@@ -216,6 +216,7 @@ static void query(SQLHSTMT h)
 }
 
 // create a table, add some rows, do an update, a count and a query
+// note that the DSN name is hardwired
 
 int main(void)
 {
