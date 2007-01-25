@@ -19,6 +19,8 @@
 #endif
 #include <openssl/bn.h>
 
+// print one extension
+
 static void printex(X509_EXTENSION *ex)
 {
   X509V3_EXT_METHOD    *meth;
@@ -111,6 +113,9 @@ static void printex(X509_EXTENSION *ex)
   else
     meth->ext_free(exts);
 }
+
+// cycle through all filenames on the command line and process them
+// as certs
 
 int main(int argc, char **argv)
 {
