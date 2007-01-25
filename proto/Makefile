@@ -1,7 +1,7 @@
 #
-# Makefile for mysql and openssl test programs
+# $Id$
 #
-# Make sure your set ODBCINI and ODBCSYSINI as described in /etc/motd
+# Makefile for mysql and openssl test programs
 #
 
 all:	sqq docert
