@@ -30,7 +30,7 @@ apki_crl "CRL" :
 apki_roa "ROA" :
 ;
 
-apki_metadata :
+apki_metadata "" :
 ;
 
 .end
