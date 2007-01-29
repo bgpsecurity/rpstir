@@ -30,6 +30,12 @@ apki_crl "CRL" :
 apki_roa "ROA" :
 ;
 
+#
+# The metadata table has information on when various operations
+# have taken place, statistics, and other information that is not
+# part of the PKI itself
+#
+
 apki_metadata "" :
 ;
 
