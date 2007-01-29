@@ -11,6 +11,7 @@
 .dsn
 
 DSN :
+	DSN={MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;USER=mysql
 ;
 
 .end
