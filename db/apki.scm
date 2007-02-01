@@ -11,7 +11,7 @@
 .dsn
 
 DSN :
-	DSN={MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;USER=mysql
+	{MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;USER=mysql
 ;
 
 .end
@@ -20,15 +20,18 @@ DSN :
 # .tables section has the tables
 #
 
-.tables
+.tables 5
 
-apki_cert "CERTIFICATE" :
+TABLE apki_cert "CERTIFICATE" :
 ;
 
-apki_crl "CRL" :
+TABLE apki_crl "CRL" :
 ;
 
-apki_roa "ROA" :
+TABLE apki_roa "ROA" :
+;
+
+TABLE apki_dir "DIRECTORY" :
 ;
 
 #
@@ -37,7 +40,7 @@ apki_roa "ROA" :
 # part of the PKI itself
 #
 
-apki_metadata "" :
+TABLE apki_metadata "" :
 ;
 
 .end
