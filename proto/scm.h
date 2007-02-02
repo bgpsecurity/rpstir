@@ -5,6 +5,36 @@
 #ifndef _SCM_H_
 #define _SCM_H_
 
+/*
+  The DSN name is used to connect to the DB. This is only a part
+  of the DSN; to construct the full DSN you must append the DB
+  name and the user name.
+*/
+
+static char *APKI_DSN =
+  "{MyODBC 3.51 Driver DSN};SERVER=localhost";
+
+/*
+  The database name itself.
+*/
+
+static char *APKI_DB =
+  "APKI";
+
+/*
+  The database user name.
+*/
+
+static char *APKI_DBUSER =
+  "mysql";
+
+/*
+  A database table has four characteristics: its real name (the name
+  by which the database knows it), its user-friendly name, the
+  SQL statement that queries it, and the list of column names.
+  The following data structure captures that.
+*/
+
 typedef struct _scmtab
 {
   char  *tabname;		/* SQL name of table */
@@ -14,37 +44,37 @@ typedef struct _scmtab
   int    ncols;			/* number of columns in "cols" */
 } scmtab;
 
+static char *APKI_CERT_COLS[] = { "blah", "foo" } ;
+
+static scmtab APKI_CERT =
+  {
+    "apki_cert",
+    "CERTIFICATE",
+    "",
+    APKI_CERT_COLS,
+    2
+  } ;
+
+static char *APKI_CRL_COLS[] = { "fred" "barney", "wilma", "betty" };
+
+static scmtab APKI_CRL =
+  {
+    "apki_crl",
+    "CRL",
+    "",
+    APKI_CRL_COLS,
+    4
+  } ;
+
+/*
+  This structure defines the overall database schema
+*/
+
 typedef struct _scm
 {
   char   *dsn;			/* canonical data source name from .dsn section */
   scmtab *tables;		/* array of tables */
   int     ntables;		/* number of tables in "tables" */
 } scm;
-
-/*
-  Error codes
-*/
-
-#define ERR_SCM_NOERR         0
-#define ERR_SCM_COFILE       -1  	/* cannot open file */
-#define ERR_SCM_NOMEM        -2	        /* out of memory */
-#define ERR_SCM_INVALARG     -3	        /* invalid argument */
-#define ERR_SCM_NODSN        -4	        /* no DSN specified */
-#define ERR_SCM_NODIR        -5         /* missing directive */
-#define ERR_SCM_INVALDIR     -6         /* invalid directive */
-#define ERR_SCM_XMOD         -7         /* extra modifiers */
-#define ERR_SCM_NOMOD        -8         /* missing modifier */
-#define ERR_SCM_INVALMOD     -9         /* invalid modifier */
-#define ERR_SCM_NXEOF       -10         /* unexpected EOF */
-#define ERR_SCM_NXDIR       -11	        /* unexpected end of directive */
-#define ERR_SCM_NXSDIR      -12         /* unexpected end of subdirective */
-#define ERR_SCM_INVALSDIR   -13         /* invalid subdirective */
-
-/*
-  Directives
-*/
-
-#define SCM_DIR_DSN           1          /* DSN directive */
-#define SCM_DIR_TABLES        2          /* TABLES directive */
 
 #endif
