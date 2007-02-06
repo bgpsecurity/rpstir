@@ -52,7 +52,7 @@ static void freescmtable(scmtab *tabp)
   tabp->cols = NULL;
 }
 
-static void freescm(scm *scmp)
+void freescm(scm *scmp)
 {
   int i;
 
@@ -67,6 +67,11 @@ static void freescm(scm *scmp)
     {
       free((void *)(scmp->dbuser));
       scmp->dbuser = NULL;
+    }
+  if ( scmp->dsnpref != NULL )
+    {
+      free((void *)(scmp->dsnpref));
+      scmp->dsnpref = NULL;
     }
   if ( scmp->dsn != NULL )
     {
@@ -119,6 +124,9 @@ static int makecolumns(scmtab *outtab)
 
   if ( outtab == NULL || outtab->tstr == NULL )
     return(-1);
+// if the tstr is the zero-length string "" then do nothing
+  if ( outtab->tstr[0] == 0 )
+    return(0);
   dp = strdup(outtab->tstr);
   if ( dp == NULL )
     return(-2);
@@ -197,12 +205,26 @@ static int preparetables(scm *scmp, scmtab *scmtabbuilderp, int sz)
   return(0);
 }
 
+char *makedsnscm(char *pref, char *db, char *usr)
+{
+  char *ptr;
+  int   len;
+
+  if ( pref == NULL || db == NULL || usr == NULL )
+    return(NULL);
+  len = strlen(pref) + strlen(db) + strlen(usr) + 30;
+  ptr = (char *)calloc(len, sizeof(char));
+  if ( ptr == NULL )
+    return(NULL);
+  (void)sprintf(ptr, "%s;DATABASE=%s;USER=%s;",
+		dsnpref, db, usr);
+  return(ptr);
+}
+
 scm *initscm(void)
 {
-  scm  *scmp;
-  char *tmp;
-  int   len;
-  int   sta;
+  scm *scmp;
+  int  sta;
 
   scmp = (scm *)calloc(1, sizeof(scm));
   if ( scmp == NULL )
@@ -219,15 +241,18 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  len = strlen(APKI_DSN) + strlen(APKI_DB) + strlen(APKI_DBUSER) + 30;
-  scmp->dsn = (char *)calloc(len, sizeof(char));
+  scmp->dsnpref = strdup(APKI_DSN);
+  if ( scmp->dsnpref == NULL )
+    {
+      freescm(scmp);
+      return(NULL);
+    }
+  scmp->dsn = makedsn(APKI_DSN, APKI_DB, APKI_DBUSER);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);
       return(NULL);
     }
-  (void)sprintf(scmp->dsn, "%s;DATABASE=%s;USER=%s;",
-		APKI_DSN, APKI_DB, APKI_DBUSER);
   sta = preparetables(scmp, &scmtabbuilder[0],
 		      sizeof(scmtabbuilder)/sizeof(scmtab));
   if ( sta < 0 )
@@ -244,6 +269,7 @@ int main(void)
 {
   scm *scmp;
   int  i;
+  int  j;
 
   (void)setbuf(stdout, NULL);
   scmp = initscm();
@@ -251,9 +277,14 @@ int main(void)
   (void)printf("Number of tables is %d\n", scmp->ntables);
   for(i=0;i<scmp->ntables;i++)
     {
-      (void)printf("\t\t%d\t%s\t%s\n", i,
+      (void)printf("%d\t%s\t%s\n", i+1,
 		   scmp->tables[i].tabname,
 		   scmp->tables[i].hname);
+      (void)printf("    Table columns: %d\n\t",
+		   scmp->tables[i].ncols);
+      for(j=0;j<scmp->tables[i].ncols;j++)
+	(void)printf(" %s", scmp->tables[i].cols[j]);
+      (void)printf("\n");
     }
   return(0);
 }

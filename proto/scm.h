@@ -29,9 +29,14 @@ typedef struct _scm
 {
   char   *db;                   /* name of the database */
   char   *dbuser;               /* name of the database user */
-  char   *dsn;			/* canonical data source name from .dsn section */
+  char   *dsnpref;              /* data source name prefix */
+  char   *dsn;			/* canonical data source name */
   scmtab *tables;		/* array of tables */
   int     ntables;		/* number of tables in "tables" */
 } scm;
+
+extern scm  *initscm(void);
+extern void  freescm(scm *scmp);
+extern char *makedsnscm(char *pref, char *db, char *usr);
 
 #endif

@@ -8,6 +8,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <getopt.h>
+
+#include "scm.h"
+
+#ifdef NOTDEF
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -121,14 +126,6 @@ static void printex(X509_EXTENSION *ex)
 // cycle through all filenames on the command line and process them
 // as certs
 
-// putative command line args:
-//   -c x.scm            db config file
-//   -t                  create all tables
-//   -x                  destroy all tables
-//   -d dir              recursive process everything in dir
-//   -f file             process the given file
-//   -w port             operate in wrapper mode using the given socket port
-
 int main(int argc, char **argv)
 {
   X509_EXTENSION *ex;
@@ -209,5 +206,193 @@ int main(int argc, char **argv)
 	}
       X509_free(x);
     }
+  return(0);
+}
+
+#endif
+
+/*
+  Safely print a message to stderr that we are out of memory.
+  Cannot use (f)printf since it can try to allocate memory.
+*/
+
+static void membail(void)
+{
+  static char oom[] = "Out of memory!\n";
+
+  (void)write(fileno(stderr), oom, strlen(oom));
+}
+
+/*
+  Print a usage message.
+*/
+
+static void usage(void)
+{
+  (void)printf("Usage:\n");
+  (void)printf("\t-t\tcreate all database tables\n");
+  (void)printf("\t-x\tdestroy all database tables\n");
+  (void)printf("\t-y\tforce operation: do not ask for confirmation\n");
+  (void)printf("\t-q\tdisplay database state\n");
+  (void)printf("\t-d dir\tprocess all files in dir\n");
+  (void)printf("\t-f file\tprocess the indicated file\n");
+  (void)printf("\t-w port\tstart an rsync listener on port\n");
+  (void)printf("\t-h\tdisplay usage and exit\n");
+}
+
+// putative command line args:
+//   -t                  create all tables
+//   -x                  destroy all tables
+//   -y                  force operation, don't ask
+//   -q                  display database state
+//   -h                  print help
+//   -d dir              recursively process everything in dir
+//   -f file             process the given file
+//   -w port             operate in wrapper mode using the given socket port
+
+int main(int argc, char **argv)
+{
+  char *thedir = NULL;
+  char *thefile = NULL;
+  char *tmpdsn = NULL;
+  char  ans[8];
+  scm  *scmp = NULL;
+  int do_create = 0;
+  int do_delete = 0;
+  int do_fileops = 0;
+  int do_sockopts = 0;
+  int do_query = 0;
+  int really = 0;
+  int force = 0;
+  int porto = 0;
+  int c;
+
+  (void)setbuf(stdout, NULL);
+  if ( argc <= 1 )
+    {
+      usage();
+      return(1);
+    }
+  while ( (c = getopt(argc, argv, "txyqhd:f:w:")) != EOF )
+    {
+      switch ( c )
+	{
+	case 't':
+	  do_create++;
+	  break;
+	case 'x':
+	  do_delete++;
+	  break;
+	case 'y':
+	  force++;
+	  break;
+	case 'q':
+	  do_query++;
+	  break;
+	case 'd':
+	  thedir = strdup(optarg);
+	  if ( thedir == NULL )
+	    {
+	      membail();
+	      return(-1);
+	    }
+	  do_fileops++;
+	  break;
+	case 'f':
+	  thefile = strdup(optarg);
+	  if ( thefile == NULL )
+	    {
+	      membail();
+	      return(-1);
+	    }
+	  do_fileops++;
+	  break;
+	case 'w':
+	  do_sockopts++;
+	  porto = atoi(optarg);
+	  break;
+	case 'h':
+	  usage();
+	  return(0);
+	default:
+	  (void)fprintf(stderr, "Invalid option '%c'\n", c);
+	  usage();
+	  return(1);
+	}
+    }
+  if ( force == 0 )
+    {
+      if ( do_delete > 0 )
+	{
+	  (void)printf("Do you REALLY want to delete all database tables? ");
+	  memset(ans, 0, 8);
+	  if ( fgets(ans, 8, stdin) == NULL || ans[0] == 0 ||
+	       toupper(ans[0]) != 'Y' )
+	    {
+	      (void)printf("Operation cancelled\n");
+	      return(1);
+	    }
+	  really++;
+	}
+      if ( (do_create > 0) && (really == 0) )
+	{
+	  (void)printf("Do you REALLY want to create all database tables? ");
+	  memset(ans, 0, 8);
+	  if ( fgets(ans, 8, stdin) == NULL || ans[0] == 0 ||
+	       toupper(ans[0]) != 'Y' )
+	    {
+	      (void)printf("Operation cancelled\n");
+	      return(1);
+	    }
+	  really++;
+	}
+    }
+  scmp = initscm();
+  if ( scmp == NULL )
+    {
+      (void)fprintf(stderr, "Internal error: cannot initialize database schema\n");
+      return(-2);
+    }
+/*
+  Process command line options in the following order: delete, create, dofile,
+  dodir, query, listener.
+*/
+  if ( do_delete > 0 )
+    {
+/*
+  For a delete operation we do not want to connect to the apki
+  database, we want to connect to the test database.
+*/
+      tmpdsn = makedsnscm(scmp->dnspref, "test", scmp->dbuser);
+      if ( tmpdsn == NULL )
+	{
+	  bailmem();
+	  return(-1);
+	}
+    }
+  if ( do_create > 0 )
+    {
+      // GAGNON
+    }
+  if ( do_fileops > 0 )
+    {
+      if ( thefile != NULL )
+	{
+	  // GAGNON
+	}
+      if ( thedir != NULL )
+	{
+	  // GAGNON
+	}
+    }
+  if ( do_query > 0 )
+    {
+      // GAGNON
+    }
+  if ( do_sockopts > 0 )
+    {
+      // GAGNON
+    }
+  freescm(scmp);
   return(0);
 }
