@@ -3,26 +3,20 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+#include "scm.h"
+#include "scmf.h"
+
+#ifdef NOTDEF
 #ifdef WINDOWS
 #include <windows.h>
 #else
 #include <memory.h>
 #include <time.h>
 #endif
-
-#include "scmf.h"
-
-// decode the last error on a handle
-
-static void heer(void *h, int what, char *errmsg, int emlen)
-{
-  SQLINTEGER  nep;
-  SQLSMALLINT tl;
-  char state[24];
-
-  SQLGetDiagRec(what, h, 1, (SQLCHAR *)&state[0], &nep,
-                (SQLCHAR *)errmsg, emlen, &tl);
-}
 
 // do an SQL statement operation
 
@@ -39,10 +33,8 @@ static void docatalog(SQLHSTMT h, char *stm, char *what)
       istm = 0;
       ret = SQLRowCount(h, &istm);
       if ( SQLOK(ret) )
-	(void)printf("Rows affected = %d\n", istm);
+	(void)printf("Rows affected = %d\n", (int)istm);
     }
-  else
-    heer(h, what);
 }
 
 // drop the custom table
@@ -152,7 +144,7 @@ static void count(SQLHSTMT h)
   ret = SQLFetch(h);
   if ( ! SQLOK(ret) )
     return;
-  (void)printf("Count = %d\n", ival);
+  (void)printf("Count = %lu\n", ival);
   SQLCloseCursor(h);
 }
 
@@ -177,7 +169,7 @@ static void query(SQLHSTMT h)
       if ( field1len == SQL_NULL_DATA )
 	(void)printf("x");
       else
-	(void)printf("%d", field1);
+	(void)printf("%d", (int)field1);
       if ( field2len == SQL_NULL_DATA )
 	(void)printf("\tNULL");
       else
@@ -197,6 +189,58 @@ static void query(SQLHSTMT h)
   SQLCloseCursor(h);
 }
 
+#endif
+
+/*
+  Decode the last error on a handle
+*/
+
+static void heer(void *h, int what, char *errmsg, int emlen)
+{
+  SQLINTEGER  nep;
+  SQLSMALLINT tl;
+  char state[24];
+
+  SQLGetDiagRec(what, h, 1, (SQLCHAR *)&state[0], &nep,
+                (SQLCHAR *)errmsg, emlen, &tl);
+}
+
+/*
+  Disconnect from a DSN and free all memory.
+*/
+
+void disconnectscm(scmcon *conp)
+{
+  if ( conp == NULL )
+    return;
+  if ( conp->hstmt != NULL )
+    {
+      SQLFreeHandle(SQL_HANDLE_STMT, conp->hstmt);
+      conp->hstmt = NULL;
+    }
+  if ( conp->connected > 0 )
+    {
+      SQLDisconnect(conp->hdbc);
+      conp->connected = 0;
+    }
+  if ( conp->hdbc != NULL )
+    {
+      SQLFreeHandle(SQL_HANDLE_DBC, conp->hdbc);
+      conp->hdbc = NULL;
+    }
+  if ( conp->henv != NULL )
+    {
+      SQLFreeHandle(SQL_HANDLE_ENV, conp->henv);
+      conp->henv = NULL;
+    }
+  if ( conp->mystat.errmsg != NULL )
+    {
+      free((void *)(conp->mystat.errmsg));
+      conp->mystat.errmsg = NULL;
+    }
+  free((void *)conp);
+}
+
 /*
   Initialize a connection to the named DSN. Return a connection object on
   success and a negative error code on failure.
@@ -204,18 +248,14 @@ static void query(SQLHSTMT h)
 
 scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
 {
+  SQLSMALLINT inret;
+  SQLSMALLINT outret;
   static char nulldsn[] = "NULL DSN";
   static char badhenv[] = "Cannot allocate HENV handle";
   static char oom[] = "Out of memory!";
   scmcon     *conp;
   SQLRETURN   ret;
-
-  SQLHDBC     hdbc1 = NULL;
-  SQLHSTMT    hstmt1 = NULL;
-  SQLSMALLINT inret;
-  SQLSMALLINT outret;
   char outlen[1024];
-  int  connd = 0;
 
   if ( errmsg != NULL && emlen > 0 )
     memset(errmsg, 0, emlen);
@@ -232,6 +272,15 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
 	(void)strcpy(errmsg, oom);
       return(NULL);
     }
+  conp->mystat.errmsg = (char *)calloc(1024, sizeof(char));
+  if ( conp->mystat.errmsg == NULL )
+    {
+      if ( errmsg != NULL && emlen > strlen(oom) )
+	(void)strcpy(errmsg, oom);
+      free((void *)conp);
+      return(NULL);
+    }
+  conp->mystat.emlen = 1024;
   ret = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &conp->henv);
   if ( ! SQLOK(ret) )
     {
@@ -249,69 +298,216 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
       disconnectscm(conp);
       return(NULL);
     }
-	{
-	  (void)printf("Success setting v3\n");
-	  ret = SQLAllocHandle(SQL_HANDLE_DBC, henv1, &hdbc1);
-	  (void)printf("DBC Handle is 0x%x\n", hdbc1);
-	  if ( SQLOK(ret) )
-	    {
-	      (void)printf("Success opening dbc handle\n");
-	      inret = strlen(leon);
-	      ret = SQLDriverConnect(hdbc1, NULL, (SQLCHAR *)&leon[0], inret,
-				     (SQLCHAR *)&outlen[0], 1024, &outret, 0);
-	      if ( !SQLOK(ret) )
-		heer2(hdbc1, "connect");
-	      else
-		{
-		  (void)printf("Success connecting to data source\n");
-//                (void)printf("Completed connection string is %s\n", outlen);
-		  sleep(1);
-		  ret = SQLAllocHandle(SQL_HANDLE_STMT, hdbc1, &hstmt1);
-		  if ( SQLOK(ret) )
-		    {
-		      (void)printf("Success allocating statement\n");
-		      ret = SQLSetStmtAttr(hstmt1, SQL_ATTR_NOSCAN,
-					   (SQLPOINTER)SQL_NOSCAN_ON,
-					   SQL_IS_UINTEGER);
-		      if ( SQLOK(ret) )
-			(void)printf("Success turning off param scanning\n");
-		      drop(hstmt1);
-		      create(hstmt1);
-		      add(hstmt1, 10, "fear");
-		      add(hstmt1, 20, "greggreg");
-		      add(hstmt1, 30, "leonburger");
-		      update(hstmt1, 20, 299);
-		      add(hstmt1, 300, "garbow");
-		      add(hstmt1, 303, "martenizing");
-		      count(hstmt1);
-		      sleep(1);
-		      query(hstmt1);
-		    }
-		  connd++;
-		}
-	    }
-	}
-    }
-  sleep(5);
-  if ( hstmt1 != NULL )
+  ret = SQLAllocHandle(SQL_HANDLE_DBC, conp->henv, &conp->hdbc);
+  if ( ! SQLOK(ret) )
     {
-      SQLFreeHandle(SQL_HANDLE_STMT, hstmt1);
-      hstmt1 = NULL;
+      if ( errmsg != NULL && emlen > 0 )
+	heer((void *)conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+      disconnectscm(conp);
+      return(NULL);
     }
-  if ( connd > 0 )
+  inret = strlen(dsnp);
+  ret = SQLDriverConnect(conp->hdbc, NULL, (SQLCHAR *)dsnp, inret,
+			 (SQLCHAR *)&outlen[0], 1024, &outret, 0);
+  if ( !SQLOK(ret) )
     {
-      SQLDisconnect(hdbc1);
-      connd = 0;
+      if ( errmsg != NULL && emlen > 0 )
+	heer((void *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
+      disconnectscm(conp);
+      return(NULL);
     }
-  if ( hdbc1 != NULL )
+  conp->connected++;
+  ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt);
+  if ( ! SQLOK(ret) )
     {
-      SQLFreeHandle(SQL_HANDLE_DBC, hdbc1);
-      hdbc1 = NULL;
+      if ( errmsg != NULL && emlen > 0 )
+	heer((void *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
+      disconnectscm(conp);
+      return(NULL);
     }
-  if ( henv1 != NULL )
+  ret = SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN,
+		       (SQLPOINTER)SQL_NOSCAN_ON,
+		       SQL_IS_UINTEGER);
+  if ( ! SQLOK(ret) )
     {
-      SQLFreeHandle(SQL_HANDLE_ENV, henv1);
-      henv1 = NULL;
+      if ( errmsg != NULL && emlen > 0 )
+	heer((void *)conp->hstmt, SQL_HANDLE_STMT, errmsg, emlen);
+      disconnectscm(conp);
+      return(NULL);
+    }
+  return(conp);
+}
+
+/*
+  Get the error message from a connection.
+*/
+
+char *geterrorscm(scmcon *conp)
+{
+  if ( conp == NULL || conp->mystat.errmsg == NULL )
+    return(NULL);
+  return(conp->mystat.errmsg);
+}
+
+/*
+  Get the name of the table that had an error.
+*/
+
+char *gettablescm(scmcon *conp)
+{
+  if ( conp == NULL )
+    return(NULL);
+  return(conp->mystat.tabname);
+}
+
+
+/*
+  Get the number of rows returned by a statement.
+*/
+
+int getrowsscm(scmcon *conp)
+{
+  int r;
+
+  if ( conp == NULL )
+    return(ERR_SCM_INVALARG);
+  r = conp->mystat.rows;
+  return(r);
+}
+
+/*
+  Execute an SQL statement.
+*/
+
+int statementscm(scmcon *conp, char *stm)
+{
+  SQLINTEGER istm;
+  SQLRETURN  ret;
+
+  if ( conp == NULL || conp->connected == 0 || stm == NULL ||
+       stm[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  memset(conp->mystat.errmsg, 0, conp->mystat.emlen);
+  istm = strlen(stm);
+  ret = SQLExecDirect(conp->hstmt, (SQLCHAR *)stm, istm);
+  if ( ! SQLOK(ret) )
+    {
+      heer((void *)(conp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
+	   conp->mystat.emlen);
+      return(ERR_SCM_SQL);
+    }
+  istm = 0;
+  ret = SQLRowCount(conp->hstmt, &istm);
+  if ( ! SQLOK(ret) )
+    {
+      heer((void *)(conp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
+	   conp->mystat.emlen);
+      return(ERR_SCM_SQL);
     }
   return(0);
+}
+
+/*
+  Create a database and grant the mysql default user the standard
+  set of privileges for that database.
+*/
+
+int createdbscm(scmcon *conp, char *dbname, char *dbuser)
+{
+  char *mk;
+  int   sta;
+
+  if ( dbname == NULL || dbname[0] == 0 || conp == NULL ||
+       conp->connected == 0 || dbuser == NULL || dbuser[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  mk = (char *)calloc(strlen(dbname) + strlen(dbuser) + 130, sizeof(char));
+  if ( mk == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(mk, "CREATE DATABASE %s;", dbname);
+  sta = statementscm(conp, mk);
+  if ( sta < 0 )
+    {
+      free((void *)mk);
+      return(sta);
+    }
+  (void)sprintf(mk,
+    "GRANT DELETE, INSERT, LOCK TABLES, SELECT, UPDATE ON %s.* TO '%s'@'localhost';",
+    dbname, dbuser);
+  sta = statementscm(conp, mk);
+  free((void *)mk);
+  return(sta);
+}
+
+/*
+  Delete a database.
+*/
+
+int deletedbscm(scmcon *conp, char *dbname)
+{
+  char *mk;
+  int   sta;
+
+  if ( dbname == NULL || dbname[0] == 0 || conp == NULL ||
+       conp->connected == 0 )
+    return(ERR_SCM_INVALARG);
+  mk = (char *)calloc(strlen(dbname) + 30, sizeof(char));
+  if ( mk == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(mk, "DROP DATABASE IF EXISTS %s;", dbname);
+  sta = statementscm(conp, mk);
+  free((void *)mk);
+  return(sta);
+}
+
+/*
+  Create a single table.
+*/
+
+static int createonetablescm(scmcon *conp, scmtab *tabp)
+{
+  char *mk;
+  int   sta;
+
+  if ( tabp->tstr == NULL || tabp->tstr[0] == 0 )
+    return(0);			/* no op */
+  conp->mystat.tabname = tabp->hname;
+  mk = (char *)calloc(strlen(tabp->tabname) + strlen(tabp->tstr) + 100,
+		      sizeof(char));
+  if ( mk == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(mk, "CREATE TABLE %s ( %s );", tabp->tabname, tabp->tstr);
+  sta = statementscm(conp, mk);
+  free((void *)mk);
+  return(sta);
+}
+
+/*
+  Create all the tables listed in scmp. This assumes that the database
+  has already been created through a call to createdbscm().
+*/
+
+int createalltablesscm(scmcon *conp, scm *scmp)
+{
+  char *mk;
+  int   sta = 0;
+  int   i;
+
+  if ( conp == NULL || conp->connected == 0 || scmp == NULL )
+    return(ERR_SCM_INVALARG);
+  if ( scmp->ntables > 0 && scmp->tables == NULL )
+    return(ERR_SCM_INVALARG);
+  mk = (char *)calloc(strlen(scmp->db) + 30, sizeof(char));
+  if ( mk == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(mk, "USE %s;", scmp->db);
+  sta = statementscm(conp, mk);
+  if ( sta < 0 )
+    return(sta);
+  for(i=0;i<scmp->ntables;i++)
+    {
+      sta = createonetablescm(conp, &scmp->tables[i]);
+      if ( sta < 0 )
+	break;
+    }
+  return(sta);
 }

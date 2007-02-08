@@ -3,6 +3,8 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #ifdef WINDOWS
 #include <windows.h>
 #else
@@ -61,7 +63,7 @@ static void docatalog(SQLHSTMT h, char *stm, char *what)
       istm = 0;
       ret = SQLRowCount(h, &istm);
       if ( SQLOK(ret) )
-	(void)printf("Rows affected = %d\n", istm);
+	(void)printf("Rows affected = %d\n", (int)istm);
     }
   else
     heer(h, what);
@@ -174,7 +176,7 @@ static void count(SQLHSTMT h)
   ret = SQLFetch(h);
   if ( ! SQLOK(ret) )
     return;
-  (void)printf("Count = %d\n", ival);
+  (void)printf("Count = %lu\n", ival);
   SQLCloseCursor(h);
 }
 
@@ -199,7 +201,7 @@ static void query(SQLHSTMT h)
       if ( field1len == SQL_NULL_DATA )
 	(void)printf("x");
       else
-	(void)printf("%d", field1);
+	(void)printf("%d", (int)field1);
       if ( field2len == SQL_NULL_DATA )
 	(void)printf("\tNULL");
       else
@@ -233,14 +235,14 @@ int main(void)
 #ifdef WINDOWS
   static char leon[] = "DRIVER={MySQL ODBC 3.51 Driver};SERVER=localhost;DATABASE=test;UID=root;PASSWORD=password;";
 #else
-//      static char leon[] = "DSN={MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;USER=root;PASSWORD=password";
-  static char leon[] = "DSN={MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;USER=mysql";
+//      static char leon[] = "DSN={MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;UID=root;PASSWORD=password";
+  static char leon[] = "DSN={MyODBC 3.51 Driver DSN};SERVER=localhost;DATABASE=test;UID=mysql";
 #endif
   char outlen[1024];
   int  connd = 0;
 
   ret = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv1);
-  (void)printf("ENV Handle is 0x%x\n", henv1);
+  (void)printf("ENV Handle is 0x%x\n", (int)henv1);
   if ( SQLOK(ret) )
     {
       (void)printf("Success opening env handle\n");
@@ -250,11 +252,12 @@ int main(void)
 	{
 	  (void)printf("Success setting v3\n");
 	  ret = SQLAllocHandle(SQL_HANDLE_DBC, henv1, &hdbc1);
-	  (void)printf("DBC Handle is 0x%x\n", hdbc1);
+	  (void)printf("DBC Handle is 0x%x\n", (int)hdbc1);
 	  if ( SQLOK(ret) )
 	    {
 	      (void)printf("Success opening dbc handle\n");
 	      inret = strlen(leon);
+	      (void)printf("DSN is '%s'\n", leon);
 	      ret = SQLDriverConnect(hdbc1, NULL, (SQLCHAR *)&leon[0], inret,
 				     (SQLCHAR *)&outlen[0], 1024, &outret, 0);
 	      if ( !SQLOK(ret) )

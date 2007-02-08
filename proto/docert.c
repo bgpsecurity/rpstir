@@ -179,7 +179,7 @@ int main(int argc, char **argv)
       ASN1_STRING_to_UTF8(&aft, (ASN1_STRING *)af4);
       (void)printf("Validity from %s to %s\n", bef, aft);
       ell = X509_subject_name_hash(x);
-      (void)printf("Subject name hash: 0x%x\n", ell);
+      (void)printf("Subject name hash: 0x%lx\n", ell);
       (void)printf("Number of extensions: %d\n",
 		   excnt=X509_get_ext_count(x));
       ci = x->cert_info;

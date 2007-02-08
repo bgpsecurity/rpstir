@@ -48,7 +48,6 @@ static scmtab scmtabbuilder[] =
       "crldp    VARCHAR(1024),"
       "valfrom  DATETIME NOT NULL,"
       "valto    DATETIME NOT NULL,"
-      "ts_cur   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
       "ts_mod   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
       "local_id INT UNSIGNED NOT NULL UNIQUE,"
       "other_id INT UNSIGNED DEFAULT 0,"

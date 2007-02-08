@@ -6,7 +6,7 @@
 
 all:	sqq docert rcli #initscm
 
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include
+CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -Wall
 
 sqq:	sqq.o Makefile
 	gcc -o sqq -g -L/usr/local/lib sqq.o -lmyodbc3 -lrt
@@ -19,8 +19,8 @@ initscm:	initscm.o Makefile
 
 initscm.o:	scm.h scmmain.h Makefile
 
-rcli:	rcli.o initscm.o Makefile
-	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o
+rcli:	rcli.o initscm.o sqcon.o Makefile
+	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o sqcon.o -lmyodbc3 -lrt
 
 clean:
 	rm -f sqq docert initscm *.o

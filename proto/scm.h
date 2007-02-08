@@ -37,6 +37,6 @@ typedef struct _scm
 
 extern scm  *initscm(void);
 extern void  freescm(scm *scmp);
-extern char *makedsnscm(char *pref, char *db, char *usr);
+extern char *makedsnscm(char *pref, char *db, char *usr, char *pass);
 
 #endif

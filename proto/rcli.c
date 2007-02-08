@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -11,6 +12,7 @@
 #include <getopt.h>
 
 #include "scm.h"
+#include "scmf.h"
 
 #ifdef NOTDEF
 #include <openssl/err.h>
@@ -252,11 +254,15 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
+  scmcon *testconp = NULL;
+  scmcon *realconp = NULL;
+  scm    *scmp = NULL;
   char *thedir = NULL;
   char *thefile = NULL;
   char *tmpdsn = NULL;
+  char *password = NULL;
+  char  errmsg[1024];
   char  ans[8];
-  scm  *scmp = NULL;
   int do_create = 0;
   int do_delete = 0;
   int do_fileops = 0;
@@ -265,6 +271,8 @@ int main(int argc, char **argv)
   int really = 0;
   int force = 0;
   int porto = 0;
+  int needpwd = 0;
+  int sta;
   int c;
 
   (void)setbuf(stdout, NULL);
@@ -279,9 +287,11 @@ int main(int argc, char **argv)
 	{
 	case 't':
 	  do_create++;
+	  needpwd++;
 	  break;
 	case 'x':
 	  do_delete++;
+	  needpwd++;
 	  break;
 	case 'y':
 	  force++;
@@ -350,9 +360,15 @@ int main(int argc, char **argv)
   scmp = initscm();
   if ( scmp == NULL )
     {
-      (void)fprintf(stderr, "Internal error: cannot initialize database schema\n");
+      (void)fprintf(stderr,
+		    "Internal error: cannot initialize database schema\n");
       return(-2);
     }
+/*
+  Get the root password to the database if necessary. GAGNON
+*/
+  if ( needpwd > 0 )
+    password = getpass("Enter MySQL root password: ");
 /*
   Process command line options in the following order: delete, create, dofile,
   dodir, query, listener.
@@ -363,16 +379,85 @@ int main(int argc, char **argv)
   For a delete operation we do not want to connect to the apki
   database, we want to connect to the test database.
 */
-      tmpdsn = makedsnscm(scmp->dnspref, "test", scmp->dbuser);
+      tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
+      if ( password != NULL )
+	memset(password, 0, strlen(password));
       if ( tmpdsn == NULL )
 	{
-	  bailmem();
+	  membail();
+	  return(-1);
+	}
+      testconp = connectscm(tmpdsn, errmsg, 1024);
+      memset(tmpdsn, 0, strlen(tmpdsn));
+      free((void *)tmpdsn);
+      if ( testconp == NULL )
+	{
+	  (void)fprintf(stderr, "Cannot connect to DSN: %s\n",
+			errmsg);
+	  freescm(scmp);
+	  return(-1);
+	}
+      sta = deletedbscm(testconp, scmp->db);
+      if ( sta == 0 )
+	(void)printf("Delete operation succeeded\n");
+      else
+	{
+	  (void)printf("Delete operation failed: %s\n",
+		       geterrorscm(testconp));
+	  disconnectscm(testconp);
+	  freescm(scmp);
 	  return(-1);
 	}
     }
   if ( do_create > 0 )
     {
-      // GAGNON
+/*
+  For a delete operation we do not want to connect to the apki
+  database, we want to connect to the test database.
+*/
+      if ( tmpdsn == NULL )
+	{
+	  tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
+	  if ( password != NULL )
+	    memset(password, 0, strlen(password));
+	  if ( tmpdsn == NULL )
+	    {
+	      membail();
+	      return(-1);
+	    }
+	}
+      testconp = connectscm(tmpdsn, errmsg, 1024);
+      memset(tmpdsn, 0, strlen(tmpdsn));
+      free((void *)tmpdsn);
+      if ( testconp == NULL )
+	{
+	  (void)fprintf(stderr, "Cannot connect to DSN: %s\n",
+			errmsg);
+	  freescm(scmp);
+	  return(-1);
+	}
+      sta = createdbscm(testconp, scmp->db, scmp->dbuser);
+      if ( sta == 0 )
+	(void)printf("Create database operation succeeded\n");
+      else
+	{
+	  (void)printf("Create database operation failed: %s\n",
+		       geterrorscm(testconp));
+	  disconnectscm(testconp);
+	  freescm(scmp);
+	  return(sta);
+	}
+      sta = createalltablesscm(testconp, scmp);
+      if ( sta == 0 )
+	(void)printf("Create tables operation succeeded\n");
+      else
+	{
+	  (void)printf("Create table %s failed: %s\n",
+		       gettablescm(testconp), geterrorscm(testconp));
+	  disconnectscm(testconp);
+	  freescm(scmp);
+	  return(sta);
+	}
     }
   if ( do_fileops > 0 )
     {

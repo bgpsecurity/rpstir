@@ -205,19 +205,26 @@ static int preparetables(scm *scmp, scmtab *scmtabbuilderp, int sz)
   return(0);
 }
 
-char *makedsnscm(char *pref, char *db, char *usr)
+char *makedsnscm(char *pref, char *db, char *usr, char *pass)
 {
   char *ptr;
   int   len;
 
-  if ( pref == NULL || db == NULL || usr == NULL )
+  if ( pref == NULL || db == NULL || usr == NULL ||
+       pref[0] == 0 || db[0] == 0 || usr[0] == 0 )
     return(NULL);
-  len = strlen(pref) + strlen(db) + strlen(usr) + 30;
+  len = strlen(pref) + strlen(db) + strlen(usr) + 60;
+  if ( pass != NULL && pass[0] != 0 )
+    len += strlen(pass);
   ptr = (char *)calloc(len, sizeof(char));
   if ( ptr == NULL )
     return(NULL);
-  (void)sprintf(ptr, "%s;DATABASE=%s;USER=%s;",
-		dsnpref, db, usr);
+  if ( pass == NULL || pass[0] == 0 )
+    (void)sprintf(ptr, "DSN=%s;DATABASE=%s;UID=%s",
+		  pref, db, usr);
+  else
+    (void)sprintf(ptr, "DSN=%s;DATABASE=%s;UID=%s;PASSWORD=%s",
+		  pref, db, usr, pass);
   return(ptr);
 }
 
@@ -247,7 +254,7 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsn = makedsn(APKI_DSN, APKI_DB, APKI_DBUSER);
+  scmp->dsn = makedsnscm(APKI_DSN, APKI_DB, APKI_DBUSER, NULL);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);
