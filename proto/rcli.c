@@ -13,6 +13,7 @@
 
 #include "scm.h"
 #include "scmf.h"
+#include "diru.h"
 
 #ifdef NOTDEF
 #include <openssl/err.h>
@@ -29,6 +30,8 @@
 #include <openssl/rsa.h>
 #endif
 #include <openssl/bn.h>
+
+#define F(A) { if ( (A) != NULL ) free((void *)(A)); }
 
 // print one extension
 
@@ -214,6 +217,101 @@ int main(int argc, char **argv)
 #endif
 
 /*
+  Perform the delete operation. Return 0 on success and a negative
+  error code on failure.
+*/
+
+static int deleteop(scmcon *conp, scm *scmp)
+{
+  int sta;
+
+  if ( conp == NULL || scmp == NULL || scmp->db == NULL ||
+       scmp->db[0] == 0 )
+    {
+      (void)fprintf(stderr, "Internal error in deleteop()\n");
+      return(-1);
+    }
+// drop the database, destroying all tables in the process
+  sta = deletedbscm(conp, scmp->db);
+  if ( sta == 0 )
+    (void)printf("Delete operation succeeded\n");
+  else
+    (void)fprintf(stderr, "Delete operation failed: %s\n",
+		  geterrorscm(conp));
+  return(sta);
+}
+
+/*
+  Perform the create operation. Return 0 on success and a negative
+  error code on failure.
+*/
+
+static int createop(scmcon *conp, scm *scmp)
+{
+  int sta;
+
+  if ( conp == NULL || scmp == NULL || scmp->db == NULL ||
+       scmp->db[0] == 0 )
+    {
+      (void)fprintf(stderr, "Internal error in createop()\n");
+      return(-1);
+    }
+// step 1: create the database itself
+  sta = createdbscm(conp, scmp->db, scmp->dbuser);
+  if ( sta == 0 )
+    (void)printf("Create database operation succeeded\n");
+  else
+    {
+      (void)fprintf(stderr, "Create database operation failed: %s\n",
+		    geterrorscm(conp));
+      return(sta);
+    }
+// step 2: create all the tables in the database
+  sta = createalltablesscm(conp, scmp);
+  if ( sta == 0 )
+    (void)printf("Create tables operation succeeded\n");
+  else
+    (void)fprintf(stderr, "Create table %s failed: %s\n",
+		  gettablescm(conp), geterrorscm(conp));
+  return(sta);
+}
+
+static int create2op(scmcon *conp, scm *scmp, char *topdir)
+{
+  scmtab *mtab;
+  char   *tdir;
+  int sta;
+
+  if ( conp == NULL || scmp == NULL || scmp->db == NULL ||
+       scmp->db[0] == 0 )
+    {
+      (void)fprintf(stderr, "Internal error in create2op()\n");
+      return(-1);
+    }
+  if ( topdir == NULL || topdir[0] == 0 )
+    {
+      (void)fprintf(stderr, "Must specify a top level repository directory\n");
+      return(-2);
+    }
+// step 1: locate the metadata table
+  mtab = findtablescm(scmp, "METADATA");
+  if ( mtab == NULL )
+    {
+      (void)fprintf(stderr, "Cannot find METADATA table\n");
+      return(-3);
+    }
+// step 2: translate "topdir" into an absolute path
+  tdir = r2adir(topdir);
+  if ( tdir == NULL )
+    {
+      (void)fprintf(stderr, "Invalid directory: %s\n", topdir);
+      return(-4);
+    }
+// step 3: init the metadata table
+  return(sta);
+}
+
+/*
   Safely print a message to stderr that we are out of memory.
   Cannot use (f)printf since it can try to allocate memory.
 */
@@ -232,7 +330,7 @@ static void membail(void)
 static void usage(void)
 {
   (void)printf("Usage:\n");
-  (void)printf("\t-t\tcreate all database tables\n");
+  (void)printf("\t-t topdir\tcreate all database tables\n");
   (void)printf("\t-x\tdestroy all database tables\n");
   (void)printf("\t-y\tforce operation: do not ask for confirmation\n");
   (void)printf("\t-q\tdisplay database state\n");
@@ -242,8 +340,27 @@ static void usage(void)
   (void)printf("\t-h\tdisplay usage and exit\n");
 }
 
+/*
+  Ask a yes or no question. Returns 1 for yes, 0 for no, -1 for error.
+*/
+
+static int yorn(char *q)
+{
+  char ans[8];
+
+  if ( q == NULL || q[0] == 0 )
+    return(-1);
+  (void)printf("%s? ", q);
+  memset(ans, 0, 8);
+  if ( fgets(ans, 8, stdin) == NULL || ans[0] == 0 ||
+       toupper(ans[0]) != 'Y' )
+    return(0);
+  else
+    return(1);
+}
+
 // putative command line args:
-//   -t                  create all tables
+//   -t topdir           create all tables, set rep root to "topdir"
 //   -x                  destroy all tables
 //   -y                  force operation, don't ask
 //   -q                  display database state
@@ -257,12 +374,13 @@ int main(int argc, char **argv)
   scmcon *testconp = NULL;
   scmcon *realconp = NULL;
   scm    *scmp = NULL;
-  char *thedir = NULL;
-  char *thefile = NULL;
-  char *tmpdsn = NULL;
-  char *password = NULL;
-  char  errmsg[1024];
-  char  ans[8];
+  char   *thedir = NULL;
+  char   *topdir = NULL;
+  char   *thefile = NULL;
+  char   *tmpdsn = NULL;
+  char   *password = NULL;
+  char    errmsg[1024];
+  int ians = 0;
   int do_create = 0;
   int do_delete = 0;
   int do_fileops = 0;
@@ -272,7 +390,8 @@ int main(int argc, char **argv)
   int force = 0;
   int porto = 0;
   int needpwd = 0;
-  int sta;
+  int needtdsn = 0;
+  int sta = 0;
   int c;
 
   (void)setbuf(stdout, NULL);
@@ -281,17 +400,20 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "txyqhd:f:w:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyqhd:f:w:")) != EOF )
     {
       switch ( c )
 	{
 	case 't':
 	  do_create++;
 	  needpwd++;
+	  needtdsn++;
+	  topdir = optarg;
 	  break;
 	case 'x':
 	  do_delete++;
 	  needpwd++;
+	  needtdsn++;
 	  break;
 	case 'y':
 	  force++;
@@ -300,21 +422,11 @@ int main(int argc, char **argv)
 	  do_query++;
 	  break;
 	case 'd':
-	  thedir = strdup(optarg);
-	  if ( thedir == NULL )
-	    {
-	      membail();
-	      return(-1);
-	    }
+	  thedir = optarg;
 	  do_fileops++;
 	  break;
 	case 'f':
-	  thefile = strdup(optarg);
-	  if ( thefile == NULL )
-	    {
-	      membail();
-	      return(-1);
-	    }
+	  thefile = optarg;
 	  do_fileops++;
 	  break;
 	case 'w':
@@ -334,24 +446,20 @@ int main(int argc, char **argv)
     {
       if ( do_delete > 0 )
 	{
-	  (void)printf("Do you REALLY want to delete all database tables? ");
-	  memset(ans, 0, 8);
-	  if ( fgets(ans, 8, stdin) == NULL || ans[0] == 0 ||
-	       toupper(ans[0]) != 'Y' )
+	  ians = yorn("Do you REALLY want to delete all database tables");
+	  if ( ians <= 0 )
 	    {
-	      (void)printf("Operation cancelled\n");
+	      (void)printf("Delete operation cancelled\n");
 	      return(1);
 	    }
 	  really++;
 	}
       if ( (do_create > 0) && (really == 0) )
 	{
-	  (void)printf("Do you REALLY want to create all database tables? ");
-	  memset(ans, 0, 8);
-	  if ( fgets(ans, 8, stdin) == NULL || ans[0] == 0 ||
-	       toupper(ans[0]) != 'Y' )
+	  ians = yorn("Do you REALLY want to create all database tables");
+	  if ( ians <= 0 )
 	    {
-	      (void)printf("Operation cancelled\n");
+	      (void)printf("Create operation cancelled\n");
 	      return(1);
 	    }
 	  really++;
@@ -365,20 +473,24 @@ int main(int argc, char **argv)
       return(-2);
     }
 /*
-  Get the root password to the database if necessary. GAGNON
+  Get the root password to the database if necessary.
 */
   if ( needpwd > 0 )
     password = getpass("Enter MySQL root password: ");
 /*
-  Process command line options in the following order: delete, create, dofile,
-  dodir, query, listener.
+  If a test dsn is needed, create it now and defer the creation of the
+  real dsn until later. Otherwise, create the real dsn.
+
+  A test dsn is needed for operations that operate on the overall
+  database state as opposed to the apki tables, namely the create and
+  delete operations.
+
+  Note that this code is done here in main() rather than in a subroutine
+  in order to avoid passing parameter(s) on the stack that contain the
+  root database password.
 */
-  if ( do_delete > 0 )
+  if ( needtdsn > 0 )
     {
-/*
-  For a delete operation we do not want to connect to the apki
-  database, we want to connect to the test database.
-*/
       tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
       if ( password != NULL )
 	memset(password, 0, strlen(password));
@@ -397,64 +509,67 @@ int main(int argc, char **argv)
 	  freescm(scmp);
 	  return(-1);
 	}
-      sta = deletedbscm(testconp, scmp->db);
-      if ( sta == 0 )
-	(void)printf("Delete operation succeeded\n");
-      else
+    }
+  else
+    {
+      realconp = connectscm(scmp->dsn, errmsg, 1024);
+      if ( realconp == NULL )
 	{
-	  (void)printf("Delete operation failed: %s\n",
-		       geterrorscm(testconp));
-	  disconnectscm(testconp);
+	  (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
+			scmp->dsn, errmsg);
 	  freescm(scmp);
 	  return(-1);
 	}
     }
-  if ( do_create > 0 )
-    {
 /*
-  For a delete operation we do not want to connect to the apki
-  database, we want to connect to the test database.
+  Process command line options in the following order: delete, create, dofile,
+  dodir, query, listener.
 */
-      if ( tmpdsn == NULL )
+  if ( do_delete > 0 )
+    sta = deleteop(testconp, scmp);
+  if ( do_create > 0 && sta == 0 )		/* first phase of create */
+    sta = createop(testconp, scmp);
+/*
+  Don't need the test connection any more
+*/
+  if ( testconp != NULL )
+    {
+      disconnectscm(testconp);
+      testconp = NULL;
+    }
+/*
+  If there has been an error, bail out.
+*/
+  if ( sta < 0 )
+    {
+      if ( realconp != NULL )
+	disconnectscm(realconp);
+      freescm(scmp);
+      return(sta);
+    }
+/*
+  If a connection to the real DSN has not been opened yet, open it now.
+*/
+  if ( realconp == NULL )
+    {
+      realconp = connectscm(scmp->dsn, errmsg, 1024);
+      if ( realconp == NULL )
 	{
-	  tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
-	  if ( password != NULL )
-	    memset(password, 0, strlen(password));
-	  if ( tmpdsn == NULL )
-	    {
-	      membail();
-	      return(-1);
-	    }
-	}
-      testconp = connectscm(tmpdsn, errmsg, 1024);
-      memset(tmpdsn, 0, strlen(tmpdsn));
-      free((void *)tmpdsn);
-      if ( testconp == NULL )
-	{
-	  (void)fprintf(stderr, "Cannot connect to DSN: %s\n",
-			errmsg);
+	  (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
+			scmp->dsn, errmsg);
 	  freescm(scmp);
 	  return(-1);
 	}
-      sta = createdbscm(testconp, scmp->db, scmp->dbuser);
-      if ( sta == 0 )
-	(void)printf("Create database operation succeeded\n");
-      else
+    }
+/*
+  If a create operation was requested, complete it now.
+*/
+  if ( do_create > 0 )
+    {
+      sta = create2op(realconp, scmp, topdir);
+      if ( sta < 0 )
 	{
-	  (void)printf("Create database operation failed: %s\n",
-		       geterrorscm(testconp));
-	  disconnectscm(testconp);
-	  freescm(scmp);
-	  return(sta);
-	}
-      sta = createalltablesscm(testconp, scmp);
-      if ( sta == 0 )
-	(void)printf("Create tables operation succeeded\n");
-      else
-	{
-	  (void)printf("Create table %s failed: %s\n",
-		       gettablescm(testconp), geterrorscm(testconp));
-	  disconnectscm(testconp);
+	  disconnectscm(realconp);
 	  freescm(scmp);
 	  return(sta);
 	}
@@ -478,6 +593,8 @@ int main(int argc, char **argv)
     {
       // GAGNON
     }
+  if ( realconp != NULL )
+    disconnectscm(realconp);
   freescm(scmp);
   return(0);
 }

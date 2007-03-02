@@ -88,6 +88,12 @@ void freescm(scm *scmp)
   free((void *)scmp);
 }
 
+/*
+  Find a column name in a schema line. Column names that appear to
+  begin with non-whitespace are considered to be values; other columns
+  are considered to be modifiers (e.g. designation of a key).
+*/
+
 static char *firsttok(char *ptr)
 {
   char *run;
@@ -114,6 +120,10 @@ static char *firsttok(char *ptr)
   out[cnt] = 0;
   return(out);
 }
+
+/*
+  Parse the schema and build a list of columns.
+*/
 
 static int makecolumns(scmtab *outtab)
 {
@@ -163,6 +173,10 @@ static int makecolumns(scmtab *outtab)
   return(0);
 }
 
+/*
+  Build the data structure associated with a single table.
+*/
+
 static int prepareonetable(scmtab *outtab, scmtab *intab)
 {
   int  sta;
@@ -181,6 +195,10 @@ static int prepareonetable(scmtab *outtab, scmtab *intab)
   sta = makecolumns(outtab);
   return(sta);
 }
+
+/*
+  Build the data structure associated with the entire set of tables.
+*/
 
 static int preparetables(scm *scmp, scmtab *scmtabbuilderp, int sz)
 {
@@ -205,6 +223,11 @@ static int preparetables(scm *scmp, scmtab *scmtabbuilderp, int sz)
   return(0);
 }
 
+/*
+  Make a complete DSN name based on a prefix, the name of a database,
+  the name of a user of that database, and an optional password.
+*/
+
 char *makedsnscm(char *pref, char *db, char *usr, char *pass)
 {
   char *ptr;
@@ -227,6 +250,10 @@ char *makedsnscm(char *pref, char *db, char *usr, char *pass)
 		  pref, db, usr, pass);
   return(ptr);
 }
+
+/*
+  Initialize the schema data structure.
+*/
 
 scm *initscm(void)
 {
@@ -268,6 +295,29 @@ scm *initscm(void)
       return(NULL);
     }
   return(scmp);
+}
+
+/*
+  Given the nice name for a table, return a pointer to the data
+  structure describing that table, or NULL if no match can be
+  found.
+*/
+
+scmtab *findtablescm(scm *scmp, char *hname)
+{
+  char *ptr;
+  int   i;
+
+  if ( scmp == NULL || hname == NULL || hname[0] == 0 ||
+       scmp->ntables <= 0 || scmp->tables == NULL )
+    return(NULL);
+  for(i=0;i<scmp->ntables;i++)
+    {
+      ptr = scmp->tables[i].hname;
+      if ( ptr != NULL && ptr[0] != 0 && strcasecmp(ptr, hname) == 0 )
+	return(&scmp->tables[i]);
+    }
+  return(NULL);
 }
 
 #ifdef TEST

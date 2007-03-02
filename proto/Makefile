@@ -18,9 +18,10 @@ initscm:	initscm.o Makefile
 	gcc -o initscm -g -L/usr/local/ssl/lib initscm.o
 
 initscm.o:	scm.h scmmain.h Makefile
+diru.o:	diru.h
 
-rcli:	rcli.o initscm.o sqcon.o Makefile
-	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o sqcon.o -lmyodbc3 -lrt
+rcli:	rcli.o initscm.o sqcon.o diru.o Makefile
+	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o sqcon.o diru.o -lmyodbc3 -lrt
 
 clean:
 	rm -f sqq docert initscm *.o

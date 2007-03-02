@@ -35,8 +35,9 @@ typedef struct _scm
   int     ntables;		/* number of tables in "tables" */
 } scm;
 
-extern scm  *initscm(void);
-extern void  freescm(scm *scmp);
-extern char *makedsnscm(char *pref, char *db, char *usr, char *pass);
+extern scm    *initscm(void);
+extern void    freescm(scm *scmp);
+extern char   *makedsnscm(char *pref, char *db, char *usr, char *pass);
+extern scmtab *findtablescm(scm *scmp, char *hname);
 
 #endif
