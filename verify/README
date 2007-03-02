@@ -1,0 +1,9 @@
+
+make generic
+
+should build the sample program ./verify_stub_test
+
+run it with the argument of 2.cer.pem and it should work.
+
+OBNotes: I need to check and test it against different chains of
+know working certs etc. (longer chains primarily)
