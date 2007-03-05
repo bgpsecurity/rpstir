@@ -85,8 +85,8 @@ static scmtab scmtabbuilder[] =
     {				/* APKI_DIR */
       "apki_dir",
       "DIRECTORY",
-      "dirname  VARCHAR(4096) NOT NULL DEFAULT '.',"
-      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
+      "dirname  VARCHAR(4096) NOT NULL,"
+      "dir_id   INT UNSIGNED NOT NULL,"
       "         PRIMARY KEY (dir_id)",
       NULL,
       0
@@ -94,15 +94,16 @@ static scmtab scmtabbuilder[] =
     {				/* APKI_METADATA */
       "apki_metadata",
       "METADATA",
-      "rootdir  VARCHAR(1024),"
-      "inited   DATETIME,"
-      "rs_last  DATETIME,"
-      "qu_last  DATETIME,"
-      "gc_last  DATETIME,"
+      "rootdir  VARCHAR(4096) NOT NULL,"
+      "inited   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+      "rs_last  TIMESTAMP DEFAULT 0,"
+      "qu_last  TIMESTAMP DEFAULT 0,"
+      "gc_last  TIMESTAMP DEFAULT 0,"
       "flags    INT UNSIGNED DEFAULT 0,"
-      "cert_max INT UNSIGNED DEFAULT 1,"
-      "crl_max  INT UNSIGNED DEFAULT 1,"
-      "roa_max  INT UNSIGNED DEFAULT 1,"
+      "cert_max INT UNSIGNED DEFAULT 0,"
+      "crl_max  INT UNSIGNED DEFAULT 0,"
+      "roa_max  INT UNSIGNED DEFAULT 0,"
+      "dir_max  INT UNSIGNED DEFAULT 0,"
       "local_id INT UNSIGNED DEFAULT 1,"
       "         PRIMARY KEY (local_id)",
       NULL,

@@ -13,10 +13,10 @@
 #ifdef NOTDEF
 #ifdef WINDOWS
 #include <windows.h>
-#else
+#else  // WINDOWS
 #include <memory.h>
 #include <time.h>
-#endif
+#endif // WINDOWS
 
 // do an SQL statement operation
 
@@ -81,7 +81,7 @@ static void sleep(int s)
   Sleep(s*1000);
 }
 
-#else
+#else  // WINDOWS
 
 static void add(SQLHSTMT h, int v1, char *v2)
 {
@@ -99,7 +99,7 @@ static void add(SQLHSTMT h, int v1, char *v2)
   docatalog(h, tmp, "Add");
 }
 
-#endif
+#endif // WINDOWS
 
 // update a column value to another value
 
@@ -182,14 +182,14 @@ static void query(SQLHSTMT h)
       else
 #ifdef WINDOWS
 	(void)printf("\t%I64d\n", field3);
-#else
+#else  // WINDOWS
       (void)printf("\t%llu\n", field3);
-#endif
+#endif // WINDOWS
     }
   SQLCloseCursor(h);
 }
 
-#endif
+#endif  // NOTDEF
 
 /*
   Decode the last error on a handle
@@ -509,5 +509,112 @@ int createalltablesscm(scmcon *conp, scm *scmp)
       if ( sta < 0 )
 	break;
     }
+  return(sta);
+}
+
+/*
+  Return the index of the named column in the given schema table,
+  or a negative error code on failure.
+*/
+
+static int findcol(scmtab *tabp, char *coln)
+{
+  char *ptr;
+  int   i;
+
+  if ( tabp == NULL || coln == NULL || coln[0] == 0 )
+    return(-1);
+  if ( tabp->cols == NULL || tabp->ncols <= 0 )
+    return(-2);
+  for(i=0;i<tabp->ncols;i++)
+    {
+      ptr = tabp->cols[i];
+      if ( ptr != NULL && ptr[0] != 0 && strcasecmp(ptr, coln) == 0 )
+	return(i);
+    }
+  return(-3);
+}
+
+/*
+  Validate that each of the columns mentioned actually occurs
+  in the indicated table. Return 0 on success and a negative
+  error code on failure.
+*/
+
+static int valcols(scmcon *conp, scmtab *tabp, scmkva *arr)
+{
+  char *ptr;
+  int   i;
+
+  if ( conp == NULL || tabp == NULL || arr == NULL || arr->vec == NULL )
+    return(ERR_SCM_INVALARG);
+  for(i=0;i<arr->nused;i++)
+    {
+      ptr = arr->vec[i].column;
+      if ( ptr == NULL || ptr[0] == 0 )
+	return(ERR_SCM_NULLCOL);
+      if ( findcol(tabp, ptr) < 0 )
+	{
+	  if ( conp->mystat.errmsg != NULL )
+	    (void)sprintf(conp->mystat.errmsg, "Invalid column %s", ptr);
+	  return(ERR_SCM_INVALCOL);
+	}
+    }
+  return(0);
+}
+
+/*
+  Insert an entry into a database table.
+*/
+
+int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald)
+{
+  char *stmt;
+  int   sta;
+  int   leen = 128;
+  int   i;
+
+  if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
+       tabp->tabname == NULL )
+    return(ERR_SCM_INVALARG);
+// handle the trivial cases first
+  if ( arr == NULL || arr->nused <= 0 || arr->vec == NULL )
+    return(0);
+// if the columns listed in arr have not already been validated
+// against the set of columns present in the table, then do so
+  if ( vald == 0 )
+    {
+      sta = valcols(conp, tabp, arr);
+      if ( sta < 0 )
+	return(sta);
+    }
+// glean the length of the statement
+  leen += strlen(tabp->tabname);
+  for(i=0;i<arr->nused;i++)
+    {
+      leen += strlen(arr->vec[i].column) + 2;
+      leen += strlen(arr->vec[i].value) + 4;
+    }
+// construct the statement
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "INSERT INTO %s (%s", tabp->tabname,
+		arr->vec[0].column);
+  for(i=1;i<arr->nused;i++)
+    {
+      (void)strcat(stmt, ", ");
+      (void)strcat(stmt, arr->vec[i].column);
+    }
+  (void)strcat(stmt, ") VALUES (\"");
+  (void)strcat(stmt, arr->vec[0].value);
+  for(i=1;i<arr->nused;i++)
+    {
+      (void)strcat(stmt, "\", \"");
+      (void)strcat(stmt, arr->vec[i].value);
+    }
+  (void)strcat(stmt, "\");");
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
   return(sta);
 }

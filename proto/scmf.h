@@ -25,6 +25,19 @@ typedef struct _scmcon
   scmstat   mystat;		/* statistics and errors */
 } scmcon;
 
+typedef struct _scmkv
+{
+  char     *column;		/* column name */
+  char     *value;		/* value for that column */
+} scmkv ;
+
+typedef struct _scmkva
+{
+  scmkv    *vec;		/* array of column/value pairs */
+  int       ntot;		/* total length of "vec" */
+  int       nused;		/* number of elements of "vec" in use */
+} scmkva;
+
 #ifndef SQLOK
 #define SQLOK(s) (s == SQL_SUCCESS || s == SQL_SUCCESS_WITH_INFO)
 #endif
@@ -38,6 +51,7 @@ extern int     statementscm(scmcon *conp, char *stm);
 extern int     createdbscm(scmcon *conp, char *dbname, char *dbuser);
 extern int     deletedbscm(scmcon *conp, char *dbname);
 extern int     createalltablesscm(scmcon *conp, scm *scmp);
+extern int     insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald);
 
 /*
   Error codes
@@ -48,5 +62,7 @@ extern int     createalltablesscm(scmcon *conp, scm *scmp);
 #define ERR_SCM_NOMEM        -2	        /* out of memory */
 #define ERR_SCM_INVALARG     -3	        /* invalid argument */
 #define ERR_SCM_SQL          -4         /* SQL error */
+#define ERR_SCM_INVALCOL     -5	        /* invalid column */
+#define ERR_SCM_NULLCOL      -6         /* null column */
 
 #endif

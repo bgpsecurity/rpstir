@@ -278,9 +278,11 @@ static int createop(scmcon *conp, scm *scmp)
 
 static int create2op(scmcon *conp, scm *scmp, char *topdir)
 {
+  static scmkva aone;
+  static scmkv  one;
   scmtab *mtab;
   char   *tdir;
-  int sta;
+  int     sta;
 
   if ( conp == NULL || scmp == NULL || scmp->db == NULL ||
        scmp->db[0] == 0 )
@@ -308,6 +310,18 @@ static int create2op(scmcon *conp, scm *scmp, char *topdir)
       return(-4);
     }
 // step 3: init the metadata table
+  one.column = "rootdir";
+  one.value = tdir;
+  aone.vec = &one;
+  aone.ntot = 1;
+  aone.nused = 1;
+  sta = insertscm(conp, mtab, &aone, 0);
+  if ( sta == 0 )
+    (void)printf("Init metadata table succeeded\n");
+  else
+    (void)fprintf(stderr, "Init metadata table failed: %s\n",
+		  geterrorscm(conp));
+  free((void *)tdir);
   return(sta);
 }
 
@@ -363,7 +377,6 @@ static int yorn(char *q)
 //   -t topdir           create all tables, set rep root to "topdir"
 //   -x                  destroy all tables
 //   -y                  force operation, don't ask
-//   -q                  display database state
 //   -h                  print help
 //   -d dir              recursively process everything in dir
 //   -f file             process the given file
@@ -383,14 +396,10 @@ int main(int argc, char **argv)
   int ians = 0;
   int do_create = 0;
   int do_delete = 0;
-  int do_fileops = 0;
   int do_sockopts = 0;
-  int do_query = 0;
   int really = 0;
   int force = 0;
   int porto = 0;
-  int needpwd = 0;
-  int needtdsn = 0;
   int sta = 0;
   int c;
 
@@ -400,34 +409,25 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyqhd:f:w:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:f:w:")) != EOF )
     {
       switch ( c )
 	{
 	case 't':
 	  do_create++;
-	  needpwd++;
-	  needtdsn++;
 	  topdir = optarg;
 	  break;
 	case 'x':
 	  do_delete++;
-	  needpwd++;
-	  needtdsn++;
 	  break;
 	case 'y':
 	  force++;
 	  break;
-	case 'q':
-	  do_query++;
-	  break;
 	case 'd':
 	  thedir = optarg;
-	  do_fileops++;
 	  break;
 	case 'f':
 	  thefile = optarg;
-	  do_fileops++;
 	  break;
 	case 'w':
 	  do_sockopts++;
@@ -473,12 +473,8 @@ int main(int argc, char **argv)
       return(-2);
     }
 /*
-  Get the root password to the database if necessary.
-*/
-  if ( needpwd > 0 )
-    password = getpass("Enter MySQL root password: ");
-/*
-  If a test dsn is needed, create it now and defer the creation of the
+  If a create or delete operation is being performed, then a test dsn
+  will be needed; create it now and defer the creation of the
   real dsn until later. Otherwise, create the real dsn.
 
   A test dsn is needed for operations that operate on the overall
@@ -489,8 +485,12 @@ int main(int argc, char **argv)
   in order to avoid passing parameter(s) on the stack that contain the
   root database password.
 */
-  if ( needtdsn > 0 )
+  if ( (do_create+do_delete) > 0 )
     {
+/*
+  These privileged operations will need a password.
+*/
+      password = getpass("Enter MySQL root password: ");
       tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
       if ( password != NULL )
 	memset(password, 0, strlen(password));
@@ -523,7 +523,7 @@ int main(int argc, char **argv)
     }
 /*
   Process command line options in the following order: delete, create, dofile,
-  dodir, query, listener.
+  dodir, listener.
 */
   if ( do_delete > 0 )
     sta = deleteop(testconp, scmp);
@@ -574,18 +574,11 @@ int main(int argc, char **argv)
 	  return(sta);
 	}
     }
-  if ( do_fileops > 0 )
+  if ( thefile != NULL )
     {
-      if ( thefile != NULL )
-	{
-	  // GAGNON
-	}
-      if ( thedir != NULL )
-	{
-	  // GAGNON
-	}
+      // GAGNON
     }
-  if ( do_query > 0 )
+  if ( thedir != NULL )
     {
       // GAGNON
     }
