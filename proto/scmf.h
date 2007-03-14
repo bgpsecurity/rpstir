@@ -36,6 +36,7 @@ typedef struct _scmkva		/* used for an insert */
   scmkv    *vec;		/* array of column/value pairs */
   int       ntot;		/* total length of "vec" */
   int       nused;		/* number of elements of "vec" in use */
+  int       vald;		/* struct already validated? */
 } scmkva;
 
 typedef struct _scmsrch		/* used for a single column of a search */
@@ -50,11 +51,12 @@ typedef struct _scmsrch		/* used for a single column of a search */
 
 typedef struct _scmsrcha	/* used for a search (select) */
 {
-  scmsrch   *vec;		/* array of column info */
-  char      *sname;		/* unique name for this search (can be NULL) */
-  int        ntot;		/* total length of "vec" */
-  int        nused;		/* number of elements in vec */
-  int        vald;		/* struct already validated? */
+  scmsrch  *vec;		/* array of column info */
+  char     *sname;		/* unique name for this search (can be NULL) */
+  int       ntot;		/* total length of "vec" */
+  int       nused;		/* number of elements in vec */
+  int       vald;		/* struct already validated? */
+  void     *context;		/* context to be passed from callback */
 } scmsrcha;
 
 // callback function signature for a count of search results
@@ -68,19 +70,19 @@ typedef int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
 // bitfields for how to do a search
 
 #define SCM_SRCH_DOCOUNT         0x1   /* call count func */
-#define SCM_SRCH_DOVALUE_ANN     0x2   /* call value func if all vals non-NULL */
-#define SCM_SRCH_DOVALUE_SNN     0x4   /* call value func if some vals non-NULL */
+#define SCM_SRCH_DOVALUE_ANN     0x2   /* call val func if all vals non-NULL */
+#define SCM_SRCH_DOVALUE_SNN     0x4   /* call val func if some vals non-NULL */
 #define SCM_SRCH_DOVALUE_ALWAYS  0x8   /* always call value func */
 #define SCM_SRCH_DOVALUE         0xE   /* call value func */
-#define SCM_SRCH_BREAK_CERR      0x10  /* break from loop if count func gives err */
-#define SCM_SRCH_BREAK_VERR      0x20  /* break from loop if value func gives err */
+#define SCM_SRCH_BREAK_CERR      0x10  /* break from loop if count func err */
+#define SCM_SRCH_BREAK_VERR      0x20  /* break from loop if value func err */
 
 #ifndef SQLOK
 #define SQLOK(s) (s == SQL_SUCCESS || s == SQL_SUCCESS_WITH_INFO)
 #endif
 
 extern scmcon   *connectscm(char *dsnp, char *errmsg, int emlen);
-extern scmsrcha *newsrchscm(char *name, int leen);
+extern scmsrcha *newsrchscm(char *name, int leen, int cleen);
 extern void  disconnectscm(scmcon *conp);
 extern char *geterrorscm(scmcon *conp);
 extern char *gettablescm(scmcon *conp);
@@ -89,7 +91,7 @@ extern int   statementscm(scmcon *conp, char *stm);
 extern int   createdbscm(scmcon *conp, char *dbname, char *dbuser);
 extern int   deletedbscm(scmcon *conp, char *dbname);
 extern int   createalltablesscm(scmcon *conp, scm *scmp);
-extern int   insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald);
+extern int   insertscm(scmcon *conp, scmtab *tabp, scmkva *arr);
 extern int   getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
 			 char *what, unsigned int *ival);
 extern int   setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,

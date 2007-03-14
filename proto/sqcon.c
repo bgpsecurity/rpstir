@@ -10,46 +10,6 @@
 #include "scm.h"
 #include "scmf.h"
 
-#ifdef NOTDEF
-
-// count the number of rows in the table
-
-static void count(SQLHSTMT h)
-{
-  SQLRETURN   ret;
-  SQLSMALLINT ire;
-  SQLSMALLINT nlen;
-  SQLSMALLINT dt;
-  SQLUINTEGER csz;
-  SQLINTEGER  iv;
-  SQLSMALLINT ddig;
-  SQLSMALLINT nullo;
-  unsigned long ival = 0;
-  char colo[256];
-
-  docatalog(h, "SELECT COUNT(*) AS TRows FROM my_odbc_net", "Count");
-  ret = SQLNumResultCols(h, &ire);
-  if ( ! SQLOK(ret) )
-    return;
-  (void)printf("Number of result columns = %d\n", ire);
-  ret = SQLDescribeCol(h, 1, (SQLCHAR *)&colo[0], 256, &nlen, &dt, &csz,
-		       &ddig, &nullo);
-  if ( ! SQLOK(ret) )
-    return;
-  (void)printf("Column 1 name %s\n", colo);
-  ret = SQLBindCol(h, 1, SQL_C_ULONG, (SQLPOINTER)&ival,
-		   sizeof(unsigned long), &iv);
-  if ( ! SQLOK(ret) )
-    return;
-  ret = SQLFetch(h);
-  if ( ! SQLOK(ret) )
-    return;
-  (void)printf("Count = %lu\n", ival);
-  SQLCloseCursor(h);
-}
-
-#endif  // NOTDEF
-
 /*
   Decode the last error on a handle
 */
@@ -426,7 +386,7 @@ static int valcols(scmcon *conp, scmtab *tabp, scmkva *arr)
   Insert an entry into a database table.
 */
 
-int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald)
+int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
 {
   char *stmt;
   int   sta;
@@ -442,11 +402,12 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald)
     return(0);
 // if the columns listed in arr have not already been validated
 // against the set of columns present in the table, then do so
-  if ( vald == 0 )
+  if ( arr->vald == 0 )
     {
       sta = valcols(conp, tabp, arr);
       if ( sta < 0 )
 	return(sta);
+      arr->vald = 1;
     }
 // glean the length of the statement
   leen += strlen(tabp->tabname);
@@ -820,6 +781,11 @@ void freesrchscm(scmsrcha *srch)
 	  free((void *)(srch->sname));
 	  srch->sname = NULL;
 	}
+      if ( srch->context != NULL )
+	{
+	  free(srch->context);
+	  srch->context = NULL;
+	}
       if ( srch->vec != NULL )
 	{
 	  for(i=0;i<srch->nused;i++)
@@ -846,7 +812,7 @@ void freesrchscm(scmsrcha *srch)
   Create a new empty srch array
 */
 
-scmsrcha *newsrchscm(char *name, int leen)
+scmsrcha *newsrchscm(char *name, int leen, int cleen)
 {
   scmsrcha *newp;
 
@@ -866,6 +832,14 @@ scmsrcha *newsrchscm(char *name, int leen)
     }
   newp->vec = (scmsrch *)calloc(leen, sizeof(scmsrch));
   if ( newp->vec == NULL )
+    {
+      freesrchscm(newp);
+      return(NULL);
+    }
+  if ( cleen <= 0 )
+    cleen = sizeof(unsigned int);
+  newp->context = (void *)calloc(cleen, sizeof(char));
+  if ( newp->context == NULL )
     {
       freesrchscm(newp);
       return(NULL);
@@ -908,10 +882,80 @@ int addcolsrchscm(scmsrcha *srch, char *colname, int sqltype, unsigned valsize)
 }
 
 /*
+  This is the value function callback for the next function.
+*/
+
+static int socvaluefunc(scmcon *conp, scmsrcha *s, int idx)
+{
+  if ( s->vec[0].sqltype == SQL_C_ULONG &&
+       s->vec[0].avalsize >= sizeof(unsigned int) &&
+       s->context != NULL )
+    {
+      memcpy(s->context, s->vec[0].valptr, sizeof(unsigned int));
+      return(0);
+    }
+  return(-1);
+}
+
+/*
   This function performs a find-or-create operation for a specific id. It first
   searches in table "tab" with search criteria "srch". If the entry is found it
-  returns the value of "id". If it isn't found then the max_id is looked up in
-  the metadata table an incremented, a new entry is created in "tab" using the
+  returns the value of the id. If it isn't found then the max_id is looked up in
+  the metadata table and incremented, a new entry is created in "tab" using the
   creation criteria "ins", and the max id in the metadata table is updated and
   returned.
 */
+
+int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
+		      scmsrcha *srch, scmkva *ins, unsigned int *idp)
+{
+  unsigned int mid;
+  char *tmp;
+  int   sta;
+
+  if ( idp == NULL || scmp == NULL || conp == NULL || conp->connected == 0 ||
+       tabp == NULL || tabp->hname == NULL || srch == NULL || ins == NULL )
+    return(ERR_SCM_INVALARG);
+// check that the 0th entry in both srch and ins is an "id"
+  if ( srch->vec == NULL || srch->nused < 1 || srch->vec[0].colname == NULL ||
+       strstr(srch->vec[0].colname, "id") == NULL )
+    return(ERR_SCM_INVALARG);
+  if ( ins->vec == NULL || ins->nused < 1 || ins->vec[0].column == NULL ||
+       strstr(ins->vec[0].column, "id") == NULL )
+    return(ERR_SCM_INVALARG);
+  *idp = (unsigned int)(-1);
+  *(unsigned int *)(srch->context) = (unsigned int)(-1);
+  sta = searchscm(conp, tabp, srch, NULL, socvaluefunc,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta == 0 )
+    {
+      mid = *(unsigned int *)(srch->context);
+      if ( mid != (unsigned int)(-1) )
+	{
+	  *idp = mid;
+	  return(0);
+	}
+    }
+  sta = getmaxidscm(scmp, conp, mtab, tabp->hname, &mid);
+  if ( sta < 0 )
+    return(sta);
+  mid++;
+  tmp = ins->vec[0].value;
+  if ( tmp != NULL )
+    {
+      free(tmp);
+      ins->vec[0].value = NULL;
+    }
+  ins->vec[0].value = (char *)calloc(16, sizeof(char));
+  if ( ins->vec[0].value == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(ins->vec[0].value, "%u", mid);
+  sta = insertscm(conp, tabp, ins);
+  if ( sta < 0 )
+    return(sta);
+  sta = setmaxidscm(scmp, conp, mtab, tabp->hname, mid);
+  if ( sta < 0 )
+    return(sta);
+  *idp = mid;
+  return(0);
+}

@@ -287,6 +287,8 @@ static int burlc(scmcon *conp, scmsrcha *s, int cnt)
 static int burlv(scmcon *conp, scmsrcha *s, int idx)
 {
   TIMESTAMP_STRUCT *ts;
+  int glart = 0;
+  int tmp;
   int i;
 
   (void)printf("Burlv called with idx %d\n", idx);
@@ -298,7 +300,8 @@ static int burlv(scmcon *conp, scmsrcha *s, int idx)
 	  switch ( s->vec[i].sqltype )
 	    {
 	    case SQL_C_ULONG:
-	      (void)printf("%d\n", *(int *)(s->vec[i].valptr));
+	      (void)printf("%d\n", tmp=*(int *)(s->vec[i].valptr));
+	      glart += tmp;
 	      break;
 	    case SQL_C_CHAR:
 	      (void)printf("%s\n", (char *)(s->vec[i].valptr));
@@ -315,6 +318,8 @@ static int burlv(scmcon *conp, scmsrcha *s, int idx)
 	    }
 	}
     }
+  if ( s->context )
+    *(int *)(s->context) = glart;
   return(0);
 }
 
@@ -357,59 +362,89 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
   aone.vec = &one;
   aone.ntot = 1;
   aone.nused = 1;
-  sta = insertscm(conp, mtab, &aone, 0);
+  sta = insertscm(conp, mtab, &aone);
   if ( sta == 0 )
     (void)printf("Init metadata table succeeded\n");
   else
     (void)fprintf(stderr, "Init metadata table failed: %s\n",
 		  geterrorscm(conp));
   free((void *)tdir);
-// burlingame code
+// burlingame test code
   {
     unsigned int iii = 0;
-    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &iii);
-    if ( sta == 0 )
-      {
-	(void)printf("Id is %u\n", iii);
-	sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 57);
-	if ( sta == 0 )
-	  {
-	    unsigned int jjj;
-	    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &jjj);
-	    (void)printf("New id is %u\n", jjj);
-	    if ( sta == 0 )
-	      {
-		scmsrcha *narr;
+    unsigned int jjj;
+    scmsrcha    *narr;
+    scmtab      *dirtab;
 
-		narr = newsrchscm("burlingame", 10);
-		(void)printf("Search array is 0x%x\n", (unsigned)narr);
-		if ( narr != NULL )
-		  {
-		    sta = addcolsrchscm(narr, "rootdir", SQL_C_CHAR, 1024);
-		    if ( sta == 0 )
-		      sta = addcolsrchscm(narr, "flags", SQL_C_ULONG,
-					  sizeof(int));
-		    if ( sta == 0 )
-		      sta = addcolsrchscm(narr, "cert_max", SQL_C_ULONG,
-					  sizeof(int));
-		    if ( sta == 0 )
-		      sta = addcolsrchscm(narr, "local_id", SQL_C_ULONG,
-					  sizeof(int));
-		    if ( sta == 0 )
-		      sta = addcolsrchscm(narr, "inited", SQL_C_TIMESTAMP,
-					  sizeof(TIMESTAMP_STRUCT));
-		    if ( sta == 0 )
-		      sta = addcolsrchscm(narr, "dir_max", SQL_C_ULONG,
-					  sizeof(int));
-		    if ( sta == 0 )
-		      {
-			sta = searchscm(conp, mtab, narr, burlc, burlv,
-					SCM_SRCH_DOCOUNT|SCM_SRCH_DOVALUE_ALWAYS);
-			(void)printf("Search returns %d\n", sta);
-		      }
-		  }
-	      }
-	  }
+// get, set, get the max directory id
+    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &iii);
+    if ( sta < 0 )
+      {
+	(void)fprintf(stderr, "getmaxidscm() failed with err %d\n", sta);
+	return(sta);
+      }
+    (void)printf("Id is %u\n", iii);
+    sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 57);
+    if ( sta < 0 )
+      {
+	(void)fprintf(stderr, "setmaxidscm() failed with err %d\n", sta);
+	return(sta);
+      }
+    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &jjj);
+    if ( sta < 0 )
+      {
+	(void)fprintf(stderr, "getmaxidscm() failed with err %d\n", sta);
+	return(sta);
+      }
+    (void)printf("New id is %u\n", jjj);
+// do a search
+    narr = newsrchscm("burlingame", 10, sizeof(int));
+    (void)printf("Search array is 0x%x\n", (unsigned)narr);
+    if ( narr == NULL )
+      return(ERR_SCM_NOMEM);
+    sta = addcolsrchscm(narr, "rootdir", SQL_C_CHAR, 1024);
+    if ( sta == 0 )
+      sta = addcolsrchscm(narr, "flags", SQL_C_ULONG,
+			  sizeof(int));
+    if ( sta == 0 )
+      sta = addcolsrchscm(narr, "cert_max", SQL_C_ULONG,
+			  sizeof(int));
+    if ( sta == 0 )
+      sta = addcolsrchscm(narr, "local_id", SQL_C_ULONG,
+			  sizeof(int));
+    if ( sta == 0 )
+      sta = addcolsrchscm(narr, "inited", SQL_C_TIMESTAMP,
+			  sizeof(TIMESTAMP_STRUCT));
+    if ( sta == 0 )
+      sta = addcolsrchscm(narr, "dir_max", SQL_C_ULONG,
+			  sizeof(int));
+    if ( sta < 0 )
+      {
+	(void)fprintf(stderr, "addcolsrchscm() failed with err %d\n", sta);
+	return(sta);
+      }
+    sta = searchscm(conp, mtab, narr, burlc, burlv,
+		    SCM_SRCH_DOCOUNT|SCM_SRCH_DOVALUE_ALWAYS);
+    (void)printf("Search returns %d\n", sta);
+    if ( sta == 0 )
+      (void)printf("Context was %d\n",
+		   *(int *)(narr->context));
+    freesrchscm(narr);
+    if ( sta < 0 )
+      return(sta);
+// reset the max directory id back to 0
+    sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 0);
+    if ( sta < 0 )
+      {
+	(void)fprintf(stderr, "setmaxidscm() failed with err %d\n", sta);
+	return(sta);
+      }
+// insert some directories
+    dirtab = findtablescm(scmp, "DIRECTORY");
+    if ( dirtab == NULL )
+      {
+	(void)fprintf(stderr, "Cannot find DIRECTORY table\n");
+	return(ERR_SCM_NOSUCHTAB);
       }
   }
   return(sta);
