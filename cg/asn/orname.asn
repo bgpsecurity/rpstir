@@ -1,0 +1,115 @@
+-- Nov 13 2000 467E  */
+-- Nov 13 2000 GARDINER started
+-- sfcsid = "@(#)orname.asn 467E"
+-- File:     orname.asn
+-- Contents: ASN.1 specification for X.509 ORName
+-- System:   PKIM development.
+-- Created:  13-Feb-1996
+-- Author:   nyang
+--
+-- Remarks:
+--
+-- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/orname.asn,v 1.2 1997/09/02 02:25:12 dmoses Exp $ 
+--
+-- COPYRIGHT 1996 BBN Systems and Technologies, A Division of BBN Inc.
+-- 150 CambridgePark Drive
+-- Cambridge, Ma. 02140
+-- 617-873-4000
+
+
+ORNAME DEFINITIONS IMPLICIT TAGS ::=
+BEGIN
+
+-- DEFINITIONS ::= -- explicitly encoded !
+
+IMPORTS Name FROM name IN name.asn;
+
+EXPORTS ORName ORAddress;
+
+ORAddressAndOrDirectoryName ::= ORName
+
+ORName ::= [APPLICATION 0] SEQUENCE {
+    address COMPONENTS OF ORAddress,
+    directory-name [0] Name OPTIONAL }
+
+ORAddress ::= SEQUENCE {
+    standard-attributes  StandardAttributes,
+    domain-defined-attributes DomainDefinedAttributes OPTIONAL,
+    extension-attributes ExtensionAttributes OPTIONAL }
+
+StandardAttributes ::= SEQUENCE {
+    country-name       CountryName OPTIONAL,
+    administration-domain-name AdministrationDomainName OPTIONAL,
+    network-address [0] NetworkAddress OPTIONAL,
+    terminal-identifier [1] TerminalIdentifier OPTIONAL,
+    private-domain-name [2] PrivateDomainName OPTIONAL,
+    organization-name   [3] OrganizationName OPTIONAL,
+    numeric-user-identifier [4] NumericUserIdentifier OPTIONAL,
+    personal-name           [5] PersonalName OPTIONAL,
+    organizational-unit-names [6] OrganizationalUnitNames OPTIONAL }
+
+CountryName ::= [APPLICATION 1] CHOICE {
+    x121-dcc-code  NumericString (SIZE (ub-country-name-numeric-length)),
+    iso-3166-alpha2-code PrintableString (SIZE (ub-country-name-alpha-length))}
+
+AdministrationDomainName ::= [APPLICATION 2] CHOICE {
+    numeric     NumericString (SIZE (0..ub-domain-name-length)),
+    printable   PrintableString (SIZE (0..ub-domain-name-length))}
+
+NetworkAddress ::= X121Address
+
+X121Address ::= NumericString (SIZE (1..ub-x121-address-length))
+
+TerminalIdentifier ::= PrintableString (SIZE (1..ub-terminal-id-length))
+
+PrivateDomainName ::= CHOICE {
+    numeric NumericString (SIZE (1..ub-domain-name-length)),
+    printable PrintableString (SIZE (1..ub-domain-name-length))}
+
+OrganizationName ::= PrintableString (SIZE (1..ub-organization-name-length))
+
+NumericUserIdentifier ::= NumericString (SIZE (1..ub-numeric-user-id-length))
+
+PersonalName ::= SET {
+    surname    [0] PrintableString (SIZE (1..ub-surname-length)),
+    given-name [1] PrintableString (SIZE (1..ub-given-name-length)) OPTIONAL,
+    initials   [2] PrintableString (SIZE (1..ub-initials-length)) OPTIONAL,
+    generational-qualifier [3] PrintableString (SIZE
+                             (1..ub-generational-qualifier-length)) OPTIONAL}
+
+OrganizationalUnitNames ::= SEQUENCE SIZE (1..ub-organizational-units) OF OrganizationalUnitName
+
+OrganizationalUnitName ::= PrintableString (SIZE (1..ub-organizational-unit-name-length))
+
+DomainDefinedAttributes ::= SEQUENCE SIZE (1..ub-domain-defined-attributes) OF DomainDefinedAttribute
+
+DomainDefinedAttribute ::= SEQUENCE {
+    type    PrintableString (SIZE (1..ub-domain-attribute-type-length)),
+    value   PrintableString (SIZE (1..ub-domain-attribute-value-length)) }
+
+ExtensionAttributes ::= SET SIZE (1..ub-extension-attributes) OF ExtensionAttribute
+
+ExtensionAttribute ::= SEQUENCE {
+   extension-attribute-type    [0] INTEGER } -- not really, just a dummy
+
+
+ub-country-name-numeric-length INTEGER ::= 3
+ub-country-name-alpha-length   INTEGER ::= 2
+ub-domain-name-length          INTEGER ::= 16
+ub-organization-name-length    INTEGER ::= 64
+ub-numeric-user-id-length      INTEGER ::= 32
+ub-surname-length              INTEGER ::= 40
+ub-given-name-length           INTEGER ::= 16
+ub-initials-length             INTEGER ::= 5
+ub-generational-qualifier-length INTEGER ::= 3
+ub-organizational-units        INTEGER ::= 4
+ub-organizational-unit-name-length INTEGER ::= 32
+ub-domain-defined-attributes   INTEGER ::= 4
+ub-domain-attribute-type-length INTEGER ::= 8
+ub-domain-attribute-value-length INTEGER ::= 128
+ub-extension-attributes        INTEGER ::= 256
+ub-x121-address-length         INTEGER ::= 15
+ub-terminal-id-length          INTEGER ::= 24
+
+
+END

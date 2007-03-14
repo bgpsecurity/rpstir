@@ -1,0 +1,57 @@
+-- Jan 23 2001 540E  */
+-- Jan 23 2001 GARDINER changed to Algorithms.asn
+-- Nov 13 2000 466E  */
+-- Nov 13 2000 GARDINER started
+-- sfcsid = "@(#)crlv2.asn 540E"
+-- File:     v2crl.asn
+-- Contents: ASN.1 specification for X.509 CRL (version 2)
+-- System:   PKIM development.
+-- Created:  20-Feb-1996
+-- Author:   nyang
+--
+-- Remarks:
+--
+-- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/v2crl.asn,v 1.3 1997/10/21 12:05:03 mcasagni Exp $ 
+--
+-- COPYRIGHT 1996 BBN Systems and Technologies, A Division of BBN Inc.
+-- 150 CambridgePark Drive
+-- Cambridge, Ma. 02140
+-- 617-873-4000
+--
+
+X509 DEFINITIONS ::= -- explicitly encoded !
+BEGIN
+ 
+IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
+        AuthorityKeyId, DistributionPointName, ReasonFlags, 
+        GeneralName, AltNames, CrlExtensions, CrlEntryExtensions
+	   FROM Extensions IN extensions.asn,
+	SerialNumber FROM SerialNumber IN serial_number.asn,
+	Name, RelativeDistinguishedName FROM Name IN name.asn;
+ 
+EXPORTS
+    CertificateRevocationList, CrlVersion, CRLEntry; 
+
+CertificateRevocationList ::= SIGNED SEQUENCE {
+    version     CrlVersion DEFAULT v1,
+                        -- if present, must be v2 
+    signature   AlgorithmIdentifier,
+    issuer      Name,
+    lastUpdate  ChoiceOfTime,
+    nextUpdate  ChoiceOfTime,
+    revokedCertificates SEQUENCE OF CRLEntry OPTIONAL,
+    extensions [0] CrlExtensions OPTIONAL }
+( CONSTRAINED BY { -- If any extensions, must be v2, if version , must be v2 -- } )
+
+CrlVersion ::=  INTEGER { v1(0), v2(1) } (v1 | v2 )
+
+CRLEntry ::= SEQUENCE {
+    userCertificate SerialNumber,
+    revocationDate  ChoiceOfTime ,
+    extensions      CrlEntryExtensions OPTIONAL}
+
+ChoiceOfTime :: = CHOICE {
+    utcTime         UTCTime,
+    generalTime     GeneralizedTime }
+
+

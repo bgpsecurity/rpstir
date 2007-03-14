@@ -1,0 +1,528 @@
+-- Jun 21 2001 672E  */
+-- Jun 21 2001 GARDINER commented out FUNCTION stuff for java
+-- May 21 2001 656E  */
+-- May 10 2001 GARDINER changed SBGP extensions, per C. Lynn
+-- Jan 23 2001 539E  */
+-- Jan 23 2001 GARDINER combined CMS version & S-BGP version
+-- Nov 13 2000 467E  */
+-- Nov 13 2000 GARDINER started
+-- sfcsid = "@(#)extensions.asn 672E"
+-- File:     extensions.asn
+-- Contents: ASN.1 specification for X.509 certificate (version 3)
+-- System:   PKIM development.
+-- Created:  1-nov-1996
+-- Author:   charlie/jduffy
+--
+-- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/extensions.asn,v 1.20 1997/11/12 16:27:29 mcasagni Exp $ 
+--
+-- COPYRIGHT 1996 BBN Systems and Technologies, A Division of BBN Inc.
+-- 150 CambridgePark Drive
+-- Cambridge, Ma. 02140
+-- 617-873-4000
+
+
+EXTENSIONS DEFINITIONS IMPLICIT TAGS ::= -- implicitly encoded !
+
+IMPORTS ORAddress FROM orname IN orname.asn, 
+        Name, RelativeDistinguishedName, DirectoryString FROM Name IN name.asn,
+        AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
+	SerialNumber FROM SerialNumber IN serial_number.asn;
+
+EXPORTS 
+      Extensions, AuthorityKeyId, KeyIdentifier, 
+      SubjectKeyIdentifier, KeyUsage, PrivateKeyUsagePeriod, 
+      CertificatePolicies, 
+      PolicyInformation, PolicyQualifierInfo, PolicyMappings,
+      CertPolicyId, AltNames, 
+      GeneralName, GeneralNames, Other_name,
+      SubjectDirectoryAttributes, 
+      BasicConstraints, NameConstraints, PolicyConstraints,
+      CrlExtensions, CRLExtension,
+      CRLDistributionPoints,
+      DistributionPoint, DistributionPointName, ReasonFlags,
+      IssuingDistPoint, DeltaCRLIndicator,
+      CrlEntryExtensions, CRLEntryExtension, CRLReason,
+      certificateType, merchantData, cardCertRequired, 
+      tunneling, setExtensions, ExtKeyUsageSyntax,
+      AuthorityInfoAccess, SBGPIpAddrBlock, ASNumberList, RouterIdentifier; --all
+ 
+Extensions ::= SEQUENCE OF Extension
+
+Extension ::= SEQUENCE     {
+    extnID     OBJECT IDENTIFIER TABLE ExtensionSet ,
+    critical   BOOLEAN DEFAULT FALSE,
+    extnValue  OCTET STRING  DEFINED BY extnID IN Extension,
+--    FUNCTION   void init_profile(void),
+--    FUNCTION   int override_profile,
+--    FUNCTION   int set_override_profile(int value),
+--    FUNCTION   int get_override_profile(void),
+--    FUNCTION   int extension_presence,
+--    FUNCTION   int set_extension_presence(int value),
+--    FUNCTION   int get_extension_presence(void),
+--    FUNCTION   int data_to_be_entered,
+--    FUNCTION   int set_data_to_be_entered(int value),
+--    FUNCTION   int get_data_to_be_entered(void),
+--    FUNCTION   int criticality,
+--    FUNCTION   int set_criticality(int value),
+--    FUNCTION   int get_criticality(void),
+--    FUNCTION   int has_been_profiled,
+--    FUNCTION   int set_has_been_profiled(int value),
+--    FUNCTION   int get_has_been_profiled(void) -- }
+--    (CONSTRAINED BY {
+	-- if override_profile is FALSE
+	-- and has_been_profiled is TRUE
+	-- extension_presence must not be DEPRECATED })
+
+-- definitions for extension_presence
+OPTIONAL-EXTENSION ::= 0
+MANDATORY-EXTENSION ::= 1
+DEPRECATED-EXTENSION ::= 2
+
+-- definitions for criticality
+NON-CRITICAL-EXTENSION ::= 0
+CRITICAL-EXTENSION ::= 1
+
+ID ::= OBJECT IDENTIFIER
+id-ce                           ID ::= { 2.5.29 }
+
+id-subjectDirectoryAttributes   ID ::= { id-ce 9 }
+id-subjectKeyIdentifier         ID ::= { id-ce 14 } 
+id-keyUsage                     ID ::= { id-ce 15 }
+id-privateKeyUsagePeriod        ID ::= { id-ce 16 }
+id-subjectAltName               ID ::= { id-ce 17 }
+id-issuerAltName                ID ::= { id-ce 18 }
+id-basicConstraints             ID ::= { id-ce 19 } 
+id-cRLNumber                    ID ::= { id-ce 20 }
+id-reasonCode	                ID ::= { id-ce 21 } 
+id-instructionCode              ID ::= { id-ce 23 }
+id-invalidityDate               ID ::= { id-ce 24 }
+id-deltaCRLIndicator            ID ::= { id-ce 27 }
+id-issuingDistributionPoint     ID ::= { id-ce 28 }
+id-certificateIssuer            ID ::= { id-ce 29 }
+id-nameConstraints              ID ::= { id-ce 30 } 
+id-cRLDistributionPoints        ID ::= { id-ce 31 } 
+id-certificatePolicies          ID ::= { id-ce 32 } 
+id-policyMappings               ID ::= { id-ce 33 } 
+id-authKeyId                    ID ::= { id-ce 35 }
+id-policyConstraints            ID ::= { id-ce 36 } 
+id-extKeyUsage                  ID ::= { id-ce 37 }
+
+id-set-certExt                  ID ::= { 2.23.42.7 }
+ 
+id-set-hashedRootKey		ID ::= { id-set-certExt 0 }
+id-set-certificateType		ID ::= { id-set-certExt 1 }
+id-set-merchantData		ID ::= { id-set-certExt 2 }
+id-set-cardCertRequired		ID ::= { id-set-certExt 3 }
+id-set-tunneling		ID ::= { id-set-certExt 4 }
+id-set-setExtensions		ID ::= { id-set-certExt 5 }
+id-set-setQualifier		ID ::= { id-set-certExt 6 }
+
+-- PKIX Object Identifiers
+id-pkix                         ID ::= { 1.3.6.1.5.5.7 }
+id-pkix-pe                      ID ::= { id-pkix 1 }
+id-pkix-qt                      ID ::= { id-pkix 2 }
+id-pkix-kp                      ID ::= { id-pkix 3 }
+id-pkix-it                      ID ::= { id-pkix 4 }
+id-pkix-ad                      ID ::= { id-pkix 48 }
+id-pkix-authorityInfoAccess     ID ::= { id-pkix-pe 1 }
+id-pkix-cps                     ID ::= { id-pkix-qt 1 }
+id-pkix-unotice                 ID ::= { id-pkix-qt 2 }
+id-pkix-serverAuth              ID ::= { id-pkix-kp 1 }
+id-pkix-clientAuth              ID ::= { id-pkix-kp 2 }
+id-pkix-codeSigning             ID ::= { id-pkix-kp 3 }
+id-pkix-emailProtection         ID ::= { id-pkix-kp 4 }
+id-pkix-ipsecEndSystem          ID ::= { id-pkix-kp 5 }
+id-pkix-ipsecTunnel             ID ::= { id-pkix-kp 6 }
+id-pkix-ipsecUser               ID ::= { id-pkix-kp 7 }
+id-pkix-timeStamping            ID ::= { id-pkix-kp 8 }
+id-pkix-caProtEncCert           ID ::= { id-pkix-it 1 }
+id-pkix-signKeyPairTypes        ID ::= { id-pkix-it 2 }
+id-pkix-encKeyPairTypes         ID ::= { id-pkix-it 3 }
+id-pkix-preferredSymmAlg        ID ::= { id-pkix-it 4 }
+id-pkix-caKeyUpdateInfo         ID ::= { id-pkix-it 5 }
+id-pkix-currentCRL              ID ::= { id-pkix-it 6 }
+id-pkix-ocsp                    ID ::= { id-pkix-ad 1 }
+id-pkix-caIssuers               ID ::= { id-pkix-ad 2 }
+id-pe-sbgp-ipAddrBlock          ID ::= { id-pkix-pe 7 }
+id-pe-sbgp-autonomousSysNum     ID ::= { id-pkix-pe 8 }
+id-pe-sbgp-routerIdentifier     ID ::= { id-pkix-pe 9 }
+
+
+ExtensionSet ::= TABLE {
+    subjectDirectoryAttributes   id-subjectDirectoryAttributes  
+                                                   SubjectDirectoryAttributes,
+    subjectKeyIdentifier   id-subjectKeyIdentifier   SubjectKeyIdentifier,
+    keyUsage		   id-keyUsage		     KeyUsage,
+    privateKeyUsagePeriod  id-privateKeyUsagePeriod  PrivateKeyUsagePeriod,
+    subjectAltName         id-subjectAltName         AltNames,
+    issuerAltName          id-issuerAltName          AltNames,
+    basicConstraints       id-basicConstraints       BasicConstraints,
+    nameConstraints        id-nameConstraints        NameConstraints,
+    certificatePolicies    id-certificatePolicies    CertificatePolicies,
+    policyMappings	   id-policyMappings	     PolicyMappings,
+    policyConstraints      id-policyConstraints      PolicyConstraints,
+    cRLDistributionPoints  id-cRLDistributionPoints  CRLDistributionPoints,
+    authKeyId              id-authKeyId              AuthorityKeyId,
+    extKeyUsage            id-extKeyUsage            ExtKeyUsageSyntax,
+    certificateType	   id-set-certificateType    CertificateType,
+    merchantData	   id-set-merchantData       MerchantData,
+    cardCertRequired	   id-set-cardCertRequired   CardCertRequired,
+    tunneling		   id-set-tunneling	     Tunneling,
+    setExtensions	   id-set-setExtensions	     SetExtensions,
+    authorityInfoAccess    id-pkix-authorityInfoAccess 
+                                                  AuthorityInfoAccessSyntax,
+    ipAddressBlock         id-pe-sbgp-ipAddrBlock    SBGPIpAddrBlock,
+    autonomousSysNum       id-pe-sbgp-autonomousSysNum SBGPASNum,
+    routerId               id-pe-sbgp-routerIdentifier RouterIdentifier,
+    other                  0xFFFF                    NOTASN1 }
+
+AuthorityKeyId ::= SEQUENCE {
+    keyIdentifier        [0] KeyIdentifier OPTIONAL,
+    certIssuer           [1] GeneralNames OPTIONAL,
+    certSerialNumber     [2] SerialNumber OPTIONAL }
+    (CONSTRAINED BY { 
+    -- certIssuer and certSerialNumber constitute a logical pair,
+    -- and if either is present both must be present.  Either this
+    -- pair or the keyIdentifier field or all shall be present. -- })
+
+KeyIdentifier ::= OCTET STRING
+ 
+SubjectKeyIdentifier ::= KeyIdentifier
+
+KeyUsage ::= BIT STRING {
+    digitalSignature	    (0),
+    nonRepudiation	    (1),
+    keyEncipherment	    (2),
+    dataEncipherment	    (3),
+    keyAgreement	    (4),
+    keyCertSign		    (5),
+    cRLSign	            (6),
+    encipherOnly            (7),
+    decipherOnly            (8) }
+
+PrivateKeyUsagePeriod ::= SEQUENCE {
+    notBefore	    [0] GeneralizedTime	    OPTIONAL,
+    notAfter	    [1] GeneralizedTime     OPTIONAL } ( CONSTRAINED BY {
+         --at least one component shall be present -- }  )
+
+CertificatePolicies ::=  SEQUENCE OF PolicyInformation
+
+PolicyInformation ::= SEQUENCE {
+    policyIdentifier	CertPolicyId,
+    policyQualifiers	SEQUENCE OF PolicyQualifierInfo    OPTIONAL }
+
+CertPolicyId ::= OBJECT IDENTIFIER
+
+PolicyQualifierInfo ::= SEQUENCE {
+    policyQualifierId   OBJECT IDENTIFIER TABLE PolicyQualifierInfoSet,
+    qualifier           ANY DEFINED BY policyQualifierId     OPTIONAL}
+
+PolicyQualifierInfoSet ::= TABLE {
+    cPSuri           id-pkix-cps         CPSuri,
+    userNotice       id-pkix-unotice     UserNotice,
+    setQualifier     id-set-setQualifier SetPolicyQualifier,
+    any		     0xFFFF              ANY }
+
+CPSuri ::= IA5String
+
+UserNotice ::= SEQUENCE {
+    noticeRef     NoticeReference OPTIONAL,
+    explicitText  DisplayText OPTIONAL }
+
+NoticeReference ::= SEQUENCE {
+    organization  IA5String,
+    noticeNumbers SEQUENCE OF INTEGER }
+
+DisplayText ::= CHOICE {
+    visibleString VisibleString,
+    bmpString     BMPString }
+
+SetPolicyQualifier ::= SEQUENCE {
+    rootQualifier       SETQualifier,
+    additionalPolicies  AdditionalPolicies OPTIONAL }
+
+AdditionalPolicies ::= SEQUENCE SIZE(1..3) OF AdditionalPolicy
+
+AdditionalPolicy ::= SEQUENCE {
+    policyOID        CertPolicyId OPTIONAL,
+    policyQualifier  SETQualifier OPTIONAL,
+    policyAddedBy    CertificateType }
+
+PolicyMappings ::= SEQUENCE OF SEQUENCE {
+    issuerDomainPolicy	   CertPolicyId,
+    subjectDomainPolicy	   CertPolicyId }
+
+AltNames ::= GeneralNames
+
+GeneralNames ::= SEQUENCE OF GeneralName
+
+GeneralName ::= CHOICE {
+    otherName       [0] Other_name,
+    rfc822Name      [1] IA5String,
+    dNSName         [2] IA5String,
+    x400Address     [3] ORAddress,
+    directoryName   [4] Name,
+    ediPartyName    [5] EDIPartyName,
+    url             [6] IA5String,
+    iPAddress	    [7] OCTET STRING,
+    registeredID    [8] OBJECT IDENTIFIER }
+
+
+Other_name ::= SEQUENCE {
+    type_id OBJECT IDENTIFIER TABLE Other_nameTable,
+    value   ANY DEFINED BY type_id }
+
+Other_nameTable ::= TABLE {
+    any 0xFFFF ANY }
+
+EDIPartyName ::= SEQUENCE {
+    nameAssigner	[0]	DirectoryString	   OPTIONAL,
+    partyName		[1]	DirectoryString }
+
+SubjectDirectoryAttributes ::= SEQUENCE OF Attribute
+
+Attribute ::= SEQUENCE {
+    type     OBJECT IDENTIFIER TABLE AttributeTable,
+    values   SET (SIZE(1..20)) OF ANY DEFINED BY type }
+
+AttributeTable ::= TABLE {
+	any                 0xFFFF                  ANY }
+
+BasicConstraints ::= SEQUENCE {
+    cA			    BOOLEAN DEFAULT FALSE,
+    pathLenConstraint	    INTEGER 	OPTIONAL }
+
+NameConstraints ::= SEQUENCE {
+    permittedSubtrees	    [0]    GeneralSubtrees    OPTIONAL,
+    excludedSubtrees	    [1]    GeneralSubtrees    OPTIONAL }
+
+GeneralSubtrees ::= SEQUENCE OF GeneralSubtree
+
+GeneralSubtree ::= SEQUENCE {
+    base	GeneralName,
+    minimum	[0]	BaseDistance	DEFAULT 0,
+    maximum	[1]	BaseDistance	OPTIONAL }
+
+BaseDistance ::= INTEGER
+
+PolicyConstraints ::= SEQUENCE {
+    requireExplicitPolicy	[0]	SkipCerts	OPTIONAL,
+    inhibitPolicyMapping	[1]	SkipCerts	OPTIONAL }
+
+SkipCerts ::= INTEGER
+
+CRLDistributionPoints ::= SEQUENCE OF DistributionPoint 
+(CONSTRAINED BY { 
+-- There must be at least one member of this SEQUENCE.  The first
+-- member must have the reasons component absent. --} )
+
+
+DistributionPoint ::= SEQUENCE {
+    distributionPoint   [0]    DistributionPointName   OPTIONAL,
+    reasons             [1]    ReasonFlags             OPTIONAL,
+    cRLIssuer		[2]    GeneralNames            OPTIONAL }
+
+DistributionPointName ::= CHOICE {
+    fullName                    [0]     GeneralNames,
+    nameRelativeToCRLIssuer     [1]     RelativeDistinguishedName}
+ 
+ReasonFlags ::= BIT STRING {
+    unused               (0),
+    keyCompromise        (1),
+    caCompromise         (2),
+    affiliationChanged   (3),
+    superseded           (4),
+    cessationOfOperation (5),
+    certificateHold      (6) }
+
+CrlExtensions ::= SEQUENCE OF CRLExtension
+ 
+CRLExtension ::= SEQUENCE     {
+    extnID      OBJECT IDENTIFIER TABLE CRLExtensionSet ,
+    critical    BOOLEAN DEFAULT FALSE,  
+    extnValue   OCTET STRING  DEFINED BY extnID IN CRLExtension }
+
+CRLExtensionSet ::= TABLE {
+    authKeyId                   id-authKeyId                 AuthorityKeyId,
+    issuerAltName               id-issuerAltName             AltNames,
+    cRLNumber                   id-cRLNumber                 CRLNumber,
+    issuingDistributionPoint    id-issuingDistributionPoint  IssuingDistPoint,
+    deltaCRLIndicator		id-deltaCRLIndicator	     DeltaCRLIndicator,
+    other                       0xFFFF                       NOTASN1 }
+ 
+CRLNumber ::= INTEGER
+
+IssuingDistPoint ::= SEQUENCE {
+    distributionPoint     [0]    DistributionPointName OPTIONAL,
+    -- if name absent, CRL shall contain all revocations
+    -- by the CA consistent with the qualifiers below
+    onlyContainsUserCerts [1]    BOOLEAN DEFAULT FALSE,
+    onlyContainsCACerts   [2]    BOOLEAN DEFAULT FALSE,
+    onlySomeReasons       [3]    ReasonFlags OPTIONAL,
+    -- if absent, contains all revocations regardless of reason-- 
+    indirectCRL           [4]    BOOLEAN DEFAULT FALSE }
+
+DeltaCRLIndicator ::= BaseCRLNumber
+
+BaseCRLNumber ::= CRLNumber
+
+CrlEntryExtensions ::= SEQUENCE OF CRLEntryExtension
+ 
+CRLEntryExtension ::= SEQUENCE     {
+    extnID OBJECT IDENTIFIER TABLE CRLEntryExtensionSet ,
+    critical BOOLEAN DEFAULT FALSE  ,
+    extnValue OCTET STRING  DEFINED BY extnID IN CRLEntryExtension }
+
+CRLEntryExtensionSet ::= TABLE {
+    reasonCode          id-reasonCode           CRLReason,
+    invalidityDate      id-invalidityDate       GeneralizedTime,
+    instructionCode     id-instructionCode      OBJECT IDENTIFIER,
+    certificateIssuer	id-certificateIssuer    GeneralNames,
+    other               0xFFFF                  NOTASN1 }
+
+CRLReason ::= ENUMERATED {
+    unspecified          (0),
+    keyCompromised       (1),
+    caCompromised        (2),
+    affiliationChanged   (3),
+    superseded           (4),
+    cessationOfOperation (5),
+    certificateHold      (6),
+    certHoldRelease      (7),
+    removeFromCRL        (8) }
+
+
+ub-countryName	    INTEGER ::=	  50
+ub-cityName	    INTEGER ::=	  50
+ub-merName	    INTEGER ::=	  25
+ub-postalCode	    INTEGER ::=	  14
+ub-stateProvince    INTEGER ::=	  25
+ub-terseStatement   INTEGER ::= 2048
+ub-RFC1766-language INTEGER ::=   35
+ub-MerchantID	    INTEGER ::=	  30
+ub-url              INTEGER ::=  512  -- from SetMessage
+
+SETString { INTEGER:maxSIZE } ::= CHOICE {
+      visibleString   VisibleString (SIZE(1..maxSIZE)),
+      bmpString	      BMPString (SIZE(1..maxSIZE))
+}
+
+MerchantID ::= SETString { ub-MerchantID }
+
+BIN ::= NumericString (SIZE(6))
+
+CountryCode ::= INTEGER (1..999)
+
+Language ::= VisibleString (SIZE(1..ub-RFC1766-language))
+
+CertificateType::= BIT STRING {
+   card  (0),
+   mer   (1),
+   pgwy  (2),
+   cca   (3),
+   mca   (4),
+   pca   (5),
+   gca   (6),
+   bca   (7),
+   rca   (8),
+   acq   (9)
+}
+
+MerchantData::= SEQUENCE {
+    merID               MerchantID,
+    merAcquirerBIN      BIN,
+    merNameSeq          MerNameSeq,
+    merCountry          CountryCode,
+    merAuthFlag         BOOLEAN DEFAULT TRUE
+}
+
+MerNameSeq ::= SEQUENCE SIZE(1..32) OF MerNames
+
+MerNames ::= SEQUENCE {
+  language      [0] Language OPTIONAL,
+  name          [1] EXPLICIT SETString { ub-merName },
+  city          [2] EXPLICIT SETString { ub-cityName },
+  stateProvince [3] EXPLICIT SETString { ub-stateProvince } OPTIONAL,
+  postalCode    [4] EXPLICIT SETString { ub-postalCode } OPTIONAL,
+  countryName   [5] EXPLICIT SETString { ub-countryName }
+}
+
+CardCertRequired ::= BOOLEAN
+
+Tunneling::= SEQUENCE {
+   tunneling 	BOOLEAN DEFAULT TRUE,
+   tunnelAlgIDs TunnelAlg
+}
+
+TunnelAlg ::=  SEQUENCE OF ID
+
+SetExtensions::= SEQUENCE OF ID
+
+-- URL comes from SetMessage
+URL ::= VisibleString (SIZE(1..ub-url))
+
+SETQualifier ::= SEQUENCE {
+--    policyDigest   DetachedDigest OPTIONAL,
+    terseStatement SETString {ub-terseStatement} OPTIONAL,
+    policyURL      [0] URL OPTIONAL,
+    policyEmail     [1] URL OPTIONAL }
+ 
+KeyPurposeId ::= OBJECT IDENTIFIER
+
+ExtKeyUsageSyntax ::= SEQUENCE OF KeyPurposeId
+
+AuthorityInfoAccessSyntax  ::=  SEQUENCE OF AccessDescription
+
+AccessDescription  ::=  SEQUENCE {
+     accessMethod          OBJECT IDENTIFIER,
+     accessLocation        GeneralName  }
+
+SBGPIpAddrBlock    ::= SEQUENCE OF IPAddressFamily
+
+IPAddressFamily  ::= SEQUENCE {
+      addressFamily       OCTET STRING (SIZE(2..3)),
+      ipAddressChoice     IPAddressChoice}
+
+IPAddressChoice ::= CHOICE
+    {
+    inherit             BOOLEAN,
+    addressesOrRanges   SEQUENCE OF IPAddressOrRange
+    }
+
+IPAddressOrRange   ::= CHOICE {
+      addressPrefix   IPAddress,
+      addressRange    IPAddressRange }
+
+IPAddressRange ::= SEQUENCE {
+	min     IPAddress,
+	max     IPAddress }
+
+IPAddress ::= BIT STRING
+
+SBGPASNum     ::= SEQUENCE {
+    asnum   [0] ASIdentifierChoice OPTIONAL,
+    rdi     [1] ASIdentifierChoice OPTIONAL}
+
+ASIdentifierChoice ::= CHOICE
+    {
+    inherit             BOOLEAN, -- inherit from issuer
+    asNumbersOrRanges   SEQUENCE OF ASNumberOrRange
+    }
+
+ASNumberOrRange ::= CHOICE {
+    num     ASNumber,
+    range   ASRange }
+
+ASRange ::= SEQUENCE {
+    min ASNumber,
+    max ASNumber }
+
+ASNumber ::= INTEGER
+
+RouterIdentifier ::= SEQUENCE OF OwningASNumber
+
+OwningASNumber   ::= CHOICE {
+      asnum     [0] INTEGER,     -- autonomous system number
+      rdi       [1] INTEGER }    -- routing domain identifier
+
+

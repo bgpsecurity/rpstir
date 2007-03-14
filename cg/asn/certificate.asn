@@ -1,0 +1,112 @@
+-- Jun 21 2001 672E  */
+-- Jun 21 2001 GARDINER commented out FUNCTION stuff for java
+-- Jan 23 2001 540E  */
+-- Jan 23 2001 GARDINER changed to Algorithms.asn
+-- Nov 13 2000 466E  */
+-- Nov 13 2000 GARDINER started
+-- sfcsid = "@(#)certificate.asn 672E"
+-- File:     certificate.asn
+-- Contents: ASN.1 specification for X.509 certificate (version 3)
+-- System:   PKIM development.
+-- Created:  13-Feb-1996
+-- Author:   charlie/nyang
+--
+-- Remarks: Changed to v3 1/24/96 by Charlie Gardiner
+--
+-- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/certificate.asn,v 1.4 1997/10/21 19:02:45 mcasagni Exp $ 
+--
+-- COPYRIGHT 1996 BBN Systems and Technologies, A Division of BBN Inc.
+-- 150 CambridgePark Drive
+-- Cambridge, Ma. 02140
+-- 617-873-4000
+
+
+DEFINITIONS ::= -- explicitly encoded !
+
+IMPORTS ORAddress FROM orname IN orname.asn, 
+        Name FROM Name IN name.asn,
+        AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
+	SerialNumber FROM SerialNumber IN serial_number.asn,
+	Extensions FROM Extensions IN extensions.asn;
+
+EXPORTS 
+      CertificationPath, CertificatePair, Certificate,  Version, 
+      Validity, SubjectPublicKeyInfo, Certificates, UniqueIdentifier,
+      ForwardCertificationPath, CrossCertificates, CertificateValidityDate;
+
+CertificationPath ::= SEQUENCE {
+	userCertificate         Certificate,
+	theCACertificates      SEQUENCE OF CertificatePair OPTIONAL }
+
+CertificatePair ::= SEQUENCE {
+    forward                     [0] Certificate OPTIONAL,
+    reverse                     [1] Certificate OPTIONAL }
+
+
+Certificate ::= SIGNED SEQUENCE {
+     	version	[0] Version DEFAULT v1,
+	serialNumber	SerialNumber,
+	signature       AlgorithmIdentifier,
+	issuer		Name,
+	validity	Validity,
+	subject		Name,
+	subjectPublicKeyInfo	SubjectPublicKeyInfo,
+	issuerUniqueID  [1] IMPLICIT UniqueIdentifier OPTIONAL,
+	subjectUniqueID [2] IMPLICIT UniqueIdentifier OPTIONAL,
+        extensions      [3] Extensions OPTIONAL,
+--	  FUNCTION	  void init_profile(void),
+--	  FUNCTION	  int override_profile,
+--	  FUNCTION	  int set_override_profile(int value),
+--	  FUNCTION	  int get_override_profile(void),
+--	  FUNCTION	  int profile_type,
+--	  FUNCTION	  int set_profile_type(int value),
+--	  FUNCTION	  int get_profile_type(void),
+--	  FUNCTION	  int apply_profile(void),
+--	  FUNCTION	  int test_profile(void) -- }
+(CONSTRAINED BY { -- if any issuerUniqueID or subjectUniqueID, must be v2
+-- or v3. If any extensions, must be v3 -- })
+
+-- definitions for profile_type
+PKIX-EE 	::= 1		-- PKIX End Entity
+PKIX-PCA 	::= 2		-- PKIX Policy CA
+PKIX-CA 	::= 3		-- PKIX CA
+MISSI-CROSSCERT	::= 4		-- MISSI Cross Certificate
+MISSI-EE 	::= 5		-- MISSI End Entity
+MISSI-SUB-CA 	::= 6		-- MISSI Subordinate CA
+MISSI-CA 	::= 7		-- MISSI CA
+MISSI-PCA 	::= 8		-- MISSI Policy CA
+MISSI-PAA 	::= 9		-- MISSI Policy Approving Authority
+SET-CARD-EE	::= 10		-- SET Card End Entity
+SET-MERCHANT-EE ::= 11		-- SET Merchant/Acquirer End Entity
+SET-CARD-CA 	::= 12		-- SET Card End Entity
+SET-MERCHANT-CA ::= 13		-- SET Merchant/Acquirer CA 
+SET-GEOPOL-CA	::= 14		-- SET Geo-political CA 
+SET-BRAND-CA 	::= 15		-- SET Brand CA 
+SET-ROOT-CA 	::= 16		-- SET Root CA
+
+UniqueIdentifier ::= BIT STRING
+
+Version ::=  INTEGER { v1(0), v2(1), v3(2) } (v1 | v2 | v3)
+
+Validity ::= SEQUENCE {
+	notBefore           CertificateValidityDate,
+	notAfter            CertificateValidityDate }
+
+CertificateValidityDate ::= CHOICE {
+       utcTime              UTCTime,
+       generalTime          GeneralizedTime }
+
+SubjectPublicKeyInfo ::= SEQUENCE {
+	algorithm           AlgorithmIdentifier,
+        subjectPublicKey    BIT STRING }
+
+--	subjectPublicKey    BIT STRING DEFINED BY algorithm.algorithm OPTIONAL}
+
+Certificates ::= SEQUENCE {
+        certificate         Certificate,
+        certificationPath   ForwardCertificationPath OPTIONAL}
+
+ForwardCertificationPath ::= SEQUENCE OF CrossCertificates
+
+CrossCertificates ::= SET OF Certificate
+

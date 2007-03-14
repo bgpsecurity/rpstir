@@ -1,0 +1,1 @@
+gcc -Wall dump.c asn.c asn_dump.c util.c -o dump

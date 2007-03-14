@@ -1,0 +1,27 @@
+-- Nov 13 2000 467E  */
+-- Nov 13 2000 GARDINER started
+-- sfcsid = "@(#)serial_number.asn 467E"
+-- File:     serial_number.asn
+-- Contents: ASN.1 specification for serial number
+-- System:   PKIM development.
+-- Created:  4-Nov-1996
+-- Author:   charlie/jduffy
+--
+-- Remarks: Workaround for recursive include compiler problem
+--	    serial number needed by extensions.h and certificates.h
+--
+-- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/serial_number.asn,v 1.2 1997/09/02 02:25:21 dmoses Exp $ 
+--
+-- COPYRIGHT 1996 BBN Systems and Technologies, A Division of BBN Inc.
+-- 150 CambridgePark Drive
+-- Cambridge, Ma. 02140
+-- 617-873-4000
+
+
+DEFINITIONS ::= -- explicitly encoded !
+
+EXPORTS 
+      SerialNumber;
+
+SerialNumber ::= INTEGER
+
