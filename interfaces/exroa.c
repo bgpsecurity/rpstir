@@ -1,25 +1,36 @@
 #include "roa.h"
 
-ROA *roaFromFile(char *fname, int fmt, int doval, int *errp);
+int roaFromFile(char *fname, int fmt, int doval, ROA **r);
 
 /*
   Read in a ROA from a file and potentially perform validation.
   "fname" is the name of the file containing the putative ROA.
-  If "fmt" is 0 this function attempts to intuit the file format
-  based on the first CR or LF delimited line in the file and also
-  the filename; if "fmt" is non-zero then it is an OpenSSL enum value
-  specifying the file format (binary DER or PEM encoded DER).
+  "fmt" is an OpenSSL enum value indicating if the output is
+  to be DER or PEM encoded DER. The filename suffix should match
+  the choice of format (".roa" or ".roa.pem" respectively), but is
+  not required to.
   
   If "doval" is any nonzero value then the ROA will also be semantically
   validated using all steps that do not require access to the database;
   if "doval" is 0 only ASN.1 syntatic validation will be performed.
 
   On success a ROA data structure, as defined in roa.h, is returned
-  and errp is set to 0.  On failure NULL is returned and errp is
-  set to a negative error code.
+  in "r" and the function returns 0.  On failure NULL is placed into "r" and
+  the function returns a negative error code.
 
-  The non-NULL return from this function is allocated memory that
-  must be freed by a call to roaFree().
+  If "r" is non-NULL then it represents allocated memory that must be freed
+  by a call to roaFree().
+*/
+
+int roaFromConfig(char *fname, int doval, ROA **r);
+
+/*
+  This function is similar to the previous function, except that it
+  expects the file named in "fname" to be an OpenSSL style config file
+  specifying a ROA to be generated.
+
+  On success this function returns 0; on failure it returns a negative
+  error code.
 */
 
 int roaToFile(ROA *r, char *fname, int fmt);
@@ -27,7 +38,8 @@ int roaToFile(ROA *r, char *fname, int fmt);
 /*
   This function is the inverse of the previous function.  The ROA
   defined by "r" is written to the file named "fname" using the format
-  "fmt".  If "fmt" is 0 the output form is the default (PEM encoded DER).
+  "fmt".  "fmt" must specify either DER or PEM encoded DER. The filename
+  suffix should match the format (but is not required to).
 
   On success this function returns 0; on failure it returns a negative
   error code.
