@@ -276,7 +276,49 @@ static int createop(scmcon *conp, scm *scmp)
   return(sta);
 }
 
-static int create2op(scmcon *conp, scm *scmp, char *topdir)
+// burlingame count function
+
+static int burlc(scmcon *conp, scmsrcha *s, int cnt)
+{
+  (void)printf("Row count is %d\n", cnt);
+  return(0);
+}
+
+static int burlv(scmcon *conp, scmsrcha *s, int idx)
+{
+  TIMESTAMP_STRUCT *ts;
+  int i;
+
+  (void)printf("Burlv called with idx %d\n", idx);
+  for(i=0;i<s->nused;i++)
+    {
+      (void)printf("\t%s\t", s->vec[i].colname);
+      if ( s->vec[i].avalsize > 0 )
+	{
+	  switch ( s->vec[i].sqltype )
+	    {
+	    case SQL_C_ULONG:
+	      (void)printf("%d\n", *(int *)(s->vec[i].valptr));
+	      break;
+	    case SQL_C_CHAR:
+	      (void)printf("%s\n", (char *)(s->vec[i].valptr));
+	      break;
+	    case SQL_C_TIMESTAMP:
+	      ts = (TIMESTAMP_STRUCT *)(s->vec[i].valptr);
+	      (void)printf("%d:%d:%d %d %d %d\n",
+			   ts->hour, ts->minute, ts->second,
+			   ts->day, ts->month, ts->year);
+	      break;
+	    default:
+	      (void)printf("huh\n");
+	      break;
+	    }
+	}
+    }
+  return(0);
+}
+
+static int create2op(scm *scmp, scmcon *conp, char *topdir)
 {
   static scmkva aone;
   static scmkv  one;
@@ -322,6 +364,54 @@ static int create2op(scmcon *conp, scm *scmp, char *topdir)
     (void)fprintf(stderr, "Init metadata table failed: %s\n",
 		  geterrorscm(conp));
   free((void *)tdir);
+// burlingame code
+  {
+    unsigned int iii = 0;
+    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &iii);
+    if ( sta == 0 )
+      {
+	(void)printf("Id is %u\n", iii);
+	sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 57);
+	if ( sta == 0 )
+	  {
+	    unsigned int jjj;
+	    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &jjj);
+	    (void)printf("New id is %u\n", jjj);
+	    if ( sta == 0 )
+	      {
+		scmsrcha *narr;
+
+		narr = newsrchscm("burlingame", 10);
+		(void)printf("Search array is 0x%x\n", (unsigned)narr);
+		if ( narr != NULL )
+		  {
+		    sta = addcolsrchscm(narr, "rootdir", SQL_C_CHAR, 1024);
+		    if ( sta == 0 )
+		      sta = addcolsrchscm(narr, "flags", SQL_C_ULONG,
+					  sizeof(int));
+		    if ( sta == 0 )
+		      sta = addcolsrchscm(narr, "cert_max", SQL_C_ULONG,
+					  sizeof(int));
+		    if ( sta == 0 )
+		      sta = addcolsrchscm(narr, "local_id", SQL_C_ULONG,
+					  sizeof(int));
+		    if ( sta == 0 )
+		      sta = addcolsrchscm(narr, "inited", SQL_C_TIMESTAMP,
+					  sizeof(TIMESTAMP_STRUCT));
+		    if ( sta == 0 )
+		      sta = addcolsrchscm(narr, "dir_max", SQL_C_ULONG,
+					  sizeof(int));
+		    if ( sta == 0 )
+		      {
+			sta = searchscm(conp, mtab, narr, burlc, burlv,
+					SCM_SRCH_DOCOUNT|SCM_SRCH_DOVALUE_ALWAYS);
+			(void)printf("Search returns %d\n", sta);
+		      }
+		  }
+	      }
+	  }
+      }
+  }
   return(sta);
 }
 
@@ -566,7 +656,7 @@ int main(int argc, char **argv)
 */
   if ( do_create > 0 )
     {
-      sta = create2op(realconp, scmp, topdir);
+      sta = create2op(scmp, realconp, topdir);
       if ( sta < 0 )
 	{
 	  disconnectscm(realconp);

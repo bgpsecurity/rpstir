@@ -11,106 +11,6 @@
 #include "scmf.h"
 
 #ifdef NOTDEF
-#ifdef WINDOWS
-#include <windows.h>
-#else  // WINDOWS
-#include <memory.h>
-#include <time.h>
-#endif // WINDOWS
-
-// do an SQL statement operation
-
-static void docatalog(SQLHSTMT h, char *stm, char *what)
-{
-  SQLINTEGER  istm;
-  SQLRETURN   ret;
-
-  istm = strlen(stm);
-  ret = SQLExecDirect(h, (SQLCHAR *)stm, istm);
-  if ( SQLOK(ret) )
-    {
-      (void)printf("%s ok\n", what);
-      istm = 0;
-      ret = SQLRowCount(h, &istm);
-      if ( SQLOK(ret) )
-	(void)printf("Rows affected = %d\n", (int)istm);
-    }
-}
-
-// drop the custom table
-
-static void drop(SQLHSTMT h)
-{
-  docatalog(h,
-	    "DROP TABLE IF EXISTS my_odbc_net",
-	    "Conditional drop");
-}
-
-// create the custom table
-
-static void create(SQLHSTMT h)
-{
-  docatalog(h,
-	    "CREATE TABLE my_odbc_net(id int, name varchar(20), idb bigint)",
-	    "Create");
-}
-
-// add a variable value pair with a 64-bit timestamp
-
-#ifdef WINDOWS
-
-static void add(SQLHSTMT h, int v1, char *v2)
-{
-  LARGE_INTEGER large;
-  FILETIME ft;
-  char tmp[512];
-
-  GetSystemTimeAsFileTime(&ft);
-  large.LowPart = ft.dwLowDateTime;
-  large.HighPart = ft.dwHighDateTime;
-//      (void)sprintf(tmp, "INSERT INTO my_odbc_net (id, name, idb) VALUES (%d, '%s', %d)",
-  (void)sprintf(tmp, "INSERT INTO my_odbc_net VALUES (%d, '%s', %I64d)",
-                v1, v2, large.QuadPart);
-  docatalog(h, tmp, "Add");
-}
-
-// windows does not have sleep(sec), it has Sleep(ms)
-
-static void sleep(int s)
-{
-  Sleep(s*1000);
-}
-
-#else  // WINDOWS
-
-static void add(SQLHSTMT h, int v1, char *v2)
-{
-  unsigned long long large;
-  struct timespec tp;
-  char tmp[512];
-
-  clock_gettime(CLOCK_REALTIME, &tp);
-  large = tp.tv_sec;
-  large *= (unsigned long long)1000000000;
-  large += tp.tv_nsec;
-//      (void)sprintf(tmp, "INSERT INTO my_odbc_net (id, name, idb) VALUES (%d, '%s', %d)",
-  (void)sprintf(tmp, "INSERT INTO my_odbc_net VALUES (%d, '%s', %llu)",
-                v1, v2, large);
-  docatalog(h, tmp, "Add");
-}
-
-#endif // WINDOWS
-
-// update a column value to another value
-
-static void update(SQLHSTMT h, int v1, int newv1)
-{
-  char tmp[512];
-
-  (void)sprintf(tmp, "UPDATE my_odbc_net SET id=%d WHERE id=%d",
-                newv1, v1);
-  docatalog(h, tmp, "Update");
-}
 
 // count the number of rows in the table
 
@@ -145,47 +45,6 @@ static void count(SQLHSTMT h)
   if ( ! SQLOK(ret) )
     return;
   (void)printf("Count = %lu\n", ival);
-  SQLCloseCursor(h);
-}
-
-// query all rows
-
-static void query(SQLHSTMT h)
-{
-  SQLINTEGER field1;
-  SQLCHAR    field2[256];
-  SQLBIGINT  field3;
-  SQLINTEGER field1len;
-  SQLINTEGER field2len;
-  SQLINTEGER field3len;
-  SQLRETURN  rc;
-
-  docatalog(h, "SELECT * FROM my_odbc_net", "Query");
-  SQLBindCol(h, 1, SQL_C_ULONG, &field1, sizeof(SQLINTEGER), &field1len);
-  SQLBindCol(h, 2, SQL_C_CHAR, field2, 256*sizeof(SQLCHAR), &field2len);
-  SQLBindCol(h, 3, SQL_C_SBIGINT, &field3, sizeof(SQLBIGINT), &field3len);
-  while ( (rc = SQLFetch(h)) != SQL_NO_DATA )
-    {
-      if ( field1len == SQL_NULL_DATA )
-	(void)printf("x");
-      else
-	(void)printf("%d", (int)field1);
-      if ( field2len == SQL_NULL_DATA )
-	(void)printf("\tNULL");
-      else
-	{
-	  field2[field2len] = 0;
-	  (void)printf("\t%s", field2);
-	}
-      if ( field3len == SQL_NULL_DATA )
-	(void)printf("\tx\n");
-      else
-#ifdef WINDOWS
-	(void)printf("\t%I64d\n", field3);
-#else  // WINDOWS
-      (void)printf("\t%llu\n", field3);
-#endif // WINDOWS
-    }
   SQLCloseCursor(h);
 }
 
@@ -577,6 +436,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald)
   if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
        tabp->tabname == NULL )
     return(ERR_SCM_INVALARG);
+  conp->mystat.tabname = tabp->hname;
 // handle the trivial cases first
   if ( arr == NULL || arr->nused <= 0 || arr->vec == NULL )
     return(0);
@@ -618,3 +478,440 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr, int vald)
   free((void *)stmt);
   return(sta);
 }
+
+int getuintscm(scmcon *conp, unsigned int *ival)
+{
+  SQLUINTEGER f1;
+  SQLINTEGER  f1len;
+  SQLRETURN   rc;
+  int fnd = 0;
+
+  if ( conp == NULL || conp->connected == 0 || ival == NULL )
+    return(ERR_SCM_INVALARG);
+  SQLBindCol(conp->hstmt, 1, SQL_C_ULONG, &f1, sizeof(f1), &f1len);
+  while ( 1 )
+    {
+      rc = SQLFetch(conp->hstmt);
+      if ( rc == SQL_NO_DATA )
+	break;
+      if ( !SQLOK(rc) )
+	continue;
+      if ( f1len == SQL_NO_DATA )
+	continue;
+      fnd++;
+      *ival = (unsigned int)f1;
+    }
+  SQLCloseCursor(conp->hstmt);
+  if ( fnd == 0 )
+    return(ERR_SCM_NODATA);
+  else
+    return(0);
+}
+
+/*
+  Get the maximum id of the table known as "what". A name translation
+  takes place as follows: what is looked up as the human name of the table;
+  the real name is then obtained; the prefix is then removed. So, for example,
+  for the "DIRECTORY" table, the real name is apki_dir. Removing the prefix
+  ("apki" + "_") yields "dir", so that actual column name is dir_max in the
+  METADATA table.
+
+  Note that as an optimization the pointer to the metadata table "mtab"
+  may be provided.  If it is null it is looked up.
+*/
+
+int getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
+		unsigned int *ival)
+{
+  scmtab *otab;
+  char   *stmt;
+  char   *ptr;
+  char   *speccol;
+  int     leen;
+  int     sta;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 || what == NULL ||
+       what[0] == 0 || ival == NULL )
+    return(ERR_SCM_INVALARG);
+  if ( mtab == NULL )
+    {
+      mtab = findtablescm(scmp, "METADATA");
+      if ( mtab == NULL )
+	{
+	  conp->mystat.tabname = "METADATA";
+	  if ( conp->mystat.errmsg != NULL )
+	    (void)strcpy(conp->mystat.errmsg, "Cannot find METADATA table");
+	  return(ERR_SCM_NOSUCHTAB);
+	}
+    }
+/*
+  The name of the special column in the metadata table, which will always
+  be the last column.
+*/
+  speccol = mtab->cols[mtab->ncols-1];
+  otab = findtablescm(scmp, what);
+  if ( otab == NULL )
+    {
+      if ( conp->mystat.errmsg != NULL )
+	(void)sprintf(conp->mystat.errmsg, "Cannot find %s table", what);
+      return(ERR_SCM_NOSUCHTAB);
+    }
+  ptr = otab->tabname;
+  if ( strncasecmp(ptr, scmp->db, strlen(scmp->db)) == 0 )
+    ptr += strlen(scmp->db);
+  if ( *ptr == '_' )
+    ptr++;
+  leen = strlen(ptr) + strlen(mtab->tabname) + strlen(speccol) + 64;
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "SELECT %s_max FROM %s WHERE %s=1;",
+		ptr, mtab->tabname, speccol);
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
+  if ( sta < 0 )
+    return(sta);
+  sta = getuintscm(conp, ival);
+  return(sta);
+}
+
+/*
+  Set the maximum id of the table known as "what". A name translation
+  takes place as described in the previous function.
+
+  Note that as an optimization the pointer to the metadata table "mtab"
+  may be provided.  If it is null it is looked up.
+*/
+
+int setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
+		unsigned int ival)
+{
+  scmtab *otab;
+  char   *stmt;
+  char   *ptr;
+  char   *speccol;
+  int     leen;
+  int     sta;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 || what == NULL ||
+       what[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  if ( mtab == NULL )
+    {
+      mtab = findtablescm(scmp, "METADATA");
+      if ( mtab == NULL )
+	{
+	  conp->mystat.tabname = "METADATA";
+	  if ( conp->mystat.errmsg != NULL )
+	    (void)strcpy(conp->mystat.errmsg, "Cannot find METADATA table");
+	  return(ERR_SCM_NOSUCHTAB);
+	}
+    }
+/*
+  The name of the special column in the metadata table, which will always
+  be the last column.
+*/
+  speccol = mtab->cols[mtab->ncols-1];
+  otab = findtablescm(scmp, what);
+  if ( otab == NULL )
+    {
+      if ( conp->mystat.errmsg != NULL )
+	(void)sprintf(conp->mystat.errmsg, "Cannot find %s table", what);
+      return(ERR_SCM_NOSUCHTAB);
+    }
+  ptr = otab->tabname;
+  if ( strncasecmp(ptr, scmp->db, strlen(scmp->db)) == 0 )
+    ptr += strlen(scmp->db);
+  if ( *ptr == '_' )
+    ptr++;
+  leen = strlen(ptr) + strlen(mtab->tabname) + strlen(speccol) + 64;
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "UPDATE %s SET %s_max=%u WHERE %s=1;",
+		mtab->tabname, ptr, ival, speccol);
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
+  return(sta);
+}
+
+/*
+  Validate a search array struct
+*/
+
+static int validsrchscm(scmsrcha *srch)
+{
+  scmsrch *vecp;
+  int i;
+
+  if ( srch == NULL || srch->vec == NULL || srch->nused <= 0 )
+    return(ERR_SCM_INVALARG);
+  for(i=0;i<srch->nused;i++)
+    {
+      vecp = (&srch->vec[i]);
+      if ( vecp->colname == NULL || vecp->colname[0] == 0 )
+	return(ERR_SCM_NULLCOL);
+      if ( vecp->valptr == NULL )
+	return(ERR_SCM_NULLVALP);
+      if ( vecp->valsize == 0 )
+	return(ERR_SCM_INVALSZ);
+    }
+  return(0);
+}
+
+/*
+  This function searches in a database table for entries that match
+  the stated search criteria.
+*/
+
+int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
+	      sqlcountfunc cnter, sqlvaluefunc valer,
+	      int what)
+{
+  SQLINTEGER  nrows = 0;
+  SQLRETURN   rc;
+  scmsrch    *vecp;
+  char *stmt = NULL;
+  int   docall;
+  int   leen = 100;
+  int   sta = 0;
+  int   nfnd = 0;
+  int   bset = 0;
+  int   ridx = 0;
+  int   fnd;
+  int   i;
+
+// validate arguments
+  if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
+       tabp->tabname == NULL )
+    return(ERR_SCM_INVALARG);
+  if ( srch->vald == 0 )
+    {
+      sta = validsrchscm(srch);
+      if ( sta < 0 )
+	return(sta);
+      srch->vald = 1;
+    }
+  if ( (what & SCM_SRCH_DOVALUE) )
+    {
+      if ( (what & SCM_SRCH_DOVALUE_ANN) )
+	bset++;
+      if ( (what & SCM_SRCH_DOVALUE_SNN) )
+	bset++;
+      if ( (what & SCM_SRCH_DOVALUE_ALWAYS) )
+	bset++;
+      if ( bset > 1 )
+	return(ERR_SCM_INVALARG);
+    }
+// construct the SELECT statement
+  conp->mystat.tabname = tabp->hname;
+  leen += strlen(tabp->tabname);
+  if ( srch->vec != NULL )
+    {
+      for(i=0;i<srch->nused;i++)
+	leen += strlen(srch->vec[i].colname) + 2;
+    }
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "SELECT %s", srch->vec[0].colname);
+  for(i=1;i<srch->nused;i++)
+    {
+      (void)strcat(stmt, ", ");
+      (void)strcat(stmt, srch->vec[i].colname);
+    }
+  (void)strcat(stmt, " FROM ");
+  (void)strcat(stmt, tabp->tabname);
+  (void)strcat(stmt, ";");
+// execute the select statement
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
+  if ( sta < 0 )
+    {
+      SQLCloseCursor(conp->hstmt);
+      return(sta);
+    }
+// count rows and call counter function if requested
+  if ( (what & SCM_SRCH_DOCOUNT) && cnter != NULL )
+    {
+      rc = SQLRowCount(conp->hstmt, &nrows);
+      if ( !SQLOK(rc) && (what & SCM_SRCH_BREAK_CERR) )
+	{
+	  heer((void *)(conp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
+	       conp->mystat.emlen);
+	  SQLCloseCursor(conp->hstmt);
+	  return(ERR_SCM_SQL);
+	}
+      sta = (*cnter)(conp, srch, (int)nrows);
+      if ( sta < 0 && (what & SCM_SRCH_BREAK_CERR) )
+	{
+	  SQLCloseCursor(conp->hstmt);
+	  return(sta);
+	}
+    }
+// loop over the results calling the value callback if requested
+  if ( (what & SCM_SRCH_DOVALUE) && valer != NULL )
+    {
+// do the column binding
+      for(i=0;i<srch->nused;i++)
+	{
+	  vecp = (&srch->vec[i]);
+	  SQLBindCol(conp->hstmt, vecp->colno <= 0 ? i+1 : vecp->colno,
+		     vecp->sqltype, vecp->valptr, vecp->valsize,
+		     (SQLINTEGER *)&vecp->avalsize);
+	}
+      while ( 1 )
+	{
+	  ridx++;
+	  rc = SQLFetch(conp->hstmt);
+	  if ( rc == SQL_NO_DATA )
+	    break;
+	  if ( !SQLOK(rc) )
+	    continue;
+// count how many columns actually contain data
+	  fnd = 0;
+	  for(i=0;i<srch->nused;i++)
+	    {
+	      if ( srch->vec[i].avalsize != SQL_NO_DATA )
+		fnd++;
+	    }
+	  if ( fnd == 0 )
+	    continue;
+	  nfnd++;
+// determine if the function should be called and call it if so
+// we have already validated that only one of these bits is set
+	  docall = 0;
+	  if ( (what & SCM_SRCH_DOVALUE_ALWAYS) )
+	    docall++;
+	  if ( (what & SCM_SRCH_DOVALUE_SNN) && (fnd > 0) )
+	    docall++;
+	  if ( (what & SCM_SRCH_DOVALUE_ANN) && (fnd == srch->nused) )
+	    docall++;
+	  if ( docall > 0 )
+	    {
+	      sta = (valer)(conp, srch, ridx);
+	      if ( (sta < 0) && (what & SCM_SRCH_BREAK_VERR) )
+		break;
+	    }
+	}
+    }
+  SQLCloseCursor(conp->hstmt);
+  if ( sta < 0 )
+    return(sta);
+  if ( nfnd == 0 )
+    return(ERR_SCM_NODATA);
+  else
+    return(0);
+}
+
+/*
+  Free all the memory in a search array
+*/
+
+void freesrchscm(scmsrcha *srch)
+{
+  scmsrch *vecp;
+  int i;
+
+  if ( srch != NULL )
+    {
+      if ( srch->sname != NULL )
+	{
+	  free((void *)(srch->sname));
+	  srch->sname = NULL;
+	}
+      if ( srch->vec != NULL )
+	{
+	  for(i=0;i<srch->nused;i++)
+	    {
+	      vecp = &srch->vec[i];
+	      if ( vecp->colname != NULL )
+		{
+		  free((void *)(vecp->colname));
+		  vecp->colname = NULL;
+		}
+	      if ( vecp->valptr != NULL )
+		{
+		  free((void *)(vecp->valptr));
+		  vecp->valptr = NULL;
+		}
+	    }
+	  free((void *)(srch->vec));
+	}
+      free((void *)srch);
+    }
+}
+
+/*
+  Create a new empty srch array
+*/
+
+scmsrcha *newsrchscm(char *name, int leen)
+{
+  scmsrcha *newp;
+
+  if ( leen <= 0 )
+    return(NULL);
+  newp = (scmsrcha *)calloc(1, sizeof(scmsrcha));
+  if ( newp == NULL )
+    return(NULL);
+  if ( name != NULL && name[0] != 0 )
+    {
+      newp->sname = strdup(name);
+      if ( newp->sname == NULL )
+	{
+	  freesrchscm(newp);
+	  return(NULL);
+	}
+    }
+  newp->vec = (scmsrch *)calloc(leen, sizeof(scmsrch));
+  if ( newp->vec == NULL )
+    {
+      freesrchscm(newp);
+      return(NULL);
+    }
+  newp->ntot = leen;
+  return(newp);
+}
+
+/*
+  Add a new column to a search array. Note that this function does
+  not grow the size of the column array, so enough space must have
+  already been allocated when the array was created.
+*/
+
+int addcolsrchscm(scmsrcha *srch, char *colname, int sqltype, unsigned valsize)
+{
+  scmsrch *vecp;
+  char *cdup;
+  void *v;
+
+  if ( srch == NULL || srch->vec == NULL || srch->ntot <= 0 ||
+       colname == NULL || colname[0] == 0 || valsize == 0 )
+    return(ERR_SCM_INVALARG);
+  if ( srch->nused >= srch->ntot )
+    return(ERR_SCM_INVALSZ);
+  cdup = strdup(colname);
+  if ( cdup == NULL )
+    return(ERR_SCM_NOMEM);
+  v = (void *)calloc(1, valsize);
+  if ( v == NULL )
+    return(ERR_SCM_NOMEM);
+  vecp = &srch->vec[srch->nused];
+  vecp->colno = srch->nused + 1;
+  vecp->sqltype = sqltype;
+  vecp->colname = cdup;
+  vecp->valptr = v;
+  vecp->valsize = valsize;
+  srch->nused++;
+  return(0);
+}
+
+/*
+  This function performs a find-or-create operation for a specific id. It first
+  searches in table "tab" with search criteria "srch". If the entry is found it
+  returns the value of "id". If it isn't found then the max_id is looked up in
+  the metadata table an incremented, a new entry is created in "tab" using the
+  creation criteria "ins", and the max id in the metadata table is updated and
+  returned.
+*/
