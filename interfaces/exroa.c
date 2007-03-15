@@ -45,6 +45,19 @@ int roaToFile(ROA *r, char *fname, int fmt);
   error code.
 */
 
+int roaGenerateFilter(ROA *r, X509 *cert, FILE *fp);
+
+/*
+  This function is used to create BGP filter tables from a ROA and its
+  certificate.  The contents of "r" and "cert" are examined, the AS-number
+  and IP-address associations are extracted, and the result is appended
+  to the file "fp".  Note that this function may produce an non-negative
+  number of lines of output (including zero).
+
+  On success this function returns 0; on failure it returns a negative
+  error code.
+*/
+
 char *roaSKI(ROA *r);
 
 /*
