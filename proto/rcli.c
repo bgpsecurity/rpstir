@@ -13,6 +13,7 @@
 
 #include "scm.h"
 #include "scmf.h"
+#include "sqhl.h"
 #include "diru.h"
 
 #ifdef NOTDEF
@@ -276,10 +277,14 @@ static int createop(scmcon *conp, scm *scmp)
   return(sta);
 }
 
+#ifdef BURLINGAME
+
 // burlingame count function
 
 static int burlc(scmcon *conp, scmsrcha *s, int cnt)
 {
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(s);
   (void)printf("Row count is %d\n", cnt);
   return(0);
 }
@@ -291,6 +296,7 @@ static int burlv(scmcon *conp, scmsrcha *s, int idx)
   int tmp;
   int i;
 
+  UNREFERENCED_PARAMETER(conp);
   (void)printf("Burlv called with idx %d\n", idx);
   for(i=0;i<s->nused;i++)
     {
@@ -323,10 +329,12 @@ static int burlv(scmcon *conp, scmsrcha *s, int idx)
   return(0);
 }
 
+#endif // BURLINGAME
+
 static int create2op(scm *scmp, scmcon *conp, char *topdir)
 {
-  static scmkva aone;
-  static scmkv  one;
+  scmkva  aone;
+  scmkv   one;
   scmtab *mtab;
   char   *tdir;
   int     sta;
@@ -368,13 +376,13 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
   else
     (void)fprintf(stderr, "Init metadata table failed: %s\n",
 		  geterrorscm(conp));
-  free((void *)tdir);
+#ifdef BURLINGAME
 // burlingame test code
   {
     unsigned int iii = 0;
     unsigned int jjj;
+    unsigned int id;
     scmsrcha    *narr;
-    scmtab      *dirtab;
 
 // get, set, get the max directory id
     sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &iii);
@@ -440,13 +448,21 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
 	return(sta);
       }
 // insert some directories
-    dirtab = findtablescm(scmp, "DIRECTORY");
-    if ( dirtab == NULL )
-      {
-	(void)fprintf(stderr, "Cannot find DIRECTORY table\n");
-	return(ERR_SCM_NOSUCHTAB);
-      }
+    sta = findorcreatedir(scmp, conp, mtab, tdir, &id);
+    (void)printf("focdir(%s) status %d id %u\n", tdir, sta, id);
+    sta = findorcreatedir(scmp, conp, mtab, "/tmp", &id);
+    (void)printf("focdir(%s) status %d id %u\n", "/tmp", sta, id);
+    sta = findorcreatedir(scmp, conp, mtab, "//var/tmp", &id);
+    (void)printf("focdir(%s) status %d id %u\n", "//var/tmp", sta, id);
+    sta = findorcreatedir(scmp, conp, mtab, "/fred/leon/burger", &id);
+    (void)printf("focdir(%s) status %d id %u\n", "/fred/leon/burger", sta, id);
+    sta = findorcreatedir(scmp, conp, mtab, "/tmp", &id);
+    (void)printf("focdir(%s) status %d id %u\n", "/tmp", sta, id);
+    sta = findorcreatedir(scmp, conp, mtab, tdir, &id);
+    (void)printf("focdir(%s) status %d id %u\n", tdir, sta, id);
   }
+  free((void *)tdir);
+#endif
   return(sta);
 }
 

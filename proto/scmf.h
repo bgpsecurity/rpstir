@@ -56,6 +56,7 @@ typedef struct _scmsrcha	/* used for a search (select) */
   int       ntot;		/* total length of "vec" */
   int       nused;		/* number of elements in vec */
   int       vald;		/* struct already validated? */
+  scmkva   *where;              /* optional "where" conditionals */
   void     *context;		/* context to be passed from callback */
 } scmsrcha;
 
@@ -102,6 +103,9 @@ extern int   searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 		       int what);
 extern int   addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 			   unsigned valsize);
+extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
+			       scmtab *mtab, scmsrcha *srch, scmkva *ins,
+			       unsigned int *idp);
 extern void  freesrchscm(scmsrcha *srch);
 
 /*
@@ -119,5 +123,13 @@ extern void  freesrchscm(scmsrcha *srch);
 #define ERR_SCM_NODATA       -8         /* no matching data in table */
 #define ERR_SCM_NULLVALP     -9         /* null value pointer */
 #define ERR_SCM_INVALSZ     -10         /* invalid size */
+
+/*
+  Macros
+*/
+
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
+#endif
 
 #endif

@@ -11,6 +11,8 @@
 #include <limits.h>
 #include <fam.h>
 
+#include "diru.h"
+
 /*
   Returns 1 if the argument is a directory, 0 if it isn't
   and a negative error code on failure.

@@ -80,21 +80,21 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
     memset(errmsg, 0, emlen);
   if ( dsnp == NULL || dsnp[0] == 0 )
     {
-      if ( errmsg != NULL && emlen > strlen(nulldsn) )
+      if ( errmsg != NULL && (unsigned)emlen > strlen(nulldsn) )
 	(void)strcpy(errmsg, nulldsn);
       return(NULL);
     }
   conp = (scmcon *)calloc(1, sizeof(scmcon));
   if ( conp == NULL )
     {
-      if ( errmsg != NULL && emlen > strlen(oom) )
+      if ( errmsg != NULL && (unsigned)emlen > strlen(oom) )
 	(void)strcpy(errmsg, oom);
       return(NULL);
     }
   conp->mystat.errmsg = (char *)calloc(1024, sizeof(char));
   if ( conp->mystat.errmsg == NULL )
     {
-      if ( errmsg != NULL && emlen > strlen(oom) )
+      if ( errmsg != NULL && (unsigned)emlen > strlen(oom) )
 	(void)strcpy(errmsg, oom);
       free((void *)conp);
       return(NULL);
@@ -104,7 +104,7 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
   if ( ! SQLOK(ret) )
     {
       disconnectscm(conp);
-      if ( errmsg != NULL && emlen > strlen(badhenv) )
+      if ( errmsg != NULL && (unsigned)emlen > strlen(badhenv) )
 	(void)strcpy(errmsg, badhenv);
       return(NULL);
     }
@@ -600,9 +600,10 @@ int setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
   Validate a search array struct
 */
 
-static int validsrchscm(scmsrcha *srch)
+static int validsrchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch)
 {
   scmsrch *vecp;
+  int sta;
   int i;
 
   if ( srch == NULL || srch->vec == NULL || srch->nused <= 0 )
@@ -616,6 +617,13 @@ static int validsrchscm(scmsrcha *srch)
 	return(ERR_SCM_NULLVALP);
       if ( vecp->valsize == 0 )
 	return(ERR_SCM_INVALSZ);
+    }
+  if ( srch->where != NULL && srch->where->vald == 0 )
+    {
+      sta = valcols(conp, tabp, srch->where);
+      if ( sta < 0 )
+	return(sta);
+      srch->where->vald = 1;
     }
   return(0);
 }
@@ -648,7 +656,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     return(ERR_SCM_INVALARG);
   if ( srch->vald == 0 )
     {
-      sta = validsrchscm(srch);
+      sta = validsrchscm(conp, tabp, srch);
       if ( sta < 0 )
 	return(sta);
       srch->vald = 1;
@@ -667,10 +675,15 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 // construct the SELECT statement
   conp->mystat.tabname = tabp->hname;
   leen += strlen(tabp->tabname);
-  if ( srch->vec != NULL )
+  for(i=0;i<srch->nused;i++)
+    leen += strlen(srch->vec[i].colname) + 2;
+  if ( srch->where != NULL )
     {
-      for(i=0;i<srch->nused;i++)
-	leen += strlen(srch->vec[i].colname) + 2;
+      for(i=0;i<srch->where->nused;i++)
+	{
+	  leen += strlen(srch->where->vec[i].column) + 4;
+	  leen += strlen(srch->where->vec[i].value);
+	}
     }
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
@@ -683,6 +696,22 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     }
   (void)strcat(stmt, " FROM ");
   (void)strcat(stmt, tabp->tabname);
+  if ( srch->where != NULL )
+    {
+      (void)strcat(stmt, " WHERE ");
+      (void)strcat(stmt, srch->where->vec[0].column);
+      (void)strcat(stmt, "=\"");
+      (void)strcat(stmt, srch->where->vec[0].value);
+      (void)strcat(stmt, "\"");
+      for(i=1;i<srch->where->nused;i++)
+	{
+	  (void)strcat(stmt, ", ");
+	  (void)strcat(stmt, srch->where->vec[i].column);
+	  (void)strcat(stmt, "=\"");
+	  (void)strcat(stmt, srch->where->vec[i].value);
+	  (void)strcat(stmt, "\"");
+	}
+    }
   (void)strcat(stmt, ";");
 // execute the select statement
   sta = statementscm(conp, stmt);
@@ -887,8 +916,10 @@ int addcolsrchscm(scmsrcha *srch, char *colname, int sqltype, unsigned valsize)
 
 static int socvaluefunc(scmcon *conp, scmsrcha *s, int idx)
 {
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
   if ( s->vec[0].sqltype == SQL_C_ULONG &&
-       s->vec[0].avalsize >= sizeof(unsigned int) &&
+       (unsigned)(s->vec[0].avalsize) >= sizeof(unsigned int) &&
        s->context != NULL )
     {
       memcpy(s->context, s->vec[0].valptr, sizeof(unsigned int));
@@ -904,6 +935,29 @@ static int socvaluefunc(scmcon *conp, scmsrcha *s, int idx)
   the metadata table and incremented, a new entry is created in "tab" using the
   creation criteria "ins", and the max id in the metadata table is updated and
   returned.
+
+  Since this is somewhat convoluted and contains several steps, consider
+  an example.  Suppose I wish to find or create two directories in the
+  directory table.  These directories are /path/to/somewhere and
+  /path/to/elsewhere.  I want to get the directory ids for these directories
+  in either case, e.g. whether they are already there or have to be
+  created. If a new directory is created I also want the maximum directory
+  id in the metadata table to be updated.
+
+  Consider the following putative sequence.  I construct a search
+  for "/path/to/somewhere" in the directory table. The first element
+  of the search is the id. The search succeeds, and the id is returned.
+  The metadata table is unchanged. Now I construct a second search for
+  "/path/to/elsewhere". That search fails. So I fetch the maximum directory
+  id from the metadata table and increment it. I then create an entry
+  in the directory table with elements "/path/to/elsewhere" and that
+  (incremented) id. I update the metadata table's value for the max
+  directory id to the new, incremented id, and, finally, I return that
+  new, incremented id.
+
+  Certs, CRLs, ROAs and directories all have ids and their tables all
+  have max ids in the metadata table and so all of them have to be
+  managed using this (sadly prolix) function.
 */
 
 int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
