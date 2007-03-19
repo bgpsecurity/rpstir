@@ -36,13 +36,14 @@ static scmtab scmtabbuilder[] =
     {				/* APKI_CERT */
       "apki_cert",
       "CERTIFICATE",
-      "filename VARCHAR(255) NOT NULL,"
+      "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
-      "dn       VARCHAR(1024),"
-      "sn       BIGINT,"
+      "subject  VARCHAR(512),"
+      "issuer   VARCHAR(512) NOT NULL,"
+      "sn       BIGINT NOT NULL,"
       "flags    INT UNSIGNED DEFAULT 0,"
-      "ski      VARCHAR(100) NOT NULL,"
-      "aki      VARCHAR(100),"
+      "ski      VARCHAR(128) NOT NULL,"
+      "aki      VARCHAR(128),"
       "sia      VARCHAR(1024),"
       "aia      VARCHAR(1024),"
       "crldp    VARCHAR(1024),"
@@ -53,7 +54,8 @@ static scmtab scmtabbuilder[] =
       "other_id INT UNSIGNED DEFAULT 0,"
       "other_ty INT UNSIGNED DEFAULT 0,"
       "         PRIMARY KEY (filename, dir_id),"
-      "         KEY ski (ski)",
+      "         KEY ski (ski),"
+      "         KEY isn (issuer, sn)",
       NULL,
       0
     },

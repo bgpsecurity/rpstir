@@ -9,6 +9,7 @@
 
 #include "scm.h"
 #include "scmf.h"
+#include "err.h"
 
 /*
   Decode the last error on a handle
@@ -1005,6 +1006,7 @@ int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
     return(ERR_SCM_NOMEM);
   (void)sprintf(ins->vec[0].value, "%u", mid);
   sta = insertscm(conp, tabp, ins);
+  free((void *)(ins->vec[0].value));
   if ( sta < 0 )
     return(sta);
   sta = setmaxidscm(scmp, conp, mtab, tabp->hname, mid);

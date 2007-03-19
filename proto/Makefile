@@ -6,7 +6,7 @@
 
 all:	sqq docert rcli #initscm
 
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers -DBURLINGAME -DHAVE_LONG_LONG
+CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers -DHAVE_LONG_LONG
 
 sqq:	sqq.o Makefile
 	gcc -o sqq -g -L/usr/local/lib sqq.o -lmyodbc3 -lrt
