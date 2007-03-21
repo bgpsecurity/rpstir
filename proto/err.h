@@ -25,5 +25,18 @@
 #define ERR_SCM_INVALFN     -13	        /* inconsistent filename */
 #define ERR_SCM_NOTADIR     -14         /* not a directory */
 #define ERR_SCM_INTERNAL    -15	        /* internal error */
+#define ERR_SCM_X509        -16         /* X509 error */
+#define ERR_SCM_BADCERT     -17	        /* error reading cert */
+#define ERR_SCM_NOSUBJECT   -18         /* subject in cert missing */
+#define ERR_SCM_NOISSUER    -19         /* issuer in cert missing */
+#define ERR_SCM_NOSN        -20         /* serial number in cert missing */
+#define ERR_SCM_BIGNUMERR   -21         /* error converting ASN.1 to a bignum */
+#define ERR_SCM_NONB4       -22         /* not-before field is missing */
+#define ERR_SCM_NONAF       -23         /* not-after field is missing */
+#define ERR_SCM_INVALDT     -24         /* invalid date/time */
+#define ERR_SCM_BADEXT      -25         /* extension error */
+#define ERR_SCM_INVALEXT    -26         /* invalid extension */
+#define ERR_SCM_XPROFILE    -27         /* profile violation */
+#define ERR_SCM_MISSEXT     -28         /* missing extension */
 
 #endif
