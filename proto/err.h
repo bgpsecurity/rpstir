@@ -38,5 +38,7 @@
 #define ERR_SCM_INVALEXT    -26         /* invalid extension */
 #define ERR_SCM_XPROFILE    -27         /* profile violation */
 #define ERR_SCM_MISSEXT     -28         /* missing extension */
+#define ERR_SCM_NOTSS       -29         /* not self-signed */
+#define ERR_SCM_NOTVALID    -30         /* cert validation error */
 
 #endif

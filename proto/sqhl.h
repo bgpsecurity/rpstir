@@ -5,8 +5,8 @@
 #ifndef _SQHL_H_
 #define _SQHL_H_
 
-extern int   findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab, char *dirname,
-			     unsigned int *idp);
+extern int   findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
+			     char *dirname, unsigned int *idp);
 extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 			char *outfull, int utrust);
 extern int   infer_filetype(char *fname);
@@ -34,5 +34,20 @@ extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 #define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET) /* PEM encoded certificate */
 #define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET) /* PEM encoded CRL */
 #define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET) /* PEM encoded ROA */
+
+/*
+  Flags
+*/
+
+#define SCM_FLAG_CA             0x1    /* certificate authority */
+#define SCM_FLAG_SS             0x2    /* self signed */
+#define SCM_FLAG_TRUSTED        0x4    /* trusted */
+#define SCM_FLAG_VALID          0x8    /* valid */
+
+#define SCM_FLAG_NOTYET      0x1000    /* not yet valid */
+#define SCM_FLAG_EXPIRED     0x2000    /* expired */
+#define SCM_FLAG_REVOKED     0x4000    /* CRL nuked it */
+#define SCM_FLAG_REMOVED     0x8000    /* rsync removed it */
+#define SCM_FLAG_PINV       0x10000    /* parent not valid */
 
 #endif

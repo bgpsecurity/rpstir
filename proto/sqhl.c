@@ -15,12 +15,13 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "diru.h"
+#include "myssl.h"
 #include "err.h"
 
 /*
   Find a directory in the directory table, or create it if it is not found.
-  Return the id in idp. The function returns 0 on success and a negative error code
-  on failure.
+  Return the id in idp. The function returns 0 on success and a negative error
+  code on failure.
 
   It is assumed that the existence of the putative directory has already been
   verified.
@@ -182,8 +183,110 @@ int infer_filetype(char *fname)
 }
 
 /*
+  Actually add a validated cert
+*/
+
+static void freeccols(scmkv *cp, int leen)
+{
+  int i;
+
+  if ( cp == NULL || leen <= 0 )
+    return;
+  for(i=0;i<leen;i++)
+    {
+      if ( cp[i].value != NULL )
+	{
+	  free((void *)(cp[i].value));
+	  cp[i].value = NULL;
+	}
+    }
+}
+
+static char *q(char *ptr)
+{
+  char *qptr;
+  int   leen;
+
+  if ( ptr == NULL || ptr[0] == 0 )
+    return(NULL);
+  leen = 3 + strlen(ptr);
+  qptr = (char *)calloc(leen, sizeof(char));
+  if ( qptr == NULL )
+    return(NULL);
+  (void)sprintf(qptr, "\"%s\"", ptr);
+  return(qptr);
+}
+
+static char *certf[] =
+  {
+    "filename", "subject", "issuer", "sn", "valfrom", "valto",
+    "ski", "aki", "sia", "aia", "crldp"
+  } ;
+
+static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
+{
+  unsigned int cert_id;
+  scmtab  *ctab;
+  scmkva   aone;
+  scmkv    cols[CF_NFIELDS+3];
+  char *ptr;
+  char *nptr;
+  char  flagn[24];
+  char  lid[24];
+  char  did[24];
+  int   idx = 0;
+  int   sta;
+  int   i;
+
+  ctab = findtablescm(scmp, "CERTIFICATE");
+  if ( ctab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  sta = getmaxidscm(scmp, conp, NULL, "CERTIFICATE", &cert_id);
+  if ( sta < 0 )
+    return(sta);
+  cert_id++;
+// fill in insertion structure
+  for(i=0;i<CF_NFIELDS+3;i++)
+    cols[i].value = NULL;
+  for(i=0;i<CF_NFIELDS;i++)
+    {
+      if ( (ptr=cf->fields[i]) != NULL )
+	{
+	  cols[idx].column = certf[i];
+	  nptr = q(ptr);
+	  if ( nptr == NULL )
+	    {
+	      freeccols(&cols[0], CF_NFIELDS);
+	      return(ERR_SCM_NOMEM);
+	    }
+	  cols[idx++].value = nptr;
+	}
+    }
+  (void)sprintf(flagn, "%u", cf->flags);
+  cols[idx].column = "flags";
+  cols[idx++].value = flagn;
+  (void)sprintf(lid, "%u", cert_id);
+  cols[idx].column = "local_id";
+  cols[idx++].value = lid;
+  (void)sprintf(did, "%u", cf->dirid);
+  cols[idx].column = "dir_id";
+  cols[idx++].value = did;
+  aone.vec = &cols[0];
+  aone.ntot = CF_NFIELDS+3;
+  aone.nused = idx;
+  aone.vald = 0;
+  sta = insertscm(conp, ctab, &aone);
+  freeccols(&cols[0], CF_NFIELDS);
+  if ( sta < 0 )
+    return(sta);
+  sta = setmaxidscm(scmp, conp, NULL, "CERTIFICATE", cert_id);
+  return(sta);
+}
+
+/*
   Add a certificate to the DB. If utrust is set, check that it is
-  self-signed first.
+  self-signed first, then just add it. If utrust is not set, then
+  validate it and then add it.
 
   This function returns 0 on success and a negative error code on
   failure.
@@ -192,7 +295,38 @@ int infer_filetype(char *fname)
 int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	     unsigned int id, int utrust, int typ)
 {
-  return(0);			/* GAGNON */
+  cert_fields *cf;
+  X509 *x = NULL;
+  int   x509sta = 0;
+  int   sta = 0;
+
+  cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
+  if ( cf == NULL || x == NULL )
+    return(sta);
+  cf->dirid = id;
+  if ( strcmp(cf->fields[CF_FIELD_SUBJECT], cf->fields[CF_FIELD_ISSUER]) == 0 )
+    cf->flags |= SCM_FLAG_SS;
+  if ( utrust > 0 )
+    {
+      if ( (cf->flags & SCM_FLAG_SS) == 0 )
+	{
+	  freecf(cf);
+	  X509_free(x);
+	  return(ERR_SCM_NOTSS);
+	}
+    }
+  else
+    {
+      freecf(cf);
+      X509_free(x);
+      return(ERR_SCM_NOTVALID);
+    }
+// actually add the certificate
+  cf->flags |= SCM_FLAG_VALID;
+  sta = add_cert_internal(scmp, conp, cf);
+  freecf(cf);
+  X509_free(x);
+  return(0);
 }
 
 /*

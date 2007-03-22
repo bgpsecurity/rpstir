@@ -37,9 +37,8 @@
 #define CF_FIELD_SIA         8
 #define CF_FIELD_AIA         9
 #define CF_FIELD_CRLDP      10
-#define CF_FIELD_FLAGS      11
 
-#define CF_NFIELDS          (CF_FIELD_FLAGS+1)
+#define CF_NFIELDS          (CF_FIELD_CRLDP+1)
 
 
 /*
@@ -51,7 +50,7 @@ typedef struct _cert_fields
 {
   char *fields[CF_NFIELDS];
   unsigned int dirid;
-  unsigned int myid;
+  unsigned int flags;
 } cert_fields;
 
 typedef char *(*cf_get)(X509 *x, int *stap, int *x509stap);
@@ -94,6 +93,6 @@ extern void  freecf(cert_fields *);
 extern char *ASNTimeToDBTime(char *in, int *stap);
 
 extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
-				int *stap, int *x509stap);
+				X509 **xp, int *stap, int *x509stap);
 
 #endif

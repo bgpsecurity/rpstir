@@ -116,10 +116,4 @@ extern void  freesrchscm(scmsrcha *srch);
 #define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
 #endif
 
-/*
-  Flags
-*/
-
-#define SCM_FLAG_CA          0x1
-
 #endif

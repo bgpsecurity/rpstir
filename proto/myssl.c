@@ -18,191 +18,6 @@
 #include "sqhl.h"
 #include "err.h"
 
-#ifdef NOTDEF
-
-// print one extension
-
-static void printex(X509_EXTENSION *ex)
-{
-  X509V3_EXT_METHOD    *meth;
-  AUTHORITY_KEYID      *aki;
-  BASIC_CONSTRAINTS    *bk;
-  STACK_OF(DIST_POINT) *crld;
-  const unsigned char  *uleon;
-  GENERAL_NAMES *gen;
-  GENERAL_NAME  *gen1;
-  DIST_POINT    *point;
-  void *exts;
-  char *leon;
-  int   j;
-  int   k;
-
-  meth = X509V3_EXT_get(ex);
-  //      (void)printf("\tMethod pointer 0x%x\n", meth);
-  if ( meth == NULL )
-    return;
-  uleon = ex->value->data;
-  if ( meth->it )
-    exts = ASN1_item_d2i(NULL, &uleon, ex->value->length,
-			 ASN1_ITEM_ptr(meth->it));
-  else
-    exts = meth->d2i(NULL, &uleon, ex->value->length);
-  //      (void)printf("\tExtension data pointer 0x%x\n", exts);
-  if ( exts == NULL )
-    return;
-  switch ( meth->ext_nid )
-    {
-    case NID_basic_constraints:
-      bk = (BASIC_CONSTRAINTS *)exts;
-      if ( bk->ca == 0 )
-	(void)printf("\t\tCA: FALSE\n");
-      else
-	(void)printf("\t\tCA: TRUE\n");
-      break;
-    case NID_subject_key_identifier:
-      if ( meth->i2s != NULL )
-	{
-	  leon = meth->i2s(meth, exts);
-	  if ( leon != NULL )
-	    {
-	      (void)printf("\t\t%s\n", leon);
-	      OPENSSL_free(leon);
-	    }
-	}
-      break;
-    case NID_authority_key_identifier:
-      aki = (AUTHORITY_KEYID *)exts;
-      if ( aki->keyid != NULL )
-	{
-	  leon = hex_to_string(aki->keyid->data, aki->keyid->length);
-	  if ( leon != NULL )
-	    {
-	      (void)printf("\t\t%s\n", leon);
-	      OPENSSL_free(leon);
-	    }
-	}
-      else
-	{
-	  (void)printf("Certificate with AKI=ISSUER/SNO\n");
-	  (void)printf("This is PROHIBITED by the profile\n");
-	}
-      break;
-    case NID_crl_distribution_points:
-      crld = (STACK_OF(DIST_POINT) *)exts;
-      for(j=0;j<sk_DIST_POINT_num(crld);j++)
-	{
-	  point = sk_DIST_POINT_value(crld, j);
-	  if ( point->distpoint != NULL )
-	    {
-//	      (void)printf("\t\tCRLDP(%d):\n", j+1);
-	      gen = point->distpoint->name.fullname;
-	      for(k=0;k<sk_GENERAL_NAME_num(gen);k++)
-		{
-		  gen1 = sk_GENERAL_NAME_value(gen, k);
-// TODO: must handle wider set of cases here, incl DIRNAME
-		  (void)printf("\t\t%s\n", gen1->d.ia5->data);
-		}
-	    }
-	}
-      break;
-// TODO: SIA and AIA
-    default:
-      break;
-    }
-  if ( meth->it )
-    ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
-  else
-    meth->ext_free(exts);
-}
-
-// cycle through all filenames on the command line and process them
-// as certs
-
-int main(int argc, char **argv)
-{
-  X509_EXTENSION *ex;
-  ASN1_INTEGER   *a1;
-  ASN1_OBJECT    *ao;
-  ASN1_GENERALIZEDTIME *nb4;
-  ASN1_GENERALIZEDTIME *af4;
-  unsigned long   ell;
-  X509_CINF      *ci;
-  BIGNUM *bn;
-  BIO    *cert;
-  X509   *x = NULL;
-  char   *leon;
-  unsigned char *bef;
-  unsigned char *aft;
-  char    buf[256];
-  int     sta;
-  int     excnt;
-  int     i;
-  int     j;
-
-  if ( argc < 2 )
-    return(1);
-  (void)setbuf(stdout, NULL);
-  cert = BIO_new(BIO_s_file());
-  // (void)printf("BIO pointer is 0x%x\n", cert);
-  if ( cert == NULL )
-    return(-1);
-  for(j=1;j<argc;j++)
-    {
-      sta = BIO_read_filename(cert, argv[j]);
-      (void)printf("Status reading %s: %d\n", argv[j], sta);
-      if ( sta <= 0 )
-	continue;
-      x = d2i_X509_bio(cert, NULL);
-      //      (void)printf("X509 pointer is 0x%x\n", x);
-      if ( x == NULL )
-	continue;
-      leon = X509_NAME_oneline(X509_get_issuer_name(x), NULL, 0);
-      (void)printf("Issuer: %s\n", leon);
-      leon = X509_NAME_oneline(X509_get_subject_name(x), NULL, 0);
-      (void)printf("Subject: %s\n", leon);
-      a1 = X509_get_serialNumber(x);
-      bn = ASN1_INTEGER_to_BN(a1, NULL);
-      if ( bn == NULL )
-	{
-	  X509_free(x);
-	  continue;
-	}
-      leon = BN_bn2dec(bn);
-      (void)printf("Serial number: %s\n", leon);
-      BN_free(bn);
-      nb4 = X509_get_notBefore(x);
-      af4 = X509_get_notAfter(x);
-      ASN1_STRING_to_UTF8(&bef, (ASN1_STRING *)nb4);
-      ASN1_STRING_to_UTF8(&aft, (ASN1_STRING *)af4);
-      (void)printf("Validity from %s to %s\n", bef, aft);
-      ell = X509_subject_name_hash(x);
-      (void)printf("Subject name hash: 0x%x\n", ell);
-      (void)printf("Number of extensions: %d\n",
-		   excnt=X509_get_ext_count(x));
-      ci = x->cert_info;
-      //      (void)printf("Certificate info pointer is 0x%x\n", ci);
-      //      (void)printf("Extensions pointer is 0x%x\n", ci->extensions);
-      for(i=0;i<excnt;i++)
-	{
-	  ex = sk_X509_EXTENSION_value(ci->extensions, i);
-      // (void)printf("\tExtension %d: 0x%x\n", i+1, ex);
-	  ao = X509_EXTENSION_get_object(ex);
-	  memset(buf, 0, 256);
-	  sta = OBJ_obj2txt(buf, 256, ao, 0);
-	  if ( sta > 0 && buf[0] != 0 )
-	    {
-	      (void)printf("\tExtension %d: %s\n", i+1, buf);
-//	      if ( strstr(buf, "Key Identifier") != NULL )
-		printex(ex);
-	    }
-	}
-      X509_free(x);
-    }
-  return(0);
-}
-
-#endif
-
 /*
   Convert between a time string as defined by a GENERALIZED_TIME
   and a time string that will be acceptable to the DB. The return
@@ -282,6 +97,47 @@ void freecf(cert_fields *cf)
 	}
     }
   free((void *)cf);
+}
+
+static char *strappend(char *instr, char *nstr)
+{
+  char *outstr;
+  int   leen;
+
+  if ( nstr == NULL || nstr[0] == 0 )
+    return(instr);
+  if ( instr == NULL )
+    return(strdup(nstr));
+  leen = strlen(instr) + strlen(nstr) + 24;
+  outstr = (char *)calloc(leen, sizeof(char));
+  if ( outstr == NULL )
+    return(instr);
+  (void)sprintf(outstr, "%s;%s", instr, nstr);
+  free((void *)instr);
+  return(outstr);
+}
+
+static char *addgn(char *ptr, GENERAL_NAME *gen)
+{
+  char  oline[1024];
+  char *optr = ptr;
+
+  if ( gen == NULL )
+    return(ptr);
+  switch ( gen->type )
+    {
+    case GEN_EMAIL:
+    case GEN_DNS:
+    case GEN_URI:
+      optr = strappend(ptr, (char *)(gen->d.ia5->data));
+      break;
+    case GEN_DIRNAME:
+      oline[0] = 0;
+      X509_NAME_oneline(gen->d.dirn, oline, 1024);
+      if ( oline[0] != 0 )
+	optr = strappend(ptr, oline);
+    }
+  return(optr);
 }
 
 static char *cf_get_subject(X509 *x, int *stap, int *x509stap)
@@ -510,21 +366,11 @@ static void cf_get_aki(X509V3_EXT_METHOD *meth, void *exts,
 static void cf_get_sia(X509V3_EXT_METHOD *meth, void *exts,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
-  // GAGNON
-}
-
-static void cf_get_aia(X509V3_EXT_METHOD *meth, void *exts,
-		       cert_fields *cf, int *stap, int *x509stap)
-{
-  // GAGNON
-}
-
-static void cf_get_crldp(X509V3_EXT_METHOD *meth, void *exts,
-			 cert_fields *cf, int *stap, int *x509stap)
-{
-  STACK_OF(DIST_POINT) *crld;
-  char *ptr;
-  char *dptr;
+  AUTHORITY_INFO_ACCESS *aia;
+  ACCESS_DESCRIPTION    *desc;
+  GENERAL_NAME *gen;
+  char *ptr = NULL;
+  int   i;
 
   if ( stap == NULL )
     return;
@@ -533,17 +379,95 @@ static void cf_get_crldp(X509V3_EXT_METHOD *meth, void *exts,
       *stap = ERR_SCM_INVALARG;
       return;
     }
-  // GAGNON
+  aia = (AUTHORITY_INFO_ACCESS *)exts;
+  for(i=0;i<sk_ACCESS_DESCRIPTION_num(aia);i++)
+    {
+      desc = sk_ACCESS_DESCRIPTION_value(aia, i);
+      if ( desc != NULL )
+	{
+	  gen = desc->location;
+	  if ( gen != NULL )
+	    ptr = addgn(ptr, gen);
+	}
+    }
+  cf->fields[CF_FIELD_SIA] = ptr;
+}
+
+static void cf_get_aia(X509V3_EXT_METHOD *meth, void *exts,
+		       cert_fields *cf, int *stap, int *x509stap)
+{
+  AUTHORITY_INFO_ACCESS *aia;
+  ACCESS_DESCRIPTION    *desc;
+  GENERAL_NAME *gen;
+  char *ptr = NULL;
+  int   i;
+
+  if ( stap == NULL )
+    return;
+  if ( meth == NULL || exts == NULL || cf == NULL || x509stap == NULL )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return;
+    }
+  aia = (AUTHORITY_INFO_ACCESS *)exts;
+  for(i=0;i<sk_ACCESS_DESCRIPTION_num(aia);i++)
+    {
+      desc = sk_ACCESS_DESCRIPTION_value(aia, i);
+      if ( desc != NULL )
+	{
+	  gen = desc->location;
+	  if ( gen != NULL )
+	    ptr = addgn(ptr, gen);
+	}
+    }
+  cf->fields[CF_FIELD_AIA] = ptr;
+}
+
+static void cf_get_crldp(X509V3_EXT_METHOD *meth, void *exts,
+			 cert_fields *cf, int *stap, int *x509stap)
+{
+  STACK_OF(DIST_POINT) *crld;
+  GENERAL_NAMES *gen;
+  GENERAL_NAME  *gen1;
+  DIST_POINT    *point;
+  char *ptr = NULL;
+  int   j;
+  int   k;
+
+  if ( stap == NULL )
+    return;
+  if ( meth == NULL || exts == NULL || cf == NULL || x509stap == NULL )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return;
+    }
+  crld = (STACK_OF(DIST_POINT) *)exts;
+  for(j=0;j<sk_DIST_POINT_num(crld);j++)
+    {
+      point = sk_DIST_POINT_value(crld, j);
+      if ( point != NULL && point->distpoint != NULL &&
+	   point->distpoint->type == 0 )
+	{
+	  gen = point->distpoint->name.fullname;
+	  if ( gen != NULL )
+	    {
+	      for(k=0;k<sk_GENERAL_NAME_num(gen);k++)
+		{
+		  gen1 = sk_GENERAL_NAME_value(gen, k);
+		  if ( gen1 != NULL )
+		    ptr = addgn(ptr, gen1);
+		}
+	    }
+	}
+    }
+  cf->fields[CF_FIELD_CRLDP] = ptr;
 }
 
 static void cf_get_flags(X509V3_EXT_METHOD *meth, void *exts,
 			 cert_fields *cf, int *stap, int *x509stap)
 {
   BASIC_CONSTRAINTS *bk;
-  unsigned int flags = 0;
-  char *ptr;
-  char *cff;
-  int   isca;
+  int isca;
 
   UNREFERENCED_PARAMETER(meth);
   if ( stap == NULL )
@@ -555,22 +479,7 @@ static void cf_get_flags(X509V3_EXT_METHOD *meth, void *exts,
     }
   bk = (BASIC_CONSTRAINTS *)exts;
   isca = bk->ca;
-  if ( isca != 0 )
-    {
-      ptr = (char *)calloc(24, sizeof(char));
-      if ( ptr == NULL )
-	{
-	  *stap = ERR_SCM_NOMEM;
-	  return;
-	}
-      if ( (cff=cf->fields[CF_FIELD_FLAGS]) != NULL )
-	flags = atoi(cff);
-      flags |= SCM_FLAG_CA;
-      (void)sprintf(ptr, "%d", flags);
-      if ( cff != NULL )
-	free((void *)cff);
-      cf->fields[CF_FIELD_FLAGS] = ptr;
-    }
+  cf->flags |= isca;
 }
 
 static cfx_validator xvalidators[] = 
@@ -580,7 +489,7 @@ static cfx_validator xvalidators[] =
     { cf_get_sia,     CF_FIELD_SIA,     NID_sinfo_access,             0 } ,
     { cf_get_aia,     CF_FIELD_AIA,     NID_info_access,              0 } ,
     { cf_get_crldp,   CF_FIELD_CRLDP,   NID_crl_distribution_points,  0 } ,
-    { cf_get_flags,   CF_FIELD_FLAGS,   NID_basic_constraints,        1 }
+    { cf_get_flags,   0,                NID_basic_constraints,        0 }
   } ;
 
 /*
@@ -626,7 +535,8 @@ static cf_validator validators[] =
   code. If an X509 error occurred, x509stap is set to that error.
 */
 
-cert_fields *cert2fields(char *fname, char *fullname, int typ, int *stap, int *x509stap)
+cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
+			 int *stap, int *x509stap)
 {
   const unsigned char *udat;
   cfx_validator       *cfx;
@@ -634,6 +544,7 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, int *stap, int *x
   X509_EXTENSION      *ex;
   X509_CINF   *ci;
   cert_fields *cf;
+  unsigned int ui;
   BIO  *bcert;
   X509 *x;
   void *exts;
@@ -645,11 +556,13 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, int *stap, int *x
   if ( stap == NULL || x509stap == NULL )
     return(NULL);
   *x509stap = 1;
-  if ( fname == NULL || fname[0] == 0 || fullname == NULL || fullname[0] == 0 )
+  if ( fname == NULL || fname[0] == 0 || fullname == NULL || fullname[0] == 0 ||
+       xp == NULL )
     {
       *stap = ERR_SCM_INVALARG;
       return(NULL);
     }
+  *xp = NULL;
   cf = (cert_fields *)calloc(1, sizeof(cert_fields));
   if ( cf == NULL )
     {
@@ -692,8 +605,8 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, int *stap, int *x
       *stap = ERR_SCM_BADCERT;
       return(NULL);
     }
-// get all the non-extension fields; if a field cannot be gotten and its critical,
-// that is a fatal error
+// get all the non-extension fields; if a field cannot be gotten and its
+// critical, that is a fatal error
   for(i=1;i<CF_NFIELDS;i++)
     {
       res = (*validators[i].get_func)(x, stap, x509stap);
@@ -735,22 +648,28 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, int *stap, int *x
       (*cfx->get_func)(meth, exts, cf, stap, x509stap);
       if ( *stap != 0 && cfx->critical != 0 )
 	break;
+      if ( meth->it )
+	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
+      else
+	meth->ext_free(exts);
     }
 // check that all critical extension fields are present
-  for(ui=0;ui<sizeof(xvalidator)/sizeof(cfx_validator);ui++)
+  for(ui=0;ui<sizeof(xvalidators)/sizeof(cfx_validator);ui++)
     {
-      if ( xvalidator[ui].critical != 0 && cf->fields[xvalidator[ui].fieldno] == NULL )
+      if ( xvalidators[ui].critical != 0 &&
+	   cf->fields[xvalidators[ui].fieldno] == NULL )
 	{
 	  *stap = ERR_SCM_MISSEXT;
 	  break;
 	}
     }
-  X509_free(x);
   BIO_free_all(bcert);
   if ( *stap != 0 )
     {
       freecf(cf);
+      X509_free(x);
       cf = NULL;
     }
+  *xp = x;
   return(cf);
 }

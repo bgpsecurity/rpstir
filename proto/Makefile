@@ -21,9 +21,10 @@ initscm.o:	scm.h scmmain.h Makefile
 diru.o:	diru.h
 sqhl.o:	sqhl.h
 rcli.o:	scm.h scmf.h sqhl.h diru.h
+myssl.o:	myssl.h
 
-rcli:	rcli.o initscm.o sqhl.o sqcon.o diru.o Makefile
-	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o sqhl.o sqcon.o diru.o -lmyodbc3 -lrt
+rcli:	rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
+	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
 clean:
 	rm -f sqq docert initscm *.o

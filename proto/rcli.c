@@ -571,8 +571,10 @@ int main(int argc, char **argv)
 	      if ( ians <= 0 )
 		sta = 1;
 	    }
-// if the user has declared it to be trusted, ask for verification
-// unless force is set
+	  if ( strstr(outdir, "TRUST") != NULL )
+	    trusted++;
+// if the user has declared it to be trusted, or if it is in a TRUSTed
+// directory ask for verification unless force is set
 	  if ( trusted > 0 && force == 0 && sta == 0 )
 	    {
 	      ians = yorn("Really declare this file as trusted");
@@ -583,7 +585,8 @@ int main(int argc, char **argv)
 	    (void)printf("File operation cancelled\n");
 	  if ( sta == 0 )
 	    {
-	      sta = add_object(scmp, realconp, outfile, outdir, outfull, trusted);
+	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
+			       trusted);
 	      if ( sta < 0 )
 		(void)fprintf(stderr, "Could not add file %s: error %d\n",
 			      thefile, sta);
