@@ -270,6 +270,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	  X509_free(x);
 	  return(ERR_SCM_NOTSS);
 	}
+      cf->flags |= SCM_FLAG_TRUSTED;
     }
 // GAGNON: validate the cert
 // actually add the certificate
