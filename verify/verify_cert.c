@@ -11,6 +11,8 @@
 
 #include "verify_cert.h"
 
+extern int fnno;  /* MCR */
+
 /* statics */
 static int checkit(X509_STORE *, X509 *, STACK_OF(X509) *, 
                    STACK_OF(X509) *, int , ENGINE *);
@@ -115,9 +117,11 @@ verify_cert(X509 *c)
   /****************************************************/
   /* using the variable 'i' as a counter is for our   */
   /* stub routines as we are using fixed files of     */
-  /* {2,1,0}.pem.cer for input                      */
+  /* {3,2,1,0}.pem.cer for input                      */
   /****************************************************/
-  i = 1; 
+  //  i = 1;
+  
+  i = fnno;			/* MCR */
 
   parent = getParentCert(c, i); 
   while (parent && (i >= 0) ) {

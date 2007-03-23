@@ -1,5 +1,7 @@
 #include "stub_main.h"
 
+int fnno = 0;			/* MCR */
+
 int
 main(int argc, char *argv[])
 {
@@ -24,6 +26,8 @@ main(int argc, char *argv[])
     fprintf(stderr, "Error reading cert from: %s\n", argv[1]);
     exit(-1);
   }
+
+  fnno = argv[1][0] - '0'; /* MCR */
 
   ret = verify_cert(cert);
 
