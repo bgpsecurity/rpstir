@@ -121,8 +121,18 @@ verify_cert(X509 *c)
   /****************************************************/
   //  i = 1;
   
-  i = fnno;			/* MCR */
+  i = fnno - 1;			/* MCR */
 
+/*
+  If we are already dealing with 0.cer.pem, then i will be -1.
+  In this case just push it onto the trusted stack. In this
+  case "parent" will return NULL and the following loop will
+  not be entered. If we are dealing with N.cer.pem then the
+  loop will be entered and all the certs, up to and including
+  0.cer.pem, will be processed.
+*/
+  if ( i < 0 )
+    sk_X509_push(sk_trusted, c);
   parent = getParentCert(c, i); 
   while (parent && (i >= 0) ) {
     ret = is_trust_anchor(parent, i);
