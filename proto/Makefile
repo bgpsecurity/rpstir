@@ -19,8 +19,8 @@ initscm:	initscm.o Makefile
 
 initscm.o:	scm.h scmmain.h Makefile
 diru.o:	diru.h
-sqhl.o:	sqhl.h
-rcli.o:	scm.h scmf.h sqhl.h diru.h
+sqhl.o:	sqhl.h myssl.h
+rcli.o:	scm.h scmf.h sqhl.h myssl.h diru.h
 myssl.o:	myssl.h
 
 rcli:	rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile

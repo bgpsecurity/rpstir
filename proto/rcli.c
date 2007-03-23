@@ -16,6 +16,7 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "diru.h"
+#include "myssl.h"
 #include "err.h"
 
 static char *tdir = NULL;   // top level dir of the repository
@@ -559,6 +560,11 @@ int main(int argc, char **argv)
       (void)printf("Top level repository directory is %s\n", tdir);
       tdirlen = strlen(tdir);
     }
+/*
+  Setup for actual SSL operations
+*/
+  OpenSSL_add_all_algorithms();
+  ERR_load_crypto_strings();
   if ( thefile != NULL && sta == 0 )
     {
 // Check that the file is in the repository, ask if not and force is off

@@ -40,5 +40,10 @@
 #define ERR_SCM_MISSEXT     -28         /* missing extension */
 #define ERR_SCM_NOTSS       -29         /* not self-signed */
 #define ERR_SCM_NOTVALID    -30         /* cert validation error */
+#define ERR_SCM_CERTCTX     -31	        /* cannot create cert context */
+#define ERR_SCM_X509STACK   -32         /* x509 stack creation error */
+#define ERR_SCM_STORECTX    -33         /* store ctx creation error */
+#define ERR_SCM_STOREINIT   -34         /* store init error */
+#define ERR_SCM_NOAKI       -35         /* missing aki */
 
 #endif

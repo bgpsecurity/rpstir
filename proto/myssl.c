@@ -523,8 +523,11 @@ static cf_validator validators[] =
 } ;
 
 /*
-  This function opens a certificate from a file and extracts all the fields
-  from it.  It does not touch the DB at all, it just manipulates the certificate.
+  This function can operate in two way.  If "fname" and "fullname" are both
+  given, then it opens a certificate from a file and extracts all the fields
+  from it.  If "xp" points to an already available certificate, then it just
+  manipulates that. This function does not touch the DB at all, it just
+  manipulates the certificate.
 
   On success this function returns a pointer to allocated memory containing
   all the indicated fields (except the three integer fields) and sets stap to 0,
@@ -549,10 +552,11 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
   X509_CINF   *ci;
   cert_fields *cf;
   unsigned int ui;
-  BIO  *bcert;
-  X509 *x;
+  BIO  *bcert = NULL;
+  X509 *x = NULL;
   void *exts;
   char *res;
+  int   freex;
   int   x509sta;
   int   excnt;
   int   i;
@@ -560,54 +564,73 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
   if ( stap == NULL || x509stap == NULL )
     return(NULL);
   *x509stap = 1;
-  if ( fname == NULL || fname[0] == 0 || fullname == NULL || fullname[0] == 0 ||
-       xp == NULL )
+  if ( xp == NULL )
     {
       *stap = ERR_SCM_INVALARG;
       return(NULL);
     }
-  *xp = NULL;
-  cf = (cert_fields *)calloc(1, sizeof(cert_fields));
-  if ( cf == NULL )
+// case 1: filenames are given
+  if ( fname != NULL && fname[0] != 0 && fullname != NULL && fullname[0] != 0 )
     {
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  cf->fields[CF_FIELD_FILENAME] = strdup(fname);
-  if ( cf->fields[CF_FIELD_FILENAME] == NULL )
-    {
-      freecf(cf);
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
+      *xp = NULL;
+      freex = 1;
+      cf = (cert_fields *)calloc(1, sizeof(cert_fields));
+      if ( cf == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+      cf->fields[CF_FIELD_FILENAME] = strdup(fname);
+      if ( cf->fields[CF_FIELD_FILENAME] == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
 // open the file
-  bcert = BIO_new(BIO_s_file());
-  if ( bcert == NULL )
-    {
-      freecf(cf);
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  x509sta = BIO_read_filename(bcert, fullname);
-  if ( x509sta <= 0 )
-    {
-      BIO_free_all(bcert);
-      freecf(cf);
-      *stap = ERR_SCM_X509;
-      *x509stap = x509sta;
-      return(NULL);
-    }
+      bcert = BIO_new(BIO_s_file());
+      if ( bcert == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+      x509sta = BIO_read_filename(bcert, fullname);
+      if ( x509sta <= 0 )
+	{
+	  BIO_free_all(bcert);
+	  freecf(cf);
+	  *stap = ERR_SCM_X509;
+	  *x509stap = x509sta;
+	  return(NULL);
+	}
 // read the cert based on the input type
-  if ( typ < OT_PEM_OFFSET )
-    x = d2i_X509_bio(bcert, NULL);
+      if ( typ < OT_PEM_OFFSET )
+	x = d2i_X509_bio(bcert, NULL);
+      else
+	x = PEM_read_bio_X509_AUX(bcert, NULL, NULL, NULL);
+      if ( x == NULL )
+	{
+	  BIO_free_all(bcert);
+	  freecf(cf);
+	  *stap = ERR_SCM_BADCERT;
+	  return(NULL);
+	}
+    }
+// case 2: x is given
   else
-    x = PEM_read_bio_X509_AUX(bcert, NULL, NULL, NULL);
-  if ( x == NULL )
     {
-      BIO_free_all(bcert);
-      freecf(cf);
-      *stap = ERR_SCM_BADCERT;
-      return(NULL);
+      x = *xp;
+      if ( x == NULL )
+	{
+	  *stap = ERR_SCM_INVALARG;
+	  return(NULL);
+	}
+      freex = 0;
+      cf = (cert_fields *)calloc(1, sizeof(cert_fields));
+      if ( cf == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
     }
 // get all the non-extension fields; if a field cannot be gotten and its
 // critical, that is a fatal error
@@ -618,8 +641,10 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
       res = (*validators[i].get_func)(x, stap, x509stap);
       if ( res == NULL && validators[i].critical > 0 )
 	{
-	  X509_free(x);
-	  BIO_free_all(bcert);
+	  if ( freex )
+	    X509_free(x);
+	  if ( bcert != NULL )
+	    BIO_free_all(bcert);
 	  freecf(cf);
 	  if ( *stap == 0 )
 	    *stap = ERR_SCM_X509;
@@ -669,11 +694,13 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	  break;
 	}
     }
-  BIO_free_all(bcert);
+  if ( bcert != NULL )
+    BIO_free_all(bcert);
   if ( *stap != 0 )
     {
       freecf(cf);
-      X509_free(x);
+      if ( freex )
+	X509_free(x);
       cf = NULL;
     }
   *xp = x;
