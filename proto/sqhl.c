@@ -182,41 +182,6 @@ int infer_filetype(char *fname)
   return(typ);
 }
 
-/*
-  Actually add a validated cert
-*/
-
-static void freeccols(scmkv *cp, int leen)
-{
-  int i;
-
-  if ( cp == NULL || leen <= 0 )
-    return;
-  for(i=0;i<leen;i++)
-    {
-      if ( cp[i].value != NULL )
-	{
-	  free((void *)(cp[i].value));
-	  cp[i].value = NULL;
-	}
-    }
-}
-
-static char *q(char *ptr)
-{
-  char *qptr;
-  int   leen;
-
-  if ( ptr == NULL || ptr[0] == 0 )
-    return(NULL);
-  leen = 3 + strlen(ptr);
-  qptr = (char *)calloc(leen, sizeof(char));
-  if ( qptr == NULL )
-    return(NULL);
-  (void)sprintf(qptr, "\"%s\"", ptr);
-  return(qptr);
-}
-
 static char *certf[] =
   {
     "filename", "subject", "issuer", "sn", "valfrom", "valto",
@@ -230,7 +195,6 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   scmkva   aone;
   scmkv    cols[CF_NFIELDS+3];
   char *ptr;
-  char *nptr;
   char  flagn[24];
   char  lid[24];
   char  did[24];
@@ -253,13 +217,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
       if ( (ptr=cf->fields[i]) != NULL )
 	{
 	  cols[idx].column = certf[i];
-	  nptr = q(ptr);
-	  if ( nptr == NULL )
-	    {
-	      freeccols(&cols[0], CF_NFIELDS);
-	      return(ERR_SCM_NOMEM);
-	    }
-	  cols[idx++].value = nptr;
+	  cols[idx++].value = ptr;
 	}
     }
   (void)sprintf(flagn, "%u", cf->flags);
@@ -276,7 +234,6 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   aone.nused = idx;
   aone.vald = 0;
   sta = insertscm(conp, ctab, &aone);
-  freeccols(&cols[0], CF_NFIELDS);
   if ( sta < 0 )
     return(sta);
   sta = setmaxidscm(scmp, conp, NULL, "CERTIFICATE", cert_id);
@@ -285,8 +242,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
 
 /*
   Add a certificate to the DB. If utrust is set, check that it is
-  self-signed first, then just add it. If utrust is not set, then
-  validate it and then add it.
+  self-signed first. Validate the cert and add it.
 
   This function returns 0 on success and a negative error code on
   failure.
@@ -315,12 +271,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	  return(ERR_SCM_NOTSS);
 	}
     }
-  else
-    {
-      freecf(cf);
-      X509_free(x);
-      return(ERR_SCM_NOTVALID);
-    }
+// GAGNON: validate the cert
 // actually add the certificate
   cf->flags |= SCM_FLAG_VALID;
   sta = add_cert_internal(scmp, conp, cf);

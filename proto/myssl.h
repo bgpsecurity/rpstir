@@ -83,8 +83,8 @@ typedef struct _cf_validator
 typedef struct _cfx_validator
 {
   cfx_get  get_func;
-  int      tag;
   int      fieldno;
+  int      tag;
   int      critical;
 } cfx_validator ;
 

@@ -78,7 +78,8 @@ char *ASNTimeToDBTime(char *bef, int *stap)
       *stap = ERR_SCM_NOMEM;
       return(NULL);
     }
-  (void)sprintf(out, "%4d-%2d-%2d %2d:%2d:%2d", year, mon, day, hour, min, sec);
+  (void)sprintf(out, "%4d-%02d-%02d %02d:%02d:%02d",
+		year, mon, day, hour, min, sec);
   return(out);
 }
 
@@ -479,7 +480,8 @@ static void cf_get_flags(X509V3_EXT_METHOD *meth, void *exts,
     }
   bk = (BASIC_CONSTRAINTS *)exts;
   isca = bk->ca;
-  cf->flags |= isca;
+  if ( isca != 0 )
+    cf->flags |= SCM_FLAG_CA;
 }
 
 static cfx_validator xvalidators[] = 
@@ -510,12 +512,14 @@ static cfx_validator *cfx_find(int tag)
 }
 
 static cf_validator validators[] = 
-{ 
+{
+  { NULL,           0,                0 } , /* filename handled already */
   { cf_get_subject, CF_FIELD_SUBJECT, 1 } ,
   { cf_get_issuer,  CF_FIELD_ISSUER,  1 } ,
   { cf_get_sn,      CF_FIELD_SN,      1 } ,
   { cf_get_from,    CF_FIELD_FROM,    1 } ,
-  { cf_get_to,      CF_FIELD_TO,      1 }
+  { cf_get_to,      CF_FIELD_TO,      1 } ,
+  { NULL,           0,                0 }   /* terminator */
 } ;
 
 /*
@@ -609,6 +613,8 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 // critical, that is a fatal error
   for(i=1;i<CF_NFIELDS;i++)
     {
+      if ( validators[i].get_func == NULL )
+	break;
       res = (*validators[i].get_func)(x, stap, x509stap);
       if ( res == NULL && validators[i].critical > 0 )
 	{

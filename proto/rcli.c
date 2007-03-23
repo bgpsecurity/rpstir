@@ -561,11 +561,11 @@ int main(int argc, char **argv)
     }
   if ( thefile != NULL && sta == 0 )
     {
-// Check that the file is in the repository, ask if not
+// Check that the file is in the repository, ask if not and force is off
       sta = splitdf(NULL, NULL, thefile, &outdir, &outfile, &outfull);
       if ( sta == 0 )
 	{
-	  if ( strncmp(tdir, outdir, tdirlen) != 0 )
+	  if ( strncmp(tdir, outdir, tdirlen) != 0 && force == 0 )
 	    {
 	      ians = yorn("That file is not in the repository. Proceed anyway");
 	      if ( ians <= 0 )
