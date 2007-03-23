@@ -48,7 +48,7 @@ getParentCert(X509 *certPtr, int val)
   snprintf(file, sizeof(file) -1, "%d.cer.pem", val);
 
   cert_fp = fopen(file, "r");
-  if (cert_fp < 0) {
+  if (cert_fp == NULL) {
     fprintf(stderr, "could not open [%s] - getParentCert returning NULL\n",
             file);
     return(NULL);
