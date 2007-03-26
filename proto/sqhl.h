@@ -18,6 +18,8 @@ extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ);
 extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ);
+extern int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
+			   unsigned int *pflags, unsigned int *lidp);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 

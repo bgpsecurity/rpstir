@@ -107,7 +107,8 @@ extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
 			       scmtab *mtab, scmsrcha *srch, scmkva *ins,
 			       unsigned int *idp);
 extern int   deletescm(scmcon *conp, scmtab *tabp, scmkva *deld);
-
+extern int   setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
+			 unsigned int flags);
 extern void  freesrchscm(scmsrcha *srch);
 
 /*

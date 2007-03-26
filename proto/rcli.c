@@ -619,6 +619,42 @@ int main(int argc, char **argv)
     {
       // GAGNON
     }
+#ifdef BFLAGS_TEST
+  {
+    unsigned int flags = 0;
+    unsigned int lid = 0;
+    scmtab *t2p;
+    scmkva  where;
+    scmkv   w;
+    int     sta2;
+
+    t2p = findtablescm(scmp, "CERTIFICATE");
+    if ( t2p != NULL )
+      {
+	w.column = "filename";
+	w.value = "2.cer.pem";
+	where.vec = &w;
+	where.ntot = 1;
+	where.nused = 1;
+	sta2 = getflagsidscm(realconp, t2p, &where, &flags, &lid);
+	if ( sta2 >= 0 )
+	  {
+	    (void)printf("Get flags: local_id %u flags 0x%x\n", lid, flags);
+	    sta2 = setflagsscm(realconp, t2p, &where, 0x347);
+	    if ( sta2 >= 0 )
+	      {
+		(void)printf("Set flags: ok\n");
+		sta2 = getflagsidscm(realconp, t2p, &where, &flags, &lid);
+		if ( sta2 >= 0 )
+		  {
+		    (void)printf("Get flags: local_id %u flags 0x%x\n", lid, flags);
+		  }
+	      }
+	  }
+      }
+    
+  }
+#endif
   if ( realconp != NULL )
     disconnectscm(realconp);
   freescm(scmp);

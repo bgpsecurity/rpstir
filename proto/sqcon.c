@@ -1074,3 +1074,48 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
   free((void *)stmt);
   return(sta);
 }
+
+/*
+  Set the flags value on a match corresponding to a search criterion.
+
+  This function returns 0 on success and a negative error code on failure.
+*/
+
+int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
+		unsigned int flags)
+{
+  char *stmt;
+  int   leen = 128;
+  int   sta;
+  int   i;
+
+  if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
+       tabp->tabname == NULL || where == NULL )
+    return(ERR_SCM_INVALARG);
+// compute the size of the statement
+  leen += strlen(tabp->tabname);
+  for(i=0;i<where->nused;i++)
+    {
+      leen += strlen(where->vec[i].column) + 7;
+      leen += strlen(where->vec[i].value) + 3;
+    }
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "UPDATE %s SET flags=%u WHERE ", tabp->tabname, flags);
+  (void)strcat(stmt, where->vec[0].column);
+  (void)strcat(stmt, "=\"");
+  (void)strcat(stmt, where->vec[0].value);
+  (void)strcat(stmt, "\"");
+  for(i=1;i<where->nused;i++)
+    {
+      (void)strcat(stmt, " AND ");
+      (void)strcat(stmt, where->vec[0].column);
+      (void)strcat(stmt, "=\"");
+      (void)strcat(stmt, where->vec[0].value);
+      (void)strcat(stmt, "\"");
+    }
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
+  return(sta);
+}
