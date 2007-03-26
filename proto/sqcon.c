@@ -682,7 +682,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     {
       for(i=0;i<srch->where->nused;i++)
 	{
-	  leen += strlen(srch->where->vec[i].column) + 4;
+	  leen += strlen(srch->where->vec[i].column) + 9;
 	  leen += strlen(srch->where->vec[i].value);
 	}
     }
@@ -706,7 +706,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       (void)strcat(stmt, "\"");
       for(i=1;i<srch->where->nused;i++)
 	{
-	  (void)strcat(stmt, ", ");
+	  (void)strcat(stmt, " AND ");
 	  (void)strcat(stmt, srch->where->vec[i].column);
 	  (void)strcat(stmt, "=\"");
 	  (void)strcat(stmt, srch->where->vec[i].value);
@@ -1014,4 +1014,63 @@ int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
     return(sta);
   *idp = mid;
   return(0);
+}
+
+/*
+  This function deletes entries in a database table that match
+  the stated search criteria.
+*/
+
+int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
+{
+  char *stmt = NULL;
+  int   leen = 128;
+  int   sta = 0;
+  int   i;
+
+// validate arguments
+  if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
+       tabp->tabname == NULL || deld == NULL )
+    return(ERR_SCM_INVALARG);
+  if ( deld->vald == 0 )
+    {
+      sta = valcols(conp, tabp, deld);
+      if ( sta < 0 )
+	return(sta);
+      deld->vald = 1;
+    }
+// glean the length of the statement
+  leen += strlen(tabp->tabname);
+  for(i=0;i<deld->nused;i++)
+    {
+      leen += strlen(deld->vec[i].column) + 2;
+      leen += strlen(deld->vec[i].value) + 9;
+    }
+// construct the DELETE statement
+  conp->mystat.tabname = tabp->hname;
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "DELETE FROM %s", tabp->tabname);
+  if ( deld != NULL )
+    {
+      (void)strcat(stmt, " WHERE ");
+      (void)strcat(stmt, deld->vec[0].column);
+      (void)strcat(stmt, "=\"");
+      (void)strcat(stmt, deld->vec[0].value);
+      (void)strcat(stmt, "\"");
+      for(i=1;i<deld->nused;i++)
+	{
+	  (void)strcat(stmt, " AND ");
+	  (void)strcat(stmt, deld->vec[i].column);
+	  (void)strcat(stmt, "=\"");
+	  (void)strcat(stmt, deld->vec[i].value);
+	  (void)strcat(stmt, "\"");
+	}
+    }
+  (void)strcat(stmt, ";");
+// execute the DELETE statement
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
+  return(sta);
 }

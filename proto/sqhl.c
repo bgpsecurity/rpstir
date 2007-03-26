@@ -427,6 +427,12 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
       free((void *)ofile);
       return(NULL);
     }
+// if the certificate is not marked as valid, then just bail
+  if ( ((*pflags) & SCM_FLAG_VALID) == 0 )
+    {
+      *stap = ERR_SCM_NOTVALID;
+      return(NULL);
+    }
 // now find the directory name from the directory id
   dfile = (char *)calloc(PATH_MAX, sizeof(char));
   if ( dfile == NULL )
@@ -712,5 +718,98 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_INTERNAL;
       break;
     }
+  return(sta);
+}
+
+/*
+  Delete an object. First find the object's directory. If it is not found
+  then we are done. If it is found, then find the corresponding (filename, dir_id)
+  combination in the appropriate table and issue the delete SQL call.
+*/
+
+int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir, char *outfull)
+{
+  unsigned int id;
+  unsigned int blah;
+  scmsrcha srch;
+  scmsrch  srch1;
+  scmkva   where;
+  scmkva   dwhere;
+  scmkv    one;
+  scmkv    dtwo[2];
+  scmtab  *thetab;
+  char did[24];
+  int  typ;
+  int  sta;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
+       outfile == NULL || outdir == NULL || outfull == NULL )
+    return(ERR_SCM_INVALARG);
+// determine its filetype
+  typ = infer_filetype(outfull);
+  if ( typ < 0 )
+    return(typ);
+// find the directory
+  thetab = findtablescm(scmp, "DIRECTORY");
+  if ( thetab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  one.column = "dirname";
+  one.value = outdir;
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  srch1.colno = 1;
+  srch1.sqltype = SQL_C_ULONG;
+  srch1.colname = "dir_id";
+  srch1.valptr = (void *)&id;
+  srch1.valsize = sizeof(unsigned int);
+  srch1.avalsize = 0;
+  srch.vec = &srch1;
+  srch.sname = NULL;
+  srch.ntot = 1;
+  srch.nused = 1;
+  srch.vald = 0;
+  srch.where = &where;
+  srch.context = &blah;
+  sta = searchscm(conp, thetab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta < 0 )
+    return(sta);
+// delete the object based on the type
+  thetab = NULL;
+  switch ( typ )
+    {
+    case OT_CER:
+    case OT_CER_PEM:
+    case OT_UNKNOWN:
+    case OT_UNKNOWN+OT_PEM_OFFSET:
+      thetab = findtablescm(scmp, "CERTIFICATE");
+      break;
+    case OT_CRL:
+    case OT_CRL_PEM:
+      thetab = findtablescm(scmp, "CRL");
+      break;
+    case OT_ROA:
+    case OT_ROA_PEM:
+      thetab = findtablescm(scmp, "ROA");
+      break;
+    default:
+      sta = ERR_SCM_INTERNAL;
+      break;
+    }
+  if ( thetab == NULL )
+    sta = ERR_SCM_NOSUCHTAB;
+  if ( sta < 0 )
+    return(sta);
+  dtwo[0].column = "filename";
+  dtwo[0].value = outfile;
+  dtwo[1].column = "dir_id";
+  (void)sprintf(did, "%u", id);
+  dtwo[1].value = did;
+  dwhere.vec = &dtwo[0];
+  dwhere.ntot = 2;
+  dwhere.nused = 2;
+  dwhere.vald = 0;
+  sta = deletescm(conp, thetab, &dwhere);
   return(sta);
 }

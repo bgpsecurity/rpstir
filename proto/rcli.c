@@ -310,8 +310,7 @@ static void usage(void)
   (void)printf("\t-x\tdestroy all database tables\n");
   (void)printf("\t-y\tforce operation: do not ask for confirmation\n");
   (void)printf("\t-q\tdisplay database state\n");
-  (void)printf("\t-d dir\tprocess the indicated dir\n");
-  (void)printf("\t-D dir\tprocess the indicated trusted dir\n");
+  (void)printf("\t-d dir\tdelete the indicated file\n");
   (void)printf("\t-f file\tprocess the indicated file\n");
   (void)printf("\t-F file\tprocess the indicated trusted file\n");
   (void)printf("\t-w port\tstart an rsync listener on port\n");
@@ -353,7 +352,7 @@ int main(int argc, char **argv)
   scmcon *testconp = NULL;
   scmcon *realconp = NULL;
   scm    *scmp = NULL;
-  char   *thedir = NULL;
+  char   *thedelfile = NULL;
   char   *topdir = NULL;
   char   *thefile = NULL;
   char   *outfile = NULL;
@@ -379,7 +378,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:D:f:F:w:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:")) != EOF )
     {
       switch ( c )
 	{
@@ -396,7 +395,7 @@ int main(int argc, char **argv)
 	case 'D':
 	  trusted++;
 	case 'd':
-	  thedir = optarg;
+	  thedelfile = optarg;
 	  break;
 	case 'F':
 	  trusted++;
@@ -602,9 +601,19 @@ int main(int argc, char **argv)
 	  free((void *)outfull);
 	}
     }
-  if ( thedir != NULL && sta == 0 )
+  if ( thedelfile != NULL && sta == 0 )
     {
-      // GAGNON
+      sta = splitdf(NULL, NULL, thedelfile, &outdir, &outfile, &outfull);
+      if ( sta == 0 )
+	{
+	  sta = delete_object(scmp, realconp, outfile, outdir, outfull);
+	  if ( sta < 0 )
+	    (void)fprintf(stderr, "Could not delete file %s: error %d\n",
+			  thefile, sta);
+	  free((void *)outdir);
+	  free((void *)outfile);
+	  free((void *)outfull);
+	}
     }
   if ( do_sockopts > 0 && sta == 0 )
     {

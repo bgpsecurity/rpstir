@@ -170,7 +170,7 @@ static char *cf_get_issuer(X509 *x, int *stap, int *x509stap)
 
   if ( x == NULL || stap == NULL || x509stap == NULL )
     return(NULL);
-  ptr = X509_NAME_oneline(X509_get_subject_name(x), NULL, 0);
+  ptr = X509_NAME_oneline(X509_get_issuer_name(x), NULL, 0);
   if ( ptr == NULL )
     {
       *stap = ERR_SCM_NOISSUER;

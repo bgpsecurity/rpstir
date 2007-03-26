@@ -106,6 +106,8 @@ extern int   addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
 			       scmtab *mtab, scmsrcha *srch, scmkva *ins,
 			       unsigned int *idp);
+extern int   deletescm(scmcon *conp, scmtab *tabp, scmkva *deld);
+
 extern void  freesrchscm(scmsrcha *srch);
 
 /*
