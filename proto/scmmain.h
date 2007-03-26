@@ -72,22 +72,18 @@ static scmtab scmtabbuilder[] =
   Usage notes: this_upd and next_upd are stored in GMT. local_id is a unique
   identifier obtained from the crl_max field of the metadata table (see above
   under the cert usage notes for the algorithm used in calculating the crl
-  local_id). issuer is the actual CRL issuer, obtained either from the issuer
-  field of the CRL (direct CRL) or the CRL certificate issuer entry extension
-  (indirect CRL). If an indirect CRL contains more than one issuer, there will
-  be multiple DB entries for a single CRL, indexed by which. snlist is the list
-  of serial numbers for this issuers. It is an array of bignums. The number
-  of bignums in the list is snlen. Some of these revocations may already happen
-  and the corresponding sn set to 0 in the list. sninuse keeps track of the
-  number of serial numbers that are not zero in the list. When this number
-  drops to 0, the entire CRL may be deleted from the DB. Note that snlist is
-  of type MEDIUMBLOB, indicating that it can hold at most 16M/8 = 2M entries.
+  local_id). issuer is the actual CRL issuer, obtained from the issuer field of the
+  CRL (direct CRL). snlist is the list of serial numbers for this issuer. It is an
+  array of bignums. The number of bignums in the list is snlen. Some of these
+  revocations may already have happened and the corresponding sn set to 0 in the list.
+  sninuse keeps track of the  number of serial numbers that are not zero in the list.
+  When this number drops to 0, the entire CRL may be deleted from the DB. Note that
+  snlist is of type MEDIUMBLOB, indicating that it can hold at most 16M/8 = 2M entries.
 */
       "apki_crl",
       "CRL",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
-      "which    INT UNSIGNED NOT NULL DEFAULT 1,"
       "issuer   VARCHAR(512) NOT NULL,"
       "this_upd DATETIME NOT NULL,"
       "next_upd DATETIME NOT NULL,"
@@ -99,7 +95,7 @@ static scmtab scmtabbuilder[] =
       "local_id INT UNSIGNED NOT NULL UNIQUE,"
       "other_id INT UNSIGNED DEFAULT 0,"
       "other_ty INT UNSIGNED DEFAULT 0,"
-      "         PRIMARY KEY (filename, dir_id, which),"
+      "         PRIMARY KEY (filename, dir_id),"
       "         KEY issuer (issuer),"
       "         KEY this_upd (this_upd)",
       NULL,
