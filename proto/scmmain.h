@@ -75,17 +75,18 @@ static scmtab scmtabbuilder[] =
   local_id). issuer is the actual CRL issuer, obtained from the issuer field of the
   CRL (direct CRL). snlist is the list of serial numbers for this issuer. It is an
   array of bignums. The number of bignums in the list is snlen. Some of these
-  revocations may already have happened and the corresponding sn set to 0 in the list.
-  sninuse keeps track of the  number of serial numbers that are not zero in the list.
-  When this number drops to 0, the entire CRL may be deleted from the DB. Note that
-  snlist is of type MEDIUMBLOB, indicating that it can hold at most 16M/8 = 2M entries.
+  revocations may already have happened and the corresponding sn set to 0 in the
+  list. sninuse keeps track of the  number of serial numbers that are not zero in
+  the list.  When this number drops to 0, the entire CRL may be deleted from the DB.
+  Note that snlist is of type MEDIUMBLOB, indicating that it can hold at most
+  16M/8 = 2M entries.
 */
       "apki_crl",
       "CRL",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
       "issuer   VARCHAR(512) NOT NULL,"
-      "this_upd DATETIME NOT NULL,"
+      "last_upd DATETIME NOT NULL,"
       "next_upd DATETIME NOT NULL,"
       "crlno    BIGINT DEFAULT 0,"
       "snlen    INT UNSIGNED DEFAULT 0,"

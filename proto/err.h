@@ -45,5 +45,7 @@
 #define ERR_SCM_STORECTX    -33         /* store ctx creation error */
 #define ERR_SCM_STOREINIT   -34         /* store init error */
 #define ERR_SCM_NOAKI       -35         /* missing aki */
+#define ERR_SCM_CRL         -36         /* CRL error */
+#define ERR_SCM_BADCRL      -37         /* error reading CRL */
 
 #endif

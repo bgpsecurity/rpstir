@@ -100,6 +100,28 @@ void freecf(cert_fields *cf)
   free((void *)cf);
 }
 
+void freecrf(crl_fields *cf)
+{
+  int i;
+
+  if ( cf == NULL )
+    return;
+  for(i=0;i<CRF_NFIELDS;i++)
+    {
+      if ( cf->fields[i] != NULL )
+	{
+	  free((void *)(cf->fields[i]));
+	  cf->fields[i] = 0;
+	}
+    }
+  if ( cf->snlist != NULL )
+    {
+      free(cf->snlist);
+      cf->snlist = NULL;
+    }
+  free((void *)cf);
+}
+
 static char *strappend(char *instr, char *nstr)
 {
   char *outstr;
@@ -155,6 +177,7 @@ static char *cf_get_subject(X509 *x, int *stap, int *x509stap)
       return(NULL);
     }
   dptr = strdup(ptr);
+  OPENSSL_free(ptr);
   if ( dptr == NULL )
     {
       *stap = ERR_SCM_NOMEM;
@@ -177,6 +200,7 @@ static char *cf_get_issuer(X509 *x, int *stap, int *x509stap)
       return(NULL);
     }
   dptr = strdup(ptr);
+  OPENSSL_free(ptr);
   if ( dptr == NULL )
     {
       *stap = ERR_SCM_NOMEM;
@@ -523,22 +547,22 @@ static cf_validator validators[] =
 } ;
 
 /*
-  This function can operate in two way.  If "fname" and "fullname" are both
+  This function can operate in two ways.  If "fname" and "fullname" are both
   given, then it opens a certificate from a file and extracts all the fields
   from it.  If "xp" points to an already available certificate, then it just
   manipulates that. This function does not touch the DB at all, it just
   manipulates the certificate.
 
   On success this function returns a pointer to allocated memory containing
-  all the indicated fields (except the three integer fields) and sets stap to 0,
-  and x509stap to 1.
+  all the indicated fields (except the "dirid" field) and sets stap to
+  0, and x509stap to 1.
 
   Note carefully that this function does NOT set all the fields in the cf.
   In particular, it is the responsibility of the caller to set the dirid
-  and myid fields.  These two fields require DB access and are therefore
-  not part of this function.
+  field.  This field requires DB access and are therefore is not part of
+  this function.
 
-  On failure this function returns NULL and sets stap to a non-negative error
+  On failure this function returns NULL and sets stap to a negative error
   code. If an X509 error occurred, x509stap is set to that error.
 */
 
@@ -701,6 +725,416 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
       freecf(cf);
       if ( freex )
 	X509_free(x);
+      cf = NULL;
+    }
+  *xp = x;
+  return(cf);
+}
+
+static char *crf_get_issuer(X509_CRL *x, int *stap, int *crlstap)
+{
+  char *ptr;
+  char *dptr;
+
+  if ( x == NULL || stap == NULL || crlstap == NULL )
+    return(NULL);
+  ptr = X509_NAME_oneline(X509_CRL_get_issuer(x), NULL, 0);
+  if ( ptr == NULL )
+    {
+      *stap = ERR_SCM_NOISSUER;
+      return(NULL);
+    }
+  dptr = strdup(ptr);
+  OPENSSL_free(ptr);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  return(dptr);
+}
+
+static char *crf_get_last(X509_CRL *x, int *stap, int *crlstap)
+{
+  ASN1_GENERALIZEDTIME *nb4;
+  unsigned char *bef = NULL;
+  char *dptr;
+  int   asn1sta;
+
+  nb4 = X509_CRL_get_lastUpdate(x);
+  if ( nb4 == NULL )
+    {
+      *stap = ERR_SCM_NONB4;
+      return(NULL);
+    }
+  asn1sta = ASN1_STRING_to_UTF8(&bef, (ASN1_STRING *)nb4);
+  if ( asn1sta < 0 )		/* error */
+    {
+      *crlstap = asn1sta;
+      *stap = ERR_SCM_CRL;
+      return(NULL);
+    }
+  if ( bef == NULL || asn1sta == 0 ) /* null string */
+    {
+      *stap = ERR_SCM_NONB4;
+      return(NULL);
+    }
+  dptr = ASNTimeToDBTime((char *)bef, stap);
+  OPENSSL_free(bef);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  return(dptr);
+}
+
+static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
+{
+  ASN1_GENERALIZEDTIME *naf;
+  unsigned char *aft = NULL;
+  char *dptr;
+  int   asn1sta;
+
+  naf = X509_CRL_get_nextUpdate(x);
+  if ( naf == NULL )
+    {
+      *stap = ERR_SCM_NONAF;
+      return(NULL);
+    }
+  asn1sta = ASN1_STRING_to_UTF8(&aft, (ASN1_STRING *)naf);
+  if ( asn1sta < 0 )		/* error */
+    {
+      *crlstap = asn1sta;
+      *stap = ERR_SCM_CRL;
+      return(NULL);
+    }
+  if ( aft == NULL || asn1sta == 0 ) /* null string */
+    {
+      *stap = ERR_SCM_NONAF;
+      return(NULL);
+    }
+  dptr = ASNTimeToDBTime((char *)aft, stap);
+  OPENSSL_free(aft);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  return(dptr);
+}
+
+static crf_validator crvalidators[] = 
+{
+  { NULL,            0,                0 } , /* filename handled already */
+  { crf_get_issuer,  CRF_FIELD_ISSUER, 1 } ,
+  { crf_get_last,    CRF_FIELD_LAST,   0 } ,
+  { crf_get_next,    CRF_FIELD_NEXT,   1 } ,
+  { NULL,            0,                0 }   /* terminator */
+} ;
+
+// GAGNON
+static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
+			  crl_fields *cf, int *stap, int *crlstap)
+{
+  char *ptr;
+  char *dptr;
+
+  if ( stap == NULL )
+    return;
+  if ( meth == NULL || exts == NULL || cf == NULL || crlstap == NULL )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return;
+    }
+  if ( meth->i2s == NULL )
+    {
+      *stap = ERR_SCM_BADEXT;
+      return;
+    }
+  ptr = meth->i2s(meth, exts);
+  if ( ptr == NULL || ptr[0] == 0 )
+    {
+      *stap = ERR_SCM_BADEXT;
+      return;
+    }
+  dptr = strdup(ptr);
+  OPENSSL_free(ptr);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return;
+    }
+  cf->fields[CRF_FIELD_SN] = dptr;
+}
+// GAGNON
+
+static crfx_validator crxvalidators[] = 
+  {
+    { crf_get_crlno,  CRF_FIELD_SN,     NID_subject_key_identifier,   0 } ,
+  } ;
+
+/*
+  Given an X509V3 extension tag, this function returns the corresponding
+  extension validator.
+*/
+
+static crfx_validator *crfx_find(int tag)
+{
+  unsigned int i;
+
+  for(i=0;i<sizeof(crxvalidators)/sizeof(crfx_validator);i++)
+    {
+      if ( crxvalidators[i].tag == tag )
+	return(&crxvalidators[i]);
+    }
+  return(NULL);
+}
+
+/*
+  This function can operate in two ways.  If "fname" and "fullname" are both
+  given, then it opens a CRL from a file and extracts all the fields
+  from it.  If "xp" points to an already available CRL, then it just
+  manipulates that. This function does not touch the DB at all, it just
+  manipulates the CRL.
+
+  On success this function returns a pointer to allocated memory containing
+  all the indicated fields (except the "dirid" field) and sets stap to
+  0, and crlstap to 1.
+
+  Note carefully that this function does NOT set all the fields in the crf.
+  In particular, it is the responsibility of the caller to set the dirid
+  field.  This field requires DB access and are therefore is not part of this
+  function.
+
+  On failure this function returns NULL and sets stap to a negative error
+  code. If an X509 error occurred, crlstap is set to that error.
+*/
+
+crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
+		       int *stap, int *crlstap)
+{
+  const unsigned char    *udat;
+  crfx_validator         *cfx;
+  STACK_OF(X509_REVOKED) *rev;
+  X509V3_EXT_METHOD   *meth;
+  X509_EXTENSION      *ex;
+  X509_REVOKED  *r;
+  unsigned char *tov;
+  crl_fields    *cf;
+  unsigned int   ui;
+  ASN1_INTEGER  *a1;
+  X509_CRL *x = NULL;
+  BIGNUM   *bn;
+  BIO  *bcert = NULL;
+  void *exts;
+  char *res;
+  int   freex;
+  int   crlsta;
+  int   excnt;
+  int   snerr;
+  int   i;
+
+  if ( stap == NULL || crlstap == NULL )
+    return(NULL);
+  *crlstap = 1;
+  if ( xp == NULL )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return(NULL);
+    }
+// case 1: filenames are given
+  if ( fname != NULL && fname[0] != 0 && fullname != NULL && fullname[0] != 0 )
+    {
+      *xp = NULL;
+      freex = 1;
+      cf = (crl_fields *)calloc(1, sizeof(crl_fields));
+      if ( cf == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+      cf->fields[CRF_FIELD_FILENAME] = strdup(fname);
+      if ( cf->fields[CRF_FIELD_FILENAME] == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+// open the file
+      bcert = BIO_new(BIO_s_file());
+      if ( bcert == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+      crlsta = BIO_read_filename(bcert, fullname);
+      if ( crlsta <= 0 )
+	{
+	  BIO_free_all(bcert);
+	  freecrf(cf);
+	  *stap = ERR_SCM_CRL;
+	  *crlstap = crlsta;
+	  return(NULL);
+	}
+// read the CRL based on the input type
+      if ( typ < OT_PEM_OFFSET )
+	x = d2i_X509_CRL_bio(bcert, NULL);
+      else
+	x = PEM_read_bio_X509_CRL(bcert, NULL, NULL, NULL);
+      if ( x == NULL )
+	{
+	  BIO_free_all(bcert);
+	  freecrf(cf);
+	  *stap = ERR_SCM_BADCRL;
+	  return(NULL);
+	}
+    }
+// case 2: x is given
+  else
+    {
+      x = *xp;
+      if ( x == NULL )
+	{
+	  *stap = ERR_SCM_INVALARG;
+	  return(NULL);
+	}
+      freex = 0;
+      cf = (crl_fields *)calloc(1, sizeof(crl_fields));
+      if ( cf == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+    }
+// get all the non-extension fields; if a field cannot be gotten and its
+// critical, that is a fatal error
+  for(i=1;i<CRF_NFIELDS;i++)
+    {
+      if ( crvalidators[i].get_func == NULL )
+	break;
+      res = (*crvalidators[i].get_func)(x, stap, crlstap);
+      if ( res == NULL && crvalidators[i].critical > 0 )
+	{
+	  if ( freex )
+	    X509_CRL_free(x);
+	  if ( bcert != NULL )
+	    BIO_free_all(bcert);
+	  freecrf(cf);
+	  if ( *stap == 0 )
+	    *stap = ERR_SCM_CRL;
+	  return(NULL);
+	}
+      cf->fields[i] = res;
+    }
+// get flags, snlen and snlist; note that snlen is the count in BIGINTs
+  cf->flags = 0;
+  rev = X509_CRL_get_REVOKED(x);
+  if ( rev == NULL )
+    cf->snlen = 0;
+  else
+    cf->snlen = sk_X509_REVOKED_num(rev);
+  snerr = 0;
+  if ( cf->snlen > 0 )
+    {
+      cf->snlist = (void *)calloc(cf->snlen, sizeof(long long));
+      if ( cf->snlist == NULL )
+	{
+	  *stap = ERR_SCM_NOMEM;
+	  return(NULL);
+	}
+      tov = (unsigned char *)(cf->snlist);
+      for(ui=0;ui<cf->snlen;ui++)
+	{
+	  r = sk_X509_REVOKED_value(rev, ui);
+	  if ( r == NULL )
+	    {
+	      snerr = ERR_SCM_NOSN;
+	      break;
+	    }
+	  a1 = r->serialNumber;
+	  if ( a1 == NULL )
+	    {
+	      snerr = ERR_SCM_NOSN;
+	      break;
+	    }
+	  bn = ASN1_INTEGER_to_BN(a1, NULL);
+	  if ( bn == NULL )
+	    {
+	      snerr = ERR_SCM_BIGNUMERR;
+	      break;
+	    }
+	  if ( (unsigned)(BN_num_bytes(bn)) <= sizeof(long long) )
+	    {
+	      BN_bn2bin(bn, tov);
+	      BN_free(bn);
+	      tov += sizeof(long long);
+	    }
+	  else
+	    {
+	      snerr = ERR_SCM_BIGNUMERR;
+	      BN_free(bn);
+	      break;
+	    }
+	}
+    }
+  if ( snerr < 0 )
+    {
+      if ( bcert != NULL )
+	BIO_free_all(bcert);
+      freecrf(cf);
+      if ( freex )
+	X509_CRL_free(x);
+      *stap = snerr;
+      return(NULL);
+    }
+// get the extension fields
+  excnt = X509_get_ext_count(x);
+  for(i=0;i<excnt;i++)
+    {
+      ex = sk_X509_EXTENSION_value(x->crl->extensions, i);
+      if ( ex == NULL )
+	continue;
+      meth = X509V3_EXT_get(ex);
+      if ( meth == NULL )
+	continue;
+      udat = ex->value->data;
+      if ( meth->it )
+	exts = ASN1_item_d2i(NULL, &udat, ex->value->length,
+			     ASN1_ITEM_ptr(meth->it));
+      else
+	exts = meth->d2i(NULL, &udat, ex->value->length);
+      if ( exts == NULL )
+	continue;
+      cfx = crfx_find(meth->ext_nid);
+      if ( cfx == NULL || cfx->get_func == NULL )
+	continue;
+      *stap = 0;
+      *crlstap = 0;
+      (*cfx->get_func)(meth, exts, cf, stap, crlstap);
+      if ( *stap != 0 && cfx->critical != 0 )
+	break;
+      if ( meth->it )
+	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
+      else
+	meth->ext_free(exts);
+    }
+// check that all critical extension fields are present
+  for(ui=0;ui<sizeof(crxvalidators)/sizeof(crfx_validator);ui++)
+    {
+      if ( crxvalidators[ui].critical != 0 &&
+	   cf->fields[crxvalidators[ui].fieldno] == NULL )
+	{
+	  *stap = ERR_SCM_MISSEXT;
+	  break;
+	}
+    }
+  if ( bcert != NULL )
+    BIO_free_all(bcert);
+  if ( *stap != 0 )
+    {
+      freecrf(cf);
+      if ( freex )
+	X509_CRL_free(x);
       cf = NULL;
     }
   *xp = x;

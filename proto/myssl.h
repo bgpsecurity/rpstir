@@ -21,7 +21,7 @@
 #include <openssl/bn.h>
 
 /*
-  This data structure defines the fields that must be extracted from the
+  This data structure defines the fields that must be extracted from a
   certificate in order to insert it into the DB.
 */
 
@@ -94,5 +94,74 @@ extern char *ASNTimeToDBTime(char *in, int *stap);
 
 extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 				X509 **xp, int *stap, int *x509stap);
+
+/*
+  This data structure defines the fields that must be extracted from a
+  CRL in order to insert it into the DB.
+*/
+
+#define CRF_FIELD_FILENAME    0
+#define CRF_FIELD_ISSUER      1
+#define CRF_FIELD_LAST        2
+#define CRF_FIELD_NEXT        3
+
+#define CRF_FIELD_SN          4
+
+#define CRF_NFIELDS         (CRF_FIELD_SN+1)
+
+
+/*
+  A X509_CRL * must be torn apart into this type of structure.
+  This structure can then be entered into the database.
+*/
+
+typedef struct _crl_fields
+{
+  char *fields[CRF_NFIELDS];
+  void *snlist;
+  unsigned int snlen;
+  unsigned int dirid;
+  unsigned int flags;
+} crl_fields;
+
+typedef char *(*crf_get)(X509_CRL *x, int *stap, int *crlstap);
+
+typedef void (*crfx_get)(X509V3_EXT_METHOD *meth, void *exts,
+			 crl_fields *cf, int *stap, int *crlstap);
+
+/*
+  For each field in the X509_CRL * that must be extracted, there is a get
+  function. Some fields are mandatory, others are optional. This structure
+  encapsulates the association of field numbers (above), get functions and
+  an indication of whether they are critical or optional.
+*/
+
+typedef struct _crf_validator
+{
+  crf_get get_func;
+  int     fieldno;
+  int     critical;
+} crf_validator;
+
+/*
+  For each field that is part of the X509_CRL extension, there is a get
+  function. As above, some fields are mandatory, others are optional.
+  This structure encapsulates the association of extension tags, get
+  functions, field numbers and an indication of whether they are critical
+  or optional.
+*/
+
+typedef struct _crfx_validator 
+{
+  crfx_get get_func;
+  int      fieldno;
+  int      tag;
+  int      critical;
+} crfx_validator;
+
+extern void  freecrf(crl_fields *);
+
+extern crl_fields *crl2fields(char *fname, char *fullname, int typ,
+			       X509_CRL **xp, int *stap, int *crlstap);
 
 #endif
