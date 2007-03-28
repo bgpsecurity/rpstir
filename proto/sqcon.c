@@ -392,6 +392,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   char *stmt;
   int   sta;
   int   leen = 128;
+  int   doq;
   int   i;
 
   if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
@@ -428,14 +429,34 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
       (void)strcat(stmt, ", ");
       (void)strcat(stmt, arr->vec[i].column);
     }
-  (void)strcat(stmt, ") VALUES (\"");
+/*
+  Note the special convention that if the value (as a string)
+  begins with 0x it is NOT quoted. This is so that we can insert
+  binary strings in their hex representation. Thus if we said
+  0x00656667 as the value it would get inserted as NULefg but
+  if we said "0x00656667" it would get inserted as the string
+  0x00656667.
+*/
+  doq = strncmp(arr->vec[0].value, "0x", 2);
+  if ( doq == 0 )
+    (void)strcat(stmt, ") VALUES (");
+  else
+    (void)strcat(stmt, ") VALUES (\"");
   (void)strcat(stmt, arr->vec[0].value);
+  if ( doq != 0 )
+    (void)strcat(stmt, "\"");
   for(i=1;i<arr->nused;i++)
     {
-      (void)strcat(stmt, "\", \"");
+      doq = strncmp(arr->vec[i].value, "0x", 2);
+      if ( doq == 0 )
+	(void)strcat(stmt, ", ");
+      else
+	(void)strcat(stmt, ", \"");
       (void)strcat(stmt, arr->vec[i].value);
+      if ( doq != 0 )
+	(void)strcat(stmt, "\"");
     }
-  (void)strcat(stmt, "\");");
+  (void)strcat(stmt, ");");
   sta = statementscm(conp, stmt);
   free((void *)stmt);
   return(sta);

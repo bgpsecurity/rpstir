@@ -833,7 +833,6 @@ static crf_validator crvalidators[] =
   { NULL,            0,                0 }   /* terminator */
 } ;
 
-// GAGNON
 static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
 			  crl_fields *cf, int *stap, int *crlstap)
 {
@@ -867,11 +866,10 @@ static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
     }
   cf->fields[CRF_FIELD_SN] = dptr;
 }
-// GAGNON
 
 static crfx_validator crxvalidators[] = 
   {
-    { crf_get_crlno,  CRF_FIELD_SN,     NID_subject_key_identifier,   0 } ,
+    { crf_get_crlno,  CRF_FIELD_SN,     NID_crl_number,   0 } ,
   } ;
 
 /*
@@ -1088,7 +1086,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
       return(NULL);
     }
 // get the extension fields
-  excnt = X509_get_ext_count(x);
+  excnt = X509_CRL_get_ext_count(x);
   for(i=0;i<excnt;i++)
     {
       ex = sk_X509_EXTENSION_value(x->crl->extensions, i);

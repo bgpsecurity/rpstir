@@ -241,6 +241,114 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
 }
 
 /*
+  Convert a binary array into a hex string.
+*/
+
+static char *hexify(unsigned int lllen, void *ptr)
+{
+  unsigned char *inptr;
+  char *aptr;
+  char *outptr;
+  int   lllim;
+  int   i;
+
+  lllim = lllen*sizeof(long long);
+  aptr = (char *)calloc(lllim+lllim+24, sizeof(char));
+  if ( aptr == NULL )
+    return(NULL);
+  inptr = (unsigned char *)ptr;
+  outptr = aptr;
+  *outptr++ = '0';
+  *outptr++ = 'x';
+  for(i=0;i<lllim;i++)
+    {
+      (void)sprintf(outptr, "%2.2x", *inptr);
+      outptr += 2;
+      inptr++;
+    }
+  *outptr = 0;
+  return(aptr);
+}
+
+static char *crlf[] =
+  {
+    "filename", "issuer", "last_upd", "next_upd", "crlno"
+  } ;
+
+static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
+{
+  unsigned int crl_id;
+  scmtab  *ctab;
+  scmkva   aone;
+  scmkv    cols[CRF_NFIELDS+6];
+  char *ptr;
+  char *hexs;
+  char  flagn[24];
+  char  lid[24];
+  char  did[24];
+  char  csnlen[24];
+  int   idx = 0;
+  int   sta;
+  int   i;
+
+// the following statement could use a LOT of memory, so we try
+// it first in case it fails
+  hexs = hexify(cf->snlen, cf->snlist);
+  if ( hexs == NULL )
+    return(ERR_SCM_NOMEM);
+  ctab = findtablescm(scmp, "CRL");
+  if ( ctab == NULL )
+    {
+      free((void *)hexs);
+      return(ERR_SCM_NOSUCHTAB);
+    }
+  sta = getmaxidscm(scmp, conp, NULL, "CRL", &crl_id);
+  if ( sta < 0 )
+    {
+      free((void *)hexs);
+      return(sta);
+    }
+  crl_id++;
+// fill in insertion structure
+  for(i=0;i<CRF_NFIELDS+6;i++)
+    cols[i].value = NULL;
+  for(i=0;i<CRF_NFIELDS;i++)
+    {
+      if ( (ptr=cf->fields[i]) != NULL )
+	{
+	  cols[idx].column = crlf[i];
+	  cols[idx++].value = ptr;
+	}
+    }
+  (void)sprintf(flagn, "%u", cf->flags);
+  cols[idx].column = "flags";
+  cols[idx++].value = flagn;
+  (void)sprintf(lid, "%u", crl_id);
+  cols[idx].column = "local_id";
+  cols[idx++].value = lid;
+  (void)sprintf(did, "%u", cf->dirid);
+  cols[idx].column = "dir_id";
+  cols[idx++].value = did;
+  (void)sprintf(csnlen, "%d", cf->snlen);
+  cols[idx].column = "snlen";
+  cols[idx++].value = csnlen;
+  cols[idx].column = "sninuse";
+  cols[idx++].value = csnlen;
+  cols[idx].column = "snlist";
+  cols[idx++].value = hexs;
+  aone.vec = &cols[0];
+  aone.ntot = CRF_NFIELDS+6;
+  aone.nused = idx;
+  aone.vald = 0;
+  sta = insertscm(conp, ctab, &aone);
+  free((void *)hexs);
+  if ( sta < 0 )
+    return(sta);
+  sta = setmaxidscm(scmp, conp, NULL, "CRL", crl_id);
+  return(sta);
+}
+
+/*
   Callback function used in verification.
 */
 
@@ -646,9 +754,22 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	    unsigned int id, int utrust, int typ)
 {
-  UNREFERENCED_PARAMETER(utrust);
+  crl_fields *cf;
+  X509_CRL   *x = NULL;
+  int   crlsta = 0;
+  int   sta = 0;
 
-  return(0);			/* GAGNON */
+  UNREFERENCED_PARAMETER(utrust);
+  cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta);
+  if ( cf == NULL || x == NULL )
+    return(sta);
+  cf->dirid = id;
+// actually add the CRL
+  cf->flags |= SCM_FLAG_VALID;
+  sta = add_crl_internal(scmp, conp, cf);
+  freecrf(cf);
+  X509_CRL_free(x);
+  return(sta);
 }
 
 /*

@@ -72,12 +72,14 @@ static scmtab scmtabbuilder[] =
   Usage notes: this_upd and next_upd are stored in GMT. local_id is a unique
   identifier obtained from the crl_max field of the metadata table (see above
   under the cert usage notes for the algorithm used in calculating the crl
-  local_id). issuer is the actual CRL issuer, obtained from the issuer field of the
-  CRL (direct CRL). snlist is the list of serial numbers for this issuer. It is an
-  array of bignums. The number of bignums in the list is snlen. Some of these
-  revocations may already have happened and the corresponding sn set to 0 in the
-  list. sninuse keeps track of the  number of serial numbers that are not zero in
-  the list.  When this number drops to 0, the entire CRL may be deleted from the DB.
+  local_id). issuer is the actual CRL issuer, obtained from the issuer field of
+  the CRL (direct CRL). snlist is the list of serial numbers for this issuer.
+  It is an array of bignums. The number of bignums in the list is snlen. Some
+  of these revocations may already have happened and the corresponding sn set
+  to 0 in the list. sninuse keeps track of the  number of serial numbers that
+  are not zero in the list.  When this number drops to 0, the entire CRL may be
+  deleted from the DB.
+
   Note that snlist is of type MEDIUMBLOB, indicating that it can hold at most
   16M/8 = 2M entries.
 */
@@ -98,7 +100,7 @@ static scmtab scmtabbuilder[] =
       "other_ty INT UNSIGNED DEFAULT 0,"
       "         PRIMARY KEY (filename, dir_id),"
       "         KEY issuer (issuer),"
-      "         KEY this_upd (this_upd)",
+      "         KEY next_upd (next_upd)",
       NULL,
       0
     },
