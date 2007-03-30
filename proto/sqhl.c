@@ -240,36 +240,6 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   return(sta);
 }
 
-/*
-  Convert a binary array into a hex string.
-*/
-
-static char *hexify(unsigned int lllen, void *ptr)
-{
-  unsigned char *inptr;
-  char *aptr;
-  char *outptr;
-  int   lllim;
-  int   i;
-
-  lllim = lllen*sizeof(long long);
-  aptr = (char *)calloc(lllim+lllim+24, sizeof(char));
-  if ( aptr == NULL )
-    return(NULL);
-  inptr = (unsigned char *)ptr;
-  outptr = aptr;
-  *outptr++ = '0';
-  *outptr++ = 'x';
-  for(i=0;i<lllim;i++)
-    {
-      (void)sprintf(outptr, "%2.2x", *inptr);
-      outptr += 2;
-      inptr++;
-    }
-  *outptr = 0;
-  return(aptr);
-}
-
 static char *crlf[] =
   {
     "filename", "issuer", "last_upd", "next_upd", "crlno"
@@ -848,7 +818,8 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   combination in the appropriate table and issue the delete SQL call.
 */
 
-int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir, char *outfull)
+int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+		  char *outfull)
 {
   unsigned int id;
   unsigned int blah;
@@ -897,6 +868,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir, char *ou
   if ( sta < 0 )
     return(sta);
 // delete the object based on the type
+// note that the directory itself is not deleted
   thetab = NULL;
   switch ( typ )
     {
@@ -987,4 +959,163 @@ int getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
   if ( lidp != NULL )
     *lidp = lid;
   return(0);
+}
+
+/*
+  This is the internal iteration function used by iterate_crl below.
+  It processes CRLs one at a time.
+
+  On failure it returns a negative error code. On success it returns 0.
+*/
+
+static int crliterator(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned long long *snlist;
+  unsigned int snlen;
+  unsigned int sninuse;
+  unsigned int flags;
+  unsigned int lid;
+  unsigned int i;
+  crlinfo *crlip;
+  char    *issuer;
+  int      ista;
+  int      chgd = 0;
+  int      sta = 0;
+
+  UNREFERENCED_PARAMETER(idx);
+  if ( conp == NULL || s == NULL || s->context == NULL )
+    return(ERR_SCM_INVALARG);
+  crlip = (crlinfo *)(s->context);
+  if ( crlip->conp != conp )
+    return(ERR_SCM_INVALARG);
+// if sninuse or snlen is 0 or if the flags mark the CRL as invalid, or
+// if the issuer is a null string, then ignore this CRL
+  issuer = (char *)(s->vec[0].valptr);
+  if ( issuer == NULL || issuer[0] == 0 || s->vec[0].avalsize == 0 )
+    return(0);
+  snlen = *(unsigned int *)(s->vec[1].valptr);
+  if ( snlen == 0 || s->vec[1].avalsize < (int)(sizeof(unsigned int)) )
+    return(0);
+  sninuse = *(unsigned int *)(s->vec[2].valptr);
+  if ( sninuse == 0 || s->vec[2].avalsize < (int)(sizeof(unsigned int)) )
+    return(0);
+  flags = *(unsigned int *)(s->vec[3].valptr);
+  if ( (flags & SCM_FLAG_VALID) == 0 ||
+       s->vec[3].avalsize < (int)(sizeof(unsigned int)) )
+    return(0);
+  lid = *(unsigned int *)(s->vec[4].valptr);
+  if ( s->vec[5].avalsize <= 0 )
+    return(0);
+  snlist = (unsigned long long *)(s->vec[5].valptr);
+  for(i=0;i<snlen;i++)
+    {
+      ista = (*crlip->cfunc)(crlip->scmp, crlip->conp, issuer, snlist[i]);
+      if ( ista < 0 )
+	sta = ista;
+      if ( ista == 1 )
+	{
+	  snlist[i] = 0;
+	  chgd++;
+	}
+    }
+// on error do nothing
+  if ( sta < 0 )
+    return(sta);
+// no changes: do not update the CRL
+  if ( chgd == 0 )
+    return(0);
+// update the sninuse and snlist values
+  sninuse -= chgd;
+  sta = updateblobscm(conp, crlip->tabp, snlist, sninuse, snlen, lid);
+  return(sta);
+}
+
+/*
+  Iterate through all CRLs in the DB, recursively processing each
+  CRL to obtain its (issuer, snlist) information. For each SN in
+  the list, call a specified function (persumably a certificate
+  revocation function) on that (issuer, sn) combination.
+
+  On success this function returns 0.  On failure it returns a negative
+  error code.
+*/
+
+int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
+{
+  unsigned int snlen = 0;
+  unsigned int sninuse = 0;
+  unsigned int flags = 0;
+  unsigned int lid = 0;
+  scmsrcha srch;
+  scmsrch  srch1[6];
+  scmtab  *tabp;
+  crlinfo  crli;
+  char     issuer[512];
+  void    *snlist;
+  int      sta;
+
+// go for broke and allocate a blob large enough that it can hold
+// the entire snlist if necessary
+  snlist = (void *)calloc(16*1024*1024/sizeof(unsigned long long),
+			  sizeof(unsigned long long));
+  if ( snlist == NULL )
+    return(ERR_SCM_NOMEM);
+  tabp = findtablescm(scmp, "CRL");
+  if ( tabp == NULL )
+    {
+      free(snlist);
+      return(ERR_SCM_NOSUCHTAB);
+    }
+// set up a search for issuer, snlen, sninuse, flags and snlist
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_CHAR;
+  srch1[0].colname = "issuer";
+  issuer[0] = 0;
+  srch1[0].valptr = issuer;
+  srch1[0].valsize = 512;
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_ULONG;
+  srch1[1].colname = "snlen";
+  srch1[1].valptr = (void *)&snlen;
+  srch1[1].valsize = sizeof(unsigned int);
+  srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_ULONG;
+  srch1[2].colname = "sninuse";
+  srch1[2].valptr = (void *)&sninuse;
+  srch1[2].valsize = sizeof(unsigned int);
+  srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_ULONG;
+  srch1[3].colname = "flags";
+  srch1[3].valptr = (void *)&flags;
+  srch1[3].valsize = sizeof(unsigned int);
+  srch1[3].avalsize = 0;
+  srch1[4].colno = 5;
+  srch1[4].sqltype = SQL_C_ULONG;
+  srch1[4].colname = "local_id";
+  srch1[4].valptr = (void *)&lid;
+  srch1[4].valsize = sizeof(unsigned int);
+  srch1[4].avalsize = 0;
+  srch1[5].colno = 6;
+  srch1[5].sqltype = SQL_C_BINARY;
+  srch1[5].colname = "snlist";
+  srch1[5].valptr = snlist;
+  srch1[5].valsize = 16*1024*1024;
+  srch1[5].avalsize = 0;
+  srch.vec = &srch1[0];
+  srch.sname = NULL;
+  srch.ntot = 6;
+  srch.nused = 6;
+  srch.vald = 0;
+  srch.where = NULL;
+  crli.scmp = scmp;
+  crli.conp = conp;
+  crli.tabp = tabp;
+  crli.cfunc = cfunc;
+  srch.context = (void *)&crli;
+  sta = searchscm(conp, tabp, &srch, NULL, crliterator, SCM_SRCH_DOVALUE_ALWAYS);
+  free(snlist);
+  return(sta);
 }

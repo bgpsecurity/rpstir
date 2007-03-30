@@ -669,6 +669,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
   int   nfnd = 0;
   int   bset = 0;
   int   ridx = 0;
+  int   nok = 0;
   int   fnd;
   int   i;
 
@@ -779,7 +780,13 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	  if ( rc == SQL_NO_DATA )
 	    break;
 	  if ( !SQLOK(rc) )
-	    continue;
+	    {
+	      nok++;
+	      if ( nok >= 2 )
+		break;
+	      else
+		continue;
+	    }
 // count how many columns actually contain data
 	  fnd = 0;
 	  for(i=0;i<srch->nused;i++)
@@ -1138,5 +1145,67 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
     }
   sta = statementscm(conp, stmt);
   free((void *)stmt);
+  return(sta);
+}
+
+/*
+  Convert a binary array into a hex string.
+*/
+
+char *hexify(unsigned int lllen, void *ptr)
+{
+  unsigned char *inptr;
+  char *aptr;
+  char *outptr;
+  int   lllim;
+  int   i;
+
+  lllim = lllen*sizeof(unsigned long long);
+  aptr = (char *)calloc(lllim+lllim+24, sizeof(char));
+  if ( aptr == NULL )
+    return(NULL);
+  inptr = (unsigned char *)ptr;
+  outptr = aptr;
+  *outptr++ = '0';
+  *outptr++ = 'x';
+  for(i=0;i<lllim;i++)
+    {
+      (void)sprintf(outptr, "%2.2x", *inptr);
+      outptr += 2;
+      inptr++;
+    }
+  *outptr = 0;
+  return(aptr);
+}
+
+/*
+  This very specific function updates the sninuse and snlist entries
+  on a CRL using the local_id as the where criterion.
+*/
+
+int updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
+		  unsigned int sninuse, unsigned int snlen, unsigned int lid)
+{
+  char *stmt;
+  char *hexi;
+  int   leen = 128;
+  int   sta;
+
+  if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
+       tabp->tabname == NULL )
+    return(ERR_SCM_INVALARG);
+  hexi = hexify(snlen, (void *)snlist);
+  if ( hexi == NULL )
+    return(ERR_SCM_NOMEM);
+// compute the size of the statement
+  leen += strlen(hexi);
+  stmt = (char *)calloc(leen, sizeof(char));
+  if ( stmt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(stmt, "UPDATE %s SET sninuse=%u, snlist=%s WHERE local_id=%u;",
+		tabp->tabname, sninuse, hexi, lid);
+  sta = statementscm(conp, stmt);
+  free((void *)stmt);
+  free((void *)hexi);
   return(sta);
 }

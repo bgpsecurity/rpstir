@@ -1034,7 +1034,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   snerr = 0;
   if ( cf->snlen > 0 )
     {
-      cf->snlist = (void *)calloc(cf->snlen, sizeof(long long));
+      cf->snlist = (void *)calloc(cf->snlen, sizeof(unsigned long long));
       if ( cf->snlist == NULL )
 	{
 	  *stap = ERR_SCM_NOMEM;
@@ -1061,11 +1061,11 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	      snerr = ERR_SCM_BIGNUMERR;
 	      break;
 	    }
-	  if ( (unsigned)(BN_num_bytes(bn)) <= sizeof(long long) )
+	  if ( (unsigned)(BN_num_bytes(bn)) <= sizeof(unsigned long long) )
 	    {
 	      BN_bn2bin(bn, tov);
 	      BN_free(bn);
-	      tov += sizeof(long long);
+	      tov += sizeof(unsigned long long);
 	    }
 	  else
 	    {

@@ -85,8 +85,10 @@ typedef int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
 extern scmcon   *connectscm(char *dsnp, char *errmsg, int emlen);
 extern scmsrcha *newsrchscm(char *name, int leen, int cleen);
 extern void  disconnectscm(scmcon *conp);
+extern void  freesrchscm(scmsrcha *srch);
 extern char *geterrorscm(scmcon *conp);
 extern char *gettablescm(scmcon *conp);
+extern char *hexify(unsigned int, void *);
 extern int   getrowsscm(scmcon *conp);
 extern int   statementscm(scmcon *conp, char *stm);
 extern int   createdbscm(scmcon *conp, char *dbname, char *dbuser);
@@ -109,7 +111,9 @@ extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
 extern int   deletescm(scmcon *conp, scmtab *tabp, scmkva *deld);
 extern int   setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			 unsigned int flags);
-extern void  freesrchscm(scmsrcha *srch);
+extern int   updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
+			   unsigned int sninuse, unsigned int snlen,
+			   unsigned int lid);
 
 /*
   Macros

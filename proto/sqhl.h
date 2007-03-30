@@ -5,24 +5,6 @@
 #ifndef _SQHL_H_
 #define _SQHL_H_
 
-extern int   findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
-			     char *dirname, unsigned int *idp);
-extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			char *outfull, int utrust);
-extern int   delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			   char *outfull);
-extern int   infer_filetype(char *fname);
-extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		      unsigned int id, int utrust, int typ);
-extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ);
-extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ);
-extern int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
-			   unsigned int *pflags, unsigned int *lidp);
-
-extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
-
 /*
   Object types
 */
@@ -53,5 +35,43 @@ extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 #define SCM_FLAG_REVOKED     0x4000    /* CRL nuked it */
 #define SCM_FLAG_REMOVED     0x8000    /* rsync removed it */
 #define SCM_FLAG_PINV       0x10000    /* parent not valid */
+
+/*
+  Data types
+*/
+
+typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer,
+		       unsigned long long sn);
+
+typedef struct _crlinfo
+{
+  scm     *scmp;
+  scmcon  *conp;
+  scmtab  *tabp;
+  crlfunc  cfunc;
+} crlinfo;
+
+/*
+  Prototypes
+*/
+
+extern int   findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
+			     char *dirname, unsigned int *idp);
+extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+			char *outfull, int utrust);
+extern int   delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+			   char *outfull);
+extern int   infer_filetype(char *fname);
+extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
+		      unsigned int id, int utrust, int typ);
+extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
+		     unsigned int id, int utrust, int typ);
+extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
+		     unsigned int id, int utrust, int typ);
+extern int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
+			   unsigned int *pflags, unsigned int *lidp);
+extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
+
+extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
 #endif

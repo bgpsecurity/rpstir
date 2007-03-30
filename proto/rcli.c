@@ -336,6 +336,25 @@ static int yorn(char *q)
     return(1);
 }
 
+#ifdef CRLI_TEST
+
+static int cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
+{
+  UNREFERENCED_PARAMETER(scmp);
+  UNREFERENCED_PARAMETER(conp);
+
+  (void)printf("CRL iterator: %s %lld\n", issuer, sn);
+  if ( sn%3 == 0 )
+    {
+      (void)printf("\tDeleting this sn\n");
+      return(1);
+    }
+  else
+    return(0);
+}
+
+#endif
+
 // putative command line args:
 //   -t topdir           create all tables, set rep root to "topdir"
 //   -x                  destroy all tables
@@ -647,13 +666,18 @@ int main(int argc, char **argv)
 		sta2 = getflagsidscm(realconp, t2p, &where, &flags, &lid);
 		if ( sta2 >= 0 )
 		  {
-		    (void)printf("Get flags: local_id %u flags 0x%x\n", lid, flags);
+		    (void)printf("Get flags: local_id %u flags 0x%x\n",
+				 lid, flags);
 		  }
 	      }
 	  }
       }
     
   }
+#endif
+#ifdef CRLI_TEST
+  sta = iterate_crl(scmp, realconp, cfunc);
+  (void)printf("Iterate_crl status was %d\n", sta);
 #endif
   if ( realconp != NULL )
     disconnectscm(realconp);
