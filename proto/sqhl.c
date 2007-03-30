@@ -1119,3 +1119,178 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   free(snlist);
   return(sta);
 }
+
+typedef struct _mcf
+{
+  scmtab *ctab;
+  scmtab *rtab;
+  int     did;
+} mcf;
+
+/*
+  Revoke a ROA
+*/
+
+static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int pflags;
+  scmkva where;
+  scmkv  one;
+  char   lid[24];
+  mcf   *mcfp;
+  int    sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  mcfp = (mcf *)(s->context);
+// first revoke the certificate itself
+  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  one.column = "local_id";
+  one.value = &lid[0];
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  sta = getflagsidscm(conp, mcfp->rtab, &where, &pflags, NULL);
+  if ( sta < 0 )
+    return(sta);
+  pflags &= ~SCM_FLAG_VALID;
+  pflags |= SCM_FLAG_REVOKED;
+  sta = setflagsscm(conp, mcfp->rtab, &where, pflags);
+  if ( sta == 0 )
+    mcfp->did++;
+  return(sta);
+}
+
+/*
+  This is the model revocation function for certificates. Given a
+  certificate it revokes it and all its children (including ROA
+  children).
+*/
+
+static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int pflags = 0;
+  scmkva  cwhere;
+  scmkva  where;
+  scmkva *ow;
+  scmkv   cone;
+  scmkv   one;
+  mcf    *mcfp;
+  char    lid[24];
+  int     sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  mcfp = (mcf *)(s->context);
+// first revoke the certificate itself
+  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  one.column = "local_id";
+  one.value = &lid[0];
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  sta = getflagsidscm(conp, mcfp->ctab, &where, &pflags, NULL);
+  if ( sta < 0 )
+    return(sta);
+  pflags &= ~SCM_FLAG_VALID;
+  pflags |= SCM_FLAG_REVOKED;
+  sta = setflagsscm(conp, mcfp->ctab, &where, pflags);
+  if ( sta < 0 )
+    return(sta);
+  mcfp->did++;
+// next, revoke all certificate children of this certificate
+  cone.column = "aki";
+  cone.value = s->vec[1].valptr;
+  cwhere.vec = &cone;
+  cwhere.ntot = 1;
+  cwhere.nused = 1;
+  cwhere.vald = 0;
+  ow = s->where;
+  s->where = &cwhere;
+  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta == ERR_SCM_NODATA )
+    sta = 0;			/* ok if no such children */
+  if ( sta < 0 )
+    {
+      s->where = ow;
+      return(sta);
+    }
+// finally, revoke all ROA children of this certificate
+  cone.column = "ski";
+  sta = searchscm(conp, mcfp->rtab, s, NULL, revoke_roa,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  s->where = ow;
+  return(sta);
+}
+
+/*
+  This is the model callback function for iterate_crl. For each
+  (issuer, sn) pair with sn != 0 it attempts to find a certificate
+  with those values in the DB. If found, it then attempts to delete
+  the certificate and all its children. Note that in deleting an EE
+  certificate, some of its children may be ROAs, so this table has
+  to be searched as well.
+
+  This function returns 1 if it deleted something, 0 if it deleted
+  nothing and a negative error code on failure.
+*/
+
+int model_cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
+{
+  unsigned int lid;
+  scmsrcha srch;
+  scmsrch  srch1[2];
+  scmkva   where;
+  scmkv    w[2];
+  mcf      mymcf;
+  char     ski[128];
+  char     sno[24];
+  int      sta;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 )
+    return(ERR_SCM_INVALARG);
+  if ( issuer == NULL || issuer[0] == 0 || sn == 0 )
+    return(0);
+  mymcf.ctab = findtablescm(scmp, "CERTIFICATE");
+  if ( mymcf.ctab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  mymcf.rtab = findtablescm(scmp, "ROA");
+  if ( mymcf.rtab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  mymcf.did = 0;
+  w[0].column = "issuer";
+  w[0].value = issuer;
+  (void)sprintf(sno, "%lld", sn);
+  w[1].column = "sn";
+  w[1].value = &sno[0];
+  where.vec = &w[0];
+  where.ntot = 2;
+  where.nused = 2;
+  where.vald = 0;
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_ULONG;
+  srch1[0].colname = "local_id";
+  srch1[0].valptr = (void *)&lid;
+  srch1[0].valsize = sizeof(unsigned int);
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_CHAR;
+  srch1[1].colname = "ski";
+  srch1[1].valptr = &ski[0];
+  srch1[1].valsize = 128;
+  srch1[1].avalsize = 0;
+  srch.vec = &srch1[0];
+  srch.sname = NULL;
+  srch.ntot = 2;
+  srch.nused = 2;
+  srch.vald = 0;
+  srch.where = &where;
+  srch.context = &mymcf;
+  sta = searchscm(conp, mymcf.ctab, &srch, NULL, revoke_cert_and_children,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta < 0 )
+    return(sta);
+  else
+    return(mymcf.did == 0 ? 0 : 1);
+}
