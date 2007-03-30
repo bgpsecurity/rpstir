@@ -1176,6 +1176,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   scmkv   cone;
   scmkv   one;
   mcf    *mcfp;
+  char    s1[256];
   char    lid[24];
   int     sta;
 
@@ -1183,6 +1184,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   mcfp = (mcf *)(s->context);
 // first revoke the certificate itself
   (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  (void)strcpy(s1, (char *)(s->vec[1].valptr));
   one.column = "local_id";
   one.value = &lid[0];
   where.vec = &one;
@@ -1200,13 +1202,14 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   mcfp->did++;
 // next, revoke all certificate children of this certificate
   cone.column = "aki";
-  cone.value = s->vec[1].valptr;
+  cone.value = s1;
   cwhere.vec = &cone;
   cwhere.ntot = 1;
   cwhere.nused = 1;
   cwhere.vald = 0;
   ow = s->where;
   s->where = &cwhere;
+  (void)printf("Searching for certs with aki=%s\n", s1);
   sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta == ERR_SCM_NODATA )
@@ -1218,9 +1221,12 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
     }
 // finally, revoke all ROA children of this certificate
   cone.column = "ski";
+  (void)printf("Searching for ROAs with ski=%s\n", s->where->vec[0].value);
   sta = searchscm(conp, mcfp->rtab, s, NULL, revoke_roa,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   s->where = ow;
+  if ( sta == ERR_SCM_NODATA )
+    sta = 0;
   return(sta);
 }
 
