@@ -77,6 +77,7 @@ typedef int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
 #define SCM_SRCH_DOVALUE         0xE   /* call value func */
 #define SCM_SRCH_BREAK_CERR      0x10  /* break from loop if count func err */
 #define SCM_SRCH_BREAK_VERR      0x20  /* break from loop if value func err */
+#define SCM_SRCH_DO_JOIN         0x40  /* Include join with directory table */
 
 #ifndef SQLOK
 #define SQLOK(s) (s == SQL_SUCCESS || s == SQL_SUCCESS_WITH_INFO)

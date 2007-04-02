@@ -719,6 +719,13 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     }
   (void)strcat(stmt, " FROM ");
   (void)strcat(stmt, tabp->tabname);
+// put in the join if requested
+  if ( (what & SCM_SRCH_DO_JOIN) )
+    {
+      (void)strcat(stmt, " LEFT JOIN apki_dir on ");
+      (void)strcat(stmt, tabp->tabname);
+      (void)strcat(stmt, ".dir_id = apki_dir.dir_id");
+    }
   if ( srch->where != NULL )
     {
       (void)strcat(stmt, " WHERE ");
