@@ -670,6 +670,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
   int   bset = 0;
   int   ridx = 0;
   int   nok = 0;
+  int   didw = 0;
   int   fnd;
   int   i;
 
@@ -708,6 +709,8 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	  leen += strlen(srch->where->vec[i].value);
 	}
     }
+  if ( srch->wherestr != NULL )
+    leen += strlen(srch->wherestr) + 24;
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
@@ -728,6 +731,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     }
   if ( srch->where != NULL )
     {
+      didw++;
       (void)strcat(stmt, " WHERE ");
       (void)strcat(stmt, srch->where->vec[0].column);
       (void)strcat(stmt, "=\"");
@@ -741,6 +745,16 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	  (void)strcat(stmt, srch->where->vec[i].value);
 	  (void)strcat(stmt, "\"");
 	}
+    }
+  if ( srch->wherestr != NULL )
+    {
+      if ( didw == 0 )
+	(void)strcat(stmt, " WHERE ");
+      else
+	(void)strcat(stmt, " AND ");
+      (void)strcat(stmt, "\"");
+      (void)strcat(stmt, srch->wherestr);
+      (void)strcat(stmt, "\"");
     }
   (void)strcat(stmt, ";");
 // execute the select statement
@@ -850,6 +864,11 @@ void freesrchscm(scmsrcha *srch)
 	{
 	  free(srch->context);
 	  srch->context = NULL;
+	}
+      if ( srch->wherestr != NULL )
+	{
+	  free(srch->wherestr);
+	  srch->wherestr = NULL;
 	}
       if ( srch->vec != NULL )
 	{
