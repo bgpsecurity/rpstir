@@ -1026,7 +1026,10 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
     return(0);
 // update the sninuse and snlist values
   sninuse -= chgd;
-  sta = updateblobscm(conp, crlip->tabp, snlist, sninuse, snlen, lid);
+  if ( sninuse > 0 )
+    sta = updateblobscm(conp, crlip->tabp, snlist, sninuse, snlen, lid);
+  else
+    sta = deletebylid(conp, crlip->tabp, lid);
   return(sta);
 }
 
