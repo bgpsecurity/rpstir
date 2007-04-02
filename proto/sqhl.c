@@ -1133,16 +1133,20 @@ typedef struct _mcf
 
 static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
 {
+  unsigned int lid;
+  mcf   *mcfp;
+#ifdef NOTDEF
   unsigned int pflags;
   scmkva where;
   scmkv  one;
   char   lid[24];
-  mcf   *mcfp;
+#endif
   int    sta;
 
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
-// first revoke the certificate itself
+#ifdef NOTDEF
+// this code path changes the ROA to not valid
   (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
   one.column = "local_id";
   one.value = &lid[0];
@@ -1156,6 +1160,11 @@ static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
   pflags &= ~SCM_FLAG_VALID;
   pflags |= SCM_FLAG_REVOKED;
   sta = setflagsscm(conp, mcfp->rtab, &where, pflags);
+#else
+// this code path actually deletes the ROA
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  sta = deletebylid(conp, mcfp->rtab, lid);
+#endif
   if ( sta == 0 )
     mcfp->did++;
   return(sta);
@@ -1169,24 +1178,31 @@ static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
 
 static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 {
+#ifdef NOTDEF
   unsigned int pflags = 0;
+#endif
+  unsigned int lid;
   scmkva  cwhere;
-  scmkva  where;
   scmkva *ow;
   scmkv   cone;
-  scmkv   one;
   mcf    *mcfp;
   char    s1[256];
-  char    lid[24];
+#ifdef NOTDEF
+  char    lidstr[24];
+  scmkv   one;
+  scmkva  where;
+#endif
   int     sta;
 
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
 // first revoke the certificate itself
-  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+#ifdef NOTDEF
+// this code path just changes the flags on the certificate
+  (void)sprintf(lidstr, "%u", *(unsigned int *)(s->vec[0].valptr));
   (void)strcpy(s1, (char *)(s->vec[1].valptr));
   one.column = "local_id";
-  one.value = &lid[0];
+  one.value = &lidstr[0];
   where.vec = &one;
   where.ntot = 1;
   where.nused = 1;
@@ -1199,6 +1215,13 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   sta = setflagsscm(conp, mcfp->ctab, &where, pflags);
   if ( sta < 0 )
     return(sta);
+#else
+// this code path actually deletes the certificate
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  sta = deletebylid(conp, mcfp->ctab, lid);
+  if ( sta < 0 )
+    return(sta);
+#endif
   mcfp->did++;
 // next, revoke all certificate children of this certificate
   cone.column = "aki";
@@ -1299,4 +1322,28 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
     return(sta);
   else
     return(mymcf.did == 0 ? 0 : 1);
+}
+
+/*
+  Delete a particular local_id from a table.
+*/
+
+int deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid)
+{
+  scmkva  lids;
+  scmkv   where;
+  char    mylid[24];
+  int     sta;
+
+  if ( conp == NULL || conp->connected == 0 || tabp == NULL )
+    return(ERR_SCM_INVALARG);
+  where.column = "local_id";
+  (void)sprintf(mylid, "%u", lid);
+  where.value = mylid;
+  lids.vec = &where;
+  lids.ntot = 1;
+  lids.nused = 1;
+  lids.vald = 0;
+  sta = deletescm(conp, tabp, &lids);
+  return(sta);
 }
