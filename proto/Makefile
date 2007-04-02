@@ -31,4 +31,4 @@ doQuery: doQuery.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
 	gcc -o doQuery -g -L/usr/local/ssl/lib doQuery.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
 clean:
-	rm -f sqq docert initscm *.o
+	rm -f rcli sqq docert initscm *.o

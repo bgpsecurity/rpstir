@@ -679,6 +679,10 @@ int main(int argc, char **argv)
   sta = iterate_crl(scmp, realconp, model_cfunc);
   (void)printf("Iterate_crl status was %d\n", sta);
 #endif
+#ifdef CV_TEST
+  sta = certificate_validity(scmp, realconp);
+  (void)printf("Certificate_validity status was %d\n", sta);
+#endif
   if ( realconp != NULL )
     disconnectscm(realconp);
   freescm(scmp);

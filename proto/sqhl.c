@@ -137,6 +137,7 @@ char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
   srch.nused = 1;
   srch.vald = 0;
   srch.where = &where;
+  srch.wherestr = NULL;
   srch.context = &blah;
   sta = searchscm(conp, mtab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
@@ -497,6 +498,7 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   srch.nused = 3;
   srch.vald = 0;
   srch.where = &where;
+  srch.wherestr = NULL;
   srch.context = &blah;
   *stap = searchscm(conp, ctab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)daki);
@@ -537,6 +539,7 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   dsrch.nused = 1;
   dsrch.vald = 0;
   dsrch.where = &dwhere;
+  srch.wherestr = NULL;
   dsrch.context = &dblah;
   *stap = searchscm(conp, dtab, &dsrch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( *stap < 0 )
@@ -863,6 +866,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   srch.nused = 1;
   srch.vald = 0;
   srch.where = &where;
+  srch.wherestr = NULL;
   srch.context = &blah;
   sta = searchscm(conp, thetab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
@@ -950,6 +954,7 @@ int getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
   srch.nused = 2;
   srch.vald = 0;
   srch.where = where;
+  srch.wherestr = NULL;
   srch.context = &blah;
   sta = searchscm(conp, tabp, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
@@ -1113,6 +1118,7 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   srch.nused = 6;
   srch.vald = 0;
   srch.where = NULL;
+  srch.wherestr = NULL;
   crli.scmp = scmp;
   crli.conp = conp;
   crli.tabp = tabp;
@@ -1318,6 +1324,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
   srch.nused = 2;
   srch.vald = 0;
   srch.where = &where;
+  srch.wherestr = NULL;
   srch.context = &mymcf;
   sta = searchscm(conp, mymcf.ctab, &srch, NULL, revoke_cert_and_children,
 		  SCM_SRCH_DOVALUE_ALWAYS);
@@ -1349,4 +1356,164 @@ int deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid)
   lids.vald = 0;
   sta = deletescm(conp, tabp, &lids);
   return(sta);
+}
+
+/*
+  This is the callback for certificates that are may have been NOTYET
+  but are now actually valid. Mark them as such.
+*/
+
+static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int pflags;
+  scmkva   where;
+  scmkv    one;
+  char lid[24];
+  int  sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  pflags = *(unsigned int *)(s->vec[1].valptr);
+  if ( (pflags & SCM_FLAG_NOTYET) == 0 )
+    return(0);
+  if ( (pflags & (SCM_FLAG_EXPIRED|SCM_FLAG_REVOKED|SCM_FLAG_REMOVED)) != 0 )
+    return(0);
+  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  one.column = "local_id";
+  one.value = &lid[0];
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  pflags &= ~SCM_FLAG_NOTYET;
+  pflags |= SCM_FLAG_VALID;
+  sta = setflagsscm(conp, (scmtab *)(s->context), &where, pflags);
+  return(sta);
+}
+
+/*
+  This is the callback for certificates that are too new, e.g. not
+  yet valid. Mark them as NOTYET in the flags field.
+*/
+
+static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int pflags;
+  scmkva   where;
+  scmkv    one;
+  char lid[24];
+  int  sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  one.column = "local_id";
+  one.value = &lid[0];
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  pflags = *(unsigned int *)(s->vec[1].valptr);
+  pflags &= ~SCM_FLAG_VALID;
+  pflags |= SCM_FLAG_NOTYET;
+  sta = setflagsscm(conp, (scmtab *)(s->context), &where, pflags);
+  return(sta);
+}
+
+/*
+  This is the callback for certificates that are too old, e.g. no longer
+  valid. Delete them.
+*/
+
+static int certtooold(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int lid;
+  int sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  sta = deletebylid(conp, (scmtab *)(s->context), lid);
+  return(sta);
+}
+
+/*
+  This function sweeps through all certificates. If it finds any that are
+  valid but marked as NOTYET, it clears the NOTYET bit and sets the VALID
+  bit. If it finds any where the start validity date (valfrom) is in the future,
+  it marks them as NOTYET. If it finds any where the end validity date (valto)
+  is in the past, it deletes them.
+*/
+
+int certificate_validity(scm *scmp, scmcon *conp)
+{
+  unsigned int pflags;
+  unsigned int lid;
+  scmsrcha srch;
+  scmsrch  srch1[2];
+  scmtab  *ctab;
+  char *vok;
+  char *vf;
+  char *vt;
+  char *now;
+  int   retsta = 0;
+  int   sta = 0;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 )
+    return(ERR_SCM_INVALARG);
+  ctab = findtablescm(scmp, "CERTIFICATE");
+  if ( ctab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  now = LocalTimeToDBTime(&sta);
+  if ( now == NULL )
+    return(sta);
+// construct the validity clauses
+  vok = (char *)calloc(48+2*strlen(now), sizeof(char));
+  if ( vok == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(vok, "valfrom <= \"%s\" AND \"%s\" <= valto", now, now);
+  vf = (char *)calloc(24+strlen(now), sizeof(char));
+  if ( vf == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(vf, "\"%s\" < valfrom", now);
+  vt = (char *)calloc(24+strlen(now), sizeof(char));
+  if ( vt == NULL )
+    return(ERR_SCM_NOMEM);
+  (void)sprintf(vt, "valto < \"%s\"", now);
+  free((void *)now);
+// search for certificates that might now be valid
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_ULONG;
+  srch1[0].colname = "local_id";
+  srch1[0].valptr = (void *)&lid;
+  srch1[0].valsize = sizeof(unsigned int);
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_ULONG;
+  srch1[1].colname = "flags";
+  srch1[1].valptr = (void *)&pflags;
+  srch1[1].valsize = sizeof(unsigned int);
+  srch1[1].avalsize = 0;
+  srch.vec = (&srch1[0]);
+  srch.sname = NULL;
+  srch.ntot = 2;
+  srch.nused = 2;
+  srch.vald = 0;
+  srch.where = NULL;
+  srch.wherestr = vok;
+  srch.context = (void *)ctab;
+  sta = searchscm(conp, ctab, &srch, NULL, certmaybeok, SCM_SRCH_DOVALUE_ALWAYS);
+  free((void *)vok);
+  if ( sta < 0 && sta != ERR_SCM_NODATA )
+    retsta = sta;
+// search for certificates that are too new
+  srch.wherestr = vf;
+  sta = searchscm(conp, ctab, &srch, NULL, certtoonew, SCM_SRCH_DOVALUE_ALWAYS);
+  free((void *)vf);
+  if ( sta < 0 && sta != ERR_SCM_NODATA && retsta == 0 )
+    retsta = sta;
+// search for certificates that are too old
+  srch.wherestr = vt;
+  sta = searchscm(conp, ctab, &srch, NULL, certtooold, SCM_SRCH_DOVALUE_ALWAYS);
+  free((void *)vt);
+  if ( sta < 0 && sta != ERR_SCM_NODATA && retsta == 0 )
+    retsta = sta;
+  return(retsta);
 }

@@ -57,6 +57,7 @@ typedef struct _scmsrcha	/* used for a search (select) */
   int       nused;		/* number of elements in vec */
   int       vald;		/* struct already validated? */
   scmkva   *where;              /* optional "where" conditionals */
+  char     *wherestr;           /* optional "where" string */
   void     *context;		/* context to be passed from callback */
 } scmsrcha;
 

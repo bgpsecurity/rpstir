@@ -752,9 +752,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	(void)strcat(stmt, " WHERE ");
       else
 	(void)strcat(stmt, " AND ");
-      (void)strcat(stmt, "\"");
       (void)strcat(stmt, srch->wherestr);
-      (void)strcat(stmt, "\"");
     }
   (void)strcat(stmt, ";");
 // execute the select statement

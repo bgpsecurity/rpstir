@@ -74,6 +74,7 @@ extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
 extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer,
 			 unsigned long long sn);
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
+extern int   certificate_validity(scm *scmp, scmcon *conp);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 

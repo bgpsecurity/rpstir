@@ -83,6 +83,34 @@ char *ASNTimeToDBTime(char *bef, int *stap)
   return(out);
 }
 
+/*
+  This function converts the local time into GMT in a form recognized
+  by the DB.
+*/
+
+char *LocalTimeToDBTime(int *stap)
+{
+  struct tm *tmp;
+  time_t clck;
+  char  *out;
+
+  if ( stap == NULL )
+    return(NULL);
+  *stap = 0;
+  out = (char *)calloc(24, sizeof(char));
+  if ( out == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  (void)time(&clck);
+  tmp = gmtime(&clck);
+  (void)sprintf(out, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+	1900+tmp->tm_year, 1+tmp->tm_mon, tmp->tm_mday,
+	tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+  return(out);
+}
+
 void freecf(cert_fields *cf)
 {
   int i;
