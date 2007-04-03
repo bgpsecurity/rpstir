@@ -37,9 +37,9 @@ static int fillInSrch (scmsrch *srch, int isChar, unsigned int sz,
 static int handleResults (scmcon *conp, scmsrcha *s, int idx)
 {
   conp = conp; idx = idx;  // silence compiler warnings
-  fprintf (stderr, "ASN = %d File = %s/%s\n",
-           *((unsigned int *) s->vec[2].valptr),
-           (char *) s->vec[3].valptr, (char *) s->vec[0].valptr);
+  fprintf (stderr, "ASN = %d File = %s/%s\n   SKI = %s\n",
+           *((unsigned int *) s->vec[2].valptr), (char *) s->vec[3].valptr,
+           (char *) s->vec[0].valptr, (char *) s->vec[1].valptr);
   return(0);
 }
 
