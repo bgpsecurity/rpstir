@@ -61,6 +61,7 @@ int main(int argc, char **argv)
   table = findtablescm (scmp, "ROA"); 
   checkErr (table == NULL, "Cannot find table ROA\n");
   srch.where = NULL;
+  srch.wherestr = NULL;
   if (fillInSrch (&srch1[0], 1, 256, 1, "filename")) return -1;
   if (fillInSrch (&srch1[1], 1, 128, 2, "ski")) return -1;
   if (fillInSrch (&srch1[2], 0, 1, 3, "asn")) return -1;
