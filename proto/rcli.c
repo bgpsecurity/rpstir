@@ -624,6 +624,8 @@ int main(int argc, char **argv)
 	  free((void *)outfile);
 	  free((void *)outfull);
 	}
+      else
+	(void)fprintf(stderr, "Error: %s (%d)\n", err2string(sta), sta);
     }
   if ( thedelfile != NULL && sta == 0 )
     {
@@ -638,6 +640,8 @@ int main(int argc, char **argv)
 	  free((void *)outfile);
 	  free((void *)outfull);
 	}
+      else
+	(void)fprintf(stderr, "Error: %s (%d)\n", err2string(sta), sta);
     }
   if ( do_sockopts > 0 && sta == 0 )
     {
