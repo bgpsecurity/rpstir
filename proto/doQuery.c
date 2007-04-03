@@ -46,7 +46,14 @@ static int handleResults (scmcon *conp, scmsrcha *s, int idx)
 static int listOptions (char *objectType)
 {
   if (strcasecmp (objectType, "roa") == 0) {
-    printf ("Unimplemented\n");
+    printf ("\nPossble fields to display or use in clauses for a roa:\n");
+    printf ("  filename: the filename where the roa is stored in the repository\n");
+    printf ("  pathname: full pathname (including the filename) where the roa is stored\n");
+    printf ("            (Note: This can be used only for display.)\n");
+    printf ("  ski: signing key for the roa\n");
+    printf ("  asn: autonomous system number referred to by the roa\n");
+    printf ("  addrrng: IP address ranges referred to by the roa\n");
+    printf ("           (Note: This can be used only for display.)\n\n");
     return 0;
   }
   if (strcasecmp (objectType, "cert") == 0) {
@@ -63,16 +70,16 @@ static int listOptions (char *objectType)
 
 static int printUsage()
 {
-  printf ("\nPossible usages:\n doQuery -a\n");
-  printf (" doQuery -l <type>\n");
-  printf (" doQuery -t <type> -d <disp1>...[ -d <dispn>] [-c <cls1>]...[ -c <clsn>]\n\nSwitches:\n");
-  printf (" -a: short cut for type=roa, no clauses, and display SKI, ASNum, and IPAddrRng\n");
-  printf (" -l: list the possible display fields and clauses for a given type\n");
-  printf (" -t: the type of object requested (roa, cert, or crl)\n");
-  printf (" -d: the name of one field of the object to display\n");
-  printf (" -c: one clause to use for filtering; a clause has the form\n");
-  printf ("     <fieldName><op><value>, where op is a comparative operator\n");
-  printf ("     such as =, <>, >, ...\n\n");
+  printf ("\nPossible usages:\n  doQuery -a\n");
+  printf ("  doQuery -l <type>\n");
+  printf ("  doQuery -t <type> -d <disp1>...[ -d <dispn>] [-c <cls1>]...[ -c <clsn>]\n\nSwitches:\n");
+  printf ("  -a: short cut for type=roa, no clauses, and display ski, asn, and addrrng\n");
+  printf ("  -l: list the possible display fields and clauses for a given type\n");
+  printf ("  -t: the type of object requested (roa, cert, or crl)\n");
+  printf ("  -d: the name of one field of the object to display\n");
+  printf ("  -c: one clause to use for filtering; a clause has the form\n");
+  printf ("      <fieldName><op><value>, where op is a comparative operator\n");
+  printf ("      such as =, <>, >, ...\n\n");
   return -1;
 }
 
