@@ -18,6 +18,9 @@
      return -1; \
   }
 
+#define MAX_VALS 20
+#define MAX_CONDS 10
+
 static int fillInSrch (scmsrch *srch, int isChar, unsigned int sz,
                        int colno, char *colname)
 {
@@ -40,26 +43,51 @@ static int handleResults (scmcon *conp, scmsrcha *s, int idx)
   return(0);
 }
 
+static int printUsage()
+{
+  printf ("\nPossible usages:\n doQuery -a\n");
+  printf (" doQuery -l <type>\n");
+  printf (" doQuery -t <type> -d <disp1>...[ -d <dispn>] [-c <cls1>]...[ -c <clsn>]\n\nSwitches:\n");
+  printf (" -a: short cut for type=roa, no clauses, and display SKI, ASNum, and IPAddrRng\n");
+  printf (" -l: list the possible display fields and clauses for a given type\n");
+  printf (" -t: the type of object requested (roa, cert, or crl)\n");
+  printf (" -d: the name of one field of the object to display\n");
+  printf (" -c: one clause to use for filtering; a clause has the form\n");
+  printf ("     <fieldName><op><value>, where op is a comparative operator\n");
+  printf ("     such as =, <>, >, ...\n\n");
+  return -1;
+}
+
 int main(int argc, char **argv) 
 {
   scm      *scmp = NULL;
   scmcon   *connect = NULL;
   scmtab   *table = NULL;
   scmsrcha srch;
-  scmsrch  srch1[4];
+  scmsrch  srch1[MAX_VALS];
+  scmkva   where;
+  scmkv    where1[MAX_CONDS];
   char     errMsg[1024];
   unsigned long blah = 0;
   int      status, i;
+  char     *objectType = "ROA";
 
-  argc = argc; argv = argv;
+  if (argc == 1) return printUsage();
+  if ((strcmp (argv[1], "-l") == 0) || (strcmp (argv[1], "-t") == 0)) {
+    printf ("Unimplemented option\n");
+    return -1;
+  }
+  if (strcmp (argv[1], "-a") != 0) return printUsage();
+  if (argc > 2) return printUsage();
+
   (void)setbuf(stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
   connect = connectscm (scmp->dsn, errMsg, 1024);
   checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, errMsg);
-  connect->mystat.tabname = "ROA";
-  table = findtablescm (scmp, "ROA"); 
-  checkErr (table == NULL, "Cannot find table ROA\n");
+  connect->mystat.tabname = objectType;
+  table = findtablescm (scmp, objectType); 
+  checkErr (table == NULL, "Cannot find table %s\n", objectType);
   srch.where = NULL;
   srch.wherestr = NULL;
   if (fillInSrch (&srch1[0], 1, 256, 1, "filename")) return -1;
