@@ -46,25 +46,43 @@ static int handleResults (scmcon *conp, scmsrcha *s, int idx)
 static int listOptions (char *objectType)
 {
   if (strcasecmp (objectType, "roa") == 0) {
-    printf ("\nPossble fields to display or use in clauses for a roa:\n");
+    printf ("\nPossible fields to display or use in clauses for a roa:\n");
     printf ("  filename: the filename where the roa is stored in the repository\n");
     printf ("  pathname: full pathname (including the filename) where the roa is stored\n");
     printf ("            (Note: This can be used only for display.)\n");
-    printf ("  ski: signing key for the roa\n");
+    printf ("  ski: subject key identifier for the roa\n");
     printf ("  asn: autonomous system number referred to by the roa\n");
     printf ("  addrrng: IP address ranges referred to by the roa\n");
     printf ("           (Note: This can be used only for display.)\n\n");
     return 0;
   }
   if (strcasecmp (objectType, "cert") == 0) {
-    printf ("Unimplemented\n");
+    printf ("\nPossible fields to display or use in clauses for a cert:\n");
+    printf ("  filename: the filename where the cert is stored in the repository\n");
+    printf ("  pathname: full pathname (including the filename) where the cert is stored\n");
+    printf ("            (Note: This can be used only for display.)\n");
+    printf ("  subject: subject of the cert\n");
+    printf ("  issuer: system that issued the cert\n");
+    printf ("  ski: subject key identifier for the cert\n");
+    printf ("  aki: authority key identifier for the cert\n");
+    printf ("  valfrom: datetime from which valid\n");
+    printf ("  valto: datetime to which valid\n");
+    printf ("  !!!Dont' forget the rest!!!\n\n");
     return 0;
   }
   if (strcasecmp (objectType, "crl") == 0) {
-    printf ("Unimplemented\n");
+    printf ("\nPossible fields to display or use in clauses for a crl:\n");
+    printf ("  filename: the filename where the crl is stored in the repository\n");
+    printf ("  pathname: full pathname (including the filename) where the crl is stored\n");
+    printf ("            (Note: This can be used only for display.)\n");
+    printf ("  issuer: system that issued the crl\n");
+    printf ("  last_upd: last update time of the crl\n");
+    printf ("  next_upd: next update time of the crl\n");
+    printf ("  crlno: crl number\n");
+    printf ("  !!!Dont' forget the rest!!!\n\n");
     return 0;
   }
-  printf ("Bad object type\n");
+  printf ("Bad object type, must be roa, cert or crl\n");
   return -1;
 }
 
