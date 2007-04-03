@@ -192,20 +192,23 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
     sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &iii);
     if ( sta < 0 )
       {
-	(void)fprintf(stderr, "getmaxidscm() failed with err %d\n", sta);
+	(void)fprintf(stderr, "getmaxidscm() failed with err %s (%d)\n",
+		      err2string(sta), sta);
 	return(sta);
       }
     (void)printf("Id is %u\n", iii);
     sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 57);
     if ( sta < 0 )
       {
-	(void)fprintf(stderr, "setmaxidscm() failed with err %d\n", sta);
+	(void)fprintf(stderr, "setmaxidscm() failed with err %s (%d)\n",
+		      err2string(sta), sta);
 	return(sta);
       }
     sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &jjj);
     if ( sta < 0 )
       {
-	(void)fprintf(stderr, "getmaxidscm() failed with err %d\n", sta);
+	(void)fprintf(stderr, "getmaxidscm() failed with err %s (%d)\n",
+		      err2string(sta), sta);
 	return(sta);
       }
     (void)printf("New id is %u\n", jjj);
@@ -232,7 +235,8 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
 			  sizeof(int));
     if ( sta < 0 )
       {
-	(void)fprintf(stderr, "addcolsrchscm() failed with err %d\n", sta);
+	(void)fprintf(stderr, "addcolsrchscm() failed with err %s (%d)\n",
+		      err2string(sta), sta);
 	return(sta);
       }
     sta = searchscm(conp, mtab, narr, burlc, burlv,
@@ -248,7 +252,8 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
     sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 0);
     if ( sta < 0 )
       {
-	(void)fprintf(stderr, "setmaxidscm() failed with err %d\n", sta);
+	(void)fprintf(stderr, "setmaxidscm() failed with err %s (%d)\n",
+		      err2string(sta), sta);
 	return(sta);
       }
 // insert some directories
@@ -612,8 +617,8 @@ int main(int argc, char **argv)
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
 			       trusted);
 	      if ( sta < 0 )
-		(void)fprintf(stderr, "Could not add file %s: error %d\n",
-			      thefile, sta);
+		(void)fprintf(stderr, "Could not add file %s: error %s (%d)\n",
+			      thefile, err2string(sta), sta);
 	    }
 	  free((void *)outdir);
 	  free((void *)outfile);
@@ -627,8 +632,8 @@ int main(int argc, char **argv)
 	{
 	  sta = delete_object(scmp, realconp, outfile, outdir, outfull);
 	  if ( sta < 0 )
-	    (void)fprintf(stderr, "Could not delete file %s: error %d\n",
-			  thefile, sta);
+	    (void)fprintf(stderr, "Could not delete file %s: error %s (%d)\n",
+			  thefile, err2string(sta), sta);
 	  free((void *)outdir);
 	  free((void *)outfile);
 	  free((void *)outfull);

@@ -48,4 +48,8 @@
 #define ERR_SCM_CRL         -36         /* CRL error */
 #define ERR_SCM_BADCRL      -37         /* error reading CRL */
 
+#define ERR_SCM_MAXERR      -37
+
+extern char *err2string(int err);
+
 #endif
