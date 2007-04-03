@@ -43,6 +43,24 @@ static int handleResults (scmcon *conp, scmsrcha *s, int idx)
   return(0);
 }
 
+static int listOptions (char *objectType)
+{
+  if (strcasecmp (objectType, "roa") == 0) {
+    printf ("Unimplemented\n");
+    return 0;
+  }
+  if (strcasecmp (objectType, "cert") == 0) {
+    printf ("Unimplemented\n");
+    return 0;
+  }
+  if (strcasecmp (objectType, "crl") == 0) {
+    printf ("Unimplemented\n");
+    return 0;
+  }
+  printf ("Bad object type\n");
+  return -1;
+}
+
 static int printUsage()
 {
   printf ("\nPossible usages:\n doQuery -a\n");
@@ -73,11 +91,15 @@ int main(int argc, char **argv)
   char     *objectType = "ROA";
 
   if (argc == 1) return printUsage();
-  if ((strcmp (argv[1], "-l") == 0) || (strcmp (argv[1], "-t") == 0)) {
+  if (strcasecmp (argv[1], "-l") == 0) {
+    if (argc != 3) return printUsage();
+    return listOptions (argv[2]);
+  }
+  if (strcasecmp (argv[1], "-t") == 0) {
     printf ("Unimplemented option\n");
     return -1;
   }
-  if (strcmp (argv[1], "-a") != 0) return printUsage();
+  if (strcasecmp (argv[1], "-a") != 0) return printUsage();
   if (argc > 2) return printUsage();
 
   (void)setbuf(stdout, NULL);
