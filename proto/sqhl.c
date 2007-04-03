@@ -539,7 +539,7 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   dsrch.nused = 1;
   dsrch.vald = 0;
   dsrch.where = &dwhere;
-  srch.wherestr = NULL;
+  dsrch.wherestr = NULL;
   dsrch.context = &dblah;
   *stap = searchscm(conp, dtab, &dsrch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( *stap < 0 )
@@ -1227,6 +1227,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 #else
 // this code path actually deletes the certificate
   lid = *(unsigned int *)(s->vec[0].valptr);
+  (void)strcpy(s1, (char *)(s->vec[1].valptr));
   sta = deletebylid(conp, mcfp->ctab, lid);
   if ( sta < 0 )
     return(sta);
@@ -1241,7 +1242,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   cwhere.vald = 0;
   ow = s->where;
   s->where = &cwhere;
-  (void)printf("Searching for certs with aki=%s\n", s1);
+//  (void)printf("Searching for certs with aki=%s\n", s1);
   sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta == ERR_SCM_NODATA )
@@ -1253,7 +1254,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
     }
 // finally, revoke all ROA children of this certificate
   cone.column = "ski";
-  (void)printf("Searching for ROAs with ski=%s\n", s->where->vec[0].value);
+//  (void)printf("Searching for ROAs with ski=%s\n", s->where->vec[0].value);
   sta = searchscm(conp, mcfp->rtab, s, NULL, revoke_roa,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   s->where = ow;
@@ -1372,7 +1373,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   int  sta;
 
   UNREFERENCED_PARAMETER(idx);
-  pflags = *(unsigned int *)(s->vec[1].valptr);
+  pflags = *(unsigned int *)(s->vec[2].valptr);
   if ( (pflags & SCM_FLAG_NOTYET) == 0 )
     return(0);
   if ( (pflags & (SCM_FLAG_EXPIRED|SCM_FLAG_REVOKED|SCM_FLAG_REMOVED)) != 0 )
@@ -1386,7 +1387,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   where.vald = 0;
   pflags &= ~SCM_FLAG_NOTYET;
   pflags |= SCM_FLAG_VALID;
-  sta = setflagsscm(conp, (scmtab *)(s->context), &where, pflags);
+  sta = setflagsscm(conp, ((mcf *)(s->context))->ctab, &where, pflags);
   return(sta);
 }
 
@@ -1411,26 +1412,27 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   where.ntot = 1;
   where.nused = 1;
   where.vald = 0;
-  pflags = *(unsigned int *)(s->vec[1].valptr);
+  pflags = *(unsigned int *)(s->vec[2].valptr);
   pflags &= ~SCM_FLAG_VALID;
   pflags |= SCM_FLAG_NOTYET;
-  sta = setflagsscm(conp, (scmtab *)(s->context), &where, pflags);
+  sta = setflagsscm(conp, ((mcf *)(s->context))->ctab, &where, pflags);
   return(sta);
 }
 
 /*
   This is the callback for certificates that are too old, e.g. no longer
-  valid. Delete them.
+  valid. Delete them (and their children).
 */
 
 static int certtooold(scmcon *conp, scmsrcha *s, int idx)
 {
-  unsigned int lid;
-  int sta;
+  char *ws;
+  int   sta;
 
-  UNREFERENCED_PARAMETER(idx);
-  lid = *(unsigned int *)(s->vec[0].valptr);
-  sta = deletebylid(conp, (scmtab *)(s->context), lid);
+  ws = s->wherestr;
+  s->wherestr = NULL;
+  sta = revoke_cert_and_children(conp, s, idx);
+  s->wherestr = ws;
   return(sta);
 }
 
@@ -1447,8 +1449,11 @@ int certificate_validity(scm *scmp, scmcon *conp)
   unsigned int pflags;
   unsigned int lid;
   scmsrcha srch;
-  scmsrch  srch1[2];
+  scmsrch  srch1[3];
   scmtab  *ctab;
+  scmtab  *rtab;
+  mcf   mymcf;
+  char  skistr[512];
   char *vok;
   char *vf;
   char *vt;
@@ -1461,6 +1466,12 @@ int certificate_validity(scm *scmp, scmcon *conp)
   ctab = findtablescm(scmp, "CERTIFICATE");
   if ( ctab == NULL )
     return(ERR_SCM_NOSUCHTAB);
+  rtab = findtablescm(scmp, "ROA");
+  if ( rtab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  mymcf.ctab = ctab;
+  mymcf.rtab = rtab;
+  mymcf.did = 0;
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
     return(sta);
@@ -1479,6 +1490,8 @@ int certificate_validity(scm *scmp, scmcon *conp)
   (void)sprintf(vt, "valto < \"%s\"", now);
   free((void *)now);
 // search for certificates that might now be valid
+// in order to use revoke_cert_and_children the first two
+// columns of the search must be the lid and the ski
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_ULONG;
   srch1[0].colname = "local_id";
@@ -1486,19 +1499,25 @@ int certificate_validity(scm *scmp, scmcon *conp)
   srch1[0].valsize = sizeof(unsigned int);
   srch1[0].avalsize = 0;
   srch1[1].colno = 2;
-  srch1[1].sqltype = SQL_C_ULONG;
-  srch1[1].colname = "flags";
-  srch1[1].valptr = (void *)&pflags;
-  srch1[1].valsize = sizeof(unsigned int);
+  srch1[1].sqltype = SQL_C_CHAR;
+  srch1[1].colname = "ski";
+  srch1[1].valptr = skistr;
+  srch1[1].valsize = 512;
   srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_ULONG;
+  srch1[2].colname = "flags";
+  srch1[2].valptr = (void *)&pflags;
+  srch1[2].valsize = sizeof(unsigned int);
+  srch1[2].avalsize = 0;
   srch.vec = (&srch1[0]);
   srch.sname = NULL;
-  srch.ntot = 2;
-  srch.nused = 2;
+  srch.ntot = 3;
+  srch.nused = 3;
   srch.vald = 0;
   srch.where = NULL;
   srch.wherestr = vok;
-  srch.context = (void *)ctab;
+  srch.context = (void *)&mymcf;
   sta = searchscm(conp, ctab, &srch, NULL, certmaybeok, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)vok);
   if ( sta < 0 && sta != ERR_SCM_NODATA )
