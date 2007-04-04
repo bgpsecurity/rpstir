@@ -1,3 +1,7 @@
+/* Mar 28 2007 849U  */
+/* Mar 28 2007 GARDINER fixed signedness errors */
+/* Mar 26 2007 848U  */
+/* Mar 26 2007 GARDINER corrected for -Wall */
 /* Aug  2 2006 845U  */
 /* Aug  2 2006 GARDINER corrected delete_casn */
 /* May 22 2006 839U  */
@@ -104,7 +108,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 845P";
+char casn_sfcsid[] = "@(#)casn.c 849P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -183,8 +187,6 @@ char char_table[] = "\
               /*            N  P  T      I              V
                             u  r  6      A              i
                             m  t  1      5              s */
-
-uchar *_putd(uchar *to, long val);
 
 int casn_error(int, char *),
     _calc_lth(uchar **cpp),
@@ -1255,15 +1257,14 @@ void _put_asn_lth(uchar *start, int lth)
         }
     }
 
-uchar *_putd(uchar *to, long val)
+char *_putd(char *to, long val)
     {
     long tmp = val / 10;
 
     if (tmp) to = _putd(to, tmp);
-    *to++ = (uchar)((val % 10) + '0');
+    *to++ = (char)((val % 10) + '0');
     return to;
     }
-
 int _readsize(struct casn *casnp, uchar *to, int mode)
     {
     uchar bb, *b, *c, buf[8];
@@ -1733,7 +1734,8 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	{
 	if (casnp->type == ASN_GENTIME) tmp = 2;
 	else tmp = 0;
-	if (_time_to_ulong(&val, &c[tmp], lth - tmp) < 0) err = ASN_TIME_ERR;
+	if (_time_to_ulong(&val, (uchar *)&c[tmp], lth - tmp) < 0)
+            err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
         (tmp > casnp->max || tmp < casnp->min)) err = ASN_BOUNDS_ERR;

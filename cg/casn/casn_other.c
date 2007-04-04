@@ -1,3 +1,5 @@
+/* Mar 28 2007 849U  */
+/* Mar 28 2007 GARDINER fixed signedness errors */
 /* Sep  1 2004 803U  */
 /* Sep  1 2004 GARDINER started */
 /*****************************************************************************
@@ -15,7 +17,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_other_sfcsid[] = "@(#)casn_other.c 803P";
+char casn_other_sfcsid[] = "@(#)casn_other.c 849P";
 #include "casn.h"
 
 int encodesize_casn(struct casn *casnp, uchar **pp)
@@ -42,7 +44,7 @@ int readvsize_objid(struct casn *casnp, char **pp)
     {
     int lth;
 
-    *pp = (uchar *)0;
+    *pp = (char *)0;
     if ((lth = vsize_objid(casnp)) < 0) return lth;
     *pp = calloc(1, lth);
     return read_objid(casnp, *pp);

@@ -1,3 +1,7 @@
+/* Mar 28 2007 849U  */
+/* Mar 28 2007 GARDINER fixed signedness errors */
+/* Mar 26 2007 848U  */
+/* Mar 26 2007 GARDINER corrected for -Wall */
 /* Jan 19 2005 823U  */
 /* Jan 19 2005 GARDINER added handling of relative OIDs */
 /* Sep  1 2004 803U  */
@@ -30,7 +34,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_objid_sfcsid[] = "@(#)casn_objid.c 823P";
+char casn_objid_sfcsid[] = "@(#)casn_objid.c 849P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -41,7 +45,7 @@ extern int _casn_obj_err(struct casn *, int),
     _write_enum(struct casn *casnp),
     _write_objid(struct casn *casnp, char *from);
 
-extern uchar *_putd(uchar *to, long val);
+extern char *_putd(char *to, long val);
 
 extern void *_free_it(void *);
 
@@ -80,7 +84,7 @@ int read_objid(struct casn *casnp, char *to)
 
 int vsize_objid(struct casn *casnp)
     {
-    uchar buf[16];
+    char buf[16];
 
     if (_clear_error(casnp) < 0) return -1;
     if (casnp->type != ASN_OBJ_ID && casnp->type != ASN_RELATIVE_OID)

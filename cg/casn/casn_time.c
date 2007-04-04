@@ -1,3 +1,5 @@
+/* Mar 28 2007 849U  */
+/* Mar 28 2007 GARDINER fixed signedness errors */
 /* Jun  8 2004 773U  */
 /* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
 /* Jun  3 2004 769U  */
@@ -26,7 +28,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_time_sfcsid[] = "@(#)casn_time.c 773P";
+char casn_time_sfcsid[] = "@(#)casn_time.c 849P";
 #include "casn.h"
 
 #define UTCBASE 70
@@ -94,7 +96,7 @@ Inputs: Pointer to ASN structure
 	Pointer to ulong for count
 Returns: IF error, -1, ELSE length of time field
 */
-    char *fromp = casnp->startp;
+    char *fromp = (char *)casnp->startp;
     int ansr;
 
     if ((ansr = _check_filled(casnp)) < 0 || (casnp->type != ASN_UTCTIME &&
@@ -172,7 +174,8 @@ int write_casn_time(struct casn *casnp, ulong time)
 
     if (casnp->type != ASN_UTCTIME && casnp->type != ASN_GENTIME) return -1;
     _free_it(casnp->startp);
-    c = to = casnp->startp = (uchar *)calloc(1, 20);
+    casnp->startp = (uchar *)calloc(1, 20);
+    c = to = (char *)casnp->startp;
     if (casnp->type == ASN_GENTIME) c += 2;
     sec = (time % 60);
     time /= 60;

@@ -1,3 +1,7 @@
+/* Mar 28 2007 849U  */
+/* Mar 28 2007 GARDINER fixed signedness errors */
+/* Mar 26 2007 848U  */
+/* Mar 26 2007 GARDINER corrected for -Wall */
 /* May 10 2006 836U  */
 /* May 10 2006 GARDINER removed _asn_of; added optional verbose map_string */
 /* Jul 14 2004 780U  */
@@ -28,7 +32,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_dump_sfcsid[] = "@(#)casn_dump.c 836P";
+char casn_dump_sfcsid[] = "@(#)casn_dump.c 849P";
 
 #include "casn.h"
 
@@ -337,7 +341,7 @@ long _dumpread(struct casn *casnp, char *to, int offset, int mode)
         }
     else if (type == ASN_OBJ_ID)
         {
-        ansr = _readsize_objid(casnp, (uchar *)c, mode) - 1; // for extra null
+        ansr = _readsize_objid(casnp, c, mode) - 1; // for extra null
         if (mode) c += ansr;
         }
     else    /* output in hex */
@@ -410,11 +414,14 @@ int _dump_tag(int tag, char *to, int offset, ushort flags, int mode)
         ansr++;
         if (mode) *c++ = ' ';
         if (flags)
-    	    {
+    	      {
     	    ansr += 5 + offset + strlen(indef_lth_w);
             if (mode)
-                c += newline((c = cat(c, indef_lth_w)), offset);
-    	    }
+                {
+                c = cat(c, indef_lth_w);
+                c += newline(c, offset);
+                }
+    	      }
         }
     else
         {

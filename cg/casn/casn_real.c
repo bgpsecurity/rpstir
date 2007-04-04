@@ -1,3 +1,5 @@
+/* Mar 28 2007 849U  */
+/* Mar 28 2007 GARDINER fixed signedness errors */
 /* Mar 20 2006 832U  */
 /* Mar 20 2006 GARDINER corrected for little-endian */
 /* Mar 10 2005 826U  */
@@ -21,7 +23,7 @@ COPYRIGHT 2005 BBN Technologies
 Cambridge, Ma. 02140
 617-873-3000
 *****************************************************************************/
-char casn_real_sfcsid[] = "@(#)casn_real.c 832P";
+char casn_real_sfcsid[] = "@(#)casn_real.c 849P";
 
 #include <stdio.h>
 #include "casn.h"
@@ -303,7 +305,7 @@ int write_casn_double(struct casn *casnp, double val, int type)
         i = 1 + exp_lth + mantissa_lth;
         }
                             			       	    // step 7
-    return write_casn(casnp, locbuf, (long)i);
+    return write_casn(casnp, (uchar *)locbuf, (long)i);
     }
 
 int shift_buf(uchar *buf, int size, int amt)
