@@ -1034,45 +1034,45 @@ void SBGPIpAddrBlock(struct SBGPIpAddrBlock *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     mine->self.flags |= ASN_OF_FLAG;
-    IPAddressFamily(&mine->iPAddressFamily, level);
-    mine->iPAddressFamily.self.flags |= ASN_LAST_FLAG;
+    IPAddressFamilyA(&mine->iPAddressFamilyA, level);
+    mine->iPAddressFamilyA.self.flags |= ASN_LAST_FLAG;
     }
 
-void IPAddressFamily(struct IPAddressFamily *mine, ushort level)
+void IPAddressFamilyA(struct IPAddressFamilyA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     simple_constructor(&mine->addressFamily, level, ASN_OCTETSTRING);
     mine->addressFamily.min = 2;
     mine->addressFamily.max = 3;
-    IPAddressChoice(&mine->ipAddressChoice, level);
+    IPAddressChoiceA(&mine->ipAddressChoice, level);
     mine->ipAddressChoice.self.flags |= ASN_LAST_FLAG;
     }
 
-void IPAddressChoice(struct IPAddressChoice *mine, ushort level)
+void IPAddressChoiceA(struct IPAddressChoiceA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_CHOICE);
     simple_constructor(&mine->inherit, level, ASN_BOOLEAN);
-    AddressesOrRangesInIPAddressChoice(&mine->addressesOrRanges, level);
+    AddressesOrRangesInIPAddressChoiceA(&mine->addressesOrRanges, level);
     mine->addressesOrRanges.self.flags |= ASN_LAST_FLAG;
     }
 
-void AddressesOrRangesInIPAddressChoice(struct AddressesOrRangesInIPAddressChoice *mine, ushort level)
+void AddressesOrRangesInIPAddressChoiceA(struct AddressesOrRangesInIPAddressChoiceA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     mine->self.flags |= ASN_OF_FLAG;
-    IPAddressOrRange(&mine->iPAddressOrRange, level);
-    mine->iPAddressOrRange.self.flags |= ASN_LAST_FLAG;
+    IPAddressOrRangeA(&mine->iPAddressOrRangeA, level);
+    mine->iPAddressOrRangeA.self.flags |= ASN_LAST_FLAG;
     }
 
-void IPAddressOrRange(struct IPAddressOrRange *mine, ushort level)
+void IPAddressOrRangeA(struct IPAddressOrRangeA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_CHOICE);
     simple_constructor(&mine->addressPrefix, level, ASN_BITSTRING);
-    IPAddressRange(&mine->addressRange, level);
+    IPAddressRangeA(&mine->addressRange, level);
     mine->addressRange.self.flags |= ASN_LAST_FLAG;
     }
 
-void IPAddressRange(struct IPAddressRange *mine, ushort level)
+void IPAddressRangeA(struct IPAddressRangeA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     simple_constructor(&mine->min, level, ASN_BITSTRING);
@@ -1083,40 +1083,40 @@ void IPAddressRange(struct IPAddressRange *mine, ushort level)
 void SBGPASNum(struct SBGPASNum *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
-    ASIdentifierChoice(&mine->asnum, level);
+    ASIdentifierChoiceA(&mine->asnum, level);
     mine->asnum.self.tag = 0xA0;
     mine->asnum.self.flags |= ASN_OPTIONAL_FLAG;
-    ASIdentifierChoice(&mine->rdi, level);
+    ASIdentifierChoiceA(&mine->rdi, level);
     mine->rdi.self.tag = 0xA1;
     mine->rdi.self.flags |= ASN_OPTIONAL_FLAG;
     mine->rdi.self.flags |= ASN_LAST_FLAG;
     }
 
-void ASIdentifierChoice(struct ASIdentifierChoice *mine, ushort level)
+void ASIdentifierChoiceA(struct ASIdentifierChoiceA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_CHOICE);
     simple_constructor(&mine->inherit, level, ASN_BOOLEAN);
-    AsNumbersOrRangesInASIdentifierChoice(&mine->asNumbersOrRanges, level);
+    AsNumbersOrRangesInASIdentifierChoiceA(&mine->asNumbersOrRanges, level);
     mine->asNumbersOrRanges.self.flags |= ASN_LAST_FLAG;
     }
 
-void AsNumbersOrRangesInASIdentifierChoice(struct AsNumbersOrRangesInASIdentifierChoice *mine, ushort level)
+void AsNumbersOrRangesInASIdentifierChoiceA(struct AsNumbersOrRangesInASIdentifierChoiceA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     mine->self.flags |= ASN_OF_FLAG;
-    ASNumberOrRange(&mine->aSNumberOrRange, level);
-    mine->aSNumberOrRange.self.flags |= ASN_LAST_FLAG;
+    ASNumberOrRangeA(&mine->aSNumberOrRangeA, level);
+    mine->aSNumberOrRangeA.self.flags |= ASN_LAST_FLAG;
     }
 
-void ASNumberOrRange(struct ASNumberOrRange *mine, ushort level)
+void ASNumberOrRangeA(struct ASNumberOrRangeA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_CHOICE);
     simple_constructor(&mine->num, level, ASN_INTEGER);
-    ASRange(&mine->range, level);
+    ASRangeA(&mine->range, level);
     mine->range.self.flags |= ASN_LAST_FLAG;
     }
 
-void ASRange(struct ASRange *mine, ushort level)
+void ASRangeA(struct ASRangeA *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     simple_constructor(&mine->min, level, ASN_INTEGER);

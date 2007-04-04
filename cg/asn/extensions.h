@@ -226,7 +226,7 @@ struct EDIPartyName
 
 void EDIPartyName(struct EDIPartyName *mine, ushort level);
 
-#define IPAddress casn
+#define IPAddressA casn
 
 void PolicyQualifierInfoSetInPolicyQualifierInfo(struct casn *mine, ushort level);
 
@@ -240,6 +240,15 @@ struct PolicyQualifierInfoSetDefined
     };
 
 void PolicyQualifierInfoSetDefined(struct PolicyQualifierInfoSetDefined *mine, ushort level);
+
+struct IPAddressRangeA
+    {
+    struct casn self;
+    struct casn min;
+    struct casn max;
+    };
+
+void IPAddressRangeA(struct IPAddressRangeA *mine, ushort level);
 
 struct GeneralName
     {
@@ -257,16 +266,7 @@ struct GeneralName
 
 void GeneralName(struct GeneralName *mine, ushort level);
 
-struct IPAddressRange
-    {
-    struct casn self;
-    struct casn min;
-    struct casn max;
-    };
-
-void IPAddressRange(struct IPAddressRange *mine, ushort level);
-
-#define ASNumber casn
+#define ASNumberA casn
 
 void AttributeTableInAttribute(struct casn *mine, ushort level);
 
@@ -278,6 +278,15 @@ struct AttributeTableDefined
 
 void AttributeTableDefined(struct AttributeTableDefined *mine, ushort level);
 
+struct IPAddressOrRangeA
+    {
+    struct casn self;
+    struct casn addressPrefix;
+    struct IPAddressRangeA addressRange;
+    };
+
+void IPAddressOrRangeA(struct IPAddressOrRangeA *mine, ushort level);
+
 struct GeneralNames
     {
     struct casn self;
@@ -286,23 +295,14 @@ struct GeneralNames
 
 void GeneralNames(struct GeneralNames *mine, ushort level);
 
-struct IPAddressOrRange
-    {
-    struct casn self;
-    struct casn addressPrefix;
-    struct IPAddressRange addressRange;
-    };
-
-void IPAddressOrRange(struct IPAddressOrRange *mine, ushort level);
-
-struct ASRange
+struct ASRangeA
     {
     struct casn self;
     struct casn min;
     struct casn max;
     };
 
-void ASRange(struct ASRange *mine, ushort level);
+void ASRangeA(struct ASRangeA *mine, ushort level);
 
 struct PolicyQualifierInfo
     {
@@ -322,14 +322,14 @@ struct Language
 
 void Language(struct Language *mine, ushort level);
 
-struct ASNumberOrRange
+struct ASNumberOrRangeA
     {
     struct casn self;
     struct casn num;
-    struct ASRange range;
+    struct ASRangeA range;
     };
 
-void ASNumberOrRange(struct ASNumberOrRange *mine, ushort level);
+void ASNumberOrRangeA(struct ASNumberOrRangeA *mine, ushort level);
 
 struct NameInMerNames
     {
@@ -376,13 +376,13 @@ struct CountryNameInMerNames
 
 void CountryNameInMerNames(struct CountryNameInMerNames *mine, ushort level);
 
-struct AddressesOrRangesInIPAddressChoice
+struct AddressesOrRangesInIPAddressChoiceA
     {
     struct casn self;
-    struct IPAddressOrRange iPAddressOrRange;
+    struct IPAddressOrRangeA iPAddressOrRangeA;
     };
 
-void AddressesOrRangesInIPAddressChoice(struct AddressesOrRangesInIPAddressChoice *mine, ushort level);
+void AddressesOrRangesInIPAddressChoiceA(struct AddressesOrRangesInIPAddressChoiceA *mine, ushort level);
 
 struct DistributionPointName
     {
@@ -432,14 +432,14 @@ struct MerNames
 
 void MerNames(struct MerNames *mine, ushort level);
 
-struct IPAddressChoice
+struct IPAddressChoiceA
     {
     struct casn self;
     struct casn inherit;
-    struct AddressesOrRangesInIPAddressChoice addressesOrRanges;
+    struct AddressesOrRangesInIPAddressChoiceA addressesOrRanges;
     };
 
-void IPAddressChoice(struct IPAddressChoice *mine, ushort level);
+void IPAddressChoiceA(struct IPAddressChoiceA *mine, ushort level);
 
 struct PolicyQualifiersInPolicyInformation
     {
@@ -457,15 +457,24 @@ struct ValuesInAttribute
 
 void ValuesInAttribute(struct ValuesInAttribute *mine, ushort level);
 
-struct AsNumbersOrRangesInASIdentifierChoice
+struct AsNumbersOrRangesInASIdentifierChoiceA
     {
     struct casn self;
-    struct ASNumberOrRange aSNumberOrRange;
+    struct ASNumberOrRangeA aSNumberOrRangeA;
     };
 
-void AsNumbersOrRangesInASIdentifierChoice(struct AsNumbersOrRangesInASIdentifierChoice *mine, ushort level);
+void AsNumbersOrRangesInASIdentifierChoiceA(struct AsNumbersOrRangesInASIdentifierChoiceA *mine, ushort level);
 
 #define KeyIdentifier casn
+
+struct Attribute
+    {
+    struct casn self;
+    struct casn type;
+    struct ValuesInAttribute values;
+    };
+
+void Attribute(struct Attribute *mine, ushort level);
 
 struct PolicyInformation
     {
@@ -494,15 +503,6 @@ struct SequenceInPolicyMappings
     };
 
 void SequenceInPolicyMappings(struct SequenceInPolicyMappings *mine, ushort level);
-
-struct Attribute
-    {
-    struct casn self;
-    struct casn type;
-    struct ValuesInAttribute values;
-    };
-
-void Attribute(struct Attribute *mine, ushort level);
 
 struct GeneralSubtrees
     {
@@ -555,23 +555,23 @@ struct AccessDescription
 
 void AccessDescription(struct AccessDescription *mine, ushort level);
 
-struct IPAddressFamily
+struct IPAddressFamilyA
     {
     struct casn self;
     struct casn addressFamily;
-    struct IPAddressChoice ipAddressChoice;
+    struct IPAddressChoiceA ipAddressChoice;
     };
 
-void IPAddressFamily(struct IPAddressFamily *mine, ushort level);
+void IPAddressFamilyA(struct IPAddressFamilyA *mine, ushort level);
 
-struct ASIdentifierChoice
+struct ASIdentifierChoiceA
     {
     struct casn self;
     struct casn inherit;
-    struct AsNumbersOrRangesInASIdentifierChoice asNumbersOrRanges;
+    struct AsNumbersOrRangesInASIdentifierChoiceA asNumbersOrRanges;
     };
 
-void ASIdentifierChoice(struct ASIdentifierChoice *mine, ushort level);
+void ASIdentifierChoiceA(struct ASIdentifierChoiceA *mine, ushort level);
 
 struct OwningASNumber
     {
@@ -736,7 +736,7 @@ void ExtKeyUsageSyntax(struct ExtKeyUsageSyntax *mine, ushort level);
 struct SBGPIpAddrBlock
     {
     struct casn self;
-    struct IPAddressFamily iPAddressFamily;
+    struct IPAddressFamilyA iPAddressFamilyA;
     };
 
 void SBGPIpAddrBlock(struct SBGPIpAddrBlock *mine, ushort level);
@@ -791,8 +791,8 @@ void AuthorityInfoAccessSyntax(struct AuthorityInfoAccessSyntax *mine, ushort le
 struct SBGPASNum
     {
     struct casn self;
-    struct ASIdentifierChoice asnum;
-    struct ASIdentifierChoice rdi;
+    struct ASIdentifierChoiceA asnum;
+    struct ASIdentifierChoiceA rdi;
     };
 
 void SBGPASNum(struct SBGPASNum *mine, ushort level);

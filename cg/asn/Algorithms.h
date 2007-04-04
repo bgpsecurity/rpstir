@@ -114,6 +114,7 @@
 #define id_rsadsi_RC2_CBC "1.2.840.113549.3.2"
 #define id_rsadsi_RC4 "1.2.840.113549.3.4"
 #define id_sha_1WithRSAEncryption "1.2.840.113549.1.1.5"
+#define id_sha_256WithRSAEncryption "1.2.840.113549.1.1.11"
 #define dssig_algorithm "1.3.14.7.2"
 #define dssig_encryption_algorithm "1.3.14.7.2.1"
 #define dssig_signature_algorithm "1.3.14.7.2.3"

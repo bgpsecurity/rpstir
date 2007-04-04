@@ -32,6 +32,7 @@ EXPORTS
       Extensions, AuthorityKeyId, KeyIdentifier, 
       SubjectKeyIdentifier, KeyUsage, PrivateKeyUsagePeriod, 
       CertificatePolicies, 
+      IPAddressRangeA, IPAddressOrRangeA, Attribute,
       PolicyInformation, PolicyQualifierInfo, PolicyMappings,
       CertPolicyId, AltNames, 
       GeneralName, GeneralNames, Other_name,
@@ -477,47 +478,47 @@ AccessDescription  ::=  SEQUENCE {
      accessMethod          OBJECT IDENTIFIER,
      accessLocation        GeneralName  }
 
-SBGPIpAddrBlock    ::= SEQUENCE OF IPAddressFamily
+SBGPIpAddrBlock    ::= SEQUENCE OF IPAddressFamilyA
 
-IPAddressFamily  ::= SEQUENCE {
+IPAddressFamilyA  ::= SEQUENCE {
       addressFamily       OCTET STRING (SIZE(2..3)),
-      ipAddressChoice     IPAddressChoice}
+      ipAddressChoice     IPAddressChoiceA}
 
-IPAddressChoice ::= CHOICE
+IPAddressChoiceA ::= CHOICE
     {
     inherit             BOOLEAN,
-    addressesOrRanges   SEQUENCE OF IPAddressOrRange
+    addressesOrRanges   SEQUENCE OF IPAddressOrRangeA
     }
 
-IPAddressOrRange   ::= CHOICE {
-      addressPrefix   IPAddress,
-      addressRange    IPAddressRange }
+IPAddressOrRangeA   ::= CHOICE {
+      addressPrefix   IPAddressA,
+      addressRange    IPAddressRangeA }
 
-IPAddressRange ::= SEQUENCE {
-	min     IPAddress,
-	max     IPAddress }
+IPAddressRangeA ::= SEQUENCE {
+	min     IPAddressA,
+	max     IPAddressA }
 
-IPAddress ::= BIT STRING
+IPAddressA ::= BIT STRING
 
 SBGPASNum     ::= SEQUENCE {
-    asnum   [0] ASIdentifierChoice OPTIONAL,
-    rdi     [1] ASIdentifierChoice OPTIONAL}
+    asnum   [0] ASIdentifierChoiceA OPTIONAL,
+    rdi     [1] ASIdentifierChoiceA OPTIONAL}
 
-ASIdentifierChoice ::= CHOICE
+ASIdentifierChoiceA ::= CHOICE
     {
     inherit             BOOLEAN, -- inherit from issuer
-    asNumbersOrRanges   SEQUENCE OF ASNumberOrRange
+    asNumbersOrRanges   SEQUENCE OF ASNumberOrRangeA
     }
 
-ASNumberOrRange ::= CHOICE {
-    num     ASNumber,
-    range   ASRange }
+ASNumberOrRangeA ::= CHOICE {
+    num     ASNumberA,
+    range   ASRangeA }
 
-ASRange ::= SEQUENCE {
-    min ASNumber,
-    max ASNumber }
+ASRangeA ::= SEQUENCE {
+    min ASNumberA,
+    max ASNumberA }
 
-ASNumber ::= INTEGER
+ASNumberA ::= INTEGER
 
 RouterIdentifier ::= SEQUENCE OF OwningASNumber
 

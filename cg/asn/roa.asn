@@ -1,0 +1,162 @@
+-- Declaration for c->asn compatibility
+DEFINITIONS IMPLICIT TAGS ::=
+-- imports
+IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
+        Extensions IPAddressOrRangeA Attribute FROM extensions IN extensions.asn,
+	Certificate Version FROM certificate IN certificate.asn,
+	Name FROM name IN name.asn;
+
+-- ROA Specification
+
+      ROA ::= SEQUENCE { 
+        contentType ContentType TABLE ContentTable, 
+        content [0] EXPLICIT ANY DEFINED BY contentType } 
+    
+      ContentType ::= OBJECT IDENTIFIER
+
+      id-signedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+        us(840) rsadsi(113549) pkcs(1) pkcs7(7) 2 }
+
+      id-sha256 OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) country(16)
+        us(840) organization(1) us-government(101) 3 4 2 1}
+
+      ContentTable ::= TABLE {
+        content id-signedData SignedData }
+
+      SignedData ::= SEQUENCE { 
+        version CMSVersion,
+        digestAlgorithms DigestAlgorithmIdentifiers, 
+        encapContentInfo EncapsulatedContentInfo, 
+        certificates [0] IMPLICIT CertificateSet OPTIONAL, 
+        crls [1] IMPLICIT RevocationInfoChoices OPTIONAL, 
+        signerInfos SignerInfos }
+
+      CMSVersion ::= INTEGER
+        {
+	v0 (0),
+	v1 (1),
+	v3 (3)
+	} (v3 | 3)
+    
+      DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
+
+      DigestAlgorithmIdentifier ::= AlgorithmIdentifier
+
+      CertificateSet ::= SET (SIZE (1..1)) OF Certificate
+
+      CertificateChoices ::= CHOICE {
+        certificate Certificate }
+
+      RevocationInfoChoices ::= SET OF RevocationInfoChoice
+
+      RevocationInfoChoice ::= CHOICE {
+	crl CertificateList,
+	other [1] IMPLICIT OtherRevocationInfoFormat }
+
+      OtherRevocationInfoFormat ::= SEQUENCE {
+	otherRevInfoFormat OBJECT IDENTIFIER,
+	otherRevInfo ANY }
+
+      CertificateList  ::=  SEQUENCE  {
+        tbsCertList          TBSCertList,
+        signatureAlgorithm   AlgorithmIdentifier,
+        signatureValue       BIT STRING  }
+
+      TBSCertList  ::=  SEQUENCE  {
+        version                 Version OPTIONAL,
+                                     -- if present, MUST be v2
+        signature               AlgorithmIdentifier,
+        issuer                  Name,
+        thisUpdate              Time,
+        nextUpdate              Time OPTIONAL,
+        revokedCertificates     SEQUENCE OF SEQUENCE  {
+             userCertificate         CertificateSerialNumber,
+             revocationDate          Time,
+             crlEntryExtensions      Extensions OPTIONAL
+                                           -- if present, MUST be v2
+                                  }  OPTIONAL,
+        crlExtensions           [0]  EXPLICIT Extensions OPTIONAL
+                                           -- if present, MUST be v2
+         }
+				  
+--      Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
+
+      CertificateSerialNumber  ::=  INTEGER
+
+      Time ::= CHOICE {
+        utcTime        UTCTime,
+        generalTime    GeneralizedTime }
+
+      SignerInfos ::= SET (SIZE (1..1)) OF SignerInfo 
+    
+      EncapsulatedContentInfo ::= SEQUENCE { 
+        eContentType ContentType TABLE EContentTable, 
+        eContent [0] EXPLICIT OCTET STRING DEFINED BY eContentType } 
+    
+      EContentTable ::= TABLE {
+        roa routeOriginAttestation RouteOriginAttestation }
+    
+      id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) 
+   rsadsi(113549) pkcs(1) pkcs9(9) 16 } 
+    
+      id-ct OBJECT IDENTIFIER ::= { id-smime 1 } 
+    
+      routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 } 
+    
+      RouteOriginAttestation ::= SEQUENCE { 
+        version [0] INTEGER DEFAULT 0, 
+        asID   ASID, 
+        ipAddrBlocks ROAIPAddrBlocks } 
+ 
+      ASID ::= INTEGER 
+    
+      ROAIPAddrBlocks ::= SEQUENCE OF ROAIPAddressFamily 
+    
+      ROAIPAddressFamily ::= SEQUENCE { 
+        addressFamily OCTET STRING (SIZE (2..3)), 
+        addressesOrRanges SEQUENCE OF IPAddressOrRangeA } 
+      -- Only two address families are allowed: IPv4 and IPv6 
+
+--      IPAddressOrRange ::= CHOICE { 
+--        addressPrefix IPAddress, 
+--        addressRange IPAddressRange } 
+    
+--      IPAddressRange ::= SEQUENCE { 
+--        min IPAddress, 
+--        max IPAddress } 
+    
+--      IPAddress ::= BIT STRING 
+    
+      SignerInfo ::= SEQUENCE { 
+        version CMSVersion, -- Value check
+        sid SignerIdentifier, 
+        digestAlgorithm DigestAlgorithmIdentifier, 
+        signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL, 
+        signatureAlgorithm SignatureAlgorithmIdentifier, 
+        signature SignatureValue, 
+        unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL } 
+
+      SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+
+      UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+
+--      Attribute ::= SEQUENCE {
+--        attrType OBJECT IDENTIFIER,
+--        attrValues SET OF AttributeValue }
+
+--      AttributeValue ::= ANY
+ 
+      SignatureAlgorithmIdentifier ::= AlgorithmIdentifier
+
+      SignerIdentifier ::= CHOICE { 
+        issuerAndSerialNumber IssuerAndSerialNumber, 
+        subjectKeyIdentifier [0] SubjectKeyIdentifier } 
+
+      IssuerAndSerialNumber ::= SEQUENCE {
+        issuer Name,
+        serialNumber CertificateSerialNumber }
+
+      SignatureValue ::= OCTET STRING 
+    
+      SubjectKeyIdentifier ::= OCTET STRING
+

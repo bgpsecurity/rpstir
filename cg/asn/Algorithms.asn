@@ -254,6 +254,7 @@ id-rsadsi-diffieHellman         ID ::= { pkcs-3 1 } -- DiffieHellmanParameters
 id-rsadsi-RC2-CBC               ID ::= { rsadsi-encryptionAlgorithm 2 } --  Proprietary symmetric block encryption algorithm from RSADSI
 id-rsadsi-RC4                   ID ::= { rsadsi-encryptionAlgorithm 4 } --  Proprietary stream cipher algorithm from RSADSI
 id-sha-1WithRSAEncryption       ID ::= { pkcs-1 5 }
+id-sha-256WithRSAEncryption     ID ::= { pkcs-1 11 }
 -- Directory Services Special Interest Group, e.g. X.500/ISO 9796 
 -- { iso(1) identified-organization(3) oiw(14) dssig(7) algorithm(2) }
 dssig-algorithm                 ID ::= {1.3.14.7.2}  

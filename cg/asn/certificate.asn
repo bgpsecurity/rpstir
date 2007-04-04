@@ -30,7 +30,7 @@ IMPORTS ORAddress FROM orname IN orname.asn,
 	Extensions FROM Extensions IN extensions.asn;
 
 EXPORTS 
-      CertificationPath, CertificatePair, Certificate,  Version, 
+      CertificationPath, CertificatePair, Certificate,  Version, CertificateList,
       Validity, SubjectPublicKeyInfo, Certificates, UniqueIdentifier,
       ForwardCertificationPath, CrossCertificates, CertificateValidityDate;
 
