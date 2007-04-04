@@ -376,6 +376,7 @@ int main(int argc, char **argv)
   scmcon *testconp = NULL;
   scmcon *realconp = NULL;
   scm    *scmp = NULL;
+  FILE   *logfile = NULL;
   char   *thedelfile = NULL;
   char   *topdir = NULL;
   char   *thefile = NULL;
@@ -384,7 +385,9 @@ int main(int argc, char **argv)
   char   *outdir = NULL;
   char   *tmpdsn = NULL;
   char   *password = NULL;
+  char   *ne;
   char    errmsg[1024];
+  time_t  nw;
   int ians = 0;
   int do_create = 0;
   int do_delete = 0;
@@ -588,6 +591,16 @@ int main(int argc, char **argv)
 */
   OpenSSL_add_all_algorithms();
   ERR_load_crypto_strings();
+/*
+  Open the logfile in preparation for actual DB operations.
+*/
+  logfile = fopen("rcli.log", "a+");
+  if ( logfile != NULL )
+    {
+      time(&nw);
+      (void)setbuf(logfile, NULL);
+      (void)fprintf(logfile, "Rsync client session start: %s", ctime(&nw));
+    }
   if ( thefile != NULL && sta == 0 )
     {
 // Check that the file is in the repository, ask if not and force is off
@@ -614,11 +627,31 @@ int main(int argc, char **argv)
 	    (void)printf("File operation cancelled\n");
 	  if ( sta == 0 )
 	    {
+	      if ( logfile != NULL )
+		(void)fprintf(logfile, "Attempting to add file %s\n", outfile);
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
 			       trusted);
 	      if ( sta < 0 )
-		(void)fprintf(stderr, "Could not add file %s: error %s (%d)\n",
-			      thefile, err2string(sta), sta);
+		{
+		  (void)fprintf(stderr, "Could not add file %s: error %s (%d)\n",
+				thefile, err2string(sta), sta);
+		  if ( logfile != NULL )
+		    {
+		      (void)fprintf(logfile, "Could not add file %s: error %s (%d)\n",
+				    thefile, err2string(sta), sta);
+		      if ( sta == ERR_SCM_SQL )
+			{
+			  ne = geterrorscm(realconp);
+			  if ( ne != NULL && ne != 0 )
+			    (void)fprintf(logfile, "\t%s\n", ne);
+			}
+		    }
+		}
+	      else
+		{
+		  if ( logfile != NULL )
+		    (void)fprintf(logfile, "Add operation succeeded\n");
+		}
 	    }
 	  free((void *)outdir);
 	  free((void *)outfile);
@@ -634,8 +667,26 @@ int main(int argc, char **argv)
 	{
 	  sta = delete_object(scmp, realconp, outfile, outdir, outfull);
 	  if ( sta < 0 )
-	    (void)fprintf(stderr, "Could not delete file %s: error %s (%d)\n",
-			  thefile, err2string(sta), sta);
+	    {
+	      (void)fprintf(stderr, "Could not delete file %s: error %s (%d)\n",
+			    thefile, err2string(sta), sta);
+	      if ( logfile != NULL )
+		{
+		  (void)fprintf(logfile, "Could not delete file %s: error %s (%d)\n",
+				thefile, err2string(sta), sta);
+		  if ( sta == ERR_SCM_SQL )
+		    {
+		      ne = geterrorscm(realconp);
+		      if ( ne != NULL && ne != 0 )
+			(void)fprintf(logfile, "\t%s\n", ne);
+		    }
+		}
+	    }
+	  else
+	    {
+	      if ( logfile != NULL )
+		(void)fprintf(logfile, "Delete operation succeeded\n");
+	    }
 	  free((void *)outdir);
 	  free((void *)outfile);
 	  free((void *)outfull);
@@ -697,5 +748,11 @@ int main(int argc, char **argv)
   freescm(scmp);
   if ( tdir != NULL )
     free((void *)tdir);
+  if ( logfile != NULL )
+    {
+      time(&nw);
+      (void)fprintf(logfile, "Rsync client session end %s", ctime(&nw));
+      (void)fclose(logfile);
+    }
   return(sta);
 }
