@@ -1,0 +1,52 @@
+####################################################################
+#
+# Sample ROA generation .cnf file
+#
+####################################################################
+# Format notes: Lines beginning with '#' and '[' will be ignored,
+#  as will blank lines.  Other lines must begin with a
+#  non-whitespace character, contain no more than 512 chars,
+#  and meet the following format requirement:
+#  [key (no whitespace)][(whitespace)][=][(whitespace)]\
+#   [value (no whitespace)][(whitespace)][whatever you like]
+#
+# N.B. ipfam lines must be followed by at least one ipaddr or
+#  ipaddrmin line, and the latter must in turn be followed by
+#  an ipaddrmax line.  ipfam IPv4 must precede ipfam IPv6.
+#  (this is the order that RFC 3779 expects)  Only one block from
+#  each family will be accepted. 
+####################################################################
+
+[ version ]
+# version of the specification (should always =3) (required)
+version		= 3
+
+####################################################################
+[ signer ]
+# the parent certificate's SKI (required)
+SID		= ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab
+
+# the signature of the parent cert (required)
+signature	= a2e3d49b32e9a
+
+####################################################################
+[ content ]
+
+# the asID of the authorized originator (required)
+as_id		= 19
+
+# a sample route (at least one required)
+ipfam		= IPv4
+ipaddrmin	= 167.134.2.0
+ipaddrmax	= 167.134.3.255
+ipaddr		= 167.134.5.7
+
+# another sample route
+ipfam		= IPv6
+ipaddr		= ::0
+
+####################################################################
+[ certs ]
+
+# full name and path to signer certificate (optional)
+certname	= /home/roa-pki/APNIC/gyAlqFfpQzsQ1gmCgRNhDChGeuM.cer
