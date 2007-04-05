@@ -82,19 +82,6 @@ static QueryField *findField (char *name)
   return NULL;
 }
 
-static int fillInSrch (scmsrch *srch, int isChar, unsigned int sz,
-                       int colno, char *colname)
-{
-  srch->colno = colno;
-  srch->sqltype = isChar ? SQL_C_CHAR : SQL_C_ULONG;
-  srch->colname = colname;
-  srch->avalsize = 0;
-  srch->valsize = isChar ? sz : sizeof (unsigned int);
-  srch->valptr = calloc (sz, sizeof (char));
-  checkErr (srch->valptr == NULL, "Not enough memory\n");
-  return 0;
-}
-
 static int handleResults (scmcon *conp, scmsrcha *s, int idx)
 {
   conp = conp; idx = idx;  // silence compiler warnings
@@ -139,7 +126,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
   if (filters == NULL || filters[0] == NULL) {
     srch.wherestr = NULL;
   } else {
-    sprintf (whereStr, "");
+    whereStr[0] = (char) 0;
     for (i = 0; filters[i] != NULL; i++) {
       if (i != 0) strcat (whereStr, " AND ");
       strcat (whereStr, filters[i]);
@@ -227,6 +214,12 @@ static int printUsage()
 
 int main(int argc, char **argv) 
 {
+  char *objectType;
+  char *displays[MAX_VALS], *clauses[MAX_CONDS];
+  int i;
+  int numDisplays = 0;
+  int numClauses = 0;
+
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
@@ -234,12 +227,22 @@ int main(int argc, char **argv)
   }
   if (strcasecmp (argv[1], "-a") == 0) {
     if (argc > 2) return printUsage();
-    char *displays[] = {"asn", "pathname", "ski", NULL};
-    return doQuery ("roa", displays, NULL);
+    char *displays2[] = {"asn", "pathname", "ski", NULL};
+    return doQuery ("roa", displays2, NULL);
   }
-  if (strcasecmp (argv[1], "-t") == 0) {
-    printf ("Unimplemented option\n");
-    return -1;
+  for (i = 1; i < argc; i += 2) {
+    if (argc == (i+1)) return printUsage();
+    if (strcasecmp (argv[i], "-t") == 0) {
+      objectType = argv[i+1];
+    } else if (strcasecmp (argv[i], "-d") == 0) {
+      displays [numDisplays++] = argv[i+1];
+    } else if (strcasecmp (argv[i], "-c") == 0) {
+      clauses [numClauses++] = argv[i+1];
+    } else {
+      return printUsage();
+    }
   }
-  return printUsage();
+  displays[numDisplays++] = NULL;
+  clauses[numClauses++] = NULL;
+  return doQuery (objectType, displays, clauses);
 }
