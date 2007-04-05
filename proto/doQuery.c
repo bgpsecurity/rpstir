@@ -35,8 +35,8 @@ typedef struct _QueryField	/* field to display or filter on */
   int      forCerts;            /* true if field is used in a cert */
   int      sqlType;             /* what type of data to expect from query */
   int      maxSize;             /* how much space to allocate for response */
-  char     *dbField;            /* if not NULL, use this for query, not name */
-  char     *otherDBField;       /* if not NULL, second field for query */
+  char     *dbColumn;           /* if not NULL, use this for query, not name */
+  char     *otherDBColumn;      /* if not NULL, second field for query */
   char     *heading;            /* name of column heading to use in printout */
   int      requiresJoin;        /* do join with dirs table to get dirname */
   char     *description;        /* one-line description for user help */
@@ -99,9 +99,89 @@ static int handleResults (scmcon *conp, scmsrcha *s, int idx)
 {
   conp = conp; idx = idx;  // silence compiler warnings
   fprintf (stderr, "ASN = %d File = %s/%s\n   SKI = %s\n",
-           *((unsigned int *) s->vec[2].valptr), (char *) s->vec[3].valptr,
-           (char *) s->vec[0].valptr, (char *) s->vec[1].valptr);
+           *((unsigned int *) s->vec[0].valptr), (char *) s->vec[1].valptr,
+           (char *) s->vec[2].valptr, (char *) s->vec[3].valptr);
   return(0);
+}
+
+static int doQuery (char *objectType, char **displays, char **filters)
+{
+  scm      *scmp = NULL;
+  scmcon   *connect = NULL;
+  scmtab   *table = NULL;
+  scmsrcha srch;
+  scmsrch  srch1[MAX_VALS];
+  char     whereStr[MAX_CONDS*20];
+  char     errMsg[1024];
+  int      srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
+  unsigned long blah = 0;
+  int      i, j, proceed, status;
+  QueryField *field, *field2;
+  char     *name;
+  int      isROA = strcasecmp (objectType, "roa") == 0;
+  int      isCRL = strcasecmp (objectType, "crl") == 0;
+  int      isCert = strcasecmp (objectType, "cert") == 0;
+
+  checkErr ((! isROA) && (! isCRL) && (! isCert),
+            "\nBad object type; must be roa, cert or crl\n\n");
+  (void) setbuf (stdout, NULL);
+  scmp = initscm();
+  checkErr (scmp == NULL, "Cannot initialize database schema\n");
+  connect = connectscm (scmp->dsn, errMsg, 1024);
+  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, errMsg);
+  connect->mystat.tabname = objectType;
+  table = findtablescm (scmp, objectType);
+  checkErr (table == NULL, "Cannot find table %s\n", objectType);
+  table = findtablescm (scmp, objectType);
+
+  /* set up where clause, i.e. the filter */
+  srch.where = NULL;
+  if (filters == NULL || filters[0] == NULL) {
+    srch.wherestr = NULL;
+  } else {
+    sprintf (whereStr, "");
+    for (i = 0; filters[i] != NULL; i++) {
+      if (i != 0) strcat (whereStr, " AND ");
+      strcat (whereStr, filters[i]);
+      name = strtok (filters[i], "=<>");
+      field = findField (name);
+      checkErr (field == NULL, "Unknown field name: %s\n", name);
+      checkErr (field->justDisplay, "Field only for display: %s", name);
+    }
+    srch.wherestr = whereStr;
+  }
+
+  /* set up columns to select */
+  srch.vec = srch1;
+  srch.sname = NULL;
+  srch.ntot = MAX_VALS;
+  srch.nused = 0;
+  srch.vald = 0;
+  srch.context = &blah;
+  for (i = 0; displays[i] != NULL; i++) {
+    field = findField (displays[i]);
+    checkErr (field == NULL, "Unknown field name: %s\n", displays[i]);
+    name = (field->dbColumn == NULL) ? displays[i] : field->dbColumn;
+    while (name != NULL) {
+      proceed = 1;
+      for (j = 0; j < srch.nused; j++) {
+        if (strcasecmp (name, srch1[j].colname) == 0) proceed = 0;
+      }
+      if (proceed) {
+        field2 = findField (name);
+        addcolsrchscm (&srch, name, field2->sqlType, field2->maxSize);
+      }
+      if (field->requiresJoin) srchFlags = srchFlags | SCM_SRCH_DO_JOIN;
+      name = (name == field->otherDBColumn) ? NULL : field->otherDBColumn;
+    }
+  }
+
+  /* do query */
+  status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
+  for (i = 0; i < srch.nused; i++) {
+    free (srch1[i].valptr);
+  }
+  return status;
 }
 
 static int listOptions (char *objectType)
@@ -111,11 +191,9 @@ static int listOptions (char *objectType)
   int isROA = strcasecmp (objectType, "roa") == 0;
   int isCRL = strcasecmp (objectType, "crl") == 0;
   int isCert = strcasecmp (objectType, "cert") == 0;
-
-  if ((! isROA) && (! isCRL) && (! isCert)) {
-    printf ("\nBad object type, must be roa, cert or crl\n\n");
-    return -1;
-  }
+  
+  checkErr ((! isROA) && (! isCRL) && (! isCert),
+            "\nBad object type; must be roa, cert or crl\n\n");
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < size; i++) {
@@ -142,61 +220,26 @@ static int printUsage()
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
   printf ("  -d: the name of one field of the object to display\n");
   printf ("  -c: one clause to use for filtering; a clause has the form\n");
-  printf ("      <fieldName><op><value>, where op is a comparative operator\n");
-  printf ("      such as =, <>, >, ...\n\n");
+  printf ("      <fieldName><op><value>, where op is a comparison operator\n");
+  printf ("      (=, <>, >, <, >=, <=)\n\n");
   return -1;
 }
 
 int main(int argc, char **argv) 
 {
-  scm      *scmp = NULL;
-  scmcon   *connect = NULL;
-  scmtab   *table = NULL;
-  scmsrcha srch;
-  scmsrch  srch1[MAX_VALS];
-  scmkva   where;
-  scmkv    where1[MAX_CONDS];
-  char     errMsg[1024];
-  unsigned long blah = 0;
-  int      status, i;
-  char     *objectType = "ROA";
-
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
     return listOptions (argv[2]);
   }
+  if (strcasecmp (argv[1], "-a") == 0) {
+    if (argc > 2) return printUsage();
+    char *displays[] = {"asn", "pathname", "ski", NULL};
+    return doQuery ("roa", displays, NULL);
+  }
   if (strcasecmp (argv[1], "-t") == 0) {
     printf ("Unimplemented option\n");
     return -1;
   }
-  if (strcasecmp (argv[1], "-a") != 0) return printUsage();
-  if (argc > 2) return printUsage();
-
-  (void)setbuf(stdout, NULL);
-  scmp = initscm();
-  checkErr (scmp == NULL, "Cannot initialize database schema\n");
-  connect = connectscm (scmp->dsn, errMsg, 1024);
-  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, errMsg);
-  connect->mystat.tabname = objectType;
-  table = findtablescm (scmp, objectType); 
-  checkErr (table == NULL, "Cannot find table %s\n", objectType);
-  srch.where = NULL;
-  srch.wherestr = NULL;
-  if (fillInSrch (&srch1[0], 1, 256, 1, "filename")) return -1;
-  if (fillInSrch (&srch1[1], 1, 128, 2, "ski")) return -1;
-  if (fillInSrch (&srch1[2], 0, 1, 3, "asn")) return -1;
-  if (fillInSrch (&srch1[3], 1, 4096, 4, "dirname")) return -1;
-  srch.vec = srch1;
-  srch.sname = NULL;
-  srch.ntot = 4;
-  srch.nused = 4;
-  srch.vald = 0;
-  srch.context = &blah;
-  status = searchscm (connect, table, &srch, NULL, handleResults,
-                      SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
-  for (i = 0; i < 4; i++) {
-    free (srch1[i].valptr);
-  }
-  return 0;
+  return printUsage();
 }
