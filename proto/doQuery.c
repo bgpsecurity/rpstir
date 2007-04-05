@@ -129,11 +129,31 @@ static int doQuery (char *objectType, char **displays, char **filters)
     whereStr[0] = (char) 0;
     for (i = 0; filters[i] != NULL; i++) {
       if (i != 0) strcat (whereStr, " AND ");
-      strcat (whereStr, filters[i]);
-      name = strtok (filters[i], "=<>");
+      name = strtok (filters[i], ".");
+      strcat (whereStr, name);
       field = findField (name);
       checkErr (field == NULL, "Unknown field name: %s\n", name);
-      checkErr (field->justDisplay, "Field only for display: %s", name);
+      checkErr (field->justDisplay, "Field only for display: %s\n", name);
+      name = strtok (NULL, ".");
+      if (strcasecmp (name, "eq") == 0) {
+        strcat (whereStr, " = ");
+      } else if (strcasecmp (name, "ne") == 0) {
+        strcat (whereStr, " <> ");
+      } else if (strcasecmp (name, "lt") == 0) {
+        strcat (whereStr, " < ");
+      } else if (strcasecmp (name, "gt") == 0) {
+        strcat (whereStr, " > ");
+      } else if (strcasecmp (name, "le") == 0) {
+        strcat (whereStr, " <= ");
+      } else if (strcasecmp (name, "ge") == 0) {
+        strcat (whereStr, " >= ");
+      } else {
+        checkErr (1, "Bad comparison operator: %s\n", name);
+      }
+      name = strtok (NULL, ".");
+      if (name[0] != '"') strcat (whereStr, "\"");
+      strcat (whereStr, name);
+      if (name[0] != '"') strcat (whereStr, "\"");
     }
     srch.wherestr = whereStr;
   }
@@ -207,8 +227,8 @@ static int printUsage()
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
   printf ("  -d: the name of one field of the object to display\n");
   printf ("  -c: one clause to use for filtering; a clause has the form\n");
-  printf ("      <fieldName><op><value>, where op is a comparison operator\n");
-  printf ("      (=, <>, >, <, >=, <=)\n\n");
+  printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
+  printf ("      (eq, ne, gt, lt, ge, le)\n\n");
   return -1;
 }
 
