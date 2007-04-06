@@ -8,9 +8,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <ctype.h>
 #include <getopt.h>
 #include <time.h>
+#include <netdb.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -318,7 +321,7 @@ static void usage(void)
   (void)printf("\t-d dir\tdelete the indicated file\n");
   (void)printf("\t-f file\tprocess the indicated file\n");
   (void)printf("\t-F file\tprocess the indicated trusted file\n");
-  (void)printf("\t-w port\tstart an rsync listener on port\n");
+  (void)printf("\t-p port\tstart an rsync listener on port\n");
   (void)printf("\t-h\tdisplay usage and exit\n");
 }
 
@@ -360,6 +363,324 @@ static int cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
 
 #endif
 
+/*
+  The port name has one of the forms tN or uN or N, indicating
+  tcp port N, udp port N, or just plain (tcp) port N.
+*/
+
+static int makesock(char *porto)
+{
+  struct sockaddr_in sin;
+  struct sockaddr_in sout;
+  struct hostent    *hen;
+  socklen_t leen;
+  char hn[256];
+  char tu = 't';
+  int  protos;
+  int  sta;
+  int  port;
+  int  offs = 0;
+  int  s;
+
+  if ( porto[0] == 'u' || porto[0] == 'U' )
+    tu = 'u', offs = 1;
+  else if ( porto[0] == 't' || porto[0] == 'T' )
+    tu = 't', offs = 1;
+  port = atoi(porto+offs);
+  if ( port <= 0 )
+    return(-1);
+  protos = socket(AF_INET, SOCK_STREAM, 0);
+  if ( protos < 0 )
+    return(protos);
+  hn[0] = 0;
+  sta = gethostname(hn, 256);
+  if ( sta < 0 )
+    {
+      close(protos);
+      return(sta);
+    }
+  hen = gethostbyname(hn);
+  if ( hen == NULL )
+    {
+      close(protos);
+      return(sta);
+    }
+  memset(&sin, 0, sizeof(sin));
+  memcpy(&sin.sin_addr.s_addr, hen->h_addr_list[0],
+	 hen->h_length);
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(port);
+  sta = bind(protos, (struct sockaddr *)&sin, sizeof(sin));
+  if ( sta < 0 )
+    {
+      close(protos);
+      return(sta);
+    }
+  sta = listen(protos, 1);
+  if ( sta < 0 )
+    {
+      close(protos);
+      return(sta);
+    }
+  leen = sizeof(sout);
+  s = accept(protos, (struct sockaddr *)&sout, &leen);
+  (void)close(protos);
+  return(s);
+}
+
+static char *afterwhite(char *ptr)
+{
+  char *run = ptr;
+  char  c;
+
+  while ( 1 )
+    {
+      c = *run;
+      if ( c == 0 )
+	break;
+      if ( ! isspace(c) )
+	break;
+      run++;
+    }
+  return(run);
+}
+
+static int aur(scm *scmp, scmcon *conp, char what, char *valu)
+{
+  char *outdir;
+  char *outfile;
+  char *outfull;
+  int   sta;
+
+  sta = splitdf(NULL, NULL, valu, &outdir, &outfile, &outfull);
+  if ( sta < 0 )
+    return(sta);
+  switch ( what )
+    {
+    case 'a':
+      sta = add_object(scmp, conp, outfile, outdir, outfull, 0);
+      break;
+    case 'r':
+      sta = delete_object(scmp, conp, outfile, outdir, outfull);
+      break;
+    case 'u':
+      (void)delete_object(scmp, conp, outfile, outdir, outfull);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, 0);
+      break;
+    default:
+      break;
+    }
+  free((void *)outdir);
+  free((void *)outfile);
+  free((void *)outfull);
+  return(sta);
+}
+
+static char *hasoneline(char *inp, char **nextp)
+{
+  char *crlf;
+  int   leen;
+
+  *nextp = NULL;
+  if ( inp == NULL )
+    return(NULL);
+  leen = strlen(inp);
+  crlf = strstr(inp, "\r\n");
+  if ( crlf == NULL )
+    return(NULL);
+  *crlf++ = 0;
+  *crlf++ = 0;
+  if ( (int)(crlf-inp) < leen )
+    *nextp = inp + leen;
+  return(inp);
+}
+
+/*
+  This function processes socket data line by line. First, it looks
+  in "left" to see if this contains one or more lines. In such a
+  case it returns a pointer to the first such line, and modifies left
+  so that that line is deleted. If left does not contain a complete
+  line this function will read as much socket data as it can. It will
+  stuff the first complete line (if any) into the return code, and
+  put the remaining stuff into left.
+*/
+
+static char *sock1line(int s, char **leftp)
+{
+  char *left2;
+  char *left = *leftp;
+  char *next = NULL;
+  char *ptr;
+  int   leen = 0;
+  int   rd = 0;
+  int   sta;
+
+  ptr = hasoneline(left, &next);
+  if ( ptr != NULL )  // left had at least one line
+    {
+      *leftp = next;
+      return(ptr);
+    }
+  if ( left != NULL )
+    leen = strlen(left);
+  sta = ioctl(s, FIONREAD, &rd);
+  if ( sta < 0 || rd <= 0 )
+    return(NULL);
+  left2 = (char *)calloc(leen+rd+1, sizeof(char));
+  if ( left2 == NULL )
+    return(NULL);
+  (void)strncpy(left2, left, leen);
+  sta = recv(s, left2+leen, rd, 0);
+  if ( sta < 0 )
+    sta = 0;
+  left2[leen+sta] = 0;
+  free((void *)left);
+  left = left2;
+  ptr = hasoneline(left, &next);
+  if ( ptr != NULL )
+    {
+      *leftp = next;
+      return(ptr);
+    }
+  *leftp = left;
+  return(NULL);
+}
+
+/*
+  Receive one or more lines of data over the socket and process
+  them.  The lines received will look like TAG whitespace VALUE CRLF.
+  The following tags are defined:
+
+
+   B (begin).  This is sent when the AUR program starts. Its VALUE is the
+               current date and time.
+
+   E (end).  Sent when the AUR program is done. VALUE is the current date and
+             time.  AUR may close its end of the socket immediately after
+             sending this message; it need not wait.
+
+   A (add). Sent when a file is added to the repository. VALUE is the full,
+            absolute path to the file.
+
+   U (update). Sent when a file is updated in the repository, e.g. the
+               contents change but the filename remains the same and is in the
+               same directory.
+
+   R (remove). Sent when a file is removed from the repository.  VALUE is the
+               full path to the file.
+
+   L (link). Sent when a link (hard or symbolic) is made between two files in
+             the repository. VALUE is formed as follows:
+                "filename1" SP filename2.
+             Filename1 is a full pathname in double quotes; it is followed by
+             a single space, and then filename2 which is also a full pathname.
+             The link direction is filename1 -> filename2.
+
+   F (fatal error). Sent (if possible) when the AUR program detects an
+                    unrecoverable error occurs. VALUE is the error text. It
+                    is expected that AUR will immediately close its end of the
+                    socket when this happens (perhaps even without being able
+                    to send an E message).
+
+   X (error). Sent when an error occurs. VALUE is error text.  This is an
+              optional message.
+
+   W (warning). Sent when a warning occurs. VALUE is warning text. Optional
+                message.
+
+   I (information). Sent to convey arbitrary information.  VALUE is the
+                    informational text. Optional message.
+*/
+
+static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
+{
+  char *left = NULL;
+  char *ptr;
+  char *valu;
+  char  c;
+  int   done = 0;
+  int   sta = 0;
+
+  while ( 1 )
+    {
+      ptr = sock1line(s, &left);
+      if ( ptr == NULL )
+	continue;
+      (void)printf("Sockline: %s\n", ptr);
+      c = ptr[0];
+      valu = afterwhite(ptr+1);
+      switch ( c )
+	{
+	case 'b':		/* begin */
+	case 'B':
+	  (void)fprintf(logfile, "AUR beginning at %s\n", valu);
+	  break;
+	case 'e':
+	case 'E':		/* end */
+	  (void)fprintf(logfile, "AUR ending at %s\n", valu);
+	  done = 1;
+	  break;
+	case 'a':
+	case 'A':		/* add */
+	  (void)fprintf(logfile, "AUR add request: %s\n", valu);
+	  sta = aur(scmp, conp, 'a', valu);
+	  (void)fprintf(logfile, "Status was %d", sta);
+	  if ( sta < 0 )
+	    (void)fprintf(logfile, " (%s)", err2string(sta));
+	  (void)fprintf(logfile, "\n");
+	  break;
+	case 'u':
+	case 'U':		/* update */
+	  (void)fprintf(logfile, "AUR update request: %s\n", valu);
+	  sta = aur(scmp, conp, 'u', valu);
+	  (void)fprintf(logfile, "Status was %d", sta);
+	  if ( sta < 0 )
+	    (void)fprintf(logfile, " (%s)", err2string(sta));
+	  (void)fprintf(logfile, "\n");
+	  break;
+	case 'r':
+	case 'R':		/* remove */
+	  (void)fprintf(logfile, "AUR remove request: %s\n", valu);
+	  sta = aur(scmp, conp, 'r', valu);
+	  (void)fprintf(logfile, "Status was %d", sta);
+	  if ( sta < 0 )
+	    (void)fprintf(logfile, " (%s)", err2string(sta));
+	  (void)fprintf(logfile, "\n");
+	  break;
+	case 'l':
+	case 'L':		/* link */
+	  (void)fprintf(logfile, "AUR link request: %s\n", valu);
+	  break;
+	case 'f':
+	case 'F':		/* fatal error */
+	  (void)fprintf(logfile, "AUR fatal error: %s\n", valu);
+	  done = 1;
+	  break;
+	case 'x':
+	case 'X':		/* error */
+	  (void)fprintf(logfile, "AUR error: %s\n", valu);
+	  break;
+	case 'w':
+	case 'W':		/* warning */
+	  (void)fprintf(logfile, "AUR warning: %s\n", valu);
+	  break;
+	case 'i':
+	case 'I':		/* information */
+	  (void)fprintf(logfile, "AUR message: %s\n", valu);
+	  break;
+	case 0:
+	  break;
+	default:
+	  (void)fprintf(logfile, "AUR invalid tag '%c' ignored\n", c);
+	  break;
+	}
+      free((void *)ptr);
+      if ( done == 1 )
+	break;
+    }
+  return(sta);
+}
+
 // putative command line args:
 //   -t topdir           create all tables, set rep root to "topdir"
 //   -x                  destroy all tables
@@ -386,6 +707,7 @@ int main(int argc, char **argv)
   char   *tmpdsn = NULL;
   char   *password = NULL;
   char   *ne;
+  char   *porto = NULL;
   char    errmsg[1024];
   time_t  nw;
   int ians = 0;
@@ -395,8 +717,8 @@ int main(int argc, char **argv)
   int really = 0;
   int trusted = 0;
   int force = 0;
-  int porto = 0;
   int sta = 0;
+  int s;
   int c;
 
   (void)setbuf(stdout, NULL);
@@ -405,7 +727,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:f:F:p:")) != EOF )
     {
       switch ( c )
 	{
@@ -429,9 +751,9 @@ int main(int argc, char **argv)
 	case 'f':
 	  thefile = optarg;
 	  break;
-	case 'w':
+	case 'p':
 	  do_sockopts++;
-	  porto = atoi(optarg);
+	  porto = strdup(optarg);
 	  break;
 	case 'h':
 	  usage();
@@ -595,12 +917,14 @@ int main(int argc, char **argv)
   Open the logfile in preparation for actual DB operations.
 */
   logfile = fopen("rcli.log", "a+");
-  if ( logfile != NULL )
+  if ( logfile == NULL )
     {
-      time(&nw);
-      (void)setbuf(logfile, NULL);
-      (void)fprintf(logfile, "Rsync client session start: %s", ctime(&nw));
+      (void)fprintf(stderr, "Cannot create logfile\n");
+      return(-1);
     }
+  time(&nw);
+  (void)setbuf(logfile, NULL);
+  (void)fprintf(logfile, "Rsync client session start: %s", ctime(&nw));
   if ( thefile != NULL && sta == 0 )
     {
 // Check that the file is in the repository, ask if not and force is off
@@ -609,7 +933,8 @@ int main(int argc, char **argv)
 	{
 	  if ( strncmp(tdir, outdir, tdirlen) != 0 && force == 0 )
 	    {
-	      ians = yorn("That file is not in the repository. Proceed anyway");
+	      ians =
+		yorn("That file is not in the repository. Proceed anyway");
 	      if ( ians <= 0 )
 		sta = 1;
 	    }
@@ -627,31 +952,26 @@ int main(int argc, char **argv)
 	    (void)printf("File operation cancelled\n");
 	  if ( sta == 0 )
 	    {
-	      if ( logfile != NULL )
-		(void)fprintf(logfile, "Attempting to add file %s\n", outfile);
+	      (void)fprintf(logfile, "Attempting to add file %s\n", outfile);
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
 			       trusted);
 	      if ( sta < 0 )
 		{
-		  (void)fprintf(stderr, "Could not add file %s: error %s (%d)\n",
+		  (void)fprintf(stderr,
+				"Could not add file %s: error %s (%d)\n",
 				thefile, err2string(sta), sta);
-		  if ( logfile != NULL )
+		  (void)fprintf(logfile,
+				"Could not add file %s: error %s (%d)\n",
+				thefile, err2string(sta), sta);
+		  if ( sta == ERR_SCM_SQL )
 		    {
-		      (void)fprintf(logfile, "Could not add file %s: error %s (%d)\n",
-				    thefile, err2string(sta), sta);
-		      if ( sta == ERR_SCM_SQL )
-			{
-			  ne = geterrorscm(realconp);
-			  if ( ne != NULL && ne != 0 )
-			    (void)fprintf(logfile, "\t%s\n", ne);
-			}
+		      ne = geterrorscm(realconp);
+		      if ( ne != NULL && ne != 0 )
+			(void)fprintf(logfile, "\t%s\n", ne);
 		    }
 		}
 	      else
-		{
-		  if ( logfile != NULL )
-		    (void)fprintf(logfile, "Add operation succeeded\n");
-		}
+		(void)fprintf(logfile, "Add operation succeeded\n");
 	    }
 	  free((void *)outdir);
 	  free((void *)outfile);
@@ -668,25 +988,21 @@ int main(int argc, char **argv)
 	  sta = delete_object(scmp, realconp, outfile, outdir, outfull);
 	  if ( sta < 0 )
 	    {
-	      (void)fprintf(stderr, "Could not delete file %s: error %s (%d)\n",
+	      (void)fprintf(stderr,
+			    "Could not delete file %s: error %s (%d)\n",
 			    thefile, err2string(sta), sta);
-	      if ( logfile != NULL )
+	      (void)fprintf(logfile,
+			    "Could not delete file %s: error %s (%d)\n",
+			    thefile, err2string(sta), sta);
+	      if ( sta == ERR_SCM_SQL )
 		{
-		  (void)fprintf(logfile, "Could not delete file %s: error %s (%d)\n",
-				thefile, err2string(sta), sta);
-		  if ( sta == ERR_SCM_SQL )
-		    {
-		      ne = geterrorscm(realconp);
-		      if ( ne != NULL && ne != 0 )
-			(void)fprintf(logfile, "\t%s\n", ne);
-		    }
+		  ne = geterrorscm(realconp);
+		  if ( ne != NULL && ne != 0 )
+		    (void)fprintf(logfile, "\t%s\n", ne);
 		}
 	    }
 	  else
-	    {
-	      if ( logfile != NULL )
-		(void)fprintf(logfile, "Delete operation succeeded\n");
-	    }
+	    (void)fprintf(logfile, "Delete operation succeeded\n");
 	  free((void *)outdir);
 	  free((void *)outfile);
 	  free((void *)outfull);
@@ -694,9 +1010,18 @@ int main(int argc, char **argv)
       else
 	(void)fprintf(stderr, "Error: %s (%d)\n", err2string(sta), sta);
     }
-  if ( do_sockopts > 0 && sta == 0 )
+  if ( do_sockopts > 0 && porto != NULL && sta == 0 )
     {
-      // GAGNON
+      (void)printf("Creating a socket on port %s\n", porto);
+      s = makesock(porto);
+      if ( s < 0 )
+	(void)fprintf(stderr, "Could not create socket\n");
+      else
+	{
+	  sta = sockline(scmp, realconp, logfile, s);
+	  (void)printf("Socket connection closed\n");
+	  (void)close(s);
+	}
     }
 #ifdef BFLAGS_TEST
   {
@@ -748,11 +1073,8 @@ int main(int argc, char **argv)
   freescm(scmp);
   if ( tdir != NULL )
     free((void *)tdir);
-  if ( logfile != NULL )
-    {
-      time(&nw);
-      (void)fprintf(logfile, "Rsync client session end %s", ctime(&nw));
-      (void)fclose(logfile);
-    }
+  time(&nw);
+  (void)fprintf(logfile, "Rsync client session end %s", ctime(&nw));
+  (void)fclose(logfile);
   return(sta);
 }
