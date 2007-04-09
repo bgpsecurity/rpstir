@@ -155,7 +155,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
   connect = connectscm (scmp->dsn, errMsg, 1024);
   checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, errMsg);
   connect->mystat.tabname = objectType;
-  table = findtablescm (scmp, objectType);
+  table = findtablescm (scmp, isCert ? "certificate" : objectType);
   checkErr (table == NULL, "Cannot find table %s\n", objectType);
 
   /* set up where clause, i.e. the filter */
