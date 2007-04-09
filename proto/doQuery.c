@@ -26,6 +26,8 @@
 #define MAX_VALS 20
 #define MAX_CONDS 10
 
+typedef int (*displayfunc)(scmsrcha *s, int idx1, char* returnStr);
+
 typedef struct _QueryField	/* field to display or filter on */
 {
   char     *name;		/* name of the field */
@@ -39,37 +41,42 @@ typedef struct _QueryField	/* field to display or filter on */
   char     *otherDBColumn;      /* if not NULL, second field for query */
   char     *heading;            /* name of column heading to use in printout */
   int      requiresJoin;        /* do join with dirs table to get dirname */
+  displayfunc displayer;        /* function for display string, NULL if std */
   char     *description;        /* one-line description for user help */
 } QueryField;
+
+int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
+int addrrngDisplay (scmsrcha *s, int idx1, char* returnStr);
 
 /* the set of all query fields */
 static QueryField fields[] = {
   {"filename", 0, 1, 1, 1, SQL_C_CHAR, 256, NULL, NULL, "Filename", 0,
-   "the filename where the data is stored in the repository"},
-  {"pathname", 1, 1, 1, 1, -1, 0, "dirname", "filename", "Pathname", 1,
+   NULL, "the filename where the data is stored in the repository"},
+  {"pathname", 1, 1, 1, 1, -1, 0, "dirname", "filename",
+   "Pathname", 1, pathnameDisplay,
    "full pathname (directory plus filename) where the data is stored"},
   {"dirname", 0, 1, 1, 1, SQL_C_CHAR, 4096, NULL, NULL, "Directory", 1,
-   "the directory in the repository where the data is stored"},
-  {"ski", 0, 1, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "SKI", 0,
+   NULL, "the directory in the repository where the data is stored"},
+  {"ski", 0, 1, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "SKI", 0, NULL,
    "subject key identifier"},
-  {"aki", 0, 0, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "AKI", 0,
+  {"aki", 0, 0, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "AKI", 0, NULL,
    "authority key identifier"},
-  {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS #", 0,
+  {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS #", 0, NULL,
    "autonomous system number"},
   {"addrrng", 1, 1, 0, 0, -1, 0, "dirname", "filename", "IP Addr Range", 1,
-   "IP address range"},
+   addrrngDisplay, "IP address range"},
   {"issuer", 0, 0, 0, 1, SQL_C_CHAR, 512, NULL, NULL, "Issuer", 0,
-   "system that issued the cert/crl"},
+   NULL, "system that issued the cert/crl"},
   {"valfrom", 0, 0, 0, 1, SQL_C_CHAR, 32, NULL, NULL, "Valid From", 0,
-   "date/time from which the cert is valid"},
+   NULL, "date/time from which the cert is valid"},
   {"valto", 0, 0, 0, 1, SQL_C_CHAR, 32, NULL, NULL, "Valid To", 0,
-   "date/time to which the cert is valid"},
+   NULL, "date/time to which the cert is valid"},
   {"last_upd", 0, 0, 1, 0, SQL_C_CHAR, 32, NULL, NULL, "Last Update", 0,
-   "last update time of the CRL"},
+   NULL, "last update time of the CRL"},
   {"next_upd", 0, 0, 1, 0, SQL_C_CHAR, 32, NULL, NULL, "Next Update", 0,
-   "next update time of the CRL"},
+   NULL, "next update time of the CRL"},
   {"crlno", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "CRL #", 0,
-   "CRL number"}
+   NULL, "CRL number"}
 };
 
 static QueryField *findField (char *name)
@@ -82,12 +89,43 @@ static QueryField *findField (char *name)
   return NULL;
 }
 
-static int handleResults (scmcon *conp, scmsrcha *s, int idx)
+int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
 {
-  conp = conp; idx = idx;  // silence compiler warnings
-  fprintf (stderr, "ASN = %d File = %s/%s\n   SKI = %s\n",
-           *((unsigned int *) s->vec[0].valptr), (char *) s->vec[1].valptr,
-           (char *) s->vec[2].valptr, (char *) s->vec[3].valptr);
+  sprintf (returnStr, "%s/%s", (char *) s->vec[idx1].valptr,
+           (char *) s->vec[idx1+1].valptr);
+  return 2;
+}
+
+int addrrngDisplay (scmsrcha *s, int idx1, char* returnStr)
+{
+  s = s; idx1 = idx1;
+  sprintf (returnStr, "Unimplemented");
+  return 2;
+}
+
+static QueryField *globalFields[MAX_VALS]; /* for passing into handleResults */
+
+/* callback function for searchscm that prints the output */
+static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
+{
+  int result = 0;
+  int display;
+  char resultStr[4096];
+  conp = conp; numLine = numLine;  // silence compiler warnings
+  for (display = 0; globalFields[display] != NULL; display++) {
+    QueryField *field = globalFields[display];
+    if (field->displayer != NULL) {
+      result += field->displayer (s, result, resultStr);
+    } else {
+      if (field->sqlType == SQL_C_CHAR)
+        sprintf (resultStr, "%s", (char *) s->vec[result].valptr);
+      else
+        sprintf (resultStr, "%d", *((unsigned int *) s->vec[result].valptr));
+      result++;
+    }
+    printf ("%s = %s ", field->heading, resultStr);
+  }
+  printf ("\n");
   return(0);
 }
 
@@ -119,7 +157,6 @@ static int doQuery (char *objectType, char **displays, char **filters)
   connect->mystat.tabname = objectType;
   table = findtablescm (scmp, objectType);
   checkErr (table == NULL, "Cannot find table %s\n", objectType);
-  table = findtablescm (scmp, objectType);
 
   /* set up where clause, i.e. the filter */
   srch.where = NULL;
@@ -168,6 +205,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
   for (i = 0; displays[i] != NULL; i++) {
     field = findField (displays[i]);
     checkErr (field == NULL, "Unknown field name: %s\n", displays[i]);
+    globalFields[i] = field;
     name = (field->dbColumn == NULL) ? displays[i] : field->dbColumn;
     while (name != NULL) {
       proceed = 1;
@@ -182,6 +220,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
       name = (name == field->otherDBColumn) ? NULL : field->otherDBColumn;
     }
   }
+  globalFields[i] = NULL;
 
   /* do query */
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
