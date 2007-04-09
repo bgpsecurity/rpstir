@@ -187,7 +187,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
       } else {
         checkErr (1, "Bad comparison operator: %s\n", name);
       }
-      name = strtok (NULL, ".");
+      name = strtok (NULL, "");
       if (name[0] != '"') strcat (whereStr, "\"");
       strcat (whereStr, name);
       if (name[0] != '"') strcat (whereStr, "\"");
