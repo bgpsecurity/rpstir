@@ -260,12 +260,12 @@ static int printUsage()
 {
   printf ("\nPossible usages:\n  doQuery -a\n");
   printf ("  doQuery -l <type>\n");
-  printf ("  doQuery -t <type> -d <disp1>...[ -d <dispn>] [-c <cls1>]...[ -c <clsn>]\n\nSwitches:\n");
+  printf ("  doQuery -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>]\n\nSwitches:\n");
   printf ("  -a: short cut for type=roa, no clauses, and display ski, asn, and addrrng\n");
   printf ("  -l: list the possible display fields and clauses for a given type\n");
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
   printf ("  -d: the name of one field of the object to display\n");
-  printf ("  -c: one clause to use for filtering; a clause has the form\n");
+  printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
   printf ("      (eq, ne, gt, lt, ge, le)\n\n");
   return -1;
@@ -295,7 +295,7 @@ int main(int argc, char **argv)
       objectType = argv[i+1];
     } else if (strcasecmp (argv[i], "-d") == 0) {
       displays [numDisplays++] = argv[i+1];
-    } else if (strcasecmp (argv[i], "-c") == 0) {
+    } else if (strcasecmp (argv[i], "-f") == 0) {
       clauses [numClauses++] = argv[i+1];
     } else {
       return printUsage();
