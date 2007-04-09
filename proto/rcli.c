@@ -317,11 +317,11 @@ static void usage(void)
   (void)printf("\t-t topdir\tcreate all database tables\n");
   (void)printf("\t-x\tdestroy all database tables\n");
   (void)printf("\t-y\tforce operation: do not ask for confirmation\n");
-  (void)printf("\t-q\tdisplay database state\n");
   (void)printf("\t-d dir\tdelete the indicated file\n");
-  (void)printf("\t-f file\tprocess the indicated file\n");
-  (void)printf("\t-F file\tprocess the indicated trusted file\n");
-  (void)printf("\t-p port\tstart an rsync listener on port\n");
+  (void)printf("\t-f file\tadd the indicated file\n");
+  (void)printf("\t-F file\tadd the indicated trusted file\n");
+  (void)printf("\t-w port\tstart an rsync listener on port\n");
+  (void)printf("\t-p\trun the socket listen in perpetual mode\n");
   (void)printf("\t-h\tdisplay usage and exit\n");
 }
 
@@ -368,7 +368,7 @@ static int cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
   tcp port N, udp port N, or just plain (tcp) port N.
 */
 
-static int makesock(char *porto)
+static int makesock(char *porto, int *protosp)
 {
   struct sockaddr_in sin;
   struct sockaddr_in sout;
@@ -380,6 +380,7 @@ static int makesock(char *porto)
   int  sta;
   int  port;
   int  offs = 0;
+//  int  one = 1;
   int  s;
 
   if ( porto[0] == 'u' || porto[0] == 'U' )
@@ -389,42 +390,48 @@ static int makesock(char *porto)
   port = atoi(porto+offs);
   if ( port <= 0 )
     return(-1);
-  protos = socket(AF_INET, SOCK_STREAM, 0);
+  protos = *protosp;
   if ( protos < 0 )
-    return(protos);
-  hn[0] = 0;
-  sta = gethostname(hn, 256);
-  if ( sta < 0 )
     {
-      close(protos);
-      return(sta);
-    }
-  hen = gethostbyname(hn);
-  if ( hen == NULL )
-    {
-      close(protos);
-      return(sta);
-    }
-  memset(&sin, 0, sizeof(sin));
-  memcpy(&sin.sin_addr.s_addr, hen->h_addr_list[0],
-	 hen->h_length);
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(port);
-  sta = bind(protos, (struct sockaddr *)&sin, sizeof(sin));
-  if ( sta < 0 )
-    {
-      close(protos);
-      return(sta);
-    }
-  sta = listen(protos, 1);
-  if ( sta < 0 )
-    {
-      close(protos);
-      return(sta);
+      protos = socket(AF_INET, SOCK_STREAM, 0);
+      if ( protos < 0 )
+	return(protos);
+      hn[0] = 0;
+      sta = gethostname(hn, 256);
+      if ( sta < 0 )
+	{
+	  close(protos);
+	  return(sta);
+	}
+      hen = gethostbyname(hn);
+      if ( hen == NULL )
+	{
+	  close(protos);
+	  return(sta);
+	}
+      memset(&sin, 0, sizeof(sin));
+      memcpy(&sin.sin_addr.s_addr, hen->h_addr_list[0],
+	     hen->h_length);
+      sin.sin_family = AF_INET;
+      sin.sin_port = htons(port);
+      sta = bind(protos, (struct sockaddr *)&sin, sizeof(sin));
+      if ( sta < 0 )
+	{
+	  close(protos);
+	  return(sta);
+	}
+//  (void)setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+      sta = listen(protos, 1);
+      if ( sta < 0 )
+	{
+	  close(protos);
+	  return(sta);
+	}
+      *protosp = protos;
     }
   leen = sizeof(sout);
   s = accept(protos, (struct sockaddr *)&sout, &leen);
-  (void)close(protos);
+//  (void)close(protos);
   return(s);
 }
 
@@ -547,6 +554,47 @@ static char *sock1line(int s, char **leftp)
 }
 
 /*
+  Determine if the peer of a socket has disconnected. This function
+  returns 0 if the other end appears to still be connected, and a
+  negative error code otherwise.
+*/
+
+static int probe(int s)
+{
+  struct sockaddr_in from;
+  unsigned int  fromlen = sizeof(from);
+  char one;
+  int  serrno;
+  int  rd;
+  int  e;
+
+  if ( s < 0 )
+    return(s);
+// test 1: zero byte write
+  e = send(s, NULL, 0, 0);
+  if ( e < 0 )
+    return(-1);
+// test 2: getpeername
+  memset(&from, 0, fromlen);
+  e = getpeername(s, (struct sockaddr *)&from, &fromlen);
+  if ( e < 0 )
+    return(-2);
+// test 3: peek
+  errno = 0;
+  e = recv(s, &one, 1, MSG_PEEK);
+  serrno = errno;
+  if ( e == 0 )
+    return(-3);
+  if ( e < 0 && serrno == ECONNRESET )
+    return(-4);
+// test 4: socket ioctl
+  e = ioctl(s, FIONREAD, &rd);
+  if ( e < 0 || rd < 0 )
+    return(-5);
+  return(0);
+}
+
+/*
   Receive one or more lines of data over the socket and process
   them.  The lines received will look like TAG whitespace VALUE CRLF.
   The following tags are defined:
@@ -603,6 +651,8 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 
   while ( 1 )
     {
+      if ( (sta=probe(s)) < 0 )
+	return(sta);
       ptr = sock1line(s, &left);
       if ( ptr == NULL )
 	continue;
@@ -686,11 +736,11 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 //   -x                  destroy all tables
 //   -y                  force operation, don't ask
 //   -h                  print help
-//   -d dir              recursively process dir
-//   -D dir              recursively process dir, assume trusted
-//   -f file             process the given file
-//   -F file             process the given trusted file
+//   -d object           delete the given object
+//   -f file             add the given object
+//   -F file             add the given trusted object
 //   -w port             operate in wrapper mode using the given socket port
+//   -p                  with -w indicates to run perpetually, e.g. as a daemon
 
 int main(int argc, char **argv)
 {
@@ -714,6 +764,7 @@ int main(int argc, char **argv)
   int do_create = 0;
   int do_delete = 0;
   int do_sockopts = 0;
+  int perpetual = 0;
   int really = 0;
   int trusted = 0;
   int force = 0;
@@ -727,7 +778,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:f:F:p:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:p")) != EOF )
     {
       switch ( c )
 	{
@@ -751,9 +802,12 @@ int main(int argc, char **argv)
 	case 'f':
 	  thefile = optarg;
 	  break;
-	case 'p':
+	case 'w':
 	  do_sockopts++;
 	  porto = strdup(optarg);
+	  break;
+	case 'p':
+	  perpetual++;
 	  break;
 	case 'h':
 	  usage();
@@ -1012,16 +1066,22 @@ int main(int argc, char **argv)
     }
   if ( do_sockopts > 0 && porto != NULL && sta == 0 )
     {
-      (void)printf("Creating a socket on port %s\n", porto);
-      s = makesock(porto);
-      if ( s < 0 )
-	(void)fprintf(stderr, "Could not create socket\n");
-      else
+      int protos = (-1);
+      do
 	{
-	  sta = sockline(scmp, realconp, logfile, s);
-	  (void)printf("Socket connection closed\n");
-	  (void)close(s);
-	}
+	  (void)printf("Creating a socket on port %s\n", porto);
+	  s = makesock(porto, &protos);
+	  if ( s < 0 )
+	    (void)fprintf(stderr, "Could not create socket\n");
+	  else
+	    {
+	      sta = sockline(scmp, realconp, logfile, s);
+	      (void)printf("Socket connection closed\n");
+	      (void)close(s);
+	    }
+	} while ( perpetual > 0 ) ;
+      if ( protos >= 0 )
+	(void)close(protos);
     }
 #ifdef BFLAGS_TEST
   {
