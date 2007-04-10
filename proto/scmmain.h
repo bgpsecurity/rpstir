@@ -91,6 +91,7 @@ static scmtab scmtabbuilder[] =
       "last_upd DATETIME NOT NULL,"
       "next_upd DATETIME NOT NULL,"
       "crlno    BIGINT DEFAULT 0,"
+      "aki      VARCHAR(128),"
       "snlen    INT UNSIGNED DEFAULT 0,"
       "sninuse  INT UNSIGNED DEFAULT 0,"
       "snlist   MEDIUMBLOB,"
