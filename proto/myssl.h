@@ -107,8 +107,9 @@ extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 #define CRF_FIELD_NEXT        3
 
 #define CRF_FIELD_SN          4
+#define CRF_FIELD_AKI         5
 
-#define CRF_NFIELDS         (CRF_FIELD_SN+1)
+#define CRF_NFIELDS         (CRF_FIELD_AKI+1)
 
 
 /*

@@ -895,9 +895,46 @@ static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CRF_FIELD_SN] = dptr;
 }
 
+static void crf_get_aki(X509V3_EXT_METHOD *meth, void *exts,
+			crl_fields *cf, int *stap, int *crlstap)
+{
+  AUTHORITY_KEYID *aki;
+  char *ptr;
+  char *dptr;
+
+  if ( stap == NULL )
+    return;
+  if ( meth == NULL || exts == NULL || cf == NULL || crlstap == NULL )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return;
+    }
+  aki = (AUTHORITY_KEYID *)exts;
+  if ( aki->keyid == NULL )
+    {
+      *stap = ERR_SCM_XPROFILE;
+      return;
+    }
+  ptr = hex_to_string(aki->keyid->data, aki->keyid->length);
+  if ( ptr == NULL )
+    {
+      *stap = ERR_SCM_INVALEXT;
+      return;
+    }
+  dptr = strdup(ptr);
+  OPENSSL_free(ptr);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return;
+    }
+  cf->fields[CRF_FIELD_AKI] = dptr;
+}
+
 static crfx_validator crxvalidators[] = 
   {
     { crf_get_crlno,  CRF_FIELD_SN,     NID_crl_number,   0 } ,
+    { crf_get_aki,    CRF_FIELD_AKI,    NID_authority_key_identifier, 1 }
   } ;
 
 /*
