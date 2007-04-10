@@ -40,7 +40,7 @@
   Data types
 */
 
-typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer,
+typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		       unsigned long long sn);
 
 typedef struct _crlinfo
@@ -71,7 +71,7 @@ extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 extern int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			   unsigned int *pflags, unsigned int *lidp);
 extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
-extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer,
+extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 			 unsigned long long sn);
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
 extern int   certificate_validity(scm *scmp, scmcon *conp);

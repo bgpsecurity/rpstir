@@ -243,7 +243,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
 
 static char *crlf[] =
   {
-    "filename", "issuer", "last_upd", "next_upd", "crlno"
+    "filename", "issuer", "last_upd", "next_upd", "crlno", "aki"
   } ;
 
 static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
@@ -311,11 +311,18 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
   aone.ntot = CRF_NFIELDS+6;
   aone.nused = idx;
   aone.vald = 0;
+// add the CRL
   sta = insertscm(conp, ctab, &aone);
   free((void *)hexs);
   if ( sta < 0 )
     return(sta);
+// update the maximum id in the metadata table
   sta = setmaxidscm(scmp, conp, NULL, "CRL", crl_id);
+  if ( sta < 0 )
+    return(sta);
+// set the other_id of all matching certs to point to this CRL
+  sta = setcertptr(scmp, conp, crl_id, cf->fields[CRF_FIELD_ISSUER],
+		   cf->fields[CRF_FIELD_AKI]);
   return(sta);
 }
 
@@ -390,9 +397,9 @@ static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
 }                                                     
 
 /*
-  Get the parent certificate by using the aki of "x" to look it
-  up in the db. If "x" has already been broken down in "cf" just
-  use the aki from there, otherwise look it up from "x". The
+  Get the parent certificate by using the issuer and the aki of "x" to look
+  it up in the db. If "x" has already been broken down in "cf" just
+  use the issuer/aki from there, otherwise look it up from "x". The
   db lookup will return the filename and directory name of the
   parent cert, as well as its flags. Set those flags into "pflags"
 */
@@ -410,13 +417,15 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   scmsrcha dsrch;
   scmsrch  dsrch1;
   scmkva where;
-  scmkv  one;
+  scmkv  one[2];
   scmkva dwhere;
   scmkv  done;
   X509  *px = NULL;
   BIO   *bcert = NULL;
   char *aki = NULL;
+  char *issuer = NULL;
   char *daki = NULL;
+  char *dissuer = NULL;
   char *ofile;			/* filename component */
   char *dfile;			/* directory component */
   char *ofullname;		/* full pathname */
@@ -452,27 +461,46 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
       *stap = ERR_SCM_NOAKI;
       if ( alld > 0 && cf != NULL )
 	freecf(cf);
+      return(NULL);
     }
   daki = strdup(aki);
-  if ( alld > 0 && cf != NULL )
-    freecf(cf);
   if ( daki == NULL )
     {
       *stap = ERR_SCM_NOMEM;
       return(NULL);
     }
+  issuer = cf->fields[CF_FIELD_ISSUER];
+  if ( issuer == NULL )
+    {
+      *stap = ERR_SCM_NOISSUER;
+      if ( alld > 0 && cf != NULL )
+	freecf(cf);
+      free((void *)daki);
+      return(NULL);
+    }
+  dissuer = strdup(issuer);
+  if ( dissuer == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  if ( alld > 0 && cf != NULL )
+    freecf(cf);
   ofile = (char *)calloc(PATH_MAX, sizeof(char));
   if ( ofile == NULL )
     {
       *stap = ERR_SCM_NOMEM;
       return(NULL);
     }
-// find the entry whose ski is our aki, e.g. our parent
-  one.column = "ski";
-  one.value = daki;
-  where.vec = &one;
-  where.ntot = 1;
-  where.nused = 1;
+// find the entry whose subject is our issuer and whose ski is our aki,
+// e.g. our parent
+  one[0].column = "subject";
+  one[0].value = dissuer;
+  one[1].column = "ski";
+  one[1].value = daki;
+  where.vec = &one[0];
+  where.ntot = 2;
+  where.nused = 2;
   where.vald = 0;
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_CHAR;
@@ -502,6 +530,7 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   srch.context = &blah;
   *stap = searchscm(conp, ctab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)daki);
+  free((void *)dissuer);
   if ( *stap < 0 )
     {
       free((void *)ofile);
@@ -983,6 +1012,7 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   unsigned int i;
   crlinfo *crlip;
   char    *issuer;
+  char    *aki;
   int      ista;
   int      chgd = 0;
   int      sta = 0;
@@ -994,9 +1024,12 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   if ( crlip->conp != conp )
     return(ERR_SCM_INVALARG);
 // if sninuse or snlen is 0 or if the flags mark the CRL as invalid, or
-// if the issuer is a null string, then ignore this CRL
+// if the issuer or aki is a null string, then ignore this CRL
   issuer = (char *)(s->vec[0].valptr);
   if ( issuer == NULL || issuer[0] == 0 || s->vec[0].avalsize == 0 )
+    return(0);
+  aki = (char *)(s->vec[6].valptr);
+  if ( aki == NULL || aki[0] == 0 || s->vec[6].avalsize == 0 )
     return(0);
   snlen = *(unsigned int *)(s->vec[1].valptr);
   if ( snlen == 0 || s->vec[1].avalsize < (int)(sizeof(unsigned int)) )
@@ -1014,12 +1047,13 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   snlist = (unsigned long long *)(s->vec[5].valptr);
   for(i=0;i<snlen;i++)
     {
-      ista = (*crlip->cfunc)(crlip->scmp, crlip->conp, issuer, snlist[i]);
+      ista = (*crlip->cfunc)(crlip->scmp, crlip->conp, issuer, aki, snlist[i]);
       if ( ista < 0 )
 	sta = ista;
       if ( ista == 1 )
 	{
-	  snlist[i] = 0;
+// per STK action item #7 we no longer set SN to zero as an exemplar
+//	  snlist[i] = 0;
 	  chgd++;
 	}
     }
@@ -1030,7 +1064,9 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   if ( chgd == 0 )
     return(0);
 // update the sninuse and snlist values
-  sninuse -= chgd;
+// per STK action item #7 we are not zero-ing out snlist entries, so
+// we never want to update sninuse
+// sninuse -= chgd;
   if ( sninuse > 0 )
     sta = updateblobscm(conp, crlip->tabp, snlist, sninuse, snlen, lid);
   else
@@ -1055,10 +1091,11 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   unsigned int flags = 0;
   unsigned int lid = 0;
   scmsrcha srch;
-  scmsrch  srch1[6];
+  scmsrch  srch1[7];
   scmtab  *tabp;
   crlinfo  crli;
   char     issuer[512];
+  char     aki[512];
   void    *snlist;
   int      sta;
 
@@ -1074,7 +1111,7 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
       free(snlist);
       return(ERR_SCM_NOSUCHTAB);
     }
-// set up a search for issuer, snlen, sninuse, flags and snlist
+// set up a search for issuer, snlen, sninuse, flags, snlist and aki
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_CHAR;
   srch1[0].colname = "issuer";
@@ -1112,10 +1149,17 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   srch1[5].valptr = snlist;
   srch1[5].valsize = 16*1024*1024;
   srch1[5].avalsize = 0;
+  srch1[6].colno = 7;
+  srch1[6].sqltype = SQL_C_CHAR;
+  srch1[6].colname = "aki";
+  aki[0] = 0;
+  srch1[6].valptr = aki;
+  srch1[6].valsize = 512;
+  srch1[6].avalsize = 0;
   srch.vec = &srch1[0];
   srch.sname = NULL;
-  srch.ntot = 6;
-  srch.nused = 6;
+  srch.ntot = 7;
+  srch.nused = 7;
   srch.vald = 0;
   srch.where = NULL;
   srch.wherestr = NULL;
@@ -1264,6 +1308,91 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 }
 
 /*
+  This is an auxiliary recursive certificate revocation function.
+  It revokes a certificate (and its children) if and only if the
+  certificate has not been reparented.
+*/
+
+static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
+{
+#ifdef NOTDEF
+  unsigned int pflags = 0;
+#endif
+  unsigned int lid;
+  scmkva  cwhere;
+  scmkva *ow;
+  scmkv   cone;
+  mcf    *mcfp;
+  char    s1[256];
+#ifdef NOTDEF
+  char    lidstr[24];
+  scmkv   one;
+  scmkva  where;
+#endif
+  int     sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  mcfp = (mcf *)(s->context);
+// check to see if the certificate has any valid parents GAGNON
+// first revoke the certificate itself
+#ifdef NOTDEF
+// this code path just changes the flags on the certificate
+  (void)sprintf(lidstr, "%u", *(unsigned int *)(s->vec[0].valptr));
+  (void)strcpy(s1, (char *)(s->vec[1].valptr));
+  one.column = "local_id";
+  one.value = &lidstr[0];
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  sta = getflagsidscm(conp, mcfp->ctab, &where, &pflags, NULL);
+  if ( sta < 0 )
+    return(sta);
+  pflags &= ~SCM_FLAG_VALID;
+  pflags |= SCM_FLAG_REVOKED;
+  sta = setflagsscm(conp, mcfp->ctab, &where, pflags);
+  if ( sta < 0 )
+    return(sta);
+#else
+// this code path actually deletes the certificate
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  (void)strcpy(s1, (char *)(s->vec[1].valptr));
+  sta = deletebylid(conp, mcfp->ctab, lid);
+  if ( sta < 0 )
+    return(sta);
+#endif
+  mcfp->did++;
+// next, revoke all certificate children of this certificate
+  cone.column = "aki";
+  cone.value = s1;
+  cwhere.vec = &cone;
+  cwhere.ntot = 1;
+  cwhere.nused = 1;
+  cwhere.vald = 0;
+  ow = s->where;
+  s->where = &cwhere;
+//  (void)printf("Searching for certs with aki=%s\n", s1);
+  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta == ERR_SCM_NODATA )
+    sta = 0;			/* ok if no such children */
+  if ( sta < 0 )
+    {
+      s->where = ow;
+      return(sta);
+    }
+// finally, revoke all ROA children of this certificate
+  cone.column = "ski";
+//  (void)printf("Searching for ROAs with ski=%s\n", s->where->vec[0].value);
+  sta = searchscm(conp, mcfp->rtab, s, NULL, revoke_roa,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  s->where = ow;
+  if ( sta == ERR_SCM_NODATA )
+    sta = 0;
+  return(sta);
+}
+
+/*
   This is the model callback function for iterate_crl. For each
   (issuer, sn) pair with sn != 0 it attempts to find a certificate
   with those values in the DB. If found, it then attempts to delete
@@ -1275,13 +1404,14 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   nothing and a negative error code on failure.
 */
 
-int model_cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
+int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
+		unsigned long long sn)
 {
   unsigned int lid;
   scmsrcha srch;
   scmsrch  srch1[2];
   scmkva   where;
-  scmkv    w[2];
+  scmkv    w[3];
   mcf      mymcf;
   char     ski[128];
   char     sno[24];
@@ -1289,7 +1419,8 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
 
   if ( scmp == NULL || conp == NULL || conp->connected == 0 )
     return(ERR_SCM_INVALARG);
-  if ( issuer == NULL || issuer[0] == 0 || sn == 0 )
+  if ( issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 ||
+       sn == 0 )
     return(0);
   mymcf.ctab = findtablescm(scmp, "CERTIFICATE");
   if ( mymcf.ctab == NULL )
@@ -1303,9 +1434,11 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, unsigned long long sn)
   (void)sprintf(sno, "%lld", sn);
   w[1].column = "sn";
   w[1].value = &sno[0];
+  w[2].column = "ski";
+  w[2].value = aki;
   where.vec = &w[0];
-  where.ntot = 2;
-  where.nused = 2;
+  where.ntot = 3;
+  where.nused = 3;
   where.vald = 0;
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_ULONG;
@@ -1421,7 +1554,7 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
 
 /*
   This is the callback for certificates that are too old, e.g. no longer
-  valid. Delete them (and their children).
+  valid. Delete them (and their children) unless they have been reparented.
 */
 
 static int certtooold(scmcon *conp, scmsrcha *s, int idx)
@@ -1431,7 +1564,7 @@ static int certtooold(scmcon *conp, scmsrcha *s, int idx)
 
   ws = s->wherestr;
   s->wherestr = NULL;
-  sta = revoke_cert_and_children(conp, s, idx);
+  sta = revoke_cert_and_children2(conp, s, idx);
   s->wherestr = ws;
   return(sta);
 }

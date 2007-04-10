@@ -113,9 +113,12 @@ extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
 extern int   deletescm(scmcon *conp, scmtab *tabp, scmkva *deld);
 extern int   setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			 unsigned int flags);
-extern int   updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
+extern int   updateblobscm(scmcon *conp, scmtab *tabp,
+			   unsigned long long *snlist,
 			   unsigned int sninuse, unsigned int snlen,
 			   unsigned int lid);
+extern int   setcertptr(scm *scmp, scmcon *conp, unsigned int crlid,
+			char *issuer, char *aki);
 
 /*
   Macros
