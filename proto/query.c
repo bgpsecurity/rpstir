@@ -17,12 +17,6 @@
  * a variety of different fields.
  **************/
 
-#define checkErr(test, printArgs...) \
-  if (test) { \
-     (void) fprintf (stderr, printArgs); \
-     return -1; \
-  }
-
 #define MAX_VALS 20
 #define MAX_CONDS 10
 
