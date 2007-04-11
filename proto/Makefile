@@ -23,6 +23,7 @@ sqhl.o:	sqhl.h myssl.h
 rcli.o:	scm.h scmf.h sqhl.h myssl.h diru.h
 myssl.o:	myssl.h
 query.o: scm.h scmf.h err.h
+chaser.o: scm.h scmf.h err.h
 err.o:	err.h
 
 rcli:	rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o err.o Makefile
@@ -30,6 +31,9 @@ rcli:	rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o err.o Makefile
 
 query: query.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
 	gcc -o query -g -L/usr/local/ssl/lib query.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
+
+chaser: chaser.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
+	gcc -o chaser -g -L/usr/local/ssl/lib chaser.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
 clean:
 	rm -f rcli sqq docert initscm *.o
