@@ -16,11 +16,18 @@ typedef struct _scmstat		/* connection statistics */
   int       rows;		/* rows changed */
 } scmstat;
 
+typedef struct _stmtstk
+{
+  SQLHSTMT  hstmt;
+  struct   _stmtstk *next;
+} stmtstk;
+
 typedef struct _scmcon		/* connection info */
 {
   SQLHENV   henv;		/* environment handle */
   SQLHDBC   hdbc;		/* database handle */
-  SQLHSTMT  hstmt;		/* statement handle */
+//  SQLHSTMT  hstmt;		/* statement handle */
+  stmtstk  *hstmtp;             /* stack of statement handles */
   int       connected;		/* are we connected? */
   scmstat   mystat;		/* statistics and errors */
 } scmcon;

@@ -26,6 +26,27 @@ static void heer(void *h, int what, char *errmsg, int emlen)
 }
 
 /*
+  Free a stack of SQLHSTMTs.
+*/
+
+static void freehstack(stmtstk *stackp)
+{
+  stmtstk *nextp;
+
+  while ( stackp == NULL )
+    {
+      if ( stackp->hstmt != NULL )
+	{
+	  SQLFreeHandle(SQL_HANDLE_STMT, stackp->hstmt);
+	  stackp->hstmt = NULL;
+	}
+      nextp = stackp->next;
+      free((void *)stackp);
+      stackp = nextp;
+    }
+}
+
+/*
   Disconnect from a DSN and free all memory.
 */
 
@@ -33,11 +54,14 @@ void disconnectscm(scmcon *conp)
 {
   if ( conp == NULL )
     return;
+  freehstack(conp->hstmtp);
+/*
   if ( conp->hstmt != NULL )
     {
       SQLFreeHandle(SQL_HANDLE_STMT, conp->hstmt);
       conp->hstmt = NULL;
     }
+*/
   if ( conp->connected > 0 )
     {
       SQLDisconnect(conp->hdbc);
@@ -59,6 +83,75 @@ void disconnectscm(scmcon *conp)
       conp->mystat.errmsg = NULL;
     }
   free((void *)conp);
+}
+
+/*
+  ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt);
+  if ( ! SQLOK(ret) )
+    {
+      if ( errmsg != NULL && emlen > 0 )
+	heer((void *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
+      disconnectscm(conp);
+      return(NULL);
+    }
+  ret = SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN,
+		       (SQLPOINTER)SQL_NOSCAN_ON,
+		       SQL_IS_UINTEGER);
+*/
+
+/*
+  Create a new STMT and push it onto the top of the stack of STMTs
+  in the connection.
+*/
+
+static SQLRETURN newhstmt(scmcon *conp)
+{
+  SQLRETURN ret;
+  stmtstk  *stackp;
+
+  if ( conp == NULL )
+    return(-1);
+  stackp = (stmtstk *)calloc(1, sizeof(stmtstk));
+  if ( stackp == NULL )
+    return(-1);
+  ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &stackp->hstmt);
+  if ( ! SQLOK(ret) )
+    {
+      free((void *)stackp);
+      return(ret);
+    }
+  ret = SQLSetStmtAttr(stackp->hstmt, SQL_ATTR_NOSCAN,
+		       (SQLPOINTER)SQL_NOSCAN_ON,
+		       SQL_IS_UINTEGER);
+  if ( ! SQLOK(ret) )
+    {
+      SQLFreeHandle(SQL_HANDLE_STMT, stackp->hstmt);
+      free((void *)stackp);
+      return(ret);
+    }
+  stackp->next = conp->hstmtp;
+  conp->hstmtp = stackp;
+  return(0);
+}
+
+/*
+  Pop the top element off the hstmt stack of a connection, free
+  the hstmt and the associated memory.
+*/
+
+static void pophstmt(scmcon *conp)
+{
+  stmtstk *stackp;
+
+  if ( conp == NULL )
+    return;
+  stackp = conp->hstmtp;
+  if ( stackp == NULL )
+    return;
+  conp->hstmtp = stackp->next;
+  if ( stackp->hstmt != NULL )
+    SQLFreeHandle(SQL_HANDLE_STMT, stackp->hstmt);
+  free((void *)stackp);
 }
 
 /*
@@ -137,6 +230,16 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
       return(NULL);
     }
   conp->connected++;
+  ret = newhstmt(conp);
+  if ( ! SQLOK(ret) )
+    {
+      if ( errmsg != NULL && emlen > 0 && conp->hstmtp != NULL &&
+	   conp->hstmtp->hstmt != NULL )
+	heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT, errmsg, emlen);
+      disconnectscm(conp);
+      return(NULL);
+    }
+/*
   ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt);
   if ( ! SQLOK(ret) )
     {
@@ -148,13 +251,7 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
   ret = SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN,
 		       (SQLPOINTER)SQL_NOSCAN_ON,
 		       SQL_IS_UINTEGER);
-  if ( ! SQLOK(ret) )
-    {
-      if ( errmsg != NULL && emlen > 0 )
-	heer((void *)conp->hstmt, SQL_HANDLE_STMT, errmsg, emlen);
-      disconnectscm(conp);
-      return(NULL);
-    }
+*/
   return(conp);
 }
 
@@ -209,18 +306,18 @@ int statementscm(scmcon *conp, char *stm)
     return(ERR_SCM_INVALARG);
   memset(conp->mystat.errmsg, 0, conp->mystat.emlen);
   istm = strlen(stm);
-  ret = SQLExecDirect(conp->hstmt, (SQLCHAR *)stm, istm);
+  ret = SQLExecDirect(conp->hstmtp->hstmt, (SQLCHAR *)stm, istm);
   if ( ! SQLOK(ret) )
     {
-      heer((void *)(conp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
+      heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
 	   conp->mystat.emlen);
       return(ERR_SCM_SQL);
     }
   istm = 0;
-  ret = SQLRowCount(conp->hstmt, &istm);
+  ret = SQLRowCount(conp->hstmtp->hstmt, &istm);
   if ( ! SQLOK(ret) )
     {
-      heer((void *)(conp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
+      heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
 	   conp->mystat.emlen);
       return(ERR_SCM_SQL);
     }
@@ -471,10 +568,10 @@ int getuintscm(scmcon *conp, unsigned int *ival)
 
   if ( conp == NULL || conp->connected == 0 || ival == NULL )
     return(ERR_SCM_INVALARG);
-  SQLBindCol(conp->hstmt, 1, SQL_C_ULONG, &f1, sizeof(f1), &f1len);
+  SQLBindCol(conp->hstmtp->hstmt, 1, SQL_C_ULONG, &f1, sizeof(f1), &f1len);
   while ( 1 )
     {
-      rc = SQLFetch(conp->hstmt);
+      rc = SQLFetch(conp->hstmtp->hstmt);
       if ( rc == SQL_NO_DATA )
 	break;
       if ( !SQLOK(rc) )
@@ -484,7 +581,7 @@ int getuintscm(scmcon *conp, unsigned int *ival)
       fnd++;
       *ival = (unsigned int)f1;
     }
-  SQLCloseCursor(conp->hstmt);
+  SQLCloseCursor(conp->hstmtp->hstmt);
   if ( fnd == 0 )
     return(ERR_SCM_NODATA);
   else
@@ -762,28 +859,37 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     }
   (void)strcat(stmt, ";");
 // execute the select statement
+  rc = newhstmt(conp);
+  if ( !SQLOK(rc) )
+    {
+      free((void *)stmt);
+      return(ERR_SCM_SQL);
+    }
   sta = statementscm(conp, stmt);
   free((void *)stmt);
   if ( sta < 0 )
     {
-      SQLCloseCursor(conp->hstmt);
+      SQLCloseCursor(conp->hstmtp->hstmt);
+      pophstmt(conp);
       return(sta);
     }
 // count rows and call counter function if requested
   if ( (what & SCM_SRCH_DOCOUNT) && cnter != NULL )
     {
-      rc = SQLRowCount(conp->hstmt, &nrows);
+      rc = SQLRowCount(conp->hstmtp->hstmt, &nrows);
       if ( !SQLOK(rc) && (what & SCM_SRCH_BREAK_CERR) )
 	{
-	  heer((void *)(conp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
+	  heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT, conp->mystat.errmsg,
 	       conp->mystat.emlen);
-	  SQLCloseCursor(conp->hstmt);
+	  SQLCloseCursor(conp->hstmtp->hstmt);
+	  pophstmt(conp);
 	  return(ERR_SCM_SQL);
 	}
       sta = (*cnter)(conp, srch, (int)nrows);
       if ( sta < 0 && (what & SCM_SRCH_BREAK_CERR) )
 	{
-	  SQLCloseCursor(conp->hstmt);
+	  SQLCloseCursor(conp->hstmtp->hstmt);
+	  pophstmt(conp);
 	  return(sta);
 	}
     }
@@ -794,14 +900,14 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       for(i=0;i<srch->nused;i++)
 	{
 	  vecp = (&srch->vec[i]);
-	  SQLBindCol(conp->hstmt, vecp->colno <= 0 ? i+1 : vecp->colno,
+	  SQLBindCol(conp->hstmtp->hstmt, vecp->colno <= 0 ? i+1 : vecp->colno,
 		     vecp->sqltype, vecp->valptr, vecp->valsize,
 		     (SQLINTEGER *)&vecp->avalsize);
 	}
       while ( 1 )
 	{
 	  ridx++;
-	  rc = SQLFetch(conp->hstmt);
+	  rc = SQLFetch(conp->hstmtp->hstmt);
 	  if ( rc == SQL_NO_DATA )
 	    break;
 	  if ( !SQLOK(rc) )
@@ -839,7 +945,8 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	    }
 	}
     }
-  SQLCloseCursor(conp->hstmt);
+  SQLCloseCursor(conp->hstmtp->hstmt);
+  pophstmt(conp);
   if ( sta < 0 )
     return(sta);
   if ( nfnd == 0 )
