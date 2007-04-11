@@ -753,7 +753,7 @@ static int validsrchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch)
 
   Note that searchscm can be call recursively, so that there can be
   more than one cursor open at a time. For this reason, searchscm()
-  must create its own STMT and then destroy it when it is done.  GAGNON.
+  must create its own STMT and then destroy it when it is done.
 */
 
 int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
