@@ -89,6 +89,7 @@ static QueryField *findField (char *name)
   return NULL;
 }
 
+/* combines dirname and filename into a pathname */
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
 {
   sprintf (returnStr, "%s/%s", (char *) s->vec[idx1].valptr,
@@ -96,10 +97,21 @@ int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
+/* reads a roa from a file in order to determine the address range */
 int addrrngDisplay (scmsrcha *s, int idx1, char* returnStr)
 {
-  s = s; idx1 = idx1;
+  s = s; idx1 = idx1; returnStr = returnStr;
+/*
+  struct ROA *roa;
+  int status;
+
+  (void) pathnameDisplay (s, idx1, returnStr);
+  // ??????????? should this do internal validation in call ??????????????
+  status = roaFromFile (returnStr, 0, 1, &roa);
+  // ??????????? should this do database validation after call ???????????
   sprintf (returnStr, "Unimplemented");
+  roaFree (roa);
+*/
   return 2;
 }
 
@@ -129,6 +141,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   return(0);
 }
 
+/* sets up and performs the database query, and handles the results */
 static int doQuery (char *objectType, char **displays, char **filters)
 {
   scm      *scmp = NULL;
@@ -137,7 +150,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
   scmsrcha srch;
   scmsrch  srch1[MAX_VALS];
   char     whereStr[MAX_CONDS*20];
-  char     errMsg[1024];
+  char     errMsg[1024], heading[4096], underlines[4096];
   int      srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
   unsigned long blah = 0;
   int      i, j, proceed, status;
@@ -202,9 +215,17 @@ static int doQuery (char *objectType, char **displays, char **filters)
   srch.nused = 0;
   srch.vald = 0;
   srch.context = &blah;
+  heading[0] = 0;
+  underlines[0] = 0;
   for (i = 0; displays[i] != NULL; i++) {
     field = findField (displays[i]);
     checkErr (field == NULL, "Unknown field name: %s\n", displays[i]);
+    (void) strcat (heading, field->heading);
+    (void) strcat (heading, "  ");
+    for (j = 0; j < (int) strlen (field->heading); j++) {
+      (void) strcat (underlines, "-");
+    }
+    (void) strcat (underlines, "  ");
     globalFields[i] = field;
     name = (field->dbColumn == NULL) ? displays[i] : field->dbColumn;
     while (name != NULL) {
@@ -223,6 +244,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
   globalFields[i] = NULL;
 
   /* do query */
+  printf ("%s\n%s\n", heading, underlines);
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
   for (i = 0; i < srch.nused; i++) {
     free (srch1[i].valptr);

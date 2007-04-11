@@ -22,14 +22,14 @@ diru.o:	diru.h
 sqhl.o:	sqhl.h myssl.h
 rcli.o:	scm.h scmf.h sqhl.h myssl.h diru.h
 myssl.o:	myssl.h
-doQuery.o: scm.h scmf.h err.h
+query.o: scm.h scmf.h err.h
 err.o:	err.h
 
 rcli:	rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o err.o Makefile
 	gcc -o rcli -g -L/usr/local/ssl/lib rcli.o initscm.o myssl.o sqhl.o sqcon.o diru.o err.o -lssl -lcrypto -lmyodbc3 -lrt
 
-doQuery: doQuery.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
-	gcc -o doQuery -g -L/usr/local/ssl/lib doQuery.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
+query: query.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
+	gcc -o query -g -L/usr/local/ssl/lib query.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
 clean:
 	rm -f rcli sqq docert initscm *.o
