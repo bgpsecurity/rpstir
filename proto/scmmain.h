@@ -146,6 +146,7 @@ static scmtab scmtabbuilder[] =
       "rs_last  TIMESTAMP DEFAULT 0,"
       "qu_last  TIMESTAMP DEFAULT 0,"
       "gc_last  TIMESTAMP DEFAULT 0,"
+      "ch_last  TIMESTAMP DEFAULT 0,"
       "flags    INT UNSIGNED DEFAULT 0,"
       "cert_max INT UNSIGNED DEFAULT 0,"
       "crl_max  INT UNSIGNED DEFAULT 0,"
