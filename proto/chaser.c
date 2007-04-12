@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   scmtab   *table = NULL;
   scmsrcha srch;
   scmsrch  srch1[NUM_FIELDS];
-  char     errMsg[1024], wherestr[50];
+  char     msg[1024];
   unsigned long blah = 0;
   int      i, status;
 
@@ -112,8 +112,8 @@ int main(int argc, char **argv)
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
-  connect = connectscm (scmp->dsn, errMsg, 1024);
-  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, errMsg);
+  connect = connectscm (scmp->dsn, msg, 1024);
+  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, msg);
   srch.vec = srch1;
   srch.sname = NULL;
   srch.ntot = NUM_FIELDS;
@@ -136,8 +136,8 @@ int main(int argc, char **argv)
   checkErr (table == NULL, "Cannot find table certificate\n");
   srch.nused = 0;
   srch.vald = 0;
-  sprintf (wherestr, "ts_mod > \"%s\"", prevTimestamp);
-  srch.wherestr = wherestr;
+  sprintf (msg, "ts_mod > \"%s\"", prevTimestamp);
+  srch.wherestr = msg;
   addcolsrchscm (&srch, "sia", SQL_C_CHAR, 1024);
   addcolsrchscm (&srch, "aia", SQL_C_CHAR, 1024);
   addcolsrchscm (&srch, "crldp", SQL_C_CHAR, 1024);
@@ -146,6 +146,12 @@ int main(int argc, char **argv)
   for (i = 0; i < srch.nused; i++) {
     free (srch1[i].valptr);
   }
+
+  // write timestamp into database
+  table = findtablescm (scmp, "metadata");
+  sprintf (msg, "update %s set ch_last=\"%s\";",
+           table->tabname, currTimestamp);
+  status = statementscm (connect, msg);
 
   for (i = 0; i < numURIs; i++) printf ("uri = %s\n", uris[i]);
   return 0;
