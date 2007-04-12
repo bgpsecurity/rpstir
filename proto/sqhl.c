@@ -1307,6 +1307,77 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   return(sta);
 }
 
+static int cparents(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int flags;
+  mcf *mymcf;
+
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
+  mymcf = (mcf *)(s->context);
+  flags = *(unsigned int *)(s->vec->valptr);
+  if ( (flags & SCM_FLAG_VALID) != 0 )
+    mymcf->did++;
+  return(0);
+}
+
+/*
+  This function returns the number of valid certificates that
+  have subject=IS and ski=AK, or a negative error code on failure.
+*/
+
+static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
+{
+  unsigned int flags = 0;
+  scmsrcha srch;
+  scmsrch  srch1;
+  scmkva   where;
+  scmkv    w[2];
+  mcf     *mymcf;
+  char     ws[256];
+  char    *now;
+  int      cnt2;
+  int      cnt;
+  int      sta;
+
+  mymcf = (mcf *)(s->context);
+  w[0].column = "subject";
+  w[0].value = IS;
+  w[1].column = "ski";
+  w[1].value = AK;
+  where.vec = &w[0];
+  where.ntot = 2;
+  where.nused = 2;
+  where.vald = 0;
+  srch1.colno = 1;
+  srch1.sqltype = SQL_C_ULONG;
+  srch1.colname = "flags";
+  srch1.valptr = (void *)&flags;
+  srch1.valsize = sizeof(unsigned int);
+  srch1.avalsize = 0;
+  srch.vec = &srch1;
+  srch.sname = NULL;
+  srch.ntot = 1;
+  srch.nused = 1;
+  srch.vald = 0;
+  srch.where = &where;
+  now = LocalTimeToDBTime(&sta);
+  if ( now == NULL )
+    return(sta);
+  (void)sprintf(ws, "valfrom < \"%s\" AND \"%s\" < valto", now, now);
+  free((void *)now);
+  srch.wherestr = &ws[0];
+  cnt = mymcf->did;
+  mymcf->did = 0;
+  sta = searchscm(conp, mymcf->ctab, &srch, NULL, /*cparents,*/ ok,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta < 0 )
+    return(sta);
+  cnt2 = mymcf->did;
+  mymcf->did = cnt;
+  return(cnt2);
+}
+
 /*
   This is an auxiliary recursive certificate revocation function.
   It revokes a certificate (and its children) if and only if the
@@ -1323,7 +1394,9 @@ static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
   scmkva *ow;
   scmkv   cone;
   mcf    *mcfp;
-  char    s1[256];
+  char    s1[512];
+  char    a1[512];
+  char    is[512];
 #ifdef NOTDEF
   char    lidstr[24];
   scmkv   one;
@@ -1333,7 +1406,15 @@ static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
 
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
-// check to see if the certificate has any valid parents GAGNON
+/*
+  First check to see if the certificate has any valid parents. If
+  so, then this certificate has been reparented, and should not be
+  revoked (nor should its children). In this case, just return 0.
+*/
+  (void)strcpy(is, (char *)(s->vec[3].valptr));
+  (void)strcpy(a1, (char *)(s->vec[4].valptr));
+  if ( countvalidparents(conp, s, is, a1) > 0 )
+    return(0);
 // first revoke the certificate itself
 #ifdef NOTDEF
 // this code path just changes the flags on the certificate
@@ -1372,7 +1453,7 @@ static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
   ow = s->where;
   s->where = &cwhere;
 //  (void)printf("Searching for certs with aki=%s\n", s1);
-  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
+  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children2,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta == ERR_SCM_NODATA )
     sta = 0;			/* ok if no such children */
@@ -1582,11 +1663,13 @@ int certificate_validity(scm *scmp, scmcon *conp)
   unsigned int pflags;
   unsigned int lid;
   scmsrcha srch;
-  scmsrch  srch1[3];
+  scmsrch  srch1[5];
   scmtab  *ctab;
   scmtab  *rtab;
   mcf   mymcf;
   char  skistr[512];
+  char  akistr[512];
+  char  issstr[512];
   char *vok;
   char *vf;
   char *vt;
@@ -1643,10 +1726,22 @@ int certificate_validity(scm *scmp, scmcon *conp)
   srch1[2].valptr = (void *)&pflags;
   srch1[2].valsize = sizeof(unsigned int);
   srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_CHAR;
+  srch1[3].colname = "issuer";
+  srch1[3].valptr = issstr;
+  srch1[3].valsize = 512;
+  srch1[3].avalsize = 0;
+  srch1[4].colno = 5;
+  srch1[4].sqltype = SQL_C_CHAR;
+  srch1[4].colname = "aki";
+  srch1[4].valptr = akistr;
+  srch1[4].valsize = 512;
+  srch1[4].avalsize = 0;
   srch.vec = (&srch1[0]);
   srch.sname = NULL;
-  srch.ntot = 3;
-  srch.nused = 3;
+  srch.ntot = 5;
+  srch.nused = 5;
   srch.vald = 0;
   srch.where = NULL;
   srch.wherestr = vok;
