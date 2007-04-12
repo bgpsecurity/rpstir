@@ -70,7 +70,8 @@ extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ);
 extern int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			   unsigned int *pflags, unsigned int *lidp);
-extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
+extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc,
+                         char *wherestr);
 extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 			 unsigned long long sn);
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);

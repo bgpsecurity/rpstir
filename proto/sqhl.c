@@ -1084,7 +1084,7 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   error code.
 */
 
-int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
+int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc, char *wherestr)
 {
   unsigned int snlen = 0;
   unsigned int sninuse = 0;
@@ -1162,7 +1162,7 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   srch.nused = 7;
   srch.vald = 0;
   srch.where = NULL;
-  srch.wherestr = NULL;
+  srch.wherestr = wherestr;
   crli.scmp = scmp;
   crli.conp = conp;
   crli.tabp = tabp;

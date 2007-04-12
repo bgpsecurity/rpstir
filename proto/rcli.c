@@ -1102,7 +1102,7 @@ int main(int argc, char **argv)
   }
 #endif
 #ifdef CRLI_TEST
-  sta = iterate_crl(scmp, realconp, model_cfunc);
+  sta = iterate_crl(scmp, realconp, model_cfunc, NULL);
   (void)printf("Iterate_crl status was %d\n", sta);
 #endif
 #ifdef CV_TEST
