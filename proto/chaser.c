@@ -20,6 +20,8 @@
 static char **uris;
 static int maxURIs = 4096;
 static int numURIs = 0;
+static char *prevTimestamp;
+static char *currTimestamp;
 
 /* update list of uris by adding the next one */
 static void addIfUnique (char *uri)
@@ -84,6 +86,15 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   return 0;
 }
 
+/* callback function for searchscm that records the timestamps */
+static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
+{
+  conp = conp; numLine = numLine;  // silence compiler warnings
+  currTimestamp = (char *) s->vec[0].valptr;
+  prevTimestamp = (char *) s->vec[1].valptr;
+  return 0;
+}
+
 int main(int argc, char **argv) 
 {
   scm      *scmp = NULL;
@@ -91,7 +102,7 @@ int main(int argc, char **argv)
   scmtab   *table = NULL;
   scmsrcha srch;
   scmsrch  srch1[NUM_FIELDS];
-  char     errMsg[1024];
+  char     errMsg[1024], wherestr[50];
   unsigned long blah = 0;
   int      i, status;
 
@@ -108,13 +119,25 @@ int main(int argc, char **argv)
   srch.ntot = NUM_FIELDS;
   srch.where = NULL;
   srch.wherestr = NULL;
+  srch.context = &blah;
+
+  // find the current time and last time chaser ran
+  table = findtablescm (scmp, "metadata");
+  checkErr (table == NULL, "Cannot find table metadata\n");
+  srch.nused = 0;
+  srch.vald = 0;
+  addcolsrchscm (&srch, "current_timestamp", SQL_C_CHAR, 24);
+  addcolsrchscm (&srch, "ch_last", SQL_C_CHAR, 24);
+  status = searchscm (connect, table, &srch, NULL, handleTimestamps,
+                      SCM_SRCH_DOVALUE_ALWAYS);
 
   // find all the URI's of AIA's, SIA's and CRLDP's in certs
   table = findtablescm (scmp, "certificate");
   checkErr (table == NULL, "Cannot find table certificate\n");
   srch.nused = 0;
   srch.vald = 0;
-  srch.context = &blah;
+  sprintf (wherestr, "ts_mod > \"%s\"", prevTimestamp);
+  srch.wherestr = wherestr;
   addcolsrchscm (&srch, "sia", SQL_C_CHAR, 1024);
   addcolsrchscm (&srch, "aia", SQL_C_CHAR, 1024);
   addcolsrchscm (&srch, "crldp", SQL_C_CHAR, 1024);
