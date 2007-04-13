@@ -1369,7 +1369,7 @@ static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
   srch.wherestr = &ws[0];
   cnt = mymcf->did;
   mymcf->did = 0;
-  sta = searchscm(conp, mymcf->ctab, &srch, NULL, /*cparents,*/ ok,
+  sta = searchscm(conp, mymcf->ctab, &srch, NULL, cparents,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
     return(sta);
