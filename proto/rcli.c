@@ -433,6 +433,8 @@ static char *afterwhite(char *ptr)
   return(run);
 }
 
+static char *hdir = NULL;
+
 static int aur(scm *scmp, scmcon *conp, char what, char *valu)
 {
   char *outdir;
@@ -440,7 +442,7 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
   char *outfull;
   int   sta;
 
-  sta = splitdf(NULL, NULL, valu, &outdir, &outfile, &outfull);
+  sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
   if ( sta < 0 )
     return(sta);
   switch ( what )
@@ -522,7 +524,7 @@ static char *sock1line(int s, char **leftp)
   if ( sta < 0 )
     sta = 0;
   left2[leen+sta] = 0;
-  free((void *)left);
+  //  free((void *)left);
   left = left2;
   ptr = hasoneline(left, &next);
   if ( ptr != NULL )
@@ -550,28 +552,28 @@ static int probe(int s)
   int  e;
 
   if ( s < 0 )
-    return(s);
+    return(-1);
 // test 1: zero byte write
   e = send(s, NULL, 0, 0);
   if ( e < 0 )
-    return(-1);
+    return(-2);
 // test 2: getpeername
   memset(&from, 0, fromlen);
   e = getpeername(s, (struct sockaddr *)&from, &fromlen);
   if ( e < 0 )
-    return(-2);
+    return(-3);
 // test 3: peek
   errno = 0;
   e = recv(s, &one, 1, MSG_PEEK);
   serrno = errno;
-  if ( e == 0 )
-    return(-3);
+  //  if ( e == 0 )
+  //  return(-4);
   if ( e < 0 && serrno == ECONNRESET )
-    return(-4);
+    return(-5);
 // test 4: socket ioctl
   e = ioctl(s, FIONREAD, &rd);
   if ( e < 0 || rd < 0 )
-    return(-5);
+    return(-6);
   return(0);
 }
 
@@ -587,6 +589,8 @@ static int probe(int s)
    E (end).  Sent when the AUR program is done. VALUE is the current date and
              time.  AUR may close its end of the socket immediately after
              sending this message; it need not wait.
+
+   C (cd): Sent when the current directory is read or changed.
 
    A (add). Sent when a file is added to the repository. VALUE is the full,
             absolute path to the file.
@@ -633,12 +637,23 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
   while ( 1 )
     {
       if ( (sta=probe(s)) < 0 )
-	return(sta);
+	{
+	  (void)printf("Probe error %d\n", sta);
+	  (void)fprintf(logfile, "Probe error %d\n", sta);
+	  return(sta);
+	}
       ptr = sock1line(s, &left);
       if ( ptr == NULL )
 	continue;
       (void)printf("Sockline: %s\n", ptr);
+      (void)fprintf(logfile, "Sockline: %s\n", ptr);
       c = ptr[0];
+      if ( !isspace(ptr[1]) )
+	{
+	  (void)printf("Invalid line: ignored\n");
+	  free((void *)ptr);
+	  continue;
+	}
       valu = afterwhite(ptr+1);
       switch ( c )
 	{
@@ -650,6 +665,15 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'E':		/* end */
 	  (void)fprintf(logfile, "AUR ending at %s\n", valu);
 	  done = 1;
+	  break;
+	case 'c':
+	case 'C':		/* cd */
+	  if ( hdir != NULL )
+	    {
+	      free((void *)hdir);
+	      hdir = NULL;
+	    }
+	  hdir = strdup(valu);
 	  break;
 	case 'a':
 	case 'A':		/* add */
