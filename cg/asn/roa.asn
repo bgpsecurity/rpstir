@@ -102,7 +102,7 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
       id-ct OBJECT IDENTIFIER ::= { id-smime 1 } 
     
       routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 } 
-    
+
       RouteOriginAttestation ::= SEQUENCE { 
         version [0] INTEGER DEFAULT 0, 
         asID   ASID, 
@@ -112,10 +112,23 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
     
       ROAIPAddrBlocks ::= SEQUENCE OF ROAIPAddressFamily 
     
-      ROAIPAddressFamily ::= SEQUENCE { 
-        addressFamily OCTET STRING (SIZE (2..3)), 
-        addressesOrRanges SEQUENCE OF IPAddressOrRangeA } 
+-- OLD
+
+--      ROAIPAddressFamily ::= SEQUENCE { 
+--        addressFamily OCTET STRING (SIZE (2..3)), 
+--        addressesOrRanges SEQUENCE OF IPAddressOrRangeA } 
       -- Only two address families are allowed: IPv4 and IPv6 
+
+-- NEW
+    
+      ROAIPAddressFamily ::= SEQUENCE {
+        addressFamily OCTET STRING (SIZE (2..3)),
+        addresses SEQUENCE OF IPAddress }
+      -- Only two address families are allowed: IPv4 and IPv6
+   
+      IPAddress ::= BIT STRING
+
+-- PERMANENTLY REMOVED (defined in extensions.asn)
 
 --      IPAddressOrRange ::= CHOICE { 
 --        addressPrefix IPAddress, 
