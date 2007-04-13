@@ -8,7 +8,7 @@
  *                                                *
  * does all of the standard stuff to setup an     *
  * AF_INET, SOCK_STREAM socket, and fills in the  *
- * sockaddr_in structure with "localhost" from    *
+ * sockaddr_in structure with the local host from *
  * gethostbyname. This latter part is left in     *
  * so we can latter modify to specify remote host *
  * connections.                                   *
@@ -20,6 +20,7 @@
 int
 tcpsocket(struct write_port *wport, int portno)
 {
+  char hn[256];
 
   /* set the wport file descriptor to the socket we've created */
   wport->out_desc = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,7 +29,9 @@ tcpsocket(struct write_port *wport, int portno)
     return(FALSE);
   }
                                                               
-  wport->host = gethostbyname("127.0.0.1");                        
+//  wport->host = gethostbyname("127.0.0.1");                        
+  gethostname(hn, 256);
+  wport->host = gethostbyname(hn);                        
   if (!(wport->host)) {
     perror("could not create hostent from gethostbyname(\"127.0.0.1\")");
     return(FALSE);
@@ -111,6 +114,7 @@ outputMsg(struct write_port *wport, char *str, unsigned int len)
 {
   int ret;
 
+  (void)printf("Sending %s", str);
   if (wport->protocol == LOCAL) {
     ret = write(wport->out_desc, (const void *)str, len);
     return(ret);
