@@ -39,9 +39,9 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
   s = s;
   char msg[600];
   if (cnt > 0) return 0;   // exists another crl that is current
-  sprintf (msg, "update %s set flags = flags + %d where ski=\"%s\" and issuer=\"%s\" and (flags %% %d) >= %d",
+  sprintf (msg, "update %s set flags = flags + %d where ski=\"%s\" and issuer=\"%s\" and (flags %% %d) < %d",
            certTable->tabname, SCM_FLAG_UNKNOWN, theAKI, theIssuer,
-           SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN / 2);
+           2 * SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
   return statementscm (conp, msg);
 }
 
@@ -55,7 +55,7 @@ static int handleIfCurrent (scmcon *conp, scmsrcha *s, int cnt)
   char msg[128];
   if (cnt == 0) return 0;   // exists another crl that is current
   sprintf (msg, "update %s set flags = flags - %d where local_id=%d",
-           crlTable->tabname, SCM_FLAG_UNKNOWN, theID);
+           certTable->tabname, SCM_FLAG_UNKNOWN, theID);
   return statementscm (conp, msg);
 }
 
@@ -64,25 +64,34 @@ static int handleIfCurrent (scmcon *conp, scmsrcha *s, int cnt)
  * another crl exists that is more recent; if not, it sets all certs
  * covered by this crl to have status unknown
  */
+static scmsrcha cntSrch;
+static scmsrch  cntSrch1[1];
+static char cntMsg[600];
+static unsigned long cntBlah = 0;
+static int cntNeedsInit = 1;
+
 static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
 {
-  scmsrcha srch;
-  char msg[600];
-  unsigned long blah = 0;
   numLine = numLine;
-  srch.vec = NULL;
-  srch.sname = NULL;
-  srch.where = NULL;
-  srch.context = &blah;
-  srch.wherestr = msg;
+  if (cntNeedsInit) {
+    cntSrch.vec = NULL;
+    cntSrch.sname = NULL;
+    cntSrch.where = NULL;
+    cntSrch.ntot = 1;
+    cntSrch.nused = 0;
+    cntSrch.context = &cntBlah;
+    cntSrch.wherestr = cntMsg;
+    cntSrch.vec = cntSrch1;
+    addcolsrchscm (&cntSrch, "local_id", SQL_C_ULONG, 8);
+  }
   theIssuer = (char *) s->vec[0].valptr;
   theAKI = (char *) s->vec[1].valptr;
   if (s->nused > 2) {
     theID = *((unsigned int *) s->vec[2].valptr);
   }
-  sprintf (msg, "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
+  sprintf (cntMsg, "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
            theIssuer, theAKI, currTimestamp);
-  return searchscm (conp, crlTable, &srch, countHandler, NULL,
+  return searchscm (conp, crlTable, &cntSrch, countHandler, NULL,
                     SCM_SRCH_DOCOUNT);
 }
 
@@ -124,8 +133,6 @@ int main(int argc, char **argv)
   addcolsrchscm (&srch, "gc_last", SQL_C_CHAR, 24);
   status = searchscm (connect, metaTable, &srch, NULL, handleTimestamps,
                       SCM_SRCH_DOVALUE_ALWAYS);
-  free (srch1[0].valptr);
-  free (srch1[1].valptr);
 
   // check for expired certs
   certificate_validity (scmp, connect);
@@ -154,7 +161,7 @@ int main(int argc, char **argv)
   // if so, set state !unknown
   srch.nused = 0;
   srch.vald = 0;
-  sprintf (msg, "(flags %% %d) >= %d", SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN/2);
+  sprintf (msg, "(flags %% %d) >= %d", 2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "issuer", SQL_C_CHAR, 512);
   addcolsrchscm (&srch, "ski", SQL_C_CHAR, 128);
