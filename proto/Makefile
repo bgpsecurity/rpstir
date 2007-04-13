@@ -4,7 +4,7 @@
 # Makefile for mysql and openssl test programs
 #
 
-all:	sqq docert rcli #initscm
+all:	sqq docert rcli query chaser garbage #initscm
 
 CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers -DHAVE_LONG_LONG
 
@@ -39,4 +39,4 @@ garbage: garbage.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
 	gcc -o garbage -g -L/usr/local/ssl/lib garbage.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
 clean:
-	rm -f rcli sqq docert initscm *.o
+	rm -f rcli query chaser garbage sqq docert initscm *.o
