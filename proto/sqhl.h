@@ -29,6 +29,7 @@
 #define SCM_FLAG_SS             0x2    /* self signed */
 #define SCM_FLAG_TRUSTED        0x4    /* trusted */
 #define SCM_FLAG_VALID          0x8    /* valid */
+#define SCM_FLAG_UNKNOWN       0x10    /* unknown because crl stale */
 
 #define SCM_FLAG_NOTYET      0x1000    /* not yet valid */
 #define SCM_FLAG_EXPIRED     0x2000    /* expired */
@@ -70,8 +71,7 @@ extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ);
 extern int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			   unsigned int *pflags, unsigned int *lidp);
-extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc,
-                         char *wherestr);
+extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
 extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 			 unsigned long long sn);
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
