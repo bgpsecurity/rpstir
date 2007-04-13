@@ -1,5 +1,27 @@
 #include "main.h"
 
+static char *makeCDStr(unsigned int *retlenp)
+{
+  char *buf;
+  char *ret;
+
+  *retlenp = 0;
+  buf = (char *)calloc(PATH_MAX+6, sizeof(char));
+  if ( buf == NULL )
+    return(NULL);
+  ret = getcwd(buf+2, PATH_MAX+1);
+  if ( ret == NULL )
+  {
+    free((void *)buf);
+    return(NULL);
+  }
+  buf[0] = 'C';
+  buf[1] = ' ';
+  (void)strcat(buf, "\r\n");
+  *retlenp = strlen(buf);
+  return(buf);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -116,6 +138,21 @@ main(int argc, char *argv[])
   sendStr = makeStartStr(&retlen);
   if (!sendStr) {
     fprintf(stderr, "failed to make Start String... bailing...\n");
+    exit(1);
+  }
+
+  outputMsg(&wport, sendStr, retlen);
+  retlen = 0;
+  free(sendStr);
+
+  /****************************************************/
+  /* Make the Directory String                        */
+  /* send the Directory String                        */
+  /* free it                                          */
+  /****************************************************/
+  sendStr = makeCDStr(&retlen);
+  if (!sendStr) {
+    fprintf(stderr, "failed to make Directory String... bailing...\n");
     exit(1);
   }
 
