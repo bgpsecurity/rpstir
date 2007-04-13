@@ -1,3 +1,7 @@
+/* Apr 12 2007 854U  */
+/* Apr 12 2007 GARDINER added test before fill_upward in write_casn_num */
+/* Apr  6 2007 851U  */
+/* Apr  6 2007 GARDINER changed fill_upward() */
 /* Apr 21 2006 835U  */
 /* Apr 21 2006 GARDINER fixed clearing */
 /* Aug  5 2004 797U  */
@@ -40,16 +44,16 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_num_sfcsid[] = "@(#)casn_num.c 835P";
+char casn_num_sfcsid[] = "@(#)casn_num.c 854P";
 #include "casn.h"
 
 extern struct casn *_go_up(struct casn *);
-extern void _clear_casn(struct casn *, ushort),
-            _fill_upward(struct casn *, int);
+extern void _clear_casn(struct casn *, ushort);
 
 extern int _casn_obj_err(struct casn *, int),
     _check_filled(struct casn *casnp, int),
     _clear_error(struct casn *),
+    _fill_upward(struct casn *, int),
     _write_casn(struct casn *casnp, uchar *c, int lth);
 
 int _table_op(struct casn *casnp),
@@ -161,8 +165,9 @@ int write_casn_num(struct casn *casnp, long val)
 int _write_casn_num(struct casn *casnp, long val)
     {
     long tmp;
-    int siz;
+    int err = 0, siz;
     uchar *c;
+    struct casn *tcasnp;
 
     _clear_casn(casnp, ~(ASN_FILLED_FLAG)); // don't clear CHOSEN flag
     tmp = val;
@@ -173,7 +178,10 @@ int _write_casn_num(struct casn *casnp, long val)
         *(--c) = (val & 0xFF), val >>= 8);
     if (val < 0 && !*casnp->startp) *casnp->startp = 0xFF;
     casnp->lth = siz;
-    _fill_upward(casnp, ASN_FILLED_FLAG);
+    tcasnp = _go_up(casnp);
+    if (tcasnp && (tcasnp->flags & ASN_ENUM_FLAG) > 0) casnp->flags |= ASN_FILLED_FLAG;
+    else if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+        return _casn_obj_err(casnp, -err);
     if ((casnp->flags & ASN_TABLE_FLAG) && _table_op(casnp) < 0) return -1;
     return siz;
     }

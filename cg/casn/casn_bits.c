@@ -1,3 +1,5 @@
+/* Apr  6 2007 851U  */
+/* Apr  6 2007 GARDINER changed fill_upward() */
 /* Jun  8 2004 773U  */
 /* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
 /* Jun  3 2004 769U  */
@@ -30,14 +32,13 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_bits_sfcsid[] = "@(#)casn_bits.c 773P";
+char casn_bits_sfcsid[] = "@(#)casn_bits.c 851P";
 #include "casn.h"
 
 extern struct casn *_go_up(struct casn *);
 extern int _casn_obj_err(struct casn *, int),
-	_clear_error(struct casn *);
-
-extern void _fill_upward(struct casn *casnp, int val);
+	_clear_error(struct casn *),
+        _fill_upward(struct casn *casnp, int val);
 extern void *_free_it(void *);
 
 int _readsize_bits(struct casn *casnp, uchar *to, int *shift, int mode)
@@ -84,6 +85,7 @@ int write_casn_bits(struct casn *casnp, uchar *from, int lth, int shift)
     {
     uchar *c, *e;
     ushort box;
+    int err = 0;
 
     if (_clear_error(casnp) < 0) return -1;
     if (casnp->type != ASN_BITSTRING) return _casn_obj_err(casnp, ASN_TYPE_ERR);
@@ -97,6 +99,7 @@ int write_casn_bits(struct casn *casnp, uchar *from, int lth, int shift)
 	*c = box & 0xFF;
 	}
     *casnp->startp = (uchar)shift;
-    _fill_upward(casnp, ASN_FILLED_FLAG);
+    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+        return _casn_obj_err(casnp, -err);
     return casnp->lth;
     }

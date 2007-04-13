@@ -1,3 +1,5 @@
+/* Apr  6 2007 851U  */
+/* Apr  6 2007 GARDINER changed fill_upward() */
 /* Jun 20 2006 844U  */
 /* Jun 20 2006 GARDINER fixed premature equality call; fixed copy to ANY */
 /* May 10 2006 836U  */
@@ -40,10 +42,9 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 #include "casn.h"
-char casn_copy_diff_sfcsid[] = "@(#)casn_copy_diff.c 844P";
+char casn_copy_diff_sfcsid[] = "@(#)casn_copy_diff.c 851P";
 
-extern void _clear_casn(struct casn *, ushort),
-            _fill_upward(struct casn *casnp, int val);
+extern void _clear_casn(struct casn *, ushort);
 
 extern struct casn *_find_chosen(struct casn *casnp),
             *_dup_casn(struct casn *casnp),
@@ -58,7 +59,8 @@ extern int _casn_obj_err(struct casn *, int),
     _calc_lth_lth(int),
     _check_filled(struct casn *, int),
     _clear_error(struct casn *),
-    _encode_tag_lth(uchar *to, struct casn **casnpp);
+    _encode_tag_lth(uchar *to, struct casn **casnpp),
+    _fill_upward(struct casn *casnp, int val);
 
 int _copy_casn(struct casn *to_casnp, struct casn *fr_casnp, int level),
     _diff_casn(struct casn *casnp1, struct casn *casnp2, int mode);
@@ -198,7 +200,10 @@ Procedure:
     if ((fr_casnp->flags & ASN_OF_FLAG))
         {
 	if ((fr_casnp->flags & ASN_FILLED_FLAG) && !fr_casnp[1].ptr)
-	    _fill_upward(to_casnp, ASN_FILLED_FLAG);
+            {
+            if ((err = _fill_upward(to_casnp, ASN_FILLED_FLAG)) < 0)
+               return _casn_obj_err(to_casnp, -err);
+            }
 	else
 	    {
             for (fr_casnp++, tcasnp = &to_casnp[1], num = 0; fr_casnp->ptr;
@@ -231,8 +236,9 @@ Procedure:
                     return _casn_obj_err(to_casnp, ASN_MATCH_ERR) - did;
 	        to_casnp = tcasnp;
                 }
-	    if (!did && (flags & ASN_FILLED_FLAG))
-		_fill_upward(to_casnp, ASN_FILLED_FLAG);
+	    if (!did && (flags & ASN_FILLED_FLAG) &&
+		(err = _fill_upward(to_casnp, ASN_FILLED_FLAG)) < 0)
+                return _casn_obj_err(to_casnp, -err);
 	    did -= ansr;
 	    }
 	else
@@ -242,7 +248,8 @@ Procedure:
 	    read_casn(fr_casnp, to_casnp->startp);
 	    to_casnp->lth = ansr;
 	    to_casnp->tag = fr_casnp->tag;
-	    _fill_upward(to_casnp, ASN_FILLED_FLAG);
+	    if ((err = _fill_upward(to_casnp, ASN_FILLED_FLAG)) < 0)
+                return _casn_obj_err(to_casnp, -err);
 	    }
 	}
     else if (fr_casnp->startp)  // might be empty because of default

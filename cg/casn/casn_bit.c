@@ -1,3 +1,5 @@
+/* Apr  6 2007 851U  */
+/* Apr  6 2007 GARDINER changed fill_upward() */
 /* Apr 21 2006 835U  */
 /* Apr 21 2006 GARDINER fixed clearing */
 /* Jun  8 2004 773U  */
@@ -28,13 +30,13 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_bit_sfcsid[] = "@(#)casn_bit.c 835P";
+char casn_bit_sfcsid[] = "@(#)casn_bit.c 851P";
 #include "casn.h"
 
 extern struct casn *_go_up(struct casn *);
 extern int _casn_obj_err(struct casn *, int),
-    _clear_error(struct casn *);
-extern void _fill_upward(struct casn *casnp, int val);
+    _clear_error(struct casn *),
+    _fill_upward(struct casn *casnp, int val);
 
 int read_casn_bit(struct casn *casnp)
     {
@@ -77,7 +79,8 @@ Function: Writes enumerated bit to higher BIT STRING
     bb = 0x80 >> (bits & 7);
     if (val) *b |= bb;
     else *b &= ~bb;
-    _fill_upward(tcasnp, ASN_FILLED_FLAG);
+    if ((bits = _fill_upward(tcasnp, ASN_FILLED_FLAG)) < 0)
+        return _casn_obj_err(tcasnp, -bits);
     return (val)? 1: 0;
     }
 

@@ -1,3 +1,5 @@
+/* Apr  6 2007 851U  */
+/* Apr  6 2007 GARDINER changed fill_upward() */
 /* Mar 28 2007 849U  */
 /* Mar 28 2007 GARDINER fixed signedness errors */
 /* Jun  8 2004 773U  */
@@ -28,7 +30,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_time_sfcsid[] = "@(#)casn_time.c 849P";
+char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include "casn.h"
 
 #define UTCBASE 70
@@ -53,9 +55,9 @@ char casn_time_sfcsid[] = "@(#)casn_time.c 849P";
 #define GENTSE (UTCSE + GENTYRSIZ - UTCYRSIZ)
 
 extern int _casn_obj_err(struct casn *, int),
-        _check_filled(struct casn *casnp);
-extern void _fill_upward(struct casn *, int),
-    *_free_it(void *);
+        _check_filled(struct casn *casnp),
+        _fill_upward(struct casn *, int);
+extern void *_free_it(void *);
 
 int _time_to_ulong(ulong *valp, char *fromp, int lth);
 
@@ -171,6 +173,7 @@ int write_casn_time(struct casn *casnp, ulong time)
     ushort *mop;
     long da, min, sec;
     char *c, *to;
+    int err = 0;
 
     if (casnp->type != ASN_UTCTIME && casnp->type != ASN_GENTIME) return -1;
     _free_it(casnp->startp);
@@ -219,7 +222,8 @@ int write_casn_time(struct casn *casnp, ulong time)
 	    }
 	}
     casnp->lth = (c - to);
-    _fill_upward(casnp, ASN_FILLED_FLAG);
+    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+        return _casn_obj_err(casnp, -err);
     return casnp->lth;
     }
     

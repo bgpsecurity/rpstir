@@ -1,3 +1,11 @@
+/* Apr 11 2007 853U  */
+/* Apr 11 2007 GARDINER corrected _readvsize() not to trim off 1st byte of BIT STRING unless defined-by */
+/* Apr  6 2007 852U  */
+/* Apr  6 2007 GARDINER minor fix */
+/* Apr  6 2007 851U  */
+/* Apr  6 2007 GARDINER changed fill_upward() */
+/* Mar 30 2007 850U  */
+/* Mar 30 2007 GARDINER fixed another signedness problem */
 /* Mar 28 2007 849U  */
 /* Mar 28 2007 GARDINER fixed signedness errors */
 /* Mar 26 2007 848U  */
@@ -108,7 +116,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 849P";
+char casn_sfcsid[] = "@(#)casn.c 853P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -198,6 +206,7 @@ int casn_error(int, char *),
     _csize(struct casn *casnp, uchar *from, long lth),
     _encodesize(struct casn *casnp, uchar *to, int mode),
     _encode_tag_lth(uchar *to, struct casn **casnpp),
+    _fill_upward(struct casn *casnp, int val),
     _readsize(struct casn *casnp, uchar *to, int mode),
     _readvsize(struct casn *casnp, uchar *to, int mode),
     _mark_definees(struct casn *casnp, uchar *wherep, int index),
@@ -212,8 +221,7 @@ int casn_error(int, char *),
     _write_objid(struct casn *casnp, char *from);
 
 void _clear_casn(struct casn *, ushort),
-    *_clear_of(struct casn *casnp),
-    _fill_upward(struct casn *casnp, int val);
+    *_clear_of(struct casn *casnp);
 
 long _get_tag(uchar **tagpp);
 
@@ -734,11 +742,15 @@ int _csize(struct casn *casnp, uchar *from, long lth)
 
 struct casn *_dup_casn(struct casn *casnp)
     {
+    int err = 0;
     _free_it(casnp->ptr);
     casnp->ptr = (struct casn *)dbcalloc(1, casnp->min);
     ((void(*)(void *, ushort))casnp->startp)((void *)casnp->ptr, 0);
-    _fill_upward(casnp, ASN_FILLED_FLAG);    // assumes duped object will be
-                   // filled. writing pointed-to won't go up through pointer
+    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)    // assumes duped object will be
+        {           // filled. writing pointed-to won't go up through pointer
+        _casn_obj_err(casnp, -err);
+        casnp = (struct casn *)0;
+        }
     return casnp->ptr;
     }
 
@@ -841,12 +853,18 @@ int _encodesize(struct casn *casnp, uchar *to, int mode)
     return lth;
     }
 
-void _fill_upward(struct casn *casnp, int val)
+int _fill_upward(struct casn *casnp, int val)
     {
-    for ( ; casnp && !(casnp->flags & val); casnp = _go_up(casnp))
+    struct casn *ucasnp;
+
+    for ( ; casnp && !(casnp->flags & val); casnp = ucasnp)
 	{
+        ucasnp = _go_up(casnp);
+        if (ucasnp && (ucasnp->flags & ASN_OF_FLAG) && !casnp->ptr)
+           return -(ASN_OF_BOUNDS_ERR);
 	casnp->flags |= val;
 	}
+    return 0;
     }
 
 struct casn *_find_tag(struct casn *casnp, ulong tag)
@@ -1160,8 +1178,9 @@ Procedure:
 	    {
 	    if (curr_casnp->min)
                 return _casn_obj_err(curr_casnp, ASN_OF_BOUNDS_ERR);
+            if ((ansr = _fill_upward(curr_casnp, ASN_FILLED_FLAG)) < 0)
+                return _casn_obj_err(curr_casnp, -ansr);
             ansr = 0;
-	    _fill_upward(curr_casnp, ASN_FILLED_FLAG);
 	    }
 	else
             {
@@ -1511,8 +1530,8 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
 	else return 0;
 	}
     if ((ansr = _readsize(casnp, to, mode)) > 0 &&
-	// pure read of bit string or bit-string-defined-by
-        (casnp->type & ~(ASN_CHOICE)) == ASN_BITSTRING)
+        // pure read of bit-string-defined-by
+        casnp->type == (ASN_CHOICE | ASN_BITSTRING))
         memcpy(to, &to[1], --ansr);   // shift to left 1 byte
     return ansr;
     }
@@ -1700,7 +1719,8 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	if (!lth)
 	    {
 	    if (casnp->min) return _casn_obj_err(casnp, ASN_OF_BOUNDS_ERR);
-	    _fill_upward(casnp, ASN_FILLED_FLAG);
+	    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+                return _casn_obj_err(casnp, -err);
 	    return 0;
 	    }
         return _match_casn(&casnp[1], c, lth, (casnp->flags & ASN_OF_FLAG),
@@ -1734,7 +1754,7 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	{
 	if (casnp->type == ASN_GENTIME) tmp = 2;
 	else tmp = 0;
-	if (_time_to_ulong(&val, (uchar *)&c[tmp], lth - tmp) < 0)
+	if (_time_to_ulong(&val, &c[tmp], lth - tmp) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
@@ -1760,7 +1780,8 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
     casnp->startp = (uchar *)dbcalloc(1, (casnp->lth = lth));
     memcpy(casnp->startp, c, casnp->lth);
 	    // fill up to top
-    _fill_upward(casnp, ASN_FILLED_FLAG);
+    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+        return _casn_obj_err(casnp, -err);
     if ((casnp->flags & ASN_TABLE_FLAG) && _table_op(casnp) < 0) return -1;
     return casnp->lth;
     }
@@ -1810,7 +1831,8 @@ int _write_objid(struct casn *casnp, char *from)
         if (!*c) break;
         }
     casnp->lth = (e - buf);
-    _fill_upward(casnp, ASN_FILLED_FLAG);
+    if ((i = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+        return _casn_obj_err(casnp, -i);
     if ((casnp->flags & ASN_TABLE_FLAG) && _table_op(casnp) < 0) return -1;
     return casnp->lth;
     }
