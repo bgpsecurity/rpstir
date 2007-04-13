@@ -35,5 +35,8 @@ query: query.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
 chaser: chaser.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
 	gcc -o chaser -g -L/usr/local/ssl/lib chaser.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
+garbage: garbage.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
+	gcc -o garbage -g -L/usr/local/ssl/lib garbage.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
+
 clean:
 	rm -f rcli sqq docert initscm *.o
