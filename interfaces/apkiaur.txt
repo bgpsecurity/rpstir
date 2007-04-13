@@ -39,6 +39,8 @@ I envision the following tags and their meaning:
    AUR may close its end of the socket immediately after sending this message; it
    need not wait.
 
+   C (cd). Send when the AUR program changes directories.
+
    A (add). Sent when a file is added to the repository. VALUE is the full, absolute
    path to the file.
 
