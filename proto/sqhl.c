@@ -194,11 +194,13 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   unsigned int cert_id;
   scmtab  *ctab;
   scmkva   aone;
-  scmkv    cols[CF_NFIELDS+3];
+  scmkv    cols[CF_NFIELDS+5];
+  char *wptr;
   char *ptr;
   char  flagn[24];
   char  lid[24];
   char  did[24];
+  char  blen[24];
   int   idx = 0;
   int   sta;
   int   i;
@@ -230,11 +232,24 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   (void)sprintf(did, "%u", cf->dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
+  if ( cf->ipblen > 0 )
+    {
+      cols[idx].column = "ipblen";
+      (void)sprintf(blen, "%u", cf->ipblen);
+      cols[idx++].value = blen;
+      cols[idx].column = "ipb";
+      wptr = hexify(cf->ipblen, cf->ipb);
+      if ( wptr == NULL )
+	return(ERR_SCM_NOMEM);
+      cols[idx++].value = wptr;
+    }
   aone.vec = &cols[0];
-  aone.ntot = CF_NFIELDS+3;
+  aone.ntot = CF_NFIELDS+5;
   aone.nused = idx;
   aone.vald = 0;
   sta = insertscm(conp, ctab, &aone);
+  if ( wptr != NULL )
+    free((void *)wptr);
   if ( sta < 0 )
     return(sta);
   sta = setmaxidscm(scmp, conp, NULL, "CERTIFICATE", cert_id);

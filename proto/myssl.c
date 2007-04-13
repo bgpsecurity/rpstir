@@ -125,6 +125,12 @@ void freecf(cert_fields *cf)
 	  cf->fields[i] = 0;
 	}
     }
+  if ( cf->ipb != NULL )
+    {
+      free(cf->ipb);
+      cf->ipb = NULL;
+    }
+  cf->ipblen = 0;
   free((void *)cf);
 }
 
@@ -536,14 +542,49 @@ static void cf_get_flags(X509V3_EXT_METHOD *meth, void *exts,
     cf->flags |= SCM_FLAG_CA;
 }
 
+/*
+  This is the raw processing function that extracts the data/length of
+  the IPAddressBlock in the ASN.1 of the certificate and places them into
+  the corresponding cf fields.
+*/
+
+static void cf_get_ipb(X509V3_EXT_METHOD *meth, void *ex,
+		       cert_fields *cf, int *stap, int *x509stap)
+{
+  X509_EXTENSION *exx;
+  int leen;
+
+  UNREFERENCED_PARAMETER(meth);
+  UNREFERENCED_PARAMETER(x509stap);
+  if ( stap == NULL )
+    return;
+  exx = (X509_EXTENSION *)ex;
+  leen = exx->value->length;
+  if ( leen <= 0 )
+    {
+      cf->ipblen = 0;
+      cf->ipb = NULL;
+      return;
+    }
+  cf->ipb = calloc(leen, sizeof(unsigned char));
+  if ( cf->ipb == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return;
+    }
+  memcpy(cf->ipb, exx->value->data, leen);
+  cf->ipblen = leen;
+}
+
 static cfx_validator xvalidators[] = 
   {
-    { cf_get_ski,     CF_FIELD_SKI,     NID_subject_key_identifier,   1 } ,
-    { cf_get_aki,     CF_FIELD_AKI,     NID_authority_key_identifier, 1 } ,
-    { cf_get_sia,     CF_FIELD_SIA,     NID_sinfo_access,             0 } ,
-    { cf_get_aia,     CF_FIELD_AIA,     NID_info_access,              0 } ,
-    { cf_get_crldp,   CF_FIELD_CRLDP,   NID_crl_distribution_points,  0 } ,
-    { cf_get_flags,   0,                NID_basic_constraints,        0 }
+    { cf_get_ski,     CF_FIELD_SKI,     NID_subject_key_identifier,   1, 0 } ,
+    { cf_get_aki,     CF_FIELD_AKI,     NID_authority_key_identifier, 1, 0 } ,
+    { cf_get_sia,     CF_FIELD_SIA,     NID_sinfo_access,             0, 0 } ,
+    { cf_get_aia,     CF_FIELD_AIA,     NID_info_access,              0, 0 } ,
+    { cf_get_crldp,   CF_FIELD_CRLDP,   NID_crl_distribution_points,  0, 0 } ,
+    { cf_get_ipb,     0,                NID_sbgp_ipAddrBlock,         0, 1 } ,
+    { cf_get_flags,   0,                NID_basic_constraints,        0, 0 }
   } ;
 
 /*
@@ -728,7 +769,10 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	continue;
       *stap = 0;
       *x509stap = 0;
-      (*cfx->get_func)(meth, exts, cf, stap, x509stap);
+      if ( cfx->raw == 0 )
+	(*cfx->get_func)(meth, exts, cf, stap, x509stap);
+      else
+	(*cfx->get_func)(meth, ex, cf, stap, x509stap);
       if ( *stap != 0 && cfx->critical != 0 )
 	break;
       if ( meth->it )

@@ -49,6 +49,8 @@
 typedef struct _cert_fields
 {
   char *fields[CF_NFIELDS];
+  void *ipb;
+  int   ipblen;
   unsigned int dirid;
   unsigned int flags;
 } cert_fields;
@@ -86,6 +88,7 @@ typedef struct _cfx_validator
   int      fieldno;
   int      tag;
   int      critical;
+  int      raw;
 } cfx_validator ;
 
 extern void  freecf(cert_fields *);
