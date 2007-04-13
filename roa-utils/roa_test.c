@@ -7,71 +7,40 @@
 int main(int argc, char** argv)
 {
   struct ROA *roa;
+  struct ROA *roa2;
   int iRet = 0;
-  char filename[16] = "";
-  char filename2[16] = "";
+  char filename_cnf[16] = "";
+  char filename_der[16] = "";
+  char filename_pem[16] = "";
+  FILE *fp = NULL;
+  //scmcon *conp;
+  //X509   *cert;
+  //char   *ski;
+  //int     sta;
   
-  strcpy(filename, "roa.cnf");
-  strcpy(filename2, "test.der");
-  iRet = roaFromConfig(filename, 0, &roa);
+  strcpy(filename_cnf, "roa.cnf");
+  strcpy(filename_der, "mytest.roa.der");
+  strcpy(filename_pem, "mytest.roa.pem");
+  iRet = roaFromConfig(filename_cnf, 0, &roa);
   if (TRUE == iRet)
-    iRet = roaToFile(roa, filename2, FMT_DER);
+    iRet = roaToFile(roa, filename_pem, FMT_PEM);
+  if (TRUE == iRet)
+    iRet = roaFromFile(filename_pem, FMT_PEM, TRUE, &roa2);
+  if (TRUE == iRet)
+    {
+      fp = fopen("roa.txt", "a");
+      if (fp) {
+	// JFG - Add these back in when ready to test validation
+	//ski = roaSKI(r);
+	//if ( NULL != ski ) {
+	//cert = find_certificate(conp, ski, NULL, NULL, &sta);
+	//if ( cert != NULL && sta == 0 )
+	iRet = roaGenerateFilter(roa2, NULL, fp);
+      }
+      fclose(fp);
+    }
   if (FALSE == iRet)
     return 1;
   else
     return 0;
 }
-
-/*
-int main(int argc, char** argv)
-{
-  scmcon *conp;
-  X509   *cert;
-  char   *ski;
-  int     valid = -1;
-  int     sta;
-  ROA    *r;
-
-  printf("Running ROA tests...");
-  // conp = openDBConnection(); or fail
-  sta = roaCreateFromConf(fname, &r);
-  if (0 != sta)
-  {
-     printf("Bad creation!");
-     return -1;
-  }
-  sta = roaValidate(r);
-  if (0 != sta)
-  {
-     printf("Failed validation!");
-     return -2;
-  }
-  else
-  {
-     ski = roaSKI(r);
-     if ( NULL == ski )
-     {
-        printf("Bad SKI translation!");
-        return -3;        
-     }
-     else
-     {
-       cert = find_certificate(conp, ski, NULL, NULL, &sta);
-       if ( cert != NULL && sta == 0 ) {
-         valid = roaValidate2(r, cert);
-       }
-     }
-
-  }
-  if (-1 == valid)
-  {
-     printf("Validity test 2 failed!");
-     return -4;
-  }
-  else
-  {
-     printf("Test successful!");
-     return 0;
-  }
-}
-*/

@@ -12,6 +12,31 @@
 //  that the ROA has
 //  been validated at entry and that ipaddrmax exceeds ipaddrmin
 
+// A quick itoa implementation that works only for radix <= 10
+int itoa (int n, char* cN, int radix){
+  int i,j = 0;
+  char* s;
+
+  if ((radix > 10) ||
+      (NULL == cN))
+    return FALSE;
+  
+  s = (char*) malloc(33);
+  
+  do{
+    s[i++]=(char)( n % radix + '0');
+    n -= n % radix;
+  }
+  while((n/=radix) > 0);
+
+  for (j = 0; j < i; j++)
+    cN[i-1-j] = s[j];
+
+  cN[j]='\0';
+  free(s);
+  return TRUE;
+}
+
 int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
 {
   char cHigh = 0;
@@ -24,12 +49,12 @@ int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
   cHigh = ((cVal & 0xf0) >> 4);
 
   if (cLow > 0x09)
-    cLow += 'A';
+    cLow += 'A' - 10;
   else
     cLow += '0';
 
   if (cHigh > 0x09)
-    cHigh += 'A';
+    cHigh += 'A' - 10;
   else
     cHigh += '0';
 
@@ -111,7 +136,7 @@ unsigned char *roaSKI(struct ROA *r)
 	  cReturn[(3*i) + 2] = ':';
 	}
       // Clear the incorrectly allocated : in the last loop
-      cReturn[(3*i) + 2] = 0x00;
+      cReturn[(3*(i-1)) + 2] = 0x00;
       return cReturn;
     }
 
@@ -121,6 +146,7 @@ unsigned char *roaSKI(struct ROA *r)
 unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;
+  unsigned char j = 0;
   int iSecLen = 0;
   int iReturnLen = 0;
   unsigned char cPrefix = 0;
@@ -130,7 +156,8 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
   if (NULL == array)
     return NULL;
 
-  cPrefix = array[0];  
+  // JFG - Cast from int to char == BAD
+  cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
   cReturnString = malloc(19);
   if (NULL == cReturnString)
     return NULL;
@@ -138,10 +165,19 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
   memset(cReturnString, 0, 19);
   for (i = 1; i < iArraySize; i++)
     {
+      // If this is the last char in the array, and we're obeying DER rules
+      //  for the maximum in a prefix (i.e. Fill is 1), then we need to add
+      //  back the removed '1' bits (aka array[0])
+      if ((1 == iFill) && (i == iArraySize - 1))
+	{
+	  for (j = 0; j < array[0]; j++)
+	    array[i] |= (0x01 << j);
+	}
       cvaldtoc3(array[i], cDecimalSection, &iSecLen);
       memcpy(cReturnString + iReturnLen, cDecimalSection, iSecLen);
       iReturnLen += iSecLen;
-      if (iArraySize - 1 != i)
+      // Interleaved periods (up to array maximum)
+      if (4 > i)
 	{
 	  memcpy(cReturnString + iReturnLen, ".", 1);
 	  iReturnLen++;
@@ -162,7 +198,7 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
 	      memcpy(cReturnString + iReturnLen, "0", 1);
 	      iReturnLen++;
 	    }
-	  // Interleaved periods
+	  // Interleaved periods (continued)
 	  if (4 > i)
 	    {
 	      memcpy(cReturnString + iReturnLen, ".", 1);
@@ -171,11 +207,14 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
 	}
     }
 
-  if (TRUE == iPrintPrefix)
+  // If we're printing prefixes, we need the array to either not be
+  //  full length or to have unused bits mentioned in array[0]
+  if ((TRUE == iPrintPrefix) &&
+      (32 != cPrefix))
     {
       memcpy(cReturnString + iReturnLen, "/", 1);
       iReturnLen++;
-      cvaldtoc3(array[0], cDecimalSection, &iSecLen);
+      cvaldtoc3(cPrefix, cDecimalSection, &iSecLen);
       memcpy(cReturnString + iReturnLen, cDecimalSection, iSecLen);
       iReturnLen += iSecLen;
     }
@@ -240,6 +279,7 @@ unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, un
 unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;
+  unsigned char j = 0;
   int iSecLen = 0;
   int iReturnLen = 0;
   unsigned char cPrefix = 0;
@@ -250,7 +290,8 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
   if (NULL == array)
     return NULL;
 
-  cPrefix = array[0];  
+  // JFG - Cast from int to char == BAD
+  cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
   cReturnString = malloc(44);
   if (NULL == cReturnString)
     return NULL;
@@ -258,10 +299,19 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
   memset(cReturnString, 0, 44);
   for (i = 1; i < iArraySize; i++)
     {
+      // If this is the last char in the array, and we're obeying DER rules
+      //  for the maximum in a prefix (i.e. Fill is 1), then we need to add
+      //  back the removed '1' bits in the prefix (array[0])
+      if ((1 == iFill) && (i == iArraySize - 1))
+	{
+	  for (j = 0; j < array[0]; j++)
+	    array[i] |= (0x01 << j);
+	}
       cvalhtoc2(array[i], cHexSection);
       memcpy(cReturnString + iReturnLen, cHexSection, 2);
       iReturnLen += 2;
-      if ((iArraySize - 1 >= i) && (0 == i % 2))
+      // Interleaved colons
+      if ((16 > i) && (0 == i % 2))
 	{
 	  memcpy(cReturnString + iReturnLen, ":", 1);
 	  iReturnLen++;
@@ -290,11 +340,14 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
 	}
     }
 
-  if (TRUE == iPrintPrefix)
+  // If we're printing prefixes, we need the array to either not be
+  //  full length or to have unused bits mentioned in array[0]
+  if ((TRUE == iPrintPrefix) &&
+      (128 != cPrefix))
     {
       memcpy(cReturnString + iReturnLen, "/", 1);
       iReturnLen++;
-      cvaldtoc3(array[0], cDecimalPrefix, &iSecLen);
+      cvaldtoc3(cPrefix, cDecimalPrefix, &iSecLen);
       memcpy(cReturnString + iReturnLen, cDecimalPrefix, iSecLen);
       iReturnLen += iSecLen;
     }
@@ -355,7 +408,8 @@ unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, un
   return cReturnString;
 }
 
-unsigned char* roaIPAddr(struct IPAddressOrRangeA *addrOrRange, int iFamily)
+#ifdef IP_RANGE_ALLOWED
+unsigned char* roaIPAddrOrRange(struct IPAddressOrRangeA *addrOrRange, int iFamily)
 {
   int iSize = 0;
   int iSize2 = 0;
@@ -375,7 +429,7 @@ unsigned char* roaIPAddr(struct IPAddressOrRangeA *addrOrRange, int iFamily)
     {
       memset(ipv4array, 0, 5);
       memset(ipv4array2, 0, 5);
-      // Check to see if we have a prefix or an address
+      // Check to see if we have a prefix or a range
       iTag = tag_casn(&(addrOrRange->self));
       if (ASN_BITSTRING == (0x1F & iTag))
 	{
@@ -436,6 +490,47 @@ unsigned char* roaIPAddr(struct IPAddressOrRangeA *addrOrRange, int iFamily)
 
   return cASCIIString;
 }
+#endif // IP_RANGE_ALLOWED
+
+unsigned char* roaIPAddr(struct IPAddress *addr, int iFamily)
+{
+  int iSize = 0;
+  unsigned char *cASCIIString = NULL;
+  unsigned char ipv4array[5];
+  unsigned char ipv6array[17];
+
+  // parameter check
+  if ((NULL == addr) ||
+      (0 == iFamily))
+    return NULL;
+  
+  if (IPV4 == iFamily)
+    {
+      memset(ipv4array, 0, 5);
+
+      iSize = vsize_casn(addr);
+      if ((0 >= iSize) || (5 < iSize))
+	return NULL;
+      if (0 > read_casn(addr, ipv4array))
+	return NULL;
+      cASCIIString = interpretIPv4Prefix(ipv4array, iSize);
+    }
+  else if (IPV6 == iFamily)
+    {
+      memset(ipv6array, 0, 17);
+
+      iSize = vsize_casn(addr);
+      if ((0 >= iSize) || (17 < iSize))
+	return NULL;
+      if (0 > read_casn(addr, ipv6array))
+	return NULL;
+      cASCIIString = interpretIPv6Prefix(ipv6array, iSize);
+    }
+  else
+    return NULL;
+
+  return cASCIIString;
+}
 
 unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numOfAddresses)
 {
@@ -445,7 +540,12 @@ unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numO
   int iAddrs = 0;
   unsigned char** pcAddresses = NULL;
   unsigned char family[3];
+
+#ifdef IP_RANGES_ALLOWED
   struct IPAddressOrRangeA *roaAddr = NULL;
+#else
+  struct IPAddress *roaAddr = NULL;
+#endif
 
   // parameter check
   if ((NULL == roapAddrFam) ||
@@ -463,7 +563,12 @@ unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numO
   else
     return NULL;
 
+#ifdef IP_RANGES_ALLOWED
   iAddrs = num_items(&(roapAddrFam->addressesOrRanges.self));
+#else
+  iAddrs = num_items(&(roapAddrFam->addresses.self));
+#endif // IP_RANGES_ALLOWED
+
   if (0 >= iAddrs)
     return NULL;
 
@@ -473,11 +578,16 @@ unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numO
 
   for (i = 0; i < iAddrs; i++)
     {
+#ifdef IP_RANGES_ALLOWED
       roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roapAddrFam->addressesOrRanges.self), i);
+      pcAddresses[i] = roaIPAddrOrRange(roaAddr, iFamily);
+#else
+      roaAddr = (struct IPAddress*) member_casn(&(roapAddrFam->addresses.self), i);
       pcAddresses[i] = roaIPAddr(roaAddr, iFamily);
+#endif // IP_RANGES_ALLOWED
       if (NULL == pcAddresses[i])
 	{
-	  for (j = i - 1; j > 0; j--)
+	  for (j = i - 1; j >= 0; j--)
 	    free(pcAddresses[j]);
 	  free(pcAddresses);
 	  return NULL;
@@ -488,7 +598,7 @@ unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numO
   return pcAddresses;
 }
 
-int roaASID(struct ROA *r)
+int roaAS_ID(struct ROA *r)
 {
   long iAS_ID = 0;
 
@@ -511,24 +621,66 @@ void roaFree(struct ROA *r)
 
 int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
 {
+  int i,j = 0;
+  int iRes = 0;
+  int iFamilies = 0;
+  int iAddrNum = 0;
+  int iAS_ID = 0;
+  char cAS_ID[17];
+  unsigned char *cSID = NULL;
+  unsigned char **pcAddresses = NULL;
+  struct ROAIPAddressFamily *roaFamily = NULL;
+
   // parameter check
+  /*
+  // JFG - Has to be uncommented when the referenced functions are complete
   if ((FALSE == roaValidate(r)) ||
       (FALSE == roaValidate2(r, cert)) ||
       (NULL == fp))
     return FALSE;
+  */
 
-  // test that all three of the arguments are non-null
-  // print roa->content->signerInfoStruct->sid (SKI)
-  // print roa->content->encapContentInfo->eContent
-  //   (RouteOriginAttestation)->asID
-  // print roa->content->encapContentInfo->eContent
-  //   (RouteOriginAttestation)->ipAddrBlocks->addressPrefix
-  //  - OR -
-  // convert roa->content->encapContentInfo->eContent
-  //   (RouteOriginAttestation)->ipAddrBlocks->addressRange->{min,max}
-  //   to syntactically correct IP format and print it
-  //   (call convertAddrsToRange, above)
-  // take printed string and write to file
+  memset(cAS_ID, 0, 16);
+  iAS_ID = roaAS_ID(r);
+  if (0 >= iAS_ID)
+    return FALSE;
 
-  return FALSE;
+  if (FALSE == itoa(iAS_ID, cAS_ID, 10))
+    return FALSE;
+
+  cSID = roaSKI(r);
+  if (NULL == cSID)
+    return FALSE;
+
+  // For each family, print out all triplets beginning with SKI and AS#
+  // and ending with each IP address listed in the ROA
+  iFamilies = num_items(&(r->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+  for (i = 0; i < iFamilies; i++)
+    {
+      roaFamily = (struct ROAIPAddressFamily*) member_casn(&(r->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), i);
+      if (NULL == roaFamily)
+	{
+	  free(cSID);
+	  return FALSE;
+	}
+      pcAddresses = roaIPAddresses(roaFamily, &iAddrNum);
+      if (NULL == pcAddresses)
+	{
+	  free(cSID);
+	  return FALSE;
+	}
+
+      for (j = 0; j < iAddrNum; j++)
+	{
+	  iRes = fprintf(fp, "%s  %s  %s\n", cSID, cAS_ID, pcAddresses[j]);
+	  if (0 > iRes)
+	    return FALSE;
+	}
+      for (j = iAddrNum - 1; j >= 0; j--)
+	free(pcAddresses[j]);
+      free(pcAddresses);
+      pcAddresses = NULL;
+    }
+
+  return TRUE;
 }

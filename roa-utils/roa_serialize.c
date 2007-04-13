@@ -2,7 +2,7 @@
   $Id$
 */
 
-// JFG - FILEWIDE TODO: Rationalize return values
+// JFG - SYSTEMWIDE TODO: Rationalize return values
 
 #include "roa_utils.h"
 
@@ -48,6 +48,26 @@ enum forcingInstruction {
 static int g_iIPv4Flag;
 static int g_iIPv6Flag;
 
+/*
+** Translation Tables as described in RFC1113 (Translation table method
+**  courtesy b64.c from Bob Trower @ base64.sourceforge.net)
+*/
+// Encode table
+static const char cb64[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+// Decode table
+static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
+
+
+// Idiotic START/END ROA armor
+static const char roaStart[]="------ BEGIN ROA ------\r\n";
+static const char roaEnd[]="------ END ROA ------\r\n";
+
+/////////////////////////////////////////////////////////////
+//
+// Testing of locally defined enumerations
+//
+/////////////////////////////////////////////////////////////
+
 inline int isInstructionForcing(enum forcingInstruction fi)
 {
   if ((NONE == fi) ||
@@ -57,6 +77,236 @@ inline int isInstructionForcing(enum forcingInstruction fi)
   else
     return TRUE;
 }
+
+/////////////////////////////////////////////////////////////
+//
+// Encode/decode to Base64 functions
+//
+/////////////////////////////////////////////////////////////
+
+/*
+** encodeblock
+**
+** encode 3 8-bit binary bytes as 4 '6-bit' characters
+*/
+void encodeblock( unsigned char in[3], unsigned char out[4], int len )
+{
+    out[0] = cb64[ in[0] >> 2 ];
+    out[1] = cb64[ ((in[0] & 0x03) << 4) | ((in[1] & 0xf0) >> 4) ];
+    out[2] = (unsigned char) (len > 1 ? cb64[ ((in[1] & 0x0f) << 2) | ((in[2] & 0xc0) >> 6) ] : '=');
+    out[3] = (unsigned char) (len > 2 ? cb64[ in[2] & 0x3f ] : '=');
+}
+
+/*
+** encode
+**
+** base64 encode a stream adding padding and line breaks as per spec.
+** ALLOCATES MEMORY that must be freed elsewhere
+*/
+int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize, int lineSize )
+{
+    unsigned char inTemp[3], outTemp[4];
+    int i = 0;
+    int len = 0;
+    int blocksout = 0;
+    int inIndex = 0;
+    int outIndex = 0;
+    int iTempSize = 0;
+    int iArmor = 0;
+    unsigned char *bufTemp = NULL;
+
+    // Parameter sanity check
+    if ((NULL == bufIn) ||
+	(0 >= inSize) ||
+	(NULL == outSize) ||
+	(0 >= lineSize))
+      return FALSE;
+
+    iTempSize = 1024;
+    bufTemp = (unsigned char *)calloc(1, iTempSize);
+    if (NULL == bufTemp)
+      return FALSE;
+
+    // Push armoring onto top of file
+    iArmor = strlen(roaStart);
+    memcpy(bufTemp, roaStart, iArmor);
+    outIndex += iArmor;
+
+    // Encode file
+    while( inIndex < inSize ) {
+        len = 0;
+        for( i = 0; i < 3; i++ ) {
+            inTemp[i] = (unsigned char) bufIn[inIndex];
+            if( inIndex < inSize ) {
+                len++;
+            }
+            else {
+                inTemp[i] = 0;
+            }
+	    inIndex++;
+        }
+        if( len ) {
+            encodeblock( inTemp, outTemp, len );
+            for( i = 0; i < 4; i++ ) {
+	      if (outIndex >= iTempSize)
+		{
+		  bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+		  iTempSize += 1024;
+		}
+	      bufTemp[outIndex] = outTemp[i];
+	      outIndex++;
+            }
+            blocksout++;
+        }
+        if( blocksout >= (lineSize/4) || inIndex >= inSize ) {
+            if( blocksout )
+	      {
+		// We have to add 2 chars, so check one below our limit
+		if (outIndex - 1 >= iTempSize)
+		  {
+		    bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+		    iTempSize += 1024;
+		  }
+		bufTemp[outIndex] = '\r';
+		outIndex++;
+		bufTemp[outIndex] = '\n';
+		outIndex++;
+	      }
+            blocksout = 0;
+        }
+    }
+
+    // Push armoring onto bottom of file
+    iArmor = strlen(roaEnd);
+    if (outIndex + iArmor + 1 >= iTempSize)
+      {
+	bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+	iTempSize += 1024;
+      }
+    memcpy(&bufTemp[outIndex], roaEnd, iArmor);
+    outIndex += iArmor;
+    bufTemp[outIndex] = 0x00;
+
+    // Set return values
+    *bufOut = bufTemp;
+    *outSize = outIndex;
+    if (NULL == bufTemp)
+      return FALSE;
+    else
+      return TRUE;
+}
+
+/*
+** decodeblock
+**
+** decode 4 '6-bit' characters into 3 8-bit binary bytes
+*/
+void decodeblock( unsigned char in[4], unsigned char out[3] )
+{   
+    out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
+    out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
+    out[ 2 ] = (unsigned char ) (((in[2] << 6) & 0xc0) | in[3]);
+}
+
+/*
+** decode
+**
+** decode a base64 encoded stream discarding padding, line breaks and noise
+** ALLOCATES MEMORY that must be freed elsewhere
+*/
+int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize )
+{
+    unsigned char inTemp[4], outTemp[3], v;
+    int i = 0;
+    int len = 0;
+    int inIndex = 0;
+    int outIndex = 0;
+    int iTempSize = 0;
+    int iArmor = 0;
+    unsigned char *bufTemp = NULL;
+
+    // Parameter sanity check
+    if ((NULL == bufIn) ||
+	(0 >= inSize) ||
+	(NULL == outSize))
+      return FALSE;
+
+    iTempSize = 1024;
+    bufTemp = (unsigned char *)calloc(1, iTempSize);
+    if (NULL == bufTemp)
+      return FALSE;
+
+    // First, search for armoring at front of file
+    while ( 1 )
+      {
+	if ('-' == bufIn[inIndex])
+	  {
+	    iArmor = strlen(roaStart);
+	    if (0 == strncmp((char*)&bufIn[inIndex], roaStart, iArmor))
+	      {
+		inIndex += iArmor;
+		break;
+	      }
+	  }
+	inIndex++;
+      }
+
+    // Decode the translation
+    while( inIndex < inSize ) {
+         for( len = 0, i = 0; (i < 4) && (inIndex < inSize); i++ ) {
+            v = 0;
+            while((inIndex < inSize) && (v == 0)) {
+                v = (unsigned char) bufIn[inIndex];
+		// Skip the end armoring (don't translate its chars)
+		if ('-' == v)
+		  {
+		    iArmor = strlen(roaEnd);
+		    if (0 == strncmp((char*)&bufIn[inIndex], roaEnd, iArmor))
+		      inIndex += iArmor;
+		  }
+                v = (unsigned char) ((v < 43 || v > 122) ? 0 : cd64[ v - 43 ]);
+                if( v ) {
+                    v = (unsigned char) ((v == '$') ? 0 : v - 61);
+                }
+		inIndex++;
+            }
+            if( inIndex < inSize ) {
+                len++;
+                if( v ) {
+                    inTemp[ i ] = (unsigned char) (v - 1);
+                }
+            }
+            else {
+                inTemp[i] = 0;
+            }
+        }
+        if( len ) {
+            decodeblock( inTemp, outTemp );
+            for( i = 0; i < len - 1; i++ ) {
+	      if (outIndex >= iTempSize)
+		{
+		  bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+		  iTempSize += 1024;
+		}
+	      bufTemp[outIndex] = outTemp[i];
+	      outIndex++;
+            }
+        }
+    }
+    
+    *bufOut = bufTemp;
+    *outSize = outIndex;
+    if (NULL == bufTemp)
+      return FALSE;
+    else
+      return TRUE;
+}
+
+/////////////////////////////////////////////////////////////
+//
+// ASCII character string to character value translation
+//
+/////////////////////////////////////////////////////////////
 
 int ctocval(unsigned char cIn, unsigned char *val, int radix)
 {
@@ -155,6 +405,13 @@ int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, int radix
   return TRUE;
 }
 
+/////////////////////////////////////////////////////////////
+//
+// Functions to calculate trailing bits in octet strings that
+//  represent bit strings
+//
+/////////////////////////////////////////////////////////////
+
 int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGoodLeadingBytes)
 {
   int iFullBytes = 0;
@@ -248,6 +505,12 @@ int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
     }
   return calculatePrefixVals(i, cBadTrailingBits, iGoodLeadingBytes);
 }
+
+/////////////////////////////////////////////////////////////
+//
+// IP Address octet strings from ASCII strings
+//
+/////////////////////////////////////////////////////////////
 
 // Translation of dotted decimal IPv4 addresses
 //
@@ -523,7 +786,6 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 	return ROA_INVALID;
       else
 	{
-	  memset(cAddrPartArray, 0, 2);
 	  arraytemp[iByteIndex] = cAddrPartArray[0];
 	  arraytemp[iByteIndex+1] = cAddrPartArray[1];
 	  iByteIndex += sizeof(short int);
@@ -546,8 +808,15 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
   return ROA_VALID;
 }
 
+/////////////////////////////////////////////////////////////
+//
+// Per-configuration item translation functions
+//
+/////////////////////////////////////////////////////////////
+
 int setVersion(struct ROA* roa, unsigned char* versionstring)
 { 
+  int iRes = 0;
   int iLen = 0;
   int iVersion = 0;
 
@@ -561,7 +830,14 @@ int setVersion(struct ROA* roa, unsigned char* versionstring)
   if (3 != iVersion)
     return ROA_INVALID;
   
-  write_casn_num(&(roa->content.content.version.v3), iVersion);
+  iRes = write_casn_num(&(roa->content.content.version.v3), iVersion);
+  if (0 > iRes)
+    return ROA_INVALID;
+
+  iRes = write_casn_num(&(roa->content.content.signerInfos.signerInfo.version.v3), iVersion);
+  if (0 > iRes)
+    return ROA_INVALID;
+
   g_lastInstruction = NONE;
   return ROA_VALID;
 }
@@ -684,8 +960,8 @@ int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
   if (0 <= iBlocks)
     {
       // If that worked, fill it with the family info
-      inject_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
-      roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
+      roaFamily = (struct ROAIPAddressFamily*) inject_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
+      //roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
       write_casn(&(roaFamily->addressFamily), familytemp, 2);
       return ROA_VALID;
     }
@@ -703,8 +979,13 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
   int iRes = ROA_INVALID;
   int iBlocks = 0;
   int iAddrs = 0;
-  struct IPAddressOrRangeA *roaAddr = NULL;
   struct ROAIPAddressFamily *roaFamily = NULL;
+
+#ifdef IP_RANGES_ALLOWED
+  struct IPAddressOrRangeA *roaAddr = NULL;
+#else
+  struct IPAddress *roaAddr = NULL;
+#endif
 
   memset(ipv4array, 0, 5);
   memset(ipv6array, 0, 17);
@@ -745,15 +1026,25 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       if (0 < iBlocks)
 	{
 	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+#ifdef IP_RANGES_ALLOWED
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
-	  if (0 < iAddrs)
+	  if (0 <= iAddrs)
 	    {
-	      inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
-	      roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
+	      roaAddr = (struct IPAddressOrRangeA*) inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
 	      write_casn(&(roaAddr->addressPrefix), ipv4array, iGoodBytes);
 	    }
 	  else
 	    iRes = ROA_INVALID;
+#else
+	  iAddrs = num_items(&(roaFamily->addresses.self));
+	  if (0 <= iAddrs)
+	    {
+	      roaAddr = (struct IPAddress*) inject_casn(&(roaFamily->addresses.self), iAddrs);
+	      write_casn(roaAddr, ipv4array, iGoodBytes);
+	    }
+	  else
+	    iRes = ROA_INVALID;
+#endif
 	}
       else
 	iRes = ROA_INVALID;
@@ -773,15 +1064,25 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       if (0 < iBlocks)
 	{
 	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+#ifdef IP_RANGES_ALLOWED
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
 	    {
-	      inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
-	      roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
+	      roaAddr = (struct IPAddressOrRangeA*) inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
 	      write_casn(&(roaAddr->addressPrefix), ipv6array, iGoodBytes);
 	    }
 	  else
 	    iRes = ROA_INVALID;
+#else
+	  iAddrs = num_items(&(roaFamily->addresses.self));
+	  if (0 <= iAddrs)
+	    {
+	      roaAddr = (struct IPAddress*) inject_casn(&(roaFamily->addresses.self), iAddrs);
+	      write_casn(roaAddr, ipv6array, iGoodBytes);
+	    }
+	  else
+	    iRes = ROA_INVALID;
+#endif
 	}
       else
 	iRes = ROA_INVALID;
@@ -790,6 +1091,10 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 
   return iRes;
 }
+
+// These two functions are only required if we allow ranges, with their
+// min/max qualifiers
+#ifdef IP_RANGES_ALLOWED
 
 int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
 {
@@ -848,8 +1153,7 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
 	    {
-	      inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
-	      roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
+	      roaAddr = (struct IPAddressOrRangeA*) inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
 	      write_casn(&(roaAddr->addressRange.min), ipv4array, iGoodBytes);
 	    }
 	  else
@@ -874,10 +1178,10 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
 	{
 	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
-	  if (0 < iAddrs)
+	  if (0 <= iAddrs)
 	    {
-	      inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
-	      roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
+	      roaAddr = (struct IPAddressOrRangeA*) inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
+	      // roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
 	      write_casn(&(roaAddr->addressRange.min), ipv6array, iGoodBytes);
 	    }
 	  else
@@ -985,15 +1289,26 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
   return iRes;
 }
 
+#endif // IP_RANGES_ALLOWED
+
 int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
 {
   int iLen = 0;
   int iRet = 0;
+  int iCerts = 0;
 
   // JFG - Do we have a filename max, given our restriction to < 512?
   iLen = strlen((char*) certfilenamestring);
 
-  iRet = get_casn_file(&(roa->content.content.certificates.certificate.self), (char*) certfilenamestring, 0);
+  // Check to make sure there's only one cert and it's the one
+  //  we're about to read in.
+  iCerts = num_items(&(roa->content.content.certificates.self));
+  if (0 != iCerts)
+    return ROA_INVALID;
+
+  // Get the cert read in
+  if (NULL != inject_casn(&(roa->content.content.certificates.self), 0))
+    iRet = get_casn_file(&(roa->content.content.certificates.certificate.self), (char*) certfilenamestring, 0);
   g_lastInstruction = NONE;
 
   if (iRet > 0)
@@ -1001,6 +1316,12 @@ int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
   else
     return ROA_INVALID;
 }
+
+/////////////////////////////////////////////////////////////
+//
+// General config file (.cnf) interpretation function
+//
+/////////////////////////////////////////////////////////////
 
 int confInterpret(char* filename, struct ROA* roa)
 {
@@ -1092,6 +1413,8 @@ int confInterpret(char* filename, struct ROA* roa)
 		  iConfiguredKey[ck] = TRUE;
 		  break;
 		case SIGNATURE:
+		  // JFG - In the real world, we're going to calculate this
+		  //  instead of getting it from a file
 		  if ((isInstructionForcing(g_lastInstruction)) ||
 		      (TRUE == iConfiguredKey[ck]))
 		    {
@@ -1126,6 +1449,7 @@ int confInterpret(char* filename, struct ROA* roa)
 		  iRet2 = setIPAddr(roa, value);
 		  iConfiguredKey[ck] = TRUE;
 		  break;
+#ifdef IP_RANGES_ALLOWED
 		case IPADDRMIN:
 		  // Check for valid previous instruction
 		  // resides in subfunction
@@ -1138,6 +1462,7 @@ int confInterpret(char* filename, struct ROA* roa)
 		  iRet2 = setIPAddrMax(roa, value);
 		  iConfiguredKey[ck] = TRUE;
 		  break;
+#endif // IP_RANGES_ALLOWED
 		case CERTNAME:
 		  if ((isInstructionForcing(g_lastInstruction)) ||
 		      (TRUE == iConfiguredKey[ck]))
@@ -1160,8 +1485,8 @@ int confInterpret(char* filename, struct ROA* roa)
 		  printf("Unparseable value or unexpected key on line %d\n", iLineCount);
 		  iROAState = ROA_INVALID;
 		}
-	      // JFG - Remove (only for debugging)
-	      printf("The value of key %s(%d) is %s\n", key, ck, value);
+	      // JFG - Debugging code
+	      // printf("The value of key %s(%d) is %s\n", key, ck, value);
 	    }
 	}
     }
@@ -1193,10 +1518,21 @@ int confInterpret(char* filename, struct ROA* roa)
   return iROAState;
 }
 
+/////////////////////////////////////////////////////////////
+//
+// Exported functions from roa_utils.h
+//
+/////////////////////////////////////////////////////////////
+
 int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 {
   int iROAState = 0;
   int iReturn = TRUE;
+  int fd = 0;
+  int iSize, iSizeFinal, iSizeTmp = 0;
+  unsigned char *buf, *buf_final, *buf_tmp = NULL;
+  struct AlgorithmIdentifier *algorithmID = NULL;
+  struct SignerInfo* signerInfo = NULL;
 
   // Parameter validity checks
   if (NULL == fname)
@@ -1213,28 +1549,76 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   // No return value; must assume success
   ROA(*rp, 0);
 
-  // Fill default algorithm slots
+  // This write _must_ be done before the injections
   write_objid(&((*rp)->contentType), id_signedData);
-  write_objid(&((*rp)->content.content.digestAlgorithms.digestAlgorithmIdentifier.algorithm), id_sha256);
+
+  // JFG - Consider injecting these on a per-struct basis just in case
+  //  there's a requirements revision.
+  algorithmID = (struct AlgorithmIdentifier*) inject_casn(&((*rp)->content.content.digestAlgorithms.self), 0);
+  signerInfo = (struct SignerInfo*) inject_casn(&((*rp)->content.content.signerInfos.self), 0);
+  if ((NULL == algorithmID) ||
+      (NULL == signerInfo))
+    {
+      free(*rp);
+      return FALSE;
+    }
+  
+  // Fill default algorithm slots
+  write_objid(&(algorithmID->algorithm), id_sha256);
   write_objid(&((*rp)->content.content.encapContentInfo.eContentType), routeOriginAttestation);
-  write_objid(&((*rp)->content.content.signerInfos.signerInfo.digestAlgorithm.algorithm), id_sha256);
-  write_objid(&((*rp)->content.content.signerInfos.signerInfo.signatureAlgorithm.algorithm), id_sha_256WithRSAEncryption);
+  write_objid(&(signerInfo->digestAlgorithm.algorithm), id_sha256);
+  write_objid(&(signerInfo->signatureAlgorithm.algorithm), id_sha_256WithRSAEncryption);
+
+  // Open the file and read in its contents
+  if ((fd = open(fname, (O_RDONLY))) < 0)
+    {
+      delete_casn(&((*rp)->self));
+      return FALSE;
+    }
+  iSize = 1024;
+  buf = buf_tmp = (unsigned char *)calloc(1, iSize);
+  while ( 1 )
+    {
+      if ((iSizeTmp = read(fd, buf_tmp, 1024)) == 1024)
+	{
+	  buf = (unsigned char *)realloc(buf, iSize + 1024);
+	  buf_tmp = &buf[iSize];
+	  iSize += 1024;
+	}
+      else if (iSizeTmp < 0)
+	{
+	  close(fd);
+	  delete_casn(&((*rp)->self));
+	  return FALSE;
+	}
+      else
+	break;
+    }
+  close(fd);
+  iSize = (iSize - 1024 + iSizeTmp);
+  buf_final = buf;
+  iSizeFinal = iSize;
 
   switch(fmt)
     {
     case FMT_PEM:
-      // JFG - TODO
-  //    call PEM->binary conversion function from X509 on file
-  //    move contents back to filecontents
-      // NO break, control moves on
-    case FMT_DER:
-      iReturn = get_casn_file(&((*rp)->self), fname, 0);
-      // JFG - Check return value
-      if (0 > iReturn)
+      // Decode buffer from b64, skipping unnecessary chars
+      buf_final = NULL;
+      iReturn = decode_b64(buf, iSize, &buf_final, &iSizeFinal);
+      // IMPORTANT: NO break, control falls through
+    case FMT_DER:      
+      iSizeTmp = decode_casn(&((*rp)->self), buf_final);
+      if (buf_final != buf)
+	free(buf);
+      free(buf_final);
+      if (iSizeTmp != iSizeFinal)
 	{
 	  delete_casn(&((*rp)->self));
 	  iReturn = FALSE;
 	}
+      else
+	iReturn = TRUE;
+      // iReturn = get_casn_file(&((*rp)->self), fname, 0);
       break;
     case FMT_CONF:
       iROAState = confInterpret(fname, *rp);
@@ -1249,33 +1633,84 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       break;
     }
 
-  // JFG - TODO
-  // if (doval)
-  //    ret = roaValidate(*rp);
+  // JFG - Put back in when the validate function is finished
+  //if ((TRUE == iReturn) && (TRUE == doval))
+  //  iReturn = roaValidate(*rp);
   return iReturn;
 }
 
 int roaToFile(struct ROA *r, char *fname, int fmt)
 {
+  int fd = 0;
   int iReturn = TRUE;
+  int iSizeDER, iSizePEM = 0;
+  unsigned char *buf_der, *buf_pem = NULL;
+  //int iCASNSize = 0;
+  //char *casn = 0;
 
   // Parameter validity checks
   if (NULL == fname)
     return FALSE;
 
+  /*
+  // JFG - Debugging code; leave out unless required
+  iCASNSize = dump_size(&(r->self));
+  if (0 > iCASNSize)
+    return FALSE;
+  casn = malloc(iCASNSize);
+  if (NULL == casn)
+    return FALSE;
+  dump_casn(&(r->self), casn);
+  printf("%s", casn);
+  free(casn);
+  */
+
+  // Encode CASN
+  if ((fd = open(fname, (O_WRONLY | O_CREAT | O_TRUNC), 0777)) < 0)
+    return FALSE;
+  if ((iSizeDER = size_casn(&(r->self))) < 0)
+    {
+      close(fd);
+      return FALSE;
+    }
+  buf_der = (unsigned char *)calloc(1, iSizeDER);
+  encode_casn(&(r->self), buf_der);
+
   switch(fmt)
     {
     case FMT_PEM:
+      // JFG - Ask what length PEM file lines expect to be
+      //  (right now, hardcoded to 50)
+      iReturn = encode_b64(buf_der, iSizeDER, &buf_pem, &iSizePEM, 50);
+
+      // Write to file
+      if (TRUE == iReturn)
+	{
+	  iReturn = write(fd, buf_pem, iSizePEM);
+	  free(buf_pem);
+	}
+      free(buf_der);
+      close(fd);
+      if (iSizePEM != iReturn)
+	iReturn = FALSE;
+      else
+	iReturn = TRUE;
+
+      break;
     case FMT_DER:
-      iReturn = put_casn_file(&(r->self), fname, 0);
-      if (0 > iReturn)
-	  iReturn = FALSE;
-      // JFG - TODO
-      // if (fmt == PEM)
-      //  ret = call binary->PEM conversion function from X509 on file
+      // Write to file
+      iReturn = write(fd, buf_der, iSizeDER);
+      free(buf_der);
+      close(fd);
+      if (iSizeDER != iReturn)
+	iReturn = FALSE;
+      else
+	iReturn = TRUE;
+      // iReturn = put_casn_file(&(r->self), fname, 0);
       break;
     case FMT_CONF:
       // NOT OUR CONCERN RIGHT NOW
+      // NO NEED TO DO THIS.
       break;
     default:
       iReturn = FALSE;

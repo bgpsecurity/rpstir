@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <fcntl.h>
+
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -23,6 +25,7 @@
 #endif
 #include <openssl/bn.h>
 
+// Generated from the asn definition
 #include <roa.h>
 
 #define FALSE 0
@@ -30,6 +33,9 @@
 
 #define ROA_VALID 0
 #define ROA_INVALID 1
+
+// JFG - Reinsert this definition here if ranges are reinstated in asn
+//#define IP_RANGES_ALLOWED
 
 enum asnFileFormat {
   FMT_CONF = 0,

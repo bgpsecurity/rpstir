@@ -14,7 +14,11 @@
 #  ipaddrmin line, and the latter must in turn be followed by
 #  an ipaddrmax line.  ipfam IPv4 must precede ipfam IPv6.
 #  (this is the order that RFC 3779 expects)  Only one block from
-#  each family will be accepted. 
+#  each family will be accepted.
+#
+# N.B. Never mind!  ipaddrmin and ipaddrmax have been removed at
+#  the request of our IETF overlords.  Use only prefixes.  All hail
+#  the mighty and capricious IETF.
 ####################################################################
 
 [ version ]
@@ -37,13 +41,13 @@ as_id		= 19
 
 # a sample route (at least one required)
 ipfam		= IPv4
-ipaddrmin	= 167.134.2.0
-ipaddrmax	= 167.134.3.255
-ipaddr		= 167.134.5.7
+ipaddr		= 167.134.5.0/25
 
 # another sample route
 ipfam		= IPv6
 ipaddr		= ::0
+ipaddr		= 4234:2342::aedb:afff
+ipaddr		= 6789:affd:a234:a500::/64
 
 ####################################################################
 [ certs ]
