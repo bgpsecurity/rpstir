@@ -174,7 +174,7 @@ int main(int argc, char **argv)
   free (srch1[2].valptr);
 
   // write timestamp into database
-  sprintf (msg, "update %s set ch_last=\"%s\";",
+  sprintf (msg, "update %s set gc_last=\"%s\";",
            metaTable->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
