@@ -251,16 +251,16 @@ void ROAIPAddressFamily(struct ROAIPAddressFamily *mine, ushort level)
     simple_constructor(&mine->addressFamily, level, ASN_OCTETSTRING);
     mine->addressFamily.min = 2;
     mine->addressFamily.max = 3;
-    AddressesOrRangesInROAIPAddressFamily(&mine->addressesOrRanges, level);
-    mine->addressesOrRanges.self.flags |= ASN_LAST_FLAG;
+    AddressesInROAIPAddressFamily(&mine->addresses, level);
+    mine->addresses.self.flags |= ASN_LAST_FLAG;
     }
 
-void AddressesOrRangesInROAIPAddressFamily(struct AddressesOrRangesInROAIPAddressFamily *mine, ushort level)
+void AddressesInROAIPAddressFamily(struct AddressesInROAIPAddressFamily *mine, ushort level)
     {
     simple_constructor(&mine->self, level++, ASN_SEQUENCE);
     mine->self.flags |= ASN_OF_FLAG;
-    IPAddressOrRangeA(&mine->iPAddressOrRangeA, level);
-    mine->iPAddressOrRangeA.self.flags |= ASN_LAST_FLAG;
+    simple_constructor(&mine->iPAddress, level, ASN_BITSTRING);
+    mine->iPAddress.flags |= ASN_LAST_FLAG;
     }
 
 void SignerInfo(struct SignerInfo *mine, ushort level)

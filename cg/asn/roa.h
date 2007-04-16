@@ -30,13 +30,15 @@
 #define id_ct "1.2.840.113549.1.9.16.1"
 #define routeOriginAttestation "1.2.840.113549.1.9.16.1.24"
 
-struct AddressesOrRangesInROAIPAddressFamily
+#define IPAddress casn
+
+struct AddressesInROAIPAddressFamily
     {
     struct casn self;
-    struct IPAddressOrRangeA iPAddressOrRangeA;
+    struct casn iPAddress;
     };
 
-void AddressesOrRangesInROAIPAddressFamily(struct AddressesOrRangesInROAIPAddressFamily *mine, ushort level);
+void AddressesInROAIPAddressFamily(struct AddressesInROAIPAddressFamily *mine, ushort level);
 
 #define CertificateSerialNumber casn
 
@@ -53,7 +55,7 @@ struct ROAIPAddressFamily
     {
     struct casn self;
     struct casn addressFamily;
-    struct AddressesOrRangesInROAIPAddressFamily addressesOrRanges;
+    struct AddressesInROAIPAddressFamily addresses;
     };
 
 void ROAIPAddressFamily(struct ROAIPAddressFamily *mine, ushort level);
