@@ -1,0 +1,1 @@
+gcc -o asn_gen -DINTEL -Dconstruct=cconstruct -Ddo_hdr=cdo_hdr -Dasn_constr_id=casn_constr_id -Dasn_hdr_id=casn_hdr_id -I. -I../casn -I../asn -L../casn asn_gen.c asn_java.c asn_pproc.c asn_pprocx.c asn_read.c asn_tabulate.c casn_constr.c casn_hdr.c -lcasn
