@@ -59,7 +59,7 @@ static QueryField fields[] = {
    "subject key identifier"},
   {"aki", 0, 0, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "AKI", 0, NULL,
    "authority key identifier"},
-  {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS #", 0, NULL,
+  {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS#", 0, NULL,
    "autonomous system number"},
   {"issuer", 0, 0, 0, 1, SQL_C_CHAR, 512, NULL, NULL, "Issuer", 0,
    NULL, "system that issued the cert/crl"},
@@ -71,7 +71,7 @@ static QueryField fields[] = {
    NULL, "last update time of the CRL"},
   {"next_upd", 0, 0, 1, 0, SQL_C_CHAR, 32, NULL, NULL, "Next Update", 0,
    NULL, "next update time of the CRL"},
-  {"crlno", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "CRL #", 0,
+  {"crlno", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "CRL#", 0,
    NULL, "CRL number"}
 };
 
@@ -94,6 +94,13 @@ int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
 }
 
 static FILE *output;  /* place to print output (file or screen) */
+static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
+static int useLabels, multiline;
+
+/* options of what to do with unknown states for roas/certs */
+#define OPTION_VALID 0
+#define OPTION_INVALID 1
+#define OPTION_SPECIAL 2
 
 /* reads a roa from a file in order to determine the filter entry */
 int displayEntry (scmsrcha *s, int idx1, char* returnStr)
@@ -117,8 +124,6 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
-static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
-
 /* callback function for searchscm that prints the output */
 static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 {
@@ -137,14 +142,20 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
         sprintf (resultStr, "%d", *((unsigned int *) s->vec[result].valptr));
       result++;
     }
-    fprintf (output, "%s = %s ", field->heading, resultStr);
+    if (multiline) fprintf (output, "%s ", (display == 0) ? "*" : " ");
+    if (useLabels) 
+      fprintf (output, "%s = %s  ", field->heading, resultStr);
+    else
+      fprintf (output, "%s  ", resultStr);
+    if (multiline) fprintf (output, "\n");
   }
-  fprintf (output, "\n");
+  if (! multiline) fprintf (output, "\n");
   return(0);
 }
 
 /* sets up and performs the database query, and handles the results */
-static int doQuery (char *objectType, char **displays, char **filters)
+static int doQuery (char *objectType, char **displays, char **filters,
+                    int validate, int unknownOption)
 {
   scm      *scmp = NULL;
   scmcon   *connect = NULL;
@@ -300,21 +311,36 @@ int main(int argc, char **argv)
   int i;
   int numDisplays = 0;
   int numClauses = 0;
+  int validate = 0;
+  int unknownOption = OPTION_SPECIAL;
 
   output = stdout;
+  useLabels = 1;
+  multiline = 0;
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
     return listOptions (argv[2]);
   }
-  if (strcasecmp (argv[1], "-a") == 0) {
-    if (argc > 2) return printUsage();
-    char *displays2[] = {"asn", "pathname", "ski", NULL};
-    return doQuery ("roa", displays2, NULL);
-  }
   for (i = 1; i < argc; i += 2) {
-    if (argc == (i+1)) return printUsage();
-    if (strcasecmp (argv[i], "-t") == 0) {
+    if (strcasecmp (argv[i], "-a") == 0) {
+      objectType = "roa";
+      displays [numDisplays++] = "filter_entry";
+      validate = 1;
+      useLabels = 0;
+      i--;
+    } else if (strcasecmp (argv[i], "-v") == 0) {
+      validate = 1;
+      i--;
+    } else if (strcasecmp (argv[i], "-n") == 0) {
+      useLabels = 0;
+      i--;
+    } else if (strcasecmp (argv[i], "-m") == 0) {
+      multiline = 1;
+      i--;
+    } else if (argc == (i+1)) {
+      return printUsage();
+    } else if (strcasecmp (argv[i], "-t") == 0) {
       objectType = argv[i+1];
     } else if (strcasecmp (argv[i], "-d") == 0) {
       displays [numDisplays++] = argv[i+1];
@@ -322,11 +348,16 @@ int main(int argc, char **argv)
       clauses [numClauses++] = argv[i+1];
     } else if (strcasecmp (argv[i], "-o") == 0) {
       output = fopen (argv[i+1], "w");
+    } else if (strcasecmp (argv[i], "-u") == 0) {
+      if (strncasecmp (argv[i+1], "v", 1) == 0)
+        unknownOption = OPTION_VALID;
+      else if (strncasecmp (argv[i+1], "i", 1) == 0)
+        unknownOption = OPTION_INVALID;
     } else {
       return printUsage();
     }
   }
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
-  return doQuery (objectType, displays, clauses);
+  return doQuery (objectType, displays, clauses, validate, unknownOption);
 }
