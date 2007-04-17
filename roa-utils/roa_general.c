@@ -14,7 +14,8 @@
 
 // A quick itoa implementation that works only for radix <= 10
 int itoa (int n, char* cN, int radix){
-  int i,j = 0;
+  int i = 0;
+  int j = 0;
   char* s;
 
   if ((radix > 10) ||
