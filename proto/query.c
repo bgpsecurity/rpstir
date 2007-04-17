@@ -93,6 +93,8 @@ int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
+static FILE *output;  /* place to print output (file or screen) */
+
 /* reads a roa from a file in order to determine the filter entry */
 int displayEntry (scmsrcha *s, int idx1, char* returnStr)
 {
@@ -107,8 +109,9 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
     fprintf (stderr, "Unknown roa extension for pathname: %s\n", returnStr);
     return 2;
   }
-  roaFromFile (returnStr, FMT_PEM, 0, &roa);
-  roaGenerateFilter (roa, NULL, stdout);
+  checkErr (! roaFromFile (returnStr, format, 0, &roa),
+            "Error reading ROA: %s\n", returnStr);
+  roaGenerateFilter (roa, NULL, output);
   free (roa);
   returnStr[0] = 0;
   return 2;
@@ -134,9 +137,9 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
         sprintf (resultStr, "%d", *((unsigned int *) s->vec[result].valptr));
       result++;
     }
-    printf ("%s = %s ", field->heading, resultStr);
+    fprintf (output, "%s = %s ", field->heading, resultStr);
   }
-  printf ("\n");
+  fprintf (output, "\n");
   return(0);
 }
 
@@ -272,7 +275,7 @@ static int printUsage()
 {
   printf ("\nPossible usages:\n  query -a\n");
   printf ("  query -l <type>\n");
-  printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>]\n\nSwitches:\n");
+  printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outFile>]\n\nSwitches:\n");
   printf ("  -a: short cut for type=roa, no clauses, and display ski, asn, and addrrng\n");
   printf ("  -l: list the possible display fields and clauses for a given type\n");
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
@@ -280,6 +283,7 @@ static int printUsage()
   printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
   printf ("      (eq, ne, gt, lt, ge, le)\n\n");
+  printf ("  -o: name of output file for the results (omitted = screen)\n");
   return -1;
 }
 
@@ -291,6 +295,7 @@ int main(int argc, char **argv)
   int numDisplays = 0;
   int numClauses = 0;
 
+  output = stdout;
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
@@ -309,6 +314,8 @@ int main(int argc, char **argv)
       displays [numDisplays++] = argv[i+1];
     } else if (strcasecmp (argv[i], "-f") == 0) {
       clauses [numClauses++] = argv[i+1];
+    } else if (strcasecmp (argv[i], "-o") == 0) {
+      output = fopen (argv[i+1], "w");
     } else {
       return printUsage();
     }
