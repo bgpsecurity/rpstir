@@ -273,17 +273,23 @@ static int listOptions (char *objectType)
 
 static int printUsage()
 {
-  printf ("\nPossible usages:\n  query -a\n");
+  printf ("\nPossible usages:\n  query -a [-o <outfile>] [-u <option>]\n");
   printf ("  query -l <type>\n");
-  printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outFile>]\n\nSwitches:\n");
-  printf ("  -a: short cut for type=roa, no clauses, and display ski, asn, and addrrng\n");
+  printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-v] [-n] [-m]\n\nSwitches:\n");
+  printf ("  -a: short cut for -t roa -d filter_entry -v -n\n");
+  printf ("  -o: name of output file for the results (omitted = screen)\n");
+  printf ("  -u: what to do when validating and encounter a cert in state unknown\n");
+  printf ("      options: valid (print to output anyway), invalid (ignore),\n");
+  printf ("               and special (write to separate file unknown.out)\n");
   printf ("  -l: list the possible display fields and clauses for a given type\n");
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
   printf ("  -d: the name of one field of the object to display\n");
   printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
-  printf ("      (eq, ne, gt, lt, ge, le)\n\n");
-  printf ("  -o: name of output file for the results (omitted = screen)\n");
+  printf ("      (eq, ne, gt, lt, ge, le)\n");
+  printf ("  -v: only display valid roa's and cert's\n");
+  printf ("  -n: no labels for the data fields displayed\n");
+  printf ("  -m: multiline, i.e. each field on a different line\n\n");
   return -1;
 }
 
