@@ -7,11 +7,13 @@
 #include "scm.h"
 #include "scmf.h"
 #include "err.h"
+#include "roa_utils.h"
 
 /****************
  * This is the query client, which allows a user to read information
  * out of the database and the repository.
- * The standard query is to read all ROA's from the DB and print them out.
+ * The standard query is to read all ROA's from the DB and out their
+ * BGP filter entries.
  * However, there are options to read any type of objects, choosing
  * a variety of different values to display, and filtering based on
  * a variety of different fields.
@@ -22,28 +24,30 @@
 
 typedef int (*displayfunc)(scmsrcha *s, int idx1, char* returnStr);
 
-typedef struct _QueryField	/* field to display or filter on */
+typedef struct _QueryField    /* field to display or filter on */
 {
-  char     *name;		/* name of the field */
-  int      justDisplay;         /* true if not allowed to filter on field */
-  int      forROAs;             /* true if field is used in a ROA */
-  int      forCRLs;             /* true if field is used in a CRL */
-  int      forCerts;            /* true if field is used in a cert */
-  int      sqlType;             /* what type of data to expect from query */
-  int      maxSize;             /* how much space to allocate for response */
-  char     *dbColumn;           /* if not NULL, use this for query, not name */
-  char     *otherDBColumn;      /* if not NULL, second field for query */
-  char     *heading;            /* name of column heading to use in printout */
-  int      requiresJoin;        /* do join with dirs table to get dirname */
-  displayfunc displayer;        /* function for display string, NULL if std */
-  char     *description;        /* one-line description for user help */
+  char     *name;	      /* name of the field */
+  int      justDisplay;       /* true if not allowed to filter on field */
+  int      forROAs;           /* true if field is used in a ROA */
+  int      forCRLs;           /* true if field is used in a CRL */
+  int      forCerts;          /* true if field is used in a cert */
+  int      sqlType;           /* what type of data to expect from query */
+  int      maxSize;           /* how much space to allocate for response */
+  char     *dbColumn;         /* if not NULL, use this for query, not name */
+  char     *otherDBColumn;    /* if not NULL, second field for query */
+  char     *heading;          /* name of column heading to use in printout */
+  int      requiresJoin;      /* do join with dirs table to get dirname */
+  displayfunc displayer;      /* function for display string, NULL if std */
+  char     *description;      /* one-line description for user help */
 } QueryField;
 
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
-int addrrngDisplay (scmsrcha *s, int idx1, char* returnStr);
+int displayEntry (scmsrcha *s, int idx1, char* returnStr);
 
 /* the set of all query fields */
 static QueryField fields[] = {
+  {"filter_entry", 1, 1, 0, 0, -1, 0, "dirname", "filename", "Filter Entry",
+   1, displayEntry, "the entry in the BGP filter file"},
   {"filename", 0, 1, 1, 1, SQL_C_CHAR, 256, NULL, NULL, "Filename", 0,
    NULL, "the filename where the data is stored in the repository"},
   {"pathname", 1, 1, 1, 1, -1, 0, "dirname", "filename",
@@ -57,8 +61,6 @@ static QueryField fields[] = {
    "authority key identifier"},
   {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS #", 0, NULL,
    "autonomous system number"},
-  {"addrrng", 1, 1, 0, 0, -1, 0, "dirname", "filename", "IP Addr Range", 1,
-   addrrngDisplay, "IP address range"},
   {"issuer", 0, 0, 0, 1, SQL_C_CHAR, 512, NULL, NULL, "Issuer", 0,
    NULL, "system that issued the cert/crl"},
   {"valfrom", 0, 0, 0, 1, SQL_C_CHAR, 32, NULL, NULL, "Valid From", 0,
@@ -91,32 +93,35 @@ int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
-/* reads a roa from a file in order to determine the address range */
-int addrrngDisplay (scmsrcha *s, int idx1, char* returnStr)
+/* reads a roa from a file in order to determine the filter entry */
+int displayEntry (scmsrcha *s, int idx1, char* returnStr)
 {
-  s = s; idx1 = idx1; returnStr = returnStr;
-/*
   struct ROA *roa;
-  int status;
-
   (void) pathnameDisplay (s, idx1, returnStr);
-  // ??????????? should this do internal validation in call ??????????????
-  status = roaFromFile (returnStr, 0, 1, &roa);
-  // ??????????? should this do database validation after call ???????????
-  sprintf (returnStr, "Unimplemented");
-  roaFree (roa);
-*/
+  int format = -1;
+  if (strncmp (".pem", &returnStr[strlen(returnStr)-4], 4) == 0)
+    format = FMT_PEM;
+  else if (strncmp (".der", &returnStr[strlen(returnStr)-4], 4) == 0)
+    format = FMT_DER;
+  else {
+    fprintf (stderr, "Unknown roa extension for pathname: %s\n", returnStr);
+    return 2;
+  }
+  roaFromFile (returnStr, FMT_PEM, 0, &roa);
+  roaGenerateFilter (roa, NULL, stdout);
+  free (roa);
+  returnStr[0] = 0;
   return 2;
 }
 
-static QueryField *globalFields[MAX_VALS]; /* for passing into handleResults */
+static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 
 /* callback function for searchscm that prints the output */
 static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 {
   int result = 0;
   int display;
-  char resultStr[4096];
+  char resultStr[10000];
   conp = conp; numLine = numLine;  // silence compiler warnings
   for (display = 0; globalFields[display] != NULL; display++) {
     QueryField *field = globalFields[display];
@@ -144,7 +149,7 @@ static int doQuery (char *objectType, char **displays, char **filters)
   scmsrcha srch;
   scmsrch  srch1[MAX_VALS];
   char     whereStr[MAX_CONDS*20];
-  char     errMsg[1024], heading[4096], underlines[4096];
+  char     errMsg[1024];
   int      srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
   unsigned long blah = 0;
   int      i, j, proceed, status;
@@ -209,17 +214,9 @@ static int doQuery (char *objectType, char **displays, char **filters)
   srch.nused = 0;
   srch.vald = 0;
   srch.context = &blah;
-  heading[0] = 0;
-  underlines[0] = 0;
   for (i = 0; displays[i] != NULL; i++) {
     field = findField (displays[i]);
     checkErr (field == NULL, "Unknown field name: %s\n", displays[i]);
-    (void) strcat (heading, field->heading);
-    (void) strcat (heading, "  ");
-    for (j = 0; j < (int) strlen (field->heading); j++) {
-      (void) strcat (underlines, "-");
-    }
-    (void) strcat (underlines, "  ");
     globalFields[i] = field;
     name = (field->dbColumn == NULL) ? displays[i] : field->dbColumn;
     while (name != NULL) {
@@ -238,7 +235,6 @@ static int doQuery (char *objectType, char **displays, char **filters)
   globalFields[i] = NULL;
 
   /* do query */
-  printf ("%s\n%s\n", heading, underlines);
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
   for (i = 0; i < srch.nused; i++) {
     free (srch1[i].valptr);
@@ -274,9 +270,9 @@ static int listOptions (char *objectType)
 
 static int printUsage()
 {
-  printf ("\nPossible usages:\n  doQuery -a\n");
-  printf ("  doQuery -l <type>\n");
-  printf ("  doQuery -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>]\n\nSwitches:\n");
+  printf ("\nPossible usages:\n  query -a\n");
+  printf ("  query -l <type>\n");
+  printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>]\n\nSwitches:\n");
   printf ("  -a: short cut for type=roa, no clauses, and display ski, asn, and addrrng\n");
   printf ("  -l: list the possible display fields and clauses for a given type\n");
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
