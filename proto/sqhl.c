@@ -1194,132 +1194,92 @@ typedef struct _mcf
   scmtab *ctab;
   scmtab *rtab;
   int     did;
+  int     toplevel;
 } mcf;
 
+static int rparents(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int flags;
+  mcf *mymcf;
+
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
+  mymcf = (mcf *)(s->context);
+  flags = *(unsigned int *)(s->vec->valptr);
+  if ( (flags & SCM_FLAG_VALID) != 0 && (flags & SCM_FLAG_CA) == 0 )
+    mymcf->did++;
+  return(0);
+}
+
 /*
-  Revoke a ROA
+  This function returns the number of valid certificates that
+  have and ski=SK and do not have the CA bit set, or a negative error
+  code on failure.
+*/
+
+static int countvalidroaparents(scmcon *conp, scmsrcha *s, char *SK)
+{
+  unsigned int flags = 0;
+  scmsrcha srch;
+  scmsrch  srch1;
+  scmkva   where;
+  scmkv    w;
+  mcf     *mymcf;
+  int      cnt2;
+  int      cnt;
+  int      sta;
+
+  mymcf = (mcf *)(s->context);
+  w.column = "ski";
+  w.value = SK;
+  where.vec = &w;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  srch1.colno = 1;
+  srch1.sqltype = SQL_C_ULONG;
+  srch1.colname = "flags";
+  srch1.valptr = (void *)&flags;
+  srch1.valsize = sizeof(unsigned int);
+  srch1.avalsize = 0;
+  srch.vec = &srch1;
+  srch.sname = NULL;
+  srch.ntot = 1;
+  srch.nused = 1;
+  srch.vald = 0;
+  srch.where = &where;
+  cnt = mymcf->did;
+  mymcf->did = 0;
+  srch.context = (void *)mymcf;
+  sta = searchscm(conp, mymcf->ctab, &srch, NULL, rparents,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta < 0 )
+    return(sta);
+  cnt2 = mymcf->did;
+  mymcf->did = cnt;
+  return(cnt2);
+}
+
+/*
+  Revoke a ROA. Check to see if it has been reparented first, however.
 */
 
 static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
 {
   unsigned int lid;
   mcf   *mcfp;
-#ifdef NOTDEF
-  unsigned int pflags;
-  scmkva where;
-  scmkv  one;
-  char   lid[24];
-#endif
+  char   ski[512];
   int    sta;
 
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
-#ifdef NOTDEF
-// this code path changes the ROA to not valid
-  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
-  one.column = "local_id";
-  one.value = &lid[0];
-  where.vec = &one;
-  where.ntot = 1;
-  where.nused = 1;
-  where.vald = 0;
-  sta = getflagsidscm(conp, mcfp->rtab, &where, &pflags, NULL);
-  if ( sta < 0 )
-    return(sta);
-  pflags &= ~SCM_FLAG_VALID;
-  pflags |= SCM_FLAG_REVOKED;
-  sta = setflagsscm(conp, mcfp->rtab, &where, pflags);
-#else
-// this code path actually deletes the ROA
   lid = *(unsigned int *)(s->vec[0].valptr);
+  (void)strcpy(ski, (char *)(s->vec[1].valptr));
+  if ( countvalidroaparents(conp, s, ski) > 0 )
+    return(0);
   sta = deletebylid(conp, mcfp->rtab, lid);
-#endif
   if ( sta == 0 )
     mcfp->did++;
-  return(sta);
-}
-
-/*
-  This is the model revocation function for certificates. Given a
-  certificate it revokes it and all its children (including ROA
-  children).
-*/
-
-static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
-{
-#ifdef NOTDEF
-  unsigned int pflags = 0;
-#endif
-  unsigned int lid;
-  scmkva  cwhere;
-  scmkva *ow;
-  scmkv   cone;
-  mcf    *mcfp;
-  char    s1[256];
-#ifdef NOTDEF
-  char    lidstr[24];
-  scmkv   one;
-  scmkva  where;
-#endif
-  int     sta;
-
-  UNREFERENCED_PARAMETER(idx);
-  mcfp = (mcf *)(s->context);
-// first revoke the certificate itself
-#ifdef NOTDEF
-// this code path just changes the flags on the certificate
-  (void)sprintf(lidstr, "%u", *(unsigned int *)(s->vec[0].valptr));
-  (void)strcpy(s1, (char *)(s->vec[1].valptr));
-  one.column = "local_id";
-  one.value = &lidstr[0];
-  where.vec = &one;
-  where.ntot = 1;
-  where.nused = 1;
-  where.vald = 0;
-  sta = getflagsidscm(conp, mcfp->ctab, &where, &pflags, NULL);
-  if ( sta < 0 )
-    return(sta);
-  pflags &= ~SCM_FLAG_VALID;
-  pflags |= SCM_FLAG_REVOKED;
-  sta = setflagsscm(conp, mcfp->ctab, &where, pflags);
-  if ( sta < 0 )
-    return(sta);
-#else
-// this code path actually deletes the certificate
-  lid = *(unsigned int *)(s->vec[0].valptr);
-  (void)strcpy(s1, (char *)(s->vec[1].valptr));
-  sta = deletebylid(conp, mcfp->ctab, lid);
-  if ( sta < 0 )
-    return(sta);
-#endif
-  mcfp->did++;
-// next, revoke all certificate children of this certificate
-  cone.column = "aki";
-  cone.value = s1;
-  cwhere.vec = &cone;
-  cwhere.ntot = 1;
-  cwhere.nused = 1;
-  cwhere.vald = 0;
-  ow = s->where;
-  s->where = &cwhere;
-//  (void)printf("Searching for certs with aki=%s\n", s1);
-  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-  if ( sta == ERR_SCM_NODATA )
-    sta = 0;			/* ok if no such children */
-  if ( sta < 0 )
-    {
-      s->where = ow;
-      return(sta);
-    }
-// finally, revoke all ROA children of this certificate
-  cone.column = "ski";
-//  (void)printf("Searching for ROAs with ski=%s\n", s->where->vec[0].value);
-  sta = searchscm(conp, mcfp->rtab, s, NULL, revoke_roa,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-  s->where = ow;
-  if ( sta == ERR_SCM_NODATA )
-    sta = 0;
   return(sta);
 }
 
@@ -1385,6 +1345,7 @@ static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
   srch.wherestr = &ws[0];
   cnt = mymcf->did;
   mymcf->did = 0;
+  srch.context = (void *)mymcf;
   sta = searchscm(conp, mymcf->ctab, &srch, NULL, cparents,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
@@ -1395,69 +1356,64 @@ static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
 }
 
 /*
-  This is an auxiliary recursive certificate revocation function.
-  It revokes a certificate (and its children) if and only if the
-  certificate has not been reparented.
+  This is the model revocation function for certificates. It handles
+  the case where a certificate is expired or revoked. Given that this
+  function can be called recursively it must be careful in what it does.
+  If the top level certificate it is handed has either the EXPIRED or
+  REVOKED bit set in its flags field, or the toplevel flag in the search
+  context, then it is deleted. If none of these bits it set then it checks
+  to see if it has been reparented. If it has not been reparented, it is deleted,
+  otherwise the function just returns.
+
+  If a certificate is deleted, then this function is invoked recursively
+  to check to see if any of its children (certificate children or ROA
+  children) also need to be deleted.
 */
 
-static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
+static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 {
-#ifdef NOTDEF
-  unsigned int pflags = 0;
-#endif
+  unsigned int pflags;
   unsigned int lid;
   scmkva  cwhere;
   scmkva *ow;
   scmkv   cone;
   mcf    *mcfp;
-  char    s1[512];
+  char    s1[256];
   char    a1[512];
   char    is[512];
-#ifdef NOTDEF
-  char    lidstr[24];
-  scmkv   one;
-  scmkva  where;
-#endif
+  int     dodel = 0;
   int     sta;
 
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
-/*
-  First check to see if the certificate has any valid parents. If
-  so, then this certificate has been reparented, and should not be
-  revoked (nor should its children). In this case, just return 0.
-*/
-  (void)strcpy(is, (char *)(s->vec[3].valptr));
-  (void)strcpy(a1, (char *)(s->vec[4].valptr));
-  if ( countvalidparents(conp, s, is, a1) > 0 )
-    return(0);
-// first revoke the certificate itself
-#ifdef NOTDEF
-// this code path just changes the flags on the certificate
-  (void)sprintf(lidstr, "%u", *(unsigned int *)(s->vec[0].valptr));
-  (void)strcpy(s1, (char *)(s->vec[1].valptr));
-  one.column = "local_id";
-  one.value = &lidstr[0];
-  where.vec = &one;
-  where.ntot = 1;
-  where.nused = 1;
-  where.vald = 0;
-  sta = getflagsidscm(conp, mcfp->ctab, &where, &pflags, NULL);
-  if ( sta < 0 )
-    return(sta);
-  pflags &= ~SCM_FLAG_VALID;
-  pflags |= SCM_FLAG_REVOKED;
-  sta = setflagsscm(conp, mcfp->ctab, &where, pflags);
-  if ( sta < 0 )
-    return(sta);
-#else
-// this code path actually deletes the certificate
+// if the cert has flags marked for deletion, or if this is a toplevel
+// invocation, then actually delete the cert
+  if ( mcfp->toplevel > 0 )
+    {
+      dodel = 1;
+      mcfp->toplevel = 0;
+    }
+  pflags = *(unsigned int *)(s->vec[2].valptr);
+  if ( (pflags & (SCM_FLAG_REVOKED|SCM_FLAG_EXPIRED)) != 0 )
+    {
+      *(unsigned int *)(s->vec[2].valptr) &= ~(SCM_FLAG_REVOKED|SCM_FLAG_EXPIRED);
+      dodel = 1;
+    }
+// if the cert has not otherwise been marked for deletion, but has not
+// been reparented, then actually delete the cert, otherwise just return
+  if ( dodel == 0 )
+    {
+      (void)strcpy(is, (char *)(s->vec[3].valptr));
+      (void)strcpy(a1, (char *)(s->vec[4].valptr));
+      if ( countvalidparents(conp, s, is, a1) > 0 )
+	return(0);
+      dodel = 1;
+    }
   lid = *(unsigned int *)(s->vec[0].valptr);
   (void)strcpy(s1, (char *)(s->vec[1].valptr));
   sta = deletebylid(conp, mcfp->ctab, lid);
   if ( sta < 0 )
     return(sta);
-#endif
   mcfp->did++;
 // next, revoke all certificate children of this certificate
   cone.column = "aki";
@@ -1469,7 +1425,7 @@ static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
   ow = s->where;
   s->where = &cwhere;
 //  (void)printf("Searching for certs with aki=%s\n", s1);
-  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children2,
+  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta == ERR_SCM_NODATA )
     sta = 0;			/* ok if no such children */
@@ -1504,13 +1460,16 @@ static int revoke_cert_and_children2(scmcon *conp, scmsrcha *s, int idx)
 int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		unsigned long long sn)
 {
+  unsigned int pflags;
   unsigned int lid;
   scmsrcha srch;
-  scmsrch  srch1[2];
+  scmsrch  srch1[5];
   scmkva   where;
   scmkv    w[3];
   mcf      mymcf;
-  char     ski[128];
+  char     ski[512];
+  char     laki[512];
+  char     is[512];
   char     sno[24];
   int      sta;
 
@@ -1526,6 +1485,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   if ( mymcf.rtab == NULL )
     return(ERR_SCM_NOSUCHTAB);
   mymcf.did = 0;
+  mymcf.toplevel = 1;
   w[0].column = "issuer";
   w[0].value = issuer;
   (void)sprintf(sno, "%lld", sn);
@@ -1547,12 +1507,29 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   srch1[1].sqltype = SQL_C_CHAR;
   srch1[1].colname = "ski";
   srch1[1].valptr = &ski[0];
-  srch1[1].valsize = 128;
+  srch1[1].valsize = 512;
   srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_ULONG;
+  srch1[2].valptr = (void *)&pflags;
+  srch1[2].valsize = sizeof(unsigned int);
+  srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_CHAR;
+  srch1[3].colname = "issuer";
+  srch1[3].valptr = &is[0];
+  srch1[3].valsize = 512;
+  srch1[3].avalsize = 0;
+  srch1[4].colno = 5;
+  srch1[4].sqltype = SQL_C_CHAR;
+  srch1[4].colname = "aki";
+  srch1[4].valptr = &laki[0];
+  srch1[4].valsize = 512;
+  srch1[4].avalsize = 0;
   srch.vec = &srch1[0];
   srch.sname = NULL;
-  srch.ntot = 2;
-  srch.nused = 2;
+  srch.ntot = 5;
+  srch.nused = 5;
   srch.vald = 0;
   srch.where = &where;
   srch.wherestr = NULL;
@@ -1660,12 +1637,18 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
 static int certtooold(scmcon *conp, scmsrcha *s, int idx)
 {
   char *ws;
+  int   tl;
   int   sta;
+  mcf  *mymcf;
 
   ws = s->wherestr;
   s->wherestr = NULL;
-  sta = revoke_cert_and_children2(conp, s, idx);
+  mymcf = (mcf *)(s->context);
+  tl = mymcf->toplevel;
+  mymcf->toplevel = 1;
+  sta = revoke_cert_and_children(conp, s, idx);
   s->wherestr = ws;
+  mymcf->toplevel = tl;
   return(sta);
 }
 
@@ -1707,6 +1690,7 @@ int certificate_validity(scm *scmp, scmcon *conp)
   mymcf.ctab = ctab;
   mymcf.rtab = rtab;
   mymcf.did = 0;
+  mymcf.toplevel = 0;
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
     return(sta);
@@ -1725,8 +1709,8 @@ int certificate_validity(scm *scmp, scmcon *conp)
   (void)sprintf(vt, "valto < \"%s\"", now);
   free((void *)now);
 // search for certificates that might now be valid
-// in order to use revoke_cert_and_children the first two
-// columns of the search must be the lid and the ski
+// in order to use revoke_cert_and_children the first five
+// columns of the search must be the lid, ski, flags, issuer and aki
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_ULONG;
   srch1[0].colname = "local_id";
