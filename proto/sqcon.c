@@ -1382,3 +1382,43 @@ int setcertptr(scm *scmp, scmcon *conp, unsigned int crlid,
   free((void *)stmt);
   return(sta);
 }
+
+/*
+  This specialized function updates the appropriate xx_last field in the
+  metadata table for the indicated time when the client completed.
+*/
+
+int updateranlastscm(scmcon *conp, scmtab *mtab, char what, char *now)
+{
+  char  stmt[256];
+  char *ent;
+  int   sta;
+
+  if ( conp == NULL || conp->connected == 0 || now == NULL || now[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  switch ( what )
+    {
+    case 'r':
+    case 'R':
+      ent = "rs_last";
+      break;
+    case 'g':
+    case 'G':
+      ent = "gc_last";
+      break;
+    case 'q':
+    case 'Q':
+      ent = "qu_last";
+      break;
+    case 'c':
+    case 'C':
+      ent = "ch_last";
+      break;
+    default:
+      return(ERR_SCM_INVALARG);
+    }
+  (void)sprintf(stmt, "UPDATE %s SET %s=\"%s\" WHERE local_id=1;",
+		mtab->tabname, ent, now);
+  sta = statementscm(conp, stmt);
+  return(sta);
+}

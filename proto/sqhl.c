@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <fam.h>
+#include <ctype.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -1651,6 +1652,9 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
 /*
   This is the callback for certificates that are too old, e.g. no longer
   valid. Delete them (and their children) unless they have been reparented.
+
+  GAGNON: must delete expired cert.
+  GAGNON: check to see if ROAs reparented also
 */
 
 static int certtooold(scmcon *conp, scmsrcha *s, int idx)
@@ -1778,4 +1782,33 @@ int certificate_validity(scm *scmp, scmcon *conp)
   if ( sta < 0 && sta != ERR_SCM_NODATA && retsta == 0 )
     retsta = sta;
   return(retsta);
+}
+
+/*
+  Update the metadata table to indicate when a particular client ran last.
+*/
+
+int ranlast(scm *scmp, scmcon *conp, char *whichcli)
+{
+  scmtab *mtab;
+  char   *now;
+  char    what;
+  int     sta = 0;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
+       whichcli == NULL || whichcli[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  what = toupper(whichcli[0]);
+  if ( what != 'R' && what != 'Q' && what != 'C' && what != 'G' )
+    return(ERR_SCM_INVALARG);
+  mtab = findtablescm(scmp, "METADATA");
+  if ( mtab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  conp->mystat.tabname = "METADATA";
+  now = LocalTimeToDBTime(&sta);
+  if ( now == NULL )
+    return(sta);
+  sta = updateranlastscm(conp, mtab, what, now);
+  free((void *)now);
+  return(sta);
 }

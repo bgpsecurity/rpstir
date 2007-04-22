@@ -1133,6 +1133,7 @@ int main(int argc, char **argv)
   sta = certificate_validity(scmp, realconp);
   (void)printf("Certificate_validity status was %d\n", sta);
 #endif
+  (void)ranlast(scmp, realconp, "RSYNC");
   if ( realconp != NULL )
     disconnectscm(realconp);
   freescm(scmp);

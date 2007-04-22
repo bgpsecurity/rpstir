@@ -126,6 +126,7 @@ extern int   updateblobscm(scmcon *conp, scmtab *tabp,
 			   unsigned int lid);
 extern int   setcertptr(scm *scmp, scmcon *conp, unsigned int crlid,
 			char *issuer, char *aki);
+extern int   updateranlastscm(scmcon *conp, scmtab *mtab, char what, char *now);
 
 /*
   Macros

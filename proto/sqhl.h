@@ -76,6 +76,7 @@ extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 			 unsigned long long sn);
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
 extern int   certificate_validity(scm *scmp, scmcon *conp);
+extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
