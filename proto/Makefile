@@ -4,7 +4,7 @@
 # Makefile for mysql and openssl test programs
 #
 
-all:	sqq docert rcli query chaser garbage makeROA #initscm
+all:	rcli query chaser garbage makeROA
 
 CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../roa-utils -I../cg/asn -I../cg/casn -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers -DHAVE_LONG_LONG
 
@@ -14,10 +14,6 @@ sqq:	sqq.o Makefile
 docert:	docert.o Makefile
 	gcc -o docert -g -L/usr/local/ssl/lib docert.o -lssl -lcrypto -ldl
 
-initscm:	initscm.o Makefile
-	gcc -o initscm -g -L/usr/local/ssl/lib initscm.o
-
-initscm.o:	scm.h scmmain.h Makefile
 diru.o:	diru.h
 sqhl.o:	sqhl.h myssl.h
 rcli.o:	scm.h scmf.h sqhl.h myssl.h diru.h
