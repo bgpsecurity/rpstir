@@ -1,0 +1,97 @@
+\documentclass[11pt]{article}
+\sloppy
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{fullpage}
+\usepackage{comment}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{subfigure}
+\usepackage{mdwlist}
+\usepackage{url}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+
+%\usepackage{lineno}
+
+%\linenumbers
+
+\textwidth = 6.9 in
+%\textheight = 9 in
+\oddsidemargin = 0.0 in
+\evensidemargin = 0.0 in
+\topmargin = 0.0 in
+\headheight = 0.0 in
+\headsep = 0.0 in
+%\parskip = 0.2in
+%\parindent = 0.0in
+
+\renewcommand\floatpagefraction{.9}
+\renewcommand\topfraction{.9}
+\renewcommand\bottomfraction{.9}
+\renewcommand\textfraction{.1}
+
+\newcommand{\ignore}[1]{}
+
+\newcommand{\xor}{\ensuremath{\oplus}}
+\newcommand{\negl}{\ensuremath{\mbox{neg}}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\theoremstyle{remark}
+\newtheorem{rem}[thm]{Remark}
+%\newtheorem{assumpt}[thm]{Assumption}
+
+\newcommand{\nump}{\ensuremath{\ell}}
+\newcommand{\nums}{\ensuremath{k}}
+%\newcommand{\numm}{\ensuremath{t}}
+
+
+\bibliographystyle{plain}
+
+\title{Distributed, Threshold Signing for PKI Root}
+\author{Lea Kissner \\ leak@bbn.com \and Peiter Zatko \\ mudge@bbn.com}
+\date{}
+\begin{document}
+\maketitle
+
+%\input{intro}
+\input{newintro}
+\input{operation}
+\input{overview}
+\input{keygen}
+\input{use-box}
+\input{how-sign}
+\input{refresh}
+\input{conclusion}
+
+\vspace{.25in}
+{\bf Acknowledgments:} We would like to thank Steve Kent for his
+insightful comments as well as Derrick Kong and Charlie Gardiner for
+their help in software testing.
+
+
+\bibliography{pki}
+
+
+\appendix
+
+\input{notation}
+\input{proof}
+\input{keygen-detail}
+\input{code}
+\input{details}
+
+
+\end{document}

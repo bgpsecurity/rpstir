@@ -1,0 +1,58 @@
+\begin{thebibliography}{10}
+
+\bibitem{sig-code}
+Java threshold signature package project.
+\newblock \url{https://sourceforge.net/projects/threshsig}.
+
+\bibitem{sidr-arch}
+Russ Barnes and Stephen Kent.
+\newblock An infrastructure to support secure internet routing.
+
+\bibitem{spv}
+Y.~Hu, A.~Perrig, and M.~Sirbu.
+\newblock Spv: Secure path vector routing for securing bgp.
+\newblock In {\em Proceedings of ACM Sigcomm}, August 2004.
+
+\bibitem{s-bgp1}
+S.~Kent, C.~Lynn, and K.~Seo.
+\newblock Secure border gateway protocol (sbgp).
+\newblock {\em IEEE Journal on Selected Areas in Communications},
+  18(4):58--592, April 2000.
+
+\bibitem{psbgp}
+E.~Kranakis, P.C. van Oorschot, and T.~Wan.
+\newblock On interdomain routing security and pretty secure bgp (psbgp).
+\newblock Technical Report TR-05-08, Carleton University, 2005.
+\newblock
+  \url{http://www.scs.carleton.ca/research/tech_reports/2005/download/TR-05-08%
+.pdf}.
+
+\bibitem{bgp}
+Y.~Rekhter and T.~Li.
+\newblock A border gateway protocol 4 (bgp-4).
+\newblock RFC 4271, 2006.
+
+\bibitem{s-bgp2}
+K.~Seo, C.~Lynn, and S.~Kent.
+\newblock Public-key infrastructure for the secure border gateway protocol
+  (s-bgp).
+\newblock In {\em Proceedings of DARPA Information Survivability Conference and
+  Exposition (DISCEX)}, June 2001.
+
+\bibitem{shamirshare}
+Adi Shamir.
+\newblock How to share a secret.
+\newblock {\em Communications of the ACM}, 22:612--613, 1979.
+
+\bibitem{shoup-sig}
+Victor Shoup.
+\newblock Practical threshold signatures.
+\newblock In {\em Proceedings of Eurocrypt}, 2000.
+
+\bibitem{sobgp}
+R.~White.
+\newblock Architecture and deployment considerations for secure origin bgp
+  (sobgp).
+\newblock draft-white-sobgp-architecture-01, May 2005.
+
+\end{thebibliography}

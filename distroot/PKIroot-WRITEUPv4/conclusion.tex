@@ -1,0 +1,20 @@
+\section{Conclusion}
+
+
+To increase both availability and security of a PKI root, a collection
+of responsible parties may share the root signing key between
+them. They must carefully and jointly generate the key in order to
+ensure that each gains a secret share of the signing key. When data
+must be signed, the requesting player sends it to all other
+players. Those players then decide whether it is valid data that
+should be signed. If it is, the players each create a signature share
+from that data and their secret key share and return the signature
+share to the requesting player. The requesting player then combines
+the signature shares into a complete RSA signature valid under the
+root signing key. In order to guard against the known or unknown
+compromise of signature shares, the root collective should refresh
+their key shares periodically. Key refresh allows the players to
+obtain new key shares without changing the public key. Given the
+logistical and security issues surrounding public key distribution,
+key refresh allows more practical recovery compromise of a small
+number of key shares.

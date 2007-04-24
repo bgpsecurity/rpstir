@@ -1,0 +1,67 @@
+\section{Overview and Procedures}
+\label{sec:overview}
+
+
+In order to operate a distributed signing root based on threshold
+signatures, the \nump\ players in the root collective must first
+determine \nums, the number of players required to create a
+signature. This must be chosen such that the maximum number of
+malicious or compromised players always be less then \nums. (For our
+proposal, we recommend $\ell=5$, $k=3$.) They then gather to create a
+common public key; each player gets one share of the secret key. In
+Section~\ref{sec:keygen}, we describe this process, as well as the
+physical and computational security precautions to be taken.
+
+Each player returns to their operations center with a share of the
+root signing key on removable media, which they load into the
+computational device that will construct signature shares. We discuss
+some of the issues involved in utilizing secured cryptographic signing
+boxes for this purpose in Section~\ref{sec:use-box}.
+
+Any \nums\ players of the root collective can now collaborate to sign
+data such that it can be verified with the root public key. When one
+player decides to sign some data, that player sends it to all other
+players. Each of these players examines the data for correct structure
+and content (e.g., that the address space being allocated is being
+correctly assigned). Each signing player then uses their secret share
+of the root signing key to produce a signature share, then sends this
+share to the requesting player. Once the requesting player has
+gathered valid signature shares from \nums\ distinct players, the
+requesting player combines them into a signature valid under the root
+verification key. We show how these signature shares are constructed
+and combined in Section~\ref{sec:how-sign}, as well as discuss
+procedures for producing signatures and identifying malicious or
+compromised players.
+\ignore{
+Key shares can be silently compromised by malicious entities who learn
+secret signing key shares. To guard against this, the root collective
+should periodically refresh their key shares. This process allows them
+to acquire new key shares without changing the public key. As securely
+distributing a new root verification key for a PKI is so difficult,
+this approach improves both security and practicality. We discuss an
+approach to refreshing key shares in Section~\ref{sec:refresh}.
+}
+
+Private key shares should be well protected. However, through
+administrative error or other means it is possible that a private
+key share might become known to a malicious entity. To protect against
+such an entity from obtaining enough private key shares that they can
+sign data as the root of the PKI, we recommend that the root
+collective periodically refresh their private key shares. A refresh of
+private key shares produces new key shares for each one of the
+participants without requiring a new public key to be issued. This
+removes the overhead and complexity involved in introducing a new root
+key unrelated to previously-issued certificates while maintaining
+security in regards to known and unknown key share compromise. We
+discuss several approaches to refreshing key shares in
+Section~\ref{sec:refresh}.
+
+\ignore{
+In Section~\ref{sec:code}, we describe code for operating a
+distributed signature root collective based on Shoup's threshold RSA
+signature scheme~\cite{shoup-sig}. This includes code for key
+generation, producing signature shares (including all the options we
+discuss in Section~\ref{sec:how-sign}), combining these signature
+shares into a threshold signature, and refreshing each players' secret
+key.
+}

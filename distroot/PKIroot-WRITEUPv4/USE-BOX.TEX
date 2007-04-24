@@ -1,0 +1,22 @@
+\section{How to Utilize a Secure Computing Device}
+\label{sec:use-box}
+
+For reasons of security and confidence, we recommend that participants
+employ secure computing devices for the storage and usage of their
+secret key shares.  Once each player has received their secret key
+share, the player can transfer it to the secure computing device used
+to create signatures (see Section~\ref{sec:how-sign} for more
+information on creating signatures). Specifically, player $i$ ($1 \leq
+i \leq \nump$) who received secret key share $s_i$ at the key
+generation ceremony (see Section~\ref{sec:keygen}) will create
+standard RSA signatures as his signature shares, using a key of $2 s_i
+\nump !$. (For the five RIRs, $\nump ! = 120$.) 
+
+Interfaces to such secure devices vary. For this reason, we
+recommend that the devices that are to be used be PKCS \#11
+compliant. An example of one such device is SafeNet's Luna SA.  The
+player can load his signing key share into such a HSM. (We give
+specific directions for SafeNet's Luna devices in
+Appendix~\ref{sec:use-box-detail}.) The player may then create
+signature shares as standard RSA signatures using the secret key in
+the HSM.

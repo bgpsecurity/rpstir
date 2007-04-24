@@ -1,0 +1,40 @@
+\section{API and Implementation Details}
+
+ \subsection{Hardware Key Generation}
+\label{sec:hardgen}
+
+While hardware key generation entails greater logistical and security complexity, they can generate cryptographic keys using better entropy sources than available on most computers. The following directions were provided by SafeNet for SafeNet's Luna line of hardware security modules\footnote{This information is courtesy of Robert
+Woodward, Alan Boyd, Mark Yakabuski, and Ben Hanrahan at SafeNet,
+Inc.}:
+\begin{enumerate}
+\item Generate the key using the PKCS call {\tt C\_GenerateKeyPair(... CKM\_RSAX\_9\_31\_KKEY\_PAIR\_GEN, ...}, as this mechanism is FIPS approved
+\item Extract the private key from the hardware device. \\
+	{\tt C\_GenerateKey( ... CKM\_AES\_KEY\_GEN, ... pTemplate)} (This should set the {\tt CKA\_WRAP} and {\tt CKA\_DECRPYT} attributes to true and returns the handle of the AES key used to wrap the RSA key.) \\
+	{\tt C\_WrapKey(... CKM\_AES\_CBC\_PAD, wrapping key handle, handle of key to wrap)} (This returns  the wrapped key blob.) \\
+	{\tt C\_DecrypInit(... CKM\_AES\_CBC\_PAD, wrapping key handle)} \\
+	{\tt C\_Decrypt(... wrappedKeyBlob, ... , pData, ...)} ({\tt pData} will not contain the decrypted key in DER-encoded form.)
+\end{enumerate}
+Note that in order to export a key, the key export bit must be set on the hardware generation device. Once set, this bit cannot be cleared without wiping the device. Thus, we recommend using a separate device than the ones used for signing by the root collective.
+
+\subsection{}
+\label{sec:use-box-detail}
+
+Players can import a secret key into SafeNet's Luna devices as follows\footnote{This information is courtesy of Robert
+Woodward, Alan Boyd, Mark Yakabuski, and Ben Hanrahan at SafeNet,
+Inc.}:
+\begin{enumerate}
+\item Generate a 3DES or AES wrapping key on the HSM with both it's
+{\tt CKA\_ENCRYPT} and {\tt CKA\_UNWRAP} bits set
+
+\item DER encode (PKCS\#8) the RSA key and encrypt it ({\tt
+C\_Encrypt}) on the HSM with the wrapping key; this call returns the
+encrypted blob
+
+\item unwrap via {\tt C\_Unwrap} the encrypted blob on the HSM using the same
+wrapping key; this call returns the key handle of the imported RSA key
+\end{enumerate}
+The public key may be imported into the HSM using the {\tt
+C\_CreateObject} call from PKCS\#11.
+
+From this point, the player may create signature shares as standard
+RSA signatures using the secret key in the HSM.

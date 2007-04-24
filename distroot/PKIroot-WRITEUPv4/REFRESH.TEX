@@ -1,0 +1,210 @@
+\section{Issues Surrounding Key Refresh}
+\label{sec:refresh}
+
+Should it become known that one or more of the key shares (but less
+than the threshold required to perform signing) have become
+compromised, key refresh should be initiated. One must also take into
+account the fact that silent key share compromise might have occurred
+creating an unknown or undisclosed compromise scenario. To help
+prevent against both known and unknown compromise we recommend that
+the root collective refresh their key shares periodically in addition
+to mandatory refresh events due to known compromise.
+
+One possible key refresh schedule is three to four times per year at
+the regular meetings of the RIR representatives. Key refresh creates
+new signing key shares for each player that create signatures valid
+under the same public key. While they could instead generate shares
+corresponding a new public key each time, the logistical difficulties
+involved in distributing the new public key to every single end user
+makes this approach difficult. By refreshing their key shares, they
+can protect against an adversary silently gaining access to fewer
+than \nums\ shares of the secret key; the adversary must collect last
+least \nums\ key shares that were created together to forge
+signatures. Note that, because the public key does not change, attacks
+based only on knowledge of the public key, such as brute force and
+factoring, can proceed independent of key refreshing. The root
+collective must thus change their public key periodically as well, but
+at much greater intervals.
+
+First, the root collective generates new shares of the secret signing
+key. Then, they switch to signing with the new shares at an
+agreed-upon time.  It is imperative that each participant destroy
+their old key shares as soon as possible, as their continued existence
+creates extra risk. Should an attacker gain access to three key shares
+created at the same time, the attacker could successfully sign under
+the existing public key.
+
+
+%In this section we will present two different key refresh
+%scenarios, along with recommended procedures for each one.
+
+\ignore{
+\subsection{Physical presence, no key required.}
+All \nump\ players physically gather to refresh
+their keys. Procedural security should be as described in
+Section~\ref{sec:keygen}. Instead of running key generation software,
+however, the root collective should run key refreshing software. (We
+describe our software for key refresh, designed for this scenario, in
+Section~\ref{sec:code}.) Note that, because the players' secret keys
+are not required for this scenario, they do not need to add security
+to transport them to the key refresh meeting.
+
+Our code utilizes Shoup's threshold RSA signature
+scheme~\cite{shoup-sig}. Thus, each player $i$ has a secret key share
+$s_i$ defined as follows according to a polynomial secret sharing
+scheme, where $d,m$ is the root secret key and $\leftarrow$ indicates
+a uniform random choice of an element from a set:
+\begin{eqnarray*}
+a_0 & = & d \\
+a_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f(x) & = & \sum_{j=0}^{\nums-1} a_j x^j \\
+s_i & = & f(i)
+\end{eqnarray*}
+
+Note that we can define this related secret sharing scheme:
+\begin{eqnarray*}
+a_0 & = & d \\
+a_j & \leftarrow & \{ 0, \dots, m-1\} \\
+b_0 & = & 0 \\
+b_j & \leftarrow & \{ 0, \dots, \frac{n}{4}-1\} \\
+f_r(x) & = & \sum_{j=0}^{\nums-1} (a_j+b_j)x^j \\
+{s_r}_i & = & f_r(i)
+\end{eqnarray*}
+This produces key shares for each player corresponding to the same
+secret key as the original scheme, so the players can sign data under
+the same public root key using shares from the old scheme or the new
+scheme. (They cannot, however, mix shares created from different
+polynomials.) We now construct a key refresh scheme based on this fact:
+\begin{eqnarray*}
+b_0 & = & 0 \\
+b_j & \leftarrow & \{ 0, \dots, \frac{n}{4}-1\} \\
+f_b(x) & = & \sum_{j=0}^{\nums-1} b_j x^j \\
+{s_b}_i & = & f_b(i) \\
+s_i' & = & s_i + {s_b}_i \\
+     & = & \sum_{j=0}^{\nums-1} \left(a_j+\right)x^j
+\end{eqnarray*}
+The players thus construct a new random polynomial $f_b$ such that
+$f_b(0)=0$, giving each player $i$ ($1\leq i \leq \nump$) a refresh
+share ${s_b}_i$. Each player keeps this secret and transports it
+home. If no player's key share has been compromised, he then creates
+his new key share $s_i' = s_i + {s_b}_i$ and starts using it to sign
+data at the time decided upon by the root collective. In this way, the
+players can refresh their secret key shares without changing the
+public key. We show the security of this key refresh scheme in
+Appendix~\ref{sec:proof-refresh}.
+
+While this scheme has the advantage of reducing the risks of key
+transport, it does increase the size of each player's key share. After
+the players have refreshed their keys $r$ times, their shares are of
+size at most $1 + \lg m + (\nums -1)\lg \nump + (\nums-2) + r$, which
+for $\nump=5, \nums=3$ is an increase of at most $8+r$ bits.
+}
+
+%\subsection{Physical presence}
+%\label{sec:refresh-mod}
+
+%In some scenarios, the players cannot utilize our previous scheme
+%because their cryptographic hardware cannot use slightly larger secret
+%keys. If this is the case, 
+The players physically gather and bring their secret keys to the key
+refresh meeting. Transporting these keys requires physical and
+computational security measures similar to the key-transport
+protocols we describe in Section~\ref{sec:keygen}.
+
+The trusted official sends out a public key to all players; only the
+official knows the corresponding secret key. Each player encrypts
+their key share $s_i$ using this public key and loads it onto
+removable media, along with the public key required by the share
+generation procedure.  They then run key refresh software in the
+same manner as key generation software was run in
+Section~\ref{sec:keygen}. The trusted official loads the encrypted key
+shares into the computer to be utilized for the key refresh procedure
+and decrypts them. The official then utilizes the key refresh code to
+ensure that every key share is correct: if $k$ key shares combine to
+create a valid private key corresponding to the root public key, those
+key shares are correct. The trusted official then generates the new
+key shares using the key refresh code, destroys the old key shares,
+and distributes the new key shares as in Section~\ref{sec:keygen}.  We
+discuss a method for key refresh in Appendix~\ref{sec:proof-refresh}.
+
+
+
+%We do not provide code for this method of key refreshing; instead we
+%discuss the differences between this method and the less complex one
+%above.
+
+
+\ignore{
+
+Our code utilizes Shoup's threshold RSA signature
+scheme~\cite{shoup-sig}. Thus, each player $i$ has a secret key share
+$s_i$ defined as follows according to a polynomial secret sharing
+scheme, where $d,m$ is the root secret key and $\leftarrow$ indicates
+a uniform random choice of an element from a set:
+\begin{eqnarray*}
+a_0 & = & d \\
+a_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f(x) & = & \sum_{j=0}^{\nums-1} a_j x^j \\
+s_i & = & f(i)
+\end{eqnarray*}
+
+Note that we can define this related secret sharing scheme:
+\begin{eqnarray*}
+a_0 & = & d \\
+a_j & \leftarrow & \{ 0, \dots, m-1\} \\
+b_0 & = & 0 \\
+b_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f_r(x) & = & \sum_{j=0}^{\nums-1} (a_j+b_j)x^j \\
+{s_r}_i & = & f_r(i) \mod m
+\end{eqnarray*}
+This produces key shares for each player corresponding to the same
+secret key as the original scheme, so the players can sign data under
+the same public root key using shares from the old scheme or the new
+scheme. (They cannot, however, mix shares created from different
+polynomials.) We now construct a key refresh scheme based on this fact:
+\begin{eqnarray*}
+b_0 & = & 0 \\
+b_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f_b(x) & = & \sum_{j=0}^{\nums-1} b_j x^j \\
+{s_b}_i & = & f_b(i) \mod m \\
+s_i' & = & s_i + {s_b}_i \mod m \\
+     & = & \sum_{j=0}^{\nums-1} (a_j+b_j)x^j
+\end{eqnarray*}
+Given \nums\ key shares, computer code run by the players can run
+polynomial interpolation code to reconstruct $m$. The players thus construct a new random polynomial $f_b$ such that
+$f_b(0)=0$, giving each player $i$ ($1\leq i \leq \nump$) a new key share 
+$s_i'$. The players begin to use their new key shares to sign 
+data at the time decided upon by the root collective. In this way, the
+players can refresh their secret key shares without changing the
+public key. We show the security of this key refresh scheme in
+Appendix~\ref{sec:proof-refresh}.
+
+
+\subsection{No physical presence}
+
+If the root collective cannot physically gather to refresh their key
+shares, they can securely perform a modified version of the scheme we
+present above over a network connection. This setup has the advantage that the key shares do not have to physically travel to a key refresh meeting. Unfortunately, the players do have to put their key shares on a network-attached computer, which carries risks of its own.
+
+We have not written code for this key refresh scheme, but it can be written as general cryptographically multi-party computation~\cite{gbw}. Each step of the following algorithm is performed {\it obliviously} by the participants; they perform a computation without learning the intermediate or final results beyond their resulting key shares. Each message in the
+protocol must be signed with that player's secret key share and
+verified by the recipients.
+
+The players begin by reconstructing $m$ as we outline above. They then
+jointly choose random coefficients for the polynomial sharing scheme;
+player $i$ ($1 \leq i \leq \nump$) chooses $b_{i,1},\dots ,
+b_{i,\nums-1}$.
+\begin{eqnarray*}
+b_0 & = & 0 \\
+b_{i,j} & \leftarrow & \{ 0, \dots, m-1\} \\
+f_b(x) & = & \sum_{j=0}^{\nums-1} \left(\sum_{i=1}^\nump b_{i,j}\right) x^j \\
+{s_b}_i & = & f_b(i) \mod m \\
+s_i' & = & s_i + {s_b}_i \mod m \\
+     & = & \sum_{j=0}^{\nums-1} \left(a_j+\left(\sum_{i=1}^\nump b_{i,j}\right)\right)x^j \mod m
+\end{eqnarray*}
+
+Because $m$ and the coefficients $\sum_{i=1}^\nump b_{i,1}, \dots ,
+\sum_{i=1}^\nump b_{i,\nums-1}$ cannot be revealed, the players must
+cryptographically secure this computation. Each player $i$ ($1 \leq i
+\leq \nump$) must learn $s_i'$ and no other information. 
+}

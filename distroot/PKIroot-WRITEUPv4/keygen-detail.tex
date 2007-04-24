@@ -1,0 +1,106 @@
+\section{Detailed Key Generation Procedures}
+\label{sec:keygen-detail}
+
+In this section, we detail a list of requirements and procedures for
+the trusted ceremony official and the participants.
+
+The trusted official will be provided with the software required to
+load onto a laptop and perform the key generation in advance of the
+meeting. Each member will be given copies of the software in advance
+and will be permitted to verify that the software that the trusted
+official will load is the same as the software that they were provided
+for review.
+
+
+The trusted official provides:
+\begin{itemize}
+\item A generic laptop computer with CD-ROM drive and USB
+connection\footnote{USB is presented as an example option for
+removable media. If there are security concerns regarding USB devices,
+the participants could elect to use one-time recordable CD-ROMs or any
+other mutually agreed upon media.}, but without a hard disk.
+
+\item Software CD-ROM with the requisite OS loader and software that the
+trusted official will use and that can be examined by the participants
+prior to start.
+\item (optional) Hardware key generation device, such as SafeNet Luna PCMCIA.
+\end{itemize}
+
+{\noindent Each representative from the root collective provides the following:}
+\begin{itemize}
+\item A suitably equipped laptop with a CD-ROM drive
+\item A USB flash drive
+\item A RSA public key on either a CD-ROM or USB flash drive (this key
+pair must be generated only for this ceremony; the corresponding
+private key must be secret)
+\end{itemize}
+
+Once the official and RIR representatives verify that all participants
+are present and have brought the appropriate resources, setup may
+commence. All hardware should not be connected to any physical
+network, have all wireless capabilities turned off or removed, and
+should remain under the owners' control at all times.
+
+Each representative from the root collective boots their system. They
+are then provided with the CD-ROM containing the software that the
+trusted official will be using\footnote{The CD-ROM should be {\bf
+read-only}, alternatively the trusted official can make multiple
+copies of the CD-ROM in front of everyone (6 in this example), provide
+a CD-ROM to each participant and retain the final copy for use.}. The
+participants are permitted to copy the CD-ROM, examine its contents,
+and perform any checksum operations they feel necessary to foster a
+strong belief that the contents of the CD-ROM are correct and
+consistent with what they had previously been provided.
+
+The official boots their system from the software CD-ROM, which
+contains a bootable linux kernel that runs in RAM only.  Additionally,
+the CD-ROM contains the required software for key generation, key
+share splitting, handling the key shares, and
+sanitization. Sanitization software clears system memory and prevents
+aversaries from utilizing forensic capabilities to retrieve any
+portions of the private key shares.
+
+The official loads each of the public keys presented by the members of
+the root collective onto the system.  After this is accomplished the
+trusted official generates a new RSA public/private key pair and
+subsequently, using a software application, splits the RSA private key
+into key shares. The joint secret key is then destroyed. The key
+shares, one for each member of the root collective, are encrypted
+using the corresponding player's public key. The resulting encrypted
+key shares and root public key are loaded onto their respective USB
+memory sticks and returned to their owners. After the keys have been
+transferred, the sanitization software is executed to remove any
+remaining traces of the private key or private key shares from the
+official's system and the system is powered down.
+
+
+\ignore{
+
+
+
+The trusted official brings the following to the ceremony:
+\begin{itemize}
+\item Laptop computer with CD-ROM drive and USB connection, but no disk drive or network connection
+\item Bootable CD with a RAM-drive-based Linux distribution and key generation/splitting software
+\item (optional) Hardware key generation device, such as a SafeNet Luna PCMCIA
+\end{itemize}
+
+{\noindent Each member of the root collective brings the following to the ceremony:}
+\begin{itemize}
+\item A USB flash drive or CD containing an RSA public key, at least as strong as the key generated in this ceremony, generated for the occasion (the corresponding private key remains at the RIR's headquarters)
+\item (optional) A laptop with CD-ROM drive, suitable for copying the software CD and examining the code on it
+\end{itemize}
+
+{\noindent The ceremony then proceeds as follows in the presence of the root collective. At any point any member of the root collective may object to the security of the proceedings and stop the key generation ceremony.}
+\begin{enumerate}
+\item The trusted official presents the laptop for inspection; the laptop may not be touched by anyone other than the official, but he can open it and perform requested tests.
+\item The trusted official lets the members of the root collective copy the software CD (using the laptops they brought for the purpose) and examine the software. (Members of the root collective may examine the software later, as well. If they find a problem, they may object to the root key being used.)
+\item If a hardware key generator is being used, it is attached to the system. 
+\item The trusted official boots the laptop from the software CD-ROM (using a RAM disk) and loads the system.
+\item The trusted official generates a new RSA public/private key pair. (We discuss hardware key generation on SafeNet's Luna products in Appendix~\ref{sec:hardgen}.)
+\item Using a software application, the trusted official splits the RSA private key into key shares, one for each member of the root collective, and destroys the private key corresponding to the root public key.
+\item For each player, the trusted official inserts a player's USB flash drive, uses the public key loaded on that drive to encrypt that player's secret key share, then copies the encrypted key share and the root public key  to the flash drive. 
+\item The trusted official runs a cleanup application and powers down the key generation laptop. (If the laptop has other memory in it, such as a writable BIOS, the cleanup application or further action must be taken to erase the contents of that memory.)
+\end{enumerate}
+
+}

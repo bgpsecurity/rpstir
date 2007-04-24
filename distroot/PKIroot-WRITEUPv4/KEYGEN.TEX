@@ -1,0 +1,118 @@
+\section{How to Generate Keys}
+\label{sec:keygen}
+
+The first step in utilizing threshold signatures is to generate the
+root public key and corresponding private key shares. To ensure the
+security and integrity of these key shares, all players of the root
+collective will physically gather for the key generation ceremony.  We
+propose the security guidelines outlined in this section to prevent
+the key generation process from leaking private information or being
+biased in favour of any player.
+
+\subsection{Key Generation}
+
+Representatives of the RIRs meet in person several times per
+year. These conferences afford the opportunity for `out-of-band'
+creation of the root public key and private key shares.  Because the
+RIR representatives have previously met face-to-face, they can avoid
+the complex issues of remote identity verification by performing key
+generation during one of these gatherings. In addition, regular physical
+meetings provide an attractive setting for periodic key refresh, as
+outlined in Section~\ref{sec:refresh}.
+
+To encourage equality and fair play, the root collective first must
+agree upon a trusted ceremony official. The trusted official will
+operate the software and hardware involved in the key generation
+ceremony. Prior to the key generation ceremony, each RIR also creates a
+public/private RSA key pair exclusively for protecting their private
+key share during the ceremony.
+
+During the ceremony, the trusted official presents the hardware and
+software to the RIR representatives for inspection. The official then
+generates the root public key and private key shares. To give each
+representative their RIR's key share, the official collects each RIR's
+public key on removable media, uses each public key to encrypt one key
+share, and gives each representative the corresponding encrypted key
+share and root public key on removable media. We recommend the use of
+encryption to protect the key shares; this prevents participants from
+obtaining access to other players' key shares. The trusted official
+then wipes all data from the key generation hardware. We defer details
+of this procedure to Appendix~\ref{sec:keygen-detail}.
+
+Before concluding the key generation ceremony, the players may wish to
+verify that the collective can correctly sign data. The players then
+protect their key shares through the use of cryptographic and physical
+security before transporting them to their respective organizations.
+
+
+In our distributed signature scheme, we utilize the Shoup threshold
+RSA signature scheme~\cite{shoup-sig}. Key generation for this
+scheme operates generally as follows:
+\begin{itemize}
+\item[{\it Input}] Number of players \nump, number of players required
+to create a signature \nums, key length. (Key length should be chosen
+to create a secure RSA signature; we recommend at least 4096 bits.)
+
+\item[{\it Output}] Root public key $(e,n)$, secret key share $s_i$
+for each player $i$ ($1 \leq i \leq \nump$). (In the full scheme, which we do not utilize, players may also receive verification keys $v,
+v_1, \dots, v_\nump$. For discussion of proofs of verification for
+signature shares, see Section~\ref{sec:how-sign}.)
+\end{itemize}
+Any \nums\ of the signature shares together define a polynomial that
+encodes the root secret key; given \nums\ of the shares we can
+reconstruct this secret key (though we do not need to do so to produce
+signatures)~\cite{shamirshare}.
+
+\ignore{
+We thus perform key generation as follows for
+\nump\ players, where \nums\ are required to sign data:
+\begin{enumerate}
+\item Generate two large primes, $p,q$ such that for primes $p',q'$,
+$p=2p'+1$ and $q=2q'+1$. Let $n=pq$ and $m=p'q'$. Choose $e$ to be a
+prime such that $\nump < e < m$. The root public key is $(e,n)$, and
+is given to all players.
+\item Calculate $d$ such that $de \equiv 1\ (\mbox{mod } m)$. For each
+player $i$ ($1\leq i\leq n$), calculate a secret key share $s_i$ as
+follows:
+  \begin{eqnarray*}
+    a_0 & = & d \\
+    a_j & \leftarrow & \{ 0 ,\dots, m-1\} \\
+    f(x) & = & \sum_{j=0}^{\nums-1} a_j x^j \\
+    s_i & = & f(i)
+  \end{eqnarray*}
+Each player $i$ ($1 \leq i \leq \nump$) receives only their own secret
+key share $s_i$.
+
+\item If the root collective anticipates that they might utilize
+proofs of signature share correctness (see Section~\ref{sec:how-sign}),
+then choose $v$ randomly from $Q_n$ (the subgroup of squares in
+$Z_n^*$) and calculate $v_i = v^s_i \mod n$ ($1 \leq i \leq
+\nump$). All players receive $v,v_1,\dots,v_\nump$.
+\end{enumerate} 
+}
+
+
+\subsection{Key Transport}
+
+Each player must protect the secrecy and integrity of their private
+key share during transport. It is extremely important that the private
+key shares not be disclosed either accidentally or to malicious
+adversaries actively attacking the protection measures. Thus, we
+recommend that the key shares remain encrypted (and separated from the
+decryption key) during transit. In addition, the key share should not
+reside on systems connected to public networks. Participants may wish
+to incorporate physical security measures, including hardware
+cryptographic devices and physical locks.
+
+If a player's key is potentially compromised, he must inform the root
+collective of this fact. If \nums\ key shares are compromised, the
+root key {\it must} be immediately retired and not used further. If
+fewer than \nums\ keys are compromised, then the root collective can
+refresh their key shares as soon as possible and make a decision as to
+how soon they will retire the root key.
+
+By refreshing their key shares, the root collective creates new key
+shares to all players without changing the root public key. Because of
+the logistical difficulties entailed in distributing a root key, the
+root collective should perform key refresh regularly to guard against
+known and unknown key compromises.

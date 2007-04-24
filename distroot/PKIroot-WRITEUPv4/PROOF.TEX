@@ -1,0 +1,201 @@
+\section{Proofs and Mathematical Details}
+
+\subsection{Regarding Signature Share NIZK Proofs}
+\label{sec:proof-sigshare}
+
+In Shoup's original scheme~\cite{shoup-sig}, proofs of signature share correctness are utilized to determine
+cheating members of the root collective. We sketch an argument that
+Shoup's threshold RSA signature scheme~\cite{shoup-sig} remains
+secure, even in the absence of these proofs of correctness, insofar as
+a corrupted or malicious player cannot forge a signature.
+
+First, note that by stripping the proofs of correct construction from
+the signature shares, we are not adding new information or changing
+the way in which information is conveyed. The behavior of the honest
+players remains the same; they construct signature shares based on the
+data to be signed. 
+
+Because the behavior of honest players is the same as in Shoup's
+scheme, we can focus on the ability of the malicious player to
+construct a signature based on $\nums-1$ signature shares. As the
+original scheme is secure and the malicious player receives strictly
+less information in our scenario, we know that the adversary cannot
+extract enough information from honest players' signature shares to
+construct a \nums th signature share on his own. Because the signature
+shares are RSA signatures, the shares are existentially unforgeable
+and the adversary cannot create a valid threshold signature.
+
+%We can even simulate the view of the malicious player in the
+%same way as Shoup's original proof of security.
+
+\subsection{Regarding Key Refresh}
+\label{sec:proof-refresh}
+
+\subsubsection{Key Refresh Algorithm}
+
+Our code utilizes Shoup's threshold RSA signature
+scheme~\cite{shoup-sig}. Thus, each player $i$ has a secret key share
+$s_i$ defined as follows according to a polynomial secret sharing
+scheme, where $d,m$ is the root secret key and $\leftarrow$ indicates
+a uniform random choice of an element from a set:
+\begin{eqnarray*}
+a_0 & = & d \\
+a_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f(x) & = & \sum_{j=0}^{\nums-1} a_j x^j \\
+s_i & = & f(i)
+\end{eqnarray*}
+
+Note that we can define this related secret sharing scheme:
+\begin{eqnarray*}
+a_0 & = & d \\
+a_j & \leftarrow & \{ 0, \dots, m-1\} \\
+b_0 & = & 0 \\
+b_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f_r(x) & = & \sum_{j=0}^{\nums-1} (a_j+b_j)x^j \\
+{s_r}_i & = & f_r(i) \mod m
+\end{eqnarray*}
+This produces key shares for each player corresponding to the same
+secret key as the original scheme, so the players can sign data under
+the same public root key using shares from the old scheme or the new
+scheme. (They cannot, however, mix shares created from different
+polynomials.) We now construct a key refresh scheme based on this fact:
+\begin{eqnarray*}
+b_0 & = & 0 \\
+b_j & \leftarrow & \{ 0, \dots, m-1\} \\
+f_b(x) & = & \sum_{j=0}^{\nums-1} b_j x^j \\
+{s_b}_i & = & f_b(i) \mod m \\
+s_i' & = & s_i + {s_b}_i \mod m \\
+     & = & \sum_{j=0}^{\nums-1} (a_j+b_j)x^j
+\end{eqnarray*}
+
+Given \nums\ key shares, computer code run by the players can run
+polynomial interpolation code to reconstruct $m$. The players thus construct a new random polynomial $f_b$ such that
+$f_b(0)=0$, giving each player $i$ ($1\leq i \leq \nump$) a new key share 
+$s_i'$. The players begin to use their new key shares to sign 
+data at the time decided upon by the root collective. In this way, the
+players can refresh their secret key shares without changing the
+public key.
+
+
+
+\subsubsection{Security}
+
+Next, we prove that our scheme for key refresh is secure.
+\ignore{
+\subsubsection{Refreshing without use of the secret key}
+
+Coefficients for the polynomial secret sharing of $0$ which we utilize
+for refreshing the players' secret keys should, ideally, be chosen
+from $Z_m=\{ 0,\dots,m-1\}$. However, by choosing these coefficients
+from $Z_n =\{ 0,\dots, n=1\}$, the players can refresh their key
+shares without direct use of these keys.
+
+To prove this remains secure, we prove that the probability that any
+coefficient chosen during the key refresh program is, with
+overwhelming probability, uniformly distributed over $Z_m$.
+
+First, note that $n$ is a product of {\it safe primes}, chosen in the
+following way:
+\begin{eqnarray*} %1
+p & = & 2p'+1 \\
+q & = & 2q'+1 \\
+n & = & pq
+\end{eqnarray*}
+If we were to choose our random coefficients from $Z_{m}$, these
+coefficients would be uniformly distributed over $Z_m$.  We may then
+divide the domain $Z_{\frac{n}{4}}$ into two sections: the part that
+is of size $Z_{m}$ and the remainder. If no random coefficients are
+chosen in this remainder, then the coefficients are uniformly
+distributed over $Z_m$ as we require. However, it is sufficient to
+prove that coefficients are chosen from this remainder with only
+negligible probability; as there are only a polynomial number of
+coefficients chosen, with overwhelming probability there will thus be
+none in the remainder.
+
+By the division theorem, there exist unique positive integers $c,r$
+such that $n = cm + r$. We now prove that $c=4$ for $p',q' > 6$. As
+$\frac{1}{p'}$ is chosen to be negligible, $p'$ must be larger than
+$6$ in any case, even to be secure against a human attacker.
+\begin{eqnarray*} %2
+n & = & (2p'+1)(2q'+1) \\
+m & = & p'q' \\
+\lfloor \frac{4p'q' +
+2p'+2q'+1}{p'q'} \rfloor & = & 4 + \lfloor \frac{2p'+2q'+1}{p'q'}\rfloor
+\end{eqnarray*}
+If $p'q' > 6$, then
+\begin{eqnarray*} %3
+\frac{1}{p'} & < & \frac{1}{6} \\
+\frac{1}{q'} & < & \frac{1}{6} \\
+\frac{1}{q'}+\frac{1}{p'} & < & \frac{1}{3} \\
+p'q' & > & 3p' + 3q'
+\end{eqnarray*}
+We may also note that $p' + q' > 1$, so $p'q' > 2p'+2q' + 1$. Thus, 
+\begin{eqnarray*} %4
+\lfloor \frac{4p'q' + 2p'+2q'+1}{p'q'} \rfloor & = & 4 + \lfloor 
+          \frac{2p'+2q'+1}{p'q'} \rfloor \\
+    & = & 4
+\end{eqnarray*}
+We can thus derive the remainder, $r$, as $n-4m = 2p'+2q'+1$. Let the
+probability that $a\in Z_{n}\backslash Z_{4m}$ for $a \leftarrow Z_n$
+be denoted $y$. The probability that $a\in a\in
+Z_{{\frac{n}{4}}}\backslash Z_{m}$ is $4y$.
+\begin{eqnarray*} %5
+y & = & \frac{r}{n} \\
+\frac{1}{y} & = & \frac{4p'q'+2p'+2q'+1}{2p'+2q'+1} \\
+    & = & \frac{4p'q'}{2p'+2q'+1} + 1 \\
+\frac{1-y}{y} & = & \frac{4p'q'}{2p'+2q'+1} \\
+\frac{y}{1-y} & = & \frac{2p'+2q'+1}{4p'q'} \\
+    & = & \frac{1}{2q'} + \frac{1}{p'} + \frac{1}{4p'q'}
+\end{eqnarray*}
+As $p',q'$ are chosen to be large, $\frac{1}{2q'} + \frac{1}{p'} +
+\frac{1}{4p'q'}$ is negligibly small. For clarity, we will represent
+this probability as $\mbox{negl}$ for the remainder of this proof.
+\begin{eqnarray*} %6
+\frac{y}{1-y} & = & \mbox{negl} \\
+\frac{1-y}{y} & = & \frac{1}{\mbox{negl}} \\
+\frac{1}{y} & = & \frac{1+\mbox{negl}}{\mbox{negl}} \\
+y & = & \frac{\mbox{negl}}{1 + \mbox{negl}}
+\end{eqnarray*}
+Note that $\frac{\mbox{negl}}{1 + \mbox{negl}}$ is also a negligible
+probability, so $y$ and $4y$ are negligible. As $4y$ is the probability of
+picking a coefficient from the `bad' set of remainders and there are
+only polynomially many such coefficients, we can conclude that the
+probability of picking any coefficient from the remainders is
+negligible.
+
+The secret sharing scheme remains secure because $s_i+s_i'$ remains
+uniformly distributed modulo $m$ (the form of the secret key that
+appears in the signature share exponent). Because the distribution of
+this key does not change, an adversary cannot extract information from
+it that it could not in the scheme without key refreshing.
+}
+
+%\subsubsection{General key refresh scheme}
+
+Our key refresh scheme of Section~\ref{sec:refresh} essentially
+requires that the players construct polynomial shares of $0$ and add
+them to their original secret shares of the secret key to generate new
+shares of the secret key. The security of this scheme for
+uncompromised players follows directly from the security of the
+polynomial secret sharing scheme~\cite{shamirshare}. If a player's
+original secret share remains secret, adding another secret share to
+the original share does not let the adversary reconstruct it.
+
+We must also ensure that $t$ or fewer players whose shares,
+$s_{i_1},\dots,s_{i_t}$, are known to the adversary are also protected
+by this scheme. Because some players that were previously corrupted
+may remain corrupted and some new players may become corrupted during
+the key refresh process, we allow the adversary to learn at most $t$
+shares of the refresh key, $s_{j_1}',\dots, s_{j_t}'$.
+
+We must now show by reduction that a player $i$ ($i \in
+\{i_1,\dots,i_t\}, i\not\in \{j_1,\dots,j_t\}$, whose secret share is
+known to the adversary but whose refresh share is not, gains a secret
+key share through the key refresh process. Note that if the adversary
+could reconstruct $s_i+s_i'$ with non-negligible probability, the
+adversary could also reconstruct $s_i'$ with non-negligible
+probability, as he knows $s_i$. Given only $t$ or fewer shares of the
+refresh key and $t$ or fewer shares of the original key, the adversary
+cannot reconstruct $s_i'$ with non-negligible probability. Thus, the
+adversary cannot reconstruct player $i$s new key share $s_i+s_i'$ with
+non-negligible probability.

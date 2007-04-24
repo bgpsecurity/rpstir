@@ -1,0 +1,89 @@
+\section{Code Summary}
+\label{sec:code}
+
+In this section, we give an overview of Java code~\cite{sig-code} for
+a distributed root based on Shoup's threshold RSA signature
+scheme~\cite{shoup-sig}.
+
+\subsection{Key Generation}
+
+The root collective players run the following code on a secure
+computer to generate key shares for each player.
+\begin{enumerate}
+\item Create a new {\tt Dealer} object to create keys of size {\tt keysize}.
+
+        {\tt d = new Dealer(keysize)}
+
+\item	Use the Dealer object to generate key shares for \nump\
+	players such that at least \nums\ players must collaborate to
+	successfully sign data under the root key.
+
+ 	{\tt d.generateKeys(\nums, \nump)} 
+
+\item	Retrieve the root verification key from the {\tt Dealer}
+	object. This key can be utilized to verify all valid
+	signatures constructed by the root collective; it is utilized
+	just as any other RSA public key.
+
+	{\tt gk = d.getGroupKey()} 
+
+\item	Retrieve the key shares from the {\tt Dealer} object. Each key
+	should be written to a separate piece of media, which is given
+	to the corresponding player.
+
+	{\tt KeyShare[] keys = d.getShares()}
+\end{enumerate}
+
+\ignore{
+\subsection{Key Refresh}
+
+Periodically, the root collective should {\it refresh} their key shares,
+using  the method discussed in Section~\ref{sec:refresh}. This protects against compromise (silent or known) of at most $k-1$ key shares.
+
+We discuss code for one method here.
+}
+%FINISHME
+
+\subsection{Constructing Signature Shares}
+
+%If the players are utilizing the Shoup scheme without proofs (which we
+%discuss in Section~\ref{sec:how-sign}), then each player {\it i} can
+%generate their signature share as in the full scheme. Alternatively,
+Given their key share {\tt ei} and root key modulus {\tt n}, each player can
+calculate their signature share as in a standard RSA signature:\\
+{\tt BigInteger bmod = new BigInteger(b).mod(n)} \\
+{\tt BigInteger sigshare = bmod.modPow(ei, n)}
+
+Each of the signing players send {\tt sigshare} and their identifier $i$ to
+the party combining signature shares into a valid root signature.
+
+Note that our code implements the full Shoup scheme, including non-interactive zero-knowledge proofs. If the root collective were utilizing the full Shoup
+scheme~\cite{shoup-sig}, then each signing player would utilize his
+KeyShare object {\tt ks} to create a signature share (with associated proof
+of correctness) on the data {\tt b} as follows: {\tt ks.sign(b)}.
+
+\subsection{Combining Signature Shares}
+
+Given the data to be signed {\tt b}, an array of \nums\ valid
+signature shares {\tt sigs}, the number of signers \nums\ and total
+number of players \nump, as well as the root public key object {\tt
+gk}, one combines the signature shares into a root signature on {\tt
+b} as follows: {\tt
+SigShare.combine(b,sigsq,k,l,gk.getModulus(),gk.getExponent())}.
+
+%\subsection{Verifying Signature Shares}
+
+If the root collective were utilizing the full version of Shoup's
+threshold signature scheme~\cite{shoup-sig}, they would have to verify the
+validity of each share before combining them into a full root
+signature. Given the data to be signed {\tt b}, an array of \nums\
+signature shares {\tt sigs}, the number of signers \nums\ and total
+number of players \nump, as well as the root public key object {\tt
+gk}, one verifies the validity of the signatures as follows: {\tt
+SigShare.verify(b, sigs, k, l, gk.getModulus(), gk.getExponent())}.
+
+
+\subsection{Verifying Joint Signature}
+
+Given the data that was to be signed {\tt b}, the signature to be checked {\tt sig}, and the root public key {\tt e,n}, one may verify the validity of the signature as with any RSA signature:
+{\tt sig.modPow(e,n).compareTo(b) == 0}.

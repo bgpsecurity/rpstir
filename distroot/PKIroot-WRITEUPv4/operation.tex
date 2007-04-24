@@ -1,0 +1,58 @@
+\section{Concept and Operation of a Distributed Root}
+\label{sec:operation}
+
+The root of a PKI signs certificates for its subordinates; in turn,
+these subordinates may sign certificates for subordinates of their
+own\footnote{Subordinates may issues certificates only if they are
+permitted to do so by being specified as a certificate authority in
+their X509 certificate.}. The root public key acts as the ultimate
+trust anchor within the proposed PKI. As such, it is an extremely
+tempting target for attack. In a scenario where multiple parties
+represent the public key, the security of the root private key can be
+increased by employing a threshold signature scheme to split the root
+private key among several players. Quorums of root collective members
+distributed over the globe collectively act as the root signing entity
+by jointly signing data to be verified with a single root verification
+key. Thus the RIRs are responsible for managing address allocations
+and certificates without requiring IANA to engage in such day-to-day
+operational issues.
+
+
+All \nump\ participants in the root collective jointly generate key
+shares for each player such that $\nums\leq \nump$ players must
+collaborate to sign data; no group of fewer than $\nums$ players can
+sign data. (See Section~\ref{sec:overview} for details.) At any later
+time they can sign data as follows: any \nums\ players individually
+construct shares of the signature using their key share; any
+computer may then combine these signature shares into a valid
+signature under the root key.
+
+Splitting the root signing key in this way protects against up to
+$\nums-1$ players being compromised or attempting to cheat. In
+combination with strong physical security, the root collective can
+achieve robust protection of the root signing key while simultaneously
+distributing control among the participants. To protect against
+undetected compromise of root collective participants, we recommend
+they refresh their key shares as we discuss in
+Section~\ref{sec:refresh}. Use of threshold signature can also
+increase availability, as $\nump-\nums$ players may be unavailable or
+slow in response without hindering the signature process.
+
+\ignore{To increase their ability to detect a cheating or corrupted player of
+the root collective, the players may employ proofs of
+correctness. Along with his signature share, each player also
+constructs a small proof that his share was correctly
+constructed. Some players, however, may wish to use cryptographic
+hardware that cannot generate such proofs. The scheme remains secure
+even in the absence of these proofs; it is only somewhat harder to detect a
+cheating or corrupted member of the root collective.}
+
+
+This paper is a companion to software (see Appendix~\ref{sec:code})
+that performs key generation, signing, and verification according to
+Victor Shoup's threshold RSA signature scheme~\cite{shoup-sig}. In
+addition, we have added the capability to perform key refresh
+as we outline in Appendix~\ref{sec:proof-refresh}. Operated according to
+the procedures described in this document, this code performs the core
+tasks necessary for a collective of players to operate a virtual
+signing authority.

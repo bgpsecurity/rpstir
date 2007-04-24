@@ -1,0 +1,116 @@
+\section{How to Sign Data}
+\label{sec:how-sign}
+
+After the players have generated keys as described in
+Section~\ref{sec:keygen}, any \nums\ players can jointly sign data.
+
+\paragraph{Creating signature shares.}
+If one player wishes to sign some data, such as a certificate, he
+sends it to all other players and requests that they create signature shares for this data. 
+(Note that the requesting player needs to receive at least $k-1$ correct responses.) Those players then check the data according to their established security routines\footnote{For example, the players might institute a
+rule that they will only sign X.509 certificates that delegate previously unallocated chunks of address space to one RIR, or a rule that they will only sign certificates vouched for by IANA.}.
+
+% TODO -- other security checks?
+
+If a player wishes to help create a signature on the data, that player constructs a signature
+share. In our code, we utilize Shoup's threshold RSA scheme, so player
+$i$ ($1 \leq i \leq \nump$) with secret key $s_i$ signs data $x$ to
+produce signature share $x_i$ as follows:
+\begin{eqnarray*}
+x_n & = & x \mod n \\
+x_i & = & x_n^{2 s_i \nump!}
+\end{eqnarray*}
+Note that this is a standard RSA signature calculation with secret key
+$2s_i \nump!$. If the player is utilizing a cryptographic signature
+box as described in Section~\ref{sec:use-box}, then he simply requests
+that the box produce a signature on data $x$ with key $2 s_i \nump!$ to
+produce the signature share $x_i$.
+
+\paragraph{Finding corrupted players.}
+The root collective can determine which player(s) are corrupted or
+malicious by combining signature shares as we discuss in this section;
+if some players' shares combine into a valid signature, the players who
+created those shares created them correctly.
+
+If all five participants respond then there are ten possible
+combinations of the private key shares. If there is exactly one corrupt
+player then one can create four valid combinations and six invalid
+combinations. Determining the corrupt player involves identifying the
+member absent from the valid combinations and verifying that the
+suspect player player is common within all invalid combinations.  In
+the case of two corrupt players, where all participants have
+responded, there will be only one valid combination and nine invalid
+combinations. The players not involved in the valid combination are
+identifiable as the corrupted players.
+
+We encourage all players to participate and
+contribute their signature shares even if \nums\ participants have
+already responded. If all players participate, it becomes possible to
+identify problems or corrupt key shares at an earlier time.
+
+In the full Shoup scheme~\cite{shoup-sig}, each player generates a small non-interactive zero-knowledge proof of
+correctness along with their signature share. These shares do not
+divulge secret information; they only allow any player to efficiently
+check that signature shares were constructed correctly. However, in this application, these proofs are not necessary and interfere with the use of hardware security modules. We discuss the
+security of Shoup's signature scheme without proofs of correctness in
+Appendix~\ref{sec:proof-sigshare}.
+
+
+\ignore{
+The players may employ proofs of correctness in their generation of
+signature shares. In this, the full Shoup scheme~\cite{shoup-sig}, each
+player generates a small non-interactive zero-knowledge proof of
+correctness along with their signature share. These shares do not
+divulge secret information; they only allow any player to efficiently
+check that signature shares were constructed correctly. We discuss the
+security of Shoup's signature scheme without proofs of correctness in
+Appendix~\ref{sec:proof-sigshare}.
+
+Before combining signature shares, the player combining these shares
+verifies their attached proofs. If a proof is incorrect, then the
+combining player alerts the root collective that the player who sent
+it may be corrupted. The combining player now has fewer than \nums\
+valid signature shares, so he must request additional shares from root
+collective players in order to construct a valid signature.
+}
+
+\paragraph{Combining signature shares.}
+Once \nums\ players have produced signature shares, each player sends
+their share to the requesting player. Once he has received these
+shares, the requesting player combines the shares into a joint
+signature and then checks that the signature is valid under the root
+public key. If it is not valid, then one of the signature shares is
+invalid; the player that produced it may be corrupt, incorrect, or an adversary may have interfered with the transmission.
+%(If the players are utilizing proofs of correctness, this is
+%not a concern.)
+The combining player should combine other sets of signature shares, as we describe above, to discover
+which player (or players) sent an invalid share. Generally, the
+combination procedure works as follows:
+\begin{itemize}
+\item[{\it Input}] Root public key $(e,n)$, signature
+shares $x_{i_1},\dots,x_{i_\nums}$ from distinct players
+$i_1,\dots,i_\nums$, respectively, data to be signed $x$.
+
+\item[{\it Output}] Signature of $x$ under root public key $(e,n)$.
+\end{itemize}
+\ignore{
+\begin{eqnarray*}
+S & = & \{ i_1,\dots, i_\nums\}\\
+\Delta & = & \nump !\\
+\lambda_{c_1,c_2}^S & = & \Delta \frac{\prod_{c'\in S\backslash
+                          \{c_2\}} (c_1-c')}{\prod_{c'\in S\backslash
+                          \{c_2\}} (c_2-c')} \mod n \\ 
+w & = & x_{i_1}^{2\lambda_{0,i_1}^S}\cdots 
+        x_{i_\nums}^{2\lambda_{0,i_\nums}^S} \mod n \\
+e' & = & 4\Delta^2
+\end{eqnarray*}
+Using the extended Euclidean algorithm, calculate integers $a,b$ such
+that $ae' +be = 1$. The combined signature is $w^ax^b \mod n$.  }
+Essentially, the exponents of the signature shares are points from a
+polynomial that encodes the root secret key. Using polynomial
+interpolation, we can combine these shares in such a way that the
+exponent becomes the signing key. In this way, we produce a signature
+without revealing the secret key. Cryptographic details and
+mathematical intuition are discussed in Shoup's
+paper~\cite{shoup-sig}.
+
