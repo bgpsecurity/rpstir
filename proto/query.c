@@ -8,6 +8,8 @@
 #include "scmf.h"
 #include "err.h"
 #include "roa_utils.h"
+#include "myssl.h"
+#include "sqhl.h"
 
 /****************
  * This is the query client, which allows a user to read information
@@ -93,14 +95,20 @@ int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
-static FILE *output;  /* place to print output (file or screen) */
-static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
-static int useLabels, multiline;
+/*
+ * I hate to use all these static variables, but the problem is
+ * that there's no other way to pass them on to all the callback
+ * functions that are used to process SQL queries
+ */
 
-/* options of what to do with unknown states for roas/certs */
-#define OPTION_VALID 0
-#define OPTION_INVALID 1
-#define OPTION_SPECIAL 2
+static FILE *output;  /* place to print output (file or screen) */
+static FILE *specialOutput; /* separate place to print output from unknown */
+static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
+static int useLabels, multiline, validate, unknownOption;
+static char *objectType;
+static int isROA, isCert, isCRL;
+static scm      *scmp = NULL;
+static scmcon   *connect = NULL;
 
 /* reads a roa from a file in order to determine the filter entry */
 int displayEntry (scmsrcha *s, int idx1, char* returnStr)
@@ -124,13 +132,109 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
+/* options of what to do with unknown states for roas/certs */
+#define OPTION_VALID 0
+#define OPTION_INVALID 1
+#define OPTION_SPECIAL 2
+
+/* different types of validity */
+#define V_INVALID 0
+#define V_VALID 1
+#define V_UNKNOWN 2
+
+static scmtab   *validTable = NULL;
+static scmsrcha validSrch;
+static scmsrch  validSrch1[3];
+static char     validWhereStr[700], *whereInsertPtr;
+static unsigned long validBlah = 0;
+static int      found;
+static char     *nextSKI, *nextSubject;
+static  unsigned int *flags;
+
+static int registerFound (scmcon *conp, scmsrcha *s, int numLine) {
+  conp = conp; s = s; numLine = numLine;
+  found = 1;
+  return 0;
+}
+
+static int checkValidity (char *ski, unsigned int localID) {
+  int status;
+
+  // set up main part of query only once, instead of once per object
+  if (validTable == NULL) {
+    validTable = findtablescm (scmp, "certificate");
+    validSrch.where = NULL;
+    validSrch.wherestr = validWhereStr;
+    validSrch.vec = validSrch1;
+    validSrch.sname = NULL;
+    validSrch.ntot = 3;
+    validSrch.nused = 0;
+    validSrch.vald = 0;
+    validSrch.context = &validBlah;
+    QueryField *field = findField ("aki");
+    addcolsrchscm (&validSrch, "aki", field->sqlType, field->maxSize);
+    field = findField ("issuer");
+    addcolsrchscm (&validSrch, "issuer", field->sqlType, field->maxSize);
+    if (unknownOption == OPTION_SPECIAL)
+      addcolsrchscm (&validSrch, "flags", SQL_C_ULONG, 8);
+    char *now = LocalTimeToDBTime (&status);
+    sprintf (validWhereStr, "valto>\"%s\"", now);
+    free (now);
+    if (unknownOption == OPTION_INVALID)
+      sprintf (&validWhereStr[strlen(validWhereStr)],
+	       " and (flags %% %d) < %d",
+	       2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+    whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
+    nextSKI = (char *) validSrch1[0].valptr;
+    nextSubject = (char *) validSrch1[1].valptr;
+    flags = (unsigned int *) validSrch1[2].valptr;
+  }
+
+  // now do the part specific to this cert
+  int firstTime = 1;
+  int validity = V_VALID;
+  char prevSKI[128];
+  // keep going until trust anchor, where AKI = SKI
+  while (firstTime || (strcmp (nextSKI, prevSKI) != 0)) {
+    if (firstTime) {
+      firstTime = 0;
+      if (ski)
+        sprintf (whereInsertPtr, " and ski=\"%s\"", ski);
+      else
+        sprintf (whereInsertPtr, " and local_id=\"%d\"", localID);
+    } else {
+      sprintf (whereInsertPtr, " and ski=\"%s\" and subject=\"%s\"",
+               nextSKI, nextSubject);
+    }
+    found = 0;
+    strcpy (prevSKI, nextSKI);
+    status = searchscm (connect, validTable, &validSrch, NULL,
+                        registerFound, SCM_SRCH_DOVALUE_ALWAYS);
+    if (! found) return V_INVALID;  // no parent cert
+    if ((unknownOption == OPTION_SPECIAL) && (*flags | SCM_FLAG_UNKNOWN))
+      validity = V_UNKNOWN;   // one unknown in chain makes result unknown
+  }
+  return validity;
+}
+
 /* callback function for searchscm that prints the output */
 static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 {
   int result = 0;
-  int display;
+  int display, valid;
   char resultStr[10000];
+  FILE *out2 = output;
+
   conp = conp; numLine = numLine;  // silence compiler warnings
+  // ???????? big issue: cannot query database until finished here ????????
+  if (validate) {
+    valid = checkValidity (isROA ? (char *) s->vec[validate].valptr : NULL,
+               isCert ? *((unsigned int *) s->vec[validate].valptr) : 0);
+    if (valid == V_INVALID) return 0;
+    if ((valid == V_UNKNOWN) && (unknownOption == OPTION_INVALID)) return 0;
+    if ((valid == V_UNKNOWN) && (unknownOption == OPTION_SPECIAL))
+      out2 = specialOutput;
+  }
   for (display = 0; globalFields[display] != NULL; display++) {
     QueryField *field = globalFields[display];
     if (field->displayer != NULL) {
@@ -154,11 +258,8 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 }
 
 /* sets up and performs the database query, and handles the results */
-static int doQuery (char *objectType, char **displays, char **filters,
-                    int validate, int unknownOption)
+static int doQuery (char **displays, char **filters)
 {
-  scm      *scmp = NULL;
-  scmcon   *connect = NULL;
   scmtab   *table = NULL;
   scmsrcha srch;
   scmsrch  srch1[MAX_VALS];
@@ -169,9 +270,6 @@ static int doQuery (char *objectType, char **displays, char **filters,
   int      i, j, proceed, status;
   QueryField *field, *field2;
   char     *name;
-  int      isROA = strcasecmp (objectType, "roa") == 0;
-  int      isCRL = strcasecmp (objectType, "crl") == 0;
-  int      isCert = strcasecmp (objectType, "cert") == 0;
 
   checkErr ((! isROA) && (! isCRL) && (! isCert),
             "\nBad object type; must be roa, cert or crl\n\n");
@@ -247,6 +345,15 @@ static int doQuery (char *objectType, char **displays, char **filters,
     }
   }
   globalFields[i] = NULL;
+  if (validate) {
+    validate = i;
+    if (isROA) {
+      field2 = findField ("ski");
+      addcolsrchscm (&srch, "ski", field2->sqlType, field2->maxSize);
+    } else if (isCert) {
+      addcolsrchscm (&srch, "local_id", SQL_C_ULONG, 8);
+    }
+  }
 
   /* do query */
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
@@ -256,13 +363,10 @@ static int doQuery (char *objectType, char **displays, char **filters,
   return status;
 }
 
-static int listOptions (char *objectType)
+static int listOptions()
 {
   int i, j;
   int size = sizeof (fields) / sizeof (fields[0]);
-  int isROA = strcasecmp (objectType, "roa") == 0;
-  int isCRL = strcasecmp (objectType, "crl") == 0;
-  int isCert = strcasecmp (objectType, "cert") == 0;
   
   checkErr ((! isROA) && (! isCRL) && (! isCert),
             "\nBad object type; must be roa, cert or crl\n\n");
@@ -292,6 +396,7 @@ static int printUsage()
   printf ("  -u: what to do when validating and encounter a cert in state unknown\n");
   printf ("      options: valid (print to output anyway), invalid (ignore),\n");
   printf ("               and special (write to separate file unknown.out)\n");
+  printf ("               default = special\n");
   printf ("  -l: list the possible display fields and clauses for a given type\n");
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
   printf ("  -d: the name of one field of the object to display\n");
@@ -304,23 +409,31 @@ static int printUsage()
   return -1;
 }
 
+static void setObjectType (char *aType)
+{
+  objectType = aType;
+  isROA = strcasecmp (objectType, "roa") == 0;
+  isCRL = strcasecmp (objectType, "crl") == 0;
+  isCert = strcasecmp (objectType, "cert") == 0;
+}
+
 int main(int argc, char **argv) 
 {
-  char *objectType;
   char *displays[MAX_VALS], *clauses[MAX_CONDS];
   int i;
   int numDisplays = 0;
   int numClauses = 0;
-  int validate = 0;
-  int unknownOption = OPTION_SPECIAL;
 
   output = stdout;
   useLabels = 1;
   multiline = 0;
+  validate = 0;
+  unknownOption = OPTION_SPECIAL;
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
-    return listOptions (argv[2]);
+    setObjectType (argv[2]);
+    return listOptions();
   }
   for (i = 1; i < argc; i += 2) {
     if (strcasecmp (argv[i], "-a") == 0) {
@@ -341,7 +454,7 @@ int main(int argc, char **argv)
     } else if (argc == (i+1)) {
       return printUsage();
     } else if (strcasecmp (argv[i], "-t") == 0) {
-      objectType = argv[i+1];
+      setObjectType (argv[i+1]);
     } else if (strcasecmp (argv[i], "-d") == 0) {
       displays [numDisplays++] = argv[i+1];
     } else if (strcasecmp (argv[i], "-f") == 0) {
@@ -357,7 +470,11 @@ int main(int argc, char **argv)
       return printUsage();
     }
   }
+  checkErr (numDisplays == 0, "Need to display something\n");
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
-  return doQuery (objectType, displays, clauses, validate, unknownOption);
+  if (unknownOption == OPTION_SPECIAL) {
+    specialOutput = fopen ("unknown.out", "w");
+  }
+  return doQuery (displays, clauses);
 }
