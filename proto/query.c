@@ -211,7 +211,7 @@ static int checkValidity (char *ski, unsigned int localID) {
     status = searchscm (connect, validTable, &validSrch, NULL,
                         registerFound, SCM_SRCH_DOVALUE_ALWAYS);
     if (! found) return V_INVALID;  // no parent cert
-    if ((unknownOption == OPTION_SPECIAL) && (*flags | SCM_FLAG_UNKNOWN))
+    if ((unknownOption == OPTION_SPECIAL) && (*flags & SCM_FLAG_UNKNOWN))
       validity = V_UNKNOWN;   // one unknown in chain makes result unknown
   }
   return validity;
@@ -246,14 +246,14 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
         sprintf (resultStr, "%d", *((unsigned int *) s->vec[result].valptr));
       result++;
     }
-    if (multiline) fprintf (output, "%s ", (display == 0) ? "*" : " ");
+    if (multiline) fprintf (out2, "%s ", (display == 0) ? "*" : " ");
     if (useLabels) 
-      fprintf (output, "%s = %s  ", field->heading, resultStr);
+      fprintf (out2, "%s = %s  ", field->heading, resultStr);
     else
-      fprintf (output, "%s  ", resultStr);
-    if (multiline) fprintf (output, "\n");
+      fprintf (out2, "%s  ", resultStr);
+    if (multiline) fprintf (out2, "\n");
   }
-  if (! multiline) fprintf (output, "\n");
+  if (! multiline) fprintf (out2, "\n");
   return(0);
 }
 
@@ -363,6 +363,7 @@ static int doQuery (char **displays, char **filters)
   return status;
 }
 
+/* show what options the user has for fields for display and filtering */
 static int listOptions()
 {
   int i, j;
