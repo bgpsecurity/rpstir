@@ -117,15 +117,8 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
 {
   struct ROA *roa;
   (void) pathnameDisplay (s, idx1, returnStr);
-  int format = -1;
-  if (strncmp (".pem", &returnStr[strlen(returnStr)-4], 4) == 0)
-    format = FMT_PEM;
-  else if (strncmp (".der", &returnStr[strlen(returnStr)-4], 4) == 0)
-    format = FMT_DER;
-  else {
-    fprintf (stderr, "Unknown roa extension for pathname: %s\n", returnStr);
-    return 2;
-  }
+  int format = (strncmp (".pem", &returnStr[strlen(returnStr)-4], 4) == 0) ?
+               FMT_PEM : FMT_DER;
   checkErr (! roaFromFile (returnStr, format, 0, &roa),
             "Error reading ROA: %s\n", returnStr);
   roaGenerateFilter (roa, NULL, output);
