@@ -14,11 +14,13 @@
 /****************
  * This is the query client, which allows a user to read information
  * out of the database and the repository.
- * The standard query is to read all ROA's from the DB and out their
+ * The standard query is to read all ROA's from the DB and output their
  * BGP filter entries.
  * However, there are options to read any type of objects, choosing
  * a variety of different values to display, and filtering based on
  * a variety of different fields.
+ * Other options include whether to validate the roas and certs and
+ * what to do during validation when encountering an "unknown" validity.
  **************/
 
 #define MAX_VALS 20
@@ -77,6 +79,7 @@ static QueryField fields[] = {
    NULL, "CRL number"}
 };
 
+/* look up particular query field in the list of all possible fields */
 static QueryField *findField (char *name)
 {
   int i;
@@ -100,7 +103,6 @@ int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
  * that there's no other way to pass them on to all the callback
  * functions that are used to process SQL queries
  */
-
 static FILE *output;  /* place to print output (file or screen) */
 static FILE *specialOutput; /* separate place to print output from unknown */
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
@@ -142,6 +144,10 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
 #define V_VALID 1
 #define V_UNKNOWN 2
 
+/*
+ * all these static variables are used for efficiency, so that
+ * there is no need to initialize them with each call to checkValidity
+ */
 static scmtab   *validTable = NULL;
 static scmsrcha validSrch;
 static scmsrch  validSrch1[3];
@@ -157,6 +163,7 @@ static int registerFound (scmcon *conp, scmsrcha *s, int numLine) {
   return 0;
 }
 
+/* check the valdity via the db of the cert whose ski or localID is given */
 static int checkValidity (char *ski, unsigned int localID) {
   int status;
 
@@ -226,7 +233,6 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   FILE *out2 = output;
 
   conp = conp; numLine = numLine;  // silence compiler warnings
-  // ???????? big issue: cannot query database until finished here ????????
   if (validate) {
     valid = checkValidity (isROA ? (char *) s->vec[validate].valptr : NULL,
                isCert ? *((unsigned int *) s->vec[validate].valptr) : 0);
@@ -346,7 +352,7 @@ static int doQuery (char **displays, char **filters)
   }
   globalFields[i] = NULL;
   if (validate) {
-    validate = i;
+    validate = srch.nused;
     if (isROA) {
       field2 = findField ("ski");
       addcolsrchscm (&srch, "ski", field2->sqlType, field2->maxSize);
@@ -387,6 +393,7 @@ static int listOptions()
   return 0;
 }
 
+/* Help user by showing the possible arguments */
 static int printUsage()
 {
   printf ("\nPossible usages:\n  query -a [-o <outfile>] [-u <option>]\n");
@@ -438,7 +445,7 @@ int main(int argc, char **argv)
   }
   for (i = 1; i < argc; i += 2) {
     if (strcasecmp (argv[i], "-a") == 0) {
-      objectType = "roa";
+      setObjectType ("roa");
       displays [numDisplays++] = "filter_entry";
       validate = 1;
       useLabels = 0;
@@ -467,7 +474,7 @@ int main(int argc, char **argv)
         unknownOption = OPTION_VALID;
       else if (strncasecmp (argv[i+1], "i", 1) == 0)
         unknownOption = OPTION_INVALID;
-    } else {
+    } else {      // unknown switch
       return printUsage();
     }
   }
@@ -475,6 +482,7 @@ int main(int argc, char **argv)
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
   if (unknownOption == OPTION_SPECIAL) {
+    // for now, user cannot select name of output file for "unknown"'s
     specialOutput = fopen ("unknown.out", "w");
   }
   return doQuery (displays, clauses);
