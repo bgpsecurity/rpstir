@@ -108,6 +108,7 @@ int main(int argc, char **argv)
 
   // initialize
   argc = argc; argv = argv;   // silence compiler warnings
+  startSyslog ("garbage");
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
@@ -178,5 +179,6 @@ int main(int argc, char **argv)
            metaTable->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
+  stopSyslog();
   return 0;
 }

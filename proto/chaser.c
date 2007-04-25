@@ -6,6 +6,7 @@
 
 #include "scm.h"
 #include "scmf.h"
+#include "sqhl.h"
 #include "err.h"
 
 /****************
@@ -108,6 +109,7 @@ int main(int argc, char **argv)
 
   // initialize
   argc = argc; argv = argv;   // silence compiler warnings
+  startSyslog ("chaser");
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
   scmp = initscm();
@@ -154,5 +156,6 @@ int main(int argc, char **argv)
   status = statementscm (connect, msg);
 
   for (i = 0; i < numURIs; i++) printf ("uri = %s\n", uris[i]);
+  stopSyslog();
   return 0;
 }

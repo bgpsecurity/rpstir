@@ -421,10 +421,11 @@ static void setObjectType (char *aType)
 int main(int argc, char **argv) 
 {
   char *displays[MAX_VALS], *clauses[MAX_CONDS];
-  int i;
+  int i, status;
   int numDisplays = 0;
   int numClauses = 0;
 
+  startSyslog ("query");
   output = stdout;
   useLabels = 1;
   multiline = 0;
@@ -478,5 +479,7 @@ int main(int argc, char **argv)
     // for now, user cannot select name of output file for "unknown"'s
     specialOutput = fopen ("unknown.out", "w");
   }
-  return doQuery (displays, clauses);
+  status = doQuery (displays, clauses);
+  stopSyslog();
+  return status;
 }

@@ -80,4 +80,7 @@ extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
+extern void  startSyslog (char *appName);
+extern void  stopSyslog (void);
+
 #endif

@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <fam.h>
 #include <ctype.h>
+#import <syslog.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -1795,4 +1796,24 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
   sta = updateranlastscm(conp, mtab, what, now);
   free((void *)now);
   return(sta);
+}
+
+/*
+ * open syslog and write message that application started
+ */
+void startSyslog (char *appName)
+{
+  char *logName = (char *) calloc (6 + strlen (appName), sizeof (char));
+  sprintf (logName, "APKI %s", appName);
+  openlog (logName, LOG_PID, 0);
+  syslog (LOG_NOTICE, "Application Started");
+}
+
+/*
+ * close syslog and write message that application ended
+ */
+void stopSyslog()
+{
+  syslog (LOG_NOTICE, "Application Ended");
+  closelog();
 }
