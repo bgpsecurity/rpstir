@@ -24,6 +24,10 @@ static int numURIs = 0;
 static char *prevTimestamp;
 static char *currTimestamp;
 
+/*
+ * return true if str2 is a subdirectory of or file in directory str1
+ * test is fully based on the name, without any actual checking the dir
+ */
 static int supersedes (const char *str1, const char *str2)
 {
   if (strncmp (str1, str2, strlen (str1)) != 0) return 0;
@@ -33,35 +37,53 @@ static int supersedes (const char *str1, const char *str2)
   return 0;
 }
 
-/* update list of uris by adding the next one */
-static void addIfUnique (char *uri)
+/* binary search for insertion point or existing position */
+static inURIList (char *uri, int *position)
 {
   int i, cmp;
   int low = 0;
   int high = numURIs;
-  char **newURIs;
 
-  if (strlen (uri) == 0) return;
-
-  // binary search for where new uri belongs
   while (low < high) {
     i = (low + high) / 2;
     cmp = strcmp (uri, uris[i]);
-    if (cmp == 0) return;    // if not unique, nothing more to do
+    if (cmp == 0) {
+      *position = i;
+      return 1;
+    }
     if (cmp < 0) {
       high = i;
     } else {
       low = i + 1;
     }
   }
+  *position = low;
+  return 0;
+}
+
+/* remove a uri from the list if it's there */
+static void removeURI (char *uri)
+{
+  int pos;
+  if (! inURIList (uri, &pos)) return;
+  memmove (&uris[pos], &uris[pos+1], (numURIs - pos - 1) * sizeof (char *));
+  numURIs--;
+}
+
+/* update list of uris by adding the next one */
+static void addURIIfUnique (char *uri)
+{
+  int i, low, high;
+  char **newURIs;
+
+  if (strlen (uri) == 0) return;
+  if (inURIList (uri, &low)) return;   // if already there, all done
 
   // if previous one supersedes it, just return without inserting
-  if ((low > 0) && supersedes (uris[low-1], uri))
-    return;
+  if ((low > 0) && supersedes (uris[low-1], uri)) return;
 
   // search for which ones to remove
-  while ((high < numURIs) && supersedes (uri, uris[high]))
-    high++;
+  for (high = low; (high < numURIs) && supersedes (uri, uris[high]); high++);
 
   // do the insert and remove
   // first, free memory of deleted ones
@@ -91,7 +113,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   int i;
   conp = conp; numLine = numLine;  // silence compiler warnings
   for (i = 0; i < NUM_FIELDS; i++) {
-    addIfUnique ((char *) s->vec[i].valptr);
+    addURIIfUnique ((char *) s->vec[i].valptr);
   }
   return 0;
 }
@@ -148,9 +170,11 @@ int main(int argc, char **argv)
   checkErr (dirs[0][0] == 0, "DIRS variable not specified in config file\n");
 
   // load from current repositories to initialize uris
+  // it is good to put these in right away, so that any future addresses
+  // that are duplicates or subdirectories are immediately discarded
   for (i = 0; i < numDirs; i++) {
     sprintf (str, "rsync://%s/%s", sys, dirs[i]);
-    addIfUnique (str);
+    addURIIfUnique (str);
   }
 
   // set up query
@@ -189,6 +213,12 @@ int main(int argc, char **argv)
                       SCM_SRCH_DOVALUE_ALWAYS);
   for (i = 0; i < srch.nused; i++) {
     free (srch1[i].valptr);
+  }
+
+  // remove original set from list of addresses
+  for (i = 0; i < numDirs; i++) {
+    sprintf (str, "rsync://%s/%s", sys, dirs[i]);
+    removeURI (str);
   }
 
   // write timestamp into database
