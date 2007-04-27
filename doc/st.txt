@@ -23,11 +23,12 @@ the operations of a typical user over the course of several days. The
 idea is to test for the presence of unexpected interactions between the
 toolchains, and also to test for the overall operational behavior of
 the system.  In addition to attempting to duplicate the primary use
-case of the users, two areas will be singled out for more detailed
-examination: database table locking and resource utilization.
+case of the users, three areas will be singled out for more detailed
+examination: database table locking, resource utilization and stale
+certificate handling.
 
 The nominal operational model for the four clients is that they are
-not expecte to overlap in time. This cannot be guaranteed, however, so
+not expected to overlap in time. This cannot be guaranteed, however, so
 it could well occur that one or more clients are running at once. Each
 client is a user of the database so there is at least the theoretical
 possibility that such simultaneous accesses could create an issue. The
@@ -64,7 +65,28 @@ determine if there are any pernicious trends, such as an every growing
 use of memory, an every growing number of open file descriptors, and so
 forth.
 
-In addition to these two focused tests, general operational testing will
+As indicated in the design document (apkidesign.doc) "stale" certificates
+require special handling by the query client. When a ROA is validated
+during the comprehensive query, one or more of the certificates encountered
+on the validation path may have its stale bit set. This indicates that the
+CRL corresponding to this certificate has not been updated in a timely
+fashion, as indicated by its nextUpdate field having passed. The query
+client is told by the user how to handle ROAs having a stale certificate
+in their path: either (a) treat them as valid; (b) treat them as invalid;
+(c) or treat them specially, with the ROA output going to a separate file.
+These three modes of operate will be separately tested. Namely, local
+database modification will be used to set the stale bit on a variety of
+certificates (with a "st" filename prefix).  The query client will then
+be invoked which each of the three command line arguments corresponding to
+the three cases, and the outputs examined. Cases (a) and (c) can be immediately
+compared, in that the union of the file contents of the nominal ROA output
+file and the special output file in case (c) should exactly equal the file
+contents of the nominal output file in case (a). Case (b) will be tested
+by looking at the exclusive OR of the nominal file from case (a) and the
+special file from case (a), which should exactly equal the nominal output
+file in case (b).
+
+In addition to these three focused tests, general operational testing will
 also be done. The important aspect of this testing is to have observables.
 To this end, local file cloning and local database modification will be
 done so that the set of results to be expected is exactly known in advance.
@@ -85,10 +107,14 @@ Once this staging of the test database has been done, a typical day in
 the life of the user will be performed.  Each of the toolchains will be
 exercised in turn. After each tool is run the contents of the database
 will be examined using the "mysql" command line tool, and the actual
-result compared with the expected result.  Note will also be made of
-the time that each invocation takes.  Finally when all four toolchains
-have been exercised (noting that chaser may reinvoked rsync, so that
-the rsync toolchain will be invoked at least twice) the overall expected
+result compared with the expected result.  This comparison will then be
+repeated, but in this case using the query client in its command line
+(non-comprehensive) mode.  The results obtained from "mysql" and from
+the query client should be identical.
+
+Note will also be made of the time that each invocation takes.  Finally when
+all four toolchains have been exercised (noting that chaser may reinvoked rsync,
+so that the rsync toolchain will be invoked at least twice) the overall expected
 result will be compared with the overall actual result. An operational
 timeline will also be developed based on the invocation times for each
 toolchain, and this timeline compared with the nominal one day timeline
