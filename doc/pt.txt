@@ -1,0 +1,94 @@
+Performance testing
+
+The ultimate goal of performance testing is to insure that the users
+can effectively operate the APKI software and perform all necessary
+operations with it on at least a daily basis.  This implies that it
+must be possible to perform all four principle operations - running
+rsync and rcli; running garbage collection; running the chaser client;
+and performing the comprehensive query on a reasonably sized database
+within a twenty-four hour period.  The definition of a "reasonably
+sized database" is open for discussion, of course, but we are targeting
+a database that can store a few hundred thousand objects. In order
+to allow for expansion beyond this putative baseline, we would
+therefore like the set of four principal operations to fit comfortably
+within the twenty-four hour period.
+
+Performance testing will test each of these four operations independently.
+We will not actually have a database with several hundred thousand
+real objects.  Therefore we will create synthetic entries, in a manner
+to be described below, in order to reach a database size of approximately
+five hundred thousand entries (total for all three object types).
+
+First this document will describe how the database will populated,
+then a description of each of the four tests will be given. The two basic ideas
+behind populating the test database are cloning and local database modification.
+Cloning is a very simple idea.  If hello.cer is a valid certificate that has
+been entered into the database, then one can simply copy hello.cer to a
+different filename, say hello2.cer, that can then be manually entered
+into the database.  Since hello.cer was valid, hello2.cer will also
+be valid, and since it has a different filename there will be no
+collision in the database itself.  Of course hello2.cer will appear
+to be a child of hello.cer's parent (assuming hello.cer is not a
+trust anchor, of course).  Cloning thus gives us a way to add more-or-less
+identical records to the database.  We can also modify the database
+records in place once we have added them using the interactive MySQL
+tool "mysql."  To see how this works, consider the following example
+Suppose R1 is a ROA that is already in the database, with ski(R1) = S1.
+There must then be an EE certificate E1 with ski(E1) = S1, also in
+the database.  All E1 antecedants (parents, grandparents, etc) must
+also be in the database. Let P be the parent of E1. If we now want
+to craft a ROA that appears to be different from R1 we do the following:
+copy R1 to R2 and E1 to E2. Enter E2 into the database; enter R2 into
+the database. In the database use the "mysql" tool to change the SKI
+of both the R2 entry and the E2 entry to some different value such that
+SKI(R2) = SKI(E2).  P will still appear to be the parent of both E1
+and E2, so we have partially modified the validation path for the
+ROA R2. Note carefully that we have not in any way modified the files
+R2 and E2. This artifice can obviously be done on any portion of the
+database. In fact, since "mysql" can be scripted, we can start with
+a small set of initial actually valid and unique entries and create an
+arbitrary number of database entries out of them. Since performance
+testing is only concerned with performance, this deemed a completely
+reasonable approach.
+
+It is important to note that cloning and local database modification
+must be done intelligently.  In the real database the tree of objects
+will have a certain "shape", that is a certain portion of the nodes
+will be leaf nodes, a certain portion will be the parents of leaf nodes,
+and so forth. Since performance testing for both rsync-rcli, and, to a
+less extent, garbage collection (with respect to its reparenting test)
+is a function of this distribution, it is important that the cloning
+and modification process not produce an aberrant distribution. Of course
+the tree obtained will be largely artificial, but we will still strive
+to clone in such a way that the distribute of nodes at each depth before
+cloning (that is, the distribution of the genuine elements) will be
+preserved to the greatest extent possible in the cloned database. This
+will necessitate cloning and modification at all levels of the tree
+below the trust anchors.
+
+The rsync performance test will consider two scenarios: populating
+an empty database with approximately 500000 entries, and adding 1000
+entries to that database (all numbers approximate).  Each test will be timed
+using the Linux utility "time."  A fake local repository will be set up
+as the source for the new objects. Cloning will be done at the file level
+for this test, that is without local database modification.
+
+The garbage collection performance test will also rely on the ability
+to modify database entries, in this case the notAfter field in the
+certificate table and also the sn field in that same table.  The "mysql"
+utility will be used to arrange that approximately 1% of the entries
+in a database with 500000 entries will need to be expired or revoked.
+The garbage collection process will then be run on the command line and
+timed using "time" for each of the three cases.
+
+The query client performance test will invoke the query client in
+its "comprehensive query" mode over a database with approximately
+50000 ROAs.  The invocation will be timed using "time." Cloning will be
+used to create the entries as in the previous two tests.
+
+The chaser client performance test will be invoked over a database
+that has 500000 entries, with the assumption that 1% of them have new SIA,
+AIA or CRLDP values that are not currently known to rsync.  These new SIA,
+AIA and CRLDP entries will be created using database entry modifications as
+with the garbage collection test. The new URIs will point to fake repositories.
+"time" will be used to time the test.
