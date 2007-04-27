@@ -114,13 +114,46 @@ int main(int argc, char **argv)
   scmsrch  srch1[NUM_FIELDS];
   char     msg[1024];
   unsigned long blah = 0;
-  int      i, status;
+  int      i, status, numDirs;
+  char     *filename, sys[120], dirs[50][60], str[180], *str2;
+  FILE     *fp;
 
   // initialize
   argc = argc; argv = argv;   // silence compiler warnings
   startSyslog ("chaser");
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
+
+  // read in from rsync config file
+  filename = (argc == 1) ? "rsync_pull_sample.config" : argv[1];
+  fp = fopen (filename, "r");
+  checkErr (fp == NULL, "Unable to open rsync config file: %s\n", filename);
+  sys[0] = 0;
+  dirs[0][0] = 0;
+  while (fgets (msg, 1024, fp) != NULL) {
+    sscanf (strtok (msg, "="), "%s", str);
+    if (strcmp (str, "SYSTEM") == 0) {
+      sscanf (strtok (NULL, ""), "%s", sys);
+    } else if (strcmp (str, "DIRS") == 0) {
+      str2 = strtok (strtok (NULL, "\""), " ");
+      for (numDirs = 0; numDirs < 50; str2 = strtok (NULL, " ")) {
+        if (str2 == NULL) break;
+        if (strlen (str2) > 0) {
+          strcpy (dirs[numDirs++], str2);
+        }
+      }
+    }
+  }
+  checkErr (sys[0] == 0, "SYSTEM variable not specified in config file\n");
+  checkErr (dirs[0][0] == 0, "DIRS variable not specified in config file\n");
+
+  // load from current repositories to initialize uris
+  for (i = 0; i < numDirs; i++) {
+    sprintf (str, "rsync://%s/%s", sys, dirs[i]);
+    addIfUnique (str);
+  }
+
+  // set up query
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
   connect = connectscm (scmp->dsn, msg, 1024);
