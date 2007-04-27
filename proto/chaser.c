@@ -24,6 +24,15 @@ static int numURIs = 0;
 static char *prevTimestamp;
 static char *currTimestamp;
 
+static int supersedes (const char *str1, const char *str2)
+{
+  if (strncmp (str1, str2, strlen (str1)) != 0) return 0;
+  if (strlen (str1) == strlen (str2)) return 1;
+  if (str1 [strlen(str1) - 1] == '/') return 1;
+  if (str2 [strlen(str1)] == '/') return 1;
+  return 0;
+}
+
 /* update list of uris by adding the next one */
 static void addIfUnique (char *uri)
 {
@@ -47,11 +56,11 @@ static void addIfUnique (char *uri)
   }
 
   // if previous one supersedes it, just return without inserting
-  if ((low > 0) && (strncmp (uri, uris[low-1], strlen (uris[low-1])) == 0))
+  if ((low > 0) && supersedes (uris[low-1], uri))
     return;
 
   // search for which ones to remove
-  while ((high < numURIs) && (strncmp (uri, uris[high], strlen (uri)) == 0))
+  while ((high < numURIs) && supersedes (uri, uris[high]))
     high++;
 
   // do the insert and remove
