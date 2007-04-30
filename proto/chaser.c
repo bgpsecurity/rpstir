@@ -38,7 +38,7 @@ static int supersedes (const char *str1, const char *str2)
 }
 
 /* binary search for insertion point or existing position */
-static inURIList (char *uri, int *position)
+static int inURIList (char *uri, int *position)
 {
   int i, cmp;
   int low = 0;
@@ -71,16 +71,16 @@ static void removeURI (char *uri)
 }
 
 /* update list of uris by adding the next one */
-static void addURIIfUnique (char *uri)
+static int addURIIfUnique (char *uri)
 {
   int i, low, high;
   char **newURIs;
 
-  if (strlen (uri) == 0) return;
-  if (inURIList (uri, &low)) return;   // if already there, all done
+  if (strlen (uri) == 0) return -1;
+  if (inURIList (uri, &low)) return low;   // if already there, all done
 
   // if previous one supersedes it, just return without inserting
-  if ((low > 0) && supersedes (uris[low-1], uri)) return;
+  if ((low > 0) && supersedes (uris[low-1], uri)) return low;
 
   // search for which ones to remove
   for (high = low; (high < numURIs) && supersedes (uri, uris[high]); high++);
@@ -105,6 +105,17 @@ static void addURIIfUnique (char *uri)
   // finally, add new one in and modify num
   uris[low] = strdup (uri);
   numURIs += 1 + low - high;
+  return low;
+}
+
+static int isDirectory (const char *uri)
+{
+  char *slash, *dot;
+  slash = strrchr (uri, '/');
+  if (strcmp (slash, "/") == 0) return 1;
+  dot = strrchr (uri, '.');
+  if (dot == NULL) return 1;
+  return slash > dot;
 }
 
 /* callback function for searchscm that accumulates the list */
@@ -137,8 +148,9 @@ int main(int argc, char **argv)
   char     msg[1024];
   unsigned long blah = 0;
   int      i, status, numDirs;
-  char     *filename, sys[120], dirs[50][60], str[180], *str2;
-  FILE     *fp;
+  char     *filename, sys[120], dirs[50][120], str[180], *str2;
+  char     *sys2, *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
+  FILE     *fp, *configFile;
 
   // initialize
   argc = argc; argv = argv;   // silence compiler warnings
@@ -152,8 +164,9 @@ int main(int argc, char **argv)
   checkErr (fp == NULL, "Unable to open rsync config file: %s\n", filename);
   sys[0] = 0;
   dirs[0][0] = 0;
+  rsyncStr[0] = 0;
   while (fgets (msg, 1024, fp) != NULL) {
-    sscanf (strtok (msg, "="), "%s", str);
+    sscanf (strtok (strdup (msg), "="), "%s", str);
     if (strcmp (str, "SYSTEM") == 0) {
       sscanf (strtok (NULL, ""), "%s", sys);
     } else if (strcmp (str, "DIRS") == 0) {
@@ -164,6 +177,8 @@ int main(int argc, char **argv)
           strcpy (dirs[numDirs++], str2);
         }
       }
+    } else {
+      strcat (rsyncStr, msg);
     }
   }
   checkErr (sys[0] == 0, "SYSTEM variable not specified in config file\n");
@@ -221,13 +236,54 @@ int main(int argc, char **argv)
     removeURI (str);
   }
 
+  // remove all files from list of addresses and replace with directories
+  for (i = 0; i < numURIs; i++) {
+    if (! isDirectory (uris[i])) {
+      strcpy (msg, uris[i]);
+      (strrchr (msg, '/'))[1] = 0;
+      i = addURIIfUnique (msg);
+    }
+  }
+
+  // aggregate those from same system and call rsync
+  sys[0] = 0;
+  for (i = 0; i <= numURIs; i++) {
+    if (i < numURIs) {
+      sys2 = &uris[i][strlen("rsync://")];
+      dir2 = strchr (sys2, '/');
+      if (dir2 != NULL) {
+	*dir2 = 0;
+	dir2 = &dir2[1];
+	if (dir2 [strlen (dir2) - 1] == '/')
+	  dir2 [strlen (dir2) - 1] = 0;
+      }
+    }
+    if ((i < numURIs) && (strcmp (sys, sys2) == 0)) {
+      strcat (dirStr, " ");
+      strcat (dirStr, dir2);
+    } else {
+      if (sys[0]) {
+	configFile = fopen ("chaser_rsync.config", "w");
+	checkErr (configFile == NULL, "Unable to open file for write\n");
+	sprintf (rsyncStr2, "%sDIRS=\"%s\"\nSYSTEM=%s\n",
+		 rsyncStr, dirStr, sys);
+	fputs (rsyncStr2, configFile);
+	fclose (configFile);
+	system ("rsync_pull.sh chaser_rsync.config");
+      }
+      if (i < numURIs) {
+	strcpy (sys, sys2);
+	strcpy (dirStr, dir2);
+      }
+    }
+  }
+
   // write timestamp into database
   table = findtablescm (scmp, "metadata");
   sprintf (msg, "update %s set ch_last=\"%s\";",
            table->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
-  for (i = 0; i < numURIs; i++) printf ("uri = %s\n", uris[i]);
   stopSyslog();
   return 0;
 }
