@@ -226,7 +226,7 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
     {
       if ( errmsg != NULL && emlen > 0 )
 	heer((void *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
-      disconnectscm(conp);
+      //  disconnectscm(conp);  # if not connected, cannot disconnect
       return(NULL);
     }
   conp->connected++;
