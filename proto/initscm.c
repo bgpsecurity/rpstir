@@ -259,11 +259,12 @@ scm *initscm(void)
 {
   scm *scmp;
   int  sta;
+  char *db = getenv ("APKI_DB");
 
   scmp = (scm *)calloc(1, sizeof(scm));
   if ( scmp == NULL )
     return(NULL);
-  scmp->db = strdup(APKI_DB);
+  scmp->db = strdup((db == NULL) ? APKI_DB : db);
   if ( scmp->db == NULL )
     {
       freescm(scmp);
@@ -281,7 +282,7 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsn = makedsnscm(APKI_DSN, APKI_DB, APKI_DBUSER, NULL);
+  scmp->dsn = makedsnscm(APKI_DSN, strdup (scmp->db), APKI_DBUSER, NULL);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);
