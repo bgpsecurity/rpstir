@@ -196,7 +196,7 @@ int main(int argc, char **argv)
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
   connect = connectscm (scmp->dsn, msg, 1024);
-  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, msg);
+  checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
   srch.vec = srch1;
   srch.sname = NULL;
   srch.ntot = NUM_FIELDS;

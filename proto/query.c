@@ -276,7 +276,7 @@ static int doQuery (char **displays, char **filters)
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
   connect = connectscm (scmp->dsn, errMsg, 1024);
-  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, errMsg);
+  checkErr (connect == NULL, "Cannot connect to database: %s\n", errMsg);
   connect->mystat.tabname = objectType;
   table = findtablescm (scmp, isCert ? "certificate" : objectType);
   checkErr (table == NULL, "Cannot find table %s\n", objectType);

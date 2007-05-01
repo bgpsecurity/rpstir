@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
   connect = connectscm (scmp->dsn, msg, 1024);
-  checkErr (connect == NULL, "Cannot connect to %s: %s\n", scmp->dsn, msg);
+  checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
   certTable = findtablescm (scmp, "certificate");
   checkErr (certTable == NULL, "Cannot find table certificate\n");
   crlTable = findtablescm (scmp, "crl");
