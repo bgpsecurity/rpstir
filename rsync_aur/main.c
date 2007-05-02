@@ -1,6 +1,6 @@
 #include "main.h"
 
-static char *makeCDStr(unsigned int *retlenp)
+static char *makeCDStr(unsigned int *retlenp, char *dir)
 {
   char *buf;
   char *ret;
@@ -9,11 +9,15 @@ static char *makeCDStr(unsigned int *retlenp)
   buf = (char *)calloc(PATH_MAX+6, sizeof(char));
   if ( buf == NULL )
     return(NULL);
-  ret = getcwd(buf+2, PATH_MAX+1);
-  if ( ret == NULL )
-  {
-    free((void *)buf);
-    return(NULL);
+  if (dir == NULL) {
+    ret = getcwd(buf+2, PATH_MAX+1);
+    if ( ret == NULL )
+    {
+      free((void *)buf);
+      return(NULL);
+    }
+  } else {
+    strncpy (buf+2, dir, PATH_MAX+1);
   }
   buf[0] = 'C';
   buf[1] = ' ';
@@ -35,6 +39,7 @@ main(int argc, char *argv[])
   unsigned int retlen;
   FILE *fp;
   char *sendStr;
+  char *topDir = NULL;
   struct write_port wport;
   char holding[PATH_MAX];
   char flags;  /* our warning flags bit fields */
@@ -45,7 +50,7 @@ main(int argc, char *argv[])
 
   memset((char *)&wport, '\0', sizeof(struct write_port));
 
-  while ((ch = getopt(argc, argv, "t:u:f:nweih")) != -1) {
+  while ((ch = getopt(argc, argv, "t:u:f:nweid:h")) != -1) {
     switch (ch) {
       case 't':  /* TCP flag */
         tflag = 1;
@@ -76,6 +81,9 @@ main(int argc, char *argv[])
           exit(1);
         }
         break;
+      case 'd':
+	topDir = strdup (optarg);
+	break;
       case 'h': /* help */
       default:
         usage(argv[0]);
@@ -150,7 +158,7 @@ main(int argc, char *argv[])
   /* send the Directory String                        */
   /* free it                                          */
   /****************************************************/
-  sendStr = makeCDStr(&retlen);
+  sendStr = makeCDStr(&retlen, topDir);
   if (!sendStr) {
     fprintf(stderr, "failed to make Directory String... bailing...\n");
     exit(1);
@@ -159,6 +167,7 @@ main(int argc, char *argv[])
   outputMsg(&wport, sendStr, retlen);
   retlen = 0;
   free(sendStr);
+  if (topDir != NULL) free (topDir);
 
   /****************************************************/
   /* do the main parsing and sending of the file loop */
