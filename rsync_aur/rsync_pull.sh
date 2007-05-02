@@ -23,7 +23,15 @@ RSYNC=/usr/local/bin/rsync
 # LOGS=
 #   The full path of where the rsync log file (that the AUR program
 #   will ultimately use) should be put. 
-
+#
+# ***NOTE*** we are handing off these variables to rsync. As such, 
+# if someone were to include shell metacharacters then badness can 
+# be acheived (e.g. DIRS="foo bar ba;touch\ /etc/nologin;" or similar)
+#
+# This script is a proof of concept, if you want to redo it in perl, c
+# or something else remember to allow only legitimate characters and
+# deny all others prior to handing any of the variables to the shell or
+# other programs. (.mudge) 
 
 # check that we have a config file specified as the arg
 if [ $# -ne 1 ] ; then
