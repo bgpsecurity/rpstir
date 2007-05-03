@@ -197,7 +197,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   scmtab  *ctab;
   scmkva   aone;
   scmkv    cols[CF_NFIELDS+5];
-  char *wptr;
+  char *wptr = NULL;
   char *ptr;
   char  flagn[24];
   char  lid[24];
