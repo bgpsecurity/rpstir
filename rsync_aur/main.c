@@ -34,7 +34,7 @@ main(int argc, char *argv[])
      what you would have done, {w,e,i}flag = {warning,error,
      information} flags for what will be sent, ch is for getopt */
 
-  int tflag, uflag, nflag, fflag, ch;
+  int tflag, uflag, nflag, fflag, ch, i, isTrust;
   int portno;
   unsigned int retlen;
   FILE *fp;
@@ -172,15 +172,21 @@ main(int argc, char *argv[])
   /****************************************************/
   /* do the main parsing and sending of the file loop */
   /****************************************************/
-  while (fgets(holding, PATH_MAX, fp) != NULL) {
-    sendStr = getMessageFromString(holding, (unsigned int)strlen(holding), 
-                                   &retlen, flags);
-    if (sendStr) {
-      outputMsg(&wport, sendStr, retlen);
-      retlen = 0;
-      free(sendStr);
+  for (i = 0; i < 2; i++) {
+    while (fgets(holding, PATH_MAX, fp) != NULL) {
+      isTrust = strstr (holding, "TRUST") != NULL;
+      if ((isTrust && (! i)) || ((! isTrust) && i)) {
+	sendStr = getMessageFromString(holding, (unsigned int)strlen(holding), 
+				       &retlen, flags);
+	if (sendStr) {
+	  outputMsg(&wport, sendStr, retlen);
+	  retlen = 0;
+	  free(sendStr);
+	}
+      }
+      memset(holding, '\0', sizeof(holding));
     }
-    memset(holding, '\0', sizeof(holding));
+    fseek (fp, 0, SEEK_SET);
   }
 
   /****************************************************/
