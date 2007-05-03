@@ -295,6 +295,7 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
+  scmp->prefixsize = TABLE_PREFIX_LENGTH;
   return(scmp);
 }
 
