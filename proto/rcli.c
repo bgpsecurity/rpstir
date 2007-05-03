@@ -440,22 +440,23 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
   char *outdir;
   char *outfile;
   char *outfull;
-  int   sta;
+  int   sta, trusted;
 
   sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
+  trusted = strstr(outdir, "TRUST") != NULL;
   if ( sta < 0 )
     return(sta);
   switch ( what )
     {
     case 'a':
-      sta = add_object(scmp, conp, outfile, outdir, outfull, 0);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
       break;
     case 'r':
       sta = delete_object(scmp, conp, outfile, outdir, outfull);
       break;
     case 'u':
       (void)delete_object(scmp, conp, outfile, outdir, outfull);
-      sta = add_object(scmp, conp, outfile, outdir, outfull, 0);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
       break;
     default:
       break;
