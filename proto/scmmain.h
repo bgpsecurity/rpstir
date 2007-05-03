@@ -27,6 +27,9 @@ static char *APKI_DB = "apki";
 
 static char *APKI_DBUSER = "mysql";
 
+/* length of prefix to remove from table name for max id lookup */
+#define TABLE_PREFIX_LENGTH 5
+
 /*
   Table definitions
 */

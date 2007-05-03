@@ -33,6 +33,7 @@ typedef struct _scm
   char   *dsn;			/* canonical data source name */
   scmtab *tables;		/* array of tables */
   int     ntables;		/* number of tables in "tables" */
+  int     prefixsize;           /* num chars in prefix for table names */
 } scm;
 
 extern scm    *initscm(void);

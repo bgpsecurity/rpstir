@@ -11,9 +11,6 @@
 #include "scmf.h"
 #include "err.h"
 
-/* length of prefix to remove from table name for max id lookup */
-#define TABLE_PREFIX_LENGTH 5
-
 /*
   Decode the last error on a handle
 */
@@ -639,7 +636,7 @@ int getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
 	(void)sprintf(conp->mystat.errmsg, "Cannot find %s table", what);
       return(ERR_SCM_NOSUCHTAB);
     }
-  ptr = otab->tabname + TABLE_PREFIX_LENGTH;
+  ptr = otab->tabname + scmp->prefixsize;
   leen = strlen(ptr) + strlen(mtab->tabname) + strlen(speccol) + 64;
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
@@ -698,7 +695,7 @@ int setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
 	(void)sprintf(conp->mystat.errmsg, "Cannot find %s table", what);
       return(ERR_SCM_NOSUCHTAB);
     }
-  ptr = otab->tabname + TABLE_PREFIX_LENGTH;
+  ptr = otab->tabname + scmp->prefixsize;
   leen = strlen(ptr) + strlen(mtab->tabname) + strlen(speccol) + 64;
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
