@@ -1,88 +1,3 @@
-#ifndef _SCMF_H_
-#define _SCMF_H_
-
-#include <sql.h>
-#include <sqlext.h>
-
-typedef struct _scmstat		/* connection statistics */
-{
-  char     *errmsg;		/* error messages */
-  char     *tabname;            /* name of table having error: not allocated */
-  int       emlen;		/* alloc'd length of errmsg */
-  int       rows;		/* rows changed */
-} scmstat;
-
-typedef struct _stmtstk
-{
-  SQLHSTMT  hstmt;
-  struct   _stmtstk *next;
-} stmtstk;
-
-typedef struct _scmcon		/* connection info */
-{
-  SQLHENV   henv;		/* environment handle */
-  SQLHDBC   hdbc;		/* database handle */
-//  SQLHSTMT  hstmt;		/* statement handle */
-  stmtstk  *hstmtp;             /* stack of statement handles */
-  int       connected;		/* are we connected? */
-  scmstat   mystat;		/* statistics and errors */
-} scmcon;
-
-typedef struct _scmkv		/* used for a single column of an insert */
-{
-  char     *column;		/* column name */
-  char     *value;		/* value for that column */
-} scmkv;
-
-typedef struct _scmkva		/* used for an insert */
-{
-  scmkv    *vec;		/* array of column/value pairs */
-  int       ntot;		/* total length of "vec" */
-  int       nused;		/* number of elements of "vec" in use */
-  int       vald;		/* struct already validated? */
-} scmkva;
-
-typedef struct _scmsrch		/* used for a single column of a search */
-{
-  int       colno;		/* column number in result, typically idx+1 */
-  int       sqltype;		/* SQL C type, e.q. SQL_C_ULONG */
-  char     *colname;		/* name of column */
-  void     *valptr;		/* where the value goes */
-  unsigned  valsize;		/* expected value size */
-  int       avalsize;		/* actual value size, really an SQLINTEGER */
-} scmsrch;
-
-typedef struct _scmsrcha	/* used for a search (select) */
-{
-  scmsrch  *vec;		/* array of column info */
-  char     *sname;		/* unique name for this search (can be NULL) */
-  int       ntot;		/* total length of "vec" */
-  int       nused;		/* number of elements in vec */
-  int       vald;		/* struct already validated? */
-  scmkva   *where;              /* optional "where" conditionals */
-  char     *wherestr;           /* optional "where" string */
-  void     *context;		/* context to be passed from callback */
-} scmsrcha;
-
-// callback function signature for a count of search results
-
-typedef int (*sqlcountfunc)(scmcon *conp, scmsrcha *s, int cnt);
-
-// callback function signature for a single search result
-
-typedef int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
-
-// bitfields for how to do a search
-
-#define SCM_SRCH_DOCOUNT         0x1   /* call count func */
-#define SCM_SRCH_DOVALUE_ANN     0x2   /* call val func if all vals non-NULL */
-#define SCM_SRCH_DOVALUE_SNN     0x4   /* call val func if some vals non-NULL */
-#define SCM_SRCH_DOVALUE_ALWAYS  0x8   /* always call value func */
-#define SCM_SRCH_DOVALUE         0xE   /* call value func */
-#define SCM_SRCH_BREAK_CERR      0x10  /* break from loop if count func err */
-#define SCM_SRCH_BREAK_VERR      0x20  /* break from loop if value func err */
-#define SCM_SRCH_DO_JOIN         0x40  /* Include join with directory table */
-
 #ifndef SQLOK
 #define SQLOK(s) (s == SQL_SUCCESS || s == SQL_SUCCESS_WITH_INFO)
 #endif
@@ -215,8 +130,9 @@ function.
 scm *initscm(void)
 
 This function creates and returns an opaque data structure of type "scm" that
-describes the database schema for the Address PKI. On success it returns a non-NULL
-pointer. On failure it returns NULL.
+describes the database schema for the Address PKI. Note that this function is
+intended to be a singleton: it should be called at most once in any application.
+On success it returns a non-NULL pointer. On failure it returns NULL.
 
 int createalltablesscm(scmcon *conp, scm *scmp)
 
@@ -238,20 +154,210 @@ a table in the schema and returns a pointer to an opaque object of type "scmtab"
 If the table can be found this pointer will be non-NULL. If a non-existent table
 is specified or if any error occurs NULL is returned.
 
-int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr);
+int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
+
+This function performs an SQL insert operation on the table specified by "tabp"
+(discovered using findtablescm()) over the database connection "conp". The row
+to be inserted is specified in the "arr" argument, which is a pointer to a
+data structure scmkva, defined as follows:
+
+     typedef struct _scmkva
+     {
+       scmkv    *vec;
+       int       ntot;
+       int       nused;
+       int       vald;
+     } scmkva;
+
+The "vec" member defines an array of scmkv elements. The total number of
+such elements is "ntot" while the number of elements actually used is "nused".
+If the scmkva has already been used in a successful insert operation then
+"vald" may be set to 1, otherwise it should be set to 0. The array "vec"
+contains data structures of the form:
+
+      typedef struct _scmkv
+      {
+        char     *column;
+        char     *value;
+      } scmkv;
+
+giving the name "column" of a column to whose value should be set to "value".
+Thus, for example to insert a row with three columns "blah" "foo" and "baz"
+whose values are, respectively 10, "fortran" and the binary value 0x2233 the
+following code could be used:
+
+	  scmkva ins;
+	  scmkv  cols[3];
+
+	  cols[0].column = "blah";
+	  cols[0].value = "10";
+	  cols[1].column = "foo";
+	  cols[1].value = "fortran";
+	  cols[2].column = "baz";
+	  cols[2].value = "0x2233";
+	  ins.vec = (&cols[0]);
+	  ins.ntot = 3;
+	  ins.nused = 3;
+	  ins.vald = 0;
+
+Note that all column names and column values are given as strings. This
+means that non-string values must be converted into strings before the
+insertscm() function can be used.
+
+int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
+
+This function performs an SQL delete operation on a row from the table
+specified by "tabp" over the database connection "conp". The value of
+the columns to be deleted is specified using the same structure as in
+insertscm(), above.
+
+int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
+	      sqlcountfunc cnter, sqlvaluefunc valer,
+	      int what)
+
+This function performs an SQL SELECT operation on the database table
+specified by "tabp" over the database connection "conp". The search
+criteria are specified by a data structure pointer of type "scmsrcha"
+which is defined as follows:
+
+    typedef struct _scmsrcha
+    {
+      scmsrch  *vec;
+      char     *sname;
+      int       ntot;
+      int       nused;
+      int       vald;
+      scmkva   *where;
+      char     *wherestr;
+      void     *context;
+    } scmsrcha;
+
+In specifying a search there are two items of importance: what is displayed
+if the search succeeds, and what criteria are used to match items in the
+search (the latter is the WHERE clause in SQL terminology).  The set of
+items to be returned is given in the array "vec" of data structures of type
+"scmsrch" which is defined as follows:
+
+    typedef struct _scmsrch
+    {
+      int       colno;
+      int       sqltype;
+      char     *colname;
+      void     *valptr;
+      unsigned  valsize;
+      int       avalsize;
+    } scmsrch;
+
+The "colno" element in an incrementing value which should begin at 1 for the
+first element in the "vec" array and be incremented for each subsequent element.
+"colno" is not in an way related to the absolute column number in the table.
+"sqltype" is an SQL data type identifier, defined in <sql.h>.  Typical values
+are SQL_C_ULONG and SQL_C_CHAR.  "colname" is the name of the column to be
+displayed, and "valptr" is an opaque pointer to where the value of that column
+will go. There must be at least "valsize" bytes of storage at that location
+to hold the results. The actual size of the results will be set in "avalsize".
+
+In the scmsrcha structure "sname" represents an arbitrary user-defined name
+that can be applied to the search. This name is for the user's use exclusively
+and does not effect the SQL statement that is generated. "ntot" and "nused"
+define, respectively the total length of the "vec" array and the number of
+elements of that array that are actually used. "vald", as in insertscm()
+indicates whether or not the column names in "vec" have previously been
+validated.
+
+The actual match criteria are specified in "where" which is a structure
+pointer of type scmkva as described in insertscm(). In addition to these
+column-based matching criteria it is also possible to specify a match
+criteria explicitly using "wherestr". This can be used, for example to
+support other forms of boolean comparison operations supported by SQL,
+such as < and > (while "where", of course, only searches based on =
+comparisons).  Note that if both "where" and "wherestr" are specified the
+resulting SQL WHERE clause is an AND of the two conditions.
+
+Once the searchscm() function has executed it will have 0 or more rows
+of matching data.  This data can be processed by one of two callback functions.
+If the user desires to only obtain a count of the number of rows that
+matched the search criteria, then the "cnter" callback function should be
+specified. The signature for this function is:
+
+     int (*sqlcountfunc)(scmcon *conp, scmsrcha *s, int cnt);
+
+It is called with the connection parameter "conp", the search parameter "s"
+(with the matching results filled in, of course) and also a total count
+of the number of matching rows.  If the callback function wishes to communicate
+back with the function that called searchscm() it may used the "context"
+pointer of the scmsrcha data structure. This pointer is a user-defined opaque
+pointer that can be used as a communication mechanism between the callbacks
+and the calling function (it may be NULL if no such data passing will be used).
+
+If the caller of the searchscm() function is actually interested in results,
+the callback function "valer" should be specified. This function will then
+be called for each row that matches the search criteria. The signature for
+this callback function is:
+
+    int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
+
+The first two arguments are the same as with the count callback function.
+The third argument is a 0-based index indicating which row of the total
+set of rows is being passed to the value callback. Thus, if there are five
+matching rows the value function will be called five times with "idx" set
+respectively to 0, 1, 2, 3 and then 4.
+
+The final ingredient in the scmsrcha data structure is the "what" element.
+This element is a bitfield of how to perform the search.  This is an OR of
+one or more of the following flags:
+
+       SCM_SRCH_DOCOUNT
+
+This flag indicates that the count function should be called.
+
+       SCM_SRCH_DOVALUE_ANN
+
+This flag indicates that the value function should be called if all the
+requested columns have non-NULL values.
+
+       SCM_SRCH_DOVALUE_SNN
+
+This flag indicates that the value function should be called if at least one
+of the requested columns has a non-NULL value.
+
+       SCM_SRCH_DOVALUE_ALWAYS
+
+This flag indicates that the value function should always be called.
+
+       SCM_SRCH_BREAK_CERR
+
+If this flag is set, and the count function returns an error code, the searchscm()
+function will not call the value function (if specified). Note that if both the
+count and value function callbacks are specified, the count callback is always
+called first, before the value callback is ever called.
+
+       SCM_SRCH_BREAK_VERR
+
+If this flag is set, and the value function returns an error when processing
+any row, it will not be called to process any subsequent rows.
+
+       SCM_SRCH_DO_JOIN
+
+If this flag is set and a search is being perform on any of the tables that
+have a directory id member in common with th directory table (which includes
+the certificate, CRL and ROA tables), then an SQL JOIN will be performed with
+the directory table. This flag should only be set if the directory id member
+(dir_id) is one of the columns in the search or display criteria.
+
+
+
+
+
 int   getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
 			 char *what, unsigned int *ival);
 int   setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
 			   char *what, unsigned int ival);
-int   searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
-		       sqlcountfunc cnter, sqlvaluefunc valer,
-		       int what);
 int   getrowsscm(scmcon *conp);
 scmsrcha *newsrchscm(char *name, int leen, int cleen);
 void  freesrchscm(scmsrcha *srch);
 int   addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 			   unsigned valsize);
-int   deletescm(scmcon *conp, scmtab *tabp, scmkva *deld);
 int   setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			 unsigned int flags);
 int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
