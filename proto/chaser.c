@@ -138,6 +138,16 @@ static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
   return 0;
 }
 
+static int printUsage()
+{
+  fprintf(stderr, "Usage:\n"); 
+  fprintf(stderr, "   -p portno     connect to port number\n");
+  fprintf(stderr, "   -f filename   rsync configuration file to model on\n");
+  fprintf(stderr, "   -d dirname    rsync executable dirrectory\n");
+  fprintf(stderr, "   -h            this help listing\n");
+  return 1;
+}
+
 int main(int argc, char **argv) 
 {
   scm      *scmp = NULL;
@@ -147,9 +157,13 @@ int main(int argc, char **argv)
   scmsrch  srch1[NUM_FIELDS];
   char     msg[1024];
   unsigned long blah = 0;
-  int      i, status, numDirs;
-  char     *filename, sys[120], dirs[50][120], str[180], *str2;
-  char     *sys2, *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
+  int      i, status, numDirs, ch;
+  int      portno = 0;
+  char     sys[120], dirs[50][120], str[180], *str2, str3[300];
+  char     *sys2, *dir2, *dir3, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
+  char     *logDir, *repoDir;
+  char     *rsyncDir = ".";
+  char     *origFile = "rsync_pull_sample.config";
   FILE     *fp, *configFile;
 
   // initialize
@@ -158,10 +172,27 @@ int main(int argc, char **argv)
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
 
+  // parse the command-line flags
+  while ((ch = getopt(argc, argv, "c:p:d:h")) != -1) {
+    switch (ch) {
+      case 'c':   /* configuration file */
+	origFile = strdup (optarg);
+	break;
+      case 'p':   /* port number */
+	portno = atoi (optarg);
+	break;
+      case 'd':   /* rsync executable directory */
+	rsyncDir = strdup (optarg);
+	break;
+      case 'h':   /* help */
+      default:
+	return printUsage();
+    }
+  }
+
   // read in from rsync config file
-  filename = (argc == 1) ? "rsync_pull_sample.config" : argv[1];
-  fp = fopen (filename, "r");
-  checkErr (fp == NULL, "Unable to open rsync config file: %s\n", filename);
+  fp = fopen (origFile, "r");
+  checkErr (fp == NULL, "Unable to open rsync config file: %s\n", origFile);
   sys[0] = 0;
   dirs[0][0] = 0;
   rsyncStr[0] = 0;
@@ -179,6 +210,13 @@ int main(int argc, char **argv)
       }
     } else {
       strcat (rsyncStr, msg);
+      if (strcmp (str, "LOGS") == 0) {
+	sscanf (strtok (NULL, ""), "%s", str);
+	logDir = strdup (str);
+      } else if (strcmp (str, "REPOSITORY") == 0) {
+	sscanf (strtok (NULL, ""), "%s", str);
+	repoDir = strdup (str);
+      }
     }
   }
   checkErr (sys[0] == 0, "SYSTEM variable not specified in config file\n");
@@ -245,7 +283,7 @@ int main(int argc, char **argv)
     }
   }
 
-  // aggregate those from same system and call rsync
+  // aggregate those from same system and call rsync and rsync_aur
   sys[0] = 0;
   for (i = 0; i <= numURIs; i++) {
     if (i < numURIs) {
@@ -269,7 +307,15 @@ int main(int argc, char **argv)
 		 rsyncStr, dirStr, sys);
 	fputs (rsyncStr2, configFile);
 	fclose (configFile);
-	system ("rsync_pull.sh chaser_rsync.config");
+	sprintf (str3, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
+	system (str3);
+	dir3 = strtok (dirStr, " ");
+	while (dir3 != NULL) {
+	  sprintf (str3, "%s/rsync_aur -t %d -f %s/%s.log -d %s/%s",
+		   rsyncDir, portno, logDir, dir3, repoDir, dir3);
+	  system (str3);
+	  dir3 = strtok (NULL, " ");
+	}
       }
       if (i < numURIs) {
 	strcpy (sys, sys2);
