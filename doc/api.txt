@@ -1,7 +1,3 @@
-#ifndef SQLOK
-#define SQLOK(s) (s == SQL_SUCCESS || s == SQL_SUCCESS_WITH_INFO)
-#endif
-
 API documentation
 Version 1.0
 May 2, 2007
@@ -83,7 +79,7 @@ they are documented herein.
 
 2.1 Low level database functions
 
-scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
+2.1.1 scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
 
 This function attempts to open a connection to the Address PKI MySQL database.
 "dsnp" is a non-NULL pointer to a Data Set Name (DSN); "errmsg" is a non-NULL
@@ -91,27 +87,27 @@ pointer to a string of strictly positive length "emlen".  On success an opaque
 connection object of type "scmcon" is returned.  On failure NULL is returned
 and an error message (possibly truncated based on "emlen") is placed in "errmsg".
 
-void disconnectscm(scmcon *conp)
+2.1.2 void disconnectscm(scmcon *conp)
 
 This function disconnects from the database connection "conp". If "conp" is NULL
 or not otherwise a valid, currently open database connection nothing happens. If
 "conp" is a valid, currently open database connection, it is closed, all associated
 database state is cleared and all allocated memory is freed.
 
-char *geterrorscm(scmcon *conp)
+2.1.3 char *geterrorscm(scmcon *conp)
 
 This function returns a textual description of the last error that occurred over
 the database connection "conp", which must be a valid, currently open database
 connection. If no errors have occurred or if it is not possible to fetch the error
 information, NULL is returned.
 
-char *gettablescm(scmcon *conp)
+2.1.4 char *gettablescm(scmcon *conp)
 
 This function returns a human-readable name for the last database table that was
 accessed over the database connection conp.  If no tables have ever been accessed,
 or if there is an error on the connection, NULL is returned.
 
-int createdbscm(scmcon *conp, char *dbname, char *dbuser)
+2.1.5 int createdbscm(scmcon *conp, char *dbname, char *dbuser)
 
 This function creates a database named "dbname" with nominal access rights for
 user "dbuser" in the Address PKI database, using the database connection "conp".
@@ -119,7 +115,7 @@ user "dbuser" in the Address PKI database, using the database connection "conp".
 that has root access to the MySQL database. Typical user applications should never
 have to call this function.
 
-int deletedbscm(scmcon *conp, char *dbname)
+2.1.6 int deletedbscm(scmcon *conp, char *dbname)
 
 This function deletes the database named "dbname" in the Address PKI database,
 using the database connection "conp". "dbname" must not be NULL. "conp" mus tbe
@@ -127,14 +123,20 @@ a database connection that has root acess to the MySQL database. All tables with
 "dbname" are deleted. Typical user applications should never have to call this
 function.
 
-scm *initscm(void)
+2.1.7 scm *initscm(void)
 
 This function creates and returns an opaque data structure of type "scm" that
 describes the database schema for the Address PKI. Note that this function is
 intended to be a singleton: it should be called at most once in any application.
-On success it returns a non-NULL pointer. On failure it returns NULL.
+On success it returns a non-NULL pointer. On failure it returns NULL. Note that
+if this function succeeds it returns allocated memory that must be freed by
+the caller.
 
-int createalltablesscm(scmcon *conp, scm *scmp)
+2.1.8 void freescm(scm *scmp)
+
+This function is used to free the memory allocated by initscm().
+
+2.1.9 int createalltablesscm(scmcon *conp, scm *scmp)
 
 This function creates all the tables within the default Addess PKI database. It
 uses a database connection "conp" which must have root access to the MySQL database.
@@ -142,19 +144,19 @@ It also uses a textual representation of the database schema, as encapsulated in
 the opaque data structure "scmp" of type "scm". Typical user applications should
 never have to call this function.
 
-int statementscm(scmcon *conp, char *stm)
+2.1.10 int statementscm(scmcon *conp, char *stm)
 
 This function executes the SQL statement in "stm" which must be non-NULL, using
 the database connection "conp".
 
-scmtab *findtablescm(scm *scmp, char *hname)
+2.1.11 scmtab *findtablescm(scm *scmp, char *hname)
 
 This function takes a database schema pointer and the human-readable name of
 a table in the schema and returns a pointer to an opaque object of type "scmtab".
 If the table can be found this pointer will be non-NULL. If a non-existent table
 is specified or if any error occurs NULL is returned.
 
-int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
+2.1.12 int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
 
 This function performs an SQL insert operation on the table specified by "tabp"
 (discovered using findtablescm()) over the database connection "conp". The row
@@ -204,16 +206,16 @@ Note that all column names and column values are given as strings. This
 means that non-string values must be converted into strings before the
 insertscm() function can be used.
 
-int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
+2.1.13 int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
 
 This function performs an SQL delete operation on a row from the table
 specified by "tabp" over the database connection "conp". The value of
 the columns to be deleted is specified using the same structure as in
 insertscm(), above.
 
-int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
-	      sqlcountfunc cnter, sqlvaluefunc valer,
-	      int what)
+2.1.14 int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
+	             sqlcountfunc cnter, sqlvaluefunc valer,
+	             int what)
 
 This function performs an SQL SELECT operation on the database table
 specified by "tabp" over the database connection "conp". The search
@@ -345,579 +347,200 @@ the certificate, CRL and ROA tables), then an SQL JOIN will be performed with
 the directory table. This flag should only be set if the directory id member
 (dir_id) is one of the columns in the search or display criteria.
 
+2.1.15 scmsrcha *newsrchscm(char *name, int leen, int cleen);
 
+This utility routine can be used to initialize a scmsrcha pointer. "name"
+is the user-defined name for this search, which can be NULL. "leen" is the
+number of entries in the "vec" array to allocate, and "cleen" is the number
+of bytes to allocate for "context". On success this function returns a non-NULL
+pointer to a new search structure. On failure it returns NULL.
 
+2.1.16 int addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
+	                 unsigned valsize)
 
+This utility function is used in conjunction with "newsrchscm". It is used
+to add a column to the "vec" search array. "srch" is the previously allocated
+scmsrcha structure, "colname" is the name of the column to add, "sqltype"
+is its SQL type, and "valsize" is the size of the "valptr" byte array to
+be allocated to hold the result.
 
-int   getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
-			 char *what, unsigned int *ival);
-int   setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
-			   char *what, unsigned int ival);
-int   getrowsscm(scmcon *conp);
-scmsrcha *newsrchscm(char *name, int leen, int cleen);
-void  freesrchscm(scmsrcha *srch);
-int   addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
-			   unsigned valsize);
-int   setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
-			 unsigned int flags);
-int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
-			       scmtab *mtab, scmsrcha *srch, scmkva *ins,
-			       unsigned int *idp);
-int   updateblobscm(scmcon *conp, scmtab *tabp,
-			   unsigned long long *snlist,
-			   unsigned int sninuse, unsigned int snlen,
-			   unsigned int lid);
-int   setcertptr(scm *scmp, scmcon *conp, unsigned int crlid,
-			char *issuer, char *aki);
-int   getuintscm(scmcon *conp, unsigned int *ival);
-int   updateranlastscm(scmcon *conp, scmtab *mtab, char what, char *now);
-char *makedsnscm(char *pref, char *db, char *usr, char *pass)
-char *hexify(unsigned int, void *);
+2.1.17 void freesrchscm(scmsrcha *srch)
+
+This utility function is used to free all memory allocated by the "newsrchscm"
+and "addcolsrchscm" functions.
+
+2.1.18 char *makedsnscm(char *pref, char *db, char *usr, char *pass)
+
+This utility function is used to create a DSN name given a DSN prefix "pref"
+a database name "db" a user name "usr" and an optional password "pass". All
+parameters other than "pass" must be non-NULL. On success the fully composed
+DSN name is returned. On failure NULL is return.
+
+2.1.19 char *hexify(unsigned int blen, void *barr)
+
+This utility routine is used to create a string appropriate for operations
+on an SQL column that has a binary BLOB type. Given a byte array at "barr"
+of length "blen" this function will create the appropriate string representation.
+On success this function returns that representation; on failure it returns
+NULL.
 
 2.2 High level database functions
 
-2.4 OpenSSL utility functions
-
-2.5 ROA utility functions
-
-2.6 ASN utility functions
-
-2.7 Other utility functions
-
-/*
-  Macros
-*/
-
-#ifndef UNREFERENCED_PARAMETER
-#define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
-#endif
-
-#endif
-
-#ifndef _SQHL_H_
-#define _SQHL_H_
-
-/*
-  Object types
-*/
-
-#define OT_UNKNOWN      0
-#define OT_CER          1	/* DER encoded certificate */
-#define OT_CRL          2	/* DER encoded CRL */
-#define OT_ROA          3	/* DER encoded ROA */
-#define OT_MAXBASIC     3
-
-#define OT_PEM_OFFSET   128
-
-#define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET) /* PEM encoded certificate */
-#define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET) /* PEM encoded CRL */
-#define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET) /* PEM encoded ROA */
-
-/*
-  Flags
-*/
-
-#define SCM_FLAG_CA             0x1    /* certificate authority */
-#define SCM_FLAG_SS             0x2    /* self signed */
-#define SCM_FLAG_TRUSTED        0x4    /* trusted */
-#define SCM_FLAG_VALID          0x8    /* valid */
-#define SCM_FLAG_UNKNOWN       0x10    /* unknown because crl stale */
-
-#define SCM_FLAG_NOTYET      0x1000    /* not yet valid */
-#define SCM_FLAG_EXPIRED     0x2000    /* expired */
-#define SCM_FLAG_REVOKED     0x4000    /* CRL nuked it */
-#define SCM_FLAG_REMOVED     0x8000    /* rsync removed it */
-#define SCM_FLAG_PINV       0x10000    /* parent not valid */
-
-/*
-  Data types
-*/
-
-typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer, char *aki,
-		       unsigned long long sn);
-
-typedef struct _crlinfo
-{
-  scm     *scmp;
-  scmcon  *conp;
-  scmtab  *tabp;
-  crlfunc  cfunc;
-} crlinfo;
-
-/*
-  Prototypes
-*/
-
-int   findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
-			     char *dirname, unsigned int *idp);
-int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			char *outfull, int utrust);
-int   delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			   char *outfull);
-int   infer_filetype(char *fname);
-int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		      unsigned int id, int utrust, int typ);
-int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ);
-int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ);
-int   getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
-			   unsigned int *pflags, unsigned int *lidp);
-int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
-int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
-			 unsigned long long sn);
-int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
-int   certificate_validity(scm *scmp, scmcon *conp);
-int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
-
-char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
-
-void  startSyslog (char *appName);
-void  stopSyslog (void);
-
-#endif
-
-#ifndef _DIRU_H_
-#define _DIRU_H_
-
-/*
-  Directory utility functions
-*/
-
-int   isadir(char *indir);
-int   splitdf(char *dirprefix, char *dirname, char *fname,
-		     char **outdir, char **outfile, char **outfull);
-int   isokfile(char *fname);
-char *r2adir(char *indir);
-
-#endif
-
-#ifndef _ERR_H_
-#define _ERR_H_
-
-/*
-  Error codes
-*/
-
-#define ERR_SCM_NOERR         0
-#define ERR_SCM_COFILE       -1  	/* cannot open file */
-#define ERR_SCM_NOMEM        -2	        /* out of memory */
-#define ERR_SCM_INVALARG     -3	        /* invalid argument */
-#define ERR_SCM_SQL          -4         /* SQL error */
-#define ERR_SCM_INVALCOL     -5	        /* invalid column */
-#define ERR_SCM_NULLCOL      -6         /* null column */
-#define ERR_SCM_NOSUCHTAB    -7         /* no such table */
-#define ERR_SCM_NODATA       -8         /* no matching data in table */
-#define ERR_SCM_NULLVALP     -9         /* null value pointer */
-#define ERR_SCM_INVALSZ     -10         /* invalid size */
-#define ERR_SCM_ISLINK      -11	        /* links not processed */
-#define ERR_SCM_BADFILE     -12         /* invalid file */
-#define ERR_SCM_INVALFN     -13	        /* inconsistent filename */
-#define ERR_SCM_NOTADIR     -14         /* not a directory */
-#define ERR_SCM_INTERNAL    -15	        /* internal error */
-#define ERR_SCM_X509        -16         /* X509 error */
-#define ERR_SCM_BADCERT     -17	        /* error reading cert */
-#define ERR_SCM_NOSUBJECT   -18         /* subject in cert missing */
-#define ERR_SCM_NOISSUER    -19         /* issuer in cert missing */
-#define ERR_SCM_NOSN        -20         /* serial number in cert missing */
-#define ERR_SCM_BIGNUMERR   -21         /* error converting ASN.1 to a bignum */
-#define ERR_SCM_NONB4       -22         /* not-before field is missing */
-#define ERR_SCM_NONAF       -23         /* not-after field is missing */
-#define ERR_SCM_INVALDT     -24         /* invalid date/time */
-#define ERR_SCM_BADEXT      -25         /* extension error */
-#define ERR_SCM_INVALEXT    -26         /* invalid extension */
-#define ERR_SCM_XPROFILE    -27         /* profile violation */
-#define ERR_SCM_MISSEXT     -28         /* missing extension */
-#define ERR_SCM_NOTSS       -29         /* not self-signed */
-#define ERR_SCM_NOTVALID    -30         /* cert validation error */
-#define ERR_SCM_CERTCTX     -31	        /* cannot create cert context */
-#define ERR_SCM_X509STACK   -32         /* x509 stack creation error */
-#define ERR_SCM_STORECTX    -33         /* store ctx creation error */
-#define ERR_SCM_STOREINIT   -34         /* store init error */
-#define ERR_SCM_NOAKI       -35         /* missing aki */
-#define ERR_SCM_CRL         -36         /* CRL error */
-#define ERR_SCM_BADCRL      -37         /* error reading CRL */
-
-#define ERR_SCM_MAXERR      -37
-
-/* macro that prints an error string and call return if a condition is true */
-#define checkErr(test, printArgs...) \
-  if (test) { \
-     (void) fprintf (stderr, printArgs); \
-     return -1; \
-  }
-
-char *err2string(int err);
-
-#endif
-#ifndef _MYSSL_H_
-#define _MYSSL_H_
-
-#include <openssl/err.h>
-#include <openssl/x509.h>
-#include <openssl/x509v3.h>
-#include <openssl/pem.h>
-#include <openssl/pkcs12.h>
-#include <openssl/ui.h>
-#include <openssl/safestack.h>
-#ifndef OPENSSL_NO_ENGINE
-#include <openssl/engine.h>
-#endif
-#ifndef OPENSSL_NO_RSA
-#include <openssl/rsa.h>
-#endif
-#include <openssl/bn.h>
-
-/*
-  This data structure defines the fields that must be extracted from a
-  certificate in order to insert it into the DB.
-*/
-
-#define CF_FIELD_FILENAME    0
-#define CF_FIELD_SUBJECT     1
-#define CF_FIELD_ISSUER      2
-#define CF_FIELD_SN          3
-#define CF_FIELD_FROM        4
-#define CF_FIELD_TO          5
-
-#define CF_FIELD_SKI         6
-#define CF_FIELD_AKI         7
-#define CF_FIELD_SIA         8
-#define CF_FIELD_AIA         9
-#define CF_FIELD_CRLDP      10
-
-#define CF_NFIELDS          (CF_FIELD_CRLDP+1)
-
-
-/*
-  A certificate X509 * must be torn apart into this type of structure.
-  This structure can then be entered into the database.
-*/
-
-typedef struct _cert_fields
-{
-  char *fields[CF_NFIELDS];
-  void *ipb;
-  int   ipblen;
-  unsigned int dirid;
-  unsigned int flags;
-} cert_fields;
-
-typedef char *(*cf_get)(X509 *x, int *stap, int *x509stap);
-
-typedef void (*cfx_get)(X509V3_EXT_METHOD *meth, void *exts,
-			cert_fields *cf, int *stap, int *x509stap);
-
-/*
-  For each field in the X509 * that must be extracted, there is a get
-  function. Some fields are mandatory, others are optional. This structure
-  encapsulates the association of field numbers (above), get functions and
-  an indication of whether they are critical or optional.
-*/
-
-typedef struct _cf_validator
-{
-  cf_get  get_func;
-  int     fieldno;
-  int     critical;
-} cf_validator;
-
-/*
-  For each field that is part of the X509 extension, there is a get
-  function. As above, some fields are mandatory, others are optional.
-  This structure encapsulates the association of extension tags, get
-  functions, field numbers and an indication of whether they are critical
-  or optional.
-*/
-
-typedef struct _cfx_validator
-{
-  cfx_get  get_func;
-  int      fieldno;
-  int      tag;
-  int      critical;
-  int      raw;
-} cfx_validator ;
-
-void  freecf(cert_fields *);
-
-char *ASNTimeToDBTime(char *in, int *stap);
-char *LocalTimeToDBTime(int *stap);
-
-cert_fields *cert2fields(char *fname, char *fullname, int typ,
-				X509 **xp, int *stap, int *x509stap);
-
-/*
-  This data structure defines the fields that must be extracted from a
-  CRL in order to insert it into the DB.
-*/
-
-#define CRF_FIELD_FILENAME    0
-#define CRF_FIELD_ISSUER      1
-#define CRF_FIELD_LAST        2
-#define CRF_FIELD_NEXT        3
-
-#define CRF_FIELD_SN          4
-#define CRF_FIELD_AKI         5
-
-#define CRF_NFIELDS         (CRF_FIELD_AKI+1)
-
-
-/*
-  A X509_CRL * must be torn apart into this type of structure.
-  This structure can then be entered into the database.
-*/
-
-typedef struct _crl_fields
-{
-  char *fields[CRF_NFIELDS];
-  void *snlist;
-  unsigned int snlen;
-  unsigned int dirid;
-  unsigned int flags;
-} crl_fields;
-
-typedef char *(*crf_get)(X509_CRL *x, int *stap, int *crlstap);
-
-typedef void (*crfx_get)(X509V3_EXT_METHOD *meth, void *exts,
-			 crl_fields *cf, int *stap, int *crlstap);
-
-/*
-  For each field in the X509_CRL * that must be extracted, there is a get
-  function. Some fields are mandatory, others are optional. This structure
-  encapsulates the association of field numbers (above), get functions and
-  an indication of whether they are critical or optional.
-*/
-
-typedef struct _crf_validator
-{
-  crf_get get_func;
-  int     fieldno;
-  int     critical;
-} crf_validator;
-
-/*
-  For each field that is part of the X509_CRL extension, there is a get
-  function. As above, some fields are mandatory, others are optional.
-  This structure encapsulates the association of extension tags, get
-  functions, field numbers and an indication of whether they are critical
-  or optional.
-*/
-
-typedef struct _crfx_validator 
-{
-  crfx_get get_func;
-  int      fieldno;
-  int      tag;
-  int      critical;
-} crfx_validator;
-
-void  freecrf(crl_fields *);
-
-crl_fields *crl2fields(char *fname, char *fullname, int typ,
-			       X509_CRL **xp, int *stap, int *crlstap);
-
-#endif
-
-#ifndef _SCM_H_
-#define _SCM_H_
-
-/*
-  A database table has four characteristics: its real name (the name
-  by which the database knows it), its user-friendly name, the
-  SQL statement that queries it, and the list of column names.
-  The following data structure captures that.
-*/
-
-typedef struct _scmtab
-{
-  char  *tabname;		/* SQL name of table */
-  char  *hname;			/* human readable name of table */
-  char  *tstr;			/* table creation string */
-  char **cols;			/* array of column names */
-  int    ncols;			/* number of columns in "cols" */
-} scmtab;
-
-/*
-  This structure defines the overall database schema
-*/
-
-typedef struct _scm
-{
-  char   *db;                   /* name of the database */
-  char   *dbuser;               /* name of the database user */
-  char   *dsnpref;              /* data source name prefix */
-  char   *dsn;			/* canonical data source name */
-  scmtab *tables;		/* array of tables */
-  int     ntables;		/* number of tables in "tables" */
-} scm;
-
-scm    *initscm(void);
-void    freescm(scm *scmp);
-char   *makedsnscm(char *pref, char *db, char *usr, char *pass);
-scmtab *findtablescm(scm *scmp, char *hname);
-
-#endif
-
-#ifndef _SCMMAIN_H_
-#define _SCMMAIN_H_
-
-#ifdef SCM_DEFINED_HERE
-
-/*
-  The DSN name is used to connect to the DB. This is only a part
-  of the DSN; to construct the full DSN you must append the DB
-  name and the user name.
-*/
-
-static char *APKI_DSN = "{MyODBC 3.51 Driver DSN};SERVER=localhost";
-
-/*
-  The database name itself.
-*/
-
-static char *APKI_DB = "apki";
-
-/*
-  The database user name.
-*/
-
-static char *APKI_DBUSER = "mysql";
-
-/*
-  Table definitions
-*/
-
-static scmtab scmtabbuilder[] = 
-  {
-    {				/* APKI_CERT */
-/*
-  Usage notes: valfrom and valto are stored in GMT. local_id is a unique
-  identifier obtained from the cert_max field of the metadata table. When a
-  new cert is to be inserted, the following algorithm is used: obtain cert_max,
-  increment it, set local_id to that incremented value, insert the cert, update
-  cert_max to be the new, incremented value. Thus, cert_max always contains
-  the largest id that is actually in use.
-*/
-      "apki_cert",
-      "CERTIFICATE",
-      "filename VARCHAR(256) NOT NULL,"
-      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
-      "subject  VARCHAR(512),"
-      "issuer   VARCHAR(512) NOT NULL,"
-      "sn       BIGINT NOT NULL,"
-      "flags    INT UNSIGNED DEFAULT 0,"
-      "ski      VARCHAR(128) NOT NULL,"
-      "aki      VARCHAR(128),"
-      "sia      VARCHAR(1024),"
-      "aia      VARCHAR(1024),"
-      "crldp    VARCHAR(1024),"
-      "valfrom  DATETIME NOT NULL,"
-      "valto    DATETIME NOT NULL,"
-      "ipblen   INT UNSIGNED DEFAULT 0,"
-      "ipb      BLOB,"
-      "ts_mod   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
-      "local_id INT UNSIGNED NOT NULL UNIQUE,"
-      "other_id INT UNSIGNED DEFAULT 0,"
-      "other_ty INT UNSIGNED DEFAULT 0,"
-      "         PRIMARY KEY (filename, dir_id),"
-      "         KEY ski (ski),"
-      "         KEY isn (issuer, sn)",
-      NULL,
-      0
-    },
-    {				/* APKI_CRL */
-/*
-  Usage notes: this_upd and next_upd are stored in GMT. local_id is a unique
-  identifier obtained from the crl_max field of the metadata table (see above
-  under the cert usage notes for the algorithm used in calculating the crl
-  local_id). issuer is the actual CRL issuer, obtained from the issuer field of
-  the CRL (direct CRL). snlist is the list of serial numbers for this issuer.
-  It is an array of bignums. The number of bignums in the list is snlen. Some
-  of these revocations may already have happened and the corresponding sn set
-  to 0 in the list. sninuse keeps track of the  number of serial numbers that
-  are not zero in the list.  When this number drops to 0, the entire CRL may be
-  deleted from the DB.
-
-  Note that snlist is of type MEDIUMBLOB, indicating that it can hold at most
-  16M/8 = 2M entries.
-*/
-      "apki_crl",
-      "CRL",
-      "filename VARCHAR(256) NOT NULL,"
-      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
-      "issuer   VARCHAR(512) NOT NULL,"
-      "last_upd DATETIME NOT NULL,"
-      "next_upd DATETIME NOT NULL,"
-      "crlno    BIGINT DEFAULT 0,"
-      "aki      VARCHAR(128),"
-      "snlen    INT UNSIGNED DEFAULT 0,"
-      "sninuse  INT UNSIGNED DEFAULT 0,"
-      "snlist   MEDIUMBLOB,"
-      "flags    INT UNSIGNED DEFAULT 0,"
-      "local_id INT UNSIGNED NOT NULL UNIQUE,"
-      "other_id INT UNSIGNED DEFAULT 0,"
-      "other_ty INT UNSIGNED DEFAULT 0,"
-      "         PRIMARY KEY (filename, dir_id),"
-      "         KEY issuer (issuer),"
-      "         KEY next_upd (next_upd)",
-      NULL,
-      0
-    },
-    {				/* APKI_ROA */
-/*
-  Usage notes: the ski is the ski of the signing cert, and is thus
-  effectively the parent of this ROA. The asn is the AS number from
-  the ROA (there is only one now, not a list). The IP address information
-  is not stored here; it must be fetched from the file itself using
-  the ROA read code. local_id is as with certs and crls.
-*/
-      "apki_roa",
-      "ROA",
-      "filename VARCHAR(256) NOT NULL,"
-      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
-      "ski      VARCHAR(128) NOT NULL,"
-      "asn      INT UNSIGNED NOT NULL,"
-      "flags    INT UNSIGNED DEFAULT 0,"
-      "local_id INT UNSIGNED NOT NULL UNIQUE,"
-      "other_id INT UNSIGNED DEFAULT 0,"
-      "other_ty INT UNSIGNED DEFAULT 0,"
-      "         PRIMARY KEY (filename, dir_id),"
-      "         KEY asn (asn),"
-      "         KEY ski (ski)",
-      NULL,
-      0
-    },
-    {				/* APKI_DIR */
-      "apki_dir",
-      "DIRECTORY",
-      "dirname  VARCHAR(4096) NOT NULL,"
-      "dir_id   INT UNSIGNED NOT NULL,"
-      "         PRIMARY KEY (dir_id)",
-      NULL,
-      0
-    },
-    {				/* APKI_METADATA */
-      "apki_metadata",
-      "METADATA",
-      "rootdir  VARCHAR(4096) NOT NULL,"
-      "inited   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-      "rs_last  TIMESTAMP DEFAULT 0,"
-      "qu_last  TIMESTAMP DEFAULT 0,"
-      "gc_last  TIMESTAMP DEFAULT 0,"
-      "ch_last  TIMESTAMP DEFAULT 0,"
-      "flags    INT UNSIGNED DEFAULT 0,"
-      "cert_max INT UNSIGNED DEFAULT 0,"
-      "crl_max  INT UNSIGNED DEFAULT 0,"
-      "roa_max  INT UNSIGNED DEFAULT 0,"
-      "dir_max  INT UNSIGNED DEFAULT 0,"
-      "local_id INT UNSIGNED DEFAULT 1,"
-      "         PRIMARY KEY (local_id)",
-      NULL,
-      0
-    },
-  } ;
-
-#endif
-
-#endif
+2.2.1 int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+	             char *outfull, int utrust)
+
+This function is used to add an arbitrary object (certificate, CRL or ROA)
+into the database. "scmp" is the database schema object returned by initscm();
+"conp" is a connection to the database. The object will be stored in the file
+named "outfile", which should be the last component of the absolute pathname
+to the file. "outfull" stores the full absolute path to the file and "outdir"
+stores the directory component of the absolute pathname. None of "outfile"
+"outdir" or "outfull" is permitted to be NULL. "utrust" is a value that should
+be set to 1 if the user wishes to provide an indicate that this object is a
+trusted certificate, which must be self-signed. If "utrust" is 0 then this
+function performs a heuristic test to determine if the object is a trust anchor
+certificate.
+
+2.2.2 int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+	                char *outfull)
+
+This function is used to delete an object from the database. Its arguments are
+the same as those of add_object(). Note that it is not an error to delete something
+that is not present in the database.
+
+2.2.3 int findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
+	                  char *dirname, unsigned int *idp)
+
+This function is used to find or create a directory in the directory table,
+or create one if it is not already present. "scmp" and "conp" are the usual
+schema and connection pointers, respectively; mtab is a pointer to the database
+table named METADATA and "dirname" is the name of the directory to be found or
+added.  mtab and dirname may not be NULL. If the operation succeeds then 0 is
+returned, and the directory id of the directory is returned in "idp". If the
+operation fails then a negative error code, defined in err.h, is returned.
+
+2.2.4 int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
+
+This function is used to iterate over all CRLs in the database and perform
+the revokations implied by their issuer/aki/serial-number lists. "scmp" and
+"conp" are the usual schema and connection pointers; cfunc is a callback
+function that is called to process each individual revocation. The function
+signature for this callback is:
+
+    typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer, char *aki,
+		           unsigned long long sn)
+
+In almost every case, the global function model_cfunc() should be used as the
+"cfunc" argument to iterate_crl.
+
+2.2.5 int certificate_validity(scm *scmp, scmcon *conp)
+
+This function is used to iterate over all certificates in the database and
+expire those whose notAfter date is in the part. "scmp" and "conp" are the
+usual schema and database pointers.
+
+2.2.6 char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
+
+This utility function is used to retrieve the name for the repository root
+directory from the database. "scmp" and "conp" are the usual schema and
+connection pointers. On success the name of this directory is returned and
+"stap" is set to 0. On failure NULL is returned, and stap is set to one
+of the negative error codes defined in err.h. Note that this function returns
+allocated memory on success; it is the responsibility of the caller to free it.
+
+2.2.7 void startSyslog(char *appName)
+
+This utility function is used to turn on syslogging with the application
+name "appName".
+
+2.2.8 void stopSyslog(void)
+
+This utility function is used to turn off syslogging.
+
+2.3 OpenSSL utility functions
+
+2.3.1 char *LocalTimeToDBTime(int *stap)
+
+This function is used to obtain the local time and then convert it to a form
+that is suitable for insertion into the database. On success "stap" will be
+set to 0 and a string returned containing that converted time. On failure NULL
+will be returned and stap will be set to a negative error code defined in err.h.
+Note that is this function succeeds it returns allocated memory that must be
+freed by the caller.
+
+2.3.2 cert_fields *cert2fields(char *fname, char *fullname, int typ,
+			       X509 **xp, int *stap, int *x509stap)
+
+This function is used to tear apart an X509 certificate, obtained either from
+a file or from OpenSSL, and place the fields of interest to the database in a
+struct pointer of type "cert_fields". If both "fname" or "fullname" is non-NULL
+then the certificate is read from that file ("fname" is the file part of the
+filename, while "fullname" is the full absolute path of the file). "typ" is
+the type of file that should be read.  It should have one of the values OT_CER,
+OT_CERPEM, OT_CRL, OT_CRL_PEM, OT_ROA or OT_ROA_PEM (defined in sqhl.h). If
+both "fname" and "fullname" are NULL then "xp" should be a pointer to a previously
+read X509 data structure obtained from the OpenSSL library.
+
+On success a non-NULL cert_fields pointer is returned; if *xp was specified as
+NULL then additionally xp is now set to point to an X509 data structure. Finally
+"stap" and "x509stap" are set to zero. On failure NULL is returned, and "stap"
+set to a negative error code. Note that if "stap" as the value ERR_SCM_X509
+then "x509stap" may contain additional error information. Note, however, that
+X509 style error codes are all positive numbers greater than one.
+
+The cert_fields structure contains an array of "fields" members whose array
+indices (e.g. CF_FIELD_SKI, CF_FIELD_ISSUER) are defined as manifest constants
+in sqhl.h. It also contains a "flags" structure member that holds the certificate
+flags that might have already been defined.  Currently only SCM_FLAG_CA, indicating
+that the certificate is a CA certificate, could have already been set. The data
+structure also contains members "ipb" and "ipblen" which contain the RFC3779
+extension information, and its length, in raw ASN.1 format.  Other structure
+members of cert_fields should be opaque to the user and not used.
+
+2.3.3 void freecf(cert_fields *)
+
+This function is used to free all the memory allocated by a call to the
+cert2fields() function.
+
+2.3.4 crl_fields *crl2fields(char *fname, char *fullname, int typ,
+			     X509_CRL **xp, int *stap, int *crlstap)
+
+This function does for CRLs what cert2fields() does for certificates. It
+extracts those fields in a CRL that are meaningful for database insert. The
+semantics of the arguments to this function are identical to those for the
+cert2fields() function.
+
+The crl_fields data structure contains an array of "fields" members, the
+members of which are indexed by manifest constants (e.g. CRF_FIELD_SN) defined
+in sqhl.h.  This data structure also contains a field "snlist" which is an
+array of long long integer values containing the serial numbers in the CRL;
+the length of this list (in elements) is defined by the data structure member
+"snlen". Other fields in the data structure are intended to be opaque and
+should not be used.
+
+On success this function returns a non-NULL crl_fields pointer, and potentially
+sets "xp" to point to an X509_CRL data structure if "fname" and "fullname"
+were both specified; "stap" and "crlstap" are also set to 0 on success. On failure
+NULL is returned, and stap is set to indicate the error. If stap is ERR_SCM_X509
+then "crlstap" may contain additional information in the form of an X509 error
+code.
+
+2.3.5 void freecrf(crl_fields *)
+
+This function is used to free all the memory allocated by crl2fields().
+
+2.4 ROA utility functions
+
+2.5 ASN.1 utility functions
+
+The ASN.1 utility functions are documented in Unix man format in the
+file casn_functions.3.
+
+2.6 Other utility functions
+
+2.6.1 int isadir(char *indir)
+2.6.2 int splitdf(char *dirprefix, char *dirname, char *fname,
+		  char **outdir, char **outfile, char **outfull)
+2.6.3 int isokfile(char *fname)
+2.6.4 char *r2adir(char *indir)
+2.6.5 char *err2string(int err)
