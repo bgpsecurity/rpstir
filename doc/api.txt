@@ -531,6 +531,118 @@ This function is used to free all the memory allocated by crl2fields().
 
 2.4 ROA utility functions
 
+2.4.1 int roaFromConfig(char *fname, int doval, struct ROA** rp)
+
+This function reads the file at "fname" and parses it.  Presuming the file
+represents a ROA in syntactically correct OpenSSL conf file format,
+the function will allocate space for and return a ROA structure at the
+location pointed to by "rp".  
+
+On success this function returns 0; on failure it returns a negative
+error code.
+
+The non-NULL return from this function is allocated memory that
+must be freed by a call to roaFree().
+
+2.4.2 int roaToConfig(struct ROA* r, char *fname)
+
+This function is the inverse of the previous function.  The ROA
+defined by "r" is written to the file named "fname" using the standard
+conf file format (paired KEY= VALUE statements)
+
+On success this function returns 0; on failure it returns a negative
+error code.
+
+This function is optional and may not be implemented in the delivered
+version.
+
+2.4.3 int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp);
+
+This is a more generalized function for similar purposes.  It
+reads in a ROA from a file and potentially perform validation.
+"fname" is the name of the file containing the putative ROA.
+If "fmt" is 0 this function attempts to intuit the file format
+based on the first CR or LF delimited line in the file and also
+the filename; if "fmt" is non-zero then it is an OpenSSL enum value
+specifying the file format (binary DER or PEM encoded DER).
+  
+If "doval" is any nonzero value then the ROA will also be semantically
+validated using all steps that do not require access to the database;
+if "doval" is 0 only ASN.1 syntatic validation will be performed.
+
+On success a ROA data structure, as defined in roa.h, is returned
+and errp is set to 0.  On failure NULL is returned and errp is
+set to a negative error code.
+
+The non-NULL return from this function is allocated memory that
+must be freed by a call to roaFree().
+
+2.4.4 int roaToFile(struct ROA *r, char *fname, int fmt)
+
+This function is the inverse of the previous function.  The ROA
+defined by "r" is written to the file named "fname" using the format
+"fmt".  If "fmt" is 0 the output form is the default (PEM encoded DER).
+
+On success this function returns 0; on failure it returns a negative
+error code.
+
+2.4.5 int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
+
+This function is used to create BGP filter tables from a ROA and its
+certificate.  The contents of "r" and "cert" are examined, the AS-number
+and IP-address associations are extracted, and the result is appended
+to the file "fp".  Note that this function may produce an non-negative
+number of lines of output (including zero).
+
+On success this function returns 0; on failure it returns a negative
+error code.
+
+2.4.6 unsigned char *roaSKI(struct ROA *r)
+
+This utility function extracts the SKI from a ROA and formats it in
+the canonical ASCII format hex:hex:...:hex, suitable for use in DB
+lookups.  On failure this function returns NULL.
+
+Note that this function returns a pointer to allocated memory that
+must be free()d by the caller.
+
+2.4.7 int roaValidate(struct ROA *r);
+
+This function performs all validations steps on a ROA that do not
+require database access.  On success it returns 0; on failure, it
+returns a negative error code.
+
+2.4.8 int roaValidate2(struct ROA *r, X509 *x)
+
+This function performs all validations steps on a ROA that require
+an X509 certificate to have been fetched from the database. It returns 0
+on success and a negative error code on failure. It is assumed that this
+function is called as follows:
+
+      scmcon *conp; // previously opened DB connection
+      X509   *cert;
+      char   *ski;
+      int     valid = -1;
+      int     sta;
+
+      sta = roaValidate(r);
+      if ( sta == 0 ) {
+        ski = roaSKI(r);
+	if ( ski != NULL ) {
+	  cert = find_certificate(conp, ski, NULL, NULL, &sta);
+	  if ( cert != NULL && sta == 0 ) {
+            valid = roaValidate2(r, cert);
+          }
+        }
+      }
+
+2.4.9 void roaFree(struct ROA *r)
+
+This function frees all memory allocated when "r" was created. It
+is permissible for "r" to be NULL, in which case nothing happens.
+If "r" is non-NULL, however, it must point to a syntatically valid
+ROA structure (which need not have been semantically validated, however).
+
 2.5 ASN.1 utility functions
 
 The ASN.1 utility functions are documented in Unix man format in the
@@ -539,8 +651,43 @@ file casn_functions.3.
 2.6 Other utility functions
 
 2.6.1 int isadir(char *indir)
+
+This function returns 1 if "indir" is a directory, 0 if it is not a
+directory, and a negative error code defined in err.h on any error.
+
 2.6.2 int splitdf(char *dirprefix, char *dirname, char *fname,
 		  char **outdir, char **outfile, char **outfull)
+
+This function is responsible for converting an arbitrary filename
+directory name combination into an absolute path, as well as splitting
+that absolute path into its directory and file components. The directory
+part of the input consists of a (possibly NULL) prefix "dirprefix" and
+a (possibly NULL) directory name "dirname". The file part of the input
+consists of the relative or absolute pathname "fname", which must not
+be NULL.  "fname" can contain arbitrary directory constructs such as
+"." and "..".
+
+The function produces a full absolute pathname in "outfull" as well
+as the directory part of that absolute pathname in "outdir" and the
+file part of the absolute pathname in "outfile".
+
 2.6.3 int isokfile(char *fname)
+
+This function returns 0 if the indicated file is a regular file
+(symlinks, sockets, pipes and device files are not considered to
+be regular, but hard links are). On error it returns a negative
+error code in err.h.
+
 2.6.4 char *r2adir(char *indir)
+
+This function attempts to convert the (possibly relative) pathname
+to a directory "indir" into an absolute pathname. On success it returns
+the absolute pathname (in allocated memory that must be freed by the
+caller), On failure it returns NULL.
+
 2.6.5 char *err2string(int err)
+
+This function returns an error string corresponding to an error code
+defined in err.h. The returned value is static memory which must not
+be modified or freed. If "err" is not an error code defined in err.h
+it returns NULL.
