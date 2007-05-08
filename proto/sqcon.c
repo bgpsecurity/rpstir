@@ -589,121 +589,23 @@ int getuintscm(scmcon *conp, unsigned int *ival)
 }
 
 /*
-  Get the maximum id of the table known as "what". A name translation
-  takes place as follows: what is looked up as the human name of the table;
-  the real name is then obtained; the prefix is then removed. So, for example,
-  for the "DIRECTORY" table, the real name is apki_dir. Removing the prefix
-  ("apki" + "_") yields "dir", so that actual column name is dir_max in the
-  METADATA table.
-
-  Note that as an optimization the pointer to the metadata table "mtab"
-  may be provided.  If it is null it is looked up.
+  Get the maximum of the specified id field of the given table.
 */
 
-int getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
+int getmaxidscm(scm *scmp, scmcon *conp, char *field, scmtab *mtab,
 		unsigned int *ival)
 {
-  scmtab *otab;
-  char   *stmt;
-  char   *ptr;
-  char   *speccol;
-  int     leen;
-  int     sta;
+  char   stmt[80];
+  int    sta;
 
-  if ( scmp == NULL || conp == NULL || conp->connected == 0 || what == NULL ||
-       what[0] == 0 || ival == NULL )
+  if (scmp == NULL || conp == NULL || conp->connected == 0 || ival == NULL)
     return(ERR_SCM_INVALARG);
-  if ( mtab == NULL )
-    {
-      mtab = findtablescm(scmp, "METADATA");
-      if ( mtab == NULL )
-	{
-	  conp->mystat.tabname = "METADATA";
-	  if ( conp->mystat.errmsg != NULL )
-	    (void)strcpy(conp->mystat.errmsg, "Cannot find METADATA table");
-	  return(ERR_SCM_NOSUCHTAB);
-	}
-    }
-/*
-  The name of the special column in the metadata table, which will always
-  be the last column.
-*/
-  speccol = mtab->cols[mtab->ncols-1];
-  otab = findtablescm(scmp, what);
-  if ( otab == NULL )
-    {
-      if ( conp->mystat.errmsg != NULL )
-	(void)sprintf(conp->mystat.errmsg, "Cannot find %s table", what);
-      return(ERR_SCM_NOSUCHTAB);
-    }
-  ptr = otab->tabname + scmp->prefixsize;
-  leen = strlen(ptr) + strlen(mtab->tabname) + strlen(speccol) + 64;
-  stmt = (char *)calloc(leen, sizeof(char));
-  if ( stmt == NULL )
-    return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt, "SELECT %s_max FROM %s WHERE %s=1;",
-		ptr, mtab->tabname, speccol);
+  (void)sprintf(stmt, "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
   sta = statementscm(conp, stmt);
-  free((void *)stmt);
   if ( sta < 0 )
     return(sta);
+  *ival = 0;
   sta = getuintscm(conp, ival);
-  return(sta);
-}
-
-/*
-  Set the maximum id of the table known as "what". A name translation
-  takes place as described in the previous function.
-
-  Note that as an optimization the pointer to the metadata table "mtab"
-  may be provided.  If it is null it is looked up.
-*/
-
-int setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab, char *what,
-		unsigned int ival)
-{
-  scmtab *otab;
-  char   *stmt;
-  char   *ptr;
-  char   *speccol;
-  int     leen;
-  int     sta;
-
-  if ( scmp == NULL || conp == NULL || conp->connected == 0 || what == NULL ||
-       what[0] == 0 )
-    return(ERR_SCM_INVALARG);
-  if ( mtab == NULL )
-    {
-      mtab = findtablescm(scmp, "METADATA");
-      if ( mtab == NULL )
-	{
-	  conp->mystat.tabname = "METADATA";
-	  if ( conp->mystat.errmsg != NULL )
-	    (void)strcpy(conp->mystat.errmsg, "Cannot find METADATA table");
-	  return(ERR_SCM_NOSUCHTAB);
-	}
-    }
-/*
-  The name of the special column in the metadata table, which will always
-  be the last column.
-*/
-  speccol = mtab->cols[mtab->ncols-1];
-  otab = findtablescm(scmp, what);
-  if ( otab == NULL )
-    {
-      if ( conp->mystat.errmsg != NULL )
-	(void)sprintf(conp->mystat.errmsg, "Cannot find %s table", what);
-      return(ERR_SCM_NOSUCHTAB);
-    }
-  ptr = otab->tabname + scmp->prefixsize;
-  leen = strlen(ptr) + strlen(mtab->tabname) + strlen(speccol) + 64;
-  stmt = (char *)calloc(leen, sizeof(char));
-  if ( stmt == NULL )
-    return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt, "UPDATE %s SET %s_max=%u WHERE %s=1;",
-		mtab->tabname, ptr, ival, speccol);
-  sta = statementscm(conp, stmt);
-  free((void *)stmt);
   return(sta);
 }
 
@@ -1118,7 +1020,7 @@ static int socvaluefunc(scmcon *conp, scmsrcha *s, int idx)
   managed using this (sadly prolix) function.
 */
 
-int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
+int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
 		      scmsrcha *srch, scmkva *ins, unsigned int *idp)
 {
   unsigned int mid;
@@ -1148,7 +1050,7 @@ int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
 	  return(0);
 	}
     }
-  sta = getmaxidscm(scmp, conp, mtab, tabp->hname, &mid);
+  sta = getmaxidscm(scmp, conp, "dir_id", tabp, &mid);
   if ( sta < 0 )
     return(sta);
   mid++;
@@ -1164,9 +1066,6 @@ int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp, scmtab *mtab,
   (void)sprintf(ins->vec[0].value, "%u", mid);
   sta = insertscm(conp, tabp, ins);
   free((void *)(ins->vec[0].value));
-  if ( sta < 0 )
-    return(sta);
-  sta = setmaxidscm(scmp, conp, mtab, tabp->hname, mid);
   if ( sta < 0 )
     return(sta);
   *idp = mid;

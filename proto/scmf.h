@@ -104,10 +104,8 @@ extern int   createdbscm(scmcon *conp, char *dbname, char *dbuser);
 extern int   deletedbscm(scmcon *conp, char *dbname);
 extern int   createalltablesscm(scmcon *conp, scm *scmp);
 extern int   insertscm(scmcon *conp, scmtab *tabp, scmkva *arr);
-extern int   getmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
-			 char *what, unsigned int *ival);
-extern int   setmaxidscm(scm *scmp, scmcon *conp, scmtab *mtab,
-			   char *what, unsigned int ival);
+extern int   getmaxidscm(scm *scmp, scmcon *conp, char *field,
+			 scmtab *mtab, unsigned int *ival);
 extern int   getuintscm(scmcon *conp, unsigned int *ival);
 extern int   searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 		       sqlcountfunc cnter, sqlvaluefunc valer,
@@ -115,8 +113,7 @@ extern int   searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 extern int   addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 			   unsigned valsize);
 extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
-			       scmtab *mtab, scmsrcha *srch, scmkva *ins,
-			       unsigned int *idp);
+		               scmsrcha *srch, scmkva *ins, unsigned int *idp);
 extern int   deletescm(scmcon *conp, scmtab *tabp, scmkva *deld);
 extern int   setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 			 unsigned int flags);

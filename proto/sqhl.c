@@ -29,7 +29,7 @@
   verified.
 */
 
-int findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab, char *dirname,
+int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
 		    unsigned int *idp)
 {
   scmsrcha *srch;
@@ -47,15 +47,6 @@ int findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab, char *dirname,
   tabp = findtablescm(scmp, "DIRECTORY");
   if ( tabp == NULL )
     return(ERR_SCM_NOSUCHTAB);
-  if ( mtab == NULL )
-    {
-      mtab = findtablescm(scmp, "METADATA");
-      if ( mtab == NULL )
-	{
-	  conp->mystat.tabname = "METADATA";
-	  return(ERR_SCM_NOSUCHTAB);
-	}
-    }
   two[0].column = "dir_id";
   two[0].value = NULL;
   two[1].column = "dirname";
@@ -76,7 +67,7 @@ int findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab, char *dirname,
       return(sta);
     }
   srch->where = &where;
-  sta = searchorcreatescm(scmp, conp, tabp, mtab, srch, &ins, idp);
+  sta = searchorcreatescm(scmp, conp, tabp, srch, &ins, idp);
   freesrchscm(srch);
   return(sta);
 }
@@ -210,7 +201,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   ctab = findtablescm(scmp, "CERTIFICATE");
   if ( ctab == NULL )
     return(ERR_SCM_NOSUCHTAB);
-  sta = getmaxidscm(scmp, conp, NULL, "CERTIFICATE", &cert_id);
+  sta = getmaxidscm(scmp, conp, "local_id", ctab, &cert_id);
   if ( sta < 0 )
     return(sta);
   cert_id++;
@@ -252,9 +243,6 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   sta = insertscm(conp, ctab, &aone);
   if ( wptr != NULL )
     free((void *)wptr);
-  if ( sta < 0 )
-    return(sta);
-  sta = setmaxidscm(scmp, conp, NULL, "CERTIFICATE", cert_id);
   return(sta);
 }
 
@@ -290,7 +278,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
       free((void *)hexs);
       return(ERR_SCM_NOSUCHTAB);
     }
-  sta = getmaxidscm(scmp, conp, NULL, "CRL", &crl_id);
+  sta = getmaxidscm(scmp, conp, "local_id", ctab, &crl_id);
   if ( sta < 0 )
     {
       free((void *)hexs);
@@ -331,10 +319,6 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 // add the CRL
   sta = insertscm(conp, ctab, &aone);
   free((void *)hexs);
-  if ( sta < 0 )
-    return(sta);
-// update the maximum id in the metadata table
-  sta = setmaxidscm(scmp, conp, NULL, "CRL", crl_id);
   if ( sta < 0 )
     return(sta);
 // set the other_id of all matching certs to point to this CRL
@@ -753,7 +737,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       cf->flags |= SCM_FLAG_TRUSTED;
     }
 // verify the cert
-  sta = verify_cert(scmp, conp, x, cf, &x509sta);
+  sta = 0; // ???????????? verify_cert(scmp, conp, x, cf, &x509sta);
 // actually add the certificate
   if ( sta == 0 )
     {
@@ -834,7 +818,7 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( typ < 0 )
     return(typ);
 // find or add the directory
-  sta = findorcreatedir(scmp, conp, NULL, outdir, &id);
+  sta = findorcreatedir(scmp, conp, outdir, &id);
   if ( sta < 0 )
     return(sta);
 // add the object based on the type

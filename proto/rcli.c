@@ -192,7 +192,8 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
     scmsrcha    *narr;
 
 // get, set, get the max directory id
-    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &iii);
+    sta = getmaxidscm(scmp, conp, "dir_id",
+		      findtablescm(scmp, "DIRECTORY"), &iii);
     if ( sta < 0 )
       {
 	(void)fprintf(stderr, "getmaxidscm() failed with err %s (%d)\n",
@@ -200,14 +201,8 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
 	return(sta);
       }
     (void)printf("Id is %u\n", iii);
-    sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 57);
-    if ( sta < 0 )
-      {
-	(void)fprintf(stderr, "setmaxidscm() failed with err %s (%d)\n",
-		      err2string(sta), sta);
-	return(sta);
-      }
-    sta = getmaxidscm(scmp, conp, mtab, "DIRECTORY", &jjj);
+    sta = getmaxidscm(scmp, conp, mtab, "dir_id",
+		      findtablescm(scmp, "DIRECTORY"), &jjj);
     if ( sta < 0 )
       {
 	(void)fprintf(stderr, "getmaxidscm() failed with err %s (%d)\n",
@@ -252,7 +247,7 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
     if ( sta < 0 )
       return(sta);
 // reset the max directory id back to 0
-    sta = setmaxidscm(scmp, conp, mtab, "DIRECTORY", 0);
+    sta = setmaxidscm(scmp, conp, "dir_id", "DIRECTORY", 0);
     if ( sta < 0 )
       {
 	(void)fprintf(stderr, "setmaxidscm() failed with err %s (%d)\n",
@@ -260,17 +255,17 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
 	return(sta);
       }
 // insert some directories
-    sta = findorcreatedir(scmp, conp, mtab, tdir, &id);
+    sta = findorcreatedir(scmp, conp, tdir, &id);
     (void)printf("focdir(%s) status %d id %u\n", tdir, sta, id);
-    sta = findorcreatedir(scmp, conp, mtab, "/tmp", &id);
+    sta = findorcreatedir(scmp, conp, "/tmp", &id);
     (void)printf("focdir(%s) status %d id %u\n", "/tmp", sta, id);
-    sta = findorcreatedir(scmp, conp, mtab, "//var/tmp", &id);
+    sta = findorcreatedir(scmp, conp, "//var/tmp", &id);
     (void)printf("focdir(%s) status %d id %u\n", "//var/tmp", sta, id);
-    sta = findorcreatedir(scmp, conp, mtab, "/fred/leon/burger", &id);
+    sta = findorcreatedir(scmp, conp, "/fred/leon/burger", &id);
     (void)printf("focdir(%s) status %d id %u\n", "/fred/leon/burger", sta, id);
-    sta = findorcreatedir(scmp, conp, mtab, "/tmp", &id);
+    sta = findorcreatedir(scmp, conp, "/tmp", &id);
     (void)printf("focdir(%s) status %d id %u\n", "/tmp", sta, id);
-    sta = findorcreatedir(scmp, conp, mtab, tdir, &id);
+    sta = findorcreatedir(scmp, conp, tdir, &id);
     (void)printf("focdir(%s) status %d id %u\n", tdir, sta, id);
 #ifdef BURLINGAME_TIMING
     {
@@ -284,7 +279,7 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
       for(i=0;i<100000;i++)
 	{
 	  (void)sprintf(numo, "/tmp/%d", i+1);
-	  sta = findorcreatedir(scmp, conp, mtab, numo, &id);
+	  sta = findorcreatedir(scmp, conp, numo, &id);
 	}
       time(&tmo);
       (void)printf("End %s", ctime(&tmo));

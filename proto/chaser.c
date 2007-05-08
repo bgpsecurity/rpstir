@@ -305,6 +305,7 @@ int main(int argc, char **argv)
 	checkErr (configFile == NULL, "Unable to open file for write\n");
 	sprintf (rsyncStr2, "%sDIRS=\"%s\"\nSYSTEM=%s\n",
 		 rsyncStr, dirStr, sys);
+	printf ("\nPull config:\n%s", rsyncStr2);
 	fputs (rsyncStr2, configFile);
 	fclose (configFile);
 	sprintf (str3, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
@@ -313,6 +314,7 @@ int main(int argc, char **argv)
 	while (dir3 != NULL) {
 	  sprintf (str3, "%s/rsync_aur -t %d -f %s/%s.log -d %s/%s",
 		   rsyncDir, portno, logDir, dir3, repoDir, dir3);
+	  printf ("Call: %s\n", str3);
 	  system (str3);
 	  dir3 = strtok (NULL, " ");
 	}

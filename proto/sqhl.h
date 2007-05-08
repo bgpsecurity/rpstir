@@ -56,8 +56,8 @@ typedef struct _crlinfo
   Prototypes
 */
 
-extern int   findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
-			     char *dirname, unsigned int *idp);
+extern int   findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
+			     unsigned int *idp);
 extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 			char *outfull, int utrust);
 extern int   delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,

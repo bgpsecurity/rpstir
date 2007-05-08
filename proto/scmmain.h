@@ -16,7 +16,8 @@
 static char *APKI_DSN = "{MyODBC 3.51 Driver DSN};SERVER=localhost";
 
 /*
-  The database name itself.
+  The database name itself.  It can be overridden via the
+  environment variable APKI_DB
 */
 
 static char *APKI_DB = "apki";
@@ -27,9 +28,6 @@ static char *APKI_DB = "apki";
 
 static char *APKI_DBUSER = "mysql";
 
-/* length of prefix to remove from table name for max id lookup */
-#define TABLE_PREFIX_LENGTH 5
-
 /*
   Table definitions
 */
@@ -39,11 +37,7 @@ static scmtab scmtabbuilder[] =
     {				/* APKI_CERT */
 /*
   Usage notes: valfrom and valto are stored in GMT. local_id is a unique
-  identifier obtained from the cert_max field of the metadata table. When a
-  new cert is to be inserted, the following algorithm is used: obtain cert_max,
-  increment it, set local_id to that incremented value, insert the cert, update
-  cert_max to be the new, incremented value. Thus, cert_max always contains
-  the largest id that is actually in use.
+  identifier with the new one obtained via max(local_id) + 1
 */
       "apki_cert",
       "CERTIFICATE",
@@ -67,17 +61,18 @@ static scmtab scmtabbuilder[] =
       "other_id INT UNSIGNED DEFAULT 0,"
       "other_ty INT UNSIGNED DEFAULT 0,"
       "         PRIMARY KEY (filename, dir_id),"
-      "         KEY ski (ski),"
+      "         KEY ski (ski, subject),"
+      "         KEY aki (aki, issuer),"
+      "         KEY lid (local_id),"
       "         KEY isn (issuer, sn)",
       NULL,
       0
     },
     {				/* APKI_CRL */
 /*
-  Usage notes: this_upd and next_upd are stored in GMT. local_id is a unique
-  identifier obtained from the crl_max field of the metadata table (see above
-  under the cert usage notes for the algorithm used in calculating the crl
-  local_id). issuer is the actual CRL issuer, obtained from the issuer field of
+  Usage notes: this_upd and next_upd are stored in GMT. local_id is a
+  unique identifier obtained as max(local_id) + 1
+  issuer is the actual CRL issuer, obtained from the issuer field of
   the CRL (direct CRL). snlist is the list of serial numbers for this issuer.
   It is an array of bignums. The number of bignums in the list is snlen. Some
   of these revocations may already have happened and the corresponding sn set
@@ -106,7 +101,8 @@ static scmtab scmtabbuilder[] =
       "other_ty INT UNSIGNED DEFAULT 0,"
       "         PRIMARY KEY (filename, dir_id),"
       "         KEY issuer (issuer),"
-      "         KEY next_upd (next_upd)",
+      "         KEY aki (aki),"
+      "         KEY lid (local_id)",
       NULL,
       0
     },
@@ -130,6 +126,7 @@ static scmtab scmtabbuilder[] =
       "other_ty INT UNSIGNED DEFAULT 0,"
       "         PRIMARY KEY (filename, dir_id),"
       "         KEY asn (asn),"
+      "         KEY lid (local_id),"
       "         KEY ski (ski)",
       NULL,
       0
@@ -139,7 +136,8 @@ static scmtab scmtabbuilder[] =
       "DIRECTORY",
       "dirname  VARCHAR(4096) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL,"
-      "         PRIMARY KEY (dir_id)",
+      "         PRIMARY KEY (dir_id),"
+      "         KEY dirname (dirname)",
       NULL,
       0
     },
@@ -153,10 +151,6 @@ static scmtab scmtabbuilder[] =
       "gc_last  TIMESTAMP DEFAULT 0,"
       "ch_last  TIMESTAMP DEFAULT 0,"
       "flags    INT UNSIGNED DEFAULT 0,"
-      "cert_max INT UNSIGNED DEFAULT 0,"
-      "crl_max  INT UNSIGNED DEFAULT 0,"
-      "roa_max  INT UNSIGNED DEFAULT 0,"
-      "dir_max  INT UNSIGNED DEFAULT 0,"
       "local_id INT UNSIGNED DEFAULT 1,"
       "         PRIMARY KEY (local_id)",
       NULL,
