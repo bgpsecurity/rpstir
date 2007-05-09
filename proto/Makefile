@@ -38,4 +38,4 @@ garbage: garbage.o initscm.o myssl.o sqhl.o sqcon.o diru.o Makefile
 	gcc -o garbage -g -L/usr/local/ssl/lib garbage.o initscm.o myssl.o sqhl.o sqcon.o diru.o -lssl -lcrypto -lmyodbc3 -lrt
 
 clean:
-	rm -f rcli query makeROA chaser garbage sqq docert initscm *.o
+	rm -f rcli query makeROA chaser garbage *.o
