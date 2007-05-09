@@ -1,0 +1,24 @@
+Client Installation and Usage Manual
+Version 1.0
+
+1.0 Organization of this document
+
+This document describes how to install and use the BBN Address Space
+PKI database/repository software.  Please refer to the design document,
+apkidesign.doc, for a detailed description of the various software
+components in this release.
+
+Section 2 of this document describes how to install that software,
+including all its dependencies.  Section 3 provides a quickstart
+guide on how to get your system running.  Section 4 provides detailed
+information on how to run the database client programs. Finally, Section
+5 describes the other documents in the deliverable package.
+
+2.0 Installation
+
+3.0 Quickstart
+
+4.0 Client arguments
+
+5.0 Document resources
+
