@@ -318,8 +318,10 @@ static char *hasoneline(char *inp, char **nextp)
     return(NULL);
   *crlf++ = 0;
   *crlf++ = 0;
-  if ( (int)(crlf-inp) < leen )
-    *nextp = inp + leen;
+  if ( (int)(crlf-inp) < leen ) {
+    *nextp = calloc (strlen(crlf) + 1, sizeof(char));
+    strcpy (*nextp, crlf);
+  }
   return(inp);
 }
 
