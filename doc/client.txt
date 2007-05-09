@@ -11,14 +11,82 @@ components in this release.
 Section 2 of this document describes how to install that software,
 including all its dependencies.  Section 3 provides a quickstart
 guide on how to get your system running.  Section 4 provides detailed
-information on how to run the database client programs. Finally, Section
-5 describes the other documents in the deliverable package.
+information on how to run the database client programs. Section
+5 describes the other documents in the deliverable package. Finally,
+Appendix A provides troubleshooting tips for some common problems.
 
 2.0 Installation
 
+2.1 Prerequisites
+
+2.1.1 OpenSSL
+
+Install the latest released version of the OpenSSL package from
+http://www.openssl.org.  It should be at least version 0.9.8d. Follow
+the installation instructions for that package.  We recommend the default
+installation target directory /usr/local/ssl.
+
+2.1.2 MySQL
+
+Install the MySQL open source database from http://mysql.org. We recommed
+the default installation target of /usr/local/mysql. Also install the
+Connector/ODBC driver from the same site.  Insure that the 3.51 driver
+is install.  We strongly recommend that you give the root account a
+password in the odbc initialization file (typically /usr/local/etc/odbc.ini.
+
+2.2 APKI database software
+
+The APKI software will have been delivered to you as a gzip-ed tarball
+named APKI.tgz.  Gunzip using the command:
+
+    gunzip APKI.tgz
+
+and then un-tar the resulting tarball using the command
+
+    tar xvpf APKI.tar
+
+This will create a directory named APKI which will contain various
+subdirectories. The ones that are important to you are the cg, roa-utils,
+proto and doc subdirectories.  In each of the first three directories you
+should do a "make".  This will build the contents of those directories.
+In the directory "proto" you should now have four executables: rcli (the
+rsync database client), query (the query database client), garbage (the garbage
+collection database client) and chaser (the chaser database client). If
+these have built without errors (warnings can safely be ignored) then you
+have successfully installed the APKI software.
+
+The final step that you need to perform is to initialize the MySQL database
+tables.  To do this you will need the MySQL root password that you set in
+step 2.1.2 above.  Execute this command from the proto directory:
+
+     ./rcli -t TOPDIR
+
+where TOPDIR is replaced with the name of the top level directory for you
+repository.  This command will ask you for the MySQL root password. It will
+also ask you to confirm your action, as this step may destroy any APKI
+database tables already present.
+
+If this command succeeds you are ready to begin using the APKI database
+software.  If this command fails, see Appendix A, Troubleshooting.
+
 3.0 Quickstart
 
-4.0 Client arguments
+4.0 Clients
+
+4.1 rsync_pull.sh
+
+4.2 rsync_aur
+
+4.3 rcli
+
+4.4 query
+
+4.5 garbage
+
+4.6 chaser
 
 5.0 Document resources
+
+Appendix A. Troubleshooting
+
 
