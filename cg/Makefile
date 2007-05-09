@@ -8,3 +8,8 @@ asn_gen.dir:
 
 asn.dir:
 	cd asn && make
+
+clean:
+	cd casn && make clean
+	cd asn_gen && make clean
+	cd asn && make clean
