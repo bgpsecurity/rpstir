@@ -128,7 +128,8 @@ ub-x121-address             INTEGER ::= 15
 ub-isdn-address             INTEGER ::= 16
 ub-destination-indicator    INTEGER ::= 128
 ub-user-password            INTEGER ::= 128
-ub-name                     INTEGER ::= 64
+-- ub-name                     INTEGER ::= 64
+ub-name                     INTEGER ::= 32768
 ub-ipAddress                INTEGER ::= 256
 
 
