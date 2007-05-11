@@ -61,20 +61,20 @@ int testSubsetIPContents()
 
 // JFG - link in appropriate parts of OpenSSL for above and below
 // instead of these dummy functions:
-long ASN1_INTEGER_ge(ASN1_INTEGER* a)
-{
-  return 0;
-}
-
-int sk_ASIdOrRange_nu(ASIdOrRange *aor)
-{
-  return 0;
-}
-
-ASIdOrRange *sk_ASIdOrRange_valu(ASIdOrRange *aor, int which)
-{
-  return 0;
-}
+//long ASN1_INTEGER_ge(ASN1_INTEGER* a)
+//{
+//  return 0;
+//}
+//
+//int sk_ASIdOrRange_nu(ASIdOrRange *aor)
+//{
+//  return 0;
+//}
+//
+//ASIdOrRange *sk_ASIdOrRange_valu(ASIdOrRange *aor, int which)
+//{
+//  return 0;
+//}
 
 int roaValidate(struct ROA *r)
 {
@@ -239,23 +239,23 @@ int roaValidate2(struct ROA *r, X509 *x)
   if (0 > iRes)
     return FALSE;
 
-  iASNumCount = sk_ASIdOrRange_nu((ASIdOrRange *)(x->rfc3779_asid->asnum->u.asIdsOrRanges));
+  iASNumCount = sk_ASIdOrRange_num(x->rfc3779_asid->asnum->u.asIdsOrRanges);
   if (0 > iRes)
     return FALSE;
 
   iASFound = FALSE;
   for (i = 0; (i < iASNumCount) && (FALSE == iASFound); i++)
     {
-      asStruct = sk_ASIdOrRange_valu((ASIdOrRange *)(x->rfc3779_asid->asnum->u.asIdsOrRanges), i);
+      asStruct = sk_ASIdOrRange_value(x->rfc3779_asid->asnum->u.asIdsOrRanges, i);
       if (ASIdOrRange_id == asStruct->type)
 	{
-	  if (ASN1_INTEGER_ge(asStruct->u.id) == iAS_ID)
+	  if (ASN1_INTEGER_get(asStruct->u.id) == iAS_ID)
 	    iASFound = TRUE;
 	}
       else if (ASIdOrRange_range == asStruct->type)
 	{
-	  if ((ASN1_INTEGER_ge(asStruct->u.range->min) <= iAS_ID) &&
-	      (ASN1_INTEGER_ge(asStruct->u.range->max) >= iAS_ID))
+	  if ((ASN1_INTEGER_get(asStruct->u.range->min) <= iAS_ID) &&
+	      (ASN1_INTEGER_get(asStruct->u.range->max) >= iAS_ID))
 	    iASFound = TRUE;
 	}
     }
