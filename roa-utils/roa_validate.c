@@ -239,14 +239,14 @@ int roaValidate2(struct ROA *r, X509 *x)
   if (0 > iRes)
     return FALSE;
 
-  iASNumCount = sk_ASIdOrRange_nu(x->rfc3779_asid->asnum->u.asIdsOrRanges);
+  iASNumCount = sk_ASIdOrRange_nu((ASIdOrRange *)(x->rfc3779_asid->asnum->u.asIdsOrRanges));
   if (0 > iRes)
     return FALSE;
 
   iASFound = FALSE;
   for (i = 0; (i < iASNumCount) && (FALSE == iASFound); i++)
     {
-      asStruct = sk_ASIdOrRange_valu(x->rfc3779_asid->asnum->u.asIdsOrRanges, i);
+      asStruct = sk_ASIdOrRange_valu((ASIdOrRange *)(x->rfc3779_asid->asnum->u.asIdsOrRanges), i);
       if (ASIdOrRange_id == asStruct->type)
 	{
 	  if (ASN1_INTEGER_ge(asStruct->u.id) == iAS_ID)

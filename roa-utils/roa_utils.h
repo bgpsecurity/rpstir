@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <openssl/err.h>
 #include <openssl/x509.h>
@@ -47,12 +48,6 @@ enum ianaAfis {
   NOAFI = 0,
   IPV4,
   IPV6
-};
-
-static const char *ianaAfiStrings[] = {
-  "none",
-  "IPv4",
-  "IPv6"
 };
 
 int roaFromConfig(char *fname, int doval, struct ROA** rp);

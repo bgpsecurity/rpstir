@@ -62,6 +62,12 @@ static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$
 static const char roaStart[]="------ BEGIN ROA ------\r\n";
 static const char roaEnd[]="------ END ROA ------\r\n";
 
+static const char *ianaAfiStrings[] = {
+  "none",
+  "IPv4",
+  "IPv6"
+};
+
 /////////////////////////////////////////////////////////////
 //
 // Testing of locally defined enumerations
