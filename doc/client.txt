@@ -134,8 +134,7 @@ then the FILE is taken to be a trust anchor certificate.  It is an error to use
 
 client.txt	This file
 api.txt		API for the database, ASN.1 and ROA libraries
-pt.txt		Performance test plan
-st.txt		System test plan
+testplan.doc    Test plan
 apkidesign.doc	Top level design document
 codereview.doc	Code review standards
 apkiaur.txt	rsync_aur/rcli socket communication protocol
