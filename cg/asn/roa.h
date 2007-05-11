@@ -18,8 +18,8 @@
 #endif
 #define id_signedData "1.2.840.113549.1.7.2"
 #define us "840"
-#define rsadsi "113549"
-#define pkcs "1"
+#define rsadsi1 "113549"
+#define pkcs1 "1"
 #define pkcs7 "7"
 #define id_sha256 "2.16.840.1.101.3.4.2.1"
 #define country "16"

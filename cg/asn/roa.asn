@@ -15,7 +15,7 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
       ContentType ::= OBJECT IDENTIFIER
 
       id-signedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-        us(840) rsadsi(113549) pkcs(1) pkcs7(7) 2 }
+        us(840) rsadsi1(113549) pkcs1(1) pkcs7(7) 2 }
 
       id-sha256 OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) country(16)
         us(840) organization(1) us-government(101) 3 4 2 1}
@@ -97,7 +97,7 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         roa routeOriginAttestation RouteOriginAttestation }
     
       id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) 
-   rsadsi(113549) pkcs(1) pkcs9(9) 16 } 
+   rsadsi1(113549) pkcs1(1) pkcs9(9) 16 } 
     
       id-ct OBJECT IDENTIFIER ::= { id-smime 1 } 
     
