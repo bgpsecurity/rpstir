@@ -645,20 +645,20 @@ Procedure:
 	{
         if (read_item(-1, construct) < 0) return -1;
         if (type < 0 && !*subclass && !optional_def()) syntax(itemname);
-        if (type < 0) c = itemname;
-        else c = find_class(type);
+        if (type < 0) c = (uchar *)itemname;
+        else c = (uchar *)find_class(type);
 	if (*token == ',')
 	    {
-            b = (char *)calloc(1,strlen(table_write) + strlen(numstring) + 16);
-            sprintf(b, table_write, array - 1, numstring, array);
+            b = (uchar *)calloc(1,strlen(table_write) + strlen(numstring) + 16);
+            sprintf((char *)b, table_write, array - 1, numstring, array);
 	    }
 	else
 	    {
-            b = (char *)calloc(1,strlen(table_write_last) + strlen(numstring) +
+            b = (uchar *)calloc(1,strlen(table_write_last) + strlen(numstring) +
                 4);
-            sprintf(b, table_write_last, array - 1, numstring);
+            sprintf((char *)b, table_write_last, array - 1, numstring);
 	    }
-        add_delay_list(b);
+        add_delay_list((char *)b);
         free(b);
 	if (*token == '}') state = IN_DEFINITION;
 	end_item();
@@ -666,14 +666,14 @@ Procedure:
 	}
     state = IN_ITEM;
     ntablep = find_name(classname);
-    if (ntablep->type == ASN_OBJ_ID) b = "AsnObjectIdentifier";
-    else b = "AsnNumeric";
+    if (ntablep->type == ASN_OBJ_ID) b = (uchar *)"AsnObjectIdentifier";
+    else b = (uchar *)"AsnNumeric";
     fprintf(outstr, table_line, b, b, array);     /* print member */
     fprintf(outstr, constructor, classname);
     if (ntablep->type < 0) warn(34, ntablep->name);
     else 
         {
-        c = find_define(ntablep->type);
+	  c = (uchar *)find_define(ntablep->type);
         fprintf(outstr, table_constructor, array, b, c, c);
 	print_delay_list();
         fprintf(outstr, func_finale);
@@ -700,9 +700,9 @@ Procedure:
     for (i = numdefineds; --i >= 0; )
 	{
 	new_file(classname, 1);
-	c = find_defined_class(thisdefined);
-        dup_ansr = test_dup(c, &tmp);
-        c = get_derivation(dup_ansr, ASN_CHOICE);
+	c = (uchar *)find_defined_class(thisdefined);
+        dup_ansr = test_dup((char *)c, &tmp);
+        c = (uchar *)get_derivation(dup_ansr, ASN_CHOICE);
 	fprintf(outstr, opener, classname, c);
         fseek(streams.str, tablepos, 0);
 	while (*token != '{') get_token(0, token);
