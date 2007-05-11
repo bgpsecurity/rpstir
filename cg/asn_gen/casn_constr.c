@@ -102,7 +102,7 @@ static char simple_opener[] =
     tcasnp->level = level;\n",
 
     definer_catchall_entry[] = "    tcasnp++;\n\
-    tcasnp->lth = _write_casn(tcasnp, \"\\377\\377\", 2);\n\
+    tcasnp->lth = _write_casn(tcasnp, (uchar *)\"\\377\\377\", 2);\n\
     tcasnp->level = level;\n",
 
     definer_oid_entry[] = "    tcasnp++;\n\
