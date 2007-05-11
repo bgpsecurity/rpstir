@@ -1754,7 +1754,7 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	{
 	if (casnp->type == ASN_GENTIME) tmp = 2;
 	else tmp = 0;
-	if (_time_to_ulong(&val, &c[tmp], lth - tmp) < 0)
+	if (_time_to_ulong(&val, (char *)&c[tmp], lth - tmp) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
