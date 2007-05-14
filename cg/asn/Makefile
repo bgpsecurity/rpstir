@@ -1,4 +1,4 @@
-all:	Algorithms.h extensions.h name.h orname.h roa.h serial_number.h certificate.h crlv2.h
+all:	Algorithms.h extensions.h name.h orname.h roa.h serial_number.h certificate.h crlv2.h libasn.a
 
 Algorithms.h:	Algorithms.asn
 	../asn_gen/asn_gen -c Algorithms.asn
@@ -24,5 +24,11 @@ certificate.h:	certificate.asn
 crlv2.h:	crlv2.asn
 	../asn_gen/asn_gen -c crlv2.asn
 
+CFLAGS=	-c -I. -I../casn
+
+libasn.a:	Algorithms.o extensions.o name.o orname.o roa.o serial_number.o certificate.o crlv2.o
+	ar crv libasn.a *.o
+	ranlib libasn.a
+
 clean:
-	rm -f *.h *.o
+	rm -f *.h *.o *.a
