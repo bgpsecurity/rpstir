@@ -47,8 +47,15 @@
 #define ERR_SCM_NOAKI       -35         /* missing aki */
 #define ERR_SCM_CRL         -36         /* CRL error */
 #define ERR_SCM_BADCRL      -37         /* error reading CRL */
+#define ERR_SCM_NOTIMPL     -38         /* not implemented */
+#define ERR_SCM_INVALASID   -39         /* invalid AS# */
+#define ERR_SCM_INVALSKI    -40         /* invalid SKI */
+#define ERR_SCM_INVALIPB    -41         /* invalid IP address block */
+#define ERR_SCM_INVALIPL    -42         /* invalid IP address length */
+#define ERR_SCM_INVALVER    -43         /* invalid version */
+#define ERR_SCM_INVALASN    -44         /* ASN.1 library error */
 
-#define ERR_SCM_MAXERR      -37
+#define ERR_SCM_MAXERR      -44
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

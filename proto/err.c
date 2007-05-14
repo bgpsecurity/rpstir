@@ -46,6 +46,13 @@ static char *errs[] =
     "Missing AKI",                  /* ERR_SCM_NOAKI */
     "CRL error",                    /* ERR_SCM_CRL */
     "Error reading CRL"             /* ERR_SCM_BADCRL */
+    "Not implemented",		    /* ERR_SCM_NOTIMPL */
+    "Invalid AS number",	    /* ERR_SCM_INVALASID */
+    "Invalid SKI",                  /* ERR_SCM_INVALSKI */
+    "Invalid IP address block",     /* ERR_SCM_INVALIPB */
+    "Invalid IP address length",    /* ERR_SCM_INVALIPL */
+    "Invalid version number",       /* ERR_SCM_INVALVER */
+    "ASN.1 library error",          /* ERR_SCM_INVALASN */
   } ;
 
 char *err2string(int err)
