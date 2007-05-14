@@ -29,11 +29,16 @@
 // Generated from the asn definition
 #include <roa.h>
 
-#define FALSE 0
-#define TRUE 1
+#include "err.h"
 
-#define ROA_VALID 0
-#define ROA_INVALID 1
+//#define FALSE 0
+//#define TRUE 1
+
+#define cFALSE 0
+#define cTRUE  1
+
+//#define ROA_VALID 0
+//#define ROA_INVALID 1
 
 // JFG - Reinsert this definition here if ranges are reinstated in asn
 //#define IP_RANGES_ALLOWED

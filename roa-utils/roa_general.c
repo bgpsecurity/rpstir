@@ -20,9 +20,11 @@ int itoa (int n, char* cN, int radix){
 
   if ((radix > 10) ||
       (NULL == cN))
-    return FALSE;
+    return ERR_SCM_INVALARG;
   
-  s = (char*) malloc(33);
+  s = (char*) calloc(33, sizeof(char));
+  if ( s == NULL )
+    return ERR_SCM_NOMEM;
   
   do{
     s[i++]=(char)( n % radix + '0');
@@ -35,7 +37,7 @@ int itoa (int n, char* cN, int radix){
 
   cN[j]='\0';
   free(s);
-  return TRUE;
+  return 0;
 }
 
 int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
@@ -44,7 +46,7 @@ int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
   char cLow = 0;
 
   if (NULL == c2Array)
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   cLow = cVal & 0x0f;
   cHigh = ((cVal & 0xf0) >> 4);
@@ -62,7 +64,7 @@ int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
   c2Array[0] = cHigh;
   c2Array[1] = cLow;
 
-  return TRUE;  
+  return 0;
 }
 
 int cvaldtoc3(unsigned char cVal, unsigned char *c2Array, int* iLength)
@@ -72,7 +74,7 @@ int cvaldtoc3(unsigned char cVal, unsigned char *c2Array, int* iLength)
   char cLow = 0;
 
   if (NULL == c2Array)
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   cLow = cVal % 10;
   cHigh = cVal / 10;
@@ -103,7 +105,7 @@ int cvaldtoc3(unsigned char cVal, unsigned char *c2Array, int* iLength)
       *iLength = 1;
     }
   
-  return TRUE;  
+  return 0;
 }
 
 unsigned char *roaSKI(struct ROA *r)
@@ -123,10 +125,10 @@ unsigned char *roaSKI(struct ROA *r)
     return NULL;
   else
     {
-      cReturn = malloc(SKI_SIZE * 3);
+      cReturn = calloc(SKI_SIZE * 3, sizeof(char));
       if (NULL == cReturn)
 	{
-	  free(cSID);
+//	  free(cSID);
 	  return NULL;
 	}
       for (i = 0; i < SKI_SIZE; i++)
@@ -159,7 +161,7 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
 
   // JFG - Cast from int to char == BAD
   cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
-  cReturnString = malloc(19);
+  cReturnString = calloc(19, sizeof(char));
   if (NULL == cReturnString)
     return NULL;
 
@@ -210,7 +212,7 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
 
   // If we're printing prefixes, we need the array to either not be
   //  full length or to have unused bits mentioned in array[0]
-  if ((TRUE == iPrintPrefix) &&
+  if ((cTRUE == iPrintPrefix) &&
       (32 != cPrefix))
     {
       memcpy(cReturnString + iReturnLen, "/", 1);
@@ -229,7 +231,7 @@ unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArraySize)
   if (NULL == prefixArray)
     return NULL;
 
-  return printIPv4String(prefixArray, iPArraySize, 0, TRUE);
+  return printIPv4String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
 unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
@@ -245,10 +247,10 @@ unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, un
       (NULL == maxArray))
     return NULL;
 
-  cMinString = printIPv4String(minArray, iMinArraySize, 0, FALSE);
+  cMinString = printIPv4String(minArray, iMinArraySize, 0, cFALSE);
   if (NULL == cMinString)
     return NULL;
-  cMaxString = printIPv4String(maxArray, iMaxArraySize, 1, FALSE);
+  cMaxString = printIPv4String(maxArray, iMaxArraySize, 1, cFALSE);
   if (NULL == cMaxString)
     {
       free(cMinString);
@@ -258,11 +260,11 @@ unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, un
   iMinStringLen = strlen((char*)cMinString);
   iMaxStringLen = strlen((char*)cMaxString);
 
-  cReturnString = malloc((iMinStringLen + iMaxStringLen + 2) * sizeof(char));
+  cReturnString = calloc((iMinStringLen + iMaxStringLen + 2), sizeof(char));
   if (NULL == cReturnString)
     {
-      free(cMinString);
-      free(cMaxString);
+      //      free(cMinString);
+      //      free(cMaxString);
       return NULL;
     }
 
@@ -293,7 +295,7 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
 
   // JFG - Cast from int to char == BAD
   cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
-  cReturnString = malloc(44);
+  cReturnString = calloc(44, sizeof(char));
   if (NULL == cReturnString)
     return NULL;
 
@@ -343,7 +345,7 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
 
   // If we're printing prefixes, we need the array to either not be
   //  full length or to have unused bits mentioned in array[0]
-  if ((TRUE == iPrintPrefix) &&
+  if ((cTRUE == iPrintPrefix) &&
       (128 != cPrefix))
     {
       memcpy(cReturnString + iReturnLen, "/", 1);
@@ -362,7 +364,7 @@ unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArraySize)
   if (NULL == prefixArray)
     return NULL;
 
-  return printIPv6String(prefixArray, iPArraySize, 0, TRUE);
+  return printIPv6String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
 unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
@@ -378,10 +380,10 @@ unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, un
       (NULL == maxArray))
     return NULL;
 
-  cMinString = printIPv6String(minArray, iMinArraySize, 0, FALSE);
+  cMinString = printIPv6String(minArray, iMinArraySize, 0, cFALSE);
   if (NULL == cMinString)
     return NULL;
-  cMaxString = printIPv6String(maxArray, iMaxArraySize, 1, FALSE);
+  cMaxString = printIPv6String(maxArray, iMaxArraySize, 1, cFALSE);
   if (NULL == cMaxString)
     {
       free(cMinString);
@@ -391,11 +393,11 @@ unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, un
   iMinStringLen = strlen((char*)cMinString);
   iMaxStringLen = strlen((char*)cMaxString);
 
-  cReturnString = malloc((iMinStringLen + iMaxStringLen + 2) * sizeof(char));
+  cReturnString = calloc((iMinStringLen + iMaxStringLen + 2), sizeof(char));
   if (NULL == cReturnString)
     {
-      free(cMinString);
-      free(cMaxString);
+      //      free(cMinString);
+      //      free(cMaxString);
       return NULL;
     }
 
@@ -573,7 +575,7 @@ unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numO
   if (0 >= iAddrs)
     return NULL;
 
-  pcAddresses = (unsigned char**) malloc(sizeof(char**) * iAddrs);
+  pcAddresses = (unsigned char**) calloc(iAddrs, sizeof(char **));
   if (NULL == pcAddresses)
     return NULL;
 
@@ -627,31 +629,35 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
   int iFamilies = 0;
   int iAddrNum = 0;
   int iAS_ID = 0;
+  int sta;
   char cAS_ID[17];
   unsigned char *cSID = NULL;
   unsigned char **pcAddresses = NULL;
   struct ROAIPAddressFamily *roaFamily = NULL;
 
   // parameter check
+  if (NULL == fp)
+    return ERR_SCM_INVALARG;
   /*
   // JFG - Has to be uncommented when the referenced functions are complete
-  if ((FALSE == roaValidate(r)) ||
-      (FALSE == roaValidate2(r, cert)) ||
-      (NULL == fp))
-    return FALSE;
+  sta = roaValidate(r);
+  if ( sta < 0 ) return(sta);
+  sta = roaValidate2(r, cert);
+  if ( sta < 0 ) return(sta);
   */
 
   memset(cAS_ID, 0, 16);
   iAS_ID = roaAS_ID(r);
   if (0 >= iAS_ID)
-    return FALSE;
+    return ERR_SCM_INVALASID;
 
-  if (FALSE == itoa(iAS_ID, cAS_ID, 10))
-    return FALSE;
+  sta = itoa(iAS_ID, cAS_ID, 10);
+  if ( sta < 0 )
+    return sta;
 
   cSID = roaSKI(r);
   if (NULL == cSID)
-    return FALSE;
+    return ERR_SCM_INVALSKI;
 
   // For each family, print out all triplets beginning with SKI and AS#
   // and ending with each IP address listed in the ROA
@@ -662,20 +668,20 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
       if (NULL == roaFamily)
 	{
 	  free(cSID);
-	  return FALSE;
+	  return ERR_SCM_INVALIPB;
 	}
       pcAddresses = roaIPAddresses(roaFamily, &iAddrNum);
       if (NULL == pcAddresses)
 	{
 	  free(cSID);
-	  return FALSE;
+	  return ERR_SCM_INVALIPB;
 	}
 
       for (j = 0; j < iAddrNum; j++)
 	{
 	  iRes = fprintf(fp, "%s  %s  %s\n", cSID, cAS_ID, pcAddresses[j]);
 	  if (0 > iRes)
-	    return FALSE;
+	    return ERR_SCM_BADFILE;
 	}
       for (j = iAddrNum - 1; j >= 0; j--)
 	free(pcAddresses[j]);
@@ -683,5 +689,5 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
       pcAddresses = NULL;
     }
 
-  return TRUE;
+  return 0;
 }

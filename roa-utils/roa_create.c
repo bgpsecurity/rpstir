@@ -19,7 +19,7 @@ int roaFromConfig(char *fname, int doval, struct ROA** rp)
 
 int roaToConfig(struct ROA* roa, char *fname)
 {
-  return FALSE;
+  return ERR_SCM_NOTIMPL;
   // currently unspecified (not yet required)
   // return roaToFile(roa, fname, FMT_CONF);
 }

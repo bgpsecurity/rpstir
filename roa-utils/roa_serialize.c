@@ -79,9 +79,9 @@ inline int isInstructionForcing(enum forcingInstruction fi)
   if ((NONE == fi) ||
       (IPV4CONT == fi) ||
       (IPV6CONT == fi))
-    return FALSE;
+    return cFALSE;
   else
-    return TRUE;
+    return cTRUE;
 }
 
 /////////////////////////////////////////////////////////////
@@ -126,12 +126,12 @@ int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 	(0 >= inSize) ||
 	(NULL == outSize) ||
 	(0 >= lineSize))
-      return FALSE;
+      return ERR_SCM_INVALARG;
 
     iTempSize = 1024;
     bufTemp = (unsigned char *)calloc(1, iTempSize);
     if (NULL == bufTemp)
-      return FALSE;
+      return ERR_SCM_NOMEM;
 
     // Push armoring onto top of file
     iArmor = strlen(roaStart);
@@ -157,6 +157,8 @@ int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 	      if (outIndex >= iTempSize)
 		{
 		  bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+		  if ( bufTemp == NULL )
+		    return ERR_SCM_NOMEM;
 		  iTempSize += 1024;
 		}
 	      bufTemp[outIndex] = outTemp[i];
@@ -171,6 +173,8 @@ int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 		if (outIndex - 1 >= iTempSize)
 		  {
 		    bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+		    if ( bufTemp == NULL )
+		      return ERR_SCM_NOMEM;
 		    iTempSize += 1024;
 		  }
 		bufTemp[outIndex] = '\r';
@@ -187,6 +191,8 @@ int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
     if (outIndex + iArmor + 1 >= iTempSize)
       {
 	bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+	if ( bufTemp == NULL )
+	  return ERR_SCM_NOMEM;
 	iTempSize += 1024;
       }
     memcpy(&bufTemp[outIndex], roaEnd, iArmor);
@@ -196,10 +202,7 @@ int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
     // Set return values
     *bufOut = bufTemp;
     *outSize = outIndex;
-    if (NULL == bufTemp)
-      return FALSE;
-    else
-      return TRUE;
+    return 0;
 }
 
 /*
@@ -235,12 +238,12 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
     if ((NULL == bufIn) ||
 	(0 >= inSize) ||
 	(NULL == outSize))
-      return FALSE;
+      return ERR_SCM_INVALARG;
 
     iTempSize = 1024;
     bufTemp = (unsigned char *)calloc(1, iTempSize);
     if (NULL == bufTemp)
-      return FALSE;
+      return ERR_SCM_NOMEM;
 
     // First, search for armoring at front of file
     while ( 1 )
@@ -292,6 +295,8 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 	      if (outIndex >= iTempSize)
 		{
 		  bufTemp = (unsigned char *)realloc(bufTemp, iTempSize + 1024);
+		  if ( bufTemp == NULL )
+		    return ERR_SCM_NOMEM;
 		  iTempSize += 1024;
 		}
 	      bufTemp[outIndex] = outTemp[i];
@@ -302,10 +307,7 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
     
     *bufOut = bufTemp;
     *outSize = outIndex;
-    if (NULL == bufTemp)
-      return FALSE;
-    else
-      return TRUE;
+    return 0;
 }
 
 /////////////////////////////////////////////////////////////
@@ -319,7 +321,7 @@ int ctocval(unsigned char cIn, unsigned char *val, int radix)
   char c;
 
   if (NULL == val)
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   c = toupper(cIn);
   if (('0' <= c) &&
@@ -330,9 +332,9 @@ int ctocval(unsigned char cIn, unsigned char *val, int radix)
 	   (16 == radix))
     *val = (c - 'A') + 10;
   else
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
-  return TRUE;  
+  return 0;
 }
 
 // Crappy substitute function for pleasant function that returned a short
@@ -341,6 +343,7 @@ int ip_strto2c(unsigned char* strToTranslate, unsigned char* c2Returned, int rad
 {
   int i = 0;
   int iLen = 0;
+  int sta;
   unsigned short int sAns = 0;
   unsigned char cTemp = 0;
   unsigned char c2Ans[2];
@@ -348,23 +351,24 @@ int ip_strto2c(unsigned char* strToTranslate, unsigned char* c2Returned, int rad
   // Check for null pointers
   if ((NULL == strToTranslate) ||
       (NULL == c2Returned))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   // Right now, I'm only interested in supporting decimal and hex
   if ((16 != radix) &&
       (10 != radix))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   iLen = strlen((char*) strToTranslate);
   if ((0 >= iLen) ||
     (iLen > 5))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   for (i = 0; i < iLen; i++)
     {
       sAns = sAns * radix;
-      if (FALSE == ctocval(strToTranslate[i], &cTemp, radix))
-	return FALSE;
+      sta = ctocval(strToTranslate[i], &cTemp, radix);
+      if ( sta < 0 )
+	return sta;
       sAns += cTemp;
     }
 
@@ -374,41 +378,43 @@ int ip_strto2c(unsigned char* strToTranslate, unsigned char* c2Returned, int rad
   c2Ans[0] = (unsigned char) sAns;
 
   memcpy(c2Returned, c2Ans, 2);
-  return TRUE;
+  return 0;
 }
 
 int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, int radix)
 {
   int i = 0;
   int iLen = 0;
+  int sta;
   unsigned char cAns = 0;
   unsigned char cTemp = 0;
 
   // Check for null pointers
   if ((NULL == strToTranslate) ||
       (NULL == cReturned))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   // Right now, I'm only interested in supporting decimal and hex
   if ((16 != radix) &&
       (10 != radix))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   iLen = strlen((char*) strToTranslate);
   if ((0 >= iLen) ||
     (iLen > 3))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   for (i = 0; i < iLen; i++)
     {
       cAns = cAns * radix;
-      if (FALSE == ctocval(strToTranslate[i], &cTemp, radix))
-	return FALSE;
+      sta = ctocval(strToTranslate[i], &cTemp, radix);
+      if ( sta < 0 )
+	return sta;
       cAns += cTemp;
     }
   
   *cReturned = cAns;
-  return TRUE;
+  return 0;
 }
 
 /////////////////////////////////////////////////////////////
@@ -426,7 +432,7 @@ int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGood
   // Check for null pointers
   if ((NULL == cBadTrailingBits) ||
       (NULL == iGoodLeadingBytes))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   iFullBytes = iPrefix / 8;
   cGoodTrailingBits = (char) iPrefix % 8;
@@ -439,7 +445,7 @@ int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGood
     *cBadTrailingBits = 0;
 
   *iGoodLeadingBytes = iFullBytes;
-  return TRUE;
+  return 0;
 }
 
 int calculateAndClearPrefix(int iPrefix, int iSize, unsigned char* iparray,
@@ -454,7 +460,7 @@ int calculateAndClearPrefix(int iPrefix, int iSize, unsigned char* iparray,
   if ((NULL == cBadBits) ||
       (NULL == iGoodBytes) ||
       (NULL == iparray))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   for (i = iSize; iPrefix < i; i--)
     {
@@ -484,7 +490,7 @@ int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
   if ((NULL == cBadTrailingBits) ||
       (NULL == iGoodLeadingBytes) ||
       (NULL == iparray))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   for (i = iSize; 0 < i; i--)
     {
@@ -495,12 +501,12 @@ int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
       else
 	iShift = 8 - iRemainder;
       cBitwiseCheck = iparray[iIndex] & (0x01 << iShift);
-      if (TRUE == iIsMin)
+      if (cTRUE == iIsMin)
 	{
 	  if (0 != cBitwiseCheck)
 	    break;
 	}
-      else if (FALSE == iIsMin)
+      else if (cFALSE == iIsMin)
 	{
 	  if (0 == cBitwiseCheck)
 	    break;
@@ -529,7 +535,7 @@ int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
   int iStringLen = 0;
   int iByteIndex = 0;
   int iTempIndex = 0;
-  int iRes = 0;
+  int sta;
   unsigned char cAddrPart = 0;
   unsigned char cPrefix = 0;
   unsigned char cLastChar = 0;
@@ -541,12 +547,12 @@ int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
   if ((NULL == ipstring) ||
       (NULL == *ipbytearray) ||
       (NULL == iprefixlen))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   // Max IPv4 Address Prefix
   iStringLen = strlen((char*) ipstring);
   if (19 < iStringLen)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPL;
 
   // Translate
   memset(stringtemp, 0, 4);
@@ -567,14 +573,15 @@ int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 	  ('/' == ipstring[i]))
 	{
 	  // Validate the previous char (must have been numeric)
-	  if (FALSE == ctocval(cLastChar, &cEmpty, 10))
-	    return ROA_INVALID;
+	  sta = ctocval(cLastChar, &cEmpty, 10);
+	  if ( sta < 0 )
+	    return sta;
 
 	  // Currently relying on strtoc to tell us if any
 	  // of the characters in the string is untranslatable
-	  iRes = (short int) ip_strtoc(stringtemp, &cAddrPart, 10);
-	  if (FALSE == iRes)
-	    return ROA_INVALID;
+	  sta = ip_strtoc(stringtemp, &cAddrPart, 10);
+	  if ( sta < 0 )
+	    return sta;
 	  else
 	    {
 	      arraytemp[iByteIndex] = cAddrPart;
@@ -592,32 +599,33 @@ int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
     }
   // If we got a badly formatted string at any point
   if (iTempIndex >= 4)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPL;
 
   // Translate the prefix
   // Currently relying on strtoc to tell us if any
   // of the characters in the string is untranslatable
   if ('/' == cLastChar)
     {
-      iRes = ip_strtoc(stringtemp, &cPrefix, 10);
+      sta = ip_strtoc(stringtemp, &cPrefix, 10);
       if ((0 >= cPrefix) ||
 	  (32 < cPrefix) ||
-	  (FALSE == iRes))
-	return ROA_INVALID;
+	  (sta < 0))
+	return ERR_SCM_INVALIPB;
     }
   // Or, if there was no prefix, finish the last
   // chunk tranlsation
   else
     {
       // Validate the previous char (must have been numeric)
-      if (FALSE == ctocval(cLastChar, &cEmpty, 10))
-	return ROA_INVALID;
+      sta = ctocval(cLastChar, &cEmpty, 10);
+      if ( sta < 0 )
+	return sta;
 
       // Currently relying on strtoc to tell us if any
       // of the characters in the string is untranslatable
-      iRes = (short int) ip_strtoc(stringtemp, &cAddrPart, 10);
-      if (FALSE == iRes)
-	return ROA_INVALID;
+      sta = ip_strtoc(stringtemp, &cAddrPart, 10);
+      if ( sta < 0 )
+	return sta;
       else
 	{
 	  arraytemp[iByteIndex] = cAddrPart;
@@ -630,13 +638,13 @@ int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 
   // Sanity check on number of copied bytes
   if (iByteIndex > 4)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPB;
 
   // Copy return values
   memcpy(*ipbytearray, arraytemp, 4);
   *iprefixlen = (int) cPrefix;
 
-  return ROA_VALID;
+  return 0;
 }
 
 // Translation of hexadecimal IPv6 addresses
@@ -649,7 +657,7 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
   int iTempIndex = 0;
   int iColonCount = 0;
   int iSkippedBytes = 0;
-  int iRes = 0;
+  int sta;
   int iLoopStart = 0;
   int iPrefixMark = 0;
 
@@ -664,12 +672,12 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
   if ((NULL == ipstring) ||
       (NULL == *ipbytearray) ||
       (NULL == iprefixlen))
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   // Max IPv6 Address Prefix
   iStringLen = strlen((char*) ipstring);
   if (43 < iStringLen)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPL;
 
   // First, find out how much skipping was done in the address
   //  and find the location of the prefix;
@@ -698,7 +706,7 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 
   // There can only be a maximum of 7 colons in any IPv6 address
   if (7 < iColonCount)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPB;
 
   // Then, translate
   memset(stringtemp, 0, 5);
@@ -722,15 +730,16 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 	  if (':' != cLastChar)
 	    {
 	      // Validate the previous char (must have been hex)
-	      if (FALSE == ctocval(cLastChar, &cEmpty, 16))
-		return ROA_INVALID;
+	      sta = ctocval(cLastChar, &cEmpty, 16);
+	      if ( sta < 0 )
+		return sta;
 
 	      // Currently relying on strto2c to tell us if any
 	      // of the characters in the string is untranslatable
 	      memset(cAddrPartArray, 0, 2);
-	      iRes = ip_strto2c(stringtemp, cAddrPartArray, 16);
-	      if (FALSE == iRes)
-		return ROA_INVALID;
+	      sta = ip_strto2c(stringtemp, cAddrPartArray, 16);
+	      if (sta < 0)
+		return sta;
 	      else
 		{
 		  arraytemp[iByteIndex] = cAddrPartArray[0];
@@ -764,32 +773,33 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 
   // If we got a badly formatted string at any point
   if (iTempIndex >= 5)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPL;
 
   // Translate the prefix
   // Currently relying on strtos to tell us if any
   // of the characters in the string is untranslatable
   if ('/' == cLastChar)
     {
-      iRes = ip_strtoc(stringtemp, &cPrefix, 10);
+      sta = ip_strtoc(stringtemp, &cPrefix, 10);
       if ((0 >= cPrefix) ||
 	  (128 < cPrefix) ||
-	  (FALSE == iRes))
-	return ROA_INVALID;
+	  (sta < 0))
+	return ERR_SCM_INVALIPB;
     }
   // Or, if there was no prefix, finish the last
   // chunk tranlsation
   else if (':' != cLastChar)
     {
       // Validate the previous char (must have been hex)
-      if (FALSE == ctocval(cLastChar, &cEmpty, 16))
-	return ROA_INVALID;
+      sta = ctocval(cLastChar, &cEmpty, 16);
+      if ( sta < 0 )
+	return sta;
 
       // Currently relying on strtos to tell us if any
       // of the characters in the string is untranslatable
-      iRes = ip_strto2c(stringtemp, cAddrPartArray, 16);
-      if (FALSE == iRes)
-	return ROA_INVALID;
+      sta = ip_strto2c(stringtemp, cAddrPartArray, 16);
+      if ( sta < 0 )
+	return sta;
       else
 	{
 	  arraytemp[iByteIndex] = cAddrPartArray[0];
@@ -805,13 +815,13 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 
   // Sanity check on number of copied bytes
   if (iByteIndex != 16)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPL;
 
   // Copy return values
   memcpy(*ipbytearray, arraytemp, 16);
   *iprefixlen = (int) cPrefix;
 
-  return ROA_VALID;
+  return 0;
 }
 
 /////////////////////////////////////////////////////////////
@@ -829,23 +839,23 @@ int setVersion(struct ROA* roa, unsigned char* versionstring)
   // Because we only accept single-digit version numbers
   iLen = strlen((char*) versionstring);
   if (1 != iLen)
-    return ROA_INVALID;
+    return ERR_SCM_INVALARG;
 
   // And all roas (for now) must be version 3
   iVersion = atoi((char*) versionstring);
   if (3 != iVersion)
-    return ROA_INVALID;
+    return ERR_SCM_INVALVER;
   
   iRes = write_casn_num(&(roa->content.content.version.v3), iVersion);
   if (0 > iRes)
-    return ROA_INVALID;
+    return ERR_SCM_INVALASN;
 
   iRes = write_casn_num(&(roa->content.content.signerInfos.signerInfo.version.v3), iVersion);
   if (0 > iRes)
-    return ROA_INVALID;
+    return ERR_SCM_INVALASN;
 
   g_lastInstruction = NONE;
-  return ROA_VALID;
+  return 0;
 }
 
 int setSID(struct ROA* roa, unsigned char* sidstring)
@@ -853,7 +863,7 @@ int setSID(struct ROA* roa, unsigned char* sidstring)
   int iLen = 0;
   int sidIndex = 0;
   int stringIndex = 0;
-  int iRes = 0;
+  int sta;
 
   unsigned char cSIDPart = 0;
   unsigned char stringtemp[3];
@@ -866,7 +876,7 @@ int setSID(struct ROA* roa, unsigned char* sidstring)
   // (xx:xx:(...16 more ...):xx:xx
   iLen = strlen((char*) sidstring);
   if (59 != iLen)
-    return ROA_INVALID;
+    return ERR_SCM_INVALSKI;
 
   // Read and translate SID, paired hex -> char
   sidIndex = 0;
@@ -876,9 +886,9 @@ int setSID(struct ROA* roa, unsigned char* sidstring)
       memcpy(stringtemp, &sidstring[stringIndex], 2);
       // Currently relying on strtos to tell us if any
       // of the characters in the string is untranslatable
-      iRes = ip_strtoc(stringtemp, &cSIDPart, 16);
-      if (FALSE == iRes)
-	return ROA_INVALID;
+      sta = ip_strtoc(stringtemp, &cSIDPart, 16);
+      if (sta < 0)
+	return sta;
       else
 	sid[sidIndex] = cSIDPart;
       stringIndex += 3;
@@ -887,7 +897,7 @@ int setSID(struct ROA* roa, unsigned char* sidstring)
   
   write_casn(&(roa->content.content.signerInfos.signerInfo.sid.subjectKeyIdentifier), sid, 20);
   g_lastInstruction = NONE;
-  return ROA_VALID;
+  return 0;
 }
 
 int setSignature(struct ROA* roa, unsigned char* signstring)
@@ -901,7 +911,7 @@ int setSignature(struct ROA* roa, unsigned char* signstring)
   // Write the signature directly to the casn
   write_casn(&(roa->content.content.signerInfos.signerInfo.signature), signstring, iLen);
   g_lastInstruction = NONE;
-  return ROA_VALID;
+  return 0;
 }
 
 int setAS_ID(struct ROA* roa, unsigned char* asidstring)
@@ -909,18 +919,14 @@ int setAS_ID(struct ROA* roa, unsigned char* asidstring)
   int iLen = 0;
   int iAS_ID = 0;
 
-  // Because we only accept 0 < ASID < 65536
+  // Because we only accept 0 < ASID < 2**32
   iLen = strlen((char*) asidstring);
-  if (5 < iLen)
-    return ROA_INVALID;
+  if (9 < iLen)
+    return ERR_SCM_INVALASID;
   iAS_ID = atoi((char*) asidstring);
-  if ((0 >= iAS_ID) ||
-      (iAS_ID >= 65536))
-    return ROA_INVALID;
-
   write_casn_num(&(roa->content.content.encapContentInfo.eContent.roa.asID), iAS_ID);
   g_lastInstruction = NONE;
-  return ROA_VALID;
+  return 0;
 }
 
 int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
@@ -933,7 +939,7 @@ int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
   // Length must be 4 (i.e. IPvX)
   iLen = strlen((char*) ipfamstring);
   if (4 != iLen)
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPL;
 
   memset(familytemp, 0, 3);
   
@@ -943,23 +949,23 @@ int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
   //  once and in the proper order
   if (0 == strcmp(ianaAfiStrings[IPV4], (char*) ipfamstring))
     {
-      if ((TRUE == g_iIPv4Flag) ||
-	  (TRUE == g_iIPv6Flag))
-	return ROA_INVALID;
+      if ((cTRUE == g_iIPv4Flag) ||
+	  (cTRUE == g_iIPv6Flag))
+	return ERR_SCM_INVALIPB;
       familytemp[1] = 0x01;
       g_lastInstruction = IPV4FAM;
-      g_iIPv4Flag = TRUE;
+      g_iIPv4Flag = cTRUE;
     }
   else if (0 == strcmp(ianaAfiStrings[IPV6], (char*) ipfamstring))
     {
-      if (TRUE == g_iIPv6Flag)
-	return ROA_INVALID;
+      if (cTRUE == g_iIPv6Flag)
+	return ERR_SCM_INVALIPB;
       familytemp[1] = 0x02;
       g_lastInstruction = IPV6FAM;
-      g_iIPv6Flag = TRUE;
+      g_iIPv6Flag = cTRUE;
     }
   else
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPB;
 
   // Write a new IP block directly to the casn
   iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
@@ -969,9 +975,9 @@ int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
       roaFamily = (struct ROAIPAddressFamily*) inject_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
       //roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
       write_casn(&(roaFamily->addressFamily), familytemp, 2);
-      return ROA_VALID;
+      return 0;
     }
-  return ROA_INVALID;
+  return ERR_SCM_INVALIPB;
 }
 
 int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
@@ -982,9 +988,10 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
   int iPrefixSize = 0;
   int iGoodBytes = 0;
   unsigned char cBadBits = 0;
-  int iRes = ROA_INVALID;
   int iBlocks = 0;
   int iAddrs = 0;
+  int sta = 0;
+
   struct ROAIPAddressFamily *roaFamily = NULL;
 
 #ifdef IP_RANGES_ALLOWED
@@ -1001,20 +1008,20 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       (IPV4CONT == g_lastInstruction))
     {
       arrayptr = &ipv4array[1];
-      iRes = translateIPv4Prefix(ipaddrstring, (unsigned char**) &arrayptr, &iPrefixSize);
+      sta = translateIPv4Prefix(ipaddrstring, (unsigned char**) &arrayptr, &iPrefixSize);
     }
   else if ((IPV6FAM == g_lastInstruction) ||
 	   (IPV6CONT == g_lastInstruction))
     {
       arrayptr = &ipv6array[1];
-      iRes = translateIPv6Prefix(ipaddrstring, (unsigned char**) &arrayptr, &iPrefixSize);
+      sta = translateIPv6Prefix(ipaddrstring, (unsigned char**) &arrayptr, &iPrefixSize);
     }
   else
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPB;
 
   // If translation failed, we're done
-  if (ROA_INVALID == iRes)
-    return iRes;
+  if (sta < 0)
+    return sta;
 
   // Otherwise, write the data to the roa
   if ((IPV4FAM == g_lastInstruction) ||
@@ -1040,7 +1047,7 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 	      write_casn(&(roaAddr->addressPrefix), ipv4array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 #else
 	  iAddrs = num_items(&(roaFamily->addresses.self));
 	  if (0 <= iAddrs)
@@ -1049,11 +1056,11 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 	      write_casn(roaAddr, ipv4array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 #endif
 	}
       else
-	iRes = ROA_INVALID;
+	sta = ERR_SCM_INVALIPB;
       g_lastInstruction = IPV4CONT;
     }
   else if ((IPV6FAM == g_lastInstruction) ||
@@ -1078,7 +1085,7 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 	      write_casn(&(roaAddr->addressPrefix), ipv6array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 #else
 	  iAddrs = num_items(&(roaFamily->addresses.self));
 	  if (0 <= iAddrs)
@@ -1087,15 +1094,15 @@ int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 	      write_casn(roaAddr, ipv6array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 #endif
 	}
       else
-	iRes = ROA_INVALID;
+	sta = ERR_SCM_INVALIPB;
       g_lastInstruction = IPV6CONT;
     }
 
-  return iRes;
+  return sta;
 }
 
 // These two functions are only required if we allow ranges, with their
@@ -1110,7 +1117,7 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
   int iPrefixSize = 0;
   int iGoodBytes = 0;
   unsigned char cBadBits = 0;
-  int iRes = ROA_INVALID;
+  int sta = 0;
   int iBlocks = 0;
   int iAddrs = 0;
   struct IPAddressOrRangeA *roaAddr = NULL;
@@ -1124,22 +1131,22 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
       (IPV4CONT == g_lastInstruction))
     {
       arrayptr = &ipv4array[1];
-      iRes = translateIPv4Prefix(ipaddrminstring, (unsigned char**) &arrayptr, &iPrefixSize);
+      sta = translateIPv4Prefix(ipaddrminstring, (unsigned char**) &arrayptr, &iPrefixSize);
     }
   else if ((IPV6FAM == g_lastInstruction) ||
 	   (IPV6CONT == g_lastInstruction))
     {
       arrayptr = &ipv6array[1];
-      iRes = translateIPv6Prefix(ipaddrminstring, (unsigned char**) &arrayptr, &iPrefixSize);
+      sta = translateIPv6Prefix(ipaddrminstring, (unsigned char**) &arrayptr, &iPrefixSize);
     }
   else
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPB;
 
   // If translation failed, or if we got anything other than
   // a single address, we're done
-  if ((ROA_INVALID == iRes) ||
+  if ((sta < 0) ||
       (32 != iPrefixSize))
-    return iRes;
+    return ERR_SCM_INVALIPB;
 
   // Otherwise, write the data to the roa
   if ((IPV4FAM == g_lastInstruction) ||
@@ -1147,7 +1154,7 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
     {
       // Construct ASN BITSTRING under the assumption that we have a
       // minimum address which needs paring down
-      calculateAndClearMM(TRUE, 32, arrayptr, &cBadBits, &iGoodBytes);
+      calculateAndClearMM(cTRUE, 32, arrayptr, &cBadBits, &iGoodBytes);
       ipv4array[0] = cBadBits;
       iGoodBytes++;
 
@@ -1163,10 +1170,10 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
 	      write_casn(&(roaAddr->addressRange.min), ipv4array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 	}
       else
-	iRes = ROA_INVALID;
+	sta = ERR_SCM_INVALIPB;
       g_lastInstruction = IPV4MIN;
     }
   else if ((IPV6FAM == g_lastInstruction) ||
@@ -1174,7 +1181,7 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
     {
       // Construct ASN BITSTRING under the assumption that we have a
       // minimum ipv6 address which needs paring down
-      calculateAndClearMM(TRUE, 128, arrayptr, &cBadBits, &iGoodBytes);
+      calculateAndClearMM(cTRUE, 128, arrayptr, &cBadBits, &iGoodBytes);
       ipv6array[0] = cBadBits;
       iGoodBytes++;
 
@@ -1191,14 +1198,14 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
 	      write_casn(&(roaAddr->addressRange.min), ipv6array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 	}
       else
-	iRes = ROA_INVALID;
+	sta = ERR_SCM_INVALIPB;
       g_lastInstruction = IPV6MIN;
     }
 
-  return iRes;
+  return sta;
 }
 
 int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
@@ -1209,7 +1216,7 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
   int iPrefixSize = 0;
   int iGoodBytes = 0;
   unsigned char cBadBits = 0;
-  int iRes = ROA_INVALID;
+  int sta = 0;
   int iBlocks = 0;
   int iAddrs = 0;
   struct IPAddressOrRangeA *roaAddr = NULL;
@@ -1222,28 +1229,28 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
   if (IPV4MIN == g_lastInstruction)
     {
       arrayptr = &ipv4array[1];
-      iRes = translateIPv4Prefix(ipaddrmaxstring, (unsigned char**) &arrayptr, &iPrefixSize);
+      sta = translateIPv4Prefix(ipaddrmaxstring, (unsigned char**) &arrayptr, &iPrefixSize);
     }
   else if (IPV6MIN == g_lastInstruction)
     {
       arrayptr = &ipv6array[1];
-      iRes = translateIPv6Prefix(ipaddrmaxstring, (unsigned char**) &arrayptr, &iPrefixSize);
+      sta = translateIPv6Prefix(ipaddrmaxstring, (unsigned char**) &arrayptr, &iPrefixSize);
     }
   else
-    return ROA_INVALID;
+    return ERR_SCM_INVALIPB;
 
   // If translation failed, or if we got anything other than
   // a single address, we're done
-  if ((ROA_INVALID == iRes) ||
+  if ((sta < 0) ||
       (32 != iPrefixSize))
-    return iRes;
+    return ERR_SCM_INVALIPB;
 
   // Otherwise, write the data to the roa
   if (IPV4MIN == g_lastInstruction)
     {
       // Construct ASN BITSTRING under the assumption that we have a
       // maximum ipv4 address which needs paring down
-      calculateAndClearMM(FALSE, 32, arrayptr, &cBadBits, &iGoodBytes);
+      calculateAndClearMM(cFALSE, 32, arrayptr, &cBadBits, &iGoodBytes);
       ipv4array[0] = cBadBits;
       iGoodBytes++;
 
@@ -1259,17 +1266,17 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
 	      write_casn(&(roaAddr->addressRange.max), ipv4array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 	}
       else
-	iRes = ROA_INVALID;
+	sta = ERR_SCM_INVALIPB;
       g_lastInstruction = IPV4CONT;
     }
   else if (IPV6MIN == g_lastInstruction)
     {
       // Construct ASN BITSTRING under the assumption that we have a
       // maximum ipv6 address which needs paring down
-      calculateAndClearMM(FALSE, 128, arrayptr, &cBadBits, &iGoodBytes);
+      calculateAndClearMM(cFALSE, 128, arrayptr, &cBadBits, &iGoodBytes);
       ipv6array[0] = cBadBits;
       iGoodBytes++;
 
@@ -1285,14 +1292,14 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
 	      write_casn(&(roaAddr->addressRange.max), ipv6array, iGoodBytes);
 	    }
 	  else
-	    iRes = ROA_INVALID;
+	    sta = ERR_SCM_INVALIPB;
 	}
       else
-	iRes = ROA_INVALID;
+	sta = ERR_SCM_INVALIPB;
       g_lastInstruction = IPV6CONT;
     }
 
-  return iRes;
+  return sta;
 }
 
 #endif // IP_RANGES_ALLOWED
@@ -1310,7 +1317,7 @@ int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
   //  we're about to read in.
   iCerts = num_items(&(roa->content.content.certificates.self));
   if (0 != iCerts)
-    return ROA_INVALID;
+    return ERR_SCM_NOTVALID;
 
   // Get the cert read in
   if (NULL != inject_casn(&(roa->content.content.certificates.self), 0))
@@ -1318,9 +1325,9 @@ int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
   g_lastInstruction = NONE;
 
   if (iRet > 0)
-    return ROA_VALID;
+    return 0;
   else
-    return ROA_INVALID;
+    return ERR_SCM_INVALASN;
 }
 
 /////////////////////////////////////////////////////////////
@@ -1337,7 +1344,7 @@ int confInterpret(char* filename, struct ROA* roa)
 
   int iRet = 0;
   int iRet2 = 0;
-  int iROAState = ROA_VALID;
+  int iROAState = 0;
   int iLineCount = 0;
   FILE* fp = NULL;
   enum configKeys ck = 0;
@@ -1346,23 +1353,23 @@ int confInterpret(char* filename, struct ROA* roa)
   int iConfiguredKey[CONFIG_KEY_MAX];
   
   for (ck = VERSION; ck < CONFIG_KEY_MAX; ck++)
-    iConfiguredKey[ck] = FALSE;
+    iConfiguredKey[ck] = cFALSE;
 
   fp = fopen(filename, "r");
   if (NULL == fp)
     {
       // Error
       printf("Error opening file %s\n", filename);
-      return ROA_INVALID;
+      return ERR_SCM_COFILE;
     }
 
   // Initialize globals
   g_lastInstruction = NONE;
-  g_iIPv4Flag = FALSE;
-  g_iIPv6Flag = FALSE;
+  g_iIPv4Flag = cFALSE;
+  g_iIPv6Flag = cFALSE;
 
   // Read, line by line, into the struct
-  while ((EOF != iRet) && (ROA_VALID == iROAState))
+  while ((EOF != iRet) && (0 == iROAState))
     {
       iLineCount++;
       memset(line, 0, MAX_LINE + 1);
@@ -1385,7 +1392,7 @@ int confInterpret(char* filename, struct ROA* roa)
 	  if (2 != iRet2)
 	    {
 	      printf("Error parsing line %d\n", iLineCount);
-	      iROAState = ROA_INVALID;
+	      iROAState = ERR_SCM_INVALARG;
 	    }
 	  else
 	    {
@@ -1399,97 +1406,97 @@ int confInterpret(char* filename, struct ROA* roa)
 	      switch(ck)
 		{
 		case VERSION:
-		  if ((isInstructionForcing(g_lastInstruction)) ||
-		      (TRUE == iConfiguredKey[ck]))
+		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
+		      (cTRUE == iConfiguredKey[ck]))
 		    {
-		      iRet2 = ROA_INVALID;
+		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setVersion(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case SID:
-		  if ((isInstructionForcing(g_lastInstruction)) ||
-		      (TRUE == iConfiguredKey[ck]))
+		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
+		      (cTRUE == iConfiguredKey[ck]))
 		    {
-		      iRet2 = ROA_INVALID;
+		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setSID(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case SIGNATURE:
 		  // JFG - In the real world, we're going to calculate this
 		  //  instead of getting it from a file
-		  if ((isInstructionForcing(g_lastInstruction)) ||
-		      (TRUE == iConfiguredKey[ck]))
+		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
+		      (cTRUE == iConfiguredKey[ck]))
 		    {
-		      iRet2 = ROA_INVALID;
+		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setSignature(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case AS_ID:
-		  if ((isInstructionForcing(g_lastInstruction)) ||
-		      (TRUE == iConfiguredKey[ck]))
+		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
+		      (cTRUE == iConfiguredKey[ck]))
 		    {
-		      iRet2 = ROA_INVALID;
+		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setAS_ID(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case IPFAM:
-		  if (isInstructionForcing(g_lastInstruction))
+		  if (isInstructionForcing(g_lastInstruction)==cTRUE)
 		    {
-		      iRet2 = ROA_INVALID;
+		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setIPFamily(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case IPADDR:
 		  // Check for valid previous instruction
 		  // resides in subfunction
 		  iRet2 = setIPAddr(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 #ifdef IP_RANGES_ALLOWED
 		case IPADDRMIN:
 		  // Check for valid previous instruction
 		  // resides in subfunction
 		  iRet2 = setIPAddrMin(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case IPADDRMAX:
 		  // Check for valid previous instruction
 		  // resides in subfunction
 		  iRet2 = setIPAddrMax(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 #endif // IP_RANGES_ALLOWED
 		case CERTNAME:
-		  if ((isInstructionForcing(g_lastInstruction)) ||
-		      (TRUE == iConfiguredKey[ck]))
+		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
+		      (cTRUE == iConfiguredKey[ck]))
 		    {
-		      iRet2 = ROA_INVALID;
+		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setCertName(roa, value);
-		  iConfiguredKey[ck] = TRUE;
+		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case CONFIG_KEY_MAX:
 		default:
 		  printf("Unknown key on line %d\n", iLineCount);
-		  iROAState = ROA_INVALID;
+		  iROAState = ERR_SCM_INVALARG;
 		  break;
 		}
 
-	      if (ROA_INVALID == iRet2)
+	      if (iRet2 < 0)
 		{
 		  printf("Unparseable value or unexpected key on line %d\n", iLineCount);
-		  iROAState = ROA_INVALID;
+		  iROAState = iRet2;
 		}
 	      // JFG - Debugging code
 	      // printf("The value of key %s(%d) is %s\n", key, ck, value);
@@ -1498,16 +1505,16 @@ int confInterpret(char* filename, struct ROA* roa)
     }
 
   // If we didn't finish an IP address block (uh-oh!)
-  if (isInstructionForcing(g_lastInstruction))
+  if (isInstructionForcing(g_lastInstruction)==cTRUE)
     {
       printf("Unfinished IP block before line %d\n", iLineCount);
-      iROAState = ROA_INVALID;
+      iROAState = ERR_SCM_INVALIPB;
     }
 
   // If we didn't have one of the required parameters
   for (ck = VERSION; ck < CONFIG_KEY_MAX; ck++)
     {
-      if (FALSE == iConfiguredKey[ck])
+      if (cFALSE == iConfiguredKey[ck])
 	{
 	  if ((SID == ck) ||
 	      (SIGNATURE == ck) ||
@@ -1515,7 +1522,7 @@ int confInterpret(char* filename, struct ROA* roa)
 	      (IPFAM == ck))
 	    {
 	      printf("Missing required key %s\n", configKeyStrings[ck]);
-	      iROAState = ROA_INVALID;
+	      iROAState = ERR_SCM_INVALARG;
 	    }
 	}
     }
@@ -1533,7 +1540,7 @@ int confInterpret(char* filename, struct ROA* roa)
 int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 {
   int iROAState = 0;
-  int iReturn = TRUE;
+  int iReturn = 0;
   int fd = 0;
   int iSize, iSizeFinal, iSizeTmp = 0;
   unsigned char *buf, *buf_final, *buf_tmp = NULL;
@@ -1542,14 +1549,14 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 
   // Parameter validity checks
   if (NULL == fname)
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
-  *rp = (struct ROA*) malloc(sizeof(struct ROA));
+  *rp = (struct ROA*) calloc(1, sizeof(struct ROA));
   if (NULL == *rp)
     {
       // Error
       printf("Error malloc'ing memory for ROA\n");
-      return FALSE;
+      return ERR_SCM_NOMEM;
     }
 
   // No return value; must assume success
@@ -1566,7 +1573,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       (NULL == signerInfo))
     {
       free(*rp);
-      return FALSE;
+      return ERR_SCM_INVALASN;
     }
   
   // Fill default algorithm slots
@@ -1579,15 +1586,19 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   if ((fd = open(fname, (O_RDONLY))) < 0)
     {
       delete_casn(&((*rp)->self));
-      return FALSE;
+      return ERR_SCM_COFILE;
     }
   iSize = 1024;
   buf = buf_tmp = (unsigned char *)calloc(1, iSize);
+  if ( buf == NULL )
+    return ERR_SCM_NOMEM;
   while ( 1 )
     {
       if ((iSizeTmp = read(fd, buf_tmp, 1024)) == 1024)
 	{
 	  buf = (unsigned char *)realloc(buf, iSize + 1024);
+	  if ( buf == NULL )
+	    return ERR_SCM_NOMEM;
 	  buf_tmp = &buf[iSize];
 	  iSize += 1024;
 	}
@@ -1595,7 +1606,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 	{
 	  close(fd);
 	  delete_casn(&((*rp)->self));
-	  return FALSE;
+	  return ERR_SCM_BADFILE;
 	}
       else
 	break;
@@ -1612,7 +1623,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       buf_final = NULL;
       iReturn = decode_b64(buf, iSize, &buf_final, &iSizeFinal);
       // IMPORTANT: NO break, control falls through
-    case FMT_DER:      
+    case FMT_DER:
       iSizeTmp = decode_casn(&((*rp)->self), buf_final);
       if (buf_final != buf)
 	free(buf);
@@ -1620,27 +1631,27 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       if (iSizeTmp != iSizeFinal)
 	{
 	  delete_casn(&((*rp)->self));
-	  iReturn = FALSE;
+	  iReturn = ERR_SCM_INVALASN;
 	}
       else
-	iReturn = TRUE;
+	iReturn = 0;
       // iReturn = get_casn_file(&((*rp)->self), fname, 0);
       break;
     case FMT_CONF:
       iROAState = confInterpret(fname, *rp);
-      if (ROA_INVALID == iROAState)
+      if (iROAState < 0)
 	{
 	  delete_casn(&((*rp)->self));
-	  iReturn = FALSE;
+	  iReturn = iROAState;
 	}
       break;
     default:
-      iReturn = FALSE;
+      iReturn = ERR_SCM_INVALARG;
       break;
     }
 
   // JFG - Put back in when the validate function is finished
-  //if ((TRUE == iReturn) && (TRUE == doval))
+  //if ((0 == iReturn) && (cTRUE == doval))
   //  iReturn = roaValidate(*rp);
   return iReturn;
 }
@@ -1648,7 +1659,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 int roaToFile(struct ROA *r, char *fname, int fmt)
 {
   int fd = 0;
-  int iReturn = TRUE;
+  int iReturn = 0;
   int iSizeDER, iSizePEM = 0;
   unsigned char *buf_der, *buf_pem = NULL;
   //int iCASNSize = 0;
@@ -1656,16 +1667,16 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
 
   // Parameter validity checks
   if (NULL == fname)
-    return FALSE;
+    return ERR_SCM_INVALARG;
 
   /*
   // JFG - Debugging code; leave out unless required
   iCASNSize = dump_size(&(r->self));
   if (0 > iCASNSize)
-    return FALSE;
-  casn = malloc(iCASNSize);
+    return ERR_SCM_INVALASN;
+  casn =  calloc(iCASNSize, sizeof(char));
   if (NULL == casn)
-    return FALSE;
+    return ERR_SCM_NOMEM;
   dump_casn(&(r->self), casn);
   printf("%s", casn);
   free(casn);
@@ -1673,13 +1684,15 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
 
   // Encode CASN
   if ((fd = open(fname, (O_WRONLY | O_CREAT | O_TRUNC), 0777)) < 0)
-    return FALSE;
+    return ERR_SCM_COFILE;
   if ((iSizeDER = size_casn(&(r->self))) < 0)
     {
       close(fd);
-      return FALSE;
+      return ERR_SCM_INVALASN;
     }
   buf_der = (unsigned char *)calloc(1, iSizeDER);
+  if ( buf_der == NULL )
+    return ERR_SCM_NOMEM;
   encode_casn(&(r->self), buf_der);
 
   switch(fmt)
@@ -1690,7 +1703,7 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
       iReturn = encode_b64(buf_der, iSizeDER, &buf_pem, &iSizePEM, 50);
 
       // Write to file
-      if (TRUE == iReturn)
+      if (0 == iReturn)
 	{
 	  iReturn = write(fd, buf_pem, iSizePEM);
 	  free(buf_pem);
@@ -1698,9 +1711,9 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
       free(buf_der);
       close(fd);
       if (iSizePEM != iReturn)
-	iReturn = FALSE;
+	iReturn = ERR_SCM_INVALASN;
       else
-	iReturn = TRUE;
+	iReturn = 0;
 
       break;
     case FMT_DER:
@@ -1709,9 +1722,9 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
       free(buf_der);
       close(fd);
       if (iSizeDER != iReturn)
-	iReturn = FALSE;
+	iReturn = ERR_SCM_INVALASN;
       else
-	iReturn = TRUE;
+	iReturn = 0;
       // iReturn = put_casn_file(&(r->self), fname, 0);
       break;
     case FMT_CONF:
@@ -1719,7 +1732,7 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
       // NO NEED TO DO THIS.
       break;
     default:
-      iReturn = FALSE;
+      iReturn = ERR_SCM_INVALARG;
       break;
     }
 
