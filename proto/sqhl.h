@@ -80,7 +80,10 @@ extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
-extern void  startSyslog (char *appName);
-extern void  stopSyslog (void);
+// really and X509 *
+extern void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap);
+
+extern void  startSyslog(char *appName);
+extern void  stopSyslog(void);
 
 #endif
