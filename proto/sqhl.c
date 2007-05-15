@@ -11,7 +11,7 @@
 #include <limits.h>
 #include <fam.h>
 #include <ctype.h>
-#import <syslog.h>
+#include <syslog.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -540,6 +540,7 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
 // if the certificate is not marked as valid, then just bail
   if ( ((*pflags) & SCM_FLAG_VALID) == 0 )
     {
+      free((void *)ofile);
       *stap = ERR_SCM_NOTVALID;
       return(NULL);
     }
@@ -600,6 +601,7 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   if ( x509sta <= 0 )
     {
       BIO_free_all(bcert);
+      free((void *)ofullname);
       *stap = ERR_SCM_X509;
       return(NULL);
     }
@@ -1780,9 +1782,193 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
 }
 
 /*
+  Given the SKI of a ROA, this function returns the X509 * structure
+  for the corresponding EE certificate (or NULL on error).
+*/
+
+void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap)
+{
+  unsigned long blah = 0;
+  unsigned long dblah = 0;
+  unsigned long pflags = 0;
+  unsigned int  dirid = 0;
+  scmsrcha srch;
+  scmsrch  srch1[3];
+  scmsrcha dsrch;
+  scmsrch  dsrch1;
+  scmkva   where;
+  scmkv    one;
+  scmkva   dwhere;
+  scmkv    done;
+  scmtab  *tabp;
+  X509    *px = NULL;
+  BIO     *bcert = NULL;
+  char     cdirid[24];
+  char    *ofullname;
+  char    *ofile;
+  char    *dfile;
+  int      x509sta = 0;
+  int      typ;
+
+  if ( stap == NULL )
+    return(NULL);
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
+       ski == NULL || ski[0] == 0 )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return(NULL);
+    }
+  tabp = findtablescm(scmp, "CERTIFICATE");
+  if ( tabp == NULL )
+    {
+      *stap = ERR_SCM_NOSUCHTAB;
+      return(NULL);
+    }
+  conp->mystat.tabname = "CERTIFICATE";
+  ofile = (char *)calloc(PATH_MAX+1, sizeof(char));
+  if ( ofile == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+// find the certificate with the given SKI
+  one.column = "ski";
+  one.value = ski;
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_CHAR;
+  srch1[0].colname = "filename";
+  srch1[0].valptr = (void *)ofile;
+  srch1[0].valsize = PATH_MAX;
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_ULONG;
+  srch1[1].colname = "dir_id";
+  srch1[1].valptr = (void *)&dirid;
+  srch1[1].valsize = sizeof(unsigned int);
+  srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_ULONG;
+  srch1[2].colname = "flags";
+  srch1[2].valptr = (void *)&pflags;
+  srch1[2].valsize = sizeof(unsigned int);
+  srch1[2].avalsize = 0;
+  srch.vec = (&srch1[0]);
+  srch.sname = NULL;
+  srch.ntot = 3;
+  srch.nused = 3;
+  srch.vald = 0;
+  srch.where = &where;
+  srch.wherestr = NULL;
+  srch.context = &blah;
+  *stap = searchscm(conp, tabp, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
+  if ( *stap < 0 )
+    {
+      free((void *)ofile);
+      return(NULL);
+    }
+// the flags field must be marked valid, and must not have the CA bit set
+  if ( (pflags & SCM_FLAG_VALID) == 0 )
+    {
+      free((void *)ofile);
+      *stap = ERR_SCM_NOTVALID;
+      return(NULL);
+    }
+  if ( (pflags & SCM_FLAG_CA) != 0 )
+    {
+      free((void *)ofile);
+      *stap = ERR_SCM_NOTEE;
+      return(NULL);
+    }
+// now find the directory name from the id
+  tabp = findtablescm(scmp, "DIRECTORY");
+  if ( tabp == NULL )
+    {
+      free((void *)ofile);
+      *stap = ERR_SCM_NOSUCHTAB;
+      return(NULL);
+    }
+  dfile = (char *)calloc(PATH_MAX+1, sizeof(char));
+  if ( dfile == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  done.column = "dir_id";
+  (void)sprintf(cdirid, "%u", dirid);
+  done.value = (&cdirid[0]);
+  dwhere.vec = &done;
+  dwhere.ntot = 1;
+  dwhere.nused = 1;
+  dwhere.vald = 0;
+  dsrch1.colno = 1;
+  dsrch1.sqltype = SQL_C_CHAR;
+  dsrch1.valptr = (void *)dfile;
+  dsrch1.colname = "dirname";
+  dsrch1.valsize = PATH_MAX;
+  dsrch1.avalsize = 0;
+  dsrch.vec = &dsrch1;
+  dsrch.sname = NULL;
+  dsrch.ntot = 1;
+  dsrch.nused = 1;
+  dsrch.vald = 0;
+  dsrch.where = &dwhere;
+  dsrch.wherestr = NULL;
+  dsrch.context = &dblah;
+  *stap = searchscm(conp, tabp, &dsrch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
+  if ( *stap < 0 )
+    {
+      free((void *)dfile);
+      free((void *)ofile);
+      return(NULL);
+    }
+  ofullname = (char *)calloc(PATH_MAX+1, sizeof(char));
+  if ( ofullname == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  (void)sprintf(ofullname, "%s/%s", dfile, ofile);
+  free((void *)dfile);
+  free((void *)ofile);
+  typ = infer_filetype(ofullname);
+  bcert = BIO_new(BIO_s_file());
+  if ( bcert == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  x509sta = BIO_read_filename(bcert, ofullname);
+  if ( x509sta <= 0 )
+    {
+      BIO_free_all(bcert);
+      free((void *)ofullname);
+      *stap = ERR_SCM_X509;
+      return(NULL);
+    }
+// read the cert based on the input type
+  if ( typ < OT_PEM_OFFSET )
+    px = d2i_X509_bio(bcert, NULL);
+  else
+    px = PEM_read_bio_X509_AUX(bcert, NULL, NULL, NULL);
+  BIO_free_all(bcert);
+  if ( px == NULL )
+    *stap = ERR_SCM_BADCERT;
+  else
+    *stap = 0;
+  free((void *)ofullname);
+  return((void *)px);
+}
+
+
+/*
  * open syslog and write message that application started
  */
-void startSyslog (char *appName)
+
+void startSyslog(char *appName)
 {
   char *logName = (char *) calloc (6 + strlen (appName), sizeof (char));
   sprintf (logName, "APKI %s", appName);
@@ -1793,7 +1979,7 @@ void startSyslog (char *appName)
 /*
  * close syslog and write message that application ended
  */
-void stopSyslog()
+void stopSyslog(void)
 {
   syslog (LOG_NOTICE, "Application Ended");
   closelog();
