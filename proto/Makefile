@@ -8,6 +8,8 @@ all:	libapki.a rcli query chaser garbage makeROA
 
 CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../roa-utils -I../cg/asn -I../cg/casn -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers -DHAVE_LONG_LONG
 
+MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L../roa-utils -lapki -lroa -lssl -lcrypto -lasn -lcasn -lmyodbc3 -lrt
+
 # OBSOLETE test program
 sqq:	sqq.o Makefile
 	gcc -o sqq -g -L/usr/local/lib sqq.o -lmyodbc3 -lrt
@@ -34,19 +36,19 @@ libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
 	ranlib libapki.a
 
 rcli:	rcli.o libapki.a Makefile
-	gcc -o rcli -g -L/usr/local/ssl/lib -L. rcli.o -lapki -lssl -lcrypto -lmyodbc3 -lrt
+	gcc -o rcli -g rcli.o $(MY_LIBS)
 
 query: query.o libapki.a Makefile
-	gcc -o query -g -L/usr/local/ssl/lib -L../roa-utils -L../cg/asn -L../cg/casn -L. query.o -lapki -lroa -lssl -lcrypto -lmyodbc3 -lrt -lasn -lcasn
+	gcc -o query -g query.o $(MY_LIBS)
 
 chaser: chaser.o libapki.a Makefile
-	gcc -o chaser -g -L/usr/local/ssl/lib -L. chaser.o -lapki -lssl -lcrypto -lmyodbc3 -lrt
+	gcc -o chaser -g chaser.o $(MY_LIBS)
 
 garbage: garbage.o libapki.a Makefile
-	gcc -o garbage -g -L/usr/local/ssl/lib -L. garbage.o -lapki -lssl -lcrypto -lmyodbc3 -lrt
+	gcc -o garbage -g garbage.o $(MY_LIBS)
 
 makeROA: makeROA.o libapki.a Makefile
-	gcc -o makeROA -g -L/usr/local/ssl/lib -L../roa-utils -L../cg/asn -L../cg/casn -L. makeROA.o -lapki -lroa -lssl -lcrypto -lmyodbc3 -lrt -lasn -lcasn
+	gcc -o makeROA -g makeROA.o $(MY_LIBS)
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a
