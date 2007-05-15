@@ -20,6 +20,8 @@
 #include "myssl.h"
 #include "err.h"
 
+#include "roa_utils.h"
+
 /*
   Find a directory in the directory table, or create it if it is not found.
   Return the id in idp. The function returns 0 on success and a negative error
@@ -201,6 +203,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   ctab = findtablescm(scmp, "CERTIFICATE");
   if ( ctab == NULL )
     return(ERR_SCM_NOSUCHTAB);
+  conp->mystat.tabname = "CERTIFICATE";
   sta = getmaxidscm(scmp, conp, "local_id", ctab, &cert_id);
   if ( sta < 0 )
     return(sta);
@@ -278,6 +281,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
       free((void *)hexs);
       return(ERR_SCM_NOSUCHTAB);
     }
+  conp->mystat.tabname = "CRL";
   sta = getmaxidscm(scmp, conp, "local_id", ctab, &crl_id);
   if ( sta < 0 )
     {
@@ -324,6 +328,54 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 // set the other_id of all matching certs to point to this CRL
   sta = setcertptr(scmp, conp, crl_id, cf->fields[CRF_FIELD_ISSUER],
 		   cf->fields[CRF_FIELD_AKI]);
+  return(sta);
+}
+
+static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
+			    unsigned int dirid, char *ski, int asid)
+{
+  unsigned int roa_id;
+  scmtab  *ctab;
+  scmkva   aone;
+  scmkv    cols[6];
+  char  flagn[24];
+  char  asn[24];
+  char  lid[24];
+  char  did[24];
+  int   idx = 0;
+  int   sta;
+
+  ctab = findtablescm(scmp, "ROA");
+  if ( ctab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  conp->mystat.tabname = "ROA";
+  sta = getmaxidscm(scmp, conp, "local_id", ctab, &roa_id);
+  if ( sta < 0 )
+    return(sta);
+  roa_id++;
+// fill in insertion structure
+  cols[idx].column = "filename";
+  cols[idx++].value = outfile;
+  (void)sprintf(did, "%u", dirid);
+  cols[idx].column = "dir_id";
+  cols[idx++].value = did;
+  cols[idx].column = "ski";
+  cols[idx++].value = ski;
+  (void)sprintf(asn, "%d", asid);
+  cols[idx].column = "asn";
+  cols[idx++].value = asn;
+  (void)sprintf(flagn, "%u", SCM_FLAG_VALID);
+  cols[idx].column = "flags";
+  cols[idx++].value = flagn;
+  (void)sprintf(lid, "%u", roa_id);
+  cols[idx].column = "local_id";
+  cols[idx++].value = lid;
+  aone.vec = &cols[0];
+  aone.ntot = 6;
+  aone.nused = idx;
+  aone.vald = 0;
+// add the ROA
+  sta = insertscm(conp, ctab, &aone);
   return(sta);
 }
 
@@ -785,9 +837,44 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	    unsigned int id, int utrust, int typ)
 {
-  UNREFERENCED_PARAMETER(utrust);
+  struct ROA *r = NULL;
+  X509 *cert;
+  char *ski;
+  int   asid;
+  int   sta;
 
-  return(0);			/* GAGNON */
+  UNREFERENCED_PARAMETER(utrust);
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
+       outfile[0] == 0 || outfull == NULL || outfull[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  sta = roaFromFile(outfull, typ >= OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &r);
+  if ( sta < 0 )
+    return(sta);
+  ski = (char *)roaSKI(r);
+  asid = roaAS_ID(r);
+  if ( ski == NULL || ski[0] == 0 )
+    {
+      roaFree(r);
+      return(ERR_SCM_INVALSKI);
+    }
+  if ( asid == 0 )
+    {
+      roaFree(r);
+      return(ERR_SCM_INVALASID);
+    }
+  cert = (X509 *)roa_parent(scmp, conp, ski, &sta);
+  if ( cert == NULL )
+    {
+      roaFree(r);
+      return(sta);
+    }
+  sta = roaValidate2(r, cert);
+  X509_free(cert);
+  roaFree(r);
+  if ( sta < 0 )
+    return(sta);
+  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid);
+  return(sta);
 }
 
 /*
