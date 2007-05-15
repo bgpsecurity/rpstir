@@ -87,6 +87,7 @@ int main(int argc, char** argv)
       return sta;
     }
   sta = roaValidate2(roa2, cert);
+  X509_free(cert);
   if ( sta < 0 )
     {
       (void)fprintf(stderr, "ROA failed semantic validation: error %s (%d)\n",
