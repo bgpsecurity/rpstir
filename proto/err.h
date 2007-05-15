@@ -54,8 +54,9 @@
 #define ERR_SCM_INVALIPL    -42         /* invalid IP address length */
 #define ERR_SCM_INVALVER    -43         /* invalid version */
 #define ERR_SCM_INVALASN    -44         /* ASN.1 library error */
+#define ERR_SCM_NOTEE       -45         /* not an EE cert */
 
-#define ERR_SCM_MAXERR      -44
+#define ERR_SCM_MAXERR      -45
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
@@ -64,6 +65,6 @@
      return -1; \
   }
 
-extern char *err2string(int err);
+extern char *err2string(int errr);
 
 #endif

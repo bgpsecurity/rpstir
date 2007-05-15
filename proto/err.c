@@ -53,6 +53,7 @@ static char *errs[] =
     "Invalid IP address length",    /* ERR_SCM_INVALIPL */
     "Invalid version number",       /* ERR_SCM_INVALVER */
     "ASN.1 library error",          /* ERR_SCM_INVALASN */
+    "Not an EE certificate",        /* ERR_SCM_NOTEE */
   } ;
 
 char *err2string(int err)
