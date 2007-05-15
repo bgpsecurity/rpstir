@@ -50,18 +50,17 @@ where SSL_INCLUDE is the full path to the OpenSSL include directory (typically
 
 All code should be linked with
 
-    -LSSL_LIB -LROA_LIB -LCASN_LIB
+    -LAPKI_LIB -LSSL_LIB -LROA_LIB -LASN_LIB -LCASN_LIB
 
-where SSL_LIB is the full path to the OpenSSL library directory (typically
-/usr/local/ssl/lib), ROA_LIB is the full path to the ROA utilities library
-(typically ../roa-utils), and CASN_LIB is the full path to the casn utility library
-(typically ../cg/casn). It should be linked against the object files:
+where APKI_LIB is the full path to the apki library (typically .), SSL_LIB is the
+full path to the OpenSSL library directory (typically /usr/local/ssl/lib), ROA_LIB
+is the full path to the ROA utilities library (typically ../roa-utils), ASN_LIB is
+the full path to the ASN.1 library (typically ../cg/asn) and CASN_LIB is the full
+path to the casn utility library (typically ../cg/casn).
 
-     initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
+The library link should contain at least the following:
 
-in that order.  The library link should contain at least the following:
-
-      -lssl -lcrypto -lmyodbc3 -lrt -lroa -lcasn
+      -lapki -lssl -lcrypto -lmyodbc3 -lrt -lroa -lasn -lcasn
 
 2.0 Function descriptions
 
@@ -457,6 +456,15 @@ name "appName".
 
 This utility function is used to turn off syslogging.
 
+2.2.9 void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap)
+
+This utility function is used to look up the end-entity certificate that
+signed a ROA.  "ski" denotes the SKI contained within the ROA. "scmp" and
+"conp" are the usual schema and connection pointers. On success this function
+returns an X509 pointer (cast to a void * for convenience) and sets "stap" to
+zero. On failure NULL is returned and "stap" is set to a negative error code
+defined in err.h.
+
 2.3 OpenSSL utility functions
 
 2.3.1 char *LocalTimeToDBTime(int *stap)
@@ -566,9 +574,9 @@ based on the first CR or LF delimited line in the file and also
 the filename; if "fmt" is non-zero then it is an OpenSSL enum value
 specifying the file format (binary DER or PEM encoded DER).
   
-If "doval" is any nonzero value then the ROA will also be semantically
+If "doval" is any nonzero value then the ROA will also be syntactically
 validated using all steps that do not require access to the database;
-if "doval" is 0 only ASN.1 syntatic validation will be performed.
+if "doval" is 0 only ASN.1 validation will be performed.
 
 On success a ROA data structure, as defined in roa.h, is returned
 and errp is set to 0.  On failure NULL is returned and errp is
