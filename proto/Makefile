@@ -37,7 +37,7 @@ rcli:	rcli.o libapki.a Makefile
 	gcc -o rcli -g -L/usr/local/ssl/lib -L. rcli.o -lapki -lssl -lcrypto -lmyodbc3 -lrt
 
 query: query.o libapki.a Makefile
-	gcc -o query -g -L/usr/local/ssl/lib -L../roa-utils -L../cg/asn -L../cg/casn -L. query.o -lapki -lssl -lcrypto -lmyodbc3 -lrt -lroa -lasn -lcasn
+	gcc -o query -g -L/usr/local/ssl/lib -L../roa-utils -L../cg/asn -L../cg/casn -L. query.o -lapki -lroa -lssl -lcrypto -lmyodbc3 -lrt -lasn -lcasn
 
 chaser: chaser.o libapki.a Makefile
 	gcc -o chaser -g -L/usr/local/ssl/lib -L. chaser.o -lapki -lssl -lcrypto -lmyodbc3 -lrt
@@ -46,7 +46,7 @@ garbage: garbage.o libapki.a Makefile
 	gcc -o garbage -g -L/usr/local/ssl/lib -L. garbage.o -lapki -lssl -lcrypto -lmyodbc3 -lrt
 
 makeROA: makeROA.o libapki.a Makefile
-	gcc -o makeROA -g -L/usr/local/ssl/lib -L../roa-utils -L../cg/asn -L../cg/casn -L. makeROA.o -lapki -lssl -lcrypto -lmyodbc3 -lrt -lroa -lasn -lcasn
+	gcc -o makeROA -g -L/usr/local/ssl/lib -L../roa-utils -L../cg/asn -L../cg/casn -L. makeROA.o -lapki -lroa -lssl -lcrypto -lmyodbc3 -lrt -lasn -lcasn
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a
