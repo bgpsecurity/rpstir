@@ -1614,9 +1614,6 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
 /*
   This is the callback for certificates that are too old, e.g. no longer
   valid. Delete them (and their children) unless they have been reparented.
-
-  GAGNON: must delete expired cert.
-  GAGNON: check to see if ROAs reparented also
 */
 
 static int certtooold(scmcon *conp, scmsrcha *s, int idx)
