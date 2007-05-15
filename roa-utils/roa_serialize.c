@@ -2,8 +2,6 @@
   $Id$
 */
 
-// JFG - SYSTEMWIDE TODO: Rationalize return values
-
 #include "roa_utils.h"
 
 // Warning - MAX_LINE hardcoded as a constant in confInterpret;
