@@ -19,6 +19,9 @@ int roaFromConfig(char *fname, int doval, struct ROA** rp)
 
 int roaToConfig(struct ROA* roa, char *fname)
 {
+  UNREFERENCED_PARAMETER(roa);
+  UNREFERENCED_PARAMETER(fname);
+
   return ERR_SCM_NOTIMPL;
   // currently unspecified (not yet required)
   // return roaToFile(roa, fname, FMT_CONF);

@@ -141,6 +141,14 @@ unsigned char *roaSKI(struct ROA *r);
   must be free()d by the caller.
 */
 
+int roaAS_ID(struct ROA *r);
+
+/*
+  This utility function extracts the AS# from a ROA and returns it.
+  On success this function returns a non-zero number, On failure it
+  returns 0.
+*/
+
 int roaValidate(struct ROA *r);
 
 /*
@@ -157,6 +165,7 @@ int roaValidate2(struct ROA *r, X509 *x);
   on success and a negative error code on failure. It is assumed that this
   function is called as follows:
 
+      scm    *scmp; // previously opened DB schema
       scmcon *conp; // previously opened DB connection
       X509   *cert;
       char   *ski;
@@ -165,9 +174,9 @@ int roaValidate2(struct ROA *r, X509 *x);
 
       sta = roaValidate(r);
       if ( sta == 0 ) {
-        ski = roaSKI(r);
+        ski = (char *)roaSKI(r);
 	if ( ski != NULL ) {
-	  cert = find_certificate(conp, ski, NULL, NULL, &sta);
+	  cert = roa_parent(scmp, conp, ski, &sta);
 	  if ( cert != NULL && sta == 0 ) {
             valid = roaValidate2(r, cert);
           }
@@ -183,3 +192,7 @@ void roaFree(struct ROA *r);
   If "r" is non-NULL, however, it must point to a syntatically valid
   ROA structure (which need not have been semantically validated, however).
 */
+
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
+#endif

@@ -72,7 +72,7 @@ static const char *ianaAfiStrings[] = {
 //
 /////////////////////////////////////////////////////////////
 
-inline int isInstructionForcing(enum forcingInstruction fi)
+static inline int isInstructionForcing(enum forcingInstruction fi)
 {
   if ((NONE == fi) ||
       (IPV4CONT == fi) ||
@@ -93,7 +93,7 @@ inline int isInstructionForcing(enum forcingInstruction fi)
 **
 ** encode 3 8-bit binary bytes as 4 '6-bit' characters
 */
-void encodeblock( unsigned char in[3], unsigned char out[4], int len )
+static void encodeblock( unsigned char in[3], unsigned char out[4], int len )
 {
     out[0] = cb64[ in[0] >> 2 ];
     out[1] = cb64[ ((in[0] & 0x03) << 4) | ((in[1] & 0xf0) >> 4) ];
@@ -107,7 +107,7 @@ void encodeblock( unsigned char in[3], unsigned char out[4], int len )
 ** base64 encode a stream adding padding and line breaks as per spec.
 ** ALLOCATES MEMORY that must be freed elsewhere
 */
-int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize, int lineSize )
+static int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize, int lineSize )
 {
     unsigned char inTemp[3], outTemp[4];
     int i = 0;
@@ -208,7 +208,7 @@ int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 **
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
 */
-void decodeblock( unsigned char in[4], unsigned char out[3] )
+static void decodeblock( unsigned char in[4], unsigned char out[3] )
 {   
     out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
     out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
@@ -221,7 +221,7 @@ void decodeblock( unsigned char in[4], unsigned char out[3] )
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 ** ALLOCATES MEMORY that must be freed elsewhere
 */
-int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize )
+static int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize )
 {
     unsigned char inTemp[4], outTemp[3], v;
     int i = 0;
@@ -314,7 +314,7 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 //
 /////////////////////////////////////////////////////////////
 
-int ctocval(unsigned char cIn, unsigned char *val, int radix)
+static int ctocval(unsigned char cIn, unsigned char *val, int radix)
 {
   char c;
 
@@ -337,7 +337,7 @@ int ctocval(unsigned char cIn, unsigned char *val, int radix)
 
 // Crappy substitute function for pleasant function that returned a short
 // (now string to 2 char array) BUT it assures no endianness crap
-int ip_strto2c(unsigned char* strToTranslate, unsigned char* c2Returned, int radix)
+static int ip_strto2c(unsigned char* strToTranslate, unsigned char* c2Returned, int radix)
 {
   int i = 0;
   int iLen = 0;
@@ -379,7 +379,7 @@ int ip_strto2c(unsigned char* strToTranslate, unsigned char* c2Returned, int rad
   return 0;
 }
 
-int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, int radix)
+static int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, int radix)
 {
   int i = 0;
   int iLen = 0;
@@ -422,7 +422,7 @@ int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, int radix
 //
 /////////////////////////////////////////////////////////////
 
-int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGoodLeadingBytes)
+static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGoodLeadingBytes)
 {
   int iFullBytes = 0;
   unsigned char cGoodTrailingBits = 0;
@@ -446,7 +446,7 @@ int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGood
   return 0;
 }
 
-int calculateAndClearPrefix(int iPrefix, int iSize, unsigned char* iparray,
+static int calculateAndClearPrefix(int iPrefix, int iSize, unsigned char* iparray,
 			    unsigned char* cBadBits, int* iGoodBytes)
 {
   int i = 0;
@@ -475,8 +475,10 @@ int calculateAndClearPrefix(int iPrefix, int iSize, unsigned char* iparray,
   return calculatePrefixVals(iPrefix, cBadBits, iGoodBytes);
 }
 
-int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
-			unsigned char* cBadTrailingBits, int* iGoodLeadingBytes)
+#ifdef IP_RANGES_ALLOWED
+
+static int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
+			      unsigned char* cBadTrailingBits, int* iGoodLeadingBytes)
 {
   int i = 0;
   int iIndex = 0;
@@ -516,6 +518,8 @@ int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
   return calculatePrefixVals(i, cBadTrailingBits, iGoodLeadingBytes);
 }
 
+#endif
+
 /////////////////////////////////////////////////////////////
 //
 // IP Address octet strings from ASCII strings
@@ -527,7 +531,7 @@ int calculateAndClearMM(int iIsMin, int iSize, unsigned char* iparray,
 // JFG - Note: Currently handled by this function are addresses of the format
 // 168.156/24, which may not be canonical, but which interprets out to
 // 168.156.0.0/24 for now.
-int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, int* iprefixlen)
+static int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, int* iprefixlen)
 {
   int i = 0;
   int iStringLen = 0;
@@ -647,7 +651,7 @@ int translateIPv4Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 
 // Translation of hexadecimal IPv6 addresses
 //
-int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, int* iprefixlen)
+static int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, int* iprefixlen)
 {
   int i = 0;
   int iStringLen = 0;
@@ -828,7 +832,7 @@ int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytearray, in
 //
 /////////////////////////////////////////////////////////////
 
-int setVersion(struct ROA* roa, unsigned char* versionstring)
+static int setVersion(struct ROA* roa, unsigned char* versionstring)
 { 
   int iRes = 0;
   int iLen = 0;
@@ -856,7 +860,7 @@ int setVersion(struct ROA* roa, unsigned char* versionstring)
   return 0;
 }
 
-int setSID(struct ROA* roa, unsigned char* sidstring)
+static int setSID(struct ROA* roa, unsigned char* sidstring)
 {
   int iLen = 0;
   int sidIndex = 0;
@@ -898,7 +902,7 @@ int setSID(struct ROA* roa, unsigned char* sidstring)
   return 0;
 }
 
-int setSignature(struct ROA* roa, unsigned char* signstring)
+static int setSignature(struct ROA* roa, unsigned char* signstring)
 {
   int iLen = 0;
 
@@ -912,7 +916,7 @@ int setSignature(struct ROA* roa, unsigned char* signstring)
   return 0;
 }
 
-int setAS_ID(struct ROA* roa, unsigned char* asidstring)
+static int setAS_ID(struct ROA* roa, unsigned char* asidstring)
 {
   int iLen = 0;
   int iAS_ID = 0;
@@ -927,7 +931,7 @@ int setAS_ID(struct ROA* roa, unsigned char* asidstring)
   return 0;
 }
 
-int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
+static int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
 {
   int iLen = 0;
   int iBlocks = 0;
@@ -978,7 +982,7 @@ int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
   return ERR_SCM_INVALIPB;
 }
 
-int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
+static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 {
   unsigned char ipv4array[5];
   unsigned char ipv6array[17];
@@ -1302,7 +1306,7 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
 
 #endif // IP_RANGES_ALLOWED
 
-int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
+static int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
 {
   int iLen = 0;
   int iRet = 0;
@@ -1334,7 +1338,7 @@ int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
 //
 /////////////////////////////////////////////////////////////
 
-int confInterpret(char* filename, struct ROA* roa)
+static int confInterpret(char* filename, struct ROA* roa)
 {
   char line[MAX_LINE + 1] = "";
   char key[MAX_LINE + 1] = "";
@@ -1648,9 +1652,8 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       break;
     }
 
-  // JFG - Put back in when the validate function is finished
-  //if ((0 == iReturn) && (cTRUE == doval))
-  //  iReturn = roaValidate(*rp);
+  if ((0 == iReturn) && (cFALSE != doval))
+    iReturn = roaValidate(*rp);
   return iReturn;
 }
 

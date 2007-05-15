@@ -4,43 +4,104 @@
 
 #include "roa_utils.h"
 
+#include "scm.h"
+#include "scmf.h"
+#include "sqhl.h"
+#include "err.h"
+
 int main(int argc, char** argv)
 {
-  struct ROA *roa;
-  struct ROA *roa2;
-  int  sta = 0;
-  char filename_cnf[16] = "";
-  char filename_der[16] = "";
-  char filename_pem[16] = "";
-  FILE *fp = NULL;
-  //scmcon *conp;
-  //X509   *cert;
-  //char   *ski;
-  //int     sta;
+  struct ROA *roa = NULL;
+  struct ROA *roa2 = NULL;
+  char  *filename_cnf = NULL;
+  char   filename_der[16] = "";
+  char   filename_pem[16] = "";
+  char   errmsg[1024];
+  FILE   *fp = NULL;
+  scmcon *conp;
+  scm    *scmp;
+  X509   *cert;
+  char   *ski;
+  int     sta = 0;
   
-  strcpy(filename_cnf, "roa.cnf");
+  if ( argc < 2 )
+    filename_cnf = "roa.cnf";
+  else
+    filename_cnf = argv[1];
   strcpy(filename_der, "mytest.roa.der");
   strcpy(filename_pem, "mytest.roa.pem");
   sta = roaFromConfig(filename_cnf, 0, &roa);
-  if (0 == sta)
-    sta = roaToFile(roa, filename_pem, FMT_PEM);
-  if (0 == sta)
-    sta = roaFromFile(filename_pem, FMT_PEM, cTRUE, &roa2);
-  if (0 == sta)
+  if ( sta < 0 )
     {
-      fp = fopen("roa.txt", "a");
-      if (fp) {
-	// JFG - Add these back in when ready to test validation
-	//ski = roaSKI(r);
-	//if ( NULL != ski ) {
-	//cert = find_certificate(conp, ski, NULL, NULL, &sta);
-	//if ( cert != NULL && sta == 0 )
-	sta = roaGenerateFilter(roa2, NULL, fp);
-      }
-      fclose(fp);
+      (void)fprintf(stderr, "roaFromConfig(%s) failed with error %s (%d)\n",
+		    filename_cnf, err2string(sta), sta);
+      return sta;
     }
-  if (sta < 0)
-    return 1;
-  else
-    return 0;
+  sta = roaToFile(roa, filename_pem, FMT_PEM);
+  if ( sta < 0 )
+    {
+      (void)fprintf(stderr, "roaToFile(%s) failed with error %s (%d)\n",
+		    filename_pem, err2string(sta), sta);
+      return sta;
+    }
+  sta = roaFromFile(filename_pem, FMT_PEM, cTRUE, &roa2);
+  if ( sta < 0 )
+    {
+      (void)fprintf(stderr, "roaFromFile(%s) failed with error %s (%d)\n",
+		    filename_pem, err2string(sta), sta);
+      return sta;
+    }
+  ski = (char *)roaSKI(roa2);
+  if ( ski == NULL || ski[0] == 0 )
+    {
+      (void)fprintf(stderr, "ROA has NULL SKI\n");
+      return -2;
+    }
+  scmp = initscm();
+  if ( scmp == NULL )
+    {
+      (void)fprintf(stderr,
+		    "Internal error: cannot initialize database schema\n");
+      return -3;
+    }
+  memset(errmsg, 0, 1024);
+  conp =  connectscm(scmp->dsn, errmsg, 1024);
+  if ( conp == NULL )
+    {
+      (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
+		    scmp->dsn, errmsg);
+      freescm(scmp);
+      return -4;
+    }
+  cert = (X509 *)roa_parent(scmp, conp, ski, &sta);
+  disconnectscm(conp);
+  freescm(scmp);
+  if ( cert == NULL )
+    {
+      (void)fprintf(stderr, "ROA has no parent: error %s (%d)\n",
+		    err2string(sta), sta);
+      return sta;
+    }
+  sta = roaValidate2(roa2, cert);
+  if ( sta < 0 )
+    {
+      (void)fprintf(stderr, "ROA failed semantic validation: error %s (%d)\n",
+		    err2string(sta), sta);
+      return sta;
+    }
+  fp = fopen("roa.txt", "a");
+  if ( fp == NULL )
+    {
+      (void)fprintf(stderr, "Cannot open roa.txt\n");
+      return -5;
+    }
+  sta = roaGenerateFilter(roa2, NULL, fp);
+  (void)fclose(fp);
+  if ( sta < 0 )
+    {
+      (void)fprintf(stderr, "Cannot generate ROA filter output: error %s (%d)\n",
+		    err2string(sta), sta);
+      return sta;
+    }
+  return 0;
 }

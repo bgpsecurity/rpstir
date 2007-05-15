@@ -13,7 +13,7 @@
 //  been validated at entry and that ipaddrmax exceeds ipaddrmin
 
 // A quick itoa implementation that works only for radix <= 10
-int itoa (int n, char* cN, int radix){
+static int itoa (int n, char* cN, int radix){
   int i = 0;
   int j = 0;
   char* s;
@@ -40,7 +40,7 @@ int itoa (int n, char* cN, int radix){
   return 0;
 }
 
-int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
+static int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
 {
   char cHigh = 0;
   char cLow = 0;
@@ -67,7 +67,7 @@ int cvalhtoc2(unsigned char cVal, unsigned char *c2Array)
   return 0;
 }
 
-int cvaldtoc3(unsigned char cVal, unsigned char *c2Array, int* iLength)
+static int cvaldtoc3(unsigned char cVal, unsigned char *c2Array, int* iLength)
 {
   char cHigh = 0;
   char cMid = 0;
@@ -125,7 +125,7 @@ unsigned char *roaSKI(struct ROA *r)
     return NULL;
   else
     {
-      cReturn = calloc(SKI_SIZE * 3, sizeof(char));
+      cReturn = calloc(1 + (SKI_SIZE * 3), sizeof(char));
       if (NULL == cReturn)
 	{
 //	  free(cSID);
@@ -146,7 +146,7 @@ unsigned char *roaSKI(struct ROA *r)
   return NULL;
 }
 
-unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
+static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;
   unsigned char j = 0;
@@ -165,7 +165,6 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
   if (NULL == cReturnString)
     return NULL;
 
-  memset(cReturnString, 0, 19);
   for (i = 1; i < iArraySize; i++)
     {
       // If this is the last char in the array, and we're obeying DER rules
@@ -225,7 +224,7 @@ unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, 
   return cReturnString;
 }
 
-unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArraySize)
+static unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArraySize)
 {
   // parameter check
   if (NULL == prefixArray)
@@ -234,7 +233,8 @@ unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArraySize)
   return printIPv4String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
-unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
+#ifdef IP_RANGE_ALLOWED
+static unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
 {
   int iMinStringLen = 0;
   int iMaxStringLen = 0;
@@ -277,9 +277,9 @@ unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, un
 
   return cReturnString;
 }
+#endif
 
-
-unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
+static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;
   unsigned char j = 0;
@@ -299,7 +299,6 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
   if (NULL == cReturnString)
     return NULL;
 
-  memset(cReturnString, 0, 44);
   for (i = 1; i < iArraySize; i++)
     {
       // If this is the last char in the array, and we're obeying DER rules
@@ -358,7 +357,7 @@ unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, 
   return cReturnString;
 }
 
-unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArraySize)
+static unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArraySize)
 {
   // parameter check
   if (NULL == prefixArray)
@@ -367,7 +366,8 @@ unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArraySize)
   return printIPv6String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
-unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
+#ifdef IP_RANGE_ALLOWED
+static unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
 {
   int iMinStringLen = 0;
   int iMaxStringLen = 0;
@@ -410,6 +410,7 @@ unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, un
 
   return cReturnString;
 }
+#endif
 
 #ifdef IP_RANGE_ALLOWED
 unsigned char* roaIPAddrOrRange(struct IPAddressOrRangeA *addrOrRange, int iFamily)
@@ -495,7 +496,7 @@ unsigned char* roaIPAddrOrRange(struct IPAddressOrRangeA *addrOrRange, int iFami
 }
 #endif // IP_RANGE_ALLOWED
 
-unsigned char* roaIPAddr(struct IPAddress *addr, int iFamily)
+static unsigned char* roaIPAddr(struct IPAddress *addr, int iFamily)
 {
   int iSize = 0;
   unsigned char *cASCIIString = NULL;
@@ -535,7 +536,7 @@ unsigned char* roaIPAddr(struct IPAddress *addr, int iFamily)
   return cASCIIString;
 }
 
-unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numOfAddresses)
+static unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, int *numOfAddresses)
 {
   int i,j = 0;
   int iRes = 0;
@@ -646,11 +647,10 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
   if ( sta < 0 ) return(sta);
   */
 
-  memset(cAS_ID, 0, 16);
+  memset(cAS_ID, 0, 17);
   iAS_ID = roaAS_ID(r);
-  if (0 >= iAS_ID)
+  if ( iAS_ID == 0 )
     return ERR_SCM_INVALASID;
-
   sta = itoa(iAS_ID, cAS_ID, 10);
   if ( sta < 0 )
     return sta;

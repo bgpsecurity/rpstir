@@ -45,14 +45,14 @@ int IPv6ValidateRange(IPAddr* ipaddrmin, IPAddr* ipaddrmax)
 */
 
 // JFG - Finish commented-out functions
-int validateIPContents()
+static int validateIPContents()
 {
   // Call subfunctions as required to assure that ranges/prefixes
   // only overlap per legitimate rules as defined by IETF
   return 0;
 }
 
-int testSubsetIPContents()
+static int testSubsetIPContents()
 {
   // Call subfunctions as required to assure that ranges/prefixes
   // fall into subset of cert's set of prefixes
