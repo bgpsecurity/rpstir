@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 		    filename_pem, err2string(sta), sta);
       return sta;
     }
+  roaFree(roa);
   sta = roaFromFile(filename_pem, FMT_PEM, cTRUE, &roa2);
   if ( sta < 0 )
     {
@@ -60,6 +61,7 @@ int main(int argc, char** argv)
   scmp = initscm();
   if ( scmp == NULL )
     {
+      roaFree(roa2);
       (void)fprintf(stderr,
 		    "Internal error: cannot initialize database schema\n");
       return -3;
@@ -70,6 +72,7 @@ int main(int argc, char** argv)
     {
       (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
 		    scmp->dsn, errmsg);
+      roaFree(roa2);
       freescm(scmp);
       return -4;
     }
@@ -80,6 +83,7 @@ int main(int argc, char** argv)
     {
       (void)fprintf(stderr, "ROA has no parent: error %s (%d)\n",
 		    err2string(sta), sta);
+      roaFree(roa2);
       return sta;
     }
   sta = roaValidate2(roa2, cert);
@@ -87,15 +91,18 @@ int main(int argc, char** argv)
     {
       (void)fprintf(stderr, "ROA failed semantic validation: error %s (%d)\n",
 		    err2string(sta), sta);
+      roaFree(roa2);
       return sta;
     }
   fp = fopen("roa.txt", "a");
   if ( fp == NULL )
     {
       (void)fprintf(stderr, "Cannot open roa.txt\n");
+      roaFree(roa2);
       return -5;
     }
   sta = roaGenerateFilter(roa2, NULL, fp);
+  roaFree(roa2);
   (void)fclose(fp);
   if ( sta < 0 )
     {
