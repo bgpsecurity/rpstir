@@ -46,6 +46,8 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 577P";
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
+
 #include "asn.h"
 
 extern void fatal(int, char *);
@@ -156,7 +158,7 @@ int j, k, offset, lth = asnp->lth, width;
 unsigned char *b, *e, delim[2], locbuf[128], *d;
 long val;
 width = 80;
-strcpy(delim, "'");
+ strcpy((char *)delim, "'");
 if (mode == 1)
     {
     j = k = 0;
@@ -175,8 +177,8 @@ else if (mode == 2)
         val = (val << 7) + (*b & 0x7F);
         }
     val = (val << 7) + *b++;
-    if (val < 80) sprintf(locbuf, "%ld.%ld", (val / 40), (val % 40));
-    else sprintf(locbuf, "2.%ld", val - 80);
+    if (val < 80) sprintf((char *)locbuf, "%ld.%ld", (val / 40), (val % 40));
+    else sprintf((char *)locbuf, "2.%ld", val - 80);
     for (d = locbuf; *d; d++);
     while (b < e)
         {
@@ -185,22 +187,22 @@ else if (mode == 2)
             val = (val << 7) + (*b & 0x7F);
             }
         val = (val << 7) + *b++;
-        sprintf(d, ".%ld", val);
+        sprintf((char *)d, ".%ld", val);
 	while (*d) d++;
         }
-    fprintf(outf, locbuf);
+    fprintf(outf, (char *)locbuf);
     return row;
     }
 for (offset = (asnp->level + 1) * 4; lth; )
     {
-    if (mode == 1) fprintf(outf, delim);
+      if (mode == 1) fprintf(outf, (char *)delim);
     else fprintf(outf, "0x");
     if ((k = (width - 9 - offset) / mode) < 16) k = 16;
     for (j = 1; k >>= 1; j <<= 1);
     if (j > lth) j = lth;
     for (e = &(b = c)[j], lth -= j; c < e;
         fprintf(outf, ((mode > 1)? "%02X": "%c"), *c++));
-    if (mode == 1) fprintf(outf, delim);
+    if (mode == 1) fprintf(outf, (char *)delim);
     else
         {
 	for (fprintf(outf, " /* "); b < e; b++)

@@ -359,8 +359,8 @@ int adj_asn(int start)
 {
 putasn ((char)0);
 putasn ((char)0);
-asn_area.next += set_asn_lth (&asn_area.area[start],
-    &asn_area.area[asn_area.next -= 2]);
+ asn_area.next += set_asn_lth ((uchar *)&asn_area.area[start],
+			       (uchar *)&asn_area.area[asn_area.next -= 2]);
 return -1;
 }
 
@@ -452,7 +452,8 @@ char *getbuf(char *to)
 {
 char *b, *c, *e;
 int col;
-if (!gets (to)) return (char *)0;
+//if (!gets (to)) return (char *)0;
+if (!fgets(to, 512, stdin)) return (char *)0;
 linenum++;
 for (b = to; *b; b++);
 e = b;
@@ -496,7 +497,7 @@ uchar *c, *e, typ, *asn_typ_lth();
 struct asn asnb;
 MD2Init(&md);
 if (!hash_start) asnb.stringp = (uchar *)&asn_area.area[2];
-else asnb.stringp = hash_start;
+ else asnb.stringp = (uchar *)hash_start;
 c = asn_typ_lth(&asnb, &typ, 1);
 MD2Update(&md, asnb.stringp, asnb.lth + (c - asnb.stringp));
 MD2Final(&md);

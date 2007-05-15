@@ -1,7 +1,7 @@
 /* Mar  8 1994   2U  */
 /* Mar  8 1994 GARDINER Started on SPARC */
 /* */
-static char sfcsid[] = "@(#)md2.c   2P";
+char md2_sfcsid[] = "@(#)md2.c   2P";
 /*
  ***********************************************************************
  ** md2.c                                                             **

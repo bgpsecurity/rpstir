@@ -43,6 +43,8 @@ Cambridge, Ma. 02140
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
+
 #include "asn.h"
 
 #define BSIZE 512

@@ -1,1 +1,0 @@
-gcc -Wall rr.c md2.c asn.c -o rr

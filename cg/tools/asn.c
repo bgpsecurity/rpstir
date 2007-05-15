@@ -30,7 +30,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <string.h>
+
 #include "asn.h"
+
 char asn_sfcsid[] = "@(#)asn.c 731P";
 
 uchar asn_typ(uchar **), *asn_set(struct asn *);
