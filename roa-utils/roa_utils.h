@@ -126,6 +126,8 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp);
   to the file "fp".  Note that this function may produce an non-negative
   number of lines of output (including zero).
 
+  It is assumed that the ROA "r" has already been validated.
+
   On success this function returns 0; on failure it returns a negative
   error code.
 */

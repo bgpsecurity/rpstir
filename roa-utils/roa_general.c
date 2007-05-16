@@ -636,16 +636,10 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
   unsigned char **pcAddresses = NULL;
   struct ROAIPAddressFamily *roaFamily = NULL;
 
+  UNREFERENCED_PARAMETER(cert);
   // parameter check
   if (NULL == fp)
     return ERR_SCM_INVALARG;
-  /*
-  // JFG - Has to be uncommented when the referenced functions are complete
-  sta = roaValidate(r);
-  if ( sta < 0 ) return(sta);
-  sta = roaValidate2(r, cert);
-  if ( sta < 0 ) return(sta);
-  */
 
   memset(cAS_ID, 0, 17);
   iAS_ID = roaAS_ID(r);
