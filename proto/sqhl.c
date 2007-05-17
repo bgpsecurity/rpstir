@@ -917,7 +917,9 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 			  cf->fields[CF_FIELD_SUBJECT]);
   }
   freecf(cf);
-  X509_free(x);
+  if (! (cf->flags | SCM_FLAG_TRUSTED)) {
+    X509_free(x);
+  }
   return(sta);
 }
 
