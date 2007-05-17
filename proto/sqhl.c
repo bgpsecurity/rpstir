@@ -883,7 +883,10 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     theCertTable = findtablescm (scmp, "CERTIFICATE");
   cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
   if ( cf == NULL || x == NULL )
-    return(sta);
+    {
+      freecf(cf);
+      return(sta);
+    }
   cf->dirid = id;
   if ( utrust > 0 )
     {
