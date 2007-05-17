@@ -706,8 +706,8 @@ static int verify_cert(scmcon *conp, X509 *x, cert_fields *cf,
   if (*chainOK)
     checkit(cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
   *x509stap = cbx509err;
-  sk_X509_free(sk_untrusted);
-  sk_X509_free(sk_trusted);
+  sk_X509_pop_free(sk_untrusted, X509_free);
+  sk_X509_pop_free(sk_trusted, X509_free);
   X509_STORE_free(cert_ctx);
   X509_VERIFY_PARAM_free(vpm);
   return(sta);
