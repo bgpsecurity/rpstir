@@ -537,14 +537,16 @@ static X509 *parent_cert(scmcon *conp, X509 *x, cert_fields *cf,
   if ( aki == NULL || issuer == NULL )
     {
       *stap = (aki == NULL) ? ERR_SCM_NOAKI : ERR_SCM_NOISSUER;
-      if (alld > 0) free (cf);
+      if (alld > 0)
+	freecf (cf);
       return(NULL);
     }
 // find the entry whose subject is our issuer and whose ski is our aki,
 // e.g. our parent
   sprintf (parentWhere, "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
 	   aki, issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
-  if (alld > 0) free (cf);
+  if (alld > 0)
+    freecf (cf);
   *stap = searchscm (conp, theCertTable, &parentSrch, NULL, ok,
 		     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   if ( *stap < 0 ) return NULL;
@@ -738,6 +740,7 @@ static int verifyChildCert (scmcon *conp, PropData *data)
   if ( x == NULL )
     return -100;
   sta = verify_cert (conp, x, cf, &x509sta, &chainOK);
+  freecf (cf);
   if (sta != 0) {
     stmt = calloc (100, sizeof(char));
     sprintf (stmt, "delete from %s where local_id=%d;",
