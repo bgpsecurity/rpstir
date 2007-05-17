@@ -231,7 +231,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   if ( cf->ipblen > 0 )
     {
       cols[idx].column = "ipblen";
-      (void)sprintf(blen, "%u", cf->ipblen);
+      (void)sprintf(blen, "%u", cf->ipblen); /* byte length */
       cols[idx++].value = blen;
       cols[idx].column = "ipb";
       wptr = hexify(cf->ipblen, cf->ipb);
@@ -272,7 +272,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 
 // the following statement could use a LOT of memory, so we try
 // it first in case it fails
-  hexs = hexify(cf->snlen, cf->snlist);
+  hexs = hexify(cf->snlen*sizeof(long long), cf->snlist);
   if ( hexs == NULL )
     return(ERR_SCM_NOMEM);
   ctab = findtablescm(scmp, "CRL");

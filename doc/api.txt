@@ -375,7 +375,7 @@ a database name "db" a user name "usr" and an optional password "pass". All
 parameters other than "pass" must be non-NULL. On success the fully composed
 DSN name is returned. On failure NULL is return.
 
-2.1.19 char *hexify(unsigned int blen, void *barr)
+2.1.19 char *hexify(int blen, void *barr)
 
 This utility routine is used to create a string appropriate for operations
 on an SQL column that has a binary BLOB type. Given a byte array at "barr"

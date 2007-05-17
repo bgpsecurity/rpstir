@@ -97,7 +97,7 @@ extern void  disconnectscm(scmcon *conp);
 extern void  freesrchscm(scmsrcha *srch);
 extern char *geterrorscm(scmcon *conp);
 extern char *gettablescm(scmcon *conp);
-extern char *hexify(unsigned int, void *);
+extern char *hexify(int bytelen, void *bytes);
 extern int   getrowsscm(scmcon *conp);
 extern int   statementscm(scmcon *conp, char *stm);
 extern int   createdbscm(scmcon *conp, char *dbname, char *dbuser);
