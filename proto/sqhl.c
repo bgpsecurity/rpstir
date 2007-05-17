@@ -56,6 +56,7 @@ int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
   where.vec = &two[1];
   where.ntot = 1;
   where.nused = 1;
+  where.vald = 0;
   ins.vec = &two[0];
   ins.ntot = 2;
   ins.nused = 2;
