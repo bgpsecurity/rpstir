@@ -33,7 +33,7 @@ static void freehstack(stmtstk *stackp)
 {
   stmtstk *nextp;
 
-  while ( stackp == NULL )
+  while ( stackp != NULL )
     {
       if ( stackp->hstmt != NULL )
 	{
