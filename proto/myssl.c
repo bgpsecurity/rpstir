@@ -652,6 +652,7 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
   int   freex;
   int   x509sta;
   int   excnt;
+  int   crit;
   int   i;
 
   if ( stap == NULL || x509stap == NULL )
@@ -689,7 +690,7 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
       x509sta = BIO_read_filename(bcert, fullname);
       if ( x509sta <= 0 )
 	{
-	  BIO_free_all(bcert);
+	  BIO_free(bcert);
 	  freecf(cf);
 	  *stap = ERR_SCM_X509;
 	  *x509stap = x509sta;
@@ -700,9 +701,9 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	x = d2i_X509_bio(bcert, NULL);
       else
 	x = PEM_read_bio_X509_AUX(bcert, NULL, NULL, NULL);
+      BIO_free(bcert);
       if ( x == NULL )
 	{
-	  BIO_free_all(bcert);
 	  freecf(cf);
 	  *stap = ERR_SCM_BADCERT;
 	  return(NULL);
@@ -735,9 +736,10 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
       if ( res == NULL && validators[i].critical > 0 )
 	{
 	  if ( freex )
-	    X509_free(x);
-	  if ( bcert != NULL )
-	    BIO_free_all(bcert);
+	    {
+	      X509_free(x);
+	      x = NULL;
+	    }
 	  freecf(cf);
 	  if ( *stap == 0 )
 	    *stap = ERR_SCM_X509;
@@ -764,21 +766,24 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	exts = meth->d2i(NULL, &udat, ex->value->length);
       if ( exts == NULL )
 	continue;
-      cfx = cfx_find(meth->ext_nid);
-      if ( cfx == NULL || cfx->get_func == NULL )
-	continue;
       *stap = 0;
       *x509stap = 0;
-      if ( cfx->raw == 0 )
-	(*cfx->get_func)(meth, exts, cf, stap, x509stap);
-      else
-	(*cfx->get_func)(meth, ex, cf, stap, x509stap);
-      if ( *stap != 0 && cfx->critical != 0 )
-	break;
+      crit = 0;
+      cfx = cfx_find(meth->ext_nid);
+      if ( cfx != NULL && cfx->get_func != NULL )
+	{
+	  crit = cfx->critical;
+	  if ( cfx->raw == 0 )
+	    (*cfx->get_func)(meth, exts, cf, stap, x509stap);
+	  else
+	    (*cfx->get_func)(meth, ex, cf, stap, x509stap);
+	}
       if ( meth->it )
 	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
       else
 	meth->ext_free(exts);
+      if ( *stap != 0 && crit != 0 )
+	break;
     }
 // check that all critical extension fields are present
   for(ui=0;ui<sizeof(xvalidators)/sizeof(cfx_validator);ui++)
@@ -790,13 +795,14 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	  break;
 	}
     }
-  if ( bcert != NULL )
-    BIO_free_all(bcert);
   if ( *stap != 0 )
     {
       freecf(cf);
       if ( freex )
-	X509_free(x);
+	{
+	  X509_free(x);
+	  x = NULL;
+	}
       cf = NULL;
     }
   *xp = x;
@@ -1040,6 +1046,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   int   crlsta;
   int   excnt;
   int   snerr;
+  int   crit;
   int   i;
 
   if ( stap == NULL || crlstap == NULL )
@@ -1077,7 +1084,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
       crlsta = BIO_read_filename(bcert, fullname);
       if ( crlsta <= 0 )
 	{
-	  BIO_free_all(bcert);
+	  BIO_free(bcert);
 	  freecrf(cf);
 	  *stap = ERR_SCM_CRL;
 	  *crlstap = crlsta;
@@ -1090,7 +1097,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	x = PEM_read_bio_X509_CRL(bcert, NULL, NULL, NULL);
       if ( x == NULL )
 	{
-	  BIO_free_all(bcert);
+	  BIO_free(bcert);
 	  freecrf(cf);
 	  *stap = ERR_SCM_BADCRL;
 	  return(NULL);
@@ -1125,7 +1132,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	  if ( freex )
 	    X509_CRL_free(x);
 	  if ( bcert != NULL )
-	    BIO_free_all(bcert);
+	    BIO_free(bcert);
 	  freecrf(cf);
 	  if ( *stap == 0 )
 	    *stap = ERR_SCM_CRL;
@@ -1187,7 +1194,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   if ( snerr < 0 )
     {
       if ( bcert != NULL )
-	BIO_free_all(bcert);
+	BIO_free(bcert);
       freecrf(cf);
       if ( freex )
 	X509_CRL_free(x);
@@ -1212,18 +1219,21 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	exts = meth->d2i(NULL, &udat, ex->value->length);
       if ( exts == NULL )
 	continue;
-      cfx = crfx_find(meth->ext_nid);
-      if ( cfx == NULL || cfx->get_func == NULL )
-	continue;
       *stap = 0;
       *crlstap = 0;
-      (*cfx->get_func)(meth, exts, cf, stap, crlstap);
-      if ( *stap != 0 && cfx->critical != 0 )
-	break;
+      crit = 0;
+      cfx = crfx_find(meth->ext_nid);
+      if ( cfx != NULL && cfx->get_func != NULL )
+	{
+	  crit = cfx->critical;
+	  (*cfx->get_func)(meth, exts, cf, stap, crlstap);
+	}
       if ( meth->it )
 	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
       else
 	meth->ext_free(exts);
+      if ( *stap != 0 && crit != 0 )
+	break;
     }
 // check that all critical extension fields are present
   for(ui=0;ui<sizeof(crxvalidators)/sizeof(crfx_validator);ui++)
@@ -1236,7 +1246,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	}
     }
   if ( bcert != NULL )
-    BIO_free_all(bcert);
+    BIO_free(bcert);
   if ( *stap != 0 )
     {
       freecrf(cf);
