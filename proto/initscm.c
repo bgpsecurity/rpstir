@@ -58,12 +58,12 @@ void freescm(scm *scmp)
 
   if ( scmp == NULL )
     return;
-  if ( scmp->db == NULL )
+  if ( scmp->db != NULL )
     {
       free((void *)(scmp->db));
       scmp->db = NULL;
     }
-  if ( scmp->dbuser == NULL )
+  if ( scmp->dbuser != NULL )
     {
       free((void *)(scmp->dbuser));
       scmp->dbuser = NULL;
@@ -282,7 +282,7 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsn = makedsnscm(APKI_DSN, strdup (scmp->db), APKI_DBUSER, NULL);
+  scmp->dsn = makedsnscm(APKI_DSN, scmp->db, APKI_DBUSER, NULL);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);
