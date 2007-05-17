@@ -1,4 +1,7 @@
-# Quick and dirty Makefile for certificate verification routines 
+#
+# Makefile for rsync_aur
+#
+# $Id$
 #
 
 ### PREDEFINES

@@ -1,3 +1,9 @@
+#
+# Makefile for asn.1 tools
+#
+# $Id$
+#
+
 all:	dump rr
 
 CFLAGS=	-Wall

@@ -1,6 +1,8 @@
 #
 # Makefile for libcasn.a
 #
+# $Id$
+#
 
 # --- macros
 CC=gcc

@@ -47,13 +47,13 @@ and then un-tar the resulting tarball using the command
 
 This will create a directory named APKI which will contain various
 subdirectories. The ones that are important to you are the cg, roa-utils,
-proto and doc subdirectories.  In each of the first three directories you
-should do a "make".  This will build the contents of those directories.
-In the directory "proto" you should now have four executables: rcli (the
-rsync database client), query (the query database client), garbage (the garbage
-collection database client) and chaser (the chaser database client). If
-these have built without errors (warnings can safely be ignored) then you
-have successfully installed the APKI software.
+proto and doc subdirectories. The first thing you should do is issue the
+"make" command in the top level directory.  This will build everything in
+cg, roa-utils and proto.  In the directory "proto" you should now have four
+executables: rcli (the rsync database client), query (the query database client),
+garbage (the garbage collection database client) and chaser (the chaser database
+client). If these have built without errors (warnings can safely be ignored) then
+you have successfully installed the APKI software.
 
 The final step that you need to perform is to initialize the MySQL database
 tables.  To do this you will need the MySQL root password that you set in

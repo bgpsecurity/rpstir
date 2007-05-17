@@ -1,3 +1,9 @@
+#
+# Makefile for asn.1 compiler
+#
+# $Id$
+#
+
 all:	asn_gen
 
 CC=	gcc

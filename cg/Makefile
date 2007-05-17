@@ -1,3 +1,9 @@
+#
+# Makefile for all asn.1 libs and tools
+#
+# $Id$
+#
+
 all:	casn.dir asn_gen.dir asn.dir tools.dir
 
 casn.dir:

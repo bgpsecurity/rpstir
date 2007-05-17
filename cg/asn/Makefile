@@ -1,3 +1,9 @@
+#
+# Makefile for asn.1 definitions
+#
+# $Id$
+#
+
 all:	Algorithms.h extensions.h name.h orname.h roa.h serial_number.h certificate.h crlv2.h libasn.a
 
 Algorithms.h:	Algorithms.asn

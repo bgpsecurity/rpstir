@@ -1,8 +1,7 @@
-
+#
+# Makefile for roa libs and test code
 #
 # $Id$
-#
-# Makefile for roa_test
 #
 
 # --- macros
