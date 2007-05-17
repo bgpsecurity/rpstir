@@ -184,10 +184,12 @@ static char *certf[] =
     "ski", "aki", "sia", "aia", "crldp"
   } ;
 
-static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
+// so don't have to pass scmp everywhere
+static scmtab *theCertTable = NULL;
+
+static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
+			     unsigned int *cert_id)
 {
-  unsigned int cert_id;
-  scmtab  *ctab;
   scmkva   aone;
   scmkv    cols[CF_NFIELDS+5];
   char *wptr = NULL;
@@ -200,14 +202,10 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   int   sta;
   int   i;
 
-  ctab = findtablescm(scmp, "CERTIFICATE");
-  if ( ctab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
-  conp->mystat.tabname = "CERTIFICATE";
-  sta = getmaxidscm(scmp, conp, "local_id", ctab, &cert_id);
+  sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
   if ( sta < 0 )
     return(sta);
-  cert_id++;
+  (*cert_id)++;
 // fill in insertion structure
   for(i=0;i<CF_NFIELDS+3;i++)
     cols[i].value = NULL;
@@ -222,7 +220,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   (void)sprintf(flagn, "%u", cf->flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)sprintf(lid, "%u", cert_id);
+  (void)sprintf(lid, "%u", *cert_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
   (void)sprintf(did, "%u", cf->dirid);
@@ -243,7 +241,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf)
   aone.ntot = CF_NFIELDS+5;
   aone.nused = idx;
   aone.vald = 0;
-  sta = insertscm(conp, ctab, &aone);
+  sta = insertscm(conp, theCertTable, &aone);
   if ( wptr != NULL )
     free((void *)wptr);
   return(sta);
@@ -323,11 +321,6 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 // add the CRL
   sta = insertscm(conp, ctab, &aone);
   free((void *)hexs);
-  if ( sta < 0 )
-    return(sta);
-// set the other_id of all matching certs to point to this CRL
-  sta = setcertptr(scmp, conp, crl_id, cf->fields[CRF_FIELD_ISSUER],
-		   cf->fields[CRF_FIELD_AKI]);
   return(sta);
 }
 
@@ -447,200 +440,19 @@ static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
     return(0);			/* verified ok */
   else
     return(ERR_SCM_NOTVALID);
-}                                                     
+}
 
 /*
-  Get the parent certificate by using the issuer and the aki of "x" to look
-  it up in the db. If "x" has already been broken down in "cf" just
-  use the issuer/aki from there, otherwise look it up from "x". The
-  db lookup will return the filename and directory name of the
-  parent cert, as well as its flags. Set those flags into "pflags"
-*/
-
-static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
-			 cert_fields *cf, int *stap, unsigned int *pflags)
+ * Read cert data from a file
+ * Unlike cert2fields, this just fills in the X509 structure,
+ *  not the certfields
+ */
+static X509 *readCertFromFile (char *ofullname, int *stap)
 {
-  unsigned long blah = 0;
-  unsigned long dblah = 0;
-  unsigned int  dirid = 0;
-  scmtab  *ctab;
-  scmtab  *dtab;
-  scmsrcha srch;
-  scmsrch  srch1[3];
-  scmsrcha dsrch;
-  scmsrch  dsrch1;
-  scmkva where;
-  scmkv  one[2];
-  scmkva dwhere;
-  scmkv  done;
   X509  *px = NULL;
   BIO   *bcert = NULL;
-  char *aki = NULL;
-  char *issuer = NULL;
-  char *daki = NULL;
-  char *dissuer = NULL;
-  char *ofile;			/* filename component */
-  char *dfile;			/* directory component */
-  char *ofullname;		/* full pathname */
-  char  cdirid[24];
-  int   alld = 0;
-  int   x509sta = 0;
-  int   typ;
+  int   typ, x509sta;
 
-  *pflags = 0;
-  *stap = 0;
-  ctab = findtablescm(scmp, "CERTIFICATE");
-  if ( ctab == NULL )
-    {
-      *stap = ERR_SCM_NOSUCHTAB;
-      return(NULL);
-    }
-  dtab = findtablescm(scmp, "DIRECTORY");
-  if ( dtab == NULL )
-    {
-      *stap = ERR_SCM_NOSUCHTAB;
-      return(NULL);
-    }
-  if ( cf == NULL )
-    {
-      cf = cert2fields(NULL, NULL, 0, &x, stap, &x509sta);
-      if ( cf == NULL )
-	return(NULL);
-      alld++;
-    }
-  aki = cf->fields[CF_FIELD_AKI];
-  if ( aki == NULL )
-    {
-      *stap = ERR_SCM_NOAKI;
-      if ( alld > 0 && cf != NULL )
-	freecf(cf);
-      return(NULL);
-    }
-  daki = strdup(aki);
-  if ( daki == NULL )
-    {
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  issuer = cf->fields[CF_FIELD_ISSUER];
-  if ( issuer == NULL )
-    {
-      *stap = ERR_SCM_NOISSUER;
-      if ( alld > 0 && cf != NULL )
-	freecf(cf);
-      free((void *)daki);
-      return(NULL);
-    }
-  dissuer = strdup(issuer);
-  if ( dissuer == NULL )
-    {
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  if ( alld > 0 && cf != NULL )
-    freecf(cf);
-  ofile = (char *)calloc(PATH_MAX, sizeof(char));
-  if ( ofile == NULL )
-    {
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-// find the entry whose subject is our issuer and whose ski is our aki,
-// e.g. our parent
-  one[0].column = "subject";
-  one[0].value = dissuer;
-  one[1].column = "ski";
-  one[1].value = daki;
-  where.vec = &one[0];
-  where.ntot = 2;
-  where.nused = 2;
-  where.vald = 0;
-  srch1[0].colno = 1;
-  srch1[0].sqltype = SQL_C_CHAR;
-  srch1[0].colname = "filename";
-  srch1[0].valptr = (void *)ofile;
-  srch1[0].valsize = PATH_MAX;
-  srch1[0].avalsize = 0;
-  srch1[1].colno = 2;
-  srch1[1].sqltype = SQL_C_ULONG;
-  srch1[1].colname = "dir_id";
-  srch1[1].valptr = (void *)&dirid;
-  srch1[1].valsize = sizeof(unsigned int);
-  srch1[1].avalsize = 0;
-  srch1[2].colno = 3;
-  srch1[2].sqltype = SQL_C_ULONG;
-  srch1[2].colname = "flags";
-  srch1[2].valptr = (void *)pflags;
-  srch1[2].valsize = sizeof(unsigned int);
-  srch1[2].avalsize = 0;
-  srch.vec = (&srch1[0]);
-  srch.sname = NULL;
-  srch.ntot = 3;
-  srch.nused = 3;
-  srch.vald = 0;
-  srch.where = &where;
-  srch.wherestr = NULL;
-  srch.context = &blah;
-  *stap = searchscm(conp, ctab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
-  free((void *)daki);
-  free((void *)dissuer);
-  if ( *stap < 0 )
-    {
-      free((void *)ofile);
-      return(NULL);
-    }
-// if the certificate is not marked as valid, then just bail
-  if ( ((*pflags) & SCM_FLAG_VALID) == 0 )
-    {
-      free((void *)ofile);
-      *stap = ERR_SCM_NOTVALID;
-      return(NULL);
-    }
-// now find the directory name from the directory id
-  dfile = (char *)calloc(PATH_MAX, sizeof(char));
-  if ( dfile == NULL )
-    {
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  done.column = "dir_id";
-  (void)sprintf(cdirid, "%u", dirid);
-  done.value = (&cdirid[0]);
-  dwhere.vec = &done;
-  dwhere.ntot = 1;
-  dwhere.nused = 1;
-  dwhere.vald = 0;
-  dsrch1.colno = 1;
-  dsrch1.sqltype = SQL_C_CHAR;
-  dsrch1.valptr = (void *)dfile;
-  dsrch1.colname = "dirname";
-  dsrch1.valsize = PATH_MAX;
-  dsrch1.avalsize = 0;
-  dsrch.vec = &dsrch1;
-  dsrch.sname = NULL;
-  dsrch.ntot = 1;
-  dsrch.nused = 1;
-  dsrch.vald = 0;
-  dsrch.where = &dwhere;
-  dsrch.wherestr = NULL;
-  dsrch.context = &dblah;
-  *stap = searchscm(conp, dtab, &dsrch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
-  if ( *stap < 0 )
-    {
-      free((void *)ofile);
-      free((void *)dfile);
-      return(NULL);
-    }
-// construct the full pathname
-  ofullname = (char *)calloc(PATH_MAX, sizeof(char));
-  if ( ofullname == NULL )
-    {
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  (void)sprintf(ofullname, "%s/%s", dfile, ofile);
-  free((void *)dfile);
-  free((void *)ofile);
 // open the file
   typ = infer_filetype(ofullname);
   bcert = BIO_new(BIO_s_file());
@@ -653,7 +465,6 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
   if ( x509sta <= 0 )
     {
       BIO_free_all(bcert);
-      free((void *)ofullname);
       *stap = ERR_SCM_X509;
       return(NULL);
     }
@@ -667,16 +478,154 @@ static X509 *parent_cert(scm *scmp, scmcon *conp, X509 *x,
     *stap = ERR_SCM_BADCERT;
   else
     *stap = 0;
-  free((void *)ofullname);
   return(px);
+}
+
+/*
+  Get the parent certificate by using the issuer and the aki of "x" to look
+  it up in the db. If "x" has already been broken down in "cf" just
+  use the issuer/aki from there, otherwise look it up from "x". The
+  db lookup will return the filename and directory name of the
+  parent cert, as well as its flags. Set those flags into "pflags"
+*/
+
+// static variables for efficiency, so only need to set up query once
+static scmsrcha parentSrch;
+static scmsrch  parentSrch1[3];
+static char parentWhere[600];
+static unsigned long parentBlah = 0;
+static int parentNeedsInit = 1;
+static char *parentDir;
+static char *parentFile;
+
+static X509 *parent_cert(scmcon *conp, X509 *x, cert_fields *cf,
+			 int *stap, unsigned int *pflags)
+{
+  char *aki = NULL;
+  char *issuer = NULL;
+  char ofullname[PATH_MAX];		/* full pathname */
+  int   alld = 0;
+  int   x509sta = 0;
+
+  if (parentNeedsInit) {
+    parentNeedsInit = 0;
+    parentSrch.sname = NULL;
+    parentSrch.where = NULL;
+    parentSrch.ntot = 3;
+    parentSrch.nused = 0;
+    parentSrch.context = &parentBlah;
+    parentSrch.wherestr = parentWhere;
+    parentSrch.vec = parentSrch1;
+    addcolsrchscm (&parentSrch, "filename", SQL_C_CHAR, 256);
+    addcolsrchscm (&parentSrch, "dirname", SQL_C_CHAR, 256);
+    addcolsrchscm (&parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int));
+    parentFile = (char *) parentSrch1[0].valptr;
+    parentDir = (char *) parentSrch1[1].valptr;
+  }
+
+  *pflags = 0;
+  *stap = 0;
+  if ( cf == NULL )
+    {
+      cf = cert2fields(NULL, NULL, 0, &x, stap, &x509sta);
+      if ( cf == NULL )
+	return(NULL);
+      alld++;
+    }
+  aki = cf->fields[CF_FIELD_AKI];
+  issuer = cf->fields[CF_FIELD_ISSUER];
+  if ( aki == NULL || issuer == NULL )
+    {
+      *stap = (aki == NULL) ? ERR_SCM_NOAKI : ERR_SCM_NOISSUER;
+      if (alld > 0) free (cf);
+      return(NULL);
+    }
+// find the entry whose subject is our issuer and whose ski is our aki,
+// e.g. our parent
+  sprintf (parentWhere, "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
+	   aki, issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  if (alld > 0) free (cf);
+  *stap = searchscm (conp, theCertTable, &parentSrch, NULL, ok,
+		     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+  if ( *stap < 0 ) return NULL;
+  *pflags = *((unsigned int *) parentSrch1[2].valptr);
+  (void)sprintf(ofullname, "%s/%s", parentDir, parentFile);
+  return readCertFromFile (ofullname, stap);
+}
+
+// static variables for efficiency, so only need to set up query once
+static scmsrcha revokedSrch;
+static scmsrch  revokedSrch1[2];
+static char revokedWhere[600];
+static unsigned long revokedBlah = 0;
+static int revokedNeedsInit = 1;
+static scmtab *theCRLTable;
+static unsigned long long *revokedSNList;
+static unsigned int *revokedSNLen;
+// static variables to pass to callback
+static int isRevoked;
+static unsigned long long revokedSN;
+
+/* callback function for cert_revoked */
+static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
+{
+  conp = conp; numLine = numLine; s = s;  // silence compiler warnings
+  unsigned int i;
+  for (i = 0; i < *revokedSNLen; i++) {
+    printf ("snlen = %d val = %llu\n", *revokedSNLen, revokedSNList[i]);
+    if (revokedSNList[i] == revokedSN) {
+      isRevoked = 1;
+      break;
+    }
+  }
+  return 0;
+}
+
+/*
+ * Check whether a cert is revoked by a crl
+ */
+static int cert_revoked (scm *scmp, scmcon *conp, char *sn,
+			 char *ski, char *subject)
+{
+  int sta;
+
+  // set up query once first time through and then just modify
+  if (revokedNeedsInit) {
+    revokedNeedsInit = 0;
+    theCRLTable = findtablescm (scmp, "CRL");
+    revokedSrch.sname = NULL;
+    revokedSrch.where = NULL;
+    revokedSrch.ntot = 2;
+    revokedSrch.nused = 0;
+    revokedSrch.context = &revokedBlah;
+    revokedSrch.wherestr = revokedWhere;
+    revokedSrch.vec = revokedSrch1;
+    addcolsrchscm (&revokedSrch, "snlen", SQL_C_ULONG, sizeof (unsigned int));
+    addcolsrchscm (&revokedSrch, "snlist", SQL_C_BINARY, 16*1024*1024);
+    revokedSNLen = (unsigned int *) revokedSrch1[0].valptr;
+    revokedSNList = (unsigned long long *) revokedSrch1[1].valptr;
+  }
+
+  // query for crls such that aki = ski, issuer = issuer, and flags & valid
+  // and set isRevoked = 1 if sn is in snlist
+  sprintf (revokedWhere, "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
+	   ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  isRevoked = 0;
+  revokedSN = strtoull (sn, NULL, 16);
+  sta = searchscm (conp, theCRLTable, &revokedSrch, NULL, revokedHandler,
+		   SCM_SRCH_DOVALUE_ALWAYS);
+  if (sta == 0) {
+    fprintf (stderr, "Error doing cert_revoked search\n");
+  }
+  return isRevoked;
 }
 
 /*
   Certificate verification code by mudge
 */
 
-static int verify_cert(scm *scmp, scmcon *conp, X509 *x,
-		       cert_fields *cf, int *x509stap)
+static int verify_cert(scmcon *conp, X509 *x, cert_fields *cf,
+		       int *x509stap, int *chainOK)
 {
   STACK_OF(X509) *sk_trusted = NULL;
   STACK_OF(X509) *sk_untrusted = NULL;
@@ -727,16 +676,19 @@ static int verify_cert(scm *scmp, scmcon *conp, X509 *x,
     }
 // if the certificate has already been flagged as trusted
 // just push it on the trusted stack and verify it
-  if ( cf->flags & SCM_FLAG_TRUSTED )
+  *chainOK = 0;
+  if ( cf->flags & SCM_FLAG_TRUSTED ) {
+    *chainOK = 1;
     sk_X509_push(sk_trusted, x);
-  else
+  } else
     {
       pflags = 0;
-      parent = parent_cert(scmp, conp, x, cf, &sta, &pflags);
+      parent = parent_cert(conp, x, cf, &sta, &pflags);
       while ( parent != NULL )
 	{
 	  if ( pflags & SCM_FLAG_TRUSTED )
 	    {
+	      *chainOK = 1;
 	      sk_X509_push(sk_trusted, parent);
 	      break;
 	    }
@@ -744,18 +696,166 @@ static int verify_cert(scm *scmp, scmcon *conp, X509 *x,
 	    {
 	      sk_X509_push(sk_untrusted, parent);
 	      pflags = 0;
-	      parent = parent_cert(scmp, conp, parent, NULL, &sta, &pflags);
+	      parent = parent_cert(conp, parent, NULL, &sta, &pflags);
 	    }
 	}
     }
-  if ( sta == 0 )
-    sta = checkit(cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
+  sta = 0;
+  if (*chainOK)
+    checkit(cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
   *x509stap = cbx509err;
   sk_X509_free(sk_untrusted);
   sk_X509_free(sk_trusted);
   X509_STORE_free(cert_ctx);
   X509_VERIFY_PARAM_free(vpm);
   return(sta);
+}
+
+
+// structure containing data of children to propagate
+typedef struct _PropData {
+  char *ski;
+  char *subject;
+  unsigned int flags;
+  unsigned int id;
+  char *filename;
+  char *dirname;
+} PropData;
+
+
+/*
+ * utility function for verify_children
+ */
+static int verifyChildCert (scmcon *conp, PropData *data)
+{
+  X509 *x = NULL;
+  int   x509sta, sta, chainOK;
+  char  pathname[PATH_MAX], *stmt;
+  cert_fields *cf;
+
+  sprintf (pathname, "%s/%s", data->dirname, data->filename);
+  cf = cert2fields(data->filename, pathname, 0, &x, &sta, &x509sta);
+  if ( x == NULL )
+    return -100;
+  sta = verify_cert (conp, x, cf, &x509sta, &chainOK);
+  if (sta != 0) {
+    stmt = calloc (100, sizeof(char));
+    sprintf (stmt, "delete from %s where local_id=%d;",
+	     theCertTable->tabname, data->id);
+    sta = statementscm (conp, stmt);
+    free (stmt);
+    return -100;
+  } else if (data->flags | SCM_FLAG_NOCHAIN) {
+    stmt = calloc (100, sizeof(char));
+    sprintf (stmt, "update %s set flags=%d where local_id=%d;",
+	     theCertTable->tabname,
+	     (data->flags - SCM_FLAG_NOCHAIN) | SCM_FLAG_VALID, data->id);
+    sta = statementscm (conp, stmt);
+    free (stmt);
+    return 0;
+  }
+  return -100;
+}
+
+
+// static variables for efficiency, so only need to set up query once
+static scmsrcha childrenSrch;
+static scmsrch  childrenSrch1[6];
+static char childrenWhere[600];
+static unsigned long childrenBlah = 0;
+static int childrenNeedsInit = 1;
+// static variables to pass back from callback and hold data
+static int propListSize = 0;
+static int propListMax = 200;
+static PropData *propData = NULL;
+
+
+/*
+ * callback function for verify_children
+ */
+static int registerChild (scmcon *conp, scmsrcha *s, int idx)
+{
+  PropData *propData2;
+
+  s = s; conp = conp; idx = idx;
+  // push onto stack of children to propagate
+  if (propListSize == propListMax) {
+    propListMax *= 2;
+    propData2 = (PropData *) calloc (propListMax, sizeof (PropData));
+    memcpy (propData2, propData, propListSize * sizeof (PropData));
+    free (propData);
+    propData = propData2;
+  }
+  propData[propListSize].dirname = strdup (s->vec[0].valptr);
+  propData[propListSize].filename = strdup (s->vec[1].valptr);
+  propData[propListSize].flags = *((unsigned int *) (s->vec[2].valptr));
+  propData[propListSize].ski = strdup (s->vec[3].valptr);
+  propData[propListSize].subject = strdup (s->vec[4].valptr);
+  propData[propListSize].id = *((unsigned int *) (s->vec[5].valptr));
+  propListSize++;
+  return 0;
+}
+
+/*
+ * verify the children certs of the current cert
+ */
+static int verifyChildren (scmcon *conp, char *ski, char *subject)
+{
+  int isRoot = 1;
+  int doIt, idx;
+
+  // initialize query first time through
+  if (childrenNeedsInit) {
+    childrenNeedsInit = 0;
+    childrenSrch.sname = NULL;
+    childrenSrch.where = NULL;
+    childrenSrch.ntot = 6;
+    childrenSrch.nused = 0;
+    childrenSrch.context = &childrenBlah;
+    childrenSrch.wherestr = childrenWhere;
+    childrenSrch.vec = childrenSrch1;
+    addcolsrchscm (&childrenSrch, "dirname", SQL_C_CHAR, 4096);
+    addcolsrchscm (&childrenSrch, "filename", SQL_C_CHAR, 256);
+    addcolsrchscm (&childrenSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
+    addcolsrchscm (&childrenSrch, "ski", SQL_C_CHAR, 128);
+    addcolsrchscm (&childrenSrch, "subject", SQL_C_CHAR, 512);
+    addcolsrchscm (&childrenSrch, "local_id", SQL_C_ULONG,
+		   sizeof(unsigned int));
+  }
+
+  // iterate through all children, verifying
+  if (propData == NULL)
+    propData = (PropData *)calloc(propListMax, sizeof(PropData));
+  propData[0].ski = ski;
+  propData[0].subject = subject;
+  propListSize = 1;
+  while (propListSize > 0) {
+    propListSize--;
+    idx = propListSize;
+    doIt = isRoot || (verifyChildCert (conp, &propData[idx]) == 0);
+    if (doIt)
+      sprintf(childrenWhere,
+	  "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
+	      propData[idx].ski, propData[idx].ski,
+	      propData[idx].subject, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+    if (! isRoot) {
+      free (propData[idx].filename);
+      free (propData[idx].dirname);
+      free (propData[idx].ski);
+      free (propData[idx].subject);
+    }
+    if (doIt)
+      searchscm (conp, theCertTable, &childrenSrch, NULL, registerChild,
+		 SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+    // next verify crl children
+    // ??????????
+    //    if any child crl has flag changed to VALID, call doRevoke
+    // ??????????
+    // next verify roa children
+    // ??????????
+    isRoot = 0;
+  }
+  return 0;
 }
 
 /*
@@ -767,37 +867,52 @@ static int verify_cert(scm *scmp, scmcon *conp, X509 *x,
 */
 
 int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	     unsigned int id, int utrust, int typ)
+	     unsigned int id, int utrust, int typ, unsigned int *cert_id)
 {
   cert_fields *cf;
   X509 *x = NULL;
   int   x509sta = 0;
   int   sta = 0;
+  int   chainOK;
 
+  if (theCertTable == NULL)
+    theCertTable = findtablescm (scmp, "CERTIFICATE");
   cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
   if ( cf == NULL || x == NULL )
     return(sta);
   cf->dirid = id;
-  if ( strcmp(cf->fields[CF_FIELD_SUBJECT], cf->fields[CF_FIELD_ISSUER]) == 0 )
-    cf->flags |= SCM_FLAG_SS;
   if ( utrust > 0 )
     {
-      if ( (cf->flags & SCM_FLAG_SS) == 0 )
-	{
-	  freecf(cf);
-	  X509_free(x);
-	  return(ERR_SCM_NOTSS);
-	}
+      if (strcmp(cf->fields[CF_FIELD_SUBJECT],
+		 cf->fields[CF_FIELD_ISSUER]) != 0) {
+	freecf(cf);
+	X509_free(x);
+	return(ERR_SCM_NOTSS);
+      }
       cf->flags |= SCM_FLAG_TRUSTED;
     }
 // verify the cert
-  sta = 0; // ???????????? verify_cert(scmp, conp, x, cf, &x509sta);
+  sta = verify_cert(conp, x, cf, &x509sta, &chainOK);
+  // check that no crls revoking this cert
+  /*
+   * ?????? uncomment this once other things working ???????
+  if (sta == 0) {
+    sta = cert_revoked (scmp, conp, cf->fields[CF_FIELD_SN],
+			cf->fields[CF_FIELD_SKI],
+			cf->fields[CF_FIELD_SUBJECT]);
+  }
+  */
 // actually add the certificate
   if ( sta == 0 )
     {
-      cf->flags |= SCM_FLAG_VALID;
-      sta = add_cert_internal(scmp, conp, cf);
+      cf->flags |= (chainOK ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+      sta = add_cert_internal(scmp, conp, cf, cert_id);
     }
+// try to validate children of cert
+  if (sta == 0) {
+    sta = verifyChildren (conp, cf->fields[CF_FIELD_SKI],
+			  cf->fields[CF_FIELD_SUBJECT]);
+  }
   freecf(cf);
   X509_free(x);
   return(sta);
@@ -891,7 +1006,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	       char *outfull, int utrust)
 {
-  unsigned int id;
+  unsigned int id, obj_id;
   int typ;
   int sta;
 
@@ -917,7 +1032,7 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN+OT_PEM_OFFSET:
-      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ);
+      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
       break;
     case OT_CRL:
     case OT_CRL_PEM:
@@ -1446,7 +1561,6 @@ static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
 
 static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 {
-  unsigned int pflags;
   unsigned int lid;
   scmkva  cwhere;
   scmkva *ow;
@@ -1466,12 +1580,6 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
     {
       dodel = 1;
       mcfp->toplevel = 0;
-    }
-  pflags = *(unsigned int *)(s->vec[2].valptr);
-  if ( (pflags & (SCM_FLAG_REVOKED|SCM_FLAG_EXPIRED)) != 0 )
-    {
-      *(unsigned int *)(s->vec[2].valptr) &= ~(SCM_FLAG_REVOKED|SCM_FLAG_EXPIRED);
-      dodel = 1;
     }
 // if the cert has not otherwise been marked for deletion, but has not
 // been reparented, then actually delete the cert, otherwise just return
@@ -1583,6 +1691,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   srch1[1].valptr = &ski[0];
   srch1[1].valsize = 512;
   srch1[1].avalsize = 0;
+  // ?????????? no longer need flags ???????????? GAGNON
   srch1[2].colno = 3;
   srch1[2].sqltype = SQL_C_ULONG;
   srch1[2].valptr = (void *)&pflags;
@@ -1655,9 +1764,8 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
 
   UNREFERENCED_PARAMETER(idx);
   pflags = *(unsigned int *)(s->vec[2].valptr);
+  // ????????? instead test for this in select statement ???????? GAGNON
   if ( (pflags & SCM_FLAG_NOTYET) == 0 )
-    return(0);
-  if ( (pflags & (SCM_FLAG_EXPIRED|SCM_FLAG_REVOKED|SCM_FLAG_REMOVED)) != 0 )
     return(0);
   (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
   one.column = "local_id";
@@ -1826,6 +1934,8 @@ int certificate_validity(scm *scmp, scmcon *conp)
     retsta = sta;
 // search for certificates that are too new
   srch.wherestr = vf;
+  // ?????????????? no need to call this here; instead ??????????
+  // ?????????????? check when first put in ???????????? GAGNON
   sta = searchscm(conp, ctab, &srch, NULL, certtoonew, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)vf);
   if ( sta < 0 && sta != ERR_SCM_NODATA && retsta == 0 )

@@ -25,17 +25,12 @@
   Flags
 */
 
-#define SCM_FLAG_CA             0x1    /* certificate authority */
-#define SCM_FLAG_SS             0x2    /* self signed */
-#define SCM_FLAG_TRUSTED        0x4    /* trusted */
-#define SCM_FLAG_VALID          0x8    /* valid */
-#define SCM_FLAG_UNKNOWN       0x10    /* unknown because crl stale */
-
-#define SCM_FLAG_NOTYET      0x1000    /* not yet valid */
-#define SCM_FLAG_EXPIRED     0x2000    /* expired */
-#define SCM_FLAG_REVOKED     0x4000    /* CRL nuked it */
-#define SCM_FLAG_REMOVED     0x8000    /* rsync removed it */
-#define SCM_FLAG_PINV       0x10000    /* parent not valid */
+#define SCM_FLAG_CA           0x1    /* certificate authority */
+#define SCM_FLAG_TRUSTED      0x2    /* trusted */
+#define SCM_FLAG_VALID        0x4    /* valid */
+#define SCM_FLAG_UNKNOWN      0x8    /* unknown because crl stale */
+#define SCM_FLAG_NOTYET      0x10    /* not yet valid */
+#define SCM_FLAG_NOCHAIN     0x20    /* missing pieces on chain to anchor */
 
 /*
   Data types
@@ -60,11 +55,12 @@ extern int   findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
 			     unsigned int *idp);
 extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 			char *outfull, int utrust);
-extern int   delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			   char *outfull);
+extern int   delete_object(scm *scmp, scmcon *conp, char *outfile,
+			   char *outdir, char *outfull);
 extern int   infer_filetype(char *fname);
 extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		      unsigned int id, int utrust, int typ);
+		      unsigned int id, int utrust, int typ,
+		      unsigned int *cert_id);
 extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ);
 extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,

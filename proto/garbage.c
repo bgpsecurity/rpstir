@@ -74,7 +74,6 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
 {
   numLine = numLine;
   if (cntNeedsInit) {
-    cntSrch.vec = NULL;
     cntSrch.sname = NULL;
     cntSrch.where = NULL;
     cntSrch.ntot = 1;

@@ -1237,42 +1237,6 @@ int updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
 }
 
 /*
-  For every cert whose issuer is "issuer" and whose ski is "aki"
-  set the other_id to "crlid".
-
-  This function return 0 on success and a negative error code on
-  failure.  It is ok if there are no matching rows.
-*/
-
-int setcertptr(scm *scmp, scmcon *conp, unsigned int crlid,
-	       char *issuer, char *aki)
-{
-  scmtab *ctab;
-  char   *stmt;
-  int leen = 256;
-  int sta;
-
-  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
-       issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 )
-    return(ERR_SCM_INVALARG);
-  ctab = findtablescm(scmp, "CERTIFICATE");
-  if ( ctab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
-  leen += strlen(issuer) + strlen(aki);
-  stmt = (char *)calloc(leen, sizeof(char));
-  if ( stmt == NULL )
-    return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt,
-		"UPDATE %s SET other_id=%u WHERE issuer=\"%s\" AND ski=\"%s\";",
-		ctab->tabname, crlid, issuer, aki);
-  sta = statementscm(conp, stmt);
-  if ( sta == ERR_SCM_NODATA )
-    sta = 0;
-  free((void *)stmt);
-  return(sta);
-}
-
-/*
   This specialized function updates the appropriate xx_last field in the
   metadata table for the indicated time when the client completed.
 */
