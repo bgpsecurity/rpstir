@@ -50,5 +50,8 @@ garbage: garbage.o libapki.a Makefile
 makeROA: makeROA.o libapki.a Makefile
 	gcc -o makeROA -g makeROA.o $(MY_LIBS)
 
+testmem:	testmem.o libapki.a Makefile
+	gcc -o testmem -g testmem.o $(MY_LIBS)
+
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a
