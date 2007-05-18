@@ -1,0 +1,190 @@
+
+inside verify_cert.c 
+
+it looks like the X509_SET_PURPOSE routines are bogus. They are
+really doing OpenSSL wrappers around actual X509 checks and not
+what we want. To wit (from ./crypto/x509v3/v3_purp.c) :
+
+static X509_PURPOSE xstandard[] = {
+        {X509_PURPOSE_SSL_CLIENT, X509_TRUST_SSL_CLIENT, 0, check_purpose_ssl_client, "SSL client", "sslclient", NULL},
+        {X509_PURPOSE_SSL_SERVER, X509_TRUST_SSL_SERVER, 0, check_purpose_ssl_server, "SSL server", "sslserver", NULL},
+        {X509_PURPOSE_NS_SSL_SERVER, X509_TRUST_SSL_SERVER, 0, check_purpose_ns_ssl_server, "Netscape SSL server", "nssslserver", NULL},
+        {X509_PURPOSE_SMIME_SIGN, X509_TRUST_EMAIL, 0, check_purpose_smime_sign, "S/MIME signing", "smimesign", NULL},
+        {X509_PURPOSE_SMIME_ENCRYPT, X509_TRUST_EMAIL, 0, check_purpose_smime_encrypt, "S/MIME encryption", "smimeencrypt", NULL},
+        {X509_PURPOSE_CRL_SIGN, X509_TRUST_COMPAT, 0, check_purpose_crl_sign, "CRL signing", "crlsign", NULL},
+        {X509_PURPOSE_ANY, X509_TRUST_DEFAULT, 0, no_check, "Any Purpose", "any", NULL},
+        {X509_PURPOSE_OCSP_HELPER, X509_TRUST_COMPAT, 0, ocsp_helper, "OCSP helper", "ocsphelper", NULL},
+        {X509_PURPOSE_TIMESTAMP_SIGN, X509_TRUST_TSA, 0, check_purpose_timestamp_sign, "Time Stamp signing", "timestampsign", NULL},                     
+
+We don't want to check for "sslclient" or "Netscape SSL Server"...
+
+We want to verify that for EE Certs that the "digitalSignature" bit is set
+to TRUE and is the only true bit in the extension. For CAs we want only the
+keyCertSign and CRLSign bits to be set to true.
+
+It seems that they wrap the real routines that we could use via the following
+(also from ./crypto/x509v3/v3_purp.c):
+
+static int check_ssl_ca(const X509 *x);
+static int check_purpose_ssl_client(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int check_purpose_ssl_server(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int check_purpose_ns_ssl_server(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int purpose_smime(const X509 *x, int ca);
+static int check_purpose_smime_sign(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int check_purpose_smime_encrypt(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int check_purpose_crl_sign(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int check_purpose_timestamp_sign(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int no_check(const X509_PURPOSE *xp, const X509 *x, int ca);
+static int ocsp_helper(const X509_PURPOSE *xp, const X509 *x, int ca);
+
+OK... so... what we need to do is perform the following checks while we
+are building our stack of certs to hand in to our verify routine
+(also from ./crypto/x509v3/v3_purp.c):
+
+if(ku_reject(x, KU_KEY_CERT_SIGN)) return 0; /* where x is an X509 * */
+
+Where we replace KU_KEY_CERT_SIGN with (from ./crypto/x509v3/x509v3.h):
+#define KU_DIGITAL_SIGNATURE    0x0080  /* for EEs */
+#define KU_NON_REPUDIATION      0x0040
+#define KU_KEY_ENCIPHERMENT     0x0020
+#define KU_DATA_ENCIPHERMENT    0x0010
+#define KU_KEY_AGREEMENT        0x0008
+#define KU_KEY_CERT_SIGN        0x0004  /* for CA */
+#define KU_CRL_SIGN             0x0002  /* for CA */
+#define KU_ENCIPHER_ONLY        0x0001
+#define KU_DECIPHER_ONLY        0x8000
+
+---
+
+We still need to figure out how to load up the correct CRLs for our
+stack... check each cert against the CRL rather than just the leaf
+cert. 
+
+Also how to verify CRL and ROA.
+
+------------------
+X509 * is from ./crypto/x509/x509.h - we can perform our tests manually
+if we wish...
+
+struct x509_st
+        {
+        X509_CINF *cert_info;
+        X509_ALGOR *sig_alg;
+        ASN1_BIT_STRING *signature;
+        int valid;
+        int references;
+        char *name;
+        CRYPTO_EX_DATA ex_data;
+        /* These contain copies of various extension values */
+        long ex_pathlen;
+        long ex_pcpathlen;
+        unsigned long ex_flags;
+        unsigned long ex_kusage;
+        unsigned long ex_xkusage;
+        unsigned long ex_nscert;
+        ASN1_OCTET_STRING *skid;
+        AUTHORITY_KEYID *akid;
+        X509_POLICY_CACHE *policy_cache;
+        STACK_OF(DIST_POINT) *crldp;
+#ifndef OPENSSL_NO_RFC3779
+        STACK_OF(IPAddressFamily) *rfc3779_addr;
+        struct ASIdentifiers_st *rfc3779_asid;
+#endif  
+#ifndef OPENSSL_NO_SHA
+        unsigned char sha1_hash[SHA_DIGEST_LENGTH];
+#endif  
+        X509_CERT_AUX *aux;
+        } /* X509 */;
+
+********
+OK, the trick now is figuring out how to get the extensions out of
+the X509_CINF * (cert_info).
+
+Possibly static void x509v3_cache_extensions(X509 *x)
+out of x509v3/v3_purp.c will point the way...
+
+These look to be what we need...
+
+static void x509v3_cache_extensions(X509 *x)
+{
+        BASIC_CONSTRAINTS *bs;
+        PROXY_CERT_INFO_EXTENSION *pci;
+        ASN1_BIT_STRING *usage;
+        ASN1_BIT_STRING *ns;
+        EXTENDED_KEY_USAGE *extusage;
+        X509_EXTENSION *ex;
+    ...
+
+        /* V1 should mean no extensions ... */
+        if(!X509_get_version(x)) x->ex_flags |= EXFLAG_V1;
+        /* Handle basic constraints */
+        if((bs=X509_get_ext_d2i(x, NID_basic_constraints, NULL, NULL))) {
+                if(bs->ca) x->ex_flags |= EXFLAG_CA;
+                if(bs->pathlen) {
+                        if((bs->pathlen->type == V_ASN1_NEG_INTEGER)
+                                                || !bs->ca) {
+                                x->ex_flags |= EXFLAG_INVALID;
+                                x->ex_pathlen = 0;
+                        } else x->ex_pathlen = ASN1_INTEGER_get(bs->pathlen);
+                } else x->ex_pathlen = -1;
+                BASIC_CONSTRAINTS_free(bs);
+                x->ex_flags |= EXFLAG_BCONS;
+        }
+     ...        
+        /* Handle key usage */
+        if((usage=X509_get_ext_d2i(x, NID_key_usage, NULL, NULL))) {
+                if(usage->length > 0) {
+                        x->ex_kusage = usage->data[0];
+                        if(usage->length > 1)
+                                x->ex_kusage |= usage->data[1] << 8;
+                } else x->ex_kusage = 0;
+                x->ex_flags |= EXFLAG_KUSAGE;
+                ASN1_BIT_STRING_free(usage);
+        }
+    ...
+        /* Handle key usage */    
+        if((usage=X509_get_ext_d2i(x, NID_key_usage, NULL, NULL))) {   
+                if(usage->length > 0) {      
+                        x->ex_kusage = usage->data[0];  
+                        if(usage->length > 1)     
+                                x->ex_kusage |= usage->data[1] << 8;   
+                } else x->ex_kusage = 0;      
+                x->ex_flags |= EXFLAG_KUSAGE;     
+                ASN1_BIT_STRING_free(usage);    
+        }   
+
+********
+
+For EE certs we want:
+flags: 0x103
+key_usage: 0x80
+
+which is:
+flags: EXFLAG_SET|EXFLAG_KUSAGE|EXFLAG_BCONS
+       0x100      0x2           0x1
+
+key_usage: KU_DIGITAL_SIGNATURE
+           0x0080
+
+For CA certs we want:
+flags: 0x113
+key_usage: 0x6
+
+which is:
+flags: EXFLAG_SET|EXFLAG_CA|EXFLAG_KUSAGE|EXFLAG_BCONS
+       0x100      0x10      0x2           0x1
+
+key_usage:KU_KEY_CERT_SIGN|KU_CRL_SIGN
+          0x4              0x2
+
+for Trust anchors:
+flags: 0x133
+key_usage:0x6
+
+which is:
+flags:EXFLAG_SET|EXFLAG_SS|EXFLAG_CA|EXFLAG_KUSAGE|EXFLAG_BCONS
+      0x100      0x20      0x10      0x2           0x1
+
+key_usage:KU_KEY_CERT_SIGN|KU_CRL_SIGN
+          0x4              0x2
+

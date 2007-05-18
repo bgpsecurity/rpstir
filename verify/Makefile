@@ -20,6 +20,9 @@ ALL_OBJS= verify_cert.o stubs.o stub_main.o usage.o
 
 ALL = verify_stub_test
 
+CERT_CHECK_OBJS = cert_check.o cert_check_main.o
+
+CERT_CHECK = cert_check
  
 ### BOGON-CATCHERS
 
@@ -42,17 +45,30 @@ stub_main.o :	stub_main.c
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c stub_main.c
 
 usage.o :	usage.c
-	$(CC) $(DFLAGS) $(XFLAGS) $(STATIC) -c usage.c 
+	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c usage.c 
+
+cert_check:	$(CERT_CHECK_OBJS)
+	$(LD) $(DFLAGS) $(XFLAGS) $(STATIC) -o cert_check \
+	$(CERT_CHECK_OBJS) $(IFLAGS) $(XLIBS)
+
+cert_check.o :	cert_check.c
+	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c cert_check.c 
+
+cert_check_main.o :	cert_check_main.c
+	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c cert_check_main.c 
 
 
 ### SYSTYPES
 generic:
 	make -e $(ALL) $(MFLAGS)
-	
+
+cert_check_test:
+	make -e $(CERT_CHECK) $(MFLAGS)
+
 #LIBS=-lgen
 
 ### RANDOM
 
 clean:
-	rm -f $(ALL) *.o core
+	rm -f $(ALL) $(CERT_CHECK) *.o core
 

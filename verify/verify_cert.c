@@ -58,7 +58,11 @@ verify_cert(X509 *c)
   /* set the verify callback */
   X509_STORE_set_verify_cb_func(cert_ctx, verify_callback);
 
-  i = X509_PURPOSE_get_by_sname("any");
+  i = X509_PURPOSE_get_by_sname("any"); 
+  if (i < 0) {
+    int_error("failed to get purpose by sname");
+  }
+
   xptmp = X509_PURPOSE_get0(i);
   purpose = X509_PURPOSE_get_id(xptmp);
 

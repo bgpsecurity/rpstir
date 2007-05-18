@@ -1,3 +1,8 @@
+this verify is including checks on certificates such as EE certs
+containing digitalSignature as the being the only bit set to true.
+
+For CA's only the keyCertSign and CRLSign bits should be set to true.
+---
 
 make generic
 
