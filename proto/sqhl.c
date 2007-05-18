@@ -60,6 +60,7 @@ int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
   ins.vec = &two[0];
   ins.ntot = 2;
   ins.nused = 2;
+  ins.vald = 0;
   srch = newsrchscm("focdir", 4, sizeof(unsigned int));
   if ( srch == NULL )
     return(ERR_SCM_NOMEM);
@@ -1003,7 +1004,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	       char *outfull, int utrust)
 {
-  unsigned int id, obj_id;
+  unsigned int id = 0, obj_id = 0;
   int typ;
   int sta;
 
