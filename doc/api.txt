@@ -72,7 +72,7 @@ utility functions.
 Unless otherwise stated, functions that return an "int" will return 0 to indicate
 success, and will return a negative error code defined in err.h to indicate failure.
 
-Although the user may see other functions publically exported from various
+Although the user may see other functions publicly exported from various
 include files, the prudent approach is to totally shun those functions unless
 they are documented herein.
 
@@ -117,8 +117,8 @@ have to call this function.
 2.1.6 int deletedbscm(scmcon *conp, char *dbname)
 
 This function deletes the database named "dbname" in the Address PKI database,
-using the database connection "conp". "dbname" must not be NULL. "conp" mus tbe
-a database connection that has root acess to the MySQL database. All tables within
+using the database connection "conp". "dbname" must not be NULL. "conp" mus be
+a database connection that has root access to the MySQL database. All tables within
 "dbname" are deleted. Typical user applications should never have to call this
 function.
 
@@ -137,7 +137,7 @@ This function is used to free the memory allocated by initscm().
 
 2.1.9 int createalltablesscm(scmcon *conp, scm *scmp)
 
-This function creates all the tables within the default Addess PKI database. It
+This function creates all the tables within the default Address PKI database. It
 uses a database connection "conp" which must have root access to the MySQL database.
 It also uses a textual representation of the database schema, as encapsulated in
 the opaque data structure "scmp" of type "scm". Typical user applications should
@@ -421,7 +421,7 @@ operation fails then a negative error code, defined in err.h, is returned.
 2.2.4 int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
 
 This function is used to iterate over all CRLs in the database and perform
-the revokations implied by their issuer/aki/serial-number lists. "scmp" and
+the revocations implied by their issuer/aki/serial-number lists. "scmp" and
 "conp" are the usual schema and connection pointers; cfunc is a callback
 function that is called to process each individual revocation. The function
 signature for this callback is:
@@ -648,7 +648,7 @@ function is called as follows:
 
 This function frees all memory allocated when "r" was created. It
 is permissible for "r" to be NULL, in which case nothing happens.
-If "r" is non-NULL, however, it must point to a syntatically valid
+If "r" is non-NULL, however, it must point to a syntactically valid
 ROA structure (which need not have been semantically validated, however).
 
 2.5 ASN.1 utility functions

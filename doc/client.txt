@@ -9,7 +9,7 @@ apkidesign.doc, for a detailed description of the various software
 components in this release.
 
 Section 2 of this document describes how to install that software,
-including all its dependencies.  Section 3 provides a quickstart
+including all its dependencies.  Section 3 provides a quick-start
 guide on how to get your system running.  Section 4 provides detailed
 information on how to run the database client programs. Section
 5 describes the other documents in the deliverable package. Finally,
@@ -28,11 +28,11 @@ installation target directory /usr/local/ssl.
 
 2.1.2 MySQL
 
-Install the MySQL open source database from http://mysql.org. We recommed
+Install the MySQL open source database from http://mysql.org. We recommend
 the default installation target of /usr/local/mysql. Also install the
 Connector/ODBC driver from the same site.  Insure that the 3.51 driver
 is install.  We strongly recommend that you give the root account a
-password in the odbc initialization file (typically /usr/local/etc/odbc.ini.
+password in the ODBC initialization file (typically /usr/local/etc/odbc.ini.
 
 2.2 APKI database software
 
@@ -69,7 +69,7 @@ database tables already present.
 If this command succeeds you are ready to begin using the APKI database
 software.  If this command fails, see Appendix A, Troubleshooting.
 
-3.0 Quickstart
+3.0 Quick-start
 
 Three of the four database client executables are typically run in the
 background, as daemon processes. Only query, the query client is usually
@@ -99,7 +99,7 @@ garbage, chaser, rsync_aur, rsync_pull.sh, query: TBD
 
 rcli is the rsync database client. It acts as an intermediary between
 rsync_aur and the MySQL database. It can be run as a background process or
-in the foreground. The former has already been described in the Quickstart
+in the foreground. The former has already been described in the Quick-start
 section. The complete command line for rcli is as follows:
 
     rcli [-h] [-p] [-w PORT] [-t TOPDIR] [-x] [-y] [-d FILE] [-(f|F) FILE]
