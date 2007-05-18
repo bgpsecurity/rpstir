@@ -33,6 +33,8 @@ bogus:
 
 ### HARD TARGETS
 
+all:	$(ALL)
+
 rsync_aur:	$(ALL_OBJS)
 	$(LD) $(DFLAGS) $(XFLAGS) $(STATIC) -o rsync_aur \
 	$(ALL_OBJS) $(IFLAGS) $(XLIBS)
