@@ -717,17 +717,21 @@ static int verifyChildCert (scmcon *conp, PropData *data)
   sprintf (pathname, "%s/%s", data->dirname, data->filename);
   x = readCertFromFile (pathname, &sta);
   if ( x == NULL )
-    return -100;
+    return ERR_SCM_X509;
   sta = verify_obj (conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
-  if (sta != 0) {
+  if (sta < 0) {
     stmt = calloc (100, sizeof(char));
+    if ( stmt == NULL )
+      return ERR_SCM_NOMEM;
     sprintf (stmt, "delete from %s where local_id=%d;",
 	     theCertTable->tabname, data->id);
     sta = statementscm (conp, stmt);
     free (stmt);
-    return -100;
+    return sta;
   } else if (data->flags | SCM_FLAG_NOCHAIN) {
     stmt = calloc (100, sizeof(char));
+    if ( stmt == NULL )
+      return ERR_SCM_NOMEM;
     sprintf (stmt, "update %s set flags=%d where local_id=%d;",
 	     theCertTable->tabname,
 	     (data->flags - SCM_FLAG_NOCHAIN) | SCM_FLAG_VALID, data->id);
@@ -735,7 +739,7 @@ static int verifyChildCert (scmcon *conp, PropData *data)
     free (stmt);
     return 0;
   }
-  return -100;
+  return ERR_SCM_X509;
 }
 
 
