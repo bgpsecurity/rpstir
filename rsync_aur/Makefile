@@ -10,7 +10,8 @@
 # debugging
 # DFLAGS = -DTEST -DDEBUG
 DFLAGS = 
-CFLAGS =-g -Wall
+CFLAGS=	-g -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers
+#CFLAGS =-g -Wall
 XFLAGS =        # xtra cflags, set by systype targets
 #IFLAGS =-I/usr/local/ssl/include 
 #XLIBS =-ldl -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
@@ -25,7 +26,8 @@ ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o
 
 ALL = rsync_aur
 
- 
+all:	$(ALL)
+
 ### BOGON-CATCHERS
 
 bogus:
@@ -33,32 +35,31 @@ bogus:
 
 ### HARD TARGETS
 
-all:	$(ALL)
-
 rsync_aur:	$(ALL_OBJS)
 	$(LD) $(DFLAGS) $(XFLAGS) $(STATIC) -o rsync_aur \
 	$(ALL_OBJS) $(IFLAGS) $(XLIBS)
 
-main.o :	main.c
+main.o :	main.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c main.c
 
-parse.o :	parse.c
+parse.o :	parse.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c parse.c
 
-socket_stuff.o	:	socket_stuff.c
+socket_stuff.o	:	socket_stuff.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c socket_stuff.c
 
-sig_handler.o	:	sig_handler.c
+sig_handler.o	:	sig_handler.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c sig_handler.c
 
-usage.o	:	usage.c
+usage.o	:	usage.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(STATIC) -c usage.c 
 
+main.h:	usage.h socket_stuff.h parse.h sig_handler.h
 
 ### SYSTYPES
 generic:
 	make -e $(ALL) $(MFLAGS)
-	
+
 #LIBS=-lgen
 
 ### RANDOM

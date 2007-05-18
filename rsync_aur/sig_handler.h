@@ -6,9 +6,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "main.h"
-#include "parse.h"
-
 void sig_handler(int);
 int setup_sig_catchers(void);
 

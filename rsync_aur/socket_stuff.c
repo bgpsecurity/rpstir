@@ -1,4 +1,4 @@
-#include "socket_stuff.h"
+#include "main.h"
 
 /**************************************************
  * int tcpsocket(struct write_port *, int portno) *

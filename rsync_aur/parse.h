@@ -8,8 +8,6 @@
 #include <linux/limits.h>
 #include <time.h>
 
-#include "main.h"
-
 char *getMessageFromString(char *, unsigned int, unsigned int *, char);
 char *makeWarningStr(char *, unsigned int, unsigned int *);
 char *makeInfoStr(char *, unsigned int, unsigned int *);

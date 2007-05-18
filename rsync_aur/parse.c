@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <linux/limits.h>
-#include "parse.h"
+
+#include "main.h"
 
 /**************************************************************
  * function: getMessageFromString(char *, unsigned int len,   *
@@ -402,6 +403,9 @@ makeAddStr(char *str, unsigned int len, unsigned int *retlen)
 char *
 makeLinkStr(char *str, unsigned int len, unsigned int *retlen)
 {
+  UNREFERENCED_PARAMETER(str);
+  UNREFERENCED_PARAMETER(len);
+  UNREFERENCED_PARAMETER(retlen);
   /* this requires more than just makeGenericStr() */
   /* STUB */
   return(NULL);
@@ -466,7 +470,7 @@ looksOK(char *str, unsigned int len)
 
   /* we expect the entire string to be either printable chars 
      or cr|nl */
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < (int)len; i++) {
     c = (char)*(str + i);
     if ( !(isprint(c)) && ((c != 0x0d) && (c != 0x0a)) )
       return(FALSE);
@@ -539,6 +543,7 @@ has_newline(char *str, unsigned int len)
 {
   char *nl = NULL;
 
+  UNREFERENCED_PARAMETER(len);
   nl = strrchr(str, '\n');
   if (nl) {
     return(TRUE);
@@ -630,6 +635,7 @@ has_Correct_Extension(char *str, unsigned int len)
   char hold[32];
   unsigned int endlen;
 
+  UNREFERENCED_PARAMETER(len);
   memset(hold, '\0', sizeof(hold));
 
   ptr = strrchr(str, '.');

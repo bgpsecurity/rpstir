@@ -12,7 +12,7 @@
  * want to introduce more elaborate handling of       *
  * signals.                                           *
  *****************************************************/
-#include "sig_handler.h"
+#include "main.h"
 
 extern struct write_port *global_wport;
 

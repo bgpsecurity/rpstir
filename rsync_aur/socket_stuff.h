@@ -9,8 +9,6 @@
 #include <netdb.h>
 #include <stdlib.h>
 
-#include "main.h"
-
 #define LOCAL 0
 #define TCP 1
 #define UDP 2
