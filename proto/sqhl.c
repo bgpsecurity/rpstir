@@ -683,7 +683,7 @@ static int verify_obj(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
     }
   sta = 0;
   if (*chainOK)
-    checkit(cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
+    sta = checkit(cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
   *x509stap = cbx509err;
   sk_X509_pop_free(sk_untrusted, X509_free);
   sk_X509_pop_free(sk_trusted, X509_free);
