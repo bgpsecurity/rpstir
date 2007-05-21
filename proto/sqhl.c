@@ -942,6 +942,53 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   return(sta);
 }
 
+static unsigned char *readfile(char *fn, int *stap)
+{
+  struct stat mystat;
+  char *ptr;
+  int   fd;
+  int   rd;
+
+  if ( stap == NULL )
+    return(NULL);
+  if ( fn == NULL || fn[0] == 0 )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return(NULL);
+    }
+  fd = open(fn, O_RDONLY);
+  if ( fd < 0 )
+    {
+      *stap = ERR_SCM_COFILE;
+      return(NULL);
+    }
+  memset(&mystat, 0, sizeof(mystat));
+  if ( fstat(fd, &mystat) < 0 || mystat.st_size == 0 )
+    {
+      (void)close(fd);
+      *stap = ERR_SCM_COFILE;
+      return(NULL);
+    }
+  ptr = (char *)calloc(mystat.st_size, sizeof(char));
+  if ( ptr == NULL )
+    {
+      (void)close(fd);
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  rd = read(fd, ptr, mystat.st_size);
+  (void)close(fd);
+  if ( rd != mystat.st_size )
+    {
+      free((void *)ptr);
+      ptr = NULL;
+      *stap = ERR_SCM_COFILE;
+    }
+  else
+    *stap = 0;
+  return((unsigned char *)ptr);
+}
+
 /*
   Add a ROA to the DB.  This function returns 0 on success and a
   negative error code on failure.
@@ -950,9 +997,11 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	    unsigned int id, int utrust, int typ)
 {
+  unsigned char *blob = NULL;
   struct ROA *r = NULL;
   X509 *cert;
   char *ski;
+  char *fn;
   int   asid;
   int   sta;
 
@@ -975,13 +1024,19 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       roaFree(r);
       return(ERR_SCM_INVALASID);
     }
-  cert = (X509 *)roa_parent(scmp, conp, ski, &sta);
+  cert = (X509 *)roa_parent(scmp, conp, ski, &fn, &sta);
   if ( cert == NULL )
     {
       roaFree(r);
       return(sta);
     }
-  sta = roaValidate2(r, cert);
+// read the ASN.1 blob from the file
+  blob = readfile(fn, &sta);
+  if ( blob != NULL )
+    {
+      sta = roaValidate2(r, cert, blob);
+      free((void *)blob);
+    }
   X509_free(cert);
   roaFree(r);
   if ( sta < 0 )
@@ -1981,7 +2036,7 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
   for the corresponding EE certificate (or NULL on error).
 */
 
-void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap)
+void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 {
   unsigned long blah = 0;
   unsigned long dblah = 0;
@@ -2007,6 +2062,8 @@ void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap)
 
   if ( stap == NULL )
     return(NULL);
+  if ( fn != NULL )
+    *fn = NULL;
   if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
        ski == NULL || ski[0] == 0 )
     {
@@ -2154,7 +2211,10 @@ void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap)
     *stap = ERR_SCM_BADCERT;
   else
     *stap = 0;
-  free((void *)ofullname);
+  if ( fn == NULL )
+    free((void *)ofullname);
+  else
+    *fn = ofullname;
   return((void *)px);
 }
 

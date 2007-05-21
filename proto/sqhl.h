@@ -76,8 +76,9 @@ extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
-// really and X509 *
-extern void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap);
+// return code is really an X509 *
+extern void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn,
+			int *stap);
 
 extern void  startSyslog(char *appName);
 extern void  stopSyslog(void);
