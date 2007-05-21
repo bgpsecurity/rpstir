@@ -10,6 +10,10 @@
 #include "parse.h"
 #include "sig_handler.h"
 
+/*
+  $Id$
+*/
+
 #define INFO_FLAG 0x1
 #define WARNING_FLAG 0x2
 #define ERROR_FLAG 0x4

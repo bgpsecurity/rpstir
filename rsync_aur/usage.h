@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+  $Id$
+*/
+
 void usage(const char *);
 
 #endif
