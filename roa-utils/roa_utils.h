@@ -159,7 +159,7 @@ int roaValidate(struct ROA *r);
   returns a negative error code.
 */
 
-int roaValidate2(struct ROA *r, X509 *x);
+int roaValidate2(struct ROA *r, X509 *x, unsigned char *blob);
 
 /*
   This function performs all validations steps on a ROA that require
@@ -171,6 +171,7 @@ int roaValidate2(struct ROA *r, X509 *x);
       scmcon *conp; // previously opened DB connection
       X509   *cert;
       char   *ski;
+      char   *fn;
       int     valid = -1;
       int     sta;
 
@@ -178,12 +179,14 @@ int roaValidate2(struct ROA *r, X509 *x);
       if ( sta == 0 ) {
         ski = (char *)roaSKI(r);
 	if ( ski != NULL ) {
-	  cert = roa_parent(scmp, conp, ski, &sta);
+	  cert = roa_parent(scmp, conp, ski, &fn, &sta);
 	  if ( cert != NULL && sta == 0 ) {
             valid = roaValidate2(r, cert);
           }
         }
       }
+  Note that the certificate data is passed in two ways: as an X509 pointer
+  "x" and also as a raw ASN.1 blob "blob".
 */
 
 void roaFree(struct ROA *r);

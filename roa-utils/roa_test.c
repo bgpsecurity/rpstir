@@ -9,19 +9,68 @@
 #include "sqhl.h"
 #include "err.h"
 
+static unsigned char *readfile(char *fn, int *stap)
+{
+  struct stat mystat;
+  char *ptr;
+  int   fd;
+  int   rd;
+
+  if ( stap == NULL )
+    return(NULL);
+  if ( fn == NULL || fn[0] == 0 )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return(NULL);
+    }
+  fd = open(fn, O_RDONLY);
+  if ( fd < 0 )
+    {
+      *stap = ERR_SCM_COFILE;
+      return(NULL);
+    }
+  memset(&mystat, 0, sizeof(mystat));
+  if ( fstat(fd, &mystat) < 0 || mystat.st_size == 0 )
+    {
+      (void)close(fd);
+      *stap = ERR_SCM_COFILE;
+      return(NULL);
+    }
+  ptr = (char *)calloc(mystat.st_size, sizeof(char));
+  if ( ptr == NULL )
+    {
+      (void)close(fd);
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  rd = read(fd, ptr, mystat.st_size);
+  (void)close(fd);
+  if ( rd != mystat.st_size )
+    {
+      free((void *)ptr);
+      ptr = NULL;
+      *stap = ERR_SCM_COFILE;
+    }
+  else
+    *stap = 0;
+  return((unsigned char *)ptr);
+}
+
 int main(int argc, char** argv)
 {
-  struct ROA *roa = NULL;
-  struct ROA *roa2 = NULL;
-  char  *filename_cnf = NULL;
-  char   filename_der[16] = "";
-  char   filename_pem[16] = "";
-  char   errmsg[1024];
+  struct ROA    *roa = NULL;
+  struct ROA    *roa2 = NULL;
+  unsigned char *blob = NULL;
   FILE   *fp = NULL;
   scmcon *conp;
   scm    *scmp;
   X509   *cert;
+  char    filename_der[16] = "";
+  char    filename_pem[16] = "";
+  char    errmsg[1024];
+  char   *filename_cnf = NULL;
   char   *ski;
+  char   *fn = NULL;
   int     sta = 0;
   
   if ( argc < 2 )
@@ -76,7 +125,7 @@ int main(int argc, char** argv)
       freescm(scmp);
       return -4;
     }
-  cert = (X509 *)roa_parent(scmp, conp, ski, &sta);
+  cert = (X509 *)roa_parent(scmp, conp, ski, &fn, &sta);
   disconnectscm(conp);
   freescm(scmp);
   if ( cert == NULL )
@@ -86,7 +135,18 @@ int main(int argc, char** argv)
       roaFree(roa2);
       return sta;
     }
-  sta = roaValidate2(roa2, cert);
+  blob = readfile(fn, &sta);
+  if ( blob == NULL )
+    {
+      (void)fprintf(stderr, "Cannot read certificate from %s: error %s (%d)\n",
+		    fn, err2string(sta), sta);
+
+      X509_free(cert);
+      roaFree(roa2);
+      return(sta);
+    }
+  sta = roaValidate2(roa2, cert, blob);
+  free((void *)blob);
   X509_free(cert);
   if ( sta < 0 )
     {

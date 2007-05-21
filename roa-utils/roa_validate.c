@@ -174,7 +174,7 @@ int roaValidate(struct ROA *r)
   return 0;
 }
 
-int roaValidate2(struct ROA *r, X509 *x)
+int roaValidate2(struct ROA *r, X509 *x, unsigned char *blob)
 {
   int i = 0;
   int iRes = 0;
@@ -188,6 +188,7 @@ int roaValidate2(struct ROA *r, X509 *x)
   int iASFound = cFALSE;
   ASIdOrRange *asStruct = NULL;
 
+  UNREFERENCED_PARAMETER(blob);
   // if (certificate exists in roa)
   // -  ignore it
   // -  Or check the certificate against x (optional)
