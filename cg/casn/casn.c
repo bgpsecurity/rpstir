@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Apr 11 2007 853U  */
 /* Apr 11 2007 GARDINER corrected _readvsize() not to trim off 1st byte of BIT STRING unless defined-by */
 /* Apr  6 2007 852U  */
