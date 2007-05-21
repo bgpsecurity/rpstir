@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Sep  7 2004 805U  */
 /* Sep  7 2004 GARDINER added encodesize and readvsize methods */
 /* May 26 2004 768U  */

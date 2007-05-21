@@ -1,3 +1,4 @@
+/* $Id$ */
 /* May 26 2004 768U  */
 /* May 26 2004 GARDINER moved BOOL flags to asn_flags.h */
 /* May 25 2004 767U  */

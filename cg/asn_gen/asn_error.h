@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Jan 25 1996 324U  */
 /* Jan 25 1996 GARDINER added constraint errors */
 /* Aug 22 1995 261U  */

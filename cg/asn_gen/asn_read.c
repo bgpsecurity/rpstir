@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Apr 25 2005 828U  */
 /* Apr 25 2005 GARDINER unified asn_gen for C++, C and Java */
 /* Jan 12 2005 821U  */
