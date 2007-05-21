@@ -456,13 +456,14 @@ name "appName".
 
 This utility function is used to turn off syslogging.
 
-2.2.9 void *roa_parent(scm *scmp, scmcon *conp, char *ski, int *stap)
+2.2.9 void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 
 This utility function is used to look up the end-entity certificate that
 signed a ROA.  "ski" denotes the SKI contained within the ROA. "scmp" and
 "conp" are the usual schema and connection pointers. On success this function
-returns an X509 pointer (cast to a void * for convenience) and sets "stap" to
-zero. On failure NULL is returned and "stap" is set to a negative error code
+returns an X509 pointer (cast to a void * for convenience), sets "fn" to
+point to the full pathname of the underlying certificate file, and sets "stap"
+to zero. On failure NULL is returned and "stap" is set to a negative error code
 defined in err.h.
 
 2.3 OpenSSL utility functions
