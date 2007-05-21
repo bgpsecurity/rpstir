@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Dec  6 1996 411U  */
 /* Dec  6 1996 GARDINER added C++ conditionals */
 /* Mar  8 1994   2U  */

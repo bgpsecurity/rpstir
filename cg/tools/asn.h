@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Nov 13 2000 550U  */
 /* Nov 13 2000 GARDINER reduced to pure ASN.1 tags */
 /* Nov 13 2000 549U  */

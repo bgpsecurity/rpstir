@@ -1,3 +1,4 @@
+/* $Id$ */
 /* Dec  5 2003 731U  */
 /* Dec  5 2003 GARDINER added "oid" as preferred nickname */
 /* Oct  1 2001 591U  */
