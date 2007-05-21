@@ -872,7 +872,10 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
   if ( cf == NULL || x == NULL )
     {
-      freecf(cf);
+      if ( cf != NULL )
+	freecf(cf);
+      if ( x != NULL )
+	X509_free(x);
       return(sta);
     }
   cf->dirid = id;
@@ -932,7 +935,13 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   UNREFERENCED_PARAMETER(utrust);
   cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta);
   if ( cf == NULL || x == NULL )
-    return(sta);
+    {
+      if ( cf != NULL )
+	freecrf(cf);
+      if ( x != NULL )
+	X509_CRL_free(x);
+      return(sta);
+    }
   cf->dirid = id;
 // actually add the CRL
   cf->flags |= SCM_FLAG_VALID;

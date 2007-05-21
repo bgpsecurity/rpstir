@@ -798,12 +798,12 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
   if ( *stap != 0 )
     {
       freecf(cf);
+      cf = NULL;
       if ( freex )
 	{
 	  X509_free(x);
 	  x = NULL;
 	}
-      cf = NULL;
     }
   *xp = x;
   return(cf);

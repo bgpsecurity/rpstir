@@ -649,7 +649,7 @@ int main(int argc, char **argv)
 	  break;
 	case 'w':
 	  do_sockopts++;
-	  porto = strdup(optarg);
+	  porto = optarg;
 	  break;
 	case 'p':
 	  perpetual++;
