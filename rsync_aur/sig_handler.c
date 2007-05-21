@@ -14,6 +14,10 @@
  *****************************************************/
 #include "main.h"
 
+/*
+  $Id$
+*/
+
 extern struct write_port *global_wport;
 
 void

@@ -1,5 +1,9 @@
 #include "main.h"
 
+/*
+  $Id$
+*/
+
 static char *makeCDStr(unsigned int *retlenp, char *dir)
 {
   char *buf;

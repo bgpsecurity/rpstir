@@ -17,6 +17,11 @@
  * write_port structure and the connect() is      *
  * made using the write_port descriptor.          *
  **************************************************/
+
+/*
+  $Id$
+*/
+
 int
 tcpsocket(struct write_port *wport, int portno)
 {

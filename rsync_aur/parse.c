@@ -3,6 +3,10 @@
 
 #include "main.h"
 
+/*
+  $Id$
+*/
+
 /**************************************************************
  * function: getMessageFromString(char *, unsigned int len,   *
  *              unsigned int *retlen, char flags)             *
