@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,6 +9,10 @@
 #include "roa_utils.h"
 #include "myssl.h"
 #include "sqhl.h"
+
+/*
+  $Id$
+*/
 
 /****************
  * This is the query client, which allows a user to read information

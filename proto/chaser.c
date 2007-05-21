@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,6 +7,10 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
+
+/*
+  $Id$
+*/
 
 /****************
  * This is the chaser client, which tracks down all the URIs of all the

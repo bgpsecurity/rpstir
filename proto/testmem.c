@@ -1,5 +1,5 @@
 /*
-  $Id: rcli.c 189 2007-05-09 18:14:22Z dmontana $
+  $Id$
 */
 
 #include <stdio.h>
