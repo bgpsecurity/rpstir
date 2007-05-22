@@ -1194,6 +1194,8 @@ char *hexify(int bytelen, void *ptr)
   outptr = aptr;
   *outptr++ = '0';
   *outptr++ = 'x';
+  if (bytelen == 0)
+    *outptr++ = '0';
   for(i=0;i<bytelen;i++)
     {
       (void)sprintf(outptr, "%2.2x", *inptr);
