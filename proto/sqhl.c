@@ -692,7 +692,6 @@ static int verify_obj(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
   return(sta);
 }
 
-
 // structure containing data of children to propagate
 typedef struct _PropData {
   char *ski;
@@ -719,7 +718,7 @@ static int verifyChildCert (scmcon *conp, PropData *data)
   x = readCertFromFile (pathname, &sta);
   if ( x == NULL )
     return ERR_SCM_X509;
-  sta = verify_obj (conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
+  sta = verify_obj(conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
   if (sta < 0) {
     stmt = calloc (100, sizeof(char));
     if ( stmt == NULL )
@@ -865,6 +864,8 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   X509 *x = NULL;
   int   x509sta = 0;
   int   sta = 0;
+  int   ss = 0;
+  int   ct = UN_CERT;
   int   chainOK;
 
   if (theCertTable == NULL)
@@ -879,19 +880,35 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       return(sta);
     }
   cf->dirid = id;
+  if ( strcmp(cf->fields[CF_FIELD_SUBJECT],
+	      cf->fields[CF_FIELD_ISSUER]) == 0 )
+    ss = 1;
   if ( utrust > 0 )
     {
-      if (strcmp(cf->fields[CF_FIELD_SUBJECT],
-		 cf->fields[CF_FIELD_ISSUER]) != 0) {
-	freecf(cf);
-	X509_free(x);
-	return(ERR_SCM_NOTSS);
-      }
+      if ( ss != 1 )
+	{
+	  freecf(cf);
+	  X509_free(x);
+	  return(ERR_SCM_NOTSS);
+	}
       cf->flags |= SCM_FLAG_TRUSTED;
     }
+// verify that the cert matches the rescert profile
+  if ( utrust > 0 )
+    ct = TA_CERT;
+  else
+    {
+      if ( cf->flags & SCM_FLAG_CA )
+	ct = CA_CERT;
+      else
+	ct = EE_CERT;
+    }
+  sta = rescert_profile_chk(x, ct);
 // verify the cert
-  sta = verify_obj(conp, x, utrust, cf->fields[CF_FIELD_AKI],
-		   cf->fields[CF_FIELD_ISSUER], &x509sta, &chainOK);
+  if ( sta == 0 ) {
+    sta = verify_obj(conp, x, utrust, cf->fields[CF_FIELD_AKI],
+		     cf->fields[CF_FIELD_ISSUER], &x509sta, &chainOK);
+  }
   // check that no crls revoking this cert
   /*
    * ?????? uncomment this once other things working ???????

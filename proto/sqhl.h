@@ -22,6 +22,15 @@
 #define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET) /* PEM encoded ROA */
 
 /*
+  Certificate types
+*/
+
+#define CA_CERT       1
+#define EE_CERT       2
+#define TA_CERT       3
+#define UN_CERT       4
+
+/*
   Flags
 */
 

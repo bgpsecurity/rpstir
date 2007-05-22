@@ -55,8 +55,43 @@
 #define ERR_SCM_INVALVER    -43         /* invalid version */
 #define ERR_SCM_INVALASN    -44         /* ASN.1 library error */
 #define ERR_SCM_NOTEE       -45         /* not an EE cert */
+#define ERR_SCM_BADFLAGS    -46         /* cert flags don't match cert type */
+#define ERR_SCM_BADVERS     -47         /* bad X509 profile version */
+#define ERR_SCM_NCEXT       -48         /* critical extension was marked non-crit */
+#define ERR_SCM_NOTCA       -49         /* cA boolean should have been set */
+#define ERR_SCM_BADPATHLEN  -50         /* pathlen should not have been present */
+#define ERR_SCM_NOBC        -51         /* missing basic constraints */
+#define ERR_SCM_DUPBC       -52         /* duplicate basic constraints */
+#define ERR_SCM_ISCA        -53         /* cA boolean set in EE cert */
+#define ERR_SCM_CEXT        -54         /* non-critical extension marked as crit */
+#define ERR_SCM_NOSKI       -55         /* SKI extension missing */
+#define ERR_SCM_DUPSKI      -56         /* duplicate SKI extension */
+#define ERR_SCM_ACI         -57         /* authCertIssuer present, shouldn't be */
+#define ERR_SCM_ACSN        -58         /* authCertSN present, shouldn't be */
+#define ERR_SCM_DUPAKI      -59         /* duplicate AKI */
+#define ERR_SCM_NOKUSAGE    -60         /* missing key usage ext */
+#define ERR_SCM_DUPKUSAGE   -61         /* duplicate key usage */
+#define ERR_SCM_CRLDPTA     -62         /* CRLDP found in TA cert */
+#define ERR_SCM_NOCRLDP     -63         /* missing CRLDP */
+#define ERR_SCM_DUPCRLDP    -64         /* duplicate CRLDP */
+#define ERR_SCM_CRLDPSF     -65         /* CRLDP has subfields, shouldn't */
+#define ERR_SCM_CRLDPNM     -66         /* cannot get name component of CRLDP */
+#define ERR_SCM_BADCRLDP    -67         /* CLRDP not a URI */
+#define ERR_SCM_NOAIA       -68         /* missing AIA */
+#define ERR_SCM_DUPAIA      -69         /* duplicate AIA */
+#define ERR_SCM_BADAIA      -70         /* AIA not a URI */
+#define ERR_SCM_NOSIA       -71         /* missing SIA */
+#define ERR_SCM_DUPSIA      -72         /* duplicate SIA */
+#define ERR_SCM_BADSIA      -73         /* SIA not a URI */
+#define ERR_SCM_NOPOLICY    -74         /* missing policy extension */
+#define ERR_SCM_DUPPOLICY   -75         /* duplicate policy extension */
+#define ERR_SCM_POLICYQ     -76         /* policy qualifiers shouldn't be present */
+#define ERR_SCM_BADOID      -77         /* invalid/unexpected OID */
+#define ERR_SCM_NOIPAS      -78         /* missing IP or AS# resources */
+#define ERR_SCM_DUPIP       -79         /* duplicate IP resource extension */
+#define ERR_SCM_DUPAS       -80         /* duplicate AS2 resource extension */
 
-#define ERR_SCM_MAXERR      -45
+#define ERR_SCM_MAXERR      -80
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

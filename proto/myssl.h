@@ -64,21 +64,23 @@ typedef void (*cfx_get)(X509V3_EXT_METHOD *meth, void *exts,
   For each field in the X509 * that must be extracted, there is a get
   function. Some fields are mandatory, others are optional. This structure
   encapsulates the association of field numbers (above), get functions and
-  an indication of whether they are critical or optional.
+  an indication of whether they are needed or optional. Note that "need"ed
+  here is not the same as a critical extension; a needed extension is one
+  that is required for a database field.
 */
 
 typedef struct _cf_validator
 {
   cf_get  get_func;
   int     fieldno;
-  int     critical;
+  int     need;
 } cf_validator;
 
 /*
   For each field that is part of the X509 extension, there is a get
   function. As above, some fields are mandatory, others are optional.
   This structure encapsulates the association of extension tags, get
-  functions, field numbers and an indication of whether they are critical
+  functions, field numbers and an indication of whether they are needed
   or optional.
 */
 
@@ -87,7 +89,7 @@ typedef struct _cfx_validator
   cfx_get  get_func;
   int      fieldno;
   int      tag;
-  int      critical;
+  int      need;
   int      raw;
 } cfx_validator ;
 
@@ -95,6 +97,8 @@ extern void  freecf(cert_fields *);
 
 extern char *ASNTimeToDBTime(char *in, int *stap);
 extern char *LocalTimeToDBTime(int *stap);
+
+extern int   rescert_profile_chk(X509 *x, int ct);
 
 extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 				X509 **xp, int *stap, int *x509stap);
@@ -138,21 +142,21 @@ typedef void (*crfx_get)(X509V3_EXT_METHOD *meth, void *exts,
   For each field in the X509_CRL * that must be extracted, there is a get
   function. Some fields are mandatory, others are optional. This structure
   encapsulates the association of field numbers (above), get functions and
-  an indication of whether they are critical or optional.
+  an indication of whether they are need or optional.
 */
 
 typedef struct _crf_validator
 {
   crf_get get_func;
   int     fieldno;
-  int     critical;
+  int     need;
 } crf_validator;
 
 /*
   For each field that is part of the X509_CRL extension, there is a get
   function. As above, some fields are mandatory, others are optional.
   This structure encapsulates the association of extension tags, get
-  functions, field numbers and an indication of whether they are critical
+  functions, field numbers and an indication of whether they are needed
   or optional.
 */
 
@@ -161,7 +165,7 @@ typedef struct _crfx_validator
   crfx_get get_func;
   int      fieldno;
   int      tag;
-  int      critical;
+  int      need;
 } crfx_validator;
 
 extern void  freecrf(crl_fields *);
