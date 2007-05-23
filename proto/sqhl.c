@@ -557,7 +557,6 @@ static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
   conp = conp; numLine = numLine; s = s;  // silence compiler warnings
   unsigned int i;
   for (i = 0; i < *revokedSNLen; i++) {
-    printf ("snlen = %d val = %llu\n", *revokedSNLen, revokedSNList[i]);
     if (revokedSNList[i] == revokedSN) {
       isRevoked = 1;
       break;
@@ -569,8 +568,7 @@ static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
 /*
  * Check whether a cert is revoked by a crl
  */
-static int cert_revoked (scm *scmp, scmcon *conp, char *sn,
-			 char *ski, char *subject)
+static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
 {
   int sta;
 
@@ -591,17 +589,14 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn,
     revokedSNList = (unsigned long long *) revokedSrch1[1].valptr;
   }
 
-  // query for crls such that aki = ski, issuer = issuer, and flags & valid
+  // query for crls such that issuer = issuer, and flags & valid
   // and set isRevoked = 1 if sn is in snlist
-  sprintf (revokedWhere, "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	   ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  sprintf (revokedWhere, "issuer=\"%s\" and (flags%%%d)>=%d",
+	   issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   isRevoked = 0;
-  revokedSN = strtoull (sn, NULL, 16);
+  revokedSN = strtoull (sn, NULL, 10);
   sta = searchscm (conp, theCRLTable, &revokedSrch, NULL, revokedHandler,
 		   SCM_SRCH_DOVALUE_ALWAYS);
-  if (sta == 0) {
-    fprintf (stderr, "Error doing cert_revoked search\n");
-  }
   return isRevoked;
 }
 
@@ -691,6 +686,7 @@ static int verify_obj(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
   X509_VERIFY_PARAM_free(vpm);
   return(sta);
 }
+
 
 // structure containing data of children to propagate
 typedef struct _PropData {
@@ -863,9 +859,8 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   cert_fields *cf;
   X509 *x = NULL;
   int   x509sta = 0;
-  int   sta = 0;
-  int   ss = 0;
   int   ct = UN_CERT;
+  int   sta = 0;
   int   chainOK;
 
   if (theCertTable == NULL)
@@ -880,29 +875,21 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       return(sta);
     }
   cf->dirid = id;
-  if ( strcmp(cf->fields[CF_FIELD_SUBJECT],
-	      cf->fields[CF_FIELD_ISSUER]) == 0 )
-    ss = 1;
   if ( utrust > 0 )
     {
-      if ( ss != 1 )
-	{
-	  freecf(cf);
-	  X509_free(x);
-	  return(ERR_SCM_NOTSS);
-	}
+      if (strcmp(cf->fields[CF_FIELD_SUBJECT],
+		 cf->fields[CF_FIELD_ISSUER]) != 0) {
+	freecf(cf);
+	X509_free(x);
+	return(ERR_SCM_NOTSS);
+      }
       cf->flags |= SCM_FLAG_TRUSTED;
     }
 // verify that the cert matches the rescert profile
   if ( utrust > 0 )
     ct = TA_CERT;
   else
-    {
-      if ( cf->flags & SCM_FLAG_CA )
-	ct = CA_CERT;
-      else
-	ct = EE_CERT;
-    }
+    ct = ( cf->flags & SCM_FLAG_CA ) ? CA_CERT : EE_CERT;
   sta = rescert_profile_chk(x, ct);
 // verify the cert
   if ( sta == 0 ) {
@@ -910,14 +897,10 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     cf->fields[CF_FIELD_ISSUER], &x509sta, &chainOK);
   }
   // check that no crls revoking this cert
-  /*
-   * ?????? uncomment this once other things working ???????
   if (sta == 0) {
     sta = cert_revoked (scmp, conp, cf->fields[CF_FIELD_SN],
-			cf->fields[CF_FIELD_SKI],
-			cf->fields[CF_FIELD_SUBJECT]);
+			cf->fields[CF_FIELD_ISSUER]);
   }
-  */
 // actually add the certificate
   if ( sta == 0 )
     {
@@ -930,6 +913,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 			  cf->fields[CF_FIELD_SUBJECT]);
   }
   freecf(cf);
+  // ??????????? always free x if stop pushing on stack ??
   if (! (cf->flags | SCM_FLAG_TRUSTED)) {
     X509_free(x);
   }
@@ -948,6 +932,7 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   X509_CRL   *x = NULL;
   int   crlsta = 0;
   int   sta = 0;
+  unsigned int i;
 
   UNREFERENCED_PARAMETER(utrust);
   cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta);
@@ -962,7 +947,18 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   cf->dirid = id;
 // actually add the CRL
   cf->flags |= SCM_FLAG_VALID;
-  sta = add_crl_internal(scmp, conp, cf);
+  // ???????????? should verify crl instead ?????????
+  sta = 0;  // ??? verify instead ???
+  if (sta == 0) {
+    sta = add_crl_internal(scmp, conp, cf);
+  }
+  if (sta == 0) {
+    for (i = 0; i < cf->snlen; i++) {
+      model_cfunc (scmp, conp, cf->fields[CRF_FIELD_ISSUER],
+		   cf->fields[CRF_FIELD_AKI],
+		   ((unsigned long long *)cf->snlist)[i]);
+    }
+  }
   freecrf(cf);
   X509_CRL_free(x);
   return(sta);
@@ -1664,14 +1660,17 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 // been reparented, then actually delete the cert, otherwise just return
   if ( dodel == 0 )
     {
-      (void)strcpy(is, (char *)(s->vec[3].valptr));
-      (void)strcpy(a1, (char *)(s->vec[4].valptr));
+      (void)strcpy(is, (char *)(s->vec[2].valptr));
+      (void)strcpy(a1, (char *)(s->vec[3].valptr));
       if ( countvalidparents(conp, s, is, a1) > 0 )
 	return(0);
       dodel = 1;
     }
   lid = *(unsigned int *)(s->vec[0].valptr);
   (void)strcpy(s1, (char *)(s->vec[1].valptr));
+  // ??????????????? should only be invalidating if not top level ?????????
+  // ????? GAGNON GAGNON
+  // ????? also, countvalidparents should verify child ????
   sta = deletebylid(conp, mcfp->ctab, lid);
   if ( sta < 0 )
     return(sta);
@@ -1721,10 +1720,9 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		unsigned long long sn)
 {
-  unsigned int pflags;
   unsigned int lid;
   scmsrcha srch;
-  scmsrch  srch1[5];
+  scmsrch  srch1[4];
   scmkva   where;
   scmkv    w[3];
   mcf      mymcf;
@@ -1752,7 +1750,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   (void)sprintf(sno, "%lld", sn);
   w[1].column = "sn";
   w[1].value = &sno[0];
-  w[2].column = "ski";
+  w[2].column = "aki";
   w[2].value = aki;
   where.vec = &w[0];
   where.ntot = 3;
@@ -1770,28 +1768,22 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   srch1[1].valptr = &ski[0];
   srch1[1].valsize = 512;
   srch1[1].avalsize = 0;
-  // ?????????? no longer need flags ???????????? GAGNON
   srch1[2].colno = 3;
-  srch1[2].sqltype = SQL_C_ULONG;
-  srch1[2].valptr = (void *)&pflags;
-  srch1[2].valsize = sizeof(unsigned int);
+  srch1[2].sqltype = SQL_C_CHAR;
+  srch1[2].colname = "issuer";
+  srch1[2].valptr = &is[0];
+  srch1[2].valsize = 512;
   srch1[2].avalsize = 0;
   srch1[3].colno = 4;
   srch1[3].sqltype = SQL_C_CHAR;
-  srch1[3].colname = "issuer";
-  srch1[3].valptr = &is[0];
+  srch1[3].colname = "aki";
+  srch1[3].valptr = &laki[0];
   srch1[3].valsize = 512;
   srch1[3].avalsize = 0;
-  srch1[4].colno = 5;
-  srch1[4].sqltype = SQL_C_CHAR;
-  srch1[4].colname = "aki";
-  srch1[4].valptr = &laki[0];
-  srch1[4].valsize = 512;
-  srch1[4].avalsize = 0;
   srch.vec = &srch1[0];
   srch.sname = NULL;
-  srch.ntot = 5;
-  srch.nused = 5;
+  srch.ntot = 4;
+  srch.nused = 4;
   srch.vald = 0;
   srch.where = &where;
   srch.wherestr = NULL;
