@@ -952,6 +952,7 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   if (sta == 0) {
     sta = add_crl_internal(scmp, conp, cf);
   }
+  // ???????????????????? also check if chain OK
   if (sta == 0) {
     for (i = 0; i < cf->snlen; i++) {
       model_cfunc (scmp, conp, cf->fields[CRF_FIELD_ISSUER],
@@ -1644,34 +1645,36 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   char    s1[256];
   char    a1[512];
   char    is[512];
-  int     dodel = 0;
+  char    wherestr[100], stmt[100];
   int     sta;
 
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
+  lid = *(unsigned int *)(s->vec[0].valptr);
 // if the cert has flags marked for deletion, or if this is a toplevel
 // invocation, then actually delete the cert
   if ( mcfp->toplevel > 0 )
     {
-      dodel = 1;
       mcfp->toplevel = 0;
+      sta = deletebylid(conp, mcfp->ctab, lid);
     }
-// if the cert has not otherwise been marked for deletion, but has not
-// been reparented, then actually delete the cert, otherwise just return
-  if ( dodel == 0 )
+// if the cert has not been reparented, then invalidate it, otherwise return
+  else
     {
       (void)strcpy(is, (char *)(s->vec[2].valptr));
       (void)strcpy(a1, (char *)(s->vec[3].valptr));
       if ( countvalidparents(conp, s, is, a1) > 0 )
 	return(0);
-      dodel = 1;
+      sprintf (stmt, "update %s set flags = %d where local_id = %d;",
+	       mcfp->ctab->tabname,
+	       (*(unsigned int *)(s->vec[4].valptr) - SCM_FLAG_VALID) |
+	       SCM_FLAG_NOCHAIN, lid);
+      sta = statementscm (conp, stmt);
     }
-  lid = *(unsigned int *)(s->vec[0].valptr);
   (void)strcpy(s1, (char *)(s->vec[1].valptr));
   // ??????????????? should only be invalidating if not top level ?????????
   // ????? GAGNON GAGNON
   // ????? also, countvalidparents should verify child ????
-  sta = deletebylid(conp, mcfp->ctab, lid);
   if ( sta < 0 )
     return(sta);
   mcfp->did++;
@@ -1684,7 +1687,8 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   cwhere.vald = 0;
   ow = s->where;
   s->where = &cwhere;
-//  (void)printf("Searching for certs with aki=%s\n", s1);
+  s->wherestr = wherestr;
+  sprintf (wherestr, "(flags%%%d)>=%d", 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta == ERR_SCM_NODATA )
@@ -1720,9 +1724,9 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		unsigned long long sn)
 {
-  unsigned int lid;
+  unsigned int lid, flags;
   scmsrcha srch;
-  scmsrch  srch1[4];
+  scmsrch  srch1[5];
   scmkva   where;
   scmkv    w[3];
   mcf      mymcf;
@@ -1780,10 +1784,16 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   srch1[3].valptr = &laki[0];
   srch1[3].valsize = 512;
   srch1[3].avalsize = 0;
+  srch1[4].colno = 5;
+  srch1[4].sqltype = SQL_C_ULONG;
+  srch1[4].colname = "flags";
+  srch1[4].valptr = (void *)&flags;
+  srch1[4].valsize = sizeof(unsigned int);
+  srch1[4].avalsize = 0;
   srch.vec = &srch1[0];
   srch.sname = NULL;
-  srch.ntot = 4;
-  srch.nused = 4;
+  srch.ntot = 5;
+  srch.nused = 5;
   srch.vald = 0;
   srch.where = &where;
   srch.wherestr = NULL;
