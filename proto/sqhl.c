@@ -1273,105 +1273,6 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 }
 
 /*
-  Delete an object. First find the object's directory. If it is not found
-  then we are done. If it is found, then find the corresponding (filename, dir_id)
-  combination in the appropriate table and issue the delete SQL call.
-*/
-
-// ??????????????????? if cert, need to figure consequences for children ???
-// ?????????????? perhaps call revoke_cert_and_children ????????
-
-int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-		  char *outfull)
-{
-  unsigned int id;
-  unsigned int blah;
-  scmsrcha srch;
-  scmsrch  srch1;
-  scmkva   where;
-  scmkva   dwhere;
-  scmkv    one;
-  scmkv    dtwo[2];
-  scmtab  *thetab;
-  char did[24];
-  int  typ;
-  int  sta;
-
-  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
-       outfile == NULL || outdir == NULL || outfull == NULL )
-    return(ERR_SCM_INVALARG);
-// determine its filetype
-  typ = infer_filetype(outfull);
-  if ( typ < 0 )
-    return(typ);
-// find the directory
-  thetab = findtablescm(scmp, "DIRECTORY");
-  if ( thetab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
-  one.column = "dirname";
-  one.value = outdir;
-  where.vec = &one;
-  where.ntot = 1;
-  where.nused = 1;
-  where.vald = 0;
-  srch1.colno = 1;
-  srch1.sqltype = SQL_C_ULONG;
-  srch1.colname = "dir_id";
-  srch1.valptr = (void *)&id;
-  srch1.valsize = sizeof(unsigned int);
-  srch1.avalsize = 0;
-  srch.vec = &srch1;
-  srch.sname = NULL;
-  srch.ntot = 1;
-  srch.nused = 1;
-  srch.vald = 0;
-  srch.where = &where;
-  srch.wherestr = NULL;
-  srch.context = &blah;
-  sta = searchscm(conp, thetab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
-  if ( sta < 0 )
-    return(sta);
-// delete the object based on the type
-// note that the directory itself is not deleted
-  thetab = NULL;
-  switch ( typ )
-    {
-    case OT_CER:
-    case OT_CER_PEM:
-    case OT_UNKNOWN:
-    case OT_UNKNOWN+OT_PEM_OFFSET:
-      thetab = findtablescm(scmp, "CERTIFICATE");
-      break;
-    case OT_CRL:
-    case OT_CRL_PEM:
-      thetab = findtablescm(scmp, "CRL");
-      break;
-    case OT_ROA:
-    case OT_ROA_PEM:
-      thetab = findtablescm(scmp, "ROA");
-      break;
-    default:
-      sta = ERR_SCM_INTERNAL;
-      break;
-    }
-  if ( thetab == NULL )
-    sta = ERR_SCM_NOSUCHTAB;
-  if ( sta < 0 )
-    return(sta);
-  dtwo[0].column = "filename";
-  dtwo[0].value = outfile;
-  dtwo[1].column = "dir_id";
-  (void)sprintf(did, "%u", id);
-  dtwo[1].value = did;
-  dwhere.vec = &dtwo[0];
-  dwhere.ntot = 2;
-  dwhere.nused = 2;
-  dwhere.vald = 0;
-  sta = deletescm(conp, thetab, &dwhere);
-  return(sta);
-}
-
-/*
   Get the flags value and possibly the local_id corresponding to a match
   on a search criterion.  Return the requested value(s) in the indicated
   pointers.
@@ -1801,11 +1702,13 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   UNREFERENCED_PARAMETER(idx);
   mcfp = (mcf *)(s->context);
   lid = *(unsigned int *)(s->vec[0].valptr);
+  printf ("revoke_cert_and_children %d\n", lid); // ******* temp *********
 // if the cert has flags marked for deletion, or if this is a toplevel
 // invocation, then actually delete the cert
   if ( mcfp->toplevel > 0 )
     {
       mcfp->toplevel = 0;
+      printf ("deleting %d\n", lid); // ******* temp *********
       sta = deletebylid(conp, mcfp->ctab, lid);
     }
 // if the cert has not been reparented, then invalidate it, otherwise return
@@ -1815,6 +1718,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
       (void)strcpy(a1, (char *)(s->vec[3].valptr));
       if ( countvalidparents(conp, s, is, a1) > 0 )
 	return(0);
+      printf ("invalidating %d\n", lid); // ******* temp *********
       sta = updateValidFlags (conp, mcfp->ctab, lid,
 			      *(unsigned int *)(s->vec[4].valptr), 0);
     }
@@ -1850,6 +1754,164 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   s->where = ow;
   if ( sta == ERR_SCM_NODATA )
     sta = 0;
+  return(sta);
+}
+
+/*
+ * Fill in the columns for a search with revoke_cert_and_children as callback
+ */
+static void fillInColumns (scmsrch *srch1, unsigned int *lid,
+			   unsigned int *flags, char *ski, char *issuer,
+			   char *aki, scmsrcha *srch)
+{
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_ULONG;
+  srch1[0].colname = "local_id";
+  srch1[0].valptr = (void *)lid;
+  srch1[0].valsize = sizeof(unsigned int);
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_CHAR;
+  srch1[1].colname = "ski";
+  srch1[1].valptr = (void *)ski;
+  srch1[1].valsize = 512;
+  srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_CHAR;
+  srch1[2].colname = "issuer";
+  srch1[2].valptr = (void *)issuer;
+  srch1[2].valsize = 512;
+  srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_CHAR;
+  srch1[3].colname = "aki";
+  srch1[3].valptr = (void *)aki;
+  srch1[3].valsize = 512;
+  srch1[3].avalsize = 0;
+  srch1[4].colno = 5;
+  srch1[4].sqltype = SQL_C_ULONG;
+  srch1[4].colname = "flags";
+  srch1[4].valptr = (void *)flags;
+  srch1[4].valsize = sizeof(unsigned int);
+  srch1[4].avalsize = 0;
+  srch->vec = srch1;
+  srch->sname = NULL;
+  srch->ntot = 5;
+  srch->nused = 5;
+  srch->vald = 0;
+}
+
+/*
+  Delete an object. First find the object's directory. If it is not found
+  then we are done. If it is found, then find the corresponding (filename, dir_id)
+  combination in the appropriate table and issue the delete SQL call.
+*/
+
+int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+		  char *outfull)
+{
+  unsigned int id;
+  unsigned int blah;
+  scmsrcha srch;
+  scmsrch  srch1, srch2[5];
+  scmkva   where;
+  scmkva   dwhere;
+  scmkv    one;
+  scmkv    dtwo[2];
+  scmtab  *thetab;
+  char did[24];
+  int  typ;
+  int  sta;
+  unsigned int lid, flags;
+  char     ski[512];
+  char     aki[512];
+  char     is[512];
+  mcf      mymcf;
+
+  printf ("deleting %s\n", outfull); // ******* temp ********
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
+       outfile == NULL || outdir == NULL || outfull == NULL )
+    return(ERR_SCM_INVALARG);
+// determine its filetype
+  typ = infer_filetype(outfull);
+  if ( typ < 0 )
+    return(typ);
+// find the directory
+  thetab = findtablescm(scmp, "DIRECTORY");
+  if ( thetab == NULL )
+    return(ERR_SCM_NOSUCHTAB);
+  one.column = "dirname";
+  one.value = outdir;
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  srch1.colno = 1;
+  srch1.sqltype = SQL_C_ULONG;
+  srch1.colname = "dir_id";
+  srch1.valptr = (void *)&id;
+  srch1.valsize = sizeof(unsigned int);
+  srch1.avalsize = 0;
+  srch.vec = &srch1;
+  srch.sname = NULL;
+  srch.ntot = 1;
+  srch.nused = 1;
+  srch.vald = 0;
+  srch.where = &where;
+  srch.wherestr = NULL;
+  srch.context = &blah;
+  sta = searchscm(conp, thetab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta < 0 )
+    return(sta);
+
+  // fill in where structure
+  dtwo[0].column = "filename";
+  dtwo[0].value = outfile;
+  dtwo[1].column = "dir_id";
+  (void)sprintf(did, "%u", id);
+  dtwo[1].value = did;
+  dwhere.vec = &dtwo[0];
+  dwhere.ntot = 2;
+  dwhere.nused = 2;
+  dwhere.vald = 0;
+
+// delete the object based on the type
+// note that the directory itself is not deleted
+  thetab = NULL;
+  switch ( typ )
+    {
+    case OT_CER:
+    case OT_CER_PEM:
+    case OT_UNKNOWN:
+    case OT_UNKNOWN+OT_PEM_OFFSET:
+      thetab = findtablescm(scmp, "CERTIFICATE");
+      mymcf.did = 0;
+      mymcf.toplevel = 1;
+      mymcf.ctab = thetab;
+      mymcf.rtab = findtablescm(scmp, "ROA");
+      fillInColumns (srch2, &lid, &flags, ski, is, aki, &srch);
+      srch.where = &dwhere;
+      srch.context = &mymcf;
+      sta = searchscm(conp, thetab, &srch, NULL, revoke_cert_and_children,
+		      SCM_SRCH_DOVALUE_ALWAYS);
+      break;
+    case OT_CRL:
+    case OT_CRL_PEM:
+      thetab = findtablescm(scmp, "CRL");
+      break;
+    case OT_ROA:
+    case OT_ROA_PEM:
+      thetab = findtablescm(scmp, "ROA");
+      break;
+    default:
+      sta = ERR_SCM_INTERNAL;
+      break;
+    }
+  if ( thetab == NULL )
+    sta = ERR_SCM_NOSUCHTAB;
+  if ( sta < 0 )
+    return(sta);
+  sta = deletescm(conp, thetab, &dwhere);
   return(sta);
 }
 
@@ -1904,41 +1966,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   where.ntot = 3;
   where.nused = 3;
   where.vald = 0;
-  srch1[0].colno = 1;
-  srch1[0].sqltype = SQL_C_ULONG;
-  srch1[0].colname = "local_id";
-  srch1[0].valptr = (void *)&lid;
-  srch1[0].valsize = sizeof(unsigned int);
-  srch1[0].avalsize = 0;
-  srch1[1].colno = 2;
-  srch1[1].sqltype = SQL_C_CHAR;
-  srch1[1].colname = "ski";
-  srch1[1].valptr = &ski[0];
-  srch1[1].valsize = 512;
-  srch1[1].avalsize = 0;
-  srch1[2].colno = 3;
-  srch1[2].sqltype = SQL_C_CHAR;
-  srch1[2].colname = "issuer";
-  srch1[2].valptr = &is[0];
-  srch1[2].valsize = 512;
-  srch1[2].avalsize = 0;
-  srch1[3].colno = 4;
-  srch1[3].sqltype = SQL_C_CHAR;
-  srch1[3].colname = "aki";
-  srch1[3].valptr = &laki[0];
-  srch1[3].valsize = 512;
-  srch1[3].avalsize = 0;
-  srch1[4].colno = 5;
-  srch1[4].sqltype = SQL_C_ULONG;
-  srch1[4].colname = "flags";
-  srch1[4].valptr = (void *)&flags;
-  srch1[4].valsize = sizeof(unsigned int);
-  srch1[4].avalsize = 0;
-  srch.vec = &srch1[0];
-  srch.sname = NULL;
-  srch.ntot = 5;
-  srch.nused = 5;
-  srch.vald = 0;
+  fillInColumns (srch1, &lid, &flags, ski, is, laki, &srch);
   srch.where = &where;
   srch.wherestr = NULL;
   srch.context = &mymcf;
@@ -1988,7 +2016,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   int  sta;
 
   UNREFERENCED_PARAMETER(idx);
-  pflags = *(unsigned int *)(s->vec[2].valptr);
+  pflags = *(unsigned int *)(s->vec[4].valptr);
   // ????????? instead test for this in select statement ???????? GAGNON
   if ( (pflags & SCM_FLAG_NOTYET) == 0 )
     return(0);
@@ -2026,7 +2054,7 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   where.ntot = 1;
   where.nused = 1;
   where.vald = 0;
-  pflags = *(unsigned int *)(s->vec[2].valptr);
+  pflags = *(unsigned int *)(s->vec[4].valptr);
   pflags &= ~SCM_FLAG_VALID;
   pflags |= SCM_FLAG_NOTYET;
   sta = setflagsscm(conp, ((mcf *)(s->context))->ctab, &where, pflags);
@@ -2115,41 +2143,7 @@ int certificate_validity(scm *scmp, scmcon *conp)
 // search for certificates that might now be valid
 // in order to use revoke_cert_and_children the first five
 // columns of the search must be the lid, ski, flags, issuer and aki
-  srch1[0].colno = 1;
-  srch1[0].sqltype = SQL_C_ULONG;
-  srch1[0].colname = "local_id";
-  srch1[0].valptr = (void *)&lid;
-  srch1[0].valsize = sizeof(unsigned int);
-  srch1[0].avalsize = 0;
-  srch1[1].colno = 2;
-  srch1[1].sqltype = SQL_C_CHAR;
-  srch1[1].colname = "ski";
-  srch1[1].valptr = skistr;
-  srch1[1].valsize = 512;
-  srch1[1].avalsize = 0;
-  srch1[2].colno = 3;
-  srch1[2].sqltype = SQL_C_ULONG;
-  srch1[2].colname = "flags";
-  srch1[2].valptr = (void *)&pflags;
-  srch1[2].valsize = sizeof(unsigned int);
-  srch1[2].avalsize = 0;
-  srch1[3].colno = 4;
-  srch1[3].sqltype = SQL_C_CHAR;
-  srch1[3].colname = "issuer";
-  srch1[3].valptr = issstr;
-  srch1[3].valsize = 512;
-  srch1[3].avalsize = 0;
-  srch1[4].colno = 5;
-  srch1[4].sqltype = SQL_C_CHAR;
-  srch1[4].colname = "aki";
-  srch1[4].valptr = akistr;
-  srch1[4].valsize = 512;
-  srch1[4].avalsize = 0;
-  srch.vec = (&srch1[0]);
-  srch.sname = NULL;
-  srch.ntot = 5;
-  srch.nused = 5;
-  srch.vald = 0;
+  fillInColumns (srch1, &lid, &pflags, skistr, issstr, akistr, &srch);
   srch.where = NULL;
   srch.wherestr = vok;
   srch.context = (void *)&mymcf;
