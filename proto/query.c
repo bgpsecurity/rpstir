@@ -181,12 +181,12 @@ static int checkValidity (char *ski, unsigned int localID) {
     if (unknownOption == OPTION_SPECIAL)
       addcolsrchscm (&validSrch, "flags", SQL_C_ULONG, 8);
     char *now = LocalTimeToDBTime (&status);
-    sprintf (validWhereStr, "valto>\"%s\"", now);
+    sprintf (validWhereStr, "valto>\"%s\" and (flags%%%d)>=%d", now,
+	     2*SCM_FLAG_VALID, SCM_FLAG_VALID);
     free (now);
     if (unknownOption == OPTION_INVALID)
       sprintf (&validWhereStr[strlen(validWhereStr)],
-	       " and (flags %% %d) < %d",
-	       2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+	       " and (flags%%%d)<%d", 2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch1[0].valptr;
     nextSubject = (char *) validSrch1[1].valptr;
