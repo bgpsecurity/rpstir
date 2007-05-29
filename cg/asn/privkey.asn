@@ -1,0 +1,16 @@
+-- $Id$ --
+
+DEFINITIONS ::=
+
+PrivateKey ::= SEQUENCE
+  {
+  v INTEGER,
+  n INTEGER,
+  e INTEGER,
+  d INTEGER,
+  p INTEGER,
+  q INTEGER,
+  e1 INTEGER,
+  e2 INTEGER,
+  u INTEGER
+  }

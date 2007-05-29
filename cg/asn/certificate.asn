@@ -111,3 +111,7 @@ ForwardCertificationPath ::= SEQUENCE OF CrossCertificates
 
 CrossCertificates ::= SET OF Certificate
 
+RSAPubKey ::= SEQUENCE {
+    modulus INTEGER,
+    exponent INTEGER }
+

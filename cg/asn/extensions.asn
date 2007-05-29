@@ -46,7 +46,7 @@ EXPORTS
       CrlEntryExtensions, CRLEntryExtension, CRLReason,
       certificateType, merchantData, cardCertRequired, 
       tunneling, setExtensions, ExtKeyUsageSyntax,
-      AuthorityInfoAccess, SBGPIpAddrBlock, ASNumberList, RouterIdentifier; --all
+      AuthorityInfoAccess, IpAddrBlock, ASNumberList, RouterIdentifier; --all
  
 Extensions ::= SEQUENCE OF Extension
 
@@ -145,9 +145,9 @@ id-pkix-caKeyUpdateInfo         ID ::= { id-pkix-it 5 }
 id-pkix-currentCRL              ID ::= { id-pkix-it 6 }
 id-pkix-ocsp                    ID ::= { id-pkix-ad 1 }
 id-pkix-caIssuers               ID ::= { id-pkix-ad 2 }
-id-pe-sbgp-ipAddrBlock          ID ::= { id-pkix-pe 7 }
-id-pe-sbgp-autonomousSysNum     ID ::= { id-pkix-pe 8 }
-id-pe-sbgp-routerIdentifier     ID ::= { id-pkix-pe 9 }
+id-pe-ipAddrBlock               ID ::= { id-pkix-pe 7 }
+id-pe-autonomousSysNum          ID ::= { id-pkix-pe 8 }
+id-pe-routerIdentifier          ID ::= { id-pkix-pe 9 }
 
 
 ExtensionSet ::= TABLE {
@@ -173,9 +173,9 @@ ExtensionSet ::= TABLE {
     setExtensions	   id-set-setExtensions	     SetExtensions,
     authorityInfoAccess    id-pkix-authorityInfoAccess 
                                                   AuthorityInfoAccessSyntax,
-    ipAddressBlock         id-pe-sbgp-ipAddrBlock    SBGPIpAddrBlock,
-    autonomousSysNum       id-pe-sbgp-autonomousSysNum SBGPASNum,
-    routerId               id-pe-sbgp-routerIdentifier RouterIdentifier,
+    ipAddressBlock         id-pe-ipAddrBlock         IpAddrBlock,
+    autonomousSysNum       id-pe-autonomousSysNum    ASNum,
+    routerId               id-pe-routerIdentifier    RouterIdentifier,
     other                  0xFFFF                    NOTASN1 }
 
 AuthorityKeyId ::= SEQUENCE {
@@ -479,7 +479,7 @@ AccessDescription  ::=  SEQUENCE {
      accessMethod          OBJECT IDENTIFIER,
      accessLocation        GeneralName  }
 
-SBGPIpAddrBlock    ::= SEQUENCE OF IPAddressFamilyA
+IpAddrBlock    ::= SEQUENCE OF IPAddressFamilyA
 
 IPAddressFamilyA  ::= SEQUENCE {
       addressFamily       OCTET STRING (SIZE(2..3)),
@@ -501,7 +501,7 @@ IPAddressRangeA ::= SEQUENCE {
 
 IPAddressA ::= BIT STRING
 
-SBGPASNum     ::= SEQUENCE {
+ASNum     ::= SEQUENCE {
     asnum   [0] ASIdentifierChoiceA OPTIONAL,
     rdi     [1] ASIdentifierChoiceA OPTIONAL}
 

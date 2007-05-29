@@ -4,7 +4,7 @@
 # $Id$
 #
 
-all:	Algorithms.h extensions.h name.h orname.h roa.h serial_number.h certificate.h crlv2.h libasn.a
+all:	Algorithms.h extensions.h name.h orname.h privkey.h roa.h serial_number.h certificate.h crlv2.h libasn.a
 
 Algorithms.c Algorithms.h:	Algorithms.asn
 	../asn_gen/asn_gen -c Algorithms.asn
@@ -17,6 +17,9 @@ name.c name.h:	name.asn
 
 orname.c orname.h:	orname.asn
 	../asn_gen/asn_gen -c orname.asn
+
+privkey.c privkey.h:	privkey.asn
+	../asn_gen/asn_gen -c privkey.asn
 
 roa.c roa.h:	roa.asn
 	../asn_gen/asn_gen -c roa.asn
@@ -36,12 +39,13 @@ Algorithms.o:	Algorithms.c
 extensions.o:	extensions.c
 name.o:	name.c
 orname.o:	orname.c
+privkey.o:	privkey.c
 roa.o:	roa.c
 serial_number.o:	serial_number.c
 certificate.o:	certificate.c
 crlv2.o:	crlv2.c
 
-libasn.a:	Algorithms.o extensions.o name.o orname.o roa.o serial_number.o certificate.o crlv2.o
+libasn.a:	Algorithms.o extensions.o name.o orname.o privkey.o roa.o serial_number.o certificate.o crlv2.o
 	ar crv libasn.a *.o
 	ranlib libasn.a
 

@@ -22,7 +22,7 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         us(840) organization(1) us-government(101) 3 4 2 1}
 
       ContentTable ::= TABLE {
-        content id-signedData SignedData }
+        signedData id-signedData SignedData }
 
       SignedData ::= SEQUENCE { 
         version CMSVersion,
@@ -39,7 +39,7 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
 	v3 (3)
 	} (v3 | 3)
     
-      DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
+      DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF DigestAlgorithmIdentifier
 
       DigestAlgorithmIdentifier ::= AlgorithmIdentifier
 
@@ -95,14 +95,14 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         eContent [0] EXPLICIT OCTET STRING DEFINED BY eContentType } 
     
       EContentTable ::= TABLE {
-        roa routeOriginAttestation RouteOriginAttestation }
+        roa id-routeOriginAttestation RouteOriginAttestation }
     
       id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) 
    rsadsi1(113549) pkcs1(1) pkcs9(9) 16 } 
     
       id-ct OBJECT IDENTIFIER ::= { id-smime 1 } 
     
-      routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 } 
+      id-routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 } 
 
       RouteOriginAttestation ::= SEQUENCE { 
         version [0] INTEGER DEFAULT 0, 
@@ -174,3 +174,9 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
     
       SubjectKeyIdentifier ::= OCTET STRING
 
+
+    DigestInfo ::= SEQUENCE
+      {
+      digestAlgorithm OBJECT IDENTIFIER,
+      digest OCTET STRING
+      }
