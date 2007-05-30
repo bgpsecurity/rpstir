@@ -23,6 +23,48 @@
 #include "roa_utils.h"
 
 /*
+ * static variables that hold tables and function to initialize them
+ */
+static scmtab *theCertTable = NULL;
+static scmtab *theROATable = NULL;
+static scmtab *theCRLTable = NULL;
+static scmtab *theDirTable = NULL;
+static scmtab *theMetaTable = NULL;
+static scm    *theSCMP = NULL;
+
+static void initTables (scm *scmp)
+{
+  if (theCertTable == NULL) {
+    theDirTable = findtablescm(scmp, "DIRECTORY");
+    if (theDirTable == NULL) {
+      fprintf (stderr, "Error finding directory table\n");
+      exit (-1);
+    }
+    theMetaTable = findtablescm(scmp, "METADATA");
+    if (theMetaTable == NULL) {
+      fprintf (stderr, "Error finding metadata table\n");
+      exit (-1);
+    }
+    theCertTable = findtablescm (scmp, "CERTIFICATE");
+    if (theCertTable == NULL) {
+      fprintf (stderr, "Error finding certificate table\n");
+      exit (-1);
+    }
+    theCRLTable = findtablescm (scmp, "CRL");
+    if (theCRLTable == NULL) {
+      fprintf (stderr, "Error finding crl table\n");
+      exit (-1);
+    }
+    theROATable = findtablescm (scmp, "ROA");
+    if (theROATable == NULL) {
+      fprintf (stderr, "Error finding roa table\n");
+      exit (-1);
+    }
+    theSCMP = scmp;
+  }
+}
+
+/*
   Find a directory in the directory table, or create it if it is not found.
   Return the id in idp. The function returns 0 on success and a negative error
   code on failure.
@@ -38,7 +80,6 @@ int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
   scmkva    where;
   scmkva    ins;
   scmkv     two[2];
-  scmtab   *tabp;
   int sta;
 
   if ( conp == NULL || conp->connected == 0 || dirname == NULL ||
@@ -46,9 +87,7 @@ int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
     return(ERR_SCM_INVALARG);
   *idp = (unsigned int)(-1);
   conp->mystat.tabname = "DIRECTORY";
-  tabp = findtablescm(scmp, "DIRECTORY");
-  if ( tabp == NULL )
-    return(ERR_SCM_NOSUCHTAB);
+  initTables (scmp);
   two[0].column = "dir_id";
   two[0].value = NULL;
   two[1].column = "dirname";
@@ -71,7 +110,7 @@ int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
       return(sta);
     }
   srch->where = &where;
-  sta = searchorcreatescm(scmp, conp, tabp, srch, &ins, idp);
+  sta = searchorcreatescm(scmp, conp, theDirTable, srch, &ins, idp);
   freesrchscm(srch);
   return(sta);
 }
@@ -96,7 +135,6 @@ char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
   scmsrch  srch1;
   scmkva   where;
   scmkv    one;
-  scmtab *mtab;
   char   *oot;
   int     sta;
 
@@ -104,12 +142,7 @@ char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
        stap == NULL )
     return(NULL);
   conp->mystat.tabname = "METADATA";
-  mtab = findtablescm(scmp, "METADATA");
-  if ( mtab == NULL )
-    {
-      *stap = ERR_SCM_NOSUCHTAB;
-      return(NULL);
-    }
+  initTables (scmp);
   one.column = "local_id";
   one.value = "1";
   where.vec = &one;
@@ -136,7 +169,8 @@ char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
   srch.where = &where;
   srch.wherestr = NULL;
   srch.context = &blah;
-  sta = searchscm(conp, mtab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theMetaTable, &srch, NULL,
+		  ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
     {
       free((void *)oot);
@@ -186,9 +220,6 @@ static char *certf[] =
     "ski", "aki", "sia", "aia", "crldp"
   } ;
 
-// so don't have to pass scmp everywhere
-static scmtab *theCertTable = NULL;
-
 static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
 			     unsigned int *cert_id)
 {
@@ -204,6 +235,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
   int   sta;
   int   i;
 
+  initTables (scmp);
   sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
   if ( sta < 0 )
     return(sta);
@@ -257,7 +289,6 @@ static char *crlf[] =
 static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 {
   unsigned int crl_id;
-  scmtab  *ctab;
   scmkva   aone;
   scmkv    cols[CRF_NFIELDS+6];
   char *ptr;
@@ -275,14 +306,9 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
   hexs = hexify(cf->snlen*sizeof(long long), cf->snlist);
   if ( hexs == NULL )
     return(ERR_SCM_NOMEM);
-  ctab = findtablescm(scmp, "CRL");
-  if ( ctab == NULL )
-    {
-      free((void *)hexs);
-      return(ERR_SCM_NOSUCHTAB);
-    }
+  initTables (scmp);
   conp->mystat.tabname = "CRL";
-  sta = getmaxidscm(scmp, conp, "local_id", ctab, &crl_id);
+  sta = getmaxidscm(scmp, conp, "local_id", theCRLTable, &crl_id);
   if ( sta < 0 )
     {
       free((void *)hexs);
@@ -321,7 +347,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
   aone.nused = idx;
   aone.vald = 0;
 // add the CRL
-  sta = insertscm(conp, ctab, &aone);
+  sta = insertscm(conp, theCRLTable, &aone);
   free((void *)hexs);
   return(sta);
 }
@@ -331,7 +357,6 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 			    int isValid)
 {
   unsigned int roa_id;
-  scmtab  *ctab;
   scmkva   aone;
   scmkv    cols[6];
   char  flagn[24];
@@ -341,11 +366,8 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   int   idx = 0;
   int   sta;
 
-  ctab = findtablescm(scmp, "ROA");
-  if ( ctab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
   conp->mystat.tabname = "ROA";
-  sta = getmaxidscm(scmp, conp, "local_id", ctab, &roa_id);
+  sta = getmaxidscm(scmp, conp, "local_id", theROATable, &roa_id);
   if ( sta < 0 )
     return(sta);
   roa_id++;
@@ -371,7 +393,7 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   aone.nused = idx;
   aone.vald = 0;
 // add the ROA
-  sta = insertscm(conp, ctab, &aone);
+  sta = insertscm(conp, theROATable, &aone);
   return(sta);
 }
 
@@ -552,8 +574,6 @@ static scmsrch  revokedSrch1[2];
 static char revokedWhere[600];
 static unsigned long revokedBlah = 0;
 static int revokedNeedsInit = 1;
-static scmtab *theCRLTable;
-static scm *theSCMP;
 static unsigned long long *revokedSNList;
 static unsigned int *revokedSNLen;
 // static variables to pass to callback
@@ -584,7 +604,7 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
   // set up query once first time through and then just modify
   if (revokedNeedsInit) {
     revokedNeedsInit = 0;
-    theCRLTable = findtablescm (scmp, "CRL");
+    initTables (scmp);
     revokedSrch.sname = NULL;
     revokedSrch.where = NULL;
     revokedSrch.ntot = 2;
@@ -873,11 +893,11 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   id = *((unsigned int *) (s->vec[2].valptr));
   // if invalid, delete it
   if (sta < 0) {
-    deletebylid (conp, findtablescm (theSCMP, "ROA"), id);
+    deletebylid (conp, theROATable, id);
     return sta;
   }
   // otherwise, validate it
-  sta = updateValidFlags (conp, findtablescm (theSCMP, "ROA"), id,
+  sta = updateValidFlags (conp, theROATable, id,
 			  *((unsigned int *) (s->vec[3].valptr)), 1);
   return 0;
 }
@@ -944,9 +964,123 @@ static int verifyChildCert (scmcon *conp, PropData *data)
 		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   sprintf (crlWhere, "ski=\"%s\" and (flags%%%d)>=%d",
 	   data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
-  sta = searchscm (conp, findtablescm (theSCMP, "ROA"), &crlSrch, NULL,
-		   verifyChildROA, SCM_SRCH_DOVALUE_ALWAYS|SCM_SRCH_DO_JOIN);
+  sta = searchscm (conp, theROATable, &crlSrch, NULL, verifyChildROA,
+		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   return 0;
+}
+
+
+typedef struct _mcf
+{
+  int     did;
+  int     toplevel;
+} mcf;
+
+
+/*
+  This function returns the number of valid certificates that
+  have subject=IS and ski=AK, or a negative error code on failure.
+*/
+
+static int cparents(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int flags;
+  mcf *mymcf;
+
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
+  mymcf = (mcf *)(s->context);
+  flags = *(unsigned int *)(s->vec->valptr);
+  if ( (flags & SCM_FLAG_VALID) != 0 )
+    mymcf->did++;
+  return(0);
+}
+
+static int countvalidparents(scmcon *conp, char *IS, char *AK)
+{
+  unsigned int flags = 0;
+  scmsrcha srch;
+  scmsrch  srch1;
+  scmkva   where;
+  scmkv    w[2];
+  mcf      mymcf;
+  char     ws[256];
+  char    *now;
+  int      sta;
+
+  w[0].column = "ski";
+  w[0].value = AK;
+  if (IS != NULL) {
+    w[1].column = "subject";
+    w[1].value = IS;
+  }
+  where.vec = &w[0];
+  where.ntot = (IS == NULL) ? 1 : 2;
+  where.nused = (IS == NULL) ? 1 : 2;
+  where.vald = 0;
+  srch1.colno = 1;
+  srch1.sqltype = SQL_C_ULONG;
+  srch1.colname = "flags";
+  srch1.valptr = (void *)&flags;
+  srch1.valsize = sizeof(unsigned int);
+  srch1.avalsize = 0;
+  srch.vec = &srch1;
+  srch.sname = NULL;
+  srch.ntot = 1;
+  srch.nused = 1;
+  srch.vald = 0;
+  srch.where = &where;
+  now = LocalTimeToDBTime(&sta);
+  if ( now == NULL )
+    return(sta);
+  (void)sprintf(ws, "valfrom < \"%s\" AND \"%s\" < valto", now, now);
+  free((void *)now);
+  srch.wherestr = &ws[0];
+  mymcf.did = 0;
+  srch.context = (void *)&mymcf;
+  sta = searchscm(conp, theCertTable, &srch, NULL, cparents,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+  if ( sta < 0 )
+    return(sta);
+  return mymcf.did;
+}
+
+
+// static variables for efficiency, so only need to set up query once
+static scmsrcha roaSrch;
+static scmsrch  roaSrch1[2];
+static char roaWhere[600];
+static unsigned long roaBlah = 0;
+static int roaNeedsInit = 1;
+
+/*
+ * callback function for invalidateChildCert
+ */
+static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int lid, flags;
+  char   ski[512];
+
+  UNREFERENCED_PARAMETER(idx);
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  flags = *(unsigned int *)(s->vec[2].valptr);
+  (void)strcpy(ski, (char *)(s->vec[1].valptr));
+  if ( countvalidparents(conp, NULL, ski) > 0 )
+    return(0);
+  updateValidFlags (conp, theROATable, lid, flags, 0);
+  return 0;
+}
+
+/*
+ * utility function for verify_children
+ */
+static int invalidateChildCert (scmcon *conp, PropData *data)
+{
+  int sta;
+  if (countvalidparents (conp, data->issuer, data->aki) > 0)
+    return -1;
+  sta = updateValidFlags (conp, theCertTable, data->id, data->flags, 0);
+  return sta;
 }
 
 
@@ -993,10 +1127,12 @@ static int registerChild (scmcon *conp, scmsrcha *s, int idx)
 /*
  * verify the children certs of the current cert
  */
-static int verifyChildren (scmcon *conp, char *ski, char *subject)
+static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
+				int doVerify)
 {
   int isRoot = 1;
   int doIt, idx;
+  int flag = doVerify ? SCM_FLAG_NOCHAIN : SCM_FLAG_VALID;
 
   // initialize query first time through
   if (childrenNeedsInit) {
@@ -1028,12 +1164,38 @@ static int verifyChildren (scmcon *conp, char *ski, char *subject)
   while (propListSize > 0) {
     propListSize--;
     idx = propListSize;
-    doIt = isRoot || (verifyChildCert (conp, &propData[idx]) == 0);
-    if (doIt)
+    if (isRoot)
+      doIt = 1;
+    else if (doVerify)
+      doIt = verifyChildCert (conp, &propData[idx]) == 0;
+    else
+      doIt = invalidateChildCert (conp, &propData[idx]) == 0;
+    if (doIt) {
       sprintf(childrenWhere,
 	  "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
 	      propData[idx].ski, propData[idx].ski,
-	      propData[idx].subject, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+	      propData[idx].subject, 2 * flag, flag);
+      if (! doVerify) {
+	if (roaNeedsInit) {
+	  roaNeedsInit = 0;
+	  roaSrch.sname = NULL;
+	  roaSrch.where = NULL;
+	  roaSrch.ntot = 3;
+	  roaSrch.nused = 0;
+	  roaSrch.context = &roaBlah;
+	  roaSrch.wherestr = roaWhere;
+	  roaSrch.vec = roaSrch1;
+	  addcolsrchscm (&roaSrch, "local_id", SQL_C_ULONG,
+			 sizeof(unsigned int));
+	  addcolsrchscm (&roaSrch, "ski", SQL_C_CHAR, 128);
+	  addcolsrchscm (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
+	}
+	sprintf (roaWhere, "ski=\"%s\" and (flags%%%d)>=%d",
+		 propData[idx].ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+	searchscm(conp, theROATable, &roaSrch, NULL, revoke_roa,
+		  SCM_SRCH_DOVALUE_ALWAYS);
+      }
+    }
     if (! isRoot) {
       free (propData[idx].filename);
       free (propData[idx].dirname);
@@ -1068,8 +1230,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int   sta = 0;
   int   chainOK;
 
-  if (theCertTable == NULL)
-    theCertTable = findtablescm (scmp, "CERTIFICATE");
+  initTables (scmp);
   cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
   if ( cf == NULL || x == NULL )
     {
@@ -1114,11 +1275,8 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     }
 // try to validate children of cert
   if (sta == 0) {
-    if (theCRLTable == NULL)
-      theCRLTable = findtablescm (scmp, "CRL");
-    if (theSCMP == NULL) theSCMP = scmp;
-    sta = verifyChildren (conp, cf->fields[CF_FIELD_SKI],
-			  cf->fields[CF_FIELD_SUBJECT]);
+    sta = verifyOrNotChildren (conp, cf->fields[CF_FIELD_SKI],
+			       cf->fields[CF_FIELD_SUBJECT], 1);
   }
   freecf(cf);
   // if change verify_cert so that not pushing on stack, change this
@@ -1437,12 +1595,7 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
 			  sizeof(unsigned long long));
   if ( snlist == NULL )
     return(ERR_SCM_NOMEM);
-  tabp = findtablescm(scmp, "CRL");
-  if ( tabp == NULL )
-    {
-      free(snlist);
-      return(ERR_SCM_NOSUCHTAB);
-    }
+  initTables (scmp);
 // set up a search for issuer, snlen, sninuse, flags, snlist and aki
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_CHAR;
@@ -1505,172 +1658,6 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   return(sta);
 }
 
-typedef struct _mcf
-{
-  scmtab *ctab;
-  scmtab *rtab;
-  int     did;
-  int     toplevel;
-} mcf;
-
-static int rparents(scmcon *conp, scmsrcha *s, int idx)
-{
-  unsigned int flags;
-  mcf *mymcf;
-
-  UNREFERENCED_PARAMETER(conp);
-  UNREFERENCED_PARAMETER(idx);
-  mymcf = (mcf *)(s->context);
-  flags = *(unsigned int *)(s->vec->valptr);
-  if ( (flags & SCM_FLAG_VALID) != 0 && (flags & SCM_FLAG_CA) == 0 )
-    mymcf->did++;
-  return(0);
-}
-
-/*
-  This function returns the number of valid certificates that
-  have and ski=SK and do not have the CA bit set, or a negative error
-  code on failure.
-*/
-
-static int countvalidroaparents(scmcon *conp, scmsrcha *s, char *SK)
-{
-  unsigned int flags = 0;
-  scmsrcha srch;
-  scmsrch  srch1;
-  scmkva   where;
-  scmkv    w;
-  mcf     *mymcf;
-  int      cnt2;
-  int      cnt;
-  int      sta;
-
-  mymcf = (mcf *)(s->context);
-  w.column = "ski";
-  w.value = SK;
-  where.vec = &w;
-  where.ntot = 1;
-  where.nused = 1;
-  where.vald = 0;
-  srch1.colno = 1;
-  srch1.sqltype = SQL_C_ULONG;
-  srch1.colname = "flags";
-  srch1.valptr = (void *)&flags;
-  srch1.valsize = sizeof(unsigned int);
-  srch1.avalsize = 0;
-  srch.vec = &srch1;
-  srch.sname = NULL;
-  srch.ntot = 1;
-  srch.nused = 1;
-  srch.vald = 0;
-  srch.where = &where;
-  cnt = mymcf->did;
-  mymcf->did = 0;
-  srch.context = (void *)mymcf;
-  sta = searchscm(conp, mymcf->ctab, &srch, NULL, rparents,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-  if ( sta < 0 )
-    return(sta);
-  cnt2 = mymcf->did;
-  mymcf->did = cnt;
-  return(cnt2);
-}
-
-/*
-  Revoke a ROA. Check to see if it has been reparented first, however.
-*/
-
-static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
-{
-  unsigned int lid;
-  mcf   *mcfp;
-  char   ski[512];
-  int    sta;
-
-  UNREFERENCED_PARAMETER(idx);
-  mcfp = (mcf *)(s->context);
-  lid = *(unsigned int *)(s->vec[0].valptr);
-  (void)strcpy(ski, (char *)(s->vec[1].valptr));
-  if ( countvalidroaparents(conp, s, ski) > 0 )
-    return(0);
-  sta = deletebylid(conp, mcfp->rtab, lid);
-  if ( sta == 0 )
-    mcfp->did++;
-  return(sta);
-}
-
-static int cparents(scmcon *conp, scmsrcha *s, int idx)
-{
-  unsigned int flags;
-  mcf *mymcf;
-
-  UNREFERENCED_PARAMETER(conp);
-  UNREFERENCED_PARAMETER(idx);
-  mymcf = (mcf *)(s->context);
-  flags = *(unsigned int *)(s->vec->valptr);
-  if ( (flags & SCM_FLAG_VALID) != 0 )
-    mymcf->did++;
-  return(0);
-}
-
-/*
-  This function returns the number of valid certificates that
-  have subject=IS and ski=AK, or a negative error code on failure.
-*/
-
-static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
-{
-  unsigned int flags = 0;
-  scmsrcha srch;
-  scmsrch  srch1;
-  scmkva   where;
-  scmkv    w[2];
-  mcf     *mymcf;
-  char     ws[256];
-  char    *now;
-  int      cnt2;
-  int      cnt;
-  int      sta;
-
-  mymcf = (mcf *)(s->context);
-  w[0].column = "subject";
-  w[0].value = IS;
-  w[1].column = "ski";
-  w[1].value = AK;
-  where.vec = &w[0];
-  where.ntot = 2;
-  where.nused = 2;
-  where.vald = 0;
-  srch1.colno = 1;
-  srch1.sqltype = SQL_C_ULONG;
-  srch1.colname = "flags";
-  srch1.valptr = (void *)&flags;
-  srch1.valsize = sizeof(unsigned int);
-  srch1.avalsize = 0;
-  srch.vec = &srch1;
-  srch.sname = NULL;
-  srch.ntot = 1;
-  srch.nused = 1;
-  srch.vald = 0;
-  srch.where = &where;
-  now = LocalTimeToDBTime(&sta);
-  if ( now == NULL )
-    return(sta);
-  (void)sprintf(ws, "valfrom < \"%s\" AND \"%s\" < valto", now, now);
-  free((void *)now);
-  srch.wherestr = &ws[0];
-  cnt = mymcf->did;
-  mymcf->did = 0;
-  srch.context = (void *)mymcf;
-  sta = searchscm(conp, mymcf->ctab, &srch, NULL, cparents,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-  if ( sta < 0 )
-    return(sta);
-  cnt2 = mymcf->did;
-  mymcf->did = cnt;
-  return(cnt2);
-}
-
 /*
   This is the model revocation function for certificates. It handles
   the case where a certificate is expired or revoked. Given that this
@@ -1689,80 +1676,20 @@ static int countvalidparents(scmcon *conp, scmsrcha *s, char *IS, char *AK)
 static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 {
   unsigned int lid;
-  scmkva  cwhere;
-  scmkva *ow;
-  scmkv   cone;
-  mcf    *mcfp;
-  char    s1[256];
-  char    a1[512];
-  char    is[512];
-  char    wherestr[100];
   int     sta;
 
   UNREFERENCED_PARAMETER(idx);
-  mcfp = (mcf *)(s->context);
   lid = *(unsigned int *)(s->vec[0].valptr);
-  printf ("revoke_cert_and_children %d\n", lid); // ******* temp *********
-// if the cert has flags marked for deletion, or if this is a toplevel
-// invocation, then actually delete the cert
-  if ( mcfp->toplevel > 0 )
-    {
-      mcfp->toplevel = 0;
-      printf ("deleting %d\n", lid); // ******* temp *********
-      sta = deletebylid(conp, mcfp->ctab, lid);
-    }
-// if the cert has not been reparented, then invalidate it, otherwise return
-  else
-    {
-      (void)strcpy(is, (char *)(s->vec[2].valptr));
-      (void)strcpy(a1, (char *)(s->vec[3].valptr));
-      if ( countvalidparents(conp, s, is, a1) > 0 )
-	return(0);
-      printf ("invalidating %d\n", lid); // ******* temp *********
-      sta = updateValidFlags (conp, mcfp->ctab, lid,
-			      *(unsigned int *)(s->vec[4].valptr), 0);
-    }
-  (void)strcpy(s1, (char *)(s->vec[1].valptr));
-  if ( sta < 0 )
-    return(sta);
-  mcfp->did++;
-// next, revoke all certificate children of this certificate
-  cone.column = "aki";
-  cone.value = s1;
-  cwhere.vec = &cone;
-  cwhere.ntot = 1;
-  cwhere.nused = 1;
-  cwhere.vald = 0;
-  ow = s->where;
-  s->where = &cwhere;
-  s->wherestr = wherestr;
-  sprintf (wherestr, "(flags%%%d)>=%d", 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
-  sta = searchscm(conp, mcfp->ctab, s, NULL, revoke_cert_and_children,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-  if ( sta == ERR_SCM_NODATA )
-    sta = 0;			/* ok if no such children */
-  if ( sta < 0 )
-    {
-      s->where = ow;
-      return(sta);
-    }
-// finally, revoke all ROA children of this certificate
-  cone.column = "ski";
-//  (void)printf("Searching for ROAs with ski=%s\n", s->where->vec[0].value);
-  sta = searchscm(conp, mcfp->rtab, s, NULL, revoke_roa,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-  s->where = ow;
-  if ( sta == ERR_SCM_NODATA )
-    sta = 0;
-  return(sta);
+  sta = deletebylid(conp, theCertTable, lid);
+  return verifyOrNotChildren (conp, (char *) s->vec[1].valptr,
+			      (char *) s->vec[2].valptr, 0);
 }
 
 /*
  * Fill in the columns for a search with revoke_cert_and_children as callback
  */
-static void fillInColumns (scmsrch *srch1, unsigned int *lid,
-			   unsigned int *flags, char *ski, char *issuer,
-			   char *aki, scmsrcha *srch)
+static void fillInColumns (scmsrch *srch1, unsigned int *lid, char *ski,
+			   char *subject, scmsrcha *srch)
 {
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_ULONG;
@@ -1778,26 +1705,14 @@ static void fillInColumns (scmsrch *srch1, unsigned int *lid,
   srch1[1].avalsize = 0;
   srch1[2].colno = 3;
   srch1[2].sqltype = SQL_C_CHAR;
-  srch1[2].colname = "issuer";
-  srch1[2].valptr = (void *)issuer;
+  srch1[2].colname = "subject";
+  srch1[2].valptr = (void *)subject;
   srch1[2].valsize = 512;
   srch1[2].avalsize = 0;
-  srch1[3].colno = 4;
-  srch1[3].sqltype = SQL_C_CHAR;
-  srch1[3].colname = "aki";
-  srch1[3].valptr = (void *)aki;
-  srch1[3].valsize = 512;
-  srch1[3].avalsize = 0;
-  srch1[4].colno = 5;
-  srch1[4].sqltype = SQL_C_ULONG;
-  srch1[4].colname = "flags";
-  srch1[4].valptr = (void *)flags;
-  srch1[4].valsize = sizeof(unsigned int);
-  srch1[4].avalsize = 0;
   srch->vec = srch1;
   srch->sname = NULL;
-  srch->ntot = 5;
-  srch->nused = 5;
+  srch->ntot = 3;
+  srch->nused = 3;
   srch->vald = 0;
 }
 
@@ -1822,13 +1737,11 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   char did[24];
   int  typ;
   int  sta;
-  unsigned int lid, flags;
+  unsigned int lid;
   char     ski[512];
-  char     aki[512];
-  char     is[512];
+  char     subject[512];
   mcf      mymcf;
 
-  printf ("deleting %s\n", outfull); // ******* temp ********
   if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
        outfile == NULL || outdir == NULL || outfull == NULL )
     return(ERR_SCM_INVALARG);
@@ -1837,9 +1750,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( typ < 0 )
     return(typ);
 // find the directory
-  thetab = findtablescm(scmp, "DIRECTORY");
-  if ( thetab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
+  initTables (scmp);
   one.column = "dirname";
   one.value = outdir;
   where.vec = &one;
@@ -1860,7 +1771,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   srch.where = &where;
   srch.wherestr = NULL;
   srch.context = &blah;
-  sta = searchscm(conp, thetab, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theDirTable, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
     return(sta);
 
@@ -1884,12 +1795,10 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN+OT_PEM_OFFSET:
-      thetab = findtablescm(scmp, "CERTIFICATE");
+      thetab = theCertTable;
       mymcf.did = 0;
       mymcf.toplevel = 1;
-      mymcf.ctab = thetab;
-      mymcf.rtab = findtablescm(scmp, "ROA");
-      fillInColumns (srch2, &lid, &flags, ski, is, aki, &srch);
+      fillInColumns (srch2, &lid, ski, subject, &srch);
       srch.where = &dwhere;
       srch.context = &mymcf;
       sta = searchscm(conp, thetab, &srch, NULL, revoke_cert_and_children,
@@ -1897,11 +1806,11 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     case OT_CRL:
     case OT_CRL_PEM:
-      thetab = findtablescm(scmp, "CRL");
+      thetab = theCRLTable;
       break;
     case OT_ROA:
     case OT_ROA_PEM:
-      thetab = findtablescm(scmp, "ROA");
+      thetab = theROATable;
       break;
     default:
       sta = ERR_SCM_INTERNAL;
@@ -1930,15 +1839,14 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		unsigned long long sn)
 {
-  unsigned int lid, flags;
+  unsigned int lid;
   scmsrcha srch;
   scmsrch  srch1[5];
   scmkva   where;
   scmkv    w[3];
   mcf      mymcf;
   char     ski[512];
-  char     laki[512];
-  char     is[512];
+  char     subject[512];
   char     sno[24];
   int      sta;
 
@@ -1947,12 +1855,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   if ( issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 ||
        sn == 0 )
     return(0);
-  mymcf.ctab = findtablescm(scmp, "CERTIFICATE");
-  if ( mymcf.ctab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
-  mymcf.rtab = findtablescm(scmp, "ROA");
-  if ( mymcf.rtab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
+  initTables (scmp);
   mymcf.did = 0;
   mymcf.toplevel = 1;
   w[0].column = "issuer";
@@ -1966,11 +1869,11 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   where.ntot = 3;
   where.nused = 3;
   where.vald = 0;
-  fillInColumns (srch1, &lid, &flags, ski, is, laki, &srch);
+  fillInColumns (srch1, &lid, ski, subject, &srch);
   srch.where = &where;
   srch.wherestr = NULL;
   srch.context = &mymcf;
-  sta = searchscm(conp, mymcf.ctab, &srch, NULL, revoke_cert_and_children,
+  sta = searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   if ( sta < 0 )
     return(sta);
@@ -2029,7 +1932,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   where.vald = 0;
   pflags &= ~SCM_FLAG_NOTYET;
   pflags |= SCM_FLAG_VALID;
-  sta = setflagsscm(conp, ((mcf *)(s->context))->ctab, &where, pflags);
+  sta = setflagsscm(conp, theCertTable, &where, pflags);
   return(sta);
 }
 
@@ -2057,7 +1960,7 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   pflags = *(unsigned int *)(s->vec[4].valptr);
   pflags &= ~SCM_FLAG_VALID;
   pflags |= SCM_FLAG_NOTYET;
-  sta = setflagsscm(conp, ((mcf *)(s->context))->ctab, &where, pflags);
+  sta = setflagsscm(conp, theCertTable, &where, pflags);
   return(sta);
 }
 
@@ -2094,16 +1997,12 @@ static int certtooold(scmcon *conp, scmsrcha *s, int idx)
 
 int certificate_validity(scm *scmp, scmcon *conp)
 {
-  unsigned int pflags;
   unsigned int lid;
   scmsrcha srch;
   scmsrch  srch1[5];
-  scmtab  *ctab;
-  scmtab  *rtab;
   mcf   mymcf;
   char  skistr[512];
-  char  akistr[512];
-  char  issstr[512];
+  char  subjstr[512];
   char *vok;
   char *vf;
   char *vt;
@@ -2113,16 +2012,7 @@ int certificate_validity(scm *scmp, scmcon *conp)
 
   if ( scmp == NULL || conp == NULL || conp->connected == 0 )
     return(ERR_SCM_INVALARG);
-  ctab = findtablescm(scmp, "CERTIFICATE");
-  if ( ctab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
-  rtab = findtablescm(scmp, "ROA");
-  if ( rtab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
-  mymcf.ctab = ctab;
-  mymcf.rtab = rtab;
-  mymcf.did = 0;
-  mymcf.toplevel = 0;
+  initTables (scmp);
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
     return(sta);
@@ -2143,11 +2033,14 @@ int certificate_validity(scm *scmp, scmcon *conp)
 // search for certificates that might now be valid
 // in order to use revoke_cert_and_children the first five
 // columns of the search must be the lid, ski, flags, issuer and aki
-  fillInColumns (srch1, &lid, &pflags, skistr, issstr, akistr, &srch);
+  fillInColumns (srch1, &lid, skistr, subjstr, &srch);
   srch.where = NULL;
   srch.wherestr = vok;
+  mymcf.did = 0;
+  mymcf.toplevel = 0;
   srch.context = (void *)&mymcf;
-  sta = searchscm(conp, ctab, &srch, NULL, certmaybeok, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theCertTable, &srch, NULL,
+		  certmaybeok, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)vok);
   if ( sta < 0 && sta != ERR_SCM_NODATA )
     retsta = sta;
@@ -2155,13 +2048,15 @@ int certificate_validity(scm *scmp, scmcon *conp)
   srch.wherestr = vf;
   // ?????????????? no need to call this here; instead ??????????
   // ?????????????? check when first put in ???????????? GAGNON
-  sta = searchscm(conp, ctab, &srch, NULL, certtoonew, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theCertTable, &srch, NULL,
+		  certtoonew, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)vf);
   if ( sta < 0 && sta != ERR_SCM_NODATA && retsta == 0 )
     retsta = sta;
 // search for certificates that are too old
   srch.wherestr = vt;
-  sta = searchscm(conp, ctab, &srch, NULL, certtooold, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theCertTable, &srch, NULL,
+		  certtooold, SCM_SRCH_DOVALUE_ALWAYS);
   free((void *)vt);
   if ( sta < 0 && sta != ERR_SCM_NODATA && retsta == 0 )
     retsta = sta;
@@ -2174,7 +2069,6 @@ int certificate_validity(scm *scmp, scmcon *conp)
 
 int ranlast(scm *scmp, scmcon *conp, char *whichcli)
 {
-  scmtab *mtab;
   char   *now;
   char    what;
   int     sta = 0;
@@ -2185,14 +2079,12 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
   what = toupper(whichcli[0]);
   if ( what != 'R' && what != 'Q' && what != 'C' && what != 'G' )
     return(ERR_SCM_INVALARG);
-  mtab = findtablescm(scmp, "METADATA");
-  if ( mtab == NULL )
-    return(ERR_SCM_NOSUCHTAB);
+  initTables (scmp);
   conp->mystat.tabname = "METADATA";
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
     return(sta);
-  sta = updateranlastscm(conp, mtab, what, now);
+  sta = updateranlastscm(conp, theMetaTable, what, now);
   free((void *)now);
   return(sta);
 }
@@ -2204,7 +2096,7 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
 
 void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 {
-  scmp = scmp;
+  initTables (scmp);
   return parent_cert (conp, ski, NULL, stap, fn);
 }
 
