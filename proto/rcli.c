@@ -26,6 +26,46 @@ static char *tdir = NULL;   // top level dir of the repository
 static int   tdirlen = 0;   // length of tdir
 
 /*
+ * save state in case operations leave db in bad state
+ */
+static int saveState (scmcon *conp, scm *scmp)
+{
+  int   i;
+  int   sta = 0;
+  char  *name, stmt[100];
+
+  for (i = 0; sta == 0 && i < scmp->ntables; i++) {
+    name = scmp->tables[i].tabname;
+    sprintf (stmt, "select * from %s into outfile 'backup_%s';", name, name);
+    sta = statementscm (conp, stmt);
+    if (sta != 0)
+      printf ("Could not back up table %s to file backup_%s", name, name);
+  }
+  return sta;
+}
+
+/*
+ * restore state when operations leave db in bad state
+ */
+static int restoreState (scmcon *conp, scm *scmp)
+{
+  int   i;
+  int   sta = 0;
+  char  *name, stmt[100];
+
+  for (i = 0; sta == 0 && i < scmp->ntables; i++) {
+    name = scmp->tables[i].tabname;
+    sprintf (stmt, "delete from %s;", name);
+    sta = statementscm (conp, stmt);
+    sprintf (stmt, "load data infile 'backup_%s' into table %s;", name, name);
+    sta = statementscm (conp, stmt);
+    if (sta != 0)
+      printf ("Could not restore to table %s from file backup_%s", name, name);
+  }
+  return sta;
+}
+
+/*
   Perform the delete operation. Return 0 on success and a negative
   error code on failure.
 */
@@ -461,6 +501,10 @@ static int probe(int s)
    W (warning). Sent when a warning occurs. VALUE is warning text. Optional
                 message.
 
+   S (save state). Sent when it makes sense to save the state
+
+   V (restore state). Sent when it makes sense to restore the state
+
    I (information). Sent to convey arbitrary information.  VALUE is the
                     informational text. Optional message.
 */
@@ -562,6 +606,14 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'i':
 	case 'I':		/* information */
 	  (void)fprintf(logfile, "AUR message: %s\n", valu);
+	  break;
+	case 's':
+	case 'S':		/* save */
+	  (void)saveState(conp, scmp);
+	  break;
+	case 'v':
+	case 'V':		/* restore */
+	  (void)restoreState(conp, scmp);
 	  break;
 	case 0:
 	  break;
