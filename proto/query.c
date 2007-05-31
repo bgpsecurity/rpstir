@@ -50,6 +50,7 @@ typedef struct _QueryField    /* field to display or filter on */
 
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
 int displayEntry (scmsrcha *s, int idx1, char* returnStr);
+int displaySNList (scmsrcha *s, int idx1, char* returnStr);
 
 /* the set of all query fields */
 static QueryField fields[] = {
@@ -64,11 +65,11 @@ static QueryField fields[] = {
    NULL, "the directory in the repository where the data is stored"},
   {"ski", 0, 1, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "SKI", 0, NULL,
    "subject key identifier"},
-  {"aki", 0, 0, 0, 1, SQL_C_CHAR, 128, NULL, NULL, "AKI", 0, NULL,
+  {"aki", 0, 0, 1, 1, SQL_C_CHAR, 128, NULL, NULL, "AKI", 0, NULL,
    "authority key identifier"},
   {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS#", 0, NULL,
    "autonomous system number"},
-  {"issuer", 0, 0, 0, 1, SQL_C_CHAR, 512, NULL, NULL, "Issuer", 0,
+  {"issuer", 0, 0, 1, 1, SQL_C_CHAR, 512, NULL, NULL, "Issuer", 0,
    NULL, "system that issued the cert/crl"},
   {"valfrom", 0, 0, 0, 1, SQL_C_CHAR, 32, NULL, NULL, "Valid From", 0,
    NULL, "date/time from which the cert is valid"},
@@ -79,7 +80,12 @@ static QueryField fields[] = {
   {"next_upd", 0, 0, 1, 0, SQL_C_CHAR, 32, NULL, NULL, "Next Update", 0,
    NULL, "next update time of the CRL"},
   {"crlno", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "CRL#", 0,
-   NULL, "CRL number"}
+   NULL, "CRL number"},
+  {"snlen", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "SNLength", 0, NULL, "number of serial numbers in list"},
+  {"snlist", 1, 0, 1, 0, SQL_C_BINARY, 16000000, NULL, NULL, NULL,
+   0, NULL, NULL},
+  {"serial_nums", 1, 0, 1, 0, -1, 0, "snlen", "snlist", "Serial#s", 0,
+   displaySNList, "list of serials numbers"}
 };
 
 /* look up particular query field in the list of all possible fields */
@@ -97,7 +103,23 @@ static QueryField *findField (char *name)
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
 {
   sprintf (returnStr, "%s/%s", (char *) s->vec[idx1].valptr,
-           (char *) s->vec[idx1+1].valptr);
+	   (char *) s->vec[idx1+1].valptr);
+  return 2;
+}
+
+/* create space-separated string of serial numbers */
+int displaySNList (scmsrcha *s, int idx1, char* returnStr)
+{
+  unsigned long long *snlist;
+  unsigned int i, snlen;
+
+  snlen = *((unsigned int *) (s->vec[idx1].valptr));
+  snlist = (unsigned long long *) s->vec[idx1+1].valptr;
+  returnStr[0] = 0;
+  for (i = 0; i < snlen; i++) {
+    sprintf (&returnStr[strlen(returnStr)], "%s%llu",
+	     (i == 0) ? "" : " ", snlist[i]);
+  }
   return 2;
 }
 
@@ -295,7 +317,8 @@ static int doQuery (char **displays, char **filters)
       name = strtok (filters[i], ".");
       strcat (whereStr, name);
       field = findField (name);
-      checkErr (field == NULL, "Unknown field name: %s\n", name);
+      checkErr (field == NULL || field->description == NULL,
+		"Unknown field name: %s\n", name);
       checkErr (field->justDisplay, "Field only for display: %s\n", name);
       name = strtok (NULL, ".");
       if (strcasecmp (name, "eq") == 0) {
@@ -330,7 +353,8 @@ static int doQuery (char **displays, char **filters)
   srch.context = &blah;
   for (i = 0; displays[i] != NULL; i++) {
     field = findField (displays[i]);
-    checkErr (field == NULL, "Unknown field name: %s\n", displays[i]);
+    checkErr (field == NULL || field->description == NULL,
+	      "Unknown field name: %s\n", displays[i]);
     globalFields[i] = field;
     name = (field->dbColumn == NULL) ? displays[i] : field->dbColumn;
     while (name != NULL) {
@@ -376,6 +400,7 @@ static int listOptions()
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < size; i++) {
+    if (fields[i].description == NULL) continue;
     if ((fields[i].forROAs && isROA) || (fields[i].forCRLs && isCRL) ||
         (fields[i].forCerts && isCert)) {
       printf ("  %s: %s\n", fields[i].name, fields[i].description);
