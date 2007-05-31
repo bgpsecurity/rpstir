@@ -5,7 +5,7 @@
 #
 
 # --- macros
-CC=gcc
+#CC=gcc
 CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers
 TEST_OBJECTS= roa_test.o
 ASN_DIR= ../cg/asn
@@ -24,7 +24,7 @@ b64:	b64.o
 	$(CC) -o $@ b64.o
 
 #roa_test: roa_test.o roa_serialize.o Makefile
-#	gcc -o roa_test -g -L/usr/local/ssl/lib roa_test.o roa_validate.o roa.o
+#	$(CC) -o roa_test -g -L/usr/local/ssl/lib roa_test.o roa_validate.o roa.o
 
 roa_test:   libroa.a $(TEST_OBJECTS) 
 	$(CC) -o $@ $(TEST_OBJECTS) $(LOCAL_LIBS) $(SSL_LIBS)

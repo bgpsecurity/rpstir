@@ -13,7 +13,7 @@ IFLAGS =-I/usr/local/ssl/include
 XLIBS =-ldl -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
-CC = gcc $(CFLAGS)
+CC += $(CFLAGS)
 LD = $(CC)      # linker; defaults to stripped executables
 o = o           # object extension
 ALL_OBJS= verify_cert.o stubs.o stub_main.o usage.o

@@ -19,7 +19,7 @@ IFLAGS =
 XLIBS =
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
-CC = gcc $(CFLAGS)
+CC += $(CFLAGS)
 LD = $(CC)      # linker; defaults to stripped executables
 o = o           # object extension
 ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o

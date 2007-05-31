@@ -12,11 +12,11 @@ MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L..
 
 # OBSOLETE test program
 sqq:	sqq.o Makefile
-	gcc -o sqq -g -L/usr/local/lib sqq.o -lmyodbc3 -lrt
+	$(CC) -o sqq -g -L/usr/local/lib sqq.o -lmyodbc3 -lrt
 
 # OBSOLETE test program
 docert:	docert.o Makefile
-	gcc -o docert -g -L/usr/local/ssl/lib docert.o -lssl -lcrypto -ldl
+	$(CC) -o docert -g -L/usr/local/ssl/lib docert.o -lssl -lcrypto -ldl
 
 initscm.o:	scm.h scmmain.h
 diru.o:	diru.h err.h
@@ -36,22 +36,22 @@ libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
 	ranlib libapki.a
 
 rcli:	rcli.o libapki.a Makefile
-	gcc -o rcli -g rcli.o $(MY_LIBS)
+	$(CC) -o rcli -g rcli.o $(MY_LIBS)
 
 query: query.o libapki.a Makefile
-	gcc -o query -g query.o $(MY_LIBS)
+	$(CC) -o query -g query.o $(MY_LIBS)
 
 chaser: chaser.o libapki.a Makefile
-	gcc -o chaser -g chaser.o $(MY_LIBS)
+	$(CC) -o chaser -g chaser.o $(MY_LIBS)
 
 garbage: garbage.o libapki.a Makefile
-	gcc -o garbage -g garbage.o $(MY_LIBS)
+	$(CC) -o garbage -g garbage.o $(MY_LIBS)
 
 makeROA: makeROA.o libapki.a Makefile
-	gcc -o makeROA -g makeROA.o $(MY_LIBS)
+	$(CC) -o makeROA -g makeROA.o $(MY_LIBS)
 
 testmem:	testmem.o libapki.a Makefile
-	gcc -o testmem -g testmem.o $(MY_LIBS)
+	$(CC) -o testmem -g testmem.o $(MY_LIBS)
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a
