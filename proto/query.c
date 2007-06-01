@@ -81,6 +81,8 @@ static QueryField fields[] = {
    NULL, "next update time of the CRL"},
   {"crlno", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "CRL#", 0,
    NULL, "CRL number"},
+  {"sn", 0, 0, 0, 1, SQL_C_ULONG, 8, NULL, NULL, "Serial#", 0,
+   NULL, "serial number"},
   {"snlen", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "SNLength", 0, NULL, "number of serial numbers in list"},
   {"snlist", 1, 0, 1, 0, SQL_C_BINARY, 16000000, NULL, NULL, NULL,
    0, NULL, NULL},

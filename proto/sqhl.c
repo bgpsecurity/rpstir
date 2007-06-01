@@ -1689,7 +1689,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
  * Fill in the columns for a search with revoke_cert_and_children as callback
  */
 static void fillInColumns (scmsrch *srch1, unsigned int *lid, char *ski,
-			   char *subject, scmsrcha *srch)
+			   char *subject, unsigned int *flags, scmsrcha *srch)
 {
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_ULONG;
@@ -1709,10 +1709,16 @@ static void fillInColumns (scmsrch *srch1, unsigned int *lid, char *ski,
   srch1[2].valptr = (void *)subject;
   srch1[2].valsize = 512;
   srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_ULONG;
+  srch1[3].colname = "flags";
+  srch1[3].valptr = (void *)flags;
+  srch1[3].valsize = sizeof(unsigned int);
+  srch1[3].avalsize = 0;
   srch->vec = srch1;
   srch->sname = NULL;
-  srch->ntot = 3;
-  srch->nused = 3;
+  srch->ntot = 4;
+  srch->nused = 4;
   srch->vald = 0;
 }
 
@@ -1737,7 +1743,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   char did[24];
   int  typ;
   int  sta;
-  unsigned int lid;
+  unsigned int lid, flags;
   char     ski[512];
   char     subject[512];
   mcf      mymcf;
@@ -1798,7 +1804,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       thetab = theCertTable;
       mymcf.did = 0;
       mymcf.toplevel = 1;
-      fillInColumns (srch2, &lid, ski, subject, &srch);
+      fillInColumns (srch2, &lid, ski, subject, &flags, &srch);
       srch.where = &dwhere;
       srch.context = &mymcf;
       sta = searchscm(conp, thetab, &srch, NULL, revoke_cert_and_children,
@@ -1839,7 +1845,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		unsigned long long sn)
 {
-  unsigned int lid;
+  unsigned int lid, flags;
   scmsrcha srch;
   scmsrch  srch1[5];
   scmkva   where;
@@ -1869,7 +1875,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   where.ntot = 3;
   where.nused = 3;
   where.vald = 0;
-  fillInColumns (srch1, &lid, ski, subject, &srch);
+  fillInColumns (srch1, &lid, ski, subject, &flags, &srch);
   srch.where = &where;
   srch.wherestr = NULL;
   srch.context = &mymcf;
@@ -1919,7 +1925,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   int  sta;
 
   UNREFERENCED_PARAMETER(idx);
-  pflags = *(unsigned int *)(s->vec[4].valptr);
+  pflags = *(unsigned int *)(s->vec[3].valptr);
   // ????????? instead test for this in select statement ???????? GAGNON
   if ( (pflags & SCM_FLAG_NOTYET) == 0 )
     return(0);
@@ -1957,7 +1963,7 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   where.ntot = 1;
   where.nused = 1;
   where.vald = 0;
-  pflags = *(unsigned int *)(s->vec[4].valptr);
+  pflags = *(unsigned int *)(s->vec[3].valptr);
   pflags &= ~SCM_FLAG_VALID;
   pflags |= SCM_FLAG_NOTYET;
   sta = setflagsscm(conp, theCertTable, &where, pflags);
@@ -1997,7 +2003,7 @@ static int certtooold(scmcon *conp, scmsrcha *s, int idx)
 
 int certificate_validity(scm *scmp, scmcon *conp)
 {
-  unsigned int lid;
+  unsigned int lid, flags;
   scmsrcha srch;
   scmsrch  srch1[5];
   mcf   mymcf;
@@ -2033,7 +2039,7 @@ int certificate_validity(scm *scmp, scmcon *conp)
 // search for certificates that might now be valid
 // in order to use revoke_cert_and_children the first five
 // columns of the search must be the lid, ski, flags, issuer and aki
-  fillInColumns (srch1, &lid, skistr, subjstr, &srch);
+  fillInColumns (srch1, &lid, skistr, subjstr, &flags, &srch);
   srch.where = NULL;
   srch.wherestr = vok;
   mymcf.did = 0;

@@ -42,7 +42,7 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
   s = s;
   char msg[600];
   if (cnt > 0) return 0;   // exists another crl that is current
-  sprintf (msg, "update %s set flags = flags + %d where ski=\"%s\" and issuer=\"%s\" and (flags %% %d) < %d",
+  sprintf (msg, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\" and (flags %% %d) < %d",
            certTable->tabname, SCM_FLAG_UNKNOWN, theAKI, theIssuer,
            2 * SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
   return statementscm (conp, msg);
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
   sprintf (msg, "(flags %% %d) >= %d", 2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "issuer", SQL_C_CHAR, 512);
-  addcolsrchscm (&srch, "ski", SQL_C_CHAR, 128);
+  addcolsrchscm (&srch, "aki", SQL_C_CHAR, 128);
   addcolsrchscm (&srch, "local_id", SQL_C_ULONG, 8);
   countHandler = handleIfCurrent;
   status = searchscm (connect, certTable, &srch, NULL, countCurrentCRLs,
