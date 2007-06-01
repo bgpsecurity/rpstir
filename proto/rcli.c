@@ -830,8 +830,9 @@ int main(int argc, char **argv)
       realconp = connectscm(scmp->dsn, errmsg, 1024);
       if ( realconp == NULL )
 	{
-	  (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
-			scmp->dsn, errmsg);
+	  if ( do_delete == 0 )
+	    (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
+			  scmp->dsn, errmsg);
 	  freescm(scmp);
 	  if ( tdir != NULL )
 	    free((void *)tdir);
