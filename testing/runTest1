@@ -2,6 +2,7 @@
 # checks: validating certs, both in order and out of order
 # checks: revoking certs based on crl: both in order and out of order
 $APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/testAdd -d $APKI_ROOT/trunk/testing/REPOSITORY
+sleep 1
 echo "Should be 5 entries (no validity check):"
 $APKI_ROOT/trunk/proto/query -t cert -d ski
 echo "Should be 5 entries (validity check):"
