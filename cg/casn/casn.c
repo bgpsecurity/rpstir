@@ -1,4 +1,8 @@
 /* $Id$ */
+/* May 31 2007 856U  */
+/* May 31 2007 GARDINER added test for empty explicitly tagged item */
+/* Apr 17 2007 855U  */
+/* Apr 17 2007 GARDINER added injection test to fill_upward */
 /* Apr 11 2007 853U  */
 /* Apr 11 2007 GARDINER corrected _readvsize() not to trim off 1st byte of BIT STRING unless defined-by */
 /* Apr  6 2007 852U  */
@@ -117,7 +121,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 853P";
+char casn_sfcsid[] = "@(#)casn.c 856P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -412,6 +416,7 @@ struct casn *inject_casn(struct casn *casnp, int num)
 
     if (_clear_error(casnp) < 0) return (struct casn *)0;
     if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_NOT_OF_ERR;
+    else if ((err = _fill_upward(casnp, 0)) != 0) err = -err;
     else
 	{
         for (lcasnp = fcasnp, icount = 0; lcasnp->ptr;
@@ -861,8 +866,16 @@ int _fill_upward(struct casn *casnp, int val)
     for ( ; casnp && !(casnp->flags & val); casnp = ucasnp)
 	{
         ucasnp = _go_up(casnp);
-        if (ucasnp && (ucasnp->flags & ASN_OF_FLAG) && !casnp->ptr)
-           return -(ASN_OF_BOUNDS_ERR);
+        if (ucasnp)
+          {   // writing to terminal OF?
+          if ((ucasnp->flags & ASN_OF_FLAG) && !casnp->ptr)
+            return -(ASN_OF_BOUNDS_ERR);
+              // writing or injecting to unchosen definee?
+          if ((ucasnp->type & ASN_CHOICE) == ASN_CHOICE &&
+            (ucasnp->flags & ASN_DEFINED_FLAG) > 0 &&
+            (casnp->flags & ASN_CHOSEN_FLAG) == 0)
+            return -(ASN_NO_DEF_ERR);
+          }
 	casnp->flags |= val;
 	}
     return 0;
@@ -1022,7 +1035,8 @@ Procedure:
         Calculate the length
         Count up the bytes processed so far
         IF have overshot or will with this item, return error
-4.	IF at an explicitly tagged item
+4.	IF at an explicitly tagged item that's empty, return error
+	IF at an explicitly tagged item
 	    Check that the next byte matches the type
 	    IF have indefinite length, return error
 	    Calculate the length
@@ -1127,7 +1141,7 @@ Procedure:
         else if (curr_casnp->type == ASN_ANY) curr_casnp->tag = tag;
 	else if (curr_casnp->tag != tag)
             {       // note that DEFAULTs are OPTIONAL, too
-    	    if (!(curr_casnp->flags & ASN_OPTIONAL_FLAG) ||
+    	    if ((curr_casnp->flags & ASN_OPTIONAL_FLAG) == 0 ||
 	        !(curr_casnp = _skip_casn(curr_casnp, 1)))
                     return _casn_obj_err(tcasnp, ASN_MATCH_ERR) - did - 1;
 	    sav_casnp = curr_casnp;
@@ -1144,6 +1158,8 @@ Procedure:
             return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
                                                             // step 4
 	explicit_extra = 0;
+	if ((flags & ASN_EXPLICIT_FLAG) && lth == 0)
+            return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
 	if ((flags & ASN_EXPLICIT_FLAG) ||
             (curr_casnp->type == ASN_CHOICE && tag != curr_casnp->type))
 	    {

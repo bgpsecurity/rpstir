@@ -92,6 +92,7 @@ AlgorithmTable ::= TABLE {
     dsa                            id-dsa                              DSAParameters OPTIONAL,
     dsa-with-sha1                  id-dsa-with-sha1                    NULL OPTIONAL,
     rsadsi-SHA-1WithRSAEncryption  id-sha-1WithRSAEncryption           NULL,
+    rsadsi-SHA256-WithRSAEncryption id-sha-256WithRSAEncryption        NULL,
     unknown                         0xFFFF                             ANY OPTIONAL
 }
 
