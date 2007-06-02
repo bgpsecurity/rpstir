@@ -1,4 +1,6 @@
 /* $Id$ */
+/* May 23 2006 840U  */
+/* May 23 2006 GARDINER additions for APKI */
 /* May 24 2001 577U  */
 /* May 24 2001 GARDINER made main an int */
 /* Apr 10 2000 528U  */
@@ -42,15 +44,14 @@ Cambridge, Ma. 02140
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <string.h>
-
 #include "asn.h"
 
 #define BSIZE 512
 
-char dump_sfcsid[] = "@(#)dump.c 577P";
+char dump_sfcsid[] = "@(#)dump.c 840P";
 
 extern int asn1dump(unsigned char *, int, FILE *);
 
@@ -76,13 +77,13 @@ char ibuf[BSIZE],
     *hexit(char *, unsigned char);
 
 long getd ();
-int is_numeric();
+int aflag, is_numeric();
 
 int main (int argc, char **argv)
 {
 char *b, *c, **p;
 char *d, *e, *ee;
-int did, fd = 0, offset, lth, asn1, count, little;
+int did, fd = 0, offset, lth, count, little;
 long start, pos, left;
 union
     {
@@ -93,12 +94,16 @@ end_test.x = 1;
 little = (end_test.y[0] > 0);
 for (c = obuf; c < &obuf[66]; *c++ = ' ');
 *c++ = '\n';
-for (p = &argv[1], asn1 = pos = left = 0; *p; p++)
+for (p = &argv[1], pos = left = 0; *p; p++)
     {
     b = &(c = *p)[1];
     if (*c == '-')
         {
-	if (*b == 'a') asn1 = 1;
+	if (*b == 'a' || *b == 'A')
+            {
+            if (aflag) fatal(1, c);
+            aflag = (*b == 'a')? 1: -1;
+            }
 	else if (*b == 'l') little = 1;
 	else if (*b == 'b') little = 0;
 	else pos = -getd (&b,0);
@@ -108,7 +113,7 @@ for (p = &argv[1], asn1 = pos = left = 0; *p; p++)
     else fname = c;
     }
 if (fname && (fd = open(fname, O_RDONLY)) < 0) fatal(2, (char *)0);
-if (asn1) dump_asn1(fd, pos);
+if (aflag) dump_asn1(fd, pos);
 if (pos < 0) start = lseek (fd,0L,2);
 else start = 0;
 lseek (fd,((start + pos) & ~(BSIZE - 1)),0);

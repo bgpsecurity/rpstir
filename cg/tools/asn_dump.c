@@ -1,4 +1,6 @@
 /* $Id$ */
+/* May 23 2006 840U  */
+/* May 23 2006 GARDINER additions for APKI */
 /* May 24 2001 577U  */
 /* May 24 2001 GARDINER added UTF8String */
 /* Apr 10 2000 528U  */
@@ -43,15 +45,15 @@ COPYRIGHT 1995 BBN Systems and Technologies, A Division of Bolt Beranek and
 Cambridge, Ma. 02140
 617-873-4000
 *****************************************************************************/
-char asn_dump_sfcsid[] = "@(#)asn_dump.c 577P";
+char asn_dump_sfcsid[] = "@(#)asn_dump.c 840P";
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <string.h>
-
+#include <strings.h>
 #include "asn.h"
 
 extern void fatal(int, char *);
+extern int aflag;
 
 static int putform (FILE *, unsigned char *, struct asn *, int, int);
 
@@ -159,7 +161,9 @@ int j, k, offset, lth = asnp->lth, width;
 unsigned char *b, *e, delim[2], locbuf[128], *d;
 long val;
 width = 80;
- strcpy((char *)delim, "'");
+//strcpy((char *)delim, "'");
+ delim[0] = (unsigned char)'\'';
+ delim[1] = 0;
 if (mode == 1)
     {
     j = k = 0;
@@ -167,6 +171,7 @@ if (mode == 1)
 	{
 	if (*b == '\'') j++;
 	else if (*b == '"') k++;
+	else if (aflag  < 0 && *b == '\n') mode = 3;
 	}
     if (b < e || (j && k)) mode = 3;
     else if (j) *delim = '"';
@@ -191,20 +196,37 @@ else if (mode == 2)
         sprintf((char *)d, ".%ld", val);
 	while (*d) d++;
         }
+    if (aflag < 0) fprintf(outf, "(%d) ", (d - locbuf));
     fprintf(outf, (char *)locbuf);
     return row;
     }
 for (offset = (asnp->level + 1) * 4; lth; )
     {
-      if (mode == 1) fprintf(outf, (char *)delim);
-    else fprintf(outf, "0x");
     if ((k = (width - 9 - offset) / mode) < 16) k = 16;
     for (j = 1; k >>= 1; j <<= 1);
     if (j > lth) j = lth;
+    if (aflag < 0)
+        {
+        if (lth <= 4 &&
+            (*asnp->stringp == ASN_INTEGER || *asnp->stringp == ASN_ENUMERATED))
+            {
+            if ((*c & 0x80)) val = -1;
+            else val = 0;
+            for (e = &c[lth]; c < e; val <<= 8, val += *c++);
+            fprintf(outf, "%ld", val);
+            break;
+            }
+        if (mode == 1) k = j + 2;
+        else k = 2 * (j + 1);
+        fprintf(outf, "(%d) ", k);
+        }
+
+    if (mode == 1) fprintf(outf, (char *)delim);
+    else fprintf(outf, "0x");
     for (e = &(b = c)[j], lth -= j; c < e;
         fprintf(outf, ((mode > 1)? "%02X": "%c"), *c++));
     if (mode == 1) fprintf(outf, (char *)delim);
-    else
+    else if (aflag >= 0)
         {
 	for (fprintf(outf, " /* "); b < e; b++)
 	    {

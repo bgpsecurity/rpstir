@@ -1,4 +1,6 @@
 /* $Id$ */
+/* May 15 2006 838U  */
+/* May 15 2006 GARDINER corrected for newer gcc */
 /* Dec  5 2003 731U  */
 /* Dec  5 2003 GARDINER added "oid" as preferred nickname */
 /* Oct  1 2001 591U  */
@@ -30,12 +32,10 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdarg.h>
 #include <string.h>
-
+#include <stdarg.h>
 #include "asn.h"
-
-char asn_sfcsid[] = "@(#)asn.c 731P";
+char asn_sfcsid[] = "@(#)asn.c 838P";
 
 uchar asn_typ(uchar **), *asn_set(struct asn *);
 

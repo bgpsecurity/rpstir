@@ -1,4 +1,14 @@
 /* $Id$ */
+/* Aug  2 2006 845U  */
+/* Aug  2 2006 GARDINER corrected sprintf format */
+/* Jun  1 2006 842U  */
+/* Jun  1 2006 GARDINER added capability for backslashed quote symbols" */
+/* May 24 2006 841U  */
+/* May 24 2006 GARDINER fixed bug for Linux compiler */
+/* May 23 2006 840U  */
+/* May 23 2006 GARDINER additions for APKI */
+/* May 15 2006 838U  */
+/* May 15 2006 GARDINER corrected for newer gcc */
 /* Oct  1 2001 591U  */
 /* Oct  1 2001 GARDINER added stuff for "biw" and "ocw" */
 /* May 24 2001 577U  */
@@ -47,7 +57,7 @@
 #include "asn.h"
 #include "md2.h"
 
-char rr_sfcsid[] = "@(#)rr.c 591p";
+char rr_sfcsid[] = "@(#)rr.c 845p";
 
 void dump_asn(), fatal(int, char *), hash_asn(), putasn(uchar),
     putout(uchar);
@@ -62,8 +72,8 @@ char buf[512], *hash_start,
 	"Can't open %s\n",			/* 4 */
 	"Area %s overflowed\n",			/* 5 */
 	},
-    *cvt_obj_id(char *, char *),
-    *do_it (char *, int, int), *getbuf (char *);
+    *cvt_int(char *), *cvt_obj_id(char *, char *), *cvt_out(char *),
+    *do_it (char *, int, int), *getbuf (char *, int);
 
 struct varfld
     {
@@ -72,7 +82,8 @@ struct varfld
                            is not present, lth is zero */
     }varfld;
 
-int bytes, dflag, req, linenum, adj_asn(int), set_asn_lth(uchar *, uchar *),
+int bytes, dflag, aflag, req, linenum, adj_asn(int),
+    set_asn_lth(uchar *, uchar *),
     wdcmp(char *, char *), write_out(char *, int),
     write_varfld(struct varfld *);
 
@@ -109,6 +120,7 @@ for (p = &argv[1]; p < &argv[argc]; p++)
         {
 	if (*(++c) == 'r') req = 1;
 	else if (*c == 'd') dflag = 1;
+	else if (*c == 'a') aflag = 1;
 	else fatal (1,*p);
 	}
     }
@@ -204,7 +216,7 @@ Outputs: Standard output is result
    IF -r switch is set, put length in proper field
 $b) */
 
-char *b, *lmarg, quote, *cvt_out (), dot_buf[80], *edot;
+char *b, *lmarg, quote, dot_buf[80], *edot;
 int val, start = -1;
 char comment[4]; /* contains up to 3 chars, 2 entry & 1 exit */
 ushort lth;
@@ -218,7 +230,7 @@ for (lmarg = (char *)0; 1; ) 			            /* step 1 */
     if (!*c)
         {
 	if (comment[0] && comment[0] == comment[1]) memset(comment, 0, 3);
-	for (c = getbuf (buf); c && *c && *c <= ' '; c++);
+	for (c = getbuf (buf, sizeof(buf)); c && *c && *c <= ' '; c++);
 	if (!lmarg) lmarg = (c > &buf[min])? c: &buf[min];
 	if (!c || c < lmarg || (c == lmarg && start >= 0))
 	    {
@@ -237,6 +249,11 @@ for (lmarg = (char *)0; 1; ) 			            /* step 1 */
 	}
     if (!comment[0])                                       /* step 2 */
         {
+	if (aflag && *c == '(')
+            {
+            while (*c != ')') c++; // skip lth field
+            for (c++; *c == ' '; c++); // go to next char
+            }
         if (*c >= '0' && *c <= '9')
 	    {
 	    for (b = c; *b >= '0' && *b <= '9'; b++);
@@ -244,7 +261,10 @@ for (lmarg = (char *)0; 1; ) 			            /* step 1 */
 	    else while (*c > ' ') *edot++ = *c++;
 	    }
         else if (*c == '"' || *c == '\'')
-	    for (quote = *c++; *c != quote; putout (*c++));
+	    for (quote = *c++; *c != quote; putout (*c++))
+                {
+                if (*c == '\\') c++;
+                }
         else if (*c == '{')
             {
             if (!genarea.area)
@@ -324,7 +344,11 @@ for (lmarg = (char *)0; 1; ) 			            /* step 1 */
 		    if (!c) break;
 		    continue;
 		    }
-		else while (*c > ' ') c++;
+		else
+                    {
+                    while (*c > ' ') c++;
+                    if (tpnmp->typ == ASN_INTEGER) c = cvt_int(c);
+                    }
 		}
 	    }
 	}
@@ -336,7 +360,7 @@ for (lmarg = (char *)0; 1; ) 			            /* step 1 */
 	}
     else if (!comment[2] && comment[1] != '/' && *c == comment[1])
         comment[2] = *c;
-    else if (*c == comment[0]) memset(comment, 0, 3);
+    else if (comment[2] && *c == comment[0]) memset(comment, 0, 3);
     else comment[2] = 0;
     if (*c) c++;
     }
@@ -360,10 +384,34 @@ int adj_asn(int start)
 {
 putasn ((char)0);
 putasn ((char)0);
+asn_area.next -= 2;
  asn_area.next += set_asn_lth ((uchar *)&asn_area.area[start],
-			       (uchar *)&asn_area.area[asn_area.next -= 2]);
+			       (uchar *)&asn_area.area[asn_area.next]);
 return -1;
 }
+
+char *cvt_int(char *c)
+    {
+    long val;
+    char *b, sign, valbuf[32];
+
+    while (*c && *c <= ' ') c++;
+    if (*c == '0' && c[1] == 'x') return cvt_out(c);
+    if (*c == '-') sign = *c++;
+    else sign = 0;
+    memset(valbuf, 0, 32);
+    for (val = 0; *c >= '0' && *c <= '9'; val = (val * 10) + *c++ - '0');
+    sprintf(valbuf, "0x0x%02lX", val);
+    if ((!sign && (valbuf[4] >= '8')) ||
+        (sign && !(valbuf[4] >= '8')))
+        {
+        b = valbuf;
+        valbuf[3] = '0';
+        }
+    else b = &valbuf[2];
+    b = cvt_out(b);
+    return c;
+    }
 
 char *cvt_obj_id(char *from, char *to)
 {
@@ -393,43 +441,44 @@ char *cvt_out (char *c)
 /* $b(+
 Function: Converts string pointed to by c and puts it in right place
 
-IF string is hex
-    FOR each byte pair
-        Convert byte pairs to a byte
-    	Write the byte to output
-    IF there's an odd byte, error
-ELSE
-    Convert as a decimal number
-    Write it as one byte to output
+IF string is decimal, convert it to a hex string
+See if there is an odd number of nibbles
+IF so. put out the first nibble as a number
+FOR each byte pair
+    Convert byte pairs to a byte
+    Write the byte to output
 $b) */
 uchar val;
-char *b;
-if (*c == '0' && (c[1] | 0x20) == 'x')
+char *a, *b, valbuf[8];
+long lval;
+
+if (*c != '0' && (c[1] | 0x20) != 'x')
     {
-    for (c += 2, b = c; (*b >= '0' && *b <= '9') || ((*b | 0x20) >= 'a' &&
-        (*b | 0x20) <= 'f'); b++);
-    if ((((int)(c - b)) & 1))
-        {
-        if (*c > '9') val = (*c++ | 0x20) - 0x27 - '0';
-    	else val = *c++ - '0';
-        putout (val);
-	}
-    while (c < b)
-        {
-        if (*c > '9') val = (*c++ | 0x20) - 0x27 - '0';
-	else val = *c++ - '0';
-        val <<= 4;
-        if (*c > '9') val += (*c++ | 0x20) - 0x27 - '0';
-        else val += *c++ - '0';
-        putout (val);
-        }
+    memset(valbuf, 0, sizeof(valbuf));
+    for (lval = 0; *c >= '0' && *c <= '9'; lval = (lval * 10) + *c++ - '0');
+    a = c;
+    c = valbuf;
+    sprintf(valbuf, "0x%lX", lval);
     }
-else 
+else a = (char *)0;
+for (c += 2, b = c; (*b >= '0' && *b <= '9') || ((*b | 0x20) >= 'a' &&
+    (*b | 0x20) <= 'f'); b++);
+if ((((int)(c - b)) & 1))
     {
-    for (val = 0; *c >= '0' && *c <= '9'; val = (val * 10) + *c++ - '0');
+    if (*c > '9') val = (*c++ | 0x20) - 0x27 - '0';
+    else val = *c++ - '0';
     putout (val);
     }
-return c;
+while (c < b)
+    {
+    if (*c > '9') val = (*c++ | 0x20) - 0x27 - '0';
+    else val = *c++ - '0';
+    val <<= 4;
+    if (*c > '9') val += (*c++ | 0x20) - 0x27 - '0';
+    else val += *c++ - '0';
+    putout (val);
+    }
+return (a)? a: c;
 }
 
 void dump_asn()
@@ -449,14 +498,15 @@ fprintf (stderr,msgs[err],param);
 exit (err);
 }
 
-char *getbuf(char *to)
+char *getbuf(char *to, int lth)
 {
 char *b, *c, *e;
 int col;
-//if (!gets (to)) return (char *)0;
-if (!fgets(to, 512, stdin)) return (char *)0;
+if (!fgets (to, lth, stdin)) return (char *)0;
 linenum++;
-for (b = to; *b; b++);
+for (b = to; b < &to[lth] && *b && *b != '\n'; b++);
+if (b >= &to[lth]) fatal(5, "input buffer");
+if (*b == '\n') *b = 0;
 e = b;
 if (!dflag)
     {

@@ -4,16 +4,35 @@
 # $Id$
 #
 
-all:	dump rr
+all:	dump rr bin_to_six six_to_bin loadkey genkey whatsfcs
 
-CFLAGS=	-Wall
+CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../asn -I../asn_gen -I../casn -Wall
+ASN_DIR= ../asn
+CASN_DIR= ../casn
+LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
+LIBS= -L/usr/local/ssl/lib -lcrypto -lcl -ldl
 
 dump:	dump.o asn.o asn_dump.o util.o asn.h
-	$(CC) -o dump -g dump.o asn.o asn_dump.o util.o
+	$(CC) $(CFLAGS) -o dump -g dump.o asn.o asn_dump.o util.o
 
 rr:	rr.o md2.o asn.o asn.h
-	$(CC) -o rr -g rr.o md2.o asn.o
+	$(CC) $(CFLAGS) -o rr -g rr.o md2.o asn.o
+
+bin_to_six:	bin_to_six.o prencode.o 
+	$(CC) $(CFLAGS) -o bin_to_six bin_to_six.o prencode.o 
+
+six_to_bin:	six_to_bin.o prencode.o 
+	$(CC) $(CFLAGS) -o six_to_bin six_to_bin.o prencode.o 
+
+whatsfcs:	whatsfcs.o prencode.o 
+	$(CC) $(CFLAGS) -o whatsfcs whatsfcs.o
+
+loadkey:	loadkey.o
+	$(CC) $(CFLAGS) -o $@ loadkey.o $(LOCAL_LIBS) $(LIBS)
+
+genkey:	genkey.o
+	$(CC) $(CFLAGS) -o $@ genkey.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
-	rm -f dump rr *.o
+	rm -f dump rr bin_to_six six_to_bin whatsfcs loadkey genkey *.o
 
