@@ -176,9 +176,9 @@ int main(int argc, char **argv)
   (void) setbuf (stdout, NULL);
 
   // parse the command-line flags
-  while ((ch = getopt(argc, argv, "c:p:d:h")) != -1) {
+  while ((ch = getopt(argc, argv, "f:p:d:h")) != -1) {
     switch (ch) {
-      case 'c':   /* configuration file */
+      case 'f':   /* configuration file */
 	origFile = strdup (optarg);
 	break;
       case 'p':   /* port number */
