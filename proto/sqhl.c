@@ -958,7 +958,7 @@ static int verifyChildCert (scmcon *conp, PropData *data)
     addcolsrchscm (&crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
   }
   sprintf (crlWhere, "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	   data->ski, data->subject,
+	   data->aki, data->issuer,
 	   2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
   sta = searchscm (conp, theCRLTable, &crlSrch, NULL, verifyChildCRL,
 		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
@@ -1080,7 +1080,25 @@ static int invalidateChildCert (scmcon *conp, PropData *data)
   if (countvalidparents (conp, data->issuer, data->aki) > 0)
     return -1;
   sta = updateValidFlags (conp, theCertTable, data->id, data->flags, 0);
-  return sta;
+  if (sta != 0) return sta;
+  if (roaNeedsInit) {
+    roaNeedsInit = 0;
+    roaSrch.sname = NULL;
+    roaSrch.where = NULL;
+    roaSrch.ntot = 3;
+    roaSrch.nused = 0;
+    roaSrch.context = &roaBlah;
+    roaSrch.wherestr = roaWhere;
+    roaSrch.vec = roaSrch1;
+    addcolsrchscm (&roaSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int));
+    addcolsrchscm (&roaSrch, "ski", SQL_C_CHAR, 128);
+    addcolsrchscm (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
+  }
+  sprintf (roaWhere, "ski=\"%s\" and (flags%%%d)>=%d",
+	   data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  searchscm(conp, theROATable, &roaSrch, NULL, revoke_roa,
+	    SCM_SRCH_DOVALUE_ALWAYS);
+  return 0;
 }
 
 
@@ -1090,37 +1108,46 @@ static scmsrch  childrenSrch1[8];
 static char childrenWhere[600];
 static unsigned long childrenBlah = 0;
 static int childrenNeedsInit = 1;
-// static variables to pass back from callback and hold data
-static int propListSize = 0;
-static int propListMax = 200;
-static PropData *propData = NULL;
 
+// static variables and structure to pass back from callback and hold data
+typedef struct _PropDataList {
+  int size;
+  int maxSize;
+  PropData *data;
+} PropDataList;
+PropDataList vPropData = {0, 200, NULL};
+PropDataList iPropData = {0, 200, NULL};
+PropDataList *currPropData = NULL;
+PropDataList *prevPropData = NULL;
 
 /*
  * callback function for verify_children
  */
 static int registerChild (scmcon *conp, scmsrcha *s, int idx)
 {
-  PropData *propData2;
+  PropData *propData;
 
   s = s; conp = conp; idx = idx;
   // push onto stack of children to propagate
-  if (propListSize == propListMax) {
-    propListMax *= 2;
-    propData2 = (PropData *) calloc (propListMax, sizeof (PropData));
-    memcpy (propData2, propData, propListSize * sizeof (PropData));
-    free (propData);
-    propData = propData2;
+  if (currPropData->size == currPropData->maxSize) {
+    currPropData->maxSize *= 2;
+    propData = (PropData *) calloc (currPropData->maxSize, sizeof (PropData));
+    memcpy (propData, currPropData->data,
+	    currPropData->size * sizeof (PropData));
+    free (currPropData->data);
+    currPropData->data = propData;
+  } else {
+    propData = currPropData->data;
   }
-  propData[propListSize].dirname = strdup (s->vec[0].valptr);
-  propData[propListSize].filename = strdup (s->vec[1].valptr);
-  propData[propListSize].flags = *((unsigned int *) (s->vec[2].valptr));
-  propData[propListSize].ski = strdup (s->vec[3].valptr);
-  propData[propListSize].subject = strdup (s->vec[4].valptr);
-  propData[propListSize].id = *((unsigned int *) (s->vec[5].valptr));
-  propData[propListSize].aki = strdup (s->vec[6].valptr);
-  propData[propListSize].issuer = strdup (s->vec[7].valptr);
-  propListSize++;
+  propData[currPropData->size].dirname = strdup (s->vec[0].valptr);
+  propData[currPropData->size].filename = strdup (s->vec[1].valptr);
+  propData[currPropData->size].flags = *((unsigned int *) (s->vec[2].valptr));
+  propData[currPropData->size].ski = strdup (s->vec[3].valptr);
+  propData[currPropData->size].subject = strdup (s->vec[4].valptr);
+  propData[currPropData->size].id = *((unsigned int *) (s->vec[5].valptr));
+  propData[currPropData->size].aki = strdup (s->vec[6].valptr);
+  propData[currPropData->size].issuer = strdup (s->vec[7].valptr);
+  currPropData->size++;
   return 0;
 }
 
@@ -1133,6 +1160,9 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
   int isRoot = 1;
   int doIt, idx;
   int flag = doVerify ? SCM_FLAG_NOCHAIN : SCM_FLAG_VALID;
+
+  prevPropData = currPropData;
+  currPropData = doVerify ? &vPropData : &iPropData;
 
   // initialize query first time through
   if (childrenNeedsInit) {
@@ -1156,59 +1186,41 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
   }
 
   // iterate through all children, verifying
-  if (propData == NULL)
-    propData = (PropData *)calloc(propListMax, sizeof(PropData));
-  propData[0].ski = ski;
-  propData[0].subject = subject;
-  propListSize = 1;
-  while (propListSize > 0) {
-    propListSize--;
-    idx = propListSize;
+  if (currPropData->data == NULL)
+    currPropData->data =
+      (PropData *)calloc(currPropData->maxSize, sizeof(PropData));
+  currPropData->data[0].ski = ski;
+  currPropData->data[0].subject = subject;
+  currPropData->size = 1;
+  while (currPropData->size > 0) {
+    currPropData->size--;
+    idx = currPropData->size;
     if (isRoot)
       doIt = 1;
     else if (doVerify)
-      doIt = verifyChildCert (conp, &propData[idx]) == 0;
+      doIt = verifyChildCert (conp, &currPropData->data[idx]) == 0;
     else
-      doIt = invalidateChildCert (conp, &propData[idx]) == 0;
+      doIt = invalidateChildCert (conp, &currPropData->data[idx]) == 0;
     if (doIt) {
       sprintf(childrenWhere,
 	  "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	      propData[idx].ski, propData[idx].ski,
-	      propData[idx].subject, 2 * flag, flag);
-      if (! doVerify) {
-	if (roaNeedsInit) {
-	  roaNeedsInit = 0;
-	  roaSrch.sname = NULL;
-	  roaSrch.where = NULL;
-	  roaSrch.ntot = 3;
-	  roaSrch.nused = 0;
-	  roaSrch.context = &roaBlah;
-	  roaSrch.wherestr = roaWhere;
-	  roaSrch.vec = roaSrch1;
-	  addcolsrchscm (&roaSrch, "local_id", SQL_C_ULONG,
-			 sizeof(unsigned int));
-	  addcolsrchscm (&roaSrch, "ski", SQL_C_CHAR, 128);
-	  addcolsrchscm (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
-	}
-	sprintf (roaWhere, "ski=\"%s\" and (flags%%%d)>=%d",
-		 propData[idx].ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
-	searchscm(conp, theROATable, &roaSrch, NULL, revoke_roa,
-		  SCM_SRCH_DOVALUE_ALWAYS);
-      }
+	      currPropData->data[idx].ski, currPropData->data[idx].ski,
+	      currPropData->data[idx].subject, 2 * flag, flag);
     }
     if (! isRoot) {
-      free (propData[idx].filename);
-      free (propData[idx].dirname);
-      free (propData[idx].ski);
-      free (propData[idx].subject);
-      free (propData[idx].aki);
-      free (propData[idx].issuer);
+      free (currPropData->data[idx].filename);
+      free (currPropData->data[idx].dirname);
+      free (currPropData->data[idx].ski);
+      free (currPropData->data[idx].subject);
+      free (currPropData->data[idx].aki);
+      free (currPropData->data[idx].issuer);
     }
     if (doIt)
       searchscm (conp, theCertTable, &childrenSrch, NULL, registerChild,
 		 SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
     isRoot = 0;
   }
+  currPropData = prevPropData;
   return 0;
 }
 
