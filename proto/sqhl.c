@@ -1292,7 +1292,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   }
   freecf(cf);
   // if change verify_cert so that not pushing on stack, change this
-  if (! (cf->flags | SCM_FLAG_TRUSTED)) {
+  if (! (cf->flags & SCM_FLAG_TRUSTED)) {
     X509_free(x);
   }
   return(sta);
