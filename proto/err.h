@@ -90,8 +90,15 @@
 #define ERR_SCM_NOIPAS      -78         /* missing IP or AS# resources */
 #define ERR_SCM_DUPIP       -79         /* duplicate IP resource extension */
 #define ERR_SCM_DUPAS       -80         /* duplicate AS2 resource extension */
+#define ERR_SCM_INVALSIG    -81         /* invalid signature */
+#define ERR_SCM_HSSIZE      -82         /* error sizing hashable string */
+#define ERR_SCM_HSREAD      -83         /* error reading hashable string */
+#define ERR_SCM_BADAF       -84         /* bad address family */
+#define ERR_SCM_BADDA       -85         /* bad digest algorithm */
+#define ERR_SCM_BADCT       -86         /* bad content type */
+#define ERR_SCM_BADATTR     -87         /* bad attributes */
 
-#define ERR_SCM_MAXERR      -80
+#define ERR_SCM_MAXERR      -87
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

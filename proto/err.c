@@ -96,6 +96,14 @@ static char *errs[] =
     "Missing RFC3779 ext",          /* ERR_SCM_NOIPAS */
     "Duplicate IP resources",       /* ERR_SCM_DUPIP */
     "Duplicate AS# resources",      /* ERR_SCM_DUPAS -80 */
+
+    "Invalid signature",            /* ERR_SCM_INVALSIG */
+    "Hashable string size error",   /* ERR_SCM_HSSIZE */
+    "Hashable string read error",   /* ERR_SCM_HSREAD */
+    "Bad address family",           /* ERR_SCM_BADAF */
+    "Bad digest algorithm",         /* ERR_SCM_BADDA */
+    "Bad Content type",             /* ERR_SCM_BADCT */
+    "Bad attributes",               /* ERR_SCM_BADATTR */
   } ;
 
 char *err2string(int err)
