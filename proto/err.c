@@ -104,6 +104,7 @@ static char *errs[] =
     "Bad digest algorithm",         /* ERR_SCM_BADDA */
     "Bad Content type",             /* ERR_SCM_BADCT */
     "Bad attributes",               /* ERR_SCM_BADATTR */
+    "Invalid addr family",          /* ERR_SCM_INVALFAM */
   } ;
 
 char *err2string(int err)

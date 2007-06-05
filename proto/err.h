@@ -97,8 +97,9 @@
 #define ERR_SCM_BADDA       -85         /* bad digest algorithm */
 #define ERR_SCM_BADCT       -86         /* bad content type */
 #define ERR_SCM_BADATTR     -87         /* bad attributes */
+#define ERR_SCM_INVALFAM    -88         /* invalid address family */
 
-#define ERR_SCM_MAXERR      -87
+#define ERR_SCM_MAXERR      -88
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
