@@ -12,24 +12,30 @@ ASN_DIR= ../cg/asn
 CASN_DIR= ../cg/casn
 PROTO_DIR= ../proto
 LOCAL_LIBS= -L. -L$(PROTO_DIR) -L$(ASN_DIR) -L$(CASN_DIR) -lapki -lroa -lasn -lcasn
-SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -L/usr/local/lib -lmyodbc3 -lrt
+SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -L/usr/local/lib -lmyodbc3 -lcl -ldl -lrt
 AR= ar
 RANLIB= ranlib
 
 # --- targets
-all:    libroa.a roa_test
+all:    libroa.a roa_test test_val2 test_check_sig
 
 b64:	b64.o
-	$(CC) $(CFLAGS) -c b64.c
-	$(CC) -o $@ b64.o
+	$(CC) $(CFLAGS) $(CFLAGS) -c b64.c
+	$(CC) $(CFLAGS) -o $@ b64.o
 
 #roa_test: roa_test.o roa_serialize.o Makefile
-#	$(CC) -o roa_test -g -L/usr/local/ssl/lib roa_test.o roa_validate.o roa.o
+#	$(CC) $(CFLAGS) -o roa_test -g -L/usr/local/ssl/lib roa_test.o roa_validate.o roa.o
 
 roa_test:   libroa.a $(TEST_OBJECTS) 
-	$(CC) -o $@ $(TEST_OBJECTS) $(LOCAL_LIBS) $(SSL_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(TEST_OBJECTS) $(LOCAL_LIBS) $(SSL_LIBS)
 
 roa_test.o: roa_test.c libroa.a Makefile
+
+test_check_sig: test_check_sig.o
+	$(CC) $(CFLAGS) -o $@ test_check_sig.o $(LOCAL_LIBS) $(SSL_LIBS)
+
+test_val2: test_val2.o roa_validate.o ../cg/casn/libcasn.a
+	$(CC) $(CFLAGS) -o $@ test_val2.o $(LOCAL_LIBS) $(SSL_LIBS)
 
 roa_validate.o: roa_validate.c roa_utils.h Makefile
 roa_create.o: roa_create.c roa_utils.h Makefile
@@ -41,7 +47,7 @@ libroa.a:	roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h
 	ranlib libroa.a
 
 clean:
-	rm -f roa_test *.a *.o
+	rm -f roa_test test_val2 test_check_sig *.a *.o
 
 clean2:
 	rm -f *.pem *.der *.txt

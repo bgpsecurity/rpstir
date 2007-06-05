@@ -145,7 +145,7 @@ int main(int argc, char** argv)
       roaFree(roa2);
       return(sta);
     }
-  sta = roaValidate2(roa2, cert, blob);
+  sta = roaValidate2(roa2, blob);
   free((void *)blob);
   X509_free(cert);
   if ( sta < 0 )
