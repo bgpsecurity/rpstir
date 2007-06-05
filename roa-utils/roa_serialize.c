@@ -3,6 +3,7 @@
 */
 
 #include "roa_utils.h"
+#include "cryptlib.h"
 
 // Warning - MAX_LINE hardcoded as a constant in confInterpret;
 //  if this changes, that must as well
@@ -18,6 +19,7 @@ enum configKeys {
   IPADDRMIN,
   IPADDRMAX,
   CERTNAME,
+  KEYFILE,
   CONFIG_KEY_MAX
 };
 
@@ -30,7 +32,8 @@ const char *configKeyStrings[] = {
   "ipaddr",
   "ipaddrmin",
   "ipaddrmax",
-  "certname"
+  "certname",
+  "keyfile"
 };
 
 enum forcingInstruction {
@@ -57,8 +60,8 @@ static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$
 
 
 // Idiotic START/END ROA armor
-static const char roaStart[]="------ BEGIN ROA ------\r\n";
-static const char roaEnd[]="------ END ROA ------\r\n";
+static const char roaStart[]="-----BEGIN ROA-----\r\n";
+static const char roaEnd[]="-----END ROA-----\r\n";
 
 static const char *ianaAfiStrings[] = {
   "none",
@@ -204,6 +207,74 @@ static int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut,
 }
 
 /*
+  A generalized pattern matching routine for finding armor. It will find any
+  string of the form X i1 i2 Y Z, where X is one or more dashes, i1 and i2 and
+  the input tokens, Y is one or more dashes, and Z is any combination of CR and LF.
+
+  Returns an offset to indicate the location of the first character after the
+  armor on success, and a negative error code on failure.
+*/
+
+static int findarmor(char *buf, int buflen, char *i1, char *i2)
+{
+  char *endd;
+  char *run;
+  char *run2;
+
+  if ( buf == NULL || buflen <= 0 )
+    return(-1);
+  endd = buf + buflen;
+  run = buf;
+// one or more - characters
+  while ( run < endd && *run == '-' )
+    run++;
+  if ( run == buf || run >= endd )
+    return(-1);
+// zero or more space characters
+  while ( run < endd && isspace(*run) )
+    run++;
+  if ( run >= endd )
+    return(-1);
+// the token i1
+  if ( i1 != NULL && i1[0] != 0 )
+    {
+      if ( strncmp(run, i1, strlen(i1)) != 0 )
+	return(-1);
+    }
+  run += strlen(i1);
+// zero or more whitespace characters
+  while ( run < endd && isspace(*run) )
+    run++;
+  if ( run >= endd )
+    return(-1);
+// the token i2
+  if ( i2 != NULL && i2[0] != 0 )
+    {
+      if ( strncmp(run, i2, strlen(i2)) != 0 )
+	return(-1);
+    }
+  run += strlen(i2);
+// zero or more whitespace characters
+  while ( run < endd && isspace(*run) )
+    run++;
+  if ( run >= endd )
+    return(-1);
+// one or more dashes
+  run2 = run;
+  while ( run < endd && *run == '-' )
+    run++;
+  if ( run == run2 || run >= endd )
+    return(-1);
+// one or more occurences of either CR or LF
+  run2 = run;
+  while ( run < endd && ( *run == '\r' || *run == '\n' ) )
+    run++;
+  if ( run == run2 || run > endd )
+    return(-1);
+  return((int)(run-buf));
+}
+
+/*
 ** decodeblock
 **
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
@@ -244,12 +315,12 @@ static int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut,
       return ERR_SCM_NOMEM;
 
     // First, search for armoring at front of file
-    while ( 1 )
+    while ( inIndex < inSize )
       {
 	if ('-' == bufIn[inIndex])
 	  {
-	    iArmor = strlen(roaStart);
-	    if (0 == strncmp((char*)&bufIn[inIndex], roaStart, iArmor))
+	    iArmor = findarmor((char*)&bufIn[inIndex], inSize-inIndex, "BEGIN", "ROA");
+	    if ( iArmor >= 0 )
 	      {
 		inIndex += iArmor;
 		break;
@@ -267,8 +338,8 @@ static int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut,
 		// Skip the end armoring (don't translate its chars)
 		if ('-' == v)
 		  {
-		    iArmor = strlen(roaEnd);
-		    if (0 == strncmp((char*)&bufIn[inIndex], roaEnd, iArmor))
+		    iArmor = findarmor((char*)&bufIn[inIndex], inSize-inIndex, "END", "ROA");
+		    if ( iArmor >= 0 )
 		      inIndex += iArmor;
 		  }
                 v = (unsigned char) ((v < 43 || v > 122) ? 0 : cd64[ v - 43 ]);
@@ -848,11 +919,11 @@ static int setVersion(struct ROA* roa, unsigned char* versionstring)
   if (3 != iVersion)
     return ERR_SCM_INVALVER;
   
-  iRes = write_casn_num(&(roa->content.content.version.v3), iVersion);
+  iRes = write_casn_num(&(roa->content.signedData.version.v3), iVersion);
   if (0 > iRes)
     return ERR_SCM_INVALASN;
 
-  iRes = write_casn_num(&(roa->content.content.signerInfos.signerInfo.version.v3), iVersion);
+  iRes = write_casn_num(&(roa->content.signedData.signerInfos.signerInfo.version.v3), iVersion);
   if (0 > iRes)
     return ERR_SCM_INVALASN;
 
@@ -897,23 +968,63 @@ static int setSID(struct ROA* roa, unsigned char* sidstring)
       sidIndex++;
     }
   
-  write_casn(&(roa->content.content.signerInfos.signerInfo.sid.subjectKeyIdentifier), sid, 20);
+  write_casn(&(roa->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier), sid, 20);
   g_lastInstruction = NONE;
   return 0;
 }
 
-static int setSignature(struct ROA* roa, unsigned char* signstring)
+static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, char *filename)
 {
-  int iLen = 0;
+  CRYPT_CONTEXT hashContext;
+  CRYPT_CONTEXT sigKeyContext;
+  CRYPT_KEYSET cryptKeyset;
+  uchar hash[40];
+  uchar *signature;
+  int ansr = 0, signatureLength;
+  char *msg;
 
-  // Length is whatever it is; we've already guaranteed it's not 512+ chars,
-  // so we'll take what we've got
-  iLen = strlen((char*) signstring);
+  // GAGNON: error values
 
-  // Write the signature directly to the casn
-  write_casn(&(roa->content.content.signerInfos.signerInfo.signature), signstring, iLen);
+  memset(hash, 0, 40);
+  cryptInit();
+  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
+      (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
+    msg = "creating context";
+  else if ((ansr = cryptEncrypt(hashContext, signstring, lth)) != 0 ||
+      (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
+    msg = "hashing";
+  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, 
+    &signatureLength)) != 0) msg = "getting attribute string";
+  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, filename, 
+    CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set";
+  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label", 
+    "password")) != 0) msg = "getting key";
+  else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext, hashContext)) != 0)
+    msg = "signing";
+  else
+    {
+    signature = (uchar *)calloc(1, signatureLength +20);
+    if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext,
+      hashContext)) != 0) msg = "signing";
+    else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext, hashContext))
+      != 0) msg = "verifying";
+    }
+
+  cryptDestroyContext(hashContext);
+  cryptDestroyContext(sigKeyContext);
+  cryptEnd();
+  if (ansr == 0)
+    { 
+    decode_casn(&(roa->content.signedData.signerInfos.signerInfo.self), signature);
+    ansr = 0;
+    }
+  else 
+    {
+      //  printf("Signature failed in %s with error %d\n", msg, ansr);
+      ansr = ERR_SCM_INVALSIG;
+    }
   g_lastInstruction = NONE;
-  return 0;
+  return ansr;
 }
 
 static int setAS_ID(struct ROA* roa, unsigned char* asidstring)
@@ -926,7 +1037,7 @@ static int setAS_ID(struct ROA* roa, unsigned char* asidstring)
   if (9 < iLen)
     return ERR_SCM_INVALASID;
   iAS_ID = atoi((char*) asidstring);
-  write_casn_num(&(roa->content.content.encapContentInfo.eContent.roa.asID), iAS_ID);
+  write_casn_num(&(roa->content.signedData.encapContentInfo.eContent.roa.asID), iAS_ID);
   g_lastInstruction = NONE;
   return 0;
 }
@@ -970,12 +1081,12 @@ static int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
     return ERR_SCM_INVALIPB;
 
   // Write a new IP block directly to the casn
-  iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+  iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
   if (0 <= iBlocks)
     {
       // If that worked, fill it with the family info
-      roaFamily = (struct ROAIPAddressFamily*) inject_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
-      //roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
+      roaFamily = (struct ROAIPAddressFamily*) inject_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
+      //roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks);
       write_casn(&(roaFamily->addressFamily), familytemp, 2);
       return 0;
     }
@@ -1037,10 +1148,10 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       iGoodBytes++;
       // Then, write the bitstring (as an octet string) to the latest generated roaIPFam
       // after generating a new block for it
-      iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+      iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
       if (0 < iBlocks)
 	{
-	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 #ifdef IP_RANGES_ALLOWED
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
@@ -1075,10 +1186,10 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       ipv6array[0] = cBadBits;
       iGoodBytes++;
       // Then, write the bitstring (as an octet string) to the casn
-      iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+      iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
       if (0 < iBlocks)
 	{
-	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 #ifdef IP_RANGES_ALLOWED
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
@@ -1161,10 +1272,10 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
       iGoodBytes++;
 
       // Then, write the bitstring (as an octet string) to the casn
-      iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+      iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
       if (0 < iBlocks)
 	{
-	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
 	    {
@@ -1188,10 +1299,10 @@ int setIPAddrMin(struct ROA* roa, unsigned char* ipaddrminstring)
       iGoodBytes++;
 
       // Then, write the bitstring (as an octet string) to the casn
-      iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+      iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
       if (0 < iBlocks)
 	{
-	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
 	    {
@@ -1257,10 +1368,10 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
       iGoodBytes++;
 
       // Then, write the bitstring (as an octet string) to the casn
-      iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+      iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
       if (0 < iBlocks)
 	{
-	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 < iAddrs)
 	    {
@@ -1283,10 +1394,10 @@ int setIPAddrMax(struct ROA* roa, unsigned char* ipaddrmaxstring)
       iGoodBytes++;
 
       // Then, write the bitstring (as an octet string) to the casn
-      iBlocks = num_items(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+      iBlocks = num_items(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
       if (0 < iBlocks)
 	{
-	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 < iAddrs)
 	    {
@@ -1317,13 +1428,13 @@ static int setCertName(struct ROA* roa, unsigned char* certfilenamestring)
 
   // Check to make sure there's only one cert and it's the one
   //  we're about to read in.
-  iCerts = num_items(&(roa->content.content.certificates.self));
+  iCerts = num_items(&(roa->content.signedData.certificates.self));
   if (0 != iCerts)
     return ERR_SCM_NOTVALID;
 
   // Get the cert read in
-  if (NULL != inject_casn(&(roa->content.content.certificates.self), 0))
-    iRet = get_casn_file(&(roa->content.content.certificates.certificate.self), (char*) certfilenamestring, 0);
+  if (NULL != inject_casn(&(roa->content.signedData.certificates.self), 0))
+    iRet = get_casn_file(&(roa->content.signedData.certificates.certificate.self), (char*) certfilenamestring, 0);
   g_lastInstruction = NONE;
 
   if (iRet > 0)
@@ -1342,7 +1453,8 @@ static int confInterpret(char* filename, struct ROA* roa)
 {
   char line[MAX_LINE + 1] = "";
   char key[MAX_LINE + 1] = "";
-  unsigned char value[MAX_LINE + 1] = "";
+  char keyfileName[128];
+  unsigned char value[MAX_LINE + 1] = "", *buf;
 
   int iRet = 0;
   int iRet2 = 0;
@@ -1361,7 +1473,7 @@ static int confInterpret(char* filename, struct ROA* roa)
   if (NULL == fp)
     {
       // Error
-      printf("Error opening file %s\n", filename);
+      //      printf("Error opening file %s\n", filename);
       return ERR_SCM_COFILE;
     }
 
@@ -1393,7 +1505,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 	  iRet2 = sscanf(line, "%s%*[ \t]%*[=]%*[ \t]%s", key, value);
 	  if (2 != iRet2)
 	    {
-	      printf("Error parsing line %d\n", iLineCount);
+	      //	      printf("Error parsing line %d\n", iLineCount);
 	      iROAState = ERR_SCM_INVALARG;
 	    }
 	  else
@@ -1430,14 +1542,16 @@ static int confInterpret(char* filename, struct ROA* roa)
 		case SIGNATURE:
 		  // JFG - In the real world, we're going to calculate this
 		  //  instead of getting it from a file
-		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
-		      (cTRUE == iConfiguredKey[ck]))
+                  /*
+		  if ((isInstructionForcing(g_lastInstruction)) ||
+		      (TRUE == iConfiguredKey[ck]))
 		    {
 		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
 		  iRet2 = setSignature(roa, value);
-		  iConfiguredKey[ck] = cTRUE;
+		  iConfiguredKey[ck] = cTRUE; */
+
 		  break;
 		case AS_ID:
 		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
@@ -1488,16 +1602,26 @@ static int confInterpret(char* filename, struct ROA* roa)
 		  iRet2 = setCertName(roa, value);
 		  iConfiguredKey[ck] = cTRUE;
 		  break;
-		case CONFIG_KEY_MAX:
+                case KEYFILE:
+		  if ((isInstructionForcing(g_lastInstruction)) ||
+		      (cTRUE == iConfiguredKey[ck]))
+		    {
+		      iRet2 = ERR_SCM_INVALARG;
+		      break;
+		    }
+                  strcpy(keyfileName, (char *)value);
+		  iConfiguredKey[ck] = cTRUE;
+                  break; 
+		case  CONFIG_KEY_MAX:
 		default:
-		  printf("Unknown key on line %d\n", iLineCount);
+		  //		  printf("Unknown key on line %d\n", iLineCount);
 		  iROAState = ERR_SCM_INVALARG;
 		  break;
 		}
 
 	      if (iRet2 < 0)
 		{
-		  printf("Unparseable value or unexpected key on line %d\n", iLineCount);
+		  //		  printf("Unparseable value or unexpected key on line %d\n", iLineCount);
 		  iROAState = iRet2;
 		}
 	      // JFG - Debugging code
@@ -1509,7 +1633,7 @@ static int confInterpret(char* filename, struct ROA* roa)
   // If we didn't finish an IP address block (uh-oh!)
   if (isInstructionForcing(g_lastInstruction)==cTRUE)
     {
-      printf("Unfinished IP block before line %d\n", iLineCount);
+      //      printf("Unfinished IP block before line %d\n", iLineCount);
       iROAState = ERR_SCM_INVALIPB;
     }
 
@@ -1519,17 +1643,37 @@ static int confInterpret(char* filename, struct ROA* roa)
       if (cFALSE == iConfiguredKey[ck])
 	{
 	  if ((SID == ck) ||
-	      (SIGNATURE == ck) ||
+//	      (SIGNATURE == ck) ||
 	      (AS_ID == ck) ||
+              (KEYFILE == ck) ||
 	      (IPFAM == ck))
 	    {
-	      printf("Missing required key %s\n", configKeyStrings[ck]);
+	      //	      printf("Missing required key %s\n", configKeyStrings[ck]);
 	      iROAState = ERR_SCM_INVALARG;
 	    }
 	}
     }
 
   iRet = fclose(fp);
+  if (iROAState < 0) return iROAState;
+  if ((iRet = vsize_casn(&roa->content.signedData.encapContentInfo.eContent.self)) < 0)
+    {
+      //    printf("Error sizing hashable string\n");
+      return ERR_SCM_HSSIZE;
+    }
+  buf = (uchar *)calloc(1, iRet);
+  iRet = read_casn(&roa->content.signedData.encapContentInfo.eContent.self, buf);
+  if (iRet < 0)
+    {
+      //    printf("Error reading hashable string\n");
+      iROAState = ERR_SCM_HSREAD;
+    }
+  if ((iRet2=setSignature(roa, buf, iRet, keyfileName)) < 0) 
+    {
+      //    printf("Error creating signature\n");
+      iROAState = iRet2;
+    }
+  free(buf);
   return iROAState;
 }
 
@@ -1557,7 +1701,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   if (NULL == *rp)
     {
       // Error
-      printf("Error malloc'ing memory for ROA\n");
+      //      printf("Error malloc'ing memory for ROA\n");
       return ERR_SCM_NOMEM;
     }
 
@@ -1569,8 +1713,8 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 
   // JFG - Consider injecting these on a per-struct basis just in case
   //  there's a requirements revision.
-  algorithmID = (struct AlgorithmIdentifier*) inject_casn(&((*rp)->content.content.digestAlgorithms.self), 0);
-  signerInfo = (struct SignerInfo*) inject_casn(&((*rp)->content.content.signerInfos.self), 0);
+  algorithmID = (struct AlgorithmIdentifier*) inject_casn(&((*rp)->content.signedData.digestAlgorithms.self), 0);
+  signerInfo = (struct SignerInfo*) inject_casn(&((*rp)->content.signedData.signerInfos.self), 0);
   if ((NULL == algorithmID) ||
       (NULL == signerInfo))
     {
@@ -1580,7 +1724,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   
   // Fill default algorithm slots
   write_objid(&(algorithmID->algorithm), id_sha256);
-  write_objid(&((*rp)->content.content.encapContentInfo.eContentType), routeOriginAttestation);
+  write_objid(&((*rp)->content.signedData.encapContentInfo.eContentType), id_routeOriginAttestation);
   write_objid(&(signerInfo->digestAlgorithm.algorithm), id_sha256);
   write_objid(&(signerInfo->signatureAlgorithm.algorithm), id_sha_256WithRSAEncryption);
 
