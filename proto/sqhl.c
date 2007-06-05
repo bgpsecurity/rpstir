@@ -810,7 +810,7 @@ static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
   blob = readfile(fn, &sta);
   if ( blob != NULL )
     {
-      sta = roaValidate2(r, cert, blob);
+      sta = roaValidate2(r, blob);
       free((void *)blob);
     }
   X509_free(cert);
@@ -1290,11 +1290,11 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     sta = verifyOrNotChildren (conp, cf->fields[CF_FIELD_SKI],
 			       cf->fields[CF_FIELD_SUBJECT], 1);
   }
-  freecf(cf);
   // if change verify_cert so that not pushing on stack, change this
   if (! (cf->flags & SCM_FLAG_TRUSTED)) {
     X509_free(x);
   }
+  freecf(cf);
   return(sta);
 }
 

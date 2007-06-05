@@ -1023,7 +1023,7 @@ static int socvaluefunc(scmcon *conp, scmsrcha *s, int idx)
 int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
 		      scmsrcha *srch, scmkva *ins, unsigned int *idp)
 {
-  unsigned int mid;
+  unsigned int mid = 0;
   char *tmp;
   int   sta;
 
