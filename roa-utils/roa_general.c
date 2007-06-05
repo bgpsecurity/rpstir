@@ -119,9 +119,9 @@ unsigned char *roaSKI(struct ROA *r)
   if (NULL == r)
     return NULL;
 
-  if (SKI_SIZE != vsize_casn(&(r->content.content.signerInfos.signerInfo.sid.subjectKeyIdentifier)))
+  if (SKI_SIZE != vsize_casn(&(r->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier)))
     return NULL;
-  if (0 > readvsize_casn(&(r->content.content.signerInfos.signerInfo.sid.subjectKeyIdentifier), &cSID))
+  if (0 > readvsize_casn(&(r->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier), &cSID))
     return NULL;
   else
     {
@@ -610,7 +610,7 @@ int roaAS_ID(struct ROA *r)
   if (NULL == r)
     return 0;
 
-  if (0 > read_casn_num(&(r->content.content.encapContentInfo.eContent.roa.asID), &iAS_ID))
+  if (0 > read_casn_num(&(r->content.signedData.encapContentInfo.eContent.roa.asID), &iAS_ID))
     return 0;
 
   return iAS_ID;
@@ -623,7 +623,7 @@ void roaFree(struct ROA *r)
   return;
 }
 
-int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
+int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp)
 {
   int i,j = 0;
   int iRes = 0;
@@ -655,10 +655,10 @@ int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
 
   // For each family, print out all triplets beginning with SKI and AS#
   // and ending with each IP address listed in the ROA
-  iFamilies = num_items(&(r->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+  iFamilies = num_items(&(r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
   for (i = 0; i < iFamilies; i++)
     {
-      roaFamily = (struct ROAIPAddressFamily*) member_casn(&(r->content.content.encapContentInfo.eContent.roa.ipAddrBlocks.self), i);
+      roaFamily = (struct ROAIPAddressFamily*) member_casn(&(r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), i);
       if (NULL == roaFamily)
 	{
 	  free(cSID);

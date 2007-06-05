@@ -117,7 +117,7 @@ int roaToFile(struct ROA *r, char *fname, int fmt);
   error code.
 */
 
-int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp);
+int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp);
 
 /*
   This function is used to create BGP filter tables from a ROA and its
@@ -159,7 +159,7 @@ int roaValidate(struct ROA *r);
   returns a negative error code.
 */
 
-int roaValidate2(struct ROA *r, X509 *x, unsigned char *blob);
+int roaValidate2(struct ROA *r, uchar *cert);
 
 /*
   This function performs all validations steps on a ROA that require
@@ -170,6 +170,7 @@ int roaValidate2(struct ROA *r, X509 *x, unsigned char *blob);
       scm    *scmp; // previously opened DB schema
       scmcon *conp; // previously opened DB connection
       X509   *cert;
+      uchar  *blob;
       char   *ski;
       char   *fn;
       int     valid = -1;
@@ -181,12 +182,11 @@ int roaValidate2(struct ROA *r, X509 *x, unsigned char *blob);
 	if ( ski != NULL ) {
 	  cert = roa_parent(scmp, conp, ski, &fn, &sta);
 	  if ( cert != NULL && sta == 0 ) {
-            valid = roaValidate2(r, cert);
+	    blob = read cert from file (fn);
+            valid = roaValidate2(r, blob);
           }
         }
       }
-  Note that the certificate data is passed in two ways: as an X509 pointer
-  "x" and also as a raw ASN.1 blob "blob".
 */
 
 void roaFree(struct ROA *r);
@@ -196,6 +196,12 @@ void roaFree(struct ROA *r);
   is permissible for "r" to be NULL, in which case nothing happens.
   If "r" is non-NULL, however, it must point to a syntatically valid
   ROA structure (which need not have been semantically validated, however).
+*/
+
+int check_sig(struct ROA *rp, struct Certificate *certp);
+
+/*
+  This function checks the signature on a ROA.
 */
 
 #ifndef UNREFERENCED_PARAMETER
