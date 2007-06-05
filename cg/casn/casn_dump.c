@@ -216,7 +216,10 @@ Procedure:
                    and an explicitly tagged DEFINED needs the same,
                    as does a nonANY DEFINED */
             if (casnp->tag != ASN_BOOLEAN)  /* so _dumpsize 7 lines below won't repeat it */
+                {
                 ansr = _dump_tag(casnp->tag, c, offset, (ushort)0, mode);
+                // if (mode > 0 && casnp->type  == (casnp->tag | ASN_CHOICE)) c[2] = 'w';
+                }
             if (mode) c += ansr;
             if ((casnp->flags & ASN_DEFINED_FLAG) && tcasnp->type == ASN_NOTASN1)
                 i = (int)_dumpread(tcasnp, c, offset + 4, mode);
@@ -231,6 +234,7 @@ Procedure:
     						        /* step 2 */
     ansr += (j = _dump_tag(casnp->tag, c, offset,
         (casnp->flags & ASN_INDEF_LTH_FLAG), mode));
+    // if (mode > 0 && casnp->type  == (casnp->tag | ASN_CHOICE)) c[2] = 'w';
     extra = 4;
     if (mode) c += j;
     if (tcasnp->type == ASN_NULL) return ansr;
@@ -238,6 +242,7 @@ Procedure:
         {
         j = _dump_tag(tcasnp->type, c, offset + extra,
             (tcasnp->flags & ASN_SUB_INDEF_FLAG), mode);
+        // if (mode > 0 && casnp->type  == (casnp->tag | ASN_CHOICE)) c[2] = 'w';
         offset += 4;
         ansr += j;
         if (mode) c += j;
