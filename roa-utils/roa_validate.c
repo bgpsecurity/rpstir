@@ -71,39 +71,52 @@ static void fill_max(uchar *max)
   max[max[1] + 1] |= ((1 << max[2]) - 1);
   } 
 
-static void setup_cert_minmax(struct IPAddressOrRangeA *cipAddrRangep, uchar *cmin, uchar *cmax)
+static int setup_cert_minmax(struct IPAddressOrRangeA *cipAddrRangep, uchar *cmin, uchar *cmax,
+  int fam)
   {
   memset(cmin, 0, MINMAXBUFSIZE);
   memset(cmax, -1, MINMAXBUFSIZE);
+  if (fam == 1) fam = 7;
+  else if (fam == 2) fam = 19;
+  else return ERR_SCM_INVALFAM;
   if (tag_casn(&cipAddrRangep->self) == ASN_SEQUENCE)
     {
+    if (size_casn(&cipAddrRangep->addressRange.min) > fam ||
+        size_casn(&cipAddrRangep->addressRange.max) > fam) return ERR_SCM_INVALFAM;
     encode_casn(&cipAddrRangep->addressRange.min, cmin);
     encode_casn(&cipAddrRangep->addressRange.max, cmax);
     }
   else 
     {
+    if (size_casn(&cipAddrRangep->addressPrefix) > fam) return ERR_SCM_INVALFAM;
     encode_casn(&cipAddrRangep->addressPrefix, cmin);
     encode_casn(&cipAddrRangep->addressPrefix, cmax);
     }
   fill_max(cmax);
   cmin[2] = 0;
   cmax[2] = 0;
+  return 0;
   }
  
-static void setup_roa_minmax(struct IPAddress *ripAddrp, uchar *rmin, uchar *rmax)
+static int setup_roa_minmax(struct IPAddress *ripAddrp, uchar *rmin, uchar *rmax, int fam)
   {
   memset(rmin, 0, MINMAXBUFSIZE);
   memset(rmax, -1, MINMAXBUFSIZE);
+  if (fam == 1) fam = 7;
+  else if (fam == 2) fam = 19;
+  else return ERR_SCM_INVALFAM;
+  if (size_casn(ripAddrp) > fam) return ERR_SCM_INVALFAM;
   encode_casn(ripAddrp, rmin);
   encode_casn(ripAddrp, rmax);
   fill_max(rmax);
   rmin[2] = 0;
   rmax[2] = 0;
+  return 0;
   }
 
 static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   {
-  uchar rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE], oldmax[MINMAXBUFSIZE];
+  uchar rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE], oldmax[MINMAXBUFSIZE], rfam[8];
   struct IPAddress *ipAddrp;
   struct ROAIPAddressFamily *roaipfamp;
   int i = 0;
@@ -111,15 +124,15 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   for (roaipfamp = &ipAddrBlockp->rOAIPAddressFamily; roaipfamp; 
     roaipfamp = (struct ROAIPAddressFamily *)next_of(&roaipfamp->self))
     {
-      if ( read_casn(&roaipfamp->addressFamily, oldmax) < 0) return ERR_SCM_BADAF;
-      if (oldmax[0] != 0 || (oldmax[1] != 1 && oldmax[1] != 2) || oldmax[1] < i) return ERR_SCM_BADAF;
-    i = oldmax[1]; 
+    if (read_casn(&roaipfamp->addressFamily, rfam) < 0 ||
+	rfam[0] != 0 || (rfam[1] != 1 && rfam[1] != 2)) return ERR_SCM_INVALFAM;
+    i = rfam[1]; 
     memset(oldmax, 0, sizeof(oldmax));
     for (ipAddrp = &roaipfamp->addresses.iPAddress; ipAddrp; ipAddrp = next_of(ipAddrp))
       {
-      setup_roa_minmax(ipAddrp, rmin, rmax);
-      if (memcmp(&rmin[2], &oldmax[2], sizeof(rmin) - 2) < 0 || 
-	  memcmp(&rmax[2], &rmin[2], sizeof(rmin) - 2) < 0) return ERR_SCM_BADAF;
+      if (setup_roa_minmax(ipAddrp, rmin, rmax, i) < 0 ||
+        memcmp(&rmin[3], &oldmax[3], sizeof(rmin) - 3) < 0 || 
+	  memcmp(&rmax[3 ], &rmin[3], sizeof(rmin) - 3) < 0) return ERR_SCM_INVALIPB;
       }
     }
   return 0;
@@ -214,6 +227,7 @@ int roaValidate(struct ROA *r)
 int roaValidate2(struct ROA *r, uchar *certp)
 {
   int iRes;
+  int sta;
   long iAS_ID = 0;
   long ii, ij;
   struct Extension *extp;
@@ -225,8 +239,11 @@ int roaValidate2(struct ROA *r, uchar *certp)
   struct IPAddressOrRangeA *cipAddrRangep;
   struct IPAddress *ripAddrp;
   uchar cmin[MINMAXBUFSIZE], cmax[MINMAXBUFSIZE], rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE];
+  uchar rfam[8], cfam[8];
   int all3 = 0;
 
+  // roaValidate() is an independent function; the caller must call it
+  // if the caller wants semantic validation
   //  if (roaValidate(r) == FALSE) return FALSE;
   Certificate(&cert, 0);
   if (decode_casn(&cert.self, certp) < 0) return ERR_SCM_NOTVALID;
@@ -278,31 +295,37 @@ int roaValidate2(struct ROA *r, uchar *certp)
       all3 |= 4;
         // start at first family in cert. NOTE order must be v4 then v6, per RFC3779
       cipAddrFamp = &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
+      read_casn(&cipAddrFamp->addressFamily, cfam);
       for (ripAddrFamp = &r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.
         rOAIPAddressFamily; 
         iRes == cTRUE && ripAddrFamp; 
         ripAddrFamp = (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
         {  // find that family in cert
-        while (cipAddrFamp && diff_casn(&cipAddrFamp->addressFamily, &ripAddrFamp->addressFamily))
-          cipAddrFamp = (struct IPAddressFamilyA *)next_of(&cipAddrFamp->self);
-        if (!cipAddrFamp) iRes = ERR_SCM_INVALIPB;
-        else
+        read_casn(&ripAddrFamp->addressFamily, rfam);
+        while (cipAddrFamp && memcmp(cfam, rfam, 2) != 0)
+          {
+          if (!(cipAddrFamp = (struct IPAddressFamilyA *)next_of(&cipAddrFamp->self))) 
+            iRes = ERR_SCM_INVALIPB;
+          else  read_casn(&cipAddrFamp->addressFamily, cfam);
+          }
+        if (iRes == 0)
           {  // set up initial entry in cert
           cipAddrRangep = &cipAddrFamp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
-          setup_cert_minmax(cipAddrRangep, cmin, cmax);
+          if ((sta=setup_cert_minmax(cipAddrRangep, cmin, cmax, cfam[1])) < 0) iRes = sta;
                // go through all ip addresses in ROA
-          for (ripAddrp = &ripAddrFamp->addresses.iPAddress; ripAddrp; 
+          for (ripAddrp = &ripAddrFamp->addresses.iPAddress; ripAddrp && iRes == 0; 
             ripAddrp = (struct IPAddress *)next_of(ripAddrp))
             {   // set up the limits
-            setup_roa_minmax(ripAddrp, rmin, rmax);
+	      if ((sta=setup_roa_minmax(ripAddrp, rmin, rmax, rfam[1])) < 0) iRes = sta;
               // go through cert addresses until a high enough one is found
               // i.e. skip cert addresses whose max is below roa's min
-            while (cipAddrRangep && memcmp(&cmax[2], &rmin[2], sizeof(rmin) - 2) <= 0)
+            while (iRes == 0 && cipAddrRangep && 
+              memcmp(&cmax[2], &rmin[2], sizeof(rmin) - 2) <= 0)
               {
-              cipAddrRangep = (struct IPAddressOrRangeA *)next_of(&cipAddrRangep->self);
-              setup_cert_minmax(cipAddrRangep, cmin, cmax);
+              if (!(cipAddrRangep = (struct IPAddressOrRangeA *)next_of(&cipAddrRangep->self)) ||
+                  setup_cert_minmax(cipAddrRangep, cmin, cmax, cfam[1]) < 0) iRes = ERR_SCM_INVALIPB;
               }
-            if (cipAddrRangep)  
+            if (cipAddrRangep && iRes == 0)  
               {  // now at cert values at or beyond roa
                   // if roa min is below cert min OR roa max beyond cert max, bail out
               if ((ii = memcmp(&rmin[2], &cmin[2], sizeof(cmin) - 2)) < 0 ||

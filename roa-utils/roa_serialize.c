@@ -931,6 +931,8 @@ static int setVersion(struct ROA* roa, unsigned char* versionstring)
   return 0;
 }
 
+#ifdef NOTDEF
+
 static int setSID(struct ROA* roa, unsigned char* sidstring)
 {
   int iLen = 0;
@@ -973,6 +975,8 @@ static int setSID(struct ROA* roa, unsigned char* sidstring)
   return 0;
 }
 
+#endif
+
 static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, char *filename)
 {
   CRYPT_CONTEXT hashContext;
@@ -982,8 +986,6 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, cha
   uchar *signature;
   int ansr = 0, signatureLength;
   char *msg;
-
-  // GAGNON: error values
 
   memset(hash, 0, 40);
   cryptInit();
@@ -1037,6 +1039,8 @@ static int setAS_ID(struct ROA* roa, unsigned char* asidstring)
   if (9 < iLen)
     return ERR_SCM_INVALASID;
   iAS_ID = atoi((char*) asidstring);
+  if ( iAS_ID == 0 )
+    return ERR_SCM_INVALASID;
   write_casn_num(&(roa->content.signedData.encapContentInfo.eContent.roa.asID), iAS_ID);
   g_lastInstruction = NONE;
   return 0;
@@ -1536,7 +1540,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
-		  iRet2 = setSID(roa, value);
+		  // iRet2 = setSID(roa, value);
 		  iConfiguredKey[ck] = cTRUE;
 		  break;
 		case SIGNATURE:
@@ -1769,7 +1773,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       buf_final = NULL;
       iReturn = decode_b64(buf, iSize, &buf_final, &iSizeFinal);
       // IMPORTANT: NO break, control falls through
-    case FMT_DER:
+    case FMT_DER:      
       iSizeTmp = decode_casn(&((*rp)->self), buf_final);
       if (buf_final != buf)
 	free(buf);

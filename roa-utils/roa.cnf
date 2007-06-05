@@ -57,6 +57,6 @@ ipaddr		= 6789:affd:a234:a500::/64
 # full name and path to signer certificate (optional)
 # certname	= /home/roa-pki/APNIC/ZbXcRD4Te8I577qH3gD2eNfWVws.cer
 # certname	= /home/roa-pki/APNIC/gyAlqFfpQzsQ1gmCgRNhDChGeuM.cer
-certname	= Cert.req
+certname	= mytest.cert.req
 
 keyfile         = keyfile.p15
