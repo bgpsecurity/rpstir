@@ -11,11 +11,9 @@ RSYNC=/usr/local/bin/rsync
 #
 # The config file must contain the following variable defines:
 #
-# SYSTEM=
-#   The remote system to rsync with (e.g. repository.apnic.net)
 # DIRS=
-#   The directories to retrieve from the above system (e.g. TRUSTANCHORS
-#   or "APNIC knownRIRs TRUSTANCHORS" if multiple are being specified
+#   A list of the form system/dir or "system1/dir1 system2/dir2 ..." (e.g.
+#   "apnic.mirin.apnic.net/mock/AFRINIC apnic.mirin.apnic.net/mock/APNIC")
 # REPOSITORY=
 #   The full path of where the repositories should be deposited
 #   (e.g. /home/mudge/rsync_aur/REPOSITORY ) - note: leave the trailing
@@ -23,6 +21,8 @@ RSYNC=/usr/local/bin/rsync
 # LOGS=
 #   The full path of where the rsync log file (that the AUR program
 #   will ultimately use) should be put. 
+# DOLOAD=
+#   YES or yes if want to load the data into the database
 #
 # ***NOTE*** we are handing off these variables to rsync. As such, 
 # if someone were to include shell metacharacters then badness can 
@@ -50,12 +50,6 @@ fi
 source $1
 if [ $? -ne 0 ] ; then
   echo "failed to source config file"
-  exit 1
-fi
-
-# check for the SYSTEM variable
-if [ "${SYSTEM}NO" = "NO" ] ; then
-  echo "missing SYSTEM= variable in config"
   exit 1
 fi
 
@@ -90,29 +84,55 @@ fi
 #############
 # if we got here... things look somewhat sane...
 #############
-cd ${LOGS}
-echo "Rotating rpki rsync logs"
+echo "Creating directories and rotating rpki rsync logs"
 
 for arg in ${DIRS}
 do
+  IFS=' '
+  cd ${LOGS}
+  IFS=/
+  dir=""
   for i in ${arg}
   do
-    if [ -f "${i}.log.8" ]; then mv -f "${i}.log.8" "${i}.log.9"; fi
-    if [ -f "${i}.log.7" ]; then mv -f "${i}.log.7" "${i}.log.8"; fi
-    if [ -f "${i}.log.6" ]; then mv -f "${i}.log.6" "${i}.log.7"; fi
-    if [ -f "${i}.log.5" ]; then mv -f "${i}.log.5" "${i}.log.6"; fi
-    if [ -f "${i}.log.4" ]; then mv -f "${i}.log.4" "${i}.log.5"; fi
-    if [ -f "${i}.log.3" ]; then mv -f "${i}.log.3" "${i}.log.4"; fi
-    if [ -f "${i}.log.2" ]; then mv -f "${i}.log.2" "${i}.log.3"; fi
-    if [ -f "${i}.log.1" ]; then mv -f "${i}.log.1" "${i}.log.2"; fi
-    if [ -f "${i}.log" ]; then mv -f "${i}.log" "${i}.log.1"; fi
+    if ! [ "${dir}NO" = "NO" ] ; then
+      if ! [ -d "${dir}" ] ; then mkdir ${dir}; fi
+      cd ${dir}
+    fi
+    dir=${i}
+  done
+  if [ -f "${dir}.log.8" ]; then mv -f "${dir}.log.8" "${dir}.log.9"; fi
+  if [ -f "${dir}.log.7" ]; then mv -f "${dir}.log.7" "${dir}.log.8"; fi
+  if [ -f "${dir}.log.6" ]; then mv -f "${dir}.log.6" "${dir}.log.7"; fi
+  if [ -f "${dir}.log.5" ]; then mv -f "${dir}.log.5" "${dir}.log.6"; fi
+  if [ -f "${dir}.log.4" ]; then mv -f "${dir}.log.4" "${dir}.log.5"; fi
+  if [ -f "${dir}.log.3" ]; then mv -f "${dir}.log.3" "${dir}.log.4"; fi
+  if [ -f "${dir}.log.2" ]; then mv -f "${dir}.log.2" "${dir}.log.3"; fi
+  if [ -f "${dir}.log.1" ]; then mv -f "${dir}.log.1" "${dir}.log.2"; fi
+  if [ -f "${dir}.log" ]; then mv -f "${dir}.log" "${dir}.log.1"; fi
+
+  IFS=' '
+  cd ${REPOSITORY}
+  IFS=/
+  dir=""
+  for i in ${arg}
+  do
+    if ! [ "${dir}NO" = "NO" ] ; then
+      if ! [ -d "${dir}" ] ; then mkdir ${dir}; fi
+      cd ${dir}
+    fi
+    dir=${i}
   done
 done
 
+IFS=' '
 for arg in ${DIRS}
 do
   echo "retrieving ${arg}"
-  $RSYNC -airz --del rsync://${SYSTEM}/${arg} ${REPOSITORY}/${arg} > \
+  $RSYNC -airz --del rsync://${arg}/ ${REPOSITORY}/${arg} > \
         ${LOGS}/${arg}.log
+  if [ "${DOLOAD}y" = "yesy" ] || [ "${DOLOAD}y" = "YESy" ]; then
+    echo "loading ${arg}"
+    ${APKI_ROOT}/trunk/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
+  fi
 done
 
