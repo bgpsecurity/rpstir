@@ -144,10 +144,10 @@ static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
 static int printUsage()
 {
   fprintf(stderr, "Usage:\n"); 
-  fprintf(stderr, "   -p portno     connect to port number\n");
-  fprintf(stderr, "   -f filename   rsync configuration file to model on\n");
-  fprintf(stderr, "   -d dirname    rsync executable dirrectory\n");
-  fprintf(stderr, "   -h            this help listing\n");
+  fprintf(stderr, "  -p portno   connect to port number (default=APKI_PORT)\n");
+  fprintf(stderr, "  -f filename rsync configuration file to model on\n");
+  fprintf(stderr, "  -d dirname  rsync executable directory (default=APKI_ROOT/trunk/rsync_aur)\n");
+  fprintf(stderr, "  -h          this help listing\n");
   return 1;
 }
 
@@ -162,15 +162,19 @@ int main(int argc, char **argv)
   unsigned long blah = 0;
   int      i, status, numDirs, ch;
   int      portno = 0;
-  char     sys[120], dirs[50][120], str[180], *str2, str3[300];
-  char     *sys2, *dir2, *dir3, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
-  char     *logDir, *repoDir;
-  char     *rsyncDir = ".";
+  char     dirs[50][120], str[180], *str2;
+  char     *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
+  char     rsyncDir[200];
   char     *origFile = "rsync_pull_sample.config";
   FILE     *fp, *configFile;
 
   // initialize
-  argc = argc; argv = argv;   // silence compiler warnings
+  if (getenv ("APKI_ROOT") != NULL)
+    sprintf (rsyncDir, "%s/trunk/rsync_aur", getenv ("APKI_ROOT"));
+  else
+    sprintf (rsyncDir, ".");
+  if (getenv ("APKI_PORT") != NULL)
+    portno = atoi (getenv ("APKI_PORT"));
   startSyslog ("chaser");
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
@@ -185,7 +189,7 @@ int main(int argc, char **argv)
 	portno = atoi (optarg);
 	break;
       case 'd':   /* rsync executable directory */
-	rsyncDir = strdup (optarg);
+	sprintf (rsyncDir, optarg);
 	break;
       case 'h':   /* help */
       default:
@@ -196,14 +200,11 @@ int main(int argc, char **argv)
   // read in from rsync config file
   fp = fopen (origFile, "r");
   checkErr (fp == NULL, "Unable to open rsync config file: %s\n", origFile);
-  sys[0] = 0;
   dirs[0][0] = 0;
   rsyncStr[0] = 0;
   while (fgets (msg, 1024, fp) != NULL) {
     sscanf (strtok (strdup (msg), "="), "%s", str);
-    if (strcmp (str, "SYSTEM") == 0) {
-      sscanf (strtok (NULL, ""), "%s", sys);
-    } else if (strcmp (str, "DIRS") == 0) {
+    if (strcmp (str, "DIRS") == 0) {
       str2 = strtok (strtok (NULL, "\""), " ");
       for (numDirs = 0; numDirs < 50; str2 = strtok (NULL, " ")) {
         if (str2 == NULL) break;
@@ -211,25 +212,18 @@ int main(int argc, char **argv)
           strcpy (dirs[numDirs++], str2);
         }
       }
-    } else {
+    } else if (strcmp (str, "DOLOAD") != 0) {
       strcat (rsyncStr, msg);
-      if (strcmp (str, "LOGS") == 0) {
-	sscanf (strtok (NULL, ""), "%s", str);
-	logDir = strdup (str);
-      } else if (strcmp (str, "REPOSITORY") == 0) {
-	sscanf (strtok (NULL, ""), "%s", str);
-	repoDir = strdup (str);
-      }
     }
   }
-  checkErr (sys[0] == 0, "SYSTEM variable not specified in config file\n");
+  strcat (rsyncStr, "DOLOAD=yes\n");
   checkErr (dirs[0][0] == 0, "DIRS variable not specified in config file\n");
 
   // load from current repositories to initialize uris
   // it is good to put these in right away, so that any future addresses
   // that are duplicates or subdirectories are immediately discarded
   for (i = 0; i < numDirs; i++) {
-    sprintf (str, "rsync://%s/%s", sys, dirs[i]);
+    sprintf (str, "rsync://%s", dirs[i]);
     addURIIfUnique (str);
   }
 
@@ -273,9 +267,11 @@ int main(int argc, char **argv)
 
   // remove original set from list of addresses
   for (i = 0; i < numDirs; i++) {
-    sprintf (str, "rsync://%s/%s", sys, dirs[i]);
+    sprintf (str, "rsync://%s", dirs[i]);
     removeURI (str);
   }
+  if (numURIs == 0)
+    return 0;
 
   // remove all files from list of addresses and replace with directories
   for (i = 0; i < numURIs; i++) {
@@ -287,47 +283,22 @@ int main(int argc, char **argv)
   }
 
   // aggregate those from same system and call rsync and rsync_aur
-  sys[0] = 0;
-  for (i = 0; i <= numURIs; i++) {
-    if (i < numURIs) {
-      sys2 = &uris[i][strlen("rsync://")];
-      dir2 = strchr (sys2, '/');
-      if (dir2 != NULL) {
-	*dir2 = 0;
-	dir2 = &dir2[1];
-	if (dir2 [strlen (dir2) - 1] == '/')
-	  dir2 [strlen (dir2) - 1] = 0;
-      }
-    }
-    if ((i < numURIs) && (strcmp (sys, sys2) == 0)) {
+  dirStr[0] = 0;
+  for (i = 0; i < numURIs; i++) {
+    dir2 = &uris[i][strlen("rsync://")];
+    if (dir2 [strlen (dir2) - 1] == '/')
+      dir2 [strlen (dir2) - 1] = 0;
+    if (i > 0)
       strcat (dirStr, " ");
-      strcat (dirStr, dir2);
-    } else {
-      if (sys[0]) {
-	configFile = fopen ("chaser_rsync.config", "w");
-	checkErr (configFile == NULL, "Unable to open file for write\n");
-	sprintf (rsyncStr2, "%sDIRS=\"%s\"\nSYSTEM=%s\n",
-		 rsyncStr, dirStr, sys);
-	printf ("\nPull config:\n%s", rsyncStr2);
-	fputs (rsyncStr2, configFile);
-	fclose (configFile);
-	sprintf (str3, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
-	system (str3);
-	dir3 = strtok (dirStr, " ");
-	while (dir3 != NULL) {
-	  sprintf (str3, "%s/rsync_aur -t %d -f %s/%s.log -d %s/%s",
-		   rsyncDir, portno, logDir, dir3, repoDir, dir3);
-	  printf ("Call: %s\n", str3);
-	  system (str3);
-	  dir3 = strtok (NULL, " ");
-	}
-      }
-      if (i < numURIs) {
-	strcpy (sys, sys2);
-	strcpy (dirStr, dir2);
-      }
-    }
+    strcat (dirStr, dir2);
   }
+  configFile = fopen ("chaser_rsync.config", "w");
+  checkErr (configFile == NULL, "Unable to open file for write\n");
+  sprintf (rsyncStr2, "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
+  fputs (rsyncStr2, configFile);
+  fclose (configFile);
+  sprintf (str, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
+  system (str);
 
   // write timestamp into database
   table = findtablescm (scmp, "metadata");
