@@ -1,0 +1,6 @@
+# run test 7
+# checks: roa operations
+$APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/testAdd4 -d $APKI_ROOT/trunk/testing/REPOSITORY
+echo "update apki_cert set ski=\"B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75\" where local_id=8;" | mysql $APKI_DB -u mysql
+echo "update apki_roa set flags=4;" | mysql $APKI_DB -u mysql
+$APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/testDelete2 -d $APKI_ROOT/trunk/testing/REPOSITORY
