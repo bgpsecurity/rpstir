@@ -132,6 +132,7 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr)
  */
 static FILE *output;  /* place to print output (file or screen) */
 static FILE *specialOutput; /* separate place to print output from unknown */
+static FILE *out2;  /* either output or specialOutput, as appropriate */
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, validate, unknownOption;
 static char *objectType;
@@ -146,9 +147,9 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
   (void) pathnameDisplay (s, idx1, returnStr);
   int format = (strncmp (".pem", &returnStr[strlen(returnStr)-4], 4) == 0) ?
                FMT_PEM : FMT_DER;
-  checkErr (! roaFromFile (returnStr, format, 0, &roa),
+  checkErr (roaFromFile (returnStr, format, 0, &roa) != 0,
             "Error reading ROA: %s\n", returnStr);
-  roaGenerateFilter (roa, NULL, output);
+  roaGenerateFilter (roa, NULL, out2);
   free (roa);
   returnStr[0] = 0;
   return 2;
@@ -250,9 +251,9 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   int result = 0;
   int display, valid;
   char resultStr[10000];
-  FILE *out2 = output;
 
   conp = conp; numLine = numLine;  // silence compiler warnings
+  out2 = output;
   if (validate) {
     valid = checkValidity (isROA ? (char *) s->vec[validate].valptr : NULL,
                isCert ? *((unsigned int *) s->vec[validate].valptr) : 0);
