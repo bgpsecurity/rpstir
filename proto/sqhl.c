@@ -926,22 +926,24 @@ static int crlNeedsInit = 1;
 /*
  * utility function for verifyChildren
  */
-static int verifyChildCert (scmcon *conp, PropData *data)
+static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
 {
   X509 *x = NULL;
   int   x509sta, sta, chainOK;
   char  pathname[PATH_MAX];
 
-  sprintf (pathname, "%s/%s", data->dirname, data->filename);
-  x = readCertFromFile (pathname, &sta);
-  if ( x == NULL )
-    return ERR_SCM_X509;
-  sta = verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
-  if (sta < 0) {
-    deletebylid (conp, theCertTable, data->id);
-    return sta;
+  if (doVerify) {
+    sprintf (pathname, "%s/%s", data->dirname, data->filename);
+    x = readCertFromFile (pathname, &sta);
+    if ( x == NULL )
+      return ERR_SCM_X509;
+    sta = verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
+    if (sta < 0) {
+      deletebylid (conp, theCertTable, data->id);
+      return sta;
+    }
+    updateValidFlags (conp, theCertTable, data->id, data->flags, 1);
   }
-  updateValidFlags (conp, theCertTable, data->id, data->flags, 1);
   if (crlNeedsInit) {
     crlNeedsInit = 0;
     crlSrch.sname = NULL;
@@ -1074,13 +1076,16 @@ static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
 /*
  * utility function for verify_children
  */
-static int invalidateChildCert (scmcon *conp, PropData *data)
+static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
 {
   int sta;
-  if (countvalidparents (conp, data->issuer, data->aki) > 0)
-    return -1;
-  sta = updateValidFlags (conp, theCertTable, data->id, data->flags, 0);
-  if (sta != 0) return sta;
+
+  if (doUpdate) {
+    if (countvalidparents (conp, data->issuer, data->aki) > 0)
+      return -1;
+    sta = updateValidFlags (conp, theCertTable, data->id, data->flags, 0);
+    if (sta != 0) return sta;
+  }
   if (roaNeedsInit) {
     roaNeedsInit = 0;
     roaSrch.sname = NULL;
@@ -1195,12 +1200,10 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
   while (currPropData->size > 0) {
     currPropData->size--;
     idx = currPropData->size;
-    if (isRoot)
-      doIt = 1;
-    else if (doVerify)
-      doIt = verifyChildCert (conp, &currPropData->data[idx]) == 0;
+    if (doVerify)
+      doIt = verifyChildCert (conp, &currPropData->data[idx], !isRoot) == 0;
     else
-      doIt = invalidateChildCert (conp, &currPropData->data[idx]) == 0;
+      doIt = invalidateChildCert(conp, &currPropData->data[idx], !isRoot) == 0;
     if (doIt) {
       sprintf(childrenWhere,
 	  "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
