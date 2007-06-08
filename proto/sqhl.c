@@ -288,7 +288,7 @@ static char *crlf[] =
 
 static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 {
-  unsigned int crl_id;
+  unsigned int crl_id = 0;
   scmkva   aone;
   scmkv    cols[CRF_NFIELDS+6];
   char *ptr;
@@ -356,7 +356,7 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 			    unsigned int dirid, char *ski, int asid,
 			    int isValid)
 {
-  unsigned int roa_id;
+  unsigned int roa_id = 0;
   scmkva   aone;
   scmkv    cols[6];
   char  flagn[24];
@@ -742,10 +742,13 @@ static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
 /*
  * roa utility
  */
+
 static unsigned char *readfile(char *fn, int *stap)
 {
   struct stat mystat;
+  char *outptr = NULL;
   char *ptr;
+  int   outsz = 0;
   int   fd;
   int   rd;
 
@@ -786,7 +789,19 @@ static unsigned char *readfile(char *fn, int *stap)
     }
   else
     *stap = 0;
-  return((unsigned char *)ptr);
+  if ( strstr(fn, ".pem") == NULL ) /* not a PEM file */
+    return((unsigned char *)ptr);
+  *stap = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz);
+  free((void *)ptr);
+  if ( *stap < 0 )
+    {
+      if ( outptr != NULL )
+	{
+	  free((void *)outptr);
+	  outptr = NULL;
+	}
+    }
+  return((unsigned char *)outptr);
 }
 
 /*
