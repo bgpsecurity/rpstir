@@ -292,7 +292,7 @@ static void decodeblock( unsigned char in[4], unsigned char out[3] )
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 ** ALLOCATES MEMORY that must be freed elsewhere
 */
-static int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize )
+int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize )
 {
     unsigned char inTemp[4], outTemp[3], v;
     int i = 0;

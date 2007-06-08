@@ -9,10 +9,13 @@
 #include "sqhl.h"
 #include "err.h"
 
-static unsigned char *readfile(char *fn, int *stap)
+static unsigned char *myreadfile(char *fn, int *stap)
 {
   struct stat mystat;
+  char *outptr = NULL;
   char *ptr;
+  int   outsz = 0;
+  int   sta;
   int   fd;
   int   rd;
 
@@ -53,7 +56,19 @@ static unsigned char *readfile(char *fn, int *stap)
     }
   else
     *stap = 0;
-  return((unsigned char *)ptr);
+  if ( strstr(fn, ".pem") == NULL )
+    return((unsigned char *)ptr); /* not a PEM file, just plain DER */
+  sta = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz);
+  free((void *)ptr);
+  if ( sta < 0 )
+    {
+      if ( outptr != NULL )
+	{
+	  free((void *)outptr);
+	  outptr = NULL;
+	}
+    }
+  return((unsigned char *)outptr);
 }
 
 int main(int argc, char** argv)
@@ -135,7 +150,7 @@ int main(int argc, char** argv)
       roaFree(roa2);
       return sta;
     }
-  blob = readfile(fn, &sta);
+  blob = myreadfile(fn, &sta);
   if ( blob == NULL )
     {
       (void)fprintf(stderr, "Cannot read certificate from %s: error %s (%d)\n",

@@ -204,6 +204,15 @@ int check_sig(struct ROA *rp, struct Certificate *certp);
   This function checks the signature on a ROA.
 */
 
+int decode_b64(unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize);
+
+/*
+  This function decodes a PEM encoded file whose contents are stored in "bufIn" of
+  length "inSize" and produces the corresponding DER (raw ASN.1) data in "bufOut" of
+  length "outSize". Note that it allocates memory to do this, which the caller must free.
+*/
+
+
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
 #endif
