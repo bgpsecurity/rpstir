@@ -294,7 +294,7 @@ static int doQuery (char **displays, char **filters)
   char     errMsg[1024];
   int      srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
   unsigned long blah = 0;
-  int      i, j, proceed, status;
+  int      i, status;
   QueryField *field, *field2;
   char     *name;
 
@@ -361,14 +361,8 @@ static int doQuery (char **displays, char **filters)
     globalFields[i] = field;
     name = (field->dbColumn == NULL) ? displays[i] : field->dbColumn;
     while (name != NULL) {
-      proceed = 1;
-      for (j = 0; j < srch.nused; j++) {
-        if (strcasecmp (name, srch1[j].colname) == 0) proceed = 0;
-      }
-      if (proceed) {
-        field2 = findField (name);
-        addcolsrchscm (&srch, name, field2->sqlType, field2->maxSize);
-      }
+      field2 = findField (name);
+      addcolsrchscm (&srch, name, field2->sqlType, field2->maxSize);
       if (field->requiresJoin) srchFlags = srchFlags | SCM_SRCH_DO_JOIN;
       name = (name == field->otherDBColumn) ? NULL : field->otherDBColumn;
     }
