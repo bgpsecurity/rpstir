@@ -735,6 +735,8 @@ static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
   *chainOK = 1;
   pkey = X509_get_pubkey (parent);
   sta = X509_CRL_verify (x, pkey);
+  X509_free(parent);
+  EVP_PKEY_free (pkey);
   return (sta <= 0) ? ERR_SCM_NOTVALID : 0;
 }
 
@@ -1290,7 +1292,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 // verify the cert
   if ( sta == 0 ) {
     sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
-		     cf->fields[CF_FIELD_ISSUER], &x509sta, &chainOK);
+		      cf->fields[CF_FIELD_ISSUER], &x509sta, &chainOK);
   }
   // check that no crls revoking this cert
   if (sta == 0) {
