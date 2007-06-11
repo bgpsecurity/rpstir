@@ -1298,7 +1298,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 			cf->fields[CF_FIELD_ISSUER]);
   }
 // actually add the certificate
-//  sta = 0; chainOK = 1; // ******* temp *************???
+//  sta = 0; chainOK = 1; // uncomment this line for running test 8
   if ( sta == 0 )
     {
       cf->flags |= (chainOK ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
