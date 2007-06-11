@@ -204,7 +204,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp);
   This function checks the signature on a ROA.
 */
 
-int decode_b64(unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize);
+int decode_b64(unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize, char *armor);
 
 /*
   This function decodes a PEM encoded file whose contents are stored in "bufIn" of

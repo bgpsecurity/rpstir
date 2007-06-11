@@ -58,7 +58,7 @@ static unsigned char *myreadfile(char *fn, int *stap)
     *stap = 0;
   if ( strstr(fn, ".pem") == NULL )
     return((unsigned char *)ptr); /* not a PEM file, just plain DER */
-  sta = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz);
+  sta = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz, "ROA");
   free((void *)ptr);
   if ( sta < 0 )
     {

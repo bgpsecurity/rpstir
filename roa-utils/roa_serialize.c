@@ -292,7 +292,7 @@ static void decodeblock( unsigned char in[4], unsigned char out[3] )
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 ** ALLOCATES MEMORY that must be freed elsewhere
 */
-int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize )
+int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *outSize, char *armor )
 {
     unsigned char inTemp[4], outTemp[3], v;
     int i = 0;
@@ -319,7 +319,7 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
       {
 	if ('-' == bufIn[inIndex])
 	  {
-	    iArmor = findarmor((char*)&bufIn[inIndex], inSize-inIndex, "BEGIN", "ROA");
+	    iArmor = findarmor((char*)&bufIn[inIndex], inSize-inIndex, "BEGIN", armor);
 	    if ( iArmor >= 0 )
 	      {
 		inIndex += iArmor;
@@ -338,7 +338,7 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
 		// Skip the end armoring (don't translate its chars)
 		if ('-' == v)
 		  {
-		    iArmor = findarmor((char*)&bufIn[inIndex], inSize-inIndex, "END", "ROA");
+		    iArmor = findarmor((char*)&bufIn[inIndex], inSize-inIndex, "END", armor);
 		    if ( iArmor >= 0 )
 		      inIndex += iArmor;
 		  }
@@ -1771,7 +1771,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
     case FMT_PEM:
       // Decode buffer from b64, skipping unnecessary chars
       buf_final = NULL;
-      iReturn = decode_b64(buf, iSize, &buf_final, &iSizeFinal);
+      iReturn = decode_b64(buf, iSize, &buf_final, &iSizeFinal, "ROA");
       // IMPORTANT: NO break, control falls through
     case FMT_DER:      
       iSizeTmp = decode_casn(&((*rp)->self), buf_final);

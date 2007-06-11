@@ -791,7 +791,7 @@ static unsigned char *readfile(char *fn, int *stap)
     *stap = 0;
   if ( strstr(fn, ".pem") == NULL ) /* not a PEM file */
     return((unsigned char *)ptr);
-  *stap = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz);
+  *stap = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz, "CERTIFICATE");
   free((void *)ptr);
   if ( *stap < 0 )
     {
@@ -1298,6 +1298,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 			cf->fields[CF_FIELD_ISSUER]);
   }
 // actually add the certificate
+//  sta = 0; chainOK = 1; // ******* temp *************???
   if ( sta == 0 )
     {
       cf->flags |= (chainOK ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
