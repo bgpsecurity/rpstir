@@ -1269,7 +1269,7 @@ static void debug_chk_printf(char *str, int val, int cert_type)
   char *ta_cert_str = "TA_CERT";
   char *ca_cert_str = "CA_CERT";
   char *ee_cert_str = "EE_CERT";
-  char *unk_cert_str = "UNK_CERT";
+  char *un_cert_str = "UNK_CERT";
   char *cert_str;
   char *val_str;
   char other_val_str[32];
@@ -1289,8 +1289,8 @@ static void debug_chk_printf(char *str, int val, int cert_type)
     case EE_CERT:
       cert_str = ee_cert_str;
       break;
-    case UNK_CERT:
-      cert_str = unk_cert_str;
+    case UN_CERT:
+      cert_str = un_cert_str;
       break;
     default:
       snprintf(other_cert_str, sizeof(other_cert_str) - 1,
@@ -1480,7 +1480,7 @@ static int rescert_flags_chk(X509 *x, int ct)
     cert_type = TA_CERT;
   else if ( (x->ex_flags == ca_flags) && (x->ex_kusage == ca_kusage) )
     cert_type = CA_CERT;
-  else if ( (x->ex_flags == ee_flags) && (x->ex_kusage == ee_flags) )
+  else if ( (x->ex_flags == ee_flags) && (x->ex_kusage == ee_kusage) )
     cert_type = EE_CERT;
   else
     cert_type = UN_CERT;
