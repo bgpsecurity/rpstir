@@ -15,3 +15,7 @@ $APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/t
 sleep 1
 echo "Should be an ski:"
 echo "select ski from apki_roa where flags=4;" | mysql $APKI_DB -u mysql
+echo "update apki_cert set aki=ski;" | mysql $APKI_DB -u mysql
+echo "update apki_cert set issuer=subject;" | mysql $APKI_DB -u mysql
+echo "Should be a filter entry:"
+$APKI_ROOT/trunk/proto/query -a
