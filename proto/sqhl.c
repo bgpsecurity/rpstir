@@ -816,6 +816,10 @@ static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
   char fn[PATH_MAX], *fn2;
   unsigned char *blob = NULL;
 
+// call the syntactic verification first
+  sta = roaValidate(r);
+  if ( sta < 0 )
+    return(sta);
   fn2 = fn;
   cert = parent_cert (conp, ski, NULL, &sta, &fn2);
   if ( cert == NULL ) {
