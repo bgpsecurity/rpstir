@@ -1646,6 +1646,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
           BASIC_CONSTRAINTS_free(bs);
 	  bs = NULL;
         }
+      }
         if (basic_flag == 0) {
 #ifdef DEBUG
           fprintf(stderr, "[basic_const] extension not present\n");
@@ -1659,8 +1660,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
         } else {
           return(0);
         }
-      break;
-    }
+    break;
   }
 skip:
 #ifdef DEBUG
