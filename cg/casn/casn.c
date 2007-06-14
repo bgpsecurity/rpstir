@@ -1,4 +1,6 @@
 /* $Id$ */
+/* Jun 14 2007 859U  */
+/* Jun 14 2007 GARDINER fixed _stuff_string() to deal with null casnp */
 /* May 31 2007 856U  */
 /* May 31 2007 GARDINER added test for empty explicitly tagged item */
 /* Apr 17 2007 855U  */
@@ -121,7 +123,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 856P";
+char casn_sfcsid[] = "@(#)casn.c 859P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -1644,7 +1646,7 @@ void _stuff_ofs(struct casn *casnp, int num_ofs)
 
 void _stuff_string(struct casn *casnp)
     {
-    struct casn *tcasnp, *ucasnp = _go_up(casnp);
+      struct casn *tcasnp, *ucasnp;
     int count;
 #ifdef ASN_VERBOSE
     int lth;
@@ -1689,7 +1691,7 @@ void _stuff_string(struct casn *casnp)
     _free_it(casn_err_struct.asn_map_string);
     casn_err_struct.asn_map_string = b;
 #endif
-    if (ucasnp)
+    if (casnp && (ucasnp = _go_up(casnp)))
 	{
         for (count = 1, tcasnp = &ucasnp[1]; tcasnp && tcasnp != casnp; count++,
     	    tcasnp = _skip_casn(tcasnp, 1));
