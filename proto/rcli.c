@@ -320,6 +320,10 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
   int   sta, trusted;
 
   sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
+  if (sta != 0) {
+    printf ("Error loading file %s/%s: %s\n", hdir, valu, err2string(sta));
+    return sta;
+  }
   trusted = strstr(outdir, "TRUST") != NULL;
   if ( sta < 0 )
     return(sta);
