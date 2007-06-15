@@ -1,14 +1,14 @@
 # run test 4
 # checks: deletion of cert propagating invalidating, and adding propagates
-$APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/testDelete -d $APKI_ROOT/trunk/testing/REPOSITORY
+$APKI_ROOT/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/testing/testDelete -d $APKI_ROOT/testing/REPOSITORY
 sleep 1
 echo "Should be 4 entries (not validating):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski
+$APKI_ROOT/proto/query -t cert -d ski
 echo "Should be 0 entries (validating):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski -v
-$APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/testAdd2 -d $APKI_ROOT/trunk/testing/REPOSITORY
+$APKI_ROOT/proto/query -t cert -d ski -v
+$APKI_ROOT/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/testing/testAdd2 -d $APKI_ROOT/testing/REPOSITORY
 sleep 1
 echo "Should be 5 entries (not validating):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski
+$APKI_ROOT/proto/query -t cert -d ski
 echo "Should be 5 entries (validating):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski -v
+$APKI_ROOT/proto/query -t cert -d ski -v

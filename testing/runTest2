@@ -1,9 +1,9 @@
 # run test 2
 # checks: garbage collection sets status of certs to unknown
-$APKI_ROOT/trunk/proto/garbage
+$APKI_ROOT/proto/garbage
 echo "Should be 5 entries (unknown = valid):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski -v -u valid
+$APKI_ROOT/proto/query -t cert -d ski -v -u valid
 echo "Should be 2 entries (unknown to separate file):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski -v
+$APKI_ROOT/proto/query -t cert -d ski -v
 echo "Should be 3 entries (output of file unknown.out):"
 cat unknown.out

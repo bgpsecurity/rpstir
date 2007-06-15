@@ -2,10 +2,10 @@
 # checks: when crl verified later, check that certs revoked
 echo "delete from apki_cert;" | mysql $APKI_DB -u mysql
 echo "delete from apki_crl;" | mysql $APKI_DB -u mysql
-$APKI_ROOT/trunk/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/trunk/testing/testAdd3 -d $APKI_ROOT/trunk/testing/REPOSITORY
+$APKI_ROOT/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/testing/testAdd3 -d $APKI_ROOT/testing/REPOSITORY
 sleep 1
 echo "Should be 5 entries (no validity check):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski
+$APKI_ROOT/proto/query -t cert -d ski
 echo "Should be 5 entries (validity check):"
-$APKI_ROOT/trunk/proto/query -t cert -d ski -v
+$APKI_ROOT/proto/query -t cert -d ski -v
 
