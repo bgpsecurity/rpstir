@@ -146,7 +146,7 @@ static int printUsage()
   fprintf(stderr, "Usage:\n"); 
   fprintf(stderr, "  -p portno   connect to port number (default=APKI_PORT)\n");
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
-  fprintf(stderr, "  -d dirname  rsync executable directory (default=APKI_ROOT/trunk/rsync_aur)\n");
+  fprintf(stderr, "  -d dirname  rsync executable directory (default=APKI_ROOT/rsync_aur)\n");
   fprintf(stderr, "  -h          this help listing\n");
   return 1;
 }
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 
   // initialize
   if (getenv ("APKI_ROOT") != NULL)
-    sprintf (rsyncDir, "%s/trunk/rsync_aur", getenv ("APKI_ROOT"));
+    sprintf (rsyncDir, "%s/rsync_aur", getenv ("APKI_ROOT"));
   else
     sprintf (rsyncDir, ".");
   if (getenv ("APKI_PORT") != NULL)
