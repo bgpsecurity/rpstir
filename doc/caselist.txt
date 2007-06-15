@@ -147,12 +147,14 @@ ROA: mytest
  3.8: Bad SignatureAlgorithmIdentifier (not SHA-256 with RSA)
  3.9: Bad SignatureValue
 
+ The following are still experimental and should not be used yet.
+
  4.1: Bad signature
-      Note: this will only fail if the parent cert is already in the DB
- 4.2: DELETED: eContent contents out of order:
-  4.2.1: DELETED: asID after ipAddrBlocks
-  4.2.2: DELETED: addressFamily after addressesOrRanges
- 4.3: DELETED: signerInfo sequence contents out of order
+ 4.2: Bad signer ID
+ 4.3: AS not valid
+ 4.4  Two ASes listed
+ 4.5  IP addresses out of order
+ 4.6  IP addresses out of range
 
   
 -----------------------------------------------------------------------
