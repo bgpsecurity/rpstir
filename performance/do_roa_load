@@ -3,9 +3,9 @@
 echo "delete from apki_cert where ski=\"D3:64:16:F7:4F:6F:2E:53:7B:84:42:0D:9B:72:2F:E8:CB:58:0B:4C\";" | mysql $APKI_DB -u mysql
 echo "delete from apki_cert where ski=\"B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75\";" | mysql $APKI_DB -u mysql
 
-${APKI_ROOT}/trunk/rsync_aur/rsync_aur -t ${APKI_PORT} -d ${APKI_ROOT}/trunk/performance/REPOSITORY -f ${APKI_ROOT}/trunk/performance/roaAdd
+${APKI_ROOT}/rsync_aur/rsync_aur -t ${APKI_PORT} -d ${APKI_ROOT}/performance/REPOSITORY -f ${APKI_ROOT}/performance/roaAdd
 
 echo "update apki_cert set flags=4;" | mysql $APKI_DB -u mysql
 
-${APKI_ROOT}/trunk/rsync_aur/rsync_aur -t ${APKI_PORT} -d ${APKI_ROOT}/trunk/performance/REPOSITORY -f ${APKI_ROOT}/trunk/performance/roaAdd2
+${APKI_ROOT}/rsync_aur/rsync_aur -t ${APKI_PORT} -d ${APKI_ROOT}/performance/REPOSITORY -f ${APKI_ROOT}/performance/roaAdd2
 
