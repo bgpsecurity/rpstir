@@ -54,5 +54,22 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
 (7) chaser.sh
 
-(8) query.sh
+(8) query.sh: This is the way to pull information out of the database and
+    local repository.  There are two basic modes.
 
+    The comprehensive query, indicated by the argument "-a", pulls all
+    the valid ROAs from the repository and outputs a set of BGP filters
+    specified by these ROAs.  To send the output to a file rather than the
+    screen, include "-o <filename>" on the command line or just redirect
+    the output.  Those ROAs whose trust chain includes a certificate whose
+    CRL is currently stale are in a state that is between valid and invalid
+    that we call "unknown", and by default we send the filters from these
+    ROAs instead to a file called unknown.out.  To instead include them with
+    the fully valid ROAs, include "-u valid" on the command line, and to
+    completely ignore them, include "-u invalid" on the command line.
+
+    The informational query provides the user with a means to see what
+    is in the database without directly executing MySQL commands.
+    The command "query.sh -l <type>", where type is cert, crl, or roa,
+    provides a list of all the field names for a particular object type.
+    ?????????????????
