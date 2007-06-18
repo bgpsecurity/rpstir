@@ -1,0 +1,180 @@
+Installation and Usage Manual
+Version 1.0
+
+1.0 Organization of this document
+
+This document describes how to install and use the BBN Address Space
+PKI database/repository software.  Please refer to the design document,
+apkidesign.doc, for a detailed description of the various software
+components in this release.
+
+Section 2 of this document describes how to install that software,
+including all its dependencies.  Section 3 provides a quick-start
+guide on how to get your system running.  Section 4 
+describes the other documents in the deliverable package. Finally,
+Appendix A provides troubleshooting tips for some common problems.
+
+2.0 Installation
+
+2.1 Prerequisites
+
+2.1.1 OpenSSL
+
+Install the latest released version of the OpenSSL package from
+http://www.openssl.org.  It should be at least version 0.9.8d. Follow
+the installation instructions for that package.  We recommend the default
+installation target directory /usr/local/ssl.
+
+2.1.2 MySQL
+
+Install the MySQL open source database from http://mysql.org. We recommend
+the default installation target of /usr/local/mysql. Also install the
+Connector/ODBC driver from the same site.  Insure that the 3.51 driver
+is installed.  We strongly recommend that you give the root account a
+password in the ODBC initialization file (typically /usr/local/etc/odbc.ini).
+
+2.1.3 cryptlib
+
+Install Peter Gutmann's cryptlib from its default website, currently at
+http://www.cs.auckland.ac.nz/~pgut001/cryptlib. Insure that both the
+library itself and its include files are in accessible locations, e.g.
+/usr/local/lib and /usr/local/include.
+
+2.2 APKI database software
+
+The APKI software will have been delivered to you as a gzip-ed tarball
+named APKI.tgz.  Gunzip using the command:
+
+    gunzip APKI.tgz
+
+and then un-tar the resulting tarball using the command
+
+    tar xvpf APKI.tar
+
+This will create a directory named APKI which will contain various
+subdirectories.
+
+3. Running the APKI Software 
+
+The following are the steps required to run the APKI software.  Note that
+steps 1-4 only need to be executed once at the beginning if everything goes
+completely as planned.  Steps 5-8 have to be run periodically even under
+ideal circumstances.  It is recommended that the user create a script
+to run these four steps and have a cron job that executes this script
+periodically.  All scripts for steps 3-8 are in the run_scripts directory.
+
+3.1 make the executables: In the top-level directory, execute make, and
+    this should create all the required executables in all the
+    different directories.
+
+3.2 set environment variables: There are three environment variables used
+    throughout the scripts and the code:
+    APKI_DB - the name of the MySQL database used to hold the APKI data
+    APKI_PORT - the port number used for the loader and feeder to talk
+    APKI_ROOT - the full pathname of this directory (the top-level
+      directory of the APKI tree)
+    These environment variables will be set automatically to the
+    following defaults by each of the scripts in the run_scripts directory:
+    APKI_DB = apki
+    APKI_PORT = 7344
+    APKI_ROOT = current working directory, or one higher if in
+                directory run_scripts
+    If you ever want to run the code directly instead of running the
+    scripts, make sure to set these yourself.
+
+3.3 initDB.sh: This script deletes the database, if any, with the name
+    APKI_DB and sets up a new database with all the right tables.
+    Be prepared to enter the root MySQL password twice.
+
+3.4 loader.sh: This starts the process that receives data from the feeder
+    and loads it into the database.  Under ideal circumstances, this will
+    continue to run forever, waiting for inputs from the feeder.
+
+3.5 rsync_pull.sh and feeder.sh: rsync_pull is a script that pulls
+    the data from a set of repositories using rsync and then optionally
+    loads them into the database used the feeder.sh script.
+    rsync_pull.sh takes a single argument which is the name of a
+    configuration file.  A sample configuration file called
+    rsync_mock.config is included.  The configuration file tells the
+    name of all remote repositories to be downloaded, the top-level
+    directory for the local repository (with the REPOSITORY directory
+    included here the suggested one), to top-level directory for storing
+    the log files of the downloads (with LOGS the suggested directory),
+    and whether or not to do the database load.
+
+    If you want to do the database load separately or something fails to
+    cause you to need to do the load separately, run the feeder.sh
+    script directly, with the one argument being the name of the log file.
+
+3.6 garbage.sh: This checks for certificates that may have expired due
+    to the passage of time, or crls that may have become stale due to
+    the passage of time, and takes the appropriate actions.
+
+3.7 chaser.sh
+
+3.8 query.sh: This is the way to pull information out of the database and
+    local repository.  There are two basic modes.
+
+    The comprehensive query, indicated by the argument "-a", pulls all
+    the valid ROAs from the repository and outputs a set of BGP filters
+    specified by these ROAs.  To send the output to a file rather than the
+    screen, include "-o <filename>" on the command line or just redirect
+    the output.  Those ROAs whose trust chain includes a certificate whose
+    CRL is currently stale are in a state that is between valid and invalid
+    that we call "unknown", and by default we send the filters from these
+    ROAs instead to a file called unknown.out.  To instead include them with
+    the fully valid ROAs, include "-u valid" on the command line, and to
+    completely ignore them, include "-u invalid" on the command line.
+
+    The informational query provides the user with a means to see what
+    is in the database without directly executing MySQL commands.
+    The basic informational query has the form
+    ./query.sh -t <type> -d <field> [-d <field> ... -d <field>]
+    where type is either cert, crl or roa, and the fields are all
+    the fields of the objects to display.  There are different possible
+    fields for each object type, and the full list of possibilities
+    is obtained with the command "query.sh -l <type>".
+    Most of these fields also provide the capability for filtering
+    the results based on a simple comparison.  To do such filtering,
+    add as many "-f <field>.<op>.<value>" arguments to the command line
+    as desired, where op is one of (eq, ne, lt, gt, le, ge) and value
+    is unquoted and contains # characters to replaces spaces.
+    Additional arguments are given if you type ./query.sh without
+    any arguments.
+
+4. Document resources
+
+client.txt	This file
+api.txt		API for the database, ASN.1 and ROA libraries
+testplan.doc    Test plan
+apkidesign.doc	Top level design document
+codereview.doc	Code review standards
+apkiaur.txt	rsync_aur/rcli socket communication protocol
+
+Appendix A. Troubleshooting
+
+A.1 Database troubleshooting
+
+If you are having database errors, particularly when you first attempt to
+use rcli, it is important to check and make sure that your MySQL installation
+is correct.  Try the following command:
+
+    mysql --user=mysql
+
+This should connect you to the database and give a "mysql> " prompt back. If
+it does not, then your MySQL and/or ODBC installation is not correct. Check
+the troubleshooting section of the MySQL documentation. Verify that your ODBC
+information, in /usr/local/etc/odbc.ini and /usr/local/etc/odbcinst.ini, is
+correct.  Verify that the MySQL daemon process mysqld is running using "ps -ef".
+Verify that there is a mysql socket named mysql.sock, typically in /tmp.
+
+Once you can successfully connect to the database as user "mysql" try
+connecting as root by issuing the command:
+
+    mysql --user=root --password=PWD
+
+where PWD is the root password specified in your odbc.ini file. If this does
+not succeed, follow the steps given in the MySQL manual for resetting the
+root password, then stop and restart the mysqld process.
+
+Other information TBD.
