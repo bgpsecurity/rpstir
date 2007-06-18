@@ -102,13 +102,13 @@ int main(int argc, char** argv)
       return sta;
     }
   sta = roaToFile(roa, filename_pem, FMT_PEM);
+  roaFree(roa);
   if ( sta < 0 )
     {
       (void)fprintf(stderr, "roaToFile(%s) failed with error %s (%d)\n",
 		    filename_pem, err2string(sta), sta);
       return sta;
     }
-  roaFree(roa);
   sta = roaFromFile(filename_pem, FMT_PEM, cTRUE, &roa2);
   if ( sta < 0 )
     {
@@ -126,6 +126,7 @@ int main(int argc, char** argv)
   if ( scmp == NULL )
     {
       roaFree(roa2);
+      free(ski);
       (void)fprintf(stderr,
 		    "Internal error: cannot initialize database schema\n");
       return -3;
@@ -137,12 +138,14 @@ int main(int argc, char** argv)
       (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
 		    scmp->dsn, errmsg);
       roaFree(roa2);
+      free(ski);
       freescm(scmp);
       return -4;
     }
   cert = (X509 *)roa_parent(scmp, conp, ski, &fn, &sta);
   disconnectscm(conp);
   freescm(scmp);
+  free(ski);
   if ( cert == NULL )
     {
       (void)fprintf(stderr, "ROA has no parent: error %s (%d)\n",

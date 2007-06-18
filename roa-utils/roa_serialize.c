@@ -143,14 +143,14 @@ static int encode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut,
     while( inIndex < inSize ) {
         len = 0;
         for( i = 0; i < 3; i++ ) {
-            inTemp[i] = (unsigned char) bufIn[inIndex];
             if( inIndex < inSize ) {
-                len++;
-            }
+	      inTemp[i] = (unsigned char) bufIn[inIndex];
+	      inIndex++;
+	      len++;
+	    }
             else {
                 inTemp[i] = 0;
             }
-	    inIndex++;
         }
         if( len ) {
             encodeblock( inTemp, outTemp, len );
@@ -983,7 +983,7 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, cha
   CRYPT_CONTEXT sigKeyContext;
   CRYPT_KEYSET cryptKeyset;
   uchar hash[40];
-  uchar *signature;
+  uchar *signature = NULL;
   int ansr = 0, signatureLength;
   char *msg;
 
@@ -1026,6 +1026,8 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, cha
       ansr = ERR_SCM_INVALSIG;
     }
   g_lastInstruction = NONE;
+  if ( signature != NULL )
+    free(signature);
   return ansr;
 }
 
@@ -1646,7 +1648,7 @@ static int confInterpret(char* filename, struct ROA* roa)
     {
       if (cFALSE == iConfiguredKey[ck])
 	{
-	  if ((SID == ck) ||
+	  if (// (SID == ck) ||
 //	      (SIGNATURE == ck) ||
 	      (AS_ID == ck) ||
               (KEYFILE == ck) ||
@@ -1735,7 +1737,9 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   // Open the file and read in its contents
   if ((fd = open(fname, (O_RDONLY))) < 0)
     {
-      delete_casn(&((*rp)->self));
+      //      delete_casn(&((*rp)->self));
+      roaFree(*rp);
+      *rp = NULL;
       return ERR_SCM_COFILE;
     }
   iSize = 1024;
@@ -1755,7 +1759,11 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       else if (iSizeTmp < 0)
 	{
 	  close(fd);
-	  delete_casn(&((*rp)->self));
+	  //	  delete_casn(&((*rp)->self));
+	  roaFree(*rp);
+	  *rp = NULL;
+	  if ( buf != NULL )
+	    free(buf);
 	  return ERR_SCM_BADFILE;
 	}
       else
@@ -1776,11 +1784,17 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
     case FMT_DER:      
       iSizeTmp = decode_casn(&((*rp)->self), buf_final);
       if (buf_final != buf)
-	free(buf);
+	{
+	  free(buf);
+	  buf = NULL;
+	}
       free(buf_final);
+      buf_final = NULL;
       if (iSizeTmp != iSizeFinal)
 	{
-	  delete_casn(&((*rp)->self));
+	  //	  delete_casn(&((*rp)->self));
+	  roaFree(*rp);
+	  *rp = NULL;
 	  iReturn = ERR_SCM_INVALASN;
 	}
       else
@@ -1791,7 +1805,9 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       iROAState = confInterpret(fname, *rp);
       if (iROAState < 0)
 	{
-	  delete_casn(&((*rp)->self));
+	  //	  delete_casn(&((*rp)->self));
+	  roaFree(*rp);
+	  *rp = NULL;
 	  iReturn = iROAState;
 	}
       break;
@@ -1799,7 +1815,8 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       iReturn = ERR_SCM_INVALARG;
       break;
     }
-
+  if ( buf != NULL )
+    free((void *)buf);
   if ((0 == iReturn) && (cFALSE != doval))
     iReturn = roaValidate(*rp);
   return iReturn;

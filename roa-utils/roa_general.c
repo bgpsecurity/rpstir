@@ -140,6 +140,7 @@ unsigned char *roaSKI(struct ROA *r)
 	}
       // Clear the incorrectly allocated : in the last loop
       cReturn[(3*(i-1)) + 2] = 0x00;
+      free(cSID);
       return cReturn;
     }
 
@@ -619,8 +620,10 @@ int roaAS_ID(struct ROA *r)
 void roaFree(struct ROA *r)
 {
   if (NULL != r)
-    delete_casn(&(r->self));
-  return;
+    {
+      delete_casn(&(r->self));
+      free((void *)r);
+    }
 }
 
 int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp)

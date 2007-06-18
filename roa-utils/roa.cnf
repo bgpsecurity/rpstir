@@ -29,11 +29,11 @@ version		= 3
 [ signer ]
 # the parent certificate's SKI (required)
 # this is not used.  SKI comes from private key used to sign
-SID		= 7b:72:F9:7A:AD:17:F2:32:65:0E:EF:5F:9B:1F:31:8C:30:1B:6F:12
+# SID		= 7b:72:F9:7A:AD:17:F2:32:65:0E:EF:5F:9B:1F:31:8C:30:1B:6F:12
 
 # the signature of the parent cert (required)
 # this is not used either now that we can sign
-signature	= a2e3d49b32e9a
+# signature	= a2e3d49b32e9a
 
 ####################################################################
 [ content ]
