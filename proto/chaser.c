@@ -147,6 +147,7 @@ static int printUsage()
   fprintf(stderr, "  -p portno   connect to port number (default=APKI_PORT)\n");
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
   fprintf(stderr, "  -d dirname  rsync executable directory (default=APKI_ROOT/rsync_aur)\n");
+  fprintf(stderr, "  -n          don't execute, just print what would have done\n");
   fprintf(stderr, "  -h          this help listing\n");
   return 1;
 }
@@ -162,6 +163,7 @@ int main(int argc, char **argv)
   unsigned long blah = 0;
   int      i, status, numDirs, ch;
   int      portno = 0;
+  int      noExecute = 0;
   char     dirs[50][120], str[180], *str2;
   char     *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
   char     rsyncDir[200];
@@ -180,7 +182,7 @@ int main(int argc, char **argv)
   (void) setbuf (stdout, NULL);
 
   // parse the command-line flags
-  while ((ch = getopt(argc, argv, "f:p:d:h")) != -1) {
+  while ((ch = getopt(argc, argv, "f:p:d:nh")) != -1) {
     switch (ch) {
       case 'f':   /* configuration file */
 	origFile = strdup (optarg);
@@ -190,6 +192,9 @@ int main(int argc, char **argv)
 	break;
       case 'd':   /* rsync executable directory */
 	sprintf (rsyncDir, optarg);
+	break;
+      case 'n':   /* no execution */
+	noExecute = 1;
 	break;
       case 'h':   /* help */
       default:
@@ -298,7 +303,10 @@ int main(int argc, char **argv)
   fputs (rsyncStr2, configFile);
   fclose (configFile);
   sprintf (str, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
-  system (str);
+  if (noExecute)
+    printf ("Would have executed: %s\n", str);
+  else
+    system (str);
 
   // write timestamp into database
   table = findtablescm (scmp, "metadata");
