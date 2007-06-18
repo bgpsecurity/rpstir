@@ -4,7 +4,7 @@ steps 1-4 only need to be executed once at the beginning if everything goes
 completely as planned.  Steps 5-8 have to be run periodically even under
 ideal circumstances.  It is recommended that the user create a script
 to run these four steps and have a cron job that executes this script
-periodically.
+periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
 (1) make the executables: In this directory, execute make, and this should
     create all the required executables in all the different directories.
@@ -24,19 +24,35 @@ periodically.
     If you ever want to run the code directly instead of running the
     scripts, make sure to set these yourself.
 
-(3) initDB: This script deletes the database, if any, with the name
+(3) initDB.sh: This script deletes the database, if any, with the name
     APKI_DB and sets up a new database with all the right tables.
     Be prepared to enter the root MySQL password twice.
 
-(4) loader: This starts the process that receives data from the feeder
+(4) loader.sh: This starts the process that receives data from the feeder
     and loads it into the database.  Under ideal circumstances, this will
     continue to run forever, waiting for inputs from the feeder.
 
-(5) rsync_pull and feeder
+(5) rsync_pull.sh and feeder.sh: rsync_pull is a script that pulls
+    the data from a set of repositories using rsync and then optionally
+    loads them into the database used the feeder.sh script.
+    rsync_pull.sh takes a single argument which is the name of a
+    configuration file.  A sample configuration file called
+    rsync_mock.config is included.  The configuration file tells the
+    name of all remote repositories to be downloaded, the top-level
+    directory for the local repository (with the REPOSITORY directory
+    included here the suggested one), to top-level directory for storing
+    the log files of the downloads (with LOGS the suggested directory),
+    and whether or not to do the database load.
 
-(6) garbage collector
+    If you want to do the database load separately or something fails to
+    cause you to need to do the load separately, run the feeder.sh
+    script directly, with the one argument being the name of the log file.
 
-(7) chaser
+(6) garbage.sh: This checks for certificates that may have expired due
+    to the passage of time, or crls that may have become stale due to
+    the passage of time, and takes the appropriate actions.
 
-(8) query
+(7) chaser.sh
+
+(8) query.sh
 
