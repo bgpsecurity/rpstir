@@ -899,6 +899,7 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   struct ROA *r = NULL;
   int typ, chainOK, sta;
   char pathname[PATH_MAX];
+  char *skii;
   unsigned int id;
 
   idx = idx;
@@ -909,8 +910,11 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &r);
   if (sta < 0)
     return sta;
-  sta = verify_roa(conp, r, (char *)roaSKI(r), &chainOK);
+  skii = (char *)roaSKI(r);
+  sta = verify_roa(conp, r, skii, &chainOK);
   roaFree(r);
+  if ( skii )
+     free((void *)skii);
   id = *((unsigned int *) (s->vec[2].valptr));
   // if invalid, delete it
   if (sta < 0) {
@@ -1400,10 +1404,12 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   if ( asid == 0 )
     {
       roaFree(r);
+      free((void *)ski);
       return(ERR_SCM_INVALASID);
     }
   sta = verify_roa (conp, r, ski, &chainOK);
   roaFree(r);
+  free((void *)ski);
   if ( sta < 0 )
     return(sta);
   sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, chainOK);
