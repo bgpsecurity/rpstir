@@ -294,7 +294,7 @@ static int doQuery (char **displays, char **filters)
   char     errMsg[1024];
   int      srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
   unsigned long blah = 0;
-  int      i, status;
+  int      i, j, status;
   QueryField *field, *field2;
   char     *name;
 
@@ -325,24 +325,27 @@ static int doQuery (char **displays, char **filters)
       checkErr (field->justDisplay, "Field only for display: %s\n", name);
       name = strtok (NULL, ".");
       if (strcasecmp (name, "eq") == 0) {
-        strcat (whereStr, " = ");
+        strcat (whereStr, "=");
       } else if (strcasecmp (name, "ne") == 0) {
-        strcat (whereStr, " <> ");
+        strcat (whereStr, "<>");
       } else if (strcasecmp (name, "lt") == 0) {
-        strcat (whereStr, " < ");
+        strcat (whereStr, "<");
       } else if (strcasecmp (name, "gt") == 0) {
-        strcat (whereStr, " > ");
+        strcat (whereStr, ">");
       } else if (strcasecmp (name, "le") == 0) {
-        strcat (whereStr, " <= ");
+        strcat (whereStr, "<=");
       } else if (strcasecmp (name, "ge") == 0) {
-        strcat (whereStr, " >= ");
+        strcat (whereStr, ">=");
       } else {
         checkErr (1, "Bad comparison operator: %s\n", name);
       }
+      strcat (whereStr, "\"");
       name = strtok (NULL, "");
-      if (name[0] != '"') strcat (whereStr, "\"");
+      for (j = 0; j < (int)strlen(name); j++) {
+	if (name[j] == '#') name[j] = ' ';
+      }
       strcat (whereStr, name);
-      if (name[0] != '"') strcat (whereStr, "\"");
+      strcat (whereStr, "\"");
     }
     srch.wherestr = whereStr;
   }
@@ -428,7 +431,8 @@ static int printUsage()
   printf ("  -d: the name of one field of the object to display\n");
   printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
-  printf ("      (eq, ne, gt, lt, ge, le)\n");
+  printf ("      (eq, ne, gt, lt, ge, le); to include a space in value,\n");
+  printf ("      put a # where the space should be\n");
   printf ("  -v: only display valid roa's and cert's\n");
   printf ("  -n: no labels for the data fields displayed\n");
   printf ("  -m: multiline, i.e. each field on a different line\n\n");
