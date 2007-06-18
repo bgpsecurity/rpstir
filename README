@@ -1,0 +1,42 @@
+
+The following are the steps required to run the APKI software.  Note that
+steps 1-4 only need to be executed once at the beginning if everything goes
+completely as planned.  Steps 5-8 have to be run periodically even under
+ideal circumstances.  It is recommended that the user create a script
+to run these four steps and have a cron job that executes this script
+periodically.
+
+(1) make the executables: In this directory, execute make, and this should
+    create all the required executables in all the different directories.
+
+(2) set environment variables: There are three environment variables used
+    throughout the scripts and the code:
+    APKI_DB - the name of the MySQL database used to hold the APKI data
+    APKI_PORT - the port number used for the loader and feeder to talk
+    APKI_ROOT - the full pathname of this directory (the top-level
+      directory of the APKI tree)
+    These environment variables will be set automatically to the
+    following defaults by each of the scripts in the run_scripts directory:
+    APKI_DB = apki
+    APKI_PORT = 7344
+    APKI_ROOT = current working directory, or one higher if in
+                directory run_scripts
+    If you ever want to run the code directly instead of running the
+    scripts, make sure to set these yourself.
+
+(3) initDB: This script deletes the database, if any, with the name
+    APKI_DB and sets up a new database with all the right tables.
+    Be prepared to enter the root MySQL password twice.
+
+(4) loader: This starts the process that receives data from the feeder
+    and loads it into the database.  Under ideal circumstances, this will
+    continue to run forever, waiting for inputs from the feeder.
+
+(5) rsync_pull and feeder
+
+(6) garbage collector
+
+(7) chaser
+
+(8) query
+
