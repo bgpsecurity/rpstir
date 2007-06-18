@@ -1,0 +1,169 @@
+All files are in ~/apki/trunk/testing/unittest
+
+Cert files: PFLXmgA2Ff9X7hUPpD9NIPosEoEbadX.Y.cer.pem
+
+ROA files: mytestbadX.Y.roa.pem
+
+CRL files: s0Rk925AmjX-pu8WWN9FOXuHz8QbadX.Y.crl
+
+Instructions:
+
+	cd ~/apki/trunk/proto
+	./rcli -f FILE
+		for each FILE in the above list (based on caselist, below)
+
+
+--------------------------------------------------------------------------
+
+Certificate cases
+
+ 1.1: Zero length file
+ 1.2: First ID (issuer) missing
+ 1.3: Second ID (subject) missing
+ 1.4: Date missing
+ 1.5: PK missing
+ 1.6: Basic Constraints field missing
+ 1.7: CA boolean set/not set (for non-CA/CA)
+ 1.8: Subject key ID field missing
+ 1.9: Authority key ID field missing for not self-signed cert
+ 1.10: Key usage field missing
+ 1.11: keyCertSign/crlSign bits missing (for CA cert with no other bits set)
+ 1.12: digitalSignature bit missing (for EE cert)
+ 1.13: Certificate policies field missing
+ 1.14: CRL Dist point field missing
+ 1.15: Auth info access field missing
+ 1.16: Subj info access field missing
+ 1.17: IP Addresses and AS number fields BOTH missing
+ 1.18: Basic Constraints crit flag missing
+ 1.19: Key usage crit flag missing
+ 1.20: Certificate policies crit flag missing
+ 1.21: IP Addresses/AS numbers crit flag missing
+
+ 2.1: First ID (issuer) duplicated
+ 2.2: Second ID (subject) duplicated
+ 2.3: Date duplicated
+ 2.4: PK info duplicated
+ 2.5: Basic Constraints field duplicated
+ 2.6: Subject key ID field duplicated
+ 2.7: Authority key ID field duplicated
+ 2.8: Key usage field duplicated
+ 2.9: Certificate policies field duplicated
+ 2.10: CRL Dist point field duplicated
+ 2.11: Auth info access field duplicated
+ 2.12: Subj info access field duplicated
+ 2.13: IP Addresses or AS number field duplicated
+ 2.14: Subject key ID critical bit set 
+ 2.15: Auth key ID critical bit set
+ 2.16: CRL dist point critical bit set
+ 2.17: Auth info access critical bit set
+ 2.18: Subj info access critical bit set
+ 2.19: Auth key ID subfield (authorityCertIssuer) present
+ 2.20: Auth key ID subfield (authorityCertSerialNumber) present
+ 2.21: CRL dist point subfield (Reasons) present
+ 2.22: CRL dist point subfield (CRLIssuer) present
+
+ 3.1: 1.2.840.113549.1.1.11 (PK algorithm) changed
+ 3.2: 2.5.4.3 (issuer) changed
+ 3.3: End date same as start date (expired)
+ 3.4: End date before start date
+ 3.5: Date before 2049 encoded as Generalized Time (should be UTC) (RFC3280)
+ 3.6: Date in 2050 or later encoded as UTC (should be generalized)
+ 3.7: 2.5.4.3 (subject) changed
+ 3.8: 1.2.840.113549.1.1.1 (PK alg not RSA) changed
+ 3.9: PK changed (short/long)
+ 3.10: 2.5.29.19 (basic constr) changed
+ 3.11: 2.5.29.14 (subj key ID) changed
+ 3.12: 2.5.29.35 (auth key ID) changed
+ 3.13: 2.5.29.15 (key usage) changed
+ 3.14: 2.5.29.32 (cert policies) changed
+ 3.15: 2.5.29.31 (CRL dist point) changed
+ 3.16: 1.3.6.1.5.5.7.1.1 (auth info access) changed
+ 3.17: 1.3.6.1.5.5.7.48.2 (auth info access data) changed
+ 3.18: 1.3.6.1.5.5.7.1.11 (subj info access) changed
+ 3.19: 1.3.6.1.5.5.7.48.5 (subj info access data) changed
+ 3.20: 1.3.6.1.5.5.7.1.7 (ip addr) changed
+ 3.21: Cert version not 3 (i.e. != 0x02)
+ 3.22: DELETED
+ 3.23: IP addresses with invalid values
+ 3.24: DELETED
+
+ 4.1: CRL dist has no rsync site
+ 4.2: CRL dist uses "RSYNC"
+ 4.3: Auth info access has no rsync siet
+ 4.4: Auth info access uses "RSYNC"
+ 4.5: Subj info access has no rsync site
+ 4.6: Subj info access uses "RSYNC"
+ 4.7: IP addresses not in order
+ 4.8: AS numbers not in order
+
+--------------------------------------------------------------------------
+
+ROA cases
+
+ 1.1: Empty file (pem header/footer only)
+ 1.2: Missing ContentType field
+ 1.3: Missing CMSVersion field
+ 1.4: Missing DigestAlgorithmIdentifiers field
+ 1.5: Missing EncapsulatedContentInfo field
+ 1.6: Missing SignerInfos field
+ 1.7: Missing eContentType field
+ 1.8: Missing SignerInfo version field
+ 1.9: Missing SignerIdentifier field
+ 1.10: Missing DigestAlgorithmIdentifier field
+ 1.11: Missing SignatureAlgorithmIdentifier field
+ 1.12: Missing SignatureValue field
+
+ 2.1: Duplicate ContentType field
+ 2.2: Duplicate CMSVersion field
+ 2.3: Duplicate DigestAlgorithmIdentifiers field
+ 2.4: Duplicate EncapsulatedContentInfo field
+ 2.5: Duplicate SignerInfos field
+ 2.6: Duplicate eContentType field
+ 2.7: Duplicate SignerInfo version field
+ 2.8: Duplicate SignerIdentifier field
+ 2.9: Duplicate DigestAlgorithmIdentifier field
+ 2.10: Duplicate SignatureAlgorithmIdentifier field
+ 2.11: Duplicate SignatureValue field
+
+ 3.1: Bad ContentType OID
+ 3.2: Bad CMSVersion number (not 3)
+ 3.3: Bad DigestAlgorithmIdentifiers (not SHA-256)
+ 3.4: Bad eContentType (not ROA)
+ 3.5: Bad eContentType info
+ 3.6: Bad SignerInfo version (not 3)
+ 3.7: Bad DigestAlgorithmIdentifier (not SHA-256)
+ 3.8: Bad SignatureAlgorithmIdentifier (not SHA-256 with RSA)
+ 3.9: Bad SignatureValue
+
+-----------------------------------------------------------------------
+
+CRL cases
+
+ 1.1: Blank file
+ 1.2: Missing issuer name
+ 1.3: Missing issue/next issue date
+ 1.4: Missing AKI
+ 1.5: Missing CRL number
+ 1.6: Missing PK
+
+ 2.1: Duplicate issuer
+ 2.2: Duplicate date
+ 2.3: Duplicate AKI
+ 2.4: Duplicate CRL number
+ 2.5: Duplicate PK
+ 2.6 CRL number field with crit bit set
+
+ 3.1: Version number not 2
+ 3.2: Cert OID corrupt
+ 3.3: Issuer OID corrupt
+ 3.4: AKI OID corrupt
+ 3.5: AKI data corrupt
+ 3.6: CRL number OID corrupt
+ 3.7: CRL number data > 20 bytes
+ 3.8: PK OID corrupt
+ 3.9: PK data corrupt
+ 3.10: Next issue date same as issue date 
+ 3.11: End date before start date
+ 3.12: Date before 2049 encoded as Generalized Time (should be UTC) (RFC3280)
+ 3.13: Date in 2050 or later encoded as UTC (should be generalized)
+
