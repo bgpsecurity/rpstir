@@ -1409,10 +1409,13 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     }
   sta = verify_roa (conp, r, ski, &chainOK);
   roaFree(r);
-  free((void *)ski);
   if ( sta < 0 )
+  {
+    free((void *)ski);
     return(sta);
+  }
   sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, chainOK);
+  free((void *)ski);
   return(sta);
 }
 
