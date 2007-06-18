@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 
   // initialize
   if (getenv ("APKI_ROOT") != NULL)
-    sprintf (rsyncDir, "%s/rsync_aur", getenv ("APKI_ROOT"));
+    sprintf (rsyncDir, "%s/run_scripts", getenv ("APKI_ROOT"));
   else
     sprintf (rsyncDir, ".");
   if (getenv ("APKI_PORT") != NULL)
