@@ -10,7 +10,7 @@
 # debugging
 # DFLAGS = -DTEST -DDEBUG
 DFLAGS = 
-CFLAGS=	-g -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wmissing-field-initializers
+CFLAGS=	-g -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations
 #CFLAGS =-g -Wall
 XFLAGS =        # xtra cflags, set by systype targets
 #IFLAGS =-I/usr/local/ssl/include 
