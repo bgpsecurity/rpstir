@@ -1,0 +1,27 @@
+
+To run the performance tests, follow these steps:
+
+(1) Open two windows.
+
+(2) Set the environment variables APKI_DB, APKI_ROOT and APKI_PORT in both
+windows (or alternatively in your startup file).
+APKI_DB = database name (e.g., davestestdb)
+APKI_ROOT = pathname of top of tree (e.g., /home/dmontana/apki)
+APKI_PORT = port number (e.g., 7000)
+
+(3) In one window, execute the script initDB and then the script listener,
+both from the directory ../testing.  You will have to enter the root mysql
+password twice for initDB.  For each test, you will need to execute
+initDB beforehand to clear the database.
+
+(4) To execute the cert/crl performance test, execute the script
+do_pull.sh to rsync the data from a remote repository and load it.
+Subsequently, if you want to test just the load from a previous pull,
+run the script do_load.sh.  Make sure to initialize the database before
+each test run.
+
+(5) To execute the roa performance test, first run the script copy_roas.sh
+to create a set of roa files.  Note that you only have to do this once
+before the first test run, not for every test run.  Then, execute the
+script do_roa_load.  Make sure to initialize the database before
+each test run.
