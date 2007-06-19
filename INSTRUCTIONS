@@ -165,9 +165,15 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     Additional arguments are given if you type ./query.sh without
     any arguments.
 
+3.9 IMPORTANT NOTE: Aborting any of the scripts that change the database
+    or repository in the middle of operation can leave the database in
+    an inconsistent state.  It is recommended that after any such abort,
+    you re-initialize the database, clear the repository, and reload the
+    data from scratch.  In the future, we plan to provide less drastic
+    means of recovering from an abort.
+
 4. Document resources
 
-client.txt	This file
 api.txt		API for the database, ASN.1 and ROA libraries
 testplan.doc    Test plan
 apkidesign.doc	Top level design document
