@@ -108,9 +108,32 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
 3.6 garbage.sh: This checks for certificates that may have expired due
     to the passage of time, or crls that may have become stale due to
-    the passage of time, and takes the appropriate actions.
+    the passage of time, and takes the appropriate actions.  Any children
+    certificates or roas of an expired certificate that are not reparented
+    are marked as invalid, with this propagating down signing chains.
+    Certificates, and their descendant certificates and roas, that might
+    potentially be revoked by the updated version of a stale crl are set
+    to an intermediate state of validity (called "unknown"), but are
+    set back to valid if a current crl is available.
 
-3.7 chaser.sh
+3.7 chaser.sh: This chases down objects from repositories that may
+    not have been loaded but are required.  It checks the AIA, SIA
+    and CRLDP fields of all certificates that arrived or have been
+    modified since the last time this client was executed.  A list of
+    other repositories to check is compiled.
+
+    In the mode where the chaser automatically downloads all the
+    other repositories, it requires only one argument, the full pathname
+    of the configuration file used by rsync_pull.sh.
+
+    Note that this can potentially download large numbers of duplicate
+    copies of objects due to caching.  Therefore, there is a mode where
+    you can execute this client to see what it would do without actually
+    doing it.  You specify this mode by providing a second argument
+    "noexec" or "NOEXEC".  It will print the name of the command it would
+    execute along with creating a file chaser_rsync.config that is the
+    configuration file it would feed to rsync_pull.sh.  You can then view
+    the file and modify it as appropriate.
 
 3.8 query.sh: This is the way to pull information out of the database and
     local repository.  There are two basic modes.
