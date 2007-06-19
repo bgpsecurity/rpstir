@@ -19,31 +19,49 @@
 #include "err.h"
 
 /*
-  Convert between a time string as defined by a GENERALIZED_TIME
-  and a time string that will be acceptable to the DB. The return
-  value is allocated memory.
+  Convert between a time string in a certificate and a time string
+  that will be acceptable to the DB. The return value is allocated memory.
 
-  The GENERALIZED_TIME is in the form YYMMDDHHMMSST, where each of
+  The time string can be either UTC or GENERALIZED. UTC is used for
+  dates <= 2049 and GENERALIZED is used for dates after >= 2050.
+
+  The UTC format takes the form YYMMDDHHMMSST, where each of
   the fields is as follows:
       if YY <= 36 the year is 2000+YY otherwise it is 1900+YY
       1 <= MM <= 12
       1 <= DD <= 31
       0 <= HH <= 24
       0 <= MM <= 60
-      0 <= SS <= 60
+      0 <= SS <= 60 (seconds field is optional)
       T, is present and == Z indicates GMT
+
+  The GENERALIZED format takes the form YYYYMMDDHHMMSST, where the year
+  is given in the full four digit form, and all other fields are the same.
+  Note that seconds can be given as either SS or SS.S.
+
+  Both fields can have an optional suffix of the form +HHMM or -HHMM.
 */
+
+#define UTC10    10   // UTC format without seconds
+#define UTC12    12   // UTC format with seconds
+#define GEN14    14   // generalized format without fractions of a second
+#define GEN16    16   // generalized format with fractions of a second
 
 char *ASNTimeToDBTime(char *bef, int *stap)
 {
   int   year;
   int   mon;
   int   day;
+  int   suf_hour = 0;
   int   hour;
+  int   suf_min = 0;
   int   min;
   int   sec;
+  int   msec;
   int   cnt;
+  int   fmt = 0;
   char  tz = 0;
+  char *ptr;
   char *out;
 
   if ( stap == NULL )
@@ -54,13 +72,83 @@ char *ASNTimeToDBTime(char *bef, int *stap)
       *stap = ERR_SCM_INVALARG;
       return(NULL);
     }
-  cnt = sscanf(bef, "%2d%2d%2d%2d%2d%2d%c", &year, &mon, &day,
-	       &hour, &min, &sec, &tz);
-  if ( cnt != 7 )
+// first find and parse the suffix if any
+  ptr = strpbrk(bef, "+-");
+  if ( ptr != NULL )
+    {
+      cnt = sscanf(ptr+1, "%2d%2d", &suf_hour, &suf_min);
+      if ( cnt != 2 || suf_hour < 0 || suf_hour > 24 ||
+	   suf_min < 0 || suf_min > 60 )
+	{
+	  *stap = ERR_SCM_INVALDT;
+	  return(NULL);
+	}
+      if ( *ptr == '-' )
+	{
+	  suf_hour = -suf_hour;
+	  suf_min = -suf_min;
+	}
+    }
+// next, determine how many characters there are before the tz indicator
+  ptr = strchr(bef, 'Z');
+  if ( ptr == NULL )
     {
       *stap = ERR_SCM_INVALDT;
       return(NULL);
     }
+  fmt = (int)(ptr - bef);
+  switch ( fmt )
+    {
+    case UTC10:
+      sec = 0;
+      cnt = sscanf(bef, "%2d%2d%2d%2d%2d%c", &year, &mon, &day,
+		   &hour, &min, &tz);
+      if ( cnt != 6 )
+	{
+	  *stap = ERR_SCM_INVALDT;
+	  return(NULL);
+	}
+      if ( year > 36 )
+	year += 1900;
+      else
+	year += 2000;
+      break;
+    case UTC12:
+      cnt = sscanf(bef, "%2d%2d%2d%2d%2d%2d%c", &year, &mon, &day,
+		   &hour, &min, &sec, &tz);
+      if ( cnt != 7 )
+	{
+	  *stap = ERR_SCM_INVALDT;
+	  return(NULL);
+	}
+      if ( year > 36 )
+	year += 1900;
+      else
+	year += 2000;
+      break;
+    case GEN14:
+      cnt = sscanf(bef, "%4d%2d%2d%2d%2d%2d%c", &year, &mon, &day,
+		   &hour, &min, &sec, &tz);
+      if ( cnt != 7 )
+	{
+	  *stap = ERR_SCM_INVALDT;
+	  return(NULL);
+	}
+      break;
+    case GEN16:
+      cnt = sscanf(bef, "%4d%2d%2d%2d%2d%2d.%1d%c", &year, &mon, &day,
+		   &hour, &min, &sec, &msec, &tz);
+      if ( cnt != 8 )
+	{
+	  *stap = ERR_SCM_INVALDT;
+	  return(NULL);
+	}
+      break;
+    default:
+      *stap = ERR_SCM_INVALDT;
+      return(NULL);
+    }
+// validate the time with the suffix
   if ( tz != 'Z' || mon < 1 || mon > 12 || day < 1 || day > 31 || hour < 0 ||
        hour > 23 || min < 0 || min > 59 || sec < 0 || sec > 61 )
     /* 61 because of leap seconds */
@@ -68,11 +156,20 @@ char *ASNTimeToDBTime(char *bef, int *stap)
       *stap = ERR_SCM_INVALDT;
       return(NULL);
     }
-  if ( year > 36 )
-    year += 1900;
-  else
-    year += 2000;
-  out = (char *)calloc(24, sizeof(char));
+// we should adjust the time if there is a suffix, but currently we don't
+// next check that the format matches the year. If the year is < 2050
+// it should be UTC, otherwise GEN.
+  if ( year < 2050 && (fmt==GEN14 || fmt==GEN16) )
+    {
+      *stap = ERR_SCM_INVALDT;
+      return(NULL);
+    }
+  if ( year >= 2050 && (fmt==UTC10 || fmt==UTC12) )
+    {
+      *stap = ERR_SCM_INVALDT;
+      return(NULL);
+    }
+  out = (char *)calloc(48, sizeof(char));
   if ( out == NULL )
     {
       *stap = ERR_SCM_NOMEM;
