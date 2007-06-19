@@ -307,11 +307,13 @@ static char *cf_get_from(X509 *x, int *stap, int *x509stap)
       *stap = ERR_SCM_NONB4;
       return(NULL);
     }
+  *stap = 0;
   dptr = ASNTimeToDBTime((char *)bef, stap);
   OPENSSL_free(bef);
   if ( dptr == NULL )
     {
-      *stap = ERR_SCM_NOMEM;
+      if ( *stap == 0 )
+        *stap = ERR_SCM_NOMEM;
       return(NULL);
     }
   return(dptr);
