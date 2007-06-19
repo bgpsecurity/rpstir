@@ -10,3 +10,5 @@ APKI_PORT = port number (e.g., 7000)
 (3) In one window, execute the script initDB and then the script listener.  You will have to enter the root mysql password twice for initDB.
 
 (4) In the other window, execute the tests (runTest1, runTest2, etc.) in numerical order.
+
+(5) There will be indications of the expected numbers of outputs followed by the outputs.  The tester should just make sure that these match.
