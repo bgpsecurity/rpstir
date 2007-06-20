@@ -1,0 +1,164 @@
+
+Running test 1
+Sending B Wed Jun 20 10:11:41 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending A TRUSTANCHORS/arin.cer
+Sending A AFRINICviaARIN/zJHxUrKSmHwNH_tnB5AV2y6mb04.cer
+Sending A ARIN/Ilk3598Xt1DW1zr8i0XBZBaLq8w.cer
+Sending A AFRINICviaARIN/zdQnXzB7I52Vqb2FlOBfNJMDOmk.cer
+Sending A AFRINICviaARIN/-BAegf-vyPekCiy2R1L2RJEqpr4.cer
+Sending A AFRINICviaARIN/HowjB1Q4ERmE62GbTvev9GMPu-A.cer
+Sending A AFRINICviaARIN/Ilk3598Xt1DW1zr8i0XBZBaLq8w.crl
+Sending A AFRINICviaARIN/dbekBvjIEiO9iVamAp9kFOls0JY.cer
+Sending A AFRINICviaARIN/zWaE8WCqhrl3sr2wpDD6CXby4oc.cer
+Sending E Wed Jun 20 10:11:42 2007
+Should be 5 entries (no validity check):
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+Should be 5 entries (validity check):
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+
+Running test 2
+Should be 5 entries (unknown = valid):
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+Should be 2 entries (unknown to separate file):
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+Should be 3 entries (output of file unknown.out):
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+
+Running test 3
+Should be 5 entries (unknown = invalid):
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+
+Running test 4
+Sending B Wed Jun 20 10:16:56 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending R TRUSTANCHORS/arin.cer
+Sending E Wed Jun 20 10:16:56 2007
+Should be 4 entries (not validating):
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+Should be 0 entries (validating):
+Sending B Wed Jun 20 10:16:57 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending A TRUSTANCHORS/arin.cer
+Sending E Wed Jun 20 10:16:57 2007
+Should be 5 entries (not validating):
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+Should be 5 entries (validating):
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+
+Running test 5
+Should be 4 entries (not validating):
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+Should be 0 entries (validating):
+
+Running test 6
+Sending B Wed Jun 20 10:17:07 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending A TRUSTANCHORS/arin.cer
+Sending A AFRINICviaARIN/zdQnXzB7I52Vqb2FlOBfNJMDOmk.cer
+Sending A AFRINICviaARIN/-BAegf-vyPekCiy2R1L2RJEqpr4.cer
+Sending A AFRINICviaARIN/HowjB1Q4ERmE62GbTvev9GMPu-A.cer
+Sending A AFRINICviaARIN/Ilk3598Xt1DW1zr8i0XBZBaLq8w.crl
+Sending A AFRINICviaARIN/dbekBvjIEiO9iVamAp9kFOls0JY.cer
+Sending A AFRINICviaARIN/zWaE8WCqhrl3sr2wpDD6CXby4oc.cer
+Sending A AFRINICviaARIN/zJHxUrKSmHwNH_tnB5AV2y6mb04.cer
+Sending A ARIN/Ilk3598Xt1DW1zr8i0XBZBaLq8w.cer
+Sending E Wed Jun 20 10:17:09 2007
+Should be 5 entries (no validity check):
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+Should be 5 entries (validity check):
+SKI = D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86  
+SKI = CD:D4:27:5F:30:7B:23:9D:95:A9:BD:85:94:E0:5F:34:93:03:3A:69  
+SKI = CD:66:84:F1:60:AA:86:B9:77:B2:BD:B0:A4:30:FA:09:76:F2:E2:87  
+SKI = CC:91:F1:52:B2:92:98:7C:0D:1F:FB:67:07:90:15:DB:2E:A6:6F:4E  
+SKI = 22:59:37:E7:DF:17:B7:50:D6:D7:3A:FC:8B:45:C1:64:16:8B:AB:CC  
+
+Running test 7
+Sending B Wed Jun 20 10:18:45 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending A roa/mytest.roa.pem
+Sending E Wed Jun 20 10:18:45 2007
+Check filter entry:
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  167.134.5.0/25
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  4234:2342:0000:0000:0000:0000:AEDB:AFFF
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  6789:AFFD:A234:A500:0000:0000:0000:0000/64
+  
+After garbage collection (0 entries):
+
+But should be here: cat unknown.out
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  167.134.5.0/25
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  4234:2342:0000:0000:0000:0000:AEDB:AFFF
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  6789:AFFD:A234:A500:0000:0000:0000:0000/64
+  
+After modifying expiration date and garbage collection (1 entries):
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  167.134.5.0/25
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  4234:2342:0000:0000:0000:0000:AEDB:AFFF
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  6789:AFFD:A234:A500:0000:0000:0000:0000/64
+  
+Sending B Wed Jun 20 10:18:46 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending R AFRINICviaARIN/zJHxUrKSmHwNH_tnB5AV2y6mb04.cer
+Sending E Wed Jun 20 10:18:46 2007
+Should be 1 entry (no validity check):
+SKI = B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  
+Should be 0 entries (validity check):
+
+Running test 8
+Sending B Wed Jun 20 10:19:51 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending A roa/mytest.roa.pem
+Sending A roa/mytest.cer.pem
+Sending E Wed Jun 20 10:19:51 2007
+Should be an ski:
+ski
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75
+Sending B Wed Jun 20 10:19:52 2007
+Sending C /home/dmontana/apki/trunk/testing/REPOSITORY
+Sending A roa/mytest.cer.pem
+Sending A roa/mytest.roa.pem
+Sending E Wed Jun 20 10:19:52 2007
+Should be an ski:
+ski
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75
+Should be a filter entry:
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  167.134.5.0/25
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  4234:2342:0000:0000:0000:0000:AEDB:AFFF
+B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75  19  6789:AFFD:A234:A500:0000:0000:0000:0000/64
+  
