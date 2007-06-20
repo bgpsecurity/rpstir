@@ -1,0 +1,30 @@
+Test date: June 18, 2007
+ SVN revision: 360
+Testers: Matt Lepinski (ML) and Sarah Edwards (SE)
+
+In this test, the testers were asked to not report on minor errors
+that had been encountered previously.  As a result, only "major"
+errors will be the subject of this report.
+
+In certificate testing, a number of certificates were inappropriately
+recognized as valid. These included the following test cases:
+3.1 3.2 3.3 3.4 3.6 3.7 3.8 3.9 4.2 4.4 4.7 and 4.8. The issue with test case
+3.2 was previously discovered to be a bug in the OpenSSL library. The
+issue with test case 3.6 was discovered to be a bug in the test data.
+All other test cases listed above appear to be due to the introduction
+of the "delayed verification" algorithm, in which a certificate is
+first verified for syntactic content and then later for semantic content.
+The second verification step requires the parent certificate. In addition
+certain conditions which could, potentially, be discovered in the syntactic
+phase (such as an expired certificate) are deferred to the semantic phase.
+This algorithm was introduced between the first unit test and the present
+unit test, which would appear to account for the differnce in test results.
+
+A final problem was that test case 3.5 gave an "out of memory" error (not
+a date error as would be expected). This was traced to a bug in date handling
+which has since been resolved.
+
+All CRL tests passed.
+
+All ROA tests passed.
+
