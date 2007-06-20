@@ -1,5 +1,8 @@
 # run test 7
 # checks: roa operations
+
+echo ""
+echo "Running test 7"
 $APKI_ROOT/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/testing/testAdd4 -d $APKI_ROOT/testing/REPOSITORY
 sleep 1
 echo "update apki_cert set ski=\"B4:4D:ED:FD:28:98:01:6E:41:18:30:25:66:A1:6C:C5:B5:BA:CD:75\" where local_id=8;" | mysql $APKI_DB -u mysql

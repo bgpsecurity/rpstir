@@ -1,5 +1,8 @@
 # run test 4
 # checks: deletion of cert propagating invalidating, and adding propagates
+
+echo ""
+echo "Running test 4"
 $APKI_ROOT/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/testing/testDelete -d $APKI_ROOT/testing/REPOSITORY
 sleep 1
 echo "Should be 4 entries (not validating):"

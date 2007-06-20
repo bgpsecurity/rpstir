@@ -1,6 +1,9 @@
 # run test 1
 # checks: validating certs, both in order and out of order
 # checks: revoking certs based on crl: both in order and out of order
+
+echo ""
+echo "Running test 1"
 $APKI_ROOT/rsync_aur/rsync_aur -t $APKI_PORT -f $APKI_ROOT/testing/testAdd -d $APKI_ROOT/testing/REPOSITORY
 sleep 1
 echo "Should be 5 entries (no validity check):"
