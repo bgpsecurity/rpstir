@@ -1,0 +1,3 @@
+# set up an initial database
+$APKI_ROOT/proto/rcli -x -y
+$APKI_ROOT/proto/rcli -t $APKI_ROOT/performance/REPOSITORY -y
