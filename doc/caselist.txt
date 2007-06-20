@@ -147,7 +147,8 @@ ROA: mytest
  3.8: Bad SignatureAlgorithmIdentifier (not SHA-256 with RSA)
  3.9: Bad SignatureValue
 
- The following are still experimental and should not be used yet.
+ The following require that the corresponding EE certificate that
+ signed the ROA be present in the database (mytest.cert.req).
 
  4.1: Bad signature
  4.2: Bad signer ID
@@ -156,7 +157,6 @@ ROA: mytest
  4.5  IP addresses out of order
  4.6  IP addresses out of range
 
-  
 -----------------------------------------------------------------------
 
 CRL: s0Rk925AmjX-pu8WWN9FOXuHz8Q
