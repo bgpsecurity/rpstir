@@ -430,8 +430,8 @@ static int probe(int s)
 {
   struct sockaddr_in from;
   unsigned int  fromlen = sizeof(from);
-  char one;
-  int  serrno;
+//  char one;
+//  int  serrno;
   int  rd;
   int  e;
 
