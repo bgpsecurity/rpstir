@@ -38,7 +38,7 @@ main(int argc, char *argv[])
      what you would have done, {w,e,i}flag = {warning,error,
      information} flags for what will be sent, ch is for getopt */
 
-  int tflag, uflag, nflag, fflag, ch, i, isTrust;
+  int tflag, uflag, nflag, fflag, sflag, ch, i, isTrust;
   int portno;
   unsigned int retlen;
   FILE *fp;
@@ -47,14 +47,15 @@ main(int argc, char *argv[])
   struct write_port wport;
   char holding[PATH_MAX];
   char flags;  /* our warning flags bit fields */
+  char c;
 
-  tflag = uflag = nflag = fflag = ch = 0;
+  tflag = uflag = nflag = fflag = sflag = ch = 0;
   portno = retlen = 0;
   flags = 0;
 
   memset((char *)&wport, '\0', sizeof(struct write_port));
 
-  while ((ch = getopt(argc, argv, "t:u:f:nweid:h")) != -1) {
+  while ((ch = getopt(argc, argv, "t:u:f:nweid:sh")) != -1) {
     switch (ch) {
       case 't':  /* TCP flag */
         tflag = 1;
@@ -87,6 +88,9 @@ main(int argc, char *argv[])
         break;
       case 'd':
 	topDir = strdup (optarg);
+	break;
+      case 's': /* synchronize */
+	sflag = 1;
 	break;
       case 'h': /* help */
       default:
@@ -191,6 +195,11 @@ main(int argc, char *argv[])
       memset(holding, '\0', sizeof(holding));
     }
     fseek (fp, 0, SEEK_SET);
+  }
+
+  if (sflag) {
+    outputMsg(&wport, "Y \r\n", 4);
+    recv(wport.out_desc, &c, 1, MSG_WAITALL);
   }
 
   /****************************************************/
