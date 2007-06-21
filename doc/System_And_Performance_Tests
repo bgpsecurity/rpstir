@@ -116,3 +116,34 @@ before the cert.  In both cases, the roa should be validated.
 
 The results show that the roa is valid in both cases.
 
+
+2.0 Performance Tests
+
+We did not have a chance to do as thorough a set of tests as
+specified in the test document.  We do two different tests to
+test the performance.  The first works with real data downloaded
+from synch://apnic.mirin.apnic.net/mock.  Whatever data is there
+is pulled down using rsync and then loaded into the database.
+Both sections are timed so that we can see the time spent on
+each operation.
+
+The second test works with 10,000 copies of the roa used in the
+system tests.  The same roa is put in 10,000 different files and
+each are loaded.  The signing cert is put in the database prior
+to the roas being loaded.
+
+The results are:
+
+Cert/CRL Test:
+22633 certs downloaded/loaded
+10528 crls downloaded/loaded
+rsync download time: 169 seconds
+database load time: 757 seconds
+total time: 926 seconds
+memory usage stabilized
+
+ROA Test:
+10000 roas loaded
+database load time: 155 seconds
+memory usage stabilized
+
