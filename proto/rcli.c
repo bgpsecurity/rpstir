@@ -438,22 +438,22 @@ static int probe(int s)
   if ( s < 0 )
     return(-1);
 // test 1: zero byte write
-  e = send(s, NULL, 0, 0);
-  if ( e < 0 )
-    return(-2);
+//  e = send(s, NULL, 0, 0);  // test 1 hangs synchronization
+//  if ( e < 0 )
+//    return(-2);
 // test 2: getpeername
   memset(&from, 0, fromlen);
   e = getpeername(s, (struct sockaddr *)&from, &fromlen);
   if ( e < 0 )
     return(-3);
 // test 3: peek
-  errno = 0;
-  e = recv(s, &one, 1, MSG_PEEK);
-  serrno = errno;
+//  errno = 0;  // test 3 hangs synchronization
+//  e = recv(s, &one, 1, MSG_PEEK);
+//  serrno = errno;
   //  if ( e == 0 )
   //  return(-4);
-  if ( e < 0 && serrno == ECONNRESET )
-    return(-5);
+//  if ( e < 0 && serrno == ECONNRESET )
+//    return(-5);
 // test 4: socket ioctl
   e = ioctl(s, FIONREAD, &rd);
   if ( e < 0 || rd < 0 )
@@ -618,6 +618,10 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'v':
 	case 'V':		/* restore */
 	  (void)restoreState(conp, scmp);
+	  break;
+	case 'y':
+	case 'Y':		/* synchronize */
+	  (void)write(s, "Y", 1);
 	  break;
 	case 0:
 	  break;
