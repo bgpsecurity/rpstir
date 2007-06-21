@@ -143,7 +143,7 @@ do
   fi
 done
 echo "Waiting for loader to finish ..."
-${APKI_ROOT}/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${APKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
+${APKI_ROOT}/rsync_aur/rsync_aur -s -t ${APKI_PORT} -f ${APKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
 echo "Loader finished"
 end2=`date +%s`
 echo "total time was $(($end2-$start2)) seconds"
