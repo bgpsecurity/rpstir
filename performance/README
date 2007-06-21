@@ -3,6 +3,8 @@ To run the performance tests, follow these steps:
 
 (1) Open two windows.
 
+(1a) Remove all subdirectories from the performance/REPOSITORY directory.
+
 (2) Set the environment variables APKI_DB, APKI_ROOT and APKI_PORT in both
 windows (or alternatively in your startup file).
 APKI_DB = database name (e.g., davestestdb)
@@ -10,8 +12,8 @@ APKI_ROOT = pathname of top of tree (e.g., /home/dmontana/apki)
 APKI_PORT = port number (e.g., 7000)
 
 (3) In one window, execute the script initDB and then the script listener,
-both from the directory ../testing.  You will have to enter the root mysql
-password twice for initDB.  For each test, you will need to execute
+the latter from the directory ../testing.  You will have to enter the root
+mysql password twice for initDB.  For each test, you will need to execute
 initDB beforehand to clear the database.
 
 (4) To execute the cert/crl performance test, execute the script
