@@ -2,8 +2,8 @@
   $Id$
 */
 
-#ifndef _ERR_H_
-#define _ERR_H_
+#ifndef _MYERR_H_
+#define _MYERR_H_
 
 /*
   Error codes
