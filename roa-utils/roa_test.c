@@ -92,8 +92,8 @@ int main(int argc, char** argv)
     filename_cnf = "roa.cnf";
   else
     filename_cnf = argv[1];
-  strcpy(filename_der, "mytest.roa.der");
-  strcpy(filename_pem, "mytest.roa.pem");
+  strncpy(filename_der, "mytest.roa.der", sizeof(filename_der)-1);
+  strncpy(filename_pem, "mytest.roa.pem", sizeof(filename_pem)-1);
   sta = roaFromConfig(filename_cnf, 0, &roa);
   if ( sta < 0 )
     {

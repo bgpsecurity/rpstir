@@ -231,7 +231,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
   if ( run == buf || run >= endd )
     return(-1);
 // zero or more space characters
-  while ( run < endd && isspace(*run) )
+  while ( run < endd && isspace((int)(*run)) )
     run++;
   if ( run >= endd )
     return(-1);
@@ -243,7 +243,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
     }
   run += strlen(i1);
 // zero or more whitespace characters
-  while ( run < endd && isspace(*run) )
+  while ( run < endd && isspace((int)(*run)) )
     run++;
   if ( run >= endd )
     return(-1);
@@ -255,7 +255,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
     }
   run += strlen(i2);
 // zero or more whitespace characters
-  while ( run < endd && isspace(*run) )
+  while ( run < endd && isspace((int)(*run)) )
     run++;
   if ( run >= endd )
     return(-1);
@@ -1459,7 +1459,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 {
   char line[MAX_LINE + 1] = "";
   char key[MAX_LINE + 1] = "";
-  char keyfileName[128];
+  char keyfileName[MAX_LINE+1] = "";
   unsigned char value[MAX_LINE + 1] = "", *buf;
 
   int iRet = 0;
@@ -1615,7 +1615,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 		      iRet2 = ERR_SCM_INVALARG;
 		      break;
 		    }
-                  strcpy(keyfileName, (char *)value);
+                  strncpy(keyfileName, (char *)value, sizeof(keyfileName)-1);
 		  iConfiguredKey[ck] = cTRUE;
                   break; 
 		case  CONFIG_KEY_MAX:
@@ -1849,7 +1849,8 @@ int roaToFile(struct ROA *r, char *fname, int fmt)
   */
 
   // Encode CASN
-  if ((fd = open(fname, (O_WRONLY | O_CREAT | O_TRUNC), 0777)) < 0)
+  (void)unlink(fname);  // security fix, needed to allow both EXCL and CREAT
+  if ((fd = open(fname, (O_EXCL | O_WRONLY | O_CREAT | O_TRUNC), 0755)) < 0)
     return ERR_SCM_COFILE;
   if ((iSizeDER = size_casn(&(r->self))) < 0)
     {

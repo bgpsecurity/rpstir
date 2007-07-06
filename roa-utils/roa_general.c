@@ -162,7 +162,7 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int 
 
   // JFG - Cast from int to char == BAD
   cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
-  cReturnString = calloc(19, sizeof(char));
+  cReturnString = calloc(24+3*iArraySize, sizeof(char));
   if (NULL == cReturnString)
     return NULL;
 
@@ -296,7 +296,7 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
 
   // JFG - Cast from int to char == BAD
   cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
-  cReturnString = calloc(44, sizeof(char));
+  cReturnString = calloc(48+3*iArraySize, sizeof(char));
   if (NULL == cReturnString)
     return NULL;
 
