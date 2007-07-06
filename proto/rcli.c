@@ -14,6 +14,9 @@
 #include <getopt.h>
 #include <time.h>
 #include <netdb.h>
+#ifdef __NetBSD__
+#include <netinet/in.h>
+#endif
 
 #include "scm.h"
 #include "scmf.h"
@@ -32,12 +35,19 @@ static int saveState (scmcon *conp, scm *scmp)
 {
   int   i;
   int   sta = 0;
-  char  *name, stmt[100];
+  int   leen;
+  char  *name, *stmt;
 
   for (i = 0; sta == 0 && i < scmp->ntables; i++) {
     name = scmp->tables[i].tabname;
-    sprintf (stmt, "select * from %s into outfile 'backup_%s';", name, name);
+    leen = 2*strlen(name) + 64;
+    stmt = (char *)calloc(leen, sizeof(char));
+    if ( stmt == NULL )
+      return(ERR_SCM_NOMEM);
+    snprintf (stmt, leen, "select * from %s into outfile 'backup_%s';", name, name);
     sta = statementscm (conp, stmt);
+    free((void *)stmt);
+    stmt = NULL;
     if (sta != 0)
       printf ("Could not back up table %s to file backup_%s", name, name);
   }
@@ -51,13 +61,20 @@ static int restoreState (scmcon *conp, scm *scmp)
 {
   int   i;
   int   sta = 0;
-  char  *name, stmt[100];
+  int   leen;
+  char  *name, *stmt;
 
   for (i = 0; sta == 0 && i < scmp->ntables; i++) {
     name = scmp->tables[i].tabname;
-    sprintf (stmt, "delete from %s;", name);
+    leen = 2*strlen(name) + 64;
+    stmt = (char *)calloc(leen, sizeof(char));
+    if ( stmt == NULL )
+      return(ERR_SCM_NOMEM);
+    snprintf (stmt, leen, "delete from %s;", name);
     sta = statementscm (conp, stmt);
-    sprintf (stmt, "load data infile 'backup_%s' into table %s;", name, name);
+    snprintf (stmt, leen, "load data infile 'backup_%s' into table %s;", name, name);
+    free((void *)stmt);
+    stmt = NULL;
     sta = statementscm (conp, stmt);
     if (sta != 0)
       printf ("Could not restore to table %s from file backup_%s", name, name);
@@ -215,7 +232,7 @@ static int yorn(char *q)
   (void)printf("%s? ", q);
   memset(ans, 0, 8);
   if ( fgets(ans, 8, stdin) == NULL || ans[0] == 0 ||
-       toupper(ans[0]) != 'Y' )
+       toupper((int)(ans[0])) != 'Y' )
     return(0);
   else
     return(1);
@@ -303,7 +320,7 @@ static char *afterwhite(char *ptr)
       c = *run;
       if ( c == 0 )
 	break;
-      if ( ! isspace(c) )
+      if ( ! isspace((int)c) )
 	break;
       run++;
     }
@@ -352,6 +369,7 @@ static char *hasoneline(char *inp, char **nextp)
 {
   char *crlf;
   int   leen;
+  int   crleen;
 
   *nextp = NULL;
   if ( inp == NULL )
@@ -363,8 +381,9 @@ static char *hasoneline(char *inp, char **nextp)
   *crlf++ = 0;
   *crlf++ = 0;
   if ( (int)(crlf-inp) < leen ) {
-    *nextp = calloc (strlen(crlf) + 1, sizeof(char));
-    strcpy (*nextp, crlf);
+    crleen = strlen(crlf);
+    *nextp = calloc (crleen + 1, sizeof(char));
+    strncpy (*nextp, crlf, crleen);
   }
   return(inp);
 }
@@ -536,7 +555,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
       (void)printf("Sockline: %s\n", ptr);
       (void)fprintf(logfile, "Sockline: %s\n", ptr);
       c = ptr[0];
-      if ( !isspace(ptr[1]) )
+      if ( !isspace((int)(ptr[1])) )
 	{
 	  (void)printf("Invalid line: ignored\n");
 	  free((void *)ptr);
