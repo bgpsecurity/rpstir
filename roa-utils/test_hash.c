@@ -10,6 +10,11 @@ int main(int argc, char **argv)
   struct Certificate cert;
   struct RSAPubKey pubkey;
 
+  if ( argc < 2 )
+  {
+    (void)fprintf(stderr, "Usage: test_hash filename\n");
+    return(1);
+  }
   Certificate(&cert, 0);
   RSAPubKey(&pubkey, 0);
   get_casn_file(&cert.self, argv[1], 0);
