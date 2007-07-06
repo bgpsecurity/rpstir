@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -79,8 +80,20 @@ static int addURIIfUnique (char *uri)
   int i, low, high;
   char **newURIs;
 
+  // check if legal
   if (strlen (uri) == 0) return -1;
-  if (inURIList (uri, &low)) return low;   // if already there, all done
+  if (strncmp (uri, "rsync://", 8) != 0) return -1;
+  for (i = 8; i < (int)strlen(uri); i++) {
+    if (isalnum(uri[i])) continue;
+    if (uri[i] == '/') continue;
+    if (uri[i] == '.') continue;
+    if (uri[i] == '-') continue;
+    if (uri[i] == '_') continue;
+    return -1;
+  }
+
+  // if already there, all done
+  if (inURIList (uri, &low)) return low;
 
   // if previous one supersedes it, just return without inserting
   if ((low > 0) && supersedes (uris[low-1], uri)) return low;
