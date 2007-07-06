@@ -8,6 +8,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdlib.h>
+#ifdef __NetBSD__
+#include <netinet/in.h>
+#endif
 
 #define LOCAL 0
 #define TCP 1
