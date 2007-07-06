@@ -101,7 +101,7 @@ static void add(SQLHSTMT h, int v1, char *v2)
   large.LowPart = ft.dwLowDateTime;
   large.HighPart = ft.dwHighDateTime;
 //      (void)sprintf(tmp, "INSERT INTO my_odbc_net (id, name, idb) VALUES (%d, '%s', %d)",
-  (void)sprintf(tmp, "INSERT INTO my_odbc_net VALUES (%d, '%s', %I64d)",
+  (void)snprintf(tmp, sizeof(tmp), "INSERT INTO my_odbc_net VALUES (%d, '%s', %I64d)",
                 v1, v2, large.QuadPart);
   docatalog(h, tmp, "Add");
 }
@@ -126,7 +126,7 @@ static void add(SQLHSTMT h, int v1, char *v2)
   large *= (unsigned long long)1000000000;
   large += tp.tv_nsec;
 //      (void)sprintf(tmp, "INSERT INTO my_odbc_net (id, name, idb) VALUES (%d, '%s', %d)",
-  (void)sprintf(tmp, "INSERT INTO my_odbc_net VALUES (%d, '%s', %llu)",
+  (void)snprintf(tmp, sizeof(tmp), "INSERT INTO my_odbc_net VALUES (%d, '%s', %llu)",
                 v1, v2, large);
   docatalog(h, tmp, "Add");
 }
@@ -139,7 +139,7 @@ static void update(SQLHSTMT h, int v1, int newv1)
 {
   char tmp[512];
 
-  (void)sprintf(tmp, "UPDATE my_odbc_net SET id=%d WHERE id=%d",
+  (void)snprintf(tmp, sizeof(tmp), "UPDATE my_odbc_net SET id=%d WHERE id=%d",
                 newv1, v1);
   docatalog(h, tmp, "Update");
 }
