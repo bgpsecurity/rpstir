@@ -10,7 +10,7 @@ DFLAGS =
 CFLAGS =-g -Wall
 XFLAGS =        # xtra cflags, set by systype targets
 IFLAGS =-I/usr/local/ssl/include 
-XLIBS =-ldl -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
+XLIBS = $(LIBDL) -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
 CC += $(CFLAGS)

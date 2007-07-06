@@ -23,22 +23,27 @@ Appendix A provides troubleshooting tips for some common problems.
 Install the latest released version of the OpenSSL package from
 http://www.openssl.org.  It should be at least version 0.9.8d. Follow
 the installation instructions for that package.  We recommend the default
-installation target directory /usr/local/ssl.
+installation target directory /usr/local/ssl. Also, make sure that
+RFC3779 support is enabled (./config enable-rfc3779).
 
 2.1.2 MySQL
 
 Install the MySQL open source database from http://mysql.org. We recommend
-the default installation target of /usr/local/mysql. Also install the
-Connector/ODBC driver from the same site.  Insure that the 3.51 driver
-is installed.  We strongly recommend that you give the root account a
+the default installation target of /usr/local/mysql. At least version 5.0 should
+be used; this is the version that our testing has used. Also install the
+Connector/ODBC driver from the same site.  Insure that at least version 3.51
+of the driver is installed.  We strongly recommend that you give the root account a
 password in the ODBC initialization file (typically /usr/local/etc/odbc.ini).
+(Depending on your machine you may also need to install unixODBC as well.)
 
 2.1.3 cryptlib
 
 Install Peter Gutmann's cryptlib from its default website, currently at
 http://www.cs.auckland.ac.nz/~pgut001/cryptlib. Insure that both the
 library itself and its include files are in accessible locations, e.g.
-/usr/local/lib and /usr/local/include.
+/usr/local/lib and /usr/local/include. If you are on FreeBSD this can
+be done by issuing the command make search name="cryptlib" from the
+/etc/ports directory.
 
 2.2 APKI database software
 
@@ -63,9 +68,10 @@ ideal circumstances.  It is recommended that the user create a script
 to run these four steps and have a cron job that executes this script
 periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
-3.1 make the executables: In the top-level directory, execute make, and
-    this should create all the required executables in all the
-    different directories.
+3.1 make the executables: In the top-level directory, execute make on the
+    appropriate makefiles; currently Makefile.linux and Makefile.bsd are
+    the only two variants available.  This should create all the required
+    executables in all the various directories.
 
 3.2 set environment variables: There are three environment variables used
     throughout the scripts and the code:

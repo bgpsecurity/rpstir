@@ -8,7 +8,7 @@ all:	libapki.a rcli query chaser garbage makeROA
 
 CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../roa-utils -I../cg/asn -I../cg/casn -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
 
-MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L../roa-utils -lapki -lroa -lssl -lcrypto -lasn -lcasn -lmyodbc3 -lcl -ldl
+MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L../roa-utils -lapki -lroa -lssl -lcrypto -lasn -lcasn -lmyodbc3 $(LIBXTRA) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 # OBSOLETE test program
 sqq:	sqq.o Makefile
@@ -16,12 +16,12 @@ sqq:	sqq.o Makefile
 
 # OBSOLETE test program
 docert:	docert.o Makefile
-	$(CC) -o docert -g -L/usr/local/ssl/lib docert.o -lssl -lcrypto -ldl
+	$(CC) -o docert -g -L/usr/local/ssl/lib docert.o -lssl -lcrypto $(LIBDL)
 
 initscm.o:	scm.h scmmain.h
 diru.o:	diru.h err.h
 sqhl.o:	scm.h scmf.h sqhl.h diru.h myssl.h err.h
-sqcon.o:	scm.h scmf.h err.h
+sqcon.o:	scm.h scmf.h diru.h err.h
 myssl.o:	myssl.h scm.h scmf.h sqhl.h err.h
 err.o:	err.h
 

@@ -10,7 +10,7 @@ CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../asn -I../asn_gen -
 ASN_DIR= ../asn
 CASN_DIR= ../casn
 LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
-LIBS= -L/usr/local/ssl/lib -lcrypto -lcl -ldl
+LIBS= -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 dump:	dump.o asn.o asn_dump.o util.o asn.h
 	$(CC) $(CFLAGS) -o dump -g dump.o asn.o asn_dump.o util.o
