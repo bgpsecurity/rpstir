@@ -175,7 +175,7 @@ char *ASNTimeToDBTime(char *bef, int *stap)
       *stap = ERR_SCM_NOMEM;
       return(NULL);
     }
-  (void)sprintf(out, "%4d-%02d-%02d %02d:%02d:%02d",
+  (void)snprintf(out, 48, "%4d-%02d-%02d %02d:%02d:%02d",
 		year, mon, day, hour, min, sec);
   return(out);
 }
@@ -194,7 +194,7 @@ char *LocalTimeToDBTime(int *stap)
   if ( stap == NULL )
     return(NULL);
   *stap = 0;
-  out = (char *)calloc(24, sizeof(char));
+  out = (char *)calloc(48, sizeof(char));
   if ( out == NULL )
     {
       *stap = ERR_SCM_NOMEM;
@@ -202,7 +202,7 @@ char *LocalTimeToDBTime(int *stap)
     }
   (void)time(&clck);
   tmp = gmtime(&clck);
-  (void)sprintf(out, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+  (void)snprintf(out, 48, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
 	1900+tmp->tm_year, 1+tmp->tm_mon, tmp->tm_mday,
 	tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
   return(out);
@@ -266,7 +266,7 @@ static char *strappend(char *instr, char *nstr)
   outstr = (char *)calloc(leen, sizeof(char));
   if ( outstr == NULL )
     return(instr);
-  (void)sprintf(outstr, "%s;%s", instr, nstr);
+  (void)snprintf(outstr, leen, "%s;%s", instr, nstr);
   free((void *)instr);
   return(outstr);
 }
