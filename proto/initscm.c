@@ -107,7 +107,7 @@ static char *firsttok(char *ptr)
   while ( 1 )
     {
       c = *run++;
-      if ( isspace(c) || c == 0 )
+      if ( isspace((int)c) || c == 0 )
 	break;
       cnt++;
     }
@@ -143,7 +143,7 @@ static int makecolumns(scmtab *outtab)
   ptr = strtok(dp, ",");
   while ( ptr != NULL && ptr[0] != 0 )
     {
-      if ( islower(ptr[0]) && !isspace(ptr[0]) )
+      if ( islower((int)(ptr[0])) && !isspace((int)(ptr[0])) )
 	cnt++;
       ptr = strtok(NULL, ",");
     }
@@ -157,7 +157,7 @@ static int makecolumns(scmtab *outtab)
   ptr = strtok(dp, ",");
   while ( ptr != NULL && ptr[0] != 0 )
     {
-      if ( isspace(ptr[0]) || ptr[0] == 0 )
+      if ( isspace((int)(ptr[0])) || ptr[0] == 0 )
 	break;
       outtab->cols[rcnt] = firsttok(ptr);
       if ( outtab->cols[rcnt] == NULL )
@@ -239,14 +239,14 @@ char *makedsnscm(char *pref, char *db, char *usr, char *pass)
   len = strlen(pref) + strlen(db) + strlen(usr) + 60;
   if ( pass != NULL && pass[0] != 0 )
     len += strlen(pass);
-  ptr = (char *)calloc(len, sizeof(char));
+  ptr = (char *)calloc(len+1, sizeof(char));
   if ( ptr == NULL )
     return(NULL);
   if ( pass == NULL || pass[0] == 0 )
-    (void)sprintf(ptr, "DSN=%s;DATABASE=%s;UID=%s",
+    (void)snprintf(ptr, len, "DSN=%s;DATABASE=%s;UID=%s",
 		  pref, db, usr);
   else
-    (void)sprintf(ptr, "DSN=%s;DATABASE=%s;UID=%s;PASSWORD=%s",
+    (void)snprintf(ptr, len, "DSN=%s;DATABASE=%s;UID=%s;PASSWORD=%s",
 		  pref, db, usr, pass);
   return(ptr);
 }
