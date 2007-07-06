@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#ifdef linux
 #include <fam.h>
+#endif
 #include <ctype.h>
 #include <syslog.h>
 
@@ -2129,7 +2131,7 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
   if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
        whichcli == NULL || whichcli[0] == 0 )
     return(ERR_SCM_INVALARG);
-  what = toupper(whichcli[0]);
+  what = toupper((int)(whichcli[0]));
   if ( what != 'R' && what != 'Q' && what != 'C' && what != 'G' )
     return(ERR_SCM_INVALARG);
   initTables (scmp);
