@@ -49,7 +49,7 @@ static int saveState (scmcon *conp, scm *scmp)
     free((void *)stmt);
     stmt = NULL;
     if (sta != 0)
-      printf ("Could not back up table %s to file backup_%s", name, name);
+      fprintf(stderr, "Could not back up table %s to file backup_%s", name, name);
   }
   return sta;
 }
@@ -77,7 +77,7 @@ static int restoreState (scmcon *conp, scm *scmp)
     stmt = NULL;
     sta = statementscm (conp, stmt);
     if (sta != 0)
-      printf ("Could not restore to table %s from file backup_%s", name, name);
+      fprintf(stderr, "Could not restore to table %s from file backup_%s", name, name);
   }
   return sta;
 }
@@ -281,8 +281,9 @@ static int makesock(char *porto, int *protosp)
       hen = gethostbyname(hn);
       if ( hen == NULL )
 	{
+          (void)fprintf(stderr, "Cannot lookup hostname %s\n", hn);
 	  close(protos);
-	  return(sta);
+	  return(-1);
 	}
       memset(&sin, 0, sizeof(sin));
       memcpy(&sin.sin_addr.s_addr, hen->h_addr_list[0],
@@ -338,7 +339,7 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
 
   sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
   if (sta != 0) {
-    printf ("Error loading file %s/%s: %s\n", hdir, valu, err2string(sta));
+    fprintf(stderr, "Error loading file %s/%s: %s\n", hdir, valu, err2string(sta));
     return sta;
   }
   trusted = strstr(outdir, "TRUST") != NULL;
@@ -545,7 +546,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
     {
       if ( (sta=probe(s)) < 0 )
 	{
-	  (void)printf("Probe error %d\n", sta);
+	  (void)fprintf(stderr, "Probe error %d\n", sta);
 	  (void)fprintf(logfile, "Probe error %d\n", sta);
 	  return(sta);
 	}
@@ -557,7 +558,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
       c = ptr[0];
       if ( !isspace((int)(ptr[1])) )
 	{
-	  (void)printf("Invalid line: ignored\n");
+	  (void)fprintf(stderr, "Invalid line: ignored\n");
 	  free((void *)ptr);
 	  continue;
 	}
