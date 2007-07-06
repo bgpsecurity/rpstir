@@ -25,7 +25,7 @@ static char *makeCDStr(unsigned int *retlenp, char *dir)
   }
   buf[0] = 'C';
   buf[1] = ' ';
-  (void)strcat(buf, "\r\n");
+  (void)strncat(buf, "\r\n", 2);
   *retlenp = strlen(buf);
   return(buf);
 }
@@ -45,7 +45,7 @@ main(int argc, char *argv[])
   char *sendStr;
   char *topDir = NULL;
   struct write_port wport;
-  char holding[PATH_MAX];
+  char holding[PATH_MAX+1];
   char flags;  /* our warning flags bit fields */
   char c;
 
