@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 
   // initialize
   if (getenv ("APKI_ROOT") != NULL)
-    sprintf (rsyncDir, "%s/run_scripts", getenv ("APKI_ROOT"));
+    snprintf (rsyncDir, 200, "%s/run_scripts", getenv ("APKI_ROOT"));
   else
     sprintf (rsyncDir, ".");
   if (getenv ("APKI_PORT") != NULL)
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
 	portno = atoi (optarg);
 	break;
       case 'd':   /* rsync executable directory */
-	sprintf (rsyncDir, optarg);
+	snprintf (rsyncDir, 200, optarg);
 	break;
       case 'n':   /* no execution */
 	noExecute = 1;
@@ -214,21 +214,21 @@ int main(int argc, char **argv)
       for (numDirs = 0; numDirs < 50; str2 = strtok (NULL, " ")) {
         if (str2 == NULL) break;
         if (strlen (str2) > 0) {
-          strcpy (dirs[numDirs++], str2);
+          strncpy (dirs[numDirs++], str2, 120);
         }
       }
     } else if (strcmp (str, "DOLOAD") != 0) {
-      strcat (rsyncStr, msg);
+      strncat (rsyncStr, msg, 500 - strlen(rsyncStr));
     }
   }
-  strcat (rsyncStr, "DOLOAD=yes\n");
+  strncat (rsyncStr, "DOLOAD=yes\n", 11);
   checkErr (dirs[0][0] == 0, "DIRS variable not specified in config file\n");
 
   // load from current repositories to initialize uris
   // it is good to put these in right away, so that any future addresses
   // that are duplicates or subdirectories are immediately discarded
   for (i = 0; i < numDirs; i++) {
-    sprintf (str, "rsync://%s", dirs[i]);
+    snprintf (str, 180, "rsync://%s", dirs[i]);
     addURIIfUnique (str);
   }
 
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
   checkErr (table == NULL, "Cannot find table certificate\n");
   srch.nused = 0;
   srch.vald = 0;
-  sprintf (msg, "ts_mod > \"%s\"", prevTimestamp);
+  snprintf (msg, 1024, "ts_mod > \"%s\"", prevTimestamp);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "sia", SQL_C_CHAR, 1024);
   addcolsrchscm (&srch, "aia", SQL_C_CHAR, 1024);
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
 
   // remove original set from list of addresses
   for (i = 0; i < numDirs; i++) {
-    sprintf (str, "rsync://%s", dirs[i]);
+    snprintf (str, 180, "rsync://%s", dirs[i]);
     removeURI (str);
   }
   if (numURIs == 0)
@@ -281,9 +281,11 @@ int main(int argc, char **argv)
   // remove all files from list of addresses and replace with directories
   for (i = 0; i < numURIs; i++) {
     if (! isDirectory (uris[i])) {
-      strcpy (msg, uris[i]);
-      (strrchr (msg, '/'))[1] = 0;
-      i = addURIIfUnique (msg);
+      strncpy (msg, uris[i], 1024);
+      if (strrchr (msg, '/') != NULL) {
+	(strrchr (msg, '/'))[1] = 0;
+	i = addURIIfUnique (msg);
+      }
     }
   }
 
@@ -294,15 +296,15 @@ int main(int argc, char **argv)
     if (dir2 [strlen (dir2) - 1] == '/')
       dir2 [strlen (dir2) - 1] = 0;
     if (i > 0)
-      strcat (dirStr, " ");
-    strcat (dirStr, dir2);
+      strncat (dirStr, " ", 4000 - strlen(dirStr));
+    strncat (dirStr, dir2, 4000 - strlen(dirStr));
   }
   configFile = fopen ("chaser_rsync.config", "w");
   checkErr (configFile == NULL, "Unable to open file for write\n");
-  sprintf (rsyncStr2, "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
+  snprintf (rsyncStr2, 4500, "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
   fputs (rsyncStr2, configFile);
   fclose (configFile);
-  sprintf (str, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
+  snprintf (str, 180, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
   if (noExecute)
     printf ("Would have executed: %s\n", str);
   else
@@ -310,8 +312,8 @@ int main(int argc, char **argv)
 
   // write timestamp into database
   table = findtablescm (scmp, "metadata");
-  sprintf (msg, "update %s set ch_last=\"%s\";",
-           table->tabname, currTimestamp);
+  snprintf (msg, 1024, "update %s set ch_last=\"%s\";",
+	    table->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
   stopSyslog();

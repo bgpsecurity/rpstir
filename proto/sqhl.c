@@ -251,19 +251,19 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
 	  cols[idx++].value = ptr;
 	}
     }
-  (void)sprintf(flagn, "%u", cf->flags);
+  (void)snprintf(flagn, 24, "%u", cf->flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)sprintf(lid, "%u", *cert_id);
+  (void)snprintf(lid, 24, "%u", *cert_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
-  (void)sprintf(did, "%u", cf->dirid);
+  (void)snprintf(did, 24, "%u", cf->dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
   if ( cf->ipblen > 0 )
     {
       cols[idx].column = "ipblen";
-      (void)sprintf(blen, "%u", cf->ipblen); /* byte length */
+      (void)snprintf(blen, 24, "%u", cf->ipblen); /* byte length */
       cols[idx++].value = blen;
       cols[idx].column = "ipb";
       wptr = hexify(cf->ipblen, cf->ipb);
@@ -326,16 +326,16 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 	  cols[idx++].value = ptr;
 	}
     }
-  (void)sprintf(flagn, "%u", cf->flags);
+  (void)snprintf(flagn, 24, "%u", cf->flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)sprintf(lid, "%u", crl_id);
+  (void)snprintf(lid, 24, "%u", crl_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
-  (void)sprintf(did, "%u", cf->dirid);
+  (void)snprintf(did, 24, "%u", cf->dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
-  (void)sprintf(csnlen, "%d", cf->snlen);
+  (void)snprintf(csnlen, 24, "%d", cf->snlen);
   cols[idx].column = "snlen";
   cols[idx++].value = csnlen;
   cols[idx].column = "sninuse";
@@ -374,18 +374,18 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 // fill in insertion structure
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
-  (void)sprintf(did, "%u", dirid);
+  (void)snprintf(did, 24, "%u", dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
   cols[idx].column = "ski";
   cols[idx++].value = ski;
-  (void)sprintf(asn, "%d", asid);
+  (void)snprintf(asn, 24, "%d", asid);
   cols[idx].column = "asn";
   cols[idx++].value = asn;
-  (void)sprintf(flagn, "%u", isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  (void)snprintf(flagn, 24, "%u", isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)sprintf(lid, "%u", roa_id);
+  (void)snprintf(lid, 24, "%u", roa_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
   aone.vec = &cols[0];
@@ -554,17 +554,18 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 // find the entry whose subject is our issuer and whose ski is our aki,
 // e.g. our parent
   if (subject != NULL)
-    sprintf (parentWhere, "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
-	     ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+    snprintf (parentWhere, 600,
+	      "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
+	      ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   else
-    sprintf (parentWhere, "ski=\"%s\" and (flags%%%d)>=%d",
-	     ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+    snprintf (parentWhere, 600, "ski=\"%s\" and (flags%%%d)>=%d",
+	      ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   *stap = searchscm (conp, theCertTable, &parentSrch, NULL, ok,
 		     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   if ( *stap < 0 ) return NULL;
-  (void)sprintf(ofullname, "%s/%s", parentDir, parentFile);
+  (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
   if (pathname != NULL)
-    strcpy (*pathname, ofullname);
+    strncpy (*pathname, ofullname, PATH_MAX);
   return readCertFromFile (ofullname, stap);
 }
 
@@ -620,8 +621,8 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
 
   // query for crls such that issuer = issuer, and flags & valid
   // and set isRevoked = 1 if sn is in snlist
-  sprintf (revokedWhere, "issuer=\"%s\" and (flags%%%d)>=%d",
-	   issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  snprintf (revokedWhere, 600, "issuer=\"%s\" and (flags%%%d)>=%d",
+	    issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   isRevoked = 0;
   revokedSN = strtoull (sn, NULL, 10);
   sta = searchscm (conp, theCRLTable, &revokedSrch, NULL, revokedHandler,
@@ -847,8 +848,8 @@ static int updateValidFlags (scmcon *conp, scmtab *tabp, unsigned int id,
   int flags = isValid ?
     ((prevFlags - SCM_FLAG_NOCHAIN) | SCM_FLAG_VALID) :
     ((prevFlags - SCM_FLAG_VALID) | SCM_FLAG_NOCHAIN);
-  sprintf (stmt, "update %s set flags=%d where local_id=%d;",
-	   tabp->tabname, flags, id);
+  snprintf (stmt, 100, "update %s set flags=%d where local_id=%d;",
+	    tabp->tabname, flags, id);
   return statementscm (conp, stmt);
 }
 
@@ -867,8 +868,8 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
 
   idx = idx;
   // try verifying crl
-  sprintf (pathname, "%s/%s", (char *) s->vec[0].valptr,
-	   (char *) s->vec[1].valptr);
+  snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
+	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   cf = crl2fields((char *) s->vec[1].valptr, pathname, typ,
 		  &x, &sta, &crlsta);
@@ -904,8 +905,8 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
 
   idx = idx;
   // try verifying crl
-  sprintf (pathname, "%s/%s", (char *) s->vec[0].valptr,
-	   (char *) s->vec[1].valptr);
+  snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
+	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &r);
   if (sta < 0)
@@ -958,7 +959,7 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
   char  pathname[PATH_MAX];
 
   if (doVerify) {
-    sprintf (pathname, "%s/%s", data->dirname, data->filename);
+    snprintf (pathname, PATH_MAX, "%s/%s", data->dirname, data->filename);
     x = readCertFromFile (pathname, &sta);
     if ( x == NULL )
       return ERR_SCM_X509;
@@ -984,13 +985,12 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
 		   sizeof(unsigned int));
     addcolsrchscm (&crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
   }
-  sprintf (crlWhere, "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	   data->aki, data->issuer,
-	   2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+  snprintf (crlWhere, 600, "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
+	    data->aki, data->issuer, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
   sta = searchscm (conp, theCRLTable, &crlSrch, NULL, verifyChildCRL,
 		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
-  sprintf (crlWhere, "ski=\"%s\" and (flags%%%d)>=%d",
-	   data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+  snprintf (crlWhere, 600, "ski=\"%s\" and (flags%%%d)>=%d",
+	    data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
   sta = searchscm (conp, theROATable, &crlSrch, NULL, verifyChildROA,
 		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   return 0;
@@ -1060,7 +1060,7 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
     return(sta);
-  (void)sprintf(ws, "valfrom < \"%s\" AND \"%s\" < valto", now, now);
+  snprintf(ws, 256, "valfrom < \"%s\" AND \"%s\" < valto", now, now);
   free((void *)now);
   srch.wherestr = &ws[0];
   mymcf.did = 0;
@@ -1091,7 +1091,7 @@ static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
   UNREFERENCED_PARAMETER(idx);
   lid = *(unsigned int *)(s->vec[0].valptr);
   flags = *(unsigned int *)(s->vec[2].valptr);
-  (void)strcpy(ski, (char *)(s->vec[1].valptr));
+  (void)strncpy(ski, (char *)(s->vec[1].valptr), 512);
   if ( countvalidparents(conp, NULL, ski) > 0 )
     return(0);
   updateValidFlags (conp, theROATable, lid, flags, 0);
@@ -1124,8 +1124,8 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
     addcolsrchscm (&roaSrch, "ski", SQL_C_CHAR, 128);
     addcolsrchscm (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
   }
-  sprintf (roaWhere, "ski=\"%s\" and (flags%%%d)>=%d",
-	   data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  snprintf (roaWhere, 600, "ski=\"%s\" and (flags%%%d)>=%d",
+	    data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   searchscm(conp, theROATable, &roaSrch, NULL, revoke_roa,
 	    SCM_SRCH_DOVALUE_ALWAYS);
   return 0;
@@ -1230,10 +1230,10 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
     else
       doIt = invalidateChildCert(conp, &currPropData->data[idx], !isRoot) == 0;
     if (doIt) {
-      sprintf(childrenWhere,
-	  "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	      currPropData->data[idx].ski, currPropData->data[idx].ski,
-	      currPropData->data[idx].subject, 2 * flag, flag);
+      snprintf(childrenWhere, 600,
+	   "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
+	       currPropData->data[idx].ski, currPropData->data[idx].ski,
+	       currPropData->data[idx].subject, 2 * flag, flag);
     }
     if (! isRoot) {
       free (currPropData->data[idx].filename);
@@ -1831,7 +1831,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   dtwo[0].column = "filename";
   dtwo[0].value = outfile;
   dtwo[1].column = "dir_id";
-  (void)sprintf(did, "%u", id);
+  (void)snprintf(did, 24, "%u", id);
   dtwo[1].value = did;
   dwhere.vec = &dtwo[0];
   dwhere.ntot = 2;
@@ -1912,7 +1912,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   mymcf.toplevel = 1;
   w[0].column = "issuer";
   w[0].value = issuer;
-  (void)sprintf(sno, "%lld", sn);
+  (void)snprintf(sno, 24, "%lld", sn);
   w[1].column = "sn";
   w[1].value = &sno[0];
   w[2].column = "aki";
@@ -1947,7 +1947,7 @@ int deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid)
   if ( conp == NULL || conp->connected == 0 || tabp == NULL )
     return(ERR_SCM_INVALARG);
   where.column = "local_id";
-  (void)sprintf(mylid, "%u", lid);
+  (void)snprintf(mylid, 24, "%u", lid);
   where.value = mylid;
   lids.vec = &where;
   lids.ntot = 1;
@@ -1975,7 +1975,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   // ????????? instead test for this in select statement ???????? GAGNON
   if ( (pflags & SCM_FLAG_NOTYET) == 0 )
     return(0);
-  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  (void)snprintf(lid, 24, "%u", *(unsigned int *)(s->vec[0].valptr));
   one.column = "local_id";
   one.value = &lid[0];
   where.vec = &one;
@@ -2002,7 +2002,7 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   int  sta;
 
   UNREFERENCED_PARAMETER(idx);
-  (void)sprintf(lid, "%u", *(unsigned int *)(s->vec[0].valptr));
+  (void)snprintf(lid, 24, "%u", *(unsigned int *)(s->vec[0].valptr));
   one.column = "local_id";
   one.value = &lid[0];
   where.vec = &one;
@@ -2072,15 +2072,16 @@ int certificate_validity(scm *scmp, scmcon *conp)
   vok = (char *)calloc(48+2*strlen(now), sizeof(char));
   if ( vok == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(vok, "valfrom <= \"%s\" AND \"%s\" <= valto", now, now);
+  (void)snprintf(vok, 48+2*strlen(now),
+		 "valfrom <= \"%s\" AND \"%s\" <= valto", now, now);
   vf = (char *)calloc(24+strlen(now), sizeof(char));
   if ( vf == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(vf, "\"%s\" < valfrom", now);
+  (void)snprintf(vf, 24+strlen(now), "\"%s\" < valfrom", now);
   vt = (char *)calloc(24+strlen(now), sizeof(char));
   if ( vt == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(vt, "valto < \"%s\"", now);
+  (void)snprintf(vt, 24+strlen(now), "valto < \"%s\"", now);
   free((void *)now);
 // search for certificates that might now be valid
 // in order to use revoke_cert_and_children the first five
@@ -2160,7 +2161,7 @@ void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 void startSyslog(char *appName)
 {
   char *logName = (char *) calloc (6 + strlen (appName), sizeof (char));
-  sprintf (logName, "APKI %s", appName);
+  snprintf (logName, 6 + strlen (appName), "APKI %s", appName);
   openlog (logName, LOG_PID, 0);
   syslog (LOG_NOTICE, "Application Started");
 }

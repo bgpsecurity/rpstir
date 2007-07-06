@@ -42,7 +42,7 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
   s = s;
   char msg[600];
   if (cnt > 0) return 0;   // exists another crl that is current
-  sprintf (msg, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\" and (flags %% %d) < %d",
+  snprintf (msg, 600, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\" and (flags %% %d) < %d",
            certTable->tabname, SCM_FLAG_UNKNOWN, theAKI, theIssuer,
            2 * SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
   return statementscm (conp, msg);
@@ -57,7 +57,7 @@ static int handleIfCurrent (scmcon *conp, scmsrcha *s, int cnt)
   s = s;
   char msg[128];
   if (cnt == 0) return 0;   // exists another crl that is current
-  sprintf (msg, "update %s set flags = flags - %d where local_id=%d",
+  snprintf (msg, 128, "update %s set flags = flags - %d where local_id=%d",
            certTable->tabname, SCM_FLAG_UNKNOWN, theID);
   return statementscm (conp, msg);
 }
@@ -91,8 +91,8 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
   if (s->nused > 2) {
     theID = *((unsigned int *) s->vec[2].valptr);
   }
-  sprintf (cntMsg, "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
-           theIssuer, theAKI, currTimestamp);
+  snprintf (cntMsg, 600, "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
+	    theIssuer, theAKI, currTimestamp);
   return searchscm (conp, crlTable, &cntSrch, countHandler, NULL,
                     SCM_SRCH_DOCOUNT);
 }
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
   //   to be unknown
   srch.nused = 0;
   srch.vald = 0;
-  sprintf (msg, "next_upd<=\"%s\"", currTimestamp);
+  snprintf (msg, 1024, "next_upd<=\"%s\"", currTimestamp);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "issuer", SQL_C_CHAR, 512);
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, 128);
@@ -164,7 +164,8 @@ int main(int argc, char **argv)
   // if so, set state !unknown
   srch.nused = 0;
   srch.vald = 0;
-  sprintf (msg, "(flags %% %d) >= %d", 2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+  snprintf (msg, 1024, "(flags %% %d) >= %d",
+	    2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "issuer", SQL_C_CHAR, 512);
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, 128);
@@ -177,8 +178,8 @@ int main(int argc, char **argv)
   free (srch1[2].valptr);
 
   // write timestamp into database
-  sprintf (msg, "update %s set gc_last=\"%s\";",
-           metaTable->tabname, currTimestamp);
+  snprintf (msg, 1024, "update %s set gc_last=\"%s\";",
+	    metaTable->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
   stopSyslog();

@@ -28,6 +28,7 @@
 
 #define MAX_VALS 20
 #define MAX_CONDS 10
+#define MAX_RESULT_SZ 8192
 
 typedef int (*displayfunc)(scmsrcha *s, int idx1, char* returnStr);
 
@@ -104,8 +105,8 @@ static QueryField *findField (char *name)
 /* combines dirname and filename into a pathname */
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr)
 {
-  sprintf (returnStr, "%s/%s", (char *) s->vec[idx1].valptr,
-	   (char *) s->vec[idx1+1].valptr);
+  snprintf (returnStr, MAX_RESULT_SZ, "%s/%s",
+	    (char *) s->vec[idx1].valptr, (char *) s->vec[idx1+1].valptr);
   return 2;
 }
 
@@ -119,8 +120,8 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr)
   snlist = (unsigned long long *) s->vec[idx1+1].valptr;
   returnStr[0] = 0;
   for (i = 0; i < snlen; i++) {
-    sprintf (&returnStr[strlen(returnStr)], "%s%llu",
-	     (i == 0) ? "" : " ", snlist[i]);
+    snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
+	      "%s%llu", (i == 0) ? "" : " ", snlist[i]);
   }
   return 2;
 }
@@ -206,12 +207,13 @@ static int checkValidity (char *ski, unsigned int localID) {
     if (unknownOption == OPTION_SPECIAL)
       addcolsrchscm (&validSrch, "flags", SQL_C_ULONG, 8);
     char *now = LocalTimeToDBTime (&status);
-    sprintf (validWhereStr, "valto>\"%s\" and (flags%%%d)>=%d", now,
-	     2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+    snprintf (validWhereStr, 700, "valto>\"%s\" and (flags%%%d)>=%d", now,
+	      2*SCM_FLAG_VALID, SCM_FLAG_VALID);
     free (now);
     if (unknownOption == OPTION_INVALID)
-      sprintf (&validWhereStr[strlen(validWhereStr)],
-	       " and (flags%%%d)<%d", 2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+      snprintf (&validWhereStr[strlen(validWhereStr)],
+		700-strlen(validWhereStr), " and (flags%%%d)<%d",
+		2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch1[0].valptr;
     nextSubject = (char *) validSrch1[1].valptr;
@@ -227,15 +229,17 @@ static int checkValidity (char *ski, unsigned int localID) {
     if (firstTime) {
       firstTime = 0;
       if (ski)
-        sprintf (whereInsertPtr, " and ski=\"%s\"", ski);
+        snprintf (whereInsertPtr, 700-strlen(validWhereStr),
+		  " and ski=\"%s\"", ski);
       else
-        sprintf (whereInsertPtr, " and local_id=\"%d\"", localID);
+        snprintf (whereInsertPtr, 700-strlen(validWhereStr),
+		  " and local_id=\"%d\"", localID);
     } else {
-      sprintf (whereInsertPtr, " and ski=\"%s\" and subject=\"%s\"",
-               nextSKI, nextSubject);
+      snprintf (whereInsertPtr, 700-strlen(validWhereStr),
+		" and ski=\"%s\" and subject=\"%s\"", nextSKI, nextSubject);
     }
     found = 0;
-    strcpy (prevSKI, nextSKI);
+    strncpy (prevSKI, nextSKI, 128);
     status = searchscm (connect, validTable, &validSrch, NULL,
                         registerFound, SCM_SRCH_DOVALUE_ALWAYS);
     if (! found) return V_INVALID;  // no parent cert
@@ -250,7 +254,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 {
   int result = 0;
   int display, valid;
-  char resultStr[10000];
+  char resultStr[MAX_RESULT_SZ];
 
   conp = conp; numLine = numLine;  // silence compiler warnings
   out2 = output;
@@ -268,9 +272,11 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       result += field->displayer (s, result, resultStr);
     } else {
       if (field->sqlType == SQL_C_CHAR)
-        sprintf (resultStr, "%s", (char *) s->vec[result].valptr);
+        snprintf (resultStr, MAX_RESULT_SZ,
+		  "%s", (char *) s->vec[result].valptr);
       else
-        sprintf (resultStr, "%d", *((unsigned int *) s->vec[result].valptr));
+        snprintf (resultStr, MAX_RESULT_SZ,
+		  "%d", *((unsigned int *) s->vec[result].valptr));
       result++;
     }
     if (multiline) fprintf (out2, "%s ", (display == 0) ? "*" : " ");
@@ -297,6 +303,7 @@ static int doQuery (char **displays, char **filters)
   int      i, j, status;
   QueryField *field, *field2;
   char     *name;
+  int      maxW = MAX_CONDS*20;
 
   checkErr ((! isROA) && (! isCRL) && (! isCert),
             "\nBad object type; must be roa, cert or crl\n\n");
@@ -316,36 +323,36 @@ static int doQuery (char **displays, char **filters)
   } else {
     whereStr[0] = (char) 0;
     for (i = 0; filters[i] != NULL; i++) {
-      if (i != 0) strcat (whereStr, " AND ");
+      if (i != 0) strncat (whereStr, " AND ", maxW-strlen(whereStr));
       name = strtok (filters[i], ".");
-      strcat (whereStr, name);
+      strncat (whereStr, name, maxW-strlen(whereStr));
       field = findField (name);
       checkErr (field == NULL || field->description == NULL,
 		"Unknown field name: %s\n", name);
       checkErr (field->justDisplay, "Field only for display: %s\n", name);
       name = strtok (NULL, ".");
       if (strcasecmp (name, "eq") == 0) {
-        strcat (whereStr, "=");
+        strncat (whereStr, "=", maxW-strlen(whereStr));
       } else if (strcasecmp (name, "ne") == 0) {
-        strcat (whereStr, "<>");
+        strncat (whereStr, "<>", maxW-strlen(whereStr));
       } else if (strcasecmp (name, "lt") == 0) {
-        strcat (whereStr, "<");
+        strncat (whereStr, "<", maxW-strlen(whereStr));
       } else if (strcasecmp (name, "gt") == 0) {
-        strcat (whereStr, ">");
+        strncat (whereStr, ">", maxW-strlen(whereStr));
       } else if (strcasecmp (name, "le") == 0) {
-        strcat (whereStr, "<=");
+        strncat (whereStr, "<=", maxW-strlen(whereStr));
       } else if (strcasecmp (name, "ge") == 0) {
-        strcat (whereStr, ">=");
+        strncat (whereStr, ">=", maxW-strlen(whereStr));
       } else {
         checkErr (1, "Bad comparison operator: %s\n", name);
       }
-      strcat (whereStr, "\"");
+      strncat (whereStr, "\"", maxW-strlen(whereStr));
       name = strtok (NULL, "");
       for (j = 0; j < (int)strlen(name); j++) {
 	if (name[j] == '#') name[j] = ' ';
       }
-      strcat (whereStr, name);
-      strcat (whereStr, "\"");
+      strncat (whereStr, name, maxW-strlen(whereStr));
+      strncat (whereStr, "\"", maxW-strlen(whereStr));
     }
     srch.wherestr = whereStr;
   }
