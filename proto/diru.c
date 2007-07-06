@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#ifdef linux
 #include <fam.h>
+#endif
 
 #include "diru.h"
 #include "err.h"
@@ -89,6 +91,41 @@ char *r2adir(char *indir)
 }
 
 /*
+  This function is a safe version of strcat. Based on the amount of data
+  already in a string (already) and the length of a new string, it will
+  append the new string if it will fit in the allocated size (totlen)
+  allowing also for one character left over for the trailing NUL. Returns
+  the new length of the string on success and a negative error code on
+  failure.
+ 
+  Note that if already is given as a negative number the length in the
+  input buffer is calculated.
+*/
+
+int strwillfit(char *inbuf, int totlen, int already, char *newbuf)
+{
+  int newlen;
+
+  if ( inbuf == NULL || newbuf == NULL )
+    return(ERR_SCM_INVALARG);
+  if ( already < 0 )
+  {
+    if ( inbuf[0] == 0 )
+      already = 0;
+    else
+      already = strlen(inbuf);
+  }
+  if ( newbuf[0] == 0 )
+    newlen = 0;
+  else
+    newlen = strlen(newbuf);
+  if ( (already+newlen) >= totlen )
+    return(ERR_SCM_INVALSZ);
+  strncat(inbuf, newbuf, newlen);
+  return(already+newlen);
+}
+
+/*
   This function splits a filename into an absolute path and a filename.
   It allocates memory for both returned values. On success it returns
   0 and on failure it returns a negative error code.
@@ -101,6 +138,7 @@ int splitdf(char *dirprefix, char *dirname, char *fname,
   char *work;
   char *outd = NULL;
   char *outf = NULL;
+  int   wsta = -1;
 
   if ( fname == NULL || fname[0] == 0 )
     return(ERR_SCM_INVALARG);
@@ -120,22 +158,64 @@ int splitdf(char *dirprefix, char *dirname, char *fname,
   if ( dirprefix == NULL && dirname == NULL && strchr(fname, '/') == NULL )
     {
       (void)getcwd(work, PATH_MAX);
-      (void)strcat(work, "/");
-      (void)strcat(work, fname);
+      wsta = strwillfit(work, PATH_MAX, wsta, "/");
+      if ( wsta < 0 )
+      {
+        free((void *)work);
+        return(wsta);
+      }
+      wsta = strwillfit(work, PATH_MAX, wsta, fname);
+      if ( wsta < 0 )
+      {
+        free((void *)work);
+        return(wsta);
+      }
     }
   else
     {
       if ( dirprefix != NULL && dirprefix[0] != 0 )
-	(void)strcpy(work, dirprefix);
+//	(void)strcpy(work, dirprefix);
+      {
+        wsta = strwillfit(work, PATH_MAX, wsta, dirprefix);
+        if ( wsta < 0 )
+        {
+          free((void *)work);
+          return(wsta);
+        }
+      }
       if ( dirname != NULL && dirname[0] != 0 )
 	{
 	  if ( work[0] != 0 )
-	    (void)strcat(work, "/");
-	  (void)strcat(work, dirname);
+          {
+            wsta = strwillfit(work, PATH_MAX, wsta, "/");
+            if ( wsta < 0 )
+            {
+              free((void *)work);
+              return(wsta);
+            }
+          }
+	  wsta = strwillfit(work, PATH_MAX, wsta, dirname);
+          if ( wsta < 0 )
+          {
+            free((void *)work);
+            return(wsta);
+          }
 	}
       if ( work[0] != 0 )
-	(void)strcat(work, "/");
-      (void)strcat(work, fname);
+      {
+        wsta = strwillfit(work, PATH_MAX, wsta, "/");
+        if ( wsta < 0 )
+        {
+          free((void *)work);
+          return(wsta);
+        }
+      }
+      wsta = strwillfit(work, PATH_MAX, wsta, fname);
+      if ( wsta < 0 )
+      {
+        free((void *)work);
+        return(wsta);
+      }
     }
   slash = strrchr(work, '/');
   if ( slash == NULL )
@@ -164,7 +244,7 @@ int splitdf(char *dirprefix, char *dirname, char *fname,
     *outfile = outf;
   if ( outfull != NULL )
     {
-      (void)sprintf(work, "%s/%s", outd, outf);
+      (void)snprintf(work, PATH_MAX, "%s/%s", outd, outf);
       *outfull = strdup(work);
       if ( *outfull == NULL )
 	return(ERR_SCM_NOMEM);
