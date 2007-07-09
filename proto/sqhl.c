@@ -1630,7 +1630,6 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   unsigned int lid = 0;
   scmsrcha srch;
   scmsrch  srch1[7];
-  scmtab  *tabp;
   crlinfo  crli;
   char     issuer[512];
   char     aki[512];
@@ -1698,10 +1697,10 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   srch.wherestr = NULL;
   crli.scmp = scmp;
   crli.conp = conp;
-  crli.tabp = tabp;
+  crli.tabp = theCRLTable;
   crli.cfunc = cfunc;
   srch.context = (void *)&crli;
-  sta = searchscm(conp, tabp, &srch, NULL, crliterator, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theCRLTable, &srch, NULL, crliterator, SCM_SRCH_DOVALUE_ALWAYS);
   free(snlist);
   return(sta);
 }
