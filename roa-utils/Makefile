@@ -6,7 +6,7 @@
 
 # --- macros
 #CC=gcc
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -Wall -Wextra -Wshadow -Wmissing-prototypes -Wmissing-declarations
+CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 TEST_OBJECTS= roa_test.o
 ASN_DIR= ../cg/asn
 CASN_DIR= ../cg/casn

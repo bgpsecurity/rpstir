@@ -245,7 +245,7 @@ static int yorn(char *q)
 
 static int makesock(char *porto, int *protosp)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sinn;
   struct sockaddr_in sout;
   struct hostent    *hen;
   socklen_t leen;
@@ -285,12 +285,12 @@ static int makesock(char *porto, int *protosp)
 	  close(protos);
 	  return(-1);
 	}
-      memset(&sin, 0, sizeof(sin));
-      memcpy(&sin.sin_addr.s_addr, hen->h_addr_list[0],
+      memset(&sinn, 0, sizeof(sinn));
+      memcpy(&sinn.sin_addr.s_addr, hen->h_addr_list[0],
 	     hen->h_length);
-      sin.sin_family = AF_INET;
-      sin.sin_port = htons(port);
-      sta = bind(protos, (struct sockaddr *)&sin, sizeof(sin));
+      sinn.sin_family = AF_INET;
+      sinn.sin_port = htons(port);
+      sta = bind(protos, (struct sockaddr *)&sinn, sizeof(sinn));
       if ( sta < 0 )
 	{
 	  close(protos);
