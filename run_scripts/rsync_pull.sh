@@ -47,7 +47,7 @@ if ! [ -f $1 ] ; then
 fi
 
 # source the file to load the variables
-source $1
+. $1
 if [ $? -ne 0 ] ; then
   echo "failed to source config file"
   exit 1
