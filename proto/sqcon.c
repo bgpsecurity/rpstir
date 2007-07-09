@@ -9,6 +9,7 @@
 
 #include "scm.h"
 #include "scmf.h"
+#include "diru.h"
 #include "err.h"
 
 /*
@@ -169,27 +170,31 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
   scmcon     *conp;
   SQLRETURN   ret;
   char outlen[1024];
+  int  leen;
 
   if ( errmsg != NULL && emlen > 0 )
     memset(errmsg, 0, emlen);
   if ( dsnp == NULL || dsnp[0] == 0 )
     {
-      if ( errmsg != NULL && (unsigned)emlen > strlen(nulldsn) )
-	(void)strcpy(errmsg, nulldsn);
+      leen = strlen(nulldsn);
+      if ( errmsg != NULL && emlen > leen )
+	(void)strncpy(errmsg, nulldsn, leen);
       return(NULL);
     }
   conp = (scmcon *)calloc(1, sizeof(scmcon));
   if ( conp == NULL )
     {
-      if ( errmsg != NULL && (unsigned)emlen > strlen(oom) )
-	(void)strcpy(errmsg, oom);
+      leen = strlen(oom);
+      if ( errmsg != NULL && emlen > leen )
+	(void)strncpy(errmsg, oom, leen);
       return(NULL);
     }
   conp->mystat.errmsg = (char *)calloc(1024, sizeof(char));
   if ( conp->mystat.errmsg == NULL )
     {
-      if ( errmsg != NULL && (unsigned)emlen > strlen(oom) )
-	(void)strcpy(errmsg, oom);
+      leen = strlen(oom);
+      if ( errmsg != NULL && emlen > leen )
+	(void)strncpy(errmsg, oom, leen);
       free((void *)conp);
       return(NULL);
     }
@@ -198,8 +203,9 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
   if ( ! SQLOK(ret) )
     {
       disconnectscm(conp);
-      if ( errmsg != NULL && (unsigned)emlen > strlen(badhenv) )
-	(void)strcpy(errmsg, badhenv);
+      leen = strlen(badhenv);
+      if ( errmsg != NULL && emlen > leen )
+	(void)strncpy(errmsg, badhenv, leen);
       return(NULL);
     }
   ret = SQLSetEnvAttr(conp->henv, SQL_ATTR_ODBC_VERSION,
@@ -333,21 +339,23 @@ int createdbscm(scmcon *conp, char *dbname, char *dbuser)
 {
   char *mk;
   int   sta;
+  int   leen;
 
   if ( dbname == NULL || dbname[0] == 0 || conp == NULL ||
        conp->connected == 0 || dbuser == NULL || dbuser[0] == 0 )
     return(ERR_SCM_INVALARG);
-  mk = (char *)calloc(strlen(dbname) + strlen(dbuser) + 130, sizeof(char));
+  leen = strlen(dbname) + strlen(dbuser) + 130;
+  mk = (char *)calloc(leen, sizeof(char));
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(mk, "CREATE DATABASE %s;", dbname);
+  (void)snprintf(mk, leen, "CREATE DATABASE %s;", dbname);
   sta = statementscm(conp, mk);
   if ( sta < 0 )
     {
       free((void *)mk);
       return(sta);
     }
-  (void)sprintf(mk,
+  (void)snprintf(mk, leen,
     "GRANT DELETE, INSERT, LOCK TABLES, SELECT, UPDATE ON %s.* TO '%s'@'localhost';",
     dbname, dbuser);
   sta = statementscm(conp, mk);
@@ -363,14 +371,16 @@ int deletedbscm(scmcon *conp, char *dbname)
 {
   char *mk;
   int   sta;
+  int   leen;
 
   if ( dbname == NULL || dbname[0] == 0 || conp == NULL ||
        conp->connected == 0 )
     return(ERR_SCM_INVALARG);
-  mk = (char *)calloc(strlen(dbname) + 30, sizeof(char));
+  leen = strlen(dbname) + 30;
+  mk = (char *)calloc(leen, sizeof(char));
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(mk, "DROP DATABASE IF EXISTS %s;", dbname);
+  (void)snprintf(mk, leen, "DROP DATABASE IF EXISTS %s;", dbname);
   sta = statementscm(conp, mk);
   free((void *)mk);
   return(sta);
@@ -384,15 +394,16 @@ static int createonetablescm(scmcon *conp, scmtab *tabp)
 {
   char *mk;
   int   sta;
+  int   leen;
 
   if ( tabp->tstr == NULL || tabp->tstr[0] == 0 )
     return(0);			/* no op */
   conp->mystat.tabname = tabp->hname;
-  mk = (char *)calloc(strlen(tabp->tabname) + strlen(tabp->tstr) + 100,
-		      sizeof(char));
+  leen = strlen(tabp->tabname) + strlen(tabp->tstr) + 100;
+  mk = (char *)calloc(leen, sizeof(char));
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(mk, "CREATE TABLE %s ( %s );", tabp->tabname, tabp->tstr);
+  (void)snprintf(mk, leen, "CREATE TABLE %s ( %s );", tabp->tabname, tabp->tstr);
   sta = statementscm(conp, mk);
   free((void *)mk);
   return(sta);
@@ -407,16 +418,18 @@ int createalltablesscm(scmcon *conp, scm *scmp)
 {
   char *mk;
   int   sta = 0;
+  int   leen;
   int   i;
 
   if ( conp == NULL || conp->connected == 0 || scmp == NULL )
     return(ERR_SCM_INVALARG);
   if ( scmp->ntables > 0 && scmp->tables == NULL )
     return(ERR_SCM_INVALARG);
-  mk = (char *)calloc(strlen(scmp->db) + 30, sizeof(char));
+  leen = strlen(scmp->db) + 30;
+  mk = (char *)calloc(leen, sizeof(char));
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(mk, "USE %s;", scmp->db);
+  (void)snprintf(mk, leen, "USE %s;", scmp->db);
   sta = statementscm(conp, mk);
   if ( sta < 0 )
     return(sta);
@@ -473,7 +486,8 @@ static int valcols(scmcon *conp, scmtab *tabp, scmkva *arr)
       if ( findcol(tabp, ptr) < 0 )
 	{
 	  if ( conp->mystat.errmsg != NULL )
-	    (void)sprintf(conp->mystat.errmsg, "Invalid column %s", ptr);
+	    (void)snprintf(conp->mystat.errmsg, conp->mystat.emlen,
+              "Invalid column %s", ptr);
 	  return(ERR_SCM_INVALCOL);
 	}
     }
@@ -489,6 +503,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   char *stmt;
   int   sta;
   int   leen = 128;
+  int   wsta = (-1);
   int   doq;
   int   i;
 
@@ -519,12 +534,18 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt, "INSERT INTO %s (%s", tabp->tabname,
+  (void)snprintf(stmt, leen, "INSERT INTO %s (%s", tabp->tabname,
 		arr->vec[0].column);
   for(i=1;i<arr->nused;i++)
     {
-      (void)strcat(stmt, ", ");
-      (void)strcat(stmt, arr->vec[i].column);
+      wsta = strwillfit(stmt, leen, wsta, ", ");
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, arr->vec[i].column);
+      if ( wsta < 0 )
+	{
+	  free((void *)stmt);
+	  return(wsta);
+	}
     }
 /*
   Note the special convention that if the value (as a string)
@@ -536,24 +557,41 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
 */
   doq = strncmp(arr->vec[0].value, "0x", 2);
   if ( doq == 0 )
-    (void)strcat(stmt, ") VALUES (");
+    wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
   else
-    (void)strcat(stmt, ") VALUES (\"");
-  (void)strcat(stmt, arr->vec[0].value);
-  if ( doq != 0 )
-    (void)strcat(stmt, "\"");
+    wsta = strwillfit(stmt, leen, wsta, ") VALUES (\"");
+  if ( wsta >= 0 )
+    wsta = strwillfit(stmt, leen, wsta, arr->vec[0].value);
+  if ( doq != 0 && wsta >= 0 )
+    wsta = strwillfit(stmt, leen, wsta, "\"");
+  if ( wsta < 0 )
+    {
+      free((void *)stmt);
+      return(wsta);
+    }
   for(i=1;i<arr->nused;i++)
     {
       doq = strncmp(arr->vec[i].value, "0x", 2);
       if ( doq == 0 )
-	(void)strcat(stmt, ", ");
+	wsta = strwillfit(stmt, leen, wsta, ", ");
       else
-	(void)strcat(stmt, ", \"");
-      (void)strcat(stmt, arr->vec[i].value);
-      if ( doq != 0 )
-	(void)strcat(stmt, "\"");
+	wsta = strwillfit(stmt, leen, wsta, ", \"");
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, arr->vec[i].value);
+      if ( doq != 0 && wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, "\"");
+      if ( wsta < 0 )
+	{
+	  free((void *)stmt);
+	  return(wsta);
+	}
     }
-  (void)strcat(stmt, ");");
+  wsta = strwillfit(stmt, leen, wsta, ");");
+  if ( wsta < 0 )
+    {
+      free((void *)stmt);
+      return(wsta);
+    }
   sta = statementscm(conp, stmt);
   free((void *)stmt);
   return(sta);
@@ -595,12 +633,13 @@ int getuintscm(scmcon *conp, unsigned int *ival)
 int getmaxidscm(scm *scmp, scmcon *conp, char *field, scmtab *mtab,
 		unsigned int *ival)
 {
-  char   stmt[80];
+  char   stmt[160];
   int    sta;
 
   if (scmp == NULL || conp == NULL || conp->connected == 0 || ival == NULL)
     return(ERR_SCM_INVALARG);
-  (void)sprintf(stmt, "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
+  (void)snprintf(stmt, sizeof(stmt),
+		 "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
   sta = statementscm(conp, stmt);
   if ( sta < 0 )
     return(sta);
@@ -1063,7 +1102,7 @@ int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
   ins->vec[0].value = (char *)calloc(16, sizeof(char));
   if ( ins->vec[0].value == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(ins->vec[0].value, "%u", mid);
+  (void)snprintf(ins->vec[0].value, 16, "%u", mid);
   sta = insertscm(conp, tabp, ins);
   free((void *)(ins->vec[0].value));
   if ( sta < 0 )
@@ -1082,6 +1121,7 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
   char *stmt = NULL;
   int   leen = 128;
   int   sta = 0;
+  int   wsta = (-1);
   int   i;
 
 // validate arguments
@@ -1107,24 +1147,47 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt, "DELETE FROM %s", tabp->tabname);
+  (void)snprintf(stmt, leen, "DELETE FROM %s", tabp->tabname);
   if ( deld != NULL )
     {
-      (void)strcat(stmt, " WHERE ");
-      (void)strcat(stmt, deld->vec[0].column);
-      (void)strcat(stmt, "=\"");
-      (void)strcat(stmt, deld->vec[0].value);
-      (void)strcat(stmt, "\"");
+      wsta = strwillfit(stmt, leen, wsta, " WHERE ");
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, deld->vec[0].column);
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, "=\"");
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, deld->vec[0].value);
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, "\"");
+      if ( wsta < 0 )
+	{
+	  free((void *)stmt);
+	  return(wsta);
+	}
       for(i=1;i<deld->nused;i++)
 	{
-	  (void)strcat(stmt, " AND ");
-	  (void)strcat(stmt, deld->vec[i].column);
-	  (void)strcat(stmt, "=\"");
-	  (void)strcat(stmt, deld->vec[i].value);
-	  (void)strcat(stmt, "\"");
+	  wsta = strwillfit(stmt, leen, wsta, " AND ");
+	  if ( wsta >= 0 )
+	    wsta = strwillfit(stmt, leen, wsta, deld->vec[i].column);
+	  if ( wsta >= 0 )
+	    wsta = strwillfit(stmt, leen, wsta, "=\"");
+	  if ( wsta >= 0 )
+	    wsta = strwillfit(stmt, leen, wsta, deld->vec[i].value);
+	  if ( wsta >= 0 )
+	    wsta = strwillfit(stmt, leen, wsta, "\"");
+	  if ( wsta < 0 )
+	    {
+	      free((void *)stmt);
+	      return(wsta);
+	    }
 	}
     }
-  (void)strcat(stmt, ";");
+  wsta = strwillfit(stmt, leen, wsta, ";");
+  if ( wsta < 0 )
+    {
+      free((void *)stmt);
+      return(wsta);
+    }
 // execute the DELETE statement
   sta = statementscm(conp, stmt);
   free((void *)stmt);
@@ -1142,6 +1205,7 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 {
   char *stmt;
   int   leen = 128;
+  int   wsta = (-1);
   int   sta;
   int   i;
 
@@ -1158,18 +1222,35 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt, "UPDATE %s SET flags=%u WHERE ", tabp->tabname, flags);
-  (void)strcat(stmt, where->vec[0].column);
-  (void)strcat(stmt, "=\"");
-  (void)strcat(stmt, where->vec[0].value);
-  (void)strcat(stmt, "\"");
+  (void)snprintf(stmt, leen, "UPDATE %s SET flags=%u WHERE ", tabp->tabname, flags);
+  wsta = strwillfit(stmt, leen, wsta, where->vec[0].column);
+  if ( wsta >= 0 )
+    wsta = strwillfit(stmt, leen, wsta, "=\"");
+  if ( wsta >= 0 )
+    wsta = strwillfit(stmt, leen, wsta, where->vec[0].value);
+  if ( wsta >= 0 )
+    wsta = strwillfit(stmt, leen, wsta, "\"");
+  if ( wsta < 0 )
+    {
+      free((void *)stmt);
+      return(wsta);
+    }
   for(i=1;i<where->nused;i++)
     {
-      (void)strcat(stmt, " AND ");
-      (void)strcat(stmt, where->vec[0].column);
-      (void)strcat(stmt, "=\"");
-      (void)strcat(stmt, where->vec[0].value);
-      (void)strcat(stmt, "\"");
+      wsta = strwillfit(stmt, leen, wsta, " AND ");
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, where->vec[i].column);
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, "=\"");
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, where->vec[i].value);
+      if ( wsta >= 0 )
+	wsta = strwillfit(stmt, leen, wsta, "\"");
+      if ( wsta < 0 )
+	{
+	  free((void *)stmt);
+	  return(wsta);
+	}
     }
   sta = statementscm(conp, stmt);
   free((void *)stmt);
@@ -1185,21 +1266,26 @@ char *hexify(int bytelen, void *ptr)
   unsigned char *inptr;
   char *aptr;
   char *outptr;
+  int   left;
   int   i;
 
-  aptr = (char *)calloc(bytelen+bytelen+24, sizeof(char));
+  left = bytelen+bytelen+24;
+  aptr = (char *)calloc(left, sizeof(char));
   if ( aptr == NULL )
     return(NULL);
   inptr = (unsigned char *)ptr;
   outptr = aptr;
   *outptr++ = '0';
+  left--;
   *outptr++ = 'x';
+  left--;
   if (bytelen == 0)
-    *outptr++ = '0';
+    *outptr++ = '0', left--;
   for(i=0;i<bytelen;i++)
     {
-      (void)sprintf(outptr, "%2.2x", *inptr);
+      (void)snprintf(outptr, left, "%2.2x", *inptr);
       outptr += 2;
+      left -= 2;
       inptr++;
     }
   *outptr = 0;
@@ -1230,7 +1316,8 @@ int updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
-  (void)sprintf(stmt, "UPDATE %s SET sninuse=%u, snlist=%s WHERE local_id=%u;",
+  (void)snprintf(stmt, leen,
+		 "UPDATE %s SET sninuse=%u, snlist=%s WHERE local_id=%u;",
 		tabp->tabname, sninuse, hexi, lid);
   sta = statementscm(conp, stmt);
   free((void *)stmt);
@@ -1272,7 +1359,7 @@ int updateranlastscm(scmcon *conp, scmtab *mtab, char what, char *now)
     default:
       return(ERR_SCM_INVALARG);
     }
-  (void)sprintf(stmt, "UPDATE %s SET %s=\"%s\" WHERE local_id=1;",
+  (void)snprintf(stmt, sizeof(stmt), "UPDATE %s SET %s=\"%s\" WHERE local_id=1;",
 		mtab->tabname, ent, now);
   sta = statementscm(conp, stmt);
   return(sta);
