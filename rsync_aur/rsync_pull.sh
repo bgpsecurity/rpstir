@@ -47,11 +47,18 @@ if ! [ -f $1 ] ; then
 fi
 
 # source the file to load the variables
-source $1
+. $1
 if [ $? -ne 0 ] ; then
   echo "failed to source config file"
   exit 1
 fi
+
+# set up APKI_PORT and APKI_ROOT if they aren't in the environment
+# already or were not specified within the config file
+
+if [ "${APKI_PORT}x" = "x" ]; then APKI_PORT=7344; fi
+if [ "${APKI_ROOT}x" = "x" ]; then APKI_ROOT=`pwd | sed 's/\/run_scripts//'`; fi
+
 
 # check for the DIRS variable
 if [ "${DIRS}NO" = "NO" ] ; then
@@ -128,11 +135,17 @@ IFS=' '
 for arg in ${DIRS}
 do
   echo "retrieving ${arg}"
+  start=`date +%s`
   $RSYNC -airz --del rsync://${arg}/ ${REPOSITORY}/${arg} > \
         ${LOGS}/${arg}.log
+  end=`date +%s`
+  echo "retrieve required $(($end-$start)) seconds"
   if [ "${DOLOAD}y" = "yesy" ] || [ "${DOLOAD}y" = "YESy" ]; then
     echo "loading ${arg}"
+    start=`date +%s`
     ${APKI_ROOT}/trunk/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
+    end=`date +%s`
+    echo "load required $(($end-$start)) seconds"
   fi
 done
 
