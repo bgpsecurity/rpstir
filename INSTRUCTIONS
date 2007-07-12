@@ -49,6 +49,12 @@ library itself and its include files are in accessible locations, e.g.
 be done by issuing the command make search name="cryptlib" from the
 /etc/ports directory.
 
+2.1.4 rsync
+
+Your rsync should be at least version 2.6.9, as earlier versions do
+not necessarily support the necessary flags.  Check your version with
+rsync --version, and install from rsync.samba.org.
+
 2.2 APKI database software
 
 The APKI software will have been delivered to you as a gzip-ed tarball
