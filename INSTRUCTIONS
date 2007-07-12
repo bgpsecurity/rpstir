@@ -101,7 +101,7 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     and loads it into the database.  Under ideal circumstances, this will
     continue to run forever, waiting for inputs from the feeder.
 
-3.5 rsync_pull.sh and feeder.sh: rsync_pull is a script that pulls
+3.5 pull_and_feed.sh and feeder.sh: rsync_pull is a script that pulls
     the data from a set of repositories using rsync and then optionally
     loads them into the database used the feeder.sh script.
     rsync_pull.sh takes a single argument which is the name of a

@@ -53,13 +53,6 @@ if [ $? -ne 0 ] ; then
   exit 1
 fi
 
-# set up APKI_PORT and APKI_ROOT if they aren't in the environment
-# already or were not specified within the config file
-
-if [ "${APKI_PORT}x" = "x" ]; then APKI_PORT=7344; fi
-if [ "${APKI_ROOT}x" = "x" ]; then APKI_ROOT=`pwd | sed 's/\/run_scripts//'`; fi
-
-
 # check for the DIRS variable
 if [ "${DIRS}NO" = "NO" ] ; then
   echo "missing DIRS= variable in config"
@@ -131,6 +124,7 @@ do
   done
 done
 
+start2=`date +%s`
 IFS=' '
 for arg in ${DIRS}
 do
@@ -143,9 +137,13 @@ do
   if [ "${DOLOAD}y" = "yesy" ] || [ "${DOLOAD}y" = "YESy" ]; then
     echo "loading ${arg}"
     start=`date +%s`
-    ${APKI_ROOT}/trunk/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
+    ${APKI_ROOT}/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
     end=`date +%s`
     echo "load required $(($end-$start)) seconds"
   fi
 done
-
+echo "Waiting for loader to finish ..."
+${APKI_ROOT}/rsync_aur/rsync_aur -s -t ${APKI_PORT} -f ${APKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
+echo "Loader finished"
+end2=`date +%s`
+echo "total time was $(($end2-$start2)) seconds"
