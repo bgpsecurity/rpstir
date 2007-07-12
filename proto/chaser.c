@@ -84,7 +84,7 @@ static int addURIIfUnique (char *uri)
   if (strlen (uri) == 0) return -1;
   if (strncmp (uri, "rsync://", 8) != 0) return -1;
   for (i = 8; i < (int)strlen(uri); i++) {
-    if (isalnum(uri[i])) continue;
+    if (isalnum((int)(uri[i]))) continue;
     if (uri[i] == '/') continue;
     if (uri[i] == '.') continue;
     if (uri[i] == '-') continue;
