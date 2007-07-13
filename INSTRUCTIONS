@@ -107,10 +107,10 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     and loads it into the database.  Under ideal circumstances, this will
     continue to run forever, waiting for inputs from the feeder.
 
-3.5 pull_and_feed.sh and feeder.sh: rsync_pull is a script that pulls
+3.5 pull_and_feed.sh and feeder.sh: pull_and_feed.sh is a script that pulls
     the data from a set of repositories using rsync and then optionally
-    loads them into the database used the feeder.sh script.
-    rsync_pull.sh takes a single argument which is the name of a
+    loads them into the database by feeding them to the loader.
+    pull_and_feed.sh takes a single argument which is the name of a
     configuration file.  A sample configuration file called
     rsync_mock.config is included.  The configuration file tells the
     name of all remote repositories to be downloaded, the top-level
@@ -121,7 +121,7 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
     If you want to do the database load separately or something fails to
     cause you to need to do the load separately, run the feeder.sh
-    script directly, with the one argument being the name of the log file.
+    script, with the one argument being the name of the log file.
 
 3.6 garbage.sh: This checks for certificates that may have expired due
     to the passage of time, or crls that may have become stale due to
