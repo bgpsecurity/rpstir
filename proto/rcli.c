@@ -17,6 +17,9 @@
 #ifdef __NetBSD__
 #include <netinet/in.h>
 #endif
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#endif
 
 #include "scm.h"
 #include "scmf.h"
