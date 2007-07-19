@@ -7,3 +7,7 @@ echo "Should be 5 entries (no validity check):"
 $APKI_ROOT/proto/query -t cert -d ski
 echo "Should be 5 entries (validity check):"
 $APKI_ROOT/proto/query -t cert -d ski -v
+echo "Should be 1 entries (crls):"
+$APKI_ROOT/proto/query -t crl -d aki
+echo "Should be 1 entries (roas):"
+$APKI_ROOT/proto/query -t roa -d ski
