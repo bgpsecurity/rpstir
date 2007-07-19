@@ -1,4 +1,6 @@
 /* $Id$ */
+/* Jul 12 2007 860U  */
+/* Jul 12 2007 GARDINER fixed per Mudge's suggestions */
 /* Aug  2 2006 847U  */
 /* Aug  2 2006 GARDINER chenged to use _casn_obj_err() */
 /* Aug  2 2006 846U  */
@@ -29,7 +31,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 847P";
+char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 860P";
 #include "casn.h"
 #include <fcntl.h>
 #include <unistd.h>
@@ -79,9 +81,13 @@ int put_casn_file(struct casn *casnp, char *name, int fd)
     uchar *b;
     int siz;
 
+    // the semantics of using O_CREAT with O_EXCL will cause the
+    // file open to fail if it already exists, so we must unlink it
+    if (name) (void)unlink(name);
       // if name is NULL, we were passed an active file descriptor
-    if (name && (fd = open(name, (O_WRONLY | O_CREAT | O_TRUNC | O_DOS),
-        0777)) < 0) return _casn_obj_err(casnp, ASN_FILE_ERR);
+    if (name && (fd = open(name,
+        (O_WRONLY | O_CREAT | O_TRUNC | O_DOS | O_EXCL), 0755)) < 0)
+        return _casn_obj_err(casnp, ASN_FILE_ERR);
     if ((siz = size_casn(casnp)) < 0)
         {
         if (name) close(fd);

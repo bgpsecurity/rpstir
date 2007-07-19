@@ -1,4 +1,6 @@
 /* $Id$ */
+/* Jul 12 2007 860U  */
+/* Jul 12 2007 GARDINER fixed per Mudge's suggestions */
 /* Jun 14 2007 859U  */
 /* Jun 14 2007 GARDINER fixed _stuff_string() to deal with null casnp */
 /* May 31 2007 856U  */
@@ -123,7 +125,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 859P";
+char casn_sfcsid[] = "@(#)casn.c 860P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -1550,7 +1552,7 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
 	}
     if ((ansr = _readsize(casnp, to, mode)) > 0 &&
         // pure read of bit-string-defined-by
-        casnp->type == (ASN_CHOICE | ASN_BITSTRING))
+        casnp->type == (ASN_CHOICE | ASN_BITSTRING) && ansr > 0)
         memcpy(to, &to[1], --ansr);   // shift to left 1 byte
     return ansr;
     }
@@ -1646,8 +1648,9 @@ void _stuff_ofs(struct casn *casnp, int num_ofs)
 
 void _stuff_string(struct casn *casnp)
     {
-      struct casn *tcasnp, *ucasnp;
+    struct casn *tcasnp, *ucasnp;
     int count;
+
 #ifdef ASN_VERBOSE
     int lth;
     uchar *c, lbuf[10];

@@ -1,4 +1,6 @@
 /* $Id$ */
+/* Jul 12 2007 860U  */
+/* Jul 12 2007 GARDINER fixed per Mudge's suggestions */
 /* Mar 28 2007 849U  */
 /* Mar 28 2007 GARDINER fixed signedness errors */
 /* Mar 20 2006 832U  */
@@ -24,7 +26,7 @@ COPYRIGHT 2005 BBN Technologies
 Cambridge, Ma. 02140
 617-873-3000
 *****************************************************************************/
-char casn_real_sfcsid[] = "@(#)casn_real.c 849P";
+char casn_real_sfcsid[] = "@(#)casn_real.c 860P";
 
 #include <stdio.h>
 #include "casn.h"
@@ -120,6 +122,7 @@ int read_casn_double(struct casn *casnp, double *val)
         *val = 0;
         return 0;
         }
+    if (casnp->lth >= sizeof(locbuf)) return _casn_obj_err(casnp, ASN_GEN_ERR);
     memcpy(locbuf, casnp->startp, casnp->lth);
     tc = *locbuf;
     box.dbl_val = 0;
@@ -158,6 +161,8 @@ int read_casn_double(struct casn *casnp, double *val)
             // shift mantissa to left for convenience
         if (locbuf[i] < mask)  // can shift all the way
             {
+            if (i + mantissa_lth >= sizeof(locbuf))
+                return _casn_obj_err(casnp, ASN_GEN_ERR);
             memcpy(locbuf, &locbuf[i], mantissa_lth);
             for (c = &locbuf[mantissa_lth]; --i >= 0; *c++ = 0);
             exponent -= 8;
@@ -166,6 +171,7 @@ int read_casn_double(struct casn *casnp, double *val)
             }
         else        // have to stop a byte short
             {
+            if (i < 2) return _casn_obj_err(casnp, ASN_GEN_ERR);
             memcpy((c = &locbuf[1]), &locbuf[i], mantissa_lth++);
             *locbuf = 0;
             for (c = &locbuf[mantissa_lth]; --i >= 0; *c++ = 0);
@@ -238,11 +244,13 @@ int write_casn_double(struct casn *casnp, double val, int type)
     else if (type == 10)
         {
         *locbuf = 3;
-        sprintf((char *)&locbuf[1], DBL_PRINTF_EFORMAT, box.dbl_val);
+        if (snprintf((char *)&locbuf[1], sizeof(locbuf) - 1,
+            DBL_PRINTF_EFORMAT, box.dbl_val) > sizeof(locbuf) - 1)
+           return _casn_obj_err(casnp, ASN_BOUNDS_ERR);
         for (c = &locbuf[1]; *c ; c++);  // go to end
         while (*(--c) == ' ') *c = 0;   // trim off trailing spaces
         for (c = &locbuf[1]; *c == '0'; c++); // trim off leading zeroes
-        if (c > &locbuf[1]) strcpy(&locbuf[1], c);
+        if (c > &locbuf[1]) strncpy(&locbuf[1], c, strlen(c) + 1);
 	for (Ep = &locbuf[1]; *Ep && *Ep != 'E'; Ep++);  // go to E
         sscanf(&Ep[1], "%ld", &exponent);
         for (Ep--; Ep[-1] == '0'; Ep--);  // trim off trailing zeroes in mantissa
@@ -252,15 +260,15 @@ int write_casn_double(struct casn *casnp, double val, int type)
         for (ptp = &locbuf[1]; *ptp && *ptp != '.'; ptp++);
         if (*ptp && ptp[1]) // have a decimal pt and someting beyond
             {
-            strcpy(ptp, &ptp[1]);
+            strncpy(ptp, &ptp[1], strlen(ptp));
             Ep[-1] = '.';
             exponent -= strlen(ptp) - 1;  //adjust for shift of decimal pt
             }
-        if (exponent == 0) strcpy(Ep, "E+0");
+        if (exponent == 0) strncpy(Ep, "E+0", 4);
         else
             {     // append nulls since sprintf will not
             for (ptp = Ep; ptp < &Ep[6]; *ptp++ = 0);
-            sprintf(Ep, "E%ld", exponent);
+            snprintf(Ep, 6, "E%ld", exponent);
             }
         i = strlen((char *)locbuf);
         }
@@ -285,11 +293,13 @@ int write_casn_double(struct casn *casnp, double val, int type)
                /* bits of shift */
         for (uc = &box.cval[DBL_MLSBYTE_INDEX], shift = 0; !*uc; uc--, shift += 8);
                 // how much will we shift?
-        mantissa_lth = (int)(uc - mantissap + 1);
+        if ((mantissa_lth = (int)(uc - mantissap + 1)) < 0)
+            return _casn_obj_err(casnp, ASN_GEN_ERR);
         for (mask = 1, j = 0; !(*uc & mask); j++, mask <<= 1);
         shift += shift_buf(mantissap, mantissa_lth, j);
             // if MSbyte is empty, shift left 1 byte
         if (!*mantissap) memcpy(mantissap, &mantissap[1], mantissa_lth--);
+        if (mantissa_lth < 0) return _casn_obj_err(casnp, ASN_GEN_ERR);
                                                                 // step 5
         exponent += shift - DBL_BINIMAL_SIZE;
         j = exponent & 0x7FFF;

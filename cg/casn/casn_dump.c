@@ -1,4 +1,8 @@
 /* $Id$ */
+/* Jun  7 2007 858U  */
+/* Jun  7 2007 GARDINER corrected offset after explicit defined-by */
+/* Jun  6 2007 857U  */
+/* Jun  6 2007 GARDINER corrected dump of DEFINED BY; changed to biw and ocw */
 /* Mar 28 2007 849U  */
 /* Mar 28 2007 GARDINER fixed signedness errors */
 /* Mar 26 2007 848U  */
@@ -33,7 +37,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_dump_sfcsid[] = "@(#)casn_dump.c 849P";
+char casn_dump_sfcsid[] = "@(#)casn_dump.c 858P";
 
 #include "casn.h"
 
@@ -218,9 +222,19 @@ Procedure:
             if (casnp->tag != ASN_BOOLEAN)  /* so _dumpsize 7 lines below won't repeat it */
                 {
                 ansr = _dump_tag(casnp->tag, c, offset, (ushort)0, mode);
-                // if (mode > 0 && casnp->type  == (casnp->tag | ASN_CHOICE)) c[2] = 'w';
+                if (mode) c += ansr;
+                if (casnp->type > ASN_CHOICE)
+                    {
+                    if ((casnp->flags & ASN_EXPLICIT_FLAG))
+                        {
+                        i = _dump_tag(casnp->type & ~(ASN_CHOICE), c, offset, (ushort)0, mode);
+                        if (mode) c += i;
+                        ansr += i;
+                        offset += 4;
+                        }
+                    if (mode) c[-2] = 'w';
+                    }
                 }
-            if (mode) c += ansr;
             if ((casnp->flags & ASN_DEFINED_FLAG) && tcasnp->type == ASN_NOTASN1)
                 i = (int)_dumpread(tcasnp, c, offset + 4, mode);
     	    else i = (int)_dumpsize(tcasnp, c, offset + 4, mode);
@@ -234,7 +248,6 @@ Procedure:
     						        /* step 2 */
     ansr += (j = _dump_tag(casnp->tag, c, offset,
         (casnp->flags & ASN_INDEF_LTH_FLAG), mode));
-    // if (mode > 0 && casnp->type  == (casnp->tag | ASN_CHOICE)) c[2] = 'w';
     extra = 4;
     if (mode) c += j;
     if (tcasnp->type == ASN_NULL) return ansr;
@@ -242,7 +255,6 @@ Procedure:
         {
         j = _dump_tag(tcasnp->type, c, offset + extra,
             (tcasnp->flags & ASN_SUB_INDEF_FLAG), mode);
-        // if (mode > 0 && casnp->type  == (casnp->tag | ASN_CHOICE)) c[2] = 'w';
         offset += 4;
         ansr += j;
         if (mode) c += j;
