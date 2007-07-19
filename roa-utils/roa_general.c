@@ -147,6 +147,14 @@ unsigned char *roaSKI(struct ROA *r)
   return NULL;
 }
 
+unsigned char *roaSignature(struct ROA *r, int *lenp)
+{
+  if ( r == NULL || lenp == NULL )
+    return(NULL);
+  *lenp = r->content.signedData.signerInfos.signerInfo.signature.lth;
+  return(r->content.signedData.signerInfos.signerInfo.signature.startp);
+}
+
 static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;

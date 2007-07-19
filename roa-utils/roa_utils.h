@@ -143,6 +143,16 @@ unsigned char *roaSKI(struct ROA *r);
   must be free()d by the caller.
 */
 
+unsigned char *roaSignature(struct ROA *r, int *lenp);
+
+/*
+  This utility function extracts the binary signature from the ROA
+  and returns a pointer to it. It additional sets the (binary) length
+  of the data pointed to in "lenp". It is the responsibility of the
+  caller to convert the binary data into an alternate form, if desired.
+  On failure this function returns NULL.
+*/
+
 int roaAS_ID(struct ROA *r);
 
 /*

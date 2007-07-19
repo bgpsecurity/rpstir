@@ -31,12 +31,13 @@
 #define CF_FIELD_SN          3
 #define CF_FIELD_FROM        4
 #define CF_FIELD_TO          5
+#define CF_FIELD_SIGNATURE   6
 
-#define CF_FIELD_SKI         6
-#define CF_FIELD_AKI         7
-#define CF_FIELD_SIA         8
-#define CF_FIELD_AIA         9
-#define CF_FIELD_CRLDP      10
+#define CF_FIELD_SKI         7
+#define CF_FIELD_AKI         8
+#define CF_FIELD_SIA         9
+#define CF_FIELD_AIA        10
+#define CF_FIELD_CRLDP      11
 
 #define CF_NFIELDS          (CF_FIELD_CRLDP+1)
 
@@ -112,9 +113,10 @@ extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 #define CRF_FIELD_ISSUER      1
 #define CRF_FIELD_LAST        2
 #define CRF_FIELD_NEXT        3
+#define CRF_FIELD_SIGNATURE   4
 
-#define CRF_FIELD_SN          4
-#define CRF_FIELD_AKI         5
+#define CRF_FIELD_SN          5
+#define CRF_FIELD_AKI         6
 
 #define CRF_NFIELDS         (CRF_FIELD_AKI+1)
 

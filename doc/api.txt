@@ -375,13 +375,14 @@ a database name "db" a user name "usr" and an optional password "pass". All
 parameters other than "pass" must be non-NULL. On success the fully composed
 DSN name is returned. On failure NULL is return.
 
-2.1.19 char *hexify(int blen, void *barr)
+2.1.19 char *hexify(int blen, void *barr, int useox)
 
 This utility routine is used to create a string appropriate for operations
 on an SQL column that has a binary BLOB type. Given a byte array at "barr"
 of length "blen" this function will create the appropriate string representation.
-On success this function returns that representation; on failure it returns
-NULL.
+If the third argument "useox" is non-zero, the string created will be prefixed
+with 0x; if it is zero then this prefix will be omitted.  On success this function
+returns that representation; on failure it returns NULL.
 
 2.2 High level database functions
 
@@ -615,13 +616,21 @@ lookups.  On failure this function returns NULL.
 Note that this function returns a pointer to allocated memory that
 must be free()d by the caller.
 
-2.4.7 int roaValidate(struct ROA *r);
+2.4.7 unsigned char *roaSignature(struct ROA *r, int *lenp);
+
+This utility function extracts the binary signature from the ROA
+and returns a pointer to it. It additional sets the (binary) length
+of the data pointed to in "lenp". It is the responsibility of the
+caller to convert the binary data into an alternate form, if desired.
+On failure this function returns NULL.
+
+2.4.8 int roaValidate(struct ROA *r);
 
 This function performs all validations steps on a ROA that do not
 require database access.  On success it returns 0; on failure, it
 returns a negative error code.
 
-2.4.8 int roaValidate2(struct ROA *r, X509 *x)
+2.4.9 int roaValidate2(struct ROA *r, X509 *x)
 
 This function performs all validations steps on a ROA that require
 an X509 certificate to have been fetched from the database. It returns 0
@@ -645,7 +654,7 @@ function is called as follows:
         }
       }
 
-2.4.9 void roaFree(struct ROA *r)
+2.4.10 void roaFree(struct ROA *r)
 
 This function frees all memory allocated when "r" was created. It
 is permissible for "r" to be NULL, in which case nothing happens.

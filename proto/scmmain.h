@@ -52,6 +52,7 @@ static scmtab scmtabbuilder[] =
       "sia      VARCHAR(1024),"
       "aia      VARCHAR(1024),"
       "crldp    VARCHAR(1024),"
+      "sig      VARCHAR(520) NOT NULL,"
       "valfrom  DATETIME NOT NULL,"
       "valto    DATETIME NOT NULL,"
       "ipblen   INT UNSIGNED DEFAULT 0,"
@@ -62,6 +63,7 @@ static scmtab scmtabbuilder[] =
       "         KEY ski (ski, subject),"
       "         KEY aki (aki, issuer),"
       "         KEY lid (local_id),"
+      "         KEY sig (sig),"
       "         KEY isn (issuer, sn)",
       NULL,
       0
@@ -90,6 +92,7 @@ static scmtab scmtabbuilder[] =
       "next_upd DATETIME NOT NULL,"
       "crlno    BIGINT DEFAULT 0,"
       "aki      VARCHAR(128),"
+      "sig      VARCHAR(520) NOT NULL,"
       "snlen    INT UNSIGNED DEFAULT 0,"
       "sninuse  INT UNSIGNED DEFAULT 0,"
       "snlist   MEDIUMBLOB,"
@@ -98,6 +101,7 @@ static scmtab scmtabbuilder[] =
       "         PRIMARY KEY (filename, dir_id),"
       "         KEY issuer (issuer),"
       "         KEY aki (aki),"
+      "         KEY sig (sig),"
       "         KEY lid (local_id)",
       NULL,
       0
@@ -115,11 +119,13 @@ static scmtab scmtabbuilder[] =
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
       "ski      VARCHAR(128) NOT NULL,"
+      "sig      VARCHAR(520) NOT NULL,"
       "asn      INT UNSIGNED NOT NULL,"
       "flags    INT UNSIGNED DEFAULT 0,"
       "local_id INT UNSIGNED NOT NULL UNIQUE,"
       "         PRIMARY KEY (filename, dir_id),"
       "         KEY asn (asn),"
+      "         KEY sig (sig),"
       "         KEY lid (local_id),"
       "         KEY ski (ski)",
       NULL,

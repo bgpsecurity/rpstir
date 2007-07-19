@@ -183,6 +183,59 @@ char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
 }
 
 /*
+  Ask the DB if it has any matching signatures to the one passed in.
+  This function works on any of the three tables that have signatures.
+*/
+
+static int dupsigscm(scm *scmp, scmcon *conp, scmtab *tabp, char *msig)
+{
+  unsigned int  blah;
+  unsigned long lid;
+  scmsrcha srch;
+  scmsrch  srch1;
+  scmkva   where;
+  scmkv    one;
+  int     sta;
+
+  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
+       tabp == NULL || msig == NULL || msig[0] == 0 )
+    return(ERR_SCM_INVALARG);
+  conp->mystat.tabname = tabp->hname;
+  initTables(scmp);
+  one.column = "sig";
+  one.value = msig;
+  where.vec = &one;
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  srch1.colno = 1;
+  srch1.sqltype = SQL_C_LONG;
+  srch1.colname = "local_id";
+  srch1.valptr = (void *)&lid;
+  srch1.valsize = sizeof(unsigned long);
+  srch1.avalsize = 0;
+  srch.vec = &srch1;
+  srch.sname = NULL;
+  srch.ntot = 1;
+  srch.nused = 1;
+  srch.vald = 0;
+  srch.where = &where;
+  srch.wherestr = NULL;
+  srch.context = &blah;
+  sta = searchscm(conp, tabp, &srch, NULL,
+		  ok, SCM_SRCH_DOVALUE_ALWAYS);
+  switch ( sta )
+    {
+    case 0:			/* found a duplicate sig */
+      return(ERR_SCM_DUPSIG);
+    case ERR_SCM_NODATA:	/* no duplicate sig */
+      return(0);
+    default:			/* some other error */
+      return(sta);
+    }
+}
+
+/*
   Infer the object type based on which file extensions are present.
   The following can be present: .cer, .crl and .roa; .pem can also
   be present. If there is no suffix, then also check to see if the filename
@@ -216,9 +269,9 @@ int infer_filetype(char *fname)
   return(typ);
 }
 
-static char *certf[] =
+static char *certf[CF_NFIELDS] =
   {
-    "filename", "subject", "issuer", "sn", "valfrom", "valto",
+    "filename", "subject", "issuer", "sn", "valfrom", "valto", "sig",
     "ski", "aki", "sia", "aia", "crldp"
   } ;
 
@@ -237,13 +290,17 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
   int   sta;
   int   i;
 
-  initTables (scmp);
+  initTables(scmp);
   sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
   if ( sta < 0 )
     return(sta);
   (*cert_id)++;
+// immediately check for duplicate signature
+  sta = dupsigscm(scmp, conp, theCertTable, cf->fields[CF_FIELD_SIGNATURE]);
+  if ( sta < 0 )
+    return(sta);
 // fill in insertion structure
-  for(i=0;i<CF_NFIELDS+3;i++)
+  for(i=0;i<CF_NFIELDS+5;i++)
     cols[i].value = NULL;
   for(i=0;i<CF_NFIELDS;i++)
     {
@@ -268,7 +325,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
       (void)snprintf(blen, 24, "%u", cf->ipblen); /* byte length */
       cols[idx++].value = blen;
       cols[idx].column = "ipb";
-      wptr = hexify(cf->ipblen, cf->ipb);
+      wptr = hexify(cf->ipblen, cf->ipb, 1);
       if ( wptr == NULL )
 	return(ERR_SCM_NOMEM);
       cols[idx++].value = wptr;
@@ -283,9 +340,9 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
   return(sta);
 }
 
-static char *crlf[] =
+static char *crlf[CRF_NFIELDS] =
   {
-    "filename", "issuer", "last_upd", "next_upd", "crlno", "aki"
+    "filename", "issuer", "last_upd", "next_upd", "sig", "crlno", "aki"
   } ;
 
 static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
@@ -303,12 +360,16 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
   int   sta;
   int   i;
 
+// immediately check for duplicate signature
+  initTables(scmp);
+  sta = dupsigscm(scmp, conp, theCRLTable, cf->fields[CRF_FIELD_SIGNATURE]);
+  if ( sta < 0 )
+    return(sta);
 // the following statement could use a LOT of memory, so we try
-// it first in case it fails
-  hexs = hexify(cf->snlen*sizeof(long long), cf->snlist);
+// it early in case it fails
+  hexs = hexify(cf->snlen*sizeof(long long), cf->snlist, 1);
   if ( hexs == NULL )
     return(ERR_SCM_NOMEM);
-  initTables (scmp);
   conp->mystat.tabname = "CRL";
   sta = getmaxidscm(scmp, conp, "local_id", theCRLTable, &crl_id);
   if ( sta < 0 )
@@ -356,11 +417,11 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 
 static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 			    unsigned int dirid, char *ski, int asid,
-			    int isValid)
+			    char *sig, int isValid)
 {
   unsigned int roa_id = 0;
   scmkva   aone;
-  scmkv    cols[6];
+  scmkv    cols[7];
   char  flagn[24];
   char  asn[24];
   char  lid[24];
@@ -369,6 +430,10 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   int   sta;
 
   conp->mystat.tabname = "ROA";
+// first check for a duplicate signature
+  sta = dupsigscm(scmp, conp, theROATable, sig);
+  if ( sta < 0 )
+    return(sta);
   sta = getmaxidscm(scmp, conp, "local_id", theROATable, &roa_id);
   if ( sta < 0 )
     return(sta);
@@ -381,6 +446,8 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   cols[idx++].value = did;
   cols[idx].column = "ski";
   cols[idx++].value = ski;
+  cols[idx].column = "sig";
+  cols[idx++].value = sig;
   (void)snprintf(asn, 24, "%d", asid);
   cols[idx].column = "asn";
   cols[idx++].value = asn;
@@ -391,7 +458,7 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
   aone.vec = &cols[0];
-  aone.ntot = 6;
+  aone.ntot = 7;
   aone.nused = idx;
   aone.vald = 0;
 // add the ROA
@@ -556,19 +623,19 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 // find the entry whose subject is our issuer and whose ski is our aki,
 // e.g. our parent
   if (subject != NULL)
-    snprintf (parentWhere, 600,
-	      "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
-	      ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+    snprintf(parentWhere, sizeof(parentWhere),
+	     "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
+	     ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   else
-    snprintf (parentWhere, 600, "ski=\"%s\" and (flags%%%d)>=%d",
-	      ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
-  *stap = searchscm (conp, theCertTable, &parentSrch, NULL, ok,
-		     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+    snprintf(parentWhere, sizeof(parentWhere), "ski=\"%s\" and (flags%%%d)>=%d",
+	     ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  *stap = searchscm(conp, theCertTable, &parentSrch, NULL, ok,
+		    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   if ( *stap < 0 ) return NULL;
   (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
   if (pathname != NULL)
-    strncpy (*pathname, ofullname, PATH_MAX);
-  return readCertFromFile (ofullname, stap);
+    strncpy(*pathname, ofullname, PATH_MAX);
+  return readCertFromFile(ofullname, stap);
 }
 
 // static variables for efficiency, so only need to set up query once
@@ -623,12 +690,13 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
 
   // query for crls such that issuer = issuer, and flags & valid
   // and set isRevoked = 1 if sn is in snlist
-  snprintf (revokedWhere, 600, "issuer=\"%s\" and (flags%%%d)>=%d",
+  snprintf (revokedWhere, sizeof(revokedWhere),
+	    "issuer=\"%s\" and (flags%%%d)>=%d",
 	    issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   isRevoked = 0;
-  revokedSN = strtoull (sn, NULL, 10);
-  sta = searchscm (conp, theCRLTable, &revokedSrch, NULL, revokedHandler,
-		   SCM_SRCH_DOVALUE_ALWAYS);
+  revokedSN = strtoull(sn, NULL, 10);
+  sta = searchscm(conp, theCRLTable, &revokedSrch, NULL, revokedHandler,
+		  SCM_SRCH_DOVALUE_ALWAYS);
   return isRevoked;
 }
 
@@ -987,14 +1055,15 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
 		   sizeof(unsigned int));
     addcolsrchscm (&crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
   }
-  snprintf (crlWhere, 600, "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	    data->aki, data->issuer, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
-  sta = searchscm (conp, theCRLTable, &crlSrch, NULL, verifyChildCRL,
-		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
-  snprintf (crlWhere, 600, "ski=\"%s\" and (flags%%%d)>=%d",
-	    data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
-  sta = searchscm (conp, theROATable, &crlSrch, NULL, verifyChildROA,
-		   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+  snprintf(crlWhere, sizeof(crlWhere),
+	   "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
+	   data->aki, data->issuer, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+  sta = searchscm(conp, theCRLTable, &crlSrch, NULL, verifyChildCRL,
+		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+  snprintf(crlWhere, sizeof(crlWhere), "ski=\"%s\" and (flags%%%d)>=%d",
+	   data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+  sta = searchscm(conp, theROATable, &crlSrch, NULL, verifyChildROA,
+		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   return 0;
 }
 
@@ -1126,8 +1195,8 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
     addcolsrchscm (&roaSrch, "ski", SQL_C_CHAR, 128);
     addcolsrchscm (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
   }
-  snprintf (roaWhere, 600, "ski=\"%s\" and (flags%%%d)>=%d",
-	    data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  snprintf(roaWhere, sizeof(roaWhere), "ski=\"%s\" and (flags%%%d)>=%d",
+	   data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
   searchscm(conp, theROATable, &roaSrch, NULL, revoke_roa,
 	    SCM_SRCH_DOVALUE_ALWAYS);
   return 0;
@@ -1232,7 +1301,7 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
     else
       doIt = invalidateChildCert(conp, &currPropData->data[idx], !isRoot) == 0;
     if (doIt) {
-      snprintf(childrenWhere, 600,
+      snprintf(childrenWhere, sizeof(childrenWhere),
 	   "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
 	       currPropData->data[idx].ski, currPropData->data[idx].ski,
 	       currPropData->data[idx].subject, 2 * flag, flag);
@@ -1246,8 +1315,8 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
       free (currPropData->data[idx].issuer);
     }
     if (doIt)
-      searchscm (conp, theCertTable, &childrenSrch, NULL, registerChild,
-		 SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+      searchscm(conp, theCertTable, &childrenSrch, NULL, registerChild,
+		SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
     isRoot = 0;
   }
   currPropData = prevPropData;
@@ -1385,9 +1454,13 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	    unsigned int id, int utrust, int typ)
 {
   struct ROA *r = NULL;
+  unsigned char *bsig = NULL;
   char *ski;
+  char *sig;
   int   asid;
-  int   sta, chainOK;
+  int   sta;
+  int   bsiglen = 0;
+  int   chainOK;
 
   UNREFERENCED_PARAMETER(utrust);
   if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
@@ -1409,15 +1482,27 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       free((void *)ski);
       return(ERR_SCM_INVALASID);
     }
+  bsig = roaSignature(r, &bsiglen);
+  if ( bsig == NULL || bsiglen < 0 )
+    {
+      roaFree(r);
+      free((void *)ski);
+      return(ERR_SCM_NOSIG);
+    }
+  sig = hexify(bsiglen, bsig, 0);
+  if ( sig == NULL )
+    return(ERR_SCM_NOMEM);
   sta = verify_roa (conp, r, ski, &chainOK);
   roaFree(r);
   if ( sta < 0 )
   {
     free((void *)ski);
+    free((void *)sig);
     return(sta);
   }
-  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, chainOK);
+  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, sig, chainOK);
   free((void *)ski);
+  free((void *)sig);
   return(sta);
 }
 
@@ -1700,7 +1785,8 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   crli.tabp = theCRLTable;
   crli.cfunc = cfunc;
   srch.context = (void *)&crli;
-  sta = searchscm(conp, theCRLTable, &srch, NULL, crliterator, SCM_SRCH_DOVALUE_ALWAYS);
+  sta = searchscm(conp, theCRLTable, &srch, NULL, crliterator,
+		  SCM_SRCH_DOVALUE_ALWAYS);
   free(snlist);
   return(sta);
 }

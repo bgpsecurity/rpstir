@@ -105,6 +105,9 @@ static char *errs[] =
     "Bad Content type",             /* ERR_SCM_BADCT */
     "Bad attributes",               /* ERR_SCM_BADATTR */
     "Invalid addr family",          /* ERR_SCM_INVALFAM */
+    "No signature",                 /* ERR_SCM_NOSIG */
+    
+    "Duplicate signature",          /* ERR_SCM_DUPSIG -90 */
   } ;
 
 char *err2string(int err)

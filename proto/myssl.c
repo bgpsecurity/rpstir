@@ -451,6 +451,25 @@ static char *cf_get_to(X509 *x, int *stap, int *x509stap)
   return(dptr);
 }
 
+static char *cf_get_sig(X509 *x, int *stap, int *x509stap)
+{
+  char *dptr;
+
+  if ( x->signature == NULL || x->signature->data == NULL ||
+       x->signature->length <= 0 )
+    {
+      *stap = ERR_SCM_NOSIG;
+      return(NULL);
+    }
+  dptr = hexify(x->signature->length, (void *)(x->signature->data), 0);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  return(dptr);
+}
+
 static void cf_get_ski(X509V3_EXT_METHOD *meth, void *exts,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
@@ -705,13 +724,14 @@ static cfx_validator *cfx_find(int tag)
 
 static cf_validator validators[] = 
 {
-  { NULL,           0,                0 } , /* filename handled already */
-  { cf_get_subject, CF_FIELD_SUBJECT, 1 } ,
-  { cf_get_issuer,  CF_FIELD_ISSUER,  1 } ,
-  { cf_get_sn,      CF_FIELD_SN,      1 } ,
-  { cf_get_from,    CF_FIELD_FROM,    1 } ,
-  { cf_get_to,      CF_FIELD_TO,      1 } ,
-  { NULL,           0,                0 }   /* terminator */
+  { NULL,           0,                  0 } , /* filename handled already */
+  { cf_get_subject, CF_FIELD_SUBJECT,   1 } ,
+  { cf_get_issuer,  CF_FIELD_ISSUER,    1 } ,
+  { cf_get_sn,      CF_FIELD_SN,        1 } ,
+  { cf_get_from,    CF_FIELD_FROM,      1 } ,
+  { cf_get_to,      CF_FIELD_TO,        1 } ,
+  { cf_get_sig,     CF_FIELD_SIGNATURE, 1 } ,
+  { NULL,           0,                  0 }   /* terminator */
 } ;
 
 /*
@@ -826,7 +846,8 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	}
     }
 // get all the non-extension fields; if a field cannot be gotten and its
-// needed, that is a fatal error
+// needed, that is a fatal error. Note that these validators are assumed
+// to be in linear order
   for(i=1;i<CF_NFIELDS;i++)
     {
       if ( validators[i].get_func == NULL )
@@ -1001,13 +1022,33 @@ static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
   return(dptr);
 }
 
+static char *crf_get_sig(X509_CRL *x, int *stap, int *crlstap)
+{
+  char *dptr;
+
+  if ( x->signature == NULL || x->signature->data == NULL ||
+       x->signature->length <= 0 )
+    {
+      *stap = ERR_SCM_NOSIG;
+      return(NULL);
+    }
+  dptr = hexify(x->signature->length, (void *)(x->signature->data), 0);
+  if ( dptr == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+  return(dptr);
+}
+
 static crf_validator crvalidators[] = 
 {
-  { NULL,            0,                0 } , /* filename handled already */
-  { crf_get_issuer,  CRF_FIELD_ISSUER, 1 } ,
-  { crf_get_last,    CRF_FIELD_LAST,   0 } ,
-  { crf_get_next,    CRF_FIELD_NEXT,   1 } ,
-  { NULL,            0,                0 }   /* terminator */
+  { NULL,            0,                   0 } , /* filename handled already */
+  { crf_get_issuer,  CRF_FIELD_ISSUER,    1 } ,
+  { crf_get_last,    CRF_FIELD_LAST,      0 } ,
+  { crf_get_next,    CRF_FIELD_NEXT,      1 } ,
+  { crf_get_sig,     CRF_FIELD_SIGNATURE, 1 } ,
+  { NULL,            0,                   0 }   /* terminator */
 } ;
 
 static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
@@ -1220,7 +1261,8 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	}
     }
 // get all the non-extension fields; if a field cannot be gotten and its
-// needed, that is a fatal error
+// needed, that is a fatal error. Note also that these are assumed to be
+// in linear order.
   for(i=1;i<CRF_NFIELDS;i++)
     {
       if ( crvalidators[i].get_func == NULL )

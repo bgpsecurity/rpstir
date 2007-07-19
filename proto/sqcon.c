@@ -1261,7 +1261,7 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
   Convert a binary array into a hex string.
 */
 
-char *hexify(int bytelen, void *ptr)
+char *hexify(int bytelen, void *ptr, int useox)
 {
   unsigned char *inptr;
   char *aptr;
@@ -1275,10 +1275,13 @@ char *hexify(int bytelen, void *ptr)
     return(NULL);
   inptr = (unsigned char *)ptr;
   outptr = aptr;
-  *outptr++ = '0';
-  left--;
-  *outptr++ = 'x';
-  left--;
+  if ( useox != 0 )
+    {
+      *outptr++ = '0';
+      left--;
+      *outptr++ = 'x';
+      left--;
+    }
   if (bytelen == 0)
     *outptr++ = '0', left--;
   for(i=0;i<bytelen;i++)
@@ -1308,7 +1311,7 @@ int updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
   if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
        tabp->tabname == NULL )
     return(ERR_SCM_INVALARG);
-  hexi = hexify(snlen*sizeof(long long), (void *)snlist);
+  hexi = hexify(snlen*sizeof(long long), (void *)snlist, 1);
   if ( hexi == NULL )
     return(ERR_SCM_NOMEM);
 // compute the size of the statement
