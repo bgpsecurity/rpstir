@@ -1,0 +1,9 @@
+# run test for duplicates, same as test 1 except with duplicate certs and crls
+
+echo ""
+echo "Running test duplicates"
+$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/testing/testDup -d $APKI_ROOT/testing/REPOSITORY
+echo "Should be 5 entries (no validity check):"
+$APKI_ROOT/proto/query -t cert -d ski
+echo "Should be 5 entries (validity check):"
+$APKI_ROOT/proto/query -t cert -d ski -v
