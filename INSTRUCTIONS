@@ -107,7 +107,7 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     and loads it into the database.  Under ideal circumstances, this will
     continue to run forever, waiting for inputs from the feeder.
 
-3.5 pull_and_feed.sh and feeder.sh: pull_and_feed.sh is a script that pulls
+3.5 pull_and_feed.sh: pull_and_feed.sh is a script that optionally pulls
     the data from a set of repositories using rsync and then optionally
     loads them into the database by feeding them to the loader.
     pull_and_feed.sh takes a single argument which is the name of a
@@ -117,11 +117,12 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     directory for the local repository (with the REPOSITORY directory
     included here the suggested one), to top-level directory for storing
     the log files of the downloads (with LOGS the suggested directory),
-    and whether or not to do the database load.
+    whether or not to do the repository pull, and whether or not to
+    do the database feed.
 
-    If you want to do the database load separately or something fails to
-    cause you to need to do the load separately, run the feeder.sh
-    script, with the one argument being the name of the log file.
+    Note that you normally want to do the pull and the feed together.
+    Only under special circumstances, such as an aborted feed, would you
+    ever want to do one operation and not the other.
 
 3.6 garbage.sh: This checks for certificates that may have expired due
     to the passage of time, or crls that may have become stale due to

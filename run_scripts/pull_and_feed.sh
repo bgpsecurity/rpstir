@@ -18,8 +18,10 @@
 # LOGS=
 #   The full path of where the rsync log file (that the AUR program
 #   will ultimately use) should be put. 
+# DOPULL=
+#   NO or no if do not want to pull the data from remote repositories
 # DOLOAD=
-#   YES or yes if want to load the data into the database
+#   NO or no if do not want to load the data into the database
 #
 # Addtional documentation is in the rsync_pull.sh file.
 

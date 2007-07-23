@@ -21,8 +21,10 @@ RSYNC=/usr/local/bin/rsync
 # LOGS=
 #   The full path of where the rsync log file (that the AUR program
 #   will ultimately use) should be put. 
+# DOPULL=
+#   NO or no if do not want to pull the data from remote repositories
 # DOLOAD=
-#   YES or yes if want to load the data into the database
+#   NO or no if do not want to load the data into the database
 #
 # ***NOTE*** we are handing off these variables to rsync. As such, 
 # if someone were to include shell metacharacters then badness can 
@@ -84,57 +86,61 @@ fi
 #############
 # if we got here... things look somewhat sane...
 #############
-echo "Creating directories and rotating rpki rsync logs"
+if [ "${DOPULL}y" != "noy" ] && [ "${DOPULL}y" != "NOy" ]; then
+  echo "Creating directories and rotating rpki rsync logs"
 
-for arg in ${DIRS}
-do
-  IFS=' '
-  cd ${LOGS}
-  IFS=/
-  dir=""
-  for i in ${arg}
+  for arg in ${DIRS}
   do
-    if ! [ "${dir}NO" = "NO" ] ; then
-      if ! [ -d "${dir}" ] ; then mkdir ${dir}; fi
-      cd ${dir}
-    fi
-    dir=${i}
-  done
-  if [ -f "${dir}.log.8" ]; then mv -f "${dir}.log.8" "${dir}.log.9"; fi
-  if [ -f "${dir}.log.7" ]; then mv -f "${dir}.log.7" "${dir}.log.8"; fi
-  if [ -f "${dir}.log.6" ]; then mv -f "${dir}.log.6" "${dir}.log.7"; fi
-  if [ -f "${dir}.log.5" ]; then mv -f "${dir}.log.5" "${dir}.log.6"; fi
-  if [ -f "${dir}.log.4" ]; then mv -f "${dir}.log.4" "${dir}.log.5"; fi
-  if [ -f "${dir}.log.3" ]; then mv -f "${dir}.log.3" "${dir}.log.4"; fi
-  if [ -f "${dir}.log.2" ]; then mv -f "${dir}.log.2" "${dir}.log.3"; fi
-  if [ -f "${dir}.log.1" ]; then mv -f "${dir}.log.1" "${dir}.log.2"; fi
-  if [ -f "${dir}.log" ]; then mv -f "${dir}.log" "${dir}.log.1"; fi
+    IFS=' '
+    cd ${LOGS}
+    IFS=/
+    dir=""
+    for i in ${arg}
+    do
+      if ! [ "${dir}NO" = "NO" ] ; then
+        if ! [ -d "${dir}" ] ; then mkdir ${dir}; fi
+        cd ${dir}
+      fi
+      dir=${i}
+    done
+    if [ -f "${dir}.log.8" ]; then mv -f "${dir}.log.8" "${dir}.log.9"; fi
+    if [ -f "${dir}.log.7" ]; then mv -f "${dir}.log.7" "${dir}.log.8"; fi
+    if [ -f "${dir}.log.6" ]; then mv -f "${dir}.log.6" "${dir}.log.7"; fi
+    if [ -f "${dir}.log.5" ]; then mv -f "${dir}.log.5" "${dir}.log.6"; fi
+    if [ -f "${dir}.log.4" ]; then mv -f "${dir}.log.4" "${dir}.log.5"; fi
+    if [ -f "${dir}.log.3" ]; then mv -f "${dir}.log.3" "${dir}.log.4"; fi
+    if [ -f "${dir}.log.2" ]; then mv -f "${dir}.log.2" "${dir}.log.3"; fi
+    if [ -f "${dir}.log.1" ]; then mv -f "${dir}.log.1" "${dir}.log.2"; fi
+    if [ -f "${dir}.log" ]; then mv -f "${dir}.log" "${dir}.log.1"; fi
 
-  IFS=' '
-  cd ${REPOSITORY}
-  IFS=/
-  dir=""
-  for i in ${arg}
-  do
-    if ! [ "${dir}NO" = "NO" ] ; then
-      if ! [ -d "${dir}" ] ; then mkdir ${dir}; fi
-      cd ${dir}
-    fi
-    dir=${i}
+    IFS=' '
+    cd ${REPOSITORY}
+    IFS=/
+    dir=""
+    for i in ${arg}
+    do
+      if ! [ "${dir}NO" = "NO" ] ; then
+        if ! [ -d "${dir}" ] ; then mkdir ${dir}; fi
+        cd ${dir}
+      fi
+      dir=${i}
+    done
   done
-done
+fi
 
 start2=`date +%s`
 IFS=' '
 for arg in ${DIRS}
 do
-  echo "retrieving ${arg}"
-  start=`date +%s`
-  $RSYNC -airz --del rsync://${arg}/ ${REPOSITORY}/${arg} > \
-        ${LOGS}/${arg}.log
-  end=`date +%s`
-  echo "retrieve required $(($end-$start)) seconds"
-  if [ "${DOLOAD}y" = "yesy" ] || [ "${DOLOAD}y" = "YESy" ]; then
+  if [ "${DOPULL}y" != "noy" ] && [ "${DOPULL}y" != "NOy" ]; then
+    echo "retrieving ${arg}"
+    start=`date +%s`
+    $RSYNC -airz --del rsync://${arg}/ ${REPOSITORY}/${arg} > \
+          ${LOGS}/${arg}.log
+    end=`date +%s`
+    echo "retrieve required $(($end-$start)) seconds"
+  fi
+  if [ "${DOLOAD}y" != "noy" ] && [ "${DOLOAD}y" != "NOy" ]; then
     echo "loading ${arg}"
     start=`date +%s`
     ${APKI_ROOT}/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
@@ -142,8 +148,10 @@ do
     echo "load required $(($end-$start)) seconds"
   fi
 done
-echo "Waiting for loader to finish ..."
-${APKI_ROOT}/rsync_aur/rsync_aur -s -t ${APKI_PORT} -f ${APKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
-echo "Loader finished"
+if [ "${DOLOAD}y" != "noy" ] && [ "${DOLOAD}y" != "NOy" ]; then
+  echo "Waiting for loader to finish ..."
+  ${APKI_ROOT}/rsync_aur/rsync_aur -s -t ${APKI_PORT} -f ${APKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
+  echo "Loader finished"
+fi
 end2=`date +%s`
 echo "total time was $(($end2-$start2)) seconds"
