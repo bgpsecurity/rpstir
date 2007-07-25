@@ -1,4 +1,20 @@
 #!/bin/sh
+# ***** BEGIN LICENSE BLOCK *****
+#  
+#  BBN Address and AS Number PKI Database/repository software
+#  Verison 1.0
+#  
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.  
+# 
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+# 
+#  Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+# 
+#  Contributor(s):  David Montana
+# 
+# ***** END LICENSE BLOCK *****
 # This script is a shortcut to invoke the script rsync_pull.sh
 # It executes rsync to pull down data and then optionally loads it
 #   into the database.
