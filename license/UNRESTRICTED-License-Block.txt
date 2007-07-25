@@ -1,6 +1,6 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * 
- * BBN Rule Editor/Engine for Address and AS Number PKI
+ * BBN Address and AS Number PKI Database/repository software
  * Verison 1.0
  * 
  * US government users are permitted unrestricted rights as
