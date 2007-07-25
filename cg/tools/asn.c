@@ -21,8 +21,23 @@
  * DESCRIPTION: Routines to support Distinguished Encoding of ASN.1
  *              defined structures.
  *
- * This work is copyright (c) 1991 by Bolt Beranek and Newman, Inc. and
- * the BBN Communications Division.
+ ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Verison 1.0
+ * 
+ * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
+ * US government users are permitted restricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 1991-2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK *****
  *
  * $Revision: 1.19 $
  * $Source: /u1/MSP/Dev/rcs/lib/asn1utils/local/asn.c,v $

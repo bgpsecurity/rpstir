@@ -12,6 +12,22 @@
 /* Mar  8 1994 GARDINER Started on SPARC */
 /* Mar  8 1994      */
 /* $Id$ */
+/* ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Verison 1.0
+ * 
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
 char six_to_bin_sfcsid[] = "@(#)six_to_bin.c 416P";
 #include <stdio.h>
 #include <stdlib.h>

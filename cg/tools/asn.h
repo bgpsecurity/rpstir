@@ -34,10 +34,23 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
-COPYRIGHT 1995 BBN Systems and Technologies, A Division of BBN Inc.
-150 CambridgePark Drive
-Cambridge, Ma. 02140
-617-873-4000
+ ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Verison 1.0
+ * 
+ * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
+ * US government users are permitted restricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 1995-2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 /* sfcsid[] = "@(#)asn.h 550p" */
 #ifndef _ASN_H
