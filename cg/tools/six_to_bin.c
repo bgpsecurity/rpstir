@@ -15,7 +15,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
- * Verison 1.0
+ * Version 1.0
  * 
  * US government users are permitted unrestricted rights as
  * defined in the FAR.  

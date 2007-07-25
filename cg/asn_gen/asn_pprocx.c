@@ -53,7 +53,7 @@ Remarks:
  ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
- * Verison 1.0
+ * Version 1.0
  * 
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
