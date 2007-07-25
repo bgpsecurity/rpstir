@@ -113,8 +113,23 @@
  *
  * DESCRIPTION: Header file for the ASN_GEN program.
  *
- * This work is copyright (c) 1994 by Bolt Beranek and Newman, Inc. and
- * the BBN Systems and Technologies Division.
+ ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Verison 1.0
+ * 
+ * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
+ * US government users are permitted restricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 1995-2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK *****
  */
 
 /* sfcsid[] = "@(#)asn_gen.h 828P" */
