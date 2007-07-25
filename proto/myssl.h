@@ -20,6 +20,23 @@
 #endif
 #include <openssl/bn.h>
 
+/* ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Verison 1.0
+ * 
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Mark Reynolds
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 /*
   This data structure defines the fields that must be extracted from a
   certificate in order to insert it into the DB.
