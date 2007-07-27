@@ -1582,61 +1582,6 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 }
 
 /*
-  Get the flags value and possibly the local_id corresponding to a match
-  on a search criterion.  Return the requested value(s) in the indicated
-  pointers.
-
-  This function returns 0 on success and a negative error code on failure.
-*/
-
-int getflagsidscm(scmcon *conp, scmtab *tabp, scmkva *where,
-		  unsigned int *pflags, unsigned int *lidp)
-{
-  unsigned int blah;
-  unsigned int flags;
-  unsigned int lid;
-  scmsrcha srch;
-  scmsrch  srch1[2];
-  int sta;
-
-  if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
-       tabp->tabname == NULL || where == NULL )
-    return(ERR_SCM_INVALARG);
-  if ( pflags != NULL )
-    *pflags = 0;
-  if ( lidp != NULL )
-    *lidp = 0;
-  srch1[0].colno = 1;
-  srch1[0].sqltype = SQL_C_ULONG;
-  srch1[0].colname = "flags";
-  srch1[0].valptr = (void *)&flags;
-  srch1[0].valsize = sizeof(unsigned int);
-  srch1[0].avalsize = 0;
-  srch1[1].colno = 2;
-  srch1[1].sqltype = SQL_C_ULONG;
-  srch1[1].colname = "local_id";
-  srch1[1].valptr = (void *)&lid;
-  srch1[1].valsize = sizeof(unsigned int);
-  srch1[1].avalsize = 0;
-  srch.vec = &srch1[0];
-  srch.sname = NULL;
-  srch.ntot = 2;
-  srch.nused = 2;
-  srch.vald = 0;
-  srch.where = where;
-  srch.wherestr = NULL;
-  srch.context = &blah;
-  sta = searchscm(conp, tabp, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS);
-  if ( sta < 0 )
-    return(sta);
-  if ( pflags != NULL )
-    *pflags = flags;
-  if ( lidp != NULL )
-    *lidp = lid;
-  return(0);
-}
-
-/*
   This is the internal iteration function used by iterate_crl below.
   It processes CRLs one at a time.
 
