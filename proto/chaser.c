@@ -338,6 +338,9 @@ int main(int argc, char **argv)
   if (noExecute)
     printf ("Would have executed: %s\n", str);
   else
+    // NOTE: THE system CALL IS INHERENTLY DANGEROUS.
+    //   CARE WAS TAKEN TO ENSURE THAT THE ARGUMENT str DOES NOT
+    //   CONTAIN FUNNY SHELL CHARACTERS
     system (str);
 
   // write timestamp into database

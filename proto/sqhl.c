@@ -961,6 +961,7 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
   typ = infer_filetype (pathname);
   cf = crl2fields((char *) s->vec[1].valptr, pathname, typ,
 		  &x, &sta, &crlsta);
+  if (cf == NULL) return sta;
   sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
 		   cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
   id = *((unsigned int *) (s->vec[2].valptr));
