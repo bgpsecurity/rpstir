@@ -22,6 +22,14 @@
 #ifndef _SCM_H_
 #define _SCM_H_
 
+/* some constants for sizes of db tables */
+#define DNAMESIZE 4096
+#define FNAMESIZE 256
+#define SUBJSIZE 512
+#define SKISIZE 128
+#define SIASIZE 1024
+#define SIGSIZE 520
+
 /*
   A database table has four characteristics: its real name (the name
   by which the database knows it), its user-friendly name, the

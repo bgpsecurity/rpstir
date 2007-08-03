@@ -168,8 +168,8 @@ int main(int argc, char **argv)
   srch.vald = 0;
   snprintf (msg, 1024, "next_upd<=\"%s\"", currTimestamp);
   srch.wherestr = msg;
-  addcolsrchscm (&srch, "issuer", SQL_C_CHAR, 512);
-  addcolsrchscm (&srch, "aki", SQL_C_CHAR, 128);
+  addcolsrchscm (&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
+  addcolsrchscm (&srch, "aki", SQL_C_CHAR, SKISIZE);
   countHandler = handleIfStale;
   status = searchscm (connect, crlTable, &srch, NULL, countCurrentCRLs,
                       SCM_SRCH_DOVALUE_ALWAYS);

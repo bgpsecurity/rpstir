@@ -41,6 +41,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define ADDCOL(a, b, c, d, e, f)  \
+       e = addcolsrchscm (a, b, c, d);  \
+       if ( e < 0 ) return f;
+
 /*
  * static variables that hold tables and function to initialize them
  */
@@ -328,19 +332,19 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
 	  cols[idx++].value = ptr;
 	}
     }
-  (void)snprintf(flagn, 24, "%u", cf->flags);
+  (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)snprintf(lid, 24, "%u", *cert_id);
+  (void)snprintf(lid, sizeof(lid), "%u", *cert_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
-  (void)snprintf(did, 24, "%u", cf->dirid);
+  (void)snprintf(did, sizeof(did), "%u", cf->dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
   if ( cf->ipblen > 0 )
     {
       cols[idx].column = "ipblen";
-      (void)snprintf(blen, 24, "%u", cf->ipblen); /* byte length */
+      (void)snprintf(blen, sizeof(blen), "%u", cf->ipblen); /* byte length */
       cols[idx++].value = blen;
       cols[idx].column = "ipb";
       wptr = hexify(cf->ipblen, cf->ipb, 1);
@@ -407,16 +411,16 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 	  cols[idx++].value = ptr;
 	}
     }
-  (void)snprintf(flagn, 24, "%u", cf->flags);
+  (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)snprintf(lid, 24, "%u", crl_id);
+  (void)snprintf(lid, sizeof(lid), "%u", crl_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
-  (void)snprintf(did, 24, "%u", cf->dirid);
+  (void)snprintf(did, sizeof(did), "%u", cf->dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
-  (void)snprintf(csnlen, 24, "%d", cf->snlen);
+  (void)snprintf(csnlen, sizeof(csnlen), "%d", cf->snlen);
   cols[idx].column = "snlen";
   cols[idx++].value = csnlen;
   cols[idx].column = "sninuse";
@@ -459,20 +463,21 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 // fill in insertion structure
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
-  (void)snprintf(did, 24, "%u", dirid);
+  (void)snprintf(did, sizeof(did), "%u", dirid);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
   cols[idx].column = "ski";
   cols[idx++].value = ski;
   cols[idx].column = "sig";
   cols[idx++].value = sig;
-  (void)snprintf(asn, 24, "%d", asid);
+  (void)snprintf(asn, sizeof(asn), "%d", asid);
   cols[idx].column = "asn";
   cols[idx++].value = asn;
-  (void)snprintf(flagn, 24, "%u", isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  (void)snprintf(flagn, sizeof(flagn), "%u",
+		 isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
-  (void)snprintf(lid, 24, "%u", roa_id);
+  (void)snprintf(lid, sizeof(lid), "%u", roa_id);
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
   aone.vec = &cols[0];
@@ -604,7 +609,7 @@ static X509 *readCertFromFile (char *ofullname, int *stap)
 // static variables for efficiency, so only need to set up query once
 static scmsrcha parentSrch;
 static scmsrch  parentSrch1[5];
-static char parentWhere[600];
+static char parentWhere[1024];
 static unsigned long parentBlah = 0;
 static int parentNeedsInit = 1;
 static char *parentDir, *parentFile;
@@ -625,11 +630,12 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
     parentSrch.context = &parentBlah;
     parentSrch.wherestr = parentWhere;
     parentSrch.vec = parentSrch1;
-    addcolsrchscm (&parentSrch, "filename", SQL_C_CHAR, 256);
-    addcolsrchscm (&parentSrch, "dirname", SQL_C_CHAR, 256);
-    addcolsrchscm (&parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int));
-    addcolsrchscm (&parentSrch, "aki", SQL_C_CHAR, 128);
-    addcolsrchscm (&parentSrch, "issuer", SQL_C_CHAR, 512);
+    ADDCOL (&parentSrch, "filename", SQL_C_CHAR, FNAMESIZE, *stap, NULL);
+    ADDCOL (&parentSrch, "dirname", SQL_C_CHAR, DNAMESIZE, *stap, NULL);
+    ADDCOL (&parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
+	    *stap, NULL);
+    ADDCOL (&parentSrch, "aki", SQL_C_CHAR, SKISIZE, *stap, NULL);
+    ADDCOL (&parentSrch, "issuer", SQL_C_CHAR, SUBJSIZE, *stap, NULL);
     parentFile = (char *) parentSrch1[0].valptr;
     parentDir = (char *) parentSrch1[1].valptr;
     parentFlags = (unsigned int *) parentSrch1[2].valptr;
@@ -659,8 +665,8 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 // static variables for efficiency, so only need to set up query once
 static scmsrcha revokedSrch;
 static scmsrch  revokedSrch1[2];
-static char revokedWhere[600];
-static unsigned long revokedBlah = 0;
+static char revokedWhere[1024];
+static unsigned long revokedContext = 0;
 static int revokedNeedsInit = 1;
 static unsigned long long *revokedSNList;
 static unsigned int *revokedSNLen;
@@ -671,7 +677,9 @@ static unsigned long long revokedSN;
 /* callback function for cert_revoked */
 static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
 {
-  conp = conp; numLine = numLine; s = s;  // silence compiler warnings
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(s);
+  UNREFERENCED_PARAMETER(numLine);
   unsigned int i;
   for (i = 0; i < *revokedSNLen; i++) {
     if (revokedSNList[i] == revokedSN) {
@@ -697,17 +705,18 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
     revokedSrch.where = NULL;
     revokedSrch.ntot = 2;
     revokedSrch.nused = 0;
-    revokedSrch.context = &revokedBlah;
+    revokedSrch.context = &revokedContext;
     revokedSrch.wherestr = revokedWhere;
     revokedSrch.vec = revokedSrch1;
-    addcolsrchscm (&revokedSrch, "snlen", SQL_C_ULONG, sizeof (unsigned int));
-    addcolsrchscm (&revokedSrch, "snlist", SQL_C_BINARY, 16*1024*1024);
+    ADDCOL (&revokedSrch, "snlen", SQL_C_ULONG, sizeof (unsigned int),
+	    sta, sta);
+    ADDCOL (&revokedSrch, "snlist", SQL_C_BINARY, 16*1024*1024, sta, sta);
     revokedSNLen = (unsigned int *) revokedSrch1[0].valptr;
     revokedSNList = (unsigned long long *) revokedSrch1[1].valptr;
   }
 
   // query for crls such that issuer = issuer, and flags & valid
-  // and set isRevoked = 1 if sn is in snlist
+  // and set isRevoked = 1 in the callback if sn is in snlist
   snprintf (revokedWhere, sizeof(revokedWhere),
 	    "issuer=\"%s\" and (flags%%%d)>=%d",
 	    issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
@@ -936,7 +945,7 @@ static int updateValidFlags (scmcon *conp, scmtab *tabp, unsigned int id,
   int flags = isValid ?
     ((prevFlags - SCM_FLAG_NOCHAIN) | SCM_FLAG_VALID) :
     ((prevFlags - SCM_FLAG_VALID) | SCM_FLAG_NOCHAIN);
-  snprintf (stmt, 100, "update %s set flags=%d where local_id=%d;",
+  snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
 	    tabp->tabname, flags, id);
   return statementscm (conp, stmt);
 }
@@ -954,7 +963,8 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
   int typ, chainOK, x509sta;
   char pathname[PATH_MAX];
 
-  idx = idx;
+  UNREFERENCED_PARAMETER(idx);
+  if (s->nused < 4) return ERR_SCM_INVALARG;
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
 	    (char *) s->vec[1].valptr);
@@ -992,7 +1002,7 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   char *skii;
   unsigned int id;
 
-  idx = idx;
+  UNREFERENCED_PARAMETER(idx);
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
 	    (char *) s->vec[1].valptr);
@@ -1034,7 +1044,7 @@ typedef struct _PropData {
 // static variables for efficiency, so only need to set up query once
 static scmsrcha crlSrch;
 static scmsrch  crlSrch1[4];
-static char crlWhere[600];
+static char crlWhere[1024];
 static unsigned long crlBlah = 0;
 static int crlNeedsInit = 1;
 
@@ -1068,11 +1078,11 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
     crlSrch.context = &crlBlah;
     crlSrch.wherestr = crlWhere;
     crlSrch.vec = crlSrch1;
-    addcolsrchscm (&crlSrch, "dirname", SQL_C_CHAR, 4096);
-    addcolsrchscm (&crlSrch, "filename", SQL_C_CHAR, 256);
-    addcolsrchscm (&crlSrch, "local_id", SQL_C_ULONG,
-		   sizeof(unsigned int));
-    addcolsrchscm (&crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
+    ADDCOL (&crlSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL (&crlSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
+    ADDCOL (&crlSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	    sta, sta);
+    ADDCOL (&crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
   }
   snprintf(crlWhere, sizeof(crlWhere),
 	   "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
@@ -1150,7 +1160,7 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
     return(sta);
-  snprintf(ws, 256, "valfrom < \"%s\" AND \"%s\" < valto", now, now);
+  snprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
   free((void *)now);
   srch.wherestr = &ws[0];
   mymcf.did = 0;
@@ -1166,7 +1176,7 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
 // static variables for efficiency, so only need to set up query once
 static scmsrcha roaSrch;
 static scmsrch  roaSrch1[2];
-static char roaWhere[600];
+static char roaWhere[1024];
 static unsigned long roaBlah = 0;
 static int roaNeedsInit = 1;
 
@@ -1199,7 +1209,7 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
     if (countvalidparents (conp, data->issuer, data->aki) > 0)
       return -1;
     sta = updateValidFlags (conp, theCertTable, data->id, data->flags, 0);
-    if (sta != 0) return sta;
+    if (sta < 0) return sta;
   }
   if (roaNeedsInit) {
     roaNeedsInit = 0;
@@ -1210,9 +1220,9 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
     roaSrch.context = &roaBlah;
     roaSrch.wherestr = roaWhere;
     roaSrch.vec = roaSrch1;
-    addcolsrchscm (&roaSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int));
-    addcolsrchscm (&roaSrch, "ski", SQL_C_CHAR, 128);
-    addcolsrchscm (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
+    ADDCOL (&roaSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    ADDCOL (&roaSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
   }
   snprintf(roaWhere, sizeof(roaWhere), "ski=\"%s\" and (flags%%%d)>=%d",
 	   data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
@@ -1225,7 +1235,7 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
 // static variables for efficiency, so only need to set up query once
 static scmsrcha childrenSrch;
 static scmsrch  childrenSrch1[8];
-static char childrenWhere[600];
+static char childrenWhere[1024];
 static unsigned long childrenBlah = 0;
 static int childrenNeedsInit = 1;
 
@@ -1247,7 +1257,9 @@ static int registerChild (scmcon *conp, scmsrcha *s, int idx)
 {
   PropData *propData;
 
-  s = s; conp = conp; idx = idx;
+  UNREFERENCED_PARAMETER(s);
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
   // push onto stack of children to propagate
   if (currPropData->size == currPropData->maxSize) {
     currPropData->maxSize *= 2;
@@ -1278,7 +1290,7 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
 				int doVerify)
 {
   int isRoot = 1;
-  int doIt, idx;
+  int doIt, idx, sta;
   int flag = doVerify ? SCM_FLAG_NOCHAIN : SCM_FLAG_VALID;
 
   prevPropData = currPropData;
@@ -1294,15 +1306,16 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
     childrenSrch.context = &childrenBlah;
     childrenSrch.wherestr = childrenWhere;
     childrenSrch.vec = childrenSrch1;
-    addcolsrchscm (&childrenSrch, "dirname", SQL_C_CHAR, 4096);
-    addcolsrchscm (&childrenSrch, "filename", SQL_C_CHAR, 256);
-    addcolsrchscm (&childrenSrch, "flags", SQL_C_ULONG, sizeof(unsigned int));
-    addcolsrchscm (&childrenSrch, "ski", SQL_C_CHAR, 128);
-    addcolsrchscm (&childrenSrch, "subject", SQL_C_CHAR, 512);
-    addcolsrchscm (&childrenSrch, "local_id", SQL_C_ULONG,
-		   sizeof(unsigned int));
-    addcolsrchscm (&childrenSrch, "aki", SQL_C_CHAR, 128);
-    addcolsrchscm (&childrenSrch, "issuer", SQL_C_CHAR, 512);
+    ADDCOL (&childrenSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL (&childrenSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
+    ADDCOL (&childrenSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
+	    sta, sta);
+    ADDCOL (&childrenSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL (&childrenSrch, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
+    ADDCOL (&childrenSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	    sta, sta);
+    ADDCOL (&childrenSrch, "aki", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL (&childrenSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, sta);
   }
 
   // iterate through all children, verifying
@@ -1882,7 +1895,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   dtwo[0].column = "filename";
   dtwo[0].value = outfile;
   dtwo[1].column = "dir_id";
-  (void)snprintf(did, 24, "%u", id);
+  (void)snprintf(did, sizeof(did), "%u", id);
   dtwo[1].value = did;
   dwhere.vec = &dtwo[0];
   dwhere.ntot = 2;
@@ -1963,7 +1976,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   mymcf.toplevel = 1;
   w[0].column = "issuer";
   w[0].value = issuer;
-  (void)snprintf(sno, 24, "%lld", sn);
+  (void)snprintf(sno, sizeof(sno), "%lld", sn);
   w[1].column = "sn";
   w[1].value = &sno[0];
   w[2].column = "aki";
@@ -1998,7 +2011,7 @@ int deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid)
   if ( conp == NULL || conp->connected == 0 || tabp == NULL )
     return(ERR_SCM_INVALARG);
   where.column = "local_id";
-  (void)snprintf(mylid, 24, "%u", lid);
+  (void)snprintf(mylid, sizeof(mylid), "%u", lid);
   where.value = mylid;
   lids.vec = &where;
   lids.ntot = 1;
@@ -2026,7 +2039,7 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   // ????????? instead test for this in select statement ????????
   if ( (pflags & SCM_FLAG_NOTYET) == 0 )
     return(0);
-  (void)snprintf(lid, 24, "%u", *(unsigned int *)(s->vec[0].valptr));
+  (void)snprintf(lid, sizeof(lid), "%u", *(unsigned int *)(s->vec[0].valptr));
   one.column = "local_id";
   one.value = &lid[0];
   where.vec = &one;
@@ -2053,7 +2066,7 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   int  sta;
 
   UNREFERENCED_PARAMETER(idx);
-  (void)snprintf(lid, 24, "%u", *(unsigned int *)(s->vec[0].valptr));
+  (void)snprintf(lid, sizeof(lid), "%u", *(unsigned int *)(s->vec[0].valptr));
   one.column = "local_id";
   one.value = &lid[0];
   where.vec = &one;
