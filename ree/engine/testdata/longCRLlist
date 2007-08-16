@@ -1,0 +1,12 @@
+newNIRBad1CRL.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 7.1
+    Failed at offset 163 (0xA3)
+newNIRBad2CRL.req 
+    Failed at 7.1.3.3.3.1.1.1
+    Failed at offset 187 (0xBB)
+newNIRBad3CRL.req 
+    Failed at 7.1.1.3.1.1
+    Failed at offset 139 (0x8B)
+newNIRCRL.req passed

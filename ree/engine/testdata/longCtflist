@@ -1,0 +1,330 @@
+newNIRISPBad1.10Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 692 (0x2B4)
+newNIRISPBad1.11Ctf.req 
+    Failed at 10.1.4.3.5
+    Failed at offset 373 (0x175)
+newNIRISPBad1.12Ctf.req 
+    Failed at 10.1.4.3.5
+    Failed at offset 373 (0x175)
+newNIRISPBad1.13Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 682 (0x2AA)
+newNIRISPBad1.14Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 641 (0x281)
+newNIRISPBad1.15Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 614 (0x266)
+newNIRISPBad1.16Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 614 (0x266)
+newNIRISPBad1.17Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 660 (0x294)
+newNIRISPBad1.18Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 660 (0x294)
+newNIRISPBad1.19Ctf.req passed
+newNIRISPBad1.20Ctf.req 
+    Failed at 10.1.1.2.6
+    Failed at offset 287 (0x11F)
+newNIRISPBad1.21Ctf.req 
+    Failed at 10.1.1.3
+    Failed at offset 290 (0x122)
+newNIRISPBad1.22Ctf.req 
+    Failed at 10.1.4.2.5
+    Failed at offset 368 (0x170)
+newNIRISPBad1.23Ctf.req 
+    Failed at 10.1.5.2.10
+    Failed at offset 384 (0x180)
+newNIRISPBad1.24Ctf.req 
+    Failed at 10.1.9.2.1
+    Failed at offset 670 (0x29E)
+newNIRISPBad1.25Ctf.req 
+    Failed at 10.1.10.2.2
+    Failed at offset 718 (0x2CE)
+newNIRISPBad1.2Ctf.req 
+    Failed at 4
+    Failed at offset 32 (0x20)
+newNIRISPBad1.3Ctf.req 
+    Failed at 6.1
+    Failed at offset 90 (0x5A)
+newNIRISPBad1.4Ctf.req 
+    Failed at 5.1
+    Failed at offset 57 (0x39)
+newNIRISPBad1.5Ctf.req 
+    Failed at 7
+    Failed at offset 110 (0x6E)
+newNIRISPBad1.6Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 691 (0x2B3)
+newNIRISPBad1.7Ctf.req 
+    Failed at 10.1.1.3
+    Failed at offset 290 (0x122)
+newNIRISPBad1.8Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 677 (0x2A5)
+newNIRISPBad1.9Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 675 (0x2A3)
+newNIRISPBad2.10Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 405 (0x195)
+newNIRISPBad2.11Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 472 (0x1D8)
+newNIRISPBad2.12Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 566 (0x236)
+newNIRISPBad2.13Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 660 (0x294)
+newNIRISPBad2.14Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 708 (0x2C4)
+newNIRISPBad2.15Ctf.req passed
+newNIRISPBad2.16Ctf.req 
+    Failed at 10.1.2.2.3
+    Failed at offset 304 (0x130)
+newNIRISPBad2.17Ctf.req 
+    Failed at 10.1.3.2.4
+    Failed at offset 335 (0x14F)
+newNIRISPBad2.18Ctf.req 
+    Failed at 10.1.6.2.7
+    Failed at offset 410 (0x19A)
+newNIRISPBad2.19Ctf.req 
+    Failed at 10.1.7.2.8
+    Failed at offset 482 (0x1E2)
+newNIRISPBad2.1Ctf.req 
+    Failed at 5.1
+    Failed at offset 57 (0x39)
+newNIRISPBad2.20Ctf.req 
+    Failed at 10.1.8.2.9
+    Failed at offset 576 (0x240)
+newNIRISPBad2.21Ctf.req 
+    Failed at 10.1.4.2.11
+    Failed at offset 368 (0x170)
+newNIRISPBad2.22Ctf.req 
+    Failed at 10.1.4.3.5
+    Failed at offset 373 (0x175)
+newNIRISPBad2.23Ctf.req 
+    Failed at 10.1.3
+    Failed at offset 361 (0x169)
+newNIRISPBad2.24Ctf.req 
+    Failed at 10.1.3
+    Failed at offset 361 (0x169)
+newNIRISPBad2.25Ctf.req 
+    Failed at 10.1.6.3.7.1.1
+    Failed at offset 470 (0x1D6)
+newNIRISPBad2.26Ctf.req 
+    Failed at 10.1.6.3.7.1.1
+    Failed at offset 470 (0x1D6)
+newNIRISPBad2.2Ctf.req 
+    Failed at 7.1
+    Failed at offset 112 (0x70)
+newNIRISPBad2.3Ctf.req 
+    Failed at 6.1
+    Failed at offset 89 (0x59)
+newNIRISPBad2.4Ctf.req 
+    Failed at 10
+    Failed at offset 272 (0x110)
+newNIRISPBad2.5Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 282 (0x11A)
+newNIRISPBad2.6Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 299 (0x12B)
+newNIRISPBad2.7Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 330 (0x14A)
+newNIRISPBad2.8Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 363 (0x16B)
+newNIRISPBad2.9Ctf.req 
+    Too many
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 379 (0x17B)
+newNIRISPBad3.10Ctf.req 
+    Failed at 10.1.1.1
+    Failed at offset 282 (0x11A)
+newNIRISPBad3.11Ctf.req 
+    Failed at 10.1.2.1
+    Failed at offset 299 (0x12B)
+newNIRISPBad3.12Ctf.req 
+    Failed at 10.1.3.1
+    Failed at offset 330 (0x14A)
+newNIRISPBad3.13Ctf.req 
+    Failed at 10.1.4.1
+    Failed at offset 363 (0x16B)
+newNIRISPBad3.14Ctf.req 
+    Failed at 10.1.5.1
+    Failed at offset 379 (0x17B)
+newNIRISPBad3.15Ctf.req 
+    Failed at 10.1.6.1
+    Failed at offset 405 (0x195)
+newNIRISPBad3.16Ctf.req 
+    Failed at 10.1.7.1
+    Failed at offset 472 (0x1D8)
+newNIRISPBad3.17Ctf.req 
+    Failed at 10.1.7.3.8.1.1
+    Failed at offset 488 (0x1E8)
+newNIRISPBad3.18Ctf.req 
+    Failed at 10.1.8.1
+    Failed at offset 566 (0x236)
+newNIRISPBad3.19Ctf.req 
+    Failed at 10.1.8.3.9.1.1
+    Failed at offset 582 (0x246)
+newNIRISPBad3.1Ctf.req 
+    Failed at 3.1
+    Failed at offset 19 (0x13)
+newNIRISPBad3.20Ctf.req 
+    Failed at 10.1.9.1
+    Failed at offset 660 (0x294)
+newNIRISPBad3.21Ctf.req 
+    Failed at 10.1.10.1
+    Failed at offset 708 (0x2C4)
+newNIRISPBad3.22Ctf.req passed
+newNIRISPBad3.23Ctf.req 
+    Failed at 1.1
+    Failed at offset 10 (0xA)
+newNIRISPBad3.24Ctf.req 
+    Failed at 10.1.9.3.1.2.2.2
+    Failed at offset 698 (0x2BA)
+newNIRISPBad3.25Ctf.req 
+    Failed at 10.1.10.3.2.1.1
+    Failed at offset 733 (0x2DD)
+newNIRISPBad3.26Ctf.req 
+    Failed at 10.1.6.3.7.1.1
+    Failed at offset 416 (0x1A0)
+newNIRISPBad3.27Ctf.req 
+    Failed at 10.1.6.3.7.1.1.1
+    Failed at offset 418 (0x1A2)
+newNIRISPBad3.28Ctf.req 
+    Failed at 10.1.6.3.7.1.1.1.1
+    Failed at offset 420 (0x1A4)
+newNIRISPBad3.29Ctf.req 
+    Failed at 10.1.6.3.7.1.1.1.2
+    Failed at offset 446 (0x1BE)
+newNIRISPBad3.2Ctf.req 
+    Failed at 4
+    Failed at offset 32 (0x20)
+newNIRISPBad3.30Ctf.req 
+    Failed at 10.1.7.3.8.1.2
+    Failed at offset 498 (0x1F2)
+newNIRISPBad3.31Ctf.req 
+    Failed at 10.1.7.3.8.2.2
+    Failed at offset 538 (0x21A)
+newNIRISPBad3.32Ctf.req 
+    Failed at 10.1.8.3.9.1.2
+    Failed at offset 592 (0x250)
+newNIRISPBad3.33Ctf.req 
+    Failed at 10.1.8.3.9.2.2
+    Failed at offset 632 (0x278)
+newNIRISPBad3.34Ctf.req 
+    Failed at 10.1.8.3.9.2.2
+    Failed at offset 632 (0x278)
+newNIRISPBad3.3Ctf.req 
+    Failed at 5.2
+    Failed at offset 72 (0x48)
+newNIRISPBad3.4Ctf.req 
+    Failed at 5.2
+    Failed at offset 72 (0x48)
+newNIRISPBad3.5Ctf.req 
+    Failed at 5.1
+    Failed at offset 57 (0x39)
+newNIRISPBad3.6Ctf.req 
+    Failed at 5.2
+    Failed at offset 72 (0x48)
+newNIRISPBad3.7Ctf.req 
+    Too few/one missing
+    Failed in group rule
+    Failed at 6
+    Failed at offset 98 (0x62)
+newNIRISPBad3.8Ctf.req 
+    Failed at 7.1.1
+    Failed at offset 115 (0x73)
+newNIRISPBad3.9Ctf.req 
+    Failed at 7.2.1.2
+    Failed at offset 267 (0x10B)
+newNIRISPBad4.10Ctf.req 
+    Failed at 10.1.8.3.9.2.2
+    Failed at offset 633 (0x279)
+newNIRISPBad4.11Ctf.req 
+    Failed at 10.1.9.3.1.1.2.1
+    Failed at offset 685 (0x2AD)
+newNIRISPBad4.12Ctf.req 
+    Failed at 10.1.10.3.2.1.1
+    Failed at offset 733 (0x2DD)
+newNIRISPBad4.1Ctf.req passed
+newNIRISPBad4.2Ctf.req 
+    Failed at 10.1.6.3.7.1.1.1.1
+    Failed at offset 420 (0x1A4)
+newNIRISPBad4.3Ctf.req 
+    Failed at 10.1.6.3.7.1.1.1.1
+    Failed at offset 420 (0x1A4)
+newNIRISPBad4.4Ctf.req 
+    Failed at 10.1.6.3.7.1.1.1.2
+    Failed at offset 446 (0x1BE)
+newNIRISPBad4.5Ctf.req 
+    Failed at 10.1.7.3.8.1.2
+    Failed at offset 498 (0x1F2)
+newNIRISPBad4.6Ctf.req 
+    Failed at 10.1.7.3.8.1
+    Failed at offset 498 (0x1F2)
+newNIRISPBad4.7Ctf.req 
+    Failed at 10.1.7.3.8.2.2
+    Failed at offset 539 (0x21B)
+newNIRISPBad4.8Ctf.req 
+    Failed at 10.1.8.3.9.1.2
+    Failed at offset 592 (0x250)
+newNIRISPBad4.9Ctf.req 
+    Failed at 10.1.8.3.9.1.2
+    Failed at offset 592 (0x250)
+newNIRISPBadSN1Ctf.req 
+    Failed at 6.3.1.1
+    Failed at offset 129 (0x81)
+newNIRISPBadSN2Ctf.req 
+    Failed at 6.2.1.1
+    Failed at offset 106 (0x6A)
+newNIRISPCtf.req passed
+newNIRISPSANCtf.req passed
