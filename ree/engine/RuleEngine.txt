@@ -87,13 +87,16 @@ DESCRIPTION
     item, but it requires a tool to dump the test file in some sort of 
     ASCII-hex and an ability to read the ASN.1 encoding.
 
-        The "examples" directory contains several sample files of rules and
+        The "testdata" directory contains several sample files of rules and
     test cases.  The files suffixed '.txt' are human-readable translations
     of the sample ASN.1 files, e.g. NIRCRL.txt is a translation of NIRCRL.
-    The file NIRCArules.results shows the output from running
+    The file longCtflist shows the output from running
 
-        RuleEngine NIRCArules NIRISP*Ctf -v
+        RuleEngine newNIRCArules newNIRISP*Ctf -v
 
-    and the file NIRCRL.results shows the output from running
+    and the file longCRLlist shows the output from running
 
-        RuleEngine NIRCRLrules NIR*CRL
+        RuleEngine newNIRCRLrules newNIR*CRL
+
+    Note: in order to get identical results to those in the *list files,
+    you must set your system date to April 4, 2007.
