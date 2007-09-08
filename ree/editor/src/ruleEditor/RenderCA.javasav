@@ -1,0 +1,380 @@
+/*
+ * Title:        <p>
+ * Description:  <p>
+ * Copyright:    Copyright (c) <p>
+ * THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE SECRETS OF 
+ * BBNT SOLUTIONS LLC.  USE, DISCLOSURE, OR REPRODUCTION IS PROHIBITED 
+ * WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF BBNT SOLUTIONS LLC.
+ * Company:      <p>
+ * @author
+ * @version 1.0
+ */
+
+package ruleEditor;
+
+import ruleEditor.*;
+import rules.*;
+import asn.*;
+import serialPort.*;
+import skaction.*;
+import Algorithms.*;
+import name.*;
+import certificate.*;
+import extensions.*;
+
+import java.util.*;
+import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+
+public class RenderCA {
+  private static JFrame frame;
+  private Component myParent;
+  private IssuerName issuerName = new IssuerName();
+  private byte[] serialNum;
+  private byte[] subjectKeyId; // octet string
+  private byte[] CAIssuerName;
+  private String[] issuerNameValue;
+  private String[] v4List = null;
+  private String[] v6List = null;
+  private String[] asnList = null;
+  private String[] rdiList = null;
+  private Vector asn = null; // hold ASPane init data
+  private Vector rdi = null; // hold RDIPane init data
+  private int n4 = 0, n6 = 0;
+  private int as0 = 0, as1 = 0;
+  final static JFileChooser fc = new JFileChooser(RuleUtils.RootDir); //TODO create the directory if no ./data 
+
+  public RenderCA(Component parent) {
+    myParent = parent;
+   
+  }
+
+  public void setSubordinate(int n) {
+    issuerName.setSubordinate(n);
+  }
+
+  public String getSubordinateName() {
+    return issuerName.getSubordinateName();
+  }
+
+  public IssuerName getIssuerName() {
+    return issuerName;
+  }
+
+  public String[] getIssuerNameStrings() {
+    return issuerNameValue;
+  }
+
+  public byte[] getSerialNum() {
+    return serialNum;
+  }
+
+  public byte[] getCAIssuerName() {
+
+    return CAIssuerName;
+  }
+
+  public byte[] getSubjectKeyId() {
+    return subjectKeyId;
+  }
+
+  public String[] getV4List() {
+    return v4List;
+  }
+
+  public String[] getV6List() {
+    return v6List;
+  }
+
+  public String[] getAsnList() {
+    return asnList;
+  }
+
+  public String[] getRdiList() {
+    return rdiList;
+  }
+
+  public int getAsnListCount() {
+    if (asnList != null) {
+      return asnList.length;
+    } else {
+      return 0;
+    }
+  }
+
+  public int getRdiListCount() {
+    if (rdiList != null) {
+      return rdiList.length;
+    } else {
+      return 0;
+    }
+  }
+
+  public boolean CAcertRendering() {
+    int lth;
+    int n;
+    AsnByteArray tmp;
+    File file = null;
+    Certificate cert = new Certificate();
+
+    if (RuleUtils.CAfilename == null)
+      {
+      int returnVal = fc.showDialog(myParent, "Retrieve CA Certificate File");
+    
+      if (returnVal == JFileChooser.APPROVE_OPTION) 
+        {
+        File dir = fc.getCurrentDirectory();
+        file = fc.getSelectedFile();
+        if (issuerName.getItemNum() != 0) 
+          { // CA exists
+	  n = JOptionPane.showConfirmDialog(frame,
+	   "You are about to replace the CA certificate information with this one."
+		  + "Are you sure you want to do this?");
+  	  if (n == JOptionPane.YES_OPTION) 
+            {
+  	    // continue
+	    issuerName.delete(); // delete old CA cert
+	    } 
+          else if (n == JOptionPane.NO_OPTION || 
+                n == JOptionPane.CANCEL_OPTION ) 
+            {
+	    JOptionPane.showMessageDialog(frame, 
+                 "Retrieving certificate cancelled by the user."); 
+	    return false;
+	    } 
+          }
+        }
+      }
+      else file = new File(RuleUtils.CAfilename);
+      String fName = file.getAbsolutePath();
+      // fName = fName.replace('\\', '/'); //TODO for mac only
+      System.out.println("Retrieving certificate file: "  +  fName + "." );
+      int ansr = cert.get_file(fName);
+      if (ansr < 0) 
+        {
+        System.out.println("Error at " + cert.error.asn_map_string);
+	JOptionPane.showMessageDialog(frame, 
+				      "Reading certificate file error: " + AsnStatic.getErrorMsg(cert.error.getErrorNo()) 
+				      + " at location " + -ansr, 
+				      "", JOptionPane.ERROR_MESSAGE);
+	
+	return false;
+        } 
+      // get serial number
+      lth = cert.toBeSigned.serialNumber.vsize();
+      tmp = new AsnByteArray(lth);
+      cert.toBeSigned.serialNumber.read(tmp);
+      serialNum = tmp.getArray();
+      //System.out.println(" serial number: " );
+      //tmp.print();
+      // get CA issuer name
+      lth = cert.toBeSigned.issuer.vsize();
+      tmp = new AsnByteArray(lth);
+      cert.toBeSigned.issuer.read(tmp);
+      CAIssuerName = tmp.getArray();
+      //System.out.println(" CA issuer name: ");
+      //tmp.print();
+      // get Issuer subject name
+      RDNSequence rdns = cert.toBeSigned.subject.rDNSequence;
+      issuerName = RuleUtils.getIssuerNameFromRDNS(rdns);
+      setIssuerTabValues(issuerName);
+      Extensions extns = cert.toBeSigned.extensions;
+      int ni = extns.numitems();
+      for (int i = 0; i < ni; i++) 
+        {
+	Extension extn = extns.extension.index(i);
+	lth = extn.extnID.vsize();
+	AsnByteArray objId = new AsnByteArray(lth);
+	extn.extnID.read(objId);
+	// get subject key id
+	if (objId.toString().trim().equals(ExtensionsStatic.id_subjectKeyIdentifier)) 
+          { //subject  key id
+	  lth = extn.extnValue.subjectKeyIdentifier.vsize();
+	  tmp = new AsnByteArray(lth);
+	   
+	  subjectKeyId = tmp.getArray();
+	  //System.out.println(" subject key id : ");
+	  //tmp.print();
+	  } 
+        else if (objId.toString().trim().equals(ExtensionsStatic.id_pe_sbgp_ipAddrBlock)) 
+          { // IPAPane
+	// get SBGP specfic extns
+	  SBGPIpAddrBlock ipab = extn.extnValue.ipAddressBlock;
+          n4 = n6 = 0;
+	  Vector ipa = getIPAdata(ipab);
+	  v4List = getV4data(ipa);
+	  v6List = getV6data(ipa);
+	  } 
+        else if (objId.toString().trim().equals(ExtensionsStatic.id_pe_sbgp_autonomousSysNum)) 
+          { //ASPane
+	  SBGPASNum asn = extn.extnValue.autonomousSysNum;
+	  getASdata(asn);
+	  } 
+        }
+      } 
+    else 
+      {	
+      System.out.println("Open command cancelled by user." );
+      return false;
+      }
+
+    return true;
+    
+  }
+
+  private void setIssuerTabValues(IssuerName name) {
+    int n = name.getItemNum();
+    issuerNameValue = new String[n];
+    for (int i = 0; i < n; i++) {
+      issuerNameValue[i] = new String(name.getDNname(i) + "\t" 
+				      + name.getDNvalue(i) );
+      //System.out.println(i + ": " + issuerNameValue[i]);
+    }
+  }
+
+  private Vector getIPAdata(SBGPIpAddrBlock ipab) {
+    Vector data = new Vector();
+    int type = 0, safi = 0;
+    String str = null;
+    int ni = ipab.numitems();
+    for (int i = 0; i < ni; i++) {
+      AsnByteArray af = new AsnByteArray(10);
+      ipab.iPAddressFamily.index(i).addressFamily.read(af);
+      byte[] b = af.getArray();
+      type = b[1];
+      safi = b[2];
+      //System.out.println(" type: " + type + " safi: " + safi);
+      IPAddressChoice ipac = ipab.iPAddressFamily.index(i).ipAddressChoice;
+      AsnIntRef tagRef = new AsnIntRef();
+      ipac.tag(tagRef);
+      if (tagRef.val != AsnStatic.ASN_SEQUENCE) {
+	// error
+	System.out.println("IPAddressChoice has wrong data. SequenceOf is expected.");
+      } else { // get addresses
+	int n = ipac.addressesOrRanges.numitems();
+	for (int j = 0; j < n; j++) {
+	  IPAddressOrRange por = ipac.addressesOrRanges.iPAddressOrRange.index(j);
+	  AsnIntRef tag = new AsnIntRef();
+	  por.tag(tag);
+	  if (tag.val == AsnStatic.ASN_BITSTRING) { // addressPrefix
+	    AsnByteArray aba = new AsnByteArray();
+	    por.addressPrefix.encode(aba);
+            if (aba.getLength() < 5 && aba.index(2) > 0) 
+              {
+           // throw a fit
+              }
+	    str = RuleUtils.formAddressString(safi, aba, aba, RuleEditorData.PROHIBIT_NUM, type); 
+	    data.addElement(str);
+	    switch (type) {
+	    case RuleEditorData.IPV4: n4++; break;
+	    case RuleEditorData.IPV6: n6++; break;
+	    }	  
+	  } else { // addressRange
+	    AsnByteArray lo = new AsnByteArray();
+	    AsnByteArray hi = new AsnByteArray();
+	    por.addressRange.min.encode(lo);
+	    por.addressRange.max.encode(hi);
+	    str = RuleUtils.formAddressString(safi, lo, hi, RuleEditorData.PROHIBIT_NUM, type); 
+	    data.addElement(str);
+	    switch (type) {
+	    case RuleEditorData.IPV4: n4++; break;
+	    case RuleEditorData.IPV6: n6++; break;
+	    }	  
+	  }
+	}
+      }
+    } 
+
+    return data;
+    
+  }
+
+  private String[] getV4data(Vector data) {
+    String[] v4 = new String[n4];
+
+    for (int i = 0; i< n4; i++) {
+      v4[i] = (String)data.elementAt(i);
+      //System.out.println(" v4: " + v4[i]);
+    }
+    return v4;
+  }
+
+  private String[] getV6data(Vector data) {
+    String[] v6 = new String[n6];
+
+    for (int i = n4; i < (n4 + n6); i++) {
+      v6[i-n4] = (String)data.elementAt(i);
+      //System.out.println(" v6: " + v6[i-n4]);
+    }
+    return v6;
+  }
+
+  private String[] getASsubdata(ASIdentifierChoice item, int type) {
+    Vector data = new Vector();
+    AsnIntRef tagRef = new AsnIntRef();
+    String s = new String();
+    int i, n = 0;
+    String[] str = null;
+   
+    item.tag(tagRef);
+    switch(tagRef.val) {
+    case AsnStatic.ASN_BOOLEAN:
+      s = new String("INHERIT");
+      n++;
+      data.addElement(s);
+      break;
+    case AsnStatic.ASN_SEQUENCE:
+      int ni = item.asNumbersOrRanges.numitems();
+      for (i = 0; i < ni; i++) {
+	ASNumberOrRange asnr = item.asNumbersOrRanges.aSNumberOrRange.index(i);
+	asnr.tag(tagRef);
+	switch(tagRef.val) {
+	case AsnStatic.ASN_INTEGER:
+	  AsnIntRef asn = new AsnIntRef();
+	  asnr.num.read(asn);
+	  s = new String(Integer.toString(asn.val));
+	  break;
+	case AsnStatic.ASN_SEQUENCE:
+	  AsnIntRef lo = new AsnIntRef();
+	  AsnIntRef hi = new AsnIntRef();
+	  asnr.range.min.read(lo);
+	  asnr.range.max.read(hi);
+	  s = new String(Integer.toString(lo.val) + " - " + Integer.toString(hi.val));
+	break;
+	}
+
+	n++;
+	data.addElement(s);
+      }
+    }
+
+    if (n > 0) {
+      str = new String[n];
+      for (i = 0; i < n; i++) {
+	str[i] = (String)data.elementAt(i);
+	//System.out.println(str[i]);
+      }
+    } 
+    return str;
+
+  }
+  
+  private void getASdata(SBGPASNum asn) {
+    Vector data = new Vector();
+    int type = -1;
+
+    ASIdentifierChoice asnum = asn.asnum;
+    ASIdentifierChoice rdi = asn.rdi;
+
+    //System.out.println(" Asn ");
+    asnList = getASsubdata(asnum, 0);
+    //System.out.println(" Rdi ");
+    rdiList = getASsubdata(rdi, 1);
+
+  }
+
+}

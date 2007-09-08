@@ -1,0 +1,204 @@
+/**
+ * Title:        <p>
+ * Description:  <p>
+ * Copyright:    Copyright (c) <p>
+ * THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE SECRETS OF 
+ * BBNT SOLUTIONS LLC.  USE, DISCLOSURE, OR REPRODUCTION IS PROHIBITED 
+ * WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF BBNT SOLUTIONS LLC.
+ * Company:      <p>
+ * @author
+ * @version 1.0
+ */
+
+package ruleEditor;
+
+import ruleEditor.*;
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+import javax.swing.text.*;
+
+import java.awt.*;
+import java.awt.dnd.*;
+import java.awt.datatransfer.*;
+
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Iterator;
+
+import java.io.*;
+import java.io.IOException;
+
+import javax.swing.JList;
+import javax.swing.DefaultListModel;
+
+public class SubtreePane extends DisplayEntryPane 
+implements ListSelectionListener {
+
+  JLabel tLabel;
+  private JTextField treeName;
+  JButton pButton;
+  private JTextField prefixName;
+  String prefix;
+  private Dimension dim;
+  private static final String addString = "add";
+  private static final String removeString = "remove";
+  private JButton removeButton;
+  private JButton addButton;
+  
+  public SubtreePane(String title) {
+    super(title);
+  }
+
+  public void setInputPane(JPanel inputButtonPane) {
+    //TODO add some vertical space after treeName
+    //TODO need to rethink the layout of DisplayInputPane for size difference.
+    dim = new Dimension(300, 25);
+    prefixName = new JTextField(); 
+    prefixName.setMinimumSize(dim);
+    prefixName.setPreferredSize(dim);
+    prefixName.setMaximumSize(dim);
+    prefixName.setActionCommand("prefix");
+    prefixName.addActionListener(this);
+
+    treeName = new JTextField();
+    try {
+      treeName.getDocument().createPosition(0);
+    } catch (BadLocationException ex) {
+      System.out.println("exception." + ex);
+    }
+    treeName.setMinimumSize(dim);
+    treeName.setPreferredSize(dim);
+    treeName.setMaximumSize(dim);
+    treeName.setActionCommand(addString);
+    treeName.addActionListener(this);
+
+    // Create a panel house input
+    JPanel prefixPane = new JPanel();
+    prefixPane.setLayout(new BoxLayout(prefixPane, BoxLayout.X_AXIS));
+    pButton = new JButton("Subtree prefix:");
+    //dim = new Dimension(100, 20);
+    dim = RuleEditorData.mediumField;
+    pButton.setPreferredSize(dim);
+    pButton.setMinimumSize(dim);
+    pButton.setMaximumSize(dim);
+    pButton.setActionCommand("prefix");
+    pButton.addActionListener(this);
+    prefixPane.add(pButton);
+    prefixPane.add(prefixName);
+
+    JPanel inputPane = new JPanel();
+    inputPane.setLayout(new BoxLayout(inputPane, BoxLayout.X_AXIS));
+    tLabel = new JLabel("Subtree name: ");
+    inputPane.add(tLabel);
+    inputPane.add(treeName);
+ 
+    addButton = new JButton(addString);
+    addButton.setPreferredSize(RuleEditorData.shortField);
+    addButton.setMinimumSize(RuleEditorData.shortField);
+    addButton.setMaximumSize(RuleEditorData.shortField);
+    addButton.setActionCommand(addString);
+    addButton.addActionListener(this);
+    
+    removeButton = new JButton(removeString);
+    removeButton.setPreferredSize(RuleEditorData.shortField);
+    removeButton.setMinimumSize(RuleEditorData.shortField);
+    removeButton.setMaximumSize(RuleEditorData.shortField);
+    removeButton.setEnabled(false);
+    removeButton.setActionCommand(removeString);
+    removeButton.addActionListener(this);
+   
+    JPanel buttonPane = new JPanel();
+    buttonPane.add(addButton);
+    buttonPane.add(removeButton);
+
+    /*
+      String name = listModel.getElementAt(
+      list.getSelectedIndex()).toString();
+      treeName.setText(name);
+    */
+    
+    //Create a panel that houses the input and buttons.
+    inputButtonPane.setLayout(new BoxLayout(inputButtonPane, BoxLayout.Y_AXIS));
+    inputButtonPane.add(prefixPane);
+    inputButtonPane.add(Box.createRigidArea(new Dimension(0,10)));
+    inputButtonPane.add(inputPane);
+    inputButtonPane.add(buttonPane);
+    inputButtonPane.add(Box.createVerticalGlue());
+    inputButtonPane.add(Box.createRigidArea(new Dimension(0,5)));
+
+  } 
+
+
+  public void setInputPanePartialEnabled(boolean b) {
+    setInputPaneEnabled(b);
+  }
+
+  public void setInputPaneEnabled(boolean b) {
+    tLabel.setEnabled(b);
+    treeName.setEnabled(b);
+    addButton.setEnabled(b);
+    if (list.getSelectedIndex() == -1) {
+      //nothing, disable remove button.
+      removeButton.setEnabled(false);
+    } else {
+      //enable remove button.
+      removeButton.setEnabled(b);
+    }
+  }
+  
+  public void enableRemoveButton(boolean b) {
+    if (list.getSelectedIndex() == -1) {
+      //nothing, disable remove button.
+      removeButton.setEnabled(false);
+    } else {
+      //enable remove button.
+      removeButton.setEnabled(b);
+    }
+    
+  }
+
+  public String getInputValue(ActionEvent e, String command) {
+    String text;
+    if (command.equals("add")) {
+      text = treeName.getText().trim();
+      treeName.setText(prefix);
+    } else { // prefix
+      text = prefixName.getText().trim();
+      prefix = new String(text);
+    }
+
+    return text;
+  }
+
+  public void setInputValue(String name, String command) {
+    if (command.equals("add")) {
+      treeName.setText(name);
+    } else { // prefix
+      prefixName.setText(name);
+    }
+  }
+
+  public void insertString(String text) {
+    Document doc = treeName.getDocument();
+    //treeName.insertString(text); TODO find how to insert string
+    //int off = doc.getEndPosition().getOffset();
+    int off = treeName.getCaret().getDot();
+    System.out.println("In SubtreePane insertString. offset: " + off + " text: " + text);
+    try {
+      doc.insertString(off, text + "=", null);
+    } catch (BadLocationException ex) {
+      System.out.println("exception." + ex);
+      // TODO display error frame
+    }
+
+  }
+
+}
+
+
+
+

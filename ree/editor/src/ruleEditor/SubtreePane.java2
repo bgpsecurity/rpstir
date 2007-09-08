@@ -1,0 +1,193 @@
+/**
+ * Title:        <p>
+ * Description:  <p>
+ * Copyright:    Copyright (c) <p>
+ * THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE SECRETS OF 
+ * BBNT SOLUTIONS LLC.  USE, DISCLOSURE, OR REPRODUCTION IS PROHIBITED 
+ * WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF BBNT SOLUTIONS LLC.
+ * Company:      <p>
+ * @author
+ * @version 1.0
+ */
+
+package ruleEditor;
+
+import ruleEditor.*;
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+
+public class SubtreePane extends JPanel 
+implements ListSelectionListener {
+
+  private String myTitle;
+  private JList list;
+  private DefaultListModel listModel;
+  private static final String addString = "Add";
+  private static final String removeString = "Remove";
+  private JButton removeButton;
+  private JButton addButton;
+  JScrollPane listScrollPane;
+  JLabel label;
+  private JTextField treeName;
+  private Dimension dim;
+  
+  public SubtreePane(String title) {
+    myTitle = title;
+    
+    initDisplay();
+  }
+  
+  public void setEnabled(boolean b) {
+    listScrollPane.setEnabled(b);
+    label.setEnabled(b);
+    treeName.setEnabled(b);
+    addButton.setEnabled(b);
+    if (list.getSelectedIndex() == -1) {
+      //nothing, disable remove button.
+      removeButton.setEnabled(false);
+    } else {
+      //enable remove button.
+      removeButton.setEnabled(b);
+    }
+  }   
+  
+  private void initDisplay() {
+    listModel = new DefaultListModel();
+    //Create the list and put it in a scroll pane
+    list = new JList(listModel);
+    list.setVisibleRowCount(5);
+    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    list.addListSelectionListener(this);
+    listScrollPane = new JScrollPane(list,
+				     JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+				     JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+    dim = new Dimension(180, 200);
+    listScrollPane.setMinimumSize(dim);
+    listScrollPane.setPreferredSize(dim);
+    listScrollPane.setMinimumSize(dim);
+    
+    addButton = new JButton(addString);
+    addButton.setActionCommand(addString);
+    addButton.addActionListener(new addListener());
+    
+    removeButton = new JButton(removeString);
+    removeButton.setEnabled(false);
+    removeButton.setActionCommand(removeString);
+    removeButton.addActionListener(new removeListener());
+
+    treeName = new JTextField(); 
+    //dim = new Dimension(100, 25);
+    //treeName.setMinimumSize(dim);
+    //treeName.setPreferredSize(dim);
+      //treeName.setMinimumSize(dim);
+    treeName.addActionListener(new addListener());
+    
+    /*
+      String name = listModel.getElementAt(
+      list.getSelectedIndex()).toString();
+      treeName.setText(name);
+    */
+    
+    // Create a panel house input
+    JPanel treeNamePane = new JPanel();
+    treeNamePane.setLayout(new BoxLayout(treeNamePane, BoxLayout.X_AXIS));
+    label = new JLabel("Subtree name: ");
+    treeNamePane.add(label);
+    treeNamePane.add(treeName);
+    
+    //Create a panel that uses FlowLayout (the default).
+    
+    JPanel buttonPane = new JPanel();
+    buttonPane.add(addButton);
+    buttonPane.add(removeButton);
+    
+    JPanel subTreeNamePane = new JPanel();
+    subTreeNamePane.setLayout(new BoxLayout(subTreeNamePane, BoxLayout.Y_AXIS));
+    subTreeNamePane.add(treeNamePane);
+    subTreeNamePane.add(buttonPane);
+    
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    add(listScrollPane);
+    add(Box.createRigidArea(new Dimension(0,5)));
+    add(subTreeNamePane); 
+    
+    setBorder(new TitledBorder(new EtchedBorder(), myTitle));
+    
+  }
+  
+  class removeListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      //This method can be called only if
+      //there's a valid selection
+      //so go ahead and remove whatever's selected.
+      int index = list.getSelectedIndex();
+      listModel.remove(index);
+      
+      int size = listModel.getSize();
+      //System.out.println(" index in removeListener(): " + index + " size: " + size);
+      
+      if (size == 0) {
+	//Nobody's left, disable firing.
+	removeButton.setEnabled(false);
+	
+      } else {
+	//Adjust the selection.
+	if (index == listModel.getSize())//removed item in last position
+	  index--;
+	list.setSelectedIndex(index);   //otherwise select same index
+      }
+    }
+  }
+  
+  //This listener is shared by the text field and the hire button
+  class addListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      
+      //User didn't type in a name...
+      if (treeName.getText().equals("")) {
+	Toolkit.getDefaultToolkit().beep();
+	return;
+      }
+      
+      int index = list.getSelectedIndex();
+      int size = listModel.getSize();
+      //System.out.println(" index in addListener(): " + index + " size: " + size);
+      
+      //If no selection or if item in last position is selected,
+      //add the new hire to end of list, and select new hire.
+      if (index == -1 || (index+1 == size)) {
+	listModel.addElement(treeName.getText());
+	//listModel.insertElementAt(treeName.getText(), size);
+	list.setSelectedIndex(size);
+	
+	//Otherwise insert the new hire after the current selection,
+	//and select new hire.
+      } else {
+	listModel.insertElementAt(treeName.getText(), index+1);
+	list.setSelectedIndex(index+1);
+      }
+    }
+  }
+  
+  public void valueChanged(ListSelectionEvent e) {
+    if (e.getValueIsAdjusting() == false) {
+      
+      if (list.getSelectedIndex() == -1) {
+	//No selection, disable remove button.
+	removeButton.setEnabled(false);
+	treeName.setText("");
+	
+      } else {
+	//Selection, update text field.
+	removeButton.setEnabled(true);
+	String name = list.getSelectedValue().toString();
+	treeName.setText(name);
+      }
+    }
+  }
+  
+}

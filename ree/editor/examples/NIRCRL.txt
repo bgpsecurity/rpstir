@@ -1,0 +1,28 @@
+seq seq ctx+0x20
+            int 0x01 /* . */
+        seq oid 1.2.840.113549.1.1.11
+            nul 
+        seq set seq oid 2.5.4.3
+                    prt 'C458D421E3'
+        utc '070213161108Z'
+        utc '070313161108Z'
+        seq seq int 0xF722 /* ." */
+                utc '051012103000Z'
+            seq int 0x92A8 /* .. */
+                utc '051020160000Z'
+        ctx+0x20
+            seq seq oid 2.5.29.35
+                    ocw seq ctx+0x00 
+                                0x0C5622171B6C66E841C71E56 /* 0....V"..lf.A..V */
+                                0x57D677FF648F4D9E /* W.w.d.M. */
+                seq oid 2.5.29.20
+                    ocw int 5
+                seq oid 2.5.29.28
+                    ocw seq ctx+0x20
+                                ctx+0x20
+                                    ctx+0x06 "rsync://CRLDistPoint.com"
+                                    ctx+0x06 "ftp://CRLDistPoint.com" 
+    seq oid 1.2.840.113549.1.1.11
+        nul 
+    bit 0x00E75D25C62FD03D1756A56955DE4DD8 /* ..]%./.=.V.iU.M. */
+        0xB2 /* . */

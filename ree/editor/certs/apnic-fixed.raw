@@ -1,0 +1,1207 @@
+seq seq ctx+0x20
+            int 0x02 /* . */
+        int 0x00 /* . */
+        seq oid 1.2.840.113549.1.1.5
+            nul
+        seq set seq oid 2.5.4.3
+                    prt 'Demonstration APNIC CA - Not for'
+                        ' real use'
+            set seq oid 1.2.840.113549.1.9.1
+                    ia5 'ca@apnic.net'
+        seq utc '051209042116Z'
+            utc '101208042116Z'
+        seq set seq oid 2.5.4.3
+                    prt 'Demonstration APNIC CA - Not for'
+                        ' real use'
+            set seq oid 1.2.840.113549.1.9.1
+                    ia5 'ca@apnic.net'
+        seq seq oid 1.2.840.113549.1.1.1
+                nul
+            bit 0x003082010A0282010100D0DC4882C436 /* .0..........H..6 */
+                0x1CA6D106F7CF1E0FB5741D2257092CC0 /* .........t."W.,. */
+                0xFCB490EA5F9420D7DB79AFE9DE337323 /* ...._. ..y...3s# */
+                0x0AF34113AF1C8FE7EF89CA8594BADA98 /* ..A............. */
+                0xFD1C60CBD291246C6343CF33A920D944 /* ..`...$lcC.3. .D */
+                0x138641B744BEA3FA57043792A587231C /* ..A.D...W.7...#. */
+                0x787D3DEF9E1CFC02DBCDD62FB5B3FDCC /* x}=......../.... */
+                0x8DBA3A8ECF9A40A5FFC730C0489EF39E /* ..:...@...0.H... */
+                0x95E5C224D308406F95FDFD4A0D99E0A6 /* ...$..@o...J.... */
+                0x944F00426C50938CE6C6F1B99FB2670F /* .O.BlP........g. */
+                0x3E543BDA8709664373FF3FDA26D6E167 /* >T;...fCs.?.&..g */
+                0x8F462E12DAE3B7298D1D0597C13BA4B1 /* .F.....).....;.. */
+                0xA097579A93531206E9B924139C363261 /* ..W..S....$..62a */
+                0xBE77EA2EAF02B874D7CB9E38304153F3 /* .w.....t...80AS. */
+                0xF934262AE4B91195D4D08A940A849C3E /* .4&*...........> */
+                0xF443C411B6FF0240A2673D3A991113AD /* .C.....@.g=:.... */
+                0x9E7E4CB8E30C4E64B7A10203010001 /* .~L...Nd....... */
+        ctx+0x23
+            seq seq oid 2.5.29.19
+                    boo 0xFF /* . */
+                    oct 0x30030101FF /* 0.... */
+                seq oid 2.5.29.14
+                    oct 0x0414A6FA63BF051E422C767B9E17F1F1 /* ....c...B,v{.... */
+                        0x9B866758328D /* ..gX2. */
+                seq oid 2.5.29.35
+                    oct 0x30168014A6FA63BF051E422C767B9E17 /* 0.....c...B,v{.. */
+                        0xF1F19B866758328D /* ....gX2. */
+                seq oid 2.5.29.15
+                    boo 0xFF /* . */
+                    oct 0x03020106 /* .... */
+                seq oid 2.5.29.32
+                    boo 0xFF /* . */
+                    oct 0x300C300A06082B06010505070E02 /* 0.0...+....... */
+                seq oid 1.3.6.1.5.5.7.1.7
+                    boo 0xFF /* . */
+		    ocw seq seq oct 0x000101 /* ... */
+				seq seq bit 0x013A /* .: */
+					bit 0x013C /* .< */
+				    seq bit 0x017C /* .| */
+					bit 0x007E /* .~ */
+				    bit 0x008086 /* ... */
+				    bit 0x0080B8 /* ... */
+				    bit 0x0080FA /* ... */
+				    bit 0x00813C /* ..< */
+				    bit 0x00814E /* ..N */
+				    bit 0x00815E /* ..^ */
+				    bit 0x058160 /* ..` */
+				    bit 0x008188 /* ... */
+				    bit 0x0081B4 /* ... */
+				    bit 0x0081F9 /* ... */
+				    bit 0x0081FE /* ... */
+				    bit 0x008222 /* .." */
+				    bit 0x008236 /* ..6 */
+				    bit 0x008238 /* ..8 */
+				    bit 0x008245 /* ..E */
+				    bit 0x008257 /* ..W */
+				    bit 0x00825F /* .._ */
+				    bit 0x008266 /* ..f */
+				    bit 0x008274 /* ..t */
+				    bit 0x00827B /* ..{ */
+				    bit 0x008282 /* ... */
+				    bit 0x008299 /* ... */
+				    bit 0x00829B /* ... */
+				    bit 0x00829E /* ... */
+				    bit 0x0182C2 /* ... */
+				    bit 0x0182D8 /* ... */
+				    bit 0x0082DC /* ... */
+				    bit 0x018370 /* ..p */
+				    bit 0x0083AA /* ... */
+				    bit 0x0083AC /* ... */
+				    bit 0x0083B5 /* ... */
+				    bit 0x0083B9 /* ... */
+				    bit 0x0083CB /* ... */
+				    bit 0x0083CE /* ... */
+				    bit 0x0083D9 /* ... */
+				    bit 0x0083EC /* ... */
+				    bit 0x0083F2 /* ... */
+				    bit 0x0183F4 /* ... */
+				    bit 0x0083F8 /* ... */
+				    bit 0x0084B3 /* ... */
+				    seq bit 0x0084B5 /* ... */
+					bit 0x0084B6 /* ... */
+				    bit 0x0084BA /* ... */
+				    bit 0x0084DE /* ... */
+				    bit 0x0084EA /* ... */
+				    bit 0x008607 /* ... */
+				    bit 0x008612 /* ... */
+				    bit 0x00864B /* ..K */
+				    bit 0x008673 /* ..s */
+				    bit 0x038690 /* ... */
+				    seq bit 0x00869F /* ... */
+					bit 0x0486A0 /* ... */
+				    bit 0x0086B4 /* ... */
+				    bit 0x0086C4 /* ... */
+				    bit 0x0286D0 /* ... */
+				    bit 0x0086ED /* ... */
+				    seq bit 0x008899 /* ... */
+					bit 0x00889A /* ... */
+				    bit 0x0188BA /* ... */
+				    bit 0x0088C6 /* ... */
+				    bit 0x008944 /* ..D */
+				    bit 0x00894C /* ..L */
+				    bit 0x00895C /* ..\ */
+				    bit 0x00896D /* ..m */
+				    bit 0x00896F /* ..o */
+				    bit 0x008984 /* ... */
+				    bit 0x008993 /* ... */
+				    seq bit 0x008999 /* ... */
+					bit 0x00899A /* ... */
+				    bit 0x00899D /* ... */
+				    bit 0x0089A6 /* ... */
+				    bit 0x0089AC /* ... */
+				    bit 0x0089BD /* ... */
+				    bit 0x0089DB /* ... */
+				    bit 0x008A07 /* ... */
+				    bit 0x008A13 /* ... */
+				    bit 0x018A18 /* ... */
+				    bit 0x008A1E /* ... */
+				    bit 0x008A2C /* .., */
+				    bit 0x008A47 /* ..G */
+				    bit 0x008A4B /* ..K */
+				    bit 0x008A4D /* ..M */
+				    seq bit 0x008A4F /* ..O */
+					bit 0x008A50 /* ..P */
+				    bit 0x008A65 /* ..e */
+				    bit 0x008A6B /* ..k */
+				    bit 0x008A82 /* ... */
+				    bit 0x008AC2 /* ... */
+				    bit 0x008ACE /* ... */
+				    seq bit 0x008AD3 /* ... */
+					bit 0x018AD4 /* ... */
+				    bit 0x008AD9 /* ... */
+				    bit 0x008AEB /* ... */
+				    bit 0x008AF3 /* ... */
+				    bit 0x008AFC /* ... */
+				    bit 0x008B2C /* .., */
+				    bit 0x008B3B /* ..; */
+				    bit 0x038B50 /* ..P */
+				    bit 0x008B82 /* ... */
+				    bit 0x028B84 /* ... */
+				    bit 0x028B98 /* ... */
+				    bit 0x008BA3 /* ... */
+				    bit 0x038BA8 /* ... */
+				    bit 0x008BBC /* ... */
+				    bit 0x008BDF /* ... */
+				    bit 0x008BE6 /* ... */
+				    bit 0x008C4F /* ..O */
+				    bit 0x008C51 /* ..Q */
+				    bit 0x008C53 /* ..S */
+				    bit 0x008C5C /* ..\ */
+				    bit 0x038C60 /* ..` */
+				    seq bit 0x018C6E /* ..n */
+					bit 0x008C8A /* ... */
+				    bit 0x008C9F /* ... */
+				    bit 0x008CA8 /* ... */
+				    bit 0x008CC8 /* ... */
+				    bit 0x008CFD /* ... */
+				    bit 0x008D67 /* ..g */
+				    bit 0x008D78 /* ..x */
+				    bit 0x008D84 /* ... */
+				    bit 0x008DA8 /* ... */
+				    bit 0x008DB2 /* ... */
+				    bit 0x008DDF /* ... */
+				    bit 0x008DE5 /* ... */
+				    bit 0x008DF3 /* ... */
+				    seq bit 0x008F59 /* ..Y */
+					bit 0x008F5A /* ..Z */
+				    seq bit 0x028F5C /* ..\ */
+					bit 0x048F60 /* ..` */
+				    bit 0x008F7D /* ..} */
+				    bit 0x008F88 /* ... */
+				    bit 0x008FAB /* ... */
+				    bit 0x008FAE /* ... */
+				    bit 0x018FBC /* ... */
+				    bit 0x008FC9 /* ... */
+				    bit 0x028FD8 /* ... */
+				    bit 0x008FDD /* ... */
+				    bit 0x008FEE /* ... */
+				    bit 0x038FF8 /* ... */
+				    bit 0x009001 /* ... */
+				    bit 0x009006 /* ... */
+				    bit 0x009010 /* ... */
+				    bit 0x009035 /* ..5 */
+				    bit 0x009037 /* ..7 */
+				    bit 0x009042 /* ..B */
+				    bit 0x00904F /* ..O */
+				    bit 0x009061 /* ..a */
+				    bit 0x00906E /* ..n */
+				    bit 0x009078 /* ..x */
+				    seq bit 0x019082 /* ... */
+					bit 0x00908C /* ... */
+				    bit 0x0090C7 /* ... */
+				    bit 0x0090CD /* ... */
+				    seq bit 0x0090D5 /* ... */
+					bit 0x0090D6 /* ... */
+				    bit 0x0090DA /* ... */
+				    bit 0x00920B /* ... */
+				    bit 0x009233 /* ..3 */
+				    bit 0x039238 /* ..8 */
+				    bit 0x00925A /* ..Z */
+				    seq bit 0x019274 /* ..t */
+					bit 0x009276 /* ..v */
+				    bit 0x009290 /* ... */
+				    bit 0x0092AB /* ... */
+				    bit 0x0092B2 /* ... */
+				    seq bit 0x0092C3 /* ... */
+					bit 0x0092C4 /* ... */
+				    bit 0x0092DD /* ... */
+				    bit 0x009306 /* ... */
+				    bit 0x029308 /* ... */
+				    bit 0x009329 /* ..) */
+				    bit 0x00932B /* ..+ */
+				    bit 0x01932E /* ... */
+				    bit 0x00933C /* ..< */
+				    bit 0x009342 /* ..B */
+				    bit 0x009345 /* ..E */
+				    bit 0x00934C /* ..L */
+				    bit 0x00936D /* ..m */
+				    bit 0x009384 /* ... */
+				    seq bit 0x00939D /* ... */
+					bit 0x00939E /* ... */
+				    bit 0x0093B0 /* ... */
+				    bit 0x0093C8 /* ... */
+				    bit 0x0093D1 /* ... */
+				    seq bit 0x0093D3 /* ... */
+					bit 0x0093D4 /* ... */
+				    bit 0x009491 /* ... */
+				    bit 0x0094A1 /* ... */
+				    bit 0x0094B6 /* ... */
+				    bit 0x0094C3 /* ... */
+				    bit 0x009587 /* ... */
+				    bit 0x009590 /* ... */
+				    bit 0x0095A7 /* ... */
+				    bit 0x0095AB /* ... */
+				    bit 0x0095B0 /* ... */
+				    seq bit 0x009601 /* ... */
+					bit 0x019664 /* ..d */
+				    bit 0x019696 /* ... */
+				    bit 0x0096AD /* ... */
+				    bit 0x0096B7 /* ... */
+				    bit 0x0096BF /* ... */
+				    bit 0x0096C5 /* ... */
+				    bit 0x0096CB /* ... */
+				    bit 0x0196CE /* ... */
+				    bit 0x0096E5 /* ... */
+				    bit 0x009782 /* ... */
+				    bit 0x009787 /* ... */
+				    bit 0x00979E /* ... */
+				    bit 0x0097AC /* ... */
+				    bit 0x0097B2 /* ... */
+				    bit 0x00984C /* ..L */
+				    bit 0x009853 /* ..S */
+				    bit 0x00985B /* ..[ */
+				    bit 0x019862 /* ..b */
+				    seq bit 0x009865 /* ..e */
+					bit 0x009868 /* ..h */
+				    bit 0x009876 /* ..v */
+				    bit 0x009893 /* ... */
+				    bit 0x009895 /* ... */
+				    bit 0x009899 /* ... */
+				    bit 0x0098E2 /* ... */
+				    bit 0x009914 /* ... */
+				    bit 0x00996B /* ..k */
+				    bit 0x00996F /* ..o */
+				    bit 0x009A0A /* ... */
+				    seq bit 0x009A21 /* ..! */
+					bit 0x009A22 /* .." */
+				    bit 0x049B20 /* ..  */
+				    bit 0x009B3C /* ..< */
+				    bit 0x009B45 /* ..E */
+				    bit 0x009B47 /* ..G */
+				    seq bit 0x009B8F /* ... */
+					bit 0x009B90 /* ... */
+				    bit 0x059BA0 /* ... */
+				    bit 0x009BCD /* ... */
+				    bit 0x009BE6 /* ... */
+				    bit 0x009C0D /* ... */
+				    bit 0x039C10 /* ... */
+				    bit 0x009C1F /* ... */
+				    bit 0x009C32 /* ..2 */
+				    bit 0x009C3B /* ..; */
+				    bit 0x009C3E /* ..> */
+				    bit 0x009C45 /* ..E */
+				    bit 0x009C93 /* ... */
+				    bit 0x009C95 /* ... */
+				    seq bit 0x009D01 /* ... */
+					bit 0x009D14 /* ... */
+				    seq bit 0x009D3F /* ..? */
+					bit 0x009D52 /* ..R */
+				    bit 0x009D55 /* ..U */
+				    seq bit 0x009D65 /* ..e */
+					bit 0x009D78 /* ..x */
+				    bit 0x059D80 /* ... */
+				    bit 0x009DB3 /* ... */
+				    bit 0x039DC0 /* ... */
+				    bit 0x009DCD /* ... */
+				    bit 0x009DD3 /* ... */
+				    bit 0x009DE3 /* ... */
+				    bit 0x009E28 /* ..( */
+				    bit 0x019E2C /* .., */
+				    bit 0x009E36 /* ..6 */
+				    bit 0x009E59 /* ..Y */
+				    bit 0x009E6C /* ..l */
+				    bit 0x009E84 /* ... */
+				    bit 0x009E90 /* ... */
+				    bit 0x009EA1 /* ... */
+				    bit 0x009EB6 /* ... */
+				    seq bit 0x019EC6 /* ... */
+					bit 0x019ED8 /* ... */
+				    bit 0x009F0D /* ... */
+				    bit 0x009F34 /* ..4 */
+				    bit 0x009F49 /* ..I */
+				    bit 0x009F50 /* ..P */
+				    bit 0x009F6F /* ..o */
+				    bit 0x009F75 /* ..u */
+				    bit 0x009FC4 /* ... */
+				    bit 0x009FCF /* ... */
+				    bit 0x009FD3 /* ... */
+				    bit 0x009FE2 /* ... */
+				    bit 0x009FE4 /* ... */
+				    bit 0x009FF8 /* ... */
+				    bit 0x00A004 /* ... */
+				    seq bit 0x00A00B /* ... */
+					bit 0x00A01E /* ... */
+				    bit 0x04A040 /* ..@ */
+				    bit 0x00A060 /* ..` */
+				    seq bit 0x00A0B9 /* ... */
+					bit 0x04A0C0 /* ... */
+				    bit 0x00A0D7 /* ... */
+				    bit 0x00A0DE /* ... */
+				    seq bit 0x00A0E9 /* ... */
+					bit 0x00A0FC /* ... */
+				    bit 0x00A11D /* ... */
+				    bit 0x00A12B /* ..+ */
+				    bit 0x00A132 /* ..2 */
+				    seq bit 0x01A140 /* ..@ */
+					bit 0x00A142 /* ..B */
+				    bit 0x00A14B /* ..K */
+				    seq bit 0x00A15D /* ..] */
+					bit 0x04A160 /* ..` */
+				    bit 0x00A176 /* ..v */
+				    bit 0x00A17A /* ..z */
+				    bit 0x00A17E /* ..~ */
+				    bit 0x00A18B /* ... */
+				    bit 0x01A18E /* ... */
+				    bit 0x00A192 /* ... */
+				    bit 0x00A198 /* ... */
+				    bit 0x03A1C8 /* ... */
+				    bit 0x00A1D4 /* ... */
+				    bit 0x00A1E5 /* ... */
+				    bit 0x00A1F6 /* ... */
+				    bit 0x00A1F8 /* ... */
+				    bit 0x00A204 /* ... */
+				    bit 0x00A269 /* ..i */
+				    bit 0x00A270 /* ..p */
+				    seq bit 0x00A291 /* ... */
+					bit 0x01A292 /* ... */
+				    seq bit 0x00A307 /* ... */
+					bit 0x02A308 /* ... */
+				    seq bit 0x01A30E /* ... */
+					bit 0x00A320 /* ..  */
+				    seq bit 0x01A32A /* ..* */
+					bit 0x01A33C /* ..< */
+				    bit 0x00A37A /* ..z */
+				    seq bit 0x00A37F /* ... */
+					bit 0x00A398 /* ... */
+				    bit 0x00A3B4 /* ... */
+				    bit 0x00A3BD /* ... */
+				    seq bit 0x02A3D0 /* ... */
+					bit 0x00A3D4 /* ... */
+				    seq bit 0x01A3D6 /* ... */
+					bit 0x01A3DC /* ... */
+				    seq bit 0x00A3DF /* ... */
+					bit 0x02A3E0 /* ... */
+				    bit 0x01A3E8 /* ... */
+				    bit 0x00A3EF /* ... */
+				    bit 0x00A42B /* ..+ */
+				    bit 0x00A42E /* ... */
+				    bit 0x00A435 /* ..5 */
+				    seq bit 0x00A445 /* ..E */
+					bit 0x01A446 /* ..F */
+				    bit 0x00A44B /* ..K */
+				    bit 0x00A44E /* ..N */
+				    bit 0x00A450 /* ..P */
+				    bit 0x00A461 /* ..a */
+				    bit 0x00A464 /* ..d */
+				    bit 0x00A46C /* ..l */
+				    bit 0x02A470 /* ..p */
+				    bit 0x01A47C /* ..| */
+				    seq bit 0x02A4A0 /* ... */
+					bit 0x00A4A4 /* ... */
+				    bit 0x00A50C /* ... */
+				    seq bit 0x01A50E /* ... */
+					bit 0x00A512 /* ... */
+				    bit 0x00A515 /* ... */
+				    bit 0x00A51F /* ... */
+				    bit 0x00A543 /* ..C */
+				    bit 0x00A545 /* ..E */
+				    bit 0x00A54C /* ..L */
+				    bit 0x02A554 /* ..T */
+				    bit 0x00A55D /* ..] */
+				    seq bit 0x02A560 /* ..` */
+					bit 0x00A566 /* ..f */
+				    bit 0x00A56C /* ..l */
+				    bit 0x00A576 /* ..v */
+				    bit 0x01A584 /* ... */
+				    seq bit 0x00A58D /* ... */
+					bit 0x00A58E /* ... */
+				    bit 0x01A5BA /* ... */
+				    bit 0x00A5BF /* ... */
+				    bit 0x00A5C2 /* ... */
+				    bit 0x00A5CA /* ... */
+				    bit 0x00A5CD /* ... */
+				    bit 0x00A5D1 /* ... */
+				    bit 0x00A5D5 /* ... */
+				    bit 0x02A5DC /* ... */
+				    bit 0x01A5E4 /* ... */
+				    bit 0x03A5F0 /* ... */
+				    bit 0x01A640 /* ..@ */
+				    bit 0x00A64F /* ..O */
+				    bit 0x00A651 /* ..Q */
+				    bit 0x00A653 /* ..S */
+				    seq bit 0x02A664 /* ..d */
+					bit 0x02A668 /* ..h */
+				    bit 0x00A66F /* ..o */
+				    seq bit 0x01A676 /* ..v */
+					bit 0x01A678 /* ..x */
+				    bit 0x00A67D /* ..} */
+				    bit 0x00A71E /* ... */
+				    bit 0x00A767 /* ..g */
+				    bit 0x00A77B /* ..{ */
+				    bit 0x00A782 /* ... */
+				    bit 0x00A78B /* ... */
+				    bit 0x00A7A2 /* ... */
+				    bit 0x00A7A9 /* ... */
+				    bit 0x00A7AF /* ... */
+				    bit 0x00A7B3 /* ... */
+				    bit 0x00A7BD /* ... */
+				    bit 0x00A7CD /* ... */
+				    bit 0x00A846 /* ..F */
+				    bit 0x01A84E /* ..N */
+				    bit 0x00A85F /* .._ */
+				    bit 0x00A86A /* ..j */
+				    bit 0x00A873 /* ..s */
+				    bit 0x03A878 /* ..x */
+				    seq bit 0x01A882 /* ... */
+					bit 0x02A884 /* ... */
+				    bit 0x00A88C /* ... */
+				    seq bit 0x01A898 /* ... */
+					bit 0x00A89A /* ... */
+				    bit 0x04A8A0 /* ... */
+				    bit 0x00A8BC /* ... */
+				    bit 0x00A8C6 /* ... */
+				    bit 0x00A8D9 /* ... */
+				    bit 0x00A8DB /* ... */
+				    bit 0x01A8F8 /* ... */
+				    bit 0x00A8FC /* ... */
+				    bit 0x00A98C /* ... */
+				    bit 0x00A9C9 /* ... */
+				    bit 0x04A9D0 /* ... */
+				    bit 0x00AA26 /* ..& */
+				    bit 0x00AA5F /* .._ */
+				    bit 0x00AA9D /* ... */
+				    bit 0x00AAB3 /* ... */
+				    bit 0x00C0055A /* ...Z */
+				    bit 0x00C005D8 /* .... */
+				    bit 0x00C005F0 /* .... */
+				    bit 0x00C00C4C /* ...L */
+				    seq bit 0x01C010B2 /* .... */
+					bit 0x00C010B4 /* .... */
+				    bit 0x00C01A09 /* .... */
+				    bit 0x00C01A5B /* ...[ */
+				    seq bit 0x00C01A5D /* ...] */
+					bit 0x00C01A5E /* ...^ */
+				    bit 0x00C01A60 /* ...` */
+				    seq bit 0x00C01AD7 /* .... */
+					bit 0x00C01AE6 /* .... */
+				    bit 0x00C01AE8 /* .... */
+				    seq bit 0x02C01F74 /* ...t */
+					bit 0x00C01F7C /* ...| */
+				    seq bit 0x00C01FC5 /* .... */
+					bit 0x00C01FCE /* .... */
+				    bit 0x00C02187 /* ..!. */
+				    bit 0x00C0233B /* ..#; */
+				    bit 0x00C023F8 /* ..#. */
+				    bit 0x00C02992 /* ..). */
+				    bit 0x00C029AA /* ..). */
+				    seq bit 0x01C029B2 /* ..). */
+					bit 0x01C029C4 /* ..). */
+				    bit 0x00C029CB /* ..). */
+				    bit 0x00C029CE /* ..). */
+				    bit 0x00C02A34 /* ..*4 */
+				    seq bit 0x01C02A3C /* ..*< */
+					bit 0x00C02A3E /* ..*> */
+				    seq bit 0x01C02A54 /* ..*T */
+					bit 0x00C02A56 /* ..*V */
+				    seq bit 0x00C02A67 /* ..*g */
+					bit 0x02C02A68 /* ..*h */
+				    bit 0x00C02A97 /* ..*. */
+				    bit 0x00C02AED /* ..*. */
+				    bit 0x00C02BAE /* ..+. */
+				    seq bit 0x00C02BB9 /* ..+. */
+					bit 0x00C02BBA /* ..+. */
+				    bit 0x00C02BBD /* ..+. */
+				    bit 0x00C02BC6 /* ..+. */
+				    seq bit 0x00C02BC9 /* ..+. */
+					bit 0x00C02BCA /* ..+. */
+				    seq bit 0x00C02BCF /* ..+. */
+					bit 0x01C02BD0 /* ..+. */
+				    bit 0x00C02BE0 /* ..+. */
+				    seq bit 0x01C02BE2 /* ..+. */
+					bit 0x01C02BE4 /* ..+. */
+				    bit 0x00C02BEF /* ..+. */
+				    seq bit 0x07C02F00 /* ../. */
+					bit 0x01C02FF0 /* ../. */
+				    seq bit 0x00C0306D /* ..0m */
+					bit 0x00C0306E /* ..0n */
+				    bit 0x00C030F8 /* ..0. */
+				    bit 0x00C032 /* ..2 */
+				    seq bit 0x04C03310 /* ..3. */
+					bit 0x07C03380 /* ..3. */
+				    bit 0x01C03448 /* ..4H */
+				    seq bit 0x00C03477 /* ..4w */
+					bit 0x00C03496 /* ..4. */
+				    seq bit 0x00C034AB /* ..4. */
+					bit 0x04C034B0 /* ..4. */
+				    bit 0x01C034C4 /* ..4. */
+				    seq bit 0x00C03669 /* ..6i */
+					bit 0x00C0366A /* ..6j */
+				    bit 0x00C03682 /* ..6. */
+				    bit 0x00C03687 /* ..6. */
+				    bit 0x00C03689 /* ..6. */
+				    bit 0x00C036F7 /* ..6. */
+				    bit 0x00C036FB /* ..6. */
+				    bit 0x01C03762 /* ..7b */
+				    bit 0x00C0376E /* ..7n */
+				    bit 0x03C03770 /* ..7p */
+				    bit 0x00C037BE /* ..7. */
+				    bit 0x00C037C6 /* ..7. */
+				    bit 0x00C037D1 /* ..7. */
+				    bit 0x00C037DC /* ..7. */
+				    bit 0x03C037E8 /* ..7. */
+				    seq bit 0x00C03A09 /* ..:. */
+					bit 0x00C03A12 /* ..:. */
+				    seq bit 0x00C03A61 /* ..:a */
+					bit 0x01C03A64 /* ..:d */
+				    seq bit 0x00C03A85 /* ..:. */
+					bit 0x00C03A88 /* ..:. */
+				    seq bit 0x01C04152 /* ..AR */
+					bit 0x02C04158 /* ..AX */
+				    bit 0x00C04182 /* ..A. */
+				    bit 0x00C041B6 /* ..A. */
+				    bit 0x00C041D9 /* ..A. */
+				    bit 0x02C041F8 /* ..A. */
+				    bit 0x00C04301 /* ..C. */
+				    bit 0x00C0430C /* ..C. */
+				    bit 0x01C04354 /* ..CT */
+				    bit 0x02C043A8 /* ..C. */
+				    bit 0x00C043D9 /* ..C. */
+				    bit 0x00C043F8 /* ..C. */
+				    bit 0x01C0446E /* ..Dn */
+				    bit 0x00C04484 /* ..D. */
+				    bit 0x00C0448B /* ..D. */
+				    seq bit 0x00C044AB /* ..D. */
+					bit 0x00C044AC /* ..D. */
+				    bit 0x00C044B3 /* ..D. */
+				    seq bit 0x00C044EB /* ..D. */
+					bit 0x01C044F8 /* ..D. */
+				    bit 0x00C04687 /* ..F. */
+				    bit 0x00C046AE /* ..F. */
+				    seq bit 0x00C046B3 /* ..F. */
+					bit 0x02C046B4 /* ..F. */
+				    bit 0x02C046D8 /* ..F. */
+				    seq bit 0x00C04803 /* ..H. */
+					bit 0x00C048FC /* ..H. */
+				    bit 0x00C0490C /* ..I. */
+				    seq bit 0x00C04915 /* ..I. */
+					bit 0x00C04916 /* ..I. */
+				    bit 0x01C04918 /* ..I. */
+				    bit 0x00C04942 /* ..IB */
+				    seq bit 0x00C04A8B /* ..J. */
+					bit 0x00C04AD0 /* ..J. */
+				    bit 0x00C04C7A /* ..Lz */
+				    seq bit 0x01C04CFC /* ..L. */
+					bit 0x00C04CFE /* ..L. */
+				    bit 0x00C04D08 /* ..M. */
+				    bit 0x00C04D11 /* ..M. */
+				    bit 0x00C05284 /* ..R. */
+				    bit 0x02C0528C /* ..R. */
+				    bit 0x00C052A1 /* ..R. */
+				    bit 0x00C052DE /* ..R. */
+				    bit 0x00C052E6 /* ..R. */
+				    bit 0x00C05368 /* ..Sh */
+				    bit 0x01C05376 /* ..Sv */
+				    bit 0x01C0537A /* ..Sz */
+				    bit 0x00C0539D /* ..S. */
+				    seq bit 0x01C053A6 /* ..S. */
+					bit 0x03C053C0 /* ..S. */
+				    seq bit 0x00C053D9 /* ..S. */
+					bit 0x01C053DA /* ..S. */
+				    bit 0x03C053E0 /* ..S. */
+				    seq bit 0x00C053ED /* ..S. */
+					bit 0x00C053EE /* ..S. */
+				    seq bit 0x00C05447 /* ..TG */
+					bit 0x01C05448 /* ..TH */
+				    bit 0x00C05459 /* ..TY */
+				    bit 0x00C054DB /* ..T. */
+				    bit 0x00C054E6 /* ..T. */
+				    seq bit 0x00C054ED /* ..T. */
+					bit 0x00C054EE /* ..T. */
+				    seq bit 0x00C054F1 /* ..T. */
+					bit 0x00C054F2 /* ..T. */
+				    bit 0x00C054FD /* ..T. */
+				    bit 0x00C0560C /* ..V. */
+				    bit 0x00C05681 /* ..V. */
+				    bit 0x01C05684 /* ..V. */
+				    bit 0x00C056A5 /* ..V. */
+				    bit 0x01C05806 /* ..X. */
+				    bit 0x03C05850 /* ..XP */
+				    seq bit 0x00C05865 /* ..Xe */
+					bit 0x00C05866 /* ..Xf */
+				    bit 0x00C05877 /* ..Xw */
+				    bit 0x00C058BB /* ..X. */
+				    bit 0x00C058BE /* ..X. */
+				    bit 0x00C05BB3 /* ..[. */
+				    bit 0x00C05BB9 /* ..[. */
+				    bit 0x00C05BD5 /* ..[. */
+				    bit 0x00C05BFE /* ..[. */
+				    bit 0x00C05C0F /* ..\. */
+				    bit 0x00C05E29 /* ..^) */
+				    seq bit 0x01C05E3E /* ..^> */
+					bit 0x06C05E40 /* ..^@ */
+				    bit 0x00C05EA9 /* ..^. */
+				    bit 0x00C05EAE /* ..^. */
+				    bit 0x00C05EC8 /* ..^. */
+				    bit 0x01C05ED0 /* ..^. */
+				    bit 0x00C05EDC /* ..^. */
+				    bit 0x00C05EE3 /* ..^. */
+				    bit 0x00C05EEE /* ..^. */
+				    seq bit 0x00C05EF3 /* ..^. */
+					bit 0x00C05EF4 /* ..^. */
+				    bit 0x00C06402 /* ..d. */
+				    bit 0x00C06416 /* ..d. */
+				    bit 0x00C06435 /* ..d5 */
+				    bit 0x00C0644D /* ..dM */
+				    bit 0x00C06450 /* ..dP */
+				    bit 0x00C06510 /* ..e. */
+				    bit 0x00C0655B /* ..e[ */
+				    bit 0x00C06586 /* ..e. */
+				    bit 0x00C065B7 /* ..e. */
+				    bit 0x00C065FE /* ..e. */
+				    bit 0x00C06653 /* ..fS */
+				    bit 0x00C0665C /* ..f\ */
+				    bit 0x00C066EF /* ..f. */
+				    bit 0x01C066FA /* ..f. */
+				    bit 0x00C066FE /* ..f. */
+				    bit 0x01C0672A /* ..g* */
+				    bit 0x00C0672E /* ..g. */
+				    bit 0x00C06782 /* ..g. */
+				    bit 0x00C06784 /* ..g. */
+				    bit 0x00C0680F /* ..h. */
+				    seq bit 0x02C06828 /* ..h( */
+					bit 0x01C0682C /* ..h, */
+				    bit 0x00C06850 /* ..hP */
+				    bit 0x00C068AC /* ..h. */
+				    bit 0x01C068E8 /* ..h. */
+				    bit 0x01C068F6 /* ..h. */
+				    bit 0x00C068FC /* ..h. */
+				    bit 0x00C0690A /* ..i. */
+				    seq bit 0x00C06B09 /* ..k. */
+					bit 0x00C06B0A /* ..k. */
+				    bit 0x00C06B65 /* ..ke */
+				    bit 0x01C06B70 /* ..kp */
+				    seq bit 0x00C06BAB /* ..k. */
+					bit 0x00C06BAC /* ..k. */
+				    bit 0x00C06C63 /* ..lc */
+				    bit 0x00C06C71 /* ..lq */
+				    bit 0x00C06CE6 /* ..l. */
+				    bit 0x00C06F20 /* ..o  */
+				    bit 0x00C06F66 /* ..of */
+				    bit 0x00C06F69 /* ..oi */
+				    bit 0x00C070D7 /* ..p. */
+				    seq bit 0x00C07A83 /* ..z. */
+					bit 0x00C07A8C /* ..z. */
+				    bit 0x00C07AAB /* ..z. */
+				    bit 0x03C07AB0 /* ..z. */
+				    bit 0x00C07AD2 /* ..z. */
+				    seq bit 0x01C07C0A /* ..|. */
+					bit 0x00C07C0E /* ..|. */
+				    bit 0x00C07C18 /* ..|. */
+				    bit 0x00C07C75 /* ..|u */
+				    bit 0x02C07C98 /* ..|. */
+				    bit 0x00C0830D /* .... */
+				    seq bit 0x00C0831B /* .... */
+					bit 0x00C0831E /* .... */
+				    seq bit 0x01C0835A /* ...Z */
+					bit 0x00C0835C /* ...\ */
+				    bit 0x00C083E9 /* .... */
+				    seq bit 0x00C083FB /* .... */
+					bit 0x00C083FC /* .... */
+				    bit 0x03C08408 /* .... */
+				    bit 0x00C0841F /* .... */
+				    bit 0x00C08429 /* ...) */
+				    bit 0x00C0845D /* ...] */
+				    bit 0x00C08466 /* ...f */
+				    seq bit 0x00C084F7 /* .... */
+					bit 0x02C084F8 /* .... */
+				    bit 0x00C084FD /* .... */
+				    bit 0x00C0850A /* .... */
+				    bit 0x00C0850E /* .... */
+				    bit 0x00C08515 /* .... */
+				    bit 0x00C0851F /* .... */
+				    bit 0x00C08529 /* ...) */
+				    bit 0x00C0852F /* .../ */
+				    bit 0x01C08542 /* ...B */
+				    seq bit 0x00C08759 /* ...Y */
+					bit 0x00C0876C /* ...l */
+				    seq bit 0x00C087CF /* .... */
+					bit 0x02C087D0 /* .... */
+				    bit 0x00C087DE /* .... */
+				    bit 0x00C08827 /* ...' */
+				    bit 0x00C0883B /* ...; */
+				    seq bit 0x00C0888D /* .... */
+					bit 0x01C0888E /* .... */
+				    bit 0x00C08A64 /* ...d */
+				    seq bit 0x01C08A76 /* ...v */
+					bit 0x01C08A7C /* ...| */
+				    bit 0x00C08AA4 /* .... */
+				    bit 0x00C08ABC /* .... */
+				    bit 0x00C08AFB /* .... */
+				    bit 0x00C09285 /* .... */
+				    bit 0x00C09296 /* .... */
+				    bit 0x03C092B8 /* .... */
+				    bit 0x00C092C8 /* .... */
+				    bit 0x01C092DA /* .... */
+				    bit 0x00C092E8 /* .... */
+				    seq bit 0x00C092FB /* .... */
+					bit 0x01C092FC /* .... */
+				    bit 0x00C09372 /* ...r */
+				    seq bit 0x00C09397 /* .... */
+					bit 0x01C09398 /* .... */
+				    bit 0x00C093EB /* .... */
+				    bit 0x00C093F6 /* .... */
+				    bit 0x00C093FD /* .... */
+				    seq bit 0x02C09474 /* ...t */
+					bit 0x01C094A4 /* .... */
+				    bit 0x00C094DD /* .... */
+				    seq bit 0x00C094DF /* .... */
+					bit 0x00C094E6 /* .... */
+				    bit 0x00C09514 /* .... */
+				    bit 0x00C09524 /* ...$ */
+				    bit 0x00C09536 /* ...6 */
+				    bit 0x00C09595 /* .... */
+				    bit 0x00C095D1 /* .... */
+				    bit 0x00C095EF /* .... */
+				    bit 0x04C09660 /* ...` */
+				    seq bit 0x00C09681 /* .... */
+					bit 0x02C09688 /* .... */
+				    bit 0x00C09690 /* .... */
+				    bit 0x02C096C8 /* .... */
+				    seq bit 0x01C096DA /* .... */
+					bit 0x00C096DC /* .... */
+				    seq bit 0x01C096EA /* .... */
+					bit 0x01C096EC /* .... */
+				    bit 0x00C096F6 /* .... */
+				    seq bit 0x00C096F9 /* .... */
+					bit 0x01C096FA /* .... */
+				    bit 0x00C09781 /* .... */
+				    bit 0x00C09845 /* ...E */
+				    bit 0x01C09856 /* ...V */
+				    bit 0x00C09877 /* ...w */
+				    bit 0x02C09890 /* .... */
+				    bit 0x00C098C5 /* .... */
+				    bit 0x00C098D4 /* .... */
+				    bit 0x00C09906 /* .... */
+				    bit 0x00C09909 /* .... */
+				    bit 0x00C0995D /* ...] */
+				    seq bit 0x00C0995F /* ..._ */
+					bit 0x00C09972 /* ...r */
+				    bit 0x00C0999E /* .... */
+				    bit 0x01C099C4 /* .... */
+				    seq bit 0x00C099DD /* .... */
+					bit 0x00C099E4 /* .... */
+				    bit 0x00C099FB /* .... */
+				    seq bit 0x03C09A10 /* .... */
+					bit 0x01C09A18 /* .... */
+				    seq bit 0x02C09C8C /* .... */
+					bit 0x04C09C90 /* .... */
+				    bit 0x00C09CA5 /* .... */
+				    seq bit 0x00C09CCF /* .... */
+					bit 0x04C09CD0 /* .... */
+				    bit 0x00C09CE1 /* .... */
+				    bit 0x00C09CF9 /* .... */
+				    bit 0x00C09DA2 /* .... */
+				    bit 0x00C09DBF /* .... */
+				    seq bit 0x03C09F10 /* .... */
+					bit 0x00C09F1E /* .... */
+				    bit 0x02C0A010 /* .... */
+				    bit 0x00C0A01D /* .... */
+				    bit 0x00C0A047 /* ...G */
+				    bit 0x00C0A09B /* .... */
+				    bit 0x00C0A0A1 /* .... */
+				    seq bit 0x00C0A0A9 /* .... */
+					bit 0x01C0A0AA /* .... */
+				    bit 0x00C0A0CD /* .... */
+				    bit 0x00C0A0E2 /* .... */
+				    bit 0x00C0A0E5 /* .... */
+				    bit 0x01C0A180 /* .... */
+				    seq bit 0x03C0A920 /* ...  */
+					bit 0x01C0A928 /* ...( */
+				    seq bit 0x00C0ACE3 /* .... */
+					bit 0x00C0ACE4 /* .... */
+				    seq bit 0x03C0ACE8 /* .... */
+					bit 0x00C0ACF6 /* .... */
+				    seq bit 0x03C0AD10 /* .... */
+					bit 0x00C0AD18 /* .... */
+				    bit 0x07C0AE80 /* .... */
+				    bit 0x00C0BC2B /* ...+ */
+				    bit 0x00C0BC47 /* ...G */
+				    seq bit 0x00C0BC49 /* ...I */
+					bit 0x00C0BC5C /* ...\ */
+				    bit 0x00C0BC65 /* ...e */
+				    bit 0x00C0BC6B /* ...k */
+				    bit 0x00C0BC73 /* ...s */
+				    bit 0x05C0BC80 /* .... */
+				    seq bit 0x01C0BCAA /* .... */
+					bit 0x00C0BCAC /* .... */
+				    bit 0x01C0BCAE /* .... */
+				    seq bit 0x00C0BCB9 /* .... */
+					bit 0x00C0BCBA /* .... */
+				    bit 0x00C0BCF1 /* .... */
+				    bit 0x00C0BD18 /* .... */
+				    bit 0x00C0BD22 /* ..." */
+				    bit 0x00C0BD36 /* ...6 */
+				    bit 0x00C0BD5E /* ...^ */
+				    bit 0x00C0BD88 /* .... */
+				    bit 0x00C0BD94 /* .... */
+				    bit 0x00C0BD9F /* .... */
+				    bit 0x02C0BDD0 /* .... */
+				    bit 0x00C0BDDF /* .... */
+				    seq bit 0x00C0BDE5 /* .... */
+					bit 0x01C0BDE8 /* .... */
+				    bit 0x00C0BE3D /* ...= */
+				    bit 0x00C0BE42 /* ...B */
+				    bit 0x00C0BE6C /* ...l */
+				    bit 0x01C0BEB4 /* .... */
+				    bit 0x01C0BECC /* .... */
+				    bit 0x03C0BED0 /* .... */
+				    bit 0x00C0C0 /* ... */
+				    bit 0x00C0C302 /* .... */
+				    bit 0x00C0C30A /* .... */
+				    seq bit 0x01C0C30C /* .... */
+					bit 0x00C0C30E /* .... */
+				    bit 0x00C0C322 /* ..." */
+				    seq bit 0x00C0C327 /* ...' */
+					bit 0x00C0C328 /* ...( */
+				    seq bit 0x02C0C32C /* ..., */
+					bit 0x03C0C330 /* ...0 */
+				    bit 0x00C0C366 /* ...f */
+				    bit 0x00C0C370 /* ...p */
+				    bit 0x00C0C398 /* .... */
+				    bit 0x00C0C3AA /* .... */
+				    bit 0x00C0C3BA /* .... */
+				    bit 0x00C0C3C5 /* .... */
+				    bit 0x00C0C3DB /* .... */
+				    bit 0x00C0C3E9 /* .... */
+				    bit 0x04C0C720 /* ...  */
+				    bit 0x04C0C840 /* ...@ */
+				    seq bit 0x00C0CB25 /* ...% */
+					bit 0x01C0CB26 /* ...& */
+				    seq bit 0x00C0CB51 /* ...Q */
+					bit 0x03C0CB58 /* ...X */
+				    seq bit 0x00C0CB63 /* ...c */
+					bit 0x02C0CB64 /* ...d */
+				    seq bit 0x01C0CB8A /* .... */
+					bit 0x00C0CB92 /* .... */
+				    bit 0x00C0CB9A /* .... */
+				    bit 0x01C0CB9C /* .... */
+				    seq bit 0x03C0CBB0 /* .... */
+					bit 0x01C0CBB8 /* .... */
+				    bit 0x00C0CBC1 /* .... */
+				    bit 0x01C0CBD0 /* .... */
+				    bit 0x00C0CBD5 /* .... */
+				    bit 0x00C0CBD8 /* .... */
+				    bit 0x02C0CBE8 /* .... */
+				    bit 0x00C0CBF7 /* .... */
+				    bit 0x00C0CBFD /* .... */
+				    bit 0x00C0CE66 /* ...f */
+				    bit 0x00C0CE6C /* ...l */
+				    bit 0x00C0CE75 /* ...u */
+				    seq bit 0x02C0CE98 /* .... */
+					bit 0x01C0CE9C /* .... */
+				    bit 0x00C0CF21 /* ...! */
+				    bit 0x00C0CF24 /* ...$ */
+				    seq bit 0x05C0CF40 /* ...@ */
+					bit 0x00C0CF62 /* ...b */
+				    bit 0x00C0CF71 /* ...q */
+				    seq bit 0x00C0CF77 /* ...w */
+					bit 0x01C0CF78 /* ...x */
+				    bit 0x00C0CF8F /* .... */
+				    seq bit 0x00C0CF97 /* .... */
+					bit 0x00C0CF9E /* .... */
+				    bit 0x00C0CFA1 /* .... */
+				    bit 0x00C0CFA5 /* .... */
+				    bit 0x00C0CFBB /* .... */
+				    seq bit 0x00C0CFC5 /* .... */
+					bit 0x00C0CFC6 /* .... */
+				    bit 0x00C0CFF2 /* .... */
+				    bit 0x03C0CFF8 /* .... */
+				    bit 0x00C0DA /* ... */
+				    seq bit 0x00C0E301 /* .... */
+					bit 0x03C0E308 /* .... */
+				    bit 0x07C0E480 /* .... */
+				    bit 0x04C0E610 /* .... */
+				    bit 0x00C0E70F /* .... */
+				    bit 0x00C0E722 /* ..." */
+				    bit 0x00C0E73B /* ...; */
+				    bit 0x00C0E74D /* ...M */
+				    bit 0x00C0E755 /* ...U */
+				    bit 0x00C0E77F /* .... */
+				    seq bit 0x00C0E787 /* .... */
+					bit 0x01C0E788 /* .... */
+				    bit 0x00C0E790 /* .... */
+				    seq bit 0x01C0E7A6 /* .... */
+					bit 0x00C0E7AA /* .... */
+				    bit 0x00C0E7B7 /* .... */
+				    bit 0x00C0E7C1 /* .... */
+				    bit 0x00C0E7CB /* .... */
+				    seq bit 0x00C0E7D3 /* .... */
+					bit 0x00C0E7D4 /* .... */
+				    bit 0x02C0E7D8 /* .... */
+				    bit 0x00C0E7F8 /* .... */
+				    bit 0x05C0E820 /* ...  */
+				    bit 0x05C0E880 /* .... */
+				    bit 0x00C0EA3A /* ...: */
+				    bit 0x00C0EAE7 /* .... */
+				    bit 0x00C0EAF5 /* .... */
+				    seq bit 0x00C0EE01 /* .... */
+					bit 0x00C0EE0A /* .... */
+				    bit 0x04C0F010 /* .... */
+				    bit 0x00C0F4 /* ... */
+				    bit 0x00C0F50B /* .... */
+				    seq bit 0x00C0F50D /* .... */
+					bit 0x00C0F50E /* .... */
+				    seq bit 0x01C0F522 /* ..." */
+					bit 0x00C0F524 /* ...$ */
+				    bit 0x01C0F53A /* ...: */
+				    seq bit 0x00C0F549 /* ...I */
+					bit 0x04C0F550 /* ...P */
+				    seq bit 0x00C0F569 /* ...i */
+					bit 0x00C0F570 /* ...p */
+				    bit 0x00C0F59B /* .... */
+				    bit 0x00C0F5B9 /* .... */
+				    bit 0x03C0F5C0 /* .... */
+				    bit 0x00C0F5D0 /* .... */
+				    seq bit 0x01C0F5D2 /* .... */
+					bit 0x01C0F5D8 /* .... */
+				    seq bit 0x00C0F5DB /* .... */
+					bit 0x00C0F5DC /* .... */
+				    seq bit 0x00C0F5F9 /* .... */
+					bit 0x01C0F5FA /* .... */
+				    bit 0x07C0F800 /* .... */
+				    bit 0x04C0F910 /* .... */
+				    bit 0x00C0FB94 /* .... */
+				    bit 0x00C0FBC3 /* .... */
+				    bit 0x00C0FBC9 /* .... */
+				    bit 0x02C0FBCC /* .... */
+				    seq bit 0x00C0FBE3 /* .... */
+					bit 0x00C0FBE6 /* .... */
+				    bit 0x00C40101 /* .... */
+				    bit 0x00C40144 /* ...D */
+				    seq bit 0x01C40168 /* ...h */
+					bit 0x00C4016A /* ...j */
+				    bit 0x02C4016C /* ...l */
+				    seq bit 0x00C40171 /* ...q */
+					bit 0x00C40172 /* ...r */
+				    bit 0x00C40186 /* .... */
+				    bit 0x00C40341 /* ...A */
+				    bit 0x00C40348 /* ...H */
+				    bit 0x05C40C20 /* ...  */
+				    bit 0x04C40F10 /* .... */
+				    seq bit 0x04C60F10 /* .... */
+					bit 0x05C60F20 /* ...  */
+				    bit 0x00C61101 /* .... */
+				    bit 0x00C61107 /* .... */
+				    bit 0x00C61146 /* ...F */
+				    bit 0x00C6116A /* ...j */
+				    seq bit 0x00C61171 /* ...q */
+					bit 0x01C61172 /* ...r */
+				    bit 0x00C61176 /* ...v */
+				    bit 0x00C611E4 /* .... */
+				    bit 0x01C611F0 /* .... */
+				    bit 0x01C61622 /* ..." */
+				    bit 0x00C61625 /* ...% */
+				    seq bit 0x00C6162F /* .../ */
+					bit 0x00C61632 /* ...2 */
+				    bit 0x00C6163D /* ...= */
+				    seq bit 0x02C61B04 /* .... */
+					bit 0x00C61B08 /* .... */
+				    seq bit 0x03C62910 /* ..). */
+					bit 0x02C62918 /* ..). */
+				    bit 0x02C63000 /* ..0. */
+				    bit 0x01C63102 /* ..1. */
+				    bit 0x03C63120 /* ..1  */
+				    bit 0x00C63157 /* ..1W */
+				    bit 0x01C63170 /* ..1p */
+				    bit 0x00C6317C /* ..1| */
+				    bit 0x02C63304 /* ..3. */
+				    seq bit 0x00C63363 /* ..3c */
+					bit 0x01C63364 /* ..3d */
+				    bit 0x00C633BA /* ..3. */
+				    seq bit 0x00C633C3 /* ..3. */
+					bit 0x00C633C4 /* ..3. */
+				    bit 0x01C633D2 /* ..3. */
+				    seq bit 0x03C63810 /* ..8. */
+					bit 0x01C63818 /* ..8. */
+				    seq bit 0x00C63D01 /* ..=. */
+					bit 0x01C63D02 /* ..=. */
+				    bit 0x03C63D08 /* ..=. */
+				    bit 0x00C649DC /* ..I. */
+				    bit 0x00C661D1 /* ..a. */
+				    bit 0x00C663AD /* ..c. */
+				    bit 0x00C68E /* ... */
+				    seq bit 0x03C6C800 /* .... */
+					bit 0x01C6C808 /* .... */
+				    bit 0x01CA /* .. */
+				    bit 0x01D2 /* .. */
+				    seq bit 0x01DA /* .. */
+					bit 0x00DE /* .. */
+			    seq oct 0x0002 /* .. */
+				seq bit 0x01200102 /* . .. */
+				    bit 0x00200107FA /* . ... */
+				    seq bit 0x0120010C /* . .. */
+					bit 0x0120010E /* . .. */
+				    bit 0x01200144 /* . .D */
+				    seq bit 0x01200180 /* . .. */
+					bit 0x012001AE /* . .. */
+				    seq bit 0x05240000 /* .$.. */
+					bit 0x03240040 /* .$.@ */
+                seq oid 1.3.6.1.5.5.7.1.8
+                    boo 0xFF /* . */
+		    ocw seq ctx+0x20
+				seq int 0x00AD /* .. */
+				    int 0x02A9 /* .. */
+				    int 0x04C5 /* .. */
+				    int 0x04D1 /* .. */
+				    int 0x04D5 /* .. */
+				    int 0x04E2 /* .. */
+				    int 0x067B /* .{ */
+				    int 0x06A8 /* .. */
+				    seq int 0x06E8 /* .. */
+					int 0x06E9 /* .. */
+				    int 0x06F5 /* .. */
+				    int 0x073B /* .; */
+				    int 0x07FA /* .. */
+				    int 0x0860 /* .` */
+				    int 0x0951 /* .Q */
+				    seq int 0x09C1 /* .. */
+					int 0x09E0 /* .. */
+				    int 0x09E9 /* .. */
+				    int 0x09FA /* .. */
+				    int 0x0A03 /* .. */
+				    seq int 0x0A09 /* .. */
+					int 0x0A0A /* .. */
+				    int 0x0A89 /* .. */
+				    int 0x0A92 /* .. */
+				    int 0x0A99 /* .. */
+				    int 0x0AC4 /* .. */
+				    int 0x0ACC /* .. */
+				    int 0x0AD4 /* .. */
+				    int 0x0B07 /* .. */
+				    int 0x0B5B /* .[ */
+				    int 0x0B63 /* .c */
+				    seq int 0x0B6D /* .m */
+					int 0x0B6E /* .n */
+				    int 0x0D1D /* .. */
+				    int 0x0D23 /* .# */
+				    int 0x0D36 /* .6 */
+				    int 0x0D3F /* .? */
+				    int 0x0D43 /* .C */
+				    int 0x0D84 /* .. */
+				    int 0x0D86 /* .. */
+				    int 0x0DA0 /* .. */
+				    int 0x0DB6 /* .. */
+				    int 0x0DDE /* .. */
+				    seq int 0x0DE6 /* .. */
+					int 0x0DE7 /* .. */
+				    int 0x0DFF /* .. */
+				    int 0x0E15 /* .. */
+				    int 0x0E18 /* .. */
+				    seq int 0x0E4D /* .M */
+					int 0x0E4E /* .N */
+				    seq int 0x0E69 /* .i */
+					int 0x0E6D /* .m */
+				    int 0x0E7F /* .. */
+				    int 0x0E85 /* .. */
+				    seq int 0x0EA3 /* .. */
+					int 0x0EA4 /* .. */
+				    seq int 0x0EAD /* .. */
+					int 0x0EAE /* .. */
+				    int 0x0EBD /* .. */
+				    int 0x0EBF /* .. */
+				    int 0x0EC8 /* .. */
+				    seq int 0x0ECA /* .. */
+					int 0x0ECB /* .. */
+				    int 0x0EE5 /* .. */
+				    int 0x0EF1 /* .. */
+				    int 0x0EFC /* .. */
+				    seq int 0x0EFF /* .. */
+					int 0x0F00 /* .. */
+				    int 0x0F59 /* .Y */
+				    int 0x0F81 /* .. */
+				    int 0x0F88 /* .. */
+				    int 0x0FA7 /* .. */
+				    int 0x0FC8 /* .. */
+				    int 0x0FD1 /* .. */
+				    int 0x0FDA /* .. */
+				    int 0x0FDC /* .. */
+				    int 0x1026 /* .& */
+				    int 0x102E /* .. */
+				    int 0x103E /* .> */
+				    seq int 0x104E /* .N */
+					int 0x104F /* .O */
+				    int 0x1065 /* .e */
+				    int 0x106A /* .j */
+				    int 0x109B /* .. */
+				    int 0x10B2 /* .. */
+				    int 0x1100 /* .. */
+				    seq int 0x111D /* .. */
+					int 0x111E /* .. */
+				    int 0x114F /* .O */
+				    seq int 0x1151 /* .Q */
+					int 0x1152 /* .R */
+				    int 0x11A3 /* .. */
+				    int 0x11B0 /* .. */
+				    int 0x11BA /* .. */
+				    int 0x11F2 /* .. */
+				    int 0x11FD /* .. */
+				    seq int 0x1200 /* .. */
+					int 0x1300 /* .. */
+				    int 0x1361 /* .a */
+				    seq int 0x1399 /* .. */
+					int 0x139A /* .. */
+				    int 0x13BB /* .. */
+				    int 0x13DD /* .. */
+				    int 0x13DF /* .. */
+				    int 0x164D /* .M */
+				    int 0x17B4 /* .. */
+				    int 0x1813 /* .. */
+				    int 0x1876 /* .v */
+				    int 0x19DB /* .. */
+				    int 0x19F8 /* .. */
+				    int 0x1BDB /* .. */
+				    int 0x1C07 /* .. */
+				    seq int 0x1D2B /* .+ */
+					int 0x1E2A /* .* */
+				    int 0x1EAF /* .. */
+				    int 0x1EDD /* .. */
+				    seq int 0x2400 /* $. */
+					int 0x27FF /* '. */
+				    int 0x2A37 /* *7 */
+				    int 0x2CCB /* ,. */
+				    seq int 0x4400 /* D. */
+					int 0x47FF /* G. */
+				    int 0x4CF9 /* L. */
+				    seq int 0x5C00 /* \. */
+					int 0x5FFF /* _. */
+				    seq int 0x009400 /* ... */
+					int 0x0097FF /* ... */
+    seq oid 1.2.840.113549.1.1.5
+        nul
+    bit 0x00CFB4B82497D98CA230B7CBFD6F3D53 /* ....$....0...o=S */
+        0xAC6747822786C64D2D3B54B1AF98ABC5 /* .gG.'..M-;T..... */
+        0xAC48BF40CA84A5390FF10199E0D9F69D /* .H.@...9........ */
+        0x4BA4EA8FD4D042D5B3C8ECAE1040CCF6 /* K.....B......@.. */
+        0x428C90C2286046342D444EE828343F47 /* B...(`F4-DN.(4?G */
+        0xF8FD09CF156016BD4C0A7B81A758FD4C /* .....`..L.{..X.L */
+        0x3EFF989084E4C4C059BC3949D1DE8DF4 /* >.......Y.9I.... */
+        0xF60F7120FEB4D153927093383BD350A3 /* ..q ...S.p.8;.P. */
+        0x5F13291F8AE63695EDE3DD816DE4F23E /* _.)...6.....m..> */
+        0x95A80C1255B300325DDB102C46ACACA2 /* ....U..2]..,F... */
+        0x4E13271EAF39FA2248839BCF9FB61FB0 /* N.'..9."H....... */
+        0xFEBF3EE2D20F2865D316E4F3FB889B26 /* ..>...(e.......& */
+        0xA0961D15D3197DBF4EF9ECFFC1D36101 /* ......}.N.....a. */
+        0x24DF83B1CAF1362A967ADBB7B10DC018 /* $.....6*.z...... */
+        0x7368D6D87D157604C591A8B51BC4D994 /* sh..}.v......... */
+        0x8FD5EF41EC5100D80132E17DAF7BEB63 /* ...A.Q...2.}.{.c */
+        0x1E /* . */

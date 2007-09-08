@@ -1,0 +1,128 @@
+seq ctx+0x20
+        seq int 0x00AD /* .. */
+            int 0x02A9 /* .. */
+            int 0x04C5 /* .. */
+            int 0x04D1 /* .. */
+            int 0x04D5 /* .. */
+            int 0x04E2 /* .. */
+            int 0x067B /* .{ */
+            int 0x06A8 /* .. */
+            seq int 0x06E8 /* .. */
+                int 0x06E9 /* .. */
+            int 0x06F5 /* .. */
+            int 0x073B /* .; */
+            int 0x07FA /* .. */
+            int 0x0860 /* .` */
+            int 0x0951 /* .Q */
+            seq int 0x09C1 /* .. */
+                int 0x09E0 /* .. */
+            int 0x09E9 /* .. */
+            int 0x09FA /* .. */
+            int 0x0A03 /* .. */
+            seq int 0x0A09 /* .. */
+                int 0x0A0A /* .. */
+            int 0x0A89 /* .. */
+            int 0x0A92 /* .. */
+            int 0x0A99 /* .. */
+            int 0x0AC4 /* .. */
+            int 0x0ACC /* .. */
+            int 0x0AD4 /* .. */
+            int 0x0B07 /* .. */
+            int 0x0B5B /* .[ */
+            int 0x0B63 /* .c */
+            seq int 0x0B6D /* .m */
+                int 0x0B6E /* .n */
+            int 0x0D1D /* .. */
+            int 0x0D23 /* .# */
+            int 0x0D36 /* .6 */
+            int 0x0D3F /* .? */
+            int 0x0D43 /* .C */
+            int 0x0D84 /* .. */
+            int 0x0D86 /* .. */
+            int 0x0DA0 /* .. */
+            int 0x0DB6 /* .. */
+            int 0x0DDE /* .. */
+            seq int 0x0DE6 /* .. */
+                int 0x0DE7 /* .. */
+            int 0x0DFF /* .. */
+            int 0x0E15 /* .. */
+            int 0x0E18 /* .. */
+            seq int 0x0E4D /* .M */
+                int 0x0E4E /* .N */
+            seq int 0x0E69 /* .i */
+                int 0x0E6D /* .m */
+            int 0x0E7F /* .. */
+            int 0x0E85 /* .. */
+            seq int 0x0EA3 /* .. */
+                int 0x0EA4 /* .. */
+            seq int 0x0EAD /* .. */
+                int 0x0EAE /* .. */
+            int 0x0EBD /* .. */
+            int 0x0EBF /* .. */
+            int 0x0EC8 /* .. */
+            seq int 0x0ECA /* .. */
+                int 0x0ECB /* .. */
+            int 0x0EE5 /* .. */
+            int 0x0EF1 /* .. */
+            int 0x0EFC /* .. */
+            seq int 0x0EFF /* .. */
+                int 0x0F00 /* .. */
+            int 0x0F59 /* .Y */
+            int 0x0F81 /* .. */
+            int 0x0F88 /* .. */
+            int 0x0FA7 /* .. */
+            int 0x0FC8 /* .. */
+            int 0x0FD1 /* .. */
+            int 0x0FDA /* .. */
+            int 0x0FDC /* .. */
+            int 0x1026 /* .& */
+            int 0x102E /* .. */
+            int 0x103E /* .> */
+            seq int 0x104E /* .N */
+                int 0x104F /* .O */
+            int 0x1065 /* .e */
+            int 0x106A /* .j */
+            int 0x109B /* .. */
+            int 0x10B2 /* .. */
+            int 0x1100 /* .. */
+            seq int 0x111D /* .. */
+                int 0x111E /* .. */
+            int 0x114F /* .O */
+            seq int 0x1151 /* .Q */
+                int 0x1152 /* .R */
+            int 0x11A3 /* .. */
+            int 0x11B0 /* .. */
+            int 0x11BA /* .. */
+            int 0x11F2 /* .. */
+            int 0x11FD /* .. */
+            seq int 0x1200 /* .. */
+                int 0x1300 /* .. */
+            int 0x1361 /* .a */
+            seq int 0x1399 /* .. */
+                int 0x139A /* .. */
+            int 0x13BB /* .. */
+            int 0x13DD /* .. */
+            int 0x13DF /* .. */
+            int 0x164D /* .M */
+            int 0x17B4 /* .. */
+            int 0x1813 /* .. */
+            int 0x1876 /* .v */
+            int 0x19DB /* .. */
+            int 0x19F8 /* .. */
+            int 0x1BDB /* .. */
+            int 0x1C07 /* .. */
+            seq int 0x1D2B /* .+ */
+                int 0x1E2A /* .* */
+            int 0x1EAF /* .. */
+            int 0x1EDD /* .. */
+            seq int 0x2400 /* $. */
+                int 0x27FF /* '. */
+            int 0x2A37 /* *7 */
+            int 0x2CCB /* ,. */
+            seq int 0x4400 /* D. */
+                int 0x47FF /* G. */
+            int 0x4CF9 /* L. */
+            seq int 0x5C00 /* \. */
+                int 0x5FFF /* _. */
+            seq int 0x009400 /* ... */
+                int 0x0097FF /* ... */

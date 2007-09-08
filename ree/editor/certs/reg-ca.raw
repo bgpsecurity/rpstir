@@ -1,0 +1,679 @@
+	-- reg-ca
+			seq				-- Certificate
+			  seq				-- TBSCertificate
+			    ctxc+0 int 2		-- version 3
+			    int 0x52534e0000100023	-- serialNumber
+			    seq				-- signature
+			      obj 1.2.840.10040.4.3	-- dsa-with-sha1
+
+			    seq				-- issuer Name
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'Net'
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'ARIN'
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'S-BGP'
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'Root'
+			      set seq obj 2.5.4.3	-- CN
+				      prt 'S-BGP ARIN Root'
+
+			    seq utc '010701000000Z'	-- validity, notBefore
+				utc '011001000000Z'	-- notAfter
+
+			    seq				-- subject Name
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'Net'
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'ARIN'
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'S-BGP'
+			      set seq obj 0.9.2342.19200300.100.1.25 -- DC
+				      ia5 'CA'
+			      set seq obj 2.5.4.3	-- CN
+				      prt 'S-BGP ARIN Registry'
+
+			    seq				-- subjectPublicKeyInfo
+			      seq obj 1.2.840.10040.4.1	-- dsa
+							-- no P, Q, G
+			      bit= 0			-- subjectPublicKey Y
+				int 			-- INTEGER
+				  0x708e0a01fd7f3dd95221834cc93c8a62 --<74002>
+				  0x752efc062342dd750f6002061f9f06cf
+				  0x33074923d95f13459584c75f1c67ee9e
+				  0xfff7b8923c610dd65c61c6e65025ba7f
+				  0xe6aa11b492ac82778dee91b422371039
+				  0xd4960370396c77443cb50063f79c63bd
+				  0xe29e242cbd052a8b32b81e609de105f9
+				  0xcc57d8cb588194eae49bbee08407fdba
+		--hash: 78da07ac3eb71db0cf6f6ba497646d880c5c85ec --<74002>
+			
+			    ctxc+3			-- extensions
+			      seq
+
+				-- id-pe-sbgp-ipAddrBlock
+				seq obj 1.3.6.1.5.5.7.1.7
+			--	  boo 0xff		-- critical
+				  oct=
+				    seq			-- IPAddressRanges
+				      seq		-- IPAddressFamily
+					oct 0x0001 1	-- IPv4, unicast
+					seq		-- IPAddressesOrRanges
+	--	003/8		General Electric Company		May 94
+	--	004/8		Bolt Beranek and Newman Inc.		Dec 92
+					  seq bit 0 3
+					      bit 0 4
+	--	006/8		Army Information Systems Center		Feb 94
+					  bit 0 6
+	--	008/8		Bolt Beranek and Newman Inc.		Dec 92
+	--	009/8		IBM					Aug 92
+					  bit 1 8
+	--	011/8		DoD Intel Information Systems		May 93
+	--	012/8		AT&T Bell Laboratories			Jun 95
+	--	013/8		Xerox Corporation			Sep 91
+					  seq bit 0 11
+					      bit 0 13
+	--	015/8		Hewlett-Packard Company			Jul 94
+	--	016/8		Digital Equipment Corporation		Nov 94
+	--	017/8		Apple Computer Inc.			Jul 92
+	--	018/8		MIT					Jan 94
+	--	019/8		Ford Motor Company			May 95
+	--	020/8		Computer Sciences Corporation		Oct 94
+	--	021/8		DDN-RVN					Jul 91
+	--	022/8		Defense Information Systems Agency	May 93
+					  seq bit 0 15
+					      bit 0 22
+	--	026/8		Defense Information Systems Agency	May 95
+					  bit 0 26
+	--	028/8		DSI-North				Jul 92
+	--	029/8		Defense Information Systems Agency	Jul 91
+	--	030/8		Defense Information Systems Agency	Jul 91
+					  seq bit 0 28
+					      bit 0 30
+	--	033/8		DLA Systems Automation Center		Jan 91
+	--	034/8		Halliburton Company			Mar 93
+	--	035/8		MERIT Computer Network			Apr 94
+					  seq bit 0 33
+					      bit 0 35
+	--	038/8		Performance Systems International	Sep 94
+					  bit 0 38
+	--	040/8		Eli Lily and Company			Jun 94
+					  bit 0 40
+	--	045/8		Interop Show Network			Jan 95
+	--	046/8		Bolt Beranek and Newman Inc.		Dec 92
+	--	047/8		Bell-Northern Research			Jan 91
+	--	048/8		Prudential Securities Inc.		May 95
+					  seq bit 0 45
+					      bit 0 48
+	--	052/8		E.I. duPont de Nemours and Co., Inc.	Dec 91
+	--	053/8		Cap Debis CCS				Oct 93
+	--	054/8		Merck and Co., Inc.			Mar 92
+	--	055/8		Boeing Computer Services		Apr 95
+	--	056/8		U.S. Postal Service			Jun 94
+	--	057/8		SITA					May 95
+					  seq bit 0 52
+					      bit 0 57
+	--	063/8		ARIN					Apr 97
+	--	064/8		ARIN					Jul 99
+	--	065/8           ARIN					Jul 00
+	--	066/8		ARIN					Jul 00
+					  seq bit 0 63
+					      bit 0 66
+
+	--	128-172.0/12	Various Registries 			May 93
+					  seq bit 7 128
+					      bit 4 172 0
+	-- but	172.16/12 local use
+	--	172.32/12-191/8	Various Registries 			May 93
+	--	192/8		Various Registries - MultiRegional	May 93
+					  seq bit 5 172 32
+					      bit 3 192 160
+	-- but	192.168/16 local use
+					  seq bit 0 192 169
+					      bit 0 192
+	--	196/8		Various Registries			May 93
+					  bit 0 196
+	--	198/8		Various Registries 			May 93
+	--	199/8		ARIN - North America 			May 93
+	--	200/8		ARIN - Central and South America	May 93
+	--	201/8		Reserved - Central and South America	May 93
+					  seq bit 0 198
+					      bit 0 201
+	--	204/8		ARIN - North America 			Mar 94
+	--	205/8		ARIN - North America 			Mar 94
+	--	206/8		ARIN - North America 			Apr 95
+	--	207/8		ARIN - North America 			Nov 95
+	--	208/8		ARIN - North America 			Apr 96
+	--	209/8		ARIN - North America			Jun 96
+					  seq bit 0 204
+					      bit 0 209
+	--	214/8		US-DOD					Mar 98
+	--	215/8		US-DOD                                  Mar 98
+	--	216/8           ARIN - North America                    Apr 98
+					  seq bit 0 214
+					      bit 0 216
+
+				      seq		-- IPAddressFamily
+					oct 0x0002 1	-- IPv6 unicast
+					seq		-- IPAddressesOrRanges
+	--	2001:0400::/29 - 2001:05F8::/29 => 2001:0400/23
+					  bit 1 0x200104
+	--	2001:0400::/29 - 2001:05F8::/29
+	--				  seq bit 3 0x20010400
+	--				      bit 3 0x200105f8
+
+				-- id-pe-sbgp-autonomousSysNum
+				seq obj 1.3.6.1.5.5.7.1.8
+			--	  boo 0xff		-- critical
+				  oct=
+				    seq
+				      ctxc+0
+					seq
+					  seq int     1
+					      int     6
+					  seq int     8
+					      int    27
+					  seq int    29
+					      int   136
+					  seq int   138
+					      int   172
+					  seq int   174
+					      int   223
+					  seq int   225
+					      int   247
+					  seq int   252
+					      int   260
+					  seq int   262
+					      int   285
+					  int       287
+					  seq int   289
+					      int   293
+					  seq int   295
+					      int   374
+					  seq int   376
+					      int   377
+					  seq int   379
+					      int   508
+					  seq int   510
+					      int   516
+					  seq int   518
+					      int   527
+					  seq int   541
+					      int   543
+					  seq int   545
+					      int   551
+					  seq int   554
+					      int   558
+					  seq int   560
+					      int   564
+					  seq int   566
+					      int   574
+					  seq int   576
+					      int   579
+					  seq int   581
+					      int   587
+					  int       589
+					  seq int   591
+					      int   592
+					  seq int   594
+					      int   668
+					  seq int   670
+					      int   678
+					  seq int   682
+					      int   693
+					  seq int   698
+					      int   708
+					  seq int   713
+					      int   718
+					  seq int   720
+					      int   759
+					  seq int   762
+					      int   763
+					  int       765
+					  seq int   767
+					      int   773
+					  seq int   784
+					      int   785
+					  seq int   787
+					      int   788
+					  seq int   791
+					      int  1100
+					  seq int  1201
+					      int  1202
+					  int      1204
+					  seq int  1206
+					      int  1232
+					  int      1236
+					  seq int  1238
+					      int  1240
+					  seq int  1242
+					      int  1247
+					  int      1249
+					  seq int  1251
+					      int  1252
+					  seq int  1254
+					      int  1256
+					  seq int  1258
+					      int  1266
+					  seq int  1276
+					      int  1278
+					  seq int  1280
+					      int  1289
+					  seq int  1291
+					      int  1296
+					  int      1298
+					  seq int  1310
+					      int  1317
+					  seq int  1319
+					      int  1341
+					  seq int  1343
+					      int  1351
+					  seq int  1354
+					      int  1652
+					  seq int  1655
+					      int  1658
+					  seq int  1660
+					      int  1662
+					  seq int  1664
+					      int  1679
+					  seq int  1681
+					      int  1703
+					  seq int  1705
+					      int  1706
+					  seq int  1708
+					      int  1728
+					  seq int  1730
+					      int  1731
+					  seq int  1733
+					      int  1737
+					  int      1740
+					  seq int  1742
+					      int  1747
+					  seq int  1749
+					      int  1751
+					  int      1753
+					  seq int  1757
+					      int  1758
+					  seq int  1760
+					      int  1763
+					  seq int  1765
+					      int  1767
+					  seq int  1772
+					      int  1773
+					  int      1775
+					  seq int  1777
+					      int  1779
+					  seq int  1782
+					      int  1832
+					  int      1834
+					  seq int  1838
+					      int  1840
+					  seq int  1842
+					      int  1848
+					  int      1852
+					  seq int  1855
+					      int  1876
+					  seq int  1904
+					      int  1920
+					  seq int  1924
+					      int  1925
+					  seq int  1927
+					      int  1929
+					  seq int  1931
+					      int  1934
+					  seq int  1956
+					      int  1959
+					  seq int  1963
+					      int  1966
+					  seq int  1968
+					      int  2003
+					  seq int  2005
+					      int  2011
+					  seq int  2013
+					      int  2015
+					  seq int  2018
+					      int  2025
+					  seq int  2030
+					      int  2035
+					  int      2037
+					  int      2041
+					  int      2044
+					  seq int  2046
+					      int  2048
+					  seq int  2050
+					      int  2056
+					  seq int  2137
+					      int  2143
+					  seq int  2145
+					      int  2146
+					  seq int  2149
+					      int  2173
+					  seq int  2274
+					      int  2277
+					  seq int  2378
+					      int  2379
+					  seq int  2381
+					      int  2384
+					  int      2386
+					  seq int  2489
+					      int  2493
+					  seq int  2495
+					      int  2496
+					  int      2529
+					  seq int  2531
+					      int  2536
+					  seq int  2538
+					      int  2540
+					  seq int  2542
+					      int  2545
+					  seq int  2548
+					      int  2553
+					  seq int  2555
+					      int  2560
+					  int      2562
+					  seq int  2564
+					      int  2568
+					  seq int  2571
+					      int  2577
+					  seq int  2579
+					      int  2584
+					  seq int  2615
+					      int  2642
+					  seq int  2644
+					      int  2646
+					  seq int  2648
+					      int  2682
+					  seq int  2684
+					      int  2696
+					  seq int  2698
+					      int  2705
+					  seq int  2707
+					      int  2712
+					  seq int  2714
+					      int  2755
+					  seq int  2757
+					      int  2763
+					  int      2765
+					  seq int  2767
+					      int  2771
+					  seq int  2824
+					      int  2829
+					  seq int  2880
+					      int  2894
+					  seq int  2896
+					      int  2906
+					  seq int  2908
+					      int  2914
+					  int      2916
+					  seq int  2918
+					      int  2924
+					  seq int  2927
+					      int  3057
+					  seq int  3059
+					      int  3150
+					  seq int  3152
+					      int  3153
+					  seq int  3354
+					      int  3356
+					  seq int  3358
+					      int  3362
+					  seq int  3364
+					      int  3381
+					  seq int  3383
+					      int  3390
+					  seq int  3392
+					      int  3394
+					  seq int  3396
+					      int  3459
+					  int      3461
+					  seq int  3463
+					      int  3487
+					  seq int  3489
+					      int  3509
+					  seq int  3511
+					      int  3549
+					  seq int  3551
+					      int  3557
+					  seq int  3560
+					      int  3582
+					  seq int  3584
+					      int  3604
+					  seq int  3606
+					      int  3607
+					  seq int  3609
+					      int  3623
+					  seq int  3625
+					      int  3660
+					  seq int  3663
+					      int  3688
+					  seq int  3694
+					      int  3710
+					  seq int  3712
+					      int  3716
+					  seq int  3718
+					      int  3746
+					  seq int  3749
+					      int  3756
+					  seq int  3759
+					      int  3772
+					  int      3774
+					  seq int  3776
+					      int  3783
+					  int      3785
+					  seq int  3788
+					      int  3812
+					  seq int  3814
+					      int  3824
+					  seq int  3826
+					      int  3835
+					  seq int  3837
+					      int  3838
+					  int      3841
+					  seq int  3844
+					      int  3916
+					  seq int  3919
+					      int  3928
+					  seq int  3930
+					      int  3968
+					  seq int  3970
+					      int  3975
+					  seq int  3977
+					      int  4006
+					  seq int  4008
+					      int  4039
+					  seq int  4041
+					      int  4048
+					  seq int  4050
+					      int  4059
+					  seq int  4061
+					      int  4133
+					  seq int  4135
+					      int  4141
+					  seq int  4143
+					      int  4147
+					  seq int  4149
+					      int  4157
+					  seq int  4159
+					      int  4173
+					  seq int  4176
+					      int  4196
+					  seq int  4198
+					      int  4201
+					  seq int  4203
+					      int  4250
+					  seq int  4252
+					      int  4273
+					  seq int  4275
+					      int  4351
+					  seq int  4353
+					      int  4381
+					  seq int  4383
+					      int  4388
+					  seq int  4390
+					      int  4430
+					  int      4432
+					  seq int  4435
+					      int  4456
+					  seq int  4459
+					      int  4501
+					  seq int  4503
+					      int  4513
+					  seq int  4516
+					      int  4523
+					  seq int  4526
+					      int  4527
+					  seq int  4529
+					      int  4537
+					  seq int  4539
+					      int  4587
+					  seq int  4590
+					      int  4593
+					  seq int  4595
+					      int  4604
+					  seq int  4606
+					      int  4607
+					  seq int  4908
+					      int  4960
+					  seq int  4962
+					      int  5016
+					  seq int  5019
+					      int  5050
+					  seq int  5052
+					      int  5084
+					  int      5086
+					  int      5088
+					  seq int  5090
+					      int  5376
+					  seq int  5633
+					      int  5668
+					  seq int  5670
+					      int  5708
+					  seq int  5710
+					      int  6066
+					  seq int  6069
+					      int  6084
+					  seq int  6086
+					      int  6126
+					  seq int  6128
+					      int  6162
+					  seq int  6164
+					      int  6167
+					  seq int  6169
+					      int  6258
+					  seq int  6260
+					      int  6261
+					  seq int  6263
+					      int  6404
+					  seq int  6406
+					      int  6411
+					  seq int  6413
+					      int  6617
+					  seq int  6620
+					      int  6647
+					  seq int  6649
+					      int  6655
+					  seq int  6912
+					      int  6953
+					  seq int  6956
+					      int  7130
+					  seq int  7132
+					      int  7174
+					  seq int  7176
+					      int  7228
+					  seq int  7230
+					      int  7466
+					  seq int  7723
+					      int  7854
+					  seq int  7856
+					      int  8092
+					  seq int  8094
+					      int  8191
+					  seq int 10240
+					      int 10243
+					  seq int 10245
+					      int 10279
+					  seq int 10281
+					      int 10763
+					  seq int 10765
+					      int 10806
+					  seq int 10808
+					      int 11340
+					  seq int 11342
+					      int 11466
+					  seq int 11468
+					      int 11559
+					  seq int 11561
+					      int 11659
+					  seq int 11661
+					      int 12045
+					  seq int 12047
+					      int 12287
+					  seq int 13312
+					      int 13878
+					  seq int 13880
+					      int 15359
+					  seq int 16384
+					      int 16578
+					  seq int 16580
+					      int 16906
+					  seq int 16908
+					      int 17175
+					  seq int 17177
+					      int 17407
+					  seq int 18432
+					      int 18731
+					  seq int 18733
+					      int 19177
+					  seq int 19179
+					      int 19375
+					  seq int 19377
+					      int 19675
+					  seq int 19677
+					      int 19704
+					  seq int 19706
+					      int 20293
+					  seq int 20295
+					      int 20360
+					  seq int 20362
+					      int 21604
+
+				seq obj 2.5.29.14	-- subjectKeyIdentifier
+				  oct=
+				    oct 0x78da07ac3eb71db0cf6f6ba497646d880c5c85ec --<74002>
+
+				seq obj 2.5.29.15	-- keyUsage
+				  boo 0xff		-- critical
+				  oct= bit 1 0x06 -- keyCertSign(5),cRLSign(6)
+			--7	80     digitalSignature        (0),
+			--6	40     nonRepudiation          (1),
+			--5	20     keyEncipherment         (2),
+			--4	10     dataEncipherment        (3),
+			--3	08     keyAgreement            (4),
+			--2	04     keyCertSign             (5),
+			--1	02     cRLSign                 (6),
+			--1	01     encipherOnly            (7),
+			--7	0080   decipherOnly            (8) }
+
+--				seq obj 2.5.29.17	-- SubjectAltName
+--				  oct=
+--				    seq			-- GeneralNames
+--				      ctx+1		-- rfc822Name
+--					/*imp ia5*/ 'HelpDesk@ARIN.Net'
+
+				seq obj 2.5.29.19	-- basicConstraints
+				  boo 0xff		-- critical
+				  oct= seq boo 0xff	-- cA TRUE
+
+				seq obj 2.5.29.32	-- certificatePolicies
+	-- Netscape loses	  boo 0xff		-- critical
+						-- sbgpCertificatePolicy
+				  oct= seq seq obj 1.3.6.1.5.5.7.14.1
+
+				seq obj 2.5.29.35    -- authorityKeyIdentifier
+				  oct= seq ctx+0 imp oct 0xdcdb30be4fad587866d3462afc464ff67e6e3f70 -->74001<
+
+			  seq obj 1.2.840.10040.4.3	-- signatureAlgorithm
+			  bit= 0			-- signatureValue
+			    seq				-- SEQ { INT r, INT s }
+			      int 0x0d51367d09b2d53f26243d482cf8db0b176a2b30
+			      int 0x18330ea4e83622865b2264e87c90dac9e7c69423

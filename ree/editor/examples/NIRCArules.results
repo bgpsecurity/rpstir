@@ -1,0 +1,9 @@
+NIRISPBad1.10Ctf 
+    Too few/one missing
+    Failed in group rule
+    Failed at 10.1
+    Failed at offset 692 (0x2B4)
+NIRISPBad1.11Ctf 
+    Failed at 10.1.4.3.5
+    Failed at offset 373 (0x175)
+NIRISPCtf passed

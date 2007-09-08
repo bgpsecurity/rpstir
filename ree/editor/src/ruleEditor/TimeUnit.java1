@@ -1,0 +1,131 @@
+/**
+ * Title:        <p>
+ * Description:  <p>
+ * Copyright:    Copyright (c) <p>
+ * THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE SECRETS OF 
+ * BBNT SOLUTIONS LLC.  USE, DISCLOSURE, OR REPRODUCTION IS PROHIBITED 
+ * WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF BBNT SOLUTIONS LLC.
+ * Company:      <p>
+ * @author
+ * @version 1.0
+ */
+
+package ruleEditor;
+
+public class TimeUnit {
+  int myLth;
+  String myUnit;
+  boolean myMonthUnit;
+    
+  public TimeUnit(int lth, boolean monthUnit) {
+    myLth = lth;
+    myMonthUnit = monthUnit;
+  }
+  public TimeUnit(int lth, String unit, boolean monthUnit) {
+    myLth = lth;
+    myUnit = unit;
+    myMonthUnit = monthUnit;
+  }
+
+    
+  protected int getUnitLth() {
+    return myLth;
+  }
+    
+  protected boolean getMonthBool() {
+    return myMonthUnit;
+  }
+
+  public static TimeUnit getTimeLth(int numUnit, String unit) {
+    int timeLth = 0;
+    boolean monthUnit = false;
+
+    if (unit.equals("year")) {
+      monthUnit = true;
+      timeLth = numUnit * 12;
+    } else if (unit.equals("month")) {
+      monthUnit = true;
+      timeLth = numUnit;
+    } else if (unit.equals("week")) {
+      timeLth = numUnit * 7 * 24 * 60 * 60;
+    } else if (unit.equals("day")) {
+      timeLth = numUnit * 24 * 60 * 60;
+    } else if (unit.equals("hour")) {
+      timeLth = numUnit * 60 * 60;
+    } else if (unit.equals("minute")) {
+      timeLth = numUnit * 60;
+    }
+
+    TimeUnit timeUnit = new TimeUnit(timeLth, unit, monthUnit);
+
+    return timeUnit;
+
+  }
+
+  private boolean noRemainder(int a, int b) {
+    int tmp = a;
+
+    while (tmp >= b) {
+      tmp = tmp - b;
+    }
+
+    if (tmp == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public int getDisplayTime() {
+    System.out.println(" time length: " + myLth);
+    int lth = 0;
+    if (myMonthUnit) { // unit is month or year
+      if (myLth >= 12) { // unit is year
+	lth = myLth / 12;
+	myUnit = new String("year");
+      } else { 
+	lth = myLth;
+	myUnit = new String("month");
+      }
+    } else { // unit is seconds
+      if (myLth >= (60 * 60 * 24 * 7)) { // weeks 
+	lth = myLth / (60 * 60 * ");
+      } else if (myLth >= (60 * 60 * 24)) { // days
+	lth = myLth / (60 * 60 * 24);
+	myUnit = new String("day");
+      } else if (myLth >= (60 * 60)) { // hour
+	lth = myLth / (60 * 60);
+	myUnit = new String("hour");
+      } else  if (myLth >= 60) { // minute
+	lth = myLth / 60;
+	myUnit = new String("minute");
+      } 
+    }
+    System.out.println(" Display time: " + lth + " " + myUnit);
+    return lth;
+  }
+
+  public String getDisplayTimeUnit() {
+    return myUnit;
+  }
+
+
+  public boolean greaterThan(TimeUnit b) {
+    int numA, numB;
+    if (myMonthUnit == b.myMonthUnit) {
+      return (myLth > b.myLth);
+    }
+    else {
+      if (myMonthUnit) {
+	numA = myLth * 30 * 24 * 60 * 60;
+	numB = b.myLth;
+      }
+      else {
+	numB = b.myLth * 30 * 24 * 60 * 60;
+	numA = myLth;
+      }
+      return (numA > numB);
+    }
+  }
+
+}

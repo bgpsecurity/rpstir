@@ -1,0 +1,169 @@
+ctx+0x20
+    int 0x04 /* . */
+    seq oct 'rsa'
+        int 0x01 /* . */
+        int 0x00 /* . */
+        int 0x04 /* . */
+        int 0x04 /* . */
+        seq seq seq set seq oid 2.5.4.3
+                            prt 'C458D421E3'
+                oct 'dsa ca'
+                gen '20070306200741Z'
+                seq seq int 0x08 /* . */
+                        seq seq utf 'C:\Documents and Settings\gardin'
+                                    'er\My Documents\SA+\RuleModule\d'
+                                    'ata\Crl\newNIRCRL.rules'
+                                pri+0x20
+                                    seq seq utf 'Version'
+                                            ctx+0x00 0x00A0 /* .. */
+                                            pri+0x20
+                                                seq seq utf 'Version Value'
+                                                        ctx+0x00 0x02 /* . */
+                                                        pri+0x27
+                                                            ctx+0x22
+                                                                int 0x01 /* . */
+                                        seq utf 'Signature Algori'
+                                                'thm'
+                                            ctx+0x00 '0'
+                                            pri+0x22
+                                                seq seq utf 'Signature Algori'
+                                                            'thm Value'
+                                                        ctx+0x00 0x06 /* . */
+                                                        pri+0x28
+                                                            ctx+0x22
+                                                                oid 1.2.840.113549.1.1.11
+                                                    seq utf 'Signature Algori'
+                                                            'thm Parameters'
+                                        seq utf 'Issuer'
+                                            ctx+0x00 '0'
+                                            pri+0x2D
+                                                int 0x03 /* . */
+                                                int 0x00 /* . */
+                                        seq utf 'This Update'
+                                            ctx+0x00 0x17 /* . */
+                                            pri+0x29
+                                                int 0xFC /* . */
+                                                boo 0xFF /* . */
+                                                int 0x00 /* . */
+                                                prt 
+                                        seq utf 'Next Update'
+                                            ctx+0x00 0x17 /* . */
+                                            pri+0x29
+                                                int 0x01 /* . */
+                                                boo 0xFF /* . */
+                                                int 0x02 /* . */
+                                                boo 0xFF /* . */
+                                                prt '-'
+                                        seq utf 'Revoked Certific'
+                                                'ates'
+                                            ctx+0x00 '0'
+                                            boo 0xFF /* . */
+                                            pri+0x23
+                                                seq utf 'Revoked Certific'
+                                                        'ate'
+                                                    ctx+0x00 '0'
+                                                    pri+0x20
+                                                        seq seq utf 'User Certificate'
+                                                                    ' Serial Number'
+                                                                ctx+0x00 0x02 /* . */
+                                                            seq utf 'Revocation Date'
+                                                                ctx+0x00 0x17 /* . */
+                                                                pri+0x29
+                                                                    int 0x88 /* . */
+                                                                    boo 0xFF /* . */
+                                                                    int 0x00 /* . */
+                                                                    prt 
+                                                ctx+0x01 0x01 /* . */
+                                        seq utf 'CRL Extensions'
+                                            ctx+0x00 0x00A0 /* .. */
+                                            pri+0x20
+                                                seq seq utf 'Extension Array'
+                                                        ctx+0x00 '0'
+                                                        pri+0x23
+                                                            seq utf 'Extension'
+                                                                ctx+0x00 '0'
+                                                                pri+0x22
+                                                                    seq seq utf 'Permitted OIDs'
+                                                                            ctx+0x00
+                                                                                0x06 /* . */
+                                                                            pri+0x28
+                                                                                ctx+0x21
+                                                                                    oid 2.5.29.35
+                                                                                    oid 2.5.29.20
+                                                                                    oid 2.5.29.28
+                                                                        seq utf 'Critical flag'
+                                                                            ctx+0x00
+                                                                                0x01 /* . */
+                                                                            pri+0x26
+                                                                                seq ctx+0x00
+                                                                                        0x0101 /* .. */
+                                                                                seq ctx+0x00
+                                                                                        0x0101 /* .. */
+                                                                                seq ctx+0x00
+                                                                                        0x0101 /* .. */
+                                                                        seq utf 'Octet string wra'
+                                                                                'pper'
+                                                                            ctx+0x00
+                                                                                0x04 /* . */
+                                                                            pri+0x2C
+                                                                                pri+0x26
+                                                                                    seq utf 'Authority Key Id'
+                                                                                            'entifier'
+                                                                                        ctx+0x00
+                                                                                            '0'
+                                                                                        pri+0x20
+                                                                                            seq seq utf 'keyIdentifier'
+                                                                                                    ctx+0x00
+                                                                                                        0x0080 /* .. */
+                                                                                                    pri+0x27
+                                                                                                        ctx+0x22
+                                                                                                            oct 0x0C5622171B6C66E841C71E5657D677FF /* .V"..lf.A..VW.w. */
+                                                                                                                0x648F4D9E /* d.M. */
+                                                                                    seq utf 'CRL Number'
+                                                                                        ctx+0x00
+                                                                                            0x02 /* . */
+                                                                                    seq utf 'Issuing Distribu'
+                                                                                            'tion Points'
+                                                                                        ctx+0x00
+                                                                                            '0'
+                                                                                        pri+0x20
+                                                                                            seq seq utf 'Distribution Poi'
+                                                                                                        'nt name'
+                                                                                                    ctx+0x00
+                                                                                                        0x00A0 /* .. */
+                                                                                                    pri+0x20
+                                                                                                        seq seq utf 'General Names'
+                                                                                                                ctx+0x00
+                                                                                                                    0x00A0 /* .. */
+                                                                                                                pri+0x20
+                                                                                                                    seq seq utf 'General Name'
+                                                                                                                            ctx+0x00
+                                                                                                                                0x0086 /* .. */
+                                                                                                                            pri+0x27
+                                                                                                                                ctx+0x22
+                                                                                                                                    oct 'rsync://CRLDistP'
+                                                                                                                                        'oint.com'
+                                                                                                                        seq utf 'General Name'
+                                                                                                                            ctx+0x00
+                                                                                                                                0x0086 /* .. */
+                                                                                                                            pri+0x27
+                                                                                                                                ctx+0x22
+                                                                                                                                    oct 'ftp://CRLDistPoi'
+                                                                                                                                        'nt.com'
+                                                            seq seq utf 'Required extensi'
+                                                                        'on'
+                                                                    seq 
+                                                                    seq pri+0x2D
+                                                                            int 0x07 /* . */
+                                                                            seq prt 'dad'
+                                                                                seq seq oid 2.5.29.35
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+                                                                                    seq oid 2.5.29.20
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+                                                                                    seq oid 2.5.29.28
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+            seq oid 1.3.14.3.2.29
+            bit 0x00 /* . */

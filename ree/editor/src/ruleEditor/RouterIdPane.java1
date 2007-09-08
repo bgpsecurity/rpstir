@@ -1,0 +1,314 @@
+/**
+ * Title:        <p>
+ * Description:  <p>
+ * Copyright:    Copyright (c) <p>
+ * THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE SECRETS OF 
+ * BBNT SOLUTIONS LLC.  USE, DISCLOSURE, OR REPRODUCTION IS PROHIBITED 
+ * WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF BBNT SOLUTIONS LLC.
+ * Company:      <p>
+ * @author
+ * @version 1.0
+ */
+
+package ruleEditor;
+
+import ruleEditor.*;
+import rules.*;
+import asn.*;
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+
+public class RouterIdPane extends ExtnFieldBasePane {
+
+  private String[] data = {
+    "asnum\t 50 - 100",
+    "rdi\t 4000",
+    "asnum\t 345",
+    "rdi\t 5987" };
+
+  private NoneDNPane innerPane;
+  private String[] rdiList;
+  private String[] tmp;
+  private int asn;
+  private int rdi;
+  private JFrame frame;
+
+  public RouterIdPane(String name) {
+    super(name, "Allow");
+    rdiList = getList();
+    //rdiList = RuleUtils.cert.getAsnList() + RuleUtils.cert.getRdiList(); 
+    //if (rdiList == null) {
+    //  rdiList = data;
+    //}
+    innerPane.setList(rdiList);
+  }
+
+  private String[] getList() {
+    int n1 = RuleUtils.cert.getAsnListCount();
+    int n2 = RuleUtils.cert.getRdiListCount();
+    String[] asn = RuleUtils.cert.getAsnList();
+    String[] rdi = RuleUtils.cert.getRdiList();
+
+    rdiList = new String[n1+n2];
+    for (int i = 0; i < n1 + n2; i++) {
+      if (i < n1) {
+	rdiList[i] = "asnum\t " + asn[i];
+      } else if (n2 > 0) {
+	rdiList[i] = "rdi\t " + rdi[i - n1];
+      }
+    }
+
+    return rdiList;
+  }
+
+  public void setContentPane() {
+
+    innerPane = new NoneDNPane("Router Identifier", "Edit number: ");
+
+    contentPane.add(innerPane);
+  }
+
+  public void redraw() {
+    innerPane.clearList();
+    innerPane.setList(getList()); 
+
+  }
+
+  public String getType(String s) {
+    int i = s.indexOf("\t");
+    String type = s.substring(0, i).trim();
+    return type;
+  }
+
+  public DataType getNum(String s) {
+    String num;
+    DataType data;
+
+    int i = s.indexOf("\t");
+    num = s.substring(i+1).trim();
+    if ((i = num.indexOf("-")) >= 0) { // range
+      data = new DataType(Integer.parseInt(num.substring(0, i).trim()),
+			  Integer.parseInt(num.substring(i+1).trim()));
+    } else { // single digit
+      data = new DataType(Integer.parseInt(num));
+    }
+      
+    return data;
+  }
+
+
+  public int createRule(Member m) {
+    String[] tmp = innerPane.getList();
+    String type = new String();
+    DataType num;
+    Target t1, t2 = null;
+    Rule r2 = null;
+    Rule r3 = null;
+    Rule r4 = null;
+    
+    if (tmp.length == 0) {
+      int ans = JOptionPane.showConfirmDialog(frame,
+				    "The Router Identifier extension appears to be empty."
+				    + "\nAre you sure you retrieved the correct CA certificate?"
+				    + "\nAre you sure you want to do this?"); 
+	if (ans == JOptionPane.YES_OPTION) {
+	  // continue
+	  return RuleEditorData.OK; // OK to have no IP Address Block
+	} else if (ans == JOptionPane.NO_OPTION || ans == JOptionPane.CANCEL_OPTION ) {
+	  JOptionPane.showMessageDialog(frame, "Please fix the \"Router Identifier\" error."); 
+	  return RuleEditorData.FAILED;
+	} 
+    }
+
+    m.name.write("Router Identifier");
+    //m.tagtype.write(AsnStatic.ASN_SEQUENCE);
+    m.rule.add();
+
+    m.rule.ref.choice.member.index(0).insert();
+    Member m1 = m.rule.ref.choice.member.index(0);
+    m1.name.write("asnum");
+    m1.tagtype.write(AsnStatic.ASN_CONT_SPEC);
+    //m1.optional.write(AsnStatic.ASN_TRUE_FLAG);
+    m1.rule.add();
+    Rule r1 = (Rule)m1.rule.ref.primitive;
+
+    if (RuleUtils.cert.getRdiListCount() > 0) {
+      m.rule.ref.choice.member.index(1).insert();
+      Member m2 = m.rule.ref.choice.member.index(1);
+      m2.name.write("rdi");
+      m2.tagtype.write(AsnStatic.ASN_CONT_SPEC|1);
+      //m2.optional.write(AsnStatic.ASN_TRUE_FLAG);
+      m2.rule.add();
+      r2 = (Rule)m2.rule.ref.primitive;
+
+
+      m.rule.ref.choice.member.index(2).insert();
+      Member m3 = m.rule.ref.choice.member.index(2);
+      m3.name.write("AsnumRdi");
+      m3.tagtype.write(AsnStatic.ASN_CONT_CONSTR|2);
+      //m3.optional.write(AsnStatic.ASN_TRUE_FLAG);
+      m3.rule.add();
+      
+      m3.rule.ref.sequence.members.member.index(0).insert();
+      Member m31 = m3.rule.ref.sequence.members.member.index(0);
+      m31.name.write("asnum");
+      m31.tagtype.write(AsnStatic.ASN_INTEGER);
+      //m31.optional.write(AsnStatic.ASN_TRUE_FLAG);
+      m31.rule.add();
+      r3 = (Rule)m31.rule.ref.primitive;
+      
+      m3.rule.ref.sequence.members.member.index(1).insert();
+      Member m32 = m3.rule.ref.sequence.members.member.index(1);
+      m32.name.write("rdi");
+      m32.tagtype.write(AsnStatic.ASN_INTEGER);
+      //m31.optional.write(AsnStatic.ASN_TRUE_FLAG);
+      m32.rule.add();
+      r4 = (Rule)m32.rule.ref.primitive;
+    }
+
+    int i1 = -1, i2 = -1;
+    for (int i = 0; i < tmp.length; i++) {
+      type = getType(tmp[i]);
+      num = getNum(tmp[i]);
+      //System.out.println("list: " + tmp[i] + " type: " + type + " num: " + num);
+      if (type.equals("asnum")) { //add asnum list (r1 & r3)
+	r1.targets.allow.target.index(++i1).insert();
+	t1 = r1.targets.allow.target.index(i1);
+	if (r3 != null) {
+	  r3.targets.allow.target.index(i1).insert();
+	  t2 = r3.targets.allow.target.index(i1);
+	}
+	if (num.getType() == 1) {
+	  t1.num.write(num.getDigit());
+	  if (t2 != null) {
+	    t2.num.write(num.getDigit());
+	  }
+	} else { // range
+	  t1.range.lo.number.write(num.getMin());
+	  t1.range.hi.number.write(num.getMax());
+	  if (t2 != null) {
+	    t2.range.lo.number.write(num.getMin());
+	    t2.range.hi.number.write(num.getMax());
+	  }
+	}
+      } else if (type.equals("rdi")) { // add to s2 list
+	r2.targets.allow.target.index(++i2).insert();
+	t1 = r2.targets.allow.target.index(i2);
+	r4.targets.allow.target.index(i2).insert();
+	t2 = r4.targets.allow.target.index(i2);
+	if (num.getType() == 1) {
+	  t1.num.write(num.getDigit());
+	  t2.num.write(num.getDigit());
+	} else { // range
+	  t1.range.lo.number.write(num.getMin());
+	  t1.range.hi.number.write(num.getMax());
+	  t2.range.lo.number.write(num.getMin());
+	  t2.range.hi.number.write(num.getMax());
+	}
+      }
+    }
+
+
+    return RuleEditorData.SUCCESS;
+
+  }
+
+  private String[] getStrings(String[] str, Rule r, String strLeader, int ni, int ind) {
+    AsnIntRef tagRef = new AsnIntRef();
+    AsnIntRef num, lo, hi;
+    lo = new AsnIntRef();
+    hi = new AsnIntRef();
+    num = new AsnIntRef();
+
+    for (int i = 0; i < ni; i++) {
+      Target t = r.targets.allow.target.index(i);
+      t.tag(tagRef);
+      switch(tagRef.val) {
+      case 0x02: // single value
+	t.num.read(num);
+	str[++ind] = new String(strLeader + "\t" + num.val);
+	break;
+      default: // range value
+	t.range.lo.number.read(lo);
+	t.range.hi.number.read(hi);
+	str[++ind] = new String(strLeader + "\t" + lo.val + " - " + hi.val);
+	break;
+      }
+      System.out.println("i: " + i + "  str[" + ind+ "]: " + str[ind]);      
+    }
+
+    return str;
+  }
+
+  public void setRule(Member m) {
+    int i, ind = -1, ni, ni1, ni2;
+
+    Member m1 = m.rule.ref.choice.member.index(0); //asnum
+    Rule r1 = (Rule)m1.rule.ref.primitive;
+    Member m2 = m.rule.ref.choice.member.index(1); //rdi
+    Rule r2 = (Rule)m2.rule.ref.primitive;
+    ni1 = r1.targets.allow.numitems();
+    ni2 = r2.targets.allow.numitems();
+    System.out.println(" ni1: " + ni1 + " ni2: " + ni2);
+    ni = ni1 + ni2;
+    String[] str = new String[ni];
+
+    str = getStrings(str, r1, "asnum", ni1, ind);
+    str = getStrings(str, r2, "rdi", ni2, ni1-1);
+    
+    innerPane.setList(str);
+  }
+  
+  class DataType {
+    private int type; // 1: single, 2: range
+    private int snum; // single int
+    private int min;
+    private int max;
+
+    void setType(int t) { type = t; }
+    void setNum(int num) { snum = num; } 
+    void set1Data(int num) { type = 1; snum = num;} 
+    void setMin(int mNum) { min = mNum; }
+    void setMax(int mNum) { max = mNum; }
+    void setRangeData(int digit1, int digit2) { type = 2; min = digit1; max = digit2; }
+
+    int getType() { return type; }
+    int getDigit() { return snum; }
+    int getMin() { return min; }
+    int getMax() { return max; }
+
+    public DataType() {
+      type = 1; // default single digit
+      snum = 0;
+      min = 0;
+      max = 0;
+
+    }
+    
+    public DataType(int digit) {
+      type = 1; // single digit
+      snum = digit;
+      min = 0;
+      max = 0;
+    }
+
+    public DataType(int digit1, int digit2) {
+      type = 2; // range data
+      snum = 0;
+      min = digit1;
+      max = digit2;
+    }
+
+  }
+
+ 
+}
+
+
+
+
+

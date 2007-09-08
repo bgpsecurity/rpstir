@@ -1,0 +1,369 @@
+ctx+0x20
+    int 0x04 /* . */
+    seq oct 'rsa'
+        int 0x01 /* . */
+        int 0x00 /* . */
+        int 0x04 /* . */
+        int 0x04 /* . */
+        seq seq seq set seq oid 2.5.4.3
+                            prt 'FCDD0D1B16'
+                oct 'rsa ee'
+                gen '20060317221620Z'
+                seq seq int 0x06 /* . */
+                        seq seq utf 'RegistryISPCertRule'
+                                pri+0x20
+                                    seq seq utf 'Version'
+                                            ctx+0x00 0x00A0 /* .. */
+                                            pri+0x20
+                                                seq seq utf 'Version Value'
+                                                        ctx+0x00 0x02 /* . */
+                                                        pri+0x27
+                                                            ctx+0x22
+                                                                int 0x02 /* . */
+                                        seq utf 'Serial Number'
+                                            ctx+0x00 0x02 /* . */
+                                            pri+0x2D
+                                                int 0x01 /* . */
+                                        seq utf 'Signature Algori'
+                                                'thm'
+                                            ctx+0x00 '0'
+                                            pri+0x22
+                                                seq seq utf 'Signature Algori'
+                                                            'thm Value'
+                                                        ctx+0x00 0x06 /* . */
+                                                        pri+0x28
+                                                            ctx+0x22
+                                                                oid 1.2.840.113549.1.1.5
+                                                    seq utf 'Signature Algori'
+                                                            'thm Parameters'
+                                                        pri+0x26
+                                                            seq ctx+0x00 0x05 /* . */
+                                        seq utf 'Issuer'
+                                            ctx+0x00 '0'
+                                            pri+0x2D
+                                                int 0x03 /* . */
+                                                int 0x00 /* . */
+                                        seq utf 'Validity Dates'
+                                            ctx+0x00 '0'
+                                            pri+0x20
+                                                seq seq utf 'notBefore'
+                                                        ctx+0x00 0x17 /* . */
+                                                        pri+0x29
+                                                            int 0xFA /* . */
+                                                            boo 0xFF /* . */
+                                                            int 0x0C /* . */
+                                                            boo 0xFF /* . */
+                                                            prt 
+                                                    seq utf 'notAfter'
+                                                        ctx+0x00 0x17 /* . */
+                                                        pri+0x29
+                                                            int 0x0C /* . */
+                                                            boo 0xFF /* . */
+                                                            int 0x0C /* . */
+                                                            boo 0xFF /* . */
+                                                            prt '-'
+                                        seq utf 'Subject'
+                                            ctx+0x00 '0'
+                                            pri+0x23
+                                                seq utf 'RelativeDistingu'
+                                                        'ishedName'
+                                                    ctx+0x00 '1'
+                                                    pri+0x23
+                                                        seq ctx+0x00 '0'
+                                                            pri+0x22
+                                                                seq seq utf 'Attribute Name'
+                                                                        ctx+0x00 0x06 /* . */
+                                                                        pri+0x28
+                                                                            ctx+0x21
+                                                                                oid 2.5.4.10
+                                                                                oid 2.5.4.3
+                                                                    seq utf 'Attribute Value'
+                                                                        pri+0x26
+                                                                            seq pri+0x25
+                                                                                    seq ctx+0x00
+                                                                                            0x13 /* . */
+                                                                                        seq int 0x01 /* . */
+                                                                                            int 0x40 /* @ */
+                                                                                    seq ctx+0x00
+                                                                                            0x1E /* . */
+                                                                                        seq int 0x01 /* . */
+                                                                                            int 0x40 /* @ */
+                                                                                    seq ctx+0x00
+                                                                                            0x0C /* . */
+                                                                                        seq int 0x01 /* . */
+                                                                                            int 0x40 /* @ */
+                                                                            seq pri+0x25
+                                                                                    seq ctx+0x00
+                                                                                            0x13 /* . */
+                                                                                        seq int 0x01 /* . */
+                                                                                            int 0x40 /* @ */
+                                                                                    seq ctx+0x00
+                                                                                            0x1E /* . */
+                                                                                        seq int 0x01 /* . */
+                                                                                            int 0x40 /* @ */
+                                                                                    seq ctx+0x00
+                                                                                            0x0C /* . */
+                                                                                        seq int 0x01 /* . */
+                                                                                            int 0x40 /* @ */
+                                                seq seq utf 'Id-limits'
+                                                        seq 
+                                                        seq pri+0x2D
+                                                                int 0x07 /* . */
+                                                                seq prt 'dadad'
+                                        seq utf 'Subject Public K'
+                                                'ey'
+                                            ctx+0x00 '0'
+                                            pri+0x22
+                                                seq seq utf 'Algorithm'
+                                                        ctx+0x00 '0'
+                                                        pri+0x22
+                                                            seq seq utf 'Algorithm Value'
+                                                                    ctx+0x00 0x06 /* . */
+                                                                    pri+0x28
+                                                                        ctx+0x22
+                                                                            oid 1.2.840.113549.1.1.1
+                                                                seq utf 'Algorithm Parame'
+                                                                        'ters'
+                                                    seq utf 'Public Key'
+                                                        ctx+0x00 0x03 /* . */
+                                                        pri+0x2C
+                                                            pri+0x26
+                                                                seq utf 'SubjectPublicKey'
+                                                                        'Info - RSA'
+                                                                    ctx+0x00 '0'
+                                                                    pri+0x20
+                                                                        seq seq utf 'modulus'
+                                                                                ctx+0x00
+                                                                                    0x02 /* . */
+                                                                                seq int 0x0081 /* .. */
+                                                                                    int 0x0081 /* .. */
+                                                                            seq utf 'public exponent'
+                                                                                ctx+0x00
+                                                                                    0x02 /* . */
+                                        seq utf 'Issuer Unique ID'
+                                            ctx+0x00 0x0081 /* .. */
+                                            boo 0xFF /* . */
+                                        seq utf 'Subject Unique I'
+                                                'D'
+                                            ctx+0x00 0x0082 /* .. */
+                                            boo 0xFF /* . */
+                                        seq utf 'Extensions'
+                                            ctx+0x00 0x00A3 /* .. */
+                                            pri+0x20
+                                                seq seq utf 'Extension Array'
+                                                        ctx+0x00 '0'
+                                                        pri+0x23
+                                                            seq utf 'Extension'
+                                                                ctx+0x00 '0'
+                                                                pri+0x22
+                                                                    seq seq utf 'Permitted OIDs'
+                                                                            ctx+0x00
+                                                                                0x06 /* . */
+                                                                            pri+0x28
+                                                                                ctx+0x21
+                                                                                    oid 1.3.6.1.5.5.7.1.7
+                                                                                    oid 1.3.6.1.5.5.7.1.8
+                                                                                    oid 2.5.29.14
+                                                                                    oid 2.5.29.35
+                                                                                    oid 2.5.29.15
+                                                                                    oid 2.5.29.32
+                                                                        seq utf 'Critical flag'
+                                                                            ctx+0x00
+                                                                                0x01 /* . */
+                                                                            pri+0x26
+                                                                                seq pri+0x27
+                                                                                        ctx+0x22
+                                                                                            int 0xFF /* . */
+                                                                                seq pri+0x27
+                                                                                        ctx+0x22
+                                                                                            int 0xFF /* . */
+                                                                                seq ctx+0x00
+                                                                                        0x0101 /* .. */
+                                                                                seq ctx+0x00
+                                                                                        0x0101 /* .. */
+                                                                                seq pri+0x27
+                                                                                        ctx+0x22
+                                                                                            int 0xFF /* . */
+                                                                                seq pri+0x27
+                                                                                        ctx+0x22
+                                                                                            int 0xFF /* . */
+                                                                        seq utf 'Octet string wra'
+                                                                                'pper'
+                                                                            ctx+0x00
+                                                                                0x04 /* . */
+                                                                            boo 0xFF /* . */
+                                                                            pri+0x2C
+                                                                                pri+0x26
+                                                                                    seq utf 'IP Address Block'
+                                                                                        ctx+0x00
+                                                                                            '0'
+                                                                                        pri+0x23
+                                                                                            seq utf 'IP Address Famil'
+                                                                                                    'y'
+                                                                                                ctx+0x00
+                                                                                                    '0'
+                                                                                                pri+0x22
+                                                                                                    seq seq utf 'Address Family'
+                                                                                                            ctx+0x00
+                                                                                                                0x04 /* . */
+                                                                                                            pri+0x28
+                                                                                                                ctx+0x21
+                                                                                                                    seq oct 0x0001 /* .. */
+                                                                                                                        oct 0x0001 /* .. */
+                                                                                                                        int 0x02 /* . */
+                                                                                                                    seq oct 0x0002 /* .. */
+                                                                                                                        oct 0x0002 /* .. */
+                                                                                                                        int 0x02 /* . */
+                                                                                                        seq utf 'IP Address Choic'
+                                                                                                                'e'
+                                                                                                            pri+0x26
+                                                                                                                seq utf 'inherit'
+                                                                                                                    ctx+0x00
+                                                                                                                        0x05 /* . */
+                                                                                                                seq utf 'inherit'
+                                                                                                                    ctx+0x00
+                                                                                                                        0x05 /* . */
+                                                                                    seq utf 'Autonomous Syste'
+                                                                                            'm Identifier'
+                                                                                        ctx+0x00
+                                                                                            '0'
+                                                                                        pri+0x20
+                                                                                            seq seq utf 'asnum'
+                                                                                                    ctx+0x00
+                                                                                                        0x00A0 /* .. */
+                                                                                                    boo 0xFF /* . */
+                                                                                                    pri+0x20
+                                                                                                        seq seq pri+0x27
+                                                                                                                    ctx+0x22
+                                                                                                                        ctx+0x00
+                                                                                                                            0x05 /* . */
+                                                                                    seq utf 'Subject Key Iden'
+                                                                                            'tifier'
+                                                                                        ctx+0x00
+                                                                                            0x04 /* . */
+                                                                                        pri+0x2D
+                                                                                            int 0x04 /* . */
+                                                                                            seq int 0x02 /* . */
+                                                                                                prt 'td6d1'
+                                                                                    seq utf 'Auth Key ID'
+                                                                                        ctx+0x00
+                                                                                            '0'
+                                                                                        pri+0x20
+                                                                                            seq seq utf 'keyIdentifier'
+                                                                                                    ctx+0x00
+                                                                                                        0x0080 /* .. */
+                                                                                                    boo 0xFF /* . */
+                                                                                                    pri+0x27
+                                                                                                        ctx+0x22
+                                                                                                            oct 0x70620B01F5F335D85B97BEF67F61E68E /* pb....5.[....a.. */
+                                                                                                                0xE10B4921 /* ..I! */
+                                                                                                seq utf 'authorityCertIss'
+                                                                                                        'uer'
+                                                                                                    ctx+0x00
+                                                                                                        0x00A1 /* .. */
+                                                                                                    boo 0xFF /* . */
+                                                                                                    pri+0x27
+                                                                                                        ctx+0x22
+                                                                                                            oct 0x311330110603550403130A4643444430 /* 1.0...U....FCDD0 */
+                                                                                                                0x4431423136 /* D1B16 */
+                                                                                                seq utf 'authityCertSeria'
+                                                                                                        'lNumber'
+                                                                                                    ctx+0x00
+                                                                                                        0x0082 /* .. */
+                                                                                                    pri+0x27
+                                                                                                        ctx+0x22
+                                                                                                            oct 0x11AE /* .. */
+                                                                                            seq seq seq 
+                                                                                                    seq seq prt 'd'
+                                                                                                        pri+0x27
+                                                                                                            ctx+0x21
+                                                                                                                ctx+0x00
+                                                                                                                    0x0080 /* .. */
+                                                                                                                ctx+0x00
+                                                                                                                    0x00A1 /* .. */
+                                                                                                seq seq seq prt 'd'
+                                                                                                        pri+0x27
+                                                                                                            ctx+0x21
+                                                                                                                ctx+0x00
+                                                                                                                    0x0080 /* .. */
+                                                                                                    seq seq prt 'd1'
+                                                                                                        boo 0xFF /* . */
+                                                                                                seq seq seq prt 'd'
+                                                                                                        pri+0x27
+                                                                                                            ctx+0x21
+                                                                                                                ctx+0x00
+                                                                                                                    0x00A1 /* .. */
+                                                                                                    seq seq prt 'd1'
+                                                                                                        pri+0x27
+                                                                                                            ctx+0x22
+                                                                                                                ctx+0x00
+                                                                                                                    0x0082 /* .. */
+                                                                                    seq utf 'Key Usage'
+                                                                                        ctx+0x00
+                                                                                            0x03 /* . */
+                                                                                        pri+0x2A
+                                                                                            bit 0x007F80 /* ... */
+                                                                                            bit 0x008000 /* ... */
+                                                                                    seq utf 'Certificate Poli'
+                                                                                            'cy'
+                                                                                        ctx+0x00
+                                                                                            '0'
+                                                                                        pri+0x23
+                                                                                            seq utf 'Policy Informati'
+                                                                                                    'on'
+                                                                                                ctx+0x00
+                                                                                                    '0'
+                                                                                                pri+0x22
+                                                                                                    seq seq utf 'Permitted Policy'
+                                                                                                                ' IDs'
+                                                                                                            ctx+0x00
+                                                                                                                0x06 /* . */
+                                                                                                            pri+0x28
+                                                                                                                ctx+0x21
+                                                                                                                    oid 1.3.6.1.5.5.7.14.2
+                                                            seq seq utf 'Required extensi'
+                                                                        'on'
+                                                                    seq 
+                                                                    seq pri+0x2D
+                                                                            int 0x07 /* . */
+                                                                            seq prt 'dad'
+                                                                                seq seq oid 2.5.29.14
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+                                                                                    seq oid 2.5.29.35
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+                                                                                    seq oid 2.5.29.15
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+                                                                                    seq oid 2.5.29.32
+                                                                                        int 0x01 /* . */
+                                                                                        int 0x01 /* . */
+                                    seq seq utf 'IssuerUnique ID '
+                                                'vs. Version'
+                                            seq seq prt 'd'
+                                                    ctx+0x00 0x0081 /* .. */
+                                            seq seq prt 'dd'
+                                                pri+0x27
+                                                    ctx+0x21
+                                                        int 0x01 /* . */
+                                                        int 0x02 /* . */
+                                        seq utf 'SubjectUniqueID '
+                                                'vs. Version'
+                                            seq seq prt 'd'
+                                                    ctx+0x00 0x0082 /* .. */
+                                            seq seq prt 'dd'
+                                                pri+0x27
+                                                    ctx+0x21
+                                                        int 0x01 /* . */
+                                                        int 0x02 /* . */
+                                        seq utf 'Extensions vs. V'
+                                                'ersion'
+                                            seq seq prt 'd'
+                                                    ctx+0x00 0x00A3 /* .. */
+                                            seq seq prt 'dd'
+                                                pri+0x27
+                                                    ctx+0x22
+                                                        int 0x02 /* . */
+            seq oid 1.3.14.3.2.29
+            bit 0x00 /* . */
