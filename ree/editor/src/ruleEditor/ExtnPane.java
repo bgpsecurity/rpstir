@@ -503,9 +503,27 @@ public class ExtnPane extends ExtnBasePane
       // set extn choices
     for (i = 0; i < myExtnOID.length; i++) 
       {
-      //System.out.println("Extn " + i + " choice " + res[i]);
+      System.out.println("Extn " + i + " choice " + res[i]);
       leftPane.setChoice(i, res[i]);
       }
+    if ((leftPane.getChoice(0) == RuleEditorData.PROHIBIT) && 
+        (leftPane.getChoice(1) == RuleEditorData.PROHIBIT))
+	retVal = false;
+    else if (leftPane.getChoice(0) == RuleEditorData.PROHIBIT)
+    {
+	 leftPane.setChoice(1,RuleEditorData.REQUIRE);
+	 leftPane.setEnabled(1, false);
+    }
+    else if (leftPane.getChoice(1) == RuleEditorData.PROHIBIT)
+    {
+	 leftPane.setChoice(0,RuleEditorData.REQUIRE);
+	 leftPane.setEnabled(0, false);
+    }
+    else
+    {
+	leftPane.setEnabled(0, true);
+	leftPane.setEnabled(1, true);
+    }
     //System.out.println("ExtnPane setRule, before checkIPASNumBlock sizes");
     //checkExtensions();
     return retVal;

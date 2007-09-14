@@ -173,7 +173,7 @@ public class SubjectPane extends FieldBasePane
       gr.thencase.rule.add();
       SpecialRule s = gr.thencase.rule.ref.special;
       s.type.write(0x07);  //id-limits
-      s.value.limits.location.path.write("ddda");
+      s.value.limits.location.path.write("dadad");
       for (i = j = 0; i < myDNName.length; i++)
         {
         int min = 0;
