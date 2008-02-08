@@ -174,7 +174,7 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
   checkErr (roaFromFile (returnStr, format, 0, &roa) != 0,
             "Error reading ROA: %s\n", returnStr);
   roaGenerateFilter (roa, NULL, out2);
-  free (roa);
+  roaFree(roa);
   returnStr[0] = 0;
   return 2;
 }
