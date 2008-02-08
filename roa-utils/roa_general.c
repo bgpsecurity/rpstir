@@ -711,5 +711,6 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp)
       pcAddresses = NULL;
     }
 
+  free(cSID);
   return 0;
 }
