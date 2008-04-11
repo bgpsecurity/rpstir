@@ -134,7 +134,7 @@ int roaToFile(struct ROA *r, char *fname, int fmt);
   error code.
 */
 
-int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp);
+int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str);
 
 /*
   This function is used to create BGP filter tables from a ROA and its
@@ -147,6 +147,9 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp);
 
   On success this function returns 0; on failure it returns a negative
   error code.
+
+  The results can be written to either a file or a string.  In general,
+  one of fp and str will be NULL.
 */
 
 unsigned char *roaSKI(struct ROA *r);
@@ -214,6 +217,16 @@ int roaValidate2(struct ROA *r, uchar *cert);
           }
         }
       }
+*/
+
+int manifestValidate2(struct ROA *r, char *dir, char ***badfilesppp);
+
+/*
+  This function performs all validations steps on a ROA that require
+  an X509 certificate to have been fetched from the database. It returns 0
+  on success and a negative error code on failure.   Any files with bad hashes
+  are listed in badfilespp as an array of char*, the last of which is null.
+  The caller is responsible for freeing each char* and then the array.
 */
 
 void roaFree(struct ROA *r);

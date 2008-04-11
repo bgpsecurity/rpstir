@@ -88,7 +88,7 @@ static void fill_max(uchar *max)
   max[max[1] + 1] |= ((1 << max[2]) - 1);
   } 
 
-static int setup_cert_minmax(struct IPAddressOrRangeA *cipAddrRangep, uchar *cmin, uchar *cmax,
+static int setup_cert_minmax(struct IPAddressOrRangeA *rpAddrRangep, uchar *cmin, uchar *cmax,
   int fam)
   {
   memset(cmin, 0, MINMAXBUFSIZE);
@@ -96,18 +96,18 @@ static int setup_cert_minmax(struct IPAddressOrRangeA *cipAddrRangep, uchar *cmi
   if (fam == 1) fam = 7;
   else if (fam == 2) fam = 19;
   else return ERR_SCM_INVALFAM;
-  if (tag_casn(&cipAddrRangep->self) == ASN_SEQUENCE)
+  if (tag_casn(&rpAddrRangep->self) == ASN_SEQUENCE)
     {
-    if (size_casn(&cipAddrRangep->addressRange.min) > fam ||
-        size_casn(&cipAddrRangep->addressRange.max) > fam) return ERR_SCM_INVALFAM;
-    encode_casn(&cipAddrRangep->addressRange.min, cmin);
-    encode_casn(&cipAddrRangep->addressRange.max, cmax);
+    if (size_casn(&rpAddrRangep->addressRange.min) > fam ||
+        size_casn(&rpAddrRangep->addressRange.max) > fam) return ERR_SCM_INVALFAM;
+    encode_casn(&rpAddrRangep->addressRange.min, cmin);
+    encode_casn(&rpAddrRangep->addressRange.max, cmax);
     }
   else 
     {
-    if (size_casn(&cipAddrRangep->addressPrefix) > fam) return ERR_SCM_INVALFAM;
-    encode_casn(&cipAddrRangep->addressPrefix, cmin);
-    encode_casn(&cipAddrRangep->addressPrefix, cmax);
+    if (size_casn(&rpAddrRangep->addressPrefix) > fam) return ERR_SCM_INVALFAM;
+    encode_casn(&rpAddrRangep->addressPrefix, cmin);
+    encode_casn(&rpAddrRangep->addressPrefix, cmax);
     }
   fill_max(cmax);
   cmin[2] = 0;
@@ -155,7 +155,7 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   return 0;
   }
 
-int roaValidate(struct ROA *r)
+int roaValidate(struct ROA *rp)
 {
   // Make sure that the ROA meets the provisions outlined in 
   // Kent/Kong ROA IETF draft
@@ -169,12 +169,12 @@ int roaValidate(struct ROA *r)
   /////////////////////////////////////////////////////////////
 
   // check that roa->content->version == 3
-  if (diff_casn_num(&r->content.signedData.version.self, 3) != 0) return ERR_SCM_BADVERS;
+  if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0) return ERR_SCM_BADVERS;
 
   // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
   //   (= OID 2.16.840.1.101.3.4.2.1)
-  if (num_items(&r->content.signedData.digestAlgorithms.self) > 1) return ERR_SCM_BADDA;
-  if ((iRes = readvsize_objid(&(r->content.signedData.digestAlgorithms.digestAlgorithmIdentifier.
+  if (num_items(&rp->content.signedData.digestAlgorithms.self) > 1) return ERR_SCM_BADDA;
+  if ((iRes = readvsize_objid(&(rp->content.signedData.digestAlgorithms.digestAlgorithmIdentifier.
     algorithm), &cOID)) > 0) iRes = strcmp(cOID, id_sha256);
   if (cOID != NULL) free(cOID);
   if (iRes != 0) return ERR_SCM_BADDA;
@@ -182,32 +182,32 @@ int roaValidate(struct ROA *r)
   // check that roa->content->encapContentInfo->eContentType ==
   //   routeOriginAttestation (= OID 1.2.240.113549.1.9.16.1.24)
   cOID = NULL;
-  if ((iRes = readvsize_objid(&(r->content.signedData.encapContentInfo.eContentType), &cOID))
+  if ((iRes = readvsize_objid(&(rp->content.signedData.encapContentInfo.eContentType), &cOID))
     > 0) iRes = strcmp(cOID, id_routeOriginAttestation);
   if (cOID != NULL) free(cOID);
   if (iRes != 0) return ERR_SCM_BADCT;
 
   // check that roa->content->crls == NULL
-  if (size_casn(&r->content.signedData.crls.self) > 0 ||
-     num_items(&r->content.signedData.signerInfos.self) != 1 ||
-     diff_casn_num(&r->content.signedData.signerInfos.signerInfo.version.self, 3) != 0) 
+  if (size_casn(&rp->content.signedData.crls.self) > 0 ||
+     num_items(&rp->content.signedData.signerInfos.self) != 1 ||
+     diff_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, 3) != 0) 
     return ERR_SCM_BADVERS;
 
   // check that roa->content->signerInfoStruct->digestAlgorithm == SHA-256
   //   (= OID 2.16.840.1.101.3.4.2.1)
   cOID = NULL;
-  if ((iRes = readvsize_objid(&r->content.signedData.signerInfos.signerInfo.digestAlgorithm.
+  if ((iRes = readvsize_objid(&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.
      algorithm, &cOID)) > 0) iRes = strcmp(id_sha256, cOID);
   free(cOID);
   if (iRes != 0) return ERR_SCM_BADCRL;
 
-  if(size_casn(&r->content.signedData.signerInfos.signerInfo.signedAttrs.self) != 0 ||
-     size_casn(&r->content.signedData.signerInfos.signerInfo.unsignedAttrs.self) != 0) 
+  if(size_casn(&rp->content.signedData.signerInfos.signerInfo.signedAttrs.self) != 0 ||
+     size_casn(&rp->content.signedData.signerInfos.signerInfo.unsignedAttrs.self) != 0) 
     return ERR_SCM_BADATTR;
 
   // check that roa->content->signerInfoStruct->signatureAlgorithm == 
   //   sha256WithRSAEncryption (= OID 1.2.240.113549.1.1.11)
-  if(readvsize_objid(&(r->content.signedData.signerInfos.signerInfo.signatureAlgorithm.
+  if(readvsize_objid(&(rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.
     algorithm), &cOID) < 0) return ERR_SCM_INVALSIG;
   iRes = strcmp(id_rsadsi_rsaEncryption, cOID);
   free(cOID);
@@ -219,7 +219,7 @@ int roaValidate(struct ROA *r)
 
   // check that roa->content->encapContentInfo->eContent
   //   (RouteOriginAttestation)->asID == a nonzero integer
-  if (read_casn_num(&(r->content.signedData.signerInfos.signerInfo.version.self), &iAS_ID) < 0 ||
+  if (read_casn_num(&(rp->content.signedData.signerInfos.signerInfo.version.self), &iAS_ID) < 0 ||
       iAS_ID <= 0) return ERR_SCM_INVALASID;
 
   // check that roa.content.encapContentInfo->eContent
@@ -230,18 +230,18 @@ int roaValidate(struct ROA *r)
   // check that roa->content->encapContentInfo->eContent
   //   (RouteOriginAttestation)->ipAddrBlocks->addressRange->{min,max} ==
   //    validIP (AND VALID RANGE?)
-  if ((sta=validateIPContents(&r->content.signedData.encapContentInfo.eContent.roa.
+  if ((sta=validateIPContents(&rp->content.signedData.encapContentInfo.eContent.roa.
 			      ipAddrBlocks)) < 0) return sta;
 
   // check that roa->content->signerInfoStruct->sid ISA subjectKeyIdentifier
   //   (really just a length check, as byte content is arbitrary)
-  if (vsize_casn(&r->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier) != 20)
+  if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier) != 20)
     return ERR_SCM_INVALSKI;
 
   return 0;
 }
 
-int roaValidate2(struct ROA *r, uchar *certp)
+int roaValidate2(struct ROA *rp, uchar *certp)
 {
   int iRes;
   int sta;
@@ -251,9 +251,9 @@ int roaValidate2(struct ROA *r, uchar *certp)
   struct Certificate cert;
   char *oidp;
   struct ASNumberOrRangeA *asNumRp;
-  struct IPAddressFamilyA *cipAddrFamp; 
+  struct IPAddressFamilyA *rpAddrFamp; 
   struct ROAIPAddressFamily *ripAddrFamp;
-  struct IPAddressOrRangeA *cipAddrRangep;
+  struct IPAddressOrRangeA *rpAddrRangep;
   struct IPAddress *ripAddrp;
   uchar cmin[MINMAXBUFSIZE], cmax[MINMAXBUFSIZE], rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE];
   uchar rfam[8], cfam[8];
@@ -283,7 +283,7 @@ int roaValidate2(struct ROA *r, uchar *certp)
       {
       all3 |= 1;      
       // Check that roa->envelope->SKI = cert->SKI
-      if (diff_casn(&r->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier,
+      if (diff_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier,
         (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
         return ERR_SCM_INVALSKI;
       }
@@ -291,7 +291,7 @@ int roaValidate2(struct ROA *r, uchar *certp)
     else if (!memcmp(oidp, id_pe_autonomousSysNum, strlen(oidp)))
       {
       all3 |= 2;
-      if (read_casn_num(&(r->content.signedData.encapContentInfo.eContent.roa.asID), 
+      if (read_casn_num(&(rp->content.signedData.encapContentInfo.eContent.roa.asID), 
 			&iAS_ID) < 0) iRes = ERR_SCM_INVALASID;
       else
         {  // look in cert
@@ -311,24 +311,24 @@ int roaValidate2(struct ROA *r, uchar *certp)
       {
       all3 |= 4;
         // start at first family in cert. NOTE order must be v4 then v6, per RFC3779
-      cipAddrFamp = &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
-      read_casn(&cipAddrFamp->addressFamily, cfam);
-      for (ripAddrFamp = &r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.
+      rpAddrFamp = &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
+      read_casn(&rpAddrFamp->addressFamily, cfam);
+      for (ripAddrFamp = &rp->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.
         rOAIPAddressFamily; 
         iRes == cTRUE && ripAddrFamp; 
         ripAddrFamp = (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
         {  // find that family in cert
         read_casn(&ripAddrFamp->addressFamily, rfam);
-        while (cipAddrFamp && memcmp(cfam, rfam, 2) != 0)
+        while (rpAddrFamp && memcmp(cfam, rfam, 2) != 0)
           {
-          if (!(cipAddrFamp = (struct IPAddressFamilyA *)next_of(&cipAddrFamp->self))) 
+          if (!(rpAddrFamp = (struct IPAddressFamilyA *)next_of(&rpAddrFamp->self))) 
             iRes = ERR_SCM_INVALIPB;
-          else  read_casn(&cipAddrFamp->addressFamily, cfam);
+          else  read_casn(&rpAddrFamp->addressFamily, cfam);
           }
         if (iRes == 0)
           {  // set up initial entry in cert
-          cipAddrRangep = &cipAddrFamp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
-          if ((sta=setup_cert_minmax(cipAddrRangep, cmin, cmax, cfam[1])) < 0) iRes = sta;
+          rpAddrRangep = &rpAddrFamp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
+          if ((sta=setup_cert_minmax(rpAddrRangep, cmin, cmax, cfam[1])) < 0) iRes = sta;
                // go through all ip addresses in ROA
           for (ripAddrp = &ripAddrFamp->addresses.iPAddress; ripAddrp && iRes == 0; 
             ripAddrp = (struct IPAddress *)next_of(ripAddrp))
@@ -336,13 +336,13 @@ int roaValidate2(struct ROA *r, uchar *certp)
 	      if ((sta=setup_roa_minmax(ripAddrp, rmin, rmax, rfam[1])) < 0) iRes = sta;
               // go through cert addresses until a high enough one is found
               // i.e. skip cert addresses whose max is below roa's min
-            while (iRes == 0 && cipAddrRangep && 
+            while (iRes == 0 && rpAddrRangep && 
               memcmp(&cmax[2], &rmin[2], sizeof(rmin) - 2) <= 0)
               {
-              if (!(cipAddrRangep = (struct IPAddressOrRangeA *)next_of(&cipAddrRangep->self)) ||
-                  setup_cert_minmax(cipAddrRangep, cmin, cmax, cfam[1]) < 0) iRes = ERR_SCM_INVALIPB;
+              if (!(rpAddrRangep = (struct IPAddressOrRangeA *)next_of(&rpAddrRangep->self)) ||
+                  setup_cert_minmax(rpAddrRangep, cmin, cmax, cfam[1]) < 0) iRes = ERR_SCM_INVALIPB;
               }
-            if (cipAddrRangep && iRes == 0)  
+            if (rpAddrRangep && iRes == 0)  
               {  // now at cert values at or beyond roa
                   // if roa min is below cert min OR roa max beyond cert max, bail out
               if ((ii = memcmp(&rmin[2], &cmin[2], sizeof(cmin) - 2)) < 0 ||
@@ -357,7 +357,7 @@ int roaValidate2(struct ROA *r, uchar *certp)
   if (all3 != 7) iRes = ERR_SCM_INVALIPB;
   if (iRes == 0)  // check the signature
     {
-    iRes = check_sig(r, &cert);
+    iRes = check_sig(rp, &cert);
     }
   delete_casn(&cert.self);
   return iRes;

@@ -651,7 +651,7 @@ void roaFree(struct ROA *r)
     }
 }
 
-int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp)
+int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str)
 {
   int i,j = 0;
   int iRes = 0;
@@ -666,7 +666,7 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp)
 
   UNREFERENCED_PARAMETER(cert);
   // parameter check
-  if (NULL == fp)
+  if (NULL == fp && NULL == str)
     return ERR_SCM_INVALARG;
 
   memset(cAS_ID, 0, 17);
@@ -701,9 +701,16 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp)
 
       for (j = 0; j < iAddrNum; j++)
 	{
-	  iRes = fprintf(fp, "%s  %s  %s\n", cSID, cAS_ID, pcAddresses[j]);
-	  if (0 > iRes)
-	    return ERR_SCM_BADFILE;
+	  if (str != NULL) {
+	    iRes = snprintf(str, 512, "%s  %s  %s\n",
+			   cSID, cAS_ID, pcAddresses[j]);
+	    str += strlen(str);
+	  }
+	  if (fp != NULL) {
+	    iRes = fprintf(fp, "%s  %s  %s\n", cSID, cAS_ID, pcAddresses[j]);
+	    if (0 > iRes)
+	      return ERR_SCM_BADFILE;
+	  }
 	}
       for (j = iAddrNum - 1; j >= 0; j--)
 	free(pcAddresses[j]);
