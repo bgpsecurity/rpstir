@@ -26,11 +26,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <time.h>
+#include <cryptlib.h>
 
 #include "usage.h"
 #include "socket_stuff.h"
 #include "parse.h"
 #include "sig_handler.h"
+#include "roa.h"
+#include "roa_utils.h"
+#include "certificate.h"
 
 #define INFO_FLAG 0x1
 #define WARNING_FLAG 0x2

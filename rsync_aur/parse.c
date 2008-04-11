@@ -660,6 +660,9 @@ has_Correct_Extension(char *str, unsigned int len)
   UNREFERENCED_PARAMETER(len);
   memset(hold, '\0', sizeof(hold));
 
+  for (ptr = str; *ptr >= ' '; ptr++);
+  if (!strncmp(&ptr[-8], "MANIFEST", 8)) return (TRUE);
+
   ptr = strrchr(str, '.');
 
   if (!ptr)
@@ -697,6 +700,9 @@ has_Correct_Extension(char *str, unsigned int len)
       return(TRUE);                                           
                                                               
     if ( strncasecmp(hold, "roa", 3) == 0)                    
+      return(TRUE);                                           
+                                                              
+    if ( strncasecmp(hold, "man", 3) == 0)                    
       return(TRUE);                                           
   }                                                           
                                                               

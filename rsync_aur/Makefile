@@ -25,14 +25,15 @@
 # pick gcc if you'd rather , and/or do -g instead of -O if debugging
 # debugging
 # DFLAGS = -DTEST -DDEBUG
+CC = gcc
 DFLAGS = 
 CFLAGS=	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 #CFLAGS =-g -Wall
 XFLAGS =        # xtra cflags, set by systype targets
 #IFLAGS =-I/usr/local/ssl/include 
 #XLIBS = $(LIBDL) -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
-IFLAGS =
-XLIBS =
+IFLAGS =-I../cg/casn -I../cg/asn -I../roa-utils
+XLIBS = ../roa-utils/manifest_validate.o ../roa-utils/roa_validate.o ../cg/asn/libasn.a  ../cg/casn/libcasn.a  -lcl -ldl
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
 CC += $(CFLAGS)
@@ -68,7 +69,7 @@ sig_handler.o	:	sig_handler.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c sig_handler.c
 
 usage.o	:	usage.c main.h
-	$(CC) $(DFLAGS) $(XFLAGS) $(STATIC) -c usage.c 
+	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c usage.c 
 
 main.h:	usage.h socket_stuff.h parse.h sig_handler.h
 
