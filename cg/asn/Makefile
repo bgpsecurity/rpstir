@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	Algorithms.h extensions.h name.h orname.h privkey.h roa.h serial_number.h certificate.h crlv2.h libasn.a
+all:	Algorithms.h extensions.h name.h orname.h privkey.h roa.h manifest.h serial_number.h certificate.h crlv2.h libasn.a
 
 Algorithms.c Algorithms.h:	Algorithms.asn
 	../asn_gen/asn_gen -c Algorithms.asn
@@ -40,6 +40,9 @@ privkey.c privkey.h:	privkey.asn
 roa.c roa.h:	roa.asn
 	../asn_gen/asn_gen -c roa.asn
 
+manifest.c manifest.h:	manifest.asn
+	../asn_gen/asn_gen -c manifest.asn
+
 serial_number.c serial_number.h:	serial_number.asn
 	../asn_gen/asn_gen -c serial_number.asn
 
@@ -57,11 +60,12 @@ name.o:	name.c
 orname.o:	orname.c
 privkey.o:	privkey.c
 roa.o:	roa.c
+manifest.o:	manifest.c
 serial_number.o:	serial_number.c
 certificate.o:	certificate.c
 crlv2.o:	crlv2.c
 
-libasn.a:	Algorithms.o extensions.o name.o orname.o privkey.o roa.o serial_number.o certificate.o crlv2.o
+libasn.a:	Algorithms.o extensions.o name.o orname.o privkey.o roa.o serial_number.o certificate.o crlv2.o manifest.o
 	ar crv libasn.a *.o
 	ranlib libasn.a
 

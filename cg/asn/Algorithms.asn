@@ -106,6 +106,7 @@ AlgorithmTable ::= TABLE {
     dsa-with-sha1                  id-dsa-with-sha1                    NULL OPTIONAL,
     rsadsi-SHA-1WithRSAEncryption  id-sha-1WithRSAEncryption           NULL,
     rsadsi-SHA256-WithRSAEncryption id-sha-256WithRSAEncryption        NULL,
+    sha256                          id-sha256                          NULL,
     unknown                         0xFFFF                             ANY OPTIONAL
 }
 
@@ -148,13 +149,16 @@ ID ::= OBJECT IDENTIFIER
 
 id-infosec  ID ::=  {2.16.840.1.101.2.1}
 
+id-nistalgs ID ::=  {2.16.840.1.101.3.4}
+
 id-modules                          ID ::= {id-infosec 0}
 id-algorithms                       ID ::= {id-infosec 1}
 id-formats                          ID ::= {id-infosec 2}
 id-policy                           ID ::= {id-infosec 3}
 id-object-classes                   ID ::= {id-infosec 4}
 id-attributes                       ID ::= {id-infosec 5}
-				        
+	
+id-sha256                           ID ::= {id-nistalgs 2.1}			        
 id-sdnsSignatureAlgorithm           ID  ::= {id-algorithms 1}
 id-mosaicSignatureAlgorithm         ID  ::= {id-algorithms 2}
 id-sdnsConfidentialityAlgorithm     ID  ::= {id-algorithms 3}
