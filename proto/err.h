@@ -117,8 +117,10 @@
 #define ERR_SCM_INVALFAM    -88         /* invalid address family */
 #define ERR_SCM_NOSIG       -89         /* no signature */
 #define ERR_SCM_DUPSIG      -90         /* duplicate signature */
+#define ERR_SCM_BADHASH     -91         /* error in hash */
+#define ERR_SCM_BADFAH      -92         /* error reading FileAndHash */
 
-#define ERR_SCM_MAXERR      -90
+#define ERR_SCM_MAXERR      -92
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

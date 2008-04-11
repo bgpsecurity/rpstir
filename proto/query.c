@@ -72,8 +72,8 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr);
 
 /* the set of all query fields */
 static QueryField fields[] = {
-  {"filter_entry", 1, 1, 0, 0, -1, 0, "dirname", "filename", "Filter Entry",
-   1, displayEntry, "the entry in the BGP filter file"},
+  {"filter", 1, 1, 0, 0, SQL_C_CHAR, 4096, NULL, NULL, "Filter Entry",
+   0, NULL, "the entry in the BGP filter file"},
   {"filename", 0, 1, 1, 1, SQL_C_CHAR, FNAMESIZE, NULL, NULL, "Filename", 0,
    NULL, "the filename where the data is stored in the repository"},
   {"pathname", 1, 1, 1, 1, -1, 0, "dirname", "filename",
@@ -173,9 +173,8 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
                FMT_PEM : FMT_DER;
   checkErr (roaFromFile (returnStr, format, 0, &roa) != 0,
             "Error reading ROA: %s\n", returnStr);
-  roaGenerateFilter (roa, NULL, out2);
+  roaGenerateFilter (roa, NULL, NULL, returnStr);
   roaFree(roa);
-  returnStr[0] = 0;
   return 2;
 }
 

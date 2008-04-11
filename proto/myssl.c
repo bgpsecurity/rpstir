@@ -204,8 +204,14 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 
 char *LocalTimeToDBTime(int *stap)
 {
-  struct tm *tmp;
   time_t clck;
+  (void)time(&clck);
+  return UnixTimeToDBTime(clck, stap);
+}
+
+char *UnixTimeToDBTime(time_t clck, int *stap)
+{
+  struct tm *tmp;
   char  *out;
 
   if ( stap == NULL )
@@ -217,7 +223,6 @@ char *LocalTimeToDBTime(int *stap)
       *stap = ERR_SCM_NOMEM;
       return(NULL);
     }
-  (void)time(&clck);
   tmp = gmtime(&clck);
   (void)snprintf(out, 48, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
 	1900+tmp->tm_year, 1+tmp->tm_mon, tmp->tm_mday,

@@ -125,6 +125,8 @@ static char *errs[] =
     "No signature",                 /* ERR_SCM_NOSIG */
     
     "Duplicate signature",          /* ERR_SCM_DUPSIG -90 */
+    "Hash error",                   /* ERR_SCM_BADHASH */
+    "Error in FileAndHash",         /* ERR_SCM_FAH */
   } ;
 
 char *err2string(int err)

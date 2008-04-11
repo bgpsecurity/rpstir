@@ -52,6 +52,7 @@
 static scmtab *theCertTable = NULL;
 static scmtab *theROATable = NULL;
 static scmtab *theCRLTable = NULL;
+static scmtab *theManifestTable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm    *theSCMP = NULL;
@@ -82,6 +83,11 @@ static void initTables (scm *scmp)
     theROATable = findtablescm (scmp, "ROA");
     if (theROATable == NULL) {
       fprintf (stderr, "Error finding roa table\n");
+      exit (-1);
+    }
+    theManifestTable = findtablescm (scmp, "MANIFEST");
+    if (theManifestTable == NULL) {
+      fprintf (stderr, "Error finding manifest table\n");
       exit (-1);
     }
     theSCMP = scmp;
@@ -284,12 +290,17 @@ int infer_filetype(char *fname)
     typ += OT_CRL;
   if ( strstr(fname, ".roa") != NULL )
     typ += OT_ROA;
+  if ( strstr(fname, ".man") != NULL )
+    typ += OT_MANIFEST;
   if ( typ < OT_UNKNOWN || typ > OT_MAXBASIC )
     return(ERR_SCM_INVALFN);
   if ( pem > 0 )
     typ += OT_PEM_OFFSET;
   return(typ);
 }
+
+// so that manifest can get id of previous cert
+static unsigned int lastCertIDAdded = 0;
 
 static char *certf[CF_NFIELDS] =
   {
@@ -359,6 +370,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
   sta = insertscm(conp, theCertTable, &aone);
   if ( wptr != NULL )
     free((void *)wptr);
+  lastCertIDAdded = *cert_id;
   return(sta);
 }
 
@@ -439,11 +451,11 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 
 static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 			    unsigned int dirid, char *ski, int asid,
-			    char *sig, int isValid)
+			    char *filter, char *sig, int isValid)
 {
   unsigned int roa_id = 0;
   scmkva   aone;
-  scmkv    cols[7];
+  scmkv    cols[8];
   char  flagn[24];
   char  asn[24];
   char  lid[24];
@@ -451,6 +463,7 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   int   idx = 0;
   int   sta;
 
+  initTables (scmp);
   conp->mystat.tabname = "ROA";
 // first check for a duplicate signature
   sta = dupsigscm(scmp, conp, theROATable, sig);
@@ -470,6 +483,8 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   cols[idx++].value = ski;
   cols[idx].column = "sig";
   cols[idx++].value = sig;
+  cols[idx].column = "filter";
+  cols[idx++].value = filter;
   (void)snprintf(asn, sizeof(asn), "%d", asid);
   cols[idx].column = "asn";
   cols[idx++].value = asn;
@@ -481,7 +496,7 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   cols[idx].column = "local_id";
   cols[idx++].value = lid;
   aone.vec = &cols[0];
-  aone.ntot = 7;
+  aone.ntot = 8;
   aone.nused = idx;
   aone.vald = 0;
 // add the ROA
@@ -1027,6 +1042,19 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   return 0;
 }
 
+/*
+ * callback function for verify_children
+ */
+static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
+{
+  int sta;
+  UNREFERENCED_PARAMETER(idx);
+  sta = updateValidFlags (conp, theManifestTable,
+			  *((unsigned int *) (s->vec[2].valptr)),
+			  *((unsigned int *) (s->vec[3].valptr)), 1);
+  return 0;
+}
+
 
 // structure containing data of children to propagate
 typedef struct _PropData {
@@ -1092,6 +1120,9 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
   snprintf(crlWhere, sizeof(crlWhere), "ski=\"%s\" and (flags%%%d)>=%d",
 	   data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
   sta = searchscm(conp, theROATable, &crlSrch, NULL, verifyChildROA,
+		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+  snprintf(crlWhere, sizeof(crlWhere), "cert_id=\"%d\"", data->id);
+  sta = searchscm(conp, theManifestTable, &crlSrch, NULL, verifyChildManifest,
 		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   return 0;
 }
@@ -1489,6 +1520,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   unsigned char *bsig = NULL;
   char *ski;
   char *sig;
+  char filter[4096];
   int   asid;
   int   sta;
   int   bsiglen = 0;
@@ -1525,6 +1557,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   if ( sig == NULL )
     return(ERR_SCM_NOMEM);
   sta = verify_roa (conp, r, ski, &chainOK);
+  roaGenerateFilter (r, NULL, NULL, filter);
+  
   roaFree(r);
   if ( sta < 0 )
   {
@@ -1532,10 +1566,162 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     free((void *)sig);
     return(sta);
   }
-  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, sig, chainOK);
+  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter,
+			 sig, chainOK);
   free((void *)ski);
   free((void *)sig);
   return(sta);
+}
+
+
+// static variables for efficiency, so only need to set up query once
+static scmsrcha embedCertSrch;
+static scmsrch  embedCertSrch1[4];
+static char embedCertWhere[1024];
+static unsigned long embedCertBlah = 0;
+static int embedCertNeedsInit = 1;
+static int embedCertFlags;
+static unsigned int embedCertID;
+
+static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
+{
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
+  unsigned int id = *((unsigned int *)(s->vec[1].valptr));
+  if (embedCertID == 0 || embedCertID != lastCertIDAdded) {
+    embedCertFlags = *((unsigned int *)(s->vec[0].valptr));
+    embedCertID = id;
+  }
+  return 0;
+}
+
+/*
+  Add a manifest to the database
+*/
+int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
+		 unsigned int id, int utrust, int typ)
+{
+  int   sta, i;
+  struct ROA roa;
+  char *thisUpdate, *nextUpdate;
+  ulong ltime;
+  unsigned int man_id = 0;
+  scmkva   aone;
+  scmkv    cols[7];
+  int   idx = 0;
+  char  did[24], mid[24], cid[24], flagn[24], ski[40];
+
+  ROA(&roa, 0);
+  initTables (scmp);
+  sta = get_casn_file(&roa.self, outfull, 0);
+  if (sta < 0) {
+    fprintf(stderr, "invalid manifest %s\n", outfull);
+    return sta;
+  }
+  struct Certificate *certp = (struct Certificate *)
+    member_casn(&roa.content.signedData.certificates.self, 0);
+  struct Extensions *exts = &certp->toBeSigned.extensions;
+  struct Extension *extp;
+  extp = (struct Extension *)member_casn(&exts->self, 0);
+  for(extp = (struct Extension *)member_casn(&exts->self, 0);
+      extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+      extp = (struct Extension *)next_of(&extp->self));
+  int size = vsize_casn(&extp->self);
+  uchar *tmp = calloc(1, size);
+  read_casn(&extp->extnValue.self, tmp);
+  struct casn theCASN;
+  decode_casn (&theCASN, tmp);
+  size = read_casn(&theCASN, tmp);
+  char *str = ski;
+  for (i = 0; i < size; i++) {
+    if (i) {
+      snprintf(str, 2, ":");
+      str++;
+    }
+    snprintf(str, 3, "%02X", tmp[i]);
+    str += 2;
+  }
+  *str = 0;
+  free(tmp);
+
+  struct Manifest *manifest = &roa.content.signedData.encapContentInfo.eContent.manifest;
+
+  read_casn_time (&manifest->thisUpdate, &ltime);
+  if ( sta < 0 ) {
+    fprintf(stderr, "Could not read_casn_time for thisUpdate\n");
+    return sta;
+  }
+  thisUpdate = UnixTimeToDBTime(ltime, &sta);
+
+  read_casn_time (&manifest->nextUpdate, &ltime);
+  if ( sta < 0 ) {
+    fprintf(stderr, "Could not read_casn_time for nextUpdate\n");
+    return sta;
+  }
+  nextUpdate = UnixTimeToDBTime(ltime, &sta);
+
+  sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id);
+  if ( sta < 0 )
+    return(sta);
+  man_id++;
+
+  // initialize query first time through
+  if (embedCertNeedsInit) {
+    embedCertNeedsInit = 0;
+    embedCertSrch.sname = NULL;
+    embedCertSrch.where = NULL;
+    embedCertSrch.ntot = 4;
+    embedCertSrch.nused = 0;
+    embedCertSrch.context = &embedCertBlah;
+    embedCertSrch.wherestr = embedCertWhere;
+    embedCertSrch.vec = embedCertSrch1;
+    ADDCOL (&embedCertSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
+	    sta, sta);
+    ADDCOL (&embedCertSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	    sta, sta);
+  }
+
+  snprintf(embedCertWhere, sizeof(embedCertWhere), "ski=\"%s\"", ski);
+  embedCertFlags = 0;
+  embedCertID = 0;
+  searchscm(conp, theCertTable, &embedCertSrch, NULL, findCertWithID,
+	    SCM_SRCH_DOVALUE_ALWAYS);
+  if (embedCertID == 0) {
+    fprintf(stderr, "For manifest %s, unable to find embedded cert ski = %s\n",
+	    outfile, ski);
+  }
+
+  cols[idx].column = "filename";
+  cols[idx++].value = outfile;
+  (void)snprintf(did, sizeof(did), "%u", id);
+  cols[idx].column = "dir_id";
+  cols[idx++].value = did;
+  cols[idx].column = "this_upd";
+  cols[idx++].value = thisUpdate;
+  cols[idx].column = "next_upd";
+  cols[idx++].value = nextUpdate;
+  (void)snprintf(flagn, sizeof(flagn), "%u", (embedCertFlags & SCM_FLAG_VALID)
+		 ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  cols[idx].column = "flags";
+  cols[idx++].value = flagn;
+  (void)snprintf(mid, sizeof(mid), "%u", man_id);
+  cols[idx].column = "local_id";
+  cols[idx++].value = mid;
+  (void)snprintf(cid, sizeof(cid), "%u", embedCertID);
+  cols[idx].column = "cert_id";
+  cols[idx++].value = cid;
+  aone.vec = &cols[0];
+  aone.ntot = 7;
+  aone.nused = idx;
+  aone.vald = 0;
+  sta = insertscm(conp, theManifestTable, &aone);
+
+  printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
+  delete_casn(&(roa.self));
+  free(thisUpdate);
+  free(nextUpdate);
+
+  return sta;
 }
 
 /*
@@ -1587,6 +1773,9 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_ROA:
     case OT_ROA_PEM:
       sta = add_roa(scmp, conp, outfile, outfull, id, utrust, typ);
+      break;
+    case OT_MANIFEST:
+      sta = add_manifest(scmp, conp, outfile, outfull, id, utrust, typ);
       break;
     default:
       sta = ERR_SCM_INTERNAL;

@@ -137,6 +137,7 @@ static scmtab scmtabbuilder[] =
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
       "ski      VARCHAR(128) NOT NULL,"
       "sig      VARCHAR(520) NOT NULL,"
+      "filter   VARCHAR(4096) NOT NULL,"
       "asn      INT UNSIGNED NOT NULL,"
       "flags    INT UNSIGNED DEFAULT 0,"
       "local_id INT UNSIGNED NOT NULL UNIQUE,"
@@ -145,6 +146,21 @@ static scmtab scmtabbuilder[] =
       "         KEY sig (sig),"
       "         KEY lid (local_id),"
       "         KEY ski (ski)",
+      NULL,
+      0
+    },
+    {				/* APKI_ROA */
+      "apki_manifest",
+      "MANIFEST",
+      "filename VARCHAR(256) NOT NULL,"
+      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
+      "this_upd DATETIME NOT NULL,"
+      "next_upd DATETIME NOT NULL,"
+      "cert_id  INT UNSIGNED NOT NULL,"
+      "flags    INT UNSIGNED DEFAULT 0,"
+      "local_id INT UNSIGNED NOT NULL UNIQUE,"
+      "         PRIMARY KEY (filename, dir_id),"
+      "         KEY lid (local_id)",
       NULL,
       0
     },
