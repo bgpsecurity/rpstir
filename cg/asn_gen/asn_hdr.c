@@ -159,7 +159,7 @@ for ( ; generation >= -1; generation--)
              ntbp->tag < ASN_CONSTRUCTED)))
 	    {
     	    strcpy(itemname, classname);  // both ASN_BSIZE
-	    curr_ntbp = replace_name(itemname, ASN_BSIZE);
+	    curr_ntbp = replace_name(itemname);
 	    if (curr_ntbp->type != -1 && curr_ntbp->type < ASN_CONSTRUCTED &&
                 !(curr_ntbp->flags & ASN_ENUM_FLAG))
 		strcpy(itemname, find_class(curr_ntbp->type)); // class names < ASN_BSIZE
@@ -433,7 +433,7 @@ else if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) != ASN_TABLE_FLAG)
     if ((option & ASN_TABLE_FLAG))
         {
         type = -1;
-        mk_in_name(subclass, tablename, classname, ASN_BSIZE);
+        mk_in_name(subclass, tablename, classname);
         }
     if (*defined_by) mk_subclass(defined_by);
     if (thisdefined > 1) set_alt_subtype(ntablep, thisdefined);
@@ -448,7 +448,7 @@ else if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) != ASN_TABLE_FLAG)
         *itemname |= 0x20;
         }
 					                    /* step 3 */
-    if (*subclass && (ntbp = replace_name(subclass, ASN_BSIZE)) &&
+    if (*subclass && (ntbp = replace_name(subclass)) &&
         ntbp->type < ASN_CONSTRUCTED &&
         !(ntbp->flags & (ASN_TABLE_FLAG | ASN_ENUM_FLAG | ASN_CONSTRAINT_FLAG)))
         {

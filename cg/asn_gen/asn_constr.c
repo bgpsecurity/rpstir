@@ -326,7 +326,7 @@ if (curr_pos > real_start &&
     {
     if (option == ASN_POINTER_FLAG)
 	{
-        c = replace_name(classname, ASN_BSIZE)->name;
+        c = replace_name(classname)->name;
 	fprintf(outstr, ptr_opener, &c[1], c, &c[1], &c[1], c, &c[1], c,
             &c[1], c, &c[1]);
 	}
@@ -396,14 +396,14 @@ else                /* no further definition */
             strcpy(itemname, subclass); // both are ASN_BSIZE
             if (*itemname != '_') *itemname |= 0x20;
             else itemname[1] |= 0x20;
-            ntbp = replace_name(subclass, ASN_BSIZE);
+            ntbp = replace_name(subclass);
 	    if (!(option & ASN_OF_FLAG) && ntbp->type > 0 && ntbp->type <
 		ASN_CONSTRUCTED) *itemname = 0;
 	    }
         else ntbp = 0;
         if (option == ASN_POINTER_FLAG)
 	    {
-	    ntbp = replace_name(&subclass[1], ASN_BSIZE - 1);
+	    ntbp = replace_name(&subclass[1]);
 	    if (ntbp->type == ntbp->tag || ntbp->tag == 0xFFFFFFFF)
                 fprintf(outstr, pointer_type_tag_w,
                     find_define(ntbp->type));
@@ -607,7 +607,7 @@ else if (type != ASN_FUNCTION)
         else
             {
             if (!(ntbp = replace_name((*subclass != '_')? subclass:
-                &subclass[1], ASN_BSIZE - 1))) syntax(subclass);
+                &subclass[1]))) syntax(subclass);
             if (ntbp->type != -1)
                 tag |= (ntbp->type & ASN_CONSTRUCTED);
 	    else if (*subclass != '_') warn(34, ntbp->name);
