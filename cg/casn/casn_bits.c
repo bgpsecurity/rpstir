@@ -107,7 +107,7 @@ int write_casn_bits(struct casn *casnp, uchar *from, int lth, int shift)
     c = casnp->startp = (uchar *)calloc(1, (casnp->lth = lth + 1));
     for (e = &from[lth]; from < e; from++)
 	{
-	box = (ushort)*from++;   
+	box = (ushort)*from;   
 	box <<= shift;           // first time top 8 bits are empty
 	*c++ |= (box >> 8);    
 	*c = box & 0xFF;
