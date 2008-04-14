@@ -1716,7 +1716,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   aone.vald = 0;
   sta = insertscm(conp, theManifestTable, &aone);
 
-  printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
+  //  printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
   delete_casn(&(roa.self));
   free(thisUpdate);
   free(nextUpdate);
