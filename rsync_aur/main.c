@@ -20,6 +20,7 @@
 /*
   $Id$
 */
+static ulong *mallocbasep;
 
 struct name_list
   {
@@ -34,7 +35,7 @@ static int bin2six(char **destpp, uchar *srcp, int lth)
   char *a, *destp;
   int indx, tmp;
 
-  destp = (char *)calloc(1, 3 + ((lth * 8) / 6));
+  destp = (char *)calloc(1, 6 + ((lth * 8) / 6));
   for (c = srcp, e = &c[lth], a = destp; c < e; )
     {
     indx = *c >> 2;
@@ -71,14 +72,14 @@ static int bin2six(char **destpp, uchar *srcp, int lth)
   return (a - destp);
   }
 
-static void free_name_list(struct name_list *root_listp)
+static void free_name_list(struct name_list *rootlistp)
   {
   struct name_list *currp, *nextp;
-  for (currp = root_listp; currp; currp = nextp)
+  for (currp = rootlistp; currp; currp = nextp)
     {
     free(currp->namep);
     nextp = currp->nextp;
-    free(currp);
+    if (currp > rootlistp) free(currp);
     }
   }
 
@@ -117,7 +118,7 @@ static ulong getTime(struct CertificateValidityDate *cvdp)
 
 static int hash_it(uchar **hashpp, uchar *srcp, int lth)
   {
-  uchar *hashp = (uchar *)calloc(1, 24);
+  uchar *hashp = (uchar *)calloc(1, 28);
   CRYPT_CONTEXT hashContext;
   int ansr;
   cryptInit();
@@ -132,63 +133,68 @@ static int hash_it(uchar **hashpp, uchar *srcp, int lth)
   return lth;
   }
   
-static struct name_list * check_manifest(struct ROA *roap, char *mfname, char *topDir)
+static int check_manifest(struct ROA *roap, char *mfname, char *topDir, struct name_list *rootp)
   {
   int sig_err = 0;
-  struct Certificate *certp = (struct Certificate *)member_casn(&roap->content.signedData.
-      certificates.self, 0);
-  ulong clo, chi, mlo, mhi, now = (ulong)time((time_t)0);
-  struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.manifest;
-  struct name_list *rootp, *curr_namep;
-
-  read_casn_time(&manp->thisUpdate, &mlo);
-  read_casn_time(&manp->nextUpdate, &mhi);
-  clo = getTime(&certp->toBeSigned.validity.notBefore);
-  chi = getTime(&certp->toBeSigned.validity.notAfter);
-  if (clo > now || chi < now || mlo > now || mhi < now) 
-    {
-    fprintf(stderr, "the manifest %s has invalid date(s)\n", mfname); 
-    return (struct name_list *)0;
-    }
-  rootp = (struct name_list *)calloc(1, sizeof(struct name_list));
-  curr_namep = rootp;
+  struct name_list *curr_namep;
+  for (curr_namep = rootp; curr_namep->nextp; curr_namep = curr_namep->nextp);
   char **badfilespp = (char **)0;
   if ((sig_err = manifestValidate2(roap, topDir, &badfilespp)) < 0)
     {
     fprintf(stderr, "the manifest %s had error %d\n", mfname, sig_err);
+    return -1;
     }
-  else   // make list of all certificates, CRLs and ROAs  in manifest
+     // make list of all certificates, CRLs and ROAs  in manifest
+  struct FileAndHash *fahp;
+  for (fahp = (struct FileAndHash *)member_casn(&roap->content.signedData.encapContentInfo.
+    eContent.manifest.fileList.self, 0); fahp;
+    fahp = (struct FileAndHash *)next_of(&fahp->self))
     {
-    struct FileAndHash *fahp;
-    for (fahp = (struct FileAndHash *)member_casn(&roap->content.signedData.encapContentInfo.
-      eContent.manifest.fileList.self, 0); fahp;
-      fahp = (struct FileAndHash *)next_of(&fahp->self))
+    int lth;
+    char *fname;
+    if((lth = readvsize_casn(&fahp->file, (uchar **)&fname)) < 0) ; // error
+    else
       {
-      int lth;
-      char *fname;
-      if((lth = readvsize_casn(&fahp->file, (uchar **)&fname)) < 0) ; // error
-      else
+      if (mustManifest(fname))
         {
-        if (mustManifest(fname))
+        if (curr_namep != rootp)
           {
-          if (curr_namep != rootp)
-            {
-            curr_namep->nextp = (struct name_list *)calloc(1, sizeof(struct name_list));
-            curr_namep = curr_namep->nextp;
-            }
-          curr_namep->namep = fname;
+          curr_namep->nextp = (struct name_list *)calloc(1, sizeof(struct name_list) + 2);
+          curr_namep = curr_namep->nextp;
           }
+        curr_namep->namep = fname;
         }
       }
     }
   if (badfilespp)
     {
     char **pp;
-    for (pp = badfilespp; *pp; free(*pp), pp++);
+    fprintf(stderr, "the manifest %s had bad hashes for the following files:\n", mfname); 
+    for (pp = badfilespp; *pp; pp++)
+      {
+      fprintf(stderr, "%s\n", *pp);
+      free(*pp);
+      }
     free(badfilespp);
+    return -1;
     }
-  return rootp;
+  return 1;
   }
+
+static int check_manifest_dates(struct ROA *roap)
+  {
+  struct Certificate *certp = (struct Certificate *)member_casn(&roap->content.signedData.
+      certificates.self, 0);
+  ulong clo, chi, mlo, mhi, now = (ulong)time((time_t)0);
+  struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.manifest;
+
+  read_casn_time(&manp->thisUpdate, &mlo);
+  read_casn_time(&manp->nextUpdate, &mhi);
+  clo = getTime(&certp->toBeSigned.validity.notBefore);
+  chi = getTime(&certp->toBeSigned.validity.notAfter);
+  if (clo > now || chi < now || mlo > now || mhi < now) return -1;
+  return 1;
+  } 
 
 static char *makeCDStr(unsigned int *retlenp, char *dir)
 {
@@ -216,9 +222,9 @@ static char *makeCDStr(unsigned int *retlenp, char *dir)
   return(buf);
 }
 
-static void send_cert(struct Certificate *certp, char *topDir, struct write_port *wportp)
+static int send_cert(struct Certificate *certp, struct write_port *wportp)
   {
-  uchar *keyp;    // pull out its certificate and send that ahead 
+  uchar *keyp;   
   char *sixp;
   int klth;
   if ((klth = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey, 
@@ -230,13 +236,14 @@ static void send_cert(struct Certificate *certp, char *topDir, struct write_port
   char *certfname;
   while(sixp[klth-1] == '=') klth--;
   sixp[klth] = 0;
-  certfname = (char *)calloc(1, klth + strlen(topDir) + 12);
-  strcat(strcat(strcat(strcpy(certfname, topDir), "/"), sixp), ".cer");
-  if (put_casn_file(&certp->self, &certfname[2], 0) < 0) /* what ? */ ;
-  strcat(strcat(strcat(strcpy(certfname, "A "), sixp), ".cer"), "\r\n");
+  certfname = (char *)calloc(1, klth + 8);
+  strcat(strcat(strcpy(certfname, "A "), sixp), ".cer");
+  if (put_casn_file(&certp->self, &certfname[2], 0) < 0) return -1;
+  strcat(certfname, "\r\n");
   outputMsg(wportp, certfname, strlen(certfname));
   free(sixp);
   free(certfname);
+  return 1;
   }
  
 static int wasManifested(struct name_list *rootp, char *fnamep)
@@ -268,7 +275,6 @@ main(int argc, char *argv[])
   char *sendStr;
   char *topDir = NULL;
   struct write_port wport;
-  char holding[PATH_MAX+1];
   char flags;  /* our warning flags bit fields */
 
   tflag = uflag = nflag = fflag = mflag = sflag = ch = 0;
@@ -277,17 +283,18 @@ main(int argc, char *argv[])
 
   memset((char *)&wport, '\0', sizeof(struct write_port));
 
-  if (argc == 2) // process a script file
+  if (argc == 2 && *argv[1] != '-') // process a script file
     {
     char *cc, *cx, *buf, *e;
     int fd, bufsize;
     if ( (fd = open(argv[1], O_RDONLY)) < 0 || (bufsize = lseek(fd, 0, SEEK_END)) <= 0 ||
-      (buf = (char *)calloc(1, bufsize + 4)) == 0 || lseek(fd, 0, SEEK_SET) != 0 ||
+      (buf = (char *)calloc(1, bufsize + 6)) == 0 || lseek(fd, 0, SEEK_SET) != 0 ||
       read(fd, buf, bufsize + 4) != bufsize)
       {
       fprintf(stderr, "error opening %s\n", argv[1]);
       exit(1);
       }
+    mallocbasep = (ulong *)&buf[-4];
     for (cc = buf, e = &buf[bufsize]; cc < e; cc++)  // null out white space
       {
       if (*cc <= ' ') *cc = 0;
@@ -467,9 +474,11 @@ main(int argc, char *argv[])
 #define GENPASS 2
 #define NUMPASSES 3
   retlen = 0;
-  struct name_list *rootp = (struct name_list *)0;
+  struct name_list rootlist;
   struct ROA roa;
   ROA(&roa, (ushort)0);
+  memset(&rootlist, 0, sizeof(rootlist));
+  char holding[PATH_MAX+40];
   for (i = MANPASS; i < NUMPASSES; i++)
     {
     while (fgets(holding, PATH_MAX, fp) != NULL)
@@ -480,7 +489,7 @@ main(int argc, char *argv[])
       char *fname = (char *)0;
       if (have_manifest)
         {
-        fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 4);
+        fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 8);
         strcat(strcat(strcpy(fname, topDir), "/"), &sendStr[2]);
         char *b;
         for (b = fname; *b >= ' '; b++); // trim off CRLF
@@ -494,12 +503,21 @@ main(int argc, char *argv[])
          // if doing manifests and it's a manifest, check contents & note file names
       if (i == MANPASS  && have_manifest != 0)
         {
-        if (mflag)  rootp = check_manifest(&roa, fname, topDir);
-        if (!mflag || rootp)         // manifest not out of date 
+        if (mflag) 
           {
-          send_cert((struct Certificate *)member_casn(&roa.content.signedData.
-            certificates.self, 0), topDir, &wport);
-          outputMsg(&wport, sendStr, retlen);
+          if (check_manifest_dates(&roa) > 0)
+            {  
+            if (check_manifest(&roa, fname, topDir, &rootlist) > 0)
+              {
+              if (send_cert((struct Certificate *)member_casn(&roa.content.signedData.
+                certificates.self, 0), &wport) < 0)
+                {
+                fprintf(stderr, "sending certificate from manifest %s failed\n", 
+                   &sendStr[2]);
+                }
+              else  outputMsg(&wport, sendStr, retlen);
+              } 
+            }
           }
         }
         // else if doing trusts and it's a trust, send message
@@ -510,10 +528,13 @@ main(int argc, char *argv[])
         // else if doing other stuff and it's not a trust
       else if (i == GENPASS && !isTrust(sendStr))
         {
-         
-        if (!mflag ||                                // not doing strict OR
+        if (have_manifest && check_manifest_dates(&roa) < 0) 
+          {
+          fprintf(stderr, "the manifest %s has invalid date(s)\n", fname); 
+          }
+        else if (!mflag ||                                // not doing strict OR
             mustManifest(&sendStr[2]) == 0 ||        // not a manifestable type OR
-            wasManifested(rootp, &sendStr[2]) == 1)  // it was in a manifest
+            wasManifested(&rootlist, &sendStr[2]) == 1)  // it was in a manifest
             outputMsg(&wport, sendStr, retlen);      // send it
         else
           {
@@ -530,7 +551,7 @@ main(int argc, char *argv[])
       }
     fseek (fp, 0, SEEK_SET);
     }
-  free_name_list(rootp);
+  free_name_list(&rootlist);
   free (topDir);
 
   char *c;
