@@ -37,8 +37,6 @@
  * required but not yet retrieved.
  **************/
 
-#define NUM_FIELDS 3
-
 static char **uris;
 static int maxURIs = 4096;
 static int numURIs = 0;
@@ -141,6 +139,7 @@ static int addURIIfUnique (char *uri)
   return low;
 }
 
+/*****
 static int isDirectory (const char *uri)
 {
   char *slash, *dot;
@@ -150,15 +149,56 @@ static int isDirectory (const char *uri)
   if (dot == NULL) return 1;
   return slash > dot;
 }
+********/
 
-/* callback function for searchscm that accumulates the list */
-static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
+// static variables for searching for parent
+static scmsrcha parentSrch;
+static scmsrch  parentSrch1[1];
+static char parentWhere[1024];
+static unsigned long parentBlah = 0;
+static int parentNeedsInit = 1;
+static int parentCount;
+static scmtab *theCertTable = NULL;
+
+/* callback function for searchscm that just notes that parent exists */
+static int foundIt (scmcon *conp, scmsrcha *s, int numLine)
 {
-  int i;
   conp = conp; numLine = numLine;  // silence compiler warnings
-  for (i = 0; i < NUM_FIELDS; i++) {
-    addURIIfUnique ((char *) s->vec[i].valptr);
+  parentCount++;
+  return 0;
+}
+
+/* callback function for searchscm that accumulates the aia's */
+static int handleAIAResults (scmcon *conp, scmsrcha *s, int numLine)
+{
+  conp = conp; numLine = numLine;  // silence compiler warnings
+  if (parentNeedsInit) {
+    parentNeedsInit = 0;
+    parentSrch.sname = NULL;
+    parentSrch.where = NULL;
+    parentSrch.ntot = 1;
+    parentSrch.nused = 0;
+    parentSrch.context = &parentBlah;
+    parentSrch.wherestr = parentWhere;
+    parentSrch.vec = parentSrch1;
+    addcolsrchscm (&parentSrch, "filename", SQL_C_CHAR, FNAMESIZE);
   }
+  snprintf(parentWhere, sizeof(parentWhere), "ski=\"%s\"",
+	   (char *) s->vec[0].valptr);
+  parentCount = 0;
+  searchscm(conp, theCertTable, &parentSrch, NULL, foundIt,
+	    SCM_SRCH_DOVALUE_ALWAYS);
+  if (parentCount == 0) {
+    addURIIfUnique ((char *) s->vec[1].valptr);
+  }
+  return 0;
+}
+
+/* callback function for searchscm that accumulates the crldp's */
+static int handleCRLDPResults (scmcon *conp, scmsrcha *s, int numLine)
+{
+  conp = conp; numLine = numLine;  // silence compiler warnings
+  addURIIfUnique ((char *) s->vec[0].valptr);
   return 0;
 }
 
@@ -188,7 +228,7 @@ int main(int argc, char **argv)
   scmcon   *connect = NULL;
   scmtab   *table = NULL;
   scmsrcha srch;
-  scmsrch  srch1[NUM_FIELDS];
+  scmsrch  srch1[2];
   char     msg[1024];
   unsigned long blah = 0;
   int      i, status, numDirs, ch;
@@ -269,7 +309,7 @@ int main(int argc, char **argv)
   checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
   srch.vec = srch1;
   srch.sname = NULL;
-  srch.ntot = NUM_FIELDS;
+  srch.ntot = 2;
   srch.where = NULL;
   srch.wherestr = NULL;
   srch.context = &blah;
@@ -284,21 +324,31 @@ int main(int argc, char **argv)
   status = searchscm (connect, table, &srch, NULL, handleTimestamps,
                       SCM_SRCH_DOVALUE_ALWAYS);
 
-  // find all the URI's of AIA's, SIA's and CRLDP's in certs
+  // add crldp field if cert either has no crl or crl is out-of-date
   table = findtablescm (scmp, "certificate");
   checkErr (table == NULL, "Cannot find table certificate\n");
+  theCertTable = table;
   srch.nused = 0;
   srch.vald = 0;
-  snprintf (msg, 1024, "ts_mod > \"%s\"", prevTimestamp);
+  snprintf (msg, 1024,
+	    "apki_crl.filename is null or apki_crl.next_upd < \"%s\"",
+	    currTimestamp);
   srch.wherestr = msg;
-  addcolsrchscm (&srch, "sia", SQL_C_CHAR, 1024);
-  addcolsrchscm (&srch, "aia", SQL_C_CHAR, 1024);
-  addcolsrchscm (&srch, "crldp", SQL_C_CHAR, 1024);
-  status = searchscm (connect, table, &srch, NULL, handleResults,
+  addcolsrchscm (&srch, "crldp", SQL_C_CHAR, SIASIZE);
+  status = searchscm (connect, table, &srch, NULL, handleCRLDPResults,
+                      SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL);
+  free (srch1[0].valptr);
+
+  // add aia field if cert has no parent
+  srch.nused = 0;
+  srch.vald = 0;
+  snprintf(msg, 1024, "(flags%%%d)>=%d", 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+  addcolsrchscm (&srch, "aki", SQL_C_CHAR, SKISIZE);
+  addcolsrchscm (&srch, "aia", SQL_C_CHAR, SIASIZE);
+  status = searchscm (connect, table, &srch, NULL, handleAIAResults,
                       SCM_SRCH_DOVALUE_ALWAYS);
-  for (i = 0; i < srch.nused; i++) {
-    free (srch1[i].valptr);
-  }
+  free (srch1[0].valptr);
+  free (srch1[1].valptr);
 
   // remove original set from list of addresses
   for (i = 0; i < numDirs; i++) {
@@ -309,6 +359,7 @@ int main(int argc, char **argv)
     return 0;
 
   // remove all files from list of addresses and replace with directories
+  /*** actually, don't do this - work with individual files
   for (i = 0; i < numURIs; i++) {
     if (! isDirectory (uris[i])) {
       strncpy (msg, uris[i], 1024);
@@ -318,6 +369,7 @@ int main(int argc, char **argv)
       }
     }
   }
+  ****/
 
   // aggregate those from same system and call rsync and rsync_aur
   dirStr[0] = 0;

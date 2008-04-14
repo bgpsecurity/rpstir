@@ -782,6 +782,10 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       (void)strcat(stmt, tabp->tabname);
       (void)strcat(stmt, ".dir_id = apki_dir.dir_id");
     }
+  if ( (what & SCM_SRCH_DO_JOIN_CRL) )
+    {
+      strcat(stmt, " LEFT JOIN apki_crl on apki_cert.aki = apki_crl.aki");
+    }
   if ( srch->where != NULL )
     {
       didw++;
