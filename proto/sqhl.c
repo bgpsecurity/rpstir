@@ -1607,7 +1607,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   ulong ltime;
   unsigned int man_id = 0;
   scmkva   aone;
-  scmkv    cols[7];
+  scmkv    cols[12];
   int   idx = 0;
   char  did[24], mid[24], cid[24], flagn[24], ski[40];
 
@@ -1622,7 +1622,6 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     member_casn(&roa.content.signedData.certificates.self, 0);
   struct Extensions *exts = &certp->toBeSigned.extensions;
   struct Extension *extp;
-  extp = (struct Extension *)member_casn(&exts->self, 0);
   for(extp = (struct Extension *)member_casn(&exts->self, 0);
       extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
       extp = (struct Extension *)next_of(&extp->self));
@@ -1645,6 +1644,26 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   free(tmp);
 
   struct Manifest *manifest = &roa.content.signedData.encapContentInfo.eContent.manifest;
+
+  uchar file[200];
+  char *files = calloc(1, 1000);
+  int filesSize = 1000;
+  struct FileAndHash *fahp;
+  for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
+      fahp != NULL;
+      fahp = (struct FileAndHash *)next_of(&fahp->self)) {
+    read_casn(&fahp->file, file);
+    decode_casn (&theCASN, file);
+    read_casn(&theCASN, file);
+    if (strlen(files) + strlen((char *)file) >= filesSize) {
+      char *tmpFiles = calloc(1, 2 * filesSize);
+      strncpy (tmpFiles, files, filesSize);
+      free(files);
+      files = tmpFiles;
+      filesSize *= 2;
+    }
+    sprintf(files + strlen(files), "%s%s", (strlen(files)) ? " " : "", file);
+  }
 
   read_casn_time (&manifest->thisUpdate, &ltime);
   if ( sta < 0 ) {
@@ -1710,16 +1729,19 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   (void)snprintf(cid, sizeof(cid), "%u", embedCertID);
   cols[idx].column = "cert_id";
   cols[idx++].value = cid;
+  cols[idx].column = "files";
+  cols[idx++].value = files;
   aone.vec = &cols[0];
-  aone.ntot = 7;
+  aone.ntot = 12;
   aone.nused = idx;
   aone.vald = 0;
   sta = insertscm(conp, theManifestTable, &aone);
 
-  //  printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
+  // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
   delete_casn(&(roa.self));
   free(thisUpdate);
   free(nextUpdate);
+  free(files);
 
   return sta;
 }

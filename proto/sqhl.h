@@ -56,8 +56,14 @@
 #define SCM_FLAG_TRUSTED      0x2    /* trusted */
 #define SCM_FLAG_VALID        0x4    /* valid */
 #define SCM_FLAG_UNKNOWN      0x8    /* unknown because crl stale */
-#define SCM_FLAG_NOTYET      0x10    /* not yet valid */
-#define SCM_FLAG_NOCHAIN     0x20    /* missing pieces on chain to anchor */
+#define SCM_FLAG_NOTYET       0x10   /* not yet valid */
+#define SCM_FLAG_NOCHAIN      0x20   /* missing pieces on chain to anchor */
+// used in non-manifests, referring to associated manifest
+#define SCM_FLAG_NOMAN        0x100  /* no associated manifest */
+#define SCM_FLAG_GOODHASH     0x200  /* manifest specifies same hash */
+#define SCM_FLAG_NOMANCHAIN   0x400  /* manifest in nochain state */
+// used in manifests
+#define SCM_FLAG_MANINVALID   0x100  /* manifest proven invalid */
 
 /*
   Data types
