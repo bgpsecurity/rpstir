@@ -348,13 +348,22 @@ static char *afterwhite(char *ptr)
   return(run);
 }
 
+static char *splitOnWhite(char *ptr) {
+  char *run = ptr;
+  while (*run && ! isspace((int)*run)) run++;
+  if (! *run) return run;
+  *run = 0;
+  run++;
+  while (isspace((int)*run)) run++;
+  return run;
+}
+
 static char *hdir = NULL;
 
-static int aur(scm *scmp, scmcon *conp, char what, char *valu)
+static int aur(scm *scmp, scmcon *conp, char what, char *valu, char *valu2)
 {
   char *outdir;
-  char *outfile;
-  char *outfull;
+  char *outfile, *outfull;
   int   sta, trusted;
 
   sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
@@ -368,14 +377,14 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
   switch ( what )
     {
     case 'a':
-      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted, valu2);
       break;
     case 'r':
       sta = delete_object(scmp, conp, outfile, outdir, outfull);
       break;
     case 'u':
       (void)delete_object(scmp, conp, outfile, outdir, outfull);
-      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted, valu2);
       break;
     default:
       break;
@@ -606,7 +615,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'a':
 	case 'A':		/* add */
 	  (void)fprintf(logfile, "AUR add request: %s\n", valu);
-	  sta = aur(scmp, conp, 'a', valu);
+	  sta = aur(scmp, conp, 'a', valu, splitOnWhite(valu));
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -615,7 +624,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'u':
 	case 'U':		/* update */
 	  (void)fprintf(logfile, "AUR update request: %s\n", valu);
-	  sta = aur(scmp, conp, 'u', valu);
+	  sta = aur(scmp, conp, 'u', valu, splitOnWhite(valu));
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -624,7 +633,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'r':
 	case 'R':		/* remove */
 	  (void)fprintf(logfile, "AUR remove request: %s\n", valu);
-	  sta = aur(scmp, conp, 'r', valu);
+	  sta = aur(scmp, conp, 'r', valu, NULL);
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -954,7 +963,7 @@ int main(int argc, char **argv)
 	    {
 	      (void)fprintf(logfile, "Attempting to add file %s\n", outfile);
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
-			       trusted);
+			       trusted, "0");
 	      if ( sta < 0 )
 		{
 		  (void)fprintf(stderr,

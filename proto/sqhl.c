@@ -451,7 +451,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 
 static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 			    unsigned int dirid, char *ski, int asid,
-			    char *filter, char *sig, int isValid)
+			    char *filter, char *sig, unsigned int flags)
 {
   unsigned int roa_id = 0;
   scmkva   aone;
@@ -488,8 +488,7 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   (void)snprintf(asn, sizeof(asn), "%d", asid);
   cols[idx].column = "asn";
   cols[idx++].value = asn;
-  (void)snprintf(flagn, sizeof(flagn), "%u",
-		 isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  (void)snprintf(flagn, sizeof(flagn), "%u", flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
   (void)snprintf(lid, sizeof(lid), "%u", roa_id);
@@ -1386,6 +1385,20 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
   return 0;
 }
 
+unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState)
+{
+  flags |= (isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  if (strcmp(manState, "0") == 0) {
+    flags |= SCM_FLAG_NOMAN;
+  } else if (strcmp(manState, "1") == 0) {
+    flags |= SCM_FLAG_GOODHASH;
+  } else if (strcmp(manState, "-1") != 0) {
+    printf("!!!!Error: Unrecognized manifest state %s\n", manState);
+  }
+  return flags;
+}
+
+
 /*
   Add a certificate to the DB. If utrust is set, check that it is
   self-signed first. Validate the cert and add it.
@@ -1395,7 +1408,8 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
 */
 
 int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	     unsigned int id, int utrust, int typ, unsigned int *cert_id)
+	     unsigned int id, int utrust, int typ, unsigned int *cert_id,
+	     char *manState)
 {
   cert_fields *cf;
   X509 *x = NULL;
@@ -1445,7 +1459,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 //  sta = 0; chainOK = 1; // uncomment this line for running test 8
   if ( sta == 0 )
     {
-      cf->flags |= (chainOK ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+      cf->flags = addStateToFlags(cf->flags, chainOK, manState);
       sta = add_cert_internal(scmp, conp, cf, cert_id);
     }
 // try to validate children of cert
@@ -1467,7 +1481,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 */
 
 int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	    unsigned int id, int utrust, int typ)
+	    unsigned int id, int utrust, int typ, char *manState)
 {
   crl_fields *cf;
   X509_CRL   *x = NULL;
@@ -1492,7 +1506,7 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		   cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
 // then add the CRL
   if (sta == 0) {
-    cf->flags |= chainOK ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN;
+    cf->flags = addStateToFlags(cf->flags, chainOK, manState);
     sta = add_crl_internal(scmp, conp, cf);
   }
 // and do the revocations
@@ -1514,7 +1528,7 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 */
 
 int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	    unsigned int id, int utrust, int typ)
+	    unsigned int id, int utrust, int typ, char *manState)
 {
   struct ROA *r = NULL;
   unsigned char *bsig = NULL;
@@ -1567,7 +1581,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     return(sta);
   }
   sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter,
-			 sig, chainOK);
+			 sig, addStateToFlags(0, chainOK, manState));
   free((void *)ski);
   free((void *)sig);
   return(sta);
@@ -1758,7 +1772,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 */
 
 int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-	       char *outfull, int utrust)
+	       char *outfull, int utrust, char *manState)
 {
   unsigned int id = 0, obj_id = 0;
   int typ;
@@ -1786,15 +1800,16 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN+OT_PEM_OFFSET:
-      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
+      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ,
+		     &obj_id, manState);
       break;
     case OT_CRL:
     case OT_CRL_PEM:
-      sta = add_crl(scmp, conp, outfile, outfull, id, utrust, typ);
+      sta = add_crl(scmp, conp, outfile, outfull, id, utrust, typ, manState);
       break;
     case OT_ROA:
     case OT_ROA_PEM:
-      sta = add_roa(scmp, conp, outfile, outfull, id, utrust, typ);
+      sta = add_roa(scmp, conp, outfile, outfull, id, utrust, typ, manState);
       break;
     case OT_MANIFEST:
       sta = add_manifest(scmp, conp, outfile, outfull, id, utrust, typ);

@@ -87,17 +87,17 @@ typedef struct _crlinfo
 extern int   findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
 			     unsigned int *idp);
 extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			char *outfull, int utrust);
+			char *outfull, int utrust, char *manState);
 extern int   delete_object(scm *scmp, scmcon *conp, char *outfile,
 			   char *outdir, char *outfull);
 extern int   infer_filetype(char *fname);
 extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		      unsigned int id, int utrust, int typ,
-		      unsigned int *cert_id);
+		      unsigned int *cert_id, char *manState);
 extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ);
+		     unsigned int id, int utrust, int typ, char *manState);
 extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ);
+		     unsigned int id, int utrust, int typ, char *manState);
 extern int   add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 			  unsigned int id, int utrust, int typ);
 extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
@@ -106,6 +106,8 @@ extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
 extern int   certificate_validity(scm *scmp, scmcon *conp);
 extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
+extern unsigned int addStateToFlags(unsigned int flags, int isValid,
+				    char *manState);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
