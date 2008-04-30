@@ -237,18 +237,21 @@ static int checkValidity (char *ski, unsigned int localID) {
   while (firstTime || (strcmp (nextSKI, prevSKI) != 0)) {
     if (firstTime) {
       firstTime = 0;
-      if (ski)
+      if (ski) {
         snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
 		  " and ski=\"%s\"", ski);
-      else
+	strncpy (prevSKI, ski, 128);
+      } else {
         snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
 		  " and local_id=\"%d\"", localID);
+	prevSKI[0] = 0;
+      }
     } else {
       snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
 		" and ski=\"%s\" and subject=\"%s\"", nextSKI, nextSubject);
+      strncpy (prevSKI, nextSKI, 128);
     }
     found = 0;
-    strncpy (prevSKI, nextSKI, 128);
     status = searchscm (connect, validTable, validSrch, NULL,
                         registerFound, SCM_SRCH_DOVALUE_ALWAYS);
     if (! found) return 0;  // no parent cert
