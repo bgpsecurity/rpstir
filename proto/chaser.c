@@ -342,7 +342,8 @@ int main(int argc, char **argv)
   // add aia field if cert has no parent
   srch.nused = 0;
   srch.vald = 0;
-  snprintf(msg, 1024, "(flags%%%d)>=%d", 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
+  msg[0] = 0;
+  addFlagTest(msg, SCM_FLAG_NOCHAIN, 1, 0);
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, SKISIZE);
   addcolsrchscm (&srch, "aia", SQL_C_CHAR, SIASIZE);
   status = searchscm (connect, table, &srch, NULL, handleAIAResults,

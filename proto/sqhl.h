@@ -30,7 +30,7 @@
 #define OT_CER          1	/* DER encoded certificate */
 #define OT_CRL          2	/* DER encoded CRL */
 #define OT_ROA          3	/* DER encoded ROA */
-#define OT_MANIFEST     4	/* manifests are only DER for now */
+#define OT_MAN          4	/* manifests are only DER for now */
 #define OT_MAXBASIC     4
 
 #define OT_PEM_OFFSET   128
@@ -38,6 +38,7 @@
 #define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET) /* PEM encoded certificate */
 #define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET) /* PEM encoded CRL */
 #define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET) /* PEM encoded ROA */
+#define OT_MAN_PEM      (OT_MAN+OT_PEM_OFFSET) /* PEM encoded manifest */
 
 /*
   Certificate types
@@ -54,16 +55,14 @@
 
 #define SCM_FLAG_CA           0x1    /* certificate authority */
 #define SCM_FLAG_TRUSTED      0x2    /* trusted */
-#define SCM_FLAG_VALID        0x4    /* valid */
-#define SCM_FLAG_UNKNOWN      0x8    /* unknown because crl stale */
-#define SCM_FLAG_NOTYET       0x10   /* not yet valid */
-#define SCM_FLAG_NOCHAIN      0x20   /* missing pieces on chain to anchor */
-// used in non-manifests, referring to associated manifest
+#define SCM_FLAG_VALIDATED    0x4    /* at some point, chain existed */
+#define SCM_FLAG_NOCHAIN      0x8    /* now missing links on chain to anchor */
+#define SCM_FLAG_NOTYET       0x10   /* too early, not yet ready */
+#define SCM_FLAG_STALECRL     0x20   /* assoc crl of self or ancestor stale */
+#define SCM_FLAG_STALEMAN     0x40   /* assoc man of self or ancestor stale */
 #define SCM_FLAG_NOMAN        0x100  /* no associated manifest */
-#define SCM_FLAG_GOODHASH     0x200  /* manifest specifies same hash */
-#define SCM_FLAG_NOMANCHAIN   0x400  /* manifest in nochain state */
-// used in manifests
-#define SCM_FLAG_MANINVALID   0x100  /* manifest proven invalid */
+#define SCM_FLAG_NOVALIDMAN   0x200  /* no validated associated manifest */
+#define SCM_FLAG_BADHASH      0x400  /* manifest specifies different hash */
 
 /*
   Data types
@@ -107,7 +106,8 @@ extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
 extern int   certificate_validity(scm *scmp, scmcon *conp);
 extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 extern unsigned int addStateToFlags(unsigned int flags, int isValid,
-				    char *manState);
+				    char *manState, char *filename,
+				    scm *scmp, scmcon *conp);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 

@@ -29,6 +29,7 @@
 #define SKISIZE 128
 #define SIASIZE 1024
 #define SIGSIZE 520
+#define MANFILES_SIZE 400000
 
 /*
   A database table has four characteristics: its real name (the name

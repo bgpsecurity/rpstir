@@ -155,10 +155,12 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr)
  * functions that are used to process SQL queries
  */
 static FILE *output;  /* place to print output (file or screen) */
-static FILE *specialOutput; /* separate place to print output from unknown */
-static FILE *out2;  /* either output or specialOutput, as appropriate */
+static int rejectStaleChain = 0;
+static int rejectStaleManifest = 0;
+static int rejectStaleCRL = 0;
+static int rejectNoManifest = 0;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
-static int useLabels, multiline, validate, unknownOption;
+static int useLabels, multiline, validate, valIndex;
 static char *objectType;
 static int isROA, isCert, isCRL;
 static scm      *scmp = NULL;
@@ -178,28 +180,16 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
-/* options of what to do with unknown states for roas/certs */
-#define OPTION_VALID 0
-#define OPTION_INVALID 1
-#define OPTION_SPECIAL 2
-
-/* different types of validity */
-#define V_INVALID 0
-#define V_VALID 1
-#define V_UNKNOWN 2
-
 /*
  * all these static variables are used for efficiency, so that
  * there is no need to initialize them with each call to checkValidity
  */
 static scmtab   *validTable = NULL;
-static scmsrcha validSrch;
-static scmsrch  validSrch1[3];
-static char     validWhereStr[700], *whereInsertPtr;
-static unsigned long validBlah = 0;
+static scmsrcha *validSrch = NULL;
+char  *validWhereStr;
+static char     *whereInsertPtr;
 static int      found;
 static char     *nextSKI, *nextSubject;
-static  unsigned int *flags;
 
 static int registerFound (scmcon *conp, scmsrcha *s, int numLine) {
   conp = conp; s = s; numLine = numLine;
@@ -214,79 +204,70 @@ static int checkValidity (char *ski, unsigned int localID) {
   // set up main part of query only once, instead of once per object
   if (validTable == NULL) {
     validTable = findtablescm (scmp, "certificate");
-    validSrch.where = NULL;
-    validSrch.wherestr = validWhereStr;
-    validSrch.vec = validSrch1;
-    validSrch.sname = NULL;
-    validSrch.ntot = 3;
-    validSrch.nused = 0;
-    validSrch.vald = 0;
-    validSrch.context = &validBlah;
+    validSrch = newsrchscm(NULL, 3, 0, 1);
     QueryField *field = findField ("aki");
-    addcolsrchscm (&validSrch, "aki", field->sqlType, field->maxSize);
+    addcolsrchscm (validSrch, "aki", field->sqlType, field->maxSize);
     field = findField ("issuer");
-    addcolsrchscm (&validSrch, "issuer", field->sqlType, field->maxSize);
-    if (unknownOption == OPTION_SPECIAL)
-      addcolsrchscm (&validSrch, "flags", SQL_C_ULONG, 8);
+    addcolsrchscm (validSrch, "issuer", field->sqlType, field->maxSize);
     char *now = LocalTimeToDBTime (&status);
-    snprintf (validWhereStr, 700, "valto>\"%s\" and (flags%%%d)>=%d", now,
-	      2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+    validWhereStr = validSrch->wherestr;
+    validWhereStr[0] = 0;
+    if (rejectStaleChain)
+      snprintf (validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
     free (now);
-    if (unknownOption == OPTION_INVALID)
-      snprintf (&validWhereStr[strlen(validWhereStr)],
-		700-strlen(validWhereStr), " and (flags%%%d)<%d",
-		2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+    addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
+		rejectStaleChain);
+    if (rejectStaleChain)
+      addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
+    if (rejectStaleCRL)
+      addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
+    if (rejectStaleManifest)
+      addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
+    if (rejectNoManifest)
+      addFlagTest(validWhereStr, SCM_FLAG_NOVALIDMAN, 0, 1);
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
-    nextSKI = (char *) validSrch1[0].valptr;
-    nextSubject = (char *) validSrch1[1].valptr;
-    flags = (unsigned int *) validSrch1[2].valptr;
+    nextSKI = (char *) validSrch->vec[0].valptr;
+    nextSubject = (char *) validSrch->vec[1].valptr;
   }
 
   // now do the part specific to this cert
   int firstTime = 1;
-  int validity = V_VALID;
   char prevSKI[128];
   // keep going until trust anchor, where AKI = SKI
   while (firstTime || (strcmp (nextSKI, prevSKI) != 0)) {
     if (firstTime) {
       firstTime = 0;
       if (ski)
-        snprintf (whereInsertPtr, 700-strlen(validWhereStr),
+        snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
 		  " and ski=\"%s\"", ski);
       else
-        snprintf (whereInsertPtr, 700-strlen(validWhereStr),
+        snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
 		  " and local_id=\"%d\"", localID);
     } else {
-      snprintf (whereInsertPtr, 700-strlen(validWhereStr),
+      snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
 		" and ski=\"%s\" and subject=\"%s\"", nextSKI, nextSubject);
     }
     found = 0;
     strncpy (prevSKI, nextSKI, 128);
-    status = searchscm (connect, validTable, &validSrch, NULL,
+    status = searchscm (connect, validTable, validSrch, NULL,
                         registerFound, SCM_SRCH_DOVALUE_ALWAYS);
-    if (! found) return V_INVALID;  // no parent cert
-    if ((unknownOption == OPTION_SPECIAL) && (*flags & SCM_FLAG_UNKNOWN))
-      validity = V_UNKNOWN;   // one unknown in chain makes result unknown
+    if (! found) return 0;  // no parent cert
   }
-  return validity;
+  return 1;
 }
 
 /* callback function for searchscm that prints the output */
 static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 {
   int result = 0;
-  int display, valid;
+  int display;
   char resultStr[MAX_RESULT_SZ];
 
   conp = conp; numLine = numLine;  // silence compiler warnings
-  out2 = output;
   if (validate) {
-    valid = checkValidity (isROA ? (char *) s->vec[validate].valptr : NULL,
-               isCert ? *((unsigned int *) s->vec[validate].valptr) : 0);
-    if (valid == V_INVALID) return 0;
-    if ((valid == V_UNKNOWN) && (unknownOption == OPTION_INVALID)) return 0;
-    if ((valid == V_UNKNOWN) && (unknownOption == OPTION_SPECIAL))
-      out2 = specialOutput;
+    if (!checkValidity (isROA ? (char *) s->vec[valIndex].valptr : NULL,
+			isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0))
+	return 0;
   }
   for (display = 0; globalFields[display] != NULL; display++) {
     QueryField *field = globalFields[display];
@@ -301,14 +282,14 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 		  "%d", *((unsigned int *) s->vec[result].valptr));
       result++;
     }
-    if (multiline) fprintf (out2, "%s ", (display == 0) ? "*" : " ");
+    if (multiline) fprintf (output, "%s ", (display == 0) ? "*" : " ");
     if (useLabels) 
-      fprintf (out2, "%s = %s  ", field->heading, resultStr);
+      fprintf (output, "%s = %s  ", field->heading, resultStr);
     else
-      fprintf (out2, "%s  ", resultStr);
-    if (multiline) fprintf (out2, "\n");
+      fprintf (output, "%s  ", resultStr);
+    if (multiline) fprintf (output, "\n");
   }
-  if (! multiline) fprintf (out2, "\n");
+  if (! multiline) fprintf (output, "\n");
   return(0);
 }
 
@@ -401,7 +382,7 @@ static int doQuery (char **displays, char **filters)
   }
   globalFields[i] = NULL;
   if (validate) {
-    validate = srch.nused;
+    valIndex = srch.nused;
     if (isROA) {
       field2 = findField ("ski");
       addcolsrchscm (&srch, "ski", field2->sqlType, field2->maxSize);
@@ -416,6 +397,35 @@ static int doQuery (char **displays, char **filters)
     free (srch1[i].valptr);
   }
   return status;
+}
+
+/* parse the specs telling which non-perfect ROA's to accept */
+static void parseSpecsFile(char *specsFilename)
+{
+  char str[WHERESTR_SIZE], str2[WHERESTR_SIZE], str3[WHERESTR_SIZE];
+  FILE *input = fopen (specsFilename, "r");
+  if (input == NULL) {
+    printf ("Could not open specs file: %s\n", specsFilename);
+    exit(-1);
+  }
+  while (fgets (str, WHERESTR_SIZE, input)) {
+    int got = sscanf(str, "%s %s", str2, str3);
+    if (got == 0) continue;
+    if (str2[0] == '#') continue;
+    if (got == 1) perror ("Bad format for specs file\n");
+    if (strcmp(str2, "StaleCRL") == 0) {
+      rejectStaleCRL = str3[0] == 'n' || str3[0] == 'N';
+    } else if (strcmp(str2, "StaleManifest") == 0) {
+      rejectStaleManifest = str3[0] == 'n' || str3[0] == 'N';
+    } else if (strcmp(str2, "StaleValidationChain") == 0) {
+      rejectStaleChain = str3[0] == 'n' || str3[0] == 'N';
+    } else if (strcmp(str2, "NoManifest") == 0) {
+      rejectNoManifest = str3[0] == 'n' || str3[0] == 'N';
+    } else {
+      printf ("Bad keyword in specs file: %s\n", str2);
+      exit(-1);
+    }
+  }
 }
 
 /* show what options the user has for fields for display and filtering */
@@ -446,15 +456,13 @@ static int listOptions()
 /* Help user by showing the possible arguments */
 static int printUsage()
 {
-  printf ("\nPossible usages:\n  query -a [-o <outfile>] [-u <option>]\n");
+  printf ("\nPossible usages:\n  query -a [-o <outfile>] [-s <specsFile>]\n");
   printf ("  query -l <type>\n");
   printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-v] [-n] [-m]\n\nSwitches:\n");
-  printf ("  -a: short cut for -t roa -d filter_entry -v -n\n");
+  printf ("  -a: short cut for -t roa -d filter -v -n\n");
   printf ("  -o: name of output file for the results (omitted = screen)\n");
-  printf ("  -u: what to do when validating and encounter a cert in state unknown\n");
-  printf ("      options: valid (print to output anyway), invalid (ignore),\n");
-  printf ("               and special (write to separate file unknown.out)\n");
-  printf ("               default = special\n");
+  printf ("  -s: input filename where how to handle non-perfect objects specified\n");
+  printf ("      see the sample specifications file sampleQuerySpecs\n");
   printf ("  -l: list the possible display fields and clauses for a given type\n");
   printf ("  -t: the type of object requested (roa, cert, or crl)\n");
   printf ("  -d: the name of one field of the object to display\n");
@@ -488,7 +496,6 @@ int main(int argc, char **argv)
   useLabels = 1;
   multiline = 0;
   validate = 0;
-  unknownOption = OPTION_SPECIAL;
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
@@ -498,7 +505,7 @@ int main(int argc, char **argv)
   for (i = 1; i < argc; i += 2) {
     if (strcasecmp (argv[i], "-a") == 0) {
       setObjectType ("roa");
-      displays [numDisplays++] = "filter_entry";
+      displays [numDisplays++] = "filter";
       validate = 1;
       useLabels = 0;
       i--;
@@ -521,11 +528,8 @@ int main(int argc, char **argv)
       clauses [numClauses++] = argv[i+1];
     } else if (strcasecmp (argv[i], "-o") == 0) {
       output = fopen (argv[i+1], "w");
-    } else if (strcasecmp (argv[i], "-u") == 0) {
-      if (strncasecmp (argv[i+1], "v", 1) == 0)
-        unknownOption = OPTION_VALID;
-      else if (strncasecmp (argv[i+1], "i", 1) == 0)
-        unknownOption = OPTION_INVALID;
+    } else if (strcasecmp (argv[i], "-s") == 0) {
+      parseSpecsFile(argv[i+1]);
     } else {      // unknown switch
       return printUsage();
     }
@@ -533,10 +537,6 @@ int main(int argc, char **argv)
   checkErr (numDisplays == 0, "Need to display something\n");
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
-  if (unknownOption == OPTION_SPECIAL) {
-    // for now, user cannot select name of output file for "unknown"'s
-    specialOutput = fopen ("unknown.out", "w");
-  }
   status = doQuery (displays, clauses);
   stopSyslog();
   return status;

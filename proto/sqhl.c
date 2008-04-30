@@ -130,7 +130,7 @@ int findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
   ins.ntot = 2;
   ins.nused = 2;
   ins.vald = 0;
-  srch = newsrchscm("focdir", 4, sizeof(unsigned int));
+  srch = newsrchscm("focdir", 4, sizeof(unsigned int), 0);
   if ( srch == NULL )
     return(ERR_SCM_NOMEM);
   sta = addcolsrchscm(srch, "dir_id", SQL_C_ULONG, sizeof(unsigned int));
@@ -291,7 +291,7 @@ int infer_filetype(char *fname)
   if ( strstr(fname, ".roa") != NULL )
     typ += OT_ROA;
   if ( strstr(fname, ".man") != NULL )
-    typ += OT_MANIFEST;
+    typ += OT_MAN;
   if ( typ < OT_UNKNOWN || typ > OT_MAXBASIC )
     return(ERR_SCM_INVALFN);
   if ( pem > 0 )
@@ -621,11 +621,7 @@ static X509 *readCertFromFile (char *ofullname, int *stap)
 */
 
 // static variables for efficiency, so only need to set up query once
-static scmsrcha parentSrch;
-static scmsrch  parentSrch1[5];
-static char parentWhere[1024];
-static unsigned long parentBlah = 0;
-static int parentNeedsInit = 1;
+static scmsrcha *parentSrch = NULL;
 static char *parentDir, *parentFile;
 static unsigned int *parentFlags;
 static char *parentAKI, *parentIssuer;
@@ -635,39 +631,32 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 {
   char ofullname[PATH_MAX];		/* full pathname */
 
-  if (parentNeedsInit) {
-    parentNeedsInit = 0;
-    parentSrch.sname = NULL;
-    parentSrch.where = NULL;
-    parentSrch.ntot = 5;
-    parentSrch.nused = 0;
-    parentSrch.context = &parentBlah;
-    parentSrch.wherestr = parentWhere;
-    parentSrch.vec = parentSrch1;
-    ADDCOL (&parentSrch, "filename", SQL_C_CHAR, FNAMESIZE, *stap, NULL);
-    ADDCOL (&parentSrch, "dirname", SQL_C_CHAR, DNAMESIZE, *stap, NULL);
-    ADDCOL (&parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
+  if (parentSrch == NULL) {
+    parentSrch = newsrchscm(NULL, 5, 0, 1);
+    ADDCOL (parentSrch, "filename", SQL_C_CHAR, FNAMESIZE, *stap, NULL);
+    ADDCOL (parentSrch, "dirname", SQL_C_CHAR, DNAMESIZE, *stap, NULL);
+    ADDCOL (parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
 	    *stap, NULL);
-    ADDCOL (&parentSrch, "aki", SQL_C_CHAR, SKISIZE, *stap, NULL);
-    ADDCOL (&parentSrch, "issuer", SQL_C_CHAR, SUBJSIZE, *stap, NULL);
-    parentFile = (char *) parentSrch1[0].valptr;
-    parentDir = (char *) parentSrch1[1].valptr;
-    parentFlags = (unsigned int *) parentSrch1[2].valptr;
-    parentAKI = (char *) parentSrch1[3].valptr;
-    parentIssuer = (char *) parentSrch1[4].valptr;
+    ADDCOL (parentSrch, "aki", SQL_C_CHAR, SKISIZE, *stap, NULL);
+    ADDCOL (parentSrch, "issuer", SQL_C_CHAR, SUBJSIZE, *stap, NULL);
+    parentFile = (char *) parentSrch->vec[0].valptr;
+    parentDir = (char *) parentSrch->vec[1].valptr;
+    parentFlags = (unsigned int *) parentSrch->vec[2].valptr;
+    parentAKI = (char *) parentSrch->vec[3].valptr;
+    parentIssuer = (char *) parentSrch->vec[4].valptr;
   }
 
   *stap = 0;
 // find the entry whose subject is our issuer and whose ski is our aki,
 // e.g. our parent
   if (subject != NULL)
-    snprintf(parentWhere, sizeof(parentWhere),
-	     "ski=\"%s\" and subject=\"%s\" and (flags%%%d)>=%d",
-	     ski, subject, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+    snprintf(parentSrch->wherestr, WHERESTR_SIZE,
+	     "ski=\"%s\" and subject=\"%s\"", ski, subject);
   else
-    snprintf(parentWhere, sizeof(parentWhere), "ski=\"%s\" and (flags%%%d)>=%d",
-	     ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
-  *stap = searchscm(conp, theCertTable, &parentSrch, NULL, ok,
+    snprintf(parentSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
+  addFlagTest(parentSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+  addFlagTest(parentSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+  *stap = searchscm(conp, theCertTable, parentSrch, NULL, ok,
 		    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
   if ( *stap < 0 ) return NULL;
   (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
@@ -677,11 +666,7 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 }
 
 // static variables for efficiency, so only need to set up query once
-static scmsrcha revokedSrch;
-static scmsrch  revokedSrch1[2];
-static char revokedWhere[1024];
-static unsigned long revokedContext = 0;
-static int revokedNeedsInit = 1;
+static scmsrcha *revokedSrch = NULL;
 static unsigned long long *revokedSNList;
 static unsigned int *revokedSNLen;
 // static variables to pass to callback
@@ -712,31 +697,24 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
   int sta;
 
   // set up query once first time through and then just modify
-  if (revokedNeedsInit) {
-    revokedNeedsInit = 0;
+  if (revokedSrch == NULL) {
+    revokedSrch = newsrchscm(NULL, 2, 0, 1);
     initTables (scmp);
-    revokedSrch.sname = NULL;
-    revokedSrch.where = NULL;
-    revokedSrch.ntot = 2;
-    revokedSrch.nused = 0;
-    revokedSrch.context = &revokedContext;
-    revokedSrch.wherestr = revokedWhere;
-    revokedSrch.vec = revokedSrch1;
-    ADDCOL (&revokedSrch, "snlen", SQL_C_ULONG, sizeof (unsigned int),
+    ADDCOL (revokedSrch, "snlen", SQL_C_ULONG, sizeof (unsigned int),
 	    sta, sta);
-    ADDCOL (&revokedSrch, "snlist", SQL_C_BINARY, 16*1024*1024, sta, sta);
-    revokedSNLen = (unsigned int *) revokedSrch1[0].valptr;
-    revokedSNList = (unsigned long long *) revokedSrch1[1].valptr;
+    ADDCOL (revokedSrch, "snlist", SQL_C_BINARY, 16*1024*1024, sta, sta);
+    revokedSNLen = (unsigned int *) revokedSrch->vec[0].valptr;
+    revokedSNList = (unsigned long long *) revokedSrch->vec[1].valptr;
   }
 
   // query for crls such that issuer = issuer, and flags & valid
   // and set isRevoked = 1 in the callback if sn is in snlist
-  snprintf (revokedWhere, sizeof(revokedWhere),
-	    "issuer=\"%s\" and (flags%%%d)>=%d",
-	    issuer, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
+  snprintf (revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", issuer);
+  addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+  addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
   isRevoked = 0;
   revokedSN = strtoull(sn, NULL, 10);
-  sta = searchscm(conp, theCRLTable, &revokedSrch, NULL, revokedHandler,
+  sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
 		  SCM_SRCH_DOVALUE_ALWAYS);
   return isRevoked;
 }
@@ -955,10 +933,10 @@ static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
 static int updateValidFlags (scmcon *conp, scmtab *tabp, unsigned int id,
 			     unsigned int prevFlags, int isValid)
 {
-  char stmt[100];
+  char stmt[150];
   int flags = isValid ?
-    ((prevFlags - SCM_FLAG_NOCHAIN) | SCM_FLAG_VALID) :
-    ((prevFlags - SCM_FLAG_VALID) | SCM_FLAG_NOCHAIN);
+    ((prevFlags | SCM_FLAG_VALIDATED) & (~SCM_FLAG_NOCHAIN)) :
+    (prevFlags | SCM_FLAG_NOCHAIN);
   snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
 	    tabp->tabname, flags, id);
   return statementscm (conp, stmt);
@@ -1042,6 +1020,28 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
 }
 
 /*
+ * unset novalidman flag from all objects on newly validated manifest
+ */
+static int updateManifestObjs2 (scmcon *conp, scmtab *tabp,
+			        char *files, char *stmt)
+{
+  snprintf (stmt, sizeof(stmt),
+	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
+	    tabp->tabname, SCM_FLAG_NOVALIDMAN,
+	    2*SCM_FLAG_NOVALIDMAN, SCM_FLAG_NOVALIDMAN, files);
+  return statementscm (conp, stmt);
+}
+
+static void updateManifestObjs(scmcon *conp, char *files)
+{
+  char *stmt = calloc(1, strlen(files) + 150);
+  updateManifestObjs2(conp, theCertTable, files, stmt);
+  updateManifestObjs2(conp, theCRLTable, files, stmt);
+  updateManifestObjs2(conp, theROATable, files, stmt);
+  free(stmt);
+}
+
+/*
  * callback function for verify_children
  */
 static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
@@ -1049,8 +1049,9 @@ static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
   int sta;
   UNREFERENCED_PARAMETER(idx);
   sta = updateValidFlags (conp, theManifestTable,
-			  *((unsigned int *) (s->vec[2].valptr)),
-			  *((unsigned int *) (s->vec[3].valptr)), 1);
+			  *((unsigned int *) (s->vec[0].valptr)),
+			  *((unsigned int *) (s->vec[1].valptr)), 1);
+  updateManifestObjs (conp, (char *) s->vec[2].valptr);
   return 0;
 }
 
@@ -1067,13 +1068,12 @@ typedef struct _PropData {
   char *issuer;
 } PropData;
 
-
 // static variables for efficiency, so only need to set up query once
-static scmsrcha crlSrch;
-static scmsrch  crlSrch1[4];
-static char crlWhere[1024];
-static unsigned long crlBlah = 0;
-static int crlNeedsInit = 1;
+static scmsrcha *crlSrch = NULL;
+static scmsrcha *manSrch = NULL;
+
+// single place to allocate large amount of space for manifest files lists
+static char manFiles[MANFILES_SIZE];
 
 /*
  * utility function for verifyChildren
@@ -1096,33 +1096,35 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
     }
     updateValidFlags (conp, theCertTable, data->id, data->flags, 1);
   }
-  if (crlNeedsInit) {
-    crlNeedsInit = 0;
-    crlSrch.sname = NULL;
-    crlSrch.where = NULL;
-    crlSrch.ntot = 4;
-    crlSrch.nused = 0;
-    crlSrch.context = &crlBlah;
-    crlSrch.wherestr = crlWhere;
-    crlSrch.vec = crlSrch1;
-    ADDCOL (&crlSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
-    ADDCOL (&crlSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
-    ADDCOL (&crlSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+  if (crlSrch == NULL) {
+    crlSrch = newsrchscm(NULL, 4, 0, 1);
+    ADDCOL (crlSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL (crlSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
+    ADDCOL (crlSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
-    ADDCOL (&crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    ADDCOL (crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
   }
-  snprintf(crlWhere, sizeof(crlWhere),
-	   "aki=\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
-	   data->aki, data->issuer, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
-  sta = searchscm(conp, theCRLTable, &crlSrch, NULL, verifyChildCRL,
+  snprintf(crlSrch->wherestr, WHERESTR_SIZE,
+	   "aki=\"%s\" and issuer=\"%s\"", data->aki, data->issuer);
+  addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
+  sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
 		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
-  snprintf(crlWhere, sizeof(crlWhere), "ski=\"%s\" and (flags%%%d)>=%d",
-	   data->ski, 2*SCM_FLAG_NOCHAIN, SCM_FLAG_NOCHAIN);
-  sta = searchscm(conp, theROATable, &crlSrch, NULL, verifyChildROA,
+  snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+  addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
+  sta = searchscm(conp, theROATable, crlSrch, NULL, verifyChildROA,
 		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
-  snprintf(crlWhere, sizeof(crlWhere), "cert_id=\"%d\"", data->id);
-  sta = searchscm(conp, theManifestTable, &crlSrch, NULL, verifyChildManifest,
-		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
+  if (manSrch == NULL) {
+    manSrch = newsrchscm(NULL, 3, 0, 1);
+    ADDCOL (manSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	    sta, sta);
+    ADDCOL (manSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    ADDCOL (manSrch, "files", SQL_C_CHAR, 1, sta, sta);
+    manSrch->vec[manSrch->nused-1].valptr = manFiles;
+    manSrch->vec[manSrch->nused-1].valsize = MANFILES_SIZE;
+  }
+  snprintf(manSrch->wherestr, WHERESTR_SIZE, "cert_id=\"%d\"", data->id);
+  sta = searchscm(conp, theManifestTable, manSrch, NULL, verifyChildManifest,
+		  SCM_SRCH_DOVALUE_ALWAYS);
   return 0;
 }
 
@@ -1141,20 +1143,17 @@ typedef struct _mcf
 
 static int cparents(scmcon *conp, scmsrcha *s, int idx)
 {
-  unsigned int flags;
-  mcf *mymcf;
-
   UNREFERENCED_PARAMETER(conp);
   UNREFERENCED_PARAMETER(idx);
-  mymcf = (mcf *)(s->context);
-  flags = *(unsigned int *)(s->vec->valptr);
-  if ( (flags & SCM_FLAG_VALID) != 0 )
-    mymcf->did++;
+  mcf *mymcf = (mcf *)(s->context);
+  // ???????????? don't have this function, instead use where clause ?????
+  mymcf->did++;
   return(0);
 }
 
 static int countvalidparents(scmcon *conp, char *IS, char *AK)
 {
+  // ?????? replace this with shorter version using utility funcs ????????
   unsigned int flags = 0;
   scmsrcha srch;
   scmsrch  srch1;
@@ -1192,6 +1191,8 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
     return(sta);
   snprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
   free((void *)now);
+  addFlagTest(ws, SCM_FLAG_VALIDATED, 1, 1);
+  addFlagTest(ws, SCM_FLAG_NOCHAIN, 0, 1);
   srch.wherestr = &ws[0];
   mymcf.did = 0;
   srch.context = (void *)&mymcf;
@@ -1202,13 +1203,8 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
   return mymcf.did;
 }
 
-
 // static variables for efficiency, so only need to set up query once
-static scmsrcha roaSrch;
-static scmsrch  roaSrch1[2];
-static char roaWhere[1024];
-static unsigned long roaBlah = 0;
-static int roaNeedsInit = 1;
+static scmsrcha *roaSrch = NULL;
 
 /*
  * callback function for invalidateChildCert
@@ -1241,33 +1237,21 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
     sta = updateValidFlags (conp, theCertTable, data->id, data->flags, 0);
     if (sta < 0) return sta;
   }
-  if (roaNeedsInit) {
-    roaNeedsInit = 0;
-    roaSrch.sname = NULL;
-    roaSrch.where = NULL;
-    roaSrch.ntot = 3;
-    roaSrch.nused = 0;
-    roaSrch.context = &roaBlah;
-    roaSrch.wherestr = roaWhere;
-    roaSrch.vec = roaSrch1;
-    ADDCOL (&roaSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
-    ADDCOL (&roaSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
-    ADDCOL (&roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+  if (roaSrch == NULL) {
+    roaSrch = newsrchscm(NULL, 3, 0, 1);
+    ADDCOL (roaSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    ADDCOL (roaSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL (roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
   }
-  snprintf(roaWhere, sizeof(roaWhere), "ski=\"%s\" and (flags%%%d)>=%d",
-	   data->ski, 2*SCM_FLAG_VALID, SCM_FLAG_VALID);
-  searchscm(conp, theROATable, &roaSrch, NULL, revoke_roa,
+  snprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+  addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+  searchscm(conp, theROATable, roaSrch, NULL, revoke_roa,
 	    SCM_SRCH_DOVALUE_ALWAYS);
   return 0;
 }
 
-
 // static variables for efficiency, so only need to set up query once
-static scmsrcha childrenSrch;
-static scmsrch  childrenSrch1[8];
-static char childrenWhere[1024];
-static unsigned long childrenBlah = 0;
-static int childrenNeedsInit = 1;
+static scmsrcha *childrenSrch = NULL;
 
 // static variables and structure to pass back from callback and hold data
 typedef struct _PropDataList {
@@ -1321,31 +1305,23 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
 {
   int isRoot = 1;
   int doIt, idx, sta;
-  int flag = doVerify ? SCM_FLAG_NOCHAIN : SCM_FLAG_VALID;
 
   prevPropData = currPropData;
   currPropData = doVerify ? &vPropData : &iPropData;
 
   // initialize query first time through
-  if (childrenNeedsInit) {
-    childrenNeedsInit = 0;
-    childrenSrch.sname = NULL;
-    childrenSrch.where = NULL;
-    childrenSrch.ntot = 8;
-    childrenSrch.nused = 0;
-    childrenSrch.context = &childrenBlah;
-    childrenSrch.wherestr = childrenWhere;
-    childrenSrch.vec = childrenSrch1;
-    ADDCOL (&childrenSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
-    ADDCOL (&childrenSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
-    ADDCOL (&childrenSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
+  if (childrenSrch == NULL) {
+    childrenSrch = newsrchscm(NULL, 8, 0, 1);
+    ADDCOL (childrenSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL (childrenSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
+    ADDCOL (childrenSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
-    ADDCOL (&childrenSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
-    ADDCOL (&childrenSrch, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
-    ADDCOL (&childrenSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+    ADDCOL (childrenSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL (childrenSrch, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
+    ADDCOL (childrenSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
-    ADDCOL (&childrenSrch, "aki", SQL_C_CHAR, SKISIZE, sta, sta);
-    ADDCOL (&childrenSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, sta);
+    ADDCOL (childrenSrch, "aki", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL (childrenSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, sta);
   }
 
   // iterate through all children, verifying
@@ -1363,10 +1339,11 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
     else
       doIt = invalidateChildCert(conp, &currPropData->data[idx], !isRoot) == 0;
     if (doIt) {
-      snprintf(childrenWhere, sizeof(childrenWhere),
-	   "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\" and (flags%%%d)>=%d",
+      snprintf(childrenSrch->wherestr, WHERESTR_SIZE,
+	       "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
 	       currPropData->data[idx].ski, currPropData->data[idx].ski,
-	       currPropData->data[idx].subject, 2 * flag, flag);
+	       currPropData->data[idx].subject);
+      addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOCHAIN, doVerify, 1);
     }
     if (! isRoot) {
       free (currPropData->data[idx].filename);
@@ -1377,7 +1354,7 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
       free (currPropData->data[idx].issuer);
     }
     if (doIt)
-      searchscm(conp, theCertTable, &childrenSrch, NULL, registerChild,
+      searchscm(conp, theCertTable, childrenSrch, NULL, registerChild,
 		SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN);
     isRoot = 0;
   }
@@ -1385,15 +1362,40 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
   return 0;
 }
 
-unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState)
+static scmsrcha *validManSrch = NULL;
+static int noValidMan;
+
+static int setNoValidMan(scmcon *conp, scmsrcha *s, int idx)
 {
-  flags |= (isValid ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  UNREFERENCED_PARAMETER(conp); UNREFERENCED_PARAMETER(idx);
+  UNREFERENCED_PARAMETER(s);
+  noValidMan = 0;
+  return 0;
+}
+
+unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState,
+			     char *filename, scm *scmp, scmcon *conp)
+{
+  int sta;
+  flags |= (isValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
+  if (strcmp(manState, "-1") == 0)
+    flags |= SCM_FLAG_BADHASH;
   if (strcmp(manState, "0") == 0) {
-    flags |= SCM_FLAG_NOMAN;
-  } else if (strcmp(manState, "1") == 0) {
-    flags |= SCM_FLAG_GOODHASH;
-  } else if (strcmp(manState, "-1") != 0) {
-    printf("!!!!Error: Unrecognized manifest state %s\n", manState);
+    flags |= SCM_FLAG_NOMAN | SCM_FLAG_NOVALIDMAN;
+  } else {
+    noValidMan = 1;
+    if (validManSrch == NULL) {
+      validManSrch = newsrchscm(NULL, 1, 0, 1);
+      ADDCOL (validManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    }
+    snprintf(validManSrch->wherestr, WHERESTR_SIZE,
+	     "filenames regexp binary \"%s\"", filename);
+    addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+    initTables(scmp);
+    searchscm(conp, theManifestTable, validManSrch, NULL, setNoValidMan,
+	      SCM_SRCH_DOVALUE_ALWAYS);
+    if (noValidMan)
+      flags |= SCM_FLAG_NOVALIDMAN;
   }
   return flags;
 }
@@ -1459,7 +1461,8 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 //  sta = 0; chainOK = 1; // uncomment this line for running test 8
   if ( sta == 0 )
     {
-      cf->flags = addStateToFlags(cf->flags, chainOK, manState);
+      cf->flags = addStateToFlags(cf->flags, chainOK, manState,
+				  cf->fields[CF_FIELD_FILENAME], scmp, conp);
       sta = add_cert_internal(scmp, conp, cf, cert_id);
     }
 // try to validate children of cert
@@ -1506,7 +1509,8 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		   cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
 // then add the CRL
   if (sta == 0) {
-    cf->flags = addStateToFlags(cf->flags, chainOK, manState);
+    cf->flags = addStateToFlags(cf->flags, chainOK, manState,
+				cf->fields[CRF_FIELD_FILENAME], scmp, conp);
     sta = add_crl_internal(scmp, conp, cf);
   }
 // and do the revocations
@@ -1580,20 +1584,17 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     free((void *)sig);
     return(sta);
   }
-  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter,
-			 sig, addStateToFlags(0, chainOK, manState));
+  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter, sig,
+			 addStateToFlags(0, chainOK, manState, outfile,
+					 scmp, conp));
   free((void *)ski);
   free((void *)sig);
   return(sta);
 }
 
 
-// static variables for efficiency, so only need to set up query once
-static scmsrcha embedCertSrch;
-static scmsrch  embedCertSrch1[4];
-static char embedCertWhere[1024];
-static unsigned long embedCertBlah = 0;
-static int embedCertNeedsInit = 1;
+// static variables so only need to set up query once and so can pass results
+static scmsrcha *embedCertSrch = NULL;
 static int embedCertFlags;
 static unsigned int embedCertID;
 
@@ -1657,26 +1658,23 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   *str = 0;
   free(tmp);
 
-  struct Manifest *manifest = &roa.content.signedData.encapContentInfo.eContent.manifest;
+  struct Manifest *manifest =
+    &roa.content.signedData.encapContentInfo.eContent.manifest;
 
   uchar file[200];
-  char *files = calloc(1, 1000);
-  int filesSize = 1000;
   struct FileAndHash *fahp;
+  manFiles[0] = 0;
+  int manFilesLen = 0;
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
       fahp = (struct FileAndHash *)next_of(&fahp->self)) {
     read_casn(&fahp->file, file);
     decode_casn (&theCASN, file);
     read_casn(&theCASN, file);
-    if (strlen(files) + strlen((char *)file) >= filesSize) {
-      char *tmpFiles = calloc(1, 2 * filesSize);
-      strncpy (tmpFiles, files, filesSize);
-      free(files);
-      files = tmpFiles;
-      filesSize *= 2;
-    }
-    sprintf(files + strlen(files), "%s%s", (strlen(files)) ? " " : "", file);
+    snprintf(manFiles + manFilesLen, MANFILES_SIZE - manFilesLen,
+	     "%s%s", manFilesLen ? " " : "", file);
+    if (manFilesLen) manFilesLen++;
+    manFilesLen += strlen((char *)file);
   }
 
   read_casn_time (&manifest->thisUpdate, &ltime);
@@ -1699,30 +1697,25 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   man_id++;
 
   // initialize query first time through
-  if (embedCertNeedsInit) {
-    embedCertNeedsInit = 0;
-    embedCertSrch.sname = NULL;
-    embedCertSrch.where = NULL;
-    embedCertSrch.ntot = 4;
-    embedCertSrch.nused = 0;
-    embedCertSrch.context = &embedCertBlah;
-    embedCertSrch.wherestr = embedCertWhere;
-    embedCertSrch.vec = embedCertSrch1;
-    ADDCOL (&embedCertSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
+  if (embedCertSrch == NULL) {
+    embedCertSrch = newsrchscm(NULL, 4, 0, 1);
+    ADDCOL (embedCertSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
-    ADDCOL (&embedCertSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+    ADDCOL (embedCertSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
   }
 
-  snprintf(embedCertWhere, sizeof(embedCertWhere), "ski=\"%s\"", ski);
+  snprintf(embedCertSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
   embedCertFlags = 0;
   embedCertID = 0;
-  searchscm(conp, theCertTable, &embedCertSrch, NULL, findCertWithID,
+  searchscm(conp, theCertTable, embedCertSrch, NULL, findCertWithID,
 	    SCM_SRCH_DOVALUE_ALWAYS);
   if (embedCertID == 0) {
     fprintf(stderr, "For manifest %s, unable to find embedded cert ski = %s\n",
 	    outfile, ski);
   }
+  int manValid = ((embedCertFlags & SCM_FLAG_VALIDATED) &&
+		  ! (embedCertFlags & SCM_FLAG_NOCHAIN));
 
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
@@ -1733,8 +1726,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   cols[idx++].value = thisUpdate;
   cols[idx].column = "next_upd";
   cols[idx++].value = nextUpdate;
-  (void)snprintf(flagn, sizeof(flagn), "%u", (embedCertFlags & SCM_FLAG_VALID)
-		 ? SCM_FLAG_VALID : SCM_FLAG_NOCHAIN);
+  (void)snprintf(flagn, sizeof(flagn), "%u",
+		 manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
   (void)snprintf(mid, sizeof(mid), "%u", man_id);
@@ -1744,18 +1737,20 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   cols[idx].column = "cert_id";
   cols[idx++].value = cid;
   cols[idx].column = "files";
-  cols[idx++].value = files;
+  cols[idx++].value = manFiles;
   aone.vec = &cols[0];
   aone.ntot = 12;
   aone.nused = idx;
   aone.vald = 0;
   sta = insertscm(conp, theManifestTable, &aone);
 
+  if (manValid)
+    updateManifestObjs(conp, manFiles);
+
   // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
   delete_casn(&(roa.self));
   free(thisUpdate);
   free(nextUpdate);
-  free(files);
 
   return sta;
 }
@@ -1811,7 +1806,8 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_ROA_PEM:
       sta = add_roa(scmp, conp, outfile, outfull, id, utrust, typ, manState);
       break;
-    case OT_MANIFEST:
+    case OT_MAN:
+    case OT_MAN_PEM:
       sta = add_manifest(scmp, conp, outfile, outfull, id, utrust, typ);
       break;
     default:
@@ -1864,7 +1860,9 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   if ( sninuse == 0 || s->vec[2].avalsize < (int)(sizeof(unsigned int)) )
     return(0);
   flags = *(unsigned int *)(s->vec[3].valptr);
-  if ( (flags & SCM_FLAG_VALID) == 0 ||
+  // ?????????? test for this in where of select statement ???????????????
+  if ( (flags & SCM_FLAG_VALIDATED) == 0 ||
+       (flags & SCM_FLAG_NOCHAIN) != 0 ||
        s->vec[3].avalsize < (int)(sizeof(unsigned int)) )
     return(0);
   lid = *(unsigned int *)(s->vec[4].valptr);
@@ -2154,6 +2152,10 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_ROA_PEM:
       thetab = theROATable;
       break;
+    case OT_MAN:
+    case OT_MAN_PEM:
+      thetab = theManifestTable;
+      break;
     default:
       sta = ERR_SCM_INTERNAL;
       break;
@@ -2273,7 +2275,6 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   where.nused = 1;
   where.vald = 0;
   pflags &= ~SCM_FLAG_NOTYET;
-  pflags |= SCM_FLAG_VALID;
   sta = setflagsscm(conp, theCertTable, &where, pflags);
   return(sta);
 }
@@ -2300,7 +2301,6 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   where.nused = 1;
   where.vald = 0;
   pflags = *(unsigned int *)(s->vec[3].valptr);
-  pflags &= ~SCM_FLAG_VALID;
   pflags |= SCM_FLAG_NOTYET;
   sta = setflagsscm(conp, theCertTable, &where, pflags);
   return(sta);

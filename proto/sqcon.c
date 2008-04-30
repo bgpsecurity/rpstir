@@ -957,11 +957,19 @@ void freesrchscm(scmsrcha *srch)
     }
 }
 
+/* add clause for testing for flag to a where string */
+void addFlagTest(char *whereStr, int flagVal, int isSet, int needAnd)
+{
+  int len = strlen(whereStr);
+  snprintf(&whereStr[len], WHERESTR_SIZE - len, "%s (flags%%%d)%s%d",
+	   needAnd ? " and" : "", 2*flagVal, isSet ? ">=" : "<", flagVal);
+}
+
 /*
   Create a new empty srch array
 */
 
-scmsrcha *newsrchscm(char *name, int leen, int cleen)
+scmsrcha *newsrchscm(char *name, int leen, int cleen, int includeWhereStr)
 {
   scmsrcha *newp;
 
@@ -970,6 +978,7 @@ scmsrcha *newsrchscm(char *name, int leen, int cleen)
   newp = (scmsrcha *)calloc(1, sizeof(scmsrcha));
   if ( newp == NULL )
     return(NULL);
+  newp->sname = NULL;
   if ( name != NULL && name[0] != 0 )
     {
       newp->sname = strdup(name);
@@ -994,6 +1003,13 @@ scmsrcha *newsrchscm(char *name, int leen, int cleen)
       return(NULL);
     }
   newp->ntot = leen;
+  newp->nused = 0;
+  newp->vald = 0;
+  newp->wherestr = NULL;
+  newp->where = NULL;
+  if (includeWhereStr) {
+    newp->wherestr = (char *)calloc(1, WHERESTR_SIZE);
+  }
   return(newp);
 }
 

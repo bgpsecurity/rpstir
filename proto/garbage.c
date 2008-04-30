@@ -39,7 +39,7 @@ static char *prevTimestamp, *currTimestamp;
 static char *theIssuer, *theAKI;   // for passing to callback
 static unsigned int theID;         // for passing to callback
 static sqlcountfunc countHandler;  // used by countCurrentCRLs
-static scmtab *certTable, *crlTable;
+static scmtab *certTable, *crlTable, *roaTable, *manifestTable;
 
 /* callback function for searchscm that records the timestamps */
 static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
@@ -59,9 +59,9 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
   s = s;
   char msg[600];
   if (cnt > 0) return 0;   // exists another crl that is current
-  snprintf (msg, 600, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\" and (flags %% %d) < %d",
-           certTable->tabname, SCM_FLAG_UNKNOWN, theAKI, theIssuer,
-           2 * SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+  snprintf (msg, 600, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
+	    certTable->tabname, SCM_FLAG_STALECRL, theAKI, theIssuer);
+  addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
   return statementscm (conp, msg);
 }
 
@@ -75,43 +75,82 @@ static int handleIfCurrent (scmcon *conp, scmsrcha *s, int cnt)
   char msg[128];
   if (cnt == 0) return 0;   // exists another crl that is current
   snprintf (msg, 128, "update %s set flags = flags - %d where local_id=%d",
-           certTable->tabname, SCM_FLAG_UNKNOWN, theID);
+           certTable->tabname, SCM_FLAG_STALECRL, theID);
   return statementscm (conp, msg);
 }
 
 /*
  * callback function for stale crl search that checks stale crls to see if
  * another crl exists that is more recent; if not, it sets all certs
- * covered by this crl to have status unknown
+ * covered by this crl to have status stale_crl
  */
-static scmsrcha cntSrch;
-static scmsrch  cntSrch1[1];
-static char cntMsg[600];
-static unsigned long cntBlah = 0;
-static int cntNeedsInit = 1;
+static scmsrcha *cntSrch = NULL;
 
 static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
 {
   numLine = numLine;
-  if (cntNeedsInit) {
-    cntSrch.sname = NULL;
-    cntSrch.where = NULL;
-    cntSrch.ntot = 1;
-    cntSrch.nused = 0;
-    cntSrch.context = &cntBlah;
-    cntSrch.wherestr = cntMsg;
-    cntSrch.vec = cntSrch1;
-    addcolsrchscm (&cntSrch, "local_id", SQL_C_ULONG, 8);
+  if (cntSrch == NULL) {
+    cntSrch = newsrchscm(NULL, 1, 0, 1);
+    addcolsrchscm (cntSrch, "local_id", SQL_C_ULONG, 8);
   }
   theIssuer = (char *) s->vec[0].valptr;
   theAKI = (char *) s->vec[1].valptr;
   if (s->nused > 2) {
     theID = *((unsigned int *) s->vec[2].valptr);
   }
-  snprintf (cntMsg, 600, "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
+  snprintf (cntSrch->wherestr, WHERESTR_SIZE,
+	    "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
 	    theIssuer, theAKI, currTimestamp);
-  return searchscm (conp, crlTable, &cntSrch, countHandler, NULL,
+  return searchscm (conp, crlTable, cntSrch, countHandler, NULL,
                     SCM_SRCH_DOCOUNT);
+}
+
+/*
+ * callback function for stale manifest search that makes all objects
+ * referenced by manifest that is stale
+ */
+static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
+{
+  char stmt[200];
+  snprintf (stmt, sizeof(stmt),
+	    "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
+	    tab->tabname, SCM_FLAG_STALEMAN,
+	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
+  return statementscm (conp, stmt);
+}
+
+static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
+{
+  numLine = numLine;
+  char *files = (char *)s->vec[0].valptr;
+  handleStaleMan2(conp, certTable, files);
+  handleStaleMan2(conp, crlTable, files);
+  handleStaleMan2(conp, roaTable, files);
+  return 0;
+}
+
+/*
+ * callback function for non-stale manifest search that makes all objects
+ * referenced by manifest that is non-stale
+ */
+static int handleFreshMan2(scmcon *conp, scmtab *tab, char *files)
+{
+  char stmt[200];
+  snprintf (stmt, sizeof(stmt),
+	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
+	    tab->tabname, SCM_FLAG_STALEMAN,
+	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
+  return statementscm (conp, stmt);
+}
+
+static int handleFreshMan (scmcon *conp, scmsrcha *s, int numLine)
+{
+  numLine = numLine;
+  char *files = (char *)s->vec[0].valptr;
+  handleFreshMan2(conp, certTable, files);
+  handleFreshMan2(conp, crlTable, files);
+  handleFreshMan2(conp, roaTable, files);
+  return 0;
 }
 
 int main(int argc, char **argv) 
@@ -120,8 +159,8 @@ int main(int argc, char **argv)
   scmcon   *connect = NULL;
   scmtab   *metaTable = NULL;
   scmsrcha srch;
-  scmsrch  srch1[3];
-  char     msg[1024];
+  scmsrch  srch1[4];
+  char     msg[WHERESTR_SIZE];
   unsigned long blah = 0;
   int      status;
 
@@ -131,15 +170,19 @@ int main(int argc, char **argv)
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
-  connect = connectscm (scmp->dsn, msg, 1024);
+  connect = connectscm (scmp->dsn, msg, WHERESTR_SIZE);
   checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
   certTable = findtablescm (scmp, "certificate");
   checkErr (certTable == NULL, "Cannot find table certificate\n");
   crlTable = findtablescm (scmp, "crl");
   checkErr (crlTable == NULL, "Cannot find table crl\n");
+  roaTable = findtablescm (scmp, "roa");
+  checkErr (roaTable == NULL, "Cannot find table roa\n");
+  manifestTable = findtablescm (scmp, "manifest");
+  checkErr (manifestTable == NULL, "Cannot find table manifest\n");
   srch.vec = srch1;
   srch.sname = NULL;
-  srch.ntot = 3;
+  srch.ntot = 4;
   srch.where = NULL;
   srch.context = &blah;
 
@@ -166,7 +209,7 @@ int main(int argc, char **argv)
   //   to be unknown
   srch.nused = 0;
   srch.vald = 0;
-  snprintf (msg, 1024, "next_upd<=\"%s\"", currTimestamp);
+  snprintf (msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, SKISIZE);
@@ -176,13 +219,24 @@ int main(int argc, char **argv)
   free (srch1[0].valptr);
   free (srch1[1].valptr);
 
+  // now check for stale and then non-stale manifests
+  srch.nused = 0;
+  srch.vald = 0;
+  addcolsrchscm (&srch, "files", SQL_C_CHAR, MANFILES_SIZE);
+  status = searchscm (connect, manifestTable, &srch, NULL, handleStaleMan,
+                      SCM_SRCH_DOVALUE_ALWAYS);
+  snprintf (msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
+  status = searchscm (connect, manifestTable, &srch, NULL, handleFreshMan,
+                      SCM_SRCH_DOVALUE_ALWAYS);
+  free (srch1[0].valptr);
+
   // check all certs in state unknown to see if now crl with issuer=issuer
   // and aki=ski and nextUpdate after currTime;
   // if so, set state !unknown
   srch.nused = 0;
   srch.vald = 0;
-  snprintf (msg, 1024, "(flags %% %d) >= %d",
-	    2*SCM_FLAG_UNKNOWN, SCM_FLAG_UNKNOWN);
+  msg[0] = 0;
+  addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "issuer", SQL_C_CHAR, 512);
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, 128);
@@ -195,7 +249,7 @@ int main(int argc, char **argv)
   free (srch1[2].valptr);
 
   // write timestamp into database
-  snprintf (msg, 1024, "update %s set gc_last=\"%s\";",
+  snprintf (msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
 	    metaTable->tabname, currTimestamp);
   status = statementscm (connect, msg);
 

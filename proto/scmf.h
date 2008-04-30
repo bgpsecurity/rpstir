@@ -105,12 +105,15 @@ typedef int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
 #define SCM_SRCH_DO_JOIN         0x40  /* Include join with directory table */
 #define SCM_SRCH_DO_JOIN_CRL     0x80  /* Include join with crl table */
 
+#define WHERESTR_SIZE 1024
+
 #ifndef SQLOK
 #define SQLOK(s) (s == SQL_SUCCESS || s == SQL_SUCCESS_WITH_INFO)
 #endif
 
 extern scmcon   *connectscm(char *dsnp, char *errmsg, int emlen);
-extern scmsrcha *newsrchscm(char *name, int leen, int cleen);
+extern scmsrcha *newsrchscm(char *name, int leen, int cleenn, int useWhereStr);
+extern void  addFlagTest(char *whereStr, int flagVal, int isSet, int needAnd);
 extern void  disconnectscm(scmcon *conp);
 extern void  freesrchscm(scmsrcha *srch);
 extern char *geterrorscm(scmcon *conp);
