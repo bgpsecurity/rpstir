@@ -109,14 +109,15 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
  * callback function for stale manifest search that makes all objects
  * referenced by manifest that is stale
  */
+static char staleManStmt[MANFILES_SIZE];
+
 static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
 {
-  char stmt[200];
-  snprintf (stmt, sizeof(stmt),
+  snprintf (staleManStmt, MANFILES_SIZE,
 	    "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
 	    tab->tabname, SCM_FLAG_STALEMAN,
 	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
-  return statementscm (conp, stmt);
+  return statementscm (conp, staleManStmt);
 }
 
 static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
@@ -135,12 +136,11 @@ static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
  */
 static int handleFreshMan2(scmcon *conp, scmtab *tab, char *files)
 {
-  char stmt[200];
-  snprintf (stmt, sizeof(stmt),
+  snprintf (staleManStmt, MANFILES_SIZE,
 	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
 	    tab->tabname, SCM_FLAG_STALEMAN,
 	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
-  return statementscm (conp, stmt);
+  return statementscm (conp, staleManStmt);
 }
 
 static int handleFreshMan (scmcon *conp, scmsrcha *s, int numLine)
@@ -222,7 +222,7 @@ int main(int argc, char **argv)
   // now check for stale and then non-stale manifests
   srch.nused = 0;
   srch.vald = 0;
-  addcolsrchscm (&srch, "files", SQL_C_CHAR, MANFILES_SIZE);
+  addcolsrchscm (&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
   status = searchscm (connect, manifestTable, &srch, NULL, handleStaleMan,
                       SCM_SRCH_DOVALUE_ALWAYS);
   snprintf (msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);

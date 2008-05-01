@@ -1117,7 +1117,7 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
     ADDCOL (manSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
     ADDCOL (manSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
-    ADDCOL (manSrch, "files", SQL_C_CHAR, 1, sta, sta);
+    ADDCOL (manSrch, "files", SQL_C_BINARY, 1, sta, sta);
     manSrch->vec[manSrch->nused-1].valptr = manFiles;
     manSrch->vec[manSrch->nused-1].valsize = MANFILES_SIZE;
   }
