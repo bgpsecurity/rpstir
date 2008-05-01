@@ -324,6 +324,7 @@ static int doQuery (char **displays, char **filters)
 
   /* set up where clause, i.e. the filter */
   srch.where = NULL;
+  whereStr[0] = 0;
   if (filters == NULL || filters[0] == NULL) {
     srch.wherestr = NULL;
   } else {
@@ -360,6 +361,18 @@ static int doQuery (char **displays, char **filters)
       strncat (whereStr, name, maxW-strlen(whereStr));
       strncat (whereStr, "\"", maxW-strlen(whereStr));
     }
+    srch.wherestr = whereStr;
+  }
+  if (validate) {
+    addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, srch.wherestr != NULL);
+    if (rejectStaleChain)
+      addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
+    if (rejectStaleCRL)
+      addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
+    if (rejectStaleManifest)
+      addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
+    if (rejectNoManifest)
+      addFlagTest(whereStr, SCM_FLAG_NOVALIDMAN, 0, 1);
     srch.wherestr = whereStr;
   }
 
