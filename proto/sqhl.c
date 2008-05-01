@@ -1387,10 +1387,11 @@ unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState,
     noValidMan = 1;
     if (validManSrch == NULL) {
       validManSrch = newsrchscm(NULL, 1, 0, 1);
-      ADDCOL (validManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+      ADDCOL (validManSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	      sta, sta);
     }
     snprintf(validManSrch->wherestr, WHERESTR_SIZE,
-	     "filenames regexp binary \"%s\"", filename);
+	     "files regexp binary \"%s\"", filename);
     addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     initTables(scmp);
     searchscm(conp, theManifestTable, validManSrch, NULL, setNoValidMan,
