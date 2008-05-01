@@ -1022,23 +1022,22 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
 /*
  * unset novalidman flag from all objects on newly validated manifest
  */
-static int updateManifestObjs2 (scmcon *conp, scmtab *tabp,
-			        char *files, char *stmt)
+static char updateManStmt[MANFILES_SIZE];
+
+static int updateManifestObjs2 (scmcon *conp, scmtab *tabp, char *files)
 {
-  snprintf (stmt, sizeof(stmt),
+  snprintf (updateManStmt, MANFILES_SIZE,
 	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
 	    tabp->tabname, SCM_FLAG_NOVALIDMAN,
 	    2*SCM_FLAG_NOVALIDMAN, SCM_FLAG_NOVALIDMAN, files);
-  return statementscm (conp, stmt);
+  return statementscm (conp, updateManStmt);
 }
 
 static void updateManifestObjs(scmcon *conp, char *files)
 {
-  char *stmt = calloc(1, strlen(files) + 150);
-  updateManifestObjs2(conp, theCertTable, files, stmt);
-  updateManifestObjs2(conp, theCRLTable, files, stmt);
-  updateManifestObjs2(conp, theROATable, files, stmt);
-  free(stmt);
+  updateManifestObjs2(conp, theCertTable, files);
+  updateManifestObjs2(conp, theCRLTable, files);
+  updateManifestObjs2(conp, theROATable, files);
 }
 
 /*
