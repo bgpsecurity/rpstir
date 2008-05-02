@@ -1486,12 +1486,14 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   }
 // actually add the certificate
 //  sta = 0; chainOK = 1; // uncomment this line for running test 8
-  if ( sta == 0 )
-    {
-      cf->flags = addStateToFlags(cf->flags, chainOK, manState,
-				  cf->fields[CF_FIELD_FILENAME], scmp, conp);
-      sta = add_cert_internal(scmp, conp, cf, cert_id);
-    }
+  if ( sta == 0 ) {
+    cf->flags = addStateToFlags(cf->flags, chainOK, manState,
+				cf->fields[CF_FIELD_FILENAME], scmp, conp);
+    sta = (SCM_FLAG_BADHASH & cf->flags) && (SCM_FLAG_NOVALIDMAN & ~cf->flags);
+  }
+  if ( sta == 0 ) {
+    sta = add_cert_internal(scmp, conp, cf, cert_id);
+  }
 // try to validate children of cert
   if (sta == 0) {
     sta = verifyOrNotChildren (conp, cf->fields[CF_FIELD_SKI],
@@ -1538,6 +1540,9 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   if (sta == 0) {
     cf->flags = addStateToFlags(cf->flags, chainOK, manState,
 				cf->fields[CRF_FIELD_FILENAME], scmp, conp);
+    sta = (SCM_FLAG_BADHASH & cf->flags) && (SCM_FLAG_NOVALIDMAN & ~cf->flags);
+  }
+  if (sta == 0) {
     sta = add_crl_internal(scmp, conp, cf);
   }
 // and do the revocations
@@ -1605,15 +1610,16 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   roaGenerateFilter (r, NULL, NULL, filter);
   
   roaFree(r);
-  if ( sta < 0 )
-  {
-    free((void *)ski);
-    free((void *)sig);
-    return(sta);
+  unsigned int flags;
+  if ( sta >= 0 ) {
+    flags = addStateToFlags(0, chainOK, manState, outfile, scmp, conp);
+    sta = (SCM_FLAG_BADHASH & flags) && (SCM_FLAG_NOVALIDMAN & ~flags);
   }
-  sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter, sig,
-			 addStateToFlags(0, chainOK, manState, outfile,
-					 scmp, conp));
+  if (sta == 0) {
+    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter, sig,
+			   flags);
+  }
+
   free((void *)ski);
   free((void *)sig);
   return(sta);
