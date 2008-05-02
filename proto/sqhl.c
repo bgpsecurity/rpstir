@@ -1495,7 +1495,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     sta = add_cert_internal(scmp, conp, cf, cert_id);
   }
 // try to validate children of cert
-  if (sta == 0) {
+  if ((sta == 0) && chainOK) {
     sta = verifyOrNotChildren (conp, cf->fields[CF_FIELD_SKI],
 			       cf->fields[CF_FIELD_SUBJECT], *cert_id, 1);
   }
