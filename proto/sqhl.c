@@ -1023,18 +1023,44 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
  * unset novalidman flag from all objects on newly validated manifest
  */
 static char updateManStmt[MANFILES_SIZE];
+static char updateManWhere[MANFILES_SIZE];
+static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx);
+static void fillInColumns (scmsrch *srch1, unsigned int *lid, char *ski,
+			   char *subject, unsigned int *flags, scmsrcha *srch);
 
-static int updateManifestObjs2 (scmcon *conp, scmtab *tabp, char *files)
+static void updateManifestObjs2 (scmcon *conp, scmtab *tabp, char *files)
 {
+  snprintf (updateManStmt, MANFILES_SIZE,
+	    "delete from %s where ", tabp->tabname);
+  addFlagTest(updateManStmt + strlen(updateManStmt), SCM_FLAG_BADHASH, 1, 0);
+  snprintf(updateManStmt + strlen(updateManStmt),
+	   MANFILES_SIZE - strlen(updateManStmt),
+	   " and \"%s\" regexp binary filename", files);
+  statementscm (conp, updateManStmt);
   snprintf (updateManStmt, MANFILES_SIZE,
 	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
 	    tabp->tabname, SCM_FLAG_NOVALIDMAN,
 	    2*SCM_FLAG_NOVALIDMAN, SCM_FLAG_NOVALIDMAN, files);
-  return statementscm (conp, updateManStmt);
+  statementscm (conp, updateManStmt);
 }
 
 static void updateManifestObjs(scmcon *conp, char *files)
 {
+  scmsrcha srch;
+  scmsrch  srch2[5];
+  unsigned int lid, flags;
+  char     ski[512], subject[512];
+
+  fillInColumns (srch2, &lid, ski, subject, &flags, &srch);
+  srch.where = NULL;
+  srch.wherestr = updateManWhere;
+  addFlagTest(updateManWhere, SCM_FLAG_BADHASH, 1, 0);
+  snprintf(updateManWhere + strlen(updateManWhere),
+	   MANFILES_SIZE - strlen(updateManWhere),
+	   " and \"%s\" regexp binary filename", files);
+  searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
+	    SCM_SRCH_DOVALUE_ALWAYS);
+
   updateManifestObjs2(conp, theCertTable, files);
   updateManifestObjs2(conp, theCRLTable, files);
   updateManifestObjs2(conp, theROATable, files);
