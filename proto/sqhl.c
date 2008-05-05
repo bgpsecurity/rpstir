@@ -929,7 +929,9 @@ static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
 }
 
 
-/* utility function */
+/* utility function for setting and zeroing the flags dealing with
+   validation and validation staleness
+*/
 static int updateValidFlags (scmcon *conp, scmtab *tabp, unsigned int id,
 			     unsigned int prevFlags, int isValid)
 {
@@ -1659,6 +1661,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int   idx = 0;
   char  did[24], mid[24], cid[24], flagn[24], ski[40];
 
+  // manifest stored in same format as a roa
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
@@ -1666,6 +1669,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     fprintf(stderr, "invalid manifest %s\n", outfull);
     return sta;
   }
+
+  // read the embedded cert information, in particular the ski
   struct Certificate *certp = (struct Certificate *)
     member_casn(&roa.content.signedData.certificates.self, 0);
   struct Extensions *exts = &certp->toBeSigned.extensions;
@@ -1691,9 +1696,11 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   *str = 0;
   free(tmp);
 
+  // now, read the data out of the manifest structure
   struct Manifest *manifest =
     &roa.content.signedData.encapContentInfo.eContent.manifest;
 
+  // read the list of files
   uchar file[200];
   struct FileAndHash *fahp;
   manFiles[0] = 0;
@@ -1710,6 +1717,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     manFilesLen += strlen((char *)file);
   }
 
+  // read this_upd and next_upd
   read_casn_time (&manifest->thisUpdate, &ltime);
   if ( sta < 0 ) {
     fprintf(stderr, "Could not read_casn_time for thisUpdate\n");
@@ -1738,6 +1746,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	    sta, sta);
   }
 
+  // find in the db the certificate embedded in the manifest by looking for the
+  // certificate with the same ski as that cert in the manifest
   snprintf(embedCertSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
   embedCertFlags = 0;
   embedCertID = 0;
@@ -1747,9 +1757,13 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     fprintf(stderr, "For manifest %s, unable to find embedded cert ski = %s\n",
 	    outfile, ski);
   }
+
+  // the manifest is valid if the embedded cert is valid (since we already
+  //  know that the cert validates the manifest)
   int manValid = ((embedCertFlags & SCM_FLAG_VALIDATED) &&
 		  ! (embedCertFlags & SCM_FLAG_NOCHAIN));
 
+  // do the actual insert of the manifest in the db
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
   (void)snprintf(did, sizeof(did), "%u", id);
@@ -1777,9 +1791,12 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   aone.vald = 0;
   sta = insertscm(conp, theManifestTable, &aone);
 
+  // if the manifest is valid, zero the nomanvalid flag for all the
+  //   objects it references
   if (manValid)
     updateManifestObjs(conp, manFiles);
 
+  // clean up
   // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
   delete_casn(&(roa.self));
   free(thisUpdate);

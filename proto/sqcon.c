@@ -957,7 +957,7 @@ void freesrchscm(scmsrcha *srch)
     }
 }
 
-/* add clause for testing for flag to a where string */
+/* add clause for testing the value of a flag to a where string */
 void addFlagTest(char *whereStr, int flagVal, int isSet, int needAnd)
 {
   int len = strlen(whereStr);

@@ -106,8 +106,8 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
 }
 
 /*
- * callback function for stale manifest search that makes all objects
- * referenced by manifest that is stale
+ * callback function for stale manifest search that marks accordingly
+ * all objects referenced by manifest that is stale
  */
 static char staleManStmt[MANFILES_SIZE];
 
@@ -131,8 +131,8 @@ static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
 }
 
 /*
- * callback function for non-stale manifest search that makes all objects
- * referenced by manifest that is non-stale
+ * callback function for non-stale manifest search that marks accordingly
+ * all objects referenced by manifest that is non-stale
  */
 static int handleFreshMan2(scmcon *conp, scmtab *tab, char *files)
 {
@@ -220,6 +220,8 @@ int main(int argc, char **argv)
   free (srch1[1].valptr);
 
   // now check for stale and then non-stale manifests
+  // note: by doing non-stale test after stale test, those objects that
+  //   are referenced by both stale and non-stale manifests, set to not stale
   srch.nused = 0;
   srch.vald = 0;
   addcolsrchscm (&srch, "files", SQL_C_BINARY, MANFILES_SIZE);

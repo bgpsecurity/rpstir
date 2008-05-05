@@ -191,6 +191,7 @@ static char     *whereInsertPtr;
 static int      found;
 static char     *nextSKI, *nextSubject;
 
+/* callback to indicate that parent found */
 static int registerFound (scmcon *conp, scmsrcha *s, int numLine) {
   conp = conp; s = s; numLine = numLine;
   found = 1;
