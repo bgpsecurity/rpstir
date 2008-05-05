@@ -115,7 +115,7 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         manifest id-roa-pki-manifest       Manifest }
     
       id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) 
-   rsadsi1(113549) pkcs1(1) pkcs9(9) 16 } 
+                                     rsadsi1(113549) pkcs1(1) pkcs9(9) 16 } 
     
       id-ct OBJECT IDENTIFIER ::= { id-smime 1 } 
     
@@ -131,34 +131,17 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
     
       ROAIPAddrBlocks ::= SEQUENCE OF ROAIPAddressFamily 
     
--- OLD
-
---      ROAIPAddressFamily ::= SEQUENCE { 
---        addressFamily OCTET STRING (SIZE (2..3)), 
---        addressesOrRanges SEQUENCE OF IPAddressOrRangeA } 
-      -- Only two address families are allowed: IPv4 and IPv6 
-
--- NEW
-    
       ROAIPAddressFamily ::= SEQUENCE {
         addressFamily OCTET STRING (SIZE (2..3)),
-        addresses SEQUENCE OF IPAddress }
+        addresses SEQUENCE OF ROAIPAddress }
       -- Only two address families are allowed: IPv4 and IPv6
+
+      ROAIPAddress ::= SEQUENCE {
+        address  IPAddress,
+        maxLength INTEGER OPTIONAL }
    
       IPAddress ::= BIT STRING
 
--- PERMANENTLY REMOVED (defined in extensions.asn)
-
---      IPAddressOrRange ::= CHOICE { 
---        addressPrefix IPAddress, 
---        addressRange IPAddressRange } 
-    
---      IPAddressRange ::= SEQUENCE { 
---        min IPAddress, 
---        max IPAddress } 
-    
---      IPAddress ::= BIT STRING 
-    
       SignerInfo ::= SEQUENCE { 
         version CMSVersion, -- Value check
         sid SignerIdentifier, 
