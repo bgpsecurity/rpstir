@@ -27,6 +27,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <cryptlib.h>
 
 #include <openssl/err.h>
 #include <openssl/x509.h>
@@ -71,6 +72,12 @@ enum ianaAfis {
   IPV4,
   IPV6
 };
+
+struct badfile 
+  {
+  char *fname;
+  int err;
+  };
 
 int roaFromConfig(char *fname, int doval, struct ROA** rp);
 
@@ -147,9 +154,6 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str);
 
   On success this function returns 0; on failure it returns a negative
   error code.
-
-  The results can be written to either a file or a string.  In general,
-  one of fp and str will be NULL.
 */
 
 unsigned char *roaSKI(struct ROA *r);
@@ -219,7 +223,7 @@ int roaValidate2(struct ROA *r, uchar *cert);
       }
 */
 
-int manifestValidate2(struct ROA *r, char *dir, char ***badfilesppp);
+int manifestValidate2(struct ROA *r, char *dir, struct badfile ***badfilesppp);
 
 /*
   This function performs all validations steps on a ROA that require
@@ -228,6 +232,8 @@ int manifestValidate2(struct ROA *r, char *dir, char ***badfilesppp);
   are listed in badfilespp as an array of char*, the last of which is null.
   The caller is responsible for freeing each char* and then the array.
 */
+
+void free_badfiles(struct badfile **badfilespp);
 
 void roaFree(struct ROA *r);
 
