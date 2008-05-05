@@ -27,7 +27,7 @@
 # DFLAGS = -DTEST -DDEBUG
 CC = gcc
 DFLAGS = 
-CFLAGS=	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
+CFLAGS=	-g -I../proto -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 #CFLAGS =-g -Wall
 XFLAGS =        # xtra cflags, set by systype targets
 #IFLAGS =-I/usr/local/ssl/include 

@@ -20,11 +20,14 @@
 /*
   $Id$
 */
-static ulong *mallocbasep;
-
+#define MANPASS 0
+#define TRUSTPASS 1
+#define GENPASS 2
+#define NUMPASSES 3
 struct name_list
   {
   char *namep;
+  int state;
   struct name_list *nextp;
   };
 
@@ -97,51 +100,48 @@ static int isManifest(char *namep)
 
 static int mustManifest(char *namep)
   {
+  /*
+  Returns 1 for certs, crls  or roas
+          0 for everything else
+ */
   char *b;
   if (isTrust(namep)) return 0;
   for (b = namep; *b > ' '; b++);
   b -= 4;
-  if (*b++ == '.' && (!strncmp(b, "der", 3) || !strncmp(b, "cer", 3) || !strncmp(b, "pem", 3) ||
-    !strncmp(b, "crl", 3) || !strncmp(b, "roa", 3))) return 1;
+  if (*b++ == '.' && (!strncmp(b, "der", 3) || !strncmp(b, "cer", 3) || 
+    !strncmp(b, "pem", 3) || !strncmp(b, "crl", 3) || !strncmp(b, "roa", 3))) 
+    return 1;
   return 0;
   }
 
-static ulong getTime(struct CertificateValidityDate *cvdp)
-  {
-  ulong val;
-  struct casn *casnp;
-  if (size_casn(&cvdp->generalTime) > 0) casnp = &cvdp->generalTime;
-  else casnp = &cvdp->utcTime;
-  read_casn_time(casnp, &val);
-  return val;
-  }
-
-static int hash_it(uchar **hashpp, uchar *srcp, int lth)
-  {
-  uchar *hashp = (uchar *)calloc(1, 28);
-  CRYPT_CONTEXT hashContext;
-  int ansr;
-  cryptInit();
-  ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-  ansr = cryptEncrypt(hashContext, srcp, lth);
-  ansr = cryptEncrypt(hashContext, srcp, 0);
-  ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
-    hashp, &lth);
-  cryptDestroyContext(hashContext);
-  cryptEnd();
-  *hashpp = hashp;
-  return lth;
-  }
-  
-static int check_manifest(struct ROA *roap, char *mfname, char *topDir, struct name_list *rootp)
+static int check_manifest(struct ROA *roap, char *mfname, char *topDir, 
+  struct name_list *rootp)
   {
   int sig_err = 0;
   struct name_list *curr_namep;
   for (curr_namep = rootp; curr_namep->nextp; curr_namep = curr_namep->nextp);
-  char **badfilespp = (char **)0;
-  if ((sig_err = manifestValidate2(roap, topDir, &badfilespp)) < 0)
+  struct badfile **badfilespp = (struct badfile **)0;
+  struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.
+    manifest;
+  ulong mhi, mlo;
+  time_t now = time ((time_t *)0); 
+  read_casn_time(&manp->thisUpdate, &mlo);
+  read_casn_time(&manp->nextUpdate, &mhi);
+  int numcerts = num_items(&roap->content.signedData.certificates.self);
+  int version = -1;
+  struct Certificate *certp = (struct Certificate *)0;
+  if (numcerts == 1) certp = (struct Certificate *)member_casn(&roap->content.
+    signedData.certificates.self, 0);
+  read_casn_num(&certp->toBeSigned.version.self, (long *)&version);
+  if ((sig_err = manifestValidate2(roap, topDir, &badfilespp)) < 0 && !badfilespp)
     {
-    fprintf(stderr, "the manifest %s had error %d\n", mfname, sig_err);
+    char *cc;
+    for (cc = mfname; *cc > ' '; cc++);
+    *cc = 0;
+    if (sig_err == ERR_SCM_INVALSIG) cc = "signature";
+    else if (sig_err == ERR_SCM_BADCT) cc = "syntax";
+    else cc = "undefined";
+    fprintf(stderr, "%s error in manifest %s\n", cc, mfname);
     return -1;
     }
      // make list of all certificates, CRLs and ROAs  in manifest
@@ -150,51 +150,46 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir, struct n
     eContent.manifest.fileList.self, 0); fahp;
     fahp = (struct FileAndHash *)next_of(&fahp->self))
     {
-    int lth;
     char *fname;
-    if((lth = readvsize_casn(&fahp->file, (uchar **)&fname)) < 0) ; // error
-    else
+    if (readvsize_casn(&fahp->file, (uchar **)&fname) > 0) 
       {
       if (mustManifest(fname))
-        {
+        {  //  add it to the manifested list
         if (curr_namep != rootp)
           {
           curr_namep->nextp = (struct name_list *)calloc(1, sizeof(struct name_list) + 2);
           curr_namep = curr_namep->nextp;
           }
         curr_namep->namep = fname;
+        curr_namep->state = 1;  // until proven otherwise
+        if (badfilespp)    // check if it is on the "bad" list
+          {
+          struct badfile **bpp;
+          for (bpp  = badfilespp; 
+            *bpp && strcmp(fname, (*bpp)->fname); 
+           bpp++);
+          if (*bpp)  // mark its state in namelist
+            {
+            curr_namep->state = ((*bpp)->err == ERR_SCM_COFILE)? 0: -1;
+            }
+          } 
         }
       }
     }
-  if (badfilespp)
+  if (badfilespp) free_badfiles(badfilespp);
+  if (mlo >= mhi || numcerts != 1 || version != 2) 
     {
-    char **pp;
-    fprintf(stderr, "the manifest %s had bad hashes for the following files:\n", mfname); 
-    for (pp = badfilespp; *pp; pp++)
-      {
-      fprintf(stderr, "%s\n", *pp);
-      free(*pp);
-      }
-    free(badfilespp);
+    char *str;
+    if (mlo >= mhi) str = "invalid dates";
+    else if (numcerts != 1) str =  "other than 1 certificate";
+    else if (version != 2) str = "wrong version in certificate";
+    fprintf(stderr, "%s in the manifest %s", str, mfname); // mfname has the \r\n
     return -1;
     }
+  if (mlo > now || mhi < now) return 0;
   return 1;
   }
 
-static int check_manifest_dates(struct ROA *roap)
-  {
-  struct Certificate *certp = (struct Certificate *)member_casn(&roap->content.signedData.
-      certificates.self, 0);
-  ulong clo, chi, mlo, mhi, now = (ulong)time((time_t)0);
-  struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.manifest;
-
-  read_casn_time(&manp->thisUpdate, &mlo);
-  read_casn_time(&manp->nextUpdate, &mhi);
-  clo = getTime(&certp->toBeSigned.validity.notBefore);
-  chi = getTime(&certp->toBeSigned.validity.notAfter);
-  if (clo > now || chi < now || mlo > now || mhi < now) return -1;
-  return 1;
-  } 
 
 static char *makeCDStr(unsigned int *retlenp, char *dir)
 {
@@ -222,42 +217,68 @@ static char *makeCDStr(unsigned int *retlenp, char *dir)
   return(buf);
 }
 
-static int send_cert(struct Certificate *certp, struct write_port *wportp)
+static char *makeCertName(struct Certificate *certp)
   {
-  uchar *keyp;   
+  uchar *hashp;
   char *sixp;
   int klth;
-  if ((klth = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey, 
-      &keyp)) < 0); // ??
-  uchar *hashp;
-  klth = hash_it(&hashp, &keyp[1], klth - 1);
-  free(keyp);
-  klth = bin2six(&sixp, hashp, klth);
-  char *certfname;
-  while(sixp[klth-1] == '=') klth--;
-  sixp[klth] = 0;
-  certfname = (char *)calloc(1, klth + 8);
-  strcat(strcat(strcpy(certfname, "A "), sixp), ".cer");
-  if (put_casn_file(&certp->self, &certfname[2], 0) < 0) return -1;
-  strcat(certfname, "\r\n");
-  outputMsg(wportp, certfname, strlen(certfname));
-  free(sixp);
-  free(certfname);
-  return 1;
+  struct Extension *extp;
+  for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0); 
+    extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+    extp = (struct Extension *)next_of(&extp->self));
+  if (!extp || (klth = readvsize_casn(&extp->extnValue.self, &hashp)) != 22)
+    {
+    return (char *)0;
+    }
+  klth -= 2;
+  klth = bin2six(&sixp, &hashp[2], klth);
+  free(hashp);
+  while(sixp[klth - 1] == '=') sixp[--klth] = 0;
+  sixp = realloc(sixp, klth + 4);
+  strcat(sixp, ".cer");
+  return sixp;
   }
- 
-static int wasManifested(struct name_list *rootp, char *fnamep)
+
+static int multi_match(struct name_list *rootp, char *fname, int fnamelth)
   {
-  char *b;
-  int lth;
-  if (!rootp) return 1;
-  for (b = fnamep; *b > ' '; b++);
-  lth = b - fnamep;
-  if (!strncmp(rootp->namep, fnamep, lth)) return 1;
-  if (!rootp->nextp) return 0;
-  for (rootp = rootp->nextp; rootp && strncmp(rootp->namep, fnamep, lth); rootp = rootp->nextp);
-  if (rootp && rootp->namep) return 1;
+  int rootlth = strlen(rootp->namep);
+  char *s;
+  if (fnamelth > rootlth) return 0;
+  for (s = &rootp->namep[rootlth - fnamelth]; s >= rootp->namep; s--)
+    {
+    if (!strcmp(s, fname)) return 1;
+    }
   return 0;
+  }  
+
+static int wasManifested(struct name_list *rootp, char *fnamep, int ee)
+  {   // ee means to match the tail end of the paths in rootlist with multi_match
+  char *b;
+  if (!rootp || !rootp->namep) return 0;
+  for (b = fnamep; *b > ' '; b++);
+  char x = *b;
+  *b = 0;
+  int ansr = 0;
+  if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
+    (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
+  else for (rootp = rootp->nextp; rootp; rootp = rootp->nextp)
+    {
+    if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
+      (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
+    }
+  *b = x;
+  return ansr;
+  }
+
+static char *appendState(char *sendStr, int state, unsigned int *retlenp)
+  {
+  char *retStr = (char *)realloc(sendStr, strlen(sendStr) + 4);
+  char *a;
+  for (a = &retStr[2]; *a >= ' '; a++);
+  *a = 0;
+  sprintf(a, " %d\r\n", state);
+  *retlenp = strlen(retStr);
+  return retStr;
   }
 
 int
@@ -268,7 +289,7 @@ main(int argc, char *argv[])
      what you would have done, {w,e,i}flag = {warning,error,
      information} flags for what will be sent, ch is for getopt */
 
-  int tflag, uflag, nflag, fflag, mflag, sflag, ch, i;
+  int tflag, uflag, nflag, fflag, sflag, ch, i;
   int portno;
   unsigned int retlen;
   FILE *fp;
@@ -277,7 +298,7 @@ main(int argc, char *argv[])
   struct write_port wport;
   char flags;  /* our warning flags bit fields */
 
-  tflag = uflag = nflag = fflag = mflag = sflag = ch = 0;
+  tflag = uflag = nflag = fflag = sflag = ch = 0;
   portno = retlen = 0;
   flags = 0;
 
@@ -291,10 +312,9 @@ main(int argc, char *argv[])
       (buf = (char *)calloc(1, bufsize + 6)) == 0 || lseek(fd, 0, SEEK_SET) != 0 ||
       read(fd, buf, bufsize + 4) != bufsize)
       {
-      fprintf(stderr, "error opening %s\n", argv[1]);
+      fprintf(stderr, "failed to open %s\n", argv[1]);
       exit(1);
       }
-    mallocbasep = (ulong *)&buf[-4];
     for (cc = buf, e = &buf[bufsize]; cc < e; cc++)  // null out white space
       {
       if (*cc <= ' ') *cc = 0;
@@ -306,7 +326,6 @@ main(int argc, char *argv[])
         {
         if (*cc == 'e') flags |= ERROR_FLAG;
         else if (*cc == 'i') flags |= INFO_FLAG;
-        else if (*cc == 'm') mflag = 1;
         else if (*cc == 'n') nflag = 1;
         else if (*cc == 's') sflag = 1;
         else if (*cc == 'w') flags |= WARNING_FLAG;
@@ -328,9 +347,9 @@ main(int argc, char *argv[])
             }
           else if (*cc == 't') { tflag = 1; portno = atoi(cx); }
           else if (*cc == 'u') { uflag = 1; portno = atoi(cx); }
-          else usage(argv[0]);
           for (cc = cx; *cc > ' '; cc++);
           }
+        else usage(argv[0]);
         cc++;
         }
       while (*cc == 0 && cc < e) cc++;
@@ -350,9 +369,6 @@ main(int argc, char *argv[])
         case 'u':  /* UDP flag */
           uflag = 1;
           portno = atoi(optarg);
-          break;
-        case 'm':  // mflag
-          mflag = 1;
           break;
         case 'n': /* do nothing flag - print what messages would have been
                      sent */
@@ -469,10 +485,6 @@ main(int argc, char *argv[])
   /****************************************************/
   /* do the main parsing and sending of the file loop */
   /****************************************************/
-#define MANPASS 0
-#define TRUSTPASS 1
-#define GENPASS 2
-#define NUMPASSES 3
   retlen = 0;
   struct name_list rootlist;
   struct ROA roa;
@@ -486,62 +498,82 @@ main(int argc, char *argv[])
       if (!(sendStr = getMessageFromString(holding, (unsigned int)strlen(holding),
         &retlen, flags))) continue;
       int have_manifest = isManifest(sendStr);
-      char *fname = (char *)0;
-      if (have_manifest)
-        {
-        fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 8);
+      char *fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 8);
         strcat(strcat(strcpy(fname, topDir), "/"), &sendStr[2]);
-        char *b;
-        for (b = fname; *b >= ' '; b++); // trim off CRLF
-        *b = 0;
+      char *b;
+      for (b = fname; *b >= ' '; b++); // trim off CRLF
+      *b = 0;
+      struct stat tstat;
+      int exists = (stat(fname, &tstat) == 0);
+         // if doing manifests and it's a manifest, check contents & note file names
+      if (i == MANPASS  && have_manifest != 0 && exists)
+        {
         if (get_casn_file(&roa.self, fname, 0) < 0)
           {
           fprintf(stderr, "invalid manifest %s\n", fname);
-          exit(1);
+          continue;
           }
-        }
-         // if doing manifests and it's a manifest, check contents & note file names
-      if (i == MANPASS  && have_manifest != 0)
-        {
-        if (mflag) 
+        int ansr;
+        if ((ansr = check_manifest(&roa, &sendStr[2], topDir, &rootlist)) >= 0)
           {
-          if (check_manifest_dates(&roa) > 0)
-            {  
-            if (check_manifest(&roa, fname, topDir, &rootlist) > 0)
-              {
-              if (send_cert((struct Certificate *)member_casn(&roa.content.signedData.
-                certificates.self, 0), &wport) < 0)
-                {
-                fprintf(stderr, "sending certificate from manifest %s failed\n", 
-                   &sendStr[2]);
-                }
-              else  outputMsg(&wport, sendStr, retlen);
-              } 
+          struct Certificate *certp = (struct Certificate *)member_casn(&roa.
+            content.signedData.certificates.self, 0);
+          char *certname = makeCertName(certp);
+          if (!certname)
+            {
+            fprintf(stderr, "error making name for EE certificate in manifest %s\n", 
+              &sendStr[2]);
             }
+          else if (!wasManifested(&rootlist, certname, 1))
+            {   // put EE cert in special directory
+            char *eefilename = (char *)calloc(1, 2 + 16 + strlen(topDir) + 
+                1 + strlen(certname) + 4);
+            strcat(strcat(strcat(strcat(strcpy(eefilename, "A "), 
+              "manifestSigners/"), topDir), "/"), certname);
+            if (put_casn_file(&certp->self, &eefilename[2], 0) < 0)
+              {
+              fprintf(stderr, "error writing %s\n", eefilename);
+              }
+            else
+              {
+              strcat(eefilename, " 0\r\n");
+              outputMsg(&wport, eefilename, strlen(eefilename));
+              }
+            free(eefilename);
+            }
+          else   // log error
+            {
+            char *e; 
+            for (e = &sendStr[2]; *e >= ' '; e++);
+            *e = 0;  // trim off CRLF
+            fprintf(stderr, 
+              "EE certificate %s in %s was sent separately\n",
+              certname, &sendStr[2]);
+            *e = '\r';
+            }
+          sendStr = appendState(sendStr, ansr, &retlen);  // send manifest
+          outputMsg(&wport, sendStr, retlen);
           }
         }
         // else if doing trusts and it's a trust, send message
-      else if (i == TRUSTPASS && isTrust(sendStr))
+      else if (i == TRUSTPASS && isTrust(sendStr) && exists)
         {
         outputMsg(&wport, sendStr, retlen);
         }
-        // else if doing other stuff and it's not a trust
-      else if (i == GENPASS && !isTrust(sendStr))
+        // else if doing other stuff and it's not a trust nor a manifest
+      else if (i == GENPASS && !isTrust(sendStr) && !have_manifest)
         {
-        if (have_manifest && check_manifest_dates(&roa) < 0) 
-          {
-          fprintf(stderr, "the manifest %s has invalid date(s)\n", fname); 
-          }
-        else if (!mflag ||                                // not doing strict OR
-            mustManifest(&sendStr[2]) == 0 ||        // not a manifestable type OR
-            wasManifested(&rootlist, &sendStr[2]) == 1)  // it was in a manifest
-            outputMsg(&wport, sendStr, retlen);      // send it
+        if (exists == 0 && (*sendStr == 'A' || *sendStr == 'U' || *sendStr == 'R')) 
+          fprintf(stderr, "cannot find %s", &sendStr[2]);
         else
-          {
-          char *bb;
-          for (bb = &sendStr[2]; *bb >= ' '; bb++);
-          *bb = 0;
-          fprintf(stderr, "File %s was not on a manifest\n", &sendStr[2]);
+          {  
+          if (mustManifest(&sendStr[2]))  // if it should be on a manifest
+            {
+            sendStr = appendState(sendStr, 
+              wasManifested(&rootlist, &sendStr[2], 0),
+              &retlen);
+            }
+          outputMsg(&wport, sendStr, retlen);
           }
         }
       retlen = 0;

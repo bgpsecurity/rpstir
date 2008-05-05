@@ -402,7 +402,7 @@ makeAddStr(char *str, unsigned int len, unsigned int *retlen)
   retStr = (char *)malloc(malloc_length);                     
   memset(retStr, '\0', malloc_length);                        
                                                               
-  snprintf(retStr, 3, "A "); /* 3 due to snprintf including '\0' in it's    
+  snprintf(retStr, 3, "A "); /* 3 due to snprintf including '\0' in its    
                                 length... which is dopey */   
                                                               
   strncat(retStr, (char *)(str + 10), (malloc_length - 3));   
