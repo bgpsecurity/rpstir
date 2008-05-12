@@ -120,19 +120,10 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
   int sig_err = 0;
   struct name_list *curr_namep;
   for (curr_namep = rootp; curr_namep->nextp; curr_namep = curr_namep->nextp);
+     // leaves curr_namep at the last one that has no name, which may be rootp
   struct badfile **badfilespp = (struct badfile **)0;
   struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.
     manifest;
-  ulong mhi, mlo;
-  time_t now = time ((time_t *)0); 
-  read_casn_time(&manp->thisUpdate, &mlo);
-  read_casn_time(&manp->nextUpdate, &mhi);
-  int numcerts = num_items(&roap->content.signedData.certificates.self);
-  int version = -1;
-  struct Certificate *certp = (struct Certificate *)0;
-  if (numcerts == 1) certp = (struct Certificate *)member_casn(&roap->content.
-    signedData.certificates.self, 0);
-  read_casn_num(&certp->toBeSigned.version.self, (long *)&version);
   if ((sig_err = manifestValidate2(roap, topDir, &badfilespp)) < 0 && !badfilespp)
     {
     char *cc;
@@ -140,6 +131,10 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
     *cc = 0;
     if (sig_err == ERR_SCM_INVALSIG) cc = "signature";
     else if (sig_err == ERR_SCM_BADCT) cc = "syntax";
+    else if (sig_err == ERR_SCM_BADNUMCERTS) cc = "number of certificates";
+    else if (sig_err == ERR_SCM_BADVERS) cc = "version";
+    else if (sig_err == ERR_SCM_NOTEE) cc = "non-EE certificate";
+    else if (sig_err == ERR_SCM_BADDATES) cc = "invalid dates";
     else cc = "undefined";
     fprintf(stderr, "%s error in manifest %s\n", cc, mfname);
     return -1;
@@ -155,11 +150,6 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
       {
       if (mustManifest(fname))
         {  //  add it to the manifested list
-        if (curr_namep != rootp)
-          {
-          curr_namep->nextp = (struct name_list *)calloc(1, sizeof(struct name_list) + 2);
-          curr_namep = curr_namep->nextp;
-          }
         curr_namep->namep = fname;
         curr_namep->state = 1;  // until proven otherwise
         if (badfilespp)    // check if it is on the "bad" list
@@ -170,22 +160,20 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
            bpp++);
           if (*bpp)  // mark its state in namelist
             {
-            curr_namep->state = ((*bpp)->err == ERR_SCM_COFILE)? 0: -1;
+            int err = (*bpp)->err;
+            curr_namep->state = (err == ERR_SCM_COFILE)? 0: err;
             }
-          } 
+          }
+        curr_namep->nextp = (struct name_list *)calloc(1, sizeof(struct name_list));
+        curr_namep = curr_namep->nextp;
         }
       }
     }
   if (badfilespp) free_badfiles(badfilespp);
-  if (mlo >= mhi || numcerts != 1 || version != 2) 
-    {
-    char *str;
-    if (mlo >= mhi) str = "invalid dates";
-    else if (numcerts != 1) str =  "other than 1 certificate";
-    else if (version != 2) str = "wrong version in certificate";
-    fprintf(stderr, "%s in the manifest %s", str, mfname); // mfname has the \r\n
-    return -1;
-    }
+  time_t now = time ((time_t *)0); 
+  ulong mhi, mlo;
+  read_casn_time(&manp->thisUpdate, &mlo);
+  read_casn_time(&manp->nextUpdate, &mhi);
   if (mlo > now || mhi < now) return 0;
   return 1;
   }
@@ -261,12 +249,13 @@ static int wasManifested(struct name_list *rootp, char *fnamep, int ee)
   int ansr = 0;
   if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
     (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
-  else for (rootp = rootp->nextp; rootp; rootp = rootp->nextp)
+  else for (rootp = rootp->nextp; rootp->namep; rootp = rootp->nextp)
     {
     if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
       (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
     }
   *b = x;
+  if (ansr == 1) return (rootp->state < 0)? rootp->state: 1;
   return ansr;
   }
 

@@ -28,13 +28,13 @@ ASN_DIR= ../cg/asn
 CASN_DIR= ../cg/casn
 PROTO_DIR= ../proto
 LOCAL_LIBS= -L. -L$(PROTO_DIR) -L$(ASN_DIR) -L$(CASN_DIR) -lapki -lroa -lasn -lcasn $(LIBCL)
-SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -L/usr/local/lib -lmyodbc3 $(LIBXTRA)  $(LIBDL) $(LIBPTHREAD)
+SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -lcl -L/usr/local/lib -lmyodbc3 $(LIBXTRA)  $(LIBDL) $(LIBPTHREAD)
 #-lrt
 AR= ar
 RANLIB= ranlib
 
 # --- targets
-all:    libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest
+all:    libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa read_roa
 
 b64:	b64.o
 	$(CC) $(CFLAGS) $(CFLAGS) -c b64.c
@@ -48,10 +48,10 @@ roa_test:   libroa.a $(TEST_OBJECTS)
 
 roa_test.o: roa_test.c libroa.a Makefile
 
-test_check_sig: test_check_sig.o
+test_check_sig: test_check_sig.o libroa.a Makefile
 	$(CC) $(CFLAGS) -o $@ test_check_sig.o $(LOCAL_LIBS) $(SSL_LIBS)
 
-test_manifest: test_manifest.o manifest_validate.o ../cg/casn/libcasn.a
+test_manifest: test_manifest.o roa_validate.o ../cg/casn/libcasn.a
 	$(CC) $(CFLAGS) -o $@ test_manifest.o $(LOCAL_LIBS) $(SSL_LIBS)
 
 test_val2: test_val2.o roa_validate.o ../cg/casn/libcasn.a
@@ -63,18 +63,25 @@ test_hash: test_hash.o roa_validate.o ../cg/casn/libcasn.a
 make_manifest: make_manifest.o ../cg/casn/libcasn.a
 	$(CC) $(CFLAGS) -o $@ make_manifest.o $(LOCAL_LIBS) $(SSL_LIBS)
 
+make_roa: make_roa.o ../cg/casn/libcasn.a
+	$(CC) $(CFLAGS) -o $@ make_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
+
+read_roa: read_roa.o ../cg/casn/libcasn.a
+	$(CC) $(CFLAGS) -o $@ read_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
+
 sign_roa: sign_roa.o ../cg/casn/libcasn.a
 	$(CC) $(CFLAGS) -o $@ sign_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
 
-roa_validate.o: roa_validate.c roa_utils.h Makefile
+roa_validate.o: roa_validate.c roa_utils.h Makefile ../cg/asn/libasn.a
 roa_create.o: roa_create.c roa_utils.h Makefile
 roa_general.o: roa_general.c roa_utils.h Makefile
 roa_serialize.o: roa_serialize.c roa_utils.h Makefile
-manifest_validate.o: manifest_validate.c roa_utils.h Makefile
 make_manifest.o: make_manifest.c roa_utils.h Makefile
+make_roa.o:	make_roa.c roa_utils.h Makefile
+read_roa.o:	read_roa.c roa_utils.h Makefile
 
-libroa.a:	roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h manifest_validate.o
-	ar crv libroa.a roa_validate.o roa_create.o roa_general.o roa_serialize.o manifest_validate.o
+libroa.a:	roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h 
+	ar crv libroa.a roa_validate.o roa_create.o roa_general.o roa_serialize.o 
 	ranlib libroa.a
 
 clean:

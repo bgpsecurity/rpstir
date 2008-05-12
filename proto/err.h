@@ -119,8 +119,11 @@
 #define ERR_SCM_DUPSIG      -90         /* duplicate signature */
 #define ERR_SCM_BADHASH     -91         /* error in hash */
 #define ERR_SCM_BADFAH      -92         /* error reading FileAndHash */
+#define ERR_SCM_BADNUMCERTS -93         /* wrong number of certificates */
+#define ERR_SCM_BADDATES    -94         /* invalid dates */
+#define ERR_SCM_BADALG      -95         /* differing algorithms in certificate */
 
-#define ERR_SCM_MAXERR      -92
+#define ERR_SCM_MAXERR      -95
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

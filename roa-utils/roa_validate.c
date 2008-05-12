@@ -89,6 +89,79 @@ static void fill_max(uchar *max)
   max[max[1] + 1] |= ((1 << max[2]) - 1);
   } 
 
+static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp)
+  { // used for manifests
+  CRYPT_CONTEXT hashContext;
+  uchar hash[40];
+  int ansr = -1;
+
+  memset(hash, 0, 40);
+  cryptInit();
+  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
+  cryptEncrypt(hashContext, inbufp, bsize);
+  cryptEncrypt(hashContext, inbufp, 0);
+  cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
+  cryptDestroyContext(hashContext);
+  cryptEnd();
+  memcpy(outbufp, hash, ansr);
+  return ansr;
+  }
+
+static int getTime(struct CertificateValidityDate *cvdp, ulong *datep)
+  {
+  int ansr;
+  if (size_casn(&cvdp->utcTime) == 0) ansr = read_casn_time(&cvdp->generalTime, datep);
+  else ansr = read_casn_time(&cvdp->utcTime, datep);
+  return ansr;
+  } 
+
+
+static int check_cert(struct Certificate *certp)
+  {
+  int tmp;
+  ulong lo, hi;
+  struct CertificateToBeSigned *certtbsp = &certp->toBeSigned;
+
+  if (read_casn_num(&certp->toBeSigned.version.self, (long*)&tmp) < 0 ||
+    tmp != 2) return ERR_SCM_BADVERS;
+  if (diff_casn(&certtbsp->signature.algorithm, &certp->algorithm.algorithm)) 
+    return ERR_SCM_BADALG;
+  if (getTime(&certtbsp->validity.notBefore, &lo) < 0 ||
+    getTime(&certtbsp->validity.notAfter, &hi) < 0 || lo >= hi)
+    return ERR_SCM_BADDATES;
+  struct Extension *extp;
+  for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
+    extp && diff_objid(&extp->extnID, id_basicConstraints);
+    extp = (struct Extension *)next_of(&extp->self));
+  if (extp && size_casn(&extp->extnValue.basicConstraints.cA) > 0) return ERR_SCM_NOTEE;  
+  return 0;
+  }
+
+static int check_fileAndHash(struct FileAndHash *fahp, int ffd)
+  {
+  uchar *contentsp;
+  int err = 0,
+      hash_lth, bit_lth, name_lth = lseek(ffd, 0, SEEK_END);
+
+  lseek(ffd, 0, SEEK_SET);
+  contentsp = (uchar *)calloc(1, name_lth + 2);
+  if (read(ffd, contentsp, name_lth + 2) != name_lth) err = ERR_SCM_BADFILE;
+  else if ((hash_lth = gen_hash(contentsp, name_lth, contentsp)) < 0) 
+    err = ERR_SCM_BADHASH;
+  else
+    {
+    bit_lth = vsize_casn(&fahp->hash);
+    uchar *hashp = (uchar *)calloc(1, bit_lth);
+    read_casn(&fahp->hash, hashp);
+    if (hash_lth != bit_lth - 1 || memcmp(&hashp[1], contentsp, hash_lth)) 
+      err = ERR_SCM_BADHASH;
+    free(hashp);
+    close(ffd);
+    }
+  free(contentsp);
+  return err;
+  }
+   
 static int setup_cert_minmax(struct IPAddressOrRangeA *rpAddrRangep, uchar *cmin, uchar *cmax,
   int fam)
   {
@@ -148,6 +221,8 @@ static int test_maxLength(struct ROAIPAddress *roaAddrp)
 
 static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   {
+  // check that addressFamily is IPv4 OR IPv6
+  // check that the addressPrefixes are valid IP addresses OR valid ranges
   uchar rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE], oldmax[MINMAXBUFSIZE], rfam[8];
   struct ROAIPAddress *roaAddrp;
   struct ROAIPAddressFamily *roaipfamp;
@@ -172,38 +247,27 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   return 0;
   }
 
-int roaValidate(struct ROA *rp)
-{
-  // Make sure that the ROA meets the provisions outlined in 
-  // Kent/Kong ROA IETF draft
-  int iRes = 0;
-  long iAS_ID = 0;
-  int  sta = 0;
-  char *cOID = NULL;
-
-  /////////////////////////////////////////////////////////////
-  // Validate ROA constants
-  /////////////////////////////////////////////////////////////
-
+static int cmsValidate(struct ROA *rp)
+    {  // validates general CMS things common to ROAs and manifests
   // check that roa->content->version == 3
   if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0) return ERR_SCM_BADVERS;
 
   // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
   //   (= OID 2.16.840.1.101.3.4.2.1)
-  if (num_items(&rp->content.signedData.digestAlgorithms.self) > 1) return ERR_SCM_BADDA;
-  if ((iRes = readvsize_objid(&(rp->content.signedData.digestAlgorithms.digestAlgorithmIdentifier.
-    algorithm), &cOID)) > 0) iRes = strcmp(cOID, id_sha256);
-  if (cOID != NULL) free(cOID);
-  if (iRes != 0) return ERR_SCM_BADDA;
-
-  // check that roa->content->encapContentInfo->eContentType ==
-  //   routeOriginAttestation (= OID 1.2.240.113549.1.9.16.1.24)
-  cOID = NULL;
-  if ((iRes = readvsize_objid(&(rp->content.signedData.encapContentInfo.eContentType), &cOID))
-    > 0) iRes = strcmp(cOID, id_routeOriginAttestation);
-  if (cOID != NULL) free(cOID);
-  if (iRes != 0) return ERR_SCM_BADCT;
-
+  if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1 ||
+    diff_objid(&rp->content.signedData.digestAlgorithms.digestAlgorithmIdentifier.
+      algorithm, id_sha256)) return ERR_SCM_BADDA;
+  int certs;
+  if ((certs = num_items(&rp->content.signedData.certificates.self)) > 1) 
+    return ERR_SCM_BADNUMCERTS;
+  if (certs)
+    {
+    int tmp;
+    struct Certificate *certp = (struct Certificate *)member_casn(
+      &rp->content.signedData.certificates.self, 0);
+    if ((certs = check_cert(certp)) < 0) return certs;
+    if ((tmp = check_sig(rp, certp)) != 0) return tmp;
+    }
   // check that roa->content->crls == NULL
   if (size_casn(&rp->content.signedData.crls.self) > 0 ||
      num_items(&rp->content.signedData.signerInfos.self) != 1 ||
@@ -212,49 +276,119 @@ int roaValidate(struct ROA *rp)
 
   // check that roa->content->signerInfoStruct->digestAlgorithm == SHA-256
   //   (= OID 2.16.840.1.101.3.4.2.1)
-  cOID = NULL;
-  if ((iRes = readvsize_objid(&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.
-     algorithm, &cOID)) > 0) iRes = strcmp(id_sha256, cOID);
-  free(cOID);
-  if (iRes != 0) return ERR_SCM_BADCRL;
+  if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.
+     algorithm, id_sha256)) return ERR_SCM_BADCRL;
 
   if(size_casn(&rp->content.signedData.signerInfos.signerInfo.signedAttrs.self) != 0 ||
      size_casn(&rp->content.signedData.signerInfos.signerInfo.unsignedAttrs.self) != 0) 
     return ERR_SCM_BADATTR;
 
   // check that roa->content->signerInfoStruct->signatureAlgorithm == 
-  //   sha256WithRSAEncryption (= OID 1.2.240.113549.1.1.11)
-  if(readvsize_objid(&(rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.
-    algorithm), &cOID) < 0) return ERR_SCM_INVALSIG;
-  iRes = strcmp(id_rsadsi_rsaEncryption, cOID);
-  free(cOID);
-  if (iRes != 0) return ERR_SCM_INVALSIG;
+  //   RSAEncryption (= OID 1.2.240.113549.1.1.1)
+  if(diff_objid(&rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.
+    algorithm, id_rsadsi_rsaEncryption)) return ERR_SCM_INVALSIG;
 
-  /////////////////////////////////////////////////////////////
-  // Validate ROA variables
-  /////////////////////////////////////////////////////////////
-
-  // check that roa->content->encapContentInfo->eContent
-  //   (RouteOriginAttestation)->asID == a nonzero integer
-  if (read_casn_num(&(rp->content.signedData.signerInfos.signerInfo.version.self), &iAS_ID) < 0 ||
-      iAS_ID <= 0) return ERR_SCM_INVALASID;
-
-  // check that roa.content.encapContentInfo->eContent
-  //   (RouteOriginAttestation)->ipAddrBlocks->addressFamily == {IPv4, IPv6}
-  // check that roa->content->encapContentInfo->eContent
-  //   (RouteOriginAttestation)->ipAddrBlocks->addressPrefix == validIP
-  //  - OR -
-  // check that roa->content->encapContentInfo->eContent
-  //   (RouteOriginAttestation)->ipAddrBlocks->addressRange->{min,max} ==
-  //    validIP (AND VALID RANGE?)
-  if ((sta=validateIPContents(&rp->content.signedData.encapContentInfo.eContent.roa.
-			      ipAddrBlocks)) < 0) return sta;
-
-  // check that roa->content->signerInfoStruct->sid ISA subjectKeyIdentifier
-  //   (really just a length check, as byte content is arbitrary)
+  // check that the subject key identifier has proper length 
   if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier) != 20)
     return ERR_SCM_INVALSKI;
+  return 0;
+  }
 
+void free_badfiles(struct badfile **badfilespp)
+  {  // for rsync_aur or anyone else who calls manifestValidate2
+  struct badfile **bpp;
+  for (bpp = badfilespp; *bpp; bpp++)
+    {
+    free((*bpp)->fname);
+    free(*bpp);
+    }
+  free(badfilespp);
+  }
+
+int manifestValidate2(struct ROA *rp, char *dirp, struct badfile ***badfilesppp)
+  {
+  struct FileAndHash *fahp;
+  struct Manifest *manp;
+  struct Certificate *certp;
+  struct badfile **badfilespp = (struct badfile **)0;
+  char *fname, *path;
+  int numbadfiles = 0, dir_lth, err = 0, ffd, tmp; 
+       // do general checks including signature if cert is present
+  if ((err = cmsValidate(rp)) < 0) return err;
+     // certificate checks
+  if (num_items(&rp->content.signedData.certificates.self) != 1) return ERR_SCM_BADNUMCERTS;
+  certp = (struct Certificate *)member_casn(&rp->content.signedData.certificates.self, 0);
+  if ((tmp = check_cert(certp)) < 0) return tmp;
+      // other specific manifest checks
+  if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType, 
+    id_roa_pki_manifest)) return ERR_SCM_BADCT;
+  manp = &rp->content.signedData.encapContentInfo.eContent.manifest;
+  ulong mlo, mhi;
+  if (read_casn_time(&manp->thisUpdate, &mlo) <= 0 ||
+      read_casn_time(&manp->nextUpdate, &mhi) <= 0 ||
+      mlo >= mhi) return ERR_SCM_BADDATES;
+     // signature OK?
+      // all checks done.  Get to the details
+  if (dirp && *dirp) 
+    {
+    dir_lth = strlen(dirp) + 1;
+    if (dirp[dir_lth - 2] == '/') dir_lth--;
+    }
+  else dir_lth = 0;
+  path = (char *)calloc(1, dir_lth + 1);
+  for (fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, 0); fahp; 
+    fahp = (struct FileAndHash *)next_of(&fahp->self))
+    {
+    int name_lth = vsize_casn(&fahp->file);
+    fname = (char *)calloc(1, name_lth + 8);
+    read_casn(&fahp->file, (uchar *)fname);
+    path = (char *)realloc(path, dir_lth + name_lth + 4);
+    if (dir_lth) strcat(strncpy(path, dirp, dir_lth), "/");
+    strcat(path, fname);
+    tmp = 0;
+    if ((ffd = open(path, O_RDONLY)) < 0) tmp = ERR_SCM_COFILE;
+    else tmp = check_fileAndHash(fahp, ffd);
+    if (tmp < 0)  // add the file to the list 
+      {
+      if (numbadfiles == 0) 
+	badfilespp = (struct badfile **)calloc(2, sizeof(struct badfile *));
+      else badfilespp = (struct badfile **)realloc(badfilespp, ((numbadfiles + 1) * 
+        sizeof(struct badfile *)));
+      struct badfile *badfilep = (struct badfile *)calloc(1, sizeof(struct badfile));
+      badfilespp[numbadfiles++] = badfilep;
+      badfilep->fname = fname;
+      badfilep->err = tmp;
+      if (!err) err = tmp;
+      }
+    else free(fname);
+    }
+  free(path);
+  *badfilesppp = badfilespp;
+  return err;
+  }
+
+int roaValidate(struct ROA *rp)
+{
+  // Make sure that the ROA meets the provisions outlined in 
+  // Kent/Kong ROA IETF draft
+  int iRes = 0;
+  long iAS_ID = 0;
+
+  /////////////////////////////////////////////////////////////
+  // Validate ROA constants
+  /////////////////////////////////////////////////////////////
+  if((iRes = cmsValidate(rp)) < 0) return iRes;
+
+  // check that eContentType is routeOriginAttestation (= OID 1.2.240.113549.1.9.16.1.24)
+  if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
+    id_routeOriginAttestation)) return ERR_SCM_BADCT;
+
+  // check that the asID is  a positive nonzero integer
+  if (read_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, &iAS_ID) < 0 ||
+      iAS_ID <= 0) return ERR_SCM_INVALASID;
+  // check the contents
+  if ((iRes = validateIPContents(&rp->content.signedData.encapContentInfo.eContent.roa.
+     ipAddrBlocks)) < 0) return iRes;
   return 0;
 }
 

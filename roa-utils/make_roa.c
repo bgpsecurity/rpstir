@@ -92,10 +92,22 @@ static int prefix2roa(struct ROAIPAddress *roaIPAddrp, char *prefixp, int family
     sscanf(c, "%d", &i);
     while(*c >= '0' && *c <= '9') c++;
     siz += pad;
-    if (((i + 7) / 8) != siz) fatal(2, prefixp);
-    i = (8 * siz) - i;
-    buf[0] = i;
+    } 
+  int lim = (i + 7) / 8;
+  if (siz < lim) fatal(2, prefixp);
+  else if (siz > lim)
+    {
+    b--;
+    if (*b) fatal(2, prefixp);
+    siz--;
     }
+  i = (8 * siz) - i;  // i = number of bits that don't count
+  uchar x, y;
+  for (x = 1, y = 0; x && y < i; x <<= 1, y++)
+    {
+    if (b[-1] & x) fatal(2, prefixp); 
+    }
+  buf[0] = i;
   write_casn(&roaIPAddrp->address, buf, siz + 1);
   if (*c == '^') 
     {

@@ -33,7 +33,7 @@ XFLAGS =        # xtra cflags, set by systype targets
 #IFLAGS =-I/usr/local/ssl/include 
 #XLIBS = $(LIBDL) -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
 IFLAGS =-I../cg/casn -I../cg/asn -I../roa-utils
-XLIBS = ../roa-utils/manifest_validate.o ../roa-utils/roa_validate.o ../cg/asn/libasn.a  ../cg/casn/libcasn.a  -lcl -ldl
+XLIBS = ../roa-utils/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  -lcl -ldl
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
 CC += $(CFLAGS)
@@ -52,11 +52,11 @@ bogus:
 
 ### HARD TARGETS
 
-rsync_aur:	$(ALL_OBJS)
+rsync_aur:	$(ALL_OBJS) $(XLIBS) Makefile
 	$(LD) $(DFLAGS) $(XFLAGS) $(STATIC) -o rsync_aur \
 	$(ALL_OBJS) $(IFLAGS) $(XLIBS)
 
-main.o :	main.c main.h
+main.o :	main.c main.h 
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c main.c
 
 parse.o :	parse.c main.h

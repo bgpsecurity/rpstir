@@ -48,18 +48,19 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         crls [1] IMPLICIT RevocationInfoChoices OPTIONAL, 
         signerInfos SignerInfos }
 
-      CMSVersion ::= INTEGER
+      CMSVersion ::= INTEGER (3..3)
         {
-	v0 (0),
-	v1 (1),
+--	v0 (0),
+--	v1 (1),
 	v3 (3)
-	} (v3 | 3)
+--      } (v3 | 3)
+        }
     
       DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF DigestAlgorithmIdentifier
 
       DigestAlgorithmIdentifier ::= AlgorithmIdentifier
 
-      CertificateSet ::= SET (SIZE (1..1)) OF Certificate
+      CertificateSet ::= SET (SIZE (0..1)) OF Certificate
 
       CertificateChoices ::= CHOICE {
         certificate Certificate }

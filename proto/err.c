@@ -23,7 +23,7 @@
 
 #include "err.h"
 
-static char *errs[] =
+static char *errs[-(ERR_SCM_MAXERR)] =
   {
     "No error",			    /* ERR_SCM_NOERR */
     "Cannot open file",             /* ERR_SCM_COFILE */
@@ -127,6 +127,9 @@ static char *errs[] =
     "Duplicate signature",          /* ERR_SCM_DUPSIG -90 */
     "Hash error",                   /* ERR_SCM_BADHASH */
     "Error in FileAndHash",         /* ERR_SCM_FAH */
+    "Wrong number of certificates", /* ERR_SCM_BADNUMCERTS */
+    "Invalid dates",                /* ERR_SCM_BADDATES */
+    "Differing algorithms in cert", /* ERR_SCM_BADALG */
   } ;
 
 char *err2string(int err)
