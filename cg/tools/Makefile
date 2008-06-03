@@ -20,16 +20,21 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	dump rr bin_to_six six_to_bin loadkey genkey whatsfcs
+TARGETS=dump rr bin_to_six six_to_bin loadkey genkey whatsfcs set_cert_ski  make_cert make_crl make_roa make_manifest read_roa
 
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../asn -I../asn_gen -I../casn -Wall
+all:	$(TARGETS)
+
+CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../asn -I../asn_gen -I../casn -Wall -I../../roa-utils
 ASN_DIR= ../asn
 CASN_DIR= ../casn
 LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
-LIBS= -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+LIBS= -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto -lcl -ldl $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 dump:	dump.o asn.o asn_dump.o util.o asn.h
 	$(CC) $(CFLAGS) -o dump -g dump.o asn.o asn_dump.o util.o
+
+read_roa:	read_roa.o 
+	$(CC) $(CFLAGS) -o $@ read_roa.o $(LOCAL_LIBS) $(LIBS)
 
 rr:	rr.o md2.o asn.o asn.h
 	$(CC) $(CFLAGS) -o rr -g rr.o md2.o asn.o
@@ -46,9 +51,24 @@ whatsfcs:	whatsfcs.o prencode.o
 loadkey:	loadkey.o
 	$(CC) $(CFLAGS) -o $@ loadkey.o $(LOCAL_LIBS) $(LIBS)
 
-genkey:	genkey.o
+genkey:	genkey.o Makefile
 	$(CC) $(CFLAGS) -o $@ genkey.o $(LOCAL_LIBS) $(LIBS)
 
+make_cert:	make_cert.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_cert.o $(LOCAL_LIBS) $(LIBS)
+
+make_crl:	make_crl.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_crl.o $(LOCAL_LIBS) $(LIBS)
+
+make_roa:	make_roa.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_roa.o $(LOCAL_LIBS) $(LIBS)
+
+make_manifest:	make_manifest.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_manifest.o $(LOCAL_LIBS) $(LIBS)
+
+set_cert_ski:	set_cert_ski.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ set_cert_ski.o $(LOCAL_LIBS) $(LIBS)
+
 clean:
-	rm -f dump rr bin_to_six six_to_bin whatsfcs loadkey genkey *.o
+	rm -f $(TARGETS) *.o
 

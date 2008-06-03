@@ -185,7 +185,7 @@ Procedure:
                     err = ASN_DEFINED_ERR;
                 if (to_casnp->type == ASN_ANY) to_casnp->tag = fr_casnp->tag;
     		}
-            else if (!(to_casnp = _find_tag((tcasnp = to_casnp), fr_casnp->tag)))
+            else if (!(to_casnp = _find_tag(&(tcasnp = to_casnp)[1], fr_casnp->tag)))
     		err = ASN_MATCH_ERR;
 	    }
 	if (fr_casnp && !(fr_casnp->flags & ASN_FILLED_FLAG))

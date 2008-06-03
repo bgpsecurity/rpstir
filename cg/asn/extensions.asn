@@ -161,6 +161,7 @@ id-pkix-caIssuers               ID ::= { id-pkix-ad 2 }
 id-pe-ipAddrBlock               ID ::= { id-pkix-pe 7 }
 id-pe-autonomousSysNum          ID ::= { id-pkix-pe 8 }
 id-pe-routerIdentifier          ID ::= { id-pkix-pe 9 }
+id-pe-subjectInfoAccess         ID ::= { id-pkix-pe 11}
 
 
 ExtensionSet ::= TABLE {
@@ -189,16 +190,17 @@ ExtensionSet ::= TABLE {
     ipAddressBlock         id-pe-ipAddrBlock         IpAddrBlock,
     autonomousSysNum       id-pe-autonomousSysNum    ASNum,
     routerId               id-pe-routerIdentifier    RouterIdentifier,
+    subjectInfoAccess      id-pe-subjectInfoAccess   SubjectInfoAccess,
     other                  0xFFFF                    NOTASN1 }
 
 AuthorityKeyId ::= SEQUENCE {
     keyIdentifier        [0] KeyIdentifier OPTIONAL,
     certIssuer           [1] GeneralNames OPTIONAL,
     certSerialNumber     [2] SerialNumber OPTIONAL }
-    (CONSTRAINED BY { 
+    -- (  CONSTRAINED BY { 
     -- certIssuer and certSerialNumber constitute a logical pair,
     -- and if either is present both must be present.  Either this
-    -- pair or the keyIdentifier field or all shall be present. -- })
+    -- pair or the keyIdentifier field or all shall be present.  })
 
 KeyIdentifier ::= OCTET STRING
  
@@ -217,8 +219,8 @@ KeyUsage ::= BIT STRING {
 
 PrivateKeyUsagePeriod ::= SEQUENCE {
     notBefore	    [0] GeneralizedTime	    OPTIONAL,
-    notAfter	    [1] GeneralizedTime     OPTIONAL } ( CONSTRAINED BY {
-         --at least one component shall be present -- }  )
+    notAfter	    [1] GeneralizedTime     OPTIONAL } -- ( CONSTRAINED BY {
+         --at least one component shall be present  }  )
 
 CertificatePolicies ::=  SEQUENCE OF PolicyInformation
 
@@ -326,10 +328,12 @@ PolicyConstraints ::= SEQUENCE {
 
 SkipCerts ::= INTEGER
 
-CRLDistributionPoints ::= SEQUENCE OF DistributionPoint 
-(CONSTRAINED BY { 
--- There must be at least one member of this SEQUENCE.  The first
--- member must have the reasons component absent. --} )
+CRLDistributionPoints ::= SEQUENCE (SIZE (1..MAX)) OF DistributionPoint
+
+ 
+ -- (CONSTRAINED BY { 
+ -- There must be at least one member of this SEQUENCE.  The first
+ -- member must have the reasons component absent. } )
 
 
 DistributionPoint ::= SEQUENCE {
@@ -488,6 +492,8 @@ ExtKeyUsageSyntax ::= SEQUENCE OF KeyPurposeId
 
 AuthorityInfoAccessSyntax  ::=  SEQUENCE OF AccessDescription
 
+SubjectInfoAccess ::= SEQUENCE (SIZE (1..MAX)) OF AccessDescription
+
 AccessDescription  ::=  SEQUENCE {
      accessMethod          OBJECT IDENTIFIER,
      accessLocation        GeneralName  }
@@ -539,5 +545,6 @@ RouterIdentifier ::= SEQUENCE OF OwningASNumber
 OwningASNumber   ::= CHOICE {
       asnum     [0] INTEGER,     -- autonomous system number
       rdi       [1] INTEGER }    -- routing domain identifier
+
 
 

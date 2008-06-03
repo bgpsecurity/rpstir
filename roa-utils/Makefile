@@ -34,7 +34,8 @@ AR= ar
 RANLIB= ranlib
 
 # --- targets
-all:    libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa read_roa
+TARGETS=libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa # read_roa
+all:    $(TARGETS)
 
 b64:	b64.o
 	$(CC) $(CFLAGS) $(CFLAGS) -c b64.c
@@ -85,7 +86,7 @@ libroa.a:	roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h
 	ranlib libroa.a
 
 clean:
-	rm -f roa_test test_val2 test_check_sig test_hash *.a *.o
+	rm -f $(TARGETS) *.o
 
 clean2:
 	rm -f *.pem *.der *.txt

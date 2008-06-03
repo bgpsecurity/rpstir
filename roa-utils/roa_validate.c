@@ -89,15 +89,17 @@ static void fill_max(uchar *max)
   max[max[1] + 1] |= ((1 << max[2]) - 1);
   } 
 
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp)
-  { // used for manifests
+static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
+  { // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
   CRYPT_CONTEXT hashContext;
   uchar hash[40];
   int ansr = -1;
 
   memset(hash, 0, 40);
   cryptInit();
-  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
+  if (alg == 2) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
+  else if (alg == 1) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
+  else return ERR_SCM_BADALG;
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
@@ -129,11 +131,30 @@ static int check_cert(struct Certificate *certp)
   if (getTime(&certtbsp->validity.notBefore, &lo) < 0 ||
     getTime(&certtbsp->validity.notAfter, &hi) < 0 || lo >= hi)
     return ERR_SCM_BADDATES;
+  struct casn *spkeyp = &certtbsp->subjectPublicKeyInfo.subjectPublicKey;
+  uchar *pubkey;
+  tmp = readvsize_casn(spkeyp, &pubkey);
+  uchar khash[22];
+  tmp = gen_hash(&pubkey[1], tmp - 1, khash, 1);
+  free(pubkey);
+  int err = 1;  // require SKI
   struct Extension *extp;
-  for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
-    extp && diff_objid(&extp->extnID, id_basicConstraints);
-    extp = (struct Extension *)next_of(&extp->self));
-  if (extp && size_casn(&extp->extnValue.basicConstraints.cA) > 0) return ERR_SCM_NOTEE;  
+  for (extp = (struct Extension *)member_casn(&certtbsp->extensions.self, 0);
+    extp; extp = (struct Extension *)next_of(&extp->self))
+    {
+    if (!diff_objid(&extp->extnID, id_basicConstraints) &&
+        size_casn(&extp->extnValue.basicConstraints.cA) > 0) return ERR_SCM_NOTEE; 
+    if (!diff_objid(&extp->extnID, id_subjectKeyIdentifier))
+      {
+      uchar *ski;
+      int ski_lth = readvsize_casn(&extp->extnValue.subjectKeyIdentifier, &ski);
+      if (ski_lth != tmp || memcmp(khash, ski, ski_lth)) err = ERR_SCM_INVALSKI;
+      free(ski);
+      if (err < 0) return err;
+      err = 0;
+      }
+    }
+  if (err == 1) return ERR_SCM_NOSKI;  // no SKI
   return 0;
   }
 
@@ -146,7 +167,7 @@ static int check_fileAndHash(struct FileAndHash *fahp, int ffd)
   lseek(ffd, 0, SEEK_SET);
   contentsp = (uchar *)calloc(1, name_lth + 2);
   if (read(ffd, contentsp, name_lth + 2) != name_lth) err = ERR_SCM_BADFILE;
-  else if ((hash_lth = gen_hash(contentsp, name_lth, contentsp)) < 0) 
+  else if ((hash_lth = gen_hash(contentsp, name_lth, contentsp, 2)) < 0) 
     err = ERR_SCM_BADHASH;
   else
     {

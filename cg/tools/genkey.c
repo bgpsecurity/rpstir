@@ -34,16 +34,18 @@ int main(int argc, char **argv)
   CRYPT_KEYSET cryptKeyset;
   int ansr = 0;
 
-  if (argc < 3) fprintf(stderr, "Too few args\n");
+  if (argc < 3) fprintf(stderr, "Usage: Filename label\n");
   else
     {
     cryptInit();
     ansr = cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
-    ansr = cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, argv[2], strlen(argv[2]));
+    ansr = cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, argv[2], 
+      strlen(argv[2]));
     ansr = cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, 1024/8);
     ansr = cryptGenerateKey(privKeyContext);
-    ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, argv[1], CRYPT_KEYOPT_CREATE);
-    ansr = cryptAddPrivateKey(cryptKeyset, privKeyContext, "");
+    ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, 
+      argv[1], CRYPT_KEYOPT_CREATE);
+    ansr = cryptAddPrivateKey(cryptKeyset, privKeyContext, "password");
     ansr = cryptDestroyContext(privKeyContext);
     cryptEnd();
     }

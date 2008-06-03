@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	cg.dir rsync_aur.dir roa-utils1.dir proto.dir roa-utils2.dir
+all:	cg.dir roa-utils1.dir proto.dir roa-utils2.dir rsync_aur.dir
 
 cg.dir:
 	cd cg && make all LIBDL="-ldl" LIBPTHREAD="" LIBXTRA="" LIBCL="-lcl"

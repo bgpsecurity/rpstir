@@ -1,0 +1,45 @@
+-- $Id: roa.asn 453 2007-07-25 15:30:40Z mreynolds $
+-- Declaration for c->asn compatibility
+--
+-- ***** BEGIN LICENSE BLOCK *****
+-- 
+-- BBN Rule Editor/Engine for Address and AS Number PKI
+-- Version 1.0
+-- 
+-- US government users are permitted unrestricted rights as
+-- defined in the FAR.  
+--
+-- This software is distributed on an "AS IS" basis, WITHOUT
+-- WARRANTY OF ANY KIND, either express or implied.
+--
+-- Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+--
+-- Contributor(s):  Charles Gardiner
+--
+-- ***** END LICENSE BLOCK *****
+--
+
+DEFINITIONS IMPLICIT TAGS ::=
+-- imports
+IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
+        Extensions IPAddressOrRangeA Attribute FROM extensions IN extensions.asn,
+	Certificate Version FROM certificate IN certificate.asn,
+	Name FROM name IN name.asn;
+
+-- Manifest Specification
+
+   Manifest ::= SEQUENCE
+    {
+    version         [0] INTEGER DEFAULT 0,
+    manifestNumber  INTEGER,
+    thisUpdate      GeneralizedTime,
+    nextUpdate      GeneralizedTime,
+    fileHashAlg     OBJECT IDENTIFIER,
+    fileList        SEQUENCE SIZE (0..MAX) OF FileAndHash
+    }
+
+FileAndHash ::= SEQUENCE
+    {
+    file        IA5String,
+    hash        BIT STRING
+    }

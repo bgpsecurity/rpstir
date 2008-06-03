@@ -20,54 +20,22 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	Algorithms.h extensions.h name.h orname.h privkey.h roa.h manifest.h serial_number.h certificate.h crlv2.h libasn.a
+TARGET=libasn.a
+ASNFILES=Algorithms.asn extensions.asn name.asn orname.asn privkey.asn roa.asn manifest.asn serial_number.asn certificate.asn crlv2.asn keyfile.asn 
+HFILES=$(ASNFILES:.asn=.h)
+CFILES=$(ASNFILES:.asn=.c) CertificateToBeSignedConstraint.c CertificateRevocationListToBeSignedConstraint.c
+OFILES=$(CFILES:.c=.o)
 
-Algorithms.c Algorithms.h:	Algorithms.asn
-	../asn_gen/asn_gen -c Algorithms.asn
+all: $(HFILES) $(TARGET)
 
-extensions.c extensions.h:	extensions.asn
-	../asn_gen/asn_gen -c extensions.asn
+CFLAGS=	-c -g -I. -I../casn
 
-name.c name.h:	name.asn
-	../asn_gen/asn_gen -c name.asn
+$(TARGET): $(OFILES)
+	ar crv $(TARGET) $(CFILES:.c=.o)
+	ranlib $(TARGET)
 
-orname.c orname.h:	orname.asn
-	../asn_gen/asn_gen -c orname.asn
-
-privkey.c privkey.h:	privkey.asn
-	../asn_gen/asn_gen -c privkey.asn
-
-roa.c roa.h:	roa.asn
-	../asn_gen/asn_gen -c roa.asn
-
-manifest.c manifest.h:	manifest.asn
-	../asn_gen/asn_gen -c manifest.asn
-
-serial_number.c serial_number.h:	serial_number.asn
-	../asn_gen/asn_gen -c serial_number.asn
-
-certificate.c certificate.h:	certificate.asn
-	../asn_gen/asn_gen -c certificate.asn
-
-crlv2.c crlv2.h:	crlv2.asn
-	../asn_gen/asn_gen -c crlv2.asn
-
-CFLAGS=	-c -I. -I../casn
-
-Algorithms.o:	Algorithms.c
-extensions.o:	extensions.c
-name.o:	name.c
-orname.o:	orname.c
-privkey.o:	privkey.c
-roa.o:	roa.c
-manifest.o:	manifest.c
-serial_number.o:	serial_number.c
-certificate.o:	certificate.c
-crlv2.o:	crlv2.c
-
-libasn.a:	Algorithms.o extensions.o name.o orname.o privkey.o roa.o serial_number.o certificate.o crlv2.o manifest.o
-	ar crv libasn.a *.o
-	ranlib libasn.a
+%.h %.c: %.asn
+	../asn_gen/asn_gen -c $<
 
 clean:
-	rm -f *.c *.h *.o *.a
+	rm -f $(ASNFILES:.asn=.c) $(ASNFILES:.asn=.h) $(TARGET) *.o

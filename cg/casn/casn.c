@@ -120,13 +120,13 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
  ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -233,7 +233,7 @@ int casn_error(int, char *),
     _readvsize(struct casn *casnp, uchar *to, int mode),
     _mark_definees(struct casn *casnp, uchar *wherep, int index),
     _match_casn(struct casn *casnp, uchar *from, int nbytes, ushort ff,
-        ushort top_lev),
+        ushort top_lev, struct casn *of_casnp),
     _num_casns(struct casn *casnp),
      _set_all_lths(uchar *top, uchar *tag_endp, uchar *val_endp, int mode),
     _set_casn_lth(uchar *s, uchar *e, int mode),
@@ -285,7 +285,7 @@ int decode_casn_lth(struct casn *casnp, uchar *from, int lth)
 	  // don't clear it if it is defined_by
     if (!(casnp->flags & (ASN_CHOSEN_FLAG | ASN_DEFINED_FLAG)))
         _clear_casn(casnp, ~(ASN_FILLED_FLAG));
-    return _match_casn(casnp, from, lth, (ushort)0, (ushort)0);
+    return _match_casn(casnp, from, lth, (ushort)0, (ushort)0, (struct casn *)0);
     }
 
 void delete_casn(struct casn *casnp)
@@ -500,6 +500,7 @@ struct casn *member_casn(struct casn *casnp, int index)
         if (index >= 0) err = ASN_OF_BOUNDS_ERR;
 	}
     if (err) _casn_obj_err(casnp, err);
+    if (!tcasnp->ptr) return (struct casn *)0;
     return tcasnp;
     }
 
@@ -1012,7 +1013,7 @@ int _mark_definees(struct casn *casnp, uchar *wherep, int index)
     }
 
 int _match_casn(struct casn *casnp, uchar *from, int nbytes, ushort pflags,
-    ushort top_lev)
+    ushort top_lev, struct casn *of_casnp)
     {
 /**
 Function: Decodes a stream, starting at 'from' for 'nbytes' bytes, filling in
@@ -1077,15 +1078,14 @@ Procedure:
             ELSE IF have no more struct casns, return error
    Return count of bytes processed
 **/
-    struct casn *curr_casnp, *of_casnp, *ch_casnp, *sav_casnp, *set_casnp,
+    struct casn *curr_casnp, *ch_casnp, *sav_casnp, *set_casnp,
         *tcasnp;
     int ansr, did, err, lth, num, explicit_extra, break_out, num_ofs;
     uchar *b, *c;
     long tag;
     ushort flags, level, send_flag;
 							// step 1
-    of_casnp = set_casnp = (struct casn *)0;
-    if ((pflags & ASN_OF_FLAG)) of_casnp = _go_up(casnp);
+    set_casnp = (struct casn *)0;
     if ((pflags & ASN_SET_FLAG)) set_casnp = casnp;  // to back to each time
 							// step 2
     for (num_ofs = did = 0, curr_casnp = casnp; (!nbytes || nbytes > did); )
@@ -1158,9 +1158,10 @@ Procedure:
         else if (curr_casnp->type == ASN_ANY) curr_casnp->tag = tag;
 	else if (curr_casnp->tag != tag)
             {       // note that DEFAULTs are OPTIONAL, too
+            struct casn *acasnp = curr_casnp;
     	    if ((curr_casnp->flags & ASN_OPTIONAL_FLAG) == 0 ||
 	        !(curr_casnp = _skip_casn(curr_casnp, 1)))
-                    return _casn_obj_err(tcasnp, ASN_MATCH_ERR) - did - 1;
+                    return _casn_obj_err(acasnp, ASN_MATCH_ERR) - did - 1;
 	    sav_casnp = curr_casnp;
 	    continue;
 	    }
@@ -1218,8 +1219,10 @@ Procedure:
 	    }
 	else
             {
+            int ch = 0;
 	    if (curr_casnp->type >= ASN_CHOICE)
     	        {
+                ch = 1;
                 if (!(tcasnp = _find_chosen(curr_casnp)) ||
                     (tcasnp->type == ASN_NOTASN1 &&
                     (ansr = _write_casn(tcasnp, c, lth)) < 0))
@@ -1228,13 +1231,19 @@ Procedure:
     	    else tcasnp = &curr_casnp[1];
 	    if (ansr < 0)    // didn't have ASN_NOT_ASN1
 		{
+                struct casn *offp = (struct casn *)0;
                 num = send_flag = 0;
                 if (tag == ASN_BITSTRING) num = 1;
-    	        if ((curr_casnp->flags & ASN_OF_FLAG)) send_flag = ASN_OF_FLAG;
-    	        else if (curr_casnp->type == ASN_SET) send_flag |= ASN_SET_FLAG;
+                  // if was chosen, can't be an OF
+    	        if (!ch && (curr_casnp->flags & ASN_OF_FLAG)) 
+                  {
+                  send_flag = ASN_OF_FLAG;
+                  offp = curr_casnp;
+                  }
+    	        if (curr_casnp->type == ASN_SET) send_flag |= ASN_SET_FLAG;
                 if ((ansr = _match_casn(tcasnp, &c[num],
                     (ulong)(curr_casnp->lth - explicit_extra - num), send_flag,
-                    top_lev + 1)) < 0)
+                    top_lev + 1, offp)) < 0)
 		    {  // if first OF, casn_obj_err stuffed right on up
 		    if (of_casnp && num_ofs > 1) _stuff_ofs(of_casnp, num_ofs);
                     return ansr - did;
@@ -1372,7 +1381,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
 	    {
             simple_constructor(&time_casn, (ushort)0, casnp->type);
 	    if (read_casn_time(casnp, &secs) > 0 &&
-	        (lth = write_casn_time(&time_casn, secs)) > 0) 
+	        (lth = write_casn_time(&time_casn, secs)) > 0)
 		tcasnp = &time_casn;
 	    else
                 {
@@ -1453,7 +1462,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
 		i = 1;      // go back to start
 		sstp1 = (sstp0 = tablep)->nextp;
 		}
-	    else 
+	    else
 		{
 		sstp0 = sstp1;
 		sstp1 = sstp2;
@@ -1759,7 +1768,7 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	    return 0;
 	    }
         return _match_casn(&casnp[1], c, lth, (casnp->flags & ASN_OF_FLAG),
-               (ushort)1);
+               (ushort)1, ((casnp->flags & ASN_OF_FLAG))? casnp: (struct casn *)0);
 	}
     if (casnp->type == ASN_CHOICE)  // can't be defined-by here
 	{

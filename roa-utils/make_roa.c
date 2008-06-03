@@ -1,5 +1,5 @@
 /*
-  $Id: make_roa.c 453 2007-07-25 15:30:40Z gardiner $
+  $Id: make_roa.c 453 20078-07-25 15:30:40Z gardiner $
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
@@ -15,7 +15,7 @@
  *
  * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
  *
- * Contributor(s):  Charles Gardiner
+ * Contributor(s):  Charles W. Gardiner
  *
  * ***** END LICENSE BLOCK ***** */
 

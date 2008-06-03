@@ -1,0 +1,71 @@
+DEFINITIONS IMPLICIT TAGS ::= 
+
+Keyfile ::= SEQUENCE
+  {
+  oid  OBJECT IDENTIFIER,
+  content [0] EXPLICIT AAA
+  }
+
+AAA ::= SEQUENCE
+  {
+  version INTEGER,
+  bbb BBB,
+  }
+
+BBB ::= SEQUENCE
+  {
+  ccc [0] CCC,
+  ggg [1] GGG
+  }
+
+CCC ::= SEQUENCE
+  {
+  eee ANY,
+  }
+
+GGG ::= SEQUENCE
+  {
+  iii [0] EXPLICIT III
+  }
+
+III ::= SEQUENCE
+  {
+  lll LLL,
+  mmm MMM, 
+  nnn [1] EXPLICIT NNN
+  }
+
+LLL ::= SEQUENCE
+  {
+  label UTF8String
+  }
+
+MMM ::= SEQUENCE
+  {
+  oct OCTET STRING,
+  bit1 BIT STRING,
+  bit2 BIT STRING,
+  }
+
+NNN ::= SEQUENCE
+  {
+  ooo [0] OOO,
+  i    INTEGER
+  }
+
+OOO ::= SEQUENCE
+  {
+  ppp [1] PPP
+  }
+
+PPP ::= SEQUENCE
+  {
+  alg QQQ,
+  key BIT STRING
+  }
+
+QQQ ::= SEQUENCE
+  {
+  oid OBJECT IDENTIFIER,
+  pad NULL
+  }

@@ -19,12 +19,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "roa_utils.h"
 #include "manifest.h"
+#include "roa.h"
+#include "certificate.h"
 #include "cryptlib.h"
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <time.h>
+#include <asn.h>
+#include <casn.h>
+
 
 /*
   This file has a program to make manifests.
@@ -32,7 +39,7 @@
 
 char *msgs [] = 
     {
-    "Finished OK\n",
+    "Finished %s OK\n",
     "Couldn't open %s\n",      //1
     "Error reading %s\n",
     "Error adding %s\n",      // 3
@@ -44,38 +51,23 @@ char *msgs [] =
 static int fatal(int msg, char *paramp);
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp);
 
-static int add_name(char *curr_file, struct Manifest *manp, int num)
+static int add_name(char *curr_file, struct Manifest *manp, int num, int bad)
   {
   int fd, siz, hsiz;
   uchar *b, hash[40];
-  struct FileAndHash *fahp;
   if ((fd = open(curr_file, O_RDONLY)) < 0) fatal(1, curr_file);
   siz = lseek(fd, 0, SEEK_END);
   lseek(fd, 0, 0);
   b = (uchar *)calloc(1, siz);
   if (read(fd, b, siz + 2) != siz) fatal(2, curr_file);
   hsiz = gen_hash(b, siz, hash);
-  if (inject_casn(&manp->fileList.self, num) < 0) fatal(3, "fileList");
-  fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, num);
+  if (bad) hash[1]++;
+  struct FileAndHash *fahp;
+  if (!(fahp = (struct FileAndHash *)inject_casn(&manp->fileList.self, num))) 
+    fatal(3, "fileList");
   write_casn(&fahp->file, (uchar *)curr_file, strlen(curr_file));
   write_casn_bits(&fahp->hash, hash, hsiz, 0);
   return  1;
-  }
-
-static int add_names(char *curr_file, char *c, struct Manifest *manp, int num)
-  {
-  FILE *str;
-  char *a;
-  if (!(str = fopen(&c[1], "r"))) fatal(1, &c[1]);
-  while((fgets(c, (128 - (c - curr_file)), str)))
-    {
-    for (a = c; *a > ' '; a++);
-    *a = 0;
-    if (*c == '-') num = add_names(curr_file, c, manp, num);
-    else num += add_name(curr_file, manp, num);
-    }
-  fclose(str);
-  return num;
   }
 
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp)
@@ -157,16 +149,32 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, cha
 
 int main(int argc, char **argv)
   {
-  char *c, curr_file[128];
   struct ROA roa;
   struct AlgorithmIdentifier *algidp;
   ulong now = time((time_t *)0);
 
-  if (argc < 4)
+  if (argc < 2)
     {
-    printf("Args needed: output file, certificate file, key file, optional directory\n");
+    printf("Usage: manifest name\n");
     return 0;
     } 
+  char manifestfile[40], certfile[40], keyfile[40];
+  memset(manifestfile, 0, 40);
+  memset(certfile, 0, 40);
+  memset(keyfile, 0, 40);
+  char *c;
+  for (c = argv[1]; *c && *c != '.'; c++);
+  *c = 0;
+  strcat(strcpy(manifestfile, argv[1]), ".man");
+  c--;
+  int index;
+  sscanf(c, "%d", &index);
+  *c = 0;
+  strcat(strcpy(certfile, argv[1]), "E.cer");
+  strcat(strcpy(keyfile, argv[1]), "E.p15");
+  certfile[0] = 'C';
+  keyfile[0] = 'C';
+
   ROA(&roa, 0);
   write_objid(&roa.contentType, id_signedData);
   write_casn_num(&roa.content.signedData.version.self, (long)3);
@@ -177,52 +185,62 @@ int main(int argc, char **argv)
   write_casn(&algidp->parameters.sha256, (uchar *)"", 0);
   write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_roa_pki_manifest);
   struct Manifest *manp = &roa.content.signedData.encapContentInfo.eContent.manifest;
-  write_casn_num(&manp->manifestNumber, 4);
+  write_casn_num(&manp->manifestNumber, (long)index);
   write_casn_time(&manp->thisUpdate, now);
   now += (30*24*3600);
   write_casn_time(&manp->nextUpdate, now);
   write_objid(&manp->fileHashAlg, id_sha256);
   
     // now get the files 
+  char curr_file[128];
   memset(curr_file, 0, 128);
-  if (argc > 4)
-    {
-    strcpy(curr_file, argv[4]);
-    for (c = curr_file; *c > ' '; c++);
-    if (c > curr_file && c[-1] != '/') *c++ = '/';
-    }
-  else c = curr_file;
   int num;
-  printf("Now give the names of the files to go in the manifest\n");
-  printf("Terminate with a null name\n");
-  printf("If a name begins with '-', the remainder of the name is considered\n");
-  printf("to be the full path to a file containing a list of file names.\n");
-  for (num = 0; 1; )
+  for (num = 0; fgets(curr_file, 128, stdin) && curr_file[0] > ' '; num++)
     {
     char *a;
-
-    printf("File[%d]? ", num);
-    fgets(c, (128 - (c - curr_file)), stdin); 
-    if (*c < ' ') break;
-    for (a = c; *a > ' '; a++);
-    *a = 0;  // remove carriage return
-    if (*c != '-') num += add_name(curr_file, manp, num);
-    else num = add_names(curr_file, c, manp, num);
+    int bad = 0;
+    for (a = curr_file; *a && *a > ' ' ; a++);
+    while (*a == ' ') a++;
+    if (*a > ' ') bad = 1;
+    for (a = curr_file; *a && *a > ' ' && *a != '.'; a++);
+    if (*a <= ' ')
+      {
+      if (*curr_file == 'C') strcpy(a, ".cer");
+      else if (*curr_file == 'L') strcpy(a, ".crl");
+      else if (*curr_file == 'R') strcpy(a, ".roa");
+      }
+    else
+      {
+      while (*a > ' ') a++;
+      *a = 0;  // bad hash flag and remove carriage return
+      }
+    add_name(curr_file, manp, num, bad);
     }
   if (!inject_casn(&roa.content.signedData.certificates.self, 0)) fatal(4, "signedData");
   struct Certificate *certp = (struct Certificate *)member_casn(&roa.content.signedData.
     certificates.self, 0);
-  if (get_casn_file(&certp->self, argv[2], 0) < 0) fatal(2, argv[2]);
-  if (!inject_casn(&roa.content.signedData.signerInfos.self, 0)) fatal(4, "signerInfo");
-  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(&roa.content.signedData.
-    signerInfos.self, 0);
+  if (get_casn_file(&certp->self, certfile, 0) < 0) fatal(2, certfile);
+  struct SignerInfo *sigInfop;
+  if (!(sigInfop  = (struct SignerInfo *)inject_casn(&roa.content.signedData.
+    signerInfos.self, 0))) fatal(4, "signerInfo");
   write_casn_num(&sigInfop->version.v3, 3);
   write_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256);
   write_objid(&sigInfop->signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption);
   uchar *tbsp;
   int tbs_lth = readvsize_casn(&roa.content.signedData.encapContentInfo.eContent.self, &tbsp);
   
-  if (setSignature(&roa, tbsp, tbs_lth, argv[3]) < 0) fatal(5, (char *)0);
-  if (put_casn_file(&roa.self, argv[1], 0) < 0) fatal(6, argv[1]);  
+  if (setSignature(&roa, tbsp, tbs_lth, keyfile) < 0) fatal(5, (char *)0);
+  if (put_casn_file(&roa.self, manifestfile, 0) < 0) fatal(6, manifestfile);
+  for (c = manifestfile; *c && *c != '.'; c++);
+  strcpy(c, ".raw");
+  char *rawp;
+  int lth = dump_size(&roa.self);
+  rawp = (char *)calloc(1, lth + 4);
+  dump_casn(&roa.self, rawp);
+  int fd = open(manifestfile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
+  write(fd, rawp, lth);
+  close(fd);
+  free(rawp);
+  fatal(0, manifestfile);  
   return 0;
   } 
