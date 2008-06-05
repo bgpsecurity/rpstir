@@ -34,7 +34,7 @@ AR= ar
 RANLIB= ranlib
 
 # --- targets
-TARGETS=libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa # read_roa
+TARGETS=libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa 
 all:    $(TARGETS)
 
 b64:	b64.o
@@ -66,9 +66,6 @@ make_manifest: make_manifest.o ../cg/casn/libcasn.a
 
 make_roa: make_roa.o ../cg/casn/libcasn.a
 	$(CC) $(CFLAGS) -o $@ make_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
-
-read_roa: read_roa.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ read_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
 
 sign_roa: sign_roa.o ../cg/casn/libcasn.a
 	$(CC) $(CFLAGS) -o $@ sign_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
