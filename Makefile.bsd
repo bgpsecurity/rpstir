@@ -20,13 +20,13 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	cg.dir rsync_aur.dir roa-utils1.dir proto.dir roa-utils2.dir
+all:	cg.dir roa-utils1.dir proto.dir roa-utils2.dir rsync_aur.dir 
 
 cg.dir:
 	cd cg && make all LIBDL="" LIBPTHREAD="-lpthread" LIBXTRA="-lodbcinst -lodbc" LIBCL="-Wl,--allow-multiple-definition -lcl"
 
 rsync_aur.dir:
-	cd rsync_aur && make all LIBDL="" LIBPTHREAD="-lpthread" LIBXTRA="-lodbcinst -lodbc" LIBCL="-Wl,--allow-multiple-definition -lcl"
+	cd rsync_aur && make all LIBDL="" LIBPTHREAD="-lpthread" LIBXTRA="-lodbcinst -lodbc" LIBCL="-L/usr/local/lib -lcl"
 
 roa-utils1.dir:
 	cd roa-utils && make libroa.a LIBDL="" LIBPTHREAD="-lpthread" LIBXTRA="-lodbcinst -lodbc" LIBCL="-Wl,--allow-multiple-definition -lcl"

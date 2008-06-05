@@ -25,6 +25,10 @@ http://www.openssl.org.  It should be at least version 0.9.8d. Follow
 the installation instructions for that package.  We recommend the default
 installation target directory /usr/local/ssl. Also, make sure that
 RFC3779 support is enabled (./config enable-rfc3779).
+	$ ./config enable-rfc3779
+	$ make depend
+	$ make
+	$ make install
 
 2.1.2 MySQL
 
@@ -48,6 +52,11 @@ library itself and its include files are in accessible locations, e.g.
 /usr/local/lib and /usr/local/include. If you are on FreeBSD this can
 be done by issuing the command make search name="cryptlib" from the
 /etc/ports directory.
+
+There seem to be some problems with compiling cryptlib on Linux machines.
+You may need to modify some files to get it to build cleanly. Also note that
+the self-test code (make testlib; ./testlib) fails on at least FreeBSD 
+and Linux. We do not currently think that this is cause for concern.
 
 2.1.4 rsync
 

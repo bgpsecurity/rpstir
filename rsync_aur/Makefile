@@ -28,12 +28,9 @@
 CC = gcc
 DFLAGS = 
 CFLAGS=	-g -I../proto -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
-#CFLAGS =-g -Wall
 XFLAGS =        # xtra cflags, set by systype targets
-#IFLAGS =-I/usr/local/ssl/include 
-#XLIBS = $(LIBDL) -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
-IFLAGS =-I../cg/casn -I../cg/asn -I../roa-utils
-XLIBS = ../roa-utils/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  $(LIBCL) $(LIBDL)
+IFLAGS =-I../cg/casn -I../cg/asn -I../roa-utils -I/usr/local/include
+XLIBS = ../roa-utils/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
 CC += $(CFLAGS)
@@ -52,7 +49,7 @@ bogus:
 
 ### HARD TARGETS
 
-rsync_aur:	$(ALL_OBJS) $(XLIBS) Makefile
+rsync_aur:	$(ALL_OBJS) Makefile
 	$(LD) $(DFLAGS) $(XFLAGS) $(STATIC) -o rsync_aur \
 	$(ALL_OBJS) $(IFLAGS) $(XLIBS)
 

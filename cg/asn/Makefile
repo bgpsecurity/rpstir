@@ -20,45 +20,45 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-GENERATED_C_FILES=Algorithms.c extensions.c name.c orname.c privkey.c roa.c manifest.c serial_number.c certificate.c crlv2.c 
-
-all:	$(GENERATED_C_FILES) libasn.a
-
-Algorithms.c Algorithms.h:	Algorithms.asn
-	../asn_gen/asn_gen -c Algorithms.asn
-
-extensions.c extensions.h:	extensions.asn
-	../asn_gen/asn_gen -c extensions.asn
-
-name.c name.h:	name.asn
-	../asn_gen/asn_gen -c name.asn
-
-orname.c orname.h:	orname.asn
-	../asn_gen/asn_gen -c orname.asn
-
-privkey.c privkey.h:	privkey.asn
-	../asn_gen/asn_gen -c privkey.asn
-
-roa.c roa.h:	roa.asn
-	../asn_gen/asn_gen -c roa.asn
-
-manifest.c manifest.h:	manifest.asn
-	../asn_gen/asn_gen -c manifest.asn
-
-serial_number.c serial_number.h:	serial_number.asn
-	../asn_gen/asn_gen -c serial_number.asn
-
-certificate.c certificate.h:	certificate.asn
-	../asn_gen/asn_gen -c certificate.asn
-
-crlv2.c crlv2.h:	crlv2.asn
-	../asn_gen/asn_gen -c crlv2.asn
-
 CFLAGS=	-c -I. -I../casn
 
-libasn.a:	Algorithms.o extensions.o name.o orname.o privkey.o roa.o serial_number.o certificate.o crlv2.o manifest.o CertificateToBeSignedConstraint.o CertificateRevocationToBeSignedConstraint.o
-	ar crv libasn.a *.o
+ASN_GEN=../asn_gen/asn_gen
+
+ASN_SOURCE=\
+	Algorithms.asn \
+	certificate.asn \
+	crlv2.asn \
+	extensions.asn \
+	keyfile.asn \
+	manifest.asn \
+	name.asn \
+	orname.asn \
+	privkey.asn \
+	roa.asn \
+	serial_number.asn
+
+GENERATED_C_FILES=$(ASN_SOURCE:.asn=.c)
+GENERATED_H_FILES=$(ASN_SOURCE:.asn=.h)
+
+OTHER_C_FILES=\
+	CertificateToBeSignedConstraint.c \
+	CertificateRevocationListToBeSignedConstraint.c
+
+O_FILES=$(GENERATED_C_FILES:.c=.o) $(OTHER_C_FILES:.c=.o)
+
+.SUFFIXES: .asn
+
+.asn.c:
+	$(ASN_GEN) -c $<
+
+all:	libasn.a
+
+$(O_FILES): $(GENERATED_C_FILES)
+
+libasn.a: $(O_FILES)
+	ar crv libasn.a $(O_FILES)
 	ranlib libasn.a
 
 clean:
-	rm -f $(GENERATED_C_FILES) *.h *.o *.a
+	rm -f $(GENERATED_C_FILES) $(GENERATED_H_FILES) $(O_FILES) *~
+
