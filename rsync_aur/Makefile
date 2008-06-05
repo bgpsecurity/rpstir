@@ -33,7 +33,7 @@ XFLAGS =        # xtra cflags, set by systype targets
 #IFLAGS =-I/usr/local/ssl/include 
 #XLIBS = $(LIBDL) -L/usr/local/ssl/lib -lcrypto    # xtra libs if necessary?
 IFLAGS =-I../cg/casn -I../cg/asn -I../roa-utils
-XLIBS = ../roa-utils/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  -lcl -ldl
+XLIBS = ../roa-utils/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  $(LIBCL) $(LIBDL)
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
 CC += $(CFLAGS)
