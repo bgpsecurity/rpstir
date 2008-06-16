@@ -23,7 +23,7 @@
 
 #include "err.h"
 
-static char *errs[-(ERR_SCM_MAXERR)] =
+static char *errs[-(ERR_SCM_MAXERR) + 1] =
   {
     "No error",			    /* ERR_SCM_NOERR */
     "Cannot open file",             /* ERR_SCM_COFILE */
