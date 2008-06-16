@@ -487,8 +487,8 @@ main(int argc, char *argv[])
       if (!(sendStr = getMessageFromString(holding, (unsigned int)strlen(holding),
         &retlen, flags))) continue;
       int have_manifest = isManifest(sendStr);
-      char *fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 8);
-        strcat(strcat(strcpy(fname, topDir), "/"), &sendStr[2]);
+      char *fname = (char *)calloc(1, strlen(sendStr) + 8);
+      strcpy(fname, &sendStr[2]);
       char *b;
       for (b = fname; *b >= ' '; b++); // trim off CRLF
       *b = 0;
