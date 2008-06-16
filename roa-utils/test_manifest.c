@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 
   ROA(&roa, 0);
   if (argc < 2) {
-      fprintf(stderr, "usage: %s directory manifest [manifest ...]\n");
+      fprintf(stderr, "usage: %s directory manifest [manifest ...]\n", argv[0]);
       return 0;
   }
   argv++;
