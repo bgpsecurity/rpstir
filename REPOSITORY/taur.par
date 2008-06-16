@@ -1,0 +1,6 @@
+-t 7344 
+-f ../LOGS/test.log 
+-w 
+-e 
+-i 
+-d /home/gardiner/apki/trunk/REPOSITORY
