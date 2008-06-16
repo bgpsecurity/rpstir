@@ -1,0 +1,54 @@
+MAKE_ROA (1)             ROA-PKI                                   MAKE_ROA(1)                                     
+
+NAME
+
+        make_roa - makes a ROA
+
+SYNOPSIS
+  
+        make_roa  -r roadatafile -c certfile -k keyfile -o outfile
+
+        make_roa parameterfile
+
+DESCRIPTION
+
+          This program creates a ROA from these parameters supplied:
+
+            -r roadatafile where roadatafile is he name of a file containing
+               data for the roa in text form, including AS#, IPv4 prefixes
+               and IPv6 prefixes in the format created by the read_roa
+               program (q.v).
+
+            -c certfile where certfile is the name of the file containing
+               the certificate of the entity that will sign the ROA
+
+            -k keyfile where keyfile is the name of a file containing the 
+               private key to be used for signing the ROA.
+
+            -o outfile where outfile is the name of the file to which the ROA
+               is to be written
+
+        The parameters may be in any order.  
+
+            As an alternative, the program may be run with a single parameter
+        naming a file which contains the above-named parameters separated by 
+        white space, e.g. the file might contain:
+
+                -c mycertificate -k mykey -o some.roa -r roa.txt
+
+            When the program completes successfully, it ends with the message
+
+                 Created xxx
+
+        If there is any error, the program terminates with one of several 
+        messages:
+
+          Missing xxx 
+          invalid parameter yyy
+          Couldn't open filename
+          Error reading filename
+          Error signing with filename
+          Error writing wilename
+  
+        where xxx is the name of a parameter, yyy is a parameter given, and
+        filename is the name of a file in the parameter list.
