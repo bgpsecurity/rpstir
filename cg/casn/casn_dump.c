@@ -1,4 +1,3 @@
-/* $Id$ */
 /* Jun  7 2007 858U  */
 /* Jun  7 2007 GARDINER corrected offset after explicit defined-by */
 /* Jun  6 2007 857U  */
@@ -31,27 +30,15 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
- ***** BEGIN LICENSE BLOCK *****
- * 
- * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
- * 
- * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
- * US government users are permitted restricted rights as
- * defined in the FAR.  
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) BBN Technologies 2004-2007.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK *****
+COPYRIGHT 2004 BBN Systems and Technologies
+10 Moulton St.
+Cambridge, Ma. 02138
+617-873-3000
 *****************************************************************************/
 
 char casn_dump_sfcsid[] = "@(#)casn_dump.c 858P";
 
+#include <stdio.h>
 #include "casn.h"
 
 extern struct casn *_skip_casn(struct casn *, int);
@@ -63,6 +50,16 @@ static char *cat(char *, char *);
 static int newline(char *, int);
 static long _dumpread(struct casn *casnp, char *to, int offset, int mode),
             _dumpsize(struct casn *casnp, char *to, int offset, int mode);
+static void load_oidtable(char *);
+static char *find_label(char *oidp, int *diffp);
+
+struct oidtable
+  {
+  char *oid;
+  char *label;
+  } *oidtable;
+int oidtable_size;
+
 int _dump_tag(int tag, char *to, int offset, ushort flags,
     int mode);
 
@@ -108,6 +105,9 @@ int dump_casn(struct casn *casnp, char *to)
     long ansr;
 
     if (_clear_error(casnp) < 0) return -1;
+    char *c;
+    if (!oidtable && (c = getenv("OIDTABLE"))) load_oidtable(c);
+
     if ((ansr = _dumpsize(casnp, to, 0, 1)) >= 0) to[ansr++] = '\n';
     to[ansr] = 0;
     return ansr;
@@ -118,6 +118,9 @@ int dump_size(struct casn *casnp)
     char buf[4];
     long ansr;
     if (_clear_error(casnp) < 0) return -1;
+    char *c;
+    if (!oidtable && (c = getenv("OIDTABLE"))) load_oidtable(c); 
+
     if ((ansr = _dumpsize(casnp, buf, 0, 0)) >= 0) ansr++;
     return ansr;
     }
@@ -374,6 +377,36 @@ long _dumpread(struct casn *casnp, char *to, int offset, int mode)
         {
         ansr = _readsize_objid(casnp, c, mode) - 1; // for extra null
         if (mode) c += ansr;
+        if (oidtable)
+          {
+          char *buf = (char *)calloc(1, ansr + 2);
+          _readsize_objid(casnp, buf, 1);
+          int diff;
+          char *labelp = find_label(buf, &diff);
+          if (labelp)
+            {
+            int xtra = strlen(labelp) + 7;
+            if (!diff)
+              {
+              if (mode) sprintf(c, " /* %s */", labelp);
+              }
+            else
+              {
+              if (mode)
+                {
+                char *locpartp = (char *)calloc(1, -diff + 2);
+                strncpy(locpartp, &c[diff], -diff);
+                locpartp[-diff] = 0;
+                if (mode) sprintf(c, " /* %s + %s */", labelp, locpartp);
+                free(locpartp);
+                }
+              xtra += (3 - diff);
+              }
+            ansr += xtra;
+            if (mode) c += xtra;
+            free(buf);
+            }
+          }
         }
     else    /* output in hex */
         {
@@ -492,3 +525,82 @@ static int newline(char *to, int offset)
     return (c - to);
     }
     
+static int cf_oid(char *curr_oid, char *test_oid)
+  {
+  char *c, *t;
+  for (c = curr_oid, t = test_oid; *c && *t && *c == *t; c++, t++);
+  if (!*c && !*t) return 0;  // exact match
+  if (!*t) return 1;  // curr is longer than test
+  if (!*c)  // curr is shorter than test, so partial match
+    {
+    // while(*t != '.' && t > test_oid) t--;
+    // return (test_oid -t - 1);
+    char *x;
+    for (x = t; *x; x++);
+    return (t - x - 1);
+    }
+  int cv, tv;
+  for (c = curr_oid, t = test_oid; 1; c++, t++)
+    {
+    sscanf(c, "%d", &cv);
+    sscanf(t, "%d", &tv);
+    if (cv > tv) return 1;
+    if (cv < tv) return -1;
+        // matches so far
+    while(*c && *c != '.') c++;
+    while(*t && *t != '.') t++;
+    if (!*c) return (curr_oid - c - 1);
+    if (!*t) return 1;
+    }
+  return -1;  // should never happen
+  }
+
+static char *find_label(char *oidp, int *diffp)
+  {
+  int num;
+  struct oidtable *curr_oidp;
+  for (num = 0; num < oidtable_size; num++)
+    {
+    curr_oidp = &oidtable[num];
+    if ((*diffp  = cf_oid(curr_oidp->oid, oidp)) <= 0) break;
+    }
+  if (!(*diffp)) return curr_oidp->label;
+  // if (*diffp < -1) return (char *)0;
+  for (num++; num < oidtable_size; num++)
+    {
+    curr_oidp = &oidtable[num];
+    if ((*diffp = cf_oid(curr_oidp->oid, oidp)) < -1)
+      {
+      (*diffp)++;
+      return curr_oidp->label;
+      }
+    }
+  return (char *)0;
+  }
+
+static void load_oidtable(char *name)
+  {
+  FILE *str = fopen(name, "r");
+  if (!str) return;
+  int numoids = 16, oidnum;
+  char locbuf[512];
+  oidtable = (struct oidtable *)calloc(numoids, sizeof(struct oidtable));
+  for (oidnum = 0; fgets(locbuf, 512, str); oidnum++)
+    {
+    if (oidnum >= numoids - 1) oidtable = (struct oidtable *)realloc(oidtable,
+        ((numoids += 16) * sizeof(struct oidtable)));
+    char *c, *l;
+    for (c = locbuf; *c > ' '; c++);
+    for (*c++ = 0; *c && *c <= ' '; c++);
+    l = c;
+    for (c++; *c > ' '; c++);
+    *c = 0;
+    struct oidtable *oidp = &oidtable[oidnum];
+    oidp->oid = (char *)calloc(1, strlen(locbuf) + 2);
+    oidp->label = (char *)calloc(1, strlen(l) + 2);
+    strcpy(oidp->oid, locbuf);
+    strcpy(oidp->label, l);
+    }
+  oidtable[oidnum].oid = (char *)0;
+  oidtable_size = oidnum;
+  }
