@@ -1,4 +1,7 @@
-/* $Id$ */
+/* Jun 16 2008 867U  */
+/* Jun 16 2008 GARDINER corrected member_casn to detect empty OF */
+/* Jun  4 2008 864U  */
+/* Jun  4 2008 GARDINER rebaselining */
 /* Jul 12 2007 860U  */
 /* Jul 12 2007 GARDINER fixed per Mudge's suggestions */
 /* Jun 14 2007 859U  */
@@ -119,6 +122,11 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
+<<<<<<< .mine
+COPYRIGHT 2004 BBN Systems and Technologies
+10 Moulton St.
+Cambridge, Ma. 02138
+617-873-3000
  ***** BEGIN LICENSE BLOCK *****
  *
  * BBN Address and AS Number PKI Database/repository software
@@ -138,7 +146,7 @@ Remarks:
  * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 860P";
+char casn_sfcsid[] = "@(#)casn.c 867P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -497,9 +505,13 @@ struct casn *member_casn(struct casn *casnp, int index)
     else
 	{
         for (tcasnp = &casnp[1] ; index-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
-        if (index >= 0) err = ASN_OF_BOUNDS_ERR;
+        if (index >= 0 || !tcasnp->ptr) err = ASN_OF_BOUNDS_ERR;
 	}
-    if (err) _casn_obj_err(casnp, err);
+    if (err)
+      {
+      _casn_obj_err(casnp, err);
+      tcasnp = (struct casn *)0;
+      }
     if (!tcasnp->ptr) return (struct casn *)0;
     return tcasnp;
     }
@@ -1235,7 +1247,7 @@ Procedure:
                 num = send_flag = 0;
                 if (tag == ASN_BITSTRING) num = 1;
                   // if was chosen, can't be an OF
-    	        if (!ch && (curr_casnp->flags & ASN_OF_FLAG)) 
+    	        if (!ch && (curr_casnp->flags & ASN_OF_FLAG))
                   {
                   send_flag = ASN_OF_FLAG;
                   offp = curr_casnp;
