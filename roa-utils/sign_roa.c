@@ -41,24 +41,6 @@ char *msgs [] =
     "Error writing %s\n",
     };
     
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp)
-  { 
-  CRYPT_CONTEXT hashContext;
-  uchar hash[40];
-  int ansr;
-
-  memset(hash, 0, 40);
-  cryptInit();
-  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-  cryptEncrypt(hashContext, inbufp, bsize);
-  cryptEncrypt(hashContext, inbufp, 0);
-  cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-  cryptDestroyContext(hashContext);
-  cryptEnd();
-  memcpy(outbufp, hash, ansr);
-  return ansr;
-  }
-
 static int fatal(int msg, char *paramp)
   {
   fprintf(stderr, msgs[msg], paramp);
