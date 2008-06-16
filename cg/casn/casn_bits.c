@@ -1,22 +1,4 @@
 /* $Id$ */
-/* Apr  6 2007 851U  */
-/* Apr  6 2007 GARDINER changed fill_upward() */
-/* Jun  8 2004 773U  */
-/* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
-/* Jun  3 2004 769U  */
-/* Jun  3 2004 GARDINER more fixes for asn_obj tests */
-/* May 11 2004 763U  */
-/* May 11 2004 GARDINER fixed warnings */
-/* May 11 2004 762U  */
-/* May 11 2004 GARDINER more fixes for asn_obj tests */
-/* Apr 21 2004 761U  */
-/* Apr 21 2004 GARDINER fixed for half of casn_obj testing */
-/* Mar 29 2004 746U  */
-/* Mar 29 2004 GARDINER corrected warnings */
-/* Mar 29 2004 745U  */
-/* Mar 29 2004 GARDINER corrected warnings */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
 /* */
 /*****************************************************************************
 File:     casn_bits.c
@@ -28,13 +10,13 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
  ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -46,7 +28,7 @@ Remarks:
  * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
-char casn_bits_sfcsid[] = "@(#)casn_bits.c 851P";
+char casn_bits_sfcsid[] = "@(#)casn_bits.c 864P";
 #include "casn.h"
 
 extern struct casn *_go_up(struct casn *);
@@ -95,7 +77,7 @@ int vsize_casn_bits(struct casn *casnp)
     return _readsize_bits(casnp, buf, &shift, 0);
     }
 
-int write_casn_bits(struct casn *casnp, uchar *from, int lth, int shift) 
+int write_casn_bits(struct casn *casnp, uchar *from, int lth, int shift)
     {
     uchar *c, *e;
     ushort box;
@@ -109,7 +91,7 @@ int write_casn_bits(struct casn *casnp, uchar *from, int lth, int shift)
 	{
 	box = (ushort)*from;   
 	box <<= shift;           // first time top 8 bits are empty
-	*c++ |= (box >> 8);    
+	*c++ |= (box >> 8);
 	*c = box & 0xFF;
 	}
     *casnp->startp = (uchar)shift;
