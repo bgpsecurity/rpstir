@@ -1,4 +1,5 @@
-/* $Id$ */
+/* Jun 16 2008 866U  */
+/* Jun 16 2008 GARDINER added defense in _readsize_objid for empty casn */
 /* Mar 28 2007 849U  */
 /* Mar 28 2007 GARDINER fixed signedness errors */
 /* Mar 26 2007 848U  */
@@ -29,26 +30,13 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
- ***** BEGIN LICENSE BLOCK *****
- * 
- * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
- * 
- * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
- * US government users are permitted restricted rights as
- * defined in the FAR.  
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) BBN Technologies 2004-2007.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK *****
+COPYRIGHT 2004 BBN Systems and Technologies
+10 Moulton St.
+Cambridge, Ma. 02138
+617-873-3000
 *****************************************************************************/
 
-char casn_objid_sfcsid[] = "@(#)casn_objid.c 849P";
+char casn_objid_sfcsid[] = "@(#)casn_objid.c 866P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
@@ -126,6 +114,7 @@ int _readsize_objid(struct casn *casnp, char *to, int mode)
     lth = 0;
     if (casnp->tag == ASN_NOTYPE && (lth = _check_enum(&casnp)) <= 0)
         return lth;
+    if (!casnp->lth) return 0;
     if (casnp->type == ASN_OBJ_ID ||                   // elements 1 & 2
 	(casnp->type == ASN_ANY && casnp->tag == ASN_OBJ_ID))
 	{   // have to allow tag for a mixed definer
