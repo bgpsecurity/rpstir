@@ -24,7 +24,7 @@ all:	libapki.a rcli query chaser garbage makeROA
 
 CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../roa-utils -I../cg/asn -I../cg/casn -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
 
-MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L../roa-utils -lapki -lroa -lssl -lcrypto -lcl -lasn -lcasn -lmyodbc3 $(LIBXTRA) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L../roa-utils -lapki -lroa -lssl -lcrypto -lasn -lcasn -lmyodbc3 $(LIBXTRA) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 # OBSOLETE test program
 #sqq:	sqq.o Makefile

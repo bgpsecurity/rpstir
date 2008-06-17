@@ -28,7 +28,7 @@ ASN_DIR= ../cg/asn
 CASN_DIR= ../cg/casn
 PROTO_DIR= ../proto
 LOCAL_LIBS= -L. -L$(PROTO_DIR) -L$(ASN_DIR) -L$(CASN_DIR) -lapki -lroa -lasn -lcasn $(LIBCL)
-SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -lcl -L/usr/local/lib -lmyodbc3 $(LIBXTRA)  $(LIBDL) $(LIBPTHREAD)
+SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -L/usr/local/lib -lmyodbc3 $(LIBXTRA)  $(LIBDL) $(LIBPTHREAD)
 #-lrt
 AR= ar
 RANLIB= ranlib
