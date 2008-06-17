@@ -20,67 +20,57 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-# --- macros
-#CC=gcc
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
+CFLAGS=-I$(SSLINCLUDES) -I$(CLINCLUDES) \
+	-I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -I../roa-lib\
+	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
+
 TEST_OBJECTS= roa_test.o
-ASN_DIR= ../cg/asn
-CASN_DIR= ../cg/casn
+LIBASN= ../cg/asn/libasn.a
+LIBCASN=../cg/casn/libcasn.a
+LIBAPKI=../proto/libapki.a
 PROTO_DIR= ../proto
-LOCAL_LIBS= -L. -L$(PROTO_DIR) -L$(ASN_DIR) -L$(CASN_DIR) -lapki -lroa -lasn -lcasn $(LIBCL)
-SSL_LIBS= -L/usr/local/ssl/lib -lssl -lcrypto -L/usr/local/lib -lmyodbc3 $(LIBXTRA)  $(LIBDL) $(LIBPTHREAD)
-#-lrt
-AR= ar
-RANLIB= ranlib
+ROA_LIB_DIR=../roa-lib
+LIBROA=$(ROA_LIB_DIR)/libroa.a
+
+LOCAL_LIBS=$(LIBAPKI) $(LIBROA)	$(LIBASN) $(LIBCASN) 
+OTHER_LIBS=$(LIBCL) $(LIBSSL) $(LIBCRYPTO) $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
 # --- targets
-TARGETS=libroa.a roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa 
+TARGETS=roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa 
 all:    $(TARGETS)
 
-b64:	b64.o
-	$(CC) $(CFLAGS) $(CFLAGS) -c b64.c
-	$(CC) $(CFLAGS) -o $@ b64.o
+roa_test: $(TEST_OBJECTS) 
+	$(CC) $(CFLAGS) -o $@ $(TEST_OBJECTS) $(LOCAL_LIBS) $(OTHER_LIBS)
 
-#roa_test: roa_test.o roa_serialize.o Makefile
-#	$(CC) $(CFLAGS) -o roa_test -g -L/usr/local/ssl/lib roa_test.o roa_validate.o roa.o
+roa_test.o: roa_test.c
 
-roa_test:   libroa.a $(TEST_OBJECTS) 
-	$(CC) $(CFLAGS) -o $@ $(TEST_OBJECTS) $(LOCAL_LIBS) $(SSL_LIBS)
+test_check_sig: test_check_sig.o
+	$(CC) $(CFLAGS) -o $@ test_check_sig.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-roa_test.o: roa_test.c libroa.a Makefile
+test_manifest: test_manifest.o $(LIBCASN)
+	$(CC) $(CFLAGS) -o $@ test_manifest.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-test_check_sig: test_check_sig.o libroa.a Makefile
-	$(CC) $(CFLAGS) -o $@ test_check_sig.o $(LOCAL_LIBS) $(SSL_LIBS)
+test_val2: test_val2.o $(LIBCASN)
+	$(CC) $(CFLAGS) -o $@ test_val2.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-test_manifest: test_manifest.o roa_validate.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ test_manifest.o $(LOCAL_LIBS) $(SSL_LIBS)
+test_hash: test_hash.o ../cg/casn/libcasn.a
+	$(CC) $(CFLAGS) -o $@ test_hash.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-test_val2: test_val2.o roa_validate.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ test_val2.o $(LOCAL_LIBS) $(SSL_LIBS)
+make_manifest: make_manifest.o $(LIBCASN)
+	$(CC) $(CFLAGS) -o $@ make_manifest.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-test_hash: test_hash.o roa_validate.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ test_hash.o $(LOCAL_LIBS) $(SSL_LIBS)
+make_roa: make_roa.o $(LIBCASN)
+	$(CC) $(CFLAGS) -o $@ make_roa.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-make_manifest: make_manifest.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ make_manifest.o $(LOCAL_LIBS) $(SSL_LIBS)
+sign_roa: sign_roa.o $(LIBCASN)
+	$(CC) $(CFLAGS) -o $@ sign_roa.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
-make_roa: make_roa.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ make_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
+make_manifest.o: make_manifest.c $(ROA_LIB_DIR)/roa_utils.h 
 
-sign_roa: sign_roa.o ../cg/casn/libcasn.a
-	$(CC) $(CFLAGS) -o $@ sign_roa.o $(LOCAL_LIBS) $(SSL_LIBS)
+make_roa.o:	make_roa.c $(ROA_LIB_DIR)/roa_utils.h
 
-roa_validate.o: roa_validate.c roa_utils.h Makefile ../cg/asn/libasn.a
-roa_create.o: roa_create.c roa_utils.h Makefile
-roa_general.o: roa_general.c roa_utils.h Makefile
-roa_serialize.o: roa_serialize.c roa_utils.h Makefile
-make_manifest.o: make_manifest.c roa_utils.h Makefile
-make_roa.o:	make_roa.c roa_utils.h Makefile
-read_roa.o:	read_roa.c roa_utils.h Makefile
+read_roa.o:	read_roa.c $(ROA_LIB_DIR)/roa_utils.h
 
-libroa.a:	roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h 
-	ar crv libroa.a roa_validate.o roa_create.o roa_general.o roa_serialize.o 
-	ranlib libroa.a
 
 clean:
 	rm -f $(TARGETS) *.o

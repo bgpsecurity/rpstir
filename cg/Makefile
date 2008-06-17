@@ -20,22 +20,24 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	casn.dir asn_gen.dir asn.dir tools.dir
+DIRS=casn asn_gen asn tools
 
-casn.dir:
-	cd casn && make all
-
-asn_gen.dir:
-	cd asn_gen && make all
-
-asn.dir:
-	cd asn && make all
-
-tools.dir:
-	cd tools && make all
+all:	
+	for DIR in $(DIRS); do \
+		(cd $$DIR && make all \
+			LIBCL="$(LIBCL)" \
+			LIBCRYPTO="$(LIBCRYPTO)" \
+			LIBDL="$(LIBDL)" \
+			LIBODBC="$(LIBODBC)" \
+			LIBPTHREAD="$(LIBPTHREAD)" \
+			LIBXTRA="$(LIBXTRA)" \
+			CLINCLUDES="$(CLINCLUDES)" \
+			MYSQLINCLUDES="$(MYSQLINCLUDES)" \
+			ODBCINCLUDES="$(ODBCINCLUDES)" \
+			SSLINCLUDES="$(SSLINCLUDES)" ) ;\
+	done
 
 clean:
-	cd casn && make clean
-	cd asn_gen && make clean
-	cd asn && make clean
-	cd tools && make clean
+	for DIR in $(DIRS); do \
+		(cd $$DIR && make clean );\
+	done

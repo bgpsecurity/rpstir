@@ -20,25 +20,59 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	cg.dir rsync_aur.dir roa-utils1.dir proto.dir roa-utils2.dir
+# Both libcl and libcrypto include bn, a binary polynomial
+# package. The code is the same in both cases, but the linker
+# complains of multiply-defined symbols if you include them both.
+LIBCL=-Wl,--allow-multiple-definition -lcl
 
-cg.dir:
-	cd cg && make all LIBDL="-ldl" LIBPTHREAD="-lpthread -lresolv" LIBXTRA="" LIBCL="-Wl,--allow-multiple-definition -lcl"
+# where to find the OpenSSL crypto lib
+LIBCRYPTO=-L/usr/local/ssl/lib -lcrypto
 
-rsync_aur.dir:
-	cd rsync_aur && make all LIBDL="-ldl" LIBPTHREAD="-lpthread -lresolv" LIBXTRA="" LIBCL="-Wl,--allow-multiple-definition -lcl"
+# Needed to do dynamic linking (dlopen)
+LIBDL=-ldl
 
-roa-utils1.dir:
-	cd roa-utils && make libroa.a LIBDL="-ldl" LIBPTHREAD="-lpthread -lresolv" LIBXTRA="" LIBCL="-Wl,--allow-multiple-definition -lcl"
+# where to find the odbc library
+LIBODBC=-L/usr/local/lib -lmyodbc3
 
-proto.dir:
-	cd proto && make all LIBDL="-ldl" LIBPTHREAD="-lpthread -lresolv" LIBXTRA="" LIBCL="-Wl,--allow-multiple-definition -lcl"
+# on older Linux machines (e.g. 2.4) need to include pthread by hand 
+# (not in libc).
+LIBPTHREAD=-lpthread -lresolv
 
-roa-utils2.dir:
-	cd roa-utils && make all LIBDL="-ldl" LIBPTHREAD="-lpthread -lresolv" LIBXTRA="" LIBCL="-Wl,--allow-multiple-definition -lcl"
+# nothing extra
+LIBXTRA=
+
+# where to find OpenSSL include files
+SSLINCLUDES=/usr/local/ssl/include
+
+# where to find ODBC include files
+ODBCINCLUDES=/usr/local/include
+
+# where to find MySQL include files
+MYSQLINCLUDES=/usr/local/include
+
+# where to find cryptlib includes
+CLINCLUDES=/usr/local/include
+
+DIRS=cg roa-lib proto roa-utils rsync_aur
+
+all:	
+	for DIR in $(DIRS); do \
+		(cd $$DIR && make all \
+			LIBCL="$(LIBCL)" \
+			LIBCRYPTO="$(LIBCRYPTO)" \
+			LIBDL="$(LIBDL)" \
+			LIBODBC="$(LIBODBC)" \
+			LIBPTHREAD="$(LIBPTHREAD)" \
+			LIBXTRA="$(LIBXTRA)" \
+			CLINCLUDES="$(CLINCLUDES)" \
+			MYSQLINCLUDES="$(MYSQLINCLUDES)" \
+			ODBCINCLUDES="$(ODBCINCLUDES)" \
+			SSLINCLUDES="$(SSLINCLUDES)" ) ;\
+		if [ $$? != 0 ]; then exit; fi \
+	done
 
 clean:
-	cd cg && make clean
-	cd rsync_aur && make clean
-	cd roa-utils && make clean
-	cd proto && make clean
+	for DIR in $(DIRS); do \
+		(cd $$DIR && make clean) ;\
+	done
+

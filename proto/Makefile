@@ -22,17 +22,16 @@
 
 all:	libapki.a rcli query chaser garbage makeROA
 
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../roa-utils -I../cg/asn -I../cg/casn -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
+CFLAGS=-I$(MYSQLINCLUDES) -I$(SSLINCLUDES) \
+	-I../roa-lib -I../cg/asn -I../cg/casn \
+	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
+	-DHAVE_LONG_LONG
 
-MY_LIBS=	-L/usr/local/ssl/lib -L/usr/local/lib -L. -L../cg/asn -L../cg/casn -L../roa-utils -lapki -lroa -lssl -lcrypto -lasn -lcasn -lmyodbc3 $(LIBXTRA) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+MY_LIBS=./libapki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a \
+	$(LIBSSL) $(LIBCRYPTO) $(LIBCL) \
+	$(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
-# OBSOLETE test program
-#sqq:	sqq.o Makefile
-#	$(CC) -o sqq -g -L/usr/local/lib sqq.o -lmyodbc3 -lrt
-
-# OBSOLETE test program
-#docert:	docert.o Makefile
-#	$(CC) -o docert -g -L/usr/local/ssl/lib docert.o -lssl -lcrypto $(LIBDL)
 
 initscm.o:	scm.h scmmain.h
 diru.o:	diru.h err.h
@@ -65,10 +64,6 @@ garbage: garbage.o libapki.a Makefile
 
 makeROA: makeROA.o libapki.a Makefile
 	$(CC) -o makeROA -g makeROA.o $(MY_LIBS)
-
-# OBSOLETE test program
-#testmem:	testmem.o libapki.a Makefile
-#	$(CC) -o testmem -g testmem.o $(MY_LIBS)
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a

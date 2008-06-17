@@ -22,7 +22,7 @@
 
 # --- macros
 #CC=gcc
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -Wall
+CFLAGS=	-g -Wall
 AR=ar
 RANLIB=ranlib
 

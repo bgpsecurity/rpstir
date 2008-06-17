@@ -24,11 +24,11 @@ TARGETS=dump rr bin_to_six six_to_bin loadkey genkey whatsfcs set_cert_ski  make
 
 all:	$(TARGETS)
 
-CFLAGS=	-g -I/usr/local/include -I/usr/local/ssl/include -I../asn -I../asn_gen -I../casn -Wall -I../../roa-utils
+CFLAGS=	-g -I$(SSLINCLUDES) -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I$(CLINCLUDES)
 ASN_DIR= ../asn
 CASN_DIR= ../casn
 LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
-LIBS= -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 dump:	dump.o asn.o asn_dump.o util.o asn.h
 	$(CC) $(CFLAGS) -o dump -g dump.o asn.o asn_dump.o util.o

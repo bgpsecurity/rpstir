@@ -87,11 +87,14 @@ ideal circumstances.  It is recommended that the user create a script
 to run these four steps and have a cron job that executes this script
 periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
-3.1 make the executables: In the top-level directory, execute make on the
-    appropriate makefiles; currently Makefile.linux24 (for Linux 2.4 kernels),
-    Makefile.linux (for Linux 2.6 kernels) and Makefile.bsd are the only
-    three variants available.  This should create all the required
-    executables in all the various directories.
+3.1 build the executables: In the top-level directory there are some sample
+    makefiles (Makefile.linux (for recent Linux distros), Makefile.linux24
+    (for older distros) and Makefile.bsd (for NetBSD/FreeBSD). Depending
+    on the target environment, including where the libraries listed above
+    have been installed, one of these three may work, or you may need to
+    customize one by updating the variables at the head of the file.
+    Once updated, build the executables by typing "make" in the top level 
+    directory.
 
 3.2 set environment variables: There are three environment variables used
     throughout the scripts and the code:
