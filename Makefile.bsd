@@ -23,7 +23,7 @@
 # Both libcl and libcrypto include bn, a binary polynomial
 # package. The code is the same in both cases, but the linker
 # complains of multiply-defined symbols if you include them both.
-LIBCL=-Wl,--allow-multiple-definition -lcl
+LIBCL=-Wl,--allow-multiple-definition -L/usr/local/lib -lcl
 
 # where to find the OpenSSL crypto lib
 LIBCRYPTO=-L/usr/local/ssl/lib -lcrypto
