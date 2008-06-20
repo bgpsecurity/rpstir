@@ -1,0 +1,32 @@
+seq seq int 0x02
+        seq oid 1.2.840.113549.1.1.11
+            nul 
+        seq set seq oid 2.5.4.3
+                    prt "C11"
+        gen "20000101000000Z"
+        gen "20300101000000Z"
+        seq seq int 0x6F
+                gen "20080505000000Z"
+        ctx+0x20
+            seq seq oid 2.5.29.20
+                    ocw int 0x01
+                seq oid 2.5.29.35
+                    ocw seq ctx+0x00
+                                0x0216F041AE435F76962E2BB0A3F90397
+                                0x942909CF
+                seq oid 2.5.29.28
+                    ocw seq ctx+0x20
+                                ctx+0x20
+                                    ctx+0x06
+                                        "rsync:arin-via-apnic"
+                seq oid 2.5.29.35
+                    ocw seq ctx+0x00
+                                0x0216F041AE435F76962E2BB0A3F90397
+                                0x942909CF
+    seq oid 1.2.840.113549.1.1.11
+        nul 
+    bit 0x0096456B64073D1AD4270F0268870147D69C8CB4EDDCCE67763B688D7B0525A5
+        0x28E51AEFDA927C58BFE68EE62CAC5FDBFE87674C34089E48012FC1E34A4F9B24
+        0xE8E54820D1E12691A1BEB3F6604CDB55406D2E341B4282103B8330A812EFA6F5
+        0xA4CAAE244A24ABCB73376096EA0F356829F7A8B5955ADE862B50ACEA14D4DA09
+        0x58

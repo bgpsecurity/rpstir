@@ -1,0 +1,76 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x01
+        seq oid 1.2.840.113549.1.1.11
+            nul 
+        seq set seq oid 2.5.4.3
+                    prt "C"
+        seq gen "20000101000000Z"
+            gen "20300101000000Z"
+        seq set seq oid 2.5.4.3
+                    prt "C"
+        seq seq oid 1.2.840.113549.1.1.1
+                nul 
+            bit 0x0030818902818100B45E1006CCDA37D5
+                0xC8CA0CC15E82DF793FDAC755BD069F66
+                0xA3D20378671C37836370A11CCE03BC45
+                0xEE3290B35665BFECD9F44412FDD9E3D1
+                0xC6F21EC41B8D258A05CCA36C69D61409
+                0xB584CE1C1090A062D388FDD3C89015FA
+                0x62DBFD5134CB5AE6EDE0373D2B4B7D18
+                0x71166FA69C251F1E065C9A29220983BE
+                0x967D804B8A153A2B0203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14
+                    ocw oct 0xA986942E555D5C384FFF25C337D8DF28
+                            0x013BFE1D
+                seq oid 2.5.29.15
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.17
+                    ocw seq ctx+0x24
+                                seq set seq oid 2.5.4.3
+                                            prt "ARINviaAPNIC-all"
+                seq oid 2.5.29.19
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync:arin-via-apnic"
+                seq oid 2.5.29.32
+                    boo 0xFF
+                    ocw seq seq oid 2.226.1.5.5.7.14.2
+                seq oid 2.5.29.35
+                    ocw seq ctx+0x00
+                                0xA986942E555D5C384FFF25C337D8DF28
+                                0x013BFE1D
+                seq oid 1.3.6.1.5.5.7.1.1
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2
+                                ctx+0x06
+                                    "rsync://bbn-via-roa-pki"
+                seq oid 1.3.6.1.5.5.7.1.7
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x00A3
+                            seq oct 0x0002
+                                seq bit 0x0042342342000000000000
+                seq oid 1.3.6.1.5.5.7.1.8
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01
+                                        int 0x64
+                seq oid 1.3.6.1.5.5.7.1.11
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2
+                                ctx+0x06
+                                    "rsync://arin-via-apnic.mirin.apnic.net/moc"
+                                    "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
+                                    "/e3L5eq0X8jJlDu9fmx8xjDAbbxI/"
+    seq oid 1.2.840.113549.1.1.11
+        nul 
+    bit 0x0092653BCCEFCD83A1D09EA3A05208CEF8023B04B4CCED9924B444AC4F1A8D10
+        0x068B87964ED956E97330C158CAF939CB0462E004CA5ADC4F2B10DF5B77EAE953
+        0x0B966ECB3B97B6157F41360A496E0B3A8ABF1FDBBDCC17C58BF4930980EF8A4B
+        0xC9F6091B6EC915DA2A249044629CA9C6C24F1B342545F545A5E64309E40FB6A1
+        0x83

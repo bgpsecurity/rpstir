@@ -1,0 +1,42 @@
+                   Making Test Cases
+
+    The creation of test cases has been automated largely with script files, starting 
+with the file "makeall".  This file calls a number of other script files: "makecerts", 
+"makecrls", "makeroas" and "makemanifests".  These in turn call programs in the
+"cg/tools" directory, such as "make_cert", "make_crl", make_roa" and "make_manifest"
+giving the name of the file to be created and setting standard input to the name of a
+script file which will provide inputs particular to the creation of that file, if 
+needed.  For example, the file "makecerts" has:
+
+../cg/tools/make_cert CE
+../cg/tools/make_cert C1 <makeC1
+../cg/tools/make_cert C1E 
+../cg/tools/make_cert C11 <makeC11
+../cg/tools/make_cert C11E 
+  :
+  :
+
+where "makeC1" and "makeC11" etc. contain the information particular to the certificate C!.
+Certificate C, being a trust anchor, has been made "by hand" and is self-signed.  Note 
+that each CA certificate has a subordinate end-entity with an "E" suffixed to the name,
+so C1E is the end entity that signs roas and manifests for C1 and C1 only signs 
+certificates and CRLs.
+
+    For ROAs which are supposed to have a bad signature, a second parameter causes the 
+signature to be altered, e.g. the line in "makeroas":
+
+../cg/tools/make_roa R22122 x
+
+Similarly in makeM1111 the line:
+
+R1311 x
+
+causes the manifest M1111 to have the wrong hash for the file R1311. 
+
+    All these tools assume the particular "genealogy" defined in "RPKI Testing Data 
+and Procedures".  The programs that geberate the various objects figure out who should 
+sign an object by looking at object's name.  All certificates are suffixed ".cer", 
+CRLs are ".crl", ROAs are ".roa" and menifests are ".man".  When the various
+programs are run, they also create more human-readable versions which are
+suffixed ".raw".  There is one special case: the second copy of certificate C2 
+with a different file name, is called "falseC2.cer".

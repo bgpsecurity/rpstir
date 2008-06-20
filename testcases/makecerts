@@ -1,0 +1,44 @@
+../cg/tools/make_cert CE x
+../cg/tools/make_cert C1 <makeC1
+../cg/tools/make_cert C1E 
+../cg/tools/make_cert C11 <makeC11
+../cg/tools/make_cert C11E 
+../cg/tools/make_cert C111 <makeC111
+../cg/tools/make_cert C111E 
+../cg/tools/make_cert C1111 <makeC1111
+../cg/tools/make_cert C1111E 
+../cg/tools/make_cert C112 <makeC112
+../cg/tools/make_cert C112E 
+../cg/tools/make_cert C113 <makeC113
+../cg/tools/make_cert C113E 
+../cg/tools/make_cert C12 <makeC12
+../cg/tools/make_cert C12E 
+../cg/tools/make_cert C121 <makeC121
+../cg/tools/make_cert C121E 
+../cg/tools/make_cert C13 <makeC13
+../cg/tools/make_cert C13E 
+../cg/tools/make_cert C131 <makeC131
+../cg/tools/make_cert C131E 
+../cg/tools/make_cert C132 <makeC132
+../cg/tools/make_cert C132E 
+../cg/tools/make_cert C2 <makeC2
+../cg/tools/make_cert C2E 
+../cg/tools/make_cert C21 <makeC21
+../cg/tools/make_cert C21E 
+../cg/tools/make_cert C211 <makeC211
+../cg/tools/make_cert C211E 
+../cg/tools/make_cert C22 <makeC22
+../cg/tools/make_cert C22E 
+../cg/tools/make_cert C221 <makeC221
+../cg/tools/make_cert C221E 
+../cg/tools/make_cert C2211 <makeC2211
+../cg/tools/make_cert C2211E 
+../cg/tools/make_cert C2212 <makeC2212
+../cg/tools/make_cert C2212E 
+../cg/tools/make_cert C23 <makeC23
+../cg/tools/make_cert C23E 
+../cg/tools/make_cert C231 <makeC231
+../cg/tools/make_cert C231E 
+../cg/tools/make_cert C232 <makeC232
+../cg/tools/make_cert C232E 
+cp C2.cer falseC2.cer

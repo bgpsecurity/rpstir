@@ -1,0 +1,166 @@
+seq oid 1.2.840.113549.1.7.2
+    ctx+0x20
+        seq int 0x03
+            set seq oid 2.16.840.1.101.3.4.2.1
+                    nul 
+            seq oid 1.2.840.113549.1.9.16.1.26
+                ctx+0x20
+                    ocw seq int 0x01
+                            gen "20080609191503Z"
+                            gen "20080709191503Z"
+                            oid 2.16.840.1.101.3.4.2.1
+                            seq seq ia5 "C112.cer"
+                                    bit 0x008D5DBA77940FB399A96AFDB9C6C4CC
+                                        0xF9B614E8C078935838E6AD069CAA8413
+                                        0x29
+                                seq ia5 "C112E.cer"
+                                    bit 0x00B23A0710DDADC9109313B8410642E9
+                                        0x1A6D9965AB6F7033139E8DF0BB487452
+                                        0x47
+                                seq ia5 "C113.cer"
+                                    bit 0x00C9CFF0A1B3771CCAD54AECAD9CF932
+                                        0xA3261DE1AF1AF370C0672655B5E5AAFD
+                                        0x04
+                                seq ia5 "C113E.cer"
+                                    bit 0x00A5C29F5BA0CDD92DCEC867EE02E492
+                                        0x8977AB00DB9ABD6CCE834B484BC7DE4C
+                                        0xF4
+                                seq ia5 "C121.cer"
+                                    bit 0x006660462BA3E8631AD87AD31F3AE9F5
+                                        0xCB56ED169A14DBD82B797398B3919182
+                                        0x75
+                                seq ia5 "C121E.cer"
+                                    bit 0x00B96482296E954B7C44BD41CF2D4E93
+                                        0x91C12A64FA637B8B47F77052C5D239ED
+                                        0x17
+                                seq ia5 "C131.cer"
+                                    bit 0x00F93489328D5E69A0FAB2EEA7471312
+                                        0x31D06C5239B5DD75BA31E8637198CC76
+                                        0xC8
+                                seq ia5 "C131E.cer"
+                                    bit 0x00DC9D8E6F144EFA60A472A5B5110CBD
+                                        0x793B5995DCCF83A861BFEEDCE75BC456
+                                        0xDB
+                                seq ia5 "C132.cer"
+                                    bit 0x00C612445F94DC2EF33612C1D4C38EBD
+                                        0x75CF8C736CB115855CB6FD3881C943FD
+                                        0x5D
+                                seq ia5 "C132E.cer"
+                                    bit 0x00DE5F13B1BF028A9371018D2FF53C78
+                                        0x97F50104A4DE770C9D7BE1D44F5137EC
+                                        0xAC
+                                seq ia5 "C211.cer"
+                                    bit 0x007960EEDF09718FC14ADFCB5FEF35E3
+                                        0x1ACE59A49BD40022A588DBFFADE7C0C0
+                                        0x31
+                                seq ia5 "C211E.cer"
+                                    bit 0x00BEC57A2AD2A31F05195DAE59E2A83A
+                                        0xCE8E8CED72E20753013A540094332EF0
+                                        0x14
+                                seq ia5 "C232.cer"
+                                    bit 0x00498F9DA97BF144588E73D634CA6F17
+                                        0xD1339A996A49073C33C02F36D9DE093A
+                                        0x89
+                                seq ia5 "C232E.cer"
+                                    bit 0x001007F414E752754322169863FD5D54
+                                        0xA232095553C9EC6BE8D44B69506A0FD8
+                                        0x98
+                                seq ia5 "R111.roa"
+                                    bit 0x0047729500DA47978287922302D40786
+                                        0xB8ACB34EC97A51BFBDC52666D5523605
+                                        0x57
+                                seq ia5 "R221.roa"
+                                    bit 0x00837E5BA42D3D5D347C56458059480C
+                                        0xCB5D1C4C83EABB065305EF7535B0A45E
+                                        0xCF
+                                seq ia5 "R231.roa"
+                                    bit 0x00C4E6FA60451F2F799EFBB053D26DB2
+                                        0x942F25F13801DE4ACDF5AE354EB26649
+                                        0xEC
+                                seq ia5 "L21.crl"
+                                    bit 0x00627732BD2598D113DD631625714AD3
+                                        0x914D13ED860A8A1D24E0CAE7470AC485
+                                        0xE6
+            ctx+0x20
+                seq seq ctx+0x20
+                            int 0x02
+                        int 0x0B
+                        seq oid 1.2.840.113549.1.1.11
+                            nul 
+                        seq set seq oid 2.5.4.3
+                                    prt "C11"
+                        seq gen "20000101000000Z"
+                            gen "20300101000000Z"
+                        seq set seq oid 2.5.4.3
+                                    prt "C11E"
+                        seq seq oid 1.2.840.113549.1.1.1
+                                nul 
+                            bit 0x0030818902818100E5F5F3BEF114D669
+                                0xAE7C4F617B3F92F3B729CC330EDAC54A
+                                0x42D8A3F27CFD68F5E89ACC6BB5162764
+                                0x40C981FBD035CDCAC49823EFE99C8FD0
+                                0xCD7AAA2342B3BA329338383A505EE0C8
+                                0xF681D1C833459FD8A571AB5EE59DDB31
+                                0x14A51F5F81AEE64004FA69FD0ACC19A6
+                                0x7A8D9E64B2A8208064FDA452E00D4BEC
+                                0x57467B9FEACB00B30203010001
+                        ctx+0x23
+                            seq seq oid 2.5.29.14
+                                    ocw oct 0x0840A08D97C12890F3515AF305A78657
+                                            0x8BD61FFD
+                                seq oid 2.5.29.15
+                                    boo 0xFF
+                                    ocw bit 0x0780
+                                seq oid 2.5.29.31
+                                    ocw seq seq ctx+0x20
+                                                    ctx+0x20
+                                                        ctx+0x06
+                                                            "rsync:arin-via-apn"
+                                                            "ic"
+                                seq oid 2.5.29.32
+                                    boo 0xFF
+                                    ocw seq seq oid 2.226.1.5.5.7.14.2
+                                seq oid 2.5.29.35
+                                    ocw seq ctx+0x00
+                                                0x0216F041AE435F76
+                                                0x962E2BB0A3F90397
+                                                0x942909CF
+                                seq oid 1.3.6.1.5.5.7.1.7
+                                    boo 0xFF
+                                    ocw seq seq oct 0x0001
+                                                seq bit 0x00A300
+                                            seq oct 0x0002
+                                                seq bit 0x0042342342000000
+                                                        0x00000000
+                                seq oid 1.3.6.1.5.5.7.1.8
+                                    boo 0xFF
+                                    ocw seq ctx+0x20
+                                                seq seq int 0x01
+                                                        int 0x0C
+                    seq oid 1.2.840.113549.1.1.11
+                        nul 
+                    bit 0x0061B311B70679E6EBFEFE3A17CEAC81
+                        0x4186775578CF9FBFA63BF9F248711BCE
+                        0xA986FEBB9FA1A5CED9B2C771167F83A9
+                        0x5EF65361F248300DD4A6E65E65D094FC
+                        0xA2BA9DDD38BF781FF0E167168601B5C9
+                        0x892FA590A74394A0C3403E2E3E53638D
+                        0xFB51C2082561389E95203AEED5B377E6
+                        0x2EA5CD653F7051618058CBEAE2E92769
+                        0xB7
+            set seq int 0x03
+                    ctx+0x00
+                        0x6329C69749CFBFBF506ED781DED18738
+                        0x8ADD89B5
+                    seq oid 2.16.840.1.101.3.4.2.1
+                        nul 
+                    seq oid 1.2.840.113549.1.1.1
+                        nul 
+                    oct 0x94AF86E5A2F4AA849D1580A0736D37B8
+                        0x4507F1D7ACF9F1B0337CD09465E70B77
+                        0xE757CE704F25F8924D73FDB77F177210
+                        0xC01A98E3E53D870CE5CE83A000963392
+                        0xAFD494CF6AC9B3E62C98F02FFEC0AFD8
+                        0x4216B6C64131EAE27857A8F75ECD3D94
+                        0x6B60437289C2DD6AFE794E5048B1585D
+                        0x9357A3F126BCFFEA4A605DEB93E351F2

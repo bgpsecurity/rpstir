@@ -1,0 +1,62 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x00E8
+        seq oid 1.2.840.113549.1.1.11
+            nul 
+        seq set seq oid 2.5.4.3
+                    prt "C23"
+        seq gen "20000101000000Z"
+            gen "20300101000000Z"
+        seq set seq oid 2.5.4.3
+                    prt "C232"
+        seq seq oid 1.2.840.113549.1.1.1
+                nul 
+            bit 0x0030818902818100B96D97DD3D1EEFEF
+                0x220D7A15A04E4CDC94968D61503BD815
+                0x1B5433FC03F8A20C4E2BD29D32F66009
+                0x6FB0E54FBFD1DF7DD3A2209D526244D4
+                0xF6670F12D38A6EE33D376DF8B285E686
+                0x49635940EA6B55AD3407FF0776C552B8
+                0xEDCCE1E31B2609BD73EBFAF8F684FAA1
+                0x2E9C2EE9897000693C4E6446F46D2CC4
+                0x2AC04A68B9C062050203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14
+                    ocw oct 0x4AACA563AE7DF13DD154FA4EB54AB462
+                            0xE3161EF9
+                seq oid 2.5.29.15
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.19
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync:arin-via-apnic"
+                seq oid 2.5.29.32
+                    boo 0xFF
+                    ocw seq seq oid 2.226.1.5.5.7.14.2
+                seq oid 2.5.29.35
+                    ocw seq ctx+0x00
+                                0xB387A0753B2D6626BA2CB7A21932F5AC
+                                0x66E76498
+                seq oid 1.3.6.1.5.5.7.1.7
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x04A3C040
+                            seq oct 0x0002
+                                seq bit 0x04423423420000000000001210
+                seq oid 1.3.6.1.5.5.7.1.8
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x50
+                                        int 0x53
+    seq oid 1.2.840.113549.1.1.11
+        nul 
+    bit 0x007D2ED62B750274867D97BF20801BF60A5462821772FFF1E89FBA970E3EAFD3
+        0xB48C6E6F4021FCA2D2676864BCE795067A5F98F9715D43864F93FC9E392ADA72
+        0xE44F1592ACE32AAFE1362D3EDDC146238F74F60D964910991F33DE9D18927F1E
+        0xE2156B24E52A6618705E923CB4A1C4EC3DB8CE4954DA36D37847469F43A75717
+        0x1C

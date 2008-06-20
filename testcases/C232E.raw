@@ -1,0 +1,59 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x00E8
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C232"
+        seq gen "20000101000000Z"
+            gen "20300101000000Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C232E"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x0030818902818100D046FF5B5CC1FE90
+                0x92063F5CF6C63B4FA2D8E16A95988DC8
+                0xFFBBFA7B458B56DCED5F45455C526948
+                0x749FB86C09203DF9924BBDBE0C1277B6
+                0x5452ABF614893EC3E143BFD943B5F08D
+                0x2EC1E8C766B3FC1ACA83C055652F3D56
+                0x4F50A5ABD5EF0B4C02DD54DE98BB4151
+                0xAABF97430DBEE3739E5E4C0B68809E93
+                0x4F217F40DDC382730203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0x42BD424ED194FF0241C8ACEDC679B0B0
+                            0x217BD5DB
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0780
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync:arin-via-apnic"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 2.226.1.5.5.7.14.2
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0x4AACA563AE7DF13DD154FA4EB54AB462
+                                0xE3161EF9
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x04A3C040
+                            seq oct 0x0002
+                                seq bit 0x04423423420000000000001210
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x50
+                                        int 0x53
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x005A452AD9C173A0C92CE5A11AD10FA9A14DBD90EC3500E55B289045BC045C57
+        0xF65F59695F90177EB350F9FC664B2EF6BEC51D69F02684867B328051ED5B095A
+        0xB6E7F9553904550D0D389BADF83FB70DA6B21B79788383C9D24853C8ECBE5643
+        0x3AD93F36C34648FE078650DBD79E324791EEE9590AAAD7E8704B15BD7A5A919A
+        0x18
