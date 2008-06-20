@@ -1,0 +1,35 @@
+MAKE_OIDTABLE (1)             ROA-PKI                              MAKE_OIDTABLE(1)                                     
+
+NAME
+
+        make_oidtable -- makes a table of OIDs
+
+SYNOPSIS
+  
+        make_oidtable table_name file.h ...
+
+DESCRIPTION
+
+            This program makes a table of OBJECT IDENTIFIERs iand their more
+        understandable lables which the "dump" program (apki/trunk/cg/tools/
+        dump) and the dump facility within the casn library (apki/trunk/cg/
+        casn/casn_dump.c) can use to make the display of object identifiers 
+        more comprehensible.
+
+        To make the table, go to apki/trunk/cg/asn and do:
+
+          make_oidtable oidtable *.h
+
+        This creates a sorted table of all the identifiers and their labels.
+
+            To make use of this table, set your environment variable thus:
+
+          export OIDTABLE=$HOME/apki/trunk/cg/asn/oidtable
+
+        Then whenever you run the dump program with the -a option, it will
+        label every object identifier that it recognizes like this:
+
+             seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+
+        The same thing will happen if you use the dump capability within
+        the casn library.  See various ".raw" files in apki/trunk/testcases.
