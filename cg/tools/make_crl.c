@@ -49,6 +49,7 @@ static int fatal(int err, char *param)
 static struct Extension *findExtension(struct Extensions *extsp, char *id)
   {
   struct Extension *extp;
+  if (!num_items(&extsp->self)) return (struct Extension *)0; 
   for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
     extp = (struct Extension *)next_of(&extp->self))
     {
