@@ -85,6 +85,7 @@ static int fillPublicKey(struct casn *spkp, char *keyfile)
 static struct Extension *findExtension(struct Extensions *extsp, char *oid)
   {
   struct Extension *extp;
+  if (!num_items(&extsp->self)) return (struct Extension *)0;
   for (extp = (struct Extension *)member_casn(&extsp->self, 0); 
     extp && diff_objid(&extp->extnID, oid); 
     extp = (struct Extension *)next_of(&extp->self));
