@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "cryptlib.h"
-#include <certificate.h>
+#include "../asn/certificate.h"
 #include <roa.h>
 #include <keyfile.h>
 #include <casn.h>

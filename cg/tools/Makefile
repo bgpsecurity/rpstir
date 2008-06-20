@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-TARGETS=dump rr bin_to_six six_to_bin loadkey genkey whatsfcs set_cert_ski  make_cert make_crl make_roa make_manifest read_roa
+TARGETS=dump rr bin_to_six six_to_bin loadkey genkey whatsfcs make_oidtable set_cert_ski  make_cert make_crl make_roa make_manifest read_roa
 
 all:	$(TARGETS)
 
@@ -47,6 +47,9 @@ six_to_bin:	six_to_bin.o prencode.o
 
 whatsfcs:	whatsfcs.o prencode.o 
 	$(CC) $(CFLAGS) -o whatsfcs whatsfcs.o
+
+make_oidtable:	make_oidtable.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_oidtable.o 
 
 loadkey:	loadkey.o
 	$(CC) $(CFLAGS) -o $@ loadkey.o $(LOCAL_LIBS) $(LIBS)
