@@ -1,3 +1,22 @@
+/* $Id: make_oidtable.c 453 2008-07-25 15:30:40Z cgardiner $ */
+
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ *
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 200r87.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles iW. Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
+static char sfcsid[] = "@(#)make_oidtable.c 869P";
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -36,7 +55,7 @@ static int diff_oid(char *o1, char *o2)
     }
   return 0; // never happens
   }
-  
+
 static void fatal(int err, char *param)
   {
   fprintf(stderr, msgs[err], param);
@@ -62,7 +81,7 @@ int main (int argc, char **argv)
       char *l, *o;
       if (linebuf[8] == '_') continue;
       for (c = &linebuf[8]; *c && *c <= ' '; c++);
-      if (!*c) fatal(2, linebuf);  
+      if (!*c) fatal(2, linebuf);
       for (l = c; *c && *c > ' '; c++);
       if (!*c) fatal(2, linebuf);
       *c++ = 0;
@@ -79,7 +98,7 @@ int main (int argc, char **argv)
       while (*c && *c != '"') c++;
       if (!*c) fatal(2, linebuf);
       *c = 0;
-      if (oidnum >= numoids) oidtable = (struct oidtable *)realloc(oidtable, 
+      if (oidnum >= numoids) oidtable = (struct oidtable *)realloc(oidtable,
         (numoids += 16) * sizeof(struct oidtable));
       // fprintf(stderr, "oidnum %d numoids %d\n", oidnum, numoids);
       struct oidtable *odp = &oidtable[oidnum];
@@ -108,7 +127,7 @@ int main (int argc, char **argv)
       i = 1;
       }
     else i++;
-    }  
+    }
   if (!(str = fopen(outfile, "w"))) fatal(1, outfile);
   char lastoid[256];
   memset(lastoid, 0, 256);
@@ -124,5 +143,5 @@ int main (int argc, char **argv)
   fatal(0, outfile);
   return 0;
   }
-      
-     
+
+
