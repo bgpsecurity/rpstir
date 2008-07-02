@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-TARGETS=dump rr bin_to_six six_to_bin loadkey genkey whatsfcs make_oidtable set_cert_ski  make_cert make_crl make_roa make_manifest read_roa
+TARGETS=test_casn_random dump rr bin_to_six six_to_bin loadkey genkey whatsfcs make_oidtable set_cert_ski  make_cert make_crl make_roa make_manifest read_roa
 
 all:	$(TARGETS)
 
@@ -71,6 +71,9 @@ make_manifest:	make_manifest.o Makefile ../casn/libcasn.a ../asn/libasn.a
 
 set_cert_ski:	set_cert_ski.o Makefile ../casn/libcasn.a ../asn/libasn.a
 	$(CC) $(CFLAGS) -o $@ set_cert_ski.o $(LOCAL_LIBS) $(LIBS)
+
+test_casn_random: test_casn_random.o
+	$(CC) $(CFLAGS) -o $@ test_casn_random.o $(LOCAL_LIBS)
 
 clean:
 	rm -f $(TARGETS) *.o
