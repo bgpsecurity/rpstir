@@ -34,7 +34,7 @@ R1311 x
 causes the manifest M1111 to have the wrong hash for the file R1311. 
 
     All these tools assume the particular "genealogy" defined in "RPKI Testing Data 
-and Procedures".  The programs that geberate the various objects figure out who should 
+and Procedures".  The programs that generate the various objects figure out who should 
 sign an object by looking at object's name.  All certificates are suffixed ".cer", 
 CRLs are ".crl", ROAs are ".roa" and menifests are ".man".  When the various
 programs are run, they also create more human-readable versions which are
