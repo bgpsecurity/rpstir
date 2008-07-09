@@ -19,6 +19,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "roa_utils.h"
 #include "cryptlib.h"
 
@@ -1705,220 +1709,151 @@ static int confInterpret(char* filename, struct ROA* roa)
 // Exported functions from roa_utils.h
 //
 /////////////////////////////////////////////////////////////
-
 int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 {
-  int iROAState = 0;
-  int iReturn = 0;
-  int fd = 0;
-  int iSize, iSizeFinal, iSizeTmp = 0;
-  unsigned char *buf, *buf_final, *buf_tmp = NULL;
-  struct AlgorithmIdentifier *algorithmID = NULL;
-  struct SignerInfo* signerInfo = NULL;
+  int iReturn, fd;
+  off_t iSize;
+  ssize_t amt_read;
+  int buf_tmp_size;
+  unsigned char *buf, *buf_tmp;
+  struct AlgorithmIdentifier *algorithmID;
+  struct SignerInfo *signerInfo;
+  struct ROA roa;
+  struct stat sb;
 
-  // Parameter validity checks
+  *rp = NULL;			// make sure we send back NULL on err
   if (NULL == fname)
-    return ERR_SCM_INVALARG;
+    return ERR_SCM_INVALARG;	// we need an input file
 
-  *rp = (struct ROA*) calloc(1, sizeof(struct ROA));
-  if (NULL == *rp)
-    {
-      // Error
-      //      printf("Error malloc'ing memory for ROA\n");
-      return ERR_SCM_NOMEM;
-    }
-
-  // No return value; must assume success
-  ROA(*rp, 0);
-
+  ROA(&roa, 0);		        // initialize the ROA
   // This write _must_ be done before the injections
-  write_objid(&((*rp)->contentType), id_signedData);
-
-  // JFG - Consider injecting these on a per-struct basis just in case
-  //  there's a requirements revision.
-  algorithmID = (struct AlgorithmIdentifier*) inject_casn(&((*rp)->content.signedData.digestAlgorithms.self), 0);
-  signerInfo = (struct SignerInfo*) inject_casn(&((*rp)->content.signedData.signerInfos.self), 0);
-  if ((NULL == algorithmID) ||
-      (NULL == signerInfo))
-    {
-      free(*rp);
-      return ERR_SCM_INVALASN;
-    }
+  write_objid(&roa.contentType, id_signedData);
+  algorithmID = (struct AlgorithmIdentifier*) inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
+  signerInfo = (struct SignerInfo*) inject_casn(&roa.content.signedData.signerInfos.self, 0);
+  if ((NULL == algorithmID) || (NULL == signerInfo))
+    return ERR_SCM_INVALASN;
   
   // Fill default algorithm slots
-  write_objid(&(algorithmID->algorithm), id_sha256);
-  write_objid(&((*rp)->content.signedData.encapContentInfo.eContentType), id_routeOriginAttestation);
-  write_objid(&(signerInfo->digestAlgorithm.algorithm), id_sha256);
-  write_objid(&(signerInfo->signatureAlgorithm.algorithm), id_sha_256WithRSAEncryption);
+  write_objid(&algorithmID->algorithm, id_sha256);
+  write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_routeOriginAttestation);
+  write_objid(&signerInfo->digestAlgorithm.algorithm, id_sha256);
+  write_objid(&signerInfo->signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption);
 
-  // Open the file and read in its contents
+  // read in the file
   if ((fd = open(fname, (O_RDONLY))) < 0)
-    {
-      //      delete_casn(&((*rp)->self));
-      roaFree(*rp);
-      *rp = NULL;
-      return ERR_SCM_COFILE;
-    }
-  iSize = 1024;
-  buf = buf_tmp = (unsigned char *)calloc(1, iSize);
-  if ( buf == NULL )
+    return ERR_SCM_COFILE;
+  if (fstat(fd, &sb) != 0) {
+    (void) close(fd);
+    return ERR_SCM_COFILE;
+  }
+  iSize = sb.st_size;
+  if ((buf = calloc(1, iSize)) == NULL)
     return ERR_SCM_NOMEM;
-  while ( 1 )
-    {
-      if ((iSizeTmp = read(fd, buf_tmp, 1024)) == 1024)
-	{
-	  buf = (unsigned char *)realloc(buf, iSize + 1024);
-	  if ( buf == NULL )
-	    return ERR_SCM_NOMEM;
-	  buf_tmp = &buf[iSize];
-	  iSize += 1024;
-	}
-      else if (iSizeTmp < 0)
-	{
-	  close(fd);
-	  //	  delete_casn(&((*rp)->self));
-	  roaFree(*rp);
-	  *rp = NULL;
-	  if ( buf != NULL )
-	    free(buf);
-	  return ERR_SCM_BADFILE;
-	}
-      else
-	break;
-    }
-  close(fd);
-  iSize = (iSize - 1024 + iSizeTmp);
-  buf_final = buf;
-  iSizeFinal = iSize;
+  amt_read = read(fd, buf, iSize);
+  (void) close(fd);
+  if (amt_read != iSize) {
+      free(buf);
+      return ERR_SCM_BADFILE;
+  }
 
-  switch(fmt)
-    {
+  // handle format-specific processing
+  switch(fmt) {
     case FMT_PEM:
-      // Decode buffer from b64, skipping unnecessary chars
-      buf_final = NULL;
-      iReturn = decode_b64(buf, iSize, &buf_final, &iSizeFinal, "ROA");
+      // Decode buffer from b64, skipping armor
+      if ((iReturn = decode_b64(buf, iSize, &buf_tmp, &buf_tmp_size, "ROA")) != 0)
+	  break;
+      free(buf);		// drop old buffer, use new one
+      buf = buf_tmp;
+      iSize = buf_tmp_size;
       // IMPORTANT: NO break, control falls through
     case FMT_DER:      
-      iSizeTmp = decode_casn(&((*rp)->self), buf_final);
-      if (buf_final != buf)
-	{
-	  free(buf);
-	  buf = NULL;
-	}
-      free(buf_final);
-      buf_final = NULL;
-      if (iSizeTmp != iSizeFinal)
-	{
-	  //	  delete_casn(&((*rp)->self));
-	  roaFree(*rp);
-	  *rp = NULL;
-	  iReturn = ERR_SCM_INVALASN;
-	}
-      else
-	iReturn = 0;
-      // iReturn = get_casn_file(&((*rp)->self), fname, 0);
+      iReturn = 0;
+      // did we use all of buf, no more and no less?
+      if (decode_casn(&roa.self, buf) != iSize)
+	iReturn = ERR_SCM_INVALASN;
       break;
+
     case FMT_CONF:
-      iROAState = confInterpret(fname, *rp);
-      if (iROAState < 0)
-	{
-	  //	  delete_casn(&((*rp)->self));
-	  roaFree(*rp);
-	  *rp = NULL;
-	  iReturn = iROAState;
-	}
+      iReturn = confInterpret(fname, &roa);
       break;
+
     default:
       iReturn = ERR_SCM_INVALARG;
       break;
     }
-  if ( buf != NULL )
-    free((void *)buf);
+  free(buf);			// all done with this now
+
+  // if we're ok and caller wants validation, it's time
   if ((0 == iReturn) && (cFALSE != doval))
-    iReturn = roaValidate(*rp);
+    iReturn = roaValidate(&roa);
+
+  // if we got this far and everything is OK, send it back to caller
+  if (iReturn == 0) {
+      *rp = calloc(1, sizeof(struct ROA));
+      if (*rp == NULL)
+	  return ERR_SCM_NOMEM;
+      memcpy(*rp, &roa, sizeof(struct ROA));
+  }
   return iReturn;
 }
 
 int roaToFile(struct ROA *r, char *fname, int fmt)
 {
   int fd = 0;
-  int iReturn = 0;
+  int iReturn = 0, written;
   int iSizeDER, iSizePEM = 0;
   unsigned char *buf_der, *buf_pem = NULL;
-  //int iCASNSize = 0;
-  //char *casn = 0;
 
   // Parameter validity checks
   if (NULL == fname)
     return ERR_SCM_INVALARG;
 
-  /*
-  // JFG - Debugging code; leave out unless required
-  iCASNSize = dump_size(&(r->self));
-  if (0 > iCASNSize)
-    return ERR_SCM_INVALASN;
-  casn =  calloc(iCASNSize, sizeof(char));
-  if (NULL == casn)
-    return ERR_SCM_NOMEM;
-  dump_casn(&(r->self), casn);
-  printf("%s", casn);
-  free(casn);
-  */
-
   // Encode CASN
   (void)unlink(fname);  // security fix, needed to allow both EXCL and CREAT
   if ((fd = open(fname, (O_EXCL | O_WRONLY | O_CREAT | O_TRUNC), 0755)) < 0)
     return ERR_SCM_COFILE;
-  if ((iSizeDER = size_casn(&(r->self))) < 0)
-    {
+  if ((iSizeDER = size_casn(&(r->self))) < 0) {
       close(fd);
       return ERR_SCM_INVALASN;
-    }
+  }
   buf_der = (unsigned char *)calloc(1, iSizeDER);
-  if ( buf_der == NULL )
+  if ( buf_der == NULL ) {
+    close(fd);
     return ERR_SCM_NOMEM;
-  encode_casn(&(r->self), buf_der);
+  }
+  (void) encode_casn(&(r->self), buf_der); // returns num bytes written
 
-  switch(fmt)
-    {
+  iReturn = 0;
+  switch(fmt) {
     case FMT_PEM:
       // JFG - Ask what length PEM file lines expect to be
       //  (right now, hardcoded to 50)
       iReturn = encode_b64(buf_der, iSizeDER, &buf_pem, &iSizePEM, 50);
-
-      // Write to file
-      if (0 == iReturn)
-	{
-	  iReturn = write(fd, buf_pem, iSizePEM);
-	  free(buf_pem);
-	}
-      free(buf_der);
-      close(fd);
-      if (iSizePEM != iReturn)
+      if (iReturn != 0)
+	  break;
+      written = write(fd, buf_pem, iSizePEM); // Write to file
+      free(buf_pem);
+      if (iSizePEM != written)
 	iReturn = ERR_SCM_INVALASN;
-      else
-	iReturn = 0;
-
       break;
+
     case FMT_DER:
-      // Write to file
-      iReturn = write(fd, buf_der, iSizeDER);
-      free(buf_der);
-      close(fd);
-      if (iSizeDER != iReturn)
+      written = write(fd, buf_der, iSizeDER); // Write to file
+      if (iSizeDER != written)
 	iReturn = ERR_SCM_INVALASN;
-      else
-	iReturn = 0;
-      // iReturn = put_casn_file(&(r->self), fname, 0);
       break;
+
     case FMT_CONF:
       // NOT OUR CONCERN RIGHT NOW
       // NO NEED TO DO THIS.
       break;
+
     default:
       iReturn = ERR_SCM_INVALARG;
       break;
     }
 
+  (void) close(fd);
+  free(buf_der);
   return iReturn;
 }
