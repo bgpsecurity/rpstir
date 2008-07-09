@@ -55,6 +55,8 @@
 #define cFALSE 0
 #define cTRUE  1
 
+#define countof(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 //#define ROA_VALID 0
 //#define ROA_INVALID 1
 
