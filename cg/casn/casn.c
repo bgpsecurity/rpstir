@@ -160,6 +160,7 @@ void clear_casn(struct casn *casnp)
     _clear_casn(casnp, ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG));
     }
 
+// XXX ill-formed input buffer will cause this to read off the end of 'from'
 int decode_casn(struct casn *casnp, uchar *from)
     {
     uchar *c = from;
