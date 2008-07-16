@@ -1,0 +1,55 @@
+#
+# Makefile for test cases
+#
+# $Id: Makefile 535 2008-06-20 18:57:43Z gardiner $
+#
+# ***** BEGIN LICENSE BLOCK *****
+#  
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 1.0
+#  
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.  
+# 
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+# 
+#  Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+# 
+#  Contributor(s):  Mark Reynolds
+# 
+# ***** END LICENSE BLOCK *****
+
+TARGETS=make_test_cert make_test_crl make_test_roa make_test_manifest  gen_test_key
+
+all:	$(TARGETS)
+
+CFLAGS=	-g -I$(SSLINCLUDES) -I../cg/asn -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib -I$(CLINCLUDES)
+ASN_DIR= ../cg/asn
+CASN_DIR= ../casn
+LIBASN=../cg/asn/libasn.a
+LIBCASN=../cg/casn/libcasn.a
+LOCAL_LIBS=  $(LIBASN) $(LIBCASN) 
+LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+
+gen_test_key:	gen_test_key.o Makefile
+	$(CC) $(CFLAGS) -o $@ gen_test_key.o $(LOCAL_LIBS) $(LIBS)
+
+make_test_cert:	make_test_cert.o Makefile adjustTime.o ../cg/casn/libcasn.a ../cg/asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ adjustTime.o make_test_cert.o $(LOCAL_LIBS) $(LIBS)
+
+make_test_crl:	make_test_crl.o Makefile adjustTime.o ../cg/casn/libcasn.a ../cg/asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_test_crl.o adjustTime.o $(LOCAL_LIBS) $(LIBS)
+
+make_test_roa:	make_test_roa.o Makefile signCMS.o ../cg/casn/libcasn.a ../cg/asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_test_roa.o signCMS.o $(LOCAL_LIBS) $(LIBS)
+
+make_test_manifest:	make_test_manifest.o Makefile adjustTime.o signCMS.o ../cg/casn/libcasn.a ../cg/asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_test_manifest.o adjustTime.o signCMS.o $(LOCAL_LIBS) $(LIBS)
+
+adjustTime.o:	adjustTime.c 
+
+signCMS.o:	signCMS.c
+clean:
+	rm -f $(TARGETS) *.o
+
