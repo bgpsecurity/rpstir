@@ -1,4 +1,4 @@
-makecerts
-makecrls
-makeroas
-makemanifests
+./makecerts
+./makecrls
+./makeroas
+./makemanifests

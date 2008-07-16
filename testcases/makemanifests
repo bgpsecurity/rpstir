@@ -1,6 +1,6 @@
-make_test_manifest M1 <makeM1
-make_test_manifest M11 <makeM11
-make_test_manifest M111 <makeM111
-make_test_manifest M112 <makeM112
-make_test_manifest M231 <makeM231
-make_test_manifest M1111 <makeM1111
+./make_test_manifest M1 <makeM1
+./make_test_manifest M11 <makeM11
+./make_test_manifest M111 <makeM111
+./make_test_manifest M112 <makeM112
+./make_test_manifest M231 <makeM231
+./make_test_manifest M1111 <makeM1111
