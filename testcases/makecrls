@@ -1,5 +1,5 @@
-../cg/tools/make_crl L11 x <makeL11
-../cg/tools/make_crl L111 1x <makeL111
-../cg/tools/make_crl L112 1x <makeL112
-../cg/tools/make_crl L21 1x <makeL21
+make_test_crl L11 0D 3M <makeL11
+make_test_crl L111 -1M  2M <makeL111
+make_test_crl L112 0D 3M <makeL112
+make_test_crl L21 0D 3M <makeL21
 
