@@ -12,8 +12,6 @@ $APKI_ROOT/proto/garbage
 echo "After garbage collection (0 entries):"
 $APKI_ROOT/proto/query -a
 echo ""
-echo "But should be here: cat unknown.out"
-cat unknown.out
 echo "update apki_crl set next_upd=\"2007-08-02 00:00:00\";" | mysql $APKI_DB -u mysql
 $APKI_ROOT/proto/garbage
 echo "After modifying expiration date and garbage collection (1 entries):"
