@@ -497,8 +497,8 @@ int main(int argc, char **argv)
 */
   clear_casn(&ctftbsp->validity.notBefore.self);
   clear_casn(&ctftbsp->validity.notAfter.self);
-  write_casn(&ctftbsp->validity.notBefore.generalTime, (uchar *)"20000101000000Z", 15);
-  write_casn(&ctftbsp->validity.notAfter.generalTime, (uchar *)"20300101000000Z", 15);
+  write_casn(&ctftbsp->validity.notBefore.utcTime, (uchar *)"000101000000Z", 13);
+  write_casn(&ctftbsp->validity.notAfter.utcTime,  (uchar *)"300101000000Z", 13);
 
   struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;
   write_objid(&spkinfop->algorithm.algorithm, id_rsadsi_rsaEncryption);

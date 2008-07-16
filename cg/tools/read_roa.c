@@ -106,8 +106,8 @@ int main(int argc, char **argv)
   struct ROA roa;
   ROA(&roa, (ushort)0);
   if (get_casn_file(&roa.self, argv[1], 0) < 0) fatal(2, argv[1]);
-  struct RouteOriginAttestation *roaip = &roa.content.signedData.encapContentInfo.
-    eContent.roa;
+  struct RouteOriginAttestation *roaip;
+  roaip = &roa.content.signedData.encapContentInfo.eContent.roa;
   if (vsize_casn(&roaip->self) <= 0) fatal(3, argv[1]);
   long asnum;
   if (read_casn_num(&roaip->asID, &asnum) < 0 || asnum <= 0) fatal(4, (char *)0);
