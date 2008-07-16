@@ -468,6 +468,7 @@ int main(int argc, char **argv)
     {
     char *a = argv[1];        // get the issuer file
     for (a++; *a >= '0' && *a <= '9'; a++);
+    if (!*a) a--;   // if not EE, cut off lest digit for issuer 
     issuerfile = (char *)calloc(1, strlen(argv[1] + 8));
     strcat(strncpy(issuerfile, argv[1], a - argv[1]), ".cer");
     issuerkeyfile = (char *)calloc(1, strlen(argv[1] + 8));
@@ -492,9 +493,9 @@ int main(int argc, char **argv)
   long now = time((time_t *)0);
   clear_casn(&ctftbsp->validity.notBefore.self);
   clear_casn(&ctftbsp->validity.notAfter.self);
-  if (adjustTime(&ctftbsp->validity.notBefore.generalTime, now, argv[2]) < 0)
+  if (adjustTime(&ctftbsp->validity.notBefore.utcTime, now, argv[2]) < 0)
     fatal(9, argv[2]);
-  if (adjustTime(&ctftbsp->validity.notAfter.generalTime, now, argv[3]) < 0)
+  if (adjustTime(&ctftbsp->validity.notAfter.utcTime, now, argv[3]) < 0)
     fatal(9, argv[3]);
 
   struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;

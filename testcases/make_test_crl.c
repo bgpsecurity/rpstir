@@ -179,9 +179,9 @@ int main(int argc, char **argv)
   time_t now = time((time_t)0);
   clear_casn(&crltbsp->lastUpdate.self);
   clear_casn(&crltbsp->nextUpdate.self);
-  if (adjustTime(&crltbsp->lastUpdate.generalTime, now, argv[2]))
+  if (adjustTime(&crltbsp->lastUpdate.utcTime, now, argv[2]))
     fatal(7, argv[2]);
-  if (adjustTime(&crltbsp->nextUpdate.generalTime, now, argv[3]))
+  if (adjustTime(&crltbsp->nextUpdate.utcTime, now, argv[3]))
     fatal(7, argv[3]);
 
   struct Extension *iextp;
@@ -226,8 +226,8 @@ int main(int argc, char **argv)
     crlentryp = (struct CRLEntry *)inject_casn(&crltbsp->revokedCertificates.self,
       numcerts++);
     write_casn_num(&crlentryp->userCertificate, (long)certnum);
-    read_casn_time(&crltbsp->lastUpdate.generalTime, (ulong *)&now);
-    adjustTime(&crlentryp->revocationDate.generalTime, now, delta);
+    read_casn_time(&crltbsp->lastUpdate.utcTime, (ulong *)&now);
+    adjustTime(&crlentryp->revocationDate.utcTime, now, delta);
     }
   signCRL(&crl, certname);
   if (put_casn_file(&crl.self, crlname, 0) < 0) fatal(6, crlname); 
