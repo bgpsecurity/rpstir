@@ -5,28 +5,32 @@ seq seq ctx+0x20
             nul 
         seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
-        seq utc "080717150949Z"
-            utc "090717150949Z"
+        seq utc "080717182340Z"
+            utc "090717182340Z"
         seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                 nul 
-            bit 0x0030818902818100B45E1006CCDA37D5
-                0xC8CA0CC15E82DF793FDAC755BD069F66
-                0xA3D20378671C37836370A11CCE03BC45
-                0xEE3290B35665BFECD9F44412FDD9E3D1
-                0xC6F21EC41B8D258A05CCA36C69D61409
-                0xB584CE1C1090A062D388FDD3C89015FA
-                0x62DBFD5134CB5AE6EDE0373D2B4B7D18
-                0x71166FA69C251F1E065C9A29220983BE
-                0x967D804B8A153A2B0203010001
+            bit 0x0030818902818100E77854CB0D8CAFB2
+                0xBFA8DDEEF47C885CA6777F3E86951B13
+                0x2A7D3D83C1EC5C2095ED106F2A15AD84
+                0x1D86175F7C6DCF5F057ACB616E090826
+                0x446107C0167F3B5574A3D8A67E8E47DF
+                0x9D565B6B58C855557A8955F4CF217E37
+                0x361ABC64B9CF4C970E9F5E283D68F663
+                0xFC75524D8D76006412B8F854A0AB913F
+                0xD9D2184F497E99FF0203010001
         ctx+0x23
             seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
-                    ocw oct 0xA986942E555D5C384FFF25C337D8DF28
-                            0x013BFE1D
+                    ocw oct 0xE7CB0F3CD4EDB7AB970258F019B53CB4
+                            0xE2F6C21F
                 seq oid 2.5.29.15 /* id_keyUsage */
                     boo 0xFF
                     ocw bit 0x0106
+                seq oid 2.5.29.17 /* id_subjectAltName */
+                    ocw seq ctx+0x24
+                                seq set seq oid 2.5.4.3 /* id_commonName */
+                                            prt "ARINviaAPNIC-all"
                 seq oid 2.5.29.19 /* id_basicConstraints */
                     boo 0xFF
                     ocw seq boo 0xFF
@@ -34,14 +38,18 @@ seq seq ctx+0x20
                     ocw seq seq ctx+0x20
                                     ctx+0x20
                                         ctx+0x06
-                                            "rsync//bbn-via-roa-pki"
+                                            "rsync://arin-via-apnic"
                 seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
                     ocw seq seq oid 2.226.1.5.5.7.14.2
                 seq oid 2.5.29.35 /* id_authKeyId */
                     ocw seq ctx+0x00
-                                0xA986942E555D5C384FFF25C337D8DF28
-                                0x013BFE1D
+                                0xE7CB0F3CD4EDB7AB970258F019B53CB4
+                                0xE2F6C21F
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_pkix_caIssuers */
+                                ctx+0x06
+                                    "rsync://bbn-via-roa-pki"
                 seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
                     boo 0xFF
                     ocw seq seq oct 0x0001
@@ -54,15 +62,15 @@ seq seq ctx+0x20
                                 seq seq int 0x01
                                         int 0x64
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_pkix_caIssuers */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_pkix_ad + .5 */
                                 ctx+0x06
                                     "rsync://arin-via-apnic.mirin.apnic.net/moc"
                                     "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
                                     "/e3L5eq0X8jJlDu9fmx8xjDAbbxI/"
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x006DBE7DE96CECC42611325FA673331E50FCF9D9E013F168C8E1189B30F3525B
-        0x8DE8364629A6A881C9EBEAB4D899294EB4C2E5CCD8D0A441CB37E00449ADA00F
-        0xDEE6F530335BE8F5AAB8F18CC28C1A6D6CA57E91306B23BF3CE085D1C4913473
-        0xFC8492E726A24E122331832E525D3DE9EF2824FB0794E4015B1C61568765F589
-        0x54
+    bit 0x00B51315808E90B116A37C57C46AD5A58222F256B1A583B986145B06866BD584
+        0x9FFD559FCA0C9BCB48FC123D5B81B36BC09EE81A2465C52566B4F2B6C9B22F91
+        0x8DBECDC29C8B7C396B1DC4626E35B815506C987E725DC42474FA39696868808E
+        0xF3E4CE358220F1511E5A524DB2FEB15814F3B068129517F190DCB877EAC8836D
+        0x77
