@@ -52,7 +52,7 @@ MYSQLINCLUDES=/usr/local/include
 # where to find cryptlib includes
 CLINCLUDES=/usr/local/include
 
-DIRS=cg roa-lib proto roa-utils rsync_aur
+DIRS=cg roa-lib proto roa-utils rsync_aur testcases
 
 all:	
 	for DIR in $(DIRS); do \
