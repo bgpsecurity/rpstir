@@ -296,13 +296,13 @@ EDIPartyName ::= SEQUENCE {
     nameAssigner	[0]	DirectoryString	   OPTIONAL,
     partyName		[1]	DirectoryString }
 
-SubjectDirectoryAttributes ::= SEQUENCE OF Attribute
+SubjectDirectoryAttributes ::= SEQUENCE OF SubjectDirectoryAttribute
 
-Attribute ::= SEQUENCE {
-    type     OBJECT IDENTIFIER TABLE AttributeTable,
+SubjectDirectoryAttribute ::= SEQUENCE {
+    type     OBJECT IDENTIFIER TABLE SubjectDirectoryAttributeTable,
     values   SET (SIZE(1..20)) OF ANY DEFINED BY type }
 
-AttributeTable ::= TABLE {
+SubjectDirectoryAttributeTable ::= TABLE {
 	any                 0xFFFF                  ANY }
 
 BasicConstraints ::= SEQUENCE {
@@ -506,7 +506,7 @@ IPAddressFamilyA  ::= SEQUENCE {
 
 IPAddressChoiceA ::= CHOICE
     {
-    inherit             BOOLEAN,
+    inherit             NULL,
     addressesOrRanges   SEQUENCE OF IPAddressOrRangeA
     }
 
@@ -526,7 +526,7 @@ ASNum     ::= SEQUENCE {
 
 ASIdentifierChoiceA ::= CHOICE
     {
-    inherit             BOOLEAN, -- inherit from issuer
+    inherit             NULL, -- inherit from issuer
     asNumbersOrRanges   SEQUENCE OF ASNumberOrRangeA
     }
 

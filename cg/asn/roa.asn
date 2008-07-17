@@ -21,8 +21,8 @@
 
 DEFINITIONS IMPLICIT TAGS ::=
 -- imports
-IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
-        Extensions IPAddressOrRangeA Attribute FROM extensions IN extensions.asn,
+IMPORTS AlgorithmIdentifier -- ID  pkcs-1 -- FROM Algorithms IN Algorithms.asn,
+        Extensions IPAddressOrRangeA FROM extensions IN extensions.asn,
 	Certificate Version FROM certificate IN certificate.asn,
 	Name FROM name IN name.asn, Manifest FROM Manifest IN manifest.asn;
 
@@ -34,8 +34,15 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
     
       ContentType ::= OBJECT IDENTIFIER
 
-      id-signedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-        us(840) rsadsi1(113549) pkcs1(1) pkcs7(7) 2 }
+      OID ::= OBJECT IDENTIFIER
+      pkcs_1 OID ::= {1.2.840.113549.1}
+
+      pkcs-7 OID ::= {pkcs-1 7 }
+
+      pkcs-9 OID ::= {pkcs-1 9}
+
+      id-signedData OBJECT IDENTIFIER ::= { pkcs-7 2 }
+
 
       ContentTable ::= TABLE {
         signedData id-signedData SignedData }
@@ -152,13 +159,31 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         signature SignatureValue, 
         unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL } 
 
+      id-contentTypeAttr OBJECT IDENTIFIER ::= { pkcs-9 3 }
+      id-messageDigestAttr OBJECT IDENTIFIER ::= { pkcs-9 4 }
+      id-signingTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 5 }
+      id-binSigningTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 16.2.46 }
+
       SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 
       UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 
---      Attribute ::= SEQUENCE {
---        attrType OBJECT IDENTIFIER,
---        attrValues SET OF AttributeValue }
+      Attribute ::= SEQUENCE {
+        attrType OBJECT IDENTIFIER TABLE AttrTable,
+        attrValues AttributeValues }
+
+      AttributeValues ::= SET SIZE (1..1) OF ANY DEFINED BY attrType IN Attribute
+
+    AttrTable ::= TABLE {
+      contentType  id-contentTypeAttr OBJECT IDENTIFIER,
+      messageDigest id-messageDigestAttr OCTET STRING,
+      signingTime  id-signingTimeAttr SigningTime,
+      binSigningTime id-binSigningTimeAttr INTEGER }
+
+    SigningTime ::= CHOICE {
+      utcTime     UTCTime,
+      generalizedTime GeneralizedTime }
+    
 
 --      AttributeValue ::= ANY
  

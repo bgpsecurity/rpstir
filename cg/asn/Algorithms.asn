@@ -43,7 +43,7 @@ Algorithms DEFINITIONS ::=  -- explicit tags from X.509 !
 BEGIN
 
 EXPORTS
-    DSAParameters, DSASignature, AlgorithmIdentifier;
+    DSAParameters, DSASignature, AlgorithmIdentifier, ID, pkcs, pkcs-1;
 
 AlgorithmIdentifier ::= SEQUENCE {
 	algorithm OBJECT IDENTIFIER TABLE AlgorithmTable,
