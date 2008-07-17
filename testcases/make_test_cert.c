@@ -318,7 +318,7 @@ static int setSignature(struct Certificate *certp, char *keyfile)
   sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
   memset(hash, 0, 40);
   cryptInit();
-  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA)) != 0 ||
+  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
       (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
     msg = "creating context";
   else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
