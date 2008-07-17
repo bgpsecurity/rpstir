@@ -37,7 +37,7 @@ char *msgs [] =
     "Couldn't open %s\n",
     "Can't translate %s.  Try again\n",      // 2
     "Usage: subjectname startdelta enddelta\n",
-    "No extension %s in issuer\n",              // 4
+    "Issuer cert has no %s extension\n",              // 4
     "Signing failed in %s\n",
     "Error opening %s\n",                // 6
     "Error reading IP Address Family\n",
@@ -290,6 +290,7 @@ static int read_family(char **fampp, struct IPAddressFamilyA *famp)
   *fampp = buf;
   return strlen(buf);
   }
+
 static void set_name(struct RDNSequence *rdnsp, char *namep)
   {
   clear_casn(&rdnsp->self);
@@ -439,11 +440,23 @@ static int writeHashedPublicKey(struct casn *valuep, struct casn *keyp)
   write_casn(valuep, hashbuf, siz);
   return siz;
   }
-
+/*
+static void view_extensions(struct Extensions *extsp)
+  {
+  struct Extension *extp;
+  for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
+    extp = (struct Extension *)next_of(&extp->self))
+    {
+    char id[20];
+    read_objid(&extp->extnID, id);
+    printf("%s\n", id);
+    }
+  }
+*/
 int main(int argc, char **argv)
   {
   if (argc < 4) fatal(3, "");
-  int ee = 0;
+  int ee = 0, root = (strlen(argv[1]) == 1);
   struct stat tstat;
   fstat(0, &tstat);
   int filein = (tstat.st_mode & S_IFREG);
@@ -462,10 +475,16 @@ int main(int argc, char **argv)
          // get keyfile for subject public key
   strcat(strcpy(subjkeyfile, argv[1]), ".p15");
   strcat(strcpy(subjfile, argv[1]), ".cer");
-  c = argv[1] + strlen(argv[1]) - 1; // at last digit
   int snum = 1;
-  if (*c != '0' && *c != 'C') // not a root
+  if (root)
     {
+    if (get_casn_file(&cert.self, subjfile, 0) < 0) fatal(1, subjfile);
+    write_casn_num(&ctftbsp->serialNumber, (long)1);
+    }
+  else 
+    {
+    // start filling subject cert
+    write_casn_num(&ctftbsp->version.self, 2);
     char *a = argv[1];        // get the issuer file
     for (a++; *a >= '0' && *a <= '9'; a++);
     if (!*a) a--;   // if not EE, cut off lest digit for issuer 
@@ -478,16 +497,14 @@ int main(int argc, char **argv)
     for (c = issuerfile; *c && *c != '.'; c++);
     strcpy(c, ".p15");
     sscanf(subjfile, "C%d", &snum);
+    snum++;
     if (*a == 'M') snum += 0x100;
     if (*a == 'R') snum += 0x200;
+    write_casn_num(&ctftbsp->serialNumber, (long)snum); 
     copy_casn(&cert.algorithm.self, &issuer.toBeSigned.signature.self);
     copy_casn(&ctftbsp->signature.self, &issuer.toBeSigned.signature.self);
     copy_casn(&ctftbsp->issuer.self, &issuer.toBeSigned.subject.self);
     }
-  if (!issuerkeyfile && get_casn_file(&cert.self, subjfile, 0) < 0) 
-    fatal(1, subjfile);
-  write_casn_num(&ctftbsp->version.self, 2);
-  write_casn_num(&ctftbsp->serialNumber, (long)snum);  
   set_name(&ctftbsp->subject.rDNSequence, argv[1]);
 
   long now = time((time_t *)0);
@@ -516,32 +533,48 @@ int main(int argc, char **argv)
     // key usage
     extp = makeExtension(extsp, id_keyUsage);
     if (!(iextp = findExtension(iextsp, id_keyUsage))) 
-      fatal(4, "issiuer's key usage");
+      fatal(4, "key usage");
     copy_casn(&extp->self, &iextp->self);
     if (ee)
       {
       write_casn(&extp->extnValue.keyUsage.self, (uchar *)"", 0);
       write_casn_bit(&extp->extnValue.keyUsage.digitalSignature, 1);
       }
-    // subject alt name ??
     // basic constraints
     if (!ee)
       {
       extp = makeExtension(extsp, id_basicConstraints);
       if (!(iextp = findExtension(iextsp, id_basicConstraints)))
-        fatal(4, "issiuer's basic constraints");
+        fatal(4, "basic constraints");
       copy_casn(&extp->self, &iextp->self);
       }
       // CRL dist points
     extp = makeExtension(extsp, id_cRLDistributionPoints);
     if (!(iextp = findExtension(iextsp, id_cRLDistributionPoints)))
-      fatal(4, "issiuer's CRL Dist points");
+      fatal(4, "CRL Dist points");
     copy_casn(&extp->self, &iextp->self);
       // Cert policies
     extp = makeExtension(extsp, id_certificatePolicies);
     if (!(iextp = findExtension(iextsp, id_certificatePolicies)))
-      fatal(4, "issiuer's cert policies");
+      fatal(4, "cert policies");
     copy_casn(&extp->self, &iextp->self);
+      // authInfoAccess
+    extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
+    if (strlen(argv[1]) == 2 || (strlen(argv[1]) == 3 && argv[1][1] > '9')) 
+      {  // first generation.  Have to build it
+      struct AuthorityInfoAccessSyntax *aiasp = &extp->extnValue.authorityInfoAccess;
+      struct AccessDescription *accdsp = (struct AccessDescription *)inject_casn(
+        &aiasp->self, 0);
+      write_objid(&accdsp->accessMethod, id_pkix_caIssuers);
+      write_casn(&accdsp->accessLocation.url, (uchar *)"rsync://bbn-via-roa-pki", 23);
+      }
+    else   // can copy it
+      {
+      extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
+      if (!(iextp = findExtension(iextsp, id_pkix_authorityInfoAccess)))
+        fatal(4, "authorityInfoAccess");
+      copy_casn(&extp->self, &iextp->self);
+      }
     }
 /*
   IF this is a root, use the subject's subjectKeyId field as a source
@@ -552,7 +585,7 @@ int main(int argc, char **argv)
 */
   if (!issuerkeyfile) iextp = extp;
   else if (!(iextp = findExtension(&issuer.toBeSigned.extensions, 
-        id_subjectKeyIdentifier))) fatal(4, "issuer's subjectKeyIdentifier");
+        id_subjectKeyIdentifier))) fatal(4, "subjectKeyIdentifier");
   extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
   copy_casn(&extp->extnValue.authKeyId.keyIdentifier, 
     &iextp->extnValue.subjectKeyIdentifier);
@@ -599,6 +632,13 @@ int main(int argc, char **argv)
       write_ASNums(asNump);
       }
     else copy_casn(&extp->self, &iextp->self);
+    }
+  if (issuerfile)
+    {  // subjectInfoAccess
+    extp = makeExtension(extsp, id_pe_subjectInfoAccess);
+    if (!(iextp = findExtension(iextsp, id_pe_subjectInfoAccess)))
+      fatal(4, "subjectInfoAccess");
+    copy_casn(&extp->self, &iextp->self);
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);
