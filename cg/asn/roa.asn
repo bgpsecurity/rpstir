@@ -35,11 +35,11 @@ IMPORTS AlgorithmIdentifier -- ID  pkcs-1 -- FROM Algorithms IN Algorithms.asn,
       ContentType ::= OBJECT IDENTIFIER
 
       OID ::= OBJECT IDENTIFIER
-      pkcs_1 OID ::= {1.2.840.113549.1}
+      pkcs OID ::= {1.2.840.113549.1}
 
-      pkcs-7 OID ::= {pkcs-1 7 }
+      pkcs-7 OID ::= {pkcs 7 }
 
-      pkcs-9 OID ::= {pkcs-1 9}
+      pkcs-9 OID ::= {pkcs 9}
 
       id-signedData OBJECT IDENTIFIER ::= { pkcs-7 2 }
 
