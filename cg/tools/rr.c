@@ -130,6 +130,14 @@ int main(int argc, char **argv)
 2. Exit with OK message	$b) */
 char *c, **p;
 int fd;
+
+if (argc < 2) {
+    printf("usage: rr [-r][-d][-a] f1 f2 f3 ...\n");
+    printf("Convert each raw-format ASN.1 file fi.raw to fi.req\n");
+    printf("-r, -d, and -a are mystery parameters.\n");
+    exit(1);
+}
+
 for (p = &argv[1]; p < &argv[argc]; p++)
     {
     if (*(c = *p) == '-')
