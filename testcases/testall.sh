@@ -17,7 +17,7 @@ echo adding root certificate
 $BASE/proto/rcli -y -F C.cer
 
 echo adding objects
-for i in $REPO/*; do
+for i in `ls $REPO/* | grep -v X`; do
     echo -n `basename $i`:
     $BASE/proto/rcli -f $i
 done
