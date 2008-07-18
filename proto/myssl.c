@@ -1636,7 +1636,7 @@ static int rescert_flags_chk(X509 *x, int ct)
   ta_kusage = (KU_KEY_CERT_SIGN|KU_CRL_SIGN);
   ca_flags = (EXFLAG_SET|EXFLAG_CA|EXFLAG_KUSAGE|EXFLAG_BCONS);
   ca_kusage = (KU_KEY_CERT_SIGN|KU_CRL_SIGN);
-  ee_flags = (EXFLAG_SET|EXFLAG_KUSAGE|EXFLAG_BCONS);
+  ee_flags = (EXFLAG_SET|EXFLAG_KUSAGE);
   ee_kusage = (KU_DIGITAL_SIGNATURE);
 
   if ( (x->ex_flags == ta_flags) && (x->ex_kusage == ta_kusage) )
@@ -1768,7 +1768,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
        return(ERR_SCM_NOBC);
      } else if (basic_flag > 1) {
 #ifdef DEBUG
-       fprintf(stderr, "[basic_const] mutliple instances of extension\n");
+       fprintf(stderr, "[basic_const] multiple instances of extension\n");
 #endif
        return(ERR_SCM_DUPBC);
      } else {
@@ -1777,52 +1777,14 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
      break; /* should never get to break */
 
     case EE_CERT:
-      /* Basic Constraints MUST be present, we don't check that it
-         is marked critical, cA boolean should not be set
-         pathlen MUST NOT be present */
-
+      /* Basic Constraints MUST NOT be present */
       for (i = 0; i < X509_get_ext_count(x); i++) {
         ex = X509_get_ext(x, i);
         ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
-
-        if (ex_nid == NID_basic_constraints) {
-          basic_flag++;
-
-          bs=X509_get_ext_d2i(x, NID_basic_constraints, NULL, NULL);
-
-          if ((bs->ca)) {
-#ifdef DEBUG
-            fprintf(stderr, "[basic_const] EE_CERT: cA boolean IS set\n");
-#endif
-            ret = ERR_SCM_ISCA;
-            goto skip;
-          }
-
-          if (bs->pathlen) {
-#ifdef DEBUG
-            fprintf(stderr, "[basic_const] pathlen found, profile violation\n");
-#endif
-            ret = ERR_SCM_BADPATHLEN;
-            goto skip;
-          }
-
-          BASIC_CONSTRAINTS_free(bs);
-	  bs = NULL;
-        }
+        if (ex_nid == NID_basic_constraints)
+          return(ERR_SCM_BCPRES);
       }
-        if (basic_flag == 0) {
-#ifdef DEBUG
-          fprintf(stderr, "[basic_const] extension not present\n");
-#endif
-          return(ERR_SCM_NOBC);
-        } else if (basic_flag > 1) {
-#ifdef DEBUG
-          fprintf(stderr, "[basic_const] multiple instances of extension\n");
-#endif
-          return(ERR_SCM_DUPBC);
-        } else {
-          return(0);
-        }
+      return 0;
     break;
   }
 skip:
@@ -2165,8 +2127,8 @@ static int rescert_crldp_chk(X509 *x, int ct)
       goto skip;
     }
 
-    if (!strncasecmp((const char *)gen_name->d.uniformResourceIdentifier->data,
-                     (const char *)"rsync://", sizeof("rsync://") -1))  {
+    if (!strncasecmp((char *)gen_name->d.uniformResourceIdentifier->data,
+                     RSYNC_PREFIX, RSYNC_PREFIX_LEN))  {
       /* printf("uri: %s\n", gen_name->d.uniformResourceIdentifier->data); */
       uri_flag++;
     }
@@ -2292,7 +2254,8 @@ static int rescert_aia_chk(X509 *x, int ct)
 
     if ( (adesc->method->length == aia_oid_len) &&
          (!memcmp(adesc->method->data, aia_oid, aia_oid_len)) &&
-         (!strncasecmp((const char *)adesc->location->d.uniformResourceIdentifier->data, (const char *)"rsync://", sizeof("rsync://") - 1)) ) {
+         (!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data, 
+		       RSYNC_PREFIX, RSYNC_PREFIX_LEN)) ) {
       uri_flag++;
     }
   }
@@ -2418,7 +2381,8 @@ static int rescert_sia_chk(X509 *x, int ct)
 
     if ( (adesc->method->length == sia_oid_len) &&
          (!memcmp(adesc->method->data, sia_oid, sia_oid_len)) &&
-         (!strncasecmp((const char *)adesc->location->d.uniformResourceIdentifier->data, (const char *)"rsync://", sizeof("rsync://") - 1)) ) {
+         (!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data, 
+		       RSYNC_PREFIX, RSYNC_PREFIX_LEN)) ) {
       /* it's the right length, right oid, and it _starts_ with
          the correct url method... does it end with a trailing '/'? */
       len = strlen((const char *)adesc->location->d.uniformResourceIdentifier->data);

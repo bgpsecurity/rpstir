@@ -92,19 +92,17 @@ static void removeURI (char *uri)
 /* update list of uris by adding the next one */
 static int addURIIfUnique (char *uri)
 {
-  int i, low, high;
+  int i, low, high, len;
   char **newURIs;
 
-  // check if legal
-  if (strlen (uri) == 0) return -1;
-  if (strncmp (uri, "rsync://", 8) != 0) return -1;
-  for (i = 8; i < (int)strlen(uri); i++) {
-    if (isalnum((int)(uri[i]))) continue;
-    if (uri[i] == '/') continue;
-    if (uri[i] == '.') continue;
-    if (uri[i] == '-') continue;
-    if (uri[i] == '_') continue;
-    return -1;
+  // check if legal -- length, starts with rsync, only uses
+  // valid characters
+  if (uri == NULL || (len = strlen(uri)) == 0) return -1;
+  if (strncmp (uri, RSYNC_PREFIX, RSYNC_PREFIX_LEN) != 0) return -1;
+  for (i = RSYNC_PREFIX_LEN; i < len; i++) {
+    int ch = uri[i];
+    if (isalnum(ch) == 0 && strchr("-/._", ch) == NULL)
+      return -1;
   }
 
   // if already there, all done
@@ -242,7 +240,7 @@ int main(int argc, char **argv)
 
   // initialize
   if (getenv ("APKI_ROOT") != NULL)
-    snprintf (rsyncDir, 200, "%s/run_scripts", getenv ("APKI_ROOT"));
+    snprintf (rsyncDir, sizeof(rsyncDir), "%s/run_scripts", getenv ("APKI_ROOT"));
   else
     sprintf (rsyncDir, ".");
   if (getenv ("APKI_PORT") != NULL)
@@ -261,7 +259,7 @@ int main(int argc, char **argv)
 	portno = atoi (optarg);
 	break;
       case 'd':   /* rsync executable directory */
-	snprintf (rsyncDir, 200, optarg);
+	snprintf (rsyncDir, sizeof(rsyncDir), optarg);
 	break;
       case 'n':   /* no execution */
 	noExecute = 1;
@@ -277,18 +275,18 @@ int main(int argc, char **argv)
   checkErr (fp == NULL, "Unable to open rsync config file: %s\n", origFile);
   dirs[0][0] = 0;
   rsyncStr[0] = 0;
-  while (fgets (msg, 1024, fp) != NULL) {
+  while (fgets (msg, sizeof(msg), fp) != NULL) {
     sscanf (strtok (strdup (msg), "="), "%s", str);
     if (strcmp (str, "DIRS") == 0) {
       str2 = strtok (strtok (NULL, "\""), " ");
       for (numDirs = 0; numDirs < 50; str2 = strtok (NULL, " ")) {
         if (str2 == NULL) break;
         if (strlen (str2) > 0) {
-          strncpy (dirs[numDirs++], str2, 120);
+          strncpy (dirs[numDirs++], str2, sizeof(dirs[0]));
         }
       }
     } else if (strcmp (str, "DOLOAD") != 0) {
-      strncat (rsyncStr, msg, 500 - strlen(rsyncStr));
+      strncat (rsyncStr, msg, sizeof(rsyncStr) - strlen(rsyncStr));
     }
   }
   strncat (rsyncStr, "DOLOAD=yes\n", 11);
@@ -298,14 +296,14 @@ int main(int argc, char **argv)
   // it is good to put these in right away, so that any future addresses
   // that are duplicates or subdirectories are immediately discarded
   for (i = 0; i < numDirs; i++) {
-    snprintf (str, 180, "rsync://%s", dirs[i]);
+    snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
     addURIIfUnique (str);
   }
 
   // set up query
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
-  connect = connectscm (scmp->dsn, msg, 1024);
+  connect = connectscm (scmp->dsn, msg, sizeof(msg));
   checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
   srch.vec = srch1;
   srch.sname = NULL;
@@ -330,7 +328,7 @@ int main(int argc, char **argv)
   theCertTable = table;
   srch.nused = 0;
   srch.vald = 0;
-  snprintf (msg, 1024,
+  snprintf (msg, sizeof(msg),
 	    "apki_crl.filename is null or apki_crl.next_upd < \"%s\"",
 	    currTimestamp);
   srch.wherestr = msg;
@@ -353,7 +351,7 @@ int main(int argc, char **argv)
 
   // remove original set from list of addresses
   for (i = 0; i < numDirs; i++) {
-    snprintf (str, 180, "rsync://%s", dirs[i]);
+    snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
     removeURI (str);
   }
   if (numURIs == 0)
@@ -363,7 +361,7 @@ int main(int argc, char **argv)
   /*** actually, don't do this - work with individual files
   for (i = 0; i < numURIs; i++) {
     if (! isDirectory (uris[i])) {
-      strncpy (msg, uris[i], 1024);
+      strncpy (msg, uris[i], sizeof(msg));
       if (strrchr (msg, '/') != NULL) {
 	(strrchr (msg, '/'))[1] = 0;
 	i = addURIIfUnique (msg);
@@ -375,19 +373,19 @@ int main(int argc, char **argv)
   // aggregate those from same system and call rsync and rsync_aur
   dirStr[0] = 0;
   for (i = 0; i < numURIs; i++) {
-    dir2 = &uris[i][strlen("rsync://")];
+    dir2 = &uris[i][RSYNC_PREFIX_LEN];
     if (dir2 [strlen (dir2) - 1] == '/')
       dir2 [strlen (dir2) - 1] = 0;
     if (i > 0)
-      strncat (dirStr, " ", 4000 - strlen(dirStr));
-    strncat (dirStr, dir2, 4000 - strlen(dirStr));
+      strncat (dirStr, " ", sizeof(dirStr) - strlen(dirStr));
+    strncat (dirStr, dir2, sizeof(dirStr) - strlen(dirStr));
   }
   configFile = fopen ("chaser_rsync.config", "w");
   checkErr (configFile == NULL, "Unable to open file for write\n");
-  snprintf (rsyncStr2, 4500, "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
+  snprintf (rsyncStr2, sizeof(rsyncStr2), "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
   fputs (rsyncStr2, configFile);
   fclose (configFile);
-  snprintf (str, 180, "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
+  snprintf (str, sizeof(str), "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
   if (noExecute)
     printf ("Would have executed: %s\n", str);
   else
@@ -398,7 +396,7 @@ int main(int argc, char **argv)
 
   // write timestamp into database
   table = findtablescm (scmp, "metadata");
-  snprintf (msg, 1024, "update %s set ch_last=\"%s\";",
+  snprintf (msg, sizeof(msg), "update %s set ch_last=\"%s\";",
 	    table->tabname, currTimestamp);
   status = statementscm (connect, msg);
 

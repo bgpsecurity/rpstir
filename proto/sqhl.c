@@ -1431,34 +1431,19 @@ unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState,
 
 
 /*
-  Add a certificate to the DB. If utrust is set, check that it is
-  self-signed first. Validate the cert and add it.
-
-  This function returns 0 on success and a negative error code on
-  failure.
-*/
-
-int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	     unsigned int id, int utrust, int typ, unsigned int *cert_id,
-	     char *manState)
+ * do the work of add_cert(). Factored out so we can call it from elsewhere.
+ *
+ * We should eventually merge this with add_cert_internal()
+ */
+static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, 
+		      X509 *x, unsigned int id, int utrust,
+		      unsigned int *cert_id, char *manState)
 {
-  cert_fields *cf;
-  X509 *x = NULL;
-  int   x509sta = 0;
-  int   ct = UN_CERT;
   int   sta = 0;
   int   chainOK;
+  int   ct = UN_CERT;
+  int   x509sta = 0;
 
-  initTables (scmp);
-  cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
-  if ( cf == NULL || x == NULL )
-    {
-      if ( cf != NULL )
-	freecf(cf);
-      if ( x != NULL )
-	X509_free(x);
-      return(sta);
-    }
   cf->dirid = id;
   if ( utrust > 0 )
     {
@@ -1507,6 +1492,36 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   }
   freecf(cf);
   return(sta);
+}
+
+/*
+  Add a certificate to the DB. If utrust is set, check that it is
+  self-signed first. Validate the cert and add it.
+
+  This function returns 0 on success and a negative error code on
+  failure.
+*/
+
+int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
+	     unsigned int id, int utrust, int typ, unsigned int *cert_id,
+	     char *manState)
+{
+  cert_fields *cf;
+  X509 *x = NULL;
+  int   x509sta = 0;
+  int   sta = 0;
+
+  initTables (scmp);
+  cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
+  if ( cf == NULL || x == NULL )
+    {
+      if ( cf != NULL )
+	freecf(cf);
+      if ( x != NULL )
+	X509_free(x);
+      return(sta);
+    }
+  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, manState);
 }
 
 /*
@@ -1585,6 +1600,42 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   sta = roaFromFile(outfull, typ >= OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &r);
   if ( sta < 0 )
     return(sta);
+
+  // EE cert
+  if (!(r->content.signedData.certificates.self.flags & ASN_FILLED_FLAG) ||
+      num_items(&r->content.signedData.certificates.self) != 1) {
+      return ERR_SCM_BADNUMCERTS;
+  }
+  struct Certificate *c = (struct Certificate *) 
+      member_casn(&r->content.signedData.certificates.self, 0);
+
+  // serialize the Certificate
+  int siz = size_casn(&c->self);
+  unsigned char *buf = calloc(1, siz + 4);
+  siz = encode_casn(&c->self, buf);
+
+  // scan it as an openssl X509 object
+  /* d2i_X509 changes used to point past end of the object */
+  unsigned char *used = buf;	
+  X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
+  free(buf);
+      
+  // if deserialization failed, return error code to caller
+  if (sta < 0)
+      return(ERR_SCM_X509);
+
+  // pull out the fields
+  int x509sta = 0;
+  cert_fields *cf = cert2fields(0, 0, typ, &x509p, &sta, &x509sta);
+  if (cf == NULL)
+      return sta;
+  // add the X509 cert to the db
+  unsigned int cert_id = 0;
+  sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, manState);
+  if (sta != 0)
+      return sta;
+
+  // ski, asid
   ski = (char *)roaSKI(r);
   asid = roaAS_ID(r);
   if ( ski == NULL || ski[0] == 0 )
@@ -1598,6 +1649,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       free((void *)ski);
       return(ERR_SCM_INVALASID);
     }
+
+  // signature
   bsig = roaSignature(r, &bsiglen);
   if ( bsig == NULL || bsiglen < 0 )
     {
@@ -1606,17 +1659,30 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       return(ERR_SCM_NOSIG);
     }
   sig = hexify(bsiglen, bsig, 0);
-  if ( sig == NULL )
-    return(ERR_SCM_NOMEM);
+  if ( sig == NULL ) {
+      roaFree(r);
+      free((void *)ski);
+      return(ERR_SCM_NOMEM);
+  }
+
+
+  // verify the signature
   sta = verify_roa (conp, r, ski, &chainOK);
+
+  // filter
   roaGenerateFilter (r, NULL, NULL, filter);
-  
+
+  // done with the roa
   roaFree(r);
+
+  // do we need to set any flags? (sta < 0 if roa is bad)
   unsigned int flags;
   if ( sta >= 0 ) {
     flags = addStateToFlags(0, chainOK, manState, outfile, scmp, conp);
     sta = (SCM_FLAG_BADHASH & flags) && (SCM_FLAG_NOVALIDMAN & ~flags);
   }
+
+  // add to database
   if (sta == 0) {
     sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter, sig,
 			   flags);

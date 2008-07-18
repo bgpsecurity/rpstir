@@ -64,6 +64,11 @@
 #define SCM_FLAG_NOVALIDMAN   0x200  /* no validated associated manifest */
 #define SCM_FLAG_BADHASH      0x400  /* manifest specifies different hash */
 
+/* certain fields need to have "rsync URIs". The only test we perform
+ * for now is to verify that the field starts with this text */
+#define RSYNC_PREFIX "rsync://"
+#define RSYNC_PREFIX_LEN (sizeof(RSYNC_PREFIX) - 1)
+
 /*
   Data types
 */
