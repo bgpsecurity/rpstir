@@ -130,6 +130,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Wrong number of certificates", /* ERR_SCM_BADNUMCERTS */
     "Invalid dates",                /* ERR_SCM_BADDATES */
     "Differing algorithms in cert", /* ERR_SCM_BADALG */
+    "Basic constraints in EE cert", /* ERR_SCM_BCPRES */
   } ;
 
 char *err2string(int err)
