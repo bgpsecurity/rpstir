@@ -55,3 +55,5 @@ mv C.req C.cer
 ./gen_test_key C232.p15;	./make_test_cert C232 0D 1Y <makeC232
 ./gen_test_key C232R1.p15;	./make_test_cert C232R1 0D 1M
 
+cp C2.cer C2X.cer
+cp C2.raw C2X.raw
