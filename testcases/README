@@ -28,7 +28,7 @@ signer of C12's third ROA.  All end-entity certificates have all the IP
 addresses and AS numbers of their CA.
 
     To create certificates one must first run the gen_test_key program and
-give it a subject name to produce a file suffixed ".p15"to produce a file
+give it a subject name to produce a file suffixed ".p15" to produce a file
 suffixed ".p15", thus
 
     gen_test_key C12
