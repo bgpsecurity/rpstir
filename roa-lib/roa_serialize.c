@@ -1769,8 +1769,11 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
     case FMT_DER:      
       iReturn = 0;
       // did we use all of buf, no more and no less?
-      if (decode_casn(&roa.self, buf) != iSize)
+      int ret;
+      if ((ret = decode_casn(&roa.self, buf)) != iSize) {
+        fprintf(stderr, "roaFromFile: scan failed at offset %d\n", -ret);
 	iReturn = ERR_SCM_INVALASN;
+      }
       break;
 
     case FMT_CONF:
