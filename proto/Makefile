@@ -27,10 +27,11 @@ CFLAGS=-I$(MYSQLINCLUDES) -I$(SSLINCLUDES) \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
-MY_LIBS=./libapki.a ../roa-lib/libroa.a \
-	../cg/asn/libasn.a ../cg/casn/libcasn.a \
-	$(LIBSSL) $(LIBCRYPTO) $(LIBCL) \
-	$(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
+LOCAL_LIBS=./libapki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a
+
+LIBS=$(LIBSSL) $(LIBCRYPTO) $(LIBCL) \
+     $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
 
 initscm.o:	scm.h scmmain.h
@@ -50,20 +51,20 @@ libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
 	ar crv libapki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
 	ranlib libapki.a
 
-rcli:	rcli.o libapki.a Makefile
-	$(CC) -o rcli -g rcli.o $(MY_LIBS)
+rcli:	rcli.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o rcli -g rcli.o $(LOCAL_LIBS) $(LIBS)
 
-query: query.o libapki.a Makefile
-	$(CC) -o query -g query.o $(MY_LIBS)
+query: query.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o query -g query.o $(LOCAL_LIBS) $(LIBS)
 
-chaser: chaser.o libapki.a Makefile
-	$(CC) -o chaser -g chaser.o $(MY_LIBS)
+chaser: chaser.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o chaser -g chaser.o $(LOCAL_LIBS) $(LIBS)
 
-garbage: garbage.o libapki.a Makefile
-	$(CC) -o garbage -g garbage.o $(MY_LIBS)
+garbage: garbage.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o garbage -g garbage.o $(LOCAL_LIBS) $(LIBS)
 
-makeROA: makeROA.o libapki.a Makefile
-	$(CC) -o makeROA -g makeROA.o $(MY_LIBS)
+makeROA: makeROA.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o makeROA -g makeROA.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a

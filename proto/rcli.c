@@ -228,15 +228,15 @@ static void membail(void)
 static void usage(void)
 {
   (void)printf("Usage:\n");
-  (void)printf("\t-t topdir\tcreate all database tables\n");
-  (void)printf("\t-x\tdestroy all database tables\n");
-  (void)printf("\t-y\tforce operation: do not ask for confirmation\n");
-  (void)printf("\t-d dir\tdelete the indicated file\n");
-  (void)printf("\t-f file\tadd the indicated file\n");
-  (void)printf("\t-F file\tadd the indicated trusted file\n");
-  (void)printf("\t-w port\tstart an rsync listener on port\n");
-  (void)printf("\t-p\trun the socket listen in perpetual mode\n");
-  (void)printf("\t-h\tdisplay usage and exit\n");
+  (void)printf("  -d dir     delete the indicated file\n");
+  (void)printf("  -f file    add the indicated file\n");
+  (void)printf("  -F file    add the indicated trusted file\n");
+  (void)printf("  -p         run the socket listener in perpetual mode\n");
+  (void)printf("  -t topdir  create all database tables\n");
+  (void)printf("  -w port    start an rsync listener on port\n");
+  (void)printf("  -x         destroy all database tables\n");
+  (void)printf("  -y         force operation: do not ask for confirmation\n");
+  (void)printf("  -h         display usage and exit\n");
 }
 
 /*
@@ -772,6 +772,19 @@ int main(int argc, char **argv)
 	  return(1);
 	}
     }
+
+  // if there is anything left in argv, or no operation specified, warn user
+  if (optind < argc) {
+      (void)printf("Extra arguments at the end of the command line.\n");
+      usage();
+      return(1);
+  } else if ((do_create + do_delete + do_sockopts) == 0 && thefile == 0) {
+      (void)printf("You need to specify at least one operation "
+		   "(e.g. -f file).\n");
+      usage();
+      return(1);
+  }
+
   if ( force == 0 )
     {
       if ( do_delete > 0 )
