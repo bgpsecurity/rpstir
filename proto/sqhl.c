@@ -2566,9 +2566,12 @@ void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 
 void startSyslog(char *appName)
 {
-  char *logName = (char *) calloc (6 + strlen (appName), sizeof (char));
+  static char *logName = 0;	/* need to save this for syslog's reuse */
+  if (logName != 0) free(logName); /* previous logName */
+  logName = (char *) calloc (6 + strlen (appName), sizeof (char));
   snprintf (logName, 6 + strlen (appName), "APKI %s", appName);
   openlog (logName, LOG_PID, 0);
+  
   syslog (LOG_NOTICE, "Application Started");
 }
 

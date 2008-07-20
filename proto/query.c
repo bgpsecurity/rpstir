@@ -162,7 +162,7 @@ static int rejectNoManifest = 0;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, validate, valIndex;
 static char *objectType;
-static int isROA, isCert, isCRL;
+static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0;
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
 
@@ -312,8 +312,8 @@ static int doQuery (char **displays, char **filters)
   char     *name;
   int      maxW = MAX_CONDS*20;
 
-  checkErr ((! isROA) && (! isCRL) && (! isCert),
-            "\nBad object type; must be roa, cert or crl\n\n");
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
+            "\nBad object type; must be roa, cert, crl, or RPSL\n\n");
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
@@ -411,6 +411,7 @@ static int doQuery (char **displays, char **filters)
   /* do query */
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
   for (i = 0; i < srch.nused; i++) {
+    free (srch.vec[i].colname);
     free (srch1[i].valptr);
   }
   return status;
@@ -450,8 +451,8 @@ static int listOptions()
 {
   int i, j;
   
-  checkErr ((! isROA) && (! isCRL) && (! isCert),
-            "\nBad object type; must be roa, cert or crl\n\n");
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
+            "\nBad object type; must be roa, cert, crl, or rpsl\n\n");
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < countof(fields); i++) {
@@ -495,7 +496,7 @@ static int printUsage()
   printf ("  -s: input filename where how to handle non-perfect objects specified\n");
   printf ("      see the sample specifications file sampleQuerySpecs\n");
   printf ("  -l: list the possible display fields and clauses for a given type (roa, cert, or crl)\n");
-  printf ("  -t: the type of object requested (roa, cert, or crl)\n");
+  printf ("  -t: the type of object requested (roa, cert, crl, or rpsl)\n");
   printf ("  -d: the name of one field of the object to display (or 'all')\n");
   printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
@@ -504,6 +505,10 @@ static int printUsage()
   printf ("  -v: only display valid roa's and cert's\n");
   printf ("  -n: no labels for the data fields displayed\n");
   printf ("  -m: multiline, i.e. each field on a different line\n\n");
+  printf ("\n");
+  printf ("Note: RPSL format is route-set:\n");
+  printf ("route-set: RS-RPKI-ROA-FOR-V4:ASnnnn (or RS-RPKI-ROA-FOR-V6:ASnnnn\n");
+  printf ("members: <route-prefix>\n");
   return -1;
 }
 
@@ -513,6 +518,7 @@ static void setObjectType (char *aType)
   isROA = strcasecmp (objectType, "roa") == 0;
   isCRL = strcasecmp (objectType, "crl") == 0;
   isCert = strcasecmp (objectType, "cert") == 0;
+  isRPSL = strcasecmp (objectType, "rpsl") == 0;
 }
 
 int main(int argc, char **argv) 
