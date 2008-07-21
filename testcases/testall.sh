@@ -18,6 +18,6 @@ $BASE/proto/rcli -y -F C.cer
 
 echo adding objects
 for i in `ls $REPO/* | grep -v X`; do
-    echo -n `basename $i`:
+    printf "%15s:" `basename $i`
     $BASE/proto/rcli -f $i
 done
