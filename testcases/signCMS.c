@@ -93,7 +93,7 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
     write_objid(&attrp->attrType, id_signingTimeAttr);
     attrtdp = (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 
       0);
-    write_casn_time(&attrtdp->signingTime.generalizedTime, 
+    write_casn_time(&attrtdp->signingTime.utcTime, 
       time((time_t*)0));
     tbs_lth = size_casn(&sigInfop->signedAttrs.self);
     free(tbsp);
