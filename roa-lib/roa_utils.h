@@ -143,7 +143,7 @@ int roaToFile(struct ROA *r, char *fname, int fmt);
   error code.
 */
 
-int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str);
+int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLen);
 
 /*
   This function is used to create BGP filter tables from a ROA and its

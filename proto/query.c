@@ -47,71 +47,204 @@
 #define MAX_CONDS 10
 #define MAX_RESULT_SZ 8192
 
+int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
+int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen);
+int displaySNList (scmsrcha *s, int idx1, char* returnStr);
+
 typedef int (*displayfunc)(scmsrcha *s, int idx1, char* returnStr);
 
+#define Q_JUST_DISPLAY  0x01
+#define Q_FOR_ROA       0x02
+#define Q_FOR_CRL       0x04
+#define Q_FOR_CERT      0x08
+#define Q_REQ_JOIN	0x10
 typedef struct _QueryField    /* field to display or filter on */
 {
   char     *name;	      /* name of the field */
-  int      justDisplay;       /* true if not allowed to filter on field */
-  int      forROAs;           /* true if field is used in a ROA */
-  int      forCRLs;           /* true if field is used in a CRL */
-  int      forCerts;          /* true if field is used in a cert */
+  char     *description;      /* one-line description for user help */
+  int      flags;	      /* flags (see Q_xyz above) */
   int      sqlType;           /* what type of data to expect from query */
   int      maxSize;           /* how much space to allocate for response */
   char     *dbColumn;         /* if not NULL, use this for query, not name */
   char     *otherDBColumn;    /* if not NULL, second field for query */
   char     *heading;          /* name of column heading to use in printout */
-  int      requiresJoin;      /* do join with dirs table to get dirname */
   displayfunc displayer;      /* function for display string, NULL if std */
-  char     *description;      /* one-line description for user help */
 } QueryField;
-
-int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
-int displayEntry (scmsrcha *s, int idx1, char* returnStr);
-int displaySNList (scmsrcha *s, int idx1, char* returnStr);
 
 /* the set of all query fields */
 static QueryField fields[] = {
-  {"filter", 1, 1, 0, 0, SQL_C_CHAR, 4096, NULL, NULL, "Filter Entry",
-   0, NULL, "the entry in the BGP filter file"},
-  {"filename", 0, 1, 1, 1, SQL_C_CHAR, FNAMESIZE, NULL, NULL, "Filename", 0,
-   NULL, "the filename where the data is stored in the repository"},
-  {"pathname", 1, 1, 1, 1, -1, 0, "dirname", "filename",
-   "Pathname", 1, pathnameDisplay,
-   "full pathname (directory plus filename) where the data is stored"},
-  {"dirname", 0, 1, 1, 1, SQL_C_CHAR, DNAMESIZE, NULL, NULL, "Directory", 1,
-   NULL, "the directory in the repository where the data is stored"},
-  {"ski", 0, 1, 0, 1, SQL_C_CHAR, SKISIZE, NULL, NULL, "SKI", 0, NULL,
-   "subject key identifier"},
-  {"aki", 0, 0, 1, 1, SQL_C_CHAR, SKISIZE, NULL, NULL, "AKI", 0, NULL,
-   "authority key identifier"},
-  {"sia", 0, 0, 0, 1, SQL_C_CHAR, SIASIZE, NULL, NULL, "SIA", 0, NULL,
-   "Subject Information Access"},
-  {"aia", 0, 0, 0, 1, SQL_C_CHAR, SIASIZE, NULL, NULL, "AIA", 0, NULL,
-   "Authority Information Access"},
-  {"crldp", 0, 0, 0, 1, SQL_C_CHAR, SIASIZE, NULL, NULL, "CRLDP", 0, NULL,
-   "CRL Distribution Points"},
-  {"asn", 0, 1, 0, 0, SQL_C_ULONG, 8, NULL, NULL, "AS#", 0, NULL,
-   "autonomous system number"},
-  {"issuer", 0, 0, 1, 1, SQL_C_CHAR, SUBJSIZE, NULL, NULL, "Issuer", 0,
-   NULL, "system that issued the cert/crl"},
-  {"valfrom", 0, 0, 0, 1, SQL_C_CHAR, 32, NULL, NULL, "Valid From", 0,
-   NULL, "date/time from which the cert is valid"},
-  {"valto", 0, 0, 0, 1, SQL_C_CHAR, 32, NULL, NULL, "Valid To", 0,
-   NULL, "date/time to which the cert is valid"},
-  {"last_upd", 0, 0, 1, 0, SQL_C_CHAR, 32, NULL, NULL, "Last Update", 0,
-   NULL, "last update time of the CRL"},
-  {"next_upd", 0, 0, 1, 0, SQL_C_CHAR, 32, NULL, NULL, "Next Update", 0,
-   NULL, "next update time of the CRL"},
-  {"crlno", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "CRL#", 0,
-   NULL, "CRL number"},
-  {"sn", 0, 0, 0, 1, SQL_C_ULONG, 8, NULL, NULL, "Serial#", 0,
-   NULL, "serial number"},
-  {"snlen", 0, 0, 1, 0, SQL_C_ULONG, 8, NULL, NULL, "SNLength", 0, NULL, "number of serial numbers in list"},
-  {"snlist", 1, 0, 1, 0, SQL_C_BINARY, 16000000, NULL, NULL, NULL,
-   0, NULL, NULL},
-  {"serial_nums", 1, 0, 1, 0, -1, 0, "snlen", "snlist", "Serial#s", 0,
-   displaySNList, "list of serials numbers"}
+  {
+    "filter",			/* name of the field */
+    "the entry in the BGP filter file",
+    Q_JUST_DISPLAY|Q_FOR_ROA,	/* flags */
+    SQL_C_CHAR, 4096, 		/* sql return type, size */
+    NULL, 			/* use this for query, not name */
+    NULL, 			/* second field for query */
+    "Filter Entry",		/* name of column for printout */
+    NULL, 			/* function for display string */
+  },
+  {
+    "filename", 
+    "the filename where the data is stored in the repository",
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT, 
+    SQL_C_CHAR, FNAMESIZE, 
+    NULL, NULL, 
+    "Filename", NULL, 
+  },
+  {
+    "pathname",
+    "full pathname (directory plus filename) where the data is stored",
+    Q_JUST_DISPLAY|Q_FOR_ROA|Q_FOR_CERT|Q_FOR_CRL|Q_REQ_JOIN,
+    -1, 0, 
+    "dirname", "filename", 
+    "Pathname", pathnameDisplay,
+  },
+  {
+    "dirname",
+    "the directory in the repository where the data is stored",
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_REQ_JOIN,
+    SQL_C_CHAR, DNAMESIZE,
+    NULL, NULL,
+    "Directory", NULL,
+  },
+  {
+    "ski", 
+    "subject key identifier",
+    Q_FOR_ROA|Q_FOR_CERT,
+    SQL_C_CHAR, SKISIZE,
+    NULL, NULL,
+    "SKI", NULL,
+  },
+  {
+    "aki", 
+    "authority key identifier",
+    Q_FOR_CRL|Q_FOR_CERT,
+    SQL_C_CHAR, SKISIZE,
+    NULL, NULL, 
+    "AKI", NULL,
+  },  
+  {
+    "sia", 
+    "Subject Information Access",
+    Q_FOR_CERT,
+    SQL_C_CHAR, SIASIZE,
+    NULL, NULL,
+    "SIA", NULL, 
+  },
+  {
+    "aia", 
+    "Authority Information Access",
+    Q_FOR_CERT,
+    SQL_C_CHAR, SIASIZE, 
+    NULL, NULL,
+    "AIA", NULL,
+  },
+  {
+    "crldp", 
+    "CRL Distribution Points",
+    Q_FOR_CERT,
+    SQL_C_CHAR, SIASIZE,
+    NULL, NULL, 
+    "CRLDP", NULL,
+  },
+  {
+    "asn",
+    "autonomous system number",
+    Q_FOR_ROA,
+    SQL_C_ULONG, 8,
+    NULL, NULL,
+    "AS#", NULL, 
+  },
+  {
+    "issuer",
+    "system that issued the cert/crl",
+    Q_FOR_CERT|Q_FOR_CRL,
+    SQL_C_CHAR, SUBJSIZE, 
+    NULL, NULL,
+    "Issuer", NULL,
+  },
+  {
+    "valfrom",
+    "date/time from which the cert is valid",
+    Q_FOR_CERT,
+    SQL_C_CHAR, 32,
+    NULL, NULL,
+    "Valid From", NULL,
+  },
+  {
+    "valto",
+    "date/time to which the cert is valid",
+    Q_FOR_CERT,
+    SQL_C_CHAR, 32,
+    NULL, NULL,
+    "Valid To", NULL,
+  },
+  {
+    "last_upd", 
+    "last update time of the CRL",
+    Q_FOR_CRL,
+    SQL_C_CHAR, 32,
+    NULL, NULL, 
+    "Last Update", NULL,
+  },
+  {
+    "next_upd",
+    "next update time of the CRL",
+    Q_FOR_CRL,
+    SQL_C_CHAR, 32,
+    NULL, NULL,
+    "Next Update", NULL, 
+  },
+  {
+    "crlno",
+    "CRL number",
+    Q_FOR_CRL,
+    SQL_C_ULONG, 8, 
+    NULL, NULL,
+    "CRL#", NULL,
+  },
+  {
+    "sn",
+    "serial number",
+    Q_FOR_CERT,
+    SQL_C_ULONG, 8,
+    NULL, NULL, 
+    "Serial#", NULL,
+  },
+  {
+    "snlen",
+    "number of serial numbers in crl",
+    Q_FOR_CRL,
+    SQL_C_ULONG, 8,
+    NULL, NULL,
+    "SNLength", NULL, 
+  },
+  {
+    "snlist",
+    NULL,
+    Q_JUST_DISPLAY|Q_FOR_CRL,
+    SQL_C_BINARY, 16000000,
+    NULL, NULL,
+    NULL, NULL,
+  },
+  {
+    "serial_nums",
+    "list of serials numbers",
+    Q_JUST_DISPLAY|Q_FOR_CRL,
+    -1, 0,
+    "snlen", "snlist",
+    "Serial#s", displaySNList,
+  }
+};
+
+struct {
+  char *objectName;
+  char *tableName;
+} tableNames[] = {
+  { "cert", "certificate" },
+  { "roa", "roa" },
+  { "crl", "crl" },
+  { "rpsl", "roa" },
 };
 
 /* look up particular query field in the list of all possible fields */
@@ -167,7 +300,7 @@ static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
 
 /* reads a roa from a file in order to determine the filter entry */
-int displayEntry (scmsrcha *s, int idx1, char* returnStr)
+int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen)
 {
   struct ROA *roa;
   (void) pathnameDisplay (s, idx1, returnStr);
@@ -175,7 +308,7 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr)
                FMT_PEM : FMT_DER;
   checkErr (roaFromFile (returnStr, format, 0, &roa) != 0,
             "Error reading ROA: %s\n", returnStr);
-  roaGenerateFilter (roa, NULL, NULL, returnStr);
+  roaGenerateFilter (roa, NULL, NULL, returnStr, returnStrLen);
   roaFree(roa);
   return 2;
 }
@@ -273,6 +406,34 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 			isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0))
 	return 0;
   }
+  // XXX hack-- print out RPSL here for now, should factor out
+  // XXX No differentiation between ipv4 and ipv6
+  if (isRPSL) {
+    unsigned int asn = 0;
+    char *filter = 0;
+
+    for (display = 0; globalFields[display] != NULL; display++) {
+      QueryField *field = globalFields[display];
+      if (!strcasecmp(field->name, "filter"))
+	filter = (char *)s->vec[display].valptr;
+      else if (!strcasecmp(field->name, "asn"))
+	asn = *(unsigned int *) s->vec[display].valptr;
+      else
+	fprintf(stderr, "unexpected field returned in RPSL query (%s)\n",
+		field->name);
+    }
+    if (asn == 0 || filter == 0) {
+      fprintf(stderr, "incomplete result returned in RPSL query: ");
+      if (asn == 0) fprintf(stderr, "no asn\n");
+      if (filter == 0) fprintf(stderr, "no filter\n");
+    } else {
+      fprintf(output, "route-set: RS-RPKI-ROA-FOR:AS%d\n", asn);
+      fprintf(output, "members: %s\n\n", filter);
+    }
+    return(0);
+  }
+
+  // normal query result (not RPSL)
   for (display = 0; globalFields[display] != NULL; display++) {
     QueryField *field = globalFields[display];
     if (field->displayer != NULL) {
@@ -297,6 +458,18 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   return(0);
 }
 
+/* given the object type (aka query type) we are looking for, tell */
+/* caller which table to search */
+static char *tableName(char *objType)
+{
+  int i;
+  for (i = 0; i < countof(tableNames); ++i) {
+    if (!strcasecmp(objType, tableNames[i].objectName))
+      return (tableNames[i].tableName);
+  }
+  return 0;
+}
+
 /* sets up and performs the database query, and handles the results */
 static int doQuery (char **displays, char **filters)
 {
@@ -313,14 +486,14 @@ static int doQuery (char **displays, char **filters)
   int      maxW = MAX_CONDS*20;
 
   checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
-            "\nBad object type; must be roa, cert, crl, or RPSL\n\n");
+            "\nBad object type; must be roa, cert, crl, or rpsl\n\n");
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
   connect = connectscm (scmp->dsn, errMsg, 1024);
   checkErr (connect == NULL, "Cannot connect to database: %s\n", errMsg);
   connect->mystat.tabname = objectType;
-  table = findtablescm (scmp, isCert ? "certificate" : objectType);
+  table = findtablescm (scmp, tableName(objectType));
   checkErr (table == NULL, "Cannot find table %s\n", objectType);
 
   /* set up where clause, i.e. the filter */
@@ -337,7 +510,7 @@ static int doQuery (char **displays, char **filters)
       field = findField (name);
       checkErr (field == NULL || field->description == NULL,
 		"Unknown field name: %s\n", name);
-      checkErr (field->justDisplay, "Field only for display: %s\n", name);
+      checkErr (field->flags & Q_JUST_DISPLAY, "Field only for display: %s\n", name);
       name = strtok (NULL, ".");
       if (strcasecmp (name, "eq") == 0) {
         strncat (whereStr, "=", maxW-strlen(whereStr));
@@ -393,7 +566,7 @@ static int doQuery (char **displays, char **filters)
     while (name != NULL) {
       field2 = findField (name);
       addcolsrchscm (&srch, name, field2->sqlType, field2->maxSize);
-      if (field->requiresJoin) srchFlags = srchFlags | SCM_SRCH_DO_JOIN;
+      if (field->flags & Q_REQ_JOIN) srchFlags = srchFlags | SCM_SRCH_DO_JOIN;
       name = (name == field->otherDBColumn) ? NULL : field->otherDBColumn;
     }
   }
@@ -457,10 +630,11 @@ static int listOptions()
           objectType);
   for (i = 0; i < countof(fields); i++) {
     if (fields[i].description == NULL) continue;
-    if ((fields[i].forROAs && isROA) || (fields[i].forCRLs && isCRL) ||
-        (fields[i].forCerts && isCert)) {
+    if (((fields[i].flags & Q_FOR_ROA) && isROA) || 
+	((fields[i].flags & Q_FOR_CRL) && isCRL) ||
+        ((fields[i].flags & Q_FOR_CERT) && isCert)) {
       printf ("  %s: %s\n", fields[i].name, fields[i].description);
-      if (fields[i].justDisplay) {
+      if (fields[i].flags & Q_JUST_DISPLAY) {
         for (j = 0; j < (int)strlen (fields[i].name) + 4; j++) printf (" ");
         printf ("(Note: This can be used only for display.)\n");
       }
@@ -477,12 +651,24 @@ static int addAllFields(char *displays[], int numDisplays)
 
   for (i = 0; i < countof(fields); ++i) {
     if (fields[i].description == NULL) continue;
-    if ((fields[i].forROAs && isROA) || (fields[i].forCRLs && isCRL) ||
-        (fields[i].forCerts && isCert)) {
+    if (((fields[i].flags & Q_FOR_ROA) && isROA) || 
+	((fields[i].flags & Q_FOR_CRL) && isCRL) ||
+        ((fields[i].flags & Q_FOR_CERT) && isCert)) {
 	displays[numDisplays++] = fields[i].name;
     }
   }
   return numDisplays;
+}
+
+/* add fields needed for RPSL query */
+static int addRPSLFields(char *displays[], int numDisplays)
+{
+  // XXX hack... just add these by hand
+  // XXX worse hack... we have hard-coded SQL field names scattered
+  // throughout the code. Help us if we ever change the schema.
+  displays[0] = "asn";		/* we only need asn and filter*/
+  displays[1] = "filter"; 
+  return 2;			/* number of fields added */
 }
 
 /* Help user by showing the possible arguments */
@@ -571,7 +757,11 @@ int main(int argc, char **argv)
       return printUsage();
     }
   }
-  checkErr (numDisplays == 0, "Need to display something\n");
+  if (isRPSL) {
+    checkErr (numDisplays != 0, "-d should not be used with RPSL query\n");
+    addRPSLFields(displays, 0);
+  }
+  checkErr (numDisplays == 0 && isRPSL == 0, "Need to display something\n");
   if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
       numDisplays = addAllFields(displays, 0);
   displays[numDisplays++] = NULL;

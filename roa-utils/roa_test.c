@@ -197,7 +197,7 @@ int main(int argc, char** argv)
       roaFree(roa2);
       return -5;
     }
-  sta = roaGenerateFilter(roa2, NULL, fp, NULL);
+  sta = roaGenerateFilter(roa2, NULL, fp, NULL, 0);
   roaFree(roa2);
   (void)fclose(fp);
   if ( sta < 0 )

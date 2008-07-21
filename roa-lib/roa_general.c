@@ -651,7 +651,7 @@ void roaFree(struct ROA *r)
     }
 }
 
-int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str)
+int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLen)
 {
   int i,j = 0;
   int iRes = 0;
@@ -702,8 +702,9 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str)
       for (j = 0; j < iAddrNum; j++)
 	{
 	  if (str != NULL) {
-	    iRes = snprintf(str, 512, "%s  %s  %s\n",
+	    iRes = snprintf(str, strLen, "%s  %s  %s\n",
 			   cSID, cAS_ID, pcAddresses[j]);
+	    strLen -= strlen(str);
 	    str += strlen(str);
 	  }
 	  if (fp != NULL) {

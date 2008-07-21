@@ -1670,7 +1670,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   sta = verify_roa (conp, r, ski, &chainOK);
 
   // filter
-  roaGenerateFilter (r, NULL, NULL, filter);
+  roaGenerateFilter (r, NULL, NULL, filter, sizeof(filter));
 
   // done with the roa
   roaFree(r);
