@@ -20,7 +20,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-TARGETS=test_casn_random dump rr bin_to_six six_to_bin loadkey genkey whatsfcs make_oidtable set_cert_ski  make_cert make_crl make_roa make_manifest read_roa
+TARGETS=test_casn_random dump rr bin_to_six six_to_bin loadkey genkey whatsfcs make_oidtable set_cert_ski  \
+	make_cert make_crl make_roa make_manifest read_roa encode-oid dumpasn1
 
 all:	$(TARGETS)
 
@@ -29,6 +30,12 @@ ASN_DIR= ../asn
 CASN_DIR= ../casn
 LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+
+dumpasn1: dumpasn1.c
+	$(CC) -o dumpasn1 dumpasn1.c
+
+encode-oid: encode-oid.c
+	$(CC) -o encode-oid encode-oid.c
 
 dump:	dump.o asn.o asn_dump.o util.o asn.h
 	$(CC) $(CFLAGS) -o dump -g dump.o asn.o asn_dump.o util.o
