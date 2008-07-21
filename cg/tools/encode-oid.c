@@ -1,3 +1,19 @@
+/* 
+   The following was adapted from sample code found at
+   http://support.novell.com/techcenter/articles/dnd19991102.html
+
+   The article is marked as being authored by
+
+   KEVIN BURNETT
+   Software Engineer
+   Strategic Partner Engineering Group
+
+   01 Nov 1999
+
+   It is used here under the assumption that, as it was published as
+   sample code, it is intended for free public use.
+*/
+
 #include <stdio.h>
 #include <string.h>
 
