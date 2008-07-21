@@ -934,8 +934,12 @@ Procedure:
 3.      Get the tag from the stream and the flags from the struct casn
         IF (at a DEFINED BY that's not a wrapper) OR at a CHOICE OR in a SET
 	    IF at a tagged CHOICE, get the next tag
-            Search from the next struct casn to find the desired one
-	    IF that's already filled, return error
+            IF at a DEFINED BY
+                Find the definee
+                IF that's a CHOICE, find the chosen
+            ELSE (CHOICE OR SET)
+              Search from the next struct casn to find the desired one
+	      IF that's already filled, return error
             Make that the current struct casn
 	ELSE IF tag doesn't match
             IF not at a default OR optional item, return error
@@ -1020,7 +1024,11 @@ Procedure:
 		    tag = _get_tag(&c);
 		    }
         	if ((curr_casnp->flags & ASN_DEFINED_FLAG))
+                    {
                     ch_casnp = _find_chosen(curr_casnp);
+                    if (ch_casnp && ch_casnp->type == ASN_CHOICE)
+                      ch_casnp = _find_tag(&ch_casnp[1], tag);
+                    }
 		else ch_casnp =
                     _find_tag(&curr_casnp[(pflags & ASN_SET_FLAG)? 0: 1], tag);
 	        if (ch_casnp && ch_casnp->type == ASN_NONE)
