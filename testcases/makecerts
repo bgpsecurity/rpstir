@@ -5,7 +5,7 @@ cp C.raw C.orig
 ../cg/tools/rr C
 mv C.req C.cer
 
-./gen_test_key C.p15;		./make_test_cert C 0D 1Y <makeC
+                                ./make_test_cert C 20000207115900Z 20150313120100Z <makeC
 ./gen_test_key CM1.p15;		./make_test_cert CM1 0D 1M
 ./gen_test_key C1.p15;		./make_test_cert C1 0D 1Y <makeC1
 ./gen_test_key C1M1.p15;	./make_test_cert C1M1 0D 1M

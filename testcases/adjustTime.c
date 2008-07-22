@@ -27,19 +27,41 @@
 
 static char *units = "YMWDhms";
 
-int adjustTime(struct casn *timep, long now, char *deltap)
-  {
-  char *unitp = &deltap[strlen(deltap) - 1];
-  if (!strchr(units, *unitp)) return -1;
-  long val;
-  sscanf(deltap, "%ld", &val);
-  if (*unitp == 's') ;   // val is right
-  else if (*unitp == 'm') val *= 60;
-  else if (*unitp == 'h') val *= 3600;
-  else if (*unitp == 'D') val *= (3600 * 24);
-  else if (*unitp == 'W') val *= (3600 * 24 * 7);
-  else if (*unitp == 'M') val *= (3600 * 24 * 30);
-  else if (*unitp == 'Y') val *= (3600 * 24 * 365);
-  write_casn_time(timep, (ulong)(now + val));
-  return 0;
-  }
+#define GENSIZE 15
+#define UTCSIZE 13
+
+int adjustTime(struct casn *timep, long basetime, char *deltap)
+{
+    // if they passed in a NULL for deltap, just use basetime
+    if (deltap != NULL) {
+	char *unitp = &deltap[strlen(deltap) - 1];
+	if (*unitp == 'Z') {
+	    // absolute time
+	    if (strlen(deltap) == GENSIZE) /* generalized time? */
+		/* this fn doesn't handle generalizedtime, strip century */
+		deltap += (GENSIZE - UTCSIZE);
+	    else if (strlen(deltap) != UTCSIZE) /* utc time? */
+		return -1;	/* bad format */
+	    if (_time_to_ulong((ulong *)&basetime, deltap, 13) < 0)
+		return -1;	/* bad format */
+	} else if (strchr(units, *unitp) != 0) {
+	    // relative time
+	    ulong val;
+	    sscanf(deltap, "%ld", &val);
+	    if (*unitp == 's') ;   // val is right
+	    else if (*unitp == 'm') val *= 60;
+	    else if (*unitp == 'h') val *= 3600;
+	    else if (*unitp == 'D') val *= (3600 * 24);
+	    else if (*unitp == 'W') val *= (3600 * 24 * 7);
+	    else if (*unitp == 'M') val *= (3600 * 24 * 30);
+	    else if (*unitp == 'Y') val *= (3600 * 24 * 365);
+	    basetime += val;
+	} else {
+	    // unknown delta unit, bad call
+	    return -1;
+	}
+    }
+
+    write_casn_time(timep, (ulong)basetime);
+    return 0;
+}
