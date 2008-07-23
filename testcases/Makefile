@@ -29,7 +29,8 @@ ASN_DIR= ../cg/asn
 CASN_DIR= ../casn
 LIBASN=../cg/asn/libasn.a
 LIBCASN=../cg/casn/libcasn.a
-LOCAL_LIBS=  $(LIBASN) $(LIBCASN) 
+LIBROA=../roa-lib/libroa.a
+LOCAL_LIBS=  $(LIBASN) $(LIBCASN)  $(LIBROA)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 gen_test_key:	gen_test_key.o Makefile

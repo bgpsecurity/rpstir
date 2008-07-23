@@ -28,6 +28,7 @@
 #include <certificate.h>
 #include <extensions.h>
 #include <roa.h>
+#include <roa_utils.h>
 
 extern char *signCMS(struct ROA *, char *, int);
 
@@ -41,6 +42,7 @@ char *msgs[] =
   "Can't find extension %s\n",
   "Can't find ASNum[%d]\n",    // 6
   "Signature failed in %s\n",
+  "%s failed roaValidate\n",//8
   };
 
 char certname[80], ecertname[80], roaname[80];
@@ -166,8 +168,13 @@ int main (int argc, char **argv)
   getIPAddresses(&roap->ipAddrBlocks, &extp->extnValue.ipAddressBlock, index);
   for (c = ecertname; *c && *c != '.'; c++);
   strcpy(c, ".p15");
+
   c = signCMS(&roa, ecertname, argc - 2);
   if (c) fatal(7, c);
+
+  // make sure we did it all right
+  if (roaValidate(&roa) != 0) fatal(8, roaname);
+
   if (put_casn_file(&roa.self, roaname, 0) < 0) fatal(4, roaname);
   for (c = roaname; *c != '.'; c++);
   strcpy(c, ".raw");
