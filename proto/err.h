@@ -123,7 +123,8 @@
 #define ERR_SCM_BADDATES    -94         /* invalid dates */
 #define ERR_SCM_BADALG      -95         /* differing algorithms in certificate */
 #define ERR_SCM_BCPRES      -96         /* basic constraints present in EE cert */
-#define ERR_SCM_MAXERR      -96
+#define ERR_SCM_BADSIGINFO  -97         /* error in SignerInfo */
+#define ERR_SCM_MAXERR      -97
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

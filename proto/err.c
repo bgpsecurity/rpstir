@@ -131,6 +131,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid dates",                /* ERR_SCM_BADDATES */
     "Differing algorithms in cert", /* ERR_SCM_BADALG */
     "Basic constraints in EE cert", /* ERR_SCM_BCPRES */
+    "Error in SignerInfos",         /* ERR_SCM_BADSIGINFO */
   } ;
 
 char *err2string(int err)
