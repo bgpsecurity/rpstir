@@ -314,7 +314,7 @@ static int setSignature(struct Certificate *certp, char *keyfile)
   uchar *signstring = NULL;
   int sign_lth;
 
-  sign_lth = size_casn(&certp->toBeSigned.self);
+  if ((sign_lth = size_casn(&certp->toBeSigned.self)) < 0) fatal(5, "sizing");
   signstring = (uchar *)calloc(1, sign_lth);
   sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
   memset(hash, 0, 40);
