@@ -1735,6 +1735,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     fprintf(stderr, "invalid manifest %s\n", outfull);
     return sta;
   }
+  if ((sta = manifestValidate(&roa)) < 0) return sta;
 
   // read the embedded cert information, in particular the ski
   struct Certificate *certp = (struct Certificate *)
