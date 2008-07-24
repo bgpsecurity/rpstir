@@ -1,12 +1,12 @@
 /* $Id: adjustTime.c 453 2008-05-28 15:30:40Z cgardiner $ */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ int adjustTime(struct casn *timep, long basetime, char *deltap)
 		deltap += (GENSIZE - UTCSIZE);
 	    else if (strlen(deltap) != UTCSIZE) /* utc time? */
 		return -1;	/* bad format */
-	    if (time_to_ulong((ulong *)&basetime, deltap, 13) < 0)
+            if (write_casn(timep, (uchar *)deltap, UTCSIZE) < 0)
 		return -1;	/* bad format */
 	} else if (strchr(units, *unitp) != 0) {
 	    // relative time
@@ -56,12 +56,12 @@ int adjustTime(struct casn *timep, long basetime, char *deltap)
 	    else if (*unitp == 'M') val *= (3600 * 24 * 30);
 	    else if (*unitp == 'Y') val *= (3600 * 24 * 365);
 	    basetime += val;
+            write_casn_time(timep, (ulong)basetime);
 	} else {
 	    // unknown delta unit, bad call
 	    return -1;
 	}
     }
 
-    write_casn_time(timep, (ulong)basetime);
     return 0;
 }
