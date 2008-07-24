@@ -180,6 +180,9 @@ struct casn *dup_casn(struct casn *casnp),
             *member_casn(struct casn *casnp, int num),
             *next_of(struct casn *casnp);
 
+// of general use, although not particularly casn-specific
+int time_to_ulong(ulong *valp, char *fromp, int lth);
+
 #ifndef DEBUG
 #define dbcalloc calloc
 #define dbfree free

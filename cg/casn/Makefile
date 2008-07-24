@@ -22,16 +22,22 @@
 
 # --- macros
 #CC=gcc
-CFLAGS=	-g -Wall
+CFLAGS=	-g -Wall -DINTEL
 AR=ar
 RANLIB=ranlib
 
 # --- targets
 all:    libcasn.a
 
-libcasn.a: *.c
-	$(CC) $(CFLAGS) -c -DINTEL $?
-	$(AR) -r $@ *.o
+CFILES=casn.c casn_bit.c casn_bits.c casn_copy_diff.c casn_dump.c \
+	casn_error.c casn_file_ops.c casn_num.c casn_objid.c casn_other.c \
+	casn_real.c casn_time.c
+OFILES=$(CFILES:.c=.o)
+
+$(OFILES): casn.h
+
+libcasn.a: $(OFILES)
+	$(AR) -r $@ $(OFILES)
 	$(RANLIB) $@
 
 clean:

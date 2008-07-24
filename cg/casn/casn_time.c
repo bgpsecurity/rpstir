@@ -73,8 +73,6 @@ extern int _casn_obj_err(struct casn *, int),
         _fill_upward(struct casn *, int);
 extern void *_free_it(void *);
 
-int _time_to_ulong(ulong *valp, char *fromp, int lth);
-
 static ushort _mos[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304,
     334, 365, 366};    /* last is for leap year */
 
@@ -124,7 +122,7 @@ Returns: IF error, -1, ELSE length of time field
         fromp += 2;
 	ansr -= 2;
 	}
-    if (_time_to_ulong(valp, fromp, ansr) < 0)
+    if (time_to_ulong(valp, fromp, ansr) < 0)
         return _casn_obj_err(casnp, ASN_TIME_ERR);
     return casnp->lth;
     }
@@ -140,7 +138,7 @@ static ulong put_num (char *to, ulong val, int lth)
     return val;
     }
 
-int _time_to_ulong(ulong *valp, char *fromp, int lth)
+int time_to_ulong(ulong *valp, char *fromp, int lth)
     {
     int yr, mo, da;
     ulong val;

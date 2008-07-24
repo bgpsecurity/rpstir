@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
-#include <casn.h>
+#include "casn.h"
 
 static char *units = "YMWDhms";
 
@@ -42,7 +42,7 @@ int adjustTime(struct casn *timep, long basetime, char *deltap)
 		deltap += (GENSIZE - UTCSIZE);
 	    else if (strlen(deltap) != UTCSIZE) /* utc time? */
 		return -1;	/* bad format */
-	    if (_time_to_ulong((ulong *)&basetime, deltap, 13) < 0)
+	    if (time_to_ulong((ulong *)&basetime, deltap, 13) < 0)
 		return -1;	/* bad format */
 	} else if (strchr(units, *unitp) != 0) {
 	    // relative time
