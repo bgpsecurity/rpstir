@@ -168,8 +168,8 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
     // check the signature to make sure it's right
     signature = (uchar *)calloc(1, signatureLength +20);
 
-    // XXX where does this 200 come from? XXX
-    CALL(cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext, hashContext), "signing");
+    //  second parameter is signatureMaxLength, so we allow a little more
+    CALL(cryptCreateSignature(signature, signatureLength+20, &signatureLength, sigKeyContext, hashContext), "signing");
 
     // verify that the signature is right
     CALL(cryptCheckSignature(signature, signatureLength, sigKeyContext, hashContext), "verifying");
