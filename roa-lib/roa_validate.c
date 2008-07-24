@@ -19,6 +19,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <assert.h>
+
 #include "roa_utils.h"
 #include "cryptlib.h"
 
@@ -61,25 +63,29 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
 
   memset(hash, 0, 40);
   RSAPubKey(&rsapubkey, 0);
+
   readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey, &c);
   decode_casn(&rsapubkey.self, &c[1]);  // [1] to skip 1st byte in BIT STRING
   free(c);
-  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(
-    &rp->content.signedData.signerInfos.self, 0);
+  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(&rp->content.signedData.signerInfos.self, 0);
+
   bsize = size_casn(&sigInfop->signedAttrs.self);
   buf = (uchar *)calloc(1, bsize);
-  tmp = encode_casn(&sigInfop->signedAttrs.self, buf);
+  encode_casn(&sigInfop->signedAttrs.self, buf);
   *buf = ASN_SET;
   
   cryptInit();
-  if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) != 0 ||
-    cryptCreateContext(&pubkeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA) != 0)
+  if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) != 0)
     return ERR_SCM_INVALSIG;
     // make the hash
   cryptEncrypt(hashContext, buf, bsize);
   cryptEncrypt(hashContext, buf, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &tmp);
       // set up public key
+  if (cryptCreateContext(&pubkeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA) != 0) {
+    cryptDestroyContext(hashContext);
+    return ERR_SCM_INVALSIG;
+  }
   cryptSetAttributeString(pubkeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
   cryptInitComponents(&rsakey, CRYPT_KEYTYPE_PUBLIC);
   free(buf);
@@ -91,15 +97,17 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
     bsize --;
     } 
   cryptSetComponent((&rsakey)->n, c, bsize * 8);
-  bsize = read_casn(&rsapubkey.exponent, buf);
+  free(buf);
+
+  bsize = readvsize_casn(&rsapubkey.exponent, &buf);
   cryptSetComponent((&rsakey)->e, buf, bsize * 8);
   free(buf);
+
   cryptSetAttributeString(pubkeyContext, CRYPT_CTXINFO_KEY_COMPONENTS, &rsakey, 
-    sizeof(CRYPT_PKCINFO_RSA));
+			  sizeof(CRYPT_PKCINFO_RSA));
+
   cryptDestroyComponents(&rsakey);
-//  cryptKeysetOpen(&cryptKeyset,pubkeyContext, "", CRYPT_KEYOPT_CREATE);
-//  cryptAddPublicKey(cryptKeyset, pubkeyContext, "password");
-    // make the structure cryptlib likes.  Copy everything but SignedAttrs
+  // make the structure cryptlib likes.  Copy everything but SignedAttrs
   struct SignerInfo sigInfo;
   SignerInfo(&sigInfo, (ushort)0);
   copy_casn(&sigInfo.version.self, &sigInfop->version.self);
@@ -109,7 +117,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   copy_casn(&sigInfo.signature, &sigInfop->signature);
   bsize = size_casn(&sigInfo.self);
   buf = (uchar *)calloc(1, bsize);
-  tmp = encode_casn(&sigInfo.self, buf);
+  encode_casn(&sigInfo.self, buf);
   tmp = cryptCheckSignature(buf, bsize, pubkeyContext, hashContext);
   free(buf);
   cryptDestroyContext(pubkeyContext);
@@ -129,9 +137,10 @@ static void fill_max(uchar *max)
 static int getTime(struct CertificateValidityDate *cvdp, ulong *datep)
   {
   int ansr;
-  if (size_casn(&cvdp->utcTime) == 0) ansr = read_casn_time(&cvdp->generalTime,
-     datep);
-  else ansr = read_casn_time(&cvdp->utcTime, datep);
+  if (size_casn(&cvdp->utcTime) == 0) 
+      ansr = read_casn_time(&cvdp->generalTime, datep);
+  else 
+      ansr = read_casn_time(&cvdp->utcTime, datep);
   return ansr;
   } 
 
@@ -297,84 +306,120 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   }
 
 static int cmsValidate(struct ROA *rp)
-    {  // validates general CMS things common to ROAs and manifests
-  // check that roa->content->version == 3
-  if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0) return ERR_SCM_BADVERS;
+{
+    // validates general CMS things common to ROAs and manifests
 
-  // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
-  //   (= OID 2.16.840.1.101.3.4.2.1)
-  if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1 ||
-    diff_objid(&rp->content.signedData.digestAlgorithms.
-      digestAlgorithmIdentifier.  algorithm, id_sha256)) return ERR_SCM_BADDA;
-  int certs;
-  if ((certs = num_items(&rp->content.signedData.certificates.self)) > 1) 
-    return ERR_SCM_BADNUMCERTS;
-  if (num_items(&rp->content.signedData.signerInfos.self) != 1)
-    return ERR_SCM_BADSIGINFO;
-  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(
-    &rp->content.signedData.signerInfos.self, 0);
-  struct Attribute *attrp;
-  struct AttrTableDefined *attrdp;
-  uchar digestbuf[40];
-  memset(digestbuf, 0, 40);
-  if (diff_casn_num(&sigInfop->version.self, 3) ||
-      !size_casn(&sigInfop->sid.subjectKeyIdentifier) ||
-      diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256) ||
-      !(attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr)) ||
-      !(attrdp = (struct AttrTableDefined *)member_casn(&attrp->
-        attrValues.self, 0)) ||
-      diff_objid(&attrdp->contentType, id_routeOriginAttestation) ||
-      !(attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr)) ||
-      !(attrdp = (struct AttrTableDefined *)member_casn(&attrp->
-        attrValues.self, 0)) ||
-      vsize_casn(&attrdp->messageDigest) != 32 ||
-      read_casn(&attrdp->messageDigest, digestbuf) != 32 ||
-      !find_attr(&sigInfop->signedAttrs, id_signingTimeAttr))
-      return ERR_SCM_BADSIGINFO;
-  attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr);
-  uchar hashbuf[40];
-  memset(hashbuf, 0, 40);
-  uchar *tbsp;
-  int tbs_lth = readvsize_casn(&rp->content.signedData.encapContentInfo.
-    eContent.self, &tbsp);
-  int err = 0;
-  if (gen_hash(tbsp, tbs_lth, hashbuf, 2) != 32 ||
-     memcmp(digestbuf, hashbuf, 32)) err =  ERR_SCM_BADHASH;
-  free(tbsp);
-  if (err) return err;
-  if (certs)
-    {
-    int tmp;
-    struct Certificate *certp = (struct Certificate *)member_casn(
-      &rp->content.signedData.certificates.self, 0);
-    if ((certs = check_cert(certp)) < 0) return certs;
-    if ((tmp = check_sig(rp, certp)) != 0) return tmp;
+    int num_certs, ret = 0, tbs_lth;
+    struct SignerInfo *sigInfop;
+    struct Attribute *attrp;
+    struct AttrTableDefined *attrdp;
+    uchar digestbuf[40], hashbuf[40];
+    uchar *tbsp;
+
+    // check that roa->content->version == 3
+    if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0) 
+	return ERR_SCM_BADVERS;
+
+    // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
+    //   (= OID 2.16.840.1.101.3.4.2.1)
+    if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1 ||
+	diff_objid(&rp->content.signedData.digestAlgorithms.digestAlgorithmIdentifier.algorithm, id_sha256)) 
+	return ERR_SCM_BADDA;
+
+    if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1) 
+	return ERR_SCM_BADNUMCERTS;
+
+    if (num_items(&rp->content.signedData.signerInfos.self) != 1)
+	return ERR_SCM_BADSIGINFO;
+
+    sigInfop = (struct SignerInfo *)member_casn(&rp->content.signedData.signerInfos.self, 0);
+    memset(digestbuf, 0, 40);
+
+#define CHECK(f) if (!(f)) return ERR_SCM_BADSIGINFO
+
+    CHECK(diff_casn_num(&sigInfop->version.self, 3) == 0);
+    CHECK(size_casn(&sigInfop->sid.subjectKeyIdentifier) != 0);
+    CHECK(diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256) == 0);
+
+    // make sure there is content
+    attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
+    CHECK(attrp != NULL);
+
+    // make sure that there is a value there
+    attrdp = (struct AttrTableDefined *)member_casn(&attrp->attrValues.self, 0);
+    CHECK(attrdp != NULL);
+
+    // make sure it's a ROA
+    CHECK(diff_objid(&attrdp->contentType, id_routeOriginAttestation) == 0);
+
+    // make sure there is a message digest
+    attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr);
+    CHECK(attrp != NULL);
+
+    // make sure there is an entry in the message digest set
+    attrdp = (struct AttrTableDefined *)member_casn(&attrp->attrValues.self, 0);
+    CHECK(attrdp != NULL);
+
+    // make sure the message digest is 32 bytes long and we can get it
+    CHECK(vsize_casn(&attrdp->messageDigest) == 32);
+    CHECK(read_casn(&attrdp->messageDigest, digestbuf) == 32);
+
+    // make sure there is a signing time
+    CHECK(find_attr(&sigInfop->signedAttrs, id_signingTimeAttr) != 0);
+
+#undef CHECK
+
+    // check the hash
+    memset(hashbuf, 0, 40);
+    // read the content
+    tbs_lth = readvsize_casn(&rp->content.signedData.encapContentInfo.eContent.self, &tbsp);
+
+    // hash it, make sure it's the right length and it matches the digest
+    if (gen_hash(tbsp, tbs_lth, hashbuf, 2) != 32 || 
+	memcmp(digestbuf, hashbuf, 32) != 0) {
+	ret =  ERR_SCM_BADHASH;
     }
-  // check that roa->content->crls == NULL
-  if (size_casn(&rp->content.signedData.crls.self) > 0 ||
-     num_items(&rp->content.signedData.signerInfos.self) != 1 ||
-     diff_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.
-      self, 3) != 0) return ERR_SCM_BADVERS;
+    free(tbsp);			// done with the content now
 
-  // check that roa->content->signerInfo.digestAlgorithm == SHA-256
-  //   (= OID 2.16.840.1.101.3.4.2.1)
-  if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.
-     algorithm, id_sha256)) return ERR_SCM_BADDA;
+    // if the hash didn't match, bail now
+    if (ret != 0)
+	return ret;
 
-  if (size_casn(&rp->content.signedData.signerInfos.signerInfo.unsignedAttrs.
-    self) != 0) return ERR_SCM_BADATTR;
+    // if there is a cert, check it
+    if (num_certs > 0) {
+	struct Certificate *certp = (struct Certificate *)member_casn(&rp->content.signedData.certificates.self, 0);
+	if ((ret = check_cert(certp)) < 0)
+	    return ret;
+	if ((ret = check_sig(rp, certp)) != 0)
+	    return ret;
+    }
 
-  // check that roa->content->signerInfoStruct->signatureAlgorithm == 
-  //   RSAEncryption (= OID 1.2.240.113549.1.1.1)
-  if(diff_objid(&rp->content.signedData.signerInfos.signerInfo.
-    signatureAlgorithm.algorithm, id_rsadsi_rsaEncryption)) 
-    return ERR_SCM_INVALSIG;
+    // check that roa->content->crls == NULL
+    if (size_casn(&rp->content.signedData.crls.self) > 0 ||
+	num_items(&rp->content.signedData.signerInfos.self) != 1 ||
+	diff_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, 3) != 0) 
+	return ERR_SCM_BADVERS;
 
-  // check that the subject key identifier has proper length 
-  if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier) != 20)
-    return ERR_SCM_INVALSKI;
-  return 0;
-  }
+    // check that roa->content->signerInfo.digestAlgorithm == SHA-256
+    //   (= OID 2.16.840.1.101.3.4.2.1)
+    if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.algorithm, id_sha256)) 
+	return ERR_SCM_BADDA;
+
+    if (size_casn(&rp->content.signedData.signerInfos.signerInfo.unsignedAttrs.self) != 0) 
+	return ERR_SCM_BADATTR;
+
+    // check that roa->content->signerInfoStruct->signatureAlgorithm == 
+    //   RSAEncryption (= OID 1.2.240.113549.1.1.1)
+    if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.algorithm, id_rsadsi_rsaEncryption)) 
+	return ERR_SCM_INVALSIG;
+
+    // check that the subject key identifier has proper length 
+    if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier) != 20)
+	return ERR_SCM_INVALSKI;
+
+    // everything checked out
+    return 0;
+}
 
 void free_badfiles(struct badfile **badfilespp)
   {  // for rsync_aur or anyone else who calls manifestValidate2
