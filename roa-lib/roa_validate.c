@@ -58,11 +58,19 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   CRYPT_PKCINFO_RSA rsakey;
   // CRYPT_KEYSET cryptKeyset;
   struct RSAPubKey rsapubkey;
-  int bsize, tmp;
-  uchar *c, *buf, hash[40];
+  int bsize, tmp, sidsize;
+  uchar *c, *buf, hash[40], sid[40];
 
   memset(hash, 0, 40);
+  memset(sid, 0, 40);
   RSAPubKey(&rsapubkey, 0);
+    // get hash of SubjectPublicKeyInfo to put in block for CheckSignature
+  if ((bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self)) < 0) 
+    return ERR_SCM_INVALSIG;;
+  buf = (uchar *)calloc(1, bsize);
+  encode_casn(&certp->toBeSigned.subjectPublicKeyInfo.self, buf);
+  sidsize = gen_hash(buf, bsize, sid, 1);
+  free(buf);
 
   readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey, &c);
   decode_casn(&rsapubkey.self, &c[1]);  // [1] to skip 1st byte in BIT STRING
@@ -112,6 +120,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   SignerInfo(&sigInfo, (ushort)0);
   copy_casn(&sigInfo.version.self, &sigInfop->version.self);
   copy_casn(&sigInfo.sid.self, &sigInfop->sid.self);
+  write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize);
   copy_casn(&sigInfo.digestAlgorithm.self, &sigInfop->digestAlgorithm.self);
   copy_casn(&sigInfo.signatureAlgorithm.self, &sigInfop->signatureAlgorithm.self);
   copy_casn(&sigInfo.signature, &sigInfop->signature);
@@ -120,6 +129,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   encode_casn(&sigInfo.self, buf);
   tmp = cryptCheckSignature(buf, bsize, pubkeyContext, hashContext);
   free(buf);
+
   cryptDestroyContext(pubkeyContext);
   cryptDestroyContext(hashContext);
   cryptEnd();
