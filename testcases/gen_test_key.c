@@ -32,23 +32,24 @@ int main(int argc, char **argv)
   {
   CRYPT_CONTEXT privKeyContext;
   CRYPT_KEYSET cryptKeyset;
-  int ansr = 0;
 
-  if (argc < 2) fprintf(stderr, "Usage: Filename\n");
-  else
-    {
-    cryptInit();
-    ansr = cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
-    ansr = cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, 
-      "label", 5);
-    ansr = cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, 1024/8);
-    ansr = cryptGenerateKey(privKeyContext);
-    ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, 
-      argv[1], CRYPT_KEYOPT_CREATE);
-    ansr = cryptAddPrivateKey(cryptKeyset, privKeyContext, "password");
-    ansr = cryptDestroyContext(privKeyContext);
-    cryptEnd();
-    }
+  if (argc < 2) {
+    fprintf(stderr, "Usage: Filename\n");
+    return 1;
+  }
+
+  cryptInit();
+  cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
+  cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
+  cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, 1024/8);
+  cryptGenerateKey(privKeyContext);
+  cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, 
+		  argv[1], CRYPT_KEYOPT_CREATE);
+  cryptAddPrivateKey(cryptKeyset, privKeyContext, "password");
+  cryptKeysetClose(cryptKeyset);
+  cryptDestroyContext(privKeyContext);
+  cryptEnd();
+
   return 0;
   }
 
