@@ -866,10 +866,19 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	  *stap = ERR_SCM_NOMEM;
 	  return(NULL);
 	}
+      if (fname != NULL) {
+	  cf->fields[CF_FIELD_FILENAME] = strdup(fname);
+	  if ( cf->fields[CF_FIELD_FILENAME] == NULL )
+	  {
+	      *stap = ERR_SCM_NOMEM;
+	      return(NULL);
+	  }
+      }
     }
 // get all the non-extension fields; if a field cannot be gotten and its
 // needed, that is a fatal error. Note that these validators are assumed
 // to be in linear order
+
   for(i=1;i<CF_NFIELDS;i++)
     {
       if ( validators[i].get_func == NULL )

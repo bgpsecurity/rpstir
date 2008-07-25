@@ -1626,7 +1626,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 
   // pull out the fields
   int x509sta = 0;
-  cert_fields *cf = cert2fields(0, 0, typ, &x509p, &sta, &x509sta);
+  cert_fields *cf = cert2fields(outfile, 0, typ, &x509p, &sta, &x509sta);
   if (cf == NULL)
       return sta;
   // add the X509 cert to the db
@@ -1668,9 +1668,18 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 
   // verify the signature
   sta = verify_roa (conp, r, ski, &chainOK);
+  if (sta != 0) {
+      roaFree(r);
+      free((void *)ski);
+      return sta;
+  }
 
   // filter
-  roaGenerateFilter (r, NULL, NULL, filter, sizeof(filter));
+  if ((sta = roaGenerateFilter (r, NULL, NULL, filter, sizeof(filter))) != 0) {
+      roaFree(r);
+      free((void *)ski);
+      return sta;
+  }
 
   // done with the roa
   roaFree(r);
