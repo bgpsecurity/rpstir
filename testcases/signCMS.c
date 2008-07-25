@@ -103,7 +103,8 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
   // create the hash for the content
 
   // first pull out the content
-  tbs_lth = readvsize_casn(&roa->content.signedData.encapContentInfo.eContent.self, &tbsp);
+  if ((tbs_lth = readvsize_casn(&roa->content.signedData.encapContentInfo.eContent.self, &tbsp)) < 0)
+    return "getting content";
 
   // set up the context, initialize crypt
   memset(hash, 0, 40);
@@ -146,7 +147,11 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
     // now sign the attributes
 
     // get the size of signed attributes and allocate space for them
-    tbs_lth = size_casn(&sigInfop->signedAttrs.self);
+    if ((tbs_lth = size_casn(&sigInfop->signedAttrs.self)) < 0) 
+      {
+      msg = "sizing SignerInfo";
+      break;
+      }
     tbsp = (uchar *)calloc(1, tbs_lth);
     encode_casn(&sigInfop->signedAttrs.self, tbsp);
     *tbsp = ASN_SET;
