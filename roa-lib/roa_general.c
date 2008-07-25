@@ -259,7 +259,7 @@ static unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArra
   return printIPv4String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
-#ifdef IP_RANGE_ALLOWED
+#ifdef IP_RANGES_ALLOWED
 static unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
 {
   int iMinStringLen = 0;
@@ -392,7 +392,7 @@ static unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArra
   return printIPv6String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
-#ifdef IP_RANGE_ALLOWED
+#ifdef IP_RANGES_ALLOWED
 static unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
 {
   int iMinStringLen = 0;
@@ -438,7 +438,7 @@ static unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArrayS
 }
 #endif
 
-#ifdef IP_RANGE_ALLOWED
+#ifdef IP_RANGES_ALLOWED
 unsigned char* roaIPAddrOrRange(struct IPAddressOrRangeA *addrOrRange, int iFamily)
 {
   int iSize = 0;
@@ -520,7 +520,7 @@ unsigned char* roaIPAddrOrRange(struct IPAddressOrRangeA *addrOrRange, int iFami
 
   return cASCIIString;
 }
-#endif // IP_RANGE_ALLOWED
+#endif // IP_RANGES_ALLOWED
 
 static unsigned char* roaIPAddr(struct IPAddress *addr, int iFamily)
 {
