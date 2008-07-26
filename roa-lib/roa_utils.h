@@ -57,6 +57,10 @@
 
 #define countof(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#ifndef min
+#define min(a,b) ((a)<(b)?(a):(b))
+#endif /* min */
+
 //#define ROA_VALID 0
 //#define ROA_INVALID 1
 
@@ -225,6 +229,7 @@ int roaValidate2(struct ROA *r, uchar *cert);
       }
 */
 
+int manifestValidate(struct ROA *manp);
 int manifestValidate2(struct ROA *r, char *dir, struct badfile ***badfilesppp);
 
 /*

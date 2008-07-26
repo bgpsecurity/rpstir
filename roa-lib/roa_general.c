@@ -19,6 +19,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <assert.h>
+
 #include "roa_utils.h"
 
 #define SKI_SIZE 20
@@ -179,14 +181,16 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int 
   int iSecLen = 0;
   int iReturnLen = 0;
   unsigned char cPrefix = 0;
+  unsigned int prefix;
   unsigned char* cReturnString = NULL;
   unsigned char cDecimalSection[3];
 
   if (NULL == array)
     return NULL;
 
-  // JFG - Cast from int to char == BAD
-  cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
+  prefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
+  assert(prefix <= 256);
+  cPrefix = (uchar) prefix;
   cReturnString = calloc(24+3*iArraySize, sizeof(char));
   if (NULL == cReturnString)
     return NULL;
@@ -259,58 +263,13 @@ static unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArra
   return printIPv4String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
-#ifdef IP_RANGES_ALLOWED
-static unsigned char* interpretIPv4Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
-{
-  int iMinStringLen = 0;
-  int iMaxStringLen = 0;
-  unsigned char* cMinString = NULL;
-  unsigned char* cMaxString = NULL;
-  unsigned char* cReturnString = NULL;
-
-  // parameter check
-  if ((NULL == minArray) ||
-      (NULL == maxArray))
-    return NULL;
-
-  cMinString = printIPv4String(minArray, iMinArraySize, 0, cFALSE);
-  if (NULL == cMinString)
-    return NULL;
-  cMaxString = printIPv4String(maxArray, iMaxArraySize, 1, cFALSE);
-  if (NULL == cMaxString)
-    {
-      free(cMinString);
-      return NULL;
-    }
-
-  iMinStringLen = strlen((char*)cMinString);
-  iMaxStringLen = strlen((char*)cMaxString);
-
-  cReturnString = calloc((iMinStringLen + iMaxStringLen + 2), sizeof(char));
-  if (NULL == cReturnString)
-    {
-      //      free(cMinString);
-      //      free(cMaxString);
-      return NULL;
-    }
-
-  memcpy(cReturnString, cMinString, iMinStringLen);
-  memcpy(cReturnString + iMinStringLen, "-", 1);
-  memcpy(cReturnString + iMinStringLen + 1, cMaxString, iMaxStringLen);
-
-  free(cMinString);
-  free(cMaxString);
-
-  return cReturnString;
-}
-#endif
-
 static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;
   unsigned char j = 0;
   int iSecLen = 0;
   int iReturnLen = 0;
+  unsigned int prefix;
   unsigned char cPrefix = 0;
   unsigned char* cReturnString = NULL;
   unsigned char cHexSection[2];
@@ -320,7 +279,9 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
     return NULL;
 
   // JFG - Cast from int to char == BAD
-  cPrefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
+  prefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
+  assert(prefix <= 257);
+  cPrefix = (uchar) prefix;
   cReturnString = calloc(48+3*iArraySize, sizeof(char));
   if (NULL == cReturnString)
     return NULL;
@@ -392,167 +353,37 @@ static unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArra
   return printIPv6String(prefixArray, iPArraySize, 0, cTRUE);
 }
 
-#ifdef IP_RANGES_ALLOWED
-static unsigned char* interpretIPv6Range(unsigned char* minArray, int iMinArraySize, unsigned char* maxArray, int iMaxArraySize)
-{
-  int iMinStringLen = 0;
-  int iMaxStringLen = 0;
-  unsigned char* cMinString = NULL;
-  unsigned char* cMaxString = NULL;
-  unsigned char* cReturnString = NULL;
-
-  // parameter check
-  if ((NULL == minArray) ||
-      (NULL == maxArray))
-    return NULL;
-
-  cMinString = printIPv6String(minArray, iMinArraySize, 0, cFALSE);
-  if (NULL == cMinString)
-    return NULL;
-  cMaxString = printIPv6String(maxArray, iMaxArraySize, 1, cFALSE);
-  if (NULL == cMaxString)
-    {
-      free(cMinString);
-      return NULL;
-    }
-
-  iMinStringLen = strlen((char*)cMinString);
-  iMaxStringLen = strlen((char*)cMaxString);
-
-  cReturnString = calloc((iMinStringLen + iMaxStringLen + 2), sizeof(char));
-  if (NULL == cReturnString)
-    {
-      //      free(cMinString);
-      //      free(cMaxString);
-      return NULL;
-    }
-
-  memcpy(cReturnString, cMinString, iMinStringLen);
-  memcpy(cReturnString + iMinStringLen, "-", 1);
-  memcpy(cReturnString + iMinStringLen + 1, cMaxString, iMaxStringLen);
-
-  free(cMinString);
-  free(cMaxString);
-
-  return cReturnString;
-}
-#endif
-
-#ifdef IP_RANGES_ALLOWED
-unsigned char* roaIPAddrOrRange(struct IPAddressOrRangeA *addrOrRange, int iFamily)
-{
-  int iSize = 0;
-  int iSize2 = 0;
-  int iTag = 0;
-  unsigned char *cASCIIString = NULL;
-  unsigned char ipv4array[5];
-  unsigned char ipv6array[17];
-  unsigned char ipv4array2[5];
-  unsigned char ipv6array2[17];
-
-  // parameter check
-  if ((NULL == addrOrRange) ||
-      (0 == iFamily))
-    return NULL;
-  
-  if (IPV4 == iFamily)
-    {
-      memset(ipv4array, 0, 5);
-      memset(ipv4array2, 0, 5);
-      // Check to see if we have a prefix or a range
-      iTag = tag_casn(&(addrOrRange->self));
-      if (ASN_BITSTRING == (0x1F & iTag))
-	{
-	  iSize = vsize_casn(&(addrOrRange->addressPrefix));
-	  if ((0 >= iSize) || (5 < iSize))
-	    return NULL;
-	  if (0 > read_casn(&(addrOrRange->addressPrefix), ipv4array))
-	    return NULL;
-	  cASCIIString = interpretIPv4Prefix(ipv4array, iSize);
-	}
-      else
-	{
-	  iSize = vsize_casn(&(addrOrRange->addressRange.min));
-	  if ((0 >= iSize) || (5 < iSize))
-	    return NULL;
-	  if (0 > read_casn(&(addrOrRange->addressRange.min), ipv4array))
-	    return NULL;
-	  iSize2 = vsize_casn(&(addrOrRange->addressRange.max));
-	  if ((0 >= iSize2) || (5 < iSize2))
-	    return NULL;
-	  if (0 > read_casn(&(addrOrRange->addressRange.max), ipv4array2))
-	    return NULL;
-	  cASCIIString = interpretIPv4Range(ipv4array, iSize, ipv4array2, iSize2);
-	}
-    }
-  else if (IPV6 == iFamily)
-    {
-      memset(ipv6array, 0, 17);
-      memset(ipv6array2, 0, 17);
-      // Check to see if we have a prefix or an address
-      iTag = tag_casn(&(addrOrRange->self));
-      if (ASN_BITSTRING == (0x1F & iTag))
-	{
-	  iSize = vsize_casn(&(addrOrRange->addressPrefix));
-	  if ((0 >= iSize) || (17 < iSize))
-	    return NULL;
-	  if (0 > read_casn(&(addrOrRange->addressPrefix), ipv6array))
-	    return NULL;
-	  cASCIIString = interpretIPv6Prefix(ipv6array, iSize);
-	}
-      else
-	{
-	  iSize = vsize_casn(&(addrOrRange->addressRange.min));
-	  if ((0 >= iSize) || (17 < iSize))
-	    return NULL;
-	  if (0 > read_casn(&(addrOrRange->addressRange.min), ipv6array))
-	    return NULL;
-	  iSize2 = vsize_casn(&(addrOrRange->addressRange.max));
-	  if ((0 >= iSize2) || (17 < iSize2))
-	    return NULL;
-	  if (0 > read_casn(&(addrOrRange->addressRange.max), ipv6array2))
-	    return NULL;
-	  cASCIIString = interpretIPv6Range(ipv6array, iSize, ipv6array2, iSize2);
-	}
-    }
-  else
-    return NULL;
-
-  return cASCIIString;
-}
-#endif // IP_RANGES_ALLOWED
-
-static unsigned char* roaIPAddr(struct IPAddress *addr, int iFamily)
+static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
 {
   int iSize = 0;
   unsigned char *cASCIIString = NULL;
-  unsigned char ipv4array[5];
-  unsigned char ipv6array[17];
+  unsigned char ipv4array[200];
+  unsigned char ipv6array[200];
 
   // parameter check
-  if ((NULL == addr) ||
-      (0 == iFamily))
+  if ((NULL == raddr) || (0 == iFamily))
     return NULL;
-  
+
   if (IPV4 == iFamily)
     {
-      memset(ipv4array, 0, 5);
+      memset(ipv4array, 0, sizeof(ipv4array));
 
-      iSize = vsize_casn(addr);
-      if ((0 >= iSize) || (5 < iSize))
+      iSize = vsize_casn(&raddr->address);
+      // XXX this ignores optional integer maxLength
+      if ((0 >= iSize) || (sizeof(ipv4array) < iSize))
 	return NULL;
-      if (0 > read_casn(addr, ipv4array))
+      if (0 > read_casn(&raddr->address, ipv4array))
 	return NULL;
       cASCIIString = interpretIPv4Prefix(ipv4array, iSize);
     }
   else if (IPV6 == iFamily)
     {
-      memset(ipv6array, 0, 17);
+      memset(ipv6array, 0, sizeof(ipv6array));
 
-      iSize = vsize_casn(addr);
-      if ((0 >= iSize) || (17 < iSize))
+      iSize = vsize_casn(&raddr->address);
+      if ((0 >= iSize) || (sizeof(ipv6array) < iSize))
 	return NULL;
-      if (0 > read_casn(addr, ipv6array))
+      if (0 > read_casn(&raddr->address, ipv6array))
 	return NULL;
       cASCIIString = interpretIPv6Prefix(ipv6array, iSize);
     }
@@ -571,11 +402,7 @@ static unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, in
   unsigned char** pcAddresses = NULL;
   unsigned char family[3];
 
-#ifdef IP_RANGES_ALLOWED
-  struct IPAddressOrRangeA *roaAddr = NULL;
-#else
-  struct IPAddress *roaAddr = NULL;
-#endif
+  struct ROAIPAddress *rIPAddr = NULL;
 
   // parameter check
   if ((NULL == roapAddrFam) ||
@@ -593,11 +420,7 @@ static unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, in
   else
     return NULL;
 
-#ifdef IP_RANGES_ALLOWED
-  iAddrs = num_items(&(roapAddrFam->addressesOrRanges.self));
-#else
   iAddrs = num_items(&(roapAddrFam->addresses.self));
-#endif // IP_RANGES_ALLOWED
 
   if (0 >= iAddrs)
     return NULL;
@@ -608,13 +431,8 @@ static unsigned char **roaIPAddresses(struct ROAIPAddressFamily *roapAddrFam, in
 
   for (i = 0; i < iAddrs; i++)
     {
-#ifdef IP_RANGES_ALLOWED
-      roaAddr = (struct IPAddressOrRangeA*) member_casn(&(roapAddrFam->addressesOrRanges.self), i);
-      pcAddresses[i] = roaIPAddrOrRange(roaAddr, iFamily);
-#else
-      roaAddr = (struct IPAddress*) member_casn(&(roapAddrFam->addresses.self), i);
-      pcAddresses[i] = roaIPAddr(roaAddr, iFamily);
-#endif // IP_RANGES_ALLOWED
+      rIPAddr = (struct ROAIPAddress*) member_casn(&(roapAddrFam->addresses.self), i);
+      pcAddresses[i] = roaIPAddr(rIPAddr, iFamily);
       if (NULL == pcAddresses[i])
 	{
 	  for (j = i - 1; j >= 0; j--)
@@ -664,6 +482,10 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLe
   unsigned char **pcAddresses = NULL;
   struct ROAIPAddressFamily *roaFamily = NULL;
 
+  // for local use, for brevity
+  struct casn *ipblocks = 
+      &r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self;
+
   UNREFERENCED_PARAMETER(cert);
   // parameter check
   if (NULL == fp && NULL == str)
@@ -683,10 +505,10 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLe
 
   // For each family, print out all triplets beginning with SKI and AS#
   // and ending with each IP address listed in the ROA
-  iFamilies = num_items(&(r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self));
+  iFamilies = num_items(ipblocks);
   for (i = 0; i < iFamilies; i++)
     {
-      roaFamily = (struct ROAIPAddressFamily*) member_casn(&(r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), i);
+      roaFamily = (struct ROAIPAddressFamily*) member_casn(ipblocks, i);
       if (NULL == roaFamily)
 	{
 	  free(cSID);
