@@ -188,8 +188,8 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int 
   if (NULL == array)
     return NULL;
 
-  prefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
-  assert(prefix <= 256);
+  prefix = 8 * (iArraySize - 1) - array[0];
+  assert(prefix < 256);
   cPrefix = (uchar) prefix;
   cReturnString = calloc(24+3*iArraySize, sizeof(char));
   if (NULL == cReturnString)
@@ -254,15 +254,6 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int 
   return cReturnString;
 }
 
-static unsigned char* interpretIPv4Prefix(unsigned char* prefixArray, int iPArraySize)
-{
-  // parameter check
-  if (NULL == prefixArray)
-    return NULL;
-
-  return printIPv4String(prefixArray, iPArraySize, 0, cTRUE);
-}
-
 static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
 {
   int i = 0;
@@ -278,8 +269,8 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
   if (NULL == array)
     return NULL;
 
-  prefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
-  assert(prefix <= 257);
+  prefix = 8 * (iArraySize - 1) - array[0];
+  assert(prefix < 256);
   cPrefix = (uchar) prefix;
   cReturnString = calloc(48+3*iArraySize, sizeof(char));
   if (NULL == cReturnString)
@@ -343,15 +334,6 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
   return cReturnString;
 }
 
-static unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArraySize)
-{
-  // parameter check
-  if (NULL == prefixArray)
-    return NULL;
-
-  return printIPv6String(prefixArray, iPArraySize, 0, cTRUE);
-}
-
 static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
 {
   int iSize = 0;
@@ -372,9 +354,9 @@ static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
       return NULL;
 
   if (IPV4 == iFamily) {
-      cASCIIString = interpretIPv4Prefix(ipaddr, iSize);
+      cASCIIString = printIPv4String(ipaddr, iSize, 0, cTRUE);
   } else if (IPV6 == iFamily) {
-      cASCIIString = interpretIPv6Prefix(ipaddr, iSize);
+      cASCIIString = printIPv6String(ipaddr, iSize, 0, cTRUE);
   }
 
   return cASCIIString;
