@@ -411,6 +411,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   if (isRPSL) {
     unsigned int asn = 0;
     char *filter = 0;
+    char *filename = 0;
 
     for (display = 0; globalFields[display] != NULL; display++) {
       QueryField *field = globalFields[display];
@@ -418,8 +419,10 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	filter = (char *)s->vec[display].valptr;
       else if (!strcasecmp(field->name, "asn"))
 	asn = *(unsigned int *) s->vec[display].valptr;
+      else if (!strcasecmp(field->name, "filename"))
+	filename = (char *)s->vec[display].valptr;
       else
-	fprintf(stderr, "unexpected field returned in RPSL query (%s)\n",
+	fprintf(stderr, "warning: unexpected field %s in RPSL query\n",
 		field->name);
     }
     if (asn == 0 || filter == 0) {
@@ -447,8 +450,10 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	  if ((i == 0 && strchr(f, ':') == 0) ||
 	      (i == 1 && strchr(f, ':') != 0)) {
 	    if (first)
-	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS%d\n", 
-		      ((i == 0) ? '4' : '6'), asn);
+	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS%d  # %s\n", 
+		      ((i == 0) ? '4' : '6'), 
+		      asn,
+		      filename ? filename : "???");
 	    first = 0;
 	    fprintf(output, "members: %s\n", f);
 	    ++numprinted;
@@ -699,7 +704,8 @@ static int addRPSLFields(char *displays[], int numDisplays)
   // throughout the code. Help us if we ever change the schema.
   displays[0] = "asn";		/* we only need asn and filter*/
   displays[1] = "filter"; 
-  return 2;			/* number of fields added */
+  displays[2] = "filename";	/* added for commentary */
+  return 3;			/* number of fields added */
 }
 
 /* Help user by showing the possible arguments */
