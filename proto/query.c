@@ -424,11 +424,42 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
     }
     if (asn == 0 || filter == 0) {
       fprintf(stderr, "incomplete result returned in RPSL query: ");
-      if (asn == 0) fprintf(stderr, "no asn\n");
-      if (filter == 0) fprintf(stderr, "no filter\n");
+      if (asn == 0) 
+	fprintf(stderr, "no asn\n");
+      if (filter == 0) 
+	fprintf(stderr, "no filter\n");
     } else {
-      fprintf(output, "route-set: RS-RPKI-ROA-FOR:AS%d\n", asn);
-      fprintf(output, "members: %s\n\n", filter);
+      // gross hack. 0 == ipv4, 1 == ipv6
+      int i, numprinted = 0;
+
+      for (i = 0; i < 2; ++i) {
+	char *end, *f = filter;
+	int first = 1;
+
+	// format of filters: some number of "sid<space>asnum<space>filter\n"
+	while ((end = strchr(f, '\n')) != 0) {
+	  *end = '\0';
+	  // skip sid and asnum
+	  if ((f = strchr(f, ' ')) == 0) continue;
+	  ++f;
+	  if ((f = strchr(f, ' ')) == 0) continue;
+	  ++f;
+	  if ((i == 0 && strchr(f, ':') == 0) ||
+	      (i == 1 && strchr(f, ':') != 0)) {
+	    if (first)
+	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS%d\n", 
+		      ((i == 0) ? '4' : '6'), asn);
+	    first = 0;
+	    fprintf(output, "members: %s\n", f);
+	    ++numprinted;
+	  }
+	  *end = '\n';
+	  // skip past the newline and try for another one
+	  f = end + 1;
+	}
+	if (!first)
+	  fprintf(output, "\n");
+      }
     }
     return(0);
   }
@@ -759,7 +790,7 @@ int main(int argc, char **argv)
   }
   if (isRPSL) {
     checkErr (numDisplays != 0, "-d should not be used with RPSL query\n");
-    addRPSLFields(displays, 0);
+    numDisplays = addRPSLFields(displays, 0);
   }
   checkErr (numDisplays == 0 && isRPSL == 0, "Need to display something\n");
   if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)

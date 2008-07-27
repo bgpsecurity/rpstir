@@ -278,7 +278,6 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
   if (NULL == array)
     return NULL;
 
-  // JFG - Cast from int to char == BAD
   prefix = 8 * (unsigned char)(iArraySize - 1) - array[0];
   assert(prefix <= 257);
   cPrefix = (uchar) prefix;
@@ -356,39 +355,27 @@ static unsigned char* interpretIPv6Prefix(unsigned char* prefixArray, int iPArra
 static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
 {
   int iSize = 0;
-  unsigned char *cASCIIString = NULL;
-  unsigned char ipv4array[200];
-  unsigned char ipv6array[200];
+  unsigned char *cASCIIString = NULL, ipaddr[200];
 
   // parameter check
   if ((NULL == raddr) || (0 == iFamily))
     return NULL;
 
-  if (IPV4 == iFamily)
-    {
-      memset(ipv4array, 0, sizeof(ipv4array));
+  memset(ipaddr, 0, sizeof(ipaddr));
+  iSize = vsize_casn(&raddr->address);
+  
+  // XXX this ignores optional integer maxLength
 
-      iSize = vsize_casn(&raddr->address);
-      // XXX this ignores optional integer maxLength
-      if ((0 >= iSize) || (sizeof(ipv4array) < iSize))
-	return NULL;
-      if (0 > read_casn(&raddr->address, ipv4array))
-	return NULL;
-      cASCIIString = interpretIPv4Prefix(ipv4array, iSize);
-    }
-  else if (IPV6 == iFamily)
-    {
-      memset(ipv6array, 0, sizeof(ipv6array));
+  if ((0 >= iSize) || (sizeof(ipaddr) < iSize))
+      return NULL;
+  if (0 > read_casn(&raddr->address, ipaddr))
+      return NULL;
 
-      iSize = vsize_casn(&raddr->address);
-      if ((0 >= iSize) || (sizeof(ipv6array) < iSize))
-	return NULL;
-      if (0 > read_casn(&raddr->address, ipv6array))
-	return NULL;
-      cASCIIString = interpretIPv6Prefix(ipv6array, iSize);
-    }
-  else
-    return NULL;
+  if (IPV4 == iFamily) {
+      cASCIIString = interpretIPv4Prefix(ipaddr, iSize);
+  } else if (IPV6 == iFamily) {
+      cASCIIString = interpretIPv6Prefix(ipaddr, iSize);
+  }
 
   return cASCIIString;
 }
@@ -524,13 +511,13 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLe
       for (j = 0; j < iAddrNum; j++)
 	{
 	  if (str != NULL) {
-	    iRes = snprintf(str, strLen, "%s  %s  %s\n",
-			   cSID, cAS_ID, pcAddresses[j]);
+	    iRes = snprintf(str, strLen, "%s %s %s\n",
+			    cSID, cAS_ID, pcAddresses[j]);
 	    strLen -= strlen(str);
 	    str += strlen(str);
 	  }
 	  if (fp != NULL) {
-	    iRes = fprintf(fp, "%s  %s  %s\n", cSID, cAS_ID, pcAddresses[j]);
+	    iRes = fprintf(fp, "%s %s %s\n", cSID, cAS_ID, pcAddresses[j]);
 	    if (0 > iRes)
 	      return ERR_SCM_BADFILE;
 	  }
