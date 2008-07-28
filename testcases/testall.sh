@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # try adding everything to the db
 

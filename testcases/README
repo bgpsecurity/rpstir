@@ -19,7 +19,7 @@ IDENTIFIERS will be interpreted in the raw file.)
     Certificates have only a simple commonName for their issuer and subject
 names.  The subject name is the same as the left part of the certificate file
 name, e.g. the certificate for the CA named "C12" is "C12.cer".  Certificates
-are either CA certificxfates or end-entity certificates.  CA certificates have
+are either CA certificates or end-entity certificates.  CA certificates have
 only digits in the middle part.  The top certificate is for the CA "C"; it is
 self-signed.  End-entity certificates have the same first part as the signing
 CA followed by either an "R" for ROA signers or an "M" for manifest signers
@@ -86,12 +86,29 @@ issued.
 
 3. ROAs
 
-    ROAs are made with the tool make_test_roa, which takes only one parameter,
-the ROA name.  The name of the ROA consists of "R" followed by digits and
-".roa".  The ROA R123.roa is the third ROA produced by CA C12 and signed by
-end entity C12R3, e.g.
+    ROAs are made with the tool make_test_roa, which takes as parameters the
+ROA filename, the EE cert filename, the EE cert keyfile name (to get the
+private key), the index of the AS number for this ROA (the cert will likely
+have more than one AS number under its control). There are optional
+arguments as well, to mark the signature bad, and to generate a file
+containing a readable version of the ROA. 
 
-    make_test_roa R123
+usage:
+./make_test_roa -r roafile -c certfile -k keyfile -i index [-R readable][-b]
+
+  -r roafile: file to write roa to
+  -c certfile: file holding EE cert for roa
+  -k keyfile: file holding p15-format public key for signing roa
+  -i index: which child is this (of that cert) (one-based)
+  -R readable: file to write readable asn.1 for roa to
+  -b: generate bad (invalid) signature
+
+Typically, the name of the ROA consists of "R" followed by digits and
+".roa", and R123.roa is the third ROA produced by CA C12 (cert C12.cer) and
+signed by end entity C12R3.cer, with key pair found in C12R3.p15. To
+generate this ROA and save off a printable version, you use
+
+    make_test_roa -r R123.roa -c C12R3.cer -i 3 -k C12R3.p15 -R R123.raw
 
 4. Manifests
 

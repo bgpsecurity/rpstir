@@ -1,21 +1,21 @@
-./make_test_roa R111
-./make_test_roa R221
-./make_test_roa R231
-./make_test_roa R1111 
-./make_test_roa R1112 
-./make_test_roa R1113 
-./make_test_roa R1121 
-./make_test_roa R1131 
-./make_test_roa R1211 
-./make_test_roa R1311 
-./make_test_roa R1321 
-./make_test_roa R1322 
-./make_test_roa R2111 
-./make_test_roa R2211 
-./make_test_roa R2311 
-./make_test_roa R2312 
-./make_test_roa R2321
-./make_test_roa R11111 
-./make_test_roa R22111 
-./make_test_roa R22121 
-./make_test_roa R22122 x
+./make_test_roa    -r R111.roa   -c C11R1.cer -i 1 -k C11R1.p15   -R R111.raw
+./make_test_roa    -r R221.roa   -c C22R1.cer -i 1 -k C22R1.p15   -R R221.raw
+./make_test_roa    -r R231.roa   -c C23R1.cer -i 1 -k C23R1.p15   -R R231.raw
+./make_test_roa    -r R1111.roa  -c C111R1.cer -i 1 -k C111R1.p15  -R R1111.raw
+./make_test_roa    -r R1112.roa  -c C111R2.cer -i 2 -k C111R2.p15  -R R1112.raw
+./make_test_roa    -r R1113.roa  -c C111R3.cer -i 3 -k C111R3.p15  -R R1113.raw
+./make_test_roa    -r R1121.roa  -c C112R1.cer -i 1 -k C112R1.p15  -R R1121.raw
+./make_test_roa    -r R1131.roa  -c C113R1.cer -i 1 -k C113R1.p15  -R R1131.raw
+./make_test_roa    -r R1211.roa  -c C121R1.cer -i 1 -k C121R1.p15  -R R1211.raw
+./make_test_roa    -r R1311.roa  -c C131R1.cer -i 1 -k C131R1.p15  -R R1311.raw
+./make_test_roa    -r R1321.roa  -c C132R1.cer -i 1 -k C132R1.p15  -R R1321.raw
+./make_test_roa    -r R1322.roa  -c C132R2.cer -i 2 -k C132R2.p15  -R R1322.raw
+./make_test_roa    -r R2111.roa  -c C211R1.cer -i 1 -k C211R1.p15  -R R2111.raw
+./make_test_roa    -r R2211.roa  -c C221R1.cer -i 1 -k C221R1.p15  -R R2211.raw
+./make_test_roa    -r R2311.roa  -c C231R1.cer -i 1 -k C231R1.p15  -R R2311.raw
+./make_test_roa    -r R2312.roa  -c C231R2.cer -i 2 -k C231R2.p15  -R R2312.raw
+./make_test_roa    -r R2321.roa  -c C232R1.cer -i 1 -k C232R1.p15  -R R2321.raw
+./make_test_roa    -r R11111.roa -c C1111R1.cer -i 1 -k C1111R1.p15 -R R11111.raw
+./make_test_roa    -r R22111.roa -c C2211R1.cer -i 1 -k C2211R1.p15 -R R22111.raw
+./make_test_roa    -r R22121.roa -c C2212R1.cer -i 1 -k C2212R1.p15 -R R22121.raw
+./make_test_roa -b -r R22122.roa -c C2212R2.cer -i 2 -k C2212R2.p15 -R R22122.raw
