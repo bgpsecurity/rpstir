@@ -3,14 +3,6 @@
 # try adding everything to the db
 
 BASE=`cd ..; pwd`
-REPO=$BASE/testing/REPOSITORY/test
-
-echo copying objects to $REPO
-rm -f $REPO/*
-cp C?*.cer R*.roa M*.man L*.crl $REPO
-# rm $REPO/C*M?.cer
-rm $REPO/C*R?.cer
-rm $REPO/C*X.cer
 
 echo initializing database
 ../testing/initDB
@@ -18,8 +10,12 @@ echo initializing database
 echo adding root certificate
 $BASE/proto/rcli -y -F C.cer
 
+# files=`ls C?.cer R*.roa M*.man L*.crl | grep -v 'C.*M..cer' | grep -v 'C.*R..cer' | grep -v 'C.*X.cer'`
+files=`ls C?*.cer R*.roa M*.man L*.crl | grep -v 'C.*R..cer' | grep -v 'C.*X.cer'`
+echo $files
+
 echo adding objects
-for i in $REPO/*; do
+for i in $files; do
     printf "%15s:" `basename $i`
-    $BASE/proto/rcli -f $i
+    $BASE/proto/rcli -y -f $i
 done
