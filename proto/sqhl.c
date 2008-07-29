@@ -290,7 +290,7 @@ int infer_filetype(char *fname)
     typ += OT_CRL;
   if ( strstr(fname, ".roa") != NULL )
     typ += OT_ROA;
-  if ( strstr(fname, ".man") != NULL )
+  if ( strstr(fname, ".man") != NULL  || strstr(fname, ".mft") != NULL)
     typ += OT_MAN;
   if ( typ < OT_UNKNOWN || typ > OT_MAXBASIC )
     return(ERR_SCM_INVALFN);
