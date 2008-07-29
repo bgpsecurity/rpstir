@@ -21,7 +21,7 @@
 
 DEFINITIONS IMPLICIT TAGS ::=
 -- imports
-IMPORTS AlgorithmIdentifier -- ID  pkcs-1 -- FROM Algorithms IN Algorithms.asn,
+IMPORTS AlgorithmIdentifier -- ID  pkcs -- FROM Algorithms IN Algorithms.asn,
         Extensions IPAddressOrRangeA FROM extensions IN extensions.asn,
 	Certificate Version FROM certificate IN certificate.asn,
 	Name FROM name IN name.asn, Manifest FROM Manifest IN manifest.asn;
@@ -166,7 +166,7 @@ IMPORTS AlgorithmIdentifier -- ID  pkcs-1 -- FROM Algorithms IN Algorithms.asn,
 
       SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 
-      UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+      UnsignedAttributes ::= SET SIZE (0..0) OF Attribute
 
       Attribute ::= SEQUENCE {
         attrType OBJECT IDENTIFIER TABLE AttrTable,
@@ -178,7 +178,8 @@ IMPORTS AlgorithmIdentifier -- ID  pkcs-1 -- FROM Algorithms IN Algorithms.asn,
       contentType  id-contentTypeAttr OBJECT IDENTIFIER,
       messageDigest id-messageDigestAttr OCTET STRING,
       signingTime  id-signingTimeAttr SigningTime,
-      binSigningTime id-binSigningTimeAttr INTEGER }
+      binSigningTime id-binSigningTimeAttr INTEGER,
+      ignored 0xFFFF ANY }
 
     SigningTime ::= CHOICE {
       utcTime     UTCTime,
