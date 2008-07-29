@@ -165,6 +165,9 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
     // XXX what is this? why are we changing the length of the prefix?
     uchar *addrp;
     int lth = readvsize_casn(&ipaorrp->addressPrefix, &addrp);
+#if 0				
+    /* I have no clue why this was here. */
+    /* It munges prefix lengths for no clear reason. */
     if (addrp[0] > 1) 
       addrp[0] -= 2;
     else
@@ -173,7 +176,7 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
       addrp[0] += 6;
       addrp[lth - 1] = 0;
       }
-
+#endif
     // write the addr to the roa's field
     write_casn(&roaipa->address, addrp, lth);
     }
