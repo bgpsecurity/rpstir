@@ -668,11 +668,8 @@ has_Correct_Extension(char *str, unsigned int len)
   if (!ptr)
     return(FALSE);
 
-  /* if the last char of the string was a '.' we're in trouble doing this */
-  /* need to correc this... */
   ptr++;
-
-  if ( ((char)*ptr == '\0') || ((char)*ptr == '\n') || ((char)*ptr == 0x0d) )
+  if ( (*ptr == '\0') || (*ptr == '\n') || (*ptr == 0x0d) )
     return(FALSE);
 
   strncpy(hold, ptr, sizeof(hold) - 1);
@@ -703,7 +700,10 @@ has_Correct_Extension(char *str, unsigned int len)
       return(TRUE);                                           
                                                               
     if ( strncasecmp(hold, "man", 3) == 0)                    
-      return(TRUE);                                           
+      return(TRUE);             
+
+    if ( strncasecmp(hold, "mft", 3) == 0)
+      return (TRUE);
   }                                                           
                                                               
   return(FALSE);                                              

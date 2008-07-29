@@ -86,32 +86,58 @@ static void free_name_list(struct name_list *rootlistp)
     }
   }
 
+// return an (allocated) downcased version of the string
+static char *downcase(char *str)
+{
+  char *p = calloc(1, 1 + strlen(str)), *q;
+  strcpy(p, str);
+  for (q = p; *q; ++q)
+    if (isupper(*q))
+      *q = tolower(*q);
+  return p;
+}
+
+// does this have TRUST in its name?
 static int isTrust(char *namep)
   {
-  if (strstr(namep, "TRUST") != NULL)  return 1;
-  return 0;
+  int ret = 0;
+  char *down = downcase(namep);
+  if (strstr(namep, "trust")) ret = 1;
+  free(down);
+  return ret;
   }
 
+// see if it's a manifest based on its name
 static int isManifest(char *namep)
   {
-  if (strstr(namep, ".man") || strstr(namep, "MANIFEST") != NULL) return 1;
-  return 0;
+  int ret = 0;
+  char *down = downcase(namep);
+  if (strstr(down, ".man") || strstr(down, ".mft") || strstr(down, "manifest"))
+    ret = 1;
+  free(down);
+  return (ret);
   }
 
+// is it something that should be on a manifest (i.e. it's not a manifest)?
 static int mustManifest(char *namep)
   {
   /*
   Returns 1 for certs, crls  or roas
           0 for everything else
  */
-  char *b;
-  if (isTrust(namep)) return 0;
-  for (b = namep; *b > ' '; b++);
-  b -= 4;
-  if (*b++ == '.' && (!strncmp(b, "der", 3) || !strncmp(b, "cer", 3) || 
-    !strncmp(b, "pem", 3) || !strncmp(b, "crl", 3) || !strncmp(b, "roa", 3))) 
-    return 1;
-  return 0;
+  int ret = 0;
+
+  if (isTrust(namep)) {
+    ret = 0;
+  } else {
+    char *down = downcase(namep);
+    if (strstr(down, "der") || strstr(down, "cer") || strstr(down, "pem") ||
+	strstr(down, "crl") || strstr(down, "roa")) {
+      ret = 1;
+    }
+    free(down);
+  }
+  return(ret);
   }
 
 static int check_manifest(struct ROA *roap, char *mfname, char *topDir, 
@@ -156,8 +182,9 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
           {
           struct badfile **bpp;
           for (bpp  = badfilespp; 
-            *bpp && strcmp(fname, (*bpp)->fname); 
-           bpp++);
+	       *bpp && strcmp(fname, (*bpp)->fname) != 0; 
+	       bpp++)
+	    ;
           if (*bpp)  // mark its state in namelist
             {
             int err = (*bpp)->err;
@@ -517,8 +544,9 @@ main(int argc, char *argv[])
             {   // put EE cert in special directory
             char *eefilename = (char *)calloc(1, 2 + 16 + strlen(topDir) + 
                 1 + strlen(certname) + 4);
-            strcat(strcat(strcat(strcat(strcpy(eefilename, "A "), 
-              "manifestSigners/"), topDir), "/"), certname);
+
+	    sprintf(eefilename, "A manifestSigners/%s/%s", topDir, certname);
+
             if (put_casn_file(&certp->self, &eefilename[2], 0) < 0)
               {
               fprintf(stderr, "error writing %s\n", eefilename);
