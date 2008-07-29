@@ -32,10 +32,10 @@ LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 dumpasn1: dumpasn1.c
-	$(CC) -o dumpasn1 dumpasn1.c
+	$(CC) -g -o dumpasn1 dumpasn1.c
 
 encode-oid: encode-oid.c
-	$(CC) -o encode-oid encode-oid.c
+	$(CC) -g -o encode-oid encode-oid.c
 
 dump:	dump.o asn.o asn_dump.o util.o asn.h
 	$(CC) $(CFLAGS) -o dump -g dump.o asn.o asn_dump.o util.o
