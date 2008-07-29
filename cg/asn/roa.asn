@@ -131,9 +131,11 @@ IMPORTS AlgorithmIdentifier -- ID  pkcs -- FROM Algorithms IN Algorithms.asn,
       id-roa-pki-manifest i     OBJECT IDENTIFIER ::= { id-ct 26 } 
 
       RouteOriginAttestation ::= SEQUENCE { 
-        version [0] INTEGER DEFAULT 0, 
+        version [0] ROAversion DEFAULT v1, 
         asID   ASID, 
-        ipAddrBlocks ROAIPAddrBlocks } 
+        ipAddrBlocks ROAIPAddrBlocks }
+
+      ROAversion ::= INTEGER { v1(0) } ( v1) 
  
       ASID ::= INTEGER 
     
