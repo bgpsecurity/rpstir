@@ -31,18 +31,19 @@
 */
 #define MINMAXBUFSIZE 20
 
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
+static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 
+		    CRYPT_ALGO_TYPE alg)
   { // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
   CRYPT_CONTEXT hashContext;
   uchar hash[40];
   int ansr = -1;
 
+  if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
+      return ERR_SCM_BADALG;
+
   memset(hash, 0, 40);
   cryptInit();
-  if (alg == 2) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-  else if (alg == 1) cryptCreateContext(&hashContext, CRYPT_UNUSED,
-    CRYPT_ALGO_SHA);
-  else return ERR_SCM_BADALG;
+  cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
@@ -58,85 +59,103 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   CRYPT_PKCINFO_RSA rsakey;
   // CRYPT_KEYSET cryptKeyset;
   struct RSAPubKey rsapubkey;
-  int bsize, tmp, sidsize;
+  int bsize, ret, sidsize;
   uchar *c, *buf, hash[40], sid[40];
 
-  memset(hash, 0, 40);
+  // get SID and generate the sha-1 hash
+  // (needed for cryptlib; see below)
   memset(sid, 0, 40);
-  RSAPubKey(&rsapubkey, 0);
-    // get hash of SubjectPublicKeyInfo to put in block for CheckSignature
-  if ((bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self)) < 0) 
-    return ERR_SCM_INVALSIG;;
+  bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self);
+  if (bsize < 0) return ERR_SCM_INVALSIG;;
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&certp->toBeSigned.subjectPublicKeyInfo.self, buf);
-  sidsize = gen_hash(buf, bsize, sid, 1);
+  sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
   free(buf);
 
-  readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey, &c);
-  decode_casn(&rsapubkey.self, &c[1]);  // [1] to skip 1st byte in BIT STRING
-  free(c);
-  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(&rp->content.signedData.signerInfos.self, 0);
-
+  // generate the sha256 hash of the signed attributes. We don't call
+  // gen_hash because we need the hashContext for later use (below).
+  struct SignerInfo *sigInfop = (struct SignerInfo *)
+      member_casn(&rp->content.signedData.signerInfos.self, 0);
+  memset(hash, 0, 40);
   bsize = size_casn(&sigInfop->signedAttrs.self);
+  if (bsize < 0) return ERR_SCM_INVALSIG;;
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&sigInfop->signedAttrs.self, buf);
   *buf = ASN_SET;
 
+  // (re)init the crypt library
   cryptInit();
-  if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) != 0)
-    return ERR_SCM_INVALSIG;
-    // make the hash
+  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   cryptEncrypt(hashContext, buf, bsize);
   cryptEncrypt(hashContext, buf, 0);
-  cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &tmp);
-      // set up public key
-  if (cryptCreateContext(&pubkeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA) != 0) {
-    cryptDestroyContext(hashContext);
-    return ERR_SCM_INVALSIG;
-  }
+  cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ret);
+  assert(ret == 32);		/* size of hash; should never fail */
+  free(buf);
+
+  // get the public key from the certificate and decode it into an RSAPubKey
+  readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey, &c);
+  RSAPubKey(&rsapubkey, 0);
+  decode_casn(&rsapubkey.self, &c[1]);  // skip 1st byte (tag?) in BIT STRING
+  free(c);
+
+  // set up the key by reading the modulus and exponent
+  cryptCreateContext(&pubkeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
   cryptSetAttributeString(pubkeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
   cryptInitComponents(&rsakey, CRYPT_KEYTYPE_PUBLIC);
-  free(buf);
+
+  // read the modulus from rsapubkey
   bsize = readvsize_casn(&rsapubkey.modulus, &buf);
   c = buf;
+  // if the first byte is a zero, skip it
   if (!*buf)
     {
     c++;
-    bsize --;
+    bsize--;
     }
   cryptSetComponent((&rsakey)->n, c, bsize * 8);
   free(buf);
 
+  // read the exponent from the rsapubkey
   bsize = readvsize_casn(&rsapubkey.exponent, &buf);
   cryptSetComponent((&rsakey)->e, buf, bsize * 8);
   free(buf);
 
+  // set the modulus and exponent on the key
   cryptSetAttributeString(pubkeyContext, CRYPT_CTXINFO_KEY_COMPONENTS, &rsakey,
 			  sizeof(CRYPT_PKCINFO_RSA));
-
+  // all done with this now, free the storage
   cryptDestroyComponents(&rsakey);
-  // make the structure cryptlib likes.  Copy everything but SignedAttrs
+
+  // make the structure cryptlib likes.
+  // we discovered through detective work that cryptlib wants the
+  // signature's SID field to be the sha-1 hash of the SID.
   struct SignerInfo sigInfo;
-  SignerInfo(&sigInfo, (ushort)0);
-  copy_casn(&sigInfo.version.self, &sigInfop->version.self);
-  copy_casn(&sigInfo.sid.self, &sigInfop->sid.self);
-  write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize);
+  SignerInfo(&sigInfo, (ushort)0); /* init sigInfo */
+  copy_casn(&sigInfo.version.self, &sigInfop->version.self); /* copy over */
+  copy_casn(&sigInfo.sid.self, &sigInfop->sid.self); /* copy over */
+  write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize); /* sid * hash */
+
+  // copy over digest algorithm, signature algorithm, signature
   copy_casn(&sigInfo.digestAlgorithm.self, &sigInfop->digestAlgorithm.self);
   copy_casn(&sigInfo.signatureAlgorithm.self, &sigInfop->signatureAlgorithm.self);
   copy_casn(&sigInfo.signature, &sigInfop->signature);
+
+  // now encode as asn1, and check the signature
   bsize = size_casn(&sigInfo.self);
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&sigInfo.self, buf);
-  tmp = cryptCheckSignature(buf, bsize, pubkeyContext, hashContext);
+  ret = cryptCheckSignature(buf, bsize, pubkeyContext, hashContext);
   free(buf);
 
+  // all done, clean up
   cryptDestroyContext(pubkeyContext);
   cryptDestroyContext(hashContext);
   cryptEnd();
   delete_casn(&rsapubkey.self);
   delete_casn(&sigInfo.self);
-  if (tmp) return ERR_SCM_INVALSIG;
-  return 0;
+
+  // if the value returned from crypt above != 0, it's invalid
+  return (ret != 0) ? ERR_SCM_INVALSIG : 0;
   }
 
 static void fill_max(uchar *max)
@@ -172,7 +191,7 @@ static int check_cert(struct Certificate *certp)
   uchar *pubkey;
   tmp = readvsize_casn(spkeyp, &pubkey);
   uchar khash[22];
-  tmp = gen_hash(&pubkey[1], tmp - 1, khash, 1);
+  tmp = gen_hash(&pubkey[1], tmp - 1, khash, CRYPT_ALGO_SHA);
   free(pubkey);
   int err = 1;  // require SKI
   struct Extension *extp;
@@ -205,7 +224,7 @@ static int check_fileAndHash(struct FileAndHash *fahp, int ffd)
   lseek(ffd, 0, SEEK_SET);
   contentsp = (uchar *)calloc(1, name_lth + 2);
   if (read(ffd, contentsp, name_lth + 2) != name_lth) err = ERR_SCM_BADFILE;
-  else if ((hash_lth = gen_hash(contentsp, name_lth, contentsp, 2)) < 0)
+  else if ((hash_lth = gen_hash(contentsp, name_lth, contentsp, CRYPT_ALGO_SHA2)) < 0)
     err = ERR_SCM_BADHASH;
   else
     {
@@ -307,9 +326,11 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
       roaAddrp = (struct ROAIPAddress *)next_of(&roaAddrp->self))
       {
       if ((err = test_maxLength(roaAddrp)) < 0 ||
-        (err = setup_roa_minmax(&roaAddrp->address, rmin, rmax, i)) < 0) return err;
+	  (err = setup_roa_minmax(&roaAddrp->address, rmin, rmax, i)) < 0) 
+	  return err;
       if (memcmp(&rmin[3], &oldmax[3], sizeof(rmin) - 3) < 0 ||
-	memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) return ERR_SCM_INVALIPB;
+	  memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
+	  return ERR_SCM_INVALIPB;
       }
     }
   return 0;
@@ -385,7 +406,7 @@ static int cmsValidate(struct ROA *rp)
     tbs_lth = readvsize_casn(&rp->content.signedData.encapContentInfo.eContent.self, &tbsp);
 
     // hash it, make sure it's the right length and it matches the digest
-    if (gen_hash(tbsp, tbs_lth, hashbuf, 2) != 32 ||
+    if (gen_hash(tbsp, tbs_lth, hashbuf, CRYPT_ALGO_SHA2) != 32 ||
 	memcmp(digestbuf, hashbuf, 32) != 0) {
 	ret =  ERR_SCM_BADHASH;
     }
