@@ -38,7 +38,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid size",                 /* ERR_SCM_INVALSZ -10 */
 
     "Link skipped",                 /* ERR_SCM_ISLINK */
-    "Invalid file",                 /* ERR_SCM_BADFILE */
+    "Bad filename or file not found", /* ERR_SCM_BADFILE */
     "Inconsistent filename",        /* ERR_SCM_INVALFN */
     "Not a directory",              /* ERR_SCM_NOTADIR */
     "Internal error",               /* ERR_SCM_INTERNAL */
