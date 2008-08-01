@@ -80,7 +80,7 @@ static const char cb64[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
 
-// Idiotic START/END ROA armor
+// START/END ROA armor
 static const char roaStart[]="-----BEGIN ROA-----\r\n";
 static const char roaEnd[]="-----END ROA-----\r\n";
 
