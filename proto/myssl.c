@@ -2304,15 +2304,16 @@ static int rescert_sia_chk(X509 *x, int ct)
   int i;
   int ex_nid;
   int ret = 0;
-  int sia_oid_len;
   size_t len = 0;
   AUTHORITY_INFO_ACCESS *sia = NULL;
   ACCESS_DESCRIPTION    *adesc = NULL;
   X509_EXTENSION *ex;
-  static const unsigned char sia_oid[] =
+  static const unsigned char sia_dir_oid[] =
+    {0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x05};
+  static const unsigned char sia_ee_oid[] =
     {0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x0b};
-
-  sia_oid_len = sizeof(sia_oid);
+  const int sia_dir_oid_len = sizeof(sia_dir_oid);
+  const int sia_ee_oid_len = sizeof(sia_ee_oid);
 
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
@@ -2387,20 +2388,22 @@ static int rescert_sia_chk(X509 *x, int ct)
       goto skip;
     }
 
-    if ( (adesc->method->length == sia_oid_len) &&
-         (!memcmp(adesc->method->data, sia_oid, sia_oid_len)) &&
-         (!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data, 
-		       RSYNC_PREFIX, RSYNC_PREFIX_LEN)) ) {
-      /* it's the right length, right oid, and it _starts_ with
-         the correct url method... does it end with a trailing '/'? */
-      len = strlen((const char *)adesc->location->d.uniformResourceIdentifier->data);
-      /* don't want a wrap case if len comes back 0 */
-      if (len == 0) {
-        ret = ERR_SCM_NOSIA;
-#ifdef DEBUG
-        fprintf(stderr, "[sia] ACCESS DESCRIPTOR lengh 0\n");
-#endif
-        goto skip;
+    int is_dir_oid = (adesc->method->length == sia_dir_oid_len && 
+		      !memcmp(adesc->method->data, sia_dir_oid, sia_dir_oid_len));
+    int is_ee_oid = (adesc->method->length == sia_ee_oid_len && 
+		     !memcmp(adesc->method->data, sia_ee_oid, sia_ee_oid_len));
+    if ((is_dir_oid || is_ee_oid) &&
+	(!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data, 
+		      RSYNC_PREFIX, RSYNC_PREFIX_LEN)) ) {
+      // if it's a dir oid, make sure it ends in a '/'
+      if (is_dir_oid) {
+	char *dir = (char *)adesc->location->d.uniformResourceIdentifier->data;
+	len = strlen(dir);
+	/* don't want a wrap case if len comes back 0 */
+	if (len == 0 || dir[len-1] != '/') {
+	  ret = ERR_SCM_NOSIA;
+	  goto skip;
+	}
       }
       ++uri_flag;
     }

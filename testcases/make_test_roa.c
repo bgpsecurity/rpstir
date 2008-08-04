@@ -31,6 +31,7 @@
 #include <extensions.h>
 #include <roa.h>
 #include <roa_utils.h>
+#include <assert.h>
 
 // in signCMS.c in this directory
 extern char *signCMS(struct ROA *, char *, int);
@@ -58,13 +59,13 @@ char *msgs[] =
   "Can't find extension %s\n",
   "Can't find ASNum[%d]\n",	// 6
   "Signature failed in %s\n",
-  "%s failed roaValidate\n",	// 8
   };
 
 void fatal(int err, ...)
 {
     va_list ap;
     va_start(ap, err);
+    assert(err < (sizeof(msgs) / sizeof(msgs[0])));
     vfprintf(stderr, msgs[err], ap);
     va_end(ap);
     exit(err);
@@ -290,7 +291,7 @@ int main (int argc, char **argv)
 
     // validate: make sure we did it all right
     if (roaValidate(&roa) != 0) 
-	fatal(8, roafile);
+	fprintf(stderr, "Warning: %s failed roaValidate\n", roafile);
 
     // write out the roa
     if (put_casn_file(&roa.self, roafile, 0) < 0) 
