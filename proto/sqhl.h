@@ -66,7 +66,7 @@
 
 /* certain fields need to have "rsync URIs". The only test we perform
  * for now is to verify that the field starts with this text */
-#define RSYNC_PREFIX "rsync:/"	/* XXX "rsync://" -- set to this for testing */
+#define RSYNC_PREFIX "rsync://"
 #define RSYNC_PREFIX_LEN (sizeof(RSYNC_PREFIX) - 1)
 
 /*
