@@ -185,7 +185,7 @@ static int check_cert(struct Certificate *certp)
   if (diff_casn(&certtbsp->signature.algorithm, &certp->algorithm.algorithm))
     return ERR_SCM_BADALG;
   if (getTime(&certtbsp->validity.notBefore, &lo) < 0 ||
-    getTime(&certtbsp->validity.notAfter, &hi) < 0 || lo >= hi)
+    getTime(&certtbsp->validity.notAfter, &hi) < 0 || lo > hi)
     return ERR_SCM_BADDATES;
   struct casn *spkeyp = &certtbsp->subjectPublicKeyInfo.subjectPublicKey;
   uchar *pubkey;

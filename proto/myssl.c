@@ -2309,9 +2309,8 @@ static int rescert_sia_chk(X509 *x, int ct)
   AUTHORITY_INFO_ACCESS *sia = NULL;
   ACCESS_DESCRIPTION    *adesc = NULL;
   X509_EXTENSION *ex;
-  char c;
   static const unsigned char sia_oid[] =
-    {0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x5};
+    {0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x0b};
 
   sia_oid_len = sizeof(sia_oid);
 
@@ -2403,16 +2402,7 @@ static int rescert_sia_chk(X509 *x, int ct)
 #endif
         goto skip;
       }
-      c = adesc->location->d.uniformResourceIdentifier->data[len - 1];
-      if (c == '/')
-        uri_flag++;
-      else {
-#ifdef DEBUG
-        fprintf(stderr, "[sia] rsync uri in CA cert without trailing /\n");
-#endif
-        ret = ERR_SCM_BADSIA;
-        goto skip;
-      }
+      ++uri_flag;
     }
   }
 
