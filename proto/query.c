@@ -409,7 +409,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   // XXX hack-- print out RPSL here for now, should factor out
   // XXX No differentiation between ipv4 and ipv6
   if (isRPSL) {
-    unsigned int asn = 0;
+    unsigned long long asn = 0;
     char *filter = 0;
     char *filename = 0;
 
@@ -418,7 +418,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       if (!strcasecmp(field->name, "filter"))
 	filter = (char *)s->vec[display].valptr;
       else if (!strcasecmp(field->name, "asn"))
-	asn = *(unsigned int *) s->vec[display].valptr;
+	asn = *(unsigned long long *) s->vec[display].valptr;
       else if (!strcasecmp(field->name, "filename"))
 	filename = (char *)s->vec[display].valptr;
       else
@@ -449,13 +449,21 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	  ++f;
 	  if ((i == 0 && strchr(f, ':') == 0) ||
 	      (i == 1 && strchr(f, ':') != 0)) {
-	    if (first)
-	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS%d  # %s\n", 
-		      ((i == 0) ? '4' : '6'), 
-		      asn,
-		      filename ? filename : "???");
+	    if (first) {
+	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS",
+		      ((i == 0) ? '4' : '6'));
+	      // is it > 2^32? split into two pieces
+	      if (asn >= ((unsigned long long)1 << 32)) {
+		fprintf(output, "%lld.%lld", (asn >> 32), 
+			(asn & (((unsigned long long)1 << 32) - 1)));
+	      } else {
+		fprintf(output, "%lld", asn);
+	      }
+	      fprintf(output, "  # %s\n", filename ? filename : "???");
+	    }
 	    first = 0;
-	    fprintf(output, "members: %s\n", f);
+	    fputs((i == 0) ? "members" : "mp-members", output);
+	    fprintf(output, ": %s\n", f);
 	    ++numprinted;
 	  }
 	  *end = '\n';
