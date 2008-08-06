@@ -409,7 +409,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   // XXX hack-- print out RPSL here for now, should factor out
   // XXX No differentiation between ipv4 and ipv6
   if (isRPSL) {
-    unsigned long long asn = 0;
+    unsigned int asn = 0;
     char *filter = 0;
     char *filename = 0;
 
@@ -418,7 +418,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       if (!strcasecmp(field->name, "filter"))
 	filter = (char *)s->vec[display].valptr;
       else if (!strcasecmp(field->name, "asn"))
-	asn = *(unsigned long long *) s->vec[display].valptr;
+	asn = *(unsigned int *) s->vec[display].valptr;
       else if (!strcasecmp(field->name, "filename"))
 	filename = (char *)s->vec[display].valptr;
       else
@@ -453,11 +453,10 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS",
 		      ((i == 0) ? '4' : '6'));
 	      // is it > 2^32? split into two pieces
-	      if (asn >= ((unsigned long long)1 << 32)) {
-		fprintf(output, "%lld.%lld", (asn >> 32), 
-			(asn & (((unsigned long long)1 << 32) - 1)));
+	      if (asn > (unsigned int) 0xffff) {
+		fprintf(output, "%u.%u", (asn >> 16), (asn & 0xffff));
 	      } else {
-		fprintf(output, "%lld", asn);
+		fprintf(output, "%u", asn);
 	      }
 	      fprintf(output, "  # %s\n", filename ? filename : "???");
 	    }
