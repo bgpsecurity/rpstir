@@ -228,7 +228,7 @@ static void membail(void)
 static void usage(void)
 {
   (void)printf("Usage:\n");
-  (void)printf("  -d dir     delete the indicated file\n");
+  (void)printf("  -d dir     delete the indicated file (using full pathname)\n");
   (void)printf("  -f file    add the indicated file\n");
   (void)printf("  -F file    add the indicated trusted file\n");
   (void)printf("  -p         run the socket listener in perpetual mode\n");
@@ -778,7 +778,7 @@ int main(int argc, char **argv)
       (void)printf("Extra arguments at the end of the command line.\n");
       usage();
       return(1);
-  } else if ((do_create + do_delete + do_sockopts) == 0 && thefile == 0) {
+  } else if ((do_create + do_delete + do_sockopts) == 0 && thefile == 0 && thedelfile == 0) {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
       usage();
@@ -1012,10 +1012,10 @@ int main(int argc, char **argv)
 	    {
 	      (void)fprintf(stderr,
 			    "Could not delete file %s: error %s (%d)\n",
-			    thefile, err2string(sta), sta);
+			    thedelfile, err2string(sta), sta);
 	      (void)fprintf(logfile,
 			    "Could not delete file %s: error %s (%d)\n",
-			    thefile, err2string(sta), sta);
+			    thedelfile, err2string(sta), sta);
 	      if ( sta == ERR_SCM_SQL )
 		{
 		  ne = geterrorscm(realconp);
@@ -1024,7 +1024,7 @@ int main(int argc, char **argv)
 		}
 	    }
 	  else
-	    (void)fprintf(logfile, "Delete operation succeeded\n");
+	    (void)fprintf(logfile, "Delete operation succeeded (%s removed)\n", thedelfile);
 	  free((void *)outdir);
 	  free((void *)outfile);
 	  free((void *)outfull);
