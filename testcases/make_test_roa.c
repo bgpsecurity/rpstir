@@ -291,7 +291,8 @@ int main (int argc, char **argv)
 
     // validate: make sure we did it all right
     if (roaValidate(&roa) != 0) 
-	fprintf(stderr, "Warning: %s failed roaValidate\n", roafile);
+	fprintf(stderr, "Warning: %s failed roaValidate (-b option %s) \n",
+		roafile, (bad == 0 ? "not set":"set"));
 
     // write out the roa
     if (put_casn_file(&roa.self, roafile, 0) < 0) 
