@@ -833,7 +833,15 @@ int main(int argc, char **argv)
 /*
   These privileged operations will need a password.
 */
-      password = getpass("Enter MySQL root password: ");
+     password = getenv ("APKI_PASSWORD");  /* can be defined by environment variable */
+     if (password == NULL)  /* env variable does not specify password */
+       {
+	  /* note: getpass manpage states that "this function is obsolete, do not use"
+	     and it is possible to write a local one, but leave this for now
+	  */
+	 password = getpass("Enter MySQL root password: ");
+       }
+     
       tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
       if ( password != NULL )
 	memset(password, 0, strlen(password));
