@@ -36,7 +36,7 @@ char *msgs [] =
     "Finished %s OK\n",
     "Couldn't open %s\n",
     "Can't translate %s.  Try again\n",      // 2
-    "Usage: subjectname startdelta enddelta\n",
+    "Usage: subjectname startdelta enddelta [badsignature]\n",
     "Issuer cert has no %s extension\n",              // 4
     "Signing failed in %s\n",
     "Error opening %s\n",                // 6
@@ -100,6 +100,23 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
   return ansr;
   }
    
+static void inheritIPAddresses(struct Extension *extp, struct Extension *iextp)
+  {
+  struct IPAddressFamilyA *ipfamp;
+  int num;
+  copy_casn(&extp->self, &iextp->self);
+  num = num_items(&extp->extnValue.ipAddressBlock.self);
+  for (num--; num >= 0; num--)
+    {    // first clear out the real addresses
+    ipfamp = (struct IPAddressFamilyA *)member_casn(
+      &extp->extnValue.ipAddressBlock.self, num);
+    while(num_items(&ipfamp->ipAddressChoice.addressesOrRanges.self) > 0)
+      eject_casn(&ipfamp->ipAddressChoice.addressesOrRanges.self, 0);
+      // then set inherit
+    write_casn(&ipfamp->ipAddressChoice.inherit, (uchar *)"", 0);  
+    }
+  }
+
 static int ip2Prefix(char **prefixpp, struct IPAddressA *ipp, int family)
   {
   int lth = vsize_casn(ipp);
@@ -302,7 +319,7 @@ static void set_name(struct RDNSequence *rdnsp, char *namep)
   write_casn(&avap->value.commonName.printableString, (uchar *)namep, strlen(namep));
   } 
 
-static int setSignature(struct Certificate *certp, char *keyfile)
+static int setSignature(struct Certificate *certp, char *keyfile, int bad)
 {
   CRYPT_CONTEXT hashContext;
   CRYPT_CONTEXT sigKeyContext;
@@ -355,9 +372,13 @@ static int setSignature(struct Certificate *certp, char *keyfile)
       msg = "decoding signature";
     else if ((ansr = readvsize_casn(&siginfo.signature, &signstring)) < 0)
       msg = "reading signature";
-    else if ((ansr = write_casn_bits(&certp->signature, signstring, ansr, 0)) < 0)
-      msg = "writing signature";
-    else ansr = 0;
+    else 
+      {
+      if (bad) signstring[0]++;
+      if ((ansr = write_casn_bits(&certp->signature, signstring, ansr, 0)) < 0)
+        msg = "writing signature";
+      else ansr = 0;
+      }
     }
   if (signstring != NULL) free(signstring);
   if (signature != NULL ) free(signature);
@@ -456,7 +477,7 @@ static void view_extensions(struct Extensions *extsp)
 int main(int argc, char **argv)
   {
   if (argc < 4) fatal(3, "");
-  int ee = 0, root = (strlen(argv[1]) == 1);
+  int bad = 0, ee = 0, root = (strlen(argv[1]) == 1);
   struct stat tstat;
   fstat(0, &tstat);
   int filein = (tstat.st_mode & S_IFREG);
@@ -467,6 +488,7 @@ int main(int argc, char **argv)
   Certificate(&issuer, (ushort)0);
   char *c, *subjkeyfile, *subjfile, *issuerfile = (char *)0,
     *issuerkeyfile = (char *)0;
+  if (argc > 4) bad = 1;
   for (c = &argv[1][1]; *c && *c >= '0' && *c <= '9'; c++);
   if (*c && *c != 'M' && *c != 'R') fatal(10, argv[1]);
   if (*c) ee = 1;
@@ -614,6 +636,9 @@ int main(int argc, char **argv)
         write_family(famp, filein);
         }
       }
+    else if (strchr(subjfile, (int)'M'))  // making EE cert to sign manifest
+      inheritIPAddresses(extp, iextp);
+      
     else copy_casn(&extp->self, &iextp->self);
     extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
     iextp = findExtension(&issuer.toBeSigned.extensions, id_pe_autonomousSysNum);
@@ -649,7 +674,7 @@ int main(int argc, char **argv)
   //    copy_casn(&extp->extnValue.self, &iextp->extnValue.self);
       }
     }
-  setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile);
+  setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile, bad);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);
   int siz = dump_size(&cert.self);
   char *rawp = (char *)calloc(1, siz + 4);
