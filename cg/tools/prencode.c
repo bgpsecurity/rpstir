@@ -1,8 +1,3 @@
-/* Jul 10 1996 378U  */
-/* Jul 10 1996 GARDINER changed for Solaris 2 */
-/* Mar  8 1994   1U  */
-/* Mar  8 1994 GARDINER Started on SPARC */
-/* Mar  8 1994      */
 /* $Id$ */
 char prencode_sfcsid[] = "@(#)prencode.c 378P";
 /*

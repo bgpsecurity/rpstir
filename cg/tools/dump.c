@@ -1,29 +1,4 @@
 /* $Id$ */
-/* May 23 2006 840U  */
-/* May 23 2006 GARDINER additions for APKI */
-/* May 24 2001 577U  */
-/* May 24 2001 GARDINER made main an int */
-/* Apr 10 2000 528U  */
-/* Apr 10 2000 GARDINER made getd() not change input string */
-/* Nov 18 1996 395U  */
-/* Nov 18 1996 GARDINER added -b and -l switches */
-/* Aug 30 1996 388U  */
-/* Aug 30 1996 GARDINER made self-adjusting for little-endian */
-/* Jul 10 1996 378U  */
-/* Jul 10 1996 GARDINER changed for Solaris 2 */
-/* Jan  3 1996 318U  */
-/* Jan  3 1996 GARDINER combined name table with rr */
-/* Oct 13 1995 290U  */
-/* Oct 13 1995 GARDINER fixed bug from bcopy in dump_asn1() */
-/* Aug 30 1994  50U  */
-/* Aug 30 1994 GARDINER initialize EOF pos variable */
-/* Apr 21 1994  20U  */
-/* Apr 21 1994 GARDINER allow indefinite length encoding */
-/* Apr  6 1994  11U  */
-/* Apr  6 1994 GARDINER fixed error messages; allow indef to start */
-/* Mar  8 1994   1U  */
-/* Mar  8 1994 GARDINER Started on SPARC */
-/* Mar  8 1994      */
 /*****************************************************************************
 File:     dump.c
 Contents: Main function of the dump utility

@@ -1,36 +1,3 @@
-/* Jun 11 2008 865U  */
-/* Jun 11 2008 GARDINER added oidtable stuff; added some snprintf etc. stuff */
-/* May 23 2006 840U  */
-/* May 23 2006 GARDINER additions for KTJL */
-/* May 24 2001 577U  */
-/* May 24 2001 GARDINER added UTF8String */
-/* Apr 10 2000 528U  */
-/* Apr 10 2000 GARDINER fixed for big offsets */
-/* Jan  8 1997 415U  */
-/* Jan  8 1997 GARDINER corrected improvement of last batch */
-/* Jan  3 1997 414U  */
-/* Jan  3 1997 GARDINER made dot notation all be on one line */
-/* Jan  3 1997    made indef length message be on same line */
-/* Nov 22 1996 401U  */
-/* Nov 22 1996 GARDINER added copyright notice header */
-/* Nov 22 1996 400U  */
-/* Nov 22 1996 GARDINER fixed for ObjId starting with 2. */
-/* Nov 19 1996 396U  */
-/* Nov 19 1996 GARDINER made it continue even if error; made enumerated hex */
-/* Feb 22 1996 338U  */
-/* Feb 22 1996 GARDINER fixed formatting */
-/* Feb 20 1996 335U  */
-/* Feb 20 1996 GARDINER removed reference to rr_dump.h */
-/* Jan  3 1996 318U  */
-/* Jan  3 1996 GARDINER taught dot notation; combined name table with rr */
-/* Oct 27 1994  98U  */
-/* Oct 27 1994 GARDINER added #defines; tidied up output format */
-/* Aug 30 1994  50U  */
-/* Aug 30 1994 GARDINER check for unprintables in t61 etc.; fix level bug */
-/* Apr 22 1994  21U  */
-/* Apr 22 1994 GARDINER added 'indefinite length' comment in output */
-/* Mar  8 1994   3U  */
-/* Mar  8 1994 GARDINER starting on SPARC */
 /*****************************************************************************
 File:     asn_dump.c
 Contents: Function to do the -a option of the dump utility

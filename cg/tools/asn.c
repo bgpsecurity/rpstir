@@ -1,18 +1,4 @@
 /* $Id$ */
-/* May 15 2006 838U  */
-/* May 15 2006 GARDINER corrected for newer gcc */
-/* Dec  5 2003 731U  */
-/* Dec  5 2003 GARDINER added "oid" as preferred nickname */
-/* Oct  1 2001 591U  */
-/* Oct  1 2001 GARDINER added "biw" and "ocw" */
-/* Nov 11 1998 498U  */
-/* Nov 11 1998 GARDINER added UTF_STRING; fixed set_asn_lth */
-/* Jan  3 1997 414U  */
-/* Jan  3 1997 GARDINER added terminating entry to table */
-/* Nov 19 1996 397U  */
-/* Nov 19 1996 GARDINER tidied header */
-/* Nov 19 1996 396U  */
-/* Nov 19 1996 GARDINER started */
 /**************************************************************************
  * FILE:        asn.c
  * AUTHORs:     Charles Gardiner (gardiner@bbn.com),
