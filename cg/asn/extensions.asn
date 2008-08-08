@@ -139,6 +139,7 @@ id-pkix-qt                      ID ::= { id-pkix 2 }
 id-pkix-kp                      ID ::= { id-pkix 3 }
 id-pkix-it                      ID ::= { id-pkix 4 }
 id-pkix-ad                      ID ::= { id-pkix 48 }
+id-ad                           ID ::= { id-pkix 48 }
 id-pkix-authorityInfoAccess     ID ::= { id-pkix-pe 1 }
 id-pkix-cps                     ID ::= { id-pkix-qt 1 }
 id-pkix-unotice                 ID ::= { id-pkix-qt 2 }
@@ -157,6 +158,7 @@ id-pkix-preferredSymmAlg        ID ::= { id-pkix-it 4 }
 id-pkix-caKeyUpdateInfo         ID ::= { id-pkix-it 5 }
 id-pkix-currentCRL              ID ::= { id-pkix-it 6 }
 id-pkix-ocsp                    ID ::= { id-pkix-ad 1 }
+id-ad-ocsp                      ID ::= { id-ad 1 }
 id-pkix-caIssuers               ID ::= { id-pkix-ad 2 }
 id-pkix-caRepository            ID ::= { id-pkix-ad 5 }
 id-pkix-signedObjectRepository  ID ::= { id-pkix-ad 9 }
@@ -165,6 +167,7 @@ id-pe-ipAddrBlock               ID ::= { id-pkix-pe 7 }
 id-pe-autonomousSysNum          ID ::= { id-pkix-pe 8 }
 id-pe-routerIdentifier          ID ::= { id-pkix-pe 9 }
 id-pe-subjectInfoAccess         ID ::= { id-pkix-pe 11}
+id-pkix-pe-rescerts-policy      ID ::= { id-pkix-pe 14 2}
 
 
 ExtensionSet ::= TABLE {
