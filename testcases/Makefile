@@ -30,7 +30,7 @@ CASN_DIR= ../casn
 LIBASN=../cg/asn/libasn.a
 LIBCASN=../cg/casn/libcasn.a
 LIBROA=../roa-lib/libroa.a
-LOCAL_LIBS=  $(LIBASN) $(LIBCASN)  $(LIBROA)
+LOCAL_LIBS=  $(LIBASN) $(LIBROA) $(LIBCASN)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
 gen_test_key:	gen_test_key.o Makefile $(LOCAL_LIBS)
@@ -42,11 +42,11 @@ make_test_cert:	make_test_cert.o Makefile adjustTime.o $(LOCAL_LIBS)
 make_test_crl:	make_test_crl.o Makefile adjustTime.o $(LOCAL_LIBS)
 	$(CC) $(CFLAGS) -o $@ make_test_crl.o adjustTime.o $(LOCAL_LIBS) $(LIBS)
 
-make_test_roa:	make_test_roa.o Makefile signCMS.o $(LOCAL_LIBS)
-	$(CC) $(CFLAGS) -o $@ make_test_roa.o signCMS.o $(LOCAL_LIBS) $(LIBS)
+make_test_roa:	make_test_roa.o Makefile $(LOCAL_LIBS)
+	$(CC) $(CFLAGS) -o $@ make_test_roa.o $(LOCAL_LIBS) $(LIBS)
 
-make_test_manifest:	make_test_manifest.o Makefile adjustTime.o signCMS.o $(LOCAL_LIBS)
-	$(CC) $(CFLAGS) -o $@ make_test_manifest.o adjustTime.o signCMS.o $(LOCAL_LIBS) $(LIBS)
+make_test_manifest:	make_test_manifest.o Makefile adjustTime.o $(LOCAL_LIBS)
+	$(CC) $(CFLAGS) -o $@ make_test_manifest.o adjustTime.o $(LOCAL_LIBS) $(LIBS)
 
 adjustTime.o:	adjustTime.c 
 

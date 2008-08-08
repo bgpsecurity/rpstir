@@ -39,13 +39,15 @@ extern char *signCMS(struct ROA *, char *, int);
 void usage(char *prog) 
 {
   printf("usage:\n");
-  printf("%s -r roafile -c certfile -k keyfile -i index [-R readable] [-b]\n", prog);
+  printf("%s -r roafile -c certfile -k keyfile -i index [-R readable] [-b] [-4 v4maxlen] [-6 v6maxlen]\n", prog);
   printf("  -r roafile: file to write roa to\n");
   printf("  -c certfile: file holding EE cert for roa\n");
   printf("  -k keyfile: file holding p15-format public key for signing roa\n");
   printf("  -i index: which child is this (of that cert) (one-based)\n");
   printf("  -R readable: file to write readable asn.1 for roa to\n");
   printf("  -b: generate bad (invalid) signature\n");
+  printf("  -4: specify maxLength for first IPv4 Address\n");
+  printf("  -6: specify maxLength for first IPv6 Address\n");
   exit(1);
 }  
 
@@ -94,11 +96,9 @@ static long getASNum(struct Certificate *certp, long idx)
 
   // now iterate through each AS number (or AS range) to find the idx'th one
 
-  // XXX asnum is marked as optional in the spec
-  // added this assert to make sure it's bound. is it right?
+  // asnum is marked as optional in the spec. If it is absent, member_casn 
+  // will immediately return NULL and exit the "for" 
   struct ASIdentifierChoiceA *asnum = &extp->extnValue.autonomousSysNum.asnum;
-  // N.b. if the length > 0, means that the field has a value
-  assert(vsize_casn(&asnum->self) > 0);
 
   // run through the sequence, decrementing idx as we go past
   // when idx goes to 0, we've found our goal
@@ -139,10 +139,11 @@ static long getASNum(struct Certificate *certp, long idx)
 
 // copy the ip addr blocks over into the roa
 static void getIPAddresses(struct ROAIPAddrBlocks *roaipp, 
-			   struct IpAddrBlock *ipap)
+   struct IpAddrBlock *ipap, int v4maxLen, int v6maxLen)
   {
   int numfams = 0;
   struct IPAddressFamilyA *ipFamp;
+    // copy all families from the cert (ipap) to the ROA (roaipp)
   for (ipFamp = (struct IPAddressFamilyA *)member_casn(&ipap->self, 0); 
        ipFamp;
        ipFamp = (struct IPAddressFamilyA *)next_of(&ipFamp->self))
@@ -154,34 +155,32 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
 
     // copy over the family ID (v4 or v6)
     copy_casn(&roafp->addressFamily, &ipFamp->addressFamily);
+    uchar fam[2];
+    read_casn(&ipFamp->addressFamily, fam);
 
-      // XXX assume only 1 IPAddressOrRange in cert
-    struct IPAddressOrRangeA *ipaorrp = (struct IPAddressOrRangeA *)
-      member_casn(&ipFamp->ipAddressChoice.addressesOrRanges.self, 0);
-
-    // insert the casn for the ip addr
-    struct ROAIPAddress *roaipa = (struct ROAIPAddress *)
-      inject_casn(&roafp->addresses.self, 0); 
-
-    // XXX what is this? why are we changing the length of the prefix?
-    uchar *addrp;
-    int lth = readvsize_casn(&ipaorrp->addressPrefix, &addrp);
-#if 0				
-    /* I have no clue why this was here. */
-    /* It munges prefix lengths for no clear reason. */
-    if (addrp[0] > 1) 
-      addrp[0] -= 2;
-    else
+    struct IPAddressOrRangeA *ipaorrp;
+    int numAddr = 0;
+    for (ipaorrp = (struct IPAddressOrRangeA *) member_casn(
+      &ipFamp->ipAddressChoice.addressesOrRanges.self, 0);
+      ipaorrp; 
+      ipaorrp = (struct IPAddressOrRangeA *)next_of(&ipaorrp->self))
       {
-      addrp = (uchar *)realloc(addrp, ++lth);
-      addrp[0] += 6;
-      addrp[lth - 1] = 0;
+      // insert the casn for the ip addr
+      struct ROAIPAddress *roaipa = (struct ROAIPAddress *) inject_casn(
+        &roafp->addresses.self, numAddr++); 
+      // if cert has a range, give up
+      if (size_casn(&ipaorrp->addressRange.self)) fatal(9, "");
+      // otherwise copy the prefix
+      copy_casn(&roaipa->address, &ipaorrp->addressPrefix);
+      if (numAddr < 2)  // it has been incremented above
+        {
+        if (fam[1] == 1 && v4maxLen > 0) 
+          write_casn_num(&roaipa->maxLength, (long)v4maxLen);
+        if (fam[1] == 2 && v6maxLen > 0) 
+          write_casn_num(&roaipa->maxLength, (long)v6maxLen);
+        }
       }
-#endif
-    // write the addr to the roa's field
-    write_casn(&roaipa->address, addrp, lth);
     }
-
   // all done
   return;
   }
@@ -195,8 +194,9 @@ int main (int argc, char **argv)
     char *msg;
     int idx;
     int c;
+    int v4maxLen = 0, v6maxLen = 0;
 
-    while ((c = getopt(argc, argv, "br:R:i:c:k:")) != -1) {
+    while ((c = getopt(argc, argv, "br:R:i:c:k:4:6:")) != -1) {
 	switch (c) {
 	case 'c':
 	    // cert file
@@ -227,6 +227,16 @@ int main (int argc, char **argv)
 	    // mark sig as bad
 	    bad = 1;
 	    break;
+
+        case '4':
+            // maxLength of first IPv4 address
+            v4maxLen = atoi(optarg);
+            break;
+
+        case '6':
+            // maxLength of first IPv6 address
+            v6maxLen = atoi(optarg);
+            break;
 
 	default:
 	    printf("illegal option.\n");
@@ -282,7 +292,8 @@ int main (int argc, char **argv)
 	extp = (struct Extension *)next_of(&extp->self);
     if (extp == NULL) 
 	fatal(3, "IP Address Block");
-    getIPAddresses(&roap->ipAddrBlocks, &extp->extnValue.ipAddressBlock);
+    getIPAddresses(&roap->ipAddrBlocks, &extp->extnValue.ipAddressBlock, 
+      v4maxLen, v6maxLen);
 
     // sign the message
     msg = signCMS(&roa, keyfile, bad);
@@ -291,8 +302,7 @@ int main (int argc, char **argv)
 
     // validate: make sure we did it all right
     if (roaValidate(&roa) != 0) 
-	fprintf(stderr, "Warning: %s failed roaValidate (-b option %s) \n",
-		roafile, (bad == 0 ? "not set":"set"));
+	fprintf(stderr, "Warning: %s failed roaValidate (-b option %s) \n", roafile, (bad == 0 ? "not set": "set"));
 
     // write out the roa
     if (put_casn_file(&roa.self, roafile, 0) < 0) 

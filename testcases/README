@@ -14,6 +14,9 @@ contents of the main file generated in more readable form.  (If the user sets
 the environment variable OIDTABLE to point to cg/asn/oidtable, the OBJECT
 IDENTIFIERS will be interpreted in the raw file.)
 
+    In addition to the "makeall" script there is a file "testall.sh" which 
+initializes the database adne then loads the test files into the database.
+
 1. Certificates
 
     Certificates have only a simple commonName for their issuer and subject
@@ -122,3 +125,6 @@ CA C12 and signed by end entity C12M3, e.g.
 
     make_test_manifest M123 0D 3M <makeM123
 
+5. Script files
+
+    The file "makeall" creates a set of test files with 

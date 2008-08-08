@@ -637,8 +637,17 @@ int main(int argc, char **argv)
     {  // subjectInfoAccess
     extp = makeExtension(extsp, id_pe_subjectInfoAccess);
     if (!(iextp = findExtension(iextsp, id_pe_subjectInfoAccess)))
-      fatal(4, "subjectInfoAccess");
+        fatal(4, "subjectInfoAccess");
     copy_casn(&extp->self, &iextp->self);
+    if (ee)  // making an EE cert
+      {
+      struct AccessDescription *accDesp = (struct AccessDescription *)
+        member_casn(&extp->extnValue.subjectInfoAccess.self, 0);
+      if (!accDesp) fatal(4, "subjectInfoAccess");
+      
+      write_objid(&accDesp->accessMethod, id_pkix_signedObject);
+  //    copy_casn(&extp->extnValue.self, &iextp->extnValue.self);
+      }
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);

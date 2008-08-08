@@ -62,7 +62,7 @@ seq seq ctx+0x20
                                 seq seq int 0x01
                                         int 0x64
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_pkix_ad + .5 */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_pkix_caRepository */
                                 ctx+0x06
                                     "rsync://arin-via-apnic.mirin.apnic.net/moc"
                                     "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
