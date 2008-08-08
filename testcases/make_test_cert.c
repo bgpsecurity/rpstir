@@ -640,24 +640,29 @@ int main(int argc, char **argv)
       inheritIPAddresses(extp, iextp);
       
     else copy_casn(&extp->self, &iextp->self);
-    extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
-    iextp = findExtension(&issuer.toBeSigned.extensions, id_pe_autonomousSysNum);
-    if (!ee)  // AS numbers
+      // if not a ROA EE, get AS num extension
+    if (!strchr(subjfile, (int)'R'))
       {
-      copy_casn(&extp->critical, &iextp->critical);
-      struct ASNum *iasNump = &iextp->extnValue.autonomousSysNum;
-      char *a;
-      read_ASNums(&a, iasNump);
-      if (!filein) 
+      iextp = findExtension(&issuer.toBeSigned.extensions, id_pe_autonomousSysNum);
+      extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
+      if (!ee)  // get numbers from input file
         {
-        fprintf(stdout, a);
-        fprintf(stdout, "What AS numbers?\n");
+        copy_casn(&extp->critical, &iextp->critical);
+        struct ASNum *iasNump = &iextp->extnValue.autonomousSysNum;
+        char *a;
+        read_ASNums(&a, iasNump);
+        if (!filein) 
+          {
+          fprintf(stdout, a);
+          fprintf(stdout, "What AS numbers?\n");
+          }
+        struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
+        write_ASNums(asNump);
         }
-      struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
-      write_ASNums(asNump);
+      else copy_casn(&extp->self, &iextp->self);
       }
-    else copy_casn(&extp->self, &iextp->self);
     }
+
   if (issuerfile)
     {  // subjectInfoAccess
     extp = makeExtension(extsp, id_pe_subjectInfoAccess);
