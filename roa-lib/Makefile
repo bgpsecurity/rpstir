@@ -32,9 +32,10 @@ roa_validate.o: roa_validate.c roa_utils.h
 roa_create.o: roa_create.c roa_utils.h 
 roa_general.o: roa_general.c roa_utils.h
 roa_serialize.o: roa_serialize.c roa_utils.h
+signCMS.o: signCMS.c
 
-libroa.a: roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h 
-	ar crv libroa.a roa_validate.o roa_create.o roa_general.o roa_serialize.o 
+libroa.a: roa_validate.o roa_create.o roa_general.o roa_serialize.o roa_utils.h signCMS.o
+	ar crv libroa.a roa_validate.o roa_create.o roa_general.o roa_serialize.o signCMS.o
 	ranlib libroa.a
 
 clean:

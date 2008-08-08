@@ -174,7 +174,8 @@ unsigned char *roaSignature(struct ROA *r, int *lenp)
   return(r->content.signedData.signerInfos.signerInfo.signature.startp);
 }
 
-static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
+static unsigned char* printIPv4String(unsigned char* array, int iArraySize, 
+    int iFill, int iPrintPrefix, int maxLen)
 {
   int i = 0;
   unsigned char j = 0;
@@ -183,15 +184,17 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int 
   unsigned char cPrefix = 0;
   unsigned int prefix;
   unsigned char* cReturnString = NULL;
+  int cReturnStringSize = 0;
   unsigned char cDecimalSection[3];
 
   if (NULL == array)
     return NULL;
 
-  prefix = 8 * (iArraySize - 1) - array[0];
-  assert(prefix < 256);
+  prefix = (8 * (iArraySize - 1)) - array[0];
+  assert(prefix < 33);
   cPrefix = (uchar) prefix;
-  cReturnString = calloc(24+3*iArraySize, sizeof(char));
+  cReturnStringSize = 30 + (3 * iArraySize);
+  cReturnString = calloc(sizeof(char), cReturnStringSize);
   if (NULL == cReturnString)
     return NULL;
 
@@ -249,12 +252,22 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize, int 
       cvaldtoc3(cPrefix, cDecimalSection, &iSecLen);
       memcpy(cReturnString + iReturnLen, cDecimalSection, iSecLen);
       iReturnLen += iSecLen;
+      if (maxLen)
+        {
+        char maxlenbuf[10];
+        memset(maxlenbuf, 0, sizeof(maxlenbuf));
+        sprintf(maxlenbuf, "^%d-%d", prefix, maxLen);
+        assert(iReturnLen + strlen(maxlenbuf) < cReturnStringSize);
+        strcpy((char *)&cReturnString[iReturnLen], maxlenbuf);
+        iReturnLen += strlen(maxlenbuf);
+        }
     }
 
   return cReturnString;
 }
 
-static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int iFill, int iPrintPrefix)
+static unsigned char* printIPv6String(unsigned char* array, int iArraySize, 
+  int iFill, int iPrintPrefix, int maxLen)
 {
   int i = 0;
   unsigned char j = 0;
@@ -264,15 +277,17 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
   unsigned char cPrefix = 0;
   unsigned char* cReturnString = NULL;
   unsigned char cHexSection[2];
+  int cReturnStringSize = 0;
   unsigned char cDecimalPrefix[3];
 
   if (NULL == array)
     return NULL;
 
   prefix = 8 * (iArraySize - 1) - array[0];
-  assert(prefix < 256);
+  assert(prefix < 129);
   cPrefix = (uchar) prefix;
-  cReturnString = calloc(48+3*iArraySize, sizeof(char));
+  cReturnStringSize = 60 + (3 * iArraySize);
+  cReturnString = calloc(sizeof(char), cReturnStringSize);
   if (NULL == cReturnString)
     return NULL;
 
@@ -329,6 +344,15 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
       cvaldtoc3(cPrefix, cDecimalPrefix, &iSecLen);
       memcpy(cReturnString + iReturnLen, cDecimalPrefix, iSecLen);
       iReturnLen += iSecLen;
+      if (maxLen)
+        {
+        char maxlenbuf[10];
+        memset(maxlenbuf, 0, sizeof(maxlenbuf));
+        sprintf(maxlenbuf, "^%d-%d", prefix, maxLen);
+        assert(iReturnLen + strlen(maxlenbuf) < cReturnStringSize);
+        strcpy((char *)&cReturnString[iReturnLen], maxlenbuf);
+        iReturnLen += strlen(maxlenbuf);
+        }
     }
 
   return cReturnString;
@@ -336,7 +360,7 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize, int 
 
 static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
 {
-  int iSize = 0;
+  int iSize = 0, maxLen;
   unsigned char *cASCIIString = NULL, ipaddr[200];
 
   // parameter check
@@ -346,17 +370,15 @@ static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
   memset(ipaddr, 0, sizeof(ipaddr));
   iSize = vsize_casn(&raddr->address);
   
-  // XXX this ignores optional integer maxLength
-
   if ((0 >= iSize) || (sizeof(ipaddr) < iSize))
       return NULL;
   if (0 > read_casn(&raddr->address, ipaddr))
       return NULL;
-
+  if (read_casn_num(&raddr->maxLength, (long *)(&maxLen)) == 0) maxLen = 0;
   if (IPV4 == iFamily) {
-      cASCIIString = printIPv4String(ipaddr, iSize, 0, cTRUE);
+      cASCIIString = printIPv4String(ipaddr, iSize, 0, cTRUE, maxLen);
   } else if (IPV6 == iFamily) {
-      cASCIIString = printIPv6String(ipaddr, iSize, 0, cTRUE);
+      cASCIIString = printIPv6String(ipaddr, iSize, 0, cTRUE, maxLen);
   }
 
   return cASCIIString;

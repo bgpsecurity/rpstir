@@ -26,6 +26,8 @@
 #include "roa_utils.h"
 #include "cryptlib.h"
 
+extern char *signCMS(struct ROA *, char *, int);
+
 // Warning - MAX_LINE hardcoded as a constant in confInterpret;
 //  if this changes, that must as well
 #define MAX_LINE 512
@@ -514,7 +516,8 @@ static int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, in
 //
 /////////////////////////////////////////////////////////////
 
-static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int* iGoodLeadingBytes)
+static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, 
+  int* iGoodLeadingBytes)
 {
   int iFullBytes = 0;
   unsigned char cGoodTrailingBits = 0;
@@ -538,8 +541,9 @@ static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, int
   return 0;
 }
 
-static int calculateAndClearPrefix(int iPrefix, int iSize, unsigned char* iparray,
-			    unsigned char* cBadBits, int* iGoodBytes)
+static int calculateAndClearPrefix(int iPrefix, int iSize, 
+    unsigned char* iparray, unsigned char* cBadBits, int* iGoodBytes,
+    int *maxLenp)
 {
   int i = 0;
   int iIndex = 0;
@@ -991,14 +995,19 @@ static int setSID(struct ROA* roa, unsigned char* sidstring)
       sidIndex++;
     }
   
-  write_casn(&(roa->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier), sid, 20);
+  write_casn(&(roa->content.signedData.signerInfos.signerInfo.sid.
+    subjectKeyIdentifier), sid, 20); 
   g_lastInstruction = NONE;
   return 0;
 }
 
 #endif
+/*
 
-static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, char *filename)
+    This has been replaced by signCMS
+
+static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, 
+  char *filename)
 {
   CRYPT_CONTEXT hashContext;
   CRYPT_CONTEXT sigKeyContext;
@@ -1051,6 +1060,7 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, cha
     free(signature);
   return ansr;
 }
+*/
 
 static int setAS_ID(struct ROA* roa, unsigned char* asidstring)
 {
@@ -1131,37 +1141,49 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
   int iBlocks = 0;
   int iAddrs = 0;
   int sta = 0;
+  int maxLen = 0;
+  uchar *addrString;
 
   struct ROAIPAddressFamily *roaFamily = NULL;
 
-#ifdef IP_RANGES_ALLOWED
+/* #ifdef IP_RANGES_ALLOWED
   struct IPAddressOrRangeA *roaAddr = NULL;
-#else
-  struct IPAddress *roaAddr = NULL;
-#endif
+#else 
+*/
+  struct ROAIPAddress *roaAddr = NULL;
+// #endif
 
   memset(ipv4array, 0, 5);
   memset(ipv6array, 0, 17);
-
+  // Before anything, deal with the maxLen, if present
+  addrString = (uchar *)calloc(1, strlen((char *)ipaddrstring) + 1);
+  strcpy((char *)addrString, (char *)ipaddrstring);
+  char *mxp = strchr((char *)addrString, '^');
+  if (mxp) 
+    {
+    sscanf(&mxp[1], "%d", &maxLen);
+    *mxp = 0;  // chop it off 
+    }
+    
   // First, translate the address into something meaningful
   if ((IPV4FAM == g_lastInstruction) ||
       (IPV4CONT == g_lastInstruction))
     {
-      arrayptr = &ipv4array[1];
-      sta = translateIPv4Prefix(ipaddrstring, (unsigned char**) &arrayptr, &iPrefixSize);
+    arrayptr = &ipv4array[1];
+    sta = translateIPv4Prefix(addrString, (unsigned char**) &arrayptr, 
+      &iPrefixSize);
     }
   else if ((IPV6FAM == g_lastInstruction) ||
 	   (IPV6CONT == g_lastInstruction))
     {
-      arrayptr = &ipv6array[1];
-      sta = translateIPv6Prefix(ipaddrstring, (unsigned char**) &arrayptr, &iPrefixSize);
+    arrayptr = &ipv6array[1];
+    sta = translateIPv6Prefix(addrString, (unsigned char**) &arrayptr, 
+      &iPrefixSize);
     }
-  else
-    return ERR_SCM_INVALIPB;
-
+  else sta = ERR_SCM_INVALIPB;
+  free(addrString);
   // If translation failed, we're done
-  if (sta < 0)
-    return sta;
+  if (sta < 0) return sta;
 
   // Otherwise, write the data to the roa
   if ((IPV4FAM == g_lastInstruction) ||
@@ -1170,7 +1192,8 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       // Pull valid leading bytes/invalid trailing bits out of the prefix
       //  (necessary to constuct ASN BITSTRING), then populate the bit notice
       //  and add one to the length of the array to be copied
-      calculateAndClearPrefix(iPrefixSize, 32, arrayptr, &cBadBits, &iGoodBytes);
+      calculateAndClearPrefix(iPrefixSize, 32, arrayptr, &cBadBits, &iGoodBytes,
+        &maxLen);
       ipv4array[0] = cBadBits;
       iGoodBytes++;
       // Then, write the bitstring (as an octet string) to the latest generated roaIPFam
@@ -1179,6 +1202,7 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       if (0 < iBlocks)
 	{
 	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+/*
 #ifdef IP_RANGES_ALLOWED
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
@@ -1189,15 +1213,18 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 	  else
 	    sta = ERR_SCM_INVALIPB;
 #else
+*/
 	  iAddrs = num_items(&(roaFamily->addresses.self));
 	  if (0 <= iAddrs)
 	    {
-	      roaAddr = (struct IPAddress*) inject_casn(&(roaFamily->addresses.self), iAddrs);
-	      write_casn(roaAddr, ipv4array, iGoodBytes);
+	    roaAddr = (struct ROAIPAddress*)inject_casn(
+              &roaFamily->addresses.self, iAddrs);
+	    write_casn(&roaAddr->address, ipv4array, iGoodBytes);
+            if (maxLen) write_casn_num(&roaAddr->maxLength, maxLen);
 	    }
 	  else
 	    sta = ERR_SCM_INVALIPB;
-#endif
+// #endif
 	}
       else
 	sta = ERR_SCM_INVALIPB;
@@ -1209,7 +1236,8 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       // Pull valid leading bytes/invalid trailing bits out of the prefix
       //  (necessary to constuct ASN BITSTRING), then populate the bit notice
       //  and add one to the length of the array to be copied
-      calculateAndClearPrefix(iPrefixSize, 128, arrayptr, &cBadBits, &iGoodBytes);
+      calculateAndClearPrefix(iPrefixSize, 128, arrayptr, &cBadBits, 
+        &iGoodBytes, &maxLen);
       ipv6array[0] = cBadBits;
       iGoodBytes++;
       // Then, write the bitstring (as an octet string) to the casn
@@ -1217,6 +1245,7 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       if (0 < iBlocks)
 	{
 	  roaFamily = (struct ROAIPAddressFamily*) member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), iBlocks - 1);
+/*
 #ifdef IP_RANGES_ALLOWED
 	  iAddrs = num_items(&(roaFamily->addressesOrRanges.self));
 	  if (0 <= iAddrs)
@@ -1227,15 +1256,18 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 	  else
 	    sta = ERR_SCM_INVALIPB;
 #else
+*/
 	  iAddrs = num_items(&(roaFamily->addresses.self));
 	  if (0 <= iAddrs)
 	    {
-	      roaAddr = (struct IPAddress*) inject_casn(&(roaFamily->addresses.self), iAddrs);
-	      write_casn(roaAddr, ipv6array, iGoodBytes);
+	    roaAddr = (struct ROAIPAddress*) inject_casn(
+              &roaFamily->addresses.self, iAddrs);
+	    write_casn(&roaAddr->address, ipv6array, iGoodBytes);
+            if (maxLen) write_casn_num(&roaAddr->maxLength, maxLen);
 	    }
 	  else
 	    sta = ERR_SCM_INVALIPB;
-#endif
+// #endif
 	}
       else
 	sta = ERR_SCM_INVALIPB;
@@ -1481,7 +1513,7 @@ static int confInterpret(char* filename, struct ROA* roa)
   char line[MAX_LINE + 1] = "";
   char key[MAX_LINE + 1] = "";
   char keyfileName[MAX_LINE+1] = "";
-  unsigned char value[MAX_LINE + 1] = "", *buf;
+  unsigned char value[MAX_LINE + 1] = "";
 
   int iRet = 0;
   int iRet2 = 0;
@@ -1683,6 +1715,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 
   iRet = fclose(fp);
   if (iROAState < 0) return iROAState;
+/*
   if ((iRet = vsize_casn(&roa->content.signedData.encapContentInfo.eContent.self)) < 0)
     {
       //    printf("Error sizing hashable string\n");
@@ -1701,6 +1734,9 @@ static int confInterpret(char* filename, struct ROA* roa)
       iROAState = iRet2;
     }
   free(buf);
+*/
+  char *ap = signCMS(roa, keyfileName, 0);
+  if (ap) iROAState = ERR_SCM_INVALSIG;
   return iROAState;
 }
 

@@ -199,6 +199,14 @@ int roaValidate(struct ROA *r);
   returns a negative error code.
 */
 
+int manifestValidate(struct ROA *r);
+
+/*
+  This function performs all validations steps on a xxximanifestROA that do not
+  require database access.  On success it returns 0; on failure, it
+  returns a negative error code.
+*/
+
 int roaValidate2(struct ROA *r, uchar *cert);
 
 /*
@@ -229,7 +237,6 @@ int roaValidate2(struct ROA *r, uchar *cert);
       }
 */
 
-int manifestValidate(struct ROA *manp);
 int manifestValidate2(struct ROA *r, char *dir, struct badfile ***badfilesppp);
 
 /*
@@ -264,7 +271,10 @@ int decode_b64(unsigned char *bufIn, int inSize, unsigned char **bufOut, int *ou
   length "inSize" and produces the corresponding DER (raw ASN.1) data in "bufOut" of
   length "outSize". Note that it allocates memory to do this, which the caller must free.
 */
-
+char *signCMS(struct ROA *roa, char *keyfilename, int bad);
+/*
+  This function is used in roa_serialize, make_test_roa and make_test_manifest.
+*/ 
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
