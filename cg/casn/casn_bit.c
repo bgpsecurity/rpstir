@@ -1,21 +1,4 @@
 /* $Id$ */
-/* Apr  6 2007 851U  */
-/* Apr  6 2007 GARDINER changed fill_upward() */
-/* Apr 21 2006 835U  */
-/* Apr 21 2006 GARDINER fixed clearing */
-/* Jun  8 2004 773U  */
-/* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
-/* May 11 2004 762U  */
-/* May 11 2004 GARDINER more fixes for asn_obj tests */
-/* Apr 21 2004 761U  */
-/* Apr 21 2004 GARDINER fixed for half of casn_obj testing */
-/* Mar 29 2004 746U  */
-/* Mar 29 2004 GARDINER corrected warnings */
-/* Mar 29 2004 745U  */
-/* Mar 29 2004 GARDINER corrected warnings */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
-/* */
 /*****************************************************************************
 File:     casn_bit.c
 Contents: Functions to handle BIT STRING ASN.1 objects.

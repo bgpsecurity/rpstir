@@ -1,7 +1,4 @@
 /* $Id$ */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
-/* */
 /*****************************************************************************
 File:     casn_error.c
 Contents: Function to report errors

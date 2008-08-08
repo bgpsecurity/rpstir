@@ -1,26 +1,4 @@
-/* Jun  7 2007 858U  */
-/* Jun  7 2007 GARDINER corrected offset after explicit defined-by */
-/* Jun  6 2007 857U  */
-/* Jun  6 2007 GARDINER corrected dump of DEFINED BY; changed to biw and ocw */
-/* Mar 28 2007 849U  */
-/* Mar 28 2007 GARDINER fixed signedness errors */
-/* Mar 26 2007 848U  */
-/* Mar 26 2007 GARDINER corrected for -Wall */
-/* May 10 2006 836U  */
-/* May 10 2006 GARDINER removed _asn_of; added optional verbose map_string */
-/* Jul 14 2004 780U  */
-/* Jul 14 2004 GARDINER fixed filling of err_struct.asn_map_string */
-/* Jun  8 2004 773U  */
-/* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
-/* May 11 2004 762U  */
-/* May 11 2004 GARDINER more fixes for asn_obj tests */
-/* Apr  1 2004 752U  */
-/* Apr  1 2004 GARDINER added terminal null to dumped string */
-/* Mar 30 2004 749U  */
-/* Mar 30 2004 GARDINER corrected dump_tag for explicit tagging */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
-/* */
+/* $Id$ */
 /*****************************************************************************
 File:     casn_dump.c
 Contents: Functions to dump ASN.1 objects.
@@ -34,6 +12,23 @@ COPYRIGHT 2004 BBN Systems and Technologies
 10 Moulton St.
 Cambridge, Ma. 02138
 617-873-3000
+ ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ * 
+ * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
+ * US government users are permitted restricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2004-2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
 char casn_dump_sfcsid[] = "@(#)casn_dump.c 858P";

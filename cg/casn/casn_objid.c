@@ -1,26 +1,4 @@
-/* Jun 16 2008 866U  */
-/* Jun 16 2008 GARDINER added defense in _readsize_objid for empty casn */
-/* Mar 28 2007 849U  */
-/* Mar 28 2007 GARDINER fixed signedness errors */
-/* Mar 26 2007 848U  */
-/* Mar 26 2007 GARDINER corrected for -Wall */
-/* Jan 19 2005 823U  */
-/* Jan 19 2005 GARDINER added handling of relative OIDs */
-/* Sep  1 2004 803U  */
-/* Sep  1 2004 GARDINER added type test to vsize_objid */
-/* Aug  9 2004 800U  */
-/* Aug  9 2004 GARDINER fixed minor errors in diff_objid() */
-/* Aug  9 2004 799U  */
-/* Aug  9 2004 GARDINER changed diff_objid() so as not to write & select a member */
-/* Jul 15 2004 784U  */
-/* Jul 15 2004 GARDINER fixed more */
-/* Jul 15 2004 783U  */
-/* Jul 15 2004 GARDINER fixed bug in diff_objid */
-/* Jul 14 2004 781U  */
-/* Jul 14 2004 GARDINER changed diff_casn_objid to diff_objid to match casn.h */
-/* Jun 21 2004 775U  */
-/* Jun 21 2004 GARDINER moved objid things to casn_objid.c */
-/* */
+/* $Id$ */
 /*****************************************************************************
 File:     casn_objid.c
 Contents: Basic functions for ASN.1 objects.
@@ -34,6 +12,23 @@ COPYRIGHT 2004 BBN Systems and Technologies
 10 Moulton St.
 Cambridge, Ma. 02138
 617-873-3000
+ ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ * 
+ * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
+ * US government users are permitted restricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2004-2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
 char casn_objid_sfcsid[] = "@(#)casn_objid.c 866P";

@@ -1,20 +1,4 @@
 /* $Id$ */
-/* Jul 12 2007 860U  */
-/* Jul 12 2007 GARDINER fixed per Mudge's suggestions */
-/* Aug  2 2006 847U  */
-/* Aug  2 2006 GARDINER chenged to use _casn_obj_err() */
-/* Aug  2 2006 846U  */
-/* Aug  2 2006 GARDINER added corrections from KTJL */
-/* Aug  5 2004 797U  */
-/* Aug  5 2004 GARDINER fixed open call */
-/* Aug  3 2004 796U  */
-/* Aug  3 2004 GARDINER added compiler conditional O_DOS */
-/* Apr 15 2004 760U  */
-/* Apr 15 2004 GARDINER changed decode_casn call */
-/* Mar 25 2004 744U  */
-/* Mar 25 2004 GARDINER fixed warnings */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
 /* */
 /*****************************************************************************
 File:     casn_file_ops.c
@@ -25,14 +9,18 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
+COPYRIGHT 2004 BBN Systems and Technologies
+10 Moulton St.
+Cambridge, Ma. 02138
+617-873-3000
  ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -44,7 +32,7 @@ Remarks:
  * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
-char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 860P";
+char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 864P";
 #include "casn.h"
 #include <fcntl.h>
 #include <unistd.h>

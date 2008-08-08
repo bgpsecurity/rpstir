@@ -1,8 +1,4 @@
 /* $Id$ */
-/* Mar 28 2007 849U  */
-/* Mar 28 2007 GARDINER fixed signedness errors */
-/* Sep  1 2004 803U  */
-/* Sep  1 2004 GARDINER started */
 /*****************************************************************************
 File:     casn.c
 Contents: Basic functions for ASN.1 objects.

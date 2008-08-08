@@ -1,17 +1,4 @@
 /* $Id$ */
-/* Jul 12 2007 860U  */
-/* Jul 12 2007 GARDINER fixed per Mudge's suggestions */
-/* Mar 28 2007 849U  */
-/* Mar 28 2007 GARDINER fixed signedness errors */
-/* Mar 20 2006 832U  */
-/* Mar 20 2006 GARDINER corrected for little-endian */
-/* Mar 10 2005 826U  */
-/* Mar 10 2005 GARDINER fixed it */
-/* Feb  9 2005 825U  */
-/* Feb  9 2005 GARDINER simplified shift_buf */
-/* Feb  9 2005 GARDINER added DER to Reals */
-/* Jan 13 2005 822U  */
-/* Jan 13 2005 GARDINER added reals */
 /*****************************************************************************
 File:     casn_real.c
 Contents: Functions for AsnReal objects

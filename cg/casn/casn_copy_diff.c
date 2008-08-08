@@ -1,32 +1,4 @@
 /* $Id$ */
-/* Apr  6 2007 851U  */
-/* Apr  6 2007 GARDINER changed fill_upward() */
-/* Jun 20 2006 844U  */
-/* Jun 20 2006 GARDINER fixed premature equality call; fixed copy to ANY */
-/* May 10 2006 836U  */
-/* May 10 2006 GARDINER removed _asn_of; added optional verbose map_string */
-/* Apr 20 2006 834U  */
-/* Apr 20 2006 GARDINER swapped parameters to copy_casn back again */
-/* Apr 25 2005 828U  */
-/* Apr 25 2005 GARDINER unified asn_gen for C++, C and Java */
-/* Aug  2 2004 793U  */
-/* Aug  2 2004 GARDINER added OF condition to copy_casn(), */
-/* Jul 29 2004 789U  */
-/* Jul 29 2004 GARDINER fixed copy_casn not to clear CHOSEN flag */
-/* Jul 23 2004 787U  */
-/* Jul 22 2004 GARDINER fixed */
-/* Jul 21 2004 786U  */
-/* Jul 21 2004 GARDINER changed _diff_casn to compare types, not tags */
-/* Jul 20 2004 785U  */
-/* Jul 20 2004 GARDINER corrected _copy_casn for empty items; added flow code */
-/* Jul 14 2004 780U  */
-/* Jul 14 2004 GARDINER changed to maskless clear_casn */
-/* Jun  8 2004 773U  */
-/* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
-/* Jun  3 2004 770U  */
-/* Jun  3 2004 GARDINER fixed warnings */
-/* Jun  3 2004 769U  */
-/* Jun  3 2004 GARDINER started */
 /* */
 /*****************************************************************************
 File:     casn_copy_diff.c
@@ -37,14 +9,18 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
+COPYRIGHT 2004 BBN Systems and Technologies
+10 Moulton St.
+Cambridge, Ma. 02138
+617-873-3000
  ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -56,7 +32,7 @@ Remarks:
  * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 #include "casn.h"
-char casn_copy_diff_sfcsid[] = "@(#)casn_copy_diff.c 851P";
+char casn_copy_diff_sfcsid[] = "@(#)casn_copy_diff.c 864P";
 
 extern void _clear_casn(struct casn *, ushort);
 
@@ -96,7 +72,8 @@ int diff_casn(struct casn *casnp1, struct casn *casnp2)
     int diff, neg;
 
     if (_clear_error(casnp1) < 0 || _clear_error(casnp2) < 0) return -1;
-    if (casnp1->type != casnp2->type ||
+    if ((casnp1->type != casnp2->type && casnp2->type != ASN_NOTASN1 &&
+        !(casnp1->flags & ASN_ENUM_FLAG)) ||
         !(casnp1->flags & ASN_FILLED_FLAG) || !(casnp2->flags & ASN_FILLED_FLAG))
         return -2;
     if (casnp1->type == ASN_INTEGER || casnp1->type == ASN_ENUMERATED ||
@@ -108,7 +85,7 @@ int diff_casn(struct casn *casnp1, struct casn *casnp2)
     	    neg = *casnp1->startp & 0x80;
     	    diff = *casnp2->startp & 0x80;
     	    if (neg && !diff) return -1;
-    	    if (!neg && !diff) return 1;
+    	    if (!neg && diff) return 1;
 	    }
 	else neg = 0;
 	if (casnp1->lth > casnp2->lth) diff = 1;
@@ -177,11 +154,11 @@ Procedure:
     if (!_check_filled(fr_casnp, 0)) return 0;
     for (err = 0; !err && fr_casnp->type >= ASN_CHOICE; )
 	{
-	if ((fr_casnp = _find_filled_or_chosen((tcasnp = fr_casnp), &err))) 
+	if ((fr_casnp = _find_filled_or_chosen((tcasnp = fr_casnp), &err)))
 	    {
 	    if (!err && (to_casnp->flags & ASN_DEFINED_FLAG))
     		{
-                if (!(to_casnp = _find_chosen((tcasnp = to_casnp)))) 
+                if (!(to_casnp = _find_chosen((tcasnp = to_casnp))))
                     err = ASN_DEFINED_ERR;
                 if (to_casnp->type == ASN_ANY) to_casnp->tag = fr_casnp->tag;
     		}
@@ -199,7 +176,7 @@ Procedure:
     if (err) return _casn_obj_err(tcasnp, err);
 						    // step 2
     tcasnp = fr_casnp;
-    if ((to_casnp->flags & ASN_POINTER_FLAG)) 
+    if ((to_casnp->flags & ASN_POINTER_FLAG))
 	{
         to_casnp = _dup_casn(to_casnp);
 	fr_casnp = fr_casnp->ptr;
@@ -237,8 +214,8 @@ Procedure:
         if (to_casnp->type != ASN_ANY)
 	    {
 	    level++;
-	    if ((++fr_casnp)->tag != (++to_casnp)->tag && 
-                to_casnp->type != ASN_ANY) 
+	    if ((++fr_casnp)->tag != (++to_casnp)->tag &&
+                to_casnp->type != ASN_ANY)
                 return _casn_obj_err(to_casnp, ASN_MATCH_ERR);
 	    while (fr_casnp)
                 {

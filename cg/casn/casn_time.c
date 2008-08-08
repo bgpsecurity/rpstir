@@ -1,21 +1,4 @@
 /* $Id$ */
-/* Apr  6 2007 851U  */
-/* Apr  6 2007 GARDINER changed fill_upward() */
-/* Mar 28 2007 849U  */
-/* Mar 28 2007 GARDINER fixed signedness errors */
-/* Jun  8 2004 773U  */
-/* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
-/* Jun  3 2004 769U  */
-/* Jun  3 2004 GARDINER more fixes for asn_obj tests */
-/* Apr 21 2004 761U  */
-/* Apr 21 2004 GARDINER fixed for half of casn_obj testing */
-/* Apr  1 2004 753U  */
-/* Apr  1 2004 GARDINER added _fill_upward() */
-/* Mar 25 2004 744U  */
-/* Mar 25 2004 GARDINER fixed warnings; changed read to take long *valp */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
-/* */
 /*****************************************************************************
 File:     casn_time.c
 Contents: Functions to handle ASN.1 time objects.

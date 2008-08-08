@@ -1,35 +1,4 @@
 /* $Id$ */
-/* Apr 12 2007 854U  */
-/* Apr 12 2007 GARDINER added test before fill_upward in write_casn_num */
-/* Apr  6 2007 851U  */
-/* Apr  6 2007 GARDINER changed fill_upward() */
-/* Apr 21 2006 835U  */
-/* Apr 21 2006 GARDINER fixed clearing */
-/* Aug  5 2004 797U  */
-/* Aug  5 2004 GARDINER fixed DEFAULT cases in read_casn_num() */
-/* Jul 23 2004 787U  */
-/* Jul 22 2004 GARDINER fixed */
-/* Jul 14 2004 780U  */
-/* Jul 14 2004 GARDINER changed clear_casn to _clear_casn */
-/* Jun  8 2004 773U  */
-/* Jun  8 2004 GARDINER put test for numm pointer into _clear_error() */
-/* May 21 2004 764U  */
-/* May 21 2004 GARDINER more fixes for asn_obj tests */
-/* Apr 21 2004 761U  */
-/* Apr 21 2004 GARDINER fixed for half of casn_obj testing */
-/* Apr  1 2004 753U  */
-/* Apr  1 2004 GARDINER added _fill_upward() */
-/* Apr  1 2004 752U  */
-/* Apr  1 2004 GARDINER fixed handling of negative integers */
-/* Apr  1 2004 751U  */
-/* Apr  1 2004 GARDINER fixed read_casn_num for 5-byte negative numbers */
-/* Mar 31 2004 750U  */
-/* Mar 31 2004 GARDINER fixed error treatment in read_casn_num */
-/* Mar 25 2004 744U  */
-/* Mar 25 2004 GARDINER fixed warnings; made val signed */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
-/* */
 /*****************************************************************************
 File:     casn_num.c
 Contents: Functions to handle numeris ASN.1 objects.
