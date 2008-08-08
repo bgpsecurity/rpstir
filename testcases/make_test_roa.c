@@ -54,7 +54,7 @@ void usage(char *prog)
 char *msgs[] =
   {
   "unused 1\n", 		// 0
-  "unused 2\n",
+  "IPAddress block has range\n",
   "Can't read %s\n",		// 2
   "Can't find %s extension in certificate\n",
   "Error writing %s\n",		// 4
@@ -169,7 +169,7 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
       struct ROAIPAddress *roaipa = (struct ROAIPAddress *) inject_casn(
         &roafp->addresses.self, numAddr++); 
       // if cert has a range, give up
-      if (size_casn(&ipaorrp->addressRange.self)) fatal(9, "");
+      if (size_casn(&ipaorrp->addressRange.self)) fatal(1, "");
       // otherwise copy the prefix
       copy_casn(&roaipa->address, &ipaorrp->addressPrefix);
       if (numAddr < 2)  // it has been incremented above
