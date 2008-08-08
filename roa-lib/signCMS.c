@@ -28,6 +28,7 @@
 #include <certificate.h>
 #include <extensions.h>
 #include <roa.h>
+#include "roa_utils.h"
 
 // find the SID for this ROA and return it
 static struct casn *findSID(struct ROA *roap)
