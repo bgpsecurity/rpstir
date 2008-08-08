@@ -1069,12 +1069,12 @@ DIAGNOSTICS
         assistance in those cases where any form of encode, read, size, or vsize
         function returns an error, there is a global structure:
 
-            struct err_struct
+            struct casn_err_struct
                 {
                 int errnum;
                 char *asn_map_string;
                 struct casn *casnp;
-                };
+                }i casn_err_struct;
 
 
 Apr 20 2006                       18

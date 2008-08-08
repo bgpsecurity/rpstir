@@ -18,7 +18,7 @@ DESCRIPTION
         header files suitable  for  compiling  and  using  with  the  ASN.1
         library  functions.   If  the  '-c'  switch  id  present, C code is
         generated,  for  which  the  library  functions  are  described  in
-        casn_objects.3.   If  the  '-j'  switch  is  present,  Java code is
+        casn_functions.3.   If  the  '-j'  switch  is  present,  Java code is
         generated,  for  which  the  library  functions  are  described  in
         asn_java_objects.3.   If  neither of these switches is present, C++
         code is generated, and  the  library  functions  are  described  in
@@ -620,7 +620,7 @@ DESCRIPTION
     Functions
 
         A reserved word, "FUNCTION", is recognized for adding a function or
-        a data item to an object.  For example, this coding:
+        a data item to a C++ object.  For example, this coding:
 
             Body ::= SEQUENCE {
                 head        [0] Head,

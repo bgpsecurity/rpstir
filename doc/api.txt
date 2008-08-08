@@ -41,8 +41,8 @@ in the top level makefile for the DB client applications:
    -DHAVE_LONG_LONG
 
 where SSL_INCLUDE is the full path to the OpenSSL include directory (typically
-/usr/local/ssl/include), ROA_INCLUDE is the full path to the "roa_utils" directory
-(typically ../roa-utils), ASN_INCLUDE is the full path to the "asn" directory
+/usr/local/ssl/include), ROA_INCLUDE is the full path to the "roa-lib" directory
+(typically ../roa-lib), ASN_INCLUDE is the full path to the "asn" directory
 (typically ../cg/asn), and CASN_INCLUDE is the full path to the "casn" directory
 (typically ../cg/casn).
 
@@ -54,7 +54,7 @@ All code should be linked with
 
 where APKI_LIB is the full path to the apki library (typically .), SSL_LIB is the
 full path to the OpenSSL library directory (typically /usr/local/ssl/lib), ROA_LIB
-is the full path to the ROA utilities library (typically ../roa-utils), ASN_LIB is
+is the full path to the ROA utilities library (typically ../roa-lib), ASN_LIB is
 the full path to the ASN.1 library (typically ../cg/asn) and CASN_LIB is the full
 path to the casn utility library (typically ../cg/casn).
 
@@ -664,7 +664,8 @@ ROA structure (which need not have been semantically validated, however).
 2.5 ASN.1 utility functions
 
 The ASN.1 utility functions are documented in Unix man format in the
-file casn_functions.3.
+files asn_gen.1 and casn_functions.3.  The DIAGNOSTICS section of the latter
+document may be particularly helpful in locating the source of problems.
 
 2.6 Other utility functions
 
@@ -709,3 +710,15 @@ This function returns an error string corresponding to an error code
 defined in err.h. The returned value is static memory which must not
 be modified or freed. If "err" is not an error code defined in err.h
 it returns NULL.
+
+2.7 Other tools
+
+   The doc directory contains instructions for several other programs:
+
+      make_roa.1 for making ROAs
+
+      make_manifest.1 for making manifests
+
+      make_oidtable for making a table of OBJECT IDENTIFIERS
+
+      rsync_aur.1 for running the rsync_aur program

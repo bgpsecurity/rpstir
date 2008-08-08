@@ -1,0 +1,98 @@
+RSYNC_AUR (1)             ROA-PKI                                   RSYNC_AUR(1)                                     
+
+NAME
+
+        rsync_aur - notifies database of files downloaded by rsync
+
+SYNOPSIS
+  
+        rsync_aur -f logfile -d topDir [-t portno | -u portno | -n] -s -e -h 
+            -i -w
+
+
+
+DESCRIPTION
+
+        The rsync_aur program reads a log prepared by the rsync program.  For
+        each message in the log, it sends a message over a socket to the 
+        database client to put the files obtained by rsync into the database 
+        after validating them.  There are two sibling directories defined for 
+        rsync, one called REPOSITORY and the other called LOGS.  Within 
+        REPOSITORY are directories, one for each source used by rsync.  For 
+        each such directory there is a file in LOGS that lists all the files 
+        downloaded by rsync plus some other items.  The name of the log file 
+        is derived from the name of the directory in REPOSITORY, e.g. directory
+        "xxx" has a log file named "xxx.log".  The rsync_aur program must be 
+        run from REPOSITORY.  The meanings of the parameters are:
+
+            -f logfile specifies the path name of the log file.
+
+            -d topDir specifies the relative path name of the directory
+               being sent.
+
+            -t portno specifies the TCP socket to use, or
+
+            -u portno specifies the UDP socket to use, or
+
+            -n specifies to send no messages but print them on stdout.
+
+            -s if present, sends a special message at the end and waits for
+               a response. 
+
+            -e if present specifies that, if the log entry has an unknown
+               opcode, the contents are sent in an error message.
+
+            -h if present, calls for display of parameter usage.
+
+            -i if present, certain messages in the log (described below) are
+               sent as informational messages, otherwise they are discarded. 
+
+            -w if present, calls for a warning message to be sent instead of
+               the normal message for any log entry that has improper syntax.
+
+        An alternative to supplying all the parameters separately in the call 
+        to rsync_aur is to put them in a single file separated by white space
+        and to give the name of that file as a single parameter when calling the 
+        program.  The name of the file must not begin with a hyphen.
+            
+        Each socket message consists of a single letter followed by a space and
+        optional other material.  The message types designated by the letter are:
+
+            B followed by the date and time.  This is the first message
+
+            C followed by the name of the directory under REPOSITORY
+
+            A followed by the name of a file which rsync added followed by a
+              space and a number: 1 for a file mentioned in a manifest with a
+              correct hash; 0 for a file not mentioned in a manifest; -1 for a
+              file mentioned but with a bad hash or not found.  If the file is 
+              a manifest, the numeric value is always 1; an invalid manifest is
+              never sent.
+
+            R followed by the name of a file which rsync deleted
+
+            U followed by the name of a modified file which rsync sent
+              followed by a spcae and a number indicating the status, as
+              in an "A" operation
+
+            I followed by usually irrelevant information (only if -i switch
+              is set)
+
+            X followed by the full content of a message which had an unknown
+              first character (only if -e switch is set)
+
+            W followed by the full content of a message that had improper
+              syntax (only if -w switch is set)
+
+            E followed by a date and time indicating the end of the transfer.
+    
+        If the -n switch is present, the socket messages are sent to stdout 
+        instead.
+
+            In addition to the socket messages, the program also prints on 
+        stdout the same message preceded by "Sending ".  
+        
+            Any errors, such as invalid manifests (bad dates, bad signature, no 
+        EE certificate, more than one certificate, bad version in certificate...), 
+        are reported on stderr. 
+

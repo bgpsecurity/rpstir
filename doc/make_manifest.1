@@ -1,0 +1,47 @@
+MAKE_MANIFEST (1)           MANIFEST-PKI                                 MAKE_MANIFEST(1)                                     
+
+NAME
+
+        make_manifest - makes a ROA
+
+SYNOPSIS
+  
+        make_manifest  outfile certfile keyfile [directory]
+
+DESCRIPTION
+
+          This program (in the roa-utils directory) creates a manifest from the 
+          parameters supplied:
+
+            outfile is the name of the file where the manifest is to go
+
+            certfile is the name of the file containing the certificate to be
+              put in the manifest
+
+            keyfile is the name of the file containing the key for signing the
+              manifest
+
+            directory is the name of the directory directory in which the 
+              files to be mentioned in the manifest are located.  The 
+              default is the current directory 
+
+          When the program runs, it asks for the names of files to put in the 
+          manifest.  A null name ends the list,  If a name given begins with 
+          a hyphen, the program treats the rest of the name as the name of a 
+          file containing the names of files to put in the manifest.
+   
+          When the program completes successfully, it ends with the message
+
+                 Finished OK
+
+        If there is any error, the program terminates with one of several 
+        messages:
+  
+            Couldn't open xxx
+            Error reading xxx
+            Error adding xxx
+            Error inserting xxx
+            Error creating signature
+            Error writing xxx
+  
+        where xxx is the name of a file.
