@@ -36,15 +36,17 @@ int main(int argc, char **argv)
   }
   Certificate(&cert, 0);
   RSAPubKey(&pubkey, 0);
+    // get public key from certificate in argv[1]
   get_casn_file(&cert.self, argv[1], 0);
   signature = (uchar *)calloc(1, size_casn(&cert.toBeSigned.subjectPublicKeyInfo.
     subjectPublicKey));
   read_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey, signature);
+    // extract it
   lth = decode_casn(&pubkey.self, &signature[1]);
   lth = encode_casn(&pubkey.self, signature);
   memset(hash, 0, 40);
   cryptInit();
-  
+    // hash it
   ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
   ansr = cryptEncrypt(hashContext, signature, lth);
   ansr = cryptEncrypt(hashContext, signature, 0);

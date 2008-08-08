@@ -165,7 +165,7 @@ int main(int argc, char** argv)
   free(ski);
   if ( cert == NULL )
     {
-      (void)fprintf(stderr, "ROA has no parent: error %s (%d)\n",
+      (void)fprintf(stderr, "ROA certificate has no parent in DB: error %s (%d)\n",
 		    err2string(sta), sta);
       roaFree(roa2);
       return sta;
