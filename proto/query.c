@@ -528,8 +528,6 @@ static int doQuery (char **displays, char **filters)
   char     *name;
   int      maxW = MAX_CONDS*20;
 
-  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
-            "\nBad object type; must be roa, cert, crl, or rpsl\n\n");
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
@@ -805,6 +803,8 @@ int main(int argc, char **argv)
     checkErr (numDisplays != 0, "-d should not be used with RPSL query\n");
     numDisplays = addRPSLFields(displays, 0);
   }
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
+            "\nBad object type; must be roa, cert, crl, or rpsl\n\n");
   checkErr (numDisplays == 0 && isRPSL == 0, "Need to display something\n");
   if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
       numDisplays = addAllFields(displays, 0);

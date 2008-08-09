@@ -39,12 +39,12 @@ extern char *signCMS(struct ROA *, char *, int);
 void usage(char *prog) 
 {
   printf("usage:\n");
-  printf("%s -r roafile -c certfile -k keyfile -i index [-R readable] [-b] [-4 v4maxlen] [-6 v6maxlen]\n", prog);
+  printf("%s -r roafile -c certfile -k keyfile -a asnum [-R readable] [-b] [-4 v4maxlen] [-6 v6maxlen]\n", prog);
   printf("  -r roafile: file to write roa to\n");
   printf("  -c certfile: file holding EE cert for roa\n");
   printf("  -k keyfile: file holding p15-format public key for signing roa\n");
-  printf("  -i index: which child is this (of that cert) (one-based)\n");
-  printf("  -R readable: file to write readable asn.1 for roa to\n");
+  printf("  -a asnum: autonomous system number\n");
+  printf("  -R readable-version: where to write readable asn.1 for roa\n");
   printf("  -b: generate bad (invalid) signature\n");
   printf("  -4: specify maxLength for first IPv4 Address\n");
   printf("  -6: specify maxLength for first IPv6 Address\n");
@@ -71,70 +71,6 @@ void fatal(int err, ...)
     vfprintf(stderr, msgs[err], ap);
     va_end(ap);
     exit(err);
-}
-
-// look through the certificate's extensions for the idx'th asn 
-static long getASNum(struct Certificate *certp, long idx)
-{
-  struct Extensions *extsp = &certp->toBeSigned.extensions;
-  struct Extension *extp;
-  struct ASNumberOrRangeA *asnump;
-  long orig = idx;
-  long min, max, range, ansr;
-
-  // idx counts down, decrementing each time we see a single addr
-  // or decrementing by the size of a range if we see a range
-
-  // look for the ASN extension
-  extp = (struct Extension *)member_casn(&extsp->self, 0); 
-  while (extsp && diff_objid(&extp->extnID, id_pe_autonomousSysNum) != 0)
-    extp = (struct Extension *) next_of(&extp->self);
-
-  // did we find it?
-  if (extp == NULL) 
-    fatal(5, id_pe_autonomousSysNum);
-
-  // now iterate through each AS number (or AS range) to find the idx'th one
-
-  // asnum is marked as optional in the spec. If it is absent, member_casn 
-  // will immediately return NULL and exit the "for" 
-  struct ASIdentifierChoiceA *asnum = &extp->extnValue.autonomousSysNum.asnum;
-
-  // run through the sequence, decrementing idx as we go past
-  // when idx goes to 0, we've found our goal
-  for (asnump = (struct ASNumberOrRangeA *) 
-	 member_casn(&asnum->asNumbersOrRanges.self, 0);
-       asnump != NULL;
-       asnump = (struct ASNumberOrRangeA *)next_of(&asnump->self)) {
-
-    // is this a singleton or a range?
-    if (vsize_casn(&asnump->num) != 0) {
-      // singleton
-      if (--idx < 1) {
-	// this is it, return it
-        read_casn_num(&asnump->num, &ansr);
-	return ansr;
-      }
-    } else {
-      // it's a range, decrement idx by the size of the range
-      read_casn_num(&asnump->range.min, &min);
-      read_casn_num(&asnump->range.max, &max);
-      range = max + 1 - min;
-
-      // if idx > size, decrement by the entire size and
-      // keep looking
-      if (idx > range) {
-	idx -= range;
-      } else {
-	// it's in this range, the answer is min + idx
-        return (min + idx - 1);
-      }
-    }
-  }
-
-  // didn't find it, fail
-  fatal(6, orig);
-  return 0;
 }
 
 // copy the ip addr blocks over into the roa
@@ -192,11 +128,10 @@ int main (int argc, char **argv)
     struct ROA roa;
     struct Certificate cert;
     char *msg;
-    int idx;
     int c;
     int v4maxLen = 0, v6maxLen = 0;
 
-    while ((c = getopt(argc, argv, "br:R:i:c:k:4:6:")) != -1) {
+    while ((c = getopt(argc, argv, "br:R:a:c:k:4:6:")) != -1) {
 	switch (c) {
 	case 'c':
 	    // cert file
@@ -218,9 +153,8 @@ int main (int argc, char **argv)
 	    keyfile = strdup(optarg);
 	    break;
 
-	case 'i':
-	    // index (which child -- 1, 2, 3
-	    idx = atoi(optarg);
+	case 'a':
+	    asnum = atoi(optarg);
 	    break;
 
 	case 'b':
@@ -245,12 +179,14 @@ int main (int argc, char **argv)
     }
 
     // validate arguments
-    if (roafile == NULL || certfile == NULL || idx < 1 || keyfile == NULL) {
-	printf("%s -r %s -c %s -i %d -k %s ", argv[0], roafile, certfile, idx, keyfile);
+    if (roafile == NULL || certfile == NULL || asnum < 0 || keyfile == NULL) {
+	printf("%s -r %s -c %s -k %s ", argv[0], roafile, certfile, keyfile);
 	if (readablefile) 
 	    printf("-R %s ", readablefile);
 	if (bad) 
 	    printf("-b ");
+	if (asnum >= 0)
+	    printf("-a %d ", asnum);
 	printf("\n");
 	usage(argv[0]);
     }
@@ -280,9 +216,9 @@ int main (int argc, char **argv)
     // mark the encapsulated content as a ROA
     write_objid(&sgdp->encapContentInfo.eContentType, id_routeOriginAttestation);
 
-    // look up and insert the AS number
+    // insert the AS number
+    // note that as numbers are not supposed to be in ee certs
     struct RouteOriginAttestation *roap = &sgdp->encapContentInfo.eContent.roa;
-    asnum = getASNum(sigcertp, idx);
     write_casn_num(&roap->asID, asnum);
 
     // look up the ipAddrBlock extension and copy over

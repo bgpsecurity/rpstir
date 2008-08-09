@@ -14,6 +14,7 @@
 #endif
 #include <ctype.h>
 #include <syslog.h>
+#include <assert.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -282,6 +283,7 @@ int infer_filetype(char *fname)
 
   if ( fname == NULL || fname[0] == 0 )
     return(ERR_SCM_INVALARG);
+
   if ( strstr(fname, ".pem") != NULL )
     pem = 1;
   if ( strstr(fname, ".cer") != NULL )
@@ -1625,10 +1627,12 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     }
 
-    // generate a (fake) filename for the cert that is unique
-    fakecertfilename = calloc(1, strlen(outfile) + 1 + 4);
-    strcpy(fakecertfilename, outfile);
-    strcat(fakecertfilename, ".cer");
+    // generate a (fake) filename for the cert that is unique.
+    // (use the roa name with ".cer" at the end)
+    int fakelen = strlen(outfile);
+    assert(fakelen >= 4);
+    fakecertfilename = strdup(outfile);
+    strcpy(fakecertfilename + fakelen - 4, ".cer");
 
     // pull out the fields
     cf = cert2fields(fakecertfilename, 0, typ, &x509p, &sta, &x509sta);
@@ -1650,10 +1654,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     }
 
-    if ((asid = roaAS_ID(r)) == 0 ) {
-      sta = ERR_SCM_INVALASID;
-      break;
-    }
+    asid = roaAS_ID(r);		/* it's OK if this comes back zero */
 
     // signature
     if ((bsig = roaSignature(r, &bsiglen)) == NULL || bsiglen < 0) {
