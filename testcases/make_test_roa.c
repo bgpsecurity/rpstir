@@ -186,7 +186,7 @@ int main (int argc, char **argv)
 	if (bad) 
 	    printf("-b ");
 	if (asnum >= 0)
-	    printf("-a %d ", asnum);
+	    printf("-a %ld ", asnum);
 	printf("\n");
 	usage(argv[0]);
     }
