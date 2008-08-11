@@ -960,9 +960,20 @@ void freesrchscm(scmsrcha *srch)
 /* add clause for testing the value of a flag to a where string */
 void addFlagTest(char *whereStr, int flagVal, int isSet, int needAnd)
 {
+  /* Obfuscated note: the search where string is a spec that tells how
+   * to test for the value of a flag being set or clear in a total-flags
+   * value using the c mod operator '%'.  A simpler to follow way would 
+   * be to test using bitwise and and then != 0 or == 0 test, but this 
+   * is (presumably) not allowed.  The 'mod' test is best understood by
+   * example - so to test for flag 0x04 being set, take the value of
+   * total-flags mod (0x04 * 2) and see if it is >= 0x04 (in which case 
+   * bit 0x04 is set), or < 0x04 (in which case bit 0x04 is not set). 
+   */
   int len = strlen(whereStr);
-  snprintf(&whereStr[len], WHERESTR_SIZE - len, "%s (flags%%%d)%s%d",
-	   needAnd ? " and" : "", 2*flagVal, isSet ? ">=" : "<", flagVal);
+  snprintf(&whereStr[len], WHERESTR_SIZE - len, "%s ((flags%%%d)%s%d)",
+	   needAnd ? " and" : "",
+	   2*flagVal /* 2x since we are doing flag mod this value */,
+	   isSet ? ">=" : "<", flagVal);
 }
 
 /*
