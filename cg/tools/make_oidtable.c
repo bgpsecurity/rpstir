@@ -16,7 +16,7 @@
  * Contributor(s):  Charles iW. Gardiner
  *
  * ***** END LICENSE BLOCK ***** */
-static char sfcsid[] = "@(#)make_oidtable.c 869P";
+char make_oidtable_sfcsid[] = "@(#)make_oidtable.c 869P";
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
