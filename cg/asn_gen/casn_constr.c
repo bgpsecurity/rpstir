@@ -1,40 +1,4 @@
 /* $Id$ */
-/* Apr 25 2005 828U  */
-/* Apr 25 2005 GARDINER unified asn_gen for C++, C and Java */
-/* Jan 19 2005 824U  */
-/* Jan 19 2005 GARDINER changed for relative OIDs */
-/* Jan  4 2005 818U  */
-/* Jan  4 2005 GARDINER changed to use simple_ and tagged_constructor */
-/* Oct  7 2004 809U  */
-/* Oct  7 2004 GARDINER changed constraint format */
-/* Sep  7 2004 806U  */
-/* Sep  7 2004 GARDINER revised and corrected print_constraint */
-/* Aug 12 2004 801U  */
-/* Aug 12 2004 GARDINER corrected detection on ambiguous tagging */
-/* Aug  9 2004 799U  */
-/* Aug  9 2004 GARDINER fixed printing of objid_constraint */
-/* Jul 29 2004 789U  */
-/* Jul 29 2004 GARDINER fixed constraints */
-/* Jul  8 2004 778U  */
-/* Jul  8 2004 GARDINER a little fix */
-/* Jul  8 2004 777U  */
-/* Jul  8 2004 GARDINER added def_constraintp & CONSTRAINTS plus more */
-/* Jun  7 2004 772U  */
-/* Jun  7 2004 GARDINER more fixes for asn_obj tests */
-/* May 11 2004 762U  */
-/* May 11 2004 GARDINER more fixes for asn_obj tests */
-/* Apr 21 2004 761U  */
-/* Apr 21 2004 GARDINER fixed for half of casn_obj testing */
-/* Apr 15 2004 757U  */
-/* Apr 15 2004 GARDINER cleaned up and fixed for casn_tests */
-/* Apr  7 2004 756U  */
-/* Apr  7 2004 GARDINER changed 'this' to 'mine' */
-/* Apr  7 2004 755U  */
-/* Apr  7 2004 GARDINER removed ref to EXPLICIT in print_item; */
-/* Apr  1 2004 754U  */
-/* Apr  1 2004 GARDINER fixes */
-/* Mar 24 2004 741U  */
-/* Mar 24 2004 GARDINER started */
 /*****************************************************************************
 File:     asn_cconstr.c
 Contents: Functions to generate .c files as part of ASN_CGEN program.

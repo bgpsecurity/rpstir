@@ -1,45 +1,4 @@
 /* $Id$ */
-/* Apr 25 2005 828U  */
-/* Apr 25 2005 GARDINER unified asn_gen for C++, C and Java */
-/* Oct  4 2000 543U  */
-/* Oct  4 2000 GARDINER corrected real_start */
-/* Sep 11 2000 542U  */
-/* Sep 11 2000 GARDINER first stab at multi-pass pre_proc */
-/* Mar 28 2000 526U  */
-/* Mar 28 2000 GARDINER more fixes for 1994 */
-/* Mar 23 2000 525U  */
-/* Mar 23 2000 GARDINER bug fix */
-/* Mar 23 2000 524U  */
-/* Mar 23 2000 GARDINER changes for nested macros & classes */
-/* Mar  9 2000 523U  */
-/* Mar  9 2000 GARDINER minor fix for macro with braces */
-/* Mar  9 2000 522U  */
-/* Mar  9 2000 GARDINER changed add_macro to work without enclosing braces; */
-/* Mar  9 2000     changed encr_xform from void to int */
-/* Feb  2 1999 500U  */
-/* Feb  2 1999 GARDINER changed for 2.6 */
-/* Nov 19 1998 499U  */
-/* Nov 19 1998 GARDINER fixed add_macro for overflow etc. */
-/* Oct 29 1997 468U  */
-/* Oct 29 1997 GARDINER added typing for portability */
-/* Sep 12 1997 457U  */
-/* Sep 12 1997 GARDINER fixed for case of constraint in macro */
-/* Apr  4 1997 425U  */
-/* Apr  4 1997 GARDINER moved some functions out */
-/* Aug  2 1996 383U  */
-/* Aug  2 1996 GARDINER fixed get_fnames to combine duplicate references to the same .asn file */
-/* Aug  1 1996 381U  */
-/* Aug  1 1996 GARDINER moved some functions back to asn_pproc.c */
-/* May 31 1996 373U  */
-/* May 31 1996 GARDINER added material for BOOLEANs */
-/* Mar 25 1996 354U  */
-/* Mar 25 1996 GARDINER fixed bug in fill_id_type() */
-/* Mar 22 1996 352U  */
-/* Mar 22 1996 GARDINER DOS-proofed */
-/* Mar 21 1996 351U  */
-/* Mar 21 1996 GARDINER trimmed get_token */
-/* Jan 25 1996 324U  */
-/* Jan 25 1996 GARDINER added 1994 */
 /*****************************************************************************
 File:     asn_pprocx.c
 Contents: Functions to do all pre-processing sub-functions as part of the

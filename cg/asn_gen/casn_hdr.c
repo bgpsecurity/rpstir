@@ -1,22 +1,4 @@
 /* $Id$ */
-/* Apr 25 2005 828U  */
-/* Apr 25 2005 GARDINER unified asn_gen for C++, C and Java */
-/* Aug  9 2004 799U  */
-/* Aug  9 2004 GARDINER changed printing of typedef to #define */
-/* Jul  8 2004 777U  */
-/* Jul  8 2004 GARDINER lots of changes, cleared out commented junk */
-/* Apr 15 2004 758U  */
-/* Apr 15 2004 GARDINER removed get_derivation */
-/* Apr 15 2004 757U  */
-/* Apr 15 2004 GARDINER minor fixes for casn_tests */
-/* Apr  7 2004 756U  */
-/* Apr  7 2004 GARDINER changed 'this' to 'mine' */
-/* Apr  7 2004 755U  */
-/* Apr  7 2004 GARDINER added use of casn_w instead of AsnXXXX */
-/* Mar 24 2004 742U  */
-/* Mar 24 2004 GARDINER removed unused variable */
-/* Mar 24 2004 741U  */
-/* Mar 24 2004 GARDINER started */
 /*****************************************************************************
 File:     asn_chdr.c
 Contents: Functions to generate .h files as part of the ASN_CGEN program.

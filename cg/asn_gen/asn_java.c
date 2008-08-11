@@ -1,46 +1,4 @@
 /* $Id$ */
-/* Apr 25 2005 828U  */
-/* Apr 25 2005 GARDINER unified asn_gen for C++, C and Java */
-/* Jan  3 2005 817U  */
-/* Jan  3 2005 GARDINER changed get_derivation() to make specific types */
-/* Dec 15 2004 816U  */
-/* Dec 15 2004 GARDINER simplified add_list */
-/* Dec  7 2004 814U  */
-/* Dec  7 2004 GARDINER simplified use of throws */
-/* Nov 15 2004 812U  */
-/* Nov 15 2004 GARDINER more fixes for asn_obj tests */
-/* Nov  8 2004 811U  */
-/* Nov  8 2004 GARDINER fixed for file-less JasnObj tests */
-/* Oct 25 2004 810U  */
-/* Oct 25 2004 GARDINER changes for JasnObj tests */
-/* Oct  7 2004 809U  */
-/* Oct  7 2004 GARDINER changes from full testing */
-/* Sep 23 2004 808U  */
-/* Sep 23 2004 GARDINER corrected print formats; moved constraint printing */
-/* Jul 29 2004 788U  */
-/* Jul 29 2004 GARDINER fixed lots of things */
-/* May 19 2003 617U  */
-/* May 19 2003 GARDINER converted to byte array form */
-/* May 14 2003 616U  */
-/* May 14 2003 GARDINER added function test; dropped non-real functions */
-/* May 14 2003 615U  */
-/* May 14 2003 GARDINER added delay_func_list for functions; improved function definition */
-/* May 14 2003 614U  */
-/* May 14 2003 GARDINER added code to strip asterisks from FUNCTIONs */
-/* Jul  9 2001 586U  */
-/* Jul  9 2001 GARDINER fixed printing of IDs and some printf formats */
-/* Jun 21 2001 585U  */
-/* Jun 21 2001 GARDINER further fix to constraints */
-/* Jun 21 2001 584U  */
-/* Jun 21 2001 GARDINER fixed set_sub_flag */
-/* Jun  8 2001 581U  */
-/* Jun  8 2001 GARDINER added printing of IDs */
-/* Jun  1 2001 580U  */
-/* Jun  1 2001 GARDINER added printing of Static.java */
-/* May 30 2001 579U  */
-/* May 30 2001 GARDINER changed formats; fixed lots of other problems */
-/* Apr 26 2001 573U  */
-/* Apr 26 2001 GARDINER started */
 /*****************************************************************************
 File:     asn_java.c
 Contents: Functions to generate java files as part of ASN_GEN program.
