@@ -1,6 +1,4 @@
 /* $Id$ */
-/* Dec  4 2000 552U  */
-/* Dec  4 2000 GARDINER started */
 /*****************************************************************************
 File:     asn_timedefs.h
 Contents: Header file for basic ASN.1 functions.

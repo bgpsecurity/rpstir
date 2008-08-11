@@ -1,30 +1,4 @@
 /* $Id$ */
-/* Jan 25 1996 324U  */
-/* Jan 25 1996 GARDINER added constraint errors */
-/* Aug 22 1995 261U  */
-/* Aug 22 1995 GARDINER added ASN_FILE_ERR */
-/* Jun 30 1995 236U  */
-/* Jun 30 1995 GARDINER added ASN_LENGTH_ERR */
-/* Jun 12 1995 221U  */
-/* Jun 12 1995 GARDINER added multi-defines */
-/* May 22 1995 212U  */
-/* May 22 1995 GARDINER fixed ifdef */
-/* May 22 1995 209U  */
-/* May 22 1995 GARDINER re-arranged error numbers */
-/* Apr  6 1995 162U  */
-/* Apr  6 1995 GARDINER header */
-/* Feb 21 1995 156U  */
-/* Feb 21 1995 GARDINER added ASN_MATCH_ERR */
-/* Nov 17 1994 113U  */
-/* Nov 17 1994 GARDINER added ASN_MASK_ERR and ASN_NO_CHOICE_ERR */
-/* Oct 12 1994  83U  */
-/* Oct 12 1994 GARDINER added ASN_UNDEF_VALUE */
-/* Aug  8 1994  45U  */
-/* Aug  8 1994 GARDINER fixed */
-/* Aug  2 1994  42U  */
-/* Aug  2 1994 GARDINER add error message ASN_NONE_ERR */
-/* Jul 27 1994  38U  */
-/* Jul 27 1994 GARDINER started */
 /*****************************************************************************
 File:     asn_error.h
 Contents: Error codes for ASN.1-object library.
