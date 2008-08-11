@@ -33,7 +33,7 @@ char *msgs [] =
     "Invalid prefix %s\n",
     "Missing %s\n",      // 3
     "%s covers AS number and v4 and v6 files\n",   
-    "Error signng with %s\n",    // 5
+    "Error in %s when signng\n",    // 5
     "Error writing %s\n",
     "Invalid parameter %s\n",     // 7
     };
@@ -137,64 +137,7 @@ static void do_family(struct ROAIPAddrBlocks *roaBlockp, int famnum, int x, FILE
     prefix2roa(roaIPaddrp, c, famnum);
     }
   }    
-  
-static int signROA(struct ROA* roa, char *keyfilename)
-  {
-  CRYPT_CONTEXT hashContext;
-  CRYPT_CONTEXT sigKeyContext;
-  CRYPT_KEYSET cryptKeyset;
-  uchar hash[40];
-  uchar *signature = NULL;
-  int ansr = 0, signatureLength;
-  char *msg;
-  uchar *tbsp;
-  int tbs_lth = readvsize_casn(&roa->content.signedData.encapContentInfo.eContent.self, &tbsp);
-
-  memset(hash, 0, 40);
-  cryptInit();    // create the hash
-  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
-      (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
-    msg = "creating context";
-  else if ((ansr = cryptEncrypt(hashContext, tbsp, tbs_lth)) != 0 ||
-      (ansr = cryptEncrypt(hashContext, tbsp, 0)) != 0)
-    msg = "hashing";
-        // get the hash
-  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, 
-    &signatureLength)) != 0) msg = "getting attribute string";
-  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, keyfilename, 
-    CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set";
-  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label", 
-    "password")) != 0) msg = "getting key";
-  else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext, hashContext)) != 0)
-    msg = "signing";
-  else     // sign it
-    {
-    signature = (uchar *)calloc(1, signatureLength +20);
-    if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext,
-      hashContext)) != 0) msg = "signing";
-    else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext, hashContext))
-      != 0) msg = "verifying";
-    }
-
-  cryptDestroyContext(hashContext);
-  cryptDestroyContext(sigKeyContext);
-  cryptEnd();
-  if (ansr == 0)
-    { 
-    struct SignerInfo *sigInfop = (struct SignerInfo *)inject_casn(
-        &(roa->content.signedData.signerInfos.self), 0);
-    decode_casn(&sigInfop->self, signature);
-    ansr = 0;
-    }
-  else 
-    {
-      //  printf("Signature failed in %s with error %d\n", msg, ansr);
-      // ansr = ERR_SCM_INVALSIG;
-    }
-  if ( signature != NULL ) free(signature);
-  return ansr;
-  }
-
+ 
 int main (int argc, char ** argv)
   {
   struct ROA roa;
@@ -244,8 +187,9 @@ int main (int argc, char ** argv)
       c = *pp;
       if (*c != '-') fatal(7,c);
       b = *(++pp);
-      if (*c == 'c') certfile = b;
+      if (*(++c) == 'c') certfile = b;
       else if (*c == 'k') keyfile = b;
+      else if (*c == 'o') outfile = b;
       else if (*c == 'r') readroafile = b;
       else fatal(7, &c[-1]);
       }
@@ -288,7 +232,7 @@ int main (int argc, char ** argv)
   struct Certificate *certp = (struct Certificate *)
       inject_casn(&sgdp->certificates.self, 0);  
   if (get_casn_file(&certp->self, certfile, 0) < 0) fatal(2, certfile);
-  if (signROA(&roa, keyfile) < 0) fatal(5, keyfile);
+  if ((c = signCMS(&roa, keyfile, 0))) fatal(5, c);
   if (put_casn_file(&roa.self, outfile, 0) < 0) fatal(6, outfile);
   if (buf) free(buf);
   fatal(0, outfile);

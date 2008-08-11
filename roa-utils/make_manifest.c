@@ -37,7 +37,7 @@ char *msgs [] =
     "Error reading %s\n",
     "Error adding %s\n",      // 3
     "Error inserting %s\n",   
-    "Error creating signature\n",    // 5
+    "Error in %s creating signature\n",    // 5
     "Error writing %s\n",
     };
     
@@ -101,7 +101,7 @@ static int fatal(int msg, char *paramp)
   fprintf(stderr, msgs[msg], paramp);
   exit(msg);
   }
-
+/*
 static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, char *filename)
 {
   CRYPT_CONTEXT hashContext;
@@ -153,7 +153,7 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, cha
   if ( signature != NULL ) free(signature);
   return ansr;
 }
-
+*/
 
 int main(int argc, char **argv)
   {
@@ -219,10 +219,8 @@ int main(int argc, char **argv)
   write_casn_num(&sigInfop->version.v3, 3);
   write_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256);
   write_objid(&sigInfop->signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption);
-  uchar *tbsp;
-  int tbs_lth = readvsize_casn(&roa.content.signedData.encapContentInfo.eContent.self, &tbsp);
   
-  if (setSignature(&roa, tbsp, tbs_lth, argv[3]) < 0) fatal(5, (char *)0);
+  if ((c = signCMS(&roa, argv[3], 0))) fatal(5, c);
   if (put_casn_file(&roa.self, argv[1], 0) < 0) fatal(6, argv[1]);  
   return 0;
   } 
