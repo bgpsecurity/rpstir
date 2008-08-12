@@ -44,6 +44,7 @@ char *msgs [] =
     "Error padding prefix %s. Try again\n",       // 8
     "Invalid time delta type: %s\n",
     "Invalid cert name %s\n",             // 10
+    "Error creating %s extension\n",
     };
 
 static int warn(int err, char *param)
@@ -587,7 +588,7 @@ int main(int argc, char **argv)
       struct AuthorityInfoAccessSyntax *aiasp = &extp->extnValue.authorityInfoAccess;
       struct AccessDescription *accdsp = (struct AccessDescription *)inject_casn(
         &aiasp->self, 0);
-      write_objid(&accdsp->accessMethod, id_pkix_caIssuers);
+      write_objid(&accdsp->accessMethod, id_ad_caIssuers);
       write_casn(&accdsp->accessLocation.url, (uchar *)"rsync://bbn-via-roa-pki", 23);
       }
     else   // can copy it
@@ -675,9 +676,18 @@ int main(int argc, char **argv)
         member_casn(&extp->extnValue.subjectInfoAccess.self, 0);
       if (!accDesp) fatal(4, "subjectInfoAccess");
       
-      write_objid(&accDesp->accessMethod, id_pkix_signedObject);
-  //    copy_casn(&extp->extnValue.self, &iextp->extnValue.self);
+      write_objid(&accDesp->accessMethod, id_ad_signedObject);
       }
+    else  // making a CA cert
+      {
+      struct AccessDescription *accDesp = (struct AccessDescription *)
+        inject_casn(&extp->extnValue.subjectInfoAccess.self, 1);
+      if (!accDesp) fatal(11, "SubjectInfoAccess");
+      struct AccessDescription *iaccDesp = (struct AccessDescription *)
+        member_casn(&iextp->extnValue.subjectInfoAccess.self, 0);
+      write_objid(&accDesp->accessMethod, id_ad_rpkiManifest);
+      copy_casn(&accDesp->accessLocation.self, &iaccDesp->accessLocation.self);
+      } 
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile, bad);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);
