@@ -1,12 +1,12 @@
 /* $Id: make_cert.c 453 2008-05-28 15:30:40Z cgardiner $ */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -45,6 +45,7 @@ char *msgs [] =
     "Invalid time delta type: %s\n",
     "Invalid cert name %s\n",             // 10
     "Error creating %s extension\n",
+    "Error in CA %s extension\n",
     };
 
 static int warn(int err, char *param)
@@ -71,18 +72,36 @@ static int fillPublicKey(struct casn *spkp, char *keyfile)
   return 0;
   }
 
+static void check_access_methods(struct Extension *iextp)
+  {
+  int rep = 0, man = 0;
+  char *e = "SubjectInfoAccess";
+  struct AccessDescription *accDesp;
+  if (num_items (&iextp->extnValue.subjectInfoAccess.self) != 2) fatal(12, e);
+   // are the two necessary access methods there?
+  for (accDesp = (struct AccessDescription *)member_casn(
+    &iextp->extnValue.subjectInfoAccess.self, 0); accDesp;
+    accDesp = (struct AccessDescription *)next_of(&accDesp->self))
+    {
+    if (!diff_objid(&accDesp->accessMethod, id_ad_caRepository)) rep++;
+    else if (!diff_objid(&accDesp->accessMethod, id_ad_rpkiManifest)) man++;
+    else man = 10; // to force error if neither
+    }
+  if (rep != 1 && man != 1) fatal(12, e);
+  }
+
 static struct Extension *findExtension(struct Extensions *extsp, char *oid)
   {
   struct Extension *extp;
   if (!num_items(&extsp->self)) return (struct Extension *)0;
-  for (extp = (struct Extension *)member_casn(&extsp->self, 0); 
-    extp && diff_objid(&extp->extnID, oid); 
+  for (extp = (struct Extension *)member_casn(&extsp->self, 0);
+    extp && diff_objid(&extp->extnID, oid);
     extp = (struct Extension *)next_of(&extp->self));
   return extp;
   }
 
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
-  { 
+  {
   CRYPT_CONTEXT hashContext;
   uchar hash[40];
   int ansr;
@@ -100,7 +119,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
   memcpy(outbufp, hash, ansr);
   return ansr;
   }
-   
+
 static void inheritIPAddresses(struct Extension *extp, struct Extension *iextp)
   {
   struct IPAddressFamilyA *ipfamp;
@@ -114,7 +133,7 @@ static void inheritIPAddresses(struct Extension *extp, struct Extension *iextp)
     while(num_items(&ipfamp->ipAddressChoice.addressesOrRanges.self) > 0)
       eject_casn(&ipfamp->ipAddressChoice.addressesOrRanges.self, 0);
       // then set inherit
-    write_casn(&ipfamp->ipAddressChoice.inherit, (uchar *)"", 0);  
+    write_casn(&ipfamp->ipAddressChoice.inherit, (uchar *)"", 0);
     }
   }
 
@@ -150,7 +169,7 @@ static int ip2Prefix(char **prefixpp, struct IPAddressA *ipp, int family)
   *prefixpp = buf;
   return (c - buf);
   }
-     
+
 static int ipOrRange2prefix(char **prefixpp, struct IPAddressOrRangeA *ipp, int family)
   {
   if (size_casn(&ipp->addressPrefix) > 0)
@@ -170,7 +189,7 @@ static struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   struct Extension *extp;
   if (!(extp = findExtension(extsp, idp)))
     {
-    extp = (struct Extension *)inject_casn(&extsp->self, 
+    extp = (struct Extension *)inject_casn(&extsp->self,
       num_items(&extsp->self));
     }
   else clear_casn(&extp->self);
@@ -188,7 +207,7 @@ static int prefix2ip(struct IPAddressA *iPAddrp, char *prefixp, int family)
       {
       if (*c == '.') siz += 1;
       }
-    else if (*c == ':') 
+    else if (*c == ':')
       {
       if (c[1] != ':') siz += 2;
       else if (pad) return warn(2, prefixp);
@@ -201,17 +220,17 @@ static int prefix2ip(struct IPAddressA *iPAddrp, char *prefixp, int family)
   int i;
   for (c = prefixp, b = &buf[1]; *c >= ' ' && *c != '/'; c++)
     {
-    if (family == 1) 
+    if (family == 1)
       {
       sscanf(c, "%d", &i);
       *b++ = i;
       }
-    else if (*c == ':') 
+    else if (*c == ':')
       {
       int j;
       for (j = 0; j < pad; *b++ = 0, j++);
       }
-    else 
+    else
       {
       sscanf(c, "%x" , &i);
       *b++ = (uchar)(i >> 8);
@@ -220,13 +239,13 @@ static int prefix2ip(struct IPAddressA *iPAddrp, char *prefixp, int family)
     while(*c > ' ' && *c != '.' && *c != ':' && *c != '/') c++;
     if (*c == '/') break;
     }
-  if (*c == '/') 
+  if (*c == '/')
     {
     c++;
     sscanf(c, "%d", &i);
     while(*c >= '0' && *c <= '9') c++;
     siz += pad;
-    } 
+    }
   int lim = (i + 7) / 8;
   if (siz < lim) return warn(8, prefixp);
   else if (siz > lim)
@@ -239,7 +258,7 @@ static int prefix2ip(struct IPAddressA *iPAddrp, char *prefixp, int family)
   uchar x, y;
   for (x = 1, y = 0; x && y < i; x <<= 1, y++)
     {
-    if (b[-1] & x) return warn(2, prefixp); 
+    if (b[-1] & x) return warn(2, prefixp);
     }
   buf[0] = i;
   write_casn(iPAddrp, buf, siz + 1);
@@ -262,7 +281,7 @@ static void read_ASNums(char **app, struct ASNum *asNump)
       read_casn_num(&asNumOrRangep->num, &val);
       sprintf(b, "%ld\n", val);
       }
-    else 
+    else
       {
       read_casn_num(&asNumOrRangep->range.min, &val);
       sprintf(b, "%ld-", val);
@@ -274,7 +293,7 @@ static void read_ASNums(char **app, struct ASNum *asNump)
     }
   *app = a;
   }
-  
+
 static int read_family(char **fampp, struct IPAddressFamilyA *famp)
   {
   uchar ub[8];
@@ -284,12 +303,12 @@ static int read_family(char **fampp, struct IPAddressFamilyA *famp)
   strcpy(buf, "IPv4\n");
   if (ub[1] == 2) buf[3] = '6';
   c = &buf[5];
-  int i, num = num_items(&famp->ipAddressChoice.addressesOrRanges.self); 
+  int i, num = num_items(&famp->ipAddressChoice.addressesOrRanges.self);
   for (i = 0; i < num; i++)
     {
     struct IPAddressOrRangeA *ipp = (struct IPAddressOrRangeA *)
       member_casn(&famp->ipAddressChoice.addressesOrRanges.self, i);
-    if (!ipp) fatal(1, buf); 
+    if (!ipp) fatal(1, buf);
     int lth = ipOrRange2prefix(&a, ipp, (int) ub[1]);
     if (lth <= 0) fprintf(stderr, "Error in address[%d] in IPv%c\n", i, buf[3]);
     else
@@ -318,7 +337,7 @@ static void set_name(struct RDNSequence *rdnsp, char *namep)
     &rdnp->self, 0);
   write_objid(&avap->objid, id_commonName);
   write_casn(&avap->value.commonName.printableString, (uchar *)namep, strlen(namep));
-  } 
+  }
 
 static int setSignature(struct Certificate *certp, char *keyfile, int bad)
 {
@@ -343,20 +362,20 @@ static int setSignature(struct Certificate *certp, char *keyfile, int bad)
   else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
       (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
     msg = "hashing";
-  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, 
+  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash,
     &signatureLength)) != 0) msg = "getting attribute string";
-  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, keyfile, 
+  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, keyfile,
     CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set";
-  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, 
+  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME,
     "label", "password")) != 0) msg = "getting key";
-  else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext, 
+  else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
     hashContext)) != 0) msg = "signing";
   else
     {
     signature = (uchar *)calloc(1, signatureLength +20);
     if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext,
       hashContext)) != 0) msg = "signing";
-    else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext, 
+    else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext,
       hashContext)) != 0) msg = "verifying";
     }
 
@@ -373,7 +392,7 @@ static int setSignature(struct Certificate *certp, char *keyfile, int bad)
       msg = "decoding signature";
     else if ((ansr = readvsize_casn(&siginfo.signature, &signstring)) < 0)
       msg = "reading signature";
-    else 
+    else
       {
       if (bad) signstring[0]++;
       if ((ansr = write_casn_bits(&certp->signature, signstring, ansr, 0)) < 0)
@@ -405,10 +424,10 @@ static void write_ASNums(struct ASNum *asnump)
       fprintf(stderr, "Invalid number(s).  Try again\n");
       ansr = -1;
       continue;
-      } 
+      }
     for (a = nbuf; *a && *a != '-'; a++);
     int val;
-    if (!*a)  
+    if (!*a)
       {
       if (sscanf(nbuf, "%d", &val) != 1 ||
         write_casn_num(&asNumorRangep->num, val) <= 0) ansr = -1;
@@ -422,15 +441,15 @@ static void write_ASNums(struct ASNum *asnump)
       }
     }
   }
-  
+
 static void write_family(struct IPAddressFamilyA *famp, int filein)
   {
   uchar family[2];
   char nbuf[256];
   read_casn(&famp->addressFamily, family);
-  write_casn(&famp->addressFamily, family, 2); 
-  char *a; 
-  int f = (family[1]== 1)? 4: 6; 
+  write_casn(&famp->addressFamily, family, 2);
+  char *a;
+  int f = (family[1]== 1)? 4: 6;
   if (!filein) fprintf(stdout, "What prefixes for family IPv%d?\n", f);
   int ansr = 0;
   int num;
@@ -448,10 +467,10 @@ static void write_family(struct IPAddressFamilyA *famp, int filein)
       if ((ansr = (prefix2ip(&ipAorRp->addressRange.min, nbuf, (int)family[1]))) >= 0)
           ansr = prefix2ip(&ipAorRp->addressRange.max, a, (int)family[1]);
       }
-    
+
     }
-  }    
-  
+  }
+
 static int writeHashedPublicKey(struct casn *valuep, struct casn *keyp)
   {
   uchar *bitval;
@@ -482,7 +501,7 @@ int main(int argc, char **argv)
   struct stat tstat;
   fstat(0, &tstat);
   int filein = (tstat.st_mode & S_IFREG);
-  struct Certificate cert; 
+  struct Certificate cert;
   struct Certificate issuer;
   Certificate(&cert, (ushort)0);
   struct CertificateToBeSigned *ctftbsp = &cert.toBeSigned;
@@ -504,18 +523,18 @@ int main(int argc, char **argv)
     if (get_casn_file(&cert.self, subjfile, 0) < 0) fatal(1, subjfile);
     write_casn_num(&ctftbsp->serialNumber, (long)1);
     }
-  else 
+  else
     {
     // start filling subject cert
     write_casn_num(&ctftbsp->version.self, 2);
     char *a = argv[1];        // get the issuer file
     for (a++; *a >= '0' && *a <= '9'; a++);
-    if (!*a) a--;   // if not EE, cut off lest digit for issuer 
+    if (!*a) a--;   // if not EE, cut off lest digit for issuer
     issuerfile = (char *)calloc(1, strlen(argv[1] + 8));
     strcat(strncpy(issuerfile, argv[1], a - argv[1]), ".cer");
     issuerkeyfile = (char *)calloc(1, strlen(argv[1] + 8));
     strcat(strncpy(issuerkeyfile, argv[1], a - argv[1]), ".p15");
-    if (get_casn_file(&issuer.self, issuerfile, 0) < 0) 
+    if (get_casn_file(&issuer.self, issuerfile, 0) < 0)
       fatal(1, issuerfile);
     for (c = issuerfile; *c && *c != '.'; c++);
     strcpy(c, ".p15");
@@ -523,7 +542,7 @@ int main(int argc, char **argv)
     snum++;
     if (*a == 'M') snum += 0x100;
     if (*a == 'R') snum += 0x200;
-    write_casn_num(&ctftbsp->serialNumber, (long)snum); 
+    write_casn_num(&ctftbsp->serialNumber, (long)snum);
     copy_casn(&cert.algorithm.self, &issuer.toBeSigned.signature.self);
     copy_casn(&ctftbsp->signature.self, &issuer.toBeSigned.signature.self);
     copy_casn(&ctftbsp->issuer.self, &issuer.toBeSigned.subject.self);
@@ -555,7 +574,7 @@ int main(int argc, char **argv)
     {
     // key usage
     extp = makeExtension(extsp, id_keyUsage);
-    if (!(iextp = findExtension(iextsp, id_keyUsage))) 
+    if (!(iextp = findExtension(iextsp, id_keyUsage)))
       fatal(4, "key usage");
     copy_casn(&extp->self, &iextp->self);
     if (ee)
@@ -583,7 +602,7 @@ int main(int argc, char **argv)
     copy_casn(&extp->self, &iextp->self);
       // authInfoAccess
     extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
-    if (strlen(argv[1]) == 2 || (strlen(argv[1]) == 3 && argv[1][1] > '9')) 
+    if (strlen(argv[1]) == 2 || (strlen(argv[1]) == 3 && argv[1][1] > '9'))
       {  // first generation.  Have to build it
       struct AuthorityInfoAccessSyntax *aiasp = &extp->extnValue.authorityInfoAccess;
       struct AccessDescription *accdsp = (struct AccessDescription *)inject_casn(
@@ -604,13 +623,13 @@ int main(int argc, char **argv)
   ELSE  IF the issuer's cert has no subjectKeyId field, error
   ELSE use the issuer's subjKeyId filed as the source
   Get or make subject's authKey Id extension
-  Copy the source  into subject's authKeyId 
+  Copy the source  into subject's authKeyId
 */
   if (!issuerkeyfile) iextp = extp;
-  else if (!(iextp = findExtension(&issuer.toBeSigned.extensions, 
+  else if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
         id_subjectKeyIdentifier))) fatal(4, "subjectKeyIdentifier");
   extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
-  copy_casn(&extp->extnValue.authKeyId.keyIdentifier, 
+  copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
     &iextp->extnValue.subjectKeyIdentifier);
       // do IP addresses
   char *a;
@@ -625,7 +644,7 @@ int main(int argc, char **argv)
       clear_casn(&extp->extnValue.ipAddressBlock.self);
       struct IPAddressFamilyA *ifamp;
       for (ifamp = (struct IPAddressFamilyA *)member_casn(
-        &iextp->extnValue.ipAddressBlock.self, 0); ifamp; 
+        &iextp->extnValue.ipAddressBlock.self, 0); ifamp;
         ifamp =(struct IPAddressFamilyA *)next_of(&ifamp->self))
         {
         if (read_family(&a, ifamp) < 0) fatal(7, (char *)0);
@@ -639,7 +658,7 @@ int main(int argc, char **argv)
       }
     else if (strchr(subjfile, (int)'M'))  // making EE cert to sign manifest
       inheritIPAddresses(extp, iextp);
-      
+
     else copy_casn(&extp->self, &iextp->self);
       // if not a ROA EE, get AS num extension
     if (!strchr(subjfile, (int)'R'))
@@ -652,7 +671,7 @@ int main(int argc, char **argv)
         struct ASNum *iasNump = &iextp->extnValue.autonomousSysNum;
         char *a;
         read_ASNums(&a, iasNump);
-        if (!filein) 
+        if (!filein)
           {
           fprintf(stdout, a);
           fprintf(stdout, "What AS numbers?\n");
@@ -662,25 +681,26 @@ int main(int argc, char **argv)
         }
       else copy_casn(&extp->self, &iextp->self);
       }
-    }
-
-  if (issuerfile)
-    {  // subjectInfoAccess
+      // subjectInfoAccess
+    iextp = findExtension(&issuer.toBeSigned.extensions, id_pe_subjectInfoAccess);
     extp = makeExtension(extsp, id_pe_subjectInfoAccess);
-    if (!(iextp = findExtension(iextsp, id_pe_subjectInfoAccess)))
-        fatal(4, "subjectInfoAccess");
+    check_access_methods(iextp);
     copy_casn(&extp->self, &iextp->self);
-    if (num_items(&extp->extnValue.subjectInfoAccess.self) != 2)
-      fatal(11, "SubjectInfoAccess");
     if (ee)  // change it for an EE cert
       {  // cut down to only 1 AccessDescription
       eject_casn(&extp->extnValue.subjectInfoAccess.self, 1);
       struct AccessDescription *accDesp = (struct AccessDescription *)
         member_casn(&extp->extnValue.subjectInfoAccess.self, 0);
-      if (!accDesp) fatal(4, "subjectInfoAccess");
+      if (!accDesp) fatal(4, "SubjectInfoAccess");
         // force the accessMethod for an EE cert
       write_objid(&accDesp->accessMethod, id_ad_signedObject);
       }
+    }
+  else   // root
+    {
+    if (!(iextp = findExtension(extsp, id_pe_subjectInfoAccess)))
+        fatal(4, "subjectInfoAccess");
+    check_access_methods(iextp);
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile, bad);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);
@@ -696,4 +716,4 @@ int main(int argc, char **argv)
   free(rawp);
   fatal(0, subjfile);
   return 0;
-  } 
+  }
