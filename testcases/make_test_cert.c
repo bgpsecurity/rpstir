@@ -670,24 +670,17 @@ int main(int argc, char **argv)
     if (!(iextp = findExtension(iextsp, id_pe_subjectInfoAccess)))
         fatal(4, "subjectInfoAccess");
     copy_casn(&extp->self, &iextp->self);
-    if (ee)  // making an EE cert
-      {
+    if (num_items(&extp->extnValue.subjectInfoAccess.self) != 2)
+      fatal(11, "SubjectInfoAccess");
+    if (ee)  // change it for an EE cert
+      {  // cut down to only 1 AccessDescription
+      eject_casn(&extp->extnValue.subjectInfoAccess.self, 1);
       struct AccessDescription *accDesp = (struct AccessDescription *)
         member_casn(&extp->extnValue.subjectInfoAccess.self, 0);
       if (!accDesp) fatal(4, "subjectInfoAccess");
-      
+        // force the accessMethod for an EE cert
       write_objid(&accDesp->accessMethod, id_ad_signedObject);
       }
-    else  // making a CA cert
-      {
-      struct AccessDescription *accDesp = (struct AccessDescription *)
-        inject_casn(&extp->extnValue.subjectInfoAccess.self, 1);
-      if (!accDesp) fatal(11, "SubjectInfoAccess");
-      struct AccessDescription *iaccDesp = (struct AccessDescription *)
-        member_casn(&iextp->extnValue.subjectInfoAccess.self, 0);
-      write_objid(&accDesp->accessMethod, id_ad_rpkiManifest);
-      copy_casn(&accDesp->accessLocation.self, &iaccDesp->accessLocation.self);
-      } 
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile, bad);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);

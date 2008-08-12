@@ -11,19 +11,19 @@ seq seq ctx+0x20
                     prt "C"
         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                 nul 
-            bit 0x0030818902818100E69F37BCFBE3C803
-                0x14B13FC90953A886437EAB4D86BAAF10
-                0x292621E59B0793E0AFB199372E582201
-                0x1A686B2A59470AF4EB5EE4AC1576A0C1
-                0x0D1971A4F12344AA11FC0729F85EECC6
-                0xED2453A37409C570DBBB031D719096DE
-                0x2374E1EC5C11A006FD4A6DA791159288
-                0xDDC924E6E974AF9E4AC17D12AB323264
-                0x83CCA7623C936FA50203010001
+            bit 0x0030818902818100EF5EE4A7CF1B103E
+                0x70D6E965D5147706D291CFB28DF90BBE
+                0xFFDFF5B7C70C01D762E46EF4D6FF8930
+                0xF44DD5DA359D268A51DC5B8FED045ECA
+                0xAD15271C99B3EC3A4634384DC8AE3191
+                0xFF7FBF5DF47092B641C1CAD5B6D239D1
+                0xE7119164DF50572EF6FDFC041D44E853
+                0x143C89C9628E535DF8375BADD426B6A7
+                0x6FAC92674C32C34D0203010001
         ctx+0x23
             seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
-                    ocw oct 0x1F068FACF2B4D83CCD736FA9EBA74C57
-                            0x287F03DB
+                    ocw oct 0x9C0103A54B55FDF44A5560BAFCA5B98A
+                            0xC71A34EA
                 seq oid 2.5.29.15 /* id_keyUsage */
                     boo 0xFF
                     ocw bit 0x0106
@@ -44,10 +44,10 @@ seq seq ctx+0x20
                     ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
                 seq oid 2.5.29.35 /* id_authKeyId */
                     ocw seq ctx+0x00
-                                0x1F068FACF2B4D83CCD736FA9EBA74C57
-                                0x287F03DB
+                                0x9C0103A54B55FDF44A5560BAFCA5B98A
+                                0xC71A34EA
                 seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_pkix_caIssuers */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                 ctx+0x06
                                     "rsync://bbn-via-roa-pki"
                 seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
@@ -62,15 +62,20 @@ seq seq ctx+0x20
                                 seq seq int 0x01
                                         int 0x64
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_pkix_caRepository */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://arin-via-apnic.mirin.apnic.net/moc"
+                                    "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
+                                    "/e3L5eq0X8jJlDu9fmx8xjDAbbxI/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
                                     "rsync://arin-via-apnic.mirin.apnic.net/moc"
                                     "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
                                     "/e3L5eq0X8jJlDu9fmx8xjDAbbxI/"
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x0070B51FD3F5099C67D3F57F7A43CCF6CDAD598A8E9AF5E3BE2D806C54CF674B
-        0x8BCA3BEB612AED7BA31E55106C71D31E42D8B29DF6AF9883BF1C551B8EF6E2CD
-        0x9057981354A82050A156FB6B053DCF8A2F3F4112CFD49AD57B9629E970A8BC27
-        0xBF5E35A3339DD7EFAB968E7E2912D6921DBC93EA52A618C48141C7E9450760FD
-        0x30
+    bit 0x0057529AF595EC8DC197105A6780C10FD728D10C203B8C7295B5AC179857BAC1
+        0x70AF27F32138EAAB3ED85AA20BCCE0AAF8A565F84EDE80F2112C4A68BCA03F8F
+        0x00B178B6088A9D17CEEEB2008E439BACAC4EE57D88D4DF2C4AB80313179F09EA
+        0x7FB2E51AEBC1C297A6F408AA65926E706DC986F3FDEA5649B0A666F03464EA18
+        0x3A
