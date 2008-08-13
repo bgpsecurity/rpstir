@@ -39,8 +39,11 @@ char *msgs [] =
     "Error inserting %s\n",   
     "Error in %s creating signature\n",    // 5
     "Error writing %s\n",
+    "File name %s too long\n",      // 7
     };
     
+#define CURR_FILE_SIZE 512
+
 static int fatal(int msg, char *paramp);
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp);
 
@@ -67,8 +70,9 @@ static int add_names(char *curr_file, char *c, struct Manifest *manp, int num)
   FILE *str;
   char *a;
   if (!(str = fopen(&c[1], "r"))) fatal(1, &c[1]);
-  while((fgets(c, (128 - (c - curr_file)), str)))
+  while((fgets(c, (CURR_FILE_SIZE - (c - curr_file)), str)))
     {
+    if (strlen(curr_file) >= CURR_FILE_SIZE - 1) fatal(7, c);
     for (a = c; *a > ' '; a++);
     *a = 0;
     if (*c == '-') num = add_names(curr_file, c, manp, num);
@@ -101,66 +105,29 @@ static int fatal(int msg, char *paramp)
   fprintf(stderr, msgs[msg], paramp);
   exit(msg);
   }
-/*
-static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, char *filename)
-{
-  CRYPT_CONTEXT hashContext;
-  CRYPT_CONTEXT sigKeyContext;
-  CRYPT_KEYSET cryptKeyset;
-  uchar hash[40];
-  uchar *signature = NULL;
-  int ansr = 0, signatureLength;
-  char *msg;
 
-  memset(hash, 0, 40);
-  cryptInit();
-  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
-      (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
-    msg = "creating context";
-  else if ((ansr = cryptEncrypt(hashContext, signstring, lth)) != 0 ||
-      (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
-    msg = "hashing";
-  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, 
-    &signatureLength)) != 0) msg = "getting attribute string";
-  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, filename, 
-    CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set";
-  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label", 
-    "password")) != 0) msg = "getting key";
-  else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext, hashContext)) != 0)
-    msg = "signing";
-  else
+static void getDate(struct casn *casnp, char *text)
+  {
+  char locbuf[20];
+  printf("%supdate date (YYYYMMDDhhmssZ)? ", text);
+  while (1)
     {
-    signature = (uchar *)calloc(1, signatureLength +20);
-    if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext,
-      hashContext)) != 0) msg = "signing";
-    else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext, hashContext))
-      != 0) msg = "verifying";
+    fgets(locbuf, sizeof(locbuf), stdin);
+    char *c;
+    for (c = locbuf; *c > ' '; c++);
+    *c = 0;
+    if (write_casn(casnp, (uchar *)locbuf, strlen(locbuf)) > 0)
+      return;
+    printf("Invalid date.  Try again ");
     }
-
-  cryptDestroyContext(hashContext);
-  cryptDestroyContext(sigKeyContext);
-  cryptEnd();
-  if (ansr == 0)
-    { 
-    decode_casn(&(roa->content.signedData.signerInfos.signerInfo.self), signature);
-    ansr = 0;
-    }
-  else 
-    {
-      //  printf("Signature failed in %s with error %d\n", msg, ansr);
-      // ansr = ERR_SCM_INVALSIG;
-    }
-  if ( signature != NULL ) free(signature);
-  return ansr;
-}
-*/
+  }
 
 int main(int argc, char **argv)
   {
-  char *c, curr_file[128];
+  char *c, curr_file[CURR_FILE_SIZE], locbuf[20];
   struct ROA roa;
   struct AlgorithmIdentifier *algidp;
-  ulong now = time((time_t *)0);
+  int man_num;
 
   if (argc < 4)
     {
@@ -175,18 +142,23 @@ int main(int argc, char **argv)
     digestAlgorithms.self, 0);
   write_objid(&algidp->algorithm, id_sha256);
   write_casn(&algidp->parameters.sha256, (uchar *)"", 0);
-  write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_roa_pki_manifest);
-  struct Manifest *manp = &roa.content.signedData.encapContentInfo.eContent.manifest;
-  write_casn_num(&manp->manifestNumber, 4);
-  write_casn_time(&manp->thisUpdate, now);
-  now += (30*24*3600);
-  write_casn_time(&manp->nextUpdate, now);
+  write_objid(&roa.content.signedData.encapContentInfo.eContentType, 
+    id_roa_pki_manifest);
+  struct Manifest *manp = 
+    &roa.content.signedData.encapContentInfo.eContent.manifest;
+  printf("What manifest number? ");
+  fgets(locbuf, sizeof(locbuf), stdin);
+  sscanf(locbuf, "%d", &man_num);
+  write_casn_num(&manp->manifestNumber, (long)man_num);
+  getDate(&manp->thisUpdate, "This");
+  getDate(&manp->nextUpdate, "Next");
   write_objid(&manp->fileHashAlg, id_sha256);
   
     // now get the files 
-  memset(curr_file, 0, 128);
+  memset(curr_file, 0, CURR_FILE_SIZE);
   if (argc > 4)
     {
+    if (strlen(argv[4]) > CURR_FILE_SIZE -8) fatal(7, argv[4]);
     strcpy(curr_file, argv[4]);
     for (c = curr_file; *c > ' '; c++);
     if (c > curr_file && c[-1] != '/') *c++ = '/';
@@ -202,25 +174,42 @@ int main(int argc, char **argv)
     char *a;
 
     printf("File[%d]? ", num);
-    fgets(c, (128 - (c - curr_file)), stdin); 
+    fgets(c, (CURR_FILE_SIZE - (c - curr_file)), stdin); 
+    if (strlen(curr_file) > CURR_FILE_SIZE - 1) fatal(7, curr_file);
     if (*c < ' ') break;
     for (a = c; *a > ' '; a++);
     *a = 0;  // remove carriage return
     if (*c != '-') num += add_name(curr_file, manp, num);
     else num = add_names(curr_file, c, manp, num);
     }
-  if (!inject_casn(&roa.content.signedData.certificates.self, 0)) fatal(4, "signedData");
-  struct Certificate *certp = (struct Certificate *)member_casn(&roa.content.signedData.
-    certificates.self, 0);
+  if (!inject_casn(&roa.content.signedData.certificates.self, 0)) 
+    fatal(4, "signedData");
+  struct Certificate *certp = (struct Certificate *)member_casn(
+    &roa.content.signedData.  certificates.self, 0);
   if (get_casn_file(&certp->self, argv[2], 0) < 0) fatal(2, argv[2]);
-  if (!inject_casn(&roa.content.signedData.signerInfos.self, 0)) fatal(4, "signerInfo");
-  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(&roa.content.signedData.
-    signerInfos.self, 0);
+  if (!inject_casn(&roa.content.signedData.signerInfos.self, 0)) 
+    fatal(4, "signerInfo");
+  struct SignerInfo *sigInfop = (struct SignerInfo *)member_casn(
+    &roa.content.signedData.  signerInfos.self, 0);
   write_casn_num(&sigInfop->version.v3, 3);
   write_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256);
-  write_objid(&sigInfop->signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption);
+  write_objid(&sigInfop->signatureAlgorithm.algorithm, 
+    id_sha_256WithRSAEncryption);
   
   if ((c = signCMS(&roa, argv[3], 0))) fatal(5, c);
-  if (put_casn_file(&roa.self, argv[1], 0) < 0) fatal(6, argv[1]);  
+  if (put_casn_file(&roa.self, argv[1], 0) < 0) fatal(6, argv[1]);
+  printf("What readable file, if any? ");
+  fgets(curr_file, CURR_FILE_SIZE, stdin);
+  curr_file[strlen(curr_file) - 1] = 0;
+  if (*curr_file > ' ')
+    {
+    int dsize = dump_size(&roa.self);
+    c = (char *)calloc(1, dsize + 2);
+    dump_casn(&roa.self, c);
+    FILE *str = fopen(curr_file, "w");
+    fprintf(str, c);
+    fclose(str);
+    }
+  fatal(0, "");
   return 0;
   } 
