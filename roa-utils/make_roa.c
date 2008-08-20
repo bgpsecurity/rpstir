@@ -3,12 +3,12 @@
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -26,18 +26,18 @@
 #include <sys/types.h>
 #include <time.h>
 
-char *msgs [] = 
+char *msgs [] =
     {
     "Created %s\n",
     "Can't open %s\n",      //1
     "Invalid prefix %s\n",
     "Missing %s\n",      // 3
-    "%s covers AS number and v4 and v6 files\n",   
+    "%s covers AS number and v4 and v6 files\n",
     "Error in %s when signng\n",    // 5
     "Error writing %s\n",
     "Invalid parameter %s\n",     // 7
     };
-    
+
 static int fatal(int msg, char *paramp)
   {
   fprintf(stderr, msgs[msg], paramp);
@@ -54,7 +54,7 @@ static int prefix2roa(struct ROAIPAddress *roaIPAddrp, char *prefixp, int family
       {
       if (*c == '.') siz += 1;
       }
-    else if (*c == ':') 
+    else if (*c == ':')
       {
       if (c[1] != ':') siz += 2;
       else if (pad) fatal(2, prefixp);
@@ -67,17 +67,17 @@ static int prefix2roa(struct ROAIPAddress *roaIPAddrp, char *prefixp, int family
   int i;
   for (c = prefixp, b = &buf[1]; *c >= ' ' && *c != '/'; c++)
     {
-    if (family == 1) 
+    if (family == 1)
       {
       sscanf(c, "%d", &i);
       *b++ = i;
       }
-    else if (*c == ':') 
+    else if (*c == ':')
       {
       int j;
       for (j = 0; j < pad; *b++ = 0, j++);
       }
-    else 
+    else
       {
       sscanf(c, "%x" , &i);
       *b++ = (uchar)(i >> 8);
@@ -86,13 +86,13 @@ static int prefix2roa(struct ROAIPAddress *roaIPAddrp, char *prefixp, int family
     while(*c > ' ' && *c != '.' && *c != ':' && *c != '/') c++;
     if (*c == '/') break;
     }
-  if (*c == '/') 
+  if (*c == '/')
     {
     c++;
     sscanf(c, "%d", &i);
     while(*c >= '0' && *c <= '9') c++;
     siz += pad;
-    } 
+    }
   int lim = (i + 7) / 8;
   if (siz < lim) fatal(2, prefixp);
   else if (siz > lim)
@@ -105,11 +105,11 @@ static int prefix2roa(struct ROAIPAddress *roaIPAddrp, char *prefixp, int family
   uchar x, y;
   for (x = 1, y = 0; x && y < i; x <<= 1, y++)
     {
-    if (b[-1] & x) fatal(2, prefixp); 
+    if (b[-1] & x) fatal(2, prefixp);
     }
   buf[0] = i;
   write_casn(&roaIPAddrp->address, buf, siz + 1);
-  if (*c == '^') 
+  if (*c == '^')
     {
     sscanf(++c, "%d", &i);
     write_casn_num(&roaIPAddrp->maxLength, (long)i);
@@ -125,8 +125,8 @@ static void do_family(struct ROAIPAddrBlocks *roaBlockp, int famnum, int x, FILE
   char *c, nbuf[256];
   family[0] = 0;
   family[1] = famnum;
-  write_casn(&roafamp->addressFamily, family, 2); 
-  
+  write_casn(&roafamp->addressFamily, family, 2);
+
   int numaddr;
   for (numaddr = 0; fgets(nbuf, sizeof(nbuf), str); numaddr++)
     {
@@ -136,8 +136,8 @@ static void do_family(struct ROAIPAddrBlocks *roaBlockp, int famnum, int x, FILE
       inject_casn(&roafamp->addresses.self, numaddr);
     prefix2roa(roaIPaddrp, c, famnum);
     }
-  }    
- 
+  }
+
 int main (int argc, char ** argv)
   {
   struct ROA roa;
@@ -150,8 +150,9 @@ int main (int argc, char ** argv)
     return 0;
     }
   char *b, *c, *e, *buf = (char *)0;
-  char *certfile, *keyfile, *outfile, *readroafile;
-  certfile = keyfile = outfile = readroafile = (char *)0;
+  char *certfile, *keyfile, *outfile, *readroafile, *vfile;
+  char **pp, **tp;
+  certfile = keyfile = outfile = readroafile = vfile = (char *)0;
   if (argc == 2 && argv[1][0] != '-')  // parameter file
     {
     int fd = open(argv[1], O_RDONLY);
@@ -160,39 +161,35 @@ int main (int argc, char ** argv)
     lseek(fd, 0, SEEK_SET);
     buf = (char *)calloc(1, lth + 1);
     read(fd, buf, lth);
+    int numargs;
     for (e = buf; *e; e++) if (*e <= ' ') *e = 0;
-    for (c = buf; c < e; c = b)
+    for (b = buf; b < e && *b== 0; b++);  // go to first parameter
+    for (numargs = 0; b < e; numargs++)
       {
-      if (*c == '-')
-        {
-        c++;
-        for (b = &c[1]; !*b && b < e; b++);
-        if (!*b) fatal(7, c);
-        if (*c == 'c') certfile = b;
-        else if (*c == 'k') keyfile = b;
-        else if (*c == 'o') outfile = b;
-        else if (*c == 'r') readroafile = b;
-        else fatal(7, &c[-1]);
-        while (*b && b < e) b++;
-        while (!*b && b < e) b++;
-        }
-      else fatal(7, c);
+      while (b < e && *b != 0) b++;
+      while (b < e && *b == 0) b++;
+      }
+    pp = (char **)calloc(1, (numargs + 1) * sizeof(char *));
+    for (b = buf; b < e && *b== 0; b++);  // go to first parameter
+    for (tp = pp; numargs-- > 0; tp++)
+      {
+      while (b < e && *b == 0) b++;
+      *tp = b;
+      while (b < e && *b > 0) b++;
       }
     }
-  else  // parameters as argvs
+  else pp = &argv[1]; // parameters as argvs
+  for ( ; *pp; pp++)
     {
-    char **pp;
-    for (pp = &argv[1]; *pp; pp++)
-      {
-      c = *pp;
-      if (*c != '-') fatal(7,c);
-      b = *(++pp);
-      if (*(++c) == 'c') certfile = b;
-      else if (*c == 'k') keyfile = b;
-      else if (*c == 'o') outfile = b;
-      else if (*c == 'r') readroafile = b;
-      else fatal(7, &c[-1]);
-      }
+    c = *pp;
+    if (*c != '-') fatal(7,c);
+    b = *(++pp);
+    if (*(++c) == 'c') certfile = b;
+    else if (*c == 'k') keyfile = b;
+    else if (*c == 'o') outfile = b;
+    else if (*c == 'r') readroafile = b;
+    else if (*c == 'v') vfile = b;
+    else fatal(7, &c[-1]);
     }
   if (!certfile)  fatal(3, "certificate file");
   if (!outfile)  fatal(3, "output file");
@@ -211,7 +208,7 @@ int main (int argc, char ** argv)
       break;
       }
     }
-  fseek(str, 0, SEEK_SET);   
+  fseek(str, 0, SEEK_SET);
   ROA(&roa, (ushort )0);
   write_objid(&roa.contentType, id_signedData);
   struct SignedData *sgdp = &roa.content.signedData;
@@ -230,10 +227,20 @@ int main (int argc, char ** argv)
   while ((c = fgets(nbuf, sizeof(nbuf), str)) && strncmp(nbuf, "IPv6", 4));
   if(c) do_family(&roap->ipAddrBlocks, 2, x, str);
   struct Certificate *certp = (struct Certificate *)
-      inject_casn(&sgdp->certificates.self, 0);  
+      inject_casn(&sgdp->certificates.self, 0);
   if (get_casn_file(&certp->self, certfile, 0) < 0) fatal(2, certfile);
   if ((c = signCMS(&roa, keyfile, 0))) fatal(5, c);
   if (put_casn_file(&roa.self, outfile, 0) < 0) fatal(6, outfile);
+  if (vfile)
+    {
+    int lth = dump_size(&roa.self);
+    char *dbuf = (char *)calloc(1, lth + 8);
+    dump_casn(&roa.self, dbuf);
+    FILE *vstr = fopen(vfile, "w");
+    fputs(dbuf, vstr);
+    fclose(vstr);
+    free(dbuf);
+    }
   if (buf) free(buf);
   fatal(0, outfile);
   return 0;
