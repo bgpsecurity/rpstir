@@ -1,0 +1,12 @@
+# each item specified as "item filter", where:
+#  - items are: Validated, NoChain, StaleCRL, StaleManifest, NoManifest, NoValidManifest
+#  - filter is: ignore (don't check), matchSet, matchClr (note: case is a no-care here)
+# items relate to SCM_FLAG items in the database, i.e., NoChain is SCM_FLAG_NOCHAIN, etc.
+# so StaleCRL ignore does not test, StaleCRL matchClr tests for flag clear, StaleCRL matchSet tests for flag set
+
+Validated ignore
+NoChain ignore
+StaleCRL ignore
+StaleManifest ignore
+NoManifest ignore
+NoValidManifest ignore

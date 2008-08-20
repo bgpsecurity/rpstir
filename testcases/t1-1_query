@@ -1,0 +1,2 @@
+# query command for t1-1
+query -t roa -s queryIgnoreAll -d filename
