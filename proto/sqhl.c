@@ -834,99 +834,20 @@ static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
 
 
 /*
- * roa utility
- */
-
-static unsigned char *readfile(char *fn, int *stap)
-{
-  struct stat mystat;
-  char *outptr = NULL;
-  char *ptr;
-  int   outsz = 0;
-  int   fd;
-  int   rd;
-
-  if ( stap == NULL )
-    return(NULL);
-  if ( fn == NULL || fn[0] == 0 )
-    {
-      *stap = ERR_SCM_INVALARG;
-      return(NULL);
-    }
-  fd = open(fn, O_RDONLY);
-  if ( fd < 0 )
-    {
-      *stap = ERR_SCM_COFILE;
-      return(NULL);
-    }
-  memset(&mystat, 0, sizeof(mystat));
-  if ( fstat(fd, &mystat) < 0 || mystat.st_size == 0 )
-    {
-      (void)close(fd);
-      *stap = ERR_SCM_COFILE;
-      return(NULL);
-    }
-  ptr = (char *)calloc(mystat.st_size, sizeof(char));
-  if ( ptr == NULL )
-    {
-      (void)close(fd);
-      *stap = ERR_SCM_NOMEM;
-      return(NULL);
-    }
-  rd = read(fd, ptr, mystat.st_size);
-  (void)close(fd);
-  if ( rd != mystat.st_size )
-    {
-      free((void *)ptr);
-      ptr = NULL;
-      *stap = ERR_SCM_COFILE;
-    }
-  else
-    *stap = 0;
-  if ( strstr(fn, ".pem") == NULL ) /* not a PEM file */
-    return((unsigned char *)ptr);
-  *stap = decode_b64((unsigned char *)ptr, mystat.st_size, (unsigned char **)&outptr, &outsz, "CERTIFICATE");
-  free((void *)ptr);
-  if ( *stap < 0 )
-    {
-      if ( outptr != NULL )
-	{
-	  free((void *)outptr);
-	  outptr = NULL;
-	}
-    }
-  return((unsigned char *)outptr);
-}
-
-/*
  * roa verification code
  */
 static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
 {
-  X509 *cert;
   int sta;
-  char fn[PATH_MAX], *fn2;
-  unsigned char *blob = NULL;
 
+  *chainOK = 0;
 // call the syntactic verification first
   sta = roaValidate(r);
   if ( sta < 0 )
     return(sta);
-  fn2 = fn;
-  cert = parent_cert (conp, ski, NULL, &sta, &fn2);
-  if ( cert == NULL ) {
-    *chainOK = 0;
-    return 0;
-  }
   *chainOK = 1;
 // read the ASN.1 blob from the file
-  blob = readfile(fn, &sta);
-  if ( blob != NULL )
-    {
-      sta = roaValidate2(r, blob);
-      free((void *)blob);
-    }
-  X509_free(cert);
+  sta = roaValidate2(r);
   return (sta < 0) ? ERR_SCM_NOTVALID : 0;
 }
 
@@ -1587,12 +1508,11 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *manState)
 {
   struct ROA *r = NULL;
-  char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, filter[4096];
+  char *ski = NULL, *sig = NULL;
+  char filter[4096];
   unsigned char *bsig = NULL;
-  cert_fields *cf = NULL;
-  int asid, sta, chainOK, bsiglen = 0, x509sta = 0, cert_added = 0;
-  unsigned int flags, cert_id = 0;
-  X509 *x509p = NULL;
+  int asid, sta, chainOK, bsiglen = 0;
+  unsigned int flags;
 
   // validate parameters
   if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
@@ -1603,51 +1523,6 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     return(sta);
 
   do {			/* do-once */
-    // pull out EE cert
-    if (!(r->content.signedData.certificates.self.flags & ASN_FILLED_FLAG) ||
-	num_items(&r->content.signedData.certificates.self) != 1) {
-      sta = ERR_SCM_BADNUMCERTS;
-      break;
-    }
-    struct Certificate *c = (struct Certificate *) 
-      member_casn(&r->content.signedData.certificates.self, 0);
-
-    // serialize the Certificate and scan it as an openssl X509 object
-    int siz = size_casn(&c->self);
-    unsigned char *buf = calloc(1, siz + 4);
-    siz = encode_casn(&c->self, buf);
-
-    /* d2i_X509 changes "used" to point past end of the object */
-    unsigned char *used = buf;
-    x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
-
-    // if deserialization failed, bail
-    if (x509p == NULL || sta < 0) {
-      sta = ERR_SCM_X509;
-      break;
-    }
-
-    // generate a (fake) filename for the cert that is unique.
-    // (use the roa name with ".cer" at the end)
-    int fakelen = strlen(outfile);
-    assert(fakelen >= 4);
-    fakecertfilename = strdup(outfile);
-    strcpy(fakecertfilename + fakelen - 4, ".cer");
-
-    // pull out the fields
-    cf = cert2fields(fakecertfilename, 0, typ, &x509p, &sta, &x509sta);
-    if (cf == NULL || sta != 0)
-      break;		/* sta set by cert2fields */
-
-    // add the X509 cert to the db
-    sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, manState);
-    x509p = NULL;		/* freed by add_cert_2 */
-    cf = NULL;			/* freed by add_cert_2 */
-    free(buf); buf = NULL;
-    if (sta != 0)
-      break;
-    cert_added = 1;
-
     // ski, asid
     if ((ski = (char *)roaSKI(r)) == NULL || ski[0] == 0 ) {
       sta = ERR_SCM_INVALSKI;
@@ -1690,10 +1565,6 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   } while (0);
 
   // clean up
-  if (sta != 0 && cert_added)
-    (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull);
-  if (fakecertfilename != 0) 
-    free(fakecertfilename);
   if (r != NULL) 
     roaFree(r);
   if (ski != NULL) 

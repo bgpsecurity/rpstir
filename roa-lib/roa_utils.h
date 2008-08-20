@@ -207,7 +207,7 @@ int manifestValidate(struct ROA *r);
   returns a negative error code.
 */
 
-int roaValidate2(struct ROA *r, uchar *cert);
+int roaValidate2(struct ROA *r);
 
 /*
   This function performs all validations steps on a ROA that require

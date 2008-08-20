@@ -560,29 +560,31 @@ int roaValidate(struct ROA *rp)
   return 0;
 }
 
-int roaValidate2(struct ROA *rp, uchar *certp)
+#define HAS_EXTN_SKI 0x01
+#define HAS_EXTN_ASN 0x02
+#define HAS_EXTN_IPADDR 0x04
+
+int roaValidate2(struct ROA *rp)
 {
   int iRes;
   int sta;
-  long iAS_ID = 0;
   long ii, ij;
   struct Extension *extp;
-  struct Certificate cert;
   char *oidp;
-  struct ASNumberOrRangeA *asNumRp;
   struct IPAddressFamilyA *rpAddrFamp;
   struct ROAIPAddressFamily *ripAddrFamp;
   struct IPAddressOrRangeA *rpAddrRangep;
   struct ROAIPAddress *roaAddrp;
   uchar cmin[MINMAXBUFSIZE], cmax[MINMAXBUFSIZE], rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE];
   uchar rfam[8], cfam[8];
-  int all3 = 0;
+  int all_extns = 0;
 
   // roaValidate() is an independent function; the caller must call it
   // if the caller wants semantic validation
   //  if (roaValidate(r) == FALSE) return FALSE;
-  Certificate(&cert, 0);
-  if (decode_casn(&cert.self, certp) < 0) return ERR_SCM_NOTVALID;
+  struct Certificate *cert = (struct Certificate *) 
+      member_casn(&rp->content.signedData.certificates.self, 0);
+
   //
  // if (certificate exists in roa)
   // -  ignore it
@@ -593,7 +595,7 @@ int roaValidate2(struct ROA *rp, uchar *certp)
   //  of having been extracted, it is reputable
   /////////////////////////////////////////////////////////////////
   iRes = 0;
-  for (extp = (struct Extension *)&cert.toBeSigned.extensions.extension;
+  for (extp = (struct Extension *)&cert->toBeSigned.extensions.extension;
     extp && iRes == 0;
     extp = (struct Extension *)next_of(&extp->self))
     {
@@ -601,35 +603,16 @@ int roaValidate2(struct ROA *rp, uchar *certp)
        // if it's the SKID extension
     if (!memcmp(oidp, id_subjectKeyIdentifier, strlen(oidp)))
       {
-      all3 |= 1;
+      all_extns |= HAS_EXTN_SKI;
       // Check that roa->envelope->SKI = cert->SKI
       if (diff_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier,
         (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
         return ERR_SCM_INVALSKI;
       }
-        // or if it's the AS num extension
-    else if (!memcmp(oidp, id_pe_autonomousSysNum, strlen(oidp)))
-      {
-      all3 |= 2;
-      if (read_casn_num(&(rp->content.signedData.encapContentInfo.eContent.roa.asID),
-			&iAS_ID) < 0) iRes = ERR_SCM_INVALASID;
-      else
-        {  // look in cert
-        for (asNumRp = &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges.aSNumberOrRangeA;
-          asNumRp; asNumRp = (struct ASNumberOrRangeA *)next_of(&asNumRp->self))
-          {
-          ii = tag_casn(&asNumRp->self);
-          if ((ii  == ASN_INTEGER && diff_casn_num(&asNumRp->num, iAS_ID) == 0) ||
-            (ii == ASN_SEQUENCE && (diff_casn_num(&asNumRp->range.min, iAS_ID) <= 0) &&
-            diff_casn_num(&asNumRp->range.max, iAS_ID) >= 0)) break;
-          }
-        if (!asNumRp) iRes =  ERR_SCM_INVALASID;
-        }
-      }
       // or if it's the IP addr extension
     else if (!memcmp(oidp, id_pe_ipAddrBlock, strlen(oidp)))
       {
-      all3 |= 4;
+      all_extns |= HAS_EXTN_IPADDR;
         // start at first family in cert. NOTE order must be v4 then v6, per RFC3779
       rpAddrFamp = &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
       read_casn(&rpAddrFamp->addressFamily, cfam);
@@ -677,11 +660,11 @@ int roaValidate2(struct ROA *rp, uchar *certp)
         }
       }
     }
-  if (all3 != 7) iRes = ERR_SCM_INVALIPB;
+  if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI)) iRes = ERR_SCM_INVALIPB;
   if (iRes == 0)  // check the signature
     {
-    iRes = check_sig(rp, &cert);
+    iRes = check_sig(rp, cert);
     }
-  delete_casn(&cert.self);
+  // delete_casn(&cert.self);
   return iRes;
   }
