@@ -47,6 +47,17 @@
 #define MAX_CONDS 10
 #define MAX_RESULT_SZ 8192
 
+#define SKIP_AND  0  /* used to clarify parameter passing */
+#define NEED_AND  1  /* used to clarify parameter passing */
+#define SKIP_EXPIRED_CHECK 0	/* used to clarify parameter passing */
+
+typedef enum FilterMode_t {
+  FMODE_UNKNOWN = 0,	/* avoid 0 in enums */
+  FMODE_IGNORE,		/* don't test related flag value */
+  FMODE_MATCH_SET,	/* report if flag set */
+  FMODE_MATCH_CLR,	/* report if flag clear */
+} FilterMode_t;
+
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
 int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen);
 int displaySNList (scmsrcha *s, int idx1, char* returnStr);
@@ -288,12 +299,14 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr)
  * functions that are used to process SQL queries
  */
 static FILE *output;  /* place to print output (file or screen) */
-static int rejectStaleChain = 0;
-static int rejectStaleManifest = 0;
-static int rejectStaleCRL = 0;
-static int rejectNoManifest = 0;
+static FilterMode_t     filtValidated		= FMODE_IGNORE;
+static FilterMode_t 	filtNoChain 		= FMODE_IGNORE;
+static FilterMode_t	filtStaleCRL 		= FMODE_IGNORE;
+static FilterMode_t	filtStaleManifest 	= FMODE_IGNORE;
+static FilterMode_t	filtNoManifest 		= FMODE_IGNORE;
+static FilterMode_t	filtNoValidManifest	= FMODE_IGNORE;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
-static int useLabels, multiline, validate, valIndex;
+static int useLabels, multiline, valIndex;
 static char *objectType;
 static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0;
 static scm      *scmp = NULL;
@@ -331,10 +344,102 @@ static int registerFound (scmcon *conp, scmsrcha *s, int numLine) {
   return 0;
 }
 
+/* fill in input whereStr with flag filters as specified in current configuration
+ *
+ * note: if string is empty the first chat of the string is '\0', if not
+ *       empty then the first term gets an 'and' prepended
+ *
+ * params:
+ *  outstr	        : string to write to (max length = WHERESTR_SIZE)
+ *  checkExpired	: 0=skip special check, 1=check real time
+ *
+ * returns:
+ *  0=ok, 1=error
+ */
+static int writeWhereStrFlagChecks (char *whereStr, int checkExpired) {
+
+  int
+    cursize,
+    status;
+  char
+    *now = NULL;
+  
+  if ((whereStr == NULL) || (strlen (whereStr) >= WHERESTR_SIZE)) {
+    return 1;	/* no string to write, or no more room */
+  }
+  else {
+
+    /* special case here for when checking expiration time (for certs)
+     * in this case check for Validated flag set, NoChain flag clear, and
+     * item valid at the current time
+     */
+    if (checkExpired == 1) {
+      cursize = strlen (whereStr);
+      now = LocalTimeToDBTime (&status);
+      snprintf (whereStr, (WHERESTR_SIZE - cursize),
+		(*whereStr != '\0' ? "valto>\"%s\"" : " and valto\"%s\""),
+		now);
+      free (now);
+      now = NULL;
+
+      addFlagTest (whereStr, SCM_FLAG_VALIDATED, 1, NEED_AND);
+      addFlagTest (whereStr, SCM_FLAG_NOCHAIN,   0, NEED_AND);
+    }
+    else { /* when not checking exp time, process NOCHAIN and VALIDATED tests normally */
+
+      /* note: the function addFlagTest() checks for string length < WHERESTR_SIZE
+       */
+      if ((filtNoChain == FMODE_MATCH_SET) || (filtNoChain == FMODE_MATCH_CLR)) {
+	addFlagTest (whereStr,
+		     SCM_FLAG_NOCHAIN,
+		     (filtNoChain == FMODE_MATCH_SET ? 1:0),
+		     (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+      }
+
+      if ((filtValidated == FMODE_MATCH_SET) || (filtValidated == FMODE_MATCH_CLR)) {
+	addFlagTest (whereStr,
+		     SCM_FLAG_VALIDATED,
+		     (filtValidated == FMODE_MATCH_SET ? 1:0),
+		     (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+      }
+    }
+    
+    if ((filtStaleCRL == FMODE_MATCH_SET) || (filtStaleCRL == FMODE_MATCH_CLR)) {
+      addFlagTest (whereStr,
+		   SCM_FLAG_STALECRL,
+		   (filtStaleCRL == FMODE_MATCH_SET ? 1:0),
+		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+    }
+    
+    if ((filtStaleManifest == FMODE_MATCH_SET) || (filtStaleManifest == FMODE_MATCH_CLR)) {
+      addFlagTest (whereStr,
+		   SCM_FLAG_STALEMAN,
+		   (filtStaleManifest == FMODE_MATCH_SET ? 1:0),
+		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+    }
+    
+    if ((filtNoManifest == FMODE_MATCH_SET) || (filtNoManifest == FMODE_MATCH_CLR)) {
+      addFlagTest (whereStr,
+		   SCM_FLAG_NOMAN,
+		   (filtNoManifest == FMODE_MATCH_SET ? 1:0),
+		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+    }
+
+    if ((filtNoValidManifest == FMODE_MATCH_SET) || (filtNoValidManifest == FMODE_MATCH_CLR)) {
+      addFlagTest (whereStr,
+		   SCM_FLAG_NOVALIDMAN,
+		   (filtNoValidManifest == FMODE_MATCH_SET ? 1:0),
+		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+    }
+  }
+  return 0;    
+}
+
 /* check the valdity via the db of the cert whose ski or localID is given */
 static int checkValidity (char *ski, unsigned int localID) {
   int status;
-
+  int checkExpired = 0;
+  
   // set up main part of query only once, instead of once per object
   if (validTable == NULL) {
     validTable = findtablescm (scmp, "certificate");
@@ -343,22 +448,13 @@ static int checkValidity (char *ski, unsigned int localID) {
     addcolsrchscm (validSrch, "aki", field->sqlType, field->maxSize);
     field = findField ("issuer");
     addcolsrchscm (validSrch, "issuer", field->sqlType, field->maxSize);
-    char *now = LocalTimeToDBTime (&status);
     validWhereStr = validSrch->wherestr;
     validWhereStr[0] = 0;
-    if (rejectStaleChain)
-      snprintf (validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
-    free (now);
-    addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
-		rejectStaleChain);
-    if (rejectStaleChain)
-      addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
-    if (rejectStaleCRL)
-      addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
-    if (rejectStaleManifest)
-      addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (rejectNoManifest)
-      addFlagTest(validWhereStr, SCM_FLAG_NOVALIDMAN, 0, 1);
+        
+    if (filtNoChain == FMODE_MATCH_CLR)
+      checkExpired = 1;
+    writeWhereStrFlagChecks (validWhereStr, checkExpired);
+    
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch->vec[0].valptr;
     nextSubject = (char *) validSrch->vec[1].valptr;
@@ -401,7 +497,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   char resultStr[MAX_RESULT_SZ];
 
   conp = conp; numLine = numLine;  // silence compiler warnings
-  if (validate) {
+  if (filtValidated == FMODE_MATCH_SET) {
     if (!checkValidity (isROA ? (char *) s->vec[valIndex].valptr : NULL,
 			isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0))
 	return 0;
@@ -519,7 +615,7 @@ static int doQuery (char **displays, char **filters)
   scmtab   *table = NULL;
   scmsrcha srch;
   scmsrch  srch1[MAX_VALS];
-  char     whereStr[MAX_CONDS*20];
+  char     whereStr[WHERESTR_SIZE];
   char     errMsg[1024];
   int      srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
   unsigned long blah = 0;
@@ -537,13 +633,12 @@ static int doQuery (char **displays, char **filters)
   table = findtablescm (scmp, tableName(objectType));
   checkErr (table == NULL, "Cannot find table %s\n", objectType);
 
-  /* set up where clause, i.e. the filter */
+  /* set up where clause, i.e. the filter, using local whereStr later set into srch */
   srch.where = NULL;
+  srch.wherestr = NULL;
   whereStr[0] = 0;
-  if (filters == NULL || filters[0] == NULL) {
-    srch.wherestr = NULL;
-  } else {
-    whereStr[0] = (char) 0;
+  
+  if (filters != NULL && filters[0] != NULL) {
     for (i = 0; filters[i] != NULL; i++) {
       if (i != 0) strncat (whereStr, " AND ", maxW-strlen(whereStr));
       name = strtok (filters[i], ".");
@@ -576,20 +671,14 @@ static int doQuery (char **displays, char **filters)
       strncat (whereStr, name, maxW-strlen(whereStr));
       strncat (whereStr, "\"", maxW-strlen(whereStr));
     }
-    srch.wherestr = whereStr;
   }
-  if (validate) {
-    addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, srch.wherestr != NULL);
-    if (rejectStaleChain)
-      addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
-    if (rejectStaleCRL)
-      addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
-    if (rejectStaleManifest)
-      addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (rejectNoManifest)
-      addFlagTest(whereStr, SCM_FLAG_NOVALIDMAN, 0, 1);
+
+  /* add flag check filters to whereStr, set via configuration
+   */
+  writeWhereStrFlagChecks (whereStr, SKIP_EXPIRED_CHECK);
+
+  if (*whereStr != '\0') /* if anything is written to local string... */
     srch.wherestr = whereStr;
-  }
 
   /* set up columns to select */
   srch.vec = srch1;
@@ -612,7 +701,7 @@ static int doQuery (char **displays, char **filters)
     }
   }
   globalFields[i] = NULL;
-  if (validate) {
+  if (filtValidated == FMODE_MATCH_SET) {
     valIndex = srch.nused;
     if (isROA) {
       field2 = findField ("ski");
@@ -631,29 +720,55 @@ static int doQuery (char **displays, char **filters)
   return status;
 }
 
+static void parseSpecsFileParameter (FilterMode_t *filterItem, char *testStr)
+{
+  char
+    *tStr,
+    tmpStr[WHERESTR_SIZE];
+
+  tStr = tmpStr;
+  while (*testStr != '\0')
+    *tStr++ = tolower (*testStr++);
+  
+  if (strcmp (tmpStr, "matchset") == 0)
+    *filterItem = FMODE_MATCH_SET;
+  else if (strcmp (tmpStr, "matchcl") == 0)
+    *filterItem = FMODE_MATCH_CLR;
+  else
+    *filterItem = FMODE_IGNORE;
+}
+
 /* parse the specs telling which non-perfect ROA's to accept */
 static void parseSpecsFile(char *specsFilename)
 {
   char str[WHERESTR_SIZE], str2[WHERESTR_SIZE], str3[WHERESTR_SIZE];
-  FILE *input = fopen (specsFilename, "r");
+  FILE *input;
+  int got;
+
+  input = fopen (specsFilename, "r");  
   if (input == NULL) {
     printf ("Could not open specs file: %s\n", specsFilename);
     exit(-1);
   }
-  while (fgets (str, WHERESTR_SIZE, input)) {
-    int got = sscanf(str, "%s %s", str2, str3);
-    if (got == 0) continue;
-    if (str2[0] == '#') continue;
-    if (got == 1) perror ("Bad format for specs file\n");
-    if (strcmp(str2, "StaleCRL") == 0) {
-      rejectStaleCRL = str3[0] == 'n' || str3[0] == 'N';
-    } else if (strcmp(str2, "StaleManifest") == 0) {
-      rejectStaleManifest = str3[0] == 'n' || str3[0] == 'N';
-    } else if (strcmp(str2, "StaleValidationChain") == 0) {
-      rejectStaleChain = str3[0] == 'n' || str3[0] == 'N';
-    } else if (strcmp(str2, "NoManifest") == 0) {
-      rejectNoManifest = str3[0] == 'n' || str3[0] == 'N';
-    } else {
+  while (fgets (str, WHERESTR_SIZE, input) != NULL) {
+    got = sscanf (str, "%s %s", str2, str3);
+    if ((got == 0) || (str2[0] == '#'))
+      continue;
+    if (got == 1)
+      perror ("Bad format for specs file\n");
+    else if (strcmp (str2, "Validated") == 0)
+      parseSpecsFileParameter (&filtValidated, str3);
+    else if (strcmp (str2, "NoChain") == 0)
+      parseSpecsFileParameter (&filtNoChain, str3);
+    else if (strcmp (str2, "StaleCRL") == 0)
+      parseSpecsFileParameter (&filtStaleCRL, str3);
+    else if (strcmp (str2, "StaleManifest") == 0)
+      parseSpecsFileParameter (&filtStaleManifest, str3);
+    else if (strcmp (str2, "NoManifest") == 0)
+      parseSpecsFileParameter (&filtNoManifest, str3);
+    else if (strcmp (str2, "NoValidManifest") == 0)
+      parseSpecsFileParameter (&filtNoValidManifest, str3);
+    else {
       printf ("Bad keyword in specs file: %s\n", str2);
       exit(-1);
     }
@@ -760,7 +875,7 @@ int main(int argc, char **argv)
   output = stdout;
   useLabels = 1;
   multiline = 0;
-  validate = 0;
+  filtValidated = FMODE_IGNORE;
   if (argc == 1) return printUsage();
   if (strcasecmp (argv[1], "-l") == 0) {
     if (argc != 3) return printUsage();
@@ -771,11 +886,11 @@ int main(int argc, char **argv)
     if (strcasecmp (argv[i], "-a") == 0) {
       setObjectType ("roa");
       displays [numDisplays++] = "filter";
-      validate = 1;
+      filtValidated = FMODE_MATCH_SET;
       useLabels = 0;
       i--;
     } else if (strcasecmp (argv[i], "-v") == 0) {
-      validate = 1;
+      filtValidated = FMODE_MATCH_SET;
       i--;
     } else if (strcasecmp (argv[i], "-n") == 0) {
       useLabels = 0;
