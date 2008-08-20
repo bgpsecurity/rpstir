@@ -1,50 +1,4 @@
 /* $Id$ */
-/* Aug  2 2006 845U  */
-/* Aug  2 2006 GARDINER corrected sprintf format */
-/* Jun  1 2006 842U  */
-/* Jun  1 2006 GARDINER added capability for backslashed quote symbols" */
-/* May 24 2006 841U  */
-/* May 24 2006 GARDINER fixed bug for Linux compiler */
-/* May 23 2006 840U  */
-/* May 23 2006 GARDINER additions for APKI */
-/* May 15 2006 838U  */
-/* May 15 2006 GARDINER corrected for newer gcc */
-/* Oct  1 2001 591U  */
-/* Oct  1 2001 GARDINER added stuff for "biw" and "ocw" */
-/* May 24 2001 577U  */
-/* May 24 2001 GARDINER made main an int; fixed warning in hash_asn */
-/* Apr 18 2000 529U  */
-/* Apr 18 2000 GARDINER allowed "--" to indicate comment start */
-/* Feb  4 1999 501U  */
-/* Feb  4 1999 GARDINER added 'sth' feature */
-/* Nov 22 1996 402U  */
-/* Nov 22 1996 GARDINER tidied */
-/* Nov 20 1996 399U  */
-/* Nov 20 1996 GARDINER added -d switch */
-/* Jul 30 1996 380U  */
-/* Jul 30 1996 GARDINER fixed for big/little-endian */
-/* Jul 10 1996 378U  */
-/* Jul 10 1996 GARDINER changed for Solaris 2 */
-/* Jan  3 1996 318U  */
-/* Jan  3 1996 GARDINER taught dot notation; combined name table with asn_dump */
-/* Jan  6 1995 123U  */
-/* Jan  6 1995 GARDINER re-fixed lmarg */
-/* Jan  6 1995 122U  */
-/* Jan  6 1995 GARDINER re-fixed bug about lmarg */
-/* Dec 29 1994 121U  */
-/* Dec 29 1994 GARDINER loosened constraints on left margin */
-/* Sep  2 1994  56U  */
-/* Sep  2 1994 GARDINER fixed bug ending level */
-/* Sep  1 1994  54U  */
-/* Sep  1 1994 GARDINER fixed bug relating to last item at a level */
-/* Aug 30 1994  51U  */
-/* Aug 30 1994 GARDINER fixed test for lmarg in do_it; cleaned up flow code */
-/* Aug 30 1994  50U  */
-/* Aug 30 1994 GARDINER made lmarg a function of level */
-/* Mar  8 1994   1U  */
-/* Mar  8 1994 GARDINER Started on SPARC */
-/* Mar  8 1994      */
-/* RR */
 /* ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
@@ -131,10 +85,10 @@ int main(int argc, char **argv)
 char *c, **p;
 int fd;
 
-if (argc < 2) {
-    printf("usage: rr [-r][-d][-a] f1 f2 f3 ...\n");
+if (argc < 2 && isatty(0) && isatty(1)) {
+    printf("usage: rr [-d] f1 f2 f3 ...\n");
     printf("Convert each raw-format ASN.1 file fi.raw to fi.req\n");
-    printf("-r, -d, and -a are mystery parameters.\n");
+    printf("-d  converts output of 'dump -b' back to ASN.1\n");
     exit(1);
 }
 
@@ -142,9 +96,7 @@ for (p = &argv[1]; p < &argv[argc]; p++)
     {
     if (*(c = *p) == '-')
         {
-	if (*(++c) == 'r') req = 1;
-	else if (*c == 'd') dflag = 1;
-	else if (*c == 'a') aflag = 1;
+	if (*(++c) == 'd') dflag = 1;
 	else fatal (1,*p);
 	}
     }
