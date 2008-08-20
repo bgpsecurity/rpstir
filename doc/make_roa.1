@@ -6,7 +6,7 @@ NAME
 
 SYNOPSIS
   
-        make_roa  -r roadatafile -c certfile -k keyfile -o outfile
+        make_roa  -r roadatafile -c certfile -k keyfile -o outfile [-v vfile]
 
         make_roa parameterfile
 
@@ -29,13 +29,15 @@ DESCRIPTION
             -o outfile where outfile is the name of the file to which the ROA
                is to be written
 
+            -v vfile where human-readable version of outfile is to be written.
+
         The parameters may be in any order.  
 
             As an alternative, the program may be run with a single parameter
         naming a file which contains the above-named parameters separated by 
         white space, e.g. the file might contain:
 
-                -c mycertificate -k mykey -o some.roa -r roa.txt
+                -c mycertificate -k mykey -o some.roa -r roa.txt -v some.raw
 
             When the program completes successfully, it ends with the message
 
