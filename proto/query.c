@@ -69,6 +69,8 @@ typedef int (*displayfunc)(scmsrcha *s, int idx1, char* returnStr);
 #define Q_FOR_CRL       0x04
 #define Q_FOR_CERT      0x08
 #define Q_REQ_JOIN	0x10
+#define Q_FOR_MAN       0x20
+
 typedef struct _QueryField    /* field to display or filter on */
 {
   char     *name;	      /* name of the field */
@@ -255,6 +257,7 @@ struct {
   { "cert", "certificate" },
   { "roa", "roa" },
   { "crl", "crl" },
+  { "manifest", "manifest" },
   { "rpsl", "roa" },
 };
 
@@ -308,7 +311,7 @@ static FilterMode_t	filtNoValidManifest	= FMODE_IGNORE;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, valIndex;
 static char *objectType;
-static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0;
+static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0, isManifest = 0;
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
 
@@ -780,15 +783,16 @@ static int listOptions()
 {
   int i, j;
   
-  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
-            "\nBad object type; must be roa, cert, crl, or rpsl\n\n");
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
+            "\nBad object type; must be roa, cert, crl, manfest or rpsl\n\n");
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < countof(fields); i++) {
     if (fields[i].description == NULL) continue;
     if (((fields[i].flags & Q_FOR_ROA) && isROA) || 
 	((fields[i].flags & Q_FOR_CRL) && isCRL) ||
-        ((fields[i].flags & Q_FOR_CERT) && isCert)) {
+	((fields[i].flags & Q_FOR_CERT) && isCert) ||
+        ((fields[i].flags & Q_FOR_MAN) && isManifest)) {
       printf ("  %s: %s\n", fields[i].name, fields[i].description);
       if (fields[i].flags & Q_JUST_DISPLAY) {
         for (j = 0; j < (int)strlen (fields[i].name) + 4; j++) printf (" ");
@@ -809,6 +813,7 @@ static int addAllFields(char *displays[], int numDisplays)
     if (fields[i].description == NULL) continue;
     if (((fields[i].flags & Q_FOR_ROA) && isROA) || 
 	((fields[i].flags & Q_FOR_CRL) && isCRL) ||
+	((fields[i].flags & Q_FOR_MAN) && isManifest) ||
         ((fields[i].flags & Q_FOR_CERT) && isCert)) {
 	displays[numDisplays++] = fields[i].name;
     }
@@ -861,6 +866,7 @@ static void setObjectType (char *aType)
   isROA = strcasecmp (objectType, "roa") == 0;
   isCRL = strcasecmp (objectType, "crl") == 0;
   isCert = strcasecmp (objectType, "cert") == 0;
+  isManifest = strcasecmp (objectType, "manifest") == 0;
   isRPSL = strcasecmp (objectType, "rpsl") == 0;
 }
 
@@ -918,8 +924,8 @@ int main(int argc, char **argv)
     checkErr (numDisplays != 0, "-d should not be used with RPSL query\n");
     numDisplays = addRPSLFields(displays, 0);
   }
-  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL),
-            "\nBad object type; must be roa, cert, crl, or rpsl\n\n");
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
+            "\nBad object type; must be roa, cert, crl, man or rpsl\n\n");
   checkErr (numDisplays == 0 && isRPSL == 0, "Need to display something\n");
   if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
       numDisplays = addAllFields(displays, 0);
