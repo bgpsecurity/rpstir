@@ -51,6 +51,8 @@
 #define NEED_AND  1  /* used to clarify parameter passing */
 #define SKIP_EXPIRED_CHECK 0	/* used to clarify parameter passing */
 
+#define BAD_OBJECT_TYPE "\nBad object type; must be roa, cert, crl, manifest or rpsl\n\n"
+
 typedef enum FilterMode_t {
   FMODE_UNKNOWN = 0,	/* avoid 0 in enums */
   FMODE_IGNORE,		/* don't test related flag value */
@@ -784,7 +786,7 @@ static int listOptions()
   int i, j;
   
   checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
-            "\nBad object type; must be roa, cert, crl, manfest or rpsl\n\n");
+            BAD_OBJECT_TYPE);
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < countof(fields); i++) {
@@ -925,7 +927,7 @@ int main(int argc, char **argv)
     numDisplays = addRPSLFields(displays, 0);
   }
   checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
-            "\nBad object type; must be roa, cert, crl, man or rpsl\n\n");
+            BAD_OBJECT_TYPE);
   checkErr (numDisplays == 0 && isRPSL == 0, "Need to display something\n");
   if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
       numDisplays = addAllFields(displays, 0);

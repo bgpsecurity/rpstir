@@ -1580,7 +1580,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 static scmsrcha *embedCertSrch = NULL;
 static int embedCertFlags;
 static unsigned int embedCertID;
-
+/*
 static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
 {
   UNREFERENCED_PARAMETER(conp);
@@ -1592,14 +1592,14 @@ static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
   }
   return 0;
 }
-
+*/
 /*
   Add a manifest to the database
 */
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 		 char *outfull, unsigned int id, int utrust, int typ)
 {
-  int   sta, i;
+  int   sta;
   struct ROA roa;
   char *thisUpdate, *nextUpdate;
   ulong ltime;
@@ -1607,7 +1607,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   scmkva   aone;
   scmkv    cols[12];
   int   idx = 0;
-  char  did[24], mid[24], cid[24], flagn[24], ski[40];
+  char  did[24], mid[24], cid[24], flagn[24]; //, ski[40];
 
   // manifest stored in same format as a roa
   ROA(&roa, 0);
@@ -1620,6 +1620,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ((sta = manifestValidate(&roa)) < 0) return sta;
 
   // read the embedded cert information, in particular the ski
+/* no. skip it
+  int i;
   struct Certificate *certp = (struct Certificate *)
     member_casn(&roa.content.signedData.certificates.self, 0);
   struct Extensions *exts = &certp->toBeSigned.extensions;
@@ -1644,7 +1646,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   }
   *str = 0;
   free(tmp);
-
+*/
   // now, read the data out of the manifest structure
   struct Manifest *manifest =
     &roa.content.signedData.encapContentInfo.eContent.manifest;
@@ -1656,15 +1658,15 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int manFilesLen = 0;
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
-      fahp = (struct FileAndHash *)next_of(&fahp->self)) {
-    read_casn(&fahp->file, file);
-    decode_casn (&theCASN, file);
-    read_casn(&theCASN, file);
+      fahp = (struct FileAndHash *)next_of(&fahp->self)) 
+    {
+    int i = read_casn(&fahp->file, file);
+    file[i] = 0;
     snprintf(manFiles + manFilesLen, MANFILES_SIZE - manFilesLen,
 	     "%s%s", manFilesLen ? " " : "", file);
     if (manFilesLen) manFilesLen++;
     manFilesLen += strlen((char *)file);
-  }
+    }
 
   // read this_upd and next_upd
   read_casn_time (&manifest->thisUpdate, &ltime);
@@ -1697,6 +1699,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 
   // find in the db the certificate embedded in the manifest by looking for the
   // certificate with the same ski as that cert in the manifest
+/* NO. skip this
   snprintf(embedCertSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
   embedCertFlags = 0;
   embedCertID = 0;
@@ -1706,6 +1709,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     fprintf(stderr, "For manifest %s, unable to find embedded cert ski = %s\n",
 	    outfile, ski);
   }
+*/
 
   // the manifest is valid if the embedded cert is valid (since we already
   //  know that the cert validates the manifest)
