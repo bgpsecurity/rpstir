@@ -200,3 +200,4 @@ pre-existing error file for the test being run is renamed to tXXX_error.sav.N
 
     The file "runtAll.sh" invokes a series of runt.sh scripts, each specifying
 a different test in turn.
+
