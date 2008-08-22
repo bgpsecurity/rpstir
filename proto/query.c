@@ -306,10 +306,12 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr)
 static FILE *output;  /* place to print output (file or screen) */
 static FilterMode_t     filtValidated		= FMODE_IGNORE;
 static FilterMode_t 	filtNoChain 		= FMODE_IGNORE;
+static FilterMode_t	filtNotYet		= FMODE_IGNORE;
 static FilterMode_t	filtStaleCRL 		= FMODE_IGNORE;
 static FilterMode_t	filtStaleManifest 	= FMODE_IGNORE;
 static FilterMode_t	filtNoManifest 		= FMODE_IGNORE;
 static FilterMode_t	filtNoValidManifest	= FMODE_IGNORE;
+static FilterMode_t	filtBadHash		= FMODE_IGNORE;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, valIndex;
 static char *objectType;
@@ -351,8 +353,8 @@ static int registerFound (scmcon *conp, scmsrcha *s, int numLine) {
 
 /* fill in input whereStr with flag filters as specified in current configuration
  *
- * note: if string is empty the first chat of the string is '\0', if not
- *       empty then the first term gets an 'and' prepended
+ * note: if string is empty the first char of the string is '\0', if not
+ *       empty then the first term is prepended with " and "
  *
  * params:
  *  outstr	        : string to write to (max length = WHERESTR_SIZE)
@@ -409,6 +411,13 @@ static int writeWhereStrFlagChecks (char *whereStr, int checkExpired) {
       }
     }
     
+    if ((filtNotYet == FMODE_MATCH_SET) || (filtNotYet == FMODE_MATCH_CLR)) {
+      addFlagTest (whereStr,
+		   SCM_FLAG_NOTYET,
+		   (filtNotYet == FMODE_MATCH_SET ? 1:0),
+		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+    }
+    
     if ((filtStaleCRL == FMODE_MATCH_SET) || (filtStaleCRL == FMODE_MATCH_CLR)) {
       addFlagTest (whereStr,
 		   SCM_FLAG_STALECRL,
@@ -436,6 +445,13 @@ static int writeWhereStrFlagChecks (char *whereStr, int checkExpired) {
 		   (filtNoValidManifest == FMODE_MATCH_SET ? 1:0),
 		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
     }
+    
+    if ((filtBadHash == FMODE_MATCH_SET) || (filtBadHash == FMODE_MATCH_CLR)) {
+      addFlagTest (whereStr,
+		   SCM_FLAG_BADHASH,
+		   (filtBadHash == FMODE_MATCH_SET ? 1:0),
+		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
+    }    
   }
   return 0;    
 }
@@ -725,6 +741,9 @@ static int doQuery (char **displays, char **filters)
   return status;
 }
 
+/* utility routine to set the filter mode for the passed in item based
+ * on the configuration string
+ */
 static void parseSpecsFileParameter (FilterMode_t *filterItem, char *testStr)
 {
   char
@@ -733,17 +752,19 @@ static void parseSpecsFileParameter (FilterMode_t *filterItem, char *testStr)
 
   tStr = tmpStr;
   while (*testStr != '\0')
-    *tStr++ = tolower (*testStr++);
+    *tStr++ = tolower (*testStr++);  /* don't care how user uses case */
   
   if (strcmp (tmpStr, "matchset") == 0)
     *filterItem = FMODE_MATCH_SET;
-  else if (strcmp (tmpStr, "matchcl") == 0)
+  else if (strcmp (tmpStr, "matchcl") == 0) /* allow matchclear, matchclr, etc. */
     *filterItem = FMODE_MATCH_CLR;
   else
     *filterItem = FMODE_IGNORE;
 }
 
-/* parse the specs telling which non-perfect ROA's to accept */
+/* routine to parse the filter specification file which  determines how to
+ * handle the various meta-data SCM_FLAG_XXX flags (ignore, matchset, matchclr)
+ */
 static void parseSpecsFile(char *specsFilename)
 {
   char str[WHERESTR_SIZE], str2[WHERESTR_SIZE], str3[WHERESTR_SIZE];
@@ -765,6 +786,8 @@ static void parseSpecsFile(char *specsFilename)
       parseSpecsFileParameter (&filtValidated, str3);
     else if (strcmp (str2, "NoChain") == 0)
       parseSpecsFileParameter (&filtNoChain, str3);
+    else if (strcmp (str2, "NotYet") == 0)
+      parseSpecsFileParameter (&filtNotYet, str3);
     else if (strcmp (str2, "StaleCRL") == 0)
       parseSpecsFileParameter (&filtStaleCRL, str3);
     else if (strcmp (str2, "StaleManifest") == 0)
@@ -773,6 +796,8 @@ static void parseSpecsFile(char *specsFilename)
       parseSpecsFileParameter (&filtNoManifest, str3);
     else if (strcmp (str2, "NoValidManifest") == 0)
       parseSpecsFileParameter (&filtNoValidManifest, str3);
+    else if (strcmp (str2, "BadHash") == 0)
+      parseSpecsFileParameter (&filtBadHash, str3);
     else {
       printf ("Bad keyword in specs file: %s\n", str2);
       exit(-1);
