@@ -36,7 +36,7 @@ char *msgs [] =
     "Finished %s OK\n",
     "Couldn't open %s\n",
     "Can't translate %s.  Try again\n",      // 2
-    "Usage: subjectname startdelta enddelta [badsignature]\n",
+    "Usage: subjectname startdelta enddelta\n [b(ad signature) | e(xplicit IP) | n(either)]\n",
     "Issuer cert has no %s extension\n",              // 4
     "Signing failed in %s\n",
     "Error opening %s\n",                // 6
@@ -45,7 +45,8 @@ char *msgs [] =
     "Invalid time delta type: %s\n",
     "Invalid cert name %s\n",             // 10
     "Error creating %s extension\n",
-    "Error in CA %s extension\n",
+    "Error in CA %s extension\n",      // 12
+    "Invalid parameter %s\n",
     };
 
 static int warn(int err, char *param)
@@ -496,8 +497,8 @@ static void view_extensions(struct Extensions *extsp)
 */
 int main(int argc, char **argv)
   {
-  if (argc < 4) fatal(3, "");
-  int bad = 0, ee = 0, root = (strlen(argv[1]) == 1);
+  if (argc < 4 || argc > 5) fatal(3, "");
+  int bad = 0, ee = 0, root = (strlen(argv[1]) == 1), explicitIPAS = 0;
   struct stat tstat;
   fstat(0, &tstat);
   int filein = (tstat.st_mode & S_IFREG);
@@ -508,7 +509,13 @@ int main(int argc, char **argv)
   Certificate(&issuer, (ushort)0);
   char *c, *subjkeyfile, *subjfile, *issuerfile = (char *)0,
     *issuerkeyfile = (char *)0;
-  if (argc > 4) bad = 1;
+  if (argc > 4) 
+    {
+    if (argv[4][0] == 'b') bad = 1;
+    else if (argv[4][0] == 'e') explicitIPAS = 1; // copy addresses
+    else if (argv[4][0] == 'n') explicitIPAS = -1; // no IP or AS extensions
+    else fatal(13, argv[4]);
+    }
   for (c = &argv[1][1]; *c && *c >= '0' && *c <= '9'; c++);
   if (*c && *c != 'M' && *c != 'R') fatal(10, argv[1]);
   if (*c) ee = 1;
@@ -635,7 +642,8 @@ int main(int argc, char **argv)
   char *a;
   if (issuerkeyfile)
     {
-    extp = makeExtension(&ctftbsp->extensions, id_pe_ipAddrBlock);
+    if (explicitIPAS >= 0) // no extension if explicitIPAS < 0
+      extp = makeExtension(&ctftbsp->extensions, id_pe_ipAddrBlock);
     iextp = findExtension(&issuer.toBeSigned.extensions, id_pe_ipAddrBlock);
     if (!ee)
       {
@@ -656,12 +664,13 @@ int main(int argc, char **argv)
         write_family(famp, filein);
         }
       }
-    else if (strchr(subjfile, (int)'M'))  // making EE cert to sign manifest
+      // if making EE cert to sign ROA or manifest, inherit
+    else if (!explicitIPAS)  
       inheritIPAddresses(extp, iextp);
-
-    else copy_casn(&extp->self, &iextp->self);
+      // else copy issuer's IP addresses
+    else if (explicitIPAS > 0) copy_casn(&extp->self, &iextp->self);
       // if not a ROA EE, get AS num extension
-    if (!strchr(subjfile, (int)'R'))
+    if (!strchr(subjfile, (int)'R'))  // not for ROAs
       {
       iextp = findExtension(&issuer.toBeSigned.extensions, id_pe_autonomousSysNum);
       extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
@@ -679,6 +688,9 @@ int main(int argc, char **argv)
         struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
         write_ASNums(asNump);
         }
+      else if (strchr(subjfile, (int)'M')) // for signing manifest
+        write_casn(&extp->extnValue.autonomousSysNum.asnum.inherit, (uchar *)
+          "", 0);
       else copy_casn(&extp->self, &iextp->self);
       }
       // subjectInfoAccess

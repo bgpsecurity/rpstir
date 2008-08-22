@@ -124,9 +124,10 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
 int main (int argc, char **argv)
 {
     long asnum = -1, bad = 0;
-    char *certfile = NULL, *roafile = NULL, *keyfile = NULL, *readablefile = NULL;
+    char *certfile = NULL, *roafile = NULL, *keyfile = NULL, 
+      *readablefile = NULL, *pcertfile = NULL;
     struct ROA roa;
-    struct Certificate cert;
+    struct Certificate cert, pcert;
     char *msg;
     int c;
     int v4maxLen = 0, v6maxLen = 0;
@@ -136,6 +137,10 @@ int main (int argc, char **argv)
 	case 'c':
 	    // cert file
 	    certfile = strdup(optarg);
+            pcertfile = (char *)calloc(1, strlen(certfile) + 8);
+            char *p = strchr(certfile, (int)'R');
+            strncpy(pcertfile, certfile, p - certfile);
+            strcat(pcertfile, &p[2]);
 	    break;
 
 	case 'r':
@@ -200,6 +205,11 @@ int main (int argc, char **argv)
     if (get_casn_file(&cert.self, certfile, 0) < 0) 
 	fatal(2, certfile);
 
+    // init and read in the parent cert
+    Certificate(&pcert, (ushort)0);
+    if (get_casn_file(&pcert.self, pcertfile, 0) < 0) 
+	fatal(2, pcertfile);
+
     // mark the roa: the signed data is hashed with sha256
     struct SignedData *sgdp = &roa.content.signedData;
     write_casn_num(&sgdp->version.self, 3);
@@ -223,7 +233,7 @@ int main (int argc, char **argv)
 
     // look up the ipAddrBlock extension and copy over
     struct Extension *extp;
-    extp = (struct Extension *)member_casn(&cert.toBeSigned.extensions.self, 0);
+    extp = (struct Extension *)member_casn(&pcert.toBeSigned.extensions.self, 0);
     while (extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock) != 0)
 	extp = (struct Extension *)next_of(&extp->self);
     if (extp == NULL) 

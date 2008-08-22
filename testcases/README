@@ -47,16 +47,17 @@ more than once, although the file "makecerts" is set up to create them.
 
     To make the certificate one must then run
 
-    make_test_cert C12 su eu
+    make_test_cert C12 su eu [b | e | n]
 
 where s and e represent some (possibly signed) number of one or more digits and
 u is either "Y" for years, "M" for months, "W" for weeks, "D" for days, "h" for
 hours, "m" for minutes or "s" for seconds.  The starting time of the certificate
 will be the current time adjusted by the "su" parameter, and the ending time
 will be the current time adjusted by the "eu" parameter.  The program allows
-two exceptional cases: To create an invalid signature, add the parameter "b";
+some exceptional cases: To create an invalid signature, add the parameter "b";
 to force a manifest-signing end-entity to have all its signer's IP addresses
-instead of the "inherit" option, add the parameter "e".  Only one of these
+instead of the "inherit" option, add the parameter "e"; to eliminate the IP 
+address extension in ROAs, use the 'n' parameter.  Only one of these
 exceptions is allowed at one time.  The IP address and AS number extensions
 for CAs must be supplied either interactively or by identifying a script file
 as standard input.  The latter method is simpler.  With a script file, the first
