@@ -380,9 +380,6 @@ static int cmsValidate(struct ROA *rp)
     attrdp = (struct AttrTableDefined *)member_casn(&attrp->attrValues.self, 0);
     CHECK(attrdp != NULL);
 
-    // make sure it's a ROA
-    CHECK(diff_objid(&attrdp->contentType, id_routeOriginAttestation) == 0);
-
     // make sure there is a message digest
     attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr);
     CHECK(attrp != NULL);
@@ -418,11 +415,22 @@ static int cmsValidate(struct ROA *rp)
 
     // if there is a cert, check it
     if (num_certs > 0) {
-	struct Certificate *certp = (struct Certificate *)member_casn(&rp->content.signedData.certificates.self, 0);
+	struct Certificate *certp = (struct Certificate *)
+          member_casn(&rp->content.signedData.certificates.self, 0);
 	if ((ret = check_cert(certp)) < 0)
 	    return ret;
 	if ((ret = check_sig(rp, certp)) != 0)
 	    return ret;
+      // check that the cert's SKI matches that in SignerInfo
+      struct Extension *extp;
+      for (extp = (struct Extension *)
+        member_casn(&certp->toBeSigned.extensions.self, 0); extp &&
+        diff_objid(&extp->extnID, id_subjectKeyIdentifier); 
+        extp = (struct Extension *)next_of(&extp->self));
+      if (!extp) return ERR_SCM_BADSIGINFO;
+      if (diff_casn(&extp->extnValue.subjectKeyIdentifier,
+        &sigInfop->sid.subjectKeyIdentifier)) return ERR_SCM_BADSIGINFO;
+      
     }
 
     // check that roa->content->crls == NULL
