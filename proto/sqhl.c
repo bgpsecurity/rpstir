@@ -1153,6 +1153,39 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
   return mymcf.did;
 }
 
+// function used by add_manifest and add_roa
+static int get_cert_ski(char *ski, struct ROA *roap)
+  {
+  int i;
+  struct Certificate *certp = (struct Certificate *)
+    member_casn(&roap->content.signedData.certificates.self, 0);
+  if (!certp) return ERR_SCM_BADNUMCERTS;
+  struct Extensions *exts = &certp->toBeSigned.extensions;
+  struct Extension *extp;
+  for(extp = (struct Extension *)member_casn(&exts->self, 0);
+      extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+      extp = (struct Extension *)next_of(&extp->self));
+  if (!extp) return ERR_SCM_NOSKI;
+  int size = vsize_casn(&extp->extnValue.self);
+  if (size <= 0) return ERR_SCM_NOSKI;
+  uchar *tmp = calloc(1, size);
+  read_casn(&extp->extnValue.self, tmp);
+  char *str = ski;
+  for (i = 0; i < size; i++) 
+    {
+    if (i) 
+      {
+      snprintf(str, 2, ":");
+      str++;
+      }
+    snprintf(str, 3, "%02X", tmp[i]);
+    str += 2;
+    }
+  *str = 0;
+  free(tmp);
+  return 0;
+  }
+
 // static variables for efficiency, so only need to set up query once
 static scmsrcha *roaSrch = NULL;
 
@@ -1508,9 +1541,10 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *manState)
 {
   struct ROA *r = NULL;
-  char *ski = NULL, *sig = NULL;
+  char *sig = NULL;
   char filter[4096];
   unsigned char *bsig = NULL;
+  char  ski[40];
   int asid, sta, chainOK, bsiglen = 0;
   unsigned int flags;
 
@@ -1522,14 +1556,15 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( sta < 0 )
     return(sta);
 
-  do {			/* do-once */
-    // ski, asid
-    if ((ski = (char *)roaSKI(r)) == NULL || ski[0] == 0 ) {
-      sta = ERR_SCM_INVALSKI;
-      break;
-    }
+  do 			/* do-once */
+    {
+    if ((sta = get_cert_ski(ski, r)) < 0) break;
 
-    asid = roaAS_ID(r);		/* it's OK if this comes back zero */
+    if ((asid = roaAS_ID(r)) < 0) /* it's OK if this comes back zero */
+      {
+      sta = ERR_SCM_INVALASID;
+      break;
+      }
 
     // signature
     if ((bsig = roaSignature(r, &bsiglen)) == NULL || bsiglen < 0) {
@@ -1567,8 +1602,6 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // clean up
   if (r != NULL) 
     roaFree(r);
-  if (ski != NULL) 
-    free(ski);
   if (sig != NULL) 
     free(sig);
 
@@ -1607,46 +1640,23 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   scmkva   aone;
   scmkv    cols[12];
   int   idx = 0;
-  char  did[24], mid[24], cid[24], flagn[24]; //, ski[40];
+  char  did[24], mid[24], cid[24], flagn[24], ski[40];
 
   // manifest stored in same format as a roa
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) {
-    fprintf(stderr, "invalid manifest %s\n", outfull);
-    return sta;
-  }
-  if ((sta = manifestValidate(&roa)) < 0) return sta;
-
-  // read the embedded cert information, in particular the ski
-/* no. skip it
-  int i;
-  struct Certificate *certp = (struct Certificate *)
-    member_casn(&roa.content.signedData.certificates.self, 0);
-  struct Extensions *exts = &certp->toBeSigned.extensions;
-  struct Extension *extp;
-  for(extp = (struct Extension *)member_casn(&exts->self, 0);
-      extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
-      extp = (struct Extension *)next_of(&extp->self));
-  int size = vsize_casn(&extp->self);
-  uchar *tmp = calloc(1, size);
-  read_casn(&extp->extnValue.self, tmp);
-  struct casn theCASN;
-  decode_casn (&theCASN, tmp);
-  size = read_casn(&theCASN, tmp);
-  char *str = ski;
-  for (i = 0; i < size; i++) {
-    if (i) {
-      snprintf(str, 2, ":");
-      str++;
+  if (sta < 0) fprintf(stderr, "invalid manifest %s\n", outfull);
+  else if ((sta = manifestValidate(&roa)) >= 0) 
+    {
+     // read the embedded cert information, in particular the ski
+    sta = get_cert_ski(ski, &roa); 
     }
-    snprintf(str, 3, "%02X", tmp[i]);
-    str += 2;
-  }
-  *str = 0;
-  free(tmp);
-*/
+  if (sta < 0)
+    {
+    delete_casn(&roa.self);
+    return sta;
+    }
   // now, read the data out of the manifest structure
   struct Manifest *manifest =
     &roa.content.signedData.encapContentInfo.eContent.manifest;
@@ -1669,24 +1679,27 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
 
   // read this_upd and next_upd
-  read_casn_time (&manifest->thisUpdate, &ltime);
-  if ( sta < 0 ) {
+  if ((sta = read_casn_time (&manifest->thisUpdate, &ltime)) < 0 ) 
     fprintf(stderr, "Could not read_casn_time for thisUpdate\n");
-    return sta;
-  }
-  thisUpdate = UnixTimeToDBTime(ltime, &sta);
+  else 
+    {
+    thisUpdate = UnixTimeToDBTime(ltime, &sta);
 
-  read_casn_time (&manifest->nextUpdate, &ltime);
-  if ( sta < 0 ) {
-    fprintf(stderr, "Could not read_casn_time for nextUpdate\n");
-    return sta;
-  }
-  nextUpdate = UnixTimeToDBTime(ltime, &sta);
+    if ((sta = read_casn_time (&manifest->nextUpdate, &ltime)) < 0)
+      fprintf(stderr, "Could not read_casn_time for nextUpdate\n");
+    else
+      {
+      nextUpdate = UnixTimeToDBTime(ltime, &sta);
 
-  sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id);
-  if ( sta < 0 )
-    return(sta);
-  man_id++;
+      if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id)) >= 0)
+        man_id++;
+      }
+    }
+  if (sta < 0)
+    {
+    delete_casn(&roa.self);
+    return sta;
+    }
 
   // initialize query first time through
   if (embedCertSrch == NULL) {
