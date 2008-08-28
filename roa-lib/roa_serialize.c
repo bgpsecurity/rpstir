@@ -1750,7 +1750,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   int iReturn, fd;
   off_t iSize;
   ssize_t amt_read;
-  int buf_tmp_size;
+  int buf_tmp_size, sta = 0;
   unsigned char *buf, *buf_tmp;
   struct AlgorithmIdentifier *algorithmID;
   struct SignerInfo *signerInfo;
@@ -1767,7 +1767,10 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   algorithmID = (struct AlgorithmIdentifier*) inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
   signerInfo = (struct SignerInfo*) inject_casn(&roa.content.signedData.signerInfos.self, 0);
   if ((NULL == algorithmID) || (NULL == signerInfo))
+    {
+    delete_casn(&roa.self);
     return ERR_SCM_INVALASN;
+    }
   
   // Fill default algorithm slots
   write_objid(&algorithmID->algorithm, id_sha256);
@@ -1777,21 +1780,29 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 
   // read in the file
   if ((fd = open(fname, (O_RDONLY))) < 0)
-    return ERR_SCM_COFILE;
-  if (fstat(fd, &sb) != 0) {
+    sta =  ERR_SCM_COFILE;
+  else if(fstat(fd, &sb) != 0) 
+    {
     (void) close(fd);
-    return ERR_SCM_COFILE;
-  }
-  iSize = sb.st_size;
-  if ((buf = calloc(1, iSize)) == NULL)
-    return ERR_SCM_NOMEM;
-  amt_read = read(fd, buf, iSize);
-  (void) close(fd);
-  if (amt_read != iSize) {
+    sta =  ERR_SCM_COFILE;
+    }
+  else
+    {
+    iSize = sb.st_size;
+    if ((buf = calloc(1, iSize)) == NULL) sta = ERR_SCM_NOMEM; 
+    else amt_read = read(fd, buf, iSize);
+    (void) close(fd);
+    if (amt_read != iSize) 
+      {
       free(buf);
-      return ERR_SCM_BADFILE;
-  }
-
+      sta =  ERR_SCM_BADFILE;
+      }
+    }
+  if (sta < 0)
+    {
+    delete_casn(&roa.self);
+    return sta;
+    }
   // handle format-specific processing
   switch(fmt) {
     case FMT_PEM:
