@@ -1170,10 +1170,11 @@ static int get_cert_ski(char *ski, struct ROA *roap)
   if (size <= 0) return ERR_SCM_NOSKI;
   uchar *tmp = calloc(1, size);
   read_casn(&extp->extnValue.self, tmp);
+    // tmp is an OCTET STRING containing the hash, e.g. 0414....
   char *str = ski;
-  for (i = 0; i < size; i++) 
+  for (i = 2; i < size; i++)  // so skip the first 2 bytes
     {
-    if (i) 
+    if (i > 2) 
       {
       snprintf(str, 2, ":");
       str++;
@@ -1544,7 +1545,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   char *sig = NULL;
   char filter[4096];
   unsigned char *bsig = NULL;
-  char  ski[40];
+  char  ski[80];
   int asid, sta, chainOK, bsiglen = 0;
   unsigned int flags;
 
