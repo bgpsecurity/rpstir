@@ -11,12 +11,12 @@
 #include "sqhl.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -99,19 +99,19 @@ static QueryField fields[] = {
     NULL, 			/* function for display string */
   },
   {
-    "filename", 
+    "filename",
     "the filename where the data is stored in the repository",
-    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT, 
-    SQL_C_CHAR, FNAMESIZE, 
-    NULL, NULL, 
-    "Filename", NULL, 
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT,
+    SQL_C_CHAR, FNAMESIZE,
+    NULL, NULL,
+    "Filename", NULL,
   },
   {
     "pathname",
     "full pathname (directory plus filename) where the data is stored",
     Q_JUST_DISPLAY|Q_FOR_ROA|Q_FOR_CERT|Q_FOR_CRL|Q_REQ_JOIN,
-    -1, 0, 
-    "dirname", "filename", 
+    -1, 0,
+    "dirname", "filename",
     "Pathname", pathnameDisplay,
   },
   {
@@ -123,7 +123,7 @@ static QueryField fields[] = {
     "Directory", NULL,
   },
   {
-    "ski", 
+    "ski",
     "subject key identifier",
     Q_FOR_ROA|Q_FOR_CERT,
     SQL_C_CHAR, SKISIZE,
@@ -131,35 +131,35 @@ static QueryField fields[] = {
     "SKI", NULL,
   },
   {
-    "aki", 
+    "aki",
     "authority key identifier",
     Q_FOR_CRL|Q_FOR_CERT,
     SQL_C_CHAR, SKISIZE,
-    NULL, NULL, 
+    NULL, NULL,
     "AKI", NULL,
-  },  
+  },
   {
-    "sia", 
+    "sia",
     "Subject Information Access",
     Q_FOR_CERT,
     SQL_C_CHAR, SIASIZE,
     NULL, NULL,
-    "SIA", NULL, 
+    "SIA", NULL,
   },
   {
-    "aia", 
+    "aia",
     "Authority Information Access",
     Q_FOR_CERT,
-    SQL_C_CHAR, SIASIZE, 
+    SQL_C_CHAR, SIASIZE,
     NULL, NULL,
     "AIA", NULL,
   },
   {
-    "crldp", 
+    "crldp",
     "CRL Distribution Points",
     Q_FOR_CERT,
     SQL_C_CHAR, SIASIZE,
-    NULL, NULL, 
+    NULL, NULL,
     "CRLDP", NULL,
   },
   {
@@ -168,13 +168,13 @@ static QueryField fields[] = {
     Q_FOR_ROA,
     SQL_C_ULONG, 8,
     NULL, NULL,
-    "AS#", NULL, 
+    "AS#", NULL,
   },
   {
     "issuer",
     "system that issued the cert/crl",
     Q_FOR_CERT|Q_FOR_CRL,
-    SQL_C_CHAR, SUBJSIZE, 
+    SQL_C_CHAR, SUBJSIZE,
     NULL, NULL,
     "Issuer", NULL,
   },
@@ -195,11 +195,11 @@ static QueryField fields[] = {
     "Valid To", NULL,
   },
   {
-    "last_upd", 
+    "last_upd",
     "last update time of the CRL",
     Q_FOR_CRL,
     SQL_C_CHAR, 32,
-    NULL, NULL, 
+    NULL, NULL,
     "Last Update", NULL,
   },
   {
@@ -208,13 +208,13 @@ static QueryField fields[] = {
     Q_FOR_CRL,
     SQL_C_CHAR, 32,
     NULL, NULL,
-    "Next Update", NULL, 
+    "Next Update", NULL,
   },
   {
     "crlno",
     "CRL number",
     Q_FOR_CRL,
-    SQL_C_ULONG, 8, 
+    SQL_C_ULONG, 8,
     NULL, NULL,
     "CRL#", NULL,
   },
@@ -223,7 +223,7 @@ static QueryField fields[] = {
     "serial number",
     Q_FOR_CERT,
     SQL_C_ULONG, 8,
-    NULL, NULL, 
+    NULL, NULL,
     "Serial#", NULL,
   },
   {
@@ -232,7 +232,7 @@ static QueryField fields[] = {
     Q_FOR_CRL,
     SQL_C_ULONG, 8,
     NULL, NULL,
-    "SNLength", NULL, 
+    "SNLength", NULL,
   },
   {
     "snlist",
@@ -370,7 +370,7 @@ static int writeWhereStrFlagChecks (char *whereStr, int checkExpired) {
     status;
   char
     *now = NULL;
-  
+
   if ((whereStr == NULL) || (strlen (whereStr) >= WHERESTR_SIZE)) {
     return 1;	/* no string to write, or no more room */
   }
@@ -410,28 +410,28 @@ static int writeWhereStrFlagChecks (char *whereStr, int checkExpired) {
 		     (*whereStr != '\0' ? NEED_AND:SKIP_AND));
       }
     }
-    
+
     if ((filtNotYet == FMODE_MATCH_SET) || (filtNotYet == FMODE_MATCH_CLR)) {
       addFlagTest (whereStr,
 		   SCM_FLAG_NOTYET,
 		   (filtNotYet == FMODE_MATCH_SET ? 1:0),
 		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
     }
-    
+
     if ((filtStaleCRL == FMODE_MATCH_SET) || (filtStaleCRL == FMODE_MATCH_CLR)) {
       addFlagTest (whereStr,
 		   SCM_FLAG_STALECRL,
 		   (filtStaleCRL == FMODE_MATCH_SET ? 1:0),
 		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
     }
-    
+
     if ((filtStaleManifest == FMODE_MATCH_SET) || (filtStaleManifest == FMODE_MATCH_CLR)) {
       addFlagTest (whereStr,
 		   SCM_FLAG_STALEMAN,
 		   (filtStaleManifest == FMODE_MATCH_SET ? 1:0),
 		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
     }
-    
+
     if ((filtNoManifest == FMODE_MATCH_SET) || (filtNoManifest == FMODE_MATCH_CLR)) {
       addFlagTest (whereStr,
 		   SCM_FLAG_NOMAN,
@@ -445,22 +445,22 @@ static int writeWhereStrFlagChecks (char *whereStr, int checkExpired) {
 		   (filtNoValidManifest == FMODE_MATCH_SET ? 1:0),
 		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
     }
-    
+
     if ((filtBadHash == FMODE_MATCH_SET) || (filtBadHash == FMODE_MATCH_CLR)) {
       addFlagTest (whereStr,
 		   SCM_FLAG_BADHASH,
 		   (filtBadHash == FMODE_MATCH_SET ? 1:0),
 		   (*whereStr != '\0' ? NEED_AND:SKIP_AND));
-    }    
+    }
   }
-  return 0;    
+  return 0;
 }
 
 /* check the valdity via the db of the cert whose ski or localID is given */
 static int checkValidity (char *ski, unsigned int localID) {
   int status;
   int checkExpired = 0;
-  
+
   // set up main part of query only once, instead of once per object
   if (validTable == NULL) {
     validTable = findtablescm (scmp, "certificate");
@@ -471,11 +471,11 @@ static int checkValidity (char *ski, unsigned int localID) {
     addcolsrchscm (validSrch, "issuer", field->sqlType, field->maxSize);
     validWhereStr = validSrch->wherestr;
     validWhereStr[0] = 0;
-        
+
     if (filtNoChain == FMODE_MATCH_CLR)
       checkExpired = 1;
     writeWhereStrFlagChecks (validWhereStr, checkExpired);
-    
+
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch->vec[0].valptr;
     nextSubject = (char *) validSrch->vec[1].valptr;
@@ -544,9 +544,9 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
     }
     if (asn == 0 || filter == 0) {
       fprintf(stderr, "incomplete result returned in RPSL query: ");
-      if (asn == 0) 
+      if (asn == 0)
 	fprintf(stderr, "no asn\n");
-      if (filter == 0) 
+      if (filter == 0)
 	fprintf(stderr, "no filter\n");
     } else {
       // gross hack. 0 == ipv4, 1 == ipv6
@@ -608,7 +608,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       result++;
     }
     if (multiline) fprintf (output, "%s ", (display == 0) ? "*" : " ");
-    if (useLabels) 
+    if (useLabels)
       fprintf (output, "%s = %s  ", field->heading, resultStr);
     else
       fprintf (output, "%s  ", resultStr);
@@ -658,7 +658,7 @@ static int doQuery (char **displays, char **filters)
   srch.where = NULL;
   srch.wherestr = NULL;
   whereStr[0] = 0;
-  
+
   if (filters != NULL && filters[0] != NULL) {
     for (i = 0; filters[i] != NULL; i++) {
       if (i != 0) strncat (whereStr, " AND ", maxW-strlen(whereStr));
@@ -669,6 +669,7 @@ static int doQuery (char **displays, char **filters)
 		"Unknown field name: %s\n", name);
       checkErr (field->flags & Q_JUST_DISPLAY, "Field only for display: %s\n", name);
       name = strtok (NULL, ".");
+      if(!name)  checkErr(1, "No comparison operator\n");
       if (strcasecmp (name, "eq") == 0) {
         strncat (whereStr, "=", maxW-strlen(whereStr));
       } else if (strcasecmp (name, "ne") == 0) {
@@ -753,7 +754,7 @@ static void parseSpecsFileParameter (FilterMode_t *filterItem, char *testStr)
   tStr = tmpStr;
   while (*testStr != '\0')
     *tStr++ = tolower (*testStr++);  /* don't care how user uses case */
-  
+
   if (strcmp (tmpStr, "matchset") == 0)
     *filterItem = FMODE_MATCH_SET;
   else if (strcmp (tmpStr, "matchcl") == 0) /* allow matchclear, matchclr, etc. */
@@ -771,7 +772,7 @@ static void parseSpecsFile(char *specsFilename)
   FILE *input;
   int got;
 
-  input = fopen (specsFilename, "r");  
+  input = fopen (specsFilename, "r");
   if (input == NULL) {
     printf ("Could not open specs file: %s\n", specsFilename);
     exit(-1);
@@ -809,14 +810,14 @@ static void parseSpecsFile(char *specsFilename)
 static int listOptions()
 {
   int i, j;
-  
+
   checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
             BAD_OBJECT_TYPE);
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < countof(fields); i++) {
     if (fields[i].description == NULL) continue;
-    if (((fields[i].flags & Q_FOR_ROA) && isROA) || 
+    if (((fields[i].flags & Q_FOR_ROA) && isROA) ||
 	((fields[i].flags & Q_FOR_CRL) && isCRL) ||
 	((fields[i].flags & Q_FOR_CERT) && isCert) ||
         ((fields[i].flags & Q_FOR_MAN) && isManifest)) {
@@ -838,7 +839,7 @@ static int addAllFields(char *displays[], int numDisplays)
 
   for (i = 0; i < countof(fields); ++i) {
     if (fields[i].description == NULL) continue;
-    if (((fields[i].flags & Q_FOR_ROA) && isROA) || 
+    if (((fields[i].flags & Q_FOR_ROA) && isROA) ||
 	((fields[i].flags & Q_FOR_CRL) && isCRL) ||
 	((fields[i].flags & Q_FOR_MAN) && isManifest) ||
         ((fields[i].flags & Q_FOR_CERT) && isCert)) {
@@ -855,7 +856,7 @@ static int addRPSLFields(char *displays[], int numDisplays)
   // XXX worse hack... we have hard-coded SQL field names scattered
   // throughout the code. Help us if we ever change the schema.
   displays[0] = "asn";		/* we only need asn and filter*/
-  displays[1] = "filter"; 
+  displays[1] = "filter";
   displays[2] = "filename";	/* added for commentary */
   return 3;			/* number of fields added */
 }
@@ -897,7 +898,7 @@ static void setObjectType (char *aType)
   isRPSL = strcasecmp (objectType, "rpsl") == 0;
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
   char *displays[MAX_VALS], *clauses[MAX_CONDS];
   int i, status;
