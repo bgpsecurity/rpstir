@@ -313,14 +313,20 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   uchar rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE], oldmax[MINMAXBUFSIZE], rfam[8];
   struct ROAIPAddress *roaAddrp;
   struct ROAIPAddressFamily *roaipfamp;
-  int i = 0, err = 0;
+  int i, err = 0, num = 0;
 
-  for (roaipfamp = &ipAddrBlockp->rOAIPAddressFamily; roaipfamp;
-    roaipfamp = (struct ROAIPAddressFamily *)next_of(&roaipfamp->self))
+  if ((i = num_items(&ipAddrBlockp->self)) == 0 || i > 2)
+    return ERR_SCM_INVALFAM;
+  i = 0;
+  for (roaipfamp = (struct ROAIPAddressFamily *)member_casn(
+    &ipAddrBlockp->self, 0); roaipfamp;
+    roaipfamp = (struct ROAIPAddressFamily *)next_of(&roaipfamp->self),
+    num++)
     {
     if (read_casn(&roaipfamp->addressFamily, rfam) < 0 ||
 	rfam[0] != 0 || (rfam[1] != 1 && rfam[1] != 2)) return ERR_SCM_INVALFAM;
     i = rfam[1];
+    if (num == 1 && i == 1) return ERR_SCM_INVALFAM; 
     memset(oldmax, 0, sizeof(oldmax));
     for (roaAddrp = &roaipfamp->addresses.rOAIPAddress; roaAddrp;
       roaAddrp = (struct ROAIPAddress *)next_of(&roaAddrp->self))
@@ -331,6 +337,7 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
       if (memcmp(&rmin[3], &oldmax[3], sizeof(rmin) - 3) < 0 ||
 	  memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
 	  return ERR_SCM_INVALIPB;
+      memcpy(oldmax, rmax, sizeof(oldmax));
       }
     }
   return 0;
@@ -563,8 +570,8 @@ int roaValidate(struct ROA *rp)
   if (read_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, &iAS_ID) < 0 ||
       iAS_ID <= 0) return ERR_SCM_INVALASID;
   // check the contents
-  if ((iRes = validateIPContents(&rp->content.signedData.encapContentInfo.eContent.roa.
-     ipAddrBlocks)) < 0) return iRes;
+  if ((iRes = validateIPContents(&rp->content.signedData.encapContentInfo.
+     eContent.roa.  ipAddrBlocks)) < 0) return iRes;
   return 0;
 }
 
@@ -583,7 +590,8 @@ int roaValidate2(struct ROA *rp)
   struct ROAIPAddressFamily *ripAddrFamp;
   struct IPAddressOrRangeA *rpAddrRangep;
   struct ROAIPAddress *roaAddrp;
-  uchar cmin[MINMAXBUFSIZE], cmax[MINMAXBUFSIZE], rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE];
+  uchar cmin[MINMAXBUFSIZE], cmax[MINMAXBUFSIZE], rmin[MINMAXBUFSIZE], 
+    rmax[MINMAXBUFSIZE];
   uchar rfam[8], cfam[8];
   int all_extns = 0;
 
@@ -613,7 +621,8 @@ int roaValidate2(struct ROA *rp)
       {
       all_extns |= HAS_EXTN_SKI;
       // Check that roa->envelope->SKI = cert->SKI
-      if (diff_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier,
+      if (diff_casn(&rp->content.signedData.signerInfos.signerInfo.sid.
+        subjectKeyIdentifier,
         (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
         return ERR_SCM_INVALSKI;
       }
