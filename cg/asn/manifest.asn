@@ -30,13 +30,15 @@ IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
 
    Manifest ::= SEQUENCE
     {
-    version         [0] INTEGER DEFAULT 0,
+    version         [0] Manifestversion DEFAULT v1,
     manifestNumber  INTEGER,
     thisUpdate      GeneralizedTime,
     nextUpdate      GeneralizedTime,
     fileHashAlg     OBJECT IDENTIFIER,
     fileList        SEQUENCE SIZE (0..MAX) OF FileAndHash
     }
+
+    Manifestversion ::= INTEGER { v1(0) } (v1)
 
 FileAndHash ::= SEQUENCE
     {

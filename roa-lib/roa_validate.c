@@ -544,9 +544,13 @@ int manifestValidate(struct ROA *manp)
   int iRes = cmsValidate(manp);
   if (iRes < 0) return iRes;
 
-  // check that eContentType is id-roa-pki-manifest(= OID 1.2.240.113549.1.9.16.1.26)
+  // check that eContentType is id-roa-pki-manifest(= OID 
+  //    1.2.240.113549.1.9.16.1.26)
   if (diff_objid(&manp->content.signedData.encapContentInfo.eContentType,
     id_roa_pki_manifest)) return ERR_SCM_BADCT;
+  // check that the version is right
+  if (!ManifestversionConstraint(&manp->content.signedData.encapContentInfo.
+    eContent.manifest.version)) return ERR_SCM_INVALVER;
   return 0;
   }
 
@@ -566,6 +570,9 @@ int roaValidate(struct ROA *rp)
   if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
     id_routeOriginAttestation)) return ERR_SCM_BADCT;
 
+  // check that the version is right
+  if (!ROAversionConstraint(&rp->content.signedData.encapContentInfo.eContent.
+    roa.version)) return ERR_SCM_INVALVER;
   // check that the asID is  a positive nonzero integer
   if (read_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, &iAS_ID) < 0 ||
       iAS_ID <= 0) return ERR_SCM_INVALASID;
