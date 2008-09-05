@@ -183,7 +183,7 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     is in the database without directly executing MySQL commands.
     The basic informational query has the form
     ./query.sh -t <type> -d <field> [-d <field> ... -d <field>]
-    where type is either cert, crl or roa, and the fields are all
+    where type is either cert, crl, roa or manifest, and the fields are all
     the fields of the objects to display.  There are different possible
     fields for each object type, and the full list of possibilities
     is obtained with the command "query.sh -l <type>".
