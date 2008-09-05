@@ -132,7 +132,11 @@ int main (int argc, char **argv)
     int c;
     int v4maxLen = 0, v6maxLen = 0;
 
-    while ((c = getopt(argc, argv, "br:R:a:c:k:4:6:")) != -1) {
+    int	roaVersion = 0;
+    int	fValidate = 1;
+
+
+    while ((c = getopt(argc, argv, "nbr:R:a:c:k:4:6:v:")) != -1) {
 	switch (c) {
 	case 'c':
 	    // cert file
@@ -167,6 +171,11 @@ int main (int argc, char **argv)
 	    bad = 1;
 	    break;
 
+	case 'v':
+	    // Insert this (specified) eContent version
+	    roaVersion = atoi(optarg);
+	    break;
+
         case '4':
             // maxLength of first IPv4 address
             v4maxLen = atoi(optarg);
@@ -176,6 +185,11 @@ int main (int argc, char **argv)
             // maxLength of first IPv6 address
             v6maxLen = atoi(optarg);
             break;
+
+	case 'n':
+	  // We don't need to validate this because we're doing something purposely invalid
+	  fValidate = 0;
+	  break;
 
 	default:
 	    printf("illegal option.\n");
@@ -226,9 +240,13 @@ int main (int argc, char **argv)
     // mark the encapsulated content as a ROA
     write_objid(&sgdp->encapContentInfo.eContentType, id_routeOriginAttestation);
 
+    struct RouteOriginAttestation *roap = &sgdp->encapContentInfo.eContent.roa;
+
+    // Insert the (optional) ROA version number
+    write_casn_num( &(roap->version.self), roaVersion);
+
     // insert the AS number
     // note that as numbers are not supposed to be in ee certs
-    struct RouteOriginAttestation *roap = &sgdp->encapContentInfo.eContent.roa;
     write_casn_num(&roap->asID, asnum);
 
     // look up the ipAddrBlock extension and copy over
@@ -246,9 +264,11 @@ int main (int argc, char **argv)
     if (msg != NULL) 
 	fatal(7, msg);
 
-    // validate: make sure we did it all right
-    if (roaValidate(&roa) != 0) 
+    if ( fValidate ) {
+      // validate: make sure we did it all right
+      if (roaValidate(&roa) != 0) 
 	fprintf(stderr, "Warning: %s failed roaValidate (-b option %s) \n", roafile, (bad == 0 ? "not set": "set"));
+    }
 
     // write out the roa
     if (put_casn_file(&roa.self, roafile, 0) < 0) 
