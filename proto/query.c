@@ -101,7 +101,7 @@ static QueryField fields[] = {
   {
     "filename",
     "the filename where the data is stored in the repository",
-    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT,
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN,
     SQL_C_CHAR, FNAMESIZE,
     NULL, NULL,
     "Filename", NULL,
@@ -109,7 +109,7 @@ static QueryField fields[] = {
   {
     "pathname",
     "full pathname (directory plus filename) where the data is stored",
-    Q_JUST_DISPLAY|Q_FOR_ROA|Q_FOR_CERT|Q_FOR_CRL|Q_REQ_JOIN,
+    Q_JUST_DISPLAY|Q_FOR_ROA|Q_FOR_CERT|Q_FOR_CRL|Q_FOR_MAN|Q_REQ_JOIN,
     -1, 0,
     "dirname", "filename",
     "Pathname", pathnameDisplay,
@@ -117,7 +117,7 @@ static QueryField fields[] = {
   {
     "dirname",
     "the directory in the repository where the data is stored",
-    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_REQ_JOIN,
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN|Q_REQ_JOIN,
     SQL_C_CHAR, DNAMESIZE,
     NULL, NULL,
     "Directory", NULL,
@@ -197,7 +197,7 @@ static QueryField fields[] = {
   {
     "last_upd",
     "last update time of the CRL",
-    Q_FOR_CRL,
+    Q_FOR_CRL|Q_FOR_MAN,
     SQL_C_CHAR, 32,
     NULL, NULL,
     "Last Update", NULL,
@@ -205,7 +205,7 @@ static QueryField fields[] = {
   {
     "next_upd",
     "next update time of the CRL",
-    Q_FOR_CRL,
+    Q_FOR_CRL|Q_FOR_MAN,
     SQL_C_CHAR, 32,
     NULL, NULL,
     "Next Update", NULL,
