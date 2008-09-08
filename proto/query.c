@@ -872,7 +872,7 @@ static int printUsage()
   printf ("  -s: input filename where how to handle non-perfect objects specified\n");
   printf ("      see the sample specifications file sampleQuerySpecs\n");
   printf ("  -l: list the possible display fields and clauses for a given type (roa, cert, or crl)\n");
-  printf ("  -t: the type of object requested (roa, cert, crl, or rpsl)\n");
+  printf ("  -t: the type of object requested (roa, cert, crl, manifest or rpsl)\n");
   printf ("  -d: the name of one field of the object to display (or 'all')\n");
   printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
