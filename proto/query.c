@@ -196,15 +196,23 @@ static QueryField fields[] = {
   },
   {
     "last_upd",
-    "last update time of the CRL",
-    Q_FOR_CRL|Q_FOR_MAN,
+    "last update time of the object",
+    Q_FOR_CRL,
     SQL_C_CHAR, 32,
     NULL, NULL,
     "Last Update", NULL,
   },
   {
+    "this_upd",
+    "last update time of the object",
+    Q_FOR_MAN,
+    SQL_C_CHAR, 32,
+    NULL, NULL,
+    "This Update", NULL,
+  },
+  {
     "next_upd",
-    "next update time of the CRL",
+    "next update time of the object",
     Q_FOR_CRL|Q_FOR_MAN,
     SQL_C_CHAR, 32,
     NULL, NULL,
@@ -241,6 +249,14 @@ static QueryField fields[] = {
     SQL_C_BINARY, 16000000,
     NULL, NULL,
     NULL, NULL,
+  },
+  {
+    "files",
+    "All the filenames in the manifest",
+    Q_JUST_DISPLAY|Q_FOR_MAN,
+    SQL_C_BINARY, 160000,
+    NULL, NULL,
+    "FilesInMan", NULL,
   },
   {
     "serial_nums",
@@ -599,7 +615,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
     if (field->displayer != NULL) {
       result += field->displayer (s, result, resultStr);
     } else {
-      if (field->sqlType == SQL_C_CHAR)
+      if (field->sqlType == SQL_C_CHAR || field->sqlType == SQL_C_BINARY)
         snprintf (resultStr, MAX_RESULT_SZ,
 		  "%s", (char *) s->vec[result].valptr);
       else
