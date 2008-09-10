@@ -149,7 +149,7 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
-    {				/* APKI_ROA */
+    {				/* APKI_MANIFEST */
       "apki_manifest",
       "MANIFEST",
       "filename VARCHAR(256) NOT NULL,"

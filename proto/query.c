@@ -125,7 +125,7 @@ static QueryField fields[] = {
   {
     "ski",
     "subject key identifier",
-    Q_FOR_ROA|Q_FOR_CERT,
+    Q_FOR_ROA | Q_FOR_CERT,
     SQL_C_CHAR, SKISIZE,
     NULL, NULL,
     "SKI", NULL,
@@ -741,13 +741,13 @@ static int doQuery (char **displays, char **filters)
   globalFields[i] = NULL;
   if (filtValidated == FMODE_MATCH_SET) {
     valIndex = srch.nused;
-    if (isROA) {
+    if (isROA || isManifest) 
+      {
       field2 = findField ("ski");
       addcolsrchscm (&srch, "ski", field2->sqlType, field2->maxSize);
-    } else if (isCert) {
-      addcolsrchscm (&srch, "local_id", SQL_C_ULONG, 8);
+      } 
+    else if (isCert) addcolsrchscm (&srch, "local_id", SQL_C_ULONG, 8);
     }
-  }
 
   /* do query */
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
@@ -975,7 +975,8 @@ int main(int argc, char **argv)
       numDisplays = addAllFields(displays, 0);
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
-  status = doQuery (displays, clauses);
+  if ((status = doQuery (displays, clauses)) < 0) fprintf(stderr, "Error: %s\n", 
+    err2string(status));
   stopSyslog();
   return status;
 }
