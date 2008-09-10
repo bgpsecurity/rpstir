@@ -104,8 +104,7 @@ extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 		     char *outfull, unsigned int id, int utrust, int typ, 
 		     char *manState);
 extern int   add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-		  char *outfull, unsigned int id, int utrust, int typ,
-                  char *manState);
+		  char *outfull, unsigned int id, int utrust, int typ);
 extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
 extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 			 unsigned long long sn);
