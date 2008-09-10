@@ -582,17 +582,13 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	  ++f;
 	  if ((i == 0 && strchr(f, ':') == 0) ||
 	      (i == 1 && strchr(f, ':') != 0)) {
-	    if (first) {
+	    if (first) 
+              {
 	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS",
 		      ((i == 0) ? '4' : '6'));
-	      // is it > 2^32? split into two pieces
-	      if (asn > (unsigned int) 0xffff) {
-		fprintf(output, "%u.%u", (asn >> 16), (asn & 0xffff));
-	      } else {
-		fprintf(output, "%u", asn);
-	      }
+	      fprintf(output, "%u", asn);
 	      fprintf(output, "  # %s\n", filename ? filename : "???");
-	    }
+	      }
 	    first = 0;
 	    fputs((i == 0) ? "members" : "mp-members", output);
 	    fprintf(output, ": %s\n", f);
