@@ -63,6 +63,7 @@ typedef enum FilterMode_t {
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
 int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen);
 int displaySNList (scmsrcha *s, int idx1, char* returnStr);
+int displayFlags (scmsrcha *s, int idx1, char* returnStr);
 
 typedef int (*displayfunc)(scmsrcha *s, int idx1, char* returnStr);
 
@@ -125,7 +126,7 @@ static QueryField fields[] = {
   {
     "ski",
     "subject key identifier",
-    Q_FOR_ROA | Q_FOR_CERT,
+    Q_FOR_ROA|Q_FOR_CERT,
     SQL_C_CHAR, SKISIZE,
     NULL, NULL,
     "SKI", NULL,
@@ -265,6 +266,14 @@ static QueryField fields[] = {
     -1, 0,
     "snlen", "snlist",
     "Serial#s", displaySNList,
+  },
+  {
+    "flags",
+    "which flags are set in the database",
+    Q_JUST_DISPLAY|Q_FOR_CERT|Q_FOR_CRL|Q_FOR_ROA|Q_FOR_MAN,
+    SQL_C_ULONG, 8,
+    NULL, NULL,
+    "Flags Set", displayFlags,
   }
 };
 
@@ -312,6 +321,34 @@ int displaySNList (scmsrcha *s, int idx1, char* returnStr)
 	      "%s%llu", (i == 0) ? "" : " ", snlist[i]);
   }
   return 2;
+}
+
+/* helper function for displayFlags */
+static void addFlagIfSet(char *returnStr, unsigned int flags,
+			 unsigned int flag, char *str)
+{
+  if (flags & flag) {
+    snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
+	      "%s%s", (returnStr[0] == 0) ? "" : "|", str);
+  }
+}
+
+/* create list of all flags set to true */
+int displayFlags (scmsrcha *s, int idx1, char* returnStr)
+{
+  unsigned int flags = *((unsigned int *) (s->vec[idx1].valptr));
+  returnStr[0] = 0;
+  addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_VALIDATED, "VALIDATED");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_BADHASH, "BADHASH");
+  return 1;
 }
 
 /*
