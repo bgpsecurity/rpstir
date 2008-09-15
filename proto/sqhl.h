@@ -3,12 +3,12 @@
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -100,11 +100,12 @@ extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		      unsigned int *cert_id, char *manState);
 extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ, char *manState);
-extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir, 
-		     char *outfull, unsigned int id, int utrust, int typ, 
+extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+		     char *outfull, unsigned int id, int utrust, int typ,
 		     char *manState);
 extern int   add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			  char *outfull, unsigned int id, int utrust, int typ, char*);
+		  char *outfull, unsigned int id, int utrust, int typ,
+                  char *manState);
 extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
 extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 			 unsigned long long sn);

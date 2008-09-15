@@ -1877,6 +1877,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   (void)snprintf(did, sizeof(did), "%u", id);
   cols[idx].column = "dir_id";
   cols[idx++].value = did;
+  cols[idx].column = "ski";
+  cols[idx++].value = ski;
   cols[idx].column = "this_upd";
   cols[idx++].value = thisUpdate;
   cols[idx].column = "next_upd";

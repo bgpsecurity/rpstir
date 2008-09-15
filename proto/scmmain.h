@@ -154,6 +154,7 @@ static scmtab scmtabbuilder[] =
       "MANIFEST",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
+      "ski      VARCHAR(128) NOT NULL,"
       "this_upd DATETIME NOT NULL,"
       "next_upd DATETIME NOT NULL,"
       "cert_id  INT UNSIGNED NOT NULL,"

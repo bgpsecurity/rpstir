@@ -126,7 +126,7 @@ static QueryField fields[] = {
   {
     "ski",
     "subject key identifier",
-    Q_FOR_ROA|Q_FOR_CERT,
+    Q_FOR_ROA | Q_FOR_CERT,
     SQL_C_CHAR, SKISIZE,
     NULL, NULL,
     "SKI", NULL,
@@ -329,7 +329,16 @@ static void addFlagIfSet(char *returnStr, unsigned int flags,
 {
   if (flags & flag) {
     snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
-	      "%s%s", (returnStr[0] == 0) ? "" : "|", str);
+	      "%s%s", (returnStr[0] == 0) ? "" : " | ", str);
+  }
+}
+
+static void addFlagIfUnset(char *returnStr, unsigned int flags,
+			 unsigned int flag, char *str)
+{
+  if (!(flags & flag)) {
+    snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
+	      "%s%s", (returnStr[0] == 0) ? "" : " | ", str);
   }
 }
 
@@ -341,11 +350,14 @@ int displayFlags (scmsrcha *s, int idx1, char* returnStr)
   addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
   addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
   addFlagIfSet(returnStr, flags, SCM_FLAG_VALIDATED, "VALIDATED");
+  addFlagIfUnset(returnStr, flags, SCM_FLAG_NOCHAIN, "CHAIN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
+  addFlagIfUnset(returnStr, flags, SCM_FLAG_NOMAN, "HASMAN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
+  addFlagIfUnset(returnStr, flags, SCM_FLAG_NOVALIDMAN, "VALIDMAN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_BADHASH, "BADHASH");
   return 1;
