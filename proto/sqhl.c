@@ -1897,8 +1897,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 
   // if the manifest is valid, zero the nomanvalid flag for all the
   //   objects it references
- // if (manValid)
- //    updateManifestObjs(conp, manFiles);
+  if (manValid)
+    updateManifestObjs(conp, manFiles);
 
   // clean up
   // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
