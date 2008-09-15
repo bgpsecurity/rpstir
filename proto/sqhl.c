@@ -1729,7 +1729,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 
   return(sta);
 }
-/*
+
 // static variables so only need to set up query once and so can pass results
 static scmsrcha *embedCertSrch = NULL;
 static int embedCertFlags;
@@ -1747,7 +1747,7 @@ static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
   }
   return 0;
 }
-*/
+
 /*
   Add a manifest to the database
 */
@@ -1784,19 +1784,17 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       extp = (struct Extension *)next_of(&extp->self));
   int size = vsize_casn(&extp->self);
   uchar *tmp = calloc(1, size);
-  read_casn(&extp->extnValue.self, tmp);
+  read_casn(&extp->extnValue.self, tmp); // read contents of outer OCTET STRING
   struct casn theCASN;
   decode_casn (&theCASN, tmp);
-  size = read_casn(&theCASN, tmp);
-  char *str = ski;
-  for (i = 0; i < size; i++) {
-    if (i) {
-      snprintf(str, 2, ":");
-      str++;
-    }
+  size = read_casn(&theCASN, tmp);  // read contents of inner OCTET STRING
+  char *str = ski;     // now hexify and punctuate it
+  for (i = 0; i < size; i++) 
+    {
+    if (i) snprintf(str++, 2, ":");
     snprintf(str, 3, "%02X", tmp[i]);
     str += 2;
-  }
+    }
   *str = 0;
   free(tmp);
 
@@ -1814,8 +1812,6 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       fahp = (struct FileAndHash *)next_of(&fahp->self)) {
     int flth = read_casn(&fahp->file, file);
     file[flth] = 0;
-//    decode_casn (&theCASN, file);
-//    read_casn(&theCASN, file);
     snprintf(manFiles + manFilesLen, MANFILES_SIZE - manFilesLen,
 	     "%s%s", manFilesLen ? " " : "", file);
     if (manFilesLen) manFilesLen++;
@@ -1841,7 +1837,9 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( sta < 0 )
     return(sta);
   man_id++;
-/*
+  if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id, utrust,
+      typ, manState)) != 0) return sta;
+
   // initialize query first time through
   if (embedCertSrch == NULL) {
     embedCertSrch = newsrchscm(NULL, 4, 0, 1);
@@ -1867,10 +1865,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   //  know that the cert validates the manifest)
   int manValid = ((embedCertFlags & SCM_FLAG_VALIDATED) &&
 		  ! (embedCertFlags & SCM_FLAG_NOCHAIN));
-*/
 
-  if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id, utrust,
-      typ, manState)) != 0) return sta;
+
   // do the actual insert of the manifest in the db
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
@@ -1883,16 +1879,14 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   cols[idx++].value = thisUpdate;
   cols[idx].column = "next_upd";
   cols[idx++].value = nextUpdate;
-//  (void)snprintf(flagn, sizeof(flagn), "%u",
-//		 manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
-//   cols[idx].column = "flags";
-//  cols[idx++].value = flagn;
+  char flagn[24];
+  (void)snprintf(flagn, sizeof(flagn), "%u",
+	 manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
+   cols[idx].column = "flags";
+  cols[idx++].value = flagn;
   (void)snprintf(mid, sizeof(mid), "%u", man_id);
   cols[idx].column = "local_id";
   cols[idx++].value = mid;
-//  (void)snprintf(cid, sizeof(cid), "%u", embedCertID);
-//  cols[idx].column = "cert_id";
-//  cols[idx++].value = cid;
   cols[idx].column = "files";
   cols[idx++].value = manFiles;
   aone.vec = &cols[0];
