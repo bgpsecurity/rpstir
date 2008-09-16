@@ -1120,6 +1120,7 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
       return ERR_SCM_X509;
     sta = verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
     if (sta < 0) {
+      fprintf(stderr, "Child cert %s had bad signature\n", pathname);
       deletebylid (conp, theCertTable, data->id);
       return sta;
     }
