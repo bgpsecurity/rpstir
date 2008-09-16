@@ -42,8 +42,9 @@ suffixed ".p15", thus
 
     gen_test_key C12
 
-produces the file "C12.p15".  It should not be necessary to generate the keys
-more than once, although the file "makecerts" is set up to create them.
+produces the file "C12.p15".  The script file "makekeys" will generate all
+but the root key, C.p15, which is never changed.  It is not necessary to
+generate the kays more than once.  
 
     To make the certificate one must then run
 

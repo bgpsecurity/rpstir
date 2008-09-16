@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "Usage: Filename\n");
     return 1;
   }
-
+  printf("Making %s\n", argv[1]);
   cryptInit();
   cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
   cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
