@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
   if (argc < 2)
     {
-    printf("Usage: manifest name\n");
+    printf("Usage: manifest name, data offset\n");
     return 0;
     } 
   char manifestfile[40], certfile[40], keyfile[40];
@@ -136,6 +136,19 @@ int main(int argc, char **argv)
   write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_roa_pki_manifest);
   struct Manifest *manp = &roa.content.signedData.encapContentInfo.eContent.manifest;
   write_casn_num(&manp->manifestNumber, (long)index);
+  int timediff = 0;
+  if (argc == 3)
+    {
+    sscanf(argv[2], "%d", &timediff);
+    char u = argv[2][strlen(argv[2]) - 1];
+    if (u == 'h') timediff *= 60;
+    else if (u == 'D') timediff *= (3600 * 24);
+    else if (u == 'W') timediff *= (3600 * 24 * 7);
+    else if (u == 'M') timediff *= (3600 * 24 * 30);
+    else if (u == 'M') timediff *= (3600 * 24 * 365);
+    else fatal(2, argv[2]);
+    now += timediff;
+    } 
   write_casn_time(&manp->thisUpdate, now);
   now += (30*24*3600);
   write_casn_time(&manp->nextUpdate, now);
@@ -152,7 +165,7 @@ int main(int argc, char **argv)
     for (a = curr_file; *a && *a > ' ' ; a++);
     while (*a == ' ') a++;
     if (*a > ' ') bad = 1;
-    for (a = curr_file; *a && *a > ' ' && *a != '.'; a++);
+    for (a = curr_file; *a && *a > ' '; a++);
     if (*a <= ' ')
       {
       if (*curr_file == 'C') strcpy(a, ".cer");

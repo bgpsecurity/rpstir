@@ -5,55 +5,55 @@ cp C.raw C.orig
 ../cg/tools/rr < C.raw > C.cer
 
                                 ./make_test_cert C 20000207115900Z 20150313120100Z <makeC
-./gen_test_key CM1.p15;		./make_test_cert CM1     0D 1M
-./gen_test_key C1.p15;		./make_test_cert C1      0D 1Y <makeC1
-./gen_test_key C1M1.p15;	./make_test_cert C1M1    0D 1M
-./gen_test_key C11.p15;		./make_test_cert C11     0D 1Y <makeC11
-./gen_test_key C11R1.p15;	./make_test_cert C11R1   0D 1M
-./gen_test_key C11M1.p15;	./make_test_cert C11M1   0D 1M
-./gen_test_key C11M2.p15;	./make_test_cert C11M2   0D 1M
-./gen_test_key C111.p15;	./make_test_cert C111    0D 1Y <makeC111
-./gen_test_key C111R1.p15;	./make_test_cert C111R1  0D 1M
-./gen_test_key C111R2.p15;	./make_test_cert C111R2  0D 1M
-./gen_test_key C111R3.p15;	./make_test_cert C111R3  0D 1M
-./gen_test_key C111M1.p15;	./make_test_cert C111M1  0D 1M
-./gen_test_key C1111.p15;	./make_test_cert C1111   0D 1Y <makeC1111
-./gen_test_key C1111R1.p15;	./make_test_cert C1111R1 0D 1M
-./gen_test_key C112.p15;	./make_test_cert C112    0D 1Y <makeC112
-./gen_test_key C112R1.p15;	./make_test_cert C112R1  0D 1M
-./gen_test_key C113.p15;	./make_test_cert C113    0D 1Y <makeC113
-./gen_test_key C113R1.p15;	./make_test_cert C113R1  0D 1M
-./gen_test_key C12.p15;		./make_test_cert C12     0D 1Y <makeC12
-./gen_test_key C121.p15;	./make_test_cert C121    0D 1Y <makeC121
-./gen_test_key C121R1.p15;	./make_test_cert C121R1  0D 1M
-./gen_test_key C13.p15;		./make_test_cert C13     0D 1Y <makeC13
-./gen_test_key C131.p15;	./make_test_cert C131    0D 1Y <makeC131
-./gen_test_key C131R1.p15;	./make_test_cert C131R1  0D 1M
-./gen_test_key C132.p15;	./make_test_cert C132    0D 1Y <makeC132
-./gen_test_key C132R1.p15;	./make_test_cert C132R1  0D 1M
-./gen_test_key C132R2.p15;	./make_test_cert C132R2  0D 1M
-./gen_test_key C2.p15;		./make_test_cert C2      0D 1Y <makeC2
-./gen_test_key C21.p15;		./make_test_cert C21     0D 1Y <makeC21
-./gen_test_key C211.p15;	./make_test_cert C211    0D 1Y <makeC211
-./gen_test_key C211R1.p15;	./make_test_cert C211R1  0D 1M
-./gen_test_key C22.p15;		./make_test_cert C22     0D 1Y <makeC22
-./gen_test_key C22R1.p15;	./make_test_cert C22R1   0D 1M
-./gen_test_key C221.p15;	./make_test_cert C221    0D 1Y <makeC221
-./gen_test_key C221R1.p15;	./make_test_cert C221R1  0D 1M
-./gen_test_key C2211.p15;	./make_test_cert C2211   0D 1Y <makeC2211
-./gen_test_key C2211R1.p15;	./make_test_cert C2211R1 0D 1M
-./gen_test_key C2212.p15;	./make_test_cert C2212   0D 1Y <makeC2212
-./gen_test_key C2212R1.p15;	./make_test_cert C2212R1 0D 1M
-./gen_test_key C2212R2.p15;	./make_test_cert C2212R2 0D 1M
-./gen_test_key C23.p15;		./make_test_cert C23     0D 1Y b <makeC23
-./gen_test_key C23R1.p15;	./make_test_cert C23R1   0D 1M 
-./gen_test_key C23R1.p15;	./make_test_cert C23R2   0D 1M n
-./gen_test_key C23M1.p15;	./make_test_cert C23M1   0D 1M e
-./gen_test_key C231.p15;	./make_test_cert C231    0D 1Y <makeC231
-./gen_test_key C231R1.p15;	./make_test_cert C231R1  0D 1M
-./gen_test_key C231R2.p15;	./make_test_cert C231R2  0D 1M
-./gen_test_key C232.p15;	./make_test_cert C232    0D 1Y <makeC232
-./gen_test_key C232R1.p15;	./make_test_cert C232R1  0D 1M
+./make_test_cert CM1     0D 1M
+./make_test_cert C1      0D 1Y <makeC1
+./make_test_cert C1M1    0D 1M
+./make_test_cert C11     0D 1Y <makeC11
+./make_test_cert C11R1   0D 1M
+./make_test_cert C11M1   0D 1M
+./make_test_cert C11M2   0D 1M
+./make_test_cert C111    0D 1Y <makeC111
+./make_test_cert C111R1  0D 1M
+./make_test_cert C111R2  0D 1M
+./make_test_cert C111R3  0D 1M
+./make_test_cert C111M1  0D 1M
+./make_test_cert C1111   0D 1Y <makeC1111
+./make_test_cert C1111R1 0D 1M
+./make_test_cert C112    0D 1Y <makeC112
+./make_test_cert C112R1  0D 1M
+./make_test_cert C113    0D 1Y <makeC113
+./make_test_cert C113R1  0D 1M
+./make_test_cert C12     0D 1Y <makeC12
+./make_test_cert C121    0D 1Y <makeC121
+./make_test_cert C121R1  0D 1M
+./make_test_cert C13     0D 1Y <makeC13
+./make_test_cert C131    0D 1Y <makeC131
+./make_test_cert C131R1  0D 1M
+./make_test_cert C132    0D 1Y <makeC132
+./make_test_cert C132R1  0D 1M
+./make_test_cert C132R2  0D 1M
+./make_test_cert C2      0D 1Y <makeC2
+./make_test_cert C21     0D 1Y <makeC21
+./make_test_cert C211    0D 1Y <makeC211
+./make_test_cert C211R1  0D 1M
+./make_test_cert C22     0D 1Y <makeC22
+./make_test_cert C22R1   0D 1M
+./make_test_cert C221    0D 1Y <makeC221
+./make_test_cert C221R1  0D 1M
+./make_test_cert C2211   0D 1Y <makeC2211
+./make_test_cert C2211R1 0D 1M
+./make_test_cert C2212   0D 1Y <makeC2212
+./make_test_cert C2212R1 0D 1M
+./make_test_cert C2212R2 0D 1M
+./make_test_cert C23     0D 1Y b <makeC23
+./make_test_cert C23R1   0D 1M 
+./make_test_cert C23R2   0D 1M n
+./make_test_cert C23M1   0D 1M e
+./make_test_cert C231    0D 1Y <makeC231
+./make_test_cert C231R1  0D 1M
+./make_test_cert C231R2  0D 1M
+./make_test_cert C232    0D 1Y <makeC232
+./make_test_cert C232R1  0D 1M
 
 cp C2.cer C2X.cer
 cp C2.raw C2X.raw
