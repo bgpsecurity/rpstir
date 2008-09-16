@@ -815,10 +815,11 @@ static void parseSpecsFileParameter (FilterMode_t *filterItem, char *testStr)
   tStr = tmpStr;
   while (*testStr != '\0')
     *tStr++ = tolower (*testStr++);  /* don't care how user uses case */
+  *tStr = 0;
 
   if (strcmp (tmpStr, "matchset") == 0)
     *filterItem = FMODE_MATCH_SET;
-  else if (strcmp (tmpStr, "matchcl") == 0) /* allow matchclear, matchclr, etc. */
+  else if (strcmp (tmpStr, "matchclear") == 0)
     *filterItem = FMODE_MATCH_CLR;
   else
     *filterItem = FMODE_IGNORE;
