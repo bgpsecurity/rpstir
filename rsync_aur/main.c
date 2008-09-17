@@ -31,50 +31,6 @@ struct name_list
   struct name_list *nextp;
   };
 
-static int bin2six(char **destpp, uchar *srcp, int lth)
-  {
-  char table[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
-  uchar *c, *e;
-  char *a, *destp;
-  int indx, tmp;
-
-  destp = (char *)calloc(1, 6 + ((lth * 8) / 6));
-  for (c = srcp, e = &c[lth], a = destp; c < e; )
-    {
-    indx = *c >> 2;
-    *a++ = table[indx]; // write 1st char
-    indx = *c++ & 0x3;  // c at 2nd uchar
-    indx <<= 4;
-    if (c == e)
-      {
-      *a++ = table[indx];
-      *a++ = '=';
-      *a++ = '=';
-      break;
-      }
-    tmp = *c;
-    tmp >>= 4;
-    indx |= tmp;
-    *a++ = table[indx]; // write 2nd char
-    indx = *c++ & 0xF;  // c at 3rd char
-    indx <<= 2;
-    if (c == e)
-      {
-      *a++ = table[indx];
-      *a++ = '=';
-      break;
-      }
-    tmp = *c;
-    tmp >>= 6;
-    indx  |= tmp;
-    *a++ = table[indx]; // write 3rd char
-    indx = (*c++ & 0x3F); // c at next 1st char
-    *a++ = table[indx];  // write 4th char
-    }
-  *destpp = destp;
-  return (a - destp);
-  }
-
 static void free_name_list(struct name_list *rootlistp)
   {
   struct name_list *currp, *nextp;
@@ -232,28 +188,6 @@ static char *makeCDStr(unsigned int *retlenp, char *dir)
   return(buf);
 }
 
-static char *makeCertName(struct Certificate *certp)
-  {
-  uchar *hashp;
-  char *sixp;
-  int klth;
-  struct Extension *extp;
-  for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0); 
-    extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
-    extp = (struct Extension *)next_of(&extp->self));
-  if (!extp || (klth = readvsize_casn(&extp->extnValue.self, &hashp)) != 22)
-    {
-    return (char *)0;
-    }
-  klth -= 2;
-  klth = bin2six(&sixp, &hashp[2], klth);
-  free(hashp);
-  while(sixp[klth - 1] == '=') sixp[--klth] = 0;
-  sixp = realloc(sixp, klth + 4);
-  strcat(sixp, ".cer");
-  return sixp;
-  }
-
 static int multi_match(struct name_list *rootp, char *fname, int fnamelth)
   {
   int rootlth = strlen(rootp->namep);
@@ -297,9 +231,8 @@ static char *appendState(char *sendStr, int state, unsigned int *retlenp)
   return retStr;
   }
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[])
+  {
 
   /* tflag = tcp, uflag = udp, nflag = do nothing, just print
      what you would have done, {w,e,i}flag = {warning,error,
@@ -532,42 +465,6 @@ main(int argc, char *argv[])
         int ansr;
         if ((ansr = check_manifest(&roa, &sendStr[2], topDir, &rootlist)) >= 0)
           {
-          struct Certificate *certp = (struct Certificate *)member_casn(&roa.
-            content.signedData.certificates.self, 0);
-          char *certname = makeCertName(certp);
-          if (!certname)
-            {
-            fprintf(stderr, "error making name for EE certificate in manifest %s\n", 
-              &sendStr[2]);
-            }
-          else if (!wasManifested(&rootlist, certname, 1))
-            {   // put EE cert in special directory
-            char *eefilename = (char *)calloc(1, 2 + 16 + strlen(topDir) + 
-                1 + strlen(certname) + 4);
-
-	    sprintf(eefilename, "A manifestSigners/%s/%s", topDir, certname);
-
-            if (put_casn_file(&certp->self, &eefilename[2], 0) < 0)
-              {
-              fprintf(stderr, "error writing %s\n", eefilename);
-              }
-            else
-              {
-              strcat(eefilename, " 0\r\n");
-              outputMsg(&wport, eefilename, strlen(eefilename));
-              }
-            free(eefilename);
-            }
-          else   // log error
-            {
-            char *e; 
-            for (e = &sendStr[2]; *e >= ' '; e++);
-            *e = 0;  // trim off CRLF
-            fprintf(stderr, 
-              "EE certificate %s in %s was sent separately\n",
-              certname, &sendStr[2]);
-            *e = '\r';
-            }
           sendStr = appendState(sendStr, ansr, &retlen);  // send manifest
           outputMsg(&wport, sendStr, retlen);
           }
