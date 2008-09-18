@@ -1753,7 +1753,7 @@ static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
   Add a manifest to the database
 */
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-   char *outfull, unsigned int id, int utrust, int typ, char * manState)
+   char *outfull, unsigned int id, int utrust, int typ)
 {
   int   sta, i;
   struct ROA roa;
@@ -1763,7 +1763,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   scmkva   aone;
   scmkv    cols[12];
   int   idx = 0;
-  char  did[24], mid[24], ski[40];
+  char  did[24], mid[24], ski[60];
 
   // manifest stored in same format as a roa
   ROA(&roa, 0);
@@ -1839,7 +1839,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     return(sta);
   man_id++;
   if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id, utrust,
-      typ, manState)) != 0) return sta;
+      typ, "1")) != 0) return sta;
 
   // initialize query first time through
   if (embedCertSrch == NULL) {
@@ -1963,8 +1963,7 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     case OT_MAN:
     case OT_MAN_PEM:
-      sta = add_manifest(scmp, conp, outfile, outdir, outfull, id, utrust, typ,
-        manState);
+      sta = add_manifest(scmp, conp, outfile, outdir, outfull, id, utrust, typ);
       break;
     default:
       sta = ERR_SCM_INTERNAL;
