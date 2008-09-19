@@ -126,7 +126,7 @@ static QueryField fields[] = {
   {
     "ski",
     "subject key identifier",
-    Q_FOR_ROA | Q_FOR_CERT,
+    Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN,
     SQL_C_CHAR, SKISIZE,
     NULL, NULL,
     "SKI", NULL,
