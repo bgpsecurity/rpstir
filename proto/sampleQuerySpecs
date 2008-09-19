@@ -1,10 +1,14 @@
 # template for filter specification
 # each item specified as "item filter", where:
-#  - items are: Validated, NoChain, NotYet, StaleCRL, StaleManifest, NoManifest, NoValidManifest, BadHash
-#  - filter is: ignore (don't check), matchSet, matchClear
-# items relate to SCM_FLAG items in the database, i.e., NoChain is SCM_FLAG_NOCHAIN, etc.
-# so StaleCRL ignore does not test, StaleCRL matchClr tests for flag clear, StaleCRL matchSet tests for flag set
-# the filter text is case insensitive (its all set tolower when testing), item text is CamelCase
+#  - items are: Validated, NoChain, NotYet, StaleCRL, StaleManifest, 
+#      NoManifest, NoValidManifest, BadHash
+#  - filter is: ignore (don't check), matchset, matchclear
+# items relate to SCM_FLAG items in the database, i.e., NoChain is 
+#   SCM_FLAG_NOCHAIN, etc.
+# so StaleCRL ignore does not test, StaleCRL matchclr tests for flag clear, 
+#   StaleCRL matchset tests for flag set
+# the filter text is case insensitive (it's all set tolower when testing), 
+# item text is CamelCase
 
 Validated ignore
 NoChain matchset
