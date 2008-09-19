@@ -333,13 +333,12 @@ static void addFlagIfSet(char *returnStr, unsigned int flags,
   }
 }
 
-static void addFlagIfUnset(char *returnStr, unsigned int flags,
-			 unsigned int flag, char *str)
+static void addFlagEither(char *returnStr, unsigned int flags,
+			 unsigned int flag, char *setStr, char *unsetStr)
 {
-  if (!(flags & flag)) {
-    snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
+  char *str = (flags & flag)? setStr: unsetStr;
+  snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
 	      "%s%s", (returnStr[0] == 0) ? "" : " | ", str);
-  }
 }
 
 /* create list of all flags set to true */
@@ -350,15 +349,12 @@ int displayFlags (scmsrcha *s, int idx1, char* returnStr)
   addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
   addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
   addFlagIfSet(returnStr, flags, SCM_FLAG_VALIDATED, "VALIDATED");
-  addFlagIfUnset(returnStr, flags, SCM_FLAG_NOCHAIN, "CHAIN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
+  addFlagEither(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN", "CHAIN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
-  addFlagIfUnset(returnStr, flags, SCM_FLAG_NOMAN, "HASMAN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
-  addFlagIfUnset(returnStr, flags, SCM_FLAG_NOVALIDMAN, "VALIDMAN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
+  addFlagEither(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN", "ONMAN");
+  addFlagEither(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN", "VALIDMAN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_BADHASH, "BADHASH");
   return 1;
 }
@@ -569,7 +565,7 @@ static int checkValidity (char *ski, unsigned int localID) {
     }
     found = 0;
     status = searchscm (connect, validTable, validSrch, NULL,
-                        registerFound, SCM_SRCH_DOVALUE_ALWAYS);
+                        registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (! found) return 0;  // no parent cert
   }
   return 1;
@@ -795,7 +791,8 @@ static int doQuery (char **displays, char **filters)
     }
 
   /* do query */
-  status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags);
+  status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags, 
+    (isRPSL)? "asn": NULL);
   for (i = 0; i < srch.nused; i++) {
     free (srch.vec[i].colname);
     free (srch1[i].valptr);
@@ -930,23 +927,23 @@ static int printUsage()
   printf ("  query -l <type>\n");
   printf ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-v] [-n] [-m]\n\nSwitches:\n");
   printf ("  -a: short cut for -t roa -d filter -v -n\n");
-  printf ("  -o: name of output file for the results (omitted = screen)\n");
-  printf ("  -s: input filename where how to handle non-perfect objects specified\n");
-  printf ("      see the sample specifications file sampleQuerySpecs\n");
-  printf ("  -l: list the possible display fields and clauses for a given type (roa, cert, or crl)\n");
-  printf ("  -t: the type of object requested (roa, cert, crl, manifest or rpsl)\n");
   printf ("  -d: the name of one field of the object to display (or 'all')\n");
   printf ("  -f: one clause to use for filtering; a clause has the form\n");
   printf ("      <fieldName>.<op>.<value>, where op is a comparison operator\n");
   printf ("      (eq, ne, gt, lt, ge, le); to include a space in value,\n");
   printf ("      put a # where the space should be\n");
-  printf ("  -v: only display valid roa's and cert's\n");
-  printf ("  -n: no labels for the data fields displayed\n");
+  printf ("  -l: list the possible display fields and clauses for a given type (roa, cert, crl or manifest)\n");
   printf ("  -m: multiline, i.e. each field on a different line\n\n");
+  printf ("  -n: no labels for the data fields displayed\n");
+  printf ("  -o: name of output file for the results (omitted = screen)\n");
+  printf ("  -s: input filename where how to handle non-perfect objects specified\n");
+  printf ("      see the sample specifications file sampleQuerySpecs\n");
+  printf ("  -t: the type of object requested (roa, cert, crl, manifest or rpsl)\n");
+  printf ("  -v: only display valid roa's and cert's\n");
   printf ("\n");
   printf ("Note: RPSL format is route-set:\n");
   printf ("route-set: RS-RPKI-ROA-FOR-V4:ASnnnn (or RS-RPKI-ROA-FOR-V6:ASnnnn\n");
-  printf ("members: <route-prefix>\n");
+  printf ("members: <route-prefix> (or mp-members: <route-prefix>)\n");
   return -1;
 }
 

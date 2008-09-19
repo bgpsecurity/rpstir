@@ -130,7 +130,7 @@ extern int   getmaxidscm(scm *scmp, scmcon *conp, char *field,
 extern int   getuintscm(scmcon *conp, unsigned int *ival);
 extern int   searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 		       sqlcountfunc cnter, sqlvaluefunc valer,
-		       int what);
+		       int what, char *orderp);
 extern int   addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 			   unsigned valsize);
 extern int   searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,

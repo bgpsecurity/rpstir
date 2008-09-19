@@ -713,6 +713,7 @@ int main(int argc, char **argv)
   char   *ne;
   char   *porto = NULL;
   char    errmsg[1024];
+  char   *manState = "0";
   time_t  nw;
   int ians = 0;
   int do_create = 0;
@@ -732,7 +733,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:p")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:pm:")) != EOF )
     {
       switch ( c )
 	{
@@ -766,6 +767,9 @@ int main(int argc, char **argv)
 	case 'h':
 	  usage();
 	  return(0);
+        case 'm':
+          manState = optarg;
+          break;
 	default:
 	  (void)fprintf(stderr, "Invalid option '%c'\n", c);
 	  usage();
@@ -984,7 +988,7 @@ int main(int argc, char **argv)
 	    {
 	      (void)fprintf(logfile, "Attempting to add file %s\n", outfile);
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
-			       trusted, "0");
+			       trusted, manState);
 	      if ( sta < 0 )
 		{
 		  (void)fprintf(stderr,

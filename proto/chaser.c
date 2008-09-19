@@ -185,7 +185,7 @@ static int handleAIAResults (scmcon *conp, scmsrcha *s, int numLine)
 	   (char *) s->vec[0].valptr);
   parentCount = 0;
   searchscm(conp, theCertTable, &parentSrch, NULL, foundIt,
-	    SCM_SRCH_DOVALUE_ALWAYS);
+	    SCM_SRCH_DOVALUE_ALWAYS, NULL);
   if (parentCount == 0) {
     addURIIfUnique ((char *) s->vec[1].valptr);
   }
@@ -320,7 +320,7 @@ int main(int argc, char **argv)
   addcolsrchscm (&srch, "current_timestamp", SQL_C_CHAR, 24);
   addcolsrchscm (&srch, "ch_last", SQL_C_CHAR, 24);
   status = searchscm (connect, table, &srch, NULL, handleTimestamps,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
   // add crldp field if cert either has no crl or crl is out-of-date
   table = findtablescm (scmp, "certificate");
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
   srch.wherestr = msg;
   addcolsrchscm (&srch, "crldp", SQL_C_CHAR, SIASIZE);
   status = searchscm (connect, table, &srch, NULL, handleCRLDPResults,
-                      SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL);
+                      SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
   free (srch1[0].valptr);
 
   // add aia field if cert has no parent
@@ -345,7 +345,7 @@ int main(int argc, char **argv)
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, SKISIZE);
   addcolsrchscm (&srch, "aia", SQL_C_CHAR, SIASIZE);
   status = searchscm (connect, table, &srch, NULL, handleAIAResults,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
   free (srch1[0].valptr);
   free (srch1[1].valptr);
 

@@ -102,7 +102,7 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
 	    "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
 	    theIssuer, theAKI, currTimestamp);
   return searchscm (conp, crlTable, cntSrch, countHandler, NULL,
-                    SCM_SRCH_DOCOUNT);
+                    SCM_SRCH_DOCOUNT, NULL);
 }
 
 /*
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
   addcolsrchscm (&srch, "current_timestamp", SQL_C_CHAR, 24);
   addcolsrchscm (&srch, "gc_last", SQL_C_CHAR, 24);
   status = searchscm (connect, metaTable, &srch, NULL, handleTimestamps,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
   // check for expired certs
   certificate_validity (scmp, connect);
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
   addcolsrchscm (&srch, "aki", SQL_C_CHAR, SKISIZE);
   countHandler = handleIfStale;
   status = searchscm (connect, crlTable, &srch, NULL, countCurrentCRLs,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
   free (srch1[0].valptr);
   free (srch1[1].valptr);
 
@@ -226,10 +226,10 @@ int main(int argc, char **argv)
   srch.vald = 0;
   addcolsrchscm (&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
   status = searchscm (connect, manifestTable, &srch, NULL, handleStaleMan,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
   snprintf (msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
   status = searchscm (connect, manifestTable, &srch, NULL, handleFreshMan,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
   free (srch1[0].valptr);
 
   // check all certs in state unknown to see if now crl with issuer=issuer
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
   addcolsrchscm (&srch, "local_id", SQL_C_ULONG, 8);
   countHandler = handleIfCurrent;
   status = searchscm (connect, certTable, &srch, NULL, countCurrentCRLs,
-                      SCM_SRCH_DOVALUE_ALWAYS);
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
   free (srch1[0].valptr);
   free (srch1[1].valptr);
   free (srch1[2].valptr);

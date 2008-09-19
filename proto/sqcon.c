@@ -708,7 +708,7 @@ static int validsrchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch)
 
 int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	      sqlcountfunc cnter, sqlvaluefunc valer,
-	      int what)
+	      int what, char *orderp)
 {
   SQLINTEGER  nrows = 0;
   SQLRETURN   rc;
@@ -811,6 +811,8 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	(void)strcat(stmt, " AND ");
       (void)strcat(stmt, srch->wherestr);
     }
+  if (orderp) sprintf(&stmt[strlen(stmt)], " order by %s ", orderp);
+    
   (void)strcat(stmt, ";");
 // execute the select statement
   rc = newhstmt(conp);
@@ -1127,7 +1129,7 @@ int searchorcreatescm(scm *scmp, scmcon *conp, scmtab *tabp,
   *idp = (unsigned int)(-1);
   *(unsigned int *)(srch->context) = (unsigned int)(-1);
   sta = searchscm(conp, tabp, srch, NULL, socvaluefunc,
-		  SCM_SRCH_DOVALUE_ALWAYS);
+		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
   if ( sta == 0 )
     {
       mid = *(unsigned int *)(srch->context);
