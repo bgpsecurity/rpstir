@@ -1152,7 +1152,7 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
     manSrch->vec[manSrch->nused-1].valptr = manFiles;
     manSrch->vec[manSrch->nused-1].valsize = MANFILES_SIZE;
   }
-  snprintf(manSrch->wherestr, WHERESTR_SIZE, "cert_id=\"%d\"", data->id);
+  snprintf(manSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
   sta = searchscm(conp, theManifestTable, manSrch, NULL, verifyChildManifest,
 		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
   return 0;
