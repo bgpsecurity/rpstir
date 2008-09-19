@@ -688,7 +688,7 @@ static char *tableName(char *objType)
 }
 
 /* sets up and performs the database query, and handles the results */
-static int doQuery (char **displays, char **filters)
+static int doQuery (char **displays, char **filters, char *orderp)
 {
   scmtab   *table = NULL;
   scmsrcha srch;
@@ -792,7 +792,7 @@ static int doQuery (char **displays, char **filters)
 
   /* do query */
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags, 
-    (isRPSL)? "asn": NULL);
+    (isRPSL)? "asn": orderp);
   for (i = 0; i < srch.nused; i++) {
     free (srch.vec[i].colname);
     free (srch1[i].valptr);
@@ -941,7 +941,9 @@ static int printUsage()
   printf ("  -t <type>: the type of object requested, e.g. roa, cert, crl, manifest\n");
   printf ("      or rpsl\n");
   printf ("  -v: only display valid roas and cert's\n");
+  printf ("  -x <field>: sort output in order of field values\n");
   printf ("\n");
+  printf ("Note: All switches are case insensitive\n");
   printf ("Note: RPSL format is route-set:\n");
   printf ("route-set: RS-RPKI-ROA-FOR-V4:ASnnnn (or RS-RPKI-ROA-FOR-V6:ASnnnn\n");
   printf ("members: <route-prefix> (or mp-members: <route-prefix>)\n");
@@ -960,7 +962,7 @@ static void setObjectType (char *aType)
 
 int main(int argc, char **argv)
 {
-  char *displays[MAX_VALS], *clauses[MAX_CONDS];
+  char *displays[MAX_VALS], *clauses[MAX_CONDS], *orderp = NULL;
   int i, status;
   int numDisplays = 0;
   int numClauses = 0;
@@ -1002,6 +1004,8 @@ int main(int argc, char **argv)
       clauses [numClauses++] = argv[i+1];
     } else if (strcasecmp (argv[i], "-o") == 0) {
       output = fopen (argv[i+1], "w");
+    } else if (strcasecmp (argv[i], "-x") == 0) {
+      orderp = argv[i+1];
     } else if (strcasecmp (argv[i], "-s") == 0) {
       parseSpecsFile(argv[i+1]);
     } else {      // unknown switch
@@ -1019,8 +1023,8 @@ int main(int argc, char **argv)
       numDisplays = addAllFields(displays, 0);
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
-  if ((status = doQuery (displays, clauses)) < 0) fprintf(stderr, "Error: %s\n", 
-    err2string(status));
+  if ((status = doQuery (displays, clauses, orderp)) < 0) 
+    fprintf(stderr, "Error: %s\n", err2string(status));
   stopSyslog();
   return status;
 }
