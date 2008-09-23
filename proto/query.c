@@ -571,27 +571,53 @@ static int checkValidity (char *ski, unsigned int localID) {
   return 1;
 }
 
+static int oldasn;  // needed for grouping by AS#
+static int v4size = 0, v6size = 0;
+static char *v4members = NULL, *v6members = NULL;
+
+static void emptyRPSL()
+  {
+  char *hdrp = "route-set: RS-RPKI-ROA-FOR-V%d:AS%u\n";
+  if (v4members != NULL)
+    {
+    fprintf(output, hdrp, 4, oldasn);
+    fprintf(output, "%s\n", v4members);
+    free(v4members);
+    v4members = NULL;
+    v4size = 0;
+    }
+  if (v6members != NULL)
+    {
+    fprintf(output, hdrp, 6, oldasn);
+    fprintf(output, "%s\n", v6members);
+    free(v6members);
+    v6members = NULL;
+    v6size = 0;
+    }
+  }
+
 /* callback function for searchscm that prints the output */
 static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
-{
+  {  
   int result = 0;
   int display;
   char resultStr[MAX_RESULT_SZ];
 
   conp = conp; numLine = numLine;  // silence compiler warnings
-  if (filtValidated == FMODE_MATCH_SET) {
+  if (filtValidated == FMODE_MATCH_SET) 
+    {
     if (!checkValidity (isROA ? (char *) s->vec[valIndex].valptr : NULL,
 			isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0))
 	return 0;
-  }
-  // XXX hack-- print out RPSL here for now, should factor out
-  // XXX No differentiation between ipv4 and ipv6
-  if (isRPSL) {
+    }
+  if (isRPSL) 
+    {
     unsigned int asn = 0;
     char *filter = 0;
     char *filename = 0;
 
-    for (display = 0; globalFields[display] != NULL; display++) {
+    for (display = 0; globalFields[display] != NULL; display++) 
+      {
       QueryField *field = globalFields[display];
       if (!strcasecmp(field->name, "filter"))
 	filter = (char *)s->vec[display].valptr;
@@ -602,53 +628,71 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       else
 	fprintf(stderr, "warning: unexpected field %s in RPSL query\n",
 		field->name);
-    }
-    if (asn == 0 || filter == 0) {
+      }
+    if (asn == 0 || filter == 0) 
+      {
       fprintf(stderr, "incomplete result returned in RPSL query: ");
       if (asn == 0)
 	fprintf(stderr, "no asn\n");
       if (filter == 0)
 	fprintf(stderr, "no filter\n");
-    } else {
-      // gross hack. 0 == ipv4, 1 == ipv6
+      } 
+    else 
+      {
+      if (asn != oldasn) emptyRPSL();
+      oldasn = asn;
+      //  0 == ipv4, 1 == ipv6
       int i, numprinted = 0;
 
-      for (i = 0; i < 2; ++i) {
-	char *end, *f = filter;
-	int first = 1;
+      for (i = 0; i < 2; ++i) 
+        {
+        char *end, *f = filter;
+        int first = 1;
 
 	// format of filters: some number of "sid<space>asnum<space>filter\n"
-	while ((end = strchr(f, '\n')) != 0) {
+	while ((end = strchr(f, '\n')) != 0) 
+          {
 	  *end = '\0';
 	  // skip sid and asnum
 	  if ((f = strchr(f, ' ')) == 0) continue;
 	  ++f;
 	  if ((f = strchr(f, ' ')) == 0) continue;
 	  ++f;
-	  if ((i == 0 && strchr(f, ':') == 0) ||
-	      (i == 1 && strchr(f, ':') != 0)) {
+	  if ((i == 0 && strchr(f, ':') == 0) || // anything of current family?
+	      (i == 1 && strchr(f, ':') != 0))
+            {
 	    if (first) 
               {
-	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS",
-		      ((i == 0) ? '4' : '6'));
-	      fprintf(output, "%u", asn);
-	      fprintf(output, "  # %s\n", filename ? filename : "???");
 	      }
 	    first = 0;
-	    fputs((i == 0) ? "members" : "mp-members", output);
-	    fprintf(output, ": %s\n", f);
+            int need = strlen(f) + 10 + strlen(filename) + 3;
+            if (i == 0)
+              {
+              if (!v4members) v4members = (char *)calloc(1, need + 1);
+              else v4members = realloc(v4members, (v4size + need + 1));
+              sprintf(&v4members[v4size], "members: %s # %s\n", f, filename);
+              v4size += need;
+              v4members[v4size] = 0;
+              }
+            else
+              {
+              need += 3;
+              if (!v6members) v6members = (char *)calloc(1, need + 1);
+              else v6members = realloc(v6members, (v6size + need + 1));
+              sprintf(&v6members[v6size], "mp-members: %s # %s\n", f, filename);
+              v6size += need;
+              v6members[v6size] = 0;
+              }
 	    ++numprinted;
-	  }
+            }
 	  *end = '\n';
 	  // skip past the newline and try for another one
 	  f = end + 1;
-	}
-	if (!first)
-	  fprintf(output, "\n");
+          }
+        }
       }
-    }
     return(0);
-  }
+    }
 
   // normal query result (not RPSL)
   for (display = 0; globalFields[display] != NULL; display++) {
@@ -793,6 +837,7 @@ static int doQuery (char **displays, char **filters, char *orderp)
   /* do query */
   status = searchscm (connect, table, &srch, NULL, handleResults, srchFlags, 
     (isRPSL)? "asn": orderp);
+  if (isRPSL) emptyRPSL();
   for (i = 0; i < srch.nused; i++) {
     free (srch.vec[i].colname);
     free (srch1[i].valptr);
