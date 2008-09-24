@@ -528,6 +528,7 @@ int manifestValidate2(struct ROA *rp, char *dirp, struct badfile ***badfilesppp)
         sizeof(struct badfile *)));
       struct badfile *badfilep = (struct badfile *)calloc(1, sizeof(struct badfile));
       badfilespp[numbadfiles++] = badfilep;
+      badfilespp[numbadfiles] = (struct badfile *)0;
       badfilep->fname = fname;
       badfilep->err = tmp;
       if (!err) err = tmp;
