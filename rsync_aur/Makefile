@@ -50,7 +50,7 @@ bogus:
 
 ### HARD TARGETS
 
-rsync_aur:	$(ALL_OBJS)
+rsync_aur:	$(ALL_OBJS) $(XLIBS)
 	$(LD) $(DFLAGS) $(XFLAGS) $(STATIC) -o rsync_aur \
 	$(ALL_OBJS) $(IFLAGS) $(XLIBS)
 
