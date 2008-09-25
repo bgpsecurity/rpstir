@@ -51,7 +51,7 @@
 #define NEED_AND  1  /* used to clarify parameter passing */
 #define SKIP_EXPIRED_CHECK 0	/* used to clarify parameter passing */
 
-#define BAD_OBJECT_TYPE "\nBad object type; must be roa, cert, crl, manifest or rpsl\n\n"
+#define BAD_OBJECT_TYPE "\nBad object type; must be roa, cert, crl, man[ifest] or rpsl\n\n"
 
 typedef enum FilterMode_t {
   FMODE_UNKNOWN = 0,	/* avoid 0 in enums */
@@ -977,13 +977,13 @@ static int printUsage()
   printf ("     eq, ne, gt, lt, ge, le).\n"); 
   printf ("     to include a space in value use '#' instead\n");
   printf ("  -l <type>: list the possible display fields for the type. e.g. roa, cert,\n");
-  printf ("      crl or manifest)\n");
+  printf ("      crl or man[ifest])\n");
   printf ("  -m: multiline, i.e. each field on a different line\n");
   printf ("  -n: do not display labels for fields\n");
   printf ("  -o <filename>: print results to filename (default is screen)\n");
   printf ("  -s <filename>: where filename prescribes how to handle flags.\n");
   printf ("      See the sample specifications file sampleQuerySpecs\n");
-  printf ("  -t <type>: the type of object requested, e.g. roa, cert, crl, manifest\n");
+  printf ("  -t <type>: the type of object requested, e.g. roa, cert, crl, man[ifest]\n");
   printf ("      or rpsl\n");
   printf ("  -v: only display valid roas and cert's\n");
   printf ("  -x <field>: sort output in order of field values\n");
@@ -998,6 +998,7 @@ static int printUsage()
 static void setObjectType (char *aType)
 {
   objectType = aType;
+  if (!strcasecmp(aType, "man")) objectType = "manifest";
   isROA = strcasecmp (objectType, "roa") == 0;
   isCRL = strcasecmp (objectType, "crl") == 0;
   isCert = strcasecmp (objectType, "cert") == 0;
