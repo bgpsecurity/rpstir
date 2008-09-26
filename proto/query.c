@@ -333,32 +333,6 @@ static void addFlagIfSet(char *returnStr, unsigned int flags,
   }
 }
 
-static void addFlagEither(char *returnStr, unsigned int flags,
-			 unsigned int flag, char *setStr, char *unsetStr)
-{
-  char *str = (flags & flag)? setStr: unsetStr;
-  snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
-	      "%s%s", (returnStr[0] == 0) ? "" : " | ", str);
-}
-
-/* create list of all flags set to true */
-int displayFlags (scmsrcha *s, int idx1, char* returnStr)
-{
-  unsigned int flags = *((unsigned int *) (s->vec[idx1].valptr));
-  returnStr[0] = 0;
-  addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_VALIDATED, "VALIDATED");
-  addFlagEither(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN", "CHAIN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
-  addFlagEither(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN", "ONMAN");
-  addFlagEither(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN", "VALIDMAN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_BADHASH, "BADHASH");
-  return 1;
-}
-
 /*
  * I hate to use all these static variables, but the problem is
  * that there's no other way to pass them on to all the callback
@@ -379,6 +353,27 @@ static char *objectType;
 static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0, isManifest = 0;
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
+
+/* create list of all flags set to true */
+int displayFlags (scmsrcha *s, int idx1, char* returnStr)
+{
+  unsigned int flags = *((unsigned int *) (s->vec[idx1].valptr));
+  returnStr[0] = 0;
+  addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_VALIDATED, "VALIDATED");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
+  if (!isManifest)
+    {
+    addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
+    addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
+    addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
+    }
+  addFlagIfSet(returnStr, flags, SCM_FLAG_BADHASH, "BADHASH");
+  return 1;
+}
 
 /* reads a roa from a file in order to determine the filter entry */
 int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen)
