@@ -443,7 +443,7 @@ static void write_ASNums(struct ASNum *asnump)
     }
   }
 
-static void write_family(struct IPAddressFamilyA *famp, int filein)
+static int write_family(struct IPAddressFamilyA *famp, int filein)
   {
   uchar family[2];
   char nbuf[256];
@@ -470,6 +470,7 @@ static void write_family(struct IPAddressFamilyA *famp, int filein)
       }
 
     }
+  return num;
   }
 
 static int writeHashedPublicKey(struct casn *valuep, struct casn *keyp)
@@ -661,7 +662,10 @@ int main(int argc, char **argv)
         struct IPAddressFamilyA *famp = (struct IPAddressFamilyA *)inject_casn(
           &extp->extnValue.ipAddressBlock.self, numfam++);
         copy_casn(&famp->addressFamily, &ifamp->addressFamily);
-        write_family(famp, filein);
+        if (!write_family(famp, filein))
+          {
+          eject_casn(&extp->extnValue.ipAddressBlock.self, --numfam);
+          }
         }
       }
       // if making EE cert to sign ROA or manifest, inherit

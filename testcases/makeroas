@@ -12,11 +12,11 @@
 ./make_test_roa    -r R2111.roa  -a 51     # 51-52
 ./make_test_roa    -r R221.roa   -a 63     # 63-75
 ./make_test_roa    -r R2211.roa  -a 64     # 63-69
-./make_test_roa    -r R22111.roa -a 65 -4 c0 -6 c0 
+./make_test_roa    -r R22111.roa -a 65     # 65
 ./make_test_roa    -r R22121.roa -a 66     # 66-69
 ./make_test_roa -b -r R22122.roa -a 67     # 66-69
 ./make_test_roa    -r R231.roa   -a 76     # 76-83
 ./make_test_roa    -r R2311.roa  -a 77     # 76-79
 ./make_test_roa    -r R2312.roa  -a 78     # 76-79
-./make_test_roa    -r R2321.roa  -a 80     # 80-83
-./make_test_roa    -r R22111.roa -a 65 -4 c1 -6 c1 
+./make_test_roa    -r R2321.roa  -a 80     # 80-82
+./make_test_roa    -r R2331.roa  -a 66     # 66

@@ -40,7 +40,7 @@ addresses and AS numbers of their issuing CA.
 give it a subject name to produce a file suffixed ".p15" to produce a file
 suffixed ".p15", thus
 
-    gen_test_key C12
+    gen_test_key C12.p15
 
 produces the file "C12.p15".  The script file "makekeys" will generate all
 but the root key, C.p15, which is never changed.  It is not necessary to
