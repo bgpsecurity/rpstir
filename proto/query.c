@@ -854,12 +854,13 @@ static void parseSpecsFileParameter (FilterMode_t *filterItem, char *testStr)
     *tStr++ = tolower (*testStr++);  /* don't care how user uses case */
   *tStr = 0;
 
-  if (strcmp (tmpStr, "matchset") == 0)
+  if (strcmp (tmpStr, "set") == 0)
     *filterItem = FMODE_MATCH_SET;
-  else if (strcmp (tmpStr, "matchclear") == 0)
+  else if (strcmp (tmpStr, "clear") == 0)
     *filterItem = FMODE_MATCH_CLR;
-  else
+  else if(strcmp(tmpStr, "ignore") == 0)
     *filterItem = FMODE_IGNORE;
+  else printf("Invalid test: %s\n", tmpStr);
 }
 
 /* routine to parse the filter specification file which  determines how to
