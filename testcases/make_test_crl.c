@@ -202,11 +202,6 @@ int main(int argc, char **argv)
     &iextp->extnValue.cRLDistributionPoints.self, 0);
   copy_casn(&extp->extnValue.issuingDistributionPoint.distributionPoint.self,
     &dp->distributionPoint.self);
-  extp = (struct CRLExtension *)inject_casn(&crltbsp->extensions.self, numext++);
-  write_objid(&extp->extnID, id_authKeyId);
-  iextp = findExtension(&ctbsp->extensions, id_subjectKeyIdentifier);
-  copy_casn(&extp->extnValue.authKeyId.keyIdentifier, 
-    &iextp->extnValue.subjectKeyIdentifier);
            // now get the revocation info
   int numcerts;
   char certbuf[40];

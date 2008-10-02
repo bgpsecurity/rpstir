@@ -473,13 +473,14 @@ static int write_family(struct IPAddressFamilyA *famp, int filein)
   return num;
   }
 
-static int writeHashedPublicKey(struct casn *valuep, struct casn *keyp)
+static int writeHashedPublicKey(struct casn *valuep, struct casn *keyp, char x)
   {
   uchar *bitval;
   int siz = readvsize_casn(keyp, &bitval);
   uchar hashbuf[24];
   siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
   free(bitval);
+  if (x) hashbuf[0]++;
   write_casn(valuep, hashbuf, siz);
   return siz;
   }
@@ -509,12 +510,13 @@ int main(int argc, char **argv)
   struct CertificateToBeSigned *ctftbsp = &cert.toBeSigned;
   Certificate(&issuer, (ushort)0);
   char *c, *subjkeyfile, *subjfile, *issuerfile = (char *)0,
-    *issuerkeyfile = (char *)0;
+    *issuerkeyfile = (char *)0, skistat = (char)0;
   if (argc > 4) 
     {
     if (argv[4][0] == 'b') bad = 1;
     else if (argv[4][0] == 'e') explicitIPAS = 1; // copy addresses
     else if (argv[4][0] == 'n') explicitIPAS = -1; // no IP or AS extensions
+    else if (argv[4][0] == 'x') skistat = 'x';
     else fatal(13, argv[4]);
     }
   for (c = &argv[1][1]; *c && *c >= '0' && *c <= '9'; c++);
@@ -577,7 +579,7 @@ int main(int argc, char **argv)
   struct Extension *extp, *iextp;
        // make subjectKeyIdentifier first
   extp = makeExtension(extsp, id_subjectKeyIdentifier);
-  writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
+  writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp, skistat);
   if (issuerkeyfile)
     {
     // key usage
