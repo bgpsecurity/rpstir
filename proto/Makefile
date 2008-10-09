@@ -22,15 +22,24 @@
 
 all:	libapki.a rcli query chaser garbage makeROA
 
-CFLAGS=-I$(MYSQLINCLUDES) -I$(SSLINCLUDES) \
-	-I../roa-lib -I../cg/asn -I../cg/casn \
+ifneq ($(MYSQLINCLUDES),)
+  CFLAGS += -I$(MYSQLINCLUDES)
+endif
+
+ifneq ($(SSLINCLUDES),)
+  CFLAGS += -I$(SSLINCLUDES)
+endif
+
+CFLAGS += -I../roa-lib -I../cg/asn -I../cg/casn \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
 LOCAL_LIBS=./libapki.a ../roa-lib/libroa.a \
 	../cg/asn/libasn.a ../cg/casn/libcasn.a
 
-LIBS=$(LIBSSL) $(LIBCRYPTO) $(LIBCL) \
+#LIBS=$(LIBSSL) $(LIBCRYPTO) $(LIBCL) \
+#     $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
+LIBS=$(LIBSSL) $(LIBCL) $(LIBCRYPTO) \
      $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
 
