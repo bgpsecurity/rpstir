@@ -445,8 +445,8 @@ int roaAS_ID(struct ROA *r)
   if (NULL == r)
     return 0;
 
-  if (0 > read_casn_num(&(r->content.signedData.encapContentInfo.eContent.roa.asID), &iAS_ID))
-    return 0;
+  if (0 >= read_casn_num(&(r->content.signedData.encapContentInfo.eContent.roa.asID), &iAS_ID))
+    return -1;
 
   return iAS_ID;
 }
