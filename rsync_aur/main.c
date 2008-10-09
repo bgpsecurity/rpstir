@@ -96,8 +96,8 @@ static int mustManifest(char *namep)
   return(ret);
   }
 
-static int check_manifest(struct ROA *roap, char *mfname, char *topDir, 
-  struct name_list *rootp)
+static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
+  char *midDir,  struct name_list *rootp)
   {
   int sig_err = 0;
   struct name_list *curr_namep;
@@ -106,7 +106,15 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
   struct badfile **badfilespp = (struct badfile **)0;
   struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.
     manifest;
-  if ((sig_err = manifestValidate2(roap, topDir, &badfilespp)) < 0 && !badfilespp)
+  char *refDir;
+  if (midDir && *midDir)
+    {
+    refDir = (char *)calloc(1, strlen(topDir) + strlen(midDir) + 4);
+    strcat(strcat(strcpy(refDir, topDir), "/"), midDir);
+    }
+  else refDir = topDir;
+
+  if ((sig_err = manifestValidate2(roap, refDir, &badfilespp)) < 0 && !badfilespp)
     {
     char *cc;
     for (cc = mfname; *cc > ' '; cc++);
@@ -119,6 +127,7 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
     else if (sig_err == ERR_SCM_BADDATES) cc = "invalid dates";
     else cc = "undefined";
     fprintf(stderr, "%s error in manifest %s\n", cc, mfname);
+    if (midDir && *midDir) free(refDir);
     return -1;
     }
      // make list of all certificates, CRLs and ROAs  in manifest
@@ -153,6 +162,7 @@ static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
       }
     }
   if (badfilespp) free_badfiles(badfilespp);
+  if (midDir && *midDir) free(refDir);
   time_t now = time ((time_t *)0); 
   ulong mhi, mlo;
   read_casn_time(&manp->thisUpdate, &mlo);
@@ -207,13 +217,21 @@ static int wasManifested(struct name_list *rootp, char *fnamep, int ee)
   for (b = fnamep; *b > ' '; b++);
   char x = *b;
   *b = 0;
+  char *t;
+  for (t = fnamep; *t; t++);  // chop off all but last part of filename
+  for (t--; t > fnamep && *t != '/'; t--);
+  if (*t == '/') fnamep = ++t;
   int ansr = 0;
   if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
     (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
   else for (rootp = rootp->nextp; rootp->namep; rootp = rootp->nextp)
     {
     if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
-      (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
+      (!ee && !strcmp(rootp->namep, fnamep))) 
+      {
+      ansr = 1;
+      break;
+      }
     }
   *b = x;
   if (ansr == 1) return (rootp->state < 0)? rootp->state: 1;
@@ -305,6 +323,11 @@ int main(int argc, char *argv[])
       }
     free(buf);
     }
+  else if (argc > 2 && *argv[1] != '-')
+    {
+    fprintf(stderr, "Too many script files: %s\n", argv[2]);
+    exit(1);
+    } 
   else
     {
     while ((ch = getopt(argc, argv, "t:u:f:nweid:sh")) != -1)
@@ -438,66 +461,99 @@ int main(int argc, char *argv[])
   struct name_list rootlist;
   struct ROA roa;
   ROA(&roa, (ushort)0);
-  memset(&rootlist, 0, sizeof(rootlist));
   char holding[PATH_MAX+40];
-  for (i = MANPASS; i < NUMPASSES; i++)
+  char curr_dir[PATH_MAX];
+
+  char *bc = fgets(holding, PATH_MAX, fp);
+  if (holding[0] != 'c' || holding[1] != 'd')
     {
-    while (fgets(holding, PATH_MAX, fp) != NULL)
-      {
-      if (!(sendStr = getMessageFromString(holding, (unsigned int)strlen(holding),
-        &retlen, flags))) continue;
-      int have_manifest = isManifest(sendStr);
-      char *fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 8);
-        strcat(strcat(strcpy(fname, topDir), "/"), &sendStr[2]);
-      char *b;
-      for (b = fname; *b >= ' '; b++); // trim off CRLF
-      *b = 0;
-      struct stat tstat;
-      int exists = (stat(fname, &tstat) == 0);
-         // if doing manifests and it's a manifest, check contents & note file names
-      if (i == MANPASS  && have_manifest != 0 && exists)
-        {
-        if (get_casn_file(&roa.self, fname, 0) < 0)
-          {
-          fprintf(stderr, "invalid manifest %s\n", fname);
-          continue;
-          }
-        int ansr;
-        if ((ansr = check_manifest(&roa, &sendStr[2], topDir, &rootlist)) >= 0)
-          {
-          sendStr = appendState(sendStr, ansr, &retlen);  // send manifest
-          outputMsg(&wport, sendStr, retlen);
-          }
-        }
-        // else if doing trusts and it's a trust, send message
-      else if (i == TRUSTPASS && isTrust(sendStr) && exists)
-        {
-        outputMsg(&wport, sendStr, retlen);
-        }
-        // else if doing other stuff and it's not a trust nor a manifest
-      else if (i == GENPASS && !isTrust(sendStr) && !have_manifest)
-        {
-        if (exists == 0 && (*sendStr == 'A' || *sendStr == 'U' || *sendStr == 'R')) 
-          fprintf(stderr, "cannot find %s", &sendStr[2]);
-        else
-          {  
-          if (mustManifest(&sendStr[2]))  // if it should be on a manifest
-            {
-            sendStr = appendState(sendStr, 
-              wasManifested(&rootlist, &sendStr[2], 0),
-              &retlen);
-            }
-          outputMsg(&wport, sendStr, retlen);
-          }
-        }
-      retlen = 0;
-      if (fname) free(fname);
-      free(sendStr);
-      memset(holding, '\0', sizeof(holding));
-      }
-    fseek (fp, 0, SEEK_SET);
+    fprintf(stderr, "Log doesn't start with 'cd' statement... bailing\n");
+    exit(1);
     }
-  free_name_list(&rootlist);
+  if (holding[10] != '.' || holding[11] != '/') 
+    {
+    strcpy(curr_dir, &holding[10]);
+    char *x;
+    for (x = curr_dir; *x > ' '; x++);
+    if (x[-1] == '/') x[-1] = 0;
+    else *x = 0;
+    }
+  int startdir, nextdir;
+  for (nextdir = ftell(fp); bc != NULL; ) // start just after cd stmt
+    {
+    startdir = nextdir;
+    fseek(fp, startdir, SEEK_SET);
+    memset(&rootlist, 0, sizeof(rootlist));
+    for (i = MANPASS; i < NUMPASSES; i++)
+      {
+      while ((bc = fgets(holding, PATH_MAX, fp)) != NULL)
+        {
+        if (!(sendStr = getMessageFromString(holding, (unsigned int)
+          strlen(holding),
+          &retlen, flags))) continue;
+        if (!strncmp(sendStr, "I cd", 4)) break;  // break out of while
+        int have_manifest = isManifest(sendStr);
+        char *fname = (char *)calloc(1, strlen(topDir) + strlen(sendStr) + 8);
+          strcat(strcat(strcpy(fname, topDir), "/"), &sendStr[2]);
+        char *b;
+        for (b = fname; *b >= ' '; b++); // trim off CRLF
+        *b = 0;
+        struct stat tstat;
+        int exists = (stat(fname, &tstat) == 0);
+           // if doing manifests and it's a manifest, check contents & 
+           // note file names
+        if (i == MANPASS  && have_manifest != 0 && exists)
+          {
+          if (get_casn_file(&roa.self, fname, 0) < 0)
+            {
+            fprintf(stderr, "invalid manifest %s\n", fname);
+            continue;
+            }
+          int ansr;
+          if ((ansr = check_manifest(&roa, &sendStr[2], topDir, curr_dir, &rootlist)) 
+            >= 0)
+            {
+            sendStr = appendState(sendStr, ansr, &retlen);  // send manifest
+            outputMsg(&wport, sendStr, retlen);
+            }
+          }
+          // else if doing trusts and it's a trust, send message
+        else if (i == TRUSTPASS && isTrust(sendStr) && exists)
+          {
+          outputMsg(&wport, sendStr, retlen);
+          }
+          // else if doing other stuff and it's not a trust nor a manifest
+        else if (i == GENPASS && !isTrust(sendStr) && !have_manifest)
+          {
+          if (exists == 0 && (*sendStr == 'A' || *sendStr == 'U' || 
+            *sendStr == 'R')) 
+            fprintf(stderr, "cannot find %s", &sendStr[2]);
+          else
+            {  
+            if (mustManifest(&sendStr[2]))  // if it should be on a manifest
+              {
+              sendStr = appendState(sendStr, 
+                wasManifested(&rootlist, &sendStr[2], 0),
+                &retlen);
+              }
+            outputMsg(&wport, sendStr, retlen);
+            }
+          }
+        retlen = 0;
+        if (fname) free(fname);
+        free(sendStr);
+        memset(holding, '\0', sizeof(holding));
+        }
+      nextdir = ftell(fp);
+      fseek (fp, startdir,  SEEK_SET);
+      }
+    free_name_list(&rootlist);
+    strcpy(curr_dir, &sendStr[12]);
+    char *x;
+    for (x = curr_dir; *x > ' '; x++);
+    if (x[-1] == '/') x[-1] = 0;
+    else *x = 0;
+    }
   free (topDir);
 
   char *c;
