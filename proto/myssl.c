@@ -2656,6 +2656,7 @@ static int rescert_ip_asnum_chk(X509 *x)
 {
   int ret = 0;
 
+#ifndef OPENSSL_NO_RFC3779
   if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
     if (x->rfc3779_addr) {
       ret = rescert_ip_resources_chk(x);
@@ -2671,8 +2672,8 @@ static int rescert_ip_asnum_chk(X509 *x)
     /* doesn't have IP resources OR AS Resources */
     return(ERR_SCM_NOIPAS);
   }
-
-  return(0);
+#endif
+  return(ret);
 }
 
 /* from x509v3/v3_purp.c */
