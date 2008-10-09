@@ -24,7 +24,19 @@ TARGETS=make_test_cert make_test_crl make_test_roa make_test_manifest  gen_test_
 
 all:	$(TARGETS)
 
-CFLAGS=	-g -I$(SSLINCLUDES) -I../cg/asn -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib -I$(CLINCLUDES)
+ifneq ($(MYSQLINCLUDES),)
+  CFLAGS += -I$(MYSQLINCLUDES)
+endif
+
+ifneq ($(SSLINCLUDES),)
+  CFLAGS += -I$(SSLINCLUDES)
+endif
+
+ifneq ($(CLINCLUDES),)
+  CFLAGS += -I$(CLINCLUDES)
+endif
+
+CFLAGS += -g -I../cg/asn -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib
 ASN_DIR= ../cg/asn
 CASN_DIR= ../casn
 LIBASN=../cg/asn/libasn.a
