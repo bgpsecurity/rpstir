@@ -21,8 +21,15 @@
 # ***** END LICENSE BLOCK *****
 
 # --- macros
-CFLAGS=-I$(CLINCLUDES) -I$(SSLINCLUDES) \
-	-I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto \
+ifneq ($(CLINCLUDES),)
+  CFLAGS += -I$(CLINCLUDES)
+endif
+
+ifneq ($(SSLINCLUDES),)
+  CFLAGS += -I$(SSLINCLUDES)
+endif
+
+CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 # --- targets
