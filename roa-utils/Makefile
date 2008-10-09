@@ -20,8 +20,15 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-CFLAGS=-I$(SSLINCLUDES) -I$(CLINCLUDES) \
-	-I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -I../roa-lib\
+ifneq ($(MYSQLINCLUDES),)
+  CFLAGS += -I$(MYSQLINCLUDES)
+endif
+
+ifneq ($(SSLINCLUDES),)
+  CFLAGS += -I$(SSLINCLUDES)
+endif
+
+CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -I../roa-lib\
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 TEST_OBJECTS= roa_test.o
