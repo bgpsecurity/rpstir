@@ -28,6 +28,9 @@
 #include <limits.h>
 #include <time.h>
 #include <cryptlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "usage.h"
 #include "socket_stuff.h"
