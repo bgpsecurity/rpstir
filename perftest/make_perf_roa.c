@@ -39,10 +39,10 @@ extern char *signCMS(struct ROA *, char *, int);
 void usage(char *prog)
 {
   printf("usage:\n");
-  printf("%s -r roafile -c certfile -k keyfile -a asnum [-R readable] [-b]\n", prog);
+  printf("%s -r roafile -c ee_certfile -k keyfile -a asnum [-R readable] [-b]\n", prog);
   printf("    [-4 [v4maxlen | cv4choicenum]] [-6 [v6maxlen | cv6choicenum]]\n");
   printf("  -r roafile: file to write roa to\n");
-  printf("  -c certfile: file holding EE cert for roa\n");
+  printf("  -c ee_certfile: file holding EE cert for roa\n");
   printf("  -k keyfile: file holding p15-format public key for signing roa\n");
   printf("  -a asnum: autonomous system number\n");
   printf("  -R readable-version: where to write readable asn.1 for roa\n");
@@ -128,8 +128,8 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
 int main (int argc, char **argv)
 {
     long asnum = -1, bad = 0;
-    char *certfile = NULL, *roafile = NULL, *keyfile = NULL,
-      *readablefile = NULL, *pcertfile = NULL;
+    char *ee_certfile = NULL, *roafile = NULL, *keyfile = NULL,
+      *readablefile = NULL, *ca_certfile = NULL;
     struct ROA roa;
     struct Certificate cert, pcert;
     char *msg;
@@ -140,28 +140,14 @@ int main (int argc, char **argv)
 
     int	roaVersion = 0;
     int	fValidate = 0;
+    int	fDebug = 0;
+    int	f = 0;
 
-    while ((c = getopt(argc, argv, "nbr:R:a:c:k:4:6:v:")) != -1) {
+    while ((c = getopt(argc, argv, "dnbr:R:a:c:k:4:6:v:p:")) != -1) {
 	switch (c) {
 	case 'r':
 	    // roa file
 	    roafile = strdup( optarg);
-
-            readablefile = strdup( optarg);
-            strcpy( strrchr( readablefile, (int)'.'), ".raw");
-
-            certfile = strdup( optarg);
-            *certfile = 'C';
-            strcpy( strrchr( certfile, (int)'.'), "R.cer");
-	    
-            pcertfile = strdup( certfile);
-	    *(strstr( pcertfile, "R.cer")) = '\0';
-	    if ( strrchr( pcertfile, '.') )
-	      *(strrchr( pcertfile, '.')) = '\0';
-	    strcpy( &pcertfile[ strlen( pcertfile) ], ".cer");
-
-            keyfile = strdup( pcertfile);
-            strcpy( strrchr( keyfile, (int)'.'), ".p15");
 
 	    break;
                   
@@ -195,9 +181,34 @@ int main (int argc, char **argv)
             free(vx);
             break;
 
+	case 'c':
+	  /*
+	   * CA Certificate file
+	   */
+	  ee_certfile = strdup( optarg);
+	  break;
+
+	case 'p':
+	  /*
+	   * Parent (issuing) certificate
+	   */
+	  ca_certfile = strdup( optarg);
+	  break;
+
+	case 'k':
+	  /*
+	   * Signing key file
+	   */
+	  keyfile = strdup( optarg);
+	  break;
+
 	case 'n':
 	  // We don't need to validate this because we're doing something purposely invalid
 	  fValidate = 1;
+	  break;
+
+	case 'd':
+	  fDebug = 1;
 	  break;
 
 	default:
@@ -206,12 +217,62 @@ int main (int argc, char **argv)
 	}
     }
 
-    if ( (asnum == -1) && (certfile != (char* )NULL) ) {
-      char*	tmpCertfile =
-	(char* )strcpy( (char *)calloc(1, strlen( certfile)), &certfile[ 1 ]);
-      char*	tmpAsnum = (char *)calloc(1, strlen( certfile));
+    if ( roafile == (char* )NULL ) {
+      usage(argv[0]);
+      exit( 1);
+    }
 
-      char*	tc = tmpCertfile;
+    if ( readablefile == (char* )NULL ) {
+      readablefile = strdup( roafile);
+      strcpy( strrchr( readablefile, (int)'.'), ".raw");
+    }
+
+    if ( ee_certfile == (char* )NULL ) {
+      ee_certfile = strdup( roafile);
+      *ee_certfile = 'C';
+      strcpy( strrchr( ee_certfile, (int)'.'), "R.cer");
+
+    }	    
+
+    if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
+	fprintf( stderr, "Cannot open CA-CERT file %s\n", ee_certfile);
+	exit( 1);
+    }
+    close( f);
+
+    if ( ca_certfile == (char* )NULL ) {
+      ca_certfile = (char* )calloc( 1, strlen( ee_certfile) + 3);
+
+      sprintf( ca_certfile, "../%s", ee_certfile);
+      *(strstr( ca_certfile, "R.cer")) = '\0';
+      if ( strrchr( ca_certfile, '.') )
+	*(strrchr( ca_certfile, '.')) = '\0';
+      strcpy( &ca_certfile[ strlen( ca_certfile) ], ".cer");
+    }
+
+    if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
+	fprintf( stderr, "Cannot open Parent-CERT file %s\n", ca_certfile);
+	exit( 1);
+    }
+    close( f);
+
+    if ( keyfile == (char* )NULL ) {
+      keyfile = strdup( ca_certfile);
+      strcpy( strrchr( keyfile, (int)'.'), ".p15");
+    }
+
+    if ( (f = open( keyfile, O_RDONLY)) < 0 ) {
+	fprintf( stderr, "Cannot open Signing KEY file %s\n", keyfile);
+	exit( 1);
+    }
+    close( f);
+
+    if ( (asnum == -1) && (ee_certfile != (char* )NULL) ) {
+      char*	tmca_certfile =
+	(char* )strcpy( (char *)calloc(1, strlen( ee_certfile)), &ee_certfile[ 1 ]);
+      char*	tmpAsnum = (char *)calloc(1, strlen( ee_certfile));
+
+      char*	tc = tmca_certfile;
       char*	ta = tmpAsnum;
 
       /*
@@ -220,24 +281,26 @@ int main (int argc, char **argv)
        * Cxx.yyyy.zzz.cer
        * AS = xxyyyyzzz
        */
-      tc = strtok( tmpCertfile, ".");
+      tc = strtok( tmca_certfile, ".");
       while ( tc != (char* )NULL ) {
 	strcpy( &tmpAsnum[ strlen( tmpAsnum) ], tc);
 	tc = strtok( NULL, ".");
       }
 
       asnum = strtol( tmpAsnum, &ta, 10);
+    }
 
+    if ( fDebug ) {
       printf( "ASNUM:\t%d\n", (int )asnum);
       printf( "ROA:\t%s\n", roafile);
-      printf( "CERT:\t%s\n", certfile);
-      printf( "PCERT:\t%s\n", pcertfile);
+      printf( "CERT:\t%s\n", ee_certfile);
+      printf( "PCERT:\t%s\n", ca_certfile);
       printf( "KEY:\t%s\n", keyfile);
     }
 
     // validate arguments
-    if (roafile == NULL || certfile == NULL || asnum < 0 || keyfile == NULL) {
-	printf("%s -r %s -c %s -k %s ", argv[0], roafile, certfile, keyfile);
+    if (roafile == NULL || ee_certfile == NULL || asnum < 0 || keyfile == NULL) {
+	printf("%s -r %s -c %s -k %s ", argv[0], roafile, ee_certfile, keyfile);
 	if (readablefile)
 	    printf("-R %s ", readablefile);
 	if (bad)
@@ -277,13 +340,13 @@ int main (int argc, char **argv)
 
     // init and read in the ee cert
     Certificate(&cert, (ushort)0);
-    if (get_casn_file(&cert.self, certfile, 0) < 0)
-	fatal(2, certfile);
+    if (get_casn_file(&cert.self, ee_certfile, 0) < 0)
+	fatal(2, ee_certfile);
 
     // init and read in the parent cert
     Certificate(&pcert, (ushort)0);
-    if (get_casn_file(&pcert.self, pcertfile, 0) < 0)
-	fatal(2, pcertfile);
+    if (get_casn_file(&pcert.self, ca_certfile, 0) < 0)
+	fatal(2, ca_certfile);
 
     // mark the roa: the signed data is hashed with sha256
     struct SignedData *sgdp = &roa.content.signedData;

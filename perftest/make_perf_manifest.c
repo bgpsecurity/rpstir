@@ -105,39 +105,118 @@ int main(int argc, char **argv)
   ulong now = time((time_t *)0);
 
   int	version = 0;
+  int	fDebug = 0;
+  int	f = 0;
   
-  if (argc < 2)
-    {
-    printf("Usage: manifest name, data offset\n");
-    return 0;
-    } 
+  char	a;
+
+  char* c = (char* )NULL;
+
   char*	manifestfile = (char* )NULL;
-  char*	certfile = (char* )NULL;
-  char*	pcertfile = (char* )NULL;
+  char*	ee_certfile = (char* )NULL;
+  char*	ca_certfile = (char* )NULL;
   char* keyfile = (char* )NULL;
+  char*	timeDiffSpec = (char* )NULL;
 
-  char *c;
 
-  if ( argc > 2 ) {
-    version = strtol( argv[ 2 ], NULL, 0);
+  while ((a = getopt( argc, argv, "dm:R:c:k:p:v:t:")) != -1) {
+    switch (a) {
+    case 'm':
+      /*
+       * Manifest name
+       */
+      manifestfile = strdup( optarg);
+      break;
+
+    case 'c':
+      /*
+       * EE-Cert name
+       */
+      ee_certfile = strdup( optarg);
+      break;
+
+    case 'k':
+      /*
+       * Signing KEY name
+       */
+      keyfile = strdup( optarg);
+      break;
+
+    case 'p':
+      /*
+       * CA-Cert name
+       */
+      ca_certfile = strdup( optarg);
+      break;
+
+    case 't':
+      timeDiffSpec = strdup( optarg);
+      break;
+
+    case 'v':
+      /*
+       * Manifest version
+       */
+      version = strtol( optarg, NULL, 0);
+      break;
+
+    case 'd':
+      fDebug = 1;
+      break;
+    }
   }
 
-  manifestfile = strcpy( calloc( 1, strlen( argv[ 1 ]) + 6), argv[ 1 ]);
-  strcat( manifestfile, ".man");
-  *manifestfile = 'M';
+  if ( manifestfile == (char* )NULL ) {
+    exit( 1);
+  }
 
-  certfile = strdup( manifestfile);
-  *certfile = 'C';
-  strcpy( strrchr( certfile, (int)'.'), "M.cer");
+  if ( ee_certfile == (char* )NULL ) {
+    ee_certfile = strdup( manifestfile);
+    *ee_certfile = 'C';
+    strcpy( strrchr( ee_certfile, (int)'.'), "M.cer");
 
-  pcertfile = strdup( certfile);
-  *strstr( pcertfile, "M.cer") = '\0';
-  if ( strrchr( pcertfile, '.') )
-    *(strrchr( pcertfile, '.')) = '\0';
-  strcpy( &pcertfile[ strlen( pcertfile) ], ".cer");
+  }	    
 
-  keyfile = strdup( pcertfile);
-  strcpy( strrchr( keyfile, (int)'.'), ".p15");
+  if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
+    fprintf( stderr, "Cannot open CA-CERT file %s\n", ee_certfile);
+    exit( 1);
+  }
+  close( f);
+
+  if ( ca_certfile == (char* )NULL ) {
+    ca_certfile = (char* )calloc( 1, strlen( ee_certfile) + 3);
+
+    sprintf( ca_certfile, "../%s", ee_certfile);
+    *(strstr( ca_certfile, "M.cer")) = '\0';
+    if ( strrchr( ca_certfile, '.') )
+      *(strrchr( ca_certfile, '.')) = '\0';
+    strcpy( &ca_certfile[ strlen( ca_certfile) ], ".cer");
+  }
+
+  if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
+    fprintf( stderr, "Cannot open Parent-CERT file %s\n", ca_certfile);
+    exit( 1);
+  }
+  close( f);
+
+  if ( keyfile == (char* )NULL ) {
+    keyfile = strdup( ca_certfile);
+    strcpy( strrchr( keyfile, (int)'.'), ".p15");
+  }
+
+  if ( (f = open( keyfile, O_RDONLY)) < 0 ) {
+    fprintf( stderr, "Cannot open Signing KEY file %s\n", keyfile);
+    exit( 1);
+  }
+  close( f);
+
+  if ( fDebug ) {
+    printf( "VERSION:\t%d\n", (int )version);
+    printf( "ROA:\t%s\n", manifestfile);
+    printf( "CERT:\t%s\n", ee_certfile);
+    printf( "PCERT:\t%s\n", ca_certfile);
+    printf( "KEY:\t%s\n", keyfile);
+  }
 
   ROA(&roa, 0);
   write_objid(&roa.contentType, id_signedData);
@@ -153,16 +232,17 @@ int main(int argc, char **argv)
   write_casn_num( &(manp->version.self), version);
   write_casn_num(&manp->manifestNumber, (long)index);
   int timediff = 0;
-  if (argc == 3)
+
+  if ( timeDiffSpec != (char* )NULL )
     {
-    sscanf(argv[2], "%d", &timediff);
-    char u = argv[2][strlen(argv[2]) - 1];
+    sscanf( timeDiffSpec, "%d", &timediff);
+    char u = timeDiffSpec[strlen(timeDiffSpec) - 1];
     if (u == 'h') timediff *= 60;
     else if (u == 'D') timediff *= (3600 * 24);
     else if (u == 'W') timediff *= (3600 * 24 * 7);
     else if (u == 'M') timediff *= (3600 * 24 * 30);
     else if (u == 'M') timediff *= (3600 * 24 * 365);
-    else fatal(2, argv[2]);
+    else fatal(2, timeDiffSpec);
     now += timediff;
     } 
   write_casn_time(&manp->thisUpdate, now);
@@ -189,7 +269,7 @@ int main(int argc, char **argv)
     fatal(4, "signedData");
   struct Certificate *certp = (struct Certificate *)member_casn(
     &roa.content.signedData.  certificates.self, 0);
-  if (get_casn_file(&certp->self, certfile, 0) < 0) fatal(2, certfile);
+  if (get_casn_file(&certp->self, ee_certfile, 0) < 0) fatal(2, ee_certfile);
   if ((c = signCMS(&roa, keyfile, 0))) fatal(7, c);
   if (put_casn_file(&roa.self, manifestfile, 0) < 0) fatal(6, manifestfile);
   for (c = manifestfile; *c && *c != '.'; c++);

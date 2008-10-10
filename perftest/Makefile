@@ -20,6 +20,36 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+# cryptlib
+LIBCL=-lcl
+
+# where to find the OpenSSL crypto lib
+LIBCRYPTO=-L/usr/local/ssl/lib -lcrypto
+
+# dlopen
+LIBDL=-ldl 
+
+# where to find the odbc library
+LIBODBC=-L/usr/local/lib -lmyodbc3
+
+# in libc on newer Linux distros
+LIBPTHREAD= 
+
+# nothing extra
+LIBXTRA=
+
+# where to find OpenSSL include files
+SSLINCLUDES=/usr/local/ssl/include
+
+# where to find ODBC include files
+ODBCINCLUDES=/usr/local/include
+
+# where to find MySQL include files
+MYSQLINCLUDES=/usr/local/include
+
+# where to find cryptlib includes
+CLINCLUDES=/usr/local/include
+
 TARGETS=make_perf_cert make_perf_roa make_perf_manifest
 
 all:	$(TARGETS)

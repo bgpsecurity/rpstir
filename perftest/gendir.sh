@@ -12,12 +12,13 @@ while [ `expr ${l1} \<= ${l1Max}` = 1 ]; do
     l3=1
     while [ `expr ${l3} \<= ${l3Max}` = 1 ]; do
 	dirName="`printf %d\/%05d\/%03d ${l1} ${l2} ${l3}`"
-#      mkdir -p ${dirName} > /dev/null 2>&1
-      echo "mkdir -p ${dirName}"
+      mkdir -p ${dirName} > /dev/null 2>&1
+#      echo -n "."
 
       l3=$(( $l3 + 1 ))
     done
 
+#    echo
     l2=$(( $l2 + 1 ))
   done
 
