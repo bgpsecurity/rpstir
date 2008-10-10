@@ -1,42 +1,3 @@
-/* $Id$ */
-/* Feb 15 2006 830U  */
-/* Feb 15 2006 GARDINER changed return from inject_casn & insert_casn */
-/* Apr 25 2005 828U  */
-/* Apr 25 2005 GARDINER added inject, eject and member */
-/* Jan 13 2005 822U  */
-/* Jan 13 2005 GARDINER added reals */
-/* Jan  4 2005 819U  */
-/* Jan  4 2005 GARDINER changed level to ushort in constructors */
-/* Jan  4 2005 818U  */
-/* Jan  4 2005 GARDINER added simple_constructor and tagged_constructor */
-/* Sep  1 2004 803U  */
-/* Sep  1 2004 GARDINER added encodesize_casn, readvsize_casn and readvsize_objid */
-/* Aug  3 2004 795U  */
-/* Aug  3 2004 GARDINER changed err_struct to casn_err_struct */
-/* Jul 14 2004 780U  */
-/* Jul 14 2004 GARDINER removed mask from clear_casn */
-/* Jul 13 2004 779U  */
-/* Jul 13 2004 GARDINER revised next_of */
-/* Jul  8 2004 777U  */
-/* Jul  8 2004 GARDINER added next_of */
-/* Jun 21 2004 776U  */
-/* Jun 21 2004 GARDINER added diff_objid */
-/* Jun 14 2004 774U  */
-/* Jun 14 2004 ROOT added CONSTRAINTS */
-/* Jun  3 2004 771U  */
-/* Jun  3 2004 GARDINER fixed warnings */
-/* May 25 2004 765U  */
-/* May 25 2004 GARDINER moved flags to asn_flags.h */
-/* May 21 2004 764U  */
-/* May 21 2004 GARDINER more fixes for asn_obj tests */
-/* Apr 21 2004 761U  */
-/* Apr 21 2004 GARDINER fixed for half of casn_obj testing */
-/* Apr 15 2004 759U  */
-/* Apr 15 2004 GARDINER made decode_casn take no length */
-/* Mar 25 2004 744U  */
-/* Mar 25 2004 GARDINER fixed warnings */
-/* Mar 25 2004 743U  */
-/* Mar 25 2004 GARDINER started */
 /* sfcsid[] = "@(#)casn.h 830P" */
 /*****************************************************************************
 File:     casn.h
@@ -179,9 +140,6 @@ struct casn *dup_casn(struct casn *casnp),
             *insert_casn(struct casn *casnp, int num),
             *member_casn(struct casn *casnp, int num),
             *next_of(struct casn *casnp);
-
-// of general use, although not particularly casn-specific
-int time_to_ulong(ulong *valp, char *fromp, int lth);
 
 #ifndef DEBUG
 #define dbcalloc calloc

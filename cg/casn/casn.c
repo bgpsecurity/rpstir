@@ -7,7 +7,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
-<<<<<<< .mine
 COPYRIGHT 2004 BBN Systems and Technologies
 10 Moulton St.
 Cambridge, Ma. 02138
@@ -31,11 +30,12 @@ Cambridge, Ma. 02138
  * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 867P";
+char casn_sfcsid[] = "@(#)casn.c 871P";
 #include "casn.h"
 
 #define ASN_READ 1          // modes for encode & read
 
+extern int _time_to_ulong(ulong *valp, char *fromp, int lth);
 extern int _dump_tag(int tag, char *to, int offset, ushort flags,
     int mode);
 
@@ -159,7 +159,6 @@ void clear_casn(struct casn *casnp)
     _clear_casn(casnp, ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG));
     }
 
-// XXX ill-formed input buffer will cause this to read off the end of 'from'
 int decode_casn(struct casn *casnp, uchar *from)
     {
     uchar *c = from;
@@ -327,12 +326,12 @@ struct casn *inject_casn(struct casn *casnp, int num)
     if (_clear_error(casnp) < 0) return (struct casn *)0;
     if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_NOT_OF_ERR;
     else if ((err = _fill_upward(casnp, 0)) != 0) err = -err;
-    else if (casnp->max > 0 && num >= casnp->max) err = ASN_OF_BOUNDS_ERR;
-    else
+    else  // will it be too many?
 	{
         for (lcasnp = fcasnp, icount = 0; lcasnp->ptr;
             lcasnp = lcasnp->ptr, icount++);
-        if (icount < num) err = ASN_OF_BOUNDS_ERR;
+        if (icount < num || (casnp->max && icount >= casnp->max))
+          err = ASN_OF_BOUNDS_ERR;
 	}
     if (err)
         {
@@ -1703,7 +1702,7 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	{
 	if (casnp->type == ASN_GENTIME) tmp = 2;
 	else tmp = 0;
-	if (time_to_ulong(&val, (char *)&c[tmp], lth - tmp) < 0)
+	if (_time_to_ulong(&val, (char *)&c[tmp], lth - tmp) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&

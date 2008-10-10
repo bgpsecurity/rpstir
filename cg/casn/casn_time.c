@@ -59,6 +59,8 @@ extern void *_free_it(void *);
 static ushort _mos[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304,
     334, 365, 366};    /* last is for leap year */
 
+int _time_to_ulong(ulong *valp, char *fromp, int lth);
+
 static ulong get_num (const char *c, int lth)
     {
 /*
@@ -105,7 +107,7 @@ Returns: IF error, -1, ELSE length of time field
         fromp += 2;
 	ansr -= 2;
 	}
-    if (time_to_ulong(valp, fromp, ansr) < 0)
+    if (_time_to_ulong(valp, fromp, ansr) < 0)
         return _casn_obj_err(casnp, ASN_TIME_ERR);
     return casnp->lth;
     }
@@ -121,7 +123,7 @@ static ulong put_num (char *to, ulong val, int lth)
     return val;
     }
 
-int time_to_ulong(ulong *valp, char *fromp, int lth)
+int _time_to_ulong(ulong *valp, char *fromp, int lth)
     {
     int yr, mo, da;
     ulong val;
