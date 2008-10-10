@@ -327,6 +327,7 @@ struct casn *inject_casn(struct casn *casnp, int num)
     if (_clear_error(casnp) < 0) return (struct casn *)0;
     if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_NOT_OF_ERR;
     else if ((err = _fill_upward(casnp, 0)) != 0) err = -err;
+    else if (casnp->max > 0 && num >= casnp->max) err = ASN_OF_BOUNDS_ERR;
     else
 	{
         for (lcasnp = fcasnp, icount = 0; lcasnp->ptr;
