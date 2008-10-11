@@ -187,9 +187,13 @@ int main(int argc, char **argv)
     ca_certfile = (char* )calloc( 1, strlen( ee_certfile) + 3);
 
     sprintf( ca_certfile, "../%s", ee_certfile);
-    *(strstr( ca_certfile, "M.cer")) = '\0';
+    if ( strstr( ca_certfile, "M.cer") ) {
+      *(strstr( ca_certfile, "M.cer")) = '\0';
+    }
+    /*
     if ( strrchr( ca_certfile, '.') )
       *(strrchr( ca_certfile, '.')) = '\0';
+      */
     strcpy( &ca_certfile[ strlen( ca_certfile) ], ".cer");
   }
 

@@ -243,10 +243,14 @@ int main (int argc, char **argv)
     if ( ca_certfile == (char* )NULL ) {
       ca_certfile = (char* )calloc( 1, strlen( ee_certfile) + 3);
 
-      sprintf( ca_certfile, "../%s", ee_certfile);
-      *(strstr( ca_certfile, "R.cer")) = '\0';
+      sprintf( ca_certfile, "../%s", roafile);
+      if ( strstr( ca_certfile, "R.cer") ) {
+	*(strstr( ca_certfile, "R.cer")) = '\0';
+      }
+      /*
       if ( strrchr( ca_certfile, '.') )
 	*(strrchr( ca_certfile, '.')) = '\0';
+	*/
       strcpy( &ca_certfile[ strlen( ca_certfile) ], ".cer");
     }
 
@@ -268,11 +272,11 @@ int main (int argc, char **argv)
     close( f);
 
     if ( (asnum == -1) && (ee_certfile != (char* )NULL) ) {
-      char*	tmca_certfile =
+      char*	tmp_certfile =
 	(char* )strcpy( (char *)calloc(1, strlen( ee_certfile)), &ee_certfile[ 1 ]);
       char*	tmpAsnum = (char *)calloc(1, strlen( ee_certfile));
 
-      char*	tc = tmca_certfile;
+      char*	tc = tmp_certfile;
       char*	ta = tmpAsnum;
 
       /*
@@ -281,7 +285,7 @@ int main (int argc, char **argv)
        * Cxx.yyyy.zzz.cer
        * AS = xxyyyyzzz
        */
-      tc = strtok( tmca_certfile, ".");
+      tc = strtok( tmp_certfile, ".");
       while ( tc != (char* )NULL ) {
 	strcpy( &tmpAsnum[ strlen( tmpAsnum) ], tc);
 	tc = strtok( NULL, ".");
