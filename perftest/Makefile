@@ -20,6 +20,36 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+# cryptlib
+LIBCL=-lcl
+
+# where to find the OpenSSL crypto lib
+LIBCRYPTO=-L/usr/local/ssl/lib -lcrypto
+
+# dlopen
+LIBDL=-ldl 
+
+# where to find the odbc library
+LIBODBC=-L/usr/local/lib -lmyodbc3
+
+# in libc on newer Linux distros
+LIBPTHREAD= 
+
+# nothing extra
+LIBXTRA=
+
+# where to find OpenSSL include files
+SSLINCLUDES=/usr/local/ssl/include
+
+# where to find ODBC include files
+ODBCINCLUDES=/usr/local/include
+
+# where to find MySQL include files
+MYSQLINCLUDES=/usr/local/include
+
+# where to find cryptlib includes
+CLINCLUDES=/usr/local/include
+
 TARGETS=make_perf_cert make_perf_roa make_perf_manifest
 
 all:	$(TARGETS)
@@ -33,16 +63,16 @@ LIBROA=../roa-lib/libroa.a
 LOCAL_LIBS=  $(LIBASN) $(LIBROA) $(LIBCASN)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
-make_perf_cert:	make_perf_cert.o Makefile $(LOCAL_LIBS)
-	$(CC) $(CFLAGS) -o $@ make_perf_cert.o $(LOCAL_LIBS) $(LIBS)
+make_perf_cert:	make_perf_cert.o adjustTime.o
+	$(CC) $(CFLAGS) -o $@ make_perf_cert.o adjustTime.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_crl:	make_perf_crl.o Makefile $(LOCAL_LIBS)
+make_perf_crl:	make_perf_crl.o
 	$(CC) $(CFLAGS) -o $@ make_perf_crl.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_roa:	make_perf_roa.o Makefile $(LOCAL_LIBS)
+make_perf_roa:	make_perf_roa.o
 	$(CC) $(CFLAGS) -o $@ make_perf_roa.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_manifest:	make_perf_manifest.o Makefile $(LOCAL_LIBS)
+make_perf_manifest:	make_perf_manifest.o
 	$(CC) $(CFLAGS) -o $@ make_perf_manifest.o $(LOCAL_LIBS) $(LIBS)
 
 clean:

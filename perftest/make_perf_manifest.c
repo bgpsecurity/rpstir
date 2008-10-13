@@ -113,6 +113,7 @@ int main(int argc, char **argv)
   char* c = (char* )NULL;
 
   char*	manifestfile = (char* )NULL;
+  char*	readablefile = (char* )NULL;
   char*	ee_certfile = (char* )NULL;
   char*	ca_certfile = (char* )NULL;
   char* keyfile = (char* )NULL;
@@ -121,11 +122,16 @@ int main(int argc, char **argv)
 
   while ((a = getopt( argc, argv, "dm:R:c:k:p:v:t:")) != -1) {
     switch (a) {
+    case'R':
+      readablefile = strdup( optarg);
+      break;
+
     case 'm':
       /*
        * Manifest name
        */
-      manifestfile = strdup( optarg);
+      manifestfile = strcpy( calloc( 1, strlen( optarg) + 5), optarg);
+      strcat( manifestfile, ".mft");
       break;
 
     case 'c':
@@ -171,34 +177,53 @@ int main(int argc, char **argv)
   }
 
   if ( ee_certfile == (char* )NULL ) {
-    ee_certfile = strdup( manifestfile);
-    *ee_certfile = 'C';
-    strcpy( strrchr( ee_certfile, (int)'.'), "M.cer");
+    ee_certfile =
+      (char* )strcpy( calloc( 1, strlen( manifestfile) + 5), manifestfile);
 
-  }	    
+      
+    *ee_certfile = 'C';
+
+    strcpy( strstr( ee_certfile, ".mft"), "M.cer");
+    if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
+      memmove( &ee_certfile[ 3 ], ee_certfile, strlen( ee_certfile) + 1);
+      strncpy( ee_certfile, "../", 3);
+      if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
+	fprintf( stderr, "Cannot open EE-CERT file %s\n", ee_certfile);
+	exit( 1);
+      }
+    }
+    close( f);
+  }
 
   if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
-    fprintf( stderr, "Cannot open CA-CERT file %s\n", ee_certfile);
+    fprintf( stderr, "Cannot open EE-CERT file %s\n", ee_certfile);
     exit( 1);
   }
   close( f);
 
   if ( ca_certfile == (char* )NULL ) {
-    ca_certfile = (char* )calloc( 1, strlen( ee_certfile) + 3);
+    ca_certfile =
+      (char* )strcpy( calloc( 1, strlen( manifestfile) + 4), manifestfile);
 
-    sprintf( ca_certfile, "../%s", ee_certfile);
-    if ( strstr( ca_certfile, "M.cer") ) {
-      *(strstr( ca_certfile, "M.cer")) = '\0';
-    }
-    /*
-    if ( strrchr( ca_certfile, '.') )
-      *(strrchr( ca_certfile, '.')) = '\0';
-      */
+
+    *ca_certfile = 'C';
+
+    *strstr( ca_certfile, ".mft") = '\0';
     strcpy( &ca_certfile[ strlen( ca_certfile) ], ".cer");
+
+    if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
+      memmove( &ca_certfile[ 3 ], ca_certfile, strlen( ca_certfile) + 1);
+      strncpy( ca_certfile, "../", 3);
+      if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
+	fprintf( stderr, "Cannot open CA-CERT file %s\n", ca_certfile);
+	exit( 1);
+      }
+    }
+    close( f);
   }
 
   if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
-    fprintf( stderr, "Cannot open Parent-CERT file %s\n", ca_certfile);
+    fprintf( stderr, "Cannot open CA-CERT file %s\n", ca_certfile);
     exit( 1);
   }
   close( f);
@@ -217,8 +242,8 @@ int main(int argc, char **argv)
   if ( fDebug ) {
     printf( "VERSION:\t%d\n", (int )version);
     printf( "ROA:\t%s\n", manifestfile);
-    printf( "CERT:\t%s\n", ee_certfile);
-    printf( "PCERT:\t%s\n", ca_certfile);
+    printf( "EE CERT:\t%s\n", ee_certfile);
+    printf( "CA CERT:\t%s\n", ca_certfile);
     printf( "KEY:\t%s\n", keyfile);
   }
 
@@ -276,16 +301,19 @@ int main(int argc, char **argv)
   if (get_casn_file(&certp->self, ee_certfile, 0) < 0) fatal(2, ee_certfile);
   if ((c = signCMS(&roa, keyfile, 0))) fatal(7, c);
   if (put_casn_file(&roa.self, manifestfile, 0) < 0) fatal(6, manifestfile);
-  for (c = manifestfile; *c && *c != '.'; c++);
-  strcpy(c, ".raw");
-  char *rawp;
-  int lth = dump_size(&roa.self);
-  rawp = (char *)calloc(1, lth + 4);
-  dump_casn(&roa.self, rawp);
-  int fd = open(manifestfile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
-  write(fd, rawp, lth);
-  close(fd);
-  free(rawp);
-  fatal(0, manifestfile);  
+
+  if ( readablefile != (char* )NULL ) {
+    char *rawp;
+    int lth = dump_size(&roa.self);
+    rawp = (char *)calloc(1, lth + 4);
+    dump_casn(&roa.self, rawp);
+    int fd = open(readablefile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
+    write(fd, rawp, lth);
+    close(fd);
+    free(rawp);
+    if ( fDebug ) {
+      fatal(0, manifestfile);  
+    }
+  }
   return 0;
   } 

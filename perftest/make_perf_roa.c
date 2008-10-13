@@ -145,11 +145,15 @@ int main (int argc, char **argv)
 
     while ((c = getopt(argc, argv, "dnbr:R:a:c:k:4:6:v:p:")) != -1) {
 	switch (c) {
-	case 'r':
-	    // roa file
-	    roafile = strdup( optarg);
+	case'R':
+	  readablefile = strdup( optarg);
+	  break;
 
-	    break;
+	case 'r':
+	  // roa file
+	  roafile = strcpy( calloc( 1, strlen( optarg) + 5), optarg);
+	  strcat( roafile, ".roa");
+	  break;
                   
 	case 'a':
 	    asnum = atoi(optarg);
@@ -183,7 +187,7 @@ int main (int argc, char **argv)
 
 	case 'c':
 	  /*
-	   * CA Certificate file
+	   * EE Certificate file
 	   */
 	  ee_certfile = strdup( optarg);
 	  break;
@@ -222,41 +226,67 @@ int main (int argc, char **argv)
       exit( 1);
     }
 
+#if 0
     if ( readablefile == (char* )NULL ) {
       readablefile = strdup( roafile);
       strcpy( strrchr( readablefile, (int)'.'), ".raw");
     }
+#endif
+
+    if ( !strstr( roafile, ".roa") ) {
+      fprintf( stderr, "Invalid ROA file name, must end with \".roa\": %s\n", roafile);
+      exit( 1);
+    }
 
     if ( ee_certfile == (char* )NULL ) {
-      ee_certfile = strdup( roafile);
-      *ee_certfile = 'C';
-      strcpy( strrchr( ee_certfile, (int)'.'), "R.cer");
+      ee_certfile =
+	(char* )strcpy( calloc( 1, strlen( roafile) + 5), roafile);
 
-    }	    
+      
+      *ee_certfile = 'C';
+
+      strcpy( strstr( ee_certfile, ".roa"), "R.cer");
+      if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
+	memmove( &ee_certfile[ 3 ], ee_certfile, strlen( ee_certfile) + 1);
+	strncpy( ee_certfile, "../", 3);
+	if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
+	  fprintf( stderr, "Cannot open EE-CERT file %s\n", ee_certfile);
+	  exit( 1);
+	}
+      }
+      close( f);
+    }
 
     if ( (f = open( ee_certfile, O_RDONLY)) < 0 ) {
-	fprintf( stderr, "Cannot open CA-CERT file %s\n", ee_certfile);
+	fprintf( stderr, "Cannot open EE-CERT file %s\n", ee_certfile);
 	exit( 1);
     }
     close( f);
 
     if ( ca_certfile == (char* )NULL ) {
-      ca_certfile = (char* )calloc( 1, strlen( ee_certfile) + 3);
+      ca_certfile =
+	(char* )strcpy( calloc( 1, strlen( roafile) + 4), roafile);
 
-      sprintf( ca_certfile, "../%s", roafile);
-      if ( strstr( ca_certfile, "R.cer") ) {
-	*(strstr( ca_certfile, "R.cer")) = '\0';
-      }
-      /*
-      if ( strrchr( ca_certfile, '.') )
-	*(strrchr( ca_certfile, '.')) = '\0';
-	*/
+
+      *ca_certfile = 'C';
+
+      *strstr( ca_certfile, ".roa") = '\0';
       strcpy( &ca_certfile[ strlen( ca_certfile) ], ".cer");
+
+      if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
+	memmove( &ca_certfile[ 3 ], ca_certfile, strlen( ca_certfile) + 1);
+	strncpy( ca_certfile, "../", 3);
+	if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
+	  fprintf( stderr, "Cannot open CA-CERT file %s\n", ca_certfile);
+	  exit( 1);
+	}
+      }
+      close( f);
     }
 
     if ( (f = open( ca_certfile, O_RDONLY)) < 0 ) {
-	fprintf( stderr, "Cannot open Parent-CERT file %s\n", ca_certfile);
-	exit( 1);
+      fprintf( stderr, "Cannot open CA-CERT file %s\n", ca_certfile);
+      exit( 1);
     }
     close( f);
 
@@ -315,8 +345,7 @@ int main (int argc, char **argv)
 	usage(argv[0]);
     }
 
-    if (v4choice >= 0  || v6choice >= 0)
-      {
+    if (v4choice >= 0  || v6choice >= 0) {
       char midfix[8];
       *midfix = '.';
       midfix[1] = '4';
@@ -330,13 +359,16 @@ int main (int argc, char **argv)
       strcat(strcat(fname, midfix), b);
       free(roafile);
       roafile = fname;
-      fname = (char *)calloc(1, strlen(roafile) + 2);
-      strcpy(fname, roafile);
-      free(readablefile);
-      readablefile = fname;
-      for (b = readablefile; *b ; b++);
-      strcpy(&b[-2], "aw");
+      if ( readablefile != (char* )NULL ) {
+	free( readablefile);
+	fname = (char *)calloc(1, strlen(roafile) + 2);
+	strcpy(fname, roafile);
+	free(readablefile);
+	readablefile = fname;
+	for (b = readablefile; *b ; b++);
+	strcpy(&b[-2], "aw");
       }
+    }
 
     // init roa
     ROA(&roa, (ushort)0);
@@ -422,6 +454,8 @@ int main (int argc, char **argv)
 	free(rawp);
     }
 
-    fprintf(stderr, "Finished %s OK\n", roafile);
+    if ( fDebug ) {
+      fprintf(stderr, "Finished %s OK\n", roafile);
+    }
     return 0;
 }

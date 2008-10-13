@@ -471,9 +471,8 @@ Procedure:
     fill_cert(subjname, &cert, &issuer, snum, (char)0, dots);
     setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
     write_cert_and_raw(subjfile, &cert);
-    }
                                    // step 3
-  if (dots)
+  //  if (dots)
     {
     struct CertificateRevocationList crl;
     CertificateRevocationList(&crl, (ushort)0);
@@ -493,10 +492,13 @@ Procedure:
     copy_casn(&crl.algorithm.self, &cert.algorithm.self);
     setSignature(&crl.toBeSigned.self, &crl.signature, issuerkeyfile, 0);
     char *crlfile = (char *)calloc(1, strlen(subjfile) + 6);
-    strcpy(crlfile, subjname);
-    crlfile[(dots == 1)? 3: 10] = 0;
-    crlfile[0] = 'L';
-    strcat(crlfile, "crl");
+
+    strcpy( crlfile, subjname);
+    if ( strrchr( crlfile, '.') )
+      *strrchr( crlfile, '.') = '\0';
+    strcpy( &crlfile[ strlen( crlfile) ], ".crl");
+    *crlfile = 'L';
+
     put_casn_file(&crl.self, crlfile, 0);
     long siz = dump_size(&crl.self);
     char *rawp = (char *)calloc(1, siz + 4);
@@ -508,20 +510,17 @@ Procedure:
     close(fd);
     free(crlfile);
     free(rawp);
-    char *fmt = "MR", *fp, e[2];
-    e[1] = 0;
+    char *fmt = "MR", *fp;
     for (fp = fmt; *fp; fp++)
       {
-      e[0] = *fp;
-      char *f = &subjfile[(dots == 1)? 2: 9];
-      strcpy(subjfile, subjname);
-      strcat(strcpy(f, e), ".cer");
+      sprintf( subjfile, "%s%c.cer", subjname, *fp);
       fill_cert(subjname, &cert, &issuer, snum, *fp, dots);
       setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
       write_cert_and_raw(subjfile, &cert);
       }
     }
+    //  fatal(0, subjname);
+    }
   free(subjfile);
-  fatal(0, subjname);
   return 0;
   }
