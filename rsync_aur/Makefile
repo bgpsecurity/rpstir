@@ -25,7 +25,7 @@
 # pick gcc if you'd rather , and/or do -g instead of -O if debugging
 # debugging
 # DFLAGS = -DTEST -DDEBUG
-#CC = gcc
+CC = gcc
 DFLAGS = 
 CFLAGS=-I../proto -I$(CLINCLUDES) -I$(SSLINCLUDES) \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
@@ -34,7 +34,7 @@ IFLAGS =-I$(SSLINCLUDES) -I../cg/casn -I../cg/asn -I../roa-lib -I../proto
 XLIBS = ../roa-lib/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
-#CC += $(CFLAGS)
+CC += $(CFLAGS)
 LD = $(CC)      # linker; defaults to stripped executables
 o = o           # object extension
 ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o
