@@ -1368,8 +1368,10 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
       if ( bcert != NULL )
 	BIO_free(bcert);
       freecrf(cf);
-      if ( freex )
+      if ( freex ) {
 	X509_CRL_free(x);
+	x = NULL;
+      }
       *stap = snerr;
       return(NULL);
     }
@@ -1422,8 +1424,10 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   if ( *stap != 0 )
     {
       freecrf(cf);
-      if ( freex )
+      if ( freex ) {
 	X509_CRL_free(x);
+	x = NULL;
+      }
       cf = NULL;
     }
   *xp = x;
