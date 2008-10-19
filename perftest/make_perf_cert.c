@@ -343,15 +343,15 @@ static void fill_cert(char *subjname, struct Certificate *certp,
       int lev2, lev3, lev4, asnum;
       if (dots == 0) sscanf(subjname, "C%d", &asnum);
       else if (dots == 1) 
-        {
-        sscanf(subjname, "C%d.%d", &lev2, &lev3);
-        asnum = (lev2 * 100000) + lev3;
-        }
+	{
+	sscanf(subjname, "C%d.%d", &lev2, &lev3);
+	asnum = (lev2 * 100000) + lev3;
+	}
       else 
         {
-        sscanf(subjname, "C%d.%d.%d", &lev2, &lev3, &lev4);
-        asnum = (lev2 * 100000000) + (lev3 * 1000) + lev4;
-        }
+	sscanf(subjname, "C%d.%d.%d", &lev2, &lev3, &lev4);
+	asnum = (lev2 * 100000000) + (lev3 * 1000) + lev4;
+	}
       copy_casn(&extp->critical, &iextp->critical);
       struct ASNumberOrRangeA *asnorp = (struct ASNumberOrRangeA *)
         inject_casn(&extp->extnValue.autonomousSysNum.asnum.
@@ -471,24 +471,45 @@ Procedure:
     fill_cert(subjname, &cert, &issuer, snum, (char)0, dots);
     setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
     write_cert_and_raw(subjfile, &cert);
+
+    if (dots)
+      {
+      char*	ee_subjname =
+	strcpy( calloc( 1, strlen( subjname) + 2), subjname);
+
+      ee_subjname[ strlen( subjname) ] = ' ';
+
+      char *fmt = "MR", *fp;
+      for (fp = fmt; *fp; fp++)
+	{
+	ee_subjname[ strlen( ee_subjname) - 1 ] = *fp;
+
+	sprintf( subjfile, "%s.cer", ee_subjname);
+	fill_cert(ee_subjname, &cert, &issuer, snum, *fp, dots);
+	setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
+	write_cert_and_raw(subjfile, &cert);
+	}
+
+      free( ee_subjname);
+      }
+    }
                                    // step 3
-  //  if (dots)
+  if (dots)
     {
     struct CertificateRevocationList crl;
     CertificateRevocationList(&crl, (ushort)0);
-    struct CertificateRevocationListToBeSigned *crltbsp =
-      &crl.toBeSigned;
+    struct CertificateRevocationListToBeSigned *crltbsp = &crl.toBeSigned;
     write_casn_num(&crltbsp->version.self, 1);
     copy_casn(&crltbsp->signature.self, &cert.toBeSigned.signature.self);
     copy_casn(&crltbsp->issuer.self, &cert.toBeSigned.subject.self);
     long now = time((time_t *)0);
     write_casn_time(&crltbsp->lastUpdate.utcTime, now);
     write_casn_time(&crltbsp->nextUpdate.utcTime, now + (30 * 24 * 3600));
-    struct CRLEntry *crlEntryp = (struct CRLEntry *)inject_casn(
-      &crltbsp->revokedCertificates.self, 0);
+    struct CRLEntry *crlEntryp =
+      (struct CRLEntry *)inject_casn( &crltbsp->revokedCertificates.self, 0);
     write_casn_num(&crlEntryp->userCertificate, 1);
-    write_casn_time(&crlEntryp->revocationDate.utcTime, now - 
-      (10 * 24 * 3600));
+    write_casn_time(&crlEntryp->revocationDate.utcTime,
+		    now - (10 * 24 * 3600));
     copy_casn(&crl.algorithm.self, &cert.algorithm.self);
     setSignature(&crl.toBeSigned.self, &crl.signature, issuerkeyfile, 0);
     char *crlfile = (char *)calloc(1, strlen(subjfile) + 6);
@@ -510,17 +531,8 @@ Procedure:
     close(fd);
     free(crlfile);
     free(rawp);
-    char *fmt = "MR", *fp;
-    for (fp = fmt; *fp; fp++)
-      {
-      sprintf( subjfile, "%s%c.cer", subjname, *fp);
-      fill_cert(subjname, &cert, &issuer, snum, *fp, dots);
-      setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
-      write_cert_and_raw(subjfile, &cert);
-      }
     }
-    //  fatal(0, subjname);
-    }
+  //  fatal(0, subjname);
   free(subjfile);
   return 0;
   }
