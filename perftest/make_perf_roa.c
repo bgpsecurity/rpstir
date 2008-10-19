@@ -302,12 +302,10 @@ int main (int argc, char **argv)
     close( f);
 
     if ( (asnum == -1) && (ee_certfile != (char* )NULL) ) {
-      char*	tmp_certfile =
-	(char* )strcpy( (char *)calloc(1, strlen( ee_certfile)), &ee_certfile[ 1 ]);
-      char*	tmpAsnum = (char *)calloc(1, strlen( ee_certfile));
-
-      char*	tc = tmp_certfile;
-      char*	ta = tmpAsnum;
+      char*	tmp_roafile =
+	(char* )strcpy( (char *)calloc(1, strlen( roafile)), &roafile[ 1 ]);
+      char*	tmp_asnum = (char *)calloc(1, strlen( roafile) + 1);
+      char*	tr = (char* )NULL;
 
       /*
        * Pick up the AS number from the file name
@@ -315,13 +313,20 @@ int main (int argc, char **argv)
        * Cxx.yyyy.zzz.cer
        * AS = xxyyyyzzz
        */
-      tc = strtok( tmp_certfile, ".");
-      while ( tc != (char* )NULL ) {
-	strcpy( &tmpAsnum[ strlen( tmpAsnum) ], tc);
-	tc = strtok( NULL, ".");
+      if ( strstr( tmp_roafile, ".roa") ) {
+	*strstr( tmp_roafile, ".roa") = '\0';
       }
 
-      asnum = strtol( tmpAsnum, &ta, 10);
+      tr = strtok( tmp_roafile, ".");
+      while ( tr != (char* )NULL ) {
+	strcpy( &tmp_asnum[ strlen( tmp_asnum) ], tr);
+	tr = strtok( NULL, ".");
+      }
+
+      asnum = strtol( tmp_asnum, NULL, 10);
+
+      free( tmp_roafile);
+      free( tmp_asnum);
     }
 
     if ( fDebug ) {
