@@ -1,0 +1,56 @@
+        Performance Test Data Structure and Programs
+
+    The performance test data structure consists of four levels of files.  At 
+the top level there is only one certificate file, C.cer.  At the next level, 
+but in the same directory, are several files of certificates issued by C.cer,
+named C1.cer, C2.cer, etc.  For each such certificate there is also a directory
+which contains all certificates (both CA and end-entity), CRLs, ROAs and
+manifests issued (and therefore signed) by that CA.  For example, there is a 
+directory named C1 containing a ROA named R1.roa, a manifest named M1.man,
+the end-entity certificates C1R.cer and C1M.cer of the signers of R1.roa and
+M1.man respectively, plus a CRL issued by C1 called L1.crl.  This directory 
+also contains CA certificates named C1.00001.cer, C1.00002.cer, etc.  For each 
+of these CA certificates there is a directory named C1.00001, C1,00002, etc.  
+In these directories is yet another collection of end-entity certificates, CRLs,
+ROAs and manifests plus CA certificates for the level below.  The structure is,
+therefore, like this:
+
+C.cer -- C1.cer
+         C1 ---- C1R.cer
+                 C1M.cer
+                 L1.crl
+                 R1.roa
+                 M1.man
+                 C1.00001,cer
+                 C1.00001 ----C1.00001R.cer
+                              C1.00001M.cer
+                              L1.00001.crl
+                              R1.00001.roa
+                              M1.00001.man
+                              C1.00001.001.cer
+                              C1.00001.001 --- C1.00001.001R.cer
+                                               C1.00001.001M.cer
+                                               L1.00001.001.crl
+                                               R1.00001.001.roa
+                                               M1.00001.001.man
+                              C1.00001.002 -- C1.00001.002R.cer etc.
+
+                 C1.00002.cer
+                 C1.00002 --- C1.00002R.cer  etc.
+         C2 --- C2R.cer etc.
+
+where C.cer and all its signees are actually in the same directory.
+
+    These files are generated automatically with scripts and programs using a 
+single signing key pair called C1.p15 located in the top directory.  The 
+contents of the C1, C2,... directories are created by running a script which
+goes down one directory and runs make_perf_cert to create the two end-
+entity certificates, the CRL and the 10,000 certificates for the next level.
+The script also runs make_perf_roa and make_perf_manifest to create the 
+necessary ROA and manifest.  Then the script goes down one level to do the
+same for each of the 10,000 CAs just created, making their material.
+
+                        
+ 
+  
+
