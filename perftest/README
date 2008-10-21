@@ -50,7 +50,17 @@ The script also runs make_perf_roa and make_perf_manifest to create the
 necessary ROA and manifest.  Then the script goes down one level to do the
 same for each of the 10,000 CAs just created, making their material.  At each
 of these CAs, the script goes down again another level to make the CRLs and
-end entity certificates for each of those CAs.
+end entity certificates for each of those CAs.  Note that, at the lowest level,
+the name given must end in a dot, e.g. "C1.00001.001." to distinguish it from
+the name at the next level up.
+
+    Note also that the file roa-lib/roa_validate.c must be compiled with the
+ANYSKI flag set, in order to prevent comparison of the SKI in an end-entity
+certificate with the hash of its public key when the ROAs and manifests are
+loaded into the database.  This silution seemed cleaner than adding another 
+parameter to the hierarchy of functions that call for validation of ROAs and
+manifests.  BE SURE not to leave this flag set!  For this reason the modified
+makefile has not been put into Subversion.
 
                         
  
