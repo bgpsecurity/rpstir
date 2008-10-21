@@ -1,5 +1,5 @@
 #
-# Makefile for test cases
+# Makefile for performance test cases
 #
 # $Id: Makefile 535 2008-06-20 18:57:43Z gardiner $
 #
@@ -63,16 +63,16 @@ LIBROA=../roa-lib/libroa.a
 LOCAL_LIBS=  $(LIBASN) $(LIBROA) $(LIBCASN)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
-make_perf_cert:	make_perf_cert.o 
+make_perf_cert:	make_perf_cert.o Makefile 
 	$(CC) $(CFLAGS) -o $@ make_perf_cert.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_crl:	make_perf_crl.o
+make_perf_crl:	make_perf_crl.o Makefile
 	$(CC) $(CFLAGS) -o $@ make_perf_crl.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_roa:	make_perf_roa.o
+make_perf_roa:	make_perf_roa.o Makefile
 	$(CC) $(CFLAGS) -o $@ make_perf_roa.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_manifest:	make_perf_manifest.o
+make_perf_manifest:	make_perf_manifest.o Makefile
 	$(CC) $(CFLAGS) -o $@ make_perf_manifest.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
