@@ -63,16 +63,13 @@ LIBROA=../roa-lib/libroa.a
 LOCAL_LIBS=  $(LIBASN) $(LIBROA) $(LIBCASN)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
-make_perf_cert:	make_perf_cert.o Makefile 
+make_perf_cert:	make_perf_cert.o Makefile $(LOCAL_LIBS)
 	$(CC) $(CFLAGS) -o $@ make_perf_cert.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_crl:	make_perf_crl.o Makefile
-	$(CC) $(CFLAGS) -o $@ make_perf_crl.o $(LOCAL_LIBS) $(LIBS)
-
-make_perf_roa:	make_perf_roa.o Makefile
+make_perf_roa:	make_perf_roa.o Makefile $(LOCAL_LIBS)
 	$(CC) $(CFLAGS) -o $@ make_perf_roa.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_manifest:	make_perf_manifest.o Makefile
+make_perf_manifest:	make_perf_manifest.o Makefile $(LOCAL_LIBS)
 	$(CC) $(CFLAGS) -o $@ make_perf_manifest.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
