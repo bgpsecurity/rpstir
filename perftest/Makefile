@@ -63,8 +63,8 @@ LIBROA=../roa-lib/libroa.a
 LOCAL_LIBS=  $(LIBASN) $(LIBROA) $(LIBCASN)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
-make_perf_cert:	make_perf_cert.o adjustTime.o
-	$(CC) $(CFLAGS) -o $@ make_perf_cert.o adjustTime.o $(LOCAL_LIBS) $(LIBS)
+make_perf_cert:	make_perf_cert.o 
+	$(CC) $(CFLAGS) -o $@ make_perf_cert.o $(LOCAL_LIBS) $(LIBS)
 
 make_perf_crl:	make_perf_crl.o
 	$(CC) $(CFLAGS) -o $@ make_perf_crl.o $(LOCAL_LIBS) $(LIBS)

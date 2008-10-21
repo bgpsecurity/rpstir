@@ -201,7 +201,7 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature,
 //    put this */ back in to terminate commented out stuff
 /*  then uncomment this
   uchar signstring[24];
-  strcpy((uchar *)signstring, "This is a signature"); 
+  strcpy((uchar *)signstring, "This is a signature");
   write_casn_bits(newsignature, signstring, 20, 0);
   return 0;
 down to here */
@@ -211,17 +211,10 @@ static void fill_cert(char *subjname, struct Certificate *certp,
   struct Certificate *issuerp, int snum, char inherit, int dots)
   {
   struct CertificateToBeSigned *ctftbsp = &certp->toBeSigned;
-  clear_casn(&certp->self);
   write_casn_num(&ctftbsp->version.self, 2);
   if (inherit == 'M') snum += 0x100000;
   if (inherit == 'R') snum += 0x200000;
   write_casn_num(&ctftbsp->serialNumber, (long)snum);
-  copy_casn(&certp->algorithm.self, &issuerp->toBeSigned.signature.self);
-  copy_casn(&ctftbsp->signature.self, &issuerp->toBeSigned.signature.self);
-  copy_casn(&ctftbsp->issuer.self, &issuerp->toBeSigned.subject.self);
-      // use parent's public key
-  copy_casn(&ctftbsp->subjectPublicKeyInfo.self, 
-    &issuerp->toBeSigned.subjectPublicKeyInfo.self);
   set_name(&ctftbsp->subject.rDNSequence, subjname);
 
   long now = time((time_t *)0);
@@ -230,8 +223,8 @@ static void fill_cert(char *subjname, struct Certificate *certp,
   write_casn_time(&ctftbsp->validity.notAfter.utcTime, now +
     (365 * 24 * 3600));
 
-  struct Extensions *extsp = &ctftbsp->extensions, *iextsp;
-  iextsp = &issuerp->toBeSigned.extensions;
+  struct Extensions *extsp = &ctftbsp->extensions, 
+    *iextsp = &issuerp->toBeSigned.extensions;
   struct Extension *extp, *iextp;
        // make subjectKeyIdentifier first
   extp = makeExtension(extsp, id_subjectKeyIdentifier);
@@ -304,7 +297,7 @@ static void fill_cert(char *subjname, struct Certificate *certp,
       incr = 0x1;
       up = &startaddr[3];
       }
-    else 
+    else
       {
       numaddrs = (dots == 1)? 256: 1;
       startaddr[0] = 0x00;
@@ -316,18 +309,18 @@ static void fill_cert(char *subjname, struct Certificate *certp,
       incr = 1;
       up = &startaddr[4];
       }
-       
+
     for (addrnum = 0; addrnum < numaddrs; addrnum++)
       {
       ipaorp = (struct IPAddressOrRangeA *)inject_casn(&famp->ipAddressChoice.
         addressesOrRanges.self, addrnum);
       write_casn(&ipaorp->addressPrefix, startaddr, addrlth);
       *up += incr;    // increment address block
-      if (!*up) 
+      if (!*up)
         {
         up[-1]++;
         if (up > &startaddr[3] && !up[-1]) up[-2]++;
-        } 
+        }
       }
     }
     // if making EE cert to sign ROA or manifest, inherit
@@ -335,19 +328,19 @@ static void fill_cert(char *subjname, struct Certificate *certp,
     // if not a ROA EE, get AS num extension
   if (inherit != 'R')  // not for ROAs
     {
-    iextp = findExtension(&issuerp->toBeSigned.extensions, 
+    iextp = findExtension(&issuerp->toBeSigned.extensions,
       id_pe_autonomousSysNum);
     extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
     if (!inherit)  // get number from subject file name
       {
       int lev2, lev3, lev4, asnum;
       if (dots == 0) sscanf(subjname, "C%d", &asnum);
-      else if (dots == 1) 
+      else if (dots == 1)
 	{
 	sscanf(subjname, "C%d.%d", &lev2, &lev3);
 	asnum = (lev2 * 100000) + lev3;
 	}
-      else 
+      else
         {
 	sscanf(subjname, "C%d.%d.%d", &lev2, &lev3, &lev4);
 	asnum = (lev2 * 100000000) + (lev3 * 1000) + lev4;
@@ -364,7 +357,7 @@ static void fill_cert(char *subjname, struct Certificate *certp,
     else copy_casn(&extp->self, &iextp->self);
     }
     // subjectInfoAccess
-  iextp = findExtension(&issuerp->toBeSigned.extensions, 
+  iextp = findExtension(&issuerp->toBeSigned.extensions,
     id_pe_subjectInfoAccess);
   extp = makeExtension(extsp, id_pe_subjectInfoAccess);
   check_access_methods(iextp);
@@ -403,7 +396,7 @@ Notes:
 1. We should be in the directory of the issuing CA
 2. argv[1] specifies the name of the first subordinate CA to be created
 3. argv[2] specifies the number of CAs to be made.
-4. All the certs created plus the issuer's CRL and, for all but the top CA 
+4. All the certs created plus the issuer's CRL and, for all but the top CA
    ("C") two end-entity certs are created in this directory
 5. The cert of the issuing CA is one directory above, except when the issuer
    is C
@@ -411,17 +404,18 @@ Notes:
 Procedure:
 1. Get the issuer's name from argv[1]
    Get its cert
-2. FOR all the quantity specified, create and write certs
+   Prepare subject cert
+2  Make two end-entity certs and write them
 3. Create and write a CRL for this CA
-4  Make two end-entity certs and write them
+4. FOR all the quantity specified, create and write certs
 */
   if (argc < 3 || argc > 4) fatal(3, "");
   struct Certificate cert;
   struct Certificate issuer;
   Certificate(&cert, (ushort)0);
   Certificate(&issuer, (ushort)0);
-  char *c, *issuerkeyfile = "C1.p15", 
-      *subjfile, 
+  char *c, *issuerkeyfile = "C1.p15",
+      subjfile[40],
       *issuerfile = (char *)0,
       subjname[20];
   for (c = &argv[1][1]; *c && ((*c >= '0' && *c <= '9') || *c == '.'); c++);
@@ -432,94 +426,87 @@ Procedure:
   dots = sscanf(argv[1], "C%d.%d.%d", &rir, &nir, &isp) - 1;
   if ((dots == 0 && rir + numcerts - 1 > 9) ||
     (dots == 1 && nir + numcerts - 1 > 99999) ||
-    (dots == 2 && isp + numcerts - 1 > 999)) fatal(2, argv[1]); 
-  if (!dots) sprintf(subjname, "C%d", rir);
-  else if (dots == 1) sprintf(subjname, "C%d.%05d", rir, nir);
-  else if (dots == 2) sprintf(subjname, "C%d.%05d.%03d", rir, nir, isp);
-  else fatal(9, argv[1]);
+    (dots == 2 && isp + numcerts - 1 > 999)) fatal(2, argv[1]);
+  if (dots == 2 && !strrchr(argv[1], '.')[1]) dots = 3;
   issuerkeyfile = (char *)calloc(1, (3 * dots) + 8);
   int i;
   for (i = 0; i < dots; i++) strcat(issuerkeyfile, "../");
   strcat(issuerkeyfile, "C1.p15");
                                   /* step 1 */
-  if (!dots) issuerfile = "C.cer";
-  else 
+  memset(subjname, 0, sizeof(subjname));
+  memset(subjfile, 0, sizeof(subjfile));
+  if (!dots) 
+    {
+    issuerfile = "C.cer";
+    strcpy(subjname, argv[1]);
+    }
+  else
       {
-      int lth = (dots == 1)? 2: 8;
+      int lth = 2;  // if dots == 1
+      if (dots == 2) lth = 8;
+      else if (dots == 3) lth = 12;
+      strncpy(subjname, argv[1], lth);
       issuerfile = (char *)calloc(1, lth + 8);
       strcpy(issuerfile, "../");
       strncpy(&issuerfile[3], subjname, lth);
       strcat(issuerfile, ".cer");
       }
+        // get issuer file
   if (get_casn_file(&issuer.self, issuerfile, 0) < 0) fatal(1, issuerfile);
+      // set up subject
+  struct CertificateToBeSigned *ctftbsp = &cert.toBeSigned;
+  copy_casn(&cert.algorithm.self, &issuer.toBeSigned.signature.self);
+  copy_casn(&ctftbsp->signature.self, &issuer.toBeSigned.signature.self);
+  copy_casn(&ctftbsp->issuer.self, &issuer.toBeSigned.subject.self);
+      // use parent's public key
+  copy_casn(&ctftbsp->subjectPublicKeyInfo.self,
+    &issuer.toBeSigned.subjectPublicKeyInfo.self);
                                  // step 2
-  subjfile = (char *)calloc(1, strlen(subjname) + 8);
   long snum = 1;
-  if (dots == 0) snum = rir;
-  else if (dots == 1) snum = nir;
-  else snum = isp;
-  int numcert;
-  for (numcert = 0; numcert < numcerts; numcert++, snum++)
-    {
-    if (numcerts > 1)  // don't need to do this for first
-      {              // and besides it would clobber appended R or M 
-      if (dots == 0) subjname[1] = snum + '0';
-      else if (dots == 1) sprintf(&subjname[3], "%05ld", snum);
-      else if (dots == 2) sprintf(&subjname[9], "%03ld", snum);
-      }
-    strcat(strcpy(subjfile, subjname), ".cer");
-    fill_cert(subjname, &cert, &issuer, snum, (char)0, dots);
-    setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
-    write_cert_and_raw(subjfile, &cert);
-
-    if (dots)
-      {
-      char*	ee_subjname =
-	strcpy( calloc( 1, strlen( subjname) + 2), subjname);
-
-      ee_subjname[ strlen( subjname) ] = ' ';
-
-      char *fmt = "MR", *fp;
-      for (fp = fmt; *fp; fp++)
-	{
-	ee_subjname[ strlen( ee_subjname) - 1 ] = *fp;
-
-	sprintf( subjfile, "%s.cer", ee_subjname);
-	fill_cert(ee_subjname, &cert, &issuer, snum, *fp, dots);
-	setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
-	write_cert_and_raw(subjfile, &cert);
-	}
-
-      free( ee_subjname);
-      }
-    }
-                                   // step 3
   if (dots)
-    {
+    {       // first make EE certs
+    char *fmt = "MR", *fp, e[2];
+    e[1] = 0;
+    char eename[20];
+    strcpy(eename, subjname);
+    
+    for (fp = fmt; *fp; fp++)
+      {
+      e[0] = *fp;
+      char *f = &eename[12];
+      if (dots <= 2) f = &eename[(dots == 1)? 2: 8];
+      strcpy(f, e);
+      strcat(strcpy(subjfile, eename), ".cer");
+      fill_cert(eename, &cert, &issuer, snum, *fp, dots);
+      setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
+      write_cert_and_raw(subjfile, &cert);
+      }
+                                   // step 3
     struct CertificateRevocationList crl;
     CertificateRevocationList(&crl, (ushort)0);
-    struct CertificateRevocationListToBeSigned *crltbsp = &crl.toBeSigned;
+    struct CertificateRevocationListToBeSigned *crltbsp =
+      &crl.toBeSigned;
+    fill_cert(subjname, &cert, &issuer, 0, (char)0, dots);
     write_casn_num(&crltbsp->version.self, 1);
     copy_casn(&crltbsp->signature.self, &cert.toBeSigned.signature.self);
     copy_casn(&crltbsp->issuer.self, &cert.toBeSigned.subject.self);
     long now = time((time_t *)0);
     write_casn_time(&crltbsp->lastUpdate.utcTime, now);
     write_casn_time(&crltbsp->nextUpdate.utcTime, now + (30 * 24 * 3600));
-    struct CRLEntry *crlEntryp =
-      (struct CRLEntry *)inject_casn( &crltbsp->revokedCertificates.self, 0);
+    struct CRLEntry *crlEntryp = (struct CRLEntry *)inject_casn(
+      &crltbsp->revokedCertificates.self, 0);
     write_casn_num(&crlEntryp->userCertificate, 1);
-    write_casn_time(&crlEntryp->revocationDate.utcTime,
-		    now - (10 * 24 * 3600));
+    write_casn_time(&crlEntryp->revocationDate.utcTime, now -
+      (10 * 24 * 3600));
     copy_casn(&crl.algorithm.self, &cert.algorithm.self);
     setSignature(&crl.toBeSigned.self, &crl.signature, issuerkeyfile, 0);
     char *crlfile = (char *)calloc(1, strlen(subjfile) + 6);
-
-    strcpy( crlfile, subjname);
-    if ( strrchr( crlfile, '.') )
-      *strrchr( crlfile, '.') = '\0';
-    strcpy( &crlfile[ strlen( crlfile) ], ".crl");
-    *crlfile = 'L';
-
+    strcpy(crlfile, subjname);
+    crlfile[0] = 'L';
+    char *cp;
+    if (dots > 2) cp = &crlfile[12];
+    else cp = &crlfile[(dots == 1)? 2: 8];
+    strcpy(cp, ".crl");
     put_casn_file(&crl.self, crlfile, 0);
     long siz = dump_size(&crl.self);
     char *rawp = (char *)calloc(1, siz + 4);
@@ -532,7 +519,31 @@ Procedure:
     free(crlfile);
     free(rawp);
     }
-  //  fatal(0, subjname);
-  free(subjfile);
+  snum = 1;
+  if (dots == 0) snum = rir;
+  else if (dots == 1) snum = nir;
+  else snum = isp;
+  if (!dots) sprintf(subjname, "C%d", rir);
+  else if (dots == 1) sprintf(subjname, "C%d.%05d", rir, nir);
+  else if (dots >= 2) sprintf(subjname, "C%d.%05d.%03d", rir, nir, isp);
+  else fatal(9, argv[1]);
+  int numcert;
+  if (dots <= 2) 
+    {
+    for (numcert = 0; numcert < numcerts; numcert++, snum++)
+      {
+      if (numcerts > 1)  // don't need to do this for first
+        {              // and besides it would clobber appended R or M
+        if (dots == 0) subjname[1] = snum + '0';
+        else if (dots == 1) sprintf(&subjname[3], "%05ld", snum);
+        else if (dots == 2) sprintf(&subjname[9], "%03ld", snum);
+        }
+      strcat(strcpy(subjfile, subjname), ".cer");
+      fill_cert(subjname, &cert, &issuer, snum, (char)0, dots);
+      setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
+      write_cert_and_raw(subjfile, &cert);
+      }
+    }
+  fatal(0, subjname);
   return 0;
   }
