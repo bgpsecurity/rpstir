@@ -144,7 +144,12 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   bsize = size_casn(&sigInfo.self);
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&sigInfo.self, buf);
+
   ret = cryptCheckSignature(buf, bsize, pubkeyContext, hashContext);
+#ifdef ANYSKI
+  ret = 0;
+#endif // ANYSKI
+
   free(buf);
 
   // all done, clean up
@@ -207,7 +212,9 @@ static int check_cert(struct Certificate *certp)
       int ski_lth = readvsize_casn(&extp->extnValue.subjectKeyIdentifier, &ski);
       if (ski_lth != tmp || memcmp(khash, ski, ski_lth)) err = ERR_SCM_INVALSKI;
       free(ski);
+#ifndef ANYSKI
       if (err < 0) return err;
+#endif // ANYSKI
       err = 0;
       }
     }
