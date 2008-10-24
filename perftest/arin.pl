@@ -68,20 +68,43 @@ while ( defined( $line = <STDIN>) ) {
     # Pick up the mapping between Organization ID and "network handle"
     #
     if ( length $orgid ) {
-        if ( length $net_handle ) {
+	if ( length $net_handle ) {
 	    $net_to_orgid{ $net_handle } = $orgid;
 
 	    $orgid_to_net{ $orgid } = [] unless exists $orgid_to_net{ $orgid };
 	    push @{ $orgid_to_net{ $orgid } },$net_handle;
 	}
-	if ( length $as ) {
-	    $as_to_orgid{ $net_handle } = $orgid;
 
-	    $orgid_to_as{ $orgid } = [] unless exists $orgid_to_as{ $orgid };
-	    push @{ $orgid_to_as{ $orgid } },$as;
+	if ( length $as ) {
+	    #
+	    # We have to handle arbitrary lists of multiple ASes with
+	    # dash ranges
+	    #
+	    @aslist = split /\s+/, $as;
+	    for ( $i = 0; $i <= $#aslist; $i++ ) {
+		#
+		# This is a simple AS listing.  We just add it to the
+		# list
+		#
+		if ( $aslist[ $i ] != '-' ) {
+		    push @{ $orgid_to_as{ $orgid } }, $aslist[ $i ];
+
+		    $as_to_orgid{ $aslist[ $i ] } = $orgid;
+		    next;
+		}
+		#
+		# Here if we're looking at a dash character - that
+		# means we have to construct all the intervening items
+		# in our list
+		#
+		for $a ( ($aslist[ $i - 1 ] + 1) .. ($aslist[ $i + 1 ] - 1)) {
+		    push @{ $orgid_to_as{ $orgid } }, $a;
+
+		    $as_to_orgid{ $a } = $orgid;
+		}
+	    }
 	}
     }
-
     #
     # Start the process of mapping "nework handle" to AS number
     # This currently requires 2 arrays, which are combined later...
@@ -123,8 +146,10 @@ while ($found == 1) {
     for $orgid (keys %orgid_parent) {
 	next if (exists $orgid_level{$orgid});
 	next if (! exists $orgid_level{$net_to_orgid{$orgid_parent{$orgid}}});
+
 	$parent_level = $orgid_level{$net_to_orgid{$orgid_parent{$orgid}}};
 	$orgid_level{$orgid} = $parent_level + 1;
+
 	$found = 1;
     }
 }
@@ -155,7 +180,7 @@ for $orgid ( keys %parent_orgid ) {
 }
 
 $direct_orgids = @direct_orgids;
-print "Non-delegating organizations [$direct_orgids]: @direct_orgids\n";
+print "Top-level organizations [$direct_orgids]: @direct_orgids\n";
 
 #++
 #for $orgid ( keys %parent_orgid ) {
@@ -173,20 +198,29 @@ print "Non-delegating organizations [$direct_orgids]: @direct_orgids\n";
 #}
 #--
 
-$level=1;
+$level=0;
+
 $found=1;
 while ( $found == 1 ) {
     $found = 0;
-    for $orgid ( keys %orgid_level ) {
-	if ( $orgid_level{ $orgid } == $level ) {
-	    $asses = $#{$orgid_to_as{ $orgid }} + 1;
-	    $level_as{ $level } += $asses;
-	    $found = 1;
-	}
-    }
+
     $level += 1;
+    for $orgid ( keys %orgid_level ) {
+	next if ( $orgid_level{ $orgid } != $level );
+
+	$level_as{ $level } += $#{$orgid_to_as{ $orgid }} + 1;
+	$level_prefix{ $level } += $#{$orgid_to_net{ $orgid }} + 1;
+
+	$found = 1;
+    }
 }
 
+print "\nAS distribution by level:\n";
 for $level ( sort {$a <=> $b} keys %level_as ) {
-    print "Level $level: $level_as{ $level }\n";
+    print "\tLevel $level: $level_as{ $level }\n";
+}
+
+print "\nPREFIX distribution by level:\n";
+for $level ( sort {$a <=> $b} keys %level_prefix ) {
+    print "\tLevel $level: $level_prefix{ $level }\n";
 }
