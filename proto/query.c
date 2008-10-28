@@ -352,9 +352,11 @@ int displayFlags (scmsrcha *s, int idx1, char* returnStr)
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
+/*
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
+*/
   if (!isManifest)
     {
     addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
@@ -531,7 +533,6 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 
       for (i = 0; i < 2; ++i) {
 	char *end, *f = filter;
-	int first = 1;
 
 	// format of filters: some number of "sid<space>asnum<space>filter\n"
 	while ((end = strchr(f, '\n')) != 0) {
@@ -543,14 +544,6 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	  ++f;
 	  if ((i == 0 && strchr(f, ':') == 0) ||
 	      (i == 1 && strchr(f, ':') != 0)) {
-	    if (first)
-              {
-	      fprintf(output, "route-set: RS-RPKI-ROA-FOR-V%c:AS",
-		      ((i == 0) ? '4' : '6'));
-	      fprintf(output, "%u", asn);
-	      fprintf(output, "  # %s\n", filename ? filename : "???");
-	      }
-	    first = 0;
             int need = strlen(f) + 10 + strlen(filename) + 3;
             if (i == 0)
               {
@@ -569,16 +562,12 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
               v6size += need;
               v6members[v6size] = 0;
               }
-	    fputs((i == 0) ? "members" : "mp-members", output);
-	    fprintf(output, ": %s\n", f);
 	    ++numprinted;
 	  }
 	  *end = '\n';
 	  // skip past the newline and try for another one
 	  f = end + 1;
 	}
-	if (!first)
-	  fprintf(output, "\n");
       }
     }
     return(0);
