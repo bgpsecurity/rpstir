@@ -540,9 +540,18 @@ Procedure:
   char *c, issuerkeyfile[40],
       subjfile[40],
       *issuerfile = (char *)0,
-      subjname[20];
+      subjname[20], dirname[40];
   char roafile[40], manifestfile[40];
   int numsteps = argc - 1;
+  int dots;
+  for (dots = 0, c = argv[1]; *c; c++) if (*c == '.') dots++;
+  struct casn casn;
+  simple_constructor(&casn, (ushort)0, ASN_UTCTIME);
+  long now = time((time_t *)0);
+  write_casn_time(&casn, now);
+  uchar tbuf[20];
+  read_casn(&casn, tbuf);
+  if (dots < 3) fprintf(stderr, "Start %s\n", (char *)tbuf);
   int curr_step;
   for (curr_step = 0; curr_step < numsteps; curr_step += 3)
     {
@@ -558,8 +567,14 @@ Procedure:
       (dots == 1 && nir + numcerts - 1 > 99999) ||
       (dots == 2 && isp + numcerts - 1 > 999)) fatal(2, argv[curr_step + 1]);
     if (dots == 2 && !strrchr(argv[curr_step + 1], '.')[1]) dots = 3;
-    int addrlimits[4] = {1023, 256, 1, 1};
+    int addrlimits[4] = {1023, 256, 8, 1};
     if (numaddrs > addrlimits[dots]) fatal(11, (char *)numaddrs);
+    memset(dirname, 0, sizeof(dirname));
+    if (!dots) dirname[0] = 0;
+    else if (dots == 1) sprintf(dirname, "%d", rir);  
+    else if (dots == 2) sprintf(dirname, "%d/%05d", rir, nir);  
+    else if (dots == 3) sprintf(dirname, "%d/%05d/%03d", rir, nir, isp);  
+    if (dots) printf("cd+++++++ %s\n", dirname);
     memset(issuerkeyfile, 0, sizeof(issuerkeyfile));
     int i;
     for (i = 0; i < dots; i++) strcat(issuerkeyfile, "../");
@@ -632,7 +647,7 @@ Procedure:
       write_casn(&algidp->parameters.sha256, (uchar *)"", 0);
       write_objid(&sgdp->encapContentInfo.eContentType, id_roa_pki_manifest);
       write_casn_num(&manp->manifestNumber, (long)index);
-      long now = time((time_t *)0);
+      now = time((time_t *)0);
       write_casn_time(&manp->thisUpdate, now);
       write_casn_time(&manp->nextUpdate, (now + (30 * 24 * 3600)));
       write_objid(&manp->fileHashAlg, id_sha256);
@@ -714,6 +729,8 @@ Procedure:
       else cp = &crlfile[(dots == 1)? 2: 8];
       strcpy(cp, ".crl");
       put_casn_file(&crl.self, crlfile, 0);
+      if (!dots) printf(">f+++++++ %s\n", crlfile);
+      else printf(">f+++++++ %s/%s\n", dirname, crlfile);
       add_to_manifest(&manp->fileList, crlfile, &crl.self);
       long siz = dump_size(&crl.self);
       char *rawp = (char *)calloc(1, siz + 4);
@@ -751,7 +768,8 @@ Procedure:
         fill_cert(subjname, &cert, &issuer, snum, (char)0, dots, numaddrs);
         setSignature(&cert.toBeSigned.self, &cert.signature, issuerkeyfile, 0);
         add_to_manifest(&manp->fileList, subjfile, &cert.self);
-        
+        if (!dots) printf(">f+++++++ %s\n", subjfile);
+        else printf(">f+++++++ %s/%s\n", dirname, subjfile);
         write_cert_and_raw(subjfile, &cert);
         }
       }
@@ -787,11 +805,22 @@ Procedure:
       // sign the message
       if ((msg = signCMS(&roa, issuerkeyfile, 0))) fatal(5, msg);
       add_to_manifest(&manp->fileList, roafile, &roa.self);
+      if (!dots) printf(">f+++++++ %s\n", roafile);
+      else printf(">f+++++++ %s/%s\n", dirname, roafile);
       write_roa_and_raw(roafile, &roa);
       }
         // step 6 make manifest
     if ((msg = signCMS(&manifest, issuerkeyfile, 0))) fatal(5, msg);
+    if (!dots) printf(">f+++++++ %s\n", manifestfile);
+    else printf(">f+++++++ %s/%s\n", dirname, manifestfile);
     write_roa_and_raw(manifestfile, &manifest);
+    }
+  if (dots < 3)
+    {
+    now = time((time_t *)0);
+    write_casn_time(&casn, now);
+    read_casn(&casn, tbuf);
+    fprintf(stderr, "End  %s\n", (char *)tbuf);
     }
   fatal(0, manifestfile);
   return 0;
