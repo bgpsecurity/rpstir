@@ -685,6 +685,121 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
   return(sta);
 }
 
+static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
+{
+  //  char *left = NULL;
+  char  ptr[1024];
+  char *valu;
+  char  c;
+  int   done = 0;
+  int   sta = 0;
+
+  while ( 1 )
+    {
+      if ( fgets(ptr, 1023, s) == NULL )
+	break;
+      (void)printf("Sockline: %s\n", ptr);
+      (void)fprintf(logfile, "Sockline: %s\n", ptr);
+      c = ptr[0];
+      if ( !isspace((int)(ptr[1])) )
+	{
+	  (void)fprintf(stderr, "Invalid line: ignored\n");
+	  free((void *)ptr);
+	  continue;
+	}
+      valu = afterwhite(ptr+1);
+      switch ( c )
+	{
+	case 'b':		/* begin */
+	case 'B':
+	  (void)fprintf(logfile, "AUR beginning at %s\n", valu);
+	  break;
+	case 'e':
+	case 'E':		/* end */
+	  (void)fprintf(logfile, "AUR ending at %s\n", valu);
+	  done = 1;
+	  break;
+	case 'c':
+	case 'C':		/* cd */
+	  if ( hdir != NULL )
+	    {
+	      free((void *)hdir);
+	      hdir = NULL;
+	    }
+	  hdir = strdup(valu);
+	  break;
+	case 'a':
+	case 'A':		/* add */
+	  (void)fprintf(logfile, "AUR add request: %s\n", valu);
+	  sta = aur(scmp, conp, 'a', valu, splitOnWhite(valu));
+	  (void)fprintf(logfile, "Status was %d", sta);
+	  if ( sta < 0 )
+	    (void)fprintf(logfile, " (%s)", err2string(sta));
+	  (void)fprintf(logfile, "\n");
+	  break;
+	case 'u':
+	case 'U':		/* update */
+	  (void)fprintf(logfile, "AUR update request: %s\n", valu);
+	  sta = aur(scmp, conp, 'u', valu, splitOnWhite(valu));
+	  (void)fprintf(logfile, "Status was %d", sta);
+	  if ( sta < 0 )
+	    (void)fprintf(logfile, " (%s)", err2string(sta));
+	  (void)fprintf(logfile, "\n");
+	  break;
+	case 'r':
+	case 'R':		/* remove */
+	  (void)fprintf(logfile, "AUR remove request: %s\n", valu);
+	  sta = aur(scmp, conp, 'r', valu, NULL);
+	  (void)fprintf(logfile, "Status was %d", sta);
+	  if ( sta < 0 )
+	    (void)fprintf(logfile, " (%s)", err2string(sta));
+	  (void)fprintf(logfile, "\n");
+	  break;
+	case 'l':
+	case 'L':		/* link */
+	  (void)fprintf(logfile, "AUR link request: %s\n", valu);
+	  break;
+	case 'f':
+	case 'F':		/* fatal error */
+	  (void)fprintf(logfile, "AUR fatal error: %s\n", valu);
+	  done = 1;
+	  break;
+	case 'x':
+	case 'X':		/* error */
+	  (void)fprintf(logfile, "AUR error: %s\n", valu);
+	  break;
+	case 'w':
+	case 'W':		/* warning */
+	  (void)fprintf(logfile, "AUR warning: %s\n", valu);
+	  break;
+	case 'i':
+	case 'I':		/* information */
+	  (void)fprintf(logfile, "AUR message: %s\n", valu);
+	  break;
+	case 's':
+	case 'S':		/* save */
+	  (void)saveState(conp, scmp);
+	  break;
+	case 'v':
+	case 'V':		/* restore */
+	  (void)restoreState(conp, scmp);
+	  break;
+	case 'y':
+	case 'Y':		/* synchronize */
+	  //	  (void)write(s, "Y", 1);
+	  break;
+	case 0:
+	  break;
+	default:
+	  (void)fprintf(logfile, "AUR invalid tag '%c' ignored\n", c);
+	  break;
+	}
+      if ( done == 1 )
+	break;
+    }
+  return(sta);
+}
+
 // putative command line args:
 //   -t topdir           create all tables, set rep root to "topdir"
 //   -x                  destroy all tables
@@ -702,6 +817,7 @@ int main(int argc, char **argv)
   scmcon *realconp = NULL;
   scm    *scmp = NULL;
   FILE   *logfile = NULL;
+  FILE   *sfile = NULL;
   char   *thedelfile = NULL;
   char   *topdir = NULL;
   char   *thefile = NULL;
@@ -719,6 +835,7 @@ int main(int argc, char **argv)
   int do_create = 0;
   int do_delete = 0;
   int do_sockopts = 0;
+  int do_fileopts = 0;
   int perpetual = 0;
   int really = 0;
   int trusted = 0;
@@ -733,7 +850,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:pm:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:W:pm:")) != EOF )
     {
       switch ( c )
 	{
@@ -761,6 +878,10 @@ int main(int argc, char **argv)
 	  do_sockopts++;
 	  porto = optarg;
 	  break;
+	case 'W':
+	  do_fileopts++;
+	  porto = optarg;
+	  break;
 	case 'p':
 	  perpetual++;
 	  break;
@@ -782,7 +903,7 @@ int main(int argc, char **argv)
       (void)printf("Extra arguments at the end of the command line.\n");
       usage();
       return(1);
-  } else if ((do_create + do_delete + do_sockopts) == 0 && thefile == 0 && thedelfile == 0) {
+  } else if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && thefile == 0 && thedelfile == 0) {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
       usage();
@@ -1044,20 +1165,36 @@ int main(int argc, char **argv)
       else
 	(void)fprintf(stderr, "Error: %s (%d)\n", err2string(sta), sta);
     }
-  if ( do_sockopts > 0 && porto != NULL && sta == 0 )
+  if ( (do_sockopts+do_fileopts) > 0 && porto != NULL && sta == 0 )
     {
       int protos = (-1);
       do
 	{
-	  (void)printf("Creating a socket on port %s\n", porto);
-	  s = makesock(porto, &protos);
-	  if ( s < 0 )
-	    (void)fprintf(stderr, "Could not create socket\n");
-	  else
+	  if ( do_sockopts > 0 )
 	    {
-	      sta = sockline(scmp, realconp, logfile, s);
-	      (void)printf("Socket connection closed\n");
-	      (void)close(s);
+	      (void)printf("Creating a socket on port %s\n", porto);
+	      s = makesock(porto, &protos);
+	      if ( s < 0 )
+		(void)fprintf(stderr, "Could not create socket\n");
+	      else
+		{
+		  sta = sockline(scmp, realconp, logfile, s);
+		  (void)printf("Socket connection closed\n");
+		  (void)close(s);
+		}
+	    }
+	  if ( do_fileopts > 0 )
+	    {
+	      (void)printf("Opening a socket cmdfile %s\n", porto);
+	      sfile = fopen(porto, "r");
+	      if ( sfile == NULL )
+		(void)fprintf(stderr, "Could not open cmdfile\n");
+	      else
+		{
+		  sta = fileline(scmp, realconp, logfile, sfile);
+		  (void)printf("Cmdfile closed\n");
+		  (void)fclose(sfile);
+		}
 	    }
 	} while ( perpetual > 0 ) ;
       if ( protos >= 0 )
