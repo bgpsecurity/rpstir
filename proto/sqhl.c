@@ -1787,6 +1787,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   uchar *tmp = calloc(1, size);
   read_casn(&extp->extnValue.self, tmp); // read contents of outer OCTET STRING
   struct casn theCASN;
+  simple_constructor(&theCASN, 0, ASN_OCTETSTRING);
   decode_casn (&theCASN, tmp);
   size = read_casn(&theCASN, tmp);  // read contents of inner OCTET STRING
   char *str = ski;     // now hexify and punctuate it
