@@ -46,7 +46,7 @@ int readvsize_casn(struct casn *casnp, uchar **pp)
 
     *pp = (uchar *)0;
     if ((lth = vsize_casn(casnp)) < 0) return lth;
-    *pp = calloc(1, lth);
+    *pp = calloc(1, lth + 1);
     return read_casn(casnp, *pp);
     }
 
