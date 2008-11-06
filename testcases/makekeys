@@ -48,6 +48,8 @@
 ./gen_test_key C231R2.p15
 ./gen_test_key C232.p15
 ./gen_test_key C232R1.p15
+./gen_test_key C233.p15
+./gen_test_key C233R1.p15
 
 cp C2.cer C2X.cer
 cp C2.raw C2X.raw
