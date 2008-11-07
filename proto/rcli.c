@@ -29,12 +29,12 @@
 #include "err.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -368,7 +368,12 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu, char *valu2)
 
   sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
   if (sta != 0) {
-    fprintf(stderr, "Error loading file %s/%s: %s\n", hdir, valu, err2string(sta));
+    fprintf(stderr, "Error loading file %s/%s: %s\n", hdir, valu,
+      err2string(sta));
+    free((void *)outdir);
+    free((void *)outfile);
+    free((void *)outfull);
+
     return sta;
   }
   trusted = strstr(outdir, "TRUST") != NULL;
@@ -698,6 +703,9 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
     {
       if ( fgets(ptr, 1023, s) == NULL )
 	break;
+      char *cp;
+      for (cp = ptr; *cp >= ' '; cp++);
+      *cp = 0;   // trim off CR/LF
       (void)printf("Sockline: %s\n", ptr);
       (void)fprintf(logfile, "Sockline: %s\n", ptr);
       c = ptr[0];
@@ -903,7 +911,8 @@ int main(int argc, char **argv)
       (void)printf("Extra arguments at the end of the command line.\n");
       usage();
       return(1);
-  } else if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && thefile == 0 && thedelfile == 0) {
+  } else if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && 
+      thefile == 0 && thedelfile == 0) {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
       usage();
@@ -966,7 +975,7 @@ int main(int argc, char **argv)
 	  */
 	 password = getpass("Enter MySQL root password: ");
        }
-     
+
       tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
       if ( password != NULL )
 	memset(password, 0, strlen(password));
@@ -1157,7 +1166,8 @@ int main(int argc, char **argv)
 		}
 	    }
 	  else
-	    (void)fprintf(logfile, "Delete operation succeeded (%s removed)\n", thedelfile);
+	    (void)fprintf(logfile, "Delete operation succeeded (%s removed)\n", 
+               thedelfile);
 	  free((void *)outdir);
 	  free((void *)outfile);
 	  free((void *)outfull);
@@ -1185,15 +1195,24 @@ int main(int argc, char **argv)
 	    }
 	  if ( do_fileopts > 0 )
 	    {
-	      (void)printf("Opening a socket cmdfile %s\n", porto);
-	      sfile = fopen(porto, "r");
-	      if ( sfile == NULL )
-		(void)fprintf(stderr, "Could not open cmdfile\n");
+              if (!isatty(0))
+                {
+                printf("Opening stdin\n");
+                sfile = stdin;
+		sta = fileline(scmp, realconp, logfile, sfile);
+                }
 	      else
 		{
+	        (void)printf("Opening a socket cmdfile %s\n", porto);
+	        sfile = fopen(porto, "r");
+	        if ( sfile == NULL )
+	          (void)fprintf(stderr, "Could not open cmdfile\n");
+	        else
+	          {
 		  sta = fileline(scmp, realconp, logfile, sfile);
 		  (void)printf("Cmdfile closed\n");
 		  (void)fclose(sfile);
+	          }
 		}
 	    }
 	} while ( perpetual > 0 ) ;
