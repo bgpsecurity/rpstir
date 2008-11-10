@@ -942,6 +942,7 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
       if ( xvalidators[ui].need > 0 &&
 	   cf->fields[xvalidators[ui].fieldno] == NULL )
 	{
+        fprintf(stderr, "Missing CF_FIELD %d\n", xvalidators[ui].fieldno);
 	  *stap = ERR_SCM_MISSEXT;
 	  break;
 	}
@@ -1415,6 +1416,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
       if ( crxvalidators[ui].need > 0 &&
 	   cf->fields[crxvalidators[ui].fieldno] == NULL )
 	{
+        fprintf(stderr, "Missing CF_FIELD %d\n", xvalidators[ui].fieldno);
 	  *stap = ERR_SCM_MISSEXT;
 	  break;
 	}
@@ -2405,7 +2407,7 @@ static int rescert_sia_chk(X509 *x, int ct)
 	len = strlen(dir);
 	/* don't want a wrap case if len comes back 0 */
 	if (len == 0 || dir[len-1] != '/') {
-	  ret = ERR_SCM_NOSIA;
+	  ret = (!len)? ERR_SCM_NOSIA: ERR_SCM_BADSIA;
 	  goto skip;
 	}
       }
