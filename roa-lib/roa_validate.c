@@ -244,11 +244,19 @@ static int check_fileAndHash(struct FileAndHash *fahp, int ffd)
 
 static struct Attribute *find_attr(struct SignedAttributes *attrsp, char *oidp)
   {
-  struct Attribute *attrp;
-  for (attrp = (struct Attribute *)member_casn(&attrsp->self, 0);
-    attrp && diff_objid(&attrp->attrType, oidp);
-    attrp = (struct Attribute *)next_of(&attrp->self));
-  return attrp;
+  struct Attribute *attrp, *ch_attrp = NULL;
+  int num = 0;
+  for (attrp = (struct Attribute *)member_casn(&attrsp->self, num);
+    attrp; attrp = (struct Attribute *)next_of(&attrp->self), num++)
+    {
+    if (!diff_objid(&attrp->attrType, oidp));
+      {
+      if (ch_attrp) return NULL;
+      }
+    }
+    // make sure there is one and only one value there
+  if (num_items(&ch_attrp->attrValues.self) != 1) return NULL;
+  return ch_attrp;
   }
 
 static int setup_cert_minmax(struct IPAddressOrRangeA *rpAddrRangep, uchar *cmin, uchar *cmax,
@@ -351,8 +359,6 @@ static int cmsValidate(struct ROA *rp)
 
     int num_certs, ret = 0, tbs_lth;
     struct SignerInfo *sigInfop;
-    struct Attribute *attrp;
-    struct AttrTableDefined *attrdp;
     uchar digestbuf[40], hashbuf[40];
     uchar *tbsp;
 
@@ -381,28 +387,39 @@ static int cmsValidate(struct ROA *rp)
     CHECK(size_casn(&sigInfop->sid.subjectKeyIdentifier) != 0);
     CHECK(diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256) == 0);
 
+    struct Attribute *attrp;
     // make sure there is content
     attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
     CHECK(attrp != NULL);
-
-    // make sure that there is a value there
-    attrdp = (struct AttrTableDefined *)member_casn(&attrp->attrValues.self, 0);
-    CHECK(attrdp != NULL);
 
     // make sure there is a message digest
     attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr);
     CHECK(attrp != NULL);
 
-    // make sure there is an entry in the message digest set
-    attrdp = (struct AttrTableDefined *)member_casn(&attrp->attrValues.self, 0);
-    CHECK(attrdp != NULL);
-
     // make sure the message digest is 32 bytes long and we can get it
-    CHECK(vsize_casn(&attrdp->messageDigest) == 32);
-    CHECK(read_casn(&attrdp->messageDigest, digestbuf) == 32);
+    CHECK(vsize_casn(&attrp->attrValues.array.messageDigest) == 32);
+    CHECK(read_casn(&attrp->attrValues.array.messageDigest, digestbuf) == 32);
 
     // make sure there is a signing time
-    CHECK(find_attr(&sigInfop->signedAttrs, id_signingTimeAttr) != 0);
+    attrp = find_attr(&sigInfop->signedAttrs, id_signingTimeAttr);
+    CHECK(attrp != NULL);
+       // make sure it is the right format      
+    uchar loctime[30];
+    int usize, gsize;
+    if ((usize = vsize_casn(&attrp->attrValues.array.signingTime.utcTime)) > 
+       15 ||
+        (gsize = vsize_casn(&attrp->attrValues.array.signingTime.
+          generalizedTime)) > 17) return ERR_SCM_BADSIGINFO;
+    if (usize > 0) 
+      {
+      read_casn(&attrp->attrValues.array.signingTime.utcTime, loctime);
+      if (loctime[0] <= '7' && loctime[0] >= '5') return ERR_SCM_BADSIGINFO;
+      }
+    else
+      {
+      read_casn(&attrp->attrValues.array.signingTime.generalizedTime, loctime);
+      if (strncmp((char *)loctime, "2050", 4) < 0) return ERR_SCM_BADSIGINFO;
+      }
 
 #undef CHECK
 
