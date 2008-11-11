@@ -21,7 +21,7 @@
 # ***** END LICENSE BLOCK *****
 
 TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex loadkey whatsfcs make_oidtable set_cert_ski  \
-	read_roa encode-oid dumpasn1 dump_roa
+	read_roa encode-oid dumpasn1 dump_roa dump_cert dump_smart
 
 all:	$(TARGETS)
 
@@ -67,8 +67,8 @@ loadkey:	loadkey.o
 set_cert_ski:	set_cert_ski.o Makefile ../casn/libcasn.a ../asn/libasn.a
 	$(CC) $(CFLAGS) -o $@ set_cert_ski.o $(LOCAL_LIBS) $(LIBS)
 
-dump_roa:	dump_roa.o Makefile ../casn/libcasn.a ../asn/libasn.a
-	$(CC) $(CFLAGS) -o $@ dump_roa.o $(LOCAL_LIBS) $(LIBS)
+dump_smart:	dump_smart.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ dump_smart.o $(LOCAL_LIBS) $(LIBS)
 
 test_casn_random: test_casn_random.o
 	$(CC) $(CFLAGS) -o $@ test_casn_random.o $(LOCAL_LIBS)
