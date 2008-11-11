@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-TARGETS=make_test_cert make_test_crl make_test_roa make_test_manifest  gen_test_key
+TARGETS=make_test_cert make_test_crl make_test_roa make_test_manifest  gen_test_key cert_validate
 
 all:	$(TARGETS)
 
@@ -60,7 +60,13 @@ make_test_roa:	make_test_roa.o Makefile $(LOCAL_LIBS)
 make_test_manifest:	make_test_manifest.o Makefile adjustTime.o $(LOCAL_LIBS)
 	$(CC) $(CFLAGS) -o $@ make_test_manifest.o adjustTime.o $(LOCAL_LIBS) $(LIBS)
 
+cert_validate:	cert_validate.o Makefile $(LOCAL_LIBS)
+	$(CC) $(CFLAGS) -o $@ cert_validate.o  $(LOCAL_LIBS) $(LIBS)
+
+cert_validate.o:	cert_validate.c
+
 adjustTime.o:	adjustTime.c 
+
 
 signCMS.o:	signCMS.c
 clean:

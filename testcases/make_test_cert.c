@@ -618,7 +618,8 @@ int main(int argc, char **argv)
       struct AccessDescription *accdsp = (struct AccessDescription *)inject_casn(
         &aiasp->self, 0);
       write_objid(&accdsp->accessMethod, id_ad_caIssuers);
-      write_casn(&accdsp->accessLocation.url, (uchar *)"rsync://bbn-via-roa-pki", 23);
+      write_casn(&accdsp->accessLocation.url, 
+        (uchar *)"rsync://roa-pki.bbn.com/home/testdir", 36);
       }
     else   // can copy it
       {

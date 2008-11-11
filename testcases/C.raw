@@ -38,7 +38,8 @@ seq seq ctx+0x20
                     ocw seq seq ctx+0x20
                                     ctx+0x20
                                         ctx+0x06
-                                            "rsync://arin-via-apnic"
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
                 seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
                     ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
@@ -49,7 +50,7 @@ seq seq ctx+0x20
                 seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
                     ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                 ctx+0x06
-                                    "rsync://bbn-via-roa-pki"
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
                 seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
                     boo 0xFF
                     ocw seq seq oct 0x0001
@@ -64,18 +65,14 @@ seq seq ctx+0x20
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
                     ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
                                 ctx+0x06
-                                    "rsync://arin-via-apnic.mirin.apnic.net/moc"
-                                    "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
-                                    "/e3L5eq0X8jJlDu9fmx8xjDAbbxI/"
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
-                                    "rsync://arin-via-apnic.mirin.apnic.net/moc"
-                                    "k/ARINviaAPNIC/02QW909vLlN7hEINm3Iv6MtYC0w"
-                                    "/e3L5eq0X8jJlDu9fmx8xjDAbbxI/"
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x004D4E1EB43C17696CDD142BFFD4B9F77CC34A4A04395836BDF4FCFD300AA868
-        0x5D8507F76B4AADB566E2E29A4E54C11CCD60E632970BDC534ACFF7939F43864E
-        0x5F553B5DA8C7E351D0449788B0A7D82AA0DCC198AD461639CB7C2CF63BF70590
-        0x8427C1130553897997B8936EDEC5199F0963A2E1977478F86BA64BE25D06D55B
-        0xB6
+    bit 0x00BCB0F72A5FF365B56260CEBD510B62DE73C01FF6EB90CCB29DA3A822A91D6B
+        0xD3E85657FA06ABD06446230E7E508C464FFC8D639F61ED69EDC696ACB401A665
+        0x0EC93A22492CA2BD74296B1AED227558972A82732613190DF2F5C35BF0BA24EE
+        0x35A921FD7C1EF5ACCEF418E3D6F47E738CCD59A92B383DE250C83832D28B1604
+        0x33
