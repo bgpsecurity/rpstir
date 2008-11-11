@@ -118,10 +118,9 @@ AlgorithmTable ::= TABLE {
 }
 RPKIAlgorithmTable ::= TABLE
     {
-    rsadsi-SHA256-WithRSAEncryption id-sha-256WithRSAEncryption        NULL,
-    rsadsi-SHA384-WithRSAEncryption id-sha-384WithRSAEncryption        NULL,
-    rsadsi-SHA512-WithRSAEncryption id-sha-512WithRSAEncryption        NULL,
-    }
+    rsadsi-rsaEncryption           id-rsadsi-rsaEncryption             NULL, 
+   }
+
 Dss-Parms ::= SEQUENCE {
     p	OCTET STRING , 
     q	OCTET STRING , 
