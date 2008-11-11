@@ -21,7 +21,7 @@
 
 DEFINITIONS IMPLICIT TAGS ::=
 -- imports
-IMPORTS AlgorithmIdentifier -- ID  pkcs -- FROM Algorithms IN Algorithms.asn,
+IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         Extensions IPAddressOrRangeA FROM extensions IN extensions.asn,
 	Certificate Version FROM certificate IN certificate.asn,
 	Name FROM name IN name.asn, Manifest FROM Manifest IN manifest.asn;
@@ -190,7 +190,7 @@ IMPORTS AlgorithmIdentifier -- ID  pkcs -- FROM Algorithms IN Algorithms.asn,
 
 --      AttributeValue ::= ANY
  
-      SignatureAlgorithmIdentifier ::= AlgorithmIdentifier
+      SignatureAlgorithmIdentifier ::= RPKIAlgorithmIdentifier
 
       SignerIdentifier ::= CHOICE { 
         issuerAndSerialNumber IssuerAndSerialNumber, 

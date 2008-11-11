@@ -43,10 +43,15 @@ Algorithms DEFINITIONS ::=  -- explicit tags from X.509 !
 BEGIN
 
 EXPORTS
-    DSAParameters, DSASignature, AlgorithmIdentifier, ID, pkcs, pkcs-1;
+    DSAParameters, DSASignature, AlgorithmIdentifier, RPKIAlgorithmIdentifier, 
+      pkcs, pkcs-1;
 
 AlgorithmIdentifier ::= SEQUENCE {
 	algorithm OBJECT IDENTIFIER TABLE AlgorithmTable,
+	parameters ANY DEFINED BY algorithm OPTIONAL }
+
+RPKIAlgorithmIdentifier ::= SEQUENCE {
+	algorithm OBJECT IDENTIFIER TABLE RPKIAlgorithmTable,
 	parameters ANY DEFINED BY algorithm OPTIONAL }
 
 -- NOTE:
@@ -106,10 +111,17 @@ AlgorithmTable ::= TABLE {
     dsa-with-sha1                  id-dsa-with-sha1                    NULL OPTIONAL,
     rsadsi-SHA-1WithRSAEncryption  id-sha-1WithRSAEncryption           NULL,
     rsadsi-SHA256-WithRSAEncryption id-sha-256WithRSAEncryption        NULL,
+    rsadsi-SHA384-WithRSAEncryption id-sha-384WithRSAEncryption        NULL,
+    rsadsi-SHA512-WithRSAEncryption id-sha-512WithRSAEncryption        NULL,
     sha256                          id-sha256                          NULL,
     unknown                         0xFFFF                             ANY OPTIONAL
 }
-
+RPKIAlgorithmTable ::= TABLE
+    {
+    rsadsi-SHA256-WithRSAEncryption id-sha-256WithRSAEncryption        NULL,
+    rsadsi-SHA384-WithRSAEncryption id-sha-384WithRSAEncryption        NULL,
+    rsadsi-SHA512-WithRSAEncryption id-sha-512WithRSAEncryption        NULL,
+    }
 Dss-Parms ::= SEQUENCE {
     p	OCTET STRING , 
     q	OCTET STRING , 
@@ -274,6 +286,8 @@ id-rsadsi-RC2-CBC               ID ::= { rsadsi-encryptionAlgorithm 2 } --  Prop
 id-rsadsi-RC4                   ID ::= { rsadsi-encryptionAlgorithm 4 } --  Proprietary stream cipher algorithm from RSADSI
 id-sha-1WithRSAEncryption       ID ::= { pkcs-1 5 }
 id-sha-256WithRSAEncryption     ID ::= { pkcs-1 11 }
+id-sha-384WithRSAEncryption     ID ::= { pkcs-1 12 }
+id-sha-512WithRSAEncryption     ID ::= { pkcs-1 13 }
 -- Directory Services Special Interest Group, e.g. X.500/ISO 9796 
 -- { iso(1) identified-organization(3) oiw(14) dssig(7) algorithm(2) }
 dssig-algorithm                 ID ::= {1.3.14.7.2}  
