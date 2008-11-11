@@ -992,23 +992,27 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
  */
 static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
 {
-  struct ROA *r = NULL;
+  struct ROA roa;
   int typ, chainOK, sta;
   char pathname[PATH_MAX];
   char *skii;
   unsigned int id;
 
   UNREFERENCED_PARAMETER(idx);
+  ROA(&roa, (ushort)0);
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
 	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
-  sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &r);
-  if (sta < 0)
+  sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &roa);
+  if (sta == 0)
+    {
+    delete_casn(&roa.self);
     return sta;
-  skii = (char *)roaSKI(r);
-  sta = verify_roa(conp, r, skii, &chainOK);
-  roaFree(r);
+    }
+  skii = (char *)roaSKI(&roa);
+  sta = verify_roa(conp, &roa, skii, &chainOK);
+  delete_casn(&roa.self);
   if ( skii )
      free((void *)skii);
   id = *((unsigned int *) (s->vec[2].valptr));
@@ -1409,9 +1413,11 @@ unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState,
 {
   int sta;
   flags |= (isValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
-  if (strcmp(manState, "-1") == 0)
-    flags |= SCM_FLAG_BADHASH;
-  if (strcmp(manState, "0") == 0) {
+//  if (strcmp(manState, "-1") == 0)
+  int statenum;
+  sscanf(manState, "%d", &statenum);
+  if (statenum < 0) flags |= SCM_FLAG_BADHASH;
+  else if (statenum == 0) {
     flags |= SCM_FLAG_NOMAN | SCM_FLAG_NOVALIDMAN;
   } else {
     noValidMan = 1;
@@ -1649,36 +1655,41 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *outfull, unsigned int id, int utrust, int typ, 
 	    char *manState)
 {
-  struct ROA *r = NULL;
+  struct ROA roa;
   char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, filter[4096];
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags;
 
+  ROA(&roa, (ushort)0);
   // validate parameters
   if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
        outfile[0] == 0 || outfull == NULL || outfull[0] == 0 )
     return(ERR_SCM_INVALARG);
-  sta = roaFromFile(outfull, typ >= OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &r);
+  sta = roaFromFile(outfull, typ >= OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &roa);
   if ( sta < 0 )
+    {
+    delete_casn(&roa.self);
     return(sta);
+    }
 
   do {			/* do-once */
     // pull out EE cert
-    if (!(r->content.signedData.certificates.self.flags & ASN_FILLED_FLAG) ||
-	num_items(&r->content.signedData.certificates.self) != 1) {
+    if (!(roa.content.signedData.certificates.self.flags & ASN_FILLED_FLAG) ||
+
+	num_items(&roa.content.signedData.certificates.self) != 1) {
       sta = ERR_SCM_BADNUMCERTS;
       break;
     }
     struct Certificate *c = (struct Certificate *) 
-      member_casn(&r->content.signedData.certificates.self, 0);
+      member_casn(&roa.content.signedData.certificates.self, 0);
 
 
     // generate a (fake) filename for the cert that is unique.
     // use the SKI
     
     // ski, asid
-    if ((ski = (char *)roaSKI(r)) == NULL || ski[0] == 0 ) 
+    if ((ski = (char *)roaSKI(&roa)) == NULL || ski[0] == 0 ) 
       {
       sta = ERR_SCM_INVALSKI;
       break;
@@ -1687,10 +1698,10 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       typ, manState)) != 0) break;
     cert_added = 1;
 
-    asid = roaAS_ID(r);		/* it's OK if this comes back zero */
+    asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
 
     // signature
-    if ((bsig = roaSignature(r, &bsiglen)) == NULL || bsiglen < 0) {
+    if ((bsig = roaSignature(&roa, &bsiglen)) == NULL || bsiglen < 0) {
       sta = ERR_SCM_NOSIG;
       break;
     }
@@ -1701,11 +1712,11 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
 
     // verify the signature
-    if ((sta = verify_roa (conp, r, ski, &chainOK)) != 0)
+    if ((sta = verify_roa (conp, &roa, ski, &chainOK)) != 0)
       break;
 
     // filter
-    sta = roaGenerateFilter (r, NULL, NULL, filter, sizeof(filter));
+    sta = roaGenerateFilter (&roa, NULL, NULL, filter, sizeof(filter));
     if (sta != 0) break;
 
     flags = addStateToFlags(0, chainOK, manState, outfile, scmp, conp);
@@ -1724,7 +1735,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // clean up
   if (sta != 0 && cert_added)
     (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull);
-  if (r != NULL) roaFree(r);
+  delete_casn(&roa.self);
   if (ski != NULL) free(ski);
   if (sig != NULL) free(sig);
 
@@ -1790,6 +1801,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   simple_constructor(&theCASN, 0, ASN_OCTETSTRING);
   decode_casn (&theCASN, tmp);
   size = read_casn(&theCASN, tmp);  // read contents of inner OCTET STRING
+  delete_casn(&theCASN);
   char *str = ski;     // now hexify and punctuate it
   for (i = 0; i < size; i++) 
     {
