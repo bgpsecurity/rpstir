@@ -50,7 +50,7 @@ MYSQLINCLUDES=/usr/local/include
 # where to find cryptlib includes
 CLINCLUDES=/usr/local/include
 
-TARGETS=make_perf_cert make_perf_roa make_perf_manifest
+TARGETS=make_perf_cert 
 
 all:	$(TARGETS)
 
@@ -66,11 +66,6 @@ LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 make_perf_cert:	make_perf_cert.o Makefile $(LOCAL_LIBS)
 	$(CC) $(CFLAGS) -o $@ make_perf_cert.o $(LOCAL_LIBS) $(LIBS)
 
-make_perf_roa:	make_perf_roa.o Makefile $(LOCAL_LIBS)
-	$(CC) $(CFLAGS) -o $@ make_perf_roa.o $(LOCAL_LIBS) $(LIBS)
-
-make_perf_manifest:	make_perf_manifest.o Makefile $(LOCAL_LIBS)
-	$(CC) $(CFLAGS) -o $@ make_perf_manifest.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f $(TARGETS) *.o
