@@ -93,9 +93,11 @@ int read_casn_num(struct casn *casnp, long *valp)
 	    *valp = buf[0];
 	    return 1;
 	    }
-	*valp = (int)tcasnp->ptr;
-	if ((ansr = *valp) < 0) ansr = -ansr;
-	for (c = casnp->startp; ansr; ansr >>= 8, c++);
+        *valp = 0;
+        return 0;
+//	*valp = (int)tcasnp->ptr;
+//      if ((ansr = *valp) < 0) ansr = -ansr;
+//	for (c = casnp->startp; ansr; ansr >>= 8, c++);
 	}
     else
         {
