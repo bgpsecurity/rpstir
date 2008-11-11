@@ -90,8 +90,8 @@ static unsigned char *myreadfile(char *fn, int *stap)
 
 int main(int argc, char** argv)
 {
-  struct ROA    *roa = NULL;
-  struct ROA    *roa2 = NULL;
+  struct ROA    roa;
+  struct ROA    roa2;
   unsigned char *blob = NULL;
   FILE   *fp = NULL;
   scmcon *conp;
@@ -105,6 +105,8 @@ int main(int argc, char** argv)
   char   *fn = NULL;
   int     sta = 0;
   
+  ROA(&roa, (ushort)0);
+  ROA(&roa2, (ushort)0);
   if ( argc < 2 )
     filename_cnf = "roa.cnf";
   else
@@ -118,8 +120,8 @@ int main(int argc, char** argv)
 		    filename_cnf, err2string(sta), sta);
       return sta;
     }
-  sta = roaToFile(roa, filename_pem, FMT_PEM);
-  roaFree(roa);
+  sta = roaToFile(&roa, filename_pem, FMT_PEM);
+  delete_casn(&roa.self);
   if ( sta < 0 )
     {
       (void)fprintf(stderr, "roaToFile(%s) failed with error %s (%d)\n",
@@ -133,7 +135,7 @@ int main(int argc, char** argv)
 		    filename_pem, err2string(sta), sta);
       return sta;
     }
-  ski = (char *)roaSKI(roa2);
+  ski = (char *)roaSKI(&roa2);
   if ( ski == NULL || ski[0] == 0 )
     {
       (void)fprintf(stderr, "ROA has NULL SKI\n");
@@ -142,7 +144,7 @@ int main(int argc, char** argv)
   scmp = initscm();
   if ( scmp == NULL )
     {
-      roaFree(roa2);
+      delete_casn(&roa2.self);
       free(ski);
       (void)fprintf(stderr,
 		    "Internal error: cannot initialize database schema\n");
@@ -154,7 +156,7 @@ int main(int argc, char** argv)
     {
       (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
 		    scmp->dsn, errmsg);
-      roaFree(roa2);
+      delete_casn(&roa2.self);
       free(ski);
       freescm(scmp);
       return -4;
@@ -167,7 +169,7 @@ int main(int argc, char** argv)
     {
       (void)fprintf(stderr, "ROA certificate has no parent in DB: error %s (%d)\n",
 		    err2string(sta), sta);
-      roaFree(roa2);
+      delete_casn(&roa2.self);
       return sta;
     }
   blob = myreadfile(fn, &sta);
@@ -177,28 +179,28 @@ int main(int argc, char** argv)
 		    fn, err2string(sta), sta);
 
       X509_free(cert);
-      roaFree(roa2);
+      delete_casn(&roa2.self);
       return(sta);
     }
-  sta = roaValidate2(roa2);
+  sta = roaValidate2(&roa2);
   free((void *)blob);
   X509_free(cert);
   if ( sta < 0 )
     {
       (void)fprintf(stderr, "ROA failed semantic validation: error %s (%d)\n",
 		    err2string(sta), sta);
-      roaFree(roa2);
+      delete_casn(&roa2.self);
       return sta;
     }
   fp = fopen("roa.txt", "a");
   if ( fp == NULL )
     {
       (void)fprintf(stderr, "Cannot open roa.txt\n");
-      roaFree(roa2);
+      delete_casn(&roa2.self);
       return -5;
     }
-  sta = roaGenerateFilter(roa2, NULL, fp, NULL, 0);
-  roaFree(roa2);
+  sta = roaGenerateFilter(&roa2, NULL, fp, NULL, 0);
+  delete_casn(&roa2.self);
   (void)fclose(fp);
   if ( sta < 0 )
     {
