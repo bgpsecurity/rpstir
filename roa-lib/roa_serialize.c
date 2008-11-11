@@ -1745,23 +1745,20 @@ static int confInterpret(char* filename, struct ROA* roa)
 // Exported functions from roa_utils.h
 //
 /////////////////////////////////////////////////////////////
-int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
+int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp)
 {
   int iReturn, fd;
   off_t iSize;
   ssize_t amt_read;
   int buf_tmp_size, sta = 0;
   unsigned char *buf, *buf_tmp;
-  struct AlgorithmIdentifier *algorithmID;
-  struct SignerInfo *signerInfo;
-  struct ROA roa;
   struct stat sb;
 
-  *rp = NULL;			// make sure we send back NULL on err
   if (NULL == fname)
     return ERR_SCM_INVALARG;	// we need an input file
 
-  ROA(&roa, 0);		        // initialize the ROA
+  ROA(rp, 0);		        // initialize the ROA
+/*
   // This write _must_ be done before the injections
   write_objid(&roa.contentType, id_signedData);
   algorithmID = (struct AlgorithmIdentifier*) inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
@@ -1777,7 +1774,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
   write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_routeOriginAttestation);
   write_objid(&signerInfo->digestAlgorithm.algorithm, id_sha256);
   write_objid(&signerInfo->signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption);
-
+*/
   // read in the file
   if ((fd = open(fname, (O_RDONLY))) < 0)
     sta =  ERR_SCM_COFILE;
@@ -1800,7 +1797,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
     }
   if (sta < 0)
     {
-    delete_casn(&roa.self);
+    delete_casn(&rp->self);
     return sta;
     }
   // handle format-specific processing
@@ -1817,14 +1814,14 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
       iReturn = 0;
       // did we use all of buf, no more and no less?
       int ret;
-      if ((ret = decode_casn(&roa.self, buf)) != iSize) {
+      if ((ret = decode_casn(&rp->self, buf)) != iSize) {
         fprintf(stderr, "roaFromFile: scan failed at offset %d\n", -ret);
 	iReturn = ERR_SCM_INVALASN;
       }
       break;
 
     case FMT_CONF:
-      iReturn = confInterpret(fname, &roa);
+      iReturn = confInterpret(fname, rp);
       break;
 
     default:
@@ -1835,15 +1832,15 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp)
 
   // if we're ok and caller wants validation, it's time
   if ((0 == iReturn) && (cFALSE != doval))
-    iReturn = roaValidate(&roa);
+    iReturn = roaValidate(rp);
 
   // if we got this far and everything is OK, send it back to caller
-  if (iReturn == 0) {
+/*  if (iReturn == 0) {
       *rp = calloc(1, sizeof(struct ROA));
-      if (*rp == NULL)
-	  return ERR_SCM_NOMEM;
-      memcpy(*rp, &roa, sizeof(struct ROA));
-  }
+      if (*rp == NULL) return ERR_SCM_NOMEM;
+      ROA(*rp, (ushort)0);
+      copy_casn(&(*rp)->self, &roa.self);
+  } */
   return iReturn;
 }
 

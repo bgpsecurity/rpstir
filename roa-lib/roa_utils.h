@@ -85,7 +85,7 @@ struct badfile
   int err;
   };
 
-int roaFromConfig(char *fname, int doval, struct ROA** rp);
+int roaFromConfig(char *fname, int doval, struct ROA* rp);
 
 /*
   This function reads the file at "fname" and parses it.  Presuming the file
@@ -113,7 +113,7 @@ int roaToConfig(struct ROA* r, char *fname);
   error code.
 */
 
-int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp);
+int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp);
 
 /*
   This is a more generalized function for similar purposes.  It

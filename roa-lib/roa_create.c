@@ -29,7 +29,7 @@ in roa_serialize.c, and are defined in roa_utils.h.
 
 // ROA_utils.h contains the headers for including these functions
 
-int roaFromConfig(char *fname, int doval, struct ROA** rp)
+int roaFromConfig(char *fname, int doval, struct ROA* rp)
 {
   return roaFromFile(fname, FMT_CONF, doval, rp);
 }

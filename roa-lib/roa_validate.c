@@ -249,9 +249,10 @@ static struct Attribute *find_attr(struct SignedAttributes *attrsp, char *oidp)
   for (attrp = (struct Attribute *)member_casn(&attrsp->self, num);
     attrp; attrp = (struct Attribute *)next_of(&attrp->self), num++)
     {
-    if (!diff_objid(&attrp->attrType, oidp));
+    if (!diff_objid(&attrp->attrType, oidp))
       {
       if (ch_attrp) return NULL;
+      ch_attrp = attrp;
       }
     }
     // make sure there is one and only one value there
@@ -391,6 +392,9 @@ static int cmsValidate(struct ROA *rp)
     // make sure there is content
     attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
     CHECK(attrp != NULL);
+    // make sure it is the same as in EncapsulatedContentInfo
+    CHECK(diff_casn(&attrp->attrValues.array.contentType, 
+      &rp->content.signedData.encapContentInfo.eContentType) == 0);
 
     // make sure there is a message digest
     attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr);
