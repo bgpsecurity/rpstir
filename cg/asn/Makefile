@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-CFLAGS=	-c -I. -I../casn
+CFLAGS=	-c -I. -I../casn -g
 
 ASN_GEN=../asn_gen/asn_gen
 
