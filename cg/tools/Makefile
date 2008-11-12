@@ -21,7 +21,7 @@
 # ***** END LICENSE BLOCK *****
 
 TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex loadkey whatsfcs make_oidtable set_cert_ski  \
-	read_roa encode-oid dumpasn1 dump_roa dump_cert dump_smart
+	read_roa encode-oid dumpasn1 dump_roa dump_smart
 
 all:	$(TARGETS)
 
