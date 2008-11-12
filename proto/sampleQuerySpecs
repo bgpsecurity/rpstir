@@ -1,20 +1,11 @@
-# template for filter specification
-# each item specified as "item filter", where:
-#  - items are: Validated, NoChain, NotYet, StaleCRL, StaleManifest, 
-#      NoManifest, NoValidManifest, BadHash
-#  - filter is: ignore (don't check), set, clear
-# items relate to SCM_FLAG items in the database, i.e., NoChain is 
-#   SCM_FLAG_NOCHAIN, etc.
-# so NotYetL ignore does not test, StaleCRL clear tests for flag clear, 
-#   NoManifest set tests for flag set
-# the filter text is case insensitive (it's all set tolower when testing), 
-# item text is CamelCase
+# This file serves as a model of how to specify which ROAs to keep and
+#      which to reject based on different ways of not being perfect
+# Note that any that have never been validated at some point with a trust
+#      chain to a trust anchor are automatically eliminated
+# "yes" means to accept the ROA anyway, and "no" means to reject it
+#      default is yes
 
-Validated ignore
-NoChain set
-NotYet ignore
-StaleCRL clear
-StaleManifest ignore
-NoManifest set
-NoValidManifest set
-BadHash ignore
+StaleCRL yes
+StaleManifest yes
+StaleValidationChain no
+NoManifest yes

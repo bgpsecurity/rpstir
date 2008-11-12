@@ -388,7 +388,7 @@ int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen)
  * there is no need to initialize them with each call to checkValidity
  */
 static scmtab   *validTable = NULL;
-static scmsrcha *validSrch = NULL;
+static scmsrcha *validSrch = NULL, *anySrch = NULL;
 char  *validWhereStr;
 static char     *whereInsertPtr;
 static int      found;
@@ -433,6 +433,12 @@ static int checkValidity (char *ski, unsigned int localID) {
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch->vec[0].valptr;
     nextSubject = (char *) validSrch->vec[1].valptr;
+
+    if (! rejectStaleChain) {
+      anySrch = newsrchscm(NULL, 1, 0, 1);
+      field = findField ("flags");
+      addcolsrchscm (anySrch, "flags", field->sqlType, field->maxSize);
+    }
   }
 
   // now do the part specific to this cert
@@ -459,7 +465,13 @@ static int checkValidity (char *ski, unsigned int localID) {
     found = 0;
     status = searchscm (connect, validTable, validSrch, NULL,
                         registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (! found) return 0;  // no parent cert
+    if (! found) {   // no parent cert
+      if (rejectStaleChain) return 0;
+      snprintf(anySrch->wherestr, WHERESTR_SIZE, "%s", whereInsertPtr+5);
+      status = searchscm (connect, validTable, anySrch, NULL,
+			  registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+      return !found;
+    }
   }
   return 1;
 }
