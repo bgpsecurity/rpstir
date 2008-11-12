@@ -574,8 +574,8 @@ int manifestValidate(struct ROA *manp)
   struct casn *casnp = &manp->content.signedData.encapContentInfo.
     eContent.manifest.version.self;
   long val;
-  if (size_casn(casnp) > 0 && read_casn_num(casnp, &val) > 1 &&
-      val > 0) return ERR_SCM_INVALVER;
+  if (size_casn(casnp) > 0 && (read_casn_num(casnp, &val) > 1 ||
+      val > 0)) return ERR_SCM_INVALVER;
   return 0;
   }
 
