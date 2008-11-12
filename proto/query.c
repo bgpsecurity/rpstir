@@ -51,7 +51,6 @@
   "\nBad object type; must be roa, cert, crl, man[ifest] or rpsl\n\n"
 
 int pathnameDisplay (scmsrcha *s, int idx1, char* returnStr);
-int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen);
 int displaySNList (scmsrcha *s, int idx1, char* returnStr);
 int displayFlags (scmsrcha *s, int idx1, char* returnStr);
 
@@ -367,21 +366,6 @@ int displayFlags (scmsrcha *s, int idx1, char* returnStr)
   return 1;
 }
 
-
-/* reads a roa from a file in order to determine the filter entry */
-int displayEntry (scmsrcha *s, int idx1, char* returnStr, int returnStrLen)
-{
-  struct ROA roa;
-  ROA(&roa, (ushort)0);
-  (void) pathnameDisplay (s, idx1, returnStr);
-  int format = (strncmp (".pem", &returnStr[strlen(returnStr)-4], 4) == 0) ?
-               FMT_PEM : FMT_DER;
-  checkErr (roaFromFile (returnStr, format, 0, &roa) != 0,
-            "Error reading ROA: %s\n", returnStr);
-  roaGenerateFilter (&roa, NULL, NULL, returnStr, returnStrLen);
-  delete_casn(&roa.self);
-  return 2;
-}
 
 /*
  * all these static variables are used for efficiency, so that
