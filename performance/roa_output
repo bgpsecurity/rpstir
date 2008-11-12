@@ -1,8 +1,8 @@
-Sending B Thu Jun 21 11:31:09 2007
+Sending B Thu Feb  7 19:20:26 2008
 Sending C /home/dmontana/apki/trunk/performance/REPOSITORY
 Sending A roa/mytest.cer.pem
-Sending E Thu Jun 21 11:31:09 2007
-Sending B Thu Jun 21 11:31:10 2007
+Sending E Thu Feb  7 19:20:26 2008
+Sending B Thu Feb  7 19:20:29 2008
 Sending C /home/dmontana/apki/trunk/performance/REPOSITORY
 Sending A roa/roa0.roa.pem
 Sending A roa/roa1.roa.pem
@@ -10005,5 +10005,5 @@ Sending A roa/roa9997.roa.pem
 Sending A roa/roa9998.roa.pem
 Sending A roa/roa9999.roa.pem
 Sending Y 
-Sending E Thu Jun 21 11:33:44 2007
-load required 155 seconds
+Sending E Thu Feb  7 19:25:06 2008
+load required 280 seconds
