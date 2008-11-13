@@ -168,16 +168,26 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 3.8 query.sh: This is the way to pull information out of the database and
     local repository.  There are two basic modes.
 
-    The comprehensive query, indicated by the argument "-a", pulls all
+    The comprehensive query, indicated by the argument "-r", pulls all
     the valid ROAs from the repository and outputs a set of BGP filters
-    specified by these ROAs.  To send the output to a file rather than the
-    screen, include "-o <filename>" on the command line or just redirect
-    the output.  Those ROAs whose trust chain includes a certificate whose
-    CRL is currently stale are in a state that is between valid and invalid
-    that we call "unknown", and by default we send the filters from these
-    ROAs instead to a file called unknown.out.  To instead include them with
-    the fully valid ROAs, include "-u valid" on the command line, and to
-    completely ignore them, include "-u invalid" on the command line.
+    in RPSL format specified by these ROAs.  To send the output to a
+    file rather than the screen, include "-o <filename>" on the command
+    line or just redirect the output. ROAs (as well as certificates and
+    CRLs) can also be stale for a variety of reasons:
+      - Validation Chain Stale: The ROA was validatated by a trust chain
+        at some point, but now there is no longer a trust chain (e.g.,
+        due to a certificate expiring or being revoked by a CRL).
+      - Stale CRL: Some certificate in the ROA's trust chain is in
+        the domain of a CRL that was supposed to be updated by a certain
+        time and has not.
+      - Stale Manifest: Similar to stale CRL
+      - No Manifest: Either the ROA or some certificate in its trust
+        chain is not on a validated manifest.
+    For each type of staleness, it is possible to specify that the
+    query consider ROAs that are stale in this manner to be either all
+    valid or all invalid.  To control how different types of staleness are
+    treated, use the "-s <filename>" option, where filename is a file
+    in the same basic format as the sampleQuerySpecs file.
 
     The informational query provides the user with a means to see what
     is in the database without directly executing MySQL commands.
