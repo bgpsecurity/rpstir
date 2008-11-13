@@ -566,6 +566,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	  f = end + 1;
 	}
       }
+      emptyRPSL();
     }
     return(0);
   }
