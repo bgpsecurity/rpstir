@@ -411,9 +411,13 @@ static int checkValidity (char *ski, unsigned int localID) {
       addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
     if (rejectStaleManifest)
       addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (rejectNoManifest)
-      addFlagTest(validWhereStr, SCM_FLAG_NOVALIDMAN, 0, 1);
-
+    if (rejectNoManifest) {
+      int len = strlen(validWhereStr);
+      snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
+	       " and (((flags%%%d)<%d) or ((flags%%%d)<%d))",
+	       2*SCM_FLAG_NOVALIDMAN, SCM_FLAG_NOVALIDMAN,
+	       2*SCM_FLAG_CA, SCM_FLAG_CA);
+    }
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch->vec[0].valptr;
     nextSubject = (char *) validSrch->vec[1].valptr;
