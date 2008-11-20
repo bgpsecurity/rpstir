@@ -1005,7 +1005,7 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
 	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &roa);
-  if (sta == 0)
+  if (sta < 0)
     {
     delete_casn(&roa.self);
     return sta;
@@ -1062,6 +1062,7 @@ static void updateManifestObjs(scmcon *conp, char *files)
   fillInColumns (srch2, &lid, ski, subject, &flags, &srch);
   srch.where = NULL;
   srch.wherestr = updateManWhere;
+  updateManWhere[0] = 0;	
   addFlagTest(updateManWhere, SCM_FLAG_BADHASH, 1, 0);
   snprintf(updateManWhere + strlen(updateManWhere),
 	   MANFILES_SIZE - strlen(updateManWhere),
@@ -1074,6 +1075,154 @@ static void updateManifestObjs(scmcon *conp, char *files)
   updateManifestObjs2(conp, theROATable, files);
 }
 
+   // place to list NOMAN files on manifest
+static char *nomanFiles = NULL;
+static int nomanFilesSize = 0;
+   // callback function for testOnManifestObjs
+static int was_on_manifest(scmcon *conp, scmsrcha *s, int idx)
+  {
+  unsigned int lid, flags;
+  char lidAndFlags[40];
+
+  UNREFERENCED_PARAMETER(idx);
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  flags = *(unsigned int*)(s->vec[3].valptr);
+  memset(lidAndFlags, 0, 40);
+  sprintf(lidAndFlags, " %d %x ", lid, flags); 
+  char *fullpath = (char *)calloc(1, s->vec[1].avalsize + 
+    s->vec[2].avalsize + strlen(lidAndFlags) + 2);
+  strcat(strcat(strcat(strcpy(fullpath, s->vec[1].valptr), "/"), 
+    s->vec[2].valptr), lidAndFlags);
+  int thisAdd = strlen(fullpath) + 1,
+      oldsize = nomanFilesSize;
+  if (!nomanFiles) 
+    {
+    nomanFilesSize = thisAdd;
+    nomanFiles = (char *)calloc(1, nomanFilesSize);
+    strcpy(nomanFiles, fullpath);
+    }
+  else 
+    {
+    nomanFilesSize += thisAdd;
+    nomanFiles = (char *)realloc(nomanFiles, nomanFilesSize);
+    nomanFiles[oldsize - 1] = ' ';
+    strcpy(&nomanFiles[oldsize], fullpath);
+    } 
+  free(fullpath);  
+  return  1;
+  }
+
+static int updateManifestFlags (scmcon *conp, scmtab *tabp, unsigned int id,
+     unsigned int prevFlags, int isValid)
+{
+  char stmt[150];
+  int flags = isValid ?  (prevFlags & (~SCM_FLAG_NOMAN)) :
+    (prevFlags | SCM_FLAG_BADHASH);
+  snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
+	    tabp->tabname, flags, id);
+  return statementscm (conp, stmt);
+}
+
+static void reflagNOMANFiles(struct Manifest *manp, scmcon *conp)
+  {
+  if (!nomanFiles) return; 
+  int fd;
+  char *a, *b, *c;
+  struct FileAndHash *fahp;
+  scmtab *tabp;  
+  struct casn ccasn;
+  simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING); 
+  for (c = b = nomanFiles; *c; b = c)
+    {
+    while(*c > ' ') c++;  // c is at first space;
+    for (a = c; a > b && *a != '/'; a--);  // a is at last '/'
+    a++;
+    write_casn(&ccasn, (uchar *)a, (c - a));
+    unsigned int lid, flags;
+    sscanf(c, "%d %x", &lid, &flags);
+    flags &= ~(SCM_FLAG_NOVALIDMAN);  // only called if manifest is valid
+    *c++ = 0;     // one beyond first space
+    char *d = &c[-5];  // start of suffix
+    if (!strncmp(d, ".cer", 4)) tabp = theCertTable;
+    else if (!strncmp(d, ".crl", 4)) tabp = theCRLTable;
+    else if (!strncmp(d, ".roa", 4)) tabp = theROATable; 
+    for (fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, 0);
+      fahp && diff_casn(&fahp->file, &ccasn); 
+      fahp = (struct FileAndHash *)next_of(&fahp->self));
+    if (!fahp || (fd = open(b, O_RDONLY)) < 0) *c++ = ' ';
+    else 
+      {
+      int ansr = check_fileAndHash(fahp, fd);
+      if (ansr == 0) updateManifestFlags(conp, tabp, lid, flags, 1);
+      if (ansr < 0)  updateManifestFlags(conp, tabp, lid, flags, 0);
+      }
+    c[-1] = ' ';  //replace nulled-out one 
+    while(*c > ' ') c++; // skip lid
+    for (c++; *c > ' '; c++); // skip flags
+    while(*c == ' ') c++;
+    }
+  delete_casn(&ccasn);
+  free(nomanFiles);
+  nomanFiles = NULL;
+  nomanFilesSize = 0;
+  }
+
+static void fillInManifestTestCols (scmsrch *srch1, unsigned int *lid, 
+    char *dirname, char *filename, unsigned int *flags, scmsrcha *srch)
+{
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_ULONG;
+  srch1[0].colname = "local_id";
+  srch1[0].valptr = (void *)lid;
+  srch1[0].valsize = sizeof(unsigned int);
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_CHAR;
+  srch1[1].colname = "dirname";
+  srch1[1].valptr = (void *)dirname;
+  srch1[1].valsize = 512;
+  srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_CHAR;
+  srch1[2].colname = "filename";
+  srch1[2].valptr = (void *)filename;
+  srch1[2].valsize = 512;
+  srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_ULONG;
+  srch1[3].colname = "flags";
+  srch1[3].valptr = (void *)flags;
+  srch1[3].valsize = sizeof(int);
+  srch1[3].avalsize = 0;
+  srch->vec = srch1;
+  srch->sname = NULL;
+  srch->ntot = 4;
+  srch->nused = 4;
+  srch->vald = 0;
+}
+static void testOnManifestObjs(scmcon *conp, char *files)
+{
+  scmsrcha srch;
+  scmsrch  srch2[5];
+  unsigned int lid, flags;
+  char     dirname[512], filename[512];
+  int ret = 0;
+
+  fillInManifestTestCols(srch2, &lid, dirname, filename, &flags, &srch);
+  srch.where = NULL;
+  srch.wherestr = updateManWhere;
+  updateManWhere[0] = 0;	
+  addFlagTest(updateManWhere, SCM_FLAG_NOMAN, 1, 0);
+  snprintf(updateManWhere + strlen(updateManWhere),
+	   MANFILES_SIZE - strlen(updateManWhere),
+	   " and \"%s\" regexp binary filename", files);
+  ret += searchscm(conp, theCertTable, &srch, NULL, was_on_manifest,
+         (SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN), NULL); 
+  searchscm(conp, theCRLTable, &srch, NULL, was_on_manifest,
+         (SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN), NULL); 
+  searchscm(conp, theROATable, &srch, NULL, was_on_manifest,
+         (SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN), NULL); 
+}
 /*
  * callback function for verify_children
  */
@@ -1820,7 +1969,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   uchar file[200];
   struct FileAndHash *fahp;
   manFiles[0] = 0;
-  int manFilesLen = 0;
+  int manFilesLen = 0; 
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
       fahp = (struct FileAndHash *)next_of(&fahp->self)) {
@@ -1912,7 +2061,15 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // if the manifest is valid, zero the nomanvalid flag for all the
   //   objects it references
   if (manValid)
+    {
+    if (nomanFiles) free(nomanFiles);
+    nomanFiles = NULL;
+    nomanFilesSize = 0;
+    testOnManifestObjs(conp, manFiles);
+    if (nomanFiles) reflagNOMANFiles(&roa.content.signedData.encapContentInfo.
+      eContent.manifest, conp);
     updateManifestObjs(conp, manFiles);
+    }
 
   // clean up
   // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
