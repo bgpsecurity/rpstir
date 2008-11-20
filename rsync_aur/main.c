@@ -20,10 +20,13 @@
 /*
   $Id$
 */
-#define MANPASS 0
-#define TRUSTPASS 1
-#define GENPASS 2
+#define TRUSTPASS 0
+#define GENPASS 1
+#define MANPASS 2
 #define NUMPASSES 3
+
+extern void usage(const char *);
+
 struct name_list
   {
   char *namep;
@@ -74,104 +77,6 @@ static int isManifest(char *namep)
   return (ret);
   }
 
-// is it something that should be on a manifest (i.e. it's not a manifest)?
-static int mustManifest(char *namep)
-  {
-  /*
-  Returns 1 for certs, crls  or roas
-          0 for everything else
- */
-  int ret = 0;
-
-  if (isTrust(namep)) {
-    ret = 0;
-  } else {
-    char *down = downcase(namep);
-    if (strstr(down, "der") || strstr(down, "cer") || strstr(down, "pem") ||
-	strstr(down, "crl") || strstr(down, "roa")) {
-      ret = 1;
-    }
-    free(down);
-  }
-  return(ret);
-  }
-
-static int check_manifest(struct ROA *roap, char *mfname, char *topDir,
-  char *midDir,  struct name_list *rootp)
-  {
-  int sig_err = 0;
-  struct name_list *curr_namep;
-  for (curr_namep = rootp; curr_namep->nextp; curr_namep = curr_namep->nextp);
-     // leaves curr_namep at the last one that has no name, which may be rootp
-  struct badfile **badfilespp = (struct badfile **)0;
-  struct Manifest *manp = &roap->content.signedData.encapContentInfo.eContent.
-    manifest;
-  char *refDir;
-  if (midDir && *midDir)
-    {
-    refDir = (char *)calloc(1, strlen(topDir) + strlen(midDir) + 4);
-    strcat(strcat(strcpy(refDir, topDir), "/"), midDir);
-    }
-  else refDir = topDir;
-
-  if ((sig_err = manifestValidate2(roap, refDir, &badfilespp)) < 0 && !badfilespp)
-    {
-    char *cc;
-    for (cc = mfname; *cc > ' '; cc++);
-    *cc = 0;
-    if (sig_err == ERR_SCM_INVALSIG) cc = "signature";
-    else if (sig_err == ERR_SCM_BADCT) cc = "syntax";
-    else if (sig_err == ERR_SCM_BADNUMCERTS) cc = "number of certificates";
-    else if (sig_err == ERR_SCM_BADVERS) cc = "version";
-    else if (sig_err == ERR_SCM_NOTEE) cc = "non-EE certificate";
-    else if (sig_err == ERR_SCM_BADDATES) cc = "invalid dates";
-    else cc = "undefined";
-    fprintf(stderr, "%s error in manifest %s\n", cc, mfname);
-    if (midDir && *midDir) free(refDir);
-    return -1;
-    }
-     // make list of all certificates, CRLs and ROAs  in manifest
-  struct FileAndHash *fahp;
-  for (fahp = (struct FileAndHash *)member_casn(&roap->content.signedData.encapContentInfo.
-    eContent.manifest.fileList.self, 0); fahp;
-    fahp = (struct FileAndHash *)next_of(&fahp->self))
-    {
-    char *fname;
-    if (readvsize_casn(&fahp->file, (uchar **)&fname) > 0) 
-      {
-      if (mustManifest(fname))
-        {  //  add it to the manifested list
-        curr_namep->namep = fname;
-        curr_namep->state = 1;  // until proven otherwise
-        if (badfilespp)    // check if it is on the "bad" list
-          {
-          struct badfile **bpp;
-          for (bpp  = badfilespp; 
-	       *bpp && strcmp(fname, (*bpp)->fname) != 0; 
-	       bpp++)
-	    ;
-          if (*bpp)  // mark its state in namelist
-            {
-            int err = (*bpp)->err;
-            curr_namep->state = (err == ERR_SCM_COFILE)? 0: err;
-            }
-          }
-        curr_namep->nextp = (struct name_list *)calloc(1, sizeof(struct name_list));
-        curr_namep = curr_namep->nextp;
-        }
-      }
-    }
-  if (badfilespp) free_badfiles(badfilespp);
-  if (midDir && *midDir) free(refDir);
-  time_t now = time ((time_t *)0); 
-  ulong mhi, mlo;
-  read_casn_time(&manp->thisUpdate, &mlo);
-  read_casn_time(&manp->nextUpdate, &mhi);
-  if (mlo > now || mhi < now) return 0;
-  return 1;
-  }
-
-
 static char *makeCDStr(unsigned int *retlenp, char *dir)
 {
   char *buf;
@@ -197,57 +102,6 @@ static char *makeCDStr(unsigned int *retlenp, char *dir)
   *retlenp = strlen(buf);
   return(buf);
 }
-
-static int multi_match(struct name_list *rootp, char *fname, int fnamelth)
-  {
-  int rootlth = strlen(rootp->namep);
-  char *s;
-  if (fnamelth > rootlth) return 0;
-  for (s = &rootp->namep[rootlth - fnamelth]; s >= rootp->namep; s--)
-    {
-    if (!strcmp(s, fname)) return 1;
-    }
-  return 0;
-  }  
-
-static int wasManifested(struct name_list *rootp, char *fnamep, int ee)
-  {   // ee means to match the tail end of the paths in rootlist with multi_match
-  char *b;
-  if (!rootp || !rootp->namep) return 0;
-  for (b = fnamep; *b > ' '; b++);
-  char x = *b;
-  *b = 0;
-  char *t;
-  for (t = fnamep; *t; t++);  // chop off all but last part of filename
-  for (t--; t > fnamep && *t != '/'; t--);
-  if (*t == '/') fnamep = ++t;
-  int ansr = 0;
-  if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
-    (!ee && !strcmp(rootp->namep, fnamep))) ansr = 1;
-  else for (rootp = rootp->nextp; rootp->namep; rootp = rootp->nextp)
-    {
-    if ((ee && !multi_match(rootp, fnamep, b - fnamep)) ||
-      (!ee && !strcmp(rootp->namep, fnamep))) 
-      {
-      ansr = 1;
-      break;
-      }
-    }
-  *b = x;
-  if (ansr == 1) return (rootp->state < 0)? rootp->state: 1;
-  return ansr;
-  }
-
-static char *appendState(char *sendStr, int state, unsigned int *retlenp)
-  {
-  char *retStr = (char *)realloc(sendStr, strlen(sendStr) + 4);
-  char *a;
-  for (a = &retStr[2]; *a >= ' '; a++);
-  *a = 0;
-  sprintf(a, " %d\r\n", state);
-  *retlenp = strlen(retStr);
-  return retStr;
-  }
 
 int main(int argc, char *argv[])
   {
@@ -484,7 +338,7 @@ int main(int argc, char *argv[])
     startdir = nextdir;
     fseek(fp, startdir, SEEK_SET);
     memset(&rootlist, 0, sizeof(rootlist));
-    for (i = MANPASS; i < NUMPASSES; i++)
+    for (i = GENPASS; i < NUMPASSES; i++)
       {
       while ((bc = fgets(holding, PATH_MAX, fp)) != NULL)
         {
@@ -500,45 +354,18 @@ int main(int argc, char *argv[])
         *b = 0;
         struct stat tstat;
         int exists = (stat(fname, &tstat) == 0);
-           // if doing manifests and it's a manifest, check contents & 
-           // note file names
-        if (i == MANPASS  && have_manifest != 0 && exists)
-          {
-          if (get_casn_file(&roa.self, fname, 0) < 0)
-            {
-            fprintf(stderr, "invalid manifest %s\n", fname);
-            continue;
-            }
-          int ansr;
-          if ((ansr = check_manifest(&roa, &sendStr[2], topDir, curr_dir, &rootlist)) 
-            >= 0)
-            {
-            sendStr = appendState(sendStr, ansr, &retlen);  // send manifest
-            outputMsg(&wport, sendStr, retlen);
-            }
-          }
+        if (exists == 0 && (*sendStr == 'A' || *sendStr == 'U' || 
+          *sendStr == 'R')) 
+          fprintf(stderr, "cannot find %s", &sendStr[2]);
           // else if doing trusts and it's a trust, send message
-        else if (i == TRUSTPASS && isTrust(sendStr) && exists)
-          {
+        else if (i == TRUSTPASS && isTrust(sendStr))
           outputMsg(&wport, sendStr, retlen);
-          }
           // else if doing other stuff and it's not a trust nor a manifest
         else if (i == GENPASS && !isTrust(sendStr) && !have_manifest)
-          {
-          if (exists == 0 && (*sendStr == 'A' || *sendStr == 'U' || 
-            *sendStr == 'R')) 
-            fprintf(stderr, "cannot find %s", &sendStr[2]);
-          else
-            {  
-            if (mustManifest(&sendStr[2]))  // if it should be on a manifest
-              {
-              sendStr = appendState(sendStr, 
-                wasManifested(&rootlist, &sendStr[2], 0),
-                &retlen);
-              }
-            outputMsg(&wport, sendStr, retlen);
-            }
-          }
+          outputMsg(&wport, sendStr, retlen);
+          // else if doing manifests and it's a manifest
+        else if (i == MANPASS  && have_manifest != 0) 
+          outputMsg(&wport, sendStr, retlen);
         retlen = 0;
         if (fname) free(fname);
         free(sendStr);
