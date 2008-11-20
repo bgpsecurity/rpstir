@@ -217,7 +217,7 @@ static int check_cert(struct Certificate *certp)
   return 0;
   }
 
-static int check_fileAndHash(struct FileAndHash *fahp, int ffd)
+int check_fileAndHash(struct FileAndHash *fahp, int ffd)
   {
   uchar *contentsp;
   int err = 0,
