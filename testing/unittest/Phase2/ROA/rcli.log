@@ -1,0 +1,896 @@
+Rsync client session start: Sat Sep  6 13:11:59 2008
+Rsync client session end Sat Sep  6 13:11:59 2008
+Rsync client session start: Sat Sep  6 13:11:59 2008
+Attempting to add file C.cer
+Could not add file /home/fbronzo/apki/trunk/testcases/unittest/ROA/C.cer: error Bad filename or file not found (-12)
+Rsync client session end Sat Sep  6 13:11:59 2008
+Rsync client session start: Sat Sep  6 13:12:19 2008
+Rsync client session end Sat Sep  6 13:12:19 2008
+Rsync client session start: Sat Sep  6 13:12:19 2008
+Attempting to add file C.cer
+Add operation succeeded
+Rsync client session end Sat Sep  6 13:12:19 2008
+Rsync client session start: Sat Sep  6 13:12:19 2008
+Attempting to add file TC_1.10.roa
+Could not add file TC_1.10.roa: error ASN.1 library error (-44)
+Rsync client session end Sat Sep  6 13:12:19 2008
+Rsync client session start: Tue Sep  9 10:50:38 2008
+Rsync client session end Tue Sep  9 10:50:38 2008
+Rsync client session start: Mon Nov 10 12:00:23 2008
+Rsync client session end Mon Nov 10 12:00:23 2008
+Rsync client session start: Mon Nov 10 12:00:30 2008
+Rsync client session end Mon Nov 10 12:00:30 2008
+Rsync client session start: Mon Nov 10 12:02:50 2008
+Attempting to add file TC_1.2.roa.req
+Could not add file TC_1.2.roa.req: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 12:02:50 2008
+Rsync client session start: Mon Nov 10 12:04:30 2008
+Attempting to add file roa.req
+Could not add file roa.req: error Error reading cert (-17)
+Rsync client session end Mon Nov 10 12:04:30 2008
+Rsync client session start: Mon Nov 10 12:05:51 2008
+Attempting to add file roa.req
+Could not add file roa.req: error Error reading cert (-17)
+Rsync client session end Mon Nov 10 12:05:51 2008
+Rsync client session start: Mon Nov 10 12:11:24 2008
+Attempting to add file roa.req
+Could not add file roa.req: error Error reading cert (-17)
+Rsync client session end Mon Nov 10 12:11:24 2008
+Rsync client session start: Mon Nov 10 12:19:42 2008
+Attempting to add file R.roa
+Could not add file R.roa: error Invalid SKI (-40)
+Rsync client session end Mon Nov 10 12:19:42 2008
+Rsync client session start: Mon Nov 10 12:22:09 2008
+Attempting to add file R111.roa
+Add operation succeeded
+Rsync client session end Mon Nov 10 12:22:09 2008
+Rsync client session start: Mon Nov 10 12:29:27 2008
+Attempting to add file roa.req
+Could not add file roa.req: error Error reading cert (-17)
+Rsync client session end Mon Nov 10 12:29:27 2008
+Rsync client session start: Mon Nov 10 12:29:56 2008
+Attempting to add file R111.roa
+Could not add file R111.roa: error Duplicate signature (-90)
+Rsync client session end Mon Nov 10 12:29:56 2008
+Rsync client session start: Mon Nov 10 13:00:07 2008
+Attempting to add file roa.req
+Could not add file roa.req: error Error reading cert (-17)
+Rsync client session end Mon Nov 10 13:00:07 2008
+Rsync client session start: Mon Nov 10 13:07:15 2008
+Attempting to add file roa.req
+Could not add file roa.req: error Error reading cert (-17)
+Rsync client session end Mon Nov 10 13:07:15 2008
+Rsync client session start: Mon Nov 10 13:18:51 2008
+Attempting to add file roa.req
+Rsync client session start: Mon Nov 10 13:35:37 2008
+Attempting to add file roa.roa
+Could not add file roa.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:36:57 2008
+Rsync client session start: Mon Nov 10 13:37:49 2008
+Attempting to add file mytest.roa
+Rsync client session start: Mon Nov 10 13:40:25 2008
+Attempting to add file roa.req
+Rsync client session start: Mon Nov 10 13:42:39 2008
+Attempting to add file roa.roa
+Add operation succeeded
+Rsync client session end Mon Nov 10 13:42:40 2008
+Rsync client session start: Mon Nov 10 13:44:51 2008
+Attempting to add file TC_1.2.roa.roa
+Could not add file TC_1.2.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 13:44:51 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file mytest.roa
+Could not add file mytest.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file R111
+Could not add file R111: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file roa
+Could not add file roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.10.roa
+Could not add file TC_1.10.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.11.roa
+Could not add file TC_1.11.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.12.roa
+Could not add file TC_1.12.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.15.roa
+Could not add file TC_1.15.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.16.roa
+Could not add file TC_1.16.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.17.roa
+Could not add file TC_1.17.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.18.roa
+Could not add file TC_1.18.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.19.roa
+Could not add file TC_1.19.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.1.roa
+Could not add file TC_1.1.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.20.roa
+Could not add file TC_1.20.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.21.roa
+Could not add file TC_1.21.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.22.roa
+Could not add file TC_1.22.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.23.roa
+Could not add file TC_1.23.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.24.roa
+Could not add file TC_1.24.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.25.roa
+Could not add file TC_1.25.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.26.roa
+Could not add file TC_1.26.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.27.roa
+Could not add file TC_1.27.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.28.roa
+Could not add file TC_1.28.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.2.roa
+Could not add file TC_1.2.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.3.roa
+Could not add file TC_1.3.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.4.roa
+Could not add file TC_1.4.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.5.roa
+Could not add file TC_1.5.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.6.roa
+Could not add file TC_1.6.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.7.roa
+Could not add file TC_1.7.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.8.roa
+Could not add file TC_1.8.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_1.9.roa
+Could not add file TC_1.9.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.10.roa
+Could not add file TC_2.10.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.11.roa
+Could not add file TC_2.11.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.12.roa
+Could not add file TC_2.12.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.13.roa
+Could not add file TC_2.13.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.14.roa
+Could not add file TC_2.14.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.15.roa
+Could not add file TC_2.15.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.16.roa
+Could not add file TC_2.16.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.17.roa
+Could not add file TC_2.17.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.18.roa
+Could not add file TC_2.18.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.19.roa
+Could not add file TC_2.19.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.1.roa
+Could not add file TC_2.1.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.20.roa
+Could not add file TC_2.20.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:54 2008
+Attempting to add file TC_2.21.roa
+Could not add file TC_2.21.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:54 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.22.roa
+Could not add file TC_2.22.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.2.roa
+Could not add file TC_2.2.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.3.roa
+Could not add file TC_2.3.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.4.roa
+Could not add file TC_2.4.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.5.roa
+Could not add file TC_2.5.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.6.roa
+Could not add file TC_2.6.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.7.roa
+Could not add file TC_2.7.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.8.roa
+Could not add file TC_2.8.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_2.9.roa
+Could not add file TC_2.9.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.1.roa
+Could not add file TC_3.1.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.20.roa
+Could not add file TC_3.20.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.21.roa
+Could not add file TC_3.21.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.22.roa
+Could not add file TC_3.22.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.23.roa
+Could not add file TC_3.23.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.24.roa
+Could not add file TC_3.24.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.25.roa
+Could not add file TC_3.25.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.26.roa
+Could not add file TC_3.26.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.27.roa
+Could not add file TC_3.27.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.28.roa
+Could not add file TC_3.28.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.29.roa
+Could not add file TC_3.29.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.2.roa
+Could not add file TC_3.2.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.30.roa
+Could not add file TC_3.30.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.31.roa
+Could not add file TC_3.31.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.32.roa
+Could not add file TC_3.32.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.33.roa
+Could not add file TC_3.33.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.34.roa
+Could not add file TC_3.34.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.35.roa
+Could not add file TC_3.35.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.36.roa
+Could not add file TC_3.36.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.37.roa
+Could not add file TC_3.37.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.38.roa
+Could not add file TC_3.38.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.39.roa
+Could not add file TC_3.39.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.3.roa
+Could not add file TC_3.3.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.41.roa
+Could not add file TC_3.41.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.42.roa
+Could not add file TC_3.42.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.43.roa
+Could not add file TC_3.43.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.44.roa
+Could not add file TC_3.44.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.45.roa
+Could not add file TC_3.45.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.46.roa
+Could not add file TC_3.46.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.47.roa
+Could not add file TC_3.47.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.48.roa
+Could not add file TC_3.48.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.49.roa
+Could not add file TC_3.49.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:55 2008
+Attempting to add file TC_3.4.roa
+Could not add file TC_3.4.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:55 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.50.roa
+Could not add file TC_3.50.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.51.roa
+Could not add file TC_3.51.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.52.roa
+Could not add file TC_3.52.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.53.roa
+Could not add file TC_3.53.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.54.roa
+Could not add file TC_3.54.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.55.roa
+Could not add file TC_3.55.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.5.roa
+Could not add file TC_3.5.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.6.roa
+Could not add file TC_3.6.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.70.roa
+Could not add file TC_3.70.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.7.roa
+Could not add file TC_3.7.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.8.roa
+Could not add file TC_3.8.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_3.9.roa
+Could not add file TC_3.9.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_4.1.roa
+Could not add file TC_4.1.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_4.2.roa
+Could not add file TC_4.2.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_4.3.roa
+Could not add file TC_4.3.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 13:52:56 2008
+Attempting to add file TC_4.4.roa
+Could not add file TC_4.4.roa: error Bad filename or file not found (-12)
+Rsync client session end Mon Nov 10 13:52:56 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.10.roa.roa
+Could not add file TC_1.10.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:21 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.11.roa.roa
+Could not add file TC_1.11.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:21 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.12.roa.roa
+Could not add file TC_1.12.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:21 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.15.roa.roa
+Could not add file TC_1.15.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:21 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.16.roa.roa
+Could not add file TC_1.16.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:21 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.17.roa.roa
+Could not add file TC_1.17.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:21 2008
+Rsync client session start: Mon Nov 10 14:02:21 2008
+Attempting to add file TC_1.18.roa.roa
+Could not add file TC_1.18.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.19.roa.roa
+Could not add file TC_1.19.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.1.roa.roa
+Could not add file TC_1.1.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.20.roa.roa
+Could not add file TC_1.20.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.21.roa.roa
+Could not add file TC_1.21.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.22.roa.roa
+Could not add file TC_1.22.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.23.roa.roa
+Could not add file TC_1.23.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.24.roa.roa
+Could not add file TC_1.24.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.25.roa.roa
+Could not add file TC_1.25.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.26.roa.roa
+Could not add file TC_1.26.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.27.roa.roa
+Could not add file TC_1.27.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.28.roa.roa
+Could not add file TC_1.28.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.2.roa.roa
+Could not add file TC_1.2.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.3.roa.roa
+Could not add file TC_1.3.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.4.roa.roa
+Could not add file TC_1.4.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.5.roa.roa
+Could not add file TC_1.5.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.6.roa.roa
+Could not add file TC_1.6.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.7.roa.roa
+Could not add file TC_1.7.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.8.roa.roa
+Could not add file TC_1.8.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_1.9.roa.roa
+Could not add file TC_1.9.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_2.10.roa.roa
+Could not add file TC_2.10.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_2.11.roa.roa
+Could not add file TC_2.11.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_2.12.roa.roa
+Could not add file TC_2.12.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_2.13.roa.roa
+Could not add file TC_2.13.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:22 2008
+Rsync client session start: Mon Nov 10 14:02:22 2008
+Attempting to add file TC_2.14.roa.roa
+Could not add file TC_2.14.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.15.roa.roa
+Could not add file TC_2.15.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.16.roa.roa
+Could not add file TC_2.16.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.17.roa.roa
+Could not add file TC_2.17.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.18.roa.roa
+Could not add file TC_2.18.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.19.roa.roa
+Could not add file TC_2.19.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.1.roa.roa
+Could not add file TC_2.1.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.20.roa.roa
+Could not add file TC_2.20.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.21.roa.roa
+Could not add file TC_2.21.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.22.roa.roa
+Could not add file TC_2.22.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.2.roa.roa
+Could not add file TC_2.2.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.3.roa.roa
+Could not add file TC_2.3.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.4.roa.roa
+Could not add file TC_2.4.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.5.roa.roa
+Could not add file TC_2.5.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.6.roa.roa
+Could not add file TC_2.6.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:23 2008
+Attempting to add file TC_2.7.roa.roa
+Could not add file TC_2.7.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:23 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_2.8.roa.roa
+Could not add file TC_2.8.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_2.9.roa.roa
+Could not add file TC_2.9.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.1.roa.roa
+Could not add file TC_3.1.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.20.roa.roa
+Could not add file TC_3.20.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.21.roa.roa
+Could not add file TC_3.21.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.22.roa.roa
+Could not add file TC_3.22.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.23.roa.roa
+Could not add file TC_3.23.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.24.roa.roa
+Could not add file TC_3.24.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.25.roa.roa
+Could not add file TC_3.25.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.26.roa.roa
+Could not add file TC_3.26.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.27.roa.roa
+Could not add file TC_3.27.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.28.roa.roa
+Could not add file TC_3.28.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.29.roa.roa
+Could not add file TC_3.29.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.2.roa.roa
+Could not add file TC_3.2.roa.roa: error Bad certificate version (-47)
+Rsync client session end Mon Nov 10 14:02:24 2008
+Rsync client session start: Mon Nov 10 14:02:24 2008
+Attempting to add file TC_3.30.roa.roa
+Could not add file TC_3.30.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.31.roa.roa
+Could not add file TC_3.31.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.32.roa.roa
+Could not add file TC_3.32.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.33.roa.roa
+Could not add file TC_3.33.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.34.roa.roa
+Could not add file TC_3.34.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.35.roa.roa
+Could not add file TC_3.35.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.36.roa.roa
+Could not add file TC_3.36.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.37.roa.roa
+Could not add file TC_3.37.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.38.roa.roa
+Could not add file TC_3.38.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:25 2008
+Rsync client session start: Mon Nov 10 14:02:25 2008
+Attempting to add file TC_3.39.roa.roa
+Could not add file TC_3.39.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.3.roa.roa
+Could not add file TC_3.3.roa.roa: error Bad digest algorithm (-85)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.41.roa.roa
+Could not add file TC_3.41.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.42.roa.roa
+Could not add file TC_3.42.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.43.roa.roa
+Could not add file TC_3.43.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.44.roa.roa
+Could not add file TC_3.44.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.45.roa.roa
+Could not add file TC_3.45.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.46.roa.roa
+Could not add file TC_3.46.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.47.roa.roa
+Could not add file TC_3.47.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.48.roa.roa
+Could not add file TC_3.48.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.49.roa.roa
+Could not add file TC_3.49.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.4.roa.roa
+Could not add file TC_3.4.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:26 2008
+Rsync client session start: Mon Nov 10 14:02:26 2008
+Attempting to add file TC_3.50.roa.roa
+Add operation succeeded
+Rsync client session end Mon Nov 10 14:02:27 2008
+Rsync client session start: Mon Nov 10 14:02:27 2008
+Attempting to add file TC_3.51.roa.roa
+Add operation succeeded
+Rsync client session end Mon Nov 10 14:02:27 2008
+Rsync client session start: Mon Nov 10 14:02:27 2008
+Attempting to add file TC_3.52.roa.roa
+Could not add file TC_3.52.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:27 2008
+Rsync client session start: Mon Nov 10 14:02:27 2008
+Attempting to add file TC_3.53.roa.roa
+Add operation succeeded
+Rsync client session end Mon Nov 10 14:02:27 2008
+Rsync client session start: Mon Nov 10 14:02:27 2008
+Attempting to add file TC_3.54.roa.roa
+Add operation succeeded
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.55.roa.roa
+Could not add file TC_3.55.roa.roa: error Invalid IP address length (-42)
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.5.roa.roa
+Could not add file TC_3.5.roa.roa: error Hash error (-91)
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.6.roa.roa
+Could not add file TC_3.6.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.70.roa.roa
+Could not add file TC_3.70.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.7.roa.roa
+Could not add file TC_3.7.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.8.roa.roa
+Could not add file TC_3.8.roa.roa: error Differing algorithms in cert (-95)
+Rsync client session end Mon Nov 10 14:02:28 2008
+Rsync client session start: Mon Nov 10 14:02:28 2008
+Attempting to add file TC_3.9.roa.roa
+Could not add file TC_3.9.roa.roa: error Invalid signature (-81)
+Rsync client session end Mon Nov 10 14:02:29 2008
+Rsync client session start: Mon Nov 10 14:02:29 2008
+Attempting to add file TC_4.1.roa.roa
+Could not add file TC_4.1.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Mon Nov 10 14:02:29 2008
+Rsync client session start: Mon Nov 10 14:02:29 2008
+Attempting to add file TC_4.2.roa.roa
+Could not add file TC_4.2.roa.roa: error Invalid IP address block (-41)
+Rsync client session end Mon Nov 10 14:02:29 2008
+Rsync client session start: Mon Nov 10 14:02:29 2008
+Attempting to add file TC_4.3.roa.roa
+Could not add file TC_4.3.roa.roa: error Invalid IP address block (-41)
+Rsync client session end Mon Nov 10 14:02:29 2008
+Rsync client session start: Mon Nov 10 14:02:29 2008
+Attempting to add file TC_4.4.roa.roa
+Could not add file TC_4.4.roa.roa: error Invalid IP address block (-41)
+Rsync client session end Mon Nov 10 14:02:29 2008
+Rsync client session start: Tue Nov 11 14:11:15 2008
+Attempting to add file TC_3.21.roa.roa
+Add operation succeeded
+Rsync client session end Tue Nov 11 14:11:16 2008
+Rsync client session start: Tue Nov 11 14:12:07 2008
+Attempting to add file TC_3.21.roa.roa
+Could not add file TC_3.21.roa.roa: error Invalid signature (-81)
+Rsync client session end Tue Nov 11 14:12:07 2008
+Rsync client session start: Wed Nov 12 16:22:37 2008
+Attempting to add file TC_2.16.roa.roa
+Could not add file TC_2.16.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Wed Nov 12 16:22:37 2008
+Rsync client session start: Wed Nov 12 16:22:42 2008
+Attempting to add file TC_2.18.roa.roa
+Could not add file TC_2.18.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Wed Nov 12 16:22:42 2008
+Rsync client session start: Wed Nov 12 16:22:51 2008
+Attempting to add file TC_3.21.roa.roa
+Could not add file TC_3.21.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Wed Nov 12 16:22:51 2008
+Rsync client session start: Wed Nov 12 16:22:55 2008
+Attempting to add file TC_3.26.roa.roa
+Could not add file TC_3.26.roa.roa: error Error in SignerInfos (-97)
+Rsync client session end Wed Nov 12 16:22:55 2008
+Rsync client session start: Wed Nov 12 16:23:02 2008
+Attempting to add file TC_3.31.roa.roa
+Could not add file TC_3.31.roa.roa: error ASN.1 library error (-44)
+Rsync client session end Wed Nov 12 16:23:02 2008

@@ -1,0 +1,16 @@
+Rsync client session start: Sat Sep  6 13:11:59 2008
+Rsync client session end Sat Sep  6 13:11:59 2008
+Rsync client session start: Sat Sep  6 13:11:59 2008
+Attempting to add file C.cer
+Could not add file /home/fbronzo/apki/trunk/testcases/unittest/ROA/C.cer: error Bad filename or file not found (-12)
+Rsync client session end Sat Sep  6 13:11:59 2008
+Rsync client session start: Sat Sep  6 13:12:19 2008
+Rsync client session end Sat Sep  6 13:12:19 2008
+Rsync client session start: Sat Sep  6 13:12:19 2008
+Attempting to add file C.cer
+Add operation succeeded
+Rsync client session end Sat Sep  6 13:12:19 2008
+Rsync client session start: Sat Sep  6 13:12:19 2008
+Attempting to add file TC_1.10.roa
+Could not add file TC_1.10.roa: error ASN.1 library error (-44)
+Rsync client session end Sat Sep  6 13:12:19 2008

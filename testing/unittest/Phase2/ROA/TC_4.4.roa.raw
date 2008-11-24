@@ -1,0 +1,116 @@
+seq oid 1.2.840.113549.1.7.2 /* id_signedData */
+    ctx+0x20
+        seq int 0x03
+            set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                    nul 
+            seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                ctx+0x20
+                    ocw seq ctx+0x00
+                                0x00
+                            int 0x08
+                            seq seq oct 0x0001
+                                    seq seq bit 0x00A300
+                                seq oct 0x0002
+                                    seq seq bit 0x0042342342000000
+                                                0x00000000
+                                        seq bit 0x0042342342000000
+                                                0x00000000
+            ctx+0x20
+                seq seq ctx+0x20
+                            int 0x02
+                        int 0x020D
+                        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                            nul 
+                        seq set seq oid 2.5.4.3 /* id_commonName */
+                                    prt "C12"
+                        seq utc "080903213206Z"
+                            utc "090903213206Z"
+                        seq set seq oid 2.5.4.3 /* id_commonName */
+                                    prt "C12R1"
+                        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                                nul 
+                            bit 0x0030818902818100D277BE97C6DC40CD
+                                0xFA5FC713F3BBA0750719041491B22E78
+                                0x5154AAEE9DE7CB139DF2C27AD03BBA5C
+                                0x607C26EE7C5C6E9636E399768F610EC3
+                                0xE53CE2C13C18D6A11343618030FB2223
+                                0x29C5334F1CBA8D8C1B276C04022982D7
+                                0x5A1999F6A644CD10FC7268FBA71ABD82
+                                0x86197327C01DD5E01D80A6FBD2DE9147
+                                0x90260DCDBA4B4AD30203010001
+                        ctx+0x23
+                            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                                    ocw oct 0x683F51170CE09BE5806DA386B28F351E
+                                            0x77D5DD90
+                                seq oid 2.5.29.15 /* id_keyUsage */
+                                    boo 0xFF
+                                    ocw bit 0x0780
+                                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                                    ocw seq seq ctx+0x20
+                                                    ctx+0x20
+                                                        ctx+0x06
+                                                            "rsync://arin-via-a"
+                                                            "pnic"
+                                seq oid 2.5.29.32 /* id_certificatePolicies */
+                                    boo 0xFF
+                                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
+                                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                                ctx+0x06
+                                                    "rsync://bbn-via-roa-pki"
+                                seq oid 2.5.29.35 /* id_authKeyId */
+                                    ocw seq ctx+0x00
+                                                0x2720C15F2AB072BC
+                                                0xA96A83D95DEFBCB9
+                                                0x36A61A0F
+                                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                                    boo 0xFF
+                                    ocw seq seq oct 0x0001
+                                                nul 
+                                            seq oct 0x0002
+                                                nul 
+                                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                                ctx+0x06
+                                                    "rsync://arin-via-apnic.mir"
+                                                    "in.apnic.net/mock/ARINviaA"
+                                                    "PNIC/02QW909vLlN7hEINm3Iv6"
+                                                    "MtYC0w/e3L5eq0X8jJlDu9fmx8"
+                                                    "xjDAbbxI/"
+                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                        nul 
+                    bit 0x007FFA2107B5C1C71422F037F43D2884
+                        0xD25469183ECF6E6D9BA86E27E8F15FF0
+                        0xEA5A37FD22F24746A6C36B6237961878
+                        0x2111F2E7BADC7563A49039B9D60B9DC2
+                        0x8C729BEAE29399EE75FCBDA7E317F02D
+                        0x1675619450607D1D36C5F28FA7A6CC92
+                        0xF940D8676B18B7F34FAC7D1A54F099C4
+                        0xC6032ECDB8BDB6DBDBE84D6CD9C9467D
+                        0x1F
+            set seq int 0x03
+                    ctx+0x00
+                        0x683F51170CE09BE5806DA386B28F351E
+                        0x77D5DD90
+                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                        nul 
+                    ctx+0x20
+                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+                            set oct 0xAF340237CA61214E88771FCB2D025191
+                                    0x42A256317172B0C9A04D7FDEE0B62EF8
+                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
+                            set utc "080903213206Z"
+                        seq oid 1.2.840.113549.1.9.16.2.46 /* id_binSigningTimeAttr */
+                            set int 0x48BF0256
+                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                        nul 
+                    oct 0xB08396092D23251D61EE974AD06D620F
+                        0x88B7B24FDFEB04212DC649B9E36FF28C
+                        0xF941AF845B57398C439C755513A662A9
+                        0xEA7D6CF6F512D496FE5474CC5C80CFD5
+                        0xFF01631265445AB0B1E400DAFD906554
+                        0x652749CB32A3640D36149789DA1E46FF
+                        0x3A7E2391B85BA7F8063557463AC0A57D
+                        0xA59FBF89DFE31E48BECF06CF7813E846

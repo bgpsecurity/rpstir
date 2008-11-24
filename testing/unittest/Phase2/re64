@@ -1,0 +1,37 @@
+#!/usr/local/bin/perl
+
+use MIME::Base64;
+
+if ($#ARGV < 1) {
+  die "Must supply 2 input args: input file basename, and file type.\n";
+}
+
+($inname, $ftype) = @ARGV;
+if ($inname =~ /(.+)\.raw$/) {
+    $inbase = $1;
+}
+
+%type = ( "cer" => 'CERTIFICATE',
+          "roa" => 'ROA',
+          "man" => 'MANIFEST');
+
+system("/home/gardiner/apki/trunk/cg/tools/rr $inbase");
+
+undef $all;
+open(IN, "< $inbase.raw") || die "Cannot open $inbase.raw: $!\n";
+while ($input = <IN>) {
+  $all .= $input;
+}
+close(IN);
+
+$encoded = encode_base64($all);
+
+$newname = $inbase . ".$ftype" . ".pem";
+
+open(OUT, "> $newname") || die "Cannot open $newname: $!\n";
+print OUT "-----BEGIN $type{$ftype}-----\n";
+print OUT $encoded;
+print OUT "-----END $type{$ftype}-----\n";
+close(OUT);
+
+

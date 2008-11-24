@@ -1,0 +1,26 @@
+#!/usr/local/bin/perl
+
+use File::Basename;
+use MIME::Base64;
+
+open(IN, "< $ARGV[0]") || die "Cannot open $ARGV[0]: $!\n";
+
+while($line = <IN>) {
+  chomp $line;
+  if ($line !~ /-----/) {
+    $string = $string . $line;
+  }
+}
+close(IN);
+
+$decoded = decode_base64($string);
+
+open(OUT, "> out.bin");
+print OUT $decoded;
+close(OUT);
+
+($base, $dir, $ext) = fileparse($ARGV[0],'\..*');
+
+print "$base, $dir, $ext\n";
+
+system("/home/gardiner/apki/trunk/cg/tools/dump -a out.bin > $base.raw");
