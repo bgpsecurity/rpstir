@@ -75,7 +75,7 @@ static int handleIfCurrent (scmcon *conp, scmsrcha *s, int cnt)
   s = s;
   char msg[128];
   if (cnt == 0) return 0;   // exists another crl that is current
-  snprintf (msg, 128, "update %s set flags = flags - %d where local_id=%d",
+  snprintf (msg, 128, "update %s set flags = flags - %d where local_id=%d;",
            certTable->tabname, SCM_FLAG_STALECRL, theID);
   return statementscm (conp, msg);
 }
