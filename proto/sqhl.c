@@ -1380,6 +1380,7 @@ static int registerChild (scmcon *conp, scmsrcha *s, int idx)
  * verify the children certs of the current cert
  */
 static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
+				char *aki, char *issuer,
 				unsigned int cert_id, int doVerify)
 {
   int isRoot = 1;
@@ -1409,6 +1410,8 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
       (PropData *)calloc(currPropData->maxSize, sizeof(PropData));
   currPropData->data[0].ski = ski;
   currPropData->data[0].subject = subject;
+  currPropData->data[0].aki = aki;
+  currPropData->data[0].issuer = issuer;
   currPropData->data[0].id = cert_id;
   currPropData->size = 1;
   while (currPropData->size > 0) {
@@ -1552,7 +1555,9 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
 // try to validate children of cert
   if ((sta == 0) && chainOK) {
     sta = verifyOrNotChildren (conp, cf->fields[CF_FIELD_SKI],
-			       cf->fields[CF_FIELD_SUBJECT], *cert_id, 1);
+			       cf->fields[CF_FIELD_SUBJECT],
+			       cf->fields[CF_FIELD_AKI], 
+			       cf->fields[CF_FIELD_ISSUER], *cert_id, 1);
   }
   // if change verify_cert so that not pushing on stack, change this
   if (! (cf->flags & SCM_FLAG_TRUSTED)) {
@@ -2237,7 +2242,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   lid = *(unsigned int *)(s->vec[0].valptr);
   sta = deletebylid(conp, theCertTable, lid);
   return verifyOrNotChildren (conp, (char *) s->vec[1].valptr,
-			      (char *) s->vec[2].valptr, lid, 0);
+			      (char *) s->vec[2].valptr, NULL, NULL, lid, 0);
 }
 
 /*

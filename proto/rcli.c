@@ -348,6 +348,7 @@ static char *afterwhite(char *ptr)
   return(run);
 }
 
+/*******************
 static char *splitOnWhite(char *ptr) {
   char *run = ptr;
   while (*run && ! isspace((int)*run)) run++;
@@ -357,6 +358,7 @@ static char *splitOnWhite(char *ptr) {
   while (isspace((int)*run)) run++;
   return run;
 }
+********************/
 
 static char *hdir = NULL;
 
