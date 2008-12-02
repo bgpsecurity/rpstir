@@ -60,9 +60,7 @@
 #define SCM_FLAG_NOTYET       0x10   /* too early, not yet ready */
 #define SCM_FLAG_STALECRL     0x20   /* assoc crl of self or ancestor stale */
 #define SCM_FLAG_STALEMAN     0x40   /* assoc man of self or ancestor stale */
-#define SCM_FLAG_NOMAN        0x100  /* no associated manifest */
-#define SCM_FLAG_NOVALIDMAN   0x200  /* no validated associated manifest */
-#define SCM_FLAG_BADHASH      0x400  /* manifest specifies different hash */
+#define SCM_FLAG_ONMAN        0x100  /* has associated valid manifest */
 
 /* certain fields need to have "rsync URIs". The only test we perform
  * for now is to verify that the field starts with this text */
@@ -91,18 +89,17 @@ typedef struct _crlinfo
 extern int   findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
 			     unsigned int *idp);
 extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-			char *outfull, int utrust, char *manState);
+			char *outfull, int utrust);
 extern int   delete_object(scm *scmp, scmcon *conp, char *outfile,
 			   char *outdir, char *outfull);
 extern int   infer_filetype(char *fname);
 extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		      unsigned int id, int utrust, int typ,
-		      unsigned int *cert_id, char *manState);
+		      unsigned int *cert_id);
 extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-		     unsigned int id, int utrust, int typ, char *manState);
+		     unsigned int id, int utrust, int typ);
 extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-		     char *outfull, unsigned int id, int utrust, int typ,
-		     char *manState);
+		     char *outfull, unsigned int id, int utrust, int typ);
 extern int   add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 		  char *outfull, unsigned int id, int utrust, int typ);
 extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
@@ -111,9 +108,8 @@ extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 extern int   deletebylid(scmcon *conp, scmtab *tabp, unsigned int lid);
 extern int   certificate_validity(scm *scmp, scmcon *conp);
 extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
-extern unsigned int addStateToFlags(unsigned int flags, int isValid,
-				    char *manState, char *filename,
-				    scm *scmp, scmcon *conp);
+extern int   addStateToFlags(unsigned int *flags, int isValid, char *filename,
+			     char *fullpath, scm *scmp, scmcon *conp);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 

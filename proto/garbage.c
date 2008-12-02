@@ -110,6 +110,8 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
  * all objects referenced by manifest that is stale
  */
 static char staleManStmt[MANFILES_SIZE];
+static char *staleManFiles[10000];
+static int numStaleManFiles = 0;
 
 static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
 {
@@ -122,11 +124,11 @@ static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
 
 static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
 {
-  numLine = numLine;
-  char *files = (char *)s->vec[0].valptr;
-  handleStaleMan2(conp, certTable, files);
-  handleStaleMan2(conp, crlTable, files);
-  handleStaleMan2(conp, roaTable, files);
+  numLine = numLine; conp = conp;
+  int len = strlen((char *)s->vec[0].valptr) + 1;
+  staleManFiles[numStaleManFiles] = malloc(len);
+  memcpy(staleManFiles[numStaleManFiles], (char *)s->vec[0].valptr, len);
+  numStaleManFiles++;
   return 0;
 }
 
@@ -143,16 +145,6 @@ static int handleFreshMan2(scmcon *conp, scmtab *tab, char *files)
   return statementscm (conp, staleManStmt);
 }
 
-static int handleFreshMan (scmcon *conp, scmsrcha *s, int numLine)
-{
-  numLine = numLine;
-  char *files = (char *)s->vec[0].valptr;
-  handleFreshMan2(conp, certTable, files);
-  handleFreshMan2(conp, crlTable, files);
-  handleFreshMan2(conp, roaTable, files);
-  return 0;
-}
-
 int main(int argc, char **argv) 
 {
   scm      *scmp = NULL;
@@ -162,7 +154,7 @@ int main(int argc, char **argv)
   scmsrch  srch1[4];
   char     msg[WHERESTR_SIZE];
   unsigned long blah = 0;
-  int      status;
+  int      status, i;
 
   // initialize
   argc = argc; argv = argv;   // silence compiler warnings
@@ -225,11 +217,26 @@ int main(int argc, char **argv)
   srch.nused = 0;
   srch.vald = 0;
   addcolsrchscm (&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
+  numStaleManFiles = 0;
   status = searchscm (connect, manifestTable, &srch, NULL, handleStaleMan,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
+  for (i = 0; i < numStaleManFiles; i++) {
+    handleStaleMan2(connect, certTable, staleManFiles[i]);
+    handleStaleMan2(connect, crlTable, staleManFiles[i]);
+    handleStaleMan2(connect, roaTable, staleManFiles[i]);
+    free(staleManFiles[i]);
+  }
+  srch.vald = 0;
   snprintf (msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
-  status = searchscm (connect, manifestTable, &srch, NULL, handleFreshMan,
+  numStaleManFiles = 0;
+  status = searchscm (connect, manifestTable, &srch, NULL, handleStaleMan,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
+  for (i = 0; i < numStaleManFiles; i++) {
+    handleFreshMan2(connect, certTable, staleManFiles[i]);
+    handleFreshMan2(connect, crlTable, staleManFiles[i]);
+    handleFreshMan2(connect, roaTable, staleManFiles[i]);
+    free(staleManFiles[i]);
+  }
   free (srch1[0].valptr);
 
   // check all certs in state unknown to see if now crl with issuer=issuer

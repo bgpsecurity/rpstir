@@ -1027,213 +1027,110 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   return 0;
 }
 
+
 /*
- * unset novalidman flag from all objects on newly validated manifest
+ * set onman flag from all objects on newly validated manifest
+ * plus, delete those objects with bad hashes
  */
-static char updateManStmt[MANFILES_SIZE];
-static char updateManWhere[MANFILES_SIZE];
+static scmsrcha *updateManSrch = NULL;
+static scmsrcha *updateManSrch2 = NULL;
+static unsigned int updateManLid;
+static char updateManPath[PATH_MAX];
 static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx);
-static void fillInColumns (scmsrch *srch1, unsigned int *lid, char *ski,
-			   char *subject, unsigned int *flags, scmsrcha *srch);
 
-static void updateManifestObjs2 (scmcon *conp, scmtab *tabp, char *files)
-{
-  snprintf (updateManStmt, MANFILES_SIZE,
-	    "delete from %s where ", tabp->tabname);
-  addFlagTest(updateManStmt + strlen(updateManStmt), SCM_FLAG_BADHASH, 1, 0);
-  snprintf(updateManStmt + strlen(updateManStmt),
-	   MANFILES_SIZE - strlen(updateManStmt),
-	   " and \"%s\" regexp binary filename", files);
-  statementscm (conp, updateManStmt);
-  snprintf (updateManStmt, MANFILES_SIZE,
-	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
-	    tabp->tabname, SCM_FLAG_NOVALIDMAN,
-	    2*SCM_FLAG_NOVALIDMAN, SCM_FLAG_NOVALIDMAN, files);
-  statementscm (conp, updateManStmt);
+static int handleUpdateMan (scmcon *conp, scmsrcha *s, int idx) {
+  updateManLid = *((unsigned int *)updateManSrch->vec[1].valptr);
+  snprintf(updateManPath, PATH_MAX, "%s/",
+	   (char *)updateManSrch->vec[0].valptr);
+  return 0;
 }
 
-static void updateManifestObjs(scmcon *conp, char *files)
+static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 {
-  scmsrcha srch;
-  scmsrch  srch2[5];
-  unsigned int lid, flags;
-  char     ski[512], subject[512];
+  uchar file[200];
+  struct FileAndHash *fahp = NULL;
+  scmtab *tabp;
+  char flagStmt[200];
+  int sta, fd, len;
 
-  fillInColumns (srch2, &lid, ski, subject, &flags, &srch);
-  srch.where = NULL;
-  srch.wherestr = updateManWhere;
-  updateManWhere[0] = 0;	
-  addFlagTest(updateManWhere, SCM_FLAG_BADHASH, 1, 0);
-  snprintf(updateManWhere + strlen(updateManWhere),
-	   MANFILES_SIZE - strlen(updateManWhere),
-	   " and \"%s\" regexp binary filename", files);
-  searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
-	    SCM_SRCH_DOVALUE_ALWAYS, NULL);
-
-  updateManifestObjs2(conp, theCertTable, files);
-  updateManifestObjs2(conp, theCRLTable, files);
-  updateManifestObjs2(conp, theROATable, files);
-}
-
-   // place to list NOMAN files on manifest
-static char *nomanFiles = NULL;
-static int nomanFilesSize = 0;
-   // callback function for testOnManifestObjs
-static int was_on_manifest(scmcon *conp, scmsrcha *s, int idx)
-  {
-  unsigned int lid, flags;
-  char lidAndFlags[40];
-
-  UNREFERENCED_PARAMETER(idx);
-  lid = *(unsigned int *)(s->vec[0].valptr);
-  flags = *(unsigned int*)(s->vec[3].valptr);
-  memset(lidAndFlags, 0, 40);
-  sprintf(lidAndFlags, " %d %x ", lid, flags); 
-  char *fullpath = (char *)calloc(1, s->vec[1].avalsize + 
-    s->vec[2].avalsize + strlen(lidAndFlags) + 2);
-  strcat(strcat(strcat(strcpy(fullpath, s->vec[1].valptr), "/"), 
-    s->vec[2].valptr), lidAndFlags);
-  int thisAdd = strlen(fullpath) + 1,
-      oldsize = nomanFilesSize;
-  if (!nomanFiles) 
-    {
-    nomanFilesSize = thisAdd;
-    nomanFiles = (char *)calloc(1, nomanFilesSize);
-    strcpy(nomanFiles, fullpath);
-    }
-  else 
-    {
-    nomanFilesSize += thisAdd;
-    nomanFiles = (char *)realloc(nomanFiles, nomanFilesSize);
-    nomanFiles[oldsize - 1] = ' ';
-    strcpy(&nomanFiles[oldsize], fullpath);
-    } 
-  free(fullpath);  
-  return  1;
+  // set up part of query
+  if (updateManSrch == NULL) {
+    updateManSrch = newsrchscm(NULL, 2, 0, 1);
+    ADDCOL(updateManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL(updateManSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	   sta, sta);
+    updateManSrch2 = newsrchscm(NULL, 3, 0, 1);
+    ADDCOL(updateManSrch2, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	   sta, sta);
+    ADDCOL(updateManSrch2, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL(updateManSrch2, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
   }
 
-static int updateManifestFlags (scmcon *conp, scmtab *tabp, unsigned int id,
-     unsigned int prevFlags, int isValid)
-{
-  char stmt[150];
-  int flags = isValid ?  (prevFlags & (~SCM_FLAG_NOMAN)) :
-    (prevFlags | SCM_FLAG_BADHASH);
-  snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
-	    tabp->tabname, flags, id);
-  return statementscm (conp, stmt);
-}
-
-static void reflagNOMANFiles(struct Manifest *manp, scmcon *conp)
-  {
-  if (!nomanFiles) return; 
-  int fd;
-  char *a, *b, *c;
-  struct FileAndHash *fahp;
-  scmtab *tabp;  
-  struct casn ccasn;
-  simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING); 
-  for (c = b = nomanFiles; *c; b = c)
-    {
-    while(*c > ' ') c++;  // c is at first space;
-    for (a = c; a > b && *a != '/'; a--);  // a is at last '/'
-    a++;
-    write_casn(&ccasn, (uchar *)a, (c - a));
-    unsigned int lid, flags;
-    sscanf(c, "%d %x", &lid, &flags);
-    flags &= ~(SCM_FLAG_NOVALIDMAN);  // only called if manifest is valid
-    *c++ = 0;     // one beyond first space
-    char *d = &c[-5];  // start of suffix
-    if (!strncmp(d, ".cer", 4)) tabp = theCertTable;
-    else if (!strncmp(d, ".crl", 4)) tabp = theCRLTable;
-    else if (!strncmp(d, ".roa", 4)) tabp = theROATable; 
-    for (fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, 0);
-      fahp && diff_casn(&fahp->file, &ccasn); 
-      fahp = (struct FileAndHash *)next_of(&fahp->self));
-    if (!fahp || (fd = open(b, O_RDONLY)) < 0) *c++ = ' ';
-    else 
-      {
-      int ansr = check_fileAndHash(fahp, fd);
-      if (ansr == 0) updateManifestFlags(conp, tabp, lid, flags, 1);
-      if (ansr < 0)  updateManifestFlags(conp, tabp, lid, flags, 0);
+  // loop over files and hashes
+  for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
+      fahp != NULL;
+      fahp = (struct FileAndHash *)next_of(&fahp->self)) {
+    int flth = read_casn(&fahp->file, file);
+    file[flth] = 0;
+    if (strstr((char *)file, ".cer")) tabp = theCertTable;
+    else if (strstr((char *)file, ".crl")) tabp = theCRLTable;
+    else if (strstr((char *)file, ".roa")) tabp = theROATable;
+    snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"", file);
+    addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
+    updateManLid = 0;
+    searchscm(conp, tabp, updateManSrch, NULL, handleUpdateMan,
+	      SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+    if (! updateManLid) continue;
+    len = strlen(updateManPath);
+    snprintf(updateManPath + len, PATH_MAX - len, "%s", file);
+    fd = open(updateManPath, O_RDONLY);
+    if (fd < 0) continue;
+    sta = check_fileAndHash(fahp, fd);
+    if (sta == 0) {
+      // if hash okay, set ONMAN flag
+      snprintf (flagStmt, 200,
+		"update %s set flags=flags+%d where local_id=%d;",
+		tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
+      statementscm (conp, flagStmt);
+    } else {
+      // if hash not okay, delete object, and if cert, invalidate children
+      if (tabp == theCertTable) {
+	snprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
+		 "local_id=\"%d\"", updateManLid);
+	searchscm(conp, tabp, updateManSrch2, NULL, revoke_cert_and_children,
+		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
+      } else {
+	deletebylid(conp, tabp, updateManLid);
       }
-    c[-1] = ' ';  //replace nulled-out one 
-    while(*c > ' ') c++; // skip lid
-    for (c++; *c > ' '; c++); // skip flags
-    while(*c == ' ') c++;
     }
-  delete_casn(&ccasn);
-  free(nomanFiles);
-  nomanFiles = NULL;
-  nomanFilesSize = 0;
   }
-
-static void fillInManifestTestCols (scmsrch *srch1, unsigned int *lid, 
-    char *dirname, char *filename, unsigned int *flags, scmsrcha *srch)
-{
-  srch1[0].colno = 1;
-  srch1[0].sqltype = SQL_C_ULONG;
-  srch1[0].colname = "local_id";
-  srch1[0].valptr = (void *)lid;
-  srch1[0].valsize = sizeof(unsigned int);
-  srch1[0].avalsize = 0;
-  srch1[1].colno = 2;
-  srch1[1].sqltype = SQL_C_CHAR;
-  srch1[1].colname = "dirname";
-  srch1[1].valptr = (void *)dirname;
-  srch1[1].valsize = 512;
-  srch1[1].avalsize = 0;
-  srch1[2].colno = 3;
-  srch1[2].sqltype = SQL_C_CHAR;
-  srch1[2].colname = "filename";
-  srch1[2].valptr = (void *)filename;
-  srch1[2].valsize = 512;
-  srch1[2].avalsize = 0;
-  srch1[3].colno = 4;
-  srch1[3].sqltype = SQL_C_ULONG;
-  srch1[3].colname = "flags";
-  srch1[3].valptr = (void *)flags;
-  srch1[3].valsize = sizeof(int);
-  srch1[3].avalsize = 0;
-  srch->vec = srch1;
-  srch->sname = NULL;
-  srch->ntot = 4;
-  srch->nused = 4;
-  srch->vald = 0;
+  return 0;
 }
-static void testOnManifestObjs(scmcon *conp, char *files)
-{
-  scmsrcha srch;
-  scmsrch  srch2[5];
-  unsigned int lid, flags;
-  char     dirname[512], filename[512];
-  int ret = 0;
 
-  fillInManifestTestCols(srch2, &lid, dirname, filename, &flags, &srch);
-  srch.where = NULL;
-  srch.wherestr = updateManWhere;
-  updateManWhere[0] = 0;	
-  addFlagTest(updateManWhere, SCM_FLAG_NOMAN, 1, 0);
-  snprintf(updateManWhere + strlen(updateManWhere),
-	   MANFILES_SIZE - strlen(updateManWhere),
-	   " and \"%s\" regexp binary filename", files);
-  ret += searchscm(conp, theCertTable, &srch, NULL, was_on_manifest,
-         (SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN), NULL); 
-  searchscm(conp, theCRLTable, &srch, NULL, was_on_manifest,
-         (SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN), NULL); 
-  searchscm(conp, theROATable, &srch, NULL, was_on_manifest,
-         (SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN), NULL); 
-}
 /*
  * callback function for verify_children
  */
 static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
 {
   int sta;
+  struct ROA roa;
+  char outfull[PATH_MAX];
   UNREFERENCED_PARAMETER(idx);
   sta = updateValidFlags (conp, theManifestTable,
 			  *((unsigned int *) (s->vec[0].valptr)),
 			  *((unsigned int *) (s->vec[1].valptr)), 1);
-  updateManifestObjs (conp, (char *) s->vec[2].valptr);
+  ROA(&roa, 0);
+  snprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
+	   (char *)(s->vec[3].valptr));
+  sta = get_casn_file(&roa.self, outfull, 0);
+  if (sta < 0) {
+    fprintf(stderr, "invalid manifest filename %s\n", outfull);
+    return sta;
+  }
+  struct Manifest *manifest =
+    &roa.content.signedData.encapContentInfo.eContent.manifest;
+  sta = updateManifestObjs (conp, manifest);
+  delete_casn(&roa.self);
   return 0;
 }
 
@@ -1297,17 +1194,16 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
   sta = searchscm(conp, theROATable, crlSrch, NULL, verifyChildROA,
 		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
   if (manSrch == NULL) {
-    manSrch = newsrchscm(NULL, 3, 0, 1);
+    manSrch = newsrchscm(NULL, 4, 0, 1);
     ADDCOL (manSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	    sta, sta);
     ADDCOL (manSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
-    ADDCOL (manSrch, "files", SQL_C_BINARY, 1, sta, sta);
-    manSrch->vec[manSrch->nused-1].valptr = manFiles;
-    manSrch->vec[manSrch->nused-1].valsize = MANFILES_SIZE;
+    ADDCOL (manSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL (manSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
   }
   snprintf(manSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
   sta = searchscm(conp, theManifestTable, manSrch, NULL, verifyChildManifest,
-		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
+		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
   return 0;
 }
 
@@ -1546,45 +1442,60 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
   return 0;
 }
 
+/*
+ * primarily, do check for whether there already is a valid manifest
+ * that can either confirm or deny the hash
+ */
 static scmsrcha *validManSrch = NULL;
-static int noValidMan;
+static char validManPath[PATH_MAX];
 
-static int setNoValidMan(scmcon *conp, scmsrcha *s, int idx)
-{
-  UNREFERENCED_PARAMETER(conp); UNREFERENCED_PARAMETER(idx);
-  UNREFERENCED_PARAMETER(s);
-  noValidMan = 0;
+static int handleValidMan (scmcon *conp, scmsrcha *s, int idx) {
+  snprintf(validManPath, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
+	   (char *)s->vec[1].valptr);
   return 0;
 }
 
-unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState,
-			     char *filename, scm *scmp, scmcon *conp)
+int addStateToFlags(unsigned int *flags, int isValid, char *filename,
+		    char *fullpath, scm *scmp, scmcon *conp)
 {
-  int sta;
-  flags |= (isValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
-//  if (strcmp(manState, "-1") == 0)
-  int statenum;
-  sscanf(manState, "%d", &statenum);
-  if (statenum < 0) flags |= SCM_FLAG_BADHASH;
-  else if (statenum == 0) {
-    flags |= SCM_FLAG_NOMAN | SCM_FLAG_NOVALIDMAN;
-  } else {
-    noValidMan = 1;
-    if (validManSrch == NULL) {
-      validManSrch = newsrchscm(NULL, 1, 0, 1);
-      ADDCOL (validManSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
-	      sta, sta);
-    }
-    snprintf(validManSrch->wherestr, WHERESTR_SIZE,
-	     "files regexp binary \"%s\"", filename);
-    addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
-    initTables(scmp);
-    searchscm(conp, theManifestTable, validManSrch, NULL, setNoValidMan,
-	      SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (noValidMan)
-      flags |= SCM_FLAG_NOVALIDMAN;
+  int sta, fd;
+  struct ROA roa;
+  struct casn ccasn;
+  struct FileAndHash *fahp = NULL;
+
+  *flags |= (isValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
+  if (fullpath == NULL) return 0;
+  if (validManSrch == NULL) {
+    validManSrch = newsrchscm(NULL, 2, 0, 1);
+    ADDCOL (validManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL (validManSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
   }
-  return flags;
+  snprintf(validManSrch->wherestr, WHERESTR_SIZE,
+	   "files regexp binary \"%s\"", filename);
+  addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+  initTables(scmp);
+  validManPath[0] = 0;
+  searchscm(conp, theManifestTable, validManSrch, NULL, handleValidMan,
+	    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+  if (! validManPath[0]) return 0;
+
+  ROA(&roa, 0);
+  sta = get_casn_file(&roa.self, validManPath, 0);
+  struct Manifest *manifest =
+    &roa.content.signedData.encapContentInfo.eContent.manifest;
+  simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING); 
+  write_casn(&ccasn, (uchar *)filename, strlen(filename));
+  for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
+       fahp && diff_casn(&fahp->file, &ccasn); 
+       fahp = (struct FileAndHash *)next_of(&fahp->self));
+  sta = 0;
+  if (fahp && (fd = open(fullpath, O_RDONLY)) >= 0) {
+    *flags |= SCM_FLAG_ONMAN;
+    sta = check_fileAndHash(fahp, fd);
+  }
+  delete_casn(&ccasn);
+  delete_casn(&roa.self);
+  return sta;
 }
 
 
@@ -1593,9 +1504,9 @@ unsigned int addStateToFlags(unsigned int flags, int isValid, char *manState,
  *
  * We should eventually merge this with add_cert_internal()
  */
-static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, 
-		      X509 *x, unsigned int id, int utrust,
-		      unsigned int *cert_id, char *manState)
+static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
+		      unsigned int id, int utrust, unsigned int *cert_id,
+		      char *fullpath)
 {
   int   sta = 0;
   int   chainOK;
@@ -1632,9 +1543,8 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf,
 // actually add the certificate
 //  sta = 0; chainOK = 1; // uncomment this line for running test 8
   if ( sta == 0 ) {
-    cf->flags = addStateToFlags(cf->flags, chainOK, manState,
-				cf->fields[CF_FIELD_FILENAME], scmp, conp);
-    sta = (SCM_FLAG_BADHASH & cf->flags) && (SCM_FLAG_NOVALIDMAN & ~cf->flags);
+    sta = addStateToFlags(&cf->flags, chainOK, cf->fields[CF_FIELD_FILENAME],
+			  fullpath, scmp, conp);
   }
   if ( sta == 0 ) {
     sta = add_cert_internal(scmp, conp, cf, cert_id);
@@ -1661,8 +1571,7 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf,
 */
 
 int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	     unsigned int id, int utrust, int typ, unsigned int *cert_id,
-	     char *manState)
+	     unsigned int id, int utrust, int typ, unsigned int *cert_id)
 {
   cert_fields *cf;
   X509 *x = NULL;
@@ -1679,7 +1588,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	X509_free(x);
       return(sta);
     }
-  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, manState);
+  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
 }
 
 /*
@@ -1688,7 +1597,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 */
 
 int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	    unsigned int id, int utrust, int typ, char *manState)
+	    unsigned int id, int utrust, int typ)
 {
   crl_fields *cf;
   X509_CRL   *x = NULL;
@@ -1713,9 +1622,8 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		   cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
 // then add the CRL
   if (sta == 0) {
-    cf->flags = addStateToFlags(cf->flags, chainOK, manState,
-				cf->fields[CRF_FIELD_FILENAME], scmp, conp);
-    sta = (SCM_FLAG_BADHASH & cf->flags) && (SCM_FLAG_NOVALIDMAN & ~cf->flags);
+    sta = addStateToFlags(&cf->flags, chainOK, cf->fields[CRF_FIELD_FILENAME],
+			  outfull, scmp, conp);
   }
   if (sta == 0) {
     sta = add_crl_internal(scmp, conp, cf);
@@ -1746,9 +1654,8 @@ static int gen_cert_filename(char *ski, char **fakename)
   return (a - *fakename) + 4;  
   } 
 
-static int extractAndAddCert(struct Certificate *c, char *ski,  
-    scm *scmp, scmcon *conp, char *outdir, unsigned int id, int utrust, 
-    int typ, char *manState)
+static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
+	  scmcon *conp, char *outdir, unsigned int id, int utrust, int typ)
   {
   cert_fields *cf = NULL;
   unsigned int cert_id;
@@ -1774,7 +1681,7 @@ static int extractAndAddCert(struct Certificate *c, char *ski,
   if (cf != NULL && sta == 0)
     {
     // add the X509 cert to the db
-    sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, manState);
+      sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, NULL);
     if (!sta)
       {
       char *pathname = (char *)calloc(1, strlen(outdir)  + 
@@ -1801,14 +1708,13 @@ static int extractAndAddCert(struct Certificate *c, char *ski,
 */
 
 int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-	    char *outfull, unsigned int id, int utrust, int typ, 
-	    char *manState)
+	    char *outfull, unsigned int id, int utrust, int typ)
 {
   struct ROA roa;
   char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, filter[4096];
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
-  unsigned int flags;
+  unsigned int flags = 0;
 
   ROA(&roa, (ushort)0);
   // validate parameters
@@ -1843,8 +1749,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_INVALSKI;
       break;
       }
-    if ((sta = extractAndAddCert(c, ski, scmp, conp, outdir, id, utrust,
-      typ, manState)) != 0) break;
+    if ((sta = extractAndAddCert(c, ski, scmp, conp, outdir, id,
+				 utrust, typ)) != 0) break;
     cert_added = 1;
 
     asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
@@ -1868,8 +1774,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     sta = roaGenerateFilter (&roa, NULL, NULL, filter, sizeof(filter));
     if (sta != 0) break;
 
-    flags = addStateToFlags(0, chainOK, manState, outfile, scmp, conp);
-    sta = (SCM_FLAG_BADHASH & flags) && (SCM_FLAG_NOVALIDMAN & ~flags);
+    sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
     if (sta != 0)
       break;
 
@@ -2000,8 +1905,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( sta < 0 )
     return(sta);
   man_id++;
-  if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id, utrust,
-      typ, "1")) != 0) return sta;
+  if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id,
+			       utrust, typ)) != 0) return sta;
 
   // initialize query first time through
   if (embedCertSrch == NULL) {
@@ -2058,18 +1963,10 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   aone.vald = 0;
   sta = insertscm(conp, theManifestTable, &aone);
 
-  // if the manifest is valid, zero the nomanvalid flag for all the
-  //   objects it references
-  if (manValid)
-    {
-    if (nomanFiles) free(nomanFiles);
-    nomanFiles = NULL;
-    nomanFilesSize = 0;
-    testOnManifestObjs(conp, manFiles);
-    if (nomanFiles) reflagNOMANFiles(&roa.content.signedData.encapContentInfo.
-      eContent.manifest, conp);
-    updateManifestObjs(conp, manFiles);
-    }
+  // if the manifest is valid, update its referenced objects accordingly
+  if (manValid) {
+    sta = updateManifestObjs(conp, manifest);
+  }
 
   // clean up
   // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
@@ -2092,7 +1989,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 */
 
 int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-	       char *outfull, int utrust, char *manState)
+	       char *outfull, int utrust) // , char *manState)
 {
   unsigned int id = 0, obj_id = 0;
   int typ;
@@ -2120,16 +2017,15 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN+OT_PEM_OFFSET:
-      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ,
-		     &obj_id, manState);
+      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
       break;
     case OT_CRL:
     case OT_CRL_PEM:
-      sta = add_crl(scmp, conp, outfile, outfull, id, utrust, typ, manState);
+      sta = add_crl(scmp, conp, outfile, outfull, id, utrust, typ);
       break;
     case OT_ROA:
     case OT_ROA_PEM:
-      sta = add_roa(scmp, conp, outfile, outdir, outfull, id, utrust, typ, manState);
+      sta = add_roa(scmp, conp, outfile, outdir, outfull, id, utrust, typ);
       break;
     case OT_MAN:
     case OT_MAN_PEM:

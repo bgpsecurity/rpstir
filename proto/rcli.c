@@ -360,7 +360,7 @@ static char *splitOnWhite(char *ptr) {
 
 static char *hdir = NULL;
 
-static int aur(scm *scmp, scmcon *conp, char what, char *valu, char *valu2)
+static int aur(scm *scmp, scmcon *conp, char what, char *valu)
 {
   char *outdir;
   char *outfile, *outfull;
@@ -382,14 +382,14 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu, char *valu2)
   switch ( what )
     {
     case 'a':
-      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted, valu2);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
       break;
     case 'r':
       sta = delete_object(scmp, conp, outfile, outdir, outfull);
       break;
     case 'u':
       (void)delete_object(scmp, conp, outfile, outdir, outfull);
-      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted, valu2);
+      sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
       break;
     default:
       break;
@@ -620,7 +620,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'a':
 	case 'A':		/* add */
 	  (void)fprintf(logfile, "AUR add request: %s\n", valu);
-	  sta = aur(scmp, conp, 'a', valu, splitOnWhite(valu));
+	  sta = aur(scmp, conp, 'a', valu); // , splitOnWhite(valu));
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -629,7 +629,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'u':
 	case 'U':		/* update */
 	  (void)fprintf(logfile, "AUR update request: %s\n", valu);
-	  sta = aur(scmp, conp, 'u', valu, splitOnWhite(valu));
+	  sta = aur(scmp, conp, 'u', valu); // , splitOnWhite(valu));
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -638,7 +638,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	case 'r':
 	case 'R':		/* remove */
 	  (void)fprintf(logfile, "AUR remove request: %s\n", valu);
-	  sta = aur(scmp, conp, 'r', valu, NULL);
+	  sta = aur(scmp, conp, 'r', valu); // , NULL);
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -739,7 +739,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 	case 'a':
 	case 'A':		/* add */
 	  (void)fprintf(logfile, "AUR add request: %s\n", valu);
-	  sta = aur(scmp, conp, 'a', valu, splitOnWhite(valu));
+	  sta = aur(scmp, conp, 'a', valu); // , splitOnWhite(valu));
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -748,7 +748,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 	case 'u':
 	case 'U':		/* update */
 	  (void)fprintf(logfile, "AUR update request: %s\n", valu);
-	  sta = aur(scmp, conp, 'u', valu, splitOnWhite(valu));
+	  sta = aur(scmp, conp, 'u', valu); // , splitOnWhite(valu));
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -757,7 +757,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 	case 'r':
 	case 'R':		/* remove */
 	  (void)fprintf(logfile, "AUR remove request: %s\n", valu);
-	  sta = aur(scmp, conp, 'r', valu, NULL);
+	  sta = aur(scmp, conp, 'r', valu); // , NULL);
 	  (void)fprintf(logfile, "Status was %d", sta);
 	  if ( sta < 0 )
 	    (void)fprintf(logfile, " (%s)", err2string(sta));
@@ -837,7 +837,6 @@ int main(int argc, char **argv)
   char   *ne;
   char   *porto = NULL;
   char    errmsg[1024];
-  char   *manState = "0";
   time_t  nw;
   int ians = 0;
   int do_create = 0;
@@ -896,9 +895,6 @@ int main(int argc, char **argv)
 	case 'h':
 	  usage();
 	  return(0);
-        case 'm':
-          manState = optarg;
-          break;
 	default:
 	  (void)fprintf(stderr, "Invalid option '%c'\n", c);
 	  usage();
@@ -1118,7 +1114,7 @@ int main(int argc, char **argv)
 	    {
 	      (void)fprintf(logfile, "Attempting to add file %s\n", outfile);
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
-			       trusted, manState);
+			       trusted);
 	      if ( sta < 0 )
 		{
 		  (void)fprintf(stderr,

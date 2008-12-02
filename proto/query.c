@@ -351,18 +351,11 @@ int displayFlags (scmsrcha *s, int idx1, char* returnStr)
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
-/*
-  addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
-*/
   if (!isManifest)
     {
     addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
-    addFlagIfSet(returnStr, flags, SCM_FLAG_NOMAN, "NOMAN");
-    addFlagIfSet(returnStr, flags, SCM_FLAG_NOVALIDMAN, "NOVALIDMAN");
+    addFlagIfSet(returnStr, flags, SCM_FLAG_ONMAN, "ONMAN");
     }
-  addFlagIfSet(returnStr, flags, SCM_FLAG_BADHASH, "BADHASH");
   return 1;
 }
 
@@ -414,9 +407,9 @@ static int checkValidity (char *ski, unsigned int localID) {
     if (rejectNoManifest) {
       int len = strlen(validWhereStr);
       snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
-	       " and (((flags%%%d)<%d) or ((flags%%%d)<%d))",
-	       2*SCM_FLAG_NOVALIDMAN, SCM_FLAG_NOVALIDMAN,
-	       2*SCM_FLAG_CA, SCM_FLAG_CA);
+	       " and (((flags%%%d)>=%d) or ((flags%%%d)<%d) or ((flags%%%d)>=%d))",
+	       2*SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2*SCM_FLAG_CA, SCM_FLAG_CA,
+	       2*SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
     }
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *) validSrch->vec[0].valptr;
@@ -689,7 +682,7 @@ static int doQuery (char **displays, char **filters, char *orderp)
     if (rejectStaleManifest)
       addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
     if (rejectNoManifest)
-      addFlagTest(whereStr, SCM_FLAG_NOVALIDMAN, 0, 1);
+      addFlagTest(whereStr, SCM_FLAG_ONMAN, 1, 1);
 
     srch.wherestr = whereStr;
  }
