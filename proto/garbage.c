@@ -63,6 +63,7 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
 	    certTable->tabname, SCM_FLAG_STALECRL, theAKI, theIssuer);
   addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
   addFlagTest(msg, SCM_FLAG_CA, 1, 1);
+  snprintf(msg + strlen(msg), 600, ";");
   return statementscm (conp, msg);
 }
 
