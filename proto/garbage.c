@@ -62,6 +62,7 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
   snprintf (msg, 600, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
 	    certTable->tabname, SCM_FLAG_STALECRL, theAKI, theIssuer);
   addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
+  addFlagTest(msg, SCM_FLAG_CA, 1, 1);
   return statementscm (conp, msg);
 }
 
