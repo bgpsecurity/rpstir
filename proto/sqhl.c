@@ -26,12 +26,12 @@
 #include "roa_utils.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -537,7 +537,7 @@ static int verify_callback(int ok2, X509_STORE_CTX *store)
  *     initializes the CTX with the X509_STORE,       *
  *         X509 cert being checked, and the stack     *
  *         of untrusted X509 certs                    *
- *     sets the trusted stack of X509 certs in the CTX* 
+ *     sets the trusted stack of X509 certs in the CTX*
  *     sets the purpose in the CTX (which we had      *
  *       set outside of this function to the OpenSSL  *
  *       definition of "any")                         *
@@ -547,7 +547,7 @@ static int verify_callback(int ok2, X509_STORE_CTX *store)
  *  apps/verify.c of the OpenSSL source               *
  ******************************************************/
 
-static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain, 
+static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
                  STACK_OF(X509) *tchain, int purpose, ENGINE *e)
 {
   X509_STORE_CTX *csc;
@@ -1005,11 +1005,7 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
 	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &roa);
-  if (sta < 0)
-    {
-    delete_casn(&roa.self);
-    return sta;
-    }
+  if (sta < 0) return sta;
   skii = (char *)roaSKI(&roa);
   sta = verify_roa(conp, &roa, skii, &chainOK);
   delete_casn(&roa.self);
@@ -1123,10 +1119,12 @@ static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
   snprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
 	   (char *)(s->vec[3].valptr));
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) {
+  if (sta < 0)
+    {
+    delete_casn(&roa.self);
     fprintf(stderr, "invalid manifest filename %s\n", outfull);
     return sta;
-  }
+    }
   struct Manifest *manifest =
     &roa.content.signedData.encapContentInfo.eContent.manifest;
   sta = updateManifestObjs (conp, manifest);
@@ -1486,10 +1484,10 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   sta = get_casn_file(&roa.self, validManPath, 0);
   struct Manifest *manifest =
     &roa.content.signedData.encapContentInfo.eContent.manifest;
-  simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING); 
+  simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING);
   write_casn(&ccasn, (uchar *)filename, strlen(filename));
   for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
-       fahp && diff_casn(&fahp->file, &ccasn); 
+       fahp && diff_casn(&fahp->file, &ccasn);
        fahp = (struct FileAndHash *)next_of(&fahp->self));
   sta = 0;
   if (fahp && (fd = open(fullpath, O_RDONLY)) >= 0) {
@@ -1556,7 +1554,7 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   if ((sta == 0) && chainOK) {
     sta = verifyOrNotChildren (conp, cf->fields[CF_FIELD_SKI],
 			       cf->fields[CF_FIELD_SUBJECT],
-			       cf->fields[CF_FIELD_AKI], 
+			       cf->fields[CF_FIELD_AKI],
 			       cf->fields[CF_FIELD_ISSUER], *cert_id, 1);
   }
   // if change verify_cert so that not pushing on stack, change this
@@ -1656,8 +1654,8 @@ static int gen_cert_filename(char *ski, char **fakename)
     if (*b != ':') *a++ = *b;
     }
   strcpy(a, ".cer");
-  return (a - *fakename) + 4;  
-  } 
+  return (a - *fakename) + 4;
+  }
 
 static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
 	  scmcon *conp, char *outdir, unsigned int id, int utrust, int typ)
@@ -1689,14 +1687,14 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
       sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, NULL);
     if (!sta)
       {
-      char *pathname = (char *)calloc(1, strlen(outdir)  + 
+      char *pathname = (char *)calloc(1, strlen(outdir)  +
         strlen(fakename) + 2);
       strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
       sta = put_casn_file(&c->self, pathname, 0);
       free(pathname);
       if (sta < 0) sta = ERR_SCM_INTERNAL;
       else sta = 0;
-      } 
+      }
     else if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else
       fprintf(stderr, "Error adding embedded certificate %s\n", fakename);
@@ -1715,13 +1713,12 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
 int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *outfull, unsigned int id, int utrust, int typ)
 {
-  struct ROA roa;
+  struct ROA roa;  // note: roaFromFile constructs this
   char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, filter[4096];
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
 
-  ROA(&roa, (ushort)0);
   // validate parameters
   if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
        outfile[0] == 0 || outfull == NULL || outfull[0] == 0 )
@@ -1741,15 +1738,15 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_BADNUMCERTS;
       break;
     }
-    struct Certificate *c = (struct Certificate *) 
+    struct Certificate *c = (struct Certificate *)
       member_casn(&roa.content.signedData.certificates.self, 0);
 
 
     // generate a (fake) filename for the cert that is unique.
     // use the SKI
-    
+
     // ski, asid
-    if ((ski = (char *)roaSKI(&roa)) == NULL || ski[0] == 0 ) 
+    if ((ski = (char *)roaSKI(&roa)) == NULL || ski[0] == 0 )
       {
       sta = ERR_SCM_INVALSKI;
       break;
@@ -1784,7 +1781,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
 
     // add to database
-    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter, 
+    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter,
 			   sig, flags);
     if (sta < 0)
       break;
@@ -1839,11 +1836,12 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) {
-    fprintf(stderr, "invalid manifest %s\n", outfull);
+  if (sta < 0) fprintf(stderr, "invalid manifest %s\n", outfull);
+  if (sta < 0 || (sta = manifestValidate(&roa)) < 0)
+    {
+    delete_casn(&roa.self);
     return sta;
-  }
-  if ((sta = manifestValidate(&roa)) < 0) return sta;
+    }
 
   // read the embedded cert information, in particular the ski
   struct Certificate *certp = (struct Certificate *)
@@ -1862,7 +1860,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   size = read_casn(&theCASN, tmp);  // read contents of inner OCTET STRING
   delete_casn(&theCASN);
   char *str = ski;     // now hexify and punctuate it
-  for (i = 0; i < size; i++) 
+  for (i = 0; i < size; i++)
     {
     if (i) snprintf(str++, 2, ":");
     snprintf(str, 3, "%02X", tmp[i]);
@@ -1879,7 +1877,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   uchar file[200];
   struct FileAndHash *fahp;
   manFiles[0] = 0;
-  int manFilesLen = 0; 
+  int manFilesLen = 0;
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
       fahp = (struct FileAndHash *)next_of(&fahp->self)) {
@@ -2682,7 +2680,7 @@ void startSyslog(char *appName)
   logName = (char *) calloc (6 + strlen (appName), sizeof (char));
   snprintf (logName, 6 + strlen (appName), "APKI %s", appName);
   openlog (logName, LOG_PID, 0);
-  
+
   syslog (LOG_NOTICE, "Application Started");
 }
 
