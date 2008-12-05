@@ -3,12 +3,12 @@
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -303,7 +303,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
 */
 static void decodeblock( unsigned char in[4], unsigned char out[3] )
-{   
+{
     out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
     out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
     out[ 2 ] = (unsigned char ) (((in[2] << 6) & 0xc0) | in[3]);
@@ -396,7 +396,7 @@ int decode_b64( unsigned char *bufIn, int inSize, unsigned char **bufOut, int *o
             }
         }
     }
-    
+
     *bufOut = bufTemp;
     *outSize = outIndex;
     return 0;
@@ -504,7 +504,7 @@ static int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, in
 	return sta;
       cAns += cTemp;
     }
-  
+
   *cReturned = cAns;
   return 0;
 }
@@ -516,7 +516,7 @@ static int ip_strtoc(unsigned char* strToTranslate, unsigned char* cReturned, in
 //
 /////////////////////////////////////////////////////////////
 
-static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits, 
+static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits,
   int* iGoodLeadingBytes)
 {
   int iFullBytes = 0;
@@ -541,7 +541,7 @@ static int calculatePrefixVals(int iPrefix, unsigned char* cBadTrailingBits,
   return 0;
 }
 
-static int calculateAndClearPrefix(int iPrefix, int iSize, 
+static int calculateAndClearPrefix(int iPrefix, int iSize,
     unsigned char* iparray, unsigned char* cBadBits, int* iGoodBytes,
     int *maxLenp)
 {
@@ -929,7 +929,7 @@ static int translateIPv6Prefix(unsigned char* ipstring, unsigned char** ipbytear
 /////////////////////////////////////////////////////////////
 
 static int setVersion(struct ROA* roa, unsigned char* versionstring)
-{ 
+{
   int iRes = 0;
   int iLen = 0;
   int iVersion = 0;
@@ -943,7 +943,7 @@ static int setVersion(struct ROA* roa, unsigned char* versionstring)
   iVersion = atoi((char*) versionstring);
   if (3 != iVersion)
     return ERR_SCM_INVALVER;
-  
+
   iRes = write_casn_num(&(roa->content.signedData.version.v3), iVersion);
   if (0 > iRes)
     return ERR_SCM_INVALASN;
@@ -994,9 +994,9 @@ static int setSID(struct ROA* roa, unsigned char* sidstring)
       stringIndex += 3;
       sidIndex++;
     }
-  
+
   write_casn(&(roa->content.signedData.signerInfos.signerInfo.sid.
-    subjectKeyIdentifier), sid, 20); 
+    subjectKeyIdentifier), sid, 20);
   g_lastInstruction = NONE;
   return 0;
 }
@@ -1006,7 +1006,7 @@ static int setSID(struct ROA* roa, unsigned char* sidstring)
 
     This has been replaced by signCMS
 
-static int setSignature(struct ROA* roa, unsigned char* signstring, int lth, 
+static int setSignature(struct ROA* roa, unsigned char* signstring, int lth,
   char *filename)
 {
   CRYPT_CONTEXT hashContext;
@@ -1025,11 +1025,11 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth,
   else if ((ansr = cryptEncrypt(hashContext, signstring, lth)) != 0 ||
       (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
     msg = "hashing";
-  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, 
+  else if ((ansr = cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash,
     &signatureLength)) != 0) msg = "getting attribute string";
-  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, filename, 
+  else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, filename,
     CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set";
-  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label", 
+  else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label",
     "password")) != 0) msg = "getting key";
   else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext, hashContext)) != 0)
     msg = "signing";
@@ -1046,11 +1046,11 @@ static int setSignature(struct ROA* roa, unsigned char* signstring, int lth,
   cryptDestroyContext(sigKeyContext);
   cryptEnd();
   if (ansr == 0)
-    { 
+    {
     decode_casn(&(roa->content.signedData.signerInfos.signerInfo.self), signature);
     ansr = 0;
     }
-  else 
+  else
     {
       //  printf("Signature failed in %s with error %d\n", msg, ansr);
       ansr = ERR_SCM_INVALSIG;
@@ -1092,7 +1092,7 @@ static int setIPFamily(struct ROA* roa, unsigned char* ipfamstring)
     return ERR_SCM_INVALIPL;
 
   memset(familytemp, 0, 3);
-  
+
   // Set AFI string (first two bytes of familytemp should be
   //  0x00 0x0Z, where Z is determined by the family)
   //  after checking to make sure that each block occurs only
@@ -1148,7 +1148,7 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
 
 /* #ifdef IP_RANGES_ALLOWED
   struct IPAddressOrRangeA *roaAddr = NULL;
-#else 
+#else
 */
   struct ROAIPAddress *roaAddr = NULL;
 // #endif
@@ -1159,25 +1159,25 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
   addrString = (uchar *)calloc(1, strlen((char *)ipaddrstring) + 1);
   strcpy((char *)addrString, (char *)ipaddrstring);
   char *mxp = strchr((char *)addrString, '^');
-  if (mxp) 
+  if (mxp)
     {
     sscanf(&mxp[1], "%d", &maxLen);
-    *mxp = 0;  // chop it off 
+    *mxp = 0;  // chop it off
     }
-    
+
   // First, translate the address into something meaningful
   if ((IPV4FAM == g_lastInstruction) ||
       (IPV4CONT == g_lastInstruction))
     {
     arrayptr = &ipv4array[1];
-    sta = translateIPv4Prefix(addrString, (unsigned char**) &arrayptr, 
+    sta = translateIPv4Prefix(addrString, (unsigned char**) &arrayptr,
       &iPrefixSize);
     }
   else if ((IPV6FAM == g_lastInstruction) ||
 	   (IPV6CONT == g_lastInstruction))
     {
     arrayptr = &ipv6array[1];
-    sta = translateIPv6Prefix(addrString, (unsigned char**) &arrayptr, 
+    sta = translateIPv6Prefix(addrString, (unsigned char**) &arrayptr,
       &iPrefixSize);
     }
   else sta = ERR_SCM_INVALIPB;
@@ -1236,7 +1236,7 @@ static int setIPAddr(struct ROA* roa, unsigned char* ipaddrstring)
       // Pull valid leading bytes/invalid trailing bits out of the prefix
       //  (necessary to constuct ASN BITSTRING), then populate the bit notice
       //  and add one to the length of the array to be copied
-      calculateAndClearPrefix(iPrefixSize, 128, arrayptr, &cBadBits, 
+      calculateAndClearPrefix(iPrefixSize, 128, arrayptr, &cBadBits,
         &iGoodBytes, &maxLen);
       ipv6array[0] = cBadBits;
       iGoodBytes++;
@@ -1524,7 +1524,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 
   // Acting as bools; testing for required config params
   int iConfiguredKey[CONFIG_KEY_MAX];
-  
+
   for (ck = VERSION; ck < CONFIG_KEY_MAX; ck++)
     iConfiguredKey[ck] = cFALSE;
 
@@ -1670,7 +1670,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 		    }
                   strncpy(keyfileName, (char *)value, sizeof(keyfileName)-1);
 		  iConfiguredKey[ck] = cTRUE;
-                  break; 
+                  break;
 		case  CONFIG_KEY_MAX:
 		default:
 		  //		  printf("Unknown key on line %d\n", iLineCount);
@@ -1728,7 +1728,7 @@ static int confInterpret(char* filename, struct ROA* roa)
       //    printf("Error reading hashable string\n");
       iROAState = ERR_SCM_HSREAD;
     }
-  if ((iRet2=setSignature(roa, buf, iRet, keyfileName)) < 0) 
+  if ((iRet2=setSignature(roa, buf, iRet, keyfileName)) < 0)
     {
       //    printf("Error creating signature\n");
       iROAState = iRet2;
@@ -1757,28 +1757,10 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp)
   if (NULL == fname)
     return ERR_SCM_INVALARG;	// we need an input file
 
-  ROA(rp, 0);		        // initialize the ROA
-/*
-  // This write _must_ be done before the injections
-  write_objid(&roa.contentType, id_signedData);
-  algorithmID = (struct AlgorithmIdentifier*) inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
-  signerInfo = (struct SignerInfo*) inject_casn(&roa.content.signedData.signerInfos.self, 0);
-  if ((NULL == algorithmID) || (NULL == signerInfo))
-    {
-    delete_casn(&roa.self);
-    return ERR_SCM_INVALASN;
-    }
-  
-  // Fill default algorithm slots
-  write_objid(&algorithmID->algorithm, id_sha256);
-  write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_routeOriginAttestation);
-  write_objid(&signerInfo->digestAlgorithm.algorithm, id_sha256);
-  write_objid(&signerInfo->signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption);
-*/
   // read in the file
   if ((fd = open(fname, (O_RDONLY))) < 0)
     sta =  ERR_SCM_COFILE;
-  else if(fstat(fd, &sb) != 0) 
+  else if(fstat(fd, &sb) != 0)
     {
     (void) close(fd);
     sta =  ERR_SCM_COFILE;
@@ -1786,21 +1768,17 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp)
   else
     {
     iSize = sb.st_size;
-    if ((buf = calloc(1, iSize)) == NULL) sta = ERR_SCM_NOMEM; 
+    if ((buf = calloc(1, iSize)) == NULL) sta = ERR_SCM_NOMEM;
     else amt_read = read(fd, buf, iSize);
     (void) close(fd);
-    if (amt_read != iSize) 
+    if (amt_read != iSize)
       {
       free(buf);
       sta =  ERR_SCM_BADFILE;
       }
     }
-  if (sta < 0)
-    {
-    delete_casn(&rp->self);
-    return sta;
-    }
   // handle format-specific processing
+  ROA(rp, 0);		        // initialize the ROA
   switch(fmt) {
     case FMT_PEM:
       // Decode buffer from b64, skipping armor
@@ -1810,14 +1788,16 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp)
       buf = buf_tmp;
       iSize = buf_tmp_size;
       // IMPORTANT: NO break, control falls through
-    case FMT_DER:      
+    case FMT_DER:
       iReturn = 0;
       // did we use all of buf, no more and no less?
       int ret;
-      if ((ret = decode_casn(&rp->self, buf)) != iSize) {
+      if ((ret = decode_casn(&rp->self, buf)) != iSize)
+        {
         fprintf(stderr, "roaFromFile: scan failed at offset %d\n", -ret);
+        delete_casn(&rp->self);
 	iReturn = ERR_SCM_INVALASN;
-      }
+         }
       break;
 
     case FMT_CONF:
@@ -1835,12 +1815,6 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp)
     iReturn = roaValidate(rp);
 
   // if we got this far and everything is OK, send it back to caller
-/*  if (iReturn == 0) {
-      *rp = calloc(1, sizeof(struct ROA));
-      if (*rp == NULL) return ERR_SCM_NOMEM;
-      ROA(*rp, (ushort)0);
-      copy_casn(&(*rp)->self, &roa.self);
-  } */
   return iReturn;
 }
 
