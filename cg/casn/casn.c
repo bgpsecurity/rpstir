@@ -227,6 +227,7 @@ Procedure:
     else
         {
         casnp->startp = _free_it(casnp->startp);
+        casnp->lth = 0;
         if ((casnp->flags & ASN_TABLE_FLAG))
             {
             if (!(ncasnp = casnp->ptr))
@@ -578,7 +579,8 @@ Function: Clears all memory allocated by decoding and all flags set by decoding
 Input: Ptr to top struct casn
        Mask for flag bits
 Procedure:
-1. IF it's constructed
+1. IF it's an OF AND has some members, clear the attached ones
+   IF it's constructed
         FOR each member, call _clear_casn
    ELSE IF it has a startp, free that
    Clear the flags in accordance with the mask
@@ -636,6 +638,7 @@ Procedure
         _free_it(casnp);
         casnp = ncasnp;
         }
+    clear_casn(casnp); // clear the last one
     return _free_it(casnp);
     }
 
