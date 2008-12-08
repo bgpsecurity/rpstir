@@ -1692,7 +1692,11 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
       strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
       sta = put_casn_file(&c->self, pathname, 0);
       free(pathname);
-      if (sta < 0) sta = ERR_SCM_INTERNAL;
+      if (sta < 0) 
+        {
+        sta = ERR_SCM_INTERNAL;
+        fprintf(stderr, "Error writing file \n");
+        }
       else sta = 0;
       }
     else if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
@@ -1714,7 +1718,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *outfull, unsigned int id, int utrust, int typ)
 {
   struct ROA roa;  // note: roaFromFile constructs this
-  char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, filter[4096];
+  char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, *filter= NULL;
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
@@ -1752,7 +1756,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
       }
     if ((sta = extractAndAddCert(c, ski, scmp, conp, outdir, id,
-				 utrust, typ)) != 0) break;
+      utrust, typ)) != 0) break;
     cert_added = 1;
 
     asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
@@ -1773,9 +1777,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
 
     // filter
-    sta = roaGenerateFilter (&roa, NULL, NULL, filter, sizeof(filter));
+    sta = roaGenerateFilter2 (&roa, &filter);
     if (sta != 0) break;
-
     sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
     if (sta != 0)
       break;
@@ -1789,6 +1792,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   } while (0);
 
   // clean up
+  free(filter);
   if (sta != 0 && cert_added)
     (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull);
   delete_casn(&roa.self);
