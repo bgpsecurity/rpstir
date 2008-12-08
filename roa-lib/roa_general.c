@@ -535,3 +535,75 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLe
   free(cSID);
   return 0;
 }
+
+int roaGenerateFilter2(struct ROA *r, char **strpp)
+{
+  int i,j = 0;
+  int iRes = 0;
+  int iFamilies = 0;
+  int iAddrNum = 0;
+  int iAS_ID = 0;
+  int sta;
+  char cAS_ID[20];
+  unsigned char *cSID = NULL;
+  unsigned char **pcAddresses = NULL;
+  struct ROAIPAddressFamily *roaFamily = NULL;
+
+  // for local use, for brevity
+  struct casn *ipblocks = 
+      &r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self;
+
+  // parameter check
+  if (*strpp != NULL) free(*strpp);
+
+  memset(cAS_ID, 0, sizeof(cAS_ID));
+  if ((iAS_ID = roaAS_ID(r)) == 0) return ERR_SCM_INVALASID;
+  if ((sta = itoa(iAS_ID, cAS_ID, 10)) < 0) return sta;
+
+  if ((cSID = roaSKI(r)) == NULL) return ERR_SCM_INVALSKI;
+
+#define FILTER_INCR 1024	
+  int strLen, remLen;
+  char *rstrp, *strp;
+  rstrp = strp =  (char *)calloc(1, FILTER_INCR);
+  strLen = remLen = FILTER_INCR;
+  // For each family, print out all triplets beginning with SKI and AS#
+  // and ending with each IP address listed in the ROA
+  iFamilies = num_items(ipblocks);
+  for (i = 0; i < iFamilies; i++)
+    {
+      if ((roaFamily = (struct ROAIPAddressFamily*) member_casn(ipblocks, i))
+         == NULL)
+	{
+	free(cSID);
+	return ERR_SCM_INVALIPB;
+	}
+      if ((pcAddresses = roaIPAddresses(roaFamily, &iAddrNum)) == NULL)
+	{
+	free(cSID);
+	return ERR_SCM_INVALIPB;
+	}
+      for (j = 0; j < iAddrNum; j++)
+	{
+	while((iRes = snprintf(rstrp, remLen, "%s %s %s\n", cSID, cAS_ID, 
+          pcAddresses[j])) > remLen)
+          {
+          int used = rstrp - strp;
+          strp = (char *)realloc(strp, strLen += FILTER_INCR);
+          rstrp = &strp[used];
+          remLen += FILTER_INCR;
+          }
+        
+        remLen -= strlen(rstrp);
+	rstrp += strlen(rstrp);
+	}
+      for (j = iAddrNum - 1; j >= 0; j--)
+	free(pcAddresses[j]);
+      free(pcAddresses);
+      pcAddresses = NULL;
+    }
+
+  free(cSID);
+  *strpp = strp;
+  return 0;
+}

@@ -162,6 +162,11 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLe
   error code.
 */
 
+int roaGenerateFilter2(struct ROA *r, char **str);
+/*
+Similar to above but allocates space for result as needed
+*/
+ 
 unsigned char *roaSKI(struct ROA *r);
 
 /*
