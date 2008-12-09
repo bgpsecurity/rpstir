@@ -100,7 +100,7 @@ static QueryField fields[] = {
     "filter",			/* name of the field */
     "the entry in the BGP filter file",
     Q_JUST_DISPLAY|Q_FOR_ROA,	/* flags */
-    SQL_C_CHAR, 4096, 		/* sql return type, size */
+    SQL_C_CHAR, 32768, 		/* sql return type, size */
     NULL, 			/* use this for query, not name */
     NULL, 			/* second field for query */
     "Filter Entry",		/* name of column for printout */

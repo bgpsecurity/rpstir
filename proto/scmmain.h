@@ -137,7 +137,7 @@ static scmtab scmtabbuilder[] =
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
       "ski      VARCHAR(128) NOT NULL,"
       "sig      VARCHAR(520) NOT NULL,"
-      "filter   VARCHAR(4096) NOT NULL,"
+      "filter   VARCHAR(32768) NOT NULL,"
       "asn      INT UNSIGNED NOT NULL,"
       "flags    INT UNSIGNED DEFAULT 0,"
       "local_id INT UNSIGNED NOT NULL UNIQUE,"
