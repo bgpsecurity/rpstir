@@ -55,7 +55,7 @@ be done by issuing the command make search name="cryptlib" from the
 
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
-the self-test code (make testlib; ./testlib) fails on at least FreeBSD 
+the self-test code (make testlib; ./testlib) fails on at least FreeBSD
 and Linux. We do not currently think that this is cause for concern.
 
 2.1.4 rsync
@@ -78,7 +78,7 @@ and then un-tar the resulting tarball using the command
 This will create a directory named APKI which will contain various
 subdirectories.
 
-3. Running the APKI Software 
+3. Running the APKI Software
 
 The following are the steps required to run the APKI software.  Note that
 steps 1-4 only need to be executed once at the beginning if everything goes
@@ -93,7 +93,7 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     on the target environment, including where the libraries listed above
     have been installed, one of these three may work, or you may need to
     customize one by updating the variables at the head of the file.
-    Once updated, build the executables by typing "make" in the top level 
+    Once updated, build the executables by typing "make" in the top level
     directory.
 
 3.2 set environment variables: There are three environment variables used
@@ -197,7 +197,7 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     ./query.sh -t <type> -d <field> [-d <field> ... -d <field>]
     where type is either cert, crl, roa or manifest, and the fields are all
     the fields of the objects to display.  There are different possible
-    fields for each object type, and the full list of possibilities
+    fields for each object type. The full list of possibilities
     is obtained with the command "query.sh -l <type>".
     Most of these fields also provide the capability for filtering
     the results based on a simple comparison.  To do such filtering,
@@ -247,5 +247,3 @@ connecting as root by issuing the command:
 where PWD is the root password specified in your odbc.ini file. If this does
 not succeed, follow the steps given in the MySQL manual for resetting the
 root password, then stop and restart the mysqld process.
-
-Other information TBD.
