@@ -1692,11 +1692,7 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
       strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
       sta = put_casn_file(&c->self, pathname, 0);
       free(pathname);
-      if (sta < 0) 
-        {
-        sta = ERR_SCM_INTERNAL;
-        fprintf(stderr, "Error writing file \n");
-        }
+      if (sta < 0) sta = ERR_SCM_INTERNAL;
       else sta = 0;
       }
     else if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
