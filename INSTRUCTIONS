@@ -187,7 +187,9 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     query consider ROAs that are stale in this manner to be either all
     valid or all invalid.  To control how different types of staleness are
     treated, use the "-s <filename>" option, where filename is a file
-    in the same basic format as the sampleQuerySpecs file.
+    in the same basic format as the sampleQuerySpecs file.  The
+    sampleQuerySpecs file also has further documentation on the different
+    types of filtering that can be specified.
 
     The informational query provides the user with a means to see what
     is in the database without directly executing MySQL commands.
