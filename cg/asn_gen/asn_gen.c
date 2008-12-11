@@ -321,14 +321,7 @@ struct parent *parentp;
 struct ub_table *ubp, *eubp;
 struct id_table *idp, *eidp;
 struct stat tstat;
-if (!getenv("ASN_GEN_LICENSE"))
-    {
-    fprintf(stderr,
-"\nUse of this ASN.1 compiler requires the user's acceptance of the software\n\
-license that is bundled with the source distribution.  Any use of this\n\
-compiler for other than U. S. Government purposes is subject to the\n\
-imposition of license fees.  Contact asn-support@bbn.com.\n\n");
-    }
+
 for(p = &argv[1], lflag = tflag = uflag = do_flag = 0,
     source = (char *)0; *p; p++)
     {
