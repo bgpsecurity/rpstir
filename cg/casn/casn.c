@@ -223,6 +223,8 @@ Procedure:
             ncasnp = _skip_casn(tcasnp, 1);
 	    delete_casn(tcasnp);
 	    }
+        if ((casnp->flags & ASN_ENUM_FLAG))  // free main one
+          casnp->startp = _free_it(casnp->startp);
 	}
     else
         {
@@ -841,7 +843,7 @@ struct casn *_find_flag(struct casn *casnp, int flag)
 
 void *_free_it(void *itp)
     {
-    if (itp) dbfree(itp);
+    if (itp) free(itp);
     return (void *)0;
     }
 
@@ -1240,6 +1242,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     int i, lth, num, of;
     ulong secs;
     struct casn time_casn, *tcasnp, *ch_casnp;
+    struct casn realobj;
     struct set_struct
 	{
 	long lth;
@@ -1301,7 +1304,6 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
 	    {
 	    double dbl;
 	    int ttype = 0;
-	    struct casn realobj;
 	    simple_constructor(&realobj, (short)0, ASN_REAL);
 	    if ((casnp->startp[0] & 0x80) && (casnp->startp[0] & 0x30))
                 ttype = 2;
