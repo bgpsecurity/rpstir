@@ -598,4 +598,5 @@ static void load_oidtable(char *name)
     }
   oidtable[oidnum].oid = (char *)0;
   oidtable_size = oidnum;
+  fclose(str);
   }
