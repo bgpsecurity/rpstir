@@ -425,6 +425,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 	  cols[idx++].value = ptr;
 	}
     }
+  memset(lid, 0, sizeof(lid));
   (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
   cols[idx].column = "flags";
   cols[idx++].value = flagn;
@@ -660,10 +661,17 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
   addFlagTest(parentSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
   *stap = searchscm(conp, theCertTable, parentSrch, NULL, ok,
 		    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
-  if ( *stap < 0 ) return NULL;
+  if ( *stap < 0 ) 
+    {
+    freesrchscm(parentSrch);
+    parentSrch = NULL;
+    return NULL;
+    }
   (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
   if (pathname != NULL)
     strncpy(*pathname, ofullname, PATH_MAX);
+//  freesrchscm(parentSrch);
+//  parentSrch = NULL;
   return readCertFromFile(ofullname, stap);
 }
 
@@ -1718,7 +1726,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
-
+ 
   // validate parameters
   if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
        outfile[0] == 0 || outfull == NULL || outfull[0] == 0 )
@@ -1757,7 +1765,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 
     asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
 
-    // signature
+    // signature NOTE: this does not calloc, only points
     if ((bsig = roaSignature(&roa, &bsiglen)) == NULL || bsiglen < 0) {
       sta = ERR_SCM_NOSIG;
       break;
@@ -1851,6 +1859,11 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   for(extp = (struct Extension *)member_casn(&exts->self, 0);
       extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
       extp = (struct Extension *)next_of(&extp->self));
+  if (!extp) 
+    {
+    delete_casn(&roa.self);
+    return ERR_SCM_NOSKI;
+    }
   int size = vsize_casn(&extp->self);
   uchar *tmp = calloc(1, size);
   read_casn(&extp->extnValue.self, tmp); // read contents of outer OCTET STRING
@@ -1888,29 +1901,36 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     if (manFilesLen) manFilesLen++;
     manFilesLen += strlen((char *)file);
   }
-
+  do
+    {  // once through
   // read this_upd and next_upd
-  read_casn_time (&manifest->thisUpdate, &ltime);
-  if ( sta < 0 ) {
-    fprintf(stderr, "Could not read time for thisUpdate\n");
+    read_casn_time (&manifest->thisUpdate, &ltime);
+    if ( sta < 0 ) {
+      fprintf(stderr, "Could not read time for thisUpdate\n");
+      sta = ERR_SCM_INVALDT;
+      break;
+    }
+    thisUpdate = UnixTimeToDBTime(ltime, &sta);
+  
+    read_casn_time (&manifest->nextUpdate, &ltime);
+    if ( sta < 0 ) {
+      fprintf(stderr, "Could not read time for nextUpdate\n");
+      break;
+    }
+    nextUpdate = UnixTimeToDBTime(ltime, &sta);
+  
+    if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id))
+      < 0) break;
+    man_id++;
+    if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id,
+  			       utrust, typ)) != 0) break;
+    }
+  while(0);
+  if (sta < 0) 
+    {
+    delete_casn(&roa.self);
     return sta;
-  }
-  thisUpdate = UnixTimeToDBTime(ltime, &sta);
-
-  read_casn_time (&manifest->nextUpdate, &ltime);
-  if ( sta < 0 ) {
-    fprintf(stderr, "Could not read time for nextUpdate\n");
-    return sta;
-  }
-  nextUpdate = UnixTimeToDBTime(ltime, &sta);
-
-  sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id);
-  if ( sta < 0 )
-    return(sta);
-  man_id++;
-  if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id,
-			       utrust, typ)) != 0) return sta;
-
+    } 
   // initialize query first time through
   if (embedCertSrch == NULL) {
     embedCertSrch = newsrchscm(NULL, 4, 0, 1);
@@ -1964,15 +1984,15 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   aone.ntot = 12;
   aone.nused = idx;
   aone.vald = 0;
-  sta = insertscm(conp, theManifestTable, &aone);
-
-  // if the manifest is valid, update its referenced objects accordingly
-  if (manValid) {
-    sta = updateManifestObjs(conp, manifest);
-  }
-
+  do
+    {
+    if ((sta = insertscm(conp, theManifestTable, &aone)) < 0) break;
+  
+    // if the manifest is valid, update its referenced objects accordingly
+    if (manValid && (sta = updateManifestObjs(conp, manifest)) < 0) break;
+    }
+  while (0);
   // clean up
-  // printf ("sta = %d thisUpdate = %s, nextUpdate = %s man_id = %d\n", sta, thisUpdate, nextUpdate, man_id);
   delete_casn(&(roa.self));
   free(thisUpdate);
   free(nextUpdate);
