@@ -19,9 +19,6 @@ int main(int argc, char ** argv)
   char *buf;
   int bsize;
 
-  ROA(&roa, (ushort)0);
-  Certificate(&certificate, (ushort)0);
-  CertificateRevocationList(&crl, (ushort)0);
 
   if (argc < 2)
     {
@@ -34,30 +31,39 @@ int main(int argc, char ** argv)
   char *p = argv[1];
   if (p[1] == 'c')
     {
+    Certificate(&certificate, (ushort)0);
     if (get_casn_file(&certificate.self, argv[2], 0) < 0) 
         fatal("Error reading %s at %s\n", argv[2], casn_err_struct.asn_map_string);
     bsize = dump_size(&certificate.self);
     buf = (char *)calloc(1, bsize + 8);
     dump_casn(&certificate.self, buf);
     printf(buf);
+    free(buf);
+    delete_casn(&certificate.self);
     }
   else if (p[1] == 'r' || p[1] == 'm')
     {
+    ROA(&roa, (ushort)0);
     if (get_casn_file(&roa.self, argv[2], 0) < 0) 
         fatal("Error reading %s at %s\n", argv[2], casn_err_struct.asn_map_string);
     bsize = dump_size(&roa.self);
     buf = (char *)calloc(1, bsize + 8);
     dump_casn(&roa.self, buf);
     printf(buf);
+    free(buf);
+    delete_casn(&roa.self);
     }
   else if (p[1] == 'l')
     {
+    CertificateRevocationList(&crl, (ushort)0);
     if (get_casn_file(&crl.self, argv[2], 0) < 0) 
         fatal("Error reading %s at %s\n", argv[2], casn_err_struct.asn_map_string);
     bsize = dump_size(&crl.self);
     buf = (char *)calloc(1, bsize + 8);
     dump_casn(&crl.self, buf);
     printf(buf);
+    free(buf);
+    delete_casn(&crl.self);
     }
   exit(1);
   }
