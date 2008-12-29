@@ -11,7 +11,7 @@
 /*****************************************************/
 
 void
-usage(const char *progname)
+myusage(const char *progname)
 {
   char *prog;                                                 
                                                               

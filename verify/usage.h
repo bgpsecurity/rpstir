@@ -5,6 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-void usage(const char *progname);
+void myusage(const char *progname);
 
 #endif
