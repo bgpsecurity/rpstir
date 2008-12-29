@@ -33,7 +33,7 @@ int main(int argc, char** argv)
             "Could not read config from %s\n", argv[1]);
   isPEM = tolower ((int)(argv[3][0])) != 'd';
   snprintf (filename, sizeof(filename), "%s.roa.%s", argv[2], isPEM ? "pem" : "der");
-  checkErr(! roaToFile (roa, filename, isPEM ? FMT_PEM : FMT_DER),
+  checkErr(! roaToFile (&roa, filename, isPEM ? FMT_PEM : FMT_DER),
             "Could not write file: %s\n", filename);
   return 0;
 }
