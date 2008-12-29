@@ -120,4 +120,6 @@ extern void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn,
 extern void  startSyslog(char *appName);
 extern void  stopSyslog(void);
 
+extern void  sqcleanup(void);
+
 #endif

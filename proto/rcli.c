@@ -1218,6 +1218,7 @@ int main(int argc, char **argv)
 	(void)close(protos);
     }
   (void)ranlast(scmp, realconp, "RSYNC");
+  sqcleanup();
   if ( realconp != NULL )
     disconnectscm(realconp);
   freescm(scmp);
@@ -1228,3 +1229,4 @@ int main(int argc, char **argv)
   (void)fclose(logfile);
   return(sta);
 }
+

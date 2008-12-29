@@ -58,7 +58,7 @@ static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm    *theSCMP = NULL;
 
-static void initTables (scm *scmp)
+static void initTables(scm *scmp)
 {
   if (theCertTable == NULL) {
     theDirTable = findtablescm(scmp, "DIRECTORY");
@@ -302,6 +302,7 @@ int infer_filetype(char *fname)
 }
 
 // so that manifest can get id of previous cert
+
 static unsigned int lastCertIDAdded = 0;
 
 static char *certf[CF_NFIELDS] =
@@ -581,6 +582,7 @@ static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
  * Unlike cert2fields, this just fills in the X509 structure,
  *  not the certfields
  */
+
 static X509 *readCertFromFile (char *ofullname, int *stap)
 {
   X509  *px = NULL;
@@ -624,6 +626,7 @@ static X509 *readCertFromFile (char *ofullname, int *stap)
 */
 
 // static variables for efficiency, so only need to set up query once
+
 static scmsrcha *parentSrch = NULL;
 static char *parentDir, *parentFile;
 static unsigned int *parentFlags;
@@ -661,29 +664,26 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
   addFlagTest(parentSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
   *stap = searchscm(conp, theCertTable, parentSrch, NULL, ok,
 		    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
-  if ( *stap < 0 ) 
-    {
-    freesrchscm(parentSrch);
-    parentSrch = NULL;
-    return NULL;
-    }
+  if ( *stap < 0 ) return NULL;
   (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
   if (pathname != NULL)
     strncpy(*pathname, ofullname, PATH_MAX);
-//  freesrchscm(parentSrch);
-//  parentSrch = NULL;
   return readCertFromFile(ofullname, stap);
 }
 
 // static variables for efficiency, so only need to set up query once
+
 static scmsrcha *revokedSrch = NULL;
 static unsigned long long *revokedSNList;
 static unsigned int *revokedSNLen;
+
 // static variables to pass to callback
+
 static int isRevoked;
 static unsigned long long revokedSN;
 
 /* callback function for cert_revoked */
+
 static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
 {
   UNREFERENCED_PARAMETER(conp);
@@ -716,7 +716,6 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
     revokedSNLen = (unsigned int *) revokedSrch->vec[0].valptr;
     revokedSNList = (unsigned long long *) revokedSrch->vec[1].valptr;
   }
-
   // query for crls such that issuer = issuer, and flags & valid
   // and set isRevoked = 1 in the callback if sn is in snlist
   snprintf (revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", issuer);
@@ -816,10 +815,10 @@ static int verify_cert(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
   return(sta);
 }
 
-
 /*
  * crl verification code
  */
+
 static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
 		       char *parentSubject, int *x509sta, int *chainOK)
 {
@@ -827,7 +826,7 @@ static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
   X509 *parent;
   EVP_PKEY *pkey;
 
-  parent = parent_cert (conp, parentSKI, parentSubject, x509sta, NULL);
+  parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL);
   if (parent == NULL) {
     *chainOK = 0;
     return 0;
@@ -839,7 +838,6 @@ static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
   EVP_PKEY_free (pkey);
   return (sta <= 0) ? ERR_SCM_NOTVALID : 0;
 }
-
 
 /*
  * roa utility
@@ -909,6 +907,7 @@ static unsigned char *readfile(char *fn, int *stap)
 /*
  * roa verification code
  */
+
 static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
 {
   X509 *cert;
@@ -938,12 +937,12 @@ static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
   return (sta < 0) ? ERR_SCM_NOTVALID : 0;
 }
 
-
 /* utility function for setting and zeroing the flags dealing with
    validation and validation staleness
 */
-static int updateValidFlags (scmcon *conp, scmtab *tabp, unsigned int id,
-			     unsigned int prevFlags, int isValid)
+
+static int updateValidFlags(scmcon *conp, scmtab *tabp, unsigned int id,
+			    unsigned int prevFlags, int isValid)
 {
   char stmt[150];
   int flags = isValid ?
@@ -957,6 +956,7 @@ static int updateValidFlags (scmcon *conp, scmtab *tabp, unsigned int id,
 /*
  * callback function for verify_children
  */
+
 static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
 {
   crl_fields *cf;
@@ -998,7 +998,8 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
 /*
  * callback function for verify_children
  */
-static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
+
+static int verifyChildROA(scmcon *conp, scmsrcha *s, int idx)
 {
   struct ROA roa;
   int typ, chainOK, sta;
@@ -1031,15 +1032,16 @@ static int verifyChildROA (scmcon *conp, scmsrcha *s, int idx)
   return 0;
 }
 
-
 /*
  * set onman flag from all objects on newly validated manifest
  * plus, delete those objects with bad hashes
  */
+
 static scmsrcha *updateManSrch = NULL;
 static scmsrcha *updateManSrch2 = NULL;
 static unsigned int updateManLid;
 static char updateManPath[PATH_MAX];
+
 static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx);
 
 static int handleUpdateMan (scmcon *conp, scmsrcha *s, int idx) {
@@ -1063,14 +1065,15 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
     ADDCOL(updateManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
     ADDCOL(updateManSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	   sta, sta);
+  }
+  if (updateManSrch2 == NULL) {
     updateManSrch2 = newsrchscm(NULL, 3, 0, 1);
     ADDCOL(updateManSrch2, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	   sta, sta);
     ADDCOL(updateManSrch2, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
     ADDCOL(updateManSrch2, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
   }
-
-  // loop over files and hashes
+ // loop over files and hashes
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
       fahp = (struct FileAndHash *)next_of(&fahp->self)) {
@@ -1114,6 +1117,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 /*
  * callback function for verify_children
  */
+
 static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
 {
   int sta;
@@ -1140,8 +1144,8 @@ static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
   return 0;
 }
 
-
 // structure containing data of children to propagate
+
 typedef struct _PropData {
   char *ski;
   char *subject;
@@ -1154,15 +1158,18 @@ typedef struct _PropData {
 } PropData;
 
 // static variables for efficiency, so only need to set up query once
+
 static scmsrcha *crlSrch = NULL;
 static scmsrcha *manSrch = NULL;
 
 // single place to allocate large amount of space for manifest files lists
+
 static char manFiles[MANFILES_SIZE];
 
 /*
  * utility function for verifyChildren
  */
+
 static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
 {
   X509 *x = NULL;
@@ -1212,7 +1219,6 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
 		  SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
   return 0;
 }
-
 
 typedef struct _mcf
 {
@@ -1289,11 +1295,13 @@ static int countvalidparents(scmcon *conp, char *IS, char *AK)
 }
 
 // static variables for efficiency, so only need to set up query once
+
 static scmsrcha *roaSrch = NULL;
 
 /*
  * callback function for invalidateChildCert
  */
+
 static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
 {
   unsigned int lid, flags;
@@ -1312,6 +1320,7 @@ static int revoke_roa(scmcon *conp, scmsrcha *s, int idx)
 /*
  * utility function for verify_children
  */
+
 static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
 {
   int sta;
@@ -1336,22 +1345,27 @@ static int invalidateChildCert (scmcon *conp, PropData *data, int doUpdate)
 }
 
 // static variables for efficiency, so only need to set up query once
+
 static scmsrcha *childrenSrch = NULL;
 
 // static variables and structure to pass back from callback and hold data
+
 typedef struct _PropDataList {
   int size;
   int maxSize;
   PropData *data;
 } PropDataList;
+
 PropDataList vPropData = {0, 200, NULL};
 PropDataList iPropData = {0, 200, NULL};
+
 PropDataList *currPropData = NULL;
 PropDataList *prevPropData = NULL;
 
 /*
  * callback function for verify_children
  */
+
 static int registerChild (scmcon *conp, scmsrcha *s, int idx)
 {
   PropData *propData;
@@ -1455,6 +1469,7 @@ static int verifyOrNotChildren (scmcon *conp, char *ski, char *subject,
  * primarily, do check for whether there already is a valid manifest
  * that can either confirm or deny the hash
  */
+
 static scmsrcha *validManSrch = NULL;
 static char validManPath[PATH_MAX];
 
@@ -1507,12 +1522,12 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   return sta;
 }
 
-
 /*
  * do the work of add_cert(). Factored out so we can call it from elsewhere.
  *
  * We should eventually merge this with add_cert_internal()
  */
+
 static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
 		      unsigned int id, int utrust, unsigned int *cert_id,
 		      char *fullpath)
@@ -1589,7 +1604,7 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int   x509sta = 0;
   int   sta = 0;
 
-  initTables (scmp);
+  initTables(scmp);
   cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
   if ( cf == NULL || x == NULL )
     {
@@ -1655,7 +1670,7 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 static int gen_cert_filename(char *ski, char **fakename)
   {
   int fakelen = strlen(ski);
-  *fakename = (char *)calloc(1, fakelen);
+  *fakename = (char *)calloc(1, fakelen+5);
   char *a, *b;
   for (a = *fakename, b = ski; *b; b++)
     {
@@ -1677,14 +1692,12 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
   int siz = size_casn(&c->self);
   unsigned char *buf = calloc(1, siz + 4);
   siz = encode_casn(&c->self, buf);
-
     /* d2i_X509 changes "used" to point past end of the object */
   unsigned char *used = buf;
   X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
   free(buf);
     // if deserialization failed, bail
   if (x509p == NULL || sta < 0) return ERR_SCM_X509;
-
   gen_cert_filename(ski, &fakename);
   // pull out the fields
   int x509sta;
@@ -1726,7 +1739,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
- 
+
   // validate parameters
   if ( scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL ||
        outfile[0] == 0 || outfull == NULL || outfull[0] == 0 )
@@ -1737,7 +1750,6 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     delete_casn(&roa.self);
     return(sta);
     }
-
   do {			/* do-once */
     // pull out EE cert
     if (!(roa.content.signedData.certificates.self.flags & ASN_FILLED_FLAG) ||
@@ -1748,7 +1760,6 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
     struct Certificate *c = (struct Certificate *)
       member_casn(&roa.content.signedData.certificates.self, 0);
-
 
     // generate a (fake) filename for the cert that is unique.
     // use the SKI
@@ -1802,11 +1813,11 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   delete_casn(&roa.self);
   if (ski != NULL) free(ski);
   if (sig != NULL) free(sig);
-
   return(sta);
 }
 
 // static variables so only need to set up query once and so can pass results
+
 static scmsrcha *embedCertSrch = NULL;
 static int embedCertFlags;
 static unsigned int embedCertID;
@@ -1827,6 +1838,7 @@ static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
 /*
   Add a manifest to the database
 */
+
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {
@@ -1850,7 +1862,6 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     delete_casn(&roa.self);
     return sta;
     }
-
   // read the embedded cert information, in particular the ski
   struct Certificate *certp = (struct Certificate *)
     member_casn(&roa.content.signedData.certificates.self, 0);
@@ -1957,7 +1968,6 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int manValid = ((embedCertFlags & SCM_FLAG_VALIDATED) &&
 		  ! (embedCertFlags & SCM_FLAG_NOCHAIN));
 
-
   // do the actual insert of the manifest in the db
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
@@ -1996,7 +2006,6 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   delete_casn(&(roa.self));
   free(thisUpdate);
   free(nextUpdate);
-
   return sta;
 }
 
@@ -2152,6 +2161,8 @@ static int crliterator(scmcon *conp, scmsrcha *s, int idx)
   error code.
 */
 
+static void *snlist = NULL;
+
 int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
 {
   unsigned int snlen = 0;
@@ -2163,13 +2174,16 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   crlinfo  crli;
   char     issuer[512];
   char     aki[512];
-  void    *snlist;
+  //  void    *snlist;
   int      sta;
 
 // go for broke and allocate a blob large enough that it can hold
 // the entire snlist if necessary
-  snlist = (void *)calloc(16*1024*1024/sizeof(unsigned long long),
-			  sizeof(unsigned long long));
+  if ( snlist == NULL )
+    snlist = (void *)calloc(16*1024*1024/sizeof(unsigned long long),
+			    sizeof(unsigned long long));
+  else
+    memset(snlist, 0, 16*1024*1024);
   if ( snlist == NULL )
     return(ERR_SCM_NOMEM);
   initTables (scmp);
@@ -2232,7 +2246,7 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
   srch.context = (void *)&crli;
   sta = searchscm(conp, theCRLTable, &srch, NULL, crliterator,
 		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
-  free(snlist);
+  //  free(snlist);
   return(sta);
 }
 
@@ -2266,8 +2280,9 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
 /*
  * Fill in the columns for a search with revoke_cert_and_children as callback
  */
-static void fillInColumns (scmsrch *srch1, unsigned int *lid, char *ski,
-			   char *subject, unsigned int *flags, scmsrcha *srch)
+
+static void fillInColumns(scmsrch *srch1, unsigned int *lid, char *ski,
+			  char *subject, unsigned int *flags, scmsrcha *srch)
 {
   srch1[0].colno = 1;
   srch1[0].sqltype = SQL_C_ULONG;
@@ -2311,6 +2326,8 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 {
   unsigned int id;
   unsigned int blah;
+  unsigned int lid;
+  unsigned int flags;
   scmsrcha srch;
   scmsrch  srch1, srch2[5];
   scmkva   where;
@@ -2318,12 +2335,11 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   scmkv    one;
   scmkv    dtwo[2];
   scmtab  *thetab;
-  char did[24];
-  int  typ;
-  int  sta;
-  unsigned int lid, flags;
+  int      typ;
+  int      sta;
   char     ski[512];
   char     subject[512];
+  char     did[24];
   mcf      mymcf;
 
   if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
@@ -2334,7 +2350,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( typ < 0 )
     return(typ);
 // find the directory
-  initTables (scmp);
+  initTables(scmp);
   one.column = "dirname";
   one.value = outdir;
   where.vec = &one;
@@ -2359,7 +2375,6 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     NULL);
   if ( sta < 0 )
     return(sta);
-
   // fill in where structure
   dtwo[0].column = "filename";
   dtwo[0].value = outfile;
@@ -2370,7 +2385,6 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   dwhere.ntot = 2;
   dwhere.nused = 2;
   dwhere.vald = 0;
-
 // delete the object based on the type
 // note that the directory itself is not deleted
   thetab = NULL;
@@ -2428,7 +2442,8 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		unsigned long long sn)
 {
-  unsigned int lid, flags;
+  unsigned int lid;
+  unsigned int flags;
   scmsrcha srch;
   scmsrch  srch1[5];
   scmkva   where;
@@ -2444,7 +2459,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   if ( issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 ||
        sn == 0 )
     return(0);
-  initTables (scmp);
+  initTables(scmp);
   mymcf.did = 0;
   mymcf.toplevel = 1;
   w[0].column = "issuer";
@@ -2458,7 +2473,7 @@ int model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,
   where.ntot = 3;
   where.nused = 3;
   where.vald = 0;
-  fillInColumns (srch1, &lid, ski, subject, &flags, &srch);
+  fillInColumns(srch1, &lid, ski, subject, &flags, &srch);
   srch.where = &where;
   srch.wherestr = NULL;
   srch.context = &mymcf;
@@ -2504,8 +2519,8 @@ static int certmaybeok(scmcon *conp, scmsrcha *s, int idx)
   unsigned int pflags;
   scmkva   where;
   scmkv    one;
-  char lid[24];
-  int  sta;
+  char     lid[24];
+  int      sta;
 
   UNREFERENCED_PARAMETER(idx);
   pflags = *(unsigned int *)(s->vec[3].valptr);
@@ -2534,8 +2549,8 @@ static int certtoonew(scmcon *conp, scmsrcha *s, int idx)
   unsigned int pflags;
   scmkva   where;
   scmkv    one;
-  char lid[24];
-  int  sta;
+  char     lid[24];
+  int      sta;
 
   UNREFERENCED_PARAMETER(idx);
   (void)snprintf(lid, sizeof(lid), "%u", *(unsigned int *)(s->vec[0].valptr));
@@ -2621,7 +2636,7 @@ int certificate_validity(scm *scmp, scmcon *conp)
 // search for certificates that might now be valid
 // in order to use revoke_cert_and_children the first five
 // columns of the search must be the lid, ski, flags, issuer and aki
-  fillInColumns (srch1, &lid, skistr, subjstr, &flags, &srch);
+  fillInColumns(srch1, &lid, skistr, subjstr, &flags, &srch);
   srch.where = NULL;
   srch.wherestr = vok;
   mymcf.did = 0;
@@ -2657,9 +2672,9 @@ int certificate_validity(scm *scmp, scmcon *conp)
 
 int ranlast(scm *scmp, scmcon *conp, char *whichcli)
 {
-  char   *now;
-  char    what;
-  int     sta = 0;
+  char *now;
+  char  what;
+  int   sta = 0;
 
   if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
        whichcli == NULL || whichcli[0] == 0 )
@@ -2667,7 +2682,7 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
   what = toupper((int)(whichcli[0]));
   if ( what != 'R' && what != 'Q' && what != 'C' && what != 'G' )
     return(ERR_SCM_INVALARG);
-  initTables (scmp);
+  initTables(scmp);
   conp->mystat.tabname = "METADATA";
   now = LocalTimeToDBTime(&sta);
   if ( now == NULL )
@@ -2684,31 +2699,100 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
 
 void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 {
-  initTables (scmp);
+  initTables(scmp);
   return parent_cert (conp, ski, NULL, stap, fn);
 }
-
 
 /*
  * open syslog and write message that application started
  */
 
+static char *logName = NULL;
+
 void startSyslog(char *appName)
 {
-  static char *logName = 0;	/* need to save this for syslog's reuse */
-  if (logName != 0) free(logName); /* previous logName */
-  logName = (char *) calloc (6 + strlen (appName), sizeof (char));
-  snprintf (logName, 6 + strlen (appName), "APKI %s", appName);
-  openlog (logName, LOG_PID, 0);
-
-  syslog (LOG_NOTICE, "Application Started");
+  //  static char *logName = 0;	/* need to save this for syslog's reuse */
+  if (logName != NULL) { free(logName); logName = NULL; } /* previous logName */
+  logName = (char *)calloc (6 + strlen (appName), sizeof (char));
+  snprintf(logName, 6 + strlen (appName), "APKI %s", appName);
+  openlog(logName, LOG_PID, 0);
+  syslog(LOG_NOTICE, "Application Started");
 }
 
 /*
  * close syslog and write message that application ended
  */
+
 void stopSyslog(void)
 {
-  syslog (LOG_NOTICE, "Application Ended");
+  syslog(LOG_NOTICE, "Application Ended");
   closelog();
+  if ( logName != NULL )
+    {
+      free(logName);
+      logName = NULL;
+    }
+}
+
+/*
+  Free all memory held in global variables
+*/
+
+void sqcleanup(void)
+{
+  if ( parentSrch != NULL )
+    {
+      freesrchscm(parentSrch);
+      parentSrch = NULL;
+    }
+  if ( revokedSrch != NULL )
+    {
+      freesrchscm(revokedSrch);
+      revokedSrch = NULL;
+    }
+  if ( updateManSrch != NULL )
+    {
+      freesrchscm(updateManSrch);
+      updateManSrch = NULL;
+    }
+  if ( updateManSrch2 != NULL )
+    {
+      freesrchscm(updateManSrch2);
+      updateManSrch2 = NULL;
+    }
+  if ( crlSrch != NULL )
+    {
+      freesrchscm(crlSrch);
+      crlSrch = NULL;
+    }
+  if ( manSrch != NULL )
+    {
+      freesrchscm(manSrch);
+      manSrch = NULL;
+    }
+  if ( roaSrch != NULL )
+    {
+      freesrchscm(roaSrch);
+      roaSrch = NULL;
+    }
+  if ( childrenSrch != NULL )
+    {
+      freesrchscm(childrenSrch);
+      childrenSrch = NULL;
+    }
+  if ( validManSrch != NULL )
+    {
+      freesrchscm(validManSrch);
+      validManSrch = NULL;
+    }
+  if ( embedCertSrch != NULL )
+    {
+      freesrchscm(embedCertSrch);
+      embedCertSrch = NULL;
+    }
+  if ( snlist != NULL )
+    {
+      free(snlist);
+      snlist = NULL;
+    }
 }

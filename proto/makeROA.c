@@ -24,7 +24,7 @@
 
 int main(int argc, char** argv)
 {
-  struct ROA *roa;
+  struct ROA roa;
   char filename[256];
   int isPEM;
 
