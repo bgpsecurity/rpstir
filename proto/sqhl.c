@@ -2796,6 +2796,6 @@ void sqcleanup(void)
       snlist = NULL;
     }
 
-  free(iPropData.data);
-  free(vPropData.data);
+  if (iPropData.data) free(iPropData.data);
+  if (vPropData.data) free(vPropData.data);
 }
