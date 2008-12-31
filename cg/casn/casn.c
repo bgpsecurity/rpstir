@@ -1323,8 +1323,8 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
 	    {
             memcpy(c, tcasnp->startp, lth);
 	    if (tcasnp->type == ASN_BOOLEAN && *c) *c = 0xFF;
-            if (tcasnp != casnp) clear_casn(tcasnp); // free stuff
 	    }
+        if (tcasnp != casnp) clear_casn(tcasnp); // free stuff
         }
     else if (casnp->type == ASN_SET && (mode & ASN_READ))
 	{
