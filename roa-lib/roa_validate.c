@@ -720,6 +720,7 @@ int roaValidate2(struct ROA *rp)
           }
         }
       }
+    free(oidp);
     }
   if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI)) iRes = ERR_SCM_INVALIPB;
   if (iRes == 0)  // check the signature
