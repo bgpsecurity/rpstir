@@ -31,6 +31,8 @@
 */
 #define MINMAXBUFSIZE 20
 
+static int CryptInitState;
+
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 
 		    CRYPT_ALGO_TYPE alg)
   { // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
@@ -42,13 +44,17 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
       return ERR_SCM_BADALG;
 
   memset(hash, 0, 40);
-  cryptInit();
+  if (!CryptInitState)
+    {
+    cryptInit();
+    CryptInitState = 1;
+    }
   cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
   cryptDestroyContext(hashContext);
-  cryptEnd();
+//  cryptEnd();
   memcpy(outbufp, hash, ansr);
   return ansr;
   }
@@ -84,7 +90,11 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   *buf = ASN_SET;
 
   // (re)init the crypt library
-  cryptInit();
+  if (!CryptInitState)
+    {
+    cryptInit();
+    CryptInitState = 1;
+    }
   cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   cryptEncrypt(hashContext, buf, bsize);
   cryptEncrypt(hashContext, buf, 0);
@@ -150,7 +160,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   // all done, clean up
   cryptDestroyContext(pubkeyContext);
   cryptDestroyContext(hashContext);
-  cryptEnd();
+//  cryptEnd();
   delete_casn(&rsapubkey.self);
   delete_casn(&sigInfo.self);
 
