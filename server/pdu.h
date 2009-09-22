@@ -44,11 +44,12 @@ typedef struct _IPPrefixData {
 	uchar maxLength;
 	uchar dataSource;
 	uint[4] ipPrefix;  // for ipv4, only use first entry
-	uint autonomousSystemNum;
-} IPV4PrefixData;
+	uint asNumber;
+} IPPrefixData;
 
 /*****
  * read a PDU from a socket, waiting until there is data on the socket
+ *   returns a NULL PDU on error
  *****/
 PDU *readPDU(int socket);
 
