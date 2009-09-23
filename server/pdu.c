@@ -7,22 +7,24 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <netinet/in.h>
 
 #define CHECK_ERR(s) if (! (s)) { freePDU(pdu); return NULL; }
 
 #define CHECK_LEN(s) if (pdu->length != (s)) { \\
-	printf("Error: was expecting length %d not %d for pdu type %d", \\
+	printf("Error: was expecting length %d not %d for pdu type %d\n", \\
 		   (s), pdu->length, pdu->pduType); \\
 	freePDU(pdu); return NULL; }
 
-PDU *readPDU(int socket) {
+PDU *readPDU(int sock) {
 	// receive header
 	PDU *pdu = calloc(1, sizeof(PDU));
-	CHECK_ERR (recv(socket, &(pdu->protocolVersion), 1, 0));
-	CHECK_ERR (recv(socket, &(pdu->pduType), 1, 0));
-	CHECK_ERR (recv(socket, &(pdu->color), 2, 0));
+	IPPrefixData *prefixData;
+	CHECK_ERR (recv(sock, &(pdu->protocolVersion), 1, 0));
+	CHECK_ERR (recv(sock, &(pdu->pduType), 1, 0));
+	CHECK_ERR (recv(sock, &(pdu->color), 2, 0));
 	pdu->color = ntohs(pdu->color);
-	CHECK_ERR (recv(socket, &(pdu->length), 4, 0));
+	CHECK_ERR (recv(sock, &(pdu->length), 4, 0));
 	pdu->length = ntohl(pdu->length);
 
 	// receive type-specific data
@@ -40,18 +42,21 @@ PDU *readPDU(int socket) {
 		return pdu;
 	case PDU_IPV4_PREFIX:
 	case PDU_IPV6_PREFIX:
-		IPPrefixData *prefixData;
 		CHECK_LEN((pdu->pduType == PDU_IPV4_PREFIX) ? 20 : 40);
 		prefixData = calloc(1, sizeof(IPPrefixData));
 		pdu->typeSpecificData = prefixData;
-		CHECK_ERR (recv(socket, &(prefixData->flags), 1, 0));
-		CHECK_ERR (recv(socket, &(prefixData->prefixLength), 1, 0));
-		CHECK_ERR (recv(socket, &(prefixData->maxLength), 1, 0));
-		CHECK_ERR (recv(socket, &(prefixData->dataSource), 1, 0));
+		CHECK_ERR (recv(sock, &(prefixData->flags), 1, 0));
+		CHECK_ERR (recv(sock, &(prefixData->prefixLength), 1, 0));
+		CHECK_ERR (recv(sock, &(prefixData->maxLength), 1, 0));
+		CHECK_ERR (recv(sock, &(prefixData->dataSource), 1, 0));
 		// ?????? read the prefix ?????????????
-		CHECK_ERR (recv(socket, &(prefixData->asNumber), 4, 0));
+		CHECK_ERR (recv(sock, &(prefixData->asNumber), 4, 0));
 		prefixData->asNumber = ntohl(prefixData->asNumber);
+		return pdu;
 	}
+	freePDU(pdu);
+	printf ("Unknown pdu type %d received\n", pdu->pduType);
+	return NULL;
 }
 
 void freePDU(PDU *pdu) {

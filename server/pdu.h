@@ -24,6 +24,9 @@
 #define FLAG_WITHDRAW 0
 #define FLAG_ANNOUNCE 1
 
+typedef unsigned char uchar;
+typedef unsigned int uint;
+
 /*****
  * Basic structure of a PDU
  *****/
@@ -32,7 +35,7 @@ typedef struct _PDU {
 	uchar pduType;
 	short color;
 	uint length;
-	void *typeSpecificData
+	void *typeSpecificData;
 } PDU;
 
 /*****
@@ -43,7 +46,7 @@ typedef struct _IPPrefixData {
 	uchar prefixLength;
 	uchar maxLength;
 	uchar dataSource;
-	uint[4] ipPrefix;  // for ipv4, only use first entry
+	uint ipPrefix[4];    // for ipv4, only use first entry
 	uint asNumber;
 } IPPrefixData;
 
