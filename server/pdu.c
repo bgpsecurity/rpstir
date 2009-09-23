@@ -9,23 +9,43 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 
-#define CHECK_ERR(s) if (! (s)) { freePDU(pdu); return NULL; }
 
-#define CHECK_LEN(s) if (pdu->length != (s)) { \
-	printf("Error: was expecting length %d not %d for pdu type %d\n", \
-		   (s), pdu->length, pdu->pduType); \
-	freePDU(pdu); return NULL; }
+/****** ???????????????? need to send error pdu's ???????????? *****/
+
+#define CHECK_LEN(s) \
+	if (pdu->length != (s)) {  \
+		printf("Error: was expecting length %d not %d for pdu type %d\n", \
+			   (s), pdu->length, pdu->pduType);	 \
+		freePDU(pdu); \
+		return NULL; \
+	}
+
+#define CHECK_READ(s) \
+	if ((s) <= 0) { \
+		freePDU(pdu); \
+		return NULL; \
+	}
+
+#define READ_BYTE(b) CHECK_READ(recv(sock, &(b), 1, 0))
+
+#define READ_SHORT(i) { \
+	CHECK_READ(recv(sock, &(i), 2, 0)); \
+	i = ntohs(i); }
+
+#define READ_INT(i) { \
+	CHECK_READ(recv(sock, &(i), 4, 0)); \
+	i = ntohl(i); }
 
 PDU *readPDU(int sock) {
-	// receive header
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
-	CHECK_ERR (recv(sock, &(pdu->protocolVersion), 1, 0));
-	CHECK_ERR (recv(sock, &(pdu->pduType), 1, 0));
-	CHECK_ERR (recv(sock, &(pdu->color), 2, 0));
-	pdu->color = ntohs(pdu->color);
-	CHECK_ERR (recv(sock, &(pdu->length), 4, 0));
-	pdu->length = ntohl(pdu->length);
+	uint *serialNum, i;
+
+	// receive header
+	READ_BYTE(pdu->protocolVersion);
+	READ_BYTE(pdu->pduType);
+	READ_SHORT(pdu->color);
+	READ_INT(pdu->length);
 
 	// receive type-specific data
 	switch (pdu->pduType) {
@@ -38,26 +58,86 @@ PDU *readPDU(int sock) {
 	case PDU_SERIAL_QUERY:
 	case PDU_END_OF_DATA:
 		CHECK_LEN(12);
-		// ???????????? read serial number ???????????
+		serialNum = malloc(sizeof(uint));
+		pdu->typeSpecificData = serialNum;
+		READ_INT(i);
+		*serialNum = i;
 		return pdu;
 	case PDU_IPV4_PREFIX:
 	case PDU_IPV6_PREFIX:
 		CHECK_LEN((pdu->pduType == PDU_IPV4_PREFIX) ? 20 : 40);
 		prefixData = calloc(1, sizeof(IPPrefixData));
 		pdu->typeSpecificData = prefixData;
-		CHECK_ERR (recv(sock, &(prefixData->flags), 1, 0));
-		CHECK_ERR (recv(sock, &(prefixData->prefixLength), 1, 0));
-		CHECK_ERR (recv(sock, &(prefixData->maxLength), 1, 0));
-		CHECK_ERR (recv(sock, &(prefixData->dataSource), 1, 0));
-		// ?????? read the prefix ?????????????
-		CHECK_ERR (recv(sock, &(prefixData->asNumber), 4, 0));
-		prefixData->asNumber = ntohl(prefixData->asNumber);
+		READ_BYTE(prefixData->flags);
+		READ_BYTE(prefixData->prefixLength);
+		READ_BYTE(prefixData->maxLength);
+		READ_BYTE(prefixData->dataSource);
+		for (i = 0; i < ((pdu->pduType == PDU_IPV4_PREFIX) ? 1 : 4); i++) {
+			READ_INT(prefixData->ipPrefix[i]);
+		}
+		READ_INT(prefixData->asNumber);
 		return pdu;
 	}
+
+	// handle case with unknown type
 	freePDU(pdu);
 	printf ("Unknown pdu type %d received\n", pdu->pduType);
 	return NULL;
 }
+
+
+#define CHECK_WRITE(s) if ((s) <= 0) return 0;
+
+#define WRITE_BYTE(b) CHECK_WRITE(send(sock, &(b), 1, 0));
+
+#define WRITE_SHORT(i) { \
+	*((short *) buffer) = htons(i); \
+	CHECK_WRITE(send(sock, buffer, 2, 0)); }
+
+#define WRITE_INT(i) { \
+	*((uint *) buffer) = htonl(i); \
+	CHECK_WRITE(send(sock, buffer, 4, 0)); }
+
+int writePDU(PDU *pdu, int sock) {
+	IPPrefixData *prefixData;
+	uchar buffer[4];
+	uint i;
+
+	// send header
+	WRITE_BYTE(pdu->protocolVersion);
+	WRITE_BYTE(pdu->pduType);
+	WRITE_SHORT(pdu->color);
+	WRITE_INT(pdu->length);
+
+	// send type-specific data
+	switch (pdu->pduType) {
+	case PDU_RESET_QUERY:
+	case PDU_CACHE_RESPONSE:
+	case PDU_CACHE_RESET:
+		return 1;
+	case PDU_SERIAL_NOTIFY:
+	case PDU_SERIAL_QUERY:
+	case PDU_END_OF_DATA:
+		i = *((uint *) pdu->typeSpecificData);
+		WRITE_INT(i);
+		return 1;
+	case PDU_IPV4_PREFIX:
+	case PDU_IPV6_PREFIX:
+		prefixData = (IPPrefixData *) pdu->typeSpecificData;
+		WRITE_BYTE(prefixData->flags);
+		WRITE_BYTE(prefixData->prefixLength);
+		WRITE_BYTE(prefixData->maxLength);
+		WRITE_BYTE(prefixData->dataSource);
+		for (i = 0; i < ((pdu->pduType == PDU_IPV4_PREFIX) ? 1 : 4); i++) {
+			WRITE_INT(prefixData->ipPrefix[i]);
+		}
+		WRITE_INT(prefixData->asNumber);
+		return 1;
+	}
+
+	return 0;
+}
+
 
 void freePDU(PDU *pdu) {
 	if (pdu->typeSpecificData) free(pdu->typeSpecificData);

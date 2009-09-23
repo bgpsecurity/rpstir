@@ -54,12 +54,12 @@ typedef struct _IPPrefixData {
  * read a PDU from a socket, waiting until there is data on the socket
  *   returns a NULL PDU on error
  *****/
-PDU *readPDU(int socket);
+PDU *readPDU(int sock);
 
 /*****
  * write a PDU to a socket, returning a non-zero value for an error
  *****/
-int writePDU(PDU *pdu, int socket);
+int writePDU(PDU *pdu, int sock);
 
 /*****
  * free a PDU returned from readPDU
