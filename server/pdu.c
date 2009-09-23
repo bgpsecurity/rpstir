@@ -11,9 +11,9 @@
 
 #define CHECK_ERR(s) if (! (s)) { freePDU(pdu); return NULL; }
 
-#define CHECK_LEN(s) if (pdu->length != (s)) { \\
-	printf("Error: was expecting length %d not %d for pdu type %d\n", \\
-		   (s), pdu->length, pdu->pduType); \\
+#define CHECK_LEN(s) if (pdu->length != (s)) { \
+	printf("Error: was expecting length %d not %d for pdu type %d\n", \
+		   (s), pdu->length, pdu->pduType); \
 	freePDU(pdu); return NULL; }
 
 PDU *readPDU(int sock) {
