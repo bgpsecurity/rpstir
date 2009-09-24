@@ -41,11 +41,12 @@ LIBS=$(LIBSSL) $(LIBCL) $(LIBCRYPTO) \
 
 
 pdu.o: pdu.h
-server.o: pdu.h
-testClient.o: pdu.h
+server.o: pdu.h socket.h
+testClient.o: pdu.h socket.h
+socket.o: socket.h
 
-libpdu.a:	pdu.o
-	ar crv libapki.a pdu.o
+libpdu.a:	pdu.o socket.o
+	ar crv libapki.a pdu.o socket.o
 	ranlib libapki.a
 
 server:	server.o libpdu.a $(LOCAL_LIBS) Makefile
