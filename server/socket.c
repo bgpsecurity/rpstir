@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <netdb.h>
-#include "comms.h"
+#include "socket.h"
 
 #define DEFAULT_SERVER_PORT 7455
 
@@ -39,5 +39,23 @@ int getServerSocket() {
 
 int getClientSocket() {
 	int sock;
+	char *hostname = getenv("RPKI_SERVER_HOST");
+	struct hostent *hp;
+	struct sockaddr_in sin;
+
+	if (! hostname) {
+		printf("Need to define environment variable RPKI_SERVER_HOST\n");
+		return -1;
+	}
+	if ((hp == gethostbyname(hostname)) == 0) {
+		printf("Could not find host named %s\n", hostname);
+		return -1;
+	}
+	memset(&sin, 0, sizeof(sin));
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
+	sin.sin_port = htons(getPort());
+	CHECK_ERR(sock = socket(AF_INET, SOCK_STREAM, 0), "socket");
+	CHECK_ERR(connect(sock, (struct sockaddr *)&sin, sizeof(sin)), "connect");
 	return sock;
 }
