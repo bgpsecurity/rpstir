@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	testClient # server
+all:	testClient server
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)

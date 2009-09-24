@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-	if (writePDU(&request, sock)) {
+	if (writePDU(&request, sock) == -1) {
 		printf ("Error writing reset query\n");
 		return -1;
 	}
@@ -44,5 +44,6 @@ int main(int argc, char **argv) {
 		printf ("Missing end-of-data pdu\n");
 		return -1;
 	}
+	printf("Completed successfully\n");
 	return 1;
 }
