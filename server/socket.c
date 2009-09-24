@@ -42,7 +42,7 @@ int getClientSocket(char *hostname) {
 	struct hostent *hp;
 	struct sockaddr_in sin;
 
-	if ((hp == gethostbyname(hostname)) == 0) {
+	if ((hp = gethostbyname(hostname)) == 0) {
 		printf("Could not find host named %s\n", hostname);
 		return -1;
 	}
