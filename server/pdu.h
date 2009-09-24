@@ -19,6 +19,7 @@
 /*****
  * Constants for use in the PDUs
  *****/
+#define PROTOCOL_VERSION 0
 #define SOURCE_RPKI 0
 #define SOURCE_IRR 1
 #define FLAG_WITHDRAW 0
@@ -65,3 +66,14 @@ int writePDU(PDU *pdu, int sock);
  * free a PDU returned from readPDU
  *****/
 void freePDU(PDU *pdu);
+
+/*****
+ * fill in the header portion of a PDU given its type,
+ *   optionally allocating memory for the type-specific portion
+ *****/
+void fillInPDUHeader(PDU *pdu, uchar pduType, char allocRest);
+
+/*****
+ * utility routine that gives the expected length for a given type
+ *****/
+int lengthForType(uchar pduType);

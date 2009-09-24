@@ -37,16 +37,11 @@ int getServerSocket() {
 	return sock2;
 }
 
-int getClientSocket() {
+int getClientSocket(char *hostname) {
 	int sock;
-	char *hostname = getenv("RPKI_SERVER_HOST");
 	struct hostent *hp;
 	struct sockaddr_in sin;
 
-	if (! hostname) {
-		printf("Need to define environment variable RPKI_SERVER_HOST\n");
-		return -1;
-	}
 	if ((hp == gethostbyname(hostname)) == 0) {
 		printf("Could not find host named %s\n", hostname);
 		return -1;

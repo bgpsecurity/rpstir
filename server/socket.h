@@ -12,6 +12,7 @@ int getServerSocket(void);
 
 /******
  * Get a client side socket
+ * Argument hostname: host name of the server
  * Returns -1 if error
  ******/
-int getClientSocket(void);
+int getClientSocket(char *hostName);

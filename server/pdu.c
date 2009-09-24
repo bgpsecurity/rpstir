@@ -12,14 +12,6 @@
 
 /****** ???????????????? need to send error pdu's ???????????? *****/
 
-#define CHECK_LEN(s) \
-	if (pdu->length != (s)) {  \
-		printf("Error: was expecting length %d not %d for pdu type %d\n", \
-			   (s), pdu->length, pdu->pduType);	 \
-		freePDU(pdu); \
-		return NULL; \
-	}
-
 #define CHECK_READ(s) \
 	if ((s) <= 0) { \
 		freePDU(pdu); \
@@ -40,24 +32,30 @@ PDU *readPDU(int sock) {
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
 	uint *serialNum, i;
+	int expectedLen;
 
-	// receive header
+	// receive header and check length
 	READ_BYTE(pdu->protocolVersion);
 	READ_BYTE(pdu->pduType);
 	READ_SHORT(pdu->color);
 	READ_INT(pdu->length);
+	expectedLen = lengthForType(pdu->pduType);
+	if ((expectedLen != -1) && (pdu->length != expectedLen)) {
+		printf("Error: was expecting length %d not %d for pdu type %d\n",
+			   expectedLen, pdu->length, pdu->pduType);	
+		freePDU(pdu);
+		return NULL;
+	}
 
 	// receive type-specific data
 	switch (pdu->pduType) {
 	case PDU_RESET_QUERY:
 	case PDU_CACHE_RESPONSE:
 	case PDU_CACHE_RESET:
-		CHECK_LEN(8);
 		return pdu;
 	case PDU_SERIAL_NOTIFY:
 	case PDU_SERIAL_QUERY:
 	case PDU_END_OF_DATA:
-		CHECK_LEN(12);
 		serialNum = malloc(sizeof(uint));
 		pdu->typeSpecificData = serialNum;
 		READ_INT(i);
@@ -65,7 +63,6 @@ PDU *readPDU(int sock) {
 		return pdu;
 	case PDU_IPV4_PREFIX:
 	case PDU_IPV6_PREFIX:
-		CHECK_LEN((pdu->pduType == PDU_IPV4_PREFIX) ? 20 : 40);
 		prefixData = calloc(1, sizeof(IPPrefixData));
 		pdu->typeSpecificData = prefixData;
 		READ_BYTE(prefixData->flags);
@@ -144,3 +141,34 @@ void freePDU(PDU *pdu) {
 	free(pdu);
 }
 
+void fillInPDUHeader(PDU *pdu, uchar pduType, char allocRest) {
+	pdu->protocolVersion = PROTOCOL_VERSION;
+	pdu->pduType = pduType;
+	pdu->color = 0;
+	pdu->length = lengthForType(pduType);
+	if (allocRest) {
+		pdu->typeSpecificData = NULL;
+		switch (pduType) {
+		case PDU_SERIAL_NOTIFY: case PDU_SERIAL_QUERY: case PDU_END_OF_DATA:
+			pdu->typeSpecificData = malloc(sizeof(uint));
+			break;
+		case PDU_IPV4_PREFIX: case PDU_IPV6_PREFIX:
+			pdu->typeSpecificData = calloc(1, sizeof(IPPrefixData));
+			break;
+		}
+	}
+}
+
+int lengthForType(uchar pduType) {
+	switch (pduType) {
+	case PDU_RESET_QUERY: case PDU_CACHE_RESPONSE: case PDU_CACHE_RESET:
+		return 8;
+	case PDU_SERIAL_NOTIFY: case PDU_SERIAL_QUERY: case PDU_END_OF_DATA:
+		return 12;
+	case PDU_IPV4_PREFIX:
+		return 20;
+	case PDU_IPV6_PREFIX:
+		return 40;
+	}
+	return -1;
+}
