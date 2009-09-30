@@ -24,6 +24,7 @@
 
 #include <sql.h>
 #include <sqlext.h>
+#include "scm.h"
 
 typedef struct _scmstat		/* connection statistics */
 {
