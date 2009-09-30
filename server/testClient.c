@@ -10,6 +10,7 @@
 int main(int argc, char **argv) {
 	int sock;
 	PDU request, *response;
+	IPPrefixData *prefixData;
 
 	if ((sock = getClientSocket("localhost")) == -1) {
 		printf ("Error opening socket\n");
@@ -34,11 +35,13 @@ int main(int argc, char **argv) {
 		if (response->pduType == PDU_IPV4_PREFIX) {
 			printf ("Received pdu of type IPv4 prefix\n");
 		} else if (response->pduType == PDU_IPV6_PREFIX) {
-			printf ("Received pdu of type IPv4 prefix\n");
+			printf ("Received pdu of type IPv6 prefix\n");
 		} else {
 			printf ("Received unexpected pdu type %d", response->pduType);
 			return -1;
 		}
+		prefixData = (IPPrefixData *) response->typeSpecificData;
+		printf ("as number = %d\n", prefixData->asNumber);
 	}
 	if (! response) {
 		printf ("Missing end-of-data pdu\n");
