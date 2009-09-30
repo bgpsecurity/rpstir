@@ -526,16 +526,15 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       int i, numprinted = 0;
 
       for (i = 0; i < 2; ++i) {
-	char *end, *f = ip_addrs;
+		char *end, *f2, *f = ip_addrs;
 
 	// format one line of ip_addrs: "ip_addr/prefix_len[/max_prefix_len]\n"
 	while ((end = strchr(f, '\n')) != 0) {
 	  *end = '\0';
-	  // skip sid and asnum
-	  if ((f = strchr(f, ' ')) == 0) continue;
-	  ++f;
-	  if ((f = strchr(f, ' ')) == 0) continue;
-	  ++f;
+	  // take out max_prefix_len from string
+	  f2 = strchr(f, '/');
+	  f2 = strchr(f2, '/');
+	  if (f2) *f2 = '\0';
 	  if ((i == 0 && strchr(f, ':') == 0) ||
 	      (i == 1 && strchr(f, ':') != 0)) {
             int need = strlen(f) + 10 + strlen(filename) + 3;
@@ -558,6 +557,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
               }
 	    ++numprinted;
 	  }
+	  if (f2) *f2 = '/';
 	  *end = '\n';
 	  // skip past the newline and try for another one
 	  f = end + 1;
