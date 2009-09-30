@@ -97,13 +97,13 @@ static scmcon   *connect = NULL;
 /* the set of all query fields */
 static QueryField fields[] = {
   {
-    "filter",			/* name of the field */
-    "the entry in the BGP filter file",
+    "ip_addrs",			/* name of the field */
+    "the set of IP addresses assigned by the ROA",
     Q_JUST_DISPLAY|Q_FOR_ROA,	/* flags */
     SQL_C_CHAR, 32768, 		/* sql return type, size */
     NULL, 			/* use this for query, not name */
     NULL, 			/* second field for query */
-    "Filter Entry",		/* name of column for printout */
+    "IP Addresses",		/* name of column for printout */
     NULL, 			/* function for display string */
   },
   {
@@ -498,13 +498,13 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 
   if (isRPSL) {
     unsigned int asn = 0;
-    char *filter = 0;
+    char *ip_addrs = 0;
     char *filename = 0;
 
     for (display = 0; globalFields[display] != NULL; display++) {
       QueryField *field = globalFields[display];
-      if (!strcasecmp(field->name, "filter"))
-	filter = (char *)s->vec[display].valptr;
+      if (!strcasecmp(field->name, "ip_addrs"))
+	ip_addrs = (char *)s->vec[display].valptr;
       else if (!strcasecmp(field->name, "asn"))
 	asn = *(unsigned int *) s->vec[display].valptr;
       else if (!strcasecmp(field->name, "filename"))
@@ -513,12 +513,12 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	fprintf(stderr, "warning: unexpected field %s in RPSL query\n",
 		field->name);
     }
-    if (asn == 0 || filter == 0) {
+    if (asn == 0 || ip_addrs == 0) {
       fprintf(stderr, "incomplete result returned in RPSL query: ");
       if (asn == 0)
 	fprintf(stderr, "no asn\n");
-      if (filter == 0)
-	fprintf(stderr, "no filter\n");
+      if (ip_addrs == 0)
+	fprintf(stderr, "no ip_addrs\n");
     } else {
       if (asn != oldasn) emptyRPSL();
       oldasn = asn;
@@ -526,9 +526,9 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       int i, numprinted = 0;
 
       for (i = 0; i < 2; ++i) {
-	char *end, *f = filter;
+	char *end, *f = ip_addrs;
 
-	// format of filters: some number of "sid<space>asnum<space>filter\n"
+	// format one line of ip_addrs: "ip_addr/prefix_len[/max_prefix_len]\n"
 	while ((end = strchr(f, '\n')) != 0) {
 	  *end = '\0';
 	  // skip sid and asnum
@@ -808,8 +808,8 @@ static int addRPSLFields(char *displays[], int numDisplays)
   // XXX hack... just add these by hand
   // XXX worse hack... we have hard-coded SQL field names scattered
   // throughout the code. Help us if we ever change the schema.
-  displays[0] = "asn";		/* we only need asn and filter*/
-  displays[1] = "filter";
+  displays[0] = "asn";		/* we only need asn and ip_addrs*/
+  displays[1] = "ip_addrs";
   displays[2] = "filename";	/* added for commentary */
   return 3;			/* number of fields added */
 }

@@ -455,7 +455,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 
 static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
 			    unsigned int dirid, char *ski, int asid,
-			    char *filter, char *sig, unsigned int flags)
+			    char *ip_addrs, char *sig, unsigned int flags)
 {
   unsigned int roa_id = 0;
   scmkva   aone;
@@ -487,8 +487,8 @@ static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
   cols[idx++].value = ski;
   cols[idx].column = "sig";
   cols[idx++].value = sig;
-  cols[idx].column = "filter";
-  cols[idx++].value = filter;
+  cols[idx].column = "ip_addrs";
+  cols[idx++].value = ip_addrs;
   (void)snprintf(asn, sizeof(asn), "%d", asid);
   cols[idx].column = "asn";
   cols[idx++].value = asn;
@@ -1735,7 +1735,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *outfull, unsigned int id, int utrust, int typ)
 {
   struct ROA roa;  // note: roaFromFile constructs this
-  char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, *filter= NULL;
+  char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, *ip_addrs = NULL;
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
@@ -1791,15 +1791,15 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     if ((sta = verify_roa (conp, &roa, ski, &chainOK)) != 0)
       break;
 
-    // filter
-    sta = roaGenerateFilter2 (&roa, &filter);
+    // ip_addrs
+    sta = roaGetIPAddresses (&roa, &ip_addrs);
     if (sta != 0) break;
     sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
     if (sta != 0)
       break;
 
     // add to database
-    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, filter,
+    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, ip_addrs,
 			   sig, flags);
     if (sta < 0)
       break;
@@ -1807,7 +1807,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   } while (0);
 
   // clean up
-  free(filter);
+  free(ip_addrs);
   if (sta != 0 && cert_added)
     (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull);
   delete_casn(&roa.self);

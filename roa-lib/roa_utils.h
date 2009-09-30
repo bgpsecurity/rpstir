@@ -166,6 +166,12 @@ int roaGenerateFilter2(struct ROA *r, char **str);
 /*
 Similar to above but allocates space for result as needed
 */
+
+int roaGetIPAddresses(struct ROA *r, char **str);
+/*
+Fills the IP addresses assigned by a ROA into a multiline string,
+where each line has the form address/prefix_length[/max_prefix_len]
+*/
  
 unsigned char *roaSKI(struct ROA *r);
 

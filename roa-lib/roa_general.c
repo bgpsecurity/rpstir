@@ -607,3 +607,8 @@ int roaGenerateFilter2(struct ROA *r, char **strpp)
   *strpp = strp;
   return 0;
 }
+
+int roaGetIPAddresses(struct ROA *r, char **str)
+{
+  return roaGenerateFilter2(r, str);
+}
