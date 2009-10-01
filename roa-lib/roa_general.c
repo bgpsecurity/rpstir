@@ -460,6 +460,89 @@ void roaFree(struct ROA *r)
     }
 }
 
+static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
+  {
+  char *bufp = (char *)calloc(1, 100);
+  struct IPAddress *ipaddressp = &roaIPaddressp->address;
+  uchar tbuf[20];
+  memset(tbuf, 0, 20);
+  int vsiz = read_casn(ipaddressp, tbuf);
+  int lth = (vsiz << 3) - (int)*tbuf;
+  int i;
+  char *c = bufp;
+  if (fam == 0)  // IPv4
+    {
+    for (i = 1; i < vsiz; )
+      {
+      if (i > 1) *c++ == '.';
+      sprintf(c, "%d", (int)tbuf[i]);
+      while (*c) c++;
+      }
+    }
+  else
+    {
+    for (i = 1; i < vsiz; i++)
+      {
+      if (i > 1) *c++ = ':';
+      int val = tbuf[i++];
+      val = (val << 8) + tbuf[i];
+      sprintf(c, "%02x", val);
+      while(*c) c++;
+      }
+    }
+  sprintf(c, "/%d", lth); 
+  long li;
+  if (size_casn(roaIPaddressp))
+    {
+    read_casn_num(&roaIPaddressp->maxLength, &li);
+    sprintf(c, "/%ld", li);
+    while(*c) c++;
+    }
+  *c++ = '\n';
+  return bufp;
+  }
+
+int roaGetIPAddresses(struct ROA *rp, char **str)
+  {
+  struct ROAIPAddrBlocks *addrBlocksp = &rp->content.signedData.
+    encapContentInfo.eContent.roa.ipAddrBlocks;
+  char *replyp;
+  int replysiz = 0;
+  int fam, fams = num_items(&addrBlocksp->self);
+  for (fam = 0; fam < fams; fam++)
+    {
+    struct ROAIPAddressFamily *famp = (struct ROAIPAddressFamily *)
+      member_casn(&addrBlocksp->self, fam);;
+    uchar famtyp[4];
+    if (read_casn(famp, famtyp) < 0) return -1;
+    int numaddr, numaddrs = num_items(&famp->addresses.self);
+    for (numaddr = 0; numaddr < numaddrs; numaddr++)
+      {
+      struct ROAIPAddress *ipaddressp = (struct ROAIPAddress *)
+        member_casn(&famp->addresses.self, numaddr);
+      char *tmpbuf = convertAddr(famtyp[1], ipaddressp);
+      int lth = strlen(tmpbuf) + 1;
+      if (!replysiz) 
+        {
+        replyp = (char *)calloc(1, lth);
+        strcpy(replyp, tmpbuf);
+        replysiz = lth - 1;
+        }
+      else
+        {
+        replyp = (char *)realloc(replyp, replysiz + lth + 1);
+        char *rpendp = &replyp[replysiz];
+        *rpendp++ = '\n';
+        strcpy(rpendp, tmpbuf);
+        replysiz += lth;
+        }
+      free(tmpbuf);
+      }
+    }
+   *str = replyp;
+   return 0;
+  }
+ 
 int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLen)
 {
   int i,j = 0;
@@ -606,9 +689,4 @@ int roaGenerateFilter2(struct ROA *r, char **strpp)
   free(cSID);
   *strpp = strp;
   return 0;
-}
-
-int roaGetIPAddresses(struct ROA *r, char **str)
-{
-  return roaGenerateFilter2(r, str);
 }
