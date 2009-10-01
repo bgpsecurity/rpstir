@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	libapki.a rcli query chaser garbage makeROA
+all:	libapki.a rcli query chaser garbage makeROA simple_test proofreader
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
@@ -55,13 +55,17 @@ query.o: scm.h scmf.h err.h myssl.h sqhl.h
 chaser.o: scm.h scmf.h sqhl.h err.h
 garbage.o:	scm.h scmf.h sqhl.h err.h
 makeROA.o:	err.h
+simple_test.o:	err.h
+proofreader.o:	err.h conversion.h
+conversion.o:	err.h conversion.h
+rpwork.o:	err.h conversion.h rpwork.c
 
 libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
 	ar crv libapki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
 	ranlib libapki.a
 
 rcli:	rcli.o libapki.a $(LOCAL_LIBS) Makefile
-	$(CC) -o rcli -g rcli.o $(LOCAL_LIBS) $(LIBS)
+	$(CC) -o rcli -g rcli.o $(LOCAL_LIBS) $(LIBS) $(LOCAL_LIBS)
 
 query: query.o libapki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o query -g query.o $(LOCAL_LIBS) $(LIBS)
@@ -74,6 +78,12 @@ garbage: garbage.o libapki.a $(LOCAL_LIBS) Makefile
 
 makeROA: makeROA.o libapki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o makeROA -g makeROA.o $(LOCAL_LIBS) $(LIBS)
+
+simple_test: simple_test.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o simple_test -g simple_test.o $(LOCAL_LIBS) $(LIBS)
+
+proofreader: proofreader.o conversion.o libapki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o proofreader -g proofreader.o conversion.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a
