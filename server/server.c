@@ -43,7 +43,7 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 				val = (val << 8) + atoi(ptr1);
 				ptr1 = strtok(NULL, ".");
 			}
-			prefixData.ipPrefix[0] = val;
+			prefixData.ipAddress[0] = val;
 		}
 		// IPv6
 		else {
@@ -53,7 +53,7 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 			while (ptr1) {
 				val = (val << 16) + atoi(ptr1);
 				if (final) {
-					prefixData.ipPrefix[i] = val;
+					prefixData.ipAddress[i] = val;
 					val = 0;
 					i++;
 				}
@@ -127,16 +127,16 @@ int main(int argc, char **argv) {
 	prefixData.prefixLength = 24;
 	prefixData.maxLength = 32;
 	prefixData.dataSource = SOURCE_RPKI;
-	prefixData.ipPrefix[0] = 12345;
+	prefixData.ipAddress[0] = 12345;
 	prefixData.asNumber = 45;
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing ipv4 prefix\n");
 		return -1;
 	}
 	fillInPDUHeader(&response, PDU_IPV6_PREFIX, 0);
-	prefixData.ipPrefix[1] = 12346;
-	prefixData.ipPrefix[2] = 12347;
-	prefixData.ipPrefix[3] = 12348;
+	prefixData.ipAddress[1] = 12346;
+	prefixData.ipAddress[2] = 12347;
+	prefixData.ipAddress[3] = 12348;
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing ipv6 prefix\n");
 		return -1;

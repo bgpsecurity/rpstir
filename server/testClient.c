@@ -7,8 +7,12 @@
 #include "socket.h"
 #include <stdio.h>
 
+static int getBits(uint val, uint start, uint len) {
+	return (val << start) >> (32 - len);
+}
+
 int main(int argc, char **argv) {
-	int sock;
+	int sock, i;
 	PDU request, *response;
 	IPPrefixData *prefixData;
 
@@ -32,16 +36,24 @@ int main(int argc, char **argv) {
 	for (response = readPDU(sock);
 		 response && (response->pduType != PDU_END_OF_DATA);
 		 response = readPDU(sock)) {
+		prefixData = (IPPrefixData *) response->typeSpecificData;
 		if (response->pduType == PDU_IPV4_PREFIX) {
-			printf ("Received pdu of type IPv4 prefix\n");
+			printf("Received pdu of type IPv4 prefix\naddr = ");
+			for (i = 0; i < 4; i++)
+				printf("%d%s", getBits(prefixData->ipAddress[0], 8*i, 8),
+					   (i == 3) ? "\n" : ".");
 		} else if (response->pduType == PDU_IPV6_PREFIX) {
-			printf ("Received pdu of type IPv6 prefix\n");
+			printf("Received pdu of type IPv6 prefix\naddr = ");
+			for (i = 0; i < 8; i++)
+				printf("%d%s",
+					   getBits(prefixData->ipAddress[i/2], (i%2)*16, 16),
+					   (i == 7) ? "\n" : ":");
 		} else {
-			printf ("Received unexpected pdu type %d\n", response->pduType);
+			printf("Received unexpected pdu type %d\n", response->pduType);
 			return -1;
 		}
-		prefixData = (IPPrefixData *) response->typeSpecificData;
-		printf ("as number = %d\n", prefixData->asNumber);
+		printf ("as# = %d len = %d max = %d\n", prefixData->asNumber,
+				prefixData->prefixLength, prefixData->maxLength);
 	}
 	if (! response) {
 		printf ("Missing end-of-data pdu\n");

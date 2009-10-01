@@ -47,7 +47,7 @@ typedef struct _IPPrefixData {
 	uchar prefixLength;
 	uchar maxLength;
 	uchar dataSource;
-	uint ipPrefix[4];    // for ipv4, only use first entry
+	uint ipAddress[4];    // for ipv4, only use first entry
 	uint asNumber;
 } IPPrefixData;
 

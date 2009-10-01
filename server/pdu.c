@@ -70,7 +70,7 @@ PDU *readPDU(int sock) {
 		READ_BYTE(prefixData->maxLength);
 		READ_BYTE(prefixData->dataSource);
 		for (i = 0; i < ((pdu->pduType == PDU_IPV4_PREFIX) ? 1 : 4); i++) {
-			READ_INT(prefixData->ipPrefix[i]);
+			READ_INT(prefixData->ipAddress[i]);
 		}
 		READ_INT(prefixData->asNumber);
 		return pdu;
@@ -126,7 +126,7 @@ int writePDU(PDU *pdu, int sock) {
 		WRITE_BYTE(prefixData->maxLength);
 		WRITE_BYTE(prefixData->dataSource);
 		for (i = 0; i < ((pdu->pduType == PDU_IPV4_PREFIX) ? 1 : 4); i++) {
-			WRITE_INT(prefixData->ipPrefix[i]);
+			WRITE_INT(prefixData->ipAddress[i]);
 		}
 		WRITE_INT(prefixData->asNumber);
 		return 1;
