@@ -30,6 +30,7 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 	prefixData.asNumber = *((uint *)s->vec[0].valptr);
 
 	while ((end = strchr(ptr1, '\n')) != 0) {
+		fillInPDUHeader(&response, PDU_IPV4_PREFIX, 0);
 		*end = '\0';
 		ptr2 = strchr(ptr1, '/');
 		*ptr2 = '\0';
@@ -46,6 +47,7 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 		}
 		// IPv6
 		else {
+			fillInPDUHeader(&response, PDU_IPV6_PREFIX, 0);
 			uint i = 0, val = 0, final = 0;
 			ptr1 = strtok(ptr1, ":");
 			while (ptr1) {
@@ -111,11 +113,14 @@ int main(int argc, char **argv) {
 	  addcolsrchscm(roaSrch, "ip_addrs", SQL_C_CHAR, 32768);
 	}
 	roaSrch->wherestr[0] = 0;
+	// ???????? just temporary ????????????
+	strncat(roaSrch->wherestr, "local_id < 100", WHERESTR_SIZE-strlen(roaSrch->wherestr));
 	// ?????? checks that ROA is valid ?????????
-	//    searchscm (connect, table, roaSrch, NULL,
-	//		   sendResponses, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+	searchscm (connect, table, roaSrch, NULL,
+			   sendResponses, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
 
+	if (1 != 1) {
 	fillInPDUHeader(&response, PDU_IPV4_PREFIX, 0);
 	response.typeSpecificData = &prefixData;
 	prefixData.flags = FLAG_ANNOUNCE;
@@ -136,6 +141,9 @@ int main(int argc, char **argv) {
 		printf("Error writing ipv6 prefix\n");
 		return -1;
 	}
+	}
+
+
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 1);
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing end of data\n");

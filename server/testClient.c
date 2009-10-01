@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 		} else if (response->pduType == PDU_IPV6_PREFIX) {
 			printf ("Received pdu of type IPv6 prefix\n");
 		} else {
-			printf ("Received unexpected pdu type %d", response->pduType);
+			printf ("Received unexpected pdu type %d\n", response->pduType);
 			return -1;
 		}
 		prefixData = (IPPrefixData *) response->typeSpecificData;
