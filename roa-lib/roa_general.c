@@ -521,20 +521,16 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
       struct ROAIPAddress *ipaddressp = (struct ROAIPAddress *)
         member_casn(&famp->addresses.self, numaddr);
       char *tmpbuf = convertAddr(famtyp[1], ipaddressp);
-      int lth = strlen(tmpbuf) + 1;
+      int lth = strlen(tmpbuf);
       if (!replysiz) 
         {
-        replyp = (char *)calloc(1, lth);
+        replyp = (char *)calloc(1, lth + 1);
         strcpy(replyp, tmpbuf);
-        replysiz = lth - 1;
+        replysiz = lth;  // size without null
         }
       else
         {
         replyp = (char *)realloc(replyp, replysiz + lth + 1);
-        char *rpendp = &replyp[replysiz];
-        *rpendp++ = '\n';
-        strcpy(rpendp, tmpbuf);
-        replysiz += lth;
         }
       free(tmpbuf);
       }
