@@ -19,6 +19,10 @@ static int sock;
 static PDU response;
 static IPPrefixData prefixData;
 
+// for now, just for single client
+static uint clientSerialNum = 0;
+static uint lastSerialNum = 0;
+
 /* callback that sends a single address to the client */
 static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 	char *ptr1 = (char *)s->vec[1].valptr, *ptr2, *end;
@@ -79,6 +83,7 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 
 int main(int argc, char **argv) {
 	PDU *request;
+	uint serialNum;
 	char errMsg[1024];
 
 	if ((sock = getServerSocket()) == -1) {
@@ -144,7 +149,10 @@ int main(int argc, char **argv) {
 	}
 
 
-	fillInPDUHeader(&response, PDU_END_OF_DATA, 1);
+	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
+	response.typeSpecificData = &serialNum;
+	serialNum = lastSerialNum;
+	clientSerialNum = lastSerialNum;
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing end of data\n");
 		return -1;
