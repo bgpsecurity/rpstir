@@ -50,6 +50,8 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 	char *ptr1 = (char *)s->vec[1].valptr, *ptr2, *end;
 	conp = conp; numLine = numLine;
 
+	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connect)) return -1;
+
 	response.typeSpecificData = &prefixData;
 	prefixData.flags = FLAG_ANNOUNCE;
 	prefixData.dataSource = SOURCE_RPKI;
@@ -143,10 +145,14 @@ int main(int argc, char **argv) {
 	// note that the where string is set to only select valid roa's, where
     //   the definition of valid is given by the staleness specs
 	if (roaSrch == NULL) {
+		QueryField *field;
 		roaSrch = newsrchscm(NULL, 3, 0, 1);
-		addcolsrchscm(roaSrch, "asn", SQL_C_ULONG, 8);
-		addcolsrchscm(roaSrch, "ip_addrs", SQL_C_CHAR, 32768);
-		addcolsrchscm(roaSrch, "ski", SQL_C_CHAR, SKISIZE);
+		field = findField("asn");
+		addcolsrchscm(roaSrch, "asn", field->sqlType, field->maxSize);
+		field = findField("ip_addrs");
+		addcolsrchscm(roaSrch, "ip_addrs", field->sqlType, field->maxSize);
+		field = findField("ski");
+		addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
 		roaSrch->wherestr[0] = 0;
 		parseStalenessSpecsFile(argv[1]);
 		addQueryFlagTests(roaSrch->wherestr, 0);

@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	libapki.a rcli query chaser garbage makeROA simple_test proofreader
+all:	libapki.a rcli query chaser garbage makeROA proofreader # simple_test 
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
