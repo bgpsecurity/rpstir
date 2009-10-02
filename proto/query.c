@@ -533,7 +533,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
 	  *end = '\0';
 	  // take out max_prefix_len from string
 	  f2 = strchr(f, '/');
-	  f2 = strchr(f2, '/');
+	  f2 = strchr(f2+1, '/');
 	  if (f2) *f2 = '\0';
 	  if ((i == 0 && strchr(f, ':') == 0) ||
 	      (i == 1 && strchr(f, ':') != 0)) {
