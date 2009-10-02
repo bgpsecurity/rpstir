@@ -51,7 +51,8 @@ myssl.o:	myssl.h scm.h scmf.h sqhl.h err.h
 err.o:	err.h
 
 rcli.o:	scm.h scmf.h sqhl.h diru.h myssl.h err.h
-query.o: scm.h scmf.h err.h myssl.h sqhl.h
+query.o: scm.h scmf.h err.h myssl.h sqhl.h querySupport.h
+querySupport.o: scm.h scmf.h err.h sqhl.h querySupport.h
 chaser.o: scm.h scmf.h sqhl.h err.h
 garbage.o:	scm.h scmf.h sqhl.h err.h
 makeROA.o:	err.h
@@ -60,8 +61,8 @@ proofreader.o:	err.h conversion.h
 conversion.o:	err.h conversion.h
 rpwork.o:	err.h conversion.h rpwork.c
 
-libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
-	ar crv libapki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o
+libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
+	ar crv libapki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
 	ranlib libapki.a
 
 rcli:	rcli.o libapki.a $(LOCAL_LIBS) Makefile

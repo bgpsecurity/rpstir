@@ -9,6 +9,7 @@
 #include "roa_utils.h"
 #include "myssl.h"
 #include "sqhl.h"
+#include "querySupport.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
  *
@@ -674,16 +675,7 @@ static int doQuery (char **displays, char **filters, char *orderp)
   }
 
   if (validate) {
-    addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, srch.wherestr != NULL);
-    if (rejectStaleChain)
-      addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
-    if (rejectStaleCRL)
-      addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
-    if (rejectStaleManifest)
-      addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (rejectNoManifest)
-      addFlagTest(whereStr, SCM_FLAG_ONMAN, 1, 1);
-
+    addQueryFlagTests(whereStr, srch.wherestr != NULL);
     srch.wherestr = whereStr;
  }
   /* set up columns to select */
@@ -725,38 +717,6 @@ static int doQuery (char **displays, char **filters, char *orderp)
     free (srch1[i].valptr);
   }
   return status;
-}
-
-/* routine to parse the filter specification file which  determines how to
- * handle the various meta-data SCM_FLAG_XXX flags (ignore, matchset, matchclr)
- */
-static void parseSpecsFile(char *specsFilename)
-{
-  char str[WHERESTR_SIZE], str2[WHERESTR_SIZE], str3[WHERESTR_SIZE];
-  FILE *input = fopen (specsFilename, "r");
-
-  if (input == NULL) {
-    printf ("Could not open specs file: %s\n", specsFilename);
-    exit(-1);
-  }
-  while (fgets (str, WHERESTR_SIZE, input)) {
-    int got = sscanf(str, "%s %s", str2, str3);
-    if (got == 0) continue;
-    if (str2[0] == '#') continue;
-    if (got == 1) perror ("Bad format for specs file\n");
-    if (strcmp(str2, "StaleCRL") == 0) {
-      rejectStaleCRL = str3[0] == 'n' || str3[0] == 'N';
-    } else if (strcmp(str2, "StaleManifest") == 0) {
-      rejectStaleManifest = str3[0] == 'n' || str3[0] == 'N';
-    } else if (strcmp(str2, "StaleValidationChain") == 0) {
-      rejectStaleChain = str3[0] == 'n' || str3[0] == 'N';
-    } else if (strcmp(str2, "NoManifest") == 0) {
-      rejectNoManifest = str3[0] == 'n' || str3[0] == 'N';
-    } else {
-      printf ("Bad keyword in specs file: %s\n", str2);
-      exit(-1);
-    }
-  }
 }
 
 /* show what options the user has for fields for display and filtering */
@@ -902,7 +862,9 @@ int main(int argc, char **argv)
     } else if (strcasecmp (argv[i], "-x") == 0) {
       orderp = argv[i+1];
     } else if (strcasecmp (argv[i], "-s") == 0) {
-      parseSpecsFile(argv[i+1]);
+      if (parseStalenessSpecsFile(argv[i+1])) return -1;
+	  getSpecsVals(&rejectStaleChain, &rejectStaleManifest,
+				   &rejectStaleCRL, &rejectNoManifest);
     } else {      // unknown switch
       return printUsage();
     }
