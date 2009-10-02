@@ -1,3 +1,24 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ *
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+ *
+ * Contributor(s):  David Montana
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+  $Id: query.c 857 2009-09-30 15:27:40Z dmontana $
+*/
+
 /************************
  * Server that implements RTR protocol
  ***********************/
@@ -6,6 +27,7 @@
 #include "socket.h"
 #include "scmf.h"
 #include "err.h"
+#include "querySupport.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -86,6 +108,10 @@ int main(int argc, char **argv) {
 	uint serialNum;
 	char errMsg[1024];
 
+	if (argc != 2) {
+		printf("Usage: server stalenessSpecsFile\n");
+	}
+
 	if ((sock = getServerSocket()) == -1) {
 		printf("Error opening socket\n");
 		return -1;
@@ -104,7 +130,7 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	// do the database query
+	// initialize the database connection
 	scmp = initscm();
 	checkErr(scmp == NULL, "Cannot initialize database schema\n");
 	connect = connectscm (scmp->dsn, errMsg, 1024);
@@ -112,43 +138,25 @@ int main(int argc, char **argv) {
 	connect->mystat.tabname = "roa";
 	table = findtablescm(scmp, "roa");
 	checkErr(table == NULL, "Cannot find table roa\n");
+
+	// setup up the query if this is the first time
+	// note that the where string is set to only select valid roa's, where
+    //   the definition of valid is given by the staleness specs
 	if (roaSrch == NULL) {
-	  roaSrch = newsrchscm(NULL, 2, 0, 1);
-	  addcolsrchscm(roaSrch, "asn", SQL_C_ULONG, 8);
-	  addcolsrchscm(roaSrch, "ip_addrs", SQL_C_CHAR, 32768);
+		roaSrch = newsrchscm(NULL, 3, 0, 1);
+		addcolsrchscm(roaSrch, "asn", SQL_C_ULONG, 8);
+		addcolsrchscm(roaSrch, "ip_addrs", SQL_C_CHAR, 32768);
+		addcolsrchscm(roaSrch, "ski", SQL_C_CHAR, SKISIZE);
+		roaSrch->wherestr[0] = 0;
+		parseStalenessSpecsFile(argv[1]);
+		addQueryFlagTests(roaSrch->wherestr, 0);
 	}
-	roaSrch->wherestr[0] = 0;
-	// ???????? just temporary ????????????
-	strncat(roaSrch->wherestr, "local_id < 100", WHERESTR_SIZE-strlen(roaSrch->wherestr));
-	// ?????? checks that ROA is valid ?????????
+
+	// do the query, with callback sending out the responses
 	searchscm (connect, table, roaSrch, NULL,
 			   sendResponses, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
-
-	if (1 != 1) {
-	fillInPDUHeader(&response, PDU_IPV4_PREFIX, 0);
-	response.typeSpecificData = &prefixData;
-	prefixData.flags = FLAG_ANNOUNCE;
-	prefixData.prefixLength = 24;
-	prefixData.maxLength = 32;
-	prefixData.dataSource = SOURCE_RPKI;
-	prefixData.ipAddress[0] = 12345;
-	prefixData.asNumber = 45;
-	if (writePDU(&response, sock) == -1) {
-		printf("Error writing ipv4 prefix\n");
-		return -1;
-	}
-	fillInPDUHeader(&response, PDU_IPV6_PREFIX, 0);
-	prefixData.ipAddress[1] = 12346;
-	prefixData.ipAddress[2] = 12347;
-	prefixData.ipAddress[3] = 12348;
-	if (writePDU(&response, sock) == -1) {
-		printf("Error writing ipv6 prefix\n");
-		return -1;
-	}
-	}
-
-
+	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
 	response.typeSpecificData = &serialNum;
 	serialNum = lastSerialNum;
@@ -157,6 +165,7 @@ int main(int argc, char **argv) {
 		printf("Error writing end of data\n");
 		return -1;
 	}
+
 	printf("Completed successfully\n");
 	return 1;
 }
