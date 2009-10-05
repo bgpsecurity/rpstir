@@ -4,23 +4,23 @@
 # Makefile for mysql and openssl test programs
 #
 # ***** BEGIN LICENSE BLOCK *****
-#  
+#
 #  BBN Address and AS Number PKI Database/repository software
 #  Version 1.0
-#  
+#
 #  US government users are permitted unrestricted rights as
-#  defined in the FAR.  
-# 
+#  defined in the FAR.
+#
 #  This software is distributed on an "AS IS" basis, WITHOUT
 #  WARRANTY OF ANY KIND, either express or implied.
-# 
+#
 #  Copyright (C) BBN Technologies 2007.  All Rights Reserved.
-# 
+#
 #  Contributor(s):  Mark Reynolds
-# 
+#
 # ***** END LICENSE BLOCK *****
 
-all:	libapki.a rcli query chaser garbage makeROA proofreader # simple_test 
+all:	libapki.a rcli query chaser garbage makeROA proofreader 
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
@@ -56,7 +56,6 @@ querySupport.o: scm.h scmf.h err.h sqhl.h querySupport.h
 chaser.o: scm.h scmf.h sqhl.h err.h
 garbage.o:	scm.h scmf.h sqhl.h err.h
 makeROA.o:	err.h
-simple_test.o:	err.h
 proofreader.o:	err.h conversion.h
 conversion.o:	err.h conversion.h
 rpwork.o:	err.h conversion.h rpwork.c
@@ -79,9 +78,6 @@ garbage: garbage.o libapki.a $(LOCAL_LIBS) Makefile
 
 makeROA: makeROA.o libapki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o makeROA -g makeROA.o $(LOCAL_LIBS) $(LIBS)
-
-simple_test: simple_test.o libapki.a $(LOCAL_LIBS) Makefile
-	$(CC) -o simple_test -g simple_test.o $(LOCAL_LIBS) $(LIBS)
 
 proofreader: proofreader.o conversion.o libapki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o proofreader -g proofreader.o conversion.o $(LOCAL_LIBS) $(LIBS)
