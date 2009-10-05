@@ -124,7 +124,14 @@
 #define ERR_SCM_BADALG      -95         /* differing algorithms in certificate */
 #define ERR_SCM_BCPRES      -96         /* basic constraints present in EE cert */
 #define ERR_SCM_BADSIGINFO  -97         /* error in SignerInfo */
-#define ERR_SCM_MAXERR      -97
+#define ERR_SCM_BADPARACERT -98         /* error making paracert */
+#define ERR_SCM_BADRANGE    -99         /* invalid IP range */
+#define ERR_SCM_BADSKIBLOCK -100        /* invalid constraints entry */
+#define ERR_SCM_USECONFLICT -101        /* conflicting usages */
+#define ERR_SCM_NOSKIFILE   -102        /* can't open constraints file */
+#define ERR_SCM_NORPCERT    -103        /* no RP's certificate */
+#define ERR_SCM_BADSKIFILE  -104        /* defective constraints file */
+#define ERR_SCM_MAXERR      -104
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
