@@ -191,6 +191,42 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
+
+	// these tables really should be specified in the server
+	//   directory, but there was no good way to do that and not
+	//   risk them not being created at initialization
+
+	{             /* RTR_UPDATE */
+	  "rtr_update",
+	  "RTR_UPDATE",
+	  "serial_num  INT UNSIGNED NOT NULL UNIQUE,"
+	  "create_time DATETIME NOT NULL,"
+	  "            PRIMARY KEY (serial_num)",
+	  NULL,
+	  0
+	},
+	{            /* RTR_FULL */
+	  "rtr_full",
+	  "RTR_FULL",
+	  "serial_num  INT UNSIGNED NOT NULL,"
+	  "roa_filename VARCHAR(256) NOT NULL,"
+	  "asn         INT UNSIGNED NOT NULL,"
+	  "ip_addr     VARCHAR(50) NOT NULL,"
+	  "KEY asn (asn), KEY ip_addr (ip_addr)",
+	  NULL,
+	  0
+	},
+	{            /* RTR_INCREMENTAL */
+	  "rtr_incremental",
+	  "RTR_INCREMENTAL",
+	  "serial_num  INT UNSIGNED NOT NULL,"
+	  "is_announce BOOLEAN NOT NULL,"
+	  "asn         INT UNSIGNED NOT NULL,"
+	  "ip_addr     VARCHAR(50) NOT NULL,"
+	  "KEY asn (asn), KEY ip_addr (ip_addr)",
+	  NULL,
+	  0
+	},
   } ;
 
 #endif

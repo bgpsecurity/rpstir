@@ -108,7 +108,7 @@ static int sendResponses(scmcon *conp, scmsrcha *s, int numLine) {
 int main(int argc, char **argv) {
 	PDU *request;
 	uint serialNum;
-	char errMsg[1024];
+	char msg[1024];
 
 	if (argc != 2) {
 		printf("Usage: server stalenessSpecsFile\n");
@@ -135,8 +135,8 @@ int main(int argc, char **argv) {
 	// initialize the database connection
 	scmp = initscm();
 	checkErr(scmp == NULL, "Cannot initialize database schema\n");
-	connect = connectscm (scmp->dsn, errMsg, 1024);
-	checkErr(connect == NULL, "Cannot connect to database: %s\n", errMsg);
+	connect = connectscm (scmp->dsn, msg, sizeof(msg));
+	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
 	connect->mystat.tabname = "roa";
 	table = findtablescm(scmp, "roa");
 	checkErr(table == NULL, "Cannot find table roa\n");
@@ -146,17 +146,27 @@ int main(int argc, char **argv) {
     //   the definition of valid is given by the staleness specs
 	if (roaSrch == NULL) {
 		QueryField *field;
-		roaSrch = newsrchscm(NULL, 3, 0, 1);
+		roaSrch = newsrchscm(NULL, 4, 0, 1);
 		field = findField("asn");
 		addcolsrchscm(roaSrch, "asn", field->sqlType, field->maxSize);
 		field = findField("ip_addrs");
 		addcolsrchscm(roaSrch, "ip_addrs", field->sqlType, field->maxSize);
 		field = findField("ski");
 		addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
+		field = findField("filename");
+		addcolsrchscm(roaSrch, "filename", field->sqlType, field->maxSize);
 		roaSrch->wherestr[0] = 0;
 		parseStalenessSpecsFile(argv[1]);
 		addQueryFlagTests(roaSrch->wherestr, 0);
 	}
+
+
+	// update rtr_update table
+	lastSerialNum++;
+	table = findtablescm(scmp, "rtr_update");
+	snprintf(msg, sizeof(msg), "insert into %s values (%d, now());",
+			 table->tabname, lastSerialNum);
+	statementscm(connect, msg);
 
 	// do the query, with callback sending out the responses
 	searchscm (connect, table, roaSrch, NULL,
