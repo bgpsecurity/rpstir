@@ -470,7 +470,7 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
   int lth = (vsiz << 3) - (int)*tbuf;
   int i;
   char *c = bufp;
-  if (fam == 0)  // IPv4
+  if (fam == 1)  // IPv4
     {
     for (i = 1; i < vsiz; )
       {
