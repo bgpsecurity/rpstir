@@ -467,7 +467,7 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
   uchar tbuf[20];
   memset(tbuf, 0, 20);
   int vsiz = read_casn(ipaddressp, tbuf);
-  int lth = (vsiz << 3) - (int)*tbuf;
+  int lth = ((vsiz - 1) << 3) - (int)*tbuf;
   int i;
   char *c = bufp;
   if (fam == 1)  // IPv4
