@@ -472,9 +472,9 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
   char *c = bufp;
   if (fam == 1)  // IPv4
     {
-    for (i = 1; i < vsiz; )
+    for (i = 1; i < vsiz; i++)
       {
-      if (i > 1) *c++ == '.';
+      if (i > 1) *c++ = '.';
       sprintf(c, "%d", (int)tbuf[i]);
       while (*c) c++;
       }
