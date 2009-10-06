@@ -1,0 +1,6 @@
+-t 7344 
+-f ../LOGS/test4.1.log 
+-w 
+-e 
+-i 
+-d test4.1

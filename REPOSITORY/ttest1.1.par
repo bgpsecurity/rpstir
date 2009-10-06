@@ -1,0 +1,6 @@
+-t 7344 
+-f ../LOGS/test1.1.log 
+-w 
+-e 
+-i 
+-d ../testcases

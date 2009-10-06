@@ -1,0 +1,6 @@
+-t 7344 
+-f ../LOGS/test3.1c.log 
+-w 
+-e 
+-i 
+-d test3.1c
