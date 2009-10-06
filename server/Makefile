@@ -41,13 +41,14 @@ LIBS=$(LIBSSL) $(LIBCL) $(LIBCRYPTO) \
 
 
 pdu.o: pdu.h
+rtrUtils.o: rtrUtils.h
 server.o: pdu.h socket.h
 testClient.o: pdu.h socket.h
 socket.o: socket.h
-doUpdate.o:
+doUpdate.o: rtrUtils.h
 
-libpdu.a:	pdu.o socket.o
-	ar crv libpdu.a pdu.o socket.o
+libpdu.a:	pdu.o socket.o rtrUtils.o
+	ar crv libpdu.a pdu.o socket.o rtrUtils.o
 	ranlib libpdu.a
 
 server:	server.o libpdu.a $(LOCAL_LIBS) Makefile
