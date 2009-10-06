@@ -26,6 +26,7 @@
 #include "scmf.h"
 #include "err.h"
 #include "querySupport.h"
+#include "pdu.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -39,11 +40,12 @@ static scmtab   *roaTable = NULL;
 static scmtab   *updateTable = NULL;
 static scmtab   *fullTable = NULL;
 
-static unsigned int lastSerialNumber;  // way to pass back result
+static uint lastSerialNum;  // way to pass back result
+static uint currSerialNum;  // serial num of current update
 
 /* helper function for getLastSerialNumber */
 static int setLastSN(scmcon *conp, scmsrcha *s, int numLine) {
-	lastSerialNumber = *((unsigned int *) (s->vec[0].valptr));
+	lastSerialNum = *((uint *) (s->vec[0].valptr));
 	return -1;    // stop after first row
 }
 
@@ -51,7 +53,7 @@ static int setLastSN(scmcon *conp, scmsrcha *s, int numLine) {
  * find the serial number from the most recent update
  ****/
 static int getLastSerialNumber() {
-	lastSerialNumber = 0;
+	lastSerialNum = 0;
 	if (lastSNSrch == NULL) {
 		lastSNSrch = newsrchscm(NULL, 1, 0, 1);
 		addcolsrchscm(lastSNSrch, "serial_num", SQL_C_ULONG, 8);
@@ -62,11 +64,33 @@ static int getLastSerialNumber() {
 	searchscm (connect, updateTable, lastSNSrch, NULL, setLastSN,
 			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR,
 			   "create_time desc");
-	return lastSerialNumber;
+	return lastSerialNum;
+}
+
+/******
+ * callback that writes the data from a ROA into the update table
+ *   if the ROA is valid
+ *****/
+static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
+	uint asn = *((uint *)s->vec[0].valptr);
+	char *ptr = (char *)s->vec[1].valptr, *end;
+	char *filename = (char *)s->vec[3].valptr;
+	char msg[1024];
+	conp = conp; numLine = numLine;
+
+	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connect)) return -1;
+	while ((end = strchr(ptr, '\n')) != 0) {
+		*end = '\0';
+		snprintf(msg, sizeof(msg),
+				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
+				 fullTable->tabname, currSerialNum, filename, asn, ptr);
+		statementscm(connect, msg);
+		ptr = end + 1;
+	}
+	return 1;
 }
 
 int main(int argc, char **argv) {
-	unsigned int serialNum;
 	char msg[1024];
 
 	// initialize the database connection
@@ -76,14 +100,39 @@ int main(int argc, char **argv) {
 	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
 
 	// find the last serial number
-	serialNum = getLastSerialNumber();
-	serialNum = (serialNum == UINT_MAX) ? 1 : (serialNum + 1);
+	currSerialNum = getLastSerialNumber();
+	currSerialNum = (currSerialNum == UINT_MAX) ? 1 : (currSerialNum + 1);
+
+	// setup up the query if this is the first time
+	// note that the where string is set to only select valid roa's, where
+    //   the definition of valid is given by the staleness specs
+	if (roaSrch == NULL) {
+		QueryField *field;
+		roaSrch = newsrchscm(NULL, 4, 0, 1);
+		field = findField("asn");
+		addcolsrchscm(roaSrch, "asn", field->sqlType, field->maxSize);
+		field = findField("ip_addrs");
+		addcolsrchscm(roaSrch, "ip_addrs", field->sqlType, field->maxSize);
+		field = findField("ski");
+		addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
+		field = findField("filename");
+		addcolsrchscm(roaSrch, "filename", field->sqlType, field->maxSize);
+		roaSrch->wherestr[0] = 0;
+		parseStalenessSpecsFile(argv[1]);
+		addQueryFlagTests(roaSrch->wherestr, 0);
+		roaTable = findtablescm(scmp, "roa");
+		checkErr(roaTable == NULL, "Cannot find table roa\n");
+		fullTable = findtablescm(scmp, "rtr_full");
+		checkErr(fullTable == NULL, "Cannot find table rtr_full\n");
+	}
 
 	// write all the data into the database
+	searchscm (connect, roaTable, roaSrch, NULL,
+			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
 	// write the current serial number and time, making the data available
 	snprintf(msg, sizeof(msg), "insert into %s values (%d, now());",
-			 updateTable->tabname, serialNum);
+			 updateTable->tabname, currSerialNum);
 	statementscm(connect, msg);
 
 	return 0;
