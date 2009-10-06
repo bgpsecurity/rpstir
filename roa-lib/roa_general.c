@@ -492,7 +492,7 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
     }
   sprintf(c, "/%d", lth); 
   long li;
-  if (size_casn(roaIPaddressp))
+  if (size_casn(&roaIPaddressp->self))
     {
     read_casn_num(&roaIPaddressp->maxLength, &li);
     sprintf(c, "/%ld", li);
@@ -508,18 +508,17 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
     encapContentInfo.eContent.roa.ipAddrBlocks;
   char *replyp;
   int replysiz = 0;
-  int fam, fams = num_items(&addrBlocksp->self);
-  for (fam = 0; fam < fams; fam++)
+  struct ROAIPAddressFamily *famp;
+
+  for (famp = (struct ROAIPAddressFamily *)member_casn(&addrBlocksp->self, 0);
+     famp; famp = (struct ROAIPAddressFamily *)next_of(&famp->self))
     {
-    struct ROAIPAddressFamily *famp = (struct ROAIPAddressFamily *)
-      member_casn(&addrBlocksp->self, fam);;
     uchar famtyp[4];
-    if (read_casn(famp, famtyp) < 0) return -1;
-    int numaddr, numaddrs = num_items(&famp->addresses.self);
-    for (numaddr = 0; numaddr < numaddrs; numaddr++)
+    if (read_casn(&famp->addressFamily, famtyp) < 0) return -1;
+    struct ROAIPAddress *ipaddressp;     
+    for (ipaddressp = (struct ROAIPAddress *)member_casn(&famp->addresses.self, 0);
+      ipaddressp; ipaddressp = (struct ROAIPAddress *)next_of(&ipaddressp->self))
       {
-      struct ROAIPAddress *ipaddressp = (struct ROAIPAddress *)
-        member_casn(&famp->addresses.self, numaddr);
       char *tmpbuf = convertAddr(famtyp[1], ipaddressp);
       int lth = strlen(tmpbuf);
       if (!replysiz) 
