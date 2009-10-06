@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-all:	testClient server
+all:	testClient server doUpdate
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
@@ -44,6 +44,7 @@ pdu.o: pdu.h
 server.o: pdu.h socket.h
 testClient.o: pdu.h socket.h
 socket.o: socket.h
+doUpdate.o:
 
 libpdu.a:	pdu.o socket.o
 	ar crv libpdu.a pdu.o socket.o
@@ -51,6 +52,9 @@ libpdu.a:	pdu.o socket.o
 
 server:	server.o libpdu.a $(LOCAL_LIBS) Makefile
 	$(CC) -o server -g server.o $(LOCAL_LIBS) $(LIBS)
+
+doUpdate: doUpdate.o $(LOCAL_LIBS) Makefile
+	$(CC) -o doUpdate -g doUpdate.o $(LOCAL_LIBS) $(LIBS)
 
 testClient: testClient.o libpdu.a $(LOCAL_LIBS) Makefile
 	$(CC) -o testClient -g testClient.o $(LOCAL_LIBS) $(LIBS)
