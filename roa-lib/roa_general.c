@@ -478,7 +478,7 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
       sprintf(c, "%d", (int)tbuf[i]);
       while (*c) c++;
       }
-    for ( ; i < 4; i++)
+    for ( ; i < 5; i++)
       {
       strcpy(c, ".0");
       c += 2;
@@ -494,7 +494,7 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
       sprintf(c, "%02x", val);
       while(*c) c++;
       }
-    for ( ; i < 16; i++)
+    for ( ; i < 17; i++)
       {
       strcpy(c, ":0");
       c += 2;
