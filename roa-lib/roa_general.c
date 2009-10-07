@@ -3,12 +3,12 @@
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 1.0
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -40,11 +40,11 @@ static int itoa (int n, char* cN, int radix){
   if ((radix > 10) ||
       (NULL == cN))
     return ERR_SCM_INVALARG;
-  
+
   s = (char*) calloc(33, sizeof(char));
   if ( s == NULL )
     return ERR_SCM_NOMEM;
-  
+
   do{
     s[i++]=(char)( n % radix + '0');
     n -= n % radix;
@@ -123,7 +123,7 @@ static int cvaldtoc3(unsigned char cVal, unsigned char *c2Array, int* iLength)
       c2Array[0] = cLow;
       *iLength = 1;
     }
-  
+
   return 0;
 }
 
@@ -174,7 +174,7 @@ unsigned char *roaSignature(struct ROA *r, int *lenp)
   return(r->content.signedData.signerInfos.signerInfo.signature.startp);
 }
 
-static unsigned char* printIPv4String(unsigned char* array, int iArraySize, 
+static unsigned char* printIPv4String(unsigned char* array, int iArraySize,
     int iFill, int iPrintPrefix, int maxLen)
 {
   int i = 0;
@@ -223,7 +223,7 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize,
     {
       for (; i < 5; i++)
 	{
-	  if (1 == iFill) 
+	  if (1 == iFill)
 	    {
 	      memcpy(cReturnString + iReturnLen, "255", 3);
 	      iReturnLen += 3;
@@ -266,7 +266,7 @@ static unsigned char* printIPv4String(unsigned char* array, int iArraySize,
   return cReturnString;
 }
 
-static unsigned char* printIPv6String(unsigned char* array, int iArraySize, 
+static unsigned char* printIPv6String(unsigned char* array, int iArraySize,
   int iFill, int iPrintPrefix, int maxLen)
 {
   int i = 0;
@@ -315,7 +315,7 @@ static unsigned char* printIPv6String(unsigned char* array, int iArraySize,
     {
       for (; i < 17; i++)
 	{
-	  if (1 == iFill) 
+	  if (1 == iFill)
 	    {
 	      memcpy(cReturnString + iReturnLen, "FF", 2);
 	      iReturnLen += 2;
@@ -369,7 +369,7 @@ static unsigned char *roaIPAddr(struct ROAIPAddress *raddr, int iFamily)
 
   memset(ipaddr, 0, sizeof(ipaddr));
   iSize = vsize_casn(&raddr->address);
-  
+
   if ((0 >= iSize) || (sizeof(ipaddr) < iSize))
       return NULL;
   if (0 > read_casn(&raddr->address, ipaddr))
@@ -478,6 +478,11 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
       sprintf(c, "%d", (int)tbuf[i]);
       while (*c) c++;
       }
+    for ( ; i < 4; i++)
+      {
+      strcpy(c, ".0");
+      c += 2;
+      }
     }
   else
     {
@@ -489,8 +494,13 @@ static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
       sprintf(c, "%02x", val);
       while(*c) c++;
       }
+    for ( ; i < 16; i++)
+      {
+      strcpy(c, ":0");
+      c += 2;
+      }
     }
-  sprintf(c, "/%d", lth); 
+  sprintf(c, "/%d", lth);
   long li;
   if (size_casn(&roaIPaddressp->self))
     {
@@ -515,13 +525,13 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
     {
     uchar famtyp[4];
     if (read_casn(&famp->addressFamily, famtyp) < 0) return -1;
-    struct ROAIPAddress *ipaddressp;     
+    struct ROAIPAddress *ipaddressp;
     for (ipaddressp = (struct ROAIPAddress *)member_casn(&famp->addresses.self, 0);
       ipaddressp; ipaddressp = (struct ROAIPAddress *)next_of(&ipaddressp->self))
       {
       char *tmpbuf = convertAddr(famtyp[1], ipaddressp);
       int lth = strlen(tmpbuf);
-      if (!replysiz) 
+      if (!replysiz)
         {
         replyp = (char *)calloc(1, lth + 1);
         strcpy(replyp, tmpbuf);
@@ -537,7 +547,7 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
    *str = replyp;
    return 0;
   }
- 
+
 int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLen)
 {
   int i,j = 0;
@@ -552,7 +562,7 @@ int roaGenerateFilter(struct ROA *r, uchar *cert, FILE *fp, char *str, int strLe
   struct ROAIPAddressFamily *roaFamily = NULL;
 
   // for local use, for brevity
-  struct casn *ipblocks = 
+  struct casn *ipblocks =
       &r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self;
 
   UNREFERENCED_PARAMETER(cert);
@@ -628,7 +638,7 @@ int roaGenerateFilter2(struct ROA *r, char **strpp)
   struct ROAIPAddressFamily *roaFamily = NULL;
 
   // for local use, for brevity
-  struct casn *ipblocks = 
+  struct casn *ipblocks =
       &r->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self;
 
   // parameter check
@@ -640,7 +650,7 @@ int roaGenerateFilter2(struct ROA *r, char **strpp)
 
   if ((cSID = roaSKI(r)) == NULL) return ERR_SCM_INVALSKI;
 
-#define FILTER_INCR 1024	
+#define FILTER_INCR 1024
   int strLen, remLen;
   char *rstrp, *strp;
   rstrp = strp =  (char *)calloc(1, FILTER_INCR);
@@ -663,7 +673,7 @@ int roaGenerateFilter2(struct ROA *r, char **strpp)
 	}
       for (j = 0; j < iAddrNum; j++)
 	{
-	while((iRes = snprintf(rstrp, remLen, "%s %s %s\n", cSID, cAS_ID, 
+	while((iRes = snprintf(rstrp, remLen, "%s %s %s\n", cSID, cAS_ID,
           pcAddresses[j])) > remLen)
           {
           int used = rstrp - strp;
@@ -671,7 +681,7 @@ int roaGenerateFilter2(struct ROA *r, char **strpp)
           rstrp = &strp[used];
           remLen += FILTER_INCR;
           }
-        
+
         remLen -= strlen(rstrp);
 	rstrp += strlen(rstrp);
 	}
