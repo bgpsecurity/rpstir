@@ -94,34 +94,17 @@ static int sendResponse(scmcon *conp, scmsrcha *s, int numLine) {
 	return 0;
 }
 
-int main(int argc, char **argv) {
-	PDU *request;
-	uint serialNum;
-	char msg[1024];
+static void handleSerialQuery(PDU *request) {
+}
 
-	if ((sock = getServerSocket()) == -1) {
-		printf("Error opening socket\n");
-		return -1;
-	}
-	if (! (request = readPDU(sock))) {
-		printf ("Error reading reset query\n");
-		return -1;
-	}
-	if (request->pduType != PDU_RESET_QUERY) {
-		printf("Was expecting reset query, got %d\n", request->pduType);
-		return -1;
-	}
+static void handleResetQuery() {
+	uint serialNum;
+
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing cache response\n");
-		return -1;
+		return;
 	}
-
-	// initialize the database connection
-	scmp = initscm();
-	checkErr(scmp == NULL, "Cannot initialize database schema\n");
-	connect = connectscm (scmp->dsn, msg, sizeof(msg));
-	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
 	serialNum = getLastSerialNumber(connect, scmp);
 
 	// setup up the query if this is the first time
@@ -143,9 +126,37 @@ int main(int argc, char **argv) {
 	response.typeSpecificData = &serialNum;
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing end of data\n");
+		return;
+	}
+}
+
+int main(int argc, char **argv) {
+	PDU *request;
+	char msg[1024];
+
+	// start listening on server socket
+	if ((sock = getServerSocket()) == -1) {
+		printf("Error opening socket\n");
 		return -1;
 	}
 
-	printf("Completed successfully\n");
+	// initialize the database connection
+	scmp = initscm();
+	checkErr(scmp == NULL, "Cannot initialize database schema\n");
+	connect = connectscm (scmp->dsn, msg, sizeof(msg));
+	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
+
+	while ((request = readPDU(sock))) {
+		switch (request->pduType) {
+		case PDU_SERIAL_QUERY:
+			handleSerialQuery(request);
+			break;
+		case PDU_RESET_QUERY:
+			handleResetQuery();
+			break;
+		default:
+			printf("Cannot handle request of type %d\n", request->pduType);
+		}
+	}
 	return 1;
 }
