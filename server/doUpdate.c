@@ -72,7 +72,17 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
  * callback that writes withdrawals into the incremental table
  *****/
 static int writeWithdrawal(scmcon *conp, scmsrcha *s, int numLine) {
-	printf("withdraw\n");
+	char msg[1024];
+	conp = conp; numLine = numLine;
+	uint asn = *((uint *)s->vec[0].valptr);
+	char *ipAddr = (char *)s->vec[1].valptr;
+	snprintf(msg, sizeof(msg),
+			 "insert into %s values (%d, false, %d, \"%s\");",
+			 incrTable->tabname, currSerialNum, asn, ipAddr);
+	newhstmt(connect);
+	statementscm(connect, msg);
+	pophstmt(connect);
+	return 1;
 	return 1;
 }
 
@@ -80,7 +90,16 @@ static int writeWithdrawal(scmcon *conp, scmsrcha *s, int numLine) {
  * callback that writes announcements into the incremental table
  *****/
 static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
-	printf("announce\n");
+	char msg[1024];
+	conp = conp; numLine = numLine;
+	uint asn = *((uint *)s->vec[0].valptr);
+	char *ipAddr = (char *)s->vec[1].valptr;
+	snprintf(msg, sizeof(msg),
+			 "insert into %s values (%d, true, %d, \"%s\");",
+			 incrTable->tabname, currSerialNum, asn, ipAddr);
+	newhstmt(connect);
+	statementscm(connect, msg);
+	pophstmt(connect);
 	return 1;
 }
 
@@ -125,10 +144,9 @@ int main(int argc, char **argv) {
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
 	if (incrSrch == NULL) {
-		incrSrch = newsrchscm(NULL, 3, 0, 1);
+		incrSrch = newsrchscm(NULL, 2, 0, 1);
 		addcolsrchscm(incrSrch, "t1.asn", SQL_C_ULONG, 8);
 		addcolsrchscm(incrSrch, "t1.ip_addr", SQL_C_CHAR, 50);
-		addcolsrchscm(incrSrch, "t1.serial_num", SQL_C_ULONG, 8);
 		incrTable = findtablescm(scmp, "rtr_incremental");
 	}
 
