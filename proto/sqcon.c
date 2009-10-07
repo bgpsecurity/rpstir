@@ -122,7 +122,7 @@ void disconnectscm(scmcon *conp)
   in the connection.
 */
 
-static SQLRETURN newhstmt(scmcon *conp)
+SQLRETURN newhstmt(scmcon *conp)
 {
   SQLRETURN ret;
   stmtstk  *stackp;
@@ -157,7 +157,7 @@ static SQLRETURN newhstmt(scmcon *conp)
   the hstmt and the associated memory.
 */
 
-static void pophstmt(scmcon *conp)
+void pophstmt(scmcon *conp)
 {
   stmtstk *stackp;
 

@@ -144,6 +144,8 @@ extern int   updateblobscm(scmcon *conp, scmtab *tabp,
 			   unsigned int sninuse, unsigned int snlen,
 			   unsigned int lid);
 extern int   updateranlastscm(scmcon *conp, scmtab *mtab, char what, char *now);
+extern SQLRETURN newhstmt(scmcon *conp);
+extern void pophstmt(scmcon *conp);
 
 /*
   Macros

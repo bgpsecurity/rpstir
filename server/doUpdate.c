@@ -51,13 +51,17 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 	char msg[1024];
 	conp = conp; numLine = numLine;
 
+	printf("got here\n");
 	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connect)) return -1;
+	printf("got here 2\n");
 	while ((end = strchr(ptr, '\n')) != 0) {
 		*end = '\0';
 		snprintf(msg, sizeof(msg),
 				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
 				 fullTable->tabname, currSerialNum, filename, asn, ptr);
+		newhstmt(connect);
 		statementscm(connect, msg);
+		pophstmt(connect);
 		ptr = end + 1;
 	}
 	return 1;
