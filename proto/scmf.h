@@ -105,6 +105,11 @@ typedef int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
 #define SCM_SRCH_BREAK_VERR      0x20  /* break from loop if value func err */
 #define SCM_SRCH_DO_JOIN         0x40  /* Include join with directory table */
 #define SCM_SRCH_DO_JOIN_CRL     0x80  /* Include join with crl table */
+// Notes on join_self: (1) The table is aliases as t1 and t2.
+//    (2) The wherestr should also include the on clause with the format
+//        "%s\n%s", onString, whereString
+#define SCM_SRCH_DO_JOIN_SELF    0x100 /* Include join with self */
+
 
 #define WHERESTR_SIZE 1024
 

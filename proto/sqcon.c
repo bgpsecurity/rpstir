@@ -782,6 +782,17 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       (void)strcat(stmt, tabp->tabname);
       (void)strcat(stmt, ".dir_id = apki_dir.dir_id");
     }
+  if ( (what & SCM_SRCH_DO_JOIN_SELF) )
+    {
+      (void)strcat(stmt, " t1 LEFT JOIN ");
+      (void)strcat(stmt, tabp->tabname);
+      (void)strcat(stmt, " t2 on ");
+	  *strchr(srch->wherestr,'\n') = 0;
+      (void)strcat(stmt, srch->wherestr);
+      (void)strcat(stmt, " where ");
+      (void)strcat(stmt, srch->wherestr + strlen(srch->wherestr) + 1);
+	  srch->wherestr[strlen(srch->wherestr)] = '\n';
+    }
   if ( (what & SCM_SRCH_DO_JOIN_CRL) )
     {
       strcat(stmt, " LEFT JOIN apki_crl on apki_cert.aki = apki_crl.aki");
@@ -803,7 +814,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	  (void)strcat(stmt, "\"");
 	}
     }
-  if ( srch->wherestr != NULL )
+  if (( srch->wherestr != NULL ) && !(what & SCM_SRCH_DO_JOIN_SELF))
     {
       if ( didw == 0 )
 	(void)strcat(stmt, " WHERE ");

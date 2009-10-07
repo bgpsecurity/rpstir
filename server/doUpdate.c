@@ -37,8 +37,11 @@ static scmcon   *connect = NULL;
 static scmsrcha *roaSrch = NULL;
 static scmtab   *roaTable = NULL;
 static scmtab   *fullTable = NULL;
+static scmsrcha *incrSrch = NULL;
+static scmtab   *incrTable = NULL;
 
-static uint currSerialNum;  // serial num of current update
+// serial number of this and previous update
+static uint prevSerialNum, currSerialNum;
 
 /******
  * callback that writes the data from a ROA into the update table
@@ -65,6 +68,22 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 	return 1;
 }
 
+/******
+ * callback that writes withdrawals into the incremental table
+ *****/
+static int writeWithdrawal(scmcon *conp, scmsrcha *s, int numLine) {
+	printf("withdraw\n");
+	return 1;
+}
+
+/******
+ * callback that writes announcements into the incremental table
+ *****/
+static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
+	printf("announce\n");
+	return 1;
+}
+
 int main(int argc, char **argv) {
 	char msg[1024];
 
@@ -75,8 +94,8 @@ int main(int argc, char **argv) {
 	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
 
 	// find the last serial number
-	currSerialNum = getLastSerialNumber(connect, scmp);
-	currSerialNum = (currSerialNum == UINT_MAX) ? 1 : (currSerialNum + 1);
+	prevSerialNum = getLastSerialNumber(connect, scmp);
+	currSerialNum = (prevSerialNum == UINT_MAX) ? 1 : (prevSerialNum + 1);
 
 	// setup up the query if this is the first time
 	// note that the where string is set to only select valid roa's, where
@@ -105,10 +124,37 @@ int main(int argc, char **argv) {
 	searchscm (connect, roaTable, roaSrch, NULL,
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
+	if (incrSrch == NULL) {
+		incrSrch = newsrchscm(NULL, 3, 0, 1);
+		addcolsrchscm(incrSrch, "t1.asn", SQL_C_ULONG, 8);
+		addcolsrchscm(incrSrch, "t1.ip_addr", SQL_C_CHAR, 50);
+		addcolsrchscm(incrSrch, "t1.serial_num", SQL_C_ULONG, 8);
+		incrTable = findtablescm(scmp, "rtr_incremental");
+	}
+
+	// first, find withdrawal
+	snprintf (incrSrch->wherestr, WHERESTR_SIZE,
+			  "t1.serial_num = t2.serial_num - 1 and t1.roa_filename = t2.roa_filename and t1.ip_addr = t2.ip_addr\nt2.serial_num is null and t1.serial_num = %d", prevSerialNum);
+	searchscm (connect, fullTable, incrSrch, NULL, writeWithdrawal,
+			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_SELF, NULL);
+
+	// then, find announcements
+	snprintf (incrSrch->wherestr, WHERESTR_SIZE,
+			  "t1.serial_num = t2.serial_num + 1 and t1.roa_filename = t2.roa_filename and t1.ip_addr = t2.ip_addr\nt2.serial_num is null and t1.serial_num = %d", currSerialNum);
+	searchscm (connect, fullTable, incrSrch, NULL, writeAnnouncement,
+			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_SELF, NULL);
+
 	// write the current serial number and time, making the data available
 	snprintf(msg, sizeof(msg), "insert into rtr_update values (%d, now());",
 			 currSerialNum);
 	statementscm(connect, msg);
+
+	// ??????????????? what about incremental ?????????????????????
+	// ????????? start with query that identifies all those in previous
+	//  ????? but not in current, and withdraw these
+	//  ????? then, query for those in current not in prev, and announce them
+
+	// ?????????????? clean up serial numbers after certain age ??????????
 
 	return 0;
 }
