@@ -25,7 +25,7 @@
 #include <stdlib.h>
 
 // for passing back results
-static uint lastSerialNum, recentSerialNums[1024];
+static uint lastSerialNum, recentSerialNums[1024], returnSNs[1024];
 static uint numRecent, origSN, foundOrig;
 
 static scmsrcha *snSrch = NULL;
@@ -70,7 +70,7 @@ static int setRecentSNs(scmcon *conp, scmsrcha *s, int numLine) {
 }
 
 uint* getMoreRecentSerialNums(scmcon *connect, scm *scmp, uint serialNum) {
-	uint *result, i;
+	int i;
 	numRecent = 0;
 	foundOrig = 0;
 	origSN = serialNum;
@@ -79,9 +79,9 @@ uint* getMoreRecentSerialNums(scmcon *connect, scm *scmp, uint serialNum) {
 			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR,
 			   "create_time desc");
 	if (! foundOrig) return NULL;
-	result = calloc(numRecent, sizeof(uint));
 	for (i = 0; i < numRecent; i++)
-		result[i] = recentSerialNums[numRecent - i];
-	return result;
+		returnSNs[i] = recentSerialNums[numRecent - 1 - i];
+	returnSNs[numRecent] = 0;
+	return returnSNs;
 }
 

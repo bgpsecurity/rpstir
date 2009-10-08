@@ -108,7 +108,7 @@ static int sendIncrResponse(scmcon *conp, scmsrcha *s, int numLine) {
 static void handleSerialQuery(PDU *request) {
 	uint oldSN = *((uint *)request->typeSpecificData);
 	uint *newSNs = getMoreRecentSerialNums(connect, scmp, oldSN);
-	int i, len = sizeof(newSNs) / sizeof(uint);
+	int i;
 
 	// handle case when error because the original serial number is not
 	//    in the database, so there is no way to get incremental updates
@@ -135,16 +135,16 @@ static void handleSerialQuery(PDU *request) {
 	// separate query for each serial number in list of recent ones
 	// in callback, first write all withdrawals and then all announcements
 	//     for the current serial number
-	for (i = 0; i < len; i++) {
+	for (i = 0; newSNs[i] != 0; i++) {
 		snprintf (incrSrch->wherestr, WHERESTR_SIZE,
 				  "serial_num = %d", newSNs[i]);
-		searchscm (connect, fullTable, fullSrch, NULL,
+		searchscm (connect, incrTable, incrSrch, NULL,
 				   sendIncrResponse, SCM_SRCH_DOVALUE_ALWAYS, "is_announce");
 	}
 
 	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
-	response.typeSpecificData = &newSNs[len-1];
+	response.typeSpecificData = &newSNs[i-1];
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing end of data\n");
 		return;

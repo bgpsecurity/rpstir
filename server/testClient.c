@@ -32,20 +32,11 @@ static int getBits(uint val, uint start, uint len) {
 	return (val << start) >> (32 - len);
 }
 
-int main(int argc, char **argv) {
-	int sock, i;
-	PDU request, *response;
+static int readResponses(int sock) {
+	PDU *response;
+	int i;
 	IPPrefixData *prefixData;
 
-	if ((sock = getClientSocket("localhost")) == -1) {
-		printf ("Error opening socket\n");
-		return -1;
-	}
-	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-	if (writePDU(&request, sock) == -1) {
-		printf ("Error writing reset query\n");
-		return -1;
-	}
 	if (! (response = readPDU(sock))) {
 		printf ("Error reading cache response\n");
 		return -1;
@@ -73,11 +64,45 @@ int main(int argc, char **argv) {
 			printf("Received unexpected pdu type %d\n", response->pduType);
 			return -1;
 		}
-		printf ("as# = %d len = %d max = %d\n", prefixData->asNumber,
-				prefixData->prefixLength, prefixData->maxLength);
+		printf ("%s as# = %d len = %d max = %d\n",
+				(prefixData->flags == FLAG_ANNOUNCE) ? "ANNOUNCE" : "WITHDRAW",
+				prefixData->asNumber, prefixData->prefixLength,
+				prefixData->maxLength);
 	}
 	if (! response) {
 		printf ("Missing end-of-data pdu\n");
+		return -1;
+	}
+	return 0;
+}
+
+int main(int argc, char **argv) {
+	int sock;
+	PDU request;
+
+	if ((sock = getClientSocket("localhost")) == -1) {
+		printf ("Error opening socket\n");
+		return -1;
+	}
+	printf("Doing reset query\n");
+	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
+	if (writePDU(&request, sock) == -1) {
+		printf ("Error writing reset query\n");
+		return -1;
+	}
+	if (readResponses(sock) < 0) {
+		printf("Failed on reset query\n");
+		return -1;
+	}
+	printf("Doing serial query\n");
+	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
+	*((uint *) request.typeSpecificData) = 1;
+	if (writePDU(&request, sock) == -1) {
+		printf ("Error writing serial query\n");
+		return -1;
+	}
+	if (readResponses(sock) < 0) {
+		printf("Failed on serial query\n");
 		return -1;
 	}
 	printf("Completed successfully\n");

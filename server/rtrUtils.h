@@ -30,7 +30,10 @@ extern uint getLastSerialNumber(scmcon *connect, scm *scmp);
 
 /*
  * Argument: serialNum is the serial number relative to which want more recent
- * Note: Remember to free the array returned.
+ * Note: No need to free the returned array, just don't call this function
+ *        again until being done with the array, as it gets reused
+ * Note: The array is ended with a zero serial number, which is never
+ *         used as a real serial number.
  * Note: Returns NULL if the original serial number is not in the database
  * Note: The results are in ascending order, from oldest to most recent
  */
