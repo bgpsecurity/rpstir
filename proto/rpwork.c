@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include "err.h"
 #include "conversion.h"
 
 #define INTERSECTION_ALWAYS 1
@@ -8,6 +9,8 @@
 #define WASEXPANDED         8
 #define WASPERFORATED      16
 #define SKIBUFSIZ 128
+
+char skibuf[SKIBUFSIZ];
 
 struct done_cert
   {
@@ -152,7 +155,7 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
     struct Certificate *paracertp = mk_paracert(certp);
     int ansr;
     if ((ansr = add_done_cert(ski, certp, paracertp)) < 0) return ansr;
-    if (!done_certp->paracertp) return -1; // error making paracert
+    if (!done_certp->paracertp) return ERR_SCM_BADPARACERT;
     i = 1;
     }
   return i;
@@ -179,7 +182,7 @@ static struct AddressesOrRangesInIPAddressChoiceA *find_IP(int typ,
   return (struct AddressesOrRangesInIPAddressChoiceA *)0;
   }
 
-static int getIPBlock(FILE *SKI, char *skibuf, struct ipranges *iprangesp, 
+static int getIPBlock(FILE *SKI, struct ipranges *iprangesp, 
   int typ)
   {
   char *c;
@@ -190,40 +193,40 @@ static int getIPBlock(FILE *SKI, char *skibuf, struct ipranges *iprangesp,
     add_iprange(iprangesp);
     }
   struct iprange *iprangep = &iprangesp->iprangep[iprangesp->numranges - 1];
-  if (txt2loc(typ, skibuf, iprangep) < 0) return -1;
+  if (txt2loc(typ, skibuf, iprangep) < 0) return ERR_SCM_BADRANGE;
   if (!c) *skibuf = 0;
   return (c)? 1: 0;
   }
  
-static int getSKIBlock(FILE *SKI, char *skibuf, struct ipranges *iprangesp)
+static int getSKIBlock(FILE *SKI, struct ipranges *iprangesp)
   {
   int ansr;
   if (!fgets(skibuf, sizeof(skibuf), SKI) || strcmp(skibuf, "IPv4\n"))
     {
     strcpy(skibuf, "Missing IPv4");
-    return -1;
+    return ERR_SCM_BADSKIBLOCK;
     }
-  if (getIPBlock(SKI, skibuf, iprangesp, IPV4) < 0);
+  if (getIPBlock(SKI, iprangesp, IPV4) < 0);
     {
     strcpy(skibuf, "Bad IPv4 group");
-    return -1;
+    return ERR_SCM_BADSKIBLOCK;
     }
   if (strcmp(skibuf, "IPv6\n"))
     {
     strcpy(skibuf, "Missing IPv6");
-    return -1;
+    return ERR_SCM_BADSKIBLOCK;
     }
-  if (getIPBlock(SKI, skibuf, iprangesp, IPV6) < 0);
+  if (getIPBlock(SKI, iprangesp, IPV6) < 0);
     {
     strcpy(skibuf, "Bad IPv6 group");
-    return -1;
+    return ERR_SCM_BADSKIBLOCK;
     }
   if (strcmp(skibuf, "AS#"))
     {
     strcpy(skibuf, "Missing AS#");
-    return -1;
+    return ERR_SCM_BADSKIBLOCK;
     }
-  if((ansr = getIPBlock(SKI, skibuf, iprangesp, ASNUM)) < 0)
+  if((ansr = getIPBlock(SKI, iprangesp, ASNUM)) < 0)
     strcpy(skibuf, "Bad AS# group");
   else if (iprangesp->numranges == 0)
   return ansr;
@@ -304,7 +307,80 @@ Procedure:
   return 1;
   }
   
-static int expand_cert(struct iprange *constrangep,  
+static int expand_AS(struct iprange *constrangep, 
+  struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp, int *changesp)
+  {
+/*
+Function: Expands AS numbers to match constraints
+Procedure:
+1. WHILE cert hiASnum < constr loASnum  go to next cert item
+   IF constr hiASnum < cert loASnum  (case a)
+     Make a new cert item for the entire constraint
+   ELSE IF constr loASnum <= cert cert hiASnum   
+     IF constr hiASnum < nextcert loASnum  (case b)
+       Extend cert hiASnum to constr hiASnum
+     ELSE DO         (case c)
+       Delete current cert item
+       Extend nextcert loASnum to constr loASnum
+       WHILE constr hiASnum >= nextcert loASnum
+   ELSE IF constr loASnum > cert loASnum AND constr hiASnum > cert hiASnum
+     Do nothing   )case d)
+   ELSE IF constr hiASnum >= nextcert loASnum  (case e)
+     Extend cert loASnum to constraint loASnum
+*/
+  int did = 0, num_addr = 0;
+  struct ASNumberOrRangeA *asNumOrRangep = (struct ASNumberOrRangeA *)
+    member_casn(&asNumbersOrRangesp->self, num_addr);
+  struct iprange certrange, nextcertrange;
+  cvt_asnum(&certrange, asNumOrRangep);
+
+  while (certrange.hiASnum < constrangep->loASnum)
+    {
+    asNumOrRangep = (struct ASNumberOrRangeA *)next_of(
+      &asNumOrRangep->self);
+    cvt_asnum(&certrange, asNumOrRangep);
+    }       
+  if (constrangep->hiASnum < certrange.loASnum)  // case a
+    {
+    asNumOrRangep = (struct ASNumberOrRangeA *)
+      inject_casn(&asNumbersOrRangesp->self, num_addr++);
+    did += make_ASnum(asNumOrRangep, constrangep);
+    asNumOrRangep = (struct ASNumberOrRangeA *)
+      member_casn(&asNumbersOrRangesp->self, num_addr);
+    }
+  else if (constrangep->loASnum <= certrange.hiASnum)
+    {
+    struct ASNumberOrRangeA *nextasNumOrRangep = (struct ASNumberOrRangeA *)
+      member_casn(&asNumbersOrRangesp->self, num_addr + 1);
+    cvt_asnum(&nextcertrange, nextasNumOrRangep);
+    if (constrangep->hiASnum < nextcertrange.loASnum)  // case b
+      {
+      certrange.hiASnum = constrangep->hiASnum;
+      did += make_ASnum(asNumOrRangep, &certrange);
+      }
+    else                                        // case c
+      {
+      do
+        {
+        eject_casn(&asNumbersOrRangesp->self, num_addr);
+        asNumOrRangep = (struct ASNumberOrRangeA *)member_casn(
+          &asNumbersOrRangesp->self, num_addr);
+        certrange.loASnum = constrangep->loASnum;
+        }
+      while (constrangep->hiASnum >= nextcertrange.loASnum);
+      did += make_ASnum(asNumOrRangep, &certrange);
+      }
+    }
+  if (certrange.loASnum <= constrangep->loASnum &&
+      certrange.hiASnum >= constrangep->hiASnum) {}   // case d
+  else if(constrangep->hiASnum >= certrange.loASnum)  // case e
+    {
+    certrange.loASnum = constrangep->loASnum;
+    did += make_ASnum(asNumOrRangep, &certrange);
+    }
+  return did;
+  }
+static int expand_IP(struct iprange *constrangep,  
   struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp, int *changesp)
   {
 /*
@@ -405,7 +481,7 @@ Inputs: typ
   return did;
   }
 
-static int perforate_cert(
+static int perforate_IP(
   struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp, 
   int num_addr, struct iprange *certrangep, struct iprange *skirangep,
   int *changesp)
@@ -482,27 +558,13 @@ static int run_through_ASlist(int run, struct ipranges *iprangesp,
 Procedure:
 1. Convert cert's starting number(s)
    DO
-2.   IF expanding
-       WHILE cert hiASnum < constr loASnum  go to next cert item
-       IF constr hiASnum < cert loASnum  (case a)
-         Make a new cert item for the entire constraint
-       ELSE IF constr loASnum <= cert cert hiASnum   
-         IF constr hiASnum < nextcert loASnum  (case b)
-           Extend cert hiASnum to constr hiASnum
-         ELSE DO         (case c)
-           Delete current cert item
-           Extend nextcert loASnum to constr loASnum
-           WHILE constr hiASnum >= nextcert loASnum
-       ELSE IF constr loASnum > cert loASnum AND constr hiASnum > cert hiASnum
-         Do nothing   )case d)
-       ELSE IF constr hiASnum >= nextcert loASnum  (case e)
-         Extend cert loASnum to constraint loASnum
+2.   IF expanding, call expand_AS
      ELSE
        WHILE cert hilim < constr lolim
          Go to next item in cert
 3.     WHILE have a cert item AND Its cert lolim < constr hilim
-         Perforate cert, noting need to flag old cert
-         Go to bext item in cert
+         Perforate cert, noting need to flag original cert
+         Go to next item in cert
      Get next constr entry 
    WHILE lis entry is of current type
 */
@@ -510,58 +572,12 @@ Procedure:
   struct ASNumberOrRangeA *asNumOrRangep = (struct ASNumberOrRangeA *)
     member_casn(&asNumbersOrRangesp->self, num_addr);
                                              // step 1
-  struct iprange certrange, nextcertrange;
+  struct iprange certrange;
   cvt_asnum(&certrange, asNumOrRangep);
   struct iprange *constrangep = &iprangesp->iprangep[numrange];
   do
     {                                          // step 2
-    if (!run)
-      {
-      while (certrange.hiASnum < constrangep->loASnum)
-        {
-        asNumOrRangep = (struct ASNumberOrRangeA *)next_of(
-          &asNumOrRangep->self);
-        cvt_asnum(&certrange, asNumOrRangep);
-        }       
-      if (constrangep->hiASnum < certrange.loASnum)  // case a
-        {
-        asNumOrRangep = (struct ASNumberOrRangeA *)
-          inject_casn(&asNumbersOrRangesp->self, num_addr++);
-        did += make_ASnum(asNumOrRangep, constrangep);
-        asNumOrRangep = (struct ASNumberOrRangeA *)
-          member_casn(&asNumbersOrRangesp->self, num_addr);
-        }
-      else if (constrangep->loASnum <= certrange.hiASnum)
-        {
-        struct ASNumberOrRangeA *nextasNumOrRangep = (struct ASNumberOrRangeA *)
-          member_casn(&asNumbersOrRangesp->self, num_addr + 1);
-        cvt_asnum(&nextcertrange, nextasNumOrRangep);
-        if (constrangep->hiASnum < nextcertrange.loASnum)  // case b
-          {
-          certrange.hiASnum = constrangep->hiASnum;
-          did += make_ASnum(asNumOrRangep, &certrange);
-          }
-        else                                        // case c
-          {
-          do
-            {
-            eject_casn(&asNumbersOrRangesp->self, num_addr);
-            asNumOrRangep = (struct ASNumberOrRangeA *)member_casn(
-              &asNumbersOrRangesp->self, num_addr);
-            certrange.loASnum = constrangep->loASnum;
-            }
-          while (constrangep->hiASnum >= nextcertrange.loASnum);
-          did += make_ASnum(asNumOrRangep, &certrange);
-          }
-        }
-      if (certrange.loASnum <= constrangep->loASnum &&
-          certrange.hiASnum >= constrangep->hiASnum) {}   // case d
-      else if(constrangep->hiASnum >= certrange.loASnum)  // case e
-        {
-        certrange.loASnum = constrangep->loASnum;
-        did += make_ASnum(asNumOrRangep, &certrange);
-        }
-      }
+    if (!run) expand_AS(constrangep, asNumbersOrRangesp, changesp);
     else
       {
       while (certrange.hiASnum < constrangep->loASnum)
@@ -630,7 +646,7 @@ Procedure:
        // convert cert address
   for ( ; constrangep->typ == typ; constrangep++)
     {
-    if (!run) expand_cert(constrangep, ipAddrOrRangesp, changesp);
+    if (!run) expand_IP(constrangep, ipAddrOrRangesp, changesp);
     else
       {                                              // step 2
       while(memcmp(certrange.hilim, constrangep->lolim, lth) < 0)
@@ -644,7 +660,7 @@ Procedure:
       while(ipAddrOrRangep && 
         memcmp(certrange.lolim, constrangep->hilim, lth) < 0)
         { 
-        num_cert_item = perforate_cert(ipAddrOrRangesp, num_cert_item, 
+        num_cert_item = perforate_IP(ipAddrOrRangesp, num_cert_item, 
           &certrange, constrangep, &did);
         ipAddrOrRangep = (struct IPAddressOrRangeA *)
           member_casn(&ipAddrOrRangesp->self, ++num_cert_item);
@@ -724,7 +740,6 @@ Procedure:
       id_subjectKeyIdentifier, 0);
   struct Certificate *childcertp;
   int ansr, numkid, numkids;
-  char skibuf[44];
   getAKI(skibuf, &extp->extnValue.subjectKeyIdentifier);
   
   // Get list of children having skibuf as their AKI
@@ -783,7 +798,7 @@ Procedure:
   for (run = 0; 1; run++) 
     {
     int ansr;
-    if (!done_certp->perf || !run) return -1; // usage conflict
+    if (!done_certp->perf || !run) return ERR_SCM_USECONFLICT; // usage conflict
     if ((ansr = modify_paracert(run, iprangesp, paracertp)) < 0)
       return ansr;
                                                   // step 2
@@ -792,7 +807,6 @@ Procedure:
                                                         // step 3     
     extp = find_extension(&paracertp->toBeSigned.extensions,
       id_authKeyId, 0);
-    char skibuf[SKIBUFSIZ];  // put AKI in skibuf
     getAKI(skibuf, &extp->extnValue.authKeyId.keyIdentifier);
     if ((ansr = get_CAcert(skibuf, &ndone_certp)) < 0) return ansr;
     
@@ -803,7 +817,7 @@ Procedure:
   return 0;
   }
 
-static int process_control_blocks(FILE *SKI, char *skibuf) 
+static int process_control_blocks(FILE *SKI) 
   {
 /*
 Function processes successive "SKI blocks" until EOF
@@ -828,7 +842,7 @@ Procedure:
     for (skip = &skibuf[4]; *skip == ' '; skip++);
     for (cc = skip; (*cc >= '0' && *cc <= '9') || 
         ((*cc | 0x20) >= 'a' && (*cc | 0x20) <= 'f'); cc++);
-    if ((cc - skip) != 40 || *cc > ' ') return -1; // BADSKIBLOCK
+    if ((cc - skip) != 40 || *cc > ' ') return ERR_SCM_BADSKIBLOCK;
     *cc = 0;
     if ((ansr = get_CAcert(skip, &done_certp)) < 0)
       {
@@ -841,8 +855,8 @@ Procedure:
       struct ipranges ipranges;
       ipranges.numranges = 0;
       ipranges.iprangep = (struct iprange *)0;
-      if ((ansr = getSKIBlock(SKI, skibuf, &ipranges)) < 0) 
-          return -1; // with error message in skibuf BADSKIBLOCK
+      if ((ansr = getSKIBlock(SKI, &ipranges)) < 0) 
+          return ansr; // with error message in skibuf BADSKIBLOCK
          // otherwise skibuf has another SKI line or NULL
       int err;
       
@@ -854,7 +868,7 @@ Procedure:
   return 0;
   } 
 
-static int read_SKI_blocks(char *skiblockfile, int flags)
+static int read_SKI_blocks(char *skiblockfile, FILE *logfile)
   {
 /*
 Procedure:
@@ -872,23 +886,22 @@ Procedure:
    Free all and return error
 */
   Certificate(&myrootcert, (ushort)0);
-  char *c, *cc, skibuf[SKIBUFSIZ];
+  char *c, *cc; 
                                                      // step 1
-  int flag = 0, ansr = 0;
-  locflags = flags;
+  int ansr = 0;
   FILE *SKI;
   done_certs.numcerts = 0;
 
-  if (!(SKI = fopen(skiblockfile, "r"))) ansr = -1; // can't open
-  else if (!fgets(skibuf, sizeof(skibuf), SKI)) ansr = -1;  // no RP certificate
+  if (!(SKI = fopen(skiblockfile, "r"))) ansr = ERR_SCM_NOSKIFILE; // can't open
+  else if (!fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_NORPCERT;  
   else
     {
     c = strchr(skibuf, (int)'\n');
     if (c) *c = 0;
-    if (get_casn_file(&myrootcert.self, skibuf, 0) < 0) ansr = -1; // bad root  
-    else if(!fgets(skibuf, sizeof(skibuf), SKI)) ansr = -1;  // RP key file
+    if (get_casn_file(&myrootcert.self, skibuf, 0) < 0) ansr = ERR_SCM_NORPCERT;  
+    else if(!fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_NORPCERT;  
         // get RP key ???
-    else if(!(c = fgets(skibuf, sizeof(skibuf), SKI))) ansr = -1; // short file 
+    else if(!(c = fgets(skibuf, sizeof(skibuf), SKI))) ansr = ERR_SCM_BADSKIFILE;  
     else
       {
       while (c && !ansr && !strncmp(skibuf, "CONTROL", 7))  
@@ -897,13 +910,13 @@ Procedure:
         *cc = 0;
         for (cc--; *cc > ' '; cc--);
         cc++;
-        if (!strcmp(cc, "intersection_always")) flag |= INTERSECTION_ALWAYS;
-        else if (!strcmp(cc, "resource_nounion")) flag |= RESOURCE_NOUNION;
-        else ansr = -1;
+        if (!strcmp(cc, "intersection_always")) locflags |= INTERSECTION_ALWAYS;
+        else if (!strcmp(cc, "resource_nounion")) locflags |= RESOURCE_NOUNION;
+        else ansr = ERR_SCM_BADSKIFILE;
         c = fgets(skibuf, sizeof(skibuf), SKI);
         }
-      if (!c || strncmp(skibuf, "SKI ", 4)) ansr = -1; // short file
-      else ansr = process_control_blocks(SKI, skibuf);
+      if (!c || strncmp(skibuf, "SKI ", 4)) ansr = ERR_SCM_BADSKIFILE; 
+      else ansr = process_control_blocks(SKI);
       }
     }
   int numcert;
@@ -920,5 +933,12 @@ Procedure:
     }
   fclose(SKI);
   delete_casn(&myrootcert.self);
+  if (*skibuf) fprintf(logfile, "%s\n", skibuf);
   return ansr;
+  }
+
+int main(int argc, char **argv)
+  {
+  read_SKI_blocks(argv[1], stderr);
+  return 0;
   }
