@@ -24,6 +24,9 @@
  *    between server and clients
  ***************/
 
+#ifndef _PDU_H
+#define _PDU_H
+
 /*****
  * Different PDU types
  *****/
@@ -98,3 +101,5 @@ void fillInPDUHeader(PDU *pdu, uchar pduType, char allocRest);
  * utility routine that gives the expected length for a given type
  *****/
 int lengthForType(uchar pduType);
+
+#endif

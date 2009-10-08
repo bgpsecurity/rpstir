@@ -24,5 +24,15 @@
  ***********************/
 
 #include "scmf.h"
+#include "pdu.h"
 
-extern int getLastSerialNumber(scmcon *connect, scm *scmp);
+extern uint getLastSerialNumber(scmcon *connect, scm *scmp);
+
+/*
+ * Argument: serialNum is the serial number relative to which want more recent
+ * Note: Remember to free the array returned.
+ * Note: Returns NULL if the original serial number is not in the database
+ * Note: The results are in ascending order, from oldest to most recent
+ */
+extern uint* getMoreRecentSerialNums(scmcon *connect, scm *scmp,
+									 uint serialNum);

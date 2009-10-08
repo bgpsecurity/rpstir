@@ -95,6 +95,29 @@ static int sendResponse(scmcon *conp, scmsrcha *s, int numLine) {
 }
 
 static void handleSerialQuery(PDU *request) {
+	uint oldSerialNum = *((uint *)request->typeSpecificData);
+	uint newSerialNum = getLastSerialNumber(connect, scmp);
+	if (oldSerialNum == newSerialNum) return;
+
+	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
+	if (writePDU(&response, sock) == -1) {
+		printf("Error writing cache response\n");
+		return;
+	}
+	oldSerialNum = getLastSerialNumber(connect, scmp);
+
+	// query for all serial nums more recent than old one in ascending order
+	// in callback, first write all withdrawals and then all announcements
+	//     for the current serial number
+	// ???? what about case when serial number not in db ??????????
+
+	// finish up by sending the end of data PDU
+	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
+	response.typeSpecificData = &newSerialNum;
+	if (writePDU(&response, sock) == -1) {
+		printf("Error writing end of data\n");
+		return;
+	}
 }
 
 static void handleResetQuery() {
@@ -157,6 +180,7 @@ int main(int argc, char **argv) {
 		default:
 			printf("Cannot handle request of type %d\n", request->pduType);
 		}
+		freePDU(request);
 	}
 	return 1;
 }
