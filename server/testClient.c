@@ -58,7 +58,7 @@ static int readResponses(int sock) {
 		} else if (response->pduType == PDU_IPV6_PREFIX) {
 			printf("Received pdu of type IPv6 prefix\naddr = ");
 			for (i = 0; i < 8; i++)
-				printf("%d%s",
+				printf("%x%s",
 					   getBits(prefixData->ipAddress[i/2], (i%2)*16, 16),
 					   (i == 7) ? "\n" : ":");
 		} else {

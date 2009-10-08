@@ -71,7 +71,7 @@ static int sendResponse(scmsrcha *s, char isAnnounce) {
 	  uint i = 0, val = 0, final = 0;
 	  ptr1 = strtok(ptr1, ":");
 	  while (ptr1) {
-		val = (val << 16) + atoi(ptr1);
+		  val = (val << 16) + strtol(ptr1, NULL, 16);
 		if (final) {
 		  prefixData.ipAddress[i] = val;
 		  val = 0;
