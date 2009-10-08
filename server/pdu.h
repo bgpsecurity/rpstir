@@ -78,6 +78,7 @@ typedef struct _IPPrefixData {
 /*****
  * read a PDU from a socket, waiting until there is data on the socket
  *   returns a NULL PDU on error
+ * Remember to free the PDU returned when done with it
  *****/
 PDU *readPDU(int sock);
 

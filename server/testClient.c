@@ -45,6 +45,7 @@ static int readResponses(int sock) {
 		printf ("Was expecting cache response, got %d\n", response->pduType);
 		return -1;
 	}
+	freePDU(response);
 	for (response = readPDU(sock);
 		 response && (response->pduType != PDU_END_OF_DATA);
 		 response = readPDU(sock)) {
@@ -68,17 +69,19 @@ static int readResponses(int sock) {
 				(prefixData->flags == FLAG_ANNOUNCE) ? "ANNOUNCE" : "WITHDRAW",
 				prefixData->asNumber, prefixData->prefixLength,
 				prefixData->maxLength);
+		freePDU(response);
 	}
 	if (! response) {
 		printf ("Missing end-of-data pdu\n");
 		return -1;
 	}
+	freePDU(response);
 	return 0;
 }
 
 int main(int argc, char **argv) {
 	int sock;
-	PDU request;
+	PDU request, *response;
 
 	if ((sock = getClientSocket("localhost")) == -1) {
 		printf ("Error opening socket\n");
@@ -105,6 +108,20 @@ int main(int argc, char **argv) {
 		printf("Failed on serial query\n");
 		return -1;
 	}
+	*((uint *) request.typeSpecificData) = 8723;
+	if (writePDU(&request, sock) == -1) {
+		printf ("Error writing serial query\n");
+		return -1;
+	}
+	if (! (response = readPDU(sock))) {
+		printf ("Error reading cache reset\n");
+		return -1;
+	}
+	if (response->pduType != PDU_CACHE_RESET) {
+		printf ("Was expecting cache reset, got %d\n", response->pduType);
+		return -1;
+	}
+	freePDU(response);
 	printf("Completed successfully\n");
 	return 1;
 }

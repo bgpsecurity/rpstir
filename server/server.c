@@ -112,8 +112,12 @@ static void handleSerialQuery(PDU *request) {
 
 	// handle case when error because the original serial number is not
 	//    in the database, so there is no way to get incremental updates
+	// in this case, send cache reset response
 	if (! newSNs) {
-		// ???????????? send error response ????????????????
+		fillInPDUHeader(&response, PDU_CACHE_RESET, 1);
+		if (writePDU(&response, sock) == -1) {
+			printf("Error writing cache reset response\n");
+		}
 		return;
 	}
 
