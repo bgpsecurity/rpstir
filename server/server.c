@@ -36,18 +36,19 @@ static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
 static scmsrcha *fullSrch = NULL;
 static scmtab   *fullTable = NULL;
+static scmsrcha *incrSrch = NULL;
+static scmtab   *incrTable = NULL;
 
 static int sock;
 static PDU response;
 static IPPrefixData prefixData;
 
 /* callback that sends a single address to the client */
-static int sendResponse(scmcon *conp, scmsrcha *s, int numLine) {
+static int sendResponse(scmsrcha *s, char isAnnounce) {
 	char *ptr1 = (char *)s->vec[1].valptr, *ptr2;
-	conp = conp; numLine = numLine;
 
 	response.typeSpecificData = &prefixData;
-	prefixData.flags = FLAG_ANNOUNCE;
+	prefixData.flags = isAnnounce ? FLAG_ANNOUNCE : FLAG_WITHDRAW;
 	prefixData.dataSource = SOURCE_RPKI;
 	prefixData.asNumber = *((uint *)s->vec[0].valptr);
 
@@ -94,26 +95,56 @@ static int sendResponse(scmcon *conp, scmsrcha *s, int numLine) {
 	return 0;
 }
 
+static int sendFullResponse(scmcon *conp, scmsrcha *s, int numLine) {
+	conp = conp; numLine = numLine;
+	return sendResponse(s, 1);
+}
+
+static int sendIncrResponse(scmcon *conp, scmsrcha *s, int numLine) {
+	conp = conp; numLine = numLine;
+	return sendResponse(s, *((char *)s->vec[2].valptr));
+}
+
 static void handleSerialQuery(PDU *request) {
-	uint oldSerialNum = *((uint *)request->typeSpecificData);
-	uint newSerialNum = getLastSerialNumber(connect, scmp);
-	if (oldSerialNum == newSerialNum) return;
+	uint oldSN = *((uint *)request->typeSpecificData);
+	uint *newSNs = getMoreRecentSerialNums(connect, scmp, oldSN);
+	int i, len = sizeof(newSNs) / sizeof(uint);
+
+	// handle case when error because the original serial number is not
+	//    in the database, so there is no way to get incremental updates
+	if (! newSNs) {
+		// ???????????? send error response ????????????????
+		return;
+	}
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing cache response\n");
 		return;
 	}
-	oldSerialNum = getLastSerialNumber(connect, scmp);
 
-	// query for all serial nums more recent than old one in ascending order
+	// setup up the query if this is the first time
+	if (incrSrch == NULL) {
+		incrSrch = newsrchscm(NULL, 3, 0, 1);
+		addcolsrchscm(incrSrch, "asn", SQL_C_ULONG, 8);
+		addcolsrchscm(incrSrch, "ip_addr", SQL_C_CHAR, 50);
+		addcolsrchscm(incrSrch, "is_announce", SQL_C_BIT, 1);
+		incrTable = findtablescm(scmp, "rtr_incremental");
+	}
+
+	// separate query for each serial number in list of recent ones
 	// in callback, first write all withdrawals and then all announcements
 	//     for the current serial number
-	// ???? what about case when serial number not in db ??????????
+	for (i = 0; i < len; i++) {
+		snprintf (incrSrch->wherestr, WHERESTR_SIZE,
+				  "serial_num = %d", newSNs[i]);
+		searchscm (connect, fullTable, fullSrch, NULL,
+				   sendIncrResponse, SCM_SRCH_DOVALUE_ALWAYS, "is_announce");
+	}
 
 	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
-	response.typeSpecificData = &newSerialNum;
+	response.typeSpecificData = &newSNs[len-1];
 	if (writePDU(&response, sock) == -1) {
 		printf("Error writing end of data\n");
 		return;
@@ -142,7 +173,7 @@ static void handleResetQuery() {
 
 	// do the query, with callback sending out the responses
 	searchscm (connect, fullTable, fullSrch, NULL,
-			   sendResponse, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+			   sendFullResponse, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
 	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
