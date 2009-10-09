@@ -83,11 +83,11 @@ int main(int argc, char **argv) {
 	int sock;
 	PDU request, *response;
 
+	printf("\nDoing reset query\n");
 	if ((sock = getClientSocket("localhost")) == -1) {
 		printf ("Error opening socket\n");
 		return -1;
 	}
-	printf("Doing reset query\n");
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
 	if (writePDU(&request, sock) == -1) {
 		printf ("Error writing reset query\n");
@@ -97,7 +97,12 @@ int main(int argc, char **argv) {
 		printf("Failed on reset query\n");
 		return -1;
 	}
-	printf("Doing serial query\n");
+	close(sock);
+	printf("\n\nDoing serial query\n");
+	if ((sock = getClientSocket("localhost")) == -1) {
+		printf ("Error opening socket\n");
+		return -1;
+	}
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
 	*((uint *) request.typeSpecificData) = 1;
 	if (writePDU(&request, sock) == -1) {
@@ -106,6 +111,12 @@ int main(int argc, char **argv) {
 	}
 	if (readResponses(sock) < 0) {
 		printf("Failed on serial query\n");
+		return -1;
+	}
+	close(sock);
+	printf("\nDoing serial query with reset response\n");
+	if ((sock = getClientSocket("localhost")) == -1) {
+		printf ("Error opening socket\n");
 		return -1;
 	}
 	*((uint *) request.typeSpecificData) = 8723;
@@ -121,6 +132,7 @@ int main(int argc, char **argv) {
 		printf ("Was expecting cache reset, got %d\n", response->pduType);
 		return -1;
 	}
+	close(sock);
 	freePDU(response);
 	printf("Completed successfully\n");
 	return 1;

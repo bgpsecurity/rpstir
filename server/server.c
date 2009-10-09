@@ -189,14 +189,9 @@ static void handleResetQuery() {
 }
 
 int main(int argc, char **argv) {
+	int listenSock;
 	PDU *request;
 	char msg[1024];
-
-	// start listening on server socket
-	if ((sock = getServerSocket()) == -1) {
-		printf("Error opening socket\n");
-		return -1;
-	}
 
 	// initialize the database connection
 	scmp = initscm();
@@ -204,7 +199,23 @@ int main(int argc, char **argv) {
 	connect = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
 
-	while ((request = readPDU(sock))) {
+	// start listening on server socket
+	if ((listenSock = getListenerSocket()) == -1) {
+		printf("Error opening listener socket\n");
+		return -1;
+	}
+
+	while (1) {
+		if ((sock = getServerSocket(listenSock)) == -1) {
+			printf("Error opening server socket\n");
+			continue;
+		}
+		request = readPDU(sock);
+		if (! request) {
+			printf("Error reading request\n");
+			// ??? close(sock); ???
+			continue;
+		}
 		switch (request->pduType) {
 		case PDU_SERIAL_QUERY:
 			handleSerialQuery(request);
@@ -216,6 +227,7 @@ int main(int argc, char **argv) {
 			printf("Cannot handle request of type %d\n", request->pduType);
 		}
 		freePDU(request);
+		// ??? close(sock); ???
 	}
 	return 1;
 }

@@ -43,19 +43,24 @@ static int getPort() {
 #define CHECK_ERR(s, t) \
 		 if ((s) == -1) { perror((t)); return -1; }
 
-int getServerSocket() {
-	int sock1, sock2;
+int getListenerSocket() {
+	int sock;
 	struct sockaddr_in sin;
 
-	CHECK_ERR(sock1 = socket(AF_INET, SOCK_STREAM, 0), "socket");
+	CHECK_ERR(sock = socket(AF_INET, SOCK_STREAM, 0), "socket");
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = INADDR_ANY;
 	sin.sin_port = htons(getPort());
-	CHECK_ERR(bind(sock1, (struct sockaddr *) &sin, sizeof(sin)), "bind");
-	CHECK_ERR(listen(sock1, 10), "listen");
-	CHECK_ERR(sock2 = accept(sock1, NULL, NULL), "accept");
-	return sock2;
+	CHECK_ERR(bind(sock, (struct sockaddr *) &sin, sizeof(sin)), "bind");
+	CHECK_ERR(listen(sock, 10), "listen");
+	return sock;
+}
+
+int getServerSocket(int listenSock) {
+	int sock;
+	CHECK_ERR(sock = accept(listenSock, NULL, NULL), "accept");
+	return sock;
 }
 
 int getClientSocket(char *hostname) {
