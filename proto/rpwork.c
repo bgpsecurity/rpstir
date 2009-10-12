@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include "err.h"
 #include "conversion.h"
+#include "scm.h"
+#include "scmf.h"
+#include "sqhl.h"
+#include "diru.h"
+#include "myssl.h"
 
 #define INTERSECTION_ALWAYS 1
 #define RESOURCE_NOUNION    2
@@ -10,7 +15,7 @@
 #define WASPERFORATED      16
 #define SKIBUFSIZ 128
 
-char skibuf[SKIBUFSIZ];
+static char skibuf[SKIBUFSIZ];
 
 struct done_cert
   {
@@ -868,7 +873,8 @@ Procedure:
   return 0;
   } 
 
-static int read_SKI_blocks(char *skiblockfile, FILE *logfile)
+int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile, 
+  FILE *logfile, FILE *s)
   {
 /*
 Procedure:
@@ -889,10 +895,10 @@ Procedure:
   char *c, *cc; 
                                                      // step 1
   int ansr = 0;
-  FILE *SKI;
   done_certs.numcerts = 0;
+  FILE *SKI = fopen(skiblockfile, "r");
 
-  if (!(SKI = fopen(skiblockfile, "r"))) ansr = ERR_SCM_NOSKIFILE; // can't open
+  if (!SKI) ansr = ERR_SCM_NOSKIFILE; // can't open
   else if (!fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_NORPCERT;  
   else
     {
@@ -936,9 +942,10 @@ Procedure:
   if (*skibuf) fprintf(logfile, "%s\n", skibuf);
   return ansr;
   }
-
+/*
 int main(int argc, char **argv)
   {
   read_SKI_blocks(argv[1], stderr);
   return 0;
-  }
+  }a
+*/
