@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
@@ -213,7 +214,7 @@ int main(int argc, char **argv) {
 		request = readPDU(sock);
 		if (! request) {
 			printf("Error reading request\n");
-			// ??? close(sock); ???
+			close(sock);
 			continue;
 		}
 		switch (request->pduType) {
@@ -224,10 +225,11 @@ int main(int argc, char **argv) {
 			handleResetQuery();
 			break;
 		default:
+			// ???????? error response ?????????
 			printf("Cannot handle request of type %d\n", request->pduType);
 		}
 		freePDU(request);
-		// ??? close(sock); ???
+		close(sock);
 	}
 	return 1;
 }

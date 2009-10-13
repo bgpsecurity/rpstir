@@ -76,6 +76,14 @@ typedef struct _IPPrefixData {
 } IPPrefixData;
 
 /*****
+ * structure holding the data for an error response
+ *****/
+typedef struct _ErrorData {
+	PDU *badPDU;
+	char *errorText;
+} ErrorData;
+
+/*****
  * read a PDU from a socket, waiting until there is data on the socket
  *   returns a NULL PDU on error
  * Remember to free the PDU returned when done with it

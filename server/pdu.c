@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#include <string.h>
 
 
 /****** ???????????????? need to send error pdu's ???????????? *****/
@@ -52,7 +53,8 @@
 PDU *readPDU(int sock) {
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
-	uint *serialNum, i;
+	ErrorData *errorData;
+	uint *serialNum, i, len;
 	int expectedLen;
 
 	// receive header and check length
@@ -95,6 +97,23 @@ PDU *readPDU(int sock) {
 		}
 		READ_INT(prefixData->asNumber);
 		return pdu;
+	case PDU_ERROR_REPORT:
+		errorData = calloc(1, sizeof(ErrorData));
+		pdu->typeSpecificData = errorData;
+		READ_INT(len);
+		errorData->badPDU = readPDU(sock);
+		if ((! errorData->badPDU) || (errorData->badPDU->length != len)) {
+			freePDU(pdu);
+			return NULL;
+		}
+		READ_INT(len);
+		errorData->errorText = malloc(len+1);
+		for (i = 0; i < len; i++) {
+			READ_BYTE(errorData->errorText[i]);
+		}
+		errorData->errorText[len] = 0;
+		// ???????? check lengths ???????
+		return pdu;
 	}
 
 	// handle case with unknown type
@@ -118,6 +137,7 @@ PDU *readPDU(int sock) {
 
 int writePDU(PDU *pdu, int sock) {
 	IPPrefixData *prefixData;
+	ErrorData *errorData;
 	uchar buffer[4];
 	uint i;
 
@@ -151,6 +171,19 @@ int writePDU(PDU *pdu, int sock) {
 		}
 		WRITE_INT(prefixData->asNumber);
 		return 1;
+	case PDU_ERROR_REPORT:
+		errorData = (ErrorData *) pdu->typeSpecificData;
+		if (! errorData->badPDU) {
+			WRITE_INT(0);
+		} else {
+			WRITE_INT(errorData->badPDU->length);
+			if (! writePDU(errorData->badPDU, sock)) return 0;
+		}
+		WRITE_INT(strlen(errorData->errorText));
+		for (i = 0; i < strlen(errorData->errorText); i++) {
+			WRITE_BYTE(errorData->errorText[i]);
+		}
+		return 1;
 	}
 
 	return 0;
@@ -176,6 +209,8 @@ void fillInPDUHeader(PDU *pdu, uchar pduType, char allocRest) {
 		case PDU_IPV4_PREFIX: case PDU_IPV6_PREFIX:
 			pdu->typeSpecificData = calloc(1, sizeof(IPPrefixData));
 			break;
+		case PDU_ERROR_REPORT:
+			pdu->typeSpecificData = calloc(1, sizeof(ErrorData));
 		}
 	}
 }
