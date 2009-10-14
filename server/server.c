@@ -161,13 +161,9 @@ static void handleResetQuery(PDU *request) {
 	uint serialNum;
 	char msg[256];
 
-	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
-	if (writePDU(&response, sock) == -1) {
-		printf("Error writing cache response\n");
-		return;
-	}
 	serialNum = getLastSerialNumber(connect, scmp);
 
+	// handle error condition when no data yet in database
 	if (serialNum == 0) {
 		fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
 		response.color = ERR_NO_DATA;
@@ -179,6 +175,12 @@ static void handleResetQuery(PDU *request) {
 		if (writePDU(&response, sock) == -1) {
 			printf("Error writing error report, no data for reset query\n");
 		}
+		return;
+	}
+
+	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
+	if (writePDU(&response, sock) == -1) {
+		printf("Error writing cache response\n");
 		return;
 	}
 
