@@ -49,6 +49,13 @@
 #define FLAG_WITHDRAW 0
 #define FLAG_ANNOUNCE 1
 
+/*****
+ * Error types for error report pdu's
+ *****/
+#define ERR_INTERNAL_ERROR 1
+#define ERR_NO_DATA 2
+#define ERR_INVALID_REQUEST 3
+
 typedef unsigned char uchar;
 typedef unsigned int uint;
 

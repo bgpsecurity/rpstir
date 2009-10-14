@@ -42,6 +42,7 @@ static scmtab   *incrTable = NULL;
 
 static int sock;
 static PDU response;
+static ErrorData errorData;
 static IPPrefixData prefixData;
 
 /* callback that sends a single address to the client */
@@ -156,8 +157,9 @@ static void handleSerialQuery(PDU *request) {
 	}
 }
 
-static void handleResetQuery() {
+static void handleResetQuery(PDU *request) {
 	uint serialNum;
+	char msg[256];
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
 	if (writePDU(&response, sock) == -1) {
@@ -165,6 +167,20 @@ static void handleResetQuery() {
 		return;
 	}
 	serialNum = getLastSerialNumber(connect, scmp);
+
+	if (serialNum == 0) {
+		fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
+		response.color = ERR_NO_DATA;
+		response.typeSpecificData = &errorData;
+		errorData.badPDU = request;
+		snprintf(msg, sizeof(msg),
+				 "First database update has not yet been performed\n");
+		errorData.errorText = msg;
+		if (writePDU(&response, sock) == -1) {
+			printf("Error writing error report, no data for reset query\n");
+		}
+		return;
+	}
 
 	// setup up the query if this is the first time
 	if (fullSrch == NULL) {
@@ -192,8 +208,7 @@ static void handleResetQuery() {
 int main(int argc, char **argv) {
 	int listenSock;
 	PDU *request;
-	ErrorData errorData;
-	char msg[1024];
+	char msg[256];
 
 	// initialize the database connection
 	scmp = initscm();
@@ -223,17 +238,18 @@ int main(int argc, char **argv) {
 			handleSerialQuery(request);
 			break;
 		case PDU_RESET_QUERY:
-			handleResetQuery();
+			handleResetQuery(request);
 			break;
 		default:
 			fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
+			response.color = ERR_INVALID_REQUEST;
 			response.typeSpecificData = &errorData;
 			errorData.badPDU = request;
 			snprintf(msg, sizeof(msg),
 					 "Cannot handle request of type %d\n", request->pduType);
 			errorData.errorText = msg;
 			if (writePDU(&response, sock) == -1) {
-				printf("Error writing error report\n");
+				printf("Error writing error report, bad request type\n");
 			}
 		}
 		freePDU(request);
