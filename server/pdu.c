@@ -112,7 +112,9 @@ PDU *readPDU(int sock) {
 			READ_BYTE(errorData->errorText[i]);
 		}
 		errorData->errorText[len] = 0;
-		// ???????? check lengths ???????
+		if (pdu->length != (16 + errorData->badPDU->length + len)) {
+			printf("Lengths not consistent in error report PDU\n");
+		}
 		return pdu;
 	}
 
@@ -140,6 +142,13 @@ int writePDU(PDU *pdu, int sock) {
 	ErrorData *errorData;
 	uchar buffer[4];
 	uint i;
+
+	// get length set correctly for error reports
+	if (pdu->pduType == PDU_ERROR_REPORT) {
+		errorData = (ErrorData *) pdu->typeSpecificData;
+		pdu->length = 16 + strlen(errorData->errorText) +
+			(errorData->badPDU ? errorData->badPDU->length: 0);
+	}
 
 	// send header
 	WRITE_BYTE(pdu->protocolVersion);

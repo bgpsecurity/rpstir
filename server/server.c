@@ -192,6 +192,7 @@ static void handleResetQuery() {
 int main(int argc, char **argv) {
 	int listenSock;
 	PDU *request;
+	ErrorData errorData;
 	char msg[1024];
 
 	// initialize the database connection
@@ -225,8 +226,15 @@ int main(int argc, char **argv) {
 			handleResetQuery();
 			break;
 		default:
-			// ???????? error response ?????????
-			printf("Cannot handle request of type %d\n", request->pduType);
+			fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
+			response.typeSpecificData = &errorData;
+			errorData.badPDU = request;
+			snprintf(msg, sizeof(msg),
+					 "Cannot handle request of type %d\n", request->pduType);
+			errorData.errorText = msg;
+			if (writePDU(&response, sock) == -1) {
+				printf("Error writing error report\n");
+			}
 		}
 		freePDU(request);
 		close(sock);

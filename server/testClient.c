@@ -134,6 +134,27 @@ int main(int argc, char **argv) {
 	}
 	close(sock);
 	freePDU(response);
+	printf("\nDoing illegal request\n");
+	if ((sock = getClientSocket("localhost")) == -1) {
+		printf ("Error opening socket\n");
+		return -1;
+	}
+	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
+	if (writePDU(&request, sock) == -1) {
+		printf ("Error writing end of data\n");
+		return -1;
+	}
+	if (! (response = readPDU(sock))) {
+		printf ("Error reading error report\n");
+		return -1;
+	}
+	if (response->pduType != PDU_ERROR_REPORT) {
+		printf ("Was expecting error report, got %d\n", response->pduType);
+		return -1;
+	}
+	printf("Error text = %s\n",
+		   ((ErrorData *)response->typeSpecificData)->errorText);
+	close(sock);
 	printf("Completed successfully\n");
 	return 1;
 }
