@@ -32,10 +32,9 @@
 #include <string.h>
 
 
-/****** ???????????????? need to send error pdu's ???????????? *****/
-
 #define CHECK_READ(s) \
 	if ((s) <= 0) { \
+		snprintf(errMsg, 128, "Badly formatted PDU\n"); \
 		freePDU(pdu); \
 		return NULL; \
 	}
@@ -50,7 +49,7 @@
 	CHECK_READ(recv(sock, &(i), 4, 0)); \
 	i = ntohl(i); }
 
-PDU *readPDU(int sock) {
+PDU *readPDU(int sock, char *errMsg) {
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
@@ -64,8 +63,9 @@ PDU *readPDU(int sock) {
 	READ_INT(pdu->length);
 	expectedLen = lengthForType(pdu->pduType);
 	if ((expectedLen != -1) && (pdu->length != expectedLen)) {
-		printf("Error: was expecting length %d not %d for pdu type %d\n",
-			   expectedLen, pdu->length, pdu->pduType);	
+		snprintf(errMsg, 128,
+				 "Error: was expecting length %d not %d for pdu type %d\n",
+				 expectedLen, pdu->length, pdu->pduType);	
 		freePDU(pdu);
 		return NULL;
 	}
@@ -101,8 +101,9 @@ PDU *readPDU(int sock) {
 		errorData = calloc(1, sizeof(ErrorData));
 		pdu->typeSpecificData = errorData;
 		READ_INT(len);
-		errorData->badPDU = readPDU(sock);
+		errorData->badPDU = readPDU(sock, errMsg);
 		if ((! errorData->badPDU) || (errorData->badPDU->length != len)) {
+			snprintf(errMsg, 128, "Bad PDU length in error reply\n");
 			freePDU(pdu);
 			return NULL;
 		}
@@ -119,8 +120,8 @@ PDU *readPDU(int sock) {
 	}
 
 	// handle case with unknown type
+	snprintf(errMsg, 128, "Unknown pdu type %d received\n", pdu->pduType);
 	freePDU(pdu);
-	printf ("Unknown pdu type %d received\n", pdu->pduType);
 	return NULL;
 }
 
@@ -200,7 +201,14 @@ int writePDU(PDU *pdu, int sock) {
 
 
 void freePDU(PDU *pdu) {
-	if (pdu->typeSpecificData) free(pdu->typeSpecificData);
+	if (pdu->typeSpecificData) {
+		free(pdu->typeSpecificData);
+		if (pdu->pduType == PDU_ERROR_REPORT) {
+			ErrorData *errData = (ErrorData *)pdu->typeSpecificData;
+			if (errData->badPDU) freePDU(errData->badPDU);
+			if (errData->errorText) free(errData->errorText);
+		}
+	}
 	free(pdu);
 }
 

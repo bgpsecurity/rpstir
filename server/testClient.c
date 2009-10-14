@@ -36,8 +36,9 @@ static int readResponses(int sock) {
 	PDU *response;
 	int i;
 	IPPrefixData *prefixData;
+	char msg[256];
 
-	if (! (response = readPDU(sock))) {
+	if (! (response = readPDU(sock, msg))) {
 		printf ("Error reading cache response\n");
 		return -1;
 	}
@@ -46,9 +47,9 @@ static int readResponses(int sock) {
 		return -1;
 	}
 	freePDU(response);
-	for (response = readPDU(sock);
+	for (response = readPDU(sock, msg);
 		 response && (response->pduType != PDU_END_OF_DATA);
-		 response = readPDU(sock)) {
+		 response = readPDU(sock, msg)) {
 		prefixData = (IPPrefixData *) response->typeSpecificData;
 		if (response->pduType == PDU_IPV4_PREFIX) {
 			printf("Received pdu of type IPv4 prefix\naddr = ");
@@ -82,6 +83,7 @@ static int readResponses(int sock) {
 int main(int argc, char **argv) {
 	int sock;
 	PDU request, *response;
+	char msg[256];
 
 	printf("\nDoing reset query\n");
 	if ((sock = getClientSocket("localhost")) == -1) {
@@ -124,7 +126,7 @@ int main(int argc, char **argv) {
 		printf ("Error writing serial query\n");
 		return -1;
 	}
-	if (! (response = readPDU(sock))) {
+	if (! (response = readPDU(sock, msg))) {
 		printf ("Error reading cache reset\n");
 		return -1;
 	}
@@ -144,7 +146,7 @@ int main(int argc, char **argv) {
 		printf ("Error writing end of data\n");
 		return -1;
 	}
-	if (! (response = readPDU(sock))) {
+	if (! (response = readPDU(sock, msg))) {
 		printf ("Error reading error report\n");
 		return -1;
 	}

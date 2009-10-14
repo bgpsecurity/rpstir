@@ -42,8 +42,21 @@ static scmtab   *incrTable = NULL;
 
 static int sock;
 static PDU response;
-static ErrorData errorData;
 static IPPrefixData prefixData;
+
+
+/* send an error report PDU to the client */
+static void sendErrorReport(PDU *request, int type, char *msg) {
+	ErrorData errorData;
+	fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
+	response.color = type;
+	response.typeSpecificData = &errorData;
+	errorData.badPDU = request;
+	errorData.errorText = msg;
+	if (writePDU(&response, sock) == -1) {
+		printf("Error writing error report, text = %s\n", msg);
+	}
+}
 
 /* callback that sends a single address to the client */
 static int sendResponse(scmsrcha *s, char isAnnounce) {
@@ -165,16 +178,9 @@ static void handleResetQuery(PDU *request) {
 
 	// handle error condition when no data yet in database
 	if (serialNum == 0) {
-		fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
-		response.color = ERR_NO_DATA;
-		response.typeSpecificData = &errorData;
-		errorData.badPDU = request;
 		snprintf(msg, sizeof(msg),
 				 "First database update has not yet been performed\n");
-		errorData.errorText = msg;
-		if (writePDU(&response, sock) == -1) {
-			printf("Error writing error report, no data for reset query\n");
-		}
+		sendErrorReport(request, ERR_NO_DATA, msg);
 		return;
 	}
 
@@ -207,6 +213,7 @@ static void handleResetQuery(PDU *request) {
 	}
 }
 
+
 int main(int argc, char **argv) {
 	int listenSock;
 	PDU *request;
@@ -229,9 +236,9 @@ int main(int argc, char **argv) {
 			printf("Error opening server socket\n");
 			continue;
 		}
-		request = readPDU(sock);
+		request = readPDU(sock, msg);
 		if (! request) {
-			printf("Error reading request\n");
+			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
 			close(sock);
 			continue;
 		}
@@ -243,16 +250,9 @@ int main(int argc, char **argv) {
 			handleResetQuery(request);
 			break;
 		default:
-			fillInPDUHeader(&response, PDU_ERROR_REPORT, 0);
-			response.color = ERR_INVALID_REQUEST;
-			response.typeSpecificData = &errorData;
-			errorData.badPDU = request;
 			snprintf(msg, sizeof(msg),
 					 "Cannot handle request of type %d\n", request->pduType);
-			errorData.errorText = msg;
-			if (writePDU(&response, sock) == -1) {
-				printf("Error writing error report, bad request type\n");
-			}
+			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
 		}
 		freePDU(request);
 		close(sock);

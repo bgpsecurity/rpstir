@@ -93,9 +93,10 @@ typedef struct _ErrorData {
 /*****
  * read a PDU from a socket, waiting until there is data on the socket
  *   returns a NULL PDU on error
+ * Arg: errMsg - provide a buffer where any error message can be returned
  * Remember to free the PDU returned when done with it
  *****/
-PDU *readPDU(int sock);
+PDU *readPDU(int sock, char *errMsg);
 
 /*****
  * write a PDU to a socket, returning a non-zero value for an error
