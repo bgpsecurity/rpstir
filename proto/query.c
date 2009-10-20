@@ -352,7 +352,7 @@ static int listOptions()
             BAD_OBJECT_TYPE);
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
-  for (i = 0; i < countof(getFields()); i++) {
+  for (i = 0; i < getNumFields(); i++) {
     if (getFields()[i].description == NULL) continue;
     if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
 	((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
@@ -374,7 +374,7 @@ static int addAllFields(char *displays[], int numDisplays)
 {
   int i;
 
-  for (i = 0; i < countof(getFields()); ++i) {
+  for (i = 0; i < getNumFields(); ++i) {
     if (getFields()[i].description == NULL) continue;
     if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
 	((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||

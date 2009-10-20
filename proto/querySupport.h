@@ -71,6 +71,11 @@ extern QueryField *findField (char *name);
  ******/
 extern QueryField *getFields(void);
 
+/******
+ * The total number of fields
+ ******/
+extern int getNumFields(void);
+
 /*****
  * check the valdity via the db of the cert whose ski or localID is given
  *****/

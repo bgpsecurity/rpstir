@@ -457,3 +457,5 @@ QueryField *findField (char *name)
 }
 
 QueryField *getFields() { return fields; }
+
+int getNumFields() { return countof(fields); }
