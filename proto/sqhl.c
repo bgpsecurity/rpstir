@@ -22,6 +22,7 @@
 #include "diru.h"
 #include "myssl.h"
 #include "err.h"
+#include "rpwork.h"
 
 #include "roa_utils.h"
 
@@ -670,6 +671,54 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
     strncpy(*pathname, ofullname, PATH_MAX);
   return readCertFromFile(ofullname, stap);
 }
+
+static scmsrcha *certSrch = NULL;
+static char *certDir, *certFile, *certSKI;
+
+struct cert_answers cert_answers;
+ 
+static int addCert2List (scmcon *conp, scmsrcha *s, int idx)
+  {
+  UNREFERENCED_PARAMETER(conp);
+  UNREFERENCED_PARAMETER(idx);
+  if (!cert_answers.num_ansrs) cert_answers.cert_ansrp = (struct cert_ansr *)
+    calloc(1, sizeof(struct cert_ansr));
+  else cert_answers.cert_ansrp = (struct cert_ansr *)
+    realloc(cert_answers.cert_ansrp, 
+    sizeof (struct cert_ansr) * (cert_answers.num_ansrs + 1));
+  struct cert_ansr *this_ansrp = 
+    &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
+  snprintf(this_ansrp->fullname, PATH_MAX, "%s/%s", certDir, certFile);
+  this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
+  return 0;
+  }
+
+int find_cert_by_SKI(char *ski, scmcon *conp)
+  {
+  int sta;
+  if (certSrch == NULL)
+    {
+    certSrch = newsrchscm(NULL, 4, 0, 1);
+    ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, -1);
+    ADDCOL(certSrch, "dirname",  SQL_C_CHAR, DNAMESIZE, sta, -1);
+    ADDCOL(certSrch, "flags",  SQL_C_ULONG, sizeof(unsigned int), sta, -1);
+    ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, -1);
+    certFile = (char *)certSrch->vec[0].valptr;
+    certDir  = (char *)certSrch->vec[1].valptr;
+    certSKI  = (char *)certSrch->vec[3].valptr;
+    }
+
+  sta = 0;
+  snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
+  addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+  addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN,   0, 1);
+  sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
+    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+  if (sta < 0) return sta;
+  char ofullname[PATH_MAX];
+  snprintf(ofullname, PATH_MAX, "%s/%s", certDir, certFile);
+  return 1;
+  }
 
 // static variables for efficiency, so only need to set up query once
 
@@ -1870,7 +1919,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   for(extp = (struct Extension *)member_casn(&exts->self, 0);
       extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
       extp = (struct Extension *)next_of(&extp->self));
-  if (!extp) 
+  if (!extp)
     {
     delete_casn(&roa.self);
     return ERR_SCM_NOSKI;
@@ -1922,14 +1971,14 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     }
     thisUpdate = UnixTimeToDBTime(ltime, &sta);
-  
+
     read_casn_time (&manifest->nextUpdate, &ltime);
     if ( sta < 0 ) {
       fprintf(stderr, "Could not read time for nextUpdate\n");
       break;
     }
     nextUpdate = UnixTimeToDBTime(ltime, &sta);
-  
+
     if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id))
       < 0) break;
     man_id++;
@@ -1937,11 +1986,11 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   			       utrust, typ)) != 0) break;
     }
   while(0);
-  if (sta < 0) 
+  if (sta < 0)
     {
     delete_casn(&roa.self);
     return sta;
-    } 
+    }
   // initialize query first time through
   if (embedCertSrch == NULL) {
     embedCertSrch = newsrchscm(NULL, 4, 0, 1);
@@ -1997,7 +2046,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   do
     {
     if ((sta = insertscm(conp, theManifestTable, &aone)) < 0) break;
-  
+
     // if the manifest is valid, update its referenced objects accordingly
     if (manValid && (sta = updateManifestObjs(conp, manifest)) < 0) break;
     }
