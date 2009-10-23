@@ -25,7 +25,7 @@
  ***************/
 
 #include "pdu.h"
-#include <sys/socket.h>
+#include "sshComms.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
@@ -39,17 +39,17 @@
 		return NULL; \
 	}
 
-#define READ_BYTE(b) CHECK_READ(recv(sock, &(b), 1, 0))
+#define READ_BYTE(b) CHECK_READ(sshReceive(session, &(b), 1))
 
 #define READ_SHORT(i) { \
-	CHECK_READ(recv(sock, &(i), 2, 0)); \
+	CHECK_READ(sshReceive(session, &(i), 2)); \
 	i = ntohs(i); }
 
 #define READ_INT(i) { \
-	CHECK_READ(recv(sock, &(i), 4, 0)); \
+	CHECK_READ(sshReceive(session, &(i), 4)); \
 	i = ntohl(i); }
 
-PDU *readPDU(int sock, char *errMsg) {
+PDU *readPDU(CRYPT_SESSION session, char *errMsg) {
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
@@ -101,7 +101,7 @@ PDU *readPDU(int sock, char *errMsg) {
 		errorData = calloc(1, sizeof(ErrorData));
 		pdu->typeSpecificData = errorData;
 		READ_INT(len);
-		errorData->badPDU = readPDU(sock, errMsg);
+		errorData->badPDU = readPDU(session, errMsg);
 		if ((! errorData->badPDU) || (errorData->badPDU->length != len)) {
 			snprintf(errMsg, 128, "Bad PDU length in error reply\n");
 			freePDU(pdu);
@@ -126,19 +126,19 @@ PDU *readPDU(int sock, char *errMsg) {
 }
 
 
-#define CHECK_WRITE(s) if ((s) <= 0) return 0;
+#define CHECK_WRITE(s) if ((s) <= 0) return -1;
 
-#define WRITE_BYTE(b) CHECK_WRITE(send(sock, &(b), 1, 0));
+#define WRITE_BYTE(b) CHECK_WRITE(sshCollect(session, &(b), 1));
 
 #define WRITE_SHORT(i) { \
 	*((short *) buffer) = htons(i); \
-	CHECK_WRITE(send(sock, buffer, 2, 0)); }
+	CHECK_WRITE(sshCollect(session, buffer, 2)); }
 
 #define WRITE_INT(i) { \
 	*((uint *) buffer) = htonl(i); \
-	CHECK_WRITE(send(sock, buffer, 4, 0)); }
+	CHECK_WRITE(sshCollect(session, buffer, 4)); }
 
-int writePDU(PDU *pdu, int sock) {
+static int writePDU2(PDU *pdu, CRYPT_SESSION session, int topLevel) {
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
 	uchar buffer[4];
@@ -162,13 +162,13 @@ int writePDU(PDU *pdu, int sock) {
 	case PDU_RESET_QUERY:
 	case PDU_CACHE_RESPONSE:
 	case PDU_CACHE_RESET:
-		return 1;
+		break;
 	case PDU_SERIAL_NOTIFY:
 	case PDU_SERIAL_QUERY:
 	case PDU_END_OF_DATA:
 		i = *((uint *) pdu->typeSpecificData);
 		WRITE_INT(i);
-		return 1;
+		break;
 	case PDU_IPV4_PREFIX:
 	case PDU_IPV6_PREFIX:
 		prefixData = (IPPrefixData *) pdu->typeSpecificData;
@@ -180,25 +180,31 @@ int writePDU(PDU *pdu, int sock) {
 			WRITE_INT(prefixData->ipAddress[i]);
 		}
 		WRITE_INT(prefixData->asNumber);
-		return 1;
+		break;
 	case PDU_ERROR_REPORT:
 		errorData = (ErrorData *) pdu->typeSpecificData;
 		if (! errorData->badPDU) {
 			WRITE_INT(0);
 		} else {
 			WRITE_INT(errorData->badPDU->length);
-			if (! writePDU(errorData->badPDU, sock)) return 0;
+			if (writePDU2(errorData->badPDU, session, 0) < 0) return -1;
 		}
 		WRITE_INT(strlen(errorData->errorText));
 		for (i = 0; i < strlen(errorData->errorText); i++) {
 			WRITE_BYTE(errorData->errorText[i]);
 		}
-		return 1;
+		break;
 	}
 
+	if (topLevel && (sshSendCollected(session) < 0)) {
+		return -1;
+	}
 	return 0;
 }
 
+int writePDU(PDU *pdu, CRYPT_SESSION session) {
+	return writePDU2(pdu, session, 1);
+}
 
 void freePDU(PDU *pdu) {
 	if (pdu->typeSpecificData) {

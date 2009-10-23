@@ -27,6 +27,8 @@
 #ifndef _PDU_H
 #define _PDU_H
 
+#include <cryptlib.h>
+
 /*****
  * Different PDU types
  *****/
@@ -91,17 +93,17 @@ typedef struct _ErrorData {
 } ErrorData;
 
 /*****
- * read a PDU from a socket, waiting until there is data on the socket
+ * read a PDU from a SSH session, waiting until there is data on the socket
  *   returns a NULL PDU on error
  * Arg: errMsg - provide a buffer where any error message can be returned
  * Remember to free the PDU returned when done with it
  *****/
-PDU *readPDU(int sock, char *errMsg);
+PDU *readPDU(CRYPT_SESSION session, char *errMsg);
 
 /*****
- * write a PDU to a socket, returning a non-zero value for an error
+ * write a PDU to a SSH session, returning a non-zero value for an error
  *****/
-int writePDU(PDU *pdu, int sock);
+int writePDU(PDU *pdu, CRYPT_SESSION session);
 
 /*****
  * free a PDU returned from readPDU

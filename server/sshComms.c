@@ -99,7 +99,6 @@ int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname) {
 
 
 int sshCloseSession(CRYPT_SESSION session) {
-	printf("closing\n");
 	return cryptDestroySession(session);
 }
 

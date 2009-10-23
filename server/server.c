@@ -24,10 +24,10 @@
  ***********************/
 
 #include "pdu.h"
-#include "socket.h"
 #include "err.h"
 #include "rtrUtils.h"
 #include "querySupport.h"
+#include "sshComms.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ static scmtab   *fullTable = NULL;
 static scmsrcha *incrSrch = NULL;
 static scmtab   *incrTable = NULL;
 
-static int sock;
+static CRYPT_SESSION session;
 static PDU response;
 static IPPrefixData prefixData;
 
@@ -53,7 +53,7 @@ static void sendErrorReport(PDU *request, int type, char *msg) {
 	response.typeSpecificData = &errorData;
 	errorData.badPDU = request;
 	errorData.errorText = msg;
-	if (writePDU(&response, sock) == -1) {
+	if (writePDU(&response, session) == -1) {
 		printf("Error writing error report, text = %s\n", msg);
 	}
 }
@@ -102,7 +102,7 @@ static int sendResponse(scmsrcha *s, char isAnnounce) {
 	if (ptr2) *ptr2 = '\0';
 	prefixData.prefixLength = atoi(ptr1);
 	prefixData.maxLength = ptr2 ? atoi(ptr2+1) : prefixData.prefixLength;
-	if (writePDU(&response, sock) == -1) {
+	if (writePDU(&response, session) == -1) {
 	  printf("Error writing response\n");
 	  return -1;
 	}
@@ -130,14 +130,14 @@ static void handleSerialQuery(PDU *request) {
 	// in this case, send cache reset response
 	if (! newSNs) {
 		fillInPDUHeader(&response, PDU_CACHE_RESET, 1);
-		if (writePDU(&response, sock) == -1) {
+		if (writePDU(&response, session) == -1) {
 			printf("Error writing cache reset response\n");
 		}
 		return;
 	}
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
-	if (writePDU(&response, sock) == -1) {
+	if (writePDU(&response, session) == -1) {
 		printf("Error writing cache response\n");
 		return;
 	}
@@ -164,7 +164,7 @@ static void handleSerialQuery(PDU *request) {
 	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
 	response.typeSpecificData = &newSNs[i-1];
-	if (writePDU(&response, sock) == -1) {
+	if (writePDU(&response, session) == -1) {
 		printf("Error writing end of data\n");
 		return;
 	}
@@ -185,7 +185,7 @@ static void handleResetQuery(PDU *request) {
 	}
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
-	if (writePDU(&response, sock) == -1) {
+	if (writePDU(&response, session) == -1) {
 		printf("Error writing cache response\n");
 		return;
 	}
@@ -207,39 +207,33 @@ static void handleResetQuery(PDU *request) {
 	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
 	response.typeSpecificData = &serialNum;
-	if (writePDU(&response, sock) == -1) {
+	if (writePDU(&response, session) == -1) {
 		printf("Error writing end of data\n");
 		return;
 	}
 }
 
 
+#define checkSSH(s, args...) if ((s) < 0) { printf(args); return -1; }
+
 int main(int argc, char **argv) {
-	int listenSock;
 	PDU *request;
 	char msg[256];
 
-	// initialize the database connection
+	// initialize the database connection and SSH library
 	scmp = initscm();
 	checkErr(scmp == NULL, "Cannot initialize database schema\n");
 	connect = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
-
-	// start listening on server socket
-	if ((listenSock = getListenerSocket()) == -1) {
-		printf("Error opening listener socket\n");
-		return -1;
-	}
+	checkSSH(initSSH(), "Error initializing SSH\n");
 
 	while (1) {
-		if ((sock = getServerSocket(listenSock)) == -1) {
-			printf("Error opening server socket\n");
-			continue;
-		}
-		request = readPDU(sock, msg);
+		checkSSH(sshOpenServerSession(&session),
+				 "Error opening server session\n");
+		request = readPDU(session, msg);
 		if (! request) {
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
-			close(sock);
+			sshCloseSession(session);
 			continue;
 		}
 		switch (request->pduType) {
@@ -255,7 +249,7 @@ int main(int argc, char **argv) {
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
 		}
 		freePDU(request);
-		close(sock);
+		sshCloseSession(session);
 	}
 	return 1;
 }

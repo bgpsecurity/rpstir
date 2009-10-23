@@ -25,20 +25,20 @@
  ***********************/
 
 #include "pdu.h"
-#include "socket.h"
+#include "sshComms.h"
 #include <stdio.h>
 
 static int getBits(uint val, uint start, uint len) {
 	return (val << start) >> (32 - len);
 }
 
-static int readResponses(int sock) {
+static int readResponses(CRYPT_SESSION session) {
 	PDU *response;
 	int i;
 	IPPrefixData *prefixData;
 	char msg[256];
 
-	if (! (response = readPDU(sock, msg))) {
+	if (! (response = readPDU(session, msg))) {
 		printf ("Error reading cache response\n");
 		return -1;
 	}
@@ -47,9 +47,9 @@ static int readResponses(int sock) {
 		return -1;
 	}
 	freePDU(response);
-	for (response = readPDU(sock, msg);
+	for (response = readPDU(session, msg);
 		 response && (response->pduType != PDU_END_OF_DATA);
-		 response = readPDU(sock, msg)) {
+		 response = readPDU(session, msg)) {
 		prefixData = (IPPrefixData *) response->typeSpecificData;
 		if (response->pduType == PDU_IPV4_PREFIX) {
 			printf("Received pdu of type IPv4 prefix\naddr = ");
@@ -80,53 +80,39 @@ static int readResponses(int sock) {
 	return 0;
 }
 
+
+#define checkSSH(s, args...) if ((s) < 0) { printf(args); return -1; }
+
 int main(int argc, char **argv) {
-	int sock;
+	CRYPT_SESSION session;
 	PDU request, *response;
 	char msg[256];
 
+	checkSSH(initSSH(), "Error initializing SSH\n");
+
 	printf("\nDoing reset query\n");
-	if ((sock = getClientSocket("localhost")) == -1) {
-		printf ("Error opening socket\n");
-		return -1;
-	}
+	checkSSH(sshOpenClientSession(&session, "localhost"),
+			 "Error opening client session\n");
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-	if (writePDU(&request, sock) == -1) {
-		printf ("Error writing reset query\n");
-		return -1;
-	}
-	if (readResponses(sock) < 0) {
-		printf("Failed on reset query\n");
-		return -1;
-	}
-	close(sock);
+	checkSSH(writePDU(&request, session), "Error writing reset query\n");
+	checkSSH(readResponses(session), "Failed on reset query\n");
+	sshCloseSession(session);
+
 	printf("\n\nDoing serial query\n");
-	if ((sock = getClientSocket("localhost")) == -1) {
-		printf ("Error opening socket\n");
-		return -1;
-	}
+	checkSSH(sshOpenClientSession(&session, "localhost"),
+			 "Error opening client session\n");
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
 	*((uint *) request.typeSpecificData) = 1;
-	if (writePDU(&request, sock) == -1) {
-		printf ("Error writing serial query\n");
-		return -1;
-	}
-	if (readResponses(sock) < 0) {
-		printf("Failed on serial query\n");
-		return -1;
-	}
-	close(sock);
+	checkSSH(writePDU(&request, session), "Error writing serial query\n");
+	checkSSH(readResponses(session), "Failed on serial query\n");
+	sshCloseSession(session);
+
 	printf("\nDoing serial query with reset response\n");
-	if ((sock = getClientSocket("localhost")) == -1) {
-		printf ("Error opening socket\n");
-		return -1;
-	}
+	checkSSH(sshOpenClientSession(&session, "localhost"),
+			 "Error opening client session\n");
 	*((uint *) request.typeSpecificData) = 8723;
-	if (writePDU(&request, sock) == -1) {
-		printf ("Error writing serial query\n");
-		return -1;
-	}
-	if (! (response = readPDU(sock, msg))) {
+	checkSSH(writePDU(&request, session), "Error writing serial query\n");
+	if (! (response = readPDU(session, msg))) {
 		printf ("Error reading cache reset\n");
 		return -1;
 	}
@@ -134,19 +120,15 @@ int main(int argc, char **argv) {
 		printf ("Was expecting cache reset, got %d\n", response->pduType);
 		return -1;
 	}
-	close(sock);
+	sshCloseSession(session);
 	freePDU(response);
+
 	printf("\nDoing illegal request\n");
-	if ((sock = getClientSocket("localhost")) == -1) {
-		printf ("Error opening socket\n");
-		return -1;
-	}
+	checkSSH(sshOpenClientSession(&session, "localhost"),
+			 "Error opening client session\n");
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
-	if (writePDU(&request, sock) == -1) {
-		printf ("Error writing end of data\n");
-		return -1;
-	}
-	if (! (response = readPDU(sock, msg))) {
+	checkSSH(writePDU(&request, session), "Error writing end of data\n");
+	if (! (response = readPDU(session, msg))) {
 		printf ("Error reading error report\n");
 		return -1;
 	}
@@ -156,7 +138,8 @@ int main(int argc, char **argv) {
 	}
 	printf("Error text = %s\n",
 		   ((ErrorData *)response->typeSpecificData)->errorText);
-	close(sock);
+	sshCloseSession(session);
+
 	printf("Completed successfully\n");
 	return 1;
 }
