@@ -24,6 +24,9 @@
  *  and the clients
  *************************/
 
+#ifndef _SSHCOMMS_H
+#define _SSHCOMMS_H
+
 #include <cryptlib.h>
 
 /******
@@ -45,11 +48,17 @@ int sshOpenServerSession(CRYPT_SESSION *sessionp);
  ******/
 int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname);
 
+/**********
+ * close an ssh session
+ * Returns 0 on success, negative number on error
+ ******/
+int sshCloseSession(CRYPT_SESSION session);
+
 /******
  * Accumulate data to send across the ssh connection
  * Returns number of bytes accepted on success, negative number on error
  ******/
-int sshCollect(CRYPT_SESSION session, char *data, int numBytes);
+int sshCollect(CRYPT_SESSION session, void *data, int numBytes);
 
 /******
  * Send all accumulated data across the ssh connection
@@ -61,4 +70,6 @@ int sshSendCollected(CRYPT_SESSION session);
  * Read data from the ssh connection
  * Returns number of bytes read on success, negative number on error
  ******/
-int sshReceive(CRYPT_SESSION session, char *buffer, int maxBytes);
+int sshReceive(CRYPT_SESSION session, void *buffer, int maxBytes);
+
+#endif

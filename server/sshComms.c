@@ -98,7 +98,13 @@ int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname) {
 }
 
 
-int sshCollect(CRYPT_SESSION session, char *data, int numBytes) {
+int sshCloseSession(CRYPT_SESSION session) {
+	printf("closing\n");
+	return cryptDestroySession(session);
+}
+
+
+int sshCollect(CRYPT_SESSION session, void *data, int numBytes) {
 	int num;
 	checkErr(cryptPushData(session, data, numBytes, &num), "writing data");
 	return num;
@@ -111,7 +117,7 @@ int sshSendCollected(CRYPT_SESSION session) {
 }
 
 
-int sshReceive(CRYPT_SESSION session, char *buffer, int maxBytes) {
+int sshReceive(CRYPT_SESSION session, void *buffer, int maxBytes) {
 	int num;
 	checkErr(cryptPopData(session, buffer, maxBytes, &num), "reading data");
 	return num;
