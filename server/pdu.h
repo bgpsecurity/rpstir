@@ -93,20 +93,26 @@ typedef struct _ErrorData {
 } ErrorData;
 
 /*****
- * read a PDU from a SSH session, waiting until there is data on the socket
+ * if using an SSH session for comms, indicate it by calling this function
+ * if using stdin/stdout for comms, do not call this function
+ *****/
+void setSession(CRYPT_SESSION session);
+
+/*****
+ * read a PDU from the SSH session, waiting until there is data on the socket
  *   returns a NULL PDU on error
  * Arg: errMsg - provide a buffer where any error message can be returned
  * Remember to free the PDU returned when done with it
  *****/
-PDU *readPDU(CRYPT_SESSION session, char *errMsg);
+PDU *readPDU(char *errMsg);
 
 /*****
- * write a PDU to a SSH session, returning a non-zero value for an error
+ * write a PDU to the SSH session, returning a non-zero value for an error
  *****/
-int writePDU(PDU *pdu, CRYPT_SESSION session);
+int writePDU(PDU *pdu);
 
 /*****
- * free a PDU returned from readPDU
+ * free a PDU returned from readPDU (does a deep free)
  *****/
 void freePDU(PDU *pdu);
 

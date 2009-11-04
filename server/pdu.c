@@ -31,6 +31,13 @@
 #include <netinet/in.h>
 #include <string.h>
 
+// global variable
+CRYPT_SESSION session;
+uchar sessionSet = 0;
+
+void setSession(CRYPT_SESSION s) {
+	session = s; sessionSet = 1;
+}
 
 /*****************
  * macros for reading
@@ -50,7 +57,7 @@
 #define READ_INT(i) { DO_READ(i, 4); i = ntohl(i); }
 
 
-PDU *readPDU(CRYPT_SESSION session, char *errMsg) {
+PDU *readPDU(char *errMsg) {
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
@@ -102,7 +109,7 @@ PDU *readPDU(CRYPT_SESSION session, char *errMsg) {
 		errorData = calloc(1, sizeof(ErrorData));
 		pdu->typeSpecificData = errorData;
 		READ_INT(len);
-		errorData->badPDU = readPDU(session, errMsg);
+		errorData->badPDU = readPDU(errMsg);
 		if ((! errorData->badPDU) || (errorData->badPDU->length != len)) {
 			snprintf(errMsg, 128, "Bad PDU length in error reply\n");
 			freePDU(pdu);
@@ -141,7 +148,7 @@ PDU *readPDU(CRYPT_SESSION session, char *errMsg) {
 #define WRITE_INT(i) { *((uint *) buffer) = htonl(i); DO_WRITE(buffer, 4) }
 
 
-static int writePDU2(PDU *pdu, CRYPT_SESSION session, int topLevel) {
+static int writePDU2(PDU *pdu, int topLevel) {
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
 	uchar buffer[4];
@@ -190,7 +197,7 @@ static int writePDU2(PDU *pdu, CRYPT_SESSION session, int topLevel) {
 			WRITE_INT(0);
 		} else {
 			WRITE_INT(errorData->badPDU->length);
-			if (writePDU2(errorData->badPDU, session, 0) < 0) return -1;
+			if (writePDU2(errorData->badPDU, 0) < 0) return -1;
 		}
 		WRITE_INT(strlen(errorData->errorText));
 		for (i = 0; i < strlen(errorData->errorText); i++) {
@@ -205,8 +212,8 @@ static int writePDU2(PDU *pdu, CRYPT_SESSION session, int topLevel) {
 	return 0;
 }
 
-int writePDU(PDU *pdu, CRYPT_SESSION session) {
-	return writePDU2(pdu, session, 1);
+int writePDU(PDU *pdu) {
+	return writePDU2(pdu, 1);
 }
 
 void freePDU(PDU *pdu) {
