@@ -32,22 +32,23 @@
 #include <string.h>
 
 
-#define CHECK_READ(s) \
-	if ((s) <= 0) { \
+/*****************
+ * macros for reading
+ ****************/
+
+#define DO_READ(_loc, _sz)								\
+	if (sshReceive(session, &(_loc), _sz) <= 0) {		\
 		snprintf(errMsg, 128, "Badly formatted PDU\n"); \
-		freePDU(pdu); \
-		return NULL; \
+		freePDU(pdu);									\
+		return NULL;									\
 	}
 
-#define READ_BYTE(b) CHECK_READ(sshReceive(session, &(b), 1))
+#define READ_BYTE(b) DO_READ(b, 1)
 
-#define READ_SHORT(i) { \
-	CHECK_READ(sshReceive(session, &(i), 2)); \
-	i = ntohs(i); }
+#define READ_SHORT(i) { DO_READ(i, 2); i = ntohs(i); }
 
-#define READ_INT(i) { \
-	CHECK_READ(sshReceive(session, &(i), 4)); \
-	i = ntohl(i); }
+#define READ_INT(i) { DO_READ(i, 4); i = ntohl(i); }
+
 
 PDU *readPDU(CRYPT_SESSION session, char *errMsg) {
 	PDU *pdu = calloc(1, sizeof(PDU));
@@ -126,17 +127,19 @@ PDU *readPDU(CRYPT_SESSION session, char *errMsg) {
 }
 
 
-#define CHECK_WRITE(s) if ((s) <= 0) return -1;
+/*****************
+ * macros for writing
+ ****************/
 
-#define WRITE_BYTE(b) CHECK_WRITE(sshCollect(session, &(b), 1));
+#define DO_WRITE(_ptr, _sz) \
+	{ if (sshCollect(session, _ptr, _sz) <= 0) return -1; }
 
-#define WRITE_SHORT(i) { \
-	*((short *) buffer) = htons(i); \
-	CHECK_WRITE(sshCollect(session, buffer, 2)); }
+#define WRITE_BYTE(b) DO_WRITE(&(b), 1)
 
-#define WRITE_INT(i) { \
-	*((uint *) buffer) = htonl(i); \
-	CHECK_WRITE(sshCollect(session, buffer, 4)); }
+#define WRITE_SHORT(i) { *((short *) buffer) = htons(i); DO_WRITE(buffer, 2) }
+
+#define WRITE_INT(i) { *((uint *) buffer) = htonl(i); DO_WRITE(buffer, 4) }
+
 
 static int writePDU2(PDU *pdu, CRYPT_SESSION session, int topLevel) {
 	IPPrefixData *prefixData;
