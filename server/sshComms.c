@@ -85,6 +85,14 @@ int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname, int port) {
 	checkErr(cryptSetAttributeString
 			 (*sessionp, CRYPT_SESSINFO_PASSWORD, "root", 11),
 			 "setting password");
+	checkErr(cryptSetAttribute(*sessionp, CRYPT_SESSINFO_SSH_CHANNEL,
+							   CRYPT_UNUSED), "seetting channel");
+	checkErr(cryptSetAttributeString(*sessionp,
+									 CRYPT_SESSINFO_SSH_CHANNEL_TYPE,
+									 "subsystem", 9), "setting chan type");
+	checkErr(cryptSetAttributeString(*sessionp,
+									 CRYPT_SESSINFO_SSH_CHANNEL_ARG1,
+									 "rpki-rtr", 8), "setting arg1");
 	checkErr(cryptSetAttribute(*sessionp, CRYPT_SESSINFO_ACTIVE, 1),
 			 "doing SSH handshake");
 	return 0;

@@ -24,7 +24,6 @@
  ***********************/
 
 #include "pdu.h"
-#include "err.h"
 #include "rtrUtils.h"
 #include "querySupport.h"
 #include "sshComms.h"
@@ -214,8 +213,10 @@ static void handleResetQuery(PDU *request) {
 }
 
 
-#define checkSSH(s, args...) \
-	if ((s) < 0) { fprintf(logfile, args); return -1; }
+#define checkerr(test, args...) \
+	if (test) { fprintf(logfile, args); fflush(logfile); return -1; }
+
+#define checkSSH(s, args...) checkerr((s) < 0, args)
 
 int main(int argc, char **argv) {
 	CRYPT_SESSION session;
@@ -247,9 +248,9 @@ int main(int argc, char **argv) {
 
 	// initialize the database connection and SSH library
 	scmp = initscm();
-	checkErr(scmp == NULL, "Cannot initialize database schema\n");
+	checkerr(scmp == NULL, "Cannot initialize database schema\n");
 	connect = connectscm (scmp->dsn, msg, sizeof(msg));
-	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
+	checkerr(connect == NULL, "Cannot connect to database: %s\n", msg);
 	if (standalone) checkSSH(initSSH(), "Error initializing SSH\n");
 
 	while (1) {
@@ -261,7 +262,8 @@ int main(int argc, char **argv) {
 		request = readPDU(msg);
 		if (! request) {
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
-			if (standalone) sshCloseSession(session);
+			if (! standalone) break;
+			sshCloseSession(session);
 			continue;
 		}
 		switch (request->pduType) {
