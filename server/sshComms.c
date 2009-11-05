@@ -72,7 +72,8 @@ int sshOpenServerSession(CRYPT_SESSION *sessionp, int port) {
 }
 
 
-int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname, int port) {
+int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname,
+						 int port, char *username, char *password) {
 	checkErr(cryptCreateSession(sessionp, CRYPT_UNUSED,
 								CRYPT_SESSION_SSH), "creating session");
 	if (setCommonAttribs(*sessionp, port) < 0) return -1;
@@ -80,10 +81,10 @@ int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname, int port) {
 									 hostname, strlen(hostname)),
 			 "setting server");
 	checkErr(cryptSetAttributeString
-			 (*sessionp, CRYPT_SESSINFO_USERNAME, "root", 4),
+			 (*sessionp, CRYPT_SESSINFO_USERNAME, username, strlen(username)),
 			 "setting username");
 	checkErr(cryptSetAttributeString
-			 (*sessionp, CRYPT_SESSINFO_PASSWORD, "root", 11),
+			 (*sessionp, CRYPT_SESSINFO_PASSWORD, password, strlen(password)),
 			 "setting password");
 	checkErr(cryptSetAttribute(*sessionp, CRYPT_SESSINFO_SSH_CHANNEL,
 							   CRYPT_UNUSED), "seetting channel");

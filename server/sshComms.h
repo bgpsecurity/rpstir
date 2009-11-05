@@ -50,7 +50,8 @@ int sshOpenServerSession(CRYPT_SESSION *sessionp, int port);
  * Argument: hostname, port - host name and port of the server
  * Returns 0 on success, negative number on error
  ******/
-int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname, int port);
+int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname,
+						 int port, char *username, char *password);
 
 /**********
  * close an ssh session

@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
 static int getBits(uint val, uint start, uint len) {
 	return (val << start) >> (32 - len);
@@ -102,10 +104,25 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	char user[128], passwd[128];
+	printf("Enter username: ");
+    fgets(user, sizeof(user), stdin);
+	user[strlen(user)-1] = 0;
+	printf("Enter password: ");
+    struct termios oldt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    struct termios newt = oldt;
+    newt.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    fgets(passwd, sizeof(passwd), stdin);
+	passwd[strlen(passwd)-1] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	printf("\n");
+
 	checkSSH(initSSH(), "Error initializing SSH\n");
 
 	printf("\nDoing reset query\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port),
+	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
 			 "Error opening client session\n");
 	setSession(session);
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
@@ -114,7 +131,7 @@ int main(int argc, char **argv) {
 	sshCloseSession(session);
 
 	printf("\n\nDoing serial query\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port),
+	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
 			 "Error opening client session\n");
 	setSession(session);
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
@@ -124,7 +141,7 @@ int main(int argc, char **argv) {
 	sshCloseSession(session);
 
 	printf("\nDoing serial query with reset response\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port),
+	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
 			 "Error opening client session\n");
 	setSession(session);
 	*((uint *) request.typeSpecificData) = 8723;
@@ -141,7 +158,7 @@ int main(int argc, char **argv) {
 	freePDU(response);
 
 	printf("\nDoing illegal request\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port),
+	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
 			 "Error opening client session\n");
 	setSession(session);
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
