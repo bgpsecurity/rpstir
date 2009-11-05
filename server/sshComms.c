@@ -30,13 +30,6 @@
 	if (err != CRYPT_OK) { printf("Error %s:%d\n", (str), err); return err; }
 static int err;  // to be used with checkErr macro
 
-#define DEFAULT_SERVER_PORT 7455
-
-static int getPort() {
-	char *port = getenv ("RPKI_SERVER_PORT");
-	return port ? atoi(port) : DEFAULT_SERVER_PORT;
-}
-
 
 int initSSH() {
 	checkErr(cryptInit(), "initializing cryptlib");
@@ -44,7 +37,7 @@ int initSSH() {
 }
 
 
-static int setCommonAttribs(CRYPT_SESSION sess) {
+static int setCommonAttribs(CRYPT_SESSION sess, int port) {
 	CRYPT_CONTEXT privateKey;
 
 	cryptSetAttribute(sess, CRYPT_OPTION_NET_READTIMEOUT, 2);
@@ -60,16 +53,16 @@ static int setCommonAttribs(CRYPT_SESSION sess) {
 	checkErr(cryptSetAttribute(sess, CRYPT_SESSINFO_PRIVATEKEY,
 							   privateKey), "setting private key");
 
-	checkErr(cryptSetAttribute(sess, CRYPT_SESSINFO_SERVER_PORT,
-							   getPort()), "setting port");
+	checkErr(cryptSetAttribute(sess, CRYPT_SESSINFO_SERVER_PORT, port),
+			 "setting port");
 	return 0;
 }
 
 
-int sshOpenServerSession(CRYPT_SESSION *sessionp) {
+int sshOpenServerSession(CRYPT_SESSION *sessionp, int port) {
 	checkErr(cryptCreateSession(sessionp, CRYPT_UNUSED,
 								CRYPT_SESSION_SSH_SERVER), "creating session");
-	if (setCommonAttribs(*sessionp) < 0) return -1;
+	if (setCommonAttribs(*sessionp, port) < 0) return -1;
 
 	// eventually, do real authentication
 	cryptSetAttribute(*sessionp, CRYPT_SESSINFO_AUTHRESPONSE, 1);
@@ -79,10 +72,10 @@ int sshOpenServerSession(CRYPT_SESSION *sessionp) {
 }
 
 
-int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname) {
+int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname, int port) {
 	checkErr(cryptCreateSession(sessionp, CRYPT_UNUSED,
 								CRYPT_SESSION_SSH), "creating session");
-	if (setCommonAttribs(*sessionp) < 0) return -1;
+	if (setCommonAttribs(*sessionp, port) < 0) return -1;
 	checkErr(cryptSetAttributeString(*sessionp, CRYPT_SESSINFO_SERVER_NAME,
 									 hostname, strlen(hostname)),
 			 "setting server");

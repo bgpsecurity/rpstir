@@ -44,7 +44,9 @@ void setSession(CRYPT_SESSION s) {
  ****************/
 
 #define DO_READ(_loc, _sz)								\
-	if (sshReceive(session, &(_loc), _sz) <= 0) {		\
+	if ((sessionSet ?									\
+		 sshReceive(session, &(_loc), _sz) :			\
+		 fread(&(_loc), _sz, 1, stdin)) <= 0) {			\
 		snprintf(errMsg, 128, "Badly formatted PDU\n"); \
 		freePDU(pdu);									\
 		return NULL;									\
@@ -138,8 +140,10 @@ PDU *readPDU(char *errMsg) {
  * macros for writing
  ****************/
 
-#define DO_WRITE(_ptr, _sz) \
-	{ if (sshCollect(session, _ptr, _sz) <= 0) return -1; }
+#define DO_WRITE(_ptr, _sz)									\
+	{ if ((sessionSet ?										\
+		   sshCollect(session, _ptr, _sz) :					\
+		   fwrite(_ptr, _sz, 1, stdout)) <= 0) return -1; }
 
 #define WRITE_BYTE(b) DO_WRITE(&(b), 1)
 

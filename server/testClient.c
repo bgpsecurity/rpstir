@@ -27,6 +27,8 @@
 #include "pdu.h"
 #include "sshComms.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static int getBits(uint val, uint start, uint len) {
 	return (val << start) >> (32 - len);
@@ -87,11 +89,23 @@ int main(int argc, char **argv) {
 	CRYPT_SESSION session;
 	PDU request, *response;
 	char msg[256];
+	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-s") == 0) {
+			standalone = 1;
+		} else if (strcmp(argv[i], "-p") == 0) {
+			port = atoi(argv[++i]);
+		} else {
+			printf("Usage: server [-s] [-p port]\n");
+			return -1;
+		}
+	}
 
 	checkSSH(initSSH(), "Error initializing SSH\n");
 
 	printf("\nDoing reset query\n");
-	checkSSH(sshOpenClientSession(&session, "localhost"),
+	checkSSH(sshOpenClientSession(&session, "localhost", port),
 			 "Error opening client session\n");
 	setSession(session);
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
@@ -100,7 +114,7 @@ int main(int argc, char **argv) {
 	sshCloseSession(session);
 
 	printf("\n\nDoing serial query\n");
-	checkSSH(sshOpenClientSession(&session, "localhost"),
+	checkSSH(sshOpenClientSession(&session, "localhost", port),
 			 "Error opening client session\n");
 	setSession(session);
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
@@ -110,7 +124,7 @@ int main(int argc, char **argv) {
 	sshCloseSession(session);
 
 	printf("\nDoing serial query with reset response\n");
-	checkSSH(sshOpenClientSession(&session, "localhost"),
+	checkSSH(sshOpenClientSession(&session, "localhost", port),
 			 "Error opening client session\n");
 	setSession(session);
 	*((uint *) request.typeSpecificData) = 8723;
@@ -127,7 +141,7 @@ int main(int argc, char **argv) {
 	freePDU(response);
 
 	printf("\nDoing illegal request\n");
-	checkSSH(sshOpenClientSession(&session, "localhost"),
+	checkSSH(sshOpenClientSession(&session, "localhost", port),
 			 "Error opening client session\n");
 	setSession(session);
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);

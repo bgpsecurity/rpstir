@@ -42,6 +42,7 @@ static scmtab   *incrTable = NULL;
 
 static PDU response;
 static IPPrefixData prefixData;
+static FILE *logfile;
 
 
 /* send an error report PDU to the client */
@@ -213,28 +214,54 @@ static void handleResetQuery(PDU *request) {
 }
 
 
-#define checkSSH(s, args...) if ((s) < 0) { printf(args); return -1; }
+#define checkSSH(s, args...) \
+	if ((s) < 0) { fprintf(logfile, args); return -1; }
 
 int main(int argc, char **argv) {
 	CRYPT_SESSION session;
 	PDU *request;
 	char msg[256];
+	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
+	char *logFilename = "log.rtr.server";
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-s") == 0) {
+			standalone = 1;
+		} else if (strcmp(argv[i], "-l") == 0) {
+			logFilename = argv[++i];
+		} else if (strcmp(argv[i], "-p") == 0) {
+			port = atoi(argv[++i]);
+		} else {
+			printf("Usage: server [-s] [-l logfile] [-p port]\n");
+			return -1;
+		}
+	}
+
+	// open the log file
+	// ??????? add time to name so that unique ???????
+	logfile = fopen(logFilename, "w");
+	if (logfile == NULL) {
+		fprintf(stderr, "Could not open log file\n");
+		return -1;
+	}
 
 	// initialize the database connection and SSH library
 	scmp = initscm();
 	checkErr(scmp == NULL, "Cannot initialize database schema\n");
 	connect = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
-	checkSSH(initSSH(), "Error initializing SSH\n");
+	if (standalone) checkSSH(initSSH(), "Error initializing SSH\n");
 
 	while (1) {
-		checkSSH(sshOpenServerSession(&session),
-				 "Error opening server session\n");
-		setSession(session);
+		if (standalone) {
+			checkSSH(sshOpenServerSession(&session, port),
+					 "Error opening server session\n");
+			setSession(session);
+		}
 		request = readPDU(msg);
 		if (! request) {
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
-			sshCloseSession(session);
+			if (standalone) sshCloseSession(session);
 			continue;
 		}
 		switch (request->pduType) {
@@ -250,7 +277,7 @@ int main(int argc, char **argv) {
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
 		}
 		freePDU(request);
-		sshCloseSession(session);
+		if (standalone) sshCloseSession(session);
 	}
 	return 1;
 }

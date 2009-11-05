@@ -29,6 +29,9 @@
 
 #include <cryptlib.h>
 
+/* if running server standalone, default port number it listens on */
+#define DEFAULT_STANDALONE_PORT 7455
+
 /******
  * Initialize the SSH library, must call this once before anything else
  * Returns 0 on success, negative number on error
@@ -37,16 +40,17 @@ int initSSH(void);
 
 /******
  * Waits for a connection from a client and opens a SSH session
+ * Argument: port - port number to listen on
  * Returns 0 on success, negative number on error
  ******/
-int sshOpenServerSession(CRYPT_SESSION *sessionp);
+int sshOpenServerSession(CRYPT_SESSION *sessionp, int port);
 
 /******
  * Waits for a connection to a server and opens a SSH session
- * Argument: hostname - host name of the server
+ * Argument: hostname, port - host name and port of the server
  * Returns 0 on success, negative number on error
  ******/
-int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname);
+int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname, int port);
 
 /**********
  * close an ssh session
