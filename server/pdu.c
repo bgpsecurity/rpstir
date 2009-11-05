@@ -210,8 +210,12 @@ static int writePDU2(PDU *pdu, int topLevel) {
 		break;
 	}
 
-	if (topLevel && (sshSendCollected(session) < 0)) {
-		return -1;
+	if (topLevel) {
+		if (sessionSet) {
+			if (sshSendCollected(session) < 0) return -1;
+		} else {
+			fflush(stdout);
+		}
 	}
 	return 0;
 }
