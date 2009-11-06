@@ -30,13 +30,19 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <unistd.h>
 
-// global variable
+// global variables
 CRYPT_SESSION session;
 uchar sessionSet = 0;
+int readPipe = STDIN_FILENO, writePipe = STDOUT_FILENO;
 
 void setSession(CRYPT_SESSION s) {
 	session = s; sessionSet = 1;
+}
+
+void setPipes(int rp, int wp) {
+	readPipe = rp; writePipe = wp;
 }
 
 /*****************
@@ -46,7 +52,7 @@ void setSession(CRYPT_SESSION s) {
 #define DO_READ(_loc, _sz)								\
 	if ((sessionSet ?									\
 		 sshReceive(session, &(_loc), _sz) :			\
-		 fread(&(_loc), _sz, 1, stdin)) <= 0) {			\
+		 read(readPipe, &(_loc), _sz)) <= 0) {			\
 		snprintf(errMsg, 128, "Badly formatted PDU\n"); \
 		freePDU(pdu);									\
 		return NULL;									\
@@ -143,7 +149,7 @@ PDU *readPDU(char *errMsg) {
 #define DO_WRITE(_ptr, _sz)									\
 	{ if ((sessionSet ?										\
 		   sshCollect(session, _ptr, _sz) :					\
-		   fwrite(_ptr, _sz, 1, stdout)) <= 0) return -1; }
+		   write(writePipe,_ptr, _sz)) <= 0) return -1; }
 
 #define WRITE_BYTE(b) DO_WRITE(&(b), 1)
 
@@ -214,7 +220,7 @@ static int writePDU2(PDU *pdu, int topLevel) {
 		if (sessionSet) {
 			if (sshSendCollected(session) < 0) return -1;
 		} else {
-			fflush(stdout);
+			//flush(writePipe);
 		}
 	}
 	return 0;

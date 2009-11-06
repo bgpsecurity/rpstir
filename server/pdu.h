@@ -99,6 +99,12 @@ typedef struct _ErrorData {
 void setSession(CRYPT_SESSION session);
 
 /*****
+ * if using pipes for comms and want to specify other pipes besides
+ *   stdin and stdout, call this function
+ *****/
+void setPipes(int readPipe, int writePipe);
+
+/*****
  * read a PDU from the SSH session, waiting until there is data on the socket
  *   returns a NULL PDU on error
  * Arg: errMsg - provide a buffer where any error message can be returned

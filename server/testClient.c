@@ -114,8 +114,32 @@ static void doOpen(CRYPT_SESSION *sessionp, char *host, int port,
 	setSession(*sessionp);
 }
 
-static void initSSHProcess() {
-	printf("Not implemented!!!\n");
+/*****
+ * set up child process, set up pipes to have the parent able to
+ *   write to stdin of child and read from stdout, and have the child
+ *   run ssh while the parent returns after setting these pipes as
+ *   those used by the PDU reading and writing routines
+ *****/
+static void initSSHProcess(char *host) {
+	int writepipe[2] = {-1,-1}, readpipe[2] = {-1,-1};
+	pid_t childpid;
+	checkerr(pipe(readpipe) < 0  ||  pipe(writepipe) < 0,
+			 "Cannot create pipes\n");
+	checkerr(childpid = fork(), "Cannot fork child\n");
+	if ( childpid == 0 ) { /* in the child */
+		close(writepipe[1]);
+		close(readpipe[0]);
+		dup2(writepipe[0], STDIN_FILENO);  close(writepipe[0]);
+		dup2(readpipe[1], STDOUT_FILENO);  close(readpipe[1]);
+		char cmd[256];
+		snprintf(cmd, sizeof(cmd), "ssh -s %s rpki-rtr\n", host);
+		system(cmd);
+	}
+	else { /* in the parent */
+		close(readpipe[1]);
+		close(writepipe[0]);
+		setPipes(readpipe[0], writepipe[1]);
+	}
 }
 
 int main(int argc, char **argv) {
@@ -139,7 +163,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (standalone) initStandalone(user, passwd);
-	else initSSHProcess();
+	else initSSHProcess(host);
 
 	printf("\nDoing reset query\n");
 	if (standalone) doOpen(&session, host, port, user, passwd);
