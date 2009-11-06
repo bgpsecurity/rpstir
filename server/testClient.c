@@ -85,28 +85,12 @@ static int readResponses() {
 }
 
 
-#define checkSSH(s, args...) if ((s) < 0) { printf(args); return -1; }
+#define checkerr(s, args...) if ((s) < 0) { fprintf(stderr, args); exit(-1); }
 
-int main(int argc, char **argv) {
-	CRYPT_SESSION session;
-	PDU request, *response;
-	char msg[256];
-	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
-
-	for (i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "-s") == 0) {
-			standalone = 1;
-		} else if (strcmp(argv[i], "-p") == 0) {
-			port = atoi(argv[++i]);
-		} else {
-			printf("Usage: server [-s] [-p port]\n");
-			return -1;
-		}
-	}
-
-	char user[128], passwd[128];
+static void initStandalone(char *user, char *passwd) {
+	// get username and password
 	printf("Enter username: ");
-    fgets(user, sizeof(user), stdin);
+    fgets(user, 128, stdin);
 	user[strlen(user)-1] = 0;
 	printf("Enter password: ");
     struct termios oldt;
@@ -114,38 +98,68 @@ int main(int argc, char **argv) {
     struct termios newt = oldt;
     newt.c_lflag &= ~ECHO;
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    fgets(passwd, sizeof(passwd), stdin);
+    fgets(passwd, 128, stdin);
 	passwd[strlen(passwd)-1] = 0;
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 	printf("\n");
 
-	checkSSH(initSSH(), "Error initializing SSH\n");
+	// init cryptlib stuff
+	checkerr(initSSH(), "Error initializing SSH\n");
+}
+
+static void doOpen(CRYPT_SESSION *sessionp, char *host, int port,
+				   char *user, char *passwd) {
+	checkerr(sshOpenClientSession(sessionp, host, port, user, passwd),
+			 "Error opening client session\n");
+	setSession(*sessionp);
+}
+
+static void initSSHProcess() {
+	printf("Not implemented!!!\n");
+}
+
+int main(int argc, char **argv) {
+	CRYPT_SESSION session;
+	PDU request, *response;
+	char msg[256], *host = "localhost";
+	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
+	char user[128], passwd[128];
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-s") == 0) {
+			standalone = 1;
+		} else if (strcmp(argv[i], "-p") == 0) {
+			port = atoi(argv[++i]);
+		} else if (strcmp(argv[i], "-h") == 0) {
+			host = argv[++i];
+		} else {
+			printf("Usage: server [-s] [-h host] [-p port]\n");
+			return -1;
+		}
+	}
+
+	if (standalone) initStandalone(user, passwd);
+	else initSSHProcess();
 
 	printf("\nDoing reset query\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
-			 "Error opening client session\n");
-	setSession(session);
+	if (standalone) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-	checkSSH(writePDU(&request), "Error writing reset query\n");
-	checkSSH(readResponses(), "Failed on reset query\n");
-	sshCloseSession(session);
+	checkerr(writePDU(&request), "Error writing reset query\n");
+	checkerr(readResponses(), "Failed on reset query\n");
+	if (standalone) sshCloseSession(session);
 
 	printf("\n\nDoing serial query\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
-			 "Error opening client session\n");
-	setSession(session);
+	if (standalone) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
 	*((uint *) request.typeSpecificData) = 1;
-	checkSSH(writePDU(&request), "Error writing serial query\n");
-	checkSSH(readResponses(), "Failed on serial query\n");
-	sshCloseSession(session);
+	checkerr(writePDU(&request), "Error writing serial query\n");
+	checkerr(readResponses(), "Failed on serial query\n");
+	if (standalone) sshCloseSession(session);
 
 	printf("\nDoing serial query with reset response\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
-			 "Error opening client session\n");
-	setSession(session);
+	if (standalone) doOpen(&session, host, port, user, passwd);
 	*((uint *) request.typeSpecificData) = 8723;
-	checkSSH(writePDU(&request), "Error writing serial query\n");
+	checkerr(writePDU(&request), "Error writing serial query\n");
 	if (! (response = readPDU(msg))) {
 		printf ("Error reading cache reset\n");
 		return -1;
@@ -154,15 +168,13 @@ int main(int argc, char **argv) {
 		printf ("Was expecting cache reset, got %d\n", response->pduType);
 		return -1;
 	}
-	sshCloseSession(session);
+	if (standalone) sshCloseSession(session);
 	freePDU(response);
 
 	printf("\nDoing illegal request\n");
-	checkSSH(sshOpenClientSession(&session, "localhost", port, user, passwd),
-			 "Error opening client session\n");
-	setSession(session);
+	if (standalone) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
-	checkSSH(writePDU(&request), "Error writing end of data\n");
+	checkerr(writePDU(&request), "Error writing end of data\n");
 	if (! (response = readPDU(msg))) {
 		printf ("Error reading error report\n");
 		return -1;
@@ -173,7 +185,7 @@ int main(int argc, char **argv) {
 	}
 	printf("Error text = %s\n",
 		   ((ErrorData *)response->typeSpecificData)->errorText);
-	sshCloseSession(session);
+	if (standalone) sshCloseSession(session);
 
 	printf("Completed successfully\n");
 	return 1;
