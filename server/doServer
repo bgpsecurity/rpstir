@@ -1,0 +1,4 @@
+# Provide a place to set environment variables and provide arguments
+# to allow the server to be invoked as a subsystem
+export APKI_DB=daves2
+/home/dmontana/apki/trunk/server/server -l /home/dmontana/apki/trunk/server/rtr.log
