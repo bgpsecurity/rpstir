@@ -135,14 +135,14 @@ id-set-setQualifier		ID ::= { id-set-certExt 6 }
 -- PKIX Object Identifiers
 id-pkix                         ID ::= { 1.3.6.1.5.5.7 }
 id-pkix-pe                      ID ::= { id-pkix 1 }
-id-pkix-qt                      ID ::= { id-pkix 2 }
+id-qt                           ID ::= { id-pkix 2 }
 id-pkix-kp                      ID ::= { id-pkix 3 }
 id-pkix-it                      ID ::= { id-pkix 4 }
 -- id-pkix-ad                      ID ::= { id-pkix 48 }
 id-ad                           ID ::= { id-pkix 48 }
 id-pkix-authorityInfoAccess     ID ::= { id-pkix-pe 1 }
-id-pkix-cps                     ID ::= { id-pkix-qt 1 }
-id-pkix-unotice                 ID ::= { id-pkix-qt 2 }
+id-qt-cps                       ID ::= { id-qt 1 }
+id-qt-unotice                   ID ::= { id-qt 2 }
 id-pkix-serverAuth              ID ::= { id-pkix-kp 1 }
 id-pkix-clientAuth              ID ::= { id-pkix-kp 2 }
 id-pkix-codeSigning             ID ::= { id-pkix-kp 3 }
@@ -242,9 +242,8 @@ PolicyQualifierInfo ::= SEQUENCE {
     qualifier           ANY DEFINED BY policyQualifierId     OPTIONAL}
 
 PolicyQualifierInfoSet ::= TABLE {
-    cPSuri           id-pkix-cps         CPSuri,
-    userNotice       id-pkix-unotice     UserNotice,
-    setQualifier     id-set-setQualifier SetPolicyQualifier,
+    cPSuri           id-qt-cps         CPSuri,
+    userNotice       id-qt-unotice     UserNotice,
     any		     0xFFFF              ANY }
 
 CPSuri ::= IA5String
@@ -254,12 +253,14 @@ UserNotice ::= SEQUENCE {
     explicitText  DisplayText OPTIONAL }
 
 NoticeReference ::= SEQUENCE {
-    organization  IA5String,
+    organization  DisplayText,
     noticeNumbers SEQUENCE OF INTEGER }
 
 DisplayText ::= CHOICE {
-    visibleString VisibleString,
-    bmpString     BMPString }
+    ia5String     IA5String     (SIZE (1..200)),
+    visibleString VisibleString (SIZE (1..200)),
+    bmpString     BMPString     (SIZE (1..200)),
+    utf8String    UTF8String    (SIZE (1..200)) }
 
 SetPolicyQualifier ::= SEQUENCE {
     rootQualifier       SETQualifier,
