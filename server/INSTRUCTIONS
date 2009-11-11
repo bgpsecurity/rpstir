@@ -1,0 +1,11 @@
+
+This directory contains an implementation of the RPKI-RTR server
+specifications given in the document "The RPKI/Router Protocol" at
+http://www.ietf.org/id/draft-ymbk-rpki-rtr-protocol-04.txt
+It also contains an implementation of a sample client, but this client
+only prints out the data received; a real client would add this data
+to the router.
+
+On the server side, there are two applications to execute:
+(1) doUpdate - This application is executed as part of the standard
+cycle of operations performed at a local cache.

@@ -184,9 +184,12 @@ int main(int argc, char **argv) {
 	statementscm(connect, msg);
 
     // clean up all the data no longer needed
+	// save last two full updates so that no problems at transition
+	//   (with client still receiving data from previous one)
 	char *str = "%s where create_time < adddate(now(), interval -%d hour);";
 	snprintf(msg, sizeof(msg),
-			 "delete from rtr_full where serial_num <= %d;", prevSerialNum);
+			 "delete from rtr_full where serial_num<>%d and serial_num<>%d;",
+			 prevSerialNum, currSerialNum);
 	statementscm(connect, msg);
 	snprintf(msg, sizeof(msg), str,
 			 "delete rtr_incremental from rtr_incremental inner join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num",
