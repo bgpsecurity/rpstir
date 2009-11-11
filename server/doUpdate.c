@@ -119,6 +119,7 @@ static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
 	return 1;
 }
 
+
 int main(int argc, char **argv) {
 	char msg[1024];
 

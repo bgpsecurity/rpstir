@@ -7,5 +7,35 @@ only prints out the data received; a real client would add this data
 to the router.
 
 On the server side, there are two applications to execute:
+
 (1) doUpdate - This application is executed as part of the standard
-cycle of operations performed at a local cache.
+cycle of operations performed at a local cache.  It should be the last
+operation in the cycle, after the rsync, chaser, and garbage collector
+have all been run.  It does all the time-consuming steps required to
+determine what data to send clients and writes this into the database.
+
+(2) server - This application takes client requests and returns the
+data requested.  In its standard mode (that given in the specifications),
+the server is run as a subsystem of ssh, which means that sshd is
+the one listening for client connection requests and starts an
+instance of the server application to service the client.  We do provide
+a second mode, where the server application listens directly for
+client requests (using the ssh protocol but on a port different from
+the standard ssh port) and implements the ssh protocol to reply to
+these requests.  Currently, the standard mode is preferable not just
+because it implements the specifications but also because the
+alternate mode does not do any authentication of the client (while
+the standard mode inherits the standard ssh authentication).
+
+On the client side, there is a sample application called testClient
+that serves as a model for how to implement clients (as well as
+providing a way to test the server side code).  This application can
+be executed in two modes, illustrating the two different ways to
+implement a client.  The first mode is as a standalone application,
+implementing the SSH protocol (by making calls to the cryptlib library)
+to talk to the server.  In the second mode, the client forks off
+a child process that runs the ssh client, and all communication with
+the server is via two pipes to this child process.
+
+The command line for running doUpdate is:
+doUpdate ??????
