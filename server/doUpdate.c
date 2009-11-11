@@ -32,6 +32,12 @@
 #include <stdlib.h>
 #include <limits.h>
 
+// number of hours to retain incremental updates
+// should be at least 24 + the maximum time between updates, since need
+//   to always have not just all those within the last 24 hours but also
+//   one more beyond these
+#define RETENTION_HOURS_DEFAULT 96
+
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
 static scmsrcha *roaSrch = NULL;
@@ -42,6 +48,16 @@ static scmtab   *incrTable = NULL;
 
 // serial number of this and previous update
 static uint prevSerialNum, currSerialNum;
+
+/*****
+ * allows overriding of retention time for data via environment variable
+ *****/
+static int retentionHours() {
+	if (getenv("RTR_RETENTION_HOURS") != NULL)
+		return atoi(getenv("RTR_RETENTION_HOURS"));
+	return RETENTION_HOURS_DEFAULT;
+}
+
 
 /******
  * callback that writes the data from a ROA into the update table
@@ -167,7 +183,18 @@ int main(int argc, char **argv) {
 			 currSerialNum);
 	statementscm(connect, msg);
 
-	// ?????????????? clean up serial numbers after certain age ??????????
+    // clean up all the data no longer needed
+	char *str = "%s where create_time < adddate(now(), interval -%d hour);";
+	snprintf(msg, sizeof(msg),
+			 "delete from rtr_full where serial_num <= %d;", prevSerialNum);
+	statementscm(connect, msg);
+	snprintf(msg, sizeof(msg), str,
+			 "delete rtr_incremental from rtr_incremental inner join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num",
+			 retentionHours());
+	statementscm(connect, msg);
+	snprintf(msg, sizeof(msg), str, "delete from rtr_update",
+			 retentionHours());
+	statementscm(connect, msg);
 
 	return 0;
 }
