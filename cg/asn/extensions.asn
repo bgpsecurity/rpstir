@@ -117,6 +117,7 @@ id-certificateIssuer            ID ::= { id-ce 29 }
 id-nameConstraints              ID ::= { id-ce 30 } 
 id-cRLDistributionPoints        ID ::= { id-ce 31 } 
 id-certificatePolicies          ID ::= { id-ce 32 } 
+id-anyPolicy                    ID ::= { id-ce 32 0 }
 id-policyMappings               ID ::= { id-ce 33 } 
 id-authKeyId                    ID ::= { id-ce 35 }
 id-policyConstraints            ID ::= { id-ce 36 } 
