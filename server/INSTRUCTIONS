@@ -52,6 +52,8 @@ The command line for running server is:
 server [-s] [-l logfile] [-p port]
   where the flags signify
 -s: standalone (i.e., in the alternate mode, not as a ssh subsystem)
+    Note: if it is being run as a ssh subsystem, see below for further
+    instructions on how to run
 -p: port to use, only used in standalone mode when the port should be
     different from the standard ssh port, default is 7455
 -l: all textual output is recorded to a log file, whose default name is
@@ -66,3 +68,16 @@ testClient [-s] [-h host] [-p port]
 -p: port the server is using, only used in standalone mode (in other mode,
     the port must be the standard ssh port 22), by default 22
 
+Further instructions on running server:
+If server is being run in its standard mode, as a ssh subsystem,
+it should not be executed from a command line prompt.  Instead, it
+should be set up to be executed automatically by sshd.
+To do this, first create a script file to execute server.
+A sample script file is given by server/doServer.
+Note how it sets the environment variable APKI_DB as part of the script,
+since server will be executing in an environment that presumably
+does not have RPKI-specific environment variables set.
+Next, edit the system file sshd_config (often at the pathname
+/etc/ssh/sshd_config) to add the line:
+Subsystem	rpki-rtr	<full_pathname_of_script_file>
+(Note that root access is generally required to edit sshd_config.)
