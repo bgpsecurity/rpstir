@@ -43,6 +43,8 @@ static PDU response;
 static IPPrefixData prefixData;
 static FILE *logfile;
 
+#define PRINTF(args...) { fprintf(logfile, args); fflush(logfile); }
+
 
 /* send an error report PDU to the client */
 static void sendErrorReport(PDU *request, int type, char *msg) {
@@ -53,7 +55,7 @@ static void sendErrorReport(PDU *request, int type, char *msg) {
 	errorData.badPDU = request;
 	errorData.errorText = msg;
 	if (writePDU(&response) == -1) {
-		printf("Error writing error report, text = %s\n", msg);
+		PRINTF("Error writing error report, text = %s\n", msg);
 	}
 }
 
@@ -102,7 +104,7 @@ static int sendResponse(scmsrcha *s, char isAnnounce) {
 	prefixData.prefixLength = atoi(ptr1);
 	prefixData.maxLength = ptr2 ? atoi(ptr2+1) : prefixData.prefixLength;
 	if (writePDU(&response) == -1) {
-	  printf("Error writing response\n");
+	  PRINTF("Error writing response\n");
 	  return -1;
 	}
 
@@ -130,14 +132,14 @@ static void handleSerialQuery(PDU *request) {
 	if (! newSNs) {
 		fillInPDUHeader(&response, PDU_CACHE_RESET, 1);
 		if (writePDU(&response) == -1) {
-			printf("Error writing cache reset response\n");
+			PRINTF("Error writing cache reset response\n");
 		}
 		return;
 	}
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
 	if (writePDU(&response) == -1) {
-		printf("Error writing cache response\n");
+		PRINTF("Error writing cache response\n");
 		return;
 	}
 
@@ -164,7 +166,7 @@ static void handleSerialQuery(PDU *request) {
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
 	response.typeSpecificData = &newSNs[i-1];
 	if (writePDU(&response) == -1) {
-		printf("Error writing end of data\n");
+		PRINTF("Error writing end of data\n");
 		return;
 	}
 }
@@ -185,7 +187,7 @@ static void handleResetQuery(PDU *request) {
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
 	if (writePDU(&response) == -1) {
-		printf("Error writing cache response\n");
+		PRINTF("Error writing cache response\n");
 		return;
 	}
 
@@ -207,14 +209,13 @@ static void handleResetQuery(PDU *request) {
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
 	response.typeSpecificData = &serialNum;
 	if (writePDU(&response) == -1) {
-		printf("Error writing end of data\n");
+		PRINTF("Error writing end of data\n");
 		return;
 	}
 }
 
 
-#define checkerr(test, args...) \
-	if (test) { fprintf(logfile, args); fflush(logfile); return -1; }
+#define checkerr(test, args...) if (test) { PRINTF(args); return -1; }
 
 #define checkSSH(s, args...) checkerr((s) < 0, args)
 
@@ -233,7 +234,7 @@ int main(int argc, char **argv) {
 		} else if (strcmp(argv[i], "-p") == 0) {
 			port = atoi(argv[++i]);
 		} else {
-			printf("Usage: server [-s] [-l logfile] [-p port]\n");
+			fprintf(stderr, "Usage: server [-s] [-l logfile] [-p port]\n");
 			return -1;
 		}
 	}
