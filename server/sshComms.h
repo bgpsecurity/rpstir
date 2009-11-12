@@ -31,6 +31,7 @@
 
 /* if running server standalone, default port number it listens on */
 #define DEFAULT_STANDALONE_PORT 7455
+#define DEFAULT_SSH_PORT 22
 
 /******
  * Initialize the SSH library, must call this once before anything else

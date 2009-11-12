@@ -38,4 +38,31 @@ a child process that runs the ssh client, and all communication with
 the server is via two pipes to this child process.
 
 The command line for running doUpdate is:
-doUpdate ??????
+doUpdate <stalenessSpecsFile>
+The stalenessSpecsFile should be in the same format as given in
+the file proto/sampleQuerySpecs and tells which types of staleness
+prevents a ROA from being considered valid and which do not.
+The two environment variables that affect the application are:
+APKI_DB - determines the name of the database, defaults to APKI
+RTR_RETENTION_HOURS - determines how long to hold old incremental updates,
+  defaults to 96 (and should always be at least 24 + the maximum time
+  between runs of doUpdate)
+
+The command line for running server is:
+server [-s] [-l logfile] [-p port]
+  where the flags signify
+-s: standalone (i.e., in the alternate mode, not as a ssh subsystem)
+-p: port to use, only used in standalone mode when the port should be
+    different from the standard ssh port, default is 7455
+-l: all textual output is recorded to a log file, whose default name is
+    log.rtr.server
+
+The command line for running testClient is:
+testClient [-s] [-h host] [-p port]
+  where the flags signify
+-s: standalone, by default it operates instead in the mode where a ssh
+    client is forked
+-h: the host where the server is, by default localhost
+-p: port the server is using, only used in standalone mode (in other mode,
+    the port must be the standard ssh port 22), by default 22
+

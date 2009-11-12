@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
 	CRYPT_SESSION session;
 	PDU request, *response;
 	char msg[256], *host = "localhost";
-	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
+	int i, standalone = 0, port = DEFAULT_SSH_PORT;
 	char user[128], passwd[128];
 
 	for (i = 1; i < argc; i++) {
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
 		} else if (strcmp(argv[i], "-h") == 0) {
 			host = argv[++i];
 		} else {
-			printf("Usage: server [-s] [-h host] [-p port]\n");
+			printf("Usage: testClient [-s] [-h host] [-p port]\n");
 			return -1;
 		}
 	}
