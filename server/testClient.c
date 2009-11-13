@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
 		printf ("Was expecting error report, got %d\n", response->pduType);
 		return -1;
 	}
-	printf("Recieved change notification\n\n");
+	printf("Received change notification\n\n");
 
 	printf("Completed successfully\n");
 	return 1;
