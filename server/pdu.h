@@ -28,6 +28,7 @@
 #define _PDU_H
 
 #include <cryptlib.h>
+#include <pthread.h>
 
 /*****
  * Different PDU types
@@ -108,9 +109,16 @@ void setPipes(int readPipe, int writePipe);
  * read a PDU from the SSH session, waiting until there is data on the socket
  *   returns a NULL PDU on error
  * Arg: errMsg - provide a buffer where any error message can be returned
+ * Arg: mutex - if non-NULL, lock this mutex after receiving the first byte
  * Remember to free the PDU returned when done with it
  *****/
 PDU *readPDU(char *errMsg);
+
+/*****
+ * same as readPDU, except also set a lock on the mutex, if the mutex
+ *   is non-NULL, after receiving the first byte of data
+ *****/
+PDU *readPduAndLock(char *errMsg, pthread_mutex_t *mutex);
 
 /*****
  * write a PDU to the SSH session, returning a non-zero value for an error

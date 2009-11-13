@@ -66,6 +66,10 @@ void setPipes(int rp, int wp) {
 
 
 PDU *readPDU(char *errMsg) {
+	return readPduAndLock(errMsg, NULL);
+}
+
+PDU *readPduAndLock(char *errMsg, pthread_mutex_t *mutex) {
 	PDU *pdu = calloc(1, sizeof(PDU));
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
@@ -74,6 +78,7 @@ PDU *readPDU(char *errMsg) {
 
 	// receive header and check length
 	READ_BYTE(pdu->protocolVersion);
+	if (mutex) pthread_mutex_lock(mutex);
 	READ_BYTE(pdu->pduType);
 	READ_SHORT(pdu->color);
 	READ_INT(pdu->length);

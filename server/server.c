@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
@@ -42,6 +43,8 @@ static scmtab   *incrTable = NULL;
 static PDU response;
 static IPPrefixData prefixData;
 static FILE *logfile;
+
+static pthread_mutex_t commsMutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define PRINTF(args...) { fprintf(logfile, args); fflush(logfile); }
 
@@ -215,6 +218,29 @@ static void handleResetQuery(PDU *request) {
 }
 
 
+#define SECS_BETWEEN_UPDATE_CHECKS 60
+
+static void *doNotifications() {
+	uint currSerialNum;
+	uint lastSerialNum = getLastSerialNumber(connect, scmp);
+
+	while (1) {
+		sleep(SECS_BETWEEN_UPDATE_CHECKS);
+		currSerialNum = getLastSerialNumber(connect, scmp);
+		if (currSerialNum != lastSerialNum) {
+			pthread_mutex_lock(&commsMutex);
+			fillInPDUHeader(&response, PDU_SERIAL_NOTIFY, 0);
+			response.typeSpecificData = &currSerialNum;
+			if (writePDU(&response) == -1) {
+				PRINTF("Error writing notificaton\n");
+			}
+			pthread_mutex_unlock(&commsMutex);
+			lastSerialNum = currSerialNum;
+		}
+	}
+}
+
+
 #define checkerr(test, args...) if (test) { PRINTF(args); return -1; }
 
 #define checkSSH(s, args...) checkerr((s) < 0, args)
@@ -224,6 +250,7 @@ int main(int argc, char **argv) {
 	PDU *request;
 	char msg[256];
 	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
+	pthread_t notifyThread;
 	char *logFilename = "log.rtr.server";
 
 	for (i = 1; i < argc; i++) {
@@ -252,7 +279,11 @@ int main(int argc, char **argv) {
 	checkerr(scmp == NULL, "Cannot initialize database schema\n");
 	connect = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkerr(connect == NULL, "Cannot connect to database: %s\n", msg);
-	if (standalone) checkSSH(initSSH(), "Error initializing SSH\n");
+	if (standalone) {
+		checkSSH(initSSH(), "Error initializing SSH\n");
+	} else {
+		pthread_create(&notifyThread, 0, doNotifications, 0);
+	}
 
 	while (1) {
 		if (standalone) {
@@ -260,7 +291,7 @@ int main(int argc, char **argv) {
 					 "Error opening server session\n");
 			setSession(session);
 		}
-		request = readPDU(msg);
+		request = readPduAndLock(msg, standalone ? NULL : &commsMutex);
 		if (! request) {
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
 			if (! standalone) break;
@@ -279,8 +310,12 @@ int main(int argc, char **argv) {
 					 "Cannot handle request of type %d\n", request->pduType);
 			sendErrorReport(request, ERR_INVALID_REQUEST, msg);
 		}
+		if (standalone)
+			sshCloseSession(session);
+		else
+			pthread_mutex_unlock(&commsMutex);
 		freePDU(request);
-		if (standalone) sshCloseSession(session);
 	}
+	exit(1);
 	return 1;
 }

@@ -147,6 +147,7 @@ int main(int argc, char **argv) {
 	PDU request, *response;
 	char msg[256], *host = "localhost";
 	int i, standalone = 0, port = DEFAULT_SSH_PORT;
+	int diffPort = 0;    // indicates whether standalone server
 	char user[128], passwd[128];
 
 	for (i = 1; i < argc; i++) {
@@ -154,6 +155,7 @@ int main(int argc, char **argv) {
 			standalone = 1;
 		} else if (strcmp(argv[i], "-p") == 0) {
 			port = atoi(argv[++i]);
+			diffPort = port != DEFAULT_SSH_PORT;
 		} else if (strcmp(argv[i], "-h") == 0) {
 			host = argv[++i];
 		} else {
@@ -170,18 +172,18 @@ int main(int argc, char **argv) {
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
 	checkerr(writePDU(&request), "Error writing reset query\n");
 	checkerr(readResponses(), "Failed on reset query\n");
-	if (standalone) sshCloseSession(session);
+	if (standalone && diffPort) sshCloseSession(session);
 
 	printf("\n\nDoing serial query\n");
-	if (standalone) doOpen(&session, host, port, user, passwd);
+	if (standalone && diffPort) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
 	*((uint *) request.typeSpecificData) = 1;
 	checkerr(writePDU(&request), "Error writing serial query\n");
 	checkerr(readResponses(), "Failed on serial query\n");
-	if (standalone) sshCloseSession(session);
+	if (standalone && diffPort) sshCloseSession(session);
 
 	printf("\nDoing serial query with reset response\n");
-	if (standalone) doOpen(&session, host, port, user, passwd);
+	if (standalone && diffPort) doOpen(&session, host, port, user, passwd);
 	*((uint *) request.typeSpecificData) = 8723;
 	checkerr(writePDU(&request), "Error writing serial query\n");
 	if (! (response = readPDU(msg))) {
@@ -192,11 +194,11 @@ int main(int argc, char **argv) {
 		printf ("Was expecting cache reset, got %d\n", response->pduType);
 		return -1;
 	}
-	if (standalone) sshCloseSession(session);
+	if (standalone && diffPort) sshCloseSession(session);
 	freePDU(response);
 
 	printf("\nDoing illegal request\n");
-	if (standalone) doOpen(&session, host, port, user, passwd);
+	if (standalone && diffPort) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
 	checkerr(writePDU(&request), "Error writing end of data\n");
 	if (! (response = readPDU(msg))) {
@@ -209,7 +211,18 @@ int main(int argc, char **argv) {
 	}
 	printf("Error text = %s\n",
 		   ((ErrorData *)response->typeSpecificData)->errorText);
-	if (standalone) sshCloseSession(session);
+	if (standalone && diffPort) sshCloseSession(session);
+
+	printf ("Waiting for change notification\n");
+	if (! (response = readPDU(msg))) {
+		printf ("Error reading change notification\n");
+		return -1;
+	}
+	if (response->pduType != PDU_SERIAL_NOTIFY) {
+		printf ("Was expecting error report, got %d\n", response->pduType);
+		return -1;
+	}
+	printf("Recieved change notification\n\n");
 
 	printf("Completed successfully\n");
 	return 1;
