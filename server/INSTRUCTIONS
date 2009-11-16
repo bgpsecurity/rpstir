@@ -26,6 +26,13 @@ these requests.  Currently, the standard mode is preferable not just
 because it implements the specifications but also because the
 alternate mode does not do any authentication of the client (while
 the standard mode inherits the standard ssh authentication).
+Futhermore, the standard mode is more robust insofar as a different
+instance is spawned for each client, and hence a single crash
+will not affect other clients/connections.  The purpose of the
+alternate/standalone mode is to facilitate testing, making it easy
+to attach a debugger to the application, as well as providing a way
+to run without the need for root access, which is required to configure
+the application to run as a subsystem of ssh.
 
 On the client side, there is a sample application called testClient
 that serves as a model for how to implement clients (as well as
