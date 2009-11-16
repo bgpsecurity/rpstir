@@ -1,0 +1,26 @@
+#!/bin/sh
+# ***** BEGIN LICENSE BLOCK *****
+#  
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 1.0
+#  
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.  
+# 
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+# 
+#  Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+# 
+#  Contributor(s):  David Montana
+# 
+# ***** END LICENSE BLOCK *****
+# clean the rpki-rtr data out of the database
+
+if [ "${APKI_DB}x" = "x" ]; then export APKI_DB=apki; fi
+
+echo "delete from rtr_update;" | mysql $APKI_DB -u mysql
+echo "delete from rtr_full;" | mysql $APKI_DB -u mysql
+echo "delete from rtr_incremental;" | mysql $APKI_DB -u mysql
+
+
