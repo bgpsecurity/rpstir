@@ -124,6 +124,18 @@ static int sendIncrResponse(scmcon *conp, scmsrcha *s, int numLine) {
 	return sendResponse(s, *((char *)s->vec[2].valptr));
 }
 
+// get the serial number and return an error response if none
+static uint getAndCheckSerialNumber(PDU *request) {
+	char msg[256];
+	uint serialNum = getLastSerialNumber(connect, scmp);
+	if (serialNum == 0) {
+		snprintf(msg, sizeof(msg),
+				 "First database update has not yet been performed\n");
+		sendErrorReport(request, ERR_NO_DATA, msg);
+	}
+	return serialNum;
+}
+
 static void handleSerialQuery(PDU *request) {
 	uint oldSN = *((uint *)request->typeSpecificData);
 	uint *newSNs = getMoreRecentSerialNums(connect, scmp, oldSN);
@@ -133,6 +145,7 @@ static void handleSerialQuery(PDU *request) {
 	//    in the database, so there is no way to get incremental updates
 	// in this case, send cache reset response
 	if (! newSNs) {
+		if (getAndCheckSerialNumber(request) == 0) return;
 		fillInPDUHeader(&response, PDU_CACHE_RESET, 1);
 		if (writePDU(&response) == -1) {
 			PRINTF("Error writing cache reset response\n");
@@ -175,18 +188,8 @@ static void handleSerialQuery(PDU *request) {
 }
 
 static void handleResetQuery(PDU *request) {
-	uint serialNum;
-	char msg[256];
-
-	serialNum = getLastSerialNumber(connect, scmp);
-
-	// handle error condition when no data yet in database
-	if (serialNum == 0) {
-		snprintf(msg, sizeof(msg),
-				 "First database update has not yet been performed\n");
-		sendErrorReport(request, ERR_NO_DATA, msg);
-		return;
-	}
+	uint serialNum = getAndCheckSerialNumber(request);
+	if (serialNum == 0) return;
 
 	fillInPDUHeader(&response, PDU_CACHE_RESPONSE, 1);
 	if (writePDU(&response) == -1) {
