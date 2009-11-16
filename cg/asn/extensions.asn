@@ -337,7 +337,7 @@ PolicyConstraints ::= SEQUENCE {
 
 SkipCerts ::= INTEGER
 
-CRLDistributionPoints ::= SEQUENCE (SIZE (1..1)) OF DistributionPoint
+CRLDistributionPoints ::= SEQUENCE (SIZE (1..MAX)) OF DistributionPoint
 
  
  -- (CONSTRAINED BY { 
