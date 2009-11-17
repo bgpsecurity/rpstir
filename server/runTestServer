@@ -1,0 +1,23 @@
+# Run the server side of the RPKI-RTR test
+# Note that you must first run initDB and then start up both the
+#   loader and the testClient before running this script
+# The important output will be that from the testClient program
+
+echo ""
+echo "Initializing database"
+$APKI_ROOT/run_scripts/initDB.sh
+echo "Loading first set of data"
+$APKI_ROOT/proto/rcli -F $APKI_ROOT/testcases/C.cer
+$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/server/testlog.1 -d $APKI_ROOT/testcases
+$APKI_ROOT/server/doUpdate $APKI_ROOT/server/testSpecs
+echo "Sleeping 10 seconds"
+sleep 10
+echo "Loading second set of data"
+$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/server/testlog.2 -d $APKI_ROOT/testcases
+$APKI_ROOT/server/doUpdate $APKI_ROOT/server/testSpecs
+echo "Sleeping 10 seconds"
+sleep 10
+echo "Loading third set of data"
+$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/server/testlog.3 -d $APKI_ROOT/testcases
+$APKI_ROOT/server/doUpdate $APKI_ROOT/server/testSpecs
+
