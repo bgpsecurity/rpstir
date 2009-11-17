@@ -120,7 +120,8 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithm
     
       EContentTable ::= TABLE {
         roa      id-routeOriginAttestation RouteOriginAttestation,
-        manifest id-roa-pki-manifest       Manifest }
+        manifest id-roa-pki-manifest       Manifest, 
+        trustAnchor id-ct-RPKITrustAnchor  Certificate }
     
       id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) 
                                      rsadsi1(113549) pkcs1(1) pkcs9(9) 16 } 
@@ -128,7 +129,8 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithm
       id-ct OBJECT IDENTIFIER ::= { id-smime 1 } 
     
       id-routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 } 
-      id-roa-pki-manifest i     OBJECT IDENTIFIER ::= { id-ct 26 } 
+      id-roa-pki-manifest       OBJECT IDENTIFIER ::= { id-ct 26 } 
+      id-ct-RPKITrustAnchor     OBJECT IDENTIFIER ::= { id-ct 33 }
 
       RouteOriginAttestation ::= SEQUENCE { 
         version [0] ROAversion DEFAULT v1, 
