@@ -1744,7 +1744,7 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
   {
   cert_fields *cf = NULL;
   unsigned int cert_id;
-  char *fakename;
+  char *fakename, *pathname;
   int sta = 0;
 
     // serialize the Certificate and scan it as an openssl X509 object
@@ -1760,26 +1760,26 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
   gen_cert_filename(ski, &fakename);
   // pull out the fields
   int x509sta;
-  cf = cert2fields(fakename, 0, typ, &x509p, &sta, &x509sta);
+  pathname = (char *)calloc(1, strlen(outdir)  +
+        strlen(fakename) + 2);
+  strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
+  cf = cert2fields(pathname, 0, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
     // add the X509 cert to the db
       sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, NULL);
     if (!sta)
       {
-      char *pathname = (char *)calloc(1, strlen(outdir)  +
-        strlen(fakename) + 2);
-      strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
       sta = put_casn_file(&c->self, pathname, 0);
-      free(pathname);
       if (sta < 0) sta = ERR_SCM_INTERNAL;
       else sta = 0;
       }
     else if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else
-      fprintf(stderr, "Error adding embedded certificate %s\n", fakename);
+		fprintf(stderr, "Error adding embedded certificate %s\n", pathname);
     }
   free(fakename);
+  free(pathname);
   x509p = NULL;		/* freed by add_cert_2 */
   cf = NULL;			/* freed by add_cert_2 */
   return sta;
