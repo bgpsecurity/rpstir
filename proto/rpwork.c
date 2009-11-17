@@ -1,16 +1,24 @@
-#include <string.h>
-#include <stdio.h>
-#include "err.h"
-#include "scm.h"
-#include "scmf.h"
-#include "sqhl.h"
-#include "diru.h"
-#include "myssl.h"
-#include "rpwork.h"
-#include "roa.h"
-#include "cryptlib.h"
-#include <keyfile.h>
+/*
+  $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $
+*/
 
+/* ***** BEGIN LICENSE BLOCK *****
+ * 
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ * 
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.  
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
+#include "rpwork.h"
 
 #define TREEGROWTH          1
 #define RESOURCE_NOUNION    2
@@ -31,116 +39,15 @@ static scmcon *locconp;
 static struct Certificate myrootcert;
 static struct ipranges certranges, ipranges;
 
-static char *validReasons[] =
-    {
-    "unused",
-    "keyCompromise",
-    "caCompromise",
-    "affiliationChanged",
-    "superseded",
-    "cessationOfOperation",
-    "certificateHold",
-    (char *)NULL,
-    };
+static char *Xcrldp;
 
-struct xcrldp 
-  {
-  struct xcrldp *nextp;
-  char *urlp;
-  struct ReasonFlags reasons;
-  };
-
-static struct xcrldp *Xcrldp;
-  
-static int check_crldp(char *crldp)
-  {
-  int count;
-  char *b, *c;
-  if ((*crldp == 'C'|| *crldp == 'R'))
-    {
-    if (crldp[1]) return -1;
-    else
-      {
-      Xcrldp = (struct xcrldp *)calloc(1, sizeof(struct xcrldp));
-      Xcrldp->urlp = (char *)calloc(1, 2);
-      *Xcrldp->urlp = *crldp;
-      return 1;
-      } 
-    }
-  for (count = 0, c = crldp; *c; )
-    {
-    for (count++, b = c; *c > ' ' ; c++); // URI
-    while (*c == ' ') c++;
-    if (!*c) break;
-    b = c;
-    for (count++; *c > ' '; c++)  // reasons
-      {
-      char *a, **vrpp;
-      for (a = c; *a > ' ' && *a != ','; a++);
-      if (strncmp(c, "all", 3))
-        {
-        for (vrpp = validReasons; *vrpp && strncmp(c, *vrpp, (a - c)); vrpp++);
-        if (!vrpp || !*vrpp) return -1;
-        }
-      c = a;
-      }
-    }
-  if ((count & 1)) return -1;  // odd number
-  struct xcrldp *tcrldp;
-  for (c = crldp; *c; )
-    {
-    for (b = c; *c > ' ' ; c++); // URI
-    struct xcrldp *tmp = calloc(1, sizeof(struct xcrldp));
-    if (!Xcrldp) Xcrldp = tcrldp = tmp;
-    else 
-      {
-      tcrldp->nextp = tmp;
-      tcrldp = tcrldp->nextp;
-      }  
-    tcrldp->urlp = (char *)calloc(1, (c - b) + 2);
-    strncpy(tcrldp->urlp, b, (c - b));
-    while (*c == ' ') c++;
-    b = c;
-    struct ReasonFlags *reasonFlagsp = &tcrldp->reasons;
-    ReasonFlags(reasonFlagsp, (ushort)0);
-    for (; *c > ' '; c++)  // reasons
-      {
-      char *a, **vrpp;
-      for (a = c; *a > ' ' && *a != ','; a++);
-      if (strncmp(c, "all", 3)) 
-        {
-        for (vrpp = validReasons; *vrpp && strncmp(c, *vrpp, (a - c)); vrpp++);
-        if (!vrpp || !*vrpp) return -1;
-        int typ = vrpp - validReasons;
-        if (!typ) write_casn_bit(&reasonFlagsp->unused, 1);
-        else if (typ == 1) write_casn_bit(&reasonFlagsp->keyCompromise, 1);
-        else if (typ == 2) write_casn_bit(&reasonFlagsp->caCompromise, 1);
-        else if (typ == 3) write_casn_bit(&reasonFlagsp->affiliationChanged, 1);
-        else if (typ == 4) write_casn_bit(&reasonFlagsp->superseded, 1);
-        else if (typ == 5) write_casn_bit(&reasonFlagsp->cessationOfOperation,
-          1);
-        else if (typ == 6) write_casn_bit(&reasonFlagsp->certificateHold, 1);
-        }
-      c = a;
-      }
-    }
-  return 1;
-  } 
-
-static void free_crldp(struct xcrldp *xcrldp )
-  {
-  if (xcrldp) 
-    {
-    struct xcrldp *nxcrldp = xcrldp->nextp;
-    if (nxcrldp) free_crldp(nxcrldp);
-    nxcrldp = (struct xcrldp *)0;
-    free(xcrldp->urlp);
-    clear_casn(&xcrldp->reasons.self);
-    }
-  }
-  
 static char *Xcp;
   
+static int add_paracert2DB(struct Certificate *paracertp)
+  {
+  return 0;
+  }
+
 static int check_cp(char *cpp)
   {
   if ((*cpp == 'C' || *cpp == 'D' || *cpp == 'R') && cpp[1] <= ' ') 
@@ -255,7 +162,7 @@ static void free_keyring(struct keyring *ringp)
   }
 
 static int add_done_cert(char *skip, struct Certificate *origcertp, 
-  struct Certificate *paracertp)
+  struct Certificate *paracertp, int flags, int local_id)
   {
   if (!done_certs.numcerts) 
     {
@@ -269,6 +176,8 @@ static int add_done_cert(char *skip, struct Certificate *origcertp,
   struct done_cert *done_certp = 
     &done_certs.done_certp[done_certs.numcerts - 1]; 
   strcpy(done_certp->ski, skip);
+  done_certp->origID = local_id;
+  done_certp->origflags = flags;
   done_certp->origcertp = origcertp;
   done_certp->paracertp = paracertp;
   return done_certs.numcerts - 1;
@@ -516,29 +425,37 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
       }
     }
   struct Extension *fextp, *textp; 
-  if (!Xcrldp || (*Xcrldp->urlp == 'R' && !Xcrldp->urlp[1]))
+  if (!Xcrldp || (*Xcrldp == 'R' && !Xcrldp[1]))
     {
     fextp = find_extension(&myrootcert, id_cRLDistributionPoints, 0);
     textp = find_extension(paracertp, id_cRLDistributionPoints, 1);
     copy_casn(&textp->self, &fextp->self);
     }
-  else if (Xcrldp && Xcrldp->urlp[1])
+  else 
     {
-    struct xcrldp *xcrldp;
     textp = find_extension(paracertp, id_cRLDistributionPoints, 1);
     clear_casn(&textp->extnValue.cRLDistributionPoints.self);
     write_objid(&textp->extnID, id_cRLDistributionPoints);
+    char *pt, *ept;
     int numpts = 0;
-    num_items(&textp->extnValue.cRLDistributionPoints.self);
-    for (xcrldp = Xcrldp; xcrldp; xcrldp = xcrldp->nextp, numpts++)
+    for (pt = Xcrldp; pt; pt = nextword(pt))
       {
       struct DistributionPoint *distp = (struct DistributionPoint *)
-        inject_casn(&textp->extnValue.cRLDistributionPoints.self, numpts);
+        inject_casn(&textp->extnValue.cRLDistributionPoints.self, numpts++);
+      if (!distp)
+        {
+        sprintf(skibuf, "Too many CRLDP extensions");
+        return (struct Certificate *)0;
+        }
       struct GeneralName *gennamep = (struct GeneralName *) inject_casn(
         &distp->distributionPoint.fullName.self, 0);
-      write_casn(&gennamep->url, (uchar *)xcrldp->urlp, strlen(xcrldp->urlp)); 
-      if (size_casn(&xcrldp->reasons.self))
-        copy_casn(&distp->reasons.self, &xcrldp->reasons.self);
+      if (!gennamep)
+        {
+        sprintf(skibuf, "Too many general names in CRLDP extensions");
+        return (struct Certificate *)0;
+        }
+      for (ept = pt; *ept > ' '; ept++);
+      write_casn(&gennamep->url, (uchar *)pt, ept - pt); 
       }
     }
   if (Xcp && *Xcp != 'C')
@@ -619,7 +536,7 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
   int i;
   struct done_cert *done_certp;
 
-  if ((done_certp = have_already(ski)))
+  if (ski && (done_certp = have_already(ski)))
     {
     done_certp = &done_certs.done_certp[i];
     *done_certpp = done_certp;
@@ -629,10 +546,11 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
     {
     int ansr; 
     struct cert_answers *cert_answersp = 
-      find_cert_by_SKI(ski, locscmp, locconp); 
+      find_cert_by_aKI(ski, (char *)0, locscmp, locconp); 
     if (!cert_answersp) return -1;
     struct cert_ansr *cert_ansrp;
     ansr = cert_answersp->num_ansrs; 
+    int flags, local_id;
     if (ansr < 0) return ansr;
     if (ansr == 1)
       {
@@ -641,13 +559,17 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
       Certificate(certp, (ushort)0);
       if ((ansr = get_casn_file(&certp->self, cert_ansrp->fullname, 0)) < 0)
         return ERR_SCM_COFILE;
+      flags = cert_ansrp->flags;
+      local_id = cert_ansrp->local_id;
       }
          // if DB returns two certs or other error, return error
     free(cert_answersp->cert_ansrp);
     cert_answersp->num_ansrs = 0;
     cert_answersp->cert_ansrp = NULL;
     struct Certificate *paracertp = mk_paracert(certp);
-    if ((ansr = add_done_cert(ski, certp, paracertp)) < 0) return ansr;
+    if (!paracertp) return ERR_SCM_BADSKIFILE;
+    if ((ansr = add_done_cert(ski, certp, paracertp, flags, local_id)) < 0) 
+      return ansr;
     done_certp = &done_certs.done_certp[ansr];
     if (!done_certp->paracertp) return ERR_SCM_BADPARACERT;
     *done_certpp = done_certp; 
@@ -1202,9 +1124,17 @@ Procedure:
   getAKI(skibuf, &extp->extnValue.subjectKeyIdentifier);
   
   // Get list of children having skibuf as their AKI
+  struct cert_answers *cert_answersp = 
+    find_cert_by_aKI((char *)0, skibuf, locscmp, locconp); 
+  numkids = cert_answersp->num_ansrs;
+  childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
+  Certificate(childcertp, (ushort)0);
+
   for (ansr = numkid = 0; numkid < numkids && ansr >= 0; numkid++)
     {
-    // childcertp = &children[numkid];
+    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[numkid];
+    if ((ansr = get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) < 0)
+        return ERR_SCM_COFILE;
     extp = find_extension(childcertp, id_subjectKeyIdentifier, 0);
     getAKI(skibuf, &extp->extnValue.subjectKeyIdentifier);
     struct done_cert *done_certp, done_cert;
@@ -1213,8 +1143,13 @@ Procedure:
       {
       done_certp = &done_cert;
       strcpy(done_cert.ski, skibuf);
+      done_cert.origcertp = (struct Certificate *)
+      calloc(1, sizeof(struct Certificate));
+      Certificate(done_cert.origcertp, (ushort)0);  
       copy_casn(&done_cert.origcertp->self, &childcertp->self);
+      done_cert.origID = cert_ansrp->local_id;
       done_cert.paracertp =  mk_paracert(childcertp);
+dump_test_certs(&done_cert);
       }
     else have = 1;
                                                 // step 2
@@ -1227,7 +1162,7 @@ Procedure:
         delete_casn(&done_certp->paracertp->self);
         }
       else add_done_cert(done_cert.ski, done_cert.origcertp, 
-        done_cert.paracertp);
+        done_cert.paracertp, done_cert.origID, done_cert.origflags);
       }
     if (ansr > 0) ansr = search_downward(done_certp->origcertp);
     }
@@ -1246,7 +1181,7 @@ Procedure:
      Modify paracert in accordance with run
 2.   IF current cert is self-signed, break out of FOR
 3.   Get the current cert's AKI
-     Get that parent cert (and make paracert if necessaru
+     Get that parent cert (and make paracert if necessaru)
 4. FOR all other self-signed certificates, search downward perforating them
    Return 0
 */
@@ -1273,7 +1208,7 @@ dump_test_certs(done_certp);
     } 
     // oldcert is at a self-signed cert
   // for all ss certs
-  // search_downward(done_certp->origcertp);
+  search_downward(done_certp->origcertp);
   return 0;
   }
 
@@ -1364,13 +1299,16 @@ Procedure:
     if (get_casn_file(&myrootcert.self, &skibuf[3], 0) < 0) 
       ansr = ERR_SCM_NORPCERT;  
                    // get key
-    else if(!fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_NORPCERT;  
-    else if(!(c = fgets(skibuf, sizeof(skibuf), SKI))) ansr = ERR_SCM_BADSKIFILE;  
+    else if(!fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_NORPCERT; 
+    else if(!(c = fgets(skibuf, sizeof(skibuf), SKI))) 
+      ansr = ERR_SCM_BADSKIFILE;  
     else
       {
       while (c && !ansr && !strncmp(skibuf, "CONTROL ", 8))  
         {
-        cc = nextword(c);
+        c = strchr(skibuf, (int)'\n');
+        if (c) *c = 0;
+        cc = nextword(skibuf);
         if (!strncmp(cc, "treegrowth", 10) && cc[10] == ' ' )
           {
           if (!strncmp(nextword(cc), "TRUE", 4) && nextword(cc)[4] <= ' ') 
@@ -1391,6 +1329,8 @@ Procedure:
         }
       while (c && !ansr && !strncmp(skibuf, "TAG ", 4))
         {
+        c = strchr(skibuf, (int)'\n');
+        if (c) *c = 0;
         cc = nextword(skibuf);
         if (!strncmp(cc, "Xvalidity_dates ", 16))
           {
@@ -1402,10 +1342,14 @@ Procedure:
         else if (!strncmp(cc, "Xcrldp ", 7))
           {
           cc = nextword(cc);
-          if (!*cc || (*cc == 'R' && 
+          if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
             !find_extension(&myrootcert, id_cRLDistributionPoints, 0)))
             ansr = ERR_SCM_BADSKIFILE;
-          else if (check_crldp(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
+          else 
+            {
+            Xcrldp = (char *)calloc(1, strlen(cc) + 2);
+            strcpy(Xcrldp, cc);
+            }
           }
         else if (!strncmp(cc, "Xcp ", 4))
           {
@@ -1439,8 +1383,10 @@ Procedure:
   for (numcert = 0; numcert < done_certs.numcerts; numcert++, done_certp++)
     {
     // mark done_certp->SKI cert as having para
-    // sign done_certp->paracertp
-    // put in database with para flag
+    done_certp->origflags |= SCM_FLAG_HASPARACERT;
+    set_cert_flag(locconp, done_certp->origID, done_certp->origflags); 
+    // put done_certp->paracert in database with para flag
+    add_paracert2DB(done_certp->paracertp);
     delete_casn(&done_certp->origcertp->self);
     delete_casn(&done_certp->paracertp->self);
     free(done_certp->origcertp);
@@ -1450,7 +1396,6 @@ Procedure:
   delete_casn(&myrootcert.self);
   if (Xcp) free(Xcp);
   if (Xaia) free(Xaia);
-  free_crldp(Xcrldp);
   free(Xcrldp);
   free_keyring(&keyring);
   if (*skibuf) fprintf(logfile, "%s\n", skibuf);

@@ -252,6 +252,7 @@ static int displayFlags (scmsrcha *s, int idx1, char* returnStr)
     addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
     addFlagIfSet(returnStr, flags, SCM_FLAG_ONMAN, "ONMAN");
     }
+  addFlagIfSet(returnStr, flags, SCM_FLAG_HASPARACERT, "HASPARACERT");
   return 1;
 }
 

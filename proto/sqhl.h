@@ -61,6 +61,8 @@
 #define SCM_FLAG_STALECRL     0x20   /* assoc crl of self or ancestor stale */
 #define SCM_FLAG_STALEMAN     0x40   /* assoc man of self or ancestor stale */
 #define SCM_FLAG_ONMAN        0x100  /* has associated valid manifest */
+#define SCM_FLAG_HASPARACERT  0x200  /* has a paracert */
+#define SCM_FLAG_PARACERT     0x400  /* is a paracert */
 
 /* certain fields need to have "rsync URIs". The only test we perform
  * for now is to verify that the field starts with this text */
@@ -110,6 +112,9 @@ extern int   certificate_validity(scm *scmp, scmcon *conp);
 extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 extern int   addStateToFlags(unsigned int *flags, int isValid, char *filename,
 			     char *fullpath, scm *scmp, scmcon *conp);
+extern int   set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags);
+extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp, 
+    scmcon *conp);
 
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
