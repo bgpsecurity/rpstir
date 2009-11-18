@@ -1763,7 +1763,7 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
   pathname = (char *)calloc(1, strlen(outdir)  +
         strlen(fakename) + 2);
   strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
-  cf = cert2fields(pathname, 0, typ, &x509p, &sta, &x509sta);
+  cf = cert2fields(fakename, pathname, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
     // add the X509 cert to the db
