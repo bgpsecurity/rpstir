@@ -32,28 +32,29 @@
 #include <termios.h>
 #include <unistd.h>
 
+#define checkerr(s, args...) if ((s) < 0) { fprintf(stderr, args); exit(-1); }
+
+#define checkerr2(s, args...) if (s) { fprintf(stderr, args); return -1; }
+
 static int getBits(uint val, uint start, uint len) {
 	return (val << start) >> (32 - len);
 }
 
-static int readResponses() {
+static int doResponses(PDU *request, int expectedNum) {
 	PDU *response;
-	int i;
+	int i, numRecords = 0;
 	IPPrefixData *prefixData;
 	char msg[256];
 
-	if (! (response = readPDU(msg))) {
-		printf ("Error reading cache response\n");
-		return -1;
-	}
-	if (response->pduType != PDU_CACHE_RESPONSE) {
-		printf ("Was expecting cache response, got %d\n", response->pduType);
-		return -1;
-	}
+	checkerr(writePDU(request), "Error writing request\n");
+	checkerr2(! (response = readPDU(msg)), "Error reading cache response\n");
+	checkerr2(response->pduType != PDU_CACHE_RESPONSE,
+			  "Was expecting cache response, got %d\n", response->pduType);
 	freePDU(response);
 	for (response = readPDU(msg);
 		 response && (response->pduType != PDU_END_OF_DATA);
 		 response = readPDU(msg)) {
+		numRecords++;
 		prefixData = (IPPrefixData *) response->typeSpecificData;
 		if (response->pduType == PDU_IPV4_PREFIX) {
 			printf("Received pdu of type IPv4 prefix\naddr = ");
@@ -76,16 +77,30 @@ static int readResponses() {
 				prefixData->maxLength);
 		freePDU(response);
 	}
-	if (! response) {
-		printf ("Missing end-of-data pdu\n");
-		return -1;
-	}
+	checkerr2(! response, "Missing end-of-data pdu\n");
+	i = *((uint *)response->typeSpecificData);
+	freePDU(response);
+	checkerr2(numRecords != expectedNum,
+			  "Received %d records, was expecting %d records\n",
+			  numRecords, expectedNum);
+	return i;
+}
+
+static int expectError(PDU *request, short code) {
+	PDU *response;
+	char msg[256];
+	checkerr(writePDU(request), "Error writing request\n");
+	checkerr2(! (response = readPDU(msg)),
+			  "Error reading response: %s\n", msg);
+	checkerr2(response->pduType != PDU_ERROR_REPORT,
+			  "Was expecting error report, got %d\n", response->pduType);
+	checkerr2(response->color != code,
+			  "Was expecting error code %d, got %d\n", code, response->color);
+	printf("Error text (expected) = %s",
+		   ((ErrorData *)response->typeSpecificData)->errorText);
 	freePDU(response);
 	return 0;
 }
-
-
-#define checkerr(s, args...) if ((s) < 0) { fprintf(stderr, args); exit(-1); }
 
 static void initStandalone(char *user, char *passwd) {
 	// get username and password
@@ -142,12 +157,40 @@ static void initSSHProcess(char *host) {
 	}
 }
 
+static int waitNotify() {
+	PDU *response;
+	char msg[256];
+	printf("\n\nWaiting for notify\n");
+	checkerr2(! (response = readPDU(msg)),
+			  "Error reading notification: %s\n", msg);
+	checkerr2(response->pduType != PDU_SERIAL_NOTIFY,
+			  "Was expecting serial notify, got %d\n", response->pduType);
+	freePDU(response);
+	return 0;
+}
+
+#define NEXT_WITH_WAIT												\
+	if (doNotify) {													\
+		checkerr(waitNotify(), "Failed to receive notification\n"); \
+	} else {														\
+		sshCloseSession(session);									\
+		sleep(10);													\
+			doOpen(&session, host, port, user, passwd);				\
+	}
+
+#define NEXT_WITHOUT_WAIT							\
+	if (! doNotify) {								\
+		sshCloseSession(session);					\
+		doOpen(&session, host, port, user, passwd); \
+	}
+
 int main(int argc, char **argv) {
 	CRYPT_SESSION session;
 	PDU request, *response;
 	char msg[256], *host = "localhost";
 	int i, standalone = 0, port = DEFAULT_SSH_PORT;
 	int diffPort = 0;    // indicates whether standalone server
+	int serialNum, doNotify = 1;
 	char user[128], passwd[128];
 
 	for (i = 1; i < argc; i++) {
@@ -164,66 +207,72 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if (standalone) initStandalone(user, passwd);
-	else initSSHProcess(host);
+	if (standalone) {
+		initStandalone(user, passwd);
+		doOpen(&session, host, port, user, passwd);
+		doNotify = ! diffPort;
+	} else {
+		initSSHProcess(host);
+	}
 
-	printf("\nDoing reset query\n");
-	if (standalone) doOpen(&session, host, port, user, passwd);
+	printf("Testing errors at startup, first too early reset query\n");
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-	checkerr(writePDU(&request), "Error writing reset query\n");
-	checkerr(readResponses(), "Failed on reset query\n");
-	if (standalone && diffPort) sshCloseSession(session);
+	checkerr(expectError(&request, ERR_NO_DATA), "failed on notify\n");
+
+	NEXT_WITHOUT_WAIT
+
+	printf("\nThen too early serial query\n");
+	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
+	checkerr(expectError(&request, ERR_NO_DATA), "failed on notify\n");
+
+	NEXT_WITH_WAIT
+
+	printf("\n\nDoing initial reset query\n");
+	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
+	checkerr(serialNum = doResponses(&request, 10), "Failed on reset query\n");
+
+	NEXT_WITH_WAIT
 
 	printf("\n\nDoing serial query\n");
-	if (standalone && diffPort) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
-	*((uint *) request.typeSpecificData) = 1;
-	checkerr(writePDU(&request), "Error writing serial query\n");
-	checkerr(readResponses(), "Failed on serial query\n");
-	if (standalone && diffPort) sshCloseSession(session);
+	*((uint *) request.typeSpecificData) = serialNum;
+	checkerr(serialNum = doResponses(&request, 12),
+			 "Failed on serial query\n");
 
-	printf("\nDoing serial query with reset response\n");
-	if (standalone && diffPort) doOpen(&session, host, port, user, passwd);
+	NEXT_WITH_WAIT
+
+	printf("\n\nRepeat serial query\n");
+	checkerr(doResponses(&request, 18), "Failed on serial query\n");
+
+	NEXT_WITHOUT_WAIT
+
+	printf("\n\nAgain, but now just most recent data\n");
+	*((uint *) request.typeSpecificData) = serialNum;
+	checkerr(doResponses(&request, 6), "Failed on serial query\n");
+
+	NEXT_WITHOUT_WAIT
+
+	printf("\n\nDoing serial query with reset response\n");
 	*((uint *) request.typeSpecificData) = 8723;
 	checkerr(writePDU(&request), "Error writing serial query\n");
-	if (! (response = readPDU(msg))) {
-		printf ("Error reading cache reset\n");
-		return -1;
-	}
-	if (response->pduType != PDU_CACHE_RESET) {
-		printf ("Was expecting cache reset, got %d\n", response->pduType);
-		return -1;
-	}
-	if (standalone && diffPort) sshCloseSession(session);
+	checkerr2(! (response = readPDU(msg)),
+			  "Error reading cache reset: %s\n", msg);
+	checkerr2(response->pduType != PDU_CACHE_RESET,
+			  "Was expecting cache reset, got %d\n", response->pduType);
 	freePDU(response);
 
+	NEXT_WITHOUT_WAIT
+
+	printf("\n\nDoing final reset query\n");
+	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
+	checkerr(doResponses(&request, 16), "Failed on reset query\n");
+
+	NEXT_WITHOUT_WAIT
+
 	printf("\nDoing illegal request\n");
-	if (standalone && diffPort) doOpen(&session, host, port, user, passwd);
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
-	checkerr(writePDU(&request), "Error writing end of data\n");
-	if (! (response = readPDU(msg))) {
-		printf ("Error reading error report\n");
-		return -1;
-	}
-	if (response->pduType != PDU_ERROR_REPORT) {
-		printf ("Was expecting error report, got %d\n", response->pduType);
-		return -1;
-	}
-	printf("Error text = %s\n",
-		   ((ErrorData *)response->typeSpecificData)->errorText);
-	if (standalone && diffPort) sshCloseSession(session);
+	expectError(&request, ERR_INVALID_REQUEST);
 
-	printf ("Waiting for change notification\n");
-	if (! (response = readPDU(msg))) {
-		printf ("Error reading change notification\n");
-		return -1;
-	}
-	if (response->pduType != PDU_SERIAL_NOTIFY) {
-		printf ("Was expecting error report, got %d\n", response->pduType);
-		return -1;
-	}
-	printf("Received change notification\n\n");
-
-	printf("Completed successfully\n");
+	printf("\nCompleted successfully\n");
 	return 1;
 }

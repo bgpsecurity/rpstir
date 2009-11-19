@@ -56,7 +56,7 @@ RTR_RETENTION_HOURS - determines how long to hold old incremental updates,
   between runs of doUpdate)
 
 The command line for running server is:
-server [-s] [-l logfile] [-p port]
+server [-s] [-l logfile] [-p port] [-t timeBetweenUpdateChecks]
   where the flags signify
 -s: standalone (i.e., in the alternate mode, not as a ssh subsystem)
     Note: if it is being run as a ssh subsystem, see below for further
@@ -65,6 +65,8 @@ server [-s] [-l logfile] [-p port]
     different from the standard ssh port, default is 7455
 -l: all textual output is recorded to a log file, whose default name is
     log.rtr.server
+-t: seconds to sleep between checking for updates to the database for
+    performing notifications (default = 60)
 
 The command line for running testClient is:
 testClient [-s] [-h host] [-p port]

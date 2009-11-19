@@ -221,14 +221,14 @@ static void handleResetQuery(PDU *request) {
 }
 
 
-#define SECS_BETWEEN_UPDATE_CHECKS 60
+static int timeBetweenUpdateChecks = 60;
 
 static void *doNotifications() {
 	uint currSerialNum;
 	uint lastSerialNum = getLastSerialNumber(connect, scmp);
 
 	while (1) {
-		sleep(SECS_BETWEEN_UPDATE_CHECKS);
+		sleep(timeBetweenUpdateChecks);
 		currSerialNum = getLastSerialNumber(connect, scmp);
 		if (currSerialNum != lastSerialNum) {
 			pthread_mutex_lock(&commsMutex);
@@ -263,8 +263,10 @@ int main(int argc, char **argv) {
 			logFilename = argv[++i];
 		} else if (strcmp(argv[i], "-p") == 0) {
 			port = atoi(argv[++i]);
+		} else if (strcmp(argv[i], "-t") == 0) {
+			timeBetweenUpdateChecks = atoi(argv[++i]);
 		} else {
-			fprintf(stderr, "Usage: server [-s] [-l logfile] [-p port]\n");
+			fprintf(stderr, "Usage: server [-s] [-l logfile] [-p port] [-t timeBetweenUpdateChecks\n");
 			return -1;
 		}
 	}

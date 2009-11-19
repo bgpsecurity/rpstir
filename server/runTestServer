@@ -6,6 +6,8 @@
 echo ""
 echo "Initializing database"
 $APKI_ROOT/run_scripts/initDB.sh
+echo "Sleeping 20 seconds, start testClient now"
+sleep 20
 echo "Loading first set of data"
 $APKI_ROOT/proto/rcli -y -F $APKI_ROOT/testcases\/C.cer
 $APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/server/testlog.1 -d $APKI_ROOT/testcases
