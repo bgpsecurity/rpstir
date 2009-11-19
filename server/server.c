@@ -202,12 +202,12 @@ static void handleResetQuery(PDU *request) {
 		fullSrch = newsrchscm(NULL, 2, 0, 1);
 		addcolsrchscm(fullSrch, "asn", SQL_C_ULONG, 8);
 		addcolsrchscm(fullSrch, "ip_addr", SQL_C_CHAR, 50);
-		snprintf (fullSrch->wherestr, WHERESTR_SIZE,
-				  "serial_num = %d", serialNum);
 		fullTable = findtablescm(scmp, "rtr_full");
 	}
 
 	// do the query, with callback sending out the responses
+	snprintf (fullSrch->wherestr, WHERESTR_SIZE,
+			  "serial_num = %d", serialNum);
 	searchscm (connect, fullTable, fullSrch, NULL,
 			   sendFullResponse, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
