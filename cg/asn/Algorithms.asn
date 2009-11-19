@@ -115,13 +115,13 @@ AlgorithmTable ::= TABLE {
     rsadsi-SHA512-WithRSAEncryption id-sha-512WithRSAEncryption        NULL,
     sha256                          id-sha256                          NULL,
     unknown                         0xFFFF                             ANY OPTIONAL
-}
+    }
 RPKIAlgorithmTable ::= TABLE
     {
     rsadsi-rsaEncryption           id-rsadsi-rsaEncryption             NULL, 
-    sha256WithRSAEncryption        id-rsa-SHA256-WithRSAEncryption     NULL,
-    sha384WithRSAEncryption        id-rsa-SHA384-WithRSAEncryption     NULL,
-    sha512WithRSAEncryption        id-rsa-SHA512-WithRSAEncryption     NULL,
+    sha256WithRSAEncryption        id-sha-256WithRSAEncryption         NULL,
+    sha384WithRSAEncryption        id-sha-384WithRSAEncryption         NULL,
+    sha512WithRSAEncryption        id-sha-512WithRSAEncryption         NULL,
     }
 
 Dss-Parms ::= SEQUENCE {
@@ -172,7 +172,10 @@ id-policy                           ID ::= {id-infosec 3}
 id-object-classes                   ID ::= {id-infosec 4}
 id-attributes                       ID ::= {id-infosec 5}
 	
-id-sha256                           ID ::= {id-nistalgs 2.1}			        
+id-sha256                           ID ::= {id-nistalgs 2.1}
+id-sha384                           ID ::= {id-nistalgs 2.2}	        
+id-sha512                           ID ::= {id-nistalgs 2.3}
+	        
 id-sdnsSignatureAlgorithm           ID  ::= {id-algorithms 1}
 id-mosaicSignatureAlgorithm         ID  ::= {id-algorithms 2}
 id-sdnsConfidentialityAlgorithm     ID  ::= {id-algorithms 3}

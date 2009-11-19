@@ -64,8 +64,18 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithm
         }
     
       DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF DigestAlgorithmIdentifier
+      id-nistalgs OID ::= { 2.16.840.1.101.3.4 }
 
-      DigestAlgorithmIdentifier ::= AlgorithmIdentifier
+      id-sha256 OBJECT IDENTIFIER ::= {id-nistalgs 2.1}
+      id-sha384 OBJECT IDENTIFIER ::= {id-nistalgs 2.2}
+      id-sha512 OBJECT IDENTIFIER ::= {id-nistalgs 2.3}
+
+      DigestAlgorithmIdentifier ::= OBJECT IDENTIFIER 
+        {
+        sha256 (id-sha256),
+        sha384 (id-sha384),
+        sha512 (id-sha512)
+        }
 
       CertificateSet ::= SET (SIZE (0..1)) OF Certificate
 
