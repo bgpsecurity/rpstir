@@ -696,6 +696,7 @@ else if (type != ASN_FUNCTION)
 		{
 		fprintf(outstr, set_sub_val, itemname, sub_val);
 		free(sub_val);
+                sub_val = (char *)0;
 		}
 	    else if (tmp != ASN_BITSTRING)
                 fprintf(outstr, sub_enum_fill, itemname, integer_val);
