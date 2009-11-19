@@ -21,7 +21,8 @@
 
 DEFINITIONS IMPLICIT TAGS ::=
 -- imports
-IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
+IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier
+        FROM Algorithms IN Algorithms.asn,
         Extensions IPAddressOrRangeA FROM extensions IN extensions.asn,
 	Certificate Version FROM certificate IN certificate.asn,
 	Name FROM name IN name.asn, Manifest FROM Manifest IN manifest.asn;
@@ -63,19 +64,7 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithm
 --      } (v3 | 3)
         }
     
-      DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF DigestAlgorithmIdentifier
-      id-nistalgs OID ::= { 2.16.840.1.101.3.4 }
-
-      id-sha256 OBJECT IDENTIFIER ::= {id-nistalgs 2.1}
-      id-sha384 OBJECT IDENTIFIER ::= {id-nistalgs 2.2}
-      id-sha512 OBJECT IDENTIFIER ::= {id-nistalgs 2.3}
-
-      DigestAlgorithmIdentifier ::= OBJECT IDENTIFIER 
-        {
-        sha256 (id-sha256),
-        sha384 (id-sha384),
-        sha512 (id-sha512)
-        }
+      DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF CMSAlgorithmIdentifier
 
       CertificateSet ::= SET (SIZE (0..1)) OF Certificate
 
@@ -167,7 +156,7 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier FROM Algorithms IN Algorithm
       SignerInfo ::= SEQUENCE { 
         version CMSVersion, -- Value check
         sid SignerIdentifier, 
-        digestAlgorithm DigestAlgorithmIdentifier, 
+        digestAlgorithm CMSAlgorithmIdentifier, 
         signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL, 
         signatureAlgorithm SignatureAlgorithmIdentifier, 
         signature SignatureValue, 

@@ -44,7 +44,7 @@ BEGIN
 
 EXPORTS
     DSAParameters, DSASignature, AlgorithmIdentifier, RPKIAlgorithmIdentifier, 
-      pkcs, pkcs-1;
+    CMSAlgorithmIdentifier  pkcs, pkcs-1;
 
 AlgorithmIdentifier ::= SEQUENCE {
 	algorithm OBJECT IDENTIFIER TABLE AlgorithmTable,
@@ -52,6 +52,10 @@ AlgorithmIdentifier ::= SEQUENCE {
 
 RPKIAlgorithmIdentifier ::= SEQUENCE {
 	algorithm OBJECT IDENTIFIER TABLE RPKIAlgorithmTable,
+	parameters ANY DEFINED BY algorithm OPTIONAL }
+
+CMSAlgorithmIdentifier ::= SEQUENCE {
+	algorithm OBJECT IDENTIFIER TABLE CMSAlgorithmTable,
 	parameters ANY DEFINED BY algorithm OPTIONAL }
 
 -- NOTE:
@@ -122,6 +126,13 @@ RPKIAlgorithmTable ::= TABLE
     sha256WithRSAEncryption        id-sha-256WithRSAEncryption         NULL,
     sha384WithRSAEncryption        id-sha-384WithRSAEncryption         NULL,
     sha512WithRSAEncryption        id-sha-512WithRSAEncryption         NULL,
+    }
+
+CMSAlgorithmTable ::= TABLE
+    {
+    sha256                        id-sha256                    NULL,
+    sha384                        id-sha384                    NULL,
+    sha512                        id-sha512                    NULL
     }
 
 Dss-Parms ::= SEQUENCE {
