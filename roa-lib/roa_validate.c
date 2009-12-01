@@ -380,7 +380,8 @@ static int cmsValidate(struct ROA *rp)
     // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
     //   (= OID 2.16.840.1.101.3.4.2.1)
     if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1 ||
-	diff_objid(&rp->content.signedData.digestAlgorithms.digestAlgorithmIdentifier.algorithm, id_sha256))
+	diff_objid(&rp->content.signedData.digestAlgorithms.
+        cMSAlgorithmIdentifier.algorithm, id_sha256))
 	return ERR_SCM_BADDA;
 
     if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1)
