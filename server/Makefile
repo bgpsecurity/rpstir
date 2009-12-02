@@ -44,12 +44,14 @@ pdu.o: pdu.h
 rtrUtils.o: rtrUtils.h
 server.o: pdu.h socket.h sshComms.h
 testClient.o: pdu.h socket.h sshComms.h
+sampleClient.o: pdu.h coreClient.h
 socket.o: socket.h
 sshComms.o: sshComms.h
+coreClient.o: coreClient.h
 doUpdate.o: rtrUtils.h
 
-libpdu.a:	pdu.o socket.o rtrUtils.o sshComms.o
-	ar crv libpdu.a pdu.o socket.o rtrUtils.o sshComms.o
+libpdu.a:	pdu.o socket.o rtrUtils.o sshComms.o coreClient.o
+	ar crv libpdu.a pdu.o socket.o rtrUtils.o sshComms.o coreClient.o
 	ranlib libpdu.a
 
 server:	server.o libpdu.a $(LOCAL_LIBS) Makefile
@@ -61,5 +63,8 @@ doUpdate: doUpdate.o $(LOCAL_LIBS) Makefile
 testClient: testClient.o libpdu.a $(LOCAL_LIBS) Makefile
 	$(CC) -o testClient -g testClient.o $(LOCAL_LIBS) $(LIBS)
 
+sampleClient: sampleClient.o libpdu.a $(LOCAL_LIBS) Makefile
+	$(CC) -o sampleClient -g sampleClient.o $(LOCAL_LIBS) $(LIBS)
+
 clean:
-	rm -f server testClient *.o *.a
+	rm -f server testClient doUpdate sampleClient *.o *.a

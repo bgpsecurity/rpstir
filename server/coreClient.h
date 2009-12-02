@@ -19,6 +19,8 @@
   $Id: query.c 857 2009-09-30 15:27:40Z dmontana $
 */
 
+#include "pdu.h"
+
 /************************
  * Performs the basic functionality of the client,
  * The caller needs just specify some parameters and callbacks that
@@ -30,7 +32,8 @@
  * Argument: isAnnounce - 0 if withdrawal, !=0 if is announcement
  * Returning a value <0 causes the core client to stop
  ******/
-typedef int (*addressBlockHandler)(IPPrefixData data, int isAnnounce);
+typedef int (*addressBlockHandler)(IPPrefixData data, int isIPV4,
+								   int isAnnounce);
 
 /******
  * Prototype for the callback functions for switching servers, and
