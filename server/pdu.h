@@ -106,6 +106,11 @@ void setSession(CRYPT_SESSION session);
 void setPipes(int readPipe, int writePipe);
 
 /*****
+ * close the pipes specified in setPipes
+ *****/
+void closePipes(void);
+
+/*****
  * read a PDU from the SSH session, waiting until there is data on the socket
  *   returns a NULL PDU on error
  * Arg: errMsg - provide a buffer where any error message can be returned

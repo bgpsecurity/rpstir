@@ -22,6 +22,9 @@
 /************************
  * Sample client for the purposes of testing and demonstrating
  *   use of the library
+ * This is just for unit testing, and should not be used as the
+ *   basis for a real client in general.
+ * Look at sampleClient instead for a model for a real client.
  ***********************/
 
 #include "pdu.h"
@@ -129,34 +132,6 @@ static void doOpen(CRYPT_SESSION *sessionp, char *host, int port,
 	setSession(*sessionp);
 }
 
-/*****
- * set up child process, set up pipes to have the parent able to
- *   write to stdin of child and read from stdout, and have the child
- *   run ssh while the parent returns after setting these pipes as
- *   those used by the PDU reading and writing routines
- *****/
-static void initSSHProcess(char *host) {
-	int writepipe[2] = {-1,-1}, readpipe[2] = {-1,-1};
-	pid_t childpid;
-	checkerr(pipe(readpipe) < 0  ||  pipe(writepipe) < 0,
-			 "Cannot create pipes\n");
-	checkerr(childpid = fork(), "Cannot fork child\n");
-	if ( childpid == 0 ) { /* in the child */
-		close(writepipe[1]);
-		close(readpipe[0]);
-		dup2(writepipe[0], STDIN_FILENO);  close(writepipe[0]);
-		dup2(readpipe[1], STDOUT_FILENO);  close(readpipe[1]);
-		char cmd[256];
-		snprintf(cmd, sizeof(cmd), "ssh -s %s rpki-rtr\n", host);
-		system(cmd);
-	}
-	else { /* in the parent */
-		close(readpipe[1]);
-		close(writepipe[0]);
-		setPipes(readpipe[0], writepipe[1]);
-	}
-}
-
 static int waitNotify() {
 	PDU *response;
 	char msg[256];
@@ -175,7 +150,7 @@ static int waitNotify() {
 	} else {														\
 		sshCloseSession(session);									\
 		sleep(10);													\
-			doOpen(&session, host, port, user, passwd);				\
+		doOpen(&session, host, port, user, passwd);					\
 	}
 
 #define NEXT_WITHOUT_WAIT							\
@@ -212,18 +187,20 @@ int main(int argc, char **argv) {
 		doOpen(&session, host, port, user, passwd);
 		doNotify = ! diffPort;
 	} else {
-		initSSHProcess(host);
+		checkerr(initSSHProcess(host), "Problem forking child ssh process");
 	}
 
 	printf("Testing errors at startup, first too early reset query\n");
 	fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-	checkerr(expectError(&request, ERR_NO_DATA), "failed on notify\n");
+	checkerr(expectError(&request, ERR_NO_DATA),
+			 "failed on early reset query\n");
 
 	NEXT_WITHOUT_WAIT
 
 	printf("\nThen too early serial query\n");
 	fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
-	checkerr(expectError(&request, ERR_NO_DATA), "failed on notify\n");
+	checkerr(expectError(&request, ERR_NO_DATA),
+			 "failed on early serial query\n");
 
 	NEXT_WITH_WAIT
 
@@ -273,6 +250,15 @@ int main(int argc, char **argv) {
 	fillInPDUHeader(&request, PDU_END_OF_DATA, 1);
 	expectError(&request, ERR_INVALID_REQUEST);
 
-	printf("\nCompleted successfully\n");
+	printf("\nCompleted single server tests successfully\n");
+
+	if (! standalone) {
+		printf("\nType return when checked for child process: ");
+		getchar();
+		killSSHProcess();
+		printf("\nType return when checked that no child process: ");
+		getchar();
+	}
+
 	return 1;
 }

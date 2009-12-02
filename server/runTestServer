@@ -1,6 +1,6 @@
 # Run the server side of the RPKI-RTR test
-# Note that you must first run initDB and then start up both the
-#   loader and the testClient before running this script
+# Note that you should have the loader started before running this
+#   and be prepared to run testClient right after starting this script
 # The important output will be that from the testClient program
 
 echo ""

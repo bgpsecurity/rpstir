@@ -20,15 +20,58 @@
 */
 
 #include "sshComms.h"
+#include "pdu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
 
 
 #define checkErr(s, str) \
 	err = (s); \
 	if (err != CRYPT_OK) { printf("Error %s:%d\n", (str), err); return err; }
 static int err;  // to be used with checkErr macro
+
+#define checkerr2(s, args...) \
+	if ((s) < 0) { fprintf(stderr, args); return -1; }
+
+
+static pid_t childpid = 0;   // remember this so that can close it later
+
+
+int initSSHProcess(char *host) {
+	int writepipe[2] = {-1,-1}, readpipe[2] = {-1,-1};
+	checkerr2(pipe(readpipe) < 0  ||  pipe(writepipe) < 0,
+			  "Cannot create pipes\n");
+	checkerr2(childpid = fork(), "Cannot fork child\n");
+	if ( childpid == 0 ) { /* in the child */
+		close(writepipe[1]);
+		close(readpipe[0]);
+		dup2(writepipe[0], STDIN_FILENO);  close(writepipe[0]);
+		dup2(readpipe[1], STDOUT_FILENO);  close(readpipe[1]);
+		char cmd[256];
+		snprintf(cmd, sizeof(cmd), "ssh -s %s rpki-rtr\n", host);
+		system(cmd);
+		fprintf(stderr, "Child process unexpected exit\n");
+		exit(-1);
+	}
+	else { /* in the parent */
+		close(readpipe[1]);
+		close(writepipe[0]);
+		setPipes(readpipe[0], writepipe[1]);
+	}
+	return 0;
+}
+
+int killSSHProcess() {
+	int pid = childpid;
+	childpid = 0;
+	if (pid == 0) return -1;
+	closePipes();
+	return kill(pid, SIGKILL);
+}
 
 
 int initSSH() {

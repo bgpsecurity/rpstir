@@ -45,6 +45,10 @@ void setPipes(int rp, int wp) {
 	readPipe = rp; writePipe = wp;
 }
 
+void closePipes() {
+	close(readPipe); close(writePipe);
+}
+
 /*****************
  * macros for reading
  ****************/
@@ -53,7 +57,7 @@ void setPipes(int rp, int wp) {
 	if ((sessionSet ?									\
 		 sshReceive(session, &(_loc), _sz) :			\
 		 read(readPipe, &(_loc), _sz)) <= 0) {			\
-		snprintf(errMsg, 128, "Badly formatted PDU\n"); \
+		snprintf(errMsg, 128, "Broken connection\n");	\
 		freePDU(pdu);									\
 		return NULL;									\
 	}
