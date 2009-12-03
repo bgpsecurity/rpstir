@@ -29,6 +29,10 @@
 
 /******
  * Prototype for the callback functions for handling data
+ * Argument: data - This contains all the data on the address block and
+ *   the autonomous system number, etc; note that this structure is
+ *   transient, and the data should be copied out
+ * Argument: isIPV4 - true for IPV4, false for IPV6
  * Argument: isAnnounce - 0 if withdrawal, !=0 if is announcement
  * Returning a value <0 causes the core client to stop
  ******/

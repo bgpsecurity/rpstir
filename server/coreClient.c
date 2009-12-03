@@ -61,6 +61,25 @@ static void parseServers (char *filename) {
 void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			   char *hostsFilename, int reconnectDelay,
 			   int maxReconnectTries) {
+	int i;
 	parseServers(hostsFilename);
+	while (1) {
+		for (i = 0; i < MAX_SERVERS; i++) {
+			// try making a connection to server i
+			// if no connection or connection gives error such as data
+			//   not ready, printf and continue to next i
+			// if succeed, keep it open until problem, then call
+			//    clearDataHandler and break loop
+			// note that if on first (reset) query, server not ready, then
+			//   continue on to next i
+		}
+		if (i == MAX_SERVERS) {
+			fprintf(stderr, "Failed on all servers, trying again\n");
+			sleep(10);
+		} else {
+			fprintf(stderr, "Failure on host %s, trying from start\n",
+					servers[i].host);
+		}
+	}
 }
 
