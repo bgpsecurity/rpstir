@@ -42,12 +42,60 @@ static struct ipranges certranges, ipranges;
 static char *Xcrldp;
 
 static char *Xcp;
-  
-static int add_paracert2DB(struct Certificate *paracertp)
+ 
+static char *Xrpdir;
+ 
+#include <fcntl.h>
+static int ffindex;
+ 
+static void dump_test_certs(struct done_cert *done_certp, int orig)
   {
-  return 0;
+  char locbuf[20];
+  int fd, size;
+  char *buf;
+  if (orig)
+    {
+    size = dump_size(&done_certp->origcertp->self);
+    buf = (char *)calloc(1, size + 2);
+    size = dump_casn(&done_certp->origcertp->self, buf);
+    sprintf(locbuf, "origcert%d.raw", ffindex);
+    fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
+    write(fd, buf, size);
+    close(fd); 
+    }
+  size = dump_size(&done_certp->paracertp->self);
+  buf = (char *)calloc(1, size + 2);
+  size = dump_casn(&done_certp->paracertp->self, buf);
+  sprintf(locbuf, "paracert%d.raw", ffindex++);
+  fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
+  write(fd, buf, size);
+  close(fd); 
+/*
+  sprintf(locbuf, "paracert%d.cer", ffindex++);
+  put_casn_file(&done_certp->paracertp->self, locbuf, 0);
+*/
   }
 
+static int add_paracert2DB(struct done_cert *done_certp)
+  {
+  int ansr;
+  uint cert_id;
+  char fullname[PATH_MAX];
+  sprintf(fullname, "%s/%s", Xrpdir, done_certp->filename);
+  ansr = add_cert(locscmp, locconp, done_certp->filename, fullname, 0, 0, 
+    OT_CER, &cert_id);
+  if (ansr >= 0) ansr = set_cert_flag(locconp, cert_id, 
+    (ulong)(SCM_FLAG_ISPARACERT |  done_certp->origflags));   
+  return ansr;
+  }
+
+static char *nextword(char *cc)
+  {
+  char *b = strchr(cc, (int)' ');
+  if (b) while (*b && *b == ' ') b++;
+  return b;
+  }
+ 
 static int check_cp(char *cpp)
   {
   if ((*cpp == 'C' || *cpp == 'D' || *cpp == 'R') && cpp[1] <= ' ') 
@@ -73,47 +121,43 @@ static int check_cp(char *cpp)
   }
 
 static char *Xaia; 
-       
-static int check_dates(char *datesp)
+
+static struct validity_dates
   {
-  struct casn lcasn, hcasn;
-  tagged_constructor(&lcasn, 0, ASN_UTCTIME, ASN_UTCTIME);
-  tagged_constructor(&hcasn, 0, ASN_UTCTIME, ASN_UTCTIME);
+  struct casn lodate;
+  struct casn hidate;
+  } Xvaliddates;
+
+static int check_date(char *datep, struct casn *casnp)
+  {
   char *c;
-  int ansr = 0;
-  for (c = datesp; *c && *c != 'Z'; c++);
-  if (c != &datesp[14] || *c != 'Z') return -1; 
-  if (write_casn(&lcasn, (uchar *)datesp, 15) == 15) 
-    {
-    for (c = &datesp[15]; *c && *c == ' '; c++);
-    if (*c) 
-      {
-      datesp = c;
-      for (c = datesp; *c && *c != 'Z'; c++);
-      if (c == &datesp[14] && *c == 'Z') 
-        {
-        if (write_casn(&hcasn, (uchar *)datesp, 15) == 15)
-          {
-          ulong lotime, hitime;
-          if (read_casn_time(&lcasn, &lotime) > 0 &&
-            read_casn_time(&hcasn, &hitime) > 0 && hitime > lotime) ansr = 1;
-          }
-        }
-      }
-    }
-  clear_casn(&lcasn);
-  clear_casn(&hcasn);
-  if (ansr > 0) return ansr;
-  return -1;
+  for (c = datep; *c >= '0' && *c <= '9'; c++);
+  if (*c != 'Z' || c != &datep[14]) return -1;
+  if (strncmp(datep, "2000", 4) < 0) return -1; 
+  ulong tag;
+  if (strncmp(datep, "2050", 4) >= 0) tag = (ulong)ASN_GENTIME; 
+  else tag = (ulong)ASN_UTCTIME;  
+  tagged_constructor(casnp, 0, tag, tag);
+  if ((tag == (ulong)ASN_UTCTIME && 
+    (write_casn(casnp, (uchar *)&datep[2], 13) < 0 || 
+    read_casn_time(casnp, &tag)) < 0) ||
+    (tag == (ulong)ASN_GENTIME && 
+    (write_casn(casnp, (uchar *)datep, 15) < 0 ||
+    read_casn_time(casnp, &tag) < 0))) return -1;  
+  return 1;
   }
 
-static char *nextword(char *cc)
+static int check_dates(char *datesp)
   {
-  char *b = strchr(cc, (int)' ');
-  if (b) while (*b && *b == ' ') b++;
-  return b;
+  char *enddatep = nextword(datesp);
+  if (!enddatep || datesp[14] != 'Z' || datesp[15] != ' ' ||
+    enddatep[14] != 'Z' || enddatep[15] > ' ' || 
+    strncmp(datesp, enddatep, 14) >= 0) return -1;
+  if (check_date(datesp, &Xvaliddates.lodate) < 0 ||
+    check_date(enddatep, &Xvaliddates.hidate) < 0) return -1;
+  return 1;
   }
- 
+
 struct keyring 
   {
   char *filename;
@@ -162,7 +206,7 @@ static void free_keyring(struct keyring *ringp)
   }
 
 static int add_done_cert(char *skip, struct Certificate *origcertp, 
-  struct Certificate *paracertp, int flags, int local_id)
+  struct Certificate *paracertp, int flags, int local_id, char *filename)
   {
   if (!done_certs.numcerts) 
     {
@@ -180,6 +224,7 @@ static int add_done_cert(char *skip, struct Certificate *origcertp,
   done_certp->origflags = flags;
   done_certp->origcertp = origcertp;
   done_certp->paracertp = paracertp;
+  strcpy(done_certp->filename, filename);
   return done_certs.numcerts - 1;
   }
 
@@ -383,7 +428,7 @@ static void mk_certranges(struct Certificate *certp)
     certrangep = inject_range(&certranges, num++);
     certrangep->typ = ASNUM;
     cvt_asnum(certrangep, asNumOrRangep);
-}
+    }
   certrangep = inject_range(&certranges, num++);
   certrangep->typ = 0;
   }
@@ -414,14 +459,16 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
         &myrootcert.toBeSigned.validity.self);
     else  
       {
-      char *b, *c;
-      for (b = c = Xvalidity_dates; *b > ' '; b++);
       struct Validity *validityp = &paracertp->toBeSigned.validity;
       clear_casn(&validityp->self);
-      write_casn(&validityp->notBefore.generalTime, (uchar *)c, (b - c));
-      while (*b && *b == ' ') b++;
-      for (c = b; *b > ' '; b++);
-      write_casn(&validityp->notAfter.generalTime, (uchar *)c, (b - c));
+      struct casn *casnp = (Xvaliddates.lodate.type == ASN_UTCTIME)?
+        &validityp->notBefore.utcTime: 
+        &validityp->notBefore.generalTime;
+      copy_casn(casnp, &Xvaliddates.lodate);
+      casnp = (Xvaliddates.hidate.type == ASN_UTCTIME)?
+        &validityp->notAfter.utcTime: 
+        &validityp->notAfter.generalTime;
+      copy_casn(casnp, &Xvaliddates.hidate);
       }
     }
   struct Extension *fextp, *textp; 
@@ -438,7 +485,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
     write_objid(&textp->extnID, id_cRLDistributionPoints);
     char *pt, *ept;
     int numpts = 0;
-    for (pt = Xcrldp; pt; pt = nextword(pt))
+    for (pt = Xcrldp; pt && *pt; pt = nextword(pt))
       {
       struct DistributionPoint *distp = (struct DistributionPoint *)
         inject_casn(&textp->extnValue.cRLDistributionPoints.self, numpts++);
@@ -504,32 +551,6 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
   return paracertp;
   }
 
-#include <fcntl.h>
-static int ffindex;
- 
-static void dump_test_certs(struct done_cert *done_certp)
-  {
-  char locbuf[20];
-  int size = dump_size(&done_certp->origcertp->self);
-  char *buf = (char *)calloc(1, size + 2);
-  size = dump_casn(&done_certp->origcertp->self, buf);
-  sprintf(locbuf, "origcert%d.raw", ffindex);
-  int fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
-  write(fd, buf, size);
-  close(fd); 
-  size = dump_size(&done_certp->paracertp->self);
-  buf = (char *)calloc(1, size + 2);
-  size = dump_casn(&done_certp->paracertp->self, buf);
-  sprintf(locbuf, "paracert%d.raw", ffindex++);
-  fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
-  write(fd, buf, size);
-  close(fd); 
-/*
-  sprintf(locbuf, "paracert%d.cer", ffindex++);
-  put_casn_file(&done_certp->paracertp->self, locbuf, 0);
-*/
-  }
-
 static int get_CAcert(char *ski, struct done_cert **done_certpp)
   {  // use INTERSECTION_ALWAYS
   struct Certificate *certp = (struct Certificate *)0;
@@ -550,7 +571,7 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
     if (!cert_answersp) return -1;
     struct cert_ansr *cert_ansrp;
     ansr = cert_answersp->num_ansrs; 
-    int flags, local_id;
+    char filename[PATH_MAX];
     if (ansr < 0) return ansr;
     if (ansr == 1)
       {
@@ -559,20 +580,22 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
       Certificate(certp, (ushort)0);
       if ((ansr = get_casn_file(&certp->self, cert_ansrp->fullname, 0)) < 0)
         return ERR_SCM_COFILE;
-      flags = cert_ansrp->flags;
-      local_id = cert_ansrp->local_id;
+      strcpy(filename, cert_ansrp->filename);
       }
          // if DB returns two certs or other error, return error
+    struct Certificate *paracertp = mk_paracert(certp);
+    if (!paracertp) ansr = ERR_SCM_BADSKIFILE;
+    else if ((ansr = add_done_cert(ski, certp, paracertp, cert_ansrp->flags, 
+      cert_ansrp->local_id, cert_ansrp->filename)) >= 0) 
+      {
+      done_certp = &done_certs.done_certp[ansr];
+      if (!done_certp->paracertp) ansr =  ERR_SCM_BADPARACERT;
+      else *done_certpp = done_certp;
+      } 
     free(cert_answersp->cert_ansrp);
     cert_answersp->num_ansrs = 0;
     cert_answersp->cert_ansrp = NULL;
-    struct Certificate *paracertp = mk_paracert(certp);
-    if (!paracertp) return ERR_SCM_BADSKIFILE;
-    if ((ansr = add_done_cert(ski, certp, paracertp, flags, local_id)) < 0) 
-      return ansr;
-    done_certp = &done_certs.done_certp[ansr];
-    if (!done_certp->paracertp) return ERR_SCM_BADPARACERT;
-    *done_certpp = done_certp; 
+    if (ansr < 0) return ansr;
     i = 1;
     }
   return i;
@@ -782,9 +805,9 @@ Procedure:
 3.     ELSE IF certrange extends before SKI range on low end
          IF certrange extends beyond SKI range on high end, too
            Cut the present cert item to stop just before SKI item
-             Add a new cert item just beyond the SKI item
-4.         ELSE IF certrange starts before SKI range
-             Cut the high end of the cert item back to just before the SKI item
+           Add a new cert item just beyond the SKI item
+4.       ELSE Cut the high end of the cert item back to just before 
+           the SKI item
 5.     ELSE IF certrange goes beyond the SKI range
          Cut the start of the cert item forward to just beyond the SKI item
        Go to next cert entry
@@ -1149,7 +1172,7 @@ Procedure:
       copy_casn(&done_cert.origcertp->self, &childcertp->self);
       done_cert.origID = cert_ansrp->local_id;
       done_cert.paracertp =  mk_paracert(childcertp);
-dump_test_certs(&done_cert);
+dump_test_certs(&done_cert, 1);
       }
     else have = 1;
                                                 // step 2
@@ -1162,7 +1185,8 @@ dump_test_certs(&done_cert);
         delete_casn(&done_certp->paracertp->self);
         }
       else add_done_cert(done_cert.ski, done_cert.origcertp, 
-        done_cert.paracertp, done_cert.origID, done_cert.origflags);
+        done_cert.paracertp, done_cert.origID, done_cert.origflags, 
+        done_cert.filename);
       }
     if (ansr > 0) ansr = search_downward(done_certp->origcertp);
     }
@@ -1196,7 +1220,7 @@ Procedure:
     if ((ansr = modify_paracert(run, done_certp->paracertp)) < 0)
       return ansr;
     done_certp->perf |= (!run)? WASEXPANDED: WASPERFORATED;
-dump_test_certs(done_certp);
+dump_test_certs(done_certp, 1);
                                                   // step 2
     if (!diff_casn(&done_certp->origcertp->toBeSigned.issuer.self, 
        &done_certp->origcertp->toBeSigned.subject.self)) break;
@@ -1293,21 +1317,32 @@ Procedure:
     !fgets(skibuf, sizeof(skibuf), SKI)) || strncmp(skibuf, "RP ", 3)) 
     ansr = ERR_SCM_NORPCERT;  
   else
-    {
-    c = strchr(skibuf, (int)'\n');
-    if (c) *c = 0;
+    {           // get root cert
+    if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
     if (get_casn_file(&myrootcert.self, &skibuf[3], 0) < 0) 
       ansr = ERR_SCM_NORPCERT;  
-                   // get key
-    else if(!fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_NORPCERT; 
-    else if(!(c = fgets(skibuf, sizeof(skibuf), SKI))) 
-      ansr = ERR_SCM_BADSKIFILE;  
+    }
+  if (!ansr && !fgets(skibuf, sizeof(skibuf), SKI)) ansr = ERR_SCM_BADSKIFILE;
+  else
+    {
+    if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
+    if (!strncmp(skibuf, "RPDIR ", 6))
+      {
+      if (!(cc = nextword(skibuf))) ansr = ERR_SCM_BADSKIFILE;
+      else 
+        {
+        char *rootp = getenv("APKI_ROOT");
+        Xrpdir = (char *)calloc(1, strlen(rootp) + strlen(cc) + 4);
+        sprintf(Xrpdir, "%s/%s", rootp, cc);
+        }
+      }
+    if (!ansr && !fgets(skibuf,sizeof(skibuf), SKI)) ansr = ERR_SCM_BADSKIFILE;
     else
       {
+      c = skibuf; 
       while (c && !ansr && !strncmp(skibuf, "CONTROL ", 8))  
         {
-        c = strchr(skibuf, (int)'\n');
-        if (c) *c = 0;
+        if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
         cc = nextword(skibuf);
         if (!strncmp(cc, "treegrowth", 10) && cc[10] == ' ' )
           {
@@ -1329,15 +1364,13 @@ Procedure:
         }
       while (c && !ansr && !strncmp(skibuf, "TAG ", 4))
         {
-        c = strchr(skibuf, (int)'\n');
-        if (c) *c = 0;
+        if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
         cc = nextword(skibuf);
         if (!strncmp(cc, "Xvalidity_dates ", 16))
           {
           cc = nextword(cc);
           if (!*cc || (*cc != 'C'  && *cc != 'R' && check_dates(cc) < 0))
             ansr = ERR_SCM_BADSKIFILE;
-          else  strcpy(Xvalidity_dates, cc);
           }
         else if (!strncmp(cc, "Xcrldp ", 7))
           {
@@ -1380,25 +1413,39 @@ Procedure:
     }
   int numcert;
   struct done_cert *done_certp = done_certs.done_certp;
+  int locansr = 0;
+  char locfilename[128];
+  *locfilename = 0;
   for (numcert = 0; numcert < done_certs.numcerts; numcert++, done_certp++)
     {
     // mark done_certp->SKI cert as having para
     done_certp->origflags |= SCM_FLAG_HASPARACERT;
     set_cert_flag(locconp, done_certp->origID, done_certp->origflags); 
     // put done_certp->paracert in database with para flag
-    add_paracert2DB(done_certp->paracertp);
+    if (locansr >= 0 && (locansr = add_paracert2DB(done_certp)) < 0) 
+      {
+      fprintf(s, "%s ", done_certp->filename);
+      if (logfile) fprintf(logfile, "%s ", done_certp->filename);
+      strcpy(locfilename, done_certp->filename);
+      *skibuf = 0;
+      }
     delete_casn(&done_certp->origcertp->self);
     delete_casn(&done_certp->paracertp->self);
     free(done_certp->origcertp);
     free(done_certp->paracertp);
     }
+  if (!ansr) ansr = locansr;
   fclose(SKI);
   delete_casn(&myrootcert.self);
   if (Xcp) free(Xcp);
   if (Xaia) free(Xaia);
   free(Xcrldp);
   free_keyring(&keyring);
-  if (*skibuf) fprintf(logfile, "%s\n", skibuf);
+  if (*skibuf) 
+    {
+    fprintf(s, "%s\n", skibuf);
+    if (logfile) fprintf(logfile, "%s\n", skibuf);
+    }
   return ansr;
   }
 
