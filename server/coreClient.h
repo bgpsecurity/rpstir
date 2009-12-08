@@ -36,7 +36,7 @@
  * Argument: isAnnounce - 0 if withdrawal, !=0 if is announcement
  * Returning a value <0 causes the core client to stop
  ******/
-typedef int (*addressBlockHandler)(IPPrefixData data, int isIPV4,
+typedef int (*addressBlockHandler)(IPPrefixData *data, int isIPV4,
 								   int isAnnounce);
 
 /******

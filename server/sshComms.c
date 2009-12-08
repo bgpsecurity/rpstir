@@ -41,7 +41,7 @@ static int err;  // to be used with checkErr macro
 static pid_t childpid = 0;   // remember this so that can close it later
 
 
-int initSSHProcess(char *host) {
+int initSSHProcess(char *host, int port, char *user) {
 	int writepipe[2] = {-1,-1}, readpipe[2] = {-1,-1};
 	checkerr2(pipe(readpipe) < 0  ||  pipe(writepipe) < 0,
 			  "Cannot create pipes\n");
@@ -52,7 +52,8 @@ int initSSHProcess(char *host) {
 		dup2(writepipe[0], STDIN_FILENO);  close(writepipe[0]);
 		dup2(readpipe[1], STDOUT_FILENO);  close(readpipe[1]);
 		char cmd[256];
-		snprintf(cmd, sizeof(cmd), "ssh -s %s rpki-rtr\n", host);
+		snprintf(cmd, sizeof(cmd), "ssh -p %d -l %s -s %s rpki-rtr\n",
+				 port, user, host);
 		system(cmd);
 		fprintf(stderr, "Child process unexpected exit\n");
 		exit(-1);
@@ -74,8 +75,12 @@ int killSSHProcess() {
 }
 
 
+static char sshInited = 0;
+
 int initSSH() {
+	if (sshInited) return 0;
 	checkErr(cryptInit(), "initializing cryptlib");
+	sshInited = 1;
 	return 0;
 }
 

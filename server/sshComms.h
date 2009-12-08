@@ -42,7 +42,7 @@
  * Returns -1 on failure, 0 on success
  * Only use this if client and not in standalone mode
  *****/
-int initSSHProcess(char *host);
+int initSSHProcess(char *host, int port, char *user);
 
 /*****
  * Kill the child process most recently opened by initSSHProcess

@@ -106,11 +106,8 @@ static int expectError(PDU *request, short code) {
 }
 
 static void initStandalone(char *user, char *passwd) {
-	// get username and password
-	printf("Enter username: ");
-    fgets(user, 128, stdin);
-	user[strlen(user)-1] = 0;
-	printf("Enter password: ");
+	// get password
+	printf("Enter password for user %s: ", user);
     struct termios oldt;
     tcgetattr(STDIN_FILENO, &oldt);
     struct termios newt = oldt;
@@ -166,7 +163,7 @@ int main(int argc, char **argv) {
 	int i, standalone = 0, port = DEFAULT_SSH_PORT;
 	int diffPort = 0;    // indicates whether standalone server
 	int serialNum, doNotify = 1;
-	char user[128], passwd[128];
+	char *user, passwd[128];
 
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-s") == 0) {
@@ -181,13 +178,15 @@ int main(int argc, char **argv) {
 			return -1;
 		}
 	}
+	user = strdup(getenv("USER"));
 
 	if (standalone) {
 		initStandalone(user, passwd);
 		doOpen(&session, host, port, user, passwd);
 		doNotify = ! diffPort;
 	} else {
-		checkerr(initSSHProcess(host), "Problem forking child ssh process");
+		checkerr(initSSHProcess(host, DEFAULT_SSH_PORT, user),
+				 "Problem forking child ssh process");
 	}
 
 	printf("Testing errors at startup, first too early reset query\n");

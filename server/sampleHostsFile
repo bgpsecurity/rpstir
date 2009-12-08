@@ -4,9 +4,13 @@
 #   server to which the client can connect.
 # The servers are specified in order of descending priority, with the
 #   highest priority server first.
-# Each line contains up to four fields with the defaults in square brackets:
-#   hostname[=localhost] port[=22] standaloneServer[=no] standaloneClient[=no]
+# Each line contains up to three fields with the defaults in square brackets:
+#   hostname[=localhost] standalone[=no] port[=22] user[=<current user>]
+#     hostname is where the server lives
+#     standalone is whether the client is standalone or uses the SSH client
+#     port is the SSH port to connect to at the host
+#     user is the user name to use for ssh (eventually switch to key pairs)
 
 localhost
-localhost 22 no yes
-localhost 7455 yes
+localhost yes
+localhost yes 7455 dmontana
