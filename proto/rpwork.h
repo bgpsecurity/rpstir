@@ -59,6 +59,8 @@ struct done_certs
 struct cert_ansr
   {
   char fullname[PATH_MAX];
+  char *dirname;
+  char *filename;
   unsigned int flags;
   unsigned int local_id;
   };

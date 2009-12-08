@@ -159,14 +159,14 @@ do
   if [ "${DOLOAD}y" != "noy" ] && [ "${DOLOAD}y" != "NOy" ]; then
     echo "loading ${arg}"
     start=`date +%s`
-    ${APKI_ROOT}/rsync_aur/rsync_aur -t ${APKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
+    ${RPKI_ROOT}/rsync_aur/rsync_aur -t ${RPKI_PORT} -f ${LOGS}/${arg}.log -d ${REPOSITORY}/${arg}
     end=`date +%s`
     echo "load required $(($end-$start)) seconds"
   fi
 done
 if [ "${DOLOAD}y" != "noy" ] && [ "${DOLOAD}y" != "NOy" ]; then
   echo "Waiting for loader to finish ..."
-  ${APKI_ROOT}/rsync_aur/rsync_aur -s -t ${APKI_PORT} -f ${APKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
+  ${RPKI_ROOT}/rsync_aur/rsync_aur -s -t ${RPKI_PORT} -f ${RPKI_ROOT}/run_scripts/empty.log -d ${REPOSITORY}
   echo "Loader finished"
 fi
 end2=`date +%s`

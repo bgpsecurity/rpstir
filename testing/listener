@@ -1,2 +1,2 @@
 # sets up server that listens for inputs
-$APKI_ROOT/proto/rcli -w $APKI_PORT -p
+$RPKI_ROOT/proto/rcli -w $RPKI_PORT -p

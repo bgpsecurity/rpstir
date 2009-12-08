@@ -93,18 +93,18 @@ checkEnvironment() {
 
   goodToGo=1
   
-  if [ -z $APKI_DB ]; then
-    echo " *** no database specified in shell as APKI_DB, can't run" | tee -a $error_fname
+  if [ -z $RPKI_DB ]; then
+    echo " *** no database specified in shell as RPKI_DB, can't run" | tee -a $error_fname
     goodToGo=0
   fi
       
-  if [ -z $APKI_ROOT ]; then
-    echo " *** no directory root specified in shell as APKI_ROOT, can't run" | tee -a $error_fname
+  if [ -z $RPKI_ROOT ]; then
+    echo " *** no directory root specified in shell as RPKI_ROOT, can't run" | tee -a $error_fname
     goodToGo=0
   fi
   
-  if [ -z $APKI_PORT ]; then
-    echo " *** no database port specified in shell as APKI_PORT, can't run" | tee -a $error_fname
+  if [ -z $RPKI_PORT ]; then
+    echo " *** no database port specified in shell as RPKI_PORT, can't run" | tee -a $error_fname
     goodToGo=0
   fi
 
@@ -114,12 +114,12 @@ checkEnvironment() {
   if [ $goodToGo -eq 1 ]; then
     listenStr=`ps -ef|grep $USER|grep "rcli -w"|grep -v "grep"`
     if [ -z "$listenStr" ]; then
-      $APKI_ROOT/proto/rcli -w $APKI_PORT -p &
+      $RPKI_ROOT/proto/rcli -w $RPKI_PORT -p &
       sleep 4
       
       listenStr=`ps -ef|grep $USER|grep "rcli -w"|grep -v "grep"`
       if [ -z "$listenStr" ]; then
-        echo " *** could not find or start listener shell (rcli -w \$APKI_PORT -p), can't run" | tee -a $error_fname
+        echo " *** could not find or start listener shell (rcli -w \$RPKI_PORT -p), can't run" | tee -a $error_fname
         goodToGo=0
       else
         echo " *** script started listener"
@@ -249,7 +249,7 @@ createEmptyDatabase() {
 
   # here set the global variable that specifies the repository directory (rDir)
   #
-  rDir=$APKI_ROOT/testcases
+  rDir=$RPKI_ROOT/testcases
 
   # note: for the below to work, the rcli executable must be compiled without
   #       using "getpass()", which is obsolete and which reads directly from
@@ -259,10 +259,10 @@ createEmptyDatabase() {
   #         the bash.sh script ... so the debug_getpass is now really a
   #         dummy call that supplies the password.  Fixing TBD.  1-Aug-08 js
   #
-  $APKI_ROOT/proto/rcli -x -y <<EOI
+  $RPKI_ROOT/proto/rcli -x -y <<EOI
 password
 EOI
-  $APKI_ROOT/proto/rcli -t $rDir -y <<EOI
+  $RPKI_ROOT/proto/rcli -t $rDir -y <<EOI
 password
 EOI
 
@@ -279,10 +279,10 @@ initializeDatabase() {
   #       i.e., it can not be delivered via the listener port -> rcli,
   #       (it fails silently), but instead has to be directly loaded thusly:
   #
-  $APKI_ROOT/proto/rcli -y -F $tanchor_fname
+  $RPKI_ROOT/proto/rcli -y -F $tanchor_fname
   
-  echo "$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/testcases/$flist_fname -d $rDir"
-  $APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/testcases/$flist_fname -d $rDir
+  echo "$RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testcases/$flist_fname -d $rDir"
+  $RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testcases/$flist_fname -d $rDir
   return
 }
 

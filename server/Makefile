@@ -34,7 +34,7 @@ CFLAGS += -I../proto \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
-LOCAL_LIBS=./libpdu.a ../proto/libapki.a
+LOCAL_LIBS=./libpdu.a ../proto/librpki.a
 
 LIBS=$(LIBSSL) $(LIBCL) $(LIBCRYPTO) \
      $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)

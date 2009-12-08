@@ -1331,7 +1331,7 @@ Procedure:
       if (!(cc = nextword(skibuf))) ansr = ERR_SCM_BADSKIFILE;
       else 
         {
-        char *rootp = getenv("APKI_ROOT");
+        char *rootp = getenv("RPKI_ROOT");
         Xrpdir = (char *)calloc(1, strlen(rootp) + strlen(cc) + 4);
         sprintf(Xrpdir, "%s/%s", rootp, cc);
         }

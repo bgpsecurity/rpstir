@@ -212,9 +212,9 @@ static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
 static int printUsage()
 {
   fprintf(stderr, "Usage:\n"); 
-  fprintf(stderr, "  -p portno   connect to port number (default=APKI_PORT)\n");
+  fprintf(stderr, "  -p portno   connect to port number (default=RPKI_PORT)\n");
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
-  fprintf(stderr, "  -d dirname  rsync executable directory (default=APKI_ROOT/rsync_aur)\n");
+  fprintf(stderr, "  -d dirname  rsync executable directory (default=RPKI_ROOT/rsync_aur)\n");
   fprintf(stderr, "  -n          don't execute, just print what would have done\n");
   fprintf(stderr, "  -h          this help listing\n");
   return 1;
@@ -239,12 +239,12 @@ int main(int argc, char **argv)
   FILE     *fp, *configFile;
 
   // initialize
-  if (getenv ("APKI_ROOT") != NULL)
-    snprintf (rsyncDir, sizeof(rsyncDir), "%s/run_scripts", getenv ("APKI_ROOT"));
+  if (getenv ("RPKI_ROOT") != NULL)
+    snprintf (rsyncDir, sizeof(rsyncDir), "%s/run_scripts", getenv ("RPKI_ROOT"));
   else
     sprintf (rsyncDir, ".");
-  if (getenv ("APKI_PORT") != NULL)
-    portno = atoi (getenv ("APKI_PORT"));
+  if (getenv ("RPKI_PORT") != NULL)
+    portno = atoi (getenv ("RPKI_PORT"));
   startSyslog ("chaser");
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
@@ -329,7 +329,7 @@ int main(int argc, char **argv)
   srch.nused = 0;
   srch.vald = 0;
   snprintf (msg, sizeof(msg),
-	    "apki_crl.filename is null or apki_crl.next_upd < \"%s\"",
+	    "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
 	    currTimestamp);
   srch.wherestr = msg;
   addcolsrchscm (&srch, "crldp", SQL_C_CHAR, SIASIZE);

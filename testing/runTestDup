@@ -2,12 +2,12 @@
 
 echo ""
 echo "Running test duplicates"
-$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/testing/testDup -d $APKI_ROOT/testing/REPOSITORY
+$RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testing/testDup -d $RPKI_ROOT/testing/REPOSITORY
 echo "Should be 5 entries (no validity check):"
-$APKI_ROOT/proto/query -t cert -d ski
+$RPKI_ROOT/proto/query -t cert -d ski
 echo "Should be 5 entries (validity check):"
-$APKI_ROOT/proto/query -t cert -d ski -v
+$RPKI_ROOT/proto/query -t cert -d ski -v
 echo "Should be 1 entries (crls):"
-$APKI_ROOT/proto/query -t crl -d aki
+$RPKI_ROOT/proto/query -t crl -d aki
 echo "Should be 1 entries (roas):"
-$APKI_ROOT/proto/query -t roa -d ski
+$RPKI_ROOT/proto/query -t roa -d ski

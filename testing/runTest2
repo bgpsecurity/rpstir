@@ -3,6 +3,6 @@
 
 echo ""
 echo "Running test 2"
-$APKI_ROOT/proto/garbage
+$RPKI_ROOT/proto/garbage
 echo "Should be 5 entries (unknown = valid):"
-$APKI_ROOT/proto/query -t cert -d ski -v
+$RPKI_ROOT/proto/query -t cert -d ski -v

@@ -20,7 +20,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-all:	libapki.a rcli query chaser garbage makeROA proofreader 
+all:	librpki.a rcli query chaser garbage makeROA proofreader 
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
@@ -34,7 +34,7 @@ CFLAGS += -I../roa-lib -I../cg/asn -I../cg/casn \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
-LOCAL_LIBS=./libapki.a ../roa-lib/libroa.a \
+LOCAL_LIBS=./librpki.a ../roa-lib/libroa.a \
 	../cg/asn/libasn.a ../cg/casn/libcasn.a
 
 #LIBS=$(LIBSSL) $(LIBCRYPTO) $(LIBCL) \
@@ -60,26 +60,26 @@ proofreader.o:	err.h conversion.h
 conversion.o:	err.h conversion.h
 rpwork.o:	err.h conversion.h rpwork.c
 
-libapki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
-	ar crv libapki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
-	ranlib libapki.a
+librpki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
+	ar crv librpki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
+	ranlib librpki.a
 
-rcli:	rcli.o libapki.a $(LOCAL_LIBS) Makefile
+rcli:	rcli.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o rcli -g rcli.o $(LOCAL_LIBS) $(LIBS) $(LOCAL_LIBS)
 
-query: query.o libapki.a $(LOCAL_LIBS) Makefile
+query: query.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o query -g query.o $(LOCAL_LIBS) $(LIBS)
 
-chaser: chaser.o libapki.a $(LOCAL_LIBS) Makefile
+chaser: chaser.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o chaser -g chaser.o $(LOCAL_LIBS) $(LIBS)
 
-garbage: garbage.o libapki.a $(LOCAL_LIBS) Makefile
+garbage: garbage.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o garbage -g garbage.o $(LOCAL_LIBS) $(LIBS)
 
-makeROA: makeROA.o libapki.a $(LOCAL_LIBS) Makefile
+makeROA: makeROA.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o makeROA -g makeROA.o $(LOCAL_LIBS) $(LIBS)
 
-proofreader: proofreader.o conversion.o libapki.a $(LOCAL_LIBS) Makefile
+proofreader: proofreader.o conversion.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o proofreader -g proofreader.o conversion.o $(LOCAL_LIBS) $(LIBS)
 
 clean:

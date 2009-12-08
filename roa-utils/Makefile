@@ -34,12 +34,12 @@ CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -I../roa-lib\
 TEST_OBJECTS= roa_test.o
 LIBASN= ../cg/asn/libasn.a
 LIBCASN=../cg/casn/libcasn.a
-LIBAPKI=../proto/libapki.a
+LIBRPKI=../proto/librpki.a
 PROTO_DIR= ../proto
 ROA_LIB_DIR=../roa-lib
 LIBROA=$(ROA_LIB_DIR)/libroa.a
 
-LOCAL_LIBS=$(LIBAPKI) $(LIBROA)	$(LIBASN) $(LIBCASN) 
+LOCAL_LIBS=$(LIBRPKI) $(LIBROA)	$(LIBASN) $(LIBCASN) 
 OTHER_LIBS=$(LIBCL) $(LIBSSL) $(LIBCRYPTO) $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
 # --- targets

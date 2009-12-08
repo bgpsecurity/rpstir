@@ -276,30 +276,30 @@ scm *initscm(void)
 {
   scm *scmp;
   int  sta;
-  char *db = getenv ("APKI_DB");
+  char *db = getenv ("RPKI_DB");
 
   scmp = (scm *)calloc(1, sizeof(scm));
   if ( scmp == NULL )
     return(NULL);
-  scmp->db = strdup((db == NULL) ? APKI_DB : db);
+  scmp->db = strdup((db == NULL) ? RPKI_DB : db);
   if ( scmp->db == NULL )
     {
       freescm(scmp);
       return(NULL);
     }
-  scmp->dbuser = strdup(APKI_DBUSER);
+  scmp->dbuser = strdup(RPKI_DBUSER);
   if ( scmp->dbuser == NULL )
     {
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsnpref = strdup(APKI_DSN);
+  scmp->dsnpref = strdup(RPKI_DSN);
   if ( scmp->dsnpref == NULL )
     {
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsn = makedsnscm(APKI_DSN, scmp->db, APKI_DBUSER, NULL);
+  scmp->dsn = makedsnscm(RPKI_DSN, scmp->db, RPKI_DBUSER, NULL);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);

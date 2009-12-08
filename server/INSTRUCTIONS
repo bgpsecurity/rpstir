@@ -50,7 +50,7 @@ The stalenessSpecsFile should be in the same format as given in
 the file proto/sampleQuerySpecs and tells which types of staleness
 prevents a ROA from being considered valid and which do not.
 The two environment variables that affect the application are:
-APKI_DB - determines the name of the database, defaults to APKI
+RPKI_DB - determines the name of the database, defaults to RPKI
 RTR_RETENTION_HOURS - determines how long to hold old incremental updates,
   defaults to 96 (and should always be at least 24 + the maximum time
   between runs of doUpdate)
@@ -83,7 +83,7 @@ it should not be executed from a command line prompt.  Instead, it
 should be set up to be executed automatically by sshd.
 To do this, first create a script file to execute server.
 A sample script file is given by server/doServer.
-Note how it sets the environment variable APKI_DB as part of the script,
+Note how it sets the environment variable RPKI_DB as part of the script,
 since server will be executing in an environment that presumably
 does not have RPKI-specific environment variables set.
 Next, edit the system file sshd_config (often at the pathname

@@ -17,10 +17,10 @@
 # ***** END LICENSE BLOCK *****
 # clean the rpki-rtr data out of the database
 
-if [ "${APKI_DB}x" = "x" ]; then export APKI_DB=apki; fi
+if [ "${RPKI_DB}x" = "x" ]; then export RPKI_DB=rpki; fi
 
-echo "delete from rtr_update;" | mysql $APKI_DB -u mysql
-echo "delete from rtr_full;" | mysql $APKI_DB -u mysql
-echo "delete from rtr_incremental;" | mysql $APKI_DB -u mysql
+echo "delete from rtr_update;" | mysql $RPKI_DB -u mysql
+echo "delete from rtr_full;" | mysql $RPKI_DB -u mysql
+echo "delete from rtr_incremental;" | mysql $RPKI_DB -u mysql
 
 

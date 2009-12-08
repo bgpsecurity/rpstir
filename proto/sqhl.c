@@ -2775,7 +2775,7 @@ void startSyslog(char *appName)
   //  static char *logName = 0;	/* need to save this for syslog's reuse */
   if (logName != NULL) { free(logName); logName = NULL; } /* previous logName */
   logName = (char *)calloc (6 + strlen (appName), sizeof (char));
-  snprintf(logName, 6 + strlen (appName), "APKI %s", appName);
+  snprintf(logName, 6 + strlen (appName), "RPKI %s", appName);
   openlog(logName, LOG_PID, 0);
   syslog(LOG_NOTICE, "Application Started");
 }

@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 
-$APKI_ROOT = "/home/gardiner/apki/trunk";
+$RPKI_ROOT = "/home/gardiner/apki/trunk";
 # Check these before running!
-$mcert = "$APKI_ROOT/perftest/make_perf_cert";
-$logfile = "$APKI_ROOT/perftest/certlog.txt";
-print "$APKI_ROOT/perftest/APKI\n";
+$mcert = "$RPKI_ROOT/perftest/make_perf_cert";
+$logfile = "$RPKI_ROOT/perftest/certlog.txt";
+print "$RPKI_ROOT/perftest/RPKI\n";
 
-# Start in dir APKI
-chdir "$APKI_ROOT/perftest/APKI";
+# Start in dir RPKI
+chdir "$RPKI_ROOT/perftest/APKI";
 
 # Derrick's test values.  Ignore for real running
 #$mcert = "/Users/starflt/Documents/SA/Newtest/perftest/make_perf_cert";

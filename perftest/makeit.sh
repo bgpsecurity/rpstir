@@ -20,7 +20,7 @@ testdir="`pwd`/TEST"
 unset fDebug fClean
 
 LD_LIBRARY_PATH=`pwd`:${LD_LIBRARY_PATH}; export LD_LIBRARY_PATH
-PATH=`pwd`:${APKI_ROOT}/perftest:${APKI_ROOT}/testcases:${PATH}; export PATH
+PATH=`pwd`:${RPKI_ROOT}/perftest:${RPKI_ROOT}/testcases:${PATH}; export PATH
 
 help() {
 echo "$0: [output dir] [-c] [-r] [-d] [-h]

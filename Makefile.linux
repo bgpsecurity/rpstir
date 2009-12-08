@@ -69,7 +69,7 @@ all:
 	done
 
 dist:
-	make_APKI.sh
+	make_RPKI.sh
 
 clean:
 	for DIR in $(DIRS); do \

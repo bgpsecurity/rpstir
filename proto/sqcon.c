@@ -778,9 +778,9 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 // put in the join if requested
   if ( (what & SCM_SRCH_DO_JOIN) )
     {
-      (void)strcat(stmt, " LEFT JOIN apki_dir on ");
+      (void)strcat(stmt, " LEFT JOIN rpki_dir on ");
       (void)strcat(stmt, tabp->tabname);
-      (void)strcat(stmt, ".dir_id = apki_dir.dir_id");
+      (void)strcat(stmt, ".dir_id = rpki_dir.dir_id");
     }
   if ( (what & SCM_SRCH_DO_JOIN_SELF) )
     {
@@ -795,7 +795,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     }
   if ( (what & SCM_SRCH_DO_JOIN_CRL) )
     {
-      strcat(stmt, " LEFT JOIN apki_crl on apki_cert.aki = apki_crl.aki");
+      strcat(stmt, " LEFT JOIN rpki_crl on rpki_cert.aki = rpki_crl.aki");
     }
   if ( srch->where != NULL )
     {

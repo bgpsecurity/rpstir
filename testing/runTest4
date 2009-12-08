@@ -3,13 +3,13 @@
 
 echo ""
 echo "Running test 4"
-$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/testing/testDelete -d $APKI_ROOT/testing/REPOSITORY
+$RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testing/testDelete -d $RPKI_ROOT/testing/REPOSITORY
 echo "Should be 4 entries (not validating):"
-$APKI_ROOT/proto/query -t cert -d ski
+$RPKI_ROOT/proto/query -t cert -d ski
 echo "Should be 0 entries (validating):"
-$APKI_ROOT/proto/query -t cert -d ski -v
-$APKI_ROOT/rsync_aur/rsync_aur -s -t $APKI_PORT -f $APKI_ROOT/testing/testAdd2 -d $APKI_ROOT/testing/REPOSITORY
+$RPKI_ROOT/proto/query -t cert -d ski -v
+$RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testing/testAdd2 -d $RPKI_ROOT/testing/REPOSITORY
 echo "Should be 5 entries (not validating):"
-$APKI_ROOT/proto/query -t cert -d ski
+$RPKI_ROOT/proto/query -t cert -d ski
 echo "Should be 5 entries (validating):"
-$APKI_ROOT/proto/query -t cert -d ski -v
+$RPKI_ROOT/proto/query -t cert -d ski -v

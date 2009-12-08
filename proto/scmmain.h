@@ -30,20 +30,20 @@
   name and the user name.
 */
 
-static char *APKI_DSN = "{MyODBC 3.51 Driver DSN};SERVER=localhost";
+static char *RPKI_DSN = "{MyODBC 3.51 Driver DSN};SERVER=localhost";
 
 /*
   The database name itself.  It can be overridden via the
-  environment variable APKI_DB
+  environment variable RPKI_DB
 */
 
-static char *APKI_DB = "apki";
+static char *RPKI_DB = "rpki";
 
 /*
   The database user name.
 */
 
-static char *APKI_DBUSER = "mysql";
+static char *RPKI_DBUSER = "mysql";
 
 /*
   Table definitions
@@ -51,12 +51,12 @@ static char *APKI_DBUSER = "mysql";
 
 static scmtab scmtabbuilder[] = 
   {
-    {				/* APKI_CERT */
+    {				/* RPKI_CERT */
 /*
   Usage notes: valfrom and valto are stored in GMT. local_id is a unique
   identifier with the new one obtained via max(local_id) + 1
 */
-      "apki_cert",
+      "rpki_cert",
       "CERTIFICATE",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
@@ -85,7 +85,7 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
-    {				/* APKI_CRL */
+    {				/* RPKI_CRL */
 /*
   Usage notes: this_upd and next_upd are stored in GMT. local_id is a
   unique identifier obtained as max(local_id) + 1
@@ -100,7 +100,7 @@ static scmtab scmtabbuilder[] =
   Note that snlist is of type MEDIUMBLOB, indicating that it can hold at most
   16M/8 = 2M entries.
 */
-      "apki_crl",
+      "rpki_crl",
       "CRL",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
@@ -123,7 +123,7 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
-    {				/* APKI_ROA */
+    {				/* RPKI_ROA */
 /*
   Usage notes: the ski is the ski of the signing cert, and is thus
   effectively the parent of this ROA. The asn is the AS number from
@@ -131,7 +131,7 @@ static scmtab scmtabbuilder[] =
   is not stored here; it must be fetched from the file itself using
   the ROA read code. local_id is as with certs and crls.
 */
-      "apki_roa",
+      "rpki_roa",
       "ROA",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
@@ -149,8 +149,8 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
-    {				/* APKI_MANIFEST */
-      "apki_manifest",
+    {				/* RPKI_MANIFEST */
+      "rpki_manifest",
       "MANIFEST",
       "filename VARCHAR(256) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
@@ -166,8 +166,8 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
-    {				/* APKI_DIR */
-      "apki_dir",
+    {				/* RPKI_DIR */
+      "rpki_dir",
       "DIRECTORY",
       "dirname  VARCHAR(4096) NOT NULL,"
       "dir_id   INT UNSIGNED NOT NULL,"
@@ -176,8 +176,8 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
-    {				/* APKI_METADATA */
-      "apki_metadata",
+    {				/* RPKI_METADATA */
+      "rpki_metadata",
       "METADATA",
       "rootdir  VARCHAR(4096) NOT NULL,"
       "inited   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"

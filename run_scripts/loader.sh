@@ -17,8 +17,8 @@
 # ***** END LICENSE BLOCK *****
 # listen for feeder connections and load the data fed into the database
 
-if [ "${APKI_PORT}x" = "x" ]; then export APKI_PORT=7344; fi
-if [ "${APKI_DB}x" = "x" ]; then export APKI_DB=apki; fi
-if [ "${APKI_ROOT}x" = "x" ]; then export APKI_ROOT=`pwd | sed 's/\/run_scripts//'`; fi
+if [ "${RPKI_PORT}x" = "x" ]; then export RPKI_PORT=7344; fi
+if [ "${RPKI_DB}x" = "x" ]; then export RPKI_DB=apki; fi
+if [ "${RPKI_ROOT}x" = "x" ]; then export RPKI_ROOT=`pwd | sed 's/\/run_scripts//'`; fi
 
-$APKI_ROOT/proto/rcli -w $APKI_PORT -p
+$RPKI_ROOT/proto/rcli -w $RPKI_PORT -p

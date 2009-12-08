@@ -953,7 +953,7 @@ int main(int argc, char **argv)
   real dsn until later. Otherwise, create the real dsn.
 
   A test dsn is needed for operations that operate on the overall
-  database state as opposed to the apki tables, namely the create and
+  database state as opposed to the rpki tables, namely the create and
   delete operations.
 
   Note that this code is done here in main() rather than in a subroutine
@@ -965,7 +965,7 @@ int main(int argc, char **argv)
 /*
   These privileged operations will need a password.
 */
-     password = getenv ("APKI_PASSWORD");  /* can be defined by environment variable */
+     password = getenv ("RPKI_PASSWORD");  /* can be defined by environment variable */
      if (password == NULL)  /* env variable does not specify password */
        {
 	  /* note: getpass manpage states that "this function is obsolete, do not use"

@@ -2,12 +2,12 @@ How to run the tests:
 
 (1) Open two windows.
 
-(2) Set the environment variables APKI_DB, APKI_ROOT and APKI_PORT in
+(2) Set the environment variables RPKI_DB, RPKI_ROOT and RPKI_PORT in
 both windows (or alternatively in your startup file).
 
-APKI_DB = database name (e.g., davestestdb)
-APKI_ROOT = pathname of top of tree (e.g., /home/dmontana/apki)
-APKI_PORT = port number (e.g., 7000)
+RPKI_DB = database name (e.g., davestestdb)
+RPKI_ROOT = pathname of top of tree (e.g., /home/dmontana/apki)
+RPKI_PORT = port number (e.g., 7000)
 
 (3) In one window, execute the script initDB and then the script
 listener.  You will have to enter the root mysql password twice for
