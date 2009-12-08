@@ -675,7 +675,7 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 static scmsrcha *certSrch = NULL;
 
 struct cert_answers cert_answers;
- 
+
 static int addCert2List (scmcon *conp, scmsrcha *s, int idx)
   {
   UNREFERENCED_PARAMETER(conp);
@@ -683,18 +683,20 @@ static int addCert2List (scmcon *conp, scmsrcha *s, int idx)
   if (!cert_answers.num_ansrs) cert_answers.cert_ansrp = (struct cert_ansr *)
     calloc(1, sizeof(struct cert_ansr));
   else cert_answers.cert_ansrp = (struct cert_ansr *)
-    realloc(cert_answers.cert_ansrp, 
+    realloc(cert_answers.cert_ansrp,
     sizeof (struct cert_ansr) * (cert_answers.num_ansrs + 1));
-  struct cert_ansr *this_ansrp = 
+  struct cert_ansr *this_ansrp =
     &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
-  snprintf(this_ansrp->fullname, PATH_MAX, "%s/%s", 
+  strcpy(this_ansrp->dirname,  (char *)certSrch->vec[1].valptr);
+  strcpy(this_ansrp->filename, (char *)certSrch->vec[0].valptr);
+  snprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
     (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
   this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
   this_ansrp->local_id = *(unsigned int *)s->vec[5].valptr;
   return 0;
   }
 
-struct cert_answers * find_cert_by_aKI(char *ski, char *aki, scm *scmp, 
+struct cert_answers * find_cert_by_aKI(char *ski, char *aki, scm *scmp,
   scmcon *conp)
   {
   int sta;
@@ -1003,7 +1005,7 @@ static int updateValidFlags(scmcon *conp, scmtab *tabp, unsigned int id,
   return statementscm (conp, stmt);
 }
 
-// Used by rpwork 
+// Used by rpwork
 int set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags)
   {
   char stmt[150];
