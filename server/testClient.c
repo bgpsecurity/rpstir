@@ -129,25 +129,32 @@ static void doOpen(CRYPT_SESSION *sessionp, char *host, int port,
 	setSession(*sessionp);
 }
 
-static int waitNotify() {
+static int waitNotify(int standalone) {
 	PDU *response;
 	char msg[256];
 	printf("\n\nWaiting for notify\n");
-	checkerr2(! (response = readPDU(msg)),
-			  "Error reading notification: %s\n", msg);
+	if (standalone) {
+		while (! (response = readPDU(msg))) {
+			sleep(1);
+		}
+	} else {
+		checkerr2(! (response = readPDU(msg)),
+				  "Error reading notification: %s\n", msg);
+	}
 	checkerr2(response->pduType != PDU_SERIAL_NOTIFY,
 			  "Was expecting serial notify, got %d\n", response->pduType);
 	freePDU(response);
 	return 0;
 }
 
-#define NEXT_WITH_WAIT												\
-	if (doNotify) {													\
-		checkerr(waitNotify(), "Failed to receive notification\n"); \
-	} else {														\
-		sshCloseSession(session);									\
-		sleep(10);													\
-		doOpen(&session, host, port, user, passwd);					\
+#define NEXT_WITH_WAIT								  \
+	if (doNotify) {									  \
+		checkerr(waitNotify(standalone),			  \
+				 "Failed to receive notification\n"); \
+	} else {										  \
+		sshCloseSession(session);					  \
+		sleep(10);									  \
+		doOpen(&session, host, port, user, passwd);	  \
 	}
 
 #define NEXT_WITHOUT_WAIT							\
