@@ -139,7 +139,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Can't open constraints file",  /* ERR_SCM_NOSKIFILE */
     "No RP certificate",            /* ERR_SCM_NORPCERT */
     "Defective constraints file",   /* ERR_SCM_BADSKIFILE */
-    "Error signing paracert",       /* ERR_SCM_SIGNINGERR */
+    "Error signing para-cert",      /* ERR_SCM_SIGNINGERR */
   } ;
 
 char *err2string(int err)

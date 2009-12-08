@@ -131,7 +131,7 @@
 #define ERR_SCM_NOSKIFILE   -102        /* can't open constraints file */
 #define ERR_SCM_NORPCERT    -103        /* no RP's certificate */
 #define ERR_SCM_BADSKIFILE  -104        /* defective constraints file */
-#define ERR_SCM_SIGNINGERR  -105
+#define ERR_SCM_SIGNINGERR  -105        /* error signing para-cert */
 #define ERR_SCM_MAXERR      -105
 
 /* macro that prints an error string and call return if a condition is true */
