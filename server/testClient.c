@@ -138,6 +138,7 @@ static int waitNotify(int standalone) {
 			   (! strcmp(msg, TIMEOUT_TEXT))) {
 			sleep(1);
 		}
+		checkerr2(! response, "Error reading notification: %s\n", msg);
 	} else {
 		checkerr2(! (response = readPDU(msg)),
 				  "Error reading notification: %s\n", msg);

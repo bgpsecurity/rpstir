@@ -166,7 +166,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			// try reset query for server i, if error move on to next i
 			fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
 			contOnErr(doResponses(&request, abh, cdh),
-					  "Failed during serial query for host %d: %s\n",
+					  "Failed during reset query for host %d: %s\n",
 					  i, servers[i].host);
 
 			// then, go into loop where wait for notification and then
