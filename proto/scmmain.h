@@ -166,6 +166,20 @@ static scmtab scmtabbuilder[] =
       NULL,
       0
     },
+    {				/* RPKI_CTA */
+      "rpki_cta",
+      "COMPOUNDTRUSTANCHOR",
+      "filename VARCHAR(256) NOT NULL,"
+      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
+      "ski_rta  VARCHAR(128) NOT NULL,"
+      "ski_ee   VARCHAR(128) NOT NULL,"
+      "flags    INT UNSIGNED DEFAULT 0,"
+      "local_id INT UNSIGNED NOT NULL UNIQUE,"
+      "         PRIMARY KEY (filename, dir_id),"
+      "         KEY lid (local_id)",
+      NULL,
+      0
+    },
     {				/* RPKI_DIR */
       "rpki_dir",
       "DIRECTORY",
