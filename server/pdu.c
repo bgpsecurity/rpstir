@@ -53,13 +53,13 @@ void closePipes() {
  * macros for reading
  ****************/
 
-#define DO_READ(_loc, _sz)								\
-	if ((sessionSet ?									\
-		 sshReceive(session, &(_loc), _sz) :			\
-		 read(readPipe, &(_loc), _sz)) <= 0) {			\
-		snprintf(errMsg, 128, "Broken connection\n");	\
-		freePDU(pdu);									\
-		return NULL;									\
+#define DO_READ(_loc, _sz)									\
+	err = sessionSet ? sshReceive(session, &(_loc), _sz) :	\
+		read(readPipe, &(_loc), _sz);						\
+	if (err <= 0) {											\
+		snprintf(errMsg, 128, "Read error %d\n", err);		\
+		freePDU(pdu);										\
+		return NULL;										\
 	}
 
 #define READ_BYTE(b) DO_READ(b, 1)
@@ -78,7 +78,7 @@ PDU *readPduAndLock(char *errMsg, pthread_mutex_t *mutex) {
 	IPPrefixData *prefixData;
 	ErrorData *errorData;
 	uint *serialNum, i, len;
-	int expectedLen;
+	int expectedLen, err;
 
 	// receive header and check length
 	READ_BYTE(pdu->protocolVersion);

@@ -167,9 +167,9 @@ int sshSendCollected(CRYPT_SESSION session) {
 
 
 int sshReceive(CRYPT_SESSION session, void *buffer, int maxBytes) {
-	int num;
-	checkErr(cryptPopData(session, buffer, maxBytes, &num), "reading data");
-	return num;
+	int num, val;
+	val = cryptPopData(session, buffer, maxBytes, &num);
+	return (val == CRYPT_OK) ? num : val;
 }
 
 
