@@ -90,6 +90,28 @@ static void getPassword(char *password, char *host, char *user) {
 }
 
 
+#define checkerr2(s, args...) if (s) { fprintf(stderr, args); return -1; }
+
+static int waitForNotification(int standalone) {
+	PDU *response;
+	char msg[256];
+	if (standalone) {
+		while ((! (response = readPDU(msg))) &&
+			   (! strcmp(msg, TIMEOUT_TEXT))) {
+			sleep(1);  // try reading from socket every 1 second
+		}
+		checkerr2(! response, "Error reading notification: %s\n", msg);
+	} else {
+		checkerr2(! (response = readPDU(msg)),
+				  "Error reading notification: %s\n", msg);
+	}
+	checkerr2(response->pduType != PDU_SERIAL_NOTIFY,
+			  "Was expecting serial notify, got %d\n", response->pduType);
+	freePDU(response);
+	return 0;
+}
+
+
 #define checkErr(s, args...) if (s) { fprintf(stderr, args); return -1; }
 
 static int doResponses(PDU *request, addressBlockHandler abh,
@@ -125,6 +147,10 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 
 
 #define contOnErr(s, args...) if ((s) < 0) { fprintf(stderr, args); continue; }
+
+#define breakOnErr(s, args...)										  \
+	if ((s) < 0) { fprintf(stderr, "Closing connection to host %s\n", \
+						   servers[i].host); break; }
 
 #define MAX_ATTEMPTS 3
 
@@ -172,11 +198,9 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			// then, go into loop where wait for notification and then
 			//   issue a serial query and handle the results
 			while (1) {
-				// ??? wait for notification
-				// ??? if error reading notif, printf and break out data loop
-				// ??? doResponses(request, abh, NULL);
-				// ??? read data for serial query, calling abh
-				// ??? if error in serial query, break out of data loop
+				breakOnErr(waitForNotification(servers[i].standalone));
+				fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
+				breakOnErr(doResponses(&request, abh, NULL));
 			}
 			break;
 		}
