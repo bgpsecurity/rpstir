@@ -57,7 +57,10 @@ void closePipes() {
 	err = sessionSet ? sshReceive(session, &(_loc), _sz) :	\
 		read(readPipe, &(_loc), _sz);						\
 	if (err <= 0) {											\
-		snprintf(errMsg, 128, "Read error %d\n", err);		\
+		if (sessionSet && err == CRYPT_ERROR_TIMEOUT)		\
+			snprintf(errMsg, 128, TIMEOUT_TEXT);			\
+		else												\
+			snprintf(errMsg, 128, "Read error %d\n", err);	\
 		freePDU(pdu);										\
 		return NULL;										\
 	}

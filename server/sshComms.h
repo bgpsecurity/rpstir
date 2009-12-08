@@ -34,6 +34,8 @@
 #define DEFAULT_STANDALONE_PORT 7455
 #define DEFAULT_SSH_PORT 22
 
+#define TIMEOUT_TEXT "Socket timed out\n"
+
 /*****
  * Set up child process, set up pipes to have the parent able to
  *   write to stdin of child and read from stdout, and have the child

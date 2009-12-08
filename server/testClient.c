@@ -134,7 +134,8 @@ static int waitNotify(int standalone) {
 	char msg[256];
 	printf("\n\nWaiting for notify\n");
 	if (standalone) {
-		while (! (response = readPDU(msg))) {
+		while ((! (response = readPDU(msg))) &&
+			   (! strcmp(msg, TIMEOUT_TEXT))) {
 			sleep(1);
 		}
 	} else {
