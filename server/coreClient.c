@@ -50,7 +50,7 @@ static void parseServers (char *filename) {
 	}
 	while (fgets (str, STR_SIZE, input)) {
 		char *tok = strtok(str, " ,\t\n");
-		if (! tok) continue;
+		if ((! tok) || (tok[0] == '#')) continue;
 		if (numServers >= MAX_SERVERS) {
 			fprintf(stderr, "Number of servers greater than max: %d\n",
 					MAX_SERVERS);
