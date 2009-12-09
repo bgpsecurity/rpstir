@@ -40,14 +40,14 @@ LIBS=$(LIBSSL) $(LIBCL) $(LIBCRYPTO) \
      $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
 
-pdu.o: pdu.h
+pdu.o: pdu.h sshComms.h
 rtrUtils.o: rtrUtils.h
-server.o: pdu.h socket.h sshComms.h
+server.o: pdu.h socket.h sshComms.h rtrUtils.h
 testClient.o: pdu.h socket.h sshComms.h
 sampleClient.o: pdu.h coreClient.h
 socket.o: socket.h
-sshComms.o: sshComms.h
-coreClient.o: coreClient.h
+sshComms.o: sshComms.h pdu.h
+coreClient.o: coreClient.h pdu.h
 doUpdate.o: rtrUtils.h
 
 libpdu.a:	pdu.o socket.o rtrUtils.o sshComms.o coreClient.o
