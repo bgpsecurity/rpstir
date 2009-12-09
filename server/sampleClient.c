@@ -46,9 +46,13 @@ static int printAssignData(IPPrefixData *data, int isIPV4, int isAnnounce) {
 	return 0;
 }
 
+static int firstReset = 1;
+
 /* just a simple example of how to write callback */
 static int printReset() {
-	fprintf(stderr, "\n\nServer failed, clear all data and start again.\n");
+	fprintf(stderr, firstReset ?
+			"\n\nInitial connection\n" :
+			"\n\nServer failed, clear all data and start again.\n");
 	return 0;
 }
 
