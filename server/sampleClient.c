@@ -20,26 +20,27 @@
 */
 
 #include "coreClient.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 static int getBits(uint val, uint start, uint len) {
 	return (val << start) >> (32 - len);
 }
 
 /* just a simple example of how to write callback */
-static int printAssignData(IPPrefixData data, int isIPV4, int isAnnounce) {
+static int printAssignData(IPPrefixData *data, int isIPV4, int isAnnounce) {
+	int i;
 	fprintf (stderr, "%s as# = %d len = %d max = %d addr = ",
-			 (prefixData->flags == FLAG_ANNOUNCE) ? "ANNOUNCE" : "WITHDRAW",
-			 prefixData->asNumber, prefixData->prefixLength,
-			 prefixData->maxLength);
+			 (data->flags == FLAG_ANNOUNCE) ? "ANNOUNCE" : "WITHDRAW",
+			 data->asNumber, data->prefixLength, data->maxLength);
 	if (isIPV4) {
 		for (i = 0; i < 4; i++)
-			fprintf(stderr, "%d%s",
-					getBits(prefixData->ipAddress[0], 8*i, 8),
+			fprintf(stderr, "%d%s", getBits(data->ipAddress[0], 8*i, 8),
 					(i == 3) ? "\n" : ".");
 	} else {
 		for (i = 0; i < 8; i++)
 			fprintf(stderr, "%x%s",
-					getBits(prefixData->ipAddress[i/2], (i%2)*16, 16),
+					getBits(data->ipAddress[i/2], (i%2)*16, 16),
 					(i == 7) ? "\n" : ":");
 	}
 	return 0;
