@@ -140,6 +140,9 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "No RP certificate",            /* ERR_SCM_NORPCERT */
     "Defective constraints file",   /* ERR_SCM_BADSKIFILE */
     "Error signing para-cert",      /* ERR_SCM_SIGNINGERR */
+    "Invalid ROA",                  /* ERR_SCM_INVALROA */  
+    "Invalid RTA",                  /* ERR_SCM_INVALRTA */  
+    "Invalid manifest",             /* ERR_SCM_INVALMAN */  
   } ;
 
 char *err2string(int err)
