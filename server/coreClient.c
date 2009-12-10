@@ -115,9 +115,8 @@ static int waitForNotification(int standalone) {
 #define checkErr(s, args...) if (s) { fprintf(stderr, args); return -1; }
 
 static int doResponses(PDU *request, addressBlockHandler abh,
-					   clearDataHandler cdh) {
+					   clearDataHandler cdh, uint *serialNumP) {
 	PDU *response;
-	int serialNum;
 	IPPrefixData *prefixData;
 	char msg[256];
 
@@ -140,9 +139,9 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 		freePDU(response);
 	}
 	checkErr(! response, "Missing end-of-data pdu\n");
-	serialNum = *((uint *)response->typeSpecificData);
+	*serialNumP = *((uint *)response->typeSpecificData);
 	freePDU(response);
-	return serialNum;
+	return 0;
 }
 
 
@@ -159,6 +158,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			   int maxReconnectTries) {
 	int i, j;
 	PDU request;
+	uint serialNum;
 
 	parseServers(hostsFilename);
 	while (1) {
@@ -190,17 +190,18 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			}
 
 			// try reset query for server i, if error move on to next i
-			fillInPDUHeader(&request, PDU_RESET_QUERY, 1);
-			contOnErr(doResponses(&request, abh, cdh),
+			fillInPDUHeader(&request, PDU_RESET_QUERY, 0);
+			contOnErr(doResponses(&request, abh, cdh, &serialNum),
 					  "Failed during reset query for host %d: %s\n",
 					  i, servers[i].host);
+			request.typeSpecificData = &serialNum;
 
 			// then, go into loop where wait for notification and then
 			//   issue a serial query and handle the results
 			while (1) {
 				breakOnErr(waitForNotification(servers[i].standalone));
-				fillInPDUHeader(&request, PDU_SERIAL_QUERY, 1);
-				breakOnErr(doResponses(&request, abh, NULL));
+				fillInPDUHeader(&request, PDU_SERIAL_QUERY, 0);
+				breakOnErr(doResponses(&request, abh, NULL, &serialNum));
 			}
 			break;
 		}
