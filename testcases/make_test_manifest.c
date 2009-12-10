@@ -95,10 +95,38 @@ static int fatal(int msg, char *paramp)
   exit(msg);
   }
 
+static void make_fullpath(char *fullpath, char *locpath)
+  {
+  // Manifest goes in issuer's directory, e.g.
+  // M1.man goes nowhere else, 
+  // M11.man goes into C1/, 
+  // M121.man goes into C1/2 
+  // M1231.man goes into C1/2/3
+  char *f = fullpath, *l = locpath;
+  if (strlen(locpath) > 6) 
+    {
+    *f++ = 'C';
+    *l++; 
+    *f++ = *l++;  // 1st digit
+    *f++ = '/';
+    if (l[1] != '.')  // 2nd digit
+      {
+      *f++ = *l++;  
+      *f++ = '/';
+      if (l[1] != '.') // 3rd digit
+        {
+        *f++ = *l++;
+        *f++ = '/';
+        }
+      }
+    }
+  strcpy(f, locpath);
+  }
+
 int main(int argc, char **argv)
   {
   struct ROA roa;
-  struct AlgorithmIdentifier *algidp;
+  struct CMSAlgorithmIdentifier *algidp;
   ulong now = time((time_t *)0);
 
   if (argc < 2)
@@ -129,12 +157,14 @@ int main(int argc, char **argv)
   write_objid(&roa.contentType, id_signedData);
   write_casn_num(&roa.content.signedData.version.self, (long)3);
   inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
-  algidp = (struct AlgorithmIdentifier *)member_casn(&roa.content.signedData.
+  algidp = (struct CMSAlgorithmIdentifier *)member_casn(&roa.content.signedData.
     digestAlgorithms.self, 0);
   write_objid(&algidp->algorithm, id_sha256);
   write_casn(&algidp->parameters.sha256, (uchar *)"", 0);
-  write_objid(&roa.content.signedData.encapContentInfo.eContentType, id_roa_pki_manifest);
-  struct Manifest *manp = &roa.content.signedData.encapContentInfo.eContent.manifest;
+  write_objid(&roa.content.signedData.encapContentInfo.eContentType, 
+    id_roa_pki_manifest);
+  struct Manifest *manp = &roa.content.signedData.encapContentInfo.eContent.
+    manifest;
   write_casn_num(&manp->manifestNumber, (long)index);
   int timediff = 0;
   if (argc == 3)
@@ -185,7 +215,10 @@ int main(int argc, char **argv)
     &roa.content.signedData.  certificates.self, 0);
   if (get_casn_file(&certp->self, certfile, 0) < 0) fatal(2, certfile);
   if ((c = signCMS(&roa, keyfile, 0))) fatal(7, c);
+  char fullpath[40];
+  make_fullpath(fullpath, manifestfile);
   if (put_casn_file(&roa.self, manifestfile, 0) < 0) fatal(6, manifestfile);
+  if (put_casn_file(&roa.self, fullpath, 0) < 0) fatal(2, fullpath);
   for (c = manifestfile; *c && *c != '.'; c++);
   strcpy(c, ".raw");
   char *rawp;

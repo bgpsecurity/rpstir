@@ -125,6 +125,39 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
   return;
   }
 
+static void make_fullpath(char *fullpath, char *locpath)
+  {
+  // ROA goes in issuer's directory, e.g.
+  // R1.roa goes nowhere else, 
+  // R11.roa goes into C1/, 
+  // R121.roa goes into C1/2 
+  // R1231.roa goes into C1/2/3
+  char *f = fullpath, *l = locpath;
+  if (strlen(locpath) > 6) 
+    {
+    *f++ = 'C';
+    *l++; 
+    *f++ = *l++;  // 1st digit
+    *f++ = '/';
+    if (l[1] != '.')  // 2nd digit
+      {
+      *f++ = *l++;  
+      *f++ = '/';
+      if (l[1] != '.') // 3rd digit
+        {
+        *f++ = *l++;
+        *f++ = '/';
+        if (l[1] != '.') // 4th digit
+          {
+          *f++ = *l++;
+          *f++ = '/';
+          }
+        }
+      }
+    }
+  strcpy(f, locpath);
+  }
+
 int main (int argc, char **argv)
 {
     long asnum = -1, bad = 0;
@@ -262,7 +295,7 @@ int main (int argc, char **argv)
     // mark the roa: the signed data is hashed with sha256
     struct SignedData *sgdp = &roa.content.signedData;
     write_casn_num(&sgdp->version.self, 3);
-    struct AlgorithmIdentifier *algidp = (struct AlgorithmIdentifier *)
+    struct CMSAlgorithmIdentifier *algidp = (struct CMSAlgorithmIdentifier *)
 	inject_casn(&sgdp->digestAlgorithms.self, 0);
     write_objid(&algidp->algorithm, id_sha256);
     write_casn(&algidp->parameters.sha256, (uchar *)"", 0);
@@ -308,8 +341,10 @@ int main (int argc, char **argv)
       }
 
     // write out the roa
-    if (put_casn_file(&roa.self, roafile, 0) < 0)
-	fatal(4, roafile);
+    char fullpath[40];
+    make_fullpath(fullpath, roafile);
+    if (put_casn_file(&roa.self, roafile, 0) < 0) fatal(4, roafile);
+    if (put_casn_file(&roa.self, fullpath, 0) < 0) fatal(4, fullpath);
 
     // do they want readable output saved?
     if (readablefile != NULL) {
