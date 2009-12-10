@@ -162,7 +162,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 
 	parseServers(hostsFilename);
 	while (1) {
-		for (i = 0; i < MAX_SERVERS; i++) {
+		for (i = 0; i < numServers; i++) {
 			// try connecting to server i, if fails move on to next i
 			if (! servers[i].standalone) {
 				contOnErr(initSSHProcess(servers[i].host, servers[i].port,
