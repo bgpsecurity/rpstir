@@ -122,6 +122,9 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 
 	checkErr(writePDU(request) < 0, "Error writing query request\n");
 	checkErr(! (response = readPDU(msg)), "Error reading cache response\n");
+	checkErr(response->pduType == PDU_ERROR_REPORT &&
+			 response->color == ERR_NO_DATA,
+			 "No data currently available at the server\n");
 	checkErr(response->pduType != PDU_CACHE_RESPONSE,
 			 "Was expecting cache response, got %d\n", response->pduType);
 	freePDU(response);
@@ -205,7 +208,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			}
 			break;
 		}
-		if (i == MAX_SERVERS) {
+		if (i == numServers) {
 			fprintf(stderr, "Failed on all servers, trying again\n");
 			sleep(10);
 		} else {
