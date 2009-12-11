@@ -149,6 +149,7 @@ int sshOpenClientSession(CRYPT_SESSION *sessionp, char *hostname,
 
 
 int sshCloseSession(CRYPT_SESSION session) {
+	unsetSession();
 	return cryptDestroySession(session);
 }
 

@@ -41,6 +41,10 @@ void setSession(CRYPT_SESSION s) {
 	session = s; sessionSet = 1;
 }
 
+void unsetSession() {
+	sessionSet = 0;
+}
+
 void setPipes(int rp, int wp) {
 	readPipe = rp; writePipe = wp;
 }

@@ -100,6 +100,11 @@ typedef struct _ErrorData {
 void setSession(CRYPT_SESSION session);
 
 /*****
+ * If no longer using a session, let the read/write functions know
+ *****/
+void unsetSession(void);
+
+/*****
  * if using pipes for comms and want to specify other pipes besides
  *   stdin and stdout, call this function
  *****/
