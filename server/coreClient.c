@@ -148,11 +148,17 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 }
 
 
-#define contOnErr(s, args...) if ((s) < 0) { fprintf(stderr, args); continue; }
+#define KILL_IT {											\
+	if (servers[i].standalone) sshCloseSession(session);	\
+	else killSSHProcess(); }
 
-#define breakOnErr(s, args...)										  \
-	if ((s) < 0) { fprintf(stderr, "Closing connection to host %s\n", \
-						   servers[i].host); break; }
+#define contOnErr(s, args...) if ((s) < 0) {		   \
+		fprintf(stderr, args);						   \
+		KILL_IT; continue; }
+
+#define breakOnErr(s, args...) if ((s) < 0) {							\
+		fprintf(stderr, "Closing connection to host %s\n", servers[i].host); \
+		KILL_IT; break; }
 
 #define MAX_ATTEMPTS 3
 
@@ -162,6 +168,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 	int i, j;
 	PDU request;
 	uint serialNum;
+	CRYPT_SESSION session;
 
 	parseServers(hostsFilename);
 	while (1) {
@@ -173,7 +180,6 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 						  "Problem connecting to host/port %d: %s/%d\n",
 						  i, servers[i].host, servers[i].port);
 			} else {
-				CRYPT_SESSION session;
 				char password[128];
 				contOnErr(initSSH(), "Error initializing cryptlib\n");
 				for (j = 0; j < MAX_ATTEMPTS; j++) {
