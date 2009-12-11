@@ -193,7 +193,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 					fprintf(stderr, "Try again to connect to %s\n",
 							servers[i].host);
 				}
-				contOnErr(j - MAX_ATTEMPTS - 1,
+				contOnErr(MAX_ATTEMPTS - j - 1,
 						  "Problem connecting to host/port %d: %s/%d\n",
 						  i, servers[i].host, servers[i].port);
 			}
