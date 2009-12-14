@@ -143,6 +143,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid ROA",                  /* ERR_SCM_INVALROA */  
     "Invalid RTA",                  /* ERR_SCM_INVALRTA */  
     "Invalid manifest",             /* ERR_SCM_INVALMAN */  
+    "Error writing EE cert",        /* ERR_SCM_WRITE_EE */
   } ;
 
 char *err2string(int err)
