@@ -115,10 +115,12 @@ static int waitForNotification(int standalone) {
 #define checkErr(s, args...) if (s) { fprintf(stderr, args); return -1; }
 
 static int doResponses(PDU *request, addressBlockHandler abh,
-					   clearDataHandler cdh, uint *serialNumP) {
+					   clearDataHandler cdh, updateCompleteHandler uch,
+					   uint *serialNumP) {
 	PDU *response;
 	IPPrefixData *prefixData;
 	char msg[256];
+	int numResponses = 0;
 
 	checkErr(writePDU(request) < 0, "Error writing query request\n");
 	checkErr(! (response = readPDU(msg)), "Error reading cache response\n");
@@ -128,7 +130,9 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 	checkErr(response->pduType != PDU_CACHE_RESPONSE,
 			 "Was expecting cache response, got %d\n", response->pduType);
 	freePDU(response);
-	if (cdh) (*cdh)();
+	if (cdh) {
+		checkErr((*cdh)(), "Top-level choice to quit in clearData\n");
+	}
 	for (response = readPDU(msg);
 		 response && (response->pduType != PDU_END_OF_DATA);
 		 response = readPDU(msg)) {
@@ -138,12 +142,16 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 				 "Received unexpected pdu type %d\n", response->pduType);
 		checkErr((*abh)(prefixData, response->pduType != PDU_IPV4_PREFIX,
 						prefixData->flags == FLAG_ANNOUNCE),
-				 "Top-level choice to abort current query\n");
+				 "Top-level choice to quit in addrressBlock\n");
 		freePDU(response);
+		numResponses++;
 	}
 	checkErr(! response, "Missing end-of-data pdu\n");
 	*serialNumP = *((uint *)response->typeSpecificData);
 	freePDU(response);
+	if (numResponses > 0) {
+		checkErr((*uch)(), "Top-level choice to quit in updateComplete\n");
+	}
 	return 0;
 }
 
@@ -152,20 +160,30 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 	if (servers[i].standalone) sshCloseSession(session);	\
 	else killSSHProcess(); }
 
+#define NEXT_RECONNECT							\
+	if (reconnectTries == maxReconnectTries) {	\
+		reconnectTries = 0; break;				\
+	}											\
+	reconnectTries++; i--;						\
+	sleep(reconnectDelay); continue;
+	
+
 #define contOnErr(s, args...) if ((s) < 0) {		   \
 		fprintf(stderr, args);						   \
-		KILL_IT; continue; }
+		KILL_IT;									   \
+		if (reconnectTries == 0) continue;			   \
+		NEXT_RECONNECT; }
 
 #define breakOnErr(s, args...) if ((s) < 0) {							\
 		fprintf(stderr, "Closing connection to host %s\n", servers[i].host); \
 		KILL_IT; break; }
 
-#define MAX_ATTEMPTS 3
+#define MAX_ATTEMPTS 1
 
 void runClient(addressBlockHandler abh, clearDataHandler cdh,
-			   char *hostsFilename, int reconnectDelay,
-			   int maxReconnectTries) {
-	int i, j;
+			   updateCompleteHandler uch, char *hostsFilename,
+			   int reconnectDelay, int maxReconnectTries) {
+	int i, j, reconnectTries = 0;
 	PDU request;
 	uint serialNum;
 	CRYPT_SESSION session;
@@ -199,24 +217,35 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			}
 
 			// try reset query for server i, if error move on to next i
-			fillInPDUHeader(&request, PDU_RESET_QUERY, 0);
-			contOnErr(doResponses(&request, abh, cdh, &serialNum),
-					  "Failed during reset query for host %d: %s\n",
-					  i, servers[i].host);
-			request.typeSpecificData = &serialNum;
+			// but, if this is a reconnect attempt, instead do a serial query
+			if (reconnectTries == 0) {
+				fillInPDUHeader(&request, PDU_RESET_QUERY, 0);
+				contOnErr(doResponses(&request, abh, cdh, uch, &serialNum),
+						  "Failed during reset query for host %d: %s\n",
+						  i, servers[i].host);
+				request.typeSpecificData = &serialNum;
+			} else {
+				fillInPDUHeader(&request, PDU_SERIAL_QUERY, 0);
+				contOnErr(doResponses(&request, abh, NULL, uch, &serialNum),
+						  "Failed during serial query for host %d: %s\n",
+						  i, servers[i].host);
+				reconnectTries = 0;  // completed successfully, so reset
+				fprintf(stderr, "Re-established connection to host %d: %s\n",
+						i, servers[i].host);
+			}
 
 			// then, go into loop where wait for notification and then
 			//   issue a serial query and handle the results
 			while (1) {
 				breakOnErr(waitForNotification(servers[i].standalone));
 				fillInPDUHeader(&request, PDU_SERIAL_QUERY, 0);
-				breakOnErr(doResponses(&request, abh, NULL, &serialNum));
+				breakOnErr(doResponses(&request, abh, NULL, uch, &serialNum));
 			}
-			break;
+			NEXT_RECONNECT;
 		}
 		if (i == numServers) {
 			fprintf(stderr, "Failed on all servers, trying again\n");
-			sleep(10);
+			sleep(reconnectDelay);
 		} else {
 			fprintf(stderr, "Failure on host %s, trying from start\n",
 					servers[i].host);

@@ -40,6 +40,14 @@ typedef int (*addressBlockHandler)(IPPrefixData *data, int isIPV4,
 								   int isAnnounce);
 
 /******
+ * Prototype for the callback functions for handling a notification that
+ *   the current set of data is finished being passed and that it is
+ *   time to perform any operations that are done when the data is stable.
+ * Returning a value <0 causes the core client to stop
+ ******/
+typedef int (*updateCompleteHandler)(void);
+
+/******
  * Prototype for the callback functions for switching servers, and
  *   hence for starting a fresh new set of address block assignments
  * Returning a value <0 causes the core client to stop
@@ -63,5 +71,5 @@ typedef int (*clearDataHandler)(void);
  *   server
  ******/
 void runClient(addressBlockHandler abh, clearDataHandler cdh,
-			   char *hostsFilename, int reconnectDelay,
-			   int maxReconnectTries);
+			   updateCompleteHandler uch, char *hostsFilename,
+			   int reconnectDelay, int maxReconnectTries);

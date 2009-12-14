@@ -46,6 +46,11 @@ static int printAssignData(IPPrefixData *data, int isIPV4, int isAnnounce) {
 	return 0;
 }
 
+static int printDataDone() {
+	fprintf(stderr, "This set of data is now complete.\n\n\n");
+	return 0;
+}
+
 static int firstReset = 1;
 
 /* just a simple example of how to write callback */
@@ -57,6 +62,7 @@ static int printReset() {
 }
 
 int main(int argc, char **argv) {
-	runClient(printAssignData, printReset, "sampleHostsFile", 5, 10);
+	runClient(printAssignData, printReset, printDataDone,
+			  "sampleHostsFile", 5, 2);
 	return 0;
 }
