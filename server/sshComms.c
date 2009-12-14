@@ -52,7 +52,8 @@ int initSSHProcess(char *host, int port, char *user) {
 		dup2(writepipe[0], STDIN_FILENO);  close(writepipe[0]);
 		dup2(readpipe[1], STDOUT_FILENO);  close(readpipe[1]);
 		char cmd[256];
-		snprintf(cmd, sizeof(cmd), "ssh -p %d -l %s -s %s rpki-rtr\n",
+		snprintf(cmd, sizeof(cmd),
+				 "ssh -o StrictHostKeyChecking=yes -p %d -l %s -s %s rpki-rtr\n",
 				 port, user, host);
 		system(cmd);
 		fprintf(stderr, "Child process unexpected exit\n");
