@@ -117,7 +117,7 @@ extern char *ASNTimeToDBTime(char *in, int *stap);
 extern char *LocalTimeToDBTime(int *stap);
 extern char *UnixTimeToDBTime(time_t clck, int *stap);
 
-extern int   rescert_profile_chk(X509 *x, int ct);
+extern int   rescert_profile_chk(X509 *x, int ct, int checkRPKI);
 
 extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 				X509 **xp, int *stap, int *x509stap);

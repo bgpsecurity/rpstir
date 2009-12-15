@@ -55,42 +55,49 @@ static scmtab *theCertTable = NULL;
 static scmtab *theROATable = NULL;
 static scmtab *theCRLTable = NULL;
 static scmtab *theManifestTable = NULL;
+static scmtab *theCTATable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm    *theSCMP = NULL;
 
 static void initTables(scm *scmp)
 {
+  char *msg = "Error finding %s table\n";
   if (theCertTable == NULL) {
     theDirTable = findtablescm(scmp, "DIRECTORY");
     if (theDirTable == NULL) {
-      fprintf (stderr, "Error finding directory table\n");
+      fprintf (stderr, msg, "directory");
       exit (-1);
     }
     theMetaTable = findtablescm(scmp, "METADATA");
     if (theMetaTable == NULL) {
-      fprintf (stderr, "Error finding metadata table\n");
+      fprintf (stderr, msg, "metadata");
       exit (-1);
     }
     theCertTable = findtablescm (scmp, "CERTIFICATE");
     if (theCertTable == NULL) {
-      fprintf (stderr, "Error finding certificate table\n");
+      fprintf (stderr, msg, "certificate");
       exit (-1);
     }
     theCRLTable = findtablescm (scmp, "CRL");
     if (theCRLTable == NULL) {
-      fprintf (stderr, "Error finding crl table\n");
+      fprintf (stderr, msg, "crl");
       exit (-1);
     }
     theROATable = findtablescm (scmp, "ROA");
     if (theROATable == NULL) {
-      fprintf (stderr, "Error finding roa table\n");
+      fprintf (stderr, msg, "roa");
       exit (-1);
     }
     theManifestTable = findtablescm (scmp, "MANIFEST");
     if (theManifestTable == NULL) {
-      fprintf (stderr, "Error finding manifest table\n");
+      fprintf (stderr, msg, "manifest");
       exit (-1);
+    }
+    theCTATable = findtablescm(scmp, "COMPOUNDTRUSTANCHOR");
+    if (theCTATable == NULL) {
+      fprintf(stderr, msg, "compound trust anchor");
+      exit(-1);
     }
     theSCMP = scmp;
   }
@@ -295,6 +302,7 @@ int infer_filetype(char *fname)
     typ += OT_ROA;
   if ( strstr(fname, ".man") != NULL  || strstr(fname, ".mft") != NULL)
     typ += OT_MAN;
+  if ( strstr(fname, ".rta") != NULL) typ += OT_RTA;
   if ( typ < OT_UNKNOWN || typ > OT_MAXBASIC )
     return(ERR_SCM_INVALFN);
   if ( pem > 0 )
@@ -451,60 +459,6 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
 // add the CRL
   sta = insertscm(conp, theCRLTable, &aone);
   free((void *)hexs);
-  return(sta);
-}
-
-static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
-			    unsigned int dirid, char *ski, int asid,
-			    char *ip_addrs, char *sig, unsigned int flags)
-{
-  unsigned int roa_id = 0;
-  scmkva   aone;
-  scmkv    cols[8];
-  char  flagn[24];
-  char  asn[24];
-  char  lid[24];
-  char  did[24];
-  int   idx = 0;
-  int   sta;
-
-  initTables (scmp);
-  conp->mystat.tabname = "ROA";
-// first check for a duplicate signature
-  sta = dupsigscm(scmp, conp, theROATable, sig);
-  if ( sta < 0 )
-    return(sta);
-  sta = getmaxidscm(scmp, conp, "local_id", theROATable, &roa_id);
-  if ( sta < 0 )
-    return(sta);
-  roa_id++;
-// fill in insertion structure
-  cols[idx].column = "filename";
-  cols[idx++].value = outfile;
-  (void)snprintf(did, sizeof(did), "%u", dirid);
-  cols[idx].column = "dir_id";
-  cols[idx++].value = did;
-  cols[idx].column = "ski";
-  cols[idx++].value = ski;
-  cols[idx].column = "sig";
-  cols[idx++].value = sig;
-  cols[idx].column = "ip_addrs";
-  cols[idx++].value = ip_addrs;
-  (void)snprintf(asn, sizeof(asn), "%d", asid);
-  cols[idx].column = "asn";
-  cols[idx++].value = asn;
-  (void)snprintf(flagn, sizeof(flagn), "%u", flags);
-  cols[idx].column = "flags";
-  cols[idx++].value = flagn;
-  (void)snprintf(lid, sizeof(lid), "%u", roa_id);
-  cols[idx].column = "local_id";
-  cols[idx++].value = lid;
-  aone.vec = &cols[0];
-  aone.ntot = 8;
-  aone.nused = idx;
-  aone.vald = 0;
-// add the ROA
-  sta = insertscm(conp, theROATable, &aone);
   return(sta);
 }
 
@@ -1591,7 +1545,7 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
 
 static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
 		      unsigned int id, int utrust, unsigned int *cert_id,
-		      char *fullpath)
+		      char *fullpath, int checkRPKI)
 {
   int   sta = 0;
   int   chainOK;
@@ -1614,7 +1568,7 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     ct = TA_CERT;
   else
     ct = ( cf->flags & SCM_FLAG_CA ) ? CA_CERT : EE_CERT;
-  sta = rescert_profile_chk(x, ct);
+  sta = rescert_profile_chk(x, ct, checkRPKI);
 // verify the cert
   if ( sta == 0 ) {
     sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
@@ -1675,7 +1629,8 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	X509_free(x);
       return(sta);
     }
-  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
+  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull, 
+    (typ == OT_ETA)? 0: 1);
 }
 
 /*
@@ -1741,44 +1696,78 @@ static int gen_cert_filename(char *ski, char **fakename)
   return (a - *fakename) + 4;
   }
 
-static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
-	  scmcon *conp, char *outdir, unsigned int id, int utrust, int typ)
+static int hexify_ski(struct Certificate *certp, char *skip)
+  {
+  struct Extensions *exts = &certp->toBeSigned.extensions;
+  struct Extension *extp;
+  for(extp = (struct Extension *)member_casn(&exts->self, 0);
+      extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+      extp = (struct Extension *)next_of(&extp->self));
+  if (!extp) return ERR_SCM_NOSKI;
+  int size = vsize_casn(&extp->self);
+  uchar *tmp = calloc(1, size);
+  read_casn(&extp->extnValue.self, tmp); // read contents of outer OCTET STRING
+  struct casn theCASN;
+  simple_constructor(&theCASN, 0, ASN_OCTETSTRING);
+  decode_casn (&theCASN, tmp);
+  size = read_casn(&theCASN, tmp);  // read contents of inner OCTET STRING
+  delete_casn(&theCASN);
+  char *str = skip;     // now hexify and punctuate it
+  int i;
+  for (i = 0; i < size; i++)
+    {
+    if (i) snprintf(str++, 2, ":");
+    snprintf(str, 3, "%02X", tmp[i]);
+    str += 2;
+    }
+  *str = 0;
+  free(tmp);
+  return size;
+  }
+
+static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp, 
+  char *outdir, unsigned int id, int utrust, int typ, char *skip, int rta)
   {
   cert_fields *cf = NULL;
   unsigned int cert_id;
   char *fakename, *pathname;
   int sta = 0;
-
+  struct Certificate *certp;
+  if (rta) certp = &roap->content.signedData.encapContentInfo.eContent.
+    trustAnchor;
+  else certp = (struct Certificate *)member_casn(
+      &roap->content.signedData.certificates.self, 0);
+  // read the embedded cert information, in particular the ski
+  if ((sta = hexify_ski(certp, skip)) < 0) return sta;
+  sta = 0;
     // serialize the Certificate and scan it as an openssl X509 object
-  int siz = size_casn(&c->self);
+  int siz = size_casn(&certp->self);
   unsigned char *buf = calloc(1, siz + 4);
-  siz = encode_casn(&c->self, buf);
+  siz = encode_casn(&certp->self, buf);
     /* d2i_X509 changes "used" to point past end of the object */
   unsigned char *used = buf;
   X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
   free(buf);
     // if deserialization failed, bail
   if (x509p == NULL || sta < 0) return ERR_SCM_X509;
-  gen_cert_filename(ski, &fakename);
-  // pull out the fields
+  gen_cert_filename(skip, &fakename);
+// pull out the fields
   int x509sta;
   pathname = (char *)calloc(1, strlen(outdir)  +
         strlen(fakename) + 2);
   strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
-  cf = cert2fields(fakename, pathname, typ, &x509p, &sta, &x509sta);
+  // write the cert there, because cert2fields needs that
+  if (put_casn_file(&certp->self, pathname, 0) < 0) sta = ERR_SCM_WRITE_EE; 
+  else cf = cert2fields(fakename, pathname, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
     // add the X509 cert to the db
-      sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, NULL);
-    if (!sta)
-      {
-      sta = put_casn_file(&c->self, pathname, 0);
-      if (sta < 0) sta = ERR_SCM_INTERNAL;
-      else sta = 0;
-      }
-    else if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
-    else
-		fprintf(stderr, "Error adding embedded certificate %s\n", pathname);
+    sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, NULL, 
+      (typ == OT_RTA)? 0: 1);
+    if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
+    else if (sta < 0)
+      fprintf(stderr, "Error adding embedded certificate %s\n", pathname);
+    else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
   free(fakename);
   free(pathname);
@@ -1786,6 +1775,60 @@ static int extractAndAddCert(struct Certificate *c, char *ski, scm *scmp,
   cf = NULL;			/* freed by add_cert_2 */
   return sta;
   }
+
+static int add_roa_internal(scm *scmp, scmcon *conp, char *outfile,
+			    unsigned int dirid, char *ski, int asid,
+			    char *ip_addrs, char *sig, unsigned int flags)
+{
+  unsigned int roa_id = 0;
+  scmkva   aone;
+  scmkv    cols[8];
+  char  flagn[24];
+  char  asn[24];
+  char  lid[24];
+  char  did[24];
+  int   idx = 0;
+  int   sta;
+
+  initTables (scmp);
+  conp->mystat.tabname = "ROA";
+// first check for a duplicate signature
+  sta = dupsigscm(scmp, conp, theROATable, sig);
+  if ( sta < 0 )
+    return(sta);
+  sta = getmaxidscm(scmp, conp, "local_id", theROATable, &roa_id);
+  if ( sta < 0 )
+    return(sta);
+  roa_id++;
+// fill in insertion structure
+  cols[idx].column = "filename";
+  cols[idx++].value = outfile;
+  (void)snprintf(did, sizeof(did), "%u", dirid);
+  cols[idx].column = "dir_id";
+  cols[idx++].value = did;
+  cols[idx].column = "ski";
+  cols[idx++].value = ski;
+  cols[idx].column = "sig";
+  cols[idx++].value = sig;
+  cols[idx].column = "ip_addrs";
+  cols[idx++].value = ip_addrs;
+  (void)snprintf(asn, sizeof(asn), "%d", asid);
+  cols[idx].column = "asn";
+  cols[idx++].value = asn;
+  (void)snprintf(flagn, sizeof(flagn), "%u", flags);
+  cols[idx].column = "flags";
+  cols[idx++].value = flagn;
+  (void)snprintf(lid, sizeof(lid), "%u", roa_id);
+  cols[idx].column = "local_id";
+  cols[idx++].value = lid;
+  aone.vec = &cols[0];
+  aone.ntot = 8;
+  aone.nused = idx;
+  aone.vald = 0;
+// add the ROA
+  sta = insertscm(conp, theROATable, &aone);
+  return(sta);
+}
 
 /*
   Add a ROA to the DB.  This function returns 0 on success and a
@@ -1796,7 +1839,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *outfull, unsigned int id, int utrust, int typ)
 {
   struct ROA roa;  // note: roaFromFile constructs this
-  char *ski = NULL, *sig = NULL, *fakecertfilename = NULL, *ip_addrs = NULL;
+  char ski[60], *sig = NULL, *fakecertfilename = NULL, *ip_addrs = NULL;
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
@@ -1812,27 +1855,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     return(sta);
     }
   do {			/* do-once */
-    // pull out EE cert
-    if (!(roa.content.signedData.certificates.self.flags & ASN_FILLED_FLAG) ||
-
-	num_items(&roa.content.signedData.certificates.self) != 1) {
-      sta = ERR_SCM_BADNUMCERTS;
-      break;
-    }
-    struct Certificate *c = (struct Certificate *)
-      member_casn(&roa.content.signedData.certificates.self, 0);
-
-    // generate a (fake) filename for the cert that is unique.
-    // use the SKI
-
-    // ski, asid
-    if ((ski = (char *)roaSKI(&roa)) == NULL || ski[0] == 0 )
-      {
-      sta = ERR_SCM_INVALSKI;
-      break;
-      }
-    if ((sta = extractAndAddCert(c, ski, scmp, conp, outdir, id,
-      utrust, typ)) != 0) break;
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, 
+      utrust, typ, ski, 0)) < 0) break;
     cert_added = 1;
 
     asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
@@ -1872,28 +1896,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if (sta != 0 && cert_added)
     (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull);
   delete_casn(&roa.self);
-  if (ski != NULL) free(ski);
   if (sig != NULL) free(sig);
   return(sta);
-}
-
-// static variables so only need to set up query once and so can pass results
-
-static scmsrcha *embedCertSrch = NULL;
-static int embedCertFlags;
-static unsigned int embedCertID;
-
-
-static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
-{
-  UNREFERENCED_PARAMETER(conp);
-  UNREFERENCED_PARAMETER(idx);
-  unsigned int id = *((unsigned int *)(s->vec[1].valptr));
-  if (embedCertID == 0 || embedCertID != lastCertIDAdded) {
-    embedCertFlags = *((unsigned int *)(s->vec[0].valptr));
-    embedCertID = id;
-  }
-  return 0;
 }
 
 /*
@@ -1903,15 +1907,11 @@ static int findCertWithID (scmcon *conp, scmsrcha *s, int idx)
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {
-  int   sta, i;
+  int   sta;
   struct ROA roa;
   char *thisUpdate, *nextUpdate;
   ulong ltime;
   unsigned int man_id = 0;
-  scmkva   aone;
-  scmkv    cols[12];
-  int   idx = 0;
-  char  did[24], mid[24], ski[60];
 
   // manifest stored in same format as a roa
   ROA(&roa, 0);
@@ -1923,37 +1923,6 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     delete_casn(&roa.self);
     return sta;
     }
-  // read the embedded cert information, in particular the ski
-  struct Certificate *certp = (struct Certificate *)
-    member_casn(&roa.content.signedData.certificates.self, 0);
-  struct Extensions *exts = &certp->toBeSigned.extensions;
-  struct Extension *extp;
-  for(extp = (struct Extension *)member_casn(&exts->self, 0);
-      extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
-      extp = (struct Extension *)next_of(&extp->self));
-  if (!extp)
-    {
-    delete_casn(&roa.self);
-    return ERR_SCM_NOSKI;
-    }
-  int size = vsize_casn(&extp->self);
-  uchar *tmp = calloc(1, size);
-  read_casn(&extp->extnValue.self, tmp); // read contents of outer OCTET STRING
-  struct casn theCASN;
-  simple_constructor(&theCASN, 0, ASN_OCTETSTRING);
-  decode_casn (&theCASN, tmp);
-  size = read_casn(&theCASN, tmp);  // read contents of inner OCTET STRING
-  delete_casn(&theCASN);
-  char *str = ski;     // now hexify and punctuate it
-  for (i = 0; i < size; i++)
-    {
-    if (i) snprintf(str++, 2, ":");
-    snprintf(str, 3, "%02X", tmp[i]);
-    str += 2;
-    }
-  *str = 0;
-  free(tmp);
-
   // now, read the data out of the manifest structure
   struct Manifest *manifest =
     &roa.content.signedData.encapContentInfo.eContent.manifest;
@@ -1965,14 +1934,17 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int manFilesLen = 0;
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
-      fahp = (struct FileAndHash *)next_of(&fahp->self)) {
+      fahp = (struct FileAndHash *)next_of(&fahp->self)) 
+    {
     int flth = read_casn(&fahp->file, file);
     file[flth] = 0;
     snprintf(manFiles + manFilesLen, MANFILES_SIZE - manFilesLen,
 	     "%s%s", manFilesLen ? " " : "", file);
     if (manFilesLen) manFilesLen++;
     manFilesLen += strlen((char *)file);
-  }
+    }
+  int v = 0;
+  char ski[60];
   do
     {  // once through
   // read this_upd and next_upd
@@ -1990,12 +1962,12 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     }
     nextUpdate = UnixTimeToDBTime(ltime, &sta);
-
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ, 
+        ski, 0)) < 0) break;
+    v = sta;
     if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id))
       < 0) break;
     man_id++;
-    if ((sta = extractAndAddCert(certp, ski , scmp, conp, outdir, id,
-  			       utrust, typ)) != 0) break;
     }
   while(0);
   if (sta < 0)
@@ -2003,33 +1975,15 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     delete_casn(&roa.self);
     return sta;
     }
-  // initialize query first time through
-  if (embedCertSrch == NULL) {
-    embedCertSrch = newsrchscm(NULL, 4, 0, 1);
-    ADDCOL (embedCertSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
-	    sta, sta);
-    ADDCOL (embedCertSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
-	    sta, sta);
-  }
-
-  // find in the db the certificate embedded in the manifest by looking for the
-  // certificate with the same ski as that cert in the manifest
-  snprintf(embedCertSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
-  embedCertFlags = 0;
-  embedCertID = 0;
-  searchscm(conp, theCertTable, embedCertSrch, NULL, findCertWithID,
-	    SCM_SRCH_DOVALUE_ALWAYS, NULL);
-  if (embedCertID == 0) {
-    fprintf(stderr, "For manifest %s, unable to find embedded cert ski = %s\n",
-	    outfile, ski);
-  }
-
   // the manifest is valid if the embedded cert is valid (since we already
   //  know that the cert validates the manifest)
-  int manValid = ((embedCertFlags & SCM_FLAG_VALIDATED) &&
-		  ! (embedCertFlags & SCM_FLAG_NOCHAIN));
+  int manValid = (v > 0)? SCM_FLAG_VALIDATED: 0;
 
   // do the actual insert of the manifest in the db
+  scmkva   aone;
+  scmkv    cols[12];
+  int   idx = 0;
+  char  did[24], mid[24];
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
   (void)snprintf(did, sizeof(did), "%u", id);
@@ -2070,6 +2024,74 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   return sta;
 }
 
+int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+   char *outfull, unsigned int id, int utrust, int typ)
+{
+  int   sta = 0, v = 0;
+  uint rtaID = 0;
+  struct ROA roa;   // RTA is CMS structure like ROA
+  char ski_ee[60], ski_rta[60];
+  ROA(&roa, (ushort)0);
+  struct Certificate *rtacertp; 
+  initTables (scmp);
+  do
+    {
+    if ((sta = get_casn_file(&roa.self, outfull, 0)) < 0) 
+      {
+      sta = ERR_SCM_INVALRTA;
+      break;
+      }
+    if ((sta = rtaValidate(&roa)) < 0) break;
+    rtacertp = &roa.content.signedData.encapContentInfo.eContent.trustAnchor;
+    if ((sta = hexify_ski(rtacertp, ski_rta)) < 0) break;
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id,
+       utrust, typ, ski_ee, 0)) < 0) break;
+    v = sta;
+             // set utrust to 1 for the RTA cert
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, 1, typ, ski_rta,
+       1)) < 0) break;
+    if ((sta = getmaxidscm(scmp, conp, "local_id", theCTATable, &rtaID)) < 0) 
+      break;
+    rtaID++;
+    }
+  while(0);
+  if (sta < 0)
+    {
+    delete_casn(&roa.self);
+    return sta;
+    }
+  // the rta is valid if the embedded cert is valid (since we already
+  //  know that the cert validates the rta)
+  uint rtaValid = (v > 0)? SCM_FLAG_VALIDATED: 0;
+  // do the actual insert of the rta into the db
+  scmkva   aone;
+  scmkv    cols[12];
+  int   idx = 0;
+  char  did[24], mid[24];
+  cols[idx].column = "filename";
+  cols[idx++].value = outfile;
+  (void)snprintf(did, sizeof(did), "%u", id);
+  cols[idx].column = "dir_id";
+  cols[idx++].value = did;
+  cols[idx].column = "ski_rta";
+  cols[idx++].value = ski_rta;
+  cols[idx].column = "ski_ee";
+  cols[idx++].value = ski_ee;
+  char flagn[24];
+  (void)snprintf(flagn, sizeof(flagn), "%u", rtaValid);
+   cols[idx].column = "flags";
+  cols[idx++].value = flagn;
+  (void)snprintf(mid, sizeof(mid), "%u", rtaID);
+  cols[idx].column = "local_id";
+  cols[idx++].value = mid;
+  aone.vec = &cols[0];
+  aone.ntot = 12;
+  aone.nused = idx;
+  aone.vald = 0;
+  sta = insertscm(conp, theCTATable, &aone);
+  return(sta);
+  }
+
 /*
   Add the indicated object to the DB. If "trusted" is set then verify
   that the object is self-signed. Note that this add operation may
@@ -2096,7 +2118,8 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( sta < 0 )
     return(sta);
 // determine its filetype
-  typ = infer_filetype(outfull);
+  if (utrust == OT_ETA) typ = utrust;
+  else typ = infer_filetype(outfull);
   if ( typ < 0 )
     return(typ);
 // find or add the directory
@@ -2110,6 +2133,7 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN+OT_PEM_OFFSET:
+    case OT_ETA:
       sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
       break;
     case OT_CRL:
@@ -2123,6 +2147,9 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_MAN:
     case OT_MAN_PEM:
       sta = add_manifest(scmp, conp, outfile, outdir, outfull, id, utrust, typ);
+      break;
+    case OT_RTA:
+      sta = add_rta(scmp, conp, outfile, outdir, outfull, id, utrust, typ);
       break;
     default:
       sta = ERR_SCM_INTERNAL;
@@ -2845,11 +2872,6 @@ void sqcleanup(void)
     {
       freesrchscm(validManSrch);
       validManSrch = NULL;
-    }
-  if ( embedCertSrch != NULL )
-    {
-      freesrchscm(embedCertSrch);
-      embedCertSrch = NULL;
     }
   if ( snlist != NULL )
     {

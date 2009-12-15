@@ -31,7 +31,9 @@
 #define OT_CRL          2	/* DER encoded CRL */
 #define OT_ROA          3	/* DER encoded ROA */
 #define OT_MAN          4	/* manifests are only DER for now */
-#define OT_MAXBASIC     4
+#define OT_RTA          5       /* DER encoded RTA */
+#define OT_ETA          6
+#define OT_MAXBASIC     6
 
 #define OT_PEM_OFFSET   128
 
@@ -62,7 +64,7 @@
 #define SCM_FLAG_STALEMAN     0x40   /* assoc man of self or ancestor stale */
 #define SCM_FLAG_ONMAN        0x100  /* has associated valid manifest */
 #define SCM_FLAG_HASPARACERT  0x200  /* has a paracert */
-#define SCM_FLAG_PARACERT     0x400  /* is a paracert */
+#define SCM_FLAG_ISPARACERT   0x400  /* is a paracert */
 
 /* certain fields need to have "rsync URIs". The only test we perform
  * for now is to verify that the field starts with this text */
@@ -103,6 +105,8 @@ extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 		     char *outfull, unsigned int id, int utrust, int typ);
 extern int   add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
+		  char *outfull, unsigned int id, int utrust, int typ);
+extern int   add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 		  char *outfull, unsigned int id, int utrust, int typ);
 extern int   iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc);
 extern int   model_cfunc(scm *scmp, scmcon *conp, char *issuer, char *aki,

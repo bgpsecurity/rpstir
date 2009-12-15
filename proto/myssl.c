@@ -2818,7 +2818,7 @@ static int rescert_criticals_chk(X509 *x)
  *   marked as critical                                   *
  *********************************************************/
 
-int rescert_profile_chk(X509 *x, int ct)
+int rescert_profile_chk(X509 *x, int ct, int checkRPKI)
 {
   int ret = 0;
 
@@ -2901,10 +2901,13 @@ int rescert_profile_chk(X509 *x, int ct)
   if ( ret < 0 )
     return(ret);
 
-  ret = rescert_ip_asnum_chk(x);
+  if (checkRPKI)
+    {
+    ret = rescert_ip_asnum_chk(x);
 #ifdef DEBUG
-  debug_chk_printf("rescert_ip_asnum_chk", ret, ct);
+    debug_chk_printf("rescert_ip_asnum_chk", ret, ct);
 #endif
+    }
   if ( ret < 0 )
     return(ret);
 

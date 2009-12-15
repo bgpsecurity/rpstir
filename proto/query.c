@@ -63,7 +63,8 @@ static int rejectNoManifest = 0;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, validate, valIndex;
 static char *objectType;
-static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0, isManifest = 0;
+static int isROA = 0, isCert = 0, isCRL = 0, isRPSL = 0, isManifest = 0, 
+    isRTA = 0;
 static scm      *scmp = NULL;
 static scmcon   *connect = NULL;
 
@@ -77,6 +78,7 @@ struct {
   { "crl", "crl" },
   { "manifest", "manifest" },
   { "rpsl", "roa" },
+  { "rta", "compoundtrustanchor" },
 };
 
 
@@ -325,10 +327,11 @@ static int doQuery (char **displays, char **filters, char *orderp)
   globalFields[i] = NULL;
   if (validate) {
     valIndex = srch.nused;
-    if (isROA || isRPSL || isManifest)
+    if (isROA || isRPSL || isManifest || isRTA)
       {
-      field2 = findField ("ski");
-      addcolsrchscm (&srch, "ski", field2->sqlType, field2->maxSize);
+      char *ski = (isRTA)? "ski_ee": "ski"; 
+      field2 = findField (ski);
+      addcolsrchscm (&srch, ski, field2->sqlType, field2->maxSize);
       }
     else if (isCert) addcolsrchscm (&srch, "local_id", SQL_C_ULONG, 8);
     }
@@ -357,7 +360,9 @@ static int listOptions()
     if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
 	((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
 	((getFields()[i].flags & Q_FOR_CERT) && isCert) ||
-        ((getFields()[i].flags & Q_FOR_MAN) && isManifest)) {
+        ((getFields()[i].flags & Q_FOR_MAN) && isManifest) ||
+        ((getFields()[i].flags & Q_FOR_RTA) && isRTA)) 
+      {
       printf ("  %s: %s\n", getFields()[i].name, getFields()[i].description);
       if (getFields()[i].flags & Q_JUST_DISPLAY) {
         for (j = 0; j < (int)strlen (getFields()[i].name) + 4; j++) printf (" ");
@@ -413,8 +418,8 @@ static int printUsage()
   printf ("  -s <filename>: filename specifies how to handle different types of staleness.\n");
   printf ("      See the sample specifications file sampleQuerySpecs\n");
   printf ("  -l <type>: list the possible display fields for the type, where type is\n");
-  printf ("     roa, cert, crl or manifest.\n");
-  printf ("  -t <type>: the type of object requested: roa, cert, crl, or man[ifest]\n");
+  printf ("     roa, cert, crl, manifest or rta.\n");
+  printf ("  -t <type>: the type of object requested: roa, cert, crl, man[ifest], or rta\n");
   printf ("  -d <field>: display a field of the object (or 'all')\n");
   printf ("  -f <field>.<op>.<value>: filter where op is a comparison operator\n");
   printf ("     (eq, ne, gt, lt, ge, le).  To include a space in value use '#'.\n");
@@ -434,12 +439,13 @@ static void setObjectType (char *aType)
 {
   objectType = aType;
   if (!strcasecmp(objectType, "man")) objectType = "manifest";
-  isROA = strcasecmp (objectType, "roa") == 0;
-  isCRL = strcasecmp (objectType, "crl") == 0;
-  isCert = strcasecmp (objectType, "cert") == 0;
-  isManifest = strcasecmp (objectType, "manifest") == 0;
+  isROA = (strcasecmp (objectType, "roa") == 0);
+  isCRL = (strcasecmp (objectType, "crl") == 0);
+  isCert = (strcasecmp (objectType, "cert") == 0);
+  isManifest = (strcasecmp (objectType, "manifest") == 0);
   setIsManifest(isManifest);
-  isRPSL = strcasecmp (objectType, "rpsl") == 0;
+  isRTA = (strcasecmp(objectType, "rta") == 0);
+  isRPSL = (strcasecmp (objectType, "rpsl") == 0);
 }
 
 int main(int argc, char **argv)
@@ -498,8 +504,8 @@ int main(int argc, char **argv)
     checkErr (numDisplays != 0, "-d should not be used with RPSL query\n");
     numDisplays = addRPSLFields(displays, 0);
   }
-  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
-            BAD_OBJECT_TYPE);
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && 
+      (!isManifest) && (! isRTA), BAD_OBJECT_TYPE);
   checkErr (numDisplays == 0 && isRPSL == 0, "Need to display something\n");
   if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
       numDisplays = addAllFields(displays, 0);

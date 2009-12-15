@@ -569,7 +569,7 @@ static int probe(int s)
                     informational text. Optional message.
 */
 
-static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
+static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s, char *skifile)
 {
   char *left = NULL;
   char *ptr;
@@ -578,7 +578,7 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
   int   done = 0;
   int   sta = 0;
 
-  while ( 1 )
+  for (done = 0; !done; )
     {
       if ( (sta=probe(s)) < 0 )
 	{
@@ -686,13 +686,12 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 	  break;
 	}
       free((void *)ptr);
-      if ( done == 1 )
-	break;
     }
+// if (done > 0) sta = read_SKI_blocks(scmp, conp, skifile, logfile, s); 
   return(sta);
 }
 
-static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
+static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s, char *skifile)
 {
   //  char *left = NULL;
   char  ptr[1024];
@@ -701,7 +700,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
   int   done = 0;
   int   sta = 0;
 
-  while ( 1 )
+  for (done = 0; !done;   )
     {
       if ( fgets(ptr, 1023, s) == NULL )
 	break;
@@ -714,7 +713,6 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
       if ( !isspace((int)(ptr[1])) )
 	{
 	  (void)fprintf(stderr, "Invalid line: ignored\n");
-	  free((void *)ptr);
 	  continue;
 	}
       valu = afterwhite(ptr+1);
@@ -772,7 +770,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 	case 'f':
 	case 'F':		/* fatal error */
 	  (void)fprintf(logfile, "AUR fatal error: %s\n", valu);
-	  done = 1;
+	  done = -1;
 	  break;
 	case 'x':
 	case 'X':		/* error */
@@ -804,9 +802,8 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 	  (void)fprintf(logfile, "AUR invalid tag '%c' ignored\n", c);
 	  break;
 	}
-      if ( done == 1 )
-	break;
     }
+// if (done > 0) sta = read_SKI_blocks(scmp, conp, skifile, logfile, s); 
   return(sta);
 }
 
@@ -820,6 +817,8 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 //   -F file             add the given trusted object
 //   -w port             operate in wrapper mode using the given socket port
 //   -p                  with -w indicates to run perpetually, e.g. as a daemon
+//   -z                  run from file list instead of port
+//   -R                  use RP work
 
 int main(int argc, char **argv)
 {
@@ -839,6 +838,7 @@ int main(int argc, char **argv)
   char   *ne;
   char   *porto = NULL;
   char    errmsg[1024];
+  char   *skifile = NULL;
   time_t  nw;
   int ians = 0;
   int do_create = 0;
@@ -859,7 +859,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:f:F:w:W:pm:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:E:f:F:w:z:pm:R:")) != EOF )
     {
       switch ( c )
 	{
@@ -878,6 +878,8 @@ int main(int argc, char **argv)
 	case 'd':
 	  thedelfile = optarg;
 	  break;
+        case 'E':
+          trusted = OT_ETA - 1;
 	case 'F':
 	  trusted++;
 	case 'f':
@@ -887,13 +889,16 @@ int main(int argc, char **argv)
 	  do_sockopts++;
 	  porto = optarg;
 	  break;
-	case 'W':
+	case 'z':
 	  do_fileopts++;
 	  porto = optarg;
 	  break;
 	case 'p':
 	  perpetual++;
 	  break;
+        case 'R':
+          skifile = optarg;
+          break;
 	case 'h':
 	  usage();
 	  return(0);
@@ -1186,7 +1191,7 @@ int main(int argc, char **argv)
 		(void)fprintf(stderr, "Could not create socket\n");
 	      else
 		{
-		  sta = sockline(scmp, realconp, logfile, s);
+		  sta = sockline(scmp, realconp, logfile, s, skifile);
 		  (void)printf("Socket connection closed\n");
 		  (void)close(s);
 		}
@@ -1197,7 +1202,7 @@ int main(int argc, char **argv)
                 {
                 printf("Opening stdin\n");
                 sfile = stdin;
-		sta = fileline(scmp, realconp, logfile, sfile);
+		sta = fileline(scmp, realconp, logfile, sfile, skifile);
                 }
 	      else
 		{
@@ -1207,7 +1212,7 @@ int main(int argc, char **argv)
 	          (void)fprintf(stderr, "Could not open cmdfile\n");
 	        else
 	          {
-		  sta = fileline(scmp, realconp, logfile, sfile);
+		  sta = fileline(scmp, realconp, logfile, sfile, skifile);
 		  (void)printf("Cmdfile closed\n");
 		  (void)fclose(sfile);
 	          }

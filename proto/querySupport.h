@@ -93,5 +93,6 @@ void setIsManifest(int val);
 #define Q_FOR_CERT      0x08
 #define Q_REQ_JOIN	0x10
 #define Q_FOR_MAN       0x20
+#define Q_FOR_RTA       0x40
 
 #define MAX_RESULT_SZ 8192

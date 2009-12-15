@@ -301,6 +301,22 @@ static QueryField fields[] = {
     "SKI", NULL,
   },
   {
+    "ski_ee",
+    "rta ee subject key identifier",
+    Q_FOR_RTA,
+    SQL_C_CHAR, SKISIZE,
+    NULL, NULL,
+    "EE_SKI", NULL,
+  },
+  {
+    "ski_rta",
+    "rta subject key identifier",
+    Q_FOR_RTA,
+    SQL_C_CHAR, SKISIZE,
+    NULL, NULL,
+    "RTA_SKI", NULL,
+  },
+  {
     "aki",
     "authority key identifier",
     Q_FOR_CRL|Q_FOR_CERT,
