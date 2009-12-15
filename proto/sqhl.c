@@ -1537,6 +1537,16 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   return sta;
 }
 
+static struct Extension *find_extension(struct Certificate *certp, char *idp)
+  {
+  struct Extensions *exts = &certp->toBeSigned.extensions;
+  struct Extension *extp;
+  for(extp = (struct Extension *)member_casn(&exts->self, 0);
+      extp != NULL && diff_objid(&extp->extnID, idp);
+      extp = (struct Extension *)next_of(&extp->self));
+  return extp;
+  }
+
 /*
  * do the work of add_cert(). Factored out so we can call it from elsewhere.
  *
@@ -1555,8 +1565,20 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   cf->dirid = id;
   if ( utrust > 0 )
     {
-      if (strcmp(cf->fields[CF_FIELD_SUBJECT],
-		 cf->fields[CF_FIELD_ISSUER]) != 0) {
+    struct Certificate cert;
+    Certificate(&cert, (ushort)0);
+    struct Extension *ski_extp, *aki_extp;
+    int locerr = 0;
+    if (get_casn_file(&cert.self, fullpath, 0) < 0 ||
+      !(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
+      !(aki_extp = find_extension(&cert, id_authKeyId)) ||
+      diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
+        &aki_extp->extnValue.authKeyId.keyIdentifier) ||  
+      strcmp(cf->fields[CF_FIELD_SUBJECT],
+		 cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
+    delete_casn(&cert.self);
+    if (locerr)  
+        {
 	freecf(cf);
 	X509_free(x);
 	return(ERR_SCM_NOTSS);
@@ -1698,11 +1720,7 @@ static int gen_cert_filename(char *ski, char **fakename)
 
 static int hexify_ski(struct Certificate *certp, char *skip)
   {
-  struct Extensions *exts = &certp->toBeSigned.extensions;
-  struct Extension *extp;
-  for(extp = (struct Extension *)member_casn(&exts->self, 0);
-      extp != NULL && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
-      extp = (struct Extension *)next_of(&extp->self));
+  struct Extension *extp = find_extension(certp, id_subjectKeyIdentifier);
   if (!extp) return ERR_SCM_NOSKI;
   int size = vsize_casn(&extp->self);
   uchar *tmp = calloc(1, size);
