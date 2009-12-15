@@ -43,7 +43,7 @@ LOCAL_LIBS=$(LIBRPKI) $(LIBROA)	$(LIBASN) $(LIBCASN)
 OTHER_LIBS=$(LIBCL) $(LIBSSL) $(LIBCRYPTO) $(LIBODBC) $(LIBXTRA) $(LIBDL) $(LIBPTHREAD)
 
 # --- targets
-TARGETS=roa_test test_val2 test_check_sig sign_roa test_manifest test_hash make_manifest make_roa 
+TARGETS=roa_test test_val2 test_check_sig sign_roa test_hash make_manifest make_roa 
 all:    $(TARGETS)
 
 roa_test: $(TEST_OBJECTS) 
@@ -53,9 +53,6 @@ roa_test.o: roa_test.c
 
 test_check_sig: test_check_sig.o
 	$(CC) $(CFLAGS) -o $@ test_check_sig.o $(LOCAL_LIBS) $(OTHER_LIBS)
-
-test_manifest: test_manifest.o $(LIBCASN)
-	$(CC) $(CFLAGS) -o $@ test_manifest.o $(LOCAL_LIBS) $(OTHER_LIBS)
 
 test_val2: test_val2.o $(LIBCASN)
 	$(CC) $(CFLAGS) -o $@ test_val2.o $(LOCAL_LIBS) $(OTHER_LIBS)
