@@ -184,7 +184,7 @@ static int getTime(struct CertificateValidityDate *cvdp, ulong *datep)
   }
 
 
-static int check_cert(struct Certificate *certp)
+static int check_cert(struct Certificate *certp, int isEE)
   {
   int tmp;
   ulong lo, hi;
@@ -208,7 +208,7 @@ static int check_cert(struct Certificate *certp)
   for (extp = (struct Extension *)member_casn(&certtbsp->extensions.self, 0);
     extp; extp = (struct Extension *)next_of(&extp->self))
     {
-    if (!diff_objid(&extp->extnID, id_basicConstraints) &&
+    if (isEE && !diff_objid(&extp->extnID, id_basicConstraints) &&
 	size_casn(&extp->extnValue.basicConstraints.cA) > 0)
 	return ERR_SCM_NOTEE;
     if (!diff_objid(&extp->extnID, id_subjectKeyIdentifier))
@@ -365,65 +365,67 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   }
 
 static int cmsValidate(struct ROA *rp)
-{
-    // validates general CMS things common to ROAs and manifests
+  {
+  // validates general CMS things common to ROAs and manifests
 
-    int num_certs, ret = 0, tbs_lth;
-    struct SignerInfo *sigInfop;
-    uchar digestbuf[40], hashbuf[40];
-    uchar *tbsp;
+  int num_certs, ret = 0, tbs_lth;
+  struct SignerInfo *sigInfop;
+  uchar digestbuf[40], hashbuf[40];
+  uchar *tbsp;
 
-    // check that roa->content->version == 3
-    if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0)
+  // check that roa->content->version == 3
+  if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0)
 	return ERR_SCM_BADVERS;
+  int notRTA = diff_objid(&rp->content.signedData.encapContentInfo.
+    eContentType, id_ct_RPKITrustAnchor);
 
-    // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
-    //   (= OID 2.16.840.1.101.3.4.2.1)
-    if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1 ||
+  // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
+  //   (= OID 2.16.840.1.101.3.4.2.1)
+  if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1 ||
 	diff_objid(&rp->content.signedData.digestAlgorithms.
-        cMSAlgorithmIdentifier.algorithm, id_sha256))
+      cMSAlgorithmIdentifier.algorithm, id_sha256))
 	return ERR_SCM_BADDA;
 
-    if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1)
+  if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1)
 	return ERR_SCM_BADNUMCERTS;
 
-    if (num_items(&rp->content.signedData.signerInfos.self) != 1)
+  if (num_items(&rp->content.signedData.signerInfos.self) != 1)
 	return ERR_SCM_BADSIGINFO;
 
-    sigInfop = (struct SignerInfo *)member_casn(&rp->content.signedData.signerInfos.self, 0);
-    memset(digestbuf, 0, 40);
+  sigInfop = (struct SignerInfo *)member_casn(&rp->content.signedData.
+    signerInfos.self, 0);
+  memset(digestbuf, 0, 40);
 
-#define CHECK(f) if (!(f)) return ERR_SCM_BADSIGINFO
+  if (diff_casn_num(&sigInfop->version.self, 3) ||
+     !size_casn(&sigInfop->sid.subjectKeyIdentifier) ||
+     diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256))
+     return ERR_SCM_BADSIGINFO;
 
-    CHECK(diff_casn_num(&sigInfop->version.self, 3) == 0);
-    CHECK(size_casn(&sigInfop->sid.subjectKeyIdentifier) != 0);
-    CHECK(diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256) == 0);
+  struct Attribute *attrp;
+  // make sure there is content
+  attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
+  if (!attrp ||
+  // make sure it is the same as in EncapsulatedContentInfo
+      diff_casn(&attrp->attrValues.array.contentType, 
+      &rp->content.signedData.encapContentInfo.eContentType) ||
+  // make sure there is a message digest
+     !(attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr)) ||
+  // make sure the message digest is 32 bytes long and we can get it
+     vsize_casn(&attrp->attrValues.array.messageDigest) != 32 ||
+     read_casn(&attrp->attrValues.array.messageDigest, digestbuf) != 32)
+     return ERR_SCM_BADSIGINFO;
 
-    struct Attribute *attrp;
-    // make sure there is content
-    attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
-    CHECK(attrp != NULL);
-    // make sure it is the same as in EncapsulatedContentInfo
-    CHECK(diff_casn(&attrp->attrValues.array.contentType, 
-      &rp->content.signedData.encapContentInfo.eContentType) == 0);
-
-    // make sure there is a message digest
-    attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr);
-    CHECK(attrp != NULL);
-
-    // make sure the message digest is 32 bytes long and we can get it
-    CHECK(vsize_casn(&attrp->attrValues.array.messageDigest) == 32);
-    CHECK(read_casn(&attrp->attrValues.array.messageDigest, digestbuf) == 32);
-
-    // make sure there is a signing time
-    attrp = find_attr(&sigInfop->signedAttrs, id_signingTimeAttr);
-    CHECK(attrp != NULL);
-       // make sure it is the right format      
+  // make sure there is a signing time
+  attrp = find_attr(&sigInfop->signedAttrs, id_signingTimeAttr);
+  if (!attrp && notRTA) return ERR_SCM_BADSIGINFO;
+     // make sure it is the right format      
+  if (attrp)
+    {
     uchar loctime[30];
     int usize, gsize;
     if ((usize = vsize_casn(&attrp->attrValues.array.signingTime.utcTime)) > 
        15 ||
-        (gsize = vsize_casn(&attrp->attrValues.array.signingTime.
+       (gsize = vsize_casn(&attrp->attrValues.array.signingTime.
           generalizedTime)) > 17) return ERR_SCM_BADSIGINFO;
     if (usize > 0) 
       {
@@ -432,77 +434,81 @@ static int cmsValidate(struct ROA *rp)
       }
     else
       {
-      read_casn(&attrp->attrValues.array.signingTime.generalizedTime, loctime);
+      read_casn(&attrp->attrValues.array.signingTime.generalizedTime, 
+        loctime);
       if (strncmp((char *)loctime, "2050", 4) < 0) return ERR_SCM_BADSIGINFO;
       }
-
-#undef CHECK
-
-    // check the hash
-    memset(hashbuf, 0, 40);
-    // read the content
-    tbs_lth = readvsize_casn(&rp->content.signedData.encapContentInfo.eContent.self, &tbsp);
-
-    // hash it, make sure it's the right length and it matches the digest
-    if (gen_hash(tbsp, tbs_lth, hashbuf, CRYPT_ALGO_SHA2) != 32 ||
-	memcmp(digestbuf, hashbuf, 32) != 0) {
-	ret =  ERR_SCM_BADHASH;
     }
-    free(tbsp);			// done with the content now
+  // check the hash
+  memset(hashbuf, 0, 40);
+  // read the content
+  tbs_lth = readvsize_casn(&rp->content.signedData.encapContentInfo.eContent.
+    self, &tbsp);
 
-    // if the hash didn't match, bail now
-    if (ret != 0)
+  // hash it, make sure it's the right length and it matches the digest
+  if (gen_hash(tbsp, tbs_lth, hashbuf, CRYPT_ALGO_SHA2) != 32 ||
+	memcmp(digestbuf, hashbuf, 32) != 0) 
+	ret =ERR_SCM_BADHASH;
+  free(tbsp);			// done with the content now
+
+  // if the hash didn't match, bail now
+  if (ret != 0)
 	return ret;
 
-    // if there is a cert, check it
-    if (num_certs > 0) {
+  // if there is a cert, check it
+  if (num_certs > 0) {
 	struct Certificate *certp = (struct Certificate *)
-	  member_casn(&rp->content.signedData.certificates.self, 0);
-	if ((ret = check_cert(certp)) < 0)
-	    return ret;
+	member_casn(&rp->content.signedData.certificates.self, 0);
+	if ((ret = check_cert(certp, 1)) < 0)
+	  return ret;
 	if ((ret = check_sig(rp, certp)) != 0)
-	    return ret;
-      // check that the cert's SKI matches that in SignerInfo
-      struct Extension *extp;
-      for (extp = (struct Extension *)
+	  return ret;
+    // check that the cert's SKI matches that in SignerInfo
+    struct Extension *extp;
+    for (extp = (struct Extension *)
 	member_casn(&certp->toBeSigned.extensions.self, 0); extp &&
 	diff_objid(&extp->extnID, id_subjectKeyIdentifier); 
 	extp = (struct Extension *)next_of(&extp->self));
-      if (!extp) return ERR_SCM_BADSIGINFO;
-      if (diff_casn(&extp->extnValue.subjectKeyIdentifier,
+    if (!extp) return ERR_SCM_BADSIGINFO;
+    if (diff_casn(&extp->extnValue.subjectKeyIdentifier,
 	&sigInfop->sid.subjectKeyIdentifier)) return ERR_SCM_BADSIGINFO;
-      
-    }
+    
+  }
 
-    // check that roa->content->crls == NULL
-    if (size_casn(&rp->content.signedData.crls.self) > 0 ||
+  // check that roa->content->crls == NULL
+  if (size_casn(&rp->content.signedData.crls.self) > 0 ||
 	num_items(&rp->content.signedData.signerInfos.self) != 1 ||
-	diff_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, 3) != 0)
+	diff_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.
+        self, 3) != 0)
 	return ERR_SCM_BADVERS;
 
-    // check that roa->content->signerInfo.digestAlgorithm == SHA-256
-    //   (= OID 2.16.840.1.101.3.4.2.1)
-    if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.algorithm, id_sha256))
+  // check that roa->content->signerInfo.digestAlgorithm == SHA-256
+  //   (= OID 2.16.840.1.101.3.4.2.1)
+  if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.
+    digestAlgorithm.algorithm, id_sha256))
 	return ERR_SCM_BADDA;
 
-    if (size_casn(&rp->content.signedData.signerInfos.signerInfo.unsignedAttrs.self) != 0)
+  if (size_casn(&rp->content.signedData.signerInfos.signerInfo.unsignedAttrs.
+    self) != 0)
 	return ERR_SCM_BADATTR;
 
-    // check that roa->content->signerInfoStruct->signatureAlgorithm ==
-    //   RSAEncryption (= OID 1.2.240.113549.1.1.1)
-    if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.algorithm, id_rsadsi_rsaEncryption))
+  // check that roa->content->signerInfoStruct->signatureAlgorithm ==
+  //   RSAEncryption (= OID 1.2.240.113549.1.1.1)
+  if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.
+    signatureAlgorithm.algorithm, id_rsadsi_rsaEncryption))
 	return ERR_SCM_INVALSIG;
 
-    // check that the subject key identifier has proper length
-    if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.subjectKeyIdentifier) != 20)
+  // check that the subject key identifier has proper length
+  if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.
+    subjectKeyIdentifier) != 20)
 	return ERR_SCM_INVALSKI;
 
-    // everything checked out
-    return 0;
-}
-
+  // everything checked out
+  return 0;
+  }
+/*
 void free_badfiles(struct badfile **badfilespp)
-	  {  // for rsync_aur or anyone else who calls manifestValidate2
+  {  // for rsync_aur or anyone else who calls manifestValidate2
   struct badfile **bpp;
   for (bpp = badfilespp; *bpp; bpp++)
     {
@@ -571,6 +577,19 @@ int manifestValidate2(struct ROA *rp, char *dirp, struct badfile ***badfilesppp)
   *badfilesppp = badfilespp;
   return err;
   }
+*/
+int rtaValidate(struct ROA *rtap)
+  {
+  int iRes = cmsValidate(rtap);
+  if (iRes < 0) return iRes;
+
+  // check eContentType  
+  if (diff_objid(&rtap->content.signedData.encapContentInfo.eContentType,
+    id_ct_RPKITrustAnchor)) return ERR_SCM_BADCT;
+  if ((iRes = check_cert(&rtap->content.signedData.encapContentInfo.eContent.
+    trustAnchor, 0)) < 0) return iRes; 
+  return 0;
+  }
 
 int manifestValidate(struct ROA *manp)
   {
@@ -591,7 +610,7 @@ int manifestValidate(struct ROA *manp)
   }
 
 int roaValidate(struct ROA *rp)
-{
+  {
   // Make sure that the ROA meets the provisions outlined in
   // Kent/Kong ROA IETF draft
   int iRes = 0;
@@ -602,7 +621,8 @@ int roaValidate(struct ROA *rp)
   /////////////////////////////////////////////////////////////
   if((iRes = cmsValidate(rp)) < 0) return iRes;
 
-  // check that eContentType is routeOriginAttestation (= OID 1.2.240.113549.1.9.16.1.24)
+  // check that eContentType is routeOriginAttestation (= 
+  //    OID 1.2.240.113549.1.9.16.1.24)
   if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
     id_routeOriginAttestation)) return ERR_SCM_BADCT;
 
@@ -613,13 +633,14 @@ int roaValidate(struct ROA *rp)
   if (size_casn(casnp) > 0 && read_casn_num(casnp, &val) > 1 &&
       val > 0) return ERR_SCM_INVALVER;
   // check that the asID is  a positive nonzero integer
-  if (read_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.self, &iAS_ID) < 0 ||
+  if (read_casn_num(&rp->content.signedData.signerInfos.signerInfo.version.
+    self, &iAS_ID) < 0 ||
       iAS_ID <= 0) return ERR_SCM_INVALASID;
   // check the contents
   if ((iRes = validateIPContents(&rp->content.signedData.encapContentInfo.
      eContent.roa.  ipAddrBlocks)) < 0) return iRes;
   return 0;
-}
+  }
 
 #define HAS_EXTN_SKI 0x01
 #define HAS_EXTN_ASN 0x02
