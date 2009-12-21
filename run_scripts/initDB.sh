@@ -21,5 +21,6 @@ if [ "${RPKI_PORT}x" = "x" ]; then export RPKI_PORT=7344; fi
 if [ "${RPKI_DB}x" = "x" ]; then export RPKI_DB=apki; fi
 if [ "${RPKI_ROOT}x" = "x" ]; then export RPKI_ROOT=`pwd | sed 's/\/run_scripts//'`; fi
 
+echo About to clear database "${RPKI_DB}" ...
 $RPKI_ROOT/proto/rcli -x -y
 $RPKI_ROOT/proto/rcli -t $RPKI_ROOT/REPOSITORY -y
