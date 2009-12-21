@@ -50,9 +50,9 @@ where SSL_INCLUDE is the full path to the OpenSSL include directory (typically
 
 All code should be linked with
 
-    -LAPKI_LIB -LSSL_LIB -LROA_LIB -LASN_LIB -LCASN_LIB
+    -LRPKI_LIB -LSSL_LIB -LROA_LIB -LASN_LIB -LCASN_LIB
 
-where APKI_LIB is the full path to the apki library (typically .), SSL_LIB is the
+where RPKI_LIB is the full path to the rpki library (typically .), SSL_LIB is the
 full path to the OpenSSL library directory (typically /usr/local/ssl/lib), ROA_LIB
 is the full path to the ROA utilities library (typically ../roa-lib), ASN_LIB is
 the full path to the ASN.1 library (typically ../cg/asn) and CASN_LIB is the full
@@ -60,7 +60,7 @@ path to the casn utility library (typically ../cg/casn).
 
 The library link should contain at least the following:
 
-      -lapki -lssl -lcrypto -lmyodbc3 -lrt -lroa -lasn -lcasn
+      -lrpki -lssl -lcrypto -lmyodbc3 -lrt -lroa -lasn -lcasn
 
 2.0 Function descriptions
 
@@ -80,7 +80,7 @@ they are documented herein.
 
 2.1.1 scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
 
-This function attempts to open a connection to the Address PKI MySQL database.
+This function attempts to open a connection to the Resource PKI MySQL database.
 "dsnp" is a non-NULL pointer to a Data Set Name (DSN); "errmsg" is a non-NULL
 pointer to a string of strictly positive length "emlen".  On success an opaque
 connection object of type "scmcon" is returned.  On failure NULL is returned
@@ -109,14 +109,14 @@ or if there is an error on the connection, NULL is returned.
 2.1.5 int createdbscm(scmcon *conp, char *dbname, char *dbuser)
 
 This function creates a database named "dbname" with nominal access rights for
-user "dbuser" in the Address PKI database, using the database connection "conp".
+user "dbuser" in the Resource PKI database, using the database connection "conp".
 "dbname" and "dbuser" must not be NULL.  "conp" must be a database connection
 that has root access to the MySQL database. Typical user applications should never
 have to call this function.
 
 2.1.6 int deletedbscm(scmcon *conp, char *dbname)
 
-This function deletes the database named "dbname" in the Address PKI database,
+This function deletes the database named "dbname" in the Resource PKI database,
 using the database connection "conp". "dbname" must not be NULL. "conp" mus be
 a database connection that has root access to the MySQL database. All tables within
 "dbname" are deleted. Typical user applications should never have to call this
@@ -125,7 +125,7 @@ function.
 2.1.7 scm *initscm(void)
 
 This function creates and returns an opaque data structure of type "scm" that
-describes the database schema for the Address PKI. Note that this function is
+describes the database schema for the Resource PKI. Note that this function is
 intended to be a singleton: it should be called at most once in any application.
 On success it returns a non-NULL pointer. On failure it returns NULL. Note that
 if this function succeeds it returns allocated memory that must be freed by
@@ -137,7 +137,7 @@ This function is used to free the memory allocated by initscm().
 
 2.1.9 int createalltablesscm(scmcon *conp, scm *scmp)
 
-This function creates all the tables within the default Address PKI database. It
+This function creates all the tables within the default Resource PKI database. It
 uses a database connection "conp" which must have root access to the MySQL database.
 It also uses a textual representation of the database schema, as encapsulated in
 the opaque data structure "scmp" of type "scm". Typical user applications should
