@@ -1693,13 +1693,23 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     sta = add_crl_internal(scmp, conp, cf);
   }
 // and do the revocations
-  if ((sta == 0) && chainOK) {
-    for (i = 0; i < cf->snlen; i++) {
+  if ((sta == 0) && chainOK) 
+    {
+    uchar *u = (uchar *)cf->snlist; 
+    for (i = 0; i < cf->snlen; i++, u += (sizeof(unsigned long long))) 
+      {
+      unsigned long long ull = 0;
+      uchar *e;
+      for (e = &u[7]; e >= u; e--)
+        {
+        ull <<= 8;
+        ull += *e;
+        }
       model_cfunc (scmp, conp, cf->fields[CRF_FIELD_ISSUER],
-		   cf->fields[CRF_FIELD_AKI],
-		   ((unsigned long long *)cf->snlist)[i]);
+		   cf->fields[CRF_FIELD_AKI], ull);
+//		   ((unsigned long long *)cf->snlist)[i]);
+      }
     }
-  }
   freecrf(cf);
   X509_CRL_free(x);
   return(sta);
@@ -1780,11 +1790,12 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   if (cf != NULL && sta == 0)
     {
     // add the X509 cert to the db
-    sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, NULL, 
-      (typ == OT_RTA)? 0: 1);
+    sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, 
+      (!rta)? NULL: pathname, (typ == OT_RTA)? 0: 1);
     if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else if (sta < 0)
-      fprintf(stderr, "Error adding embedded certificate %s\n", pathname);
+      fprintf(stderr, "Error adding embedded certificate %s\n", 
+        (!rta)? pathname: NULL);
     else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
   free(fakename);
@@ -2520,6 +2531,9 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_MAN:
     case OT_MAN_PEM:
       thetab = theManifestTable;
+      break;
+    case OT_RTA:
+      thetab = theCTATable;
       break;
     default:
       sta = ERR_SCM_INTERNAL;

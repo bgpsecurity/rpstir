@@ -1350,9 +1350,10 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	      snerr = ERR_SCM_BIGNUMERR;
 	      break;
 	    }
-	  if ( (unsigned)(BN_num_bytes(bn)) <= sizeof(unsigned long long) )
+          int numbytes = (unsigned)BN_num_bytes(bn);
+          if (numbytes <= sizeof(unsigned long long) )
 	    {
-	      BN_bn2bin(bn, tov);
+              memcpy(tov, (unsigned char *)bn->d, numbytes);
 	      BN_free(bn);
 	      tov += sizeof(unsigned long long);
 	    }
