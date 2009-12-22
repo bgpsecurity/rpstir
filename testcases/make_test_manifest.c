@@ -95,14 +95,15 @@ static int fatal(int msg, char *paramp)
   exit(msg);
   }
 
-static void make_fullpath(char *fullpath, char *locpath)
+static void make_fulldir(char *fulldir, const char *locpath)
   {
   // Manifest goes in issuer's directory, e.g.
   // M1.man goes nowhere else, 
   // M11.man goes into C1/, 
   // M121.man goes into C1/2 
   // M1231.man goes into C1/2/3
-  char *f = fullpath, *l = locpath;
+  char *f = fulldir;
+  const char *l = locpath;
   if (strlen(locpath) > 6) 
     {
     *f++ = 'C';
@@ -117,11 +118,30 @@ static void make_fullpath(char *fullpath, char *locpath)
         {
         *f++ = *l++;
         *f++ = '/';
+        if (l[1] != '.') // 4th digit
+          {
+          *f++ = *l++;
+          *f++ = '/';
+          }
         }
       }
     }
-  strcpy(f, locpath);
   }
+
+static void make_fullpath(char *fullpath, const char *locpath)
+  {
+    make_fulldir(fullpath, locpath);
+    strcat(fullpath, locpath);
+  }
+
+static void mkdir_recursive(const char *dir)
+{
+  char mkdircmd[60];
+  if (!dir || strlen(dir) == 0)
+    return;
+  snprintf(mkdircmd, sizeof(mkdircmd), "mkdir -p %s", dir);
+  system(mkdircmd);
+}
 
 int main(int argc, char **argv)
   {
@@ -215,8 +235,14 @@ int main(int argc, char **argv)
     &roa.content.signedData.  certificates.self, 0);
   if (get_casn_file(&certp->self, certfile, 0) < 0) fatal(2, certfile);
   if ((c = signCMS(&roa, keyfile, 0))) fatal(7, c);
+
   char fullpath[40];
+  char fulldir[40];
+  make_fulldir(fulldir, manifestfile);
   make_fullpath(fullpath, manifestfile);
+  fprintf(stdout, "Full path to manifest: %s\n", fullpath);
+  mkdir_recursive(fulldir);
+
   if (put_casn_file(&roa.self, manifestfile, 0) < 0) fatal(6, manifestfile);
   if (put_casn_file(&roa.self, fullpath, 0) < 0) fatal(2, fullpath);
   for (c = manifestfile; *c && *c != '.'; c++);

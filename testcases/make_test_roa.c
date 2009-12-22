@@ -125,14 +125,15 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
   return;
   }
 
-static void make_fullpath(char *fullpath, char *locpath)
+static void make_fulldir(char *fulldir, const char *locpath)
   {
   // ROA goes in issuer's directory, e.g.
   // R1.roa goes nowhere else, 
   // R11.roa goes into C1/, 
   // R121.roa goes into C1/2 
   // R1231.roa goes into C1/2/3
-  char *f = fullpath, *l = locpath;
+  char *f = fulldir;
+  const char *l = locpath;
   if (strlen(locpath) > 6) 
     {
     *f++ = 'C';
@@ -155,8 +156,22 @@ static void make_fullpath(char *fullpath, char *locpath)
         }
       }
     }
-  strcpy(f, locpath);
   }
+
+static void make_fullpath(char *fullpath, const char *locpath)
+  {
+    make_fulldir(fullpath, locpath);
+    strcat(fullpath, locpath);
+  }
+
+static void mkdir_recursive(const char *dir)
+{
+  char mkdircmd[60];
+  if (!dir || strlen(dir) == 0)
+    return;
+  snprintf(mkdircmd, sizeof(mkdircmd), "mkdir -p %s", dir);
+  system(mkdircmd);
+}
 
 int main (int argc, char **argv)
 {
@@ -341,8 +356,12 @@ int main (int argc, char **argv)
       }
 
     // write out the roa
+    char fulldir[40];
     char fullpath[40];
+    make_fulldir(fulldir, roafile);
     make_fullpath(fullpath, roafile);
+    printf("Full path to roa: %s\n", fullpath);
+    mkdir_recursive(fulldir);
     if (put_casn_file(&roa.self, roafile, 0) < 0) fatal(4, roafile);
     if (put_casn_file(&roa.self, fullpath, 0) < 0) fatal(4, fullpath);
 
