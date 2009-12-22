@@ -343,7 +343,7 @@ compareResults() {
 killListener() {
 
   if [ $scriptStartedListener -eq 1 ]; then
-    listenPID=`ps -ef|grep $USER|grep "rcli -w"|grep -v "grep"|cut -d" " -f2`
+    listenPID=`ps -ef|grep $USER|grep "rcli -w"|grep -v "grep"|gawk '{print $2};'`
     echo " *** killing listener process started by $0, PID" $listenPID
     kill -9 $listenPID
   fi
