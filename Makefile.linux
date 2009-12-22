@@ -71,8 +71,11 @@ all:
 dist:
 	make_RPKI.sh
 
+tags:
+	find ${PWD} -name \*.[ch] | xargs etags --declarations
+
 clean:
 	for DIR in $(DIRS); do \
 		(cd $$DIR && make clean) ;\
 	done
-
+	rm -f TAGS

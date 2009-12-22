@@ -71,8 +71,12 @@ all:
 		if [ $$? != 0 ]; then exit; fi \
 	done
 
+tags:
+	find ${PWD} -name \*.[ch] | xargs etags --declarations
+
 clean:
 	for DIR in $(DIRS); do \
 		(cd $$DIR && make clean) ;\
 	done
+	rm -f TAGS
 
