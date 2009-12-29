@@ -1,7 +1,7 @@
 #! /bin/sh
 
-RCLI="${APKI_ROOT}/proto/rcli"
-REPOSITORY="${APKI_ROOT}/testing/REPOSITORY"
+RCLI="${RPKI_ROOT}/proto/rcli"
+REPOSITORY="${RPKI_ROOT}/testing/REPOSITORY"
 ROOT_CERT="`/bin/pwd`/C.cer"
 asID=8
 tcType="roa"
