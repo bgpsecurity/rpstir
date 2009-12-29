@@ -232,6 +232,15 @@ static void addFlagIfSet(char *returnStr, unsigned int flags,
   }
 }
 
+static void addFlagIfUnset(char *returnStr, unsigned int flags,
+			 unsigned int flag, char *str)
+{
+  if (!(flags & flag)) {
+    snprintf (&returnStr[strlen(returnStr)], MAX_RESULT_SZ-strlen(returnStr),
+	      "%s%s", (returnStr[0] == 0) ? "" : " | ", str);
+  }
+}
+
 static int isManifest = 0;
 
 void setIsManifest(int val) { isManifest = val; }
@@ -244,7 +253,12 @@ static int displayFlags (scmsrcha *s, int idx1, char* returnStr)
   addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
   addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
   addFlagIfSet(returnStr, flags, SCM_FLAG_VALIDATED, "VALIDATED");
-  addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
+  if ((flags & SCM_FLAG_VALIDATED))
+    {
+    if ((flags & SCM_FLAG_NOCHAIN)) 
+      addFlagIfSet(returnStr, flags, SCM_FLAG_NOCHAIN, "NOCHAIN");
+    else addFlagIfUnset(returnStr, flags, SCM_FLAG_NOCHAIN, "CHAINED");
+    }
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
   if (!isManifest)
@@ -271,7 +285,7 @@ static QueryField fields[] = {
   {
     "filename",
     "the filename where the data is stored in the repository",
-    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN,
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN | Q_FOR_RTA,
     SQL_C_CHAR, FNAMESIZE,
     NULL, NULL,
     "Filename", NULL,
@@ -279,7 +293,7 @@ static QueryField fields[] = {
   {
     "pathname",
     "full pathname (directory plus filename) where the data is stored",
-    Q_JUST_DISPLAY|Q_FOR_ROA|Q_FOR_CERT|Q_FOR_CRL|Q_FOR_MAN|Q_REQ_JOIN,
+    Q_JUST_DISPLAY|Q_FOR_ROA|Q_FOR_CERT|Q_FOR_CRL|Q_FOR_MAN| Q_FOR_RTA | Q_REQ_JOIN,
     -1, 0,
     "dirname", "filename",
     "Pathname", pathnameDisplay,
@@ -287,7 +301,7 @@ static QueryField fields[] = {
   {
     "dirname",
     "the directory in the repository where the data is stored",
-    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN|Q_REQ_JOIN,
+    Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN| Q_FOR_RTA | Q_REQ_JOIN,
     SQL_C_CHAR, DNAMESIZE,
     NULL, NULL,
     "Directory", NULL,
@@ -455,7 +469,7 @@ static QueryField fields[] = {
   {
     "flags",
     "which flags are set in the database",
-    Q_JUST_DISPLAY|Q_FOR_CERT|Q_FOR_CRL|Q_FOR_ROA|Q_FOR_MAN,
+    Q_JUST_DISPLAY|Q_FOR_CERT|Q_FOR_CRL|Q_FOR_ROA|Q_FOR_MAN | Q_FOR_RTA,
     SQL_C_ULONG, 8,
     NULL, NULL,
     "Flags Set", displayFlags,
