@@ -11,6 +11,6 @@
 #     port is the SSH port to connect to at the host
 #     user is the user name to use for ssh (eventually switch to key pairs)
 
-localhost
-localhost yes
-localhost yes 7455 dmontana
+localhost dmontana
+localhost dmontana yes
+localhost dmontana yes 7455

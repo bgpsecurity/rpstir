@@ -29,11 +29,13 @@
 
 typedef struct _ServerInfo {
 	char *host;       // host name where server lives
+	char *user;       // user name to use for logging in (eventually this
 	char standalone;  // whether client is standalone or uses SSH client
 	int port;         // SSH port to connect to at host
-	char *user;       // user name to use for logging in (eventually this
 	                  // will be replace by public/private keys)
 } ServerInfo;
+
+#define DEFAULT_USER "rpkirtr"
 
 #define MAX_SERVERS 64
 static ServerInfo servers[MAX_SERVERS];
@@ -59,6 +61,9 @@ static void parseServers (char *filename) {
 		servers[numServers].host = strdup(tok);
 
 		tok = strtok(NULL, " ,\t\n");
+		servers[numServers].user = strdup(tok ? tok : DEFAULT_USER);
+
+		tok = strtok(NULL, " ,\t\n");
 		servers[numServers].standalone =
 			tok && (strlen(tok) > 0) && (tok[0] == 'y' || tok[0] == 'Y');
 
@@ -70,8 +75,6 @@ static void parseServers (char *filename) {
 			exit(-1);
 		}
 
-		tok = strtok(NULL, " ,\t\n");
-		servers[numServers].user = strdup(tok ? tok : getenv("USER"));
 		numServers++;
 	}
 }
