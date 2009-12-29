@@ -1,10 +1,26 @@
 
 This directory contains an implementation of the RPKI-RTR server
 specifications given in the document "The RPKI/Router Protocol" at
-http://www.ietf.org/id/draft-ymbk-rpki-rtr-protocol-04.txt
-It also contains an implementation of a sample client, but this client
-only prints out the data received; a real client would add this data
-to the router.
+http://www.ietf.org/id/draft-ymbk-rpki-rtr-protocol-04.txt .
+It also contains an implementation of the portions of the RPKI-RTR
+client specified in the document.  This client functionality is
+provided as a core set of functions to perform the communication
+with the server that invokes user-provided callbacks to handle
+the data returned from the server.
+
+Note that there are two different versions of the server and the
+client: standalone and non-standalone.  The standalone version
+uses cryptlib functions to perform the SSH operations, while
+the non-standalone instead utilizes the SSH functionality that
+already exists on standard Linux/Unix systems (sshd for the
+server and the ssh client and ssh_agent for the client).
+The standalone versions are invoked with the -s switch.
+AT THE CURRENT TIME, THE STANDALONE VERSIONS SHOULD NOT BE
+USED IN REAL SYSTEMS, since there are still certain pieces
+of functionality not yet implemented fully.  For this reason,
+we refer to the non-standalone mode as the STANDARD MODE.
+
+EXECUTING THE SERVER
 
 On the server side, there are two applications to execute:
 
@@ -14,17 +30,89 @@ operation in the cycle, after the rsync, chaser, and garbage collector
 have all been run.  It does all the time-consuming steps required to
 determine what data to send clients and writes this into the database.
 
+The command line for running doUpdate is:
+doUpdate <stalenessSpecsFile>
+The stalenessSpecsFile should be in the same format as given in
+the file proto/sampleQuerySpecs and tells which types of staleness
+prevents a ROA from being considered valid and which do not.
+The two environment variables that affect the application are:
+RPKI_DB - determines the name of the database, defaults to rpki
+RTR_RETENTION_HOURS - determines how long to hold old incremental updates,
+  defaults to 96 (and should always be at least 24 + the maximum time
+  between runs of doUpdate)
+
 (2) server - This application takes client requests and returns the
-data requested.  In its standard mode (that given in the specifications),
-the server is run as a subsystem of ssh, which means that sshd is
-the one listening for client connection requests and starts an
-instance of the server application to service the client.  We do provide
-a second mode, where the server application listens directly for
+data requested.  In standard mode, the server is run as a subsystem
+of ssh, which means that sshd is the one listening for client connection
+requests, and sshd starts a separate instance of the server application
+for each client.  sshd also handles all the authentication and the
+SSH transport.
+
+To configure sshd so that it invokes server as a subsystem:
+- Edit the /etc/ssh/sshd_config file to contain the line
+  Subsystem	rpki-rtr	<RPKI_ROOT>/server/doServer
+  (replacing <RPKI_ROOT> with the actual pathname)
+  (Note that root access is generally required to edit sshd_config.)
+- Edit the file doServer so that all the parameters are set correctly.
+  As specified in the documentation at the top of the file, the
+  parameters include (a) the database name, (b) the root of the
+  RPKI code, (c) the seconds between checks for updates to the database,
+  and (d) optionally, the full pathname of the log file.
+To configure sshd so that it can accept logins without passwords:
+- Create a user account, preferably named rpkirtr.  (Note that it
+  would make sense, although is not required, for RPKI_ROOT to be
+  owned by this user.)  If the username is not rpkirtr, all clients
+  should be informed of this, as they will have to specify the username
+  explicitly in this case.
+- Add all the clients' keys to this user's ~/.ssh/authorized_keys file.
+
+WRITING AND RUNNING A CLIENT
+
+There are three steps to creating a client: writing the application,
+creating a hosts file, and setting up the private/public key pairs.
+
+The client code provided is a function runClient that when executed
+connects to servers and reads the data.  There are three callbacks
+provided to pass the data to user-provided code, which will in turn
+do whatever needs to be done with the data (e.g., update routing tables).
+Documentation for how to invoke runClient and the form for the
+callbacks is provided in the file coreClient.h.  A very simple sample
+client to serve as a model is provided in sampleClient.h.
+
+The client also needs a hosts file to tell where the servers are, how
+to connect (e.g., what username), and the priorities on servers.
+The documentation on host to create a hosts file is given in
+the file sampleHostsFile.
+
+The client should be run as a user that has at least one set of
+public/private key pairs.  If such a key pair does not yet exist,
+create it using ssh-keygen.  For security reasons, it is preferable
+to encrypt the private key (although this does require one extra step
+in executing the client, as described below).  One public key should
+be provide to each server listed in the hosts file.  The ~/.ssh/known_hosts
+file should also contain the public key of each server.  Note that
+this can be accomplished by connecting to each server using the
+command-line ssh and typing yes when asked if you want to continue
+connecting.  (This command-line connection is also a good test that
+the server has the client's public key correctly included.  To test
+further that the server hostname has been added to known_hosts, run
+"ssh -o StrictHostKeyChecking=yes -l <username> <hostname>".)
+
+
+NOTES TO DEVELOPERS
+
+This section contains extra documentation intended just for
+developers, or people trying to understand/modify the code.
+Users should ignore everything past this point.
+
+STANDALONE MODE
+
+In standalone mode, the server application listens directly for
 client requests (using the ssh protocol but on a port different from
 the standard ssh port) and implements the ssh protocol to reply to
 these requests.  Currently, the standard mode is preferable not just
 because it implements the specifications but also because the
-alternate mode does not do any authentication of the client (while
+standalone mode does not do any authentication of the client (while
 the standard mode inherits the standard ssh authentication).
 Futhermore, the standard mode is more robust insofar as a different
 instance is spawned for each client, and hence a single crash
@@ -34,26 +122,23 @@ to attach a debugger to the application, as well as providing a way
 to run without the need for root access, which is required to configure
 the application to run as a subsystem of ssh.
 
-On the client side, there is a sample application called testClient
-that serves as a model for how to implement clients (as well as
-providing a way to test the server side code).  This application can
-be executed in two modes, illustrating the two different ways to
-implement a client.  The first mode is as a standalone application,
-implementing the SSH protocol (by making calls to the cryptlib library)
-to talk to the server.  In the second mode, the client forks off
+There is also a standalone mode on the client side, which also
+currently should not be used except for testing.  It currently does
+not work with keys and requires the user to type in a password for
+each connection to a server.
+
+RANDOM NOTES
+
+On the client side, there is a test application called testClient
+that is used for certain types of unit testing.  This should not
+be used as a model for how to build a real client, sampleClient
+is instead that model.
+
+The standard mode for the client works by forking off
 a child process that runs the ssh client, and all communication with
 the server is via two pipes to this child process.
 
-The command line for running doUpdate is:
-doUpdate <stalenessSpecsFile>
-The stalenessSpecsFile should be in the same format as given in
-the file proto/sampleQuerySpecs and tells which types of staleness
-prevents a ROA from being considered valid and which do not.
-The two environment variables that affect the application are:
-RPKI_DB - determines the name of the database, defaults to RPKI
-RTR_RETENTION_HOURS - determines how long to hold old incremental updates,
-  defaults to 96 (and should always be at least 24 + the maximum time
-  between runs of doUpdate)
+COMMAND LINE INVOCATION
 
 The command line for running server is:
 server [-s] [-l logfile] [-p port] [-t timeBetweenUpdateChecks]
@@ -76,17 +161,3 @@ testClient [-s] [-h host] [-p port]
 -h: the host where the server is, by default localhost
 -p: port the server is using, only used in standalone mode (in other mode,
     the port must be the standard ssh port 22), by default 22
-
-Further instructions on running server:
-If server is being run in its standard mode, as a ssh subsystem,
-it should not be executed from a command line prompt.  Instead, it
-should be set up to be executed automatically by sshd.
-To do this, first create a script file to execute server.
-A sample script file is given by server/doServer.
-Note how it sets the environment variable RPKI_DB as part of the script,
-since server will be executing in an environment that presumably
-does not have RPKI-specific environment variables set.
-Next, edit the system file sshd_config (often at the pathname
-/etc/ssh/sshd_config) to add the line:
-Subsystem	rpki-rtr	<full_pathname_of_script_file>
-(Note that root access is generally required to edit sshd_config.)
