@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
 	char msg[256];
 	int i, standalone = 0, port = DEFAULT_STANDALONE_PORT;
 	pthread_t notifyThread;
-	char *logFilename = "log.rtr.server";
+	char *logFilename = "log.rtr.server", logFilename2[200];
 
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-s") == 0) {
@@ -271,11 +271,12 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	// open the log file
-	// ??????? add time to name so that unique ???????
-	logfile = fopen(logFilename, "w");
+	// open the log file, making a unique name for the log file
+	snprintf(logFilename2, sizeof(logFilename2), "%s_%ld_%d",
+			 logFilename, time(NULL), getpid());
+	logfile = fopen(logFilename2, "w");
 	if (logfile == NULL) {
-		fprintf(stderr, "Could not open log file\n");
+		fprintf(stderr, "Could not open log file %s\n", logFilename2);
 		return -1;
 	}
 

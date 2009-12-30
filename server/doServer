@@ -13,4 +13,4 @@
 #
 export RPKI_DB=daves
 export RPKI_ROOT=/home/dmontana/apki/trunk
-$RPKI_ROOT/server/server -l $RPKI_ROOT/server/rtr.log -t 1
+$RPKI_ROOT/server/server -l $RPKI_ROOT/server/logs/rtr.log -t 1
