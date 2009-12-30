@@ -95,7 +95,7 @@ extern int   findorcreatedir(scm *scmp, scmcon *conp, char *dirname,
 extern int   add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 			char *outfull, int utrust);
 extern int   delete_object(scm *scmp, scmcon *conp, char *outfile,
-			   char *outdir, char *outfull);
+			   char *outdir, char *outfull, unsigned int dir_id);
 extern int   infer_filetype(char *fname);
 extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		      unsigned int id, int utrust, int typ,

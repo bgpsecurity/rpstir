@@ -1707,7 +1707,6 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
         }
       model_cfunc (scmp, conp, cf->fields[CRF_FIELD_ISSUER],
 		   cf->fields[CRF_FIELD_AKI], ull);
-//		   ((unsigned long long *)cf->snlist)[i]);
       }
     }
   freecrf(cf);
@@ -1791,7 +1790,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     {
     // add the X509 cert to the db
     sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, 
-      (!rta)? NULL: pathname, (typ == OT_RTA)? 0: 1);
+      pathname, (typ == OT_RTA)? 0: 1);
     if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else if (sta < 0)
       fprintf(stderr, "Error adding embedded certificate %s\n", 
@@ -1923,7 +1922,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // clean up
   free(ip_addrs);
   if (sta != 0 && cert_added)
-    (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull);
+    (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull, 
+    (unsigned int)0);
   delete_casn(&roa.self);
   if (sig != NULL) free(sig);
   return(sta);
@@ -2368,33 +2368,6 @@ int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
 }
 
 /*
-  This is the model revocation function for certificates. It handles
-  the case where a certificate is expired or revoked. Given that this
-  function can be called recursively it must be careful in what it does.
-  If the top level certificate it is handed has either the EXPIRED or
-  REVOKED bit set in its flags field, or the toplevel flag in the search
-  context, then it is deleted. If none of these bits it set then it checks
-  to see if it has been reparented. If it has not been reparented, it is deleted,
-  otherwise the function just returns.
-
-  If a certificate is deleted, then this function is invoked recursively
-  to check to see if any of its children (certificate children or ROA
-  children) also need to be deleted.
-*/
-
-static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
-{
-  unsigned int lid;
-  int     sta;
-
-  UNREFERENCED_PARAMETER(idx);
-  lid = *(unsigned int *)(s->vec[0].valptr);
-  sta = deletebylid(conp, theCertTable, lid);
-  return verifyOrNotChildren (conp, (char *) s->vec[1].valptr,
-			      (char *) s->vec[2].valptr, NULL, NULL, lid, 0);
-}
-
-/*
  * Fill in the columns for a search with revoke_cert_and_children as callback
  */
 
@@ -2432,6 +2405,99 @@ static void fillInColumns(scmsrch *srch1, unsigned int *lid, char *ski,
   srch->vald = 0;
 }
 
+static int findRTA(scmcon *conp, char *ski_ee)
+  {
+  unsigned int lid;
+  scmsrcha srch;
+  scmsrch  srch1[4];
+  scmkva   where;
+  scmkv    w[2];
+  char ski[512];
+  char filename[512];
+  unsigned int dir_id;
+  int      sta;
+
+  if (ski_ee == NULL || ski_ee[0] == 0) return(0);
+  w[0].column = "ski_ee";
+  w[0].value = ski_ee;
+  where.vec = &w[0];
+  where.ntot = 1;
+  where.nused = 1;
+  where.vald = 0;
+  srch1[0].colno = 1;
+  srch1[0].sqltype = SQL_C_ULONG;
+  srch1[0].colname = "local_id";
+  srch1[0].valptr = (void *)&lid;
+  srch1[0].valsize = sizeof(unsigned int);
+  srch1[0].avalsize = 0;
+  srch1[1].colno = 2;
+  srch1[1].sqltype = SQL_C_CHAR;
+  srch1[1].colname = "ski_rta";
+  srch1[1].valptr = (void *)ski;
+  srch1[1].valsize = sizeof(ski);
+  srch1[1].avalsize = 0;
+  srch1[2].colno = 3;
+  srch1[2].sqltype = SQL_C_CHAR;
+  srch1[2].colname = "filename";
+  srch1[2].valptr = (void *)filename;
+  srch1[2].valsize = sizeof(filename);
+  srch1[2].avalsize = 0;
+  srch1[3].colno = 4;
+  srch1[3].sqltype = SQL_C_ULONG;
+  srch1[3].colname = "dir_id";
+  srch1[3].valptr = (void *)&dir_id;
+  srch1[3].valsize = sizeof(unsigned int);
+  srch1[3].avalsize = 0;
+  srch.vec = srch1;
+  srch.sname = NULL;
+  srch.ntot = 4;
+  srch.nused = 4;
+  srch.vald = 0;
+  srch.where = &where;
+  srch.wherestr = NULL;
+  srch.context = NULL;
+  sta = searchscm(conp, theCTATable, &srch, NULL, ok,
+    SCM_SRCH_DOVALUE_ALWAYS, NULL);
+  if (sta == ERR_SCM_NODATA) return sta;
+  delete_object(NULL, conp,  filename, NULL, NULL, dir_id);
+  w[0].column = "ski";
+  w[0].value = ski;
+  srch1[1].colname = "subject"; // uses other srch1[] as above
+  sta = searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
+    SCM_SRCH_DOVALUE_ALWAYS, NULL);
+  return(sta);
+  }
+
+/*
+  This is the model revocation function for certificates. It handles
+  the case where a certificate is expired or revoked. Given that this
+  function can be called recursively it must be careful in what it does.
+  If the top level certificate it is handed has either the EXPIRED or
+  REVOKED bit set in its flags field, or the toplevel flag in the search
+  context, then it is deleted. If none of these bits it set then it checks
+  to see if it has been reparented. If it has not been reparented, it is deleted,
+  otherwise the function just returns.
+
+  If a certificate is deleted, then this function is invoked recursively
+  to check to see if any of its children (certificate children or ROA
+  children) also need to be deleted.
+*/
+
+static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
+{
+  unsigned int lid;
+  int     sta;
+
+  UNREFERENCED_PARAMETER(idx);
+  lid = *(unsigned int *)(s->vec[0].valptr);
+  if ((sta = deletebylid(conp, theCertTable, lid)) < 0) return sta;
+  if ((sta = findRTA(conp, (char *)s->vec[1].valptr)) == ERR_SCM_NODATA) 
+    return 0;
+  if (sta < 0)  return sta;
+  return verifyOrNotChildren (conp, (char *) s->vec[1].valptr,
+			      (char *) s->vec[2].valptr, NULL, NULL, lid, 0);
+}
+
 /*
   Delete an object. First find the object's directory. If it is not found
   then we are done. If it is found, then find the corresponding (filename, dir_id)
@@ -2439,7 +2505,7 @@ static void fillInColumns(scmsrch *srch1, unsigned int *lid, char *ski,
 */
 
 int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-		  char *outfull)
+		  char *outfull, unsigned int dir_id )
 {
   unsigned int id;
   unsigned int blah;
@@ -2459,39 +2525,42 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   char     did[24];
   mcf      mymcf;
 
-  if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
-       outfile == NULL || outdir == NULL || outfull == NULL )
+  if (conp == NULL || conp->connected == 0 || outfile == NULL || 
+    (outdir == NULL && !dir_id))
     return(ERR_SCM_INVALARG);
 // determine its filetype
-  typ = infer_filetype(outfull);
+  typ = infer_filetype(outfile);
   if ( typ < 0 )
     return(typ);
 // find the directory
-  initTables(scmp);
-  one.column = "dirname";
-  one.value = outdir;
-  where.vec = &one;
-  where.ntot = 1;
-  where.nused = 1;
-  where.vald = 0;
-  srch1.colno = 1;
-  srch1.sqltype = SQL_C_ULONG;
-  srch1.colname = "dir_id";
-  srch1.valptr = (void *)&id;
-  srch1.valsize = sizeof(unsigned int);
-  srch1.avalsize = 0;
-  srch.vec = &srch1;
-  srch.sname = NULL;
-  srch.ntot = 1;
-  srch.nused = 1;
-  srch.vald = 0;
-  srch.where = &where;
-  srch.wherestr = NULL;
-  srch.context = &blah;
-  sta = searchscm(conp, theDirTable, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS,
-    NULL);
-  if ( sta < 0 )
-    return(sta);
+  if (scmp) initTables(scmp); // may be null if tables have been initiated
+  if (outdir)
+    {
+    one.column = "dirname";
+    one.value = outdir;
+    where.vec = &one;
+    where.ntot = 1;
+    where.nused = 1;
+    where.vald = 0;
+    srch1.colno = 1;
+    srch1.sqltype = SQL_C_ULONG;
+    srch1.colname = "dir_id";
+    srch1.valptr = (void *)&id;
+    srch1.valsize = sizeof(unsigned int);
+    srch1.avalsize = 0;
+    srch.vec = &srch1;
+    srch.sname = NULL;
+    srch.ntot = 1;
+    srch.nused = 1;
+    srch.vald = 0;
+    srch.where = &where;
+    srch.wherestr = NULL;
+    srch.context = &blah;
+    sta = searchscm(conp, theDirTable, &srch, NULL, ok, SCM_SRCH_DOVALUE_ALWAYS,
+      NULL);
+    if ( sta < 0 ) return(sta);
+    }
+  else id = dir_id;
   // fill in where structure
   dtwo[0].column = "filename";
   dtwo[0].value = outfile;

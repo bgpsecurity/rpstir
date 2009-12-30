@@ -387,10 +387,10 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
       sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
       break;
     case 'r':
-      sta = delete_object(scmp, conp, outfile, outdir, outfull);
+      sta = delete_object(scmp, conp, outfile, outdir, outfull, 0);
       break;
     case 'u':
-      (void)delete_object(scmp, conp, outfile, outdir, outfull);
+      (void)delete_object(scmp, conp, outfile, outdir, outfull, 0);
       sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
       break;
     default:
@@ -1152,7 +1152,7 @@ int main(int argc, char **argv)
       sta = splitdf(NULL, NULL, thedelfile, &outdir, &outfile, &outfull);
       if ( sta == 0 )
 	{
-	  sta = delete_object(scmp, realconp, outfile, outdir, outfull);
+	  sta = delete_object(scmp, realconp, outfile, outdir, outfull, 0);
 	  if ( sta < 0 )
 	    {
 	      (void)fprintf(stderr,
