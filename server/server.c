@@ -180,7 +180,7 @@ static void handleSerialQuery(PDU *request) {
 
 	// finish up by sending the end of data PDU
 	fillInPDUHeader(&response, PDU_END_OF_DATA, 0);
-	response.typeSpecificData = &newSNs[i-1];
+	response.typeSpecificData = (i > 0) ? &newSNs[i-1] : &oldSN;
 	if (writePDU(&response) == -1) {
 		PRINTF("Error writing end of data\n");
 		return;
