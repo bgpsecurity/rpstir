@@ -37,6 +37,9 @@ typedef struct _ServerInfo {
 
 #define DEFAULT_USER "rpkirtr"
 
+#define RECOVERABLE_ERROR -1
+#define NONRECOVERABLE_ERROR -2
+
 #define MAX_SERVERS 64
 static ServerInfo servers[MAX_SERVERS];
 static int numServers = 0;
@@ -93,7 +96,8 @@ static void getPassword(char *password, char *host, char *user) {
 }
 
 
-#define checkerr2(s, args...) if (s) { fprintf(stderr, args); return -1; }
+#define checkerr2(s, args...) \
+	if (s) { fprintf(stderr, args); return RECOVERABLE_ERROR; }
 
 static int waitForNotification(int standalone) {
 	PDU *response;
@@ -115,7 +119,11 @@ static int waitForNotification(int standalone) {
 }
 
 
-#define checkErr(s, args...) if (s) { fprintf(stderr, args); return -1; }
+#define checkErr(s, args...) \
+	if (s) { fprintf(stderr, args); return RECOVERABLE_ERROR; }
+
+#define checkErrNon(s, args...) \
+	if (s) { fprintf(stderr, args); return NONRECOVERABLE_ERROR; }
 
 static int doResponses(PDU *request, addressBlockHandler abh,
 					   clearDataHandler cdh, updateCompleteHandler uch,
@@ -127,9 +135,11 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 
 	checkErr(writePDU(request) < 0, "Error writing query request\n");
 	checkErr(! (response = readPDU(msg)), "Error reading cache response\n");
-	checkErr(response->pduType == PDU_ERROR_REPORT &&
-			 response->color == ERR_NO_DATA,
-			 "No data currently available at the server\n");
+	checkErrNon(response->pduType == PDU_ERROR_REPORT &&
+				response->color == ERR_NO_DATA,
+				"No data currently available at the server\n");
+	checkErrNon(response->pduType == PDU_CACHE_RESET,
+				"Data has become out of date at the server\n");
 	checkErr(response->pduType != PDU_CACHE_RESPONSE,
 			 "Was expecting cache response, got %d\n", response->pduType);
 	freePDU(response);
@@ -177,9 +187,13 @@ static int doResponses(PDU *request, addressBlockHandler abh,
 		if (reconnectTries == 0) continue;			   \
 		NEXT_RECONNECT; }
 
-#define breakOnErr(s, args...) if ((s) < 0) {							\
+#define breakOnErr(s, args...)											\
+	err = s;															\
+	if (err < 0) {														\
 		fprintf(stderr, "Closing connection to host %s\n", servers[i].host); \
-		KILL_IT; break; }
+		if (err == NONRECOVERABLE_ERROR) reconnectTries = maxReconnectTries; \
+		KILL_IT; break;													\
+	}
 
 #define MAX_ATTEMPTS 1
 
@@ -240,6 +254,7 @@ void runClient(addressBlockHandler abh, clearDataHandler cdh,
 			// then, go into loop where wait for notification and then
 			//   issue a serial query and handle the results
 			while (1) {
+				int err;
 				breakOnErr(waitForNotification(servers[i].standalone));
 				fillInPDUHeader(&request, PDU_SERIAL_QUERY, 0);
 				breakOnErr(doResponses(&request, abh, NULL, uch, &serialNum));
