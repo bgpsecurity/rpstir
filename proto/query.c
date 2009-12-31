@@ -351,8 +351,8 @@ static int listOptions()
 {
   int i, j;
 
-  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && (!isManifest),
-            BAD_OBJECT_TYPE);
+  checkErr ((! isROA) && (! isCRL) && (! isCert) && (! isRPSL) && 
+    (!isManifest) && (!isRTA), BAD_OBJECT_TYPE);
   printf ("\nPossible fields to display or use in clauses for a %s:\n",
           objectType);
   for (i = 0; i < getNumFields(); i++) {

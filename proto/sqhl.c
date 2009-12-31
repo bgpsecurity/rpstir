@@ -2462,7 +2462,8 @@ static int findRTA(scmcon *conp, char *ski_ee)
   delete_object(NULL, conp,  filename, NULL, NULL, dir_id);
   w[0].column = "ski";
   w[0].value = ski;
-  srch1[1].colname = "subject"; // uses other srch1[] as above
+  srch1[1].colname = "ski";
+  srch1[2].colname = "subject"; // uses other srch1[] as above
   sta = searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
     SCM_SRCH_DOVALUE_ALWAYS, NULL);
   return(sta);
@@ -2492,7 +2493,7 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   lid = *(unsigned int *)(s->vec[0].valptr);
   if ((sta = deletebylid(conp, theCertTable, lid)) < 0) return sta;
   if ((sta = findRTA(conp, (char *)s->vec[1].valptr)) == ERR_SCM_NODATA) 
-    return 0;
+    sta = 0;
   if (sta < 0)  return sta;
   return verifyOrNotChildren (conp, (char *) s->vec[1].valptr,
 			      (char *) s->vec[2].valptr, NULL, NULL, lid, 0);
