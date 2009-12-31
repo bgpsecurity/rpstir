@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <certificate.h>
+#include <crlv2.h>
 #include <roa.h>
 #include <casn.h>
 
@@ -108,21 +109,48 @@ int main(int argc, char **argv)
 */
   struct Certificate cert;
   Certificate(&cert, (ushort)0);
+  struct CertificateRevocationList crl;
+  CertificateRevocationList(&crl, (ushort)0);
+  struct AlgorithmIdentifier *algp, *tbsalgp; 
+  struct casn *casnp, *sigp, *selfp;
   if (argc < 3) 
     {
     fputs("Need 2 args: TBS filename, Key filename\n", stderr);
     return 0;
     }
-  if (get_casn_file(&cert.self, argv[1], 0) < 0)
+  char *sfx = strchr(argv[1], (int)'.'); 
+  if (!strcmp(sfx, ".cer")) 
+    {
+    selfp = &cert.self;
+    casnp = &cert.toBeSigned.self;
+    tbsalgp = &cert.toBeSigned.signature;
+    sigp = &cert.signature;
+    algp = &cert.algorithm;
+    }
+  else if (!strcmp(sfx, ".crl"))
+    {
+    selfp = &crl.self;
+    casnp = &crl.toBeSigned.self;
+    tbsalgp = &crl.toBeSigned.signature;
+    sigp = &crl.signature;
+    algp = &crl.algorithm;
+    }
+  if (get_casn_file(selfp, argv[1], 0) < 0)
     {
     fprintf(stderr, "Couldn't open %s\n", argv[1]);
     return 0;
     }
+  write_objid(&tbsalgp->algorithm, id_sha_256WithRSAEncryption);
+  write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption, 
+    (uchar *)"", 0);
   strcpy(keyring.label, "label");
   strcpy(keyring.password, "password");
   strcpy(keyring.filename, argv[2]);
-  setSignature(&cert.toBeSigned.self, &cert.signature);
-  put_casn_file(&cert.self, argv[1], 0);
+  setSignature(casnp, sigp);
+  write_objid(&algp->algorithm, id_sha_256WithRSAEncryption);
+  write_casn(&algp->parameters.rsadsi_SHA256_WithRSAEncryption, 
+    (uchar *)"", 0);
+  put_casn_file(selfp, argv[1], 0);
   fatal(0, argv[1]);
   return 0;
   }
