@@ -220,11 +220,8 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     Additional arguments are given if you type ./query.sh without
     any arguments.
 
-3.9 rtrUpdate.sh: The server directory contains its own set of
-    instructions on how to execute the RPKI-RTR server for passing
-    the data from a local RPKI cache to a bunch of routers.
-    Part of the process of performing the RPKI-RTR server functionality
-    is to execute this script, with its one argument being the pathname
+3.9 rtrUpdate.sh: The process of performing the RPKI-RTR server functionality
+    includes executing this script, with its one argument being the pathname
     of the staleness specifications file it should use, each time after
     executing the proceeding scripts.
 
