@@ -9,7 +9,7 @@
 .ds LH Internet-Draft
 .ds RH November 2009
 .ds CH RPKI Local TA Management
-.ds CF Expires May 27, 2010
+.ds CF Expires July 4, 2010
 .hy 0
 .nh
 .ad l
@@ -19,7 +19,7 @@
 .tl 'Secure Inter-Domain Routing''S. Kent'
 .tl 'Internet-Draft''M. Reynolds'
 .tl 'Intended status: Standards Track''BBN'
-.tl 'Expires: May 27, 2010''November 23, 2009'
+.tl 'Expires: July 4, 2010''December 31, 2009'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -52,7 +52,7 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on May 27, 2010.
+This Internet-Draft will expire on July 4, 2010.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
@@ -66,7 +66,7 @@ This document is subject to BCP\078 and the IETF Trust's Legal Provisions Relati
 .ti 0
 Abstract
 
-This document describes a facility to enable a relying party (RP) to manage trust anchors (TAs) in the context of the Resource Public Key Infrastructure (RPKI). In addition to allowing an RP to import TA material in the form of self-signed certificates, the facility allows an RP to impose constraints on such TAs. Because this mechanism is designed to operate in the RPKI context, the relevant constraints are the RFC 3779 extensions that bind address spaces and/or autonomous system (AS) numbers to entities. The primary motivation for this facility is to enable an RP to ensure that resource allocation information which it has acquired via some trusted path is not overridden by the information acquired from the RPKI repository and putative TAs which that RP imports. Specifically, the mechanism allows an RP to specify a set of bindings between public key identifiers and RFC 3779 extension data and will override any conflicting bindings expressed via the putative TAs and the certificates downloaded from the RPKI repository system.
+This document describes a facility to enable a relying party (RP) to manage trust anchors (TAs) in the context of the Resource Public Key Infrastructure (RPKI). It is common to allow an RP to import TA material in the form of self-signed certificates. The facility described in this document allows an RP to impose constraints on such TAs. Because this mechanism is designed to operate in the RPKI context, the relevant constraints are the RFC 3779 extensions that bind address spaces and/or autonomous system (AS) numbers to entities. The primary motivation for this facility is to enable an RP to ensure that resource allocation information that it has acquired via some trusted channel is not overridden by the information acquired from the RPKI repository and the putative TAs which that RP imports. Specifically, the mechanism allows an RP to specify a set of bindings between public key identifiers and RFC 3779 extension data and will override any conflicting bindings expressed via the putative TAs and the certificates downloaded from the RPKI repository system.
 
 
 
@@ -89,7 +89,7 @@ Table of Contents
       3.3  Tags subsection . . . . . . . . . . . . . . . . . . . . . . 9
          3.3.1  Xvalidity_dates tag  . . . . . . . . . . . . . . . .  10
          3.3.2  Xcrldp tag . . . . . . . . . . . . . . . . . . . . .  10
-         3.3.3  Xcp tag  . . . . . . . . . . . . . . . . . . . . . .  10
+         3.3.3  Xcp tag  . . . . . . . . . . . . . . . . . . . . . .  11
          3.3.4  Xaia tag . . . . . . . . . . . . . . . . . . . . . .  11
       3.4  Blocks subsection . . . . . . . . . . . . . . . . . . . .  11
    4  Certificate Processing Algorithm . . . . . . . . . . . . . . .  12
@@ -103,11 +103,11 @@ Table of Contents
       4.3  Discussion  . . . . . . . . . . . . . . . . . . . . . . .  19
    5  Implications for Path Discovery  . . . . . . . . . . . . . . .  20
       5.1  Two answers . . . . . . . . . . . . . . . . . . . . . . .  20
-      5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . .  20
+      5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . .  21
       5.3  No answer . . . . . . . . . . . . . . . . . . . . . . . .  21
    6  Implications for Revocation  . . . . . . . . . . . . . . . . .  21
       6.1  No state bits set . . . . . . . . . . . . . . . . . . . .  21
-      6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . .  21
+      6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . .  22
       6.3  PARA state bit set  . . . . . . . . . . . . . . . . . . .  22
       6.4  Both ORIGINAL and PARA state bits set . . . . . . . . . .  22
    7  Security Considerations  . . . . . . . . . . . . . . . . . . .  23
@@ -116,7 +116,7 @@ Table of Contents
    10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  23
       10.1  Normative References . . . . . . . . . . . . . . . . . .  23
       10.2  Informative References . . . . . . . . . . . . . . . . .  24
-   Author's Addresses  . . . . . . . . . . . . . . . . . . . . . . .  24
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  24
    Appendix A: Sample Constraints File . . . . . . . . . . . . . . .  25
 .fi
 .in 3
@@ -127,13 +127,13 @@ Table of Contents
 .ti 0
 1  Introduction
 
-The Resource Public Key Infrastructure (RPKI) [I-D.sidr-arch] is a PKI in which the resources managed are IP addresses and autonomous systems numbers. Such resources are expressed in the form of X.509v3 "resource" certificates with extensions as defined by RFC 3779. A resource certificate is validated by discovering a certificate path upward from the given certificate to a root of trust, and then performing path validation, in which each certificate's public key is used to verify the signature of its subordinate certificate. The root of trust is a self-signed certificate known as a trust anchor (TA). There are circumstances under which a relying party (RP) may wish to override the resource specifications obtained through the RPKI distributed repository system [I-D.sidr-repos-struct]. This document describes a mechanism by which an RP may override any conflicting information expressed via the putative TAs and the certificates downloaded from the RPKI repository system.
+The Resource Public Key Infrastructure (RPKI) [I-D.sidr-arch] is a PKI in which the resources managed are IP addresses and autonomous systems numbers. Such resources are expressed in the form of X.509v3 "resource" certificates with extensions as defined by RFC 3779. A resource certificate is validated by discovering a certificate path upward from the given certificate to a trust anchor, and then performing path validation, in which each certificate's public key is used to verify the signature of its subordinate certificate. In the RPKI it is anticipated that one or more putative trust anchors will be available in the form of self-signed certificates configured by an RP. There are circumstances under which an RP may wish to override the resource specifications obtained through the RPKI distributed repository system [I-D.sidr-repos-struct]. This document describes a mechanism by which an RP may override any conflicting information expressed via the putative TAs and the certificates downloaded from the RPKI repository system.
 
-The relying party specifies a set of bindings between public key identifiers and resources (IP resources and/or AS number resources) through a text file known as a constraints file. The constraints as expressed in this file then take precedence over any competing claims as expressed by resource entries in certificates from the distributed repository system. (The means by which the relying party acquires the key identifier and the RFC 3779 extension data for each entity that the RP wishes to override is outside the scope of this document.) The relying party may also use a local publication party as a source of certificates that were never issued under the RPKI. This allows a local authority to introduce these purely local certificates and the constraints mechanism described herein to ensure that the resources in those certificates are specifically excluded from certificates issued elsewhere.
+To effect this local control, this document calls for a relying party to specify a set of bindings between public key identifiers and resources (IP resources and/or AS number resources) through a text file known as a constraints file. The constraints as expressed in this file then take precedence over any competing claims as expressed by resource entries in certificates from the distributed repository system. (The means by which a relying party acquires the key identifier and the RFC 3779 extension data used to populate the constraints file is outside the scope of this document.) The relying party also may use a local publication party as a source of certificates that were never issued under the RPKI.
 
-In order to allow reuse of existing, standard path validation mechanisms, the RP-imposed constraints are realized by having the RP itself represented as the only TA known in the local certificate validation context. To insure that all RPKI certificates can be validated relative to this TA, this RP TA certificate must contain all-encompassing resource allocations, i.e. 0/0 for IPv4, 0::/0 for IPv6 and 0-4294967295 for AS numbers. Thus, a conforming implementation of this mechanism must be able to cause a self-signed certificate authority (CA) certificate to be created with a locally generated key pair. It must also be able to issue CA certificates subordinate to this TA. Finally, a conforming implementation of this mechanism must process the constraints file and modify certificates as needed in order to enforce the constraints asserted in the file.
+In order to allow reuse of existing, standard path validation mechanisms, the RP-imposed constraints are realized by having the RP itself represented as the only TA known in the local certificate validation context. To ensure that all RPKI certificates can be validated relative to this TA, this RP TA certificate must contain all-encompassing resource allocations, i.e. 0/0 for IPv4, 0::/0 for IPv6 and 0-4294967295 for AS numbers. Thus, a conforming implementation of this mechanism must be able to cause a self-signed certification authority (CA) certificate to be created with a locally generated key pair. It must also be able to issue CA certificates subordinate to this TA. Finally, a conforming implementation of this mechanism must process the constraints file and modify certificates as needed in order to enforce the constraints asserted in the file.
 
-The remainder of this document will be devoted to describing in detail the types of certificate modification that may occur, the syntax and semantics of the constraints file, and the implication of certificate modification on path discovery and revocation.
+The remainder of this document describes in detail the types of certificate modification that may occur, the semantics of the constraints file, and the implications of certificate modification on path discovery and revocation.
 
 .ti 0
 1.1  Terminology
@@ -146,12 +146,12 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 .ti 0
 2  Overview of Certificate Processing
 
-The fundamental aspect of the facility described in this document is one of certificate modification. The constraints file, described in more detail in the next section, contains assertions about resources that are to be specially processed. As a result of this processing, certificates in the local copy of the RPKI repository are transformed into new certificates satisfying the resource constraints so specified. As a result, an assertion of ownership of resources that would otherwise be assigned elsewhere can be made. Three forms of certificate modification can occur.
+The fundamental aspect of the facility described in this document is one of certificate modification. The constraints file, described in more detail in the next section, contains assertions about resources that are to be specially processed. As a result of this processing, certificates in the local copy of the RPKI repository are transformed into new certificates satisfying the resource constraints so specified. This enables the RP to override conflicting assertions about resource holdings as acquired from the RPKI repository system. Three forms of certificate modification can occur.
 
 .ti 0
 2.1  Target Certificate Processing
 
-Any certificate corresponding to a public key and RFC 3779 data in the constraints file will be reissued directly under the RP TA certificate, with (possibly) modified RFC 3779 extensions. The modified extensions will include any RFC 3779 data expressed in the constraints file. In the certificate processing algorithm to be described subsequently, target certificate processing corresponds to "stage one" of the algorithm.
+Any certificate acquired from the RPKI repository system that corresponds to a public key and RFC 3779 data in the constraints file will be reissued directly under the RP TA certificate, with (possibly) modified RFC 3779 extensions. The modified extensions will include any RFC 3779 data expressed in the constraints file. In Section 4.2, target certificate processing corresponds to "stage one" of the algorithm.
 
 .ti 0
 2.2  Perforation
@@ -161,19 +161,19 @@ Any certificate that contains an RFC 3779 extension that intersects the data in 
 .ti 0
 2.3  TA Reparenting
 
-For consistency, all valid self-signed certificates that would have been regarded as TAs in the public RPKI certificate hierarchy, e.g. the TA certificates of the RIRs, will be reparented under the RP TA certificate. This processing is done even though all but one of these certificates might not intersect any resources specified in the constraints file. In the certificate processing algorithm, TA reparenting corresponds to stage four of the algorithm.
+For consistency, all valid self-signed certificates that would have been regarded as TAs in the public RPKI certificate hierarchy, e.g. self-signed certificates issued by IANA or the RIRs, will be re-parented under the RP TA certificate. This processing is done even though all but one of these certificates might not intersect any resources specified in the constraints file. In the certificate processing algorithm, TA re-parenting corresponds to stage four of the algorithm.
 
 .ti 0
 2.4  Paracertificates
 
-If a certificate is subject to any of the three forms of processing just described, that certificate will be referred to as the "original" certificate and the processed (output) certificate will be referred to as the paracertificate. When an original certificate is transformed into a paracertificate all the fields and extensions from the original certificate will be retained, except as indicated in Table 1, below.
+If a certificate is subject to any of the three forms of processing just described, that certificate will be referred to as an "original" certificate and the processed (output) certificate will be referred to as a paracertificate. When an original certificate is transformed into a paracertificate all the fields and extensions from the original certificate will be retained, except as indicated in Table 1, below.
 
 .bp
 .in 6
 .nf
-Certificate Field Name           Action
+Original Certificate Field         Action
 
-  Version                       unchanged
+    Version                     unchanged
     Serial number               created per note A
     Algorithm                   replaced if needed 
                                   with description of 
@@ -212,6 +212,8 @@ Note B. These fields are derived from parameters that MAY be in the constraints 
 
 .ti 0
 3  Format of the constraints file
+
+This section will describe a general model for the syntax of the constraints file. The model described below is nominal; implementations need not match details of this model as presented, but the external behavior of implementations MUST correspond to the externally observable characteristics of this model in order to be compliant.
 
 The constraints file consists of four logical subsections: the replying party subsection, the flags subsection, the tags subsection and the blocks subsection. The relying party subsection and the blocks subsection are REQUIRED and MUST be present; the flags and tags subsections are OPTIONAL. Each subsection will be described in more detail below. Note that the semicolon (;) character acts as the comment character. All characters from a semicolon to the end of that line are ignored. In addition, lines consisting only of whitespace are ignored. The subsections MUST occur in the order indicated. An example constraints file is given in Appendix A.
 
@@ -519,7 +521,7 @@ Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource C
 
 
 .ti 0
-Author's Addresses
+Authors' Addresses
 
 .sp
 .nf

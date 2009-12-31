@@ -5,7 +5,7 @@
 Secure Inter-Domain Routing                                      S. Kent
 Internet-Draft                                               M. Reynolds
 Intended status: Standards Track                                     BBN
-Expires: May 27, 2010                                  November 23, 2009
+Expires: July 4, 2010                                  December 31, 2009
 
 
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
@@ -33,7 +33,7 @@ Status of this Memo
    The list of Internet-Draft Shadow Directories can be accessed at
    http://www.ietf.org/shadow.html
 
-   This Internet-Draft will expire on May 27, 2010.
+   This Internet-Draft will expire on July 4, 2010.
 
 Copyright and License Notice
 
@@ -53,7 +53,7 @@ Copyright and License Notice
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 1]
+Kent, et al               Expires July 4, 2010                  [Page 1]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
@@ -62,20 +62,20 @@ Abstract
 
    This document describes a facility to enable a relying party (RP) to
    manage trust anchors (TAs) in the context of the Resource Public Key
-   Infrastructure (RPKI). In addition to allowing an RP to import TA
-   material in the form of self-signed certificates, the facility allows
-   an RP to impose constraints on such TAs. Because this mechanism is
-   designed to operate in the RPKI context, the relevant constraints are
-   the RFC 3779 extensions that bind address spaces and/or autonomous
-   system (AS) numbers to entities. The primary motivation for this
-   facility is to enable an RP to ensure that resource allocation
-   information which it has acquired via some trusted path is not
-   overridden by the information acquired from the RPKI repository and
-   putative TAs which that RP imports. Specifically, the mechanism
-   allows an RP to specify a set of bindings between public key
-   identifiers and RFC 3779 extension data and will override any
-   conflicting bindings expressed via the putative TAs and the
-   certificates downloaded from the RPKI repository system.
+   Infrastructure (RPKI). It is common to allow an RP to import TA
+   material in the form of self-signed certificates. The facility
+   described in this document allows an RP to impose constraints on such
+   TAs. Because this mechanism is designed to operate in the RPKI
+   context, the relevant constraints are the RFC 3779 extensions that
+   bind address spaces and/or autonomous system (AS) numbers to
+   entities. The primary motivation for this facility is to enable an RP
+   to ensure that resource allocation information that it has acquired
+   via some trusted channel is not overridden by the information
+   acquired from the RPKI repository and the putative TAs which that RP
+   imports. Specifically, the mechanism allows an RP to specify a set of
+   bindings between public key identifiers and RFC 3779 extension data
+   and will override any conflicting bindings expressed via the putative
+   TAs and the certificates downloaded from the RPKI repository system.
 
 
 
@@ -94,7 +94,7 @@ Table of Contents
       3.3  Tags subsection . . . . . . . . . . . . . . . . . . . . . . 9
          3.3.1  Xvalidity_dates tag  . . . . . . . . . . . . . . . .  10
          3.3.2  Xcrldp tag . . . . . . . . . . . . . . . . . . . . .  10
-         3.3.3  Xcp tag  . . . . . . . . . . . . . . . . . . . . . .  10
+         3.3.3  Xcp tag  . . . . . . . . . . . . . . . . . . . . . .  11
          3.3.4  Xaia tag . . . . . . . . . . . . . . . . . . . . . .  11
       3.4  Blocks subsection . . . . . . . . . . . . . . . . . . . .  11
    4  Certificate Processing Algorithm . . . . . . . . . . . . . . .  12
@@ -109,18 +109,18 @@ Table of Contents
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 2]
+Kent, et al               Expires July 4, 2010                  [Page 2]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
 
    5  Implications for Path Discovery  . . . . . . . . . . . . . . .  20
       5.1  Two answers . . . . . . . . . . . . . . . . . . . . . . .  20
-      5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . .  20
+      5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . .  21
       5.3  No answer . . . . . . . . . . . . . . . . . . . . . . . .  21
    6  Implications for Revocation  . . . . . . . . . . . . . . . . .  21
       6.1  No state bits set . . . . . . . . . . . . . . . . . . . .  21
-      6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . .  21
+      6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . .  22
       6.3  PARA state bit set  . . . . . . . . . . . . . . . . . . .  22
       6.4  Both ORIGINAL and PARA state bits set . . . . . . . . . .  22
    7  Security Considerations  . . . . . . . . . . . . . . . . . . .  23
@@ -129,7 +129,7 @@ Internet-Draft          RPKI Local TA Management           November 2009
    10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  23
       10.1  Normative References . . . . . . . . . . . . . . . . . .  23
       10.2  Informative References . . . . . . . . . . . . . . . . .  24
-   Author's Addresses  . . . . . . . . . . . . . . . . . . . . . . .  24
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  24
    Appendix A: Sample Constraints File . . . . . . . . . . . . . . .  25
 
 
@@ -165,7 +165,7 @@ Internet-Draft          RPKI Local TA Management           November 2009
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 3]
+Kent, et al               Expires July 4, 2010                  [Page 3]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
@@ -177,58 +177,56 @@ Internet-Draft          RPKI Local TA Management           November 2009
    systems numbers. Such resources are expressed in the form of X.509v3
    "resource" certificates with extensions as defined by RFC 3779. A
    resource certificate is validated by discovering a certificate path
-   upward from the given certificate to a root of trust, and then
+   upward from the given certificate to a trust anchor, and then
    performing path validation, in which each certificate's public key is
-   used to verify the signature of its subordinate certificate. The root
-   of trust is a self-signed certificate known as a trust anchor (TA).
-   There are circumstances under which a relying party (RP) may wish to
-   override the resource specifications obtained through the RPKI
-   distributed repository system [I-D.sidr-repos-struct]. This document
-   describes a mechanism by which an RP may override any conflicting
-   information expressed via the putative TAs and the certificates
-   downloaded from the RPKI repository system.
+   used to verify the signature of its subordinate certificate. In the
+   RPKI it is anticipated that one or more putative trust anchors will
+   be available in the form of self-signed certificates configured by an
+   RP. There are circumstances under which an RP may wish to override
+   the resource specifications obtained through the RPKI distributed
+   repository system [I-D.sidr-repos-struct]. This document describes a
+   mechanism by which an RP may override any conflicting information
+   expressed via the putative TAs and the certificates downloaded from
+   the RPKI repository system.
 
-   The relying party specifies a set of bindings between public key
-   identifiers and resources (IP resources and/or AS number resources)
-   through a text file known as a constraints file. The constraints as
-   expressed in this file then take precedence over any competing claims
-   as expressed by resource entries in certificates from the distributed
-   repository system. (The means by which the relying party acquires the
-   key identifier and the RFC 3779 extension data for each entity that
-   the RP wishes to override is outside the scope of this document.) The
-   relying party may also use a local publication party as a source of
-   certificates that were never issued under the RPKI. This allows a
-   local authority to introduce these purely local certificates and the
-   constraints mechanism described herein to ensure that the resources
-   in those certificates are specifically excluded from certificates
-   issued elsewhere.
+   To effect this local control, this document calls for a relying party
+   to specify a set of bindings between public key identifiers and
+   resources (IP resources and/or AS number resources) through a text
+   file known as a constraints file. The constraints as expressed in
+   this file then take precedence over any competing claims as expressed
+   by resource entries in certificates from the distributed repository
+   system. (The means by which a relying party acquires the key
+   identifier and the RFC 3779 extension data used to populate the
+   constraints file is outside the scope of this document.) The relying
+   party also may use a local publication party as a source of
+   certificates that were never issued under the RPKI.
 
    In order to allow reuse of existing, standard path validation
    mechanisms, the RP-imposed constraints are realized by having the RP
    itself represented as the only TA known in the local certificate
-   validation context. To insure that all RPKI certificates can be
+   validation context. To ensure that all RPKI certificates can be
    validated relative to this TA, this RP TA certificate must contain
    all-encompassing resource allocations, i.e. 0/0 for IPv4, 0::/0 for
    IPv6 and 0-4294967295 for AS numbers. Thus, a conforming
    implementation of this mechanism must be able to cause a self-signed
-   certificate authority (CA) certificate to be created with a locally
+   certification authority (CA) certificate to be created with a locally
    generated key pair. It must also be able to issue CA certificates
    subordinate to this TA. Finally, a conforming implementation of this
    mechanism must process the constraints file and modify certificates
    as needed in order to enforce the constraints asserted in the file.
 
-   The remainder of this document will be devoted to describing in
+   The remainder of this document describes in detail the types of
+   certificate modification that may occur, the semantics of the
+   constraints file, and the implications of certificate modification on
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 4]
+Kent, et al               Expires July 4, 2010                  [Page 4]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
 
-   detail the types of certificate modification that may occur, the
-   syntax and semantics of the constraints file, and the implication of
-   certificate modification on path discovery and revocation.
+   path discovery and revocation.
 
 1.1  Terminology
 
@@ -252,19 +250,19 @@ Internet-Draft          RPKI Local TA Management           November 2009
    that are to be specially processed. As a result of this processing,
    certificates in the local copy of the RPKI repository are transformed
    into new certificates satisfying the resource constraints so
-   specified. As a result, an assertion of ownership of resources that
-   would otherwise be assigned elsewhere can be made. Three forms of
-   certificate modification can occur.
+   specified. This enables the RP to override conflicting assertions
+   about resource holdings as acquired from the RPKI repository system.
+   Three forms of certificate modification can occur.
 
 2.1  Target Certificate Processing
 
-   Any certificate corresponding to a public key and RFC 3779 data in
-   the constraints file will be reissued directly under the RP TA
-   certificate, with (possibly) modified RFC 3779 extensions. The
-   modified extensions will include any RFC 3779 data expressed in the
-   constraints file. In the certificate processing algorithm to be
-   described subsequently, target certificate processing corresponds to
-   "stage one" of the algorithm.
+   Any certificate acquired from the RPKI repository system that
+   corresponds to a public key and RFC 3779 data in the constraints file
+   will be reissued directly under the RP TA certificate, with
+   (possibly) modified RFC 3779 extensions. The modified extensions will
+   include any RFC 3779 data expressed in the constraints file. In
+   Section 4.2, target certificate processing corresponds to "stage one"
+   of the algorithm.
 
 2.2  Perforation
 
@@ -274,35 +272,37 @@ Internet-Draft          RPKI Local TA Management           November 2009
    exclude any RFC 3779 data expressed in the constraints file. In the
    certificate processing algorithm, perforation corresponds to stage
    two of the algorithm ("ancestor processing") and also to stage three
+   of the algorithm ("tree processing").
+
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 5]
+Kent, et al               Expires July 4, 2010                  [Page 5]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
-
-   of the algorithm ("tree processing").
 
 2.3  TA Reparenting
 
    For consistency, all valid self-signed certificates that would have
    been regarded as TAs in the public RPKI certificate hierarchy, e.g.
-   the TA certificates of the RIRs, will be reparented under the RP TA
-   certificate. This processing is done even though all but one of these
-   certificates might not intersect any resources specified in the
-   constraints file. In the certificate processing algorithm, TA
-   reparenting corresponds to stage four of the algorithm.
+   self-signed certificates issued by IANA or the RIRs, will be re-
+   parented under the RP TA certificate. This processing is done even
+   though all but one of these certificates might not intersect any
+   resources specified in the constraints file. In the certificate
+   processing algorithm, TA re-parenting corresponds to stage four of
+   the algorithm.
 
 2.4  Paracertificates
 
    If a certificate is subject to any of the three forms of processing
-   just described, that certificate will be referred to as the
-   "original" certificate and the processed (output) certificate will be
-   referred to as the paracertificate. When an original certificate is
-   transformed into a paracertificate all the fields and extensions from
-   the original certificate will be retained, except as indicated in
-   Table 1, below.
+   just described, that certificate will be referred to as an "original"
+   certificate and the processed (output) certificate will be referred
+   to as a paracertificate. When an original certificate is transformed
+   into a paracertificate all the fields and extensions from the
+   original certificate will be retained, except as indicated in Table
+   1, below.
+
 
 
 
@@ -333,14 +333,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 6]
+Kent, et al               Expires July 4, 2010                  [Page 6]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
 
-      Certificate Field Name           Action
+      Original Certificate Field         Action
 
-        Version                       unchanged
+          Version                     unchanged
           Serial number               created per note A
           Algorithm                   replaced if needed 
                                         with description of 
@@ -389,12 +389,19 @@ Internet-Draft          RPKI Local TA Management           November 2009
  
 
 
-Kent, et al               Expires May 27, 2010                  [Page 7]
+Kent, et al               Expires July 4, 2010                  [Page 7]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
 
 3  Format of the constraints file
+
+   This section will describe a general model for the syntax of the
+   constraints file. The model described below is nominal;
+   implementations need not match details of this model as presented,
+   but the external behavior of implementations MUST correspond to the
+   externally observable characteristics of this model in order to be
+   compliant.
 
    The constraints file consists of four logical subsections: the
    replying party subsection, the flags subsection, the tags subsection
@@ -435,6 +442,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
 
    The flags subsection of the constraints file is an OPTIONAL
    subsection. If present it MUST follow the relying party subsection.
+ 
+
+
+Kent, et al               Expires July 4, 2010                  [Page 8]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    The flags subsection consists of zero or more lines of the form
 
       CONTROL  flagname  booleanvalue
@@ -442,14 +457,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    Each such line is referred to as a control line. Each control line
    MUST contain exactly three whitespace delimited strings. The first
    string MUST be the literal CONTROL. The second string MUST be one of
- 
-
-
-Kent, et al               Expires May 27, 2010                  [Page 8]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    the following three literals:
 
             resource_nounion
@@ -491,20 +498,20 @@ Internet-Draft          RPKI Local TA Management           November 2009
    under "Note B", are constructed. Each tag has a default, so that if
    the corresponding tag line is not present in the constraints file,
    the default behavior is used when constructing the paracertificates.
+ 
+
+
+Kent, et al               Expires July 4, 2010                  [Page 9]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    The syntax and semantics of each tag line is described next.
 
    Note that the tag lines are considered to be global; the action of
    each tag line (or the default action, if that tag line is not
    present) applies to all paracertificates that are created as part of
    the certificate processing algorithm.
-
- 
-
-
-Kent, et al               Expires May 27, 2010                  [Page 9]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
 
 3.3.1  Xvalidity_dates tag
 
@@ -547,6 +554,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
 
    If this tag line is not present in the constraints file the default
    behavior is to copy the CRLDP from the original certificate to the
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 10]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    corresponding paracertificate.
 
 3.3.3  Xcp tag
@@ -554,14 +569,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    This tagline is used to control the value of the policyQualifierId
    field in paracertificates. If this tag line is specified there MUST
    be exactly one tagvalue. If the tagvalue is the string literal C, the
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 10]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    paracertificate value is copied from the value in the corresponding
    original certificate. If the tagvalue is the string literal R, the
    paracertificate value is copied from the value in the RP's top level
@@ -603,6 +610,13 @@ Internet-Draft          RPKI Local TA Management           November 2009
    assertions. Each target block contains four regions, an SKI region,
    an IPv4 region, an IPv6 region and an AS number region. All regions
    are REQUIRED to be present in a target block.
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 11]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
 
    The SKI region contains a single line beginning with the string
    literal SKI and followed by forty hexadecimal characters giving the
@@ -610,14 +624,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    certificate. The hex character string MAY contain embedded whitespace
    or colon characters, which are ignored. The IPv4 region consists of a
    line containing only the string literal IPv4. This line is followed
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 11]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    by zero or more lines containing IPv4 prefixes in the format
    described in RFC 3779. The IPv6 region consists of a line containing
    only the string literal IPv6, followed by zero or more lines
@@ -660,19 +666,20 @@ Internet-Draft          RPKI Local TA Management           November 2009
    it will be assumed that certificates may be persistently associated
    with state (or metadata) information. This state information will be
    further construed as having the form of any array of named bits which
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 12]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    are associated with all certificates. No specific implementation of
    this functionality is mandated by this document. Any implementation
    which provides the indicated functionality is acceptable, and need
    not actually consist of a bitfield associated with each certificate.
 
    The state bits used in certificate processing are
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 12]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
 
          NOCHAIN
          ORIGINAL
@@ -715,6 +722,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
    occurred as well as informative text that is sufficiently descriptive
    as to allow the user to identify and correct the error. An
    implementation of the proofreading algorithm SHOULD NOT assume that
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 13]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    is has access to the local RPKI repository (even read-only access).
    An implementation of the proofreading algorithm MUST NOT alter the
    local RPKI repository in any way; it also MUST NOT change any of the
@@ -722,14 +737,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    repository. Finally, the proofreading algorithm MAY produce a
    transformed output file containing the same syntactic information as
    in the text version of the constraints file, so long as the format of
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 13]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    the transformed file format is understood by the TA processing
    algorithm.
 
@@ -771,6 +778,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
    ancestor processing (stage 2), tree processing (state 3) and TA
    reparenting (stage 4). Conceptually, during the preparatory stage the
    constraints (or proofreader output) file is read and a set of
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 14]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    internal RP, tag and flag variables are set based on the contents of
    that file, or from defaults if the constraint file has not specified
    one or more of the tags and/or flags. During target processing all
@@ -778,14 +793,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    resources for those certificates are (potentially) expanded; for each
    target found a new paracertificate is manufactured with its various
    fields set, as shown in Table 1, using the values of the internal
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 14]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    variables set in the preparatory stage and also, of course, the
    fields of the original certificate (and, potentially, fields of the
    RP's TA certificate). In stage 2 (ancestor) processing, all ancestors
@@ -827,20 +834,20 @@ Internet-Draft          RPKI Local TA Management           November 2009
    success to this query. The TA processing algorithm next uses the
    value string for the TOPLEVELCERTIFICATE to locate this certificate
    in an implementation dependent manner. The certificate in question
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 15]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    may already be present in the local RPKI repository, or it may be
    located elsewhere. The implementation is also free to create the top
    level certificate at this time, and then assign to this newly created
    certificate the name indicated. It is only necessary that at the
    conclusion of this processing a valid trust anchor certificate for
    the relying party has been created or otherwise obtained.
-
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 15]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
 
    Some form of access to the RP's private key and top level certificate
    are required for subsequent correct operation of the algorithm.
@@ -883,6 +890,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
    the two resource sets are different, the algorithm SHOULD issue a
    warning noting the difference. An output resource set is then formed
    which is exactly equal to the resource set extracted from the
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 16]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    certificate. If, however, the resource_nounion flag is not set, then
    the output resource set is calculated by forming the union of the
    resources extracted from the certificate and the resources specified
@@ -890,14 +905,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    then constructed according to Table 1, using fields from the original
    certificate, the tags that had been set during stage 0, and, if
    necessary, fields from the RP's TA certificate. The RFC 3779
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 16]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    resources of the paracertificate are equated to the derived output
    resource set. The PARA state bit is set for the newly created
    paracertificate.
@@ -939,6 +946,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
    first certificate in the collection is chosen, and a resource set R
    is initialized based on the resources of the target block for that
    certificate (since the certificate is in collection, it must be a
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 17]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    target certificate, and thus correspond to a target block). The
    parent of the certificate is then located using ordinary path
    discovery over original certificates only. The ancestor's certificate
@@ -946,14 +961,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    with respect to R. That is, an output set of resources is created by
    forming the intersection I of A and R, and then taking the set
    difference A - I as the output resources. A paracertificate is then
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 17]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    created whose resources are these output resources, and whose other
    fields and extensions are set from the original certificate (and
    possibly the RP's TA certificate) according to the procedure given in
@@ -995,6 +1002,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
    eliminated from this collection. Third, if the intersection_always
    global flag is set, those target blocks that occur in the constraints
    file, but that did not correspond to a certificate in the local
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 18]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    repository, are also added to the collection. In tree processing,
    unlike ancestor processing, this collection is not sorted. An
    iteration is now performed over each certificate (or set of target
@@ -1002,13 +1017,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    empty, in which case this stage of algorithm processing terminates,
    and processing advances to stage 4. Note also that all stage 3
    processing is performed before any stage 4 processing.
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 18]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
 
    Given a certificate or target resource block, each top level original
    TA certificate is examined. If that TA certificate has an
@@ -1050,6 +1058,13 @@ Internet-Draft          RPKI Local TA Management           November 2009
    party's own TA certificate.
 
 4.3  Discussion
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 19]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
 
    The algorithm described in this document effectively creates two
    coexisting certificate hierarchies: the original certificate
@@ -1058,14 +1073,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    in the previous section. Some original certificates may move from
    having no state bits set (or only the NOCHAIN state bit set) to
    having one or both of the ORIGINAL and TARGET state bits set (and, of
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 19]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    course, having the NOCHAIN state bit still set if it was set before
    any processing). The paracertificate hierarchy, however, is intended
    to supercede the original hierarchy for the purposes of ROA
@@ -1107,6 +1114,14 @@ Internet-Draft          RPKI Local TA Management           November 2009
    certificates is the putative parent. In the no-error case, with the
    state bits are as indicated, the certificate with the PARA state bit
    set is chosen as the parent P. Note this means, in effect, that all
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 20]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
+
    children of the original certificate have been reparented under the
    paracertificate.
 
@@ -1114,14 +1129,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
 
    If the matching certificate has neither the ORIGINAL state bit set
    nor the PARA state bit set, this certificate is the parent. If the
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 20]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    matching certificate has the PARA state bit set but the ORIGINAL
    state bit not set, this certificate is the parent. (This situation
    would arise, for example, if the original certificate had been
@@ -1163,6 +1170,13 @@ Internet-Draft          RPKI Local TA Management           November 2009
    bit set nor the PARA state bit set, revocation proceeds normally. All
    children of the revoked certificate must have the NOCHAIN state bit
    set.
+ 
+
+
+Kent, et al               Expires July 4, 2010                 [Page 21]
+
+Internet-Draft          RPKI Local TA Management           November 2009
+
 
 6.2  ORIGINAL state bit set
 
@@ -1170,14 +1184,6 @@ Internet-Draft          RPKI Local TA Management           November 2009
    the PARA state bit clear, then this certificate is revoked as usual.
    If this original certificate also has the TARGET state bit set, then
    the corresponding paracertificate (if it exists) is not revoked; if
- 
-
-
-Kent, et al               Expires May 27, 2010                 [Page 21]
-
-Internet-Draft          RPKI Local TA Management           November 2009
-
-
    this original certificate has the TARGET state bit clear, then the
    corresponding paracertificate is revoked as well. Note that since all
    the children of the original certificate have been reparented to be
@@ -1220,16 +1226,10 @@ Internet-Draft          RPKI Local TA Management           November 2009
 
 
 
-
-
-
-
-
-
  
 
 
-Kent, et al               Expires May 27, 2010                 [Page 22]
+Kent, et al               Expires July 4, 2010                 [Page 22]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
@@ -1285,7 +1285,7 @@ Internet-Draft          RPKI Local TA Management           November 2009
  
 
 
-Kent, et al               Expires May 27, 2010                 [Page 23]
+Kent, et al               Expires July 4, 2010                 [Page 23]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
@@ -1302,7 +1302,7 @@ Internet-Draft          RPKI Local TA Management           November 2009
 
 
 
-Author's Addresses
+Authors' Addresses
 
 
      Stephen Kent
@@ -1341,7 +1341,7 @@ Author's Addresses
  
 
 
-Kent, et al               Expires May 27, 2010                 [Page 24]
+Kent, et al               Expires July 4, 2010                 [Page 24]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
@@ -1397,7 +1397,7 @@ Appendix A: Sample Constraints File
  
 
 
-Kent, et al               Expires May 27, 2010                 [Page 25]
+Kent, et al               Expires July 4, 2010                 [Page 25]
 
 Internet-Draft          RPKI Local TA Management           November 2009
 
@@ -1453,4 +1453,4 @@ Internet-Draft          RPKI Local TA Management           November 2009
 
 
 
-Kent, et al               Expires May 27, 2010                 [Page 26]
+Kent, et al               Expires July 4, 2010                 [Page 26]
