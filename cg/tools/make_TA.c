@@ -146,7 +146,8 @@ int main(int argc, char **argv)
   ROA(&roa, (ushort)0);
   if (argc < 5)
     {
-    fputs("Need 5 file names: ETA cert, EE cert, RTA cert, EE keyfile, outputfile\n", stderr);
+    fputs("Usage: file names: ETA cert, EE cert, RTA cert, EE key, outfile\n", 
+      stderr);
     return -1;
     }
   strcpy(keyring.label, "label");
@@ -231,7 +232,7 @@ int main(int argc, char **argv)
   if (msg) fprintf(stderr, "%s\n", msg);
   else
     {
-    put_casn_file(&roa.self, argv[5], 0);
+    put_casn_file(&roa.self, (char *)0, 1);
     int siz = dump_size(&roa.self);   
     char *buf = (char *)calloc(1, siz + 2);
     dump_casn(&roa.self, buf);

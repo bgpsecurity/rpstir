@@ -1,0 +1,37 @@
+
+MAKE_TA (1)                 ROA-PKI                                   MAKE_TA(1)
+
+
+NAME
+        make_TA - constructs a CMS structure to hold an EE certificate and a
+              self-signed RTA certificate, and signs it.
+
+SYNOPSIS   
+
+        make_TA ETAcertificate EEcertificate RTAcertificate EEkeyfile outfile
+
+DESCRIPTION
+    
+        The files specified in the first four parameters are read, checked,
+        assembled into the CMS structure, and signed.  The parameters are as 
+        follows: ETAcertificate is the name of the file containing the ETA's 
+        certificate, EEcertificate is the name of the file containing the EE 
+        certificate, RTAcertificate is the name of the file containing the RTA 
+        certificate, EEkeyfile is the name of ".p15" file containing the key 
+        material for the EE, and outfile is the name of the file where the 
+        resulting CMS structure will be put.  In addition, the program produces
+        a more readable version of the contents of outfile in a file of the 
+        same name but suffixed with ".raw".
+
+        Response messages:
+
+          Usage: file names: ETA cert, EE cert, RTA cert, EE key, outfile
+          Finished OK
+          Usage: nanes of .cms file, ETA certificate file, RTA destination file
+          Couldn't get ...
+          Error inserting ...
+          EE ... cert doesn't match ETA cert's
+          Error signing in ...
+
+       where the ellipsis is replaced with specific information.
+                             
