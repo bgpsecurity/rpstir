@@ -1,0 +1,34 @@
+
+DUMP_SMART?g (1)                 ROA-PKI                            VALIDATETA(1)
+
+
+NAME
+         dump_smart - converts ASN.1-encoded file to a more readable form
+
+SYNOPSIS   
+
+         dump_smart filename
+
+DESCRIPTION
+ 
+        This program translates the contents of the file "filename" into more
+        readable form and outputs the result to stdout.  The type of file is
+        determined by the suffix in "filename", which must be one of ".cer" 
+        for a certificate, ".crl for a CRL, ".man" for a manifest, ".roa"
+        for a ROA, or ".rta" for a RPKI TA.
+
+        If there is no error, the translated contents of the file are printed 
+        out on stdout in the readable form.  If there is an error, one of these
+        messages is printed on stderr: 
+ 
+          Usage: name of input file
+          Suffix is missing
+          Unknown type ...
+          Error reading at ...
+
+       where the ellipsis is replaced with specific information.  For the 
+       "Unknown type" error it is the suffix.  For the "Error reading at"
+       error it is a sequence of dot-separated numbers indicating where the
+       error was found, e.g. 1.2.3.4 means in the fourth member of the third 
+       member of the second member of the first member of the ASN.1 encoding.
+                             
