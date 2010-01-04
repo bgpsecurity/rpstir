@@ -1,0 +1,29 @@
+
+SIGN_CERT (1)                 ROA-PKI                               SIGN_CERT(1)
+
+
+NAME
+
+        sign_cert - signs a certificate or a CRL
+
+SYNOPSIS   
+
+        sign_cert tobesignedfile keyfile
+
+DESCRIPTION
+    
+        The "tobesignedfile" is signed using the private key in the "keyfile",
+        a ".p15" file.  The type of contents in the "tobesignedfile" are 
+        designated by its suffix: ".cer indicates a certificate, and ".crl"
+        indicates a CRL.
+
+        Response messages:
+
+          Usage: TBS filename, Key filename
+          Finished OK
+          Error in ...
+          Couldn't open ...
+
+       where the ellipsis is replaced with specific information.
+                             
+

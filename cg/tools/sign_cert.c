@@ -1,3 +1,24 @@
+/*
+  $Id: sign_cert.c c 506 2008-06-03 21:20:05Z gardiner $
+*/
+
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ *
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include <stdio.h>
 #include <cryptlib.h>
 #include <keyfile.h>
@@ -12,6 +33,8 @@
 char *msgs[] = {
     "Finished %s OK\n",
     "Error in %s\n",
+    "Usage: TBS filename, Key filename\n",
+    "Couldn't open %s\n",
     };
 
 static void fatal(int err, char *paramp)
@@ -113,11 +136,7 @@ int main(int argc, char **argv)
   CertificateRevocationList(&crl, (ushort)0);
   struct AlgorithmIdentifier *algp, *tbsalgp; 
   struct casn *casnp, *sigp, *selfp;
-  if (argc < 3) 
-    {
-    fputs("Need 2 args: TBS filename, Key filename\n", stderr);
-    return 0;
-    }
+  if (argc < 3) fatal(2, (char *)0);
   char *sfx = strchr(argv[1], (int)'.'); 
   if (!strcmp(sfx, ".cer")) 
     {
@@ -135,11 +154,7 @@ int main(int argc, char **argv)
     sigp = &crl.signature;
     algp = &crl.algorithm;
     }
-  if (get_casn_file(selfp, argv[1], 0) < 0)
-    {
-    fprintf(stderr, "Couldn't open %s\n", argv[1]);
-    return 0;
-    }
+  if (get_casn_file(selfp, argv[1], 0) < 0) fatal(3, argv[1]);
   write_objid(&tbsalgp->algorithm, id_sha_256WithRSAEncryption);
   write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption, 
     (uchar *)"", 0);
@@ -154,5 +169,3 @@ int main(int argc, char **argv)
   fatal(0, argv[1]);
   return 0;
   }
-  
-   
