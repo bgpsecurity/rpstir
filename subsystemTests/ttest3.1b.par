@@ -1,0 +1,6 @@
+-t 7370
+-f test3.1b.log 
+-w 
+-e 
+-i 
+-d ../testcases

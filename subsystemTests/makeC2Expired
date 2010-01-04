@@ -1,0 +1,1 @@
+echo "update apki_cert set valto='2008-07-31' where filename='C2.cer';" | /usr/local/mysql/bin/mysql  $APKI_DB -u mysql
