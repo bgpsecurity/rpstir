@@ -1,0 +1,31 @@
+
+MAKE_TA (1)                 ROA-PKI                                   MAKE_TA(1)
+
+
+NAME
+
+        check_signature - checks the signature on a certificate or a CRL
+
+SYNOPSIS   
+
+        check_signature signedfile signerfile
+
+DESCRIPTION
+    
+        The signature in the "signedfile" is checked using the public key in
+        the "signerfile".  The type of contents in the "signedfile" are 
+        designated by its suffix: ".cer indicates a certificate, and ".crl"
+        indicates a CRL.
+
+        Response messages:
+
+          Usage: signed cert or CRL, signer's cert
+          Signature succeeded
+          Signature failed
+          Can't get file ...
+          Signature checking error in ...
+          Invalid type ...
+          Invalid algorithm ...
+
+       where the ellipsis is replaced with specific information.
+                             
