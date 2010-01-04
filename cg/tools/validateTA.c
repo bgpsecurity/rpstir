@@ -1,5 +1,5 @@
 /*
-  $Id valAndExtractTA.c 506 2008-06-03 21:20:05Z gardiner $
+  $Id validateTA.c 506 2008-06-03 21:20:05Z gardiner $
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
@@ -33,7 +33,7 @@
 
 char *msgs[] = {
   "Finished OK\n",
-  "Usage: names of .cms file, ETA certificate file, RTA destination file\n",
+  "Usage: names of CMS file, ETA certificate file, [RTA destination file]\n",
   "Invalid TA file %s\n",  // 2
   "Invalid %s\n",
   "CMS validation error %d\n",   // 4
@@ -381,7 +381,15 @@ static int cmsValidate(struct ROA *rp)
 
     if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1)
 	return ERR_SCM_BADNUMCERTS;
-
+    struct Certificate *certp = (struct Certificate *)member_casn(
+      &rp->content.signedData.certificates.self, 0); 
+    if (num_items(&rp->content.signedData.crls.self)) return ERR_SCM_CRL;
+    struct Extension *extp;
+    for (extp = (struct Extension *)member_casn(
+      &certp->toBeSigned.extensions.self, 0);
+      extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+      extp = (struct Extension *)next_of(&extp->self))
+    if (!extp) return ERR_SCM_NOSKI;
     if (num_items(&rp->content.signedData.signerInfos.self) != 1)
 	return ERR_SCM_BADSIGINFO;
 
@@ -391,7 +399,12 @@ static int cmsValidate(struct ROA *rp)
 
     if (diff_casn_num(&sigInfop->version.self, 3) != 0 ||
         size_casn(&sigInfop->sid.subjectKeyIdentifier) <= 0 ||
-        diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256))
+        (diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256) &&
+         diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha384) &&
+         diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha512)) ||
+        diff_casn(&extp->extnValue.subjectKeyIdentifier, 
+          &sigInfop->sid.subjectKeyIdentifier) ||
+        num_items(&sigInfop->unsignedAttrs.self))
         return ERR_SCM_BADSIGINFO;
    
     struct Attribute *attrp;
@@ -399,11 +412,12 @@ static int cmsValidate(struct ROA *rp)
     if (!(attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr)) ||
          diff_casn(&attrp->attrValues.array.contentType, 
             &rp->content.signedData.encapContentInfo.eContentType) ||
+    // and messageDigest
         !(attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr)) ||
          vsize_casn(&attrp->attrValues.array.messageDigest) != 32 ||
          read_casn(&attrp->attrValues.array.messageDigest, digestbuf) != 32)
         return ERR_SCM_BADSIGINFO;
-    // make sure there is a signing time
+    /* skip signing time 
     if (!(attrp = find_attr(&sigInfop->signedAttrs, id_signingTimeAttr))) 
         return ERR_SCM_BADSIGINFO;
        // make sure it is the right format      
@@ -423,7 +437,7 @@ static int cmsValidate(struct ROA *rp)
       read_casn(&attrp->attrValues.array.signingTime.generalizedTime, loctime);
       if (strncmp((char *)loctime, "2050", 4) < 0) return ERR_SCM_BADSIGINFO;
       }
-
+   */
     // check the hash
     memset(hashbuf, 0, 40);
     // read the content
@@ -495,7 +509,7 @@ int main(int argc, char **argv)
   ROA(&roa, (ushort)0);
   struct Certificate etacert;
   Certificate(&etacert, (ushort)0);
-  if (argc < 4) fatal(1, (char *)0);
+  if (argc < 3) fatal(1, (char *)0);
   if (get_casn_file(&roa.self, argv[1], 0) < 0) fatal(2, argv[1]);
   if (get_casn_file(&etacert.self, argv[2], 0) < 0) fatal(2, argv[2]);
   int ansr = cmsValidate(&roa);
@@ -528,16 +542,15 @@ int main(int argc, char **argv)
   if (j >= num) fatal(3, "message digest attribute");
   struct Certificate *rtacertp = &roa.content.signedData.encapContentInfo.  
     eContent.trustAnchor;
+    
   if (check_cert_signature(rtacertp, rtacertp) < 0) fatal(2, "signature");
   if (num_items(&roa.content.signedData.certificates.self) != 1) 
     fatal(3, "number of certificates");
   struct Certificate *eecertp = (struct Certificate *)member_casn(&roa.content.
     signedData.certificates.self, 0);  
-//  if (put_casn_file(&rtacertp->self, argv[3], 0) < 0) 
-//    fatal(5, "write RTA certificate");
   if (check_cert_signature(eecertp, &etacert) < 0) 
     fatal(3, "EE certificate signature");
-  if (put_casn_file(&rtacertp->self, argv[3], 0) < 0) 
+  if (argc > 2 && put_casn_file(&rtacertp->self, argv[3], 0) < 0) 
     fatal(5, "write RTA certificate");
   return 0;
   } 
