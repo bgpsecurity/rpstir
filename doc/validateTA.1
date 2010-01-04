@@ -1,0 +1,41 @@
+VALIDATETA (1)                 ROA-PKI                            VALIDATETA(1)
+
+
+NAME
+        validateTA - validates a CMS structure and optionally extracts the Trust
+              Anchor
+
+SYNOPSIS   
+
+        validateTA CMSfile ETAcert [TAcert]
+
+DESCRIPTION
+ 
+        The parameter CMSfile is the name of a file containing a CMS structure 
+        containing a trust anchor, in accordance with the document draft-ietf-
+        sidr-ta-02.  The parameter signercert is the name of a file contain-
+        ing the certificate of the signer of the certificate in the CMSfile, 
+        the "ETA CA certificate" in that document.  The parameter TAcert is 
+        the name of the file where the certificate embedded in the CMSfile,
+        called the "RTA CA certificate" will be put.
+
+        The program checks the structure of the CMSfile, validates the signature
+        of the end-entity certificate inside the CMS file using the public key 
+        in the signercert file, validates the signature in the CMSfile using 
+        the public key of the end entity certificate in the CMSfile (the "ETA
+        EE certificate"), and validates the self-signed signature of the trust 
+        anchor within the CMSfile (the "RTA CA certificate").  If all tests are
+        successful, and if the TAcert parameter is present, the program extracts
+        the trust anchor certificate from the CMS structure and writes it to the
+        TAcert file.  
+ 
+        Response messages:
+
+          Finished OK
+          Usage: nanes of .cms file, ETA certificate file, RTA destination file
+          Invalid ....
+          CMS validation error ...
+          Can't ...
+
+       where the ellipsis is replaced with specific information.
+                             
