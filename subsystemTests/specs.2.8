@@ -1,0 +1,11 @@
+# This file serves as a model of how to specify which ROAs to keep and
+#      which to reject based on different ways of not being perfect
+# Note that any that have never been validated at some point with a trust
+#      chain to a trust anchor are automatically eliminated
+# "yes" means to accept the ROA anyway, and "no" means to reject it
+#      default is yes
+
+StaleCRL no
+StaleManifest yes
+StaleValidationChain no
+NoManifest yes
