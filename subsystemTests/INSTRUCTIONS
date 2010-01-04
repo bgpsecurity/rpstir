@@ -1,0 +1,7 @@
+In order to run the tests, do the following:
+
+(1) Open two shell windows.
+(2) Before each test (but not before each step in a a test), run initDB in one of the windows.
+(3) In the same window, run doLoader and leave it running for the duration of the test.
+(4) In the other window, execute the files corresponding to each step of the test in the correct order.
+(5) For each step where there is an indicated number of expected results, count to make sure that the right number are printed.

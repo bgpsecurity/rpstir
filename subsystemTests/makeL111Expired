@@ -1,1 +1,1 @@
-echo "update apki_crl set next_upd='2008-07-31' where filename='L111.crl';" | /usr/local/mysql/bin/mysql  $APKI_DB -u mysql
+echo "update rpki_crl set next_upd='2008-07-31' where filename='L111.crl';" | /usr/local/mysql/bin/mysql $RPKI_DB -u mysql
