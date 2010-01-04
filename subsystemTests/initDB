@@ -1,3 +1,4 @@
 # set up an initial database
 ../proto/rcli -x -y
 ../proto/rcli -t $PWD/../testcases -y
+../proto/rcli -y -F ../testcases/C.cer
