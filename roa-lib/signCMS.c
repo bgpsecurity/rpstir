@@ -99,7 +99,8 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
   attrp = (struct Attribute *)inject_casn(&sigInfop->signedAttrs.self, 0);
   write_objid(&attrp->attrType, id_contentTypeAttr);
   attrtdp = (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 0);
-  write_objid(&attrtdp->contentType, id_routeOriginAttestation);
+  copy_casn(&attrtdp->contentType, &roa->content.signedData.encapContentInfo.
+    eContentType);
 
   // second attribute: message digest
   attrp = (struct Attribute *)inject_casn( &sigInfop->signedAttrs.self, 1);
