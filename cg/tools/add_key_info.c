@@ -1,3 +1,24 @@
+/*
+  $Id: .dd_key_infoc c 506 2008-06-03 21:20:05Z gardiner $
+*/
+
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 1.0
+ *
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
+ *
+ * Contributor(s):  Charles Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include <stdio.h>
 #include <cryptlib.h>
 #include <keyfile.h>
@@ -12,11 +33,10 @@
 char *msgs [] = {
   "Finished OK\n",
   "Couldn't open %s\n",
-  "Error inserting %s\n",   // 2
-  "Couldn't find %s key identifier\n", 
-  "Error signing in %s\n",     // 4
-  "Need authority's certificate\n",
-  }; 
+  "Couldn't find %s subject key identifier\n",    // 2
+  "Usage: file names for certificate, subject key, [authority certificate]\n",
+  "Subject and issuer differ in %s; need authority certificate\n", // 4
+   }; 
 
 static void fatal(int err, char *paramp)
   {
@@ -24,22 +44,20 @@ static void fatal(int err, char *paramp)
   exit(0);
   }
 
-struct keyring
-  {
-  char filename[80];
-  char label[20];
-  char password[20];
-  };
-
-static struct keyring keyring;
- 
-static struct Extension *find_extension(struct Certificate *certp, char *idp)
+static struct Extension *find_extension(struct Certificate *certp, char *idp,
+  int creat)
   {
   struct Extension *extp;
-  for (extp = (struct Extension *)member_casn(
-    &certp->toBeSigned.extensions.self, 0);
+  struct Extensions *extsp = &certp->toBeSigned.extensions;
+  for (extp = (struct Extension *)member_casn(&extsp->self, 0);
     extp && diff_objid(&extp->extnID, idp);
     extp = (struct Extension *)next_of(&extp->self));
+  if (!extp && creat)
+    {
+    int num = num_items(&extsp->self);
+    extp = (struct Extension *)inject_casn(&extsp->self, num);
+    if (extp) write_objid(&extp->extnID, idp);
+    }  
   return extp;
   }
 
@@ -76,33 +94,32 @@ int main(int argc, char **argv)
   Certificate(&acert, (ushort)0);
   struct Keyfile keyfile;
   Keyfile(&keyfile, (ushort)0);
-  if (argc < 3)
-    {
-    fputs("Need file names for certificate, subject key and optional authority key\n", stderr);
-    return -1;
-    }
+  if (argc < 3) fatal(3, (char *)0);
   if (get_casn_file(&scert.self, argv[1], 0) < 0) fatal(1, argv[1]); 
   if (get_casn_file(&keyfile.self, argv[2], 0) < 0) fatal(1, argv[2]);
   uchar *keyp;
-  int ksiz = readvsize_casn(&keyfile.content.bbb.ggg.iii.nnn.ooo.ppp.key, &keyp);
+  int ksiz = readvsize_casn(&keyfile.content.bbb.ggg.iii.nnn.ooo.ppp.key, 
+    &keyp);
   uchar hashbuf[40];
   int hsize = gen_hash(&keyp[1], ksiz - 1, hashbuf, CRYPT_ALGO_SHA);
     
   struct Extension *aextp, *sextp;
-  if (!(sextp = find_extension(&scert, id_subjectKeyIdentifier)))
-    fatal(3, "subject");
-  if (!(aextp = find_extension(&scert, id_authKeyId))) fatal(3, "authority");
+  if (!(sextp = find_extension(&scert, id_subjectKeyIdentifier, 1)))
+    fatal(2, "subject's");
+  if (!(aextp = find_extension(&scert, id_authKeyId, 0))) fatal(2, "authority");
   write_casn(&sextp->extnValue.subjectKeyIdentifier, hashbuf, hsize);
   if (diff_casn(&scert.toBeSigned.subject.self, &scert.toBeSigned.issuer.self))
     {
-    if (argc < 4) fatal(5, "");
+    if (argc < 4) fatal(4, argv[1]);
     if (get_casn_file(&acert.self, argv[3], 0) < 0) fatal(1, argv[3]);
-    if (!(sextp = find_extension(&acert, id_subjectKeyIdentifier))) fatal(3, "authority's subject");
+    if (!(sextp = find_extension(&acert, id_subjectKeyIdentifier, 0))) 
+      fatal(2, "authority's");
     hsize = read_casn(&sextp->extnValue.subjectKeyIdentifier, hashbuf);
     }
   write_casn(&aextp->extnValue.authKeyId.keyIdentifier, hashbuf, hsize);
     
-  write_casn(&scert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey, keyp, ksiz);
+  write_casn(&scert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey, keyp, 
+    ksiz);
   put_casn_file(&scert.self, argv[1], 0);
   int siz = dump_size(&scert.self);
   char *buf = (char *)calloc(1, siz + 2);
