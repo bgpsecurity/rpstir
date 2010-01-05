@@ -1,7 +1,32 @@
-In order to run the tests, do the following:
+Instructions for RPKI Subsystem Tests
+-------------------------------------
 
-(1) Open two shell windows.
-(2) Before each test (but not before each step in a a test), run initDB in one of the windows.
-(3) In the same window, run doLoader and leave it running for the duration of the test.
-(4) In the other window, execute the files corresponding to each step of the test in the correct order.
-(5) For each step where there is an indicated number of expected results, count to make sure that the right number are printed.
+PREREQUISITES
+
+1. Compile this Resource PKI relying party source code on the target
+platform:
+
+cd $RPKI_ROOT
+make -f Makefile.platform
+
+2. Create all test certificates:
+
+cd $RPKI_ROOT/testcases
+./makeall
+
+
+TEST SEQUENCE
+
+1. Open two shell windows in the current directory ($RPKI_ROOT/subsystemTests).
+
+2. Before each test (but not before each step in a a test), run initDB
+in one of the windows.
+
+3. In the same window, run doLoader and leave it running for the
+duration of the test.
+
+4. In the other window, execute the files corresponding to each step
+of the test in the correct order.
+
+5. For each step where there is an indicated number of expected
+results, count to make sure that the right number are printed.
