@@ -1,1 +1,1 @@
-../proto/rcli -w 7370 -p
+../proto/rcli -w $RPKI_PORT -p
