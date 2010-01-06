@@ -1,0 +1,25 @@
+GEN_KEY (1)                 ROA-PKI                                   GEN_KEY(1)
+
+
+NAME
+        gen_key - generates an RSA pair of specified size
+
+SYNOPSIS   
+
+        gen_key filename size
+
+DESCRIPTION
+    
+        Generates an RSA key pair with a public exponent having "size" bits and
+        writes the results to a cryptlib keyfile (".p15") with label "label"
+        and password "password".
+
+        Response messages:
+
+          Usage: filename keysize in bits
+          Making ... with key size ... bits
+          Invalid key size
+
+       where the ellipsis is replaced with specific information.
+                             
+
