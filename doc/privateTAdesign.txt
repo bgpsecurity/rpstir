@@ -1,0 +1,305 @@
+                     Private TA Design
+
+    This document describes the design and structure of the code that implements
+the procedures for expanding and perforating para-certificates for a private 
+trust anchor.
+
+1, Exterior Description
+
+    The code is to be called from the rcli program with the parameters
+
+       -c filename
+
+where filename is the name of a file that contains the data described in the
+document "Special Relying Party Procedure for Trust Anchor Management".  That 
+will cause the procedure 
+
+  read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile, FILE *logfile) 
+
+to be called after either the "sockline" or the "fileline" procedure has 
+completed successfully.  The code for read_SKI_blocks() and most of its
+subordinate routines are in the file rpki/trunk/proto/rpwork.c.  
+
+2. read_SKI_blocks
+
+    This function reads in the parameter section of the "skiblockfile" up to
+the first "SKI" statement and sets up the parameters in various structures.  It
+then calls process_control_blocks() to read the remainder of the control file
+and to build a table containing data about all the certificates and para-
+certificates it has processed.  The table is defined as:
+
+struct done_certs
+  {
+  int numcerts;
+  struct done_cert *done_certp;
+  };
+
+struct done_cert
+  {
+  char ski[64];
+  int perf;
+  ulong origID, origflags;
+  char filename[PATH_MAX];
+  struct Certificate *origcertp, *paracertp;
+  };
+
+static struct done_certs done_certs;
+
+These structures are designed so that "*done_certp" can be extended with 
+calloc/realloc operations.
+
+    When process_control_blocks() returns successfully, read_SKI_blocks reads
+the done_certs structure and calls on the database to mark the original
+certificates as having para-certificates (using the function set_cert_flag in
+sqhl.c) and to add the para-certificates flagged accordingly (using the function 
+add_paracert2DB).  It then frees all "callocked" memory and returns success.  If
+an error is encountered in the processing, the database is left unchanged, 
+memory is freed and an error code is returned.
+
+2. process_control_blocks(FILE *skifile)
+
+    This function reads the successive blocks of SKI entries and does the
+following for each group of lines starting with the SKI entry up to but not
+including the next SKI entry:
+
+    Validate the SKI statement 
+    Call get_CAcert to fetch the certificate 
+    Initialize the ipranges (see below)
+    Fill in the ipranges for this block
+    Call process_control_block() to process this block
+    Clear ipranges
+    Return success/failure 
+ 
+Each SKI block builds an array of control information in
+
+struct ipranges
+  {
+  int numranges;
+  struct iprange *iprangep;
+  };
+
+struct iprange
+  {
+  int typ;
+  uchar lolim[18], hilim[18];
+  char *text;
+  };
+
+static struct ipranges ipranges, certranges;
+
+These structures are extensible in the same way as done_certs.  The members
+lolim and hilim contain translations of the IP addresses or the AS numbers,
+where the IPv4 addresses and the AS numbers use the first 4 bytes, and the IPv6 
+addresses use 16 bytes.  The typ variable indicates wich type of resource:
+IPv4 is 4, IPv6 is 6 and ASnumber is 8.  The ipranges group is for the
+constraints, and the certranges group is for a certificate.  There are
+functions to manipulate these arrays of ranges described in the Appendix.
+
+3. process_control_block(struct done_cert *done_certp)
+
+    This function processes an SKI block both upward and downward, starting at
+the certificate pointed to by done_certp.  For the upward direction, the
+procedure is
+    
+    WHILE forever
+      IF this is the first time in this loop AND the certificate has been
+        perforated, error
+      Call modify_paracert(done_certp->paracertp) 
+      IF the certificate is self-signed, break out of WHILE
+      Read the AKI and call get_CAcert
+
+And then for the downward durection:
+      
+    FOR all other self-signed certificates, call search_downward()
+
+4. modify_paracert(int run, struct Certificate *certp)
+
+    This function applies the constraints to the certificate depending on the
+run number.  It calls the function run_through_typlist() for IPv4, IPv6 and AS
+number types, passing the run number.  If no error, it calls
+remake_cert_ranges to translate the structures in cert_ranges to resources in
+the paracert.
+
+5 run_through_typlist(int run, int numconstrange, int numcertrange, 
+    int *changesp)
+    
+    
+    If this is run #0, this calls expand(), otherwise it calls perforate().
+
+6. expand(int numconstrange, int numcertrange, int *changesp)
+
+    This function expands certificate fields in struct ipranges certranges to
+conform to the fields in struct ipranges ipranges.  The detailed procedure is:
+
+  Starting at first constraint (one guaranteed) and 
+     first cert field of this type (not guaranteed) 
+   FOR each constraint of this type
+     IF there is no cert field of this type
+       Make one with the limits of the constraint
+       Get non-existent certrange
+       Continue in FOR
+     Process constraint lolim:
+     WHILE cert hilim < constraint lolim
+       IF there's a next cert, get it as current one
+       ELSE make a new certrange with constraint limits
+     Process constraint hilim:
+     WHILE cert hilim < constraint hilim
+       IF no next cert
+         Set cert hilim to constraint hilim
+       ELSE WHILE have a next cert AND nextcert lolim <= constraint hilim
+         Set cert hilim to next cert hilim
+         Delete nextcert
+
+7. perforate(int numconstrrange, int numcertrange, int *changesp)
+
+    This function perforates certificate fields in struct ipranges certranges to
+conform to the fields in struct ipranges ipranges.  The detailed procedure is:
+
+   Starting at first constraint (one guaranteed) 
+     and first cert field of this type (not guaranteed) 
+   FOR each constraint
+     WHILE cert hilim < constraint lolim
+       Go to next item in cert, if any
+     WHILE have a cert entry AND its lolim < constraint's hilim
+       IF certrange is within SKI range, delete certrange
+       ELSE IF certrange extends before SKI range on low end
+         IF certrange extends beyond SKI range on high end, too
+           Cut the present cert item to stop just before SKI item
+           Add a new cert item just beyond the SKI item
+         ELSE Cut the high end of the cert item back to just before 
+           the SKI item
+       ELSE IF certrange goes beyond the SKI range
+         Cut the start of the cert item forward to just beyond the SKI item
+       Go to next cert entry
+
+8. search_downward(struct Certificate *topcertp)
+
+    This looks for any overlap between the list of constraint ipranges and the
+children of the current certificate and perforates them.  The procedure is:
+
+   Get certificate's SKI
+   Call find_cert_by_aKI to get list of children
+   FOR each of its children
+     Get its SKI
+     IF haven't done this cert already, make a temporary done_cert
+     ELSE use the one we have
+     Make a paracert just in case 
+     Punch out any listed resources
+    IF it's a temporary cert
+      IF there was any error OR nothing was done, free the cert
+      ELSE add the cert & paracert to the done list
+    IF something was done, call this function with this child
+
+9. remake_cert_ranges(struct Certificate *paracertp)
+
+    This function reconstructs the resource extensions in the paracert in
+accordance with the data stored in certranges, as follows:
+
+   IF paracert has an extension for IP addresses, empty it
+   IF have certranges for IPv4
+     IF no such extension, add one
+     Translate all IPv4 addresses in certrange to the cert's IPv4 space
+   IF paracert has any ranges for IPv6
+     IF no such extension, add one
+     Translate all IPv6 addresses in certrange to the cert's IPv6 space
+   IF cert has an AS# extension, empty it
+   IF have any ranges for AS#
+     IF no such extension, add one
+     Translate all AS numbers in certrange to the cert's AS number space
+
+The translation of resources from the iprange format is done with the
+functions make_IPAddrOrRange and make_ASnum.
+
+Appendix
+
+    Several of the functions referred to above are defined below;
+
+A. get_CAcert(char *ski, struct done_cert **done_certpp)
+
+  This function checks to see if the CA certificate is already in the list of
+done_certs with the function have_already().  If so, it uses that entry,
+otherwise it asks the database for certificate(s) having that AKI using this
+structure for the response:
+
+struct cert_answers
+  {
+  int num_ansrs;
+  struct cert_ansr *cert_ansrp;
+  };
+
+struct cert_ansr
+  {
+  char dirname[PATH_AX], filename[PATH_MAX], fullname[PATH_MAX];
+  unsigned int flags;
+  unsigned int local_id;
+  }; 
+    
+The procedure is:
+
+    Call find_cert_by_aKI in sqhl.c
+    IF that returns nothing, error
+    IF there is just one answer, get the certificate
+    ELSE ??? error?
+    Call mk_paracert() to make a paracert from the certificate
+    Call add_done_cert() to add the certificate and the paracert to the list 
+      of done_certs 
+
+B. mk_paracert(struct Certificate *certp)
+
+    This function is called from get_CAcert and search_downward.  It makes a
+paracert from the given certificate using the conditions given at the start of
+the skifile.  After that it calls mk_certranges to fill in the struct ipranges 
+named certranges defined above and returns a pointer to the
+paracert. 
+
+C. make_IPAddrOrRange(struct IPAddressOrRangeA *ipAddrOrRangep,
+      struct iprange *iprangep)
+
+    This function translates the struct iprange data into either a range or a
+prefix, as follows:
+
+   Running from left to right, find where the low and high of tiprangep differ
+   Count the number of bits where they match
+   IF beyond that point lolim is all zeroes and hilim all ones, write a prefix
+   ELSE make a range and write it
+ 
+D make_ASnum(struct ASNumberOrRangeA *asNumberOrRangep
+    struct iprange *iprangep)
+
+    This function translates the struct iprange data into either a number or a
+range of numbers depending on whether the lower limit is the same as the upper
+or not.
+
+E. addPraracert2DB(struct done_cert *done_certp)
+
+    This function calls the function add_cert (in sqhl.c) and then the
+set_cert_flag function in sqhl.c.
+
+
+F. add_done_cert(char *ski, struct Certificate *certp, 
+    struct Certificate *paracertp, int flags, int local_id, char *filename)
+
+    This function appends a new struct done_cert to the list done_certs and
+fills it in with the parameters supplied.
+ 
+G. Range functions
+
+    The functions to manipulate arrays or ranges are:
+
+struct iprange*next_range(struct ipranges *iprangesp, struct iprange
+    *iprangep)
+
+    Returns a pointer to the next range.  If none, returns NULL.
+
+struct iprange *inject_range(struct ipranges *iprangesp, int num)
+    
+    Adds an iprange at position [num] in the array and returns a pointer to it
+
+struct iprange *eject_range(struct iprangesp *iprangesp, int num)
+
+    Deletes the iprange at position [num] in the array and returns a pointer
+to the remaining iprange at [num]. If none, it returns NULL.
+
+    If either inject_range or ehect_range is given an invalid num, the message
+"Injecting out of range" or "Ejecting out of range" is printed on stderr and
+the program exits.
