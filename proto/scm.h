@@ -55,6 +55,7 @@ typedef struct _scm
 {
   char   *db;                   /* name of the database */
   char   *dbuser;               /* name of the database user */
+  char   *dbpass;               /* password for the database user */
   char   *dsnpref;              /* data source name prefix */
   char   *dsn;			/* canonical data source name */
   scmtab *tables;		/* array of tables */

@@ -85,6 +85,11 @@ void freescm(scm *scmp)
       free((void *)(scmp->dbuser));
       scmp->dbuser = NULL;
     }
+  if ( scmp->dbpass != NULL )
+    {
+      free((void *)(scmp->dbpass));
+      scmp->dbpass = NULL;
+    }
   if ( scmp->dsnpref != NULL )
     {
       free((void *)(scmp->dsnpref));
@@ -276,7 +281,9 @@ scm *initscm(void)
 {
   scm *scmp;
   int  sta;
-  char *db = getenv ("RPKI_DB");
+  char *db = getenv("RPKI_DB");
+  char *dbu = getenv("RPKI_DBUSER");
+  char *dbp = getenv("RPKI_DBPASS");
 
   scmp = (scm *)calloc(1, sizeof(scm));
   if ( scmp == NULL )
@@ -287,11 +294,19 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  scmp->dbuser = strdup(RPKI_DBUSER);
+  scmp->dbuser = strdup((dbu == NULL) ? RPKI_DBUSER : dbu);
   if ( scmp->dbuser == NULL )
     {
       freescm(scmp);
       return(NULL);
+    }
+// password is allowed to be NULL
+  if ( dbp != NULL )
+    scmp->dbpass = strdup(dbp);
+  else
+    {
+      if ( RPKI_DBPASS != NULL )
+	scmp->dbpass = strdup(RPKI_DBPASS);
     }
   scmp->dsnpref = strdup(RPKI_DSN);
   if ( scmp->dsnpref == NULL )
@@ -299,7 +314,7 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsn = makedsnscm(RPKI_DSN, scmp->db, RPKI_DBUSER, NULL);
+  scmp->dsn = makedsnscm(RPKI_DSN, scmp->db, scmp->dbuser, scmp->dbpass);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);

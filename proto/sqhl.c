@@ -2053,6 +2053,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   return sta;
 }
 
+extern int rtaValidate(struct ROA *);
+
 int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {

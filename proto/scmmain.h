@@ -40,10 +40,16 @@ static char *RPKI_DSN = "{MyODBC 3.51 Driver DSN};SERVER=localhost";
 static char *RPKI_DB = "rpki";
 
 /*
-  The database user name.
+  The default database user name.
 */
 
 static char *RPKI_DBUSER = "mysql";
+
+/*
+  The default database password.
+*/
+
+static char *RPKI_DBPASS = NULL;
 
 /*
   Table definitions
