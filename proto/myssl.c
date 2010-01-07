@@ -2044,7 +2044,10 @@ skip:
 
 static int rescert_crldp_chk(X509 *x, int ct)
 {
-  int crldp_flag = 0, uri_flag = 0;
+  int crldp_flag = 0;
+  int uri_flag = 0;
+  int ncrldp = 0;
+  int j;
   int i;
   int ex_nid;
   int ret = 0;
@@ -2053,123 +2056,119 @@ static int rescert_crldp_chk(X509 *x, int ct)
   X509_EXTENSION *ex = NULL;
   GENERAL_NAME   *gen_name = NULL;
 
-  for (i = 0; i < X509_get_ext_count(x); i++) {
-    ex = X509_get_ext(x, i);
-    ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
-
-    if (ex_nid == NID_crl_distribution_points) {
-      crldp_flag++;
+  for(i = 0; i < X509_get_ext_count(x); i++)
+    {
+      ex = X509_get_ext(x, i);
+      ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
+      if ( ex_nid == NID_crl_distribution_points )
+	{
+	  crldp_flag++;
 #ifdef notdef  // MCR removed this test
-      if (ct == TA_CERT) {
+	  if (ct == TA_CERT) {
 #ifdef DEBUG
-        fprintf(stderr, "[crldp] crldp found in self-signed cert\n");
+	    fprintf(stderr, "[crldp] crldp found in self-signed cert\n");
 #endif
-        ret = ERR_SCM_CRLDPTA;
-        goto skip;
-      }
+	    ret = ERR_SCM_CRLDPTA;
+	    goto skip;
+	  }
 #endif
-      if (X509_EXTENSION_get_critical(ex)) {
+	  if ( X509_EXTENSION_get_critical(ex) )
+	    {
 #ifdef DEBUG
-        fprintf(stderr, "[crldp] marked critical, violation\n");
+	      fprintf(stderr, "[crldp] marked critical, violation\n");
 #endif
-        ret = ERR_SCM_CEXT;
-        goto skip;
-      }
-
+	      ret = ERR_SCM_CEXT;
+	      goto skip;
+	    }
+	}
     }
-  }
-
-  if (crldp_flag == 0) {
-    if (ct == TA_CERT) {  /* must be omitted if TA */
-      ret = 0;
-      goto skip;
+  if ( crldp_flag == 0 )
+    {
+      if (ct == TA_CERT)
+	{  /* must be omitted if TA */
+	  ret = 0;
+	  goto skip;
+	}
+#ifdef DEBUG
+      fprintf(stderr, "[crldp] missing crldp extension\n");
+#endif
+      return(ERR_SCM_NOCRLDP);
     }
-#ifdef DEBUG
-    fprintf(stderr, "[crldp] missing crldp extension\n");
-#endif
-    return(ERR_SCM_NOCRLDP);
-  } else if (crldp_flag > 1) {
-#ifdef DEBUG
-    fprintf(stderr, "[crldp] multiple crldp extensions\n");
-#endif
-    return(ERR_SCM_DUPCRLDP);
-  }
-
-  /* we should be here if NID_crl_distribution_points was found,
-     it was not marked critical, and there was only one instance of it.
-
-     I think rob's code is doing this right so I'm lifting his
-     checks from rcynic.c */
-
+/*
+  we should be here if NID_crl_distribution_points was found,
+  and it was not marked critical
+*/
   crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, NULL, NULL);
-  if (!crldp) {
+  if ( !crldp )
+    {
 #ifdef DEBUG
-    fprintf(stderr, "[crldp] could not retrieve crldp extension\n");
+      fprintf(stderr, "[crldp] could not retrieve crldp extension\n");
 #endif
-    return(ERR_SCM_NOCRLDP);
-  } else if (sk_DIST_POINT_num(crldp) != 1) {
+      return(ERR_SCM_NOCRLDP);
+    }
+  ncrldp = sk_DIST_POINT_num(crldp);
+  for(j=0;j<ncrldp;j++)
+    {
+      dist_st = sk_DIST_POINT_value(crldp, j);
+      if (dist_st->reasons || dist_st->CRLissuer || !dist_st->distpoint
+	  || dist_st->distpoint->type != 0)
+	{
 #ifdef DEBUG
-    fprintf(stderr, "[crldp] incorrect number of STACK_OF(DIST_POINT)\n");
+	  fprintf(stderr, "[crldp] incorrect crldp sub fields\n");
 #endif
-    ret = ERR_SCM_DUPCRLDP;
-    goto skip;
-  }
-
-  dist_st = sk_DIST_POINT_value(crldp, 0);
-  if (dist_st->reasons || dist_st->CRLissuer || !dist_st->distpoint
-      || dist_st->distpoint->type != 0) {
+	  ret = ERR_SCM_CRLDPSF;
+	  goto skip;
+	}
+      for (i=0; i < sk_GENERAL_NAME_num(dist_st->distpoint->name.fullname); i++)
+	{
+	  gen_name = sk_GENERAL_NAME_value(dist_st->distpoint->name.fullname, i);
+	  if ( !gen_name )
+	    {
 #ifdef DEBUG
-    fprintf(stderr, "[crldp] incorrect crldp sub fields\n");
+	      fprintf(stderr, "[crldp] error retrieving distribution point name\n");
 #endif
-    ret = ERR_SCM_CRLDPSF;
-    goto skip;
-  }
-
-  for (i=0; i < sk_GENERAL_NAME_num(dist_st->distpoint->name.fullname); i++) {
-    gen_name = sk_GENERAL_NAME_value(dist_st->distpoint->name.fullname, i);
-    if (!gen_name) {
+	      ret = ERR_SCM_CRLDPNM;
+	      goto skip;
+	    }
+    /* all of the general names must be of type URI */
+	  if ( gen_name->type != GEN_URI )
+	    {
 #ifdef DEBUG
-      fprintf(stderr, "[crldp] error retrieving distribution point name\n");
+	      fprintf(stderr, "[crldp] general name of non GEN_URI type found\n");
+#endif
+	      ret = ERR_SCM_BADCRLDP;
+	      goto skip;
+	    }
+	  if (!strncasecmp((char *)gen_name->d.uniformResourceIdentifier->data,
+			   RSYNC_PREFIX, RSYNC_PREFIX_LEN))
+	    {
+      /* printf("uri: %s\n", gen_name->d.uniformResourceIdentifier->data); */
+	      uri_flag++;
+	    }
+	}
+    }
+  if ( uri_flag == 0 )
+    {
+#ifdef DEBUG
+      fprintf(stderr, "[crldp] no general name of type URI\n");
 #endif
       ret = ERR_SCM_CRLDPNM;
       goto skip;
     }
-    /* all of the general names must be of type URI */
-    if (gen_name->type != GEN_URI) {
-#ifdef DEBUG
-      fprintf(stderr, "[crldp] general name of non GEN_URI type found\n");
-#endif
-      ret = ERR_SCM_BADCRLDP;
-      goto skip;
+  else
+    {
+      if (crldp)
+	{
+	  sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
+	  crldp = NULL;
+	}
+      return(0);
     }
-
-    if (!strncasecmp((char *)gen_name->d.uniformResourceIdentifier->data,
-                     RSYNC_PREFIX, RSYNC_PREFIX_LEN))  {
-      /* printf("uri: %s\n", gen_name->d.uniformResourceIdentifier->data); */
-      uri_flag++;
-    }
-  }
-
-  if (uri_flag == 0) {
-#ifdef DEBUG
-    fprintf(stderr, "[crldp] no general name of type URI\n");
-#endif
-    ret = ERR_SCM_CRLDPNM;
-    goto skip;
-  } else {
-    if (crldp)
-      {
-	sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
-	crldp = NULL;
-      }
-    return(0);
-  }
-
 skip:
 #ifdef DEBUG
   fprintf(stderr, "[crldp] jump to return...\n");
 #endif
-  if (crldp)
+  if ( crldp )
     sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
   return(ret);
 }

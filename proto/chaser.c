@@ -193,10 +193,22 @@ static int handleAIAResults (scmcon *conp, scmsrcha *s, int numLine)
 }
 
 /* callback function for searchscm that accumulates the crldp's */
+/* note that a CRLDP in the cert table can now be a single URI or a set
+   of URIs separated by semicolons */
+
 static int handleCRLDPResults (scmcon *conp, scmsrcha *s, int numLine)
 {
+  char *res;
+  char *oneres;
+
   conp = conp; numLine = numLine;  // silence compiler warnings
-  addURIIfUnique ((char *) s->vec[0].valptr);
+  res = (char *)(s->vec[0].valptr);
+  oneres = strtok(res, ";");
+  while ( oneres != NULL && oneres[0] != 0 )
+    {
+      addURIIfUnique(oneres);
+      oneres = strtok(NULL, ";");
+    }
   return 0;
 }
 
