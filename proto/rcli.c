@@ -569,7 +569,7 @@ static int probe(int s)
                     informational text. Optional message.
 */
 
-static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s, char *skifile)
+static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s)
 {
   char *left = NULL;
   char *ptr;
@@ -687,11 +687,10 @@ static int sockline(scm *scmp, scmcon *conp, FILE *logfile, int s, char *skifile
 	}
       free((void *)ptr);
     }
-// if (done > 0) sta = read_SKI_blocks(scmp, conp, skifile, logfile, s); 
   return(sta);
 }
 
-static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s, char *skifile)
+static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s)
 {
   //  char *left = NULL;
   char  ptr[1024];
@@ -803,7 +802,6 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s, char *skifi
 	  break;
 	}
     }
-// if (done > 0) sta = read_SKI_blocks(scmp, conp, skifile, logfile, s); 
   return(sta);
 }
 
@@ -818,7 +816,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *logfile, FILE *s, char *skifi
 //   -w port             operate in wrapper mode using the given socket port
 //   -p                  with -w indicates to run perpetually, e.g. as a daemon
 //   -z                  run from file list instead of port
-//   -R                  use RP work
+//   -c                  use RP work
 
 int main(int argc, char **argv)
 {
@@ -859,7 +857,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:E:f:F:w:z:pm:R:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhd:E:f:F:w:z:pm:c:")) != EOF )
     {
       switch ( c )
 	{
@@ -896,7 +894,7 @@ int main(int argc, char **argv)
 	case 'p':
 	  perpetual++;
 	  break;
-        case 'R':
+        case 'c':
           skifile = optarg;
           break;
 	case 'h':
@@ -1191,7 +1189,7 @@ int main(int argc, char **argv)
 		(void)fprintf(stderr, "Could not create socket\n");
 	      else
 		{
-		  sta = sockline(scmp, realconp, logfile, s, skifile);
+		  sta = sockline(scmp, realconp, logfile, s);
 		  (void)printf("Socket connection closed\n");
 		  (void)close(s);
 		}
@@ -1202,7 +1200,7 @@ int main(int argc, char **argv)
                 {
                 printf("Opening stdin\n");
                 sfile = stdin;
-		sta = fileline(scmp, realconp, logfile, sfile, skifile);
+		sta = fileline(scmp, realconp, logfile, sfile);
                 }
 	      else
 		{
@@ -1212,12 +1210,14 @@ int main(int argc, char **argv)
 	          (void)fprintf(stderr, "Could not open cmdfile\n");
 	        else
 	          {
-		  sta = fileline(scmp, realconp, logfile, sfile, skifile);
+		  sta = fileline(scmp, realconp, logfile, sfile);
 		  (void)printf("Cmdfile closed\n");
 		  (void)fclose(sfile);
 	          }
 		}
 	    }
+        if (sta == 0 && skifile) 
+          sta = read_SKI_blocks(scmp, realconp, skifile, logfile); 
 	} while ( perpetual > 0 ) ;
       if ( protos >= 0 )
 	(void)close(protos);

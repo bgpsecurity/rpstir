@@ -20,7 +20,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-all:	librpki.a rcli query chaser garbage makeROA proofreader 
+all:	librpki.a rcli query chaser garbage makeROA proofreader
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
@@ -56,12 +56,14 @@ querySupport.o: scm.h scmf.h err.h sqhl.h querySupport.h
 chaser.o: scm.h scmf.h sqhl.h err.h
 garbage.o:	scm.h scmf.h sqhl.h err.h
 makeROA.o:	err.h
-proofreader.o:	err.h conversion.h
-conversion.o:	err.h conversion.h
-rpwork.o:	err.h conversion.h rpwork.c
 
-librpki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
-	ar crv librpki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o
+proofreader.o:	err.h rpwork.h
+add_TA.o:	err.h rpwork.h
+conversion.o:	err.h rpwork.h
+rpwork.o:	err.h rpwork.c rpwork.h
+
+librpki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o rpwork.o conversion.o
+	ar crv librpki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o rpwork.o conversion.o
 	ranlib librpki.a
 
 rcli:	rcli.o librpki.a $(LOCAL_LIBS) Makefile
@@ -79,8 +81,9 @@ garbage: garbage.o librpki.a $(LOCAL_LIBS) Makefile
 makeROA: makeROA.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o makeROA -g makeROA.o $(LOCAL_LIBS) $(LIBS)
 
-proofreader: proofreader.o conversion.o librpki.a $(LOCAL_LIBS) Makefile
-	$(CC) -o proofreader -g proofreader.o conversion.o $(LOCAL_LIBS) $(LIBS)
+proofreader: proofreader.o librpki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o proofreader -g proofreader.o $(LOCAL_LIBS) $(LIBS)
+
 
 clean:
 	rm -f rcli query makeROA chaser garbage *.o *.a
