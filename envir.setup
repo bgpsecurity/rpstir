@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Sets up the environment variables for the RPKI relying party system,
+# but allows the user to override by setting existing variables.
+#
+# This file should NOT be executed on its own.  It should be imported
+# at the beginning of another script using "source".  It is useless to
+# execute this file standalone, since "export" can only affect the
+# environment of child processes, not parent processes.
+
+DEFAULT_RPKI_ROOT=$(dirname $(which $0))
+DEFAULT_RPKI_PORT=7344
+DEFAULT_RPKI_DB=rpki
+DEFAULT_RPKI_DBUSER=mysql
+DEFAULT_RPKI_DBPASS=
+
+if [ "${RPKI_ROOT}x" = "x" ]; then export RPKI_ROOT=$DEFAULT_RPKI_ROOT; fi
+if [ "${RPKI_PORT}x" = "x" ]; then export RPKI_PORT=$DEFAULT_RPKI_PORT; fi
+if [ "${RPKI_DB}x" = "x" ]; then export RPKI_DB=$DEFAULT_RPKI_DB; fi
+if [ "${RPKI_DBUSER}x" = "x" ]; then
+    export RPKI_DBUSER=$DEFAULT_RPKI_DBUSER
+fi
+if [ "${RPKI_DBPASS}x" = "x" ]; then
+    export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
+fi
+
+# If mysql acccount needs a password, we must use -p<password> on the
+# mysql command line.  If no password, we must omit the option entirely.
+if [ "${RPKI_DBPASS}x" = "x" ]; then
+    export RPKI_DBPASS_OPTION=
+else
+    export RPKI_DBPASS_OPTION="-p${RPKI_DBPASS}"
+fi
