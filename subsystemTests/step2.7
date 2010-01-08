@@ -1,4 +1,4 @@
 echo "Loading data and running garbage collector"
-../rsync_aur/rsync_aur ttest2.7.par
+../rsync_aur/rsync_aur -t $RPKI_PORT -f test2.7.log -w -e -i -d ../testcases
 sleep 2
 ../proto/garbage
