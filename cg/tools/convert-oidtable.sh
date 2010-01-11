@@ -7,7 +7,8 @@
 # N.b. requires /bin/bash for "read foo bar" instead of just "read foo"
 
 # set this to wherever encode-oid lives
-ENCODE_OID=$HOME/apki/trunk/cg/tools/encode-oid
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+ENCODE_OID=$THIS_SCRIPT_DIR/encode-oid
 
 if [ ! -x $ENCODE_OID ]; then
     echo set ENCODE_OID in $0 to point to the encode-oid program
