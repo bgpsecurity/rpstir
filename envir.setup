@@ -49,4 +49,4 @@ else
 fi
 
 # MySQL command line which reads statements from stdin
-export RPKI_MYSQL_CMD=mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION
+export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
