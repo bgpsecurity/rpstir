@@ -1,3 +1,11 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
+echo About to clear database $RPKI_DB ...
+
 # set up an initial database
 ../proto/rcli -x -y
 ../proto/rcli -t $PWD/../testcases -y

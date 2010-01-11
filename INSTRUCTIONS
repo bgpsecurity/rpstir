@@ -109,18 +109,21 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     Once updated, build the executables by typing "make" in the top level
     directory.
 
-3.2 set environment variables: There are three environment variables used
+3.2 set environment variables: There are several environment variables used
     throughout the scripts and the code:
     RPKI_DB - the name of the MySQL database used to hold the RPKI data
     RPKI_PORT - the port number used for the loader and feeder to talk
     RPKI_ROOT - the full pathname of this directory (the top-level
       directory of the RPKI tree)
+    RPKI_DBUSER - the username for logging into the MySQL database
+    RPKI_DBPASS - the password for logging into the MySQL database, if any
     These environment variables will be set automatically to the
     following defaults by each of the scripts in the run_scripts directory:
     RPKI_DB = rpki
     RPKI_PORT = 7344
-    RPKI_ROOT = current working directory, or one higher if in
-                directory run_scripts
+    RPKI_ROOT = ${HOME}/rpki/trunk
+    RPKI_DBUSER = mysql
+    RPKI_DBPASS = (none)
     If you ever want to run the code directly instead of running the
     scripts, make sure to set these yourself.
 
