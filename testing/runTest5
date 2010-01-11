@@ -1,9 +1,16 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 # run test 5
 # checks: garbage collection expires certs
 
 echo ""
 echo "Running test 5"
-echo "update apki_cert set valto = \"2007-05-02 00:00:00\" where ski=\"D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86\";" | mysql $RPKI_DB -u mysql
+echo "update apki_cert set valto = \"2007-05-02 00:00:00\" where ski=\"D4:BD:2D:B8:C6:6E:05:06:64:EA:89:21:B6:AF:98:A2:FF:98:7B:86\";" | $RPKI_MYSQL_CMD
+
 $RPKI_ROOT/proto/garbage
 echo "Should be 4 entries (not validating):"
 $RPKI_ROOT/proto/query -t cert -d ski

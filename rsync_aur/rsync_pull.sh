@@ -16,6 +16,10 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 RSYNC=/usr/local/bin/rsync
 
 # This is the rsync_pull.sh script. It takes one argument which is
@@ -23,7 +27,7 @@ RSYNC=/usr/local/bin/rsync
 # any existing log files and then rsyncs the data specified in the
 # config file. After this is completed, the rsync_aur program should
 # be invoked with the log names to alert the database as to new 
-# or changed elements to be in PKI_DB.
+# or changed elements to be in RPKI_DB.
 #
 # The config file must contain the following variable defines:
 #

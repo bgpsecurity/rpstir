@@ -1,10 +1,16 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 # run test 6
 # checks: when crl verified later, check that certs revoked
 
 echo ""
 echo "Running test 6"
-echo "delete from apki_cert;" | mysql $RPKI_DB -u mysql
-echo "delete from apki_crl;" | mysql $RPKI_DB -u mysql
+echo "delete from apki_cert;" | $RPKI_MYSQL_CMD
+echo "delete from apki_crl;" | $RPKI_MYSQL_CMD
 $RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testing/testAdd3 -d $RPKI_ROOT/testing/REPOSITORY
 echo "Should be 5 entries (no validity check):"
 $RPKI_ROOT/proto/query -t cert -d ski

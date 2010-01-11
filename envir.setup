@@ -7,6 +7,12 @@
 # at the beginning of another script using "source".  It is useless to
 # execute this file standalone, since "export" can only affect the
 # environment of child processes, not parent processes.
+#
+# Example:
+# # set environment variables if not set
+# THIS_SCRIPT_DIR=$(dirname $(which $0))
+# source $THIS_SCRIPT_DIR/../envir.setup
+#
 
 DEFAULT_RPKI_ROOT=${HOME}/rpki/trunk  # caller should set RPKI_ROOT
 DEFAULT_RPKI_PORT=7344
@@ -41,3 +47,6 @@ if [ "${RPKI_DBPASS}x" = "x" ]; then
 else
     export RPKI_DBPASS_OPTION="-p${RPKI_DBPASS}"
 fi
+
+# MySQL command line which reads statements from stdin
+export RPKI_MYSQL_CMD=mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION

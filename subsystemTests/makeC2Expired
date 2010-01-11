@@ -1,1 +1,8 @@
-echo "update rpki_cert set valto='2008-07-31' where filename='C2.cer';" | /usr/local/mysql/bin/mysql $RPKI_DB -u $RPKI_DBUSER -p$RPKI_DBPASS
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
+echo "update rpki_cert set valto='2008-07-31' where filename='C2.cer';" | \
+    $RPKI_MYSQL_CMD

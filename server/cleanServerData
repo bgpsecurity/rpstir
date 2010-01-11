@@ -21,9 +21,6 @@
 THIS_SCRIPT_DIR=$(dirname $(which $0))
 source $THIS_SCRIPT_DIR/../envir.setup
 
-echo "delete from rtr_update;" | \
-    mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION
-echo "delete from rtr_full;" | \
-    mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION
-echo "delete from rtr_incremental;" | \
-    mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION
+echo "delete from rtr_update;" | $RPKI_MYSQL_CMD
+echo "delete from rtr_full;" | $RPKI_MYSQL_CMD
+echo "delete from rtr_incremental;" | $RPKI_MYSQL_CMD

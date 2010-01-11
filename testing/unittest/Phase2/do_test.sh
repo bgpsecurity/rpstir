@@ -1,5 +1,9 @@
 #! /bin/sh
 
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../../../envir.setup
+
 RCLI="${RPKI_ROOT}/proto/rcli"
 REPOSITORY="${RPKI_ROOT}/testing/REPOSITORY"
 ROOT_CERT="`/bin/pwd`/C.cer"

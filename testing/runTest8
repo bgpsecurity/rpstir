@@ -1,3 +1,9 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 # run test 8
 # checks: roa validation
 # currently requires addition to sqhl.c of line
@@ -6,17 +12,17 @@
 
 echo ""
 echo "Running test 8"
-echo "delete from apki_cert;" | mysql $RPKI_DB -u mysql
-echo "delete from apki_roa;" | mysql $RPKI_DB -u mysql
+echo "delete from apki_cert;" | $RPKI_MYSQL_CMD
+echo "delete from apki_roa;" | $RPKI_MYSQL_CMD
 $RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testing/testAdd5 -d $RPKI_ROOT/testing/REPOSITORY
 echo "Should be an ski:"
-echo "select ski from apki_roa where flags=4;" | mysql $RPKI_DB -u mysql
-echo "delete from apki_cert;" | mysql $RPKI_DB -u mysql
-echo "delete from apki_roa;" | mysql $RPKI_DB -u mysql
+echo "select ski from apki_roa where flags=4;" | $RPKI_MYSQL_CMD
+echo "delete from apki_cert;" | $RPKI_MYSQL_CMD
+echo "delete from apki_roa;" | $RPKI_MYSQL_CMD
 $RPKI_ROOT/rsync_aur/rsync_aur -s -t $RPKI_PORT -f $RPKI_ROOT/testing/testAdd6 -d $RPKI_ROOT/testing/REPOSITORY
 echo "Should be an ski:"
-echo "select ski from apki_roa where flags=4;" | mysql $RPKI_DB -u mysql
-echo "update apki_cert set aki=ski;" | mysql $RPKI_DB -u mysql
-echo "update apki_cert set issuer=subject;" | mysql $RPKI_DB -u mysql
+echo "select ski from apki_roa where flags=4;" | $RPKI_MYSQL_CMD
+echo "update apki_cert set aki=ski;" | $RPKI_MYSQL_CMD
+echo "update apki_cert set issuer=subject;" | $RPKI_MYSQL_CMD
 echo "Should be a filter entry:"
 $RPKI_ROOT/proto/query -a

@@ -1,9 +1,15 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 # run test 3
 # checks: garbage collection sets status of certs no longer unknown
 
 echo ""
 echo "Running test 3"
-echo "update apki_crl set next_upd=\"2007-08-02 00:00:00\";" | mysql $RPKI_DB -u mysql
+echo "update apki_crl set next_upd=\"2007-08-02 00:00:00\";" | $RPKI_MYSQL_CMD
 $RPKI_ROOT/proto/garbage
 echo "Should be 5 entries (unknown = invalid):"
 $RPKI_ROOT/proto/query -t cert -d ski -v 

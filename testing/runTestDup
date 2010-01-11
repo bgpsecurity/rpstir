@@ -1,3 +1,9 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 # run test for duplicates, same as test 1 except with duplicate certs and crls
 
 echo ""
