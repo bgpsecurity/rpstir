@@ -50,8 +50,7 @@ if [ $# -ne 1 ] ; then
 fi
 
 # set environment variables if not set
-if [ "${RPKI_PORT}x" = "x" ]; then export RPKI_PORT=7344; fi
-if [ "${RPKI_DB}x" = "x" ]; then export RPKI_DB=rpki; fi
-if [ "${RPKI_ROOT}x" = "x" ]; then export RPKI_ROOT=`pwd | sed 's/\/run_scripts//'`; fi
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
 
 ${RPKI_ROOT}/rsync_aur/rsync_pull.sh $1

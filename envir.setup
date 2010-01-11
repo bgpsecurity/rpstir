@@ -8,16 +8,26 @@
 # execute this file standalone, since "export" can only affect the
 # environment of child processes, not parent processes.
 
-DEFAULT_RPKI_ROOT=$(dirname $(which $0))
+DEFAULT_RPKI_ROOT=${HOME}/rpki/trunk  # caller should set RPKI_ROOT
 DEFAULT_RPKI_PORT=7344
 DEFAULT_RPKI_DB=rpki
 DEFAULT_RPKI_DBUSER=mysql
 DEFAULT_RPKI_DBPASS=
 
-if [ "${RPKI_ROOT}x" = "x" ]; then export RPKI_ROOT=$DEFAULT_RPKI_ROOT; fi
-if [ "${RPKI_PORT}x" = "x" ]; then export RPKI_PORT=$DEFAULT_RPKI_PORT; fi
-if [ "${RPKI_DB}x" = "x" ]; then export RPKI_DB=$DEFAULT_RPKI_DB; fi
+if [ "${RPKI_ROOT}x" = "x" ]; then
+    echo Warning: RPKI_ROOT not set, defaulting to $DEFAULT_RPKI_ROOT
+    export RPKI_ROOT=$DEFAULT_RPKI_ROOT
+fi
+if [ "${RPKI_PORT}x" = "x" ]; then
+    echo Warning: RPKI_PORT not set, defaulting to $DEFAULT_RPKI_PORT
+    export RPKI_PORT=$DEFAULT_RPKI_PORT;
+fi
+if [ "${RPKI_DB}x" = "x" ]; then
+    echo Warning: RPKI_DB not set, defaulting to $DEFAULT_RPKI_DB
+    export RPKI_DB=$DEFAULT_RPKI_DB;
+fi
 if [ "${RPKI_DBUSER}x" = "x" ]; then
+    echo Warning: RPKI_DBUSER not set, defaulting to $DEFAULT_RPKI_DBUSER
     export RPKI_DBUSER=$DEFAULT_RPKI_DBUSER
 fi
 if [ "${RPKI_DBPASS}x" = "x" ]; then

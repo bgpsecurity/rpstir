@@ -12,5 +12,9 @@
 # Optionally, change the location of the log file.
 #
 
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 if [ "${RTR_CHECK_INTERVAL}x" = "x" ]; then export RTR_CHECK_INTERVAL=60; fi
 $RPKI_ROOT/server/server -l $RPKI_ROOT/server/logs/rtr.log -t $RTR_CHECK_INTERVAL
