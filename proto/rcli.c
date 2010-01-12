@@ -977,7 +977,11 @@ int main(int argc, char **argv)
 	 password = getpass("Enter MySQL root password: ");
        }
 
-      tmpdsn = makedsnscm(scmp->dsnpref, "test", "root", password);
+      /* Note that in the following line, we do not intend to edit the
+	 database named "mysql".  We are simply filling in the
+	 "database name" parameter with something that is guaranteed
+	 to be valid. */
+      tmpdsn = makedsnscm(scmp->dsnpref, "mysql", "root", password);
       if ( password != NULL )
 	memset(password, 0, strlen(password));
       if ( tmpdsn == NULL )
