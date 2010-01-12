@@ -578,7 +578,6 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
 
   if (ski && (done_certp = have_already(ski)))
     {
-    done_certp = &done_certs.done_certp[i];
     *done_certpp = done_certp;
     i = 0;
     }
