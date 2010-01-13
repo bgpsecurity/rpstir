@@ -7,6 +7,5 @@ source $THIS_SCRIPT_DIR/../envir.setup
 echo About to clear database $RPKI_DB ...
 
 # set up an initial database
-../proto/rcli -x -y
-../proto/rcli -t $PWD/../testcases -y
+../proto/rcli -x -t $PWD/../testcases -y
 ../proto/rcli -y -F ../testcases/C.cer
