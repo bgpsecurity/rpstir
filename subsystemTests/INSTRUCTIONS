@@ -7,7 +7,7 @@ PREREQUISITES
 platform:
 
 cd $RPKI_ROOT
-make -f Makefile.platform
+make -f Makefile.<platform>
 
 2. Create all test certificates:
 

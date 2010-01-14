@@ -1,2 +1,8 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 echo "Loading data"
 ../rsync_aur/rsync_aur -t $RPKI_PORT -f test1.8.log -w -e -i -d ../testcases

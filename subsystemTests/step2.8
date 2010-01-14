@@ -1,3 +1,9 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 echo "Expecting 3 roa filenames"
 ../proto/query -s specs.2.6 -t roa -d filename
 echo "Expecting 2 roa filenames"

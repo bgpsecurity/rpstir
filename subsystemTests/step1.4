@@ -1,2 +1,8 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $(which $0))
+source $THIS_SCRIPT_DIR/../envir.setup
+
 echo "Making C2 expired"
 ./makeC2Expired
