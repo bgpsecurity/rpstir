@@ -9,9 +9,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
-#ifdef linux
-#include <fam.h>
-#endif
 #include <ctype.h>
 #include <syslog.h>
 #include <assert.h>

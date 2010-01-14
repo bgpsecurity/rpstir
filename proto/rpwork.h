@@ -26,9 +26,9 @@
 #include "sqhl.h"
 #include "diru.h"
 #include "myssl.h"
-#include <fam.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include <roa.h>
 #include <cryptlib.h>
 #include <keyfile.h>
