@@ -631,8 +631,8 @@ int getuintscm(scmcon *conp, unsigned int *ival)
 	break;
       if ( !SQLOK(rc) )
 	continue;
-      if ( f1len == SQL_NO_DATA )
-	continue;
+      if ( f1len == SQL_NULL_DATA )
+	  break;
       fnd++;
       *ival = (unsigned int)f1;
     }
@@ -644,8 +644,8 @@ int getuintscm(scmcon *conp, unsigned int *ival)
 }
 
 /*
-  Get the maximum of the specified id field of the given table.
-*/
+  Get the maximum of the specified id field of the given table.  If
+  table is empty, then sets *ival to 0.  */
 
 int getmaxidscm(scm *scmp, scmcon *conp, char *field, scmtab *mtab,
 		unsigned int *ival)
@@ -662,7 +662,9 @@ int getmaxidscm(scm *scmp, scmcon *conp, char *field, scmtab *mtab,
     return(sta);
   *ival = 0;
   sta = getuintscm(conp, ival);
-  return(sta);
+  if (sta < 0)
+    *ival = 0; /* No rows (or NULL), set max to arbitrary value of 0. */
+  return 0;
 }
 
 /*
