@@ -241,6 +241,8 @@ static void *doNotifications() {
 			lastSerialNum = currSerialNum;
 		}
 	}
+
+	return NULL;
 }
 
 
