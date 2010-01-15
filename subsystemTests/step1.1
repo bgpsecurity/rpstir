@@ -6,3 +6,7 @@ source $THIS_SCRIPT_DIR/../envir.setup
 
 echo "Loading data"
 ../rsync_aur/rsync_aur -t $RPKI_PORT -f test1.1.log -w -e -i -d ../testcases
+
+check_errs $? "$0 rsync_aur failed"
+
+echo $0 PASS

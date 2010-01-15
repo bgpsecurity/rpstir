@@ -6,3 +6,6 @@ source $THIS_SCRIPT_DIR/../envir.setup
 
 echo "Making C2 expired"
 ./makeC2Expired
+check_errs $? "$0 makeC2Expired failed"
+
+echo $0 PASS

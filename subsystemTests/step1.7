@@ -4,5 +4,15 @@
 THIS_SCRIPT_DIR=$(dirname $(which $0))
 source $THIS_SCRIPT_DIR/../envir.setup
 
+TMPFILE=`mktemp`
+check_errs $? "$0 could not create temp file"
+
 echo "Expecting 11 roa filenames"
-../proto/query -s specs.1.3 -t roa -d filename
+../proto/query -s specs.1.3 -t roa -d filename | tee $TMPFILE
+
+NUMLINES=$(cat $TMPFILE | wc -l)
+rm $TMPFILE
+[[ $NUMLINES == "11" ]]
+check_errs $? "$0 incorrect output: $NUMLINES filenames (expected 11)"
+
+echo $0 PASS

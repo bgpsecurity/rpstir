@@ -6,3 +6,7 @@ source $THIS_SCRIPT_DIR/../envir.setup
 
 echo "Running the garbage collector"
 ../proto/garbage
+
+check_errs $? "$0 ../proto/garbage failed"
+
+echo $0 PASS
