@@ -4,7 +4,15 @@
 THIS_SCRIPT_DIR=$(dirname $(which $0))
 source $THIS_SCRIPT_DIR/../envir.setup
 
+# test functions
+source $THIS_SCRIPT_DIR/test.include
+
 echo "Expecting 3 roa filenames"
-../proto/query -s specs.2.6 -t roa -d filename
+CMDLINE="../proto/query -s specs.2.6 -t roa -d filename"
+check_num_output_lines "$CMDLINE" "query client failed" 3
+
 echo "Expecting 2 roa filenames"
-../proto/query -s specs.2.8 -t roa -d filename
+CMDLINE="../proto/query -s specs.2.8 -t roa -d filename"
+check_num_output_lines "$CMDLINE" "query client failed" 2
+
+echo $0 PASS

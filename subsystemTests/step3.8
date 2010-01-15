@@ -4,7 +4,14 @@
 THIS_SCRIPT_DIR=$(dirname $(which $0))
 source $THIS_SCRIPT_DIR/../envir.setup
 
+# test functions
+source $THIS_SCRIPT_DIR/test.include
+
 echo "Loading data and running garbage collector"
 ../rsync_aur/rsync_aur -t $RPKI_PORT -f test3.7.log -w -e -i -d ../testcases
+check_errs $? "$0 rsync_aur failed"
 sleep 2
 ../proto/garbage
+check_errs $? "$0 ../proto/garbage failed"
+
+echo $0 PASS

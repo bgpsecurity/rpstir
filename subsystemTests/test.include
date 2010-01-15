@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Shell function for checking return codes for error (swiped from
+# http://steve-parker.org/sh/exitcodes.shtml)
+#
+# Usage:
+# grep "^${1}:" /etc/passwd > /dev/null 2>&1
+# check_errs $? "User ${1} not found in /etc/passwd"
+# USERNAME=`grep "^${1}:" /etc/passwd|cut -d":" -f1`
+# check_errs $? "Cut returned an error"
+# echo "USERNAME: $USERNAME"
+# check_errs $? "echo returned an error - very strange!"
+
+check_errs()
+{
+  # Function. Parameter 1 is the return code
+  # Para. 2 is text to display on failure.
+  if [ "${1}" -ne "0" ]; then
+    echo "ERROR # ${1} : ${2}"
+    # as a bonus, make our script exit with the right error code.
+    exit ${1}
+  fi
+}
+
+###########################################################################
+
+# Shell function for checking if the number of lines of output matches
+# the expected number.
+
+check_num_output_lines()
+{
+    # Parameter 1 is the command line.
+    # Parameter 2 is the error message if command returns nonzero.
+    # Parameter 3 is the number of expected output lines.
+    # If anything fails, exit the script with the right error code.
+
+    TMPFILE=`mktemp`
+    check_errs $? "$0 could not create temp file"
+
+    CMDLINE=${1}		# re-wordsplit on whitespace
+    $CMDLINE | tee $TMPFILE
+    check_errs $? "$0 ${2}"
+
+    NUMLINES=$(cat $TMPFILE | wc -l)
+    rm $TMPFILE
+    [[ $NUMLINES == "${3}" ]]
+    check_errs $? "$0 incorrect output: $NUMLINES lines (expected ${3})"
+
+    return 0
+}

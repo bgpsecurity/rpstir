@@ -4,5 +4,11 @@
 THIS_SCRIPT_DIR=$(dirname $(which $0))
 source $THIS_SCRIPT_DIR/../envir.setup
 
+# test functions
+source $THIS_SCRIPT_DIR/test.include
+
 echo "Making M111 expired"
 ./makeM111stale
+check_errs $? "$0 makeM111stale failed"
+
+echo $0 PASS
