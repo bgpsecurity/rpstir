@@ -2009,7 +2009,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   scmkva   aone;
   scmkv    cols[12];
   int   idx = 0;
-  char  did[24], mid[24];
+  char  did[24], mid[24], lenbuf[20];
   cols[idx].column = "filename";
   cols[idx++].value = outfile;
   (void)snprintf(did, sizeof(did), "%u", id);
@@ -2031,6 +2031,9 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   cols[idx++].value = mid;
   cols[idx].column = "files";
   cols[idx++].value = manFiles;
+  cols[idx].column = "fileslen";
+  (void)snprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
+  cols[idx++].value = lenbuf;
   aone.vec = &cols[0];
   aone.ntot = 12;
   aone.nused = idx;

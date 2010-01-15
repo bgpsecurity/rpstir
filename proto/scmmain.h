@@ -165,6 +165,7 @@ static scmtab scmtabbuilder[] =
       "next_upd DATETIME NOT NULL,"
       "cert_id  INT UNSIGNED NOT NULL,"
       "files    MEDIUMBLOB,"
+      "fileslen INT UNSIGNED DEFAULT 0,"
       "flags    INT UNSIGNED DEFAULT 0,"
       "local_id INT UNSIGNED NOT NULL UNIQUE,"
       "         PRIMARY KEY (filename, dir_id),"

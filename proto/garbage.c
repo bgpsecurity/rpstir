@@ -127,9 +127,10 @@ static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
 static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
 {
   numLine = numLine; conp = conp;
-  int len = strlen((char *)s->vec[0].valptr) + 1;
-  staleManFiles[numStaleManFiles] = malloc(len);
+  int len = *((unsigned int *)s->vec[1].valptr);
+  staleManFiles[numStaleManFiles] = malloc(len + 1);
   memcpy(staleManFiles[numStaleManFiles], (char *)s->vec[0].valptr, len);
+  staleManFiles[numStaleManFiles][len] = 0;
   numStaleManFiles++;
   return 0;
 }
@@ -219,6 +220,7 @@ int main(int argc, char **argv)
   srch.nused = 0;
   srch.vald = 0;
   addcolsrchscm (&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
+  addcolsrchscm (&srch, "fileslen", SQL_C_ULONG, sizeof (unsigned int));
   numStaleManFiles = 0;
   status = searchscm (connect, manifestTable, &srch, NULL, handleStaleMan,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
