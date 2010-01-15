@@ -33,6 +33,13 @@ cd $THIS_SCRIPT_DIR
 ./initDB
 check_errs $? "initDB failed!"
 
+# check for existing loader and fail if so
+nc -z localhost $RPKI_PORT
+if [ $? -eq "0" ]; then
+    echo "ERROR: port $RPKI_PORT is already in use.  Aborting subsystem test."
+    exit 3
+fi
+
 # start loader
 ../proto/rcli -w $RPKI_PORT -p &
 LOADER_PID=$!
