@@ -10,7 +10,9 @@ source $THIS_SCRIPT_DIR/test.include
 echo "Loading data"
 ../rsync_aur/rsync_aur -t $RPKI_PORT -f test3.1a.log -w -e -i -d ../testcases
 check_errs $? "$0 rsync_aur on test3.1a.log failed"
+sleep 2
 ../rsync_aur/rsync_aur -t $RPKI_PORT -f test3.1b.log -w -e -i -d ../testcases
 check_errs $? "$0 rsync_aur on test3.1b.log failed"
+sleep 2
 
 echo $0 PASS
