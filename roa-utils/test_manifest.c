@@ -71,7 +71,8 @@ int manifestValidate2(struct ROA *rp, char *dirp, struct badfile ***badfilesppp)
     strcat(path, fname);
     tmp = 0;
     if ((ffd = open(path, O_RDONLY)) < 0) tmp = ERR_SCM_COFILE;
-    else tmp = check_fileAndHash(fahp, ffd);
+    else tmp = check_fileAndHash(fahp, ffd, NULL, 0, 0);
+    (void)close(ffd);
     if (tmp < 0)  // add the file to the list
       {
       if (numbadfiles == 0)
