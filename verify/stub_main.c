@@ -13,7 +13,7 @@ main(int argc, char *argv[])
   ret = 0;
 
   if (argc != 2)
-    usage(argv[0]);
+    myusage(argv[0]);
 
   cert_fp = fopen(argv[1], "r");
   if (cert_fp < 0) {
