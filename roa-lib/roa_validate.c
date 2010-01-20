@@ -29,35 +29,35 @@
   Any and all syntactic validation against existing structures is assumed
   to have been performed at the translation step (see roa_serialize.c).
 */
+
 #define MINMAXBUFSIZE 20
 
 static int CryptInitState;
 
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 
 		    CRYPT_ALGO_TYPE alg)
-  { // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
+{ // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
   CRYPT_CONTEXT hashContext;
   uchar hash[40];
-  int ansr = -1;
+  int   ansr = -1;
 
-  if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
-      return ERR_SCM_BADALG;
-
-  memset(hash, 0, 40);
-  if (!CryptInitState)
+  if ( alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2 )
+    return ERR_SCM_BADALG;
+  memset(hash, 0, sizeof(hash));
+  if ( !CryptInitState )
     {
-    cryptInit();
-    CryptInitState = 1;
+      cryptInit();
+      CryptInitState = 1;
     }
   cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
   cryptDestroyContext(hashContext);
-//  cryptEnd();
+  //  cryptEnd();
   memcpy(outbufp, hash, ansr);
   return ansr;
-  }
+}
 
 int check_sig(struct ROA *rp, struct Certificate *certp)
   {
@@ -227,30 +227,60 @@ static int check_cert(struct Certificate *certp, int isEE)
   return 0;
   }
 
-int check_fileAndHash(struct FileAndHash *fahp, int ffd)
-  {
+/*
+  If the hash is given as "inhash", check to see that the hash inside the
+  FileAndHash struct is the same. If the hash is not given in "inhash" then
+  compute the hash, check it against the hash in FileAndHash, and then store
+  the hash (if the comparison succeeded) in "inhash". "inhashlen" is the number
+  of bytes actually used in "inhash" (which is a binary array, not a string),
+  and "inhashtotlen" is the total space available in that array.
+
+  On success this function returns the length, in bytes, of the hash. On
+  failure it returns a negative error code.
+*/
+
+int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
+		      int inhashlen, int inhashtotlen)
+{
   uchar *contentsp;
-  int err = 0,
-      hash_lth, bit_lth, name_lth = lseek(ffd, 0, SEEK_END);
+  int err = 0;
+  int hash_lth;
+  int bit_lth;
+  int name_lth = lseek(ffd, 0, SEEK_END);
 
   lseek(ffd, 0, SEEK_SET);
   contentsp = (uchar *)calloc(1, name_lth + 2);
-  if (read(ffd, contentsp, name_lth + 2) != name_lth) err = ERR_SCM_BADFILE;
-  else if ((hash_lth = gen_hash(contentsp, name_lth, contentsp, CRYPT_ALGO_SHA2)) < 0)
-    err = ERR_SCM_BADHASH;
+  if ( read(ffd, contentsp, name_lth + 2) != name_lth )
+    {
+      free(contentsp);
+      return(ERR_SCM_BADFILE);
+    }
+  if ( inhash != NULL && inhashlen > 0 && inhashlen <= (name_lth+2) )
+    {
+      memcpy(contentsp, inhash, inhashlen);
+      hash_lth = inhashlen;
+    }
   else
     {
-    bit_lth = vsize_casn(&fahp->hash);
-    uchar *hashp = (uchar *)calloc(1, bit_lth);
-    read_casn(&fahp->hash, hashp);
-    if (hash_lth != bit_lth - 1 || memcmp(&hashp[1], contentsp, hash_lth))
-      err = ERR_SCM_BADHASH;
-    free(hashp);
-    close(ffd);
+      hash_lth = gen_hash(contentsp, name_lth, contentsp, CRYPT_ALGO_SHA2);
+      if ( hash_lth < 0 )
+	{
+	  free(contentsp);
+	  return(ERR_SCM_BADHASH);
+	}
     }
+  bit_lth = vsize_casn(&fahp->hash);
+  uchar *hashp = (uchar *)calloc(1, bit_lth);
+  read_casn(&fahp->hash, hashp);
+  if ( hash_lth != (bit_lth - 1) ||
+       memcmp(&hashp[1], contentsp, hash_lth) != 0 )
+    err = ERR_SCM_BADHASH;
+  free(hashp);
+  if ( inhash != NULL && inhashtotlen >= hash_lth && inhashlen == 0 && err == 0 )
+    memcpy(inhash, contentsp, hash_lth);
   free(contentsp);
-  return err;
-  }
+  return err == 0 ? hash_lth : err;
+}
 
 static struct Attribute *find_attr(struct SignedAttributes *attrsp, char *oidp)
   {
@@ -578,6 +608,7 @@ int manifestValidate2(struct ROA *rp, char *dirp, struct badfile ***badfilesppp)
   return err;
   }
 */
+
 int rtaValidate(struct ROA *rtap)
   {
   int iRes = cmsValidate(rtap);

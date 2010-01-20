@@ -248,7 +248,8 @@ int roaValidate2(struct ROA *r);
       }
 */
 
-int check_fileAndHash(struct FileAndHash *fahp, int fd);
+int check_fileAndHash(struct FileAndHash *fahp, int fd, uchar *inhash,
+		      int inhashlen, int inhashtotlen);
 
 int manifestValidate2(struct ROA *r, char *dir, struct badfile ***badfilesppp);
 
