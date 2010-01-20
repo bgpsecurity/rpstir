@@ -26,6 +26,6 @@
   $Id$
 */
 
-void usage(const char *);
+void myusage(const char *);
 
 #endif

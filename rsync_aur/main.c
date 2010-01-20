@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
           else if (*cc == 'u') { uflag = 1; portno = atoi(cx); }
           for (cc = cx; *cc > ' '; cc++);
           }
-        else usage(argv[0]);
+        else myusage(argv[0]);
         cc++;
         }
       while (*cc == 0 && cc < e) cc++;
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
   	break;
         case 'h': /* help */
         default:
-          usage(argv[0]);
+          myusage(argv[0]);
           break;
         }
       }
