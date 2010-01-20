@@ -1053,78 +1053,140 @@ static scmsrcha *updateManSrch = NULL;
 static scmsrcha *updateManSrch2 = NULL;
 static unsigned int updateManLid;
 static char updateManPath[PATH_MAX];
+static char updateManHash[HASHSIZE];
 
 static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx);
 
-static int handleUpdateMan (scmcon *conp, scmsrcha *s, int idx) {
+static int handleUpdateMan(scmcon *conp, scmsrcha *s, int idx)
+{
   updateManLid = *((unsigned int *)updateManSrch->vec[1].valptr);
   snprintf(updateManPath, PATH_MAX, "%s/",
 	   (char *)updateManSrch->vec[0].valptr);
+  snprintf(updateManHash, HASHSIZE, "%s",
+	   (char *)updateManSrch->vec[2].valptr);
   return 0;
 }
 
 static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 {
-  uchar file[200];
-  struct FileAndHash *fahp = NULL;
+  struct  FileAndHash *fahp = NULL;
+  uchar   file[200];
+  uchar   bytehash[HASHSIZE/2];
+  uchar  *bhash;
   scmtab *tabp;
-  char flagStmt[200];
-  int sta, fd, len;
+  char flagStmt[200+HASHSIZE];
+  int  bhashlen;
+  int  gothash;
+  int  sta;
+  int  fd;
+  int  len;
 
   // set up part of query
-  if (updateManSrch == NULL) {
-    updateManSrch = newsrchscm(NULL, 2, 0, 1);
-    ADDCOL(updateManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
-    ADDCOL(updateManSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
-	   sta, sta);
-  }
-  if (updateManSrch2 == NULL) {
-    updateManSrch2 = newsrchscm(NULL, 3, 0, 1);
-    ADDCOL(updateManSrch2, "local_id", SQL_C_ULONG, sizeof(unsigned int),
-	   sta, sta);
-    ADDCOL(updateManSrch2, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
-    ADDCOL(updateManSrch2, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
-  }
+  if ( updateManSrch == NULL )
+    {
+      updateManSrch = newsrchscm(NULL, 3, 0, 1);
+      ADDCOL(updateManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+      ADDCOL(updateManSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	     sta, sta);
+      ADDCOL(updateManSrch, "hash", SQL_C_CHAR, HASHSIZE, sta, sta);
+    }
+  if ( updateManSrch2 == NULL )
+    {
+      updateManSrch2 = newsrchscm(NULL, 3, 0, 1);
+      ADDCOL(updateManSrch2, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+	     sta, sta);
+      ADDCOL(updateManSrch2, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
+      ADDCOL(updateManSrch2, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
+    }
  // loop over files and hashes
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
-      fahp = (struct FileAndHash *)next_of(&fahp->self)) {
-    int flth = read_casn(&fahp->file, file);
-    file[flth] = 0;
-    if (strstr((char *)file, ".cer")) tabp = theCertTable;
-    else if (strstr((char *)file, ".crl")) tabp = theCRLTable;
-    else if (strstr((char *)file, ".roa")) tabp = theROATable;
-    snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"", file);
-    addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
-    updateManLid = 0;
-    searchscm(conp, tabp, updateManSrch, NULL, handleUpdateMan,
-	      SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
-    if (! updateManLid) continue;
-    len = strlen(updateManPath);
-    snprintf(updateManPath + len, PATH_MAX - len, "%s", file);
-    fd = open(updateManPath, O_RDONLY);
-    if (fd < 0) continue;
-    sta = check_fileAndHash(fahp, fd);
-    if (sta == 0) {
-      (void)fprintf(stderr, "Hash ok on %s\n", file);
-      // if hash okay, set ONMAN flag
-      snprintf (flagStmt, 200,
-		"update %s set flags=flags+%d where local_id=%d;",
-		tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
-      statementscm (conp, flagStmt);
-    } else {
-      (void)fprintf(stderr, "Hash not ok on %s\n", file);
+      fahp = (struct FileAndHash *)next_of(&fahp->self))
+    {
+      int flth = read_casn(&fahp->file, file);
+      file[flth] = 0;
+      if ( strstr((char *)file, ".cer") )
+	tabp = theCertTable;
+      else if ( strstr((char *)file, ".crl") )
+	tabp = theCRLTable;
+      else if ( strstr((char *)file, ".roa") )
+	tabp = theROATable;
+      else if ( strstr((char *)file, ".cta") )
+	tabp = theCTATable;
+      snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"", file);
+      addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
+      updateManLid = 0;
+      memset(updateManHash, 0, sizeof(updateManHash));
+      searchscm(conp, tabp, updateManSrch, NULL, handleUpdateMan,
+		SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+      if (! updateManLid)
+	continue;
+      len = strlen(updateManPath);
+      snprintf(updateManPath + len, PATH_MAX - len, "%s", file);
+      fd = open(updateManPath, O_RDONLY);
+      if ( fd < 0 )
+	continue;
+/*
+  Note that the hash is stored in the db as a string, but the function
+  check_fileAndHash wants it as a byte array.
+*/
+      if ( updateManHash[0] != 0 )
+	{
+	  gothash = 1;
+	  bhashlen = strlen(updateManHash);
+	  bhash = unhexify(bhashlen, updateManHash);
+	  if ( bhash == NULL )
+	    sta = ERR_SCM_BADHASH;
+	  else
+	    {
+	      bhashlen /= 2;
+	      memcpy(bytehash, bhash, bhashlen);
+	      free((void *)bhash);
+	      sta = check_fileAndHash(fahp, fd, bytehash, bhashlen, HASHSIZE/2);
+	    }
+	}
+      else
+	{
+	  gothash = 0;
+	  memset(bytehash, 0, sizeof(bytehash));
+	  sta = check_fileAndHash(fahp, fd, bytehash, 0, HASHSIZE/2);
+	}
+      (void)close(fd);
+      if ( sta >= 0 )
+	{
+      // if hash okay, set ONMAN flag and optionally the hash if we just computed it
+	  if ( gothash == 1 )
+	    snprintf(flagStmt, sizeof(flagStmt),
+		     "update %s set flags=flags+%d where local_id=%d;",
+		     tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
+	  else
+	    {
+	      char *h = hexify(sta, bytehash, 0);
+//            (void)fprintf(stderr, "Updating hash of %s to %s\n", file, h);
+	      snprintf(flagStmt, sizeof(flagStmt),
+		       "update %s set flags=flags+%d, hash=\"%s\" where local_id=%d;",
+		       tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
+	      free((void *)h);
+	    }
+	  statementscm(conp, flagStmt);
+	}
+      else
+	{
+//	  (void)fprintf(stderr, "Hash not ok on file %s\n", file);
       // if hash not okay, delete object, and if cert, invalidate children
-      if (tabp == theCertTable) {
-	snprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
-		 "local_id=\"%d\"", updateManLid);
-	searchscm(conp, tabp, updateManSrch2, NULL, revoke_cert_and_children,
-		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
-      } else {
-	deletebylid(conp, tabp, updateManLid);
-      }
+	  if ( tabp == theCertTable )
+	    {
+	      snprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
+		       "local_id=\"%d\"", updateManLid);
+	      searchscm(conp, tabp, updateManSrch2, NULL, revoke_cert_and_children,
+			SCM_SRCH_DOVALUE_ALWAYS, NULL);
+	    }
+	  else
+	    {
+	      deletebylid(conp, tabp, updateManLid);
+	    }
+	}
     }
-  }
   return 0;
 }
 
@@ -1529,11 +1591,12 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   sta = 0;
   if (fahp && (fd = open(fullpath, O_RDONLY)) >= 0) {
     *flags |= SCM_FLAG_ONMAN;
-    sta = check_fileAndHash(fahp, fd);
+    sta = check_fileAndHash(fahp, fd, NULL, 0, 0);
+    (void)close(fd);
   }
   delete_casn(&ccasn);
   delete_casn(&roa.self);
-  return sta;
+  return sta >= 0 ? 0 : sta;
 }
 
 static struct Extension *find_extension(struct Certificate *certp, char *idp)
