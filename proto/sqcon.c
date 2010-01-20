@@ -1321,7 +1321,7 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 }
 
 /*
-  Convert a binary array into a hex string.
+  Convert a binary array into a hex string. Allocates memory.
 */
 
 char *hexify(int bytelen, void *ptr, int useox)
@@ -1356,6 +1356,43 @@ char *hexify(int bytelen, void *ptr, int useox)
     }
   *outptr = 0;
   return(aptr);
+}
+
+/*
+  Convert a hex string into a byte array. Allocates memory.
+  The string must not begin with 0x.
+*/
+
+void *unhexify(int strnglen, char *strng)
+{
+  unsigned char *oot;
+  unsigned int   x;
+  char three[3];
+  int  outlen;
+  int  i;
+
+  if ( strng == NULL )
+    return NULL;
+  if ( strnglen <= 0 || (strnglen%2) == 1 )
+    return NULL;
+  outlen = strnglen/2;
+  oot = (unsigned char *)calloc(outlen, sizeof(unsigned char));
+  if ( oot == NULL )
+    return NULL;
+  three[2] = 0;
+  for(i=0;i<outlen;i++)
+    {
+      three[0] = strng[2*i];
+      three[1] = strng[1+(2*i)];
+      x = 0;
+      if ( sscanf(three, "%x", &x) != 1 || x >= 256 )
+	{
+	  free((void *)oot);
+	  return NULL;
+	}
+      oot[i] = (unsigned char)x;
+    }
+  return oot;
 }
 
 /*

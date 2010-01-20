@@ -122,6 +122,7 @@ extern scmsrcha *newsrchscm(char *name, int leen, int cleenn, int useWhereStr);
 extern void  addFlagTest(char *whereStr, int flagVal, int isSet, int needAnd);
 extern void  disconnectscm(scmcon *conp);
 extern void  freesrchscm(scmsrcha *srch);
+extern void *unhexify(int strnglen, char *strng);
 extern char *geterrorscm(scmcon *conp);
 extern char *gettablescm(scmcon *conp);
 extern char *hexify(int bytelen, void *bytes, int useox);

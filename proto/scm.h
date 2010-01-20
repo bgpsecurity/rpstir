@@ -25,10 +25,12 @@
 /* some constants for sizes of db tables */
 #define DNAMESIZE 4096
 #define FNAMESIZE 256
-#define SUBJSIZE 512
-#define SKISIZE 128
-#define SIASIZE 1024
-#define SIGSIZE 520
+#define SUBJSIZE  512
+#define SKISIZE   128
+#define SIASIZE   1024
+#define SIGSIZE   520
+#define HASHSIZE  256
+
 #define MANFILES_SIZE 400000
 
 /*

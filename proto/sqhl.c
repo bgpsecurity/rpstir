@@ -1106,12 +1106,14 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
     if (fd < 0) continue;
     sta = check_fileAndHash(fahp, fd);
     if (sta == 0) {
+      (void)fprintf(stderr, "Hash ok on %s\n", file);
       // if hash okay, set ONMAN flag
       snprintf (flagStmt, 200,
 		"update %s set flags=flags+%d where local_id=%d;",
 		tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
       statementscm (conp, flagStmt);
     } else {
+      (void)fprintf(stderr, "Hash not ok on %s\n", file);
       // if hash not okay, delete object, and if cert, invalidate children
       if (tabp == theCertTable) {
 	snprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
