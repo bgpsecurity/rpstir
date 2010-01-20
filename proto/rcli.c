@@ -968,7 +968,7 @@ int main(int argc, char **argv)
 /*
   These privileged operations will need a password.
 */
-     password = getenv ("RPKI_PASSWORD");  /* can be defined by environment variable */
+     password = getenv ("RPKI_ROOTPASSWORD");  /* can be defined by environment variable */
      if (password == NULL)  /* env variable does not specify password */
        {
 	  /* note: getpass manpage states that "this function is obsolete, do not use"
