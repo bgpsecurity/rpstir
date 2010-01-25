@@ -60,10 +60,10 @@ cert_check_main.o :	cert_check_main.c
 
 ### SYSTYPES
 generic:
-	make -e $(ALL) $(MFLAGS)
+	$(MAKE) -e $(ALL) $(MFLAGS)
 
 cert_check_test:
-	make -e $(CERT_CHECK) $(MFLAGS)
+	$(MAKE) -e $(CERT_CHECK) $(MFLAGS)
 
 #LIBS=-lgen
 

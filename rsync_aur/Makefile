@@ -31,7 +31,8 @@ CFLAGS=-I../proto -I$(CLINCLUDES) -I$(SSLINCLUDES) \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 XFLAGS =        # xtra cflags, set by systype targets
 IFLAGS =-I$(SSLINCLUDES) -I../cg/casn -I../cg/asn -I../roa-lib -I../proto
-XLIBS = ../roa-lib/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a  $(LIBCL) $(LIBDL) $(LIBPTHREAD)
+XLIBS = ../roa-lib/libroa.a ../cg/asn/libasn.a  ../cg/casn/libcasn.a
+XLIBS_SYS = $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
 CC += $(CFLAGS)
@@ -52,7 +53,7 @@ bogus:
 
 rsync_aur:	$(ALL_OBJS) $(XLIBS)
 	$(CC) $(DFLAGS) $(XFLAGS) $(STATIC) -o rsync_aur \
-	$(ALL_OBJS) $(IFLAGS) $(XLIBS)
+	$(ALL_OBJS) $(IFLAGS) $(XLIBS) $(XLIBS_SYS)
 
 main.o :	main.c main.h 
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c main.c
@@ -73,7 +74,7 @@ main.h:	usage.h socket_stuff.h parse.h sig_handler.h
 
 ### SYSTYPES
 generic:
-	make -e $(ALL) $(MFLAGS)
+	$(MAKE) -e $(ALL) $(MFLAGS)
 
 #LIBS=-lgen
 

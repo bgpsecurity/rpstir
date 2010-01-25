@@ -24,7 +24,7 @@ DIRS=casn asn_gen asn tools
 
 all:	
 	for DIR in $(DIRS); do \
-		(cd $$DIR && make all \
+		(cd $$DIR && $(MAKE) all \
 			LIBCL="$(LIBCL)" \
 			LIBCRYPTO="$(LIBCRYPTO)" \
 			LIBDL="$(LIBDL)" \
@@ -39,5 +39,5 @@ all:
 
 clean:
 	for DIR in $(DIRS); do \
-		(cd $$DIR && make clean );\
+		(cd $$DIR && $(MAKE) clean );\
 	done
