@@ -540,9 +540,9 @@ int main(int argc, char **argv)
     char *a = argv[1];        // get the issuer file
     for (a++; *a >= '0' && *a <= '9'; a++);
     if (!*a) a--;   // if not EE, cut off lest digit for issuer
-    issuerfile = (char *)calloc(1, strlen(argv[1] + 8));
+    issuerfile = (char *)calloc(1, strlen(argv[1]) + 8);
     strcat(strncpy(issuerfile, argv[1], a - argv[1]), ".cer");
-    issuerkeyfile = (char *)calloc(1, strlen(argv[1] + 8));
+    issuerkeyfile = (char *)calloc(1, strlen(argv[1]) + 8);
     strcat(strncpy(issuerkeyfile, argv[1], a - argv[1]), ".p15");
     if (get_casn_file(&issuer.self, issuerfile, 0) < 0)
       fatal(1, issuerfile);
