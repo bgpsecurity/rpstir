@@ -107,7 +107,7 @@ static void make_fulldir(char *fulldir, const char *locpath)
   if (strlen(locpath) > 6) 
     {
     *f++ = 'C';
-    *l++; 
+    l++; 
     *f++ = *l++;  // 1st digit
     *f++ = '/';
     if (l[1] != '.')  // 2nd digit
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
   char fulldir[40];
   make_fulldir(fulldir, manifestfile);
   make_fullpath(fullpath, manifestfile);
-  fprintf(stdout, "Full path to manifest: %s\n", fullpath);
+  fprintf(stdout, "Path: %s\n", fullpath);
   mkdir_recursive(fulldir);
 
   if (put_casn_file(&roa.self, manifestfile, 0) < 0) fatal(6, manifestfile);

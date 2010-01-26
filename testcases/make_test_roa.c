@@ -137,7 +137,7 @@ static void make_fulldir(char *fulldir, const char *locpath)
   if (strlen(locpath) > 6) 
     {
     *f++ = 'C';
-    *l++; 
+    l++; 
     *f++ = *l++;  // 1st digit
     *f++ = '/';
     if (l[1] != '.')  // 2nd digit
@@ -360,7 +360,7 @@ int main (int argc, char **argv)
     char fullpath[40];
     make_fulldir(fulldir, roafile);
     make_fullpath(fullpath, roafile);
-    printf("Full path to roa: %s\n", fullpath);
+    printf("Path: %s\n", fullpath);
     mkdir_recursive(fulldir);
     if (put_casn_file(&roa.self, roafile, 0) < 0) fatal(4, roafile);
     if (put_casn_file(&roa.self, fullpath, 0) < 0) fatal(4, fullpath);
