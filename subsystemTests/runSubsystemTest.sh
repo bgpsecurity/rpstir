@@ -54,9 +54,9 @@ N=1
 while [ $N -le $NUM_TOTAL ]; do
     ./step${TESTID}.${N}
     if [ "$?" -eq "0" ]; then
-	let "NUM_PASSED += 1"
+	NUM_PASSED=$(( $NUM_PASSED + 1 ))
     fi
-    let "N += 1"
+    N=$(( $N + 1 ))
 done
 
 # cleanup
