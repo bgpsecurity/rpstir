@@ -22,6 +22,7 @@
 #ifndef _SQHL_H_
 #define _SQHL_H_
 
+#include <stdio.h>
 /*
   Object types
 */
@@ -119,7 +120,8 @@ extern int   addStateToFlags(unsigned int *flags, int isValid, char *filename,
 extern int   set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags);
 extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp, 
     scmcon *conp);
-
+extern int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile,
+    FILE *logfile);
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
 // return code is really an X509 *
