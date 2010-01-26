@@ -19,7 +19,7 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $(which $0))
-source $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../envir.setup
 
 echo About to clear database "${RPKI_DB}" ...
 $RPKI_ROOT/proto/rcli -x -t $RPKI_ROOT/REPOSITORY -y

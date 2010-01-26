@@ -22,10 +22,10 @@ NUM_STEPS=$2
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $(which $0))
-source $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../envir.setup
 
 # test functions
-source $THIS_SCRIPT_DIR/test.include
+. $THIS_SCRIPT_DIR/test.include
 
 cd $THIS_SCRIPT_DIR
 

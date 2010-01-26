@@ -20,7 +20,7 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $(which $0))
-source $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../envir.setup
 
 
 $RPKI_ROOT/server/doUpdate $*

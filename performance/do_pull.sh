@@ -2,7 +2,7 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $(which $0))
-source $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../envir.setup
 
 echo "delete from apki_cert;" | $RPKI_MYSQL_CMD
 echo "delete from apki_roa;" | $RPKI_MYSQL_CMD

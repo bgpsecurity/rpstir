@@ -21,7 +21,7 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $(which $0))
-source $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../envir.setup
 
 unset arg
 if [ "$2x" = "noexecx" ] || [ "$2X" = "NOEXECX" ]; then arg="-n"; fi

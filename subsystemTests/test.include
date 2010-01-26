@@ -34,7 +34,7 @@ check_num_output_lines()
     # Parameter 3 is the number of expected output lines.
     # If anything fails, exit the script with the right error code.
 
-    TMPFILE=`mktemp`
+    TMPFILE=`mktemp /tmp/tmp.XXXXXXXXXX`
     check_errs $? "$0 could not create temp file"
 
     CMDLINE=${1}		# re-wordsplit on whitespace
@@ -43,7 +43,7 @@ check_num_output_lines()
 
     NUMLINES=$(cat $TMPFILE | wc -l)
     rm $TMPFILE
-    [[ $NUMLINES == "${3}" ]]
+    [ $NUMLINES -eq "${3}" ]
     check_errs $? "$0 incorrect output: $NUMLINES lines (expected ${3})"
 
     return 0
