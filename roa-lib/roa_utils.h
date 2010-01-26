@@ -213,12 +213,20 @@ int roaValidate(struct ROA *r);
 int manifestValidate(struct ROA *r);
 
 /*
-  This function performs all validations steps on a xxximanifestROA that do not
+  This function performs all validations steps on a manifest that do not
   require database access.  On success it returns 0; on failure, it
   returns a negative error code.
 */
 
-int roaValidate2(struct ROA *r);
+int rtaValidate(struct ROA *r);
+
+/*
+  This function performs all validations steps on a RTA that do not
+  require database access.  On success it returns 0; on failure, it
+  returns a negative error code.
+*/
+
+extern int roaValidate2(struct ROA *r);
 
 /*
   This function performs all validations steps on a ROA that require
@@ -248,8 +256,7 @@ int roaValidate2(struct ROA *r);
       }
 */
 
-int check_fileAndHash(struct FileAndHash *fahp, int fd, uchar *inhash,
-		      int inhashlen, int inhashtotlen);
+int check_fileAndHash(struct FileAndHash *fahp, int fd);
 
 int manifestValidate2(struct ROA *r, char *dir, struct badfile ***badfilesppp);
 
