@@ -350,10 +350,13 @@ static int test_maxLength(struct ROAIPAddress *roaAddrp)
   int lth = vsize_casn(&roaAddrp->address);
   uchar *addr = (uchar *)calloc(1, lth);
   read_casn(&roaAddrp->address, addr);
+  /* Compute the length of the IP prefix, noting that the ASN.1
+     encoding of a bit string uses the first byte to specify the
+     number of unused bits at the end. */
+  int addrLength = ((lth - 1) * 8) - addr[0];
   free(addr);
-  lth = ((lth - 1) * 8) + ((8 - addr[0]) & 7);
   read_casn_num(&roaAddrp->maxLength, &maxLength);
-  if (lth > maxLength) return ERR_SCM_INVALIPL;
+  if (addrLength > maxLength) return ERR_SCM_INVALIPL;
   return 0;
   }
 
