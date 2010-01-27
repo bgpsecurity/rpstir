@@ -75,7 +75,7 @@ typedef struct _cert_fields
 
 typedef char *(*cf_get)(X509 *x, int *stap, int *x509stap);
 
-typedef void (*cfx_get)(X509V3_EXT_METHOD *meth, void *exts,
+typedef void (*cfx_get)(const X509V3_EXT_METHOD *meth, void *exts,
 			cert_fields *cf, int *stap, int *x509stap);
 
 /*
@@ -155,7 +155,7 @@ typedef struct _crl_fields
 
 typedef char *(*crf_get)(X509_CRL *x, int *stap, int *crlstap);
 
-typedef void (*crfx_get)(X509V3_EXT_METHOD *meth, void *exts,
+typedef void (*crfx_get)(const X509V3_EXT_METHOD *meth, void *exts,
 			 crl_fields *cf, int *stap, int *crlstap);
 
 /*

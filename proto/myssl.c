@@ -492,7 +492,7 @@ static char *cf_get_sig(X509 *x, int *stap, int *x509stap)
   return(dptr);
 }
 
-static void cf_get_ski(X509V3_EXT_METHOD *meth, void *exts,
+static void cf_get_ski(const X509V3_EXT_METHOD *meth, void *exts,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
   char *ptr;
@@ -526,7 +526,7 @@ static void cf_get_ski(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CF_FIELD_SKI] = dptr;
 }
 
-static void cf_get_aki(X509V3_EXT_METHOD *meth, void *exts,
+static void cf_get_aki(const X509V3_EXT_METHOD *meth, void *exts,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
   AUTHORITY_KEYID *aki;
@@ -562,7 +562,7 @@ static void cf_get_aki(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CF_FIELD_AKI] = dptr;
 }
 
-static void cf_get_sia(X509V3_EXT_METHOD *meth, void *exts,
+static void cf_get_sia(const X509V3_EXT_METHOD *meth, void *exts,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
   AUTHORITY_INFO_ACCESS *aia;
@@ -592,7 +592,7 @@ static void cf_get_sia(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CF_FIELD_SIA] = ptr;
 }
 
-static void cf_get_aia(X509V3_EXT_METHOD *meth, void *exts,
+static void cf_get_aia(const X509V3_EXT_METHOD *meth, void *exts,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
   AUTHORITY_INFO_ACCESS *aia;
@@ -622,7 +622,7 @@ static void cf_get_aia(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CF_FIELD_AIA] = ptr;
 }
 
-static void cf_get_crldp(X509V3_EXT_METHOD *meth, void *exts,
+static void cf_get_crldp(const X509V3_EXT_METHOD *meth, void *exts,
 			 cert_fields *cf, int *stap, int *x509stap)
 {
   STACK_OF(DIST_POINT) *crld;
@@ -662,7 +662,7 @@ static void cf_get_crldp(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CF_FIELD_CRLDP] = ptr;
 }
 
-static void cf_get_flags(X509V3_EXT_METHOD *meth, void *exts,
+static void cf_get_flags(const X509V3_EXT_METHOD *meth, void *exts,
 			 cert_fields *cf, int *stap, int *x509stap)
 {
   BASIC_CONSTRAINTS *bk;
@@ -688,7 +688,7 @@ static void cf_get_flags(X509V3_EXT_METHOD *meth, void *exts,
   the corresponding cf fields.
 */
 
-static void cf_get_ipb(X509V3_EXT_METHOD *meth, void *ex,
+static void cf_get_ipb(const X509V3_EXT_METHOD *meth, void *ex,
 		       cert_fields *cf, int *stap, int *x509stap)
 {
   X509_EXTENSION *exx;
@@ -781,7 +781,7 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 {
   const unsigned char *udat;
   cfx_validator       *cfx;
-  X509V3_EXT_METHOD   *meth;
+  const X509V3_EXT_METHOD   *meth;
   X509_EXTENSION      *ex;
   X509_CINF   *ci;
   cert_fields *cf;
@@ -1083,7 +1083,7 @@ static crf_validator crvalidators[] =
   { NULL,            0,                   0 }   /* terminator */
 } ;
 
-static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
+static void crf_get_crlno(const X509V3_EXT_METHOD *meth, void *exts,
 			  crl_fields *cf, int *stap, int *crlstap)
 {
   char *ptr;
@@ -1117,7 +1117,7 @@ static void crf_get_crlno(X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CRF_FIELD_SN] = dptr;
 }
 
-static void crf_get_aki(X509V3_EXT_METHOD *meth, void *exts,
+static void crf_get_aki(const X509V3_EXT_METHOD *meth, void *exts,
 			crl_fields *cf, int *stap, int *crlstap)
 {
   AUTHORITY_KEYID *aki;
@@ -1202,7 +1202,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   const unsigned char    *udat;
   crfx_validator         *cfx;
   STACK_OF(X509_REVOKED) *rev;
-  X509V3_EXT_METHOD   *meth;
+  const X509V3_EXT_METHOD   *meth;
   X509_EXTENSION      *ex;
   X509_REVOKED  *r;
   unsigned char *tov;
