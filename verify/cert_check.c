@@ -1729,9 +1729,9 @@ rescert_crit_ext_chk(X509_EXTENSION *ex)
   if (ex_nid == NID_undef)                              
     return FALSE;                                     
                                                               
-  if (OBJ_bsearch((char *)&ex_nid, (char *)supported_nids,
-                  sizeof(supported_nids)/sizeof(int), sizeof(int),
-                  (int (*)(const void *, const void *))res_nid_cmp))
+  if (bsearch((char *)&ex_nid, (char *)supported_nids,
+	      sizeof(supported_nids)/sizeof(int), sizeof(int),
+	      (int (*)(const void *, const void *))res_nid_cmp))
     return(TRUE);                                     
   return(FALSE); 
 }                                                     
