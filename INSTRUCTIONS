@@ -1,10 +1,11 @@
+Resource PKI Relying Party Database
 Installation and Usage Manual
-Version 1.0
+Version 2.0
 
-1.0 Organization of this document
+1. Organization of this document
 
-This document describes how to install and use the BBN Address Space
-PKI database/repository software.  Please refer to the design document,
+This document describes how to install and use the Resource PKI
+relying party database.  Please refer to the design document,
 rpkidesign.doc, for a detailed description of the various software
 components in this release.
 
@@ -14,48 +15,111 @@ guide on how to get your system running.  Section 4 describes the other
 documents in the deliverable package. Finally, Appendix A provides
 troubleshooting tips for some common problems.
 
-2.0 Installation
+
+
+2. Installation
+
+    Contents
+    2.1 Prerequisites
+      2.1.1 OpenSSL
+      2.1.2 MySQL
+      2.1.3 cryptlib
+      2.1.4 rsync
+    2.2 RPKI Software
+      2.2.1 Unpack the Source Code
+      2.2.2 Customize the Makefiles
+      2.2.3 Build the Executables
+    2.3 RPKI User Account
+      2.3.1 Environment Variables
+    2.4 SSH Subsystem
+    2.5 Self-Test
+
+The RPKI software is distributed as source code that should be built
+using the GNU build tools on Linux/Unix.  After reading this section,
+you will know:
+    . How to install and configure the prerequisites.
+    . How to build the RPKI software.
+    . How to set up a user with the correct environment.
+    . How to validate the installation.
+We assume that you can operate your system's package manager, as well
+as build packages from source and do minor edits on Makefiles.
+
 
 2.1 Prerequisites
 
 2.1.1 OpenSSL
 
-Install the latest released version of the OpenSSL package from
-http://www.openssl.org.  It should be at least version 0.9.8d. Follow
-the installation instructions for that package.  We recommend the default
-installation target directory /usr/local/ssl. Also, make sure that
-RFC3779 support is enabled (./config enable-rfc3779).
+You must build OpenSSL from source in order to enable support for
+RFC3779 X.509v3 extensions.  Download the latest source code (at least
+version 0.9.8e) from http://www.openssl.org.  We recommend the default
+installation target directory /usr/local/ssl.  As of version 0.9.8l,
+the steps were:
+
 	$ ./config enable-rfc3779
 	$ make depend
 	$ make
+	$ make test
 	$ make install
 
 2.1.2 MySQL
 
-Install the MySQL open source database from http://mysql.org. We
-recommend the default installation target of /usr/local/mysql. At
-least version 5.0 should be used; this is the version that our testing
-has used.  Also install the Connector/ODBC driver from the same site.
-Insure that at least version 3.51 of the driver is installed.  We
-strongly recommend that you give the root account a password in the
-ODBC initialization file (typically this is /usr/local/etc/odbc.ini).
-You will need to edit the Makefiles to link with the correct library
-(e.g. -lmyodbc3 or -lmyodbc5), and to edit proto/scmmain.h to point to
-the correct DSN name.
+Install the MySQL database server from http://mysql.org, at least
+version 5.1.  We recommend the default installation target of
+/usr/local/mysql, but this is not required.  Install the MySQL
+Connector/ODBC driver from the same site, at least version 3.51, into
+an accessible lib directory such as /usr/local/lib.  On many systems,
+MySQL Connector/ODBC depends on unixODBC.  During later compilation of
+the RPKI software, if you get a variety of link errors in the "proto"
+directory, missing unixODBC is probably the problem.
 
-Depending on your machine you may also need to install unixODBC as well.
-If you get a variety of link errors in the "proto" directory this is
-probably the problem.
+Configure MySQL.  First, secure the initial MySQL accounts, which
+includes setting a root password (see MySQL 5.1 manual, section
+2.13.2).  Then set up a database user for RPKI.  For example, the
+following creates a root password, then sets up a user with username
+"rpki", password "bbn", and access to the database named "rpkidb7":
+
+    shell> mysql -u root
+    mysql> SELECT Host, User FROM mysql.user;  /* view all accounts */
+    mysql> SET PASSWORD FOR 'root'@'127.0.0.1' = PASSWORD('rootpass');
+    mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('rootpass');
+    mysql> SET PASSWORD FOR 'root'@'<myhostname>' = PASSWORD('rootpass');
+    mysql> CREATE USER 'rpki'@'localhost' IDENTIFIED BY 'bbn';
+    mysql> GRANT ALL PRIVILEGES ON rpkidb7.* TO 'rpki'@'localhost';
+
+Configure the Connector/ODBC driver.  We strongly recommend that you
+give the MySQL root account a password in the ODBC initialization file
+(typically /usr/local/etc/odbc.ini).  For example:
+-----------------------------------------------------------------------------
+;
+;  odbc.ini configuration for Connector/ODBC and Connector/ODBC 3.51 drivers
+;
+
+[ODBC Data Sources]
+myodbc3      = MyODBC 3.51 Driver DSN
+
+[myodbc3]
+Driver       = /usr/local/lib/libmyodbc3.so
+Description  = Connector/ODBC 3.51 Driver DSN
+SERVER       = localhost
+PORT         =
+USER         = root
+Password     = rootpass
+Database     = mysql
+OPTION       = 3
+SOCKET       =
+-----------------------------------------------------------------------------
 
 2.1.3 cryptlib
 
-Install Peter Gutmann's cryptlib from its default website, currently
-at http://www.cs.auckland.ac.nz/~pgut001/cryptlib. Insure that both
-the library itself and its include files are in accessible locations,
-e.g.  it may be necessary to manually copy libcl.so to /usr/local/lib
-and cryptlib.h to /usr/local/include.  If you are on FreeBSD this can
-be done by issuing the command make search name="cryptlib" from the
-/etc/ports directory.
+Install Peter Gutmann's cryptlib, currently available at
+http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  Ensure that both the
+library itself and its include files are in accessible locations.  For
+example, it may be necessary to manually copy libcl.so to
+/usr/local/lib and cryptlib.h to /usr/local/include.  On FreeBSD this
+can be done one of two ways: (1) using the package system by issuing
+the command pkg_add -r cryptlib, or (2) using the ports system by
+issuing the command make search name="cryptlib" from the /usr/ports
+directory.
 
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
@@ -68,53 +132,66 @@ Your rsync should be at least version 2.6.9, as earlier versions do
 not necessarily support the necessary flags.  Check your version with
 rsync --version, and install from rsync.samba.org.
 
-2.2 RPKI database software
+
+2.2 RPKI Software
+
+2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
 named RPKI.tgz.  Gunzip using the command:
 
     gunzip RPKI.tgz
-
-and then un-tar the resulting tarball using the command
+    
+and then un-tar the resulting tarball using the command:
 
     tar xvpf RPKI.tar
-
+    
 This will create a directory named RPKI which will contain various
 subdirectories.
 
-2.3 Establish a user account
+2.2.1 Customize the Makefiles
+
+In the top-level source directory there are some sample makefiles:
+Makefile.linux for recent Linux distros, Makefile.linux24 for older
+distros, and Makefile.bsd for NetBSD/FreeBSD.  Choose one depending on
+your target environment.
+
+You will most likely need to customize the Makefile to point to the
+paths where the libraries listed above have been installed.  , one of
+these three may work, or you may need to customize one by updating the
+variables at the head of the file.  
+
+You will need to edit the appropriate Makefile to link with the
+correct libraries.  Note that the LIBODBC variable could either point
+to -lmyodbc3 or -lmyodbc5, depending on what you installed above in
+section 2.1.2.  In addition, you must edit proto/scmmain.h to point to
+the correct DSN name, as specified in odbc.ini.
+
+2.2.2 Build the Executables
+
+Once the Makefile and header have been updated, build the executables
+by issuing the command "make -f Makefile.<platform>" in the top-level
+source directory.
+
+
+2.3 RPKI User Account
 
 There should be some established user account from which to run the
-RPKI software.  This allows environment variables (RPKI_DB,
-RPKI_ROOT, RPKI_PORT, RTR_RETENTION_HOURS, RTR_CHECK_INTERVAL) to
-be set consistently between logins, assuming that the default values
-need to be overridden.  It also provides a place, ~/.ssh/authorized_keys,
-to put all the RPKI-RTR clients' public keys to allow SSH login.
+RPKI software.  This allows environment variables to be set
+consistently between logins, assuming that the default values need to
+be overridden.  It also provides a place, ~/.ssh/authorized_keys, to
+put all the RPKI-RTR clients' public keys to allow SSH login.
 
-2.4 Edit the /etc/ssh/sshd_config file to contain the line
-  Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
+<< comments on setting permissions to be friendly for some other users
+>> Mark Reynolds: "It was my expectation that all processes other than
+the query client would be run as rpki using cron jobs, but that the
+permissions would be sufficiently open that an arbitrary user could
+run query or could launch an rsync cycle using the sh script."
 
+2.3.1 Environment Variables
 
-3. Running the RPKI Software
-
-The following are the steps required to run the RPKI software.  Note that
-steps 1-4 only need to be executed once at the beginning if everything goes
-completely as planned.  Steps 5-8 have to be run periodically even under
-ideal circumstances.  It is recommended that the user create a script
-to run these four steps and have a cron job that executes this script
-periodically.  All scripts for steps 3-8 are in the run_scripts directory.
-
-3.1 build the executables: In the top-level directory there are some sample
-    makefiles (Makefile.linux (for recent Linux distros), Makefile.linux24
-    (for older distros) and Makefile.bsd (for NetBSD/FreeBSD). Depending
-    on the target environment, including where the libraries listed above
-    have been installed, one of these three may work, or you may need to
-    customize one by updating the variables at the head of the file.
-    Once updated, build the executables by typing "make" in the top level
-    directory.
-
-3.2 set environment variables: There are several environment variables used
-    throughout the scripts and the code:
+    set environment variables: There are several environment variables
+    used throughout the scripts and the code:
     RPKI_DB - the name of the MySQL database used to hold the RPKI data
     RPKI_PORT - the port number used for the loader and feeder to talk
     RPKI_ROOT - the full pathname of this directory (the top-level
@@ -130,6 +207,23 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     RPKI_DBPASS = (none)
     If you ever want to run the code directly instead of running the
     scripts, make sure to set these yourself.
+    
+(RTR_RETENTION_HOURS, RTR_CHECK_INTERVAL?)
+
+2.4 SSH Subsystem
+
+Edit the /etc/ssh/sshd_config file to contain the line
+  Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
+
+
+3. Running the RPKI Software
+
+The following are the steps required to run the RPKI software.  Note that
+steps 1-4 only need to be executed once at the beginning if everything goes
+completely as planned.  Steps 5-8 have to be run periodically even under
+ideal circumstances.  It is recommended that the user create a script
+to run these four steps and have a cron job that executes this script
+periodically.  All scripts for steps 3-8 are in the run_scripts directory.
 
 3.3 initDB.sh: This script deletes the database, if any, with the name
     RPKI_DB and sets up a new database with all the right tables.
