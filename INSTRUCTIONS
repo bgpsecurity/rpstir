@@ -33,6 +33,7 @@ troubleshooting tips for some common problems.
       2.3.1 Environment Variables
     2.4 SSH Subsystem
     2.5 Self-Test
+    2.6 Cron Job Configuration
 
 The RPKI software is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.  After reading this section,
@@ -135,6 +136,13 @@ rsync --version, and install from rsync.samba.org.
 
 2.2 RPKI Software
 
+The RPKI software is distributed as source code that should be built
+using the GNU build tools on Linux/Unix.
+
+You will want to establish a user account from which you can build and
+run the RPKI software.  While the full environment setup is detailed
+in section 2.3, the basic user should be created now.
+
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
@@ -159,11 +167,10 @@ your target environment.
 You will need edit the Makefile to link with the correct libraries.
 Modify the variables at the beginning of the Makefile (LIBCL,
 LIBCRYPTO, LIBODBC, etc.) so that each contains the path to its
-respective library.  Note that the LIBODBC variable could either use
+respective library.  Note that the LIBODBC variable may contain either
 -lmyodbc3 or -lmyodbc5, depending on the version you installed in
-section 2.1.2.  In addition, you must edit proto/scmmain.h to point to
-the correct DSN name, corresponding to the appropriate section of
-odbc.ini.
+section 2.1.2.  In addition, you must edit proto/scmmain.h to match
+the DSN name with the corresponding section of odbc.ini.
 
 2.2.2 Build the Executables
 
@@ -174,17 +181,11 @@ source directory.
 
 2.3 RPKI User Account
 
-There should be some established user account from which to run the
-RPKI software.  This allows environment variables to be set
-consistently between logins, assuming that the default values need to
-be overridden.  It also provides a place, ~/.ssh/authorized_keys, to
-put all the RPKI-RTR clients' public keys to allow SSH login.
-
-<< comments on setting permissions to be friendly for some other users
->> Mark Reynolds: "It was my expectation that all processes other than
-the query client would be run as rpki using cron jobs, but that the
-permissions would be sufficiently open that an arbitrary user could
-run query or could launch an rsync cycle using the sh script."
+Establish a user account from which to run the RPKI software.  This
+allows environment variables to be set consistently between logins,
+especially if the default values need to be overridden.  It also
+provides a place, ~/.ssh/authorized_keys, to put all the RPKI-RTR
+clients' public keys to allow SSH login.
 
 2.3.1 Environment Variables
 
@@ -204,9 +205,9 @@ Set these environment variables to match your installation.  You may
 choose any unused port for RPKI_PORT.
 
 Some variables are required for the operation of the RPKI software.
-Each script checks for the required environment, and if any variables
-are not set, it will warn the user and automatically set them to the
-following defaults:
+Each script will check for the required environment, and if any
+variables are not set, the script will warn the user and automatically
+set them to the following defaults:
 
 RPKI_DB = rpki
 RPKI_PORT = 7344
@@ -214,7 +215,7 @@ RPKI_ROOT = ${HOME}/rpki/trunk
 RPKI_DBUSER = mysql
 RPKI_DBPASS =
 
-If you ever want to directly run the binaries instead of running the
+If you ever need to directly run the binaries instead of running the
 scripts, there will be no environment checking, so make sure to set
 these yourself.
 
@@ -233,8 +234,17 @@ self-test target by issuing the command:
    make -f Makefile.<platform> test
 
 You may need to enter the MySQL root password several times as the
-various self-test steps proceed.  If all tests pass, a success message
-will be displayed.
+various self-test steps proceed.  If all tests pass, you will see a
+message indicating success.
+
+
+2.6 Cron Job Configuration
+
+Once a successful install has been validated<< comments on setting permissions to be friendly for some other users
+>> Mark Reynolds: "It was my expectation that all processes other than
+the query client would be run as rpki using cron jobs, but that the
+permissions would be sufficiently open that an arbitrary user could
+run query or could launch an rsync cycle using the sh script."
 
 
 
