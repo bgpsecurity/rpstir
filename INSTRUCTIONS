@@ -115,11 +115,11 @@ Install Peter Gutmann's cryptlib, currently available at
 http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  Ensure that both the
 library itself and its include files are in accessible locations.  For
 example, it may be necessary to manually copy libcl.so to
-/usr/local/lib and cryptlib.h to /usr/local/include.  On FreeBSD this
-can be done one of two ways: (1) using the package system by issuing
-the command pkg_add -r cryptlib, or (2) using the ports system by
-issuing the command make search name="cryptlib" from the /usr/ports
-directory.
+/usr/local/lib and cryptlib.h to /usr/local/include.  On FreeBSD,
+cryptlib can be obtained one of two ways: (1) using the package system
+by issuing the command pkg_add -r cryptlib, or (2) using the ports
+system by issuing the command make search name="cryptlib" from the
+/usr/ports directory.
 
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
@@ -156,16 +156,14 @@ Makefile.linux for recent Linux distros, Makefile.linux24 for older
 distros, and Makefile.bsd for NetBSD/FreeBSD.  Choose one depending on
 your target environment.
 
-You will most likely need to customize the Makefile to point to the
-paths where the libraries listed above have been installed.  , one of
-these three may work, or you may need to customize one by updating the
-variables at the head of the file.  
-
-You will need to edit the appropriate Makefile to link with the
-correct libraries.  Note that the LIBODBC variable could either point
-to -lmyodbc3 or -lmyodbc5, depending on what you installed above in
+You will need edit the Makefile to link with the correct libraries.
+Modify the variables at the beginning of the Makefile (LIBCL,
+LIBCRYPTO, LIBODBC, etc.) so that each contains the path to its
+respective library.  Note that the LIBODBC variable could either use
+-lmyodbc3 or -lmyodbc5, depending on the version you installed in
 section 2.1.2.  In addition, you must edit proto/scmmain.h to point to
-the correct DSN name, as specified in odbc.ini.
+the correct DSN name, corresponding to the appropriate section of
+odbc.ini.
 
 2.2.2 Build the Executables
 
@@ -190,30 +188,54 @@ run query or could launch an rsync cycle using the sh script."
 
 2.3.1 Environment Variables
 
-    set environment variables: There are several environment variables
-    used throughout the scripts and the code:
-    RPKI_DB - the name of the MySQL database used to hold the RPKI data
-    RPKI_PORT - the port number used for the loader and feeder to talk
-    RPKI_ROOT - the full pathname of this directory (the top-level
-      directory of the RPKI tree)
-    RPKI_DBUSER - the username for logging into the MySQL database
-    RPKI_DBPASS - the password for logging into the MySQL database, if any
-    These environment variables will be set automatically to the
-    following defaults by each of the scripts in the run_scripts directory:
-    RPKI_DB = rpki
-    RPKI_PORT = 7344
-    RPKI_ROOT = ${HOME}/rpki/trunk
-    RPKI_DBUSER = mysql
-    RPKI_DBPASS = (none)
-    If you ever want to run the code directly instead of running the
-    scripts, make sure to set these yourself.
-    
-(RTR_RETENTION_HOURS, RTR_CHECK_INTERVAL?)
+There are several environment variables used throughout the scripts
+and the code:
+
+required: RPKI_ROOT - full path to the top-level directory of the RPKI tree
+required: RPKI_PORT - port number on which the loader and feeder communicate
+required: RPKI_DB - name of the MySQL database used to hold RPKI data
+required: RPKI_DBUSER - username for logging into the MySQL database
+required: RPKI_DBPASS - password for logging into the MySQL database, if any
+optional: RPKI_ROOTPASSWORD - the MySQL root password
+optional: RTR_RETENTION_HOURS -
+optional: RTR_CHECK_INTERVAL -
+
+Set these environment variables to match your installation.  You may
+choose any unused port for RPKI_PORT.
+
+Some variables are required for the operation of the RPKI software.
+Each script checks for the required environment, and if any variables
+are not set, it will warn the user and automatically set them to the
+following defaults:
+
+RPKI_DB = rpki
+RPKI_PORT = 7344
+RPKI_ROOT = ${HOME}/rpki/trunk
+RPKI_DBUSER = mysql
+RPKI_DBPASS =
+
+If you ever want to directly run the binaries instead of running the
+scripts, there will be no environment checking, so make sure to set
+these yourself.
+
 
 2.4 SSH Subsystem
 
 Edit the /etc/ssh/sshd_config file to contain the line
   Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
+
+
+2.5 Self-Test
+
+To perform a basic validation of your install, run the Makefile's
+self-test target by issuing the command:
+
+   make -f Makefile.<platform> test
+
+You may need to enter the MySQL root password several times as the
+various self-test steps proceed.  If all tests pass, a success message
+will be displayed.
+
 
 
 3. Running the RPKI Software
