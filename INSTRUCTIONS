@@ -32,8 +32,10 @@ troubleshooting tips for some common problems.
     2.3 RPKI User Account
       2.3.1 Environment Variables
     2.4 SSH Subsystem
-    2.5 Self-Test
-    2.6 Cron Job Configuration
+    2.5 Self Test
+    2.6 Post-Installation Procedures
+      2.6.1 Cron Job Configuration
+      2.6.2 Adjust Permissions
 
 The RPKI software is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.  After reading this section,
@@ -105,7 +107,7 @@ SERVER       = localhost
 PORT         =
 USER         = root
 Password     = rootpass
-Database     = mysql
+Database     = rpkidb7
 OPTION       = 3
 SOCKET       =
 -----------------------------------------------------------------------------
@@ -222,11 +224,13 @@ these yourself.
 
 2.4 SSH Subsystem
 
-Edit the /etc/ssh/sshd_config file to contain the line
+If you plan to use the RTR Server, you will need to configure it as an
+SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
+line:
   Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
 
 
-2.5 Self-Test
+2.5 Self Test
 
 To perform a basic validation of your install, run the Makefile's
 self-test target by issuing the command:
@@ -238,13 +242,42 @@ various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
 
 
-2.6 Cron Job Configuration
+2.6 Post-Installation Procedures
 
-Once a successful install has been validated<< comments on setting permissions to be friendly for some other users
->> Mark Reynolds: "It was my expectation that all processes other than
-the query client would be run as rpki using cron jobs, but that the
-permissions would be sufficiently open that an arbitrary user could
-run query or could launch an rsync cycle using the sh script."
+Once the RPKI software installation passes the self-test, you may
+configure it to automatically run at regular intervals via cron.  It
+may also be desirable to allow arbitrary users to query the RPKI
+database.
+
+2.6.1 Cron Job Configuration
+
+Except for the query client, all RPKI processes should run as the RPKI
+user at regular intervals using cron jobs.
+
+<< FIXME: fill in correct intervals >>
+--------------------------------------------------------------------
+Component (script)                   Frequency
+--------------------------------------------------------------------
+Rsync Wrapper (pull_and_feed.sh)     Once per day
+RCLI Database Client (loader.sh)     Continuously as daemon
+Garbage Collector (garbage.sh)       Once per day
+Chaser Client (chaser.sh)            Once per day
+MySQL Database                       Continuously as daemon (mysqld)
+
+RTR Server                           ?????
+Query Client (query.sh)              On demand by user
+Initialization (initDB.sh)           Ideally only once ("reset all")
+--------------------------------------------------------------------
+<< FIXME: give tested crontab example >>
+
+2.6.2 Adjust Permissions
+
+Depending on the setup, you may also want to allow arbitrary users to
+run a query against the RPKI database, or to launch an rsync update
+cycle.
+
+<< FIXME: fill in this section once we determine whether setuid will
+be necessary for accessing the local copy of the repository. >>
 
 
 
