@@ -178,7 +178,8 @@ the DSN name with the corresponding section of odbc.ini.
 
 Once the Makefile and header have been updated, build the executables
 by issuing the command "make -f Makefile.<platform>" in the top-level
-source directory.
+source directory.  On some systems, the default is not GNU Make, so
+substitute the appropriate command (e.g. "gmake" on FreeBSD).
 
 
 2.3 RPKI User Account
