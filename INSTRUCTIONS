@@ -229,6 +229,9 @@ SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
 line:
   Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
 
+<< FIXME: insert instructions on ssh-keygen/authorized_keys once those
+parts have been well-tested. >>
+
 
 2.5 Self Test
 
