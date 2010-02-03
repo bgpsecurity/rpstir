@@ -60,5 +60,5 @@ libasn.a: $(O_FILES)
 	ranlib libasn.a
 
 clean:
-	rm -f $(GENERATED_C_FILES) $(GENERATED_H_FILES) $(O_FILES) *~
+	rm -f $(GENERATED_C_FILES) $(GENERATED_H_FILES) $(O_FILES) *~ libasn.a
 

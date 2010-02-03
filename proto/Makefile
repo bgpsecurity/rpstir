@@ -86,4 +86,4 @@ proofreader: proofreader.o librpki.a $(LOCAL_LIBS) Makefile
 
 
 clean:
-	rm -f rcli query makeROA chaser garbage *.o *.a
+	rm -f rcli query makeROA chaser garbage proofreader *.o *.a
