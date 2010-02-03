@@ -406,28 +406,33 @@ rpkidesign.doc	Top level design document
 codereview.doc	Code review standards
 rpkiaur.txt	rsync_aur/rcli socket communication protocol
 
+
+
 Appendix A. Troubleshooting
 
 A.1 Database troubleshooting
 
-If you are having database errors, particularly when you first attempt to
-use rcli, it is important to check and make sure that your MySQL installation
-is correct.  Try the following command:
+If you are having database errors, particularly when you first attempt
+to use rcli, it is important to check and make sure that your MySQL
+installation is correct.  Try the following command (drop the '-p' if
+your MySQL user has no password):
 
-    mysql --user=mysql
+    mysql --user=$RPKI_DBUSER -p
 
-This should connect you to the database and give a "mysql> " prompt back. If
-it does not, then your MySQL and/or ODBC installation is not correct. Check
-the troubleshooting section of the MySQL documentation. Verify that your ODBC
-information, in /usr/local/etc/odbc.ini and /usr/local/etc/odbcinst.ini, is
-correct.  Verify that the MySQL daemon process mysqld is running using "ps -ef".
-Verify that there is a mysql socket named mysql.sock, typically in /tmp.
+This should connect you to the database and give a "mysql> " prompt
+back. If it does not, then your MySQL and/or ODBC installation is not
+correct. Check the troubleshooting section of the MySQL
+documentation. Verify that your ODBC information, in
+/usr/local/etc/odbc.ini and /usr/local/etc/odbcinst.ini, is correct.
+Verify that the MySQL daemon process mysqld is running using "ps -ef".
+Verify that there is a mysql socket named mysql.sock, typically in
+/tmp.
 
 Once you can successfully connect to the database as user "mysql" try
 connecting as root by issuing the command:
 
     mysql --user=root --password=PWD
 
-where PWD is the root password specified in your odbc.ini file. If this does
-not succeed, follow the steps given in the MySQL manual for resetting the
-root password, then stop and restart the mysqld process.
+where PWD is the root password specified in your odbc.ini file. If
+this does not succeed, follow the steps given in the MySQL manual for
+resetting the root password, then stop and restart the mysqld process.
