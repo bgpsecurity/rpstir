@@ -5,13 +5,16 @@ make_oidtable \- makes a table of ASN.1 object identifiers (OIDs)
 
 .SH SYNOPSIS
 .B make_oidtable
-.I table_name file.h ...
+.I tablefile file.h ...
 
 .SH DESCRIPTION
 This program makes a table of OBJECT IDENTIFIERs and their more
 understandable labels which the \fBdump\fP program (cg/tools/dump) and
 the dump facility within the casn library (cg/casn/casn_dump.c) can
 use to make the display of object identifiers more comprehensible.
+\fBmake_oidtable\fP searches the header file(s) specified on the
+command line and writes its output to \fItablefile\fP.
+
 
 .PP
 To make the table, go to cg/asn and issue the command:
