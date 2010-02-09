@@ -1,7 +1,7 @@
 .TH DUMP_SMART 1 "2010 Feb 9" "ASN.1 Tools" "ROA-PKI"
 
 .SH NAME
-dump_smart \- converts ASN.1-encoded file to a more readable form
+dump_smart \- converts ASN.1-encoded RPKI file to a more readable form
 
 .SH SYNOPSIS
 \fBdump_smart\fP \fIfilename\fP
@@ -44,7 +44,7 @@ is affected by a very useful environment variable.
 .TP
 .B OIDTABLE
 The pathname to the OID table is kept in this environment variable.
-If one is provided
+If provided,
 .B dump_smart
 can use the OID table to label every object identifier it recognizes,
 like this:
@@ -53,6 +53,17 @@ seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
 .IP
 To generate a suitable OID table for use with RPKI objects, see
 .BR make_oidtable (1).
+
+.SH ALTERNATIVES
+
+.B dump_smart
+outputs a raw human-readable format which still contains enough
+information to be edited and converted directly back into a
+certificate using ASN.1 tools.  An even more human-friendly format
+(but NOT easily reversible) can be obtained by issuing the openssl
+command:
+.IP
+openssl x509 -inform DER -text < \fIfilename\fP
 
 .SH AUTHOR
 Charlie Gardiner.  Edited by Andrew Chi.
