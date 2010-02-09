@@ -1,34 +1,62 @@
+.TH DUMP_SMART 1 "2010 Feb 9" "ASN.1 Tools" "ROA-PKI"
 
-DUMP_SMART?g (1)                 ROA-PKI                            VALIDATETA(1)
+.SH NAME
+dump_smart \- converts ASN.1-encoded file to a more readable form
 
+.SH SYNOPSIS
+\fBdump_smart\fP \fIfilename\fP
 
-NAME
-         dump_smart - converts ASN.1-encoded file to a more readable form
+.SH DESCRIPTION
+This program translates the contents of the file
+.I filename
+into more readable form and outputs the result to stdout.  The type of
+file is determined by the suffix in
+.IR filename ", which must be one of"
+.BR .cer " for a certificate, " .crl " for a CRL, " .man
+.RB " for a manifest, " .roa " for a ROA, or " .rta " for an RPKI TA."
 
-SYNOPSIS   
+.PP
+If there is no error, the translated contents of the file are printed
+out on stdout in the readable form.  If there is an error, one of
+these messages is printed on stderr:
 
-         dump_smart filename
+.IP \(bu 4
+Usage: name of input file
+.IP \(bu 4
+Suffix is missing
+.IP \(bu 4
+Unknown type ...
+.IP \(bu 4
+Error reading at ...
 
-DESCRIPTION
- 
-        This program translates the contents of the file "filename" into more
-        readable form and outputs the result to stdout.  The type of file is
-        determined by the suffix in "filename", which must be one of ".cer" 
-        for a certificate, ".crl for a CRL, ".man" for a manifest, ".roa"
-        for a ROA, or ".rta" for a RPKI TA.
+.PP
+where the ellipsis is replaced with specific information.  For the
+"Unknown type" error it is the suffix.  For the "Error reading at"
+error it is a sequence of dot-separated numbers indicating where the
+error was found, e.g. 1.2.3.4 means in the fourth member of the third
+member of the second member of the first member of the ASN.1 encoding.
 
-        If there is no error, the translated contents of the file are printed 
-        out on stdout in the readable form.  If there is an error, one of these
-        messages is printed on stderr: 
- 
-          Usage: name of input file
-          Suffix is missing
-          Unknown type ...
-          Error reading at ...
+.SH ENVIRONMENT
 
-       where the ellipsis is replaced with specific information.  For the 
-       "Unknown type" error it is the suffix.  For the "Error reading at"
-       error it is a sequence of dot-separated numbers indicating where the
-       error was found, e.g. 1.2.3.4 means in the fourth member of the third 
-       member of the second member of the first member of the ASN.1 encoding.
-                             
+.B dump_smart
+is affected by a very useful environment variable.
+
+.TP
+.B OIDTABLE
+The pathname to the OID table is kept in this environment variable.
+If one is provided
+.B dump_smart
+can use the OID table to label every object identifier it recognizes,
+like this:
+.IP
+seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+.IP
+To generate a suitable OID table for use with RPKI objects, see
+.BR make_oidtable (1).
+
+.SH AUTHOR
+Charlie Gardiner.  Edited by Andrew Chi.
+
+.SH "SEE ALSO"
+.BR dump (1),
+.BR make_oidtable (1)
