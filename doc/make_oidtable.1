@@ -1,34 +1,41 @@
-MAKE_OIDTABLE (1)             ROA-PKI                              MAKE_OIDTABLE(1)                                     
+.TH MAKE_OIDTABLE 1 "2010 Feb 9" "ASN.1 Tools" "ROA-PKI"
 
-NAME
+.SH NAME
+make_oidtable \- makes a table of ASN.1 object identifiers (OIDs)
 
-        make_oidtable -- makes a table of OIDs
+.SH SYNOPSIS
+.B make_oidtable
+.I table_name file.h ...
 
-SYNOPSIS
-  
-        make_oidtable table_name file.h ...
+.SH DESCRIPTION
+This program makes a table of OBJECT IDENTIFIERs and their more
+understandable labels which the \fBdump\fP program (cg/tools/dump) and
+the dump facility within the casn library (cg/casn/casn_dump.c) can
+use to make the display of object identifiers more comprehensible.
 
-DESCRIPTION
+.PP
+To make the table, go to cg/asn and issue the command:
+.IP
+ ../tools/make_oidtable oidtable *.h
+.PP
+This creates a sorted table of all the identifiers and their labels.
+To make use of this table, set your environment variable thus:
+.IP
+export OIDTABLE=$RPKI_ROOT/cg/asn/oidtable
+.PP
+Then whenever you run \fBdump -a\fP or \fBdump_smart\fP,
+it will label every object identifier that it recognizes like this:
+.IP
+seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+.PP
+The same thing will happen if you use the dump capability within the
+casn library.  See various ".raw" files in the \fItestcases\fP
+directory.
 
-            This program makes a table of OBJECT IDENTIFIERs and their more
-        understandable labels which the "dump" program (cg/tools/dump) and 
-        the dump facility within the casn library (cg/casn/casn_dump.c) can 
-        use to make the display of object identifiers more comprehensible.
+.SH AUTHOR
 
-        To make the table, go to cg/asn and do:
+Charlie Gardiner.
 
-          ../tools/make_oidtable oidtable *.h
-
-        This creates a sorted table of all the identifiers and their labels.
-
-            To make use of this table, set your environment variable thus:
-
-          export OIDTABLE=$HOME/apki/trunk/cg/asn/oidtable
-
-        Then whenever you run the dump program with the -a option, it will
-        label every object identifier that it recognizes like this:
-
-             seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
-
-        The same thing will happen if you use the dump capability within
-        the casn library.  See various ".raw" files in apki/trunk/testcases.
+.SH "SEE ALSO"
+.BR dump (1),
+.BR dump_smart (1)
