@@ -20,7 +20,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex loadkey whatsfcs make_oidtable set_cert_ski  \
+TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
+	loadkey gen_key whatsfcs make_oidtable set_cert_ski  \
 	read_roa encode-oid dumpasn1 dump_smart
 
 all:	$(TARGETS)
@@ -60,6 +61,9 @@ whatsfcs:	whatsfcs.o prencode.o
 
 make_oidtable:	make_oidtable.o Makefile ../casn/libcasn.a ../asn/libasn.a
 	$(CC) $(CFLAGS) -o $@ make_oidtable.o 
+
+gen_key: gen_key.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LOCAL_LIBS) $(LIBS)
 
 loadkey:	loadkey.o
 	$(CC) $(CFLAGS) -o $@ loadkey.o $(LOCAL_LIBS) $(LIBS)

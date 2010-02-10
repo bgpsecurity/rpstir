@@ -29,8 +29,8 @@ int main(int argc, char **argv)
   int ksize;
   if (argc < 3) 
     {
-    fprintf(stderr, "Usage: Filename keysize in bits\n");
-    return 1;
+      fprintf(stderr, "Usage: %s filename keysize\n", argv[0]);
+      return 1;
     }
   if (sscanf(argv[2], "%d", &ksize) != 1)
     {
