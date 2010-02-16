@@ -21,8 +21,8 @@
 # ***** END LICENSE BLOCK *****
 
 TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
-	loadkey gen_key whatsfcs make_oidtable set_cert_ski  \
-	read_roa encode-oid dumpasn1 dump_smart
+	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
+	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart
 
 all:	$(TARGETS)
 
@@ -62,10 +62,19 @@ whatsfcs:	whatsfcs.o prencode.o
 make_oidtable:	make_oidtable.o Makefile ../casn/libcasn.a ../asn/libasn.a
 	$(CC) $(CFLAGS) -o $@ make_oidtable.o 
 
-gen_key: gen_key.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LOCAL_LIBS) $(LIBS)
+gen_key: gen_key.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
 
-loadkey:	loadkey.o
+make_TA: make_TA.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
+
+sign_cert: sign_cert.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
+
+add_key_info: add_key_info.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
+
+loadkey:	loadkey.o 
 	$(CC) $(CFLAGS) -o $@ loadkey.o $(LOCAL_LIBS) $(LIBS)
 
 set_cert_ski:	set_cert_ski.o Makefile ../casn/libcasn.a ../asn/libasn.a
