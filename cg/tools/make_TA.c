@@ -165,11 +165,11 @@ int main(int argc, char **argv)
   {
   struct ROA roa;
   ROA(&roa, (ushort)0);
-  if (argc < 5)
+  if (argc != 6)
     {
-    fputs("Usage: file names: ETA cert, EE cert, RTA cert, EE key, outfile\n", 
-      stderr);
-    return -1;
+      fprintf(stderr, "Usage: %s ETAcert EEcert RTAcert EEkeyfile "
+	      "outfile.rta.raw > outfile.rta\n", argv[0]);
+      return -1;
     }
   strcpy(keyring.label, "label");
   strcpy(keyring.password, "password");
@@ -257,10 +257,7 @@ int main(int argc, char **argv)
     int siz = dump_size(&roa.self);   
     char *buf = (char *)calloc(1, siz + 2);
     dump_casn(&roa.self, buf);
-    char fname[80];
-    strcpy(fname, argv[5]);
-    strcat(fname, ".raw");
-    int fd = creat(fname, 0777);
+    int fd = creat(argv[5], 0777);
     write(fd, buf, siz);
     }
   return 0;
