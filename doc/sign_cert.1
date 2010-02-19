@@ -1,29 +1,40 @@
+.TH SIGN_CERT 1 "2010 Feb 19" "ASN.1 Tools" "ROA-PKI"
 
-SIGN_CERT (1)                 ROA-PKI                               SIGN_CERT(1)
+.SH NAME
+sign_cert \- signs a certificate or a CRL
 
+.SH SYNOPSIS
+.B sign_cert
+.I tobesignedfile keyfile
 
-NAME
+.SH DESCRIPTION
+The 
+.I tobesignedfile
+is signed using the private key in 
+.IR keyfile ,
+a ".p15" file with label "label" and password "password" as created by
+.BR gen_key (1).
+The type of contents in the
+.I tobesignedfile
+are designated by its suffix:
+.B .cer
+indicates a certificate, and
+.B .crl
+indicates a CRL.
 
-        sign_cert - signs a certificate or a CRL
+.SS Response Messages
 
-SYNOPSIS   
+.nf
+       Usage: TBS filename, Key filename
+       Finished OK
+       Error in ...
+       Couldn't open ...
+.fi
+where the ellipsis is replaced with specific information.
 
-        sign_cert tobesignedfile keyfile
+.SH AUTHOR
+Charlie Gardiner.
 
-DESCRIPTION
-    
-        The "tobesignedfile" is signed using the private key in the "keyfile",
-        a ".p15" file.  The type of contents in the "tobesignedfile" are 
-        designated by its suffix: ".cer indicates a certificate, and ".crl"
-        indicates a CRL.
-
-        Response messages:
-
-          Usage: TBS filename, Key filename
-          Finished OK
-          Error in ...
-          Couldn't open ...
-
-       where the ellipsis is replaced with specific information.
-                             
-
+.SH "SEE ALSO"
+.BR add_key_info (1),
+.BR gen_key (1)
