@@ -11,16 +11,22 @@ gen_key \- generates an RSA key pair of specified size
 Generates an RSA key pair with a public modulus of \fIsize\fP bits.
 Results are written to to \fIfilename\fP as a cryptlib keyfile (".p15")
 with label "label" and password "password".
-.PP
-Response messages:
-.IP
-Usage: filename keysize in bits
-.IP
-Making ... with key size ... bits
-.IP
-Invalid key size
-.PP
+
+.SS "FILE FORMAT"
+The output keyfile is formatted according to PKCS #15, the
+Cryptographic Token Information Format Standard.
+
+.SS "Response Messages"
+.nf
+    Usage: filename keysize in bits
+    Making ... with key size ... bits
+    Invalid key size
+.fi
 where the ellipsis is replaced with specific information.
 
 .SH AUTHOR
 Charlie Gardiner.
+
+.SH "SEE ALSO"
+.BR add_key_info (1),
+.BR sign_cert (1)
