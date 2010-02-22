@@ -8,8 +8,8 @@
 .ds RF FORMFEED[Page %]
 .ds LH Internet-Draft
 .ds RH February 2010
-.ds CH BGPSEC Certificate Profile
-.ds CF Expires August 25, 2010
+.ds CH BGPSEC Router Certificate Profile
+.ds CF Expires August 26, 2010
 .hy 0
 .nh
 .ad l
@@ -19,8 +19,8 @@
 .tl 'Secure Inter-Domain Routing''S. Kent'
 .tl 'Internet-Draft''M. Lepinski'
 .tl 'Intended status: Standards Track''M. Reynolds'
-.tl 'Expires: August 25, 2010''BBN'
-.tl '''February 21, 2010'
+.tl 'Expires: August 26, 2010''BBN'
+.tl '''February 22, 2010'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -34,8 +34,8 @@
 .\" This and other comments in this template can safely be deleted.
 
 .ce 2
-A Profile for BGPSEC Certificates 
-draft-ietf-sidr-bgpsec-certs-00
+A Profile for BGPSEC Router Certificates 
+draft-ietf-sidr-bgpsec-rtrcerts-00
 .fi
 .in 3
 
@@ -53,7 +53,7 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on August 25, 2010.
+This Internet-Draft will expire on August 26, 2010.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
@@ -67,7 +67,7 @@ This document is subject to BCP\078 and the IETF Trust's Legal Provisions Relati
 .ti 0
 Abstract
 
-This document defines a standard profile for X.509 certificates for the purposes of supporting validation of Autonomous System (AS) paths in the Border Gateway Protocol (BGP), as part of an extension to that protocol known as BGPSEC. BGP is a critical component for the proper operation of the Internet as a whole. Securing BGP as a routing system is a complex task. The BGPSEC protocol is under development as a component to address the requirement to provide security for the BGP protocol, and is the subject of a number of Internet Drafts in addition to the current document. The goal of BGPSEC is to design a protocol for full AS path validation based on the use of strong cryptographic primitives. When combined with the ongoing work on prefix-origin validation in the resource PKI (RPKI) [I-D.sidr-arch], routers will be able to perform full AS path validation. Signed AS paths are encapsulated in X.509 certificates. This certificate profile for the BGPSEC certificates is used to convey the issuer's assertion to the validation of the signed AS path contained therein.
+This document defines a standard profile for X.509 certificates for the purposes of supporting validation of Autonomous System (AS) paths in the Border Gateway Protocol (BGP), as part of an extension to that protocol known as BGPSEC. BGP is a critical component for the proper operation of the Internet as a whole. The BGPSEC protocol is under development as a component to address the requirement to provide security for the BGP protocol. The goal of BGPSEC is to design a protocol for full AS path validation based on the use of strong cryptographic primitives. The end-entity (EE) certificates specified by this profile are issued under Resource PKI (RPKI) CA certificates, containing the RFC 3779 AS number extension, to routers within the autonomous system. The certificate asserts that the router(s) holding the public key are authorized to send out secure route advertisements on behalf of the specified autonomous system. Noted that since these certificates extend the RPKI [ID.sidr-arch], this profile is based on the profile for RPKI resource certificates [ID.res-certs].
 
 .\" \# TD4  -- Set TOC depth by altering this value (TD5 = depth 5)
 .\" \# TOC  -- Beginning of auto updated Table of Contents
@@ -78,7 +78,7 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 5
       1.1  Terminology . . . . . . . . . . . . . . . . . . . . . . . . 6
    2.  Describing Resources in Certificates  . . . . . . . . . . . . . 7
-   3.  BGPSEC Certificate Fields . . . . . . . . . . . . . . . . . . . 8
+   3.  BGPSEC Router Certificate Fields  . . . . . . . . . . . . . . . 8
       3.1  Version . . . . . . . . . . . . . . . . . . . . . . . . . . 8
       3.2  Serial Number . . . . . . . . . . . . . . . . . . . . . . . 8
       3.3  Signature Algorithm . . . . . . . . . . . . . . . . . . . . 8
@@ -86,7 +86,7 @@ Table of Contents
       3.6  Valid From  . . . . . . . . . . . . . . . . . . . . . . . . 8
       3.7  Valid To  . . . . . . . . . . . . . . . . . . . . . . . . . 9
       3.8  Subject Public Key Info . . . . . . . . . . . . . . . . . . 9
-      3.9  BGPSEC Certificate Version 3 Extension Fields . . . . . . . 9
+      3.9  BGPSEC Router Certificate Version 3 Extension Fields  . . . 9
          3.9.1  Basic Constraints  . . . . . . . . . . . . . . . . . . 9
          3.9.2  Subject Alternate Name . . . . . . . . . . . . . . .  10
          3.9.3  Subject Key Identifier . . . . . . . . . . . . . . .  10
@@ -98,7 +98,7 @@ Table of Contents
          3.9.9  Subject Information Access . . . . . . . . . . . . .  12
          3.9.10  Certificate Policies  . . . . . . . . . . . . . . .  13
          3.9.11  AS Resources  . . . . . . . . . . . . . . . . . . .  13
-   4.  BGPSEC Certificate Revocation List Profile  . . . . . . . . .  14
+   4.  BGPSEC Router Certificate Revocation List Profile . . . . . .  14
       4.1  Version . . . . . . . . . . . . . . . . . . . . . . . . .  14
       4.2  Issuer Name . . . . . . . . . . . . . . . . . . . . . . .  14
       4.3  This Update . . . . . . . . . . . . . . . . . . . . . . .  14
@@ -110,16 +110,18 @@ Table of Contents
       4.7  CRL Extensions  . . . . . . . . . . . . . . . . . . . . .  15
          4.7.1  Authority Key Identifier . . . . . . . . . . . . . .  15
          4.7.2  CRL Number . . . . . . . . . . . . . . . . . . . . .  15
-   5.  BGPSEC Certificate Request Profile  . . . . . . . . . . . . .  17
+   5.  BGPSEC Router Certificate Request Profile . . . . . . . . . .  17
       5.1  PCKS#10 Profile . . . . . . . . . . . . . . . . . . . . .  17
-         5.1.1  PKCS#10 BGPSEC Certificate Request Template Fields .  17
+         5.1.1  PKCS#10 BGPSEC Router Certificate Request Template
+                Fields   . . . . . . . . . . . . . . . . . . . . . .  17
       5.2  CRMF Profile  . . . . . . . . . . . . . . . . . . . . . .  18
-         5.2.1  CRMF BGPSEC Certificate Request Template Fields  . .  18
-         5.2.2  BGPSEC Certificate Request Control Fields  . . . . .  19
+         5.2.1  CRMF BGPSEC Router Certificate Request Template 
+                Fields . . . . . . . . . . . . . . . . . . . . . . .  18
+         5.2.2  BGPSEC Router Certificate Request Control Fields . .  19
       5.3  Certificate Extension Attributes in Certificate Requests   19
-   6.  BGPSEC Certificate Validation . . . . . . . . . . . . . . . .  21
+   6.  BGPSEC Router Certificate Validation  . . . . . . . . . . . .  21
       6.1  BGPSEC Extension Validation . . . . . . . . . . . . . . .  21
-      6.2.  BGPSEC Certification Path Validation . . . . . . . . . .  22
+      6.2.  BGPSEC Router Certification Path Validation  . . . . . .  22
    7.  Design Notes  . . . . . . . . . . . . . . . . . . . . . . . .  24
    8.  Security Considerations . . . . . . . . . . . . . . . . . . .  25
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  25
@@ -127,7 +129,7 @@ Table of Contents
       10.1  Normative References . . . . . . . . . . . . . . . . . .  25
       10.2  Informative References . . . . . . . . . . . . . . . . .  26
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  26
-   Appendix A: Example BGPSEC Certificate  . . . . . . . . . . . . .  28
+   Appendix A: Example BGPSEC Router Certificate . . . . . . . . . .  28
    Appendix B: Example Certificate Revocation List . . . . . . . . .  28
 .fi
 .in 3
@@ -138,15 +140,20 @@ Table of Contents
 .ti 0
 1.  Introduction
 
-This document defines a standard profile for X.509 certificates [X.509] for use in the context of certification of AS paths, as used in the BGPSEC protocol. Such certificates are termed "BGPSEC certificates". BGPSEC certificates attest that the issuer has granted the subject the right to append its AS number to a validated AS PATH that has been received by the subject, and sign the resulting (longer) path for subsequent validation further downstream.
+This document defines a standard profile for X.509 certificates [X.509] for use in the context of certification of AS paths, as used in the BGPSEC protocol. Such certificates are termed "BGPSEC Router certificates". The holder of the private key associated with a BGPSEC router certificate is authorized to send out  secure route advertisements (BGPSEC UPDATEs) on behalf of the AS(es) named in the certificate. That is, a router holding the private key may 
+send to its BGP peers, route advertisements that contain the specified 
+AS number(s) as the last item in the AS PATH attribute. A key property that BGPSEC will provide is that every autonomous system along the AS PATH has authorized the advertisement of the given route (to the next AS along the AS PATH).
 
-The primary goal of BGP security in general, and the BGPSEC protocol in particular, is to provide the ability to BGP speakers to reject advertisements, as contained in BGP UPDATE messages, that are not valid. Two issues may arise: (1) the authorization of the originating AS to originate its prefix; and (2) the validity of the AS path as a valid path through the network. The first issue is currently being addressed within the context of the RPKI. The second issue is the one that BGPSEC specifically is addressing. Specifically, when a BGPSEC capable router receives a signed AS path, via a channel that is distinct from regular BGP traffic and dedicated to BGPSEC specifically, it should validate the set of signatures in the signed AS path using the signatures for each of the certificates associated with each of the antecedent AS holders in the path. The public keys contained in those antecedent BGPSEC certificates are used for signature verification. Each BGPSEC certificate is a resource certificate in the sense of RFC 3779, and must contain as a resource the AS number(s) associated with those components of the AS path that is it validating as part of this signature check.
+The primary goal of BGP security in general, and the BGPSEC protocol in particular, is to provide the ability to BGP speakers to reject advertisements, as contained in BGP UPDATE messages, that are not valid. Two issues may arise: (1) the authorization of the originating AS to originate its prefix; and (2) the validity of the AS path as a valid path through the network. When a BGPSEC capable router receives a signed AS path, via a channel that is distinct from regular BGP traffic and dedicated to BGPSEC specifically, it should validate the set of signatures in the signed AS path using the signatures for each of the certificates associated with each of the antecedent AS holders in the path. The public keys contained in those antecedent BGPSEC Router certificates are used for signature verification. Each BGPSEC Router certificate is a resource certificate in the sense of RFC 3779, and must contain as a resource the AS number(s) associated with those components of the AS path that is it validating as part of this signature check.
 
-Validation of BGPSEC resource certificates, within the hierarchical RPKI, can be undertaken by establishing a valid issuer-subject certificate chain from a certificate issued by a trust anchor certification authority to the BGPSEC certificate, with the additional constraint that each subject's listed AS number resources are fully encompassed by those of the issuer at each step in the issuer-subject certification chain. Validation therefore logically corresponds to validation of an associated set of assignment or allocation actions of AS number resources.
+BGPSEC will provide a complete solution that addresses both path and origination security. In order to  provide these protections, BGPSEC will, of course, fundamentally rely on the RPKI (and the signed ROAs) specified in the current SIDR work. BGPSEC makes use of  the RPKI (and ROAs) to provide both path and origination security. BGPSEC router 
+certificates may thus be construed as an extension of the RPKI that is required to meet the goals of BGPSEC.
 
-BGPSEC certificates may be used in the context of the operation of secure inter-domain routing protocols to convey a binding between a public key, used to validate a signed AS path, and an AS number resource that is a constituent of that path, allowing BGPSEC participants to verify the correctness of the AS path that appears in BGP UPDATE messages.
+Validation of BGPSEC Router certificates, within the hierarchical RPKI, can be undertaken by establishing a valid issuer-subject certificate chain from a certificate issued by a trust anchor certification authority to the BGPSEC Router certificate, with the additional constraint that each subject's listed AS number resources are fully encompassed by those of the issuer at each step in the issuer-subject certification chain. Validation therefore logically corresponds to validation of an associated set of assignment or allocation actions of AS number resources.
 
-This profile defines those fields that are used in BGPSEC certificates that MUST be present for the certificate to be valid. BGPSEC participants SHOULD check that a BGPSEC certificate conforms to this profile as a requisite for the validation of a BGPSEC certificate.
+BGPSEC Router certificates may be used in the context of the operation of secure inter-domain routing protocols to convey a binding between a public key, used to validate a signed AS path, and an AS number resource that is a constituent of that path, allowing BGPSEC participants to verify the correctness of the AS path that appears in BGP UPDATE messages.
+
+This profile defines those fields that are used in BGPSEC Router certificates that MUST be present for the certificate to be valid. BGPSEC participants SHOULD check that a BGPSEC Router certificate conforms to this profile as a requisite for the validation of a BGPSEC Router certificate.
 
 .ti 0
 1.1  Terminology
@@ -162,20 +169,20 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 The framework for describing an association between the subject of a certificate and the AS resources currently under the subject's control is described in RFC 3779.
 
-There are two aspects of this resource extension that are noted in this profile. First, RFC 3779 notes that a resource extension SHOULD be a CRITICAL extension to the X.509 certificate. This BGPSEC certificate profile further specifies that he use of this certificate extension MUST be used in all BGPSEC certificates and MUST be marked as CRITICAL. Second, a test of the resource extension in the context of certificate validity includes the condition that the resources described in the immediate parent CA certificate in the PKI (the certificate where this certificate's issuer is the subject) has a resource set, hereinafter called the "issuer's resource set" that MUST encompass the resource set of the issued certificate. In this context "encompass" allows for the issuer's resource set to be the same as, or a strict superset of, any subject's resource set.
+There are two aspects of this resource extension that are noted in this profile. First, RFC 3779 notes that a resource extension SHOULD be a CRITICAL extension to the X.509 certificate. This BGPSEC Router certificate profile further specifies that he use of this certificate extension MUST be used in all BGPSEC Router certificates and MUST be marked as CRITICAL. Second, a test of the resource extension in the context of certificate validity includes the condition that the resources described in the immediate parent CA certificate in the PKI (the certificate where this certificate's issuer is the subject) has a resource set, hereinafter called the "issuer's resource set" that MUST encompass the resource set of the issued certificate. In this context "encompass" allows for the issuer's resource set to be the same as, or a strict superset of, any subject's resource set.
 
 Certificate validation entails the construction of a sequence of valid certificates in an issuer-subject chain (where the subject field of one certificate appears as the issuer in the next certificate in the sequence) from a trust anchor to the certificate being validated. Moreover, the resource extensions in this certificate sequence from the first CA under the trust anchor to the certificate being validated form a sequence of encompassing relationships in terms of the resources described in the resource extension.
 
 .bp
 .ti 0
-3.  BGPSEC Certificate Fields
+3.  BGPSEC Router Certificate Fields
 
-A BGPSEC Certificate is a valid X.509 public key certificate, consistent with the PKIX profile [RFC5380], containing the fields listed in this section. Unless specifically noted as being OPTIONAL, all the fields listed here MUST be present, and any other field MUST NOT appear in a conforming BGPSEC Certificate. Where a field value is specified here this value MUST be used in conforming BGPSEC certificates.
+A BGPSEC Router Certificate is a valid X.509 public key certificate, consistent with the PKIX profile [RFC5380], containing the fields listed in this section. Unless specifically noted as being OPTIONAL, all the fields listed here MUST be present, and any other field MUST NOT appear in a conforming BGPSEC Router Certificate. Where a field value is specified here this value MUST be used in conforming BGPSEC Router certificates.
 
 .ti 0
 3.1  Version
 
-BGPSEC certificates are X.509 Version 3 certificates. This field MUST be present, and the Version MUST be 3 (i.e. the value of this field is 2).
+BGPSEC Router certificates are X.509 Version 3 certificates. This field MUST be present, and the Version MUST be 3 (i.e. the value of this field is 2).
 
 .ti 0
 3.2  Serial Number
@@ -192,7 +199,7 @@ This field describes the algorithm used to compute the signature on this certifi
 
 This field identifies the entity that has signed and issued the certificate. The value of this field is a valid X.501 distinguished name. Conventions are imposed on Issuer names used in resource certificates, as described in [ID.sidr-arch].
 
-A BGPSEC certificate is always an end entity (EE) certificate, and therefore it is always a subordinate certificate. Thus the Issuer name MUST correspond to the subject name as contained in the immediate superior certificate.
+A BGPSEC Router certificate is always an end entity (EE) certificate, and therefore it is always a subordinate certificate. Thus the Issuer name MUST correspond to the subject name as contained in the immediate superior certificate.
 
 .ti 0
 3.6  Valid From
@@ -214,45 +221,45 @@ As noted above, it is valid for a certificate to have a value for this field tha
 This field specifies the subject's public key and the algorithm with which the key is used. The algorithm used in this profile is specified in [ID.sidr-rpki-algs]. It is noted that larger key sizes are computationally expensive for both issuers and participants, indicating that care should be taken when deciding to use larger than the minimum keyu size noted in [ID.sidr-rpki-algs].
 
 .ti 0
-3.9  BGPSEC Certificate Version 3 Extension Fields
+3.9  BGPSEC Router Certificate Version 3 Extension Fields
 
 As noted in Section 4.2 of RFC 5280, each extension in a certificate is designated as either critical or non-critical. A certificate-using system MUST reject the certificate if it encounters a critical extension that it does not recognize; however, a non-critical extension MAY be ignored if it is not recognized.
 
-The following X.509 V3 extensions MUST be present in a conforming BGPSEC certificate, except where explicitly noted otherwise.
+The following X.509 V3 extensions MUST be present in a conforming BGPSEC Router certificate, except where explicitly noted otherwise.
 
 .ti 0
 3.9.1  Basic Constraints
 
-The basic constraints extension identifies whether the subject of the certificate is a CA and the maximum depth of valid certification paths that include this certificate. Since a BGPSEC certificate is always an EE certificate, the basic constraints extension MUST NOT be present (and therefore the Path Length Constraint also MUST NOT be present).
+The basic constraints extension identifies whether the subject of the certificate is a CA and the maximum depth of valid certification paths that include this certificate. Since a BGPSEC Router certificate is always an EE certificate, the basic constraints extension MUST NOT be present (and therefore the Path Length Constraint also MUST NOT be present).
 
 .ti 0
 3.9.2  Subject Alternate Name
 
-The subject alternate name extension provides an alternate subject identifier for the certificate that need not be unique. The subject alternate name SHOULD appear in all BGPSEC certificates, and SHOULD contain the DNS name of the router with which the BGPSEC certificate is associated. In this profile, the subject alternate name extension is non-critical.
+The subject alternate name extension provides an alternate subject identifier for the certificate that need not be unique. The subject alternate name SHOULD appear in all BGPSEC Router certificates, and SHOULD contain the DNS name of the router with which the BGPSEC Router certificate is associated. In this profile, the subject alternate name extension is non-critical.
 
 .ti 0
 3.9.3  Subject Key Identifier
 
-The subject key identifier extension provides a means of identifying certificates that contain a particular public key. To facilitate certification path construction, this extension MUST appear in all BGPSEC certificates. This extension is non-critical.
+The subject key identifier extension provides a means of identifying certificates that contain a particular public key. To facilitate certification path construction, this extension MUST appear in all BGPSEC Router certificates. This extension is non-critical.
 
 The Key Identifier used here is the 160-bit SHA-1 hash of the value of the DER-encoded ASN.1 bit string of the subject public key, as described in section 4.2.1.2 of RFC 5280. 
 
 .ti 0
 3.9.4  Authority Key Identifier
 
-The authority key identifier extension provides a means of identifying certificates that are signed by the issuer's private key, by providing a hash value of the issuer's public key. To facilitate path construction, this extension must appear in all BGPSEC certificates. The keyIdentifier MUST be present in all BGPSEC certificates. The authorityCertIssuer and authorityCertSerialNumber fields MUST NOT be present. This extension is non-critical.
+The authority key identifier extension provides a means of identifying certificates that are signed by the issuer's private key, by providing a hash value of the issuer's public key. To facilitate path construction, this extension must appear in all BGPSEC Router certificates. The keyIdentifier MUST be present in all BGPSEC Router certificates. The authorityCertIssuer and authorityCertSerialNumber fields MUST NOT be present. This extension is non-critical.
 
 The Key Identifier used here is the 160-bit SHA-1 hash of the value of the DER-encoded ASN.1 bit string of the issuer's public key, as described in section 4.2.1.1 of RFC 5280. 
 
 .ti 0
 3.9.5  Key Usage
 
-This describes the purpose of the certificate. This is a critical extension, and it MUST be present. The digitalSignature bit MUST be set to TRUE in all BGPSEC certificates, and it MUST be the only bit set to TRUE.
+This describes the purpose of the certificate. This is a critical extension, and it MUST be present. The digitalSignature bit MUST be set to TRUE in all BGPSEC Router certificates, and it MUST be the only bit set to TRUE.
 
 .ti 0
 3.9.6  Extended Key Usage
 
-The extended key usage (EKU) extension indicates one or more purposes for which the public key in a certificate may be used. The uses are specified via a SEQUENCE of one or more object identifiers (OIDs). The EKU extension MUST NOT appear in any BGPSEC certificates.
+The extended key usage (EKU) extension indicates one or more purposes for which the public key in a certificate may be used. The uses are specified via a SEQUENCE of one or more object identifiers (OIDs). The EKU extension MUST NOT appear in any BGPSEC Router certificates.
 
 .ti 0
 3.9.7  CRL Distribution Points
@@ -285,20 +292,20 @@ This extension is non-critical.
 
 This extension (SIA) identifies the location of information and services relating to the subject of the certificate in which the SIA extension appears. This profiles uses a URI form of location identification. The preferred URI access mechanism is "rsync", and an RSYNC URI MUST be specified. The RYSNC URI must reference an object collection rather than an individual object and MUST use a trailing '/' in the URI.
 
-This extension is non-critical, and MAY be omitted. If present, it either references the location where objects signed by the private key associated with the BGPSEC (EE) certificate can be accessed, or, in the case of single use EE certificates it references the location of the single object that has been signed by the corresponding private key.
+This extension is non-critical, and MAY be omitted. If present, it either references the location where objects signed by the private key associated with the BGPSEC Router (EE) certificate can be accessed, or, in the case of single use EE certificates it references the location of the single object that has been signed by the corresponding private key.
 
 When such objects are published in a repository, the directory where these signed objects are published is referenced in the id-ad-signedObjectRepository OID. When only a single object is published signed with the matching private key, the location where this signed object is published is referenced by the id-ad-signedObject OID.
 
-This profile requires the use of repository publication manifests [ID.sidr-manifests] to list all signed objects that are deposited in the repository publication point associated with a BGPSEC EE certificate. The publication point of the manifest is placed in the SIA extension of the certificate. This profile uses the URI form of manifest identification for the accessLocation. The preferred URI access mechanism is "rsync", and an RSYNC URI must be specified. Other accessDescription fields may exist for the id-ad-rpkiManifest accessMethod, where the accessLocation indicates alternate URI access mechanisms for the same manifest object.
+This profile requires the use of repository publication manifests [ID.sidr-manifests] to list all signed objects that are deposited in the repository publication point associated with a BGPSEC Router EE certificate. The publication point of the manifest is placed in the SIA extension of the certificate. This profile uses the URI form of manifest identification for the accessLocation. The preferred URI access mechanism is "rsync", and an RSYNC URI must be specified. Other accessDescription fields may exist for the id-ad-rpkiManifest accessMethod, where the accessLocation indicates alternate URI access mechanisms for the same manifest object.
 
-When a BGPSEC EE certificate is intended for use in verifying multiple objects, the EE certificate MUST include in the SIA an accessMethod OID of id-ad-rpkiManifest, where the associated accessLocation refers to the EE's published manifest as an object URL.
+When a BGPSEC Router EE certificate is intended for use in verifying multiple objects, the EE certificate MUST include in the SIA an accessMethod OID of id-ad-rpkiManifest, where the associated accessLocation refers to the EE's published manifest as an object URL.
 
-When a BGPSEC EE certificate is used to verify a single published object, the EE certificate MUST include in the SIA an accessMethod OID of id-ad-signedObject, where the associated accessLocation refers to the publication point of the single object that is verified using this certificate. In this case, the SIA MUST NOT include the accessMethod OID of id-ad-rpkiManifest.
+When a BGPSEC Router EE certificate is used to verify a single published object, the EE certificate MUST include in the SIA an accessMethod OID of id-ad-signedObject, where the associated accessLocation refers to the publication point of the single object that is verified using this certificate. In this case, the SIA MUST NOT include the accessMethod OID of id-ad-rpkiManifest.
 
 .ti 0
 3.9.10  Certificate Policies
 
-This extension MUST reference the BGPSEC Certificate Policy, using the OID Policy Identifier value of TBD. This field MUST be present and MUST contain only this value for BGPSEC certificates.
+This extension MUST reference the RPKI Certificate Policy, using the OID Policy Identifier value of "1.3.6.1.5.5.7.14.2". This field MUST be present and MUST contain only this value for BGPSEC Router certificates.
 
 No PolicyQualifiers are defined for use with this policy and thus none must be included in this extension.
 
@@ -307,11 +314,11 @@ This extension MUST be present and it is critical.
 .ti 0
 3.9.11  AS Resources
 
-This extension contains the list of AS number resources as per RFC 3779. The "inherit" element MUST NOT be specified. RDI values are NOT supported in this profile and MUST NOT be used. All BGPSEC certificates MUST include an AS resources extension. This extension MUST be marked critical.
+This extension contains the list of AS number resources as per RFC 3779. The "inherit" element MUST NOT be specified. RDI values are NOT supported in this profile and MUST NOT be used. All BGPSEC Router certificates MUST include an AS resources extension. This extension MUST be marked critical.
 
 .bp
 .ti 0
-4.  BGPSEC Certificate Revocation List Profile
+4.  BGPSEC Router Certificate Revocation List Profile
 
 Each CA MUST issue a version 2 Certificate Revocation List (CRL), consistent with RFC 5280. The CRL issuer is the CA, and no indirect CRLs are supported in this profile.
 
@@ -326,12 +333,12 @@ No CRL fields other than those listed here are permitted in CRLs issued under th
 .ti 0
 4.1  Version
 
-BGPSEC Certificate Revocation Lists are version 2 (the integer value of this field is 1).
+BGPSEC Router Certificate Revocation Lists are version 2 (the integer value of this field is 1).
 
 .ti 0
 4.2  Issuer Name
 
-The value of this field is the X.501 name of the issuing CA who is also the signer of the CRL, and is identical to the Issuer name in the BGPSEC certificates that are issued by this issuer.
+The value of this field is the X.501 name of the issuing CA who is also the signer of the CRL, and is identical to the Issuer name in the BGPSEC Router certificates that are issued by this issuer.
 
 .ti 0
 4.3  This Update
@@ -388,27 +395,27 @@ This extension is non-critical.
 
 .bp
 .ti 0
-5.  BGPSEC Certificate Request Profile
+5.  BGPSEC Router Certificate Request Profile
 
-A BGPSEC certificate request MAY use either of the PKCS#10 or Certificate Request Message Format (CRMF). A CA Issuer MUST support PKCS#10 and a CA Issuer may, with mutual consent of the subject, support CRMF.
+Provisioning of BGPSEC router certificates SHOULD occur entirely within an administrative entity (i.e., an ISP). However, certificate requests MAY be supported as well. A BGPSEC Router certificate request MAY use either of the PKCS#10 or Certificate Request Message Format (CRMF). A CA Issuer MAY support PKCS#10 and a CA Issuer MAY support CRMF, with the mutual consent of the subject.
 
 .ti 0
 5.1  PCKS#10 Profile
 
-This profile refines the specification in RFC2986, as it relates to BGPSEC certificates. A Certificate Request Message object, formatted according to PKCS#10, is passed to the CA as the initial step in issuing a certificate.
+This profile refines the specification in RFC2986, as it relates to BGPSEC Router certificates. A Certificate Request Message object, formatted according to PKCS#10, is passed to the CA as the initial step in issuing a certificate.
 
 This request may be conveyed to the CA via a Registration Authority (RA), acting under the directions of a Subject.
 
 With the exception of the public key related fields, the CA is permitted to alter any requested field when issuing a corresponding certificate.
 
 .ti 0
-5.1.1  PKCS#10 BGPSEC Certificate Request Template Fields
+5.1.1  PKCS#10 BGPSEC Router Certificate Request Template Fields
 
 This profile applies the following additional constraints to fields that may appear in a CertificationRequestInfo:
 
 Version: This field is mandatory and MUST have the value 0.
 
-Subject: This field is optional. If present, the value of this field SHOULD be empty, in which case the issuer MUST generate a subject name that is unique in the context of BGPSEC certificates issued by this issuer. If the value of this field is non-empty, then the CA MAY consider the value of this field as the subject's suggested subject name, but the CA is NOT bound to honor this suggestion, as the subject name MUST be unique per subordinate EE certificates issued by this issuer.
+Subject: This field is optional. If present, the value of this field SHOULD be empty, in which case the issuer MUST generate a subject name that is unique in the context of BGPSEC Router certificates issued by this issuer. If the value of this field is non-empty, then the CA MAY consider the value of this field as the subject's suggested subject name, but the CA is NOT bound to honor this suggestion, as the subject name MUST be unique per subordinate EE certificates issued by this issuer.
 
 SubjectPublicKeyInfo: This field specifies the subject's public key and the algorithm with which the key is used. The algorithm used in this profile is specified in [ID.sidr-rpki-algs].
 
@@ -421,14 +428,14 @@ signatureAlgorithm: The algorithm used in this profile is specified in [ID.sidr-
 .ti 0
 5.2  CRMF Profile
 
-This profile refines the Certificate Request Message Format (CRMF) specification in RFC4211, as it relates to BGPSEC certificates. A Certificate Request Message object, formatted according to the CRMF, is passed to the CA as the initial stage in issuing a certificate.
+This profile refines the Certificate Request Message Format (CRMF) specification in RFC4211, as it relates to BGPSEC Router certificates. A Certificate Request Message object, formatted according to the CRMF, is passed to the CA as the initial stage in issuing a certificate.
 
 This request MAY be conveyed to the CA via a Registration Authority (RA), acting under the direction of the subject.
 
 With the exception of the public key related fields, the CA is permitted to alter any requested field when issuing a corresponding certificate.
 
 .ti 0
-5.2.1  CRMF BGPSEC Certificate Request Template Fields
+5.2.1  CRMF BGPSEC Router Certificate Request Template Fields
 
 This profile applies the following additional constraints to fields that may appear in the Certificate Request Template:
 
@@ -449,7 +456,7 @@ PublicKey: This field MUST be present.
 extensions: This attribute contains X509v3 Certificate Extensions. The profile for extensions in certificate requests is specified in Section 5.3.
 
 .ti 0
-5.2.2  BGPSEC Certificate Request Control Fields
+5.2.2  BGPSEC Router Certificate Request Control Fields
 
 This profile supports the Authenticator Control field. It is noted that the intended model of authentication of the subject is the "long term" model, and the advice as offered in RFC4211 is that the Authenticator Control field be used.
 
@@ -458,7 +465,7 @@ This profile supports the Authenticator Control field. It is noted that the inte
 
 The following extensions MAY appear in PKCS#10 or CRMF Certificate Requests. Any other extensions MUST NOT appear in a Certificate Request. This profile places the following additional constraints on these extensions:
 
-BasicConstraints: this field is only used by CA certificates; since BGPSEC certificates are always end entity certificates, this field MUST be omitted in this profile.
+BasicConstraints: this field is only used by CA certificates; since BGPSEC Router certificates are always end entity certificates, this field MUST be omitted in this profile.
 
 SubjectKeyIdentifier: This field is assigned by the CA and MUST be omitted in this profile.
 
@@ -470,11 +477,11 @@ ExtendedKeyUsage: This field MUST be omitted in this profile.
 
 SubjectInformationAccess: This field MAY be present in this profile. If it is present the field value SHOULD be honored by the CA. If the CA is not able to honor the requested field value, then the CA MUST reject the Certificate Request. If it is not present the CA SHOULD honor this request and omit the SIA from the issued certificate. If the CA is not able to honor the request to omit the SIA, then the CA MUST reject the Certificate Request.
 
-When a BGPSEC EE certificate is intended for use in verifying multiple objects, the certificate request for the EE certificate MUST include in the SIA of the request an accessMethod OID of id-ad-signedObjectRepository, and also MUST include in the SIA of the request an accessMethod OID of id-ad-rpkiManifest, where the associated access location refers to the publication point of the manifest object describing all objects that are verified using this EE certificate.
+When a BGPSEC Router EE certificate is intended for use in verifying multiple objects, the certificate request for the EE certificate MUST include in the SIA of the request an accessMethod OID of id-ad-signedObjectRepository, and also MUST include in the SIA of the request an accessMethod OID of id-ad-rpkiManifest, where the associated access location refers to the publication point of the manifest object describing all objects that are verified using this EE certificate.
 
-When a BGPSEC EE certificate is used to sign a single published object, the certificate request for the EE certificate MUST include in the SIA of the request an accessMethod OID of id-ad-signedObject, where the associated accessLocation refers to the publication point of the single object that is verified using this EE certificate, and MUST NOT include an id-ad-rpkiManifest accessMethod OID in the SIA of the request.
+When a BGPSEC Router EE certificate is used to sign a single published object, the certificate request for the EE certificate MUST include in the SIA of the request an accessMethod OID of id-ad-signedObject, where the associated accessLocation refers to the publication point of the single object that is verified using this EE certificate, and MUST NOT include an id-ad-rpkiManifest accessMethod OID in the SIA of the request.
 
-In the case where the BGPSEC EE certificate is to be used exclusively to sign one or more unpublished objects, such that all signed objects will not be published in any repository, then the SIA SHOULD be omitted from the request.
+In the case where the BGPSEC Router EE certificate is to be used exclusively to sign one or more unpublished objects, such that all signed objects will not be published in any repository, then the SIA SHOULD be omitted from the request.
 
 CRLDistributionPoints: This field is assigned by the CA and MUST be omitted in this profile.
 
@@ -486,9 +493,9 @@ With the exception of the publicKey field and the SubjectInformationAccess field
 
 .bp
 .ti 0
-6.  BGPSEC Certificate Validation
+6.  BGPSEC Router Certificate Validation
 
-This section describes the BGPSEC Certificate validation procedure. This refines the generic procedure described in Section 6 of RFC 5280.
+This section describes the BGPSEC Router Certificate validation procedure. This refines the generic procedure described in Section 6 of RFC 5280.
 
 To meet this goal, the path validation verifies, among other things, that a prospective certification path (a sequence of n certificates) satisfies the following conditions:
 
@@ -505,7 +512,7 @@ For all 'x' in {1, ..., n}, certificate 'x' is valid.
 
 The AS Resource extension definitions of RFC 3779 define critical extensions for Internet number resources. These are ASN.1 encoded representations of the AS number set.
 
-Valid BGPSEC Certificates MUST have a valid AS number resource extension. In order to validate a BGPSEC Certificate the resource extension MUST also be validated. This validation process relies on definitions of comparisons of resource sets:
+Valid BGPSEC Router Certificates MUST have a valid AS number resource extension. In order to validate a BGPSEC Router Certificate the resource extension MUST also be validated. This validation process relies on definitions of comparisons of resource sets:
 
 More specific: Given two AS number contiguous ranges, A and B, A is "more specific" than B if range B includes all AS numbers described in range A, and if range B is larger than range A.
 
@@ -516,9 +523,9 @@ Encompass: Given two AS number sets X and Y, X "encompasses" Y if, for every con
 Validation of a certificate's resource extension in the context of an ordered certificate sequence of {1, 2, ..., n} where certificate '1' is issued by a trust anchor and certificate 'n' is the target of certificate {'x' + 1}, includes verification that the resources described in certificate 'x' "encompass" the resources described in certificate {'x' + 1}, and the resources described in the trust anchor information "encompass" the resources described in certificate '1'.
 
 .ti 0
-6.2.  BGPSEC Certification Path Validation
+6.2.  BGPSEC Router Certification Path Validation
 
-Validation of signed resource data using a target BGPSEC certificate consists of assembling an ordered sequence (or 'Certification Path') of certificates {1,2,...,n} where '1' is a certificate that has been issued by a trust anchor, and 'n' is the target certificate, verifying that all of the following conditions hold:
+Validation of signed resource data using a target BGPSEC Router certificate consists of assembling an ordered sequence (or 'Certification Path') of certificates {1,2,...,n} where '1' is a certificate that has been issued by a trust anchor, and 'n' is the target certificate, verifying that all of the following conditions hold:
 
 (a) The certificate can be verified using the Issuer's public key and the signature algorithm;
 
@@ -538,21 +545,21 @@ A certificate validation algorithm may perform these tests in any chosen order.
 
 Certificates and CRLs used in this process may be found in a locally maintained cache, maintained by a regular synchronization across the distributed publication repository structure.
 
-There exists the possibility of encountering certificate paths that are arbitrarily long, or attempting to generate paths with loops as means of creating a potential DOS attack on a BGPSEC participant. Some further heuristics may be required to halt the certification path validation process in order to avoid some of the issues associated with attempts to validate such structures. It is suggested that implementations of BGPSEC Certificate validation MAY halt with a validation failure if the certification path length exceeds a locally defined configuration parameter.
+There exists the possibility of encountering certificate paths that are arbitrarily long, or attempting to generate paths with loops as means of creating a potential DOS attack on a BGPSEC participant. Some further heuristics may be required to halt the certification path validation process in order to avoid some of the issues associated with attempts to validate such structures. It is suggested that implementations of BGPSEC Router Certificate validation MAY halt with a validation failure if the certification path length exceeds a locally defined configuration parameter.
 
 .bp
 .ti 0
 7.  Design Notes
 
-The BGPSEC Certificate profile is based off the Resource Certificate profile as specified in [ID.res-certs]. As a result, many of the design choices herein are a reflection of the design choices that were taken in that prior work. The reader is referred to [ID.res-certs] for a fuller discussion of those choices.
+The BGPSEC Router Certificate profile is based off the Resource Certificate profile as specified in [ID.res-certs]. As a result, many of the design choices herein are a reflection of the design choices that were taken in that prior work. The reader is referred to [ID.res-certs] for a fuller discussion of those choices.
 
 .bp
 .ti 0
 8.  Security Considerations
 
-The Security Considerations of RFC5280 and RFC3779 apply to BGPSEC Certificates as defined by this profile, and their use.
+The Security Considerations of RFC5280 and RFC3779 apply to BGPSEC Router Certificates as defined by this profile, and their use.
 
-A BGPSEC Certificate PKI cannot in and of itself resolve any forms of ambiguity relating to uniqueness of assertions of rights to use in the event that two or more valid certificates encompass the same resource. If the issuance of BGPSEC certificates is aligned to the status of AS resource allocations and assignments then the information conveyed in a certificate is no better that the information in the allocation and assignment databases.
+A BGPSEC Router Certificate PKI cannot in and of itself resolve any forms of ambiguity relating to uniqueness of assertions of rights to use in the event that two or more valid certificates encompass the same resource. If the issuance of BGPSEC Router certificates is aligned to the status of AS resource allocations and assignments then the information conveyed in a certificate is no better that the information in the allocation and assignment databases.
 
 .ti 0
 9.  IANA Considerations
@@ -648,7 +655,7 @@ Authors' Addresses
 .bp
 
 .ti 0
-Appendix A: Example BGPSEC Certificate
+Appendix A: Example BGPSEC Router Certificate
 
 .in 3
 .nf
