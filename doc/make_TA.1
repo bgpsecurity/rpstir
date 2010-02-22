@@ -9,8 +9,7 @@ ETA EE certificate and a self-signed RTA certificate
 .SH SYNOPSIS
 
 .B make_TA
-.I ETAcertificate EEcertificate RTAcertificate
-.I EEkeyfile outfile.rta.raw
+.I ETAcertificate EEcertificate RTAcertificate EEkeyfile
 .B >
 .I outfile.rta
 
@@ -18,11 +17,10 @@ ETA EE certificate and a self-signed RTA certificate
     
 .B make_TA
 produces a Compound Trust Anchor structure according to
-draft-ietf-sidr-ta-02.  The files specified in the first four
-parameters are read and checked.  The ETA EE cert and RTA cert are
-assembled into the CMS structure that is signed by the EE private key.
-A human-readable form is written to \fIoutfile.rta.raw\fP, while the
-binary, DER-encoded CMS structure is written to stdout.
+draft-ietf-sidr-ta-02.  The files specified in the four parameters are
+read and checked.  The ETA EE cert and RTA cert are assembled into the
+CMS structure that is signed by the EE private key.  The CMS structure
+is written to stdout as DER-encoded ASN.1.
 .SS Parameters
 .TP
 .I ETAcertificate
@@ -45,10 +43,6 @@ The ".p15" file containing the public/private key material for the ETA
 EE certificate.  The label and password used for the EEkeyfile are
 assumed to be hard-coded as "label" and "password", as created by 
 .BR gen_key (1).
-.TP
-.I outfile.raw
-The name of the text output file for the human readable version of the CMS
-structure.
 
 .SS Response Messages
 .nf

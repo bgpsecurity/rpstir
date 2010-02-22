@@ -165,10 +165,10 @@ int main(int argc, char **argv)
   {
   struct ROA roa;
   ROA(&roa, (ushort)0);
-  if (argc != 6)
+  if (argc != 5)
     {
       fprintf(stderr, "Usage: %s ETAcert EEcert RTAcert EEkeyfile "
-	      "outfile.rta.raw > outfile.rta\n", argv[0]);
+	      "> outfile.rta\n", argv[0]);
       return -1;
     }
   strcpy(keyring.label, "label");
@@ -250,15 +250,9 @@ int main(int argc, char **argv)
   write_casn(&signerInfop->signatureAlgorithm.parameters.rsadsi_rsaEncryption,
     (uchar *)"", 0);
   char *msg = signCMS(&roa, argv[4], 0);
-  if (msg) fprintf(stderr, "%s\n", msg);
+  if (msg)
+    fprintf(stderr, "%s\n", msg);
   else
-    {
     put_casn_file(&roa.self, (char *)0, 1);
-    int siz = dump_size(&roa.self);   
-    char *buf = (char *)calloc(1, siz + 2);
-    dump_casn(&roa.self, buf);
-    int fd = creat(argv[5], 0777);
-    write(fd, buf, siz);
-    }
   return 0;
   }
