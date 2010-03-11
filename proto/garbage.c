@@ -39,7 +39,7 @@ static char *prevTimestamp, *currTimestamp;
 static char *theIssuer, *theAKI;   // for passing to callback
 static unsigned int theID;         // for passing to callback
 static sqlcountfunc countHandler;  // used by countCurrentCRLs
-static scmtab *certTable, *crlTable, *roaTable, *manifestTable, *CTATable;
+static scmtab *certTable, *crlTable, *roaTable, *manifestTable;
 
 /* callback function for searchscm that records the timestamps */
 static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
@@ -175,8 +175,6 @@ int main(int argc, char **argv)
   checkErr (roaTable == NULL, "Cannot find table roa\n");
   manifestTable = findtablescm (scmp, "manifest");
   checkErr (manifestTable == NULL, "Cannot find table manifest\n");
-  CTATable = findtablescm (scmp, "COMPOUNDTRUSTANCHOR");
-  checkErr (CTATable == NULL, "Cannot find table compoundtrustanchor\n");
   srch.vec = srch1;
   srch.sname = NULL;
   srch.ntot = 4;
