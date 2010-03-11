@@ -26,7 +26,7 @@ TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 
 all:	$(TARGETS)
 
-CFLAGS=	-g -I$(SSLINCLUDES) -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I$(CLINCLUDES)
+CFLAGS=	-g -I$(SSLINCLUDES) -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I../../proto -I$(CLINCLUDES)
 ASN_DIR= ../asn
 CASN_DIR= ../casn
 LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
@@ -62,18 +62,6 @@ whatsfcs:	whatsfcs.o prencode.o
 make_oidtable:	make_oidtable.o Makefile ../casn/libcasn.a ../asn/libasn.a
 	$(CC) $(CFLAGS) -o $@ make_oidtable.o 
 
-gen_key: gen_key.o Makefile ../casn/libcasn.a ../asn/libasn.a
-	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
-
-make_TA: make_TA.o Makefile ../casn/libcasn.a ../asn/libasn.a
-	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
-
-sign_cert: sign_cert.o Makefile ../casn/libcasn.a ../asn/libasn.a
-	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
-
-add_key_info: add_key_info.o Makefile ../casn/libcasn.a ../asn/libasn.a
-	$(CC) $(CFLAGS) -o $@ $< $(LOCAL_LIBS) $(LIBS)
-
 loadkey:	loadkey.o 
 	$(CC) $(CFLAGS) -o $@ loadkey.o $(LOCAL_LIBS) $(LIBS)
 
@@ -83,8 +71,26 @@ set_cert_ski:	set_cert_ski.o Makefile ../casn/libcasn.a ../asn/libasn.a
 dump_smart:	dump_smart.o Makefile ../casn/libcasn.a ../asn/libasn.a
 	$(CC) $(CFLAGS) -o $@ dump_smart.o $(LOCAL_LIBS) $(LIBS)
 
+sign_cert:	sign_cert.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ sign_cert.o $(LOCAL_LIBS) $(LIBS)
+
+gen_key:	gen_key.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ gen_key.o $(LOCAL_LIBS) $(LIBS)
+
+make_TA:	make_TA.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ make_TA.o $(LOCAL_LIBS) $(LIBS)
+
+validateTA:	validateTA.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ validateTA.o $(LOCAL_LIBS) $(LIBS)
+
+add_key_info:	add_key_info.o Makefile ../casn/libcasn.a ../asn/libasn.a
+	$(CC) $(CFLAGS) -o $@ add_key_info.o $(LOCAL_LIBS) $(LIBS)
+
 test_casn_random: test_casn_random.o
 	$(CC) $(CFLAGS) -o $@ test_casn_random.o $(LOCAL_LIBS)
+
+check_signature: check_signature.o
+	$(CC) $(CFLAGS) -o $@ check_signature.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f $(TARGETS) *.o
