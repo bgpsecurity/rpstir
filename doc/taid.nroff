@@ -7,9 +7,9 @@
 .ds LF Reynolds, et al 
 .ds RF FORMFEED[Page %]
 .ds LH Internet-Draft
-.ds RH February 2010
+.ds RH March 2010
 .ds CH RPKI Local TA Management
-.ds CF Expires August 28, 2010
+.ds CF Expires September 26, 2010
 .hy 0
 .nh
 .ad l
@@ -19,7 +19,7 @@
 .tl 'Secure Inter-Domain Routing''M. Reynolds'
 .tl 'Internet-Draft''S. Kent'
 .tl 'Intended status: Standards Track''BBN'
-.tl 'Expires: August 28, 2010''February 24, 2010'
+.tl 'Expires: September 26, 2010''March 25, 2010'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -34,7 +34,7 @@
 
 .ce 2
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
-<draft-ietf-sidr-rpki-ltamgmt-00.txt>
+<draft-reynolds-rpki-ltamgmt-00.txt>
 .fi
 .in 3
 
@@ -52,7 +52,7 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on August 28, 2010.
+This Internet-Draft will expire on September 26, 2010.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
