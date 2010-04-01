@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $(which $0))
+THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
 echo "delete from apki_cert where ski=\"D3:64:16:F7:4F:6F:2E:53:7B:84:42:0D:9B:72:2F:E8:CB:58:0B:4C\";" | $RPKI_MYSQL_CMD

@@ -7,7 +7,7 @@
 # N.b. requires /bin/bash for "read foo bar" instead of just "read foo"
 
 # set this to wherever encode-oid lives
-THIS_SCRIPT_DIR=$(dirname $(which $0))
+THIS_SCRIPT_DIR=$(dirname $0)
 ENCODE_OID=$THIS_SCRIPT_DIR/encode-oid
 
 if [ ! -x $ENCODE_OID ]; then

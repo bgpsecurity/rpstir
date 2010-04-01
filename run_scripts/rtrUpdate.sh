@@ -19,7 +19,7 @@
 #   requires an argument that is the staleness specs file
 
 # set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $(which $0))
+THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
 

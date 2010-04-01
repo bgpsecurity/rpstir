@@ -17,7 +17,7 @@
 # ***** END LICENSE BLOCK *****
 
 # set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $(which $0))
+THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
 RSYNC=/usr/local/bin/rsync

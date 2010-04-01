@@ -13,7 +13,7 @@
 #
 
 # set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $(which $0))
+THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
 if [ "${RTR_CHECK_INTERVAL}x" = "x" ]; then export RTR_CHECK_INTERVAL=60; fi
