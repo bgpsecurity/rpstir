@@ -19,7 +19,7 @@ Remarks:
  ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
+ * Version 3.0-beta
  * 
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
@@ -28,7 +28,7 @@ Remarks:
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2004-2007.  All Rights Reserved.
+ * Copyright (C) BBN Technologies 2004-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles Gardiner
  *

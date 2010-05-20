@@ -1,18 +1,8 @@
-/* Jun  7 2006 843U  */
-/* Jun  7 2006 GARDINER modified for new gcc */
-/* Jul 27 1995 252U  */
-/* Jul 24 1995 GARDINER fixed bug for unreadable file */
-/* Mar  8 1994   1U  */
-/* Mar  8 1994 GARDINER Started on SPARC */  
-/* Mar  8 1994      */
-/*   2U May 20 1988  */
-/*      May 20 1988 GARDINER started */
-/* WHAT */
 /* $Id$ */
 /* ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
+ * Version 3.0-beta
  * 
  * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
  * US government users are permitted restricted rights as
@@ -21,7 +11,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2007.  All Rights Reserved.
+ * Copyright (C) BBN Technologies 2007-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles Gardiner
  *

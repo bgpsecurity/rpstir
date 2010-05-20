@@ -1,3 +1,20 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 3.0-beta
+ *
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2010.  All Rights Reserved.
+ *
+ * Contributor(s): Charlie Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
