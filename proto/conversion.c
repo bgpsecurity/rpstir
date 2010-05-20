@@ -1,4 +1,21 @@
-#include "conversion.h"
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * BBN Address and AS Number PKI Database/repository software
+ * Version 3.0-beta
+ *
+ * US government users are permitted unrestricted rights as
+ * defined in the FAR.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied.
+ *
+ * Copyright (C) BBN Technologies 2010.  All Rights Reserved.
+ *
+ * Contributor(s): Charlie Gardiner
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "rpwork.h"
 
 void cvt_asn(struct iprange *torangep, struct IPAddressOrRangeA *asnp)
   {
@@ -20,60 +37,25 @@ void cvt_asn(struct iprange *torangep, struct IPAddressOrRangeA *asnp)
   if (locbuf[0]) torangep->hilim[siz - 1] |= ((1 << locbuf[0]) - 1);
   }
 
-static ulong casn2ulong(struct casn *casnp)
-  {
-  uchar locbuf[4], *uc;
-  ulong ansr;
-  int lth = read_casn(casnp, locbuf);
-  for (ansr = 0, uc = &locbuf[lth]; --uc >= locbuf; )
-    {
-    ansr <<= 8;
-    ansr += *uc;
-    }
-  return ansr;
-  }
-
-void count_bits(struct iprange *tiprangep, int *lonump, int *hinump)
-  {
-/*
-Procedure:
-1. Running from right to left, find where the low and high of tiprangep differ
-   Count the number of bits where they match
-*/
-  int lth = tiprangep->typ == IPV4? 4: 16;
-  uchar *hucp, *lucp, mask;
-  int lonumbits, hinumbits;
-  lonumbits = hinumbits = (lth << 3);
-                                                   // step 1
-  for (lucp = &tiprangep->lolim[lth - 1], lonumbits = lth << 3;
-      lucp >= tiprangep->lolim && !*lucp; 
-    lucp--,  lonumbits -= 8);
-  if (lucp >= tiprangep->lolim)
-    {
-    for (mask = 1; mask && !(mask & *lucp); mask <<= 1, lonumbits--);
-    } 
-  for (hucp = &tiprangep->hilim[lth - 1], hinumbits = 0 ; 
-    hucp >= tiprangep->hilim && *hucp == 0xFF; hucp--, hinumbits += 8);
-  if (hucp >= tiprangep->hilim)
-    {
-    for (mask = 1; mask  && (mask & *hucp); mask <<= 1, hinumbits--);
-    }
-  *lonump = lonumbits;
-  *hinump = hinumbits;
-  }
-
 void cvt_asnum(struct iprange *certrangep, 
   struct ASNumberOrRangeA *asNumberOrRangep)
   {
+  uchar locbuf[20];
+  int lth;
+  memset(certrangep->lolim, 0, sizeof(certrangep->lolim));  
+  memset(certrangep->hilim, 0, sizeof(certrangep->hilim));  
   if (size_casn(&asNumberOrRangep->num) > 0)
     {
-    certrangep->hiASnum = certrangep->loASnum =
-        casn2ulong(&asNumberOrRangep->num);
+    lth = read_casn(&asNumberOrRangep->num, locbuf);
+    memcpy(&certrangep->lolim[4 - lth], locbuf, lth);
+    memcpy(&certrangep->hilim[4 - lth], locbuf, lth);
     }
   else
     {
-    certrangep->loASnum = casn2ulong(&asNumberOrRangep->range.min);
-    certrangep->hiASnum = casn2ulong(&asNumberOrRangep->range.max);
+    lth = read_casn(&asNumberOrRangep->range.min, locbuf);
+    memcpy(&certrangep->lolim[4 - lth], locbuf, lth);
+    lth = read_casn(&asNumberOrRangep->range.max, locbuf);
+    memcpy(&certrangep->hilim[4 - lth], locbuf, lth);
     }
   }
 
@@ -101,6 +83,7 @@ static int cvtv4(uchar fill, char *ip, uchar *buf)
     c++;
     sscanf(c, "%d", &fld); // fld has total number of bits
     if (fld >= 32) return (fld > 32)? -1: 0;
+    if (uc < &buf[fld >> 3]) return -1;
     uc = &buf[(fld >> 3)];  // points to char having bit beyond last
     fld %= 8;   // number of used bits in last byte
     fld = 8 - fld;   // number of unused 
@@ -159,6 +142,7 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
     c++;
     sscanf(c, "%d", &fld); // fld has total number of bits
     if (fld >= 128) return (fld > 128)? -1: 0;
+    if (up < &buf[fld >> 3]) return -1;
     up = &buf[(fld >> 3)];
     fld %= 16;   // number of used bits in last ushort
     fld = 16 - fld;  // number of unused bits
@@ -196,19 +180,8 @@ void increment_iprange(uchar *lim, int lth)
 
 int diff_ipaddr(struct iprange *lop, struct iprange *hip)
   {
-  int ansr;
-  if (lop->typ > 0)
-    {
-    ansr = memcmp(lop->lolim, hip->lolim, (lop->typ == IPV4)? 4: 16);
-    }
-  else
-    {
-    if((hip->hiASnum == hip->loASnum && lop->loASnum == lop->hiASnum) ||
-       hip->loASnum > lop->hiASnum)
-       ansr = lop->loASnum - hip->hiASnum;
-    else ansr = 0; 
-    }
-  return ansr;
+  int lth = (lop->typ == ASNUM || lop->typ == IPv4)? 4: 6;
+  return memcmp(lop->lolim, hip->lolim, lth);
   }
 
 int overlap(struct iprange *lop, struct iprange *hip)
@@ -216,7 +189,7 @@ int overlap(struct iprange *lop, struct iprange *hip)
   if (lop->typ != hip->typ) return 0;
   if (lop->typ > 0)
     {
-    int lth = lop->typ == IPV4? 4: 16;
+    int lth = lop->typ == IPv4? 4: 16;
     if ((memcmp(lop->lolim, hip->lolim, lth) > 0 &&  // lolo within hi
          memcmp(lop->lolim, hip->hilim, lth) < 0) ||
         (memcmp(lop->hilim, hip->lolim, lth) > 0 &&  // lohi within hi
@@ -235,21 +208,40 @@ int  txt2loc(int typ, char *skibuf, struct iprange *iprangep)
   {
   int ansr;
   char *c;
+  ulong ASnum;
   iprangep->typ = typ;
+  memset(iprangep->lolim, 0, 16);
+  memset(iprangep->hilim, 0xFF, 16);
   if (typ == ASNUM)
     {
-    for (c = skibuf; *c > ' ' && *c >= '0' && *c <= '9'; c++);
+    for (c = skibuf; *c == '-' || (*c >= '0' && *c <= '9'); c++);
     if (*c > ' ') return -2; 
-    sscanf(skibuf, "%ld", &iprangep->loASnum);
-    iprangep->hiASnum = iprangep->loASnum;
+    sscanf(skibuf, "%ld", &ASnum);
+    uchar *top;
+    for (top = &iprangep->lolim[3]; top >= iprangep->lolim; top--)
+      {
+      *top = (uchar)(ASnum & 0xFF);
+      ASnum >>= 8;
+      }
+    c = strchr(skibuf, (int)'-');
+    if (!c) memcpy(iprangep->hilim, iprangep->lolim, 4);
+    else 
+      {
+      sscanf(++c, "%ld", &ASnum);
+      for (top = &iprangep->hilim[3]; top >= iprangep->hilim; top--)
+        {
+        *top = (uchar)(ASnum & 0xFF);
+        ASnum >>= 8;
+        }
+      }
     }
-  else if (typ == IPV4) 
+  else if (typ == IPv4) 
     {
     if ((ansr = cvtv4((uchar)0,    skibuf, iprangep->lolim)) < 0 ||
       (ansr = cvtv4((uchar)0xff, skibuf, iprangep->hilim)) < 0) 
       return ansr;
     }
-  else if (typ == IPV6)
+  else if (typ == IPv6)
     {
     if ((ansr = cvtv6((uchar)0,  skibuf, iprangep->lolim)) < 0 ||
       (ansr = cvtv6((uchar)0xff, skibuf, iprangep->hilim)) < 0) 
