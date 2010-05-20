@@ -3,7 +3,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  *
  * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
+ * Version 3.0-beta
  *
  * US government users are permitted unrestricted rights as
  * defined in the FAR.
@@ -11,7 +11,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
+ * Copyright (C) BBN Technologies 2008-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles W. Gardiner
  *
@@ -196,6 +196,38 @@ static struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   else clear_casn(&extp->self);
   write_objid(&extp->extnID, idp);
   return extp;
+  }
+
+static void make_fullpath(char *fullpath, char *locpath)
+  {
+  // certificate goes in issuer's directory, e.g.
+  // CM1.cer and C1.cer go nowhere else, 
+  // C1M1.cer and C12.cer go into C1/, 
+  // C12M1.cer and C123.cer go into C1/2 
+  // C123M1.cer goes into C1/2/3
+  char *f = fullpath, *l = locpath;
+  if (strlen(locpath) > 6 && locpath[1] >= '0' && locpath[1] <= '9') 
+    {
+    *f++ = *l++;  // 'C'
+    *f++ = *l++;  // 1st digit
+    *f++ = '/';
+    if (*l >= '0' && *l <= '9' && l[1] != '.') // 2nd digit
+      {
+      *f++ = *l++;  
+      *f++ = '/';
+      if (*l >= '0' && *l <= '9' && l[1] != '.') // 3rd digit
+        {
+        *f++ = *l++;
+        *f++ = '/';
+        if (*l >= '0' && *l <= '9' && l[1] != '.')
+          {
+          *f++ = *l++;
+          *f++ = '/';
+          }
+        }
+      }
+    }
+  strcpy(f, locpath);
   }
 
 static int prefix2ip(struct IPAddressA *iPAddrp, char *prefixp, int family)
@@ -619,7 +651,7 @@ int main(int argc, char **argv)
         &aiasp->self, 0);
       write_objid(&accdsp->accessMethod, id_ad_caIssuers);
       write_casn(&accdsp->accessLocation.url, 
-        (uchar *)"rsync://roa-pki.bbn.com/home/testdir", 36);
+        (uchar *)"rsync://roa-pki.bbn.com/home/testdir/", 37);
       }
     else   // can copy it
       {
@@ -722,7 +754,10 @@ int main(int argc, char **argv)
     check_access_methods(iextp);
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile, bad);
+  char fullpath[40];
+  make_fullpath(fullpath, subjfile);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);
+  if (put_casn_file(&cert.self, fullpath, 0) < 0) fatal(2, fullpath);
   int siz = dump_size(&cert.self);
   char *rawp = (char *)calloc(1, siz + 4);
   siz = dump_casn(&cert.self, rawp);

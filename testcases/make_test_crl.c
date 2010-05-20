@@ -3,7 +3,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
+ * Version 3.0-beta
  * 
  * US government users are permitted unrestricted rights as
  * defined in the FAR.  
@@ -11,7 +11,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
+ * Copyright (C) BBN Technologies 2008-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles W. Gardiner
  *
@@ -73,6 +73,34 @@ static long getCertNum(char *certfile)
   read_casn_num(&cert.toBeSigned.serialNumber, &num);
   delete_casn(&cert.self);
   return num;
+  }
+
+static void make_fullpath(char *fullpath, char *locpath)
+  {
+  // CRL goes in issuer's directory, e.g.
+  // L1.crl goes nowhere else, 
+  // L11.crl goes into C1/, 
+  // L121.crl goes into C1/2 
+  // L1231.crl goes into C1/2/3
+  char *f = fullpath, *l = locpath;
+  if (strlen(locpath) > 6) 
+    {
+    *f++ = 'C';
+    *l++; 
+    *f++ = *l++;  // 1st digit
+    *f++ = '/';
+    if (l[1] != '.')  // 2nd digit
+      {
+      *f++ = *l++;  
+      *f++ = '/';
+      if (l[1] != '.') // 3rd digit
+        {
+        *f++ = *l++;
+        *f++ = '/';
+        }
+      }
+    }
+  strcpy(f, locpath);
   }
 
 static void signCRL(struct CertificateRevocationList *crlp, char *certname)
@@ -225,7 +253,10 @@ int main(int argc, char **argv)
     adjustTime(&crlentryp->revocationDate.utcTime, now, delta);
     }
   signCRL(&crl, certname);
+  char fullpath[40];
+  make_fullpath(fullpath, crlname);
   if (put_casn_file(&crl.self, crlname, 0) < 0) fatal(6, crlname); 
+  if (put_casn_file(&crl.self, fullpath, 0) < 0) fatal(2, fullpath);
   int siz = dump_size(&crl.self);
   char *rawp = (char *)calloc(1, siz + 4);
   siz = dump_casn(&crl.self, rawp);
