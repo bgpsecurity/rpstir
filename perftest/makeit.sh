@@ -1,5 +1,22 @@
 #! /bin/sh
 # makeit.sh -m1 3 -m2 1500 -m3 300
+#  ***** BEGIN LICENSE BLOCK *****
+# 
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 3.0-beta
+# 
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.
+# 
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+# 
+#  Copyright (C) BBN Technologies 2010.  All Rights Reserved.
+# 
+#  Contributor(s): Mark Reynolds
+# 
+#  ***** END LICENSE BLOCK ***** */
+
 l1Start=1
 l1Max=3
 

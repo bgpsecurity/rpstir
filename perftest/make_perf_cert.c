@@ -3,7 +3,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  *
  * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
+ * Version 3.0-beta
  *
  * US government users are permitted unrestricted rights as
  * defined in the FAR.
@@ -11,7 +11,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
+ * Copyright (C) BBN Technologies 2008-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles W. Gardiner
  *
@@ -691,10 +691,10 @@ Procedure:
       copy_casn(&crl.toBeSigned.issuer.self, &cert.toBeSigned.issuer.self);
       write_casn_time(&crltbsp->lastUpdate.utcTime, now);
       write_casn_time(&crltbsp->nextUpdate.utcTime, now + (30 * 24 * 3600));
-      struct CRLEntry *crlEntryp = (struct CRLEntry *)inject_casn(
-        &crltbsp->revokedCertificates.self, 0);
-      write_casn_num(&crlEntryp->userCertificate, 1);
-      write_casn_time(&crlEntryp->revocationDate.utcTime, now); 
+//      struct CRLEntry *crlEntryp = (struct CRLEntry *)inject_casn(
+//        &crltbsp->revokedCertificates.self, 0);
+//      write_casn_num(&crlEntryp->userCertificate, 1);
+//      write_casn_time(&crlEntryp->revocationDate.utcTime, now); 
       struct CRLExtension *crlextp = (struct CRLExtension *)inject_casn(
         &crltbsp->extensions.self, 0);
       write_objid(&crlextp->extnID, id_cRLNumber);
