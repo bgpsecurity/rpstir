@@ -3,7 +3,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
- * Version 1.0
+ * Version 3.0-beta
  * 
  * US government users are permitted unrestricted rights as
  * defined in the FAR.  
@@ -11,7 +11,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2008.  All Rights Reserved.
+ * Copyright (C) BBN Technologies 2008-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles iW. Gardiner
  *
