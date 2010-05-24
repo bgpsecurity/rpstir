@@ -13,7 +13,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 2007-2010.  All Rights Reserved.
+ * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
  *
  * Contributor(s):  Mark Reynolds
  *

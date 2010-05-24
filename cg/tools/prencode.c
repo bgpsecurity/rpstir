@@ -19,7 +19,7 @@ char prencode_sfcsid[] = "@(#)prencode.c 378P";
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
  *
- * Copyright (C) BBN Technologies 1991-2010.  All Rights Reserved.
+ * Copyright (C) Raytheon BBN Technologies Corp. 1991-2010.  All Rights Reserved.
  *
  * Contributor(s):  Charles Gardiner
  *
