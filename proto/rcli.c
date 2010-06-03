@@ -231,6 +231,7 @@ static void usage(void)
   (void)printf("  -d dir     delete the indicated file (using full pathname)\n");
   (void)printf("  -f file    add the indicated file\n");
   (void)printf("  -F file    add the indicated trusted file\n");
+  (void)printf("  -E file    add the indicated ETA file\n");
   (void)printf("  -p         run the socket listener in perpetual mode\n");
   (void)printf("  -t topdir  create all database tables\n");
   (void)printf("  -w port    start an rsync listener on port\n");
