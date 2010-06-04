@@ -5,8 +5,8 @@
                                                                  S. Kent
 Internet-Draft                                               M. Lepinski
 Intended status: Standards Track                             M. Reynolds
-Expires: September 18, 2010                                          BBN
-                                                          March 17, 2010
+Expires: December 5, 2010                                            BBN
+                                                            June 3, 2010
 
 
                A Profile for BGPSEC Router Certificates 
@@ -34,7 +34,7 @@ Status of this Memo
    The list of Internet-Draft Shadow Directories can be accessed at
    http://www.ietf.org/shadow.html
 
-   This Internet-Draft will expire on September 18, 2010.
+   This Internet-Draft will expire on December 5, 2010.
 
 Copyright and License Notice
 
@@ -53,65 +53,9 @@ Copyright and License Notice
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 1]
+Kent, et al             Expires December 5, 2010                [Page 1]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-Kent, et al            Expires September 18, 2010               [Page 2]
-
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 Abstract
@@ -135,50 +79,50 @@ Abstract
 
 Table of Contents
 
-   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 5
-      1.1  Terminology . . . . . . . . . . . . . . . . . . . . . . . . 6
-   2.  Describing Resources in Certificates  . . . . . . . . . . . . . 7
-   3.  BGPSEC Router Certificate Fields  . . . . . . . . . . . . . . . 8
-      3.1  Version . . . . . . . . . . . . . . . . . . . . . . . . . . 8
-      3.2  Serial Number . . . . . . . . . . . . . . . . . . . . . . . 8
-      3.3  Signature Algorithm . . . . . . . . . . . . . . . . . . . . 8
-      3.4  Issuer  . . . . . . . . . . . . . . . . . . . . . . . . . . 8
-      3.5  Subject . . . . . . . . . . . . . . . . . . . . . . . . . . 8
-      3.6  Valid From  . . . . . . . . . . . . . . . . . . . . . . . . 9
-      3.7  Valid To  . . . . . . . . . . . . . . . . . . . . . . . . . 9
-      3.8  Subject Public Key Info . . . . . . . . . . . . . . . . . . 9
-      3.9  BGPSEC Router Certificate Version 3 Extension Fields  . . . 9
-         3.9.1  Basic Constraints  . . . . . . . . . . . . . . . . . . 9
-         3.9.2  Subject Key Identifier . . . . . . . . . . . . . . . . 9
-         3.9.3  Authority Key Identifier . . . . . . . . . . . . . .  10
-         3.9.4  Key Usage  . . . . . . . . . . . . . . . . . . . . .  10
-         3.9.5  Extended Key Usage . . . . . . . . . . . . . . . . .  10
-         3.9.6  CRL Distribution Points  . . . . . . . . . . . . . .  10
-         3.9.7  Authority Information Access . . . . . . . . . . . .  10
-         3.9.8  Subject Information Access . . . . . . . . . . . . .  10
-         3.9.9  Certificate Policies . . . . . . . . . . . . . . . .  10
-         3.9.10  IP Resources  . . . . . . . . . . . . . . . . . . .  10
-         3.9.11  AS Resources  . . . . . . . . . . . . . . . . . . .  10
-   4.  BGPSEC Router Certificate Revocation List Profile . . . . . .  12
-   5.  BGPSEC Router Certificate Request Profile . . . . . . . . . .  13
-   6.  BGPSEC Router Certificate Validation  . . . . . . . . . . . .  14
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 4
+      1.1  Terminology . . . . . . . . . . . . . . . . . . . . . . . . 4
+   2.  Describing Resources in Certificates  . . . . . . . . . . . . . 5
+   3.  BGPSEC Router Certificate Fields  . . . . . . . . . . . . . . . 6
+      3.1  Version . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+      3.2  Serial Number . . . . . . . . . . . . . . . . . . . . . . . 6
+      3.3  Signature Algorithm . . . . . . . . . . . . . . . . . . . . 6
+      3.4  Issuer  . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+      3.5  Subject . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+      3.6  Valid From  . . . . . . . . . . . . . . . . . . . . . . . . 7
+      3.7  Valid To  . . . . . . . . . . . . . . . . . . . . . . . . . 7
+      3.8  Subject Public Key Info . . . . . . . . . . . . . . . . . . 7
+      3.9  BGPSEC Router Certificate Version 3 Extension Fields  . . . 7
+         3.9.1  Basic Constraints  . . . . . . . . . . . . . . . . . . 7
+         3.9.2  Subject Key Identifier . . . . . . . . . . . . . . . . 7
+         3.9.3  Authority Key Identifier . . . . . . . . . . . . . . . 8
+         3.9.4  Key Usage  . . . . . . . . . . . . . . . . . . . . . . 8
+         3.9.5  Extended Key Usage . . . . . . . . . . . . . . . . . . 8
+         3.9.6  CRL Distribution Points  . . . . . . . . . . . . . . . 8
+         3.9.7  Authority Information Access . . . . . . . . . . . . . 8
+         3.9.8  Subject Information Access . . . . . . . . . . . . . . 8
+         3.9.9  Certificate Policies . . . . . . . . . . . . . . . . . 8
+         3.9.10  IP Resources  . . . . . . . . . . . . . . . . . . . . 8
+         3.9.11  AS Resources  . . . . . . . . . . . . . . . . . . . . 8
+   4.  BGPSEC Router Certificate Revocation List Profile . . . . . .  10
+   5.  BGPSEC Router Certificate Request Profile . . . . . . . . . .  11
+   6.  BGPSEC Router Certificate Validation  . . . . . . . . . . . .  12
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 3]
+Kent, et al             Expires December 5, 2010                [Page 2]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
-   7.  Design Notes  . . . . . . . . . . . . . . . . . . . . . . . .  15
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  16
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  16
-   10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  16
-      10.1  Normative References . . . . . . . . . . . . . . . . . .  16
-      10.2  Informative References . . . . . . . . . . . . . . . . .  17
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  17
-   Appendix A: Example BGPSEC Router Certificate . . . . . . . . . .  19
-   Appendix B: Example Certificate Revocation List . . . . . . . . .  19
+   7.  Design Notes  . . . . . . . . . . . . . . . . . . . . . . . .  13
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  14
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  14
+   10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  14
+      10.1  Normative References . . . . . . . . . . . . . . . . . .  14
+      10.2  Informative References . . . . . . . . . . . . . . . . .  15
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
+   Appendix A: Example BGPSEC Router Certificate . . . . . . . . . .  17
+   Appendix B: Example Certificate Revocation List . . . . . . . . .  17
 
 
 
@@ -221,66 +165,33 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 4]
+Kent, et al             Expires December 5, 2010                [Page 3]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 1.  Introduction
 
-   This document defines a profile for X.509 end entity certificates
-   [X.509] for use in the context of certification of AS paths in the
-   BGPSEC protocol. Such certificates are termed "BGPSEC Router
-   certificates". The holder of the private key associated with a BGPSEC
-   router certificate is authorized to send secure route advertisements
-   (BGPSEC UPDATEs) on behalf of the AS(es) named in the certificate.
-   That is, a router holding the private key may send to its BGP peers,
-   route advertisements that contain the specified AS number(s) as the
-   last item in the AS PATH attribute. A key property that BGPSEC will
-   provide is that every autonomous system along the AS PATH has
-   authorized the advertisement of the given route (to the next AS along
-   the AS PATH).
-
-   The primary goal of the BGPSEC protocol is to enable BGP speakers to
-   evaluate the validity of AS path info contained in BGP UPDATE
-   messages. Path validity is based on two criteria: (1) the
-   authorization of the originating AS to originate a prefix; and (2)
-   the integrity of the AS path as an indication of the path traversed
-   by this AS path info through the Internet. When a BGPSEC capable
-   router receives a signed AS path, it SHOULD validate each signature
-   in the signed AS path using the public key from a certificate
-   associated with a router representing the corresponding AS holder in
-   the path. Each BGPSEC Router certificate is a resource certificate,
-   as defined in [ID.res-cert-prof]. It must contain an AS number
-   extension [RFC3779] corresponding to the AS number in the AS path
-   that it is being used to verify.
-
-   The first criterion is satisfied by matching the origin AS number
-   against validated data from one or more ROAs that correspond to the
-   NLRI in the UPDATE message. The second criterion is met by verifying
-   the signature associated with each AS in the AS path info, using the
-   corresponding BGPSEC Router certificate. BGPSEC Router certificates
-   are validated by establishing a (valid) certificate chain from the
-   certificate issued by a trust anchor, through one or more
-   intermediaries, to the BGPSEC Router certificate, consistent with
-   path validation criteria established in RFC 3779. (This validation
-   procedure nominally correspond to validation of an associated set of
-   assignment or allocation actions of AS number resources.)
+   This document defines a profile for X.509 end entity (EE)
+   certificates [X.509] for use in the context of certification of AS
+   paths in the BGPSEC protocol. Such certificates are termed "BGPSEC
+   Router certificates". The holder of the private key associated with a
+   BGPSEC router certificate is authorized to send secure route
+   advertisements (BGPSEC UPDATEs) on behalf of the AS named in the
+   certificate. That is, a router holding the private key may send to
+   its BGP peers, route advertisements that contain the specified AS
+   number as the last item in the AS PATH attribute. A key property that
+   BGPSEC will provide is that every autonomous system along the AS PATH
+   can verify that the other ASes along the path have authorized the
+   advertisement of the given route (to the next AS along the AS PATH).
 
    This document is a profile of [ID.res-cert-prof], which is a profile
    of RFC 5280. It establishes requirements imposed on a Resource
-   certificate to be a BGPSEC Router certificate, i.e., it defines
-   constraints for certificate fields and extensions for the certificate
-   to be valid in this context. A relying party processing what purports
-   to be a BGPSEC Router certificate MUST verify that the certificate
-   conforms to this profile.
- 
-
-
-Kent, et al            Expires September 18, 2010               [Page 5]
-
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
-
+   certificate that is used as a BGPSEC Router certificate, i.e., it
+   defines constraints for certificate fields and extensions for the
+   certificate to be valid in this context. A relying party processing
+   what purports to be a BGPSEC Router certificate MUST verify that the
+   certificate conforms to this profile.
 
 1.1  Terminology
 
@@ -307,35 +218,12 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 6]
+Kent, et al             Expires December 5, 2010                [Page 4]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 2.  Describing Resources in Certificates
@@ -356,18 +244,18 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
    issuer is the subject) has a resource set, hereinafter called the
    "issuer's resource set" that MUST encompass the resource set of the
    issued certificate. In this context "encompass" allows for the
-   issuer's resource set to be the same as, or a strict superset of, any
+   issuer's resource set to be the same as, or a strict superset of, a
    subject's resource set.
 
-   Certificate validation entails the construction of a sequence of
-   valid certificates in an issuer-subject chain (where the subject
-   field of one certificate appears as the issuer in the next
-   certificate in the sequence) from a trust anchor to the certificate
-   being validated. Moreover, the resource extensions in this
-   certificate sequence from the first CA under the trust anchor to the
-   certificate being validated form a sequence of encompassing
-   relationships in terms of the resources described in the resource
-   extension.
+
+
+
+
+
+
+
+
+
 
 
 
@@ -389,9 +277,9 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 7]
+Kent, et al             Expires December 5, 2010                [Page 5]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 3.  BGPSEC Router Certificate Fields
@@ -400,8 +288,8 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
    consistent with the PKIX profile [RFC5380], containing the fields
    listed in this section. Unless specifically noted as being OPTIONAL,
    all the fields listed here MUST be present, and any other field MUST
-   NOT appear in a conforming BGPSEC Router Certificate. Where a field
-   value is specified here this value MUST be used in conforming BGPSEC
+   NOT appear in a conforming BGPSEC Router Certificate. If a field
+   value is specified here, this value MUST be used in conforming BGPSEC
    Router certificates. For any BGPSEC Router certificate field that is
    the same as in the [ID.res-cert-prof] profile, this document will
    cite the corresponding section in that document.
@@ -439,21 +327,23 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
    are printableString and UTF8String. For router certificates, it is
    RECOMMENDED that the common name attribute contain the literal string
    "ROUTER-" followed by the 32-bit router ID encoded as eight
-   hexadecimal digits. If one certificate is issued to more than one
-   router (hance the private key is shared among these routers), the
+   hexadecimal digits. If the same certificate is issued to more than
+   one router (hence the private key is shared among these routers), the
    choice of the router ID used in this name is at the discretion of the
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 8]
+Kent, et al             Expires December 5, 2010                [Page 6]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
    issuer. Note that router IDs are not guaranteed to be unique across
    the Internet, and thus the Subject name in a BGPSEC Router
    certificate issued using this convention also is not guaranteed to be
-   unique across different issuers.
+   unique across different issuers. However, each certificate issued by
+   an individual CA MUST contain a subject name that is unique within
+   that context.
 
 3.6  Valid From
 
@@ -471,9 +361,9 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
 
    As noted in Section 4.2 of RFC 5280, each extension in a certificate
    is designated as either critical or non-critical. A certificate-using
-   system MUST reject the certificate if it encounters a critical
-   extension that it does not recognize; however, a non-critical
-   extension MAY be ignored if it is not recognized.
+   system (relying party) MUST reject the certificate if it encounters a
+   critical extension that it does not recognize; however, a non-
+   critical extension MAY be ignored if it is not recognized.
 
    The following X.509 V3 extensions MUST be present in a conforming
    BGPSEC Router certificate, except where explicitly noted otherwise.
@@ -484,27 +374,28 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
    certificate is a CA and the maximum depth of valid certification
    paths that include this certificate. Since a BGPSEC Router
    certificate is always an EE certificate, the basic constraints
-   extension MUST NOT be present (and therefore the Path Length
-   Constraint also MUST NOT be present).
+   extension MUST NOT be present.
 
 3.9.2  Subject Key Identifier
 
-   The subject key identifier extension provides a means of identifying
-   certificates that contain a particular public key. To facilitate
-   certification path construction, this extension MUST appear in all
-   BGPSEC Router certificates. This extension is non-critical.
-
-   The Key Identifier used here is the 160-bit SHA-1 hash of the value
-   of the DER-encoded ASN.1 bit string of the subject public key, as
-   described in section 4.2.1.2 of RFC 5280. 
-
+   The subject key identifier (SKI) extension typically is used to
+   identify an individual CA certificate among a group of certificates
+   that contain the same subject name but distinct public keys (to
+   facilitate path construction). In the case of router certificates,
+   the SKI is used as a shorthand means of uniquely identifying an
+   individual certificate. The SKI in any Resource certificate is
+   generated from the public key in the certificate, using the SHA-1
+   algorithm, as described in section 4.2.1.2 of RFC 5280. This
  
 
 
-Kent, et al            Expires September 18, 2010               [Page 9]
+Kent, et al             Expires December 5, 2010                [Page 7]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
+
+   extension MUST appear in all BGPSEC Router certificates. This
+   extension is non-critical.
 
 3.9.3  Authority Key Identifier
 
@@ -519,11 +410,7 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
 
 3.9.5  Extended Key Usage
 
-   The extended key usage (EKU) extension indicates one or more purposes
-   for which the public key in a certificate may be used. The uses are
-   specified via a SEQUENCE of one or more object identifiers (OIDs).
-
-   The EKU extension MUST NOT appear in any BGPSEC Router certificates.
+   The EKU extension MUST NOT appear in a BGPSEC Router certificate.
 
 3.9.6  CRL Distribution Points
 
@@ -534,10 +421,6 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
    Refer to section 3.9.7 of [ID.res-cert-prof].
 
 3.9.8  Subject Information Access
-
-   This extension (SIA) identifies the location of information and
-   services relating to the subject of the certificate in which the SIA
-   extension appears.
 
    This extension is not used in BGPSEC Router certificates. It MUST be
    omitted.
@@ -554,19 +437,24 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
 
 3.9.11  AS Resources
 
- 
-
-
-Kent, et al            Expires September 18, 2010              [Page 10]
-
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
-
-
    This extension contains the list of AS number resources as per RFC
    3779. The "inherit" element MUST NOT be specified. RDI values are NOT
    supported in this profile and MUST NOT be used. All BGPSEC Router
-   certificates MUST include an AS resources extension. This extension
-   MUST be marked critical.
+   certificates MUST include an AS resources extension, and the
+   extension MUST contain exactly one AS number. This extension MUST be
+ 
+
+
+Kent, et al             Expires December 5, 2010                [Page 8]
+
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
+
+
+   marked critical.
+
+
+
+
 
 
 
@@ -613,9 +501,9 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 11]
+Kent, et al             Expires December 5, 2010                [Page 9]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 4.  BGPSEC Router Certificate Revocation List Profile
@@ -669,21 +557,21 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 12]
+Kent, et al             Expires December 5, 2010               [Page 10]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 5.  BGPSEC Router Certificate Request Profile
 
-   Provisioning of BGPSEC router certificates SHOULD occur entirely
-   within an administrative entity (i.e., an ISP). However, certificate
-   requests MAY be supported as well. A BGPSEC Router certificate
-   request MAY use either of the PKCS#10 or Certificate Request Message
-   Format (CRMF). A CA Issuer MAY support PKCS#10 and a CA Issuer MAY
-   support CRMF, with the mutual consent of the subject. The profile for
-   these requests is identical to that described in section 5 of
-   [ID.res-cert-prof].
+   Refer to section 5 of [ID.res-cert-prof].
+
+
+
+
+
+
+
 
 
 
@@ -725,22 +613,22 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 13]
+Kent, et al             Expires December 5, 2010               [Page 11]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 6.  BGPSEC Router Certificate Validation
 
-   This section describes the BGPSEC Router Certificate validation
-   procedure. This refines the generic procedure described in Section 6
-   of RFC 5280. The validation procedure used for BGPSEC Router
-   certificates is identical to the validation procedure described in
-   Section 6 of [ID.res-cert-prof], with the further restriction that
-   all IP address resources for a BGPSEC Router certificate will be
-   empty.
-
-
+   The validation procedure used for BGPSEC Router certificates is
+   identical to the validation procedure described in Section 6 of
+   [ID.res-cert-prof], with two further restrictions. First, all IP
+   address resources for a BGPSEC Router certificate will be empty.
+   Second, the sole AS number resource in the BGPSEC Router certificate
+   must match the last AS number in the AS path information of each BGP
+   UPDATE message. While this second restriction is not part of
+   validation per se, it is part of the operational validation of
+   UPDATEs performed by the router.
 
 
 
@@ -781,9 +669,9 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 14]
+Kent, et al             Expires December 5, 2010               [Page 12]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 7.  Design Notes
@@ -837,23 +725,25 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 15]
+Kent, et al             Expires December 5, 2010               [Page 13]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 8.  Security Considerations
 
    The Security Considerations of RFC5280 and RFC3779 apply to BGPSEC
    Router Certificates as defined by this profile, and their use.
+   Additionally, the Security Considerations documented in the RPKI
+   Architecture and Resource Certificate Profile [ID.res-cert-prof]
+   apply.
 
-   A BGPSEC Router Certificate PKI cannot in and of itself resolve any
-   forms of ambiguity relating to uniqueness of assertions of rights to
-   use in the event that two or more valid certificates encompass the
-   same resource. If the issuance of BGPSEC Router certificates is
-   aligned to the status of AS resource allocations and assignments then
-   the information conveyed in a certificate is no better that the
-   information in the allocation and assignment databases.
+   A BGPSEC Router Certificate is an extension of the RPKI to encompass
+   routers. It is a building block of the larger BGPSEC security
+   protocol used to validate signatures on BGPSEC Signature-Segment
+   origination of Signed-Path segments. Thus its essential security
+   function is the secure binding of an AS number to a public key,
+   consistent with the RPKI allocation/assignment hierarchy.
 
 9.  IANA Considerations
 
@@ -888,16 +778,16 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
                (CRMF)", RFC 4211, June 2004.
 
    [RFC5280]   Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
-               Housley, R., and W. Polk, "Internet X.509 Public Key
-               Infrastructure Certificate and Certificate Revocation
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 16]
+Kent, et al             Expires December 5, 2010               [Page 14]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
+               Housley, R., and W. Polk, "Internet X.509 Public Key
+               Infrastructure Certificate and Certificate Revocation
                List (CRL) Profile", RFC 5280, May 2008.
 
    [X.509]   ITU-T, "Recommendation X.509: The Directory Authentication
@@ -929,30 +819,31 @@ Authors' Addresses
 
 
                  Stephen Kent
-                 BBN Technologies
+                 Raytheon BBN Technologies Corp.
                  10 Moulton St.
                  Cambridge, MA 02138
 
                  Email: kent@bbn.com
 
                  Matt Lepinski
-                 BBN Technologies
+                 Raytheon BBN Technologies Corp.
                  10 Moulton St.
                  Cambridge, MA 02138
 
                  Email: mlepinsk@bbn.com
 
                  Mark Reynolds
-                 BBN Technologies
-                 10 Moulton St.
-                 Cambridge, MA 02138
+                 Raytheon BBN Technologies Corp.
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 17]
+Kent, et al             Expires December 5, 2010               [Page 15]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
+
+                 10 Moulton St.
+                 Cambridge, MA 02138
 
                  Email: mreynold@bbn.com
 
@@ -999,15 +890,12 @@ Internet-Draft     BGPSEC Router Certificate Profile          March 2010
 
 
 
-
-
-
  
 
 
-Kent, et al            Expires September 18, 2010              [Page 18]
+Kent, et al             Expires December 5, 2010               [Page 16]
 
-Internet-Draft     BGPSEC Router Certificate Profile          March 2010
+Internet-Draft     BGPSEC Router Certificate Profile           June 2010
 
 
 Appendix A: Example BGPSEC Router Certificate
@@ -1061,4 +949,4 @@ Appendix B: Example Certificate Revocation List
 
 
 
-Kent, et al            Expires September 18, 2010              [Page 19]
+Kent, et al             Expires December 5, 2010               [Page 17]
