@@ -478,8 +478,263 @@ static int verify_callback(int ok2, X509_STORE_CTX *store)
   return(ok2);
 }
 
+/*
+  This function gets the sigval parameter from a table based on the
+  type. It returns one of the SIGVAL_ constants indicating what
+  happened.
+*/
+
+static int get_cert_sigval(scmcon *conp, char *subj, char *ski)
+{
+  static scmsrcha *sigsrch = NULL;
+  unsigned int *svalp;
+  int sval;
+  int sta = 0;
+
+  if ( theSCMP != NULL )
+    initTables(theSCMP);
+  if ( sigsrch == NULL )
+    {
+      sigsrch = newsrchscm(NULL, 1, 0, 1);
+      ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
+	     SIGVAL_UNKNOWN);
+    }
+  (void)snprintf(sigsrch->wherestr, WHERESTR_SIZE,
+		 "ski=\"%s\" and subject=\"%s\"",
+		 ski, subj);
+//  (void)printf("Wherestr = %s\n", sigsrch->wherestr);
+  sta = searchscm(conp, theCertTable, sigsrch, NULL, ok,
+		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
+//  (void)printf("Sta = %d\n", sta);
+  if ( sta < 0 )
+    return SIGVAL_UNKNOWN;
+  svalp = (unsigned int *)(sigsrch->vec[0].valptr);
+  if ( svalp == NULL )
+    return SIGVAL_UNKNOWN;
+  sval = *(int *)svalp;
+//  (void)printf("Sval = %d\n", sta);
+  if ( sval < SIGVAL_UNKNOWN || sval > SIGVAL_INVALID )
+    return SIGVAL_UNKNOWN;
+  return sval;
+}
+
+static int get_sigval(scmcon *conp, int typ, char *item1, char *item2)
+{
+  switch ( typ )
+    {
+    case OT_CER:
+      return get_cert_sigval(conp, item1, item2);
+      // other cases not handled yet
+    default:
+      break;
+    }
+  return SIGVAL_UNKNOWN;
+}
+
+/*
+  This function attempts to set the sigval parameter in a table based
+  on the type. It has no return value, since the only negative effect
+  it can have is on performance.
+*/
+
+static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
+			    int valu)
+{
+  char stmt[520];
+  int  sta;
+
+  if ( theSCMP != NULL )
+    initTables(theSCMP);
+  if ( theCertTable == NULL )
+    return -1;
+  (void)snprintf(stmt, sizeof(stmt),
+		 "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
+		 theCertTable->tabname, valu, ski, subj);
+//  (void)printf("SET: %s\n", stmt);
+  sta = statementscm(conp, stmt);
+//  (void)printf("Statementscn returns %d\n", sta);
+  return sta;
+}
+
+static void set_sigval(scmcon *conp, int typ, char *item1, char *item2,
+		       int valu)
+{
+  switch ( typ )
+    {
+    case OT_CER:
+      set_cert_sigval(conp, item1, item2, valu);
+      break;
+    default:
+      // other cases not handled yet
+      break;
+    }
+}
+
+/*
+  A verification function type
+*/
+
+typedef int (*vfunc)(X509_STORE_CTX *);
+
+/*
+  Global variables used by the verification callback
+*/
+
+static vfunc   old_vfunc = NULL;
+static scmcon *thecon = NULL;
+
+/*
+  Our replacement for X509_verify. Consults the database first to
+  see if the certificate is already valid, otherwise calls X509_verify
+  and then sets the state in the db based on that. It returns 1 on
+  success and 0 on failure.
+*/
+
+static int local_verify(X509 *cert, EVP_PKEY *pkey)
+{
+  int   x509sta = 0;
+  int   sta = 0;
+  int   sigval = SIGVAL_UNKNOWN;
+  int   mok;
+  char *subj = NULL;
+  char *ski = NULL;
+
+//  (void)printf("LOCAL VERIFY!\n");
+// first, get the subject and the SKI
+  subj = X509_to_subject(cert, &sta, &x509sta);
+  if ( subj != NULL )
+    {
+      ski = X509_to_ski(cert, &sta, &x509sta);
+      if ( ski != NULL )
+      {
+	sigval = get_sigval(thecon, OT_CER, subj, ski);
+//        (void)printf("Sigval from db: %d\n", sigval);
+      }
+    }
+  switch ( sigval )
+    {
+    case SIGVAL_VALID:		/* already validated */
+      if ( subj != NULL )
+	free((void *)subj);
+      if ( ski != NULL )
+	free((void *)ski);
+      return 1;
+    case SIGVAL_INVALID:	/* already invalidated */
+      if ( subj != NULL )
+	free((void *)subj);
+      if ( ski != NULL )
+	free((void *)ski);
+      return 0;
+    case SIGVAL_UNKNOWN:
+    case SIGVAL_NOTPRESENT:
+    default:
+      break;			/* compute validity, then set in db */
+    }
+  mok = X509_verify(cert, pkey);
+  if ( mok )
+  {
+//    (void)printf("Sigval to db: %d\n", SIGVAL_VALID);
+    set_sigval(thecon, OT_CER, subj, ski, SIGVAL_VALID);
+  }
+  if ( subj != NULL )
+    free((void *)subj);
+  if ( ski != NULL )
+    free((void *)ski);
+  return mok;
+}
+
+/*
+  Our own internal verifier, replacing the internal_verify
+  function in openSSL (x509_vfy.c). It returns 1 on success
+  and 0 on failure.
+*/
+
+static int our_verify(X509_STORE_CTX *ctx)
+{
+  int   mok;
+  int   n;
+  int (*cb)(int, X509_STORE_CTX *);
+  X509 *xsubject;
+  X509 *xissuer;
+  EVP_PKEY *pkey = NULL;
+
+//  (void)printf("OUR VERIFY!\n");
+  cb = ctx->verify_cb;
+  n = sk_X509_num(ctx->chain);
+  ctx->error_depth = n - 1;
+  n--;
+  xissuer = sk_X509_value(ctx->chain, n);
+  if ( ctx->check_issued(ctx, xissuer, xissuer) )
+    xsubject = xissuer;
+  else
+    {
+      if ( n <= 0 )
+	{
+	  ctx->error = X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE;
+	  ctx->current_cert = xissuer;
+	  mok = cb(0, ctx);
+	  goto end;
+	}
+      else
+	{
+	  n--;
+	  ctx->error_depth = n;
+	  xsubject = sk_X509_value(ctx->chain, n);
+	}
+    }
+  while ( n >= 0 )
+    {
+      ctx->error_depth = n;
+      if ( !xsubject->valid )
+	{
+	  pkey = X509_get_pubkey(xissuer);
+	  if ( pkey == NULL )
+	    {
+	      ctx->error = X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY;
+	      ctx->current_cert = xissuer;
+	      mok = cb(0, ctx);
+	      if ( !mok )
+		goto end;
+	    }
+	  else if ( local_verify(xsubject, pkey) <= 0 )
+	    {
+	      ctx->error = X509_V_ERR_CERT_SIGNATURE_FAILURE;
+	      ctx->current_cert = xsubject;
+	      mok = cb(0, ctx);
+	      if ( !mok )
+		{
+		  EVP_PKEY_free(pkey);
+		  goto end;
+		}
+	    }
+	  EVP_PKEY_free(pkey);
+	  pkey = NULL;
+	}
+      xsubject->valid = 1;
+      /*
+      mok = check_cert_time(ctx, xsubject);
+      if ( !mok )
+	goto end;
+      */
+      ctx->current_issuer = xissuer;
+      ctx->current_cert = xsubject;
+      mok = cb(1, ctx);
+      if ( !mok )
+	goto end;
+      n--;
+      if ( n >= 0 )
+	{
+	  xissuer = xsubject;
+	  xsubject = sk_X509_value(ctx->chain, n);
+	}
+    }
+  mok = 1;
+ end:
+  return mok;
+}
+
 /******************************************************
- * static int checkit(cert_ctx, x, sk_untrusted,      *
+ * static int checkit(conp, cert_ctx, x, sk_untrusted,      *
  *                     sk_trusted, purpose, NULL)     *
  *   This is the routine that actually calls          *
  *     X509_verify_cert(). Prior to calling the final *
@@ -501,11 +756,11 @@ static int verify_callback(int ok2, X509_STORE_CTX *store)
  *  apps/verify.c of the OpenSSL source               *
  ******************************************************/
 
-static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
-                 STACK_OF(X509) *tchain, int purpose, ENGINE *e)
+static int checkit(scmcon *conp, X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
+		   STACK_OF(X509) *tchain, int purpose, ENGINE *e)
 {
   X509_STORE_CTX *csc;
-  int i;
+  int   i;
 
   UNREFERENCED_PARAMETER(e);
   csc = X509_STORE_CTX_new();
@@ -521,7 +776,14 @@ static int checkit(X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchain,
     X509_STORE_CTX_trusted_stack(csc, tchain);
   if ( purpose >= 0 )
     X509_STORE_CTX_set_purpose(csc, purpose);
+  old_vfunc = ctx->verify;
+  thecon = conp;
+//  (void)printf("CHeckit: Here\n");
+  csc->verify = our_verify;
   i = X509_verify_cert(csc);
+  csc->verify = old_vfunc;
+  old_vfunc = NULL;
+  thecon = NULL;
   X509_STORE_CTX_free(csc);
   if ( i )
     return(0);			/* verified ok */
@@ -589,25 +851,25 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
 {
   char ofullname[PATH_MAX];		/* full pathname */
 
-  if (parentSrch == NULL) {
-    parentSrch = newsrchscm(NULL, 5, 0, 1);
-    ADDCOL (parentSrch, "filename", SQL_C_CHAR, FNAMESIZE, *stap, NULL);
-    ADDCOL (parentSrch, "dirname", SQL_C_CHAR, DNAMESIZE, *stap, NULL);
-    ADDCOL (parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
-	    *stap, NULL);
-    ADDCOL (parentSrch, "aki", SQL_C_CHAR, SKISIZE, *stap, NULL);
-    ADDCOL (parentSrch, "issuer", SQL_C_CHAR, SUBJSIZE, *stap, NULL);
-    parentFile = (char *) parentSrch->vec[0].valptr;
-    parentDir = (char *) parentSrch->vec[1].valptr;
-    parentFlags = (unsigned int *) parentSrch->vec[2].valptr;
-    parentAKI = (char *) parentSrch->vec[3].valptr;
-    parentIssuer = (char *) parentSrch->vec[4].valptr;
-  }
-
+  if ( parentSrch == NULL )
+    {
+      parentSrch = newsrchscm(NULL, 5, 0, 1);
+      ADDCOL (parentSrch, "filename", SQL_C_CHAR, FNAMESIZE, *stap, NULL);
+      ADDCOL (parentSrch, "dirname", SQL_C_CHAR, DNAMESIZE, *stap, NULL);
+      ADDCOL (parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
+	      *stap, NULL);
+      ADDCOL (parentSrch, "aki", SQL_C_CHAR, SKISIZE, *stap, NULL);
+      ADDCOL (parentSrch, "issuer", SQL_C_CHAR, SUBJSIZE, *stap, NULL);
+      parentFile = (char *) parentSrch->vec[0].valptr;
+      parentDir = (char *) parentSrch->vec[1].valptr;
+      parentFlags = (unsigned int *) parentSrch->vec[2].valptr;
+      parentAKI = (char *) parentSrch->vec[3].valptr;
+      parentIssuer = (char *) parentSrch->vec[4].valptr;
+    }
   *stap = 0;
 // find the entry whose subject is our issuer and whose ski is our aki,
 // e.g. our parent
-  if (subject != NULL)
+  if ( subject != NULL )
     snprintf(parentSrch->wherestr, WHERESTR_SIZE,
 	     "ski=\"%s\" and subject=\"%s\"", ski, subject);
   else
@@ -616,9 +878,10 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
   addFlagTest(parentSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
   *stap = searchscm(conp, theCertTable, parentSrch, NULL, ok,
 		    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
-  if ( *stap < 0 ) return NULL;
+  if ( *stap < 0 )
+    return NULL;
   (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
-  if (pathname != NULL)
+  if ( pathname != NULL )
     strncpy(*pathname, ofullname, PATH_MAX);
   return readCertFromFile(ofullname, stap);
 }
@@ -627,7 +890,7 @@ static scmsrcha *certSrch = NULL;
 
 struct cert_answers cert_answers;
 
-static int addCert2List (scmcon *conp, scmsrcha *s, int idx)
+static int addCert2List(scmcon *conp, scmsrcha *s, int idx)
   {
   UNREFERENCED_PARAMETER(conp);
   UNREFERENCED_PARAMETER(idx);
@@ -647,7 +910,7 @@ static int addCert2List (scmcon *conp, scmsrcha *s, int idx)
   return 0;
   }
 
-struct cert_answers * find_cert_by_aKI(char *ski, char *aki, scm *scmp,
+struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *scmp,
   scmcon *conp)
   {
   int sta;
@@ -662,10 +925,11 @@ struct cert_answers * find_cert_by_aKI(char *ski, char *aki, scm *scmp,
     ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
     ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
     }
-
   sta = 0;
-  if (ski) snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
-  else snprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\"%s\"", aki);
+  if ( ski )
+    snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
+  else
+    snprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\"%s\"", aki);
   addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
   addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN,   0, 1);
   sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
@@ -687,7 +951,7 @@ static unsigned long long revokedSN;
 
 /* callback function for cert_revoked */
 
-static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
+static int revokedHandler(scmcon *conp, scmsrcha *s, int numLine)
 {
   UNREFERENCED_PARAMETER(conp);
   UNREFERENCED_PARAMETER(s);
@@ -705,7 +969,8 @@ static int revokedHandler (scmcon *conp, scmsrcha *s, int numLine)
 /*
  * Check whether a cert is revoked by a crl
  */
-static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
+
+static int cert_revoked(scm *scmp, scmcon *conp, char *sn, char *issuer)
 {
   int sta;
 
@@ -736,7 +1001,7 @@ static int cert_revoked (scm *scmp, scmcon *conp, char *sn, char *issuer)
 */
 
 static int verify_cert(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
-		      char *parentSubject, int *x509stap, int *chainOK)
+		       char *parentSubject, int *x509stap, int *chainOK)
 {
   STACK_OF(X509) *sk_trusted = NULL;
   STACK_OF(X509) *sk_untrusted = NULL;
@@ -809,7 +1074,7 @@ static int verify_cert(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
     }
   sta = 0;
   if (*chainOK)
-    sta = checkit(cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
+    sta = checkit(conp, cert_ctx, x, sk_untrusted, sk_trusted, purpose, NULL);
   *x509stap = cbx509err;
   sk_X509_pop_free(sk_untrusted, X509_free);
   sk_X509_pop_free(sk_trusted, X509_free);
@@ -951,9 +1216,9 @@ static int updateValidFlags(scmcon *conp, scmtab *tabp, unsigned int id,
   int flags = isValid ?
     ((prevFlags | SCM_FLAG_VALIDATED) & (~SCM_FLAG_NOCHAIN)) :
     (prevFlags | SCM_FLAG_NOCHAIN);
-  snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
-	    tabp->tabname, flags, id);
-  return statementscm (conp, stmt);
+  snprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
+	   tabp->tabname, flags, id);
+  return statementscm(conp, stmt);
 }
 
 // Used by rpwork
@@ -1246,7 +1511,7 @@ static char manFiles[MANFILES_SIZE];
  * utility function for verifyChildren
  */
 
-static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
+static int verifyChildCert(scmcon *conp, PropData *data, int doVerify)
 {
   X509 *x = NULL;
   int   x509sta, sta, chainOK;
@@ -1263,7 +1528,7 @@ static int verifyChildCert (scmcon *conp, PropData *data, int doVerify)
       deletebylid (conp, theCertTable, data->id);
       return sta;
     }
-    updateValidFlags (conp, theCertTable, data->id, data->flags, 1);
+    updateValidFlags(conp, theCertTable, data->id, data->flags, 1);
   }
   if (crlSrch == NULL) {
     crlSrch = newsrchscm(NULL, 4, 0, 1);

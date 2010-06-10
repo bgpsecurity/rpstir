@@ -79,6 +79,7 @@ static scmtab scmtabbuilder[] =
       "hash     VARCHAR(256),"
       "valfrom  DATETIME NOT NULL,"
       "valto    DATETIME NOT NULL,"
+      "sigval   INT UNSIGNED DEFAULT 0,"
       "ipblen   INT UNSIGNED DEFAULT 0,"
       "ipb      BLOB,"
       "ts_mod   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"

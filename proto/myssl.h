@@ -116,6 +116,8 @@ extern void  freecf(cert_fields *);
 extern char *ASNTimeToDBTime(char *in, int *stap);
 extern char *LocalTimeToDBTime(int *stap);
 extern char *UnixTimeToDBTime(time_t clck, int *stap);
+extern char *X509_to_ski(X509 *x, int *stap, int *x509stap);
+extern char *X509_to_subject(X509 *x, int *stap, int *x509stap);
 
 extern int   rescert_profile_chk(X509 *x, int ct, int checkRPKI);
 

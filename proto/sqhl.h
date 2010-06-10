@@ -23,6 +23,7 @@
 #define _SQHL_H_
 
 #include <stdio.h>
+
 /*
   Object types
 */
@@ -51,6 +52,15 @@
 #define EE_CERT       2
 #define TA_CERT       3
 #define UN_CERT       4
+
+/*
+  Signature validation states
+*/
+
+#define SIGVAL_UNKNOWN     0
+#define SIGVAL_NOTPRESENT  1
+#define SIGVAL_VALID       2
+#define SIGVAL_INVALID     3
 
 /*
   Flags

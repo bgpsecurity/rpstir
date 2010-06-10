@@ -339,6 +339,15 @@ static char *cf_get_subject(X509 *x, int *stap, int *x509stap)
   return(dptr);
 }
 
+/*
+  This is a public version of the above.
+*/
+
+char *X509_to_subject(X509 *x, int *stap, int *x509stap)
+{
+  return cf_get_subject(x, stap, x509stap);
+}
+
 static char *cf_get_issuer(X509 *x, int *stap, int *x509stap)
 {
   char *ptr;
@@ -866,19 +875,19 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
 	  *stap = ERR_SCM_NOMEM;
 	  return(NULL);
 	}
-      if (fname != NULL) {
+      if ( fname != NULL )
+	{
 	  cf->fields[CF_FIELD_FILENAME] = strdup(fname);
 	  if ( cf->fields[CF_FIELD_FILENAME] == NULL )
-	  {
+	    {
 	      *stap = ERR_SCM_NOMEM;
 	      return(NULL);
-	  }
-      }
+	    }
+	}
     }
 // get all the non-extension fields; if a field cannot be gotten and its
 // needed, that is a fatal error. Note that these validators are assumed
 // to be in linear order
-
   for(i=1;i<CF_NFIELDS;i++)
     {
       if ( validators[i].get_func == NULL )
@@ -959,6 +968,90 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
     }
   *xp = x;
   return(cf);
+}
+
+/*
+  This utility function just gets the SKI from an X509 data structure.
+*/
+
+char *X509_to_ski(X509 *x, int *stap, int *x509stap)
+{
+  const X509V3_EXT_METHOD   *meth;
+  const unsigned char *udat;
+  cfx_validator       *cfx;
+  X509_EXTENSION      *ex;
+  X509_CINF   *ci;
+  cert_fields *cf;
+  void *exts;
+  char *dptr;
+  int   excnt;
+  int   i;
+
+  if ( stap == NULL || x509stap == NULL )
+    return(NULL);
+  dptr = NULL;
+  *x509stap = 1;
+  if ( x == NULL )
+    {
+      *stap = ERR_SCM_INVALARG;
+      return(NULL);
+    }
+  cf = (cert_fields *)calloc(1, sizeof(cert_fields));
+  if ( cf == NULL )
+    {
+      *stap = ERR_SCM_NOMEM;
+      return(NULL);
+    }
+// get the extension fields
+  excnt = X509_get_ext_count(x);
+  ci = x->cert_info;
+  for(i=0;i<excnt;i++)
+    {
+      ex = sk_X509_EXTENSION_value(ci->extensions, i);
+      if ( ex == NULL )
+	continue;
+      meth = X509V3_EXT_get(ex);
+      if ( meth == NULL )
+	continue;
+      if ( meth->ext_nid != NID_subject_key_identifier )
+	continue;
+      udat = ex->value->data;
+      if ( meth->it )
+	exts = ASN1_item_d2i(NULL, &udat, ex->value->length,
+			     ASN1_ITEM_ptr(meth->it));
+      else
+	exts = meth->d2i(NULL, &udat, ex->value->length);
+      if ( exts == NULL )
+	continue;
+      *stap = 0;
+      *x509stap = 0;
+      cfx = cfx_find(meth->ext_nid);
+      if ( cfx != NULL && cfx->get_func != NULL )
+	{
+	  if ( cfx->raw == 0 )
+	    (*cfx->get_func)(meth, exts, cf, stap, x509stap);
+	  else
+	    (*cfx->get_func)(meth, ex, cf, stap, x509stap);
+	}
+      if ( meth->it )
+	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
+      else
+	meth->ext_free(exts);
+      if ( cf->fields[CF_FIELD_SKI] != NULL )
+	{
+	  *x509stap = 0;
+	  break;
+	}
+    }
+  if ( *stap != 0 )
+    {
+      freecf(cf);
+      cf = NULL;
+    }
+  if ( cf != NULL && cf->fields[CF_FIELD_SKI] != NULL )
+    dptr = strdup(cf->fields[CF_FIELD_SKI]);
+  freecf(cf);
+  return(dptr);
 }
 
 static char *crf_get_issuer(X509_CRL *x, int *stap, int *crlstap)
