@@ -518,12 +518,47 @@ static int get_cert_sigval(scmcon *conp, char *subj, char *ski)
   return sval;
 }
 
+static int get_roa_sigval(scmcon *conp, char *ski)
+{
+  static scmsrcha *sigsrch = NULL;
+  unsigned int *svalp;
+  int sval;
+  int sta = 0;
+
+  if ( theSCMP != NULL )
+    initTables(theSCMP);
+  if ( sigsrch == NULL )
+    {
+      sigsrch = newsrchscm(NULL, 1, 0, 1);
+      ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
+	     SIGVAL_UNKNOWN);
+    }
+  (void)snprintf(sigsrch->wherestr, WHERESTR_SIZE,
+		 "ski=\"%s\"", ski);
+//  (void)printf("Wherestr = %s\n", sigsrch->wherestr);
+  sta = searchscm(conp, theROATable, sigsrch, NULL, ok,
+		  SCM_SRCH_DOVALUE_ALWAYS, NULL);
+//  (void)printf("Sta = %d\n", sta);
+  if ( sta < 0 )
+    return SIGVAL_UNKNOWN;
+  svalp = (unsigned int *)(sigsrch->vec[0].valptr);
+  if ( svalp == NULL )
+    return SIGVAL_UNKNOWN;
+  sval = *(int *)svalp;
+//  (void)printf("Sval = %d\n", sta);
+  if ( sval < SIGVAL_UNKNOWN || sval > SIGVAL_INVALID )
+    return SIGVAL_UNKNOWN;
+  return sval;
+}
+
 static int get_sigval(scmcon *conp, int typ, char *item1, char *item2)
 {
   switch ( typ )
     {
     case OT_CER:
       return get_cert_sigval(conp, item1, item2);
+    case OT_ROA:
+      return get_roa_sigval(conp, item1);
       // other cases not handled yet
     default:
       break;
@@ -538,7 +573,7 @@ static int get_sigval(scmcon *conp, int typ, char *item1, char *item2)
 */
 
 static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
-			    int valu)
+			   int valu)
 {
   char stmt[520];
   int  sta;
@@ -546,7 +581,7 @@ static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
   if ( theSCMP != NULL )
     initTables(theSCMP);
   if ( theCertTable == NULL )
-    return -1;
+    return ERR_SCM_NOSUCHTAB;
   (void)snprintf(stmt, sizeof(stmt),
 		 "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
 		 theCertTable->tabname, valu, ski, subj);
@@ -556,18 +591,42 @@ static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
   return sta;
 }
 
-static void set_sigval(scmcon *conp, int typ, char *item1, char *item2,
-		       int valu)
+static int set_roa_sigval(scmcon *conp, char *ski, int valu)
 {
+  char stmt[520];
+  int  sta;
+
+  if ( theSCMP != NULL )
+    initTables(theSCMP);
+  if ( theROATable == NULL )
+    return ERR_SCM_NOSUCHTAB;
+  (void)snprintf(stmt, sizeof(stmt),
+		 "update %s set sigval=%d where ski=\"%s\";",
+		 theROATable->tabname, valu, ski);
+//  (void)printf("SET: %s\n", stmt);
+  sta = statementscm(conp, stmt);
+//  (void)printf("Statementscn returns %d\n", sta);
+  return sta;
+}
+
+static int set_sigval(scmcon *conp, int typ, char *item1, char *item2,
+		      int valu)
+{
+  int sta = -1;
+
   switch ( typ )
     {
     case OT_CER:
-      set_cert_sigval(conp, item1, item2, valu);
+      sta = set_cert_sigval(conp, item1, item2, valu);
+      break;
+    case OT_ROA:
+      sta = set_roa_sigval(conp, item1, valu);
       break;
     default:
       // other cases not handled yet
       break;
     }
+  return sta;
 }
 
 /*
@@ -1176,23 +1235,33 @@ static unsigned char *readfile(char *fn, int *stap)
  * roa verification code
  */
 
-static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
+static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
 {
-  X509 *cert;
-  int sta;
-  char fn[PATH_MAX], *fn2;
   unsigned char *blob = NULL;
+  X509 *cert;
+  int   sta;
+  char  fn[PATH_MAX];
+  char *fn2;
 
-// call the syntactic verification first
+// first, see if the ROA is already validated and in the DB
+//  (void)printf("VERIFY_ROA\n");
+  sta = get_sigval(conp, OT_ROA, ski, NULL);
+  if ( sta == SIGVAL_VALID )
+    {
+//      (void)printf("ALREADY validated this ROA!\n");
+      return 0;
+    }
+// next call the syntactic verification
   sta = roaValidate(r);
   if ( sta < 0 )
     return(sta);
   fn2 = fn;
-  cert = parent_cert (conp, ski, NULL, &sta, &fn2);
-  if ( cert == NULL ) {
-    *chainOK = 0;
-    return 0;
-  }
+  cert = parent_cert(conp, ski, NULL, &sta, &fn2);
+  if ( cert == NULL )
+    {
+      *chainOK = 0;
+      return 0;
+    }
   *chainOK = 1;
 // read the ASN.1 blob from the file
   blob = readfile(fn, &sta);
@@ -1202,6 +1271,9 @@ static int verify_roa (scmcon *conp, struct ROA *r, char *ski, int *chainOK)
       free((void *)blob);
     }
   X509_free(cert);
+//  (void)printf("VERIFY_ROA %d\n", sta);
+  if ( sta >= 0 )
+    set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
   return (sta < 0) ? ERR_SCM_NOTVALID : 0;
 }
 
@@ -1287,25 +1359,27 @@ static int verifyChildROA(scmcon *conp, scmsrcha *s, int idx)
   UNREFERENCED_PARAMETER(idx);
   ROA(&roa, (ushort)0);
   // try verifying crl
-  snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
-	    (char *) s->vec[1].valptr);
+  snprintf(pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
+	   (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   sta = roaFromFile(pathname, typ>=OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1, &roa);
-  if (sta < 0) return sta;
+  if ( sta < 0 )
+    return sta;
   skii = (char *)roaSKI(&roa);
   sta = verify_roa(conp, &roa, skii, &chainOK);
   delete_casn(&roa.self);
   if ( skii )
      free((void *)skii);
-  id = *((unsigned int *) (s->vec[2].valptr));
+  id = *((unsigned int *)(s->vec[2].valptr));
   // if invalid, delete it
-  if (sta < 0) {
-    deletebylid (conp, theROATable, id);
-    return sta;
-  }
+  if ( sta < 0 )
+    {
+      deletebylid(conp, theROATable, id);
+      return sta;
+    }
   // otherwise, validate it
-  sta = updateValidFlags (conp, theROATable, id,
-			  *((unsigned int *) (s->vec[3].valptr)), 1);
+  sta = updateValidFlags(conp, theROATable, id,
+			 *((unsigned int *) (s->vec[3].valptr)), 1);
   return 0;
 }
 
@@ -2228,7 +2302,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
 
     // verify the signature
-    if ((sta = verify_roa (conp, &roa, ski, &chainOK)) != 0)
+    if ((sta = verify_roa(conp, &roa, ski, &chainOK)) != 0)
       break;
 
     // ip_addrs
