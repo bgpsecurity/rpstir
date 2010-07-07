@@ -1,0 +1,275 @@
+#####################################
+Test cases for RFC 3779 extensions
+by Charlie Gardiner and Andrew Chi
+#####################################
+
+The following test cases are designed to verify the handling of RFC
+3779 extensions for X.509 certificates.  Comprehensive coverage of all
+possible valid and invalid certificates is infeasible.  Nevertheless,
+the following cases are careful to check (1) each requirement in the
+RFC, and (2) corner cases that may reveal common software errors.
+
+All test cases are variations of two well-formed "base" certificates:
+a parent (P*) and child (C*) with correct RFC3779 relationships.  P*
+and C* both contain multiple IPv4 and IPv6 IPaddressOrRange sequence
+elements, and multiple AS numbers.  Unless otherwise specified, the
+RFC3779 extensions of each certificate below are a superset of the
+RFC3779 extensions in either P* or C*.  This helps to verify both the
+independence and the correct combination of behavior when handling
+IPv4, IPv6, and AS number fields.
+
+
+Base Certificates
+-----------------
+
+P*: The "base" parent certificate contains the following RFC3779 fields.
+
+IPv4 IPAddress        8.0/16
+IPv4 IPAddress        8.2/16
+IPv4 IPAddressRange   9.2.3.4 - 9.2.5.255
+IPv6 IPAddress        1111::/16
+IPv6 IPAddressRange   AAA1:: - AAA3::
+ASId                  1234
+ASRange               1236-1242
+
+
+C*: The "base" child certificate contains the following RFC3779 fields.
+
+IPv4 IPAddress        8.0.0/24
+IPv4 IPAddressRange   9.2.3.4 - 9.2.3.8
+IPv4 IPAddressRange   9.2.4.4 - 9.2.4.8
+IPv6 IPAddress        1111:1111::/32
+IPv6 IPAddressRange   AAA1:: - AAA2::
+ASId                  1236
+ASRange               1238-1239
+ASRange               1241-1242
+
+
+IPv4 / IPv6 Test Cases
+----------------------
+
+1. Tests for encoding order of IPaddressOrRange sequence elements (8
+   positive, 8 negative cases):
+
+   Generate certificates by appending to C*:
+   first {IPv4/IPv6} sequence element is a {prefix/range},
+   next sequence element is a {prefix/range},
+   and the sequence elements are {correctly/incorrectly} ordered.
+
+   Cases:
+
+   +
+   IPv4 IPAddress        10.0.0/24
+   IPv4 IPAddress        10.0.2/24
+
+   -
+   IPv4 IPAddress        10.0.2/24
+   IPv4 IPAddress        10.0.0/24
+
+   +
+   IPv4 IPAddress        10.0.0/24
+   IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+
+   -
+   IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+   IPv4 IPAddress        10.0.0/24
+
+   +
+   IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+   IPv4 IPAddress        10.3.0/24
+
+   -
+   IPv4 IPAddress        10.3.0/24
+   IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+
+   +
+   IPv4 IPAddressRange   10.2.3.4 - 10.2.3.8
+   IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+
+   -
+   IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+   IPv4 IPAddressRange   10.2.3.4 - 10.2.3.8
+
+   +
+   IPv6 IPAddress        2222::/16
+   IPv6 IPAddress        2224::/16
+
+   -
+   IPv6 IPAddress        2224::/16
+   IPv6 IPAddress        2222::/16
+
+   +
+   IPv6 IPAddress        2222::/16
+   IPv6 IPAddressRange   3333:: - 3334::
+
+   -
+   IPv6 IPAddressRange   3333:: - 3334::
+   IPv6 IPAddress        2222::/16
+
+   +
+   IPv6 IPAddressRange   2222:: - 2223::
+   IPv6 IPAddress        3333::/16
+
+   -
+   IPv6 IPAddress        3333::/16
+   IPv6 IPAddressRange   2222:: - 2223::
+
+   +
+   IPv6 IPAddressRange   2222:: - 2223::
+   IPv6 IPAddressRange   3333:: - 3334::
+
+   -
+   IPv6 IPAddressRange   3333:: - 3334::
+   IPv6 IPAddressRange   2222:: - 2223::
+
+
+2. Tests for adjacent sequence elements (8 negative cases)
+
+   Generate certificates by appending to C*:
+   first {IPv4/IPv6} sequence element is a {prefix/range},
+   next sequence element is a {prefix/range},
+   and the sequence elements are adjacent in address space.
+
+   Cases:
+
+   -
+   IPv4 IPAddress        10.0.0/24
+   IPv4 IPAddress        10.0.1/24
+
+   -
+   IPv4 IPAddress        10.0.0/24
+   IPv4 IPAddressRange   10.0.1.0 - 10.0.1.2
+
+   -
+   IPv4 IPAddressRange   10.0.0.253 - 10.0.0.255
+   IPv4 IPAddress        10.0.1/24
+
+   -
+   IPv4 IPAddressRange   10.0.0.253 - 10.0.0.255
+   IPv4 IPAddressRange   10.0.1.0 - 10.0.1.2
+
+   -
+   IPv6 IPAddress        2222::/16
+   IPv6 IPAddress        2223::/16
+
+   -
+   IPv6 IPAddress        2222::/16
+   IPv6 IPAddressRange   2223:: - 2223::0002
+
+   -
+   IPv6 IPAddressRange   2222::1 - 2222::ffff
+   IPv6 IPAddress        2222:0:0:0:0:0:1/112
+
+   -
+   IPv6 IPAddressRange   2222:: - 2222::2
+   IPv6 IPAddressRange   2222::3 - 2222::5
+
+3. Tests for overlapping sequence elements (8 negative cases)
+
+   Generate certificates by appending to C*:
+   first {IPv4/IPv6} sequence element is a {prefix/range},
+   next sequence element is a {prefix/range},
+   and the sequence elements overlap by one address.
+
+   -
+   IPv4 IPAddress        10.0.0/24
+   IPv4 IPAddress        10.0.0.255/32
+
+   -
+   IPv4 IPAddress        10.0.0/24
+   IPv4 IPAddressRange   10.0.0.255 - 10.0.1.1
+
+   -
+   IPv4 IPAddressRange   10.0.0.254 - 10.0.1.0
+   IPv4 IPAddress        10.0.1/24
+
+   -
+   IPv4 IPAddressRange   10.0.0.254 - 10.0.1.0
+   IPv4 IPAddressRange   10.0.1.0 - 10.0.1.2
+
+   -
+   IPv6 IPAddress        2222::/128
+   IPv6 IPAddress        2222::/16
+
+   -
+   IPv6 IPAddress        2222::/16
+   IPv6 IPAddressRange   2222:ffff:ffff:ffff:ffff:ffff:ffff:ffff - 2223::1
+
+   -
+   IPv6 IPAddressRange   2222:: - 2223::
+   IPv6 IPAddress        2223::/16
+
+   -
+   IPv6 IPAddressRange   2222:: - 2223::
+   IPv6 IPAddressRange   2223:: - 2223::2
+
+4. Tests for child within parent limits (32 positive, 40 negative cases)
+
+   Generate certificates by appending to C* and P* where
+   the following sequence elements are {IPv4/IPv6},
+   parent has sequence element {prefix/range},
+   child  has sequence element {prefix/range},
+   child low limit is {less than/equal to/greater than} parent low limit,
+   child high limit is {less than/equal to/greater than} parent high limit.
+
+   -
+   Parent IPv4 IPAddress       10.0.5/24
+   Child  IPv4 IPAddress       10.0.4/24
+
+   -
+   Parent IPv4 IPAddress       10.0.5/24
+   Child  IPv4 IPAddress       10.0.4/23
+
+   -
+   Parent IPv4 IPAddress       10.0.5/24
+   Child  IPv4 IPAddress       10.0.0/21
+
+   +
+   Parent IPv4 IPAddress       10.0.0/22
+   Child  IPv4 IPAddress       10.0.0/24
+
+   +
+   Parent IPv4 IPAddress       10.0.0/22
+   Child  IPv4 IPAddress       10.0.0/22
+   
+   -
+   Parent IPv4 IPAddress       10.0.0/22
+   Child  IPv4 IPAddress       10.0.0/20
+
+   +
+   Parent IPv4 IPAddress       10.0.0/24
+   Child  IPv4 IPAddress       10.0.0.128/26
+
+   +
+   Parent IPv4 IPAddress       10.0.0/24
+   Child  IPv4 IPAddress       10.0.0.128/25
+
+   -
+   Parent IPv4 IPAddress       10.0.0/24
+   Child  IPv4 IPAddress       10.0.1/24
+
+   
+   
+5. Parent-child multi-member tests (unnecessary since these are
+   already tested by the fact that all certificates above are built
+   from "base" certificates with multiple members)
+
+6. Special tests
+
+  6.1 Valid/invalid ranges
+     6.1.1 Extra zero bits in low limit
+     6.1.2 Extra one bits in upper limit
+     6.1.3 Invalid range due to equivalence to prefix (1.0.0.0 - 1.0.255.255)
+     6.1.4 Invalid range due to equivalence to prefix (1.0.0.0 - 1.0.0.0)
+     6.1.5 Invalid range due to out-of-order limits (1.1.0.0 - 1.0.0.0)
+     6.1.6 31.12.34.56 - 31.255.255.255 encode high limit as "000" or "0001?
+
+  6.2 Valid/invalid prefixes
+     6.2.1 0/0 valid
+     6.2.2 0/32 invalid?
+     6.2.3 8/33 invalid
+
+
+AS Number Test Cases
+--------------------
+
