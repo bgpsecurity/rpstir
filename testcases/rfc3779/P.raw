@@ -1,0 +1,83 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x02
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C"
+        seq utc "100713190712Z"
+            utc "110713190712Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C1"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x0030818902818100DCB5C71F0639D669
+                0x698461676A6D4C9CD4E2CB2A93D2F2FC
+                0xBE8394429B1593C7C3E82BD0195E91E4
+                0xA57A115B27108D8A69028162383AC026
+                0x0DD3C583626DAB354C09351178002F66
+                0xF7FF647C8EC837F569588C0E6715FE42
+                0xC846E9B1EFABBC082A2CB391FA023DBA
+                0xB3CCDC6240FB2CB563325A9AF031CF69
+                0xC956887ADC4EBC410203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xFF1663DC8CDBBCC18E5C042D24533F7A
+                            0x280EE3FD
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0x1F068FACF2B4D83CCD736FA9EBA74C57
+                                0x287F03DB
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x000800  /* 8.0/16 */
+                                    bit 0x000802  /* 8.2/16 */
+                                    seq bit 0x0009020304 /* 9.2.3.4 - */
+                                        bit 0x01090204   /* 9.2.5.255 */
+                                    bit 0x010A02  /* 10.0/14 */
+                            seq oct 0x0002
+                                seq bit 0x001111   /* 1111::/16 */
+                                    bit 0x032220  /* 2220::/13 */
+                                    bit 0x003330  /* 3330::/13 */
+                                    seq bit 0x00AAA1 /* AAA1 - */
+                                        bit 0x02AAA0 /* AAA3 */
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq int 0x4d2  /* 1234 */
+                                    seq int 0x4d4 /* 1236 - */
+                                        int 0x4da /* 1242 */
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x00D6972A1FD46107C8023F912F6D08ADB581592900403A4A6617012AC082DFB9
+        0x14F57FA8034EE05C48D7844CB493FFD5199DBD550AADDE8CF52FB7D95AFA2B9B
+        0xDC997C324250C0CEDBEBBB284C1DF7193577778B1CAB7B6CF00DC96A87CFB532
+        0xF676CA0DB2F05C999BD5D3B2AEF0AA727FD750F120FCF3F35E05A2077B512695
+        0x4B
