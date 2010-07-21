@@ -60,7 +60,8 @@ seq seq ctx+0x20
                                     seq bit 0x003333   /* 3333 - */
                                         bit 0x023334   /* 3334 */
                                     seq bit 0x012222   /* 2222:: - */
-                                        bit 0x002223   /* 2223:: */
+                                        bit 0x0022230000000000000000000000000000
+                                                           /* 2223:: */
                                     seq bit 0x00AAA1   /* AAA1:: - */
                                         bit 0x00AAA2   /* AAA2:: */
                 seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */

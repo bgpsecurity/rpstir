@@ -4,11 +4,11 @@ seq seq ctx+0x20
         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
             nul 
         seq set seq oid 2.5.4.3 /* id_commonName */
-                    prt "C"
+                    prt "R"
         seq utc "100713190712Z"
             utc "110713190712Z"
         seq set seq oid 2.5.4.3 /* id_commonName */
-                    prt "C1"
+                    prt "P"
         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                 nul 
             bit 0x0030818902818100DCB5C71F0639D669
