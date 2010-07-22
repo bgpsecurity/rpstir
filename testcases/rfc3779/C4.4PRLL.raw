@@ -1,0 +1,85 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x0C
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "P"
+        seq utc "100713190713Z"
+            utc "110713190713Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x0030818902818100E46CEB67BC219A06
+                0x0665BB0474F592BB356C2E8410164BE5
+                0x3FBEB2E556E7DD1F1D2162CCC4F6DDEB
+                0xB3F6B3B3F306C8AA7DDB7A6C3ECDE093
+                0x865A6E8B1D8D8CAF3082AC4831C6F424
+                0xBE5B6A7344D171C34DDC8AB9ABDECE0D
+                0xE107DC0026346EF006278FED3A8246EA
+                0x8D3D607CCEAD519CF607F8258C6E30A4
+                0x6E890F35045C7CA30203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xB8BA57AB38B077199FCC57E7865EFAB2
+                            0x499434E7
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0xFF1663DC8CDBBCC18E5C042D24533F7A
+                                0x280EE3FD
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x00080000  /* 8.0.0/24 */
+                                    seq bit 0x0209020304 /* 9.2.3.4 - */
+                                        bit 0x0009020308 /* 9.2.3.8 */
+                                    seq bit 0x0209020404 /* 9.2.4.4 - */
+                                        bit 0x0009020408 /* 9.2.4.8 */
+                                    seq bit 0x000A000401 /* 10.0.4.1 - */
+                                        bit 0x000A0004   /* 10.0.4.255 */
+                            seq oct 0x0002
+                                seq bit 0x0011111111    /* 1111.1111/32 */
+                                    seq bit 0x00AAA1   /* AAA1:: - */
+                                        bit 0x00AAA2   /* AAA2:: */
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq int 0x4d4 /* 1236 */
+                                    seq int 0x4d6 /* 1238 - */
+                                        int 0x4d7 /* 1239 */
+                                    seq int 0x4d9 /* 1241 - */
+                                        int 0x4da /* 1242 */
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x00767AC148D17C3173E2387F99F230D6FC6AA01C648EFB2CFD01ED0AA8F97661
+        0x55BE0DB8598C27E546F9F0A458F3CCAA8529D8A107379B71725E268E8CAA9349
+        0x4AA40BAA1225043457FB5DEC254897E1BF65F230707935AC6A05C0AE3D2B87C9
+        0x29747241D79519644B46D29BC2D63A0E7DACC9687C584455CC7FBC67AA2D832A
+        0x3A
