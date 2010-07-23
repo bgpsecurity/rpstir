@@ -630,19 +630,29 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       -
-       GrGrParent  IPv4 IPAddress       10.0.5/24
-       GrParent    IPv4 IPAddress       <inherit>
-       Parent      IPv4 IPAddress       <inherit>
-       Child       IPv4 IPAddress       10.0.4/24
+       - 6.3.4a
+       Parent      IPv4 IPAddress       10.0.5/24
+       Child       IPv4 IPAddress       <inherit>
+       GrChild     IPv4 IPAddress       <inherit>
+       GrGrChild   IPv4 IPAddress       10.0.4/24
 
-       +
-       GrGrParent  IPv4 IPAddress       10.0.0/22
-       GrParent    IPv4 IPAddress       <inherit>
-       Parent      IPv4 IPAddress       <inherit>
-       Child       IPv4 IPAddress       10.0.0/24
+       + 6.3.4b
+       Parent      IPv4 IPAddress       10.0.0/22
+       Child       IPv4 IPAddress       <inherit>
+       GrChild     IPv4 IPAddress       <inherit>
+       GrGrChild   IPv4 IPAddress       10.0.0/24
 
-       << Charlie: Take a positive and negative IPv6 test case; do the same. >>
+       - 6.3.6a
+       Parent      IPv4 IPAddress       0A0005/24
+       Child       IPv4 IPAddress       <inherit>
+       GrChild     IPv4 IPAddress       <inherit>
+       GrGrChild   IPv4 IPAddress       0A0004/24
+
+       + 6.3.6b
+       Parent      IPv4 IPAddress       0A00:00/22
+       Child       IPv4 IPAddress       <inherit>
+       GrChild     IPv4 IPAddress       <inherit>
+       GrGrChild   IPv4 IPAddress       0A00:00/24
 
   6.4 Empty IP extension or AS extension.
 
