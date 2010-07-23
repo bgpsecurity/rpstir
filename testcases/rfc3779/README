@@ -432,7 +432,7 @@ IPv4 / IPv6 Test Cases
 
    +4.6PRGE
    Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:0501 - 0A00:05
+   Child  IPv6 IPAddressRange  0A00:0501 - 0A00:05FF
 
    - 4.6PRGG
    Parent IPv6 IPAddress       0A00:05/24
@@ -452,7 +452,7 @@ IPv4 / IPv6 Test Cases
 
    + 4.6RPEL
    Parent IPv6 IPAddressRange  0A00:0500 - 0A00:05FE
-   Child  IPv6 IPAddress       0A00:05/25
+   Child  IPv6 IPAddress       0A00:0500/25
 
    - 4.6RPEE
    Parent IPv6 IPAddressRange  0A00:0500 - 0A00:05FF (invalid: range = prefix)
@@ -487,7 +487,7 @@ IPv4 / IPv6 Test Cases
    Child  IPv6 IPAddressRange  0A00:0400 - 0A00:040B
 
    + 4.6RREL
-   Parent IPv6 IPAddressRange  0A00:00401 - 0A00:040A
+   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
    Child  IPv6 IPAddressRange  0A00:0401 - 0A00:0409
 
    + 4.6RREE
