@@ -20,6 +20,10 @@ RFC3779 extensions in either P* or C*.  This verifies both the
 independence and the correct combination of behavior when handling
 IPv4, IPv6, and AS number fields.
 
+IPv6 Notation Note:
+	:: and NO /     all zero's
+     NO :: and NO /     all ones
+
 
 Base Certificates
 -----------------
@@ -33,7 +37,7 @@ IPv4 IPAddress        10.0/14
 IPv6 IPAddress        1111::/16
 IPv6 IPAddress        2220::/13
 IPv6 IPAddress        3330::/13
-IPv6 IPAddressRange   AAA1:: - AAA3::
+IPv6 IPAddressRange   AAA1:: - AAA3
 ASId                  1234
 ASRange               1236-1242
 
@@ -44,7 +48,7 @@ IPv4 IPAddress        8.0.0/24
 IPv4 IPAddressRange   9.2.3.4 - 9.2.3.8
 IPv4 IPAddressRange   9.2.4.4 - 9.2.4.8
 IPv6 IPAddress        1111:1111::/32
-IPv6 IPAddressRange   AAA1:: - AAA2::
+IPv6 IPAddressRange   AAA1:: - AAA2
 ASId                  1236
 ASRange               1238-1239
 ASRange               1241-1242
@@ -105,10 +109,10 @@ IPv4 / IPv6 Test Cases
 
    + C1.6PRG
    IPv6 IPAddress        2222::/16
-   IPv6 IPAddressRange   3333:: - 3334::
+   IPv6 IPAddressRange   3333:: - 3334
 
    - C1.6PRB
-   IPv6 IPAddressRange   3333:: - 3334::
+   IPv6 IPAddressRange   3333:: - 3334
    IPv6 IPAddress        2222::/16
 
    + C1.6RPG
@@ -121,10 +125,10 @@ IPv4 / IPv6 Test Cases
 
    + C1.6RRG
    IPv6 IPAddressRange   2222:: - 2223::
-   IPv6 IPAddressRange   3333:: - 3334::
+   IPv6 IPAddressRange   3333:: - 3334
 
    - C1.6RRB
-   IPv6 IPAddressRange   3333:: - 3334::
+   IPv6 IPAddressRange   3333:: - 3334
    IPv6 IPAddressRange   2222:: - 2223::
 
 
