@@ -20,9 +20,10 @@ RFC3779 extensions in either P* or C*.  This verifies both the
 independence and the correct combination of behavior when handling
 IPv4, IPv6, and AS number fields.
 
-IPv6 Notation Note:
-	:: and NO /     all zero's
-     NO :: and NO /     all ones
+IPv6 Range Notation Note:
+	::      all zero's 
+     NO ::      in min  all zero's 
+		in max  all ones
 
 
 Base Certificates
