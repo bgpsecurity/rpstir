@@ -539,7 +539,7 @@ IPv4 / IPv6 Test Cases
        IPv6 IPAddressRange FF00:: - FFFE::0010  where the lower
        limit is encoded by the bit string 111111110.
 
-     6.1.2 Extra/missing one bits in upper limit (2 positive, 4 negative 
+     6.1.2 Extra/missing one bits in upper limit (2 positive, 4 negative
        cases)
 
        Generate certificates by appending to C*:
@@ -566,12 +566,12 @@ IPv4 / IPv6 Test Cases
 
        +
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-       where the upper limit is encoded by the bit string 
+       where the upper limit is encoded by the bit string
        00000000000001.
 
        -
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-       where the upper limit is encoded by the bit string 
+       where the upper limit is encoded by the bit string
        000000000000011.
 
      6.1.3 Invalid range due to equivalence to prefix (4 negative cases)
@@ -588,7 +588,7 @@ IPv4 / IPv6 Test Cases
        IPv6 IPAddressRange 100:: - 100::
 
        -
-       IPv6 IPAddressRange 100:: - 
+       IPv6 IPAddressRange 100:: -
           100:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 
      6.1.4 Invalid range due to out-of-order limits (2 negative cases)
@@ -663,11 +663,11 @@ IPv4 / IPv6 Test Cases
        Cases:
 
        +
-       Certificate with empty AS Resources extension; no IP Resources 
+       Certificate with empty AS Resources extension; no IP Resources
        extension.
 
        +
-       Certificate with empty IP Resources extension; no AS Resources 
+       Certificate with empty IP Resources extension; no AS Resources
        extension.
 
        << Charlie: Stay tuned.  The Resource Certificate Profile might
@@ -679,11 +679,11 @@ IPv4 / IPv6 Test Cases
        Cases:
 
        +
-       Certificate with AS Resources extension but no IP Resources 
+       Certificate with AS Resources extension but no IP Resources
        extension.
 
        +
-       Certificate with IP Resources extension but no AS Resources 
+       Certificate with IP Resources extension but no AS Resources
        extension.
 
        -
@@ -712,40 +712,40 @@ AS Number Test Cases
    Generate certificates by appending to C*:
    first ASIdOrRange sequence element is an {id/range} (I or R),
    next ASIdOrRange sequence element is an {id/range} (I or R),
-   and the sequence elements are {correctly/incorrectly} ordered (C or 
+   and the sequence elements are {correctly/incorrectly} ordered (C or
    X).
 
    Cases:
 
-   +   IIC
+   +   CA1IIC
    ASId       1234
    ASId      65537
 
-   -   IIX
+   -   CA1IIX
    ASId      65537
    ASId       1234
 
-   +   IRC
+   +   CA1IRC
    ASId      65537
    ASRange   65539 - 65540
 
-   -   IRX
+   -   CA1IRX
    ASId      65542
    ASRange   65539 - 65540
 
-   +   RIC
+   +   CA1RIC
    ASRange   65539 - 65540
    ASId      65542
 
-   -   RIX
+   -   CA1RIX
    ASRange   65539 - 65540
    ASId      65537
 
-   +   RRC
+   +   CA1RRC
    ASRange   65536 - 65537
    ASRange   65539 - 65540
 
-   -   RRX
+   -   CA1RRX
    ASRange   65539 - 65540
    ASRange   65536 - 65537
 
@@ -759,19 +759,19 @@ AS Number Test Cases
 
    Cases:
 
-   -  II
+   -  CA2II
    ASId      65542
    ASId      65543
 
-   -  IR
+   -  CA2IR
    ASId      65538
    ASRange   65539 - 65540
 
-   -  RI
+   -  CA2RI
    ASRange   65539 - 65540
    ASId      65541
 
-   -  RR
+   -  CA2RR
    ASRange   65539 - 65540
    ASRange   65541 - 65542
 
@@ -785,19 +785,19 @@ AS Number Test Cases
 
    Cases:
 
-   -  II
+   -  CA3II
    ASId      65542
    ASId      65542
 
-   -  IR
+   -  CA3IR
    ASId      65539
    ASRange   65539 - 65540
 
-   -  RI
+   -  CA3RI
    ASRange   65539 - 65540
    ASId      65540
 
-   - RR
+   - CA3RR
    ASRange   65539 - 65540
    ASRange   65540 - 65542
 
@@ -817,98 +817,98 @@ AS Number Test Cases
 
    Cases:
 
-   - IIL
+   - A4IIL
    Parent ASId      10
    Child  ASId       9
 
-   + IIE
+   + A4IIE
    Parent ASId      10
    Child  ASId      10
 
-   - IIG
+   - A4IIG
    Parent ASId      10
    Child  ASId      11
 
-   -  RIL
-   Parent ASRange   10 - 20
-   Child  ASId       9
-
-   +  RIE
-   Parent ASRange   10 - 20
-   Child  ASId      10
-
-   + RIGL
-   Parent ASRange   10 - 20
-   Child  ASId      11
-
-   + RIGL
-   Parent ASRange   10 - 20
-   Child  ASId      19
-
-   + RIGE
-   Parent ASRange   10 - 20
-   Child  ASId      20
-
-   - RIGG
-   Parent ASRange   10 - 20
-   Child  ASId      21
-
-   - IRLL
+   - A4IRLL
    Parent ASId      20
    Child  ASRange   10 - 19
 
-   - IRLE
+   - A4IRLE
    Parent ASId      20
    Child  ASRange   10 - 20
 
-   - IRLG
+   - A4IRLGa
    Parent ASId      20
    Child  ASRange   10 - 21
 
-   - IRLG
+   - A4IRLGb
    Parent ASId      20
    Child  ASRange   19 - 30
 
-   - IREG
+   - A4IREG
    Parent ASId      20
    Child  ASRange   20 - 30
 
-   - IRGG
+   - A4IRGG
    Parent ASId      20
    Child  ASRange   21 - 30
 
-   - RRLL
+   -  A4RIL
+   Parent ASRange   10 - 20
+   Child  ASId       9
+
+   +  A4RIE
+   Parent ASRange   10 - 20
+   Child  ASId      10
+
+   + A4RIGLa
+   Parent ASRange   10 - 20
+   Child  ASId      11
+
+   + A4RIGLb
+   Parent ASRange   10 - 20
+   Child  ASId      19
+
+   + A4RIGE
+   Parent ASRange   10 - 20
+   Child  ASId      20
+
+   - A4RIGG
+   Parent ASRange   10 - 20
+   Child  ASId      21
+
+   - A4RRLL
    Parent ASRange   20 - 30
    Child  ASRange   19 - 29
 
-   - RRLE
+   - A4RRLE
    Parent ASRange   20 - 30
    Child  ASRange   19 - 30
 
-   - RRLG
+   - A4RRLG
    Parent ASRange   20 - 30
    Child  ASRange   19 - 31
 
-   + RREL
+   + A4RREL
    Parent ASRange   20 - 30
    Child  ASRange   20 - 29
 
-   + RREE
+   + A4RREE
    Parent ASRange   20 - 30
    Child  ASRange   20 - 30
 
-   - RREG
+   - A4RREG
    Parent ASRange   20 - 30
    Child  ASRange   20 - 31
 
-   + RRGL
+   + A4RRGL
    Parent ASRange   20 - 30
    Child  ASRange   21 - 29
 
-   + RRGE
+   + A4RRGE
    Parent ASRange   20 - 30
    Child  ASRange   21 - 30
 
-   - RRGG
+   - A4RRGG
    Parent ASRange   20 - 30
    Child  ASRange   21 - 31
