@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
 #include <certificate.h>
 #include <crlv2.h>
 #include <roa.h>
@@ -37,6 +38,18 @@ char *msgs[] = {
     "Couldn't open %s\n",
     };
 
+static void adjust_time(struct casn *fromp, struct casn *tillp)
+  {
+  ulong begt, till;
+  read_casn_time(fromp, &begt);
+  read_casn_time(tillp, &till);
+  till -= begt;
+  time((time_t *)&begt);
+  till += begt;
+  write_casn_time(fromp, begt);
+  write_casn_time(tillp, till);
+  }
+  
 static void fatal(int err, char *paramp)
   {
   fprintf(stderr, msgs[err], paramp);
@@ -128,7 +141,7 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature)
 int main(int argc, char **argv)
   {
 /*
- Args are: file TBS, keyfile
+ Args are: file TBS, keyfile, [update]
 */
   struct Certificate cert;
   Certificate(&cert, (ushort)0);
@@ -137,7 +150,7 @@ int main(int argc, char **argv)
   struct AlgorithmIdentifier *algp, *tbsalgp; 
   struct casn *casnp, *sigp, *selfp;
   if (argc < 3) fatal(2, (char *)0);
-  char *sfx = strchr(argv[1], (int)'.'); 
+  char *sfx = strrchr(argv[1], (int)'.'); 
   if (!strcmp(sfx, ".cer")) 
     {
     selfp = &cert.self;
@@ -155,6 +168,15 @@ int main(int argc, char **argv)
     algp = &crl.algorithm;
     }
   if (get_casn_file(selfp, argv[1], 0) < 0) fatal(3, argv[1]);
+  if (argv[3]) 
+    {
+    if (!strcmp(sfx, ".cer")) 
+      adjust_time(&cert.toBeSigned.validity.notBefore.utcTime,
+        &cert.toBeSigned.validity.notAfter.utcTime);
+    else if (!strcmp(sfx, ".cer")) 
+      adjust_time((struct casn *)&crl.toBeSigned.lastUpdate, 
+          (struct casn *)&crl.toBeSigned.nextUpdate);
+    }
   write_objid(&tbsalgp->algorithm, id_sha_256WithRSAEncryption);
   write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption, 
     (uchar *)"", 0);
