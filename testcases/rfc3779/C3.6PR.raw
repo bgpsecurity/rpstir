@@ -59,7 +59,7 @@ seq seq ctx+0x20
                                 seq bit 0x0011111111    /* 1111.1111/32 */
                                     bit 0x002222        /* 2222::/16 */
                                     seq bit 0x002222FFFFFFFFFFFFFFFFFFFFFFFFFFFF 
-                                   /* 2222:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF - */
+                                                         /* 2222:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF - */
                                         bit 0x0122230000000000000000000000000000
                                             /* 2223::1 */
                                     seq bit 0x00AAA1   /* AAA1:: - */
