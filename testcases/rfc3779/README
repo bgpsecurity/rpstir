@@ -25,9 +25,13 @@ IPv6 Range Notation Note:
      NO ::      in min  all zero's 
 		in max  all ones
 
+The test cases are all labeled with names to indicate which certificate tests
+that case.  If there is only one file involved in the test, name of the file
+is that implements the test is the case name prefixed with "C".  If more than 
+one file is involved in the test, the names of the test files are the case name prefixed with "P", "C", "GC" or "GGC" to represent the parent, child grandchild or great-grandchild.  
 
 Base Certificates
------------------
+----------------
 
 P*: The "base" parent certificate contains the following RFC3779 fields.
 
@@ -532,11 +536,11 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       -
+       - 6.1.1a
        IPv4 IPAddressRange 5.0.0.0 - 5.1.2.3 where the lower limit is
        encoded by the bit string 000001010.
 
-       -
+       - 6.1.1b
        IPv6 IPAddressRange FF00:: - FFFE::0010  where the lower
        limit is encoded by the bit string 111111110.
 
@@ -549,28 +553,28 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       -
+       - 6.1.2.4Z
        IPv4 IPAddressRange 7.0.0.1 - 7.255.255.255 where the upper limit
        is encoded by the bit string 00000.
 
-       +
+       + 6.1.2.4O
        IPv4 IPAddressRange 7.0.0.1 - 7.255.255.255 where the upper limit
        is encoded by the bit string 000001.
 
-       -
+       - 6.1.2.4S
        IPv4 IPAddressRange 7.0.0.1 - 7.255.255.255 where the upper limit
        is encoded by the bit string 0000011.
 
-       -
+       - 6.1.2.6Z
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
        where the upper limit is encoded by the bit string 0000000000000.
 
-       +
+       + 6.1.2.6O
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
        where the upper limit is encoded by the bit string
        00000000000001.
 
-       -
+       - 6.1.2.6S
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
        where the upper limit is encoded by the bit string
        000000000000011.
@@ -579,16 +583,16 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       -
+       - 6.1.3.4a
        IPv4 IPAddressRange 1.0.0.0 - 1.0.0.0
 
-       -
+       - 6.1.3.4b
        IPv4 IPAddressRange 1.0.0.0 - 1.0.255.255
 
-       -
+       - 6.1.3.6a
        IPv6 IPAddressRange 100:: - 100::
 
-       -
+       - 6.1.3.6b
        IPv6 IPAddressRange 100:: -
           100:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 
@@ -596,15 +600,15 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       -
+       - 6.1.4.4
        IPv4 IPAddressRange 1.1.0.0 - 1.0.0.0
 
-       -
+       - 6.1.4.6
        IPv6 IPAddressRange 2:: - 1::
 
      6.1.5 Invalid ordering of IPv4 and IPv6 fields (1 negative case)
 
-       -
+       - 6.1.5
        IPv6 IPAddressRange 1:: - 2::
        IPv4 IPAddressRange 1.0.0.0 - 1.1.0.0
 
@@ -613,22 +617,22 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       +
+       + 6.2.4a
        IPv4 IPAddress      0/0
 
-       +
+       + 6.2.4b
        IPv4 IPAddress      0/32
 
-       -
+       - 6.2.4c
        IPv4 IPAddress      8/33
 
-       +
+       + 6.2.6a
        IPv6 IPAddress      0::/0
 
-       +
+       + 6.2.6b
        IPv6 IPAddress      0::/128
 
-       -
+       - 6.2.6c
        IPv6 IPAddress      8::/129
 
   6.3 "Inherit" capability (2 positive, 2 negative cases)
@@ -663,11 +667,11 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       +
+       + 6.4.1
        Certificate with empty AS Resources extension; no IP Resources
        extension.
 
-       +
+       + 6.4.2
        Certificate with empty IP Resources extension; no AS Resources
        extension.
 
@@ -679,26 +683,26 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       +
+       + 6.5.1
        Certificate with AS Resources extension but no IP Resources
        extension.
 
-       +
+       + 6.5.2
        Certificate with IP Resources extension but no AS Resources
        extension.
 
-       -
+       - 6.5.3
        Certificate with neither AS nor IP Resources extension.
 
   6.6 Prohibition of rdi resource type (2 negative cases).
 
        Cases:
 
-       -
+       - 6.6.1
        Certificate with AS Resources, that possesses both asnum and
        rdi ASIdentifiers.
 
-       -
+       - 6.6.2
        Certificate with AS Resources, that possesses no asnum
        ASIdentifier but does have the rdi ASIdentifier.
 
@@ -718,35 +722,35 @@ AS Number Test Cases
 
    Cases:
 
-   +   CA1IIC
+   +   A1IIC
    ASId       1234
    ASId      65537
 
-   -   CA1IIX
+   -   A1IIX
    ASId      65537
    ASId       1234
 
-   +   CA1IRC
+   +   A1IRC
    ASId      65537
    ASRange   65539 - 65540
 
-   -   CA1IRX
+   -   A1IRX
    ASId      65542
    ASRange   65539 - 65540
 
-   +   CA1RIC
+   +   A1RIC
    ASRange   65539 - 65540
    ASId      65542
 
-   -   CA1RIX
+   -   A1RIX
    ASRange   65539 - 65540
    ASId      65537
 
-   +   CA1RRC
+   +   A1RRC
    ASRange   65536 - 65537
    ASRange   65539 - 65540
 
-   -   CA1RRX
+   -   A1RRX
    ASRange   65539 - 65540
    ASRange   65536 - 65537
 
@@ -760,19 +764,19 @@ AS Number Test Cases
 
    Cases:
 
-   -  CA2II
+   -  A2II
    ASId      65542
    ASId      65543
 
-   -  CA2IR
+   -  A2IR
    ASId      65538
    ASRange   65539 - 65540
 
-   -  CA2RI
+   -  A2RI
    ASRange   65539 - 65540
    ASId      65541
 
-   -  CA2RR
+   -  A2RR
    ASRange   65539 - 65540
    ASRange   65541 - 65542
 
@@ -786,19 +790,19 @@ AS Number Test Cases
 
    Cases:
 
-   -  CA3II
+   -  A3II
    ASId      65542
    ASId      65542
 
-   -  CA3IR
+   -  A3IR
    ASId      65539
    ASRange   65539 - 65540
 
-   -  CA3RI
+   -  A3RI
    ASRange   65539 - 65540
    ASId      65540
 
-   - CA3RR
+   - A3RR
    ASRange   65539 - 65540
    ASRange   65540 - 65542
 
