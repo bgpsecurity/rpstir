@@ -28,7 +28,10 @@ IPv6 Range Notation Note:
 The test cases are all labeled with names to indicate which certificate tests
 that case.  If there is only one file involved in the test, name of the file
 is that implements the test is the case name prefixed with "C".  If more than 
-one file is involved in the test, the names of the test files are the case name prefixed with "P", "C", "GC" or "GGC" to represent the parent, child grandchild or great-grandchild.  
+one file is involved in the test, the names of the test files are the case name
+prefixed with "P", "C", "GC" or "GGC" to represent the parent, child 
+grandchild or great-grandchild.  In addition, there is a file for the root, 
+self-signed certificate, "R,cer" 
 
 Base Certificates
 ----------------

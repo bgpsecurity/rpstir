@@ -1,0 +1,12 @@
+           Instructions for use of Test Cases
+
+    The test cases consist of files with suffixes ".cer" and ".raw", where a
+".cer" file is a certificate and a ".raw" file is a human readable version of 
+the corresponding ".cer" file.  File names consist of one or more letters 
+followed by the number of the test case described in the README document.  The 
+prefix letters are "P", "C", "GC"and "GGC".  There are also files suffixed with
+"p15" which contain signing keys.
+
+    To run the tests, first execute the python program creat_cert.py, which 
+generates new ".cer" files with refreshed beginning and end dates.  Then execute the python program run_tests.py, which runs all the tests, stopping at the 
+first error encountered.
