@@ -1,4 +1,4 @@
-fseq seq ctx+0x20
+seq seq ctx+0x20
             int 0x02
         int 0x0C
         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
