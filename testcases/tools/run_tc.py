@@ -48,15 +48,22 @@ def run_tests(cfgfile):
     return
 
 def process_input(line):
-    """ process in input line from the config file
-    separate the command first, then the arguments
+    """
+    Process line from input configuration file.
+    split the command into fields separated by space
+    The first field is the command. Subsequent fields are
+    based upon the command.
     """
     global certpath
     
     line = line.strip()
 #    print line
     fields = line.split(' ')
-    command = fields[0]
+    # convert command to upper case to compare
+    command = fields[0].upper()
+    # switch based upon command
+
+    # add the certificate to the repository
     if command == ('ADD'):
         cert = fields[1]
         trusted = False
@@ -65,13 +72,17 @@ def process_input(line):
                 trusted = True
         add_to_repository(cert, trusted)
 
+    # delete certificate from the repository
     elif command == 'DELETE':
         cert = fields[1]
         del_from_repository(cert)
 
+    # echo the line directly from config file 
     elif command == 'ECHO':
         print ('%s') % (line.strip(command))
     
+    # display cert in database and print pass or fail
+    # based upon expected results (from command line)
     elif command == 'DISPLAY':
         result = False
         cert = fields[1]
@@ -93,12 +104,16 @@ def process_input(line):
     return
 
 def display_cert(cert, result):
-    """ query -t cert -d filename -d flags
+    """
+    Query the repository to see if the certificate is there - compare
     parse query results looking for cert - 
-    if there and result true then print PASS with flags
-    if there and result false then print FAIL
-    if not there and result true then print FAIL
-    if not there and result false then print PASS
+     if there and expected result true then print PASS with flags
+     if there and expected result false then print FAIL
+     if not there and expected result true then print FAIL
+     if not there and expected result false then print PASS
+
+    BBN software case:
+       query -t cert -d filename -d flags
     """
 
     if cert is None:
@@ -124,7 +139,11 @@ def display_cert(cert, result):
 
 
 def add_to_repository(cert, trusted):
-    """ rcli -f cert """
+    """
+    Add certificate to repository
+    BBN softrware case:
+      run rcli command to add certificate to database (rcli -y -f cert)
+    """
 
     global verbose
     
@@ -144,6 +163,10 @@ def add_to_repository(cert, trusted):
 
 def del_from_repository(cert):
     """ 
+    Delete certificate from the database
+    BBN software case:
+       run rcli command to delete certificate from the database
+       rcli -y -d <cert>
     """
 
     if cert is None:
@@ -168,6 +191,7 @@ def create_fullpath_cert(cert):
     if certpath is None:
         return cert
 
+    # join pathname with certificate name, add slash if necessary
     if certpath.endswith("/"):
         fullpath_cert = ("%s%s") % (certpath, cert)
     else:
