@@ -56,7 +56,8 @@ seq seq ctx+0x20
                     ocw seq seq oct 0x0001
                                 seq bit 0x0208  /* 8/6 */
                             seq oct 0x0002
-                                seq bit 0x001111   /* 1111::/16 */
+                                seq bit 0x000A00   /* 0A00:: */
+                                    bit 0x001111   /* 1111::/16 */
                                     bit 0x032220  /* 2220::/13 */
                                     bit 0x033330  /* 3330::/13 */
                                     seq bit 0x00AAA1 /* AAA1 - */
