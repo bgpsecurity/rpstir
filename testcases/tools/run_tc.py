@@ -6,11 +6,12 @@
 #     For BBN this means using the rcli and query programs to insert/delete
 #     certificates from the database or query the database for the cert
 #     cases:
-#      PATH - set the certificate path
-#      ECHO - just print this string to stdout
-#      INSERT - insert this certificate into the database
-#      DELETE - delete this certificate from the database
-#      DISPLAY - query the database for this certificate
+#      PATH - set the certificate path (for all certificates that aren't
+#             specified by full pathname)
+#      ECHO - print string to stdout
+#      ADD - add this certificate into the repository (and verify it was added)
+#      DELETE - delete this certificate from the repository
+#      DISPLAY - query the database for this repository
 
 import os
 import sys
@@ -41,8 +42,8 @@ def run_tests(cfgfile):
 
 
     except IOError:
-        traceback.print_exc()
-        error(1,("Error processing file %s") % (cfgfile))
+#        traceback.print_exc()
+        err(1,("File %s does not exist") % (cfgfile))
         
 
     return
@@ -55,22 +56,37 @@ def process_input(line):
     based upon the command.
     """
     global certpath
-    
     line = line.strip()
-#    print line
-    fields = line.split(' ')
+    fields = line.split()
+
     # convert command to upper case to compare
-    command = fields[0].upper()
+    command = fields[0].upper().strip()
     # switch based upon command
 
     # add the certificate to the repository
-    if command == ('ADD'):
-        cert = fields[1]
+    # first field is cert name, second field is either
+    # trusted (don't validate) or expected result (true or false)
+    # defaults to not trusted and don't display results
+    if command == 'ADD':
         trusted = False
+        display = False
+        cert = fields[1].strip()
         if len(fields) > 2:
-            if fields[2].upper().startswith('TRUSTED'):
+            arg2 = fields[2].upper()
+            if arg2.startswith('TRUSTED'):
                 trusted = True
-        add_to_repository(cert, trusted)
+            elif arg2 == 'TRUE':
+                display = True
+                expected = True
+            elif arg2 == 'FALSE':
+                display = True
+                expected = False
+
+        # attempt to add the certificate to the repository
+        # Note: if the file does not exist we don't attempt to 
+        # add it so no need to query the repository to see if it was added
+        if add_to_repository(cert, trusted) and display:
+            display_cert(cert,expected)
 
     # delete certificate from the repository
     elif command == 'DELETE':
@@ -79,25 +95,33 @@ def process_input(line):
 
     # echo the line directly from config file 
     elif command == 'ECHO':
-        print ('%s') % (line.strip(command))
+        text = line.strip(command)
+        if len(text) > 0:
+            print text
+        else:
+            print
+
     
     # display cert in database and print pass or fail
     # based upon expected results (from command line)
     elif command == 'DISPLAY':
         result = False
         cert = fields[1]
-        if fields[2].lower() == 'true':
+        if fields[2].upper() == 'TRUE':
             result = True
         display_cert(cert,result)
 
-
     elif command == 'PATH':
-        if os.path.exists(fields[1]):
-            certpath = fields[1]
-            print ('Certificate path set to %s ') % (certpath)
-        else:
-            print ('Path %s does not exist') % (fields[1])
-
+        try:
+            p = fields[1]
+            if os.path.exists(p):
+                certpath = p
+            else:
+                err(2,'Path %s does not exist') % (p)
+        except IOError:
+#            traceback.print_exc()
+            err(1,("Path %s does not exist") % (cfgfile))
+            
     else:
         return
 
@@ -143,23 +167,30 @@ def add_to_repository(cert, trusted):
     Add certificate to repository
     BBN softrware case:
       run rcli command to add certificate to database (rcli -y -f cert)
-    """
 
+    Returns False if we did not attempt to add certificate
+            True if we did try to add certificate (note it may have failed
+                 to be added)
+    """
     global verbose
     
     if cert is None:
         return
 
     fullpath_cert = create_fullpath_cert(cert)
-    if trusted:
-        command = ("rcli -y -F %s") % (fullpath_cert)
+    if not os.path.exists(fullpath_cert):
+        print ('File Not Found: %s\n') % (fullpath_cert)
+        return (False)
     else:
-        command = ("rcli -y -f %s") % (fullpath_cert)
-    out, err = exec_command(command)
-    
-    if verbose and err is not None:
-        print err
-    return
+        if trusted:
+            command = ("rcli -y -F %s") % (fullpath_cert)
+        else:
+            command = ("rcli -y -f %s") % (fullpath_cert)
+        out, err = exec_command(command)
+        if verbose and err:
+            print err
+            
+    return True
 
 def del_from_repository(cert):
     """ 
@@ -173,7 +204,6 @@ def del_from_repository(cert):
         return
 
     fullpath_cert = create_fullpath_cert(cert)
-
     command = ("rcli -y -d %s") % (fullpath_cert)
     out,err = exec_command(command)
 
@@ -217,6 +247,10 @@ def main(argv=None):
     """
 
     global verbose
+    global certpath
+
+    # default certificate path to current directory
+    certpath = '.'      
 
     if argv is None:
         argv = sys.argv
@@ -224,18 +258,22 @@ def main(argv=None):
     parser = OptionParser(usage)
     parser.add_option("-q", "--quiet",
                   action="store_false", dest="verbose", default=True,
-                  help="don't print status messages to stdout")
+                  help="don't print error or output messages from executed commands")
 
     opts,args = parser.parse_args()
     verbose = opts.verbose
 
-    if len(argv) < 2:
-        parser.error('Missing Test Configuration File')
-        parser.print_usage()
-        sys.exit(-1)
+    try:
+        if len(argv) < 2:
+            parser.error('Missing Test Configuration File')
+            parser.print_help()
+            sys.exit(-1)
+            
+        config_file = args[0]
+        run_tests(config_file)
 
-    config_file = args[0]
-    run_tests(config_file)
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit()
 
 if __name__ == "__main__":
     sys.exit(main())
