@@ -26,7 +26,6 @@ def err(code, errstring):
     print errstring    
     sys.exit(code)
 
-
 def run_tests(cfgfile):
     """ run all test cases"""
 
@@ -146,6 +145,7 @@ def display_cert(cert, result):
     command = ('query -t cert -d filename -d flags')
     out, err = exec_command(command)
     if out is not None:
+#        print 'QUERY OUTPUT: %s' % out
         if cert in out:
             if result:
                 print ("%s: PASS") % (cert)
