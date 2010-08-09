@@ -1,0 +1,71 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x0458
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "GC"
+        seq utc "100713190714Z"
+            utc "110713190714Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "GGC"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x0030818902818100C1CF86CA23B28224
+                0xD03311B96C2BD6C79321C888AD030F26
+                0xE92B07AB80B395D25D7FCE3894B0AFF0
+                0x486F6CA6CC63A25816B7CFBF670BCB89
+                0xF21F80D7BC443C3EF7BBF13368A012B4
+                0x4F42780943576B852E3E873F5EC271EF
+                0x910F21B93F9429895174DAAF4B96A710
+                0x011044736837E717B2A73680BA1F1C36
+                0x9BF5B5F7D90C18E10203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xE1C9726FDCF8B3D2DFAE55942D4FA0B4
+                            0xA7B86E48
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0xBF3592244AF61424CAC884151C8B3A6E
+                                0xCA9392EB
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x00080000  /* 8.0.0/24 */
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq int 9
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x00507F2923681CD6C79E91D6756C3E56DD887C370A5429552E94A56B2DEF6E67
+        0x97F5505BF6F959916D1A6C936B30A4D8F8E3D7A7ACDB2B171645561EC97D61DB
+        0x272396C1339BD7172154137C58985F028B74EA4BE7A144AE05693006A81E7669
+        0xD927AA1B5FC1ABF991E39D9EA7082F32388684A1B9FE92F6D33DC03318E17AD9
+        0x86

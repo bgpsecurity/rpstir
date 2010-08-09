@@ -920,3 +920,25 @@ AS Number Test Cases
    - A4RRGG
    Parent ASRange   20 - 30
    Child  ASRange   21 - 31
+
+
+5. Tests for special cases (1 positive, 1 negative)
+
+   Generate certificates by appending to C* and P* 
+
+5.1 Inherit
+
+   Cases:
+   + A51RIG
+     Parent      ASRange    10 - 20
+     Child       ASId       <inherit>
+     GrChild     ASId       <inherit>
+     GrGrChild   ASId       11
+
+   + A51RIB
+     Parent      ASRange    10 - 20
+     Child       ASId       <inherit>
+     GrChild     ASId       <inherit>
+     GrGrChild   ASId       9
+
+
