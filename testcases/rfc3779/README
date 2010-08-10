@@ -709,6 +709,13 @@ IPv4 / IPv6 Test Cases
        Certificate with AS Resources, that possesses no asnum
        ASIdentifier but does have the rdi ASIdentifier.
 
+  6.7 IP address block extension ordering
+
+	Case:
+	-
+	6.7 (C6.7.64.cer)
+	  ipv6 precedes ipv4 (1 negative case)	  
+
 
 
 AS Number Test Cases
