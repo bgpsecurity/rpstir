@@ -22,8 +22,6 @@ IPv4, IPv6, and AS number fields.
 
 IPv6 Range Notation Note:
 	::      all zero's 
-     NO ::      in min  all zero's 
-		in max  all ones
 
 The test cases are all labeled with names to indicate which certificate tests
 that case.  If there is only one file involved in the test, name of the file
@@ -45,7 +43,7 @@ IPv4 IPAddress        10.0/14
 IPv6 IPAddress        1111::/16
 IPv6 IPAddress        2220::/13
 IPv6 IPAddress        3330::/13
-IPv6 IPAddressRange   AAA1:: - AAA3
+IPv6 IPAddressRange   AAA1:: - AAA3:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 ASId                  1234
 ASRange               1236-1242
 
@@ -56,7 +54,7 @@ IPv4 IPAddress        8.0.0/24
 IPv4 IPAddressRange   9.2.3.4 - 9.2.3.8
 IPv4 IPAddressRange   9.2.4.4 - 9.2.4.8
 IPv6 IPAddress        1111:1111::/32
-IPv6 IPAddressRange   AAA1:: - AAA2
+IPv6 IPAddressRange   AAA1:: - AAA2:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 ASId                  1236
 ASRange               1238-1239
 ASRange               1241-1242
@@ -88,16 +86,16 @@ IPv4 / IPv6 Test Cases
    IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
 
    - C1.4PRB
+   IPv4 IPAddress        10.3.0/24
    IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
-   IPv4 IPAddress        10.0.0/24
 
    + C1.4RPG
    IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
    IPv4 IPAddress        10.3.0/24
 
    - C1.4RPB
-   IPv4 IPAddress        10.3.0/24
    IPv4 IPAddressRange   10.2.4.4 - 10.2.4.8
+   IPv4 IPAddress        10.0.0/24
 
    + C1.4RRG
    IPv4 IPAddressRange   10.2.3.4 - 10.2.3.8
@@ -117,26 +115,26 @@ IPv4 / IPv6 Test Cases
 
    + C1.6PRG
    IPv6 IPAddress        2222::/16
-   IPv6 IPAddressRange   3333:: - 3334
+   IPv6 IPAddressRange   3333:: - 3334:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - C1.6PRB
-   IPv6 IPAddressRange   3333:: - 3334
-   IPv6 IPAddress        2222::/16
+   IPv6 IPAddress        3333::/16
+   IPv6 IPAddressRange   2222:: - 2223::
 
    + C1.6RPG
    IPv6 IPAddressRange   2222:: - 2223::
    IPv6 IPAddress        3333::/16
 
    - C1.6RPB
-   IPv6 IPAddress        3333::/16
-   IPv6 IPAddressRange   2222:: - 2223::
+   IPv6 IPAddressRange   3333:: - 3334:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   IPv6 IPAddress        2222::/16
 
    + C1.6RRG
    IPv6 IPAddressRange   2222:: - 2223::
-   IPv6 IPAddressRange   3333:: - 3334
+   IPv6 IPAddressRange   3333:: - 3334:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - C1.6RRB
-   IPv6 IPAddressRange   3333:: - 3334
+   IPv6 IPAddressRange   3333:: - 3334:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
    IPv6 IPAddressRange   2222:: - 2223::
 
 
@@ -366,7 +364,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.1 - 10.0.4.11
 
-    -  4.4RRGL BAD?
+    +  4.4RRGL
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.9
 
@@ -374,153 +372,153 @@ IPv4 / IPv6 Test Cases
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.10
 
-    + 4.4RRGG  GOOD?
+    - 4.4RRGG  
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.11
 
   - 4.6PPLL
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddress       0A00:04/24
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddress       0A00:0400::/24
 
   - 4.6PPLE
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddress       0A00:04/23
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddress       0A00:0400::/23
 
   - 4.6PPLG
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddress       0A00:00/21
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddress       0A00:0000::/21
 
   +4.6PPEL
-   Parent IPv6 IPAddress       0A00:00/22
-   Child  IPv6 IPAddress       0A00:00/24
+   Parent IPv6 IPAddress       0A00:0000::/22
+   Child  IPv6 IPAddress       0A00:0000::/24
 
   +4.6PPEE
-   Parent IPv6 IPAddress       0A00:00/22
-   Child  IPv6 IPAddress       0A00:00/22
+   Parent IPv6 IPAddress       0A00:0000::/22
+   Child  IPv6 IPAddress       0A00:0000::/22
 
   - 4.6PPEG
-   Parent IPv6 IPAddress       0A00:00/22
-   Child  IPv6 IPAddress       0A00:00/20
+   Parent IPv6 IPAddress       0A00:0000::/22
+   Child  IPv6 IPAddress       0A00:0000::/20
 
   +4.6PPGL
-   Parent IPv6 IPAddress       0A00:00/24
-   Child  IPv6 IPAddress       0A00:0080/26
+   Parent IPv6 IPAddress       0A00:0000::/24
+   Child  IPv6 IPAddress       0A00:0080::/26
 
   +4.6PPGE
-   Parent IPv6 IPAddress       0A00:00/24
-   Child  IPv6 IPAddress       0A00:0080/25
+   Parent IPv6 IPAddress       0A00:0000::/24
+   Child  IPv6 IPAddress       0A00:0080::/25
 
   - 4.6PPGG
-   Parent IPv6 IPAddress       0A00:00/24
-   Child  IPv6 IPAddress       0A00:01/24
+   Parent IPv6 IPAddress       0A00:0000::/24
+   Child  IPv6 IPAddress       0A00:0100::/24
 
    - 4.6PRLL
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:0401 - 0A00:04FF
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0401:: - 0A00:04FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6PRLE
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:04FF - 0A00:05FF
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:04FF:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6PRLG
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:04FF - 0A00:0600
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:04FF:: - 0A00:0600:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    +4.6PREL
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:05 - 0A00:0505
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0500:: - 0A00:0505:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6PREE
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:0500 - 0A00:05FF  (invalid: range = prefix)
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0500:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF  (invalid: range = prefix)
 
   - 4.6PREG
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:05 - 0A00:0600
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0500:: - 0A00:0600:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    + 4.6PRGL
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:0501 - 0A00:0505
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0501:: - 0A00:0505:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    +4.6PRGE
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:0501 - 0A00:05FF
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0501:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6PRGG
-   Parent IPv6 IPAddress       0A00:05/24
-   Child  IPv6 IPAddressRange  0A00:0501 - 0A00:0600
+   Parent IPv6 IPAddress       0A00:0500::/24
+   Child  IPv6 IPAddressRange  0A00:0501:: - 0A00:0600:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6RPLL
-   Parent IPv6 IPAddressRange  0A00:0501:: - 0A00:05FF::
-   Child  IPv6 IPAddress       0A00:04/24
+   Parent IPv6 IPAddressRange  0A00:0501:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0400::/24
 
    - 4.6RPLE
-   Parent IPv6 IPAddressRange  0A00:0501 - 0A00:05FF
-   Child  IPv6 IPAddress       0A00:04/23
+   Parent IPv6 IPAddressRange  0A00:0501:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0400::/23
 
    - 4.6RPLG
-   Parent IPv6 IPAddressRange  0A00:0501 - 0A00:05FF
-   Child  IPv6 IPAddress       0A00:04/22
+   Parent IPv6 IPAddressRange  0A00:0501:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0400::/22
 
    + 4.6RPEL
-   Parent IPv6 IPAddressRange  0A00:0500 - 0A00:05FE
-   Child  IPv6 IPAddress       0A00:0500/25
+   Parent IPv6 IPAddressRange  0A00:0500:: - 0A00:05FE:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0500::/25
 
    - 4.6RPEE
-   Parent IPv6 IPAddressRange  0A00:0500 - 0A00:05FF (invalid: range = prefix)
-   Child  IPv6 IPAddress       0A00:05/24
+   Parent IPv6 IPAddressRange  0A00:0500:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF (invalid: range = prefix)
+   Child  IPv6 IPAddress       0A00:0500::/24
 
    - 4.6RPEG
-   Parent IPv6 IPAddressRange  0A00:0500 - 0A00:05FE
-   Child  IPv6 IPAddress       0A00:05/24
+   Parent IPv6 IPAddressRange  0A00:0500:: - 0A00:05FE:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0500::/24
 
    + 4.6RPGL
-   Parent IPv6 IPAddressRange  0A00:04FF - 0A00:05FF
-   Child  IPv6 IPAddress       0A00:05/25
+   Parent IPv6 IPAddressRange  0A00:04FF:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0500::/25
 
    + 4.6RPGE
-   Parent IPv6 IPAddressRange  0A00:04FF - 0A00:05FF
-   Child  IPv6 IPAddress       0A00:05/24
+   Parent IPv6 IPAddressRange  0A00:04FF:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddress       0A00:0500::/24
 
    - 4.6RPGG
-   Parent IPv6 IPAddressRange  0A00:04FF - 0A00:05FF
+   Parent IPv6 IPAddressRange  0A00:04FF:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
    Child  IPv6 IPAddress       0A00:05/23
 
    - 4.6RRLL
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0400 - 0A00:0409
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0400:: - 0A00:0409:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6RRLE
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0400 - 0A00:040A
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0400:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6RRLG
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0400 - 0A00:040B
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0400:: - 0A00:040B:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    + 4.6RREL
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0401 - 0A00:0409
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0401:: - 0A00:0409:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    + 4.6RREE
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0401 - 0A00:040A
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    - 4.6RREG
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0401 - 0A00:040B
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0401:: - 0A00:040B:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
-   - 4.6RRGL  BAD?
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0402 - 0A00:0409
+   + 4.6RRGL  
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0402:: - 0A00:0409:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
    + 4.6RRGE
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0402 - 0A00:040A
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0402:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
-   + 4.6RRGG GOOD?
-   Parent IPv6 IPAddressRange  0A00:0401 - 0A00:040A
-   Child  IPv6 IPAddressRange  0A00:0402 - 0A00:040B
+   - 4.6RRGG 
+   Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
+   Child  IPv6 IPAddressRange  0A00:0402:: - 0A00:040B:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
 5. Parent-child multi-member tests: none.  This was deemed unnecessary
    by A. Chi because all certificates above are built from "base"
