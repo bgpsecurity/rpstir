@@ -280,23 +280,23 @@ IPv4 / IPv6 Test Cases
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.4.255 - 10.0.6.0
 
-    + 4.4PREL
+   + 4.4PREL
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.5.0 - 10.0.5.5
 
-    - 4.4PREE
+   - 4.4PREE
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.5.0 - 10.0.5.255  (invalid: range = prefix)
 
-    - 4.4PREG
+   - 4.4PREG
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.5.0 - 10.0.6.0
 
-    + 4.4PRGL
+   + 4.4PRGL
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.5.1 - 10.0.5.5
 
-    + 4.4PRGE
+   + 4.4PRGE
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.5.1 - 10.0.5.255
 
@@ -304,111 +304,111 @@ IPv4 / IPv6 Test Cases
    Parent IPv4 IPAddress       10.0.5/24
    Child  IPv4 IPAddressRange  10.0.5.1 - 10.0.6.0
 
-    - 4.4RPLL
+   - 4.4RPLL
    Parent IPv4 IPAddressRange  10.0.5.1 - 10.0.5.255
    Child  IPv4 IPAddress       10.0.4/24
 
-    - 4.4RPLE
+   - 4.4RPLE
    Parent IPv4 IPAddressRange  10.0.5.1 - 10.0.5.255
    Child  IPv4 IPAddress       10.0.4/23
 
-    - 4.4RPLG
+   - 4.4RPLG
    Parent IPv4 IPAddressRange  10.0.5.1 - 10.0.5.255
    Child  IPv4 IPAddress       10.0.4/22
 
-    + 4.4RPEL
+   + 4.4RPEL
    Parent IPv4 IPAddressRange  10.0.5.0 - 10.0.5.254
    Child  IPv4 IPAddress       10.0.5/25
 
-     - 4.4RPEE
+   - 4.4RPEE
    Parent IPv4 IPAddressRange  10.0.5.0 - 10.0.5.255 (invalid: range = prefix)
    Child  IPv4 IPAddress       10.0.5/24
 
-     - 4.4RPEG
+   - 4.4RPEG
    Parent IPv4 IPAddressRange  10.0.5.0 - 10.0.5.254
    Child  IPv4 IPAddress       10.0.5/24
 
-     + 4.4RPGL
+   + 4.4RPGL
    Parent IPv4 IPAddressRange  10.0.4.255 - 10.0.5.255
    Child  IPv4 IPAddress       10.0.5/25
 
-    + 4.4RPGE
+   + 4.4RPGE
    Parent IPv4 IPAddressRange  10.0.4.255 - 10.0.5.255
    Child  IPv4 IPAddress       10.0.5/24
 
-    - 4.4RPGG
+   - 4.4RPGG
    Parent IPv4 IPAddressRange  10.0.4.255 - 10.0.5.255
    Child  IPv4 IPAddress       10.0.5/23
 
-    - 4.4RRLL
+   - 4.4RRLL
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.0 - 10.0.4.9
 
-    - 4.4RRLE
+   - 4.4RRLE
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.0 - 10.0.4.10
 
-    - 4.4RRLG
+   - 4.4RRLG
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.0 - 10.0.4.11
 
-    + 4.4RREL
+   + 4.4RREL
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.1 - 10.0.4.9
 
-    + 4.4RREE
+   + 4.4RREE
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
 
-    - 4.4RREG
+   - 4.4RREG
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.1 - 10.0.4.11
 
-    +  4.4RRGL
+   + 4.4RRGL
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.9
 
-    + 4.4RRGE
+   + 4.4RRGE
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.10
 
-    - 4.4RRGG  
+   - 4.4RRGG  
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.11
 
-  - 4.6PPLL
+   - 4.6PPLL
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddress       0A00:0400::/24
 
-  - 4.6PPLE
+   - 4.6PPLE
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddress       0A00:0400::/23
 
-  - 4.6PPLG
+   - 4.6PPLG
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddress       0A00:0000::/21
 
-  +4.6PPEL
+   + 4.6PPEL
    Parent IPv6 IPAddress       0A00:0000::/22
    Child  IPv6 IPAddress       0A00:0000::/24
 
-  +4.6PPEE
+   + 4.6PPEE
    Parent IPv6 IPAddress       0A00:0000::/22
    Child  IPv6 IPAddress       0A00:0000::/22
 
-  - 4.6PPEG
+   - 4.6PPEG
    Parent IPv6 IPAddress       0A00:0000::/22
    Child  IPv6 IPAddress       0A00:0000::/20
 
-  +4.6PPGL
+   + 4.6PPGL
    Parent IPv6 IPAddress       0A00:0000::/24
    Child  IPv6 IPAddress       0A00:0080::/26
 
-  +4.6PPGE
+   + 4.6PPGE
    Parent IPv6 IPAddress       0A00:0000::/24
    Child  IPv6 IPAddress       0A00:0080::/25
 
-  - 4.6PPGG
+   - 4.6PPGG
    Parent IPv6 IPAddress       0A00:0000::/24
    Child  IPv6 IPAddress       0A00:0100::/24
 
@@ -424,7 +424,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddressRange  0A00:04FF:: - 0A00:0600:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
-   +4.6PREL
+   + 4.6PREL
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddressRange  0A00:0500:: - 0A00:0505:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
@@ -432,7 +432,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddressRange  0A00:0500:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF  (invalid: range = prefix)
 
-  - 4.6PREG
+   - 4.6PREG
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddressRange  0A00:0500:: - 0A00:0600:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
@@ -440,7 +440,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddressRange  0A00:0501:: - 0A00:0505:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
-   +4.6PRGE
+   + 4.6PRGE
    Parent IPv6 IPAddress       0A00:0500::/24
    Child  IPv6 IPAddressRange  0A00:0501:: - 0A00:05FF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
