@@ -358,6 +358,8 @@ int main (int argc, char **argv)
     // write out the roa
     char fulldir[40];
     char fullpath[40];
+    memset(fullpath,0,sizeof(fullpath));
+    memset(fulldir,0,sizeof(fulldir));
     make_fulldir(fulldir, roafile);
     make_fullpath(fullpath, roafile);
     printf("Path: %s\n", fullpath);

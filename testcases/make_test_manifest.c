@@ -238,6 +238,8 @@ int main(int argc, char **argv)
 
   char fullpath[40];
   char fulldir[40];
+  memset(fullpath,0,sizeof(fullpath));
+  memset(fulldir,0,sizeof(fullpath));
   make_fulldir(fulldir, manifestfile);
   make_fullpath(fullpath, manifestfile);
   fprintf(stdout, "Path: %s\n", fullpath);

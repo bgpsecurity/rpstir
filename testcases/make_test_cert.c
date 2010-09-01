@@ -47,6 +47,7 @@ char *msgs [] =
     "Error creating %s extension\n",
     "Error in CA %s extension\n",      // 12
     "Invalid parameter %s\n",
+    "Directory Error %s\n",      // 14
     };
 
 static int warn(int err, char *param)
@@ -107,7 +108,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
   uchar hash[40];
   int ansr;
 
-  memset(hash, 0, 40);
+  memset(hash, 0, sizeof(hash));
   cryptInit();
   if (alg == 2) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   else if (alg == 1) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
@@ -200,6 +201,8 @@ static struct Extension *makeExtension(struct Extensions *extsp, char *idp)
 
 static void make_fullpath(char *fullpath, char *locpath)
   {
+    struct stat stbuf;
+
   // certificate goes in issuer's directory, e.g.
   // CM1.cer and C1.cer go nowhere else, 
   // C1M1.cer and C12.cer go into C1/, 
@@ -225,6 +228,12 @@ static void make_fullpath(char *fullpath, char *locpath)
           *f++ = '/';
           }
         }
+      }
+    // if path does not exist create it
+    if ( (fullpath != NULL) && (stat(fullpath, &stbuf) < 0) )
+      {
+	if (errno != ENOENT) fatal(14, fullpath); // different error
+	if (mkdir(fullpath,0777) < 0) fatal(14,fullpath);
       }
     }
   strcpy(f, locpath);
@@ -387,7 +396,7 @@ static int setSignature(struct Certificate *certp, char *keyfile, int bad)
   if ((sign_lth = size_casn(&certp->toBeSigned.self)) < 0) fatal(5, "sizing");
   signstring = (uchar *)calloc(1, sign_lth);
   sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
-  memset(hash, 0, 40);
+  memset(hash, 0, sizeof(hash));
   cryptInit();
   if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
       (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
@@ -755,6 +764,7 @@ int main(int argc, char **argv)
     }
   setSignature(&cert, (issuerkeyfile)? issuerkeyfile: subjkeyfile, bad);
   char fullpath[40];
+  memset(fullpath,0,sizeof(fullpath));
   make_fullpath(fullpath, subjfile);
   if (put_casn_file(&cert.self, subjfile, 0) < 0) fatal(2, subjfile);
   if (put_casn_file(&cert.self, fullpath, 0) < 0) fatal(2, fullpath);
