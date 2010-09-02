@@ -177,9 +177,9 @@ static int makecolumns(scmtab *outtab)
   if ( dp == NULL )
     return(-4);
   ptr = strtok(dp, ",");
-  while ( ptr != NULL && ptr[0] != 0 )
+  while ( ptr != NULL && ptr[0] != 0 && rcnt<cnt)
     {
-      if ( isspace((int)(ptr[0])) || ptr[0] == 0 )
+      if ( !islower((int)(ptr[0])) || isspace((int)(ptr[0])) || ptr[0] == 0 )
 	break;
       outtab->cols[rcnt] = firsttok(ptr);
       if ( outtab->cols[rcnt] == NULL )

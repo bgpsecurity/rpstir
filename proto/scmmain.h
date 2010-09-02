@@ -55,6 +55,12 @@ static char *RPKI_DBPASS = NULL;
   Table definitions
 */
 
+/*
+The sceme for adding in SQL statements to scmtabbuilder is the following:
+	column names should start with a lowercase letter
+	all SQL keywords should be uppercase
+*/
+
 static scmtab scmtabbuilder[] = 
   {
     {				/* RPKI_CERT */
