@@ -20,6 +20,10 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+
+# Rearrangement for building of .h files in FreeBSD
+CFLAGS += -I../proto
+
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
 endif
@@ -28,7 +32,7 @@ ifneq ($(SSLINCLUDES),)
   CFLAGS += -I$(SSLINCLUDES)
 endif
 
-CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto -I../roa-lib\
+CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../roa-lib\
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 TEST_OBJECTS= roa_test.o

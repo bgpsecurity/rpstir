@@ -21,6 +21,10 @@
 # ***** END LICENSE BLOCK *****
 
 # --- macros
+
+#--Rearrangement of building for .h files in FreeBSD
+CFLAGS += -I../proto
+
 ifneq ($(CLINCLUDES),)
   CFLAGS += -I$(CLINCLUDES)
 endif
@@ -29,7 +33,7 @@ ifneq ($(SSLINCLUDES),)
   CFLAGS += -I$(SSLINCLUDES)
 endif
 
-CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../proto \
+CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations -DANYSKI
 
 # --- targets
