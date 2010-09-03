@@ -7,9 +7,9 @@
 .ds LF Reynolds, et al 
 .ds RF FORMFEED[Page %]
 .ds LH Internet-Draft
-.ds RH March 2010
+.ds RH September 2010
 .ds CH RPKI Local TA Management
-.ds CF Expires September 26, 2010
+.ds CF Expires March 7, 2011
 .hy 0
 .nh
 .ad l
@@ -19,7 +19,7 @@
 .tl 'Secure Inter-Domain Routing''M. Reynolds'
 .tl 'Internet-Draft''S. Kent'
 .tl 'Intended status: Standards Track''BBN'
-.tl 'Expires: September 26, 2010''March 25, 2010'
+.tl 'Expires: March 7, 2011''September 3, 2010'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -34,7 +34,7 @@
 
 .ce 2
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
-<draft-reynolds-rpki-ltamgmt-00.txt>
+<draft-reynolds-rpki-ltamgmt-01.txt>
 .fi
 .in 3
 
@@ -52,7 +52,7 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on September 26, 2010.
+This Internet-Draft will expire on March 7, 2011.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
@@ -500,17 +500,17 @@ The authors would like to acknowledge the significant contributions of Charles G
 .ti 3
 [I-D. sidr-arch]
 .ti 15
-Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing", draft-ietf-side-arch-09.txt (work in progress), October 2009.
+Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing", draft-ietf-sidr-arch-09.txt (work in progress), October 2009.
 
 .ti 3
 [I-D. sidr-repos-struct]
 .ti 15
-Huston, G., Loomans, R., and G. Michaelson, "A Profile for Resource Certificate Policy Structure", draft-ietf-sidr-repos-struct-03.txt (work in progress), August 2009.
+Huston, G., Loomans, R., and G. Michaelson, "A Profile for Resource Certificate Policy Structure", draft-ietf-sidr-repos-struct-04.txt (work in progress), May 2010.
 
 .ti 3
 [I-D. sidr-res-cert-prof]
 .ti 15
-Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource Certificates", draft-ietf-sidr-res-certs-17.txt (work in progress), September 2009.
+Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource Certificates", draft-ietf-sidr-res-certs-18.txt (work in progress), May 2010.
 
 .in 3
 

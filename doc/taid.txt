@@ -5,11 +5,11 @@
 Secure Inter-Domain Routing                                  M. Reynolds
 Internet-Draft                                                   S. Kent
 Intended status: Standards Track                                     BBN
-Expires: September 26, 2010                               March 25, 2010
+Expires: March 7, 2011                                 September 3, 2010
 
 
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
-                  <draft-reynolds-rpki-ltamgmt-00.txt>
+                  <draft-reynolds-rpki-ltamgmt-01.txt>
 
 
 Status of this Memo
@@ -33,7 +33,7 @@ Status of this Memo
    The list of Internet-Draft Shadow Directories can be accessed at
    http://www.ietf.org/shadow.html
 
-   This Internet-Draft will expire on September 26, 2010.
+   This Internet-Draft will expire on March 7, 2011.
 
 Copyright and License Notice
 
@@ -53,9 +53,9 @@ Copyright and License Notice
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 1]
+Reynolds, et al          Expires March 7, 2011                  [Page 1]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 Abstract
@@ -109,9 +109,9 @@ Table of Contents
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 2]
+Reynolds, et al          Expires March 7, 2011                  [Page 2]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
          4.2.2  Target processing (stage 1)  . . . . . . . . . . . .  17
@@ -165,9 +165,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 3]
+Reynolds, et al          Expires March 7, 2011                  [Page 3]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 1  Introduction
@@ -221,9 +221,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 4]
+Reynolds, et al          Expires March 7, 2011                  [Page 4]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    mechanism must process the constraints file and modify certificates
@@ -277,9 +277,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 5]
+Reynolds, et al          Expires March 7, 2011                  [Page 5]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    modified extensions will exclude any RFC 3779 data expressed in the
@@ -333,9 +333,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 6]
+Reynolds, et al          Expires March 7, 2011                  [Page 6]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
       Original Certificate Field         Action
@@ -389,9 +389,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 7]
+Reynolds, et al          Expires March 7, 2011                  [Page 7]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 3  Format of the constraints file
@@ -445,9 +445,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 8]
+Reynolds, et al          Expires March 7, 2011                  [Page 8]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    subsection. The flags subsection consists of one or more lines of the
@@ -501,9 +501,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010               [Page 9]
+Reynolds, et al          Expires March 7, 2011                  [Page 9]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    by which paracertificate fields, specifically those indicated above
@@ -557,9 +557,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 10]
+Reynolds, et al          Expires March 7, 2011                 [Page 10]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    paracertificate.
@@ -613,9 +613,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 11]
+Reynolds, et al          Expires March 7, 2011                 [Page 11]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 3.4  Blocks subsection
@@ -669,9 +669,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 12]
+Reynolds, et al          Expires March 7, 2011                 [Page 12]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    or resolvable within the context of the local RPKI repository. Also,
@@ -725,9 +725,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 13]
+Reynolds, et al          Expires March 7, 2011                 [Page 13]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    "proofreading" and "TA processing". Conceptually, the proofreading
@@ -781,9 +781,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 14]
+Reynolds, et al          Expires March 7, 2011                 [Page 14]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    block, it then verifies the presence of the IPv4, IPv6 and AS#
@@ -837,9 +837,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 15]
+Reynolds, et al          Expires March 7, 2011                 [Page 15]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    entire local RPKI repository is searching for any other certificates
@@ -893,9 +893,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 16]
+Reynolds, et al          Expires March 7, 2011                 [Page 16]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 4.2.2  Target processing (stage 1)
@@ -949,9 +949,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 17]
+Reynolds, et al          Expires March 7, 2011                 [Page 17]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    necessary, fields from the RP's TA certificate. The RFC 3779
@@ -1005,9 +1005,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 18]
+Reynolds, et al          Expires March 7, 2011                 [Page 18]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    certificate (since the certificate is in collection, it must be a
@@ -1061,9 +1061,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 19]
+Reynolds, et al          Expires March 7, 2011                 [Page 19]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    file, but that did not correspond to a certificate in the local
@@ -1117,9 +1117,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 20]
+Reynolds, et al          Expires March 7, 2011                 [Page 20]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 4.3  Discussion
@@ -1173,9 +1173,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 21]
+Reynolds, et al          Expires March 7, 2011                 [Page 21]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    certificates is the putative parent. In the no-error case, with the
@@ -1229,9 +1229,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 22]
+Reynolds, et al          Expires March 7, 2011                 [Page 22]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    bit set nor the PARA state bit set, revocation proceeds normally. All
@@ -1285,9 +1285,9 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 23]
+Reynolds, et al          Expires March 7, 2011                 [Page 23]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 7  Security Considerations
@@ -1341,25 +1341,25 @@ Internet-Draft          RPKI Local TA Management              March 2010
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 24]
+Reynolds, et al          Expires March 7, 2011                 [Page 24]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    [I-D. sidr-arch]
                Lepinski, M. and S. Kent, "An Infrastructure to Support
-               Secure Internet Routing", draft-ietf-side-arch-09.txt
+               Secure Internet Routing", draft-ietf-sidr-arch-09.txt
                (work in progress), October 2009.
 
    [I-D. sidr-repos-struct]
                Huston, G., Loomans, R., and G. Michaelson, "A Profile
                for Resource Certificate Policy Structure", draft-ietf-
-               sidr-repos-struct-03.txt (work in progress), August 2009.
+               sidr-repos-struct-04.txt (work in progress), May 2010.
 
    [I-D. sidr-res-cert-prof]
                Huston, G., Michaelson, G., and R. Loomans, "A Profile
                for X.509 PKIX Resource Certificates", draft-ietf-sidr-
-               res-certs-17.txt (work in progress), September 2009.
+               res-certs-18.txt (work in progress), May 2010.
 
 
 10.2  Informative References
@@ -1397,9 +1397,9 @@ Authors' Addresses
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 25]
+Reynolds, et al          Expires March 7, 2011                 [Page 25]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
 Appendix A: Sample Constraints File
@@ -1453,9 +1453,9 @@ Appendix A: Sample Constraints File
  
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 26]
+Reynolds, et al          Expires March 7, 2011                 [Page 26]
 
-Internet-Draft          RPKI Local TA Management              March 2010
+Internet-Draft          RPKI Local TA Management          September 2010
 
 
    ;
@@ -1509,4 +1509,4 @@ Internet-Draft          RPKI Local TA Management              March 2010
 
 
 
-Reynolds, et al        Expires September 26, 2010              [Page 27]
+Reynolds, et al          Expires March 7, 2011                 [Page 27]
