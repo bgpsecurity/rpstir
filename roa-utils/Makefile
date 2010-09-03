@@ -32,7 +32,7 @@ ifneq ($(SSLINCLUDES),)
   CFLAGS += -I$(SSLINCLUDES)
 endif
 
-CFLAGS += -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../roa-lib\
+CFLAGS += -I$(CLINCLUDES) -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../roa-lib\
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 TEST_OBJECTS= roa_test.o

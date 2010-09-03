@@ -30,7 +30,7 @@ ifneq ($(SSLINCLUDES),)
   CFLAGS += -I$(SSLINCLUDES)
 endif
 
-CFLAGS += -I../roa-lib -I../cg/asn -I../cg/casn \
+CFLAGS += -I$(CLINCLUDES) -I../roa-lib -I../cg/asn -I../cg/casn \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
