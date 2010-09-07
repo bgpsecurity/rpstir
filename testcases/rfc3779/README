@@ -940,7 +940,7 @@ AS Number Test Cases
      GrChild     ASId       <inherit>
      GrGrChild   ASId       11
 
-   + A51RIB
+   - A51RIB
      Parent      ASRange    10 - 20
      Child       ASId       <inherit>
      GrChild     ASId       <inherit>
