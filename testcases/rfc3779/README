@@ -533,17 +533,33 @@ IPv4 / IPv6 Test Cases
 
        Generate certificates by appending to C*:
        {IPv4/IPv6} address range where the lower limit is encoded with
-       least significant zero bits.
+       {zero/one/serveral} least significant zero bits.
 
        Cases:
 
-       - 6.1.1a
+       + 6.1.1.4Z
+       IPv4 IPAddressRange 5.0.0.0 - 5.1.2.3 where the lower limit is
+       encoded by the bit string 00000101.
+
+       - 6.1.1.4O
        IPv4 IPAddressRange 5.0.0.0 - 5.1.2.3 where the lower limit is
        encoded by the bit string 000001010.
 
-       - 6.1.1b
+       - 6.1.1.4S
+       IPv4 IPAddressRange 5.0.0.0 - 5.1.2.3 where the lower limit is
+       encoded by the bit string 0000010100.
+
+       + 6.1.1.6Z
+       IPv6 IPAddressRange FF00:: - FFFE::0010  where the lower
+       limit is encoded by the bit string 11111111.
+
+       - 6.1.1.6O
        IPv6 IPAddressRange FF00:: - FFFE::0010  where the lower
        limit is encoded by the bit string 111111110.
+
+       - 6.1.1.6S
+       IPv6 IPAddressRange FF00:: - FFFE::0010  where the lower
+       limit is encoded by the bit string 1111111100.
 
      6.1.2 Extra/missing one bits in upper limit (2 positive, 4 negative
        cases)
@@ -554,11 +570,11 @@ IPv4 / IPv6 Test Cases
 
        Cases:
 
-       - 6.1.2.4Z
+       + 6.1.2.4Z
        IPv4 IPAddressRange 7.0.0.1 - 7.255.255.255 where the upper limit
        is encoded by the bit string 00000.
 
-       + 6.1.2.4O
+       - 6.1.2.4O
        IPv4 IPAddressRange 7.0.0.1 - 7.255.255.255 where the upper limit
        is encoded by the bit string 000001.
 
@@ -566,11 +582,11 @@ IPv4 / IPv6 Test Cases
        IPv4 IPAddressRange 7.0.0.1 - 7.255.255.255 where the upper limit
        is encoded by the bit string 0000011.
 
-       - 6.1.2.6Z
+       + 6.1.2.6Z
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
        where the upper limit is encoded by the bit string 0000000000000.
 
-       + 6.1.2.6O
+       - 6.1.2.6O
        IPv6 IPAddressRange 7::1 - 7:ffff:ffff:ffff:ffff:ffff:ffff:ffff
        where the upper limit is encoded by the bit string
        00000000000001.
