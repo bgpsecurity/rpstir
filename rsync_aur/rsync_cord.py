@@ -1,4 +1,20 @@
-# -*- coding: cp1252 -*-
+#/* ***** BEGIN LICENSE BLOCK *****
+# *
+# * BBN Address and AS Number PKI Database/repository software
+# * Version 3.0-beta
+# *
+# * US government users are permitted unrestricted rights as
+# * defined in the FAR.
+# *
+# * This software is distributed on an "AS IS" basis, WITHOUT
+# * WARRANTY OF ANY KIND, either express or implied.
+# *
+# * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
+# *
+# * Contributor(s):  Brenton Kohler(bkohler@bbn.com)
+# *
+# * ***** END LICENSE BLOCK ***** */
+
 from threading import Thread
 import getopt, sys, os, Queue, time, socket, logging, urllib
 
@@ -39,7 +55,7 @@ class RSYNC_thread(Thread):
             #notify Listener
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
             s.connect((IP_LISTENER, PORT_LISTENER))
-            data = ("%s %s/%s %s/%s.log\n") % (nextURI, repoDir, nextURI, logDir, nextURI)
+            data = ("%s %s/%s %s/%s.log \n") % (nextURI, repoDir, nextURI, logDir, nextURI)
             bytesSent = s.send(data)
             s.close()
 
@@ -188,15 +204,15 @@ for line in lines:
 
 #Get at each URI in the dirs= element of the config file
 URIPool = Queue.Queue(0)
-dirs = dirs.strip(";\'\"\n")
 eachDir = (dirs.strip('\"').strip('\n').strip('\"')).split(' ')
+
 #fill in the queue
 dirs = []
 for direc in eachDir:
-    dirs.append(urllib.quote(direc, safe="/~"))
-    URIPool.put(urllib.quote(direc, safe="/~"))
+    dirs.append(direc)
+    URIPool.put(direc)
 
 sanity_check_and_rotate_logs()
-#launch_listener()
+launch_listener()
 thread_controller()
 clean_rsync_logs()
