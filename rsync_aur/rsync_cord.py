@@ -16,7 +16,7 @@
 # * ***** END LICENSE BLOCK ***** */
 
 from threading import Thread
-import getopt, sys, os, Queue, time, socket, logging, urllib
+import getopt, sys, os, Queue, time, socket
 
 BLOCK_TIMEOUT = 5
 MAXTHREADS = 8
@@ -55,7 +55,7 @@ class RSYNC_thread(Thread):
             #notify Listener
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
             s.connect((IP_LISTENER, PORT_LISTENER))
-            data = ("%s %s/%s %s/%s.log \n") % (nextURI, repoDir, nextURI, logDir, nextURI)
+            data = ("%s %s/%s %s/%s.log\n") % (nextURI, repoDir, nextURI, logDir, nextURI)
             bytesSent = s.send(data)
             s.close()
 
