@@ -16,12 +16,12 @@
 # * ***** END LICENSE BLOCK ***** */
 
 from threading import Thread
-import getopt, sys, os, Queue, time, socket
+import getopt, sys, os, Queue, time, socket, subprocess
 
 BLOCK_TIMEOUT = 5
 MAXTHREADS = 8
 IP_LISTENER = '127.0.0.1'
-PORT_LISTENER = 3450
+PORT_LISTENER = 55566
 
 class RSYNC_thread(Thread):
     #The class for handling RSYNC tasks
@@ -34,9 +34,10 @@ class RSYNC_thread(Thread):
             print "queue empty. %s " % self.getName()
             return
         while not nextURI=="" : #while a URI has been popped
-            #build and run the rsync command. This may block for awhile but that is the beauty of the multiple threads. 
-            rsyncCom = "rsync -airz --del rsync://%s/ %s/%s > %s/%s.log" %(nextURI, repoDir, nextURI, logDir, nextURI)
-            rcode = os.system(rsyncCom)
+            #build and run the rsync command. This may block for awhile but that is the beauty of
+            #the multiple threads. 
+            rsyncCom = "rsync -airz --del rsync://%s/ %s/%s > %s/%s.log" % (nextURI, repoDir, nextURI, logDir, nextURI)
+            rcode = subprocess.call(rsyncCom, shell=True)
 
             #log return code and respond appropriately
             logFile = (logDir + "/rsync_thread_%s.log") % self.getName()
@@ -44,11 +45,11 @@ class RSYNC_thread(Thread):
             f.write( (nextURI + " %d\n") % rcode)
             if rcode == 30:
                 #re-run the rsync command
-                rcode = os.system(rsyncCom)
+                rcode = subprocess.call(rsyncCom, shell=True)
                 f.write( (nextURI + " 2nd attempt: %d\n") % rcode)
             elif rcode == 35:
                 #re-run the rsync command
-                rcode = os.system(rsyncCom)
+                rcode = subprocess.call(rsyncCom, shell=True)
                 f.write( (nextURI + " 2nd attempt: %d\n") % rcode)
             f.close()
             
@@ -71,7 +72,11 @@ def thread_controller():
     # maximum number of threads and waits for their completion
     threadPool = []
     # Start MAX threads and keep track of a reference to them
-    for x in xrange ( MAXTHREADS ):
+    if MAXTHREADS > URIPool.qsize():
+        threadsToSpawn = URIPool.qsize()
+    else:
+        threadsToSpawn = MAXTHREADS
+    for x in xrange ( threadsToSpawn ):
         thr = RSYNC_thread()
         thr.setName(x)
         thr.start()
@@ -79,7 +84,7 @@ def thread_controller():
     
     notAliveCount = 0
     # while the last count of the dead threads is less than the number spawned
-    while notAliveCount < MAXTHREADS :
+    while notAliveCount < threadsToSpawn :
         notAliveCount = 0
         time.sleep(5)
         for i in threadPool:
@@ -140,7 +145,11 @@ def clean_rsync_logs():
     # cat them together into one rsync_cord.log and then
     # delete each thread log
     res = ""
-    for x in xrange( MAXTHREADS ):
+    if MAXTHREADS > len(dirs):
+        threadsToSpawn = len(dirs)
+    else:
+        threadsToSpawn = MAXTHREADS
+    for x in xrange( threadsToSpawn ):
         fileStr = (" " + logDir + "/rsync_thread_%d.log") % x
         res = res + fileStr
 
