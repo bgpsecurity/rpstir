@@ -21,7 +21,7 @@ import getopt, sys, os, Queue, time, socket, subprocess
 BLOCK_TIMEOUT = 5
 MAXTHREADS = 8
 IP_LISTENER = '127.0.0.1'
-PORT_LISTENER = 55566
+PORT_LISTENER = 55567
 
 class RSYNC_thread(Thread):
     #The class for handling RSYNC tasks
@@ -56,7 +56,7 @@ class RSYNC_thread(Thread):
             #notify Listener
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
             s.connect((IP_LISTENER, PORT_LISTENER))
-            data = ("%s %s/%s %s/%s.log\n") % (nextURI, repoDir, nextURI, logDir, nextURI)
+            data = ("%s %s/%s %s/%s.log") % (nextURI, repoDir, nextURI, logDir, nextURI)
             bytesSent = s.send(data)
             s.close()
 
@@ -160,7 +160,7 @@ def clean_rsync_logs():
     os.system(rmStr)
 
 def launch_listener():
-    os.system(".\rsync_listener %d &" % (PORT_LISTENER)) 
+    os.system("./rsync_listener %d &" % (PORT_LISTENER)) 
 
 def usage():
     print "rsync_cord [-h -c config] [--help] \n \
