@@ -16,7 +16,7 @@
 # 
 #  Copyright (C) Raytheon BBN Technologies Corp. 2007.  All Rights Reserved.
 # 
-#  Contributor(s):  Peiter "Mudge" Zatko
+#  Contributor(s):  Peiter "Mudge" Zatko, Ryan Caloras
 # 
 # ***** END LICENSE BLOCK *****
 
@@ -27,6 +27,8 @@
 # DFLAGS = -DTEST -DDEBUG
 CC = gcc
 DFLAGS = 
+HFLAGS = -g -Wall -ggdb3
+LDFLAGS = -lpthread
 CFLAGS=-I../proto -I$(CLINCLUDES) -I$(SSLINCLUDES) \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 XFLAGS =        # xtra cflags, set by systype targets
@@ -38,9 +40,9 @@ STATIC =
 CC += $(CFLAGS)
 LD = $(CC)      # linker; defaults to stripped executables
 o = o           # object extension
-ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o
+ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o csapp.o rsync_listener.o
 
-ALL = rsync_aur
+ALL = rsync_aur rsync_listener
 
 all:	$(ALL)
 
@@ -66,6 +68,15 @@ socket_stuff.o	:	socket_stuff.c main.h
 
 sig_handler.o	:	sig_handler.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c sig_handler.c
+
+csapp.o: csapp.c csapp.h
+	$(CC) $(HFLAGS) -c csapp.c
+
+rsync_listener.o: rsync_listener.c csapp.h rsync_listener.h
+	$(CC) $(HFLAGS) -c rsync_listener.c
+
+rsync_listener: rsync_listener.o csapp.o
+	$(CC) $(LDFLAGS) rsync_listener.o csapp.o	-o rsync_listener
 
 usage.o	:	usage.c main.h
 	$(CC) $(DFLAGS) $(XFLAGS) $(IFLAGS) $(STATIC) -c usage.c 
