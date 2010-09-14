@@ -107,7 +107,7 @@ int main (int argc, char *argv [])
 		int status;
 		char path[MAXREAD];
 		char command[MAXREAD];
-		sprintf(command,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_HOME"), getenv("RPKI_PORT"), log_loc, rep_loc);
+		sprintf(command,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
 
 		printf("%s\n",command);
 
