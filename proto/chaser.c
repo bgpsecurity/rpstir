@@ -26,7 +26,7 @@
  *
  * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
  *
- * Contributor(s):  David Montana
+ * Contributor(s):  David Montana, Brenton Kohler
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -212,6 +212,23 @@ static int handleCRLDPResults (scmcon *conp, scmsrcha *s, int numLine)
   return 0;
 }
 
+/* callback function for searchscm that accumulates the sia's */
+static int handleTASIAResults (scmcon *conp, scmsrcha *s, int numLine)
+{
+  char *res;
+  char *oneres;
+
+  conp = conp; numLine = numLine;  // silence compiler warnings
+  res = (char *)(s->vec[0].valptr);
+  oneres = strtok(res, ";");
+  while( oneres != NULL && oneres[0] != 0)
+    {
+      addURIIfUnique (oneres);
+      oneres = strtok(NULL, ";");
+    }
+  return 0;
+}
+
 /* callback function for searchscm that records the timestamps */
 static int handleTimestamps (scmcon *conp, scmsrcha *s, int numLine)
 {
@@ -228,6 +245,7 @@ static int printUsage()
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
   fprintf(stderr, "  -d dirname  rsync executable directory (default=RPKI_ROOT/rsync_aur)\n");
   fprintf(stderr, "  -n          don't execute, just print what would have done\n");
+  fprintf(stderr, "  -t          run by grabbing only Trust Anchor URIs from the database\n");
   fprintf(stderr, "  -h          this help listing\n");
   return 1;
 }
@@ -244,6 +262,7 @@ int main(int argc, char **argv)
   int      i, status, numDirs, ch;
   int      portno = 0;
   int      noExecute = 0;
+  int      taOnly = 0;
   char     dirs[50][120], str[180], *str2;
   char     *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
   char     rsyncDir[200];
@@ -262,7 +281,7 @@ int main(int argc, char **argv)
   (void) setbuf (stdout, NULL);
 
   // parse the command-line flags
-  while ((ch = getopt(argc, argv, "f:p:d:nh")) != -1) {
+  while ((ch = getopt(argc, argv, "f:p:d:nth")) != -1) {
     switch (ch) {
       case 'f':   /* configuration file */
 	origFile = strdup (optarg);
@@ -275,6 +294,9 @@ int main(int argc, char **argv)
 	break;
       case 'n':   /* no execution */
 	noExecute = 1;
+	break;
+      case 't':   /* no execution */
+	taOnly = 1;
 	break;
       case 'h':   /* help */
       default:
@@ -324,6 +346,8 @@ int main(int argc, char **argv)
   srch.wherestr = NULL;
   srch.context = &blah;
 
+  if(!taOnly)
+  {
   // find the current time and last time chaser ran
   table = findtablescm (scmp, "metadata");
   checkErr (table == NULL, "Cannot find table metadata\n");
@@ -360,7 +384,21 @@ int main(int argc, char **argv)
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
   free (srch1[0].valptr);
   free (srch1[1].valptr);
-
+  }//this ends the normal operation
+  else
+  {
+	table = findtablescm (scmp, "certificate");
+	checkErr (table == NULL, "Cannot find table certificate\n");
+	theCertTable = table;
+	srch.nused = 0;
+	srch.vald = 0;
+	snprintf (msg, sizeof(msg),"((flags%%%d)>=%d)",2*SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
+	srch.wherestr = msg;
+	addcolsrchscm (&srch, "sia", SQL_C_CHAR, SIASIZE);
+	status = searchscm (connect, table, &srch, NULL, handleTASIAResults,
+					SCM_SRCH_DOVALUE_ALWAYS, NULL);
+	free (srch1[0].valptr);
+  }
   // remove original set from list of addresses
   for (i = 0; i < numDirs; i++) {
     snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
