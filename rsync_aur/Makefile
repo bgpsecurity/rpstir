@@ -40,7 +40,7 @@ STATIC =
 CC += $(CFLAGS)
 LD = $(CC)      # linker; defaults to stripped executables
 o = o           # object extension
-ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o csapp.o rsync_listener.o
+ALL_OBJS= main.o parse.o socket_stuff.o sig_handler.o usage.o csapp.o
 
 ALL = rsync_aur rsync_listener
 
