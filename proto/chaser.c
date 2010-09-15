@@ -400,10 +400,15 @@ int main(int argc, char **argv)
 	free (srch1[0].valptr);
   }
   // remove original set from list of addresses
-  for (i = 0; i < numDirs; i++) {
-    snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
-    removeURI (str);
-  }
+  // This is now commented out under the assumption that the chaser will be the 
+  //  only cron'ed event to occur and it will always build it's list of URI's
+  //  from what is available in the database and from the static list provided
+  //  in the config file. 
+  //
+  //for (i = 0; i < numDirs; i++) {
+  //  snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
+  //  removeURI (str);
+  //}
   if (numURIs == 0)
     return 0;
 
