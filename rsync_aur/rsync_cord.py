@@ -18,10 +18,16 @@
 from threading import Thread
 import getopt, sys, os, Queue, time, socket, subprocess
 
-BLOCK_TIMEOUT = 5
-MAXTHREADS = 8
+BLOCK_TIMEOUT = 1
 IP_LISTENER = '127.0.0.1'
-PORT_LISTENER = 55567
+
+def send_to_listener(data):
+    #This needs a lot of error checking
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
+    s.connect((IP_LISTENER, portno))
+    bytesSent = s.send(data)
+    s.close()
+
 
 class RSYNC_thread(Thread):
     #The class for handling RSYNC tasks
@@ -34,37 +40,44 @@ class RSYNC_thread(Thread):
             print "queue empty. %s " % self.getName()
             return
         while not nextURI=="" : #while a URI has been popped
+            logFileName = (logDir + "/rsync_thread_%s.log") % (self.getName())
+
             #build and run the rsync command. This may block for awhile but that is the beauty of
-            #the multiple threads. 
-            rsyncCom = "rsync -airz --del rsync://%s/ %s/%s > %s/%s.log" % (nextURI, repoDir, nextURI, logDir, nextURI)
+            #the multiple threads.
+            rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 2>>%s 1> %s/%s.log" % (nextURI, repoDir, nextURI, logFileName, logDir, nextURI)
             rcode = subprocess.call(rsyncCom, shell=True)
 
-            #log return code and respond appropriately
-            logFile = (logDir + "/rsync_thread_%s.log") % self.getName()
-            f = open(logFile, "a")
-            f.write( (nextURI + " %d\n") % rcode)
+            f = open(logFileName, 'a')
+            f.write( (nextURI + " had return code %d and was run by thread %s \n") % (rcode, self.getName()))
+            f.write( rsyncCom + "\n")
+            f.flush()
+            
             if rcode == 30:
+                time.sleep(5)
                 #re-run the rsync command
                 rcode = subprocess.call(rsyncCom, shell=True)
                 f.write( (nextURI + " 2nd attempt: %d\n") % rcode)
+                f.flush()
             elif rcode == 35:
+                time.sleep(5)
                 #re-run the rsync command
                 rcode = subprocess.call(rsyncCom, shell=True)
                 f.write( (nextURI + " 2nd attempt: %d\n") % rcode)
+                f.flush()
+            f.flush()
             f.close()
             
-            #notify Listener
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
-            s.connect((IP_LISTENER, PORT_LISTENER))
-            data = ("%s %s/%s %s/%s.log") % (nextURI, repoDir, nextURI, logDir, nextURI)
-            bytesSent = s.send(data)
-            s.close()
+            if rcode == 0:
+               #if the rsync ran successful, notify Listener
+               data = ("%s %s/%s %s/%s.log") % (nextURI, repoDir, nextURI, logDir, nextURI)
+               send_to_listener(data)
 
             #get next URI
             try:
                 # The python queue is synchronized so this is safe
                 nextURI = URIPool.get(True,BLOCK_TIMEOUT)
             except Queue.Empty:
+                print "Queue is empty.... bailing\n"
                 nextURI = ""
 
 def thread_controller():
@@ -72,16 +85,19 @@ def thread_controller():
     # maximum number of threads and waits for their completion
     threadPool = []
     # Start MAX threads and keep track of a reference to them
-    if MAXTHREADS > URIPool.qsize():
+    if threadCount > URIPool.qsize():
         threadsToSpawn = URIPool.qsize()
     else:
-        threadsToSpawn = MAXTHREADS
+        threadsToSpawn = threadCount
     for x in xrange ( threadsToSpawn ):
         thr = RSYNC_thread()
         thr.setName(x)
         thr.start()
         threadPool.append(thr)
-    
+ 
+    if debug:
+        debugFile.write('Number of threads spawned: %d\n' % len(threadPool))
+
     notAliveCount = 0
     # while the last count of the dead threads is less than the number spawned
     while notAliveCount < threadsToSpawn :
@@ -91,12 +107,12 @@ def thread_controller():
             if not i.isAlive():
                 notAliveCount = notAliveCount + 1
 
+    if debug:
+        debugFile.write('Threads have all closed\n')
+
     # Send the RSYNC finished message to the listener
     data = 'RSYNC_DONE'
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
-    s.connect((IP_LISTENER, PORT_LISTENER))
-    bytesSent = s.send(data)
-    s.close()
+    send_to_listener(data)
 
 def sanity_check_and_rotate_logs():
     #check for variables in the config file
@@ -109,6 +125,26 @@ def sanity_check_and_rotate_logs():
     if logDir == "":
         assert False, "missing LOGS= variable in config"
 
+    #Rotate the main log for rsync_cord
+    if os.path.exists(logDir + "/rsync_cord.log.8"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.8 " + logDir + "/rsync_cord.log.9")
+    if os.path.exists(logDir + "/rsync_cord.log.7"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.7 " + logDir + "/rsync_cord.log.8")
+    if os.path.exists(logDir + "/rsync_cord.log.6"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.6 " + logDir + "/rsync_cord.log.7")
+    if os.path.exists(logDir + "/rsync_cord.log.5"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.5 " + logDir + "/rsync_cord.log.6")
+    if os.path.exists(logDir + "/rsync_cord.log.4"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.4 " + logDir + "/rsync_cord.log.5")
+    if os.path.exists(logDir + "/rsync_cord.log.3"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.3 " + logDir + "/rsync_cord.log.4")
+    if os.path.exists(logDir + "/rsync_cord.log.2"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.2 " + logDir + "/rsync_cord.log.3")
+    if os.path.exists(logDir + "/rsync_cord.log.1"):
+        os.system("mv -f " + logDir + "/rsync_cord.log.1 " + logDir + "/rsync_cord.log.2")
+    if os.path.exists(logDir + "/rsync_cord.log"):
+        os.system("mv -f " + logDir + "/rsync_cord.log " + logDir + "/rsync_cord.log.1")
+
     #make directories for logs and repository locations
     for direc in dirs:
         d = os.path.dirname(logDir + "/" +  direc)
@@ -118,7 +154,7 @@ def sanity_check_and_rotate_logs():
         if not os.path.exists(d):
             os.makedirs(d)
 
-    #rotate the logs
+    #rotate the logs for the URI's
     for direc in dirs:
         startPath = logDir + "/" + direc
         if os.path.exists(startPath + ".log.8"):
@@ -145,22 +181,28 @@ def clean_rsync_logs():
     # cat them together into one rsync_cord.log and then
     # delete each thread log
     res = ""
-    if MAXTHREADS > len(dirs):
+    if threadCount > len(dirs):
         threadsToSpawn = len(dirs)
     else:
-        threadsToSpawn = MAXTHREADS
+        threadsToSpawn = threadCount
     for x in xrange( threadsToSpawn ):
         fileStr = (" " + logDir + "/rsync_thread_%d.log") % x
         res = res + fileStr
 
-    catStr = "cat " + res + " > " + logDir + "/rsync_cord.log"
+    if debug:
+        catStr = "cat " + logDir + "/rsync_cord.debug " + res + " > " + logDir + "/rsync_cord.log"
+    else:
+        catStr = "cat " + res + " > " + logDir + "/rsync_cord.log"
     os.system(catStr)
 
-    rmStr = "rm -f " + res
+    if debug:
+        rmStr = "rm -f " + logDir + "/rsync_cord.debug " + res
+    else:
+        rmStr = "rm -f " + res
     os.system(rmStr)
 
 def launch_listener():
-    os.system("./rsync_listener %d &" % (PORT_LISTENER)) 
+    rc = subprocess.call("./rsync_listener %d &" % (portno), shell=True) 
 
 def usage():
     print "rsync_cord [-h -c config] [--help] \n \
@@ -168,30 +210,50 @@ def usage():
             Arguments:\n \
             \t-c config\n \
                 \t The config file that is to be used\n \
+            \t-p port\n \
+                \t The port to set the listener running on and communicate with it\n \
+            \t-t threadcount\n \
+                \t The maximum number of threads to spawn. Default is 8\n \
+            \t-d\n \
+                \t A debug flag to get extra output in the log file\n \
             \t-h --help\n \
                 \t   Shows this help information\n"
 
 
 #Parse command line args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+    opts, args = getopt.getopt(sys.argv[1:], "hdc:p:t:", ["help"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recoized"
     usage()
     sys.exit(2)
+
+#Default variables
 configFile = ""
+portno = 0
+threadCount = 8
+debug = False
+
 for o, a in opts:
     if o in ("-h", "--help"):
         usage()
         sys.exit()
     elif o in ("-c"):
         configFile = a
+    elif o in ("-p"):
+        portno = int(a)
+    elif o in ("-t"):
+        threadCount = int(a)
+    elif o in ("-d"):
+        debug = True
     else:
         assert False, "unhandled option"
 
 if configFile == "":
     assert False, "You must specify the config file"
+if portno == 0:
+    assert False, "You must specify the listener port number"
 
 #parse config file and get various entries
 configParse = open(configFile, "r")
@@ -222,6 +284,16 @@ for direc in eachDir:
     URIPool.put(direc)
 
 sanity_check_and_rotate_logs()
+if debug:
+    debugFile = open(logDir + "/rsync_cord.debug", 'a')
+    debugFile.write('This will process %d URI\'s from %s\n' % (len(dirs), configFile))
+    debugFile.flush()
+
 launch_listener()
 thread_controller()
+
+#close the debug log file before we clean up the logs
+if debug:
+    debugFile.close()
+
 clean_rsync_logs()
