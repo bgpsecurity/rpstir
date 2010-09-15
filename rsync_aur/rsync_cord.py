@@ -16,6 +16,7 @@
 # * ***** END LICENSE BLOCK ***** */
 
 from threading import Thread
+from subprocess import Popen
 import getopt, sys, os, Queue, time, socket, subprocess, logging
 
 BLOCK_TIMEOUT = 1
@@ -41,29 +42,34 @@ class RSYNC_thread(Thread):
             return
         cli = logging.getLogger('Thread: %s: ' % self.getName())
         while not nextURI=="" : #while a URI has been popped
+            stderror = ""
             logFileName = (logDir + "/rsync_thread_%s.log") % (self.getName())
 
             #build and run the rsync command. This may block for awhile but that is the beauty of
             #the multiple threads.
-            rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 2>>%s 1> %s/%s.log" % (nextURI, repoDir, nextURI, logFileName, logDir, nextURI)
-            rcode = subprocess.call(rsyncCom, shell=True)
+            rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 1> %s/%s.log" % (nextURI, repoDir, nextURI, logDir, nextURI)
+            p = Popen(rsyncCom, shell=True, stderr=subprocess.PIPE)
+            stderror = p.communicate()[1]
+            rcode = p.returncode
 
-            cli.info( (nextURI + " had return code %d") % (rcode) )
-            cli.info( rsyncCom )            
+            cli.info( (nextURI + " had return code %s") % (rcode) )
+            if not stderror == "":
+                cli.error( 'rsync returned errors: %s' % stderror )
+            cli.info( rsyncCom )
             
             if rcode == 30:
                 # this is an error code for timeout, sleep then re-run
                 time.sleep(5)
                 #re-run the rsync command
                 rcode = subprocess.call(rsyncCom, shell=True)
-                cli.info( (nextURI + " 2nd attempt: %d") % (rcode))
+                cli.info( (nextURI + " 2nd attempt: %s") % (rcode))
  
             elif rcode == 35:
                 # this is an error code for timeout, sleep then re-run
                 time.sleep(5)
                 #re-run the rsync command
                 rcode = subprocess.call(rsyncCom, shell=True)
-                cli.info( (nextURI + " 2nd attempt: %d") % (rcode))
+                cli.info( (nextURI + " 2nd attempt: %s") % (rcode))
 
             if rcode == 0:
                 #if the rsync ran successful, notify Listener
@@ -78,6 +84,7 @@ class RSYNC_thread(Thread):
             except Queue.Empty:
                 print "Queue is empty.... bailing\n"
                 nextURI = ""
+        cli.info('Thread %s: exiting with no more work to do' % self.getName())
 
 def thread_controller():
     #this function is the main thread controller. It spawns the 
@@ -175,33 +182,6 @@ def sanity_check_and_rotate_logs():
         if os.path.exists(startPath + ".log"):
             os.system("mv -f " + startPath + ".log " + startPath + ".log.1")
 
-def clean_rsync_logs():
-    # this function is supposed to grad each thread log,
-    # cat them together into one rsync_cord.log and then
-    # delete each thread log
-    res = ""
-    if debug:
-        main.info('Cleaning rsync logs up')
-    if threadCount > len(dirs):
-        threadsToSpawn = len(dirs)
-    else:
-        threadsToSpawn = threadCount
-    for x in xrange( threadsToSpawn ):
-        fileStr = (" " + logDir + "/rsync_thread_%d.log") % x
-        res = res + fileStr
-
-    if debug:
-        catStr = "cat " + logDir + "/rsync_cord.debug " + res + " > " + logDir + "/rsync_cord.log"
-    else:
-        catStr = "cat " + res + " > " + logDir + "/rsync_cord.log"
-    os.system(catStr)
-
-    if debug:
-        rmStr = "rm -f " + logDir + "/rsync_cord.debug " + res
-    else:
-        rmStr = "rm -f " + res
-    os.system(rmStr)
-
 def launch_listener():
     rc = subprocess.call("./rsync_listener %d &" % (portno), shell=True) 
 
@@ -298,4 +278,3 @@ if debug:
      
 launch_listener()
 thread_controller()
-#clean_rsync_logs()
