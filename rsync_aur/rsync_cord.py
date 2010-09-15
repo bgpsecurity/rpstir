@@ -16,7 +16,7 @@
 # * ***** END LICENSE BLOCK ***** */
 
 from threading import Thread
-import getopt, sys, os, Queue, time, socket, subprocess
+import getopt, sys, os, Queue, time, socket, subprocess, logging
 
 BLOCK_TIMEOUT = 1
 IP_LISTENER = '127.0.0.1'
@@ -39,6 +39,7 @@ class RSYNC_thread(Thread):
         except Queue.Empty:
             print "queue empty. %s " % self.getName()
             return
+        cli = logging.getLogger('Thread: %s: ' % self.getName())
         while not nextURI=="" : #while a URI has been popped
             logFileName = (logDir + "/rsync_thread_%s.log") % (self.getName())
 
@@ -47,30 +48,28 @@ class RSYNC_thread(Thread):
             rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 2>>%s 1> %s/%s.log" % (nextURI, repoDir, nextURI, logFileName, logDir, nextURI)
             rcode = subprocess.call(rsyncCom, shell=True)
 
-            f = open(logFileName, 'a')
-            f.write( (nextURI + " had return code %d and was run by thread %s \n") % (rcode, self.getName()))
-            f.write( rsyncCom + "\n")
-            f.flush()
+            cli.info( (nextURI + " had return code %d") % (rcode) )
+            cli.info( rsyncCom )            
             
             if rcode == 30:
+                # this is an error code for timeout, sleep then re-run
                 time.sleep(5)
                 #re-run the rsync command
                 rcode = subprocess.call(rsyncCom, shell=True)
-                f.write( (nextURI + " 2nd attempt: %d\n") % rcode)
-                f.flush()
+                cli.info( (nextURI + " 2nd attempt: %d") % (rcode))
+ 
             elif rcode == 35:
+                # this is an error code for timeout, sleep then re-run
                 time.sleep(5)
                 #re-run the rsync command
                 rcode = subprocess.call(rsyncCom, shell=True)
-                f.write( (nextURI + " 2nd attempt: %d\n") % rcode)
-                f.flush()
-            f.flush()
-            f.close()
-            
+                cli.info( (nextURI + " 2nd attempt: %d") % (rcode))
+
             if rcode == 0:
-               #if the rsync ran successful, notify Listener
-               data = ("%s %s/%s %s/%s.log") % (nextURI, repoDir, nextURI, logDir, nextURI)
-               send_to_listener(data)
+                #if the rsync ran successful, notify Listener
+                cli.info( 'Notifying the listener' ) 
+                data = ("%s %s/%s %s/%s.log") % (nextURI, repoDir, nextURI, logDir, nextURI)
+                send_to_listener(data)
 
             #get next URI
             try:
@@ -96,7 +95,7 @@ def thread_controller():
         threadPool.append(thr)
  
     if debug:
-        debugFile.write('Number of threads spawned: %d\n' % len(threadPool))
+        main.info('Number of threads spawned: %d' % len(threadPool))
 
     notAliveCount = 0
     # while the last count of the dead threads is less than the number spawned
@@ -108,7 +107,7 @@ def thread_controller():
                 notAliveCount = notAliveCount + 1
 
     if debug:
-        debugFile.write('Threads have all closed\n')
+        main.info('Threads have all closed')
 
     # Send the RSYNC finished message to the listener
     data = 'RSYNC_DONE'
@@ -181,6 +180,8 @@ def clean_rsync_logs():
     # cat them together into one rsync_cord.log and then
     # delete each thread log
     res = ""
+    if debug:
+        main.info('Cleaning rsync logs up')
     if threadCount > len(dirs):
         threadsToSpawn = len(dirs)
     else:
@@ -284,16 +285,17 @@ for direc in eachDir:
     URIPool.put(direc)
 
 sanity_check_and_rotate_logs()
-if debug:
-    debugFile = open(logDir + "/rsync_cord.debug", 'a')
-    debugFile.write('This will process %d URI\'s from %s\n' % (len(dirs), configFile))
-    debugFile.flush()
 
+logging.basicConfig(level=logging.DEBUG,
+	format='%(asctime)-21s %(levelname)-5s %(name)-19s %(message)s',
+	datefmt='%d-%b-%Y-%H:%M:%S',
+	filename='%s/rsync_cord.log' % (logDir),
+	filemode='w')
+if debug:
+    main = logging.getLogger('main')
+    main.info('Parsing the dirs out of the config file')
+    main.info('This will process %d URI\'s from %s' % (len(dirs), configFile))
+     
 launch_listener()
 thread_controller()
-
-#close the debug log file before we clean up the logs
-if debug:
-    debugFile.close()
-
-clean_rsync_logs()
+#clean_rsync_logs()
