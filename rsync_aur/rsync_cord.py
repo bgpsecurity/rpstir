@@ -45,9 +45,11 @@ class RSYNC_thread(Thread):
             stderror = ""
             logFileName = (logDir + "/rsync_thread_%s.log") % (self.getName())
 
-            #build and run the rsync command. This may block for awhile but that is the beauty of
-            #the multiple threads.
-            rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 1> %s/%s.log" % (nextURI, repoDir, nextURI, logDir, nextURI)
+            #build and run the rsync command. This may block for awhile but that
+            #is the beauty of the multiple threads.
+            rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 1> %s/%s.log" \
+                       % (nextURI, repoDir, nextURI, logDir, nextURI)
+
             p = Popen(rsyncCom, shell=True, stderr=subprocess.PIPE)
             stderror = p.communicate()[1]
             rcode = p.returncode
@@ -74,7 +76,9 @@ class RSYNC_thread(Thread):
             if rcode == 0:
                 #if the rsync ran successful, notify Listener
                 cli.info( 'Notifying the listener' ) 
-                data = ("%s %s/%s %s/%s.log") % (nextURI, repoDir, nextURI, logDir, nextURI)
+                data = ("%s %s/%s %s/%s.log") % \
+                              (nextURI, repoDir, nextURI, logDir, nextURI)
+                              
                 send_to_listener(data)
 
             #get next URI
@@ -82,7 +86,6 @@ class RSYNC_thread(Thread):
                 # The python queue is synchronized so this is safe
                 nextURI = URIPool.get(True,BLOCK_TIMEOUT)
             except Queue.Empty:
-                print "Queue is empty.... bailing\n"
                 nextURI = ""
         cli.info('Thread %s: exiting with no more work to do' % self.getName())
 
@@ -133,23 +136,61 @@ def sanity_check_and_rotate_logs():
 
     #Rotate the main log for rsync_cord
     if os.path.exists(logDir + "/rsync_cord.log.8"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.8 " + logDir + "/rsync_cord.log.9")
+        os.system("mv -f " + logDir + "/rsync_cord.log.8 " + logDir +
+                  "/rsync_cord.log.9")
     if os.path.exists(logDir + "/rsync_cord.log.7"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.7 " + logDir + "/rsync_cord.log.8")
+        os.system("mv -f " + logDir + "/rsync_cord.log.7 " + logDir +
+                  "/rsync_cord.log.8")
     if os.path.exists(logDir + "/rsync_cord.log.6"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.6 " + logDir + "/rsync_cord.log.7")
+        os.system("mv -f " + logDir + "/rsync_cord.log.6 " + logDir +
+                  "/rsync_cord.log.7")
     if os.path.exists(logDir + "/rsync_cord.log.5"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.5 " + logDir + "/rsync_cord.log.6")
+        os.system("mv -f " + logDir + "/rsync_cord.log.5 " + logDir +
+                  "/rsync_cord.log.6")
     if os.path.exists(logDir + "/rsync_cord.log.4"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.4 " + logDir + "/rsync_cord.log.5")
+        os.system("mv -f " + logDir + "/rsync_cord.log.4 " + logDir +
+                  "/rsync_cord.log.5")
     if os.path.exists(logDir + "/rsync_cord.log.3"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.3 " + logDir + "/rsync_cord.log.4")
+        os.system("mv -f " + logDir + "/rsync_cord.log.3 " + logDir +
+                  "/rsync_cord.log.4")
     if os.path.exists(logDir + "/rsync_cord.log.2"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.2 " + logDir + "/rsync_cord.log.3")
+        os.system("mv -f " + logDir + "/rsync_cord.log.2 " + logDir +
+                  "/rsync_cord.log.3")
     if os.path.exists(logDir + "/rsync_cord.log.1"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.1 " + logDir + "/rsync_cord.log.2")
+        os.system("mv -f " + logDir + "/rsync_cord.log.1 " + logDir +
+                  "/rsync_cord.log.2")
     if os.path.exists(logDir + "/rsync_cord.log"):
-        os.system("mv -f " + logDir + "/rsync_cord.log " + logDir + "/rsync_cord.log.1")
+        os.system("mv -f " + logDir + "/rsync_cord.log " + logDir +
+                  "/rsync_cord.log.1")
+
+    #Rotate the main log for rsync_listener
+    if os.path.exists(logDir + "/rsync_listener.log.8"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.8 " + logDir +
+                  "/rsync_listener.log.9")
+    if os.path.exists(logDir + "/rsync_listener.log.7"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.7 " + logDir +
+                  "/rsync_listener.log.8")
+    if os.path.exists(logDir + "/rsync_listener.log.6"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.6 " + logDir +
+                  "/rsync_listener.log.7")
+    if os.path.exists(logDir + "/rsync_listener.log.5"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.5 " + logDir +
+                  "/rsync_listener.log.6")
+    if os.path.exists(logDir + "/rsync_listener.log.4"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.4 " + logDir +
+                  "/rsync_listener.log.5")
+    if os.path.exists(logDir + "/rsync_listener.log.3"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.3 " + logDir +
+                  "/rsync_listener.log.4")
+    if os.path.exists(logDir + "/rsync_listener.log.2"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.2 " + logDir +
+                  "/rsync_listener.log.3")
+    if os.path.exists(logDir + "/rsync_listener.log.1"):
+        os.system("mv -f " + logDir + "/rsync_listener.log.1 " + logDir +
+                  "/rsync_listener.log.2")
+    if os.path.exists(logDir + "/rsync_listener.log"):
+        os.system("mv -f " + logDir + "/rsync_listener.log " + logDir +
+                  "/rsync_listener.log.1")
 
     #make directories for logs and repository locations
     for direc in dirs:
@@ -183,7 +224,11 @@ def sanity_check_and_rotate_logs():
             os.system("mv -f " + startPath + ".log " + startPath + ".log.1")
 
 def launch_listener():
-    rc = subprocess.call("./rsync_listener %d &" % (portno), shell=True) 
+    p = Popen("./rsync_listener %d &> %s/rsync_listener.log" % \
+              (portno,logDir), shell=True)
+    if debug:
+        main.info('rsync_listener pid: %s' % p.pid)
+    
 
 def usage():
     print "rsync_cord [-h -c config] [--help] \n \
@@ -235,6 +280,8 @@ if configFile == "":
     assert False, "You must specify the config file"
 if portno == 0:
     assert False, "You must specify the listener port number"
+
+subprocess.call('../envir.setup',shell=True)
 
 #parse config file and get various entries
 configParse = open(configFile, "r")
