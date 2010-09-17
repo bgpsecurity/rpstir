@@ -83,7 +83,7 @@ int main (int argc, char *argv [])
 		char *parse_me = parse_node->payload;
 		
 		/*If we're done receiving rsyncs we'll get an RSYNC_DONE
-		  signal from pytho_cord.py. But first remove
+		  signal from rsync_cord.py. But first remove
 		  the carraige return on the sting.*/
 		parse_me = strtok(parse_me,"\r");
 		if(!strcmp(parse_me,"RSYNC_DONE")){
@@ -107,11 +107,15 @@ int main (int argc, char *argv [])
 		int status;
 		char path[MAXREAD];
 		char command[MAXREAD];
-		sprintf(command,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
+		/*Initilize buffers to be safe due to issues with OpenBSD*/
+		memset(path,'\0',MAXREAD);
+		memset(command,'\0',MAXREAD);
 
+		
+		snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
 		printf("%s\n",command);
 
-		//popen should spawn a new command line and invoke rsync_aur from there
+		/*popen should spawn a new command line and invoke rsync_aur from there*/
 		fp = popen(command, "r");
 		if (fp == NULL){
 	    /* Handle error */;
@@ -119,8 +123,9 @@ int main (int argc, char *argv [])
 			return POPEN_PARSER_ERR;
 		}
 
+		/*Read the response from the parser*/
 		while (fgets(path, MAXREAD, fp) != NULL)
-	    	printf("%s", path);
+			printf("%s", path);
 		status = pclose(fp);
 
 		//Clean up and log some stuff if needed
@@ -129,10 +134,10 @@ int main (int argc, char *argv [])
 	}
 	return 0;
 }
-
-/** @brief
- * 
- *  @param fd The connection file descriptor
+/** @brief recv_rsync_conns Runs a single thread which repeatedly accpets connections from rsync_cord.py.
+ *  For each connection, a line of length MAXREAD is robustly read, memory is malloced and used for
+ *  storing the line, a new rsync_node is created for it, and finally that node is queued. A condition
+ *  variable is signlaed for a possible thread waiting to read the contents of the queue.
  */
 void *recv_rsync_conns()
 {
@@ -152,12 +157,12 @@ void *recv_rsync_conns()
 		rio_t rio;
 		rsync_node* new_node;
 		if(!(new_node = malloc(sizeof(rsync_node)))){
-			fprintf(stderr, "malloc error in payload during recv_rsync_conns");
+			fprintf(stderr, "malloc error for new node during recv_rsync_conns");
 			return NULL;
 		}
 		char* payload;
 		if(!(payload = calloc(MAXREAD, sizeof(char)))){
-			fprintf(stderr, "malloc error in payload during recv_rsync_conns");
+			fprintf(stderr, "malloc error for payload during recv_rsync_conns");
 		return NULL;
 		}
 
@@ -176,18 +181,18 @@ void *recv_rsync_conns()
 	}
 }
 
-int enqueue(rsync_node* node)
+void enqueue(rsync_node* node)
 {
 	if(head == NULL){
 		head = node;
 		tail = node;
-		return 1;
+		return;
 	}
 	else{
 		tail->next = node;
 		tail = node;
 		node->next = NULL;
-		return 1;
+		return;
 	}
 }
 rsync_node* dequeue()
@@ -204,4 +209,3 @@ rsync_node* dequeue()
 	head = head->next;
 	return ret;
 }
-

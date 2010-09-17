@@ -39,6 +39,6 @@ typedef struct rsync_node{
 
 void *recv_rsync_conns();
 void *parse_files();
-int enqueue(rsync_node* node);
+void enqueue(rsync_node* node);
 rsync_node* dequeue();
 #endif /* _RSYNC_LISTENER_H*/
