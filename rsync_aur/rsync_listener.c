@@ -98,9 +98,15 @@ int main (int argc, char *argv [])
 		uri = strtok(parse_me," ");
 		rep_loc = strtok( NULL," ");
 		log_loc = strtok(NULL," ");
-	
-		//printf("uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
+
+		if(strcmp(uri,"(null)") || strcmp(log_loc,"(null)") || strcmp(rep_loc,"(null)")){
+			free(parse_node->payload);
+			free(parse_node);
+			fprintf(stderr, "One or more variables parsed out was null: uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
+			continue;
+		}
 		
+		//printf("uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
 		/*Generate a command line string which will execute rsync_aur
 		  once fed to another shell by popen*/
 		FILE *fp;
