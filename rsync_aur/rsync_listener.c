@@ -27,11 +27,11 @@
  * @bugs None known
  */
 
+#include "rsync_listener.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include "rsync_listener.h"
 #include "csapp.h"
 
 /*The head of the queue*/
@@ -63,15 +63,14 @@ int main (int argc, char *argv [])
 			}
 	}
 	pthread_t tid;
-
-
 	/*Spawn our thread to run the server*/
 	if((rc = pthread_create(&tid, NULL,recv_rsync_conns,NULL)) != 0){
 		printf("Error during initial thread creation: rc= %d",rc);
 		return rc;
 	}
 
-	while(1){	
+	while(1){
+		int err_flag = 0;
 		pthread_mutex_lock(&queue_mutex);
 		rsync_node* parse_node;
 		while((parse_node = dequeue()) == NULL){
@@ -92,49 +91,64 @@ int main (int argc, char *argv [])
 			break;
 		}
 		char *uri, *rep_loc, *log_loc;
-		printf("About to parse a node! payload: %s\n",parse_me);
-
+		FILE *logfile;
+		FILE *reposit;
+		
+		//printf("About to parse a node! payload: %s\n",parse_me);
 		/*Args should be passed with a space after each " arg1 arg2 arg3 "*/
 		uri = strtok(parse_me," ");
 		rep_loc = strtok( NULL," ");
 		log_loc = strtok(NULL," ");
 
-		if(strcmp(uri,"(null)") || strcmp(log_loc,"(null)") || strcmp(rep_loc,"(null)")){
-			free(parse_node->payload);
-			free(parse_node);
+		/*Error check what we've been passed before we generate a command for rsync_aur.
+		First check if all three arguments are not null, then test to open the files*/
+		if((uri==NULL) || (log_loc==NULL) || (rep_loc == NULL)){
+			err_flag = NULL_ARGS_ERR;
 			fprintf(stderr, "One or more variables parsed out was null: uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
-			continue;
 		}
-		
-		//printf("uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
-		/*Generate a command line string which will execute rsync_aur
-		  once fed to another shell by popen*/
-		FILE *fp;
-		int status;
-		char path[MAXREAD];
-		char command[MAXREAD];
-		/*Initilize buffers to be safe due to issues with OpenBSD*/
-		memset(path,'\0',MAXREAD);
-		memset(command,'\0',MAXREAD);
-
-		
-		snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
-		printf("%s\n",command);
-
-		/*popen should spawn a new command line and invoke rsync_aur from there*/
-		fp = popen(command, "r");
-		if (fp == NULL){
-	    /* Handle error */;
-			printf("Error forking process and starting Parser..exiting. Status = %d", pclose(fp));
-			return POPEN_PARSER_ERR;
+		else if(!(logfile = fopen(log_loc,"r"))){
+			err_flag = OPEN_LOG_ERR;
+			fprintf(stderr, "Failed to open logfile: log_loc %s. Probably incorrect filename.", log_loc);
+		}
+		else if(!(reposit = fopen(rep_loc,"r"))){
+			err_flag = OPEN_REPOSITORY_ERR;
+			fprintf(stderr, "Failed to open repository: rep_loc %s. Probably incorrect filename.", rep_loc);
 		}
 
-		/*Read the response from the parser*/
-		while (fgets(path, MAXREAD, fp) != NULL)
-			printf("%s", path);
-		status = pclose(fp);
+		/*If we haven't detected any problems thus far with our inuput, then we'll generate and make
+		  the call to rsync_aur*/
+		if(!err_flag){
 
-		//Clean up and log some stuff if needed
+			/*Generate a command line string which will execute rsync_aur
+		  	once fed to another shell by popen*/
+			FILE *fp;
+			int status;
+			char path[MAXREAD];
+			char command[MAXREAD];
+			/*Initilize buffers to be safe due to issues with OpenBSD*/
+			memset(path,'\0',MAXREAD);
+			memset(command,'\0',MAXREAD);	
+			snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
+			printf("%s\n",command);
+
+			/*popen should spawn a new command line and invoke rsync_aur from there*/
+			fp = popen(command, "r");
+			if (fp == NULL){
+				fprintf(stderr,"Error forking process and starting Parser..exiting. Status = %d", pclose(fp));
+				err_flag =  POPEN_PARSER_ERR;
+			}
+			else{
+				/*Read the response from the parser*/
+				while (fgets(path, MAXREAD, fp) != NULL){
+					printf("%s", path);
+				}
+				status = pclose(fp);
+			}
+		}
+		/*Clean up and log some stuff if needed*/
+		if(err_flag)
+			fprintf(stderr, " Error Code: %d. Continuing.\n",err_flag);
+
 		free(parse_node->payload);
 		free(parse_node);
 	}

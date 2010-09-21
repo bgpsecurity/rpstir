@@ -26,6 +26,9 @@
 
 #define DEFAULT_PORT 3450
 #define POPEN_PARSER_ERR -1
+#define NULL_ARGS_ERR -2
+#define OPEN_LOG_ERR -3
+#define OPEN_REPOSITORY_ERR -4
 #define MAXREAD 2048
 
 
@@ -38,7 +41,6 @@ typedef struct rsync_node{
 	
 
 void *recv_rsync_conns();
-void *parse_files();
 void enqueue(rsync_node* node);
 rsync_node* dequeue();
 #endif /* _RSYNC_LISTENER_H*/
