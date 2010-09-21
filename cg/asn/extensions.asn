@@ -169,7 +169,7 @@ id-pe-ipAddrBlock               ID ::= { id-pkix-pe 7 }
 id-pe-autonomousSysNum          ID ::= { id-pkix-pe 8 }
 id-pe-routerIdentifier          ID ::= { id-pkix-pe 9 }
 id-pe-subjectInfoAccess         ID ::= { id-pkix-pe 11}
-id-pkix-pe-rescerts-policy      ID ::= { id-pkix-pe 14 2}
+id-pkix-rescerts-policy         ID ::= { id-pkix 14 2}
 
 
 ExtensionSet ::= TABLE {
