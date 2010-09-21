@@ -370,7 +370,7 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
 {
   char *outdir;
   char *outfile, *outfull;
-  int   sta, trusted;
+  int   sta, trusted = 0;
 
   sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
   if (sta != 0) {
@@ -382,7 +382,7 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
 
     return sta;
   }
-  trusted = strstr(outdir, "TRUST") != NULL;
+  //  trusted = strstr(outdir, "TRUST") != NULL;
   if ( sta < 0 )
     return(sta);
   switch ( what )
@@ -1111,10 +1111,10 @@ int main(int argc, char **argv)
 	      if ( ians <= 0 )
 		sta = 1;
 	    }
-	  if ( strstr(outdir, "TRUST") != NULL )
-	    trusted++;
-// if the user has declared it to be trusted, or if it is in a TRUSTed
-// directory ask for verification unless force is set
+	  //	  if ( strstr(outdir, "TRUST") != NULL )
+	  //	    trusted++;
+// if the user has declared it to be trusted
+// ask for verification unless force is set
 	  if ( trusted > 0 && force == 0 && sta == 0 )
 	    {
 	      ians = yorn("Really declare this file as trusted");
