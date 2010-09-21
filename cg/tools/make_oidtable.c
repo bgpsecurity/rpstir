@@ -32,6 +32,7 @@ char *msgs[] = {
     "Finished OK\n",
     "Can't open %s\n",
     "Error in this line: %s",
+    "Usage: tablefilename, file.h ...\n",
     };
 
 static int diff_oid(char *o1, char *o2)
@@ -68,6 +69,8 @@ int main (int argc, char **argv)
   struct oidtable *oidtable;
   int numoids = 16, oidnum;
   FILE *str;
+  if (argc < 2) fatal(3, (char *)0);
+  
   oidtable = (struct oidtable *)calloc(numoids, sizeof(struct oidtable));
   for (argv++, oidnum = 0; argv && *argv; argv++)
     {
