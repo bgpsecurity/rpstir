@@ -17,22 +17,30 @@
 
 from threading import Thread
 from subprocess import Popen
-import getopt, sys, os, Queue, time, socket, subprocess, logging
+import getopt, sys, os, Queue, time, socket, subprocess, logging, commands
 
 BLOCK_TIMEOUT = 1
 IP_LISTENER = '127.0.0.1'
 
-def send_to_listener(data):
+#
+# A short utility function to handle tcp sending and error checking
+#
+def send_to_listener(data,logger):
     #This needs a lot of error checking
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
-    s.connect((IP_LISTENER, portno))
-    bytesSent = s.send(data)
-    s.close()
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
+        s.connect((IP_LISTENER, portno))
+        bytesSent = s.send(data)
+        while bytesSent < len(data):
+            bytesSent = s.send(data)
+        s.close()
+    except:
+        logger.error("A socket error occurred")
 
-
+#
+# This class handles the RSYNC threads
+#
 class RSYNC_thread(Thread):
-    #The class for handling RSYNC tasks
-       
     def run(self):
         try:
             # The python queue is synchronized so this is safe
@@ -44,11 +52,12 @@ class RSYNC_thread(Thread):
         while not nextURI=="" : #while a URI has been popped
             stderror = ""
             logFileName = (logDir + "/rsync_thread_%s.log") % (self.getName())
+            rsync_log = ("%s/%s.%f" % (logDir,nextURI,time.time()))
 
             #build and run the rsync command. This may block for awhile but that
             #is the beauty of the multiple threads.
-            rsyncCom = "rsync -airz --del --timeout=10 rsync://%s/ %s/%s 1> %s/%s.log" \
-                       % (nextURI, repoDir, nextURI, logDir, nextURI)
+            rsyncCom = "%s -airz --del --timeout=10 rsync://%s/ %s/%s 1> %s" \
+                       % (rsyncDir, nextURI, repoDir, nextURI, rsync_log)
 
             p = Popen(rsyncCom, shell=True, stderr=subprocess.PIPE)
             stderror = p.communicate()[1]
@@ -76,10 +85,10 @@ class RSYNC_thread(Thread):
             if rcode == 0:
                 #if the rsync ran successful, notify Listener
                 cli.info( 'Notifying the listener' ) 
-                data = ("%s %s/%s %s/%s.log") % \
-                              (nextURI, repoDir, nextURI, logDir, nextURI)
+                data = ("%s %s/%s %s") % \
+                              (nextURI, repoDir, nextURI, rsync_log)
                               
-                send_to_listener(data)
+                send_to_listener(data,cli)
 
             #get next URI
             try:
@@ -89,9 +98,11 @@ class RSYNC_thread(Thread):
                 nextURI = ""
         cli.info('Thread %s: exiting with no more work to do' % self.getName())
 
+#
+# This function is the main thread controller. It spawns the 
+# maximum number of threads and waits for their completion
+#
 def thread_controller():
-    #this function is the main thread controller. It spawns the 
-    # maximum number of threads and waits for their completion
     threadPool = []
     # Start MAX threads and keep track of a reference to them
     if threadCount > URIPool.qsize():
@@ -121,19 +132,18 @@ def thread_controller():
 
     # Send the RSYNC finished message to the listener
     data = 'RSYNC_DONE'
-    send_to_listener(data)
+    #send_to_listener(data)
 
-def sanity_check_and_rotate_logs():
-    #check for variables in the config file
-    if dirs == "":
-        assert False, "missing DIRS= variable in config"
-    if rsyncDir == "":
-        assert False, "missing RSYNC= variable in config"
-    if repoDir == "":
-        assert False, "missing REPOSITORY= variable in config"
-    if logDir == "":
-        assert False, "missing LOGS= variable in config"
-
+#
+# Create log directories and/or rotate the logs
+#
+def rotate_logs():
+    #create the log directory if it doesn't exist
+    if not os.path.exists(logDir):
+        os.system("mkdir " + logDir)
+    if not os.path.exists(repoDir):
+        os.system("mkdir " + repoDir)
+    
     #Rotate the main log for rsync_cord
     if os.path.exists(logDir + "/rsync_cord.log.8"):
         os.system("mv -f " + logDir + "/rsync_cord.log.8 " + logDir +
@@ -201,35 +211,22 @@ def sanity_check_and_rotate_logs():
         if not os.path.exists(d):
             os.makedirs(d)
 
-    #rotate the logs for the URI's
-    for direc in dirs:
-        startPath = logDir + "/" + direc
-        if os.path.exists(startPath + ".log.8"):
-            os.system("mv -f " + startPath + ".log.8 " + startPath + ".log.9")
-        if os.path.exists(startPath + ".log.7"):
-            os.system("mv -f " + startPath +  ".log.7 " + startPath + ".log.8")
-        if os.path.exists(startPath + ".log.6"):
-            os.system("mv -f " + startPath +  ".log.6 " + startPath + ".log.7")
-        if os.path.exists(startPath + ".log.5"):
-            os.system("mv -f " + startPath +  ".log.5 " + startPath + ".log.6")
-        if os.path.exists(startPath + ".log.4"):
-            os.system("mv -f " + startPath + ".log.4 " + startPath + ".log.5")
-        if os.path.exists(startPath + ".log.3"):
-            os.system("mv -f " + startPath + ".log.3 " + startPath + ".log.4")
-        if os.path.exists(startPath + ".log.2"):
-            os.system("mv -f " + startPath + ".log.2 " + startPath + ".log.3")
-        if os.path.exists(startPath + ".log.1"):
-            os.system("mv -f " + startPath + ".log.1 " + startPath + ".log.2")
-        if os.path.exists(startPath + ".log"):
-            os.system("mv -f " + startPath + ".log " + startPath + ".log.1")
-
+#
+# Function to launch the rsync_listener
+#
 def launch_listener():
-    p = Popen("./rsync_listener %d &> %s/rsync_listener.log" % \
+    output = commands.getoutput('ps -A')
+    if not 'rsync_listener' in output:
+        p = Popen("./rsync_listener %d &> %s/rsync_listener.log" % \
               (portno,logDir), shell=True)
-    if debug:
-        main.info('rsync_listener pid: %s' % p.pid)
-    
+        if debug:
+            main.info('rsync_listener pid: %s' % p.pid)
+    else:
+        main.info('rsync_listener was already running. Continuing execution.')
 
+#
+# Function that prints the usage of this script
+#
 def usage():
     print "rsync_cord [-h -c config] [--help] \n \
             \n \
@@ -261,6 +258,7 @@ portno = 0
 threadCount = 8
 debug = False
 
+#Parse the options
 for o, a in opts:
     if o in ("-h", "--help"):
         usage()
@@ -274,17 +272,26 @@ for o, a in opts:
     elif o in ("-d"):
         debug = True
     else:
-        assert False, "unhandled option"
+        print "unhandled option"
+        sys.exit(1)
 
+# If these main two arguments are not present, don't run
 if configFile == "":
-    assert False, "You must specify the config file"
+    print "You must specify the config file"
+    sys.exit(1)
 if portno == 0:
-    assert False, "You must specify the listener port number"
+    print "You must specify the listener port number"
+    sys.exit(1)
 
-subprocess.call('../envir.setup',shell=True)
+subprocess.call('source ../envir.setup',shell=True)
 
 #parse config file and get various entries
-configParse = open(configFile, "r")
+try:
+    configParse = open(configFile, "r")
+except:
+    print "Check permissions on your config file or that it exists"
+    sys.exit(1)
+
 lines = configParse.readlines(10000)
 dirs = ""
 rsyncDir = ""
@@ -301,27 +308,59 @@ for line in lines:
     elif line[:5] == "LOGS=":
         logDir = line[5:].strip('\n\";:')
 
+#check for variables in the config file
+if dirs == "":
+    print "missing DIRS= variable in config"
+    sys.exit(1)
+if rsyncDir == "":
+    print "missing RSYNC= variable in config"
+    sys.exit(1)
+if repoDir == "":
+    print "missing REPOSITORY= variable in config"
+    sys.exit(1)
+if logDir == "":
+    print "missing LOGS= variable in config"
+    sys.exit(1)
+
+if dirs.count(',') > 0:
+    print "Commas in DIRS variable, Delimiter should be a space."
+    sys.exit(1)
+if dirs.count(';') > 0:
+    print "Semicolons in DIRS variable, delimiter should be a space."
+    sys.exit(1)
+
 #Get at each URI in the dirs= element of the config file
 URIPool = Queue.Queue(0)
-eachDir = (dirs.strip('\"').strip('\n').strip('\"')).split(' ')
+eachDir = (dirs.strip('\"\'').strip('\n').strip('\"\'')).split(' ')
 
 #fill in the queue
 dirs = []
 for direc in eachDir:
-    dirs.append(direc)
-    URIPool.put(direc)
+    if not direc == '':
+        dirs.append(direc)
+        URIPool.put(direc)
 
-sanity_check_and_rotate_logs()
+#log rotation
+rotate_logs()
 
+#Set up logging
 logging.basicConfig(level=logging.DEBUG,
 	format='%(asctime)-21s %(levelname)-5s %(name)-19s %(message)s',
 	datefmt='%d-%b-%Y-%H:%M:%S',
 	filename='%s/rsync_cord.log' % (logDir),
 	filemode='w')
+
+#Generate the debug logger
+main = logging.getLogger('main')
 if debug:
-    main = logging.getLogger('main')
-    main.info('Parsing the dirs out of the config file')
     main.info('This will process %d URI\'s from %s' % (len(dirs), configFile))
-     
+
+#launch the listener and the threads
+if URIPool.qsize() == 0:
+    print "You don't have any URI's to RSYNC with"
+    sys.exit(1)
+elif URIPool.qsize() == 1:
+    main.warn('The URI list only has 1 URI.')
+    
 launch_listener()
 thread_controller()
