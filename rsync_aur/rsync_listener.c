@@ -16,7 +16,7 @@
  *
  * ***** END LICENSE BLOCK *****
  *
- * @brief Starts a simple TCP server and listens for incoming connections
+ * @brief Starts a simple TCP server  and listens for incoming connections
  * from rsync_cord.py. Once a connection is established a retrieval log
  * file name and the local file cache name are sent, parsed, and queued.
  * Eventually all files are dequeued and passed to the log_parser and updated
@@ -33,20 +33,22 @@
 #include <string.h>
 #include <pthread.h>
 #include "csapp.h"
+#include "signal.h"
 
 /*The head of the queue*/
 static rsync_node* head = NULL;
 /*The tail od the queue*/
 static rsync_node* tail = NULL;
-
+/*The worker thread to accept connections*/
+static pthread_t tid;
 static int port_number = DEFAULT_PORT;
-
-pthread_mutex_t queue_mutex;
-pthread_cond_t rsync_cv;
+static pthread_mutex_t queue_mutex;
+static pthread_cond_t rsync_cv;
 
 int main (int argc, char *argv [])
 {
 	int rc = 0;
+	Signal(SIGHUP,sighup_handler);
 	/*Initialize our condition variable and mutex*/
 	pthread_mutex_init(&queue_mutex, NULL);
 	pthread_cond_init (&rsync_cv, NULL);
@@ -62,7 +64,6 @@ int main (int argc, char *argv [])
 			exit(1);
 			}
 	}
-	pthread_t tid;
 	/*Spawn our thread to run the server*/
 	if((rc = pthread_create(&tid, NULL,recv_rsync_conns,NULL)) != 0){
 		printf("Error during initial thread creation: rc= %d",rc);
@@ -200,7 +201,19 @@ void *recv_rsync_conns()
 		Close(connfd);
 	}
 }
-
+void sighup_handler(int sig)
+{
+	pthread_mutex_lock(&queue_mutex);
+	pthread_cancel(tid);
+	rsync_node* node;
+	while((node = dequeue())!= NULL){
+		free(node->payload);
+		free(node);
+	}
+	pthread_mutex_unlock(&queue_mutex);
+	printf("Rsync_listener queue cleared, now terminating...");
+	exit(0);
+}
 void enqueue(rsync_node* node)
 {
 	if(head == NULL){
