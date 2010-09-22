@@ -132,7 +132,7 @@ def thread_controller():
 
     # Send the RSYNC finished message to the listener
     data = 'RSYNC_DONE'
-    #send_to_listener(data)
+    send_to_listener(data,main)
 
 #
 # Create log directories and/or rotate the logs
