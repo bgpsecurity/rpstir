@@ -19,10 +19,20 @@ DEFAULT_RPKI_PORT=7344
 DEFAULT_RPKI_DB=rpki
 DEFAULT_RPKI_DBUSER=mysql
 DEFAULT_RPKI_DBPASS=
+DEFAULT_RPKI_TCOUNT=8
+DEFAULT_RPKI_LISTPORT=3450
 
 if [ "${RPKI_ROOT}x" = "x" ]; then
     echo Warning: RPKI_ROOT not set, defaulting to $DEFAULT_RPKI_ROOT
     export RPKI_ROOT=$DEFAULT_RPKI_ROOT
+fi
+if [ "${RPKI_TCOUNT}x" = "x" ]; then
+    echo Warning: RPKI_TCOUNT not set, defaulting to $DEFAULT_RPKI_TCOUNT
+    export RPKI_TCOUNT=$DEFAULT_RPKI_TCOUNT
+fi
+if [ "${RPKI_LISTPORT}x" = "x" ]; then
+    echo Warning: RPKI_LISTPORT not set, defaulting to $DEFAULT_RPKI_LISTPORT
+    export RPKI_LISTPORT=$DEFAULT_RPKI_LISTPORT
 fi
 if [ "${RPKI_PORT}x" = "x" ]; then
     echo Warning: RPKI_PORT not set, defaulting to $DEFAULT_RPKI_PORT
@@ -39,6 +49,7 @@ fi
 if [ "${RPKI_DBPASS}x" = "x" ]; then
     export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
 fi
+
 
 # If mysql acccount needs a password, we must use -p<password> on the
 # mysql command line.  If no password, we must omit the option entirely.

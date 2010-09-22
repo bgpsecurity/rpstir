@@ -173,35 +173,6 @@ def rotate_logs():
         os.system("mv -f " + logDir + "/rsync_cord.log " + logDir +
                   "/rsync_cord.log.1")
 
-    #Rotate the main log for rsync_listener
-    if os.path.exists(logDir + "/rsync_listener.log.8"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.8 " + logDir +
-                  "/rsync_listener.log.9")
-    if os.path.exists(logDir + "/rsync_listener.log.7"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.7 " + logDir +
-                  "/rsync_listener.log.8")
-    if os.path.exists(logDir + "/rsync_listener.log.6"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.6 " + logDir +
-                  "/rsync_listener.log.7")
-    if os.path.exists(logDir + "/rsync_listener.log.5"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.5 " + logDir +
-                  "/rsync_listener.log.6")
-    if os.path.exists(logDir + "/rsync_listener.log.4"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.4 " + logDir +
-                  "/rsync_listener.log.5")
-    if os.path.exists(logDir + "/rsync_listener.log.3"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.3 " + logDir +
-                  "/rsync_listener.log.4")
-    if os.path.exists(logDir + "/rsync_listener.log.2"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.2 " + logDir +
-                  "/rsync_listener.log.3")
-    if os.path.exists(logDir + "/rsync_listener.log.1"):
-        os.system("mv -f " + logDir + "/rsync_listener.log.1 " + logDir +
-                  "/rsync_listener.log.2")
-    if os.path.exists(logDir + "/rsync_listener.log"):
-        os.system("mv -f " + logDir + "/rsync_listener.log " + logDir +
-                  "/rsync_listener.log.1")
-
     #make directories for logs and repository locations
     for direc in dirs:
         d = os.path.dirname(logDir + "/" +  direc)
@@ -217,8 +188,9 @@ def rotate_logs():
 def launch_listener():
     output = commands.getoutput('ps -A')
     if not 'rsync_listener' in output:
-        p = Popen("./rsync_listener %d &> %s/rsync_listener.log" % \
-              (portno,logDir), shell=True)
+        os.putenv('RPKI_LOGDIR', logDir)
+        p = Popen("%s/rsync_aur/rsync_listener %d" % \
+              (os.getenv('RPKI_ROOT'),portno), shell=True)
         if debug:
             main.info('rsync_listener pid: %s' % p.pid)
     else:
@@ -254,7 +226,7 @@ except getopt.GetoptError, err:
 
 #Default variables
 configFile = ""
-portno = 0
+portno = 3450
 threadCount = 8
 debug = False
 
@@ -279,11 +251,6 @@ for o, a in opts:
 if configFile == "":
     print "You must specify the config file"
     sys.exit(1)
-if portno == 0:
-    print "You must specify the listener port number"
-    sys.exit(1)
-
-subprocess.call('source ../envir.setup',shell=True)
 
 #parse config file and get various entries
 try:

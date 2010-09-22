@@ -243,7 +243,7 @@ static int printUsage()
   fprintf(stderr, "Usage:\n"); 
   fprintf(stderr, "  -p portno   connect to port number (default=RPKI_PORT)\n");
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
-  fprintf(stderr, "  -d dirname  rsync executable directory (default=RPKI_ROOT/rsync_aur)\n");
+  fprintf(stderr, "  -d dirname  rsync executable directory (default=RPKI_ROOT)\n");
   fprintf(stderr, "  -n          don't execute, just print what would have done\n");
   fprintf(stderr, "  -t          run by grabbing only Trust Anchor URIs from the database\n");
   fprintf(stderr, "  -h          this help listing\n");
@@ -261,6 +261,8 @@ int main(int argc, char **argv)
   unsigned long blah = 0;
   int      i, status, numDirs, ch;
   int      portno = 0;
+  int      listPort = 0;
+  int      tcount = 0;
   int      noExecute = 0;
   int      taOnly = 0;
   char     dirs[50][120], str[180], *str2;
@@ -271,11 +273,19 @@ int main(int argc, char **argv)
 
   // initialize
   if (getenv ("RPKI_ROOT") != NULL)
-    snprintf (rsyncDir, sizeof(rsyncDir), "%s/run_scripts", getenv ("RPKI_ROOT"));
+    snprintf (rsyncDir, sizeof(rsyncDir), "%s", getenv ("RPKI_ROOT"));
   else
     sprintf (rsyncDir, ".");
   if (getenv ("RPKI_PORT") != NULL)
     portno = atoi (getenv ("RPKI_PORT"));
+  if (getenv ("RPKI_LISTPORT") != NULL)
+    listPort = atoi (getenv ("RPKI_LISTPORT"));
+  else
+    listPort = 3450;
+  if (getenv ("RPKI_TCOUNT") != NULL)
+    tcount = atoi (getenv ("RPKI_TCOUNT"));
+  else
+    tcount = 8;
   startSyslog ("chaser");
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
@@ -440,7 +450,7 @@ int main(int argc, char **argv)
   snprintf (rsyncStr2, sizeof(rsyncStr2), "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
   fputs (rsyncStr2, configFile);
   fclose (configFile);
-  snprintf (str, sizeof(str), "%s/rsync_pull.sh chaser_rsync.config", rsyncDir);
+  snprintf(str, sizeof(str), "python %s/rsync_aur/rsync_cord.py -c chaser_rsync.config -t %d -p %d", rsyncDir, tcount, listPort);
   if (noExecute)
     printf ("Would have executed: %s\n", str);
   else
