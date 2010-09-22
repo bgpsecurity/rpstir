@@ -200,6 +200,8 @@ required: RPKI_PORT - port number on which the loader and feeder communicate
 required: RPKI_DB - name of the MySQL database used to hold RPKI data
 required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
+required: RPKI_LISTPORT - another random port to run the rsync_listener application on
+required: RPKI_TCOUNT - the maximum count of allowable threads
 optional: RPKI_ROOTPASSWORD - the MySQL root password
 optional: RTR_RETENTION_HOURS -
 optional: RTR_CHECK_INTERVAL -
@@ -217,6 +219,8 @@ RPKI_PORT = 7344
 RPKI_ROOT = ${HOME}/rpki/trunk
 RPKI_DBUSER = mysql
 RPKI_DBPASS =
+RPKI_TCOUNT = 8
+RPKI_LISTPORT = 3450
 
 If you ever need to directly run the binaries instead of running the
 scripts, there will be no environment checking, so make sure to set
@@ -262,10 +266,9 @@ user at regular intervals using cron jobs.
 --------------------------------------------------------------------
 Component (script)                   Frequency
 --------------------------------------------------------------------
-Rsync Wrapper (pull_and_feed.sh)     Once per day
 RCLI Database Client (loader.sh)     Continuously as daemon
 Garbage Collector (garbage.sh)       Once per day
-Chaser Client (chaser.sh)            Once per day
+Chaser Client (rsync_process.sh)     Once per day
 MySQL Database                       Continuously as daemon (mysqld)
 
 RTR Server                           ?????
@@ -302,15 +305,19 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     and loads it into the database.  Under ideal circumstances, this will
     continue to run forever, waiting for inputs from the feeder.
 
-3.5 pull_and_feed.sh: pull_and_feed.sh is a script that optionally pulls
-    the data from a set of repositories using rsync and then optionally
-    loads them into the database by feeding them to the loader.
-    pull_and_feed.sh takes a single argument which is the name of a
-    configuration file.  A sample configuration file called
-    rsync_mock.config is included.  The configuration file tells the
-    name of all remote repositories to be downloaded, the top-level
+3.5 rsync_process.sh: rsync_process.sh pulls URI from a config file 
+    and from what is in the database, builds a new config file, and starts
+    the rsync_cord.py. It does this by first utilizing the chaser. 
+    The chaser then provides a new config file to rsync_cord.py which is 
+    a script that reads the set of repositories and then runs rsync to 
+    update the local caches. It then loads the updated information into 
+    the database by feeding them to the listener which feeds information 
+    to the loader. rsync_cord.sh takes a single argument which is the 
+    name of a configuration file. A sample configuration file called 
+    rsync_mock.config is included. The configuration file has a list of 
+    the names of some remote repositories to be downloaded, the top-level
     directory for the local repository (with the REPOSITORY directory
-    included here the suggested one), to top-level directory for storing
+    included here the suggested one), the top-level directory for storing
     the log files of the downloads (with LOGS the suggested directory),
     whether or not to do the repository pull, and whether or not to
     do the database feed.
@@ -328,25 +335,6 @@ periodically.  All scripts for steps 3-8 are in the run_scripts directory.
     potentially be revoked by the updated version of a stale crl are set
     to an intermediate state of validity (called "unknown"), but are
     set back to valid if a current crl is available.
-
-3.7 chaser.sh: This chases down objects from repositories that may
-    not have been loaded but are required.  It checks the AIA, SIA
-    and CRLDP fields of all certificates that arrived or have been
-    modified since the last time this client was executed.  A list of
-    other repositories to check is compiled.
-
-    In the mode where the chaser automatically downloads all the
-    other repositories, it requires only one argument, the full pathname
-    of the configuration file used by rsync_pull.sh.
-
-    Note that this can potentially download large numbers of duplicate
-    copies of objects due to caching.  Therefore, there is a mode where
-    you can execute this client to see what it would do without actually
-    doing it.  You specify this mode by providing a second argument
-    "noexec" or "NOEXEC".  It will print the name of the command it would
-    execute along with creating a file chaser_rsync.config that is the
-    configuration file it would feed to rsync_pull.sh.  You can then view
-    the file and modify it as appropriate.
 
 3.8 query.sh: This is the way to pull information out of the database and
     local repository.  There are two basic modes.
