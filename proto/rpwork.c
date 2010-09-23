@@ -132,6 +132,17 @@ static char *nextword(char *cc)
   return b;
   }
 
+static char *next_cmd(char *buf, int siz, FILE *SKI)
+  {
+  char *c;
+  do
+    {
+    if (!(c = fgets(skibuf, siz, SKI))) return c;
+    }
+  while(*skibuf == ';');
+  return c;
+  }
+   
 static int check_cp(char *cpp)
   {
   if ((*cpp == 'C' || *cpp == 'D' || *cpp == 'R') && cpp[1] <= ' ')
@@ -683,7 +694,7 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
 static int getIPBlock(FILE *SKI, int typ)
   {
   char *c;
-  while((c = fgets(skibuf, sizeof(skibuf), SKI)))
+  while((c = next_cmd(skibuf, sizeof(skibuf), SKI)))
     {
     if ((typ == IPv4 && *skibuf == 'I') || (typ == IPv6 && *skibuf == 'A') ||
       (typ == ASNUM && *skibuf == 'S')) break;
@@ -697,7 +708,7 @@ static int getIPBlock(FILE *SKI, int typ)
 static int getSKIBlock(FILE *SKI)
   {
   int ansr = ERR_SCM_BADSKIBLOCK;
-  if (!fgets(skibuf, sizeof(skibuf), SKI) || strcmp(skibuf, "IPv4\n"))
+  if (!next_cmd(skibuf, sizeof(skibuf), SKI) || strcmp(skibuf, "IPv4\n"))
     strcpy(skibuf, "Missing IPv4");
   else if (getIPBlock(SKI, IPv4) < 0)
     strcpy(skibuf, "Bad IPv4 group");
@@ -1413,17 +1424,6 @@ Procedure:
   return 0;
   }
 
-static char *next_cmd(char *buf, int siz, FILE *SKI)
-  {
-  char *c;
-  do
-    {
-    if (!(c = fgets(skibuf, siz, SKI))) return c;
-    }
-  while(*skibuf == ';');
-  return c;
-  }
-   
 int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile, FILE *logfile)
   {
 /*
