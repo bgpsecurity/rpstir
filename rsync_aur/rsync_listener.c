@@ -44,11 +44,19 @@ static pthread_t tid;
 static int port_number = DEFAULT_PORT;
 static pthread_mutex_t queue_mutex;
 static pthread_cond_t rsync_cv;
+static FILE *listener_log;
+static char log_file_uri[MAXREAD];
+time_t rawtime;
 
 int main (int argc, char *argv [])
 {
 	int rc = 0;
+	time(&rawtime);
+	/*Setup our file logging*/
+	create_new_log();
+	
 	Signal(SIGHUP,sighup_handler);
+	Signal(SIGTERM,sighup_handler);
 	/*Initialize our condition variable and mutex*/
 	pthread_mutex_init(&queue_mutex, NULL);
 	pthread_cond_init (&rsync_cv, NULL);
@@ -81,15 +89,24 @@ int main (int argc, char *argv [])
 		pthread_mutex_unlock(&queue_mutex);
 		/*parse out the uri, repository location, and log location*/
 		char *parse_me = parse_node->payload;
-		
-		/*If we're done receiving rsyncs we'll get an RSYNC_DONE
-		  signal from rsync_cord.py. But first remove
-		  the carraige return on the sting.*/
 		parse_me = strtok(parse_me,"\r");
-		if(!strcmp(parse_me,"RSYNC_DONE")){
+		
+		/*When we encounter this message it should be appended to the end of the queue*/
+		if(!strcmp(parse_me,"FINISH_QUEUE_EXIT")){
 			free(parse_node->payload);
 			free(parse_node);
 			break;
+		}
+		/*Signals the end of an instance of rsync_cord.py. So we need
+		  to rotate our Logs.*/
+		if(!strcmp(parse_me,"RSYNC_DONE")){
+			if(listener_log != stderr){
+				fprintf(listener_log,"Doesn't think it's Stderr\n");
+				fclose(listener_log);
+			}
+			create_new_log();
+			/*adjusted our logging ready for a fresh instance of rsync_cord.py*/
+			continue;
 		}
 		char *uri, *rep_loc, *log_loc;
 		FILE *logfile;
@@ -105,21 +122,24 @@ int main (int argc, char *argv [])
 		First check if all three arguments are not null, then test to open the files*/
 		if((uri==NULL) || (log_loc==NULL) || (rep_loc == NULL)){
 			err_flag = NULL_ARGS_ERR;
-			fprintf(stderr, "One or more variables parsed out was null: uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
+			fprintf(listener_log, "One or more variables parsed out was null: uri %s, log_loc %s, rep_loc %s", uri, log_loc, rep_loc);
 		}
 		else if(!(logfile = fopen(log_loc,"r"))){
 			err_flag = OPEN_LOG_ERR;
-			fprintf(stderr, "Failed to open logfile: log_loc %s. Probably incorrect filename.", log_loc);
+			fprintf(listener_log, "Failed to open logfile: log_loc %s. Probably incorrect filename.", log_loc);
 		}
 		else if(!(reposit = fopen(rep_loc,"r"))){
 			err_flag = OPEN_REPOSITORY_ERR;
-			fprintf(stderr, "Failed to open repository: rep_loc %s. Probably incorrect filename.", rep_loc);
+			fprintf(listener_log, "Failed to open repository: rep_loc %s. Probably incorrect filename.", rep_loc);
 		}
-
+		
 		/*If we haven't detected any problems thus far with our inuput, then we'll generate and make
 		  the call to rsync_aur*/
 		if(!err_flag){
-
+			/*just opened them to check existence, we can close them now*/
+			fclose(logfile);
+			fclose(reposit);
+			
 			/*Generate a command line string which will execute rsync_aur
 		  	once fed to another shell by popen*/
 			FILE *fp;
@@ -130,29 +150,33 @@ int main (int argc, char *argv [])
 			memset(path,'\0',MAXREAD);
 			memset(command,'\0',MAXREAD);	
 			snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
-			printf("%s\n",command);
+			fprintf(listener_log,"%s\n",command);
 
-			/*popen should spawn a new command line and invoke rsync_aur from there*/
+			/*popen should spawn a new command line and invoke rsync_aur from there. fflush the stream
+			  so any responses from popen are appended properly.*/
+			fflush(listener_log);
 			fp = popen(command, "r");
 			if (fp == NULL){
-				fprintf(stderr,"Error forking process and starting Parser..exiting. Status = %d", pclose(fp));
+				fprintf(listener_log,"Error forking process and starting Parser..exiting. Status = %d", pclose(fp));
 				err_flag =  POPEN_PARSER_ERR;
 			}
 			else{
 				/*Read the response from the parser*/
 				while (fgets(path, MAXREAD, fp) != NULL){
-					printf("%s", path);
+					fprintf(listener_log,"%s", path);
 				}
 				status = pclose(fp);
 			}
 		}
 		/*Clean up and log some stuff if needed*/
 		if(err_flag)
-			fprintf(stderr, " Error Code: %d. Continuing.\n",err_flag);
+			fprintf(listener_log, " Error Code: %d. Continuing.\n",err_flag);
 
 		free(parse_node->payload);
 		free(parse_node);
+		fflush(listener_log);
 	}
+	fclose(listener_log);
 	return 0;
 }
 /** @brief recv_rsync_conns Runs a single thread which repeatedly accpets connections from rsync_cord.py.
@@ -178,18 +202,18 @@ void *recv_rsync_conns()
 		rio_t rio;
 		rsync_node* new_node;
 		if(!(new_node = malloc(sizeof(rsync_node)))){
-			fprintf(stderr, "malloc error for new node during recv_rsync_conns");
+			fprintf(listener_log, "malloc error for new node during recv_rsync_conns");
 			return NULL;
 		}
 		char* payload;
 		if(!(payload = calloc(MAXREAD, sizeof(char)))){
-			fprintf(stderr, "malloc error for payload during recv_rsync_conns");
+			fprintf(listener_log, "malloc error for payload during recv_rsync_conns");
 		return NULL;
 		}
 
 		rio_readinitb(&rio, connfd);
 		rio_readlineb(&rio, payload, MAXREAD);
-		printf("contents of buf %s",payload);;
+		fprintf(listener_log,"# From rsync_cord: %s\n",payload);;
 		/*Setup our rsync_node, queue it up, then signal the
 		  parser to wake up because there is work for it*/
 		new_node->payload = payload;
@@ -211,7 +235,8 @@ void sighup_handler(int sig)
 		free(node);
 	}
 	pthread_mutex_unlock(&queue_mutex);
-	printf("Rsync_listener queue cleared, now terminating...");
+	fprintf(listener_log,"Rsync_listener queue cleared, now terminating...");
+	fclose(listener_log);
 	exit(0);
 }
 void enqueue(rsync_node* node)
@@ -241,4 +266,15 @@ rsync_node* dequeue()
 	rsync_node* ret = head;
 	head = head->next;
 	return ret;
+}
+void create_new_log(){
+	memset(log_file_uri,'\0',MAXREAD);
+	snprintf(log_file_uri,MAXREAD,"%s/listener.%ld.log",getenv("RPKI_LOGDIR"),time(NULL));
+	
+	if(!(listener_log = freopen(log_file_uri,"a", stderr))){
+		/*couldn't open file from RPKI_LOGDIR default to stderr*/
+		listener_log = stderr;
+	}
+	fprintf(listener_log,"Log file created on: %s", ctime(&rawtime));
+	fflush(listener_log);
 }
