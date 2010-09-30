@@ -960,8 +960,11 @@ static int addCert2List(scmcon *conp, scmsrcha *s, int idx)
     sizeof (struct cert_ansr) * (cert_answers.num_ansrs + 1));
   struct cert_ansr *this_ansrp =
     &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
+  memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
   strcpy(this_ansrp->dirname,  (char *)certSrch->vec[1].valptr);
+  memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
   strcpy(this_ansrp->filename, (char *)certSrch->vec[0].valptr);
+  memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
   snprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
     (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
   this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
@@ -986,17 +989,41 @@ struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *scmp,
     }
   sta = 0;
   if ( ski )
-    snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
+    snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
   else
-    snprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\"%s\"", aki);
+    snprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\'%s\'", aki);
   addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
   addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN,   0, 1);
+  cert_answers.num_ansrs = 0;
   sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
   if (sta < 0) cert_answers.num_ansrs = sta;
   return &cert_answers;
   }
 
+struct cert_answers *find_trust_anchors(scm *scmp, scmcon *conp)
+  {
+  int sta;
+  initTables(scmp);
+//  if (certSrch == NULL)
+//    {
+    certSrch = newsrchscm(NULL, 6, 0, 1);
+    ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
+    ADDCOL(certSrch, "dirname",  SQL_C_CHAR, DNAMESIZE, sta, NULL);
+    ADDCOL(certSrch, "flags",  SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
+    ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
+    ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
+    ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
+//    }
+  sta = 0;
+  addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
+  cert_answers.num_ansrs = 0;
+  sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
+    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+  if (sta < 0) cert_answers.num_ansrs = sta;
+  return &cert_answers;
+  }
+  
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *revokedSrch = NULL;
