@@ -130,6 +130,7 @@ extern int   addStateToFlags(unsigned int *flags, int isValid, char *filename,
 extern int   set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags);
 extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp, 
     scmcon *conp);
+extern struct cert_answers *find_trust_anchors(scm *sscmp, scmcon *conp);
 extern int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile,
     FILE *logfile);
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
