@@ -30,7 +30,7 @@
   name and the user name.
 */
 
-static char *RPKI_DSN = "{MyODBC 3.51 Driver DSN};SERVER=localhost";
+static char *RPKI_DSN = "myodbc3";
 
 /*
   The database name itself.  It can be overridden via the

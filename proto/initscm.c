@@ -284,6 +284,7 @@ scm *initscm(void)
   char *db = getenv("RPKI_DB");
   char *dbu = getenv("RPKI_DBUSER");
   char *dbp = getenv("RPKI_DBPASS");
+  char *dsn = getenv("RPKI_DSN");
 
   scmp = (scm *)calloc(1, sizeof(scm));
   if ( scmp == NULL )
@@ -308,7 +309,7 @@ scm *initscm(void)
       if ( RPKI_DBPASS != NULL )
 	scmp->dbpass = strdup(RPKI_DBPASS);
     }
-  scmp->dsnpref = strdup(RPKI_DSN);
+  scmp->dsnpref = strdup((dsn == NULL) ? RPKI_DSN : dsn);
   if ( scmp->dsnpref == NULL )
     {
       freescm(scmp);
