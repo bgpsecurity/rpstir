@@ -1,0 +1,259 @@
+Test Plan Local Trust Anchor Management
+
+The motivation for Local Trust Anchor [1] is to enable a replying 
+party to ensure that resource allocation information that it has
+acquired via some trusted channel is not overridden by the information 
+acquired from the RPKI repository system or by the putative TAs that
+the relying party imports.
+
+A mirror hierarchy for the locally allocated resource is created with 
+a new local trust anchor. This mirror is local to the relying party, 
+not part of the repository system.
+
+To affect this local control a document, called the constraints file, 
+specifies a set of bindings between public key identifiers and
+resources. The constraints expressed in this file then take precedence
+over any competing claims expressed by resource certificates acquired 
+from the distributed repository system.
+
+This document describes functional tests used to verify BBN’s
+Relying Party software.
+
+Parsing Constraints File Test Cases:
+
+1. (+) No constraints file (This is ok)
+2. Constraints file parsing
+   2.1. Section ordering
+        2.1.1. (-) Empty file (File exists but no contents)
+        2.1.2. (-) Missing Relying Party section
+        2.1.3. (-) Section 1 not first (starts with Flags section with
+		RP following)
+        2.1.4. (-) Tags section before Flags section
+        2.1.5. (-) Blocks section not last (flags or tags last)
+        2.1.6. (-) Missing blocks section
+
+   2.2. Section 1 – Relying Party 
+        2.2.1. (+) PRIVATEKEYMETHOD contains multiple valid values and 
+	            valid TOPLEVELCERTIFICATE value
+        2.2.2. (-) String literals contain lower case characters 
+	          (PRIVATEKEYMETHOD and/or TOPLEVELCERTIFICATE)
+        2.2.3. PRIVATEKEYMETHOD contains values that 
+	       2.2.3.1. comma separated 
+	       2.2.3.2. tab separated
+
+        2.2.4. PRIVATEKEYMETHOD contains incorrect values 
+	    (This is up to the relying party, we cannot know if it is 
+	     correct or not (MR))
+        2.2.5. TOPLEVELCERTIFICATE contains more than one value
+        2.2.6. TOPLEVELCERTIFICATE contains incorrect value
+	      (We have to be able to find or construct this certificate,
+	      so if the name is invalid it is a fatal error)
+        2.2.7. Missing either PRIVATEKEYMETHOD or TOPLEVELCERTIFICATE
+   2.3. Section 2 Flags (This section is optional but if there must follow 1)
+	2.3.1. No flags section -verify all three flags use default
+	    value (FALSE)
+        2.3.2. control line strings separated by commas
+        2.3.3. control line strings separated by tabs 
+        2.3.4. control line does not start with CONTROL
+        2.3.5. control line has only 2 strings (must be 3)
+        2.3.6. control line second string does not contain one of the 
+	       three allowed values (resource_nounion,
+	       intersection_always, treegrowth) 
+        2.3.7. control line third field is not TRUE or FALSE
+        2.3.8. (+) Test all possible values for flags section:
+	    2.3.8.1. All flags TRUE
+	    2.3.8.2. All flags FALSE
+
+   2.4. Tags section
+	2.4.1. Tag line does not start with TAG
+        2.4.2. Tag line strings separated by commas
+        2.4.3. Tag line strings separated by tabs
+        2.4.4. Tag line second string does not contain one of the 4 
+               possible values(Xvalidity_dates, Xcrldp, Xcp, Xaia)
+        Xvalidity_dates
+        2.4.5. Valid values:
+   	    2.4.5.1. TAG Xvalidity_dates C
+	    2.4.5.2. TAG Xvalidity_dates R
+	    2.4.5.3. TAG Xvalidity_dates YYYYMMDDHHMMSSZ YYYYMMDDHHMMSSZ
+        2.4.6. Invalid values
+            2.4.6.1. TAG Xvalidity_dates [string, i.e foo]
+	    2.4.6.2. TAG Xvalidity_dates [not before > not_after]
+	    2.4.6.3. TAG Xvalidity_dates [dates not generalized time]
+	    2.4.6.4. TAG Xvalidity_dates [not_after is not in the future]
+
+        Xcrldp tag
+        2.4.7. (+) Valid values
+	    2.4.7.1. TAG Xcrldp C
+	    2.4.7.2. TAG Xcrldp R
+	    2.4.7.3. TAG Xcrldp [valid URL]
+	    2.4.7.4. TAG Xcrldp [valid URL] [valid URL]
+        2.4.8. Invalid values
+	    2.4.8.1. TAG Xcrldp [invalid URL]
+	    2.4.8.2. TAG Xcrldp [valid URL] [invalid URL]
+	    2.4.8.3. TAG Xcrldp [valid URL],[valid URL]
+
+        Xcp tag
+        2.4.9. (+)Valid values
+	    2.4.9.1. TAG Xcp C
+	    2.4.9.2. TAG Xcp R
+	    2.4.9.3. TAG Xcp D
+	    2.4.9.4. TAG Xcp [valid OID]
+        2.4.10. Invalid values
+	     2.4.10.1. TAG Xcp [invalid OID]
+	     2.4.10.2. TAG Xcp OID OID  (only one allowed)
+
+        Xaia tag
+        2.4.11. (+)Valid values
+	     2.4.11.1. TAG Xaia C
+	     2.4.11.2. TAG Xaia [valid URL]
+	     2.4.12. Invalid values
+	     2.4.12.1. TAG Xaia [invalid URL string]
+	     2.4.12.2. TAG Xaia X
+
+   2.5. Blocks Section
+	2.5.1. First block does not start with SKI
+	2.5.2. SKI not followed by any address or as specifications (?ok?)
+        2.5.3. Empty SKI 
+        2.5.4. SKI contains < 40 digits
+        2.5.5. SKI contains > 40 digits
+        2.5.6. SKI contains invalid chars (only whitespace and : allowed)
+        2.5.7. Invalid ipv4 specification
+        2.5.7.1. Prefixes that are too large (larger than /8)
+        2.5.8. Invalid ipv6 specification
+        2.5.9. AS# literal incorrectly typed (i.e. AS:)
+        2.5.10. AS# line has values on the same line 
+        2.5.11. Multiple AS values on the same line
+        2.5.12. AS values specified as hex values (must be decimal)
+        2.5.13. Numerical order of address space out of order, this is ok if 
+		parser writes out re-ordered constraints file, a 
+		transformation file or an error (‘warning’) message to 
+		the user stating that reordering was done.
+
+3. One target block specified in constraints file
+   3.1. No certificate found for the specified SKI value (ok)
+   3.2. Multiple certificates found for the specified SKI value
+	3.2.1. same issuer, overlapping validity intervals, same key, 
+               distinct subject names
+       3.2.2. different issuers, same key
+   3.3. IPv4 address is not a resource in target certificate
+      3.3.1. resource_nounion flag TRUE
+      3.3.2. resource_nounion flag FALSE
+   3.4. IPv6 address is not a resource in target certificate
+      3.4.1. resource_nounion flag TRUE
+      3.4.2. resource_nounion flag FALSE
+   3.5. IPv4 address at the top of certificates IPv4 range
+   3.6. IPv4 address at the bottom of the certificates IPv4 range
+   3.7. IPv4 address in the middle of the certificates IPv4 range
+   3.8. IPv4 address is the entire IPv6 adder in certificate
+   3.9. IPv6 address at the top of certificates IPv6 range
+   3.10. IPv6 address at the bottom of the certificates IPv6 range
+   3.11. IPv6 address in the middle of the certificates IPv6 range
+   3.12. IPv6 address is the entire IPv6 addr in certificate
+   3.13. AS number not in target certificate (ok?)
+   3.14. IPv4 address specified as a range
+   3.15. IPv6 address specified as a range
+
+4. Multiple TA's (self signed certs) in the repository
+
+5. Multiple target blocks
+   5.1. Same SKI in different blocks with different IP address specification.
+        Generally same-SKI is ok so long as the subject names are 
+	different. Steve's current proposal is to use a subject name 
+        consisting of a CommonName and a serialNumber, where the 
+        CommonName part would not change but the serialNumber part 
+        would go up. So be careful here, because there can already be 
+        certs in the DB with the same SKI even before para-certificates 
+        are added.)
+   5.2. Same SKI in different blocks with the same IP address specifications
+   5.3. multiple different SKI blocks where ip address specifications are 
+     as follows:
+	5.3.1. Address ranges in the multiple target blocks overlap
+	5.3.2. Address ranges in the multiple target blocks are adjacent
+	5.3.3. Address ranges in the multiple target blocks are not 
+	       adjacent or overlapping
+	5.3.4. SKI specifies high level CA certificate (i.e. has
+	       parent and children)
+
+6. We now have processed a constraints file and have a database 
+   that is made up of original certificates and para-certificates. 
+   [Refer to section 6 of the LTA spec]
+   6.1. CRL revokes a certificate with none of the O,T or P flags set
+   6.2. CRL revokes a certificate with O flag set, but not the T or P flags
+   6.3. CRL revokes a certificate with both the O and T flags set, but no P
+   6.4. CRL revokes a certificate with only the P flag set
+   6.5. CRL revokes a certificate with the P flag set and either/or 
+	the O and T flag(s)
+   7 Path discovery [Refer to section 5 of the LTA spec]
+   7.1. A certificate has two parents, one with only P and one with only O
+   7.2. A certificate has two or more parents with a mixture of flags 
+	excl of case 7.1
+   7.3. A certificate has one parent with only P
+   7.4. A certificate has a parent with only O and a para-certificate exists
+   7.5. A certificate has a parent with only O and no para-certificate exists
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      Certificate hierarchy
+
+			      	    C (self signed)
+			     1.0.0.0-1.255.255.255
+			     3.0.0.0-3.255.255.255
+			     5.0.0.0-5.255.255.255
+			         AS 1-1535
+				    |
+				    |
+______________________________________________________________________________
+|                                   |                                        |
+C1                                 C2                                       C3
+1.0.0.0-1.255.255.255     1.0.0.0-1.0.255.255             5.0.0.0-5.255.255.255
+AS 1 - 511                3.0.0.0-3.255.255.255                   AS 1024-1535
+                               AS 1-127
+                                512-1023
+ |                                 |                                  |
+ |                                 |                                  |
+C11                               C21                                C31
+1.0.0.0-1.15.255.255        1.0.0.0-1.0.255.255            5.0.0.0-5.0.255.255
+AS 1 - 255                  3.0.0.0-3.15.255.255                AS 1024-1200
+                               AS 1-127
+                                512-767
+ |                                 |                                  |
+ |                                 |                                  |
+C111                             C211                               C311
+1.0.0.0-1.0.255.255         1.0.0.0-1.0.255.255             5.0.0.0-5.0.255.255
+AS 1 - 127               3.0.0.0-3.0.255.255                 AS 1024-1100
+                               AS 1-127
+                               512-639
+
+           
+
+Local Trust Authority Certificate
+1.0.0.0-128.0.0.0
+AS 1 - 65535     
+
+
+
+[1] Local Trust Anchor Management for the Resource Public Key
+    Infrastructure <draft-reynolds-rpki-ltamgmt-01.txt>
+
