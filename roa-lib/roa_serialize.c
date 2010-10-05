@@ -33,7 +33,7 @@ extern char *signCMS(struct ROA *, char *, int);
 #define MAX_LINE 512
 
 enum configKeys {
-  VERSION = 0,
+  KEYVERSION = 0,
   SID,
   SIGNATURE,
   AS_ID,
@@ -47,7 +47,7 @@ enum configKeys {
 };
 
 const char *configKeyStrings[] = {
-  "version",
+  "keyversion",
   "SID",
   "signature",
   "as_id",
@@ -1525,7 +1525,7 @@ static int confInterpret(char* filename, struct ROA* roa)
   // Acting as bools; testing for required config params
   int iConfiguredKey[CONFIG_KEY_MAX];
 
-  for (ck = VERSION; ck < CONFIG_KEY_MAX; ck++)
+  for (ck = KEYVERSION; ck < CONFIG_KEY_MAX; ck++)
     iConfiguredKey[ck] = cFALSE;
 
   fp = fopen(filename, "r");
@@ -1569,7 +1569,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 	    }
 	  else
 	    {
-	      for (ck = VERSION; ck < CONFIG_KEY_MAX; ck++)
+	      for (ck = KEYVERSION; ck < CONFIG_KEY_MAX; ck++)
 		{
 		  iRet2 = strcmp(configKeyStrings[ck], key);
 		  if (0 == iRet2)
@@ -1578,7 +1578,7 @@ static int confInterpret(char* filename, struct ROA* roa)
 
 	      switch(ck)
 		{
-		case VERSION:
+		case KEYVERSION:
 		  if ((isInstructionForcing(g_lastInstruction)==cTRUE) ||
 		      (cTRUE == iConfiguredKey[ck]))
 		    {
@@ -1697,7 +1697,7 @@ static int confInterpret(char* filename, struct ROA* roa)
     }
 
   // If we didn't have one of the required parameters
-  for (ck = VERSION; ck < CONFIG_KEY_MAX; ck++)
+  for (ck = KEYVERSION; ck < CONFIG_KEY_MAX; ck++)
     {
       if (cFALSE == iConfiguredKey[ck])
 	{
