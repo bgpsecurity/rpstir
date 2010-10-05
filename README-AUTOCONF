@@ -1,0 +1,91 @@
+#/* ***** BEGIN LICENSE BLOCK *****
+# *
+# * BBN Address and AS Number PKI Database/repository software
+# * Version 3.0-beta
+# *
+# * US government users are permitted unrestricted rights as
+# * defined in the FAR.
+# *
+# * This software is distributed on an "AS IS" basis, WITHOUT
+# * WARRANTY OF ANY KIND, either express or implied.
+# *
+# * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
+# *
+# * Contributor(s):  Brenton Kohler
+# *
+# * ***** END LICENSE BLOCK ***** */
+#                                               -*- Autoconf Readme-*-
+# This file is intended to serve as a instructions document for developers of the RPKI system
+# 
+
+** Compiling in New Files **
+In general, there exists a 'Makefile.am' in each directory where we want code compiled. These
+makefiles specify in a simple syntax what files are related to what binaries. So, when you add a
+new file to a subdirectory that needs to be compiled into a binary you must update the 'Makefile.am'
+to include it. The .am files look somewhat like the following:
+
+bin_PROGRAMS = foo
+foo_SOURCES = foo.c
+
+If say I added test.c that needed to be a part of the executable foo, I would update the Makefile.am
+to be:
+
+bin_PROGRAMS = foo
+foo_SOURCES = foo.c
+
+** New flags needed **
+If a new flag needs to be given to the compiler for a specific executable, it should be added to the 
+AM_CFLAGS variable. This is strictly local to the subdirectory, meaning that flag will only apply to
+the making of the binaries in the subdirectory where the Makefile.am file you modified is. 
+
+If you want to specify a global environment compiler flag, the configure.ac file will need to be updated.
+
+** Modifying configure.ac **
+The configure.ac file contains a bunch of macros. Some of them set-up the arguments that are discussed 
+below. Modifying the CFLAGS or the LDFLAGS will set-up compiler flags or library linking flags that 
+should be done on a project basis. This means ALL compiling will be done with what you add in here. 
+
+The configure.ac contains a list (AC_CONFIG_FILES) of all subdirectories where Makefiles should be 
+built. If you were to add a new directory, or you wanted an existing directory to be compiled that 
+isn't, you would need to add it to this list and then run the re-building steps defined below. Loook
+at the cg folder for an example of how to do a Makefile.am for a subdirectory where it has more 
+subdirectories that need to be built. These are built in a recurisive make style. 
+
+** Re-build the configure script **
+Anytime that you modify a Makefile.am or the configure.ac files, a new configure script will need to be 
+generated so that you can re-run configure which will build you new make files for future compiling. To
+do this, a file name autogen.sh exists in the trunk directory. You should run the following commands to
+rebuild your environment for new compiling (with the configure having any necessary options for your 
+machine):
+
+./autogen.sh
+./configure
+make
+
+
+** Using the configure script **
+The following arguments are defined to allow for user specified compiling. The 'lib' arguments
+should each have a =/usr/local/lib specifying where the respective libraries are located. The
+'include' arguments should have the same thing except for they should specify where the necessary
+header files are for the respective tool. 
+
+--with-ssl-lib
+--with-ssl-include
+--with-cryptlib-lib
+--with-cryptlib-include
+--with-odbc-lib
+
+These locations are put in to the global CFLAGS and LDFLAGS. New arguments can be added in to 
+test for other system libraries existence. It may also be important to add in additional headers
+to check for in the AC_CHECK_HEADERS macro. If you add additional headers to look for, you should
+also be sure that you are providing a include location under the CFLAGS. 
+
+** Under Source Control **
+The following files are under source control and should be re-checked in if you change something and
+subsequently re-run ./autogen.sh:
+
+autogen.sh
+each Makefile.am and Makefile.in
+configure.ac
+configure
+the folder rpki/trunk/build-aux/
