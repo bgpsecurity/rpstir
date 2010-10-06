@@ -76,7 +76,7 @@ SelectedAttributeTypes ::= TABLE {
 --    objectClass           id-objectClass            ObjectClass,
 --    aliasedObjectName     id-aliasedObjectName      AliasedObjectName,
 --    knowledgeInformation  id-knowledgeInformation   DirectoryString,
-    commonName              id-commonName             DirectoryString (SIZE (1..ub-common-name)),
+    commonName              id-commonName             PrintableString (SIZE (1..ub-common-name)),
     surname                 id-surname                DirectoryString (SIZE (1..ub-surname)),
     serialNumber            id-serialNumber           PrintableString (SIZE (1..ub-serial-number)),
     countryName             id-countryName            PrintableString (SIZE (2)),
