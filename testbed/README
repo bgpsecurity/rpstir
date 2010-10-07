@@ -1,0 +1,119 @@
+
+RPKI Testbed, Repository Construction Library
+
+
+################################################
+#
+# Level 0: File Creation and Modification Tools
+#
+################################################
+
+Certificates
+------------
+
+Certificates in the RPKI are defined by the X.509 PKIX Resource
+Certificate Profile (please refer to draft-ietf-sidr-res-certs).  The
+following properties need to be modifiable.
+
+* outputfilename [string] - The path/name of the file to be written.
+
+* parentcertfile [string] - The path/name of the file containing the
+  parent certificate, for copying the appropriate fields.  Fields
+  below will override anything generated from this file.
+
+* parentkeyfile [string] - The path/name of the file containing the
+  parent's key pair.  Fields below will override any signature value
+  or hash identifier generated from this file.
+
+* subjectkeyfile [string] - The path/name of the file containing the
+  subject's key pair.  Fields below will override any hash identifier
+  or key info generated from this file.
+  
+* type [choice of string] - "CA" or "EE".  This affects the fields
+  BasicConstraints, KeyUsage, and ExtendedKeyUsage.
+
+* serial [integer] - Serial Number
+
+* issuer [string or hex] - Issuer's commonName field. The commonName
+  field is the ASN.1 type DirectoryString which has multiple options,
+  two of which are PrintableString and UTF8String.  If a "string" is
+  passed in, the encoding should be PrintableString, but if a "hex" is
+  passed in, the encoding should be UTF8String.  (FIXME: res-certs
+  doesn't actually restrict to commonName only, and RFC 5280 and X.501
+  distinguished names can have lots of fields, not just commonName.
+  See http://tools.ietf.org/html/rfc5280#section-4.1.2.4.  Do we
+  currently refuse to handle others?  If so, is that okay?)
+
+* subject [string or hex] - Subject's commonName field. The commonName
+  field is the ASN.1 type DirectoryString which has multiple options,
+  two of which are PrintableString and UTF8String.  If a "string" is
+  passed in, the encoding should be PrintableString, but if a "hex" is
+  passed in, the encoding should be UTF8String.  (FIXME: see notes on
+  issuer)
+
+* notBefore [string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  Note: RFC5280 requires a
+  switch in notation type at the year 2050 (because for UTCTime, if YY
+  >= 50, then it is interpreted as the year 19YY).
+
+* notAfter [string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on notBefore.
+
+* pubkey [comma-separated pair of hex integers "0xXX,0xYY"] - Subject
+  Public Key Info.  Currently, RSA is the only allowed algorithm for
+  the RPKI, so the public key information is defined as modulus
+  followed by publicExponent.  See
+  http://tools.ietf.org/html/rfc3279#section-2.3.1
+
+* ski [hex integer] - Subject Key Identifier, as a 160-bit SHA-1 hash
+  of the subject public key.
+
+* aki [hex integer] - Authority Key Identifier, as a 160-bit SHA-1
+  hash of the issuer public key.
+
+* crldp [comma-separated strings] - CRL Distribution Point(s).
+  (FIXME: this means we are disallowing commas in URIs, and URIs are
+  always ASCII).
+
+* aia [string] - Authority Information Access.
+
+* ipv4 [comma-separated strings] - IPv4 Resources.  Each item will be
+  either a prefix or a dash-separated range: e.g. "1.0.0.0/8" or
+  "1.0.0.1-1.0.0.2".
+
+* ipv6 [comma-separated strings] - IPv6 Resources.  Each item will be
+  either a prefix or a dash-separated range: e.g. "2:BEEF::/32" or
+  "2::-2:BEEF::".
+
+* as [comma-separated strings] - AS Number Resources.  Each item will
+  be either a single AS Number or a range: e.g. "23" or "65590-65594".
+
+* signatureValue [hex integer] - Signature Value
+
+
+References:
+http://datatracker.ietf.org/doc/draft-ietf-sidr-res-certs
+http://datatracker.ietf.org/doc/rfc5280
+http://datatracker.ietf.org/doc/rfc3779
+
+
+######################################################
+#
+# Level 1: Object Construction (Along w/ Semantics)
+#
+######################################################
+
+
+
+##################################
+#
+# Level 2: Directory Construction
+#
+##################################
+
+
+#######################################
+#
+# Level 3: Full Hierarchy Construction
+#
+#######################################
