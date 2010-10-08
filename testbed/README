@@ -13,82 +13,88 @@ Certificates
 
 Certificates in the RPKI are defined by the X.509 PKIX Resource
 Certificate Profile (please refer to draft-ietf-sidr-res-certs).  The
-following properties need to be modifiable.
+following properties need to be modifiable:
 
-* outputfilename [string] - The path/name of the file to be written.
+* outputfilename=[string] - The path/name of the file to be written.
 
-* parentcertfile [string] - The path/name of the file containing the
-  parent certificate, for copying the appropriate fields.  Fields
-  below will override anything generated from this file.
+* parentcertfile=[string] - The path/name of the file containing the
+  parent certificate, for copying the appropriate fields.  Any field
+  generated from this parameter can be overriden by a more specific
+  parameter below.
 
-* parentkeyfile [string] - The path/name of the file containing the
-  parent's key pair.  Fields below will override any signature value
-  or hash identifier generated from this file.
-
-* subjectkeyfile [string] - The path/name of the file containing the
-  subject's key pair.  Fields below will override any hash identifier
-  or key info generated from this file.
+* parentkeyfile=[string] - The path/name of the file containing the
+  parent's key pair.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
   
-* type [choice of string] - "CA" or "EE".  This affects the fields
+* subjectkeyfile=[string] - The path/name of the file containing the
+  subject's key pair.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
+  
+* type=[choice of string] - "CA" or "EE".  This affects the fields
   BasicConstraints, KeyUsage, and ExtendedKeyUsage.
 
-* serial [integer] - Serial Number
+* serial=[integer] - Serial Number of the Certificate.  Not to be
+  confused with the serial number(s) in the issuer/subject name.
 
-* issuer [string or hex] - Issuer's commonName field. The commonName
-  field is the ASN.1 type DirectoryString which has multiple options,
-  two of which are PrintableString and UTF8String.  If a "string" is
-  passed in, the encoding should be PrintableString, but if a "hex" is
-  passed in, the encoding should be UTF8String.  (FIXME: res-certs
-  doesn't actually restrict to commonName only, and RFC 5280 and X.501
-  distinguished names can have lots of fields, not just commonName.
-  See http://tools.ietf.org/html/rfc5280#section-4.1.2.4.  Do we
-  currently refuse to handle others?  If so, is that okay?)
+* issuer=[PrintableString plus optional PrintableString] - Issuer's
+  commonName and (optionally) serialNumber attribute, separated by the
+  percent sign (%).  For example "Gollum", or "Bilbo Baggins%135AX79".
+  The commonName field is the ASN.1 type DirectoryString but its
+  subtype is required to be PrintableString by the certificate
+  profile. The serialNumber attribute must be a PrintableString.  Note
+  that this serialNumber is not the same as the certificate serial
+  number above.  See http://tools.ietf.org/html/rfc5280#appendix-A.1
 
-* subject [string or hex] - Subject's commonName field. The commonName
-  field is the ASN.1 type DirectoryString which has multiple options,
-  two of which are PrintableString and UTF8String.  If a "string" is
-  passed in, the encoding should be PrintableString, but if a "hex" is
-  passed in, the encoding should be UTF8String.  (FIXME: see notes on
-  issuer)
+* subject=[PrintableString plus optional PrintableString] - Subject's
+  commonName and (optionally) serialNumber attribute, separated by the
+  percent sign (%). See "issuer" definition.
 
-* notBefore [string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+* notbefore=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
   GeneralizedTime ("YYYYMMDDHHMMSSZ").  Note: RFC5280 requires a
-  switch in notation type at the year 2050 (because for UTCTime, if YY
-  >= 50, then it is interpreted as the year 19YY).
+  switch in notation type at the year 2050.  The reason is that with
+  UTCTime, if YY >= 50, then it is interpreted as the year 19YY.  The
+  certification creation tool is NOT required to check for this.
 
-* notAfter [string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
-  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on notBefore.
+* notafter=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on notbefore.
 
-* pubkey [comma-separated pair of hex integers "0xXX,0xYY"] - Subject
+* pubkey=[comma-separated pair of hex integers "0xXX,0xYY"] - Subject
   Public Key Info.  Currently, RSA is the only allowed algorithm for
   the RPKI, so the public key information is defined as modulus
   followed by publicExponent.  See
   http://tools.ietf.org/html/rfc3279#section-2.3.1
 
-* ski [hex integer] - Subject Key Identifier, as a 160-bit SHA-1 hash
-  of the subject public key.
+* ski=[hex integer] - Subject Key Identifier, as a 160-bit SHA-1 hash
+  of the subject public key.  Hex integers will begin with "0x".
 
-* aki [hex integer] - Authority Key Identifier, as a 160-bit SHA-1
-  hash of the issuer public key.
+* aki=[hex integer] - Authority Key Identifier, as a 160-bit SHA-1
+  hash of the issuer public key.  Hex integers will begin with "0x".
 
-* crldp [comma-separated strings] - CRL Distribution Point(s).
-  (FIXME: this means we are disallowing commas in URIs, and URIs are
-  always ASCII).
+* crldp=[comma-separated ASCII strings] - CRL Distribution Point(s).
+  Note: This means we are disallowing commas in URIs.  (I believe this
+  restriction is reasonable. A comma is technically allowed in URLs,
+  but on many filesystems it is not allowed as a filename character.
+  -Andrew)
 
-* aia [string] - Authority Information Access.
+* aia=[ASCII string] - Authority Information Access.  Commas are
+  disallowed.
 
-* ipv4 [comma-separated strings] - IPv4 Resources.  Each item will be
+* ipv4=[comma-separated strings] - IPv4 Resources.  Each item will be
   either a prefix or a dash-separated range: e.g. "1.0.0.0/8" or
-  "1.0.0.1-1.0.0.2".
+  "1.0.0.1-1.0.0.2".  Full example would be
+  "0.0.0.0/32,1.0.0.0/8,1.0.0.1-1.0.0.2"
 
-* ipv6 [comma-separated strings] - IPv6 Resources.  Each item will be
+* ipv6=[comma-separated strings] - IPv6 Resources.  Each item will be
   either a prefix or a dash-separated range: e.g. "2:BEEF::/32" or
-  "2::-2:BEEF::".
+  "2::-2:BEEF::".  Full example would be "2:BEEF::/32,2::-2:BEEF::"
 
-* as [comma-separated strings] - AS Number Resources.  Each item will
+* as=[comma-separated strings] - AS Number Resources.  Each item will
   be either a single AS Number or a range: e.g. "23" or "65590-65594".
+  Full example would be "1,3,5-9,65590-65594".
 
-* signatureValue [hex integer] - Signature Value
+* signatureValue=[hex integer] - Signature Value.  Note that this is
+  actually a bit string (RFC 5280), but RSA signature values are
+  always multiples of 8 bits.  Hex integers will begin with "0x".
 
 
 References:
