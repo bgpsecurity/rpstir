@@ -8,19 +8,20 @@ RPKI Testbed, Repository Construction Library
 #
 ################################################
 
+
 Certificates
 ------------
 
 Certificates in the RPKI are defined by the X.509 PKIX Resource
-Certificate Profile (please refer to draft-ietf-sidr-res-certs).  The
-following properties need to be modifiable:
+Certificate Profile (draft-ietf-sidr-res-certs).  The low-level
+certificate creation tool must allow the following properties to be
+specified:
 
 * outputfilename=[string] - The path/name of the file to be written.
 
 * parentcertfile=[string] - The path/name of the file containing the
-  parent certificate, for copying the appropriate fields.  Any field
-  generated from this parameter can be overriden by a more specific
-  parameter below.
+  parent certificate.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
 
 * parentkeyfile=[string] - The path/name of the file containing the
   parent's key pair.  Any field generated from this parameter can be
@@ -96,11 +97,61 @@ following properties need to be modifiable:
   actually a bit string (RFC 5280), but RSA signature values are
   always multiples of 8 bits.  Hex integers will begin with "0x".
 
-
 References:
 http://datatracker.ietf.org/doc/draft-ietf-sidr-res-certs
 http://datatracker.ietf.org/doc/rfc5280
 http://datatracker.ietf.org/doc/rfc3779
+
+
+Certificate Revocation Lists (CRLs)
+-----------------------------------
+
+CRLs in the RPKI are defined by the X.509 PKIX Resource Certificate
+Profile (draft-ietf-sidr-res-certs).  The low-level CRL creation tool
+must allow the following properties to be specified:
+
+* outputfilename=[string] - The path/name of the file to be written.
+
+* parentcertfile=[string] - The path/name of the file containing the
+  parent certificate.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
+
+* parentkeyfile=[string] - The path/name of the file containing the
+  parent's key pair.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
+  
+* issuer=[PrintableString plus optional PrintableString] - Issuer's
+  commonName and (optionally) serialNumber attribute, separated by the
+  percent sign (%). See "issuer" definition in Certificates.
+
+* thisupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
+  Certificates.
+
+* nextupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
+  Certificates.
+
+* revokedcertlist=[comma-separated pairs of strings] - Revoked
+  Certificate List.  May be empty (no revoked certificates), or may
+  have the following fields: serial number and revocation date,
+  separated by percent "%".  E.g. "112358%101011102536Z".
+
+* aki=[hex integer] - Authority Key Identifier, as a 160-bit SHA-1
+  hash of the issuer public key.  Hex integers will begin with "0x".
+
+* crlnum=[integer] - CRL Number.  Monotonically increasing sequence
+  number for a given CRL issuer, allowing users to easily determine
+  when a particular CRL supersedes another CRL.  See
+  http://tools.ietf.org/html/rfc5280#section-5.2.3 .
+
+* signatureValue=[hex integer] - Signature Value.  Note that this is
+  actually a bit string (RFC 5280), but RSA signature values are
+  always multiples of 8 bits.  Hex integers will begin with "0x".
+
+References:
+http://datatracker.ietf.org/doc/draft-ietf-sidr-res-certs
+http://datatracker.ietf.org/doc/rfc5280
 
 
 ######################################################
