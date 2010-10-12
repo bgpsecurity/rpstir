@@ -83,15 +83,22 @@ specified:
 * ipv4=[comma-separated strings] - IPv4 Resources.  Each item will be
   either a prefix or a dash-separated range: e.g. "1.0.0.0/8" or
   "1.0.0.1-1.0.0.2".  Full example would be
-  "0.0.0.0/32,1.0.0.0/8,1.0.0.1-1.0.0.2"
+  "0.0.0.0/32,1.0.0.0/8,1.0.0.1-1.0.0.2".  Alternatively, the string
+  "inherit" means to encode the bits indicating that this certificate
+  inherits all IPv4 resources from its parent.
 
 * ipv6=[comma-separated strings] - IPv6 Resources.  Each item will be
   either a prefix or a dash-separated range: e.g. "2:BEEF::/32" or
-  "2::-2:BEEF::".  Full example would be "2:BEEF::/32,2::-2:BEEF::"
+  "2::-2:BEEF::".  Full example would be "2:BEEF::/32,2::-2:BEEF::".
+  Alternatively, the string "inherit" means to encode the bits
+  indicating that this certificate inherits all IPv6 resources from
+  its parent.
 
 * as=[comma-separated strings] - AS Number Resources.  Each item will
   be either a single AS Number or a range: e.g. "23" or "65590-65594".
-  Full example would be "1,3,5-9,65590-65594".
+  Full example would be "1,3,5-9,65590-65594".  Alternatively, the
+  string "inherit" means to encode the bits indicating that this
+  certificate inherits all AS resources from its parent.
 
 * signatureValue=[hex integer] - Signature Value.  Note that this is
   actually a bit string (RFC 5280), but RSA signature lengths are
@@ -163,7 +170,15 @@ creation tool must allow the following properties to be specified:
 
 * outputfilename=[string] - The path/name of the file to be written.
 
-* 
+* eecertfile=[string] - The path/name of the file containing the
+  End-Entity (EE) certificate.  Any field generated from this
+  parameter can be overriden by a more specific parameter below.
+
+* eekeyfile=[string] - The path/name of the file containing the
+  EE certificate's key pair.  Any field generated from this parameter
+  can be overriden by a more specific parameter below.
+
+<< NOT COMPLETE >>
 
 References:
 http://datatracker.ietf.org/doc/draft-ietf-sidr-roa-format/
@@ -179,13 +194,13 @@ to be specified:
 
 * outputfilename=[string] - The path/name of the file to be written.
 
-* parentcertfile=[string] - The path/name of the file containing the
-  parent certificate.  Any field generated from this parameter can be
-  overriden by a more specific parameter below.
+* eecertfile=[string] - The path/name of the file containing the
+  End-Entity (EE) certificate.  Any field generated from this
+  parameter can be overriden by a more specific parameter below.
 
-* parentkeyfile=[string] - The path/name of the file containing the
-  parent's key pair.  Any field generated from this parameter can be
-  overriden by a more specific parameter below.
+* eekeyfile=[string] - The path/name of the file containing the
+  EE certificate's key pair.  Any field generated from this parameter
+  can be overriden by a more specific parameter below.
 
 * thisupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
   GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
@@ -200,17 +215,17 @@ to be specified:
   easily determine when a particular Manifest supersedes another
   Manifest.
 
-* filelist=[comma-separated pairs of strings] - Sequence of 
+* filelist=[comma-separated pairs of strings] - Sequence of
   FileAndHash objects. May be empty (no files), or may have the
-  following fields: filename, a hash of the file's contents
-  separated by percent "%".  E.g. "/repo/C.cer%101011102536Z".
-
-* eecert=[string]- EE certificate. The path/name of the EE certificate. 
+  following fields: filename, a hexadecimal integer SHA-256 hash of
+  the file's contents separated by percent "%".  Note that this means
+  we must disallow both commas and percent "%" signs in filenames.
+  E.g. "C.cer%0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF".
 
 References:
 http://datatracker.ietf.org/doc/draft-ietf-sidr-rpki-manifests/
 http://datatracker.ietf.org/doc/draft-ietf-sidr-signed-object/
-
+http://datatracker.ietf.org/doc/draft-ietf-sidr-rpki-algs/
 
 ######################################################
 #
