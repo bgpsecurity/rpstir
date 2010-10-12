@@ -172,8 +172,44 @@ http://datatracker.ietf.org/doc/draft-ietf-sidr-signed-object/
 
 Manifests
 ---------
+Manifests in the RPKI are defined by the Manifests for the Resource
+Public Key Infrastructure (draft-ietf-sidr-rpki-manifests).  The
+low-level Manifest creation tool must allow the following properties
+to be specified:
+
+* outputfilename=[string] - The path/name of the file to be written.
+
+* parentcertfile=[string] - The path/name of the file containing the
+  parent certificate.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
+
+* parentkeyfile=[string] - The path/name of the file containing the
+  parent's key pair.  Any field generated from this parameter can be
+  overriden by a more specific parameter below.
+
+* thisupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
+  Certificates.
+
+* nextupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
+  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
+  Certificates.
+
+* manifestnum=[integer] - Manifest Number. Monotonically increasing 
+  sequence number for a given Manifest issuer, allowing users to 
+  easily determine when a particular Manifest supersedes another
+  Manifest.
+
+* filelist=[comma-separated pairs of strings] - Sequence of 
+  FileAndHash objects. May be empty (no files), or may have the
+  following fields: filename, a hash of the file's contents
+  separated by percent "%".  E.g. "/repo/C.cer%101011102536Z".
+
+* eecert=[string]- EE certificate. The path/name of the EE certificate. 
 
 References:
+http://datatracker.ietf.org/doc/draft-ietf-sidr-rpki-manifests/
+http://datatracker.ietf.org/doc/draft-ietf-sidr-signed-object/
 
 
 ######################################################
