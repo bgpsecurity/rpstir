@@ -158,10 +158,11 @@ AliasedObjectName ::=   DistinguishedName
 GenName ::= DirectoryString
 
 DirectoryString ::= CHOICE {
-    printableString	PrintableString (SIZE(1..ub-name)),
-    teletexString	TeletexString (SIZE(1..ub-name)),
-    universalString	UniversalString (SIZE(1..ub-name)),
-    bMPString 		BMPString}
+    printableString	PrintableString (SIZE(1..ub-name))
+--    teletexString	TeletexString (SIZE(1..ub-name)),
+--    universalString	UniversalString (SIZE(1..ub-name)),
+--    bMPString 		BMPString
+      }
 
 -- CaseIgnoreSyntax ::= CHOICE {
 --    printable PrintableString,
