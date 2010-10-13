@@ -77,8 +77,15 @@ specified:
   but on many filesystems it is not allowed as a filename character.
   -Andrew)
 
-* aia=[ASCII string] - Authority Information Access.  Commas are
-  disallowed.
+* aia=[ASCII string] - Authority Information Access.  This is a single
+  URI.  Commas are disallowed.  Note that self-signed certificate omit
+  this field.
+
+* sia=[comma-separated ASCII strings] - Subject Information Access.
+  This represents several URIs which represent different ways of
+  accessing the same directory of objects issued by this CA.  Commas
+  are disallowed in the URIs.
+  http://tools.ietf.org/html/draft-ietf-sidr-res-certs-18#section-4.9.8
 
 * ipv4=[comma-separated strings] - IPv4 Resources.  Each item will be
   either a prefix or a dash-separated range: e.g. "1.0.0.0/8" or
