@@ -202,13 +202,11 @@ to be specified:
   EE certificate's key pair.  Any field generated from this parameter
   can be overriden by a more specific parameter below.
 
-* thisupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
-  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
-  Certificates.
+* thisupdate=[string] - GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note
+  on "notbefore" in Certificates.
 
-* nextupdate=[string] - Either a UTCTime ("YYMMDDHHMMSSZ") or a
-  GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note on "notbefore" in
-  Certificates.
+* nextupdate=[string] - GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note
+  on "notbefore" in Certificates.
 
 * manifestnum=[integer] - Manifest Number. Monotonically increasing 
   sequence number for a given Manifest issuer, allowing users to 
