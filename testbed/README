@@ -178,7 +178,21 @@ creation tool must allow the following properties to be specified:
   EE certificate's key pair.  Any field generated from this parameter
   can be overriden by a more specific parameter below.
 
-<< NOT COMPLETE >>
+* asid=[integer] - Single AS number (32-bit unsigned integer).
+
+* ipv4=[comma-separated strings or pairs] - The sequence of IPv4
+  address prefixes to which the AS is authorized to originate routes.
+  Each prefix may optionally be paired with a maxLength value (an
+  integer between 0 and 32 inclusive).  The percent "%" delimiter is
+  used to separate a prefix from its maxLength.
+  E.g. "10.0.0.0/16%24,10.0.255.0/24".
+
+* ipv6=[comma-separated strings or pairs] - The sequence of IPv6
+  address prefixes to which the AS is authorized to originate routes.
+  Each prefix may optionally be paired with a maxLength value (an
+  integer between 0 and 128 inclusive).  The percent "%" delimiter is
+  used to separate a prefix from its maxLength.
+  E.g. "A00::/16%24,A00:FF00::/24".
 
 References:
 http://datatracker.ietf.org/doc/draft-ietf-sidr-roa-format/
