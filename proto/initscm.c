@@ -315,7 +315,7 @@ scm *initscm(void)
       freescm(scmp);
       return(NULL);
     }
-  scmp->dsn = makedsnscm(RPKI_DSN, scmp->db, scmp->dbuser, scmp->dbpass);
+  scmp->dsn = makedsnscm(scmp->dsnpref, scmp->db, scmp->dbuser, scmp->dbpass);
   if ( scmp->dsn == NULL )
     {
       freescm(scmp);
