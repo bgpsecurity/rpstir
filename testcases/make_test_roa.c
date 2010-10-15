@@ -39,16 +39,17 @@ extern char *signCMS(struct ROA *, char *, int);
 void usage(char *prog)
 {
   printf("usage:\n");
-  printf("%s -r roafile -c certfile -k keyfile -a asnum [-R readable] [-b]\n", prog);
+  printf("%s -r roafile -a asnum [-R readable] [-b]\n", prog);
   printf("    [-4 [v4maxlen | cv4choicenum]] [-6 [v6maxlen | cv6choicenum]]\n");
   printf("  -r roafile: file to write roa to\n");
-  printf("  -c certfile: file holding EE cert for roa\n");
-  printf("  -k keyfile: file holding p15-format public key for signing roa\n");
   printf("  -a asnum: autonomous system number\n");
   printf("  -R readable-version: where to write readable asn.1 for roa\n");
   printf("  -b: generate bad (invalid) signature\n");
   printf("  -4: specify maxLength for first IPv4 Address\n");
   printf("  -6: specify maxLength for first IPv6 Address\n");
+  printf(" other file names are derived, e.g. for R123.roa:\n");
+  printf("  readable file R123.raw, certificate file C12R3.cer,\n");
+  printf("  parent file C12.cer, keyfile C12R3.p15.\n");
   exit(1);
 }
 
@@ -128,21 +129,21 @@ static void getIPAddresses(struct ROAIPAddrBlocks *roaipp,
 static void make_fulldir(char *fulldir, const char *locpath)
   {
   // ROA goes in issuer's directory, e.g.
-  // R1.roa goes nowhere else, 
-  // R11.roa goes into C1/, 
-  // R121.roa goes into C1/2 
+  // R1.roa goes nowhere else,
+  // R11.roa goes into C1/,
+  // R121.roa goes into C1/2
   // R1231.roa goes into C1/2/3
   char *f = fulldir;
   const char *l = locpath;
-  if (strlen(locpath) > 6) 
+  if (strlen(locpath) > 6)
     {
     *f++ = 'C';
-    l++; 
+    l++;
     *f++ = *l++;  // 1st digit
     *f++ = '/';
     if (l[1] != '.')  // 2nd digit
       {
-      *f++ = *l++;  
+      *f++ = *l++;
       *f++ = '/';
       if (l[1] != '.') // 3rd digit
         {
@@ -215,7 +216,7 @@ int main (int argc, char **argv)
             strcpy(keyfile, certfile);
             strcpy(strchr(keyfile, (int)'.'), ".p15");
 	    break;
-                  
+
 	case 'a':
 	    asnum = atoi(optarg);
 	    break;
@@ -347,11 +348,11 @@ int main (int argc, char **argv)
     if (msg != NULL)
 	fatal(7, msg);
 
-    if ( fValidate ) 
+    if ( fValidate )
       {
       // validate: make sure we did it all right
       if (roaValidate(&roa) != 0)
-	fprintf(stderr, "Warning: %s failed roaValidate (-b option %s) \n", 
+	fprintf(stderr, "Warning: %s failed roaValidate (-b option %s) \n",
          roafile, (bad == 0 ? "not set": "set"));
       }
 
