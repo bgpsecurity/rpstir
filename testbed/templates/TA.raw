@@ -1,0 +1,78 @@
+seq seq ctx+0x20
+            int 0x02
+        int 0x01
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "TA"
+        seq utc "000207115900Z"
+            utc "150313120100Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "TA"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x0030818902818100F0F9B2052F789208
+                0x75608B5FE64BAE5DF95A01E455E2696E
+                0x03DF4D31967C442D77ED10E56827B99D
+                0x7992ED8873E28FB1DB82F87CF80BD1A3
+                0x575E44C4476386E59DA441A0DA6055E4
+                0x36A730BEA721BF8DC1DE7982C343BAB8
+                0x655B61A76BECE8B10837EA2CD410FC28
+                0x123CFCA401977F5CED799711921A2071
+                0x59C4EA7459A001A30203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xE856567DF0F4FC5AF0B5EEA02CB539D0
+                            0x4ED0A2E7
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.17 /* id_subjectAltName */
+                    ocw seq ctx+0x24
+                                seq set seq oid 2.5.4.3 /* id_commonName */
+                                            prt "ARINviaAPNIC-all"
+                seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0xE856567DF0F4FC5AF0B5EEA02CB539D0
+                                0x4ED0A2E7
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x00A3
+                            seq oct 0x0002
+                                seq bit 0x0042342342000000000000
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01
+                                        int 0x64
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x009B145386AC36623A32FF888102A7009416D93EF36483135B09EC4C8BDED00B
+        0x53E8D011DC19749C114FEE8A732E9DBB65F0BC47E4BF4658BBF55C77C8FE7F24
+        0x1FA833D70AB55A0144FDF1477FFE6B948414BA041D9B2F21A436F55EC69E2594
+        0xD4D5D8083A6A48D1EE5113AA19DE55242908DE78012FB7045E457D2627381551
+        0x27

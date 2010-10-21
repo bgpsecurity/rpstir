@@ -1,0 +1,111 @@
+seq oid 1.2.840.113549.1.7.2 /* id_signedData */
+    ctx+0x20
+        seq int 0x03
+            set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                    nul 
+            seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                ctx+0x20
+                    ocw seq ctx+0x00
+                                0x00
+                            int 0x08
+                            seq seq oct 0x0001
+                                    seq seq bit 0x00A300
+                                seq oct 0x0002
+                                    seq seq bit 0x0042342342000000
+                                                0x00000000
+            ctx+0x20
+                seq seq ctx+0x20
+                            int 0x02
+                        int 0x020C
+                        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                            nul 
+                        seq set seq oid 2.5.4.3 /* id_commonName */
+                                    prt "TA"
+                        seq utc "100901184053Z"
+                            utc "101001184053Z"
+                        seq set seq oid 2.5.4.3 /* id_commonName */
+                                    prt "EE"
+                        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                                nul 
+                            bit 0x0030818902818100E6B9F87FAD42AC39
+                                0x85F27634619110BA6399753FC2A12C44
+                                0x828ED6990E821C7715C21CBFC40BCF6A
+                                0x48B5E21167C9DB3F08B4DBBA319EC48D
+                                0x77FA9A0E7FD7041364A4529413E3A534
+                                0xF6398CA4EF4A73AC38FF1C51975A5FF4
+                                0xABCA4DD4338139CB23D5D2731702972E
+                                0xE6C4ED405D94C7262D5522055D19E4E9
+                                0xD8B019EB78D146AF0203010001
+                        ctx+0x23
+                            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                                    ocw oct 0xF16790D6DA81634178AB18E988A6B4C2
+                                            0xF14F263D
+                                seq oid 2.5.29.15 /* id_keyUsage */
+                                    boo 0xFF
+                                    ocw bit 0x0780
+                                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                                    ocw seq seq ctx+0x20
+                                                    ctx+0x20
+                                                        ctx+0x06
+                                                            "rsync://roa-pki.bb"
+                                                            "n.com/home/testdir"
+                                                            "/"
+                                seq oid 2.5.29.32 /* id_certificatePolicies */
+                                    boo 0xFF
+                                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
+                                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                                ctx+0x06
+                                                    "rsync://roa-pki.bbn.com/ho"
+                                                    "me/testdir/"
+                                seq oid 2.5.29.35 /* id_authKeyId */
+                                    ocw seq ctx+0x00
+                                                0xB8BA57AB38B07719
+                                                0x9FCC57E7865EFAB2
+                                                0x499434E7
+                                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                                    boo 0xFF
+                                    ocw seq seq oct 0x0001
+                                                nul 
+                                            seq oct 0x0002
+                                                nul 
+                                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                                ctx+0x06
+                                                    "rsync://roa-pki.bbn.com/ho"
+                                                    "me/testdir/"
+                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                        nul 
+                    bit 0x00B1240C151E7ED8BFFC5677086F376E
+                        0x55C55708A06C9C3192945EB538BCB882
+                        0x96D3C269700F6727536D06703FB59276
+                        0xB48ABDCB102BC8824EB7F41F36F150D7
+                        0xECABE342FDE1229EF2BD62A0BE1BC1C7
+                        0x897BE9278B88ACA9D0E1A50F71471985
+                        0x990B0944407F123C89CAEE6FE96CBFDA
+                        0xF0532AA05A51FF19184169C4F1F471AA
+                        0x6F
+            set seq int 0x03
+                    ctx+0x00
+                        0xF16790D6DA81634178AB18E988A6B4C2
+                        0xF14F263D
+                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                        nul 
+                    ctx+0x20
+                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+                            set oct 0xC8B159D52330B0B9D268DFAE0F1B8311
+                                    0xF41FAC87D479F010EA848A16663A4BAF
+                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
+                            set utc "100928122220Z"
+                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                        nul 
+                    oct 0xB65CC533CDC99259B6DFECE24D59AB68
+                        0xEF954FE2B4DCA96B40DCFBA7726FFD1C
+                        0x6783440099BFA4A8A365CC3143DD5BDB
+                        0x3E6B7C83230CB1D7300546C228E17567
+                        0x2EFD2182289CCB4C3E64A13FCE3F11D8
+                        0x7AD8E542B5026040F0C9B7B81C9487FF
+                        0xE9C2EE36CF56490F5F379259F75F407E
+                        0x93912F6ADDB8FC167F68136E116E08C8
