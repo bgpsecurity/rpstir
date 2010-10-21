@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK *****
+ /* ***** BEGIN LICENSE BLOCK *****
  *
  * BBN Address and AS Number PKI Database/repository software
  * Version 3.0-beta
@@ -385,11 +385,20 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
       {
       while(elided) 
         {
-        *up++ = 0;
-        *up++ = 0;
-        elided--;
+	  if (c[2] == '/')
+	    {
+	      *up++ = fill;
+	      *up++ = fill;
+	    }
+	  else
+	    {
+	      *up++ = 0;
+	      *up++ = 0;
+	    }
+	  elided--;
         }
-      c++;
+      //      c++;
+      c+=2;
       }
     }
   if (*c) 
@@ -526,9 +535,16 @@ int  txt2loc(int typ, char *buf, struct iprange *iprangep)
     }
   else if (typ == IPv6)
     {
-      if ((ansr = cvtv6((uchar)0,  buf, iprangep->lolim)) < 0 ||
+      char *min = NULL;
+      if (d) // copy low if it is a range
+	min = copy_string(buf, (char *)d - buf -1);
+      if ((ansr = cvtv6((uchar)0,  (min)?min:buf, iprangep->lolim)) < 0 ||
 	  (ansr = cvtv6((uchar)0xff, (d)? d: buf, iprangep->hilim)) < 0) 
-	return ansr;
+	{
+	  if (min != NULL) free(min);
+	  return ansr;
+	}
+      if (min != NULL) free(min);
     }
   else return -1;
   return 0;

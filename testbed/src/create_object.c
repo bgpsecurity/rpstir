@@ -32,6 +32,7 @@
 #include <time.h>
 #include "create_object.h"
 #include "create_cert.h"
+#include "create_crl.h"
 #include "create_manifest.h"
 #include "create_roa.h"
 #include "obj_err.h"
@@ -126,10 +127,13 @@ int parse_config(char *configfile, struct object_field *tbl)
     { 
       name = buf;
       while(isspace(*name)) name++;
-      if (strncmp(name,";", 1) == 0)
+      if ( (strncmp(name,";", 1) == 0) || strlen(buf) <= 0)
 	continue;
 
       value = strchr(buf,'=');      
+      if ( (value == NULL) || (strlen(value) <=0))
+	   continue; // maybe warn here
+
       name_len = value - name;      
       if ((n = fieldInTable(name, name_len, tbl)) >= 0) 
 	tbl[n].value = stripQuotes(stripws(++value));
@@ -279,7 +283,6 @@ int main(int argc, char **argv)
   if (strncasecmp(obj_type,"CERT", strlen("CERT")) == 0)
     {
       table = get_cert_field_table();
-      fprintf(stdout, "Parsing config file %s\n", configFile);
       if (configFile != NULL)
 	if (parse_config(configFile, table) != 0)
 	{
@@ -287,7 +290,6 @@ int main(int argc, char **argv)
 	  parse_err = 1;
 	}
 
-      fprintf(stdout, "Parsing args for cert\n");
       // parse and validate arguments, exit if either or both fail
       if (parse_args(argc, argv, index, table) != 0)
 	{
@@ -306,16 +308,38 @@ int main(int argc, char **argv)
     }
   else if (strncasecmp(obj_type,"CRL", strlen("CRL")) == 0)
     {
-      table = get_roa_field_table();
-      
+      table = get_crl_field_table();
+      if (configFile != NULL)
+	if (parse_config(configFile, table) != 0)
+	{
+	  warn(INPUT_ARG_ERR, parse_errstr);
+	  parse_err = 1;
+	}
+
       if (parse_args(argc, argv, index, table) != 0)
-	fatal(INPUT_ARG_ERR, parse_errstr);
+	{
+	  warn(INPUT_ARG_ERR, parse_errstr);
+	  parse_err = 1;
+	}
+      if (validate_table(table, validate_errstr,sizeof(validate_errstr)) != 0)
+	fatal(MISSING_FIELDS, validate_errstr);
+
+      // if no validation error but we did have a parse err - exit
+      if (parse_err)
+	exit(INPUT_ARG_ERR);
+
       ret = create_crl(table);
     }
   else if (strncasecmp(obj_type,"ROA", strlen("ROA")) == 0)
     {
       table = get_roa_field_table();
-      
+      if (configFile != NULL)
+	if (parse_config(configFile, table) != 0)
+	{
+	  warn(INPUT_ARG_ERR, parse_errstr);
+	  parse_err = 1;
+	}
+
       if (parse_args(argc, argv,index, table) != 0)
 	fatal(INPUT_ARG_ERR, parse_errstr);
       
@@ -326,6 +350,12 @@ int main(int argc, char **argv)
    else if (strncasecmp(obj_type,"MANIFEST", strlen("MANIFEST")) == 0)
      {
       table = get_man_field_table();
+      if (configFile != NULL)
+	if (parse_config(configFile, table) != 0)
+	{
+	  warn(INPUT_ARG_ERR, parse_errstr);
+	  parse_err = 1;
+	}
       
       // parse arguments and validate table
       if (parse_args(argc, argv,index, table) != 0)
