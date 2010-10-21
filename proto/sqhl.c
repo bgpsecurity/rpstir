@@ -1998,15 +1998,15 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     struct Extension *ski_extp, *aki_extp;
     int locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0 ||
-      !(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
-      !(aki_extp = find_extension(&cert, id_authKeyId)) ||
-      diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
-        &aki_extp->extnValue.authKeyId.keyIdentifier) ||  
-      strcmp(cf->fields[CF_FIELD_SUBJECT],
-		 cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
+	!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
+	((aki_extp = find_extension(&cert, id_authKeyId)) &&
+	 diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
+		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||  
+	strcmp(cf->fields[CF_FIELD_SUBJECT],
+	       cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
     delete_casn(&cert.self);
     if (locerr)  
-        {
+      {
 	freecf(cf);
 	X509_free(x);
 	return(ERR_SCM_NOTSS);

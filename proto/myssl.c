@@ -728,7 +728,7 @@ static void cf_get_ipb(const X509V3_EXT_METHOD *meth, void *ex,
 static cfx_validator xvalidators[] = 
   {
     { cf_get_ski,     CF_FIELD_SKI,     NID_subject_key_identifier,   1, 0 } ,
-    { cf_get_aki,     CF_FIELD_AKI,     NID_authority_key_identifier, 1, 0 } ,
+    { cf_get_aki,     CF_FIELD_AKI,     NID_authority_key_identifier, 0, 0 } ,
     { cf_get_sia,     CF_FIELD_SIA,     NID_sinfo_access,             0, 0 } ,
     { cf_get_aia,     CF_FIELD_AIA,     NID_info_access,              0, 0 } ,
     { cf_get_crldp,   CF_FIELD_CRLDP,   NID_crl_distribution_points,  0, 0 } ,
@@ -1961,8 +1961,9 @@ skip:
 /*************************************************************
  * rescert_aki_chk(X509 *, int)                              *
  *                                                           *
- *  Authority Key Identifier - non-crit MUST be present      *
- *    keyIdentifier - MUST be present except in TA's         *
+ *  Authority Key Identifier - non-critical MUST be present  *
+ *      in CA and EE, optional in TAs.                       *
+ *    keyIdentifier - MUST be present                        *
  *    authorityCertIssuer - MUST NOT be present              *
  *    authorityCertSerialNumber - MUST NOT be present        *
  *                                                           *
@@ -2000,9 +2001,9 @@ static int rescert_aki_chk(X509 *x, int ct)
         return(ERR_SCM_NOAKI);
       }
 
-      /* Key Identifier sub field MUST be present in all certs except for
-         self signed CA (aka TA) */
-      if ( (!akid->keyid) && (ct != TA_CERT)) {
+      /* Key Identifier sub field MUST be present in any certs that
+	 have an AKI */
+      if (!akid->keyid) {
 #ifdef DEBUG
         fprintf(stderr, "[aki] key identifier sub field not present\n");
 #endif
@@ -2036,7 +2037,7 @@ static int rescert_aki_chk(X509 *x, int ct)
       akid = NULL;
     }
 
-  if (aki_flag == 0) {
+  if (aki_flag == 0 && ct != TA_CERT) {
 #ifdef DEBUG
     fprintf(stderr, "[aki_chk] missing AKI extension\n");
 #endif
@@ -2052,7 +2053,7 @@ static int rescert_aki_chk(X509 *x, int ct)
 
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[ski]jump to return...\n");
+  fprintf(stderr, "[aki]jump to return...\n");
 #endif
   if (akid)
     AUTHORITY_KEYID_free(akid);
@@ -2270,8 +2271,8 @@ skip:
  * rescert_aia_chk(X509 *, int)                              *
  *                                                           *
  *  Authority Information Access - non-crit - MUST           *
- *     be present                                            *
- *     in the case of TAs this SHOULD be omitted             *
+ *     be present, except in the case of TAs where it        *
+ *     MUST be omitted (but this is checked elsewhere).      *
  *                                                           *
  ************************************************************/
 
@@ -2309,7 +2310,7 @@ static int rescert_aia_chk(X509 *x, int ct)
   }
 
   if (info_flag == 0) {
-    if (ct == TA_CERT) {  /* SHOULD be omitted if TA */
+    if (ct == TA_CERT) {  /* MUST be omitted if TA, checked elsewhere. */
       ret = 0;
       goto skip;
     } else {
@@ -2868,7 +2869,7 @@ static int rescert_criticals_chk(X509 *x)
 
 /**********************************************************
  * profile_check(X509 *, int cert_type)                   *
- *  This function makes sure the required base eleme ts   *
+ *  This function makes sure the required base elements   *
  *  are present within the certificate.                   *
  *   cert_type can be one of CA_CERT, EE_CERT, TA_CERT    *
  *                                                        *
@@ -2877,9 +2878,9 @@ static int rescert_criticals_chk(X509 *x)
  *                                                        *
  *  Subject Key Identifier - non-critical MUST be present *
  *                                                        *
- *  Authority Key Identifier - non-crit MUST be present   *
- *    keyIdentifier - MUST be present except in TA's      *
- *      (TA versus EE,CA checks performed elsewhere)      *
+ *  Authority Key Identifier - non-critical MUST be       *
+ *      present in CA and EE, optional in TAs.            *
+ *    keyIdentifier - MUST be present                     *
  *    authorityCertIssuer - MUST NOT be present           *
  *    authorityCertSerialNumber - MUST NOT be present     *
  *                                                        *
@@ -2888,11 +2889,14 @@ static int rescert_criticals_chk(X509 *x)
  *    CA - keyCertSign and CRLSign only                   *
  *    EE - digitalSignature only                          *
  *                                                        *
- *  CRL Distribution Points - non-crit - MUST be present  *
+ *  CRL Distribution Points - non-crit -                  *
+ *    MUST be present unless the CA is self-signed (TA)   *
+ *    in which case it MUST be omitted.  CRLissuer MUST   *
+ *    be omitted; reasons MUST be omitted.                *
  *                                                        *
  *  Authority Information Access - non-crit - MUST        *
  *     be present                                         *
- *    (in the case of TAs this SHOULD be omitted - this   *
+ *    (in the case of TAs this MUST be omitted - this     *
  *    check performed elsewhere)                          *
  *                                                        *
  *  Subject Information Access -                          *
