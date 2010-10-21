@@ -371,21 +371,20 @@ char *cvt_int(char *c)
     long val;
     char *b, sign, valbuf[32];
 
+    memset(valbuf, 0, 32);
     while (*c && *c <= ' ') c++;
     if (*c == '0' && c[1] == 'x') return cvt_out(c);
     if (*c == '-') sign = *c++;
     else sign = 0;
-    memset(valbuf, 0, 32);
     for (val = 0; *c >= '0' && *c <= '9'; val = (val * 10) + *c++ - '0');
-    sprintf(valbuf, "0x0x%02lX", val);
-    if ((!sign && (valbuf[4] >= '8')) ||
-        (sign && !(valbuf[4] >= '8')))
-        {
-        b = valbuf;
-        valbuf[3] = '0';
-        }
-    else b = &valbuf[2];
-    b = cvt_out(b);
+    if (sign) val = -val;
+    sprintf(valbuf, "0x%08lX", val);
+    b = (char *)0;
+    if (val < 128 && val >= -128) b = &valbuf[8]; 
+    else if  (val < 32768 && val >= -32768) b = &valbuf[6];
+    else if (val < 8388608 && val >= -8388608) b = &valbuf[4];
+    if (b) strcpy(&valbuf[2], b);
+    b = cvt_out(valbuf);
     return c;
     }
 

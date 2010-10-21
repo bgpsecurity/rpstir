@@ -52,6 +52,11 @@ int main(int argc, char **argv)
   struct Certificate cert;
 
   Certificate(&cert, (ushort)0);
+  if (argc <= 1) 
+    {
+    fprintf(stderr, "Usage: input certificate file name, [output file name]\n");
+    exit(0);
+    }  
   if (get_casn_file(&cert.self, argv[1], 0) < 0)
     {
     fprintf(stderr, "error getting cert\n");
