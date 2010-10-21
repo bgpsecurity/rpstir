@@ -445,6 +445,18 @@ long _dumpread(struct casn *casnp, char *to, int offset, int mode)
                 ansr += (1 + offset);
     	        if (mode) c += newline(c, offset - 4);
                 }
+            if (type == ASN_INTEGER && lth <= 4)
+                {
+                int decnum = 0;
+                uchar locbuf[20], *uc, *ec = &casnp->startp[casnp->lth];
+                for (uc = casnp->startp; uc < ec; *uc++)
+                    {
+                    decnum = (decnum <<= 8) + *uc;
+                    }
+                sprintf(locbuf, " /* %d */ ", decnum);
+                if (mode) c = cat(c, locbuf); 
+                ansr += strlen(locbuf);
+                }
             }
         }
     *c = 0;
