@@ -125,11 +125,11 @@
 #define ERR_SCM_BCPRES      -96         /* basic constraints present in EE cert */
 #define ERR_SCM_BADSIGINFO  -97         /* error in SignerInfo */
 #define ERR_SCM_BADPARACERT -98         /* error making paracert */
-#define ERR_SCM_BADRANGE    -99         /* invalid IP range */
+#define ERR_SCM_BADRANGE    -99         /* invalid IP or AS numbers */
 #define ERR_SCM_BADSKIBLOCK -100        /* invalid constraints entry */
 #define ERR_SCM_USECONFLICT -101        /* conflicting usages */
 #define ERR_SCM_NOSKIFILE   -102        /* can't open constraints file */
-#define ERR_SCM_NORPCERT    -103        /* no RP's certificate */
+#define ERR_SCM_NORPCERT    -103        /* Can't find RP certificate */
 #define ERR_SCM_BADSKIFILE  -104        /* defective constraints file */
 #define ERR_SCM_SIGNINGERR  -105        /* error signing para-cert */
 #define ERR_SCM_INVALROA    -106        /* invalid ROA */

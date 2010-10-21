@@ -133,11 +133,11 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Basic constraints in EE cert", /* ERR_SCM_BCPRES */
     "Error in SignerInfos",         /* ERR_SCM_BADSIGINFO */
     "Error making para-certificate", /* ERR_SCM_BADPARACERT */
-    "Invalid IP range",             /* ERR_SCM_BADRANGE */
+    "Invalid IP or AS numbers",     /* ERR_SCM_BADRANGE */
     "Invalid constraints entry",    /* ERR_SCM_BADSKIBLOCK */
     "Conflicting constraint entry", /* ERR_SCM_USECONFLICT */
     "Can't open constraints file",  /* ERR_SCM_NOSKIFILE */
-    "No RP certificate",            /* ERR_SCM_NORPCERT */
+    "Can't find RP certificate",    /* ERR_SCM_NORPCERT */
     "Defective constraints file",   /* ERR_SCM_BADSKIFILE */
     "Error signing para-cert",      /* ERR_SCM_SIGNINGERR */
     "Invalid ROA",                  /* ERR_SCM_INVALROA */  
