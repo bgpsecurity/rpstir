@@ -75,7 +75,7 @@ static int cvtv4(uchar fill, char *ip, uchar *buf)
     sscanf(c, "%d", &fld);
     if (uc >= ue || fld > 255) return -1;
     *uc++ = (uchar)fld;
-    while (*c != '.' && *c != '/') c++;
+    while (*c && *c != '.' && *c != '/') c++;
     }
   if (*c) 
     {
@@ -90,14 +90,13 @@ static int cvtv4(uchar fill, char *ip, uchar *buf)
     mask = ~(0xFF << fld);  // mask for last byte
     if (fill) 
       {
-      mask = ~mask;
-      if ((mask & *uc)) return -1;
-      *uc |= (~mask);
+      if ((mask & *uc) && mask != *uc) return -1;
+      *uc |= mask;
       }
     else 
       {
       if ((mask & *uc)) return -1;
-      *uc &= mask;
+      *uc &= ~(mask);
       }
     }
   return 0;
@@ -129,11 +128,19 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
       {
       while(elided) 
         {
-        *up++ = 0;
-        *up++ = 0;
+        if (c[2] =='/')
+          {
+          *up++ = fill;
+          *up++ = fill;
+          }
+        else
+          { 
+          *up++ = 0;
+          *up++ = 0;
+          }
         elided--;
         }
-      c++;
+      c += 2;
       }
     }
   if (*c) 
@@ -146,19 +153,24 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
     up = &buf[(fld >> 3)];
     fld %= 16;   // number of used bits in last ushort
     fld = 16 - fld;  // number of unused bits
-    mask = (0xFFFF << fld);  // mask for last ushort
+    mask = ~(0xFFFF << fld);  // mask for last ushort
     if (fill) 
       {
-      mask = ~mask;
+      if ((mask >> 8) & *up && (mask >> 8) != *up) return -1; 
+      *up++ |= ((mask >> 8) & 0xFF);
+      if ((mask &0xFF) & *up && (mask & 0xFF) != *up) return -1;
+      *up++ |= (mask & 0xFF);
           // if up is at the high byte in a short
-      if (!((up - buf) & 1)) *up++ |= ((mask >> 8) & 0xFF);
-      *up |= (mask & 0xFF);
+      if (((up - buf) & 1)) *up = 0xFF;
       }
     else 
       {
-      *up++ &= ((mask >> 8) & 0xFF);
-      *up   &= (mask & 0xFF);
+      if ((mask >> 8) && *up) return -1; 
+      *up++ &= ((~(mask) >> 8) & 0xFF);
+      if ((mask & 0xFF) && *up) return -1;
+      *up   &= (~(mask) & 0xFF);
       }
+    for (up++; up < ue; *up++ = fill);
     }
   return 0;
   }
@@ -207,11 +219,17 @@ int overlap(struct iprange *lop, struct iprange *hip)
 int  txt2loc(int typ, char *skibuf, struct iprange *iprangep)
   {
   int ansr;
-  char *c;
+  char *c, *d = strchr(skibuf, (int)'-');
   ulong ASnum;
   iprangep->typ = typ;
   memset(iprangep->lolim, 0, 16);
   memset(iprangep->hilim, 0xFF, 16);
+  if (d && *d)
+    {
+    for (c = &d[-1]; *c == ' ' || *c == '\t'; *c-- = 0);
+    for (d++; *d == ' ' || *d == '\t'; d++);
+    }
+  else d = (char *)0;
   if (typ == ASNUM)
     {
     for (c = skibuf; *c == '-' || (*c >= '0' && *c <= '9'); c++);
@@ -223,11 +241,10 @@ int  txt2loc(int typ, char *skibuf, struct iprange *iprangep)
       *top = (uchar)(ASnum & 0xFF);
       ASnum >>= 8;
       }
-    c = strchr(skibuf, (int)'-');
-    if (!c) memcpy(iprangep->hilim, iprangep->lolim, 4);
+    if (!d) memcpy(iprangep->hilim, iprangep->lolim, 4);
     else 
       {
-      sscanf(++c, "%ld", &ASnum);
+      sscanf(d, "%ld", &ASnum);
       for (top = &iprangep->hilim[3]; top >= iprangep->hilim; top--)
         {
         *top = (uchar)(ASnum & 0xFF);
@@ -238,13 +255,13 @@ int  txt2loc(int typ, char *skibuf, struct iprange *iprangep)
   else if (typ == IPv4) 
     {
     if ((ansr = cvtv4((uchar)0,    skibuf, iprangep->lolim)) < 0 ||
-      (ansr = cvtv4((uchar)0xff, skibuf, iprangep->hilim)) < 0) 
-      return ansr;
-    }
+        (ansr = cvtv4((uchar)0xff, (d)? d: skibuf, iprangep->hilim)) < 0) 
+        return ansr;
+    }   
   else if (typ == IPv6)
     {
     if ((ansr = cvtv6((uchar)0,  skibuf, iprangep->lolim)) < 0 ||
-      (ansr = cvtv6((uchar)0xff, skibuf, iprangep->hilim)) < 0) 
+      (ansr = cvtv6((uchar)0xff, (d)? d: skibuf, iprangep->hilim)) < 0) 
       return ansr;
     }
   else return -1;
