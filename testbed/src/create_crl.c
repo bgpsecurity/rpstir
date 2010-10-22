@@ -292,7 +292,7 @@ int write_crlNum(void *crl, void *val)
   struct CRLExtension *extp;
 
   cnum = atoi(val);
-  fprintf(stdout, "Writing CRL Number %d to CRL\n",cnum);
+  //fprintf(stdout, "Writing CRL Number %d to CRL\n",cnum);
 
   if (!(extp = findCrlExtension(&crltbsp->extensions, id_cRLNumber)))
     extp = (struct CRLExtension *)inject_casn(&crltbsp->extensions.self, 0);
@@ -427,7 +427,7 @@ int write_nextUpdate_time(void *crl, void *val)
 
   clear_casn(&crltbsp->nextUpdate.self);
 
-  fprintf(stdout, "Next Update is %s\n", (char *)val);
+  //fprintf(stdout, "Next Update is %s\n", (char *)val);
   len = strlen(val);
 
   if (len == utclen)

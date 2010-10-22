@@ -222,7 +222,7 @@ int get_table_value(char *name, struct object_field *table, char **value, int *t
 
   *value = table[offset].value;
   *type =  table[offset].type;
-  fprintf(stdout,"Value and type for %s is %s, %d\n", name, *value, *type);
+  //fprintf(stdout,"Value and type for %s is %s, %d\n", name, *value, *type);
   return SUCCESS;
 }
 

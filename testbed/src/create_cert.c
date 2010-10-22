@@ -81,9 +81,9 @@ struct object_field cert_field_table[] =
     {"pubkey", LIST, NULL, OPTIONAL, write_cert_pubkey}, // public Key
     {"ski", OCTETSTRING, NULL, OPTIONAL, write_cert_ski}, // Subj key identifier
     {"aki", OCTETSTRING, NULL, OPTIONAL, write_cert_aki},   //Issuer key id
-    {"crldp", LIST, NULL, REQUIRED, write_cert_crldp},// crl distribution point
-    {"aia", TEXT, NULL, REQUIRED, write_cert_aia},   //auth information access 
-    {"sia", TEXT, NULL, REQUIRED, write_cert_sia},   //subj information access 
+    {"crldp", LIST, NULL, OPTIONAL, write_cert_crldp},// crl distribution point
+    {"aia", TEXT, NULL, OPTIONAL, write_cert_aia},   //auth information access 
+    {"sia", TEXT, NULL, OPTIONAL, write_cert_sia},   //subj information access 
     {"ipv4", LIST, NULL, REQUIRED, write_cert_ipv4}, //  ipv4 addresses
     {"ipv6", LIST, NULL, REQUIRED, write_cert_ipv6}, // ipv6 addresses
     {"as", LIST, NULL, REQUIRED, write_cert_asnums}, // as num resources
@@ -119,34 +119,34 @@ int use_parent_cert(void *cert, void *val)
   if ((val == NULL) || (selfSigned))
     return SUCCESS;
 
-  fprintf(stdout,"getting issuers cert %s\n", (char *)val);
+  //fprintf(stdout,"getting issuers cert %s\n", (char *)val);
   if (get_casn_file(&issuer.self,val, 0) < 0)
     {
       fprintf(stdout,"can't use issuers cert %s", (char *)val);
       return -1;
     }
   // copy algorithm identifiers (overwrite template value)
-  fprintf(stdout,"trying to copy algorithm identifiers\n");
+  //fprintf(stdout,"trying to copy algorithm identifiers\n");
   copy_casn(&certp->algorithm.self, &issuer.toBeSigned.signature.self);
   copy_casn(&ctftbsp->signature.self, &issuer.toBeSigned.signature.self);
-  fprintf(stdout,"copied algorithm identifiers\n");
+  //fprintf(stdout,"copied algorithm identifiers\n");
 
   // copy subject name from issuer cert into issuer name in cert if issuer name
   // not filled in.
   copy_casn(&ctftbsp->issuer.self, &issuer.toBeSigned.subject.self);
-  fprintf(stdout,"copied issuer name\n");
+  //fprintf(stdout,"copied issuer name\n");
 
   // if aki extension of certificate is empty, use ski from issuer's cert
   if (!(cextp = findExtension(&ctftbsp->extensions, id_authKeyId)))
     {
-      fprintf(stdout,"coping ski as aki\n");
+      //fprintf(stdout,"coping ski as aki\n");
       if ((iextp = findExtension(&ctftbsp->extensions, id_subjectKeyIdentifier)))
 	{
 	  cextp = makeExtension(&ctftbsp->extensions, id_authKeyId);
 	  copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
 		    &iextp->extnValue.subjectKeyIdentifier);
 	}
-      fprintf(stdout,"done\n");
+      //fprintf(stdout,"done\n");
     }
   return (SUCCESS);
 
@@ -288,7 +288,7 @@ int write_serialNum(void *cert, void *val)
   struct CertificateToBeSigned *tbs=&((struct Certificate *)cert)->toBeSigned;
 
   snum = atoi(val);
-  fprintf(stdout, "Writing Serial Number %d to Certificate\n",snum);
+  //fprintf(stdout, "Writing Serial Number %d to Certificate\n",snum);
 
   if (write_casn_num(&tbs->serialNumber, snum) < 0)
     return -1;
@@ -349,7 +349,7 @@ int write_issuer_name(void *cert, void *val)
 
   clear_casn(&tbs->issuer.self);
   sn = strchr(val,token);
-  fprintf(stdout, "Writing Issuer Name %s to Certificate\n",(char *)val );
+  //fprintf(stdout, "Writing Issuer Name %s to Certificate\n",(char *)val );
 
   rdnsp = (struct RDNSequence *)&tbs->issuer.rDNSequence;
 
@@ -438,7 +438,7 @@ int write_notBefore_time(void *cert, void *val)
   if (val == NULL)
     return -1;
 
-  fprintf(stdout, "Not Before is %s\n", (char *)val);
+  //fprintf(stdout, "Not Before is %s\n", (char *)val);
   len = strlen(val);
 
   if (len == utclen)
@@ -469,7 +469,7 @@ int write_notAfter_time(void *cert, void *val)
   if (val == NULL)
     return -1;
 
-  fprintf(stdout, "Not After is %s\n", (char *)val);
+  //fprintf(stdout, "Not After is %s\n", (char *)val);
   len = strlen(val);
 
   if (len == utclen)
@@ -523,7 +523,7 @@ int write_cert_pubkey(void *cert, void *val)
   pExp+=2; 
 
   exp_len = strlen(pExp);
-  fprintf(stdout, "exponent is: %s, len is %d\n", pExp, exp_len);
+  //fprintf(stdout, "exponent is: %s, len is %d\n", pExp, exp_len);
 
   mkey = calloc(mod_len/2 + 1, sizeof(char));
   ekey = calloc(exp_len/2 + 1, sizeof(char));
@@ -544,7 +544,7 @@ int write_cert_pubkey(void *cert, void *val)
       free(ekey);
       return -1;
     }
-  fprintf(stdout, "bytes written are %d\n", bytes_written);  
+  //fprintf(stdout, "bytes written are %d\n", bytes_written);  
   if (write_casn(&rpk.exponent, ekey, bytes_written) < 0)
     {
       free(ekey);

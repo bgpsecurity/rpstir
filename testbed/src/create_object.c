@@ -270,11 +270,11 @@ int main(int argc, char **argv)
     
   if (configFile != NULL)
     {  
-      fprintf(stdout, "Config file is %s\n", configFile);
+      //fprintf(stdout, "Config file is %s\n", configFile);
       index = 3;
     }
   else
-      fprintf(stdout, "No Config file\n");
+    fprintf(stdout, "No Config file\n");
 
   obj_type = argv[index++];
   if (obj_type == NULL)
@@ -304,7 +304,7 @@ int main(int argc, char **argv)
 	exit(INPUT_ARG_ERR);
 
       ret = create_cert(table);
-      fprintf(stdout,"return from creating certificate %d\n", ret);
+      //fprintf(stdout,"return from creating certificate %d\n", ret);
     }
   else if (strncasecmp(obj_type,"CRL", strlen("CRL")) == 0)
     {
