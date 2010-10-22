@@ -217,7 +217,7 @@ int write_ipv6(void* my_var, void* value)
 // to functions that deal with them
 struct object_field roa_field_table[] = 
   {
-    {"subjfile",TEXT,NULL,REQUIRED,NULL},
+    {"outputfilename",TEXT,NULL,REQUIRED,NULL},
     {"asID",INTEGER,NULL,OPTIONAL,write_asID},
     {"ipv4",TEXT,NULL,OPTIONAL,write_ipv4},
     {"ipv6",TEXT,NULL,OPTIONAL,write_ipv6},

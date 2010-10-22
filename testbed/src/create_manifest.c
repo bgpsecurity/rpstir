@@ -186,7 +186,7 @@ int write_fileList(void* man, void* value)
 // options to a manifest
 struct object_field manifest_field_table[] = 
   {
-    {"subjfile", TEXT, NULL, REQUIRED, NULL},        // output filename for the manifest
+    {"outputfilename", TEXT, NULL, REQUIRED, NULL},        // output filename for the manifest
     {"manNum",INTEGER, 0, OPTIONAL, write_manNum},            // sequence number
     {"thisUpdate", TEXT, NULL,OPTIONAL, write_thisUpdate},
     {"nextUpdate", TEXT, NULL,OPTIONAL, write_nextUpdate},
