@@ -297,7 +297,8 @@ int infer_filetype(char *fname)
     typ += OT_CRL;
   if ( strstr(fname, ".roa") != NULL )
     typ += OT_ROA;
-  if ( strstr(fname, ".man") != NULL  || strstr(fname, ".mft") != NULL)
+  if ( strstr(fname, ".man") != NULL  || strstr(fname, ".mft") != NULL ||
+    strstr(fname, ".mnf"))
     typ += OT_MAN;
   if ( strstr(fname, ".rta") != NULL) typ += OT_RTA;
   if ( typ < OT_UNKNOWN || typ > OT_MAXBASIC )

@@ -438,7 +438,9 @@ static int printUsage()
 static void setObjectType (char *aType)
 {
   objectType = aType;
-  if (!strcasecmp(objectType, "man")) objectType = "manifest";
+  if (!strcasecmp(objectType, "man") ||
+      !strcasecmp(objectType, "mft") ||
+      !strcasecmp(objectType, "mnf")) objectType = "manifest";
   isROA = (strcasecmp (objectType, "roa") == 0);
   isCRL = (strcasecmp (objectType, "crl") == 0);
   isCert = (strcasecmp (objectType, "cert") == 0);

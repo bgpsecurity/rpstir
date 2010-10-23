@@ -71,7 +71,8 @@ static int isManifest(char *namep)
   {
   int ret = 0;
   char *down = downcase(namep);
-  if (strstr(down, ".man") || strstr(down, ".mft") || strstr(down, "manifest"))
+  if (strstr(down, ".man") || strstr(down, ".mft") || 
+    strstr(down, "manifest") || strstr(down, ".mfn"))
     ret = 1;
   free(down);
   return (ret);
