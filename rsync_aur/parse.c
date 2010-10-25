@@ -705,7 +705,7 @@ has_Correct_Extension(char *str, unsigned int len)
     if ( strncasecmp(hold, "mft", 3) == 0)
       return (TRUE);
 
-    if ( strncasecmp(hold, "mfn", 3) == 0)
+    if ( strncasecmp(hold, "mnf", 3) == 0)
       return (TRUE);
   }                                                           
                                                               
