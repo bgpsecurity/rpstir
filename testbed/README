@@ -84,8 +84,15 @@ specified:
 * sia=[comma-separated ASCII strings] - Subject Information Access.
   This represents several URIs which represent different ways of
   accessing the same directory of objects issued by this CA.  Commas
-  are disallowed in the URIs.
-  http://tools.ietf.org/html/draft-ietf-sidr-res-certs-18#section-4.9.8
+  are disallowed in the URIs.  Three different accessMethod OIDs are
+  allowed, depending on the type of certificate:
+    . id-ad-caRepository - indicated by ASCII string "r:<URI>"
+    . id-ad-signedObject - indicated by ASCII string "s:<URI>"
+    . id-ad-rpkiManifest - indicated by ASCII string "m:<URI>"
+  For example, "r:rsync://foo.com/mydir/,m:rsync://foo.com/mydir/manifest.mft".
+  We intentionally do not support multi-use EE's, which would use an
+  accessMethod of id-ad-signedObjectRepository.  See
+  http://tools.ietf.org/html/draft-ietf-sidr-res-certs-19#section-4.9.8
 
 * ipv4=[comma-separated strings] - IPv4 Resources.  Each item will be
   either a prefix or a dash-separated range: e.g. "1.0.0.0/8" or
