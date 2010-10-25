@@ -87,7 +87,7 @@ def configuration_parser(factory_dict,fileName):
                                         MAX_DEPTH=config.getint(section,opt)
                                 elif opt == 'max_nodes':
                                         MAX_OPTS=config.getint(section,opt)
-                                e\lse:
+                                else:
                                         print 'Opt in config file not recognized: %s' % (opt)
 
                                 f = Factory(bluePrintName=section, ipv4List=ipv4,
@@ -105,11 +105,14 @@ def configuration_parser(factory_dict,fileName):
 #Main create driver function used for creating directories and building them
 #into a fully functioning repository
 def create_driver(iana):
+
+	#create our CA queue with no limit and place iana in it
 	ca_queue = Queue(0)
 	ca_queue.put(iana)
-	
+	#locals to keep track of where we are in creation
 	repo_depth = 0
 	repo_size = 1
+	
 	#check our conditionals
 	while(not(ca_queue.empty()) and MAX_DEPTH > repo_depth and MAX_NODES > repo_size):
 		ca_node = ca_queue.get()
@@ -118,7 +121,10 @@ def create_driver(iana):
 		#roa_list
 		#crl_list
 		#manifest_list
-		ca_queue.append(child_list)
+		
+		#Add all of our children to the queue of CAs
+		for child in child_list:
+			ca_queue.put(child)
 
 
 
@@ -131,5 +137,6 @@ def create_children(ca_node):
 	return child_list
 	
 	
-#configuration_parser(FACTORIES)
+configuration_parser(FACTORIES)
+
 
