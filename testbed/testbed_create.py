@@ -87,7 +87,7 @@ def configuration_parser(factory_dict,fileName):
                                         MAX_DEPTH=config.getint(section,opt)
                                 elif opt == 'max_nodes':
                                         MAX_OPTS=config.getint(section,opt)
-                                else:
+                                e\lse:
                                         print 'Opt in config file not recognized: %s' % (opt)
 
                                 f = Factory(bluePrintName=section, ipv4List=ipv4,
@@ -127,7 +127,6 @@ def create_driver(iana):
 			ca_queue.put(child)
 
 
-
 def create_children(ca_node):
 	child_list = []
 	list = FACTORIES[ca_node.bluePrintName].childSpec
@@ -137,6 +136,23 @@ def create_children(ca_node):
 	return child_list
 	
 	
-configuration_parser(FACTORIES)
+#
+# A testing function to help determine if above classes
+#   and functionality is correctly working
+#
+def main():
+        fileName = 'test.ini'
+
+        print FACTORIES
+
+        configuration_parser(FACTORIES,fileName)
+
+        print FACTORIES
+        print FACTORIES['AFRINIC'].ipv4List
+        print FACTORIES['APNIC'].childSpec
 
 
+#Fire off the test
+if __name__ == '__main__':
+    main()
+    
