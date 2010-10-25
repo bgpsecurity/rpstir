@@ -87,7 +87,7 @@ def configuration_parser(factory_dict,fileName):
                                         MAX_DEPTH=config.getint(section,opt)
                                 elif opt == 'max_nodes':
                                         MAX_OPTS=config.getint(section,opt)
-                                e\lse:
+                                else:
                                         print 'Opt in config file not recognized: %s' % (opt)
 
                                 f = Factory(bluePrintName=section, ipv4List=ipv4,
