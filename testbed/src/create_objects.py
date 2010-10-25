@@ -18,7 +18,8 @@
 #  * ***** END LICENSE BLOCK ***** */
 
 import datetime, os, sys
-
+from subprocess import Popen
+import subprocess
 
 #
 # This is a utility function that will write the configuration file
@@ -69,7 +70,19 @@ def writeConfig(obj):
 def create_binary(obj, xargs):
     s = './create_object -f %s.cfg ' % obj.outputfilename
     s += xargs
-    os.system(s)    
+    os.system(s)
+
+#
+# Calls the gen_hash C executable and grabs the STDOUT from it
+#  and returns it as the SKI
+#
+# Author: Brenton Kohler
+#
+def generate_ski(filename):
+    s = "./gen_hash -f %s" % filename
+    p = Popen(s, shell=True, stdout=subprocess.PIPE)
+    stdout = p.communicate()[0]
+    return stdout
 
 
 #
