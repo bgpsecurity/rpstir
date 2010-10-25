@@ -47,7 +47,7 @@ class Factory:
 		#return CA_object(parent,self)
 		
 class Resource_Block:
-	def __init__(allocated = false, range, ca_name, block_id= 0):
+	def __init__(self, allocated = false, range, ca_name, block_id= 0):
 		self.allocated = allocated
 		#integer tuple
 		self.range = range
@@ -72,6 +72,8 @@ class CA_Object:
 		self.roas = []
 		self.crl = []
 		
+		#generate our key file
+		command_string = "./gen_key"
 		#self.keys = generateKeys()
 		try:
 			#tuple of type(ipv4 netaddr, ipv6 netaddr, as_nums(start,end))
@@ -88,7 +90,7 @@ class CA_Object:
 			pass
 			self.SIA = parent.SIA + "/" + commonName
 
-		#self.certificate = CA_Cert(...)
+		self.certificate = CA_Cert(parent.getNextChildSN(),  )
 		#self.path_CA_CERT = parent.SIA+"/"+myfilename
 		#self.path_URI_CRLDP =
 		
