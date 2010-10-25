@@ -15,7 +15,7 @@
 #  Contributor(s):  Brenton Kohler
 # 
 # ***** END LICENSE BLOCK *****
-bin_PROGRAMS = create_object
+bin_PROGRAMS = create_object gen_hash
 
 AM_CFLAGS = -DDEBUG -I$(CLINCLUDES) -g -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn -Wall 
 
@@ -30,3 +30,6 @@ create_object_SOURCES = create_object.c create_object.h create_cert.h \
 
 create_object_LDFLAGS = $(LOCAL_LIBS)
 
+
+gen_hash_SOURCES = gen_hash.c
+gen_hash_LDFLAGS = $(LOCAL_LIBS)
