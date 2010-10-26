@@ -104,22 +104,7 @@ class Certificate:
         self.ipv6           = ipv6
         self.as             = as
         self.outputfilename = outputfilename
-
-    #
-    # The function to call in order to create a binary based on this
-    #  certificate object
-    #
-#     def createBinary(self):
-#         s = './create_object -f %s.cfg' % self.outputfilename
-#         name = self.__class__.__name__
-#         if name == 'SS_cert':
-#             s += ' CERTIFICATE selfsigned=true'
-#         else:
-#             s += ' CERTIFICATE selfsigned=false'
-#         #s += ' -f %s.cfg' % self.outputfilename
-#         print(s)
-#         os.system(s)
-
+        
 #
 # The CA Certificate class. Inherits from Certificate
 #
@@ -131,8 +116,9 @@ class CA_cert(Certificate):
         self.aia   = aia
         Certificate.__init__(self,serial,issuer, subject, notBefore, notAfter, aki,
                     ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
+        writeConfig(self)
+        create_binary(self, "CERTIFICATE selfsigned=False")
 
-    
 #
 # The EE certificate class. Inherits from Certificate
 #
@@ -143,6 +129,8 @@ class EE_cert(Certificate):
         self.crldp = crldp
         Certificate.__init__(self,serial,issuer, subject, notBefore, notAfter, aki,
                     ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
+        writeConfig(self)
+        create_binary(self, "CERTIFICATE selfsigned=True")
 
 #
 # The SS certificate class. Inherits from Certificate
@@ -153,6 +141,8 @@ class SS_cert(Certificate):
         self.sia = sia
         Certificate.__init__(self, serial, issuer, subject, notBefore, notAfter, aki,
                     ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
+        writeConfig(self)
+        create_binary(self, "CERTIFICATE selfsigned=False")
 
 #
 # The generic CMS class
@@ -161,7 +151,6 @@ class CMS:
     def __init__(self, EECertLocation, EEKeyLocation):
         self.EECertLocation = EECertLocation
         self.EEKeyLocation = EEKeyLocation
-
 
 #
 # The Manifest class. Inherits from CMS
@@ -176,6 +165,8 @@ class manifest(CMS):
         self.fileList       = fileList
         CMS.__init__(self, EECertLocation, EEKeyLocation)
 
+        writeConfig(self)
+        create_binary(self, "MANIFEST")
 
 #
 # The ROA class. Inherits from CMS
@@ -188,6 +179,8 @@ class roa(CMS):
         self.outputfilename = outputfilename
         CMS.__init__(self, EECertLocation, EEKeyLocation)
 
+        writeConfig(self)
+        create_binary(self, "ROA")
 
 #
 # The CRL class.
@@ -205,6 +198,9 @@ class crl:
         self.aki             = aki
         self.signatureValue  = signatureValue
         self.outputfilename  = outputfilename
+
+        writeConfig(self)
+        create_binary(self, "CRL")
 
 #
 # A testing function to help determine if above classes
@@ -272,18 +268,6 @@ def main():
                  'ca.cer',
                  'crldp',
                  'm:roa-pki://home/testdir, r:rsync://my/new/home/dir/for/ca/stuff','aia')
-
-    writeConfig(c)
-    writeConfig(ss)
-    writeConfig(ee)
-    writeConfig(ca)
-
-    create_binary(c, "CERT selfsigned=false")
-    create_binary(ss, "CERT selfsigned=true")
-    create_binary(ca, "CERT selfsigned=false")
-    create_binary(ee, "CERT selfsigned=false")
-    
-
 
 
 #Fire off the test
