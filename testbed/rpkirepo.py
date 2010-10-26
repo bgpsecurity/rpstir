@@ -20,8 +20,12 @@ from datetime import datetime
 from time import time
 import netaddr
 import base64
+import os
 
-OBJECT_PATH = "/objects"
+#Quick import hack, linked to src/create_objects
+from create_objects_ln import *
+
+OBJECT_PATH = "./objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
 
 class Factory:
@@ -69,52 +73,61 @@ class CA_Object:
 			self.nextChildSN = 0
 			self.id = 0
 			self.myFactory = myFactory
-			self.bluePrintName = myfactory
+			self.bluePrintName = myFactory.bluePrintName
 			self.parent=None
-			self.notBefore = datetime.now()
-			self.notAfter = datetime.fromtimestamp(time()+myfactory.ttl)
-			self.nickName= bluePrintName+str(id)
-			self.commonName = nickName
+			self.notBefore = datetime.datetime.now()
+			self.notAfter = datetime.datetime.fromtimestamp(time()+myFactory.ttl)
+			self.nickName= self.bluePrintName+"-"+str(self.id)
+			self.commonName = self.nickName
 			#List initialization
 			self.children = []
 			self.manifests = []
 			self.roas = []
 			self.crl = []
-			self.SIA = REPO_PATH+"/"+commonName
+			self.SIA = self.commonName
 
-			keyFileName = OBJECT_PATH+"/keys/"+SIA+"/"+nickName+".p15"
-			command_string = "../cg/tools/gen_key "+keyFileName+ " 1024"
-			#Execute the gen_key command
+			self.keyFileName = OBJECT_PATH+"/keys/"+self.SIA+"/"+self.nickName+".p15"
+			command_string = "../cg/tools/gen_key "+self.keyFileName+ " 1024"
+			print command_string
+			#Make our directory for the key and execute the gen_key command
+			#Genkey doesn't create the directory if it doesn't exist.
+			dir_path = OBJECT_PATH+"/keys/"+self.SIA
+			if not os.path.exists(dir_path):
+				os.system("mkdir "+ dir_path)
 			os.system(command_string)
-			self.ski = generate_ski(keyFileName)
-			self.aki = ski
+			
+			self.ski = generate_ski(self.keyFileName)
+			self.aki = self.ski
 			#For self signed cert we directly pass the resources, no call to parent.allocate
-			self.ResourcesOwned = (myFactory.ipv4List, myFactory.ipv6List, myFactory.asList)
-			parseResources()
+			self.ResourcesOwned = (self.myFactory.ipv4List, self.myFactory.ipv6List, self.myFactory.asList)
 			#Parse out the resources we've been allocated to blocks and strings for our certificate
 			#Create lists for our blocks for sub_allocation to child ca's.
 			self.ip4ResourcesFree = []; self.ip6ResourcesFree = [] ;self.asResourcesFree = []
-			ip4Strings = []; ip6Strings = []; asStrings = []
-			parseResources()
+			self.ip4Strings = []; self.ip6Strings = []; self.asStrings = []
+			self.parseResources()
 			#Sort of a special case, we want the top of our repository to be
-			self.path_CA_cert = REPO_PATH+"/"+base64.urlSafe_b64encode(ski)+".cer"
-			self.certificate = SS_Cert(id,commonName,commonName, notBefore,\
-					notAfter,aki,ski,keyFileName,keyFileName, ip4Strings,\
-					ip6Strings, asStrings,path_CA_Cert, "rsync://"+SIA)
-	
+			self.path_CA_cert = REPO_PATH+"/"+base64.urlsafe_b64encode(self.ski)+".cer"
+			print "Got Here about to call SS_cert constructor"	
+			print self.path_CA_cert
+			dir_path = REPO_PATH+"/"
+			if not os.path.exists(dir_path):
+				os.system("mkdir "+ dir_path)
 
+			self.certificate = SS_cert(self.id,self.commonName,self.commonName, self.notBefore,\
+					self.notAfter,self.aki,self.ski,self.keyFileName,self.keyFileName, self.ip4Strings,\
+					self.ip6Strings, self.asStrings,self.path_CA_cert, "rsync://"+REPO_PATH+"/"+self.SIA)
+			return
 			
-	
-		
+		#If this isn't a trust anchor.
 		self.nextChildSN = 0
 		self.id = parent.getNextChildSN()
 		self.myFactory = myFactory
 		self.bluePrintName = myFactory.bluePrintName
 		self.parent = parent
 		self.notBefore = datetime.now()
-		self.notAfter = datetime.fromtimestamp(time()+myfactory.ttl)
-		self.nickName= bluePrintName+str(id)
-		self.commonName = parent.commonName+"."+nickName
+		self.notAfter = datetime.fromtimestamp(time()+myFactory.ttl)
+		self.nickName= self.bluePrintName+str(self.id)
+		self.commonName = parent.commonName+"."+self.nickName
 		self.aki = parent.ski
 		
 		#List initialization
@@ -124,23 +137,26 @@ class CA_Object:
 		self.crl = []
 
 		if factory.breakAway:
-			self.SIA = REPO_PATH+"/"+myFactory.serverName + "/"+nickName
+			self.SIA = self.myFactory.serverName + "/"+self.nickName
 		else:
-			self.SIA = parent.SIA + "/" +nickName
+			self.SIA = parent.SIA + "/" +self.nickName
 			
 		
 		#Generate our keyfile by creating a parallel repository for keys
 		#Keys are placed under a directory of their SIA. For example
 		#IANA's key should be in IANA/IANA.p15, APNIC's, should be in something
 		#like IANA/APNIC1/APNIC1.p15
-		keyFileName = OBJECT_PATH+"/keys/"+SIA+"/"+nickName+".p15"
-		command_string = "../cg/tools/gen_key "+keyFileName+ " 1024"
-		#Execute the gen_key command
+		self.keyFileName = OBJECT_PATH+"/keys/"+self.SIA+"/"+self.nickName+".p15"
+		command_string = "../cg/tools/gen_key "+self.keyFileName+ " 1024"
+		#Execute the gen_key command, create the directory if it needs to
+		dir_path = OBJECT_PATH+"/keys/"+self.SIA+"/"
+		if not os.path.exists(dir_path):
+			os.system("mkdir "+ dir_path)	
 		os.system(command_string)
 		
 		#set our ski based on the hash of the public key in our keyfile
 		#result from .p15-> hash(public_key) which is a hex string
-		self.ski = generate_ski(keyFileName)
+		self.ski = generate_ski(self.keyFileName)
 		
 		try:
 			#tuple of type([ipv4 netaddrs,...], [ipv6 netaddrs,...], [as_nums(start,end),...])
@@ -150,19 +166,29 @@ class CA_Object:
 
 		self.AIA = parent.path_CA_cert
 		#crlfileName.... computed by B64(parent.ski)
-		self.CRLDP = parent.SIA+"/"+base64.urlSafe_b64encode(parent.ski)+".crl"
-		self.path_CA_cert = parent.SIA+"/"+base64.urlSafe_b64encode(ski)+".cer"  
+		self.CRLDP = REPO_PATH+"/"+parent.SIA+"/"+base64.urlsafe_b64encode(parent.ski)+".crl"
+		self.path_CA_cert = REPO_PATH+"/"+parent.SIA+"/"+base64.urlsafe_b64encode(self.ski)+".cer"
+		
+		#Check if the directory is create yet for our Certificate
+		#If it's not made make it. Since cert tools won't create dirs
+		dir_path= REPO_PATH+"/"+parent.SIA+"/"
+		if not os.path.exists(dir_path):
+			os.system("mkdir "+dir_path)
 		
 		#Parse out the resources we've been allocated to blocks and strings for our certificate
 		#Create lists for our blocks for sub_allocation to child ca's.
 		self.ip4ResourcesFree = []; self.ip6ResourcesFree = [] ;self.asResourcesFree = []
-		ip4Strings = []; ip6Strings = []; asStrings = []
-		parseResources()
-			
-		self.certificate = CA_Cert(id,parent.commonName, \
-				commonName, notBefore,notAfter,aki,ski,keyFileName, \
-				parent.keyFileName, ip4Strings, ip6Strings, asStrings, \
-				path_CA_Cert, "rsync://"+CRLDP,"rsync://"+SIA,"rsync://"+AIA)
+		self.ip4Strings = []; self.ip6Strings = []; self.asStrings = []
+		self.parseResources()
+
+		print "about to create" + self.path_CA_cert
+		
+		self.certificate = CA_cert(self.id,parent.commonName, \
+				self.commonName, self.notBefore,self.notAfter,\
+				self.aki,self.ski,self.keyFileName, parent.keyFileName,\
+				self.ip4Strings, self.ip6Strings, self.asStrings, \
+				self.path_CA_cert, "rsync://"+self.CRLDP,\
+				"rsync://"+REPO_PATH+"/"+self.SIA,"rsync://"+self.AIA)
 	
 		
 	def parseResources(self):
