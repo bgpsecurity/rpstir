@@ -93,7 +93,7 @@ class CA_Object:
 			#Genkey doesn't create the directory if it doesn't exist.
 			dir_path = OBJECT_PATH+"/keys/"+self.SIA
 			if not os.path.exists(dir_path):
-				os.system("mkdir "+ dir_path)
+				os.system("mkdir -p "+ dir_path)
 			os.system(command_string)
 			
 			self.ski = generate_ski(self.keyFileName)
@@ -111,7 +111,7 @@ class CA_Object:
 			print self.path_CA_cert
 			dir_path = REPO_PATH+"/"
 			if not os.path.exists(dir_path):
-				os.system("mkdir "+ dir_path)
+				os.system("mkdir -p "+ dir_path)
 
 			self.certificate = SS_cert(self.id,self.commonName,self.commonName, self.notBefore,\
 					self.notAfter,self.aki,self.ski,self.keyFileName,self.keyFileName, self.ip4Strings,\
@@ -151,7 +151,7 @@ class CA_Object:
 		#Execute the gen_key command, create the directory if it needs to
 		dir_path = OBJECT_PATH+"/keys/"+self.SIA+"/"
 		if not os.path.exists(dir_path):
-			os.system("mkdir "+ dir_path)	
+			os.system("mkdir -p "+ dir_path)	
 		os.system(command_string)
 		
 		#set our ski based on the hash of the public key in our keyfile
@@ -173,7 +173,7 @@ class CA_Object:
 		#If it's not made make it. Since cert tools won't create dirs
 		dir_path= REPO_PATH+"/"+parent.SIA+"/"
 		if not os.path.exists(dir_path):
-			os.system("mkdir "+dir_path)
+			os.system("mkdir -p "+dir_path)
 		
 		#Parse out the resources we've been allocated to blocks and strings for our certificate
 		#Create lists for our blocks for sub_allocation to child ca's.
