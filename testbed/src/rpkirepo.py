@@ -52,7 +52,7 @@ class Factory:
 		
 	def create(self, parent):
 		print "creating a CA_object as specified by "+ self.bluePrintName
-		#return CA_object(parent,self)
+		return CA_Object(self,parent)
 		
 class Resource_Block:
 	def __init__(self, range, ca_name, block_id= 0, allocated=False):
@@ -125,8 +125,8 @@ class CA_Object:
 		self.myFactory = myFactory
 		self.bluePrintName = myFactory.bluePrintName
 		self.parent = parent
-		self.notBefore = datetime.now()
-		self.notAfter = datetime.fromtimestamp(time()+myFactory.ttl)
+		self.notBefore = datetime.datetime.now()
+		self.notAfter = datetime.datetime.fromtimestamp(time()+myFactory.ttl)
 		self.nickName= self.bluePrintName+str(self.id)
 		self.commonName = parent.commonName+"."+self.nickName
 		self.aki = parent.ski
@@ -136,8 +136,9 @@ class CA_Object:
 		self.manifests = []
 		self.roas = []
 		self.crl = []
-
-		if factory.breakAway:
+		print "$$$$$$$$$$$$$$$$$$$$$$$$$"+myFactory.breakAway
+		if myFactory.breakAway:
+			print "Somehow executing this crap"
 			self.SIA = self.myFactory.serverName + "/"+self.nickName
 		else:
 			self.SIA = parent.SIA + "/" +self.nickName
@@ -158,7 +159,9 @@ class CA_Object:
 		#set our ski based on the hash of the public key in our keyfile
 		#result from .p15-> hash(public_key) which is a hex string
 		self.ski = generate_ski(self.keyFileName)
-		
+
+		#Initialize ResourcesOwned and then try to allocate resources in our Parent
+		self.ResourcesOwned = []
 		try:
 			#tuple of type([ipv4 netaddrs,...], [ipv6 netaddrs,...], [as_nums(start,end),...])
 			self.ResourcesOwned = parent.allocate(myFactory.ipv4List, myFactory.ipv6List, myFactory.asList)
@@ -193,7 +196,7 @@ class CA_Object:
 	
 		
 	def parseResources(self):
-		#IPV4
+		#IPV4 
 		for ipRange in self.ResourcesOwned[0]:
 			#Put the netaddr into a block and add it to our list of free resources
 			self.ip4ResourcesFree.append(Resource_Block(ipRange, self.commonName))
@@ -218,12 +221,13 @@ class CA_Object:
 		return [(0,1)]
 	
 	def allocate(self, ipv4List, ipv6List, asList):
-		return(suballocateIP4(ipv4List),suballocateIP6(ipv6List),suballocateAS(asList))
+		return (self.subAllocateIP4(ipv4List),self.subAllocateIP6(ipv6List),self.subAllocateAS(asList))
+		
 		
 	
 	def getNextChildSN(self):
-		nextChild = nextChildSN
-		nextChildSN += 1
+		nextChild = self.nextChildSN
+		self.nextChildSN += 1
 		return nextChild
 		
 		

@@ -128,11 +128,13 @@ def create_driver(iana):
 
 
 def create_children(ca_node):
+	print "creating my children"
 	child_list = []
+	print ca_node.bluePrintName
 	list = FACTORIES[ca_node.bluePrintName].childSpec
 	for ca_def in list:
 		for n in range(0,ca_def[1]):
-			child_list.append(factories[ca_def[0]].create(ca_node))
+			child_list.append(FACTORIES[ca_def[0]].create(ca_node))
 	return child_list
 	
 	
@@ -155,6 +157,7 @@ def main():
         FACTORIES['IANA'].asList = [(0,1)]
         print FACTORIES['IANA'].ipv4List
         iana = CA_Object(FACTORIES['IANA'])
+        create_driver(iana)
 		
 #Fire off the test
 if __name__ == '__main__':
