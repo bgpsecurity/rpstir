@@ -42,6 +42,7 @@ static int maxURIs = 4096;
 static int numURIs = 0;
 static char *prevTimestamp;
 static char *currTimestamp;
+static int verbose = 0;
 
 /*
  * return true if str2 is a subdirectory of or file in directory str1
@@ -188,6 +189,8 @@ static int handleAIAResults (scmcon *conp, scmsrcha *s, int numLine)
 	    SCM_SRCH_DOVALUE_ALWAYS, NULL);
   if (parentCount == 0) {
     addURIIfUnique ((char *) s->vec[1].valptr);
+    if (verbose)
+      printf("AIA: %s\n", (char *) s->vec[1].valptr);
   }
   return 0;
 }
@@ -207,13 +210,15 @@ static int handleCRLDPResults (scmcon *conp, scmsrcha *s, int numLine)
   while ( oneres != NULL && oneres[0] != 0 )
     {
       addURIIfUnique(oneres);
+      if (verbose)
+	printf("CRLDP: %s\n", oneres);
       oneres = strtok(NULL, ";");
     }
   return 0;
 }
 
 /* callback function for searchscm that accumulates the sia's */
-static int handleTASIAResults (scmcon *conp, scmsrcha *s, int numLine)
+static int handleSIAResults (scmcon *conp, scmsrcha *s, int numLine)
 {
   char *res;
   char *oneres;
@@ -224,6 +229,8 @@ static int handleTASIAResults (scmcon *conp, scmsrcha *s, int numLine)
   while( oneres != NULL && oneres[0] != 0)
     {
       addURIIfUnique (oneres);
+      if (verbose)
+	printf("SIA: %s\n", oneres);
       oneres = strtok(NULL, ";");
     }
   return 0;
@@ -244,8 +251,10 @@ static int printUsage()
   fprintf(stderr, "  -p portno   connect to port number (default=RPKI_PORT)\n");
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
   fprintf(stderr, "  -d dirname  rsync executable directory (default=RPKI_ROOT)\n");
-  fprintf(stderr, "  -n          don't execute, just print what would have done\n");
+  fprintf(stderr, "  -n          don't execute rsync, just print what would have done\n");
   fprintf(stderr, "  -t          run by grabbing only Trust Anchor URIs from the database\n");
+  fprintf(stderr, "  -s          chase all SIA values\n");
+  fprintf(stderr, "  -v          verbose\n");
   fprintf(stderr, "  -h          this help listing\n");
   return 1;
 }
@@ -265,6 +274,7 @@ int main(int argc, char **argv)
   int      tcount = 0;
   int      noExecute = 0;
   int      taOnly = 0;
+  int      chaseSIA = 1;
   char     dirs[50][120], str[180], *str2;
   char     *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
   char     rsyncDir[200];
@@ -291,7 +301,7 @@ int main(int argc, char **argv)
   (void) setbuf (stdout, NULL);
 
   // parse the command-line flags
-  while ((ch = getopt(argc, argv, "f:p:d:nth")) != -1) {
+  while ((ch = getopt(argc, argv, "f:p:d:nthv")) != -1) {
     switch (ch) {
       case 'f':   /* configuration file */
 	origFile = strdup (optarg);
@@ -307,6 +317,9 @@ int main(int argc, char **argv)
 	break;
       case 't':   /* no execution */
 	taOnly = 1;
+	break;
+      case 'v':   /* verbose */
+	verbose = 1;
 	break;
       case 'h':   /* help */
       default:
@@ -394,6 +407,26 @@ int main(int argc, char **argv)
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
   free (srch1[0].valptr);
   free (srch1[1].valptr);
+
+  // add sia field (command line option)
+  if (chaseSIA)
+    {
+      srch.nused = 0;
+      srch.vald = 0;
+      msg[0] = 0;
+      srch.where = NULL;
+      srch.wherestr = NULL;
+      addcolsrchscm(&srch, "sia", SQL_C_CHAR, SIASIZE);
+      status = searchscm (connect, table, &srch, NULL, handleSIAResults,
+			  SCM_SRCH_DOVALUE_ALWAYS, NULL);
+      if (status != ERR_SCM_NOERR) {
+	fprintf(stderr, "Error chasing SIAs: %s (%d)\n",
+		err2string(status),
+		status);
+      }
+      free(srch1[0].valptr);
+    }
+  
   }//this ends the normal operation
   else
   {
@@ -405,7 +438,7 @@ int main(int argc, char **argv)
 	snprintf (msg, sizeof(msg),"((flags%%%d)>=%d)",2*SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
 	srch.wherestr = msg;
 	addcolsrchscm (&srch, "sia", SQL_C_CHAR, SIASIZE);
-	status = searchscm (connect, table, &srch, NULL, handleTASIAResults,
+	status = searchscm (connect, table, &srch, NULL, handleSIAResults,
 					SCM_SRCH_DOVALUE_ALWAYS, NULL);
 	free (srch1[0].valptr);
   }
