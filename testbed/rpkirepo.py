@@ -113,9 +113,10 @@ class CA_Object:
 			if not os.path.exists(dir_path):
 				os.system("mkdir -p "+ dir_path)
 
+			print self.commonName
 			self.certificate = SS_cert(self.id,self.commonName,self.commonName, self.notBefore,\
 					self.notAfter,self.aki,self.ski,self.keyFileName,self.keyFileName, self.ip4Strings,\
-					self.ip6Strings, self.asStrings,self.path_CA_cert, "rsync://"+REPO_PATH+"/"+self.SIA)
+					self.ip6Strings, self.asStrings,self.path_CA_cert, "r:rsync://"+REPO_PATH+"/"+self.SIA)
 			return
 			
 		#If this isn't a trust anchor.
@@ -187,8 +188,8 @@ class CA_Object:
 				self.commonName, self.notBefore,self.notAfter,\
 				self.aki,self.ski,self.keyFileName, parent.keyFileName,\
 				self.ip4Strings, self.ip6Strings, self.asStrings, \
-				self.path_CA_cert, "rsync://"+self.CRLDP,\
-				"rsync://"+REPO_PATH+"/"+self.SIA,"rsync://"+self.AIA)
+				self.path_CA_cert, "r:rsync://"+self.CRLDP,\
+				"r:rsync://"+REPO_PATH+"/"+self.SIA,"r:rsync://"+self.AIA)
 	
 		
 	def parseResources(self):
