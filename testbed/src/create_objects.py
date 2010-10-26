@@ -130,7 +130,7 @@ class EE_cert(Certificate):
         Certificate.__init__(self,serial,issuer, subject, notBefore, notAfter, aki,
                     ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
         writeConfig(self)
-        create_binary(self, "CERTIFICATE selfsigned=True")
+        create_binary(self, "CERTIFICATE selfsigned=False")
 
 #
 # The SS certificate class. Inherits from Certificate
@@ -142,7 +142,7 @@ class SS_cert(Certificate):
         Certificate.__init__(self, serial, issuer, subject, notBefore, notAfter, aki,
                     ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
         writeConfig(self)
-        create_binary(self, "CERTIFICATE selfsigned=False")
+        create_binary(self, "CERTIFICATE selfsigned=True")
 
 #
 # The generic CMS class
