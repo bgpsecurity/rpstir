@@ -138,7 +138,7 @@ def create_children(ca_node):
 	
 #
 # A testing function to help determine if above classes
-#   and functionality is correctly working
+#   and functionality is correctly working. SPACED not TABBED function
 #
 def main():
         fileName = 'test.ini'
@@ -150,8 +150,12 @@ def main():
         print FACTORIES
         print FACTORIES['AFRINIC'].ipv4List
         print FACTORIES['APNIC'].childSpec
-
-
+        FACTORIES['IANA'].ipv4List = [netaddr.IPRange("0.0.0.0","0.0.0.255")]
+        FACTORIES['IANA'].ipv6List = [netaddr.IPRange("1::0","255::0")]
+        FACTORIES['IANA'].asList = [(0,1)]
+        print FACTORIES['IANA'].ipv4List
+        iana = CA_Object(FACTORIES['IANA'])
+		
 #Fire off the test
 if __name__ == '__main__':
     main()
