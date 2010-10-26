@@ -47,12 +47,16 @@ def writeConfig(obj):
         if val is not None:
             if member == 'issuer' or member == 'subject':
                 #deal with the issuer and subject name
-                if val[1] is not None:
-                    fileBuf += '%s=%s%%%s\n' % (member, val[0],val[1])
+                try:
+                    name,ser = val.split('%')
+                except ValueError:
+                    ser = None
+                if ser is not None:
+                    fileBuf += '%s=%s%%%s\n' % (member, name,ser)
                 else:
-                    fileBuf += '%s=%s\n' % (member, val[0])
+                    fileBuf += '%s=%s\n' % (member, val)
             
-            elif member == 'ipv4' or member == 'ipv6':
+            elif member == 'ipv4' or member == 'ipv6' or member == 'as':
                 fileBuf += '%s=%s\n' % (member,",".join(val))
             elif member == 'notBefore' or member == 'notAfter':
                 fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
