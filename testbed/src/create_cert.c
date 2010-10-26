@@ -33,8 +33,8 @@
 #include "create_object.h"
 #include "obj_err.h"
 
-char *cacert_template = "templates/ca_template.cer";
-char *eecert_template = "templates/ee_template.cer";
+char *cacert_template = "../templates/ca_template.cer";
+char *eecert_template = "../templates/ee_template.cer";
 int eecert = 0; // either EE or CA
 int selfSigned = 0; // defaults to not self signed
 
