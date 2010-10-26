@@ -68,7 +68,7 @@ def writeConfig(obj):
 # This is a generic function that calls create_object
 #
 def create_binary(obj, xargs):
-    s = './create_object -f %s.cfg ' % obj.outputfilename
+    s = './src/create_object -f %s.cfg ' % obj.outputfilename
     s += xargs
     os.system(s)
 
@@ -79,7 +79,7 @@ def create_binary(obj, xargs):
 # Author: Brenton Kohler
 #
 def generate_ski(filename):
-    s = "./gen_hash -f %s" % filename
+    s = "./src/gen_hash -f %s" % filename
     p = Popen(s, shell=True, stdout=subprocess.PIPE)
     stdout = p.communicate()[0]
     return stdout
