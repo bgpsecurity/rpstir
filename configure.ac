@@ -105,16 +105,16 @@ AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
 ])
+AC_SEARCH_LIBS([SQLConnect],[odbc odbcinst],[],[
+	echo "Error: unixODBC is required for building this project"
+	exit -1;
+])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
 	echo "Error: cryptlib is required for building this project"
 	exit -1;
 ])
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
 	echo "Error: openSSL is required for building this project"
-	exit -1;
-])
-AC_SEARCH_LIBS([SQLConnect],[odbc odbcinst],[],[
-	echo "Error: unixODBC is required for building this project"
 	exit -1;
 ])
 
@@ -160,5 +160,7 @@ AC_CONFIG_FILES([Makefile
                  rsync_aur/Makefile
                  server/Makefile
                  testcases/Makefile
+		 testbed/Makefile
+		 testbed/src/Makefile
 ])
 AC_OUTPUT
