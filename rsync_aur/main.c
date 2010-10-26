@@ -406,6 +406,7 @@ int main(int argc, char *argv[])
   /* close descriptors etc. */
   if (wport.protocol != LOCAL) {
     close(wport.out_desc);
+    fprintf(stderr, "closed the descriptor %d\n", wport.out_desc);
   }
   return(0);
 }

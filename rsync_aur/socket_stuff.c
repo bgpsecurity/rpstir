@@ -137,6 +137,7 @@ outputMsg(struct write_port *wport, char *str, unsigned int len)
   int ret;
 
   (void)printf("Sending %s", str);
+  (void)fflush(stdout);
   if (wport->protocol == LOCAL) {
     ret = write(wport->out_desc, (const void *)str, len);
     return(ret);

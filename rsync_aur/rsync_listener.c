@@ -166,6 +166,8 @@ int main (int argc, char *argv [])
 					fprintf(listener_log,"%s", path);
 				}
 				status = pclose(fp);
+				fprintf(listener_log, "Process ended with termination status %d (command = %s)\n", status, command);
+				fflush(listener_log);
 			}
 		}
 		/*Clean up and log some stuff if needed*/
@@ -213,7 +215,7 @@ void *recv_rsync_conns()
 
 		rio_readinitb(&rio, connfd);
 		rio_readlineb(&rio, payload, MAXREAD);
-		fprintf(listener_log,"# From rsync_cord: %s\n",payload);;
+		fprintf(listener_log,"# From rsync_cord: %s\n",payload);
 		/*Setup our rsync_node, queue it up, then signal the
 		  parser to wake up because there is work for it*/
 		new_node->payload = payload;
