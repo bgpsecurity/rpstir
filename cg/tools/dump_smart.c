@@ -72,7 +72,8 @@ int main(int argc, char ** argv)
     free(buf);
     delete_casn(&crl.self);
     }
-  else if (!strcmp(p, ".man") || !strcmp(p, ".roa") || !strcmp(p, ".rta"))
+  else if (!strcmp(p, ".man") || !strcmp(p, ".mft") || !strcmp(p, ".mnf") || 
+    !strcmp(p, ".roa") || !strcmp(p, ".rta"))
     {
     ROA(&roa, (ushort)0);
     if (get_casn_file(&roa.self, argv[1], 0) < 0) 
