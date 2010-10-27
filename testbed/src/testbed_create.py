@@ -23,9 +23,10 @@ from Queue import Queue
 from rpkirepo import *
 import ConfigParser
 
-#Globals for repository
-MAX_DEPTH = 1
-MAX_NODES = 10
+#Globals for repository specified by configuration file
+#These are set once while parsing the .ini
+MAX_DEPTH = None
+MAX_NODES = None
 FACTORIES = {}
 
 #
@@ -85,9 +86,11 @@ def configuration_parser(factory_dict,fileName):
                                 elif opt == 'ttl':
                                         t = config.getint(section,opt)
                                 elif opt == 'max_depth':
-                                        MAX_DEPTH=config.getint(section,opt)
+                                        global MAX_DEPTH
+                                        MAX_DEPTH = config.getint(section,opt)
                                 elif opt == 'max_nodes':
-                                        MAX_OPTS=config.getint(section,opt)
+                                        global MAX_NODES
+                                        MAX_NODES=config.getint(section,opt)
                                 else:
                                         print 'Opt in config file not recognized: %s' % (opt)
 
@@ -134,7 +137,7 @@ def create_driver(iana):
 				#continue onto the next node in the queue
 				continue
 			
-		child(_list, repo_size = create_children(ca_node,repo_size)
+		child_list, repo_size = create_children(ca_node,repo_size)
 		ca_node.children = child_list
 		#roa_list
 		#crl_list
@@ -150,7 +153,6 @@ def create_driver(iana):
 
 
 def create_children(ca_node, repo_size):
-	print "creating my children"
 	child_list = []
 	print ca_node.bluePrintName
 	list = FACTORIES[ca_node.bluePrintName].childSpec
@@ -159,6 +161,7 @@ def create_children(ca_node, repo_size):
 			if MAX_NODES > repo_size:
 				child_list.append(FACTORIES[ca_def[0]].create(ca_node))
 				repo_size+=1
+				print repo_size
 			else:
 				return (child_list, repo_size)	
 

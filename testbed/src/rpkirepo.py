@@ -27,7 +27,7 @@ from create_objects import *
 
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
-
+DEBUG_ON = False
 class Factory:
 	def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [],\
 			asList = [], childSpec = [()], serverName = "", breakAway = False, ttl = 0):
@@ -51,7 +51,8 @@ class Factory:
 		self.ttl = ttl
 		
 	def create(self, parent):
-		print "creating a CA_object as specified by "+ self.bluePrintName
+		if DEBUG_ON:
+			print "creating a CA_object as specified by "+ self.bluePrintName
 		return CA_Object(self,parent)
 		
 class Resource_Block:
@@ -84,11 +85,13 @@ class CA_Object:
 			self.manifests = []
 			self.roas = []
 			self.crl = []
-			self.SIA = self.commonName
+			self.SIA = self.myFactory.serverName + "/"+self.nickName
 
 			self.keyFileName = OBJECT_PATH+"/keys/"+self.SIA+"/"+self.nickName+".p15"
 			command_string = "../../cg/tools/gen_key "+self.keyFileName+ " 1024"
-			print command_string
+			if DEBUG_ON:
+				print command_string
+				
 			#Make our directory for the key and execute the gen_key command
 			#Genkey doesn't create the directory if it doesn't exist.
 			dir_path = OBJECT_PATH+"/keys/"+self.SIA
@@ -106,14 +109,14 @@ class CA_Object:
 			self.ip4Strings = []; self.ip6Strings = []; self.asStrings = []
 			self.parseResources()
 			#Sort of a special case, we want the top of our repository to be
-			self.path_CA_cert = REPO_PATH+"/"+base64.urlsafe_b64encode(self.ski)+".cer"
-			print "Got Here about to call SS_cert constructor"	
-			print self.path_CA_cert
-			dir_path = REPO_PATH+"/"
+			self.path_CA_cert = REPO_PATH+"/"+self.myFactory.serverName+"/"+base64.urlsafe_b64encode(self.ski)+".cer"
+			if DEBUG_ON:
+				print "TA CA cert path:" +self.path_CA_cert
+
+			dir_path = REPO_PATH+"/"+self.myFactory.serverName
 			if not os.path.exists(dir_path):
 				os.system("mkdir -p "+ dir_path)
 
-			print self.commonName
 			self.certificate = SS_cert(self.id,self.commonName,self.commonName, self.notBefore,\
 					self.notAfter,self.aki,self.ski,self.keyFileName,self.keyFileName, self.ip4Strings,\
 					self.ip6Strings, self.asStrings,self.path_CA_cert, "r:rsync://"+REPO_PATH+"/"+self.SIA)
@@ -183,9 +186,7 @@ class CA_Object:
 		self.ip4ResourcesFree = []; self.ip6ResourcesFree = [] ;self.asResourcesFree = []
 		self.ip4Strings = []; self.ip6Strings = []; self.asStrings = []
 		self.parseResources()
-
-		print "about to create" + self.path_CA_cert
-		
+	
 		self.certificate = CA_cert(self.id,parent.commonName, \
 				self.commonName, self.notBefore,self.notAfter,\
 				self.aki,self.ski,self.keyFileName, parent.keyFileName,\
