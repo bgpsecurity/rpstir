@@ -23,6 +23,7 @@ from Queue import Queue
 from rpkirepo import *
 import ConfigParser
 
+#Globals for repository
 MAX_DEPTH = 1
 MAX_NODES = 10
 FACTORIES = {}
@@ -109,14 +110,31 @@ def create_driver(iana):
 	#create our CA queue with no limit and place iana in it
 	ca_queue = Queue(0)
 	ca_queue.put(iana)
+	#Add a flag to the queue track depth of repository
+	ca_queue.put("FLAG - NEW LEVEL")
 	#locals to keep track of where we are in creation
 	repo_depth = 0
 	repo_size = 1
 	
 	#check our conditionals
-	while(not(ca_queue.empty()) and MAX_DEPTH > repo_depth and MAX_NODES > repo_size):
+	while(not(ca_queue.empty()) and (MAX_DEPTH > repo_depth) and MAX_NODES > repo_size):
+		
 		ca_node = ca_queue.get()
-		child_list = create_children(ca_node)
+
+		#Check if this is the start of a new level
+		if ca_node == "FLAG - NEW LEVEL":
+			#If we're at the end of the queue already then just break
+			if ca_queue.empty()== True:
+				break
+			else:
+				#Otherwise add the falg back into the queue to 
+				#track for the next level
+				ca_queue.put(ca_node)
+				repo_depth+= 1
+				#continue onto the next node in the queue
+				continue
+			
+		child(_list, repo_size = create_children(ca_node,repo_size)
 		ca_node.children = child_list
 		#roa_list
 		#crl_list
@@ -126,16 +144,25 @@ def create_driver(iana):
 		for child in child_list:
 			ca_queue.put(child)
 
+	print "Finished creation driver loop. repo_depth = "+ str(repo_depth)+\
+			" repo_size = "+str(repo_size)
+	print "MAX_REPO depth" + str(MAX_DEPTH)
 
-def create_children(ca_node):
+
+def create_children(ca_node, repo_size):
 	print "creating my children"
 	child_list = []
 	print ca_node.bluePrintName
 	list = FACTORIES[ca_node.bluePrintName].childSpec
 	for ca_def in list:
 		for n in range(0,ca_def[1]):
-			child_list.append(FACTORIES[ca_def[0]].create(ca_node))
-	return child_list
+			if MAX_NODES > repo_size:
+				child_list.append(FACTORIES[ca_def[0]].create(ca_node))
+				repo_size+=1
+			else:
+				return (child_list, repo_size)	
+
+	return (child_list, repo_size)
 	
 	
 #

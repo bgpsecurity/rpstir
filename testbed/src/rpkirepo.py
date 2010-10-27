@@ -136,9 +136,8 @@ class CA_Object:
 		self.manifests = []
 		self.roas = []
 		self.crl = []
-		print "$$$$$$$$$$$$$$$$$$$$$$$$$"+myFactory.breakAway
-		if myFactory.breakAway:
-			print "Somehow executing this crap"
+		
+		if myFactory.breakAway == True:
 			self.SIA = self.myFactory.serverName + "/"+self.nickName
 		else:
 			self.SIA = parent.SIA + "/" +self.nickName
