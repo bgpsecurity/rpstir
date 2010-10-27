@@ -267,6 +267,76 @@ http://datatracker.ietf.org/doc/draft-ietf-sidr-rpki-algs/
 #
 ##################################
 
+The repository structure follows the specification in
+draft-ietf-sidr-repos-struct-05.  The following excerpt illustrates
+the relationships between directory structure and the AIA, SIA, and
+CRLDP fields in a certificate.  Note that ROAs and manifests are
+omitted from the diagram below.  In addition this testbed does not
+support multi-use EE's (hence the EE repository publication point is
+simply the URI pointing to the signed-object containing the EE cert,
+not a directory as implied below).
+
+   For every Certification Authority (CA) certificate in the RPKI there
+   is a corresponding repository publication point that is the
+   authoritative publication point for all current certificates and CRLs
+   issued by this CA.  For every End-entity (EE) certificate in the RPKI
+   there is a repository publication point that holds all current signed
+   objects that can be verified via this EE certificate.  In both cases
+   certificate's SIA extension contains a URI [RFC3986] that references
+   this repository publication point and identifies the repository
+   access mechanisms.  Additionally, a certificate's Authority
+   Information Access (AIA) extension contains a URI that references the
+   authoritative location for the Certification Authority (CA)
+   certificate under which the given certificate was issued.
+
+   For example, if the subject of certificate A has issued certificates
+   B and C, then the AIA extensions of certificates B and C both point
+   to the publication point for the certificate A object, and the SIA
+   extension of certificate A points to a repository publication point
+   (directory) containing certificates B and C (see Figure 1).
+
+                      +--------+
+           +--------->| Cert A |<----+
+           |          |  AIA   |     |
+           |  +--------- SIA   |     |
+           |  |       +--------+     |
+           |  |                      |
+           |  |  +-------------------|------------------+
+           |  |  |                   |                  |
+           |  +->|   +--------+      |   +--------+     |
+           |     |   | Cert B |      |   | Cert C |     |
+           |     |   | CRLDP-------+ |   | CRLDP-----+  |
+           +----------- AIA   |    | +----- AIA   |  |  |
+                 |   |  SIA------+ |     |  SIA------------+
+                 |   +--------+  | |     +--------+  |  |  |
+                 |               | V                 V  |  |
+                 |               | +-----------------+  |  |
+                 |               | | CRL issued by A |  |  |
+                 | A's Repository| +-----------------+  |  |
+                 | Directory     |                      |  |
+                 +---------------|----------------------+  |
+                                 |                         |
+       +----------------+        |    +----------------+   |
+       | B's Repository |<-------+    | C's Repository |<--+
+       |  Directory     |             |  Directory     |
+       +----------------+             +----------------+
+
+   Figure 1.  Use of AIA and SIA extensions in the RPKI.
+
+   In Figure 1, certificates B and C are issued by (CA) A. Therefore,
+   the AIA extensions of certificates B and C point to (certificate) A,
+   and the SIA extension of certificate A points to the repository
+   publication point of CA A's subordinate products, which includes
+   certificates B and C, as well as the CRL issued by A. The CRL
+   Distribution Points (CRLDP) extension in certificates B and C both
+   point to the Certificate Revocation List (CRL) issued by A.
+
+   In this distributed repository structure an instance of a CA's
+   repository publication point contains all published certificates
+   issued by that CA, and the CRL issued by that CA.  An End Entity's
+   (EE's) repository publication point contains all the published
+   objects that are verified via the associated EE certificate.
+
 
 #######################################
 #
