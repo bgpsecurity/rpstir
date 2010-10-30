@@ -166,6 +166,8 @@ def create_children(ca_node, repo_size):
 				return (child_list, repo_size)	
 
 	return (child_list, repo_size)
+
+
 	
 	
 #
@@ -182,9 +184,9 @@ def main():
         print FACTORIES
         print FACTORIES['AFRINIC'].ipv4List
         print FACTORIES['APNIC'].childSpec
-        FACTORIES['IANA'].ipv4List = [netaddr.IPRange("0.0.0.0","0.0.0.255")]
-        FACTORIES['IANA'].ipv6List = [netaddr.IPRange("1::0","255::0")]
-        FACTORIES['IANA'].asList = [(0,1)]
+        FACTORIES['IANA'].ipv4List = ["0.0.0.0-0.0.0.255"]
+        FACTORIES['IANA'].ipv6List = ["1::0-255::0"]
+        FACTORIES['IANA'].asList = ["0-1"]
         print FACTORIES['IANA'].ipv4List
         iana = CA_Object(FACTORIES['IANA'])
         create_driver(iana)

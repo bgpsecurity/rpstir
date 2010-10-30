@@ -13,13 +13,19 @@
 #  * Copyright (C) Raytheon BBN Technologies Corp. 2008-2010.
 #  * all Rights Reserved.
 #  *
-#  * Contributor(s):  Brenton Kohler
+#  * Contributor(s):  Ryan Caloras, Brenton Kohler
 #  *
 #  * ***** END LICENSE BLOCK ***** */
 
 import datetime, os, sys
 from subprocess import Popen
 import subprocess
+from time import time
+import base64
+
+OBJECT_PATH = "../objects"
+REPO_PATH = OBJECT_PATH+"/REPOSITORY"
+DEBUG_ON = True
 
 #
 # This is a utility function that will write the configuration file
@@ -80,7 +86,7 @@ def create_binary(obj, xargs):
 # Calls the gen_hash C executable and grabs the STDOUT from it
 #  and returns it as the SKI
 #
-# Author: Brenton Kohler
+# Author: Brenton Kohler 
 #
 def generate_ski(filename):
     s = "./gen_hash -f %s" % filename
@@ -91,35 +97,95 @@ def generate_ski(filename):
 
 #
 # The certificate class
-#
+# 
 class Certificate:
-    def __init__(self, serial, issuer, subject, notBefore, notAfter, aki,
-                 ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename):
-        self.serial         = serial
-        self.issuer         = issuer
-        self.subject        = subject
-        self.notBefore      = notBefore
-        self.notAfter       = notAfter
-        self.aki            = aki
-        self.ski            = ski
-        self.subjkeyfile    = subjkeyfile
-        self.parentkeyfile  = parentkeyfile
-        self.ipv4           = ipv4
-        self.ipv6           = ipv6
-        self.as             = as
-        self.outputfilename = outputfilename
+    
+    #Constructs a certificate object by executing and generating
+    #the appropriate files and information. If it's a CA certificate
+    #its reference will be stored and used within the CA_Object
+    def __init__(self,parent, myFactory,sia_path, serial):
         
+        self.serial = serial
+        
+        #Local variable to help with naming conventions
+        nickName = myFactory.bluePrintName+"-"+str(self.serial)
+        
+        #Certificate lifetime and expiration info
+        self.notBefore = datetime.datetime.now()
+        self.notAfter = datetime.datetime.fromtimestamp(time()+myFactory.ttl)
+        
+        #Set our subject key file name and generate the key
+        #Also check the directory first, and create it if it doesn't exist
+        dir_path = OBJECT_PATH+"/keys/"+sia_path
+        self.subjkeyfile = dir_path+"/"+nickName+".p15"
+        command_string = "../../cg/tools/gen_key "+self.subjkeyfile+ " 1024"
+        if not os.path.exists(dir_path):
+            os.system("mkdir -p "+ dir_path)
+        os.system(command_string)
+        if DEBUG_ON:
+            print command_string      
+            
+        #Generate our ski by getting the hash of the public key 
+        #Result from .p15 -> hash(public_key) which is a hex string
+        self.ski = generate_ski(self.subjkeyfile)
+        if DEBUG_ON:
+            print self.ski
+
+        #Set the name we will write to file depending on if
+        #this is a CA_cert, EE_cert, SS_cert. Also check if it exists
+        if isinstance(self,CA_cert):
+            dir_path  = REPO_PATH+"/"+parent.SIA_path+"/"
+        elif isinstance(self,EE_cert):
+            dir_path = REPO_PATH+"/EE/"+parent.SIA_path+"/"
+        elif isinstance(self,SS_cert):
+            dir_path = REPO_PATH+"/"+myFactory.serverName+"/"
+        #Create the output file directory if it doesn't exist
+        self.outputfilename = dir_path+base64.urlsafe_b64encode(self.ski)+".cer"
+        if DEBUG_ON:
+            print "outputfilename = "+self.outputfilename
+        if not os.path.exists(dir_path):
+            os.system("mkdir -p " + dir_path)
+        
+        #Initilization based on if you're a TA or not
+        #EE and CA else SS
+        if parent != None:
+            self.issuer = parent.commonName
+            self.subject = parent.commonName+"."+nickName
+            self.parentkeyfile = parent.certificate.subjkeyfile
+            self.aki = parent.certificate.ski
+            self.ipv4 = parent.subAllocateIP4(myFactory.ipv4List)
+            self.ipv6 = parent.subAllocateIP6(myFactory.ipv6List)
+            self.as = parent.subAllocateAS(myFactory.asList)
+            
+        else:
+            self.issuer = nickName
+            self.subject = nickName
+            self.parentkeyfile = self.subjkeyfile
+            self.aki = self.ski
+            self.ipv4 = myFactory.ipv4List
+            self.ipv6 = myFactory.ipv6List
+            self.as = myFactory.asList
 #
 # The CA Certificate class. Inherits from Certificate
 #
 class CA_cert(Certificate):
-    def __init__(self, serial,issuer, subject, notBefore, notAfter, aki,
-                 ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename, crldp, sia, aia):
-        self.crldp = crldp
-        self.sia   = sia
-        self.aia   = aia
-        Certificate.__init__(self,serial,issuer, subject, notBefore, notAfter, aki,
-                    ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
+    def __init__(self, parent, myFactory):
+        
+        serial = parent.getNextChildSN()
+         #Local variable to help with naming conventions
+        nickName = myFactory.bluePrintName+"-"+str(serial)
+        
+        if myFactory.breakAway == True:
+            sia_path = myFactory.serverName + "/"+nickName
+        else:
+            sia_path = parent.SIA_path + "/" +nickName
+    
+
+        #setup our cert addresses for rsync
+        self.aia   = "r:rsync://"+parent.path_CA_cert
+        self.crldp = "r:rsync://"+REPO_PATH+"/"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
+        self.sia = "r:rsync://"+REPO_PATH+"/"+sia_path
+        Certificate.__init__(self,parent, myFactory,sia_path,serial)
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
 
@@ -127,12 +193,17 @@ class CA_cert(Certificate):
 # The EE certificate class. Inherits from Certificate
 #
 class EE_cert(Certificate):
-    def __init__(self, serial,issuer, subject, notBefore, notAfter, aki,
-                 ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename, crldp, sia):
-        self.sia   = sia
-        self.crldp = crldp
-        Certificate.__init__(self,serial,issuer, subject, notBefore, notAfter, aki,
-                    ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
+    def __init__(self, parent, myFactory):
+        
+        serial = parent.getNextChildSN()
+         #Local variable to help with naming conventions
+        nickName = "EE-"+str(serial)
+
+        sia__path = parent.SIA_path+"/"+nickName
+        self.crldp = "r:rsync://"+REPO_PATH+"/"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
+        Certificate.__init__(self,pqrent,myFactory,sia_path,serial)
+        #Set our SIA based on the hash of our public key, which will be the name of the ROA this EE will be inside of.
+        self.sia = "r:rsync://"+REPO_PATH+"/"+parent.SIA_path+"/"+base64.urlsafe_b64encode(self.ski)+".roa"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
 
@@ -140,11 +211,16 @@ class EE_cert(Certificate):
 # The SS certificate class. Inherits from Certificate
 #
 class SS_cert(Certificate):
-    def __init__(self, serial,issuer, subject, notBefore, notAfter, aki,
-                 ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename, sia):
-        self.sia = sia
-        Certificate.__init__(self, serial, issuer, subject, notBefore, notAfter, aki,
-                    ski, subjkeyfile, parentkeyfile, ipv4, ipv6, as, outputfilename)
+    def __init__(self, parent, myFactory):
+      
+        #Iana should have zero!
+        serial = 0
+         #Local variable to help with naming conventions
+        nickName = myFactory.bluePrintName+"-"+str(serial)
+  
+        sia_path = myFactory.serverName + "/"+nickName
+        self.sia = "r:rsync://"+REPO_PATH+"/"+sia_path
+        Certificate.__init__(self,parent,myFactory,sia_path,serial)
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=True")
 
@@ -160,7 +236,7 @@ class CMS:
 # The Manifest class. Inherits from CMS
 #
 class manifest(CMS):
-    def __init__(self, manNum, thisUpdate, nextUpdate, subjFile, fileList,
+    def __init__(self, manNum, thisUpdate, nextUpdate, outputfilename, fileList,
                  EECertLocation, EEKeyLoation):
         self.manNum         = manNum
         self.thisUpdate     = thisUpdate
@@ -175,7 +251,7 @@ class manifest(CMS):
 #
 # The ROA class. Inherits from CMS
 #
-class roa(CMS):
+class Roa(CMS):
     def __init__(self, asID, ipv4, ipv6, EECertLocation, EEKeyLocation, outputfilename):
         self.asID           = asID
         self.ipv4           = ipv4
