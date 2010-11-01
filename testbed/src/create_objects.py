@@ -77,6 +77,8 @@ def writeConfig(obj):
             elif member == 'notBefore' or member == 'notAfter' \
                     or  member == 'thisupdate' or member == 'nextupdate':
                 fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
+            elif member == 'fileList':
+                fileBuf += '%s=%s\n' % (member, ','.join(val))
             else:
                 fileBuf+= '%s=%s\n' % (member,val)
         else:
