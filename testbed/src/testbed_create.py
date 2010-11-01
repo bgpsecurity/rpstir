@@ -183,7 +183,7 @@ def create_driver(iana):
         #create an template factory for our ee needed in the manifest
         eeFactory = Factory("Manifest-EE", "inherit", "inherit", "inherit", ttl=ca_node.myFactory.ttl)
         new_manifest = Manifest(ca_node,eeFactory)
-        ca_node.manifest_lsit.append(new_manifest)
+        ca_node.manifests.append(new_manifest)
 
         
         #Add all of our children to the queue of CAs

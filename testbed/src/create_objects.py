@@ -25,7 +25,7 @@ import base64
 
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
-CONFIG_PATH = OBJECT_PATH+'configs/'
+CONFIG_PATH = OBJECT_PATH+'/configs/'
 DEBUG_ON = True
 RSYNC_EXTENSION = "r:rsync://"
 
@@ -35,7 +35,11 @@ RSYNC_EXTENSION = "r:rsync://"
 #
 def writeConfig(obj):
     # Use introspection to print out all the member variables and their values to a file
-    f = open(CONFIG_PATH + obj.outputfilename + ".cfg", 'w')
+    if not os.path.exists(CONFIG_PATH):
+        os.system('mkdir -p ' + CONFIG_PATH)
+    fn = obj.outputfilename.split('/')
+    file = fn[-1]
+    f = open(CONFIG_PATH + file + ".cfg", 'w')
     
     #Gets all the attributes of this class that are only member variables(not functions)
     members = [attr for attr in dir(obj) if not callable(getattr(obj,attr))
@@ -92,7 +96,9 @@ def writeConfig(obj):
 # This is a generic function that calls create_object
 #
 def create_binary(obj, xargs):
-    s = './create_object -f %s%s.cfg ' % (CONFIG_PATH,obj.outputfilename)
+    fn = obj.outputfilename.split('/')
+    file = fn[-1]
+    s = './create_object -f %s%s.cfg ' % (CONFIG_PATH,file)
     s += xargs
     os.system(s)
 
