@@ -64,11 +64,14 @@ def configuration_parser(factory_dict,fileName):
                         breakA     = ''
                         t          = 0
                         as         = []
+                        ipPrefix   =
+                        a          = 0
+                        roav4l     = []
+                        roav6l     = []
                         
                         for opt in options:
                                 if opt == 'childspec':
                                         val = config.get(section,opt)
-                                        # parse the string like AFRINIC,1%APNIC,2%RIPE,2...
                                         parse(child,val)
                                 elif opt == 'ipv4list':
                                         l = config.get(section,opt)
@@ -91,15 +94,41 @@ def configuration_parser(factory_dict,fileName):
                                 elif opt == 'max_nodes':
                                         global MAX_NODES
                                         MAX_NODES=config.getint(section,opt)
+                                elif opt == 'roaipv4list':
+                                        l = config.get(section,opt)
+                                        parse(roav4l, l)
+                                elif opt == 'roaipv6list':
+                                        l = config.get(section,opt)
+                                        parse(roav6l, l)
+                                elif opt == 'asid':
+                                        a = config.getint(section,opt)
                                 else:
                                         print 'Opt in config file not recognized: %s' % (opt)
-
-                                f = Factory(bluePrintName=section, ipv4List=ipv4,
+                        try:
+                                type,name=section.split('-')
+                        except ValueError:
+                                print 'Unrecognized type included in name of section in the .ini'
+                                return
+                        if type == 'C':
+                                f = Factory(bluePrintName=name, ipv4List=ipv4,
                                             ipv6List=ipv6, asList=as,
                                             childSpec=child, serverName=server,
                                             breakAway=breakA, ttl=t)
-                
-                                factory_dict[section]=f
+                        elif type == 'M':
+                                pass
+                        elif type == 'CR':
+                                pass
+                        elif type == 'R':
+                                f = ROA_Factory(bluePrintName=name, ipv4List=ipv4List, \
+                                                ipv6List=ipv6List, asList=as, childSpec=child, \
+                                                serverName=server, breakAway=breakA, ttl=t, \
+                                                ROAipv4List =roav4l, ROAipv6List = roav6l,asid = a)  
+                        else:
+                                print 'Unrecognized type included in name of section in the .ini'
+                                return 
+                                
+                        factory_dict[section]=f
+                        
         except ValueError:
                 print 'A ValueError occurred, check the syntax of your config file'
         except:
