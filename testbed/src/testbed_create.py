@@ -166,18 +166,35 @@ def create_driver(iana):
                 #continue onto the next node in the queue
                 continue
 
+        #Create the directory for the objects we're about to store
+        dir_path = REPO_PATH+"/"+ca_node.SIA_path+"/"
+        if not os.path.exists(dir_path):
+            os.system("mkdir -p "+ dir_path)
+
+
+        child_list = []
         #Creates all child CA's and ROA's for a the CA ca_node
-        child_list, repo_size = create_children(ca_node,repo_size)
-        ca_node.children = child_list
+        #child_list, repo_size = create_children(ca_node,repo_size)
         #crl_list
-        #new_crl = Crl(ca_node)
-        #ca_node.crl_list.append(new_crl)
+        new_crl = Crl(ca_node)
+        ca_node.crl.append(new_crl)
+        repo_size+=1
         #manifest_list
+        #create an template factory for our ee needed in the manifest
+        eeFactory = Factory("Manifest-EE", "inherit", "inherit", "inherit", ttl=ca_node.myFactory.ttl)
+        new_manifest = Manifest(ca_node,eeFactory)
+        ca_node.manifest_lsit.append(new_manifest)
 
         
         #Add all of our children to the queue of CAs
         for child in child_list:
-            ca_queue.put(child)
+            if isinstance(child, CA_Object):
+                ca_node.children.append(child)
+                ca_queue.put(child)
+            elif isinstance(child, Roa):
+                ca_node.roas.append(child)
+            else:
+                print "Somehow got something besides CA or ROA in child list"
 
     print "Finished creation driver loop. repo_depth = "+ str(repo_depth)+\
             " repo_size = "+str(repo_size)

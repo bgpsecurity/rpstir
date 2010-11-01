@@ -74,7 +74,8 @@ def writeConfig(obj):
                     fileBuf += '%s=%s%%%s\n' % (member, ip,value)
                 else:
                     fileBuf += '%s=%s\n' % (member, val)                    
-            elif member == 'notBefore' or member == 'notAfter':
+            elif member == 'notBefore' or member == 'notAfter' \
+                    or  member == 'thisupdate' or member == 'nextupdate':
                 fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
             else:
                 fileBuf+= '%s=%s\n' % (member,val)
@@ -266,17 +267,24 @@ class CMS:
 # The Manifest class. Inherits from CMS
 #
 class Manifest(CMS):
-    def __init__(self, parent):
-        #Create a generic Manifest EE factory. Should inherit ipv4,6, and AS
-        eeFactory = Factory("Manifest-EE", "inherit","inherit","inherit", ttl=parent.myFactory.ttl)
-        eeCertificate = EE_cert(parent,eeFactory)
-        self.manNum         = parent.getNextSerial()
+    def __init__(self, parent, myFactory):
+        
+        eeCertificate = EE_cert(parent,myFactory)
+        self.manNum         = eeCertificate.serial
         self.thisupdate      = datetime.datetime.now()
         #Not sure on this nextUpdate time frame
         self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl)
         #Chop off our rsync:// portion and append the repo path
         self.outputfilename = REPO_PATH+"/"+eeCertificate.sia[len(RSYNC_EXTENSION):]
-        self.fileList       = fileList
+        
+        dirname = REPO_PATH+"/"+parent.SIA_path
+        filelist = []
+        for f in os.listdir(dirname):
+            if os.path.isfile(os.path.join(dirname, f)):
+                print dirname+"/"+f
+                filelist.append(f+"%"+generate_file_hash(dirname+"/"+f))
+        
+        self.fileList = filelist
         CMS.__init__(self, eeCertificate.outputfilename,eeCertificate.subjkeyfile)
 
         writeConfig(self)
@@ -294,9 +302,10 @@ class Roa(CMS):
         self.outputfilename = REPO_PATH+"/"+ee_object.path_ROA
         #Make our directory to place our ROA if it doesn't already exist
         dir_path = REPO_PATH+"/"+ee_object.parent.SIA_path+"/"
-        if not os.path.exists(dir_path):
-            os.system("mkdir -p "+ dir_path)
-            print dir_path
+        
+        #Can safely remove this if it works in the main loop
+        #if not os.path.exists(dir_path):
+        #    os.system("mkdir -p "+ dir_path)
         CMS.__init__(self, ee_object.certificate.outputfilename, ee_object.certificate.subjkeyfile)
 
         writeConfig(self)
@@ -310,16 +319,14 @@ class Crl:
 
         self.parentcertfile  = parent.path_CA_cert
         self.parentkeyfile   = parent.certificate.subjkeyfile
-        self.issue           = parent.commonName
+        self.issuer          = parent.commonName
         self.thisupdate      = datetime.datetime.now()
         #Not sure on this nextUpdate time frame
         self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl)
-        self.crlnum          = parent.getNextSerial()
+        self.crlnum          = parent.getNextChildSN()
         self.revokedcertlist = []
         self.aki             = parent.certificate.ski
-        
-        self.signatureValue  = signatureValue
-        
+         
         #Create the output file directory if it doesn't exist
         dir_path  = REPO_PATH+"/"+parent.SIA_path+"/"
         self.outputfilename = dir_path+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"

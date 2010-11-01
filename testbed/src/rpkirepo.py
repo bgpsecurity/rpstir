@@ -81,7 +81,7 @@ class ROA_Factory(Factory):
             print "creating a ROA for "+ self.bluePrintName
             
         ee_object = EE_Object(self, parent)
-        Roa(self,ee_object) 
+        return Roa(self,ee_object) 
  
 #Takes a netAddrList and converts it to a list of IP range strings for certificates
 def parseIPForCert(self, netAddrList):
