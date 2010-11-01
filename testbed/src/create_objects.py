@@ -26,6 +26,7 @@ import base64
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
 DEBUG_ON = True
+RSYNC_EXTENSION = "r:rsync://"
 
 #
 # This is a utility function that will write the configuration file
@@ -182,9 +183,10 @@ class CA_cert(Certificate):
     
 
         #setup our cert addresses for rsync
-        self.aia   = "r:rsync://"+parent.path_CA_cert
-        self.crldp = "r:rsync://"+REPO_PATH+"/"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
-        self.sia = "r:rsync://"+REPO_PATH+"/"+sia_path
+        #For aia cut off the portion that contains the repoitory path to create an rsync url
+        self.aia   = "r:rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
+        self.crldp = "r:rsync://"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
+        self.sia = "r:rsync://"+sia_path
         Certificate.__init__(self,parent, myFactory,sia_path,serial)
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
@@ -199,11 +201,18 @@ class EE_cert(Certificate):
          #Local variable to help with naming conventions
         nickName = "EE-"+str(serial)
 
-        sia__path = parent.SIA_path+"/"+nickName
-        self.crldp = "r:rsync://"+REPO_PATH+"/"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
-        Certificate.__init__(self,pqrent,myFactory,sia_path,serial)
-        #Set our SIA based on the hash of our public key, which will be the name of the ROA this EE will be inside of.
-        self.sia = "r:rsync://"+REPO_PATH+"/"+parent.SIA_path+"/"+base64.urlsafe_b64encode(self.ski)+".roa"
+        path_sia = parent.SIA_path+"/"+nickName
+        self.crldp = "r:rsync://"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
+        Certificate.__init__(self,parent,myFactory,path_sia,serial)
+        
+        #Set our SIA based on the hash of our public key, which will be the name
+        #of the ROA or Manifest this EE will be inside of.
+        self.sia = "r:rsync://"+parent.SIA_path+"/"+base64.urlsafe_b64encode(self.ski)
+        if myFactory.bluePrintName == "Manifest-EE":
+            self.sia = self.sia+".mft"
+        else:
+            self.sia = self.sia+".roa"
+              
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
 
@@ -219,7 +228,7 @@ class SS_cert(Certificate):
         nickName = myFactory.bluePrintName+"-"+str(serial)
   
         sia_path = myFactory.serverName + "/"+nickName
-        self.sia = "r:rsync://"+REPO_PATH+"/"+sia_path
+        self.sia = "r:rsync://"+sia_path
         Certificate.__init__(self,parent,myFactory,sia_path,serial)
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=True")
@@ -235,15 +244,19 @@ class CMS:
 #
 # The Manifest class. Inherits from CMS
 #
-class manifest(CMS):
-    def __init__(self, manNum, thisUpdate, nextUpdate, outputfilename, fileList,
-                 EECertLocation, EEKeyLoation):
-        self.manNum         = manNum
-        self.thisUpdate     = thisUpdate
-        self.nextUpdate     = nextUpdate
-        self.outputfilename = outputfilename
+class Manifest(CMS):
+    def __init__(self, parent):
+        #Create a generic Manifest EE factory. Should inherit ipv4,6, and AS
+        eeFactory = Factory("Manifest-EE", "inherit","inherit","inherit", ttl=parent.myFactory.ttl)
+        eeCertificate = EE_cert(parent,eeFactory)
+        self.manNum         = parent.getNextSerial()
+        self.thisupdate      = datetime.datetime.now()
+        #Not sure on this nextUpdate time frame
+        self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl)
+        #Chop off our rsync:// portion and append the repo path
+        self.outputfilename = REPO_PATH+"/"+eeCertificate.sia[len(RSYNC_EXTENSION):]
         self.fileList       = fileList
-        CMS.__init__(self, EECertLocation, EEKeyLocation)
+        CMS.__init__(self, eeCertificate.outputfilename,eeCertificate.subjkeyfile)
 
         writeConfig(self)
         create_binary(self, "MANIFEST")
@@ -252,12 +265,18 @@ class manifest(CMS):
 # The ROA class. Inherits from CMS
 #
 class Roa(CMS):
-    def __init__(self, asID, ipv4, ipv6, EECertLocation, EEKeyLocation, outputfilename):
-        self.asID           = asID
-        self.ipv4           = ipv4
-        self.ipv6           = ipv6
-        self.outputfilename = outputfilename
-        CMS.__init__(self, EECertLocation, EEKeyLocation)
+    def __init__(self,myFactory,ee_object):
+        #Pull the info we need from our ee_object
+        self.asID           = ee_object.subAllocateAS(myFactory.asid)
+        self.ipv4           = ee_object.subAllocateIP4(myFactory.ROAipv4List)
+        self.ipv6           = ee_object.subAllocateIP6(myFactory.ROAipv6List)
+        self.outputfilename = REPO_PATH+"/"+ee_object.path_ROA
+        #Make our directory to place our ROA if it doesn't already exist
+        dir_path = REPO_PATH+"/"+ee_object.parent.SIA_path+"/"
+        if not os.path.exists(dir_path):
+            os.system("mkdir -p "+ dir_path)
+            print dir_path
+        CMS.__init__(self, ee_object.certificate.outputfilename, ee_object.certificate.subjkeyfile)
 
         writeConfig(self)
         create_binary(self, "ROA")
@@ -265,20 +284,24 @@ class Roa(CMS):
 #
 # The CRL class.
 #
-class crl:
-    def __init__(self, parentcertfile, parentkeyfile, issuer, thisupdate, nextupdate,
-                 crlnum, revokedcertlist, aki, signatureValue, outputfilename):
-        self.parentcertfile  = parentcertfile
-        self.parentkeyfile   = parentkeyfile
-        self.issue           = issuer
-        self.thisupdate      = thisupdate
-        self.nextupdate      = nextupdate
-        self.crlnum          = crlnum
-        self.revokedcertlist = revokedcertlist
-        self.aki             = aki
-        self.signatureValue  = signatureValue
-        self.outputfilename  = outputfilename
+class Crl:
+    def __init__(self, parent):
 
+        self.parentcertfile  = parent.path_CA_cert
+        self.parentkeyfile   = parent.certificate.subjkeyfile
+        self.issue           = parent.commonName
+        self.thisupdate      = datetime.datetime.now()
+        #Not sure on this nextUpdate time frame
+        self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl)
+        self.crlnum          = parent.getNextSerial()
+        self.revokedcertlist = []
+        self.aki             = parent.certificate.ski
+        
+        self.signatureValue  = signatureValue
+        
+        #Create the output file directory if it doesn't exist
+        dir_path  = REPO_PATH+"/"+parent.SIA_path+"/"
+        self.outputfilename = dir_path+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
         writeConfig(self)
         create_binary(self, "CRL")
 

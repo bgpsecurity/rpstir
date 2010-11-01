@@ -28,6 +28,7 @@ from create_objects import *
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
 DEBUG_ON = False
+RSYNC_EXTENSION = "r:rsync://"
 
 class Factory:
     def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [],\
@@ -62,13 +63,13 @@ class Factory:
 # The ROA Factory class. Inherits from Certificate.
 #
 class ROA_Factory(Factory):
-    def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [],\
-            asList = [], childSpec = [()], serverName = "",\
-            breakAway = False, ttl = 0, ROAipv4List =[], ROAipv6List = [],\
+    def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [], \
+            asList = [], childSpec = [()], serverName = "", \
+            breakAway = False, ttl = 0, ROAipv4List =[], ROAipv6List = [], \
             asid = 0):
         
         #Call the factory constructor to initialize inherited args
-        Factory._init_(self, bluePrintName, ipv4List, ipv6List, asList,\
+        Factory.__init__(self, bluePrintName, ipv4List, ipv6List, asList,\
                 childSpec, serverName, breakAway, ttl = 0)
         
         #ROA specific
@@ -80,10 +81,7 @@ class ROA_Factory(Factory):
             print "creating a ROA for "+ self.bluePrintName
             
         ee_object = EE_Object(self, parent)
-        Roa(ee_object.subAllocateAS(self.asid),ee_object.subAllocateIP4(self.ROAipv4List),\
-                ee_object.subAllocateIP6(self.ROAipv6List),\
-                ee_object.certificate.outputfilename, ee_object.certificate.subjkeyfile,\
-                ee_object.path_ROA)
+        Roa(self,ee_object) 
  
 #Takes a netAddrList and converts it to a list of IP range strings for certificates
 def parseIPForCert(self, netAddrList):
@@ -125,22 +123,23 @@ class EE_Object:
         self.certificate = EE_cert(parent,myFactory)
         
         #Grab what I need from the certificate 
-        #Obtain just the SIA path and cut off the r:rsync://REPOSITORY_PATH
-        self.SIA_path = self.certificate.sia[32:]
+        #Obtain just the SIA path and cut off the r:rsync
+        self.SIA_path = self.certificate.sia[len(RSYNC_EXTENSION):]
         self.id = self.certificate.serial 
-        self.path_ROA = self.certificate.outputfilename
+        self.path_ROA = self.SIA_path
         
         #FIX ME add some kind of string list to Netaddr Function for allocation
         self.ipv4ResourcesFree = self.certificate.ipv4
         self.ipv6ResourcesFree = self.certificate.ipv6
         self.asResourcesFree = self.certificate.as 
-         
+    
+    #Hard coded suballocation currently, need to implement actual allocation
     def subAllocateIP4(self,iplist):
-        return parseIPForCert(self,[netaddr.IPRange("0.0.0.0","0.0.0.255")])
+        return "0.0.0.0/16"
     def subAllocateIP6(self,iplist):
-        return parseIPForCert(self,[netaddr.IPRange("1::0","255::0")])
+        return "1::/16"
     def subAllocateAS(self, asList):
-        return parseASForCert(self,[(0,1)])
+        return 1
     
     def allocate(self, ipv4List, ipv6List, asList):
         return (self.subAllocateIP4(ipv4List),self.subAllocateIP6(ipv6List),self.subAllocateAS(asList))
@@ -166,8 +165,8 @@ class CA_Object:
         else:
             self.certificate = SS_cert(parent,myFactory)    
         #Grab what I need from the certificate 
-        #Obtain just the SIA path and cut off the r:rsync://REPOSITORY_PATH
-        self.SIA_path = self.certificate.sia[32:]
+        #Obtain just the SIA path and cut off the r:rsync://
+        self.SIA_path = self.certificate.sia[len(RSYNC_EXTENSION):]
         self.id = self.certificate.serial 
         self.path_CA_cert = self.certificate.outputfilename
         self.nickName= self.myFactory.bluePrintName+"-"+str(self.id)

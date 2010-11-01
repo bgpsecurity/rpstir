@@ -19,7 +19,7 @@
 
 from datetime import datetime
 from time import time
-from Queue import Queue	
+from Queue import Queue 
 from rpkirepo import *
 import ConfigParser
 
@@ -64,7 +64,6 @@ def configuration_parser(factory_dict,fileName):
                         breakA     = ''
                         t          = 0
                         as         = []
-                        ipPrefix   =
                         a          = 0
                         roav4l     = []
                         roav6l     = []
@@ -119,15 +118,16 @@ def configuration_parser(factory_dict,fileName):
                         elif type == 'CR':
                                 pass
                         elif type == 'R':
-                                f = ROA_Factory(bluePrintName=name, ipv4List=ipv4List, \
-                                                ipv6List=ipv6List, asList=as, childSpec=child, \
+                                f = ROA_Factory(bluePrintName=name, ipv4List=ipv4, \
+                                                ipv6List=ipv6, asList=as, childSpec=child, \
                                                 serverName=server, breakAway=breakA, ttl=t, \
                                                 ROAipv4List =roav4l, ROAipv6List = roav6l,asid = a)  
                         else:
                                 print 'Unrecognized type included in name of section in the .ini'
                                 return 
-                                
-                        factory_dict[section]=f
+                        #Add our bluePrintName to the factory dictionary
+                        print name
+                        factory_dict[name]=f
                         
         except ValueError:
                 print 'A ValueError occurred, check the syntax of your config file'
@@ -139,66 +139,69 @@ def configuration_parser(factory_dict,fileName):
 #into a fully functioning repository
 def create_driver(iana):
 
-	#create our CA queue with no limit and place iana in it
-	ca_queue = Queue(0)
-	ca_queue.put(iana)
-	#Add a flag to the queue track depth of repository
-	ca_queue.put("FLAG - NEW LEVEL")
-	#locals to keep track of where we are in creation
-	repo_depth = 0
-	repo_size = 1
-	
-	#check our conditionals
-	while(not(ca_queue.empty()) and (MAX_DEPTH > repo_depth) and MAX_NODES > repo_size):
-		
-		ca_node = ca_queue.get()
+    #create our CA queue with no limit and place iana in it
+    ca_queue = Queue(0)
+    ca_queue.put(iana)
+    #Add a flag to the queue track depth of repository
+    ca_queue.put("FLAG - NEW LEVEL")
+    #locals to keep track of where we are in creation
+    repo_depth = 0
+    repo_size = 1
+    
+    #check our conditionals
+    while(not(ca_queue.empty()) and (MAX_DEPTH > repo_depth) and MAX_NODES > repo_size):
+        
+        ca_node = ca_queue.get()
 
-		#Check if this is the start of a new level
-		if ca_node == "FLAG - NEW LEVEL":
-			#If we're at the end of the queue already then just break
-			if ca_queue.empty()== True:
-				break
-			else:
-				#Otherwise add the falg back into the queue to 
-				#track for the next level
-				ca_queue.put(ca_node)
-				repo_depth+= 1
-				#continue onto the next node in the queue
-				continue
-			
-		child_list, repo_size = create_children(ca_node,repo_size)
-		ca_node.children = child_list
-		#roa_list
-		#crl_list
-		#manifest_list
-		
-		#Add all of our children to the queue of CAs
-		for child in child_list:
-			ca_queue.put(child)
+        #Check if this is the start of a new level
+        if ca_node == "FLAG - NEW LEVEL":
+            #If we're at the end of the queue already then just break
+            if ca_queue.empty()== True:
+                break
+            else:
+                #Otherwise add the falg back into the queue to 
+                #track for the next level
+                ca_queue.put(ca_node)
+                repo_depth+= 1
+                #continue onto the next node in the queue
+                continue
 
-	print "Finished creation driver loop. repo_depth = "+ str(repo_depth)+\
-			" repo_size = "+str(repo_size)
-	print "MAX_REPO depth" + str(MAX_DEPTH)
+        #Creates all child CA's and ROA's for a the CA ca_node
+        child_list, repo_size = create_children(ca_node,repo_size)
+        ca_node.children = child_list
+        #crl_list
+        #new_crl = Crl(ca_node)
+        #ca_node.crl_list.append(new_crl)
+        #manifest_list
+
+        
+        #Add all of our children to the queue of CAs
+        for child in child_list:
+            ca_queue.put(child)
+
+    print "Finished creation driver loop. repo_depth = "+ str(repo_depth)+\
+            " repo_size = "+str(repo_size)
+    print "MAX_REPO depth" + str(MAX_DEPTH)
 
 
 def create_children(ca_node, repo_size):
-	child_list = []
-	print ca_node.bluePrintName
-	list = FACTORIES[ca_node.bluePrintName].childSpec
-	for ca_def in list:
-		for n in range(0,ca_def[1]):
-			if MAX_NODES > repo_size:
-				child_list.append(FACTORIES[ca_def[0]].create(ca_node))
-				repo_size+=1
-				print repo_size
-			else:
-				return (child_list, repo_size)	
+    child_list = []
+    print ca_node.bluePrintName
+    list = FACTORIES[ca_node.bluePrintName].childSpec
+    for ca_def in list:
+        for n in range(0,ca_def[1]):
+            if MAX_NODES > repo_size:
+                child_list.append(FACTORIES[ca_def[0]].create(ca_node))
+                repo_size+=1
+                print repo_size
+            else:
+                return (child_list, repo_size)  
 
-	return (child_list, repo_size)
+    return (child_list, repo_size)
 
 
-	
-	
+    
+    
 #
 # A testing function to help determine if above classes
 #   and functionality is correctly working. SPACED not TABBED function
@@ -213,13 +216,14 @@ def main():
         print FACTORIES
         print FACTORIES['AFRINIC'].ipv4List
         print FACTORIES['APNIC'].childSpec
+        print FACTORIES['ROAA'].asid
         FACTORIES['IANA'].ipv4List = ["0.0.0.0-0.0.0.255"]
         FACTORIES['IANA'].ipv6List = ["1::0-255::0"]
         FACTORIES['IANA'].asList = ["0-1"]
         print FACTORIES['IANA'].ipv4List
         iana = CA_Object(FACTORIES['IANA'])
         create_driver(iana)
-		
+        
 #Fire off the test
 if __name__ == '__main__':
     main()
