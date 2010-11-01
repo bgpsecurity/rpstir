@@ -67,7 +67,7 @@ def writeConfig(obj):
                 fileBuf += '%s=%s\n' % (member,",".join(val))
             elif member == 'roaipv4' or member == 'roaipv6':
                 try:
-                    ip,value = value.split('%')
+                    ip,value = val.split('%')
                 except ValueError:
                     value = None
                 if value is not None:
@@ -100,6 +100,18 @@ def create_binary(obj, xargs):
 #
 def generate_ski(filename):
     s = "./gen_hash -f %s" % filename
+    p = Popen(s, shell=True, stdout=subprocess.PIPE)
+    stdout = p.communicate()[0]
+    return stdout
+
+#
+# Calls the gen_hash C executable and grabs the STDOUT from it
+#  and returns it as the hash of the contents of the filename
+#
+# Author: Brenton Kohler 
+#
+def generate_file_hash(filename):
+    s = "./gen_hash -n %s" % filename
     p = Popen(s, shell=True, stdout=subprocess.PIPE)
     stdout = p.communicate()[0]
     return stdout

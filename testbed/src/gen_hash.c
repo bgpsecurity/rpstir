@@ -64,6 +64,21 @@ static int writeHashedPublicKey(struct casn *keyp)
   printf("\n");
   return siz;
 }
+static int writeFileHash(char* buf, int len)
+{
+  uchar hashbuf[24];
+  int siz;
+  siz = gen_hash((uchar*)buf, len - 1, hashbuf, 1);
+  
+
+  //write out the hashed key
+  int i =0;
+  printf("0x");
+  for(i = 0; i < 24; i++)
+    printf("%X", (unsigned int)hashbuf[i]);
+  printf("\n");
+  return siz;
+}
 
 static int fillPublicKey(struct casn *spkp, char *keyfile)
 {
@@ -96,17 +111,20 @@ int main(int argc, char* argv[])
 {
   int c;
   char *configFile = NULL;
+  char *name = NULL;
   
 
   // parse options
-  while ((c = getopt (argc, argv, "f:")) != -1)
+  while ((c = getopt (argc, argv, "f:n:")) != -1)
     {
       switch (c)
 	{
 	case 'f':
 	  configFile=optarg;
 	  break;
-
+	case 'n':
+          name=optarg;
+          break;
 	case '?':
 	  printUsage(argv);
 	  break;
@@ -118,21 +136,41 @@ int main(int argc, char* argv[])
 	}
     }
 
-  if(configFile == NULL){
+  if(configFile == NULL && name == NULL){
+    printUsage(argv);
+    return -1;
+  }
+  else if(configFile != NULL && name != NULL){
     printUsage(argv);
     return -1;
   }
 
-  struct Certificate certp;
-  Certificate(&certp,(unsigned short)0);
-  struct CertificateToBeSigned *ctftbsp = &certp.toBeSigned;
-  struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;
-  struct casn *spkp = &spkinfop->subjectPublicKey;
+  if(configFile != NULL)
+  {
+     struct Certificate certp;
+     Certificate(&certp,(unsigned short)0);
+     struct CertificateToBeSigned *ctftbsp = &certp.toBeSigned;
+     struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;
+     struct casn *spkp = &spkinfop->subjectPublicKey;
 
-  if (fillPublicKey(spkp, configFile) < 0)
-    return -1;
-  writeHashedPublicKey(spkp);
+     if (fillPublicKey(spkp, configFile) < 0)
+        return -1;
+     writeHashedPublicKey(spkp);
 
-  return 1;
+     return 1;
+   }
+   else{
+     int length = 10000;
+     char* buf = calloc(length, sizeof(char));
+
+     FILE* fp = fopen(name,"r");
+  
+     int size = fread(buf, sizeof(char), length, fp);
+     writeFileHash(buf, size);
+     fclose(fp);
+
+     return 1;
+   }
 
 }
+
