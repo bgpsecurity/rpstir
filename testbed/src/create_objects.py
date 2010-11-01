@@ -65,6 +65,15 @@ def writeConfig(obj):
             
             elif member == 'ipv4' or member == 'ipv6' or member == 'as':
                 fileBuf += '%s=%s\n' % (member,",".join(val))
+            elif member == 'roaipv4' or member == 'roaipv6':
+                try:
+                    ip,value = value.split('%')
+                except ValueError:
+                    value = None
+                if value is not None:
+                    fileBuf += '%s=%s%%%s\n' % (member, ip,value)
+                else:
+                    fileBuf += '%s=%s\n' % (member, val)                    
             elif member == 'notBefore' or member == 'notAfter':
                 fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
             else:
@@ -268,8 +277,8 @@ class Roa(CMS):
     def __init__(self,myFactory,ee_object):
         #Pull the info we need from our ee_object
         self.asID           = ee_object.subAllocateAS(myFactory.asid)
-        self.ipv4           = ee_object.subAllocateIP4(myFactory.ROAipv4List)
-        self.ipv6           = ee_object.subAllocateIP6(myFactory.ROAipv6List)
+        self.roaipv4        = ee_object.subAllocateIP4(myFactory.ROAipv4List)
+        self.roaipv6        = ee_object.subAllocateIP6(myFactory.ROAipv6List)
         self.outputfilename = REPO_PATH+"/"+ee_object.path_ROA
         #Make our directory to place our ROA if it doesn't already exist
         dir_path = REPO_PATH+"/"+ee_object.parent.SIA_path+"/"
