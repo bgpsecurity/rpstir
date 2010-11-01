@@ -219,8 +219,8 @@ struct object_field roa_field_table[] =
   {
     {"outputfilename",TEXT,NULL,REQUIRED,NULL},
     {"asID",INTEGER,NULL,OPTIONAL,write_asID},
-    {"ipv4",TEXT,NULL,OPTIONAL,write_ipv4},
-    {"ipv6",TEXT,NULL,OPTIONAL,write_ipv6},
+    {"roaipv4",TEXT,NULL,OPTIONAL,write_ipv4},
+    {"roaipv6",TEXT,NULL,OPTIONAL,write_ipv6},
     {"EECertLocation",TEXT, NULL,OPTIONAL,write_EEcert},
     {"EEKeyLocation",TEXT, NULL,OPTIONAL,write_EEkey},
     {NULL,0,NULL,0,NULL}
