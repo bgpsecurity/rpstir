@@ -76,7 +76,7 @@ static int writeFileHash(char* buf, int len)
   printf("0x");
   for(i = 0; i < 24; i++)
     printf("%X", (unsigned int)hashbuf[i]);
-  printf("\n");
+ // printf("\n");
   return siz;
 }
 
