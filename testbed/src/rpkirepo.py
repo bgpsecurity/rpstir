@@ -166,7 +166,9 @@ class CA_Object:
             self.certificate = SS_cert(parent,myFactory)    
         #Grab what I need from the certificate 
         #Obtain just the SIA path and cut off the r:rsync://
-        self.SIA_path = self.certificate.sia[len(RSYNC_EXTENSION):]
+        sia_list = self.certificate.sia[len(RSYNC_EXTENSION):].split(",")
+        self.SIA_path = sia_list[0]
+        self.manifest_path = sia_list[1][len(RSYNC_EXTENSION):]
         self.id = self.certificate.serial 
         self.path_CA_cert = self.certificate.outputfilename
         self.nickName= self.myFactory.bluePrintName+"-"+str(self.id)

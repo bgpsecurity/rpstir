@@ -28,7 +28,7 @@ REPO_PATH = OBJECT_PATH+"/REPOSITORY"
 CONFIG_PATH = OBJECT_PATH+'/configs/'
 DEBUG_ON = True
 RSYNC_EXTENSION = "r:rsync://"
-
+SECONDS_IN_DAY = 86400
 #
 # This is a utility function that will write the configuration file
 #  that will be fed to the create_object code
@@ -98,10 +98,10 @@ def writeConfig(obj):
 #  currently don't are about them
 #
 def b64encode_wrapper(toPass):
-	ret = base64.urlsafe_b64encode(toPass)
-        while ret[-1] == '=':
-		ret = ret[:-1]
-	return ret
+    ret = base64.urlsafe_b64encode(toPass)
+    while ret[-1] == '=':
+        ret = ret[:-1]
+    return ret
 
 #
 # This is a generic function that calls create_object
@@ -155,7 +155,7 @@ class Certificate:
         
         #Certificate lifetime and expiration info
         self.notBefore = datetime.datetime.now()
-        self.notAfter = datetime.datetime.fromtimestamp(time()+myFactory.ttl)
+        self.notAfter = datetime.datetime.fromtimestamp(time()+myFactory.ttl*SECONDS_IN_DAY)
         
         #Set our subject key file name and generate the key
         #Also check the directory first, and create it if it doesn't exist
@@ -183,7 +183,7 @@ class Certificate:
         elif isinstance(self,SS_cert):
             dir_path = REPO_PATH+"/"+myFactory.serverName+"/"
         #Create the output file directory if it doesn't exist
-        self.outputfilename = dir_path+base64.urlsafe_b64encode(self.ski)+".cer"
+        self.outputfilename = dir_path+b64encode_wrapper(self.ski)+".cer"
         if DEBUG_ON:
             print "outputfilename = "+self.outputfilename
         if not os.path.exists(dir_path):
@@ -227,9 +227,9 @@ class CA_cert(Certificate):
         #setup our cert addresses for rsync
         #For aia cut off the portion that contains the repoitory path to create an rsync url
         self.aia   = "r:rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
-        self.crldp = "r:rsync://"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
-        self.sia = "r:rsync://"+sia_path
+        self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         Certificate.__init__(self,parent, myFactory,sia_path,serial)
+        self.sia = "r:rsync://"+sia_path+",m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
 
@@ -244,16 +244,15 @@ class EE_cert(Certificate):
         nickName = "EE-"+str(serial)
 
         path_sia = parent.SIA_path+"/"+nickName
-        self.crldp = "r:rsync://"+parent.SIA_path+"/"+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
+        self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         Certificate.__init__(self,parent,myFactory,path_sia,serial)
         
         #Set our SIA based on the hash of our public key, which will be the name
-        #of the ROA or Manifest this EE will be inside of.
-        self.sia = "r:rsync://"+parent.SIA_path+"/"+base64.urlsafe_b64encode(self.ski)
+        #of the ROA or Manifest this EE will be signing 
         if myFactory.bluePrintName == "Manifest-EE":
-            self.sia = self.sia+".mft"
+            self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".mft"
         else:
-            self.sia = self.sia+".roa"
+            self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(self.ski)+".roa"
               
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
@@ -270,8 +269,8 @@ class SS_cert(Certificate):
         nickName = myFactory.bluePrintName+"-"+str(serial)
   
         sia_path = myFactory.serverName + "/"+nickName
-        self.sia = "r:rsync://"+sia_path
         Certificate.__init__(self,parent,myFactory,sia_path,serial)
+        self.sia = "r:rsync://"+sia_path+",m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=True")
 
@@ -293,9 +292,9 @@ class Manifest(CMS):
         self.manNum         = eeCertificate.serial
         self.thisupdate      = datetime.datetime.now()
         #Not sure on this nextUpdate time frame
-        self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl)
+        self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl*SECONDS_IN_DAY)
         #Chop off our rsync:// portion and append the repo path
-        self.outputfilename = REPO_PATH+"/"+eeCertificate.sia[len(RSYNC_EXTENSION):]
+        self.outputfilename = REPO_PATH+"/"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".mft"
         
         dirname = REPO_PATH+"/"+parent.SIA_path
         fileList = []
@@ -340,14 +339,14 @@ class Crl:
         self.issuer          = parent.commonName
         self.thisupdate      = datetime.datetime.now()
         #Not sure on this nextUpdate time frame
-        self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl)
+        self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl*SECONDS_IN_DAY)
         self.crlnum          = parent.getNextChildSN()
         self.revokedcertlist = []
         self.aki             = parent.certificate.ski
          
         #Create the output file directory if it doesn't exist
         dir_path  = REPO_PATH+"/"+parent.SIA_path+"/"
-        self.outputfilename = dir_path+base64.urlsafe_b64encode(parent.certificate.ski)+".crl"
+        self.outputfilename = dir_path+b64encode_wrapper(parent.certificate.ski)+".crl"
         writeConfig(self)
         create_binary(self, "CRL")
 

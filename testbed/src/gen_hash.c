@@ -68,7 +68,7 @@ static int writeFileHash(char* buf, int len)
 {
   uchar hashbuf[24];
   int siz;
-  siz = gen_hash((uchar*)buf, len - 1, hashbuf, 1);
+  siz = gen_hash((uchar*)buf, len - 1, hashbuf, 2);
   
 
   //write out the hashed key
