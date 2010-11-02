@@ -126,7 +126,6 @@ def configuration_parser(factory_dict,fileName):
                                 print 'Unrecognized type included in name of section in the .ini'
                                 return 
                         #Add our bluePrintName to the factory dictionary
-                        print name
                         factory_dict[name]=f
                         
         except ValueError:
@@ -174,7 +173,7 @@ def create_driver(iana):
 
         child_list = []
         #Creates all child CA's and ROA's for a the CA ca_node
-        #child_list, repo_size = create_children(ca_node,repo_size)
+        child_list, repo_size = create_children(ca_node,repo_size)
         #crl_list
         new_crl = Crl(ca_node)
         ca_node.crl.append(new_crl)
@@ -184,6 +183,7 @@ def create_driver(iana):
         eeFactory = Factory("Manifest-EE", "inherit", "inherit", "inherit", ttl=ca_node.myFactory.ttl)
         new_manifest = Manifest(ca_node,eeFactory)
         ca_node.manifests.append(new_manifest)
+        repo_size+=1
 
         
         #Add all of our children to the queue of CAs
@@ -226,22 +226,22 @@ def create_children(ca_node, repo_size):
 def main():
         fileName = 'test.ini'
 
-        print FACTORIES
-
         configuration_parser(FACTORIES,fileName)
-
         print FACTORIES
-        print FACTORIES['AFRINIC'].ipv4List
-        print FACTORIES['APNIC'].childSpec
-        print FACTORIES['ROAA'].asid
+        #Declaring the initial resources we want IANA to have
         FACTORIES['IANA'].ipv4List = ["0.0.0.0-0.0.0.255"]
         FACTORIES['IANA'].ipv6List = ["1::0-255::0"]
         FACTORIES['IANA'].asList = ["0-1"]
         print FACTORIES['IANA'].ipv4List
+        #House Keeping to clean up the old REPOSITORY
+        #Should remove objects/keys,configs, and REPOSITORY
+        os.system("rm -r "+OBJECT_PATH+"/*")
+        
         iana = CA_Object(FACTORIES['IANA'])
+        
         create_driver(iana)
         
 #Fire off the test
 if __name__ == '__main__':
     main()
-    
+   

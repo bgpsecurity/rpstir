@@ -287,18 +287,16 @@ class Manifest(CMS):
         self.outputfilename = REPO_PATH+"/"+eeCertificate.sia[len(RSYNC_EXTENSION):]
         
         dirname = REPO_PATH+"/"+parent.SIA_path
-        filelist = []
+        fileList = []
         for f in os.listdir(dirname):
             if os.path.isfile(os.path.join(dirname, f)):
-                print dirname+"/"+f
-                filelist.append(f+"%"+generate_file_hash(dirname+"/"+f))
+                fileList.append(f+"%"+generate_file_hash(dirname+"/"+f))
         
-        self.fileList = filelist
+        self.fileList = fileList
         CMS.__init__(self, eeCertificate.outputfilename,eeCertificate.subjkeyfile)
 
         writeConfig(self)
         create_binary(self, "MANIFEST")
-
 #
 # The ROA class. Inherits from CMS
 #
