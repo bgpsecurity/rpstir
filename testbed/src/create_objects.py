@@ -93,6 +93,17 @@ def writeConfig(obj):
     f.close()
 
 #
+# Drops the last set of = signs off the returned string. These are just 
+#  padding information specified by the RFC for the b64 encoding  and 
+#  currently don't are about them
+#
+def b64encode_wrapper(toPass):
+	ret = base64.urlsafe_b64encode(toPass)
+        while ret[-1] == '=':
+		ret = ret[:-1]
+	return ret
+
+#
 # This is a generic function that calls create_object
 #
 def create_binary(obj, xargs):
