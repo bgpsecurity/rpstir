@@ -157,7 +157,6 @@ int write_fileList(void* man, void* value)
       //get a null terminated filename to copy into the casn
       char* fileName = calloc(fileNameLen+1,sizeof(char));
       memcpy(fileName,testBuf,fileNameLen);
-      fileName[fileNameLen+1]='\0';
 
       //Use a function in create_utils.c to read the hex value from 
       // the string. 
