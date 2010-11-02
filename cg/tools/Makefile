@@ -22,7 +22,8 @@
 
 TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
-	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart
+	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
+	extractCMScert
 
 all:	$(TARGETS)
 
@@ -91,6 +92,9 @@ test_casn_random: test_casn_random.o
 
 check_signature: check_signature.o
 	$(CC) $(CFLAGS) -o $@ check_signature.o $(LOCAL_LIBS) $(LIBS)
+
+extractCMScert: extractCMScert.o
+	$(CC) $(CFLAGS) -o $@ extractCMScert.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f $(TARGETS) *.o
