@@ -110,9 +110,22 @@ int parse_config(char *configfile, struct object_field *tbl)
   char *name, *value;
   int name_len;
   FILE *fp; 
-  char buf[200];
+  char *buf;
+  struct stat stbuf;
 
   memset(parse_errstr,0, sizeof(parse_errstr));
+
+  if (stat(configfile,&stbuf) != 0)
+    {
+      fprintf(stderr, "Error getting file size %s\n", configfile);
+      return 1;
+    }
+
+  if ( (buf = calloc(stbuf.st_size, sizeof(char))) == NULL)
+    {
+      fprintf(stderr, "Memory Error\n");
+      return 1;
+    }
 
   // Open the config file
   fp = fopen(configfile, "r");
