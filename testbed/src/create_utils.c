@@ -352,14 +352,13 @@ int cvtv4(uchar fill, char *ip, uchar *buf)
     mask = ~(0xFF << fld);  // mask for last byte
     if (fill) 
       {
-      mask = ~mask;
-      if ((mask & *uc)) return -1;
-      *uc |= (~mask);
+      if ((mask & *uc) && mask != *uc) return -1;
+      *uc |= mask;
       }
     else 
       {
       if ((mask & *uc)) return -1;
-      *uc &= mask;
+      *uc &= ~(mask);
       }
     }
   return 0;
@@ -371,8 +370,8 @@ int cvtv6(uchar fill, char *ip, uchar *buf)
   char *c;
   int fld, elided;
   for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') || 
-      ((*c | 0x20) >= 'a' && (*c | 0x20) <= 'f') || *c == ':' || *c == '/');
-       c++);
+    ((*c | 0x20) >= 'a' && (*c | 0x20) <= 'f') || *c == ':' || *c == '/');
+    c++);
   if (*c > ' ') return -2;
   for (up = buf, ue = &buf[16]; up < ue; *up++ = fill);
   for (c = ip, elided = 8; *c && *c != '/'; c++)
@@ -392,18 +391,17 @@ int cvtv6(uchar fill, char *ip, uchar *buf)
       while(elided) 
         {
 	  if (c[2] == '/')
-	    {
-	      *up++ = fill;
-	      *up++ = fill;
-	    }
-	  else
-	    {
-	      *up++ = 0;
-	      *up++ = 0;
-	    }
-	  elided--;
+	  {
+	    *up++ = fill;
+	    *up++ = fill;
+	  }
+	else
+	  {
+	    *up++ = 0;
+	    *up++ = 0;
+	  }
+	elided--;
         }
-      //      c++;
       c+=2;
       }
     }
@@ -420,15 +418,15 @@ int cvtv6(uchar fill, char *ip, uchar *buf)
     mask = (0xFFFF << fld);  // mask for last ushort
     if (fill) 
       {
-      mask = ~mask;
-          // if up is at the high byte in a short
-      if (!((up - buf) & 1)) *up++ |= ((mask >> 8) & 0xFF);
-      *up |= (mask & 0xFF);
+	mask = ~mask;
+	// if up is at the high byte in a short
+	if (!((up - buf) & 1)) *up++ |= ((mask >> 8) & 0xFF);
+	*up |= (mask & 0xFF);
       }
-    else 
+    else
       {
-      *up++ &= ((mask >> 8) & 0xFF);
-      *up   &= (mask & 0xFF);
+	*up++ &= ((mask >> 8) & 0xFF);
+	*up   &= (mask & 0xFF);
       }
     }
   return 0;
