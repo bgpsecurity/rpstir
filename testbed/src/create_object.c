@@ -111,6 +111,7 @@ int parse_config(char *configfile, struct object_field *tbl)
   int name_len;
   FILE *fp; 
   char *buf;
+  int flen;
   struct stat stbuf;
 
   memset(parse_errstr,0, sizeof(parse_errstr));
@@ -121,7 +122,8 @@ int parse_config(char *configfile, struct object_field *tbl)
       return 1;
     }
 
-  if ( (buf = calloc(stbuf.st_size, sizeof(char))) == NULL)
+  flen =  stbuf.st_size;
+  if ( (buf = calloc(flen, sizeof(char))) == NULL)
     {
       fprintf(stderr, "Memory Error\n");
       return 1;
@@ -136,7 +138,7 @@ int parse_config(char *configfile, struct object_field *tbl)
     }
 
   // read each line and process
-  while (fgets(buf, sizeof(buf), fp) != NULL)
+  while (fgets(buf, flen, fp) != NULL)
     { 
       name = buf;
       while(isspace(*name)) name++;
