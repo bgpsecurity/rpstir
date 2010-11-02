@@ -135,7 +135,7 @@ class EE_Object:
     
     #Hard coded suballocation currently, need to implement actual allocation
     def subAllocateIP4(self,iplist):
-        return "0.0.0.0/16"
+        return "0.1/17"
     def subAllocateIP6(self,iplist):
         return "1::/16"
     def subAllocateAS(self, asList):
@@ -185,7 +185,7 @@ class CA_Object:
     def subAllocateIP4(self,iplist):
         return parseIPForCert(self,[netaddr.IPRange("0.0.0.0","0.0.0.255")])
     def subAllocateIP6(self,iplist):
-        return parseIPForCert(self,[netaddr.IPRange("1::0","255::0")])
+        return parseIPForCert(self,[netaddr.IPRange("1::","255::")])
     def subAllocateAS(self, asList):
         return parseASForCert(self,[(0,1)])
     
