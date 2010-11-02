@@ -226,8 +226,8 @@ class CA_cert(Certificate):
 
         #setup our cert addresses for rsync
         #For aia cut off the portion that contains the repoitory path to create an rsync url
-        self.aia   = "r:rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
+        self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         Certificate.__init__(self,parent, myFactory,sia_path,serial)
         self.sia = "r:rsync://"+sia_path+",m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
@@ -244,6 +244,7 @@ class EE_cert(Certificate):
         nickName = "EE-"+str(serial)
 
         path_sia = parent.SIA_path+"/"+nickName
+        self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         Certificate.__init__(self,parent,myFactory,path_sia,serial)
         

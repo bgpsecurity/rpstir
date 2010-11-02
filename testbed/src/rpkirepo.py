@@ -135,7 +135,7 @@ class EE_Object:
     
     #Hard coded suballocation currently, need to implement actual allocation
     def subAllocateIP4(self,iplist):
-        return "0.1/17"
+        return "0.1/16"
     def subAllocateIP6(self,iplist):
         return "1::/16"
     def subAllocateAS(self, asList):

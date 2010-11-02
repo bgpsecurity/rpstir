@@ -230,7 +230,7 @@ def main():
         print FACTORIES
         #Declaring the initial resources we want IANA to have
         FACTORIES['IANA'].ipv4List = ["0.0.0.0-0.0.0.255"]
-        FACTORIES['IANA'].ipv6List = ["1::0-255::0"]
+        FACTORIES['IANA'].ipv6List = ["1::-255::"]
         FACTORIES['IANA'].asList = ["0-1"]
         print FACTORIES['IANA'].ipv4List
         #House Keeping to clean up the old REPOSITORY
