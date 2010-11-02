@@ -29,13 +29,22 @@
 #include <asn.h>
 #include <time.h>
 
+#define SHA1_HASH_LENGTH 20
+#define SHA2_HASH_LENGTH 32
+
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
 {
   CRYPT_CONTEXT hashContext;
-  uchar hash[40];
+  uchar* hash;
   int ansr;
-  
-  memset(hash, 0, sizeof(hash));
+
+  if (alg == 2)
+    hash = calloc(SHA2_HASH_LENGTH,sizeof(char));
+  else if (alg == 1)
+    hash = calloc(SHA1_HASH_LENGTH,sizeof(char));
+  else return 0;
+    
+  //memset(hash, 0, sizeof(hash));
   cryptInit();
   if (alg == 2) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   else if (alg == 1) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
@@ -52,31 +61,28 @@ static int writeHashedPublicKey(struct casn *keyp)
 {
   uchar *bitval;
   int siz = readvsize_casn(keyp, &bitval);
-  uchar hashbuf[24];
+  uchar* hashbuf = calloc(SHA1_HASH_LENGTH, sizeof(uchar));
   siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
   free(bitval);
 
   //write out the hashed key
   int i =0;
   printf("0x");
-  for(i = 0; i < 24; i++)
-    printf("%X", (unsigned int)hashbuf[i]);
-  printf("\n");
+  for(i = 0; i < SHA1_HASH_LENGTH; i++)
+    printf("%02X", (unsigned int)hashbuf[i]);
   return siz;
 }
 static int writeFileHash(char* buf, int len)
 {
-  uchar hashbuf[24];
+  uchar* hashbuf = calloc(SHA2_HASH_LENGTH, sizeof(uchar));
   int siz;
-  siz = gen_hash((uchar*)buf, len - 1, hashbuf, 2);
-  
+  siz = gen_hash((uchar*)buf, len, hashbuf, 2);  
 
   //write out the hashed key
   int i =0;
   printf("0x");
-  for(i = 0; i < 24; i++)
-    printf("%X", (unsigned int)hashbuf[i]);
- // printf("\n");
+  for(i = 0; i < SHA2_HASH_LENGTH; i++)
+    printf("%02X", (unsigned int)hashbuf[i]);
   return siz;
 }
 
@@ -160,12 +166,26 @@ int main(int argc, char* argv[])
      return 1;
    }
    else{
-     int length = 10000;
-     char* buf = calloc(length, sizeof(char));
+     struct stat stbuf;
+     char* buf;
+     int flen;
+     
+     if (stat(name,&stbuf) != 0)
+     {
+       fprintf(stderr, "Error getting file size %s\n", name);
+       return 1;
+     }
+     
+     flen =  stbuf.st_size;
+     if ( (buf = calloc(flen, sizeof(char))) == NULL)
+     {
+       fprintf(stderr, "Memory Error\n");
+       return 1;
+     }
 
      FILE* fp = fopen(name,"r");
   
-     int size = fread(buf, sizeof(char), length, fp);
+     int size = fread(buf, sizeof(char), flen, fp);
      writeFileHash(buf, size);
      fclose(fp);
 
