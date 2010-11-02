@@ -321,7 +321,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
     return extp;
   }
 
-static int cvtv4(uchar fill, char *ip, uchar *buf)
+int cvtv4(uchar fill, char *ip, uchar *buf)
   {
   uchar *uc, *ue = &buf[4];
   char *c;
@@ -365,7 +365,7 @@ static int cvtv4(uchar fill, char *ip, uchar *buf)
   return 0;
   }
     
-static int cvtv6(uchar fill, char *ip, uchar *buf)
+int cvtv6(uchar fill, char *ip, uchar *buf)
 {
   uchar *up, *ue;
   char *c;

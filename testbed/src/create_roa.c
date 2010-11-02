@@ -39,7 +39,7 @@ char *roa_template = "../templates/R.roa";
 void print_table(struct object_field *table);
 int write_EEcert(void* my_var, void* value);
 int write_EEkey(void* my_var, void* value);
-
+int enc_ipAddr(int family,char *ipAddr, uchar *enc_addr);
 /**
  *
  * This file is designed to provide functions to create a roa
@@ -79,7 +79,7 @@ int parse_and_write_ips(struct RouteOriginAttestation* roap, char* ptr, long add
   char* token=",";
   int numIps = 0;
   char family[2];
-  int var,numBits;
+  int var;
 
   family[0]= 0;
   // if we are dealing with IPv4, set up some variables
@@ -87,13 +87,11 @@ int parse_and_write_ips(struct RouteOriginAttestation* roap, char* ptr, long add
     {
       family[1]= 1;
       var = AF_INET;
-      numBits = 4;
     }
   else
     {
       family[1]= 2;
       var = AF_INET6;
-      numBits = 16;
     }
 
   // Grab the correct structure from the ROA CMS object
@@ -146,11 +144,13 @@ int parse_and_write_ips(struct RouteOriginAttestation* roap, char* ptr, long add
 
       //A buffer to send to the inet_pton function which takes care of parsing
       // the IP address
-      char* ipBits[numBits];
+      uchar ipBits[18];
+      int lth;
       
-      if(inet_pton(var,ipAddr,&ipBits) > 0)
+      memset(ipBits, 0, sizeof(ipBits));
+      if((lth = enc_ipAddr(var,ipAddr,ipBits)) > 0)
 	{
-	  if(write_casn(&roafp->address, (uchar*)ipBits,numBits) != numBits)
+	  if(write_casn(&roafp->address, (uchar*)ipBits,lth) != lth)
 	    return -1;
 	}
       else
@@ -211,6 +211,54 @@ int write_ipv6(void* my_var, void* value)
     return SUCCESS;
   else
     return -1;
+}
+
+// encode the ascii ip address into an encoded bit string
+// will handle prefixes but not ranges(not supported for roas)
+// i.e. 1.0/14 encodes to 020100
+int enc_ipAddr(int family,char *ipAddr, uchar *enc_addr)
+{
+  int lth = (family==AF_INET) ? 4:16;
+  uchar *hucp, *lucp, *eucp;
+  uchar mask = 0;
+  int numbits = 0;
+  uchar lolim[18], hilim[18];
+
+  if (family == AF_INET)
+    {
+      cvtv4(0,ipAddr, lolim);
+      cvtv4(0xFF,ipAddr, hilim);
+    }  
+  else
+    {
+      cvtv6(0,ipAddr, lolim);
+      cvtv6(0xFF,ipAddr, hilim);
+    }  
+  eucp = &lolim[lth];
+  for (lucp = lolim, hucp = hilim;
+       lucp < eucp && *lucp == *hucp;
+       lucp++,  hucp++, numbits += 8);
+  if (lucp < eucp)
+    {
+    for (mask = 0x80; mask && (mask & *lucp) == (mask & *hucp);
+      mask >>= 1, numbits++);
+    }
+       // at first difference. test remains of byte
+  while(mask && !(mask & *lucp) && (mask & *hucp)) mask >>= 1;
+  if (!mask) // now test remainder of bytes
+    {
+    for (lucp++, hucp++; lucp < eucp && !*lucp && *hucp == 0xff;
+      lucp++, hucp++);
+    }
+  int strlth;
+  if (!mask && lucp >= eucp)                
+    {
+      strlth = (numbits + 7) >> 3;
+      memcpy(&enc_addr[1], lolim, strlth);
+      enc_addr[0] = (8 - (numbits & 7)) & 7;
+      return strlth+1;
+    }
+  return 0;
 }
 
 // This table stores all possible input values for the ROA and a pointer

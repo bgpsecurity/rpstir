@@ -80,4 +80,6 @@ extern int write_family(struct IPAddressFamilyA *famp, char *buf, int num);
 extern int write_ASNums(struct ASNum *asnump, char *val, int num);
 extern char *stripQuotes(char *str);
 extern char *copy_string(char *str, int num);
+extern int cvtv4(uchar fill, char *ip, uchar *buf);
+extern int cvtv6(uchar fill, char *ip, uchar *buf);
 #endif /* _CREATE_OBJ_H */
