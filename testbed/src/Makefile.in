@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(create_object_SOURCES)
+SOURCES = $(create_object_SOURCES) $(gen_hash_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -36,7 +36,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = create_object$(EXEEXT)
+bin_PROGRAMS = create_object$(EXEEXT) gen_hash$(EXEEXT)
 subdir = testbed/src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -56,6 +56,10 @@ create_object_OBJECTS = $(am_create_object_OBJECTS)
 create_object_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 create_object_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_gen_hash_OBJECTS = gen_hash.$(OBJEXT)
+gen_hash_OBJECTS = $(am_gen_hash_OBJECTS)
+gen_hash_LDADD = $(LDADD)
+gen_hash_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -63,8 +67,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(create_object_SOURCES)
-DIST_SOURCES = $(create_object_SOURCES)
+SOURCES = $(create_object_SOURCES) $(gen_hash_SOURCES)
+DIST_SOURCES = $(create_object_SOURCES) $(gen_hash_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -159,6 +163,8 @@ create_object_SOURCES = create_object.c create_object.h create_cert.h \
 	create_cert.c create_manifest.h create_roa.c create_utils.c sign_object.c
 
 create_object_LDFLAGS = $(LOCAL_LIBS)
+gen_hash_SOURCES = gen_hash.c
+gen_hash_LDFLAGS = $(LOCAL_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -218,6 +224,9 @@ clean-binPROGRAMS:
 create_object$(EXEEXT): $(create_object_OBJECTS) $(create_object_DEPENDENCIES) 
 	@rm -f create_object$(EXEEXT)
 	$(LINK) $(create_object_LDFLAGS) $(create_object_OBJECTS) $(create_object_LDADD) $(LIBS)
+gen_hash$(EXEEXT): $(gen_hash_OBJECTS) $(gen_hash_DEPENDENCIES) 
+	@rm -f gen_hash$(EXEEXT)
+	$(LINK) $(gen_hash_LDFLAGS) $(gen_hash_OBJECTS) $(gen_hash_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -231,6 +240,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/create_object.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/create_roa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/create_utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_hash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sign_object.Po@am__quote@
 
 .c.o:

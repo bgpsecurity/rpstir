@@ -70,7 +70,7 @@ class ROA_Factory(Factory):
         
         #Call the factory constructor to initialize inherited args
         Factory.__init__(self, bluePrintName, ipv4List, ipv6List, asList,\
-                childSpec, serverName, breakAway, ttl = 0)
+                childSpec, serverName, breakAway, ttl)
         
         #ROA specific
         self.ROAipv4List = ROAipv4List
