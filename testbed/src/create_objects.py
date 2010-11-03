@@ -239,7 +239,7 @@ class CA_cert(Certificate):
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         Certificate.__init__(self,parent, myFactory,sia_path,serial)
-        self.sia = "r:rsync://"+sia_path+",m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
+        self.sia = "r:rsync://"+sia_path+"/,m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
 
@@ -281,7 +281,7 @@ class SS_cert(Certificate):
   
         sia_path = myFactory.serverName + "/"+nickName
         Certificate.__init__(self,parent,myFactory,sia_path,serial)
-        self.sia = "r:rsync://"+sia_path+",m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
+        self.sia = "r:rsync://"+sia_path+"/,m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=True")
 
