@@ -22,6 +22,7 @@ from subprocess import Popen
 import subprocess
 from time import time
 import base64
+import binascii
 
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
@@ -108,7 +109,7 @@ def writeConfig(obj):
 #  currently don't are about them
 #
 def b64encode_wrapper(toPass):
-    ret = base64.urlsafe_b64encode(toPass)
+    ret = base64.urlsafe_b64encode( binascii.unhexlify(toPass[2:] ) )
     while ret[-1] == '=':
         ret = ret[:-1]
     return ret
