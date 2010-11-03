@@ -263,6 +263,9 @@ class EE_cert(Certificate):
         #of the ROA or Manifest this EE will be signing 
         if myFactory.bluePrintName == "Manifest-EE":
             self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".mft"
+            self.ipv4 = myFactory.ipv4List
+            self.ipv6 = myFactory.ipv6List
+            self.as = myFactory.asList
         else:
             self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(self.ski)+".roa"
               
