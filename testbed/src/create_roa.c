@@ -138,8 +138,8 @@ int parse_and_write_ips(struct RouteOriginAttestation* roap, char* ptr, long add
       else
 	{
 	  ipAddr = next;
-	  if(write_casn_num(&roafp->maxLength, 0)<0)
-	    return -1;
+	  //if(write_casn_num(&roafp->maxLength, 0)<0)
+	  //  return -1;
 	}
 
       //A buffer to send to the inet_pton function which takes care of parsing
