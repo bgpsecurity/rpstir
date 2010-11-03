@@ -70,7 +70,10 @@ def writeConfig(obj):
                     fileBuf += '%s=%s\n' % (member, val)
             
             elif member == 'ipv4' or member == 'ipv6' or member == 'as':
-                fileBuf += '%s=%s\n' % (member,",".join(val))
+                if val == 'inherit':
+                    fileBuf += '%s=%s\n' % (member, val)
+		else:
+		    fileBuf += '%s=%s\n' % (member,",".join(val))
             elif member == 'roaipv4' or member == 'roaipv6':
                 try:
                     ip,value = val.split('%')
