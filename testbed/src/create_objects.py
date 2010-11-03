@@ -79,9 +79,19 @@ def writeConfig(obj):
                     fileBuf += '%s=%s%%%s\n' % (member, ip,value)
                 else:
                     fileBuf += '%s=%s\n' % (member, val)                    
-            elif member == 'notBefore' or member == 'notAfter' \
-                    or  member == 'thisupdate' or member == 'nextupdate':
-                fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
+            elif member == 'notBefore' or member == 'notAfter':
+                if val.year < 2050:
+                    fileBuf += '%s=%s\n' % (member,val.strftime("%y%m%d%H%M%SZ"))
+                else:
+                    fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
+            elif member == 'thisupdate' or member == 'nextupdate':
+                if isinstance(obj,Manifest):
+                    fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
+                else:
+                    if val.year < 2050:
+                        fileBuf += '%s=%s\n' % (member,val.strftime("%y%m%d%H%M%SZ"))
+                    else:
+                        fileBuf += '%s=%s\n' % (member,val.strftime("%Y%m%d%H%M%SZ"))
             elif member == 'fileList':
                 fileBuf += '%s=%s\n' % (member, ','.join(val))
             else:
