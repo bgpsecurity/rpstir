@@ -63,10 +63,17 @@ static int cvtv4(uchar fill, char *ip, uchar *buf)
   {
   uchar *uc, *ue = &buf[4];
   char *c;
-  int fld;
+  int fld, lth;
   for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') || 
     *c == '.' || *c == '/');
-    c++);
+    c++)
+    {
+    if (*c == '/') 
+      {
+      sscanf(&c[1], "%d", &lth);
+      lth = ((lth + 7) >> 3);  // number of bytes
+      }
+    }
   if (*c > ' ') return -2;
   memset(buf, fill, 4);
   for (c = ip, uc = buf; *c && *c != '/'; )
@@ -74,7 +81,7 @@ static int cvtv4(uchar fill, char *ip, uchar *buf)
     if (*c == '.') c++;
     sscanf(c, "%d", &fld);
     if (uc >= ue || fld > 255) return -1;
-    *uc++ = (uchar)fld;
+    if ((uc - buf) < lth) *uc++ = (uchar)fld;
     while (*c && *c != '.' && *c != '/') c++;
     }
   if (*c) 
@@ -111,6 +118,7 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
     ((*c | 0x20) >= 'a' && (*c | 0x20) <= 'f') || *c == ':' || *c == '/');
     c++);
   if (*c > ' ') return -2;
+  memset(buf, fill, 16);
   for (up = buf, ue = &buf[16]; up < ue; *up++ = fill);
   for (c = ip, elided = 8; *c && *c != '/'; c++)
     {
@@ -126,39 +134,35 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
     while(*c && *c != ':' && *c != '/') c++;
     if (*c == ':' && c[1] == ':')
       {
-      while(elided) 
+      while(elided--) 
         {
-        if (c[2] =='/')
-          {
-          *up++ = fill;
-          *up++ = fill;
-          }
-        else
-          { 
-          *up++ = 0;
-          *up++ = 0;
-          }
-        elided--;
+        *up++ = fill;
+        *up++ = fill;
         }
       c += 2;
       }
     }
   if (*c) 
     {
-    ushort mask;
-    c++;
-    sscanf(c, "%d", &fld); // fld has total number of bits
-    if (fld >= 128) return (fld > 128)? -1: 0;
-    if (up < &buf[fld >> 3]) return -1;
-    up = &buf[(fld >> 3)];
-    fld %= 16;   // number of used bits in last ushort
-    fld = 16 - fld;  // number of unused bits
-    mask = ~(0xFFFF << fld);  // mask for last ushort
+    ushort mask = 0;
+    fld = 0;
+    if (*c == '/')
+      {
+      c++;
+      sscanf(c, "%d", &fld); // fld has total number of bits
+      if (fld >= 128) return (fld > 128)? -1: 0;
+      if (up < &buf[fld >> 3]) return -1;
+      up = &buf[(fld >> 3)];
+      fld %= 0;   // number of used bits in last ushort
+      fld = 16 - fld;  // number of unused bits
+      mask = ~(0xFFFF << fld);  // mask for last ushort
+      }
+    else up = &buf[14];
     if (fill) 
       {
-      if ((mask >> 8) & *up && (mask >> 8) != *up) return -1; 
+      if (((mask >> 8) & *up) && (mask >> 8) != *up) return -1; 
       *up++ |= ((mask >> 8) & 0xFF);
-      if ((mask &0xFF) & *up && (mask & 0xFF) != *up) return -1;
+      if (((mask &0xFF) & *up) && (mask & 0xFF) != *up) return -1;
       *up++ |= (mask & 0xFF);
           // if up is at the high byte in a short
       if (((up - buf) & 1)) *up = 0xFF;
