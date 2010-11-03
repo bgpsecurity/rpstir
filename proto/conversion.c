@@ -153,7 +153,7 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
       if (fld >= 128) return (fld > 128)? -1: 0;
       if (up < &buf[fld >> 3]) return -1;
       up = &buf[(fld >> 3)];
-      fld %= 0;   // number of used bits in last ushort
+      fld %= 16;   // number of used bits in last ushort
       fld = 16 - fld;  // number of unused bits
       mask = ~(0xFFFF << fld);  // mask for last ushort
       }
