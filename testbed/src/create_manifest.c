@@ -160,7 +160,7 @@ int write_fileList(void* man, void* value)
 
       //Use a function in create_utils.c to read the hex value from 
       // the string. 
-      if( read_hex_val(hash, strlen(hash), hashBits) > 0 )
+      if( read_hex_val(hash, strlen(hash), &hashBits[1]) > 0 )
 	{
 	  if(fileName != NULL && hashBits != NULL)
 	    {
@@ -169,7 +169,7 @@ int write_fileList(void* man, void* value)
 	      if (!(fahp = (struct FileAndHash *)inject_casn(&manp->fileList.self, num))) 
 		warn(3, "fileList");
 	      write_casn(&fahp->file, (uchar *)fileName, strlen(fileName));
-	      write_casn(&fahp->hash, hashBits, (strlen(hash)/2)+1);
+	      write_casn(&fahp->hash, hashBits, (strlen(hash)/2));
 	    }      
 
 	  num++;
