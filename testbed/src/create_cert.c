@@ -931,6 +931,15 @@ int write_cert_asnums(void *cert, void *val)
   write_casn_num(&extp->critical, 1);
   struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
 
+
+  // if it is inherit - set that and done
+  if (strncasecmp(val, "inherit", strlen("inherit")) == 0)
+    {
+      struct ASIdentifierChoiceA *asidChoice = &asNump->asnum;
+      write_casn(&asidChoice->inherit, (uchar *)"", 0);
+      return SUCCESS;
+    }
+
   // go through all as numbers listed and add them to the block
   ptr = val;
   while (ptr != NULL)
