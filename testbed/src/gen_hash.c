@@ -55,6 +55,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
   cryptDestroyContext(hashContext);
   cryptEnd();
   memcpy(outbufp, hash, ansr);
+  free(hash);
   return ansr;
 }
 static int writeHashedPublicKey(struct casn *keyp)
@@ -70,6 +71,7 @@ static int writeHashedPublicKey(struct casn *keyp)
   printf("0x");
   for(i = 0; i < SHA1_HASH_LENGTH; i++)
     printf("%02X", (unsigned int)hashbuf[i]);
+  free(hashbuf);
   return siz;
 }
 static int writeFileHash(char* buf, int len)
@@ -83,6 +85,8 @@ static int writeFileHash(char* buf, int len)
   printf("0x");
   for(i = 0; i < SHA2_HASH_LENGTH; i++)
     printf("%02X", (unsigned int)hashbuf[i]);
+
+  free(hashbuf);
   return siz;
 }
 
@@ -188,6 +192,7 @@ int main(int argc, char* argv[])
      int size = fread(buf, sizeof(char), flen, fp);
      writeFileHash(buf, size);
      fclose(fp);
+     free(buf);
 
      return 1;
    }
