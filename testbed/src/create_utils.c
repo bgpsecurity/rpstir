@@ -322,113 +322,214 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   }
 
 int cvtv4(uchar fill, char *ip, uchar *buf)
-  {
-  uchar *uc, *ue = &buf[4];
-  char *c;
-  int fld;
-  for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') || 
-    *c == '.' || *c == '/');
-    c++);
-  if (*c > ' ') return -2;
-  memset(buf, fill, 4);
-  for (c = ip, uc = buf; *c && *c != '/'; )
-    {
-    if (*c == '.') c++;
-    sscanf(c, "%d", &fld);
-    if (uc >= ue || fld > 255) return -1;
-    *uc++ = (uchar)fld;
-    while (*c > ' ' && *c != '.' && *c != '/') c++;
-    }
-  if (*c) 
-    {
-    uchar mask;
-    c++;
-    sscanf(c, "%d", &fld); // fld has total number of bits
-    if (fld >= 32) return (fld > 32)? -1: 0;
-    if (uc < &buf[fld >> 3]) return -1;
-    uc = &buf[(fld >> 3)];  // points to char having bit beyond last
-    fld %= 8;   // number of used bits in last byte
-    fld = 8 - fld;   // number of unused 
-    mask = ~(0xFF << fld);  // mask for last byte
-    if (fill) 
-      {
-      if ((mask & *uc) && mask != *uc) return -1;
-      *uc |= mask;
-      }
-    else 
-      {
-      if ((mask & *uc)) return -1;
-      *uc &= ~(mask);
-      }
-    }
+{
+  /**
+   * THIS IS A TEMPORARY FIX(AND A POOR ONE) FOR TESTBED GENERATION
+   * WE WANT THIS CODE TO BE REMOVED AND THE ORIGINAL
+   * CVTV4 FUNCTION TO BE CORRECTED AND LEFT HERE.
+   **/
+
+  //This is the python command we want to run
+  int commandLen = 100;
+  char* cmd;
+  cmd = calloc(commandLen, sizeof(char));
+  snprintf (cmd, commandLen, "python parse_ip.py %s", ip);
+
+  //Run it and read in the std output
+  FILE *output = popen(cmd, "r");
+  if(!output)return -1;
+  char buffer[1024];
+  char *line_p = fgets(buffer, sizeof(buffer), output);
+  pclose(output);
+
+  //Parse up the space delimited return value
+  //  char* tmp = calloc(strlen(buf), sizeof(char));
+  //memcpy(tmp, buffer,strlen(buffer));
+  int firstLen;
+  char* second = NULL;      
+  //Set up two char lengths 
+  second = strchr(buffer,' ');
+  firstLen = (char*)second - (char*)buffer;
+  second++;
+  //get a null terminated filename to copy into the casn
+  char* first = calloc(firstLen+1,sizeof(char));
+  memcpy(first,buffer,firstLen);
+  //free(tmp);
+
+  //Parse the two strings in hex value into binary
+  uchar* firstHex = calloc(firstLen,sizeof(char));
+  uchar* secHex = calloc(strlen(second),sizeof(char));
+  read_hex_val(first, firstLen, firstHex);  
+  read_hex_val(second, strlen(second), secHex);
+
+  //firstHex and secHex are the first and last hex values for the ip prefix/range
+  if(fill == (uchar)0)
+    memcpy(buf, firstHex, firstLen);
+  else
+    memcpy(buf, secHex, strlen(second));
+  
+  free(cmd);
+  free(firstHex);
+  free(secHex);
+  free(first);  
+
+
+  /* uchar *uc, *ue = &buf[4]; */
+/*   char *c; */
+/*   int fld; */
+/*   for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') ||  */
+/*     *c == '.' || *c == '/'); */
+/*     c++); */
+/*   if (*c > ' ') return -2; */
+/*   memset(buf, fill, 4); */
+/*   for (c = ip, uc = buf; *c && *c != '/'; ) */
+/*     { */
+/*     if (*c == '.') c++; */
+/*     sscanf(c, "%d", &fld); */
+/*     if (uc >= ue || fld > 255) return -1; */
+/*     *uc++ = (uchar)fld; */
+/*     while (*c > ' ' && *c != '.' && *c != '/') c++; */
+/*     } */
+/*   if (*c)  */
+/*     { */
+/*     uchar mask; */
+/*     c++; */
+/*     sscanf(c, "%d", &fld); // fld has total number of bits */
+/*     if (fld >= 32) return (fld > 32)? -1: 0; */
+/*     if (uc < &buf[fld >> 3]) return -1; */
+/*     uc = &buf[(fld >> 3)];  // points to char having bit beyond last */
+/*     fld %= 8;   // number of used bits in last byte */
+/*     fld = 8 - fld;   // number of unused  */
+/*     mask = ~(0xFF << fld);  // mask for last byte */
+/*     if (fill)  */
+/*       { */
+/*       if ((mask & *uc) && mask != *uc) return -1; */
+/*       *uc |= mask; */
+/*       } */
+/*     else  */
+/*       { */
+/*       if ((mask & *uc)) return -1; */
+/*       *uc &= ~(mask); */
+/*       } */
+/*     } */
   return 0;
   }
     
 int cvtv6(uchar fill, char *ip, uchar *buf)
 {
-  uchar *up, *ue;
-  char *c;
-  int fld, elided;
-  for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') || 
-    ((*c | 0x20) >= 'a' && (*c | 0x20) <= 'f') || *c == ':' || *c == '/');
-    c++);
-  if (*c > ' ') return -2;
-  for (up = buf, ue = &buf[16]; up < ue; *up++ = fill);
-  for (c = ip, elided = 8; *c && *c != '/'; c++)
-    {
-    if (*c == ':') elided--;
-    } 
-  for (c = ip, up = buf; *c > ' ' && *c != '/';)
-    {
-    if (*c == ':') c++;
-    sscanf(c, "%x", &fld);
-    if (up >= ue || fld > 0xFFFF) return -1;
-    *up++ = (uchar)((fld >> 8) &0xFF);
-    *up++ = (uchar)(fld & 0xFF);
-    while(*c && *c != ':' && *c != '/') c++;
-    if (*c == ':' && c[1] == ':')
-      {
-      while(elided) 
-        {
-	  if (c[2] == '/')
-	  {
-	    *up++ = fill;
-	    *up++ = fill;
-	  }
-	else
-	  {
-	    *up++ = 0;
-	    *up++ = 0;
-	  }
-	elided--;
-        }
-      c+=2;
-      }
-    }
-  if (*c) 
-    {
-    ushort mask;
-    c++;
-    sscanf(c, "%d", &fld); // fld has total number of bits
-    if (fld >= 128) return (fld > 128)? -1: 0;
-    if (up < &buf[fld >> 3]) return -1;
-    up = &buf[(fld >> 3)];
-    fld %= 16;   // number of used bits in last ushort
-    fld = 16 - fld;  // number of unused bits
-    mask = (0xFFFF << fld);  // mask for last ushort
-    if (fill) 
-      {
-	mask = ~mask;
-	// if up is at the high byte in a short
-	if (!((up - buf) & 1)) *up++ |= ((mask >> 8) & 0xFF);
-	*up |= (mask & 0xFF);
-      }
-    else
-      {
-	*up++ &= ((mask >> 8) & 0xFF);
-	*up   &= (mask & 0xFF);
-      }
-    }
+  /**
+   * THIS IS A TEMPORARY FIX(AND A POOR ONE) FOR TESTBED GENERATION
+   * WE WANT THIS CODE TO BE REMOVED AND THE ORIGINAL
+   * CVTV6 FUNCTION TO BE CORRECTED AND LEFT HERE.
+   **/
+
+  //This is the python command we want to run
+  int commandLen = 100;
+  char* cmd;
+  cmd = calloc(commandLen, sizeof(char));
+  snprintf (cmd, commandLen, "python parse_ip.py %s", ip);
+
+  //Run it and read in the std output
+  FILE *output = popen(cmd, "r");
+  if(!output)return -1;
+  char buffer[1024];
+  char *line_p = fgets(buffer, sizeof(buffer), output);
+  pclose(output);
+
+  //Parse up the space delimited return value
+  //  char* tmp = calloc(strlen(buf), sizeof(char));
+  //memcpy(tmp, buffer,strlen(buffer));
+  int firstLen;
+  char* second = NULL;      
+  //Set up two char lengths 
+  second = strchr(buffer,' ');
+  firstLen = (char*)second - (char*)buffer;
+  second++;
+  //get a null terminated filename to copy into the casn
+  char* first = calloc(firstLen+1,sizeof(char));
+  memcpy(first,buffer,firstLen);
+  //free(tmp);
+
+  //Parse the two strings in hex value into binary
+  uchar* firstHex = calloc(firstLen,sizeof(char));
+  uchar* secHex = calloc(strlen(second),sizeof(char));
+  read_hex_val(first, firstLen, firstHex);  
+  read_hex_val(second, strlen(second), secHex);
+
+  //firstHex and secHex are the first and last hex values for the ip prefix/range
+  if(fill == (uchar)0)
+    memcpy(buf, firstHex, firstLen);
+  else
+    memcpy(buf, secHex, strlen(second));
+
+  free(cmd);
+  free(firstHex);
+  free(secHex);
+  free(first);
+
+  /* uchar *up, *ue; */
+/*   char *c; */
+/*   int fld, elided; */
+/*   for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') ||  */
+/*     ((*c | 0x20) >= 'a' && (*c | 0x20) <= 'f') || *c == ':' || *c == '/'); */
+/*     c++); */
+/*   if (*c > ' ') return -2; */
+/*   for (up = buf, ue = &buf[16]; up < ue; *up++ = fill); */
+/*   for (c = ip, elided = 8; *c && *c != '/'; c++) */
+/*     { */
+/*     if (*c == ':') elided--; */
+/*     }  */
+/*   for (c = ip, up = buf; *c > ' ' && *c != '/';) */
+/*     { */
+/*     if (*c == ':') c++; */
+/*     sscanf(c, "%x", &fld); */
+/*     if (up >= ue || fld > 0xFFFF) return -1; */
+/*     *up++ = (uchar)((fld >> 8) &0xFF); */
+/*     *up++ = (uchar)(fld & 0xFF); */
+/*     while(*c && *c != ':' && *c != '/') c++; */
+/*     if (*c == ':' && c[1] == ':') */
+/*       { */
+/*       while(elided)  */
+/*         { */
+/* 	  if (c[2] == '/') */
+/* 	  { */
+/* 	    *up++ = fill; */
+/* 	    *up++ = fill; */
+/* 	  } */
+/* 	else */
+/* 	  { */
+/* 	    *up++ = 0; */
+/* 	    *up++ = 0; */
+/* 	  } */
+/* 	elided--; */
+/*         } */
+/*       c+=2; */
+/*       } */
+/*     } */
+/*   if (*c)  */
+/*     { */
+/*     ushort mask; */
+/*     c++; */
+/*     sscanf(c, "%d", &fld); // fld has total number of bits */
+/*     if (fld >= 128) return (fld > 128)? -1: 0; */
+/*     if (up < &buf[fld >> 3]) return -1; */
+/*     up = &buf[(fld >> 3)]; */
+/*     fld %= 16;   // number of used bits in last ushort */
+/*     fld = 16 - fld;  // number of unused bits */
+/*     mask = (0xFFFF << fld);  // mask for last ushort */
+/*     if (fill)  */
+/*       { */
+/* 	mask = ~mask; */
+/* 	// if up is at the high byte in a short */
+/* 	if (!((up - buf) & 1)) *up++ |= ((mask >> 8) & 0xFF); */
+/* 	*up |= (mask & 0xFF); */
+/*       } */
+/*     else */
+/*       { */
+/* 	*up++ &= ((mask >> 8) & 0xFF); */
+/* 	*up   &= (mask & 0xFF); */
+/*       } */
+/*     } */
   return 0;
 }
 
