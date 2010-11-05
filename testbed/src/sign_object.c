@@ -33,7 +33,7 @@ int CryptInitState = 0;
 
 struct keyring
   {
-  char filename[80];
+  char filename[1024]; //expanded from 80 to 1024. it was cutting off filenames
   char label[10];
   char password[20];
   } keyring;
