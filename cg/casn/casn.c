@@ -32,6 +32,7 @@ Cambridge, Ma. 02138
 
 char casn_sfcsid[] = "@(#)casn.c 871P";
 #include "casn.h"
+#include <stdio.h>
 
 #define ASN_READ 1          // modes for encode & read
 
@@ -287,6 +288,7 @@ int eject_casn(struct casn *casnp, int num)
                          // in lower OF that should only be deleted when
                          // the lcasnp is deleted
     _free_it(tcasnp);
+    casnp->num_items--;
     return num;
     }
 
@@ -307,11 +309,14 @@ struct casn *index_casn(struct casn *casnp, int num)
     if (_clear_error(casnp) < 0) return (struct casn *)0;
     if (!casnp->level || !(_go_up(casnp)->flags & ASN_OF_FLAG))
         err = ASN_NOT_OF_ERR;
+/*
     else
 	{
         for (tcasnp = casnp ; num-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
         if (num >= 0) err = ASN_OF_BOUNDS_ERR;
 	}
+*/
+    else if (num >= casnp->num_items) err = ASN_OF_BOUNDS_ERR;
     if (err)
 	{
 	_casn_obj_err(casnp, err);
@@ -323,31 +328,38 @@ struct casn *index_casn(struct casn *casnp, int num)
 struct casn *inject_casn(struct casn *casnp, int num)
     {
     struct casn *fcasnp = &casnp[1], // first member
-        *lcasnp, *pcasnp, *tcasnp;
+        *pcasnp, *tcasnp;
     int icount, ncount, err = 0;
 
     if (_clear_error(casnp) < 0) return (struct casn *)0;
     if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_NOT_OF_ERR;
     else if ((err = _fill_upward(casnp, 0)) != 0) err = -err;
+    else if(casnp->max && num >= casnp->max) err = ASN_OF_BOUNDS_ERR;
+/*
     else  // will it be too many?
 	{
         for (lcasnp = fcasnp, icount = 0; lcasnp->ptr;
             lcasnp = lcasnp->ptr, icount++);
         if (icount < num || (casnp->max && icount >= casnp->max))
           err = ASN_OF_BOUNDS_ERR;
-	}
+        }
+*/
     if (err)
         {
         _casn_obj_err(casnp, err);
         return (struct casn *)0;
         }
-    ncount = _num_casns(lcasnp);
+    if (!casnp->num_items) casnp->lastp = fcasnp;
+    ncount = _num_casns(casnp->lastp); // how many struct casns in this casnp
     tcasnp = (struct casn *)dbcalloc(ncount, sizeof(struct casn));
-        // set up tags etc. in tcasnp. If have only fcasnp, lcasnp == fcasnp
+        // set up tags etc. in tcasnp. 
+    struct casn *lcasnp;
+    if (!casnp->num_items) lcasnp = fcasnp;
+    else lcasnp = casnp->lastp->ptr; 
     memcpy(tcasnp, lcasnp, (ncount * sizeof(struct casn)));
     if (!num)   // has to go in front, but fcasnp must be first
 	{
-	if (!icount)  // i.e. there is only one, including final
+	if (!casnp->num_items) // there is only one, including final
     	    tcasnp->level = 0;  // fcasnp's ptr was null, so OK
         else  // there's more than one, including final
 	    {
@@ -358,14 +370,18 @@ struct casn *inject_casn(struct casn *casnp, int num)
 	fcasnp->ptr = tcasnp;    // then link first one to new one
         tcasnp = fcasnp;   // return ptr to first
 	}
-    else  // there's more than one, including final
-	{           // find previous item
-	for (pcasnp = fcasnp, icount = num; --icount; pcasnp = pcasnp->ptr);
-		// copy blank last to new one
-	tcasnp->ptr = pcasnp->ptr;   // new one points to where previous did
-	pcasnp->ptr = tcasnp;       // previous points to new one
-	tcasnp->level = 0;   // this may be redundant
-	}
+    else // there's more than one, including final
+      {   // if it's the last
+     if (num == casnp->num_items) pcasnp = casnp->lastp;
+          // else find previous item
+      else for (pcasnp = fcasnp, icount = num; --icount; pcasnp = pcasnp->ptr);
+        // copy blank last to new one
+      tcasnp->ptr = pcasnp->ptr;   // new one points to where previous did
+      pcasnp->ptr = tcasnp;       // previous points to new one
+      if (num == casnp->num_items) casnp->lastp = tcasnp;
+      tcasnp->level = 0;   // this may be redundant
+      }
+    casnp->num_items++;
     return tcasnp;
     }
 

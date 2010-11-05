@@ -36,6 +36,7 @@ char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 864P";
 #include "casn.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #ifndef _DOS
 #define O_DOS 0
@@ -51,25 +52,35 @@ int get_casn_file(struct casn *casnp, char *name, int fd)
     uchar *b, *c;
 
       // if name is NULL, we were passed an active file descriptor
-    if (name && (fd = open(name, (O_RDONLY | O_DOS))) < 0)
+    if (name)
+      {
+      struct stat statbuf;
+      if (stat(name, &statbuf) < 0 ||
+        !(b = (uchar *)calloc(1, statbuf.st_size + 4)) ||
+        (fd = open(name, (O_RDONLY | O_DOS))) < 0 ||
+        (siz = read(fd, b, statbuf.st_size + 1)) < 0)
         return _casn_obj_err(casnp, ASN_FILE_ERR);
-    for (siz = 1024, b = c = (uchar *)calloc(1, siz); 1; )
-	{
-	if ((tmp = read(fd, c, 1024)) == 1024)
-	    {
-	    b = (uchar *)realloc(b, siz + 1024);
-	    c = &b[siz];
-	    siz += 1024;
-	    }
-	else if (tmp < 0)
-            {
-            if (name) close(fd); // if we opened it
-            return _casn_obj_err(casnp, ASN_FILE_ERR);
-            }
-    	else break;
-	}
-    if (name) close(fd); // if we opened it
-    siz = (siz - 1024 + tmp);
+      close(fd); 
+      }
+    else
+      { 
+      for (siz = 2048, b = c = (uchar *)calloc(1, siz); 1; )
+  	{
+  	if ((tmp = read(fd, c, 2048)) == 2048)
+  	    {
+  	    b = (uchar *)realloc(b, siz + 2048);
+  	    c = &b[siz];
+  	    siz += 2048;
+  	    }
+  	else if (tmp < 0)
+              {
+              if (name) close(fd); // if we opened it
+              return _casn_obj_err(casnp, ASN_FILE_ERR);
+              }
+      	else break;
+  	}
+      siz = (siz - 1024 + tmp);
+      }
     tmp = decode_casn(casnp, b);
     free(b);
     if (tmp < 0) return tmp;

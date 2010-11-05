@@ -74,6 +74,8 @@ struct casn
     short min;
     ulong max;
     struct casn *ptr;
+    ulong num_items;
+    struct casn *lastp;
 #ifdef CONSTRAINTS
     uchar *constraint;
 #endif
