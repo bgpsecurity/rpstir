@@ -364,7 +364,7 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
   {
   // check that addressFamily is IPv4 OR IPv6
   // check that the addressPrefixes are valid IP addresses OR valid ranges
-  uchar rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE], oldmax[MINMAXBUFSIZE], rfam[8];
+  uchar rmin[MINMAXBUFSIZE], rmax[MINMAXBUFSIZE], rfam[8];
   struct ROAIPAddress *roaAddrp;
   struct ROAIPAddressFamily *roaipfamp;
   int i, err = 0, num = 0;
@@ -381,17 +381,14 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
 	rfam[0] != 0 || (rfam[1] != 1 && rfam[1] != 2)) return ERR_SCM_INVALFAM;
     i = rfam[1];
     if (num == 1 && i == 1) return ERR_SCM_INVALFAM; 
-    memset(oldmax, 0, sizeof(oldmax));
     for (roaAddrp = &roaipfamp->addresses.rOAIPAddress; roaAddrp;
       roaAddrp = (struct ROAIPAddress *)next_of(&roaAddrp->self))
       {
       if ((err = test_maxLength(roaAddrp)) < 0 ||
 	  (err = setup_roa_minmax(&roaAddrp->address, rmin, rmax, i)) < 0) 
 	  return err;
-      if (memcmp(&rmin[3], &oldmax[3], sizeof(rmin) - 3) < 0 ||
-	  memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
+      if (memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
 	  return ERR_SCM_INVALIPB;
-      memcpy(oldmax, rmax, sizeof(oldmax));
       }
     }
   return 0;
