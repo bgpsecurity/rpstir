@@ -335,15 +335,6 @@ struct casn *inject_casn(struct casn *casnp, int num)
     if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_NOT_OF_ERR;
     else if ((err = _fill_upward(casnp, 0)) != 0) err = -err;
     else if(casnp->max && num >= casnp->max) err = ASN_OF_BOUNDS_ERR;
-/*
-    else  // will it be too many?
-	{
-        for (lcasnp = fcasnp, icount = 0; lcasnp->ptr;
-            lcasnp = lcasnp->ptr, icount++);
-        if (icount < num || (casnp->max && icount >= casnp->max))
-          err = ASN_OF_BOUNDS_ERR;
-        }
-*/
     if (err)
         {
         _casn_obj_err(casnp, err);
@@ -601,6 +592,7 @@ Procedure:
    IF it's constructed
         FOR each member, call _clear_casn
    ELSE IF it has a startp, free that
+   Clear num_items and lastp
    Clear the flags in accordance with the mask
    IF the type is an ANY, set the tag to that
 **/
@@ -621,6 +613,8 @@ Procedure:
         casnp->startp = _free_it(casnp->startp);
         casnp->lth = 0;
         }
+    casnp->num_items = 0;
+    casnp->lastp = NULL;
     casnp->flags &= mask;
     if (!casnp->type) casnp->tag = ASN_ANY;
     }
