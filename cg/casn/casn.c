@@ -328,7 +328,7 @@ struct casn *index_casn(struct casn *casnp, int num)
 struct casn *inject_casn(struct casn *casnp, int num)
     {
     struct casn *fcasnp = &casnp[1], // first member
-        *pcasnp, *tcasnp;
+        *lcasnp, *pcasnp, *tcasnp;
     int icount, ncount, err = 0;
 
     if (_clear_error(casnp) < 0) return (struct casn *)0;
@@ -344,9 +344,8 @@ struct casn *inject_casn(struct casn *casnp, int num)
     ncount = _num_casns(casnp->lastp); // how many struct casns in this casnp
     tcasnp = (struct casn *)dbcalloc(ncount, sizeof(struct casn));
         // set up tags etc. in tcasnp. 
-    struct casn *lcasnp;
     if (!casnp->num_items) lcasnp = fcasnp;
-    else lcasnp = casnp->lastp->ptr; 
+    else lcasnp = casnp->lastp->ptr;
     memcpy(tcasnp, lcasnp, (ncount * sizeof(struct casn)));
     if (!num)   // has to go in front, but fcasnp must be first
 	{
