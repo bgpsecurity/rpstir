@@ -75,14 +75,8 @@ def writeConfig(obj):
 		else:
 		    fileBuf += '%s=%s\n' % (member,",".join(val))
             elif member == 'roaipv4' or member == 'roaipv6':
-                try:
-                    ip,value = val.split('%')
-                except ValueError:
-                    value = None
-                if value is not None:
-                    fileBuf += '%s=%s%%%s\n' % (member, ip,value)
-                else:
-                    fileBuf += '%s=%s\n' % (member, val)                    
+                # FIXME: maxlength not yet supported
+                fileBuf += '%s=%s\n' % (member, ",".join(val))
             elif member == 'notBefore' or member == 'notAfter':
                 if val.year < 2050:
                     fileBuf += '%s=%s\n' % (member,val.strftime("%y%m%d%H%M%SZ"))
@@ -125,7 +119,12 @@ def create_binary(obj, xargs):
     file = fn[-1]
     s = './create_object -f %s%s.cfg ' % (CONFIG_PATH,file)
     s += xargs
-    os.system(s)
+    print "Invoking: " + s
+    ret = os.system(s)
+    if ret == 0:
+        print "Successful return from: " + s
+    else:
+        print "Error return (%d) from: %s" % (ret, s)
 
 #
 # Calls the gen_hash C executable and grabs the STDOUT from it
@@ -160,7 +159,10 @@ class Certificate:
     #Constructs a certificate object by executing and generating
     #the appropriate files and information. If it's a CA certificate
     #its reference will be stored and used within the CA_Object
-    def __init__(self,parent, myFactory,sia_path, serial):
+    def __init__(self,parent, myFactory,sia_path, serial,
+                 ipv4=None,
+                 ipv6=None,
+                 as=None):
         
         self.serial = serial
         
@@ -210,23 +212,23 @@ class Certificate:
             self.subject = parent.commonName+"."+nickName
             self.parentkeyfile = parent.certificate.subjkeyfile
             self.aki = parent.certificate.ski
-            self.ipv4 = parent.subAllocateIP4(myFactory.ipv4List)
-            self.ipv6 = parent.subAllocateIP6(myFactory.ipv6List)
-            self.as = parent.subAllocateAS(myFactory.asList)
+            self.ipv4 = [str(x) for x in ipv4]
+            self.ipv6 = [str(x) for x in ipv6]
+            self.as = [str(x) for x in as]
             
         else:
             self.issuer = nickName
             self.subject = nickName
             self.parentkeyfile = self.subjkeyfile
             self.aki = self.ski
-            self.ipv4 = myFactory.ipv4List
-            self.ipv6 = myFactory.ipv6List
-            self.as = myFactory.asList
+            self.ipv4 = [str(x) for x in myFactory.ipv4List]
+            self.ipv6 = [str(x) for x in myFactory.ipv6List]
+            self.as = [str(x) for x in myFactory.asList]
 #
 # The CA Certificate class. Inherits from Certificate
 #
 class CA_cert(Certificate):
-    def __init__(self, parent, myFactory):
+    def __init__(self, parent, myFactory, ipv4, ipv6, as):
         
         serial = parent.getNextChildSN()
          #Local variable to help with naming conventions
@@ -242,7 +244,8 @@ class CA_cert(Certificate):
         #For aia cut off the portion that contains the repoitory path to create an rsync url
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
-        Certificate.__init__(self,parent, myFactory,sia_path,serial)
+        Certificate.__init__(self,parent, myFactory,sia_path,serial,
+                             ipv4,ipv6,as)
         self.sia = "r:rsync://"+sia_path+"/,m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
@@ -251,7 +254,7 @@ class CA_cert(Certificate):
 # The EE certificate class. Inherits from Certificate
 #
 class EE_cert(Certificate):
-    def __init__(self, parent, myFactory):
+    def __init__(self, parent, myFactory,ipv4=[],ipv6=[],as=[]):
         
         serial = parent.getNextChildSN()
          #Local variable to help with naming conventions
@@ -260,15 +263,16 @@ class EE_cert(Certificate):
         path_sia = parent.SIA_path+"/"+nickName
         self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
-        Certificate.__init__(self,parent,myFactory,path_sia,serial)
+        Certificate.__init__(self,parent,myFactory,path_sia,serial,
+                             ipv4,ipv6,as)
         
         #Set our SIA based on the hash of our public key, which will be the name
         #of the ROA or Manifest this EE will be signing 
         if myFactory.bluePrintName == "Manifest-EE":
             self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".mft"
-            self.ipv4 = myFactory.ipv4List
-            self.ipv6 = myFactory.ipv6List
-            self.as = myFactory.asList
+            self.ipv4 = ["inherit"]
+            self.ipv6 = ["inherit"]
+            self.as = ["inherit"]
         else:
             self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(self.ski)+".roa"
               
@@ -332,8 +336,11 @@ class Roa(CMS):
     def __init__(self,myFactory,ee_object):
         #Pull the info we need from our ee_object
         self.asID           = ee_object.subAllocateAS(myFactory.asid)
-        self.roaipv4        = ee_object.subAllocateIP4(myFactory.ROAipv4List)
-        self.roaipv6        = ee_object.subAllocateIP6(myFactory.ROAipv6List)
+        self.roaipv4        = ee_object.subAllocateIPv4(myFactory.ROAipv4List)
+        self.roaipv6        = ee_object.subAllocateIPv6(myFactory.ROAipv6List)
+        self.roaipv4 = [str(x) for x in self.roaipv4]
+        self.roaipv6 = [str(x) for x in self.roaipv6]
+        self.asID = [str(x) for x in self.asID]
         self.outputfilename = REPO_PATH+"/"+ee_object.path_ROA
         #Make our directory to place our ROA if it doesn't already exist
         dir_path = REPO_PATH+"/"+ee_object.parent.SIA_path+"/"

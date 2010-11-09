@@ -18,17 +18,33 @@
 
 from datetime import datetime
 from time import time
-import netaddr
+from netaddr import IPAddress, IPNetwork, IPRange
 import base64
 import os
 
 #Quick import hack, linked to src/create_objects
 from create_objects import *
+from generic_allocate import generic_allocate
 
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
 DEBUG_ON = False
 RSYNC_EXTENSION = "r:rsync://"
+
+class ASRange:
+    def __init__(self, s):
+        x = s.split("-")
+        if len(x) == 1:
+            self.first = int(x[0].strip())
+            self.last = self.first
+        elif len(x) == 2:
+            self.first = int(x[0].strip())
+            self.last = int(x[1].strip())
+    def __str__(self):
+        if self.first == self.last:
+            return str(self.first)
+        else:
+            return str(self.first) + "-" + str(self.last)
 
 class Factory:
     def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [],\
@@ -75,7 +91,10 @@ class ROA_Factory(Factory):
         #ROA specific
         self.ROAipv4List = ROAipv4List
         self.ROAipv6List = ROAipv6List
-        self.asid = asid
+        # The line below always ends up ('r',1).  asid should really
+        # be as_amount, which, for a ROA, is always 1.
+        self.asid = [('r',asid)]
+        
     def create(self, parent):
         if DEBUG_ON:
             print "creating a ROA for "+ self.bluePrintName
@@ -118,7 +137,16 @@ class EE_Object:
         
         #List initialization
         self.children = []
-        self.ip4ResourcesFree = []; self.ip6ResourcesFree = [] ;self.asResourcesFree = []
+        self.ipv4Resources = parent.subAllocateIPv4(myFactory.ipv4List)
+        self.ipv6Resources = parent.subAllocateIPv6(myFactory.ipv6List)
+        self.asResources = parent.subAllocateAS(myFactory.asList)
+        self.ipv4ResourcesFree = [[x.first, x.last] \
+                                  for x in self.ipv4Resources]
+        self.ipv6ResourcesFree = [[x.first, x.last] \
+                                  for x in self.ipv6Resources]
+        self.asResourcesFree = [[x.first, x.last] \
+                                for x in self.asResources]
+    
         #Intialize our certificate
         self.certificate = EE_cert(parent,myFactory)
         
@@ -128,21 +156,44 @@ class EE_Object:
         self.id = self.certificate.serial 
         self.path_ROA = self.SIA_path
         
-        #FIX ME add some kind of string list to Netaddr Function for allocation
-        self.ipv4ResourcesFree = self.certificate.ipv4
-        self.ipv6ResourcesFree = self.certificate.ipv6
-        self.asResourcesFree = self.certificate.as 
-    
     #Hard coded suballocation currently, need to implement actual allocation
-    def subAllocateIP4(self,iplist):
-        return "0.0.0/24"
-    def subAllocateIP6(self,iplist):
-        return "1::/32"
+    def subAllocateIPv4(self,iplist):
+        print "IPv4 Request: " + repr(iplist)
+        # Note that the following may raise an exception!
+        allocated_pairs = generic_allocate(self.ipv4ResourcesFree,
+                                           [], # used list not recorded
+                                           iplist,
+                                           range_not_prefix=True)
+        allocated_blocks = [IPRange(IPAddress(x[0],version=4), \
+                                    IPAddress(x[1],version=4)) \
+                            for x in allocated_pairs]
+        return allocated_blocks
+    def subAllocateIPv6(self,iplist):
+        print "IPv6 Request: " + repr(iplist)
+        # Note that the following may raise an exception!
+        allocated_pairs = generic_allocate(self.ipv6ResourcesFree,
+                                           [], # used list not recorded
+                                           iplist,
+                                           range_not_prefix=True)
+        allocated_blocks = [IPRange(IPAddress(x[0],version=6), \
+                                    IPAddress(x[1],version=6)) \
+                            for x in allocated_pairs]
+        return allocated_blocks
     def subAllocateAS(self, asList):
-        return 1
-    
+        print "AS Request: " + repr(asList)
+        # Note that the following may raise an exception!
+        allocated_pairs = generic_allocate(self.asResourcesFree,
+                                           [], # used list not recorded
+                                           asList,
+                                           range_not_prefix=False)
+        allocated_blocks = [ASRange(str(x[0]) + '-' + str(x[1])) \
+                            for x in allocated_pairs]
+        return allocated_blocks
+
     def allocate(self, ipv4List, ipv6List, asList):
-        return (self.subAllocateIP4(ipv4List),self.subAllocateIP6(ipv6List),self.subAllocateAS(asList))
+        return (self.subAllocateIPv4(ipv4List),
+                self.subAllocateIPv6(ipv6List),
+                self.subAllocateAS(asList))
     
     
 class CA_Object:
@@ -158,12 +209,31 @@ class CA_Object:
         self.manifests = []
         self.roas = []
         self.crl = []
-        self.ip4ResourcesFree = []; self.ip6ResourcesFree = [] ;self.asResourcesFree = []
+
+        if parent is not None: # normal CA
+            self.ipv4Resources = parent.subAllocateIPv4(myFactory.ipv4List)
+            self.ipv6Resources = parent.subAllocateIPv6(myFactory.ipv6List)
+            self.asResources = parent.subAllocateAS(myFactory.asList)
+        else: # trust anchor CA
+            self.ipv4Resources = myFactory.ipv4List
+            self.ipv6Resources = myFactory.ipv6List
+            self.asResources = myFactory.asList
+        
+        self.ipv4ResourcesFree = [[x.first, x.last] \
+                                  for x in self.ipv4Resources]
+        self.ipv6ResourcesFree = [[x.first, x.last] \
+                                  for x in self.ipv6Resources]
+        self.asResourcesFree = [[x.first, x.last] \
+                                for x in self.asResources]
+        
         #Intialize our certificate
         if parent != None:
-            self.certificate = CA_cert(parent,myFactory)
+            self.certificate = CA_cert(parent,myFactory,
+                                       self.ipv4Resources,
+                                       self.ipv6Resources,
+                                       self.asResources)
         else:
-            self.certificate = SS_cert(parent,myFactory)    
+            self.certificate = SS_cert(parent,myFactory)
         #Grab what I need from the certificate 
         #Obtain just the SIA path and cut off the r:rsync://
         sia_list = self.certificate.sia[len(RSYNC_EXTENSION):].split(",")
@@ -178,22 +248,43 @@ class CA_Object:
         else:
             self.commonName = self.nickName
         
-        #FIX ME add some kind of string list to Netaddr Function for allocation
-        self.ipv4ResourcesFree = self.certificate.ipv4
-        self.ipv6ResourcesFree = self.certificate.ipv6
-        self.asResourcesFree = self.certificate.as 
-        
-    def subAllocateIP4(self,iplist):
-        return parseIPForCert(self,[netaddr.IPRange("0.0.0.0","0.0.0.255")])
-    def subAllocateIP6(self,iplist):
-        return parseIPForCert(self,[netaddr.IPRange("1::","255::")])
+    def subAllocateIPv4(self,iplist):
+        print "IPv4 Request: " + repr(iplist)
+        # Note that the following may raise an exception!
+        allocated_pairs = generic_allocate(self.ipv4ResourcesFree,
+                                           [], # used list not recorded
+                                           iplist,
+                                           range_not_prefix=True)
+        allocated_blocks = [IPRange(IPAddress(x[0],version=4), \
+                                    IPAddress(x[1],version=4)) \
+                            for x in allocated_pairs]
+        return allocated_blocks
+    def subAllocateIPv6(self,iplist):
+        print "IPv6 Request: " + repr(iplist)
+        # Note that the following may raise an exception!
+        allocated_pairs = generic_allocate(self.ipv6ResourcesFree,
+                                           [], # used list not recorded
+                                           iplist,
+                                           range_not_prefix=True)
+        allocated_blocks = [IPRange(IPAddress(x[0],version=6), \
+                                    IPAddress(x[1],version=6)) \
+                            for x in allocated_pairs]
+        return allocated_blocks
     def subAllocateAS(self, asList):
-        return parseASForCert(self,[(0,1)])
+        print "AS Request: " + repr(asList)
+        # Note that the following may raise an exception!
+        allocated_pairs = generic_allocate(self.asResourcesFree,
+                                           [], # used list not recorded
+                                           asList,
+                                           range_not_prefix=False)
+        allocated_blocks = [ASRange(str(x[0]) + '-' + str(x[1])) \
+                            for x in allocated_pairs]
+        return allocated_blocks
     
     def allocate(self, ipv4List, ipv6List, asList):
-        return (self.subAllocateIP4(ipv4List),self.subAllocateIP6(ipv6List),self.subAllocateAS(asList))
-        
-        
+        return (self.subAllocateIPv4(ipv4List),
+                self.subAllocateIPv6(ipv6List),
+                self.subAllocateAS(asList))
     
     def getNextChildSN(self):
         nextChild = self.nextChildSN

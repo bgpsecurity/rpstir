@@ -22,6 +22,7 @@ from time import time
 from Queue import Queue 
 from rpkirepo import *
 import ConfigParser
+from netaddr import IPAddress, IPNetwork, IPRange
 
 #Globals for repository specified by configuration file
 #These are set once while parsing the .ini
@@ -94,9 +95,11 @@ def configuration_parser(factory_dict,fileName):
                                         global MAX_NODES
                                         MAX_NODES=config.getint(section,opt)
                                 elif opt == 'roaipv4list':
+					# FIXME: maxlength not yet supported
                                         l = config.get(section,opt)
                                         parse(roav4l, l)
                                 elif opt == 'roaipv6list':
+					# FIXME: maxlength not yet supported
                                         l = config.get(section,opt)
                                         parse(roav6l, l)
                                 elif opt == 'asid':
@@ -208,9 +211,13 @@ def create_children(ca_node, repo_size):
     for ca_def in list:
         for n in range(0,ca_def[1]):
             if MAX_NODES > repo_size:
-                child_list.append(FACTORIES[ca_def[0]].create(ca_node))
-                repo_size+=1
-                print repo_size
+#	        try:
+		    child = FACTORIES[ca_def[0]].create(ca_node)
+		    child_list.append(child)
+		    repo_size+=1
+		    print "Child created. repo_size = %d" % repo_size
+# 		except:
+# 		    print "Child creation failed: type = %s" % ca_def[0]
             else:
                 return (child_list, repo_size)  
 
@@ -229,9 +236,9 @@ def main():
         configuration_parser(FACTORIES,fileName)
         print FACTORIES
         #Declaring the initial resources we want IANA to have
-        FACTORIES['IANA'].ipv4List = ["0.0.0.0-0.0.0.255"]
-        FACTORIES['IANA'].ipv6List = ["1::-255::"]
-        FACTORIES['IANA'].asList = ["0-1"]
+        FACTORIES['IANA'].ipv4List = [IPNetwork('0/0')]
+        FACTORIES['IANA'].ipv6List = [IPNetwork('0::/0')]
+        FACTORIES['IANA'].asList = [ASRange("0-4294967295")] # (2^32-1)
         print FACTORIES['IANA'].ipv4List
         #House Keeping to clean up the old REPOSITORY
         #Should remove objects/keys,configs, and REPOSITORY
