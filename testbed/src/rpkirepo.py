@@ -148,7 +148,10 @@ class EE_Object:
                                 for x in self.asResources]
     
         #Intialize our certificate
-        self.certificate = EE_cert(parent,myFactory)
+        self.certificate = EE_cert(parent,myFactory,
+                                   self.ipv4Resources,
+                                   self.ipv6Resources,
+                                   self.asResources)
         
         #Grab what I need from the certificate 
         #Obtain just the SIA path and cut off the r:rsync
