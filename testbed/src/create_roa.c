@@ -104,7 +104,7 @@ int parse_and_write_ips(struct RouteOriginAttestation* roap, char* ptr, long add
 
   //Safe use of the strtok function is to make a local copy of the
   // string you are tokenizing
-  buf = calloc(strlen(ptr),sizeof(char));
+  buf = calloc(strlen(ptr)+1,sizeof(char));
   memcpy(buf, ptr, strlen(ptr));
 
   next = strtok(buf,token);
