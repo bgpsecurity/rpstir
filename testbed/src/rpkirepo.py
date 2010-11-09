@@ -45,6 +45,13 @@ class ASRange:
             return str(self.first)
         else:
             return str(self.first) + "-" + str(self.last)
+    def __cmp__(self, other):
+        if self.first < other.first:
+            return -1
+        elif self.first == other.first:
+            return 0
+        else:
+            return 1
 
 class Factory:
     def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [],\
@@ -170,6 +177,8 @@ class EE_Object:
         allocated_blocks = [IPRange(IPAddress(x[0],version=4), \
                                     IPAddress(x[1],version=4)) \
                             for x in allocated_pairs]
+        # FIXME: maxlength not supported
+        allocated_blocks.sort()
         return allocated_blocks
     def subAllocateIPv6(self,iplist):
         print "IPv6 Request: " + repr(iplist)
@@ -181,6 +190,8 @@ class EE_Object:
         allocated_blocks = [IPRange(IPAddress(x[0],version=6), \
                                     IPAddress(x[1],version=6)) \
                             for x in allocated_pairs]
+        # FIXME: maxlength not supported
+        allocated_blocks.sort()
         return allocated_blocks
     def subAllocateAS(self, asList):
         print "AS Request: " + repr(asList)
@@ -191,6 +202,7 @@ class EE_Object:
                                            range_not_prefix=False)
         allocated_blocks = [ASRange(str(x[0]) + '-' + str(x[1])) \
                             for x in allocated_pairs]
+        allocated_blocks.sort()
         return allocated_blocks
 
     def allocate(self, ipv4List, ipv6List, asList):
@@ -261,6 +273,7 @@ class CA_Object:
         allocated_blocks = [IPRange(IPAddress(x[0],version=4), \
                                     IPAddress(x[1],version=4)) \
                             for x in allocated_pairs]
+        allocated_blocks.sort()
         return allocated_blocks
     def subAllocateIPv6(self,iplist):
         print "IPv6 Request: " + repr(iplist)
@@ -272,6 +285,7 @@ class CA_Object:
         allocated_blocks = [IPRange(IPAddress(x[0],version=6), \
                                     IPAddress(x[1],version=6)) \
                             for x in allocated_pairs]
+        allocated_blocks.sort()
         return allocated_blocks
     def subAllocateAS(self, asList):
         print "AS Request: " + repr(asList)
@@ -282,6 +296,7 @@ class CA_Object:
                                            range_not_prefix=False)
         allocated_blocks = [ASRange(str(x[0]) + '-' + str(x[1])) \
                             for x in allocated_pairs]
+        allocated_blocks.sort()
         return allocated_blocks
     
     def allocate(self, ipv4List, ipv6List, asList):
