@@ -175,7 +175,7 @@ class Certificate:
         nickName = myFactory.bluePrintName+"-"+str(self.serial)
         
         #Certificate lifetime and expiration info
-        self.notBefore = datetime.datetime.now()
+        self.notBefore = datetime.datetime.utcnow()
         self.notAfter = datetime.datetime.fromtimestamp(time()+myFactory.ttl*SECONDS_IN_DAY)
         
         #Set our subject key file name and generate the key
@@ -317,7 +317,7 @@ class Manifest(CMS):
         
         eeCertificate = EE_cert(parent,myFactory)
         self.manNum         = eeCertificate.serial
-        self.thisupdate      = datetime.datetime.now()
+        self.thisupdate      = datetime.datetime.utcnow()
         #Not sure on this nextUpdate time frame
         self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl*SECONDS_IN_DAY)
         #Chop off our rsync:// portion and append the repo path
@@ -367,7 +367,7 @@ class Crl:
         self.parentcertfile  = parent.path_CA_cert
         self.parentkeyfile   = parent.certificate.subjkeyfile
         self.issuer          = parent.commonName
-        self.thisupdate      = datetime.datetime.now()
+        self.thisupdate      = datetime.datetime.utcnow()
         #Not sure on this nextUpdate time frame
         self.nextupdate      = datetime.datetime.fromtimestamp(time()+parent.myFactory.ttl*SECONDS_IN_DAY)
         self.crlnum          = parent.getNextChildSN()
@@ -389,8 +389,8 @@ def main():
     c = Certificate(234,
                     ['name','value'],
                     ['name','value'],
-                    datetime.datetime.now(),
-                    datetime.datetime.now(),
+                    datetime.datetime.utcnow(),
+                    datetime.datetime.utcnow(),
                     '0xffdd4398764433983322099110',
                     '0x12df45ac65bf9876ff',
                     '../templates/EE.p15',
@@ -403,8 +403,8 @@ def main():
     ss = SS_cert(23,
                  ['name','value'],
                  ['name','value'],
-                 datetime.datetime.now(),
-                 datetime.datetime.now(),
+                 datetime.datetime.utcnow(),
+                 datetime.datetime.utcnow(),
                  '0xffdd4398764433983322099110',
                  '0x12df45ac65bf9876ff',
                  '../templates/EE.p15',
@@ -418,8 +418,8 @@ def main():
     ee = EE_cert(56,
                  ['name','value'],
                  ['name','value'],
-                 datetime.datetime.now(),
-                 datetime.datetime.now(),
+                 datetime.datetime.utcnow(),
+                 datetime.datetime.utcnow(),
                  '0xffdd4398764433983322099110',
                  '0x12df45ac65bf9876ff',
                  '../templates/EE.p15',
@@ -434,8 +434,8 @@ def main():
     ca = CA_cert(234678,
                  ['name','val'],
                  ['name','value'],
-                 datetime.datetime.now(),
-                 datetime.datetime.now(),
+                 datetime.datetime.utcnow(),
+                 datetime.datetime.utcnow(),
                  '0xffdd4398764433983322099110',
                  '0x12df45ac65bf9876ff',
                  '../templates/EE.p15',
