@@ -144,6 +144,9 @@ char *stripQuotes(char *str)
   char *tmpval = str;
   char *end;
 
+  if (!str)
+    return NULL;
+
   if (strlen(tmpval) > 0)
     { 
       if (strncmp(tmpval, "\"", 1) == 0)
