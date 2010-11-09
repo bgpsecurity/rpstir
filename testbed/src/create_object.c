@@ -146,8 +146,10 @@ int parse_config(char *configfile, struct object_field *tbl)
 	continue;
 
       value = strchr(buf,'=');      
-      if ( (value == NULL) || (strlen(value) <=0))
-	   continue; // maybe warn here
+      if ( (value == NULL) || (strlen(value+1) <=0)) {
+	fprintf(stderr,"Warning: blank value (line: %s)\n", buf);
+	continue;
+      }
 
       name_len = value - name;      
       if ((n = fieldInTable(name, name_len, tbl)) >= 0) 
