@@ -687,7 +687,7 @@ Procedure:
 */
   int lth = tiprangep->typ == IPv4? 4: 16;
   uchar *hucp, *lucp, *eucp = &tiprangep->lolim[lth];
-  uchar mask;
+  uchar mask = 0x80;
   uchar omask;
   int numbits = 0;
                                                    // step 1
@@ -727,7 +727,7 @@ Procedure:
       while (lucp > (uchar *)&tiprangep->lolim && !*lucp) lucp--;
       strlth = (lucp - tiprangep->lolim) + 1;
       memcpy(&bitstring[1], tiprangep->lolim, strlth);
-      for (bitstring[0] = 0, mask = *lucp; !(mask & 1);
+      for (bitstring[0] = 0, mask = *lucp; (mask != 0) && !(mask & 1);
 	   mask >>= 1, bitstring[0]++);
       write_casn(&ipAddrOrRangep->addressRange.min, bitstring, strlth + 1);
       
