@@ -368,7 +368,7 @@ return -1;
 
 char *cvt_int(char *c)
     {
-    long val;
+    ulong val;
     char *b, sign, valbuf[32];
 
     memset(valbuf, 0, 32);
@@ -377,8 +377,12 @@ char *cvt_int(char *c)
     if (*c == '-') sign = *c++;
     else sign = 0;
     for (val = 0; *c >= '0' && *c <= '9'; val = (val * 10) + *c++ - '0');
-    if (sign) val = -val;
-    sprintf(valbuf, "0x%08lX", val);
+    if ((val & 0x80000000) && !sign) sprintf(valbuf, "0x00%08lX", val);
+    else
+      {
+      if (sign) val = -val;
+      sprintf(valbuf, "0x%08lX", val);
+      }
     b = (char *)0;
     if (val < 128 && val >= -128) b = &valbuf[8]; 
     else if  (val < 32768 && val >= -32768) b = &valbuf[6];
