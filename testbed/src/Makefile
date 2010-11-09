@@ -34,6 +34,9 @@ CASN_DIR= ../../casn
 LIBASN=../../cg/asn/libasn.a
 LIBCASN=../../cg/casn/libcasn.a
 LIBROA=../../roa-lib/libroa.a
+LIBCL=-lcl
+LIBCRYPTO=-L/usr/local/ssl/lib -lcrypto
+LIBDL=-ldl
 LOCAL_LIBS=  $(LIBASN) $(LIBROA) $(LIBCASN)
 LIBS=$(LIBCRYPTO) $(LIBCL) $(LIBDL) $(LIBPTHREAD)
 
