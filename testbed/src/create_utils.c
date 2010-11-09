@@ -364,9 +364,9 @@ int cvtv4(uchar fill, char *ip, uchar *buf)
 
   //firstHex and secHex are the first and last hex values for the ip prefix/range
   if(fill == (uchar)0)
-    memcpy(buf, firstHex, firstLen);
+    memcpy(buf, firstHex, 4);
   else
-    memcpy(buf, secHex, strlen(second));
+    memcpy(buf, secHex, 4);
   
   free(cmd);
   free(firstHex);
@@ -458,9 +458,9 @@ int cvtv6(uchar fill, char *ip, uchar *buf)
 
   //firstHex and secHex are the first and last hex values for the ip prefix/range
   if(fill == (uchar)0)
-    memcpy(buf, firstHex, firstLen);
+    memcpy(buf, firstHex, 16);
   else
-    memcpy(buf, secHex, strlen(second));
+    memcpy(buf, secHex, 16);
 
   free(cmd);
   free(firstHex);
