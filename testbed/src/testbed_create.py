@@ -64,7 +64,7 @@ def configuration_parser(factory_dict,fileName):
                         server     = ''
                         breakA     = ''
                         t          = 0
-                        as         = []
+                        as_list         = []
                         a          = 0
                         roav4l     = []
                         roav6l     = []
@@ -81,7 +81,7 @@ def configuration_parser(factory_dict,fileName):
                                         parse(ipv6,l)
                                 elif opt == 'aslist':
                                         l = config.get(section,opt)
-                                        parse(as,l)
+                                        parse(as_list,l)
                                 elif opt == 'servername':
                                         server = config.get(section,opt)
                                 elif opt == 'breakaway':
@@ -113,7 +113,7 @@ def configuration_parser(factory_dict,fileName):
                                 return
                         if type == 'C':
                                 f = Factory(bluePrintName=name, ipv4List=ipv4,
-                                            ipv6List=ipv6, asList=as,
+                                            ipv6List=ipv6, asList=as_list,
                                             childSpec=child, serverName=server,
                                             breakAway=breakA, ttl=t)
                         elif type == 'M':
@@ -122,7 +122,7 @@ def configuration_parser(factory_dict,fileName):
                                 pass
                         elif type == 'R':
                                 f = ROA_Factory(bluePrintName=name, ipv4List=ipv4, \
-                                                ipv6List=ipv6, asList=as, childSpec=child, \
+                                                ipv6List=ipv6, asList=as_list, childSpec=child, \
                                                 serverName=server, breakAway=breakA, ttl=t, \
                                                 ROAipv4List =roav4l, ROAipv6List = roav6l,asid = a)  
                         else:

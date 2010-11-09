@@ -68,8 +68,13 @@ def writeConfig(obj):
                     fileBuf += '%s=%s%%%s\n' % (member, name,ser)
                 else:
                     fileBuf += '%s=%s\n' % (member, val)
-            
-            elif member == 'ipv4' or member == 'ipv6' or member == 'as':
+            elif member == 'as_list':
+                member = 'as'
+                if val == 'inherit':
+                    fileBuf += '%s=%s\n' % (member, val)
+		else:
+		    fileBuf += '%s=%s\n' % (member,",".join(val))
+            elif member == 'ipv4' or member == 'ipv6':
                 if val == 'inherit':
                     fileBuf += '%s=%s\n' % (member, val)
 		else:
@@ -162,7 +167,7 @@ class Certificate:
     def __init__(self,parent, myFactory,sia_path, serial,
                  ipv4=None,
                  ipv6=None,
-                 as=None):
+                 as_list=None):
         
         self.serial = serial
         
@@ -214,7 +219,7 @@ class Certificate:
             self.aki = parent.certificate.ski
             self.ipv4 = [str(x) for x in ipv4]
             self.ipv6 = [str(x) for x in ipv6]
-            self.as = [str(x) for x in as]
+            self.as_list = [str(x) for x in as_list]
             
         else:
             self.issuer = nickName
@@ -223,12 +228,12 @@ class Certificate:
             self.aki = self.ski
             self.ipv4 = [str(x) for x in myFactory.ipv4List]
             self.ipv6 = [str(x) for x in myFactory.ipv6List]
-            self.as = [str(x) for x in myFactory.asList]
+            self.as_list = [str(x) for x in myFactory.asList]
 #
 # The CA Certificate class. Inherits from Certificate
 #
 class CA_cert(Certificate):
-    def __init__(self, parent, myFactory, ipv4, ipv6, as):
+    def __init__(self, parent, myFactory, ipv4, ipv6, as_list):
         
         serial = parent.getNextChildSN()
          #Local variable to help with naming conventions
@@ -245,7 +250,7 @@ class CA_cert(Certificate):
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         Certificate.__init__(self,parent, myFactory,sia_path,serial,
-                             ipv4,ipv6,as)
+                             ipv4,ipv6,as_list)
         self.sia = "r:rsync://"+sia_path+"/,m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
@@ -254,7 +259,7 @@ class CA_cert(Certificate):
 # The EE certificate class. Inherits from Certificate
 #
 class EE_cert(Certificate):
-    def __init__(self, parent, myFactory,ipv4=[],ipv6=[],as=[]):
+    def __init__(self, parent, myFactory,ipv4=[],ipv6=[],as_list=[]):
         
         serial = parent.getNextChildSN()
          #Local variable to help with naming conventions
@@ -264,7 +269,7 @@ class EE_cert(Certificate):
         self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         Certificate.__init__(self,parent,myFactory,path_sia,serial,
-                             ipv4,ipv6,as)
+                             ipv4,ipv6,as_list)
         
         #Set our SIA based on the hash of our public key, which will be the name
         #of the ROA or Manifest this EE will be signing 
@@ -272,7 +277,7 @@ class EE_cert(Certificate):
             self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".mft"
             self.ipv4 = ["inherit"]
             self.ipv6 = ["inherit"]
-            self.as = ["inherit"]
+            self.as_list = ["inherit"]
         else:
             self.sia = "s:rsync://"+parent.SIA_path+"/"+b64encode_wrapper(self.ski)+".roa"
               
