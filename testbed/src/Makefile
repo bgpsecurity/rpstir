@@ -28,7 +28,7 @@ ifneq ($(CLINCLUDES),)
   CFLAGS += -DDEBUG -I$(CLINCLUDES)
 endif
 
-CFLAGS += -g -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn -Wall 
+CFLAGS += -g -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn -Wall -DDEBUG
 ASN_DIR= ../../cg/asn
 CASN_DIR= ../../casn
 LIBASN=../../cg/asn/libasn.a
@@ -44,7 +44,7 @@ create_object: create_object.o create_cert.o create_crl.o create_utils.o create_
 	$(CC) $(CFLAGS) -o $@ create_object.o create_cert.o create_crl.o create_utils.o sign_object.o  create_manifest.o create_roa.o $(LOCAL_LIBS) $(LIBS)
 
 gen_hash: gen_hash.o $(LOCAL_LIBS)
-	$(CC) $(CFLAGS)-o $@ gen_hash.o $(LOCAL_LIBS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ gen_hash.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f $(TARGETS) *.o
