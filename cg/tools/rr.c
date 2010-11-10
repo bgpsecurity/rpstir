@@ -368,25 +368,36 @@ return -1;
 
 char *cvt_int(char *c)
     {
-    ulong val;
-    char *b, sign, valbuf[32];
+    ulong uval;
+    long val;
+    char *b = 0, sign, valbuf[32];
 
     memset(valbuf, 0, 32);
     while (*c && *c <= ' ') c++;
     if (*c == '0' && c[1] == 'x') return cvt_out(c);
     if (*c == '-') sign = *c++;
     else sign = 0;
-    for (val = 0; *c >= '0' && *c <= '9'; val = (val * 10) + *c++ - '0');
-    if ((val & 0x80000000) && !sign) sprintf(valbuf, "0x00%08lX", val);
+    if (!sign)
+      {
+      for (uval = 0; *c >= '0' && *c <= '9'; uval = (uval * 10) + *c++ - '0');
+      if ((uval & 0x80000000)) sprintf(valbuf, "0x00%08lX", uval);
+      else
+        {
+        sprintf(valbuf, "0x%08lX", uval);
+        if (uval < 128) b = &valbuf[8]; 
+        else if  (uval < 32768) b = &valbuf[6];
+        else if (uval < 8388608) b = &valbuf[4];
+        }
+      }
     else
       {
-      if (sign) val = -val;
+      val = uval;
+      val = -val;
       sprintf(valbuf, "0x%08lX", val);
+      if (val < 128 && val >= -128) b = &valbuf[8]; 
+      else if  (val < 32768 && val >= -32768) b = &valbuf[6];
+      else if (val < 8388608 && val >= -8388608) b = &valbuf[4];
       }
-    b = (char *)0;
-    if (val < 128 && val >= -128) b = &valbuf[8]; 
-    else if  (val < 32768 && val >= -32768) b = &valbuf[6];
-    else if (val < 8388608 && val >= -8388608) b = &valbuf[4];
     if (b) strcpy(&valbuf[2], b);
     b = cvt_out(valbuf);
     return c;
