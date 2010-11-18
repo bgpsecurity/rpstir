@@ -127,6 +127,7 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
   for (c = ip, up = buf; *c > ' ' && *c != '/';)
     {
     if (*c == ':') c++;
+    if (*c == '/') break;
     sscanf(c, "%x", &fld);
     if (up >= ue || fld > 0xFFFF) return -1;
     *up++ = (uchar)((fld >> 8) &0xFF);
