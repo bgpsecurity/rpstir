@@ -84,10 +84,6 @@ static void dump_test_cert(struct done_cert *done_certp, int orig)
   fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
   write(fd, buf, size);
   close(fd);
-/*
-  sprintf(locbuf, "paracert%d.cer", ffindex++);
-  put_casn_file(&done_certp->paracertp->self, locbuf, 0);
-*/
   }
 
 static void dump_test_certs(int orig)
@@ -1519,7 +1515,7 @@ Procedure:
     strcpy(skibuf, nextskibuf);
     }
   while(ansr);
-  dump_test_certs(1);
+//  dump_test_certs(1); a diagnostic tool
   return 0;
   }
 
