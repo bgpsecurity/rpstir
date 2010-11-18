@@ -74,8 +74,9 @@
 #define SCM_FLAG_STALECRL     0x20   /* assoc crl of self or ancestor stale */
 #define SCM_FLAG_STALEMAN     0x40   /* assoc man of self or ancestor stale */
 #define SCM_FLAG_ONMAN        0x100  /* has associated valid manifest */
-#define SCM_FLAG_HASPARACERT  0x200  /* has a paracert */
-#define SCM_FLAG_ISPARACERT   0x400  /* is a paracert */
+#define SCM_FLAG_ISPARACERT   0x200  /* is a paracert */
+#define SCM_FLAG_HASPARACERT  0x400  /* has a paracert */
+#define SCM_FLAG_ISTARGET     0x800  /* is a target for LTA work */
 
 /* certain fields need to have "rsync URIs". The only test we perform
  * for now is to verify that the field starts with this text */
@@ -110,7 +111,7 @@ extern int   delete_object(scm *scmp, scmcon *conp, char *outfile,
 extern int   infer_filetype(char *fname);
 extern int   add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		      unsigned int id, int utrust, int typ,
-		      unsigned int *cert_id);
+		      unsigned int *cert_id, int constraining);
 extern int   add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 		     unsigned int id, int utrust, int typ);
 extern int   add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
@@ -130,6 +131,7 @@ extern int   addStateToFlags(unsigned int *flags, int isValid, char *filename,
 extern int   set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags);
 extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp, 
     scmcon *conp);
+extern struct cert_answers * find_parent_cert(char *, char *, scmcon *);
 extern struct cert_answers *find_trust_anchors(scm *sscmp, scmcon *conp);
 extern int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile,
     FILE *logfile);

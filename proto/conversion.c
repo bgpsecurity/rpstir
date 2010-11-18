@@ -144,7 +144,7 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
     }
   if (*c) 
     {
-    ushort mask = 0;
+    uchar mask = 0;
     fld = 0;
     if (*c == '/')
       {
@@ -152,20 +152,19 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
       sscanf(c, "%d", &fld); // fld has total number of bits
       if (fld >= 128) return (fld > 128)? -1: 0;
       if (up < &buf[fld >> 3]) return -1;
-      up = &buf[(fld >> 3)];
-      fld %= 16;   // number of used bits in last ushort
-      fld = 16 - fld;  // number of unused bits
-      mask = ~(0xFFFF << fld);  // mask for last ushort
+      up = &buf[(fld >> 3)]; // points to first possibly partial byte 
+      fld %= 8;   // number of used bits in that byte 
+      fld = 8 - fld;  // number of unused bits
+      mask = ~(0xFF << fld);  // mask for last byte
       }
     else up = &buf[14];
     if (fill) 
       {
-      if (((mask >> 8) & *up) && (mask >> 8) != *up) return -1; 
-      *up++ |= ((mask >> 8) & 0xFF);
-      if (((mask &0xFF) & *up) && (mask & 0xFF) != *up) return -1;
-      *up++ |= (mask & 0xFF);
+      if ((mask & *up) && mask != *up) return -1; 
+      *up++ |= mask;
+      if ((mask & *up) && mask != *up) return -1;
+      *up |= 0xFF;
           // if up is at the high byte in a short
-      if (((up - buf) & 1)) *up = 0xFF;
       }
     else 
       {
@@ -181,16 +180,16 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
 
 void  decrement_iprange(uchar *lim, int lth)
   {
-  uchar *ucp;
-  for (ucp = &lim[lth - 1]; ucp >= lim && *ucp == 0; *ucp-- = 0xFF);
+  uchar *eucp = &lim[lth], *ucp;
+  for (ucp = &eucp[-1]; ucp >= lim && *ucp == 0; *ucp-- = 0xFF);
       // uc now at last non-zero
   if (ucp >= lim) (*ucp)--;
   }
 
 void increment_iprange(uchar *lim, int lth)
   {
-  uchar *ucp;
-  for (ucp = &lim[lth - 1]; ucp >= lim && *ucp == 0xff; *ucp-- = 0);
+  uchar *eucp = &lim[lth], *ucp;
+  for (ucp = &eucp[-1]; ucp >= lim && *ucp == 0xff; *ucp-- = 0);
   if (ucp >= lim) (*ucp)++;
   }
 

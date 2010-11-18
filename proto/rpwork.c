@@ -19,55 +19,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "rpwork.h"
+#include <time.h>
+#include <fcntl.h>
 
-#define TREEGROWTH          1
-#define RESOURCE_NOUNION    2
-#define INTERSECTION_ALWAYS 4
-#define PARACERT           64
-// spares for afterthoughts
-#define WASEXPANDED           128
-#define WASPERFORATED         256
-#define WASEXPANDEDTHISBLK    512
-#define WASPERFORATEDTHISBLK 1024
-#define SKIBUFSIZ         128
+extern struct done_certs done_certs;
 
-#define IPv4 4
-#define IPv6 6
-#define ASNUM 8
-
-struct done_cert
-  {
-  char ski[64];
-  int perf;      // see #defines in rpwork.c
-  ulong origID, origflags;
-  char filename[PATH_MAX];
-  struct Certificate *origcertp, *paracertp;
-  };
-
-struct done_certs
-  {
-  int numcerts;
-  struct done_cert *done_certp;
-  };
-
-static struct done_certs done_certs;
-
-static int  locflags = 0;
-static char skibuf[SKIBUFSIZ], lastskibuf[SKIBUFSIZ], errbuf[160];
 static char Xvalidity_dates[40];
 static scm *locscmp;
 static scmcon *locconp;
-static struct Certificate myrootcert;
-static char myrootfullname[PATH_MAX];
-static struct ipranges certranges, ruleranges, lessranges, fromranges;
+struct Certificate myrootcert;
+char myrootfullname[PATH_MAX];
+struct ipranges certranges, ruleranges, lessranges, fromranges;
+char errbuf[160]; 
+char currskibuf[SKIBUFSIZ], nextskibuf[SKIBUFSIZ], skibuf[SKIBUFSIZ];
 
-static char *Xcrldp;
+char *Xcrldp;
+char *Xcp;
+char *Xrpdir;
+unsigned int XrpdirId;
 
-static char *Xcp;
+int locflags;
+FILE *loclog;
 
-static char *Xrpdir;
-
-#include <fcntl.h>
+extern struct keyring keyring;
 
 static struct casn *get_subject_name(struct Name *subjp)
   {
@@ -75,8 +49,7 @@ static struct casn *get_subject_name(struct Name *subjp)
       member_casn(&subjp->rDNSequence.self, 0);
   struct AttributeValueAssertion *avap = (struct AttributeValueAssertion *)
       member_casn(&rdnp->self, 0);
-  struct DirectoryString *dirsp = &avap->value.commonName;
-  struct casn *casnp = &dirsp->printableString;
+  struct casn *casnp = (struct casn *)&avap->value.commonName;
   return casnp;
   }
 
@@ -126,133 +99,6 @@ static void dump_test_certs(int orig)
     }
   }
 
-static char *nextword(char *cc)
-  {
-  char *b = strchr(cc, (int)' ');
-  if (b) while (*b && *b == ' ') b++;
-  return b;
-  }
-
-static char *next_cmd(char *buf, int siz, FILE *SKI)
-  {
-  char *c;
-  do
-    {
-    if (!(c = fgets(skibuf, siz, SKI))) return c;
-    }
-  while(*skibuf == ';');
-  return c;
-  }
-
-static int check_cp(char *cpp)
-  {
-  if ((*cpp == 'C' || *cpp == 'D' || *cpp == 'R') && cpp[1] <= ' ')
-    {
-
-    Xcp = (char *)calloc(1, 2);
-    *Xcp = *cpp;
-    }
-  else
-    {
-    struct casn oid;
-    tagged_constructor(&oid, 0, ASN_OBJ_ID, ASN_OBJ_ID);
-    int ansr = write_objid(&oid, cpp);
-    clear_casn(&oid);
-    if (ansr > 0)
-      {
-      Xcp = (char *)calloc(1, strlen(cpp) + 2);
-      strcpy(Xcp, cpp);
-      }
-    else return -1;
-    }
-  return 1;
-  }
-
-static char *Xaia;
-
-static struct validity_dates
-  {
-  struct casn lodate;
-  struct casn hidate;
-  } Xvaliddates;
-
-static int check_date(char *datep, struct casn *casnp)
-  {
-  char *c;
-  for (c = datep; *c >= '0' && *c <= '9'; c++);
-  if (*c != 'Z' || c != &datep[14]) return -1;
-  if (strncmp(datep, "2000", 4) < 0) return -1;
-  ulong tag;
-  if (strncmp(datep, "2050", 4) >= 0) tag = (ulong)ASN_GENTIME;
-  else tag = (ulong)ASN_UTCTIME;
-  tagged_constructor(casnp, 0, tag, tag);
-  if ((tag == (ulong)ASN_UTCTIME &&
-    (write_casn(casnp, (uchar *)&datep[2], 13) < 0 ||
-    read_casn_time(casnp, &tag)) < 0) ||
-    (tag == (ulong)ASN_GENTIME &&
-    (write_casn(casnp, (uchar *)datep, 15) < 0 ||
-    read_casn_time(casnp, &tag) < 0))) return -1;
-  return 1;
-  }
-
-static int check_dates(char *datesp)
-  {
-  char *enddatep = nextword(datesp);
-  if (!enddatep || datesp[14] != 'Z' || datesp[15] != ' ' ||
-    enddatep[14] != 'Z' || enddatep[15] > ' ' ||
-    strncmp(datesp, enddatep, 14) >= 0) return -1;
-  if (check_date(datesp, &Xvaliddates.lodate) < 0 ||
-    check_date(enddatep, &Xvaliddates.hidate) < 0) return -1;
-  return 1;
-  }
-
-struct keyring
-  {
-  char *filename;
-  char *label;
-  char *password;
-  };
-
-static struct keyring keyring;
-
-static int check_keyring(char *cc)
-  {
-  char *b;
-  if ((cc = nextword(cc)))
-    {
-    b = strchr(cc, (int)' ');
-    if (b)
-      {
-      keyring.filename = (char *)calloc(1, (b - cc) + 2);
-      strncpy(keyring.filename, cc, (b - cc));
-      if ((cc = nextword(cc)))
-        {
-        if ((b = strchr(cc, (int)' ')))
-          {
-          keyring.label = (char *)calloc(1, (b - cc) + 2);
-          strncpy( keyring.label, cc, (b - cc));
-          if ((cc = nextword(cc)))
-            {
-            for (b = cc; *b > ' '; b++);
-            keyring.password = (char *)calloc(1, (b - cc) + 2);
-            strncpy( keyring.password, cc, (b - cc));
-            return 1;
-            }
-          }
-        }
-      }
-    }
-  return -1;
-  }
-
-static void free_keyring(struct keyring *ringp)
-  {
-  if (ringp->filename) free(ringp->filename);
-  if (ringp->label) free(ringp->label);
-  if (ringp->password) free(ringp->password);
-  ringp->filename = ringp->label = ringp->password = (char *)0;
-  }
-
 static int add_done_cert(struct done_cert *tmp_done_certp)
   {
   if (!done_certs.numcerts)
@@ -274,113 +120,6 @@ static int add_done_cert(struct done_cert *tmp_done_certp)
   strcpy(done_certp->filename, tmp_done_certp->filename);
   done_certp->perf = tmp_done_certp->perf;
   return done_certs.numcerts - 1;
-  }
-
-static struct Extension *find_extension(struct Certificate *certp, char *oid,
-  int add)
-  {
-  struct Extensions *extsp = &certp->toBeSigned.extensions;
-  struct Extension *extp;
-  int num = num_items(&extsp->self);
-  if (!num && !add) return (struct Extension *)0;
-  for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-    extp && diff_objid(&extp->extnID, oid);
-    extp = (struct Extension *)next_of(&extp->self));
-  if (!extp && add)
-    {
-    extp = (struct Extension *)inject_casn(&extsp->self, num);
-    }
-  return extp;
-  }
-
-static void free_ipranges(struct ipranges *iprangesp)
-  {
-  int i;
-  struct iprange *iprangep = iprangesp->iprangep;
-  if (!iprangep) return;
-  for (i = 0; i < iprangesp->numranges; i++, iprangep++)
-    {
-    if (iprangep->text) free(iprangep->text);
-    }
-  free(iprangesp->iprangep);
-  iprangesp->iprangep = (struct iprange *)0;
-  }
-
-static void clear_ipranges(struct ipranges *iprangesp)
-  {
-  free_ipranges(iprangesp);
-  iprangesp->iprangep = (struct iprange *)0;
-  iprangesp->numranges = 0;
-  }
-
-static void internal_error(char *msg)
-  {
-  fprintf(stderr, msg);
-  exit(0);
-  }
-
-static struct iprange *eject_range(struct ipranges *iprangesp, int num)
-  {
-  if (num < 0 || num >= iprangesp->numranges)
-    internal_error("Ejecting out of range\n");
-  iprangesp->numranges--;
-  struct iprange *newrangep = (struct iprange *)calloc(
-    iprangesp->numranges, sizeof(struct iprange));
-  int i;
-  for(i = 0; i < num; i++)
-    {
-    newrangep[i].typ = iprangesp->iprangep[i].typ;
-    memcpy(newrangep[i].lolim, iprangesp->iprangep[i].lolim, 18);
-    memcpy(newrangep[i].hilim, iprangesp->iprangep[i].hilim, 18);
-    newrangep[i].text = iprangesp->iprangep[i].text;
-    }
-  for( ; i < iprangesp->numranges; i++)
-    {
-    newrangep[i].typ = iprangesp->iprangep[i + 1].typ;
-    memcpy(newrangep[i].lolim, iprangesp->iprangep[i + 1].lolim, 18);
-    memcpy(newrangep[i].hilim, iprangesp->iprangep[i + 1].hilim, 18);
-    newrangep[i].text = iprangesp->iprangep[i + 1].text;
-    }
-  free_ipranges(iprangesp);
-  iprangesp->iprangep = newrangep;
-  return &iprangesp->iprangep[num];
-  }
-
-static struct iprange *inject_range(struct ipranges *iprangesp, int num)
-  {
-  if (num < 0 || num > iprangesp->numranges)
-    internal_error("Injecting out of range\n");
-  struct iprange *newrangep = (struct iprange *)calloc(
-    iprangesp->numranges + 1, sizeof(struct iprange));
-  int i;
-  for(i = 0; i < num; i++)
-    {
-    newrangep[i].typ = iprangesp->iprangep[i].typ;
-    memcpy(newrangep[i].lolim, iprangesp->iprangep[i].lolim, 18);
-    memcpy(newrangep[i].hilim, iprangesp->iprangep[i].hilim, 18);
-    newrangep[i].text = iprangesp->iprangep[i].text;
-    }
-  memset(newrangep[i].lolim, 0, sizeof(newrangep));
-  memset(newrangep[i].hilim, 0, sizeof(newrangep));
-  newrangep[i].text = 0;
-  for( ; i < iprangesp->numranges; i++)
-    {
-    newrangep[i + 1].typ = iprangesp->iprangep[i].typ;
-    memcpy(newrangep[i + 1].lolim, iprangesp->iprangep[i].lolim, 18);
-    memcpy(newrangep[i + 1].hilim, iprangesp->iprangep[i].hilim, 18);
-    newrangep[i + 1].text = iprangesp->iprangep[i].text;
-    }
-  free_ipranges(iprangesp);
-  iprangesp->numranges++;
-  iprangesp->iprangep = newrangep;
-  return &iprangesp->iprangep[num];
-  }
-
-static struct iprange *next_range(struct ipranges *iprangesp,
-  struct iprange *iprangep)
-  {
-  if (iprangep[1].typ != iprangep->typ) return (struct iprange *)0;
-  return ++iprangep;
   }
 
 static int format_aKI(char *namep, struct casn *idp)
@@ -413,18 +152,16 @@ static int add_paracert2DB(struct done_cert *done_certp)
     fullname, dbid);
   if ((ansr = put_casn_file(&done_certp->paracertp->self, fullname, 0)) < 0)
     return ansr;
-  ansr = add_object(locscmp, locconp, done_certp->filename, Xrpdir, fullname,
-     0);
+  ansr = add_cert(locscmp, locconp, done_certp->filename, fullname, XrpdirId, 
+     0, OT_CER, &dbid, 1); 
   if (ansr >= 0)
     {
     flags = done_certp->origflags & ~(SCM_FLAG_NOCHAIN);
-    struct Extension *extp = find_extension(done_certp->paracertp,
+    struct Extension *extp = find_extn(done_certp->paracertp,
       id_subjectKeyIdentifier, 0);
     format_aKI(ski, &extp->extnValue.subjectKeyIdentifier);
     cert_answersp = find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
-    if (!cert_answersp && cert_answersp->num_ansrs < 0) return -1;
-    ansr = cert_answersp->num_ansrs;
-    if (ansr < 0) return ansr;
+    if (!cert_answersp || cert_answersp->num_ansrs < 0) return -1;
     int i = 0;
     for (cert_ansrp = &cert_answersp->cert_ansrp[0];
       i < cert_answersp->num_ansrs; i++, cert_ansrp++)
@@ -436,7 +173,7 @@ static int add_paracert2DB(struct done_cert *done_certp)
   if (ansr >= 0)
     {
     flags |= SCM_FLAG_ISPARACERT;
-    flags &= ~(SCM_FLAG_HASPARACERT);
+    flags &= ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
     if ((ansr = set_cert_flag(locconp, cert_ansrp->local_id, flags)) ||
       (ansr = set_cert_flag(locconp, done_certp->origID,
       done_certp->origflags)))
@@ -485,7 +222,7 @@ static void mk_certranges(struct ipranges *rangep,
   {
   if (rangep->numranges > 0 || rangep->iprangep)
       clear_ipranges(rangep);
-  struct Extension *extp = find_extension(certp, id_pe_ipAddrBlock, 0);
+  struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
   int num;
   struct IPAddressOrRangeA *ipAddrOrRangep;
   struct iprange *certrangep;
@@ -514,7 +251,7 @@ static void mk_certranges(struct ipranges *rangep,
       cvt_asn(certrangep, ipAddrOrRangep);
       }
     }
-  extp = find_extension(certp, id_pe_autonomousSysNum, 0);
+  extp = find_extn(certp, id_pe_autonomousSysNum, 0);
   struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp =
     &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges;
   struct ASNumberOrRangeA *asNumOrRangep;
@@ -532,7 +269,8 @@ static void mk_certranges(struct ipranges *rangep,
 
 static int snum_sfx;
 
-static struct Certificate *mk_paracert(struct Certificate *origcertp)
+static struct Certificate *mk_paracert(struct Certificate *origcertp, 
+  int flags)
   {
   struct Certificate *paracertp = (struct Certificate *)calloc(1,
     sizeof(struct Certificate));
@@ -569,15 +307,16 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
       }
     }
   struct Extension *fextp, *textp;
-  if (!Xcrldp || (*Xcrldp == 'R' && !Xcrldp[1]))
+  if (!Xcrldp || (*Xcrldp == 'C' && !Xcrldp[1])) { }  // do nothing 
+  else if ((*Xcrldp == 'R' && !Xcrldp[1]))
     {
-    fextp = find_extension(&myrootcert, id_cRLDistributionPoints, 0);
-    textp = find_extension(paracertp, id_cRLDistributionPoints, 1);
+    fextp = find_extn(&myrootcert, id_cRLDistributionPoints, 0);
+    textp = find_extn(paracertp, id_cRLDistributionPoints, 1);
     copy_casn(&textp->self, &fextp->self);
     }
-  else
+  else if (*Xcrldp != 'C' || Xcrldp[1]) 
     {
-    textp = find_extension(paracertp, id_cRLDistributionPoints, 1);
+    textp = find_extn(paracertp, id_cRLDistributionPoints, 1);
     clear_casn(&textp->extnValue.cRLDistributionPoints.self);
     write_objid(&textp->extnID, id_cRLDistributionPoints);
     char *pt, *ept;
@@ -604,10 +343,10 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
     }
   if (Xcp && *Xcp != 'C')
     {
-    textp = find_extension(paracertp, id_certificatePolicies, 1);
+    textp = find_extn(paracertp, id_certificatePolicies, 1);
     if (*Xcp == 'R')
       {
-      fextp = find_extension(&myrootcert, id_certificatePolicies, 0);
+      fextp = find_extn(&myrootcert, id_certificatePolicies, 0);
       copy_casn(&textp->self, &fextp->self);
       }
     else  // D or specified one
@@ -623,7 +362,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
     }
   if (Xaia && *Xaia != 'C' && Xaia[1] > 0)
     {
-    textp = find_extension(paracertp, id_pkix_authorityInfoAccess, 1);
+    textp = find_extn(paracertp, id_pkix_authorityInfoAccess, 1);
     clear_casn(&textp->extnValue.self);
     write_objid(&textp->extnID, id_pkix_authorityInfoAccess);
     struct AccessDescription *adp = (struct AccessDescription *)inject_casn(
@@ -633,15 +372,24 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
     }
   struct Extension *skiExtp, // root's ski
         *akiExtp;   // new cert's aki
-  if (!(skiExtp = find_extension(&myrootcert, id_subjectKeyIdentifier, 0)))
+  if (!(skiExtp = find_extn(&myrootcert, id_subjectKeyIdentifier, 0)))
     {
-    // print message?
+    sprintf(errbuf, "Certificate has no SKI.");
     return (struct Certificate *)0;
     }
-  if (!(akiExtp = find_extension(paracertp, id_authKeyId, 1)))
+  if (!(akiExtp = find_extn(paracertp, id_authKeyId, 0)))
     {
-    // print message?
-    return (struct Certificate *)0;
+    if ((flags & SCM_FLAG_TRUSTED)) 
+      {    
+      akiExtp = (struct Extension *)inject_casn(
+        &paracertp->toBeSigned.extensions.self, 0);
+      write_objid(&akiExtp->extnID, id_authKeyId);
+      }
+    else 
+      {
+      sprintf(errbuf, "Certificate has no AKI.");
+      return (struct Certificate *)0;
+      }
     }
   copy_casn(&akiExtp->extnValue.authKeyId.keyIdentifier,
       &skiExtp->extnValue.subjectKeyIdentifier);
@@ -649,7 +397,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp)
   return paracertp;
   }
 
-static void fill_done_cert(struct done_cert *done_certp, char *cSKI, 
+static void fill_done_cert(struct done_cert *done_certp, char *cSKI,
     char *filename, struct Certificate *certp, ulong local_id, int flags)
   {
   strcpy(done_certp->ski, cSKI);
@@ -661,11 +409,11 @@ static void fill_done_cert(struct done_cert *done_certp, char *cSKI,
   copy_casn(&done_certp->origcertp->self, &certp->self);
   done_certp->origID = local_id;
   done_certp->origflags = flags;
-  done_certp->paracertp =  mk_paracert(certp);
+  done_certp->paracertp =  mk_paracert(certp, flags);
   done_certp->perf = 0;
   }
 
-static int get_CAcert(char *ski, struct done_cert **done_certpp)
+int get_CAcert(char *ski, struct done_cert **done_certpp)
   {  // use INTERSECTION_ALWAYS
   struct Certificate *certp = (struct Certificate *)0;
   int i, j;
@@ -686,10 +434,15 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
     ansr = cert_answersp->num_ansrs;
     if (ansr < 0) return ansr;
     i = j = 0;
+    int have_para = 0;
     for (cert_ansrp = &cert_answersp->cert_ansrp[0];
       i < cert_answersp->num_ansrs; i++, cert_ansrp++)
-      {      // if it's a paracert, skip it
-      if (!strcmp(cert_ansrp->dirname, Xrpdir)) continue;
+      {      // if it's a paracert, note that and skip it
+      if (!strcmp(cert_ansrp->dirname, Xrpdir))
+        {
+        have_para++;
+        continue;
+        }
       certp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
       Certificate(certp, (ushort)0);
       if ((ansr = get_casn_file(&certp->self, cert_ansrp->fullname, 0)) < 0)
@@ -697,69 +450,39 @@ static int get_CAcert(char *ski, struct done_cert **done_certpp)
       this_cert_ansrp = cert_ansrp;
       j++;
       }
-    if (j != 1)
+    if (!j) 
       {
-      if (!j) strcpy(errbuf, "No CA certificate found\n");
-      else sprintf(errbuf, "%d certificates found\n", j);
+      sprintf(errbuf, "No CA certificate found for SKI %s\n", ski);
       return -1;
       }
-    struct Certificate *paracertp = mk_paracert(certp);
+    else if (j > 2 || (j == 2 && !have_para)) 
+      {
+      sprintf(errbuf, "Found %d certificates for SKI %s\n", j, ski);
+      return -1;
+      }
+    get_casn_file(&certp->self, this_cert_ansrp->fullname, 0);
+    struct Certificate *paracertp = mk_paracert(certp, this_cert_ansrp->flags);
     if (!paracertp) ansr = ERR_SCM_BADSKIFILE;
-    else 
+    else
       {
       struct done_cert done_cert;
       fill_done_cert(&done_cert, ski, this_cert_ansrp->filename, certp,
         this_cert_ansrp->local_id, this_cert_ansrp->flags);
-      if ((ansr = add_done_cert(&done_cert)) >= 0) 
+      if ((ansr = add_done_cert(&done_cert)) >= 0)
         {
         done_certp = &done_certs.done_certp[ansr];
         *done_certpp = done_certp;
         }
       }
+/*
     free(cert_answersp->cert_ansrp);
     cert_answersp->num_ansrs = 0;
     cert_answersp->cert_ansrp = NULL;
+*/
     if (ansr < 0) return ansr;
     i = 1;
     }
   return i;
-  }
-
-static int getIPBlock(FILE *SKI, int typ)
-  {
-  char *c, *newSKI = "SKI";
-  while((c = next_cmd(skibuf, sizeof(skibuf), SKI)))
-    {
-    if ((typ == IPv4 && *skibuf == 'I') || (typ == IPv6 && *skibuf == 'A') ||
-      (typ == ASNUM && !strncmp(skibuf, newSKI, 3))) break;
-    struct iprange *iprangep  = inject_range(&ruleranges, ruleranges.numranges);
-    if (txt2loc(typ, skibuf, iprangep) < 0) return ERR_SCM_BADRANGE;
-    }
-  if (!c) *skibuf = 0;
-  if (typ == ASNUM && c && !strncmp(skibuf, newSKI, 3)) 
-    strcpy(lastskibuf, skibuf);
-  return (c)? 1: 0;
-  }
-
-static int getSKIBlock(FILE *SKI)
-  {
-  int ansr = ERR_SCM_BADSKIBLOCK;
-  if (!next_cmd(skibuf, sizeof(skibuf), SKI) || strcmp(skibuf, "IPv4\n"))
-    strcpy(errbuf, "Missing IPv4");
-  else if (getIPBlock(SKI, IPv4) < 0)
-    strcpy(errbuf, "Bad IPv4 group");
-  else if (strcmp(skibuf, "IPv6\n"))
-    strcpy(errbuf, "Missing IPv6");
-  else if (getIPBlock(SKI, IPv6) < 0)
-    strcpy(errbuf, "Bad IPv6 group");
-  else if (strcmp(skibuf, "AS#\n"))
-    strcpy(errbuf, "Missing AS#");
-  else if((ansr = getIPBlock(SKI, ASNUM)) < 0)
-    strcpy(errbuf, "Bad AS# group");
-  else if (ruleranges.numranges == 0)
-    strcpy(errbuf, "Empty SKI block");
-  else ansr = 1;
-  return ansr;
   }
 
 static int CryptInitState = 0;
@@ -852,54 +575,9 @@ static void save_cert_answers(struct cert_answers *to_cert_answersp,
     calloc(numkids, sizeof(struct cert_ansr));
   for (numkid = 0; numkid < numkids; numkid++)
     {
-    to_cert_answersp->cert_ansrp[numkid] = 
+    to_cert_answersp->cert_ansrp[numkid] =
       from_cert_answersp->cert_ansrp[numkid];
-    } 
-  }
-
-static int process_trust_anchors()
-  {
-  struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
-  if (cert_answersp->num_ansrs < 0) return -1;
-  int ansr = 0, numkids = cert_answersp->num_ansrs, numkid;
-  struct Certificate *childcertp;
-  childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
-  Certificate(childcertp, (ushort)0);
-  struct cert_answers mycert_answers; 
-  char cSKI[64];
-  save_cert_answers(&mycert_answers, cert_answersp);
-  struct Extension *extp;
-  struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[0];
-      // get them
-  for (numkid = 0; numkid < numkids; numkid++, cert_ansrp++)
-    {
-    int i;
-    struct done_cert *done_certp = &done_certs.done_certp[0];
-    for (i = 0; i < done_certs.numcerts; i++, done_certp++)
-      {    // break if we have seen it
-      if (done_certp->origID == cert_ansrp->local_id) break;
-      }   // then continue if we found it
-    if (i < done_certs.numcerts) continue;
-        // or if it is the LTA
-    if (!strcmp(myrootfullname, cert_ansrp->fullname)) continue;
-           // or if it is an ETA
-    if ((ansr = get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) 
-        < 0) return ERR_SCM_COFILE;
-    if (!(extp = find_extension(childcertp, id_pe_ipAddrBlock, 0)) &&
-        !(extp = find_extension(childcertp, id_pe_autonomousSysNum, 0)))
-      continue;
-    if (i >= done_certs.numcerts) 
-      {
-      struct done_cert done_cert;
-      extp = find_extension(childcertp, id_subjectKeyIdentifier, 0);
-      format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
-      fill_done_cert(&done_cert, cSKI, cert_ansrp->filename, childcertp, 
-        cert_ansrp->local_id, cert_ansrp->flags);
-      sign_cert(done_cert.paracertp);
-      add_done_cert(&done_cert);    
-      }
     }
-  return 0;
   }
 
 
@@ -945,7 +623,7 @@ Procedure:
     Fill in the number of unused bits in the max field
 */
   int lth = tiprangep->typ == IPv4? 4: 16;
-  uchar *hucp, *lucp, mask, *eucp = &tiprangep->lolim[lth];
+  uchar *hucp, *lucp, mask = 0, *eucp = &tiprangep->lolim[lth];
   int numbits = 0;
                                                    // step 1
   for (lucp = tiprangep->lolim, hucp = tiprangep->hilim;
@@ -955,16 +633,17 @@ Procedure:
     {
     for (mask = 0x80; mask && (mask & *lucp) == (mask & *hucp);
       mask >>= 1, numbits++);
-    }
        // at first difference. test remains of byte
-  while(mask && !(mask & *lucp) && (mask & *hucp)) mask >>= 1;
-  if (!mask) // now test remainder of bytes
-    {
-    for (lucp++, hucp++; lucp < eucp && !*lucp && *hucp == 0xff;
-      lucp++, hucp++);
+    while(mask && !(mask & *lucp) && (mask & *hucp)) mask >>= 1;
+    if (!mask) // now test remainder of bytes
+      {
+      for (lucp++, hucp++; lucp < eucp && !*lucp && *hucp == 0xff;
+        lucp++, hucp++);
+      }
     }
   uchar bitstring[18];
   int strlth;
+  memset(bitstring, 0, sizeof(bitstring));
   clear_casn(&ipAddrOrRangep->self);
   if (!mask && lucp >= eucp)                // step 2
     {
@@ -982,7 +661,7 @@ Procedure:
     while (lucp > (uchar *)&tiprangep->lolim && !*lucp) lucp--;
     strlth = (lucp - tiprangep->lolim) + 1;
     memcpy(&bitstring[1], tiprangep->lolim, strlth);
-    for (bitstring[0] = 0, mask = *lucp; !(mask & 1);
+    for (bitstring[0] = 0, mask = *lucp; mask && !(mask & 1);
       mask >>= 1, bitstring[0]++);
     write_casn(&ipAddrOrRangep->addressRange.min, bitstring, strlth + 1);
 
@@ -992,19 +671,13 @@ Procedure:
     while (lucp > (uchar *)&tiprangep->hilim && *lucp == 0xFF) lucp--;
     strlth = (lucp - tiprangep->hilim) + 1;
     memcpy(&bitstring[1], tiprangep->hilim, strlth);
-    mask = (*lucp >> 1);
-    bitstring[strlth] &= ~mask;
-    for (bitstring[0] = 0; (mask & 1); mask >>= 1, bitstring[0]++);
+    lucp = &bitstring[strlth];
+    for (bitstring[0] = 0, mask = 1; (mask & *lucp); mask <<= 1, bitstring[0]++)
+      {
+      *lucp &= ~(mask);
+      }
     write_casn(&ipAddrOrRangep->addressRange.max, bitstring, strlth + 1);
     }
-  }
-
-static int touches(struct iprange *lop, struct iprange *hip, int lth)
-  {
-  struct iprange mid;
-  memcpy(mid.lolim, lop->hilim, lth);
-  increment_iprange(mid.lolim, lth);
-  return memcmp(mid.lolim, hip->lolim, lth);
   }
 
 static int expand(struct ipranges *rulerangesp, int numrulerange,
@@ -1017,50 +690,77 @@ static int expand(struct ipranges *rulerangesp, int numrulerange,
        Inject new C
        Set C-lo to R-lo
        Set C-hi to R-hi
-       Go back to original C
        Get next rule
 3.   ELSE IF R-hi just touches C-lo
        Set C-lo to R-lo
-       Get next rule
+       IF C-hi >= R-hi, finished with this rule so get next rule
 4.   ELSE ( R-hi > C-lo)
+       IF C-hi doesn't touch R-lo
+         Get next C
+         Continue in WHILE
        IF C-lo > R-lo, set C-lo to R-lo
+       IF R-hi > C-hi, 
+         Set C-hi to R-hi
+         Get next rule
      IF no rule, break out of WHILE
 5.   Do C-hi
      IF R-hi <= C-hi
        Get next rule
      ELSE (R-hi > C-hi)
-       Set C-hi to R-hi
+       IF C-hi touches R-lo, set C-hi to R-hi
+       ELSE get next C
 */
   int did = 0;
   struct iprange *certrangep = &certrangesp->iprangep[numcertrange],
     *rulerangep = &rulerangesp->iprangep[numrulerange];
   int lth = rulerangep->typ == IPv6? 16: 4;
-
+  int flag = 0, lastcert = numcertrange - 1;
+  if ((locflags & RESOURCE_NOUNION)) flag = 1;
   while (rulerangep)                   // step 1
     {
     int ansr = -1;
     if (certrangep) ansr = touches(rulerangep, certrangep, lth);
     if (ansr < 0)                     // step 2
       {
-      certrangep = inject_range(certrangesp,
-        certrangep - certrangesp->iprangep);
+      if (flag) return -1;
+      certrangep = inject_range(certrangesp, ++lastcert);
       certrangep->typ = rulerangep->typ;
       memcpy(certrangep->lolim, rulerangep->lolim, lth);
       memcpy(certrangep->hilim, rulerangep->hilim, lth);
-      certrangep++;
       rulerangep = next_range(rulerangesp, rulerangep);
       did++;
       if (!rulerangep) continue;
       }
     else if (!ansr)                  // step 3
       {
+      if (flag) return -1;
       memcpy(certrangep->lolim, rulerangep->lolim, lth);
-      rulerangep = next_range(rulerangesp, rulerangep);
+      if (memcmp(certrangep->hilim, rulerangep->hilim, lth) >= 0)
+        rulerangep = next_range(rulerangesp, rulerangep);
       did++;
       }
     else     //   ansr > 0             step 4
+      {
+      if (touches(certrangep, rulerangep, lth) < 0)
+        {
+        lastcert = certrangep - certranges.iprangep;
+        certrangep = next_range(certrangesp, certrangep);
+        continue;
+        }
       if (memcmp(certrangep->lolim, rulerangep->lolim, lth) > 0)
+        {
+        if (flag) return -1;
         memcpy(certrangep->lolim, rulerangep->lolim, lth);
+        did++;
+        }
+      if (memcmp(rulerangep->hilim, certrangep->hilim, lth) > 0)
+        {
+        if (flag) return -1;
+        memcpy(certrangep->hilim, rulerangep->hilim, lth);
+        rulerangep = next_range(rulerangesp, rulerangep);
+        did++;
+        }
+      }
     if (!rulerangep) break;
                                            // step 5
     if (memcmp(rulerangep->hilim, certrangep->hilim, lth) <= 0)
@@ -1068,7 +768,19 @@ static int expand(struct ipranges *rulerangesp, int numrulerange,
       rulerangep = next_range(rulerangesp, rulerangep);
       did++;
       }
-    else memcpy(certrangep->hilim, rulerangep->lolim, lth);
+    else if ((ansr = touches(certrangep, rulerangep, lth)) >= 0)
+      {
+      if (flag) return -1;
+      memcpy(certrangep->hilim, rulerangep->hilim, lth);
+      lastcert = certrangep - certrangesp->iprangep;
+      certrangep = next_range(certrangesp, certrangep);
+      rulerangep = next_range(rulerangesp, rulerangep);
+      }
+    else 
+      {
+      lastcert = certrangep - certrangesp->iprangep;
+      certrangep = next_range(certrangesp, certrangep);
+      } 
     }
   return did;
   }
@@ -1093,6 +805,7 @@ Notation: C is certificate item, C-lo is its low end, C-hi its high end
 2b    Check upper limits
       IF C-hi < R-hi (C ends before R)
         Delete C (gets next C)
+        IF no more C of this type, break out
       ELSE IF C-hi == R-hi (C ends at R)
         Delete C (gets next C)
         Get next R
@@ -1123,7 +836,7 @@ Notation: C is certificate item, C-lo is its low end, C-hi its high end
       memcpy(certrangep->lolim, certrangep[1].lolim, lth);
       memcpy(certrangep->hilim, rulerangep->lolim, lth);
       decrement_iprange(certrangep->hilim, lth);
-      certrangep++;
+      certrangep = next_range(certrangesp, certrangep);
       memcpy(certrangep->lolim, rulerangep->lolim, lth);
       did++;
       }
@@ -1132,11 +845,13 @@ Notation: C is certificate item, C-lo is its low end, C-hi its high end
       {
       certrangep = eject_range(certrangesp,
         certrangep - certrangesp->iprangep);
+      if (!certrangep) return did;
       did++;
       }
     else if (memcmp(certrangep->hilim, rulerangep->hilim, lth) == 0)
       {
       certrangep = eject_range(certrangesp, certrangep - certrangesp->iprangep);
+      if (!certrangep) return did;
       rulerangep = next_range(rulerangesp, rulerangep);
       did++;
       }
@@ -1204,6 +919,16 @@ static void print_range(char *title, struct ipranges *rangesp)
 */
   }
 
+static void copy_text(struct iprange *rulep, struct iprange *savp)
+  {
+  if (memcmp(rulep->lolim, savp->lolim, 16) <= 0 &&
+      memcmp(rulep->hilim, savp->hilim, 16) >= 0)
+    {
+    savp->text = calloc(1, strlen(rulep->text) + 2);
+    strcat(strcat(skibuf, rulep->text), " ");
+    }
+  }
+ 
 static int conflict_test(int perf, struct done_cert *done_certp)
   {
 /*
@@ -1237,54 +962,85 @@ static int conflict_test(int perf, struct done_cert *done_certp)
   print_range("From", &fromranges);
   clear_ipranges(&lessranges);
   struct iprange *iprangep;
-  int i;
+  int i;      // copy rules to less 
   for (i = 0; i < ruleranges.numranges; i++)
     {
+    struct iprange *rulerangep = &ruleranges.iprangep[i];
     iprangep = inject_range(&lessranges, i);
     iprangep->typ = ruleranges.iprangep[i].typ;
-    memcpy(iprangep->lolim, ruleranges.iprangep[i].lolim,
-      sizeof(iprangep->lolim));
-    memcpy(iprangep->hilim, ruleranges.iprangep[i].hilim,
-      sizeof(iprangep->hilim));
+    memcpy(iprangep->lolim, rulerangep->lolim, sizeof(iprangep->lolim));
+    memcpy(iprangep->hilim, rulerangep->hilim, sizeof(iprangep->hilim));
+    if (rulerangep->text)
+      {
+      iprangep->text = calloc(1, strlen(rulerangep->text));
+      strcpy(iprangep->text, rulerangep->text);
+      }
     }
   iprangep = inject_range(&lessranges,i);
   iprangep->typ = 0;
   memset(iprangep->lolim, 0, sizeof(iprangep->lolim));
   memset(iprangep->hilim, 0, sizeof(iprangep->hilim));
+  struct ipranges savranges;         // save copy of fromrange
+  savranges.numranges = 0;
+  savranges.iprangep = (struct iprange *)0;
+  int j;
+              // save the present fromranges
+  for (j = 0; j < fromranges.numranges; j++) 
+    {
+    struct iprange *siprangep, *fiprangep;
+    inject_range(&savranges, j);
+    siprangep = &savranges.iprangep[j];
+    fiprangep = &fromranges.iprangep[j];
+    siprangep->typ = fiprangep->typ;
+    memcpy(siprangep->lolim, fiprangep->lolim, sizeof(fiprangep->lolim));   
+    memcpy(siprangep->hilim, fiprangep->hilim, sizeof(fiprangep->hilim));
+    } 
   print_range("Less", &lessranges);
   ansr = perf_A_from_B(&lessranges, &fromranges);
   print_range("From", &fromranges);
   if (ansr < 0) return ansr;
-  if (fromranges.numranges > 1) 
+  if (fromranges.numranges > 1)  // "subtract"  new fromranges from old
     {
-    int j = 0, k = 0;
+    perf_A_from_B(&fromranges, &savranges);  // diff shows where it occurred
+      // find where
+    int jj, k = 0;
     *skibuf = 0;
-    while(j < fromranges.numranges - 1)
+    struct iprange *savp;
+    for (jj = 0;  jj < savranges.numranges; jj++)
       {
-      if (fromranges.iprangep[j].typ == IPv4)
+      int kk;
+      savp = &savranges.iprangep[jj];
+      if (savp->typ == IPv4)
         {
-        strcpy(skibuf, "IPv4");
+        for (kk = 0; ruleranges.iprangep[kk].typ == IPv4; kk++)
+          {
+          copy_text(&ruleranges.iprangep[kk], savp);
+          }     
         k++;
-        while(fromranges.iprangep[j].typ == IPv4) j++;
-        } 
-      else if (fromranges.iprangep[j].typ == IPv6)
+        while(savranges.iprangep[jj].typ == IPv4) jj++;
+        }
+      else if (savranges.iprangep[jj].typ == IPv6)
         {
-        if (!k) strcpy(skibuf, "IPv6");
-        else strcat(skibuf, ", IPv6");
-        while(fromranges.iprangep[j].typ == IPv6) j++;
-        } 
-      else if (fromranges.iprangep[j].typ == ASNUM)
+        for (  ; ruleranges.iprangep[kk].typ == IPv6; kk++)
+          {
+          copy_text(&ruleranges.iprangep[kk], savp);
+          }     
+        while(savranges.iprangep[jj].typ == IPv6) jj++;
+        }
+      else if (savranges.iprangep[jj].typ == ASNUM)
         {
-        if (!k) strcpy(skibuf, "AS#");
-        else strcat(skibuf, ", AS#");
-        while(fromranges.iprangep[j].typ == ASNUM) j++;
+        for (kk = 0; ruleranges.iprangep[kk].typ == IPv4; kk++)
+          {
+          copy_text(&ruleranges.iprangep[kk], savp);
+          }     
+        while(savranges.iprangep[jj].typ == ASNUM) jj++;
         }
       }
     ansr = 1;
     }
   else ansr = 0;
   free_ipranges(&fromranges);
-  free_ipranges(&lessranges); 
+  free_ipranges(&lessranges);
   return ansr;
   }
 
@@ -1307,8 +1063,22 @@ Procedure:
 */
   int did;
                                                   // step 1
-  if (!run) did = expand(&ruleranges, numrulerange, &certranges, numcertrange, changesp);
-  else did = perforate(&ruleranges, numrulerange, &certranges, numcertrange, changesp);
+  if (!run)
+    {
+    did = expand(&ruleranges, numrulerange, &certranges, numcertrange, 
+      changesp);
+    if (did < 0)
+      {
+      char *typname;
+      if (ruleranges.iprangep[numrulerange].typ == IPv4) typname = "IPv4";
+      else if (ruleranges.iprangep[numrulerange].typ == IPv6) typname = "IPv6";
+      else typname = "AS#";
+      fprintf(loclog, "Did not expand %s in block %s.", typname, currskibuf);
+      did = 0;
+      } 
+    }
+  else did = perforate(&ruleranges, numrulerange, &certranges, numcertrange, 
+    changesp);
   return did;
   }
 
@@ -1331,7 +1101,7 @@ Procedure:
 */
   struct iprange *certrangep = certranges.iprangep;
   int num4 = 0, num6 = 0;
-  struct Extension *extp = find_extension(paracertp, id_pe_ipAddrBlock, 0);
+  struct Extension *extp = find_extn(paracertp, id_pe_ipAddrBlock, 0);
   struct Extensions *extsp = &paracertp->toBeSigned.extensions;
   struct IpAddrBlock *ipAddrBlockp;
   struct IPAddressFamilyA *ipfamp;
@@ -1340,7 +1110,7 @@ Procedure:
   int numfam = 0;
   uchar fambuf[2];
                                                  // step 1
- *fambuf = 0;
+  *fambuf = 0;
   if (extp)
     {
     int i;
@@ -1389,10 +1159,10 @@ Procedure:
         inject_casn(&ipAddrOrRangesp->self, num6);
       make_IPAddrOrRange(ipAddrOrRangep, certrangep);
       }
-    }
 
+    }
                                                    // step 4
-  if ((extp = find_extension(paracertp, id_pe_autonomousSysNum, 0)))
+  if ((extp = find_extn(paracertp, id_pe_autonomousSysNum, 0)))
     {
     int i;
     for (i = num_items(
@@ -1419,6 +1189,11 @@ Procedure:
       make_ASnum(asNumOrRangep, certrangep);
       }
     }
+/*
+  locbufp = (char *)calloc(1, dump_size(&paracertp->self) + 2);
+  dump_casn(&paracertp->self, locbufp);
+  fprintf(stderr, locbufp); 
+*/
   }
 
 static int modify_paracert(int run,   struct Certificate *paracertp)
@@ -1440,32 +1215,35 @@ Procedure:
     // start at beginning of SKI list and IPv4 family in certificate
   struct iprange *rulerangep = ruleranges.iprangep;   // beginning of SKI list
                                                 // step 1
-  typ = IPv4;
-  if (rulerangep->typ == typ &&
-    (did = run_through_typlist(run, numrulerange, numcertrange,
-    &changes)) < 0) return did;
-  while(rulerangep->typ == typ) rulerangep++;
-                                 // step 2
-  typ = IPv6;
-  struct iprange *certrangep;
-  for (certrangep = certranges.iprangep;
-      certrangep->typ && certrangep->typ < typ; certrangep++);
-  numcertrange = (certrangep - certranges.iprangep);
-  numrulerange = (rulerangep - ruleranges.iprangep);
-  if (rulerangep->typ == typ &&
-    (did = run_through_typlist(run, numrulerange, numcertrange,
+  if (!(locflags & RESOURCE_NOUNION) || run)
+    {
+    typ = IPv4;
+    if (rulerangep->typ == typ &&
+      (did = run_through_typlist(run, numrulerange, numcertrange,
       &changes)) < 0) return did;
-  while(rulerangep->typ == typ) rulerangep++;
-                                   // step 3
-  typ = ASNUM;
-  for (certrangep = certranges.iprangep;
-      certrangep->typ && certrangep->typ < typ; certrangep++);
-  numcertrange = (certrangep - certranges.iprangep);
-  numrulerange = (rulerangep - ruleranges.iprangep);
-  if (rulerangep->typ == typ  &&
-    (did = run_through_typlist(run, numrulerange, numcertrange,
-      &changes)) < 0) return did;
-  remake_cert_ranges(paracertp);
+    while(rulerangep->typ == typ) rulerangep++;
+                                   // step 2
+    typ = IPv6;
+    struct iprange *certrangep;
+    for (certrangep = certranges.iprangep;
+        certrangep->typ && certrangep->typ < typ; certrangep++);
+    numcertrange = (certrangep - certranges.iprangep);
+    numrulerange = (rulerangep - ruleranges.iprangep);
+    if (rulerangep->typ == typ &&
+      (did = run_through_typlist(run, numrulerange, numcertrange,
+        &changes)) < 0) return did;
+    while(rulerangep->typ == typ) rulerangep++;
+                                     // step 3
+    typ = ASNUM;
+    for (certrangep = certranges.iprangep;
+        certrangep->typ && certrangep->typ < typ; certrangep++);
+    numcertrange = (certrangep - certranges.iprangep);
+    numrulerange = (rulerangep - ruleranges.iprangep);
+    if (rulerangep->typ == typ  &&
+      (did = run_through_typlist(run, numrulerange, numcertrange,
+        &changes)) < 0) return did;
+    remake_cert_ranges(paracertp);
+    }
   did = sign_cert(paracertp);
   if (did < 0) return did;
   return changes;
@@ -1490,7 +1268,7 @@ Procedure:
         ELSE add the cert & paracert to the done list
 4.    IF something was done, call this function with this child
 */
-  struct Extension *extp = find_extension(topcertp,
+  struct Extension *extp = find_extn(topcertp,
       id_subjectKeyIdentifier, 0);
   struct Certificate *childcertp;
   int ansr, numkid, numkids;
@@ -1512,10 +1290,10 @@ Procedure:
     struct cert_ansr *cert_ansrp = &mycert_answers.cert_ansrp[numkid];
     if ((ansr = get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) < 0)
         return ERR_SCM_COFILE;
-    extp = find_extension(childcertp, id_authKeyId, 0);
+    extp = find_extn(childcertp, id_authKeyId, 0);
     memset(cAKI, 0, 64);
     format_aKI(cAKI, &extp->extnValue.authKeyId.keyIdentifier);
-    extp = find_extension(childcertp, id_subjectKeyIdentifier, 0);
+    extp = find_extn(childcertp, id_subjectKeyIdentifier, 0);
     format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
     if (strcmp(cAKI, pSKI) || !strcmp(cSKI, cAKI)) continue;
     struct done_cert *done_certp, done_cert;
@@ -1523,7 +1301,7 @@ Procedure:
     if (!(done_certp = have_already(cSKI)))
       {
       done_certp = &done_cert;
-      fill_done_cert(done_certp, cSKI, cert_ansrp->filename, childcertp, 
+      fill_done_cert(done_certp, cSKI, cert_ansrp->filename, childcertp,
         cert_ansrp->local_id, cert_ansrp->flags);
       }
     else
@@ -1552,6 +1330,52 @@ Procedure:
   free(mycert_answers.cert_ansrp);
   delete_casn(&childcertp->self);
   return ansr;
+  }
+
+static int process_trust_anchors()
+  {
+  struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
+  if (cert_answersp->num_ansrs < 0) return -1;
+  int ansr = 0, numkids = cert_answersp->num_ansrs, numkid;
+  struct Certificate *childcertp;
+  childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
+  Certificate(childcertp, (ushort)0);
+  struct cert_answers mycert_answers;
+  char cSKI[64];
+  save_cert_answers(&mycert_answers, cert_answersp);
+  struct Extension *extp;
+  struct cert_ansr *cert_ansrp = &mycert_answers.cert_ansrp[0];
+      // get them
+  for (numkid = 0; numkid < numkids; numkid++, cert_ansrp++)
+    {
+    int i;
+    struct done_cert *done_certp = &done_certs.done_certp[0];
+    for (i = 0; i < done_certs.numcerts; i++, done_certp++)
+      {    // break if we have seen it
+      if (done_certp->origID == cert_ansrp->local_id) break;
+      }   // then break if we found it
+    if (i < done_certs.numcerts) break;
+        // or if it is the LTA
+    if (!strcmp(myrootfullname, cert_ansrp->fullname)) continue;
+           // or if it is an ETA
+    if ((ansr = get_casn_file(&childcertp->self, cert_ansrp->fullname, 0))
+        < 0) return ERR_SCM_COFILE;
+    if (!(extp = find_extn(childcertp, id_pe_ipAddrBlock, 0)) &&
+        !(extp = find_extn(childcertp, id_pe_autonomousSysNum, 0)))
+      continue;
+    if (i >= done_certs.numcerts)
+      {
+      struct done_cert done_cert;
+      extp = find_extn(childcertp, id_subjectKeyIdentifier, 0);
+      format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
+      fill_done_cert(&done_cert, cSKI, cert_ansrp->filename, childcertp,
+        cert_ansrp->local_id, cert_ansrp->flags);
+      sign_cert(done_cert.paracertp);
+      add_done_cert(&done_cert);
+      search_downward(done_cert.origcertp);
+      }
+    }
+  return 0;
   }
 
 static int process_control_block(struct done_cert *done_certp)
@@ -1583,12 +1407,13 @@ Procedure:
       {
       if (conflict_test(run, done_certp))
         {
-        lastskibuf[strlen(lastskibuf) - 1] = 0; // trim CR
-        sprintf(errbuf, "in block %s at %s", lastskibuf, skibuf);
+        currskibuf[strlen(currskibuf) - 1] = 0; // trim CR
+        sprintf(errbuf, "in block %s at %s", currskibuf, skibuf);
         *skibuf = 0;
         return ERR_SCM_USECONFLICT;
         }
       }
+       // if resource_nounion, skip expanding
     if ((ansr = modify_paracert(run, done_certp->paracertp)) < 0)
       return ansr;
     done_certp->perf |= (!run)? (WASEXPANDED | WASEXPANDEDTHISBLK):
@@ -1598,7 +1423,7 @@ Procedure:
     if (!diff_casn(&done_certp->origcertp->toBeSigned.issuer.self,
        &done_certp->origcertp->toBeSigned.subject.self)) break;
                                                         // step 3
-    extp = find_extension(done_certp->origcertp, id_authKeyId, 0);
+    extp = find_extn(done_certp->origcertp, id_authKeyId, 0);
     format_aKI(skibuf, &extp->extnValue.authKeyId.keyIdentifier);
     if ((ansr = get_CAcert(skibuf, &ndone_certp)) < 0) return ansr;
     done_certp = ndone_certp;
@@ -1623,6 +1448,7 @@ Procedure:
        trust anchor
        Return error
      Process the block
+     Process the trust anchors with these constraints
    WHILE skibuf has anything
 */
   struct done_cert *done_certp;
@@ -1633,17 +1459,53 @@ Procedure:
     for (skip = &skibuf[4]; *skip == ' '; skip++);
     for (cc = skip; *cc == ':' || (*cc >= '0' && *cc <= '9') ||
         ((*cc | 0x20) >= 'a' && (*cc | 0x20) <= 'f'); cc++);
-    if ((cc - skip) != 59 || *cc > ' ') return ERR_SCM_BADSKIBLOCK;
+    if ((cc - skip) != 59 || *cc > ' ') 
+      {
+      for (cc = skip; *cc != '\n'; cc++);
+      if (*cc == '\n') *cc = 0;
+      sprintf(errbuf, "Invalid SKI: %s", skip);
+      return ERR_SCM_BADSKIBLOCK;
+      }
     *cc = 0;
-    if ((ansr = get_CAcert(skip, &done_certp)) < 0) return ansr;
+    if ((ansr = get_CAcert(skip, &done_certp)) < 0) 
+      {
+      sprintf(errbuf, "No file for SKI %s.", skip);
+      return ansr;
+      }
     ruleranges.numranges = 0;
     ruleranges.iprangep = (struct iprange *)0;
-    if ((ansr = getSKIBlock(SKI)) < 0)
-        return ansr; // with error message in errbuf BADSKIBLOCK
-       // otherwise skibuf has another SKI line or NULL
+    if ((ansr = getSKIBlock(SKI, skibuf, sizeof(skibuf))) < 0)
+      {
+      cc = strchr(skibuf, (int)'\n');
+      if (cc && *cc) *cc = 0;
+      if (*errbuf) strcat(strcat(errbuf, "at "), skibuf);
+      else sprintf(errbuf, "Invalid prefix/range %s", skibuf); 
+      return ansr; // with error message in errbuf BADSKIBLOCK
+      }    // otherwise skibuf has another SKI line or NULL
+
+    if ((locflags & RESOURCE_NOUNION))
+      {
+      while (ruleranges.numranges) eject_range(&ruleranges, 0);
+      int j;
+      struct iprange *ciprangep;
+      for (j = 0; j < certranges.numranges; j++)
+        {
+        struct iprange *riprangep = inject_range(&ruleranges, j);
+        ciprangep = &certranges.iprangep[j];
+        riprangep->typ = ciprangep->typ;
+        memcpy(riprangep->lolim, ciprangep->lolim, sizeof(ciprangep->lolim));
+        memcpy(riprangep->hilim, ciprangep->hilim, sizeof(ciprangep->hilim));
+        if (ciprangep->text)
+          {
+          riprangep->text = calloc(1, strlen(ciprangep->text) + 2);
+          strcpy(riprangep->text, ciprangep->text);
+          }
+        }
+      }
     int err;
 
     err = process_control_block(done_certp);
+    process_trust_anchors();
     clear_ipranges(&ruleranges);
     if (err < 0) return err;
     int i;
@@ -1652,11 +1514,11 @@ Procedure:
       {
       done_certp->perf &= ~(WASPERFORATEDTHISBLK | WASEXPANDEDTHISBLK);
       }
-    strcpy(skibuf, lastskibuf);
-    if (!*skibuf) break;
+    if (!*nextskibuf) break;
+    strcpy(currskibuf, nextskibuf);
+    strcpy(skibuf, nextskibuf);
     }
   while(ansr);
-  process_trust_anchors();
   dump_test_certs(1);
   return 0;
   }
@@ -1665,11 +1527,7 @@ int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile, FILE *logfile)
   {
 /*
 Procedure:
-1. Open file for control data
-   Get certificate for RP
-   Get key information for RP
-   Get any flags
-   Get first SKI line from the control file
+1. Call parse_SKI_blocks
 2. Process all the control blocks
    IF no error,
      FOR each item in done_certs
@@ -1679,163 +1537,43 @@ Procedure:
    Free all and return error
 */
   Certificate(&myrootcert, (ushort)0);
-  char *c, *cc;
-                                                     // step 1
+  int numcert;
+  int locansr = 0;
+  char locfilename[128];
+  *locfilename = 0;
   int ansr = 0;
-  done_certs.numcerts = 0;
+                                                     // step 1
+  loclog = logfile;
   FILE *SKI = fopen(skiblockfile, "r");
-
-  if (!SKI) ansr = ERR_SCM_NOSKIFILE; // can't open
-  else if (!next_cmd(skibuf, sizeof(skibuf), SKI) ||
-    strncmp(skibuf, "PRIVATEKEYMETHOD", 16)) 
+  fprintf(logfile, "Starting LTA work\n");
+  if (!SKI) ansr = ERR_SCM_NOSKIFILE;
+  else if ((ansr = parse_SKI_blocks(SKI, logfile, skibuf, sizeof(skibuf), &locflags))
+     >= 0)
     {
-    ansr = ERR_SCM_BADSKIFILE;
-    strcpy(errbuf, "No private key method");
-    }
-  else
-    {
-    for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
-    if (strncmp(cc, "Keyring", 7) ||
-      check_keyring(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
-    }
-  if (!ansr)
-    {
-    if (!next_cmd(skibuf, sizeof(skibuf), SKI) ||
-      strncmp(skibuf, "TOPLEVELCERTIFICATE ", 20))
-      {
-      ansr = ERR_SCM_NORPCERT;
-      strcpy(errbuf, "No top level certificate");
-      }
-    else
-      {           // get root cert
-      if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      strcpy(myrootfullname, &skibuf[20]);
-      if (get_casn_file(&myrootcert.self, &skibuf[20], 0) < 0)
-        ansr = ERR_SCM_NORPCERT;
-      else
-        {
-        for (c--; c > &skibuf[20] && *c != '/'; c--);
-        if (*c != '/')
-          {
-          char *rootp = getenv("RPKI_ROOT");
-          Xrpdir = (char *)calloc(1, strlen(rootp) + strlen(c) + 4);
-          sprintf(Xrpdir, "%s/%s", rootp, c);
-          }
-        else
-          {
-          *c = 0;
-          Xrpdir = (char *)calloc(1, strlen(&skibuf[20]) + 4);
-          strcpy(Xrpdir, &skibuf[20]);
-          }
-        }
-      }
-    }
-  if (!ansr && !next_cmd(skibuf, sizeof(skibuf), SKI))
-    {
-    strcpy(errbuf, "No control section");
-    ansr = ERR_SCM_BADSKIFILE;
-    }
-  else if (!ansr)   // CONTROL section
-    {
-    c = skibuf;
-    while (c && !ansr && !strncmp(skibuf, "CONTROL ", 8))
-      {
-      if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      cc = nextword(skibuf);
-      if (!strncmp(cc, "treegrowth", 10) && cc[10] == ' ' )
-        {
-        if (!strncmp(nextword(cc), "TRUE", 4) && nextword(cc)[4] <= ' ')
-          locflags |= TREEGROWTH;
-        }
-      else if (!strncmp(cc, "resource_nounion", 16) && cc[16] == ' ')
-        {
-        if (!strncmp(nextword(cc), "TRUE", 4) && nextword(cc)[4]  <= ' ')
-            locflags |= RESOURCE_NOUNION;
-        }
-      else if (!strncmp(cc, "intersection_always", 19) && cc[19] == ' ')
-        {
-        if (!strncmp(nextword(cc), "TRUE", 4) && nextword(cc)[4]  <= ' ')
-            locflags |= INTERSECTION_ALWAYS;
-        }
-      else 
-        {
-        ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "Invalid control message: %s\n", cc);
-        } 
-      if (!ansr) c = next_cmd(skibuf, sizeof(skibuf), SKI);
-      }
-    while (c && !ansr && !strncmp(skibuf, "TAG ", 4))
-      {
-      if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      cc = nextword(skibuf);
-      if (!strncmp(cc, "Xvalidity_dates ", 16))
-        {
-        cc = nextword(cc);
-        if (!*cc || (*cc != 'C'  && *cc != 'R' && check_dates(cc) < 0))
-          ansr = ERR_SCM_BADSKIFILE;
-        }
-      else if (!strncmp(cc, "Xcrldp ", 7))
-        {
-        cc = nextword(cc);
-        if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
-          !find_extension(&myrootcert, id_cRLDistributionPoints, 0)))
-          ansr = ERR_SCM_BADSKIFILE;
-        else
-          {
-          Xcrldp = (char *)calloc(1, strlen(cc) + 2);
-          strcpy(Xcrldp, cc);
-          }
-        }
-      else if (!strncmp(cc, "Xcp ", 4))
-        {
-        struct Extension *extp;
-        cc = nextword(cc);
-        if (!*cc ||
-          (*cc == 'R' &&
-          ((!(extp = find_extension(&myrootcert, id_certificatePolicies, 0)))
-          ||
-          num_items(&extp->extnValue.certificatePolicies.self) > 1)))
-          ansr = ERR_SCM_BADSKIFILE;
-        else if (check_cp(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
-        }
-      else if (!strncmp(cc, "Xaia ", 5))
-        {
-        cc = nextword(cc);
-        Xaia = (char *)calloc(1, strlen(cc));
-        strncpy(Xaia, cc, strlen(cc));
-        }
-      else 
-        {
-        ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "Invalid TAG entry: %s", cc);
-        }
-      c = next_cmd(skibuf, sizeof(skibuf), SKI);
-      }
     if (!Xcp)
       {
       Xcp = (char *)calloc(1,4);
       *Xcp = 'D';
       }
+    strcpy(currskibuf, skibuf); 
     locscmp = scmp;
     locconp = conp;
-    if (!c || strncmp(skibuf, "SKI ", 4)) 
+    if (findorcreatedir(locscmp, locconp, Xrpdir, &XrpdirId) < 0)
       {
+      sprintf(errbuf, "Cannot find directory %s.", Xrpdir);
       ansr = ERR_SCM_BADSKIFILE;
-      sprintf(errbuf, "No SKI entry in file: %s", skibuf);
       }
     else ansr = process_control_blocks(SKI);
     }
-  int numcert;
   struct done_cert *done_certp = done_certs.done_certp;
-  int locansr = 0;
-  char locfilename[128];
-  *locfilename = 0;
   for (numcert = 0; numcert < done_certs.numcerts; numcert++, done_certp++)
     {
     if (ansr >= 0)
       {
       // mark done_certp->cert as having para
       done_certp->origflags |= SCM_FLAG_HASPARACERT;
+      if (done_certp->perf & WASEXPANDED)
+        done_certp->origflags |= SCM_FLAG_ISTARGET;
       // put done_certp->paracert in database with para flag and
       // flag original cert as having a paracert
       if (locansr >= 0 && (locansr = add_paracert2DB(done_certp)) < 0)
@@ -1857,8 +1595,11 @@ Procedure:
   if (Xcp) free(Xcp);
   if (Xaia) free(Xaia);
   free(Xcrldp);
-  free_keyring(&keyring);
-  if (*errbuf && logfile) fprintf(logfile, "%s\n", errbuf);
+  free_keyring();
+  if (errbuf[strlen(errbuf) - 1] != '.' &&
+      errbuf[strlen(errbuf) - 1] != '\n') strcat(errbuf, "."); 
+  if (*errbuf && logfile) fprintf(logfile, "%s ", errbuf);
+  fprintf(logfile, "Finished LTA work\n");
   return ansr;
   }
 

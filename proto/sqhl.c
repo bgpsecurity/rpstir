@@ -1,5 +1,6 @@
 /*
   $Id$
+  $Id$
 */
 
 #include <stdio.h>
@@ -56,6 +57,7 @@ static scmtab *theCTATable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm    *theSCMP = NULL;
+static int useParacerts = 1;
 
 static void initTables(scm *scmp)
 {
@@ -891,61 +893,6 @@ static X509 *readCertFromFile (char *ofullname, int *stap)
   return(px);
 }
 
-/*
-  Get the parent certificate by using the issuer and the aki of "x" to look
-  it up in the db. If "x" has already been broken down in "cf" just
-  use the issuer/aki from there, otherwise look it up from "x". The
-  db lookup will return the filename and directory name of the
-  parent cert, as well as its flags. Set those flags into "pflags"
-*/
-
-// static variables for efficiency, so only need to set up query once
-
-static scmsrcha *parentSrch = NULL;
-static char *parentDir, *parentFile;
-static unsigned int *parentFlags;
-static char *parentAKI, *parentIssuer;
-
-static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
-			 int *stap, char **pathname)
-{
-  char ofullname[PATH_MAX];		/* full pathname */
-
-  if ( parentSrch == NULL )
-    {
-      parentSrch = newsrchscm(NULL, 5, 0, 1);
-      ADDCOL (parentSrch, "filename", SQL_C_CHAR, FNAMESIZE, *stap, NULL);
-      ADDCOL (parentSrch, "dirname", SQL_C_CHAR, DNAMESIZE, *stap, NULL);
-      ADDCOL (parentSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
-	      *stap, NULL);
-      ADDCOL (parentSrch, "aki", SQL_C_CHAR, SKISIZE, *stap, NULL);
-      ADDCOL (parentSrch, "issuer", SQL_C_CHAR, SUBJSIZE, *stap, NULL);
-      parentFile = (char *) parentSrch->vec[0].valptr;
-      parentDir = (char *) parentSrch->vec[1].valptr;
-      parentFlags = (unsigned int *) parentSrch->vec[2].valptr;
-      parentAKI = (char *) parentSrch->vec[3].valptr;
-      parentIssuer = (char *) parentSrch->vec[4].valptr;
-    }
-  *stap = 0;
-// find the entry whose subject is our issuer and whose ski is our aki,
-// e.g. our parent
-  if ( subject != NULL )
-    snprintf(parentSrch->wherestr, WHERESTR_SIZE,
-	     "ski=\"%s\" and subject=\"%s\"", ski, subject);
-  else
-    snprintf(parentSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
-  addFlagTest(parentSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
-  addFlagTest(parentSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
-  *stap = searchscm(conp, theCertTable, parentSrch, NULL, ok,
-		    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
-  if ( *stap < 0 )
-    return NULL;
-  (void)snprintf(ofullname, PATH_MAX, "%s/%s", parentDir, parentFile);
-  if ( pathname != NULL )
-    strncpy(*pathname, ofullname, PATH_MAX);
-  return readCertFromFile(ofullname, stap);
-}
-
 static scmsrcha *certSrch = NULL;
 
 struct cert_answers cert_answers;
@@ -968,10 +915,108 @@ static int addCert2List(scmcon *conp, scmsrcha *s, int idx)
   memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
   snprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
     (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
+  memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
+  strcpy(this_ansrp->issuer, (char *)certSrch->vec[4].valptr);
+  memset(this_ansrp->aki, 0, sizeof(this_ansrp->aki));
+  strcpy(this_ansrp->aki, (char *)certSrch->vec[3].valptr);
   this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
   this_ansrp->local_id = *(unsigned int *)s->vec[5].valptr;
   return 0;
   }
+
+/*
+  Get the parent certificate by using the issuer and the aki of "x" to look
+  it up in the db. If "x" has already been broken down in "cf" just
+  use the issuer/aki from there, otherwise look it up from "x". The
+  db lookup will return the filename and directory name of the
+  parent cert, as well as its flags. Set those flags into "pflags"
+*/
+
+// static variables for efficiency, so only need to set up query once
+
+static scmsrcha *parentSrch = NULL;
+static char *parentDir, *parentFile;
+static unsigned int *parentFlags;
+static char *parentAKI, *parentIssuer;
+
+struct cert_answers *find_parent_cert(char *ski, char *subject, scmcon *conp)
+  {
+  int sta;
+  if ( certSrch == NULL )
+    {
+      certSrch = newsrchscm(NULL, 6, 0, 1);
+      ADDCOL (certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
+      ADDCOL (certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
+      ADDCOL (certSrch, "flags", SQL_C_ULONG, sizeof (unsigned int),
+	      sta, NULL);
+      ADDCOL (certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
+      ADDCOL (certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
+      ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
+        NULL);
+      parentFile = (char *) certSrch->vec[0].valptr;
+      parentDir = (char *) certSrch->vec[1].valptr;
+      parentFlags = (unsigned int *) certSrch->vec[2].valptr;
+      parentAKI = (char *) certSrch->vec[3].valptr;
+      parentIssuer = (char *) certSrch->vec[4].valptr;
+    }
+  sta = 0;
+// find the entry whose subject is our issuer and whose ski is our aki,
+// e.g. our parent
+  if ( subject != NULL )
+    snprintf(certSrch->wherestr, WHERESTR_SIZE,
+	     "ski=\'%s\' and subject=\'%s\'", ski, subject);
+  else
+    snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
+  addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+  addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+  cert_answers.num_ansrs = 0;
+  if (cert_answers.cert_ansrp) free(cert_answers.cert_ansrp);
+  cert_answers.cert_ansrp = NULL;
+  sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
+    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+  if (sta < 0)  cert_answers.num_ansrs = sta;
+  return &cert_answers;
+  }
+
+static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
+			 int *stap, char **pathname, int *flagsp)
+{
+  char ofullname[PATH_MAX];		/* full pathname */
+
+  struct cert_answers *cert_answersp = find_parent_cert(ski, subject, conp);
+  struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
+  int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
+  if (!cert_answersp  || cert_answersp->num_ansrs <= 0)  return NULL;
+  if (cert_answersp->num_ansrs == 1)
+    {
+    cert_ansrp = &cert_answersp->cert_ansrp[0];
+    if (cert_ansrp->flags & (SCM_FLAG_ISTARGET | SCM_FLAG_HASPARACERT))
+      return NULL;
+    }
+  else if (cert_answersp->num_ansrs == 2)
+    {
+      // do they conflict?
+    if (((cert_answersp->cert_ansrp[0].flags & ff) &
+        (cert_ansrp->flags & ff))) return NULL;
+      // if using paracerts, choose the paracert
+
+    if ((useParacerts &&
+      (cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT)) ||
+       (!useParacerts &&
+      !(cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT)))
+        cert_ansrp = &cert_answersp->cert_ansrp[0];
+    if (!parentAKI || !parentIssuer) return NULL;
+    strcpy(parentAKI, cert_ansrp->aki);
+    strcpy(parentIssuer, cert_ansrp->issuer);
+    }
+  else return NULL;
+  (void)snprintf(ofullname, PATH_MAX, cert_ansrp->fullname);
+  if ( pathname != NULL ) strncpy(*pathname, ofullname, PATH_MAX);
+  if (flagsp) *flagsp = cert_ansrp->flags;
+  return readCertFromFile(ofullname, stap);
+  if ( *stap < 0 ) return NULL;
+  return NULL;
+}
 
 struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *scmp,
   scmcon *conp)
@@ -996,6 +1041,8 @@ struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *scmp,
   addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
   addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN,   0, 1);
   cert_answers.num_ansrs = 0;
+  if (cert_answers.cert_ansrp) free(cert_answers.cert_ansrp);
+  cert_answers.cert_ansrp = NULL;
   sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
   if (sta < 0) cert_answers.num_ansrs = sta;
@@ -1024,7 +1071,7 @@ struct cert_answers *find_trust_anchors(scm *scmp, scmcon *conp)
   if (sta < 0) cert_answers.num_ansrs = sta;
   return &cert_answers;
   }
-  
+
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *revokedSrch = NULL;
@@ -1143,10 +1190,11 @@ static int verify_cert(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
     sk_X509_push(sk_trusted, x);
   } else
     {
-      parent = parent_cert(conp, parentSKI, parentSubject, &sta, NULL);
+      int flags;
+      parent = parent_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
       while ( parent != NULL )
 	{
-	  if ( (*parentFlags) & SCM_FLAG_TRUSTED )
+	  if ( flags & SCM_FLAG_TRUSTED )
 	    {
 	      *chainOK = 1;
 	      sk_X509_push(sk_trusted, parent);
@@ -1155,7 +1203,8 @@ static int verify_cert(scmcon *conp, X509 *x, int isTrusted, char *parentSKI,
 	  else
 	    {
 	      sk_X509_push(sk_untrusted, parent);
-	      parent = parent_cert(conp, parentAKI, parentIssuer, &sta, NULL);
+	      parent = parent_cert(conp, parentAKI, parentIssuer, &sta, NULL,
+                &flags);
 	    }
 	}
     }
@@ -1181,7 +1230,7 @@ static int verify_crl (scmcon *conp, X509_CRL *x, char *parentSKI,
   X509 *parent;
   EVP_PKEY *pkey;
 
-  parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL);
+  parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
   if (parent == NULL) {
     *chainOK = 0;
     return 0;
@@ -1284,7 +1333,7 @@ static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
   if ( sta < 0 )
     return(sta);
   fn2 = fn;
-  cert = parent_cert(conp, ski, NULL, &sta, &fn2);
+  cert = parent_cert(conp, ski, NULL, &sta, &fn2, NULL);
   if ( cert == NULL )
     {
       *chainOK = 0;
@@ -1459,11 +1508,13 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
     }
   if ( updateManSrch2 == NULL )
     {
-      updateManSrch2 = newsrchscm(NULL, 3, 0, 1);
+      updateManSrch2 = newsrchscm(NULL, 4, 0, 1);
       ADDCOL(updateManSrch2, "local_id", SQL_C_ULONG, sizeof(unsigned int),
 	     sta, sta);
       ADDCOL(updateManSrch2, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
       ADDCOL(updateManSrch2, "subject", SQL_C_CHAR, SUBJSIZE, sta, sta);
+      ADDCOL(updateManSrch2, "flags", SQL_C_ULONG, sizeof(unsigned int),
+        sta, sta);
     }
  // loop over files and hashes
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
@@ -1539,7 +1590,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 	}
       else
 	{
-//	  (void)fprintf(stderr, "Hash not ok on file %s\n", file);
+	  (void)fprintf(stderr, "Hash not ok on file %s\n", file);
       // if hash not okay, delete object, and if cert, invalidate children
 	  if ( tabp == theCertTable )
 	    {
@@ -1999,20 +2050,20 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     struct Extension *ski_extp, *aki_extp;
     int locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0 ||
-	!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
-	((aki_extp = find_extension(&cert, id_authKeyId)) &&
-	 diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
-		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||  
-	strcmp(cf->fields[CF_FIELD_SUBJECT],
-	       cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
+      !(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
+      ((aki_extp = find_extension(&cert, id_authKeyId)) &&
+      diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
+        &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
+      strcmp(cf->fields[CF_FIELD_SUBJECT],
+		 cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
     delete_casn(&cert.self);
-    if (locerr)  
+    if (locerr)
       {
-	freecf(cf);
-	X509_free(x);
-	return(ERR_SCM_NOTSS);
+      freecf(cf);
+      X509_free(x);
+      return(ERR_SCM_NOTSS);
       }
-      cf->flags |= SCM_FLAG_TRUSTED;
+    cf->flags |= SCM_FLAG_TRUSTED;
     }
 // verify that the cert matches the rescert profile
   if ( utrust > 0 )
@@ -2063,7 +2114,8 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
 */
 
 int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
-	     unsigned int id, int utrust, int typ, unsigned int *cert_id)
+	     unsigned int id, int utrust, int typ, unsigned int *cert_id,
+             int constraining)
 {
   cert_fields *cf;
   X509 *x = NULL;
@@ -2080,7 +2132,8 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
 	X509_free(x);
       return(sta);
     }
-  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull, 
+  useParacerts = constraining;
+  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull,
     (typ == OT_ETA)? 0: 1);
 }
 
@@ -2098,6 +2151,8 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int   sta = 0;
   unsigned int i;
   int chainOK, x509sta;
+//  struct CertificateRevocationList CRL;
+
 
   UNREFERENCED_PARAMETER(utrust);
   cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta);
@@ -2122,10 +2177,10 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
     sta = add_crl_internal(scmp, conp, cf);
   }
 // and do the revocations
-  if ((sta == 0) && chainOK) 
+  if ((sta == 0) && chainOK)
     {
-    uchar *u = (uchar *)cf->snlist; 
-    for (i = 0; i < cf->snlen; i++, u += (sizeof(unsigned long long))) 
+    uchar *u = (uchar *)cf->snlist;
+    for (i = 0; i < cf->snlen; i++, u += (sizeof(unsigned long long)))
       {
       unsigned long long ull = 0;
       uchar *e;
@@ -2142,19 +2197,6 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   X509_CRL_free(x);
   return(sta);
 }
-
-static int gen_cert_filename(char *ski, char **fakename)
-  {
-  int fakelen = strlen(ski);
-  *fakename = (char *)calloc(1, fakelen+5);
-  char *a, *b;
-  for (a = *fakename, b = ski; *b; b++)
-    {
-    if (*b != ':') *a++ = *b;
-    }
-  strcpy(a, ".cer");
-  return (a - *fakename) + 4;
-  }
 
 static int hexify_ski(struct Certificate *certp, char *skip)
   {
@@ -2181,19 +2223,20 @@ static int hexify_ski(struct Certificate *certp, char *skip)
   return size;
   }
 
-static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp, 
-  char *outdir, unsigned int id, int utrust, int typ, char *skip, int rta)
+static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
+  char *outdir, unsigned int id, int utrust, int typ, char *outfile, 
+  char *skip, int rta)
   {
   cert_fields *cf = NULL;
   unsigned int cert_id;
-  char *fakename, *pathname;
+  char certname[PATH_MAX], pathname[PATH_MAX];
   int sta = 0;
   struct Certificate *certp;
-  if (rta) certp = &roap->content.signedData.encapContentInfo.eContent.
+  if (rta > 1) certp = &roap->content.signedData.encapContentInfo.eContent.
     trustAnchor;
   else certp = (struct Certificate *)member_casn(
       &roap->content.signedData.certificates.self, 0);
-  // read the embedded cert information, in particular the ski
+ // read the embedded cert information, in patricular the ski
   if ((sta = hexify_ski(certp, skip)) < 0) return sta;
   sta = 0;
     // serialize the Certificate and scan it as an openssl X509 object
@@ -2206,28 +2249,67 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   free(buf);
     // if deserialization failed, bail
   if (x509p == NULL || sta < 0) return ERR_SCM_X509;
-  gen_cert_filename(skip, &fakename);
+  memset(certname, 0, sizeof(certname));
+  memset(pathname, 0, sizeof(pathname));
+  strcpy(certname, outfile);
+  if (rta == 1) strcpy(&certname[strlen(certname) - 4], ".ee.cer");
+  else strcat(certname, ".cer");
+  char *cc = retrieve_tdir(scmp, conp, &sta);
+    // find or add the directory
+  struct stat statbuf;
+  strcat(strcpy(pathname, cc), "/EEcertificates");
+  if (stat(pathname, &statbuf)) mkdir(pathname, 0777);
+  int lth = strlen(pathname) - 15; // not counting /EEcertificate
+  cc = &outdir[lth];
+  if (cc)
+    {
+    if (strncmp(outdir, pathname, lth)) return ERR_SCM_WRITE_EE;
+    cc = &outdir[lth];
+    if (*cc == '/') strncat(pathname, cc++, 1);
+    do
+      {
+      char *d = strchr(cc, '/');
+      if (d)
+        {
+        d++;
+        strncat(pathname, cc, d - cc);
+        }
+      else strcat(pathname, cc);
+      cc = d;
+      if (stat(pathname, &statbuf) < 0) mkdir(pathname, 0777);
+      }
+    while (cc);
+    }
+  else if (stat(pathname, &statbuf) < 0) mkdir(pathname, 0777);
+  unsigned int dir_id;
+  sta = findorcreatedir(scmp, conp, pathname, &dir_id);
+  strcat(strcat(pathname, "/"), certname);
 // pull out the fields
   int x509sta;
-  pathname = (char *)calloc(1, strlen(outdir)  +
-        strlen(fakename) + 2);
-  strcat(strcat(strcpy(pathname, outdir), "/"), fakename);
   // write the cert there, because cert2fields needs that
-  if (put_casn_file(&certp->self, pathname, 0) < 0) sta = ERR_SCM_WRITE_EE; 
-  else cf = cert2fields(fakename, pathname, typ, &x509p, &sta, &x509sta);
+  if (put_casn_file(&certp->self, pathname, 0) < 0) sta = ERR_SCM_WRITE_EE;
+  else cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
-    // add the X509 cert to the db
-    sta = add_cert_2(scmp, conp, cf, x509p, id, utrust, &cert_id, 
+    // add the X509 cert to the db with right directory
+    if (!cc)
+      {
+      cc = strrchr(pathname, (int)'/');
+      strncpy(certname, pathname, (cc - pathname));
+      certname[cc - pathname] = 0;
+      }
+    else strcpy(certname, outdir);
+    sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id,
       pathname, (typ == OT_RTA)? 0: 1);
     if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else if (sta < 0)
-      fprintf(stderr, "Error adding embedded certificate %s\n", 
+      {
+      fprintf(stderr, "Error adding embedded certificate %s\n",
         (!rta)? pathname: NULL);
+      unlink(pathname);
+      }
     else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
-  free(fakename);
-  free(pathname);
   x509p = NULL;		/* freed by add_cert_2 */
   cf = NULL;			/* freed by add_cert_2 */
   return sta;
@@ -2312,8 +2394,8 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     return(sta);
     }
   do {			/* do-once */
-    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, 
-      utrust, typ, ski, 0)) < 0) break;
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id,
+      utrust, typ, outfile, ski, 0)) < 0) break;
     cert_added = 1;
 
     asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
@@ -2351,7 +2433,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // clean up
   free(ip_addrs);
   if (sta != 0 && cert_added)
-    (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull, 
+    (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull,
     (unsigned int)0);
   delete_casn(&roa.self);
   if (sig != NULL) free(sig);
@@ -2392,7 +2474,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int manFilesLen = 0;
   for(fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
       fahp != NULL;
-      fahp = (struct FileAndHash *)next_of(&fahp->self)) 
+      fahp = (struct FileAndHash *)next_of(&fahp->self))
     {
     int flth = read_casn(&fahp->file, file);
     file[flth] = 0;
@@ -2420,8 +2502,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     }
     nextUpdate = UnixTimeToDBTime(ltime, &sta);
-    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ, 
-        ski, 0)) < 0) break;
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ,
+        outfile, ski, 0)) < 0) break;
     v = sta;
     if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id))
       < 0) break;
@@ -2495,25 +2577,25 @@ int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   struct ROA roa;   // RTA is CMS structure like ROA
   char ski_ee[60], ski_rta[60];
   ROA(&roa, (ushort)0);
-  struct Certificate *rtacertp; 
+  struct Certificate *rtacertp;
+
   initTables (scmp);
   do
     {
-    if ((sta = get_casn_file(&roa.self, outfull, 0)) < 0) 
+    if ((sta = get_casn_file(&roa.self, outfull, 0)) < 0)
       {
       sta = ERR_SCM_INVALRTA;
       break;
       }
     if ((sta = rtaValidate(&roa)) < 0) break;
     rtacertp = &roa.content.signedData.encapContentInfo.eContent.trustAnchor;
-    if ((sta = hexify_ski(rtacertp, ski_rta)) < 0) break;
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id,
-       utrust, typ, ski_ee, 0)) < 0) break;
+       utrust, typ, outfile, ski_ee, 1)) < 0) break;
     v = sta;
              // set utrust to 1 for the RTA cert
-    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, 1, typ, ski_rta,
-       1)) < 0) break;
-    if ((sta = getmaxidscm(scmp, conp, "local_id", theCTATable, &rtaID)) < 0) 
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, 1, typ, outfile,
+       ski_rta, 2)) < 0) break;
+    if ((sta = getmaxidscm(scmp, conp, "local_id", theCTATable, &rtaID)) < 0)
       break;
     rtaID++;
     }
@@ -2573,6 +2655,7 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int typ;
   int sta;
 
+  useParacerts = 0;
   if ( scmp == NULL || conp == NULL || conp->connected == 0 ||
        outfile == NULL || outdir == NULL || outfull == NULL )
     return(ERR_SCM_INVALARG);
@@ -2597,7 +2680,8 @@ int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     case OT_UNKNOWN:
     case OT_UNKNOWN+OT_PEM_OFFSET:
     case OT_ETA:
-      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
+      sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id,
+                     0);
       break;
     case OT_CRL:
     case OT_CRL_PEM:
@@ -2926,7 +3010,29 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
   UNREFERENCED_PARAMETER(idx);
   lid = *(unsigned int *)(s->vec[0].valptr);
   if ((sta = deletebylid(conp, theCertTable, lid)) < 0) return sta;
-  if ((sta = findRTA(conp, (char *)s->vec[1].valptr)) == ERR_SCM_NODATA) 
+  char *ski = (char *)(s->vec[1].valptr);
+  ulong flags = *(unsigned int *)(s->vec[3].valptr);
+  if ((flags & SCM_FLAG_ISPARACERT))
+    {  // is its regular cert in the DB with unneeded flags?
+    struct cert_answers *cert_answersp;
+    struct cert_ansr *cert_ansrp;
+    cert_answersp = find_cert_by_aKI(ski, (char *)0, theSCMP, conp);
+    if (cert_answersp && cert_answersp->num_ansrs) 
+      {
+      int i;
+      for (i = 0, cert_ansrp = &cert_answersp->cert_ansrp[i]; 
+        i < cert_answersp->num_ansrs; i++, cert_ansrp++)
+        {
+        if ((cert_ansrp->flags & (SCM_FLAG_HASPARACERT || SCM_FLAG_ISTARGET)))
+          {  // if so, clear them
+          flags = (cert_ansrp->flags & 
+            ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
+          set_cert_flag(conp, cert_ansrp->local_id, flags);
+          }
+        }
+      }
+    }
+  if ((sta = findRTA(conp, (char *)s->vec[1].valptr)) == ERR_SCM_NODATA)
     sta = 0;
   if (sta < 0)  return sta;
   return verifyOrNotChildren (conp, (char *) s->vec[1].valptr,
@@ -2960,7 +3066,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   char     did[24];
   mcf      mymcf;
 
-  if (conp == NULL || conp->connected == 0 || outfile == NULL || 
+  if (conp == NULL || conp->connected == 0 || outfile == NULL ||
     (outdir == NULL && !dir_id))
     return(ERR_SCM_INVALARG);
 // determine its filetype
@@ -3324,7 +3430,7 @@ int ranlast(scm *scmp, scmcon *conp, char *whichcli)
 void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
 {
   initTables(scmp);
-  return parent_cert (conp, ski, NULL, stap, fn);
+  return parent_cert (conp, ski, NULL, stap, fn, NULL);
 }
 
 /*
@@ -3417,4 +3523,4 @@ void sqcleanup(void)
 
   if (iPropData.data) free(iPropData.data);
   if (vPropData.data) free(vPropData.data);
-}
+ }

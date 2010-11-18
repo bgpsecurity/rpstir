@@ -221,7 +221,6 @@ static int displaySNList (scmsrcha *s, int idx1, char* returnStr)
   return 2;
 }
 
-
 /* helper function for displayFlags */
 static void addFlagIfSet(char *returnStr, unsigned int flags,
 			 unsigned int flag, char *str)
@@ -267,6 +266,8 @@ static int displayFlags (scmsrcha *s, int idx1, char* returnStr)
     addFlagIfSet(returnStr, flags, SCM_FLAG_ONMAN, "ONMAN");
     }
   addFlagIfSet(returnStr, flags, SCM_FLAG_HASPARACERT, "HASPARACERT");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_ISPARACERT, "ISPARACERT");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_ISTARGET, "ISTARGET");
   return 1;
 }
 
