@@ -19,17 +19,19 @@
 
 char *msgs[] = {
     "Finished %s OK\n",
-    "Too %s parameters\n",    // 1
+    "Usage: name of constraints file",    // 1
     "Invalid line: %s",
     "Duplicate SKI: %s ",       // 3
     "Missing %s line\n",
     "Premature end of file\n",  // 5
     "overlap at: %s",
     "Can't open %s\n",          // 7
-    "Had warnings.  New file NOT created\n",
+    "\nHad warnings.  New file NOT created\n",
     };
 
 int warnings;
+
+extern char errbuf[160];
 
 static void warn (int err, char *paramp)
   {
@@ -43,27 +45,6 @@ static void fatal(int err, char *paramp)
   if(err) warn(8, "");
   exit(0);
   }
-
-static int sort_resources(struct iprange *iprangesp, int numranges)
-  {
-  struct iprange *rp0, *rp1, spare;
-  int did, i;
-  for (did = 0, i = 1; i < numranges; )
-    {
-    rp0 = &iprangesp[i - 1];
-    rp1 = &iprangesp[i];
-    if (diff_ipaddr(rp0, rp1) > 0) // swap them
-      {
-      memcpy(&spare, rp0, sizeof(struct iprange));
-      memcpy(rp0, rp1,    sizeof(struct iprange));
-      memcpy(rp1, &spare, sizeof(struct iprange));
-      i = 1;    // go back to start
-      did++;
-      }
-    else i++;
-    }
-  return did;
-  } 
 
 static void process_type(FILE *str, FILE *tmpstr, int typ, char *inbuf, 
   char *ending)
@@ -112,24 +93,33 @@ int main(int argc, char **argv)
   {
   char **skis, inbuf[128];
   int numskis = 0;
-  if (argc != 2) fatal(1, (argc < 1)? "few": "many");
+  if (argc < 2) fatal(1, (char *)0);
   FILE *str = fopen(argv[1], "r");
   if (!str) fatal(7, argv[1]);
   FILE *tmpstr;
   char *f = "xproof.tmp";
-  if (!(tmpstr = fopen(f, "w+"))) fatal(7, f);
-  if (!fgets(inbuf, sizeof(inbuf), str) ||
-    strncmp(inbuf, "RP_Key ", 6)) fatal(2, inbuf); 
-  fputs(inbuf, tmpstr);
-  if (!fgets(inbuf, sizeof(inbuf), str) ||
-    strncmp(inbuf, "SKI ", 4)) fatal(2, inbuf);
+  int ansr, i = 0;
   
+  if (!(tmpstr = fopen(f, "w+"))) fatal(7, f);
+
+  if ((ansr = parse_SKI_blocks(str, NULL, inbuf, sizeof(inbuf), &i)) < 0)
+    fatal(2, errbuf);
+  fseek(str, (long)0, 0);
+  *inbuf = 0;
+  while (1)
+    {
+    fgets(inbuf, sizeof(inbuf), str);
+    if (!strncmp(inbuf, "SKI ", 4)) break;
+    fputs(inbuf, tmpstr);
+    } 
   char *c;
   do    // starting with first SKI line
     {
-    for (c = &inbuf[5]; *c && ((*c >= '0' && *c <= '9') ||
+    for (c = &inbuf[4]; *c && ((*c >= '0' && *c <= '9') || *c == ':' ||
       (*c >= 'A' && *c <= 'F') || (*c >= 'a' && *c <= 'f')); c++);
-    if (c != &inbuf[44] && *c != '\n') fatal(2, inbuf); 
+    if (c != &inbuf[63]) fatal(2, inbuf); 
+    while(*c == ' ' || *c == '\t') c++;
+    if (*c != '\n') fatal(2, inbuf);
     if (numskis)
       {
       int num;
@@ -157,22 +147,11 @@ int main(int argc, char **argv)
     fputs(inbuf, tmpstr);    // print as# hdr
            // get first AS#, if any
     if (!(c = fgets(inbuf, sizeof(inbuf), str))) break; 
-    process_type(str, tmpstr, -1, inbuf, "SKI ");
+    process_type(str, tmpstr, 8, inbuf, "SKI ");
     }
   while(*inbuf);
   if (warnings) fatal(8, "");
-  char oldfile[128];
-  strcat(strcpy(oldfile, argv[1]), "~");
-    // rename file in argv[1] tp same name with suffixed tilde 
-  unlink(oldfile);
-  link(argv[1], oldfile);
-    // rename tmp file to argv[1]
-  unlink(argv[1]);
-  link(f, argv[1]);
-  unlink(f);
   fatal(0, argv[1]);
   return 0;
   }
-   
-      
     
