@@ -1,5 +1,5 @@
 #
-# $Id: Makefile 1237 2010-09-03 14:24:16Z bkohler $
+# $Id: Makefile 1461 2010-11-18 21:14:15Z gardiner $
 #
 # Makefile for mysql and openssl test programs
 #
@@ -20,7 +20,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-all:	librpki.a rcli query chaser garbage makeROA proofreader
+all:	librpki.a rcli query chaser garbage makeROA proofreader testrpwork
 
 ifneq ($(MYSQLINCLUDES),)
   CFLAGS += -I$(MYSQLINCLUDES)
@@ -30,7 +30,7 @@ ifneq ($(SSLINCLUDES),)
   CFLAGS += -I$(SSLINCLUDES)
 endif
 
-CFLAGS += -I$(CLINCLUDES) -I../roa-lib -I../cg/asn -I../cg/casn \
+CFLAGS += -I../roa-lib -I../cg/asn -I../cg/casn \
 	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
@@ -61,9 +61,11 @@ proofreader.o:	err.h rpwork.h
 add_TA.o:	err.h rpwork.h
 conversion.o:	err.h rpwork.h
 rpwork.o:	err.h rpwork.c rpwork.h
+rpcommon.o:	err.h rpcommon.c rpwork.h
+testrpwork.o:	err.h rpwork.c rpwork.h
 
-librpki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o rpwork.o conversion.o
-	ar crv librpki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o rpwork.o conversion.o
+librpki.a:	initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o rpwork.o conversion.o rpcommon.o
+	ar crv librpki.a initscm.o myssl.o sqhl.o sqcon.o diru.o err.o querySupport.o rpwork.o conversion.o rpcommon.o
 	ranlib librpki.a
 
 rcli:	rcli.o librpki.a $(LOCAL_LIBS) Makefile
@@ -83,6 +85,9 @@ makeROA: makeROA.o librpki.a $(LOCAL_LIBS) Makefile
 
 proofreader: proofreader.o librpki.a $(LOCAL_LIBS) Makefile
 	$(CC) -o proofreader -g proofreader.o $(LOCAL_LIBS) $(LIBS)
+
+testrpwork: testrpwork.o librpki.a $(LOCAL_LIBS) Makefile
+	$(CC) -o testrpwork -g testrpwork.o $(LOCAL_LIBS) $(LIBS)
 
 
 clean:
