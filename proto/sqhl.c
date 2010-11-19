@@ -1,6 +1,5 @@
 /*
   $Id$
-  $Id$
 */
 
 #include <stdio.h>
@@ -2224,8 +2223,8 @@ static int hexify_ski(struct Certificate *certp, char *skip)
   }
 
 static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
-  char *outdir, unsigned int id, int utrust, int typ, char *outfile, 
-  char *skip, int rta)
+  char *outdir, unsigned int id, int utrust, int typ, char *outfile,
+  char *skip, int rta, char *certfilenamep)
   {
   cert_fields *cf = NULL;
   unsigned int cert_id;
@@ -2284,6 +2283,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   unsigned int dir_id;
   sta = findorcreatedir(scmp, conp, pathname, &dir_id);
   strcat(strcat(pathname, "/"), certname);
+  if (certfilenamep) strcpy(certfilenamep, certname);
 // pull out the fields
   int x509sta;
   // write the cert there, because cert2fields needs that
@@ -2378,7 +2378,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 	    char *outfull, unsigned int id, int utrust, int typ)
 {
   struct ROA roa;  // note: roaFromFile constructs this
-  char ski[60], *sig = NULL, *fakecertfilename = NULL, *ip_addrs = NULL;
+  char ski[60], *sig = NULL, certfilename[PATH_MAX], *ip_addrs = NULL;
   unsigned char *bsig = NULL;
   int asid, sta, chainOK, bsiglen = 0, cert_added = 0;
   unsigned int flags = 0;
@@ -2395,7 +2395,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
   do {			/* do-once */
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id,
-      utrust, typ, outfile, ski, 0)) < 0) break;
+      utrust, typ, outfile, ski, 0, certfilename)) < 0) break;
     cert_added = 1;
 
     asid = roaAS_ID(&roa);		/* it's OK if this comes back zero */
@@ -2433,7 +2433,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // clean up
   free(ip_addrs);
   if (sta != 0 && cert_added)
-    (void) delete_object(scmp, conp, fakecertfilename, outdir, outfull,
+    (void) delete_object(scmp, conp, certfilename, outdir, outfull,
     (unsigned int)0);
   delete_casn(&roa.self);
   if (sig != NULL) free(sig);
@@ -2447,9 +2447,9 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {
-  int   sta;
+  int   sta, cert_added = 0;
   struct ROA roa;
-  char *thisUpdate, *nextUpdate;
+  char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
   ulong ltime;
   unsigned int man_id = 0;
 
@@ -2503,7 +2503,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
     nextUpdate = UnixTimeToDBTime(ltime, &sta);
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ,
-        outfile, ski, 0)) < 0) break;
+        outfile, ski, 0, (char *)0)) < 0) break;
+    cert_added = 1;
     v = sta;
     if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id))
       < 0) break;
@@ -2512,6 +2513,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   while(0);
   if (sta < 0)
     {
+    if (cert_added) (void) delete_object(scmp, conp, certfilename, outdir, 
+      outfull, (unsigned int)0);
     delete_casn(&roa.self);
     return sta;
     }
@@ -2561,6 +2564,8 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
   while (0);
   // clean up
+  if (sta < 0 && cert_added) (void) delete_object(scmp, conp, certfilename, 
+      outdir, outfull, (unsigned int)0);
   delete_casn(&(roa.self));
   free(thisUpdate);
   free(nextUpdate);
@@ -2572,10 +2577,10 @@ extern int rtaValidate(struct ROA *);
 int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {
-  int   sta = 0, v = 0;
+  int   sta = 0, v = 0, cert_added = 0;
   uint rtaID = 0;
   struct ROA roa;   // RTA is CMS structure like ROA
-  char ski_ee[60], ski_rta[60];
+  char ski_ee[60], ski_rta[60], certfilename[PATH_MAX];
   ROA(&roa, (ushort)0);
   struct Certificate *rtacertp;
 
@@ -2590,11 +2595,12 @@ int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     if ((sta = rtaValidate(&roa)) < 0) break;
     rtacertp = &roa.content.signedData.encapContentInfo.eContent.trustAnchor;
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id,
-       utrust, typ, outfile, ski_ee, 1)) < 0) break;
+       utrust, typ, outfile, ski_ee, 1, certfilename)) < 0) break;
     v = sta;
+    cert_added = 1;
              // set utrust to 1 for the RTA cert
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, 1, typ, outfile,
-       ski_rta, 2)) < 0) break;
+       ski_rta, 2, (char *)0)) < 0) break;
     if ((sta = getmaxidscm(scmp, conp, "local_id", theCTATable, &rtaID)) < 0)
       break;
     rtaID++;
@@ -2602,6 +2608,8 @@ int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   while(0);
   if (sta < 0)
     {
+    if (cert_added) (void) delete_object(scmp, conp, certfilename, outdir, 
+      outfull, (unsigned int)0);
     delete_casn(&roa.self);
     return sta;
     }
@@ -3017,15 +3025,15 @@ static int revoke_cert_and_children(scmcon *conp, scmsrcha *s, int idx)
     struct cert_answers *cert_answersp;
     struct cert_ansr *cert_ansrp;
     cert_answersp = find_cert_by_aKI(ski, (char *)0, theSCMP, conp);
-    if (cert_answersp && cert_answersp->num_ansrs) 
+    if (cert_answersp && cert_answersp->num_ansrs)
       {
       int i;
-      for (i = 0, cert_ansrp = &cert_answersp->cert_ansrp[i]; 
+      for (i = 0, cert_ansrp = &cert_answersp->cert_ansrp[i];
         i < cert_answersp->num_ansrs; i++, cert_ansrp++)
         {
         if ((cert_ansrp->flags & (SCM_FLAG_HASPARACERT || SCM_FLAG_ISTARGET)))
           {  // if so, clear them
-          flags = (cert_ansrp->flags & 
+          flags = (cert_ansrp->flags &
             ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
           set_cert_flag(conp, cert_ansrp->local_id, flags);
           }
