@@ -44,6 +44,9 @@ char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 864P";
 #define O_DOS (O_BINARY | S_IWRITE |  S_IREAD)
 #endif
 
+extern long _get_tag(uchar **tagpp);
+extern int _calc_lth(uchar **cpp);
+
 int _casn_obj_err(struct casn *, int);
 
 int get_casn_file(struct casn *casnp, char *name, int fd)
@@ -81,10 +84,18 @@ int get_casn_file(struct casn *casnp, char *name, int fd)
   	}
       siz = (siz - 1024 + tmp);
       }
-    tmp = decode_casn(casnp, b);
+       // defend against a truncated file
+    c = b;
+    tmp = _get_tag(&c);
+    tmp = _calc_lth(&c);
+    tmp += (c - b);
+    if (tmp > siz) 
+      {
+      _casn_obj_err(casnp, ASN_FILE_SIZE_ERR);
+      tmp = (b - c);
+      }
+    else tmp = decode_casn_lth(casnp, b, tmp); 
     free(b);
-    if (tmp < 0) return tmp;
-    if (tmp < siz) _casn_obj_err(casnp, ASN_FILE_SIZE_ERR);
     return tmp;
     }
 
