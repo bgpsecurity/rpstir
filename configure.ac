@@ -105,8 +105,8 @@ AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([SQLConnect],[odbc odbcinst],[],[
-	echo "Error: unixODBC is required for building this project"
+AC_SEARCH_LIBS([SQLConnect],[myodbc3 myodbc5],[],[
+	echo "Error: libmyodbc3 or libmyodbc5 is required for building this project"
 	exit -1;
 ])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
