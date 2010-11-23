@@ -121,7 +121,7 @@ struct iprange *eject_range(struct ipranges *, int ),
       *inject_range(struct ipranges *, int),
       *next_range(struct ipranges *, struct iprange *);
 
-extern void free_ipranges(struct ipranges *), free_keyring();
+extern void free_ipranges(struct ipranges *);
 
 struct Extension *find_extn(struct Certificate *certp, char *oid, int add);
 

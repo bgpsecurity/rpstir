@@ -43,6 +43,14 @@ FILE *loclog;
 
 extern struct keyring keyring;
 
+static void free_keyring()
+  {
+  if (keyring.filename) free(keyring.filename);
+  if (keyring.label) free(keyring.label);
+  if (keyring.password) free(keyring.password);
+  keyring.filename = keyring.label = keyring.password = (char *)0;
+  }
+
 static struct casn *get_subject_name(struct Name *subjp)
   {
   struct RelativeDistinguishedName *rdnp = (struct RelativeDistinguishedName *)

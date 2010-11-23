@@ -36,12 +36,17 @@ extern char *Xcrldp, *Xcp, *Xrpdir;
 
 struct keyring keyring;
 
-void free_keyring()
+static int translate_env(char *v)
   {
-  if (keyring.filename) free(keyring.filename);
-  if (keyring.label) free(keyring.label);
-  if (keyring.password) free(keyring.password);
-  keyring.filename = keyring.label = keyring.password = (char *)0;
+  char *c = strchr(v, (int)'/');
+  if (!c || !*c) return -1;
+  *c = 0;
+  char *rootp = getenv(&v[1]);
+  char *b = (char *)calloc(1, strlen(rootp) + strlen(&c[1]) + 4);
+  sprintf(b, "%s/%s", rootp, &c[1]);
+  strcpy(v, b);
+  free(b);
+  return 0;
   }
 
 static int check_keyring(char *cc)
@@ -49,8 +54,9 @@ static int check_keyring(char *cc)
   char *b;
   if ((cc = nextword(cc)))
     {
-    b = strchr(cc, (int)' ');
-    if (b)
+    if (*cc == '$' && translate_env(cc) < 0) return -1;
+    for (b = cc; *b > ' '; b++);
+    if (*b)
       {
       keyring.filename = (char *)calloc(1, (b - cc) + 2);
       strncpy(keyring.filename, cc, (b - cc));
@@ -76,9 +82,9 @@ static int check_keyring(char *cc)
 
 char *nextword(char *cc)
   {
-  char *b = strchr(cc, (int)' ');
-  if (b) while (*b && *b == ' ') b++;
-  return b;
+  while (*cc > ' ') cc++; 
+  while (*cc && (*cc == ' ' || *cc == '\t')) cc++;
+  return cc;
   }
 
 static int trueOrFalse(char *c)
@@ -427,6 +433,8 @@ Procedure:
     else
       {           // get root cert
       if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
+      for (c = &skibuf[20]; *c == ' ' || *c == '\t'; c++); 
+      if (*c == '$') translate_env(&skibuf[20]);
       strcpy(myrootfullname, &skibuf[20]);
       if (get_casn_file(&myrootcert.self, &skibuf[20], 0) < 0)
         {
@@ -435,13 +443,8 @@ Procedure:
         }
       else
         {
-        for (c--; c > &skibuf[20] && *c != '/'; c--);
-        if (*c != '/')
-          {
-          char *rootp = getenv("RPKI_ROOT");
-          Xrpdir = (char *)calloc(1, strlen(rootp) + strlen(c) + 4);
-          sprintf(Xrpdir, "%s/%s", rootp, c);
-          }
+        c = strrchr(&skibuf[20], (int)'/');
+        if (!c) ansr = ERR_SCM_NORPCERT;
         else
           {
           *c = 0;
