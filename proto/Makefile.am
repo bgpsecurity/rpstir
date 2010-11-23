@@ -25,12 +25,12 @@ AM_LDFLAGS = $(LIBS)
 
 lib_rpki_files = scm.h scmmain.h diru.h err.h scmf.h sqhl.h myssl.h \
 		initscm.c myssl.c sqhl.c sqcon.c diru.c err.c \
-		querySupport.c rpwork.c conversion.c
+		querySupport.c rpwork.c conversion.c rpcommon.c rpwork.h
 
 noinst_LIBRARIES = librpki.a
-bin_PROGRAMS = rcli query chaser garbage makeROA proofreader
+bin_PROGRAMS = rcli query chaser garbage makeROA proofreader testrpwork
 
-local_libs = -L../cg/asn -lasn -L../cg/casn -lcasn -L. -lrpki -L../roa-lib -lroa 
+local_libs = -L../cg/asn -lasn -L../cg/casn -lcasn -L. -lrpki -L../roa-lib -lroa
 LDADD = $(local_libs)
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 
@@ -38,13 +38,16 @@ librpki_a_SOURCES = ${lib_rpki_files}
 
 rcli_SOURCES = rcli.c $(lib_rpki_files)
 rcli_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-query_SOURCES = query.c querySupport.h ${lib_rpki_files}
+query_SOURCES = query.c $(lib_rpki_files)
 query_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-chaser_SOURCES = chaser.c ${lib_rpki_files}
+chaser_SOURCES = chaser.c $(lib_rpki_files)
 chaser_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-garbage_SOURCES = garbage.c ${lib_rpki_files}
+garbage_SOURCES = garbage.c $(lib_rpki_files)
 garbage_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-makeROA_SOURCES = makeROA.c ${lib_rpki_files}
+makeROA_SOURCES = makeROA.c $(lib_rpki_files)
 makeROA_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-proofreader_SOURCES = proofreader.c err.h rpwork.h ${lib_rpki_files}
+proofreader_SOURCES = proofreader.c $(lib_rpki_files)
 proofreader_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
+testrpwork_SOURCES = testrpwork.c $(lib_rpki_files)
+testrpwork_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
+
