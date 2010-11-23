@@ -36,7 +36,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) $(dump_SOURCES) $(dump_smart_SOURCES) $(dumpasn1_SOURCES) $(encode_oid_SOURCES) $(gen_key_SOURCES) $(loadkey_SOURCES) $(make_TA_SOURCES) $(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) $(set_cert_ski_SOURCES) $(sign_cert_SOURCES) $(six2hex_SOURCES) $(six_to_bin_SOURCES) $(test_casn_random_SOURCES) $(whatsfcs_SOURCES)
+SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) $(dump_SOURCES) $(dump_smart_SOURCES) $(dumpasn1_SOURCES) $(encode_oid_SOURCES) $(extractCMScert_SOURCES) $(gen_key_SOURCES) $(loadkey_SOURCES) $(make_TA_SOURCES) $(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) $(set_cert_ski_SOURCES) $(sign_cert_SOURCES) $(six2hex_SOURCES) $(six_to_bin_SOURCES) $(test_casn_random_SOURCES) $(whatsfcs_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -63,7 +63,8 @@ bin_PROGRAMS = test_casn_random$(EXEEXT) dump$(EXEEXT) rr$(EXEEXT) \
 	loadkey$(EXEEXT) gen_key$(EXEEXT) whatsfcs$(EXEEXT) \
 	make_oidtable$(EXEEXT) make_TA$(EXEEXT) set_cert_ski$(EXEEXT) \
 	sign_cert$(EXEEXT) add_key_info$(EXEEXT) read_roa$(EXEEXT) \
-	encode-oid$(EXEEXT) dumpasn1$(EXEEXT) dump_smart$(EXEEXT)
+	encode-oid$(EXEEXT) dumpasn1$(EXEEXT) dump_smart$(EXEEXT) \
+	extractCMScert$(EXEEXT)
 subdir = cg/tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -100,6 +101,10 @@ am_encode_oid_OBJECTS = encode-oid.$(OBJEXT)
 encode_oid_OBJECTS = $(am_encode_oid_OBJECTS)
 encode_oid_LDADD = $(LDADD)
 encode_oid_DEPENDENCIES =
+am_extractCMScert_OBJECTS = extractCMScert.$(OBJEXT)
+extractCMScert_OBJECTS = $(am_extractCMScert_OBJECTS)
+extractCMScert_LDADD = $(LDADD)
+extractCMScert_DEPENDENCIES =
 am_gen_key_OBJECTS = gen_key.$(OBJEXT)
 gen_key_OBJECTS = $(am_gen_key_OBJECTS)
 gen_key_LDADD = $(LDADD)
@@ -157,17 +162,19 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(dump_SOURCES) $(dump_smart_SOURCES) $(dumpasn1_SOURCES) \
-	$(encode_oid_SOURCES) $(gen_key_SOURCES) $(loadkey_SOURCES) \
-	$(make_TA_SOURCES) $(make_oidtable_SOURCES) \
-	$(read_roa_SOURCES) $(rr_SOURCES) $(set_cert_ski_SOURCES) \
-	$(sign_cert_SOURCES) $(six2hex_SOURCES) $(six_to_bin_SOURCES) \
+	$(encode_oid_SOURCES) $(extractCMScert_SOURCES) \
+	$(gen_key_SOURCES) $(loadkey_SOURCES) $(make_TA_SOURCES) \
+	$(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) \
+	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
+	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
 	$(test_casn_random_SOURCES) $(whatsfcs_SOURCES)
 DIST_SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(dump_SOURCES) $(dump_smart_SOURCES) $(dumpasn1_SOURCES) \
-	$(encode_oid_SOURCES) $(gen_key_SOURCES) $(loadkey_SOURCES) \
-	$(make_TA_SOURCES) $(make_oidtable_SOURCES) \
-	$(read_roa_SOURCES) $(rr_SOURCES) $(set_cert_ski_SOURCES) \
-	$(sign_cert_SOURCES) $(six2hex_SOURCES) $(six_to_bin_SOURCES) \
+	$(encode_oid_SOURCES) $(extractCMScert_SOURCES) \
+	$(gen_key_SOURCES) $(loadkey_SOURCES) $(make_TA_SOURCES) \
+	$(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) \
+	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
+	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
 	$(test_casn_random_SOURCES) $(whatsfcs_SOURCES)
 ETAGS = etags
 CTAGS = ctags
@@ -185,9 +192,6 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
-CXX = @CXX@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -222,13 +226,10 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -283,6 +284,8 @@ encode_oid_SOURCES = encode-oid.c
 dumpasn1_SOURCES = dumpasn1.c
 dump_smart_SOURCES = dump_smart.c
 dump_smart_LDFLAGS = $(LIBS)
+extractCMScert_SOURCES = extractCMScert.c
+extractCMScert_LDFLAGS = $(LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -357,6 +360,9 @@ dumpasn1$(EXEEXT): $(dumpasn1_OBJECTS) $(dumpasn1_DEPENDENCIES)
 encode-oid$(EXEEXT): $(encode_oid_OBJECTS) $(encode_oid_DEPENDENCIES) 
 	@rm -f encode-oid$(EXEEXT)
 	$(LINK) $(encode_oid_LDFLAGS) $(encode_oid_OBJECTS) $(encode_oid_LDADD) $(LIBS)
+extractCMScert$(EXEEXT): $(extractCMScert_OBJECTS) $(extractCMScert_DEPENDENCIES) 
+	@rm -f extractCMScert$(EXEEXT)
+	$(LINK) $(extractCMScert_LDFLAGS) $(extractCMScert_OBJECTS) $(extractCMScert_LDADD) $(LIBS)
 gen_key$(EXEEXT): $(gen_key_OBJECTS) $(gen_key_DEPENDENCIES) 
 	@rm -f gen_key$(EXEEXT)
 	$(LINK) $(gen_key_LDFLAGS) $(gen_key_OBJECTS) $(gen_key_LDADD) $(LIBS)
@@ -408,6 +414,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump_smart.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpasn1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encode-oid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractCMScert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_key.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loadkey.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/make_TA.Po@am__quote@

@@ -34,7 +34,7 @@
 # ***** END LICENSE BLOCK *****
 
 
-SOURCES = $(librpki_a_SOURCES) $(chaser_SOURCES) $(garbage_SOURCES) $(makeROA_SOURCES) $(proofreader_SOURCES) $(query_SOURCES) $(rcli_SOURCES)
+SOURCES = $(librpki_a_SOURCES) $(chaser_SOURCES) $(garbage_SOURCES) $(makeROA_SOURCES) $(proofreader_SOURCES) $(query_SOURCES) $(rcli_SOURCES) $(testrpwork_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -57,7 +57,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = rcli$(EXEEXT) query$(EXEEXT) chaser$(EXEEXT) \
-	garbage$(EXEEXT) makeROA$(EXEEXT) proofreader$(EXEEXT)
+	garbage$(EXEEXT) makeROA$(EXEEXT) proofreader$(EXEEXT) \
+	testrpwork$(EXEEXT)
 subdir = proto
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -73,7 +74,8 @@ librpki_a_AR = $(AR) $(ARFLAGS)
 librpki_a_LIBADD =
 am__objects_1 = initscm.$(OBJEXT) myssl.$(OBJEXT) sqhl.$(OBJEXT) \
 	sqcon.$(OBJEXT) diru.$(OBJEXT) err.$(OBJEXT) \
-	querySupport.$(OBJEXT) rpwork.$(OBJEXT) conversion.$(OBJEXT)
+	querySupport.$(OBJEXT) rpwork.$(OBJEXT) conversion.$(OBJEXT) \
+	rpcommon.$(OBJEXT)
 am_librpki_a_OBJECTS = $(am__objects_1)
 librpki_a_OBJECTS = $(am_librpki_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
@@ -104,6 +106,10 @@ am_rcli_OBJECTS = rcli.$(OBJEXT) $(am__objects_1)
 rcli_OBJECTS = $(am_rcli_OBJECTS)
 rcli_LDADD = $(LDADD)
 rcli_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_testrpwork_OBJECTS = testrpwork.$(OBJEXT) $(am__objects_1)
+testrpwork_OBJECTS = $(am_testrpwork_OBJECTS)
+testrpwork_LDADD = $(LDADD)
+testrpwork_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -113,10 +119,10 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(librpki_a_SOURCES) $(chaser_SOURCES) $(garbage_SOURCES) \
 	$(makeROA_SOURCES) $(proofreader_SOURCES) $(query_SOURCES) \
-	$(rcli_SOURCES)
+	$(rcli_SOURCES) $(testrpwork_SOURCES)
 DIST_SOURCES = $(librpki_a_SOURCES) $(chaser_SOURCES) \
 	$(garbage_SOURCES) $(makeROA_SOURCES) $(proofreader_SOURCES) \
-	$(query_SOURCES) $(rcli_SOURCES)
+	$(query_SOURCES) $(rcli_SOURCES) $(testrpwork_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -133,9 +139,6 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
-CXX = @CXX@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -170,13 +173,10 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -209,25 +209,27 @@ AM_CFLAGS = -I../roa-lib -I../roa-utils -I../cg/asn -I../cg/casn -I. \
 AM_LDFLAGS = $(LIBS)
 lib_rpki_files = scm.h scmmain.h diru.h err.h scmf.h sqhl.h myssl.h \
 		initscm.c myssl.c sqhl.c sqcon.c diru.c err.c \
-		querySupport.c rpwork.c conversion.c
+		querySupport.c rpwork.c conversion.c rpcommon.c rpwork.h
 
 noinst_LIBRARIES = librpki.a
-local_libs = -L../cg/asn -lasn -L../cg/casn -lcasn -L. -lrpki -L../roa-lib -lroa 
+local_libs = -L../cg/asn -lasn -L../cg/casn -lcasn -L. -lrpki -L../roa-lib -lroa
 LDADD = $(local_libs)
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 librpki_a_SOURCES = ${lib_rpki_files} 
 rcli_SOURCES = rcli.c $(lib_rpki_files)
 rcli_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-query_SOURCES = query.c querySupport.h ${lib_rpki_files}
+query_SOURCES = query.c $(lib_rpki_files)
 query_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-chaser_SOURCES = chaser.c ${lib_rpki_files}
+chaser_SOURCES = chaser.c $(lib_rpki_files)
 chaser_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-garbage_SOURCES = garbage.c ${lib_rpki_files}
+garbage_SOURCES = garbage.c $(lib_rpki_files)
 garbage_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-makeROA_SOURCES = makeROA.c ${lib_rpki_files}
+makeROA_SOURCES = makeROA.c $(lib_rpki_files)
 makeROA_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-proofreader_SOURCES = proofreader.c err.h rpwork.h ${lib_rpki_files}
+proofreader_SOURCES = proofreader.c $(lib_rpki_files)
 proofreader_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
+testrpwork_SOURCES = testrpwork.c $(lib_rpki_files)
+testrpwork_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
 all: all-am
 
 .SUFFIXES:
@@ -309,6 +311,9 @@ query$(EXEEXT): $(query_OBJECTS) $(query_DEPENDENCIES)
 rcli$(EXEEXT): $(rcli_OBJECTS) $(rcli_DEPENDENCIES) 
 	@rm -f rcli$(EXEEXT)
 	$(LINK) $(rcli_LDFLAGS) $(rcli_OBJECTS) $(rcli_LDADD) $(LIBS)
+testrpwork$(EXEEXT): $(testrpwork_OBJECTS) $(testrpwork_DEPENDENCIES) 
+	@rm -f testrpwork$(EXEEXT)
+	$(LINK) $(testrpwork_LDFLAGS) $(testrpwork_OBJECTS) $(testrpwork_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -328,9 +333,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/query.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/querySupport.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rcli.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rpcommon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rpwork.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sqcon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sqhl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testrpwork.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

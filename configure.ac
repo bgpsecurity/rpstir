@@ -24,11 +24,11 @@ AM_INIT_AUTOMAKE([1.9], [foreign])
 AC_CONFIG_SRCDIR([server/pdu.h])
 
 AM_MAINTAINER_MODE
-
+: ${CFLAGS=""}
 # Checks for programs.
-AC_PROG_CXX
+#AC_PROG_CXX
 AC_PROG_CC
-AC_PROG_AWK
+#AC_PROG_AWK
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
@@ -106,7 +106,7 @@ AC_SEARCH_LIBS([dlopen],[dl],[],[
 	exit -1;
 ])
 AC_SEARCH_LIBS([SQLConnect],[myodbc3 myodbc5],[],[
-	echo "Error: libmyodbc3 or libmyodbc5 is required for building this project"
+	echo "Error: unixODBC is required for building this project"
 	exit -1;
 ])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[

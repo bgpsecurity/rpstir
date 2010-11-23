@@ -35,10 +35,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure COPYING \
+	$(srcdir)/Makefile.in $(top_srcdir)/configure \
 	build-aux/config.guess build-aux/config.sub build-aux/depcomp \
-	build-aux/install-sh build-aux/ltmain.sh build-aux/missing \
-	compile
+	build-aux/install-sh build-aux/ltmain.sh build-aux/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -82,9 +81,6 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
-CXX = @CXX@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -119,13 +115,10 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -152,7 +145,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = 1.6 foreign
-SUBDIRS = cg roa-lib proto roa-utils rsync_aur testcases server
+SUBDIRS = cg roa-lib proto roa-utils rsync_aur testcases server testbed
 ACLOCAL_AMFLAGS = -I build-aux
 all: all-recursive
 
@@ -471,7 +464,6 @@ check: check-recursive
 all-am: Makefile
 installdirs: installdirs-recursive
 installdirs-am:
-install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -567,6 +559,9 @@ test: all
 	cd subsystemTests && ./runSubsystemTest.sh 2 8
 	cd subsystemTests && ./runSubsystemTest.sh 3 9
 	@echo '**** All RPKI Subsystem tests ran successfully. ****'
+
+install:
+	@echo '**** Please refer to the documentation file name INSTRUCTIONS. ****'
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
