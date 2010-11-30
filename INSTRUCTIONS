@@ -124,6 +124,8 @@ by issuing the command pkg_add -r cryptlib, or (2) using the ports
 system by issuing the command make search name="cryptlib" from the
 /usr/ports directory.
 
+**NOTE** If you are using unzip, specify the -a argument.
+
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
 the self-test code (make testlib; ./testlib) fails on at least FreeBSD
@@ -159,27 +161,20 @@ and then un-tar the resulting tarball using the command:
 This will create a directory named RPKI which will contain various
 subdirectories.
 
-2.2.1 Customize the Makefiles
+2.2.1 Compile the source code and Build the executables
 
-In the top-level source directory there are some sample makefiles:
-Makefile.linux for recent Linux distros, Makefile.linux24 for older
-distros, and Makefile.bsd for NetBSD/FreeBSD.  Choose one depending on
-your target environment.
+./configure
+make
 
-You will need edit the Makefile to link with the correct libraries.
-Modify the variables at the beginning of the Makefile (LIBCL,
-LIBCRYPTO, LIBODBC, etc.) so that each contains the path to its
-respective library.  Note that the LIBODBC variable may contain either
--lmyodbc3 or -lmyodbc5, depending on the version you installed in
-section 2.1.2.  In addition, you must edit proto/scmmain.h to match
-the DSN name with the corresponding section of odbc.ini.
+If you find any make errors, refer to the README-AUTOCONF file. But, in
+general, they can probably be solved by adding one of the following 
+arguments to the ./configure command:
 
-2.2.2 Build the Executables
-
-Once the Makefile and header have been updated, build the executables
-by issuing the command "make -f Makefile.<platform>" in the top-level
-source directory.  On some systems, the default is not GNU Make, so
-substitute the appropriate command (e.g. "gmake" on FreeBSD).
+--with-ssl-lib
+--with-ssl-include
+--with-cryptlib-lib
+--with-cryptlib-include
+--with-odbc-lib
 
 
 2.3 RPKI User Account
@@ -200,8 +195,8 @@ required: RPKI_PORT - port number on which the loader and feeder communicate
 required: RPKI_DB - name of the MySQL database used to hold RPKI data
 required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
-required: RPKI_LISTPORT - another random port to run the rsync_listener application on
-required: RPKI_TCOUNT - the maximum count of allowable threads
+optional: RPKI_LISTPORT - another random port to run the rsync_listener application on
+optional: RPKI_TCOUNT - the maximum count of allowable threads
 optional: RPKI_ROOTPASSWORD - the MySQL root password
 optional: RTR_RETENTION_HOURS -
 optional: RTR_CHECK_INTERVAL -
