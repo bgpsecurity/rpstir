@@ -106,9 +106,15 @@ AC_SEARCH_LIBS([dlopen],[dl],[],[
 	exit -1;
 ])
 AC_SEARCH_LIBS([SQLConnect],[myodbc3 myodbc5],[],[
+	echo "Error: A mysql connector is required for building this project"
+	exit -1;
+],[-lodbc -lodbcinst])
+
+AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbc odbcinst],[],[
 	echo "Error: unixODBC is required for building this project"
 	exit -1;
 ])
+
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
 	echo "Error: cryptlib is required for building this project"
 	exit -1;
