@@ -3486,7 +3486,7 @@ else
 
 fi
 
-
+oldLibs=${LIBS}
 echo "$as_me:$LINENO: checking for library containing SQLWriteDSNToIni" >&5
 echo $ECHO_N "checking for library containing SQLWriteDSNToIni... $ECHO_C" >&6
 if test "${ac_cv_search_SQLWriteDSNToIni+set}" = set; then
@@ -3616,6 +3616,12 @@ else
 	echo "Error: unixODBC is required for building this project"
 	exit -1;
 
+fi
+
+
+
+if [ "$ac_cv_search_SQLWriteDSNToIni" = "-lodbc" ];then
+   LIBS="${oldLibs} -lodbc"
 fi
 
 
