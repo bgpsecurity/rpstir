@@ -97,9 +97,8 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature)
   else
     {
       signature = (uchar *)calloc(1, signatureLength +20);
-      if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, 
-	          sigKeyContext, hashContext)) != 0) 
-	msg = "signing";
+      if ((ansr = cryptCreateSignature(signature, signatureLength + 20, 
+        &signatureLength, sigKeyContext, hashContext)) != 0) msg = "signing";
       else if ((ansr = cryptCheckSignature(signature, signatureLength, 
 		       sigKeyContext, hashContext)) != 0) 
 	msg = "verifying";
@@ -107,6 +106,7 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature)
   cryptDestroyContext(hashContext);
   cryptDestroyContext(sigKeyContext);
   if (signstring) free(signstring);
+  if (msg && *msg) fprintf(stderr, "Signature length = %d\n", signatureLength);
   signstring = NULL;
   if (ansr == 0)
     {
@@ -165,7 +165,6 @@ int sign_cert(struct Certificate *certp, char *keyname)
   strcpy(keyring.label, "label");
   strcpy(keyring.password, "password");
   strcpy(keyring.filename, keyname);
-
   if ((ret = setSignature(casnp, sigp)) != 0)
       return ret;
 
