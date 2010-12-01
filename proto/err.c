@@ -144,6 +144,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid RTA",                  /* ERR_SCM_INVALRTA */  
     "Invalid manifest",             /* ERR_SCM_INVALMAN */  
     "Error writing EE cert",        /* ERR_SCM_WRITE_EE */
+    "Key too small",                /* ERR_SCM_SMALLKEY */
   } ;
 
 char *err2string(int err)

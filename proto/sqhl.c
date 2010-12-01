@@ -2055,12 +2055,15 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
         &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
       strcmp(cf->fields[CF_FIELD_SUBJECT],
 		 cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
+    else if (vsize_casn(&cert.signature) < 256 ||
+      vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey) 
+        < 265) locerr = ERR_SCM_SMALLKEY; 
     delete_casn(&cert.self);
     if (locerr)
       {
       freecf(cf);
       X509_free(x);
-      return(ERR_SCM_NOTSS);
+      return(locerr < 0) ?locerr: ERR_SCM_NOTSS;
       }
     cf->flags |= SCM_FLAG_TRUSTED;
     }

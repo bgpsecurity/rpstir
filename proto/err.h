@@ -136,7 +136,8 @@
 #define ERR_SCM_INVALRTA    -107        /* invalid RTA */
 #define ERR_SCM_INVALMAN    -108        /* invalid manifest */
 #define ERR_SCM_WRITE_EE    -109        /* error writing EE certificate */
-#define ERR_SCM_MAXERR      -109
+#define ERR_SCM_SMALLKEY    -110        /* key too small */
+#define ERR_SCM_MAXERR      -110
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
