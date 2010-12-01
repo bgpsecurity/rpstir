@@ -45,7 +45,7 @@ char *msgs [] =
 #define CURR_FILE_SIZE 512
 
 static int fatal(int msg, char *paramp);
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp);
+static int gen_sha2(uchar *inbufp, int bsize, uchar *outbufp);
 
 static int add_name(char *curr_file, struct Manifest *manp, int num)
   {
@@ -57,7 +57,7 @@ static int add_name(char *curr_file, struct Manifest *manp, int num)
   lseek(fd, 0, 0);
   b = (uchar *)calloc(1, siz);
   if (read(fd, b, siz + 2) != siz) fatal(2, curr_file);
-  hsiz = gen_hash(b, siz, hash);
+  hsiz = gen_sha2(b, siz, hash);
   if (inject_casn(&manp->fileList.self, num) < 0) fatal(3, "fileList");
   fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, num);
   write_casn(&fahp->file, (uchar *)curr_file, strlen(curr_file));
@@ -82,7 +82,7 @@ static int add_names(char *curr_file, char *c, struct Manifest *manp, int num)
   return num;
   }
 
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp)
+static int gen_sha2(uchar *inbufp, int bsize, uchar *outbufp)
   { 
   CRYPT_CONTEXT hashContext;
   uchar hash[40];
