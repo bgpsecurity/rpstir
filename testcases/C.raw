@@ -1,78 +1,90 @@
 seq seq ctx+0x20
-            int 0x02
-        int 0x01
-        seq oid 1.2.840.113549.1.1.11
+            int 0x02 /* 2 */ 
+        int 0x01 /* 1 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
             nul 
-        seq set seq oid 2.5.4.3
+        seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
         seq utc "000207115900Z"
             utc "150313120100Z"
-        seq set seq oid 2.5.4.3
+        seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
-        seq seq oid 1.2.840.113549.1.1.1
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                 nul 
-            bit 0x0030818902818100E69F37BCFBE3C803
-                0x14B13FC90953A886437EAB4D86BAAF10
-                0x292621E59B0793E0AFB199372E582201
-                0x1A686B2A59470AF4EB5EE4AC1576A0C1
-                0x0D1971A4F12344AA11FC0729F85EECC6
-                0xED2453A37409C570DBBB031D719096DE
-                0x2374E1EC5C11A006FD4A6DA791159288
-                0xDDC924E6E974AF9E4AC17D12AB323264
-                0x83CCA7623C936FA50203010001
+            bit 0x003082010A0282010100A29FCCE74A2A
+                0x21DF35E281F3433F9518DD80279924C7
+                0xAB7E8D12D9229946FBF29416EAEB985C
+                0x073BED63345BF42B3FE70C67675ECF22
+                0xB00026A88104D12963A611074B7E354F
+                0xD383F9B45EE9A7F358AC40AE046393A8
+                0x0A500C655499AEB610F19A5EC2167F74
+                0x35DAE6A6E3397115093D8E4EA3A66E7E
+                0xB576380CE1AEFA42B139F10B195BBF3F
+                0x188251FEFF3A9DCF9F9CE2A3F1E71697
+                0xC8C69371DDBF64EFE208EFB52196332B
+                0xAE69AFACE4533BF53DFBE87D631D222A
+                0x0447C4AEC338365F2281252B1890E059
+                0xE9E14A79918680DB0FA7437FEAFACF2A
+                0xA52B30BCDE413FC19E3A4A381BEE95C5
+                0xE274C2B338DF6AEBA5EEF11731722FCC
+                0x9485C5D28AE7DCFF34B30203010001
         ctx+0x23
-            seq seq oid 2.5.29.14
-                    ocw oct 0x1F068FACF2B4D83CCD736FA9EBA74C57
-                            0x287F03DB
-                seq oid 2.5.29.15
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0x88AD6A0A87F19AD013B71CCDFAF4D68A
+                            0x40A74226
+                seq oid 2.5.29.15 /* id_keyUsage */
                     boo 0xFF
                     ocw bit 0x0106
-                seq oid 2.5.29.17
+                seq oid 2.5.29.17 /* id_subjectAltName */
                     ocw seq ctx+0x24
-                                seq set seq oid 2.5.4.3
+                                seq set seq oid 2.5.4.3 /* id_commonName */
                                             prt "ARINviaAPNIC-all"
-                seq oid 2.5.29.19
+                seq oid 2.5.29.19 /* id_basicConstraints */
                     boo 0xFF
                     ocw seq boo 0xFF
-                seq oid 2.5.29.31
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
                     ocw seq seq ctx+0x20
                                     ctx+0x20
                                         ctx+0x06
                                             "rsync://roa-pki.bbn.com/home/testd"
                                             "ir/"
-                seq oid 2.5.29.32
+                seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
-                    ocw seq seq oid 1.3.6.1.5.5.7.14.2
-                seq oid 2.5.29.35
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe_rescerts_policy */
+                seq oid 2.5.29.35 /* id_authKeyId */
                     ocw seq ctx+0x00
-                                0x1F068FACF2B4D83CCD736FA9EBA74C57
-                                0x287F03DB
-                seq oid 1.3.6.1.5.5.7.1.1
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.2
+                                0x88AD6A0A87F19AD013B71CCDFAF4D68A
+                                0x40A74226
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/home/testdir/"
-                seq oid 1.3.6.1.5.5.7.1.7
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
                     boo 0xFF
                     ocw seq seq oct 0x0001
                                 seq bit 0x00A3
                             seq oct 0x0002
                                 seq bit 0x0042342342000000000000
-                seq oid 1.3.6.1.5.5.7.1.8
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
                     boo 0xFF
                     ocw seq ctx+0x20
-                                seq seq int 0x01
-                                        int 0x64
-                seq oid 1.3.6.1.5.5.7.1.11
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.5
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x64 /* 100 */ 
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/home/testdir/"
-                            seq oid 1.3.6.1.5.5.7.48.10
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/home/testdir/"
-    seq oid 1.2.840.113549.1.1.11
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x00BCB0F72A5FF365B56260CEBD510B62DE73C01FF6EB90CCB29DA3A822A91D6B
-        0xD3E85657FA06ABD06446230E7E508C464FFC8D639F61ED69EDC696ACB401A665
-        0x0EC93A22492CA2BD74296B1AED227558972A82732613190DF2F5C35BF0BA24EE
-        0x35A921FD7C1EF5ACCEF418E3D6F47E738CCD59A92B383DE250C83832D28B1604
-        0x33
+    bit 0x000910681FF15E68D454C8A9A223E46BC027FC1C00603169CA641E776C5AB9D0
+        0x2B0D886A500F8121A2F95E2343F8FCBEF3D28BD26087C20B7FFCF3C723A8CC19
+        0x58050CB072ABF03074D522D79114872A889FF15C29D3F3BBF9D91DB9D8C9520F
+        0xEA226C0ECA2D2143043D29B7236A1C42457F7F727F64B3E9E187704DECFDA961
+        0x240B9F2D350AB575E7219709697656D12D810C0CAD87E5F475CF577E5AEFAAF7
+        0xF4C917FD097F8E853D5FECBC501863359D0D1B42270FF8B334CA2F994DF791CB
+        0xEA8F05B43CA79E62DB49D34CE6848EDFA29A42C63660D35826FF4BDACE175730
+        0x8D5A347F15417BDB90FF1F85E9D6FE28C42CC1F070B3C6ECB8B25C520CB3D405
+        0x1F

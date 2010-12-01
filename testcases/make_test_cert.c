@@ -415,8 +415,8 @@ static int setSignature(struct Certificate *certp, char *keyfile, int bad)
   else
     {
     signature = (uchar *)calloc(1, signatureLength +20);
-    if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext,
-      hashContext)) != 0) msg = "signing";
+    if ((ansr = cryptCreateSignature(signature, signatureLength+20, 
+      &signatureLength, sigKeyContext, hashContext)) != 0) msg = "signing";
     else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext,
       hashContext)) != 0) msg = "verifying";
     }
