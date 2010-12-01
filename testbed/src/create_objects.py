@@ -182,7 +182,7 @@ class Certificate:
         #Also check the directory first, and create it if it doesn't exist
         dir_path = OBJECT_PATH+"/keys/"+sia_path
         self.subjkeyfile = dir_path+"/"+nickName+".p15"
-        command_string = "../../cg/tools/gen_key "+self.subjkeyfile+ " 1024"
+        command_string = "../../cg/tools/gen_key "+self.subjkeyfile+ " 2048"
         if not os.path.exists(dir_path):
             os.system("mkdir -p "+ dir_path)
         os.system(command_string)
