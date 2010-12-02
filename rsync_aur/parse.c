@@ -117,8 +117,13 @@ getMessageFromString(char *str, unsigned int len,
         } else {
           return(NULL);
         }
-      }  
-      retStr = makeAddStr(str, len, retlen);
+       }
+       char* bitFlags = (str+2); /* skip >f */
+       char* addStr = "+++++++";
+       if(strncmp(bitFlags, addStr, 7) == 0)
+         retStr = makeAddStr(str, len, retlen);
+       else
+         retStr = makeUpdateStr(str,len,retlen);
       return(retStr);
       break;
     case 'c':
@@ -433,12 +438,19 @@ makeLinkStr(char *str, unsigned int len, unsigned int *retlen)
   return(NULL);
 }
 
+/*
+ * Input string:  *deleting path/to/file.ext
+ * Output string: R path/to/file.ext
+ */
 char *
 makeRemoveStr(char *str, unsigned int len, unsigned int *retlen)
 {
 
   char *retStr;
   int holdLen;
+  int bytesUsed = 0;
+  int i;
+  const char *whitespace = " \t\r\n";
 
   holdLen = len + 2;
 
@@ -450,13 +462,22 @@ makeRemoveStr(char *str, unsigned int len, unsigned int *retlen)
 
   memset(retStr, '\0', holdLen);
 
-  strncpy(retStr, str, len);
+  /* Copy filename into "remove" string, by skipping "*deleting " prefix. */
+  bytesUsed = snprintf(retStr, holdLen, "R %s\r\n", &str[10]);
+  if (bytesUsed >= holdLen) {	/* output truncated, no trailing '\0' */
+    free(retStr);
+    fprintf(stderr, "Error: malformed deletion line\n");
+    return NULL;
+  }
 
-  *(char *)retStr = 'R';
-
-  *(char *)(retStr + len - 1) = '\0';
-
-  strncat(retStr, "\r\n", 2);
+  /* In case of extra whitespace at the end, leave only one "\r\n". */
+  for (i = 2; i < holdLen; i++) {
+    if (strchr(whitespace, retStr[i])) {
+      strcpy(&retStr[i], "\r\n");
+      break;
+    }
+  }
+  
   *retlen = strlen(retStr);
 
   return(retStr);
@@ -502,9 +523,9 @@ looksOK(char *str, unsigned int len)
   
   switch (c) {
     case '*':
-      if ( ((char)*(str + 1)) != 0x20 )
+      if (strncmp("*deleting ", str, strlen("*deleting ")) != 0)
         return(FALSE);
-      if (len < 3)
+      if (len < 11)
         return(FALSE);
       if (!has_Correct_Extension(str, len))
         return(FALSE);
@@ -661,7 +682,6 @@ has_Correct_Extension(char *str, unsigned int len)
   memset(hold, '\0', sizeof(hold));
 
   for (ptr = str; *ptr >= ' '; ptr++);
-  if (!strncmp(&ptr[-8], "MANIFEST", 8)) return (TRUE);
 
   ptr = strrchr(str, '.');
 
