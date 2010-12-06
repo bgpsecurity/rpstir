@@ -68,7 +68,7 @@ static struct casn_errors
     { ASN_MASK_ERR,       "Invalid character at [-(value returned)]"},
     { ASN_DEFINED_ERR,    "Error trying to find DEFINED BY" },
     { ASN_LENGTH_ERR,     "Invalid length field" },
-    { ASN_FILE_SIZE_ERR,  "File too short" },
+    { ASN_FILE_SIZE_ERR,  "File too short/long" },
     { ASN_CONSTRAINT_ERR, "Failed constraint test" },
     { ASN_RECURSION_ERR,  "Constraint calls forbidden function" },
     { ASN_ENUM_ERR,       "Item must be enumerated" },
