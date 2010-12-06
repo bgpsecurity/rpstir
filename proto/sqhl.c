@@ -296,12 +296,12 @@ int infer_filetype(char *fname)
     typ += OT_CER;
   if ( strstr(fname, ".crl") != NULL )
     typ += OT_CRL;
-  if ( strstr(fname, ".roa") != NULL )
+  if ( strstr(fname, ".roa") != NULL && !typ)
     typ += OT_ROA;
-  if ( strstr(fname, ".man") != NULL  || strstr(fname, ".mft") != NULL ||
-    strstr(fname, ".mnf") != NULL)
+  if ( (strstr(fname, ".man") != NULL  || strstr(fname, ".mft") != NULL ||
+    strstr(fname, ".mnf") != NULL) && !typ)
     typ += OT_MAN;
-  if ( strstr(fname, ".rta") != NULL) typ += OT_RTA;
+  if ( strstr(fname, ".rta") != NULL && !typ) typ += OT_RTA;
   if ( typ < OT_UNKNOWN || typ > OT_MAXBASIC )
     return(ERR_SCM_INVALFN);
   if ( pem > 0 )
@@ -2049,15 +2049,15 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     struct Extension *ski_extp, *aki_extp;
     int locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0 ||
-      !(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
-      ((aki_extp = find_extension(&cert, id_authKeyId)) &&
-      diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
-        &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
-      strcmp(cf->fields[CF_FIELD_SUBJECT],
-		 cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
+	!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
+	((aki_extp = find_extension(&cert, id_authKeyId)) &&
+	 diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
+		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||  
+	strcmp(cf->fields[CF_FIELD_SUBJECT],
+	       cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
     else if (vsize_casn(&cert.signature) < 256 ||
-      vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey) 
-        < 265) locerr = ERR_SCM_SMALLKEY; 
+	     vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey)
+	     < 265) locerr = ERR_SCM_SMALLKEY; 
     delete_casn(&cert.self);
     if (locerr)
       {
@@ -2238,7 +2238,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     trustAnchor;
   else certp = (struct Certificate *)member_casn(
       &roap->content.signedData.certificates.self, 0);
- // read the embedded cert information, in patricular the ski
+  // read the embedded cert information, in patricular the ski
   if ((sta = hexify_ski(certp, skip)) < 0) return sta;
   sta = 0;
     // serialize the Certificate and scan it as an openssl X509 object
@@ -2261,17 +2261,18 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   struct stat statbuf;
   strcat(strcpy(pathname, cc), "/EEcertificates");
   if (stat(pathname, &statbuf)) mkdir(pathname, 0777);
-  int lth = strlen(pathname) - 15; // not counting /EEcertificate
+  int lth = strlen(pathname) - 15; // not counting /EEcertificates
   cc = &outdir[lth];
-  if (cc)
+  
+  if (*cc)
     {
     if (strncmp(outdir, pathname, lth)) return ERR_SCM_WRITE_EE;
     cc = &outdir[lth];
-    if (*cc == '/') strncat(pathname, cc++, 1);
+    if (*cc == '/') strncat(pathname, cc++, 1); 
     do
       {
       char *d = strchr(cc, '/');
-      if (d)
+      if (d) 
         {
         d++;
         strncat(pathname, cc, d - cc);
@@ -2294,7 +2295,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   else cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
-    // add the X509 cert to the db with right directory
+    // add the X509 cert to the db with the right directory
     if (!cc)
       {
       cc = strrchr(pathname, (int)'/');
@@ -2302,14 +2303,16 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
       certname[cc - pathname] = 0;
       }
     else strcpy(certname, outdir);
-    sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id,
+    sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id, 
       pathname, (typ == OT_RTA)? 0: 1);
     if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else if (sta < 0)
       {
       fprintf(stderr, "Error adding embedded certificate %s\n",
         (!rta)? pathname: NULL);
-      unlink(pathname);
+      /* Leave the file there for debugging purposes.  FIXME: add code
+	 to clean this up later. */
+      // unlink(pathname);
       }
     else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
@@ -2413,7 +2416,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_NOMEM;
       break;
     }
-
+    
     // verify the signature
     if ((sta = verify_roa(conp, &roa, ski, &chainOK)) != 0)
       break;
@@ -2506,7 +2509,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
     nextUpdate = UnixTimeToDBTime(ltime, &sta);
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ,
-        outfile, ski, 0, (char *)0)) < 0) break;
+        outfile, ski, 0, certfilename)) < 0) break;
     cert_added = 1;
     v = sta;
     if ((sta = getmaxidscm(scmp, conp, "local_id", theManifestTable, &man_id))
@@ -3165,6 +3168,41 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   if ( sta < 0 )
     return(sta);
   sta = deletescm(conp, thetab, &dwhere);
+  if (sta != 0) return sta;
+  if (typ == OT_ROA || typ == OT_ROA_PEM || typ == OT_MAN || typ == OT_MAN_PEM
+    || typ == OT_RTA)
+    {
+    unsigned int ndir_id;
+    char noutfile[PATH_MAX], noutdir[PATH_MAX], noutfull[PATH_MAX];
+    memset(noutfile, 0, PATH_MAX);
+    memset(noutdir, 0, PATH_MAX);
+    memset(noutfull, 0, PATH_MAX);
+    char *c = retrieve_tdir(scmp, conp, &sta);
+    int lth = strlen(c);  // lth of tdir
+    strcat(strcpy(noutfull, c), "/EEcertificates");
+    findorcreatedir(scmp, conp, noutfull, &ndir_id);
+    strcpy(noutdir, noutfull);
+    strcat(noutdir, &outdir[lth]); 
+    strcat(noutfull, &outfull[lth]); // add roa path + name
+    strcat(noutfull, ".cer");
+    strcat(strcpy(noutfile, outfile), ".cer");
+    
+     
+    if ((sta = delete_object(scmp, conp, noutfile, noutdir,
+		  noutfull, ndir_id )) < 0) return sta;
+    if (typ == OT_RTA)
+      {
+      char *cc = strrchr(noutfull, (int)'.');
+      *cc = 0;
+      cc = strrchr(noutfull, (int)'.');
+      strcpy(++cc, "ee.cer");  
+      cc = strrchr(noutfile, (int)'.');
+      *cc = 0;
+      cc = strrchr(noutfile, (int)'.');
+      strcpy(++cc, "ee.cer");
+      sta = delete_object(scmp, conp, noutfile, noutdir, noutfull, ndir_id);
+      }
+    }
   return(sta);
 }
 
@@ -3534,4 +3572,4 @@ void sqcleanup(void)
 
   if (iPropData.data) free(iPropData.data);
   if (vPropData.data) free(vPropData.data);
- }
+}
