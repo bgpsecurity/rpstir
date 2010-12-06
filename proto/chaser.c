@@ -315,7 +315,7 @@ int main(int argc, char **argv)
       case 'n':   /* no execution */
 	noExecute = 1;
 	break;
-      case 't':   /* no execution */
+      case 't':   /* chase trust anchor SIAs only */
 	taOnly = 1;
 	break;
       case 'v':   /* verbose */
@@ -355,6 +355,8 @@ int main(int argc, char **argv)
   for (i = 0; i < numDirs; i++) {
     snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
     addURIIfUnique (str);
+    if (verbose)
+      printf("PRECONFIGURED: %s\n", str);
   }
 
   // set up query
