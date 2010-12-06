@@ -36,16 +36,16 @@ AC_PROG_RANLIB
 
 AC_ARG_WITH(
     [ssl-include],
-    AS_HELP_STRING([--with-ssl-include],[Path to openssl library install location: Defaults to /usr/local/include ]),
+    AS_HELP_STRING([--with-ssl-include],[Path to openssl library install location: Defaults to /usr/local/ssl/include ]),
     [ ssl_include=$withval],
-    [ ssl_include=/usr/local/include]
+    [ ssl_include=/usr/local/ssl/include]
 )
 
 AC_ARG_WITH(
     [ssl-lib],
-    AS_HELP_STRING([--with-ssl-lib],[Path to openssl library install location: Defaults to /usr/local/lib ]),
+    AS_HELP_STRING([--with-ssl-lib],[Path to openssl library install location: Defaults to /usr/local/ssl/lib ]),
     [ ssl_lib=$withval],
-    [ ssl_lib=/usr/local/lib]
+    [ ssl_lib=/usr/local/ssl/lib]
 )
 
 AC_ARG_WITH(
@@ -77,13 +77,13 @@ AC_ARG_WITH(
 )
 
 if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${ssl_lib} -Wl,-R${ssl_lib} ${LDFLAGS-}"
 fi
 if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -R${odbc_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${odbc_lib} -Wl,-R${odbc_lib} ${LDFLAGS-}"
 fi
 if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${cryptlib_lib} -Wl,-R${cryptlib_lib} ${LDFLAGS-}"
 fi
 
 if test x${odbc_include} != x; then
