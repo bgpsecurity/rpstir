@@ -208,6 +208,7 @@ def add_to_repository(cert, trusted):
         else:
             command = ("rcli -y -f %s") % (cert)
         out, err = exec_command(command)
+        print out
         if verbose and err:
             print err
             
