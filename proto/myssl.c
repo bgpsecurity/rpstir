@@ -1290,7 +1290,7 @@ static crfx_validator *crfx_find(int tag)
 */
 
 crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
-		       int *stap, int *crlstap)
+		       int *stap, int *crlstap, unsigned char *badoid)
 {
   const unsigned char    *udat;
   crfx_validator         *cfx;
@@ -1477,6 +1477,12 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
       ex = sk_X509_EXTENSION_value(x->crl->extensions, i);
       if ( ex == NULL )
 	continue;
+      if (ex->object->length == 3 && !memcmp(ex->object->data, badoid, 3))
+        {
+        fprintf(stderr, "Invalid CRL extension\n");
+        *stap = ERR_SCM_INVALEXT;
+        break;
+        }
       meth = X509V3_EXT_get(ex);
       if ( meth == NULL )
 	continue;
@@ -1505,15 +1511,18 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
 	break;
     }
 // check that all needed extension fields are present
-  for(ui=0;ui<sizeof(crxvalidators)/sizeof(crfx_validator);ui++)
+  if (!*stap)
     {
-      if ( crxvalidators[ui].need > 0 &&
-	   cf->fields[crxvalidators[ui].fieldno] == NULL )
-	{
-        fprintf(stderr, "Missing CF_FIELD %d\n", xvalidators[ui].fieldno);
-	  *stap = ERR_SCM_MISSEXT;
-	  break;
-	}
+    for(ui=0;ui<sizeof(crxvalidators)/sizeof(crfx_validator);ui++)
+      {
+        if ( crxvalidators[ui].need > 0 &&
+  	   cf->fields[crxvalidators[ui].fieldno] == NULL )
+  	{
+          fprintf(stderr, "Missing CF_FIELD %d\n", xvalidators[ui].fieldno);
+  	  *stap = ERR_SCM_MISSEXT;
+  	  break;
+  	}
+      }
     }
   if ( bcert != NULL )
     BIO_free(bcert);

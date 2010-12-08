@@ -20,6 +20,8 @@
 #include "myssl.h"
 #include "err.h"
 #include "rpwork.h"
+#include "casn.h"
+#include "crlv2.h"
 
 #include "roa_utils.h"
 
@@ -1378,6 +1380,15 @@ int set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags)
   return statementscm (conp, stmt);
   }
 
+static int make_oid(unsigned char *oidp, char *namep)
+  {
+  struct casn casn;
+  simple_constructor(&casn, (ushort)0, ASN_OBJ_ID);
+  write_objid(&casn, namep);
+  int lth = read_casn(&casn, oidp);
+  delete_casn(&casn);
+  return lth;
+  }
 /*
  * callback function for verify_children
  */
@@ -1391,15 +1402,18 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
   unsigned int i, id;
   int typ, chainOK, x509sta;
   char pathname[PATH_MAX];
+  unsigned char badoid[4];
 
   UNREFERENCED_PARAMETER(idx);
   if (s->nused < 4) return ERR_SCM_INVALARG;
+  if (make_oid(badoid, id_issuingDistributionPoint) > 3)
+    return ERR_SCM_INTERNAL;
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
 	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   cf = crl2fields((char *) s->vec[1].valptr, pathname, typ,
-		  &x, &sta, &crlsta);
+		  &x, &sta, &crlsta, badoid);
   if (cf == NULL) return sta;
   sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
 		   cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
@@ -2052,12 +2066,12 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
 	!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
 	((aki_extp = find_extension(&cert, id_authKeyId)) &&
 	 diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
-		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||  
+		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
 	strcmp(cf->fields[CF_FIELD_SUBJECT],
 	       cf->fields[CF_FIELD_ISSUER]) != 0) locerr = 1;
     else if (vsize_casn(&cert.signature) < 256 ||
 	     vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey)
-	     < 265) locerr = ERR_SCM_SMALLKEY; 
+	     < 265) locerr = ERR_SCM_SMALLKEY;
     delete_casn(&cert.self);
     if (locerr)
       {
@@ -2155,9 +2169,12 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int chainOK, x509sta;
 //  struct CertificateRevocationList CRL;
 
+  uchar badoid[4];
+  if (make_oid(badoid, id_issuingDistributionPoint) > 3)
+    return ERR_SCM_INTERNAL;
 
   UNREFERENCED_PARAMETER(utrust);
-  cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta);
+  cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, badoid);
   if ( cf == NULL || x == NULL )
     {
       if ( cf != NULL )
@@ -2263,16 +2280,16 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   if (stat(pathname, &statbuf)) mkdir(pathname, 0777);
   int lth = strlen(pathname) - 15; // not counting /EEcertificates
   cc = &outdir[lth];
-  
+
   if (*cc)
     {
     if (strncmp(outdir, pathname, lth)) return ERR_SCM_WRITE_EE;
     cc = &outdir[lth];
-    if (*cc == '/') strncat(pathname, cc++, 1); 
+    if (*cc == '/') strncat(pathname, cc++, 1);
     do
       {
       char *d = strchr(cc, '/');
-      if (d) 
+      if (d)
         {
         d++;
         strncat(pathname, cc, d - cc);
@@ -2303,7 +2320,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
       certname[cc - pathname] = 0;
       }
     else strcpy(certname, outdir);
-    sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id, 
+    sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id,
       pathname, (typ == OT_RTA)? 0: 1);
     if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else if (sta < 0)
@@ -2416,7 +2433,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_NOMEM;
       break;
     }
-    
+
     // verify the signature
     if ((sta = verify_roa(conp, &roa, ski, &chainOK)) != 0)
       break;
@@ -2519,7 +2536,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   while(0);
   if (sta < 0)
     {
-    if (cert_added) (void) delete_object(scmp, conp, certfilename, outdir, 
+    if (cert_added) (void) delete_object(scmp, conp, certfilename, outdir,
       outfull, (unsigned int)0);
     delete_casn(&roa.self);
     return sta;
@@ -2570,7 +2587,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
   while (0);
   // clean up
-  if (sta < 0 && cert_added) (void) delete_object(scmp, conp, certfilename, 
+  if (sta < 0 && cert_added) (void) delete_object(scmp, conp, certfilename,
       outdir, outfull, (unsigned int)0);
   delete_casn(&(roa.self));
   free(thisUpdate);
@@ -2614,7 +2631,7 @@ int add_rta(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   while(0);
   if (sta < 0)
     {
-    if (cert_added) (void) delete_object(scmp, conp, certfilename, outdir, 
+    if (cert_added) (void) delete_object(scmp, conp, certfilename, outdir,
       outfull, (unsigned int)0);
     delete_casn(&roa.self);
     return sta;
@@ -3182,12 +3199,12 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     strcat(strcpy(noutfull, c), "/EEcertificates");
     findorcreatedir(scmp, conp, noutfull, &ndir_id);
     strcpy(noutdir, noutfull);
-    strcat(noutdir, &outdir[lth]); 
+    strcat(noutdir, &outdir[lth]);
     strcat(noutfull, &outfull[lth]); // add roa path + name
     strcat(noutfull, ".cer");
     strcat(strcpy(noutfile, outfile), ".cer");
-    
-     
+
+
     if ((sta = delete_object(scmp, conp, noutfile, noutdir,
 		  noutfull, ndir_id )) < 0) return sta;
     if (typ == OT_RTA)
@@ -3195,7 +3212,7 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       char *cc = strrchr(noutfull, (int)'.');
       *cc = 0;
       cc = strrchr(noutfull, (int)'.');
-      strcpy(++cc, "ee.cer");  
+      strcpy(++cc, "ee.cer");
       cc = strrchr(noutfile, (int)'.');
       *cc = 0;
       cc = strrchr(noutfile, (int)'.');
