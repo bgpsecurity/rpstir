@@ -168,7 +168,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = -I../casn
+AM_CFLAGS = -g -Wall -I../casn
 ASN_GEN = ../asn_gen/asn_gen
 ASN_SOURCE = \
 	Algorithms.asn \
@@ -371,6 +371,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
 clean-am: clean-generic clean-noinstLIBRARIES mostlyclean-am
 
 distclean: distclean-am
@@ -435,10 +437,7 @@ SUFFIXES: .asn
 .asn.c:
 	$(ASN_GEN) -c $<
 
-$(O_FILES): $(GENERATED_C_FILES) $(OTHER_C_FILES)
-
-clean:
-	rm -f $(GENERATED_C_FILES) $(GENERATED_H_FILES) $(O_FILES) *~ libasn.a
+$(O_FILES): $(GENERATED_C_FILES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

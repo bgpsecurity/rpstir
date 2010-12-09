@@ -163,8 +163,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
-	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations -DANYSKI
+AM_CFLAGS = -g -Wall -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
+	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DANYSKI
 
 noinst_LIBRARIES = libroa.a
 libroa_a_SOURCES = roa_validate.c roa_utils.h roa_create.c roa_general.c signCMS.c roa_serialize.c

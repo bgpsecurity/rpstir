@@ -255,7 +255,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I../../proto
+AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
+	-I../../proto
+
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 LDADD = -L../asn -lasn -L../casn -lcasn
 test_casn_random_SOURCES = test_casn_random.c 

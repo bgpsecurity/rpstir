@@ -194,17 +194,17 @@ target_alias = @target_alias@
 AM_CFLAGS = -g -I../cg/asn -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib
 LDADD = -L../roa-lib -lroa -L../cg/asn -lasn -L../cg/casn -lcasn
 make_test_cert_SOURCES = make_test_cert.c adjustTime.c
-make_test_cert_LDFLAGS = $(LIBS)
+make_test_cert_LDFLAGS = -lpthread $(LIBS)
 make_test_crl_SOURCES = make_test_crl.c adjustTime.c
-make_test_crl_LDFLAGS = $(LIBS)
+make_test_crl_LDFLAGS = -lpthread $(LIBS)
 make_test_roa_SOURCES = make_test_roa.c
-make_test_roa_LDFLAGS = $(LIBS)
+make_test_roa_LDFLAGS = -lpthread $(LIBS)
 make_test_manifest_SOURCES = make_test_manifest.c adjustTime.c
-make_test_manifest_LDFLAGS = $(LIBS)
+make_test_manifest_LDFLAGS = -lpthread $(LIBS)
 gen_test_key_SOURCES = gen_test_key.c
-gen_test_key_LDFLAGS = $(LIBS)
+gen_test_key_LDFLAGS = -lpthread $(LIBS)
 cert_validate_SOURCES = cert_validate.c
-cert_validate_LDFLAGS = $(LIBS)
+cert_validate_LDFLAGS = -lpthread $(LIBS)
 all: all-am
 
 .SUFFIXES:

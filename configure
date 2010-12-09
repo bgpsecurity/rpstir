@@ -858,9 +858,9 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-ssl-include      Path to openssl library install location: Defaults
-                          to /usr/local/include
+                          to /usr/local/ssl/include
   --with-ssl-lib          Path to openssl library install location: Defaults
-                          to /usr/local/lib
+                          to /usr/local/ssl/lib
   --with-cryptlib-include Path to cryptlib install location: Defaults to
                           /usr/local/include
   --with-odbc-include     Path to unixodbc include files: Defaults to
@@ -3017,7 +3017,7 @@ if test "${with_ssl_include+set}" = set; then
   withval="$with_ssl_include"
    ssl_include=$withval
 else
-   ssl_include=/usr/local/include
+   ssl_include=/usr/local/ssl/include
 
 fi;
 
@@ -3027,7 +3027,7 @@ if test "${with_ssl_lib+set}" = set; then
   withval="$with_ssl_lib"
    ssl_lib=$withval
 else
-   ssl_lib=/usr/local/lib
+   ssl_lib=/usr/local/ssl/lib
 
 fi;
 
@@ -3072,13 +3072,13 @@ else
 fi;
 
 if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${ssl_lib} -Wl,-R${ssl_lib} ${LDFLAGS-}"
 fi
 if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -R${odbc_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${odbc_lib} -Wl,-R${odbc_lib} ${LDFLAGS-}"
 fi
 if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${cryptlib_lib} -Wl,-R${cryptlib_lib} ${LDFLAGS-}"
 fi
 
 if test x${odbc_include} != x; then
@@ -3486,6 +3486,15 @@ else
 
 fi
 
+
+
+
+#This is the test to allow for the weird odbc issue fix.
+#Ultimately this should be the only test here and the myodbc3 or 5 test above this
+#  should be removed and the if statement below should be removed.
+#The if statement tests for the present of a variable that the AC_SEARCH_LIBS call
+#  sets and reorders the LIBS arguments so that -lodbc is linked last. The correct
+#  solution is to have it first with the no -lmyodbc.
 oldLibs=${LIBS}
 echo "$as_me:$LINENO: checking for library containing SQLWriteDSNToIni" >&5
 echo $ECHO_N "checking for library containing SQLWriteDSNToIni... $ECHO_C" >&6
@@ -3618,11 +3627,11 @@ else
 
 fi
 
-
-
 if [ "$ac_cv_search_SQLWriteDSNToIni" = "-lodbc" ];then
    LIBS="${oldLibs} -lodbc"
 fi
+#End of hack to make this work.
+
 
 
 echo "$as_me:$LINENO: checking for library containing cryptInit" >&5
