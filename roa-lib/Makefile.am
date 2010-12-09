@@ -20,8 +20,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS = -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
-	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations -DANYSKI
+AM_CFLAGS = -g -Wall -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
+	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DANYSKI
 
 noinst_LIBRARIES = libroa.a
 

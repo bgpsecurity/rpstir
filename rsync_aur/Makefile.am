@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS = -Wall -ggdb3 -I../proto -I../cg/casn -I../cg/asn \
+AM_CFLAGS = -g -Wall -I../proto -I../cg/casn -I../cg/asn \
 	-I../roa-lib -I../proto -Wshadow -Wmissing-prototypes \
 	-Wmissing-declarations
 

@@ -22,8 +22,9 @@
 
 bin_PROGRAMS = asn_gen
 
-AM_CFLAGS= -DINTEL -Dconstruct=cconstruct -Ddo_hdr=cdo_hdr -Dasn_constr_id=casn_constr_id \
-	-Dasn_hdr_id=casn_hdr_id -DCONSTRAINTS -I. -I../casn -g
+AM_CFLAGS= -g -Wall -DINTEL -Dconstruct=cconstruct -Ddo_hdr=cdo_hdr \
+	-Dasn_constr_id=casn_constr_id \
+	-Dasn_hdr_id=casn_hdr_id -DCONSTRAINTS -I. -I../casn
 AM_LDFLAGS=
 LDADD = ../casn/libcasn.a
 

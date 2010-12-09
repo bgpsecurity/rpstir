@@ -17,7 +17,7 @@
 # ***** END LICENSE BLOCK *****
 bin_PROGRAMS = create_object gen_hash
 
-AM_CFLAGS = -DDEBUG -I$(CLINCLUDES) -g -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn -Wall 
+AM_CFLAGS = -g -Wall -DDEBUG -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn
 
 AM_LDFLAGS = $(LIBS)
 LOCAL_LIBS=  -L../../cg/asn -lasn -L../../cg/casn -lcasn -L../../proto -lrpki -L../../roa-lib -lroa

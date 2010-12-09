@@ -22,8 +22,8 @@
 
 bin_PROGRAMS = roa_test test_val2 test_check_sig sign_roa test_hash make_manifest make_roa 
 
-AM_CFLAGS = -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn -I../roa-lib \
-		-Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
+AM_CFLAGS = -g -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
+	-I../roa-lib -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 

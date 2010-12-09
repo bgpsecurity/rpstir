@@ -17,8 +17,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS= -I../roa-lib -I../roa-utils -I../cg/asn -I../cg/casn -I. \
-	-g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
+AM_CFLAGS= -g -Wall -I../roa-lib -I../roa-utils -I../cg/asn -I../cg/casn -I. \
+	-Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
 AM_LDFLAGS = $(LIBS)

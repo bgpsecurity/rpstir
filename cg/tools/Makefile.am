@@ -25,7 +25,8 @@ bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
 	extractCMScert
 
-AM_CFLAGS = -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I../../proto
+AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
+	-I../../proto
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 
