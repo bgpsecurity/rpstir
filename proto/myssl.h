@@ -193,6 +193,7 @@ typedef struct _crfx_validator
 extern void  freecrf(crl_fields *);
 
 extern crl_fields *crl2fields(char *fname, char *fullname, int typ,
-		 X509_CRL **xp, int *stap, int *crlstap, unsigned char *badoid);
+		 X509_CRL **xp, int *stap, int *crlstap, 
+                 void *goodoidp);
 
 #endif

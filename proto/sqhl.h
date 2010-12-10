@@ -98,6 +98,12 @@ typedef struct _crlinfo
   crlfunc  cfunc;
 } crlinfo;
 
+struct goodoid 
+  {
+  int lth;
+  unsigned char *oid;
+  };
+
 /*
   Prototypes
 */

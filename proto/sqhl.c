@@ -1380,15 +1380,29 @@ int set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags)
   return statementscm (conp, stmt);
   }
 
-static int make_oid(unsigned char *oidp, char *namep)
+static struct goodoid goodoids[3];
+
+static int make_goodoids()
   {
   struct casn casn;
   simple_constructor(&casn, (ushort)0, ASN_OBJ_ID);
-  write_objid(&casn, namep);
-  int lth = read_casn(&casn, oidp);
+  uchar oid[8];
+  write_objid(&casn, id_cRLNumber);
+  int lth = read_casn(&casn, oid);
+  goodoids[0].oid = (uchar *)calloc(1, lth + 1);
+  memcpy(goodoids[0].oid, oid, lth);
+  goodoids[0].lth = lth;
+  write_objid(&casn, id_authKeyId);
+  lth = read_casn(&casn, oid);
+  goodoids[1].oid = (uchar *)calloc(1, lth + 1);
+  memcpy(goodoids[1].oid, oid, lth);
+  goodoids[1].lth = lth;
+  goodoids[2].lth = 0;
+  goodoids[2].oid = NULL;
   delete_casn(&casn);
   return lth;
   }
+  
 /*
  * callback function for verify_children
  */
@@ -1402,18 +1416,17 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
   unsigned int i, id;
   int typ, chainOK, x509sta;
   char pathname[PATH_MAX];
-  unsigned char badoid[4];
 
   UNREFERENCED_PARAMETER(idx);
   if (s->nused < 4) return ERR_SCM_INVALARG;
-  if (make_oid(badoid, id_issuingDistributionPoint) > 3)
-    return ERR_SCM_INTERNAL;
+  
+  if (!goodoids[0].lth) make_goodoids();
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
 	    (char *) s->vec[1].valptr);
   typ = infer_filetype (pathname);
   cf = crl2fields((char *) s->vec[1].valptr, pathname, typ,
-		  &x, &sta, &crlsta, badoid);
+		  &x, &sta, &crlsta, goodoids);
   if (cf == NULL) return sta;
   sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
 		   cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
@@ -2169,12 +2182,9 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int chainOK, x509sta;
 //  struct CertificateRevocationList CRL;
 
-  uchar badoid[4];
-  if (make_oid(badoid, id_issuingDistributionPoint) > 3)
-    return ERR_SCM_INTERNAL;
-
+  if (!goodoids[0].lth) make_goodoids();
   UNREFERENCED_PARAMETER(utrust);
-  cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, badoid);
+  cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, goodoids);
   if ( cf == NULL || x == NULL )
     {
       if ( cf != NULL )

@@ -1288,9 +1288,8 @@ static crfx_validator *crfx_find(int tag)
   On failure this function returns NULL and sets stap to a negative error
   code. If an X509 error occurred, crlstap is set to that error.
 */
-
 crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
-		       int *stap, int *crlstap, unsigned char *badoid)
+		       int *stap, int *crlstap, void *oidtestp)
 {
   const unsigned char    *udat;
   crfx_validator         *cfx;
@@ -1471,44 +1470,66 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
       return(NULL);
     }
 // get the extension fields
+  struct goodoid *goodoids = (struct goodoid *)oidtestp;
   excnt = X509_CRL_get_ext_count(x);
-  for(i=0;i<excnt;i++)
+  if (excnt != 2)
     {
-      ex = sk_X509_EXTENSION_value(x->crl->extensions, i);
-      if ( ex == NULL )
-	continue;
-      if (ex->object->length == 3 && !memcmp(ex->object->data, badoid, 3))
-        {
-        fprintf(stderr, "Invalid CRL extension\n");
-        *stap = ERR_SCM_INVALEXT;
-        break;
+    fprintf(stderr, "Wrong number of CRL extensions\n");
+    *stap = ERR_SCM_INVALEXT;
+    }
+  else
+    {
+    int did = 0;
+    for(i=0;i<excnt;i++)
+      {
+        ex = sk_X509_EXTENSION_value(x->crl->extensions, i);
+        if ( ex == NULL )
+  	continue;
+        struct goodoid *goodoidp;
+        for (goodoidp = goodoids; goodoidp->lth > 0; goodoidp++)
+          {
+          if (goodoidp->lth == ex->object->length && 
+             !memcmp(ex->object->data, goodoidp->oid, goodoidp->lth)) break;
+          }
+        if (!goodoidp->lth)
+          {
+          fprintf(stderr, "Invalid CRL extension [%d]\n", i);
+          *stap = ERR_SCM_INVALEXT;
+          break;
+          }
+        else did += (goodoidp - goodoids) + 1;
+        meth = X509V3_EXT_get(ex);
+        if ( meth == NULL )
+  	continue;
+        udat = ex->value->data;
+        if ( meth->it )
+  	exts = ASN1_item_d2i(NULL, &udat, ex->value->length,
+  			     ASN1_ITEM_ptr(meth->it));
+        else
+  	exts = meth->d2i(NULL, &udat, ex->value->length);
+        if ( exts == NULL )
+  	continue;
+        *stap = 0;
+        *crlstap = 0;
+        need = 0;
+        cfx = crfx_find(meth->ext_nid);
+        if ( cfx != NULL && cfx->get_func != NULL )
+  	{
+  	  need = cfx->need;
+  	  (*cfx->get_func)(meth, exts, cf, stap, crlstap);
+  	}
+        if ( meth->it )
+  	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
+        else
+  	meth->ext_free(exts);
+        if ( *stap != 0 && need > 0 )
+  	break;
         }
-      meth = X509V3_EXT_get(ex);
-      if ( meth == NULL )
-	continue;
-      udat = ex->value->data;
-      if ( meth->it )
-	exts = ASN1_item_d2i(NULL, &udat, ex->value->length,
-			     ASN1_ITEM_ptr(meth->it));
-      else
-	exts = meth->d2i(NULL, &udat, ex->value->length);
-      if ( exts == NULL )
-	continue;
-      *stap = 0;
-      *crlstap = 0;
-      need = 0;
-      cfx = crfx_find(meth->ext_nid);
-      if ( cfx != NULL && cfx->get_func != NULL )
-	{
-	  need = cfx->need;
-	  (*cfx->get_func)(meth, exts, cf, stap, crlstap);
-	}
-      if ( meth->it )
-	ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
-      else
-	meth->ext_free(exts);
-      if ( *stap != 0 && need > 0 )
-	break;
+     if (did != 3) 
+      {
+      *stap = ERR_SCM_INVALEXT;
+      fprintf(stderr, "Duplicate extensions\n");
+      }
     }
 // check that all needed extension fields are present
   if (!*stap)
