@@ -47,5 +47,16 @@ int has_Text_Value(char *, unsigned int);
 int has_Correct_Extension(char *, unsigned int);
 int has_newline(char *str, unsigned int len);
 
+/* Lower level parsing utilities. */
+int endswith(const char *s, const char *suffix);
+int startswith(const char *s, const char *prefix);
+int exists_non_delimiter(const char *s, const char *delimiters);
+char *start_of_next_field(const char *s, const char *delimiters);
+char *dirname(char *dest, int dest_len, const char *path);
+char *this_field(char *dest, int dest_length, const char *src,
+		 const char *delimiters);
+int field_length(const char *s, const char *delimiters);
+long next_dirblock(FILE *fp);
+int is_manifest(const char *path);
 
 #endif
