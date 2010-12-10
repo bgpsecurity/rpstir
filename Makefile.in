@@ -264,7 +264,6 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	  $(AWK) '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	mkid -fID $$unique
-tags: TAGS
 
 TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
@@ -559,6 +558,9 @@ test: all
 	cd subsystemTests && ./runSubsystemTest.sh 2 8
 	cd subsystemTests && ./runSubsystemTest.sh 3 9
 	@echo '**** All RPKI Subsystem tests ran successfully. ****'
+
+tags:
+	find ${PWD} -name \*.[ch] | xargs etags --declarations
 
 install:
 	@echo '**** Please refer to the documentation file name INSTRUCTIONS. ****'
