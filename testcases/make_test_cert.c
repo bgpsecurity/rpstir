@@ -671,18 +671,24 @@ int main(int argc, char **argv)
       }
     }
 /*
+  IF this is not a root
+    IF issuer has no subjectKeyId extension, error
+    Create subject's authKeyId extension
+    Write the issuer's subjectKeyID as the subject's authKeyID
   IF this is a root, use the subject's subjectKeyId field as a source
   ELSE  IF the issuer's cert has no subjectKeyId field, error
   ELSE use the issuer's subjKeyId filed as the source
   Get or make subject's authKey Id extension
   Copy the source  into subject's authKeyId
 */
-  if (!issuerkeyfile) iextp = extp;
-  else if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
+  if (issuerkeyfile)
+    {
+    if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
         id_subjectKeyIdentifier))) fatal(4, "subjectKeyIdentifier");
-  extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
-  copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
-    &iextp->extnValue.subjectKeyIdentifier);
+    extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
+    copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
+      &iextp->extnValue.subjectKeyIdentifier);
+    }
       // do IP addresses
   char *a;
   if (issuerkeyfile)
