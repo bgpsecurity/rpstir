@@ -25,6 +25,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+static const char *WHITESPACE="\n\r\t ";
+
 /**************************************************************
  * function: getMessageFromString(char *, unsigned int len,   *
  *              unsigned int *retlen, char flags)             *
@@ -58,7 +60,7 @@
  *  that the string is not in the correct format (ends in \n).*
  *************************************************************/
 char *
-getMessageFromString(char *str, unsigned int len, 
+getMessageFromString(const char *str, unsigned int len, 
             unsigned int *retlen, char flags)
 {
   unsigned char Y, X;
@@ -118,8 +120,8 @@ getMessageFromString(char *str, unsigned int len,
           return(NULL);
         }
        }
-       char* bitFlags = (str+2); /* skip >f */
-       char* addStr = "+++++++";
+       const char* bitFlags = (str+2); /* skip >f */
+       const char* addStr = "+++++++"; /* rsync 3.x still works w/ this */
        if(strncmp(bitFlags, addStr, 7) == 0)
          retStr = makeAddStr(str, len, retlen);
        else
@@ -211,53 +213,40 @@ getMessageFromString(char *str, unsigned int len,
  * as more is better than less for these codes.          *
  ********************************************************/
 char *
-makeGenericStr(char *str, unsigned int len, unsigned int *retlen, char c)
+makeGenericStr(const char *str, unsigned int len, unsigned int *retlen, char c)
 {
   /* WARNING - have not included parsing of strings to include 
      escaping of CR or LF to '\013' and '\010' */
 
-  char *retStr;
+  char *retStr, *copiedStr;
   unsigned int holdLen;
-  int i;
-  
-  /* we are going to send back X\ [text]\r\n - so we are tacking on         
-     4 chars and there's the risk that strncat will tack on \0 as a         
-     fifth... */                                              
-  if (len >= (PATH_MAX - 5))                                  
-    holdLen = PATH_MAX;                                       
-  else                                                        
-    holdLen = len + 5;                                        
-                                                              
-  retStr = (char *)malloc(holdLen);                           
-  if (!retStr)                                                
-    return(NULL);                                             
-                                                              
-  memset(retStr, '\0', holdLen);                              
-                                                              
-  snprintf(retStr, 3, "%c ", c); /* stupid snprintf wanting to tack on '\0' */ 
-                                                              
-  /* memcpy((char *)(retStr + 2), str, holdLen); */           
-  strncat(retStr, str, holdLen);                              
-                                                              
-  i = strlen(retStr);                                         
-  if ( ( (char)*(retStr + (i - 1)) == 0x0a)  ||               
-       ( (char)*(retStr + (i -1)) == 0x0d ) ) {               
-    *(char *)(retStr + (i - 1)) = 0x0;                        
-  }                                                           
-  if ( ( (char)*(retStr + (i - 2)) == 0x0a)  ||               
-       ( (char)*(retStr + (i - 2)) == 0x0d) ) {               
-    *(char *)(retStr + (i - 2)) = 0x0;                        
-  }                                                           
-                                                              
-  strncat(retStr, "\r\n", 2);                                 
-  *retlen = strlen(retStr);                                   
-                                                              
-  return(retStr);                                             
-                                                              
-}                                                             
-                                                              
+  int ret;
+
+  if (!str)
+    return NULL;
+
+  copiedStr = strdup(str);
+  if (!copiedStr)
+    return NULL;
+
+  holdLen = strlen(str)+5;
+  retStr = (char *)calloc(holdLen, 1);
+  if (!retStr) {
+    free(copiedStr);
+    return NULL;
+  }
+
+  strip(copiedStr, WHITESPACE);
+  ret = snprintf(retStr, holdLen, "%c %s\r\n", c, copiedStr);
+  if (retlen)
+    *retlen = ret;
+
+  free(copiedStr);
+  return retStr;
+}
+
 char *
-makeWarningStr(char *str, unsigned int len, unsigned int *retlen)
+makeWarningStr(const char *str, unsigned int len, unsigned int *retlen)
 {     
   char *retStr;                                               
                                                               
@@ -271,7 +260,7 @@ makeWarningStr(char *str, unsigned int len, unsigned int *retlen)
 
 
 char *
-makeInfoStr(char *str, unsigned int len, unsigned int *retlen)
+makeInfoStr(const char *str, unsigned int len, unsigned int *retlen)
 {
   char *retStr;
 
@@ -284,7 +273,7 @@ makeInfoStr(char *str, unsigned int len, unsigned int *retlen)
 }
 
 char *
-makeFatalStr(char *str, unsigned int len, unsigned int *retlen)
+makeFatalStr(const char *str, unsigned int len, unsigned int *retlen)
 {
   char *retStr;                                               
                                                               
@@ -297,7 +286,7 @@ makeFatalStr(char *str, unsigned int len, unsigned int *retlen)
 }                                                             
 
 char *
-makeErrorStr(char *str, unsigned int len, unsigned int *retlen)
+makeErrorStr(const char *str, unsigned int len, unsigned int *retlen)
 {
   char *retStr;
 
@@ -309,21 +298,18 @@ makeErrorStr(char *str, unsigned int len, unsigned int *retlen)
 
 }
 
-char *
-makeUpdateStr(char *str, unsigned int len, unsigned int *retlen)
+static char *
+makeAURStr(const char *str, unsigned int len,
+	   unsigned int *retlen, char c)
 {
 
   /* the update string will contain "\010" and "\013" as replacements
      for any in-line NL and CR values. Additionally, we need to 
      preface the message with "U " and suffix it with "\r\n". We
-     do NOT include the 9 character %i format string.
+     do NOT include the 9 or 11 character %i format string.
 
      Thus, the output string is: "U path_and_filename\r\n"
-
-     We compute the storage size for the output string as:
-       number of NL and CR values found within the path_and_filename
-       component of the log message multiplied by 3 + 2 for the
-       preface and 3 for the suffix (tacking on a \0).
+     (replace "U" with "A" or "R" depending on update/add/remove)
 
      STRIKE THE ABOVE - we're using fgets() as the initial input from
      the log file - and so HOW WOULD WE COME ACROSS AN EMBEDDED \n?!?!
@@ -340,95 +326,68 @@ makeUpdateStr(char *str, unsigned int len, unsigned int *retlen)
      As the output from this is not expected to be handled by the
      shell (it is envisioned that {f}open(), etc. are used) we
      don't need to worry about escaping shell nasties such as 
-     *;'` etc. etc.                                           
-                                                              
-  */                                                          
-                                                              
-  unsigned int tempLen, malloc_length;                        
-  char *retStr, *ptr;                                         
-                                                              
-  /* sanity check */                                          
-  if (len < 11)                                               
-    return(NULL);                                             
-                                                              
-  /* pesky trailing NL that we will be clobbering anyway */   
-  if ( (char)*(str + (len - 1)) == '\n')                      
-    tempLen = len - 1;                                        
-  else                                                        
-    tempLen = len;                                            
-                                                              
-  /* our return string will be the string passed in minus the 
-     9 chars in the %i description at the end plus 2 for "U " 
-     plus 3 for "\r\n\0" at the end */                        
-  malloc_length = tempLen - 10 + 2 + 3;                       
-  retStr = (char *)malloc(malloc_length);                     
-  memset(retStr, '\0', malloc_length);                        
-                                                              
-  snprintf(retStr, 3, "U "); /* 3 due to snprintf including '\0' in it's    
-                                length... which is dopey */   
-                                                              
-  strncat(retStr, (char *)(str + 10), (malloc_length - 3));   
-                                                              
-  ptr = strrchr(retStr, '\n');                                
-  if (ptr) {                                                  
-    *(char *)ptr = '\0';                                      
-  } else {                                                    
-    *(char *)(retStr + malloc_length - 1) = '\0';             
-  }                                                           
-                                                              
-  strncat(retStr, "\r\n", 2); /* 3 or 2 to include the '\0'... will check */
-                                                              
-  *retlen = strlen(retStr);                                   
-                                                              
-  return(retStr);                                             
-}
+     *;'` etc. etc.
+     
+  */
 
-char *
-makeAddStr(char *str, unsigned int len, unsigned int *retlen)
-{
-
-  unsigned int tempLen, malloc_length;
-  char *retStr, *ptr;
-
+  int ret, holdLen;
+  char *retStr, *ptr, *copiedStr;
+  
   /* sanity check */
-  if (len < 11)
+  if (!str || len < 11)
     return(NULL);
-                                                              
-  /* pesky trailing NL that we will be clobbering anyway */   
-  if ( (char)*(str + (len - 1)) == '\n')                      
-    tempLen = len - 1;                                        
-  else                                                        
-    tempLen = len;                                            
-                                                              
-  /* our return string will be the string passed in minus the 
-     9 chars in the %i description at the end plus 2 for "U " 
-     plus 3 for "\r\n\0" at the end */                        
-  malloc_length = tempLen - 10 + 2 + 3;                       
-  retStr = (char *)malloc(malloc_length);                     
-  memset(retStr, '\0', malloc_length);                        
-                                                              
-  snprintf(retStr, 3, "A "); /* 3 due to snprintf including '\0' in its    
-                                length... which is dopey */   
-                                                              
-  strncat(retStr, (char *)(str + 10), (malloc_length - 3));   
-                                                              
-  ptr = strrchr(retStr, '\n');                                
-  if (ptr) {                                                  
-    *(char *)ptr = '\0';                                      
-  } else {                                                    
-    *(char *)(retStr + malloc_length - 1) = '\0';             
-  }                                                           
-                                                              
-  strncat(retStr, "\r\n", 2); /* 3 or 2 to include the '\0'... will check */
-                                                              
-  *retlen = strlen(retStr);                                   
-                                                              
-  return(retStr);                                             
 
+  /* make local copy of 'len' bytes of str, null-terminated */
+  copiedStr = (char *)malloc(len+1);
+  if (!copiedStr)
+    return NULL;
+  strncpy(copiedStr, str, len);
+  copiedStr[len] = '\0';
+  
+  /* strip any pesky whitespaces that we will be clobbering anyway */
+  strip(copiedStr, WHITESPACE);  
+                                                              
+  /* our return string will be the string passed in minus the 9 or 11
+     chars in the %i description at the end plus 2 for "U " plus 3 for
+     "\r\n\0" at the end */
+  ptr = start_of_next_field(copiedStr, WHITESPACE);
+  holdLen = field_length(ptr, WHITESPACE) + 2 + 3;
+  retStr = (char *)malloc(holdLen);
+  if (!retStr) {
+    free(copiedStr);
+    return NULL;
+  }
+
+  ret = snprintf(retStr, holdLen, "%c %s\r\n", c, ptr);
+  if (ret < 0 || ret >= holdLen) { /* error or overflow */
+    free(retStr);
+    free(copiedStr);
+    return NULL;
+  }
+  if (retlen)
+    *retlen = strlen(retStr);
+
+  free(copiedStr);
+  return retStr;
 }
 
+
 char *
-makeLinkStr(char *str, unsigned int len, unsigned int *retlen)
+makeUpdateStr(const char *str, unsigned int len, unsigned int *retlen)
+{
+  return makeAURStr(str, len, retlen, 'U');
+}
+
+
+char *
+makeAddStr(const char *str, unsigned int len, unsigned int *retlen)
+{
+  return makeAURStr(str, len, retlen, 'A');
+}
+
+
+char *
+makeLinkStr(const char *str, unsigned int len, unsigned int *retlen)
 {
   UNREFERENCED_PARAMETER(str);
   UNREFERENCED_PARAMETER(len);
@@ -443,48 +402,13 @@ makeLinkStr(char *str, unsigned int len, unsigned int *retlen)
  * Output string: R path/to/file.ext
  */
 char *
-makeRemoveStr(char *str, unsigned int len, unsigned int *retlen)
+makeRemoveStr(const char *str, unsigned int len, unsigned int *retlen)
 {
-
-  char *retStr;
-  int holdLen;
-  int bytesUsed = 0;
-  int i;
-  const char *whitespace = " \t\r\n";
-
-  holdLen = len + 2;
-
-  retStr = (char *)malloc(holdLen);
-  if (!retStr) {
-    perror("makeRemoveStr:malloc");
-    exit(1);
-  }
-
-  memset(retStr, '\0', holdLen);
-
-  /* Copy filename into "remove" string, by skipping "*deleting " prefix. */
-  bytesUsed = snprintf(retStr, holdLen, "R %s\r\n", &str[10]);
-  if (bytesUsed >= holdLen) {	/* output truncated, no trailing '\0' */
-    free(retStr);
-    fprintf(stderr, "Error: malformed deletion line\n");
-    return NULL;
-  }
-
-  /* In case of extra whitespace at the end, leave only one "\r\n". */
-  for (i = 2; i < holdLen; i++) {
-    if (strchr(whitespace, retStr[i])) {
-      strcpy(&retStr[i], "\r\n");
-      break;
-    }
-  }
-  
-  *retlen = strlen(retStr);
-
-  return(retStr);
+  return makeAURStr(str, len, retlen, 'R');
 }
 
 int
-looksOK(char *str, unsigned int len)
+looksOK(const char *str, unsigned int len)
 {
   int c, i;
 
@@ -582,9 +506,9 @@ looksOK(char *str, unsigned int len)
  * exceeded.                                    *
  ************************************************/
 int
-has_newline(char *str, unsigned int len)
+has_newline(const char *str, unsigned int len)
 {
-  char *nl = NULL;
+  const char *nl = NULL;
 
   UNREFERENCED_PARAMETER(len);
   nl = strrchr(str, '\n');
@@ -596,11 +520,11 @@ has_newline(char *str, unsigned int len)
 }
 
 int
-has_I_Format(char *str, unsigned int len)
+has_I_Format(const char *str, unsigned int len)
 {
-  /* this will check that the first 9 chars appear to be from the %i
-     format, that there is a space afterwards, and some text as an
-     argument */
+  /* This will check that the first 9 chars appear to be from the %i
+     format.  Note that in newer versions of rsync, the %i format has
+     11 chars.  The following code should return true for both. */
 
   int i, c, Y, X;
   
@@ -640,41 +564,43 @@ has_I_Format(char *str, unsigned int len)
       return(FALSE);
   }
 
-  c = (char)*(str + 9);
-  if (c != 0x20)
-    return(FALSE);
-
-   
   return(TRUE);
 }
 
 int
-has_Text_Value(char *str, unsigned int len)
+has_Text_Value(const char *str, unsigned int len)
 {
   /* checks to make sure there is some data after the %i format,
      we would expect this to be a filename most of the time */
-  int c;
+  int i, pos, field_len;
+  const char *text;
 
-  if (len < 11)
+  if (len < 11 || strlen(str) < 11)
     return(FALSE);
 
-  /* the 10th char should be a space */
-  c = (char)*(str + 9);
-  if (c != 0x20)
+  text = start_of_next_field(str, WHITESPACE);
+  if (!text)
+    return(FALSE);
+
+  /* Check that filename starts at 11th or 13th character.  Since the
+     number depends on version of rsync; we allow either. */
+  pos = text - str;
+  if (pos != 10 && pos != 12)
     return(FALSE);
   
-  /* the 11th char should be at the very least printable */
-  c = (char)*(str + 10);
-  if (!isprint(c))
-    return(FALSE);
+  /* the filename chars should be at the very least printable */
+  field_len = field_length(text, WHITESPACE);
+  for (i = 0; i < field_len; i++)
+    if (!isprint(text[i]))
+      return (FALSE);
 
   return(TRUE);
 }
 
 int
-has_Correct_Extension(char *str, unsigned int len)
+has_Correct_Extension(const char *str, unsigned int len)
 {
-  char *ptr;
+  const char *ptr;
   char hold[32];
   unsigned int endlen;
 
@@ -840,6 +766,41 @@ int exists_non_delimiter(const char *s, const char *delimiters)
       return 1;
 
   return 0;
+}
+
+
+/* Strip all leftmost delimiter characters from input string (in place). */
+void lstrip(char *s, const char *delimiters)
+{
+  int i, len, num_leftmost_delims;
+  if (!s || !delimiters)
+    return;
+  len = strlen(s);
+  num_leftmost_delims = 0;
+  for (i = 0; i < len && strchr(delimiters, s[i]); i++)
+    num_leftmost_delims++;
+  if (num_leftmost_delims > 0)
+    memmove(s, &s[num_leftmost_delims], len - num_leftmost_delims + 1);
+}
+
+
+/* Strip all rightmost delimiter characters from input string (in place). */
+void rstrip(char *s, const char *delimiters)
+{
+  int i, len;
+  if (!s || !delimiters)
+    return;
+  len = strlen(s);
+  for (i = len - 1; i >= 0 && strchr(delimiters, s[i]); i--)
+    s[i] = '\0';
+}
+
+
+/* Strip all leftmost and rightmost delimiter characters (in place). */
+void strip(char *s, const char *delimiters)
+{
+  lstrip(s, delimiters);
+  rstrip(s, delimiters);
 }
 
 

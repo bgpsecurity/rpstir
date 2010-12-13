@@ -29,27 +29,30 @@
   $Id$
 */
 
-char *getMessageFromString(char *, unsigned int, unsigned int *, char);
-char *makeWarningStr(char *, unsigned int, unsigned int *);
-char *makeInfoStr(char *, unsigned int, unsigned int *);
-char *makeUpdateStr(char *, unsigned int, unsigned int *);
-char *makeAddStr(char *, unsigned int, unsigned int *);
-char *makeLinkStr(char *, unsigned int, unsigned int *);
-char *makeRemoveStr(char *, unsigned int, unsigned int *);
-char *makeFatalStr(char *, unsigned int, unsigned int *);
-char *makeErrorStr(char *, unsigned int, unsigned int *);
-char *makeGenericStr(char *, unsigned int, unsigned int *, char);
+char *getMessageFromString(const char *, unsigned int, unsigned int *, char);
+char *makeWarningStr(const char *, unsigned int, unsigned int *);
+char *makeInfoStr(const char *, unsigned int, unsigned int *);
+char *makeUpdateStr(const char *, unsigned int, unsigned int *);
+char *makeAddStr(const char *, unsigned int, unsigned int *);
+char *makeLinkStr(const char *, unsigned int, unsigned int *);
+char *makeRemoveStr(const char *, unsigned int, unsigned int *);
+char *makeFatalStr(const char *, unsigned int, unsigned int *);
+char *makeErrorStr(const char *, unsigned int, unsigned int *);
+char *makeGenericStr(const char *, unsigned int, unsigned int *, char);
 char *makeStartStr(unsigned int *);
 char *makeEndStr(unsigned int *);
-int looksOK(char *, unsigned int);
-int has_I_Format(char *, unsigned int);
-int has_Text_Value(char *, unsigned int);
-int has_Correct_Extension(char *, unsigned int);
-int has_newline(char *str, unsigned int len);
+int looksOK(const char *, unsigned int);
+int has_I_Format(const char *, unsigned int);
+int has_Text_Value(const char *, unsigned int);
+int has_Correct_Extension(const char *, unsigned int);
+int has_newline(const char *str, unsigned int len);
 
 /* Lower level parsing utilities. */
 int endswith(const char *s, const char *suffix);
 int startswith(const char *s, const char *prefix);
+void lstrip(char *s, const char *delimiters);
+void rstrip(char *s, const char *delimiters);
+void strip(char *s, const char *delimiters);
 int exists_non_delimiter(const char *s, const char *delimiters);
 char *start_of_next_field(const char *s, const char *delimiters);
 char *dirname(char *dest, int dest_len, const char *path);
