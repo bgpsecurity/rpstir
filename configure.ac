@@ -20,7 +20,10 @@
 AC_PREREQ(2.59)
 AC_INIT(resource-PKI, 0.01, mreynolds@bbn.com)
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([1.9], [foreign])
+AM_INIT_AUTOMAKE([1.11], [foreign])
+AM_SILENT_RULES
+# The following would default to silent, but depends on GNU make behavior.
+# AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([server/pdu.h])
 
 AM_MAINTAINER_MODE
