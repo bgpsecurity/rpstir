@@ -342,7 +342,7 @@ int cvtv4(uchar fill, char *ip, uchar *buf)
   FILE *output = popen(cmd, "r");
   if(!output)return -1;
   char buffer[1024];
-  char *line_p = fgets(buffer, sizeof(buffer), output);
+  (void)fgets(buffer, sizeof(buffer), output);
   pclose(output);
 
   //Parse up the space delimited return value
@@ -436,7 +436,7 @@ int cvtv6(uchar fill, char *ip, uchar *buf)
   FILE *output = popen(cmd, "r");
   if(!output)return -1;
   char buffer[1024];
-  char *line_p = fgets(buffer, sizeof(buffer), output);
+  (void)fgets(buffer, sizeof(buffer), output);
   pclose(output);
 
   //Parse up the space delimited return value
