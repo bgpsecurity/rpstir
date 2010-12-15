@@ -1,7 +1,7 @@
 #
 # Makefile for asn.1 tools
 #
-# $Id: Makefile 1135 2010-05-24 13:17:17Z achi $
+# $Id: Makefile 1404 2010-11-02 21:27:14Z gardiner $
 #
 # ***** BEGIN LICENSE BLOCK *****
 #  
@@ -22,12 +22,12 @@
 
 TARGETS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
-	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart
+	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
+	extractCMScert
 
 all:	$(TARGETS)
 
-#CFLAGS=	-g -I$(SSLINCLUDES) -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I../../proto -I$(CLINCLUDES)
-CFLAGS=	-g -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I../../proto
+CFLAGS=	-g -I$(SSLINCLUDES) -I../asn -I../asn_gen -I../casn -Wall -I../../roa-lib -I../../proto -I$(CLINCLUDES)
 ASN_DIR= ../asn
 CASN_DIR= ../casn
 LOCAL_LIBS= -L$(ASN_DIR) -lasn -L$(CASN_DIR) -lcasn
@@ -92,6 +92,9 @@ test_casn_random: test_casn_random.o
 
 check_signature: check_signature.o
 	$(CC) $(CFLAGS) -o $@ check_signature.o $(LOCAL_LIBS) $(LIBS)
+
+extractCMScert: extractCMScert.o
+	$(CC) $(CFLAGS) -o $@ extractCMScert.o $(LOCAL_LIBS) $(LIBS)
 
 clean:
 	rm -f $(TARGETS) *.o
