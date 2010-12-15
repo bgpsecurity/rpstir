@@ -40,6 +40,8 @@
 #include "roa_utils.h"
 #include "certificate.h"
 #include "err.h"
+#include "logutils.h"
+#include "stringutils.h"
 
 #define INFO_FLAG 0x1
 #define WARNING_FLAG 0x2

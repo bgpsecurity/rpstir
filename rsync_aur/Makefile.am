@@ -20,12 +20,13 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS = -g -Wall -I../proto -I../cg/casn -I../cg/asn \
-	-I../roa-lib -I../proto -Wshadow -Wmissing-prototypes \
-	-Wmissing-declarations
+AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
-LOCAL_LIBS = -L../roa-lib -lroa -L../cg/asn -lasn  -L../cg/casn -lcasn
-LDADD = $(LOCAL_LIBS)
+AM_CPPFLAGS = -I../proto -I../cg/casn -I../cg/asn -I../roa-lib -I../proto \
+	-I../utils
+
+LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
+	../utils/libutils.a
 
 bin_PROGRAMS = rsync_aur rsync_listener
 

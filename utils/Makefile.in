@@ -16,14 +16,14 @@
 @SET_MAKE@
 
 #
-# Makefile for rsync_aur
+# Makefile for utilities convenience library: logging, strings
 #
-# $Id: Makefile 1259 2010-09-14 17:53:17Z bkohler $
+# $Id$
 #
 # ***** BEGIN LICENSE BLOCK *****
 #  
 #  BBN Address and AS Number PKI Database/repository software
-#  Version 1.0
+#  Version 3.0-beta
 #  
 #  US government users are permitted unrestricted rights as
 #  defined in the FAR.  
@@ -31,9 +31,10 @@
 #  This software is distributed on an "AS IS" basis, WITHOUT
 #  WARRANTY OF ANY KIND, either express or implied.
 # 
-#  Copyright (C) Raytheon BBN Technologies Corp. 2007.  All Rights Reserved.
+#  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.
+#  All Rights Reserved.
 # 
-#  Contributor(s):  Brenton Kohler
+#  Contributor(s):  Andrew Chi
 # 
 # ***** END LICENSE BLOCK *****
 
@@ -54,8 +55,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = rsync_aur$(EXEEXT) rsync_listener$(EXEEXT)
-subdir = rsync_aur
+subdir = utils
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -64,22 +64,19 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
-PROGRAMS = $(bin_PROGRAMS)
-am_rsync_aur_OBJECTS = main.$(OBJEXT) parse.$(OBJEXT) \
-	socket_stuff.$(OBJEXT) sig_handler.$(OBJEXT) csapp.$(OBJEXT) \
-	usage.$(OBJEXT)
-rsync_aur_OBJECTS = $(am_rsync_aur_OBJECTS)
-rsync_aur_LDADD = $(LDADD)
-rsync_aur_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
-	../cg/casn/libcasn.a ../utils/libutils.a
-am_rsync_listener_OBJECTS = rsync_listener.$(OBJEXT) csapp.$(OBJEXT)
-rsync_listener_OBJECTS = $(am_rsync_listener_OBJECTS)
-rsync_listener_LDADD = $(LDADD)
-rsync_listener_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
-	../cg/casn/libcasn.a ../utils/libutils.a
-rsync_listener_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(rsync_listener_LDFLAGS) $(LDFLAGS) -o $@
+LIBRARIES = $(noinst_LIBRARIES)
+AR = ar
+ARFLAGS = cru
+AM_V_AR = $(am__v_AR_$(V))
+am__v_AR_ = $(am__v_AR_$(AM_DEFAULT_VERBOSITY))
+am__v_AR_0 = @echo "  AR    " $@;
+AM_V_at = $(am__v_at_$(V))
+am__v_at_ = $(am__v_at_$(AM_DEFAULT_VERBOSITY))
+am__v_at_0 = @
+libutils_a_AR = $(AR) $(ARFLAGS)
+libutils_a_LIBADD =
+am_libutils_a_OBJECTS = logutils.$(OBJEXT) stringutils.$(OBJEXT)
+libutils_a_OBJECTS = $(am_libutils_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -89,9 +86,6 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 AM_V_CC = $(am__v_CC_$(V))
 am__v_CC_ = $(am__v_CC_$(AM_DEFAULT_VERBOSITY))
 am__v_CC_0 = @echo "  CC    " $@;
-AM_V_at = $(am__v_at_$(V))
-am__v_at_ = $(am__v_at_$(AM_DEFAULT_VERBOSITY))
-am__v_at_0 = @
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_$(V))
@@ -100,8 +94,8 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(rsync_aur_SOURCES) $(rsync_listener_SOURCES)
-DIST_SOURCES = $(rsync_aur_SOURCES) $(rsync_listener_SOURCES)
+SOURCES = $(libutils_a_SOURCES)
+DIST_SOURCES = $(libutils_a_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -194,18 +188,11 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
-AM_CPPFLAGS = -I../proto -I../cg/casn -I../cg/asn -I../roa-lib -I../proto \
-	-I../utils
+AM_CFLAGS = -g -Wall
+noinst_LIBRARIES = libutils.a
+libutils_a_SOURCES = logutils.h logutils.c \
+	stringutils.h stringutils.c
 
-LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
-	../utils/libutils.a
-
-rsync_aur_SOURCES = main.c main.h parse.c socket_stuff.c sig_handler.c \
-	csapp.c csapp.h usage.c usage.h socket_stuff.h parse.h sig_handler.h
-
-rsync_listener_SOURCES = rsync_listener.c csapp.h rsync_listener.h csapp.c
-rsync_listener_LDFLAGS = -lpthread
 all: all-am
 
 .SUFFIXES:
@@ -219,9 +206,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu rsync_aur/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu utils/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu rsync_aur/Makefile
+	  $(AUTOMAKE) --gnu utils/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -240,49 +227,13 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	for p in $$list; do echo "$$p $$p"; done | \
-	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p; \
-	  then echo "$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n;h' -e 's|.*|.|' \
-	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
-	sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
-	    else { print "f", $$3 "/" $$4, $$1; } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
-	    } \
-	; done
 
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' `; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(bindir)" && rm -f $$files
-
-clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-rsync_aur$(EXEEXT): $(rsync_aur_OBJECTS) $(rsync_aur_DEPENDENCIES) 
-	@rm -f rsync_aur$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(rsync_aur_OBJECTS) $(rsync_aur_LDADD) $(LIBS)
-rsync_listener$(EXEEXT): $(rsync_listener_OBJECTS) $(rsync_listener_DEPENDENCIES) 
-	@rm -f rsync_listener$(EXEEXT)
-	$(AM_V_CCLD)$(rsync_listener_LINK) $(rsync_listener_OBJECTS) $(rsync_listener_LDADD) $(LIBS)
+clean-noinstLIBRARIES:
+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libutils.a: $(libutils_a_OBJECTS) $(libutils_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libutils.a
+	$(AM_V_AR)$(libutils_a_AR) libutils.a $(libutils_a_OBJECTS) $(libutils_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libutils.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -290,13 +241,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/csapp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rsync_listener.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sig_handler.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/socket_stuff.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usage.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logutils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stringutils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -398,11 +344,8 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(LIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
-	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -430,7 +373,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+clean-am: clean-generic clean-noinstLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -456,7 +399,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
+install-exec-am:
 
 install-html: install-html-am
 
@@ -495,22 +438,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am:
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic ctags distclean distclean-compile \
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
+	clean-noinstLIBRARIES ctags distclean distclean-compile \
 	distclean-generic distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	html-am info info-am install install-am install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS
+	uninstall-am
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

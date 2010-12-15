@@ -186,5 +186,6 @@ AC_CONFIG_FILES([Makefile
                  testcases/Makefile
 		 testbed/Makefile
 		 testbed/src/Makefile
+		 utils/Makefile
 ])
 AC_OUTPUT

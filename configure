@@ -5854,7 +5854,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile cg/Makefile cg/asn/Makefile cg/asn_gen/Makefile cg/casn/Makefile cg/tools/Makefile proto/Makefile roa-lib/Makefile roa-utils/Makefile rsync_aur/Makefile server/Makefile testcases/Makefile testbed/Makefile testbed/src/Makefile"
+ac_config_files="$ac_config_files Makefile cg/Makefile cg/asn/Makefile cg/asn_gen/Makefile cg/casn/Makefile cg/tools/Makefile proto/Makefile roa-lib/Makefile roa-utils/Makefile rsync_aur/Makefile server/Makefile testcases/Makefile testbed/Makefile testbed/src/Makefile utils/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6620,6 +6620,7 @@ do
     "testcases/Makefile") CONFIG_FILES="$CONFIG_FILES testcases/Makefile" ;;
     "testbed/Makefile") CONFIG_FILES="$CONFIG_FILES testbed/Makefile" ;;
     "testbed/src/Makefile") CONFIG_FILES="$CONFIG_FILES testbed/src/Makefile" ;;
+    "utils/Makefile") CONFIG_FILES="$CONFIG_FILES utils/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

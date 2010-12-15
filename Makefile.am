@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = 1.6 foreign
 
-SUBDIRS = cg roa-lib proto roa-utils rsync_aur testcases server testbed
+SUBDIRS = cg roa-lib utils proto roa-utils rsync_aur testcases server testbed
 
 ACLOCAL_AMFLAGS = -I build-aux
 
