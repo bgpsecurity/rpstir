@@ -20,3 +20,4 @@
 ./make_test_roa    -r R2312.roa  -a 78     # 76-79
 ./make_test_roa    -r R2321.roa  -a 80     # 80-82
 ./make_test_roa    -r R2331.roa  -a 66     # 66
+./make_test_roa    -r R2339.roa  -a 70     # 70

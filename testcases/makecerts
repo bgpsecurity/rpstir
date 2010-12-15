@@ -56,6 +56,7 @@ cp C.raw C.orig
 ./make_test_cert C232R1  0D 1M
 ./make_test_cert C233    0D 1Y <makeC233
 ./make_test_cert C233R1  0D 1M
+./make_test_cert C233R9  0D 1M x
 
 cp C2.cer C2X.cer
 cp C2.raw C2X.raw
