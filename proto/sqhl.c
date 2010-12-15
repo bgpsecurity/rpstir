@@ -2265,9 +2265,15 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     trustAnchor;
   else certp = (struct Certificate *)member_casn(
       &roap->content.signedData.certificates.self, 0);
-  // read the embedded cert information, in patricular the ski
+  // read the embedded cert information, in particular the ski
   if ((sta = hexify_ski(certp, skip)) < 0) return sta;
   sta = 0;
+    // test for forbidden extension
+  struct Extension *extp;
+  for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
+    extp && diff_objid(&extp->extnID, id_extKeyUsage);
+    extp = (struct Extension *)next_of(&extp->self));
+  if (extp) return ERR_SCM_BADEXT;
     // serialize the Certificate and scan it as an openssl X509 object
   int siz = size_casn(&certp->self);
   unsigned char *buf = calloc(1, siz + 4);
