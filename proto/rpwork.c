@@ -535,8 +535,8 @@ static int sign_cert(struct Certificate *certp)
   else
     {
     signature = (uchar *)calloc(1, signatureLength +20);
-    if ((ansr = cryptCreateSignature(signature, 200, &signatureLength,
-      sigKeyContext, hashContext)) != 0) msg = "signing";
+    if ((ansr = cryptCreateSignature(signature, signatureLength + 20, 
+      &signatureLength, sigKeyContext, hashContext)) != 0) msg = "signing";
     else if ((ansr = cryptCheckSignature(signature, signatureLength,
       sigKeyContext, hashContext)) != 0) msg = "verifying";
     }
@@ -798,77 +798,83 @@ Procedure:
      type (not guaranteed)
 Notation: C is certificate item, C-lo is its low end, C-hi its high end
           R is rule item, R-lo is its low end, R-hi its high end
-1. WHILE have C and C-hi < R-lo, get next C
-2. WHILE have C AND have R of this type
-2a    Check low ends
-      IF C-lo < R-lo (R cuts off low end of C)
-        Insert a new C before this one
-        Set new C-lo to this C-lo
-        Set new C-hi to R-lo - 1
-        Set this C-lo to R-lo
-2b    Check upper limits
-      IF C-hi < R-hi (C ends before R)
-        Delete C (gets next C)
-        IF no more C of this type, break out
-      ELSE IF C-hi == R-hi (C ends at R)
-        Delete C (gets next C)
-        Get next R
-      ELSE (C-hi > R-hi)
-        IF C-lo <= R-hi AND R-hi more than touches C-lo
-            Set C-lo to R-hi + 1 (Cut off bottom of C)
-        Get next R
+1. WHILE have C AND have R of this type
+    IF C-hi < R-lo
+      Get next C
+      Start WHILE again
+    IF C-lo > R-hi
+      Get next R
+      Start WHILE again
+    Now C-lo <= R-hi AND C-hi >= R-lo
+2.  IF C-lo < R-lo 
+        IF C-hi <= R-hi
+          Set C-hi = R-lo - 1.
+          Get next cert
+        ELSE (C-hi > R-hi) 
+            Inject new C with C-lo = old C-lo AND C-hi = R-lo - 1
+            Go to next C
+            Set C-lo to R-hi + 1
+            Get next R
+3.  ELSE (C-lo >= R-lo) 
+        IF C-hi <= R-hi, delete C
+        ELSE (C-hi > R-hi) chop off low end of C
+            Set C-lo = R-hi + 1 
+            Get next R  
   Return index of last rule
 */
   struct iprange *certrangep = &certrangesp->iprangep[numcertrange],
     *rulerangep = &rulerangesp->iprangep[numrulerange];
   int did = 0, typ = certrangep->typ, lth = (typ == IPv6)? 16: 4;
                                                   // step 1
-  while(certrangep &&
-      memcmp(certrangep->hilim, rulerangep->lolim, lth) < 0)
-      {
-      certrangep = next_range(certrangesp, certrangep);
-      }
-                                                   // step 2
-  while (certrangep && rulerangep)
+  while(certrangep && rulerangep)
     {
-                                               // step 2a
+    if (memcmp(certrangep->hilim, rulerangep->lolim, lth) < 0)
+      {
+      certrangep= next_range(certrangesp, certrangep);
+      continue;
+      }
+    if (memcmp(certrangep->lolim, rulerangep->hilim, lth) > 0)
+      {
+      rulerangep = next_range(rulerangesp, rulerangep);
+      continue;
+      }
+                       // step 2
     if (memcmp(certrangep->lolim, rulerangep->lolim, lth) < 0)
       {
-      certrangep = inject_range(certrangesp,
-        certrangep - certrangesp->iprangep);
-      certrangep->typ = typ;
-      memcpy(certrangep->lolim, certrangep[1].lolim, lth);
-      memcpy(certrangep->hilim, rulerangep->lolim, lth);
-      decrement_iprange(certrangep->hilim, lth);
-      certrangep = next_range(certrangesp, certrangep);
-      memcpy(certrangep->lolim, rulerangep->lolim, lth);
-      did++;
-      }
-                                                    // step 2b
-    if (memcmp(certrangep->hilim, rulerangep->hilim, lth) < 0)
-      {
-      certrangep = eject_range(certrangesp,
-        certrangep - certrangesp->iprangep);
-      if (!certrangep) return did;
-      did++;
-      }
-    else if (memcmp(certrangep->hilim, rulerangep->hilim, lth) == 0)
-      {
-      certrangep = eject_range(certrangesp, certrangep - certrangesp->iprangep);
-      if (!certrangep) return did;
-      rulerangep = next_range(rulerangesp, rulerangep);
-      did++;
-      }
-    else // C-hi > R-hi
-      {
-      if (memcmp(certrangep->lolim, rulerangep->hilim, lth)  <= 0 &&
-        touches(rulerangep, certrangep, lth) > 0)
+      if (memcmp(certrangep->hilim, rulerangep->hilim, lth) <= 0)
+        {     // C-hi <= R-hi
+        memcpy(certrangep->hilim, rulerangep->lolim, lth);
+        decrement_iprange(certrangep->hilim, lth);
+        certrangep = next_range(certrangesp, certrangep);
+        }
+      else // C-hi > R-hi
         {
+        certrangep = inject_range(certrangesp, 
+          certrangep - certrangesp->iprangep);
+        memcpy(certrangep->lolim, certrangep[1].lolim, lth);
+        memcpy(certrangep->hilim, rulerangep->lolim, lth);
+        certrangep->typ = certrangep[1].typ;
+        decrement_iprange(certrangep->hilim, lth);
+        certrangep++;
         memcpy(certrangep->lolim, rulerangep->hilim, lth);
         increment_iprange(certrangep->lolim, lth);
-        did++;
+        rulerangep = next_range(rulerangesp, rulerangep); 
         }
-      rulerangep = next_range(rulerangesp, rulerangep);
+      did++;
+      }
+               // step 3
+    else 
+      {      // C-lo >= R-lo
+      if (memcmp(certrangep->hilim, rulerangep->hilim, lth) <= 0)
+        certrangep = eject_range(certrangesp, certrangep -
+          certrangesp->iprangep);
+      else
+        {   // C-hi > R-hi
+        memcpy(certrangep->lolim, rulerangep->hilim, lth);
+        increment_iprange(certrangep->lolim, lth);
+        rulerangep = next_range(rulerangesp, rulerangep); 
+        }
+      did++;
       }
     }
   *changesp = did;
@@ -1326,7 +1332,7 @@ Procedure:
       else
         {
         add_done_cert(&done_cert);
-//        dump_test_cert(&done_cert, 1);
+        // dump_test_cert(&done_cert, 1);
         }
       }
     if (ansr > 0) ansr = search_downward(done_certp->origcertp);
@@ -1422,7 +1428,7 @@ Procedure:
       return ansr;
     done_certp->perf |= (!run)? (WASEXPANDED | WASEXPANDEDTHISBLK):
       (WASPERFORATED | WASPERFORATEDTHISBLK);
-// dump_test_cert(done_certp, 1);
+ // dump_test_cert(done_certp, 1);
                                                   // step 2
     if (!diff_casn(&done_certp->origcertp->toBeSigned.issuer.self,
        &done_certp->origcertp->toBeSigned.subject.self)) break;
@@ -1523,7 +1529,7 @@ Procedure:
     strcpy(skibuf, nextskibuf);
     }
   while(ansr);
-//  dump_test_certs(1); a diagnostic tool
+ dump_test_certs(1); // a diagnostic tool
   return 0;
   }
 

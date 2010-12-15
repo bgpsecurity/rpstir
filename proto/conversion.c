@@ -120,28 +120,33 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
   if (*c > ' ') return -2;
   memset(buf, fill, 16);
   for (up = buf, ue = &buf[16]; up < ue; *up++ = fill);
-  for (c = ip, elided = 8; *c && *c != '/'; c++)
+  if (*ip == ':' && ip[1] == ':') elided = 7;
+  else for (c = ip, elided = 8; *c && *c != '/'; c++)
     {
     if (*c == ':') elided--;
     } 
+  if (elided < 0) return -1;
   for (c = ip, up = buf; *c > ' ' && *c != '/';)
     {
-    if (*c == ':') c++;
+    if (*c == ':')
+      {
+      if (c[1] == ':')
+        {
+        while(elided--) 
+          {
+          *up++ = 0;
+          *up++ = 0;
+          }
+        c += 2;
+        }
+      else c++;
+      }
     if (*c == '/') break;
     sscanf(c, "%x", &fld);
     if (up >= ue || fld > 0xFFFF) return -1;
     *up++ = (uchar)((fld >> 8) &0xFF);
     *up++ = (uchar)(fld & 0xFF);
     while(*c && *c != ':' && *c != '/') c++;
-    if (*c == ':' && c[1] == ':')
-      {
-      while(elided--) 
-        {
-        *up++ = fill;
-        *up++ = fill;
-        }
-      c += 2;
-      }
     }
   if (*c) 
     {
@@ -164,7 +169,7 @@ static int cvtv6(uchar fill, char *ip, uchar *buf)
       if ((mask & *up) && mask != *up) return -1; 
       *up++ |= mask;
       if ((mask & *up) && mask != *up) return -1;
-      *up |= 0xFF;
+      while (up < ue) *up++ |= 0xFF;
           // if up is at the high byte in a short
       }
     else 

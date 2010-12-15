@@ -334,7 +334,7 @@ static int getIPBlock(FILE *SKI, int typ, char *skibuf, int siz)
       (typ == IPv6 && !strncmp(skibuf, "AS", 2)) ||
       (typ == ASNUM && *skibuf == 'S')) break;
     char *cc = nextword(skibuf);
-    if  (cc && *cc != '-') return ERR_SCM_BADSKIBLOCK;
+    if  (cc && *cc > ' ' && *cc != '-') return ERR_SCM_BADSKIBLOCK;
     struct iprange *iprangep  = inject_range(&ruleranges, ruleranges.numranges);
     if (txt2loc(typ, skibuf, iprangep) < 0) return ERR_SCM_BADRANGE;
     else
