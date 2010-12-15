@@ -154,6 +154,14 @@ extern SQLRETURN newhstmt(scmcon *conp);
 extern void pophstmt(scmcon *conp);
 
 /*
+  Directives for hexify()
+*/
+
+#define HEXIFY_NO         0              // no prefix
+#define HEXIFY_X          1              // 0x prefix
+#define HEXIFY_HAT        2              // ^x prefix
+
+/*
   Macros
 */
 

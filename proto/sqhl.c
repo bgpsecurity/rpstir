@@ -371,7 +371,7 @@ static int add_cert_internal(scm *scmp, scmcon *conp, cert_fields *cf,
       (void)snprintf(blen, sizeof(blen), "%u", cf->ipblen); /* byte length */
       cols[idx++].value = blen;
       cols[idx].column = "ipb";
-      wptr = hexify(cf->ipblen, cf->ipb, 1);
+      wptr = hexify(cf->ipblen, cf->ipb, HEXIFY_HAT);
       if ( wptr == NULL )
 	return(ERR_SCM_NOMEM);
       cols[idx++].value = wptr;
@@ -414,7 +414,7 @@ static int add_crl_internal(scm *scmp, scmcon *conp, crl_fields *cf)
     return(sta);
 // the following statement could use a LOT of memory, so we try
 // it early in case it fails
-  hexs = hexify(cf->snlen*sizeof(long long), cf->snlist, 1);
+  hexs = hexify(cf->snlen*sizeof(long long), cf->snlist, HEXIFY_HAT);
   if ( hexs == NULL )
     return(ERR_SCM_NOMEM);
   conp->mystat.tabname = "CRL";
@@ -724,6 +724,7 @@ static int our_verify(X509_STORE_CTX *ctx)
 //  (void)printf("OUR VERIFY!\n");
   cb = ctx->verify_cb;
   n = sk_X509_num(ctx->chain);
+//  (void)printf("NUM is %d\n", n);
   ctx->error_depth = n - 1;
   n--;
   xissuer = sk_X509_value(ctx->chain, n);
@@ -1605,7 +1606,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 		     tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
 	  else
 	    {
-	      char *h = hexify(sta, bytehash, 0);
+	      char *h = hexify(sta, bytehash, HEXIFY_NO);
 //            (void)fprintf(stderr, "Updating hash of %s to %s\n", file, h);
 	      snprintf(flagStmt, sizeof(flagStmt),
 		       "update %s set flags=flags+%d, hash=\"%s\" where local_id=%d;",
@@ -2445,7 +2446,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       break;
     }
 
-    if ((sig = hexify(bsiglen, bsig, 0)) == NULL ) {
+    if ((sig = hexify(bsiglen, bsig, HEXIFY_NO)) == NULL ) {
       sta = ERR_SCM_NOMEM;
       break;
     }

@@ -566,15 +566,19 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
     }
 /*
   Note the special convention that if the value (as a string)
-  begins with 0x it is NOT quoted. This is so that we can insert
-  binary strings in their hex representation. Thus if we said
-  0x00656667 as the value it would get inserted as NULefg but
-  if we said "0x00656667" it would get inserted as the string
+  begins with ^x it is NOT quoted. The ^x is turned into 0x and
+  then inserted. This is so that we can insert binary strings in their
+  hex representation without having to pass in column information. Thus
+  if we said ^x00656667 -> 0x00656667 as the value it would get inserted
+  as NULefg but if we said "0x00656667" it would get inserted as the string
   0x00656667.
 */
-  doq = strncmp(arr->vec[0].value, "0x", 2);
+  doq = strncmp(arr->vec[0].value, "^x", 2);
   if ( doq == 0 )
-    wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
+    {
+      arr->vec[0].value[0] = '0';
+      wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
+    }
   else
     wsta = strwillfit(stmt, leen, wsta, ") VALUES (\"");
   if ( wsta >= 0 )
@@ -588,9 +592,12 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
     }
   for(i=1;i<arr->nused;i++)
     {
-      doq = strncmp(arr->vec[i].value, "0x", 2);
+      doq = strncmp(arr->vec[i].value, "^x", 2);
       if ( doq == 0 )
-	wsta = strwillfit(stmt, leen, wsta, ", ");
+	{
+	  arr->vec[i].value[0] = '0';
+	  wsta = strwillfit(stmt, leen, wsta, ", ");
+	}
       else
 	wsta = strwillfit(stmt, leen, wsta, ", \"");
       if ( wsta >= 0 )
@@ -1338,12 +1345,25 @@ char *hexify(int bytelen, void *ptr, int useox)
     return(NULL);
   inptr = (unsigned char *)ptr;
   outptr = aptr;
-  if ( useox != 0 )
+  switch ( useox )
     {
+    case HEXIFY_NO:
+      break;
+    case HEXIFY_X:
       *outptr++ = '0';
       left--;
       *outptr++ = 'x';
       left--;
+      break;
+    case HEXIFY_HAT:
+      *outptr++ = '^';
+      left--;
+      *outptr++ = 'x';
+      left--;
+      break;
+    default:
+      free(aptr);
+      return NULL;
     }
   if (bytelen == 0)
     *outptr++ = '0', left--;
@@ -1360,7 +1380,7 @@ char *hexify(int bytelen, void *ptr, int useox)
 
 /*
   Convert a hex string into a byte array. Allocates memory.
-  The string must not begin with 0x.
+  The string must not begin with 0x or ^x.
 */
 
 void *unhexify(int strnglen, char *strng)
@@ -1411,7 +1431,7 @@ int updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
   if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
        tabp->tabname == NULL )
     return(ERR_SCM_INVALARG);
-  hexi = hexify(snlen*sizeof(long long), (void *)snlist, 1);
+  hexi = hexify(snlen*sizeof(long long), (void *)snlist, HEXIFY_X);
   if ( hexi == NULL )
     return(ERR_SCM_NOMEM);
 // compute the size of the statement
