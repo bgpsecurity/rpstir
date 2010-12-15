@@ -60,7 +60,9 @@ bin_PROGRAMS = test_casn_random$(EXEEXT) dump$(EXEEXT) rr$(EXEEXT) \
 	make_oidtable$(EXEEXT) make_TA$(EXEEXT) set_cert_ski$(EXEEXT) \
 	sign_cert$(EXEEXT) add_key_info$(EXEEXT) read_roa$(EXEEXT) \
 	encode-oid$(EXEEXT) dumpasn1$(EXEEXT) dump_smart$(EXEEXT) \
-	extractCMScert$(EXEEXT)
+	extractCMScert$(EXEEXT) change_cms_cert$(EXEEXT) \
+	test_cert$(EXEEXT) makeLTAtest$(EXEEXT) checkLTAtest$(EXEEXT) \
+	dumpIPAddr$(EXEEXT)
 subdir = cg/tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -82,11 +84,29 @@ am_bin_to_six_OBJECTS = bin_to_six.$(OBJEXT) prencode.$(OBJEXT)
 bin_to_six_OBJECTS = $(am_bin_to_six_OBJECTS)
 bin_to_six_LDADD = $(LDADD)
 bin_to_six_DEPENDENCIES =
+am_change_cms_cert_OBJECTS = change_cms_cert.$(OBJEXT)
+change_cms_cert_OBJECTS = $(am_change_cms_cert_OBJECTS)
+change_cms_cert_LDADD = $(LDADD)
+change_cms_cert_DEPENDENCIES =
+change_cms_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(change_cms_cert_LDFLAGS) $(LDFLAGS) -o $@
+am_checkLTAtest_OBJECTS = checkLTAtest.$(OBJEXT)
+checkLTAtest_OBJECTS = $(am_checkLTAtest_OBJECTS)
+checkLTAtest_LDADD = $(LDADD)
+checkLTAtest_DEPENDENCIES =
+checkLTAtest_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(checkLTAtest_LDFLAGS) $(LDFLAGS) -o $@
 am_dump_OBJECTS = dump.$(OBJEXT) asn.$(OBJEXT) asn_dump.$(OBJEXT) \
 	util.$(OBJEXT)
 dump_OBJECTS = $(am_dump_OBJECTS)
 dump_LDADD = $(LDADD)
 dump_DEPENDENCIES =
+am_dumpIPAddr_OBJECTS = dumpIPAddr.$(OBJEXT)
+dumpIPAddr_OBJECTS = $(am_dumpIPAddr_OBJECTS)
+dumpIPAddr_LDADD = $(LDADD)
+dumpIPAddr_DEPENDENCIES =
+dumpIPAddr_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(dumpIPAddr_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_dump_smart_OBJECTS = dump_smart.$(OBJEXT)
 dump_smart_OBJECTS = $(am_dump_smart_OBJECTS)
 dump_smart_LDADD = $(LDADD)
@@ -119,6 +139,12 @@ loadkey_LDADD = $(LDADD)
 loadkey_DEPENDENCIES =
 loadkey_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(loadkey_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_makeLTAtest_OBJECTS = makeLTAtest.$(OBJEXT)
+makeLTAtest_OBJECTS = $(am_makeLTAtest_OBJECTS)
+makeLTAtest_LDADD = $(LDADD)
+makeLTAtest_DEPENDENCIES =
+makeLTAtest_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(makeLTAtest_LDFLAGS) $(LDFLAGS) -o $@
 am_make_TA_OBJECTS = make_TA.$(OBJEXT)
 make_TA_OBJECTS = $(am_make_TA_OBJECTS)
 make_TA_LDADD = $(LDADD)
@@ -163,6 +189,12 @@ am_test_casn_random_OBJECTS = test_casn_random.$(OBJEXT)
 test_casn_random_OBJECTS = $(am_test_casn_random_OBJECTS)
 test_casn_random_LDADD = $(LDADD)
 test_casn_random_DEPENDENCIES =
+am_test_cert_OBJECTS = test_cert.$(OBJEXT)
+test_cert_OBJECTS = $(am_test_cert_OBJECTS)
+test_cert_LDADD = $(LDADD)
+test_cert_DEPENDENCIES =
+test_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(test_cert_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_whatsfcs_OBJECTS = whatsfcs.$(OBJEXT) prencode.$(OBJEXT)
 whatsfcs_OBJECTS = $(am_whatsfcs_OBJECTS)
 whatsfcs_LDADD = $(LDADD)
@@ -188,21 +220,27 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
-	$(dump_SOURCES) $(dump_smart_SOURCES) $(dumpasn1_SOURCES) \
-	$(encode_oid_SOURCES) $(extractCMScert_SOURCES) \
-	$(gen_key_SOURCES) $(loadkey_SOURCES) $(make_TA_SOURCES) \
+	$(change_cms_cert_SOURCES) $(checkLTAtest_SOURCES) \
+	$(dump_SOURCES) $(dumpIPAddr_SOURCES) $(dump_smart_SOURCES) \
+	$(dumpasn1_SOURCES) $(encode_oid_SOURCES) \
+	$(extractCMScert_SOURCES) $(gen_key_SOURCES) \
+	$(loadkey_SOURCES) $(makeLTAtest_SOURCES) $(make_TA_SOURCES) \
 	$(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) \
 	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
 	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
-	$(test_casn_random_SOURCES) $(whatsfcs_SOURCES)
+	$(test_casn_random_SOURCES) $(test_cert_SOURCES) \
+	$(whatsfcs_SOURCES)
 DIST_SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
-	$(dump_SOURCES) $(dump_smart_SOURCES) $(dumpasn1_SOURCES) \
-	$(encode_oid_SOURCES) $(extractCMScert_SOURCES) \
-	$(gen_key_SOURCES) $(loadkey_SOURCES) $(make_TA_SOURCES) \
+	$(change_cms_cert_SOURCES) $(checkLTAtest_SOURCES) \
+	$(dump_SOURCES) $(dumpIPAddr_SOURCES) $(dump_smart_SOURCES) \
+	$(dumpasn1_SOURCES) $(encode_oid_SOURCES) \
+	$(extractCMScert_SOURCES) $(gen_key_SOURCES) \
+	$(loadkey_SOURCES) $(makeLTAtest_SOURCES) $(make_TA_SOURCES) \
 	$(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) \
 	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
 	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
-	$(test_casn_random_SOURCES) $(whatsfcs_SOURCES)
+	$(test_casn_random_SOURCES) $(test_cert_SOURCES) \
+	$(whatsfcs_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -328,6 +366,16 @@ dump_smart_SOURCES = dump_smart.c
 dump_smart_LDFLAGS = $(LIBS)
 extractCMScert_SOURCES = extractCMScert.c
 extractCMScert_LDFLAGS = $(LIBS)
+change_cms_cert_SOURCES = change_cms_cert.c
+change_cms_cert_LDFLAGS = $(LIBS)
+test_cert_SOURCES = test_cert.c
+test_cert_LDFLAGS = $(LIBS)
+makeLTAtest_SOURCES = makeLTAtest.c
+makeLTAtest_LDFLAGS = $(LIBS)
+checkLTAtest_SOURCES = checkLTAtest.c
+checkLTAtest_LDFLAGS = $(LIBS)
+dumpIPAddr_SOURCES = dumpIPAddr.c
+dumpIPAddr_LDFLAGS = $(LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -405,9 +453,18 @@ add_key_info$(EXEEXT): $(add_key_info_OBJECTS) $(add_key_info_DEPENDENCIES)
 bin_to_six$(EXEEXT): $(bin_to_six_OBJECTS) $(bin_to_six_DEPENDENCIES) 
 	@rm -f bin_to_six$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bin_to_six_OBJECTS) $(bin_to_six_LDADD) $(LIBS)
+change_cms_cert$(EXEEXT): $(change_cms_cert_OBJECTS) $(change_cms_cert_DEPENDENCIES) 
+	@rm -f change_cms_cert$(EXEEXT)
+	$(AM_V_CCLD)$(change_cms_cert_LINK) $(change_cms_cert_OBJECTS) $(change_cms_cert_LDADD) $(LIBS)
+checkLTAtest$(EXEEXT): $(checkLTAtest_OBJECTS) $(checkLTAtest_DEPENDENCIES) 
+	@rm -f checkLTAtest$(EXEEXT)
+	$(AM_V_CCLD)$(checkLTAtest_LINK) $(checkLTAtest_OBJECTS) $(checkLTAtest_LDADD) $(LIBS)
 dump$(EXEEXT): $(dump_OBJECTS) $(dump_DEPENDENCIES) 
 	@rm -f dump$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(dump_OBJECTS) $(dump_LDADD) $(LIBS)
+dumpIPAddr$(EXEEXT): $(dumpIPAddr_OBJECTS) $(dumpIPAddr_DEPENDENCIES) 
+	@rm -f dumpIPAddr$(EXEEXT)
+	$(AM_V_CCLD)$(dumpIPAddr_LINK) $(dumpIPAddr_OBJECTS) $(dumpIPAddr_LDADD) $(LIBS)
 dump_smart$(EXEEXT): $(dump_smart_OBJECTS) $(dump_smart_DEPENDENCIES) 
 	@rm -f dump_smart$(EXEEXT)
 	$(AM_V_CCLD)$(dump_smart_LINK) $(dump_smart_OBJECTS) $(dump_smart_LDADD) $(LIBS)
@@ -426,6 +483,9 @@ gen_key$(EXEEXT): $(gen_key_OBJECTS) $(gen_key_DEPENDENCIES)
 loadkey$(EXEEXT): $(loadkey_OBJECTS) $(loadkey_DEPENDENCIES) 
 	@rm -f loadkey$(EXEEXT)
 	$(AM_V_CCLD)$(loadkey_LINK) $(loadkey_OBJECTS) $(loadkey_LDADD) $(LIBS)
+makeLTAtest$(EXEEXT): $(makeLTAtest_OBJECTS) $(makeLTAtest_DEPENDENCIES) 
+	@rm -f makeLTAtest$(EXEEXT)
+	$(AM_V_CCLD)$(makeLTAtest_LINK) $(makeLTAtest_OBJECTS) $(makeLTAtest_LDADD) $(LIBS)
 make_TA$(EXEEXT): $(make_TA_OBJECTS) $(make_TA_DEPENDENCIES) 
 	@rm -f make_TA$(EXEEXT)
 	$(AM_V_CCLD)$(make_TA_LINK) $(make_TA_OBJECTS) $(make_TA_LDADD) $(LIBS)
@@ -453,6 +513,9 @@ six_to_bin$(EXEEXT): $(six_to_bin_OBJECTS) $(six_to_bin_DEPENDENCIES)
 test_casn_random$(EXEEXT): $(test_casn_random_OBJECTS) $(test_casn_random_DEPENDENCIES) 
 	@rm -f test_casn_random$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_casn_random_OBJECTS) $(test_casn_random_LDADD) $(LIBS)
+test_cert$(EXEEXT): $(test_cert_OBJECTS) $(test_cert_DEPENDENCIES) 
+	@rm -f test_cert$(EXEEXT)
+	$(AM_V_CCLD)$(test_cert_LINK) $(test_cert_OBJECTS) $(test_cert_LDADD) $(LIBS)
 whatsfcs$(EXEEXT): $(whatsfcs_OBJECTS) $(whatsfcs_DEPENDENCIES) 
 	@rm -f whatsfcs$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(whatsfcs_OBJECTS) $(whatsfcs_LDADD) $(LIBS)
@@ -467,13 +530,17 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn_dump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bin_to_six.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/change_cms_cert.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/checkLTAtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpIPAddr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump_smart.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpasn1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encode-oid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractCMScert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_key.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loadkey.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeLTAtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/make_TA.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/make_oidtable.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md2.Po@am__quote@
@@ -485,6 +552,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/six2hex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/six_to_bin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_casn_random.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_cert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whatsfcs.Po@am__quote@
 
