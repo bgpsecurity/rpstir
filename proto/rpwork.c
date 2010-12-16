@@ -1529,7 +1529,7 @@ Procedure:
     strcpy(skibuf, nextskibuf);
     }
   while(ansr);
- dump_test_certs(1); // a diagnostic tool
+// dump_test_certs(1);  a diagnostic tool
   return 0;
   }
 
