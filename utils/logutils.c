@@ -44,8 +44,18 @@ log_msg_generic(FILE *fp, struct tm *timestamp, const char *facility,
 		int priority, const char *format, ...);
 
 
-
-
+/*
+ * Initialize logging system.  Open "logfile" for append, set the
+ * facility (i.e. component name), and set the logging verbosity to
+ * file and to standard error.
+ *
+ * Returns 0 on success.  On error, returns -1 and sets errno with a
+ * system-wide value indicating the cause of the error.
+ *
+ * IMPORTANT: each executable can have at most one logging system
+ * initialized.  If you call log_init() from main() only, then you
+ * should be fine.
+ */
 int log_init(const char *logfile, const char *facility,
 	     int file_loglevel, int stderr_loglevel)
 {
@@ -80,15 +90,22 @@ int log_init(const char *logfile, const char *facility,
 }
 
 
+/*
+ * Log a message with a given priority (e.g. LOG_WARNING), using
+ * printf-style parameters.
+ */
 void log_msg(int priority, const char *format, ...)
 {
   va_list args;
   time_t now_sec;
   struct tm now;
 
+  if (!log_fp)			/* logging not initialized */
+    return;
+
   if (!format)
     return;
-  
+
   /* build timestamp */
   now_sec = time(NULL);
   (void)gmtime_r(&now_sec, &now); /* fails only after year exceeds MAX_INT */
@@ -111,13 +128,23 @@ void log_msg(int priority, const char *format, ...)
 }
 
 
+/*
+ * Ensure that all buffered log messages are flushed out to disk
+ * and/or stderr.
+ */
 void log_flush(void)
 {
-  if (log_fp)
-    fflush(log_fp);
+  if (!log_fp)			/* logging not initialized */
+    return;
+  
+  fflush(log_fp);
+  fflush(stderr);
 }
 
 
+/*
+ * Close the log file and clear the logging state.
+ */
 void log_close(void)
 {
   int ret;
@@ -162,7 +189,7 @@ void log_msg_generic(FILE *fp, struct tm *timestamp, const char *facility,
     return;
 
   /* timestamp */
-  fprintf(fp, "%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d | ",
+  fprintf(fp, "UTC %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d | ",
 	  timestamp->tm_year + 1990,
 	  timestamp->tm_mon + 1,
 	  timestamp->tm_mday,
