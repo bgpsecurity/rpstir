@@ -8,7 +8,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/test.include
 
 echo "Loading data and running garbage collector"
-../rsync_aur/rsync_aur -t $RPKI_PORT -f test3.7.log -w -e -i -d ../testcases
+../rsync_aur/rsync_aur -t $RPKI_PORT -f test3.7.log -w -e -i -d $RPKI_ROOT/testcases
 check_errs $? "$0 rsync_aur failed"
 sleep 2
 ../proto/garbage
