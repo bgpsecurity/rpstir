@@ -24,6 +24,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include "stringutils.h"
+
 
 /* Does string s end with suffix? */
 int endswith(const char *s, const char *suffix)
@@ -222,4 +225,153 @@ int field_length(const char *s, const char *delimiters)
     s++;
   }
   return len;
+}
+
+
+/* Split a string on given delimiters.
+
+   This modifies the original string by terminating each field with a
+   NULL character.  The function also allocates an array of char* and
+   populates it with pointers back into the original string, each
+   pointer indicating the start of a field.  The caller is responsible
+   for freeing the memory allocated at address *pfields.
+
+   Intuitively, if the delimiters are whitespace, this function parses
+   a command line string into char *argv[] and sets argc.  Strictly
+   speaking, this is not a complete replica of command line parsing
+   because quoting is not supported.
+
+   Inputs:
+   s           - string to be split
+   delimiters  - list of characters to split on (field delimiters)
+
+   Outputs:
+   s           - string is modified in place
+   pfields     - address of char** that will store the array of fields
+   pnumfields  - address of int that will store the number of fields
+
+   Returns:
+   0 on success, -1 on failure and sets errno accordingly.
+*/
+int split_string(char *s, const char *delimiters,
+		 char ***pfields, int *pnumfields)
+{
+  char **fields = NULL;		/* array of char*, like argv */
+  char *strtok_state;		/* for strtok_r's use only */
+  size_t num_fields = 0;      /* number of fields actually recorded */
+  size_t fields_capacity = 0;	/* capacity of fields array */
+  char *current_field = NULL;
+  
+  if (!delimiters || !s || !pfields || !pnumfields) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  /* Find first field. */
+  current_field = strtok_r(s, delimiters, &strtok_state);
+  if (current_field) {	/* allocate field array as necessary */
+    if (expand_by_doubling((void*)&fields, sizeof(char*),
+			   &fields_capacity, num_fields + 1) != 0) {
+      if (fields)
+	free(fields);
+      return -1;
+    }
+    fields[num_fields] = current_field;
+    num_fields++;
+  }
+
+  /* Find subsequent fields. */
+  while (current_field) {
+    current_field = strtok_r(NULL, delimiters, &strtok_state);
+    if (current_field) {/* expand field array as necessary */
+      if (expand_by_doubling((void*)&fields, sizeof(char*),
+			     &fields_capacity, num_fields + 1) != 0) {
+	if (fields)
+	  free(fields);
+	return -1;
+      }
+      fields[num_fields] = current_field;
+      num_fields++;
+    }
+  }
+  
+  *pfields = fields;
+  *pnumfields = num_fields;
+
+  return 0;
+}
+
+
+/* Expand an array by doubling the amount of elements allocated.
+ * Behaves much like realloc(), and so the following two paragraphs
+ * are copied from the realloc() man page for reference:
+ *
+ *   realloc() changes the size of the memory block pointed to by ptr to
+ *   size bytes.  The contents will be unchanged to the minimum of the
+ *   old and new sizes; newly allocated memory will be uninitialized.
+ *   If ptr is NULL, the call is equivalent to malloc(size); if size is
+ *   equal to zero, the call is equivalent to free(ptr).  Unless ptr is
+ *   NULL, it must have been returned by an earlier call to malloc(),
+ *   calloc() or realloc().
+ *
+ *   Returns a pointer to the newly allocated memory, which is suitably
+ *   aligned for any kind of variable and may be different from ptr, or
+ *   NULL if the request fails. If size was equal to 0, either NULL or a
+ *   pointer suitable to be passed to free() is returned.  If realloc()
+ *   fails the original block is left untouched - it is not freed or
+ *   moved.
+ * 
+ * Inputs:
+ *
+ * ptr - address of pointer to array of members (*ptr may be NULL).
+ * current_nmemb - current number of members allocated for the array
+ * min_nmemb - minimum number of members requested for the output array
+ * 
+ * Outputs:
+ *
+ * If the realloc_by_doubling() was successful, *ptr is
+ * updated to the new pointer, and *current_nmemb is updated to the
+ * new number of members.  Note that you won't get the expected
+ * exponential reallocation if you call this more than about 30 times,
+ * since size_t is often 32 bits.
+ *
+ * Returns: 0 on success; -1 and sets errno on failure.
+ */
+
+int expand_by_doubling(void **ptr, size_t size, size_t *current_nmemb,
+		       size_t min_nmemb)
+{
+  void *new_ptr = NULL;
+  size_t new_nmemb = 1;
+
+  if (!ptr || !current_nmemb) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (*current_nmemb >= min_nmemb)
+    return 0;
+
+  /* Double current_nmemb, yet be graceful about integer overflow.
+     Note that signed integer overflow is undefined, so it's important
+     that we're using size_t which is guaranteed to be unsigned.  */
+  new_nmemb = (new_nmemb * size > min_nmemb * size) ?
+    new_nmemb : min_nmemb;
+  new_nmemb = (new_nmemb * size > 2 * (*current_nmemb) * size) ?
+    new_nmemb : 2 * (*current_nmemb);
+
+  if (*current_nmemb >= new_nmemb) {
+    errno = ENOMEM;
+    return -1;
+  }
+
+  new_ptr = realloc(*ptr, new_nmemb * size);
+  if (!new_ptr) {
+    errno = ENOMEM;
+    return -1;
+  }
+  
+  *ptr = new_ptr;
+  *current_nmemb = new_nmemb;
+  return 0;
 }

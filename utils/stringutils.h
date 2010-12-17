@@ -33,3 +33,7 @@ char *dirname(char *dest, int dest_len, const char *path);
 char *this_field(char *dest, int dest_length, const char *src,
 		 const char *delimiters);
 int field_length(const char *s, const char *delimiters);
+int split_string(char *s, const char *delimiters,
+		 char ***pfields, int *pnumfields);
+int expand_by_doubling(void **ptr, size_t size, size_t *current_nmemb,
+		       size_t min_nmemb);

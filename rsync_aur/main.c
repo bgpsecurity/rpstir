@@ -30,6 +30,7 @@ struct name_list
   struct name_list *nextp;
   };
 
+/*
 static void free_name_list(struct name_list *rootlistp)
   {
   struct name_list *currp, *nextp;
@@ -40,6 +41,7 @@ static void free_name_list(struct name_list *rootlistp)
     if (currp > rootlistp) free(currp);
     }
   }
+*/
 
 static char *makeCDStr(unsigned int *retlenp, char *dir)
 {
@@ -83,6 +85,11 @@ int main(int argc, char *argv[])
   char *topDir = NULL;
   struct write_port wport;
   char flags;  /* our warning flags bit fields */
+  char **my_argv;		/* either real or from script file */
+  int my_argc;		    /* either real or from script file */
+  const char *WHITESPACE = "\n\r\t ";
+  char *inputLogFile = NULL;
+  char *rsync_aur_logfile = "rsync_aur.log";
 
   tflag = uflag = nflag = fflag = sflag = ch = 0;
   portno = retlen = 0;
@@ -90,67 +97,51 @@ int main(int argc, char *argv[])
 
   memset((char *)&wport, '\0', sizeof(struct write_port));
 
-  if (argc == 2 && *argv[1] != '-') // process a script file
+  if (argc == 2 && *argv[1] != '-') // process a script file as command line
     {
-    char *cc, *cx, *buf, *e;
-    int fd, bufsize;
-    if ( (fd = open(argv[1], O_RDONLY)) < 0 || (bufsize = lseek(fd, 0, SEEK_END)) <= 0 ||
-      (buf = (char *)calloc(1, bufsize + 6)) == 0 || lseek(fd, 0, SEEK_SET) != 0 ||
-      read(fd, buf, bufsize + 4) != bufsize)
+    char *buf = NULL;
+    char **expanded_argv = NULL;
+    int fd, bufsize, i;
+
+    /* Read file into buffer and parse as if it were a long command line. */
+    if ( (fd = open(argv[1], O_RDONLY)) < 0 ||
+	 (bufsize = lseek(fd, 0, SEEK_END)) <= 0 ||
+	 (buf = (char *)calloc(1, bufsize + 6)) == 0 ||
+	 lseek(fd, 0, SEEK_SET) != 0 ||
+	 read(fd, buf, bufsize + 4) != bufsize ||
+	 split_string(buf, WHITESPACE, &my_argv, &my_argc) != 0
+	 )
       {
-      fprintf(stderr, "failed to open %s\n", argv[1]);
+      fprintf(stderr, "failed to open/parse %s\n", argv[1]);
       exit(1);
       }
-    for (cc = buf, e = &buf[bufsize]; cc < e; cc++)  // null out white space
-      {
-      if (*cc <= ' ') *cc = 0;
-      }
-    for (cc = buf; cc < e; )
-      {
-      while (*cc == 0 && cc < e) cc++;
-      if (*cc++ == '-')
-        {
-        if (*cc == 'e') flags |= ERROR_FLAG;
-        else if (*cc == 'i') flags |= INFO_FLAG;
-        else if (*cc == 'n') nflag = 1;
-        else if (*cc == 's') sflag = 1;
-        else if (*cc == 'w') flags |= WARNING_FLAG;
-        else if (*cc == 'd'|| *cc == 'f' || *cc == 't' || *cc == 'u')
-          {
-          for (cx = &cc[1]; *cx == 0 && cx < e; cx++);
-          if (*cc == 'd') topDir = strdup(cx);
-          else if (*cc == 'f')
-            {
-            fflag = 1;
-            char *ce;
-            for (ce = cx; *ce > ' '; ce++);
-            *ce = 0;
-            if (!(fp = fopen(cx, "r")))
-               {
-               fprintf(stderr, "failed to open %s\n", cx);
-               exit(1);
-               }
-            }
-          else if (*cc == 't') { tflag = 1; portno = atoi(cx); }
-          else if (*cc == 'u') { uflag = 1; portno = atoi(cx); }
-          for (cc = cx; *cc > ' '; cc++);
-          }
-        else myusage(argv[0]);
-        cc++;
-        }
-      while (*cc == 0 && cc < e) cc++;
-      }
-    free(buf);
+    /* Prepend executable name to my_argv and increment my_argc */
+    expanded_argv = (char **)realloc(my_argv, sizeof(char*) * (my_argc+1));
+    if (!expanded_argv) {
+      fprintf(stderr, "out of memory\n");
+      exit(1);
     }
-  else if (argc > 2 && *argv[1] != '-')
+    my_argv = expanded_argv;
+    my_argc++;
+    for (i = argc; i > 0; i--)	/* shift right by one position */
+      my_argv[i] = my_argv[i-1];
+    my_argv[0] = argv[0];
+    
+    /* Intentionally leak buf & my_argv: they've become the "command line". */
+    }
+  else if (argc > 2 && *argv[1] != '-') // more than one script file?
     {
     fprintf(stderr, "Too many script files: %s\n", argv[2]);
     exit(1);
     } 
-  else
+  else // normal command line
     {
-    while ((ch = getopt(argc, argv, "t:u:f:nweid:sh")) != -1)
-      {
+      my_argv = argv;
+      my_argc = argc;
+    }
+  
+  while ((ch = getopt(my_argc, my_argv, "t:u:f:d:l:nweish")) != -1)
+    {
       switch (ch)
         {
         case 't':  /* TCP flag */
@@ -174,29 +165,27 @@ int main(int argc, char *argv[])
         case 'i': /* create information message(s) */
           flags = flags | INFO_FLAG;
           break;
-        case 'f': /* log file to read and parse */
+        case 'f': /* input rsync log file to read and parse */
           fflag = 1;
-          fp = fopen(optarg, "r");
-          if (!fp) {
-            fprintf(stderr, "failed to open %s\n", optarg);
-            exit(1);
-          }
-          printf("Opened rsync log file: %s\n", optarg);
-          fflush(stdout);
+	  inputLogFile = strdup(optarg);
           break;
         case 'd':
-  	topDir = strdup (optarg);
-  	break;
-        case 's': /* synchronize */
-  	sflag = 1;
-  	break;
+	  topDir = strdup (optarg);
+	  break;
+        case 's': /* synchronize with rcli */
+	  sflag = 1;
+	  break;
+	case 'l': /* logfile for rsync_aur itself */
+	  rsync_aur_logfile = strdup(optarg);
+	  break;
         case 'h': /* help */
         default:
           myusage(argv[0]);
           break;
         }
-      }
     }
+
+  log_init(rsync_aur_logfile, "rsync_aur", LOG_DEBUG, LOG_DEBUG);
 
   /* test for necessary flags */
   if (!fflag) {
@@ -214,6 +203,15 @@ int main(int argc, char *argv[])
     fprintf(stderr, "must choose tcp or udp, or specify -n. -h for help\n");
     exit(1);
   }
+
+  /* open input rsync log file... */
+  fp = fopen(inputLogFile, "r");
+  if (!fp) {
+    fprintf(stderr, "failed to open %s\n", inputLogFile);
+    exit(1);
+  }
+  printf("Opened rsync log file: %s\n", inputLogFile);
+  fflush(stdout);
 
   /* setup sockets... */
   if (!nflag) {
@@ -369,5 +367,8 @@ int main(int argc, char *argv[])
     close(wport.out_desc);
     fprintf(stderr, "closed the descriptor %d\n", wport.out_desc);
   }
+
+  log_close();
+  
   return(0);
 }
