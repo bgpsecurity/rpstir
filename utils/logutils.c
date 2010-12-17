@@ -41,7 +41,7 @@ static const char *log_facility = "none"; /* rcli, rsync_aur, chaser */
 static const char *log_level2string(int priority);
 static void
 log_msg_generic(FILE *fp, struct tm *timestamp, const char *facility,
-		int priority, const char *format, ...);
+		int priority, const char *format, va_list args);
 
 
 /*
@@ -181,16 +181,14 @@ const char *log_level2string(int priority)
 
 
 void log_msg_generic(FILE *fp, struct tm *timestamp, const char *facility,
-		     int priority, const char *format, ...)
+		     int priority, const char *format, va_list args)
 {
-  va_list args;
-  
   if (!fp || !timestamp || !format)
     return;
 
   /* timestamp */
-  fprintf(fp, "UTC %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d | ",
-	  timestamp->tm_year + 1990,
+  fprintf(fp, "%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d UTC | ",
+	  timestamp->tm_year + 1900,
 	  timestamp->tm_mon + 1,
 	  timestamp->tm_mday,
 	  timestamp->tm_hour,
@@ -204,8 +202,6 @@ void log_msg_generic(FILE *fp, struct tm *timestamp, const char *facility,
   fprintf(fp, "%-7s | ", log_level2string(priority));
 
   /* custom message */
-  va_start(args, format);
   vfprintf(fp, format, args);
-  va_end(args);
   fprintf(fp, "\n");
 }
