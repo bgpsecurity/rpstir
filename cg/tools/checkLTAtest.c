@@ -17,8 +17,10 @@ char *msgs[] =
 
 int fatal(int num, char *note)
   {
+  int i = 0;
   printf(msgs[num], note);
-  exit(-1);
+  if (num > 1) i = -1;
+  exit(i);
   }
 
 struct Extension *find_extn(struct Extensions *extsp, char *oidp)

@@ -62,7 +62,7 @@ bin_PROGRAMS = test_casn_random$(EXEEXT) dump$(EXEEXT) rr$(EXEEXT) \
 	encode-oid$(EXEEXT) dumpasn1$(EXEEXT) dump_smart$(EXEEXT) \
 	extractCMScert$(EXEEXT) change_cms_cert$(EXEEXT) \
 	test_cert$(EXEEXT) makeLTAtest$(EXEEXT) checkLTAtest$(EXEEXT) \
-	dumpIPAddr$(EXEEXT)
+	dumpIPAddr$(EXEEXT) update_cert$(EXEEXT)
 subdir = cg/tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -195,6 +195,12 @@ test_cert_LDADD = $(LDADD)
 test_cert_DEPENDENCIES =
 test_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(test_cert_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_update_cert_OBJECTS = update_cert.$(OBJEXT)
+update_cert_OBJECTS = $(am_update_cert_OBJECTS)
+update_cert_LDADD = $(LDADD)
+update_cert_DEPENDENCIES =
+update_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(update_cert_LDFLAGS) $(LDFLAGS) -o $@
 am_whatsfcs_OBJECTS = whatsfcs.$(OBJEXT) prencode.$(OBJEXT)
 whatsfcs_OBJECTS = $(am_whatsfcs_OBJECTS)
 whatsfcs_LDADD = $(LDADD)
@@ -229,7 +235,7 @@ SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
 	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
 	$(test_casn_random_SOURCES) $(test_cert_SOURCES) \
-	$(whatsfcs_SOURCES)
+	$(update_cert_SOURCES) $(whatsfcs_SOURCES)
 DIST_SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(change_cms_cert_SOURCES) $(checkLTAtest_SOURCES) \
 	$(dump_SOURCES) $(dumpIPAddr_SOURCES) $(dump_smart_SOURCES) \
@@ -240,7 +246,7 @@ DIST_SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
 	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
 	$(test_casn_random_SOURCES) $(test_cert_SOURCES) \
-	$(whatsfcs_SOURCES)
+	$(update_cert_SOURCES) $(whatsfcs_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -376,6 +382,8 @@ checkLTAtest_SOURCES = checkLTAtest.c
 checkLTAtest_LDFLAGS = $(LIBS)
 dumpIPAddr_SOURCES = dumpIPAddr.c
 dumpIPAddr_LDFLAGS = $(LIBS)
+update_cert_SOURCES = update_cert.c
+update_cert_LDFLAGS = $(LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -516,6 +524,9 @@ test_casn_random$(EXEEXT): $(test_casn_random_OBJECTS) $(test_casn_random_DEPEND
 test_cert$(EXEEXT): $(test_cert_OBJECTS) $(test_cert_DEPENDENCIES) 
 	@rm -f test_cert$(EXEEXT)
 	$(AM_V_CCLD)$(test_cert_LINK) $(test_cert_OBJECTS) $(test_cert_LDADD) $(LIBS)
+update_cert$(EXEEXT): $(update_cert_OBJECTS) $(update_cert_DEPENDENCIES) 
+	@rm -f update_cert$(EXEEXT)
+	$(AM_V_CCLD)$(update_cert_LINK) $(update_cert_OBJECTS) $(update_cert_LDADD) $(LIBS)
 whatsfcs$(EXEEXT): $(whatsfcs_OBJECTS) $(whatsfcs_DEPENDENCIES) 
 	@rm -f whatsfcs$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(whatsfcs_OBJECTS) $(whatsfcs_LDADD) $(LIBS)
@@ -553,6 +564,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/six_to_bin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_casn_random.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_cert.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/update_cert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whatsfcs.Po@am__quote@
 
