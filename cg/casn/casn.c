@@ -1732,12 +1732,19 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	    if (num < casnp->min || num > casnp->max) err = ASN_BOUNDS_ERR;
             }
 	}
-    else if (casnp->type < sizeof(mask_table) &&
-        (mask = mask_table[casnp->type]))
-	{
-	for (b = c, tmp = lth; tmp-- && (char_table[*b] & mask); b++);
-	if (tmp >= 0) return _casn_obj_err(casnp, ASN_MASK_ERR) - tmp;
-	}
+    else 
+      {
+      tmp = -1;
+      if (casnp->type == ASN_IA5_STRING) 
+	for (b = c, tmp = lth; tmp-- && !(*b & 0x80); b++);
+      else if (casnp->type < sizeof(mask_table))
+        { 
+        mask = mask_table[casnp->type];
+        if (mask)
+          for (b = c, tmp = lth; tmp-- && (char_table[*b] & mask); b++);
+        }
+      if (tmp >= 0) return _casn_obj_err(casnp, ASN_MASK_ERR) - tmp;
+      }
     if (err) return _casn_obj_err(casnp, err);
     casnp->flags &= ~(ASN_FILLED_FLAG);
     if (casnp->startp) casnp->startp = _free_it(casnp->startp);
