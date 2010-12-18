@@ -134,10 +134,18 @@ udpsocket(struct write_port *wport, int portno)
 int
 outputMsg(struct write_port *wport, char *str, unsigned int len)
 {
-  int ret;
+  int ret = -1;
+  char *str_copy = NULL;
 
-  (void)printf("Sending %s", str);
-  (void)fflush(stdout);
+  /* Log a copy of str without newline(s) */
+  str_copy = strdup(str);
+  if (str_copy) {
+    rstrip(str_copy, "\r\n");
+    log_msg(LOG_INFO, "Sending %s", str_copy);
+    log_flush();
+    free(str_copy);
+  }
+  
   if (wport->protocol == LOCAL) {
     ret = write(wport->out_desc, (const void *)str, len);
     return(ret);
@@ -151,8 +159,8 @@ outputMsg(struct write_port *wport, char *str, unsigned int len)
                   (struct sockaddr *)&(wport->server_addr), 
                   wport->to_length);
   } else {
-    ret = fprintf(stderr, "unknown protocol specification: %d\n",
-                  wport->protocol);
+    log_msg(LOG_ERR, "unknown protocol specification: %d",
+	    wport->protocol);
   }
   return(ret);
 }

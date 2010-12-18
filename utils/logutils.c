@@ -187,7 +187,7 @@ void log_msg_generic(FILE *fp, struct tm *timestamp, const char *facility,
     return;
 
   /* timestamp */
-  fprintf(fp, "%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d UTC | ",
+  fprintf(fp, "UTC %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d | ",
 	  timestamp->tm_year + 1900,
 	  timestamp->tm_mon + 1,
 	  timestamp->tm_mday,

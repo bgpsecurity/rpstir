@@ -20,7 +20,7 @@
  *
  * Copyright (C) Raytheon BBN Technologies Corp. 2007.  All Rights Reserved.
  *
- * Contributor(s):  Peiter "Mudge" Zatko
+ * Contributor(s):  Peiter "Mudge" Zatko, Andrew Chi
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -777,20 +777,20 @@ long next_dirblock(FILE *fp)
     fullpath_start = start_of_next_field(line, delimiters);
     if (!fullpath_start) {
       line_start_pos = -1;	/* error code */
-      fprintf(stderr, "Malformed rsync log file line: %s", line);
+      log_msg(LOG_ERR, "Malformed rsync log file line: %s", line);
       break;
     }
 
     if (!this_field(fullpath, PATH_MAX, fullpath_start, delimiters)) {
       line_start_pos = -1;	/* error code */
-      fprintf(stderr, "Insufficient buffer to hold path: %s",
+      log_msg(LOG_ERR, "Insufficient buffer to hold path: %s",
 	      fullpath_start);
       break;
     }
 
     if (!dirname(directory, PATH_MAX, fullpath)) {
       line_start_pos = -1;	/* error code */
-      fprintf(stderr, "Insufficient buffer to hold directory.  Path = %s\n",
+      log_msg(LOG_ERR, "Insufficient buffer to hold directory.  Path = %s\n",
 	      fullpath);
       break;
     }

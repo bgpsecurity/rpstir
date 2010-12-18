@@ -207,22 +207,22 @@ int main(int argc, char *argv[])
   /* open input rsync log file... */
   fp = fopen(inputLogFile, "r");
   if (!fp) {
-    fprintf(stderr, "failed to open %s\n", inputLogFile);
+    log_msg(LOG_ERR, "failed to open %s", inputLogFile);
     exit(1);
   }
-  printf("Opened rsync log file: %s\n", inputLogFile);
-  fflush(stdout);
+  log_msg(LOG_INFO, "Opened rsync log file: %s", inputLogFile);
+  log_flush();
 
   /* setup sockets... */
   if (!nflag) {
     if (tflag) {
       if (tcpsocket(&wport, portno) != TRUE) {
-        fprintf(stderr, "tcpsocket failed...\n");
+        log_msg(LOG_ERR, "tcpsocket failed...");
         exit(-1);
       }
     } else if (uflag) {
       if (udpsocket(&wport, portno) != TRUE) {
-        fprintf(stderr, "udpsocket failed...\n");
+        log_msg(LOG_ERR, "udpsocket failed...");
         exit(-1);
       }
     }
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
   global_wport = &wport;
 
   if (setup_sig_catchers() != TRUE) {
-    fprintf(stderr, "failed to setup signal catchers... bailing.\n");
+    log_msg(LOG_ERR, "failed to setup signal catchers... bailing.");
     exit(FALSE);
   }
 
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
   /****************************************************/
   sendStr = makeStartStr(&retlen);
   if (!sendStr) {
-    fprintf(stderr, "failed to make Start String... bailing...\n");
+    log_msg(LOG_ERR, "failed to make Start String... bailing...");
     exit(1);
   }
 
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
   /****************************************************/
   sendStr = makeCDStr(&retlen, topDir);
   if (!sendStr) {
-    fprintf(stderr, "failed to make Directory String... bailing...\n");
+    log_msg(LOG_ERR, "failed to make Directory String... bailing...");
     exit(1);
   }
 
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
     this_dirblock_pos = ftell(fp);
     next_dirblock_pos = next_dirblock(fp);
     if (next_dirblock_pos < 0) {
-      fprintf(stderr, "Error while trying to find a block of directories.\n");
+      log_msg(LOG_ERR, "Error while trying to find a block of directories.");
       break;
     }
     if (this_dirblock_pos == next_dirblock_pos)	/*  end of file */
@@ -316,11 +316,11 @@ int main(int argc, char *argv[])
 	/* Get second field. */
 	fullpath_start = start_of_next_field(line, DELIMS);
 	if (!fullpath_start) {
-	  fprintf(stderr, "Malformed rsync log file line: %s", line);
+	  log_msg(LOG_ERR, "Malformed rsync log file line: %s", line);
 	  break;
 	}
 	if (!this_field(fullpath, PATH_MAX, fullpath_start, DELIMS)) {
-	  fprintf(stderr, "Insufficient buffer to hold path: %s",
+	  log_msg(LOG_ERR, "Insufficient buffer to hold path: %s",
 		  fullpath_start);
 	  break;
 	}
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
 	retlen = 0;
 	if (!(sendStr = getMessageFromString(line, (unsigned int) strlen(line),
 					     &retlen, flags))) {
-	  (void)printf("Ignoring: %s", line);
+	  log_msg(LOG_DEBUG, "Ignoring: %s", line);
 	  continue;
 	}
 	if (pass_num == NORMAL_PASS && !is_manifest(fullpath)) {
@@ -356,7 +356,7 @@ int main(int argc, char *argv[])
   /****************************************************/
   sendStr = makeEndStr(&retlen);
   if (!sendStr) {
-    fprintf(stderr, "failed to make End String... bailing...\n");
+    log_msg(LOG_ERR, "failed to make End String... bailing...");
     exit(1);
   }
   outputMsg(&wport, sendStr, retlen);
@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
   /* close descriptors etc. */
   if (wport.protocol != LOCAL) {
     close(wport.out_desc);
-    fprintf(stderr, "closed the descriptor %d\n", wport.out_desc);
+    log_msg(LOG_DEBUG, "closed the descriptor %d", wport.out_desc);
   }
 
   log_close();
