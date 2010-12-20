@@ -420,7 +420,7 @@ static int createonetablescm(scmcon *conp, scmtab *tabp)
   mk = (char *)calloc(leen, sizeof(char));
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
-  (void)snprintf(mk, leen, "CREATE TABLE %s ( %s );", tabp->tabname, tabp->tstr);
+  (void)snprintf(mk, leen, "CREATE TABLE %s ( %s ) ENGINE=InnoDB;", tabp->tabname, tabp->tstr);
   sta = statementscm(conp, mk);
   free((void *)mk);
   return(sta);
