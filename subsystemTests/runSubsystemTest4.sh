@@ -45,16 +45,13 @@ cd $THIS_SCRIPT_DIR
 
 # refresh test certs
   cd testcases4_LTA
-  for f in C?*.raw
+  for f in C?*.raw MYTA.raw
   do
     filename=`basename $f .raw`
-    rr <$f > ${filename}.cer
+    $RPKI_ROOT/cg/tools/rr <$f > ${filename}.cer
   done
   $RPKI_ROOT/cg/tools/update_cert 0D 2Y C?*.cer 
   cd ../
-# clear database
-./initDB4
-check_errs $? "initDB failed!"
 
 # check for existing loader and fail if so
 nc -z localhost $RPKI_PORT
@@ -66,7 +63,11 @@ fi
 NUM_PASSED=0 
 N=1
 while [ $N -le "4" ]; do
+# clear database
+    ./initDB4
+    check_errs $? "initDB failed!"
     ../proto/rcli -w $RPKI_PORT -c testcases4_LTA/LTA/case${N} &
+    LOADER_PID=$!
      echo "Loader started for case ${N}"
      sleep 1
      ./step4
