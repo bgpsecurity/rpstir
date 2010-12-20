@@ -1,0 +1,90 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x02 /* 2 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C"
+        seq utc "101220165835Z"
+            utc "121219165835Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C2"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100A55D66CD8891
+                0x3254EF0E06884C1D9713BC7E09038E53
+                0x796566F491BBB2426C03515947BB4F06
+                0xF0E0E98FE7D2DF78B25A2F83F44C570A
+                0xBD8B17F9DB766A12B65FC68DAB313CD7
+                0xAE2D8B2E91E6F0C5755C41D2C2671574
+                0x990F467EA4E01B0498A25A6EE7BD95AE
+                0xFFA544B8E798F5DC2BA8096B28349DB6
+                0x6813BF76CA4B53B02402FFDD2C0717E8
+                0x30A787A6CB21533E52F3AD72A04CC93A
+                0x851671BBE0AC73AD28179C960C8C492F
+                0x0943C316435C295F909EEBE140DDF5BC
+                0x8801B16147C87B03B0B8BFB666C99C89
+                0xF754CB187386CD8254667BCAFE1D7578
+                0x5213D01188D33F8E148D006944AB3940
+                0xFF06A5E1484E87A015CDD743A2EA53D9
+                0x589A22958B8D6E02FF930203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xFBB976CB647BEFE2D4EE0F7275166830
+                            0x76C42D8A
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0xC1B174C02B4EE39FA058304C16CD9B39
+                                0x6667FA4B
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x000100
+                                    bit 0x0003
+                            seq oct 0x0002
+                                seq bit 0x000100
+                                    bit 0x0003
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x7F /* 127 */ 
+                                    seq int 0x0200 /* 512 */ 
+                                        int 0x03FF /* 1023 */ 
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x001AC2504730A339D69018A64E44AB2B750F70365F3B712250C795640AC4E1D7
+        0xB17092DC592F9CB885C9550AB746D7A4B877785E13B06C81755D4EE5048794FF
+        0x81D7C4DD90EDD8FB45ECE5D752469C66AB1D4B3CC735015739A5AD3F6DBF2ABC
+        0xA9E004146AA57BCF5B2B04BB904995434B0A0856D5AE2C8780A40A1C6CC52269
+        0x3558C70EBC06155D28BA30A19EFAD7D00B7D425A23B6F20B025C8FAC1F042BEF
+        0xC3B7B5C232BEE470C243447CD7E5737B89D9CB97832D66D3CB64B32E92AAEB97
+        0x175B632D16B52A27EE4720216B5C3613705F46C9E4A4140F218EB6A48E6F002F
+        0xE00A038687E1266A93717A4A4D2D0F7E185648B3A2CF6B26D35FF811FBD2B76A
+        0xDF
