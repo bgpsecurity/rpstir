@@ -1606,10 +1606,12 @@ Procedure:
   if (Xaia) free(Xaia);
   free(Xcrldp);
   free_keyring();
-  if (errbuf[strlen(errbuf) - 1] != '.' &&
-      errbuf[strlen(errbuf) - 1] != '\n') strcat(errbuf, "."); 
   if (*errbuf)
+    {
+    if (errbuf[strlen(errbuf) - 1] != '.' &&
+      errbuf[strlen(errbuf) - 1] != '\n') strcat(errbuf, "."); 
     log_msg(LOG_ERR, "%s", errbuf);
+    }
   log_msg(LOG_DEBUG, "Finished LTA work");
   return ansr;
   }
