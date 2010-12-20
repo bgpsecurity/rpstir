@@ -45,6 +45,11 @@ cd $THIS_SCRIPT_DIR
 
 # refresh test certs
   cd testcases4_LTA
+  for f in C?*.raw
+  do
+    filename=`basename $f .raw`
+    rr <$f > ${filename}.cer
+  done
   $RPKI_ROOT/cg/tools/update_cert 0D 2Y C?*.cer 
   cd ../
 # clear database

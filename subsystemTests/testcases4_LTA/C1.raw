@@ -1,0 +1,86 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x02 /* 2 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C"
+        seq utc "101218142857Z"
+            utc "121217142857Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "C1"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100B2B09B90E374
+                0xD95B564E80AC2B91A3DDF0AE5BF6C783
+                0x50F4560D182438997B7CB37617028B27
+                0xADAC712EA9FA4980EF75FA61E21C9C52
+                0x078C32FF2A7C69C403F6293E2A7BDC95
+                0x0A50AF0A875370A5CFE39C75548A1C29
+                0x9D32AA22D0E97B385DD87E4338D70E7E
+                0xDB6CE87EFFDF9C8E5F634C0979F863EE
+                0xD1E1FD964986A94EC2368DD3FD6C1202
+                0xC91EDE3FED09D7CCF9C662DE3C67F028
+                0xAE9AA96B5D84B9B950AB376584075D5A
+                0x4A4D39B1201BEC6FFF763C420E20D4A7
+                0x6997C6AE5D06480958EEF025D9425217
+                0x455ADE4B7DBCEFBE9B59C0DFF760A3EE
+                0x9DD330E79442606FC626766B83CAA6F9
+                0xD75C2DB13C097A454D3A7A4281B6DBB2
+                0x0315EDE1B87A80AF3C670203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0x64F05905F7BBFF8F9758BB6FB5C25F19
+                            0x6DF5FE46
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://roa-pki.bbn.com/home/testd"
+                                            "ir/"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0xC1B174C02B4EE39FA058304C16CD9B39
+                                0x6667FA4B
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x0001
+                            seq oct 0x0002
+                                seq bit 0x0001
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x01FF /* 511 */ 
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/home/testdir/"
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x0086307F57BD7201AC16E4E3065A3CA7A039B7684F9352527DC912D62CE7E57A
+        0x7509CD8BD2D10CCCF66A67F3C6F96670186CD4AAFB948AF13D2D6A5890B96A50
+        0xFF7E7DC7AE3ED98C6BAC2A01D7CDED0EB5C9582C97D77F0B5D784765942D9227
+        0x9E1A2BCEAB79C0D70F1B0011ED7AEACAA83772C9BF8FD15BAF9A644BA9CC33F8
+        0x5C12833D3561638813DD0AE242C4139B882C48F77DBEB359F2CEE34D0ACC85FF
+        0x388926A524DCD0F8AF2396EF75328DAC274D385DFBE251689C981D164A6CE393
+        0x005485080D3441E32DDEC9F9880F64DA99C83E3E5FB141534A3B13BCC5B744E3
+        0xC7427DE6F041E254C56076DF1D4AE23A89728A6767C392132AAEB2F05A4B1DEC
+        0xBC
