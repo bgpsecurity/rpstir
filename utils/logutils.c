@@ -36,6 +36,7 @@ static FILE *log_fp = NULL;
 static int log_filethresh = LOG_DEBUG;
 static int log_stderrthresh = LOG_DEBUG;
 static const char *log_facility = "none"; /* rcli, rsync_aur, chaser */
+static int user_was_warned = 0;
 
 /* function prototypes */
 static const char *log_level2string(int priority);
@@ -79,6 +80,7 @@ int log_init(const char *logfile, const char *facility,
   
   log_filethresh = file_loglevel;
   log_stderrthresh = stderr_loglevel;
+  user_was_warned = 0;
 
   log_msg(LOG_MAINT,
 	  "Logging initialized: filelevel=%d, stderrlevel=%d, file=%s",
@@ -92,7 +94,8 @@ int log_init(const char *logfile, const char *facility,
 
 /*
  * Log a message with a given priority (e.g. LOG_WARNING), using
- * printf-style parameters.
+ * printf-style parameters.  Obey logging thresholds for stderr and
+ * file.
  */
 void log_msg(int priority, const char *format, ...)
 {
@@ -100,8 +103,11 @@ void log_msg(int priority, const char *format, ...)
   time_t now_sec;
   struct tm now;
 
-  if (!log_fp)			/* logging not initialized */
-    return;
+  /* logfile not initialized; warn user once */
+  if (!log_fp && !user_was_warned) {
+    fprintf(stderr, "NOTICE: logfile uninitialized, logging to stderr only.\n");
+    user_was_warned = 1;
+  }
 
   if (!format)
     return;
@@ -111,7 +117,7 @@ void log_msg(int priority, const char *format, ...)
   (void)gmtime_r(&now_sec, &now); /* fails only after year exceeds MAX_INT */
 
   /* write message to logfile */
-  if (priority == LOG_MAINT || priority <= log_filethresh) {
+  if (log_fp && (priority == LOG_MAINT || priority <= log_filethresh)) {
     va_start(args, format);
     log_msg_generic(log_fp, &now, log_facility, priority, format, args);
     va_end(args);
@@ -134,10 +140,8 @@ void log_msg(int priority, const char *format, ...)
  */
 void log_flush(void)
 {
-  if (!log_fp)			/* logging not initialized */
-    return;
-  
-  fflush(log_fp);
+  if (log_fp)
+    fflush(log_fp);
   fflush(stderr);
 }
 
@@ -155,11 +159,13 @@ void log_close(void)
   log_msg(LOG_MAINT, "Logging closed");
   
   ret = fclose(log_fp);
+
   if (ret != 0)
     perror("log_close");
 
   log_fp = NULL;
   log_facility = "none";
+  user_was_warned = 0;
 }
 
 
