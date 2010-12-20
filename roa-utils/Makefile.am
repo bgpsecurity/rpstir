@@ -27,7 +27,8 @@ AM_CFLAGS = -g -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 
-LDADD = -L../cg/asn -L../cg/casn -L../proto -L../roa-lib -lrpki -lroa -lasn -lcasn
+LDADD = ../proto/librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a ../utils/libutils.a
 
 roa_test_SOURCES = roa_test.c
 roa_test_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition

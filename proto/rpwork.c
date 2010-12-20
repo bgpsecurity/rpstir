@@ -21,6 +21,7 @@
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
+#include "logutils.h"
 
 extern struct done_certs done_certs;
 
@@ -39,7 +40,6 @@ char *Xrpdir;
 unsigned int XrpdirId;
 
 int locflags;
-FILE *loclog;
 
 extern struct keyring keyring;
 
@@ -182,11 +182,12 @@ static int add_paracert2DB(struct done_cert *done_certp)
       (ansr = set_cert_flag(locconp, done_certp->origID,
       done_certp->origflags)))
       return ansr;
-    fprintf(stderr, "Added %s to DB\n", fullname);
+    log_msg(LOG_INFO, "Added %s to DB", fullname);
     return 1;
     }
-  else fprintf(stderr, "Adding %s to DB failed with error %d\n", fullname,
-    -ansr);
+  else
+    log_msg(LOG_ERR, "Adding %s to DB failed with error %d",
+	    fullname, -ansr);
   return ansr;
   }
 
@@ -1083,7 +1084,7 @@ Procedure:
       if (ruleranges.iprangep[numrulerange].typ == IPv4) typname = "IPv4";
       else if (ruleranges.iprangep[numrulerange].typ == IPv6) typname = "IPv6";
       else typname = "AS#";
-      fprintf(loclog, "Did not expand %s in block %s.", typname, currskibuf);
+      log_msg(LOG_DEBUG, "Did not expand %s in block %s.", typname, currskibuf);
       did = 0;
       } 
     }
@@ -1533,7 +1534,7 @@ Procedure:
   return 0;
   }
 
-int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile, FILE *logfile)
+int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile)
   {
 /*
 Procedure:
@@ -1553,11 +1554,10 @@ Procedure:
   *locfilename = 0;
   int ansr = 0;
                                                      // step 1
-  loclog = logfile;
   FILE *SKI = fopen(skiblockfile, "r");
-  fprintf(logfile, "Starting LTA work\n");
+  log_msg(LOG_DEBUG, "Starting LTA work");
   if (!SKI) ansr = ERR_SCM_NOSKIFILE;
-  else if ((ansr = parse_SKI_blocks(SKI, logfile, skibuf, sizeof(skibuf), &locflags))
+  else if ((ansr = parse_SKI_blocks(SKI, skibuf, sizeof(skibuf), &locflags))
      >= 0)
     {
     if (!Xcp)
@@ -1588,7 +1588,7 @@ Procedure:
       // flag original cert as having a paracert
       if (locansr >= 0 && (locansr = add_paracert2DB(done_certp)) < 0)
         {
-        if (logfile) fprintf(logfile, "%s ", done_certp->filename);
+	  log_msg(LOG_DEBUG, "%s ", done_certp->filename);
         strcpy(locfilename, done_certp->filename);
         *skibuf = 0;
         }
@@ -1608,8 +1608,9 @@ Procedure:
   free_keyring();
   if (errbuf[strlen(errbuf) - 1] != '.' &&
       errbuf[strlen(errbuf) - 1] != '\n') strcat(errbuf, "."); 
-  if (*errbuf && logfile) fprintf(logfile, "%s ", errbuf);
-  fprintf(logfile, "Finished LTA work\n");
+  if (*errbuf)
+    log_msg(LOG_ERR, "%s", errbuf);
+  log_msg(LOG_DEBUG, "Finished LTA work");
   return ansr;
   }
 

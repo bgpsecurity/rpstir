@@ -24,6 +24,7 @@
 #include "crlv2.h"
 
 #include "roa_utils.h"
+#include "logutils.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
  *
@@ -62,41 +63,41 @@ static int useParacerts = 1;
 
 static void initTables(scm *scmp)
 {
-  char *msg = "Error finding %s table\n";
+  char *msg = "Error finding %s table";
   if (theCertTable == NULL) {
     theDirTable = findtablescm(scmp, "DIRECTORY");
     if (theDirTable == NULL) {
-      fprintf (stderr, msg, "directory");
+      log_msg(LOG_ERR, msg, "directory");
       exit (-1);
     }
     theMetaTable = findtablescm(scmp, "METADATA");
     if (theMetaTable == NULL) {
-      fprintf (stderr, msg, "metadata");
+      log_msg(LOG_ERR, msg, "metadata");
       exit (-1);
     }
     theCertTable = findtablescm (scmp, "CERTIFICATE");
     if (theCertTable == NULL) {
-      fprintf (stderr, msg, "certificate");
+      log_msg(LOG_ERR, msg, "certificate");
       exit (-1);
     }
     theCRLTable = findtablescm (scmp, "CRL");
     if (theCRLTable == NULL) {
-      fprintf (stderr, msg, "crl");
+      log_msg(LOG_ERR, msg, "crl");
       exit (-1);
     }
     theROATable = findtablescm (scmp, "ROA");
     if (theROATable == NULL) {
-      fprintf (stderr, msg, "roa");
+      log_msg(LOG_ERR, msg, "roa");
       exit (-1);
     }
     theManifestTable = findtablescm (scmp, "MANIFEST");
     if (theManifestTable == NULL) {
-      fprintf (stderr, msg, "manifest");
+      log_msg(LOG_ERR, msg, "manifest");
       exit (-1);
     }
     theCTATable = findtablescm(scmp, "COMPOUNDTRUSTANCHOR");
     if (theCTATable == NULL) {
-      fprintf(stderr, msg, "compound trust anchor");
+      log_msg(LOG_ERR, msg, "compound trust anchor");
       exit(-1);
     }
     theSCMP = scmp;
@@ -474,8 +475,8 @@ static int verify_callback(int ok2, X509_STORE_CTX *store)
   if ( !ok2 )
     {
       cbx509err = store->error;
-      (void)fprintf(stderr, "Error: %s\n",
-		    X509_verify_cert_error_string(cbx509err));
+      log_msg(LOG_ERR, "Error: %s",
+	      X509_verify_cert_error_string(cbx509err));
     }
   else
     cbx509err = 0;
@@ -1617,7 +1618,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 	}
       else
 	{
-	  (void)fprintf(stderr, "Hash not ok on file %s\n", file);
+	  log_msg(LOG_ERR, "Hash not ok on file %s", file);
       // if hash not okay, delete object, and if cert, invalidate children
 	  if ( tabp == theCertTable )
 	    {
@@ -1655,7 +1656,7 @@ static int verifyChildManifest (scmcon *conp, scmsrcha *s, int idx)
   if (sta < 0)
     {
     delete_casn(&roa.self);
-    fprintf(stderr, "invalid manifest filename %s\n", outfull);
+    log_msg(LOG_ERR, "invalid manifest filename %s", outfull);
     return sta;
     }
   struct Manifest *manifest =
@@ -1704,7 +1705,7 @@ static int verifyChildCert(scmcon *conp, PropData *data, int doVerify)
       return ERR_SCM_X509;
     sta = verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta, &chainOK);
     if (sta < 0) {
-      fprintf(stderr, "Child cert %s had bad signature\n", pathname);
+      log_msg(LOG_ERR, "Child cert %s had bad signature", pathname);
       deletebylid (conp, theCertTable, data->id);
       return sta;
     }
@@ -2342,7 +2343,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     if (typ == OT_ROA && sta == ERR_SCM_DUPSIG) sta = 0; // dup roas OK
     else if (sta < 0)
       {
-      fprintf(stderr, "Error adding embedded certificate %s\n",
+      log_msg(LOG_ERR, "Error adding embedded certificate %s",
         (!rta)? pathname: NULL);
       /* Leave the file there for debugging purposes.  FIXME: add code
 	 to clean this up later. */
@@ -2497,7 +2498,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) fprintf(stderr, "invalid manifest %s\n", outfull);
+  if (sta < 0) log_msg(LOG_ERR, "invalid manifest %s", outfull);
   if (sta < 0 || (sta = manifestValidate(&roa)) < 0)
     {
     delete_casn(&roa.self);
@@ -2530,7 +2531,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   // read this_upd and next_upd
     read_casn_time (&manifest->thisUpdate, &ltime);
     if ( sta < 0 ) {
-      fprintf(stderr, "Could not read time for thisUpdate\n");
+      log_msg(LOG_ERR, "Could not read time for thisUpdate");
       sta = ERR_SCM_INVALDT;
       break;
     }
@@ -2538,7 +2539,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 
     read_casn_time (&manifest->nextUpdate, &ltime);
     if ( sta < 0 ) {
-      fprintf(stderr, "Could not read time for nextUpdate\n");
+      log_msg(LOG_ERR, "Could not read time for nextUpdate");
       break;
     }
     nextUpdate = UnixTimeToDBTime(ltime, &sta);

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -10,6 +11,7 @@
 #include "myssl.h"
 #include "sqhl.h"
 #include "querySupport.h"
+#include "logutils.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
  *
@@ -137,15 +139,12 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
       else if (!strcasecmp(field->name, "filename"))
 	filename = (char *)s->vec[display].valptr;
       else
-	fprintf(stderr, "warning: unexpected field %s in RPSL query\n",
+	log_msg(LOG_WARNING, "unexpected field %s in RPSL query",
 		field->name);
     }
     if (asn == 0 || ip_addrs == 0) {
-      fprintf(stderr, "incomplete result returned in RPSL query: ");
-      if (asn == 0)
-	fprintf(stderr, "no asn\n");
-      if (ip_addrs == 0)
-	fprintf(stderr, "no ip_addrs\n");
+      log_msg(LOG_ERR, "incomplete result returned in RPSL query: %s",
+	      (asn == 0) ? "no asn" : "no ip_addrs");
     } else {
       if (asn != oldasn) emptyRPSL();
       oldasn = asn;
@@ -457,7 +456,10 @@ int main(int argc, char **argv)
   int numDisplays = 0;
   int numClauses = 0;
 
-  startSyslog ("query");
+  if (log_init("query.log", "query", LOG_DEBUG, LOG_DEBUG) != 0) {
+    perror("Could not initialize query client log file");
+    exit(1);
+  }
   output = stdout;
   useLabels = 1;
   multiline = 0;
@@ -514,7 +516,7 @@ int main(int argc, char **argv)
   displays[numDisplays++] = NULL;
   clauses[numClauses++] = NULL;
   if ((status = doQuery (displays, clauses, orderp)) < 0)
-    fprintf(stderr, "Error: %s\n", err2string(status));
-  stopSyslog();
+    log_msg(LOG_ERR, "%s", err2string(status));
+  log_close();
   return status;
 }

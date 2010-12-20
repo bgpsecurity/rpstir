@@ -71,43 +71,50 @@ PROGRAMS = $(bin_PROGRAMS)
 am_make_manifest_OBJECTS = make_manifest.$(OBJEXT)
 make_manifest_OBJECTS = $(am_make_manifest_OBJECTS)
 make_manifest_LDADD = $(LDADD)
-make_manifest_DEPENDENCIES =
+make_manifest_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 make_manifest_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(make_manifest_LDFLAGS) $(LDFLAGS) -o $@
 am_make_roa_OBJECTS = make_roa.$(OBJEXT)
 make_roa_OBJECTS = $(am_make_roa_OBJECTS)
 make_roa_LDADD = $(LDADD)
-make_roa_DEPENDENCIES =
+make_roa_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 make_roa_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(make_roa_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_roa_test_OBJECTS = roa_test.$(OBJEXT)
 roa_test_OBJECTS = $(am_roa_test_OBJECTS)
 roa_test_LDADD = $(LDADD)
-roa_test_DEPENDENCIES =
+roa_test_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 roa_test_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(roa_test_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_sign_roa_OBJECTS = sign_roa.$(OBJEXT)
 sign_roa_OBJECTS = $(am_sign_roa_OBJECTS)
 sign_roa_LDADD = $(LDADD)
-sign_roa_DEPENDENCIES =
+sign_roa_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 sign_roa_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(sign_roa_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_test_check_sig_OBJECTS = test_check_sig.$(OBJEXT)
 test_check_sig_OBJECTS = $(am_test_check_sig_OBJECTS)
 test_check_sig_LDADD = $(LDADD)
-test_check_sig_DEPENDENCIES =
+test_check_sig_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 test_check_sig_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(test_check_sig_LDFLAGS) $(LDFLAGS) -o $@
 am_test_hash_OBJECTS = test_hash.$(OBJEXT)
 test_hash_OBJECTS = $(am_test_hash_OBJECTS)
 test_hash_LDADD = $(LDADD)
-test_hash_DEPENDENCIES =
+test_hash_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 test_hash_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(test_hash_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_test_val2_OBJECTS = test_val2.$(OBJEXT)
 test_val2_OBJECTS = $(am_test_val2_OBJECTS)
 test_val2_LDADD = $(LDADD)
-test_val2_DEPENDENCIES =
+test_val2_DEPENDENCIES = ../proto/librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 test_val2_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(test_val2_LDFLAGS) \
 	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -234,7 +241,9 @@ AM_CFLAGS = -g -I../proto -I../cg/asn -I../cg/asn_gen -I../cg/casn \
 	-I../roa-lib -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
-LDADD = -L../cg/asn -L../cg/casn -L../proto -L../roa-lib -lrpki -lroa -lasn -lcasn
+LDADD = ../proto/librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a ../utils/libutils.a
+
 roa_test_SOURCES = roa_test.c
 roa_test_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
 test_val2_SOURCES = test_val2.c

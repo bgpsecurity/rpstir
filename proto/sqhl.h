@@ -139,8 +139,7 @@ extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp,
     scmcon *conp);
 extern struct cert_answers * find_parent_cert(char *, char *, scmcon *);
 extern struct cert_answers *find_trust_anchors(scm *sscmp, scmcon *conp);
-extern int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile,
-    FILE *logfile);
+extern int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile);
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 
 // return code is really an X509 *

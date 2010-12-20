@@ -7,6 +7,7 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
+#include "logutils.h"
 
 /*
   $Id$
@@ -161,7 +162,10 @@ int main(int argc, char **argv)
 
   // initialize
   argc = argc; argv = argv;   // silence compiler warnings
-  startSyslog ("garbage");
+  if (log_init("garbage.log", "garbage", LOG_DEBUG, LOG_DEBUG) != 0) {
+    perror("Could not initialize garbage collector's logfile");
+    exit(1);
+  }
   (void) setbuf (stdout, NULL);
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
@@ -266,6 +270,6 @@ int main(int argc, char **argv)
 	    metaTable->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
-  stopSyslog();
+  log_close();
   return 0;
 }

@@ -34,6 +34,7 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
+#include "logutils.h"
 
 /*
   Convert between a time string in a certificate and a time string
@@ -951,7 +952,7 @@ cert_fields *cert2fields(char *fname, char *fullname, int typ, X509 **xp,
       if ( xvalidators[ui].need > 0 &&
 	   cf->fields[xvalidators[ui].fieldno] == NULL )
 	{
-        fprintf(stderr, "Missing CF_FIELD %d\n", xvalidators[ui].fieldno);
+        log_msg(LOG_ERR, "Missing CF_FIELD %d", xvalidators[ui].fieldno);
 	  *stap = ERR_SCM_MISSEXT;
 	  break;
 	}
@@ -1474,7 +1475,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   excnt = X509_CRL_get_ext_count(x);
   if (excnt != 2)
     {
-    fprintf(stderr, "Wrong number of CRL extensions\n");
+    log_msg(LOG_ERR, "Wrong number of CRL extensions");
     *stap = ERR_SCM_INVALEXT;
     }
   else
@@ -1493,7 +1494,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
           }
         if (!goodoidp->lth)
           {
-          fprintf(stderr, "Invalid CRL extension [%d]\n", i);
+          log_msg(LOG_ERR, "Invalid CRL extension [%d]", i);
           *stap = ERR_SCM_INVALEXT;
           break;
           }
@@ -1528,7 +1529,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
      if (did != 3) 
       {
       *stap = ERR_SCM_INVALEXT;
-      fprintf(stderr, "Duplicate extensions\n");
+      log_msg(LOG_ERR, "Duplicate extensions");
       }
     }
 // check that all needed extension fields are present
@@ -1539,7 +1540,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
         if ( crxvalidators[ui].need > 0 &&
   	   cf->fields[crxvalidators[ui].fieldno] == NULL )
   	{
-          fprintf(stderr, "Missing CF_FIELD %d\n", xvalidators[ui].fieldno);
+          log_msg(LOG_ERR, "Missing CF_FIELD %d", xvalidators[ui].fieldno);
   	  *stap = ERR_SCM_MISSEXT;
   	  break;
   	}
@@ -1605,7 +1606,7 @@ static void debug_chk_printf(char *str, int val, int cert_type)
 	   "%d", val);
   val_str = other_val_str;
 
-  fprintf(stderr, "%s returned: %s [against: %s]\n", str, val_str, cert_str);
+  log_msg(LOG_ERR, "%s returned: %s [against: %s]", str, val_str, cert_str);
 }
 
 #endif
@@ -1806,7 +1807,7 @@ static int rescert_version_chk(X509 *x)
   /* returns the value which is 2 to denote version 3 */
 
 #ifdef DEBUG
-  printf("rescert_version_check: version %lu\n", l + 1);
+  log_msg(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
 #endif
   if (l != 2)  /* see above: value of 2 means v3 */
     return(ERR_SCM_BADVERS);
@@ -1852,7 +1853,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
     case UN_CERT:
 #ifdef DEBUG
       /* getting here means we couldn't figure it out above.. */
-      fprintf(stderr, "couldn't determine cert_type to test against\n");
+      log_msg(LOG_ERR, "couldn't determine cert_type to test against");
 #endif
       return(ERR_SCM_INVALARG);
       break;
@@ -1870,8 +1871,8 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
    
           if (!X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-            fprintf(stderr,
-		    "[basic_const] CA_CERT: basic_constraints NOT critical!\n");
+            log_msg(LOG_ERR,
+		    "[basic_const] CA_CERT: basic_constraints NOT critical!");
 #endif
             ret = ERR_SCM_NCEXT;
             goto skip;
@@ -1880,8 +1881,8 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
           bs=X509_get_ext_d2i(x, NID_basic_constraints, NULL, NULL);
           if (!(bs->ca)) {
 #ifdef DEBUG
-            fprintf(stderr,
-		    "[basic_const] testing for CA_CERT: cA boolean NOT set\n");
+            log_msg(LOG_ERR,
+		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
 #endif
             ret = ERR_SCM_NOTCA;
             goto skip;
@@ -1889,8 +1890,9 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
 
           if (bs->pathlen) {
 #ifdef DEBUG
-            fprintf(stderr,
-		    "[basic_const] basic constraints pathlen present - profile violation\n");
+            log_msg(LOG_ERR,
+		    "[basic_const] basic constraints pathlen present "
+		    "- profile violation");
 #endif
             ret = ERR_SCM_BADPATHLEN;
             goto skip;
@@ -1902,12 +1904,12 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
      }
      if (basic_flag == 0) {
 #ifdef DEBUG
-       fprintf(stderr, "[basic_const] basic_constraints not present\n");
+       log_msg(LOG_ERR, "[basic_const] basic_constraints not present");
 #endif
        return(ERR_SCM_NOBC);
      } else if (basic_flag > 1) {
 #ifdef DEBUG
-       fprintf(stderr, "[basic_const] multiple instances of extension\n");
+       log_msg(LOG_ERR, "[basic_const] multiple instances of extension");
 #endif
        return(ERR_SCM_DUPBC);
      } else {
@@ -1928,7 +1930,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
   }
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[basic_const] jump to return...\n");
+  log_msg(LOG_DEBUG, "[basic_const] jump to return...");
 #endif
   if (bs)
     BASIC_CONSTRAINTS_free(bs);
@@ -1961,7 +1963,7 @@ static int rescert_ski_chk(X509 *x)
       ski_flag++;
       if (X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "SKI marked as critical, profile violation\n");
+        log_msg(LOG_ERR, "SKI marked as critical, profile violation");
 #endif
         ret = ERR_SCM_CEXT;
         goto skip;
@@ -1970,12 +1972,12 @@ static int rescert_ski_chk(X509 *x)
   }
   if (ski_flag == 0) {
 #ifdef DEBUG
-    fprintf(stderr, "[ski] ski extionsion missing\n");
+    log_msg(LOG_ERR, "[ski] ski extension missing");
 #endif
     return(ERR_SCM_NOSKI);
   } else if (ski_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[ski] multiple instances of ski extension\n");
+    log_msg(LOG_ERR, "[ski] multiple instances of ski extension");
 #endif
     return(ERR_SCM_DUPSKI);
   } else {
@@ -1983,7 +1985,7 @@ static int rescert_ski_chk(X509 *x)
   }
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[ski]jump to return...\n");
+  log_msg(LOG_DEBUG, "[ski]jump to return...");
 #endif
   return(ret);
 }
@@ -2017,7 +2019,7 @@ static int rescert_aki_chk(X509 *x, int ct)
 
       if (X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[aki] critical, profile violation\n");
+        log_msg(LOG_ERR, "[aki] critical, profile violation");
 #endif
         ret = ERR_SCM_CEXT;
         goto skip;
@@ -2026,7 +2028,7 @@ static int rescert_aki_chk(X509 *x, int ct)
       akid = X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
       if (!akid) {
 #ifdef DEBUG
-        fprintf(stderr, "[aki] could not load aki\n");
+        log_msg(LOG_ERR, "[aki] could not load aki");
 #endif
         return(ERR_SCM_NOAKI);
       }
@@ -2035,7 +2037,7 @@ static int rescert_aki_chk(X509 *x, int ct)
 	 have an AKI */
       if (!akid->keyid) {
 #ifdef DEBUG
-        fprintf(stderr, "[aki] key identifier sub field not present\n");
+        log_msg(LOG_ERR, "[aki] key identifier sub field not present");
 #endif
         ret = ERR_SCM_NOAKI;
         goto skip;
@@ -2043,8 +2045,8 @@ static int rescert_aki_chk(X509 *x, int ct)
 
       if (akid->issuer) {
 #ifdef DEBUG
-        fprintf(stderr,
-                "[aki_chk] authorityCertIssuer is present = violation\n");
+        log_msg(LOG_ERR,
+                "[aki_chk] authorityCertIssuer is present = violation");
 #endif
         ret = ERR_SCM_ACI;
         goto skip;
@@ -2052,8 +2054,8 @@ static int rescert_aki_chk(X509 *x, int ct)
 
       if (akid->serial) {
 #ifdef DEBUG
-        fprintf(stderr,
-                "[aki_chk] authorityCertSerialNumber is present = violation\n");
+        log_msg(LOG_ERR,
+                "[aki_chk] authorityCertSerialNumber is present = violation");
 #endif
         ret = ERR_SCM_ACSN;
         goto skip;
@@ -2069,12 +2071,12 @@ static int rescert_aki_chk(X509 *x, int ct)
 
   if (aki_flag == 0 && ct != TA_CERT) {
 #ifdef DEBUG
-    fprintf(stderr, "[aki_chk] missing AKI extension\n");
+    log_msg(LOG_ERR, "[aki_chk] missing AKI extension");
 #endif
     return(ERR_SCM_NOAKI);
   } else if (aki_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[aki_chk] duplicate AKI extensions\n");
+    log_msg(LOG_ERR, "[aki_chk] duplicate AKI extensions");
 #endif
     return(ERR_SCM_DUPAKI);
   } else {
@@ -2083,7 +2085,7 @@ static int rescert_aki_chk(X509 *x, int ct)
 
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[aki]jump to return...\n");
+  log_msg(LOG_DEBUG, "[aki]jump to return...");
 #endif
   if (akid)
     AUTHORITY_KEYID_free(akid);
@@ -2115,7 +2117,7 @@ static int rescert_key_usage_chk(X509 *x)
       kusage_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[kusage] not marked critical, violation\n");
+        log_msg(LOG_ERR, "[kusage] not marked critical, violation");
 #endif
         ret = ERR_SCM_NCEXT;
         goto skip;
@@ -2135,12 +2137,12 @@ static int rescert_key_usage_chk(X509 *x)
 
   if (kusage_flag == 0) {
 #ifdef DEBUG
-    fprintf(stderr, "[key_usage] missing Key Usage extension\n");
+    log_msg(LOG_ERR, "[key_usage] missing Key Usage extension");
 #endif
     return(ERR_SCM_NOKUSAGE);
   } else if (kusage_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[key_usage] multiple key_usage extensions\n");
+    log_msg(LOG_ERR, "[key_usage] multiple key_usage extensions");
 #endif
     return(ERR_SCM_DUPKUSAGE);
   } else {
@@ -2149,7 +2151,7 @@ static int rescert_key_usage_chk(X509 *x)
 
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[key_usage] jump to...\n");
+  log_msg(LOG_DEBUG, "[key_usage] jump to...");
 #endif
   return(ret);
 }
@@ -2190,7 +2192,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 #ifdef notdef  // MCR removed this test
 	  if (ct == TA_CERT) {
 #ifdef DEBUG
-	    fprintf(stderr, "[crldp] crldp found in self-signed cert\n");
+	    log_msg(LOG_ERR, "[crldp] crldp found in self-signed cert");
 #endif
 	    ret = ERR_SCM_CRLDPTA;
 	    goto skip;
@@ -2199,7 +2201,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  if ( X509_EXTENSION_get_critical(ex) )
 	    {
 #ifdef DEBUG
-	      fprintf(stderr, "[crldp] marked critical, violation\n");
+	      log_msg(LOG_ERR, "[crldp] marked critical, violation");
 #endif
 	      ret = ERR_SCM_CEXT;
 	      goto skip;
@@ -2214,7 +2216,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  goto skip;
 	}
 #ifdef DEBUG
-      fprintf(stderr, "[crldp] missing crldp extension\n");
+      log_msg(LOG_ERR, "[crldp] missing crldp extension");
 #endif
       return(ERR_SCM_NOCRLDP);
     }
@@ -2226,7 +2228,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
   if ( !crldp )
     {
 #ifdef DEBUG
-      fprintf(stderr, "[crldp] could not retrieve crldp extension\n");
+      log_msg(LOG_ERR, "[crldp] could not retrieve crldp extension");
 #endif
       return(ERR_SCM_NOCRLDP);
     }
@@ -2238,7 +2240,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  || dist_st->distpoint->type != 0)
 	{
 #ifdef DEBUG
-	  fprintf(stderr, "[crldp] incorrect crldp sub fields\n");
+	  log_msg(LOG_ERR, "[crldp] incorrect crldp sub fields");
 #endif
 	  ret = ERR_SCM_CRLDPSF;
 	  goto skip;
@@ -2249,7 +2251,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  if ( !gen_name )
 	    {
 #ifdef DEBUG
-	      fprintf(stderr, "[crldp] error retrieving distribution point name\n");
+	      log_msg(LOG_ERR, "[crldp] error retrieving distribution point name");
 #endif
 	      ret = ERR_SCM_CRLDPNM;
 	      goto skip;
@@ -2258,7 +2260,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  if ( gen_name->type != GEN_URI )
 	    {
 #ifdef DEBUG
-	      fprintf(stderr, "[crldp] general name of non GEN_URI type found\n");
+	      log_msg(LOG_ERR, "[crldp] general name of non GEN_URI type found");
 #endif
 	      ret = ERR_SCM_BADCRLDP;
 	      goto skip;
@@ -2274,7 +2276,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
   if ( uri_flag == 0 )
     {
 #ifdef DEBUG
-      fprintf(stderr, "[crldp] no general name of type URI\n");
+      log_msg(LOG_ERR, "[crldp] no general name of type URI");
 #endif
       ret = ERR_SCM_CRLDPNM;
       goto skip;
@@ -2290,7 +2292,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
     }
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[crldp] jump to return...\n");
+  log_msg(LOG_DEBUG, "[crldp] jump to return...");
 #endif
   if ( crldp )
     sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
@@ -2330,7 +2332,7 @@ static int rescert_aia_chk(X509 *x, int ct)
 
       if (X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[aia] marked critical, violation\n");
+        log_msg(LOG_ERR, "[aia] marked critical, violation");
 #endif
         ret = ERR_SCM_CEXT;
         goto skip;
@@ -2345,13 +2347,13 @@ static int rescert_aia_chk(X509 *x, int ct)
       goto skip;
     } else {
 #ifdef DEBUG
-      fprintf(stderr, "[aia] missing aia extension\n");
+      log_msg(LOG_ERR, "[aia] missing aia extension");
 #endif
       return(ERR_SCM_NOAIA);
     }
   } else if (info_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[aia] multiple aia extensions\n");
+    log_msg(LOG_ERR, "[aia] multiple aia extensions");
 #endif
     return(ERR_SCM_DUPAIA);
   }
@@ -2368,7 +2370,7 @@ static int rescert_aia_chk(X509 *x, int ct)
   aia = X509_get_ext_d2i(x, NID_info_access, NULL, NULL);
   if (!aia) {
 #ifdef DEBUG
-    fprintf(stderr, "[aia] could not retrieve aia extension\n");
+    log_msg(LOG_ERR, "[aia] could not retrieve aia extension");
 #endif
     return(ERR_SCM_NOAIA);
   }
@@ -2377,7 +2379,7 @@ static int rescert_aia_chk(X509 *x, int ct)
     adesc = sk_ACCESS_DESCRIPTION_value(aia, i);
     if (!adesc) {
 #ifdef DEBUG
-      fprintf(stderr, "[aia] error retrieving access description\n");
+      log_msg(LOG_ERR, "[aia] error retrieving access description");
 #endif
       ret = ERR_SCM_NOAIA;
       goto skip;
@@ -2385,7 +2387,7 @@ static int rescert_aia_chk(X509 *x, int ct)
     /* URI form of object identification in AIA */
     if (adesc->location->type != GEN_URI) {
 #ifdef DEBUG
-      fprintf(stderr, "[aia] access type of non GEN_URI found\n");
+      log_msg(LOG_ERR, "[aia] access type of non GEN_URI found");
 #endif
       ret = ERR_SCM_BADAIA;
       goto skip;
@@ -2401,7 +2403,7 @@ static int rescert_aia_chk(X509 *x, int ct)
 
   if (uri_flag == 0) {
 #ifdef DEBUG
-    fprintf(stderr, "[aia] no aia name of type URI rsync\n"); 
+    log_msg(LOG_ERR, "[aia] no aia name of type URI rsync"); 
 #endif
     ret = ERR_SCM_BADAIA;
     goto skip;
@@ -2412,7 +2414,7 @@ static int rescert_aia_chk(X509 *x, int ct)
 
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[aia] jump to return...\n");
+  log_msg(LOG_DEBUG, "[aia] jump to return...");
 #endif
   if (aia)
     sk_ACCESS_DESCRIPTION_pop_free(aia, ACCESS_DESCRIPTION_free);
@@ -2454,7 +2456,7 @@ static int rescert_sia_chk(X509 *x, int ct)
 
       if (X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[sia] marked critical, violation\n");
+        log_msg(LOG_ERR, "[sia] marked critical, violation");
 #endif
         ret = ERR_SCM_CEXT;
         goto skip;
@@ -2469,13 +2471,13 @@ static int rescert_sia_chk(X509 *x, int ct)
       goto skip;
     } else {
 #ifdef DEBUG
-      fprintf(stderr, "[sia] missing sia extension\n");
+      log_msg(LOG_ERR, "[sia] missing sia extension");
 #endif
       return(ERR_SCM_NOSIA);
     }
   } else if (sinfo_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[sia] multiple sia extensions\n");
+    log_msg(LOG_ERR, "[sia] multiple sia extensions");
 #endif
     return(ERR_SCM_DUPSIA);
   }
@@ -2495,7 +2497,7 @@ static int rescert_sia_chk(X509 *x, int ct)
   sia = X509_get_ext_d2i(x, NID_sinfo_access, NULL, NULL);
   if (!sia) {
 #ifdef DEBUG
-    fprintf(stderr, "[sia] could not retrieve sia extension\n");
+    log_msg(LOG_ERR, "[sia] could not retrieve sia extension");
 #endif
     return(ERR_SCM_NOSIA);
   }
@@ -2504,7 +2506,7 @@ static int rescert_sia_chk(X509 *x, int ct)
     adesc = sk_ACCESS_DESCRIPTION_value(sia, i);
     if (!adesc) {
 #ifdef DEBUG
-      fprintf(stderr, "[sia] error retrieving access description\n");
+      log_msg(LOG_ERR, "[sia] error retrieving access description");
 #endif
       ret = ERR_SCM_NOSIA;
       goto skip;
@@ -2512,7 +2514,7 @@ static int rescert_sia_chk(X509 *x, int ct)
     /* URI form of object identification in SIA */
     if (adesc->location->type != GEN_URI) {
 #ifdef DEBUG
-      fprintf(stderr, "[sia] access type of non GEN_URI found\n");
+      log_msg(LOG_ERR, "[sia] access type of non GEN_URI found");
 #endif
       ret = ERR_SCM_BADSIA;
       goto skip;
@@ -2541,7 +2543,7 @@ static int rescert_sia_chk(X509 *x, int ct)
 
   if (uri_flag == 0) {
 #ifdef DEBUG
-    fprintf(stderr, "[sia] no sia name of type URI rsync\n");
+    log_msg(LOG_ERR, "[sia] no sia name of type URI rsync");
 #endif
     ret = ERR_SCM_BADSIA;
     goto skip;
@@ -2552,7 +2554,7 @@ static int rescert_sia_chk(X509 *x, int ct)
 
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[sia] jump to return...\n");
+  log_msg(LOG_DEBUG, "[sia] jump to return...");
 #endif
   if (sia)
     sk_ACCESS_DESCRIPTION_pop_free(sia, ACCESS_DESCRIPTION_free);
@@ -2593,7 +2595,7 @@ static int rescert_cert_policy_chk(X509 *x)
       policy_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[policy] not marked as critical\n");
+        log_msg(LOG_ERR, "[policy] not marked as critical");
 #endif
         ret = ERR_SCM_NCEXT;
         goto skip;
@@ -2602,13 +2604,13 @@ static int rescert_cert_policy_chk(X509 *x)
   }
   if (policy_flag == 0) {
 #ifdef DEBUG
-    fprintf(stderr, "[policy] policy extionsion missing\n");
+    log_msg(LOG_ERR, "[policy] policy extension missing");
 #endif
     ret = ERR_SCM_NOPOLICY;
     goto skip;
   } else if (policy_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[policy] multiple instances of policy extension\n");
+    log_msg(LOG_ERR, "[policy] multiple instances of policy extension");
 #endif
     ret = ERR_SCM_DUPPOLICY;
     goto skip;
@@ -2619,7 +2621,7 @@ static int rescert_cert_policy_chk(X509 *x)
   ex_cpols = X509_get_ext_d2i(x, NID_certificate_policies, NULL, NULL);
   if (!ex_cpols) {
 #ifdef DEBUG
-    fprintf(stderr, "[policy] policies present but could not retrieve\n");
+    log_msg(LOG_ERR, "[policy] policies present but could not retrieve");
 #endif
     ret = ERR_SCM_NOPOLICY;
     goto skip;
@@ -2627,7 +2629,7 @@ static int rescert_cert_policy_chk(X509 *x)
 
   if (sk_POLICYINFO_num(ex_cpols) != 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[policy] incorrect number of policies\n");
+    log_msg(LOG_ERR, "[policy] incorrect number of policies");
 #endif
     ret = ERR_SCM_DUPPOLICY;
     goto skip;
@@ -2636,7 +2638,7 @@ static int rescert_cert_policy_chk(X509 *x)
   policy = sk_POLICYINFO_value(ex_cpols, 0);
   if (!policy) {
 #ifdef DEBUG
-    fprintf(stderr, "[policy] could not retrieve policyinfo\n");
+    log_msg(LOG_ERR, "[policy] could not retrieve policyinfo");
 #endif
     ret = ERR_SCM_NOPOLICY;
     goto skip;
@@ -2644,7 +2646,7 @@ static int rescert_cert_policy_chk(X509 *x)
 
   if (policy->qualifiers) {
 #ifdef DEBUG
-    fprintf(stderr, "[policy] must not contain PolicyQualifiers\n");
+    log_msg(LOG_ERR, "[policy] must not contain PolicyQualifiers");
 #endif
     ret = ERR_SCM_POLICYQ;
     goto skip;
@@ -2654,8 +2656,8 @@ static int rescert_cert_policy_chk(X509 *x)
 
   if ( (len != policy_id_len) || (strcmp(policy_id_str, oid_policy_id)) ) {
 #ifdef DEBUG
-    fprintf(stderr, "len: %d value: %s\n", len, policy_id_str);
-    fprintf(stderr, "[policy] OID Policy Identifier value incorrect\n");
+    log_msg(LOG_ERR, "len: %d value: %s\n", len, policy_id_str);
+    log_msg(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
 #endif
     ret = ERR_SCM_BADOID;
     goto skip;
@@ -2663,7 +2665,7 @@ static int rescert_cert_policy_chk(X509 *x)
 
 skip:
 #ifdef DEBUG
-  fprintf(stderr, "[policy] jump to return...\n");
+  log_msg(LOG_DEBUG, "[policy] jump to return...");
 #endif
 
   if (ex_cpols)
@@ -2696,7 +2698,7 @@ static int rescert_ip_resources_chk(X509 *x)
       ipaddr_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[IP res] not marked as critical\n");
+        log_msg(LOG_ERR, "[IP res] not marked as critical");
 #endif
         return(ERR_SCM_NCEXT);
       }
@@ -2705,13 +2707,13 @@ static int rescert_ip_resources_chk(X509 *x)
 
   if (!ipaddr_flag) {
 #ifdef DEBUG
-    fprintf(stderr, "[IP res] did not contain IP Resources ext\n");
-    fprintf(stderr, "could be ok if AS resources are present and correct\n");
+    log_msg(LOG_ERR, "[IP res] did not contain IP Resources ext");
+    log_msg(LOG_ERR, "could be ok if AS resources are present and correct");
 #endif
     return(0);
   } else if (ipaddr_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[IP res] multiple instances of IP resources extension\n");
+    log_msg(LOG_ERR, "[IP res] multiple instances of IP resources extension");
 #endif
     return(ERR_SCM_DUPIP);
   }
@@ -2743,7 +2745,7 @@ static int rescert_as_resources_chk(X509 *x)
       asnum_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
 #ifdef DEBUG
-        fprintf(stderr, "[AS res] not marked as critical\n");
+        log_msg(LOG_ERR, "[AS res] not marked as critical");
 #endif
         return(ERR_SCM_NCEXT);
       }
@@ -2752,13 +2754,13 @@ static int rescert_as_resources_chk(X509 *x)
 
   if (!asnum_flag) {
 #ifdef DEBUG
-    fprintf(stderr, "[AS res] did not contain IP Resources ext\n");
-    fprintf(stderr, "could be ok if IP resources are present and correct\n");
+    log_msg(LOG_ERR, "[AS res] did not contain IP Resources ext");
+    log_msg(LOG_ERR, "could be ok if IP resources are present and correct");
 #endif
     return(0);
   } else if (asnum_flag > 1) {
 #ifdef DEBUG
-    fprintf(stderr, "[AS res] multiple instances of AS resources extension\n");
+    log_msg(LOG_ERR, "[AS res] multiple instances of AS resources extension");
 #endif
     return(ERR_SCM_DUPAS);
   }

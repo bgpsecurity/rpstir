@@ -15,7 +15,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <errno.h>
 #include "rpwork.h"
+#include "logutils.h"
 
 char *msgs[] = {
     "Finished %s OK\n",
@@ -35,14 +37,15 @@ extern char errbuf[160];
 
 static void warn (int err, char *paramp)
   {
-  fprintf(stderr, msgs[err], paramp);
-  if (err) warnings++;
+    log_msg(LOG_WARNING, msgs[err], paramp);
+    if (err) warnings++;
   }
 
 static void fatal(int err, char *paramp)
   {
   warn(err, paramp);
   if(err) warn(8, "");
+  log_close();
   exit(0);
   }
 
@@ -99,10 +102,15 @@ int main(int argc, char **argv)
   FILE *tmpstr;
   char *f = "xproof.tmp";
   int ansr, i = 0;
+
+  if (log_init("proofreader.log", "proofreader", LOG_DEBUG, LOG_DEBUG) != 0) {
+    perror("Failed to initialize proofreader log file");
+    exit(1);
+  }
   
   if (!(tmpstr = fopen(f, "w+"))) fatal(7, f);
 
-  if ((ansr = parse_SKI_blocks(str, NULL, inbuf, sizeof(inbuf), &i)) < 0)
+  if ((ansr = parse_SKI_blocks(str, inbuf, sizeof(inbuf), &i)) < 0)
     fatal(2, errbuf);
   fseek(str, (long)0, 0);
   *inbuf = 0;
@@ -152,6 +160,7 @@ int main(int argc, char **argv)
   while(*inbuf);
   if (warnings) fatal(8, "");
   fatal(0, argv[1]);
+  log_close();
   return 0;
   }
     

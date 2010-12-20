@@ -85,25 +85,28 @@ PROGRAMS = $(bin_PROGRAMS)
 am_doUpdate_OBJECTS = doUpdate.$(OBJEXT)
 doUpdate_OBJECTS = $(am_doUpdate_OBJECTS)
 doUpdate_LDADD = $(LDADD)
-doUpdate_DEPENDENCIES =
+doUpdate_DEPENDENCIES = libpdu.a ../proto/librpki.a \
+	../utils/libutils.a
 doUpdate_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(doUpdate_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_sampleClient_OBJECTS = sampleClient.$(OBJEXT)
 sampleClient_OBJECTS = $(am_sampleClient_OBJECTS)
 sampleClient_LDADD = $(LDADD)
-sampleClient_DEPENDENCIES =
+sampleClient_DEPENDENCIES = libpdu.a ../proto/librpki.a \
+	../utils/libutils.a
 sampleClient_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(sampleClient_LDFLAGS) $(LDFLAGS) -o $@
 am_server_OBJECTS = server.$(OBJEXT)
 server_OBJECTS = $(am_server_OBJECTS)
 server_LDADD = $(LDADD)
-server_DEPENDENCIES =
+server_DEPENDENCIES = libpdu.a ../proto/librpki.a ../utils/libutils.a
 server_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(server_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_testClient_OBJECTS = testClient.$(OBJEXT)
 testClient_OBJECTS = $(am_testClient_OBJECTS)
 testClient_LDADD = $(LDADD)
-testClient_DEPENDENCIES =
+testClient_DEPENDENCIES = libpdu.a ../proto/librpki.a \
+	../utils/libutils.a
 testClient_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(testClient_LDFLAGS) \
 	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -224,7 +227,7 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = -g -I../cg/asn -I../proto -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib \
 	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
 
-LDADD = -L. -lpdu -L../proto -lrpki
+LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
 noinst_LIBRARIES = libpdu.a
 testClient_SOURCES = testClient.c
 testClient_LDFLAGS = $(LIBS)

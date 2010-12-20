@@ -30,7 +30,7 @@
 # 
 #  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
 # 
-#  Contributor(s):  Brenton Kohler
+#  Contributor(s):  Brenton Kohler, Andrew Chi
 # 
 # ***** END LICENSE BLOCK *****
 
@@ -75,57 +75,50 @@ am__v_at_ = $(am__v_at_$(AM_DEFAULT_VERBOSITY))
 am__v_at_0 = @
 librpki_a_AR = $(AR) $(ARFLAGS)
 librpki_a_LIBADD =
-am__objects_1 = initscm.$(OBJEXT) myssl.$(OBJEXT) sqhl.$(OBJEXT) \
-	sqcon.$(OBJEXT) diru.$(OBJEXT) err.$(OBJEXT) \
+am__objects_1 =
+am__objects_2 = $(am__objects_1) initscm.$(OBJEXT) myssl.$(OBJEXT) \
+	sqhl.$(OBJEXT) sqcon.$(OBJEXT) diru.$(OBJEXT) err.$(OBJEXT) \
 	querySupport.$(OBJEXT) rpwork.$(OBJEXT) conversion.$(OBJEXT) \
 	rpcommon.$(OBJEXT)
-am_librpki_a_OBJECTS = $(am__objects_1)
+am_librpki_a_OBJECTS = $(am__objects_2)
 librpki_a_OBJECTS = $(am_librpki_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_chaser_OBJECTS = chaser.$(OBJEXT) $(am__objects_1)
 chaser_OBJECTS = $(am_chaser_OBJECTS)
 chaser_LDADD = $(LDADD)
-am__DEPENDENCIES_1 =
-chaser_DEPENDENCIES = $(am__DEPENDENCIES_1)
-chaser_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(chaser_LDFLAGS) \
-	$(LDFLAGS) -o $@
+chaser_DEPENDENCIES = librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a ../utils/libutils.a
 am_garbage_OBJECTS = garbage.$(OBJEXT) $(am__objects_1)
 garbage_OBJECTS = $(am_garbage_OBJECTS)
 garbage_LDADD = $(LDADD)
-garbage_DEPENDENCIES = $(am__DEPENDENCIES_1)
-garbage_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(garbage_LDFLAGS) \
-	$(LDFLAGS) -o $@
+garbage_DEPENDENCIES = librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 am_makeROA_OBJECTS = makeROA.$(OBJEXT) $(am__objects_1)
 makeROA_OBJECTS = $(am_makeROA_OBJECTS)
 makeROA_LDADD = $(LDADD)
-makeROA_DEPENDENCIES = $(am__DEPENDENCIES_1)
-makeROA_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(makeROA_LDFLAGS) \
-	$(LDFLAGS) -o $@
+makeROA_DEPENDENCIES = librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 am_proofreader_OBJECTS = proofreader.$(OBJEXT) $(am__objects_1)
 proofreader_OBJECTS = $(am_proofreader_OBJECTS)
 proofreader_LDADD = $(LDADD)
-proofreader_DEPENDENCIES = $(am__DEPENDENCIES_1)
-proofreader_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(proofreader_LDFLAGS) $(LDFLAGS) -o $@
+proofreader_DEPENDENCIES = librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 am_query_OBJECTS = query.$(OBJEXT) $(am__objects_1)
 query_OBJECTS = $(am_query_OBJECTS)
 query_LDADD = $(LDADD)
-query_DEPENDENCIES = $(am__DEPENDENCIES_1)
-query_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(query_LDFLAGS) \
-	$(LDFLAGS) -o $@
+query_DEPENDENCIES = librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a ../utils/libutils.a
 am_rcli_OBJECTS = rcli.$(OBJEXT) $(am__objects_1)
 rcli_OBJECTS = $(am_rcli_OBJECTS)
 rcli_LDADD = $(LDADD)
-rcli_DEPENDENCIES = $(am__DEPENDENCIES_1)
-rcli_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(rcli_LDFLAGS) $(LDFLAGS) \
-	-o $@
+rcli_DEPENDENCIES = librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a ../utils/libutils.a
 am_testrpwork_OBJECTS = testrpwork.$(OBJEXT) $(am__objects_1)
 testrpwork_OBJECTS = $(am_testrpwork_OBJECTS)
 testrpwork_LDADD = $(LDADD)
-testrpwork_DEPENDENCIES = $(am__DEPENDENCIES_1)
-testrpwork_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(testrpwork_LDFLAGS) \
-	$(LDFLAGS) -o $@
+testrpwork_DEPENDENCIES = librpki.a ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -241,34 +234,32 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -g -Wall -I../roa-lib -I../roa-utils -I../cg/asn -I../cg/casn -I. \
-	-Wshadow -Wmissing-prototypes -Wmissing-declarations \
+AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
-AM_LDFLAGS = $(LIBS)
-lib_rpki_files = scm.h scmmain.h diru.h err.h scmf.h sqhl.h myssl.h \
+AM_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
+AM_CPPFLAGS = $(DEPS_CFLAGS) -I../roa-lib -I../roa-utils -I../cg/asn \
+	-I../cg/casn -I../utils -I. 
+
+LDADD = librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
+	../utils/libutils.a
+
+lib_rpki_headers = scm.h scmmain.h diru.h err.h scmf.h sqhl.h myssl.h rpwork.h \
+	querySupport.h conversion.h ../utils/logutils.h
+
+lib_rpki_files = $(lib_rpki_headers) \
 		initscm.c myssl.c sqhl.c sqcon.c diru.c err.c \
-		querySupport.c rpwork.c conversion.c rpcommon.c rpwork.h
+		querySupport.c rpwork.c conversion.c rpcommon.c
 
 noinst_LIBRARIES = librpki.a
-local_libs = -L../cg/asn -lasn -L../cg/casn -lcasn -L. -lrpki -L../roa-lib -lroa
-LDADD = $(local_libs)
-AM_CPPFLAGS = $(DEPS_CFLAGS)
-librpki_a_SOURCES = ${lib_rpki_files} 
-rcli_SOURCES = rcli.c $(lib_rpki_files)
-rcli_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-query_SOURCES = query.c $(lib_rpki_files)
-query_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-chaser_SOURCES = chaser.c $(lib_rpki_files)
-chaser_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-garbage_SOURCES = garbage.c $(lib_rpki_files)
-garbage_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-makeROA_SOURCES = makeROA.c $(lib_rpki_files)
-makeROA_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-proofreader_SOURCES = proofreader.c $(lib_rpki_files)
-proofreader_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
-testrpwork_SOURCES = testrpwork.c $(lib_rpki_files)
-testrpwork_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
+librpki_a_SOURCES = $(lib_rpki_files)
+rcli_SOURCES = rcli.c $(lib_rpki_headers)
+query_SOURCES = query.c $(lib_rpki_headers)
+chaser_SOURCES = chaser.c $(lib_rpki_headers)
+garbage_SOURCES = garbage.c $(lib_rpki_headers)
+makeROA_SOURCES = makeROA.c $(lib_rpki_headers)
+proofreader_SOURCES = proofreader.c $(lib_rpki_headers)
+testrpwork_SOURCES = testrpwork.c $(lib_rpki_headers)
 all: all-am
 
 .SUFFIXES:
@@ -349,25 +340,25 @@ clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 chaser$(EXEEXT): $(chaser_OBJECTS) $(chaser_DEPENDENCIES) 
 	@rm -f chaser$(EXEEXT)
-	$(AM_V_CCLD)$(chaser_LINK) $(chaser_OBJECTS) $(chaser_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(chaser_OBJECTS) $(chaser_LDADD) $(LIBS)
 garbage$(EXEEXT): $(garbage_OBJECTS) $(garbage_DEPENDENCIES) 
 	@rm -f garbage$(EXEEXT)
-	$(AM_V_CCLD)$(garbage_LINK) $(garbage_OBJECTS) $(garbage_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(garbage_OBJECTS) $(garbage_LDADD) $(LIBS)
 makeROA$(EXEEXT): $(makeROA_OBJECTS) $(makeROA_DEPENDENCIES) 
 	@rm -f makeROA$(EXEEXT)
-	$(AM_V_CCLD)$(makeROA_LINK) $(makeROA_OBJECTS) $(makeROA_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(makeROA_OBJECTS) $(makeROA_LDADD) $(LIBS)
 proofreader$(EXEEXT): $(proofreader_OBJECTS) $(proofreader_DEPENDENCIES) 
 	@rm -f proofreader$(EXEEXT)
-	$(AM_V_CCLD)$(proofreader_LINK) $(proofreader_OBJECTS) $(proofreader_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(proofreader_OBJECTS) $(proofreader_LDADD) $(LIBS)
 query$(EXEEXT): $(query_OBJECTS) $(query_DEPENDENCIES) 
 	@rm -f query$(EXEEXT)
-	$(AM_V_CCLD)$(query_LINK) $(query_OBJECTS) $(query_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(query_OBJECTS) $(query_LDADD) $(LIBS)
 rcli$(EXEEXT): $(rcli_OBJECTS) $(rcli_DEPENDENCIES) 
 	@rm -f rcli$(EXEEXT)
-	$(AM_V_CCLD)$(rcli_LINK) $(rcli_OBJECTS) $(rcli_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(rcli_OBJECTS) $(rcli_LDADD) $(LIBS)
 testrpwork$(EXEEXT): $(testrpwork_OBJECTS) $(testrpwork_DEPENDENCIES) 
 	@rm -f testrpwork$(EXEEXT)
-	$(AM_V_CCLD)$(testrpwork_LINK) $(testrpwork_OBJECTS) $(testrpwork_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(testrpwork_OBJECTS) $(testrpwork_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

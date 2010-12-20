@@ -384,8 +384,7 @@ int getSKIBlock(FILE *SKI, char *skibuf, int siz)
   return ansr;
   }
 
-int parse_SKI_blocks(FILE *SKI, FILE *logfile, char *skibuf, int siz, 
-  int *locflagsp)
+int parse_SKI_blocks(FILE *SKI, char *skibuf, int siz, int *locflagsp)
   {
 /*
 Procedure:

@@ -8,6 +8,7 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
+#include "logutils.h"
 
 /*
   $Id$
@@ -190,7 +191,7 @@ static int handleAIAResults (scmcon *conp, scmsrcha *s, int numLine)
   if (parentCount == 0) {
     addURIIfUnique ((char *) s->vec[1].valptr);
     if (verbose)
-      printf("AIA: %s\n", (char *) s->vec[1].valptr);
+      log_msg(LOG_DEBUG, "AIA: %s", (char *) s->vec[1].valptr);
   }
   return 0;
 }
@@ -210,8 +211,7 @@ static int handleCRLDPResults (scmcon *conp, scmsrcha *s, int numLine)
   while ( oneres != NULL && oneres[0] != 0 )
     {
       addURIIfUnique(oneres);
-      if (verbose)
-	printf("CRLDP: %s\n", oneres);
+      log_msg(LOG_DEBUG, "CRLDP: %s", oneres);
       oneres = strtok(NULL, ";");
     }
   return 0;
@@ -229,8 +229,7 @@ static int handleSIAResults (scmcon *conp, scmsrcha *s, int numLine)
   while( oneres != NULL && oneres[0] != 0)
     {
       addURIIfUnique (oneres);
-      if (verbose)
-	printf("SIA: %s\n", oneres);
+      log_msg(LOG_DEBUG, "SIA: %s", oneres);
       oneres = strtok(NULL, ";");
     }
   return 0;
@@ -296,7 +295,6 @@ int main(int argc, char **argv)
     tcount = atoi (getenv ("RPKI_TCOUNT"));
   else
     tcount = 8;
-  startSyslog ("chaser");
   uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
 
@@ -327,6 +325,11 @@ int main(int argc, char **argv)
     }
   }
 
+  if (log_init("chaser.log", "chaser", LOG_DEBUG, LOG_DEBUG) != 0) {
+    perror("Could not initialize chaser log file");
+    exit(1);
+  }
+
   // read in from rsync config file
   fp = fopen (origFile, "r");
   checkErr (fp == NULL, "Unable to open rsync config file: %s\n", origFile);
@@ -355,8 +358,7 @@ int main(int argc, char **argv)
   for (i = 0; i < numDirs; i++) {
     snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
     addURIIfUnique (str);
-    if (verbose)
-      printf("PRECONFIGURED: %s\n", str);
+    log_msg(LOG_DEBUG, "PRECONFIGURED URI: %s", str);
   }
 
   // set up query
@@ -422,9 +424,8 @@ int main(int argc, char **argv)
       status = searchscm (connect, table, &srch, NULL, handleSIAResults,
 			  SCM_SRCH_DOVALUE_ALWAYS, NULL);
       if (status != ERR_SCM_NOERR) {
-	fprintf(stderr, "Error chasing SIAs: %s (%d)\n",
-		err2string(status),
-		status);
+	log_msg(LOG_ERR, "Error chasing SIAs: %s (%d)",
+		err2string(status), status);
       }
       free(srch1[0].valptr);
     }
@@ -487,7 +488,7 @@ int main(int argc, char **argv)
   fclose (configFile);
   snprintf(str, sizeof(str), "python %s/rsync_aur/rsync_cord.py -c chaser_rsync.config -t %d -p %d", rsyncDir, tcount, listPort);
   if (noExecute)
-    printf ("Would have executed: %s\n", str);
+    log_msg(LOG_NOTICE, "Would have executed: %s", str);
   else
     // NOTE: THE system CALL IS INHERENTLY DANGEROUS.
     //   CARE WAS TAKEN TO ENSURE THAT THE ARGUMENT str DOES NOT
@@ -500,6 +501,6 @@ int main(int argc, char **argv)
 	    table->tabname, currTimestamp);
   status = statementscm (connect, msg);
 
-  stopSyslog();
+  log_close();
   return 0;
 }

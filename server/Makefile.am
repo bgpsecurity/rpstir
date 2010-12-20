@@ -23,7 +23,7 @@
 AM_CFLAGS = -g -I../cg/asn -I../proto -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib \
 	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
 
-LDADD = -L. -lpdu -L../proto -lrpki
+LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
 
 bin_PROGRAMS = testClient server doUpdate sampleClient
 noinst_LIBRARIES = libpdu.a
@@ -37,5 +37,5 @@ doUpdate_LDFLAGS = $(LIBS)
 sampleClient_SOURCES = sampleClient.c
 sampleClient_LDFLAGS = $(LIBS)
 
-libpdu_a_SOURCES = pdu.h pdu.c sshComms.h sshComms.c socket.h socket.c rtrUtils.h rtrUtils.c \
-	 coreClient.h coreClient.c
+libpdu_a_SOURCES = pdu.h pdu.c sshComms.h sshComms.c socket.h socket.c \
+	rtrUtils.h rtrUtils.c coreClient.h coreClient.c
