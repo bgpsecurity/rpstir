@@ -45,7 +45,7 @@ cd $THIS_SCRIPT_DIR
 
 # refresh test certs
   cd testcases4_LTA
-  for f in C?*.raw MYTA.raw
+  for f in C?*.raw 
   do
     filename=`basename $f .raw`
     $RPKI_ROOT/cg/tools/rr <$f > ${filename}.cer
