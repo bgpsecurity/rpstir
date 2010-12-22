@@ -1181,8 +1181,10 @@ int main(int argc, char **argv)
 		log_msg(LOG_ERR, "Could not create socket");
 	      else
 		{
+		  log_flush();
 		  sta = sockline(scmp, realconp, s);
 		  log_msg(LOG_INFO, "Socket connection closed");
+		  log_flush();
 		  (void)close(s);
 		}
 	    }
