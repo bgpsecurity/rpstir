@@ -276,9 +276,11 @@ static int handleAIAResults (scmcon *conp, scmsrcha *s, int numLine)
   searchscm(conp, theCertTable, &parentSrch, NULL, foundIt,
 	    SCM_SRCH_DOVALUE_ALWAYS, NULL);
   if (parentCount == 0) {
-    addURIIfUnique ((char *) s->vec[1].valptr);
-    if (verbose)
-      log_msg(LOG_DEBUG, "AIA: %s", (char *) s->vec[1].valptr);
+    char *str = (char *) s->vec[1].valptr;
+    if (addURIIfUnique (str) >= 0)
+      log_msg(LOG_DEBUG, "AIA: %s", str);
+    else
+      log_msg(LOG_ERR, "Discarding malformed AIA: %s", str);
   }
   return 0;
 }
@@ -297,8 +299,10 @@ static int handleCRLDPResults (scmcon *conp, scmsrcha *s, int numLine)
   oneres = strtok(res, ";");
   while ( oneres != NULL && oneres[0] != 0 )
     {
-      addURIIfUnique(oneres);
-      log_msg(LOG_DEBUG, "CRLDP: %s", oneres);
+      if (addURIIfUnique(oneres) >= 0)
+	log_msg(LOG_DEBUG, "CRLDP: %s", oneres);
+      else
+	log_msg(LOG_ERR, "Discarding malformed CRLDP: %s", oneres);
       oneres = strtok(NULL, ";");
     }
   return 0;
@@ -315,8 +319,10 @@ static int handleSIAResults (scmcon *conp, scmsrcha *s, int numLine)
   oneres = strtok(res, ";");
   while( oneres != NULL && oneres[0] != 0)
     {
-      addURIIfUnique (oneres);
-      log_msg(LOG_DEBUG, "SIA: %s", oneres);
+      if (addURIIfUnique (oneres) >= 0)
+	log_msg(LOG_DEBUG, "SIA: %s", oneres);
+      else
+	log_msg(LOG_ERR, "Discarding malformed SIA: %s", oneres);
       oneres = strtok(NULL, ";");
     }
   return 0;
@@ -447,7 +453,6 @@ int main(int argc, char **argv)
   // initialize database
   scmp = initscm();
   checkErr (scmp == NULL, "Cannot initialize database schema\n");
-  log_msg(LOG_DEBUG, "About to connectscm w/ msg = %s", msg);
   connect = connectscm (scmp->dsn, msg, sizeof(msg));
   checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
 
@@ -487,8 +492,10 @@ int main(int argc, char **argv)
   // that are duplicates or subdirectories are immediately discarded
   for (i = 0; i < numDirs; i++) {
     snprintf (str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
-    addURIIfUnique (str);
-    log_msg(LOG_DEBUG, "PRECONFIGURED URI: %s", str);
+    if (addURIIfUnique (str) >= 0)
+      log_msg(LOG_DEBUG, "Preconfigured URI: %s", str);
+    else
+      log_msg(LOG_ERR, "Discarding malformed preconfigured URI: %s", str);
   }
 
   log_msg(LOG_INFO, "Searching database for URIs...");
