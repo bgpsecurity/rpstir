@@ -34,16 +34,19 @@
 /****************
  * This is the chaser client, which tracks down all the URIs of all the
  * authorities that have signed certs.  It can then inform
- * rsynch of the need to synchronize with any repositories that are
+ * rsync of the need to synchronize with any repositories that are
  * required but not yet retrieved.
  **************/
 
-static char **uris;
+static char **uris = NULL;
+static char **previous_uris = NULL;
 static int maxURIs = 4096;
 static int numURIs = 0;
+static int numPrevURIs = 0;
 static char *prevTimestamp;
 static char *currTimestamp;
 static int verbose = 0;
+static int maxChaseDepth = 10;
 
 /*
  * return true if str2 is a subdirectory of or file in directory str1
@@ -83,6 +86,7 @@ static int inURIList (char *uri, int *position)
 }
 
 /* remove a uri from the list if it's there */
+/*
 static void removeURI (char *uri)
 {
   int pos;
@@ -90,6 +94,7 @@ static void removeURI (char *uri)
   memmove (&uris[pos], &uris[pos+1], (numURIs - pos - 1) * sizeof (char *));
   numURIs--;
 }
+*/
 
 /* update list of uris by adding the next one */
 static int addURIIfUnique (char *uri)
@@ -138,6 +143,88 @@ static int addURIIfUnique (char *uri)
   numURIs += 1 + low - high;
   return low;
 }
+
+static void freeURIList(char **uri_list, int size)
+{
+  int i;
+  
+  if (!uri_list)
+    return;
+
+  for (i = 0; i < size; i++) {
+    free(uri_list[i]);
+    uri_list[i] = NULL;
+  }
+
+  free(uri_list);
+}
+
+static char **copyURIList(char **uri_list, int size)
+{
+  char **new_uri_list = NULL;
+  int num_copied = 0;
+  int i;
+  
+  if (!uri_list || size <= 0)
+    return NULL;
+
+  /* Allocate enough space for pointer array. */
+  new_uri_list = (char**)calloc(sizeof(char*), size);
+  if (!new_uri_list)
+    return NULL;
+
+  /* Copy each uri in the list. */
+  for (i = 0; i < size; i++) {
+    new_uri_list[i] = strdup(uri_list[i]);
+    if (!new_uri_list[i]) {
+      freeURIList(new_uri_list, num_copied);
+      return NULL;
+    } else {
+      num_copied++;
+    }
+  }
+
+  return new_uri_list;
+}
+
+static int cmpURILists(char **uris1, int size1, char **uris2, int size2)
+{
+  int i;
+  
+  /* Deal with NULL string cases */
+  if (!uris1 && !uris2)
+    return 0;
+  else if (!uris1 && uris2)
+    return -1;
+  else if (uris1 && !uris2)
+    return 1;
+
+  /* Deal with empty string cases */
+  if (size1 <= 0 && size2 <= 0)
+    return 0;
+  else if (size1 <= 0 && size2 > 0)
+    return -1;
+  else if (size1 > 0 && size2 <= 0)
+    return 1;
+
+  /* Compare arrays of strings lexicographically. */
+  for (i = 0; i < size1 && i < size2; i++) {
+    int result = 0;
+    result = strcmp(uris1[i], uris2[i]);
+    if (result != 0)
+      return result;
+  }
+
+  /* Array with leftover strings wins. */
+  if (size1 < size2)
+    return -1;
+  else if (size1 > size2)
+    return 1;
+
+  /* Equal! */
+  return 0;
+}
+
 
 /*****
 static int isDirectory (const char *uri)
@@ -250,9 +337,9 @@ static int printUsage()
   fprintf(stderr, "  -p portno   connect to port number (default=RPKI_PORT)\n");
   fprintf(stderr, "  -f filename rsync configuration file to model on\n");
   fprintf(stderr, "  -d dirname  rsync executable directory (default=RPKI_ROOT)\n");
+  fprintf(stderr, "  -c maxdepth limit on chaser/rsync/rcli iterations (default=10)\n");
   fprintf(stderr, "  -n          don't execute rsync, just print what would have done\n");
   fprintf(stderr, "  -t          run by grabbing only Trust Anchor URIs from the database\n");
-  fprintf(stderr, "  -s          chase all SIA values\n");
   fprintf(stderr, "  -v          verbose\n");
   fprintf(stderr, "  -h          this help listing\n");
   return 1;
@@ -274,6 +361,8 @@ int main(int argc, char **argv)
   int      noExecute = 0;
   int      taOnly = 0;
   int      chaseSIA = 1;
+  int      chaseDepth = 0;
+  int      uriListChanged = 0;
   char     dirs[50][120], str[180], *str2;
   char     *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
   char     rsyncDir[200];
@@ -295,7 +384,6 @@ int main(int argc, char **argv)
     tcount = atoi (getenv ("RPKI_TCOUNT"));
   else
     tcount = 8;
-  uris = calloc (sizeof (char *), maxURIs);
   (void) setbuf (stdout, NULL);
 
   // parse the command-line flags
@@ -309,6 +397,9 @@ int main(int argc, char **argv)
 	break;
       case 'd':   /* rsync executable directory */
 	snprintf (rsyncDir, sizeof(rsyncDir), optarg);
+	break;
+      case 'c':	  /* max chase depth */
+	maxChaseDepth = atoi (optarg);
 	break;
       case 'n':   /* no execution */
 	noExecute = 1;
@@ -349,9 +440,48 @@ int main(int argc, char **argv)
       strncat (rsyncStr, msg, sizeof(rsyncStr) - strlen(rsyncStr));
     }
   }
+  fclose(fp);
   strncat (rsyncStr, "DOLOAD=yes\n", 11);
   checkErr (dirs[0][0] == 0, "DIRS variable not specified in config file\n");
 
+  // initialize database
+  scmp = initscm();
+  checkErr (scmp == NULL, "Cannot initialize database schema\n");
+  log_msg(LOG_DEBUG, "About to connectscm w/ msg = %s", msg);
+  connect = connectscm (scmp->dsn, msg, sizeof(msg));
+  checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
+
+  // Run chaser/rsync/rcli iterations until completion or maxdepth achieved.
+  do {
+
+  // Save previous URI list.
+  if (previous_uris) {
+    freeURIList(previous_uris, numPrevURIs);
+    previous_uris = NULL;
+    numPrevURIs = 0;
+  }
+  if (uris) {
+    previous_uris = copyURIList(uris, numURIs);
+    if (previous_uris) {
+      numPrevURIs = numURIs;
+    } else {
+      log_msg(LOG_ERR, "Could not make copy of URI list");
+      exit(1);
+    }
+  }
+
+  // Prepare a blank new URI list.
+  if (uris) {
+    freeURIList(uris, numURIs);
+    uris = NULL;
+    numURIs = 0;
+  }
+  uris = calloc (sizeof (char *), maxURIs);
+  if (!uris) {
+    log_msg(LOG_ERR, "Could not allocate memory for URI list.");
+    exit(1);
+  }
+  
   // load from current repositories to initialize uris
   // it is good to put these in right away, so that any future addresses
   // that are duplicates or subdirectories are immediately discarded
@@ -361,11 +491,10 @@ int main(int argc, char **argv)
     log_msg(LOG_DEBUG, "PRECONFIGURED URI: %s", str);
   }
 
+  log_msg(LOG_INFO, "Searching database for URIs...");
+  log_flush();
+
   // set up query
-  scmp = initscm();
-  checkErr (scmp == NULL, "Cannot initialize database schema\n");
-  connect = connectscm (scmp->dsn, msg, sizeof(msg));
-  checkErr (connect == NULL, "Cannot connect to database: %s\n", msg);
   srch.vec = srch1;
   srch.sname = NULL;
   srch.ntot = 2;
@@ -481,25 +610,54 @@ int main(int argc, char **argv)
       strncat (dirStr, " ", sizeof(dirStr) - strlen(dirStr));
     strncat (dirStr, dir2, sizeof(dirStr) - strlen(dirStr));
   }
+
+  // See if the URI list changed since last time.
+  uriListChanged = cmpURILists(uris, numURIs, previous_uris, numPrevURIs);
+  if (!uriListChanged)
+    break;
+
+  // Write URI list to chaser configuration file and run rsync.
+  log_msg(LOG_INFO, "Invoking parallelized rsync on %d top-level URIs "
+	  "(maxthreads = %d)",
+	  numURIs, tcount);
+  log_flush();
   configFile = fopen ("chaser_rsync.config", "w");
   checkErr (configFile == NULL, "Unable to open file for write\n");
   snprintf (rsyncStr2, sizeof(rsyncStr2), "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
   fputs (rsyncStr2, configFile);
   fclose (configFile);
   snprintf(str, sizeof(str), "python %s/rsync_aur/rsync_cord.py -c chaser_rsync.config -t %d -p %d", rsyncDir, tcount, listPort);
-  if (noExecute)
+  if (noExecute) {
     log_msg(LOG_NOTICE, "Would have executed: %s", str);
-  else
+    log_close();
+    return 0;
+  } else {
     // NOTE: THE system CALL IS INHERENTLY DANGEROUS.
     //   CARE WAS TAKEN TO ENSURE THAT THE ARGUMENT str DOES NOT
     //   CONTAIN FUNNY SHELL CHARACTERS
     system (str);
+  }
 
   // write timestamp into database
   table = findtablescm (scmp, "metadata");
   snprintf (msg, sizeof(msg), "update %s set ch_last=\"%s\";",
 	    table->tabname, currTimestamp);
   status = statementscm (connect, msg);
+
+  // Increment chase depth
+  chaseDepth++;
+  log_msg(LOG_INFO, "Chaser iteration %d complete.", chaseDepth);
+  log_flush();
+  } while (chaseDepth < maxChaseDepth);
+
+  // Let user know whether why we stopped.
+  if (!uriListChanged) {
+    log_msg(LOG_INFO, "URI list has stabilized after %d chaser iterations.",
+	    chaseDepth);
+  } else if (chaseDepth == maxChaseDepth) {
+    log_msg(LOG_WARNING, "Warning: maximum chase depth (%d) has been reached, "
+	    "but URI list is still changing.  Aborting.", maxChaseDepth);
+  }
 
   log_close();
   return 0;

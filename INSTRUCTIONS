@@ -1,21 +1,22 @@
 Resource PKI Relying Party Database
 Installation and Usage Manual
-Version 2.0
+Version 4.0
+
+================================================================================
 
 1. Organization of this document
 
-This document describes how to install and use the Resource PKI
-relying party database.  Please refer to the design document,
-rpkidesign.doc, for a detailed description of the various software
-components in this release.
+This document describes how to install and use the BBN Resource PKI
+validator.  Please refer to the design document, rpkidesign.doc, for a
+detailed description of the various software components in this
+release.
 
 Section 2 of this document describes how to install that software,
 including all its dependencies.  Section 3 provides a quick-start
-guide on how to get your system running.  Section 4 describes the other
-documents in the deliverable package. Finally, Appendix A provides
+guide on how to get your system running.  Finally, Appendix A provides
 troubleshooting tips for some common problems.
 
-
+================================================================================
 
 2. Installation
 
@@ -124,8 +125,6 @@ by issuing the command pkg_add -r cryptlib, or (2) using the ports
 system by issuing the command make search name="cryptlib" from the
 /usr/ports directory.
 
-**NOTE** If you are using unzip, specify the -a argument.
-
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
 the self-test code (make testlib; ./testlib) fails on at least FreeBSD
@@ -135,8 +134,11 @@ and Linux. We do not currently think that this is cause for concern.
 
 Your rsync should be at least version 2.6.9, as earlier versions do
 not necessarily support the necessary flags.  Check your version with
-rsync --version, and install from rsync.samba.org.
-
+rsync --version, and install from rsync.samba.org.  Note that in
+version 3.0b of the BBN relying party software, there is a known
+incompatibility with the newest versions of rsync (3.x) due to a
+change in the rsync log format.  This problem will not exist in future
+releases.
 
 2.2 RPKI Software
 
@@ -161,20 +163,27 @@ and then un-tar the resulting tarball using the command:
 This will create a directory named RPKI which will contain various
 subdirectories.
 
-2.2.1 Compile the source code and Build the executables
+2.2.1 Customize the Makefiles
 
-./configure
-make
+In the top-level source directory there are some sample makefiles:
+Makefile.linux for recent Linux distros, Makefile.linux24 for older
+distros, and Makefile.bsd for NetBSD/FreeBSD.  Choose one depending on
+your target environment.
 
-If you find any make errors, refer to the README-AUTOCONF file. But, in
-general, they can probably be solved by adding one of the following 
-arguments to the ./configure command:
+You will need edit the Makefile to link with the correct libraries.
+Modify the variables at the beginning of the Makefile (LIBCL,
+LIBCRYPTO, LIBODBC, etc.) so that each contains the path to its
+respective library.  Note that the LIBODBC variable may contain either
+-lmyodbc3 or -lmyodbc5, depending on the version you installed in
+section 2.1.2.  In addition, you must edit proto/scmmain.h to match
+the DSN name with the corresponding section of odbc.ini.
 
---with-ssl-lib
---with-ssl-include
---with-cryptlib-lib
---with-cryptlib-include
---with-odbc-lib
+2.2.2 Build the Executables
+
+Once the Makefile and header have been updated, build the executables
+by issuing the command "make -f Makefile.<platform>" in the top-level
+source directory.  On some systems, the default is not GNU Make, so
+substitute the appropriate command (e.g. "gmake" on FreeBSD).
 
 
 2.3 RPKI User Account
@@ -195,11 +204,7 @@ required: RPKI_PORT - port number on which the loader and feeder communicate
 required: RPKI_DB - name of the MySQL database used to hold RPKI data
 required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
-optional: RPKI_LISTPORT - another random port to run the rsync_listener application on
-optional: RPKI_TCOUNT - the maximum count of allowable threads
 optional: RPKI_ROOTPASSWORD - the MySQL root password
-optional: RTR_RETENTION_HOURS -
-optional: RTR_CHECK_INTERVAL -
 
 Set these environment variables to match your installation.  You may
 choose any unused port for RPKI_PORT.
@@ -214,8 +219,6 @@ RPKI_PORT = 7344
 RPKI_ROOT = ${HOME}/rpki/trunk
 RPKI_DBUSER = mysql
 RPKI_DBPASS =
-RPKI_TCOUNT = 8
-RPKI_LISTPORT = 3450
 
 If you ever need to directly run the binaries instead of running the
 scripts, there will be no environment checking, so make sure to set
@@ -228,10 +231,9 @@ If you plan to use the RTR Server, you will need to configure it as an
 SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
 line:
   Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
-
-<< FIXME: insert instructions on ssh-keygen/authorized_keys once those
-parts have been well-tested. >>
-
+  
+NOTE: the RTR code is NOT supported in this archival version 3.0b of
+the BBN relying party software, but will be released.
 
 2.5 Self Test
 
@@ -255,145 +257,301 @@ database.
 2.6.1 Cron Job Configuration
 
 Except for the query client, all RPKI processes should run as the RPKI
-user at regular intervals using cron jobs.
+user at regular intervals using cron jobs.  NOTE: While cron job
+configuration will be used for final deployment, this release (3.0b)
+does not include suggested crontab entries.  It is assumed that for
+trial purposes, manual execution gives the user/debugger maximum
+control.
 
-<< FIXME: fill in correct intervals >>
 --------------------------------------------------------------------
 Component (script)                   Frequency
 --------------------------------------------------------------------
+Rsync Wrapper (pull_and_feed.sh)     Once per day
 RCLI Database Client (loader.sh)     Continuously as daemon
 Garbage Collector (garbage.sh)       Once per day
-Chaser Client (rsync_process.sh)     Once per day
+Chaser Client (chaser.sh)            Once per day
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server                           ?????
+RTR Server                           Continuously as SSH subsystem
 Query Client (query.sh)              On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
-<< FIXME: give tested crontab example >>
+
 
 2.6.2 Adjust Permissions
 
 Depending on the setup, you may also want to allow arbitrary users to
 run a query against the RPKI database, or to launch an rsync update
-cycle.
+cycle.  This step is unnecessary if you are simply trying this
+software out.
 
-<< FIXME: fill in this section once we determine whether setuid will
-be necessary for accessing the local copy of the repository. >>
-
-
+================================================================================
 
 3. Running the RPKI Software
 
-The following are the steps required to run the RPKI software.  Note that
-steps 1-4 only need to be executed once at the beginning if everything goes
-completely as planned.  Steps 5-8 have to be run periodically even under
-ideal circumstances.  It is recommended that the user create a script
-to run these four steps and have a cron job that executes this script
-periodically.  All scripts for steps 3-8 are in the run_scripts directory.
-
-3.3 initDB.sh: This script deletes the database, if any, with the name
-    RPKI_DB and sets up a new database with all the right tables.
-    Be prepared to enter the root MySQL password twice.
-
-3.4 loader.sh: This starts the process that receives data from the feeder
-    and loads it into the database.  Under ideal circumstances, this will
-    continue to run forever, waiting for inputs from the feeder.
-
-3.5 rsync_process.sh: rsync_process.sh pulls URI from a config file 
-    and from what is in the database, builds a new config file, and starts
-    the rsync_cord.py. It does this by first utilizing the chaser. 
-    The chaser then provides a new config file to rsync_cord.py which is 
-    a script that reads the set of repositories and then runs rsync to 
-    update the local caches. It then loads the updated information into 
-    the database by feeding them to the listener which feeds information 
-    to the loader. rsync_cord.sh takes a single argument which is the 
-    name of a configuration file. A sample configuration file called 
-    rsync_mock.config is included. The configuration file has a list of 
-    the names of some remote repositories to be downloaded, the top-level
-    directory for the local repository (with the REPOSITORY directory
-    included here the suggested one), the top-level directory for storing
-    the log files of the downloads (with LOGS the suggested directory),
-    whether or not to do the repository pull, and whether or not to
-    do the database feed.
-
-    Note that you normally want to do the pull and the feed together.
-    Only under special circumstances, such as an aborted feed, would you
-    ever want to do one operation and not the other.
-
-3.6 garbage.sh: This checks for certificates that may have expired due
-    to the passage of time, or crls that may have become stale due to
-    the passage of time, and takes the appropriate actions.  Any children
-    certificates or roas of an expired certificate that are not reparented
-    are marked as invalid, with this propagating down signing chains.
-    Certificates, and their descendant certificates and roas, that might
-    potentially be revoked by the updated version of a stale crl are set
-    to an intermediate state of validity (called "unknown"), but are
-    set back to valid if a current crl is available.
-
-3.8 query.sh: This is the way to pull information out of the database and
-    local repository.  There are two basic modes.
-
-    The comprehensive query, indicated by the argument "-r", pulls all
-    the valid ROAs from the repository and outputs a set of BGP filters
-    in RPSL format specified by these ROAs.  To send the output to a
-    file rather than the screen, include "-o <filename>" on the command
-    line or just redirect the output. ROAs (as well as certificates and
-    CRLs) can also be stale for a variety of reasons:
-      - Validation Chain Stale: The ROA was validatated by a trust chain
-        at some point, but now there is no longer a trust chain (e.g.,
-        due to a certificate expiring or being revoked by a CRL).
-      - Stale CRL: Some certificate in the ROA's trust chain is in
-        the domain of a CRL that was supposed to be updated by a certain
-        time and has not.
-      - Stale Manifest: Similar to stale CRL
-      - No Manifest: Either the ROA or some certificate in its trust
-        chain is not on a validated manifest.
-    For each type of staleness, it is possible to specify that the
-    query consider ROAs that are stale in this manner to be either all
-    valid or all invalid.  To control how different types of staleness are
-    treated, use the "-s <filename>" option, where filename is a file
-    in the same basic format as the sampleQuerySpecs file.  The
-    sampleQuerySpecs file also has further documentation on the different
-    types of filtering that can be specified.
-
-    The informational query provides the user with a means to see what
-    is in the database without directly executing MySQL commands.
-    The basic informational query has the form
-    ./query.sh -t <type> -d <field> [-d <field> ... -d <field>]
-    where type is either cert, crl, roa or manifest, and the fields are all
-    the fields of the objects to display.  There are different possible
-    fields for each object type. The full list of possibilities
-    is obtained with the command "query.sh -l <type>".
-    Most of these fields also provide the capability for filtering
-    the results based on a simple comparison.  To do such filtering,
-    add as many "-f <field>.<op>.<value>" arguments to the command line
-    as desired, where op is one of (eq, ne, lt, gt, le, ge) and value
-    is unquoted and contains # characters to replaces spaces.
-    Additional arguments are given if you type ./query.sh without
-    any arguments.
-
-3.9 rtrUpdate.sh: The process of performing the RPKI-RTR server functionality
-    includes executing this script, with its one argument being the pathname
-    of the staleness specifications file it should use, each time after
-    executing the proceeding scripts.
-
-3.10 IMPORTANT NOTE: Aborting any of the scripts that change the database
-    or repository in the middle of operation can leave the database in
-    an inconsistent state.  It is recommended that after any such abort,
-    you re-initialize the database, clear the repository, and reload the
-    data from scratch.  In the future, we plan to provide less drastic
-    means of recovering from an abort.
-
-4. Document resources
-
-api.txt		API for the database, ASN.1 and ROA libraries
-testplan.doc    Test plan
-rpkidesign.doc	Top level design document
-codereview.doc	Code review standards
-rpkiaur.txt	rsync_aur/rcli socket communication protocol
+    Contents
+    3.1 Walkthrough
+      3.1.1 Manually download trust anchors.
+      3.1.2 Clear database and insert trust anchors.
+      3.1.3 Create initial rsync configuration file.
+      3.1.4 Invoke DB Updater (rcli) in listening mode.
+      3.1.5 Run URI Chaser.
+      3.1.6 Run Garbage Collector.
+    3.2 Results and Analysis
+      3.2.1 Validation Report (results.py)
+      3.2.2 Query Client
+    3.3 Warning
 
 
+3.1 Walkthrough
+
+The following walkthrough shows how to run the BBN RPKI validator.
+Note that steps 3.1.1 - 3.1.4 only need to be executed once at the
+beginning if everything goes completely as planned.  Steps 3.1.5 -
+3.1.6 have to be run periodically even under ideal circumstances.  In
+production, it is recommended that the user create a script to run
+3.1.5 and 3.1.6 and have a cron job that executes this script
+periodically.
+
+3.1.1 Manually download trust anchors.
+
+A trust anchor in the RPKI is obtained through a Trust Anchor Locator
+(TAL), which allows distribution via a mix of out-of-band and online
+means [draft-ietf-sidr-ta].  The 3.0b archive release of the RPKI
+software does not support the TAL format; the final release version
+will do so.  Instead, manually download the trust anchors.
+
+    cd $RPKI_ROOT
+    rm -rf REPOSITORY LOGS chaser.log rcli.log  # clear existing data
+    mkdir -p REPOSITORY
+    mkdir -p LOGS
+    cd REPOSITORY
+    rsync rsync://apnic.rpki.net/rpki/apnic/root.cer apnic_root.cer
+    rsync rsync://arin.rpki.net/rpki/arin/root.cer arin_root.cer
+    rsync rsync://ripe.rpki.net/rpki/ripe/root.cer ripe_root.cer
+    cd ..
+
+3.1.2 Clear database and insert trust anchors.
+
+First, call the initDB script.  This deletes the database, if any,
+with the name RPKI_DB and sets up a new database with all the right
+tables.  Be prepared to enter the root MySQL password twice.  Then,
+use the out-of-band invocation of rcli to add each of the trust
+anchors.
+
+    run_scripts/initDB.sh
+    proto/rcli -y -F REPOSITORY/apnic_root.cer
+    proto/rcli -y -F REPOSITORY/arin_root.cer
+    proto/rcli -y -F REPOSITORY/ripe_root.cer
+
+3.1.3 Create initial rsync configuration file.
+
+In order to pre-configure rsync with default directories and
+publication points, write the following configuration file.  The
+example below needs no pre-configured publication points since the
+publication points will be derived from the trust anchors.
+
+    cat > initial_rsync.config <<EOF
+    RSYNC=/usr/local/bin/rsync
+    REPOSITORY=/home/bbn/rpki/trunk/REPOSITORY
+    LOGS=/home/bbn/rpki/trunk/LOGS
+    DIRS=""
+    EOF
+
+Adjust the paths for REPOSITORY and LOGS above to match your
+$RPKI_ROOT directory.
+
+3.1.4 Invoke DB Updater (rcli) in listening mode.
+
+The following script starts the process that receives data from the
+rsync log parser and loads it into the database.  Under ideal
+circumstances, this will continue to run forever, waiting for input
+from the log parser.  Note that this script actually invokes rcli--the
+same executable that adds the trust anchors--but with flags which
+enable a different mode where it perpetually listens on a TCP socket
+for notifications of rsync updates.
+
+     run_scripts/loader.sh &
+
+It may be helpful to run this in a separate window instead of
+backgrounding the process.  In archive release 3.0b, some error
+message details print only to stderr/stdout of loader.sh.
+
+3.1.5 Run URI Chaser.
+
+This chases down objects from repositories that may not have been
+loaded but are required.  It checks the AIA, SIA and CRLDP fields of
+all certificates in the database.  A list of repositories to check is
+compiled and written to chaser_rsync.config.
+
+The chaser automatically invokes rsync to download from all the
+repositories.  When each rsync transfer completes, the chaser invokes
+the rsync log parser, which notifies the DB Updater (activated in the
+previous step) of any changes.
+
+    proto/chaser -f initial_rsync.config
+
+The process of chasing URIs and then invoking rsync will automatically
+continue until no new publication directories have been found, or
+until a maximum depth is reached.
+
+3.1.6 Run Garbage Collector.
+
+(Note: the testbeds available as of 22 Nov 2010 have only small
+amounts of change due to expiration.  Nevertheless, it may be
+interesting to run the garbage collector just in case.)
+
+The Garbage Collector is responsible for any time-related state
+changes in object validity.  This checks for certificates that may
+have expired due to the passage of time, or crls that may have become
+stale due to the passage of time, and takes the appropriate actions.
+Any children certificates or roas of an expired certificate that are
+not reparented are marked as invalid, with this propagating down
+signing chains.  Certificates, and their descendant certificates and
+roas, that might potentially be revoked by the updated version of a
+stale crl are set to an intermediate state of validity (called
+"unknown"), but are set back to valid if a current crl is available.
+
+    run_scripts/garbage.sh
+
+Successful garbage collection may not produce any screen output.
+
+
+3.2 Results and Analysis
+
+There are three ways to obtain results from version 3.0b of the BBN
+RPKI validation software.
+. For an overview, generate a Validation Report (results.py).
+. For detailed information about validation state, use the Query Client.
+. For error analysis, search through rcli.log or the output of the
+  database updater.
+We recommend starting with the first option and moving down the list
+as more detailed information is required.
+
+3.2.1 Validation Report (results.py)
+
+At a basic level, every object is in one of three states: fully
+validated to a trust anchor, unknown, and definitely invalid.  Valid
+objects are inserted in the database; unknown objects are potentially
+valid, so they are kept in the database; definitely invalid objects
+are not entered into the database.
+
+The validation report generator (results.py) searches the local cache
+and the database and summarizes the three categories as counts.  In
+verbose mode, it also shows full paths to all invalid/unknown
+certifcates, thereby allowing the user to determine the offending
+rsync publication URI.
+
+Usage: run_scripts/results.py [options]
+Options:
+  -h, --help     show this help message and exit
+  -v, --verbose  print lists of unknown/invalid objects to stdout
+
+Example output:
+
+[bbn@rpki-fc13 trunk]$ run_scripts/results.py 
+Using RPKI root directory: /home/bbn/rpki/30b/rpki/trunk
+Using local repository path: /home/bbn/rpki/30b/rpki/trunk/REPOSITORY
+
+-------------------------------------------------------------------------------
+Certficate Information:
+-------------------------------------------------------------------------------
+CA cert files: 23
+EE cert files: 136
+Total cert files: 159
+Validated certs: 81
+Status-unknown certs: 49
+Invalid or duplicate certs: 29
+
+-------------------------------------------------------------------------------
+CRL Information:
+-------------------------------------------------------------------------------
+Total crl files: 21
+Validated crls: 12
+Status-unknown crls: 5
+Invalid or duplicate crls: 4
+
+-------------------------------------------------------------------------------
+ROA Information:
+-------------------------------------------------------------------------------
+Total roa files: 105
+Validated roas: 56
+Status-unknown roas: 49
+Invalid or duplicate roas: 0
+
+-------------------------------------------------------------------------------
+Manifest Information:
+-------------------------------------------------------------------------------
+Total manifest files: 31
+Validated manifests: 7
+Status-unknown manifests: 0
+Invalid or duplicate manifests: 24
+
+Hint: to see lists of unknown/invalid objects, run with -v.
+
+3.2.2 Query Client
+
+This is the way to pull specific information out of the database and
+local repository.  There are two basic modes.
+
+The comprehensive query, indicated by the argument "-r", pulls all the
+valid ROAs from the repository and outputs a set of BGP filters in
+RPSL format specified by these ROAs.  To send the output to a file
+rather than the screen, include "-o <filename>" on the command line or
+just redirect the output. ROAs (as well as certificates and CRLs) can
+also be stale for a variety of reasons:
+  - Validation Chain Stale: The ROA was validatated by a trust chain
+    at some point, but now there is no longer a trust chain (e.g., due
+    to a certificate expiring or being revoked by a CRL).
+  - Stale CRL: Some certificate in the ROA's trust chain is in the
+    domain of a CRL that was supposed to be updated by a certain time
+    and has not.
+  - Stale Manifest: Similar to stale CRL
+  - No Manifest: Either the ROA or some certificate in its trust chain
+    is not on a validated manifest.
+For each type of staleness, it is possible to specify that the query
+consider ROAs that are stale in this manner to be either all valid or
+all invalid.  To control how different types of staleness are treated,
+use the "-s <filename>" option, where filename is a file in the same
+basic format as the sampleQuerySpecs file.  The sampleQuerySpecs file
+also has further documentation on the different types of filtering
+that can be specified.
+
+The informational query provides the user with a means to see what is
+in the database without directly executing MySQL commands.  The basic
+informational query has the form
+./query.sh -t <type> -d <field> [-d <field> ... -d <field>]
+where type is either cert, crl, roa or manifest, and the fields are
+all the fields of the objects to display.  There are different
+possible fields for each object type. The full list of possibilities
+is obtained with the command "query.sh -l <type>".  Most of these
+fields also provide the capability for filtering the results based on
+a simple comparison.  To do such filtering, add as many "-f
+<field>.<op>.<value>" arguments to the command line as desired, where
+op is one of (eq, ne, lt, gt, le, ge) and value is unquoted and
+contains # characters to replaces spaces.  Additional arguments are
+given if you type proto/query without any arguments.
+
+    Examples:
+
+    proto/query -t cert -d pathname      # display paths of valid certs
+    proto/query -t cert -d pathname -d flags # display path+flags of valid certs
+    proto/query -t cert -d pathname -i   # display paths of valid/unknown certs
+    proto/query -t crl -d all            # display all fields of valid CRLs
+    proto/query -t roa -d pathname -d flags # display path+flags of valid roas
+    proto/query -t man -d all -i # display all fields of valid/unknown manifests
+
+
+3.3 Warning
+
+Aborting any of the scripts that change the database or repository in
+the middle of operation can leave the database in an inconsistent
+state.  It is recommended that after any such abort, you re-initialize
+the database, clear the repository, and reload the data from scratch.
+In the future, we plan to provide less drastic means of recovering
+from an abort.
+
+================================================================================
 
 Appendix A. Troubleshooting
 
