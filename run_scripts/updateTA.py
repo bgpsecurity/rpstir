@@ -1,4 +1,76 @@
 #!/usr/bin/python
+# ***** BEGIN LICENSE BLOCK *****
+#  
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 3.0-beta
+#  
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.  
+# 
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+# 
+#  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
+# 
+#  Contributor(s):  Andrew Chi
+# 
+# ***** END LICENSE BLOCK *****
+
+# updateTA.py - Trust Anchor updater
+#
+# usage: updateTA.py [options] file.tal [file2.tal ...]
+#
+# options:
+#   -h, --help             show this help message and exit
+#   -r PATH, --rsync=PATH  PATH to rsync executable
+#   -s PATH, --ssl=PATH    PATH to openssl executable
+#   -v, --verbose          print gory details to stdout
+#
+# Parses one or more Trust Anchor Locator (TAL) files defined by
+# [draft-ietf-sidr-ta], downloads and check the self-signed
+# certificates, and adds them to the local database.  This script
+# provides basic protection against MITM attacks on trust anchor
+# downloads: an existing trust anchor will be restored if the
+# replacement trust anchor fails for any reason.
+#
+# SECURITY WARNING: It is assumed that each TAL file is obtained
+# through an out-of-band, trusted channel.  This is critical for the
+# functioning of the RPKI.  In addition, this script uses the TAL file
+# contents directly on the command line.
+#
+# The following excerpt is taken from draft-ietf-sidr-ta-06.  This
+# script checks 1-3.  If you'd like to customize this script to
+# perform additional checks (i.e., #4), insert new code at the end of
+# the function update_one_TA().
+#
+# 3. Relying Party Use
+#
+#    In order to use the TAL to retrieve and validate a (putative) TA, an
+#    RP SHOULD:
+#
+#    1.  Retrieve the object referenced by the URI contained in the TAL.
+#
+#    2.  Confirm that the retrieved object is a current, self-signed RPKI
+#        CA certificate that conforms to the profile as specified in
+#        [ID.sidr-res-certs].
+#
+#    3.  Confirm that the public key in the TAL matches the public key in
+#        the retrieved object.
+#
+#    4.  Perform other checks, as deem appropriate (locally), to ensure
+#        that the RP is willing to accept the entity publishing this self-
+#        signed CA certificate to be a trust anchor, relating to the
+#        validity oof attestations made in the context of the RPKI
+#        (relating to all resources described in the INR extension of this
+#        certificate).
+#
+#    An RP SHOULD perform these functions for each instance of TAL that it
+#    is holding for this purpose every time the RP performs a re-
+#    synchronization across the local repository cache.  In any case, an
+#    RP also SHOULD perform these functions prior to the expiration of the
+#    locally cached copy of the retrieved trust anchor referenced by the
+#    TAL.
+
 
 import os, sys, filecmp, shutil, subprocess, tempfile
 from optparse import OptionParser
@@ -149,6 +221,8 @@ def rsync_download(uri, targetpath):
         os.makedirs(target_dir)
         
     # WARNING: we do not check uri or targetpath for malicious input!
+    # We are assuming that the TAL contents are obtained from a
+    # trusted source.
     return subprocess.call([options.rsync_cmd, uri, targetpath])
 
 def verify_TA_signature(cert_path):
@@ -156,9 +230,9 @@ def verify_TA_signature(cert_path):
         print "Verifying signature on " + cert_path
 
     # Create temporary PEM-encoded certificate file
+    pemfilename = cert_path + ".pem"
+    pem_f = open(pemfilename, "wb")
     f = open(cert_path, "rb")
-    pem_f = tempfile.NamedTemporaryFile(delete=False)
-    pemfilename = pem_f.name
     ret = subprocess.call([options.openssl_cmd, 'x509', '-inform', 'DER'],
                           stdin=f, stdout=pem_f)
     f.close()
@@ -188,8 +262,7 @@ def verify_TA_signature(cert_path):
     return ret
 
 def verify_SubjectPubKeyInfo(cert_path, pubkey_base64):
-    p1 = subprocess.Popen([rpki_root + "/cg/tools/extractPubKeyInfo",
-                           cert_path], stdout=subprocess.PIPE)
+    p1 = subprocess.Popen([extractkey_path, cert_path], stdout=subprocess.PIPE)
     pubkey_binary = p1.communicate()[0]
     ret = p1.returncode
     if ret != 0:
@@ -226,10 +299,23 @@ if __name__ == "__main__":
     
     # Get top-level RPKI directory, and compute local repository cache
     # path based on $RPKI_ROOT environment variable.
+    if not "RPKI_ROOT" in os.environ:
+        print >>sys.stderr, "Error: environment variable RPKI_ROOT is not set"
+        sys.exit(1)
     rpki_root = os.environ["RPKI_ROOT"].strip().rstrip("/")
     repo_path = rpki_root + "/REPOSITORY"
     ta_repo_path = repo_path + "/trustanchors"
     rcli_path = rpki_root + "/proto/rcli"
+    extractkey_path = rpki_root + "/cg/tools/extractPubKeyInfo"
+    if not os.path.exists(rpki_root):
+        print >>sys.stderr, "Error: rpki_root (%s) is not a valid path"
+        sys.exit(1)
+    if not os.path.exists(rcli_path):
+        print >>sys.stderr, "Error: rcli_path (%s) is not a valid path"
+        sys.exit(1)
+    if not os.path.exists(extractkey_path):
+        print >>sys.stderr, "Error: extractkey_path (%s) is not a valid path"
+        sys.exit(1)
     print "Using RPKI root directory: " + rpki_root
     print "Using local repository path: " + repo_path
     print "Using local trust anchor path: " + ta_repo_path
