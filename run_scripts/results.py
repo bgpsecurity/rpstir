@@ -1,4 +1,33 @@
 #!/usr/bin/python
+# ***** BEGIN LICENSE BLOCK *****
+#  
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 3.0-beta
+#  
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.  
+# 
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+# 
+#  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
+# 
+#  Contributor(s):  Andrew Chi
+# 
+# ***** END LICENSE BLOCK *****
+
+# results.py
+#
+# Generate counts of valid/invalid/unknown objects based on the state
+# of the current RPKI database and the files present in the local
+# repository.
+#
+# usage: results.py [options]
+#
+# options:
+#   -h, --help     show this help message and exit
+#   -v, --verbose  output lists of valid/invalid/unknown objects
+
 
 from subprocess import Popen, PIPE
 import os
@@ -12,7 +41,7 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-v", "--verbose",
                   action="store_true", dest="verbose", default=False,
-                  help="print gory details to stdout")
+                  help="output lists of valid/invalid/unknown objects")
 (options, args) = parser.parse_args()
 
 #
@@ -78,6 +107,9 @@ print "Invalid or duplicate certs: %d" % len(invalid_certs)
 if options.verbose:
     db_unknown_certs.sort()
     invalid_certs.sort()
+    db_validated_certs.sort()
+    if db_validated_certs:
+        print "\nValidated certs:\n", "\n".join(db_validated_certs)
     if db_unknown_certs:
         print "\nStatus-unknown certs:\n", "\n".join(db_unknown_certs)
     if invalid_certs:
@@ -109,6 +141,9 @@ print "Invalid or duplicate crls: %d" % len(invalid_crls)
 if options.verbose:
     db_unknown_crls.sort()
     invalid_crls.sort()
+    db_validated_crls.sort()
+    if db_validated_crls:
+        print "\nValidated crls:\n", "\n".join(db_validated_crls)
     if db_unknown_crls:
         print "\nStatus-unknown crls:\n", "\n".join(db_unknown_crls)
     if invalid_crls:
@@ -140,6 +175,9 @@ print "Invalid or duplicate roas: %d" % len(invalid_roas)
 if options.verbose:
     db_unknown_roas.sort()
     invalid_roas.sort()
+    db_validated_roas.sort()
+    if db_validated_roas:
+        print "\nValidated roas:\n", "\n".join(db_validated_roas)
     if db_unknown_roas:
         print "\nStatus-unknown roas:\n", "\n".join(db_unknown_roas)
     if invalid_roas:
@@ -175,6 +213,9 @@ print "Invalid or duplicate manifests: %d" % len(invalid_mfts)
 if options.verbose:
     db_unknown_mfts.sort()
     invalid_mfts.sort()
+    db_validated_mfts.sort()
+    if db_validated_mfts:
+        print "\nValidated manifests:\n", "\n".join(db_validated_mfts)
     if db_unknown_mfts:
         print "\nStatus-unknown manifests:\n", "\n".join(db_unknown_mfts)
     if invalid_mfts:
@@ -182,4 +223,4 @@ if options.verbose:
 
 # Informational message
 if not options.verbose:
-    print "\nHint: to see lists of unknown/invalid objects, run with -v."
+    print "\nHint: to see lists of valid/unknown/invalid objects, run with -v."
