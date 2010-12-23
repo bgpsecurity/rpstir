@@ -24,7 +24,7 @@ bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
 	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
 	extractCMScert change_cms_cert test_cert makeLTAtest checkLTAtest \
-        dumpIPAddr update_cert
+        dumpIPAddr update_cert extractPubKeyInfo
 
 
 AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
@@ -74,3 +74,5 @@ dumpIPAddr_SOURCES = dumpIPAddr.c
 dumpIPAddr_LDFLAGS = $(LIBS)
 update_cert_SOURCES = update_cert.c
 update_cert_LDFLAGS = $(LIBS)
+extractPubKeyInfo_SOURCES = extractPubKeyInfo.c
+extractPubKeyInfo_LDFLAGS = $(LIBS)

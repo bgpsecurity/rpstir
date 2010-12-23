@@ -62,7 +62,8 @@ bin_PROGRAMS = test_casn_random$(EXEEXT) dump$(EXEEXT) rr$(EXEEXT) \
 	encode-oid$(EXEEXT) dumpasn1$(EXEEXT) dump_smart$(EXEEXT) \
 	extractCMScert$(EXEEXT) change_cms_cert$(EXEEXT) \
 	test_cert$(EXEEXT) makeLTAtest$(EXEEXT) checkLTAtest$(EXEEXT) \
-	dumpIPAddr$(EXEEXT) update_cert$(EXEEXT)
+	dumpIPAddr$(EXEEXT) update_cert$(EXEEXT) \
+	extractPubKeyInfo$(EXEEXT)
 subdir = cg/tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -127,6 +128,12 @@ extractCMScert_LDADD = $(LDADD)
 extractCMScert_DEPENDENCIES =
 extractCMScert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(extractCMScert_LDFLAGS) $(LDFLAGS) -o $@
+am_extractPubKeyInfo_OBJECTS = extractPubKeyInfo.$(OBJEXT)
+extractPubKeyInfo_OBJECTS = $(am_extractPubKeyInfo_OBJECTS)
+extractPubKeyInfo_LDADD = $(LDADD)
+extractPubKeyInfo_DEPENDENCIES =
+extractPubKeyInfo_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(extractPubKeyInfo_LDFLAGS) $(LDFLAGS) -o $@
 am_gen_key_OBJECTS = gen_key.$(OBJEXT)
 gen_key_OBJECTS = $(am_gen_key_OBJECTS)
 gen_key_LDADD = $(LDADD)
@@ -229,22 +236,22 @@ SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(change_cms_cert_SOURCES) $(checkLTAtest_SOURCES) \
 	$(dump_SOURCES) $(dumpIPAddr_SOURCES) $(dump_smart_SOURCES) \
 	$(dumpasn1_SOURCES) $(encode_oid_SOURCES) \
-	$(extractCMScert_SOURCES) $(gen_key_SOURCES) \
-	$(loadkey_SOURCES) $(makeLTAtest_SOURCES) $(make_TA_SOURCES) \
-	$(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) \
-	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
-	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
+	$(extractCMScert_SOURCES) $(extractPubKeyInfo_SOURCES) \
+	$(gen_key_SOURCES) $(loadkey_SOURCES) $(makeLTAtest_SOURCES) \
+	$(make_TA_SOURCES) $(make_oidtable_SOURCES) \
+	$(read_roa_SOURCES) $(rr_SOURCES) $(set_cert_ski_SOURCES) \
+	$(sign_cert_SOURCES) $(six2hex_SOURCES) $(six_to_bin_SOURCES) \
 	$(test_casn_random_SOURCES) $(test_cert_SOURCES) \
 	$(update_cert_SOURCES) $(whatsfcs_SOURCES)
 DIST_SOURCES = $(add_key_info_SOURCES) $(bin_to_six_SOURCES) \
 	$(change_cms_cert_SOURCES) $(checkLTAtest_SOURCES) \
 	$(dump_SOURCES) $(dumpIPAddr_SOURCES) $(dump_smart_SOURCES) \
 	$(dumpasn1_SOURCES) $(encode_oid_SOURCES) \
-	$(extractCMScert_SOURCES) $(gen_key_SOURCES) \
-	$(loadkey_SOURCES) $(makeLTAtest_SOURCES) $(make_TA_SOURCES) \
-	$(make_oidtable_SOURCES) $(read_roa_SOURCES) $(rr_SOURCES) \
-	$(set_cert_ski_SOURCES) $(sign_cert_SOURCES) \
-	$(six2hex_SOURCES) $(six_to_bin_SOURCES) \
+	$(extractCMScert_SOURCES) $(extractPubKeyInfo_SOURCES) \
+	$(gen_key_SOURCES) $(loadkey_SOURCES) $(makeLTAtest_SOURCES) \
+	$(make_TA_SOURCES) $(make_oidtable_SOURCES) \
+	$(read_roa_SOURCES) $(rr_SOURCES) $(set_cert_ski_SOURCES) \
+	$(sign_cert_SOURCES) $(six2hex_SOURCES) $(six_to_bin_SOURCES) \
 	$(test_casn_random_SOURCES) $(test_cert_SOURCES) \
 	$(update_cert_SOURCES) $(whatsfcs_SOURCES)
 ETAGS = etags
@@ -384,6 +391,8 @@ dumpIPAddr_SOURCES = dumpIPAddr.c
 dumpIPAddr_LDFLAGS = $(LIBS)
 update_cert_SOURCES = update_cert.c
 update_cert_LDFLAGS = $(LIBS)
+extractPubKeyInfo_SOURCES = extractPubKeyInfo.c
+extractPubKeyInfo_LDFLAGS = $(LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -485,6 +494,9 @@ encode-oid$(EXEEXT): $(encode_oid_OBJECTS) $(encode_oid_DEPENDENCIES)
 extractCMScert$(EXEEXT): $(extractCMScert_OBJECTS) $(extractCMScert_DEPENDENCIES) 
 	@rm -f extractCMScert$(EXEEXT)
 	$(AM_V_CCLD)$(extractCMScert_LINK) $(extractCMScert_OBJECTS) $(extractCMScert_LDADD) $(LIBS)
+extractPubKeyInfo$(EXEEXT): $(extractPubKeyInfo_OBJECTS) $(extractPubKeyInfo_DEPENDENCIES) 
+	@rm -f extractPubKeyInfo$(EXEEXT)
+	$(AM_V_CCLD)$(extractPubKeyInfo_LINK) $(extractPubKeyInfo_OBJECTS) $(extractPubKeyInfo_LDADD) $(LIBS)
 gen_key$(EXEEXT): $(gen_key_OBJECTS) $(gen_key_DEPENDENCIES) 
 	@rm -f gen_key$(EXEEXT)
 	$(AM_V_CCLD)$(gen_key_LINK) $(gen_key_OBJECTS) $(gen_key_LDADD) $(LIBS)
@@ -549,6 +561,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpasn1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encode-oid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractCMScert.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractPubKeyInfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_key.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loadkey.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeLTAtest.Po@am__quote@

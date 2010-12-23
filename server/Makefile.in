@@ -237,8 +237,8 @@ doUpdate_SOURCES = doUpdate.c
 doUpdate_LDFLAGS = $(LIBS)
 sampleClient_SOURCES = sampleClient.c
 sampleClient_LDFLAGS = $(LIBS)
-libpdu_a_SOURCES = pdu.h pdu.c sshComms.h sshComms.c socket.h socket.c rtrUtils.h rtrUtils.c \
-	 coreClient.h coreClient.c
+libpdu_a_SOURCES = pdu.h pdu.c sshComms.h sshComms.c socket.h socket.c \
+	rtrUtils.h rtrUtils.c coreClient.h coreClient.c
 
 all: all-am
 
