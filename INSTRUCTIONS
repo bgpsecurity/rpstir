@@ -22,10 +22,11 @@ troubleshooting tips for some common problems.
 
     Contents
     2.1 Prerequisites
-      2.1.1 OpenSSL
-      2.1.2 MySQL
-      2.1.3 cryptlib
-      2.1.4 rsync
+      2.1.1 User Account
+      2.1.2 OpenSSL
+      2.1.3 MySQL
+      2.1.4 cryptlib
+      2.1.5 rsync
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Customize the Makefiles
@@ -51,7 +52,14 @@ as build packages from source and do minor edits on Makefiles.
 
 2.1 Prerequisites
 
-2.1.1 OpenSSL
+2.1.1 User Account
+
+You must establish a user account from which you can build and run the
+RPKI software.  While the full environment setup is detailed in
+section 2.3, the basic user should be created now so that you
+can set and test environment variables.
+
+2.1.2 OpenSSL
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
@@ -65,7 +73,11 @@ the steps were:
 	$ make test
 	$ make install
 
-2.1.2 MySQL
+In addition, the some scripts invoke the OpenSSL executable from the
+shell.  Modify your user's PATH such that `which openssl` points to
+the custom-compiled binary that supports RFC 3779 extensions.
+
+2.1.3 MySQL
 
 Install the MySQL database server from http://mysql.org, at least
 version 5.1.  We recommend the default installation target of
@@ -113,7 +125,7 @@ OPTION       = 3
 SOCKET       =
 -----------------------------------------------------------------------------
 
-2.1.3 cryptlib
+2.1.4 cryptlib
 
 Install Peter Gutmann's cryptlib, currently available at
 http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  Ensure that both the
@@ -130,24 +142,16 @@ You may need to modify some files to get it to build cleanly. Also note that
 the self-test code (make testlib; ./testlib) fails on at least FreeBSD
 and Linux. We do not currently think that this is cause for concern.
 
-2.1.4 rsync
+2.1.5 rsync
 
 Your rsync should be at least version 2.6.9, as earlier versions do
 not necessarily support the necessary flags.  Check your version with
-rsync --version, and install from rsync.samba.org.  Note that in
-version 3.0b of the BBN relying party software, there is a known
-incompatibility with the newest versions of rsync (3.x) due to a
-change in the rsync log format.  This problem will not exist in future
-releases.
+rsync --version, and install from rsync.samba.org.
 
 2.2 RPKI Software
 
 The RPKI software is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.
-
-You will want to establish a user account from which you can build and
-run the RPKI software.  While the full environment setup is detailed
-in section 2.3, the basic user should be created now.
 
 2.2.1 Unpack the Source Code
 

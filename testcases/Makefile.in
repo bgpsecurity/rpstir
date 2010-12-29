@@ -71,40 +71,46 @@ PROGRAMS = $(bin_PROGRAMS)
 am_cert_validate_OBJECTS = cert_validate.$(OBJEXT)
 cert_validate_OBJECTS = $(am_cert_validate_OBJECTS)
 cert_validate_LDADD = $(LDADD)
-cert_validate_DEPENDENCIES =
+cert_validate_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a
 cert_validate_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cert_validate_LDFLAGS) $(LDFLAGS) -o $@
 am_gen_test_key_OBJECTS = gen_test_key.$(OBJEXT)
 gen_test_key_OBJECTS = $(am_gen_test_key_OBJECTS)
 gen_test_key_LDADD = $(LDADD)
-gen_test_key_DEPENDENCIES =
+gen_test_key_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a
 gen_test_key_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(gen_test_key_LDFLAGS) $(LDFLAGS) -o $@
 am_make_test_cert_OBJECTS = make_test_cert.$(OBJEXT) \
 	adjustTime.$(OBJEXT)
 make_test_cert_OBJECTS = $(am_make_test_cert_OBJECTS)
 make_test_cert_LDADD = $(LDADD)
-make_test_cert_DEPENDENCIES =
+make_test_cert_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a
 make_test_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(make_test_cert_LDFLAGS) $(LDFLAGS) -o $@
 am_make_test_crl_OBJECTS = make_test_crl.$(OBJEXT) \
 	adjustTime.$(OBJEXT)
 make_test_crl_OBJECTS = $(am_make_test_crl_OBJECTS)
 make_test_crl_LDADD = $(LDADD)
-make_test_crl_DEPENDENCIES =
+make_test_crl_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a
 make_test_crl_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(make_test_crl_LDFLAGS) $(LDFLAGS) -o $@
 am_make_test_manifest_OBJECTS = make_test_manifest.$(OBJEXT) \
 	adjustTime.$(OBJEXT)
 make_test_manifest_OBJECTS = $(am_make_test_manifest_OBJECTS)
 make_test_manifest_LDADD = $(LDADD)
-make_test_manifest_DEPENDENCIES =
+make_test_manifest_DEPENDENCIES = ../roa-lib/libroa.a \
+	../cg/asn/libasn.a ../cg/casn/libcasn.a
 make_test_manifest_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(make_test_manifest_LDFLAGS) $(LDFLAGS) -o $@
 am_make_test_roa_OBJECTS = make_test_roa.$(OBJEXT)
 make_test_roa_OBJECTS = $(am_make_test_roa_OBJECTS)
 make_test_roa_LDADD = $(LDADD)
-make_test_roa_DEPENDENCIES =
+make_test_roa_DEPENDENCIES = ../roa-lib/libroa.a ../cg/asn/libasn.a \
+	../cg/casn/libcasn.a
 make_test_roa_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(make_test_roa_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -226,7 +232,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -g -I../cg/asn -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib
-LDADD = -L../roa-lib -lroa -L../cg/asn -lasn -L../cg/casn -lcasn
+LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a
 make_test_cert_SOURCES = make_test_cert.c adjustTime.c
 make_test_cert_LDFLAGS = -lpthread $(LIBS)
 make_test_crl_SOURCES = make_test_crl.c adjustTime.c

@@ -20,16 +20,11 @@ bin_PROGRAMS = create_object gen_hash
 AM_CFLAGS = -g -Wall -DDEBUG -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn
 
 AM_LDFLAGS = $(LIBS)
-LOCAL_LIBS=  -L../../cg/asn -lasn -L../../cg/casn -lcasn -L../../proto -lrpki -L../../roa-lib -lroa
-
-LDADD = $(LOCAL_LIBS)
+LDADD = ../../proto/librpki.a ../../roa-lib/libroa.a ../../cg/asn/libasn.a ../../cg/casn/libcasn.a
 
 create_object_SOURCES = create_object.c create_object.h create_cert.h \
 	create_manifest.c create_roa.h create_utils.h obj_err.h create_crl.c \
-	create_cert.c create_manifest.h create_roa.c create_utils.c sign_object.c
-
-create_object_LDFLAGS = $(LOCAL_LIBS)
-
+	create_cert.c create_manifest.h create_roa.c create_utils.c \
+	sign_object.c
 
 gen_hash_SOURCES = gen_hash.c
-gen_hash_LDFLAGS = $(LOCAL_LIBS)
