@@ -130,12 +130,18 @@ if options.verbose:
     db_unknown_certs.sort()
     invalid_certs.sort()
     db_validated_certs.sort()
+    db_certs_outside_repo_path = list(set(db_all_certs) - set(all_cert_files))
+    db_certs_outside_repo_path.sort()
     if db_validated_certs:
         print "\nValidated certs:\n", "\n".join(db_validated_certs)
     if db_unknown_certs:
         print "\nStatus-unknown certs:\n", "\n".join(db_unknown_certs)
     if invalid_certs:
         print "\nInvalid or duplicate certs:\n", "\n".join(invalid_certs)
+    if db_certs_outside_repo_path:
+        print "\nCerts in the database but outside the " + \
+              "local repository path:\n", \
+              "\n".join(db_certs_outside_repo_path)
 
 
 #
@@ -173,12 +179,18 @@ if options.verbose:
     db_unknown_crls.sort()
     invalid_crls.sort()
     db_validated_crls.sort()
+    db_crls_outside_repo_path = list(set(db_all_crls) - set(all_crl_files))
+    db_crls_outside_repo_path.sort()
     if db_validated_crls:
         print "\nValidated crls:\n", "\n".join(db_validated_crls)
     if db_unknown_crls:
         print "\nStatus-unknown crls:\n", "\n".join(db_unknown_crls)
     if invalid_crls:
         print "\nInvalid or duplicate crls:\n", "\n".join(invalid_crls)
+    if db_crls_outside_repo_path:
+        print "\nCRLs in the database but outside the " + \
+              "local repository path:\n", \
+              "\n".join(db_crls_outside_repo_path)
 
 
 #
@@ -216,12 +228,18 @@ if options.verbose:
     db_unknown_roas.sort()
     invalid_roas.sort()
     db_validated_roas.sort()
+    db_roas_outside_repo_path = list(set(db_all_roas) - set(all_roa_files))
+    db_roas_outside_repo_path.sort()
     if db_validated_roas:
         print "\nValidated roas:\n", "\n".join(db_validated_roas)
     if db_unknown_roas:
         print "\nStatus-unknown roas:\n", "\n".join(db_unknown_roas)
     if invalid_roas:
         print "\nInvalid or duplicate roas:\n", "\n".join(invalid_roas)
+    if db_roas_outside_repo_path:
+        print "\nROAs in the database but outside the " + \
+              "local repository path:\n", \
+              "\n".join(db_roas_outside_repo_path)
 
 
 #
@@ -263,12 +281,18 @@ if options.verbose:
     db_unknown_mfts.sort()
     invalid_mfts.sort()
     db_validated_mfts.sort()
+    db_mfts_outside_repo_path = list(set(db_all_mfts) - set(all_mft_files))
+    db_mfts_outside_repo_path.sort()
     if db_validated_mfts:
         print "\nValidated manifests:\n", "\n".join(db_validated_mfts)
     if db_unknown_mfts:
         print "\nStatus-unknown manifests:\n", "\n".join(db_unknown_mfts)
     if invalid_mfts:
         print "\nInvalid or duplicate manifests:\n", "\n".join(invalid_mfts)
+    if db_mfts_outside_repo_path:
+        print "\nManifests in the database but outside the " + \
+              "local repository path:\n", \
+              "\n".join(db_mfts_outside_repo_path)
 
 # Informational message
 if not options.verbose:
