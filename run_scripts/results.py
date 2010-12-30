@@ -30,7 +30,7 @@
 
 
 from subprocess import Popen, PIPE
-import os
+import os, sys
 from optparse import OptionParser
 
 
@@ -53,9 +53,14 @@ rpki_root = os.environ["RPKI_ROOT"].strip().rstrip("/")
 repo_path = rpki_root + "/REPOSITORY"
 print "Using RPKI root directory: " + rpki_root
 print "Using local repository path: " + repo_path
+if not os.path.exists(rpki_root):
+    print >>sys.stderr, "RPKI root does not exist (%s)" % rpki_root
+    sys.exit(1)
+if not os.path.exists(repo_path):
+    print >>sys.stderr, "Local repository does not exist (%s)" % repo_path
 
 #
-# Define some useful functions which invoke command line tools.
+# Define some utility functions, some of which invoke command line tools.
 #
 
 def find_files_with_extension(absolute_path, ext):
@@ -72,6 +77,14 @@ def find_all_objects_in_db(object_type):
                 "-d", "pathname", "-i"], stdout=PIPE)
     return [line.split()[2] for line in p1.communicate()[0].splitlines()]
 
+def is_in_directory(base_dir, file_list):
+    prefix = base_dir.strip()
+    if not prefix.endswith("/"):
+        prefix = prefix + "/"
+    for f in file_list:
+        if not f.startswith(prefix):
+            return False
+    return True
 
 #
 # Results for certificates
@@ -100,6 +113,15 @@ db_validated_certs = find_validated_objects_in_db("cert")
 db_all_certs = find_all_objects_in_db("cert")
 db_unknown_certs = list(set(db_all_certs) - set(db_validated_certs))
 invalid_certs = list(set(all_cert_files) - set(db_all_certs))
+if not is_in_directory(repo_path, db_validated_certs):
+    print >>sys.stderr, "Warning: Found validated file outside of " + \
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, db_unknown_certs):
+    print >>sys.stderr, "Warning: Found file of unknown validity outside of "+\
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, invalid_certs):
+    print >>sys.stderr, "Error: Found invalid file outside of "+\
+          "repository path.  This should never happen."
 print "Validated certs: %d" % len(db_validated_certs)
 print "Status-unknown certs: %d" % len(db_unknown_certs)
 print "Invalid or duplicate certs: %d" % len(invalid_certs)
@@ -134,6 +156,15 @@ db_validated_crls = find_validated_objects_in_db("crl")
 db_all_crls = find_all_objects_in_db("crl")
 db_unknown_crls = list(set(db_all_crls) - set(db_validated_crls))
 invalid_crls = list(set(all_crl_files) - set(db_all_crls))
+if not is_in_directory(repo_path, db_validated_crls):
+    print >>sys.stderr, "Warning: Found validated file outside of " + \
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, db_unknown_crls):
+    print >>sys.stderr, "Warning: Found file of unknown validity outside of "+\
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, invalid_crls):
+    print >>sys.stderr, "Error: Found invalid file outside of "+\
+          "repository path.  This should never happen."
 print "Validated crls: %d" % len(db_validated_crls)
 print "Status-unknown crls: %d" % len(db_unknown_crls)
 print "Invalid or duplicate crls: %d" % len(invalid_crls)
@@ -168,6 +199,15 @@ db_validated_roas = find_validated_objects_in_db("roa")
 db_all_roas = find_all_objects_in_db("roa")
 db_unknown_roas = list(set(db_all_roas) - set(db_validated_roas))
 invalid_roas = list(set(all_roa_files) - set(db_all_roas))
+if not is_in_directory(repo_path, db_validated_roas):
+    print >>sys.stderr, "Warning: Found validated file outside of " + \
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, db_unknown_roas):
+    print >>sys.stderr, "Warning: Found file of unknown validity outside of "+\
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, invalid_roas):
+    print >>sys.stderr, "Error: Found invalid file outside of "+\
+          "repository path.  This should never happen."
 print "Validated roas: %d" % len(db_validated_roas)
 print "Status-unknown roas: %d" % len(db_unknown_roas)
 print "Invalid or duplicate roas: %d" % len(invalid_roas)
@@ -206,6 +246,15 @@ db_validated_mfts = find_validated_objects_in_db("man")
 db_all_mfts = find_all_objects_in_db("man")
 db_unknown_mfts = list(set(db_all_mfts) - set(db_validated_mfts))
 invalid_mfts = list(set(all_mft_files) - set(db_all_mfts))
+if not is_in_directory(repo_path, db_validated_mfts):
+    print >>sys.stderr, "Warning: Found validated file outside of " + \
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, db_unknown_mfts):
+    print >>sys.stderr, "Warning: Found file of unknown validity outside of "+\
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, invalid_mfts):
+    print >>sys.stderr, "Error: Found invalid file outside of "+\
+          "repository path.  This should never happen."
 print "Validated manifests: %d" % len(db_validated_mfts)
 print "Status-unknown manifests: %d" % len(db_unknown_mfts)
 print "Invalid or duplicate manifests: %d" % len(invalid_mfts)
