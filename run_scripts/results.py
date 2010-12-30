@@ -139,7 +139,7 @@ if options.verbose:
     if invalid_certs:
         print "\nInvalid or duplicate certs:\n", "\n".join(invalid_certs)
     if db_certs_outside_repo_path:
-        print "\nCerts in the database but outside the " + \
+        print "\nCerts in the database but not found in " + \
               "local repository path:\n", \
               "\n".join(db_certs_outside_repo_path)
 
@@ -188,7 +188,7 @@ if options.verbose:
     if invalid_crls:
         print "\nInvalid or duplicate crls:\n", "\n".join(invalid_crls)
     if db_crls_outside_repo_path:
-        print "\nCRLs in the database but outside the " + \
+        print "\nCRLs in the database but not found in " + \
               "local repository path:\n", \
               "\n".join(db_crls_outside_repo_path)
 
@@ -237,7 +237,7 @@ if options.verbose:
     if invalid_roas:
         print "\nInvalid or duplicate roas:\n", "\n".join(invalid_roas)
     if db_roas_outside_repo_path:
-        print "\nROAs in the database but outside the " + \
+        print "\nROAs in the database but not found in " + \
               "local repository path:\n", \
               "\n".join(db_roas_outside_repo_path)
 
@@ -290,7 +290,7 @@ if options.verbose:
     if invalid_mfts:
         print "\nInvalid or duplicate manifests:\n", "\n".join(invalid_mfts)
     if db_mfts_outside_repo_path:
-        print "\nManifests in the database but outside the " + \
+        print "\nManifests in the database but not found in " + \
               "local repository path:\n", \
               "\n".join(db_mfts_outside_repo_path)
 
