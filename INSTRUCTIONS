@@ -372,12 +372,13 @@ software out.
 
     Contents
     3.1 Walkthrough
-      3.1.1 Manually download trust anchors.
-      3.1.2 Clear database and insert trust anchors.
-      3.1.3 Create initial rsync configuration file.
-      3.1.4 Invoke DB Updater (rcli) in listening mode.
-      3.1.5 Run URI Chaser.
-      3.1.6 Run Garbage Collector.
+      3.1.1 Create initial rsync configuration file.
+      3.1.2 Clear database and local repository cache.
+      3.1.3 Invoke DB Updater (rcli) in listening mode.
+      3.1.4 Automatically download Trust Anchors using TAL files.
+      3.1.5 Manually insert trust anchors (optional).
+      3.1.6 Run URI Chaser.
+      3.1.7 Run Garbage Collector.
     3.2 Results and Analysis
       3.2.1 Validation Report (results.py)
       3.2.2 Query Client
@@ -387,45 +388,14 @@ software out.
 3.1 Walkthrough
 
 The following walkthrough shows how to run the BBN RPKI validator.
-Note that steps 3.1.1 - 3.1.4 only need to be executed once at the
-beginning if everything goes completely as planned.  Steps 3.1.5 -
-3.1.6 have to be run periodically even under ideal circumstances.  In
+Note that steps 3.1.1-3.1.3 only need to be executed once at the
+beginning if everything goes completely as planned.  The other steps
+should be run periodically even under ideal circumstances.  In
 production, it is recommended that the user create a script to run
-3.1.5 and 3.1.6 and have a cron job that executes this script
+3.1.4-3.1.6 and have a cron job that executes this script
 periodically.
 
-3.1.1 Manually download trust anchors.
-
-A trust anchor in the RPKI is obtained through a Trust Anchor Locator
-(TAL), which allows distribution via a mix of out-of-band and online
-means [draft-ietf-sidr-ta].  The 3.0b archive release of the RPKI
-software does not support the TAL format; the final release version
-will do so.  Instead, manually download the trust anchors.
-
-    cd $RPKI_ROOT
-    rm -rf REPOSITORY LOGS chaser.log rcli.log  # clear existing data
-    mkdir -p REPOSITORY
-    mkdir -p LOGS
-    cd REPOSITORY
-    rsync rsync://apnic.rpki.net/rpki/apnic/root.cer apnic_root.cer
-    rsync rsync://arin.rpki.net/rpki/arin/root.cer arin_root.cer
-    rsync rsync://ripe.rpki.net/rpki/ripe/root.cer ripe_root.cer
-    cd ..
-
-3.1.2 Clear database and insert trust anchors.
-
-First, call the initDB script.  This deletes the database, if any,
-with the name RPKI_DB and sets up a new database with all the right
-tables.  Be prepared to enter the root MySQL password twice.  Then,
-use the out-of-band invocation of rcli to add each of the trust
-anchors.
-
-    run_scripts/initDB.sh
-    proto/rcli -y -F REPOSITORY/apnic_root.cer
-    proto/rcli -y -F REPOSITORY/arin_root.cer
-    proto/rcli -y -F REPOSITORY/ripe_root.cer
-
-3.1.3 Create initial rsync configuration file.
+3.1.1 Create initial rsync configuration file.
 
 In order to pre-configure rsync with default directories and
 publication points, write the following configuration file.  The
@@ -442,7 +412,20 @@ publication points will be derived from the trust anchors.
 Adjust the paths for REPOSITORY and LOGS above to match your
 $RPKI_ROOT directory.
 
-3.1.4 Invoke DB Updater (rcli) in listening mode.
+3.1.2 Clear database and local repository cache.
+
+First, clear any existing local cache and call the initDB script.
+This deletes the database, if any, with the name RPKI_DB and sets up a
+new database with all the right tables.  Be prepared to enter the root
+MySQL password twice.
+
+    cd $RPKI_ROOT
+    rm -rf REPOSITORY LOGS chaser.log rcli.log  # clear existing data
+    mkdir -p REPOSITORY
+    mkdir -p LOGS
+    run_scripts/initDB.sh
+
+3.1.3 Invoke DB Updater (rcli) in listening mode.
 
 The following script starts the process that receives data from the
 rsync log parser and loads it into the database.  Under ideal
@@ -455,10 +438,41 @@ for notifications of rsync updates.
      run_scripts/loader.sh &
 
 It may be helpful to run this in a separate window instead of
-backgrounding the process.  In archive release 3.0b, some error
-message details print only to stderr/stdout of loader.sh.
+backgrounding the process.
 
-3.1.5 Run URI Chaser.
+3.1.4 Automatically download Trust Anchors using TAL files.
+
+A trust anchor in the RPKI is obtained through a Trust Anchor Locator
+(TAL), which allows distribution via a mix of out-of-band and online
+means [draft-ietf-sidr-ta].  We assume that the trust anchor locators
+themselves have been obtained through a reliable out-of-band means.
+
+    cd $RPKI_ROOT
+    # The following three commands should be replaced by reliable methods.
+    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-ripe.ita
+    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-arin.ita
+    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-apnic.ita
+    run_scripts/updateTA.py testbed-ripe.ita testbed-arin.ita testbed-apnic.ita
+
+3.1.5 Manually insert trust anchors (optional).
+
+Trust anchor material is not always distributed via TAL, e.g. in the
+case of local trust anchors.  Instead, we assume the user has directly
+obtained the trust anchor certificates through some reliable
+out-of-band method.  Then, we use the out-of-band invocation of rcli
+to manually add each of the trust anchors.
+
+    cd REPOSITORY
+    # The following three commands should be replaced by reliable methods.
+    rsync rsync://apnic.rpki.net/rpki/apnic/root.cer apnic_root.cer
+    rsync rsync://arin.rpki.net/rpki/arin/root.cer arin_root.cer
+    rsync rsync://ripe.rpki.net/rpki/ripe/root.cer ripe_root.cer
+    cd ..
+    proto/rcli -y -F REPOSITORY/apnic_root.cer
+    proto/rcli -y -F REPOSITORY/arin_root.cer
+    proto/rcli -y -F REPOSITORY/ripe_root.cer
+
+3.1.6 Run URI Chaser.
 
 This chases down objects from repositories that may not have been
 loaded but are required.  It checks the AIA, SIA and CRLDP fields of
@@ -476,7 +490,7 @@ The process of chasing URIs and then invoking rsync will automatically
 continue until no new publication directories have been found, or
 until a maximum depth is reached.
 
-3.1.6 Run Garbage Collector.
+3.1.7 Run Garbage Collector.
 
 (Note: the testbeds available as of 22 Nov 2010 have only small
 amounts of change due to expiration.  Nevertheless, it may be
@@ -500,12 +514,11 @@ Successful garbage collection may not produce any screen output.
 
 3.2 Results and Analysis
 
-There are three ways to obtain results from version 3.0b of the BBN
-RPKI validation software.
+There are three ways to obtain results from the BBN RPKI validation
+software.
 . For an overview, generate a Validation Report (results.py).
 . For detailed information about validation state, use the Query Client.
-. For error analysis, search through rcli.log or the output of the
-  database updater.
+. For error analysis, search through rcli.log.
 We recommend starting with the first option and moving down the list
 as more detailed information is required.
 
