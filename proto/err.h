@@ -137,7 +137,8 @@
 #define ERR_SCM_INVALMAN    -108        /* invalid manifest */
 #define ERR_SCM_WRITE_EE    -109        /* error writing EE certificate */
 #define ERR_SCM_SMALLKEY    -110        /* key too small */
-#define ERR_SCM_MAXERR      -110
+#define ERR_SCM_ASN1_LTH    -111        /* invalid ASN.1 length */
+#define ERR_SCM_MAXERR      -111
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

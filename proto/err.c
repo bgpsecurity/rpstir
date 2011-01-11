@@ -145,6 +145,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid manifest",             /* ERR_SCM_INVALMAN */  
     "Error writing EE cert",        /* ERR_SCM_WRITE_EE */
     "Key too small",                /* ERR_SCM_SMALLKEY */
+    "Invalid indefinite ASN.1 length",  /* ERR_SCM_ASN1_LTH */
   } ;
 
 char *err2string(int err)
