@@ -149,6 +149,7 @@ struct casn *dup_casn(struct casn *casnp),
 #else
 uchar *dbcalloc(int, int);
 #endif
+#define ASN_UNDEFINED_LTH 0x7FFFFFFF
     // for reals
 #define ASN_PLUS_INFINITY  0x40
 #define ASN_MINUS_INFINITY 0x41

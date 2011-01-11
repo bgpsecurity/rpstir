@@ -448,10 +448,12 @@ long _dumpread(struct casn *casnp, char *to, int offset, int mode)
             if (type == ASN_INTEGER && lth <= 4)
                 {
                 int decnum = 0;
-                uchar locbuf[20], *uc, *ec = &casnp->startp[casnp->lth];
+                char locbuf[20];
+                uchar *uc, *ec = &casnp->startp[casnp->lth];
                 for (uc = casnp->startp; uc < ec; *uc++)
                     {
-                    decnum = (decnum <<= 8) + *uc;
+                    decnum <<= 8;
+                    decnum += *uc;
                     }
                 sprintf(locbuf, " /* %d */ ", decnum);
                 if (mode) c = cat(c, locbuf); 
