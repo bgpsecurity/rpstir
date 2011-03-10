@@ -125,7 +125,8 @@ static void signCRL(struct CertificateRevocationList *crlp, char *keyfile)
   else
     {
     signature = (uchar *)calloc(1, signatureLength +20);
-    if ((ansr = cryptCreateSignature(signature, 200, &signatureLength, sigKeyContext,
+    if ((ansr = cryptCreateSignature(signature, signatureLength + 20, 
+      &signatureLength, sigKeyContext,
       hashContext)) != 0) msg = "signing";
     else if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext, 
       hashContext)) != 0) msg = "verifying";
