@@ -777,7 +777,8 @@ else
         for(from++, val2 = 0; *from && *from != '.' && *from >= '0' && *from <= '9';
              val2 = (val2 * 10) + *from++ - '0');
         if (*from && *from != '.') syntax(from);
-        c += putobjid((c = to), (val + val2), 0);
+        c = to;
+        c += putobjid(c, (val + val2), 0);
         if (*from) from++;
         while(*from)
             {

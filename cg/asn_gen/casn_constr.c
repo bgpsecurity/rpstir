@@ -114,7 +114,6 @@ static char simple_opener[] =
     defined_flag[] =    "    mine->self.flags |= ASN_DEFINED_FLAG;\n",
     set_bool_def[] =    "    mine->%s.min = %d;\n",
     set_flags[] =       "    mine->%s.flags |= ",
-    set_prim_flags[] =  "    mine->flags |= ",
     set_flags_self[] =  "    mine->%s.self.flags |= ",
     set_int_def[] =     "    mine->%s.ptr = (struct casn *)((long)%s);\n",
 
