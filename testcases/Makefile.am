@@ -23,7 +23,7 @@
 AM_CFLAGS = -g -I../cg/asn -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib
 bin_PROGRAMS=make_test_cert make_test_crl make_test_roa make_test_manifest  gen_test_key cert_validate
 
-LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a
+LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a ../utils/libutils.a
 
 make_test_cert_SOURCES = make_test_cert.c adjustTime.c
 make_test_cert_LDFLAGS = -lpthread $(LIBS)

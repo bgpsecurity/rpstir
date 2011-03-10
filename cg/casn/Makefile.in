@@ -193,6 +193,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -g -Wall -DINTEL
+AM_CPPFLAGS = -I../../utils
 noinst_LIBRARIES = libcasn.a
 libcasn_a_SOURCES = casn.c casn_bit.c casn_bits.c casn_copy_diff.c casn_dump.c \
 	casn_error.c casn_file_ops.c casn_num.c casn_objid.c casn_other.c \

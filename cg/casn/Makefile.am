@@ -21,6 +21,7 @@
 # ***** END LICENSE BLOCK *****
 
 AM_CFLAGS = -g -Wall -DINTEL
+AM_CPPFLAGS = -I../../utils
 
 noinst_LIBRARIES = libcasn.a
 

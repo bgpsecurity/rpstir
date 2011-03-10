@@ -52,12 +52,13 @@ create_object_OBJECTS = $(am_create_object_OBJECTS)
 create_object_LDADD = $(LDADD)
 create_object_DEPENDENCIES = ../../proto/librpki.a \
 	../../roa-lib/libroa.a ../../cg/asn/libasn.a \
-	../../cg/casn/libcasn.a
+	../../cg/casn/libcasn.a ../../utils/libutils.a
 am_gen_hash_OBJECTS = gen_hash.$(OBJEXT)
 gen_hash_OBJECTS = $(am_gen_hash_OBJECTS)
 gen_hash_LDADD = $(LDADD)
 gen_hash_DEPENDENCIES = ../../proto/librpki.a ../../roa-lib/libroa.a \
-	../../cg/asn/libasn.a ../../cg/casn/libcasn.a
+	../../cg/asn/libasn.a ../../cg/casn/libcasn.a \
+	../../utils/libutils.a
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -174,7 +175,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -g -Wall -DDEBUG -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn
 AM_LDFLAGS = $(LIBS)
-LDADD = ../../proto/librpki.a ../../roa-lib/libroa.a ../../cg/asn/libasn.a ../../cg/casn/libcasn.a
+LDADD = ../../proto/librpki.a ../../roa-lib/libroa.a ../../cg/asn/libasn.a \
+	../../cg/casn/libcasn.a ../../utils/libutils.a
+
 create_object_SOURCES = create_object.c create_object.h create_cert.h \
 	create_manifest.c create_roa.h create_utils.h obj_err.h create_crl.c \
 	create_cert.c create_manifest.h create_roa.c create_utils.c \

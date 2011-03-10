@@ -33,6 +33,7 @@ Cambridge, Ma. 02138
 char casn_sfcsid[] = "@(#)casn.c 871P";
 #include "casn.h"
 #include <stdio.h>
+#include "logutils.h"
 
 #define ASN_READ 1          // modes for encode & read
 
@@ -182,6 +183,8 @@ int decode_casn_lth(struct casn *casnp, uchar *from, int lth)
     int ansr = _match_casn(casnp, from, lth, (ushort)0, (short)0, 
       (struct casn *)0, &has_indef);
     casnp->flags |= has_indef;
+    if (ansr < 0) log_msg(LOG_ERR, "ASN.1 decode error at %s, offset %d (0x%x)", 
+      casn_err_struct.asn_map_string, -ansr, -ansr);
     return ansr;
     }
 

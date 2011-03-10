@@ -32,7 +32,7 @@ AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 
-LDADD = ../asn/libasn.a ../casn/libcasn.a
+LDADD = ../asn/libasn.a ../casn/libcasn.a ../../utils/libutils.a
 
 test_casn_random_SOURCES = test_casn_random.c 
 dump_SOURCES = dump.c asn.c asn_dump.c util.c asn.h

@@ -78,140 +78,166 @@ PROGRAMS = $(bin_PROGRAMS)
 am_add_key_info_OBJECTS = add_key_info.$(OBJEXT)
 add_key_info_OBJECTS = $(am_add_key_info_OBJECTS)
 add_key_info_LDADD = $(LDADD)
-add_key_info_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+add_key_info_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 add_key_info_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(add_key_info_LDFLAGS) $(LDFLAGS) -o $@
 am_bin_to_six_OBJECTS = bin_to_six.$(OBJEXT) prencode.$(OBJEXT)
 bin_to_six_OBJECTS = $(am_bin_to_six_OBJECTS)
 bin_to_six_LDADD = $(LDADD)
-bin_to_six_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+bin_to_six_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_change_cms_cert_OBJECTS = change_cms_cert.$(OBJEXT)
 change_cms_cert_OBJECTS = $(am_change_cms_cert_OBJECTS)
 change_cms_cert_LDADD = $(LDADD)
-change_cms_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+change_cms_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 change_cms_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(change_cms_cert_LDFLAGS) $(LDFLAGS) -o $@
 am_checkLTAtest_OBJECTS = checkLTAtest.$(OBJEXT)
 checkLTAtest_OBJECTS = $(am_checkLTAtest_OBJECTS)
 checkLTAtest_LDADD = $(LDADD)
-checkLTAtest_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+checkLTAtest_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 checkLTAtest_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(checkLTAtest_LDFLAGS) $(LDFLAGS) -o $@
 am_dump_OBJECTS = dump.$(OBJEXT) asn.$(OBJEXT) asn_dump.$(OBJEXT) \
 	util.$(OBJEXT)
 dump_OBJECTS = $(am_dump_OBJECTS)
 dump_LDADD = $(LDADD)
-dump_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+dump_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_dumpIPAddr_OBJECTS = dumpIPAddr.$(OBJEXT)
 dumpIPAddr_OBJECTS = $(am_dumpIPAddr_OBJECTS)
 dumpIPAddr_LDADD = $(LDADD)
-dumpIPAddr_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+dumpIPAddr_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 dumpIPAddr_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(dumpIPAddr_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_dump_smart_OBJECTS = dump_smart.$(OBJEXT)
 dump_smart_OBJECTS = $(am_dump_smart_OBJECTS)
 dump_smart_LDADD = $(LDADD)
-dump_smart_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+dump_smart_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 dump_smart_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(dump_smart_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_dumpasn1_OBJECTS = dumpasn1.$(OBJEXT)
 dumpasn1_OBJECTS = $(am_dumpasn1_OBJECTS)
 dumpasn1_LDADD = $(LDADD)
-dumpasn1_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+dumpasn1_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_encode_oid_OBJECTS = encode-oid.$(OBJEXT)
 encode_oid_OBJECTS = $(am_encode_oid_OBJECTS)
 encode_oid_LDADD = $(LDADD)
-encode_oid_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+encode_oid_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_extractCMScert_OBJECTS = extractCMScert.$(OBJEXT)
 extractCMScert_OBJECTS = $(am_extractCMScert_OBJECTS)
 extractCMScert_LDADD = $(LDADD)
-extractCMScert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+extractCMScert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 extractCMScert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(extractCMScert_LDFLAGS) $(LDFLAGS) -o $@
 am_extractPubKeyInfo_OBJECTS = extractPubKeyInfo.$(OBJEXT)
 extractPubKeyInfo_OBJECTS = $(am_extractPubKeyInfo_OBJECTS)
 extractPubKeyInfo_LDADD = $(LDADD)
-extractPubKeyInfo_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+extractPubKeyInfo_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 extractPubKeyInfo_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(extractPubKeyInfo_LDFLAGS) $(LDFLAGS) -o $@
 am_gen_key_OBJECTS = gen_key.$(OBJEXT)
 gen_key_OBJECTS = $(am_gen_key_OBJECTS)
 gen_key_LDADD = $(LDADD)
-gen_key_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+gen_key_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 gen_key_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(gen_key_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_loadkey_OBJECTS = loadkey.$(OBJEXT)
 loadkey_OBJECTS = $(am_loadkey_OBJECTS)
 loadkey_LDADD = $(LDADD)
-loadkey_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+loadkey_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 loadkey_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(loadkey_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_makeLTAtest_OBJECTS = makeLTAtest.$(OBJEXT)
 makeLTAtest_OBJECTS = $(am_makeLTAtest_OBJECTS)
 makeLTAtest_LDADD = $(LDADD)
-makeLTAtest_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+makeLTAtest_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 makeLTAtest_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(makeLTAtest_LDFLAGS) $(LDFLAGS) -o $@
 am_make_TA_OBJECTS = make_TA.$(OBJEXT)
 make_TA_OBJECTS = $(am_make_TA_OBJECTS)
 make_TA_LDADD = $(LDADD)
-make_TA_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+make_TA_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 make_TA_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(make_TA_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_make_oidtable_OBJECTS = make_oidtable.$(OBJEXT)
 make_oidtable_OBJECTS = $(am_make_oidtable_OBJECTS)
 make_oidtable_LDADD = $(LDADD)
-make_oidtable_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+make_oidtable_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_read_roa_OBJECTS = read_roa.$(OBJEXT)
 read_roa_OBJECTS = $(am_read_roa_OBJECTS)
 read_roa_LDADD = $(LDADD)
-read_roa_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+read_roa_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 read_roa_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(read_roa_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_rr_OBJECTS = rr.$(OBJEXT) md2.$(OBJEXT) asn.$(OBJEXT)
 rr_OBJECTS = $(am_rr_OBJECTS)
 rr_LDADD = $(LDADD)
-rr_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+rr_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_set_cert_ski_OBJECTS = set_cert_ski.$(OBJEXT)
 set_cert_ski_OBJECTS = $(am_set_cert_ski_OBJECTS)
 set_cert_ski_LDADD = $(LDADD)
-set_cert_ski_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+set_cert_ski_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 set_cert_ski_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(set_cert_ski_LDFLAGS) $(LDFLAGS) -o $@
 am_sign_cert_OBJECTS = sign_cert.$(OBJEXT)
 sign_cert_OBJECTS = $(am_sign_cert_OBJECTS)
 sign_cert_LDADD = $(LDADD)
-sign_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+sign_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 sign_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(sign_cert_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_six2hex_OBJECTS = six2hex.$(OBJEXT) prencode.$(OBJEXT)
 six2hex_OBJECTS = $(am_six2hex_OBJECTS)
 six2hex_LDADD = $(LDADD)
-six2hex_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+six2hex_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_six_to_bin_OBJECTS = six_to_bin.$(OBJEXT) prencode.$(OBJEXT)
 six_to_bin_OBJECTS = $(am_six_to_bin_OBJECTS)
 six_to_bin_LDADD = $(LDADD)
-six_to_bin_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+six_to_bin_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_test_casn_random_OBJECTS = test_casn_random.$(OBJEXT)
 test_casn_random_OBJECTS = $(am_test_casn_random_OBJECTS)
 test_casn_random_LDADD = $(LDADD)
-test_casn_random_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+test_casn_random_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 am_test_cert_OBJECTS = test_cert.$(OBJEXT)
 test_cert_OBJECTS = $(am_test_cert_OBJECTS)
 test_cert_LDADD = $(LDADD)
-test_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+test_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 test_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(test_cert_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_update_cert_OBJECTS = update_cert.$(OBJEXT)
 update_cert_OBJECTS = $(am_update_cert_OBJECTS)
 update_cert_LDADD = $(LDADD)
-update_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+update_cert_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 update_cert_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(update_cert_LDFLAGS) $(LDFLAGS) -o $@
 am_whatsfcs_OBJECTS = whatsfcs.$(OBJEXT) prencode.$(OBJEXT)
 whatsfcs_OBJECTS = $(am_whatsfcs_OBJECTS)
 whatsfcs_LDADD = $(LDADD)
-whatsfcs_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a
+whatsfcs_DEPENDENCIES = ../asn/libasn.a ../casn/libcasn.a \
+	../../utils/libutils.a
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -350,7 +376,7 @@ AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
 	-I../../proto
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
-LDADD = ../asn/libasn.a ../casn/libcasn.a
+LDADD = ../asn/libasn.a ../casn/libcasn.a ../../utils/libutils.a
 test_casn_random_SOURCES = test_casn_random.c 
 dump_SOURCES = dump.c asn.c asn_dump.c util.c asn.h
 rr_SOURCES = rr.c md2.c asn.c asn.h
