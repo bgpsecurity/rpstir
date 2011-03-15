@@ -639,10 +639,14 @@ int main(int argc, char **argv)
     log_close();
     return 0;
   } else {
+    int ret;
+    log_msg(LOG_DEBUG, "Executing: %s", str);
     // NOTE: THE system CALL IS INHERENTLY DANGEROUS.
     //   CARE WAS TAKEN TO ENSURE THAT THE ARGUMENT str DOES NOT
     //   CONTAIN FUNNY SHELL CHARACTERS
-    system (str);
+    ret = system (str);
+    log_msg((ret == 0) ? LOG_DEBUG : LOG_ERR,
+	    "Return value: %d (command = %s)", ret, str);
   }
 
   // write timestamp into database
