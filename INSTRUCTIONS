@@ -402,12 +402,12 @@ publication points, write the following configuration file.  The
 example below needs no pre-configured publication points since the
 publication points will be derived from the trust anchors.
 
-    cat > initial_rsync.config <<EOF
+    #### Contents of initial_rsync.config ####
     RSYNC=/usr/local/bin/rsync
     REPOSITORY=/home/bbn/rpki/trunk/REPOSITORY
     LOGS=/home/bbn/rpki/trunk/LOGS
     DIRS=""
-    EOF
+    ##########################################
 
 Adjust the paths for REPOSITORY and LOGS above to match your
 $RPKI_ROOT directory.
