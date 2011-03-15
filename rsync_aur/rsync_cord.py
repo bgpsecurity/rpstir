@@ -23,6 +23,18 @@ BLOCK_TIMEOUT = 1
 IP_LISTENER = '127.0.0.1'
 
 #
+# Test if an IP/Port is open
+#
+def isTCPPortOpen(ip,port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect((ip,int(port)))
+        s.shutdown(socket.SHUT_RDWR)
+        return True
+    except:
+        return False
+
+#
 # A short utility function to handle tcp sending and error checking
 #
 def send_to_listener(data,logger):
@@ -186,8 +198,7 @@ def rotate_logs():
 # Function to launch the rsync_listener
 #
 def launch_listener():
-    output = commands.getoutput('ps -A')
-    if not 'rsync_listener' in output:
+    if not isTCPPortOpen(IP_LISTENER,portno):
         os.putenv('RPKI_LOGDIR', logDir)
         p = Popen("%s/rsync_aur/rsync_listener %d" % \
               (os.getenv('RPKI_ROOT'),portno), shell=True)
@@ -259,7 +270,7 @@ except:
     print "Check permissions on your config file or that it exists"
     sys.exit(1)
 
-lines = configParse.readlines(10000)
+lines = configParse.readlines()
 dirs = ""
 rsyncDir = ""
 repoDir = ""
