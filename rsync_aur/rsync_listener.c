@@ -90,6 +90,8 @@ int main (int argc, char *argv [])
 		/*parse out the uri, repository location, and log location*/
 		char *parse_me = parse_node->payload;
 		parse_me = strtok(parse_me,"\r");
+		if (!parse_me)
+		  continue;
 		
 		/*When we encounter this message it should be appended to the end of the queue*/
 		if(!strcmp(parse_me,"FINISH_QUEUE_EXIT")){
