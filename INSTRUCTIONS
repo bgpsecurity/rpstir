@@ -435,24 +435,33 @@ same executable that adds the trust anchors--but with flags which
 enable a different mode where it perpetually listens on a TCP socket
 for notifications of rsync updates.
 
-     run_scripts/loader.sh &
+     xterm -e run_scripts/loader.sh &
 
-It may be helpful to run this in a separate window instead of
-backgrounding the process.
+As the command indicates, it is useful run loader.sh in a new xterm
+window.  Doing so separates the DB updater (rcli) log messages from
+the chaser/rsync log messages.
 
 3.1.4 Automatically download Trust Anchors using TAL files.
 
-A trust anchor in the RPKI is obtained through a Trust Anchor Locator
-(TAL), which allows distribution via a mix of out-of-band and online
-means [draft-ietf-sidr-ta].  We assume that the trust anchor locators
-themselves have been obtained through a reliable out-of-band means.
+A trust anchor certificate in the RPKI is obtained through a long term
+Trust Anchor Locator (TAL), which allows distribution via a mix of
+out-of-band and online means [draft-ietf-sidr-ta].  In practice,
+relying parties obtain TAL files through a trusted out-of-band channel
+of their choice.  For testing purposes, these instructions use Rob
+Austein's collection of sample trust anchors found at
+http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors .
 
     cd $RPKI_ROOT
-    # The following three commands should be replaced by reliable methods.
-    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-ripe.ita
-    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-arin.ita
-    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-apnic.ita
-    run_scripts/updateTA.py testbed-ripe.ita testbed-arin.ita testbed-apnic.ita
+    # The following three commands retrieve three example long-term
+    # trust anchors in the form of TALs.  Operationally, these TALs
+    # must be obtained through a trusted channel, not HTTP!
+    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-ripe.tal
+    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-arin.tal
+    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-apnic.tal
+    # The following command parses the TAL files, downloads the trust
+    # anchor certificates, verifies their public key and signature, and
+    # inserts them into the local database.
+    run_scripts/updateTA.py testbed-ripe.tal testbed-arin.tal testbed-apnic.tal
 
 3.1.5 Manually insert trust anchors (optional).
 
