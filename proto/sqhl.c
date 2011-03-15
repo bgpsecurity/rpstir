@@ -2499,7 +2499,12 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) log_msg(LOG_ERR, "invalid manifest %s", outfull);
+  if (sta < 0) 
+    {
+    log_msg(LOG_ERR, "invalid manifest %s", outfull);
+    delete_casn(&roa.self);
+    return ERR_SCM_INVALASN;
+    }
   if (sta < 0 || (sta = manifestValidate(&roa)) < 0)
     {
     delete_casn(&roa.self);
