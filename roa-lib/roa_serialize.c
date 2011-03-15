@@ -1792,7 +1792,7 @@ int roaFromFile(char *fname, int fmt, int doval, struct ROA *rp)
       iReturn = 0;
       // did we use all of buf, no more and no less?
       int ret;
-      if ((ret = decode_casn(&rp->self, buf)) != iSize)
+      if ((ret = decode_casn_lth(&rp->self, buf, iSize)) < 0)
         {
         fprintf(stderr, "roaFromFile: scan failed at offset %d\n", -ret);
         delete_casn(&rp->self);
