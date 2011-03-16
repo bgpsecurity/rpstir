@@ -747,12 +747,7 @@ int roaValidate2(struct ROA *rp)
             // OK, got the cert family, too f it's not inheriting
         if (iRes == 0 && 
           tag_casn(&rpAddrFamp->ipAddressChoice.self) == ASN_SEQUENCE) 
-          {  // set up initial entry in cert
-          struct IPAddressOrRangeA *rpAddrRangep = 
-            &rpAddrFamp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
-          if ((sta=setup_cert_minmax(rpAddrRangep, cmin, cmax, cfam[1])) < 0) 
-            iRes = sta;
-               // go through all ip addresses in that ROA family
+          {  // go through all ip addresses in that ROA family
           struct ROAIPAddress *roaAddrp;
           for (roaAddrp = &ripAddrFamp->addresses.rOAIPAddress; 
             roaAddrp && iRes == 0;
@@ -760,6 +755,11 @@ int roaValidate2(struct ROA *rp)
             {   // set up the limits
 	    if ((sta = setup_roa_minmax(
                 &roaAddrp->address, rmin, rmax, rfam[1])) < 0) iRes = sta;
+              // first set up initial entry in cert
+            struct IPAddressOrRangeA *rpAddrRangep = 
+              &rpAddrFamp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
+            if ((sta=setup_cert_minmax(rpAddrRangep, cmin, cmax, cfam[1])) < 0) 
+              iRes = sta;
               // go through cert addresses until a high enough one is found
               // i.e. skip cert addresses whose max is below roa's min
             while (iRes == 0 && rpAddrRangep &&

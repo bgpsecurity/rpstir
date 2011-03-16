@@ -1354,7 +1354,7 @@ static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
 //  (void)printf("VERIFY_ROA %d\n", sta);
   if ( sta >= 0 )
     set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
-  return (sta < 0) ? ERR_SCM_NOTVALID : 0;
+  return (sta < 0) ? sta : 0;
 }
 
 /* utility function for setting and zeroing the flags dealing with
