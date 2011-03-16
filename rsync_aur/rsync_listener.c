@@ -16,7 +16,7 @@
  *
  * ***** END LICENSE BLOCK *****
  *
- * @brief Starts a simple TCP server  and listens for incoming connections
+ * @brief Starts a simple TCP server and listens for incoming connections
  * from rsync_cord.py. Once a connection is established a retrieval log
  * file name and the local file cache name are sent, parsed, and queued.
  * Eventually all files are dequeued and passed to the log_parser and updated
@@ -90,8 +90,13 @@ int main (int argc, char *argv [])
 		/*parse out the uri, repository location, and log location*/
 		char *parse_me = parse_node->payload;
 		parse_me = strtok(parse_me,"\r");
-		if (!parse_me)
-		  continue;
+		
+        /*If this was just a connection test*/
+        if (!parse_me){
+            free(parse_node->payload);
+            free(parse_node);
+            continue;
+        }
 		
 		/*When we encounter this message it should be appended to the end of the queue*/
 		if(!strcmp(parse_me,"FINISH_QUEUE_EXIT")){
@@ -108,6 +113,8 @@ int main (int argc, char *argv [])
 			}
 			create_new_log();
 			/*adjusted our logging ready for a fresh instance of rsync_cord.py*/
+           	free(parse_node->payload);
+			free(parse_node);
 			continue;
 		}
 		char *uri, *rep_loc, *log_loc;
