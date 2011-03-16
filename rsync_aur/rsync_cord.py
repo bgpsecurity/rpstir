@@ -127,8 +127,7 @@ def thread_controller():
         thr.start()
         threadPool.append(thr)
  
-    if debug:
-        main.info('Number of threads spawned: %d' % len(threadPool))
+    main.debug('Number of threads spawned: %d' % len(threadPool))
 
     notAliveCount = 0
     # while the last count of the dead threads is less than the number spawned
@@ -139,8 +138,7 @@ def thread_controller():
             if not i.isAlive():
                 notAliveCount = notAliveCount + 1
 
-    if debug:
-        main.info('Threads have all closed')
+    main.debug('Threads have all closed')
 
     # Send the RSYNC finished message to the listener
     data = 'RSYNC_DONE'
@@ -200,10 +198,12 @@ def rotate_logs():
 def launch_listener():
     if not isTCPPortOpen(IP_LISTENER,portno):
         os.putenv('RPKI_LOGDIR', logDir)
-        p = Popen("%s/rsync_aur/rsync_listener %d" % \
-              (os.getenv('RPKI_ROOT'),portno), shell=True)
-        if debug:
-            main.info('rsync_listener pid: %s' % p.pid)
+        cmdline = "%s/rsync_aur/rsync_listener %d" % \
+            (os.getenv('RPKI_ROOT'),portno)
+        main.debug('Launching rsync listener: RPKI_LOGDIR=%s %s' % \
+                       (logDir, cmdline))
+        p = Popen(cmdline, shell=True)
+        main.debug('rsync_listener pid: %d' % p.pid)
     else:
         main.info('rsync_listener was already running. Continuing execution.')
 
@@ -322,7 +322,11 @@ for direc in eachDir:
 rotate_logs()
 
 #Set up logging
-logging.basicConfig(level=logging.DEBUG,
+if debug:
+    requested_log_level = logging.DEBUG
+else:
+    requested_log_level = logging.INFO
+logging.basicConfig(level=requested_log_level,
 	format='%(asctime)-21s %(levelname)-5s %(name)-19s %(message)s',
 	datefmt='%d-%b-%Y-%H:%M:%S',
 	filename='%s/rsync_cord.log' % (logDir),
@@ -330,8 +334,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 #Generate the debug logger
 main = logging.getLogger('main')
-if debug:
-    main.info('This will process %d URI\'s from %s' % (len(dirs), configFile))
+main.debug('This will process %d URI\'s from %s' % (len(dirs), configFile))
 
 #launch the listener and the threads
 if URIPool.qsize() == 0:

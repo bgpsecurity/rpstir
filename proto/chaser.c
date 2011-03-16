@@ -633,7 +633,7 @@ int main(int argc, char **argv)
   snprintf (rsyncStr2, sizeof(rsyncStr2), "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
   fputs (rsyncStr2, configFile);
   fclose (configFile);
-  snprintf(str, sizeof(str), "python %s/rsync_aur/rsync_cord.py -c chaser_rsync.config -t %d -p %d", rsyncDir, tcount, listPort);
+  snprintf(str, sizeof(str), "python %s/rsync_aur/rsync_cord.py -d -c chaser_rsync.config -t %d -p %d", rsyncDir, tcount, listPort);
   if (noExecute) {
     log_msg(LOG_NOTICE, "Would have executed: %s", str);
     log_close();
