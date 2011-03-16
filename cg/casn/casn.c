@@ -237,12 +237,12 @@ Procedure:
     else
         {
         casnp->startp = _free_it(casnp->startp);
-        casnp->lth = 0;
         if ((casnp->flags & ASN_TABLE_FLAG))
             {
-            if (!(ncasnp = casnp->ptr))
+            ncasnp = casnp->ptr;
+            if (!ncasnp)
                 {
-                _casn_obj_err(casnp, ASN_GEN_ERR);
+                if (casnp->lth) _casn_obj_err(casnp, ASN_GEN_ERR);
                 return;
                 }
             for (num = (ncasnp++)->lth;  num--; ncasnp++)
@@ -252,6 +252,7 @@ Procedure:
             casnp->ptr = _free_it(casnp->ptr);
             }
         }
+        casnp->lth = 0;
     }
 
 struct casn *dup_casn(struct casn *casnp)
