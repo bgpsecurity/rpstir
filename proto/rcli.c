@@ -322,7 +322,7 @@ static int makesock(char *porto, int *protosp)
 	  return(sta);
 	}
 //  (void)setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
-      sta = listen(protos, 1);
+      sta = listen(protos, 5);
       if ( sta < 0 )
 	{
 	  close(protos);
