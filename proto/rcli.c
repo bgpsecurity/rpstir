@@ -459,8 +459,12 @@ static char *sock1line(int s, char **leftp)
   if ( left != NULL )
     leen = strlen(left);
   sta = ioctl(s, FIONREAD, &rd);
-  if ( sta < 0 || rd <= 0 )
+  if ( sta < 0 )
     return(NULL);
+  /* Blocking mode, by A. Chi, 3/18/11.  Even if no data is available
+     yet, block until we can read at least one byte. */
+  if ( rd <= 0)
+    rd = 1;
   left2 = (char *)calloc(leen+rd+1, sizeof(char));
   if ( left2 == NULL )
     return(NULL);
@@ -486,7 +490,9 @@ static char *sock1line(int s, char **leftp)
   returns 0 if the other end appears to still be connected, and a
   negative error code otherwise.
 */
-
+/* Probe routine commented out by A. Chi, on 3/18/11 because if we are
+   in blocking mode, it is unnecessary. */
+/*
 static int probe(int s)
 {
   struct sockaddr_in from;
@@ -521,6 +527,7 @@ static int probe(int s)
     return(-6);
   return(0);
 }
+*/
 
 /*
   Receive one or more lines of data over the socket and process
@@ -585,11 +592,15 @@ static int sockline(scm *scmp, scmcon *conp, int s)
 
   for (done = 0; !done; )
     {
+      /* If we are in blocking mode, probe() is unnecessary. Commented
+	 out by A. Chi, 3/18/11. */
+      /*
       if ( (sta=probe(s)) < 0 )
 	{
 	  log_msg(LOG_ERR, "Probe error %d", sta);
 	  return(sta);
 	}
+      */
       ptr = sock1line(s, &left);
       if ( ptr == NULL )
 	continue;
