@@ -420,7 +420,7 @@ new database with all the right tables.  Be prepared to enter the root
 MySQL password twice.
 
     cd $RPKI_ROOT
-    rm -rf REPOSITORY LOGS chaser.log rcli.log  # clear existing data
+    rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log
     mkdir -p REPOSITORY
     mkdir -p LOGS
     run_scripts/initDB.sh
