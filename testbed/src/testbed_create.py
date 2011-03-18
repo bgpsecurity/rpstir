@@ -36,12 +36,12 @@ FACTORIES = {}
 #
 def parse(toMod, val):
         # parse the string like AFRINIC,1%APNIC,2%RIPE,2...
-        tup = val.split('%')
+        tup = val.split(',')
         for i in tup:
                 try:
                         #split the individual groups
-                        one,two=i.split(',')
-                        x = (one,int(two))
+                        one,two=i.split('%')
+                        x = (one.strip(),int(two.strip()))
                         toMod.append(x)
                 except ValueError:
                         print 'A value error occurred for: %s' %(i)
