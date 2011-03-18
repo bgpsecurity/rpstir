@@ -158,7 +158,7 @@ int main (int argc, char *argv [])
 			/*Initilize buffers to be safe due to issues with OpenBSD*/
 			memset(path,'\0',MAXREAD);
 			memset(command,'\0',MAXREAD);	
-			snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
+			snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -s -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
 			log_msg(LOG_DEBUG,"%s",command);
 			log_flush();
 
