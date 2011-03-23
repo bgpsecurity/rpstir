@@ -199,7 +199,7 @@ int main(int argc, char **argv)
   struct CertificateRevocationListToBeSigned *crltbsp = 
     &crl.toBeSigned;
   struct CertificateToBeSigned *ctbsp = &cert.toBeSigned;
-  write_casn_num(&crltbsp->version.self, 2);
+  write_casn_num(&crltbsp->version.self, 1);
   copy_casn(&crltbsp->signature.self, &ctbsp->signature.self);
   copy_casn(&crl.algorithm.self, &ctbsp->signature.self);
   copy_casn(&crltbsp->issuer.self, &ctbsp->subject.self);
