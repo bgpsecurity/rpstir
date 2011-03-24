@@ -68,6 +68,7 @@ def configuration_parser(factory_dict,fileName):
                         a          = 0
                         roav4l     = []
                         roav6l     = []
+                        subjkeyfile= None
                         
                         for opt in options:
                                 if opt == 'childspec':
@@ -104,6 +105,9 @@ def configuration_parser(factory_dict,fileName):
                                         parse(roav6l, l)
                                 elif opt == 'asid':
                                         a = config.getint(section,opt)
+                                elif opt == 'subjkeyfile':
+                                        val = config.get(section,opt)
+                                        subjkeyfile = val.strip()
                                 else:
                                         print 'Opt in config file not recognized: %s' % (opt)
                         try:
@@ -115,7 +119,8 @@ def configuration_parser(factory_dict,fileName):
                                 f = Factory(bluePrintName=name, ipv4List=ipv4,
                                             ipv6List=ipv6, asList=as_list,
                                             childSpec=child, serverName=server,
-                                            breakAway=breakA, ttl=t)
+                                            breakAway=breakA, ttl=t,
+                                            subjkeyfile=subjkeyfile)
                         elif type == 'M':
                                 pass
                         elif type == 'CR':

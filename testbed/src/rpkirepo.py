@@ -55,7 +55,8 @@ class ASRange:
 
 class Factory:
     def __init__(self, bluePrintName = "", ipv4List = [], ipv6List= [],\
-            asList = [], childSpec = [()], serverName = "", breakAway = False, ttl = 0):
+                 asList = [], childSpec = [()], serverName = "",\
+                 breakAway = False, ttl = 0, subjkeyfile=None):
         # Particular type of CA object as specified in config file
         self.bluePrintName = bluePrintName
         
@@ -75,8 +76,11 @@ class Factory:
         self.serverName = serverName        
         self.breakAway = breakAway
         
-        #Time to live given as seconds due
+        #Time to live before certificate expiration, measured in days
         self.ttl = ttl
+
+        #Subject key-pair file.  Used for IANA, possibly others.
+        self.subjkeyfile = subjkeyfile
         
     def create(self, parent):
         if DEBUG_ON:
@@ -213,7 +217,7 @@ class EE_Object:
     
 class CA_Object:
 
-    def __init__(self, myFactory, parent=None):
+    def __init__(self, myFactory, parent=None, subjkeyfile=None):
 
         self.nextChildSN = 0
         self.bluePrintName = myFactory.bluePrintName
@@ -246,9 +250,11 @@ class CA_Object:
             self.certificate = CA_cert(parent,myFactory,
                                        self.ipv4Resources,
                                        self.ipv6Resources,
-                                       self.asResources)
+                                       self.asResources,
+                                       subjkeyfile=subjkeyfile)
         else:
-            self.certificate = SS_cert(parent,myFactory)
+            self.certificate = SS_cert(parent,myFactory,
+                                       subjkeyfile=subjkeyfile)
         #Grab what I need from the certificate 
         #Obtain just the SIA path and cut off the r:rsync://
         sia_list = self.certificate.sia[len(RSYNC_EXTENSION):].split(",")

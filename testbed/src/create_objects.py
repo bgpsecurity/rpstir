@@ -23,6 +23,7 @@ import subprocess
 from time import time
 import base64
 import binascii
+import shutil
 
 OBJECT_PATH = "../objects"
 REPO_PATH = OBJECT_PATH+"/REPOSITORY"
@@ -167,7 +168,8 @@ class Certificate:
     def __init__(self,parent, myFactory,sia_path, serial,
                  ipv4=None,
                  ipv6=None,
-                 as_list=None):
+                 as_list=None,
+                 subjkeyfile=None):
         
         self.serial = serial
         
@@ -182,13 +184,30 @@ class Certificate:
         #Also check the directory first, and create it if it doesn't exist
         dir_path = OBJECT_PATH+"/keys/"+sia_path
         self.subjkeyfile = dir_path+"/"+nickName+".p15"
-        command_string = "../../cg/tools/gen_key "+self.subjkeyfile+ " 2048"
         if not os.path.exists(dir_path):
             os.system("mkdir -p "+ dir_path)
-        os.system(command_string)
-        if DEBUG_ON:
-            print command_string      
-            
+
+        # Subject key pair is either (in order of priority)...
+        # 1) pre-specified for this certificate
+        # 2) pre-specified for this factory (e.g. IANA, maybe RIRs)
+        # 3) generated
+        if subjkeyfile is not None:
+            shutil.copyfile(subjkeyfile, self.subjkeyfile)
+            if DEBUG_ON:
+                print "Copying pre-specified key file: " + subjkeyfile +\
+                      " to " + self.subjkeyfile
+        elif myFactory.subjkeyfile is not None:
+            shutil.copyfile(myFactory.subjkeyfile, self.subjkeyfile)
+            if DEBUG_ON:
+                print "Copying factory pre-specified key file: " + \
+                      myFactory.subjkeyfile + " to " + self.subjkeyfile
+        else:
+            command_string = "../../cg/tools/gen_key " + \
+                             self.subjkeyfile + " 2048"
+            os.system(command_string)
+            if DEBUG_ON:
+                print command_string
+        
         #Generate our ski by getting the hash of the public key 
         #Result from .p15 -> hash(public_key) which is a hex string
         self.ski = generate_ski(self.subjkeyfile)
@@ -233,7 +252,8 @@ class Certificate:
 # The CA Certificate class. Inherits from Certificate
 #
 class CA_cert(Certificate):
-    def __init__(self, parent, myFactory, ipv4, ipv6, as_list):
+    def __init__(self, parent, myFactory, ipv4, ipv6, as_list,
+                 subjkeyfile=None):
         
         serial = parent.getNextChildSN()
          #Local variable to help with naming conventions
@@ -250,7 +270,7 @@ class CA_cert(Certificate):
         self.crldp = "rsync://"+parent.SIA_path+"/"+b64encode_wrapper(parent.certificate.ski)+".crl"
         self.aia   = "rsync://"+parent.path_CA_cert[len(REPO_PATH)+1:]
         Certificate.__init__(self,parent, myFactory,sia_path,serial,
-                             ipv4,ipv6,as_list)
+                             ipv4,ipv6,as_list, subjkeyfile=subjkeyfile)
         self.sia = "r:rsync://"+sia_path+"/,m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=False")
@@ -288,7 +308,7 @@ class EE_cert(Certificate):
 # The SS certificate class. Inherits from Certificate
 #
 class SS_cert(Certificate):
-    def __init__(self, parent, myFactory):
+    def __init__(self, parent, myFactory, subjkeyfile=None):
       
         #Iana should have zero!
         serial = 0
@@ -296,7 +316,8 @@ class SS_cert(Certificate):
         nickName = myFactory.bluePrintName+"-"+str(serial)
   
         sia_path = myFactory.serverName + "/"+nickName
-        Certificate.__init__(self,parent,myFactory,sia_path,serial)
+        Certificate.__init__(self,parent,myFactory,sia_path,serial,
+                             subjkeyfile=subjkeyfile)
         self.sia = "r:rsync://"+sia_path+"/,m:rsync://"+sia_path+"/"+b64encode_wrapper(self.ski)+".mft"
         writeConfig(self)
         create_binary(self, "CERTIFICATE selfsigned=True")
