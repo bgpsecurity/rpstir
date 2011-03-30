@@ -370,11 +370,15 @@ int main(int argc, char **argv)
   int      chaseDepth = 0;
   int      uriListChanged = 0;
   char     dirs[50][120], str[180], *str2;
-  char     *dir2, dirStr[4000], rsyncStr[500], rsyncStr2[4500];
+  char     *dir2;
+  char     *dirStr = NULL;
+  char     *rsyncStr2 = NULL;
+  char     rsyncStr[500];
   char     rsyncDir[200];
   char     *origFile = "rsync_pull_sample.config";
   FILE     *fp, *configFile;
-
+  int sizeof_dirStr, sizeof_rsyncStr2;
+  
   // initialize
   if (getenv ("RPKI_ROOT") != NULL)
     snprintf (rsyncDir, sizeof(rsyncDir), "%s", getenv ("RPKI_ROOT"));
@@ -608,14 +612,25 @@ int main(int argc, char **argv)
   ****/
 
   // aggregate those from same system and call rsync and rsync_aur
-  dirStr[0] = 0;
+  sizeof_dirStr = 0;
+  for (i = 0; i < numURIs; i++) {
+    dir2 = &uris[i][RSYNC_PREFIX_LEN];
+    sizeof_dirStr += strlen(dir2);
+    sizeof_dirStr += 1;
+  }
+  dirStr = (char*)realloc(dirStr, sizeof_dirStr * sizeof(char));
+  if (!dirStr) {
+    log_msg(LOG_ERR, "Out of memory, data lost!");
+    exit(1);
+  }
+  dirStr[0] = '\0';
   for (i = 0; i < numURIs; i++) {
     dir2 = &uris[i][RSYNC_PREFIX_LEN];
     if (dir2 [strlen (dir2) - 1] == '/')
       dir2 [strlen (dir2) - 1] = 0;
     if (i > 0)
-      strncat (dirStr, " ", sizeof(dirStr) - strlen(dirStr));
-    strncat (dirStr, dir2, sizeof(dirStr) - strlen(dirStr));
+      strncat (dirStr, " ", sizeof_dirStr - strlen(dirStr));
+    strncat (dirStr, dir2, sizeof_dirStr - strlen(dirStr));
   }
 
   // See if the URI list changed since last time.
@@ -630,7 +645,13 @@ int main(int argc, char **argv)
   log_flush();
   configFile = fopen ("chaser_rsync.config", "w");
   checkErr (configFile == NULL, "Unable to open file for write\n");
-  snprintf (rsyncStr2, sizeof(rsyncStr2), "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
+  sizeof_rsyncStr2 = sizeof_dirStr + 3000;
+  rsyncStr2 = (char*)realloc(rsyncStr2, sizeof_rsyncStr2);
+  if (!rsyncStr2) {
+    log_msg(LOG_ERR, "Out of memory!  Data lost.");
+    exit(1);
+  }
+  snprintf (rsyncStr2, sizeof_rsyncStr2, "%sDIRS=\"%s\"\n", rsyncStr, dirStr);
   fputs (rsyncStr2, configFile);
   fclose (configFile);
   snprintf(str, sizeof(str), "python %s/rsync_aur/rsync_cord.py -d -c chaser_rsync.config -t %d -p %d", rsyncDir, tcount, listPort);
