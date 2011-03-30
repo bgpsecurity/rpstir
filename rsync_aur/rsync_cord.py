@@ -79,28 +79,33 @@ class RSYNC_thread(Thread):
             if not stderror == "":
                 cli.error( 'rsync returned errors: %s' % stderror )
             cli.info( rsyncCom )
+            data = ("%s %s/%s %s") % \
+                (nextURI, repoDir, nextURI, rsync_log)
             
-            if rcode == 30:
-                # this is an error code for timeout, sleep then re-run
-                time.sleep(5)
-                #re-run the rsync command
-                rcode = subprocess.call(rsyncCom, shell=True)
-                cli.info( (nextURI + " 2nd attempt: %s") % (rcode))
- 
-            elif rcode == 35:
-                # this is an error code for timeout, sleep then re-run
-                time.sleep(5)
-                #re-run the rsync command
-                rcode = subprocess.call(rsyncCom, shell=True)
-                cli.info( (nextURI + " 2nd attempt: %s") % (rcode))
-
             if rcode == 0:
                 #if the rsync ran successful, notify Listener
                 cli.info( 'Notifying the listener' ) 
-                data = ("%s %s/%s %s") % \
-                              (nextURI, repoDir, nextURI, rsync_log)
-                              
                 send_to_listener(data,cli)
+                
+            else:
+                # sleep, then re-run
+                sleep_time = 5
+                retry_count = 0
+                while sleep_time < 300:
+                    time.sleep(sleep_time)
+                    #re-run the rsync command
+                    rcode = subprocess.call(rsyncCom, shell=True)
+                    retry_count += 1
+                    if rcode == 0:
+                        cli.info( (nextURI + " Retry %d return code: %d") %\
+                                      (retry_count, rcode))
+                        cli.info( 'Notifying the listener' ) 
+                        send_to_listener(data,cli)
+                        break
+                    else:
+                        cli.error( (nextURI + " Retry %d return code: %d") %\
+                                      (retry_count, rcode))
+                    sleep_time *= 2
 
             #get next URI
             try:
