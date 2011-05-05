@@ -1,0 +1,45 @@
+seq oid 1.2.840.113549.1.7.2 /* id_signedData */
+    ctx+0x20
+        seq int 0x03 /* 3 */ 
+            set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                    nul 
+            seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                ctx+0x20
+                    ocw seq int 0x08 /* 8 */ 
+                            seq seq oct 0x0001
+                                    seq seq bit 0x0001
+                                seq oct 0x0002
+                                    seq seq bit 0x00010200
+            ctx+0x20
+            set seq int 0x03 /* 3 */ 
+                    ctx+0x00
+                        0x6AFD64C8FA33004A6B7DA4CF74CF1B5D
+                        0x32D5783E
+                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                        nul 
+                    ctx+0x20
+                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
+                            set utc "110427185255Z"
+                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+                            set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
+                                    0x25CF8ED649BF1E425CA765083E0493A7
+                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                        nul 
+                    oct 0x7348DA8981B92C9D1577A3D6B63DF97D
+                        0xFD40CA0C3390D6812AEF82A388BFEE0B
+                        0x1BC4B4B7813E055562E45ED95DDBB35C
+                        0x8B48C4B54152639250D11BAC8DEED79A
+                        0x099B790923A480C5B097A460860670C7
+                        0x823F61EEA0A6DA9C2F46DF1F5A035058
+                        0xDAAF53B289D1E213CECE7EAD401E9E63
+                        0x0CC2DEA1336EB7274D5BC3FD072A5BEC
+                        0xFF55108F98A5B6B160613FE865A1544B
+                        0xBBC6CE67E8519AB34D4C571D6DA29D61
+                        0x36DEABFFD99EF97FD90494C4FE1AAACD
+                        0x7DAF82979441C9E2E48EB2003E8C0688
+                        0x419DE58913ABBC731D6824A7475A2A36
+                        0xCD61A886038E482146B78F3DC1E71677
+                        0x48BC03CE800C7F39F6512AB0DAD02DE9
+                        0x4246165F4683CA2BC7E17612F9B82DAD

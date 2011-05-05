@@ -1,0 +1,89 @@
+seq seq ctx+0x20
+            int 0x03 /* 3 */ 
+        int 0x00A7 /* 167 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "badCertVersion4"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100C247EF57C065
+                0x453DAB3ECFC9D8432CB492D1765815EC
+                0xC907FDEE0500D195CAF8BC084ACE982B
+                0xF0C733EDDAFDB0E95AEE558931CD59FF
+                0x86340EF241AE1AE3FA608E4BA6A89878
+                0xCDFE4475593DA56898B722D16811DD29
+                0x2157B1E4E98F254115BF1C542D02863D
+                0x14D1F139F3C1B4694819D27245E627DF
+                0x663CD6A863026774055C1CC7BD70C074
+                0x3BF5D33A6D2A0A3E050C56BE17CC8DC9
+                0x7123B3D285180008706F755CA744837F
+                0x72BBDF05F8BD7E321F887E7874552A8E
+                0x345E60641AB5287A67ED134AE0561507
+                0xD5F58D2603D0A644A5BDADB705570204
+                0x81114A94E7916829DC94D94CDAB247A6
+                0xC606A948A9C5B0EAAAA7051DF03E49BB
+                0x8395A87C2F1C516397470203010001
+        ctx+0x23
+            seq seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xD8C8131BF55527DA27C425E86006185A
+                            0x6F36A189
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0x66692F54208FC6E03A1227B2DE8289E5
+                                0x3A3EA861
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://rpki.bbn.com/conformance/r"
+                                            "oot/root.crl"
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/conformance/root.c"
+                                    "er"
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/goodCert.mft"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x000101
+                            seq oct 0x0002
+                                seq bit 0x00010201
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x0100 /* 256 */ 
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x0092F9BBF92A7409EC38B97D9ADF0CCA38A9D1AD94F739632739911B8746F1F4
+        0x7DA026BDD420639B008B937AD33C6160E177727BF6EE5DC144888A0B5C2BFDBA
+        0x0826D3118BBA3730E71A428E4F613E00AE60B7997555363A32F0C247339EB530
+        0x6E537CCFF1425083E985833AEDC010278984E1B746D52FBC9EC3BAE8AA05794E
+        0x4681BE34FB53DA06B141E4E73A243AA3C14ED787D05AABCC62425384936714FE
+        0x0C06D8260FF44294AAD448B305951953B59C82A5F3D3513DCD0BA6FEF8962940
+        0x387EC316693B9526CCCE75CBFDAE088F82405C8AA250876FBB46E21C6B9C82B8
+        0xF7E952B9E9A5AD795682D23C1544CDBDAC3CE921F444024FD2CCEB98C5CDAF67
+        0xF9

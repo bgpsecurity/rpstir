@@ -1,0 +1,92 @@
+seq seq ctx+0x20
+            int 0x02 /* . */
+        int 0x009A /* .. */
+        seq oid 1.2.840.113549.1.1.11  /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3  /* id_commonName */
+                    prt 'root'
+        seq utc '110411185728Z'
+            utc '460515185928Z'
+        seq set seq oid 2.5.4.3  /* id_commonName */
+                    ia5 'badCertSubjectIa5'
+        seq seq oid 1.2.840.113549.1.1.1  /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100C247EF57C065 /* .0.........G.W.e */
+                0x453DAB3ECFC9D8432CB492D1765815EC /* E=.>...C,...vX.. */
+                0xC907FDEE0500D195CAF8BC084ACE982B /* ............J..+ */
+                0xF0C733EDDAFDB0E95AEE558931CD59FF /* ..3.....Z.U.1.Y. */
+                0x86340EF241AE1AE3FA608E4BA6A89878 /* .4..A....`.K...x */
+                0xCDFE4475593DA56898B722D16811DD29 /* ..DuY=.h..".h..) */
+                0x2157B1E4E98F254115BF1C542D02863D /* !W....%A...T-..= */
+                0x14D1F139F3C1B4694819D27245E627DF /* ...9...iH..rE.'. */
+                0x663CD6A863026774055C1CC7BD70C074 /* f<..c.gt.\...p.t */
+                0x3BF5D33A6D2A0A3E050C56BE17CC8DC9 /* ;..:m*.>..V..... */
+                0x7123B3D285180008706F755CA744837F /* q#......pou\.D.. */
+                0x72BBDF05F8BD7E321F887E7874552A8E /* r.....~2..~xtU*. */
+                0x345E60641AB5287A67ED134AE0561507 /* 4^`d..(zg..J.V.. */
+                0xD5F58D2603D0A644A5BDADB705570204 /* ...&...D.....W.. */
+                0x81114A94E7916829DC94D94CDAB247A6 /* ..J...h)...L..G. */
+                0xC606A948A9C5B0EAAAA7051DF03E49BB /* ...H.........>I. */
+                0x8395A87C2F1C516397470203010001 /* ...|/.Qc.G..... */
+        ctx+0x23
+            seq seq oid 2.5.29.19  /* id_basicConstraints */
+                    boo 0xFF /* . */
+                    oct 0x30030101FF /* 0.... */
+                seq oid 2.5.29.14  /* id_subjectKeyIdentifier */
+                    oct 0x0414D8C8131BF55527DA27C425E86006 /* .......U'.'.%.`. */
+                        0x185A6F36A189 /* .Zo6.. */
+                seq oid 2.5.29.35  /* id_authKeyId */
+                    oct 0x3016801466692F54208FC6E03A1227B2 /* 0...fi/T ...:.'. */
+                        0xDE8289E53A3EA861 /* ....:>.a */
+                seq oid 2.5.29.15  /* id_keyUsage */
+                    boo 0xFF /* . */
+                    oct 0x03020106 /* .... */
+                seq oid 2.5.29.31  /* id_cRLDistributionPoints */
+                    oct 0x30363034A032A030862E7273796E633A /* 0604.2.0..rsync: */
+                        0x2F2F72706B692E62626E2E636F6D2F63 /* //rpki.bbn.com/c */
+                        0x6F6E666F726D616E63652F726F6F742F /* onformance/root/ */
+                        0x726F6F742E63726C /* root.crl */
+                seq oid 1.3.6.1.5.5.7.1.1  /* id_pkix_authorityInfoAccess */
+                    oct 0x303A303806082B06010505073002862C /* 0:08..+.....0.., */
+                        0x7273796E633A2F2F726F612D706B692E /* rsync://roa-pki. */
+                        0x62626E2E636F6D2F636F6E666F726D61 /* bbn.com/conforma */
+                        0x6E63652F726F6F742E636572 /* nce/root.cer */
+                seq oid 1.3.6.1.5.5.7.1.11  /* id_pe_subjectInfoAccess */
+                    oct 0x308186303B06082B0601050507300586 /* 0..0;..+.....0.. */
+                        0x2F7273796E633A2F2F72706B692E6262 /* /rsync://rpki.bb */
+                        0x6E2E636F6D2F636F6E666F726D616E63 /* n.com/conformanc */
+                        0x652F726F6F742F676F6F64436572742F /* e/root/goodCert/ */
+                        0x304706082B0601050507300A863B7273 /* 0G..+.....0..;rs */
+                        0x796E633A2F2F72706B692E62626E2E63 /* ync://rpki.bbn.c */
+                        0x6F6D2F636F6E666F726D616E63652F72 /* om/conformance/r */
+                        0x6F6F742F676F6F64436572742F676F6F /* oot/goodCert/goo */
+                        0x64436572742E6D6674 /* dCert.mft */
+                seq oid 2.5.29.32  /* id_certificatePolicies */
+                    boo 0xFF /* . */
+                    oct 0x300C300A06082B06010505070E02 /* 0.0...+....... */
+                seq oid 1.3.6.1.5.5.7.1.7  /* id_pe_ipAddrBlock */
+                    boo 0xFF /* . */
+                    oct 0x301B300B040200013005030300010130 /* 0.0.....0......0 */
+                        0x0C040200023006030400010201 /* .....0....... */
+                seq oid 1.3.6.1.5.5.7.1.8  /* id_pe_autonomousSysNum */
+                    boo 0xFF /* . */
+                    oct 0x300DA00B3009300702010102020100 /* 0...0.0........ */
+    seq oid 1.2.840.113549.1.1.11  /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x0041F3225A27110939DB97FD345D96F7 /* .A."Z'..9...4].. */
+        0x903C3EA91261F003933617554243F595 /* .<>..a...6.UBC.. */
+        0xEFDE222E02AEC1BE3C56505F354CEBF5 /* ..".....<VP_5L.. */
+        0x45FBDCA8200F3760956E26CE2D51D5B0 /* E... .7`.n&.-Q.. */
+        0xCF050FB75E72A06E81DE20FFF7548E10 /* ....^r.n.. ..T.. */
+        0x728C44E1EE5AA46527461566083EE30C /* r.D..Z.e'F.f.>.. */
+        0x45B9BA5004FB9724F2910E3A51E2CA5A /* E..P...$...:Q..Z */
+        0x5AE8B6F77B3295F2E44296E183EFAB2B /* Z...{2...B.....+ */
+        0x59D5A3D20C5DE78B5E25B80177BE7810 /* Y....]..^%..w.x. */
+        0xB5F11A6E570239F5999B79015B5482F2 /* ...nW.9...y.[T.. */
+        0x513452515A487DFEB0F2A48B0CFEAD68 /* Q4RQZH}........h */
+        0x5500E8E9A1AD10A6160B795F3907C9C8 /* U.........y_9... */
+        0xBD62266C0EA8D81D97704E1617EE9AD8 /* .b&l.....pN..... */
+        0x4CD120F94DAFC47F2ADE3F57E62F9A1F /* L. .M...*.?W./.. */
+        0xD133E7A774A4705E4AF52C73344D5620 /* .3..t.p^J.,s4MV  */
+        0xF6D98DD9B3144A5C3EEC8AE2F6A2262B /* ......J\>.....&+ */
+        0x0F /* . */

@@ -1,0 +1,93 @@
+seq seq ctx+0x20
+            int 0x00B2 /* 178 */ 
+        int 0x01 /* 1 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "badCert2AKI"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100C247EF57C065
+                0x453DAB3ECFC9D8432CB492D1765815EC
+                0xC907FDEE0500D195CAF8BC084ACE982B
+                0xF0C733EDDAFDB0E95AEE558931CD59FF
+                0x86340EF241AE1AE3FA608E4BA6A89878
+                0xCDFE4475593DA56898B722D16811DD29
+                0x2157B1E4E98F254115BF1C542D02863D
+                0x14D1F139F3C1B4694819D27245E627DF
+                0x663CD6A863026774055C1CC7BD70C074
+                0x3BF5D33A6D2A0A3E050C56BE17CC8DC9
+                0x7123B3D285180008706F755CA744837F
+                0x72BBDF05F8BD7E321F887E7874552A8E
+                0x345E60641AB5287A67ED134AE0561507
+                0xD5F58D2603D0A644A5BDADB705570204
+                0x81114A94E7916829DC94D94CDAB247A6
+                0xC606A948A9C5B0EAAAA7051DF03E49BB
+                0x8395A87C2F1C516397470203010001
+        ctx+0x23
+            seq seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xD8C8131BF55527DA27C425E86006185A
+                            0x6F36A189
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0x66692F54208FC6E03A1227B2DE8289E5
+                                0x3A3EA861
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://rpki.bbn.com/conformance/r"
+                                            "oot/root.crl"
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/conformance/root.c"
+                                    "er"
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/goodCert.mft"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0x66692F54208FC6E03A1227B2DE8289E5
+                                0x3A3EA861
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x000101
+                            seq oct 0x0002
+                                seq bit 0x00010201
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x0100 /* 256 */ 
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x001E8BD80C396D590E0AA07D7A3ED547A0686591CCE17672D83696977BA42B5A
+        0x99FA77E54721D8A77434C58CD3ACA36C176189E28CDA63AA89B5A2694CC72C25
+        0x1A34BBB4702B70207F159E1B86BE63ED7B39C7B81723D2EFFAC8EA47AA86F4E8
+        0x8D171DC0FEF2204BA69FB4751748069CC80F87281BB529A923E4B66EE4829CF8
+        0x92CA549EDE50892A3FD515B1CFA32CA244F5187D7F97373133A9D7014E625939
+        0x305AD700A0BA155D8F2C2ACE52D44CF8F0ED82D73F1F30F29F0BBB7942F0E56D
+        0xF90A74642202CFE5518E6BC9B48CFDC3A635299A7C285D9FC7E68B05830C72AD
+        0x1C2BF275A9B00245F73A17949A15065159B17554879F1C2C1840477C1E7C440D
+        0x90

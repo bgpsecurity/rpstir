@@ -1,0 +1,73 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x66 /* 102 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "BadRootNameDiff"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100CED7C213D431
+                0x2022ACEFFDF1BF1116A978454BCBDAD6
+                0x9825C8B887772CFB2C59C5F8C2250F39
+                0x81AF50464A9B2E3975E87765F9233FFC
+                0x54FD85C7D1DE394DD568720EB8BCE210
+                0x9B27CB09E8AF6B16119B2ECBD8642DF5
+                0xF0BED448F2931A05CE0A109897C886A1
+                0x8F7C065CF74CC27DF5EE47B9DAE9F587
+                0xC7A14731CA6196A97D7B2971BD8CA486
+                0xD54F32BFE886145174D79D9F15F4951C
+                0xBE3DE32B15C3F69985E787D6C2E6B525
+                0xA249CEB3019AA7E9CA55FF0E5FD2E784
+                0x2C4FB2F07BDBB47F1487FAD22266C98A
+                0xC5A75632AE061CFFFD9393CFAA8BD3CE
+                0xED9F7AB1E638FF5445D1F90714F67A3D
+                0x8C6FDE0D8643561058E1E94FCA29DC09
+                0xF6E08E20BB0CFFD6DC310203010001
+        ctx+0x23
+            seq seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0x66692F54208FC6E03A1227B2DE8289E5
+                            0x3A3EA861
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/output/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/output/ro"
+                                    "ot/root.mft"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x0001
+                            seq oct 0x0002
+                                seq bit 0x000102
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x010000 /* 65536 */ 
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x004C618270400479956610BC7E0753B4D2F3321325C5B2FA89D889A8DF0714C1
+        0x7ACDBB6F5CB8D227D5B78F3FE4B5BFD4CA0F80E7551474A276DF3DF891A21897
+        0x222C5BD89A37E7C97215685FD41804AC23AF5AE18634C308915291D62CA00750
+        0x1137E3A076B8162E1F44BEC83C299AFFF97927206E0E140671D673E1C92B3DFB
+        0xE76BE1D0B07A41B166C2AC3CABB75BAFBCC93BD12084D09D5D839FE9BB46CFEE
+        0xA348383DE36B81B0A9C436B8DF644B769A7602C9C6BB7D8E5218C0DA72E0B653
+        0xB7C2AAC58315C6585ED9475EF3BEB54516BD5BDF4DDEC1512747F559157A6703
+        0x5E70E9ADF0D061DF22170A90C1480C5193D583C8D69F54C2CE3412FE38A45198
+        0x8D

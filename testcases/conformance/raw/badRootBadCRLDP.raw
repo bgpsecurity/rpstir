@@ -1,0 +1,79 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x65 /* 101 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100CED7C213D431
+                0x2022ACEFFDF1BF1116A978454BCBDAD6
+                0x9825C8B887772CFB2C59C5F8C2250F39
+                0x81AF50464A9B2E3975E87765F9233FFC
+                0x54FD85C7D1DE394DD568720EB8BCE210
+                0x9B27CB09E8AF6B16119B2ECBD8642DF5
+                0xF0BED448F2931A05CE0A109897C886A1
+                0x8F7C065CF74CC27DF5EE47B9DAE9F587
+                0xC7A14731CA6196A97D7B2971BD8CA486
+                0xD54F32BFE886145174D79D9F15F4951C
+                0xBE3DE32B15C3F69985E787D6C2E6B525
+                0xA249CEB3019AA7E9CA55FF0E5FD2E784
+                0x2C4FB2F07BDBB47F1487FAD22266C98A
+                0xC5A75632AE061CFFFD9393CFAA8BD3CE
+                0xED9F7AB1E638FF5445D1F90714F67A3D
+                0x8C6FDE0D8643561058E1E94FCA29DC09
+                0xF6E08E20BB0CFFD6DC310203010001
+        ctx+0x23
+            seq seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0x66692F54208FC6E03A1227B2DE8289E5
+                            0x3A3EA861
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://rpki.bbn.com/conformance/r"
+                                            "oot"
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/output/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/output/ro"
+                                    "ot/root.mft"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x0001
+                            seq oct 0x0002
+                                seq bit 0x000102
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x010000 /* 65536 */ 
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x00943F1100DB1E4243D04C963B4F21B0272014687C80573FC393C0A77EC26C74
+        0x2C849546897D6FD91A928661E6C30BF487000CCAB5500B82A09E1B03D181EA64
+        0xBB74952CDA30C573235FCE971219FD193C7DA48BD919474ED94395BC7B40B971
+        0x5DFC27FFE77014AB9B1C2CC7C2962B534AFACA28451AFE502723BDE43730D39C
+        0x2112095E319B796268C6F20524DCAC43E809655998B0F4622DF78E45CD650001
+        0x8E39D5EC0CDB868BC000D46786C4766238D93D1D0CDAA1DC1F290D96C9BA2C6A
+        0x663FB9D7B8EC4DDEC41A7969FA68CAA45A83384BA8F9E966F720644D303F18B5
+        0xF15DAE1FC8F1C58EF16749A11BA36AFAE621F8DAF7F370FFC32D47F26A12A103
+        0xD3

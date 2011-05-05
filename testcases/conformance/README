@@ -1,0 +1,24 @@
+output/root.cer
+       root/root.crl
+            root.roa
+            root.mft
+            badCert*.cer
+            badCMS*.roa
+            badROA.roa
+            goodCert.cer
+            goodCert/goodCert.crl
+                     goodCert.roa
+                     goodCert.mft
+            testCRL*.cer
+            testCRL*/badCRL*.crl
+                     goodmft.mft
+                     goodroa*.roa?
+             :
+             :
+            testMFT*.cer
+            testMFT*/goodcrl.crl
+                     badMFT*.mft
+                     goodroa*.roa?
+             :
+             :        
+                  
