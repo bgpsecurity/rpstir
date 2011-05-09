@@ -30,11 +30,12 @@
 #include <crlv2.h>
 #include <roa.h>
 #include <casn.h>
+#include <blob.h>
 
 char *msgs[] = {
     "Finished %s OK\n",
     "Error in %s\n",
-    "Usage: TBS filename, Key filename\n",
+    "Usage: TBS filename, Key filename [1 to adjust dates | 2 to keep tbs alg]\n",
     "Couldn't open %s\n",
     };
 
@@ -147,6 +148,8 @@ int main(int argc, char **argv)
   Certificate(&cert, (ushort)0);
   struct CertificateRevocationList crl;
   CertificateRevocationList(&crl, (ushort)0);
+  struct Blob blob;
+  Blob(&blob, (ushort)0);
   struct AlgorithmIdentifier *algp, *tbsalgp; 
   struct casn *casnp, *sigp, *selfp;
   if (argc < 3) fatal(2, (char *)0);
@@ -167,26 +170,40 @@ int main(int argc, char **argv)
     sigp = &crl.signature;
     algp = &crl.algorithm;
     }
+  else if (!strcmp(sfx, ".blb"))
+    {
+    selfp = &blob.self;
+    casnp = &blob.toBeSigned;
+    tbsalgp = NULL;
+    sigp = &blob.signature;
+    algp = &blob.algorithm;
+    }
   if (get_casn_file(selfp, argv[1], 0) < 0) fatal(3, argv[1]);
-  if (argv[3]) 
+  if (argv[3] && (*argv[3] & 1)) 
     {
     if (!strcmp(sfx, ".cer")) 
       adjust_time(&cert.toBeSigned.validity.notBefore.utcTime,
         &cert.toBeSigned.validity.notAfter.utcTime);
-    else if (!strcmp(sfx, ".cer")) 
+    else if (!strcmp(sfx, ".crl")) 
       adjust_time((struct casn *)&crl.toBeSigned.lastUpdate, 
-          (struct casn *)&crl.toBeSigned.nextUpdate);
+        (struct casn *)&crl.toBeSigned.nextUpdate);
     }
-  write_objid(&tbsalgp->algorithm, id_sha_256WithRSAEncryption);
-  write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption, 
-    (uchar *)"", 0);
+  if (tbsalgp && (!argv[3] ||  !(*argv[3] & 2)))
+    {
+    write_objid(&tbsalgp->algorithm, id_sha_256WithRSAEncryption);
+    write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption, 
+      (uchar *)"", 0);
+    }
   strcpy(keyring.label, "label");
   strcpy(keyring.password, "password");
   strcpy(keyring.filename, argv[2]);
   setSignature(casnp, sigp);
-  write_objid(&algp->algorithm, id_sha_256WithRSAEncryption);
-  write_casn(&algp->parameters.rsadsi_SHA256_WithRSAEncryption, 
-    (uchar *)"", 0);
+  if (!argv[3] || !(*argv[3] & 4))
+    {
+    write_objid(&algp->algorithm, id_sha_256WithRSAEncryption);
+    write_casn(&algp->parameters.rsadsi_SHA256_WithRSAEncryption, 
+      (uchar *)"", 0);
+    }
   put_casn_file(selfp, argv[1], 0);
   fatal(0, argv[1]);
   return 0;
