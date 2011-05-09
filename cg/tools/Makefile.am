@@ -23,8 +23,8 @@
 bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
 	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
-	extractCMScert change_cms_cert test_cert makeLTAtest checkLTAtest \
-        dumpIPAddr update_cert extractPubKeyInfo
+	extractCMScert add_cms_cert test_cert makeLTAtest checkLTAtest \
+        dumpIPAddr update_cert extractPubKeyInfo get_sernum put_sernum
 
 
 AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
@@ -62,8 +62,8 @@ dump_smart_SOURCES = dump_smart.c
 dump_smart_LDFLAGS = $(LIBS)
 extractCMScert_SOURCES = extractCMScert.c
 extractCMScert_LDFLAGS = $(LIBS)
-change_cms_cert_SOURCES = change_cms_cert.c
-change_cms_cert_LDFLAGS = $(LIBS)
+add_cms_cert_SOURCES = add_cms_cert.c
+add_cms_cert_LDFLAGS = $(LIBS)
 test_cert_SOURCES = test_cert.c
 test_cert_LDFLAGS = $(LIBS)
 makeLTAtest_SOURCES = makeLTAtest.c
@@ -76,3 +76,7 @@ update_cert_SOURCES = update_cert.c
 update_cert_LDFLAGS = $(LIBS)
 extractPubKeyInfo_SOURCES = extractPubKeyInfo.c
 extractPubKeyInfo_LDFLAGS = $(LIBS)
+get_sernum_SOURCES = get_sernum.c
+get_sernum_LDFLAGS = $(LIBS)
+put_sernum_SOURCES = put_sernum.c
+put_sernum_LDFLAGS = $(LIBS)
