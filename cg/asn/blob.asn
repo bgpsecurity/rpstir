@@ -1,0 +1,32 @@
+-- $Id: blob.asn 1135 2010-05-24 13:17:17Z gardiner $
+-- sfcsid = "@(#)blob.asn 672E"
+-- File:     blob.asn
+-- Contents: ASN.1 specification for a signed blob
+-- System:   PKIM development.
+-- Created:  April 12, 2011
+-- Author:   Charlie Gardiner
+--
+-- ***** BEGIN LICENSE BLOCK *****
+--
+-- BBN Address and AS Number PKI Database/repository software
+-- Version 3.0-beta
+-- 
+-- COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
+-- US government users are permitted restricted rights as
+-- defined in the FAR.  
+--
+-- This software is distributed on an "AS IS" basis, WITHOUT
+-- WARRANTY OF ANY KIND, either express or implied.
+--
+-- Copyright (C) Raytheon BBN Technologies Corp. 1996-2010.  All Rights Reserved.
+--
+-- Contributor(s):  Charles Gardiner
+--
+-- ***** END LICENSE BLOCK ***** */
+
+
+DEFINITIONS ::= -- explicitly encoded !
+
+IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn;
+
+Blob ::= SIGNED  ANY 
