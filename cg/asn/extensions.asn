@@ -122,6 +122,7 @@ id-policyMappings               ID ::= { id-ce 33 }
 id-authKeyId                    ID ::= { id-ce 35 }
 id-policyConstraints            ID ::= { id-ce 36 } 
 id-extKeyUsage                  ID ::= { id-ce 37 }
+anyExtendedKeyUsage             ID ::= { id-extKeyUsage 0}
 
 id-set-certExt                  ID ::= { 2.23.42.7 }
  

@@ -77,7 +77,8 @@ libasn_a_LIBADD =
 am__objects_1 = Algorithms.$(OBJEXT) name.$(OBJEXT) \
 	serial_number.$(OBJEXT) orname.$(OBJEXT) extensions.$(OBJEXT) \
 	crlv2.$(OBJEXT) keyfile.$(OBJEXT) certificate.$(OBJEXT) \
-	manifest.$(OBJEXT) privkey.$(OBJEXT) roa.$(OBJEXT)
+	manifest.$(OBJEXT) privkey.$(OBJEXT) roa.$(OBJEXT) \
+	blob.$(OBJEXT)
 am__objects_2 = $(am__objects_1)
 am__objects_3 = CertificateToBeSignedConstraint.$(OBJEXT) \
 	CertificateRevocationListToBeSignedConstraint.$(OBJEXT)
@@ -207,7 +208,8 @@ ASN_SOURCE = \
 	certificate.asn \
         manifest.asn \
 	privkey.asn \
-        roa.asn
+        roa.asn \
+        blob.asn
 
 GENERATED_C_FILES = $(ASN_SOURCE:.asn=.c)
 GENERATED_H_FILES = $(ASN_SOURCE:.asn=.h)
@@ -269,6 +271,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Algorithms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CertificateRevocationListToBeSignedConstraint.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CertificateToBeSignedConstraint.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blob.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/certificate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crlv2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extensions.Po@am__quote@

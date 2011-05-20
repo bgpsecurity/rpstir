@@ -35,7 +35,8 @@ ASN_SOURCE= \
 	certificate.asn \
         manifest.asn \
 	privkey.asn \
-        roa.asn
+        roa.asn \
+        blob.asn
 
 GENERATED_C_FILES=$(ASN_SOURCE:.asn=.c)
 GENERATED_H_FILES=$(ASN_SOURCE:.asn=.h)

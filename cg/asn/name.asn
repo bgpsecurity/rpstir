@@ -159,8 +159,8 @@ GenName ::= DirectoryString
 
 DirectoryString ::= CHOICE {
     printableString	PrintableString (SIZE(1..ub-name)),
-    utf8String          UTF8String (SIZE(1..ub-name))
---    teletexString	TeletexString (SIZE(1..ub-name)),
+    utf8String          UTF8String (SIZE(1..ub-name)),
+    teletexString	TeletexString (SIZE(1..ub-name))
 --    universalString	UniversalString (SIZE(1..ub-name)),
 --    bMPString 		BMPString
       }
