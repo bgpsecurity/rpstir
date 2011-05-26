@@ -1,0 +1,11 @@
+--- badCertValToTyp.raw.old	2011-05-25 15:29:34.000000000 -0400
++++ badCertValToTyp.raw	2011-05-25 15:29:54.000000000 -0400
+@@ -6,7 +6,7 @@
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "root"
+         seq utc "110411185728Z"
+-            utc "460515185928Z"
++            utc "560515185928Z"
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "badCertValToTyp"
+         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */

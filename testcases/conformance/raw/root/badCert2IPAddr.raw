@@ -32,6 +32,12 @@ seq seq ctx+0x20
             seq seq oid 2.5.29.19 /* id_basicConstraints */
                     boo 0xFF
                     ocw seq boo 0xFF
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x000101
+                            seq oct 0x0002
+                                seq bit 0x00010201
                 seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
                     ocw oct 0xD8C8131BF55527DA27C425E86006185A
                             0x6F36A189
@@ -48,12 +54,6 @@ seq seq ctx+0x20
                                         ctx+0x06
                                             "rsync://rpki.bbn.com/conformance/r"
                                             "oot/root.crl"
-                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
-                    boo 0xFF
-                    ocw seq seq oct 0x0001
-                                seq bit 0x000101
-                            seq oct 0x0002
-                                seq bit 0x00010201
                 seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
                     ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                 ctx+0x06
@@ -84,12 +84,12 @@ seq seq ctx+0x20
                                         int 0x0100 /* 256 */ 
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x007CEE98DF76FA33C6F2F9C7F08BDA8F00B51C55B057EF7BFA97472030631AAC
-        0xE5EA0F6293FAB397E24C5F7563F2BBA0341D977A39CF6F999895B334D95ED39F
-        0x70BF4F92371FA6F78C4ED4867C071BC63DC960CBE0BC357C73A1AAB6D8D23288
-        0x1A4C647DDCE085BC46BC358CB4ED0EAF4B4ECF171DB7E7C185F0C6B67435A63E
-        0x80FCBDC873D1C0B77E9DB248FF27DAB2EA6AA18CE5A9FC897D01705B820E5C08
-        0xB4DC3695533BAF361266424484AE941EFE13AF741294544464742F61B24C1047
-        0x612A38CAEEA9FD290DB650A9032DD0F954960A8181254E3AB381002899247371
-        0xDB703E163246A2148A12441DFD3474381C173D17CDBC9D16B5A90D969ED7AA73
-        0x8F
+    bit 0x00AC88C08AB4CDEF8784E58A198BB08C60EDFF77D2BB841DDFEC7792275B6D8B
+        0x15CA67B62CE3E1AA1DDAB31135E0187134451EEC2C7174587D2DA63397E21084
+        0xD1C674D8A7CA468FC63BCC3BA861787E49D74A8F2409C00C1D516EE47FD2EA9F
+        0x938DA2236BC3E39EC842BE79B827CBF251CBB8F1BADE128181F178DCDF35B675
+        0xAB672B681ED317C405ED1E3E5DC910D8CF24B69A7AA0C46BCA5D01A193BC13F3
+        0x4C3D86A1662E542A71DEC8A3A448326C41D06C2D4B7C6EB3A0770B85DD524C40
+        0xE7D726479659DC37AAA9DEE9590DE2F0489BF4BE3A10C5B6E614457333B8B6E3
+        0x4D6BDE55EBEA5884DC3182FA6F860563E07656D19C54BE269BBDAE0BCFFBC3E7
+        0xFB

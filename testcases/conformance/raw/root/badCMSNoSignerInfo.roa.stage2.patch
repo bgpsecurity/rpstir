@@ -1,0 +1,39 @@
+--- badCMSNoSignerInfo.roa.raw.old	2011-05-26 10:37:56.000000000 -0400
++++ badCMSNoSignerInfo.roa.raw	2011-05-26 10:39:55.000000000 -0400
+@@ -108,35 +108,4 @@
+                         0x3320F4A8BF3D006F1598FF82FBF61795
+                         0x160758535539B01ED3C835D9A9FB7373
+                         0x67
+-            set seq int 0x03 /* 3 */ 
+-                    ctx+0x00
+-                        0x3BF593ED122E4B50748408212445519C
+-                        0x062EF5FF
+-                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+-                        nul 
+-                    ctx+0x20
+-                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+-                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+-                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
+-                            set utc "110526143756Z"
+-                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+-                            set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
+-                                    0x25CF8ED649BF1E425CA765083E0493A7
+-                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+-                        nul 
+-                    oct 0x28ECAEB8031632656FACB24E757BBD1E
+-                        0xF70B160548DC317CB3AF7724237419F4
+-                        0x0CE9ECC72B635E9AD761785A72FDD40F
+-                        0x57AA6B55AECC39B50CFF1635FE513417
+-                        0xA6CE73ABEF1E36994515951AC0828B0B
+-                        0x4E78DEF0ADD818E5303DE88700808CBD
+-                        0x486F2620523AECCBEC6E624E584C5702
+-                        0x3222E5F35CF6672337C11390F573441B
+-                        0x97C142398530777C630BF8100FB390AC
+-                        0x807BD074D12CC02DAF1C90FF0DB31AA4
+-                        0xE6665E3D5655AF4A5AFB88E175251A74
+-                        0x6FBA5D13B9438923196F7EEC36BCB2F9
+-                        0x185A65DD6605D479C1E0B6BB6D1ABFE9
+-                        0x95B5D006E632D139E2CB4CDDC475E6C8
+-                        0x8E60831DF56EB05C696EF15E557C9F85
+-                        0xE183150970AB8985CC7E4E6F027B2D32
++            set 

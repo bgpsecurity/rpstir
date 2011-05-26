@@ -53,7 +53,6 @@
 158 badCertValCrossed.cer
 159 badCertValFromFuture.cer
 160 badCertValFromTyp.cer
-161 badCertValToFuture.cer
 162 badCertValToPast.cer
 163 badCertValToTyp.cer
 164 badCertVersionNeg.cer
@@ -112,3 +111,8 @@
 542 badCMSSigInfoNoHashAlg.roa
 543 badCMSKeyUsage.roa
 550 badROAVersion.roa
+551 badROAASID.roa
+552 badROAFamily.roa
+553 badROAFamilyLth.roa
+554 badROAIPMaxLth.roa
+555 badROAVersion4.roa

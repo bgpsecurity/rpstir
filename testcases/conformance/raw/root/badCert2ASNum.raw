@@ -35,6 +35,11 @@ seq seq ctx+0x20
                 seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
                     ocw oct 0xD8C8131BF55527DA27C425E86006185A
                             0x6F36A189
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x0100 /* 256 */ 
                 seq oid 2.5.29.35 /* id_authKeyId */
                     ocw seq ctx+0x00
                                 0x66692F54208FC6E03A1227B2DE8289E5
@@ -42,11 +47,6 @@ seq seq ctx+0x20
                 seq oid 2.5.29.15 /* id_keyUsage */
                     boo 0xFF
                     ocw bit 0x0106
-                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
-                    boo 0xFF
-                    ocw seq ctx+0x20
-                                seq seq int 0x01 /* 1 */ 
-                                        int 0x0100 /* 256 */ 
                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
                     ocw seq seq ctx+0x20
                                     ctx+0x20
@@ -83,12 +83,12 @@ seq seq ctx+0x20
                                         int 0x0100 /* 256 */ 
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x0022A6834657B49D629699A76B93BE7B0CB245D654917C18A772AED4F11C2FD0
-        0xFB21087ABD4EBDE2FB3F929CFE6DE174DBC20149D0065B76E709A478DE7F0A5E
-        0x836E4E93152B0D99625A009D9A049F527F46E7C379C961A9C6D58EF4AFE64762
-        0xF5055DB7FFFA34D8A40D072AA54A777EEADE39F4C1304E53C7CDC2542428D080
-        0x7002F526667602760546B354D60F4CB3A3C7E1F1394798D3A7CF14DB12FBF191
-        0x7158CCC88A38DD3BF1496379F537DCB1E1206F55631DF3607DE56AEC3E386FF7
-        0xB8D2F8B6ABF796E071C615FDC36FFA810C9414D04D3EB4E50278E20153748B27
-        0x97052083A67548179D34A286DFDF7A79E63D48E5717CDDC7D88C916E5A0F50DF
-        0xFF
+    bit 0x0054E30C28206E6C7CB756795B3ACE0F295391C2D7B3C95CE84EDBFF6AD6D3A6
+        0x9DB28B6B1DCE386ADFCBD60C161ED9926C17C087BB6D7EFC74D81B99BF965A5C
+        0x4E40DCCAF8D5E80AE78F9F2C90A4E7B7D1190E346C8884D6F622E0F09225656A
+        0x04AE4E6BEC70125EE404E590F4300BD1D4B1938E51B02082D58AB87DCBACC914
+        0x59A470E868F8CBDADBD559521BB9D1540704C6557DEE22D9E7D92C0FE55FBEC4
+        0x73D1C05DD3E3F7E900B7182E5D6FB0D9E0E5C06C62EBCB38E847B0FC9126B7D5
+        0x342B90A458C9A75DEBDAFCF3ABD915E117E5D0EC92205F2F2C7506F2377D87EE
+        0xB5DB45AC4642452C8E810F5FA6F1EC42D5FF77B032923F299EF56B3235E5EAD6
+        0xE7

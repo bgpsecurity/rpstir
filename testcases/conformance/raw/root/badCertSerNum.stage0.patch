@@ -1,0 +1,10 @@
+--- badCertSerNum.raw.old	2011-05-25 15:32:01.000000000 -0400
++++ badCertSerNum.raw	2011-05-25 15:32:47.000000000 -0400
+@@ -1,6 +1,6 @@
+ seq seq ctx+0x20
+             int 0x02 /* 2 */ 
+-        int 0x00A8 /* 168 */ 
++        int 0x80A8 /* 168 */ 
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */

@@ -1,0 +1,10 @@
+--- badCertSubject2SubjUID.raw.old	2011-05-25 10:54:27.000000000 -0400
++++ badCertSubject2SubjUID.raw	2011-05-25 10:55:30.000000000 -0400
+@@ -28,6 +28,7 @@
+                 0x81114A94E7916829DC94D94CDAB247A6
+                 0xC606A948A9C5B0EAAAA7051DF03E49BB
+                 0x8395A87C2F1C516397470203010001
++        ctx+0x02 0x00010203
+         ctx+0x23
+             seq seq oid 2.5.29.19 /* id_basicConstraints */
+                     boo 0xFF

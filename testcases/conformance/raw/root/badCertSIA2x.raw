@@ -32,6 +32,15 @@ seq seq ctx+0x20
             seq seq oid 2.5.29.19 /* id_basicConstraints */
                     boo 0xFF
                     ocw seq boo 0xFF
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/goodCert.mft"
                 seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
                     ocw oct 0xD8C8131BF55527DA27C425E86006185A
                             0x6F36A189
@@ -76,23 +85,14 @@ seq seq ctx+0x20
                     ocw seq ctx+0x20
                                 seq seq int 0x01 /* 1 */ 
                                         int 0x0100 /* 256 */ 
-                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
-                                ctx+0x06
-                                    "rsync://rpki.bbn.com/conformance/root/good"
-                                    "Cert/"
-                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
-                                ctx+0x06
-                                    "rsync://rpki.bbn.com/conformance/root/good"
-                                    "Cert/goodCert.mft"
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x004448413A12E9B9D3DDC1671A7925D2BCB6305B06935C0B22841FE90096D754
-        0x949FA88C30A3A852DC30BB48F13F58D919E0EF5AA3CDAA3EFFEC50667561E228
-        0x547B294DA4A10F89D5F8167CCD26F360CC53F912E3A4830570265CA6F44D2967
-        0x317589F220410C8F113377B32BF0B0A05EDBA0E1736C25C2F25A4EEFA1485584
-        0x19D6C07758BCE2263E28B396AC14566162F5DF0C56134F47B1DE3038239A00AC
-        0x32730B21C7AFCFF7C6A59B9F492B4E859C492CAD3B93F696FB28AE1A2834D217
-        0x00BA239942E51D9741878C27F0F322FEF4482AB037439FDB34638152FCFB77F5
-        0x9F770DB10600AFD005B3E8A6588F115761C5330A9A614CC7817701C94A99BFD8
-        0xE5
+    bit 0x00C0C4932D82A13A877056655DA4F7939AA85654C20D85B2D2362C6EFB6B72B4
+        0x8F2743CFF52A1A70D25EE84178FE9BC00C1033B6C652DCB30E282E1A82084489
+        0x147BF4DEBDB2C622D6B9C5A57AC3653851DB3A66503B81E47ED6414AF3D1E621
+        0xBB213BA1E614028A947127C07AD8065DEADBA17AA9493C931658D0BF27A6AFA8
+        0x823D9C45928584BA57C61319A4494494C5709EFFCE6E299DC8B0F6F20CDF80AA
+        0xE98EF8BF2930E96161CE102DB10585AC08AEFD7055EAE0F84067BBC05D7718F7
+        0xAAF7287D5338E7CE90BF28802FC60AAC66FB50C6FD7414093D53B455B2DDC859
+        0x6C1B9E98A7BA0576CED42601AC2EE3BE1659F12920F1CBF1B3F4AF9E6F7CBE7C
+        0x47

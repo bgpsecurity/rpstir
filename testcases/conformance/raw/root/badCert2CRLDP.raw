@@ -65,12 +65,6 @@ seq seq ctx+0x20
                 seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
                     ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
-                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
-                    ocw seq seq ctx+0x20
-                                    ctx+0x20
-                                        ctx+0x06
-                                            "rsync://rpki.bbn.com/conformance/r"
-                                            "oot/root.crl"
                 seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
                     boo 0xFF
                     ocw seq seq oct 0x0001
@@ -82,14 +76,20 @@ seq seq ctx+0x20
                     ocw seq ctx+0x20
                                 seq seq int 0x01 /* 1 */ 
                                         int 0x0100 /* 256 */ 
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://rpki.bbn.com/conformance/r"
+                                            "oot/root.crl"
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x00A897D3C6B6F993AC3206381E1566C4E64CBCED7C97765F5F0F443686352822
-        0xF90B005DD75B87BC5B7F6A568D9A201D3C859B8836369E2A91929BB2769465A8
-        0x78B8E75701BAE038A3488F13A638C70A2B1998C2D541D76C27A6683A02CDCC32
-        0xDDF9AE37EF204FB5C5B908ED123581F5B9DAC8C8667977A3D17203CFE84B6D33
-        0x39F2DE145965E7DBAD6EC880F77AF0FE7D9F8E0F6AE346E73D473FEDF60EB0DC
-        0x3997956EC5AD20E364E4DDBA09CDF5D6CE0C171D3394AFEF49AE91A82489DA1F
-        0xE9A5530044A55C35B0DA62C1AB69A10D480310C7FEC24EA048722289A3D69915
-        0xD707AD46F066F46CB01219A2465F99A9C183D3D4D1DC6A6A87D9834D150CEF97
-        0x6B
+    bit 0x004F6124ACBBA613FCBCBDEAA2AF60AE872690014FA290ED6CFAEDCD402D080D
+        0xC14FC62CE5E8DD6326985020C0A8E46008C19A785147963EBE1B422DFA1E80BC
+        0x485474F047E8EB34B727827E02E929F78E3545C8FB4F51BF3051D2E1CED05E36
+        0x101BC3B98D01B852D0968E9E3438B4E490074E71C7D84BE05448CE978BD13869
+        0xF3653224F87EB6CDEDA463B915E88AC03D75F963A40DD1AC57490286BF947DE3
+        0xDFEB806FD50D9E341F2856E24780BDD237606CDC418D7433B6C626D7A912E7E4
+        0x7B7D00EADB52475404855DA64377E9E338D9F0A8B5290134E34E088108BDE7C0
+        0xD8C7DADC46F4DC600CAE4E29D9CA7A09A233C1FE855F7B1B2D2D0EB4804B4F9F
+        0xE5

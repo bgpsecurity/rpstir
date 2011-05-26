@@ -1,0 +1,10 @@
+--- badROAIPMaxLth.raw.old	2011-05-25 18:31:12.000000000 -0400
++++ badROAIPMaxLth.raw	2011-05-25 18:31:37.000000000 -0400
+@@ -8,6 +8,7 @@
+                     ocw seq int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+                                     seq seq bit 0x0001
++                                            int 33
+                                 seq oct 0x0002
+                                     seq seq bit 0x00010200
+             ctx+0x20
