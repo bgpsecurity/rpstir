@@ -1,0 +1,89 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x0089 /* 137 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "badCertPubKeyLth"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100C247EF57C065
+                0x453DAB3ECFC9D8432CB492D1765815EC
+                0xC907FDEE0500D195CAF8BC084ACE982B
+                0xF0C733EDDAFDB0E95AEE558931CD59FF
+                0x86340EF241AE1AE3FA608E4BA6A89878
+                0xCDFE4475593DA56898B722D16811DD29
+                0x2157B1E4E98F254115BF1C542D02863D
+                0x14D1F139F3C1B4694819D27245E627DF
+                0x663CD6A863026774055C1CC7BD70C074
+                0x3BF5D33A6D2A0A3E050C56BE17CC8DC9
+                0x7123B3D285180008706F755CA744837F
+                0x72BBDF05F8BD7E321F887E7874552A8E
+                0x345E60641AB5287A67ED134AE0561507
+                0xD5F58D2603D0A644A5BDADB705570204
+                0x81114A94E7916829DC94D94CDAB247A6
+                0xC606A948A9C5B0EAAAA7051DF03E49BB
+                0x8395A87C2F1C516397470203010001
+        ctx+0x23
+            seq seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xD8C8131BF55527DA27C425E86006185A
+                            0x6F36A189
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0x66692F54208FC6E03A1227B2DE8289E5
+                                0x3A3EA861
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://rpki.bbn.com/conformance/r"
+                                            "oot/root.crl"
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://roa-pki.bbn.com/conformance/root.c"
+                                    "er"
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    "Cert/goodCert.mft"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                seq bit 0x000101
+                            seq oct 0x0002
+                                seq bit 0x00010201
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x0100 /* 256 */ 
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x006C562A805514144BFE8E6E66CB90675113077846EF81FE79D385D8B9308627
+        0x1D22C17FE477D3EFB51F69C8745D429A142430D735184BA7AFAB3D73D097D571
+        0x00191AA59B07EDAD4235041AC0DE67660A7CE1CC1930D1FED36EC9F2C1338885
+        0x602B3BA770F23444174496F4B25CC10364C5C1C1B4E7A47A8344D76A0169198F
+        0x3BD3CF673C8BAE873F433A79CD93334383FB72ECE417A27D78D8742AC07BB1D5
+        0x37986C7247CD1EC82A1BB831537BCFFAABDD166C8B7327E9D677CAB1DE7E94DC
+        0xDCC1FE3DB59AB4C86F6A8168F81CFDF012CE9BBC1D2B4366E62B622F651AB5D5
+        0xC24C5F2FBD4D757563AFB4BABF35F3FFDCEA3737A6775DC4D38B74F19FDB9521
+        0xC2
