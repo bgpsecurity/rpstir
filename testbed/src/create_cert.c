@@ -1044,17 +1044,17 @@ int create_cert(struct object_field *table)
 
   setSelfSigned(table);
 
-  // Read the certificate template into the certifcate
-  if (eecert)
-    ret = get_casn_file(&cert.self, eecert_template , 0);
-  else
-    ret = get_casn_file(&cert.self, cacert_template , 0);
+  // Read the certificate template into the certificate
+  if (!templateFile) {
+    if (eecert)
+      templateFile = eecert_template;
+    else
+      templateFile = cacert_template;
+  }
+  ret = get_casn_file(&cert.self, (char*)templateFile, 0);
   if (ret < 0)
     {
-      if (eecert)
-	warn(FILE_OPEN_ERR, eecert_template);
-      else
-	warn(FILE_OPEN_ERR, cacert_template);
+      warn(FILE_OPEN_ERR, (char*)templateFile);
       return(FILE_OPEN_ERR);
     }
 

@@ -82,4 +82,6 @@ extern char *stripQuotes(char *str);
 extern char *copy_string(char *str, int num);
 extern int cvtv4(uchar fill, char *ip, uchar *buf);
 extern int cvtv6(uchar fill, char *ip, uchar *buf);
+
+extern const char *templateFile;
 #endif /* _CREATE_OBJ_H */

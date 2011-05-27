@@ -49,6 +49,7 @@ extern int validate_table(struct object_field *table, char *errstr, int len);
 void print_table(struct object_field *table);
 char parse_errstr[1024];
 char validate_errstr[1024];
+const char *templateFile = NULL;
 
 // see obj_err.h for error codes
 char *msgs [] =
@@ -232,14 +233,17 @@ int parse_args(int argc, char **argv, int index, struct object_field *tbl)
 // print usage to stdout for the user
 void printUsage(char **argv)
 {
-  fprintf(stdout, "Usage:\n");
-  fprintf(stdout, "        %s OBJECT_TYPE arg1=value arg2=value arg3=value\n", argv[0]);
-  fprintf(stdout, "\n");
-  fprintf(stdout, "where OBJECT_TYPE is one of the following: \n");
-  fprintf(stdout, "            (CERT, CRL, ROA or MANIFEST)\n"); 
-  fprintf(stdout, "and argument/value pairs are based upon the object type\n");
-  fprintf(stdout, "\n");
-  fprintf(stdout, "options: -h print this usage\n");
+  fprintf(stderr, "Usage:\n");
+  fprintf(stderr, "        %s OBJECT_TYPE arg1=value arg2=value arg3=value\n", argv[0]);
+  fprintf(stderr, "\n");
+  fprintf(stderr, "where OBJECT_TYPE is one of the following: \n");
+  fprintf(stderr, "            (CERT, CRL, ROA or MANIFEST)\n"); 
+  fprintf(stderr, "and argument/value pairs are based upon the object type\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "options:\n");
+  fprintf(stderr, "\t-f\tread config file for additional argument/value pairs (cmd line takes precedence)\n");
+  fprintf(stderr, "\t-t\tuse specified file template rather than the default\n");
+  fprintf(stderr, "\t-h\tprint this usage\n");
   exit(0);
 }
 
@@ -262,7 +266,7 @@ int main(int argc, char **argv)
 
 
   // parse options
-  while ((c = getopt (argc, argv, "hf:")) != -1)
+  while ((c = getopt (argc, argv, "hf:t:")) != -1)
     {
       switch (c)
 	{
@@ -272,6 +276,10 @@ int main(int argc, char **argv)
 
 	case 'f':
 	  configFile=optarg;
+	  break;
+
+	case 't':
+	  templateFile=optarg;
 	  break;
 
 	case '?':
