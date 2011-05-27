@@ -86,6 +86,7 @@ Inputs:
 
 Outputs:
   child CA certificate - verifiable in the usual fashion by the parent pubkey
+  child key pair - not shown in diagram, <outdir>/<subjectname>.p15
   child repo directory - ASSUMED to be a subdirectory of parent's repo and
                          named by the child's subjectname
   crl issued by child - named <subjectname>.crl, and left empty
