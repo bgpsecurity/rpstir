@@ -30,11 +30,12 @@ TBTOOLS=$RPKI_ROOT/testbed/src	# Tools used for testbed generation
 # Usage
 usage ( ) {
     usagestr="
-Usage: $0 [options] <subjectname> <serial> <parentcertfile> <parentkeyfile>
+Usage: $0 [options] <subjectname> <serial> <parentcertfile> <parentURI> <parentkeyfile> <crldp>
 
 Options:
-  -b crl|mft\tchild CRL or manifest will be named 'bad<subjectname>.*'
-  -o outdir\tOutput directory (default = PWD)
+  -b crl|mft\tChild CRL or manifest should be named 'bad<subjectname>.*'
+  -o outdir\tOutput directory (default = CWD)
+  -h       \tDisplay this help file
 
 This tool takes as input a parent CA certificate + key pair, and as
 output, issues a child CA certificate with a minimal publication
@@ -76,21 +77,22 @@ Note: this script does NOT update the 'Manifest issued by Parent'.
 	       	 +--------------------------------+
 
 Inputs:
-  parentcertfile - path to parent certificate file
-  parentkeyfile - path to parent key pair (.p15 file)
   subjectname - subject name for the child
   serial - serial number for the child
-  outdir - path to parent's repo directory.  Defaults to PWD
-  crldp - full rsync URI to 'CRL issued by Parent'.  Defaults to
+  parentcertfile - local path to parent certificate file
+  parentURI - full rsync URI to parent certificate file
+  parentkeyfile - local path to parent key pair (.p15 file)
+  crldp - full rsync URI to 'CRL issued by Parent'.  Probably something like
           <parentSIA>/<parentSubjectName>.crl
+  outdir - (optional) local path to parent's repo directory.  Defaults to CWD
 
 Outputs:
-  child CA certificate - verifiable in the usual fashion by the parent pubkey
+  child CA certificate - inherits AS/IP resources from parent via inherit bit
   child key pair - not shown in diagram, <outdir>/<subjectname>.p15
-  child repo directory - ASSUMED to be a subdirectory of parent's repo and
-                         named by the child's subjectname
-  crl issued by child - named <subjectname>.crl, and left empty
-  mft issued by child - named <subjectname>.mft, includes one item (the crl)
+  child repo directory - ASSUMED to be a subdirectory of parent's repo. The
+                         new directory will be <outdir>/<subjectname>/
+  crl issued by child - named <subjectname>.crl, and has no entries
+  mft issued by child - named <subjectname>.mft, and has one entry (the crl)
 
   For convenience in generating the RPKI conformance test cases, the
   caller may optionally specify that the filename for either the crl
@@ -104,8 +106,7 @@ Outputs:
 MAKE_CRL_BAD=0
 MAKE_MFT_BAD=0
 OUTPUT_DIR="."
-CHILDCERT_RAW_TEMPLATE="$RPKI_ROOT/testcases/conformance/raw/root/goodCert.raw"
-CHILDCERT_TEMPLATE="$RPKI_ROOT/testcases/conformance/raw/root/goodCert.cer"
+CHILDCERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
 
 # Process command line arguments.
 while getopts b:o:h opt
@@ -131,12 +132,13 @@ do
   esac
 done
 shift $((OPTIND - 1))
-if [ $# = "4" ]
+if [ $# = "5" ]
 then
     SUBJECTNAME=$1
     SERIAL=$2
     PARENT_CERT_FILE=$3
-    PARENT_KEY_FILE=$4
+    PARENT_URI=$4
+    PARENT_KEY_FILE=$5
 else
     usage
 fi
@@ -174,9 +176,18 @@ $CGTOOLS/gen_key $childkeyfile 2048
 check_errs $? "Failed to generate key pair $child_key_file"
 
 # 2. Create/sign child certificate with appropriate parameters
+if [ ! -e ${CHILDCERT_TEMPLATE} ]
+then
+    printf "Error - file not found: template cert ${CHILDCERT_TEMPLATE}\n"
+    exit 1
+fi
+
 
 # Create child publication directory
+mkdir -p $child_sia_dir
+check_errs $? "Failed to create child SIA directory: $child_sia_dir"
 
 # Create child CRL
+
 
 # Create child Manifest
