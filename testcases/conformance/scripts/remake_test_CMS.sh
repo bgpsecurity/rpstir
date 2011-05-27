@@ -12,7 +12,7 @@ vi bad$1EE$2.raw
 diff -u bad$1EE$2.raw.old bad$1EE$2.raw > bad$1$2.stage0.patch
 
 rr <bad$1EE$2.raw >bad$1EE$2.cer
-gen_key bad$1EE$2.p15 2048
+# gen_key bad$1EE$2.p15 2048
 add_key_info bad$1EE$2.cer bad$1EE$2.p15 ../root.cer
 mv bad$1EE$2.cer.raw bad$1EE$2.raw
 sign_cert bad$1EE$2.cer ../root.p15
