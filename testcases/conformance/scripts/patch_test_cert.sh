@@ -1,4 +1,21 @@
 #!/bin/bash -x
+#
+# ***** BEGIN LICENSE BLOCK *****
+#
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 4.0
+#
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.
+#
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+#
+#  Copyright (C) Raytheon BBN Technologies 2011.  All Rights Reserved.
+#
+#  Contributor(s): Charlie Gardiner
+#
+#  ***** END LICENSE BLOCK ***** */
 # $1= file stem, $2= serial number
 cp goodCert.raw badCert$1.raw
 rr <badCert$1.raw >badCert$1.cer
