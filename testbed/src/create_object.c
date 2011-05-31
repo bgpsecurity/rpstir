@@ -292,14 +292,10 @@ int main(int argc, char **argv)
 	  break;
 	}
     }
-    
-  if (configFile != NULL)
-    {  
-      //fprintf(stdout, "Config file is %s\n", configFile);
-      index = 3;
-    }
-  else
-    fprintf(stdout, "No Config file\n");
+
+  index = optind;		// remaining arguments
+  if (configFile == NULL)
+      fprintf(stdout, "No Config file\n");
 
   obj_type = argv[index++];
   if (obj_type == NULL)
