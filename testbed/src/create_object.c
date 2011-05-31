@@ -297,9 +297,10 @@ int main(int argc, char **argv)
   if (configFile == NULL)
       fprintf(stdout, "No Config file\n");
 
-  obj_type = argv[index++];
-  if (obj_type == NULL)
+  if (index >= argc)
     fatal(INPUT_ARG_ERR, "No Object Type");
+  else
+    obj_type = argv[index++];
 
   if (strncasecmp(obj_type,"CERT", strlen("CERT")) == 0)
     {
