@@ -106,7 +106,9 @@ Outputs:
 MAKE_CRL_BAD=0
 MAKE_MFT_BAD=0
 OUTPUT_DIR="."
-CHILDCERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
+#CHILDCERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
+CHILDCRL_TEMPLATE="$RPKI_ROOT/testbed/templates/crl_template.crl"
+CHILDMFT_TEMPALTE="$RPKI_ROOT/testbed/templates/mft_tempalte.mft"
 
 # Process command line arguments.
 while getopts b:o:h opt
@@ -132,22 +134,23 @@ do
   esac
 done
 shift $((OPTIND - 1))
-if [ $# = "5" ]
+if [ $# = "6" ] 
 then
     SUBJECTNAME=$1
     SERIAL=$2
     PARENT_CERT_FILE=$3
     PARENT_URI=$4
     PARENT_KEY_FILE=$5
+    CRLDP=$6
 else
     usage
 fi
 
-# Extract SIA directory from parent
+# Extract SIA directory from parent (rsync URI)
 parent_sia=$($CGTOOLS/extractSIA $PARENT_CERT_FILE)
 check_errs $? "Failed to extract SIA"
 
-# Compute SIA directory URI for child CA
+# Compute SIA directory (rsync URI) for child CA
 child_sia_dir="${parent_sia}${SUBJECTNAME}/"
 
 # Compute manifest name for child CA
@@ -166,26 +169,45 @@ else
     child_crl_name="${SUBJECTNAME}.crl"
 fi
 
-# Compute SIA manifest URI for child CA
+# Compute SIA manifest (rsync URI) for child CA
 child_sia_mft="${child_sia_dir}${child_mft_name}"
 
 # Create child cert
 # 1. Generate child key pair
 child_key_file=${OUTPUT_DIR}/${SUBJECTNAME}.p15
-$CGTOOLS/gen_key $childkeyfile 2048
+$CGTOOLS/gen_key $child_key_file 2048
 check_errs $? "Failed to generate key pair $child_key_file"
 
 # 2. Create/sign child certificate with appropriate parameters
-if [ ! -e ${CHILDCERT_TEMPLATE} ]
+childcert_template=$PARENT_CERT_FILE  # get default field values from parent
+if [ ! -e ${childcert_template} ]
 then
-    printf "Error - file not found: template cert ${CHILDCERT_TEMPLATE}\n"
+    printf "Error - file not found: template cert ${childcert_template}\n"
     exit 1
 fi
-
+child_cert_file=${OUTPUT_DIR}/${SUBJECTNAME}.cer
+$TBTOOLS/create_object -t ${childcert_template} CERT \
+    parentcertfile=${PARENT_CERT_FILE} \
+    parentkeyfile=${PARENT_KEY_FILE} \
+    subjkeyfile=${child_key_file} \
+    type=CA \
+    notbefore=100101000000Z \
+    notafter=20800101000000Z \
+    serial=${SERIAL} \
+    subject=${SUBJECTNAME} \
+    crldp=${CRLDP} \
+    aia=${PARENT_URI} \
+    sia="r:${child_sia_dir},m:${child_sia_mft}" \
+    ipv4=inherit \
+    ipv6=inherit \
+    as=inherit \
+    outputfilename=${child_cert_file}
+check_errs $? "Failed to create child certificate: ${child_cert_file}"
 
 # Create child publication directory
-mkdir -p $child_sia_dir
-check_errs $? "Failed to create child SIA directory: $child_sia_dir"
+child_sia_path=${OUTPUT_DIR}/${SUBJECTNAME}
+mkdir -p $child_sia_path
+check_errs $? "Failed to create child SIA directory: $child_sia_path"
 
 # Create child CRL
 
