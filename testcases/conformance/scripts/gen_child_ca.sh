@@ -17,15 +17,9 @@
 #
 #  ***** END LICENSE BLOCK ***** */
 
-
-
-# Set up environment variables if not already done.
+# Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../envir.setup
-
-# Set up paths to ASN.1 tools.
-CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
-TBTOOLS=$RPKI_ROOT/testbed/src	# Tools used for testbed generation
 
 # Usage
 usage ( ) {
@@ -102,13 +96,25 @@ Outputs:
     exit 1
 }
 
+# NOTES
+# 1. Variable naming convention -- preset constants and command line
+# arguments are in ALL_CAPS.  Derived/computed values are in
+# lower_case.
+# 2. Dependencies: This script assumes the existence (and PATH
+# accessibility) of the standard tools 'sed' and 'sha256sum'.
+
+# Set up paths to ASN.1 tools.
+CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
+TBTOOLS=$RPKI_ROOT/testbed/src	# Tools used for testbed generation
+
 # Options and defaults
 MAKE_CRL_BAD=0
 MAKE_MFT_BAD=0
 OUTPUT_DIR="."
-#CHILDCERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
-CHILDCRL_TEMPLATE="$RPKI_ROOT/testbed/templates/crl_template.crl"
-CHILDMFT_TEMPALTE="$RPKI_ROOT/testbed/templates/mft_tempalte.mft"
+CACERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
+EECERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ee_template.cer"
+CRL_TEMPLATE="$RPKI_ROOT/testbed/templates/crl_template.crl"
+MFT_TEMPLATE="$RPKI_ROOT/testbed/templates/M.man"
 
 # Process command line arguments.
 while getopts b:o:h opt
@@ -146,6 +152,10 @@ else
     usage
 fi
 
+###############################################################################
+# Compute Paths (both rsync URIs and local paths)
+###############################################################################
+
 # Extract SIA directory from parent (rsync URI)
 parent_sia=$($CGTOOLS/extractSIA $PARENT_CERT_FILE)
 check_errs $? "Failed to extract SIA"
@@ -172,24 +182,43 @@ fi
 # Compute SIA manifest (rsync URI) for child CA
 child_sia_mft="${child_sia_dir}${child_mft_name}"
 
+# Compute CRLDP for grandchildren (i.e. child CA's children)
+grandchildren_crldp="${child_sia_dir}${child_crl_name}"
+
+# Compute AIA for grandchildren (i.e. child CA's children)
+grandchildren_aia="${parent_sia}${SUBJECTNAME}.cer"
+
+# Compute local paths to child CA
+child_key_path=${OUTPUT_DIR}/${SUBJECTNAME}.p15
+child_cert_path=${OUTPUT_DIR}/${SUBJECTNAME}.cer
+ 
+# Compute local paths to child CA publication point and CRL/manifest
+child_sia_path=${OUTPUT_DIR}/${SUBJECTNAME}
+child_crl_path=${child_sia_path}/${child_crl_name}
+child_mft_path=${child_sia_path}/${child_mft_name}
+child_mft_ee_path=${child_sia_path}/${child_mft_name}.cer
+child_mft_ee_key_path=${child_sia_path}/${child_mft_name}.p15
+
+###############################################################################
+# Generate child cert
+###############################################################################
+
 # Create child cert
 # 1. Generate child key pair
-child_key_file=${OUTPUT_DIR}/${SUBJECTNAME}.p15
-$CGTOOLS/gen_key $child_key_file 2048
-check_errs $? "Failed to generate key pair $child_key_file"
+$CGTOOLS/gen_key $child_key_path 2048
+check_errs $? "Failed to generate key pair $child_key_path"
 
 # 2. Create/sign child certificate with appropriate parameters
-childcert_template=$PARENT_CERT_FILE  # get default field values from parent
-if [ ! -e ${childcert_template} ]
+if [ ! -e ${CACERT_TEMPLATE} ]
 then
-    printf "Error - file not found: template cert ${childcert_template}\n"
+    printf "Error - file not found: template cert ${CACERT_TEMPLATE}\n"
     exit 1
 fi
-child_cert_file=${OUTPUT_DIR}/${SUBJECTNAME}.cer
-$TBTOOLS/create_object -t ${childcert_template} CERT \
+$TBTOOLS/create_object -t ${CACERT_TEMPLATE} CERT \
+    outputfilename=${child_cert_path} \
     parentcertfile=${PARENT_CERT_FILE} \
     parentkeyfile=${PARENT_KEY_FILE} \
-    subjkeyfile=${child_key_file} \
+    subjkeyfile=${child_key_path} \
     type=CA \
     notbefore=100101000000Z \
     notafter=20800101000000Z \
@@ -200,16 +229,64 @@ $TBTOOLS/create_object -t ${childcert_template} CERT \
     sia="r:${child_sia_dir},m:${child_sia_mft}" \
     ipv4=inherit \
     ipv6=inherit \
-    as=inherit \
-    outputfilename=${child_cert_file}
-check_errs $? "Failed to create child certificate: ${child_cert_file}"
+    as=inherit
+check_errs $? "Failed to create child certificate: ${child_cert_path}"
+
+###############################################################################
+# Generate child cert's publication directory
+###############################################################################
 
 # Create child publication directory
-child_sia_path=${OUTPUT_DIR}/${SUBJECTNAME}
 mkdir -p $child_sia_path
 check_errs $? "Failed to create child SIA directory: $child_sia_path"
 
-# Create child CRL
+# Create child-issued CRL
+$TBTOOLS/create_object -t ${CRL_TEMPLATE} CRL \
+    outputfilename=${child_crl_path} \
+    parentcertfile=${child_cert_path} \
+    parentkeyfile=${child_key_path} \
+    thisupdate=100101000000Z \
+    nextupdate=20800101000000Z \
+    revokedcertlist= \
+    crlnum=1
+check_errs $? "Failed to create child-issued CRL: ${child_crl_path}"
 
+# Create child-issued Manifest
+# 1. Generate EE key pair
+$CGTOOLS/gen_key $child_mft_ee_key_path 2048
+check_errs $? "Failed to generate key pair $child_mft_ee_key_path"
 
-# Create child Manifest
+# 2. Create child-issued EE cert (to be embedded in the manifest)
+$TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
+    outputfilename=${child_mft_ee_path} \
+    parentcertfile=${child_cert_path} \
+    parentkeyfile=${child_key_path} \
+    subjkeyfile=${child_mft_ee_key_path} \
+    type=EE \
+    notbefore=100101000000Z \
+    notafter=20800101000000Z \
+    serial=1 \
+    subject="${SUBJECTNAME}-mft-ee" \
+    crldp=${grandchildren_crldp} \
+    aia=${grandchildren_aia} \
+    sia="s:${child_sia_mft}" \
+    ipv4=inherit \
+    ipv6=inherit \
+    as=inherit
+check_errs $? "Failed to create child-issued EE certificate: ${child_mft_ee_path}"
+
+# 3. Compute hash of CRL
+child_crl_hash=$(sha256sum ${child_crl_path} | \
+    sed -e 's/ .*$//' -e 'y/abcdef/ABCDEF/')
+echo "Hash of ${child_crl_name}: 0x${child_crl_hash}"
+
+# 4. Create child-issued Manifest
+$TBTOOLS/create_object -t ${MFT_TEMPLATE} MANIFEST \
+    outputfilename=${child_mft_path} \
+    EECertLocation=${child_mft_ee_path} \
+    EEKeyLocation=${child_mft_ee_key_path} \
+    thisUpdate=20100101000000Z \
+    nextUpdate=20800101000000Z \
+    manNum=1 \
+    filelist=${child_crl_name}'%0x'${child_crl_hash}
+check_errs $? "Failed to create child-issued MFT: ${child_mft_path}"
