@@ -7,9 +7,9 @@
 .ds LF Kent, et al 
 .ds RF FORMFEED[Page %]
 .ds LH Internet-Draft
-.ds RH July 2010
+.ds RH June 2011
 .ds CH BGPSEC Router Certificate Profile
-.ds CF Expires January 16, 2011
+.ds CF Expires December 4, 2011
 .hy 0
 .nh
 .ad l
@@ -19,8 +19,8 @@
 .tl '''S. Kent'
 .tl 'Internet-Draft''M. Lepinski'
 .tl 'Intended status: Standards Track''M. Reynolds'
-.tl 'Expires: January 16, 2011''BBN'
-.tl '''July 16, 2010'
+.tl 'Expires: December 4, 2011''BBN'
+.tl '''June 2, 2011'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -35,7 +35,7 @@
 
 .ce 2
 A Profile for BGPSEC Router Certificates 
-draft-ietf-reynolds-bgpsec-rtrcerts-00
+draft-reynolds-bgpsec-rtrcerts-00
 .fi
 .in 3
 
@@ -53,13 +53,13 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on January 16, 2011.
+This Internet-Draft will expire on December 4, 2011.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
 
 .\" NOTE: Insert current <year> in the following paragraph
-Copyright (c) 2010 IETF Trust and the persons identified as the document authors. All rights reserved.
+Copyright (c) 2011 IETF Trust and the persons identified as the document authors. All rights reserved.
 
 This document is subject to BCP\078 and the IETF Trust's Legal Provisions Relating to IETF Documents \%(http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must included Simplified BSD License text as described in Section\04.e of the Legal Trust Provisions and are provided without warranty as described in the BSD License.
 
@@ -179,12 +179,12 @@ Refer to section 4.6 of [ID.res-cert-prof].
 .ti 0
 3.7  Valid To
 
-Refer to section 4.7 of [ID.res-cert-prof].
+Refer to section 4.6 of [ID.res-cert-prof].
 
 .ti 0
 3.8  Subject Public Key Info
 
-Refer to section 4.8 of [ID.res-cert-prof].
+Refer to section 4.7 of [ID.res-cert-prof].
 
 .ti 0
 3.9  BGPSEC Router Certificate Version 3 Extension Fields
@@ -199,12 +199,12 @@ The basic constraints extension identifies whether the subject of the certificat
 .ti 0
 3.9.2  Subject Key Identifier
 
-The subject key identifier (SKI) extension MUST appear in every Resource Certificate, as per section 4.9.2 of [ID.res-cert-prof]. For a BGPSEC Router certificate, the SKI is used as a shorthand means of uniquely identifying an individual certificate. The SKI in a Resource certificate is generated from the public key in the certificate, using the SHA-1 algorithm, as described in section 4.2.1.2 of RFC 5280. This extension MUST appear in all BGPSEC Router certificates. This extension is non-critical.
+The subject key identifier (SKI) extension MUST appear in every Resource Certificate, as per section 4.8.2 of [ID.res-cert-prof]. For a BGPSEC Router certificate, the SKI is used as a shorthand means of uniquely identifying an individual certificate. The SKI in a Resource certificate is generated from the public key in the certificate, using the SHA-1 algorithm, as described in section 4.2.1.2 of RFC 5280. This extension MUST appear in all BGPSEC Router certificates. This extension is non-critical.
 
 .ti 0
 3.9.3  Authority Key Identifier
 
-This is a non-critical extension and it MUST be present, as per section 4.9.3 of [ID.res-cert-prof].
+This is a non-critical extension and it MUST be present, as per section 4.8.3 of [ID.res-cert-prof].
 
 .ti 0
 3.9.4  Key Usage
@@ -219,12 +219,12 @@ The EKU extension MUST NOT appear in a BGPSEC Router certificate.
 .ti 0
 3.9.6  CRL Distribution Points
 
-The CRLDP extension is non-critical and MUST appear in every BGPSEC Router Certificate, as per section 4.9.6 of [ID.res-cert-prof].
+The CRLDP extension is non-critical and MUST appear in every BGPSEC Router Certificate, as per section 4.8.6 of [ID.res-cert-prof].
 
 .ti 0
 3.9.7  Authority Information Access
 
-The AIA extension is non-critical and MUST appear in every BGPSEC Router Certificate, as per section 4.9.7 of [ID.res-cert-prof].
+The AIA extension is non-critical and MUST appear in every BGPSEC Router Certificate, as per section 4.8.7 of [ID.res-cert-prof].
 
 .ti 0
 3.9.8  Subject Information Access
@@ -234,7 +234,7 @@ This extension is not used in BGPSEC Router certificates. It MUST be omitted.
 .ti 0
 3.9.9  Certificate Policies
 
-This critical extension MUST be present as per section 4.9.9 of [ID.res-cert-prof].
+This critical extension MUST be present as per section 4.8.9 of [ID.res-cert-prof].
 
 .ti 0
 3.9.10  IP Resources
@@ -244,7 +244,7 @@ This extension is not used in BGPSEC Router certificates. It MUST be omitted.
 .ti 0
 3.9.11  AS Resources
 
-This extension contains the list of AS numbers that the router is authorized to represent in BGP advertisements, encoded as specified in RFC 3779. The "inherit" element MUST NOT be specified. As specified in section 4.9.11 of [ID.res-cert-prof], RDI values MUST NOT be used. All BGPSEC Router certificates MUST include an AS resources extension, and the extension MUST contain exactly one AS number. This extension MUST be marked critical.
+This extension contains the list of AS numbers that the router is authorized to represent in BGP advertisements, encoded as specified in RFC 3779. The "inherit" element MUST NOT be specified. As specified in section 4.8.11 of [ID.res-cert-prof], RDI values MUST NOT be used. All BGPSEC Router certificates MUST include an AS resources extension, and the extension MUST contain exactly one AS number. This extension MUST be marked critical.
 
 .bp
 .ti 0
@@ -293,7 +293,7 @@ A BGPSEC Router Certificate is an extension of the RPKI to encompass routers. It
 .ti 3
 [ID.sidr-rpki-algs]
 .ti 15
-Huston, G., "A Profile for Algorithms and Key Sizes for use in the Resource Public Key Infrastructure", work in progresss: Internet Drafts draft-ietf-sidr-rpki-algs-01.txt, May 2010.
+Huston, G., "A Profile for Algorithms and Key Sizes for use in the Resource Public Key Infrastructure" (work in progress); Internet Drafts draft-ietf-sidr-rpki-algs-05.txt, April 2011.
 
 .ti 3
 [RFC2050]   Hubbard, K., Kosters, M., Conrad, D., Karrenburg, D., and J. Postel, "INTERNET REGISTRY IP ALLOCATION GUIDELINES", BCP\012, RFC\02050, November 1996.
@@ -320,17 +320,17 @@ Huston, G., "A Profile for Algorithms and Key Sizes for use in the Resource Publ
 .ti 3
 [I-D. sidr-arch]
 .ti 15
-Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing", draft-ietf-side-arch-09.txt (work in progress), October 2009.
+Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing", draft-ietf-side-arch-13.txt (work in progress), May 2011.
 
 .ti 3
 [I-D. sidr-manifests]
 .ti 15
-Austein, R., Huston, G., Kent, S., and M. Lepinski, "Manifests for the Resource Public Key Intrastructure", Work in progress; Internet Draft draft-ietf-sidr-rpki-manifests-07.txt, May 2010.
+Austein, R., Huston, G., Kent, S., and M. Lepinski, "Manifests for the Resource Public Key Intrastructure" (work in progress); Internet Draft draft-ietf-sidr-rpki-manifests-12.txt, May 2011.
 
 .ti 3
 [I-D. sidr-res-cert-prof]
 .ti 15
-Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource Certificates", draft-ietf-sidr-res-certs-18.txt (work in progress), May 2010.
+Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource Certificates", draft-ietf-sidr-res-certs-22.txt; (work in progress), May 2011.
 
 .in 3
 
@@ -353,7 +353,7 @@ Authors' Addresses
 
   Email: kent@bbn.com
 
-  Matt Lepinski
+  Matthew Lepinski
   Raytheon BBN Technologies Corp.
   10 Moulton St.
   Cambridge, MA 02138

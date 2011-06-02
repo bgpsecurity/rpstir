@@ -34,7 +34,7 @@
 
 .ce 2
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
-<draft-ietf-sidr-ltamgmt-01.txt>
+<draft-ietf-sidr-ltamgmt-02.txt>
 .fi
 .in 3
 
@@ -503,17 +503,17 @@ The authors would like to acknowledge the significant contributions of Charles G
 .ti 3
 [I-D. sidr-arch]
 .ti 15
-Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing", draft-ietf-sidr-arch-11.txt (work in progress), September 2010.
+Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing", draft-ietf-sidr-arch-13.txt (work in progress), May 2011.
 
 .ti 3
 [I-D. sidr-repos-struct]
 .ti 15
-Huston, G., Loomans, R., and G. Michaelson, "A Profile for Resource Certificate Policy Structure", draft-ietf-sidr-repos-struct-05.txt (work in progress), October 2010.
+Huston, G., Loomans, R., and G. Michaelson, "A Profile for Resource Certificate Policy Structure", draft-ietf-sidr-repos-struct-07.txt (work in progress), February 2011.
 
 .ti 3
 [I-D. sidr-res-cert-prof]
 .ti 15
-Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource Certificates", draft-ietf-sidr-res-certs-19.txt (work in progress), October 2010.
+Huston, G., Michaelson, G., and R. Loomans, "A Profile for X.509 PKIX Resource Certificates", draft-ietf-sidr-res-certs-22.txt (work in progress), May 2011.
 
 .in 3
 
