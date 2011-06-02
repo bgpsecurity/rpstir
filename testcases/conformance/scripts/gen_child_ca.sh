@@ -160,6 +160,12 @@ fi
 parent_sia=$($CGTOOLS/extractSIA $PARENT_CERT_FILE)
 check_errs $? "Failed to extract SIA"
 
+# Extract validity dates from parent
+parent_notbefore=$($CGTOOLS/extractValidityDate -b $PARENT_CERT_FILE)
+parent_notafter=$($CGTOOLS/extractValidityDate -a $PARENT_CERT_FILE)
+parent_notbefore_gtime=$($CGTOOLS/extractValidityDate -b -g $PARENT_CERT_FILE)
+parent_notafter_gtime=$($CGTOOLS/extractValidityDate -a -g $PARENT_CERT_FILE)
+
 # Compute SIA directory (rsync URI) for child CA
 child_sia_dir="${parent_sia}${SUBJECTNAME}/"
 
@@ -220,8 +226,8 @@ $TBTOOLS/create_object -t ${CACERT_TEMPLATE} CERT \
     parentkeyfile=${PARENT_KEY_FILE} \
     subjkeyfile=${child_key_path} \
     type=CA \
-    notbefore=100101000000Z \
-    notafter=20800101000000Z \
+    notbefore=${parent_notbefore} \
+    notafter=${parent_notafter} \
     serial=${SERIAL} \
     subject=${SUBJECTNAME} \
     crldp=${CRLDP} \
@@ -245,8 +251,8 @@ $TBTOOLS/create_object -t ${CRL_TEMPLATE} CRL \
     outputfilename=${child_crl_path} \
     parentcertfile=${child_cert_path} \
     parentkeyfile=${child_key_path} \
-    thisupdate=100101000000Z \
-    nextupdate=20800101000000Z \
+    thisupdate=${parent_notbefore} \
+    nextupdate=${parent_notafter} \
     revokedcertlist= \
     crlnum=1
 check_errs $? "Failed to create child-issued CRL: ${child_crl_path}"
@@ -263,8 +269,8 @@ $TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
     parentkeyfile=${child_key_path} \
     subjkeyfile=${child_mft_ee_key_path} \
     type=EE \
-    notbefore=100101000000Z \
-    notafter=20800101000000Z \
+    notbefore=${parent_notbefore} \
+    notafter=${parent_notafter} \
     serial=1 \
     subject="${SUBJECTNAME}-mft-ee" \
     crldp=${grandchildren_crldp} \
@@ -285,8 +291,8 @@ $TBTOOLS/create_object -t ${MFT_TEMPLATE} MANIFEST \
     outputfilename=${child_mft_path} \
     EECertLocation=${child_mft_ee_path} \
     EEKeyLocation=${child_mft_ee_key_path} \
-    thisUpdate=20100101000000Z \
-    nextUpdate=20800101000000Z \
+    thisUpdate=${parent_notbefore_gtime} \
+    nextUpdate=${parent_notafter_gtime} \
     manNum=1 \
     filelist=${child_crl_name}'%0x'${child_crl_hash}
 check_errs $? "Failed to create child-issued MFT: ${child_mft_path}"
