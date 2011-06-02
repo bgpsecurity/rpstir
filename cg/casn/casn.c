@@ -37,7 +37,8 @@ char casn_sfcsid[] = "@(#)casn.c 871P";
 
 #define ASN_READ 1          // modes for encode & read
 
-extern int _time_to_ulong(ulong *valp, char *fromp, int lth);
+extern int _utctime_to_ulong(ulong *valp, char *fromp, int lth);
+extern int _gentime_to_ulong(ulong *valp, char *fromp, int lth);
 extern int _dump_tag(int tag, char *to, int offset, ushort flags,
     int mode);
 
@@ -1855,11 +1856,14 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
         ((!*c && !(c[1] & 0x80)) ||
         (*c == 0xFF && (c[1] & 0x80))))) err = ASN_CODING_ERR;
     else if (casnp->type == ASN_NULL && lth) err = ASN_LENGTH_ERR;
-    else if (casnp->type == ASN_UTCTIME || casnp->type == ASN_GENTIME)
+    else if (casnp->type == ASN_UTCTIME)
 	{
-	if (casnp->type == ASN_GENTIME) tmp = 2;
-	else tmp = 0;
-	if (_time_to_ulong(&val, (char *)&c[tmp], lth - tmp) < 0)
+	if (_utctime_to_ulong(&val, (char *)c, lth) < 0)
+            err = ASN_TIME_ERR;
+	}
+    else if (casnp->type == ASN_GENTIME)
+	{
+	if (_gentime_to_ulong(&val, (char *)c, lth) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
