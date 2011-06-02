@@ -82,7 +82,6 @@ Inputs:
 
 Outputs:
   child CA certificate - inherits AS/IP resources from parent via inherit bit
-  child key pair - not shown in diagram, <outdir>/<subjectname>.p15
   child repo directory - ASSUMED to be a subdirectory of parent's repo. The
                          new directory will be <outdir>/<subjectname>/
   crl issued by child - named <subjectname>.crl, and has no entries
@@ -91,6 +90,11 @@ Outputs:
   For convenience in generating the RPKI conformance test cases, the
   caller may optionally specify that the filename for either the crl
   or mft should be prepended by the string 'bad'.
+
+Auxiliary Outputs: (not shown in diagram)
+  child key pair - <outdir>/<subjectname>.p15
+  child-issued MFT EE cert - <outdir>/<subjectname>/<subjectname>.mft.cer
+  child-issued MFT EE key pair - <outdir>/<subjectname>/<subjectname>.mft.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -162,9 +166,13 @@ check_errs $? "Failed to extract SIA"
 
 # Extract validity dates from parent
 parent_notbefore=$($CGTOOLS/extractValidityDate -b $PARENT_CERT_FILE)
+check_errs $? "Failed to extract notBefore date"
 parent_notafter=$($CGTOOLS/extractValidityDate -a $PARENT_CERT_FILE)
+check_errs $? "Failed to extract notAfter date"
 parent_notbefore_gtime=$($CGTOOLS/extractValidityDate -b -g $PARENT_CERT_FILE)
+check_errs $? "Failed to extract notBefore date"
 parent_notafter_gtime=$($CGTOOLS/extractValidityDate -a -g $PARENT_CERT_FILE)
+check_errs $? "Failed to extract notAfter date"
 
 # Compute SIA directory (rsync URI) for child CA
 child_sia_dir="${parent_sia}${SUBJECTNAME}/"
