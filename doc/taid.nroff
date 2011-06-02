@@ -7,9 +7,9 @@
 .ds LF Reynolds, et al 
 .ds RF FORMFEED[Page %]
 .ds LH Internet-Draft
-.ds RH October 2010
+.ds RH June 2011
 .ds CH RPKI Local TA Management
-.ds CF Expires April 24, 2011
+.ds CF Expires December 4, 2011
 .hy 0
 .nh
 .ad l
@@ -19,7 +19,7 @@
 .tl 'Secure Inter-Domain Routing''M. Reynolds'
 .tl 'Internet-Draft''S. Kent'
 .tl 'Intended status: Standards Track''BBN'
-.tl 'Expires: April 24, 2011''October 21, 2010'
+.tl 'Expires: December 4, 2011''June 2, 2011'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -34,7 +34,7 @@
 
 .ce 2
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
-<draft-reynolds-rpki-ltamgmt-02.txt>
+<draft-ietf-sidr-ltamgmt-01.txt>
 .fi
 .in 3
 
@@ -52,13 +52,13 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on April 24, 2011.
+This Internet-Draft will expire on December 4, 2011.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
 
 .\" NOTE: Insert current <year> in the following paragraph
-Copyright (c) 2010 IETF Trust and the persons identified as the document authors. All rights reserved.
+Copyright (c) 2011 IETF Trust and the persons identified as the document authors. All rights reserved.
 
 This document is subject to BCP\078 and the IETF Trust's Legal Provisions Relating to IETF Documents \%(http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
 
@@ -98,26 +98,27 @@ Table of Contents
          4.2.1  Preparatory processing (stage 0) . . . . . . . . . .  16
          4.2.2  Target processing (stage 1)  . . . . . . . . . . . .  17
          4.2.3  Ancestor processing (stage 2)  . . . . . . . . . . .  18
-         4.2.4  Tree processing (stage 3)  . . . . . . . . . . . . .  20
-         4.2.5  TA re-parenting (stage 4)  . . . . . . . . . . . . .  21
+         4.2.4  Tree processing (stage 3)  . . . . . . . . . . . . .  19
+         4.2.5  TA re-parenting (stage 4)  . . . . . . . . . . . . .  20
       4.3  Discussion  . . . . . . . . . . . . . . . . . . . . . . .  21
    5  Implications for Path Discovery  . . . . . . . . . . . . . . .  21
-      5.1  Two answers . . . . . . . . . . . . . . . . . . . . . . .  22
+      5.1  Two answers . . . . . . . . . . . . . . . . . . . . . . .  21
       5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . .  22
       5.3  No answer . . . . . . . . . . . . . . . . . . . . . . . .  22
-   6  Implications for Revocation  . . . . . . . . . . . . . . . . .  23
-      6.1  No state bits set . . . . . . . . . . . . . . . . . . . .  23
+   6  Implications for Revocation  . . . . . . . . . . . . . . . . .  22
+      6.1  No state bits set . . . . . . . . . . . . . . . . . . . .  22
       6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . .  23
       6.3  PARA state bit set  . . . . . . . . . . . . . . . . . . .  23
-      6.4  Both ORIGINAL and PARA state bits set . . . . . . . . . .  24
-   7  Security Considerations  . . . . . . . . . . . . . . . . . . .  25
-   8  IANA Considerations  . . . . . . . . . . . . . . . . . . . . .  25
-   9  Acknowledgements . . . . . . . . . . . . . . . . . . . . . . .  25
-   10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  25
-      10.1  Normative References . . . . . . . . . . . . . . . . . .  25
-      10.2  Informative References . . . . . . . . . . . . . . . . .  26
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  26
-   Appendix A: Sample Constraints File . . . . . . . . . . . . . . .  27
+      6.4  Both ORIGINAL and PARA state bits set . . . . . . . . . .  23
+   7  Security Considerations  . . . . . . . . . . . . . . . . . . .  24
+   8  IANA Considerations  . . . . . . . . . . . . . . . . . . . . .  24
+   9  Acknowledgements . . . . . . . . . . . . . . . . . . . . . . .  24
+   10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  24
+      10.1  Normative References . . . . . . . . . . . . . . . . . .  24
+      10.2  Informative References . . . . . . . . . . . . . . . . .  25
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  25
+   Appendix A: Sample Constraints File . . . . . . . . . . . . . . .  26
+   Appendix B: Optional Sorting Algorithm for Ancestor Processing  .  27
 .fi
 .in 3
 
@@ -387,14 +388,13 @@ If a single original certificate is found matching the indicated SKI, then the a
 
 The goal of ancestor processing is to discover all ancestors of target certificates and remove from those ancestors the resources specified in the target blocks corresponding to the targets being processed. Note that it is possible that, for a given chain from a target certificate to a trust anchor, another target might be encountered. This is handled by removing all the target resources of all descendents. The set of all targets that are descendants of the given certificate is formed. The union of all the target resources of the corresponding target blocks is computed, and this union in then removed from the shared ancestor.
 
-In detail, the algorithm is as follows. First, all original target certificates processed during stage 1 processing are collected. Second, any such certificates that have the NOCHAIN state bit set are eliminated from the collection. (Note that, as a result of eliminating such certificates, the resulting collection may be empty, in which case this stage of algorithm processing terminates, and processing advances to stage 3.) Next, it is RECOMMENDED that the collection be sorted. Sorting is performed in an effort to eliminate any order dependencies in processing. It does this by rearranging the processing of certificates such that if A is an ancestor of B, B is processed before A. Sorting proceeds as follows. The collection is traversed and any certificate in the collection that is visited as a result of path discovery is temporarily marked. After the traversal, all unmarked certificates are moved to the beginning of the collection. The remaining marked certificates are unmarked, and a traversal again performed through this sub-collection of previously marked certificates. The sorting algorithm proceeds iteratively until all certificates have been sorted or until a predetermined fixed number of iterations has been performed. (Eight is suggested as a munificent value for the upper bound, since the number of sorting steps need should be no greater than the maximum depth of the tree). Finally, the ancestor processing algorithm is applied in turn to each certificate in the remaining sorted collection. Note that all stage 2 processing is completed before any stage 3 processing.
+In detail, the algorithm is as follows. First, all original target certificates processed during stage 1 processing are collected. Second, any such certificates that have the NOCHAIN state bit set are eliminated from the collection. (Note that, as a result of eliminating such certificates, the resulting collection may be empty, in which case this stage of algorithm processing terminates, and processing advances to stage 3.) Next, an implementation MAY sort the collection. The optional sorting algorithm is described in Appendix B. Note that all stage 2 processing is completed before any stage 3 processing.
 
-If an implementation does not perform sorting, as described above,
-then it MUST provide for conflict detection and notification. In particular, if a certificate is encountered two or more times during any part of the processing algorithm, and the modifications dictated by the processing algorithm are in conflict, the implementation MUST refrain from processing that certificate. Further, the implementation MUST present the user with an error message that contains enough detail that the user can locate the directives in the constraints file that are creating the conflict. For example, during one stage of the processing algorithm it may be directed that resources R1 be added to a certificate C, while during a different stage of the processing algorithm it may be directed that resources R2 be removed from certificate C. If the resource sets R1 and R2 have a non-empty intersection, that is a conflict.
+Two levels of nested iteration are performed. The outer iteration is effected over all certificates in the collection; the inner iteration is over all ancestors of the designated certificate being processed. The first certificate in the collection is chosen, and a resource set R is initialized based on the resources of the target block for that certificate (since the certificate is in collection, it must be a target certificate, and thus correspond to a target block). The parent of the certificate is then located using ordinary path discovery over original certificates only. The ancestor's certificate resources A are then extracted. These resources are then perforated with respect to R. That is, an output set of resources is created by forming the intersection I of A and R, and then taking the set difference A - I as the output resources. A paracertificate is then created containing resources tat are these output resources, and containing other fields and extensions from the original certificate (and possibly the RP's TA certificate) according to the procedure given in Table 1. The PARA state bit is set on this paracertificate and the ORIGINAL state bit is set on A. If A is also a target certificate, as indicated by its TARGET state bit being set, then there will already have been a paracertificate created for it. This previous paracertificate is destroyed in favor of the newly created paracertificate. In this case also, the set R is augmented by adding into it the set of resources of the target block for A. The algorithm then proceeds to process the parent of A. This inner iteration continues until the self-signed certificate at the root of the path is encountered and processed. The outer iteration then continues by clearing R and proceeding to the next certificate in the target collection.
 
-After sorting (if implemented) is complete, two levels of nested iteration are performed. The outer iteration is effected over all certificates in the collection; the inner iteration is over all ancestors of the designated certificate being processed. The first certificate in the collection is chosen, and a resource set R is initialized based on the resources of the target block for that certificate (since the certificate is in collection, it must be a target certificate, and thus correspond to a target block). The parent of the certificate is then located using ordinary path discovery over original certificates only. The ancestor's certificate resources A are then extracted. These resources are then perforated with respect to R. That is, an output set of resources is created by forming the intersection I of A and R, and then taking the set difference A - I as the output resources. A paracertificate is then created containing resources tat are these output resources, and containing other fields and extensions from the original certificate (and possibly the RP's TA certificate) according to the procedure given in Table 1. The PARA state bit is set on this paracertificate and the ORIGINAL state bit is set on A. If A is also a target certificate, as indicated by its TARGET state bit being set, then there will already have been a paracertificate created for it. This previous paracertificate is destroyed in favor of the newly created paracertificate. In this case also, the set R is augmented by adding into it the set of resources of the target block for A. The algorithm then proceeds to process the parent of A. This inner iteration continues until the self-signed certificate at the root of the path is encountered and processed. The outer iteration then continues by clearing R and proceeding to the next certificate in the target collection.
+Note that ancestor processing has the potential for order dependency as mentioned earlier in this document. If sorting is not implemented, or if the sorting algorithm fails to completely process the collection of target certificates because the allotted maximum number of iterations has been realized, it may be the case that an ancestor of a certificate logically occurs before that certificate in the collection. Whenever an existing paracertificate is replaced by a newly created paracertificate during ancestor processing, the algorithm SHOULD alert the user, and SHOULD log sufficient detail such that the user is able to determine which resources were perforated from the original certificate in order to create the (new) paracertificate.
 
-Note that ancestor processing has the potential for order dependency as mentioned earlier in this document. If the sorting algorithm fails to completely process the collection of target certificates because the allotted maximum number of iterations has been realized, it may be the case that an ancestor of a certificate logically occurs before that certificate in the collection. The algorithm SHOULD warn the user in case the sorting procedure fails to converge. In addition, whenever an existing paracertificate is replaced by a newly created paracertificate during ancestor processing, the algorithm SHOULD alert the user, and SHOULD log sufficient detail such that the user is able to determine which resources were perforated from the original certificate in order to create the (new) paracertificate.
+In addition, implementations MUST provide for conflict detection and notification during ancestor processing. In particular, if a certificate is encountered two or more times during any part of the ancestor processing algorithm, and the modifications dictated by the ancestor processing algorithm are in conflict, the implementation MUST refrain from processing that certificate. Further, the implementation MUST present the user with an error message that contains enough detail that the user can locate those directives in the constraints file that are creating the conflict. For example, during one stage of the processing algorithm it may be directed that resources R1 be added to a certificate C, while during a different stage of the processing algorithm it may be directed that resources R2 be removed from certificate C. If the resource sets R1 and R2 have a non-empty intersection, that is a conflict.
 
 .ti 0
 4.2.4  Tree processing (stage 3)
@@ -431,7 +431,8 @@ If the matching certificate has neither the ORIGINAL state bit set nor the PARA 
 .ti 0
 5.3  No answer
 
-This situation occurs when C has no parent in either the original hierarchy or the paracertificate hierarchy. In this case the parent P is NULL and path discovery terminates unsuccessfully. The NOCHAIN state bit must be set on C and all its descendants.
+This situation occurs when C has no parent in either the original
+hierarchy or the paracertificate hierarchy. In this case the parent P is NULL and path discovery terminates unsuccessfully. The NOCHAIN state bit must be set on C and all its descendants.
 
 .ti 0
 6  Implications for Revocation
@@ -639,3 +640,9 @@ SKI 19:82:34:90:8b:a0:9c:ef:00:af:a0:98:23:09:82:4b:ef:ab:98:09
 ; End of TBO constraints file
 
 .fi
+
+.ti 0
+Appendix B: Optional Sorting Algorithm for Ancestor Processing
+
+Sorting is performed in an effort to eliminate any order dependencies in ancestor processing, as described in section 4.2.3 of this document. The sorting algorithm does this by rearranging the processing of certificates such that if A is an ancestor of B, B is processed before A. The sorting algorithm is an OPTIONAL part of ancestor processing. Sorting proceeds as follows. The collection created at the beginning of ancestor processing is traversed and any certificate in the collection that is visited as a result of path discovery is temporarily marked. After the traversal, all unmarked certificates are moved to the beginning of the collection. The remaining marked certificates are unmarked, and a traversal again performed through this sub-collection of previously marked certificates. The sorting algorithm proceeds iteratively until all certificates have been sorted or until a predetermined fixed number of iterations has been performed. (Eight is suggested as a munificent value for the upper bound, since the number of sorting steps need should be no greater than the maximum depth of the tree). Finally, the ancestor processing algorithm is applied in turn to each certificate in the remaining sorted collection. If the sorting algorithm fails to converge, that is if the maximum number of iterations has been reached and unsorted certificates remain, the implementation SHOULD warn the user.
+
