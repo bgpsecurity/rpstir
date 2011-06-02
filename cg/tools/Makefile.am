@@ -28,7 +28,7 @@ bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	extractSIA extractValidityDate
 
 AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
-	-I../../proto
+	-I../../proto -I../../utils
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
 
