@@ -133,7 +133,7 @@ int write_fileList(void* man, void* value)
   //Clear the original fileList from the template
   clear_casn(&manp->fileList.self);
 
-  //tokenize the ',' seperated list. 
+  //tokenize the ',' separated list. 
   buf=strtok(filesAndHashes,token);
   int num = 0;
   while(buf != NULL)
@@ -219,10 +219,14 @@ int create_manifest(struct object_field *table)
    
   ROA(&roa, 0);
 
+  if (!templateFile) {
+    templateFile = man_template;
+  }
+
   // Read the manifest template into this manifest
-  if (get_casn_file(&roa.self,  man_template, 0) < 0)
+  if (get_casn_file(&roa.self, (char*)templateFile, 0) < 0)
     {
-      warn(FILE_OPEN_ERR, man_template);
+      warn(FILE_OPEN_ERR, (char*)templateFile);
       return(FILE_OPEN_ERR);
     }
 

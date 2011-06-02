@@ -551,10 +551,14 @@ int create_crl(struct object_field *table)
   char *keyfile = NULL,*val;
   int val_type;
 
+  if (!templateFile) {
+    templateFile = crl_template;
+  }
+
   // Read the crl template into the certifcate
-  if (get_casn_file(&crl.self, crl_template , 0) < 0)
+  if (get_casn_file(&crl.self, (char*)templateFile, 0) < 0)
     {
-      warn(FILE_OPEN_ERR, crl_template);
+      warn(FILE_OPEN_ERR, (char*)templateFile);
       return(FILE_OPEN_ERR);
     }
 
