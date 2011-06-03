@@ -195,7 +195,7 @@ int main(int argc, char **argv)
   num_items(&signedDatap->certificates.self);
      // check CMS suffix
   char *c = strrchr(argv[2], (int)'.');
-  if (!c || (strcmp(c, ".roa") && strcmp(c, ".man") && strcmp(c, "mft") &&
+  if (!c || (strcmp(c, ".roa") && strcmp(c, ".man") && strcmp(c, ".mft") &&
     strcmp(c, ".mnf"))) 
     fatal(1, "CMSfile suffix");
        // fill in SignerInfo
