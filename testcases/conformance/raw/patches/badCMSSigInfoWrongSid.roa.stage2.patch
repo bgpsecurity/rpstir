@@ -1,0 +1,15 @@
+--- badCMSSigInfoWrongSid.roa.raw.old	2011-05-25 17:41:28.000000000 -0400
++++ badCMSSigInfoWrongSid.roa.raw	2011-05-25 17:45:20.000000000 -0400
+@@ -109,9 +109,9 @@
+                         0x2E4B59E180C6B4FFECFC72D66DDB1668
+                         0x64
+             set seq int 0x03 /* 3 */ 
+-                    ctx+0x00
+-                        0xA6472A1AC280D2F472D0854A42FA6159
+-                        0xDBB6BB50
++                    seq seq set seq oid 2.5.4.3
++                                    prt "badCMSSigInfoWrongSid"
++                        int 526
+                     seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                         nul 
+                     ctx+0x20

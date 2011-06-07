@@ -1,0 +1,11 @@
+--- badCRLIssuerOID.raw.old	2011-06-07 13:13:56.000000000 -0400
++++ badCRLIssuerOID.raw	2011-06-07 13:14:19.000000000 -0400
+@@ -1,7 +1,7 @@
+ seq seq int 0x01 /* 1 */ 
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+-        seq set seq oid 2.5.4.3 /* id_commonName */
++        seq set seq oid 2.5.4.4 /* id_commonName */
+                     prt "CRLIssuerOID"
+         utc "110411185728Z"
+         utc "460515185928Z"

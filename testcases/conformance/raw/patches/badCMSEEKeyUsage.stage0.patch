@@ -1,0 +1,11 @@
+--- badCMSEEKeyUsage.raw.old	2011-05-26 10:59:03.000000000 -0400
++++ badCMSEEKeyUsage.raw	2011-05-26 10:59:57.000000000 -0400
+@@ -37,7 +37,7 @@
+                         0xDE8289E53A3EA861 /* ....:>.a */
+                 seq oid 2.5.29.15  /* id_keyUsage */
+                     boo 0xFF /* . */
+-                    oct 0x03020780 /* .... */
++                    oct 0x03020106 /* .... */
+                 seq oid 2.5.29.31  /* id_cRLDistributionPoints */
+                     oct 0x302D302BA029A02786257273796E633A /* 0-0+.).'.%rsync: */
+                         0x2F2F72706B692E62626E2E636F6D2F63 /* //rpki.bbn.com/c */

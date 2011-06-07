@@ -1,0 +1,9 @@
+--- badCMSSigInfoUnSigAttrs.roa.raw.old	2011-05-26 10:45:05.000000000 -0400
++++ badCMSSigInfoUnSigAttrs.roa.raw	2011-05-26 10:48:25.000000000 -0400
+@@ -140,3 +140,6 @@
+                         0x1A723691848422C31C17C8C7087BC9D1
+                         0xE3A78A623FCC63D7F2A6D965B8E01E4F
+                         0xCE8011668BCDB3D36621AE801EEE426D
++                    ctx+0x21
++                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
++                            set utc "110526144505Z"

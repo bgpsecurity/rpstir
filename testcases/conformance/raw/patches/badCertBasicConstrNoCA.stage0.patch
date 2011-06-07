@@ -1,0 +1,11 @@
+--- badCertBasicConstrNoCA.raw.old	2011-05-25 14:23:15.000000000 -0400
++++ badCertBasicConstrNoCA.raw	2011-05-25 14:24:28.000000000 -0400
+@@ -31,7 +31,7 @@
+         ctx+0x23
+             seq seq oid 2.5.29.19 /* id_basicConstraints */
+                     boo 0xFF
+-                    ocw seq boo 0xFF
++                    ocw seq 
+                 seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                     ocw oct 0xD8C8131BF55527DA27C425E86006185A
+                             0x6F36A189

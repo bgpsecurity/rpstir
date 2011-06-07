@@ -1,0 +1,9 @@
+--- badCertVersionNeg.raw.old	2011-05-25 15:29:59.000000000 -0400
++++ badCertVersionNeg.raw	2011-05-25 15:30:27.000000000 -0400
+@@ -1,5 +1,5 @@
+ seq seq ctx+0x20
+-            int 0x02 /* 2 */ 
++            int 0x80 /* 2 */ 
+         int 0x00A4 /* 164 */ 
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 

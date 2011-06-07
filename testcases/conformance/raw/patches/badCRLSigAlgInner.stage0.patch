@@ -1,0 +1,9 @@
+--- badCRLSigAlgInner.raw.old	2011-06-07 13:13:06.000000000 -0400
++++ badCRLSigAlgInner.raw	2011-06-07 13:13:20.000000000 -0400
+@@ -1,5 +1,5 @@
+ seq seq int 0x01 /* 1 */ 
+-        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
++        seq oid 1.2.840.113549.1.1.12 /* id_sha_256WithRSAEncryption */
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "CRLSigAlgInner"

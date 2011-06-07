@@ -1,0 +1,11 @@
+--- badCRLIssAltName.raw.old	2011-06-07 13:24:11.000000000 -0400
++++ badCRLIssAltName.raw	2011-06-07 13:28:10.000000000 -0400
+@@ -12,6 +12,8 @@
+                     ocw seq ctx+0x00
+                                 0xE856567DF0F4FC5AF0B5EEA02CB539D0
+                                 0x4ED0A2E7
++                seq oid 2.5.29.18
++                    ocw seq ctx+0x01 "alt name"
+     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+         nul 
+     bit 0x000DA73C56CA83371A6B54A3DCD366E1DA6F5BB8985D92DBB3C69167EC02DA2E

@@ -1,0 +1,11 @@
+--- badCRLLastUpdateFuture.raw.old	2011-06-07 13:20:48.000000000 -0400
++++ badCRLLastUpdateFuture.raw	2011-06-07 13:22:06.000000000 -0400
+@@ -3,7 +3,7 @@
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "CRLLastUpdateFuture"
+-        utc "110411185728Z"
++        utc "410411185728Z"
+         utc "460515185928Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */

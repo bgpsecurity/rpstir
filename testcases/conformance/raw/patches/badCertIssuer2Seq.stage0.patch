@@ -1,0 +1,11 @@
+--- badCertIssuer2Seq.raw.old	2011-05-25 14:43:28.000000000 -0400
++++ badCertIssuer2Seq.raw	2011-05-25 14:48:03.000000000 -0400
+@@ -5,6 +5,8 @@
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "root"
++                seq oid 2.5.4.3 /* id_commonName */
++                    prt "xxx"
+         seq utc "110411185728Z"
+             utc "460515185928Z"
+         seq set seq oid 2.5.4.3 /* id_commonName */

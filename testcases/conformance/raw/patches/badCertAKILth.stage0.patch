@@ -1,0 +1,11 @@
+--- badCertAKILth.raw.old	2011-05-25 14:14:09.000000000 -0400
++++ badCertAKILth.raw	2011-05-25 14:14:35.000000000 -0400
+@@ -38,7 +38,7 @@
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
+                                 0x66692F54208FC6E03A1227B2DE8289E5
+-                                0x3A3EA861
++                                0x3A3EA8
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+                     ocw bit 0x0106
