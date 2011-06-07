@@ -16,22 +16,28 @@
 #  Contributor(s): Charlie Gardiner
 #
 #  ***** END LICENSE BLOCK ***** */
-# $1= file stem, $2= CRL number
-cp goodCRL.raw badCRL$1.raw
-rr <badCRL$1.raw >badCRL$1.cer
-put_sernum badCRL$1.cer $2
-dump_smart badCRL$1.cer >badCRL$1.raw
+# $1= cert serial number, $2= file stem
+$RPKI_ROOT/testcases/conformance/scripts/gen_child_ca.sh -b crl $2 $1 \
+  ../root.cer \
+  rsync://rpki.bbn.com/conformance/root.cer ../root.p15 \
+  rsync://rpki.bbn.com/conformance/root/root.crl
+# 
+dump_smart $2.cer >$2.cer.raw
+cd $2
+dump_smart bad$2.crl >bad$2.raw
+# #
+cp bad$2.raw bad$2.raw.old
+vi bad$2.raw
+diff -u bad$2.raw.old bad$2.raw >bad$2.stage0.patch
 #
-cp badCRL$1.raw badCRL$1.raw.old
-vi badCRL$1.raw
-diff -u badCRL$1.raw.old badCRL$1.raw >badCRL$1.stage0.patch
+rr <bad$2.raw >bad$2.blb
+sign_cert bad$2.blb ../$2.p15
+mv bad$2.blb bad$2.crl
+dump -a bad$2.crl >bad$2.raw
 #
-rr <badCRL$1.raw >badCRL$1.blb
-sign_cert badCRL$1.blb ../root.p15
-mv badCRL$1.blb badCRL$1.cer
-dump_smart badCRL$1.cer >badCRL$1.raw
-#
-cp badCRL$1.raw badCRL$1.raw.old
-vi badCRL$1.raw
-diff -u badCRL$1.raw.old badCRL$1.raw >badCRL$1.stage1.patch
-rr <badCRL$1.raw >badCRL$1.cer
+cp bad$2.raw bad$2.raw.old
+vi bad$2.raw
+diff -u bad$2.raw.old bad$2.raw >bad$2.stage1.patch
+rr <bad$2.raw >bad$2.crl
+# cp $2.mft $2.old.mft
+fix_manifest $2.mft $2.mft.p15 bad$2.crl
