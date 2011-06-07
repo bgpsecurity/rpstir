@@ -1,10 +1,10 @@
---- badCMS2DigestAlgs.roa.raw.old	2011-05-26 10:32:11.000000000 -0400
-+++ badCMS2DigestAlgs.roa.raw	2011-05-26 10:36:56.000000000 -0400
+--- badCMS2DigestAlgs.roa.raw.old	2011-05-26 18:02:07.000000000 -0400
++++ badCMS2DigestAlgs.roa.raw	2011-05-26 18:02:45.000000000 -0400
 @@ -3,6 +3,8 @@
          seq int 0x03 /* 3 */ 
-             set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+             set seq oid 2.16.840.1.101.3.4.2.2 /* id_sha384 */
                      nul 
-+                seq oid 2.16.840.1.101.3.4.2.2 /* id_sha256 */
++                seq oid 2.16.840.1.101.3.4.2.1 /* id_sha384 */
 +                    nul 
              seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
                  ctx+0x20

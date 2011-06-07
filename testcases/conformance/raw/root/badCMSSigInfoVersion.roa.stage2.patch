@@ -1,9 +1,9 @@
---- badCMSSigInfoVersion.roa.raw.old	2011-05-25 17:37:31.000000000 -0400
-+++ badCMSSigInfoVersion.roa.raw	2011-05-25 17:37:56.000000000 -0400
+--- badCMSSigInfoVersion.roa.raw.old	2011-05-26 18:08:59.000000000 -0400
++++ badCMSSigInfoVersion.roa.raw	2011-05-26 18:09:14.000000000 -0400
 @@ -108,7 +108,7 @@
-                         0xE10E0A0007436D3863414FD4CD09013B
-                         0xD3CB71E7AC1C03033B79E793550F8951
-                         0xD9
+                         0xC016380414667B41F0D47DB99984E552
+                         0x5E812458A27C6408A9C4001FA6CE132B
+                         0x60
 -            set seq int 0x03 /* 3 */ 
 +            set seq int 0x02 /* 3 */ 
                      ctx+0x00

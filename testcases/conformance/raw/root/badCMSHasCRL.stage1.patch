@@ -1,39 +1,40 @@
---- badCMSHasCRL.raw.old	2011-05-25 17:16:19.000000000 -0400
-+++ badCMSHasCRL.raw	2011-05-25 17:33:58.000000000 -0400
-@@ -98,6 +98,36 @@
+--- badCMSHasCRL.raw.old	2011-05-26 18:05:12.000000000 -0400
++++ badCMSHasCRL.raw	2011-05-26 18:06:39.000000000 -0400
+@@ -98,6 +98,37 @@
                          0xF98EE5DB53F7B5AF71CABA35D78846C4
                          0xEF2646F1AD41E107087C1160A10698C7
                          0x0A
-+            ctx+0x21    
-+                seq seq int 0x01 /* 1 */ 
-+                        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
-+                            nul 
-+                        seq set seq oid 2.5.4.3 /* id_commonName */
-+                                    prt "root"
-+                        utc "110310200210Z"
-+                        utc "210608200210Z"
-+                        seq seq int 0x0D /* 13 */ 
-+                                utc "110218200210Z"
-+                            seq int 0x0E /* 14 */ 
-+                                utc "110302200210Z"
-+                        ctx+0x20
-+                            seq seq oid 2.5.29.20 /* id_cRLNumber */
-+                                    ocw int 0x01 /* 1 */ 
-+                                seq oid 2.5.29.35 /* id_authKeyId */
-+                                    ocw seq ctx+0x00
-+                                                0x6972E4236BB348AA2C9A138434D64D73
-+                                                0xDC5A7C69
++            ctx+0x21
++                seq seq int 0x02 /* 2 */
 +                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
-+                        nul 
-+                    bit 0x00454856CB704B0CBBA9C6566048D2333D093FCD09D1C4647FA5A2448BE9F30E
-+                        0xC3D49A10DAE19C79455C0A262A7C9BCAB1C7CFBF11CB2251926D126C5BF60AED
-+                        0x9F89658E04E06E7532625537F964379B1C267836560E7300337B7E5FF252CFE4
-+                        0x4B7DC428566345134CD38AA1723C0D16DA5CF729D58DDC79E8D9DC66BFEE520C
-+                        0x5CE822A6DD4A84998B62F439DA7279C6C9F2EA43D9F5C9807786D250C93B83F1
-+                        0x3D08FD6248CEA52AC0C4F7DEDC8B352C8B0CFDCE9CE6F8EFBFC811E7FF397BB8
-+                        0x7554F1C501DFFD89A72E5C2C259E5D4EB17477B3412A52AAD6566FD950DB60FE
-+                        0x0CFFA6A73429E292962AC58DA39FFAAA28070C5E88400EC8D62D92DF34267A1C
-+                        0x3D
++                        nul
++                    seq set seq oid 2.5.4.3 /* id_commonName */
++                                prt "badCMSEEHasCRL"
++                    utc "110310200210Z"
++                    utc "110608200210Z"
++                    seq seq int 0x0D /* 13 */
++                            utc "110218200210Z"
++                        seq int 0x0E /* 14 */
++                            utc "110302200210Z"
++                    ctx+0x20
++                        seq seq oid 2.5.29.20 /* id_cRLNumber */
++                                ocw int 0x01 /* 1 */
++                            seq oid 2.5.29.35 /* id_authKeyId */
++                                ocw seq ctx+0x00
++                                            0x6972E4236BB348AA2C9A138434D64D73
++                                            0xDC5A7C69
++                seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
++                    nul
++                bit 0x007681C88D4D6451839C75BD3A52D5D2D21CC2E319182A1B2FD32AC181392DF8
++                    0x6A67938FF098B8B0C27A022C7EAA77350760E3874EACBEE30A74D8E7B2E74C69
++                    0x8C6661C0496AE39BF83E7CD4551358F1897A2FBAF2B02D4EC596A39C73B76638
++                    0x6EE4516E2D37A89DCC72FD8AFD56C87A8EB7F3060051742A0DFB82583EB1E726
++                    0x183283D2FB88855FDF0FAAEA257A33D40CC79439115DDEDF16BA1351828F9740
++                    0x498539BCC01296AC989E7676FAF86126E58E82C155422D451FE6E011DA1EBF6A
++                    0xD8FAABD920508BC0908B05DD1C6144C4CD909BBF8A8052F907B3C2A3F8000AEF
++                    0x7347DC4364AD0D8005153DE92E13C8B45022D0FDD24F94E454827CD7F0E1A1D1
++                    0x8C
++
              set seq int 0x03 /* 3 */ 
                      ctx+0x00
                          0x02859FC8B8CC33675380C96BF01B8B51

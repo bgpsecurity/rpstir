@@ -1,5 +1,5 @@
---- badCMSNoCerts.roa.raw.old	2011-05-25 17:03:49.000000000 -0400
-+++ badCMSNoCerts.roa.raw	2011-05-25 17:04:25.000000000 -0400
+--- badCMSNoCerts.roa.raw.old	2011-05-26 17:54:49.000000000 -0400
++++ badCMSNoCerts.roa.raw	2011-05-26 17:55:26.000000000 -0400
 @@ -11,103 +11,6 @@
                                  seq oct 0x0002
                                      seq seq bit 0x00010200
@@ -59,10 +59,10 @@
 -                                                    "rsync://roa-pki.bbn.com/co"
 -                                                    "nformance/root"
 -                                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
--                                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+-                                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
 -                                                ctx+0x06
 -                                                    "rsync://rpki.bbn.com/confo"
--                                                    "rmance/root/"
+-                                                    "rmance/root/good.roa"
 -                                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
 -                                                ctx+0x06
 -                                                    "rsync://rpki.bbn.com/confo"
@@ -84,23 +84,23 @@
 -                                                        int 0x0100 /* 256 */ 
 -                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
 -                        nul 
--                    bit 0x00301DFE9597EB4DD07540E91748AA6D
--                        0x8768662EC5120E5A1E350C5A2DF2A405
--                        0xBBD2F42FDB29874729367DE78A9C275E
--                        0x5135E925FB416231BA8FB51E28562613
--                        0x26DD718B9863F24C62C176CD5BAFE868
--                        0xECA8EA5A11915BFE46F9D2855FA86DAE
--                        0x6AB0F4119B11928AC3EF5C8EF435EDD1
--                        0x1E01F52CBDB4C3550BD9EBD62AF40EB7
--                        0x936C586DC04B389DD6CCB6D8757A5CAB
--                        0x3B4BCFDEF050B5AD256615A97ADF60BE
--                        0xFE8F9AF007F8A1E4B2C2A05ADE823F69
--                        0x06CFD560CBA0C2F3D0F903175D821454
--                        0x27E70E28B9DEF2A285666B86EB7A01E3
--                        0xA1660413EE6F01EE90C9467A40833923
--                        0x0E4D9FB47209091BC1F1F5BE8F980B73
--                        0x68E480D89ADF105CAE67AAE1EA14C7E9
--                        0x83
+-                    bit 0x00046C8A24CC4186A1453983EF66AE5B
+-                        0x27778C134A157F8ED13F8F383EBEF00A
+-                        0xBD134364FEC9CB66CF4F306924FEFF7F
+-                        0xDA3653FAF8DA908438CEE4EA62F7AA70
+-                        0xA3BFE72E03A1AF8FC42554913DC67E68
+-                        0x348E5456A58B4C5F19E6D324B93AA37F
+-                        0x28803F2186F26A610DFB29EA932A11B6
+-                        0x25489A70C82CBE5C8394D7EEC08BB2D8
+-                        0x4A5335580DED2A6C8B3F69FDAAF11D48
+-                        0x36D639EB902F52F66742ED603028C512
+-                        0x649064B40E6DBACCA01B410F880A3E34
+-                        0x081DF6F1C19B98E02C178B664F517716
+-                        0xC2B8BF7ED1D8396120DA144A8C1924C0
+-                        0x14791DDFCDCF839A03ED211FB82F7694
+-                        0x8B1C7C9962557DBF56EBD602D57CEA5E
+-                        0xC9A85DD102A73A4E9EBA87C3650E94C1
+-                        0x14
              set seq int 0x03 /* 3 */ 
                      ctx+0x00
                          0x2B7CD3626B5B68ADF0E5D5EA96484670

@@ -8,7 +8,7 @@ seq seq ctx+0x20
         seq utc "110411185728Z"
             utc "460515185928Z"
         seq set seq oid 2.5.4.3 /* id_commonName */
-                    prt "goodCertEE"
+                    prt "goodEECert"
         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                 nul 
             bit 0x003082010A0282010100C247EF57C065
@@ -50,9 +50,10 @@ seq seq ctx+0x20
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/conformance/root"
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_caRepository */
                                 ctx+0x06
                                     "rsync://rpki.bbn.com/conformance/root/"
+                                    "good.roa"
                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
                                     "rsync://rpki.bbn.com/conformance/root/cert"
