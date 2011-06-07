@@ -30,6 +30,8 @@
 #include <roa.h>
 #include <casn.h>
 
+extern int CryptInitState;
+
 char *msgs [] = {
   "Finished OK\n",
   "Couldn't get %s\n",
@@ -61,32 +63,6 @@ static struct Extension *find_extension(struct Certificate *certp, char *idp)
     extp && diff_objid(&extp->extnID, idp);
     extp = (struct Extension *)next_of(&extp->self));
   return extp;
-  }
-
-int CryptInitState;
-
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 
-    CRYPT_ALGO_TYPE alg)
-  { 
-  CRYPT_CONTEXT hashContext;
-  uchar hash[40];
-  int ansr = -1;
-
-  if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2) return -1;
-  memset(hash, 0, 40);
-  if (!CryptInitState)
-    {
-    cryptInit();
-    CryptInitState = 1;
-    }
-
-  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2); 
-  cryptEncrypt(hashContext, inbufp, bsize);
-  cryptEncrypt(hashContext, inbufp, 0);
-  cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-  cryptDestroyContext(hashContext);
-  if (ansr > 0) memcpy(outbufp, hash, ansr);
-  return ansr;
   }
 
 // return a printable message indicating the error (if any) or NULL if not
