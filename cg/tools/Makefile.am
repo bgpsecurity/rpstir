@@ -25,7 +25,7 @@ bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
 	extractCMScert add_cms_cert test_cert makeLTAtest checkLTAtest \
         dumpIPAddr update_cert extractPubKeyInfo get_sernum put_sernum \
-	extractSIA extractValidityDate fix_manifest
+	extractSIA extractValidityDate fix_manifest check_signature
 
 AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
 	-I../../proto -I../../utils
@@ -84,3 +84,5 @@ extractSIA_SOURCES = extractSIA.c
 extractValidityDate_SOURCES = extractValidityDate.c
 fix_manifest_SOURCES = fix_manifest.c
 fix_manifest_LDFLAGS = $(LIBS)
+check_signature_SOURCES = check_signature.c
+check_signature_LDFLAGS = $(LIBS)

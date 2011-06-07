@@ -22,6 +22,7 @@
 #include "roa_utils.h"
 #include "crlv2.h"
 #include "cryptlib.h"
+#include "blob.h"
 
 char *msgs[] =
     {
@@ -177,6 +178,8 @@ int main(int argc, char **argv)
   Certificate(&locert, (ushort)0);
   Certificate(&hicert, (ushort)0);
   CertificateRevocationList(&crl, (ushort)0);
+  struct Blob blob;
+  Blob(&blob, (ushort)0);
   struct casn *tbsp, *sigp;
   struct AlgorithmIdentifier *algp;
   char *sfx = strchr(argv[1], (int)'.');
@@ -194,6 +197,13 @@ int main(int argc, char **argv)
     algp = &crl.algorithm;
     sigp = &crl.signature;
     ansr = get_casn_file(&crl.self, argv[1], 0);
+    }
+  else if (!strcmp(sfx, ".blb"))
+    {
+    tbsp = &blob.toBeSigned;
+    algp = &blob.algorithm;
+    sigp = &blob.signature;
+    ansr = get_casn_file(&blob.self, argv[1], 0);
     }
   else fatal(4, argv[1]);
   if (ansr < 0) fatal(2, argv[1]);
