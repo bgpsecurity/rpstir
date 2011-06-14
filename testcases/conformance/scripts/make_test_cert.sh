@@ -48,36 +48,36 @@ This tool assumes the repository structure in the diagram below.  It
 creates only the certificate labeled 'Child'.
 
 
-               +----------------------------------+
-               | http://rpki.bbn.com/conformance/ |
-               |     +--------+                   |
-         +---------->|  Root  |                   |
-         |     |     |  cert  |                   |
-         |  +---------- SIA   |                   |
-         |  |  |     +--------+                   |
-         |  |  +----------------------------------+
+               +-----------------------------------+
+               | rsync://rpki.bbn.com/conformance/ |
+               |     +--------+                    |
+         +---------->|  Root  |                    |
+         |     |     |  cert  |                    |
+         |  +---------- SIA   |                    |
+         |  |  |     +--------+                    |
+         |  |  +-----------------------------------+
          |  |
          |  |
-         |  |  +---------------------------------------+
-         |  |  | http://rpki.bbn.com/conformance/root/ |
-         |  +->|   +--------+     +------------+       |
-         |     |   | *Child |     | CRL issued |       |
-         |     |   | CRLDP------->| by Root    |       |
-         +----------- AIA   |     | root.crl   |       |
-               |   |  SIA------+  +------------+       |
-               |   +--------+  |  +-----------------+  |
-               |               |  | Manifest issued |  |
-               |       	       |  | by Root    	    |  |
-               | Root's Repo   |  | root.mft        |  |
-               | Directory     |  +-----------------+  |
-               +---------------|-----------------------+
+         |  |  +----------------------------------------+
+         |  |  | rsync://rpki.bbn.com/conformance/root/ |
+         |  +->|   +--------+     +------------+        |
+         |     |   | *Child |     | CRL issued |        |
+         |     |   | CRLDP------->| by Root    |        |
+         +----------- AIA   |     | root.crl   |        |
+               |   |  SIA------+  +------------+        |
+               |   +--------+  |  +-----------------+   |
+               |               |  | Manifest issued |   |
+               |       	       |  | by Root    	    |   |
+               | Root's Repo   |  | root.mft        |   |
+               | Directory     |  +-----------------+   |
+               +---------------|------------------------+
                                |
                                V
-               +------------------------------------------------+
-               | http://rpki.bbn.com/conformance/root/goodCert/ |
-               |                                                |
-               | Empty Directory (MFT intentionally omitted)    |
-               +------------------------------------------------+
+               +-------------------------------------------------+
+               | rsync://rpki.bbn.com/conformance/root/goodCert/ |
+               |                                                 |
+               | Empty Directory (MFT intentionally omitted)     |
+               +-------------------------------------------------+
 
 Inputs:
   filestem - subject name (and filename stem) for 'Child' to be created
