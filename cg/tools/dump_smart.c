@@ -33,7 +33,7 @@ static char *msgs[] =
 void fatal(int err, char *param)
   {
   fprintf(stderr, msgs[err], param);
-  exit(1);
+  exit(err);
   }
 
 int main(int argc, char ** argv)
@@ -85,7 +85,6 @@ int main(int argc, char ** argv)
     free(buf);
     delete_casn(&roa.self);
     }
-  else fatal(2, p);   
-  exit(1);
+  else fatal(2, p);
+  return 0;
   }
-   

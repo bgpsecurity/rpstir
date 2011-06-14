@@ -18,7 +18,7 @@ char *msgs[] =
 int fatal(int num, char *note)
   {
   printf(msgs[num], note);
-  exit(-1);
+  exit(num);
   }
 
 int main(int argc, char **argv)
