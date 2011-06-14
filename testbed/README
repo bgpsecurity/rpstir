@@ -27,7 +27,7 @@ specified:
   parent's key pair.  Any field generated from this parameter can be
   overriden by a more specific parameter below.
   
-* subjectkeyfile=[string] - The path/name of the file containing the
+* subjkeyfile=[string] - The path/name of the file containing the
   subject's key pair.  Any field generated from this parameter can be
   overriden by a more specific parameter below.
   
