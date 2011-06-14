@@ -67,7 +67,7 @@ creates only the certificate labeled 'Child'.
                |   |  SIA------+  +------------+        |
                |   +--------+  |  +-----------------+   |
                |               |  | Manifest issued |   |
-               |       	       |  | by Root    	    |   |
+               |               |  | by Root         |   |
                | Root's Repo   |  | root.mft        |   |
                | Directory     |  +-----------------+   |
                +---------------|------------------------+
