@@ -136,6 +136,7 @@ PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 TEMPLATE_CERT_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCert.raw"
 USE_EXISTING_PATCHES=
+EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
 
 # Process command line arguments.
 while getopts Pk:o:t:p:h opt
@@ -230,7 +231,7 @@ then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage0.patch
 else
     cp ${child_name}.raw ${child_name}.raw.old
-    vi ${child_name}.raw
+    ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
 	>${PATCHES_DIR}/${child_name}.stage0.patch || true
 fi
@@ -247,7 +248,7 @@ then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
 else
     cp ${child_name}.raw ${child_name}.raw.old
-    vi ${child_name}.raw
+    ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
 	>${PATCHES_DIR}/${child_name}.stage1.patch || true
 fi
