@@ -131,7 +131,7 @@ ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 TEMPLATE_CERT_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCert.raw"
 
 # Process command line arguments.
-while getopts b:o:h opt
+while getopts k:o:t:h opt
 do
   case $opt in
       k)
@@ -168,7 +168,7 @@ child_name=badCert${FILESTEM}
 # Check for prerequisite tools and files
 ###############################################################################
 
-ensure_file ( ) {
+ensure_file_exists ( ) {
     if [ ! -e "$1" ]
     then
 	echo "Error: file not found - $1" 1>&2
@@ -182,12 +182,12 @@ then
     exit 1
 fi
 
-ensure_file $ROOT_KEY_PATH
-ensure_file $TEMPLATE_CERT_RAW
-ensure_file $CGTOOLS/rr
-ensure_file $CGTOOLS/put_sernum
-ensure_file $CGTOOLS/dump_smart
-ensure_file $CGTOOLS/sign_cert
+ensure_file_exists $ROOT_KEY_PATH
+ensure_file_exists $TEMPLATE_CERT_RAW
+ensure_file_exists $CGTOOLS/rr
+ensure_file_exists $CGTOOLS/put_sernum
+ensure_file_exists $CGTOOLS/dump_smart
+ensure_file_exists $CGTOOLS/sign_cert
 
 
 ###############################################################################
