@@ -203,6 +203,7 @@ ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $TEMPLATE_CERT_RAW
 ensure_file_exists $CGTOOLS/rr
 ensure_file_exists $CGTOOLS/put_sernum
+ensure_file_exists $CGTOOLS/put_subj
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
 
@@ -220,6 +221,7 @@ fi
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
 ${CGTOOLS}/put_sernum ${child_name}.cer ${SERIAL}
+${CGTOOLS}/put_subj ${child_name}.cer ${child_name}
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
 # Manually or automatically modify (pre-signing): can be no-op
