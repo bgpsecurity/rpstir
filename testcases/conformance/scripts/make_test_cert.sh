@@ -23,8 +23,9 @@
 # This script creates a certificate, prompts the user multiple times
 # to interactively edit (e.g., in order to introduce errors), and
 # captures those edits in ".patch" files (output of diff -u).  Later,
-# patch_test_cert.sh can replay the creation process by automatically
-# applying those patch files without user intervention.
+# make_test_cert.sh with the -P option can replay the creation process
+# by automatically applying those patch files without user
+# intervention.
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
@@ -41,15 +42,17 @@ usage ( ) {
 Usage: $0 [options] <filestem> <serial>
 
 Options:
+  -P        \tApply patches instead of prompting user to edit (default = false)
   -k keyfile\tRoot's key (default = ...conformance/raw/root.p15)
   -o outdir \tOutput directory (default = CWD)
   -t template\tTemplate cert (default = ...conformance/raw/templates/goodCert.raw)
+  -p patchdir\tDirectory for saving/getting patches (default = .../conformance/raw/patches/)
   -h        \tDisplay this help file
 
 This script creates a certificate, prompts the user multiple times to
 interactively edit (e.g., in order to introduce errors), and captures
-those edits in '.patch' files (output of diff -u).  Later,
-patch_test_cert.sh can replay the creation process by automatically
+those edits in '.patch' files (output of diff -u).  Later, running $0
+with the -P option can replay the creation process by automatically
 applying those patch files instead of prompting for user intervention.
 
 This tool assumes the repository structure in the diagram below.  It
@@ -96,8 +99,10 @@ script.
 Inputs:
   filestem - subject name (and filename stem) for 'Child' to be created
   serial - serial number for 'Child' to be created
+  -P - (optional) use patch mode for automatic insertion of errors
   keyfile - (optional) local path to root key pair
   outdir - (optional) local path to root's repo directory
+  patchdir - (optional) local path to directory of patches
   template - (optional) template cert for Child. WARNING: use this
              option at your own risk.  Substituting a non-default
              template cert will probably mess up search
@@ -127,13 +132,18 @@ CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
 
 # Options and defaults
 OUTPUT_DIR="."
+PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 TEMPLATE_CERT_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCert.raw"
+USE_EXISTING_PATCHES=
 
 # Process command line arguments.
-while getopts k:o:t:h opt
+while getopts Pk:o:t:p:h opt
 do
   case $opt in
+      P)
+	  USE_EXISTING_PATCHES=1
+	  ;;
       k)
 	  ROOT_KEY_PATH=$OPTARG
 	  ;;
@@ -142,6 +152,9 @@ do
 	  ;;
       t)
 	  TEMPLATE_CERT_RAW=$OPTARG
+	  ;;
+      p)
+	  PATCHES_DIR=$OPTARG
 	  ;;
       h)
 	  usage
@@ -176,12 +189,16 @@ ensure_file_exists ( ) {
     fi
 }
 
-if [ ! -d "$OUTPUT_DIR" ]
-then
-    echo "Error: output directory not found - $OUTPUT_DIR" 1>&2
-    exit 1
-fi
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+	echo "Error: directory not found - $1" 1>&2
+	exit 1
+    fi
+}
 
+ensure_dir_exists $OUTPUT_DIR
+ensure_dir_exists $PATCHES_DIR
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $TEMPLATE_CERT_RAW
 ensure_file_exists $CGTOOLS/rr
@@ -189,6 +206,11 @@ ensure_file_exists $CGTOOLS/put_sernum
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
 
+if [ $USE_EXISTING_PATCHES ]
+then
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage0.patch
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
+fi
 
 ###############################################################################
 # Generate Child cert
@@ -200,11 +222,16 @@ ${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
 ${CGTOOLS}/put_sernum ${child_name}.cer ${SERIAL}
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Manually modify (pre-signing): can be no-op
-cp ${child_name}.raw ${child_name}.raw.old
-vi ${child_name}.raw
-diff -u ${child_name}.raw.old ${child_name}.raw >${child_name}.stage0.patch \
-    || true
+# Manually or automatically modify (pre-signing): can be no-op
+if [ $USE_EXISTING_PATCHES ]
+then
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage0.patch
+else
+    cp ${child_name}.raw ${child_name}.raw.old
+    vi ${child_name}.raw
+    diff -u ${child_name}.raw.old ${child_name}.raw \
+	>${PATCHES_DIR}/${child_name}.stage0.patch || true
+fi
 
 # Sign it
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.blb
@@ -212,23 +239,35 @@ ${CGTOOLS}/sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
 mv ${child_name}.blb ${child_name}.cer
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Manually modify (post-signing): can be no-op
-cp ${child_name}.raw ${child_name}.raw.old
-vi ${child_name}.raw
-diff -u ${child_name}.raw.old ${child_name}.raw >${child_name}.stage1.patch \
-    || true
+# Manually or automatically modify (post-signing): can be no-op
+if [ $USE_EXISTING_PATCHES ]
+then
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
+else
+    cp ${child_name}.raw ${child_name}.raw.old
+    vi ${child_name}.raw
+    diff -u ${child_name}.raw.old ${child_name}.raw \
+	>${PATCHES_DIR}/${child_name}.stage1.patch || true
+fi
 
 # Convert back into DER-encoded binary.
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
 
 # Clean-up
 rm ${child_name}.raw
-rm ${child_name}.raw.old
+if [ ! $USE_EXISTING_PATCHES ]
+then
+    rm ${child_name}.raw.old
+fi
 
-# Move to output directory
-if [ ${OUTPUT_DIR} != "." ]
+# Move to output directories
+if [ "${OUTPUT_DIR}" != "." ]
 then
     mv ${child_name}.cer ${OUTPUT_DIR}/
-    mv ${child_name}.stage0.patch ${OUTPUT_DIR}/
-    mv ${child_name}.stage1.patch ${OUTPUT_DIR}/
+fi
+echo Successfully created "${OUTPUT_DIR}/${child_name}.cer"
+if [ ! $USE_EXISTING_PATCHES ]
+then
+    echo Successfully created "${PATCHES_DIR}/${child_name}.stage0.patch"
+    echo Successfully created "${PATCHES_DIR}/${child_name}.stage1.patch"
 fi
