@@ -54,7 +54,7 @@ static void adjust_time(struct casn *fromp, struct casn *tillp)
 static void fatal(int err, char *paramp)
   {
   fprintf(stderr, msgs[err], paramp);
-  exit(0);
+  exit(err);
   }
 
 int CryptInitState = 0;
