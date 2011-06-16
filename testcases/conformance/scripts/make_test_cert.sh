@@ -225,7 +225,7 @@ ${CGTOOLS}/put_sernum ${child_name}.cer ${SERIAL}
 ${CGTOOLS}/put_subj ${child_name}.cer ${child_name}
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Manually or automatically modify (pre-signing): can be no-op
+# Pre-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
 then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage0.patch
@@ -242,7 +242,7 @@ ${CGTOOLS}/sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
 mv ${child_name}.blb ${child_name}.cer
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Manually or automatically modify (post-signing): can be no-op
+# Post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
 then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
@@ -268,6 +268,8 @@ if [ "${OUTPUT_DIR}" != "." ]
 then
     mv ${child_name}.cer ${OUTPUT_DIR}/
 fi
+
+# Notify user of output locations
 echo Successfully created "${OUTPUT_DIR}/${child_name}.cer"
 if [ ! $USE_EXISTING_PATCHES ]
 then
