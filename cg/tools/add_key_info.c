@@ -42,7 +42,7 @@ char *msgs [] = {
 static void fatal(int err, char *paramp)
   {
   fprintf(stderr, msgs[err], paramp);
-  exit(0);
+  exit(err);
   }
 
 static struct Extension *find_extension(struct Extensions *extsp, char *idp,
@@ -126,8 +126,8 @@ int main(int argc, char **argv)
     CertificateRevocationList(&crl, (ushort)0);
     struct CRLExtension *aextp;
     if (get_casn_file(&crl.self, argv[1], 0) < 0) fatal(1, argv[1]); 
-    if (!(aextp = find_CRLextension(&crl.toBeSigned.extensions, id_authKeyId, 0)))
-      fatal(2, "authority");
+    if (!(aextp = (struct CRLExtension *)find_CRLextension(&crl.toBeSigned.extensions, 
+      id_authKeyId, 0))) fatal(2, "authority");
     write_casn(&aextp->extnValue.authKeyId.keyIdentifier, hashbuf, hsize);
     put_casn_file(&crl.self, argv[1], 0);
     siz = dump_size(&crl.self);

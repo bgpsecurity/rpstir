@@ -41,7 +41,7 @@ char *msgs [] = {
 static void fatal(int err, char *paramp)
   {
   fprintf(stderr, msgs[err], paramp);
-  exit(0);
+  exit(err);
   }
 
 struct keyring

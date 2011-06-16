@@ -30,7 +30,7 @@
 #include <roa.h>
 #include <casn.h>
 
-extern int CryptInitState;
+extern int CryptInitState, gen_hash(uchar *, int, uchar *, int);
 
 char *msgs [] = {
   "Finished OK\n",
@@ -43,7 +43,7 @@ char *msgs [] = {
 static void fatal(int err, char *paramp)
   {
   fprintf(stderr, msgs[err], paramp);
-  exit(0);
+  exit(err);
   }
 
 struct keyring

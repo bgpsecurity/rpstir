@@ -37,7 +37,7 @@ char *msgs[] =
 static void fatal(int err, char *param)
   {
   fprintf(stderr, msgs[err], param);
-  exit(err);
+  if (err) exit(err);
   }
 
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 

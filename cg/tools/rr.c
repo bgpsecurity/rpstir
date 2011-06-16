@@ -485,7 +485,7 @@ for (c = asn_area.area, e = &c[asn_area.next], asn_area.next = 0; c < e;
 void fatal(int err, char *param)
 {
 fprintf (stderr,msgs[err],param);
-exit (err);
+if (err) exit (err);
 }
 
 char *getbuf(char *to, int lth)

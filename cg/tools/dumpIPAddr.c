@@ -15,10 +15,10 @@ char *msgs[] =
     "Error in %s\n",             // 6
     };
 
-int fatal(int num, char *note)
+void fatal(int num, char *note)
   {
   printf(msgs[num], note);
-  exit(-1);
+  if (num) exit(-1);
   }
 
 struct Extension *find_extn(struct Extensions *extsp, char *oidp)

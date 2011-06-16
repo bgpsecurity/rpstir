@@ -33,7 +33,7 @@ static char *msgs[] =
 void fatal(int err, char *param)
   {
   fprintf(stderr, msgs[err], param);
-  exit(err);
+  if (err) exit(err);
   }
 
 int main(int argc, char ** argv)

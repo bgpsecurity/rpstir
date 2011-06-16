@@ -15,10 +15,10 @@ char *msgs[] =
     "Error writing %s\n",
     };
 
-int fatal(int num, char *note)
+void fatal(int num, char *note)
   {
   printf(msgs[num], note);
-  exit(-1);
+  if (num) exit(num);
   }
 
 int main(int argc, char **argv)

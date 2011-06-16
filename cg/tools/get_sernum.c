@@ -14,16 +14,16 @@ char *msgs[] =
     "Error reading %n\n",
     };
 
-int fatal(int num, char *note)
+void fatal(int num, char *note)
   {
   printf(msgs[num], note);
-  exit(-1);
+  if (num) exit(num);
   }
 
 int main(int argc, char **argv)
   {
   struct Certificate cert;
-  ulong certnum;
+  long certnum;
   Certificate(&cert, (ushort)0);
   if (argc == 0 || argc < 2) fatal(1, (char *)0);
   FILE *fp = fopen(argv[1], "r");
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     if (get_casn_file(&cert.self, linebuf, 0) < 0)
         fatal(3, linebuf);
     read_casn_num(&cert.toBeSigned.serialNumber, &certnum);  
-    printf("%d %s\n", certnum, linebuf);
+    printf("%ld %s\n", certnum, linebuf);
     }
   fatal(0, argv[1]);
   return 0;
