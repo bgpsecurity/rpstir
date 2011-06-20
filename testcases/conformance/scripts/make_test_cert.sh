@@ -39,12 +39,12 @@ trap "echo Error encountered during execution of $0 1>&2" ERR
 # Usage
 usage ( ) {
     usagestr="
-Usage: $0 [options] <filestem> <serial>
+Usage: $0 [options] <serial> <filestem>
 
 Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
   -k keyfile\tRoot's key (default = ...conformance/raw/root.p15)
-  -o outdir \tOutput directory (default = CWD)
+  -o outdir \tOutput directory (default = .../conformance/raw/root/)
   -t template\tTemplate cert (default = ...conformance/raw/templates/goodCert.raw)
   -p patchdir\tDirectory for saving/getting patches (default = .../conformance/raw/patches/)
   -h        \tDisplay this help file
@@ -131,7 +131,7 @@ Outputs:
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
 
 # Options and defaults
-OUTPUT_DIR="."
+OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
 PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 TEMPLATE_CERT_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCert.raw"
@@ -165,8 +165,8 @@ done
 shift $((OPTIND - 1))
 if [ $# = "2" ]
 then
-    FILESTEM=$1
-    SERIAL=$2
+    SERIAL=$1
+    FILESTEM=$2
 else
     usage
 fi
@@ -218,6 +218,8 @@ fi
 # Generate Child cert
 ###############################################################################
 
+cd ${OUTPUT_DIR}
+
 # Customize w/ serial number and subject name (based on $child_name)
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
@@ -261,12 +263,6 @@ rm ${child_name}.raw
 if [ ! $USE_EXISTING_PATCHES ]
 then
     rm ${child_name}.raw.old
-fi
-
-# Move to output directories
-if [ "${OUTPUT_DIR}" != "." ]
-then
-    mv ${child_name}.cer ${OUTPUT_DIR}/
 fi
 
 # Notify user of output locations
