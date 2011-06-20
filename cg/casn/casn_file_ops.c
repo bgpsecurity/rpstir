@@ -111,7 +111,7 @@ int put_casn_file(struct casn *casnp, char *name, int fd)
     if (name) (void)unlink(name);
       // if name is NULL, we were passed an active file descriptor
     if (name && (fd = open(name,
-        (O_WRONLY | O_CREAT | O_TRUNC | O_DOS | O_EXCL), 0755)) < 0)
+        (O_WRONLY | O_CREAT | O_TRUNC | O_DOS | O_EXCL), 0644)) < 0)
         return _casn_obj_err(casnp, ASN_FILE_ERR);
     if ((siz = size_casn(casnp)) < 0)
         {
