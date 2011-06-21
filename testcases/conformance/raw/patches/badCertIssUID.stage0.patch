@@ -1,11 +1,11 @@
---- badCertIssUID.raw.old	2011-05-25 14:50:12.000000000 -0400
-+++ badCertIssUID.raw	2011-05-25 14:50:44.000000000 -0400
+--- badCertIssUID.raw.old	2011-06-21 14:53:20.000000000 -0400
++++ badCertIssUID.raw	2011-06-21 14:54:16.000000000 -0400
 @@ -28,6 +28,8 @@
-                 0x81114A94E7916829DC94D94CDAB247A6
-                 0xC606A948A9C5B0EAAAA7051DF03E49BB
-                 0x8395A87C2F1C516397470203010001
+                 0xD9156079DEED98DEBCF164836FCE4362
+                 0x42BB042C32385930388091C46DCA1ECD
+                 0x2C7A91231D55453592430203010001
 +        ctx+0x01
-+            0x0012345678
++            0x012345678
          ctx+0x23
              seq seq oid 2.5.29.19 /* id_basicConstraints */
                      boo 0xFF
