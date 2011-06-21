@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # ***** BEGIN LICENSE BLOCK *****
 #
@@ -17,22 +17,19 @@
 #
 #  ***** END LICENSE BLOCK ***** */
 
-# make_test_cert.sh - manually create certificate for RPKI syntax
-#                     conformance test
+# make_test_CMS.sh - manually create ROA/CMS for RPKI syntax conformance test
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../envir.setup
 
 # Safe bash shell scripting practices
-set -o errexit                  # exit if anything fails
-set -o errtrace                 # shell functions inherit 'ERR' trap
-trap "echo Error encountered during execution of $0 1>&2" ERR
+. $RPKI_ROOT/trap_errors
 
 # Usage
 usage ( ) {
     usagestr="
-Usage: $0 [options] <CMS/ROA> <filestem> <serial>
+Usage: $0 [options] <CMS/ROA> <serial> <filestem>
 
 Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
@@ -118,7 +115,9 @@ ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
 TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
 TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodROA.raw"
+CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
 USE_EXISTING_PATCHES=
+EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
 
 # Process command line arguments.
 while getopts Pk:o:t:p:h opt
@@ -145,8 +144,8 @@ shift $((OPTIND - 1))
 if [ $# = "3" ]
 then
     TEST_CLASS=$1
-    FILESTEM=$2
-    SERIAL=$3
+    SERIAL=$2
+    FILESTEM=$3
 else
     usage
 fi
@@ -188,6 +187,7 @@ ensure_file_exists $TEMPLATE_ROA_RAW
 ensure_file_exists $CGTOOLS/rr
 ensure_file_exists $CGTOOLS/put_sernum
 ensure_file_exists $CGTOOLS/put_subj
+ensure_file_exists $CGTOOLS/put_sia
 ensure_file_exists $CGTOOLS/add_key_info
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
@@ -196,6 +196,7 @@ if [ $USE_EXISTING_PATCHES ]
 then
     ensure_file_exists $PATCHES_DIR/${child_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
 fi
 
 ###############################################################################
@@ -209,6 +210,7 @@ cp ${TEMPLATE_EE_RAW} ${ee_name}.raw
 ${CGTOOLS}/rr <${ee_name}.raw >${ee_name}.cer
 ${CGTOOLS}/put_sernum ${ee_name}.cer ${SERIAL}
 ${CGTOOLS}/put_subj ${ee_name}.cer ${ee_name}
+${CGTOOLS}/put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
 ${CGTOOLS}/gen_key ${ee_name}.p15 2048
 ${CGTOOLS}/add_key_info ${ee_name}.cer ${ee_name}.p15 ${ROOT_CERT_PATH}
 rm ${ee_name}.cer.raw
@@ -220,14 +222,17 @@ then
     patch ${ee_name}.raw ${PATCHES_DIR}/${ee_name}.stage0.patch
 else
     cp ${ee_name}.raw ${ee_name}.raw.old
-    vi ${ee_name}.raw
+    ${EDITOR} ${ee_name}.raw
     diff -u ${ee_name}.raw.old ${ee_name}.raw \
         >${PATCHES_DIR}/${ee_name}.stage0.patch || true
+    rm ${ee_name}.raw.old
 fi
 
 # Sign EE cert
 ${CGTOOLS}/rr <${ee_name}.raw >${ee_name}.cer
 ${CGTOOLS}/sign_cert ${ee_name}.cer ${ROOT_KEY_PATH}
+rm ${ee_name}.raw
+echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 
 # Make ROA
 cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
@@ -238,9 +243,11 @@ then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
 else
     cp ${child_name}.raw ${child_name}.raw.old
-    vi ${child_name}.raw
+    ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
         >${PATCHES_DIR}/${child_name}.stage1.patch || true
+    rm ${child_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${child_name}.stage1.patch"
 fi
 
 # Embed EE into ROA and sign using EE private key
@@ -255,10 +262,14 @@ then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
 else
     cp ${child_name}.raw ${child_name}.raw.old
-    vi ${child_name}.raw
+    ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
         >${PATCHES_DIR}/${child_name}.stage2.patch || true
+    rm ${child_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${child_name}.stage2.patch"
 fi
 
 # Convert back into binary
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
+rm ${child_name}.raw
+echo "Successfully created ${OUTPUT_DIR}/${child_name}.roa"
