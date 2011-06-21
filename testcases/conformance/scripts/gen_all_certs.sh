@@ -27,7 +27,15 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 set -o errexit			# exit if anything fails
 set -o errtrace			# shell functions inherit 'ERR' trap
-trap 'echo Error encountered during execution of $0 $@ 1>&2' ERR
+init_cmd=$(basename $0)         # initial command
+init_args="$@"                  # initial arguments to the script
+function trap_handler() {
+    local lastline="$1"               # line number of error occurence
+    local errcode="$2"                # error code of last command
+    echo "Error (${errcode}) at ${init_cmd}:${lastline},"\
+        "arguments = ${init_args}" 1>&2
+}
+trap 'trap_handler ${LINENO} $?' ERR
 
 # Usage
 usage ( ) {
