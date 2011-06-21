@@ -200,7 +200,7 @@ then
 fi
 
 ###############################################################################
-# Generate Child cert
+# Generate child EE cert and ROA
 ###############################################################################
 
 cd ${OUTPUT_DIR}
@@ -216,7 +216,7 @@ ${CGTOOLS}/add_key_info ${ee_name}.cer ${ee_name}.p15 ${ROOT_CERT_PATH}
 rm ${ee_name}.cer.raw
 ${CGTOOLS}/dump_smart ${ee_name}.cer >${ee_name}.raw
 
-# Modify EE automatically or manually
+# Stage 0: Modify EE automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
     patch ${ee_name}.raw ${PATCHES_DIR}/${ee_name}.stage0.patch
@@ -237,7 +237,7 @@ echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 # Make ROA
 cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
 
-# Modify ROA's to-be-signed portions automatically or manually
+# Stage 1: Modify ROA's to-be-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
@@ -256,7 +256,7 @@ ${CGTOOLS}/add_cms_cert ${ee_name}.cer ${child_name}.roa \
     ${ee_name}.p15 ${child_name}.roa
 ${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
 
-# Modify ROA's not-signed portions automatically or manually
+# Stage 2: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
