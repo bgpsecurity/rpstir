@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # ***** BEGIN LICENSE BLOCK *****
 #
@@ -34,7 +34,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 set -o errexit			# exit if anything fails
 set -o errtrace			# shell functions inherit 'ERR' trap
-trap "echo Error encountered during execution of $0 $@ 1>&2" ERR
+trap 'echo Error encountered during execution of $0 $@ 1>&2' ERR
 
 # Usage
 usage ( ) {
