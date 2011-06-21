@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# ***** BEGIN LICENSE BLOCK *****
+#
+#  BBN Address and AS Number PKI Database/repository software
+#  Version 4.0
+#
+#  US government users are permitted unrestricted rights as
+#  defined in the FAR.
+#
+#  This software is distributed on an "AS IS" basis, WITHOUT
+#  WARRANTY OF ANY KIND, either express or implied.
+#
+#  Copyright (C) Raytheon BBN Technologies 2011.  All Rights Reserved.
+#
+#  Contributor(s): Andrew Chi
+#
+#  ***** END LICENSE BLOCK *****
+
+# Safe bash shell scripting practices
+set -o errexit			# exit if anything fails
+set -o errtrace			# shell functions inherit 'ERR' trap
+init_cmd=$(basename $0)         # initial command
+init_args="$@"                  # initial arguments to the script
+function trap_handler() {
+    local lastline="$1"               # line number of error occurence
+    local errcode="$2"                # error code of last command
+    echo "Error (${errcode}) at ${init_cmd}:${lastline},"\
+        "arguments = ${init_args}" 1>&2
+}
+trap 'trap_handler ${LINENO} $?' ERR

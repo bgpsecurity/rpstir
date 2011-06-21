@@ -25,17 +25,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../envir.setup
 
 # Safe bash shell scripting practices
-set -o errexit			# exit if anything fails
-set -o errtrace			# shell functions inherit 'ERR' trap
-init_cmd=$(basename $0)         # initial command
-init_args="$@"                  # initial arguments to the script
-function trap_handler() {
-    local lastline="$1"               # line number of error occurence
-    local errcode="$2"                # error code of last command
-    echo "Error (${errcode}) at ${init_cmd}:${lastline},"\
-        "arguments = ${init_args}" 1>&2
-}
-trap 'trap_handler ${LINENO} $?' ERR
+. $RPKI_ROOT/trap_errors
 
 # Usage
 usage ( ) {
