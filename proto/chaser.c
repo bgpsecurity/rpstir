@@ -108,7 +108,7 @@ static int addURIIfUnique (char *uri)
   if (strncmp (uri, RSYNC_PREFIX, RSYNC_PREFIX_LEN) != 0) return -1;
   for (i = RSYNC_PREFIX_LEN; i < len; i++) {
     int ch = uri[i];
-    if (isalnum(ch) == 0 && strchr("-/._", ch) == NULL)
+    if (isalnum(ch) == 0 && strchr("-/._:", ch) == NULL)
       return -1;
   }
 
