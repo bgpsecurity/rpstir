@@ -99,10 +99,10 @@ typedef struct _crlinfo
 } crlinfo;
 
 struct goodoid 
-  {
+{
   int lth;
   unsigned char *oid;
-  };
+} ;
 
 /*
   Prototypes
@@ -148,6 +148,7 @@ extern void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn,
 
 extern void  startSyslog(char *appName);
 extern void  stopSyslog(void);
+extern void  setallowexpired(int v);
 
 extern void  sqcleanup(void);
 

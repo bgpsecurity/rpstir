@@ -59,7 +59,13 @@ static scmtab *theCTATable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm    *theSCMP = NULL;
-static int useParacerts = 1;
+static int     useParacerts = 1;
+static int     allowex = 0;
+
+void setallowexpired(int v)
+{
+  allowex = ( v == 0 ? 0 : 1 );
+}
 
 static void initTables(scm *scmp)
 {
@@ -2102,9 +2108,9 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   else
     ct = ( cf->flags & SCM_FLAG_CA ) ? CA_CERT : EE_CERT;
   sta = rescert_profile_chk(x, ct, checkRPKI);
-// MCR: new code to check for expiration. Why is this
-// suddenly necessary? I don't know.
-  if ( sta == 0 )
+// MCR: new code to check for expiration. Ignore this
+// check if "allowex" is non-zero
+  if ( (sta == 0) && (allowex == 0) )
     {
       if ( X509_cmp_time(X509_get_notAfter(x), NULL) < 0 )
 	sta = ERR_SCM_EXPIRED;

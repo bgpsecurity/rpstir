@@ -241,6 +241,7 @@ static void usage(void)
   (void)printf("  -w port    start an rsync listener on port\n");
   (void)printf("  -x         destroy all database tables\n");
   (void)printf("  -y         force operation: do not ask for confirmation\n");
+  (void)printf("  -a         allow expired certificates\n");
   (void)printf("  -h         display usage and exit\n");
 }
 
@@ -380,7 +381,6 @@ static int aur(scm *scmp, scmcon *conp, char what, char *valu)
     free((void *)outdir);
     free((void *)outfile);
     free((void *)outfull);
-
     return sta;
   }
   //  trusted = strstr(outdir, "TRUST") != NULL;
@@ -858,6 +858,7 @@ int main(int argc, char **argv)
   int really = 0;
   int trusted = 0;
   int force = 0;
+  int allowex = 0;
   int sta = 0;
   int s;
   int c;
@@ -868,10 +869,13 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhd:E:f:F:w:z:pm:c:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:")) != EOF )
     {
       switch ( c )
 	{
+	case 'a':
+	  allowex = 1;
+	  break;
 	case 't':
 	  do_create++;
 	  topdir = optarg;
@@ -917,25 +921,26 @@ int main(int argc, char **argv)
 	  return(1);
 	}
     }
-
   // if there is anything left in argv, or no operation specified, warn user
-  if (optind < argc) {
+  if ( optind < argc )
+    {
       (void)printf("Extra arguments at the end of the command line.\n");
       usage();
       return(1);
-  } else if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && 
-      thefile == 0 && thedelfile == 0) {
+    }
+  if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && 
+      thefile == 0 && thedelfile == 0)
+    {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
       usage();
       return(1);
-  }
-
-  if ( log_init("rcli.log", "rcli", LOG_DEBUG, LOG_DEBUG) != 0 ) {
-    perror("Could not initialize rcli log file");
-    exit(1);
-  }
-
+    }
+  if ( log_init("rcli.log", "rcli", LOG_DEBUG, LOG_DEBUG) != 0 )
+    {
+      perror("Could not initialize rcli log file");
+      exit(1);
+    }
   if ( force == 0 )
     {
       if ( do_delete > 0 )
@@ -984,15 +989,14 @@ int main(int argc, char **argv)
 /*
   These privileged operations will need a password.
 */
-     password = getenv ("RPKI_ROOTPASSWORD");  /* can be defined by environment variable */
-     if (password == NULL)  /* env variable does not specify password */
+     password = getenv("RPKI_ROOTPASSWORD");  /* can be defined by environment variable */
+     if ( password == NULL )  /* env variable does not specify password */
        {
 	  /* note: getpass manpage states that "this function is obsolete, do not use"
 	     and it is possible to write a local one, but leave this for now
 	  */
 	 password = getpass("Enter MySQL root password: ");
        }
-
       /* Note that in the following line, we do not intend to edit the
 	 database named "mysql".  We are simply filling in the
 	 "database name" parameter with something that is guaranteed
@@ -1010,8 +1014,7 @@ int main(int argc, char **argv)
       free((void *)tmpdsn);
       if ( testconp == NULL )
 	{
-	  log_msg(LOG_ERR, "Cannot connect to DSN: %s",
-			errmsg);
+	  log_msg(LOG_ERR, "Cannot connect to DSN: %s", errmsg);
 	  freescm(scmp);
 	  return(-1);
 	}
@@ -1021,8 +1024,7 @@ int main(int argc, char **argv)
       realconp = connectscm(scmp->dsn, errmsg, 1024);
       if ( realconp == NULL )
 	{
-	  log_msg(LOG_ERR, "Cannot connect to DSN %s: %s",
-			scmp->dsn, errmsg);
+	  log_msg(LOG_ERR, "Cannot connect to DSN %s: %s", scmp->dsn, errmsg);
 	  freescm(scmp);
 	  return(-1);
 	}
@@ -1033,7 +1035,7 @@ int main(int argc, char **argv)
 */
   if ( do_delete > 0 )
     sta = deleteop(testconp, scmp);
-  if ( do_create > 0 && sta == 0 )		/* first phase of create */
+  if ( (do_create > 0) && (sta == 0) )		/* first phase of create */
     sta = createop(testconp, scmp);
 /*
   Don't need the test connection any more
@@ -1065,7 +1067,7 @@ int main(int argc, char **argv)
 	{
 	  if ( do_delete == 0 )
 	    log_msg(LOG_ERR, "Cannot connect to DSN %s: %s",
-			  scmp->dsn, errmsg);
+		    scmp->dsn, errmsg);
 	  freescm(scmp);
 	  if ( tdir != NULL )
 	    free((void *)tdir);
@@ -1075,13 +1077,13 @@ int main(int argc, char **argv)
 /*
   If a create operation was requested, complete it now.
 */
-  if ( do_create > 0 && sta == 0 )
+  if ( (do_create > 0) && (sta == 0) )
     sta = create2op(scmp, realconp, topdir);
 /*
   If the top level repository directory is not set, then retrieve it from
   the database.
 */
-  if ( tdir == NULL && sta == 0 )
+  if ( (tdir == NULL) && (sta == 0) )
     {
       tdir = retrieve_tdir(scmp, realconp, &sta);
       if ( tdir == NULL )
@@ -1127,6 +1129,7 @@ int main(int argc, char **argv)
 	  if ( sta == 0 )
 	    {
 	      log_msg(LOG_INFO, "Attempting to add file %s", outfile);
+	      setallowexpired(allowex);
 	      sta = add_object(scmp, realconp, outfile, outdir, outfull,
 			       trusted);
 	      if ( sta < 0 )
