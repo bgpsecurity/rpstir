@@ -843,7 +843,7 @@ static int checkit(scmcon *conp, X509_STORE *ctx, X509 *x, STACK_OF(X509) *uchai
     X509_STORE_CTX_set_purpose(csc, purpose);
   old_vfunc = ctx->verify;
   thecon = conp;
-//  (void)printf("CHeckit: Here\n");
+//  (void)printf("Checkit: Here\n");
   csc->verify = our_verify;
   i = X509_verify_cert(csc);
   csc->verify = old_vfunc;
@@ -2102,6 +2102,14 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   else
     ct = ( cf->flags & SCM_FLAG_CA ) ? CA_CERT : EE_CERT;
   sta = rescert_profile_chk(x, ct, checkRPKI);
+// MCR: new code to check for expiration. Why is this
+// suddenly necessary? I don't know.
+  if ( sta == 0 )
+    {
+      if ( X509_cmp_time(X509_get_notAfter(x), NULL) < 0 )
+	sta = ERR_SCM_EXPIRED;
+    }
+// MCR
 // verify the cert
   if ( sta == 0 ) {
     sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],

@@ -51,6 +51,8 @@ static void free_keyring()
   keyring.filename = keyring.label = keyring.password = (char *)0;
   }
 
+#ifdef DUMP_THEM
+
 static struct casn *get_subject_name(struct Name *subjp)
   {
   struct RelativeDistinguishedName *rdnp = (struct RelativeDistinguishedName *)
@@ -102,6 +104,8 @@ static void dump_test_certs(int orig)
     dump_test_cert(&done_certs.done_certp[num], orig);
     }
   }
+
+#endif
 
 static int add_done_cert(struct done_cert *tmp_done_certp)
   {
@@ -1333,7 +1337,9 @@ Procedure:
       else
         {
         add_done_cert(&done_cert);
-        // dump_test_cert(&done_cert, 1);
+#ifdef DUMP_THEM
+        dump_test_cert(&done_cert, 1);
+#endif
         }
       }
     if (ansr > 0) ansr = search_downward(done_certp->origcertp);
@@ -1429,7 +1435,9 @@ Procedure:
       return ansr;
     done_certp->perf |= (!run)? (WASEXPANDED | WASEXPANDEDTHISBLK):
       (WASPERFORATED | WASPERFORATEDTHISBLK);
- // dump_test_cert(done_certp, 1);
+#ifdef DUMP_THEM
+    dump_test_cert(done_certp, 1);
+#endif
                                                   // step 2
     if (!diff_casn(&done_certp->origcertp->toBeSigned.issuer.self,
        &done_certp->origcertp->toBeSigned.subject.self)) break;
@@ -1530,7 +1538,9 @@ Procedure:
     strcpy(skibuf, nextskibuf);
     }
   while(ansr);
-// dump_test_certs(1);  a diagnostic tool
+#ifdef DUMP_THEM
+ dump_test_certs(1);  a diagnostic tool
+#endif
   return 0;
   }
 

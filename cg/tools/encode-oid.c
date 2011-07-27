@@ -16,6 +16,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #define MAX_UINT64_EXPANSION            9
 #define MAX_LDAP_OID_BYTES              128
@@ -37,9 +39,9 @@ int GetKeyboardInput(int inputBufLen, char *inputBuf);
 int main(int argc, char *argv[])
 {
     int err, i, encodedLen;
-    char inputBuf[80];
+    //    char inputBuf[80];
     char buf1[128];
-    char buf2[MAX_LDAP_OID_BYTES + 1];
+    //    char buf2[MAX_LDAP_OID_BYTES + 1];
 
     while (argc-- > 1)
     {
@@ -161,7 +163,7 @@ int LdapOid2Asn1Id(char *ldapOid, int asn1BufLen, char *asn1Buf)
             if (value >= OIT_TOP_FACTOR)
             {
                 printf("LdapOid2Asn1Id: "
-                        "2nd OID integer '%d' must be less than %d.\n",
+                        "2nd OID integer '%ld' must be less than %ld.\n",
                         value, OIT_TOP_FACTOR);
                 err = ERR_INVALID_IDENTITY;
                 break;
@@ -177,7 +179,7 @@ int LdapOid2Asn1Id(char *ldapOid, int asn1BufLen, char *asn1Buf)
             oitTop = value;
             if (oitTop > MAX_OIT_TOP)
             {
-                printf("LdapOid2Asn1Id: 1st OID integer '%d' must be either "
+                printf("LdapOid2Asn1Id: 1st OID integer '%ld' must be either "
                         "0, 1 or 2.\n", oitTop);
                 err = ERR_INVALID_IDENTITY;
                 break;
@@ -233,7 +235,7 @@ int Asn1Id2LdapOid(uint32 asn1Len, char *asn1Id, int oidBufLen, char *oidBuf)
     if (value != LBER_OID)
     {
 
-        printf("Asn1Id2LdapOid: 1st ASN.1 value %d must be %d.\n",
+        printf("Asn1Id2LdapOid: 1st ASN.1 value %ld must be %d.\n",
                 value, LBER_OID);
         err = ERR_INVALID_IDENTITY;
         goto _Asn1Id2LdapOidExit;

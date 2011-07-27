@@ -403,7 +403,8 @@ struct casn *member_casn(struct casn *casnp, int index)
     struct casn *tcasnp;
     int err = 0;
 
-    if (index < 0) return ASN_OF_BOUNDS_ERR;
+    //    if (index < 0) return ASN_OF_BOUNDS_ERR;
+    if ( index < 0 ) return (struct casn *)0;
     if (_clear_error(casnp) < 0) return (struct casn *)0;
     if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_NOT_OF_ERR;
     else if (!casnp[1].ptr)  // it's empty

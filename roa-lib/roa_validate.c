@@ -205,6 +205,8 @@ static int check_cert(struct Certificate *certp, int isEE)
   free(pubkey);
   int err = 1;  // require SKI
   struct Extension *extp;
+  int ski_lth = 0;
+  int tmp2 = 0;
   for (extp = (struct Extension *)member_casn(&certtbsp->extensions.self, 0);
     extp; extp = (struct Extension *)next_of(&extp->self))
     {
@@ -214,10 +216,11 @@ static int check_cert(struct Certificate *certp, int isEE)
     if (!diff_objid(&extp->extnID, id_subjectKeyIdentifier))
       {
       uchar *ski;
-      int ski_lth = readvsize_casn(&extp->extnValue.subjectKeyIdentifier, &ski);
+      ski_lth = readvsize_casn(&extp->extnValue.subjectKeyIdentifier, &ski);
 #ifndef ANYSKI
-      if (ski_lth != tmp || memcmp(khash, ski, ski_lth)) err = ERR_SCM_INVALSKI;
+      if (ski_lth != tmp || memcmp(khash, ski, ski_lth)) err = ERR_SCM_INVALSKI
 #endif
+      tmp2 += ski_lth;	/* dummy statement to make compiler happy */
       free(ski);
       if (err < 0) return err;
       err = 0;

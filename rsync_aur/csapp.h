@@ -72,7 +72,7 @@ unsigned int Sleep(unsigned int secs);
 void Pause(void);
 unsigned int Alarm(unsigned int seconds);
 void Setpgid(pid_t pid, pid_t pgid);
-pid_t Getpgrp();
+pid_t Getpgrp(void);
 
 /* Signal wrappers */
 typedef void handler_t(int);
