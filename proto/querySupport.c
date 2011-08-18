@@ -274,16 +274,6 @@ static int displayFlags (scmsrcha *s, int idx1, char* returnStr)
 /* the set of all query fields */
 static QueryField fields[] = {
   {
-    "ip_addrs",			/* name of the field */
-    "the set of IP addresses assigned by the ROA",
-    Q_JUST_DISPLAY|Q_FOR_ROA,	/* flags */
-    SQL_C_CHAR, 32768, 		/* sql return type, size */
-    NULL, 			/* use this for query, not name */
-    NULL, 			/* second field for query */
-    "IP Addresses",		/* name of column for printout */
-    NULL, 			/* function for display string */
-  },
-  {
     "filename",
     "the filename where the data is stored in the repository",
     Q_FOR_ROA|Q_FOR_CRL|Q_FOR_CERT|Q_FOR_MAN | Q_FOR_RTA,
@@ -362,6 +352,16 @@ static QueryField fields[] = {
     SQL_C_CHAR, SIASIZE,
     NULL, NULL,
     "CRLDP", NULL,
+  },
+  {
+    "ip_addrs",			/* name of the field */
+    "the set of IP addresses assigned by the ROA",
+    Q_JUST_DISPLAY|Q_FOR_ROA,	/* flags */
+    SQL_C_CHAR, 32768, 		/* sql return type, size */
+    NULL, 			/* use this for query, not name */
+    NULL, 			/* second field for query */
+    "IP Addresses",		/* name of column for printout */
+    NULL, 			/* function for display string */
   },
   {
     "asn",
