@@ -20,7 +20,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <assert.h>
-
+#include <arpa/inet.h> 
 #include "roa_utils.h"
 
 #define SKI_SIZE 20
@@ -460,77 +460,62 @@ void roaFree(struct ROA *r)
     }
 }
 
-static char *convertAddr(int fam, struct ROAIPAddress *roaIPaddressp)
+static int convertAddr(int family, struct ROAIPAddress *ipaddressp, 
+  char *tmpbuf)
   {
-  char *bufp = (char *)calloc(1, 100);
-  struct IPAddress *ipaddressp = &roaIPaddressp->address;
-  uchar tbuf[20];
-  memset(tbuf, 0, 20);
-  int vsiz = read_casn(ipaddressp, tbuf);
-  int lth = ((vsiz - 1) << 3) - (int)*tbuf;
-  int i;
-  char *c = bufp;
-  if (fam == 1)  // IPv4
+  memset(tmpbuf, 0, sizeof(tmpbuf));
+  uchar abuf[36];
+  int addrLth = read_casn(&ipaddressp->address, abuf);
+  if (family == AF_INET)
     {
-    for (i = 1; i < vsiz; i++)
-      {
-      if (i > 1) *c++ = '.';
-      sprintf(c, "%d", (int)tbuf[i]);
-      while (*c) c++;
-      }
-    for ( ; i < 5; i++)
-      {
-      strcpy(c, ".0");
-      c += 2;
-      }
+    ulong addrVal = 0;
+    int ii;
+    for (ii = addrLth; ii; ii--) addrVal = (addrVal << 8) + abuf[ii];
+    if (!inet_ntop(family, &addrVal, tmpbuf, (size_t)INET_ADDRSTRLEN)) 
+      return ERR_SCM_INVALIPL;
+    sprintf(&tmpbuf[strlen(tmpbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
     }
   else
     {
-    for (i = 1; i < vsiz; i++)
-      {
-      if (i > 1) *c++ = ':';
-      int val = tbuf[i++];
-      val = (val << 8) + tbuf[i];
-      sprintf(c, "%02x", val);
-      while(*c) c++;
-      }
-    for ( ; i < 17; i++)
-      {
-      strcpy(c, ":0");
-      c += 2;
-      }
+    uchar addrVal[16];
+    memcpy(addrVal, &abuf[1], addrLth - 1);
+    if (!inet_ntop(family, &addrVal, tmpbuf, (size_t)INET6_ADDRSTRLEN)) 
+      return ERR_SCM_INVALIPL;
+    sprintf(&tmpbuf[strlen(tmpbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
     }
-  sprintf(c, "/%d", lth);
-  long li;
-  if (size_casn(&roaIPaddressp->self))
+  int lth = strlen(tmpbuf);
+  if (vsize_casn(&ipaddressp->maxLength))
     {
-    read_casn_num(&roaIPaddressp->maxLength, &li);
-    sprintf(c, "/%ld", li);
-    while(*c) c++;
+    long j;
+    read_casn_num(&ipaddressp->maxLength, &j);
+    sprintf(&tmpbuf[lth], "(%d)", (int)j);
+    lth = strlen(tmpbuf);
     }
-  *c++ = '\n';
-  return bufp;
+  return lth;
   }
 
 int roaGetIPAddresses(struct ROA *rp, char **str)
   {
   struct ROAIPAddrBlocks *addrBlocksp = &rp->content.signedData.
     encapContentInfo.eContent.roa.ipAddrBlocks;
-  char *replyp;
-  int replysiz = 0;
   struct ROAIPAddressFamily *famp;
+  int replysiz = 0, lth;
+  char *replyp = NULL;
+  char tmpbuf[INET6_ADDRSTRLEN + 8]; // to be on safe side
 
   for (famp = (struct ROAIPAddressFamily *)member_casn(&addrBlocksp->self, 0);
      famp; famp = (struct ROAIPAddressFamily *)next_of(&famp->self))
     {
     uchar famtyp[4];
     if (read_casn(&famp->addressFamily, famtyp) < 0) return -1;
+    int family = (famtyp[1] == 1)? AF_INET: AF_INET6; 
     struct ROAIPAddress *ipaddressp;
-    for (ipaddressp = (struct ROAIPAddress *)member_casn(&famp->addresses.self, 0);
-      ipaddressp; ipaddressp = (struct ROAIPAddress *)next_of(&ipaddressp->self))
+    for (ipaddressp = (struct ROAIPAddress *)member_casn(&famp->addresses.self,
+       0); ipaddressp; ipaddressp = (struct ROAIPAddress *)
+      next_of(&ipaddressp->self))
       {
-      char *tmpbuf = convertAddr(famtyp[1], ipaddressp);
-      int lth = strlen(tmpbuf);
+      lth = convertAddr(family, ipaddressp, tmpbuf);
+      if (lth < 0) return lth;
       if (!replysiz)
         {
         replyp = (char *)calloc(1, lth + 1);
@@ -539,11 +524,15 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
         }
       else
         {
-        replyp = (char *)realloc(replyp, replysiz + lth + 1);
+        replyp = (char *)realloc(replyp, replysiz + lth + 3);
+        char *b = &replyp[replysiz];
+        *b++ = ',';
+        *b++ = ' '; 
+        strcpy(b, tmpbuf);
+        replysiz += lth + 2; 
         }
-      free(tmpbuf);
       }
-    }
+    } 
    *str = replyp;
    return 0;
   }
