@@ -539,8 +539,13 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
         }
       else
         {
-        if (!(replyp = (char *)realloc(replyp, replysiz + lth + 3)))
-          return ERR_SCM_NOMEM;
+        char *tmpp = (char *)realloc(replyp, replysiz + lth + 3);
+        if (!tmpp)
+          {
+          free(replyp);
+          return ERR_SCM_NOMEM;;
+          }
+        replyp = tmpp;
         char *b = &replyp[replysiz];
         *b++ = ',';
         *b++ = ' '; 
