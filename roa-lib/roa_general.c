@@ -450,7 +450,7 @@ int roaAS_ID(struct ROA *r)
 
   return iAS_ID;
 }
-
+/*
 void roaFree(struct ROA *r)
 {
   if (NULL != r)
@@ -459,37 +459,46 @@ void roaFree(struct ROA *r)
       free((void *)r);
     }
 }
-
+*/
 static int convertAddr(int family, struct ROAIPAddress *ipaddressp, 
-  char *tmpbuf)
+  char *outbuf, int outbufLth)
   {
-  memset(tmpbuf, 0, sizeof(tmpbuf));
+  memset(outbuf, 0, outbufLth);
   uchar abuf[36];
   int addrLth = read_casn(&ipaddressp->address, abuf);
   if (family == AF_INET)
     {
-    ulong addrVal = 0;
-    int ii;
-    for (ii = addrLth; ii; ii--) addrVal = (addrVal << 8) + abuf[ii];
-    if (!inet_ntop(family, &addrVal, tmpbuf, (size_t)INET_ADDRSTRLEN)) 
+    uint32_t addrVal = 0;
+    uint32_t xx;
+    int ii;  
+    if (outbufLth < INET_ADDRSTRLEN + 6) return ERR_SCM_INVALSZ;  
+    for (ii = 1; ii < addrLth; ii++) addrVal = (addrVal << 8) + abuf[ii];
+    while (ii++ <= sizeof(uint)) addrVal <<= 8;
+    xx = htonl(addrVal);
+    if (!inet_ntop(family, &xx, outbuf, outbufLth)) 
       return ERR_SCM_INVALIPL;
-    sprintf(&tmpbuf[strlen(tmpbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
+      // prefix length is ((addrLth - 1) * 8) - unused bits
+    sprintf(&outbuf[strlen(outbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
     }
-  else
+  else if (family == AF_INET6)
     {
+    if (outbufLth < INET6_ADDRSTRLEN + 6) return ERR_SCM_INVALSZ;
     uchar addrVal[16];
+    memset(addrVal, 0, 16);
     memcpy(addrVal, &abuf[1], addrLth - 1);
-    if (!inet_ntop(family, &addrVal, tmpbuf, (size_t)INET6_ADDRSTRLEN)) 
+    if (!inet_ntop(family, &addrVal, outbuf, outbufLth)) 
       return ERR_SCM_INVALIPL;
-    sprintf(&tmpbuf[strlen(tmpbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
+    sprintf(&outbuf[strlen(outbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
     }
-  int lth = strlen(tmpbuf);
+  else return ERR_SCM_INVALIPB;
+    
+  int lth = strlen(outbuf);
   if (vsize_casn(&ipaddressp->maxLength))
     {
     long j;
     read_casn_num(&ipaddressp->maxLength, &j);
-    sprintf(&tmpbuf[lth], "(%d)", (int)j);
-    lth = strlen(tmpbuf);
+    sprintf(&outbuf[lth], "(%d)", (int)j);
+    lth = strlen(outbuf);
     }
   return lth;
   }
@@ -502,34 +511,41 @@ int roaGetIPAddresses(struct ROA *rp, char **str)
   int replysiz = 0, lth;
   char *replyp = NULL;
   char tmpbuf[INET6_ADDRSTRLEN + 8]; // to be on safe side
-
+  *str = NULL;  // in case of failure
   for (famp = (struct ROAIPAddressFamily *)member_casn(&addrBlocksp->self, 0);
      famp; famp = (struct ROAIPAddressFamily *)next_of(&famp->self))
     {
     uchar famtyp[4];
     if (read_casn(&famp->addressFamily, famtyp) < 0) return -1;
-    int family = (famtyp[1] == 1)? AF_INET: AF_INET6; 
+    int family;
+    if (famtyp[1] == 1) family = AF_INET;
+    else if (famtyp[1] == 2) family = AF_INET6; 
     struct ROAIPAddress *ipaddressp;
     for (ipaddressp = (struct ROAIPAddress *)member_casn(&famp->addresses.self,
        0); ipaddressp; ipaddressp = (struct ROAIPAddress *)
       next_of(&ipaddressp->self))
       {
-      lth = convertAddr(family, ipaddressp, tmpbuf);
-      if (lth < 0) return lth;
-      if (!replysiz)
+      lth = convertAddr(family, ipaddressp, tmpbuf, INET6_ADDRSTRLEN + 8);
+      if (lth < 0) 
         {
-        replyp = (char *)calloc(1, lth + 1);
+        if (replyp) free(replyp);
+        return lth; 
+        }
+      if (!replysiz)
+        {                           // lth + 1 allows for null
+        if (!(replyp = (char *)calloc(1, lth + 1))) return ERR_SCM_NOMEM;
         strcpy(replyp, tmpbuf);
         replysiz = lth;  // size without null
         }
       else
         {
-        replyp = (char *)realloc(replyp, replysiz + lth + 3);
+        if (!(replyp = (char *)realloc(replyp, replysiz + lth + 3)))
+          return ERR_SCM_NOMEM;
         char *b = &replyp[replysiz];
         *b++ = ',';
         *b++ = ' '; 
         strcpy(b, tmpbuf);
-        replysiz += lth + 2; 
+        replysiz += lth + 2; // without null
         }
       }
     } 
