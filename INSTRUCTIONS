@@ -179,10 +179,11 @@ for successful operation of the RPKI software.
 2.1.4 cryptlib
 
 Install Peter Gutmann's cryptlib, currently available at
-http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  Ensure that both the
-library itself and its include files are in accessible locations.  For
-example, it may be necessary to manually copy libcl.so to
-/usr/local/lib and cryptlib.h to /usr/local/include.  On FreeBSD,
+http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  When compiling on *nix, it
+may be necessary to unzip in text mode to ensure that line endings are
+correct.  Ensure that both the library itself and its include files are in
+accessible locations.  For example, it may be necessary to manually copy
+libcl.so to /usr/local/lib and cryptlib.h to /usr/local/include.  On FreeBSD,
 cryptlib can be obtained one of two ways: (1) using the package system
 by issuing the command pkg_add -r cryptlib, or (2) using the ports
 system by issuing the command make search name="cryptlib" from the
