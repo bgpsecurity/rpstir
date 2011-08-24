@@ -1357,7 +1357,7 @@ struct import_item *itemp;
 for (timtbp = (struct import_table *)import_area.area,
     eimtbp = &timtbp[import_area.next]; timtbp && timtbp < eimtbp; timtbp++)
     {
-    for (itemp = &timtbp->item; itemp && strcmp(token, itemp->objname);
+    for (itemp = &timtbp->item; itemp && strcmp(name, itemp->objname);
 	itemp = itemp->next);
     if (itemp) return 1;
     }
