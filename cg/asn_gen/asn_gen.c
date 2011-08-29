@@ -676,7 +676,7 @@ lth = c - fname;
 while (c > fname && *(--c) != '.');
 if (c > fname) lth = c - fname;
 if ((!i_names && !(i_names = (char*)calloc((size_t)(lth + 3), 1))) ||
-    !(i_names = recalloc(i_names, (size_t)i_namesize + 3,
+    !(i_names = recalloc(i_names, (size_t)i_namesize,
     (size_t)(i_namesize + lth + 3)))) fatal(7, (char *)0);
 strncpy((b = &i_names[i_namesize]), fname, (size_t)lth);
 c = &b[lth];
@@ -1457,7 +1457,7 @@ return (c - to) + 4;
 
 char *recalloc(char *from, size_t oldsize, size_t newsize)
 {
-char *to;
+char *to = NULL;
 if ((to = (char*)calloc(newsize, 1)))
     {
     memcpy(to, from, oldsize);
