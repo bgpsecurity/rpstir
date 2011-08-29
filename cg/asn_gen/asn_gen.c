@@ -67,7 +67,7 @@ nnnnnnnnnnnnnnnnnnnnnnnnnnnyyynn";
 char fname[80],
     token[ASN_BSIZE], itemname[ASN_BSIZE], classname[ASN_BSIZE], prevname[ASN_BSIZE], path[16],
     subclass[ASN_BSIZE], defaultname[32], numstring[ASN_BSIZE], defined_by[ASN_BSIZE],
-    definer[ASN_BSIZE], tablename[32], inclass[ASN_BSIZE], *source,
+    definer[ASN_BSIZE], tablename[32], inclass[ASN_BSIZE], *source = NULL,
     lo_end[ASN_BSIZE], hi_end[ASN_BSIZE], curr_file[80],
     *def_constraintp = NULL,
     *sub_val = NULL,
