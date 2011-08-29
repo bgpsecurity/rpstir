@@ -1123,7 +1123,7 @@ if (imtbp && imtbp->name)                                   /* step 2 */
             {
             free(ntbp->name);
 	    lntbp = &((struct name_table *)name_area.area)[--name_area.next];
-            memcpy((char *)ntbp, (char *)&ntbp[1], ((lntbp - ntbp) *
+            memmove((char *)ntbp, (char *)&ntbp[1], ((lntbp - ntbp) *
                 sizeof(struct name_table)));
             memset((char *)entbp--, 0, sizeof(struct name_table));
 	    }
