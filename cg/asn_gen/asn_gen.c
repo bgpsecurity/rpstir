@@ -228,6 +228,7 @@ identified-organization OBJECT IDENTIFIER ::= {3}\n",
 	"Can't find stream for fd %d\n",    /* 39 */
 	"Incomplete table item %s\n",       /* 40 */
 	"Couldn't find constraint for %s\n",  /* 41 */
+	"Can't rename file: %s\n",          /* 42 */
     	},
     *sfcsids[] = {asn_gen_id,
         asn_constr_id, asn_hdr_id,
@@ -418,9 +419,7 @@ do
 	pre_proc_pass++;
         fclose(tmpstr);
 	cat(cat(locbuf, pprocname), "~");
-	unlink(locbuf);
-	link(pprocname, locbuf);
-	unlink(pprocname);
+	if (rename(pprocname, locbuf)) fatal(42, strerror(errno));
 	c = locbuf;
 	close(fd);
         for(ntbp = (struct name_table *)name_area.area,
@@ -429,6 +428,7 @@ do
 	    ntbp->type = -1;
 	    }
 	fd = open(c, (O_RDONLY | O_BINARY));
+	if (fd == -1) fatal(2, c);
         dup2(fd, 0);
         close(fd);
 	}
