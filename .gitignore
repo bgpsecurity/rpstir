@@ -3,3 +3,10 @@
 # exclude patterns (uncomment them if you want to use them):
 *.[oa]
 *~
+*Makefile
+*Makefile.in
+aclocal.m4
+autom4te.cache/
+*.deps
+config.log
+config.status
