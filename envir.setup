@@ -11,9 +11,9 @@
 #  This software is distributed on an "AS IS" basis, WITHOUT
 #  WARRANTY OF ANY KIND, either express or implied.
 # 
-#  Copyright (C) BBN Technologies 2010.  All Rights Reserved.
+#  Copyright (C) BBN Technologies 2011.  All Rights Reserved.
 # 
-#  Contributor(s): Mark Reynolds
+#  Contributor(s): Mark Reynolds, Andrew Chi
 # 
 #  ***** END LICENSE BLOCK ***** */
 
@@ -31,7 +31,7 @@
 # . $THIS_SCRIPT_DIR/../envir.setup
 #
 
-DEFAULT_RPKI_ROOT=${HOME}/rpki/trunk  # caller should set RPKI_ROOT
+DEFAULT_RPKI_ROOT=${HOME}/trunk  # caller should set RPKI_ROOT
 DEFAULT_RPKI_PORT=7344
 DEFAULT_RPKI_DB=rpki
 DEFAULT_RPKI_DBUSER=mysql
