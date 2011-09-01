@@ -156,9 +156,11 @@ int main(int argc, char **argv) {
 		checkErr(fullTable == NULL, "Cannot find table rtr_full\n");
 	}
 
-	// write all the data into the database
+	// write all the data into the database (done writing "full")
 	searchscm (connect, roaTable, roaSrch, NULL,
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
+        // setup to compute incremental
 
 	if (incrSrch == NULL) {
 		incrSrch = newsrchscm(NULL, 2, 0, 1);

@@ -1,5 +1,5 @@
 /*
-  $Id$
+  $Id: scmmain.h 1285 2010-10-01 19:43:05Z bkohler $
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
@@ -233,7 +233,7 @@ static scmtab scmtabbuilder[] =
 	{             /* RTR_UPDATE */
 	  "rtr_update",
 	  "RTR_UPDATE",
-	  "serial_num  INT UNSIGNED NOT NULL UNIQUE,"
+	  "serial_num  INT UNSIGNED NOT NULL UNIQUE," /* which snapshot */
 	  "create_time DATETIME NOT NULL,"
 	  "            PRIMARY KEY (serial_num)",
 	  NULL,
@@ -254,7 +254,7 @@ static scmtab scmtabbuilder[] =
 	  "rtr_incremental",
 	  "RTR_INCREMENTAL",
 	  "serial_num  INT UNSIGNED NOT NULL,"
-	  "is_announce BOOLEAN NOT NULL,"
+	  "is_announce BOOLEAN NOT NULL," /* announcement or retraction */
 	  "asn         INT UNSIGNED NOT NULL,"
 	  "ip_addr     VARCHAR(50) NOT NULL,"
 	  "KEY asn (asn), KEY ip_addr (ip_addr)",
