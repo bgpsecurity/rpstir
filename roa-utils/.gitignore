@@ -1,0 +1,7 @@
+make_manifest
+make_roa
+roa_test
+sign_roa
+test_check_sig
+test_hash
+test_val2
