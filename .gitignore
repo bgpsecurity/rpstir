@@ -8,6 +8,6 @@
 aclocal.m4
 autom4te.cache/
 *.deps
-config.log
+*.log
 config.status
 configure
