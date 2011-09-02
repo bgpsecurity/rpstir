@@ -105,7 +105,7 @@ following creates a root password, then sets up a user with username
 Configure the Connector/ODBC driver.  First, locate your system ODBC
 drivers and data sources configuration files.  For example:
 
-[achi@roa-pki:~/rpki/trunk]$ odbcinst -j
+[achi@roa-pki:~/rpki/trunks]$ odbcinst -j
 unixODBC 2.2.11
 DRIVERS............: /usr/local/etc/odbcinst.ini
 SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
