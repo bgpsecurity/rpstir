@@ -105,7 +105,7 @@ following creates a root password, then sets up a user with username
 Configure the Connector/ODBC driver.  First, locate your system ODBC
 drivers and data sources configuration files.  For example:
 
-[achi@roa-pki:~/rpki/trunk]$ odbcinst -j
+[achi@roa-pki:~/rpki]$ odbcinst -j
 unixODBC 2.2.11
 DRIVERS............: /usr/local/etc/odbcinst.ini
 SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
@@ -291,7 +291,7 @@ set them to the following defaults:
 
 RPKI_DB = rpki
 RPKI_PORT = 7344
-RPKI_ROOT = ${HOME}/rpki/trunk
+RPKI_ROOT = ${HOME}/rpki
 RPKI_DBUSER = mysql
 RPKI_DBPASS =
 RPKI_DSN = myodbc3
@@ -405,8 +405,8 @@ publication points will be derived from the trust anchors.
 
     #### Contents of initial_rsync.config ####
     RSYNC=/usr/local/bin/rsync
-    REPOSITORY=/home/bbn/rpki/trunk/REPOSITORY
-    LOGS=/home/bbn/rpki/trunk/LOGS
+    REPOSITORY=/home/bbn/rpki/REPOSITORY
+    LOGS=/home/bbn/rpki/LOGS
     DIRS=""
     ##########################################
 
@@ -553,9 +553,9 @@ Options:
 
 Example output:
 
-[bbn@rpki-fc13 trunk]$ run_scripts/results.py 
-Using RPKI root directory: /home/bbn/rpki/30b/rpki/trunk
-Using local repository path: /home/bbn/rpki/30b/rpki/trunk/REPOSITORY
+[bbn@rpki-fc13 rpki]$ run_scripts/results.py 
+Using RPKI root directory: /home/bbn/rpki/30b/rpki
+Using local repository path: /home/bbn/rpki/30b/rpki/REPOSITORY
 
 -------------------------------------------------------------------------------
 Certficate Information:
