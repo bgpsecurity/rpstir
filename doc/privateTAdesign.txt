@@ -18,7 +18,7 @@ will cause the procedure
 
 to be called after either the "sockline" or the "fileline" procedure has 
 completed successfully.  The code for read_SKI_blocks() and most of its
-subordinate routines are in the file rpki/trunk/proto/rpwork.c.  
+subordinate routines are in the file rpki/proto/rpwork.c.  
 
 2. read_SKI_blocks
 

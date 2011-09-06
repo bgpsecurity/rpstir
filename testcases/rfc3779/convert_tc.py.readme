@@ -1,6 +1,6 @@
 The convert_tc.py script was created to convert existing RFC 3779 test cases
 into something that would validate and chain in a hierarchy. Currently, all 
-the testcases are sitting in the trunk/testcases/rfc3779 directory as .raw files.
+the testcases are sitting in the testcases/rfc3779 directory as .raw files.
 These files are not chained or validated in any sense of a hierarchy. The test for 
 these involves removing and adding specific files in order to test one of the cases. 
 Several steps need to be taken in order to convert these .raw files into useful

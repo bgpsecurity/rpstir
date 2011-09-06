@@ -106,4 +106,4 @@ autogen.sh
 each Makefile.am and Makefile.in
 configure.ac
 configure
-the folder rpki/trunk/build-aux/
+the folder rpki/build-aux/
