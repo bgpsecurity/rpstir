@@ -11,3 +11,6 @@ autom4te.cache/
 *.log
 config.status
 configure
+TAGS
+REPOSITORY/
+LOGS/
