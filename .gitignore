@@ -9,5 +9,6 @@ aclocal.m4
 autom4te.cache/
 *.deps
 *.log
+conf4857.dir/
 config.status
 configure
