@@ -1358,8 +1358,12 @@ static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
     }
   X509_free(cert);
 //  (void)printf("VERIFY_ROA %d\n", sta);
-  if ( sta >= 0 )
-    set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
+  if ( sta >= 0 ) {
+    sta = set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
+    if (sta < 0)
+      log_msg(LOG_ERR, "could not set ROA sigval: conp->mystat.errmsg = %s",
+	      conp->mystat.errmsg);
+  }
   return (sta < 0) ? sta : 0;
 }
 
