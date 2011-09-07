@@ -1,15 +1,15 @@
 seq seq ctx+0x20
             int 0x02 /* 2 */ 
         int 0x01 /* 1 */ 
-        seq oid 1.2.840.113549.1.1.11
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
             nul 
-        seq set seq oid 2.5.4.3
+        seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
         seq utc "000207115900Z"
             utc "150313120100Z"
-        seq set seq oid 2.5.4.3
+        seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
-        seq seq oid 1.2.840.113549.1.1.1
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                 nul 
             bit 0x003082010A0282010100A29FCCE74A2A
                 0x21DF35E281F3433F9518DD80279924C7
@@ -29,51 +29,51 @@ seq seq ctx+0x20
                 0xE274C2B338DF6AEBA5EEF11731722FCC
                 0x9485C5D28AE7DCFF34B30203010001
         ctx+0x23
-            seq seq oid 2.5.29.14
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
                     ocw oct 0x88AD6A0A87F19AD013B71CCDFAF4D68A
                             0x40A74226
-                seq oid 2.5.29.15
+                seq oid 2.5.29.15 /* id_keyUsage */
                     boo 0xFF
                     ocw bit 0x0106
-                seq oid 2.5.29.17
+                seq oid 2.5.29.17 /* id_subjectAltName */
                     ocw seq ctx+0x24
-                                seq set seq oid 2.5.4.3
+                                seq set seq oid 2.5.4.3 /* id_commonName */
                                             prt "ARINviaAPNIC-all"
-                seq oid 2.5.29.19
+                seq oid 2.5.29.19 /* id_basicConstraints */
                     boo 0xFF
                     ocw seq boo 0xFF
-                seq oid 2.5.29.31
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
                     ocw seq seq ctx+0x20
                                     ctx+0x20
                                         ctx+0x06
                                             "rsync://roa-pki.bbn.com/home/testd"
                                             "ir/"
-                seq oid 2.5.29.32
+                seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
-                    ocw seq seq oid 1.3.6.1.5.5.7.14.2
-                seq oid 1.3.6.1.5.5.7.1.1
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.2
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/home/testdir/"
-                seq oid 1.3.6.1.5.5.7.1.7
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
                     boo 0xFF
                     ocw seq seq oct 0x0001
                                 seq bit 0x00A3
                             seq oct 0x0002
                                 seq bit 0x0042342342000000000000
-                seq oid 1.3.6.1.5.5.7.1.8
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
                     boo 0xFF
                     ocw seq ctx+0x20
                                 seq seq int 0x01 /* 1 */ 
                                         int 0x64 /* 100 */ 
-                seq oid 1.3.6.1.5.5.7.1.11
-                    ocw seq seq oid 1.3.6.1.5.5.7.48.5
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/home/testdir/"
-                            seq oid 1.3.6.1.5.5.7.48.10
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
                                     "rsync://roa-pki.bbn.com/home/testdir/"
-    seq oid 1.2.840.113549.1.1.11
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
     bit 0x004D78E4D297219376ABDB2DEE5F6D17A5538B96D4DFFC45FD401FD35874DB18
         0x99363499301F3EAC38D5366EA77E0F5FE3813DD086F3DADC86F6D2C95E29E5E1

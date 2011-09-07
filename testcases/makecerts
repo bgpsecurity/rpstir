@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # first assemble the root cert from source
-cp C.raw C.orig
+cp C.orig C.raw
 ../cg/tools/rr < C.raw > C.cer
 
                                 ./make_test_cert C 20000207115900Z 20150313120100Z <makeC
