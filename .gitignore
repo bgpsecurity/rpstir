@@ -13,5 +13,8 @@ conf4857.dir/
 config.status
 configure
 TAGS
-REPOSITORY/
-LOGS/
+
+# directories generated during program execution
+*REPOSITORY
+*LOGS
+*EEcertificates
