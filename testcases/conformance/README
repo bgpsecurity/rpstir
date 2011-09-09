@@ -1,3 +1,7 @@
+RPKI Syntax Conformance Test Cases
+
+Goal: generate a repository that tests the 
+
 output/root.cer
        root/root.crl
             root.roa
@@ -22,3 +26,15 @@ output/root.cer
              :
              :        
                   
+
+CA Certificates
+
+EE Certificates (embedded in ROAs)
+
+CMS signed objects, generic (using ROAs)
+
+ROAs
+
+CRLs
+
+Manifests
