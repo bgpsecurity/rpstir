@@ -478,9 +478,11 @@ static char *sock1line(int s, char **leftp)
   ptr = hasoneline(left, &next);
   if ( ptr != NULL )
     {
+      free((void *)*leftp);
       *leftp = next;
       return(ptr);
     }
+  free((void *)*leftp);
   *leftp = left;
   return(NULL);
 }
@@ -701,6 +703,7 @@ static int sockline(scm *scmp, scmcon *conp, int s)
 	}
       free((void *)ptr);
     }
+  free((void*)left);
   return(sta);
 }
 
