@@ -1335,6 +1335,7 @@ static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
   if ( sta == SIGVAL_VALID )
     {
 //      (void)printf("ALREADY validated this ROA!\n");
+      *chainOK = 1;
       return 0;
     }
 // next call the syntactic verification
