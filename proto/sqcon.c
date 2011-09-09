@@ -242,7 +242,7 @@ scmcon *connectscm(char *dsnp, char *errmsg, int emlen)
       disconnectscm(conp);
       return(NULL);
     }
-  inret = strlen(dsnp);
+  inret = strlen(dsnp) + 1;
   ret = SQLDriverConnect(conp->hdbc, NULL, (SQLCHAR *)dsnp, inret,
 			 (SQLCHAR *)&outlen[0], 1024, &outret, 0);
   if ( !SQLOK(ret) )
