@@ -246,7 +246,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
         or
 
-            body.head.hair,brown
+            body.head.hair.brown
 
         or
 
@@ -349,6 +349,10 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
         int readvsize_casn(struct casn *casnp, unsigned char **pp)
 
+        Note that the ASN.1 library follows this convention:
+         - write: to struct, from byte stream or other type
+         - read: from struct, to byte stream or other type
+
         These functions perform operations similar to the decoding and  encoding
         functions  but  with  an  important  difference  that  must  be  clearly
         understood:  Each ASN.1 item contains a tag field, a length field and  a
@@ -362,15 +366,15 @@ Apr 20 2006                       6
 CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
 
 
-            decode_casn(&body.trunk.self, to, size)
+            decode_casn(&body.trunk.self, from, size)
 
-        assumes that 'to' points to the tag of a stream containing 'trunk',  the
-        call
+        assumes that 'from' points to the tag of a stream containing 'trunk',
+        the call
 
-            write_casn(&body.trunk.self, to, lth)
+            write_casn(&body.trunk.self, from, lth)
 
-        assumes that 'to' points to just the value of a 'trunk' without the  tag
-        and length.  The call
+        assumes that 'from' points to just the value of a 'trunk' without the
+        tag and length.  The call
 
             read_casn(&body.arms.self, to)
 
@@ -384,7 +388,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         objects.   Whenever  'write_casn'  or  'decode_casn'  is used to fill an
         object, all directly 'higher' objects are marked as filled in, e.g.
 
-            write_casn((struct casn *)&body.arms.left, from. lth)
+            write_casn((struct casn *)&body.arms.left, from, lth)
 
         marks 'body' and 'body.arms' as filled in.  Any prior data in the object
         being written is cleared out before the writing starts.
@@ -398,7 +402,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
         Any writing to a definer, that is, an OBJECT IDENTIFIER  or  an  INTEGER
         that  defines  one  or more later DEFINED BY objects automatically marks
-        the chosen defined object(s) and clears out eh  ones  not  chosen.   See
+        the chosen defined object(s) and clears out the ones  not  chosen.   See
         Appendix A for details.
 
         The value returned by  the  'read_casn'  function  or  the  'vsize_casn'
