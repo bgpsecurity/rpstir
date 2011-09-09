@@ -2317,6 +2317,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   strcat(strcpy(pathname, cc), "/EEcertificates");
   if (stat(pathname, &statbuf)) mkdir(pathname, 0777);
   int lth = strlen(pathname) - 15; // not counting /EEcertificates
+  free((void *)cc);
   cc = &outdir[lth];
 
   if (*cc)
@@ -3240,6 +3241,8 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     char *c = retrieve_tdir(scmp, conp, &sta);
     int lth = strlen(c);  // lth of tdir
     strcat(strcpy(noutfull, c), "/EEcertificates");
+    free((void *)c);
+    c = NULL;
     findorcreatedir(scmp, conp, noutfull, &ndir_id);
     strcpy(noutdir, noutfull);
     strcat(noutdir, &outdir[lth]);
