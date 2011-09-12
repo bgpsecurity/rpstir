@@ -597,7 +597,7 @@ static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
 		 "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
 		 theCertTable->tabname, valu, ski, subj);
 //  (void)printf("SET: %s\n", stmt);
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
 //  (void)printf("Statementscn returns %d\n", sta);
   return sta;
 }
@@ -615,7 +615,7 @@ static int set_roa_sigval(scmcon *conp, char *ski, int valu)
 		 "update %s set sigval=%d where ski=\"%s\";",
 		 theROATable->tabname, valu, ski);
 //  (void)printf("SET: %s\n", stmt);
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
 //  (void)printf("Statementscn returns %d\n", sta);
   return sta;
 }
@@ -1381,7 +1381,7 @@ static int updateValidFlags(scmcon *conp, scmtab *tabp, unsigned int id,
     (prevFlags | SCM_FLAG_NOCHAIN);
   snprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
 	   tabp->tabname, flags, id);
-  return statementscm(conp, stmt);
+  return statementscm_no_data(conp, stmt);
 }
 
 // Used by rpwork
@@ -1390,7 +1390,7 @@ int set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags)
   char stmt[150];
   snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
 	    theCertTable->tabname, flags, id);
-  return statementscm (conp, stmt);
+  return statementscm_no_data (conp, stmt);
   }
 
 static struct goodoid goodoids[3];
@@ -1625,7 +1625,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 		       tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
 	      free((void *)h);
 	    }
-	  statementscm(conp, flagStmt);
+	  statementscm_no_data(conp, flagStmt);
 	}
       else
 	{

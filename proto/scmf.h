@@ -128,6 +128,7 @@ extern char *gettablescm(scmcon *conp);
 extern char *hexify(int bytelen, void *bytes, int useox);
 extern int   getrowsscm(scmcon *conp);
 extern int   statementscm(scmcon *conp, char *stm);
+extern int   statementscm_no_data(scmcon *conp, char *stm);
 extern int   createdbscm(scmcon *conp, char *dbname, char *dbuser);
 extern int   deletedbscm(scmcon *conp, char *dbname);
 extern int   createalltablesscm(scmcon *conp, scm *scmp);

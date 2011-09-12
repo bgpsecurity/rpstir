@@ -76,9 +76,7 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 		snprintf(msg, sizeof(msg),
 				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
 				 fullTable->tabname, currSerialNum, filename, asn, ptr);
-		newhstmt(connect);
-		statementscm(connect, msg);
-		pophstmt(connect);
+		statementscm_no_data(connect, msg);
 		ptr = end + 1;
 	}
 	return 1;
@@ -95,10 +93,7 @@ static int writeWithdrawal(scmcon *conp, scmsrcha *s, int numLine) {
 	snprintf(msg, sizeof(msg),
 			 "insert into %s values (%d, false, %d, \"%s\");",
 			 incrTable->tabname, currSerialNum, asn, ipAddr);
-	newhstmt(connect);
-	statementscm(connect, msg);
-	pophstmt(connect);
-	return 1;
+	statementscm_no_data(connect, msg);
 	return 1;
 }
 
@@ -113,9 +108,7 @@ static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
 	snprintf(msg, sizeof(msg),
 			 "insert into %s values (%d, true, %d, \"%s\");",
 			 incrTable->tabname, currSerialNum, asn, ipAddr);
-	newhstmt(connect);
-	statementscm(connect, msg);
-	pophstmt(connect);
+	statementscm_no_data(connect, msg);
 	return 1;
 }
 
@@ -184,7 +177,7 @@ int main(int argc, char **argv) {
 	// write the current serial number and time, making the data available
 	snprintf(msg, sizeof(msg), "insert into rtr_update values (%d, now());",
 			 currSerialNum);
-	statementscm(connect, msg);
+	statementscm_no_data(connect, msg);
 
     // clean up all the data no longer needed
 	// save last two full updates so that no problems at transition
@@ -193,14 +186,14 @@ int main(int argc, char **argv) {
 	snprintf(msg, sizeof(msg),
 			 "delete from rtr_full where serial_num<>%d and serial_num<>%d;",
 			 prevSerialNum, currSerialNum);
-	statementscm(connect, msg);
+	statementscm_no_data(connect, msg);
 	snprintf(msg, sizeof(msg), str,
 			 "delete rtr_incremental from rtr_incremental inner join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num",
 			 retentionHours());
-	statementscm(connect, msg);
+	statementscm_no_data(connect, msg);
 	snprintf(msg, sizeof(msg), str, "delete from rtr_update",
 			 retentionHours());
-	statementscm(connect, msg);
+	statementscm_no_data(connect, msg);
 
 	return 0;
 }

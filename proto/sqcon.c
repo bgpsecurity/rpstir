@@ -317,6 +317,12 @@ int getrowsscm(scmcon *conp)
 
 /*
   Execute an SQL statement.
+
+  Before calling statementscm:
+    You must call newhstmt(conp) and verify its return value.
+
+  After calling statementscm and using its statement handle:
+    You must call pophstmt(conp).
 */
 
 int statementscm(scmcon *conp, char *stm)
@@ -348,6 +354,26 @@ int statementscm(scmcon *conp, char *stm)
 }
 
 /*
+  Execute a SQL statement, ignoring any returned rows.
+*/
+
+int statementscm_no_data(scmcon *conp, char *stm)
+{
+  SQLRETURN ret;
+
+  ret = newhstmt(conp);
+  if (!SQLOK(ret))
+    return ret;
+
+  ret = statementscm(conp, stm);
+
+  pophstmt(conp);
+
+  return ret;
+}
+
+
+/*
   Create a database and grant the mysql default user the standard
   set of privileges for that database.
 */
@@ -366,7 +392,7 @@ int createdbscm(scmcon *conp, char *dbname, char *dbuser)
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
   (void)snprintf(mk, leen, "CREATE DATABASE %s;", dbname);
-  sta = statementscm(conp, mk);
+  sta = statementscm_no_data(conp, mk);
   if ( sta < 0 )
     {
       free((void *)mk);
@@ -375,7 +401,7 @@ int createdbscm(scmcon *conp, char *dbname, char *dbuser)
   (void)snprintf(mk, leen,
     "GRANT DELETE, INSERT, LOCK TABLES, SELECT, UPDATE ON %s.* TO '%s'@'localhost';",
     dbname, dbuser);
-  sta = statementscm(conp, mk);
+  sta = statementscm_no_data(conp, mk);
   free((void *)mk);
   return(sta);
 }
@@ -398,7 +424,7 @@ int deletedbscm(scmcon *conp, char *dbname)
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
   (void)snprintf(mk, leen, "DROP DATABASE IF EXISTS %s;", dbname);
-  sta = statementscm(conp, mk);
+  sta = statementscm_no_data(conp, mk);
   free((void *)mk);
   return(sta);
 }
@@ -421,7 +447,7 @@ static int createonetablescm(scmcon *conp, scmtab *tabp)
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
   (void)snprintf(mk, leen, "CREATE TABLE %s ( %s ) ENGINE=InnoDB;", tabp->tabname, tabp->tstr);
-  sta = statementscm(conp, mk);
+  sta = statementscm_no_data(conp, mk);
   free((void *)mk);
   return(sta);
 }
@@ -447,7 +473,7 @@ int createalltablesscm(scmcon *conp, scm *scmp)
   if ( mk == NULL )
     return(ERR_SCM_NOMEM);
   (void)snprintf(mk, leen, "USE %s;", scmp->db);
-  sta = statementscm(conp, mk);
+  sta = statementscm_no_data(conp, mk);
   if ( sta < 0 )
     return(sta);
   for(i=0;i<scmp->ntables;i++)
@@ -616,7 +642,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
       free((void *)stmt);
       return(wsta);
     }
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
   free((void *)stmt);
   return(sta);
 }
@@ -662,6 +688,9 @@ int getmaxidscm(scm *scmp, scmcon *conp, char *field, scmtab *mtab,
 
   if (scmp == NULL || conp == NULL || conp->connected == 0 || ival == NULL)
     return(ERR_SCM_INVALARG);
+  sta = newhstmt(conp);
+  if (!SQLOK(sta))
+    return sta;
   (void)snprintf(stmt, sizeof(stmt),
 		 "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
   sta = statementscm(conp, stmt);
@@ -669,6 +698,7 @@ int getmaxidscm(scm *scmp, scmcon *conp, char *field, scmtab *mtab,
     return(sta);
   *ival = 0;
   sta = getuintscm(conp, ival);
+  pophstmt(conp);
   if (sta < 0)
     *ival = 0; /* No rows (or NULL), set max to arbitrary value of 0. */
   return 0;
@@ -1259,7 +1289,7 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
       return(wsta);
     }
 // execute the DELETE statement
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
   free((void *)stmt);
   return(sta);
 }
@@ -1322,7 +1352,7 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
 	  return(wsta);
 	}
     }
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
   free((void *)stmt);
   return(sta);
 }
@@ -1442,7 +1472,7 @@ int updateblobscm(scmcon *conp, scmtab *tabp, unsigned long long *snlist,
   (void)snprintf(stmt, leen,
 		 "UPDATE %s SET sninuse=%u, snlist=%s WHERE local_id=%u;",
 		tabp->tabname, sninuse, hexi, lid);
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
   free((void *)stmt);
   free((void *)hexi);
   return(sta);
@@ -1484,6 +1514,6 @@ int updateranlastscm(scmcon *conp, scmtab *mtab, char what, char *now)
     }
   (void)snprintf(stmt, sizeof(stmt), "UPDATE %s SET %s=\"%s\" WHERE local_id=1;",
 		mtab->tabname, ent, now);
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
   return(sta);
 }
