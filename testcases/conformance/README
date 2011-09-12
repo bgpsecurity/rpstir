@@ -1,6 +1,6 @@
 RPKI Syntax Conformance Test Cases
 
-Goal: generate a repository that tests the 
+Goal: generate a repository that tests the
 
 output/root.cer
        root/root.crl
@@ -24,8 +24,8 @@ output/root.cer
                      badMFT*.mft
                      goodroa*.roa?
              :
-             :        
-                  
+             :
+
 
 CA Certificates
 
@@ -41,13 +41,13 @@ CA Certificates
 111 BasicConstrPathLth  # BasicConstr path length present
 112 Cpol2oid            # More than one Certificate Policy OID (more?)
 113 CpolNoCrit          # CertPolicy extension, crit bit unset
-114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points	
+114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points
 115 CRLDPCrit           # CRL Dist Pt marked critical
 116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer
 117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt
 118 CRLDPReasons        # CRL Dist Pt has reasons
 119 EKU                 # has Extended KeyUsage
-120 InnerSigAlg         # wrong signature algorithm in toBeSigned 
+120 InnerSigAlg         # wrong signature algorithm in toBeSigned
 121 IssuerOID           # issuer name is not id_commonName
 122 Issuer2Sets         # issuer name has 2 sets
 123 IssuerUtf           # issuer name has utf name
@@ -72,14 +72,14 @@ CA Certificates
 145 ResourcesSAFI       # IP addresses has SAFI digit
 147 SIAAccessLoc        # subject info access extension has non-rsync locator
 148 SIAAccessMethod     # subject info access extension has bad access method
-149 SIAMissing          # no subject info access extension 
+149 SIAMissing          # no subject info access extension
 150 SKIHash             # incorrect subject key identifier
 151 SKILth              # incorrect subject key identifier length
 152 SubjectOID          # subject name is not id_commonName
 153 Subject2Sets        # subject name has 2 sets
 154 SubjectUtf          # subject name has utf name
 155 Subject2Seq         # subject name has 2 sequences
-156 Subject2SerNum      # subject name has 2 serial numbers 
+156 Subject2SerNum      # subject name has 2 serial numbers
 157 SubjUID             # has subject unique ID
 158 ValCrossed          # beginning validity date > ending date
 159 ValFromFuture       # starting validity date is in future
@@ -103,7 +103,7 @@ CA Certificates
 178 2AKI                # two authority key identifier extensions
 179 NoKeyUsage          # no key usage extension
 180 2KeyUsage           # two key usage extensions
-181 2CRLDP              # two CRLDP extensions 
+181 2CRLDP              # two CRLDP extensions
 182 NoCRLDP             # no CRLDP extension
 183 NoCpol              # no certificate policies extension
 184 2Cpol               # two certificate policies extensions
