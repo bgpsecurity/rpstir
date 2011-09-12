@@ -113,7 +113,10 @@ CA Certificates
 
 EE Certificates (embedded in ROAs)
 
-??? We may not have created these at all.
+??? We may not have created these at all.  We need:
+1. keyUsage
+2. SIA (id-ad-signedObject)
+3. EE inherits, but ROA IPAddress too big
 
 
 CMS signed objects, generic (using ROAs)
