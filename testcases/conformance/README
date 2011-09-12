@@ -29,86 +29,86 @@ output/root.cer
 
 CA Certificates
 
-101 AIA2AccessDesc # ??? is this right?
-102 AIABadAccess   # wrong accessMethod for rsync URI
-103 AIAAccessLoc   # single HTTP accessLoc, no rsync
-104 AIACrit        # wrongly mark AIA extension as critical
-105 AKIHash        # AKI doesn't match parent SKI
-106 AKILth         # AKI is too short (do we want too long?)
-107 BadExtension1  # illegal extension (PolicyMappings)
-109 BasicConstrNoCA # BasicConstr present, but cA not set
-110 BasicConstrNoCrit # BasicConstr present, crit bit unset
-111 BasicConstrPathLth # BasicConstr path length present
-112 Cpol2oid # More than one Certificate Policy OID (more?)
-113 CpolNoCrit # CertPolicy extension, crit bit unset
-114 CRLDP2DistPt
-115 CRLDPCrit
-116 CRLDPCrlIssuer
-117 CRLDPNoDistPt
-118 CRLDPReasons
-119 EKU
-120 InnerSigAlg
-121 IssuerOID
-122 Issuer2Sets
-123 IssuerUtf
-124 Issuer2Seq
-125 Issuer2SerNums
-126 IssUID
-127 KUsageExtra
-128 KUsageNoCertSign
-129 KUsageNoCrit
-131 KUsageNoCRLSign
-134 OuterSigAlg
-135 PubKeyAlg
-136 PubKeyExp
-137 PubKeyLth
-138 ResourcesASNoCrit
-139 ResourcesBadAFI
-140 ResourcesBadASOrder
-141 ResourcesBadV4Order
-142 ResourcesBadV6Order
-143 ResourcesIPNoCrit
-144 ResourcesNone
-145 ResourcesSAFI
-147 SIAAccessLoc
-148 SIAAccessMethod
-149 SIAMissing
-150 SKIHash
-151 SKILth
-152 SubjectOID
-153 Subject2Sets
-154 SubjectUtf
-155 Subject2Seq
-156 Subject2SerNum
-157 SubjUID
-158 ValCrossed
-159 ValFromFuture
-160 ValFromTyp
-162 ValToPast
-163 ValToTyp
-164 VersionNeg
-165 Version1
-166 Version2
-167 Version4
-168 SerNum
-169 AIA2x
-170 SIA2x
-171 NoAIA
-172 NoSIA
-173 NoBasicConstr
-174 2BasicConstr
-175 NoSKI
-176 2SKI
-177 NoAKI
-178 2AKI
-179 NoKeyUsage
-180 2KeyUsage
-181 2CRLDP
-182 NoCRLDP
-183 NoCpol
-184 2Cpol
-185 2IPAddr
-186 2ASNum
+101 AIA2AccessDesc      # two AccessDescriptors
+102 AIABadAccess        # wrong accessMethod for rsync URI
+103 AIAAccessLoc        # single HTTP accessLoc, no rsync
+104 AIACrit             # wrongly mark AIA extension as critical
+105 AKIHash             # AKI doesn't match parent SKI
+106 AKILth              # AKI is too short (do we want too long?)
+107 BadExtension1       # illegal extension (PolicyMappings)
+109 BasicConstrNoCA     # BasicConstr present, but cA not set
+110 BasicConstrNoCrit   # BasicConstr present, crit bit unset
+111 BasicConstrPathLth  # BasicConstr path length present
+112 Cpol2oid            # More than one Certificate Policy OID (more?)
+113 CpolNoCrit          # CertPolicy extension, crit bit unset
+114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points	
+115 CRLDPCrit           # CRL Dist Pt marked critical
+116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer
+117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt
+118 CRLDPReasons        # CRL Dist Pt has reasons
+119 EKU                 # has Extended KeyUsage
+120 InnerSigAlg         # wrong signature algorithm in toBeSigned 
+121 IssuerOID           # issuer name is not id_commonName
+122 Issuer2Sets         # issuer name has 2 sets
+123 IssuerUtf           # 
+124 Issuer2Seq          # issuer name has 2 sequences
+125 Issuer2SerNums      # issuer name has 2 serial numbers
+126 IssUID              # has issuer unique ID
+127 KUsageExtra         # has disallowed key usage bit
+128 KUsageNoCertSign    # lacks bit for signing certificates
+129 KUsageNoCrit        # key usage extension not critical
+131 KUsageNoCRLSign     # lacks bit for signing CRLs
+134 OuterSigAlg         # wrong signature algorithm in cert.algorithm
+135 PubKeyAlg           # wrong SubjectPublicKey algorithm
+136 PubKeyExp           # wrong SubjectPublicKey exponent
+137 PubKeyLth           # wrong SubjectPublicKey length
+138 ResourcesASNoCrit   # AS number extension not critical
+139 ResourcesBadAFI     # invalid IP address family
+140 ResourcesBadASOrder # AS numbers out of order
+141 ResourcesBadV4Order # IPv4 addresses out of order
+142 ResourcesBadV6Order # IPv6 addresses out of order
+143 ResourcesIPNoCrit   # IP address extension not critical
+144 ResourcesNone       # no IP addresses or AS numbers
+145 ResourcesSAFI       # IP addresses has SAFI digit
+147 SIAAccessLoc        # subject info access extension has non-rsync locator
+148 SIAAccessMethod     # subject info access extension has bad access method
+149 SIAMissing          # no subject info access extension 
+150 SKIHash             # incorrect subject key identifier
+151 SKILth              # incorrect subject key identifier length
+152 SubjectOID          # subject name is not id_commonName
+153 Subject2Sets        # subject name has 2 sets
+154 SubjectUtf          
+155 Subject2Seq         # subject name has 2 sequences
+156 Subject2SerNum      # subject name has 2 serial numbers 
+157 SubjUID             # has subject unique ID
+158 ValCrossed          # beginning validity date > ending date
+159 ValFromFuture       # starting validity date is in future
+160 ValFromTyp          # starting validity is of wrong type
+162 ValToPast           # ending validity date has passed
+163 ValToTyp            # ending date is of wrong type
+164 VersionNeg          # version number is negative
+165 Version1            # version number is v1, i.e. 0
+166 Version2            # version number is v2, i.e. 1
+167 Version4            # version number is v4, i.e. 3
+168 SerNum              # negative serial number
+169 AIA2x               # two authority info access extensions
+170 SIA2x               # two subject info access extensions
+171 NoAIA               # no authority info access extension
+172 NoSIA               # no subject info access extension
+173 NoBasicConstr       # no basic constraints extension
+174 2BasicConstr        # two basic constraints extensions
+175 NoSKI               # no subject key identifier extension
+176 2SKI                # two subject key identifier extensions
+177 NoAKI               # no authority key identifier extension
+178 2AKI                # two authority key identifier extensions
+179 NoKeyUsage          # no key usage extension
+180 2KeyUsage           # two key usage extensions
+181 2CRLDP              # two CRLDP extensions 
+182 NoCRLDP             # no CRLDP extension
+183 NoCpol              # no certificate policies extension
+184 2Cpol               # two certificate policies extensions
+185 2IPAddr             # two IP address extensions
+186 2ASNum              # two AS number extensions
 
 
 EE Certificates (embedded in ROAs)
