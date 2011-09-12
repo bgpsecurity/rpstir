@@ -2351,6 +2351,8 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   else cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
+    // needs to be accessed after cf is freed
+    unsigned int cf_flags = cf->flags;
     // add the X509 cert to the db with the right directory
     if (!cc)
       {
@@ -2370,7 +2372,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
 	 to clean this up later. */
       // unlink(pathname);
       }
-    else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
+    else if (!sta && (cf_flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
   x509p = NULL;		/* freed by add_cert_2 */
   cf = NULL;			/* freed by add_cert_2 */
