@@ -50,7 +50,7 @@ CA Certificates
 120 InnerSigAlg         # wrong signature algorithm in toBeSigned 
 121 IssuerOID           # issuer name is not id_commonName
 122 Issuer2Sets         # issuer name has 2 sets
-123 IssuerUtf           # 
+123 IssuerUtf           # issuer name has utf name
 124 Issuer2Seq          # issuer name has 2 sequences
 125 Issuer2SerNums      # issuer name has 2 serial numbers
 126 IssUID              # has issuer unique ID
@@ -77,7 +77,7 @@ CA Certificates
 151 SKILth              # incorrect subject key identifier length
 152 SubjectOID          # subject name is not id_commonName
 153 Subject2Sets        # subject name has 2 sets
-154 SubjectUtf          
+154 SubjectUtf          # subject name has utf name
 155 Subject2Seq         # subject name has 2 sequences
 156 Subject2SerNum      # subject name has 2 serial numbers 
 157 SubjUID             # has subject unique ID
