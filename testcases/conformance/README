@@ -29,6 +29,88 @@ output/root.cer
 
 CA Certificates
 
+101 AIA2AccessDesc # ??? is this right?
+102 AIABadAccess   # wrong accessMethod for rsync URI
+103 AIAAccessLoc   # single HTTP accessLoc, no rsync
+104 AIACrit        # wrongly mark AIA extension as critical
+105 AKIHash        # AKI doesn't match parent SKI
+106 AKILth         # AKI is too short (do we want too long?)
+107 BadExtension1  # illegal extension (PolicyMappings)
+109 BasicConstrNoCA # BasicConstr present, but cA not set
+110 BasicConstrNoCrit # BasicConstr present, crit bit unset
+111 BasicConstrPathLth # BasicConstr path length present
+112 Cpol2oid # More than one Certificate Policy OID (more?)
+113 CpolNoCrit # CertPolicy extension, crit bit unset
+114 CRLDP2DistPt
+115 CRLDPCrit
+116 CRLDPCrlIssuer
+117 CRLDPNoDistPt
+118 CRLDPReasons
+119 EKU
+120 InnerSigAlg
+121 IssuerOID
+122 Issuer2Sets
+123 IssuerUtf
+124 Issuer2Seq
+125 Issuer2SerNums
+126 IssUID
+127 KUsageExtra
+128 KUsageNoCertSign
+129 KUsageNoCrit
+131 KUsageNoCRLSign
+134 OuterSigAlg
+135 PubKeyAlg
+136 PubKeyExp
+137 PubKeyLth
+138 ResourcesASNoCrit
+139 ResourcesBadAFI
+140 ResourcesBadASOrder
+141 ResourcesBadV4Order
+142 ResourcesBadV6Order
+143 ResourcesIPNoCrit
+144 ResourcesNone
+145 ResourcesSAFI
+147 SIAAccessLoc
+148 SIAAccessMethod
+149 SIAMissing
+150 SKIHash
+151 SKILth
+152 SubjectOID
+153 Subject2Sets
+154 SubjectUtf
+155 Subject2Seq
+156 Subject2SerNum
+157 SubjUID
+158 ValCrossed
+159 ValFromFuture
+160 ValFromTyp
+162 ValToPast
+163 ValToTyp
+164 VersionNeg
+165 Version1
+166 Version2
+167 Version4
+168 SerNum
+169 AIA2x
+170 SIA2x
+171 NoAIA
+172 NoSIA
+173 NoBasicConstr
+174 2BasicConstr
+175 NoSKI
+176 2SKI
+177 NoAKI
+178 2AKI
+179 NoKeyUsage
+180 2KeyUsage
+181 2CRLDP
+182 NoCRLDP
+183 NoCpol
+184 2Cpol
+185 2IPAddr
+186 2ASNum
+
+
 EE Certificates (embedded in ROAs)
 
 CMS signed objects, generic (using ROAs)
