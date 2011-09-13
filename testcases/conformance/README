@@ -114,54 +114,51 @@ CA Certificates
 EE Certificates (embedded in ROAs)
 
 ??? We may not have created these at all.  We need:
-1. keyUsage
-2. SIA (id-ad-signedObject)
-3. EE inherits, but ROA IPAddress too big
+543 KeyUsage            * permission to sign certs and CRLs
+544 SIAWrongOID         * improper OID in SIA
 
 
 CMS signed objects, generic (using ROAs)
 
-../../scripts/make_test_CMS.sh CMS ContentType roa 512
-../../scripts/make_test_CMS.sh CMS NoCerts roa 513
-../../scripts/make_test_CMS.sh CMS 2Certs roa 514
-../../scripts/make_test_CMS.sh CMS Version2 roa 515
-../../scripts/make_test_CMS.sh CMS Version4 roa 516
-../../scripts/make_test_CMS.sh CMS DigestAlg roa 517
-../../scripts/make_test_CMS.sh CMS 2DigestAlgs roa 518
-../../scripts/make_test_CMS.sh CMS NoDigestAlgs roa 519
-../../scripts/make_test_CMS.sh CMS HasCRL roa 520
-../../scripts/make_test_CMS.sh CMS NoSignerInfo roa 522
-../../scripts/make_test_CMS.sh CMS SigInfoVersion roa 523
-../../scripts/make_test_CMS.sh CMS SigInfoVersion4 roa 524
-../../scripts/make_test_CMS.sh CMS SigInfoNoSid roa 525
-../../scripts/make_test_CMS.sh CMS SigInfoWrongSid roa 526
-../../scripts/make_test_CMS.sh CMS SigInfoBadSid roa 527
-../../scripts/make_test_CMS.sh CMS SigInfoHashAlg roa 528
-../../scripts/make_test_CMS.sh CMS SigInfoNoAttrs roa 529
-../../scripts/make_test_CMS.sh CMS SigInfoAttrsNoContType roa 530
-../../scripts/make_test_CMS.sh CMS SigInfoAttrsContTypeOid roa 531
-../../scripts/make_test_CMS.sh CMS SigInfoAttrsMsgDigestOid roa 532
-../../scripts/make_test_CMS.sh CMS SigInfoAttrsNoMsgDigest roa 533
-../../scripts/make_test_CMS.sh CMS SigInfoAttrs2ContType roa 534
-../../scripts/make_test_CMS.sh CMS SigInfoAttrs2MsgDigest roa 535
-../../scripts/make_test_CMS.sh CMS SigInfoAttrs2SigTime roa 536
-../../scripts/make_test_CMS.sh CMS SigInfoAttrs2BinSigTime roa 537
-../../scripts/make_test_CMS.sh CMS SigInfoUnSigAttrs roa 538
-../../scripts/make_test_CMS.sh CMS SigInfoNoSig roa 539
-../../scripts/make_test_CMS.sh CMS SigInfo2Sig roa 540
-../../scripts/make_test_CMS.sh CMS SigInfoNoSigAlg roa 541
-../../scripts/make_test_CMS.sh CMS SigInfoNoHashAlg roa 542
-../../scripts/make_test_CMS.sh CMS KeyUsage roa 543
+512 ContentType              # wrong content type
+513 NoCerts                  # no certificate
+514 2Certs                   # two certificates
+515 Version2                 # version 2
+516 Version4                 # version 4
+517 DigestAlg                # wrong digest algorithm
+518 2DigestAlgs              # two digest algorithms
+519 NoDigestAlgs             # no digest algorithm
+520 HasCRL                   # has a CRL
+522 NoSignerInfo             # no SignerInfo field
+523 SigInfoVersion           # wrong Signer Info version -- 2
+524 SigInfoVersion4          # wrong Signer Info version -- 4
+525 SigInfoNoSid             # no Signer Identifier
+526 SigInfoWrongSid          # wrong Signer Identifier
+527 SigInfoBadSid            # wrong choice of Signer Identifier
+528 SigInfoHashAlg           # wrong hash algorithm in Signer Info
+529 SigInfoNoAttrs           # no attributes in Signer Info
+530 SigInfoAttrsNoContType   # no content type in Signer Info
+531 SigInfoAttrsContTypeOid  # wrong content type OID
+532 SigInfoAttrsMsgDigestOid # wrong digest OID attribute
+533 SigInfoAttrsNoMsgDigest  # no message digest
+534 SigInfoAttrs2ContType    # duplicate content type attributes
+535 SigInfoAttrs2MsgDigest   # duplicate digest attributes
+536 SigInfoAttrs2SigTime     # duplicate signng time attributes
+537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes
+538 SigInfoUnSigAttrs        # has unsigned attribute
+539 SigInfoNoSig             # no signature
+540 SigInfo2Sig              # has two signatures
+541 SigInfoNoSigAlg          # has no signature algorithm
+542 SigInfoNoHashAlg         # had no hash algorithm
 
 
 ROAs
 
-../../scripts/make_test_CMS.sh ROA Version roa 550
-../../scripts/make_test_CMS.sh ROA ASID roa 551
-../../scripts/make_test_CMS.sh ROA Family roa 552
-../../scripts/make_test_CMS.sh ROA FamilyLth roa 553
-../../scripts/make_test_CMS.sh ROA IPMaxLth roa 554
-../../scripts/make_test_CMS.sh ROA Version4 roa 550
+551 ASID                     # AS number outsideof root's
+552 Family                   # invalid family
+553 FamilyLth                # family name too long
+554 IPMaxLth                 # IP max length too long
+555 IP2Big                   # IP addresses exceed parent's 
 
 
 CRLs
