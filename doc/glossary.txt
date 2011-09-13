@@ -56,7 +56,7 @@ relying party - Entity or individual that acts in reliance on certificates or
 
 RIR - Regional Internet Registry
 
-rpkiaur - rpki Add Update Remove.
+rsync_aur - rsync Add Update Remove.
     Program that parses rsync log file and sends msgs to the rcli DB client.
 
 RPSL - Routing Policy Specification Language.
