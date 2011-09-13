@@ -1,0 +1,82 @@
+AIA - Authority Information Access.  A field in a certificate.
+    see rfc5280
+
+AKI - Authority Key Identifier.  Taken from the CA certificate.
+
+ASN.1 - Abstract Syntax Notation One
+
+BGPSEC - A security extension to BGP.
+    Addresses AS-path info.
+    see draft-lepinski-bgpsec-overview-00.txt
+
+BPKI - Business PKI
+
+CA - Certification Authority
+
+CMS - Cryptographic Message Syntax.
+      see draft-ietf-sidr-signed-object
+
+CP - Certificate Policy
+
+CPS - Certification Practice Statement.
+    see draft-ietf-sidr-cps-irs
+
+CRL - Certificate Revocation List
+
+CRLDP - CRL Distribution Points.
+    A field in a certificate.
+
+EE - End Entity
+
+INR - Internet Number Resources.
+    Number values for three protocol parameter sets:
+     - IP Version 4 addresses
+     - IP version 6 addresses
+     - Autonomous System numbers
+        
+IIR - Internet Routing Registry
+
+LIR - Local Internet Registry
+
+NIR - National Internet Registry
+
+NLRI - Network Layer Reachability Information
+
+PoP - Point of Presence.  An access point to the internet.
+
+PoP - Proof of Possession (of private key corresponding to the public key in a
+    certificate).
+
+RA - Registration Authority
+
+rcli - Rsync CLIent.  The rsync database client.
+
+relying party - Entity or individual that acts in reliance on certificates or
+    RPKI-signed objects.
+
+RIR - Regional Internet Registry
+
+rpkiaur - rpki Add Update Remove.
+    Program that parses rsync log file and sends msgs to the rcli DB client.
+
+RPSL - Routing Policy Specification Language.
+    A route filtering language.
+
+ROA - Route Origination Authorization.
+    The holder of a block of addresses signs this.
+    It identifies the AS numbers that are authorized to originate routes to the
+    addresses in question.
+
+SBGP - An old effort at revising BGP protocol for security.
+    It was not accepted by router manufacturers.
+
+SIA - Subject Information Access.  A field in a certificate.
+    see rfc5280
+
+SKI - Subject Key Identifier.
+
+subscriber - In a PKI, refers to an individual or organization that is a Subject
+    of a certificate issued by a CA.
+
+X.509 - A standard specifying formats for several PKI items.
+
