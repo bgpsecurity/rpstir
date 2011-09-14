@@ -351,11 +351,14 @@ select statement.
 
 2.1.15 scmsrcha *newsrchscm(char *name, int leen, int cleen);
 
-This utility routine can be used to initialize a scmsrcha pointer. "name"
-is the user-defined name for this search, which can be NULL. "leen" is the
-number of entries in the "vec" array to allocate, and "cleen" is the number
-of bytes to allocate for "context". On success this function returns a non-NULL
-pointer to a new search structure. On failure it returns NULL.
+This utility routine can be used to initialize a scmsrcha pointer.
+"name" is the user-defined name for this search, which can be NULL.
+"leen" is the number of entries in the "vec" array to allocate.
+"cleen" is the number of bytes to allocate for "context", which affects data
+passing between searchscm() and the callback functions passed to it.
+TODO explain "includeWhereStr" here.
+On success this function returns a non-NULL pointer to a new search
+structure. On failure it returns NULL.
 
 2.1.16 int addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 	                 unsigned valsize)
