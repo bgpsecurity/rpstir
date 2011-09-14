@@ -163,43 +163,43 @@ ROAs
 
 CRLs
 
-../../scripts/make_test_CRL.sh 640 CRLNoVersion
-../../scripts/make_test_CRL.sh 641 CRLVersion0
-../../scripts/make_test_CRL.sh 642 CRLSigAlgInner
-../../scripts/make_test_CRL.sh 643 CRLSigAlgOuter
-../../scripts/make_test_CRL.sh 644 CRLIssuerOID
-../../scripts/make_test_CRL.sh 645 CRLIssuer2Sets
-../../scripts/make_test_CRL.sh 646 CRLIssuerUTF
-../../scripts/make_test_CRL.sh 647 CRLIssuer2Seq
-../../scripts/make_test_CRL.sh 648 CRLIssuer2SerNums
-../../scripts/make_test_CRL.sh 649 CRLLastUpdateFuture
-../../scripts/make_test_CRL.sh 650 CRLLastUpdateTyp
-../../scripts/make_test_CRL.sh 651 CRLNextUpdatePast
-../../scripts/make_test_CRL.sh 652 CRLNextUpdateTyp
-../../scripts/make_test_CRL.sh 653 CRLUpdatesCrossed
-../../scripts/make_test_CRL.sh 654 CRLIssAltName
-../../scripts/make_test_CRL.sh 655 CRLIssDistPt
-../../scripts/make_test_CRL.sh 656 CRLDeltaCRLInd
-../../scripts/make_test_CRL.sh 657 CRLNoAKI
-../../scripts/make_test_CRL.sh 658 CRLNoCRLNum
-../../scripts/make_test_CRL.sh 659 CRLEntryNoSerNum
-../../scripts/make_test_CRL.sh 660 CRLEntryNoRevDate
-../../scripts/make_test_CRL.sh 661 CRLEntryReason
+640 CRLNoVersion             # no version
+641 CRLVersion0              # version 0
+642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 
+643 CRLSigAlgOuter           # wrong outer signature algorithm ID
+644 CRLIssuerOID             # wrong OID for issuer name
+645 CRLIssuer2Sets           # two SETs in issuer name
+646 CRLIssuerUTF             # issuer name in utf not printable string
+647 CRLIssuer2Seq            # two SEQUENCEs in issuer name
+648 CRLIssuer2SerNums        # two serial numbers
+649 CRLLastUpdateFuture      # last update is in the future
+650 CRLLastUpdateTyp         # wrong type of date in last Update
+651 CRLNextUpdatePast        # next update is in the past
+652 CRLNextUpdateTyp         # wrong type of date in next update  
+653 CRLUpdatesCrossed        # last date is later then next date
+654 CRLIssAltName            # has issuer alternative name extension
+655 CRLIssDistPt             # has issuing distribution point extension
+656 CRLDeltaCRLInd           # has delta CRL indicator extension
+657 CRLNoAKI                 # has no authority key identifier extension
+658 CRLNoCRLNum              # has no CRL number
+659 CRLEntryNoSerNum         # entry has no certificate serial number
+660 CRLEntryNoRevDate        # entry has no revocation date
+661 CRLEntryReason           # entry has a revocation reason
 
 
 Manifests
 
-../../scripts/make_test_manifest.sh 768 MFTWrongType
-../../scripts/make_test_manifest.sh 769 MFTVersion0
-../../scripts/make_test_manifest.sh 770 MFTVersion1
-../../scripts/make_test_manifest.sh 771 MFTNoNum
-../../scripts/make_test_manifest.sh 772 MFTNegNum
-../../scripts/make_test_manifest.sh 773 MFTThisUpdUTC
-../../scripts/make_test_manifest.sh 774 MFTThisUpdFuture
-../../scripts/make_test_manifest.sh 775 MFTNextUpdUTC
-../../scripts/make_test_manifest.sh 776 MFTNextUpdPast
-../../scripts/make_test_manifest.sh 777 MFTHashAlg
-../../scripts/make_test_manifest.sh 779 MFTFileHashShort
-../../scripts/make_test_manifest.sh 780 MFTFileHashLong
-../../scripts/make_test_manifest.sh 781 MFTFileNotIA5
-../../scripts/make_test_manifest.sh 782 MFTHashOctetStr
+768 MFTWrongType             # wrong CMS type
+769 MFTVersion0              # explicit version 0
+770 MFTVersion1              # version 1
+771 MFTNoNum                 # no manifest number
+772 MFTNegNum                # negative manifest number
+773 MFTThisUpdUTC            # thisUpdate in UTC
+774 MFTThisUpdFuture         # thisUpdate in future
+775 MFTNextUpdUTC            # nextUpdate in UTC
+776 MFTNextUpdPast           # nextUpdate in past
+777 MFTHashAlg               # wrong hash algorithm
+779 MFTFileHashShort         # too short hash of a file
+780 MFTFileHashLong          # too long hash of a file
+781 MFTFileNotIA5            # file name not IA5
+782 MFTHashOctetStr          # file hash is octet, not bit string
