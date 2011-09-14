@@ -2070,6 +2070,8 @@ static struct Extension *find_extension(struct Certificate *certp, char *idp)
  * do the work of add_cert(). Factored out so we can call it from elsewhere.
  *
  * We should eventually merge this with add_cert_internal()
+ *
+ * Note: caller is responsible for invoking freecf(cf).
  */
 
 static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
@@ -2352,7 +2354,6 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   else cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
   if (cf != NULL && sta == 0)
     {
-    // needs to be accessed after cf is freed
     // add the X509 cert to the db with the right directory
     if (!cc)
       {
