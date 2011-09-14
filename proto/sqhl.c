@@ -2101,7 +2101,6 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     delete_casn(&cert.self);
     if (locerr)
       {
-      freecf(cf);
       X509_free(x);
       return(locerr < 0) ?locerr: ERR_SCM_NOTSS;
       }
@@ -2151,7 +2150,6 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   if (! (cf->flags & SCM_FLAG_TRUSTED)) {
     X509_free(x);
   }
-  freecf(cf);
   return(sta);
 }
 
@@ -2183,8 +2181,11 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       return(sta);
     }
   useParacerts = constraining;
-  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull,
+  sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull,
     (typ == OT_ETA)? 0: 1);
+  freecf(cf);
+  cf = NULL;
+  return sta;
 }
 
 /*
@@ -2352,7 +2353,6 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   if (cf != NULL && sta == 0)
     {
     // needs to be accessed after cf is freed
-    unsigned int cf_flags = cf->flags;
     // add the X509 cert to the db with the right directory
     if (!cc)
       {
@@ -2372,10 +2372,11 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
 	 to clean this up later. */
       // unlink(pathname);
       }
-    else if (!sta && (cf_flags & SCM_FLAG_VALIDATED)) sta = 1;
+    else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
   x509p = NULL;		/* freed by add_cert_2 */
-  cf = NULL;			/* freed by add_cert_2 */
+  freecf(cf);
+  cf = NULL;
   return sta;
   }
 
