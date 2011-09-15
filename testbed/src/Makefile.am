@@ -24,7 +24,7 @@ LDADD = ../../proto/librpki.a ../../roa-lib/libroa.a ../../cg/asn/libasn.a \
 	../../cg/casn/libcasn.a ../../utils/libutils.a
 
 create_object_SOURCES = create_object.c create_object.h create_cert.h \
-	create_manifest.c create_roa.h create_utils.h obj_err.h create_crl.c \
+	create_manifest.c create_roa.h obj_err.h create_crl.c \
 	create_cert.c create_manifest.h create_roa.c create_utils.c \
 	sign_object.c
 
