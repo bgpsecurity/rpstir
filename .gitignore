@@ -13,6 +13,7 @@ conf*.dir/
 config.status
 configure
 TAGS
+resource-pki-*.tar.gz
 
 # directories generated during program execution
 *REPOSITORY
