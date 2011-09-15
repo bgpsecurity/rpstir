@@ -38,3 +38,31 @@ gen_test_key_LDFLAGS = -lpthread $(LIBS)
 cert_validate_SOURCES = cert_validate.c
 cert_validate_LDFLAGS = -lpthread $(LIBS)
 
+EXTRA_DIST = \
+	$(filter-out C.raw,$(wildcard *.p15 *.raw false*)) C.orig \
+	certpattern \
+	conformance \
+	makeall \
+	makecerts \
+	makecrls \
+	makekeys \
+	makemanifests \
+	makeroas \
+	makeC* \
+	makeL* \
+	makeM* \
+	print-cert-addrs.sh \
+	queryIgnoreAll \
+	rfc3779 \
+	runtAll.sh \
+	runt.sh \
+	t?-?_* \
+	test1.log \
+	testall.sh \
+	tools
+
+CLEANFILES = \
+	C.raw $(filter-out false%,$(wildcard *.man *.roa *.crl *.cer))
+
+clean-local:
+	rm -rf C1 C2 EEcertificates

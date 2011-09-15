@@ -44,3 +44,5 @@ make_manifest_SOURCES = make_manifest.c
 make_manifest_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
 make_roa_SOURCES = make_roa.c
 make_roa_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
+
+EXTRA_DIST = *.req *.p15 roa.cnf

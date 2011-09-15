@@ -8,8 +8,14 @@ EXTRA_DIST = \
 	envir.setup \
 	INSTRUCTIONS \
 	license \
-	performance \
-	perftest
+	README-AUTOCONF \
+	run_scripts \
+	subsystemTests \
+	testing \
+	trap_errors
+
+CLEANFILES = \
+	query.log
 
 ACLOCAL_AMFLAGS = -I build-aux
 
