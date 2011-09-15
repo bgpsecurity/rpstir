@@ -2,6 +2,8 @@ AUTOMAKE_OPTIONS = 1.6 foreign
 
 SUBDIRS = utils cg roa-lib proto roa-utils rsync_aur testcases server testbed
 
+EXTRA_DIST = autogen.sh
+
 ACLOCAL_AMFLAGS = -I build-aux
 
 test: all
