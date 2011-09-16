@@ -36,6 +36,7 @@ Options:
   -k keyfile\tRoot's key (default = ...conformance/raw/root.p15)
   -o outdir \tOutput directory (default = ...conformance/raw/root/)
   -p patchdir\tDirectory for saving/getting patches (default = .../conformance/raw/patches/)
+  -d keydir\tDirectory for saving/getting keys (default = .../conformance/raw/keys/)
   -h        \tDisplay this help file
 
 This script creates a ROA (with embedded EE cert), prompts the user
@@ -111,6 +112,7 @@ CGTOOLS=$RPKI_ROOT/cg/tools     # Charlie Gardiner's tools
 # Options and defaults
 OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
 PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
+KEYS_DIR="$RPKI_ROOT/testcases/conformance/raw/keys"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
 TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
@@ -120,7 +122,7 @@ USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
 
 # Process command line arguments.
-while getopts Pk:o:t:p:h opt
+while getopts Pk:o:t:p:d:h opt
 do
   case $opt in
       P)
@@ -134,6 +136,9 @@ do
           ;;
       p)
           PATCHES_DIR=$OPTARG
+          ;;
+      d)
+          KEYS_DIR=$OPTARG
           ;;
       h)
           usage
@@ -156,7 +161,8 @@ fi
 ###############################################################################
 
 child_name=bad${TEST_CLASS}${FILESTEM}
-ee_name=bad${TEST_CLASS}EE${FILESTEM}
+ee_name=bad${TEST_CLASS}${FILESTEM}.ee
+ee_key_path=${KEYS_DIR}/${ee_name}.p15
 
 ###############################################################################
 # Check for prerequisite tools and files
@@ -180,6 +186,7 @@ ensure_dir_exists ( ) {
 
 ensure_dir_exists $OUTPUT_DIR
 ensure_dir_exists $PATCHES_DIR
+ensure_dir_exists $KEYS_DIR
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $ROOT_CERT_PATH
 ensure_file_exists $TEMPLATE_EE_RAW
@@ -197,6 +204,7 @@ then
     ensure_file_exists $PATCHES_DIR/${child_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
+    ensure_file_exists ${ee_key_path}
 fi
 
 ###############################################################################
@@ -211,16 +219,25 @@ ${CGTOOLS}/rr <${ee_name}.raw >${ee_name}.cer
 ${CGTOOLS}/put_sernum ${ee_name}.cer ${SERIAL}
 ${CGTOOLS}/put_subj ${ee_name}.cer ${ee_name}
 ${CGTOOLS}/put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
-${CGTOOLS}/gen_key ${ee_name}.p15 2048
-${CGTOOLS}/add_key_info ${ee_name}.cer ${ee_name}.p15 ${ROOT_CERT_PATH}
+
+# Create new key if in manual mode (not using existing patches)
+if [ -z $USE_EXISTING_PATCHES ]
+then
+    ${CGTOOLS}/gen_key ${ee_key_path} 2048
+fi
+
+${CGTOOLS}/add_key_info ${ee_name}.cer ${ee_key_path} ${ROOT_CERT_PATH}
 rm ${ee_name}.cer.raw
 ${CGTOOLS}/dump_smart ${ee_name}.cer >${ee_name}.raw
 
 # Stage 0: Modify EE automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
+    echo "Stage 0: Modify EE automatically"
     patch ${ee_name}.raw ${PATCHES_DIR}/${ee_name}.stage0.patch
+    rm -f ${ee_name}.raw.orig
 else
+    echo "Stage 0: Modify EE manually"
     cp ${ee_name}.raw ${ee_name}.raw.old
     ${EDITOR} ${ee_name}.raw
     diff -u ${ee_name}.raw.old ${ee_name}.raw \
@@ -240,8 +257,11 @@ cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
 # Stage 1: Modify ROA's to-be-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
+    echo "Stage 1: Modify ROA's to-be-signed portions automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
+    rm -f ${child_name}.orig
 else
+    echo "Stage 1: Modify ROA's to-be-signed portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
@@ -253,14 +273,17 @@ fi
 # Embed EE into ROA and sign using EE private key
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
 ${CGTOOLS}/add_cms_cert ${ee_name}.cer ${child_name}.roa \
-    ${ee_name}.p15 ${child_name}.roa
+    ${ee_key_path} ${child_name}.roa
 ${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
 
 # Stage 2: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
+    echo "Stage 2: Modify ROA's not-signed portions automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
+    patch ${child_name}.raw.orig
 else
+    echo "Stage 2: Modify ROA's not-signed portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
