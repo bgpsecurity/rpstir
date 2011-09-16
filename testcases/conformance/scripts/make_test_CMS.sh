@@ -281,7 +281,7 @@ if [ $USE_EXISTING_PATCHES ]
 then
     echo "Stage 2: Modify ROA's not-signed portions automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
-    patch ${child_name}.raw.orig
+    rm -f ${child_name}.raw.orig
 else
     echo "Stage 2: Modify ROA's not-signed portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
