@@ -13,6 +13,7 @@ conf*.dir/
 config.status
 configure
 TAGS
+*.swp
 
 # directories generated during program execution
 *REPOSITORY
