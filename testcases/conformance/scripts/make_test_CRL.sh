@@ -128,9 +128,6 @@ Auxiliary Outputs: (not shown in diagram)
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-# 2. Assumes write-access to current directory even though the output
-# directory will be different.
-
 # Set up paths to ASN.1 tools and conformance test scripts
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
 CONF_SCRIPTS=$RPKI_ROOT/testcases/conformance/scripts
@@ -186,27 +183,18 @@ fi
 
 child_name="${SUBJECTNAME}"
 crl_name="${PREFIX}${child_name}"
-
+if [ ${USE_EXISTING_PATCHES} ]
+then
+    option_reuse_keys="-K"  # will be passed to gen_child_ca.sh
+else
+    option_reuse_keys=
+fi
+child_key_path=${KEYS_DIR}/${SUBJECTNAME}.p15
+child_mft_ee_key_path=${KEYS_DIR}/${SUBJECTNAME}.mft.p15
 
 ###############################################################################
 # Check for prerequisite tools and files
 ###############################################################################
-
-ensure_file_exists ( ) {
-    if [ ! -e "$1" ]
-    then
-	echo "Error: file not found - $1" 1>&2
-	exit 1
-    fi
-}
-
-ensure_dir_exists ( ) {
-    if [ ! -d "$1" ]
-    then
-        echo "Error: directory not found - $1" 1>&2
-        exit 1
-    fi
-}
 
 hash patch
 hash diff
@@ -227,6 +215,8 @@ if [ $USE_EXISTING_PATCHES ]
 then
     ensure_file_exists $PATCHES_DIR/${crl_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${crl_name}.stage1.patch
+    ensure_file_exists ${child_key_path}
+    ensure_file_exists ${child_mft_ee_key_path}
 fi
 
 ###############################################################################
@@ -240,6 +230,8 @@ $CONF_SCRIPTS/gen_child_ca.sh \
     -b crl \
     -o ${OUTPUT_DIR} \
     -x ${PREFIX} \
+    ${option_reuse_keys} \
+    -d ${KEYS_DIR} \
     ${child_name} \
     ${SERIAL} \
     ${ROOT_CERT_PATH} \
@@ -268,7 +260,7 @@ fi
 # Sign it
 echo "Signing CRL"
 ${CGTOOLS}/rr <${crl_name}.crl.raw >${crl_name}.blb
-${CGTOOLS}/sign_cert ${crl_name}.blb ../${child_name}.p15
+${CGTOOLS}/sign_cert ${crl_name}.blb ${child_key_path}
 mv ${crl_name}.blb ${crl_name}.crl
 ${CGTOOLS}/dump -a ${crl_name}.crl >${crl_name}.crl.raw
 
@@ -291,7 +283,7 @@ ${CGTOOLS}/rr <${crl_name}.crl.raw >${crl_name}.crl
 
 # Update manifest with hash of newly edited CRL
 ${CGTOOLS}/fix_manifest ${child_name}.mft \
-    ${child_name}.mft.p15 ${crl_name}.crl
+    ${child_mft_ee_key_path} ${crl_name}.crl
 echo "Updated manifest ${child_name}.mft with hash of ${crl_name}.crl"
 
 # Clean-up
