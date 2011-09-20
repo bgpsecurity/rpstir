@@ -3,6 +3,7 @@
 # exclude patterns (uncomment them if you want to use them):
 *.[oa]
 *~
+*.pyc
 *Makefile
 *Makefile.in
 aclocal.m4
@@ -13,6 +14,7 @@ conf*.dir/
 config.status
 configure
 TAGS
+*.swp
 resource-pki-*.tar.gz
 
 # directories generated during program execution
