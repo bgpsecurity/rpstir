@@ -183,9 +183,21 @@ http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  When compiling on *nix, it
 may be necessary to unzip in text mode to ensure that line endings are
 correct.  Ensure that both the library itself and its include files are in
 accessible locations.  For example, it may be necessary to manually copy
-libcl.so to /usr/local/lib and cryptlib.h to /usr/local/include.  On FreeBSD,
-cryptlib can be obtained one of two ways: (1) using the package system
-by issuing the command pkg_add -r cryptlib, or (2) using the ports
+libcl.so to /usr/local/lib and cryptlib.h to /usr/local/include.  To install
+cryptlib 3.4.1 (for example):
+
+$ wget --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl341.zip
+$ mkdir cryptlib
+$ cd cryptlib
+$ unzip -a ../cl341.zip  # -a enables text-mode
+$ make shared  # create libcl.so, not libcl.a
+$ su
+# install -o root -g root -m 755 libcl.so.3.4.1 /usr/local/lib
+# ln -s libcl.so.3.4.1 /usr/local/lib/libcl.so
+# install -o root -g root -m 644 cryptlib.h /usr/local/include
+
+On FreeBSD, cryptlib can be obtained one of two ways: (1) using the package
+system by issuing the command pkg_add -r cryptlib, or (2) using the ports
 system by issuing the command make search name="cryptlib" from the
 /usr/ports directory.
 
