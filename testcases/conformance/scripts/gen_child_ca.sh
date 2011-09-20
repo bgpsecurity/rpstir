@@ -21,14 +21,19 @@
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../envir.setup
 
+# Safe bash shell scripting practices - exit w/ failure on any error
+. $RPKI_ROOT/trap_errors
+
 # Usage
 usage ( ) {
     usagestr="
 Usage: $0 [options] <subjectname> <serial> <parentcertfile> <parentURI> <parentkeyfile> <crldp>
 
 Options:
-  -b crl|mft\tChild CRL or manifest should be named 'bad<subjectname>.*'
+  -b crl|mft\tChild CRL or manifest should be named '<prefix><subjectname>.*'
+  -x prefix\tPrefix (default = 'bad')
   -o outdir\tOutput directory (default = CWD)
+  -d keydir\tKeys directory (default = CWD)
   -h       \tDisplay this help file
 
 This tool takes as input a parent CA certificate + key pair, and as
@@ -79,6 +84,7 @@ Inputs:
   crldp - full rsync URI to 'CRL issued by Parent'.  Probably something like
           <parentSIA>/<parentSubjectName>.crl
   outdir - (optional) local path to parent's repo directory.  Defaults to CWD
+  keydir - (optional) local path to key directory.  Defaults to CWD.
 
 Outputs:
   child CA certificate - inherits AS/IP resources from parent via inherit bit
@@ -92,9 +98,9 @@ Outputs:
   or mft should be prepended by the string 'bad'.
 
 Auxiliary Outputs: (not shown in diagram)
-  child key pair - <outdir>/<subjectname>.p15
+  child key pair - <keydir>/<subjectname>.p15
   child-issued MFT EE cert - <outdir>/<subjectname>/<subjectname>.mft.cer
-  child-issued MFT EE key pair - <outdir>/<subjectname>/<subjectname>.mft.p15
+  child-issued MFT EE key pair - <keydir>/<subjectname>.mft.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -112,25 +118,28 @@ CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
 TBTOOLS=$RPKI_ROOT/testbed/src	# Tools used for testbed generation
 
 # Options and defaults
-MAKE_CRL_BAD=0
-MAKE_MFT_BAD=0
+USE_CRL_PREFIX=0
+USE_MFT_PREFIX=0
+PREFIX="bad"
 OUTPUT_DIR="."
+KEYS_DIR="."
+USE_EXISTING_KEYS=
 CACERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
 EECERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ee_template.cer"
 CRL_TEMPLATE="$RPKI_ROOT/testbed/templates/crl_template.crl"
 MFT_TEMPLATE="$RPKI_ROOT/testbed/templates/M.man"
 
 # Process command line arguments.
-while getopts b:o:h opt
+while getopts b:o:x:d:Kh opt
 do
   case $opt in
       b)
       	  if [ $OPTARG = "crl" ]
 	  then
-	      MAKE_CRL_BAD=1
+	      USE_CRL_PREFIX=1
 	  elif [ $OPTARG = "mft" ]
 	  then
-	      MAKE_MFT_BAD=1
+	      USE_MFT_PREFIX=1
 	  else
 	      usage
 	  fi
@@ -138,6 +147,15 @@ do
       o)
 	  OUTPUT_DIR=$OPTARG
 	  ;;
+      x)
+          PREFIX=$OPTARG
+          ;;
+      d)
+          KEYS_DIR=$OPTARG
+          ;;
+      K)
+          USE_EXISTING_KEYS=1
+          ;;
       h)
 	  usage
 	  ;;
@@ -157,38 +175,48 @@ else
 fi
 
 ###############################################################################
+# Check for prerequisite tools
+###############################################################################
+
+# Ensure executables are in PATH
+hash sha256sum
+hash sed
+
+ensure_file_exists $CGTOOLS/extractSIA
+ensure_file_exists $CGTOOLS/extractValidityDate
+ensure_file_exists $CGTOOLS/gen_key
+ensure_file_exists $TBTOOLS/create_object
+
+###############################################################################
 # Compute Paths (both rsync URIs and local paths)
 ###############################################################################
 
 # Extract SIA directory from parent (rsync URI)
 parent_sia=$($CGTOOLS/extractSIA $PARENT_CERT_FILE)
-check_errs $? "Failed to extract SIA"
+echo "Parent SIA: ${parent_sia}"
 
-# Extract validity dates from parent
+# Extract validity dates from parent in both X.509 (utctime or gmtime,
+# depending on the date) and MFT (gmtime) formats.
 parent_notbefore=$($CGTOOLS/extractValidityDate -b $PARENT_CERT_FILE)
-check_errs $? "Failed to extract notBefore date"
 parent_notafter=$($CGTOOLS/extractValidityDate -a $PARENT_CERT_FILE)
-check_errs $? "Failed to extract notAfter date"
 parent_notbefore_gtime=$($CGTOOLS/extractValidityDate -b -g $PARENT_CERT_FILE)
-check_errs $? "Failed to extract notBefore date"
 parent_notafter_gtime=$($CGTOOLS/extractValidityDate -a -g $PARENT_CERT_FILE)
-check_errs $? "Failed to extract notAfter date"
 
 # Compute SIA directory (rsync URI) for child CA
 child_sia_dir="${parent_sia}${SUBJECTNAME}/"
 
 # Compute manifest name for child CA
-if [ $MAKE_MFT_BAD = "1" ]
+if [ $USE_MFT_PREFIX = "1" ]
 then
-    child_mft_name="bad${SUBJECTNAME}.mft"
+    child_mft_name="${PREFIX}${SUBJECTNAME}.mft"
 else
     child_mft_name="${SUBJECTNAME}.mft"
 fi
 
 # Compute CRL name for child CA
-if [ $MAKE_CRL_BAD = "1" ]
+if [ $USE_CRL_PREFIX = "1" ]
 then
-    child_crl_name="bad${SUBJECTNAME}.crl"
+    child_crl_name="${PREFIX}${SUBJECTNAME}.crl"
 else
     child_crl_name="${SUBJECTNAME}.crl"
 fi
@@ -203,7 +231,6 @@ grandchildren_crldp="${child_sia_dir}${child_crl_name}"
 grandchildren_aia="${parent_sia}${SUBJECTNAME}.cer"
 
 # Compute local paths to child CA
-child_key_path=${OUTPUT_DIR}/${SUBJECTNAME}.p15
 child_cert_path=${OUTPUT_DIR}/${SUBJECTNAME}.cer
  
 # Compute local paths to child CA publication point and CRL/manifest
@@ -211,7 +238,24 @@ child_sia_path=${OUTPUT_DIR}/${SUBJECTNAME}
 child_crl_path=${child_sia_path}/${child_crl_name}
 child_mft_path=${child_sia_path}/${child_mft_name}
 child_mft_ee_path=${child_sia_path}/${child_mft_name}.cer
-child_mft_ee_key_path=${child_sia_path}/${child_mft_name}.p15
+
+# Compute paths to keys
+child_key_path=${KEYS_DIR}/${SUBJECTNAME}.p15
+child_mft_ee_key_path=${KEYS_DIR}/${child_mft_name}.p15
+
+###############################################################################
+# Check for prerequisite files
+###############################################################################
+
+ensure_dir_exists $OUTPUT_DIR
+ensure_file_exists ${PARENT_CERT_FILE}
+ensure_file_exists ${PARENT_KEY_FILE}
+ensure_file_exists ${CACERT_TEMPLATE}
+if [ ${USE_EXISTING_KEYS} ]
+then
+    ensure_file_exists $child_key_path
+    ensure_file_exists $child_mft_ee_key_path
+fi
 
 ###############################################################################
 # Generate child cert
@@ -219,15 +263,15 @@ child_mft_ee_key_path=${child_sia_path}/${child_mft_name}.p15
 
 # Create child cert
 # 1. Generate child key pair
-$CGTOOLS/gen_key $child_key_path 2048
-check_errs $? "Failed to generate key pair $child_key_path"
+if [ ${USE_EXISTING_KEYS} ]
+then
+    echo "Using existing key pair: $child_key_path"
+else
+    $CGTOOLS/gen_key $child_key_path 2048
+    echo "Generated key pair: $child_key_path"
+fi
 
 # 2. Create/sign child certificate with appropriate parameters
-if [ ! -e ${CACERT_TEMPLATE} ]
-then
-    printf "Error - file not found: template cert ${CACERT_TEMPLATE}\n"
-    exit 1
-fi
 $TBTOOLS/create_object -t ${CACERT_TEMPLATE} CERT \
     outputfilename=${child_cert_path} \
     parentcertfile=${PARENT_CERT_FILE} \
@@ -244,7 +288,7 @@ $TBTOOLS/create_object -t ${CACERT_TEMPLATE} CERT \
     ipv4=inherit \
     ipv6=inherit \
     as=inherit
-check_errs $? "Failed to create child certificate: ${child_cert_path}"
+echo "Created child certificate: ${child_cert_path}"
 
 ###############################################################################
 # Generate child cert's publication directory
@@ -252,7 +296,7 @@ check_errs $? "Failed to create child certificate: ${child_cert_path}"
 
 # Create child publication directory
 mkdir -p $child_sia_path
-check_errs $? "Failed to create child SIA directory: $child_sia_path"
+echo "Created child SIA directory: $child_sia_path"
 
 # Create child-issued CRL
 $TBTOOLS/create_object -t ${CRL_TEMPLATE} CRL \
@@ -263,12 +307,17 @@ $TBTOOLS/create_object -t ${CRL_TEMPLATE} CRL \
     nextupdate=${parent_notafter} \
     revokedcertlist= \
     crlnum=1
-check_errs $? "Failed to create child-issued CRL: ${child_crl_path}"
+echo "Created child-issued CRL: ${child_crl_path}"
 
 # Create child-issued Manifest
 # 1. Generate EE key pair
-$CGTOOLS/gen_key $child_mft_ee_key_path 2048
-check_errs $? "Failed to generate key pair $child_mft_ee_key_path"
+if [ ${USE_EXISTING_KEYS} ]
+then
+    echo "Using existing MFT EE key pair: $child_mft_ee_key_path"
+else
+    $CGTOOLS/gen_key $child_mft_ee_key_path 2048
+    echo "Generated MFT EE key pair: $child_mft_ee_key_path"
+fi
 
 # 2. Create child-issued EE cert (to be embedded in the manifest)
 $TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
@@ -287,7 +336,7 @@ $TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
     ipv4=inherit \
     ipv6=inherit \
     as=inherit
-check_errs $? "Failed to create child-issued EE certificate: ${child_mft_ee_path}"
+echo "Created child-issued MFT EE certificate: ${child_mft_ee_path}"
 
 # 3. Compute hash of CRL
 child_crl_hash=$(sha256sum ${child_crl_path} | \
@@ -303,4 +352,4 @@ $TBTOOLS/create_object -t ${MFT_TEMPLATE} MANIFEST \
     nextUpdate=${parent_notafter_gtime} \
     manNum=1 \
     filelist=${child_crl_name}'%0x'${child_crl_hash}
-check_errs $? "Failed to create child-issued MFT: ${child_mft_path}"
+echo "Created child-issued MFT: ${child_mft_path}"

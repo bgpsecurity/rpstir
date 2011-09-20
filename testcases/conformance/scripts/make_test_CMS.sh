@@ -37,6 +37,7 @@ Options:
   -o outdir \tOutput directory (default = ...conformance/raw/root/)
   -p patchdir\tDirectory for saving/getting patches (default = .../conformance/raw/patches/)
   -d keydir\tDirectory for saving/getting keys (default = .../conformance/raw/keys/)
+  -x prefix\tPrefix (default = 'bad')
   -h        \tDisplay this help file
 
 This script creates a ROA (with embedded EE cert), prompts the user
@@ -79,7 +80,7 @@ rsync://rpki.bbn.com/conformance/root/subjname.roa .
                | Directory                                   |
                +---------------------------------------------+
 
-Inputs:
+Explanation of inputs, not in original order:
   class - ROA or CMS (i.e. whether this will be a ROA or CMS testcase)
   filestem - subject name (and filename stem) for ROA to be created
   serial - serial number for embedded EE certificate to be created
@@ -87,8 +88,9 @@ Inputs:
   keyfile - (optional) local path to root key pair
   outdir - (optional) local path to root's repo directory
   patchdir - (optional) local path to directory of patches
+  keydir - (optional) local path to directory of keys
 
-Outputs:
+Explanation of outputs, not in original order:
   ROA - AS/IP resources are hardcoded in goodEECert and goodROA templates
   patch files - manual edits are saved as diff output in
                 'bad<CMS/ROA><filestem>.stageN.patch' (N=0..1)
@@ -99,12 +101,9 @@ Outputs:
 
 # NOTES
 
-# 1. Variable naming convention -- preset constants and command line
+# Variable naming convention -- preset constants and command line
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
-
-# 2. Assumes write-access to current directory even though the output
-# directory will be different.
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools     # Charlie Gardiner's tools
@@ -118,11 +117,12 @@ ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
 TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
 TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodROA.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
+PREFIX="bad"
 USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
 
 # Process command line arguments.
-while getopts Pk:o:t:p:d:h opt
+while getopts Pk:o:t:p:d:x:h opt
 do
   case $opt in
       P)
@@ -139,6 +139,9 @@ do
           ;;
       d)
           KEYS_DIR=$OPTARG
+          ;;
+      x)
+          PREFIX=$OPTARG
           ;;
       h)
           usage
@@ -160,8 +163,8 @@ fi
 # Computed Variables
 ###############################################################################
 
-child_name=bad${TEST_CLASS}${FILESTEM}
-ee_name=bad${TEST_CLASS}${FILESTEM}.ee
+child_name=${PREFIX}${TEST_CLASS}${FILESTEM}
+ee_name=${PREFIX}${TEST_CLASS}${FILESTEM}.ee
 ee_key_path=${KEYS_DIR}/${ee_name}.p15
 
 ###############################################################################
@@ -246,12 +249,14 @@ else
 fi
 
 # Sign EE cert
+echo "Signing EE cert"
 ${CGTOOLS}/rr <${ee_name}.raw >${ee_name}.cer
 ${CGTOOLS}/sign_cert ${ee_name}.cer ${ROOT_KEY_PATH}
 rm ${ee_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 
 # Make ROA
+echo "Making ROA"
 cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
 
 # Stage 1: Modify ROA's to-be-signed portions automatically or manually

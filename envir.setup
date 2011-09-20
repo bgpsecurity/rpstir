@@ -84,6 +84,7 @@ fi
 # MySQL command line which reads statements from stdin
 export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 
+############################################################################
 # Shell function for checking return codes for error (swiped from
 # http://steve-parker.org/sh/exitcodes.shtml)
 #
@@ -94,6 +95,10 @@ export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 # check_errs $? "Cut returned an error"
 # echo "USERNAME: $USERNAME"
 # check_errs $? "echo returned an error - very strange!"
+#
+# NOTE: DEPRECATED!  Better to use trap_errors at the top of your
+# script, which causes an exit and prints script/line number on any
+# error.
 
 check_errs()
 {
@@ -104,4 +109,22 @@ check_errs()
     # as a bonus, make our script exit with the right error code.
     exit ${1}
   fi
+}
+
+############################################################################
+
+ensure_file_exists ( ) {
+    if [ ! -e "$1" ]
+    then
+	echo "Error: file not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+        echo "Error: directory not found - $1" 1>&2
+        exit 1
+    fi
 }

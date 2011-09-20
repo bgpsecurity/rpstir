@@ -4,5 +4,4 @@ badCMSEESIAWrongOID.cer
 badCMSEESIAWrongOID.p15
 badCMSIP2Big.roa
 badCMSSIAWrongOID.roa
-:
-
+*.cer
