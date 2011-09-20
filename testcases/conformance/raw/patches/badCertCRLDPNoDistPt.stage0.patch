@@ -1,5 +1,5 @@
---- badCertCRLDPNoDistPt.raw.old	2011-05-25 14:34:01.000000000 -0400
-+++ badCertCRLDPNoDistPt.raw	2011-05-25 14:34:43.000000000 -0400
+--- badCertCRLDPNoDistPt.raw.old	2011-09-19 16:05:22.000000000 -0400
++++ badCertCRLDPNoDistPt.raw	2011-09-19 16:06:19.000000000 -0400
 @@ -46,8 +46,6 @@
                      ocw seq seq ctx+0x20
                                      ctx+0x20

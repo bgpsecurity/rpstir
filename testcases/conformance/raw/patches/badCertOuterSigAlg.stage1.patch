@@ -1,11 +1,11 @@
---- badCertOuterSigAlg.raw.old	2011-05-25 14:54:40.000000000 -0400
-+++ badCertOuterSigAlg.raw	2011-05-25 14:55:13.000000000 -0400
-@@ -76,7 +76,7 @@
+--- badCertOuterSigAlg.raw.old	2011-09-19 16:27:34.000000000 -0400
++++ badCertOuterSigAlg.raw	2011-09-19 16:27:54.000000000 -0400
+@@ -75,7 +75,7 @@
                      ocw seq ctx+0x20
                                  seq seq int 0x01 /* 1 */ 
                                          int 0x0100 /* 256 */ 
 -    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
 +    seq oid 1.2.840.113549.1.1.12 /* id_sha_256WithRSAEncryption */
          nul 
-     bit 0x00CA6E1C78143D606290BC8AF9121242C09DB638A704419B2E443DA41E3C4CE0
-         0xF093A75FD1FE12E624F9E93361957712EC1CCB8FE2E368F87783CC86064C4E7E
+     bit 0x0036E1F7CFEAB922E50453446BBA394D3D1005D644C8C9723AC4CE15D0FB77E7
+         0x39DF5EE35AB5382F68D0905880AE0A3EE146A7799367D606F33114313332000F
