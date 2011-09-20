@@ -37,6 +37,7 @@ Options:
   -o outdir \tOutput directory (default = ...conformance/raw/root/)
   -p patchdir\tDirectory for saving/getting patches (default = .../conformance/raw/patches/)
   -d keydir\tDirectory for saving/getting keys (default = .../conformance/raw/keys/)
+  -x prefix\tPrefix (default = 'bad')
   -h        \tDisplay this help file
 
 This script creates a ROA (with embedded EE cert), prompts the user
@@ -116,11 +117,12 @@ ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
 TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
 TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodROA.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
+PREFIX="bad"
 USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
 
 # Process command line arguments.
-while getopts Pk:o:t:p:d:h opt
+while getopts Pk:o:t:p:d:x:h opt
 do
   case $opt in
       P)
@@ -137,6 +139,9 @@ do
           ;;
       d)
           KEYS_DIR=$OPTARG
+          ;;
+      x)
+          PREFIX=$OPTARG
           ;;
       h)
           usage
@@ -158,8 +163,8 @@ fi
 # Computed Variables
 ###############################################################################
 
-child_name=bad${TEST_CLASS}${FILESTEM}
-ee_name=bad${TEST_CLASS}${FILESTEM}.ee
+child_name=${PREFIX}${TEST_CLASS}${FILESTEM}
+ee_name=${PREFIX}${TEST_CLASS}${FILESTEM}.ee
 ee_key_path=${KEYS_DIR}/${ee_name}.p15
 
 ###############################################################################
