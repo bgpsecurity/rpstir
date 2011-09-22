@@ -18,6 +18,8 @@
 
 /* $Id$ */
 
+/* Gratuitous change by MCR */
+
 #ifndef _enforce_h
 #include "enforce.h"
 #endif
