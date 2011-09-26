@@ -14,6 +14,8 @@ config.status
 configure
 TAGS
 *.swp
+.cproject
+.project
 
 # directories generated during program execution
 *REPOSITORY
