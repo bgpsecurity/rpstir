@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <getopt.h>
 #include <time.h>
+#include <limits.h>
 
 #include "myssl.h"
 #include "scm.h"
@@ -2007,6 +2008,7 @@ static int rescert_aki_chk(X509 *x, int ct)
   int i;
   int ex_nid;
   int ret = 0;
+  int *crit = INT_MIN;
   X509_EXTENSION  *ex = NULL;
   AUTHORITY_KEYID *akid = NULL;
 
@@ -2027,9 +2029,27 @@ static int rescert_aki_chk(X509 *x, int ct)
 
       akid = X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
       if (!akid) {
+          if (crit == -2) {  /* extension occurs more than once */
 #ifdef DEBUG
-        log_msg(LOG_ERR, "[aki] could not load aki");
+              log_msg(LOG_ERR, "[aki] duplicate aki found");
 #endif
+              return(ERR_SCM_DUPAKI);
+          }
+          if (crit == -1) {  /* extension not found */
+#ifdef DEBUG
+              log_msg(LOG_ERR, "[aki] aki extension not found");
+#endif
+          }
+          if (crit >= 0) {   /* extension found but not decoded */
+#ifdef DEBUG
+              log_msg(LOG_ERR, "[aki] extension found but not decoded");
+#endif
+          } else {
+#ifdef DEBUG
+              log_msg(LOG_ERR, "[aki] could not load aki");
+#endif
+          }
+
         return(ERR_SCM_NOAKI);
       }
 
