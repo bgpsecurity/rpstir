@@ -36,17 +36,21 @@ Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
   -h        \tDisplay this help file
 
-This script creates a large number of ROAs (with embedded EE certs), 
-prompts the user multiple times to edit interactively (e.g., in order 
-to introduce errors), and captures those edits in '.patch' files (output 
-of diff -u).  Later, running $0 with the -P option can replay the creation
-process by automatically applying those patch files instead of
-prompting for user intervention.
+This script creates a large number of ROAs (with embedded EE certs),
+prompts the user multiple times to edit interactively (e.g., in order
+to introduce errors), and captures those edits in '.patch' files
+(output of diff -u).  Later, running $0 with the -P option can replay
+the creation process by automatically applying those patch files
+instead of prompting for user intervention.  In patch mode, existing
+keys are reused from the keys directory, instead of the default of
+generating new keys.
 
 This tool assumes the repository structure in the diagram below.  It
 creates a ton of ROAs (with embedded EE certs).  In the EE certs' SIA, the
 accessMethod id-ad-signedObject will have an accessLocation of
-rsync://rpki.bbn.com/conformance/root/subjname.roa .
+rsync://rpki.bbn.com/conformance/root/subjname.roa.
+
+NOTE: this script does NOT update the manifest issued by root.
 
                +-----------------------------------+
                | rsync://rpki.bbn.com/conformance/ |
@@ -82,8 +86,10 @@ Inputs:
 Outputs:
   ROA - AS/IP is hardcoded in goodCert.raw and goodROA templates
   patch files - manual edits are saved as diff output in
-                'badi<CMS><filestem>.stageN.patch' (N=0..1) in the patch
+                'badCMS<filestem>.stageN.patch' (N=0..1) in the patch
                 directory
+  key files - generated key pairs for the EE certs are stored in keys directory
+              as badCMS<filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1

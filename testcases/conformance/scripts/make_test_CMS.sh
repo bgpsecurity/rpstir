@@ -45,12 +45,16 @@ multiple times to interactively edit (e.g., in order to introduce
 errors), and captures those edits in '.patch' files (output of diff
 -u).  Later, running $0 with the -P option can replay the creation
 process by automatically applying those patch files instead of
-prompting for user intervention.
+prompting for user intervention.  In patch mode, existing keys are
+reused from the keys directory, instead of the default of generating
+new keys.
 
 This tool assumes the repository structure in the diagram below.  It
 creates only the ROA (with embedded EE cert).  In the EE cert's SIA, the
 accessMethod id-ad-signedObject will have an accessLocation of
-rsync://rpki.bbn.com/conformance/root/subjname.roa .
+rsync://rpki.bbn.com/conformance/root/subjname.roa.
+
+NOTE: this script does NOT update the manifest issued by root.
 
                +-----------------------------------+
                | rsync://rpki.bbn.com/conformance/ |
@@ -94,6 +98,8 @@ Explanation of outputs, not in original order:
   ROA - AS/IP resources are hardcoded in goodEECert and goodROA templates
   patch files - manual edits are saved as diff output in
                 'bad<CMS/ROA><filestem>.stageN.patch' (N=0..1)
+  key files - generated key pair for the EE cert is stored in keys directory as
+              bad<CMS/ROA><filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1
