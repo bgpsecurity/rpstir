@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # ***** BEGIN LICENSE BLOCK *****
 #
@@ -174,7 +174,6 @@ ${single_CMS_cmd} CMS 517 DigestAlg
 ${single_CMS_cmd} CMS 518 2DigestAlgs              
 ${single_CMS_cmd} CMS 519 NoDigestAlgs             
 ${single_CMS_cmd} CMS 520 HasCRL                   
-${single_CMS_cmd} CMS 522 NoSignerInfo             
 ${single_CMS_cmd} CMS 523 SigInfoVersion           
 ${single_CMS_cmd} CMS 524 SigInfoVersion4          
 ${single_CMS_cmd} CMS 525 SigInfoNoSid             
@@ -194,4 +193,6 @@ ${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs
 ${single_CMS_cmd} CMS 539 SigInfoNoSig             
 ${single_CMS_cmd} CMS 540 SigInfo2Sig              
 ${single_CMS_cmd} CMS 541 SigInfoNoSigAlg          
-${single_CMS_cmd} CMS 542 SigInfoNoHashAlg         
+${single_CMS_cmd} CMS 542 SigInfoNoHashAlg 
+${single_CMS_cmd} CMS 543 KeyUsage
+${single_CMS_cmd} CMS 544 BadSIAOid        

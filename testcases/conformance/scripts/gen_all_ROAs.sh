@@ -165,5 +165,9 @@ ensure_file_exists "${single_CMS_script}"
 # Generate CMS cases
 ###############################################################################
 
-${single_CMS_cmd} 543 KeyUsage            * permission to sign certs and CRLs
-${single_CMS_cmd} 544 SIAWrongOID         * improper OID in SIA
+${single_CMS_cmd} ROA 551 ASID    
+${single_CMS_cmd} ROA 552 Family
+${single_CMS_cmd} ROA 553 FamilyLth
+${single_CMS_cmd} ROA 554 IPMaxLth
+${single_CMS_cmd} ROA 555 IP2Big
+

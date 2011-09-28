@@ -1,11 +1,11 @@
---- badCMSSigInfoBadSid.roa.raw.old	2011-05-25 17:45:59.000000000 -0400
-+++ badCMSSigInfoBadSid.roa.raw	2011-05-25 17:47:01.000000000 -0400
-@@ -111,7 +111,7 @@
+--- badCMSSigInfoBadSid.raw.old	2011-09-22 17:29:41.000000000 -0400
++++ badCMSSigInfoBadSid.raw	2011-09-22 17:30:07.000000000 -0400
+@@ -107,7 +107,7 @@
              set seq int 0x03 /* 3 */ 
                      ctx+0x00
-                         0x2CAD93B49532C1A50A38A78547C19658
--                        0x027F8CF6
-+                        0x027F8CF5
+                         0xC2427D0DE273F4581D80A8358DA167F1
+-                        0x9EE30CDF
++                        0x9EE30CDE
                      seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
                          nul 
                      ctx+0x20

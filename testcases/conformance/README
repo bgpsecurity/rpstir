@@ -111,12 +111,6 @@ CA Certificates
 186 2ASNum              # two AS number extensions
 
 
-EE Certificates (embedded in ROAs)
-
-??? We may not have created these at all.  We need:
-543 KeyUsage            * permission to sign certs and CRLs
-544 SIAWrongOID         * improper OID in SIA
-
 
 CMS signed objects, generic (using ROAs)
 
@@ -129,7 +123,6 @@ CMS signed objects, generic (using ROAs)
 518 2DigestAlgs              # two digest algorithms
 519 NoDigestAlgs             # no digest algorithm
 520 HasCRL                   # has a CRL
-522 NoSignerInfo             # no SignerInfo field
 523 SigInfoVersion           # wrong Signer Info version -- 2
 524 SigInfoVersion4          # wrong Signer Info version -- 4
 525 SigInfoNoSid             # no Signer Identifier
@@ -151,10 +144,15 @@ CMS signed objects, generic (using ROAs)
 541 SigInfoNoSigAlg          # has no signature algorithm
 542 SigInfoNoHashAlg         # had no hash algorithm
 
+EE Certificates (embedded in ROAs)
+
+543 KeyUsage                 * permission to sign certs and CRLs
+544 SIAWrongOID              * improper OID in SIA
+
 
 ROAs
 
-551 ASID                     # AS number outsideof root's
+551 ASID                     # AS number outside of root's
 552 Family                   # invalid family
 553 FamilyLth                # family name too long
 554 IPMaxLth                 # IP max length too long

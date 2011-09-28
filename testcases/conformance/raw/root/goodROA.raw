@@ -110,8 +110,6 @@ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
                         seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
                             set oct 0xC8B159D52330B0B9D268DFAE0F1B8311
                                     0xF41FAC87D479F010EA848A16663A4BAF
-                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
-                            set utc "110310200210Z"
                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                         nul 
                     oct 0x82DE1067844092DC5C9DB3EA7853AF05

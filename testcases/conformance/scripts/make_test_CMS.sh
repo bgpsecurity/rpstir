@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # ***** BEGIN LICENSE BLOCK *****
 #
@@ -115,7 +115,7 @@ KEYS_DIR="$RPKI_ROOT/testcases/conformance/raw/keys"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
 TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
-TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodROA.raw"
+TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCMS.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
