@@ -99,6 +99,13 @@ if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
 fi
 
+AC_ARG_ENABLE(
+    [stack-protector],
+    AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ]),
+    [ if test x"$enableval" != xno; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ],
+    [ if test x"$GCC" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
+)
+
 #Checks for libraries.
 AC_SEARCH_LIBS([pthread_create],[pthread],[],[
 	LDFLAGS="{LDFLAGS-} -lpthread"
