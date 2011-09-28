@@ -108,31 +108,14 @@ AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([SQLConnect],[myodbc3 myodbc5],[],[
-	echo "Error: A mysql connector is required for building this project"
-	exit -1;
-],[-lodbc -lodbcinst])
-
-
-
-#This is the test to allow for the weird odbc issue fix.
-#Ultimately this should be the only test here and the myodbc3 or 5 test above this
-#  should be removed and the if statement below should be removed. 
-#The if statement tests for the present of a variable that the AC_SEARCH_LIBS call
-#  sets and reorders the LIBS arguments so that -lodbc is linked last. The correct
-#  solution is to have it first with the no -lmyodbc.
-oldLibs=${LIBS}
-AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbc odbcinst],[],[
+AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst odbc],[],[
 	echo "Error: unixODBC is required for building this project"
 	exit -1;
 ])
-if [[ "$ac_cv_search_SQLWriteDSNToIni" = "-lodbc" ]];then
-   LIBS="${oldLibs} -lodbc"
-fi
-#End of hack to make this work. 
-
-
-
+AC_SEARCH_LIBS([SQLConnect],[odbc odbcinst],[], [
+	echo "Error: unixODBC is required for building this project"
+	exit -1;
+])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
 	echo "Error: cryptlib is required for building this project"
 	exit -1;

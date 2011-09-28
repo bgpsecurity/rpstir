@@ -212,6 +212,8 @@ int main(int argc, char *argv[])
   }
   log_msg(LOG_INFO, "Opened rsync log file: %s", inputLogFile);
   log_flush();
+  free(inputLogFile);
+  inputLogFile = NULL;
 
   /* setup sockets... */
   if (!nflag) {
