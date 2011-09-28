@@ -157,7 +157,7 @@ ROAs
 553 FamilyLth                # family name too long
 554 IPMaxLth                 # IP max length too long
 555 IP2Big                   # IP addresses exceed parent's 
-
+556 ROAVersion4              # wrong ROA version
 
 CRLs
 

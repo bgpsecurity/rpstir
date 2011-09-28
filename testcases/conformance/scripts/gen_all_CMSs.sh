@@ -17,8 +17,8 @@
 #
 #  ***** END LICENSE BLOCK ***** */
 
-# gen_all_roas.sh - create all certificates for RPKI syntax
-#                    conformance test
+# gen_all_CMSs.sh - create all CMS test cases for RPKI syntactic
+#                   conformance test
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
