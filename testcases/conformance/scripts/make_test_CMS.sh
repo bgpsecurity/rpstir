@@ -205,6 +205,7 @@ ensure_file_exists $CGTOOLS/put_sernum
 ensure_file_exists $CGTOOLS/put_subj
 ensure_file_exists $CGTOOLS/put_sia
 ensure_file_exists $CGTOOLS/add_key_info
+ensure_file_exists $CGTOOLS/add_cms_cert
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
 
@@ -252,6 +253,7 @@ else
     diff -u ${ee_name}.raw.old ${ee_name}.raw \
         >${PATCHES_DIR}/${ee_name}.stage0.patch || true
     rm ${ee_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${ee_name}.stage0.patch"
 fi
 
 # Sign EE cert
