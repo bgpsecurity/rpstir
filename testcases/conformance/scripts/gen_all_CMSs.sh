@@ -17,8 +17,8 @@
 #
 #  ***** END LICENSE BLOCK ***** */
 
-# gen_all_roas.sh - create all certificates for RPKI syntax
-#                    conformance test
+# gen_all_CMSs.sh - create all CMS test cases for RPKI syntactic
+#                   conformance test
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
@@ -97,12 +97,9 @@ Outputs:
 
 # NOTES
 
-# 1. Variable naming convention -- preset constants and command line
+# Variable naming convention -- preset constants and command line
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
-
-# 2. Assumes write-access to current directory even though the output
-# directory will be different.
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
@@ -171,34 +168,34 @@ ensure_file_exists "${single_CMS_script}"
 # Generate CMS cases
 ###############################################################################
 
-${single_CMS_cmd} CMS 512 ContentType              
-${single_CMS_cmd} CMS 513 NoCerts                  
-${single_CMS_cmd} CMS 514 2Certs                   
-${single_CMS_cmd} CMS 515 Version2                 
-${single_CMS_cmd} CMS 516 Version4                 
-${single_CMS_cmd} CMS 517 DigestAlg                
-${single_CMS_cmd} CMS 518 2DigestAlgs              
-${single_CMS_cmd} CMS 519 NoDigestAlgs             
-${single_CMS_cmd} CMS 520 HasCRL                   
-${single_CMS_cmd} CMS 523 SigInfoVersion           
-${single_CMS_cmd} CMS 524 SigInfoVersion4          
-${single_CMS_cmd} CMS 525 SigInfoNoSid             
-${single_CMS_cmd} CMS 526 SigInfoWrongSid          
-${single_CMS_cmd} CMS 527 SigInfoBadSid            
-${single_CMS_cmd} CMS 528 SigInfoHashAlg           
-${single_CMS_cmd} CMS 529 SigInfoNoAttrs           
-${single_CMS_cmd} CMS 530 SigInfoAttrsNoContType   
-${single_CMS_cmd} CMS 531 SigInfoAttrsContTypeOid  
-${single_CMS_cmd} CMS 532 SigInfoAttrsMsgDigestOid 
-${single_CMS_cmd} CMS 533 SigInfoAttrsNoMsgDigest  
-${single_CMS_cmd} CMS 534 SigInfoAttrs2ContType    
-${single_CMS_cmd} CMS 535 SigInfoAttrs2MsgDigest   
-${single_CMS_cmd} CMS 536 SigInfoAttrs2SigTime     
-${single_CMS_cmd} CMS 537 SigInfoAttrs2BinSigTime  
-${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs        
-${single_CMS_cmd} CMS 539 SigInfoNoSig             
-${single_CMS_cmd} CMS 540 SigInfo2Sig              
-${single_CMS_cmd} CMS 541 SigInfoNoSigAlg          
-${single_CMS_cmd} CMS 542 SigInfoNoHashAlg 
+${single_CMS_cmd} CMS 512 ContentType
+${single_CMS_cmd} CMS 513 NoCerts
+${single_CMS_cmd} CMS 514 2Certs
+${single_CMS_cmd} CMS 515 Version2
+${single_CMS_cmd} CMS 516 Version4
+${single_CMS_cmd} CMS 517 DigestAlg
+${single_CMS_cmd} CMS 518 2DigestAlgs
+${single_CMS_cmd} CMS 519 NoDigestAlgs
+${single_CMS_cmd} CMS 520 HasCRL
+${single_CMS_cmd} CMS 523 SigInfoVersion
+${single_CMS_cmd} CMS 524 SigInfoVersion4
+${single_CMS_cmd} CMS 525 SigInfoNoSid
+${single_CMS_cmd} CMS 526 SigInfoWrongSid
+${single_CMS_cmd} CMS 527 SigInfoBadSid
+${single_CMS_cmd} CMS 528 SigInfoHashAlg
+${single_CMS_cmd} CMS 529 SigInfoNoAttrs
+${single_CMS_cmd} CMS 530 SigInfoAttrsNoContType
+${single_CMS_cmd} CMS 531 SigInfoAttrsContTypeOid
+${single_CMS_cmd} CMS 532 SigInfoAttrsMsgDigestOid
+${single_CMS_cmd} CMS 533 SigInfoAttrsNoMsgDigest
+${single_CMS_cmd} CMS 534 SigInfoAttrs2ContType
+${single_CMS_cmd} CMS 535 SigInfoAttrs2MsgDigest
+${single_CMS_cmd} CMS 536 SigInfoAttrs2SigTime
+${single_CMS_cmd} CMS 537 SigInfoAttrs2BinSigTime
+${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs
+${single_CMS_cmd} CMS 539 SigInfoNoSig
+${single_CMS_cmd} CMS 540 SigInfo2Sig
+${single_CMS_cmd} CMS 541 SigInfoNoSigAlg
+${single_CMS_cmd} CMS 542 SigInfoNoHashAlg
 ${single_CMS_cmd} CMS 543 KeyUsage
-${single_CMS_cmd} CMS 544 BadSIAOid        
+${single_CMS_cmd} CMS 544 BadSIAOid
