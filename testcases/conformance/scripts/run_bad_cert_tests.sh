@@ -59,7 +59,6 @@ rcli -y -f badCert2AKI.cer
 # rcli -y -f badCertResourcesIPNoCrit.cer
 # rcli -y -f badCertResourcesNone.cer
 # rcli -y -f badCertResourcesSAFI.cer
-# rcli -y -f badCerts
 # rcli -y -f badCertSerNum.cer
 # rcli -y -f badCertSIA2x.cer
 # rcli -y -f badCertSIAAccessLoc.cer
@@ -78,7 +77,6 @@ rcli -y -f badCert2AKI.cer
 # rcli -y -f badCertValFromTyp.cer
 # rcli -y -f badCertValToPast.cer
 # rcli -y -f badCertValToTyp.cer
-# rcli -y -f badCertValToType.raw
 # rcli -y -f badCertVersion1.cer
 # rcli -y -f badCertVersion2.cer
 # rcli -y -f badCertVersion4.cer
