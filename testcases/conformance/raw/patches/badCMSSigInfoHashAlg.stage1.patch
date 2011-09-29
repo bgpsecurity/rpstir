@@ -1,0 +1,11 @@
+--- badCMSSigInfoHashAlg.raw.old	2011-09-22 17:31:53.000000000 -0400
++++ badCMSSigInfoHashAlg.raw	2011-09-22 17:32:23.000000000 -0400
+@@ -102,7 +102,7 @@
+                     ctx+0x00
+                         0x02859FC8B8CC33675380C96BF01B8B51
+                         0xDF2E316A
+-                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++                    seq oid 2.16.840.1.101.3.4.2.2 /* id_sha256 */
+                         nul 
+                     ctx+0x20
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */

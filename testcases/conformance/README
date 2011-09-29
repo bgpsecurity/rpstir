@@ -49,10 +49,10 @@ CA Certificates
 119 EKU                 # has Extended KeyUsage
 120 InnerSigAlg         # wrong signature algorithm in toBeSigned
 121 IssuerOID           # issuer name is not id_commonName
-122 Issuer2Sets         # issuer name has 2 sets
+122 Issuer2ComName      # issuer name has 2 common names
 123 IssuerUtf           # issuer name has utf name
-124 Issuer2Seq          # issuer name has 2 sequences
-125 Issuer2SerNums      # issuer name has 2 serial numbers
+124 Issuer2SetComName   # issuer name has 2 sets with common names
+125 IssuerSerNum        # issuer name has only a serial number
 126 IssUID              # has issuer unique ID
 127 KUsageExtra         # has disallowed key usage bit
 128 KUsageNoCertSign    # lacks bit for signing certificates
@@ -76,10 +76,10 @@ CA Certificates
 150 SKIHash             # incorrect subject key identifier
 151 SKILth              # incorrect subject key identifier length
 152 SubjectOID          # subject name is not id_commonName
-153 Subject2Sets        # subject name has 2 sets
+153 Subject2ComName     # subject name has 2 common names
 154 SubjectUtf          # subject name has utf name
-155 Subject2Seq         # subject name has 2 sequences
-156 Subject2SerNum      # subject name has 2 serial numbers
+155 Subject2SetComName  # subject name has 2 sets with common names
+156 SubjectSerNum       # subject name has only a serial number
 157 SubjUID             # has subject unique ID
 158 ValCrossed          # beginning validity date > ending date
 159 ValFromFuture       # starting validity date is in future
@@ -111,12 +111,6 @@ CA Certificates
 186 2ASNum              # two AS number extensions
 
 
-EE Certificates (embedded in ROAs)
-
-??? We may not have created these at all.  We need:
-543 KeyUsage            * permission to sign certs and CRLs
-544 SIAWrongOID         * improper OID in SIA
-
 
 CMS signed objects, generic (using ROAs)
 
@@ -129,7 +123,6 @@ CMS signed objects, generic (using ROAs)
 518 2DigestAlgs              # two digest algorithms
 519 NoDigestAlgs             # no digest algorithm
 520 HasCRL                   # has a CRL
-522 NoSignerInfo             # no SignerInfo field
 523 SigInfoVersion           # wrong Signer Info version -- 2
 524 SigInfoVersion4          # wrong Signer Info version -- 4
 525 SigInfoNoSid             # no Signer Identifier
@@ -151,15 +144,21 @@ CMS signed objects, generic (using ROAs)
 541 SigInfoNoSigAlg          # has no signature algorithm
 542 SigInfoNoHashAlg         # had no hash algorithm
 
+EE Certificates (embedded in ROAs)
+
+543 KeyUsage                 * permission to sign certs and CRLs
+544 SIAWrongOID              * improper OID in SIA
+
 
 ROAs
 
-551 ASID                     # AS number outsideof root's
+551 ASID                     # AS number outside of root's
 552 Family                   # invalid family
 553 FamilyLth                # family name too long
 554 IPMaxLth                 # IP max length too long
 555 IP2Big                   # IP addresses exceed parent's 
-
+556 VersionV1Explicit        # explicit V1 version (int 0)
+557 VersionV2                # Version V2 (int 1)
 
 CRLs
 

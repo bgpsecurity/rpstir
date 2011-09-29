@@ -17,8 +17,8 @@
 #
 #  ***** END LICENSE BLOCK ***** */
 
-# gen_all_roas.sh - create all certificates for RPKI syntax
-#                    conformance test
+# gen_all_ROAs.sh - create all ROA test cases for RPKI syntactic
+#                   conformance test
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
@@ -36,17 +36,21 @@ Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
   -h        \tDisplay this help file
 
-This script creates a small number of ROAs (with embedded EE certs), 
-prompts the user multiple times to edit interactively (e.g., in order 
-to introduce errors), and captures those edits in '.patch' files (output 
-of diff -u).  Later, running $0 with the -P option can replay the creation
-process by automatically applying those patch files instead of
-prompting for user intervention.
+This script creates a large number of ROAs (with embedded EE certs),
+prompts the user multiple times to edit interactively (e.g., in order
+to introduce errors), and captures those edits in '.patch' files
+(output of diff -u).  Later, running $0 with the -P option can replay
+the creation process by automatically applying those patch files
+instead of prompting for user intervention.  In patch mode, existing
+keys are reused from the keys directory, instead of the default of
+generating new keys.
 
 This tool assumes the repository structure in the diagram below.  It
-creates the ROAs (with embedded EE certs).  In the EE certs' SIA, the
+creates a ton of ROAs (with embedded EE certs).  In the EE certs' SIA, the
 accessMethod id-ad-signedObject will have an accessLocation of
-rsync://rpki.bbn.com/conformance/root/subjname.roa .
+rsync://rpki.bbn.com/conformance/root/subjname.roa.
+
+NOTE: this script does NOT update the manifest issued by root.
 
                +-----------------------------------+
                | rsync://rpki.bbn.com/conformance/ |
@@ -84,6 +88,8 @@ Outputs:
   patch files - manual edits are saved as diff output in
                 'badROA<filestem>.stageN.patch' (N=0..1) in the patch
                 directory
+  key files - generated key pairs for the EE certs are stored in keys directory
+              as badROA<filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -91,12 +97,9 @@ Outputs:
 
 # NOTES
 
-# 1. Variable naming convention -- preset constants and command line
+# Variable naming convention -- preset constants and command line
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
-
-# 2. Assumes write-access to current directory even though the output
-# directory will be different.
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
@@ -134,8 +137,8 @@ else
     patch_option=
 fi
 
-single_CMS_script="$RPKI_ROOT/testcases/conformance/scripts/make_test_CMS.sh"
-single_CMS_cmd="${single_CMS_script} ${patch_option} -o ${OUTPUT_DIR}"
+single_ROA_script="$RPKI_ROOT/testcases/conformance/scripts/make_test_CMS.sh"
+single_ROA_cmd="${single_ROA_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################
 # Check for prerequisite tools and files
@@ -159,11 +162,16 @@ ensure_dir_exists ( ) {
 
 ensure_dir_exists "$OUTPUT_DIR"
 ensure_dir_exists "$CGTOOLS"
-ensure_file_exists "${single_CMS_script}"
+ensure_file_exists "${single_ROA_script}"
 
 ###############################################################################
-# Generate CMS cases
+# Generate ROA cases
 ###############################################################################
 
-${single_CMS_cmd} 543 KeyUsage            * permission to sign certs and CRLs
-${single_CMS_cmd} 544 SIAWrongOID         * improper OID in SIA
+${single_CMS_cmd} ROA 551 ASID    
+${single_CMS_cmd} ROA 552 Family
+${single_CMS_cmd} ROA 553 FamilyLth
+${single_CMS_cmd} ROA 554 IPMaxLth
+${single_CMS_cmd} ROA 555 IP2Big
+${single_CMS_cmd} ROA 556 VersionV1Explicit
+${single_CMS_cmd} ROA 557 VersionV2
