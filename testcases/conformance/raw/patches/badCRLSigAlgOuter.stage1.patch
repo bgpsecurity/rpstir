@@ -1,11 +1,11 @@
---- badCRLSigAlgOuter.raw.old	2011-06-07 13:13:41.000000000 -0400
-+++ badCRLSigAlgOuter.raw	2011-06-07 13:13:52.000000000 -0400
+--- badCRLSigAlgOuter.crl.raw.old	2011-09-29 17:45:48.000000000 -0400
++++ badCRLSigAlgOuter.crl.raw	2011-09-29 17:46:26.000000000 -0400
 @@ -11,7 +11,7 @@
                  seq oid 2.5.29.35  /* id_authKeyId */
-                     oct 0x30168014E856567DF0F4FC5AF0B5EEA0 /* 0....VV}...Z.... */
-                         0x2CB539D04ED0A2E7 /* ,.9.N... */
+                     oct 0x30168014D27F6E783B2B5CE535940D54 /* 0.....nx;+\.5..T */
+                         0xC0A6F38F5B7804D4 /* ....[x.. */
 -    seq oid 1.2.840.113549.1.1.11  /* id_sha_256WithRSAEncryption */
-+    seq oid 1.2.840.113549.1.1.12  /* id_sha_256WithRSAEncryption */
++    seq oid 1.2.840.113549.1.1.12  /* not id_sha_256WithRSAEncryption */
          nul 
-     bit 0x003242855631C08DFA739C66B75DD25A /* .2B.V1...s.f.].Z */
-         0x05240DF68196100AFE117196781A6C2E /* .$........q.x.l. */
+     bit 0x007AD1D6010B8AB9B45B0EE10D0AB855 /* .z.......[.....U */
+         0x570AB640A078DDEACF33A8FDCF9A3B24 /* W..@.x...3....;$ */
