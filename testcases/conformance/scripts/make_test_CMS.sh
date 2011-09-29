@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # ***** BEGIN LICENSE BLOCK *****
 #
@@ -121,7 +121,7 @@ KEYS_DIR="$RPKI_ROOT/testcases/conformance/raw/keys"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
 TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
-TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodROA.raw"
+TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCMS.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
@@ -205,12 +205,13 @@ ensure_file_exists $CGTOOLS/put_sernum
 ensure_file_exists $CGTOOLS/put_subj
 ensure_file_exists $CGTOOLS/put_sia
 ensure_file_exists $CGTOOLS/add_key_info
+ensure_file_exists $CGTOOLS/add_cms_cert
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
 
 if [ $USE_EXISTING_PATCHES ]
 then
-    ensure_file_exists $PATCHES_DIR/${child_name}.stage0.patch
+    ensure_file_exists $PATCHES_DIR/${ee_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
     ensure_file_exists ${ee_key_path}
@@ -252,6 +253,7 @@ else
     diff -u ${ee_name}.raw.old ${ee_name}.raw \
         >${PATCHES_DIR}/${ee_name}.stage0.patch || true
     rm ${ee_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${ee_name}.stage0.patch"
 fi
 
 # Sign EE cert
