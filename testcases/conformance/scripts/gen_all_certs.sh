@@ -194,10 +194,10 @@ ${single_cert_cmd} 118 CRLDPReasons
 ${single_cert_cmd} 119 EKU
 ${single_cert_cmd} 120 InnerSigAlg
 ${single_cert_cmd} 121 IssuerOID
-${single_cert_cmd} 122 Issuer2Sets
+${single_cert_cmd} 122 Issuer2ComName
 ${single_cert_cmd} 123 IssuerUtf
-${single_cert_cmd} 124 Issuer2Seq
-${single_cert_cmd} 125 Issuer2SerNums
+${single_cert_cmd} 124 Issuer2SetComName
+${single_cert_cmd} 125 IssuerSerNum
 ${single_cert_cmd} 126 IssUID
 ${single_cert_cmd} 127 KUsageExtra
 ${single_cert_cmd} 128 KUsageNoCertSign
@@ -221,10 +221,10 @@ ${single_cert_cmd} 149 SIAMissing
 ${single_cert_cmd} 150 SKIHash
 ${single_cert_cmd} 151 SKILth
 ${single_cert_cmd} 152 SubjectOID
-${single_cert_cmd} 153 Subject2Sets
+${single_cert_cmd} 153 Subject2ComName
 ${single_cert_cmd} 154 SubjectUtf
-${single_cert_cmd} 155 Subject2Seq
-${single_cert_cmd} 156 Subject2SerNum
+${single_cert_cmd} 155 Subject2SetComName
+${single_cert_cmd} 156 SubjectSerNum
 ${single_cert_cmd} 157 SubjUID
 ${single_cert_cmd} 158 ValCrossed
 ${single_cert_cmd} 159 ValFromFuture
