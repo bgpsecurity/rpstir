@@ -295,11 +295,11 @@ ${CGTOOLS}/dump_smart ${mft_name}.mft > ${mft_name}.raw
 # Stage 2: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 2: Modify ROA's not-signed portions automatically"
+    echo "Stage 2: Modify MFT's not-signed portions automatically"
     patch ${mft_name}.raw ${PATCHES_DIR}/${mft_name}.stage2.patch
     rm -f ${mft_name}.raw.orig
 else
-    echo "Stage 2: Modify ROA's not-signed portions manually"
+    echo "Stage 2: Modify MFT's not-signed portions manually"
     cp ${mft_name}.raw ${mft_name}.raw.old
     ${EDITOR} ${mft_name}.raw
     diff -u ${mft_name}.raw.old ${mft_name}.raw \
