@@ -3,6 +3,7 @@
 # exclude patterns (uncomment them if you want to use them):
 *.[oa]
 *~
+*.pyc
 *Makefile
 *Makefile.in
 aclocal.m4

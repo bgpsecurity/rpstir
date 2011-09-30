@@ -69,7 +69,7 @@ static int saveState (scmcon *conp, scm *scmp)
     if ( stmt == NULL )
       return(ERR_SCM_NOMEM);
     snprintf (stmt, leen, "select * from %s into outfile 'backup_%s';", name, name);
-    sta = statementscm (conp, stmt);
+    sta = statementscm_no_data (conp, stmt);
     free((void *)stmt);
     stmt = NULL;
     if (sta != 0)
@@ -95,11 +95,11 @@ static int restoreState (scmcon *conp, scm *scmp)
     if ( stmt == NULL )
       return(ERR_SCM_NOMEM);
     snprintf (stmt, leen, "delete from %s;", name);
-    sta = statementscm (conp, stmt);
+    sta = statementscm_no_data (conp, stmt);
     snprintf (stmt, leen, "load data infile 'backup_%s' into table %s;", name, name);
     free((void *)stmt);
     stmt = NULL;
-    sta = statementscm (conp, stmt);
+    sta = statementscm_no_data (conp, stmt);
     if (sta != 0)
       log_msg(LOG_ERR,
 	      "Could not restore to table %s from file backup_%s", name, name);
@@ -478,9 +478,11 @@ static char *sock1line(int s, char **leftp)
   ptr = hasoneline(left, &next);
   if ( ptr != NULL )
     {
+      free((void *)*leftp);
       *leftp = next;
       return(ptr);
     }
+  free((void *)*leftp);
   *leftp = left;
   return(NULL);
 }
@@ -701,6 +703,7 @@ static int sockline(scm *scmp, scmcon *conp, int s)
 	}
       free((void *)ptr);
     }
+  free((void*)left);
   return(sta);
 }
 
