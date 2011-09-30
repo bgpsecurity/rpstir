@@ -551,8 +551,8 @@ Procedure:
       else if (!strncmp(cc, "Xaia ", 5))
         {
         cc = nextword(cc);
-        Xaia = (char *)calloc(1, strlen(cc));
-        strncpy(Xaia, cc, strlen(cc));
+        Xaia = (char *)calloc(1, strlen(cc) + 1);
+        strncpy(Xaia, cc, strlen(cc) + 1);
         }
       else
         {
