@@ -369,7 +369,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp,
       else write_objid(&polInfop->policyIdentifier, Xcp);
       }
     }
-  if (Xaia && *Xaia != 'C' && Xaia[1] > 0)
+  if (Xaia && *Xaia != 'C' && Xaia[0] != 0 && Xaia[1] > 0)
     {
     textp = find_extn(paracertp, id_pkix_authorityInfoAccess, 1);
     clear_casn(&textp->extnValue.self);
