@@ -65,7 +65,7 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
   addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
   addFlagTest(msg, SCM_FLAG_CA, 1, 1);
   snprintf(msg + strlen(msg), 600, ";");
-  return statementscm (conp, msg);
+  return statementscm_no_data (conp, msg);
 }
 
 /*
@@ -79,7 +79,7 @@ static int handleIfCurrent (scmcon *conp, scmsrcha *s, int cnt)
   if (cnt == 0) return 0;   // exists another crl that is current
   snprintf (msg, 128, "update %s set flags = flags - %d where local_id=%d;",
            certTable->tabname, SCM_FLAG_STALECRL, theID);
-  return statementscm (conp, msg);
+  return statementscm_no_data (conp, msg);
 }
 
 /*
@@ -122,7 +122,7 @@ static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
 	    "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
 	    tab->tabname, SCM_FLAG_STALEMAN,
 	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
-  return statementscm (conp, staleManStmt);
+  return statementscm_no_data (conp, staleManStmt);
 }
 
 static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
@@ -146,7 +146,7 @@ static int handleFreshMan2(scmcon *conp, scmtab *tab, char *files)
 	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
 	    tab->tabname, SCM_FLAG_STALEMAN,
 	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
-  return statementscm (conp, staleManStmt);
+  return statementscm_no_data (conp, staleManStmt);
 }
 
 int main(int argc, char **argv) 
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
   // write timestamp into database
   snprintf (msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
 	    metaTable->tabname, currTimestamp);
-  status = statementscm (connect, msg);
+  status = statementscm_no_data (connect, msg);
 
   log_close();
   return 0;

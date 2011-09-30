@@ -674,7 +674,7 @@ int main(int argc, char **argv)
   table = findtablescm (scmp, "metadata");
   snprintf (msg, sizeof(msg), "update %s set ch_last=\"%s\";",
 	    table->tabname, currTimestamp);
-  status = statementscm (connect, msg);
+  status = statementscm_no_data (connect, msg);
 
   // Increment chase depth
   chaseDepth++;

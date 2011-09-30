@@ -214,7 +214,7 @@ insertscm(), above.
 
 2.1.14 int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
 	             sqlcountfunc cnter, sqlvaluefunc valer,
-	             int what)
+	             int what, char *orderp)
 
 This function performs an SQL SELECT operation on the database table
 specified by "tabp" over the database connection "conp". The search
@@ -304,7 +304,7 @@ set of rows is being passed to the value callback. Thus, if there are five
 matching rows the value function will be called five times with "idx" set
 respectively to 0, 1, 2, 3 and then 4.
 
-The final ingredient in the scmsrcha data structure is the "what" element.
+The next member in the scmsrcha data structure is the "what" element.
 This element is a bitfield of how to perform the search.  This is an OR of
 one or more of the following flags:
 
@@ -346,13 +346,19 @@ the certificate, CRL and ROA tables), then an SQL JOIN will be performed with
 the directory table. This flag should only be set if the directory id member
 (dir_id) is one of the columns in the search or display criteria.
 
+"orderp" is the last member in scmsrcha.  It is the order-by clause of a sql
+select statement.
+
 2.1.15 scmsrcha *newsrchscm(char *name, int leen, int cleen);
 
-This utility routine can be used to initialize a scmsrcha pointer. "name"
-is the user-defined name for this search, which can be NULL. "leen" is the
-number of entries in the "vec" array to allocate, and "cleen" is the number
-of bytes to allocate for "context". On success this function returns a non-NULL
-pointer to a new search structure. On failure it returns NULL.
+This utility routine can be used to initialize a scmsrcha pointer.
+"name" is the user-defined name for this search, which can be NULL.
+"leen" is the number of entries in the "vec" array to allocate.
+"cleen" is the number of bytes to allocate for "context", which affects data
+passing between searchscm() and the callback functions passed to it.
+TODO explain "includeWhereStr" here.
+On success this function returns a non-NULL pointer to a new search
+structure. On failure it returns NULL.
 
 2.1.16 int addcolsrchscm(scmsrcha *srch, char *colname, int sqltype,
 	                 unsigned valsize)

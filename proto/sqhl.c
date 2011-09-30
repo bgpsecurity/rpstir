@@ -597,7 +597,7 @@ static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
 		 "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
 		 theCertTable->tabname, valu, ski, subj);
 //  (void)printf("SET: %s\n", stmt);
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
 //  (void)printf("Statementscn returns %d\n", sta);
   return sta;
 }
@@ -615,7 +615,7 @@ static int set_roa_sigval(scmcon *conp, char *ski, int valu)
 		 "update %s set sigval=%d where ski=\"%s\";",
 		 theROATable->tabname, valu, ski);
 //  (void)printf("SET: %s\n", stmt);
-  sta = statementscm(conp, stmt);
+  sta = statementscm_no_data(conp, stmt);
 //  (void)printf("Statementscn returns %d\n", sta);
   return sta;
 }
@@ -1335,6 +1335,7 @@ static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
   if ( sta == SIGVAL_VALID )
     {
 //      (void)printf("ALREADY validated this ROA!\n");
+      *chainOK = 1;
       return 0;
     }
 // next call the syntactic verification
@@ -1358,8 +1359,12 @@ static int verify_roa(scmcon *conp, struct ROA *r, char *ski, int *chainOK)
     }
   X509_free(cert);
 //  (void)printf("VERIFY_ROA %d\n", sta);
-  if ( sta >= 0 )
-    set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
+  if ( sta >= 0 ) {
+    sta = set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
+    if (sta < 0)
+      log_msg(LOG_ERR, "could not set ROA sigval: conp->mystat.errmsg = %s",
+	      conp->mystat.errmsg);
+  }
   return (sta < 0) ? sta : 0;
 }
 
@@ -1376,7 +1381,7 @@ static int updateValidFlags(scmcon *conp, scmtab *tabp, unsigned int id,
     (prevFlags | SCM_FLAG_NOCHAIN);
   snprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
 	   tabp->tabname, flags, id);
-  return statementscm(conp, stmt);
+  return statementscm_no_data(conp, stmt);
 }
 
 // Used by rpwork
@@ -1385,7 +1390,7 @@ int set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags)
   char stmt[150];
   snprintf (stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
 	    theCertTable->tabname, flags, id);
-  return statementscm (conp, stmt);
+  return statementscm_no_data (conp, stmt);
   }
 
 static struct goodoid goodoids[3];
@@ -1620,7 +1625,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 		       tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
 	      free((void *)h);
 	    }
-	  statementscm(conp, flagStmt);
+	  statementscm_no_data(conp, flagStmt);
 	}
       else
 	{
@@ -2065,6 +2070,8 @@ static struct Extension *find_extension(struct Certificate *certp, char *idp)
  * do the work of add_cert(). Factored out so we can call it from elsewhere.
  *
  * We should eventually merge this with add_cert_internal()
+ *
+ * Note: caller is responsible for invoking freecf(cf).
  */
 
 static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
@@ -2096,7 +2103,6 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     delete_casn(&cert.self);
     if (locerr)
       {
-      freecf(cf);
       X509_free(x);
       return(locerr < 0) ?locerr: ERR_SCM_NOTSS;
       }
@@ -2146,7 +2152,6 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   if (! (cf->flags & SCM_FLAG_TRUSTED)) {
     X509_free(x);
   }
-  freecf(cf);
   return(sta);
 }
 
@@ -2178,8 +2183,11 @@ int add_cert(scm *scmp, scmcon *conp, char *outfile, char *outfull,
       return(sta);
     }
   useParacerts = constraining;
-  return add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull,
+  sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull,
     (typ == OT_ETA)? 0: 1);
+  freecf(cf);
+  cf = NULL;
+  return sta;
 }
 
 /*
@@ -2312,6 +2320,7 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
   strcat(strcpy(pathname, cc), "/EEcertificates");
   if (stat(pathname, &statbuf)) mkdir(pathname, 0777);
   int lth = strlen(pathname) - 15; // not counting /EEcertificates
+  free((void *)cc);
   cc = &outdir[lth];
 
   if (*cc)
@@ -2367,7 +2376,8 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     else if (!sta && (cf->flags & SCM_FLAG_VALIDATED)) sta = 1;
     }
   x509p = NULL;		/* freed by add_cert_2 */
-  cf = NULL;			/* freed by add_cert_2 */
+  freecf(cf);
+  cf = NULL;
   return sta;
   }
 
@@ -3235,6 +3245,8 @@ int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     char *c = retrieve_tdir(scmp, conp, &sta);
     int lth = strlen(c);  // lth of tdir
     strcat(strcpy(noutfull, c), "/EEcertificates");
+    free((void *)c);
+    c = NULL;
     findorcreatedir(scmp, conp, noutfull, &ndir_id);
     strcpy(noutdir, noutfull);
     strcat(noutdir, &outdir[lth]);
