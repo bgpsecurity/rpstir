@@ -1884,7 +1884,7 @@ skip:
  *  of EE, CA, and TA certs in the resource cert profile     *
  ************************************************************/
 
-static int rescert_ski_chk(X509 *x, Certificate certificate)
+static int rescert_ski_chk(X509 *x)
 {
 
   int ski_flag = 0;
@@ -1912,9 +1912,13 @@ static int rescert_ski_chk(X509 *x, Certificate certificate)
   } else if (ski_flag > 1) {
     log_msg(LOG_ERR, "[ski] multiple instances of ski extension");
     return(ERR_SCM_DUPSKI);
-  } else {
-    return(0);
   }
+  if (0 /* TODO: check ski hash */) {
+    log_msg(LOG_ERR, "invalid ski hash value");
+    return(ERR_SCM_INVALSKI);
+  }
+
+  return(0);
 skip:
   log_msg(LOG_DEBUG, "[ski]jump to return...");
   return(ret);
@@ -1937,7 +1941,7 @@ static int rescert_aki_chk(X509 *x, int ct)
   int i;
   int ex_nid;
   int ret = 0;
-  int *crit = INT_MIN;
+  int crit = INT_MIN;
   X509_EXTENSION  *ex = NULL;
   AUTHORITY_KEYID *akid = NULL;
 
@@ -1954,7 +1958,7 @@ static int rescert_aki_chk(X509 *x, int ct)
         goto skip;
       }
 
-      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
+      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, NULL);
       if (!akid) {
           if (crit == -2) {  /* extension occurs more than once */
               log_msg(LOG_ERR, "[aki] duplicate aki found");
@@ -2799,65 +2803,65 @@ int rescert_profile_chk(X509 *x, int ct, int checkRPKI)
     return(ERR_SCM_BADEXT);
 
   ret = rescert_flags_chk(x, ct);
-  debug_chk_printf("rescert_flags_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_flags_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_version_chk(x);
-  debug_chk_printf("rescert_version_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_version_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_basic_constraints_chk(x, ct);
-  debug_chk_printf("rescert_basic_constraints_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_basic_constraints_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_ski_chk(x);
-  //debug_chk_printf("rescert_ski_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_ski_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_aki_chk(x, ct);
-  debug_chk_printf("rescert_aki_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_aki_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_key_usage_chk(x);
-  debug_chk_printf("rescert_key_usage_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_key_usage_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_crldp_chk(x, ct);
-  debug_chk_printf("rescert_crldp_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_crldp_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_aia_chk(x, ct);
-  debug_chk_printf("rescert_aia_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_aia_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_sia_chk(x, ct);
-  debug_chk_printf("rescert_sia_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_sia_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_cert_policy_chk(x);
-  debug_chk_printf("rescert_cert_policy_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_cert_policy_chk");
   if ( ret < 0 )
     return(ret);
 
   if (checkRPKI)
     {
     ret = rescert_ip_asnum_chk(x);
-    debug_chk_printf("rescert_ip_asnum_chk", ret, ct);
+    log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
     }
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_criticals_chk(x);
-  debug_chk_printf("rescert_criticals_chk", ret, ct);
+  log_msg(LOG_DEBUG, "rescert_criticals_chk");
   if ( ret < 0 )
     return(ret);
 
