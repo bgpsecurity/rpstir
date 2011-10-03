@@ -23,7 +23,7 @@
 AM_CFLAGS = -g -I../cg/asn -I../proto -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib \
 	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
 
-LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
+LDADD = libpdu.a ../proto/librpki.a ../cg/casn/libcasn.a ../utils/libutils.a
 
 bin_PROGRAMS = testClient server doUpdate sampleClient
 noinst_LIBRARIES = libpdu.a

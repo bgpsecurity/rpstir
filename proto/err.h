@@ -139,8 +139,10 @@
 #define ERR_SCM_SMALLKEY    -110        /* key too small */
 #define ERR_SCM_ASN1_LTH    -111        /* invalid ASN.1 length */
 #define ERR_SCM_EXPIRED     -112        /* certificate expired */
+#define ERR_SCM_BADSUBJECT  -113        /* invalid subject name */
+#define ERR_SCM_BADISSUER   -114        /* invalid issuer name */
 
-#define ERR_SCM_MAXERR      -112
+#define ERR_SCM_MAXERR      -114
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

@@ -2008,7 +2008,7 @@ static int rescert_aki_chk(X509 *x, int ct)
   int i;
   int ex_nid;
   int ret = 0;
-  int *crit = INT_MIN;
+  int crit = INT_MIN;
   X509_EXTENSION  *ex = NULL;
   AUTHORITY_KEYID *akid = NULL;
 
@@ -2919,11 +2919,35 @@ static int rescert_criticals_chk(X509 *x)
   return(0);
 }
 
+static int check_name(struct RDNSequence *rdnseqp)
+  {
+  int i, j, k, l, cnames = 0;
+  if ((i = num_items(&rdnseqp->self)) > 2) return -1;
+  for (j = 0; j < i; j++)
+    {
+    struct RelativeDistinguishedName *rdnp =
+      (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, j);
+    if ((k = num_items(&rdnp->self)) > 2) return -1;
+    for (l = 0; l < k; l++)
+      {
+      struct AttributeValueAssertion *avap =
+        (struct AttributeValueAssertion *)member_casn(&rdnp->self, l);
+      if (!diff_objid(&avap->objid, id_commonName)) cnames++;
+      else if (diff_objid(&avap->objid, id_serialNumber)) return -1;
+      }
+    }
+  if (cnames > 1 || !cnames) return -1;
+  return 0;
+  }
+
+
 /**********************************************************
  * profile_check(X509 *, int cert_type)                   *
  *  This function makes sure the required base elements   *
  *  are present within the certificate.                   *
  *   cert_type can be one of CA_CERT, EE_CERT, TA_CERT    *
+ *                                                        *
+ *  Issuer and subject names must conform                 *
  *                                                        *
  *  Basic Constraints - critical MUST be present          *
  *    path length constraint MUST NOT be present          *
@@ -2967,7 +2991,7 @@ static int rescert_criticals_chk(X509 *x)
  *   marked as critical                                   *
  *********************************************************/
 
-int rescert_profile_chk(X509 *x, int ct, int checkRPKI)
+int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPKI)
 {
   int ret = 0;
 
@@ -2993,6 +3017,9 @@ int rescert_profile_chk(X509 *x, int ct, int checkRPKI)
 #endif
   if ( ret < 0 )
     return(ret);
+
+  if (check_name(&certp->toBeSigned.issuer.rDNSequence) < 0) return ERR_SCM_BADISSUER;
+  else if (check_name(&certp->toBeSigned.subject.rDNSequence)) return ERR_SCM_BADSUBJECT;
 
   ret = rescert_basic_constraints_chk(x, ct);
 #ifdef DEBUG
