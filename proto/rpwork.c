@@ -25,21 +25,22 @@
 
 extern struct done_certs done_certs;
 
-static char Xvalidity_dates[40];
-static scm *locscmp;
-static scmcon *locconp;
+static char Xvalidity_dates[40] = "";
+static scm *locscmp = NULL;
+static scmcon *locconp = NULL;
 struct Certificate myrootcert;
-char myrootfullname[PATH_MAX];
+char myrootfullname[PATH_MAX] = "";
 struct ipranges certranges, ruleranges, lessranges, fromranges;
-char errbuf[160]; 
-char currskibuf[SKIBUFSIZ], nextskibuf[SKIBUFSIZ], skibuf[SKIBUFSIZ];
+char errbuf[160] = "";
+char currskibuf[SKIBUFSIZ] = "", nextskibuf[SKIBUFSIZ] = "", skibuf[SKIBUFSIZ] = "";
 
-char *Xcrldp;
-char *Xcp;
-char *Xrpdir;
-unsigned int XrpdirId;
+char *Xaia = NULL;
+char *Xcrldp = NULL;
+char *Xcp = NULL;
+char *Xrpdir = NULL;
+unsigned int XrpdirId = 0;
 
-int locflags;
+int locflags = 0;
 
 extern struct keyring keyring;
 
