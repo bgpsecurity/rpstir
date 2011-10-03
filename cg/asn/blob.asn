@@ -27,6 +27,112 @@
 
 DEFINITIONS ::= -- explicitly encoded !
 
-IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn;
+IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier FROM 
+    Algorithms IN Algorithms.asn, Name FROM name IN name.asn,
+    Certificate FROM certificate IN certificate.asn;
 
 Blob ::= SIGNED  ANY 
+
+CMSBlob ::= SEQUENCE {
+        contentType ContentType TABLE ContentTable,
+        content [0] EXPLICIT ANY DEFINED BY contentType }
+
+      ContentType ::= OBJECT IDENTIFIER
+
+      OID ::= OBJECT IDENTIFIER
+      pkcs OID ::= {1.2.840.113549.1}
+
+      pkcs-7 OID ::= {pkcs 7 }
+
+      pkcs-9 OID ::= {pkcs 9}
+
+      id-signedData OBJECT IDENTIFIER ::= { pkcs-7 2 }
+
+
+      ContentTable ::= TABLE {
+        signedData id-signedData SignedData }
+
+      SignedData ::= SEQUENCE {
+        version CMSVersion,
+        digestAlgorithms DigestAlgorithmIdentifiers,
+        encapContentInfo EncapsulatedContentInfo,
+        certificates [0] IMPLICIT CertificateSet OPTIONAL,
+        crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+        signerInfos SignerInfos }
+
+      CMSVersion ::= INTEGER (3..3)
+        {
+--      v0 (0),
+--      v1 (1),
+        v3 (3)
+--      } (v3 | 3)
+        }
+
+      DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF CMSAlgorithmIdentifier
+
+      CertificateSet ::= SET (SIZE (0..1)) OF Certificate
+
+      RevocationInfoChoices ::= SET OF NULL
+
+
+     EncapsulatedContentInfo ::= SEQUENCE {
+        eContentType ContentType TABLE EContentTable,
+        eContent [0] EXPLICIT OCTET STRING DEFINED BY eContentType }
+
+      EContentTable ::= TABLE {
+        unknown  0xFFFF ANY }
+
+      SignerInfos ::= SET (SIZE (1..1)) OF SignerInfo
+
+      SignerInfo ::= SEQUENCE {
+        version CMSVersion, -- Value check
+        sid SignerIdentifier,
+        digestAlgorithm CMSAlgorithmIdentifier,
+        signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+        signatureAlgorithm SignatureAlgorithmIdentifier,
+        signature SignatureValue,
+        unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+
+      id-contentTypeAttr OBJECT IDENTIFIER ::= { pkcs-9 3 }
+      id-messageDigestAttr OBJECT IDENTIFIER ::= { pkcs-9 4 }
+      id-signingTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 5 }
+      id-binSigningTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 16.2.46 }
+
+      SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+
+      UnsignedAttributes ::= SET SIZE (0..0) OF Attribute
+
+      Attribute ::= SEQUENCE {
+        attrType OBJECT IDENTIFIER TABLE AttrTable,
+        attrValues AttributeValues }
+
+      AttributeValues ::= SET SIZE (1..1) OF ANY DEFINED BY attrType IN Attribute
+
+    AttrTable ::= TABLE {
+      contentType  id-contentTypeAttr OBJECT IDENTIFIER,
+      messageDigest id-messageDigestAttr OCTET STRING,
+      signingTime  id-signingTimeAttr SigningTime,
+      binSigningTime id-binSigningTimeAttr INTEGER,
+      ignored 0xFFFF ANY }
+
+    SigningTime ::= CHOICE {
+      utcTime     UTCTime,
+      generalizedTime GeneralizedTime }
+
+
+--      AttributeValue ::= ANY
+
+      SignatureAlgorithmIdentifier ::= RPKIAlgorithmIdentifier
+
+      SignerIdentifier ::= CHOICE {
+        issuerAndSerialNumber IssuerAndSerialNumber,
+        subjectKeyIdentifier [0] SubjectKeyIdentifier }
+
+      IssuerAndSerialNumber ::= SEQUENCE {
+        issuer Name,
+        serialNumber INTEGER }
+
+      SignatureValue ::= OCTET STRING
+
+      SubjectKeyIdentifier ::= OCTET STRING
+
