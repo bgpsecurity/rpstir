@@ -26,7 +26,7 @@ bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	extractCMScert add_cms_cert test_cert makeLTAtest checkLTAtest \
         dumpIPAddr update_cert extractPubKeyInfo get_sernum put_sernum \
 	extractSIA extractValidityDate fix_manifest check_signature \
-        put_subj put_sia
+        put_subj put_sia add_cms_cert_no_check
 
 AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
 	-I../../proto -I../../utils
@@ -65,6 +65,8 @@ extractCMScert_SOURCES = extractCMScert.c
 extractCMScert_LDFLAGS = $(LIBS)
 add_cms_cert_SOURCES = add_cms_cert.c
 add_cms_cert_LDFLAGS = $(LIBS)
+add_cms_cert_no_check_SOURCES = add_cms_cert_no_check.c
+add_cms_cert_no_check_LDFLAGS = $(LIBS)
 test_cert_SOURCES = test_cert.c
 test_cert_LDFLAGS = $(LIBS)
 makeLTAtest_SOURCES = makeLTAtest.c
