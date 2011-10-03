@@ -101,8 +101,8 @@ Explanation of inputs, not in original order:
 
 Outputs:
   child CA certificate - inherits AS/IP resources from parent via inherit bit
-  path files - manual edits are saved as diff output in
-              'badCRL<subjectname>.stageN.patch' (N=0..1)
+  patch files - manual edits are saved as diff output in
+                'badCRL<subjectname>.stageN.patch' (N=0..1)
 
   child repo directory - ASSUMED to be a subdirectory of parent's repo. The
                          new directory will be <outdir>/<subjectname>/

@@ -2,6 +2,8 @@
   $Id$
 */
 
+/** @file */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * 
  * BBN Address and AS Number PKI Database/repository software
@@ -1562,55 +1564,6 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
   return(cf);
 }
 
-/*
-  Profile checking code by Mudge
-*/
-
-#ifdef DEBUG
-
-static void debug_chk_printf(char *str, int val, int cert_type)
-{
-  char *ta_cert_str = "TA_CERT";
-  char *ca_cert_str = "CA_CERT";
-  char *ee_cert_str = "EE_CERT";
-  char *un_cert_str = "UNK_CERT";
-  char *cert_str;
-  char *val_str;
-  char other_val_str[32];
-  char other_cert_str[32];
-
-  cert_str = val_str = NULL;
-  memset(other_cert_str, '\0', sizeof(other_cert_str));
-  memset(other_val_str, '\0', sizeof(other_val_str));
-
-  switch(cert_type) {
-    case CA_CERT:
-      cert_str = ca_cert_str;
-      break;
-    case TA_CERT:
-      cert_str = ta_cert_str;
-      break;
-    case EE_CERT:
-      cert_str = ee_cert_str;
-      break;
-    case UN_CERT:
-      cert_str = un_cert_str;
-      break;
-    default:
-      snprintf(other_cert_str, sizeof(other_cert_str) - 1,
-               "cert type val: %d (\?\?)", cert_type);
-      cert_str = other_cert_str;
-      break;
-  }
-
-  snprintf(other_val_str, sizeof(other_val_str) - 1,
-	   "%d", val);
-  val_str = other_val_str;
-
-  log_msg(LOG_ERR, "%s returned: %s [against: %s]", str, val_str, cert_str);
-}
-
-#endif
 
 /*************************************************************
  * This is a minimal modification of                         *
@@ -1807,9 +1760,7 @@ static int rescert_version_chk(X509 *x)
   l = X509_get_version(x);
   /* returns the value which is 2 to denote version 3 */
 
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
-#endif
   if (l != 2)  /* see above: value of 2 means v3 */
     return(ERR_SCM_BADVERS);
   else
@@ -1852,10 +1803,8 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
   switch(ct) {
 
     case UN_CERT:
-#ifdef DEBUG
       /* getting here means we couldn't figure it out above.. */
       log_msg(LOG_ERR, "couldn't determine cert_type to test against");
-#endif
       return(ERR_SCM_INVALARG);
       break;
 
@@ -1871,30 +1820,24 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
           basic_flag++;
    
           if (!X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
             log_msg(LOG_ERR,
 		    "[basic_const] CA_CERT: basic_constraints NOT critical!");
-#endif
             ret = ERR_SCM_NCEXT;
             goto skip;
           }
 
           bs=X509_get_ext_d2i(x, NID_basic_constraints, NULL, NULL);
           if (!(bs->ca)) {
-#ifdef DEBUG
             log_msg(LOG_ERR,
 		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
-#endif
             ret = ERR_SCM_NOTCA;
             goto skip;
           }
 
           if (bs->pathlen) {
-#ifdef DEBUG
             log_msg(LOG_ERR,
 		    "[basic_const] basic constraints pathlen present "
 		    "- profile violation");
-#endif
             ret = ERR_SCM_BADPATHLEN;
             goto skip;
           }
@@ -1904,14 +1847,10 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
         }
      }
      if (basic_flag == 0) {
-#ifdef DEBUG
        log_msg(LOG_ERR, "[basic_const] basic_constraints not present");
-#endif
        return(ERR_SCM_NOBC);
      } else if (basic_flag > 1) {
-#ifdef DEBUG
        log_msg(LOG_ERR, "[basic_const] multiple instances of extension");
-#endif
        return(ERR_SCM_DUPBC);
      } else {
        return(0);
@@ -1930,9 +1869,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
     break;
   }
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[basic_const] jump to return...");
-#endif
   if (bs)
     BASIC_CONSTRAINTS_free(bs);
   return(ret);
@@ -1944,7 +1881,7 @@ skip:
  *  Subject Key Identifier - non-critical MUST be present    *
  *                                                           *
  *  We don't do anything with the cert_type as this is true  *
- *  of EE, CA, and TA certs in the resrouce cert profile     *
+ *  of EE, CA, and TA certs in the resource cert profile     *
  ************************************************************/
 
 static int rescert_ski_chk(X509 *x)
@@ -1963,31 +1900,27 @@ static int rescert_ski_chk(X509 *x)
     if (ex_nid == NID_subject_key_identifier) {
       ski_flag++;
       if (X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "SKI marked as critical, profile violation");
-#endif
         ret = ERR_SCM_CEXT;
         goto skip;
       }
     }
   }
   if (ski_flag == 0) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[ski] ski extension missing");
-#endif
     return(ERR_SCM_NOSKI);
   } else if (ski_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[ski] multiple instances of ski extension");
-#endif
     return(ERR_SCM_DUPSKI);
-  } else {
-    return(0);
   }
+  if (0 /* TODO: check ski hash */) {
+    log_msg(LOG_ERR, "invalid ski hash value");
+    return(ERR_SCM_INVALSKI);
+  }
+
+  return(0);
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[ski]jump to return...");
-#endif
   return(ret);
 }
 
@@ -2020,34 +1953,24 @@ static int rescert_aki_chk(X509 *x, int ct)
       aki_flag++;
 
       if (X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[aki] critical, profile violation");
-#endif
         ret = ERR_SCM_CEXT;
         goto skip;
       }
 
-      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
+      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, NULL);
       if (!akid) {
           if (crit == -2) {  /* extension occurs more than once */
-#ifdef DEBUG
               log_msg(LOG_ERR, "[aki] duplicate aki found");
-#endif
               return(ERR_SCM_DUPAKI);
           }
           if (crit == -1) {  /* extension not found */
-#ifdef DEBUG
               log_msg(LOG_ERR, "[aki] aki extension not found");
-#endif
           }
           if (crit >= 0) {   /* extension found but not decoded */
-#ifdef DEBUG
               log_msg(LOG_ERR, "[aki] extension found but not decoded");
-#endif
           } else {
-#ifdef DEBUG
               log_msg(LOG_ERR, "[aki] could not load aki");
-#endif
           }
 
         return(ERR_SCM_NOAKI);
@@ -2056,27 +1979,21 @@ static int rescert_aki_chk(X509 *x, int ct)
       /* Key Identifier sub field MUST be present in any certs that
 	 have an AKI */
       if (!akid->keyid) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[aki] key identifier sub field not present");
-#endif
         ret = ERR_SCM_NOAKI;
         goto skip;
       }
 
       if (akid->issuer) {
-#ifdef DEBUG
         log_msg(LOG_ERR,
                 "[aki_chk] authorityCertIssuer is present = violation");
-#endif
         ret = ERR_SCM_ACI;
         goto skip;
       }
 
       if (akid->serial) {
-#ifdef DEBUG
         log_msg(LOG_ERR,
                 "[aki_chk] authorityCertSerialNumber is present = violation");
-#endif
         ret = ERR_SCM_ACSN;
         goto skip;
       }
@@ -2090,23 +2007,17 @@ static int rescert_aki_chk(X509 *x, int ct)
     }
 
   if (aki_flag == 0 && ct != TA_CERT) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[aki_chk] missing AKI extension");
-#endif
     return(ERR_SCM_NOAKI);
   } else if (aki_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[aki_chk] duplicate AKI extensions");
-#endif
     return(ERR_SCM_DUPAKI);
   } else {
     return(0);
   }
 
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[aki]jump to return...");
-#endif
   if (akid)
     AUTHORITY_KEYID_free(akid);
   return(ret);
@@ -2136,9 +2047,7 @@ static int rescert_key_usage_chk(X509 *x)
     if (ex_nid == NID_key_usage) {
       kusage_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[kusage] not marked critical, violation");
-#endif
         ret = ERR_SCM_NCEXT;
         goto skip;
       }
@@ -2156,23 +2065,17 @@ static int rescert_key_usage_chk(X509 *x)
   }
 
   if (kusage_flag == 0) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[key_usage] missing Key Usage extension");
-#endif
     return(ERR_SCM_NOKUSAGE);
   } else if (kusage_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[key_usage] multiple key_usage extensions");
-#endif
     return(ERR_SCM_DUPKUSAGE);
   } else {
     return(0);
   }
 
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[key_usage] jump to...");
-#endif
   return(ret);
 }
 
@@ -2211,18 +2114,14 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  crldp_flag++;
 #ifdef notdef  // MCR removed this test
 	  if (ct == TA_CERT) {
-#ifdef DEBUG
 	    log_msg(LOG_ERR, "[crldp] crldp found in self-signed cert");
-#endif
 	    ret = ERR_SCM_CRLDPTA;
 	    goto skip;
 	  }
 #endif
 	  if ( X509_EXTENSION_get_critical(ex) )
 	    {
-#ifdef DEBUG
 	      log_msg(LOG_ERR, "[crldp] marked critical, violation");
-#endif
 	      ret = ERR_SCM_CEXT;
 	      goto skip;
 	    }
@@ -2235,9 +2134,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  ret = 0;
 	  goto skip;
 	}
-#ifdef DEBUG
       log_msg(LOG_ERR, "[crldp] missing crldp extension");
-#endif
       return(ERR_SCM_NOCRLDP);
     }
 /*
@@ -2247,9 +2144,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
   crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, NULL, NULL);
   if ( !crldp )
     {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[crldp] could not retrieve crldp extension");
-#endif
       return(ERR_SCM_NOCRLDP);
     }
   ncrldp = sk_DIST_POINT_num(crldp);
@@ -2259,9 +2154,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
       if (dist_st->reasons || dist_st->CRLissuer || !dist_st->distpoint
 	  || dist_st->distpoint->type != 0)
 	{
-#ifdef DEBUG
 	  log_msg(LOG_ERR, "[crldp] incorrect crldp sub fields");
-#endif
 	  ret = ERR_SCM_CRLDPSF;
 	  goto skip;
 	}
@@ -2270,18 +2163,14 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	  gen_name = sk_GENERAL_NAME_value(dist_st->distpoint->name.fullname, i);
 	  if ( !gen_name )
 	    {
-#ifdef DEBUG
 	      log_msg(LOG_ERR, "[crldp] error retrieving distribution point name");
-#endif
 	      ret = ERR_SCM_CRLDPNM;
 	      goto skip;
 	    }
     /* all of the general names must be of type URI */
 	  if ( gen_name->type != GEN_URI )
 	    {
-#ifdef DEBUG
 	      log_msg(LOG_ERR, "[crldp] general name of non GEN_URI type found");
-#endif
 	      ret = ERR_SCM_BADCRLDP;
 	      goto skip;
 	    }
@@ -2295,9 +2184,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
     }
   if ( uri_flag == 0 )
     {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[crldp] no general name of type URI");
-#endif
       ret = ERR_SCM_CRLDPNM;
       goto skip;
     }
@@ -2311,9 +2198,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
       return(0);
     }
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[crldp] jump to return...");
-#endif
   if ( crldp )
     sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
   return(ret);
@@ -2351,9 +2236,7 @@ static int rescert_aia_chk(X509 *x, int ct)
       info_flag++;
 
       if (X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[aia] marked critical, violation");
-#endif
         ret = ERR_SCM_CEXT;
         goto skip;
       }
@@ -2366,15 +2249,11 @@ static int rescert_aia_chk(X509 *x, int ct)
       ret = 0;
       goto skip;
     } else {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[aia] missing aia extension");
-#endif
       return(ERR_SCM_NOAIA);
     }
   } else if (info_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[aia] multiple aia extensions");
-#endif
     return(ERR_SCM_DUPAIA);
   }
 
@@ -2389,26 +2268,20 @@ static int rescert_aia_chk(X509 *x, int ct)
 
   aia = X509_get_ext_d2i(x, NID_info_access, NULL, NULL);
   if (!aia) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[aia] could not retrieve aia extension");
-#endif
     return(ERR_SCM_NOAIA);
   }
 
   for (i=0; i < sk_ACCESS_DESCRIPTION_num(aia); i++) {
     adesc = sk_ACCESS_DESCRIPTION_value(aia, i);
     if (!adesc) {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[aia] error retrieving access description");
-#endif
       ret = ERR_SCM_NOAIA;
       goto skip;
     }
     /* URI form of object identification in AIA */
     if (adesc->location->type != GEN_URI) {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[aia] access type of non GEN_URI found");
-#endif
       ret = ERR_SCM_BADAIA;
       goto skip;
     }
@@ -2422,9 +2295,7 @@ static int rescert_aia_chk(X509 *x, int ct)
   }
 
   if (uri_flag == 0) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[aia] no aia name of type URI rsync"); 
-#endif
     ret = ERR_SCM_BADAIA;
     goto skip;
   } else {
@@ -2433,9 +2304,7 @@ static int rescert_aia_chk(X509 *x, int ct)
   }
 
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[aia] jump to return...");
-#endif
   if (aia)
     sk_ACCESS_DESCRIPTION_pop_free(aia, ACCESS_DESCRIPTION_free);
   return(ret);
@@ -2475,13 +2344,10 @@ static int rescert_sia_chk(X509 *x, int ct)
       sinfo_flag++;
 
       if (X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[sia] marked critical, violation");
-#endif
         ret = ERR_SCM_CEXT;
         goto skip;
       }
-
     }
   }
 
@@ -2490,15 +2356,11 @@ static int rescert_sia_chk(X509 *x, int ct)
       ret = 0;
       goto skip;
     } else {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[sia] missing sia extension");
-#endif
       return(ERR_SCM_NOSIA);
     }
   } else if (sinfo_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[sia] multiple sia extensions");
-#endif
     return(ERR_SCM_DUPSIA);
   }
 
@@ -2516,26 +2378,20 @@ static int rescert_sia_chk(X509 *x, int ct)
 
   sia = X509_get_ext_d2i(x, NID_sinfo_access, NULL, NULL);
   if (!sia) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[sia] could not retrieve sia extension");
-#endif
     return(ERR_SCM_NOSIA);
   }
 
   for (i=0; i < sk_ACCESS_DESCRIPTION_num(sia); i++) {
     adesc = sk_ACCESS_DESCRIPTION_value(sia, i);
     if (!adesc) {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[sia] error retrieving access description");
-#endif
       ret = ERR_SCM_NOSIA;
       goto skip;
     }
     /* URI form of object identification in SIA */
     if (adesc->location->type != GEN_URI) {
-#ifdef DEBUG
       log_msg(LOG_ERR, "[sia] access type of non GEN_URI found");
-#endif
       ret = ERR_SCM_BADSIA;
       goto skip;
     }
@@ -2562,9 +2418,7 @@ static int rescert_sia_chk(X509 *x, int ct)
   }
 
   if (uri_flag == 0) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[sia] no sia name of type URI rsync");
-#endif
     ret = ERR_SCM_BADSIA;
     goto skip;
   } else {
@@ -2573,9 +2427,7 @@ static int rescert_sia_chk(X509 *x, int ct)
   }
 
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[sia] jump to return...");
-#endif
   if (sia)
     sk_ACCESS_DESCRIPTION_pop_free(sia, ACCESS_DESCRIPTION_free);
   return(ret);
@@ -2614,24 +2466,18 @@ static int rescert_cert_policy_chk(X509 *x)
     if (ex_nid == NID_certificate_policies) {
       policy_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[policy] not marked as critical");
-#endif
         ret = ERR_SCM_NCEXT;
         goto skip;
       }
     }
   }
   if (policy_flag == 0) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[policy] policy extension missing");
-#endif
     ret = ERR_SCM_NOPOLICY;
     goto skip;
   } else if (policy_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[policy] multiple instances of policy extension");
-#endif
     ret = ERR_SCM_DUPPOLICY;
     goto skip;
   }
@@ -2640,34 +2486,26 @@ static int rescert_cert_policy_chk(X509 *x)
      and there was only one instance of it. */
   ex_cpols = X509_get_ext_d2i(x, NID_certificate_policies, NULL, NULL);
   if (!ex_cpols) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[policy] policies present but could not retrieve");
-#endif
     ret = ERR_SCM_NOPOLICY;
     goto skip;
   }
 
   if (sk_POLICYINFO_num(ex_cpols) != 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[policy] incorrect number of policies");
-#endif
     ret = ERR_SCM_DUPPOLICY;
     goto skip;
   }
 
   policy = sk_POLICYINFO_value(ex_cpols, 0);
   if (!policy) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[policy] could not retrieve policyinfo");
-#endif
     ret = ERR_SCM_NOPOLICY;
     goto skip;
   }
 
   if (policy->qualifiers) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[policy] must not contain PolicyQualifiers");
-#endif
     ret = ERR_SCM_POLICYQ;
     goto skip;
   }
@@ -2675,18 +2513,14 @@ static int rescert_cert_policy_chk(X509 *x)
   len = i2t_ASN1_OBJECT(policy_id_str, sizeof(policy_id_str), policy->policyid);
 
   if ( (len != policy_id_len) || (strcmp(policy_id_str, oid_policy_id)) ) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "len: %d value: %s\n", len, policy_id_str);
     log_msg(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
-#endif
     ret = ERR_SCM_BADOID;
     goto skip;
   }
 
 skip:
-#ifdef DEBUG
   log_msg(LOG_DEBUG, "[policy] jump to return...");
-#endif
 
   if (ex_cpols)
     sk_POLICYINFO_pop_free(ex_cpols, POLICYINFO_free);
@@ -2717,24 +2551,18 @@ static int rescert_ip_resources_chk(X509 *x)
     if (ex_nid == NID_sbgp_ipAddrBlock) {
       ipaddr_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[IP res] not marked as critical");
-#endif
         return(ERR_SCM_NCEXT);
       }
     }
   }
 
   if (!ipaddr_flag) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[IP res] did not contain IP Resources ext");
     log_msg(LOG_ERR, "could be ok if AS resources are present and correct");
-#endif
     return(0);
   } else if (ipaddr_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[IP res] multiple instances of IP resources extension");
-#endif
     return(ERR_SCM_DUPIP);
   }
 
@@ -2764,24 +2592,18 @@ static int rescert_as_resources_chk(X509 *x)
     if (ex_nid == NID_sbgp_ipAddrBlock) {
       asnum_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
-#ifdef DEBUG
         log_msg(LOG_ERR, "[AS res] not marked as critical");
-#endif
         return(ERR_SCM_NCEXT);
       }
     }
   }
 
   if (!asnum_flag) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[AS res] did not contain IP Resources ext");
     log_msg(LOG_ERR, "could be ok if IP resources are present and correct");
-#endif
     return(0);
   } else if (asnum_flag > 1) {
-#ifdef DEBUG
     log_msg(LOG_ERR, "[AS res] multiple instances of AS resources extension");
-#endif
     return(ERR_SCM_DUPAS);
   }
 
@@ -3005,16 +2827,12 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
     return(ERR_SCM_BADEXT);
 
   ret = rescert_flags_chk(x, ct);
-#ifdef DEBUG
-  debug_chk_printf("rescert_flags_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_flags_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_version_chk(x);
-#ifdef DEBUG
-  debug_chk_printf("rescert_version_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_version_chk");
   if ( ret < 0 )
     return(ret);
 
@@ -3022,75 +2840,55 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   else if (check_name(&certp->toBeSigned.subject.rDNSequence)) return ERR_SCM_BADSUBJECT;
 
   ret = rescert_basic_constraints_chk(x, ct);
-#ifdef DEBUG
-  debug_chk_printf("rescert_basic_constraints_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_basic_constraints_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_ski_chk(x);
-#ifdef DEBUG
-  debug_chk_printf("rescert_ski_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_ski_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_aki_chk(x, ct);
-#ifdef DEBUG
-  debug_chk_printf("rescert_aki_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_aki_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_key_usage_chk(x);
-#ifdef DEBUG
-  debug_chk_printf("rescert_key_usage_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_key_usage_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_crldp_chk(x, ct);
-#ifdef DEBUG
-  debug_chk_printf("rescert_crldp_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_crldp_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_aia_chk(x, ct);
-#ifdef DEBUG
-  debug_chk_printf("rescert_aia_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_aia_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_sia_chk(x, ct);
-#ifdef DEBUG
-  debug_chk_printf("rescert_sia_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_sia_chk");
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_cert_policy_chk(x);
-#ifdef DEBUG
-  debug_chk_printf("rescert_cert_policy_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_cert_policy_chk");
   if ( ret < 0 )
     return(ret);
 
   if (checkRPKI)
     {
     ret = rescert_ip_asnum_chk(x);
-#ifdef DEBUG
-    debug_chk_printf("rescert_ip_asnum_chk", ret, ct);
-#endif
+    log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
     }
   if ( ret < 0 )
     return(ret);
 
   ret = rescert_criticals_chk(x);
-#ifdef DEBUG
-  debug_chk_printf("rescert_criticals_chk", ret, ct);
-#endif
+  log_msg(LOG_DEBUG, "rescert_criticals_chk");
   if ( ret < 0 )
     return(ret);
 
