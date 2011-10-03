@@ -207,9 +207,10 @@ ensure_dir_exists $PATCHES_DIR
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $ROOT_CERT_PATH
 ensure_file_exists $CGTOOLS/rr
+ensure_file_exists $CGTOOLS/dump
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
-ensure_file_exists $CGTOOLS/add_cms_cert
+ensure_file_exists $CGTOOLS/add_cms_cert_no_check
 ensure_file_exists $CONF_SCRIPTS/gen_child_ca.sh
 
 if [ $USE_EXISTING_PATCHES ]
@@ -288,9 +289,9 @@ fi
 # Embed EE into MFT and sign using EE private key
 echo "Embedding EE cert into MFT and signing"
 ${CGTOOLS}/rr <${mft_name}.raw >${mft_name}.mft
-${CGTOOLS}/add_cms_cert ${mft_ee_filename} ${mft_name}.mft \
+${CGTOOLS}/add_cms_cert_no_check ${mft_ee_filename} ${mft_name}.mft \
     ${child_mft_ee_key_path} ${mft_name}.mft
-${CGTOOLS}/dump_smart ${mft_name}.mft > ${mft_name}.raw
+${CGTOOLS}/dump -a ${mft_name}.mft > ${mft_name}.raw
 
 # Stage 2: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]

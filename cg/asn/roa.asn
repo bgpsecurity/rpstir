@@ -211,3 +211,27 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier
       digestAlgorithm OBJECT IDENTIFIER,
       digest OCTET STRING
       }
+
+--  CMS Blob Specification (where eContent can be anything)
+
+    CMSBlob ::= SEQUENCE {
+        contentType ContentType TABLE BlobContentTable,
+        content [0] EXPLICIT ANY DEFINED BY contentType }
+
+    BlobContentTable ::= TABLE {
+        signedData id-signedData BlobSignedData }
+
+    BlobSignedData ::= SEQUENCE {
+        version CMSVersion,
+        digestAlgorithms DigestAlgorithmIdentifiers,
+        encapContentInfo BlobEncapsulatedContentInfo,
+        certificates [0] IMPLICIT CertificateSet OPTIONAL,
+        crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+        signerInfos SignerInfos }
+
+    BlobEncapsulatedContentInfo ::= SEQUENCE {
+        eContentType ContentType TABLE BlobEContentTable,
+        eContent [0] EXPLICIT OCTET STRING DEFINED BY eContentType }
+
+    BlobEContentTable ::= TABLE {
+        unknown 0xFFFF ANY }

@@ -1,4 +1,5 @@
 add_cms_cert
+add_cms_cert_no_check
 add_key_info
 bin_to_six
 checkLTAtest
