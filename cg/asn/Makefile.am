@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-SUFFIXES: .asn
+SUFFIXES = .asn
 
 AM_CFLAGS = -g -Wall -I../casn
 
