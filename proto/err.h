@@ -141,8 +141,9 @@
 #define ERR_SCM_EXPIRED     -112        /* certificate expired */
 #define ERR_SCM_BADSUBJECT  -113        /* invalid subject name */
 #define ERR_SCM_BADISSUER   -114        /* invalid issuer name */
+#define ERR_SCM_INVALAKI    -115        /* invalid AKI */
 
-#define ERR_SCM_MAXERR      -114
+#define ERR_SCM_MAXERR      -115
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

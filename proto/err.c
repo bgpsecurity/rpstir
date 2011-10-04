@@ -149,6 +149,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Certificate expired",          /* ERR_SCM_EXPIRED */
     "Invalid subject name",         /* ERR_SCM_BADSUBJECT */
     "Invalid issuer name",          /* ERR_SCM_BADISSUER */
+    "Invalid AKI",                  /* ERR_SCM_INVALAKI */
   } ;
 
 char *err2string(int err)
