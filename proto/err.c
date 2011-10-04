@@ -147,6 +147,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Key too small",                /* ERR_SCM_SMALLKEY */
     "Invalid indefinite ASN.1 length",  /* ERR_SCM_ASN1_LTH */
     "Certificate expired",          /* ERR_SCM_EXPIRED */
+    "Invalid AKI",                  /* ERR_SCM_INVALAKI */
   } ;
 
 char *err2string(int err)

@@ -1997,6 +1997,13 @@ static int rescert_aki_chk(X509 *x, int ct)
         ret = ERR_SCM_ACSN;
         goto skip;
       }
+
+      // http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8.3
+      if (akid->keyid->length != 160 / 8) {
+        log_msg(LOG_ERR, "[aki] key identifier has %d bytes instead of %d", akid->keyid->length, 160 / 8);
+        ret = ERR_SCM_INVALAKI;
+        goto skip;
+      }
     }
   }
 
