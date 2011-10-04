@@ -2084,15 +2084,22 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   int   x509sta = 0;
 
   cf->dirid = id;
+  struct Certificate cert;
+  Certificate(&cert, (ushort)0);
+  struct Extension *ski_extp, *aki_extp;
+  int locerr = 0;
+  if (get_casn_file(&cert.self, fullpath, 0) < 0) locerr = ERR_SCM_BADCERT;
+  else if (!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)))
+    locerr = ERR_SCM_NOSKI;
+  if (locerr)
+    {
+    delete_casn(&cert.self);
+    freecf(cf);
+    return locerr;
+    }
   if ( utrust > 0 )
     {
-    struct Certificate cert;
-    Certificate(&cert, (ushort)0);
-    struct Extension *ski_extp, *aki_extp;
-    int locerr = 0;
-    if (get_casn_file(&cert.self, fullpath, 0) < 0 ||
-	!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
-	((aki_extp = find_extension(&cert, id_authKeyId)) &&
+    if (((aki_extp = find_extension(&cert, id_authKeyId)) &&
 	 diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
 		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
 	strcmp(cf->fields[CF_FIELD_SUBJECT],
@@ -2100,10 +2107,10 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     else if (vsize_casn(&cert.signature) < 256 ||
 	     vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey)
 	     < 265) locerr = ERR_SCM_SMALLKEY;
-    delete_casn(&cert.self);
     if (locerr)
       {
       X509_free(x);
+      delete_casn(&cert.self);
       return(locerr < 0) ?locerr: ERR_SCM_NOTSS;
       }
     cf->flags |= SCM_FLAG_TRUSTED;
@@ -2113,7 +2120,8 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     ct = TA_CERT;
   else
     ct = ( cf->flags & SCM_FLAG_CA ) ? CA_CERT : EE_CERT;
-  sta = rescert_profile_chk(x, ct, checkRPKI);
+  sta = rescert_profile_chk(x, &cert, ct, checkRPKI);
+  delete_casn(&cert.self);
 // MCR: new code to check for expiration. Ignore this
 // check if "allowex" is non-zero
   if ( (sta == 0) && (allowex == 0) )
