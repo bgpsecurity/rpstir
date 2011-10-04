@@ -188,8 +188,8 @@ CRLs
 
 Manifests
 
-768 MFTWrongType             # wrong CMS type
-769 MFTVersion0              # explicit version 0
+768 MFTWrongType             # wrong eContentType
+769 MFTVersion0              # non-default version 0
 770 MFTVersion1              # version 1
 771 MFTNoNum                 # no manifest number
 772 MFTNegNum                # negative manifest number
