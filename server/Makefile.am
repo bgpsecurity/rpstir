@@ -1,6 +1,4 @@
 #
-# $Id: Makefile 735 2008-10-09 22:51:55Z fbronzo $
-#
 # Makefile for local cache as server program and test programs
 #
 # ***** BEGIN LICENSE BLOCK *****
@@ -23,7 +21,9 @@
 AM_CFLAGS = -g -I../cg/asn -I../proto -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib \
 	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
 
-LDADD = libpdu.a ../proto/librpki.a ../cg/casn/libcasn.a ../utils/libutils.a
+LDADD = libpdu.a ../proto/librpki.a \
+        ../roa-lib/libroa.a ../cg/casn/libcasn.a ../cg/asn/libasn.a \
+        ../utils/libutils.a
 
 bin_PROGRAMS = testClient server doUpdate sampleClient
 noinst_LIBRARIES = libpdu.a

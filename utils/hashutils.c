@@ -1,7 +1,3 @@
-/*
-  $Id: make_TA.c c 506 2008-06-03 21:20:05Z gardiner $
-*/
-
 /* ***** BEGIN LICENSE BLOCK *****
  *
  * BBN Address and AS Number PKI Database/repository software
@@ -25,11 +21,11 @@
 #include <unistd.h>
 #include <string.h>
 
-int CryptInitState;
+int CryptInitState = 0;
 
-int gen_hash(unsigned char *inbufp, int bsize, unsigned char *outbufp, 
+int gen_hash(unsigned char *inbufp, int bsize, unsigned char *outbufp,
     CRYPT_ALGO_TYPE alg)
-  { 
+  {
   CRYPT_CONTEXT hashContext;
   unsigned char hash[40];
   int ansr = -1;
@@ -42,7 +38,7 @@ int gen_hash(unsigned char *inbufp, int bsize, unsigned char *outbufp,
     CryptInitState = 1;
     }
 
-  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2); 
+  cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);

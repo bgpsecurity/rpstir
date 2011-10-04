@@ -1415,7 +1415,7 @@ static int make_goodoids()
   delete_casn(&casn);
   return lth;
   }
-  
+
 /*
  * callback function for verify_children
  */
@@ -1432,7 +1432,7 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
 
   UNREFERENCED_PARAMETER(idx);
   if (s->nused < 4) return ERR_SCM_INVALARG;
-  
+
   if (!goodoids[0].lth) make_goodoids();
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
@@ -2056,7 +2056,7 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   return sta >= 0 ? 0 : sta;
 }
 
-static struct Extension *find_extension(struct Certificate *certp, char *idp)
+struct Extension *find_extension(struct Certificate *certp, char *idp)
   {
   struct Extensions *exts = &certp->toBeSigned.extensions;
   struct Extension *extp;
@@ -2531,7 +2531,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) 
+  if (sta < 0)
     {
     log_msg(LOG_ERR, "invalid manifest %s", outfull);
     delete_casn(&roa.self);

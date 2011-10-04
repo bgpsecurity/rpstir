@@ -30,7 +30,7 @@
 #include <roa.h>
 #include <casn.h>
 
-extern int CryptInitState, gen_hash(uchar *, int, uchar *, int);
+#include "hashutils.h"
 
 char *msgs [] = {
   "Finished OK\n",

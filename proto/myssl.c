@@ -1,16 +1,12 @@
-/*
-  $Id$
-*/
-
 /** @file */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 3.0-beta
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -31,13 +27,18 @@
 #include <getopt.h>
 #include <time.h>
 #include <limits.h>
+#include <cryptlib.h>
 
+#include "hashutils.h"
 #include "myssl.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
 #include "logutils.h"
+
+// PUT THIS SOMEWHERE ELSE!!
+extern struct Extension *find_extension(struct Certificate *certp, char *idp);
 
 /*
   Convert between a time string in a certificate and a time string
@@ -729,7 +730,7 @@ static void cf_get_ipb(const X509V3_EXT_METHOD *meth, void *ex,
   cf->ipblen = leen;
 }
 
-static cfx_validator xvalidators[] = 
+static cfx_validator xvalidators[] =
   {
     { cf_get_ski,     CF_FIELD_SKI,     NID_subject_key_identifier,   1, 0 } ,
     { cf_get_aki,     CF_FIELD_AKI,     NID_authority_key_identifier, 0, 0 } ,
@@ -757,7 +758,7 @@ static cfx_validator *cfx_find(int tag)
   return(NULL);
 }
 
-static cf_validator validators[] = 
+static cf_validator validators[] =
 {
   { NULL,           0,                  0 } , /* filename handled already */
   { cf_get_subject, CF_FIELD_SUBJECT,   1 } ,
@@ -1170,7 +1171,7 @@ static char *crf_get_sig(X509_CRL *x, int *stap, int *crlstap)
   return(dptr);
 }
 
-static crf_validator crvalidators[] = 
+static crf_validator crvalidators[] =
 {
   { NULL,            0,                   0 } , /* filename handled already */
   { crf_get_issuer,  CRF_FIELD_ISSUER,    1 } ,
@@ -1250,7 +1251,7 @@ static void crf_get_aki(const X509V3_EXT_METHOD *meth, void *exts,
   cf->fields[CRF_FIELD_AKI] = dptr;
 }
 
-static crfx_validator crxvalidators[] = 
+static crfx_validator crxvalidators[] =
   {
     { crf_get_crlno,  CRF_FIELD_SN,     NID_crl_number,   0 } ,
     { crf_get_aki,    CRF_FIELD_AKI,    NID_authority_key_identifier, 1 }
@@ -1492,7 +1493,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
         struct goodoid *goodoidp;
         for (goodoidp = goodoids; goodoidp->lth > 0; goodoidp++)
           {
-          if (goodoidp->lth == ex->object->length && 
+          if (goodoidp->lth == ex->object->length &&
              !memcmp(ex->object->data, goodoidp->oid, goodoidp->lth)) break;
           }
         if (!goodoidp->lth)
@@ -1529,7 +1530,7 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
         if ( *stap != 0 && need > 0 )
   	break;
         }
-     if (did != 3) 
+     if (did != 3)
       {
       *stap = ERR_SCM_INVALEXT;
       log_msg(LOG_ERR, "Duplicate extensions");
@@ -1818,7 +1819,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
 
         if (ex_nid == NID_basic_constraints) {
           basic_flag++;
-   
+
           if (!X509_EXTENSION_get_critical(ex)) {
             log_msg(LOG_ERR,
 		    "[basic_const] CA_CERT: basic_constraints NOT critical!");
@@ -1884,7 +1885,7 @@ skip:
  *  of EE, CA, and TA certs in the resource cert profile     *
  ************************************************************/
 
-static int rescert_ski_chk(X509 *x)
+static int rescert_ski_chk(X509 *x, struct Certificate *certp)
 {
 
   int ski_flag = 0;
@@ -1913,8 +1914,48 @@ static int rescert_ski_chk(X509 *x)
     log_msg(LOG_ERR, "[ski] multiple instances of ski extension");
     return(ERR_SCM_DUPSKI);
   }
-  if (0 /* TODO: check ski hash */) {
-    log_msg(LOG_ERR, "invalid ski hash value");
+
+  /* check ski hash */
+  struct Extension *extp = find_extension(certp, id_subjectKeyIdentifier);
+  if (extp) {
+    uchar hash[40];
+    int key_info_len = vsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
+      subjectPublicKey);
+    if (key_info_len <= 0)
+      return ERR_SCM_INVALSKI;
+    uchar *pub_key_infp = calloc(1, key_info_len + 4);
+    if (!pub_key_infp)
+      return ERR_SCM_NOMEM;
+    if (read_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey,
+        pub_key_infp) != key_info_len) {
+      free(pub_key_infp); 
+      return ERR_SCM_INVALSKI;
+    }
+    // Subject public key info is a BIT STRING, so the first octet is the
+    // number of unused bits.  We assume it is zero and skip it.
+    gen_hash(&pub_key_infp[1], key_info_len - 1, hash, CRYPT_ALGO_SHA1);
+    free(pub_key_infp);
+    pub_key_infp = NULL;
+
+    // Compare 160-bit SHA-1 hash of subject public key info to SKI.
+    uchar ski_data[20];
+    int hash_len = vsize_casn(&extp->extnValue.subjectKeyIdentifier);
+    if (hash_len != 160 / 8) {
+       log_msg(LOG_ERR, "wrong ski length: %d instead of 160 bits",
+               8 * hash_len);
+       return ERR_SCM_INVALSKI;
+    }
+    int ski_len = read_casn(&extp->extnValue.subjectKeyIdentifier, ski_data);
+    if (ski_len != 160 / 8) {
+       log_msg(LOG_ERR, "failed to read ski");
+       return ERR_SCM_INVALSKI;
+    }
+    if (memcmp(ski_data, hash, hash_len)) {
+      log_msg(LOG_ERR, "SKI does not match Subject Public Key Info");
+      return ERR_SCM_INVALSKI;
+    }
+  } else {
+    log_msg(LOG_ERR, "could not find ski extension for cert");
     return(ERR_SCM_INVALSKI);
   }
 
@@ -2050,7 +2091,7 @@ static int rescert_key_usage_chk(X509 *x)
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
     ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
-  
+
     if (ex_nid == NID_key_usage) {
       kusage_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
@@ -2295,14 +2336,14 @@ static int rescert_aia_chk(X509 *x, int ct)
 
     if ( (adesc->method->length == aia_oid_len) &&
          (!memcmp(adesc->method->data, aia_oid, aia_oid_len)) &&
-         (!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data, 
+         (!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data,
 		       RSYNC_PREFIX, RSYNC_PREFIX_LEN)) ) {
       uri_flag++;
     }
   }
 
   if (uri_flag == 0) {
-    log_msg(LOG_ERR, "[aia] no aia name of type URI rsync"); 
+    log_msg(LOG_ERR, "[aia] no aia name of type URI rsync");
     ret = ERR_SCM_BADAIA;
     goto skip;
   } else {
@@ -2380,7 +2421,7 @@ static int rescert_sia_chk(X509 *x, int ct)
      requiring the URI to be case sensitive. Additionally, there were
      no checks in his code to make sure that the RSYNC URI MUST use a
      trailing '/' in the URI.
- 
+
   */
 
   sia = X509_get_ext_d2i(x, NID_sinfo_access, NULL, NULL);
@@ -2403,12 +2444,12 @@ static int rescert_sia_chk(X509 *x, int ct)
       goto skip;
     }
 
-    int is_dir_oid = (adesc->method->length == sia_dir_oid_len && 
+    int is_dir_oid = (adesc->method->length == sia_dir_oid_len &&
 		      !memcmp(adesc->method->data, sia_dir_oid, sia_dir_oid_len));
-    int is_ee_oid = (adesc->method->length == sia_ee_oid_len && 
+    int is_ee_oid = (adesc->method->length == sia_ee_oid_len &&
 		     !memcmp(adesc->method->data, sia_ee_oid, sia_ee_oid_len));
     if ((is_dir_oid || is_ee_oid) &&
-	(!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data, 
+	(!strncasecmp((char *)adesc->location->d.uniformResourceIdentifier->data,
 		      RSYNC_PREFIX, RSYNC_PREFIX_LEN)) ) {
       // if it's a dir oid, make sure it ends in a '/'
       if (is_dir_oid) {
@@ -2590,7 +2631,7 @@ static int rescert_as_resources_chk(X509 *x)
   int asnum_flag = 0;
   int i;
   int ex_nid;
-  X509_EXTENSION *ex = NULL;                                         
+  X509_EXTENSION *ex = NULL;
 
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
@@ -2705,8 +2746,8 @@ static int rescert_crit_ext_chk(X509_EXTENSION *ex)
   int ex_nid;
 
   ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
- 
-  if (ex_nid == NID_undef)                              
+
+  if (ex_nid == NID_undef)
     return ERR_SCM_BADEXT;
 
   if (bsearch((char *)&ex_nid, (char *)supported_nids,
@@ -2851,7 +2892,7 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   if ( ret < 0 )
     return(ret);
 
-  ret = rescert_ski_chk(x);
+  ret = rescert_ski_chk(x, certp);
   log_msg(LOG_DEBUG, "rescert_ski_chk");
   if ( ret < 0 )
     return(ret);
