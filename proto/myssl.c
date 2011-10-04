@@ -1876,13 +1876,17 @@ skip:
   return(ret);
 }
 
-/*************************************************************
- * rescert_ski_chk(X509 *)                                   *
- *                                                           *
- *  Subject Key Identifier - non-critical MUST be present    *
- *                                                           *
- *  We don't do anything with the cert_type as this is true  *
- *  of EE, CA, and TA certs in the resource cert profile     *
+/** @brief Check a cert's SKI.
+ *
+ *  Subject Key Identifier - non-critical MUST be present 
+ *
+ *  We don't do anything with the cert_type as this is true
+ *  of EE, CA, and TA certs in the resrouce cert profile
+ *
+ *  @param x (struct X509*)
+ *
+ *  @retval ret 0 on success
+ *              a negative integer return value on failure
  ************************************************************/
 
 static int rescert_ski_chk(X509 *x, struct Certificate *certp)
