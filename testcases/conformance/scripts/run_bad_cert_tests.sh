@@ -16,7 +16,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertAIABadAccess.cer        # AIA not a URI (-70)
 # rcli -y -f badCertAIACrit.cer             # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
-# rcli -y -f badCertAKIHash.cer                  # Add operation succeeded
+# rcli -y -f badCertAKIHash.cer                  # I think a bad AKI hash should be added to the DB normally and garbage collected eventually. -- David Mandelberg
 # rcli -y -f badCertAKILth.cer                   # Invalid AKI (-115)
 # rcli -y -f badCertBadExtension1.cer            # Add operation succeeded
 # rcli -y -f badCertBasicConstrNoCA.cer     # Invalid certificate flags (-46)
@@ -85,7 +85,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSubjectUtf.cer          # Bad filename or file not found (-12)
 # rcli -y -f badCertSubjUID.cer                  # Add operation succeeded
 # rcli -y -f badCertValCrossed.cer          # Certificate expired (-112)
-# rcli -y -f badCertValFromFuture.cer            # Add operation succeeded
+# rcli -y -f badCertValFromFuture.cer            # There's a possibility this should be added to the database correctly and left untouched until it becomes valid. -- David Mandelberg
 # rcli -y -f badCertValFromTyp.cer          # Invalid date/time (-24)
 # rcli -y -f badCertValToPast.cer           # Certificate expired (-112)
 # rcli -y -f badCertValToTyp.cer            # Certificate expired (-112)
