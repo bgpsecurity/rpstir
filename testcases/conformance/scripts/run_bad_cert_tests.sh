@@ -17,7 +17,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertAIACrit.cer             # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
 # rcli -y -f badCertAKIHash.cer                  # Add operation succeeded
-# rcli -y -f badCertAKILth.cer                   # Add operation succeeded
+# rcli -y -f badCertAKILth.cer                   # Invalid AKI (-115)
 # rcli -y -f badCertBadExtension1.cer            # Add operation succeeded
 # rcli -y -f badCertBasicConstrNoCA.cer     # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
