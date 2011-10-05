@@ -76,8 +76,8 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSIAAccessLoc.cer        # SIA not a URI (-73)
 # rcli -y -f badCertSIAAccessMethod.cer          # Add operation succeeded
 # rcli -y -f badCertSIAMissing.cer          # Missing SIA (-71)
-# rcli -y -f badCertSKIHash.cer                  # Add operation succeeded
-# rcli -y -f badCertSKILth.cer                   # Add operation succeeded
+# rcli -y -f badCertSKIHash.cer             # Invalid SKI (-40)
+# rcli -y -f badCertSKILth.cer              # Invalid SKI (-40)
 # rcli -y -f badCertSubject2Seq.cer              # Add operation succeeded
 # rcli -y -f badCertSubject2SerNum.cer           # Add operation succeeded
 # rcli -y -f badCertSubject2Sets.cer             # Add operation succeeded
