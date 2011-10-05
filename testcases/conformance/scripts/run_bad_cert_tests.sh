@@ -5,7 +5,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCert2BasicConstr.cer        # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
 # rcli -y -f badCert2Cpol.cer               # Duplicate policy ext (-75)
-# rcli -y -f badCert2CRLDP.cer                   # error Missing CRLDP (-63)
+# rcli -y -f badCert2CRLDP.cer                   # error Duplicate CRLDP (-64)
 # rcli -y -f badCert2IPAddr.cer                  # error Duplicate AS# resources (-80)
 # rcli -y -f badCert2KeyUsage.cer                # error Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
@@ -25,7 +25,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertBasicConstrPathLth.cer  # Pathlen invalid (-50)
 # rcli -y -f badCertCpol2oid.cer            # Duplicate policy ext (-75)
 # rcli -y -f badCertCpolNoCrit.cer          # Extension must be critical (-48)
-# rcli -y -f badCertCRLDP2DistPt.cer             # Add operation succeeded
+# rcli -y -f badCertCRLDP2DistPt.cer             # It looks like a CRLDP with two URIs is allowed: http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8.6
 # rcli -y -f badCertCRLDPCrit.cer           # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
 # rcli -y -f badCertCRLDPCrlIssuer.cer      # CRLDP with subfields (-65)
