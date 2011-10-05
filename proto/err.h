@@ -142,8 +142,9 @@
 #define ERR_SCM_BADSUBJECT  -113        /* invalid subject name */
 #define ERR_SCM_BADISSUER   -114        /* invalid issuer name */
 #define ERR_SCM_INVALAKI    -115        /* invalid AKI */
+#define ERR_SCM_CRLDPNMRS   -116        /* no rsync URI in CRLDP */
 
-#define ERR_SCM_MAXERR      -115
+#define ERR_SCM_MAXERR      -116
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

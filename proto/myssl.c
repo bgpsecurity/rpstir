@@ -2147,6 +2147,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
 {
   int crldp_flag = 0;
   int uri_flag = 0;
+  int rsync_uri_flag = 0;
   int ncrldp = 0;
   int j;
   int i;
@@ -2232,11 +2233,12 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	      ret = ERR_SCM_BADCRLDP;
 	      goto skip;
 	    }
+	  uri_flag++;
 	  if (!strncasecmp((char *)gen_name->d.uniformResourceIdentifier->data,
 			   RSYNC_PREFIX, RSYNC_PREFIX_LEN))
 	    {
       /* printf("uri: %s\n", gen_name->d.uniformResourceIdentifier->data); */
-	      uri_flag++;
+	      rsync_uri_flag++;
 	    }
 	}
     }
@@ -2244,6 +2246,12 @@ static int rescert_crldp_chk(X509 *x, int ct)
     {
       log_msg(LOG_ERR, "[crldp] no general name of type URI");
       ret = ERR_SCM_CRLDPNM;
+      goto skip;
+    }
+  else if ( rsync_uri_flag == 0 )
+    {
+      log_msg(LOG_ERR, "[crldp] no general name of type URI with RSYNC access method");
+      ret = ERR_SCM_CRLDPNMRS;
       goto skip;
     }
   else

@@ -150,6 +150,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid subject name",         /* ERR_SCM_BADSUBJECT */
     "Invalid issuer name",          /* ERR_SCM_BADISSUER */
     "Invalid AKI",                  /* ERR_SCM_INVALAKI */
+    "No rsync URI in CRLDP",        /* ERR_SCM_CRLDPNMRS */
   } ;
 
 char *err2string(int err)
