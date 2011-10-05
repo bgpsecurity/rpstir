@@ -2189,6 +2189,12 @@ static int rescert_crldp_chk(X509 *x, int ct)
       log_msg(LOG_ERR, "[crldp] missing crldp extension");
       return(ERR_SCM_NOCRLDP);
     }
+  else if ( crldp_flag > 1 )
+    {
+      log_msg(LOG_ERR, "[crldp] duplicate crldp extensions");
+      ret = ERR_SCM_DUPCRLDP;
+      goto skip;
+    }
 /*
   we should be here if NID_crl_distribution_points was found,
   and it was not marked critical
