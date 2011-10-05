@@ -18,7 +18,7 @@ rcli -y -F ../root.cer
         # cg-110927:  this error result is not good
 # rcli -y -f badCertAKIHash.cer                  # I think a bad AKI hash should be added to the DB normally and garbage collected eventually. -- David Mandelberg
 # rcli -y -f badCertAKILth.cer                   # Invalid AKI (-115)
-# rcli -y -f badCertBadExtension1.cer            # Add operation succeeded
+# rcli -y -f badCertBadExtension1.cer            # Unless the extension is critical, it's fine to ignore an unknown extension. (http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8)
 # rcli -y -f badCertBasicConstrNoCA.cer     # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
 # rcli -y -f badCertBasicConstrNoCrit.cer   # Extension must be critical (-48)
