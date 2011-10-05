@@ -15,8 +15,13 @@ config.status
 configure
 TAGS
 *.swp
+.cproject
+.project
+doc/doxygen/warnings.log
 
 # directories generated during program execution
 *REPOSITORY
 *LOGS
 *EEcertificates
+doc/doxygen/def
+doc/doxygen/html

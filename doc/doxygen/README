@@ -1,0 +1,87 @@
+################################################################################
+# FILES
+#-------------------------------------------------------------------------------
+customdoxygen.css - the default css used by doxygen.
+
+def/ - 
+
+Doxyfile.config - the main configuration file.
+
+DoxygenLayout.xml - controls global structure of the generated output files.
+
+footer.html - 
+
+header.html - deleted the contents of a header line.
+
+header.html.orig - a backup.
+
+html/ - the output directory for the generated documentation.
+
+navtree.css - 
+
+tabs.css - 
+
+warnings.log - receives stderr of doxygen command.
+
+
+################################################################################
+# SETUP
+#-------------------------------------------------------------------------------
+Install doxygen.
+
+Install graphviz.
+
+If you do not have graphviz, or if you do not want graphs generated,
+edit the file doxygen.config and set:
+  HAVE_DOT = NO
+
+$ cd $RPKI_ROOT/doc/doxygen
+$ doxygen doxygen.config  // to create the docs
+
+
+################################################################################
+# NOTES
+#-------------------------------------------------------------------------------
+In the configuration file,
+  HAVE_DOT = YES
+creates graphs (if graphviz is installed), but takes a long time.
+  HAVE_DOT = NO
+takes less time, but no graphs.
+
+
+################################################################################
+# CHANGES from default configuration (as of Oct 5, 2011)
+#-------------------------------------------------------------------------------
+    PROJECT_NAME = rpki
+    OUTPUT_DIRECTORY = .
+    STRIP_FROM_PATH = ../../..
+    JAVADOC_AUTOBRIEF = NO
+    TAB_SIZE = 4  # was 8
+    OPTIMIZE_OUTPUT_FOR_C = YES
+    EXTRACT_ALL = YES
+    EXTRACT_PRIVATE = YES
+    EXTRACT_STATIC = YES
+    SHOW_DIRECTORIES = YES
+    LAYOUT_FILE = DoxygenLayout.xml
+    WARN_LOGFILE = warnings.log
+    INPUT = ../../ ../../testcases/conformance/scripts ../../run_scripts
+    RECURSIVE = YES
+    EXCLUDE = ../../ree ../../performance ../../perftest ../../verify ../../distroot
+    SOURCE_BROWSWER = YES
+    REFERENCES_BY_RELATION = YES
+    REFERENCES_RELATION = YES
+    HTML_HEADER = header.html
+    HTML_FOOTER = footer.html
+    HTML_TIMESTAMP = YES
+    HTML_STYLESHEET = customdoxygen.css
+    GENERATE_TREEVIEW = YES
+    GENERATE_LATEX = NO
+    GENERATE_AUTOGEN_DEF = YES
+    HAVE_DOT = YES
+    CLASS_DIAGRAMS = NO
+    CLASS_GRAPH = NO
+    CALL_GRAPH = YES
+    CALLER_GRAPH = YES
+    GRAPHICAL_HIERARCHY = NO
+    DOT_GRAPH_MAX_NODES = 90
+
