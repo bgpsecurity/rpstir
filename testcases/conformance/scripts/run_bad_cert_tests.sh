@@ -94,6 +94,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertVersion2.cer            # Bad certificate version (-47)
 # rcli -y -f badCertVersion4.cer            # Bad certificate version (-47)
 # rcli -y -f badCertVersionNeg.cer          # Bad certificate version (-47)
+# rcli -y -f badCertCRLDPNoRsyncDistPt.cer  # Cannot get CRLDP name field (-66) (this result is not good)
 
 # ----- notes from Charlie email of Sep 27: -----
 # We need a code for key usage bits to distinguish from general cert flags.

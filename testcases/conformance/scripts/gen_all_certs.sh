@@ -254,3 +254,4 @@ ${single_cert_cmd} 183 NoCpol
 ${single_cert_cmd} 184 2Cpol
 ${single_cert_cmd} 185 2IPAddr
 ${single_cert_cmd} 186 2ASNum
+${single_cert_cmd} 187 CRLDPNoRsyncDistPt
