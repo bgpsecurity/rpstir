@@ -2193,7 +2193,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
       if ( ex_nid == NID_crl_distribution_points )
 	{
 	  crldp_flag++;
-#ifdef notdef  // MCR removed this test
+#if 0  // MCR removed this test
 	  if (ct == TA_CERT) {
 #ifdef DEBUG
 	    log_msg(LOG_ERR, "[crldp] crldp found in self-signed cert");
