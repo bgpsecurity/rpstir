@@ -110,7 +110,7 @@ Explanation of inputs, not in original order:
 Explanation of outputs, not in original order:
   child CA certificate - AS/IP resources are hardcoded in goodCert.raw template
   patch files - manual edits are saved as diff output in
-                'badCert<filestem>.stageN.patch' (N=0..1)
+                'badCert<filestem>.stageN.patch' (N=0..2)
     "
     printf "${usagestr}\n"
     exit 1
@@ -207,6 +207,7 @@ if [ $USE_EXISTING_PATCHES ]
 then
     ensure_file_exists $PATCHES_DIR/${child_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
 fi
 
 ###############################################################################
@@ -223,18 +224,39 @@ ${CGTOOLS}/put_sernum ${child_name}.cer ${SERIAL}
 ${CGTOOLS}/put_subj ${child_name}.cer ${child_name}
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Stage 0: pre-signing modification: manual or automatic (can be no-op)
+# Stage 0: pre-setting SKI modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 0: modify to-be-signed portions automatically"
+    echo "Stage 0: modify to-be-hashed-in-SKI portions automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage0.patch
     rm -f ${child_name}.raw.orig
 else
-    echo "Stage 0: modify to-be-signed portions manually"
+    echo "Stage 0: modify to-be-hashed-in-SKI portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
 	>${PATCHES_DIR}/${child_name}.stage0.patch || true
+fi
+
+# Set the SKI
+echo "Setting SKI"
+${CGTOOLS}/rr <${child_name}.raw >${child_name}.blb
+${CGTOOLS}/set_cert_ski ${child_name}.blb ${child_name}.cer
+${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
+rm ${child_name}.blb ${child_name}.cer
+
+# Stage 1: post-setting SKI, pre-signing modification: manual or automatic (can be no-op)
+if [ $USE_EXISTING_PATCHES ]
+then
+    echo "Stage 1: modify to-be-signed portions automatically"
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
+    rm -f ${child_name}.raw.orig
+else
+    echo "Stage 1: modify to-be-signed portions manually"
+    cp ${child_name}.raw ${child_name}.raw.old
+    ${EDITOR} ${child_name}.raw
+    diff -u ${child_name}.raw.old ${child_name}.raw \
+	>${PATCHES_DIR}/${child_name}.stage1.patch || true
 fi
 
 # Sign it
@@ -244,18 +266,18 @@ ${CGTOOLS}/sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
 mv ${child_name}.blb ${child_name}.cer
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Stage 1: post-signing modification: manual or automatic (can be no-op)
+# Stage 2: post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 1: modify not-signed portions automatically"
-    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
+    echo "Stage 2: modify not-signed portions automatically"
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
     rm -f ${child_name}.raw.orig
 else
-    echo "Stage 1: modify not-signed portions manually"
+    echo "Stage 2: modify not-signed portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
-	>${PATCHES_DIR}/${child_name}.stage1.patch || true
+	>${PATCHES_DIR}/${child_name}.stage2.patch || true
 fi
 
 # Convert back into DER-encoded binary.
@@ -274,4 +296,5 @@ if [ ! $USE_EXISTING_PATCHES ]
 then
     echo Successfully created "${PATCHES_DIR}/${child_name}.stage0.patch"
     echo Successfully created "${PATCHES_DIR}/${child_name}.stage1.patch"
+    echo Successfully created "${PATCHES_DIR}/${child_name}.stage2.patch"
 fi
