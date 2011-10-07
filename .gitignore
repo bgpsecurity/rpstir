@@ -15,11 +15,7 @@ config.status
 configure
 TAGS
 *.swp
-.cproject
-.project
 doc/doxygen/warnings.log
-learn/
-tmp
 
 # directories generated during program execution
 *REPOSITORY
