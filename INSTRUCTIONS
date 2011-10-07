@@ -49,6 +49,10 @@ you will know:
 We assume that you can operate your system's package manager, as well
 as build packages from source and do minor edits on Makefiles.
 
+If you are running a 64-bit operating system or have python installed
+somewhere other than /usr/bin/python, see Appendix A at the bottom of
+this file before continuing.
+
 
 2.1 Prerequisites
 
@@ -704,3 +708,86 @@ connecting as root by issuing the command:
 where PWD is the root password specified in your odbc.ini file. If
 this does not succeed, follow the steps given in the MySQL manual for
 resetting the root password, then stop and restart the mysqld process.
+
+
+A.2 64-bit support
+
+The RPKI software does not currently support running in 64-bit mode.
+It is however possible to run RPKI in 32-bit mode on a 64-bit OS that
+supports 32-bit binaries and libraries.
+
+The build environment, including gcc, need to support 32-bit programs.
+You may need to install additional packages, see your operating system's
+documentation. To compile in 32-bit mode on x86_64, gcc takes the flags
+"-m32 -march=i686". The rest of these instructions assume those are the
+appropriate flags for 32-bit compilation. Substitute whatever your system
+uses in their place.
+
+All libraries that RPKI depends on need to be compiled in 32-bit mode.
+They may also need to be installed in an alternate library path for 32-bit
+libraries, see your operating system's documentation.
+
+Here are some notes from installing on CentOS 6.0 x86_64 that may or may
+not be useful for you:
+
+To configure openssl, subsitute
+
+    ./config enable-rfc3779
+
+with
+
+    ./Configure linux-elf enable-rfc3779 -m32 -march=i686
+
+To build cryptlib:
+
+Near the top of makefile, find the line that sets the
+CFLAGS variable and append "-m32 -march=i686" without quotes. Find the
+line that sets LDFLAGS and append "-m32" without quotes. Note that -m32
+is actually a gcc option, not an ld option. This is unusual behavior of
+cryptlib, not a mistake in this document. Lower down in makefile, find
+the line that starts like
+
+    $(SLIBNAME):
+
+Under that line, there should be a line that looks something like
+
+    @./tools/buildsharedlib.sh ... $(LD) ...
+
+Change only the "$(LD)" part so it looks like
+
+    @./tools/buildsharedlib.sh ... "$(LD) $(LDFLAGS)" ...
+
+Note the addition of quotes, they're important.
+
+Next, edit tools/ccopts.sh and delete all instances of the word (string
+separated by whitespace) "-march=opteron" that occur on a line that
+looks like
+
+    CCARGS=...
+
+Continue building with the regular instructions.
+
+To configure RPKI itself, run
+
+    ./configure CFLAGS="-m32 -march=i686"
+
+
+A.3 Python path
+
+Some systems may have the python executable installed somewhere other
+than /usr/bin/python. On these systems, run "/path/to/python ./something.py"
+instead of "./something.py".
+
+
+A.4 Specific Operating Systems
+
+A.4.1 OpenBSD
+
+If you have trouble compiling mysql-ODBC-connector, you may need to find
+all lines in its source that call wprintf() or swprintf() and comment
+them out.
+
+A.4.2 FreeBSD
+
+If you have trouble compiling cryptlib, you may have to comment out the
+sections in tools/ccopts.sh that enable ODBC support.
