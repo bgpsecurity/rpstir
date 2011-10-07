@@ -1878,7 +1878,7 @@ skip:
 
 /** @brief Check a cert's SKI.
  *
- *  Subject Key Identifier - non-critical MUST be present 
+ *  Subject Key Identifier - non-critical MUST be present
  *
  *  We don't do anything with the cert_type as this is true
  *  of EE, CA, and TA certs in the resrouce cert profile
@@ -1932,7 +1932,7 @@ static int rescert_ski_chk(X509 *x, struct Certificate *certp)
       return ERR_SCM_NOMEM;
     if (read_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey,
         pub_key_infp) != key_info_len) {
-      free(pub_key_infp); 
+      free(pub_key_infp);
       return ERR_SCM_INVALSKI;
     }
     // Subject public key info is a BIT STRING, so the first octet is the
@@ -2147,7 +2147,6 @@ static int rescert_crldp_chk(X509 *x, int ct)
 {
   int crldp_flag = 0;
   int uri_flag = 0;
-  int rsync_uri_flag = 0;
   int ncrldp = 0;
   int j;
   int i;
@@ -2190,12 +2189,6 @@ static int rescert_crldp_chk(X509 *x, int ct)
       log_msg(LOG_ERR, "[crldp] missing crldp extension");
       return(ERR_SCM_NOCRLDP);
     }
-  else if ( crldp_flag > 1 )
-    {
-      log_msg(LOG_ERR, "[crldp] duplicate crldp extensions");
-      ret = ERR_SCM_DUPCRLDP;
-      goto skip;
-    }
 /*
   we should be here if NID_crl_distribution_points was found,
   and it was not marked critical
@@ -2233,12 +2226,11 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	      ret = ERR_SCM_BADCRLDP;
 	      goto skip;
 	    }
-	  uri_flag++;
 	  if (!strncasecmp((char *)gen_name->d.uniformResourceIdentifier->data,
 			   RSYNC_PREFIX, RSYNC_PREFIX_LEN))
 	    {
       /* printf("uri: %s\n", gen_name->d.uniformResourceIdentifier->data); */
-	      rsync_uri_flag++;
+	      uri_flag++;
 	    }
 	}
     }
@@ -2246,12 +2238,6 @@ static int rescert_crldp_chk(X509 *x, int ct)
     {
       log_msg(LOG_ERR, "[crldp] no general name of type URI");
       ret = ERR_SCM_CRLDPNM;
-      goto skip;
-    }
-  else if ( rsync_uri_flag == 0 )
-    {
-      log_msg(LOG_ERR, "[crldp] no general name of type URI with RSYNC access method");
-      ret = ERR_SCM_CRLDPNMRS;
       goto skip;
     }
   else
@@ -2829,6 +2815,65 @@ static int check_name(struct RDNSequence *rdnseqp)
   }
 
 
+/**=============================================================================
+ * @brief Check that the cert lists the proper algorithms.
+ *
+ * This applies to both the inner and outer signature algorithms.
+ * @see rfc5280
+
+ * @param certp (struct Certificate*)
+ * @retval ret 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+static int rescert_sig_algs_chk(const struct Certificate *certp) {
+	uchar SIG_OID_SPEC[] = "1.2.840.113549.1.1.11";
+
+	// read the inner algorithm oid
+	int length = vsize_objid(&certp->algorithm.algorithm);
+	if (length <= 0)
+		return ERR_SCM_BADCERT;
+	uchar *alg_outerp = calloc(1, length + 1);
+	if (read_objid(&certp->algorithm.algorithm, alg_outerp) != length) {
+		free(alg_outerp);
+		return ERR_SCM_BADOID;
+	}
+
+	// read the outer algorithm oid
+	length = vsize_objid(&certp->toBeSigned.signature.algorithm);
+	if (length <= 0)
+		return ERR_SCM_BADCERT;
+	uchar *alg_innerp = calloc(1, length + 1);
+	if (read_objid(&certp->toBeSigned.signature.algorithm, alg_innerp) != length) {
+		free(alg_innerp);
+		return ERR_SCM_BADOID;
+	}
+
+	// check that the algorithms match and meet spec
+	if (memcmp(alg_outerp, alg_innerp, length) != 0) {
+		free(alg_innerp);
+		free(alg_outerp);
+		return ERR_SCM_BADALG;
+	} else if (strncmp(alg_innerp, SIG_OID_SPEC, length) != 0) {
+		free(alg_innerp);
+		free(alg_outerp);
+		return ERR_SCM_BADALG;
+	}
+	free(alg_innerp);
+	free(alg_outerp);
+
+	return 0;
+
+//define ERR_SCM_BADCERT     -17	     /* error reading cert */
+//define ERR_SCM_NOTVALID    -30         /* cert validation error */
+//define ERR_SCM_NOTIMPL     -38         /* not implemented */
+//define ERR_SCM_BADOID      -77         /* invalid/unexpected OID */
+//define ERR_SCM_BADDA       -85         /* bad digest algorithm */
+//define ERR_SCM_INVALFAM    -88         /* invalid address family */
+//define ERR_SCM_NOSIG       -89         /* no signature */
+//define ERR_SCM_DUPSIG      -90         /* duplicate signature */
+//define ERR_SCM_BADALG      -95         /* differing algorithms in certificate */
+}
+
+
 /**********************************************************
  * profile_check(X509 *, int cert_type)                   *
  *  This function makes sure the required base elements   *
@@ -2877,6 +2922,8 @@ static int check_name(struct RDNSequence *rdnseqp)
  *  IP Resources, AS Resources - critical - MUST have one *
  *   of these or both. In the case of one, if present     *
  *   marked as critical                                   *
+ *                                                        *
+ *  Signature Algorithms - correct types listed           *
  *********************************************************/
 
 int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPKI)
@@ -2957,6 +3004,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_criticals_chk");
   if ( ret < 0 )
     return(ret);
+
+  ret = rescert_sig_algs_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_sig_algs_chk");
+  if ( ret < 0 )
+	  return(ret);
 
   return(0);
 }

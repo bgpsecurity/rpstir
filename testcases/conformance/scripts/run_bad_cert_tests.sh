@@ -34,7 +34,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertCRLDPReasons.cer        # CRLDP with subfields (-65)
 # rcli -y -f badCertEKU.cer                 # Invalid certificate flags (-46)
         # cg-110927:  this should have a stronger error message than bad flags
-# rcli -y -f badCertInnerSigAlg.cer              # Add operation succeeded
+# rcli -y -f badCertInnerSigAlg.cer         # Differing algorithms in cert (-95)
 # rcli -y -f badCertIssuer2Seq.cer               # Add operation succeeded
 # rcli -y -f badCertIssuer2SerNums.cer           # Add operation succeeded
 # rcli -y -f badCertIssuer2Sets.cer              # Add operation succeeded
@@ -59,7 +59,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertNoSIA.cer               # Missing SIA (-71)
 # rcli -y -f badCertNoSKI.cer               # Missing extension (-28)
 # rcli -y -f badCertNums                    # Error reading cert (-17)
-# rcli -y -f badCertOuterSigAlg.cer         # Certificate validation error (-30)
+# rcli -y -f badCertOuterSigAlg.cer         # Differing algorithms in cert (-95)
 # rcli -y -f badCertPubKeyAlg.cer                # Add operation succeeded
 # rcli -y -f badCertPubKeyExp.cer                # Add operation succeeded
 # rcli -y -f badCertPubKeyLth.cer                # Add operation succeeded
