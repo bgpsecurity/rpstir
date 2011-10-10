@@ -2839,52 +2839,51 @@ static int check_name(struct RDNSequence *rdnseqp)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
 static int rescert_sig_algs_chk(const struct Certificate *certp) {
-	uchar SIG_OID_SPEC[] = "1.2.840.113549.1.1.11";
-
-	// read the inner algorithm oid
+	// read the outer algorithm oid
 	int length = vsize_objid(&certp->algorithm.algorithm);
-	if (length <= 0)
-		return ERR_SCM_BADCERT;
-	uchar *alg_outerp = calloc(1, length + 1);
+	if (length <= 0) {
+		log_msg(LOG_ERR, "length of algorithm field <= 0");
+		return ERR_SCM_BADALG;
+	}
+	char *alg_outerp = calloc(1, length + 1);
 	if (read_objid(&certp->algorithm.algorithm, alg_outerp) != length) {
 		free(alg_outerp);
-		return ERR_SCM_BADOID;
+		log_msg(LOG_ERR, "algorithm actual length != stated length");
+		return ERR_SCM_BADALG;
 	}
 
-	// read the outer algorithm oid
+	// read the inner algorithm oid
 	length = vsize_objid(&certp->toBeSigned.signature.algorithm);
-	if (length <= 0)
-		return ERR_SCM_BADCERT;
-	uchar *alg_innerp = calloc(1, length + 1);
+	if (length <= 0) {
+		free(alg_outerp);
+		log_msg(LOG_ERR, "length of algorithm field <= 0");
+		return ERR_SCM_BADALG;
+	}
+	char *alg_innerp = calloc(1, length + 1);
 	if (read_objid(&certp->toBeSigned.signature.algorithm, alg_innerp) != length) {
 		free(alg_innerp);
-		return ERR_SCM_BADOID;
+		free(alg_outerp);
+		log_msg(LOG_ERR, "algorithm actual length != stated length");
+		return ERR_SCM_BADALG;
 	}
 
-	// check that the algorithms match and meet spec
-	if (memcmp(alg_outerp, alg_innerp, length) != 0) {
+	// check that the algorithms match each other and the spec
+	if (strncmp(alg_outerp, alg_innerp, length) != 0) {
 		free(alg_innerp);
 		free(alg_outerp);
+		log_msg(LOG_ERR, "inner and outer signature algorithms do not match");
 		return ERR_SCM_BADALG;
-	} else if (strncmp(alg_innerp, SIG_OID_SPEC, length) != 0) {
+	} else if (strncmp(alg_innerp, id_sha_256WithRSAEncryption, length) != 0) {
 		free(alg_innerp);
 		free(alg_outerp);
+		log_msg(LOG_ERR, "signature algorithm does not match spec");
 		return ERR_SCM_BADALG;
 	}
+
 	free(alg_innerp);
 	free(alg_outerp);
 
 	return 0;
-
-//define ERR_SCM_BADCERT     -17	     /* error reading cert */
-//define ERR_SCM_NOTVALID    -30         /* cert validation error */
-//define ERR_SCM_NOTIMPL     -38         /* not implemented */
-//define ERR_SCM_BADOID      -77         /* invalid/unexpected OID */
-//define ERR_SCM_BADDA       -85         /* bad digest algorithm */
-//define ERR_SCM_INVALFAM    -88         /* invalid address family */
-//define ERR_SCM_NOSIG       -89         /* no signature */
-//define ERR_SCM_DUPSIG      -90         /* duplicate signature */
-//define ERR_SCM_BADALG      -95         /* differing algorithms in certificate */
 }
 
 
