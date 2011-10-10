@@ -1,0 +1,227 @@
+#define STATE_DIR "rsync/state"
+#define REPO_DIR "REPOSITORY"
+#define LOG_DIR "LOGS"
+
+typedef enum _dir_type {
+  DIR_CUR,
+  DIR_OLD;
+} dir_type;
+
+char[][] dir_type_names = {
+  "cur", // DIR_CUR
+  "old", // DIR_OLD
+};
+
+typedef struct _thread_state {
+  URI rsync_uri;
+  dir_type aur_done;
+  dir_type rsync_done;
+  char *state_path;
+} thread_state;
+
+thread_state * new_thread_state()
+{
+  malloc
+  rsync_uri = NULL
+  state_path = NULL
+  return
+}
+
+free_thread_state(thread_state * statep)
+{
+  ...
+}
+
+set_state(const thread_state * statep) // warn if return value unused?
+{
+  char * path;
+  if (statep->path == NULL)
+    path = cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/thread", get_globally_unique_thread_id());
+  else
+    path = statep->state_path;
+
+  if (statep->rsync_uri == NULL)
+  {
+    unlink(path); // and check for errors
+    // sync?
+  }
+  else
+  {
+    fd = open(cat(path, ".new"), for writing); // and check for errors
+    truncate(fd);
+    size_t len = serialize(statep, buffer); // and check for errors
+    write(fd, buffer, len); // and check for errors
+    sync(fd);
+    close(fd);
+    rename(cat(path, ".new"), path);
+    // sync?
+  }
+}
+
+get_state(thread_state *statep)
+{
+  assert(statep != NULL);
+  if (statep->state_path && (fd = open(statep->state_path, for reading)))
+  {
+    size_t len = read(fd, buffer, MAXLEN); // and check for errors
+    unserialize(statep, buffer, len); // and check for errors
+  }
+  else
+  {
+    statep->rsync_uri = NULL;
+  }
+  if (fd) close(fd);
+}
+
+get_path(dir_type dtype, URI uri, char *buffer, size_t maxlen)
+{
+  buffer = cat(getenv("RPKI_ROOT"), "/", REPO_DIR, "/", dir_type_names[dtype], normalize(uri));
+}
+
+get_log_path(URI uri, char *buffer, size_t maxlen)
+{
+  buffer = cat(getenv("RPKI_ROOT"), "/", LOG_DIR, "/", normalize(uri));
+}
+
+run_aur(thread_state *statep)
+{
+  get_log_path(statep->rsync_uri, logfile, maxlen);
+  run rsync_aur on logfile
+  flush rcli
+  statep->aur_done = DIR_CUR;
+  set_state(statep);
+  truncate(logfile); // or archive?
+}
+
+update_directory(thread_state *statep)
+{
+  get_path(DIR_OLD, statep->rsync_uri, old_path, maxlen);
+  get_path(DIR_CUR, statep->rsync_uri, cur_path, maxlen);
+  get_log_path(statep->rsync_uri, logfile, maxlen);
+
+  rm -rf old_path
+  hardlink copy cur_path to old_path
+  sync(old_path)
+  statep->aur_done = DIR_OLD;
+  statep->rsync_done = DIR_OLD;
+  set_state(statep);
+
+  truncate(logfile)
+  // should we output to logfile.new and then atomically rename()?
+  call rsync to update cur_path from statep->rsync_uri, being aware of hardlinks and logging to logfile
+  sync(cur_path)
+  sync(logfile)
+  statep->rsync_done = DIR_CUR;
+  set_state(statep);
+
+  run_aur(statep);
+}
+
+recover(thread_state *statep)
+{
+  if (statep->rsync_uri == NULL)
+    return;
+
+  if (statep->rsync_done == DIR_OLD)
+  {
+    get_path(DIR_OLD, statep->rsync_uri, old_path, maxlen);
+    get_path(DIR_CUR, statep->rsync_uri, cur_path, maxlen);
+    rm -rf cur_path
+    hardlink copy old_path to cur_path
+    sync(cur_path);
+    statep->aur_done = DIR_CUR;
+    statep->rsync_done = DIR_CUR;
+    set_state(statep);
+  }
+
+  if (statep->aur_done == DIR_OLD)
+  {
+    if (statep->rsync_done != DIR_CUR)
+    {
+      log error
+      exit
+    }
+    run_aur(statep);
+  }
+
+  assert(statep->rsync_done == DIR_CUR);
+  assert(statep->aur_done == DIR_CUR);
+}
+
+recover_all()
+{
+  thread_state *statep = new_thread_state();
+
+  for each file in cat(getenv("RPKI_ROOT"), "/", STATE_DIR)
+  {
+    if (!(file begins with "thread-"))
+      continue;
+
+    statep->state_path = file;
+
+    get_state(statep);
+
+    recover(statep);
+
+    statep->state_path = NULL;
+
+    unlink(file);
+  }
+
+  free_thread_state(statep);
+}
+
+listen_thread(void *uri_queue_voidp)
+{
+  ThreadSafeQueue *uri_queue = (ThreadSafeQueue *)uri_queue_voidp;
+
+  ...
+  {
+    ...
+    uri_queue->enqueue(uri);
+  }
+
+  uri_queue->enqueue_all(NULL);
+}
+
+rsync_thread(void *uri_queue_voidp)
+{
+  ThreadSafeQueue *uri_queue = (ThreadSafeQueue *)uri_queue_voidp;
+  thread_state *statep = new_thread_state();
+
+  while ((statep->rsync_uri = uri_queue->dequeue()) != NULL)
+  {
+    update_directory(statep);
+  }
+
+  free_thread_state(statep);
+}
+
+main()
+{
+
+  if (!lock(cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/main.lock")))
+  {
+     log error message that main is already running and delete lock file if it's not running
+     exit
+  }
+
+  trap signals and on exit call unlock(cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/main.lock"))
+
+  recover_all();
+
+  ThreadSafeQueue *uri_queue = new_queue();
+
+  thread listener = start_thread(listen_thread, (void*)uri_queue);
+  thread rsyncs[num_threads];
+  for (int i = 0; i < num_threads; ++i)
+  {
+    rsyncs[i] = start_thread(rsync_thread, (void*)uri_queue);
+  }
+
+  listener.join();
+  for (int i = 0; i < num_threads; ++i)
+  {
+    rsyncs[i].join();
+  }
+}
