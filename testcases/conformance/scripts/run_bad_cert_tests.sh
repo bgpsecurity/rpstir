@@ -5,7 +5,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCert2BasicConstr.cer        # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
 # rcli -y -f badCert2Cpol.cer               # Duplicate policy ext (-75)
-# rcli -y -f badCert2CRLDP.cer                   # error Duplicate CRLDP (-64)
+# rcli -y -f badCert2CRLDP.cer              # error Duplicate CRLDP (-64)
 # rcli -y -f badCert2IPAddr.cer                  # error Duplicate AS# resources (-80)
 # rcli -y -f badCert2KeyUsage.cer                # error Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
@@ -17,7 +17,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertAIACrit.cer             # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
 # rcli -y -f badCertAKIHash.cer                  # I think a bad AKI hash should be added to the DB normally and garbage collected eventually. -- David Mandelberg
-# rcli -y -f badCertAKILth.cer                   # Invalid AKI (-115)
+# rcli -y -f badCertAKILth.cer              # Invalid AKI (-115)
 # rcli -y -f badCertBadExtension1.cer            # Unless the extension is critical, it's fine to ignore an unknown extension. (http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8)
 # rcli -y -f badCertBasicConstrNoCA.cer     # Invalid certificate flags (-46)
         # cg-110927:  this error result is not good
@@ -35,8 +35,8 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertEKU.cer                 # Invalid certificate flags (-46)
         # cg-110927:  this should have a stronger error message than bad flags
 # rcli -y -f badCertInnerSigAlg.cer         # Differing algorithms in cert (-95)
-# rcli -y -f badCertIssuer2Seq.cer               # Add operation succeeded
-# rcli -y -f badCertIssuer2SerNums.cer           # Add operation succeeded
+# rcli -y -f badCertIssuer2Seq.cer          # Invalid issuer name (-114)
+# rcli -y -f badCertIssuer2SerNums.cer      # Invalid issuer name (-114)
 # rcli -y -f badCertIssuer2Sets.cer              # Add operation succeeded
 # rcli -y -f badCertIssuerOID.cer                # Add operation succeeded
 # rcli -y -f badCertIssuerUtf.cer           # Bad filename or file not found (-12)
