@@ -180,7 +180,7 @@ archive_log(thread_state *statep)
   get_log_path(LOG_CUR, statep->rsync_uri, cur_file, maxlen);
   get_log_path(LOG_ARCHIVE, statep->rsync_uri, archive_file, maxlen);
 
-  ret = rename(cur_file, archive_file));
+  ret = rename(cur_file, archive_file);
   if (ret is success)
   {
     sync(archive_file);
