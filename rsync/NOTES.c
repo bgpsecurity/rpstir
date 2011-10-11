@@ -1,3 +1,17 @@
+/*
+  This file contains some notes on how to implement a program to maintain
+  the RPKI file repository cache of multiple remote rsync repositories.
+  It tries to do all network operations in parallel. It also tries to be
+  as resistant to concurrency and crashing issues as possible.
+
+  NOTE: While this maintains a valid repository at all times, there
+  is currently no mechanism provided to ensure to other RPKI programs
+  that they are accessing a currently valid version of the repository.
+  E.g. this program knows whether the valid version of a file is in the
+  "current" or "old" directory, but it doesn't expose any API for other
+  programs to get that information.
+*/
+
 #define STATE_DIR "rsync/state"
 #define REPO_DIR "REPOSITORY"
 #define LOG_DIR "LOGS"
