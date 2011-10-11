@@ -305,6 +305,12 @@ recover_all()
   free_thread_state(statep);
 }
 
+bool conflicts_with_currently_processing(ThreadSafeSet *currently_processing, URI uri)
+{
+  assert(calling thread has a lock on currently_processing);
+  return (uri is equal to, a descendent of, or an ancestor of any member of currently_processing);
+}
+
 listen_thread(void *uri_queue_voidp)
 {
   ThreadSafeQueue *uri_queue = (ThreadSafeQueue *)uri_queue_voidp;
@@ -318,14 +324,31 @@ listen_thread(void *uri_queue_voidp)
   uri_queue->enqueue_all(NULL);
 }
 
-rsync_thread(void *uri_queue_voidp)
+rsync_thread(void *uri_queue_voidp, void *currently_processing_voidp)
 {
   ThreadSafeQueue *uri_queue = (ThreadSafeQueue *)uri_queue_voidp;
+  ThreadSafeSet *currently_processing = (ThreadSafeSet *)currently_processing_voidp;
+
   thread_state *statep = new_thread_state();
 
   while ((statep->rsync_uri = uri_queue->dequeue()) != NULL)
   {
+    lock(currently_processing);
+    if (conflicts_with_currently_processing(currently_processing, statep->rsync_uri))
+    {
+      // XXX: this could induce a busy-wait if there are only conflicting URIs in the queue
+      unlock(currently_processing);
+      uri_queue->enqueue(statep->rsync_uri);
+      continue;
+    }
+    add_to_set(currently_processing, statep->rsync_uri);
+    unlock(currently_processing);
+
     update_directory(statep);
+
+    lock(currently_processing);
+    remove_from_set(currently_processing, statep->rsync_uri);
+    unlock(currently_processing);
   }
 
   free_thread_state(statep);
@@ -345,12 +368,13 @@ main()
   recover_all();
 
   ThreadSafeQueue *uri_queue = new_queue();
+  ThreadSafeSet *currently_processing = new_set();
 
   thread listener = start_thread(listen_thread, (void*)uri_queue);
   thread rsyncs[num_threads];
   for (int i = 0; i < num_threads; ++i)
   {
-    rsyncs[i] = start_thread(rsync_thread, (void*)uri_queue);
+    rsyncs[i] = start_thread(rsync_thread, (void*)uri_queue, (void*)currently_processing);
   }
 
   listener.join();
