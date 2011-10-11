@@ -38,7 +38,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertIssuer2Seq.cer          # Invalid issuer name (-114)
 # rcli -y -f badCertIssuer2SerNums.cer      # Invalid issuer name (-114)
 # rcli -y -f badCertIssuer2Sets.cer              # Add operation succeeded
-# rcli -y -f badCertIssuerOID.cer                # Add operation succeeded
+# rcli -y -f badCertIssuerOID.cer           # Invalid issuer name (-114)
 # rcli -y -f badCertIssuerUtf.cer           # Bad filename or file not found (-12)
 # rcli -y -f badCertIssUID.cer                   # Add operation succeeded
 # rcli -y -f badCertKUsageExtra.cer         # Invalid certificate flags (-46)
@@ -81,7 +81,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSubject2Seq.cer              # Add operation succeeded
 # rcli -y -f badCertSubject2SerNum.cer           # Add operation succeeded
 # rcli -y -f badCertSubject2Sets.cer             # Add operation succeeded
-# rcli -y -f badCertSubjectOID.cer               # Add operation succeeded
+# rcli -y -f badCertSubjectOID.cer          # Invalid subject name (-113)
 # rcli -y -f badCertSubjectUtf.cer          # Bad filename or file not found (-12)
 # rcli -y -f badCertSubjUID.cer                  # Add operation succeeded
 # rcli -y -f badCertValCrossed.cer          # Certificate expired (-112)
