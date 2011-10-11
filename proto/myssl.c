@@ -1694,17 +1694,9 @@ static void x509v3_load_extensions(X509 *x)
 
   x->skid =X509_get_ext_d2i(x, NID_subject_key_identifier, NULL, NULL);
   x->akid =X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
-#ifdef OUT
-   /* the crldp element didn't show up in the x509_st until after
-      OpenSSL 0.9.8e-dev XX xxx XXXX apparently  */
-  /* NOTE */
-  /* we check for it manually in the rescert_crldp_chk() function */
   x->crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, NULL, NULL);
-#endif
-#ifndef OPENSSL_NO_RFC3779
   x->rfc3779_addr =X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, NULL, NULL);
   x->rfc3779_asid =X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, NULL, NULL);
-#endif
 
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
@@ -2655,7 +2647,7 @@ static int rescert_as_resources_chk(X509 *x)
     ex = X509_get_ext(x, i);
     ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
 
-    if (ex_nid == NID_sbgp_ipAddrBlock) {
+    if (ex_nid == NID_sbgp_autonomousSysNum) {
       asnum_flag++;
       if (!X509_EXTENSION_get_critical(ex)) {
         log_msg(LOG_ERR, "[AS res] not marked as critical");
@@ -2696,7 +2688,6 @@ static int rescert_ip_asnum_chk(X509 *x)
 {
   int ret = 0;
 
-#ifndef OPENSSL_NO_RFC3779
   if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
     if (x->rfc3779_addr) {
       ret = rescert_ip_resources_chk(x);
@@ -2712,7 +2703,7 @@ static int rescert_ip_asnum_chk(X509 *x)
     /* doesn't have IP resources OR AS Resources */
     return(ERR_SCM_NOIPAS);
   }
-#endif
+
   return(ret);
 }
 
@@ -2830,58 +2821,114 @@ static int check_name(struct RDNSequence *rdnseqp)
 
 
 /**=============================================================================
- * @brief Check that the cert lists the proper algorithms.
+ * @brief Check that certs list the proper signature algorithms and parameters.
  *
- * This applies to both the inner and outer signature algorithms.
- * @see rfc5280
-
+ * This applies to the:
+ * - inner signature algorithm
+ * - outer signature algorithm
+ * - public key signature algorithm and parameters
+ *
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_sig_algs_chk(const struct Certificate *certp) {
-	// read the outer algorithm oid
+static int rescert_sig_algs_chk(struct Certificate *certp) {
 	int length = vsize_objid(&certp->algorithm.algorithm);
 	if (length <= 0) {
-		log_msg(LOG_ERR, "length of algorithm field <= 0");
+		log_msg(LOG_ERR, "length of outer sig alg oid <= 0");
 		return ERR_SCM_BADALG;
 	}
-	char *alg_outerp = calloc(1, length + 1);
-	if (read_objid(&certp->algorithm.algorithm, alg_outerp) != length) {
-		free(alg_outerp);
-		log_msg(LOG_ERR, "algorithm actual length != stated length");
+	char *outer_sig_alg_oidp = calloc(1, length + 1);
+	if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length) {
+		free(outer_sig_alg_oidp);
+		log_msg(LOG_ERR, "outer sig alg oid actual length != stated length");
 		return ERR_SCM_BADALG;
 	}
 
-	// read the inner algorithm oid
+	if (strncmp(outer_sig_alg_oidp, id_sha_256WithRSAEncryption, length) != 0) {
+		free(outer_sig_alg_oidp);
+		log_msg(LOG_ERR, "inner sig alg oid does not match spec");
+		return ERR_SCM_BADALG;
+	}
+
 	length = vsize_objid(&certp->toBeSigned.signature.algorithm);
 	if (length <= 0) {
-		free(alg_outerp);
-		log_msg(LOG_ERR, "length of algorithm field <= 0");
+		free(outer_sig_alg_oidp);
+		log_msg(LOG_ERR, "length of inner sig alg oid <= 0");
 		return ERR_SCM_BADALG;
 	}
-	char *alg_innerp = calloc(1, length + 1);
-	if (read_objid(&certp->toBeSigned.signature.algorithm, alg_innerp) != length) {
-		free(alg_innerp);
-		free(alg_outerp);
-		log_msg(LOG_ERR, "algorithm actual length != stated length");
-		return ERR_SCM_BADALG;
-	}
-
-	// check that the algorithms match each other and the spec
-	if (strncmp(alg_outerp, alg_innerp, length) != 0) {
-		free(alg_innerp);
-		free(alg_outerp);
-		log_msg(LOG_ERR, "inner and outer signature algorithms do not match");
-		return ERR_SCM_BADALG;
-	} else if (strncmp(alg_innerp, id_sha_256WithRSAEncryption, length) != 0) {
-		free(alg_innerp);
-		free(alg_outerp);
-		log_msg(LOG_ERR, "signature algorithm does not match spec");
+	char *inner_sig_alg_oidp = calloc(1, length + 1);
+	if (read_objid(&certp->toBeSigned.signature.algorithm, inner_sig_alg_oidp) != length) {
+		free(inner_sig_alg_oidp);
+		free(outer_sig_alg_oidp);
+		log_msg(LOG_ERR, "inner sig alg oid actual length != stated length");
 		return ERR_SCM_BADALG;
 	}
 
-	free(alg_innerp);
-	free(alg_outerp);
+	if (strncmp(inner_sig_alg_oidp, id_sha_256WithRSAEncryption, length) != 0) {
+		free(inner_sig_alg_oidp);
+		free(outer_sig_alg_oidp);
+		log_msg(LOG_ERR, "inner sig alg oid does not match spec");
+		return ERR_SCM_BADALG;
+	}
+
+	// amw: Although this is currently redundant, it satisfies a different spec
+	//      which may change separately.
+	if (strncmp(outer_sig_alg_oidp, inner_sig_alg_oidp, length) != 0) {
+		free(inner_sig_alg_oidp);
+		free(outer_sig_alg_oidp);
+		log_msg(LOG_ERR, "inner and outer sig alg oids do not match");
+		return ERR_SCM_BADALG;
+	}
+
+	free(inner_sig_alg_oidp);
+	free(outer_sig_alg_oidp);
+
+	length = vsize_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm);
+	if (length <= 0) {
+		log_msg(LOG_ERR, "length of pub key sig alg oid <= 0");
+		return ERR_SCM_BADALG;
+	}
+	char *alg_pubkey_oidp = calloc(1, length + 1);
+	if (read_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm,
+			alg_pubkey_oidp) != length) {
+		free(alg_pubkey_oidp);
+		log_msg(LOG_ERR, "pub key sig alg oid actual length != stated length");
+		return ERR_SCM_BADALG;
+	}
+
+	if (strncmp(alg_pubkey_oidp, id_rsadsi_rsaEncryption, length) != 0) {
+		free(alg_pubkey_oidp);
+		log_msg(LOG_ERR, "pub key sig alg id does not match spec");
+		return ERR_SCM_BADALG;
+	}
+
+/*
+	// read the subject public key modulus
+	uchar *to = calloc(1, 300);
+	int shift = -1;
+	int num_bytes = read_casn_bits(&certp->toBeSigned.subjectPublicKeyInfo.
+			subjectPublicKey, to, &shift);
+	printf("num_bytes:  %d\n", num_bytes);
+	printf("shift:  %d\n", shift);
+*/
+	// modulus must be 2048-bits
+
+	// read the subject public key exponent
+
+	// exponent must be 65,537
+
+	return 0;
+}
+
+
+/**=============================================================================
+ * @brief Some cert checks that don't fit anywhere else.
+ *
+ * @param certp (struct Certificate*)
+ * @retval ret 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+static int rescert_misc_chk(struct Certificate *certp) {
+
 
 	return 0;
 }
@@ -2962,8 +3009,10 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   if ( ret < 0 )
     return(ret);
 
-  if (check_name(&certp->toBeSigned.issuer.rDNSequence) < 0) return ERR_SCM_BADISSUER;
-  else if (check_name(&certp->toBeSigned.subject.rDNSequence)) return ERR_SCM_BADSUBJECT;
+  if (check_name(&certp->toBeSigned.issuer.rDNSequence) < 0)
+	  return ERR_SCM_BADISSUER;
+  else if (check_name(&certp->toBeSigned.subject.rDNSequence))
+	  return ERR_SCM_BADSUBJECT;
 
   ret = rescert_basic_constraints_chk(x, ct);
   log_msg(LOG_DEBUG, "rescert_basic_constraints_chk");
@@ -3020,6 +3069,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   ret = rescert_sig_algs_chk(certp);
   log_msg(LOG_DEBUG, "rescert_sig_algs_chk");
+  if ( ret < 0 )
+	  return(ret);
+
+  ret = rescert_misc_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_misc_chk");
   if ( ret < 0 )
 	  return(ret);
 
