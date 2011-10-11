@@ -60,7 +60,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertNoSKI.cer               # Missing extension (-28)
 # rcli -y -f badCertNums                    # Error reading cert (-17)
 # rcli -y -f badCertOuterSigAlg.cer         # Differing algorithms in cert (-95)
-# rcli -y -f badCertPubKeyAlg.cer                # Add operation succeeded
+ rcli -y -f badCertPubKeyAlg.cer                # Add operation succeeded
 # rcli -y -f badCertPubKeyExp.cer                # Add operation succeeded
 # rcli -y -f badCertPubKeyLth.cer                # Add operation succeeded
 # rcli -y -f badCertResourcesASNoCrit.cer        # If we don't read asn, why test this?
