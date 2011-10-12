@@ -7,7 +7,7 @@
 -        seq utc "110411185728Z"
 -            utc "460515185928Z"
 +        seq utc "460515185928Z"
-+            utc "110411185728Z"
++            utc "460515185927Z"
          seq set seq oid 2.5.4.3 /* id_commonName */
                      prt "badCertValCrossed"
          seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
