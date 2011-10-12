@@ -361,7 +361,34 @@ bool ready_for_next_attempt(URI_attempt *uri_attemptp)
   return (now >= uri_attemptp->next_attempt)
 }
 
-/** @return the next URI_attempt to try, or NULL if there's nothing to be tried at this time */
+/**
+  NOTE: This should be eventually replaced with a smarter function that looks
+  at URIs and picks the URI with the largest distance from currently_processing,
+  where "distance" somehow captures this notion:
+
+  If curently_processing has:
+    rsync://a.foo.com/a/b/c
+    rsync://b.foo.com/
+    rsync://bar.com/
+    rsync://foo.org/
+
+ The prefered ordering of to_process, from best next choice to worst, is:
+    rsync://quux.net/        because there are no URIs in the .net TLD
+    rsync://quux.org/        because there are fewer second-level domains in .org (foo.org) than .com (foo.com and bar.com)
+    rsync://quux.com/        because there are no URIs in the .quuz.com domain
+    rsync://c.foo.com/       because there are no URIs in the .c.foo.com domain
+    rsync://a.foo.com/e      because there are no paths begining with /e (top-level path) on a.foo.com
+    rsync://a.foo.com/a/b/d  because there are no paths begining with /a/b/d (third-level path) on a.foo.com
+
+  I.e. for each domain name label from most- to least- significant, the least common labels are prefered, then
+  for each path directory from top to bottom, the least common directories are prefered.
+
+  This is designed to minimize the chance of any one attacker blocking all rsync threads
+  at the same time.
+
+
+  @return the next URI_attempt to try, or NULL if there's nothing to be tried at this time
+*/
 URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_container<URI_attempt *> to_process)
 {
   assert(calling thread has lock on currently_processing);
