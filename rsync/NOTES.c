@@ -57,6 +57,35 @@ free_thread_state(thread_state * statep)
   ...
 }
 
+typedef struct _URI_attempt {
+  URI *uri;
+  size_t attempt;
+  time_t next_attempt;
+} URI_attempt;
+
+URI_attempt * new_URI_attempt(URI *uri)
+{
+  URI_attempt *ret = malloc
+  URI *uri_copy = malloc
+  copy uri to uri_copy
+  ret->uri = uri_copy;
+  ret->attempt = 0;
+  ret->next_attempt = TIME_MIN
+  return ret
+}
+
+free_URI_attempt(URI_attempt *uri_attemptp)
+{
+  if (uri_attemptp)
+  {
+    if (uri_attemptp->uri)
+    {
+      free uri_attemptp->uri
+    }
+    free uri_attemptp
+  }
+}
+
 set_state(const thread_state * statep) // warn if return value unused?
 {
   char * path;
@@ -132,7 +161,7 @@ start_directory_update(thread_state *statep)
   assert(statep->log_done == LOG_ARCHIVE);
 }
 
-run_rsync(thread_state *statep)
+bool run_rsync(thread_state *statep)
 {
   assert(statep->rsync_done == DIR_OLD);
   assert(statep->aur_done == DIR_OLD);
@@ -142,6 +171,18 @@ run_rsync(thread_state *statep)
   get_log_path(LOG_CUR, statep->rsync_uri, logfile, maxlen);
 
   call rsync to update cur_path from statep->rsync_uri, being aware of hardlinks and logging to logfile
+  if (rsync failed)
+  {
+    rm -r cur_path
+    rm logfile
+    hardlink copy old_path to cur_path
+    sync(cur_path);
+    statep->aur_done = DIR_CUR;
+    statep->rsync_done = DIR_CUR;
+    set_state(statep);
+    return false;
+  }
+
   sync(cur_path)
   sync(logfile)
   statep->rsync_done = DIR_CUR;
@@ -151,6 +192,7 @@ run_rsync(thread_state *statep)
   assert(statep->rsync_done == DIR_CUR);
   assert(statep->aur_done == DIR_OLD);
   assert(statep->log_done == LOG_CUR);
+  return true;
 }
 
 run_aur(thread_state *statep)
@@ -209,15 +251,18 @@ archive_log(thread_state *statep)
   assert(statep->log_done == LOG_ARCHIVE);
 }
 
-update_directory(thread_state *statep)
+bool update_directory(thread_state *statep)
 {
   start_directory_update(statep);
 
-  run_rsync(statep);
+  if (!run_rsync(statep))
+    return false;
 
   run_aur(statep);
 
   archive_log(statep);
+
+  return true;
 }
 
 recover(thread_state *statep)
@@ -311,44 +356,135 @@ bool conflicts_with_currently_processing(ThreadSafeSet *currently_processing, UR
   return (uri is equal to, a descendent of, or an ancestor of any member of currently_processing);
 }
 
-listen_thread(void *uri_queue_voidp)
+bool ready_for_next_attempt(URI_attempt *uri_attemptp)
 {
-  ThreadSafeQueue *uri_queue = (ThreadSafeQueue *)uri_queue_voidp;
+  return (now >= uri_attemptp->next_attempt)
+}
+
+/** @return the next URI_attempt to try, or NULL if there's nothing to be tried at this time */
+URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_container<URI_attempt *> to_process)
+{
+  assert(calling thread has lock on currently_processing);
+  assert(calling thread has lock on to_process);
+
+  for each URI_attempt * uri_attemptp in to_process
+  {
+    if (ready_for_next_attempt(uri_attemptp) &&
+      !conflicts_with_currently_processing(currently_processing, uri_attemptp->uri))
+    {
+      return uri_attemptp;
+    }
+  }
+
+  return NULL;
+}
+
+/** @return the next URI_attempt to try, or NULL if the caller should stop processing URIs */
+URI_attempt * next_uri(ThreadSafeSet *currently_processing, some_container<URI_attempt *> to_process)
+{
+  lock(currently_processing);
+  lock(to_process);
+
+  while (to_process is not empty || there's no special flag on to_process that indicates we should stop)
+  {
+    URI_attempt *uri_attemptp = NULL;
+    if ((uri_attemptp = choose_next_uri(currently_processing, to_process)) != NULL)
+    {
+      assert(ready_for_next_attempt(uri_attemptp));
+      assert(!conflicts_with_currently_processing(currently_processing, uri_attemptp->uri));
+
+      remove uri_attemptp from to_process
+      add uri_attemptp->uri to currently_processing
+
+      unlock(to_process);
+      unlock(currently_processing);
+      return uri_attemptp;
+    }
+
+    unlock(to_process);
+    unlock(currently_processing);
+    wait until there might be a change that gives us something to do
+    lock(currently_processing);
+    lock(to_process);
+  }
+
+  unlock(to_process);
+  unlock(currently_processing);
+
+  return NULL;
+}
+
+failed_attempt(URI_attempt * uri_attemptp, some_container<URI_attempt *> to_process)
+{
+  log failed uri_attemptp->uri, try number uri_attemptp->attempt at now
+
+  if (uri_attemptp->attempt < some threshhold)
+  {
+    uri_attemptp->attempt += 1;
+    uri_attemptp->next_attempt = now + some_function(uri_attemptp->attempt);
+    lock(to_process);
+    if (!to_process->add(uri_attemptp))
+    {
+      free_URI_attempt(uri_attemptp)
+      log error
+    }
+    unlock(to_process);
+  }
+  else
+  {
+    log giving up on uri_attemptp->uri after uri_attemptp->attempt tries at now
+    free_URI_attempt(uri_attemptp);
+  }
+}
+
+listen_thread(void *to_process_voidp)
+{
+  some_container<URI_attempt *> to_process = (some_container<URI_attempt *>)to_process_voidp;
 
   ...
   {
     ...
-    uri_queue->enqueue(uri);
+    URI uri = something_from_input()
+    URI_attempt uri_attemptp = new_URI_attempt(&uri);
+    if (!to_process->add(uri_attemptp))
+    {
+      free_URI_attempt(uri_attemptp)
+      log error
+    }
   }
 
-  uri_queue->enqueue_all(NULL);
+  set special flag on to_process that indicates we should stop (may need lock())
 }
 
-rsync_thread(void *uri_queue_voidp, void *currently_processing_voidp)
+rsync_thread(void *to_process_voidp, void *currently_processing_voidp)
 {
-  ThreadSafeQueue *uri_queue = (ThreadSafeQueue *)uri_queue_voidp;
+  some_container<URI_attempt *> to_process = (some_container<URI_attempt *>)to_process_voidp;
   ThreadSafeSet *currently_processing = (ThreadSafeSet *)currently_processing_voidp;
 
   thread_state *statep = new_thread_state();
+  URI_attempt *uri_attemptp;
 
-  while ((statep->rsync_uri = uri_queue->dequeue()) != NULL)
+  while ((uri_attemptp = next_uri(currently_processing, to_process)) != NULL)
   {
-    lock(currently_processing);
-    if (conflicts_with_currently_processing(currently_processing, statep->rsync_uri))
+    copy uri_attemptp->uri to statep->rsync_uri
+
+    log attempting uri_attemptp->uri, try number uri_attemptp->attempt at now
+
+    if (update_directory(statep))
     {
-      // XXX: this could induce a busy-wait if there are only conflicting URIs in the queue
+      log succeeded uri_attemptp->uri, try number uri_attemptp->attempt at now
+
+      free_URI_attempt(uri_attemptp);
+      uri_attemptp = NULL;
+
+      lock(currently_processing);
+      remove_from_set(currently_processing, statep->rsync_uri);
       unlock(currently_processing);
-      uri_queue->enqueue(statep->rsync_uri);
-      continue;
     }
-    add_to_set(currently_processing, statep->rsync_uri);
-    unlock(currently_processing);
-
-    update_directory(statep);
-
-    lock(currently_processing);
-    remove_from_set(currently_processing, statep->rsync_uri);
-    unlock(currently_processing);
+    else
+    {
+      failed_attempt(uri_attemptp, to_process);
+    }
   }
 
   free_thread_state(statep);
@@ -367,14 +503,14 @@ main()
 
   recover_all();
 
-  ThreadSafeQueue *uri_queue = new_queue();
+  some_container<URI_attempt *> to_process = new_...();
   ThreadSafeSet *currently_processing = new_set();
 
-  thread listener = start_thread(listen_thread, (void*)uri_queue);
+  thread listener = start_thread(listen_thread, (void*)to_process);
   thread rsyncs[num_threads];
   for (int i = 0; i < num_threads; ++i)
   {
-    rsyncs[i] = start_thread(rsync_thread, (void*)uri_queue, (void*)currently_processing);
+    rsyncs[i] = start_thread(rsync_thread, (void*)to_process, (void*)currently_processing);
   }
 
   listener.join();
