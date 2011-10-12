@@ -2094,7 +2094,6 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   if (locerr)
     {
     delete_casn(&cert.self);
-    freecf(cf);
     return locerr;
     }
   if ( utrust > 0 )
