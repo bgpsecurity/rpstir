@@ -168,6 +168,7 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
         (*b < '0' && ep != &b[GENSFXMI + GENMISIZ])))
         return -1;
     if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0) yr += 100;
+    if (yr >= 2200) return -1;
     if ((mo = (int)get_num (&fromp[GENMO],GENMOSIZ)) < 1 || mo > 12)
         return -1;
     val = (yr * 365) + _mos[mo - 1] + ((yr + (GENBASE % 4)) / 4) -
