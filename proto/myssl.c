@@ -1585,6 +1585,13 @@ static void x509v3_load_extensions(X509 *x)
   X509_EXTENSION *ex;
   int i;
 
+  /* Passing int*, instead of NULL, to the 3rd and 4th parameters of
+   * X509_get_ext_d2i() allows it to return the extensions we are looking for,
+   * instead of returning NULL, in certain error cases.  Also, it may return
+   * error codes via those pointers.   */
+  int crit = INT_MIN;
+  int idx = INT_MIN;
+
   if(x->ex_flags & EXFLAG_SET)
     return;
 #ifndef OPENSSL_NO_SHA
@@ -1597,7 +1604,7 @@ static void x509v3_load_extensions(X509 *x)
   if(!X509_get_version(x))
     x->ex_flags |= EXFLAG_V1;
   /* Handle basic constraints */
-  if((bs=X509_get_ext_d2i(x, NID_basic_constraints, NULL, NULL))) {
+  if((bs=X509_get_ext_d2i(x, NID_basic_constraints, &crit, &idx))) {
     if(bs->ca)
       x->ex_flags |= EXFLAG_CA;
     if(bs->pathlen) {
@@ -1616,7 +1623,7 @@ static void x509v3_load_extensions(X509 *x)
   }
 
   /* Handle proxy certificates */
-  if((pci=X509_get_ext_d2i(x, NID_proxyCertInfo, NULL, NULL))) {
+  if((pci=X509_get_ext_d2i(x, NID_proxyCertInfo, &crit, &idx))) {
     if (x->ex_flags & EXFLAG_CA ||
         X509_get_ext_by_NID(x, NID_subject_alt_name, 0) >= 0
         || X509_get_ext_by_NID(x, NID_issuer_alt_name, 0) >= 0) {
@@ -1632,7 +1639,7 @@ static void x509v3_load_extensions(X509 *x)
   }
 
   /* Handle key usage */
-  if((usage=X509_get_ext_d2i(x, NID_key_usage, NULL, NULL))) {
+  if((usage=X509_get_ext_d2i(x, NID_key_usage, &crit, &idx))) {
     if(usage->length > 0) {
       x->ex_kusage = usage->data[0];
       if(usage->length > 1)
@@ -1644,7 +1651,7 @@ static void x509v3_load_extensions(X509 *x)
     ASN1_BIT_STRING_free(usage);
   }
   x->ex_xkusage = 0;
-  if((extusage=X509_get_ext_d2i(x, NID_ext_key_usage, NULL, NULL))) {
+  if((extusage=X509_get_ext_d2i(x, NID_ext_key_usage, &crit, &idx))) {
     x->ex_flags |= EXFLAG_XKUSAGE;
     for(i = 0; i < sk_ASN1_OBJECT_num(extusage); i++) {
       switch(OBJ_obj2nid(sk_ASN1_OBJECT_value(extusage,i))) {
@@ -1685,18 +1692,18 @@ static void x509v3_load_extensions(X509 *x)
     sk_ASN1_OBJECT_pop_free(extusage, ASN1_OBJECT_free);
   }
 
-  if((ns=X509_get_ext_d2i(x, NID_netscape_cert_type, NULL, NULL))) {
+  if((ns=X509_get_ext_d2i(x, NID_netscape_cert_type, &crit, &idx))) {
     if(ns->length > 0) x->ex_nscert = ns->data[0];
     else x->ex_nscert = 0;
     x->ex_flags |= EXFLAG_NSCERT;
     ASN1_BIT_STRING_free(ns);
   }
 
-  x->skid =X509_get_ext_d2i(x, NID_subject_key_identifier, NULL, NULL);
-  x->akid =X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
-  x->crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, NULL, NULL);
-  x->rfc3779_addr =X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, NULL, NULL);
-  x->rfc3779_asid =X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, NULL, NULL);
+  x->skid =X509_get_ext_d2i(x, NID_subject_key_identifier, &crit, &idx);
+  x->akid =X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, &idx);
+  x->crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, &crit, &idx);
+  x->rfc3779_addr =X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, &crit, &idx);
+  x->rfc3779_asid =X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, &crit, &idx);
 
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
@@ -1788,6 +1795,8 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
   int ret = 0;
   X509_EXTENSION    *ex = NULL;
   BASIC_CONSTRAINTS *bs = NULL;
+  int crit = INT_MIN;
+  int idx = INT_MIN;
 
   /* test the basic_constraints based against either an
      CA_CERT (cert authority), EE_CERT (end entity), or TA_CERT
@@ -1819,7 +1828,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
             goto skip;
           }
 
-          bs=X509_get_ext_d2i(x, NID_basic_constraints, NULL, NULL);
+          bs=X509_get_ext_d2i(x, NID_basic_constraints, &crit, &idx);
           if (!(bs->ca)) {
             log_msg(LOG_ERR,
 		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
@@ -1979,6 +1988,7 @@ static int rescert_aki_chk(X509 *x, int ct)
   int ex_nid;
   int ret = 0;
   int crit = INT_MIN;
+  int idx = INT_MIN;
   X509_EXTENSION  *ex = NULL;
   AUTHORITY_KEYID *akid = NULL;
 
@@ -1995,7 +2005,7 @@ static int rescert_aki_chk(X509 *x, int ct)
         goto skip;
       }
 
-      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, NULL);
+      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, &idx);
       if (!akid) {
           if (crit == -2) {  /* extension occurs more than once */
               log_msg(LOG_ERR, "[aki] duplicate aki found");
@@ -2149,6 +2159,8 @@ static int rescert_crldp_chk(X509 *x, int ct)
   DIST_POINT     *dist_st = NULL;
   X509_EXTENSION *ex = NULL;
   GENERAL_NAME   *gen_name = NULL;
+  int crit = INT_MIN;
+  int idx = INT_MIN;
 
   for(i = 0; i < X509_get_ext_count(x); i++)
     {
@@ -2192,7 +2204,7 @@ static int rescert_crldp_chk(X509 *x, int ct)
   we should be here if NID_crl_distribution_points was found,
   and it was not marked critical
 */
-  crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, NULL, NULL);
+  crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, &crit, &idx);
   if ( !crldp )
     {
       log_msg(LOG_ERR, "[crldp] could not retrieve crldp extension");
@@ -2283,6 +2295,8 @@ static int rescert_aia_chk(X509 *x, int ct)
   X509_EXTENSION *ex;
   static const unsigned char aia_oid[] =
     {0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x2};
+  int crit = INT_MIN;
+  int idx = INT_MIN;
 
   aia_oid_len = sizeof(aia_oid);
 
@@ -2324,7 +2338,7 @@ static int rescert_aia_chk(X509 *x, int ct)
      requiring the URI to be case sensitive.
   */
 
-  aia = X509_get_ext_d2i(x, NID_info_access, NULL, NULL);
+  aia = X509_get_ext_d2i(x, NID_info_access, &crit, &idx);
   if (!aia) {
     log_msg(LOG_ERR, "[aia] could not retrieve aia extension");
     return(ERR_SCM_NOAIA);
@@ -2393,6 +2407,8 @@ static int rescert_sia_chk(X509 *x, int ct)
     {0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x0b};
   const int sia_dir_oid_len = sizeof(sia_dir_oid);
   const int sia_ee_oid_len = sizeof(sia_ee_oid);
+  int crit = INT_MIN;
+  int idx = INT_MIN;
 
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
@@ -2434,7 +2450,7 @@ static int rescert_sia_chk(X509 *x, int ct)
 
   */
 
-  sia = X509_get_ext_d2i(x, NID_sinfo_access, NULL, NULL);
+  sia = X509_get_ext_d2i(x, NID_sinfo_access, &crit, &idx);
   if (!sia) {
     log_msg(LOG_ERR, "[sia] could not retrieve sia extension");
     return(ERR_SCM_NOSIA);
@@ -2502,7 +2518,6 @@ skip:
 
 static int rescert_cert_policy_chk(X509 *x)
 {
-
   int policy_flag = 0;
   int i;
   int ex_nid;
@@ -2514,6 +2529,8 @@ static int rescert_cert_policy_chk(X509 *x)
   char policy_id_str[32];
   char *oid_policy_id = "1.3.6.1.5.5.7.14.2\0";
   int policy_id_len = strlen(oid_policy_id);
+  int crit = INT_MIN;
+  int idx = INT_MIN;
 
   memset(policy_id_str, '\0', sizeof(policy_id_str));
 
@@ -2542,7 +2559,7 @@ static int rescert_cert_policy_chk(X509 *x)
 
   /* we should be here if policy_flag == 1, it was marked critical,
      and there was only one instance of it. */
-  ex_cpols = X509_get_ext_d2i(x, NID_certificate_policies, NULL, NULL);
+  ex_cpols = X509_get_ext_d2i(x, NID_certificate_policies, &crit, &idx);
   if (!ex_cpols) {
     log_msg(LOG_ERR, "[policy] policies present but could not retrieve");
     ret = ERR_SCM_NOPOLICY;
