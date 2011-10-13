@@ -81,10 +81,27 @@ Function: Converts lth decimal digits, starting at c, to a number
     return val;
     }
 
+static struct casn *choose_time(struct casn *casnp)
+  {
+  if (vsize_casn(&casnp[1])) return &casnp[1];
+  if (vsize_casn(&casnp[2])) return &casnp[2];
+  return NULL;
+  }
+
 int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
     {
     int diff;
     ulong t1, t2;
+    struct casn *casnp;
+
+    if (casnp1->type == ASN_CHOICE) casnp = choose_time(
+      (struct CertificateValidityDate *) casnp1);
+    if (!casnp) return _casn_obj_err(casnp1, ASN_TIME_ERR);
+    casnp1 = casnp;
+    if (casnp2->type == ASN_CHOICE) casnp = choose_time(
+      (struct CertificateValidityDate *) casnp2);
+    if (!casnp) return _casn_obj_err(casnp2, ASN_TIME_ERR);
+    casnp2 = casnp;
 
     if ((casnp1->type != ASN_UTCTIME && casnp1->type != ASN_GENTIME) ||
         (casnp2->type != ASN_UTCTIME && casnp2->type != ASN_GENTIME) ||
