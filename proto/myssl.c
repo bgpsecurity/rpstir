@@ -17,6 +17,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,6 +30,7 @@
 #include <limits.h>
 #include <cryptlib.h>
 
+#include "globals.h"
 #include "hashutils.h"
 #include "myssl.h"
 #include "scm.h"
@@ -2902,37 +2904,85 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 
 	length = vsize_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm);
 	if (length <= 0) {
-		log_msg(LOG_ERR, "length of pub key sig alg oid <= 0");
+		log_msg(LOG_ERR, "length of subj pub key sig alg oid <= 0");
 		return ERR_SCM_BADALG;
 	}
 	char *alg_pubkey_oidp = calloc(1, length + 1);
 	if (read_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm,
 			alg_pubkey_oidp) != length) {
 		free(alg_pubkey_oidp);
-		log_msg(LOG_ERR, "pub key sig alg oid actual length != stated length");
+		log_msg(LOG_ERR, "subj pub key sig alg oid actual length != stated length");
 		return ERR_SCM_BADALG;
 	}
 
 	if (strncmp(alg_pubkey_oidp, id_rsadsi_rsaEncryption, length) != 0) {
 		free(alg_pubkey_oidp);
-		log_msg(LOG_ERR, "pub key sig alg id does not match spec");
+		log_msg(LOG_ERR, "subj pub key sig alg id does not match spec");
 		return ERR_SCM_BADALG;
 	}
 
-/*
-	// read the subject public key modulus
-	uchar *to = calloc(1, 300);
-	int shift = -1;
-	int num_bytes = read_casn_bits(&certp->toBeSigned.subjectPublicKeyInfo.
-			subjectPublicKey, to, &shift);
-	printf("num_bytes:  %d\n", num_bytes);
-	printf("shift:  %d\n", shift);
-*/
-	// modulus must be 2048-bits
+	free(alg_pubkey_oidp);
 
-	// read the subject public key exponent
+	// read the subject public key
+	int bytes_to_read = vsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
+			subjectPublicKey);
+	if (bytes_to_read > SUBJ_PUBKEY_MAX_BYTES) {
+		log_msg(LOG_ERR, "subj pub key too long");
+		return ERR_SCM_BADALG;
+	}
+	uchar *pubkey_buf = calloc(1, SUBJ_PUBKEY_MAX_BYTES + 1);
+	int bytes_read;
+    bytes_read = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
+			subjectPublicKey, &pubkey_buf);
+    if (bytes_read != bytes_to_read) {
+		log_msg(LOG_ERR, "subj pub key actual length != stated");
+		free(pubkey_buf);
+		return ERR_SCM_BADALG;
+    }
+    struct RSAPubKey rsapubkey;
+    RSAPubKey(&rsapubkey, 0);
+    bytes_read = decode_casn(&rsapubkey.self, &pubkey_buf[1]);
+    free(pubkey_buf);
+    if (bytes_read < 0) {
+		log_msg(LOG_ERR, "error decoding subj pub key");
+		return ERR_SCM_BADALG;
+    }
 
-	// exponent must be 65,537
+	// Subject public key modulus must be 2048-bits.
+    bytes_to_read = vsize_casn(&rsapubkey.modulus);
+    // TODO: can we always count on an extra leading zero byte?
+	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_NUM_BYTES + 1) {
+		log_msg(LOG_ERR, "subj pub key modulus too long");
+		return ERR_SCM_BADALG;
+	}
+	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
+    uchar *pubkey_modulus_buf = calloc(1, bytes_to_read+1);
+    bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
+	free(pubkey_modulus_buf);
+    if (bytes_read != bytes_to_read) {
+		log_msg(LOG_ERR, "subj pub key modulus actual length != stated");
+		return ERR_SCM_BADALG;
+    }
+
+	// Subject public key exponent must = 65,537.
+    bytes_to_read = vsize_casn(&rsapubkey.exponent);
+	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_NUM_BYTES) {
+		log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
+		return ERR_SCM_BADALG;
+	}
+    uchar *pubkey_exponent_buf = calloc(1, sizeof(uint32_t));
+    bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
+    if (bytes_read != bytes_to_read) {
+		log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
+		free(pubkey_exponent_buf);
+		return ERR_SCM_BADALG;
+    }
+    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT) {
+		log_msg(LOG_ERR, "subj pub key exponent != SUBJ_PUBKEY_EXPONENT");
+		free(pubkey_exponent_buf);
+		return ERR_SCM_BADALG;
+    }
+	free(pubkey_exponent_buf);
 
 	return 0;
 }

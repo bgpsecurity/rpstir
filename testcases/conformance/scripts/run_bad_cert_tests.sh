@@ -49,8 +49,8 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertNums                    # Error reading cert (-17)
 # rcli -y -f badCertOuterSigAlg.cer         # Differing algorithms in cert (-95)
 # rcli -y -f badCertPubKeyAlg.cer           # Differing algorithms in cert (-95)
-# rcli -y -f badCertPubKeyExp.cer                # Add operation succeeded
-# rcli -y -f badCertPubKeyLth.cer                # Add operation succeeded
+# rcli -y -f badCertPubKeyExp.cer           # Differing algorithms in cert (-95)
+# rcli -y -f badCertPubKeyLth.cer           # Differing algorithms in cert (-95)
 # rcli -y -f badCertResourcesASNoCrit.cer   # Extension must be critical (-48)
 # rcli -y -f badCertResourcesBadAFI.cer     # Certificate validation error (-30)
 # rcli -y -f badCertResourcesBadASOrder.cer      # Add operation succeeded
