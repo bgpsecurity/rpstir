@@ -15,12 +15,9 @@ config.status
 configure
 TAGS
 *.swp
-doc/doxygen/warnings.log
 resource-pki-*.tar.gz
 
 # directories generated during program execution
 *REPOSITORY
 *LOGS
 *EEcertificates
-doc/doxygen/def
-doc/doxygen/html
