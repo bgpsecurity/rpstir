@@ -30,6 +30,14 @@ LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
 
 bin_PROGRAMS = rsync_aur rsync_listener
 
+EXTRA_DIST = \
+	AUR.readme \
+	rsync_cord.py \
+	rsync_pull_sample.config \
+	rsync_pull.sh \
+	rsync_test.config \
+	test.log
+
 rsync_aur_SOURCES = main.c main.h parse.c socket_stuff.c sig_handler.c \
 	csapp.c csapp.h usage.c usage.h socket_stuff.h parse.h sig_handler.h
 

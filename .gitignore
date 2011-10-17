@@ -16,6 +16,7 @@ configure
 TAGS
 *.swp
 doc/doxygen/warnings.log
+resource-pki-*.tar.gz
 
 # directories generated during program execution
 *REPOSITORY
