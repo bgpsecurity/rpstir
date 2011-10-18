@@ -20,7 +20,7 @@
 AC_PREREQ(2.59)
 AC_INIT(resource-PKI, 0.01, mreynolds@bbn.com)
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([1.11], [foreign])
+AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
@@ -60,7 +60,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
     [odbc-include],
-    AS_HELP_STRING([--with-odbc-include],[Path to unixodbc include files: Defaults to /usr/local/include ]),
+    AS_HELP_STRING([--with-odbc-include],[Path to odbc include files: Defaults to /usr/local/include ]),
     [ odbc_include=$withval],
     [ odbc_include=/usr/local/include]
 )
@@ -74,7 +74,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
     [odbc-lib],
-    AS_HELP_STRING([--with-odbc-lib],[Path to unixODBC install location: Defaults to /usr/local/lib ]),
+    AS_HELP_STRING([--with-odbc-lib],[Path to odbc install location: Defaults to /usr/local/lib ]),
     [ odbc_lib=$withval],
     [ odbc_lib=/usr/local/lib]
 )
@@ -99,21 +99,40 @@ if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
 fi
 
+#Check for GCC Stack-Smashing Protector and enable in some cases
+#  If --enable-stack-protector is specified: enable it
+#  Else if --disable-stack-protector is specified: don't enable it
+#  Else if C compiler supports it: enable it
+#  Else: don't enable it
+AC_MSG_CHECKING([whether C compiler supports -fstack-protector])
+CFLAGS_RESTORE="${CFLAGS-}"
+CFLAGS="${CFLAGS-} -fstack-protector"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
+    [AC_MSG_RESULT([yes]); HAVE_STACK_PROTECTOR=yes],
+    [AC_MSG_RESULT([no]);  HAVE_STACK_PROTECTOR=no])
+CFLAGS="${CFLAGS_RESTORE-}"
+AC_ARG_ENABLE(
+    [stack-protector],
+    AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ]),
+    [ if test x"$enableval" != xno; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ],
+    [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
+)
+
 #Checks for libraries.
 AC_SEARCH_LIBS([pthread_create],[pthread],[],[
-	LDFLAGS="{LDFLAGS-} -lpthread"
-	echo "Your system requires -lpthread being added to the flags"
+	echo "Error: libpthread is required for building this project"
+	exit -1;
 ])
 AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst odbc],[],[
-	echo "Error: unixODBC is required for building this project"
+AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst iodbcinst],[],[
+	echo "Error: ODBC is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([SQLConnect],[odbc odbcinst],[], [
-	echo "Error: unixODBC is required for building this project"
+AC_SEARCH_LIBS([SQLConnect],[odbc iodbc],[], [
+	echo "Error: ODBC is required for building this project"
 	exit -1;
 ])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[

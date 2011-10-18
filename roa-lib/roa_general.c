@@ -21,6 +21,8 @@
 
 #include <assert.h>
 #include <arpa/inet.h> 
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "roa_utils.h"
 
 #define SKI_SIZE 20

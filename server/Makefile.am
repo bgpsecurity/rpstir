@@ -28,6 +28,18 @@ LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
 bin_PROGRAMS = testClient server doUpdate sampleClient
 noinst_LIBRARIES = libpdu.a
 
+EXTRA_DIST = \
+	cleanServerData \
+	doServer \
+	INSTRUCTIONS \
+	runTestServer \
+	sampleHostsFile \
+	startAgent.sh \
+	testlog.1 \
+	testlog.2 \
+	testlog.3 \
+	testSpecs
+
 testClient_SOURCES = testClient.c
 testClient_LDFLAGS = $(LIBS)
 server_SOURCES = server.c

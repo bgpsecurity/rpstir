@@ -20,6 +20,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+SUFFIXES = .asn
+
 AM_CFLAGS = -g -Wall -I../casn
 
 ASN_GEN=../asn_gen/asn_gen
@@ -40,22 +42,22 @@ ASN_SOURCE= \
 
 GENERATED_C_FILES=$(ASN_SOURCE:.asn=.c)
 GENERATED_H_FILES=$(ASN_SOURCE:.asn=.h)
+GENERATED_O_FILES=$(ASN_SOURCE:.asn=.$(OBJEXT))
 
 OTHER_C_FILES=\
         CertificateToBeSignedConstraint.c \
         CertificateRevocationListToBeSignedConstraint.c
+OTHER_O_FILES=$(OTHER_C_FILES:.c=.$(OBJEXT))
 
+$(OTHER_O_FILES): $(GENERATED_H_FILES)
 
-O_FILES=$(GENERATED_C_FILES:.c=.o) $(OTHER_C_FILES:.c=.o)
-
-SUFFIXES: .asn
-
-.asn.c:
+%.c %.h: %.asn
 	$(ASN_GEN) -c $<
 
 noinst_LIBRARIES = libasn.a
 
-$(O_FILES): $(GENERATED_C_FILES)
+libasn_a_SOURCES = $(ASN_SOURCE) $(OTHER_C_FILES)
+libasn_a_LIBADD = $(GENERATED_O_FILES)
 
-libasn_a_SOURCES = $(GENERATED_C_FILES) $(OTHER_C_FILES)
-
+CLEANFILES = $(GENERATED_C_FILES) $(GENERATED_H_FILES)
+EXTRA_DIST = oidtable
