@@ -16,6 +16,7 @@
 
 /* =============================================================================
 --------------------------- Based on external standards ----------------------*/
+#define SER_NUM_MAX_SZ				20
 #define SUBJ_PUBKEY_EXPONENT		65537
 #define SUBJ_PUBKEY_EXPONENT_SZ		3
 #define SUBJ_PUBKEY_MAX_SZ			280

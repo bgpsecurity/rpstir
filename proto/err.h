@@ -3,12 +3,12 @@
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 3.0-beta
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -143,8 +143,9 @@
 #define ERR_SCM_BADISSUER   -114        /* invalid issuer name */
 #define ERR_SCM_INVALAKI    -115        /* invalid AKI */
 #define ERR_SCM_CRLDPNMRS   -116        /* no rsync URI in CRLDP */
+#define ERR_SCM_BADSERNUM	-117		/* bad serial number */
 
-#define ERR_SCM_MAXERR      -116
+#define ERR_SCM_MAXERR      -117
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

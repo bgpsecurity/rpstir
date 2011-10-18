@@ -3,12 +3,12 @@
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * BBN Address and AS Number PKI Database/repository software
  * Version 3.0-beta
- * 
+ *
  * US government users are permitted unrestricted rights as
- * defined in the FAR.  
+ * defined in the FAR.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT
  * WARRANTY OF ANY KIND, either express or implied.
@@ -123,7 +123,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Bad attributes",               /* ERR_SCM_BADATTR */
     "Invalid addr family",          /* ERR_SCM_INVALFAM */
     "No signature",                 /* ERR_SCM_NOSIG */
-    
+
     "Duplicate signature",          /* ERR_SCM_DUPSIG -90 */
     "Hash error",                   /* ERR_SCM_BADHASH */
     "Error in FileAndHash",         /* ERR_SCM_FAH */
@@ -140,9 +140,9 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Can't find RP certificate",    /* ERR_SCM_NORPCERT */
     "Defective constraints file",   /* ERR_SCM_BADSKIFILE */
     "Error signing para-cert",      /* ERR_SCM_SIGNINGERR */
-    "Invalid ROA",                  /* ERR_SCM_INVALROA */  
-    "Invalid RTA",                  /* ERR_SCM_INVALRTA */  
-    "Invalid manifest",             /* ERR_SCM_INVALMAN */  
+    "Invalid ROA",                  /* ERR_SCM_INVALROA */
+    "Invalid RTA",                  /* ERR_SCM_INVALRTA */
+    "Invalid manifest",             /* ERR_SCM_INVALMAN */
     "Error writing EE cert",        /* ERR_SCM_WRITE_EE */
     "Key too small",                /* ERR_SCM_SMALLKEY */
     "Invalid indefinite ASN.1 length",  /* ERR_SCM_ASN1_LTH */
@@ -151,6 +151,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid issuer name",          /* ERR_SCM_BADISSUER */
     "Invalid AKI",                  /* ERR_SCM_INVALAKI */
     "No rsync URI in CRLDP",        /* ERR_SCM_CRLDPNMRS */
+    "Bad serial number"				/* ERR_SCM_BADSERNUM */
   } ;
 
 char *err2string(int err)

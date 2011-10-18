@@ -2384,16 +2384,16 @@ skip:
   return(ret);
 }
 
-/*************************************************************
- * rescert_sia_chk(X509 *, int)                              *
- *                                                           *
- *  Subject Information Access -                             *
- *    CA - non-critical - MUST be present                    *
- *    non-CA - MUST NOT be present                           *
- *                                                           *
- ************************************************************/
+/**=============================================================================
+ * @brief Check correctness of SIA.
+ *
+ * @param x - X509*
+ * @param ct -
+ * @param certp (struct Certificate*)
+ * @retval ret 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
 
-static int rescert_sia_chk(X509 *x, int ct)
+static int rescert_sia_chk(X509 *x, int ct/*, struct Certificate *certp */)
 {
   int sinfo_flag = 0, uri_flag = 0;
   int i;
@@ -2926,11 +2926,11 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 	// read the subject public key
 	int bytes_to_read = vsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
 			subjectPublicKey);
-	if (bytes_to_read > SUBJ_PUBKEY_MAX_BYTES) {
+	if (bytes_to_read > SUBJ_PUBKEY_MAX_SZ) {
 		log_msg(LOG_ERR, "subj pub key too long");
 		return ERR_SCM_BADALG;
 	}
-	uchar *pubkey_buf = calloc(1, SUBJ_PUBKEY_MAX_BYTES + 1);
+	uchar *pubkey_buf = calloc(1, SUBJ_PUBKEY_MAX_SZ + 1);
 	int bytes_read;
     bytes_read = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
 			subjectPublicKey, &pubkey_buf);
@@ -2951,7 +2951,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 	// Subject public key modulus must be 2048-bits.
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
     // TODO: can we always count on an extra leading zero byte?
-	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_NUM_BYTES + 1) {
+	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
 		log_msg(LOG_ERR, "subj pub key modulus too long");
 		return ERR_SCM_BADALG;
 	}
@@ -2966,7 +2966,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 
 	// Subject public key exponent must = 65,537.
     bytes_to_read = vsize_casn(&rsapubkey.exponent);
-	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_NUM_BYTES) {
+	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ) {
 		log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
 		return ERR_SCM_BADALG;
 	}
@@ -2987,6 +2987,42 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 	return 0;
 }
 
+
+/**=============================================================================
+ * @brief Check that cert has a positive integer serial number.
+ *
+ * @param certp (struct Certificate*)
+ * @retval ret 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+/*
+static int rescert_serial_number_chk(struct Certificate *certp) {
+	int bytes_to_read = vsize_casn(&certp->toBeSigned.serialNumber);
+	if (bytes_to_read != SER_NUM_SZ) {
+		log_msg(LOG_ERR, "serial number field too long");
+		return (ERR_SCM_BADSERNUM);
+	}
+
+	uchar *ser_num_buf = calloc(1, SER_NUM_SZ);
+	if (!ser_num_buf) {
+		return ERR_SCM_NOMEM;
+	}
+	int bytes_read = readvsize_casn(&certp->toBeSigned.serialNumber, &ser_num_buf);
+	if (bytes_read != bytes_to_read) {
+		log_msg(LOG_ERR, "serial number actual length != stated length");
+		return (ERR_SCM_BADSERNUM);
+	}
+
+	if (*ser_num_buf  &  SER_NUM_NOT_NEGATIVE) {
+		log_msg(LOG_ERR, "serial number does not meet spec");
+		return (ERR_SCM_BADSERNUM);
+	}
+
+	// TODO: Do we check whether the ser num is unique to the issuer?
+	// TODO:
+
+	return 0;
+}
+*/
 
 /**=============================================================================
  * @brief Some cert checks that don't fit anywhere else.
@@ -3036,9 +3072,7 @@ static int rescert_misc_chk(struct Certificate *certp) {
  *    check performed elsewhere)                          *
  *                                                        *
  *  Subject Information Access -                          *
- *    CA - non-critical - MUST be present                 *
- *    non-CA - MUST NOT be present                        *
- *      Will check for this elsewhere.                    *
+ *    non-critical - MUST be present                      *
  *                                                        *
  *  Certificate Policies - critical - MUST be present     *
  *    PolicyQualifiers - MUST NOT be used in this profile *
@@ -3138,7 +3172,12 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_sig_algs_chk");
   if ( ret < 0 )
 	  return(ret);
-
+/*
+  ret = rescert_serial_number_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_serial_number_chk");
+  if ( ret < 0 )
+	  return(ret);
+*/
   ret = rescert_misc_chk(certp);
   log_msg(LOG_DEBUG, "rescert_misc_chk");
   if ( ret < 0 )
