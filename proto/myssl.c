@@ -2384,17 +2384,24 @@ skip:
   return(ret);
 }
 
+
 /**=============================================================================
  * @brief Check correctness of SIA.
  *
  * @param x - X509*
- * @param ct -
+ * @param ct - integer representing certificate type
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-
-static int rescert_sia_chk(X509 *x, int ct/*, struct Certificate *certp */)
+static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp)
 {
+//	*certp->toBeSigned.extensions.extension;
+
+
+
+
+
+// -----------------------------------------------------------------------------
   int sinfo_flag = 0, uri_flag = 0;
   int i;
   int ex_nid;
@@ -2989,40 +2996,42 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 
 
 /**=============================================================================
- * @brief Check that cert has a positive integer serial number.
+ * @brief Check that the cert's serial number meets spec.
  *
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-/*
 static int rescert_serial_number_chk(struct Certificate *certp) {
 	int bytes_to_read = vsize_casn(&certp->toBeSigned.serialNumber);
-	if (bytes_to_read != SER_NUM_SZ) {
+	if (bytes_to_read > SER_NUM_MAX_SZ) {
 		log_msg(LOG_ERR, "serial number field too long");
 		return (ERR_SCM_BADSERNUM);
 	}
 
-	uchar *ser_num_buf = calloc(1, SER_NUM_SZ);
-	if (!ser_num_buf) {
+	uint8_t *sernump = calloc(1, bytes_to_read + 1);
+	if (!sernump) {
+		log_msg(LOG_ERR, "could not alloc for serial number");
 		return ERR_SCM_NOMEM;
 	}
-	int bytes_read = readvsize_casn(&certp->toBeSigned.serialNumber, &ser_num_buf);
+
+	int bytes_read = readvsize_casn(&certp->toBeSigned.serialNumber, &sernump);
 	if (bytes_read != bytes_to_read) {
 		log_msg(LOG_ERR, "serial number actual length != stated length");
+		free(sernump);
 		return (ERR_SCM_BADSERNUM);
 	}
 
-	if (*ser_num_buf  &  SER_NUM_NOT_NEGATIVE) {
-		log_msg(LOG_ERR, "serial number does not meet spec");
+	if (*sernump  &  0x80) {
+		log_msg(LOG_ERR, "serial number is negative");
+		free(sernump);
 		return (ERR_SCM_BADSERNUM);
 	}
 
-	// TODO: Do we check whether the ser num is unique to the issuer?
-	// TODO:
+	free(sernump);
 
 	return 0;
 }
-*/
+
 
 /**=============================================================================
  * @brief Date-related checks
@@ -3035,7 +3044,7 @@ static int rescert_dates_chk(struct Certificate *certp) {
 		&certp->toBeSigned.validity.notAfter.self) > 0)
 	{
 		log_msg(LOG_ERR, "invalid certificate, notBefore > notAfter");
-		return ERR_SCM_BADDATES;
+		return ERR_SCM_BADDATES;  // I am the monarch of the sea.  I am the ruler of the qu...
 	}
 
 	return 0;
@@ -3150,7 +3159,7 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   if ( ret < 0 )
     return(ret);
 
-  ret = rescert_sia_chk(x, ct);
+  ret = rescert_sia_chk(x, ct, certp);
   log_msg(LOG_DEBUG, "rescert_sia_chk");
   if ( ret < 0 )
     return(ret);
@@ -3177,12 +3186,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_sig_algs_chk");
   if ( ret < 0 )
 	  return(ret);
-/*
+
   ret = rescert_serial_number_chk(certp);
   log_msg(LOG_DEBUG, "rescert_serial_number_chk");
   if ( ret < 0 )
 	  return(ret);
-*/
 
   ret = rescert_dates_chk(certp);
   log_msg(LOG_DEBUG, "rescert_dates_chk");

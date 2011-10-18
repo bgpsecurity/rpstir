@@ -59,7 +59,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertResourcesIPNoCrit.cer   # Extension must be critical (-48)
 # rcli -y -f badCertResourcesNone.cer       # Missing RFC3779 ext (-78)
 # rcli -y -f badCertResourcesSAFI.cer       # Certificate validation error (-30)
-# rcli -y -f badCertSerNum.cer                   # Add operation succeeded
+# rcli -y -f badCertSerNum.cer              # Bad serial number (-117)
 # rcli -y -f badCertSIA2x.cer               # Duplicate SIA (-72)
 # rcli -y -f badCertSIAAccessLoc.cer        # SIA not a URI (-73)
 # rcli -y -f badCertSIAAccessMethod.cer          # Add operation succeeded
