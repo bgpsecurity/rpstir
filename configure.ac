@@ -60,7 +60,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
     [odbc-include],
-    AS_HELP_STRING([--with-odbc-include],[Path to unixodbc include files: Defaults to /usr/local/include ]),
+    AS_HELP_STRING([--with-odbc-include],[Path to odbc include files: Defaults to /usr/local/include ]),
     [ odbc_include=$withval],
     [ odbc_include=/usr/local/include]
 )
@@ -74,7 +74,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
     [odbc-lib],
-    AS_HELP_STRING([--with-odbc-lib],[Path to unixODBC install location: Defaults to /usr/local/lib ]),
+    AS_HELP_STRING([--with-odbc-lib],[Path to odbc install location: Defaults to /usr/local/lib ]),
     [ odbc_lib=$withval],
     [ odbc_lib=/usr/local/lib]
 )
@@ -108,12 +108,12 @@ AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst odbc],[],[
-	echo "Error: unixODBC is required for building this project"
+AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst iodbcinst],[],[
+	echo "Error: ODBC is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([SQLConnect],[odbc odbcinst],[], [
-	echo "Error: unixODBC is required for building this project"
+AC_SEARCH_LIBS([SQLConnect],[odbc iodbc],[], [
+	echo "Error: ODBC is required for building this project"
 	exit -1;
 ])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
