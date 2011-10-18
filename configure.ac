@@ -99,6 +99,25 @@ if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
 fi
 
+#Check for GCC Stack-Smashing Protector and enable in some cases
+#  If --enable-stack-protector is specified: enable it
+#  Else if --disable-stack-protector is specified: don't enable it
+#  Else if C compiler supports it: enable it
+#  Else: don't enable it
+AC_MSG_CHECKING([whether C compiler supports -fstack-protector])
+CFLAGS_RESTORE="${CFLAGS-}"
+CFLAGS="${CFLAGS-} -fstack-protector"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
+    [AC_MSG_RESULT([yes]); HAVE_STACK_PROTECTOR=yes],
+    [AC_MSG_RESULT([no]);  HAVE_STACK_PROTECTOR=no])
+CFLAGS="${CFLAGS_RESTORE-}"
+AC_ARG_ENABLE(
+    [stack-protector],
+    AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ]),
+    [ if test x"$enableval" != xno; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ],
+    [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
+)
+
 #Checks for libraries.
 AC_SEARCH_LIBS([pthread_create],[pthread],[],[
 	LDFLAGS="{LDFLAGS-} -lpthread"
