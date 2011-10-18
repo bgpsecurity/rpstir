@@ -3025,13 +3025,18 @@ static int rescert_serial_number_chk(struct Certificate *certp) {
 */
 
 /**=============================================================================
- * @brief Some cert checks that don't fit anywhere else.
+ * @brief Date-related checks
  *
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_misc_chk(struct Certificate *certp) {
-
+static int rescert_dates_chk(struct Certificate *certp) {
+	if (diff_casn_time(&certp->toBeSigned.validity.notBefore.self,
+		&certp->toBeSigned.validity.notAfter.self) > 0)
+	{
+		log_msg(LOG_ERR, "invalid certificate, notBefore > notAfter");
+		return ERR_SCM_BADDATES;
+	}
 
 	return 0;
 }
@@ -3178,8 +3183,9 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   if ( ret < 0 )
 	  return(ret);
 */
-  ret = rescert_misc_chk(certp);
-  log_msg(LOG_DEBUG, "rescert_misc_chk");
+
+  ret = rescert_dates_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_dates_chk");
   if ( ret < 0 )
 	  return(ret);
 
