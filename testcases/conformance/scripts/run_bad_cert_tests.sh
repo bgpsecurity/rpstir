@@ -72,7 +72,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSubjectOID.cer          # Invalid subject name (-113)
 # rcli -y -f badCertSubjectUtf.cer          # Bad filename or file not found (-12)
 # rcli -y -f badCertSubjUID.cer                  # Add operation succeeded
-# rcli -y -f badCertValCrossed.cer          # Certificate expired (-112)
+# rcli -y -f badCertValCrossed.cer          # Invalid dates (-94)
 # rcli -y -f badCertValFromFuture.cer            # There's a possibility this should be added to the database correctly and left untouched until it becomes valid. -- David Mandelberg
 # rcli -y -f badCertValFromTyp.cer          # Invalid date/time (-24)
 # rcli -y -f badCertValToPast.cer           # Certificate expired (-112)

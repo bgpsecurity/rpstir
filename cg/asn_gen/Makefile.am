@@ -28,6 +28,20 @@ AM_CFLAGS= -g -Wall -DINTEL -Dconstruct=cconstruct -Ddo_hdr=cdo_hdr \
 AM_LDFLAGS=
 LDADD = ../casn/libcasn.a
 
-asn_gen_SOURCES = asn_gen.c asn_java.c asn_pproc.c asn_pprocx.c asn_read.c asn_tabulate.c \
-	casn_constr.c casn_hdr.c 
+asn_gen_SOURCES = \
+	asn_error.h \
+	asn_flags.h \
+	asn_gen.c \
+	asn_gen.h \
+	asn.h \
+	asn_java.c \
+	asn_obj.h \
+	asn_pproc.c \
+	asn_pprocx.c \
+	asn_read.c \
+	asn_tabulate.c \
+	asn_timedefs.h \
+	casn_constr.c \
+	casn_hdr.c
+
 asn_gen_LDFLAGS=

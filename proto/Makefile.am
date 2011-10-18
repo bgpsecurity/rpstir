@@ -47,3 +47,5 @@ garbage_SOURCES = garbage.c $(lib_rpki_headers)
 makeROA_SOURCES = makeROA.c $(lib_rpki_headers)
 proofreader_SOURCES = proofreader.c $(lib_rpki_headers)
 testrpwork_SOURCES = testrpwork.c $(lib_rpki_headers)
+
+EXTRA_DIST = *.pem *.cer *.crl sampleQuerySpecs
