@@ -29,6 +29,7 @@
 
 #include <cryptlib.h>
 #include <pthread.h>
+#include <stdint.h>
 
 /*****
  * Different PDU types
@@ -47,29 +48,35 @@
  * Constants for use in the PDUs
  *****/
 #define PROTOCOL_VERSION 0
-#define SOURCE_RPKI 0
-#define SOURCE_IRR 1
-#define FLAG_WITHDRAW 0
-#define FLAG_ANNOUNCE 1
+//#define SOURCE_RPKI 0 // what's this?
+//#define SOURCE_IRR 1 // what's this?
+//#define FLAG_WITHDRAW 0 // should be FLAG_WITHDRAW_ANNOUNCE <bit-position in flags field>
+//#define FLAG_ANNOUNCE 1 // "
 
 /*****
  * Error types for error report pdu's
  *****/
+#define ERR_CORRUPT_DATA 0
 #define ERR_INTERNAL_ERROR 1
 #define ERR_NO_DATA 2
 #define ERR_INVALID_REQUEST 3
-
-typedef unsigned char uchar;
-typedef unsigned int uint;
+#define ERR_UNSUPPORTED_VERSION 4
+#define ERR_UNSUPPORTED_TYPE 5
+#define ERR_UNKNOWN_WITHDRAW 6
+#define ERR_DUPLICATE_ANNOUNCE 7
 
 /*****
  * Basic structure of a PDU
  *****/
 typedef struct _PDU {
-	uchar protocolVersion;
-	uchar pduType;
-	short color;
-	uint length;
+	uint8_t protocolVersion;
+	uint8_t pduType;
+	union {
+		uint16_t cacheNonce;
+		uint16_t reserved;
+		uint16_t errorCode;
+	};
+	uint32_t length;
 	void *typeSpecificData;
 } PDU;
 
