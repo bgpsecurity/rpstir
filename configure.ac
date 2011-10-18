@@ -120,8 +120,8 @@ AC_ARG_ENABLE(
 
 #Checks for libraries.
 AC_SEARCH_LIBS([pthread_create],[pthread],[],[
-	LDFLAGS="{LDFLAGS-} -lpthread"
-	echo "Your system requires -lpthread being added to the flags"
+	echo "Error: libpthread is required for building this project"
+	exit -1;
 ])
 AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
