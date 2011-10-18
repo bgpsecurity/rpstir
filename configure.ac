@@ -24,7 +24,7 @@ AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
-AC_CONFIG_SRCDIR([server/pdu.h])
+AC_CONFIG_SRCDIR([rtr/pdu.h])
 
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
@@ -184,7 +184,7 @@ AC_CONFIG_FILES([Makefile
                  roa-lib/Makefile
                  roa-utils/Makefile
                  rsync_aur/Makefile
-                 server/Makefile
+                 rtr/Makefile
                  testcases/Makefile
 		 testbed/Makefile
 		 testbed/src/Makefile
