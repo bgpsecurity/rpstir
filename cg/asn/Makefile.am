@@ -26,23 +26,7 @@ AM_CFLAGS = -g -Wall -I../casn
 
 ASN_GEN=../asn_gen/asn_gen
 
-ASN_SOURCE= \
-	Algorithms.asn \
-	name.asn \
-	serial_number.asn \
-        orname.asn \
-	extensions.asn \
-	crlv2.asn \
-	keyfile.asn \
-	certificate.asn \
-        manifest.asn \
-	privkey.asn \
-        roa.asn \
-        blob.asn
-
-GENERATED_C_FILES=$(ASN_SOURCE:.asn=.c)
-GENERATED_H_FILES=$(ASN_SOURCE:.asn=.h)
-GENERATED_O_FILES=$(ASN_SOURCE:.asn=.$(OBJEXT))
+include asn-files.mk
 
 OTHER_C_FILES=\
         CertificateToBeSignedConstraint.c \
@@ -60,4 +44,3 @@ libasn_a_SOURCES = $(ASN_SOURCE) $(OTHER_C_FILES)
 libasn_a_LIBADD = $(GENERATED_O_FILES)
 
 CLEANFILES = $(GENERATED_C_FILES) $(GENERATED_H_FILES)
-EXTRA_DIST = oidtable
