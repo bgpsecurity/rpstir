@@ -86,9 +86,7 @@ int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
     int diff;
     ulong t1, t2;
 
-    if ((casnp1->type != ASN_UTCTIME && casnp1->type != ASN_GENTIME) ||
-        (casnp2->type != ASN_UTCTIME && casnp2->type != ASN_GENTIME) ||
-        read_casn_time(casnp1, &t1) <= 0 || read_casn_time(casnp2, &t2) <= 0)
+    if (read_casn_time(casnp1, &t1) <= 0 || read_casn_time(casnp2, &t2) <= 0)
 	return -2;
     diff = t1 - t2;
     if (diff > 1) diff = 1;
@@ -192,7 +190,14 @@ Inputs: Pointer to ASN structure
 Returns: IF error, -1, ELSE length of time field
 */
     int ansr;  
+    struct casn *xcasnp;
 
+    if (casnp->type == ASN_CHOICE)
+      {
+      if (vsize_casn(&casnp[1])) casnp = &casnp[1];
+      else if (vsize_casn(&casnp[2])) casnp = &casnp[2];
+      else return _casn_obj_err(casnp, ASN_TIME_ERR);
+      }
     if ((ansr = _check_filled(casnp)) < 0 || (casnp->type != ASN_UTCTIME &&
         casnp->type != ASN_GENTIME)) return -1;
     if (!ansr) return 0;
