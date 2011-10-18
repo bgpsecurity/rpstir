@@ -1,14 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
+. $RPKI_ROOT/trap_errors
+
 # test functions
 . $THIS_SCRIPT_DIR/test.include
 
 echo "Making C2 expired"
-./makeC2Expired
-check_errs $? "$0 makeC2Expired failed"
+./makeC2Expired || check_errs $? "$0 makeC2Expired failed"
 
 echo $0 PASS
