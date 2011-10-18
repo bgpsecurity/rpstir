@@ -1,0 +1,83 @@
+html, body {
+    height: 100%;
+    overflow: auto;
+}
+
+body {
+    font-size: 10px;
+    font-family: arial;
+    color: #000000;
+    background-color: #FFFFFF;
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+}
+
+#outer {
+    width: 800px;
+    padding: 4px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    position: relative;
+    text-align: left;
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
+}
+
+#content {
+    position: relative;
+    left: 100px;
+    width: 692px;
+    padding: 4px;
+    margin: 0px;
+    background-color: #ffffff;
+    /*
+    float: left;
+    width: 692px;
+    padding: 4px;
+    margin: 0px;
+    background-color: #ffffff;
+    position: relative;
+    */
+}
+
+#links {
+    position: fixed;
+    top: 4;
+    left: 4;
+    width: 100px;
+    background-color: #f4f4f4;
+    z-index: 2;
+
+    /*
+    float: left;
+    width: 100px;
+    background-color: #f4f4f4;
+    z-index: 2;
+    */
+}
+
+table, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+th {
+    font-size: 11px;
+    font-weight: bolder;
+    text-align: center;
+    border: 1px solid black;
+}
+
+caption {
+    font-size: 14px;
+    font-weight: bolder;
+    color: #ff6600;
+    text-align: left;
+}
+
+.clearFloats{
+    clear: both;
+}

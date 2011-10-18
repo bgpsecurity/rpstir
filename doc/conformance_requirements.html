@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="keywords" content="" />
+        <meta name="description" content="" />
+        <title>RPKI Conformance Requirements</title>
+        <link rel="stylesheet" type="text/css" href="conformance_requirements.css" />
+        <link rel="shortcut icon" href="images/favicon.ico" />
+    </head>
+
+<body>
+
+    <div id="outer">
+
+        <div id="links">
+            <a href="conformance_requirements.html#AS">AS</a><br />
+            <a href="conformance_requirements.html#IP">IP</a><br />
+            <a href="conformance_requirements.html#isSelfSigned">isSelfSigned</a><br />
+            <a href="conformance_requirements.html#Serial Number">Serial Number</a><br />
+            <a href="conformance_requirements.html#SIA">SIA</a><br />
+            <a href="conformance_requirements.html#Signature">Signature</a><br />
+            <a href="conformance_requirements.html#UID">UID</a><br />
+        </div>
+
+        <div id="content">
+
+
+            <div id="AS">
+                <table>
+                    <caption>AS</caption>
+                    <tr>
+                        <th>.cer</th>
+                        <th>problem</th>
+                    </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr>
+                        <th>source</th>
+                        <th>statement</th>
+                        <th>implementation</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            draft-ietf-sidr-res-certs-22<br />
+                            4.8.11 AS Resources
+                        </td>
+                        <td>
+                            Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.<br />
+                            This extension contains the list of AS number resources as per [RFC3779], or may specify the "inherit" element.  RDI values are NOT supported in this profile and MUST NOT be used.<br />
+                            This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.
+                        </td>
+                        <td>
+                            -
+                        </td>
+                    </tr>
+                </table>
+            </div> <!-- AS -->
+
+
+            <br />
+            <br />
+            <div id="IP">
+                <table>
+                    <caption>IP</caption>
+                    <tr>
+                        <th>.cer</th>
+                        <th>problem</th>
+                    </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr>
+                        <th>source</th>
+                        <th>statement</th>
+                        <th>implementation</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            draft-ietf-sidr-res-certs-22<br />4.8.11 AS Resources
+                        </td>
+                        <td>
+                            Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.<br />
+                            This extension contains the list of AS number resources as per [RFC3779], or may specify the "inherit" element.  RDI values are NOT supported in this profile and MUST NOT be used.<br />
+                            This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.
+                        </td>
+                        <td>
+                            -
+                        </td>
+                    </tr>
+                </table>
+            </div> <!-- IP -->
+
+
+            <br />
+            <br />
+            <div id="isSelfSigned">
+                <table>
+                    <caption>is self signed?</caption>
+                    <tr>
+                        <th>.cer</th>
+                        <th>problem</th>
+                    </tr>
+                    <tr>
+                        <td>na</td>
+                        <td>is_self_signed()</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr>
+                        <th>source</th>
+                        <th>statement</th>
+                        <th>implementation</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            draft-ieft-sidr-ta-07<br />
+                            2.1 Trust Anchor Locator Format
+                        </td>
+                        <td>
+                            A TA in the RPKI is represented by a self-signed X.509 CA certificate...
+                        </td>
+                        <td>
+                            proto/myssl.c - <br />?
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            rfc5280<br />
+                            3.2 Certification Paths and Trust
+                        </td>
+                        <td>
+                            Self-issued certificates are CA certificates in which the issuer and subject are the same entity.<br />
+                            Self-signed certificates are self-issued certificates where the digital signature may be verified by the public key bound into the certificate.
+                        </td>
+                        <td>
+                            proto/myssl.c - <br />?
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            draft-ietf-sidr-res-certs-22<br />
+                            4.8.3 Authority Key Identifier
+                        </td>
+                        <td>
+                            This extension MUST appear in all Resource Certificates, with the exception of a CA who issues a "self-signed" certificate.  In a self-signed certificate, a CA MAY include this extension, and set it equal to the Subject Key Identifier.  The authorityCertIssuer and authorityCertSerialNumber fields MUST NOT be present.  This extension is non-critical.
+                        </td>
+                        <td>
+                            proto/myssl.c - <br />?
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            draft-ietf-sidr-res-certs-22<br />
+                            4.8.7 Authority Information Access
+                        </td>
+                        <td>
+                            ..."self-signed" certificate, in which case the extension MUST be omitted.  This extension is non-critical.
+                        </td>
+                        <td>
+                            proto/myssl.c - <br />?
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            rfc5280<br />
+                            4.2.1.1 Authority Key Identifier
+                        </td>
+                        <td>
+                            ...where a CA distributes its public key in the form of a "self-signed" certificate, the authority key identifier MAY be omitted.
+                        </td>
+                        <td>
+                            proto/myssl.c - <br />?
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            rfc5280<br />
+                            4.1.2.4 Issuer
+                        </td>
+                        <td>
+                            If the names in the issuer and subject field in a certificate match according to the rules specified in Section 7.1, then the certificate is self-issued.
+                        </td>
+                        <td>
+                            proto/myssl.c - <br />?
+                        </td>
+                    </tr>
+                </table>
+            </div> <!-- IP -->
+
+
+            <br />
+            <br />
+            <div id="AS">
+                <table>
+                    <caption>Serial Number</caption>
+                    <tr>
+                        <th>.cer</th>
+                        <th>problem</th>
+                    </tr>
+                    <tr>
+                        <td>SerNum</td>
+                        <td>negative number</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr>
+                        <th>source</th>
+                        <th>statement</th>
+                        <th>implementation</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            rfc5280<br />
+                            4.1.2.2 Serial Number
+                        </td>
+                        <td>
+                            The serial number MUST be a positive integer ... .  It MUST be unique for each certificate issued by a given CA ... .  CAs MUST force the serialNumber to be a non-negative integer.
+                        </td>
+                        <td>
+                            proto/myssl.c - rescert_ser_num_chk()
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            rfc5280<br />
+                            4.1.2.2 Serial Number
+                        </td>
+                        <td>
+                            Certificate users MUST be able to handle serialNumber values up to 20 octets.  Conforming CAs MUST NOT use serialNumber values longer than 20 octets.
+                        </td>
+                        <td>
+                            proto/myssl.c - rescert_ser_num_chk()
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            rfc5280<br />
+                            4.1.2.2 Serial Number
+                        </td>
+                        <td>
+                           The serial number MUST be a positive integer ... .  It MUST be unique for each certificate issued by a given CA ... .  CAs MUST force the serialNumber to be a non-negative integer. 
+                        </td>
+                        <td>
+                            proto/myssl.c - rescert_ser_num_chk()
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            draft-ietf-sidr-res-certs-22<br />
+                            4.2 Serial number
+                        </td>
+                        <td>
+                           The serial number value is a positive integer that is unique for each certificate issued by a given CA.
+                        </td>
+                        <td>
+                            proto/myssl.c - rescert_ser_num_chk()
+                        </td>
+                    </tr>
+                </table>
+            </div> <!-- AS -->
+
+
+        </div>  <!-- content -->
+
+        <div class="clearFloats"></div>
+
+    </div>  <!-- outer -->
+
+</body>
+</html>
