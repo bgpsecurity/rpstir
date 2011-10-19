@@ -31,6 +31,10 @@
 #include <pthread.h>
 #include <stdint.h>
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 /*****
  * Different PDU types
  *****/
@@ -48,10 +52,8 @@
  * Constants for use in the PDUs
  *****/
 #define PROTOCOL_VERSION 0
-//#define SOURCE_RPKI 0 // what's this?
-//#define SOURCE_IRR 1 // what's this?
-//#define FLAG_WITHDRAW 0 // should be FLAG_WITHDRAW_ANNOUNCE <bit-position in flags field>
-//#define FLAG_ANNOUNCE 1 // "
+#define FLAG_WITHDRAW_ANNOUNCE 0x1
+#define FLAGS_RESERVED (0x2 | 0x4 | 0x8 | 0x10 | 0x20 | 0x40 | 0x80)
 
 /*****
  * Error types for error report pdu's
@@ -65,6 +67,38 @@
 #define ERR_UNKNOWN_WITHDRAW 6
 #define ERR_DUPLICATE_ANNOUNCE 7
 
+
+/*****
+ * structures holding data for an IP prefix (v4 or v6)
+ *****/
+typedef struct _IP4PrefixData {
+	uint8_t flags;
+	uint8_t prefixLength;
+	uint8_t maxLength;
+	uint8_t reserved;
+	struct in_addr prefix4;
+	uint32_t asNumber;
+} IP4PrefixData;
+
+typedef struct _IP6PrefixData {
+	uint8_t flags;
+	uint8_t prefixLength;
+	uint8_t maxLength;
+	uint8_t reserved;
+	struct in6_addr prefix6;
+	uint32_t asNumber;
+} IP6PrefixData;
+
+/*****
+ * structure holding the data for an error response
+ *****/
+typedef struct _ErrorData {
+	uint32_t encapsulatedPDULength;
+	PDU *encapsulatedPDU;
+	uint32_t errorTextLength;
+	uint8_t *errorText;
+} ErrorData;
+
 /*****
  * Basic structure of a PDU
  *****/
@@ -77,28 +111,13 @@ typedef struct _PDU {
 		uint16_t errorCode;
 	};
 	uint32_t length;
-	void *typeSpecificData;
+	union {
+		uint32_t serialNumber;
+		IP4PrefixData ipPrefixData;
+		IP6PrefixData ipPrefixData;
+		ErrorData errorData;
+	};
 } PDU;
-
-/*****
- * structure holding data for an IP prefix (v4 or v6)
- *****/
-typedef struct _IPPrefixData {
-	uchar flags;
-	uchar prefixLength;
-	uchar maxLength;
-	uchar dataSource;
-	uint ipAddress[4];    // for ipv4, only use first entry
-	uint asNumber;
-} IPPrefixData;
-
-/*****
- * structure holding the data for an error response
- *****/
-typedef struct _ErrorData {
-	PDU *badPDU;
-	char *errorText;
-} ErrorData;
 
 /*****
  * if using an SSH session for comms, indicate it by calling this function
