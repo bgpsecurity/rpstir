@@ -115,8 +115,8 @@ typedef struct _PDU {
 	uint32_t length;
 	union {
 		uint32_t serialNumber;
-		IP4PrefixData ipPrefixData;
-		IP6PrefixData ipPrefixData;
+		IP4PrefixData ip4PrefixData;
+		IP6PrefixData ip6PrefixData;
 		ErrorData errorData;
 	};
 } PACKED_STRUCT PDU;
