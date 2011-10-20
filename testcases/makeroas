@@ -1,3 +1,5 @@
+#!/bin/sh -e
+
 ./make_test_roa    -r R111.roa   -a 8      # 1-12
 ./make_test_roa    -r R1111.roa  -a 2      # 1-4
 ./make_test_roa    -r R1112.roa  -a 3      # 1-4
