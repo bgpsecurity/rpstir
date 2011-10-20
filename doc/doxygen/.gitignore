@@ -1,3 +1,4 @@
 warnings.log
 def/
 html/
+doxygen_objdb_*.tmp
