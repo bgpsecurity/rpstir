@@ -22,6 +22,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef _UTILS_LOGUTILS_H
+#define _UTILS_LOGUTILS_H
+
+
 #include "macros.h"
 
 /* These definitions follow conventional meaning and numeric value of
@@ -39,3 +43,6 @@ int log_init(const char *logfile, const char *facility,
 void log_msg(int priority, const char *format, ...) WARN_PRINTF(2,3);
 void log_flush(void);
 void log_close(void);
+
+
+#endif
