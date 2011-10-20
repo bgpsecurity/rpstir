@@ -20,8 +20,11 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS = -g -I../cg/asn -I../proto -I../cg/asn_gen -I../cg/casn -Wall -I../roa-lib \
-	-Wshadow -Wmissing-prototypes -Wmissing-declarations -DHAVE_LONG_LONG
+AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
+	-DHAVE_LONG_LONG
+
+AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
+	-I../cg/casn I../roa-lib -I../utils
 
 LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
 
