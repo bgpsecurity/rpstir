@@ -35,6 +35,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "macros.h"
+
 /*****
  * Different PDU types
  *****/
@@ -78,7 +80,7 @@ typedef struct _IP4PrefixData {
 	uint8_t reserved;
 	struct in_addr prefix4;
 	uint32_t asNumber;
-} IP4PrefixData;
+} PACKED_STRUCT IP4PrefixData;
 
 typedef struct _IP6PrefixData {
 	uint8_t flags;
@@ -87,7 +89,7 @@ typedef struct _IP6PrefixData {
 	uint8_t reserved;
 	struct in6_addr prefix6;
 	uint32_t asNumber;
-} IP6PrefixData;
+} PACKED_STRUCT IP6PrefixData;
 
 /*****
  * structure holding the data for an error response
@@ -117,7 +119,7 @@ typedef struct _PDU {
 		IP6PrefixData ipPrefixData;
 		ErrorData errorData;
 	};
-} PDU;
+} PACKED_STRUCT PDU;
 
 /*****
  * if using an SSH session for comms, indicate it by calling this function
