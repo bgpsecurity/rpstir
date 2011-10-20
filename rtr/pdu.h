@@ -69,6 +69,8 @@
 #define ERR_UNKNOWN_WITHDRAW 6
 #define ERR_DUPLICATE_ANNOUNCE 7
 
+struct _PDU;
+typedef struct _PDU PDU;
 
 /*****
  * structures holding data for an IP prefix (v4 or v6)
@@ -104,7 +106,7 @@ typedef struct _ErrorData {
 /*****
  * Basic structure of a PDU
  *****/
-typedef struct _PDU {
+struct _PDU {
 	uint8_t protocolVersion;
 	uint8_t pduType;
 	union {
@@ -119,7 +121,7 @@ typedef struct _PDU {
 		IP6PrefixData ip6PrefixData;
 		ErrorData errorData;
 	};
-} PACKED_STRUCT PDU;
+} PACKED_STRUCT;
 
 /*****
  * if using an SSH session for comms, indicate it by calling this function
