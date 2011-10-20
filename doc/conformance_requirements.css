@@ -33,30 +33,14 @@ body {
     padding: 4px;
     margin: 0px;
     background-color: #ffffff;
-    /*
-    float: left;
-    width: 692px;
-    padding: 4px;
-    margin: 0px;
-    background-color: #ffffff;
-    position: relative;
-    */
 }
 
 #links {
     position: fixed;
     top: 4;
     left: 4;
-    width: 100px;
-    background-color: #f4f4f4;
+    width: 90px;
     z-index: 2;
-
-    /*
-    float: left;
-    width: 100px;
-    background-color: #f4f4f4;
-    z-index: 2;
-    */
 }
 
 table, td {
