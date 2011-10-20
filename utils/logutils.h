@@ -22,6 +22,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "macros.h"
+
 /* These definitions follow conventional meaning and numeric value of
    kernel loglevels defined in linux/kernel.h */
 #define LOG_ERR     3		/* error conditions */
@@ -34,6 +36,6 @@
 /* Logging interface */
 int log_init(const char *logfile, const char *facility,
 	     int file_loglevel, int stderr_loglevel);
-void log_msg(int priority, const char *format, ...);
+void log_msg(int priority, const char *format, ...) WARN_PRINTF(2,3);
 void log_flush(void);
 void log_close(void);
