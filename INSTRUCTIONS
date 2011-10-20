@@ -264,6 +264,9 @@ output.  If you are using GNU make, then you have the option to use
 
 which will give much shorter compilation/linking notifications.
 
+The RTR code currently only compiles under gcc. If you have multiple
+compilers installed, add the option "CC=gcc" to ./configure.
+
 2.2.3 Build the Executables
 
 Once the configure script has generated all of the Makefiles, build
