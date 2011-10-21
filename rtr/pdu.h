@@ -30,6 +30,7 @@
 #include <cryptlib.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -122,6 +123,8 @@ struct _PDU {
 		ErrorData errorData;
 	};
 } PACKED_STRUCT;
+
+#define PDU_HEADER_LENGTH offsetof(PDU, serialNumber)
 
 /*****
  * if using an SSH session for comms, indicate it by calling this function
