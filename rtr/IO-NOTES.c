@@ -39,7 +39,7 @@ err:
   return NULL;
 }
 
-bool run_transport(
+thread_type run_transport(
   void * const transport_state_voidp,
   void (handle_connection*)(void * handle_connection_arg, void * const connection),
   void * const handle_connection_arg
@@ -49,17 +49,23 @@ bool run_transport(
   struct TransportState * const transport_state = (struct TransportState * const) transport_state_voidp;
 
   listen for new connections
-  when there's a new connection
+  run in child thread
   {
-    struct ConnectionState * const connection = malloc();
-    if (!connection)
-      log_and_continue()
+    when there's a new connection
+    {
+      struct ConnectionState * const connection = malloc();
+      if (!connection)
+        log_and_continue()
 
-    connection->transport_state = transport_state;
-    fill in *connection
+      connection->transport_state = transport_state;
+      fill in *connection
 
-    handle_connection(handle_connection_arg, (void * const)connection);
+      handle_connection(handle_connection_arg, (void * const)connection);
+    }
+    // this block only quits when there's an error or destroy_transport is called
   }
+
+  return child thread;
 }
 
 ssize_t read(uint8_t * const buffer, const size_t length, void * const connection_voidp)
@@ -108,4 +114,136 @@ int log_prefix_snprint(char * const buffer, const size_t max_length; void const 
   struct ConnectionState * connection = (struct ConnectionState *)connection_voidp;
 
   return snprintf(buffer, max_length, some format string, some information from connection, ...);
+}
+
+void destroy_transport(void * const transport_state_voidp)
+{
+  assert(transport_state_voidp);
+
+  struct TransportState * const transport_state = (struct TransportState * const) transport_state_voidp
+
+  stop listening for connections
+
+  TransportState_free(transport_state);
+}
+
+
+
+/*
+ * Server code
+ */
+
+static struct TransportThreadData {
+  module_type module;
+  thread_type thread;
+  void * data;
+};
+
+static struct ConnectionThreadData {
+  TransportThreadData * transport;
+  thread_type thread;
+  void * data;
+};
+
+bool initialize(config_file, container of (TransportThreadData) transports)
+{
+  if (!parse config file)
+    return false;
+
+  ...
+
+  foreach const INIConfigSection transport_section
+  {
+    open transport_section.module_name .so
+    void * const transport_data = module::initialize_transport(transport_section);
+    if (transport_data)
+    {
+      TransportThreadData transport;
+      transport.module = module;
+      transport.thread = INVALID;
+      transport.data = transport_data;
+      add transport to transports
+    }
+    else
+    {
+      log error
+      return false;
+    }
+  }
+
+  ...
+
+  return true;
+}
+
+void quit(container of (TransportThreadData) transports, container of (ConnectionThreadData) connections)
+{
+  foreach connection
+  {
+    connection.transport->module::close(connection.data);
+  }
+
+  foreach transport
+  {
+    transport.module::destroy_transport(transport.data);
+  }
+
+  foreach connection
+  {
+    wait(connection.thread);
+  }
+
+  foreach transport
+  {
+    wait(transport.thread);
+  }
+}
+
+void handle_connection(void * handle_connection_arg, void * const connection_data)
+{
+  assert(handle_connection_arg);
+
+  transport, connections = grab stuff from handle_connection_arg
+
+  struct ConnectionThreadData connection;
+  connection.transport = transport;
+  connection.data = connection_data;
+  connection.thread = new thread(
+  {
+    do stuff, including logging, reading, writing, and eventually closing connection
+  })
+
+  add connection to connections
+}
+
+bool run(container of (TransportThreadData) transports)
+{
+  container of (ConnectionThreadData) connections;
+
+  on quit signals, call quit(transports, connections)
+
+  foreach transport
+  {
+    transport.thread = transport.module::run_transport(transport.data, &handle_connection, pair of transport and connections);
+
+    if (!transport.thread)
+    {
+      log error
+      quit(transports, connections);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+main ()
+{
+  container of (TransportThreadData) transports;
+
+  initialize(config_data, transports)
+
+  run(transports)
+
+  sleep.. or something
 }
