@@ -39,8 +39,9 @@
 #include "err.h"
 #include "logutils.h"
 
-// PUT THIS SOMEWHERE ELSE!!
+// PUT THESE SOMEWHERE ELSE!!
 extern struct Extension *find_extension(struct Certificate *certp, char *idp);
+extern struct Extension *get_extension(struct Certificate *certp, char *idp, int *count);
 
 /*
   Convert between a time string in a certificate and a time string
@@ -2386,6 +2387,30 @@ skip:
 
 
 /**=============================================================================
+ * @brief Check if Certificate is CA or EE.
+ *
+ * @param certp (struct Certificate*)
+ * @retval ret int type of the Certificate<br />-1 for error
+ -----------------------------------------------------------------------------*/
+static int get_cert_type(struct Certificate *certp) {
+	int ret = -1;
+	struct Extension *extp = NULL;
+
+	extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
+	for ( ; extp; extp = (struct Extension *)next_of(&extp->self)) {
+		if (!diff_objid(&extp->extnID, id_basicConstraints)) {
+			if (size_casn(&extp->extnValue.basicConstraints.cA) > 0)
+    			ret = CA_CERT;
+	    	else
+		    	ret = EE_CERT;
+		}
+	}
+
+	return ret;
+}
+
+
+/**=============================================================================
  * @brief Check correctness of SIA.
  *
  * @param x - X509*
@@ -2393,12 +2418,102 @@ skip:
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp)
-{
-//	*certp->toBeSigned.extensions.extension;
+static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
+	int count = -1;
+	int type = -1;
+	struct Extension *extp = NULL;
 
+	extp = get_extension(certp, id_pe_subjectInfoAccess, &count);
+	if (count == 0) {
+		log_msg(LOG_ERR, "no SIA found");
+		return ERR_SCM_NOSIA;
+	}
+	if (count > 1) {
+		log_msg(LOG_ERR, "multiple SIA found");
+		return ERR_SCM_DUPSIA;
+	}
+	if (extp == NULL) {
+		log_msg(LOG_ERR, "error reading SIA");
+		return ERR_SCM_BADSIA;
+	}
 
+	uchar crit_bool = 0;
+	int size = INT_MIN;
+	size = read_casn(&extp->critical, &crit_bool);
+	if (size && crit_bool) {
+		log_msg(LOG_ERR, "critical bit set for SIA");
+		return ERR_SCM_CEXT;
+	}
 
+	// Need different checks for a CA vs EE Cert
+	type = get_cert_type(certp);
+	if (type != CA_CERT  &&  type != EE_CERT) {
+		log_msg(LOG_ERR, "could not read certificate type; or unknown type");
+		return ERR_SCM_NOBC;
+	}
+
+	struct AccessDescription *adp;
+	struct SubjectInfoAccess *siap;
+	siap = &extp->extnValue.subjectInfoAccess;
+	adp = (struct AccessDescription *)member_casn(&siap->self, 0);
+	if (type == CA_CERT) {
+		int found_uri_repo_rsync = 0;
+		int found_uri_mft_rsync = 0;
+		uchar *uri_repo = 0;
+		uchar *uri_mft = 0;
+		for (; adp; adp = (struct AccessDescription *)next_of(&adp->self)) {
+			if (!diff_objid(&adp->accessMethod, id_ad_caRepository)) {
+				size = vsize_casn((struct casn *)&adp->accessLocation.url);
+				uri_repo = calloc(1, size + 1);
+				read_casn((struct casn *)&adp->accessLocation.url, uri_repo);
+				if (!strncasecmp((char *)uri_repo, "rsync", 5))
+					found_uri_repo_rsync = 1;
+			} else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest)) {
+				size = vsize_casn((struct casn *)&adp->accessLocation.url);
+				uri_mft = calloc(1, size + 1);
+				read_casn((struct casn *)&adp->accessLocation.url, uri_mft);
+				if (!strncasecmp((char *)uri_mft, "rsync", 5))
+					found_uri_mft_rsync = 1;
+			}
+		}
+
+		if (uri_repo)
+			free (uri_repo);
+		if (uri_mft)
+			free (uri_mft);
+
+		if (!found_uri_repo_rsync) {
+			log_msg(LOG_ERR, "did not find rsync uri for repository for SIA");
+			return ERR_SCM_BADSIA;
+		}
+		if (!found_uri_mft_rsync) {
+			log_msg(LOG_ERR, "did not find rsync uri for manifest for SIA");
+			return ERR_SCM_BADSIA;
+		}
+	} else {  // (type == EE_CERT)
+		int found_uri_obj_rsync = 0;
+		uchar *uri_obj = 0;
+		for (; adp; adp = (struct AccessDescription *)next_of(&adp->self)) {
+			if (!diff_objid(&adp->accessMethod, id_ad_signedObject)) {
+				size = vsize_casn((struct casn *)&adp->accessLocation.url);
+				uri_obj = calloc(1, size + 1);
+				read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
+				if (!strncasecmp((char *)uri_obj, "rsync", 5))
+					found_uri_obj_rsync = 1;
+			} else {
+				log_msg(LOG_ERR, "in EE-cert SIA, found accessMethod != id-ad-signedObject");
+				return ERR_SCM_BADSIA;
+			}
+		}
+
+		if (uri_obj)
+			free (uri_obj);
+
+		if (!found_uri_obj_rsync) {
+			log_msg(LOG_ERR, "did not find rsync uri for signedObject for SIA");
+			return ERR_SCM_BADSIA;
+		}
+	}
 
 
 // -----------------------------------------------------------------------------

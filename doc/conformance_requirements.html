@@ -225,69 +225,69 @@
                     <tr> <th>for</th> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
                     <tr>
                         <td>all</td>
-                        <td>rfc5280 4.2.2.2 Subject Information Access"</td>
+                        <td>rfc5280 4.2.2.2 Subject Information Access</td>
                         <td>This extension may be included in end entity or CA certificates.  Conforming CAs MUST mark this extension as non-critical.</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>all</td>
                         <td>rfc5280 4.2.2.2 Subject Information Access</td>
                         <td>id-pe-subjectInfoAccess </td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>CA</td>
                         <td>rfc5280 4.2.2.2 Subject Information Access</td>
                         <td>The id-ad-caRepository OID is used when the subject is a CA that publishes certificates it issues in a repository.</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>all</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
                         <td>This extension MUST be present, and is non-critical.</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>CA</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
                         <td>This extension MUST have an instance of an accessMethod of id-ad-caRepository, with an accessLocation form of a URI that MUST specify an RSYNC URI [RFC5781].</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>CA</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
                         <td>Other accessDescription elements with an accessMethod of id-ad-caRepository MAY be present. In such cases, the accessLocation values describe alternate supported URI access mechanisms for the same directory.</td>
-                        <td>-</td>
+                        <td>not currently checked</td>
                     </tr>
                     <tr>
                         <td>CA</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
                         <td>This extension MUST have an instance of an AccessDescription with an accessMethod of id-ad-rpkiManifest, with an RSYNC URI [RFC5781] form of accessLocation.  The URI points to the CA's manifest of published objects [ID.sidr-rpki-manifests] as an object URL.</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>CA</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates </td>
                         <td>Other accessDescription elements MAY exist for the id-ad-rpkiManifest accessMethod, where the accessLocation value indicates alternate access mechanisms for the same manifest object.</td>
-                        <td>-</td>
+                        <td>not currently checked</td>
                     </tr>
                     <tr>
                         <td>EE</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.2 SIA for EE Certificates</td>
                         <td>This extension MUST have an instance of an accessMethod of id-ad-signedObject, with an accessLocation form of a URI that MUST include an RSYNC URI [RFC5781].  This URI points to the signed object that is verified using this EE certificate [ID.sidr-repos-struct].</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                     <tr>
                         <td>EE</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.2 SIA for EE Certificates</td>
                         <td>Other accessDescription elements may exist for the id-ad-signedObject accessMethod, where the accessLocation value indicates alternate URI access mechanisms for the same object, ...</td>
-                        <td>-</td>
+                        <td>not currently checked</td>
                     </tr>
                     <tr>
                         <td>EE</td>
                         <td>draft-ietf-sidr-res-certs-22 4.8.8.2 SIA for EE Certificates</td>
                         <td>Other AccessMethods MUST NOT be used for an EE certificates's SIA.</td>
-                        <td>-</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
                     </tr>
                 </table>
             </div>

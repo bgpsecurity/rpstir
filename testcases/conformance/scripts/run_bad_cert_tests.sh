@@ -62,7 +62,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSerNum.cer              # Bad serial number (-117)
 # rcli -y -f badCertSIA2x.cer               # Duplicate SIA (-72)
 # rcli -y -f badCertSIAAccessLoc.cer        # SIA not a URI (-73)
-# rcli -y -f badCertSIAAccessMethod.cer          # Add operation succeeded
+# rcli -y -f badCertSIAAccessMethod.cer     # SIA not a URI (-73)
 # rcli -y -f badCertSIAMissing.cer          # Missing SIA (-71)
 # rcli -y -f badCertSKIHash.cer             # Invalid SKI (-40)
 # rcli -y -f badCertSKILth.cer              # Invalid SKI (-40)

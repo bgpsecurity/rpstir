@@ -143,7 +143,7 @@
 #define ERR_SCM_BADISSUER   -114        /* invalid issuer name */
 #define ERR_SCM_INVALAKI    -115        /* invalid AKI */
 #define ERR_SCM_CRLDPNMRS   -116        /* no rsync URI in CRLDP */
-#define ERR_SCM_BADSERNUM	-117		/* bad serial number */
+#define ERR_SCM_BADSERNUM   -117        /* bad serial number */
 
 #define ERR_SCM_MAXERR      -117
 

@@ -2056,6 +2056,38 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   return sta >= 0 ? 0 : sta;
 }
 
+
+/**=============================================================================
+ * @brief Get an extension from a Cert, and a count of that type of extn.
+ *
+ * @param certp (struct Certificate*)
+ * @param idp (char*) an id pointer
+ * @param count (int*) count of extensions of type id found
+ * @retval extp a pointer to the extension<br />null on failure
+------------------------------------------------------------------------------*/
+struct Extension *get_extension(struct Certificate *certp,
+		char *idp, int *count) {
+	struct Extensions *exts = &certp->toBeSigned.extensions;
+	struct Extension *extp;
+	int cnt = 0;
+
+	for (extp = (struct Extension *)member_casn(&exts->self, 0);
+			extp != NULL;
+			extp = (struct Extension *)next_of(&extp->self))    {
+		if (!diff_objid(&extp->extnID, idp))
+			cnt++;
+	}
+
+	for (extp = (struct Extension *)member_casn(&exts->self, 0);
+			extp != NULL && diff_objid(&extp->extnID, idp);
+			extp = (struct Extension *)next_of(&extp->self));
+
+	if (count)
+		*count = cnt;
+	return extp;
+}
+
+
 struct Extension *find_extension(struct Certificate *certp, char *idp)
   {
   struct Extensions *exts = &certp->toBeSigned.extensions;
