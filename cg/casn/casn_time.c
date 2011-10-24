@@ -30,6 +30,7 @@ Remarks:
 char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include "casn.h"
 #include <stdio.h>
+#include <stdint.h>
 
 #define UTCBASE 70
 #define UTCYR 0
@@ -139,7 +140,7 @@ int _utctime_to_ulong(ulong *valp, char *fromp, int lth)
 int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
     {
     int yr, mo, da;
-    long long val = 0;
+    int64_t val = 0;
     char *b, *ep;
 
     for (b = fromp, ep = &fromp[lth]; b < ep && *b >= '0' && *b <= '9'; b++);
@@ -151,7 +152,7 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
     if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0) yr += 100;
     if ((mo = (int)get_num (&fromp[GENMO],GENMOSIZ)) < 1 || mo > 12)
         return -1;
-    val = (yr * 365) + _mos[mo - 1] + ((yr + (GENBASE % 4)) / 4) -
+    val = ((int64_t)yr * 365) + _mos[mo - 1] + ((yr + (GENBASE % 4)) / 4) -
         ((!((yr + GENBASE) % 4) && mo < 3)? 1: 0);
     if ((da = (int)get_num (&fromp[GENDA],GENDASIZ)) < 1 ||
         da > _mos[mo] - _mos[mo - 1] +
@@ -165,7 +166,6 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
     if (b <= &fromp[GENSE]) mo = 0;                             /* seconds */
     else if ((mo = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59) return -1;
     val = (val * 3600) + (yr * 60) + mo;
-    if (val > 0xFFFFFFFF) return -1;
     if (*b == '+' || *b == '-')
         {
         if ((yr = (int)get_num (&b[GENSFXHR],GENHRSIZ)) > 23 ||
@@ -175,7 +175,9 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
         if (*b == '+') yr = -yr;
         val += (60 * yr);           /* adjust by diff of seconds */
         }
-    *valp = val;
+    if (val > 0xFFFFFFFF) return -1;
+    if (val < 0) return -1;
+    *valp = (ulong)val;
     return 1;
     }
 
