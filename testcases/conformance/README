@@ -109,6 +109,9 @@ CA Certificates
 184 2Cpol               # two certificate policies extensions
 185 2IPAddr             # two IP address extensions
 186 2ASNum              # two AS number extensions
+187 CRLDPNoRsyncDistPt  # no rsync URI in CRLDP
+188 Issuer2SerNums      # issuer name has 2 serial numbers
+189 Subject2SerNums     # subject name has 2 serial numbers
 
 
 
