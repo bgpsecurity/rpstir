@@ -17,9 +17,12 @@
         <div id="links">
             <a href="conformance_requirements.html#as">AS</a><br />
             <a href="conformance_requirements.html#ca or ee">CA or EE?</a><br />
+            <a href="conformance_requirements.html#crldp">CRLDP</a><br />
+            <a href="conformance_requirements.html#crlissuer">CRLIssuer</a><br />
             <a href="conformance_requirements.html#ip">IP</a><br />
             <a href="conformance_requirements.html#isselfsigned">isSelfSigned?</a><br />
-            <a href="conformance_requirements.html#issuer">issuer</a><br />
+            <a href="conformance_requirements.html#issuer">Issuer</a><br />
+            <a href="conformance_requirements.html#issuid">IssUID</a><br />
             <a href="conformance_requirements.html#serial number">serial number</a><br />
             <a href="conformance_requirements.html#sia">SIA</a><br />
             <a href="conformance_requirements.html#signature">signature</a><br />
@@ -81,6 +84,59 @@
                     <tr>
                         <td>draft-ietf-sidr-res-certs-22 4.8.1 Basic Constraints</td>
                         <td>The Path Length Constraint is not specified for RPKI certificates, and MUST NOT be present.</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="crldp">
+                <table>
+                    <caption>CRLDP</caption>
+                    <tr><th>.cer in raw/root/</th>            <th>in run_bad_.sh</th>               <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCert2CRLDP.cer</td>            <td>badCert2CRLDP.cer</td>            <td>2CRLDP</td>            <td>two CRLDP extensions</td></tr>
+                    <tr><td>badCertCRLDP2DistPt.cer</td>      <td>badCertCRLDP2DistPt.cer</td>      <td>CRLDP2DistPt</td>      <td>CRL Dist Pt has 2 Dist points</td></tr>
+                    <tr><td>badCertCRLDPCrit.cer</td>         <td>badCertCRLDPCrit.cer</td>         <td>CRLDPCrit</td>         <td>CRL Dist Pt marked critical</td></tr>
+                    <tr><td>badCertCRLDPCrlIssuer.cer</td>    <td>badCertCRLDPCrlIssuer.cer</td>    <td>CRLDPCrlIssuer</td>    <td>CRL Dist Pt has CRL Issuer</td></tr>
+                    <tr><td>badCertCRLDPNoDistPt.cer</td>     <td>badCertCRLDPNoDistPt.cer</td>     <td>CRLDPNoDistPt</td>     <td>CRL DIST PT hs no Dist Pt</td></tr>
+                    <tr><td>badCertCRLDPReasons.cer</td>      <td>badCertCRLDPReasons.cer</td>      <td>CRLDPReasons</td>      <td>CRL Dist Pt has reasons</td></tr>
+                    <tr><td>badCertCRLDPNoRsyncDistPt.cer</td><td>badCertCRLDPNoRsyncDistPt.cer</td><td>CRLDPNoRsyncDistPt</td><td>no rsync URI in CRLDP</td></tr>
+                    <tr><td>badCertNoCRLDP.cer</td>           <td>badCertNoCRLDP.cer</td>           <td>NoCRLDP</td>           <td>no CRLDP extension</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="crlissuer">
+                <table>
+                    <caption>CRLIssuer</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>           <th>in README</th>         <th>problem</th></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuerOID</td>      <td>wrong OID for issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Sets</td>    <td>two SETs in issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuerUTF</td>      <td>issuer name in utf not printable string</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Seq</td>     <td>two SEQUENCEs in issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2SerNums</td> <td>two serial numbers</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssAltName</td>     <td>has issuer alternative name extension</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssDistPt</td>      <td>has issuing distribution point extension</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
                         <td>-</td>
                     </tr>
                 </table>
@@ -164,25 +220,14 @@
             <br /><br />
             <div id="issuer">
                 <table>
-                    <caption>issuer</caption>
-                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>           <th>in README</th>         <th>problem</th></tr>
-                    <tr><td>badCertCRLDPCrlIssuer.cer</td>   <td>badCertCRLDPCrlIssuer.cer</td><td>CRLDPCrlIssuer</td>    <td>CRL Dist Pt has CRL Issuer</td></tr>
-                    <tr><td>badCertIssuer2ComName.cer</td>   <td>Issuer2ComName</td>           <td>Issuer2ComName</td>    <td>issuer name has 2 common names</td></tr>
-                    <tr><td>badCertIssuer2Seq.cer</td>       <td>badCertIssuer2Seq.cer</td>    <td></td>                  <td></td></tr>
-                    <tr><td>badCertIssuer2SerNums.cer</td>   <td>badCertIssuer2SerNums.cer</td><td>Issuer2SerNum (sp)</td><td>issuer name has only a serial number</td></tr>
-                    <tr><td>badCertIssuer2SetComName.cer</td><td></td>                         <td>Issuer2SetComName</td> <td>issuer name has 2 sets with common names</td></tr>
-                    <tr><td>badCertIssuer2Sets.cer</td>      <td>badCertIssuer2Sets.cer</td>   <td></td>                  <td></td></tr>
-                    <tr><td>badCertIssuerOID.cer</td>        <td>badCertIssuerOID.cer</td>     <td>IssuerOID</td>         <td>issuer name is not id_commonName</td></tr>
-                    <tr><td>badCertIssuerSerNum.cer</td>     <td></td>                         <td></td>                  <td>issuer name has only a serial number</td></tr>
-                    <tr><td>badCertIssUID.cer</td>           <td>badCertIssUID.cer</td>        <td>IssUID</td>            <td>has issuer unique ID</td></tr>
-                    <tr><td></td>                            <td>badCertIssuerUtf.cer</td>     <td>IssuerUtf</td>         <td>issuer name has utf name</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssuerOID</td>      <td>wrong OID for issuer name</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Sets</td>    <td>two SETs in issuer name</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssuerUTF</td>      <td>issuer name in utf not printable string</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Seq</td>     <td>two SEQUENCEs in issuer name</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2SerNums</td> <td>two serial numbers</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssAltName</td>     <td>has issuer alternative name extension</td></tr>
-                    <tr><td></td>                            <td></td>                         <td>CRLIssDistPt</td>      <td>has issuing distribution point extension</td></tr>
+                    <caption>Issuer</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>              <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCertIssuer2ComName.cer</td>   <td>Issuer2ComName</td>              <td>Issuer2ComName</td>    <td>issuer name has 2 common names</td></tr>
+                    <tr><td>badCertIssuer2SerNums.cer</td>   <td>badCertIssuer2SerNums.cer</td>   <td>Issuer2SerNums</td>    <td>issuer name has 2 serial numbers</td></tr>
+                    <tr><td>badCertIssuer2SetComName.cer</td><td>badCertIssuer2SetComName.cer</td><td>Issuer2SetComName</td> <td>issuer name has 2 sets with common names</td></tr>
+                    <tr><td>badCertIssuerOID.cer</td>        <td>badCertIssuerOID.cer</td>        <td>IssuerOID</td>         <td>issuer name is not id_commonName</td></tr>
+                    <tr><td>badCertIssuerSerNum.cer</td>     <td>badCertIssuerSerNum.cer</td>     <td>IssuerSerNum</td>      <td>issuer name has only a serial number</td></tr>
+                    <tr><td>badCertIssuerUtf.cer</td>        <td>badCertIssuerUtf.cer</td>        <td>IssuerUtf</td>         <td>issuer name has utf name</td></tr>
                 </table>
                 <br />
                 <table>
@@ -196,6 +241,26 @@
                     <tr>
                         <td>draft-ietf-sidr-res-certs-22 4.4 Issuer</td>
                         <td>The Common Name attribute MUST be encoded using the ASN.1 type PrintableString [X.680].</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="issuid">
+                <table>
+                    <caption>IssUID</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>           <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCertIssUID.cer</td>           <td>badCertIssUID.cer</td>        <td>IssUID</td>            <td>has issuer unique ID</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
                         <td>-</td>
                     </tr>
                 </table>
