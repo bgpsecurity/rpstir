@@ -19,6 +19,7 @@
             <a href="conformance_requirements.html#ca or ee">CA or EE?</a><br />
             <a href="conformance_requirements.html#ip">IP</a><br />
             <a href="conformance_requirements.html#isselfsigned">isSelfSigned?</a><br />
+            <a href="conformance_requirements.html#issuer">issuer</a><br />
             <a href="conformance_requirements.html#serial number">serial number</a><br />
             <a href="conformance_requirements.html#sia">SIA</a><br />
             <a href="conformance_requirements.html#signature">signature</a><br />
@@ -160,6 +161,47 @@
             </div>
 
 
+            <br /><br />
+            <div id="issuer">
+                <table>
+                    <caption>issuer</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>           <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCertCRLDPCrlIssuer.cer</td>   <td>badCertCRLDPCrlIssuer.cer</td><td>CRLDPCrlIssuer</td>    <td>CRL Dist Pt has CRL Issuer</td></tr>
+                    <tr><td>badCertIssuer2ComName.cer</td>   <td>Issuer2ComName</td>           <td>Issuer2ComName</td>    <td>issuer name has 2 common names</td></tr>
+                    <tr><td>badCertIssuer2Seq.cer</td>       <td>badCertIssuer2Seq.cer</td>    <td></td>                  <td></td></tr>
+                    <tr><td>badCertIssuer2SerNums.cer</td>   <td>badCertIssuer2SerNums.cer</td><td>Issuer2SerNum (sp)</td><td>issuer name has only a serial number</td></tr>
+                    <tr><td>badCertIssuer2SetComName.cer</td><td></td>                         <td>Issuer2SetComName</td> <td>issuer name has 2 sets with common names</td></tr>
+                    <tr><td>badCertIssuer2Sets.cer</td>      <td>badCertIssuer2Sets.cer</td>   <td></td>                  <td></td></tr>
+                    <tr><td>badCertIssuerOID.cer</td>        <td>badCertIssuerOID.cer</td>     <td>IssuerOID</td>         <td>issuer name is not id_commonName</td></tr>
+                    <tr><td>badCertIssuerSerNum.cer</td>     <td></td>                         <td></td>                  <td>issuer name has only a serial number</td></tr>
+                    <tr><td>badCertIssUID.cer</td>           <td>badCertIssUID.cer</td>        <td>IssUID</td>            <td>has issuer unique ID</td></tr>
+                    <tr><td></td>                            <td>badCertIssuerUtf.cer</td>     <td>IssuerUtf</td>         <td>issuer name has utf name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuerOID</td>      <td>wrong OID for issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Sets</td>    <td>two SETs in issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuerUTF</td>      <td>issuer name in utf not printable string</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Seq</td>     <td>two SEQUENCEs in issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2SerNums</td> <td>two serial numbers</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssAltName</td>     <td>has issuer alternative name extension</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssDistPt</td>      <td>has issuing distribution point extension</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.4 Issuer</td>
+                        <td>An Issuer name MUST contain one instance of the Common Name attribute and MAY contain one instance of the Serial Number attribute.</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.4 Issuer</td>
+                        <td>The Common Name attribute MUST be encoded using the ASN.1 type PrintableString [X.680].</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
             <br /> <br />
             <div id="serial number">
                 <table>
@@ -201,23 +243,7 @@
                 <table>
                     <caption>SIA</caption>
                     <tr> <th>.cer in raw/root/</th> <th>in README</th> <th>problem</th> </tr>
-                    <tr><td>CRLDPCrlIssuer</td>    <td>CRLDPCrlIssuer</td>       <td>CLS Dist Pt has CRL Issuer</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssuerOID</td>         <td>-</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssuer2Sets</td>       <td>-</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssuerUTF</td>         <td>-</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssuer2Seq</td>        <td>-</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssuer2SerNums</td>    <td>-</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssAltName</td>        <td>-</td></tr>
-                    <tr><td>-</td>                 <td>CRLIssDistPt</td>         <td>-</td></tr>
-                    <tr><td>Issuer2ComName</td>    <td>Issuer2ComName</td>       <td>issuer name has 2 common names</td></tr>
-                    <tr><td>Issuer2Seq</td>        <td>-</td>                    <td>-</td></tr>
-                    <tr><td>Issuer2SerNums</td>    <td>-</td>                    <td>-</td></tr>
-                    <tr><td>Issuer2SetComName</td> <td>Issuer2SetComName</td>    <td>issuer name has 2 sets with common names</td></tr>
-                    <tr><td>Issuer2Sets</td>       <td>-</td>                    <td>-</td></tr>
-                    <tr><td>IssuerOID</td>         <td>IssuerOID</td>            <td>issuer name is not id_commonName</td></tr>
-                    <tr><td>IssuerSerNum</td>      <td>IssuerSerNum</td>         <td>issuer name has only a serial number</td></tr>
-                    <tr><td>-</td>                 <td>IssUID</td>               <td>has issuer unique ID</td></tr>
-                    <tr><td>-</td>                 <td>IssuerUtf</td>            <td>issuer name has utf name</td></tr>
+                    <tr><td>.</td>        <td>-</td>                    <td>-</td></tr>
                 </table>
                 <br />
                 <table>
