@@ -24,7 +24,7 @@ AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
-	-I../cg/casn I../roa-lib -I../utils
+	-I../cg/casn -I../roa-lib -I../utils
 
 LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
 
