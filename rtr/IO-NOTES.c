@@ -133,6 +133,8 @@ void destroy_transport(void * const transport_state_voidp)
  * Server code
  */
 
+// TODO: figure out what to do when doUpdate finishes updating the database (i.e. how to send Serial Notify PDUs)
+
 static struct TransportThreadData {
   module_type module;
   thread_type thread;
