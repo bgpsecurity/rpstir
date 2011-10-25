@@ -39,7 +39,7 @@
 #define RETENTION_HOURS_DEFAULT 96
 
 static scm      *scmp = NULL;
-static scmcon   *connect = NULL;
+static scmcon   *connection = NULL;
 static scmsrcha *roaSrch = NULL;
 static scmtab   *roaTable = NULL;
 static scmtab   *fullTable = NULL;
@@ -70,13 +70,13 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 	char msg[1024];
 	conp = conp; numLine = numLine;
 
-	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connect)) return -1;
+	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connection)) return -1;
 	while ((end = strchr(ptr, '\n')) != 0) {
 		*end = '\0';
 		snprintf(msg, sizeof(msg),
 				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
 				 fullTable->tabname, currSerialNum, filename, asn, ptr);
-		statementscm_no_data(connect, msg);
+		statementscm_no_data(connection, msg);
 		ptr = end + 1;
 	}
 	return 1;
@@ -93,7 +93,7 @@ static int writeWithdrawal(scmcon *conp, scmsrcha *s, int numLine) {
 	snprintf(msg, sizeof(msg),
 			 "insert into %s values (%d, false, %d, \"%s\");",
 			 incrTable->tabname, currSerialNum, asn, ipAddr);
-	statementscm_no_data(connect, msg);
+	statementscm_no_data(connection, msg);
 	return 1;
 }
 
@@ -108,7 +108,7 @@ static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
 	snprintf(msg, sizeof(msg),
 			 "insert into %s values (%d, true, %d, \"%s\");",
 			 incrTable->tabname, currSerialNum, asn, ipAddr);
-	statementscm_no_data(connect, msg);
+	statementscm_no_data(connection, msg);
 	return 1;
 }
 
@@ -119,11 +119,11 @@ int main(int argc, char **argv) {
 	// initialize the database connection
 	scmp = initscm();
 	checkErr(scmp == NULL, "Cannot initialize database schema\n");
-	connect = connectscm (scmp->dsn, msg, sizeof(msg));
-	checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
+	connection = connectscm (scmp->dsn, msg, sizeof(msg));
+	checkErr(connection == NULL, "Cannot connect to database: %s\n", msg);
 
 	// find the last serial number
-	prevSerialNum = getLastSerialNumber(connect, scmp);
+	prevSerialNum = getLastSerialNumber(connection, scmp);
 	currSerialNum = (prevSerialNum == UINT_MAX) ? 1 : (prevSerialNum + 1);
 
 	// setup up the query if this is the first time
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 	}
 
 	// write all the data into the database (done writing "full")
-	searchscm (connect, roaTable, roaSrch, NULL,
+	searchscm (connection, roaTable, roaSrch, NULL,
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
         // setup to compute incremental
@@ -165,19 +165,19 @@ int main(int argc, char **argv) {
 	// first, find withdrawal
 	snprintf (incrSrch->wherestr, WHERESTR_SIZE,
 			  "t1.serial_num = t2.serial_num - 1 and t1.roa_filename = t2.roa_filename and t1.ip_addr = t2.ip_addr\nt2.serial_num is null and t1.serial_num = %d", prevSerialNum);
-	searchscm (connect, fullTable, incrSrch, NULL, writeWithdrawal,
+	searchscm (connection, fullTable, incrSrch, NULL, writeWithdrawal,
 			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_SELF, NULL);
 
 	// then, find announcements
 	snprintf (incrSrch->wherestr, WHERESTR_SIZE,
 			  "t1.serial_num = t2.serial_num + 1 and t1.roa_filename = t2.roa_filename and t1.ip_addr = t2.ip_addr\nt2.serial_num is null and t1.serial_num = %d", currSerialNum);
-	searchscm (connect, fullTable, incrSrch, NULL, writeAnnouncement,
+	searchscm (connection, fullTable, incrSrch, NULL, writeAnnouncement,
 			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_SELF, NULL);
 
 	// write the current serial number and time, making the data available
 	snprintf(msg, sizeof(msg), "insert into rtr_update values (%d, now());",
 			 currSerialNum);
-	statementscm_no_data(connect, msg);
+	statementscm_no_data(connection, msg);
 
     // clean up all the data no longer needed
 	// save last two full updates so that no problems at transition
@@ -186,14 +186,14 @@ int main(int argc, char **argv) {
 	snprintf(msg, sizeof(msg),
 			 "delete from rtr_full where serial_num<>%d and serial_num<>%d;",
 			 prevSerialNum, currSerialNum);
-	statementscm_no_data(connect, msg);
+	statementscm_no_data(connection, msg);
 	snprintf(msg, sizeof(msg), str,
 			 "delete rtr_incremental from rtr_incremental inner join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num",
 			 retentionHours());
-	statementscm_no_data(connect, msg);
+	statementscm_no_data(connection, msg);
 	snprintf(msg, sizeof(msg), str, "delete from rtr_update",
 			 retentionHours());
-	statementscm_no_data(connect, msg);
+	statementscm_no_data(connection, msg);
 
 	return 0;
 }
