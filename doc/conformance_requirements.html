@@ -19,6 +19,7 @@
             <a href="conformance_requirements.html#ca or ee">CA or EE?</a><br />
             <a href="conformance_requirements.html#crldp">CRLDP</a><br />
             <a href="conformance_requirements.html#crlissuer">CRLIssuer</a><br />
+            <a href="conformance_requirements.html#extensions">Extensions</a><br />
             <a href="conformance_requirements.html#ip">IP</a><br />
             <a href="conformance_requirements.html#isselfsigned">isSelfSigned?</a><br />
             <a href="conformance_requirements.html#issuer">Issuer</a><br />
@@ -27,6 +28,7 @@
             <a href="conformance_requirements.html#sia">SIA</a><br />
             <a href="conformance_requirements.html#signature">signature</a><br />
             <a href="conformance_requirements.html#uid">UID</a><br />
+            <a href="conformance_requirements.html#version">version</a><br />
             <a href="conformance_requirements.html#empty">empty</a><br />
         </div>
 
@@ -138,6 +140,31 @@
                         <td>-</td>
                         <td>-</td>
                         <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="extensions">
+                <table>
+                    <caption>Extensions</caption>
+                    <tr> <th>.cer</th> <th>problem</th> <th>notes</th></tr>
+                    <tr><td>badCertExtension1.cer</td> <td>illegal extension (PolicyMappings)</td> <td>Acceptable if not marked critical.</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 1 Introduction</td>
+                        <td>This profile defines those fields that are used in a Resource Certificate that MUST be present for the certificate to be valid.  Any extensions not explicitly mentioned MUST be absent.</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8 Resource Certificate Extensions</td>
+                        <td>The following X.509 V3 extensions MUST be present in a conforming Resource Certificate, except where explicitly noted otherwise.  Each extension in a resource certificate is designated as either critical or non-critical.  A certificate-using system MUST reject the certificate if it encounters a critical extension it does not recognise; however, a non-critical extension MAY be ignored if it is not recognised [RFC5280].</td>
+                        <td></td>
                     </tr>
                 </table>
             </div>
@@ -441,6 +468,29 @@
                             - Issuer UID is not listed.<br />
                             - Subject UID is not listed.</td>
                         <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="version">
+                <table>
+                    <caption>version</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr><td>badCertVersion1.cer</td> <td>version number is v1, i.e. 0</td></tr>
+                    <tr><td>badCertVersion2.cer</td> <td>version number is v2, i.e. 1</td></tr>
+                    <tr><td>badCertVersion4.cer</td> <td>version number is v4, i.e. 3</td></tr>
+                    <tr><td>badCertVersionNeg.cer</td> <td>version number is negative</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.1 Version</td>
+                        <td>As Resource Certificates are X.509 Version 3 certificates, the version MUST be 3 (i.e. the value of this field is 2).</td>
+                        <td></td>
                     </tr>
                 </table>
             </div>
