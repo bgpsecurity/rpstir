@@ -28,12 +28,12 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertCRLDPReasons.cer        # CRLDP with subfields (-65)
 # rcli -y -f badCertEKU.cer                     # Invalid certificate flags (-46) # cg-110927:  this should have a stronger error message than bad flags
 # rcli -y -f badCertInnerSigAlg.cer         # Differing algorithms in cert (-95)
-# rcli -y -f badCertIssuer2ComName.cer          # 
+# rcli -y -f badCertIssuer2ComName.cer      # Invalid issuer name (-114)
 # rcli -y -f badCertIssuer2SerNums.cer      # Invalid issuer name (-114)
-# rcli -y -f badCertIssuer2SetComName.cer       # 
+# rcli -y -f badCertIssuer2SetComName.cer       # Invalid subject name (-113)
 # rcli -y -f badCertIssuerOID.cer           # Invalid issuer name (-114)
-# rcli -y -f badCertIssuerSerNum.cer            # 
-# rcli -y -f badCertIssuerUtf.cer           # Bad filename or file not found (-12)
+# rcli -y -f badCertIssuerSerNum.cer        # Invalid issuer name (-114)
+# rcli -y -f badCertIssuerUtf.cer           # Invalid issuer name (-114)
 # rcli -y -f badCertIssUID.cer                  # Add operation succeeded
 # rcli -y -f badCertKUsageExtra.cer             # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCertKUsageNoCertSign.cer        # Invalid certificate flags (-46) # cg-110927:  this error result is not good
@@ -72,7 +72,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSubject2SetComName.cer      # 
 # rcli -y -f badCertSubjectOID.cer          # Invalid subject name (-113)
 # rcli -y -f badCertSubjectSerNum.cer           # 
-# rcli -y -f badCertSubjectUtf.cer          # Bad filename or file not found (-12)
+# rcli -y -f badCertSubjectUtf.cer          # Invalid subject name (-113)
 # rcli -y -f badCertSubjUID.cer                 # Add operation succeeded
 # rcli -y -f badCertValCrossed.cer          # Invalid dates (-94)
 # rcli -y -f badCertValFromFuture.cer           # There's a possibility this should be added to the database correctly and left untouched until it becomes valid. -- David Mandelberg

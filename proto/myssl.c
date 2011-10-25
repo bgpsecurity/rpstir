@@ -1770,6 +1770,30 @@ static int rescert_version_chk(X509 *x)
     return(0);
 }
 
+
+/**=============================================================================
+ * @brief Issuer-related checks
+ *
+ * @param certp (struct Certificate*)
+ * @retval ret 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+static int rescert_issuer_chk(struct Certificate *certp) {
+    /*
+	int size = INT_MIN;
+	struct Name *issuer = &certp->toBeSigned.issuer;
+
+	size = vsize_casn(&certp->toBeSigned.issuer);
+	printf("size of issuer.self is %d\n", size);
+	uchar *to1 = calloc(1, size + 1);
+	int ret = read_casn(&certp->toBeSigned.issuer.self, to1);
+    printf("ret: %d\n", ret);
+	printf("issuer.self: %s\n", to1);
+*/
+
+	return 0;
+}
+
+
 /*************************************************************
  * rescert_basic_constraints_chk(X509 *, int)                *
  *                                                           *
@@ -2939,24 +2963,58 @@ static int rescert_criticals_chk(X509 *x)
   return(0);
 }
 
+
+/**=============================================================================
+ * @brief Check that issuer/subject name contains specified items.
+ *
+ * Note:  This may not be generalizable to other RDNSequence items because
+ *   it imposes stricter limits on quantities of items contained.
+ *
+ * @param rdnseqp (struct RDNSequence*)
+ * @return 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
 static int check_name(struct RDNSequence *rdnseqp)
   {
   int i, j, k, l, cnames = 0;
-  if ((i = num_items(&rdnseqp->self)) > 2) return -1;
+  if ((i = num_items(&rdnseqp->self)) > 2)
+    {
+    log_msg(LOG_ERR, "RDNSeq contains >1 RelativeDistinguishedName");
+    return -1;
+    }
   for (j = 0; j < i; j++)
     {
     struct RelativeDistinguishedName *rdnp =
       (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, j);
-    if ((k = num_items(&rdnp->self)) > 2) return -1;
+    if ((k = num_items(&rdnp->self)) > 2)  // amw: not sure this limit is correct
+      {
+      log_msg(LOG_ERR, "RelativeDistinguishedName contains >2 Attribute Value Assertions");
+      return -1;
+      }
     for (l = 0; l < k; l++)
       {
       struct AttributeValueAssertion *avap =
         (struct AttributeValueAssertion *)member_casn(&rdnp->self, l);
-      if (!diff_objid(&avap->objid, id_commonName)) cnames++;
-      else if (diff_objid(&avap->objid, id_serialNumber)) return -1;
+      if (!diff_objid(&avap->objid, id_commonName))
+        {
+        cnames++;
+        if (!vsize_casn(&avap->value.commonName.printableString) > 0)
+          {
+          log_msg(LOG_ERR, "CommonName not printableString");
+          return -1;
+          }
+        } else if (diff_objid(&avap->objid, id_serialNumber))  // amw: not sure this limit is correct
+        {
+        log_msg(LOG_ERR, "AttributeValueAssertion contains >1 id_commonName plus one id_serialNumber");
+        return -1;
+        }
       }
     }
-  if (cnames > 1 || !cnames) return -1;
+  if (cnames != 1)
+    {
+    log_msg(LOG_ERR, "AttributeValueAssertion contains 0, or >1, id_commonName");
+    return -1;
+    }
+
   return 0;
   }
 
@@ -3238,6 +3296,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_version_chk");
   if ( ret < 0 )
     return(ret);
+
+  ret = rescert_issuer_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_issuer_chk");
+  if ( ret < 0 )
+	  return(ret);
 
   if (check_name(&certp->toBeSigned.issuer.rDNSequence) < 0)
 	  return ERR_SCM_BADISSUER;
