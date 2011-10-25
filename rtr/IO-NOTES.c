@@ -1,4 +1,27 @@
 /*
+
+General design (problems):
+
+Spend most of the time in a connection thread blocking on read or write.
+When the main thread wants to kill a connection, it calls close and the next read or write
+by the connection thread fails, causing the thread to quit.
+This needs some kind of idempotent and thread-safe and possibly reentrant guard around close
+in case a connection thread is closing itself when main tries to close it or in case a signal to
+the connection thread results in a call to close.
+
+This design also makes it hard to handle received error report PDUs when a connection
+thread is in a cycle of reading from the database and writing to the router, and to handle
+the need to send serial notify PDUs to the router either when read is blocking or at the end
+of a cycle of writes.
+
+A possible improvement would be to have one read and one write thread per connection with
+a thread-safe queue that main and read can enqueue to and write can dequeue from.
+
+*/
+
+
+
+/*
  * Transport module API, each <transport>.so contains these functions and global variables.
  *
  * The non-static module-scope names and types are the API, the variables' values
