@@ -122,6 +122,12 @@ int main(int argc, char **argv) {
 	connection = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkErr(connection == NULL, "Cannot connect to database: %s\n", msg);
 
+	if (number of rows in table rtr_nonce != 1) {
+		truncate all tables used by RTR, including rtr_nonce; // TODO: does order matter?
+		insert a random value into rtr_nonce;
+	}
+	assert(number of rows in table rtr_nonce == 1);
+
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
 	currSerialNum = (prevSerialNum == UINT_MAX) ? 1 : (prevSerialNum + 1);

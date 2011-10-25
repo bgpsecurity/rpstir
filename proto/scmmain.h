@@ -230,6 +230,14 @@ static scmtab scmtabbuilder[] =
 	//   directory, but there was no good way to do that and not
 	//   risk them not being created at initialization
 
+	{             /* RTR_NONCE */
+	  "rtr_nonce",
+	  "RTR_NONCE",
+	  "cache_nonce SMALLINT UNSIGNED NOT NULL,"
+	  "            PRIMARY_KEY (cache_nonce)",
+	  NULL,
+	  0
+	},
 	{             /* RTR_UPDATE */
 	  "rtr_update",
 	  "RTR_UPDATE",
