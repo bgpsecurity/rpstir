@@ -2540,7 +2540,10 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 	}
 
 
-// -----------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------
+ * Above this comment uses the casn library.
+ * Below this comment uses the openssl library.
+----------------------------------------------------------------------------- */
   int sinfo_flag = 0, uri_flag = 0;
   int i;
   int ex_nid;
@@ -2967,13 +2970,14 @@ static int rescert_criticals_chk(X509 *x)
 /**=============================================================================
  * @brief Check that issuer/subject name contains specified items.
  *
- * Note:  This may not be generalizable to other RDNSequence items because
- *   it imposes stricter limits on quantities of items contained.
+ * Note:  This function is not generalizable to other RDNSequence items because
+ *   it imposes stricter limits on quantities of items contained.  It is
+ *   written specifically to handle Issuer/Subject RDNs.
  *
  * @param rdnseqp (struct RDNSequence*)
  * @return 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int check_name(struct RDNSequence *rdnseqp)
+static int rescert_name_chk(struct RDNSequence *rdnseqp)
   {
   int i, j, k, l, cnames = 0;
   if ((i = num_items(&rdnseqp->self)) > 2)
@@ -2985,7 +2989,7 @@ static int check_name(struct RDNSequence *rdnseqp)
     {
     struct RelativeDistinguishedName *rdnp =
       (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, j);
-    if ((k = num_items(&rdnp->self)) > 2)  // amw: not sure this limit is correct
+    if ((k = num_items(&rdnp->self)) > 2)  // this limit applies to Issuer/Subject, not to RelativeDistinguishedName
       {
       log_msg(LOG_ERR, "RelativeDistinguishedName contains >2 Attribute Value Assertions");
       return -1;
@@ -3002,7 +3006,7 @@ static int check_name(struct RDNSequence *rdnseqp)
           log_msg(LOG_ERR, "CommonName not printableString");
           return -1;
           }
-        } else if (diff_objid(&avap->objid, id_serialNumber))  // amw: not sure this limit is correct
+        } else if (diff_objid(&avap->objid, id_serialNumber))  // this limit applies to Issuer/Subject, not to AttributeValueAssertion
         {
         log_msg(LOG_ERR, "AttributeValueAssertion contains >1 id_commonName plus one id_serialNumber");
         return -1;
@@ -3302,9 +3306,9 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   if ( ret < 0 )
 	  return(ret);
 
-  if (check_name(&certp->toBeSigned.issuer.rDNSequence) < 0)
+  if (rescert_name_chk(&certp->toBeSigned.issuer.rDNSequence) < 0)
 	  return ERR_SCM_BADISSUER;
-  else if (check_name(&certp->toBeSigned.subject.rDNSequence))
+  else if (rescert_name_chk(&certp->toBeSigned.subject.rDNSequence))
 	  return ERR_SCM_BADSUBJECT;
 
   ret = rescert_basic_constraints_chk(x, ct);
