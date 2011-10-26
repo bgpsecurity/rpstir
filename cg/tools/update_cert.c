@@ -33,7 +33,6 @@
 
 char *msgs [] =
     {
-    "Finished all OK\n",
     "Couldn't open %s\n",
     "Usage: startdelta, enddelta, certfile(s)\n",
     };
@@ -153,11 +152,11 @@ int main(int argc, char **argv)
   {
   struct Certificate cert;
   Certificate(&cert, (ushort)0);
-  if (argc < 4) fatal(2, (char *)0);
+  if (argc < 4) fatal(1, (char *)0);
   int i;
   for (i = 3; i < argc; i++)
     { 
-    if (get_casn_file(&cert.self, argv[i], 0) < 0) fatal(1, argv[1]);
+    if (get_casn_file(&cert.self, argv[i], 0) < 0) fatal(0, argv[1]);
     struct CertificateToBeSigned *ctftbsp = &cert.toBeSigned;
   
     long now = time((time_t *)0);
@@ -175,6 +174,6 @@ int main(int argc, char **argv)
     put_casn_file(&cert.self, argv[i], 0);
     fprintf(stderr, "Finished %s\n", argv[i]);
     }
-  fatal(0, (char *)0);
+  fprintf(stderr, "Finished all OK\n");
   return 0;
   }

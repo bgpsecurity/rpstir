@@ -36,7 +36,7 @@ edit the file doxygen.config and set:
   HAVE_DOT = NO
 
 $ cd $RPKI_ROOT/doc/doxygen
-$ doxygen doxygen.config  // to create the docs
+$ doxygen Doxyfile.config  // to create the docs
 
 
 ################################################################################
@@ -50,7 +50,7 @@ takes less time, but no graphs.
 
 
 ################################################################################
-# CHANGES from default configuration (as of Oct 5, 2011)
+# CHANGES from default configuration (as of Oct 20, 2011)
 #-------------------------------------------------------------------------------
     PROJECT_NAME = rpki
     OUTPUT_DIRECTORY = .
@@ -66,7 +66,7 @@ takes less time, but no graphs.
     WARN_LOGFILE = warnings.log
     INPUT = ../../ ../../testcases/conformance/scripts ../../run_scripts
     RECURSIVE = YES
-    EXCLUDE = ../../ree ../../performance ../../perftest ../../verify ../../distroot
+    EXCLUDE = ../../deprecated
     SOURCE_BROWSWER = YES
     REFERENCES_BY_RELATION = YES
     REFERENCES_RELATION = YES

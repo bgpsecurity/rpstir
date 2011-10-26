@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 # first assemble the root cert from source
 cp C.orig C.raw

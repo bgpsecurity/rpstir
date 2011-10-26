@@ -80,13 +80,13 @@ AC_ARG_WITH(
 )
 
 if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} -Wl,-R${ssl_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
 fi
 if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -Wl,-R${odbc_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
 fi
 if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} -Wl,-R${cryptlib_lib} ${LDFLAGS-}"
+  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
 fi
 
 if test x${odbc_include} != x; then
