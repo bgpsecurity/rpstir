@@ -1,7 +1,7 @@
 $RPKI_ROOT/run_scripts/initDB.sh
 rcli -y -F ../root.cer
 # rcli -y -f badCert2AKI.cer                # Duplicate AKI (-59)
-# rcli -y -f badCert2ASNum.cer              # Duplicate AS# resources (-80) # remember to store AS info in the db
+# rcli -y -f badCert2ASNum.cer              # Duplicate AS# resources (-80)
 # rcli -y -f badCert2BasicConstr.cer            # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCert2Cpol.cer               # Duplicate policy ext (-75)
 # rcli -y -f badCert2CRLDP.cer              # Duplicate CRLDP (-64)
@@ -15,7 +15,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertAIACrit.cer                 # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCertAKIHash.cer                 # I think a bad AKI hash should be added to the DB normally and garbage collected eventually. -- David Mandelberg
 # rcli -y -f badCertAKILth.cer              # Invalid AKI (-115)
- rcli -y -f badCertBadExtension1.cer       # Unless the extension is critical, it's fine to ignore an unknown extension. (http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8)
+# rcli -y -f badCertBadExtension1.cer       # Unless the extension is critical, it's fine to ignore an unknown extension. (http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8)
 # rcli -y -f badCertBasicConstrNoCA.cer         # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCertBasicConstrNoCrit.cer   # Extension must be critical (-48)
 # rcli -y -f badCertBasicConstrPathLth.cer  # Pathlen invalid (-50)
@@ -34,7 +34,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertIssuerOID.cer           # Invalid issuer name (-114)
 # rcli -y -f badCertIssuerSerNum.cer        # Invalid issuer name (-114)
 # rcli -y -f badCertIssuerUtf.cer           # Invalid issuer name (-114)
-# rcli -y -f badCertIssUID.cer                  # Add operation succeeded
+# rcli -y -f badCertIssUID.cer              # Profile violation (-27)
 # rcli -y -f badCertKUsageExtra.cer             # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCertKUsageNoCertSign.cer        # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCertKUsageNoCrit.cer        # Extension must be critical (-48)
@@ -67,13 +67,13 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertSIAMissing.cer          # Missing SIA (-71)
 # rcli -y -f badCertSKIHash.cer             # Invalid SKI (-40)
 # rcli -y -f badCertSKILth.cer              # Invalid SKI (-40)
-# rcli -y -f badCertSubject2ComName.cer         # 
-# rcli -y -f badCertSubject2SerNums.cer         # 
-# rcli -y -f badCertSubject2SetComName.cer      # 
+# rcli -y -f badCertSubject2ComName.cer     # Invalid subject name (-113)
+# rcli -y -f badCertSubject2SerNums.cer     # Invalid subject name (-113)
+# rcli -y -f badCertSubject2SetComName.cer  # Invalid subject name (-113)
 # rcli -y -f badCertSubjectOID.cer          # Invalid subject name (-113)
-# rcli -y -f badCertSubjectSerNum.cer           # 
+# rcli -y -f badCertSubjectSerNum.cer       # Invalid subject name (-113)
 # rcli -y -f badCertSubjectUtf.cer          # Invalid subject name (-113)
-# rcli -y -f badCertSubjUID.cer                 # Add operation succeeded
+# rcli -y -f badCertSubjUID.cer             # Profile violation (-27)
 # rcli -y -f badCertValCrossed.cer          # Invalid dates (-94)
 # rcli -y -f badCertValFromFuture.cer           # There's a possibility this should be added to the database correctly and left untouched until it becomes valid. -- David Mandelberg
 # rcli -y -f badCertValFromTyp.cer          # Invalid date/time (-24)

@@ -3008,7 +3008,7 @@ static int rescert_name_chk(struct RDNSequence *rdnseqp)
           }
         } else if (diff_objid(&avap->objid, id_serialNumber))  // this limit applies to Issuer/Subject, not to AttributeValueAssertion
         {
-        log_msg(LOG_ERR, "AttributeValueAssertion contains >1 id_commonName plus one id_serialNumber");
+        log_msg(LOG_ERR, "AttributeValueAssertion contains an OID that is neither id_commonName nor id_serialNumber");
         return -1;
         }
       }
@@ -3228,6 +3228,27 @@ static int rescert_dates_chk(struct Certificate *certp) {
 }
 
 
+/**=============================================================================
+ * @brief Check for issuer UID or subject UID
+ *
+ * @param certp (struct Certificate*)
+ * @return 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
+    if (vsize_casn(&certp->toBeSigned.issuerUniqueID) > 0) {
+        log_msg(LOG_ERR, "certificate has issuer unique ID");
+        return ERR_SCM_XPROFILE;
+    }
+
+    if (vsize_casn(&certp->toBeSigned.subjectUniqueID) > 0) {
+        log_msg(LOG_ERR, "certificate has subject unique ID");
+        return ERR_SCM_XPROFILE;
+    }
+
+    return 0;
+}
+
+
 /**********************************************************
  * profile_check(X509 *, int cert_type)                   *
  *  This function makes sure the required base elements   *
@@ -3378,6 +3399,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_dates_chk");
   if ( ret < 0 )
 	  return(ret);
+
+  ret = rescert_subj_iss_UID_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_dates_chk");
+  if ( ret < 0 )
+      return(ret);
 
   return(0);
 }
