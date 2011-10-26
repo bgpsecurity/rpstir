@@ -15,12 +15,11 @@
     <div id="outer">
 
         <div id="links">
-            <a href="conformance_requirements.html#as">AS</a><br />
+            <a href="conformance_requirements.html#asip">AS, IP</a><br />
             <a href="conformance_requirements.html#ca or ee">CA or EE?</a><br />
             <a href="conformance_requirements.html#crldp">CRLDP</a><br />
             <a href="conformance_requirements.html#crlissuer">CRLIssuer</a><br />
             <a href="conformance_requirements.html#extensions">Extensions</a><br />
-            <a href="conformance_requirements.html#ip">IP</a><br />
             <a href="conformance_requirements.html#isselfsigned">isSelfSigned?</a><br />
             <a href="conformance_requirements.html#issuer">Issuer</a><br />
             <a href="conformance_requirements.html#issuid">IssUID</a><br />
@@ -35,13 +34,49 @@
         <div id="content">
 
 
-            <div id="as">
+            <div id="asip">
                 <table>
-                    <caption>AS</caption>
+                    <caption>AS, IP</caption>
                     <tr> <th>.cer</th> <th>problem</th> </tr>
                     <tr>
-                        <td>-</td>
-                        <td>-</td>
+                        <td>badCert2ASNum.cer</td>
+                        <td>two AS number extensions</td>
+                    </tr>
+                    <tr>
+                        <td>badCert2IPAddr.cer</td>
+                        <td>two IP address extensions</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesASNoCrit.cer</td>
+                        <td>AS number extension not critical</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadAFI.cer</td>
+                        <td>invalid IP address family</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadASOrder.cer</td>
+                        <td>AS numbers out of order</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadV4Order.cer</td>
+                        <td>IPv4 addresses out of order</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadV6Order.cer</td>
+                        <td>IPv6 addresses out of order</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesIPNoCrit.cer</td>
+                        <td>IP address extension not critical</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesNone.cer</td>
+                        <td>no IP addresses or AS numbers</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesSAFI.cer</td>
+                        <td>IP addresses has SAFI digit</td>
                     </tr>
                 </table>
                 <br />
@@ -52,10 +87,17 @@
                     </tr>
                     <tr>
                         <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
-                        <td>Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.<br />
-                            This extension contains the list of AS number resources as per [RFC3779], or may specify the "inherit" element.  RDI values are NOT supported in this profile and MUST NOT be used.<br />
-                            This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.</td>
-                        <td> - </td>
+                        <td>Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.</td>
+                        <td>myssl.c - rescert_ip_asnum_chk()</td>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
+                        <td>This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.</td>
+                        <td>myssl.c - rescert_asnums_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>?</td>
+                        <td>IP numbers must be in canonical order.</td>
+                        <td>sqhl.c - checkit() - openssl/crypto/x509v3/v3_addr.c - v3_addr_is_canonical()</td>
                     </tr>
                 </table>
             </div>
@@ -165,31 +207,6 @@
                         <td>draft-ietf-sidr-res-certs-22 4.8 Resource Certificate Extensions</td>
                         <td>The following X.509 V3 extensions MUST be present in a conforming Resource Certificate, except where explicitly noted otherwise.  Each extension in a resource certificate is designated as either critical or non-critical.  A certificate-using system MUST reject the certificate if it encounters a critical extension it does not recognise; however, a non-critical extension MAY be ignored if it is not recognised [RFC5280].</td>
                         <td></td>
-                    </tr>
-                </table>
-            </div>
-
-
-            <br /> <br />
-            <div id="ip">
-                <table>
-                    <caption>IP</caption>
-                    <tr> <th>.cer</th> <th>problem</th> </tr>
-                    <tr>
-                        <td>-</td>
-                        <td>-</td>
-                    </tr>
-                </table>
-                <br />
-                <table>
-                    <caption> </caption>
-                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
-                    <tr>
-                        <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources</td>
-                        <td>Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.<br />
-                            This extension contains the list of AS number resources as per [RFC3779], or may specify the "inherit" element.  RDI values are NOT supported in this profile and MUST NOT be used.<br />
-                            This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.</td>
-                        <td> - </td>
                     </tr>
                 </table>
             </div>
