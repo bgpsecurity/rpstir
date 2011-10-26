@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  ***** BEGIN LICENSE BLOCK *****
 # 
@@ -41,18 +41,18 @@ NUM_STEPS=$2
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
+. $RPKI_ROOT/trap_errors
+
 # test functions
 . $THIS_SCRIPT_DIR/test.include
 
 cd $THIS_SCRIPT_DIR
 
 # clear database
-./initDB
-check_errs $? "initDB failed!"
+./initDB || check_errs $? "initDB failed!"
 
 # check for existing loader and fail if so
-nc -z localhost $RPKI_PORT
-if [ $? -eq "0" ]; then
+if nc -z localhost $RPKI_PORT; then
     echo "ERROR: port $RPKI_PORT is already in use.  Aborting subsystem test."
     exit 3
 fi
@@ -69,8 +69,7 @@ NUM_TOTAL=$NUM_STEPS
 
 N=1
 while [ $N -le $NUM_TOTAL ]; do
-    ./step${TESTID}.${N}
-    if [ "$?" -eq "0" ]; then
+    if ./step${TESTID}.${N}; then
 	NUM_PASSED=$(( $NUM_PASSED + 1 ))
     fi
     N=$(( $N + 1 ))

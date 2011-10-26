@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  ***** BEGIN LICENSE BLOCK *****
 # 
@@ -38,6 +38,8 @@ fi
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
+. $RPKI_ROOT/trap_errors
+
 # test functions
 . $THIS_SCRIPT_DIR/test.include
 
@@ -54,8 +56,7 @@ cd $THIS_SCRIPT_DIR
   cd ../
 
 # check for existing loader and fail if so
-nc -z localhost $RPKI_PORT
-if [ $? -eq "0" ]; then
+if nc -z localhost $RPKI_PORT; then
     echo "ERROR: port $RPKI_PORT is already in use.  Aborting subsystem test."
     exit 3
 fi
@@ -64,17 +65,17 @@ NUM_PASSED=0
 N=1
 while [ $N -le "4" ]; do
 # clear database
-    ./initDB4
-    check_errs $? "initDB failed!"
+    ./initDB4 || check_errs $? "initDB failed!"
     ../proto/rcli -w $RPKI_PORT -c testcases4_LTA/LTA/case${N} &
     LOADER_PID=$!
      echo "Loader started for case ${N}"
      sleep 1
-     ./step4
+     failures=""
+     ./step4 || failures="$failures step4"
      cd testcases4_LTA/LTA 
-     $RPKI_ROOT/cg/tools/checkLTAtest case${N} C*.cer
+     $RPKI_ROOT/cg/tools/checkLTAtest case${N} C*.cer || failures="$failures checkLTAtest"
      cd ../../
-    if [ "$?" -eq "0" ]; then
+    if [ -z "$failures" ]; then
 	NUM_PASSED=$(( $NUM_PASSED + 1 ))
     fi
     N=$(( $N + 1 ))

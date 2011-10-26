@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
+
+. $RPKI_ROOT/trap_errors
 
 # test functions
 . $THIS_SCRIPT_DIR/test.include
