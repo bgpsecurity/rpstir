@@ -39,10 +39,6 @@
 #include "err.h"
 #include "logutils.h"
 
-// PUT THESE SOMEWHERE ELSE!!
-extern struct Extension *find_extension(struct Certificate *certp, char *idp);
-extern struct Extension *get_extension(struct Certificate *certp, char *idp, int *count);
-
 /*
   Convert between a time string in a certificate and a time string
   that will be acceptable to the DB. The return value is allocated memory.
@@ -2489,13 +2485,13 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_repo = calloc(1, size + 1);
 				read_casn((struct casn *)&adp->accessLocation.url, uri_repo);
-				if (!strncasecmp((char *)uri_repo, "rsync", 5))
+				if (!strncasecmp((char *)uri_repo, RSYNC_PREFIX, 8))
 					found_uri_repo_rsync = 1;
 			} else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_mft = calloc(1, size + 1);
 				read_casn((struct casn *)&adp->accessLocation.url, uri_mft);
-				if (!strncasecmp((char *)uri_mft, "rsync", 5))
+				if (!strncasecmp((char *)uri_mft, RSYNC_PREFIX, 8))
 					found_uri_mft_rsync = 1;
 			}
 		}
@@ -2521,7 +2517,7 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_obj = calloc(1, size + 1);
 				read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
-				if (!strncasecmp((char *)uri_obj, "rsync", 5))
+				if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
 					found_uri_obj_rsync = 1;
 			} else {
 				log_msg(LOG_ERR, "in EE-cert SIA, found accessMethod != id-ad-signedObject");
