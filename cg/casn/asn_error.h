@@ -55,7 +55,9 @@ void asn_error(int, char *);
 #define ASN_MASK_ERR        20
 #define ASN_DEFINED_ERR     21
 #define ASN_LENGTH_ERR      22
-#define ASN_FILE_ERR        23
+#define ASN_FILE_SIZE_ERR   23
 #define ASN_CONSTRAINT_ERR  24
 #define ASN_RECURSION_ERR   25
+#define ASN_ENUM_ERR        26
+#define ASN_FILE_ERR        27
 #endif /* _ASN_ERROR_H */
