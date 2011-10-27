@@ -2803,7 +2803,8 @@ static int rescert_ip_resources_chk(X509 *x)
  *   marked as critical                                      *
  *                                                           *
  ************************************************************/
-
+/* openssl not checking AS number canonicity as of 1.0.0.d
+ * even tho it contains Rob Austein's patch from Dec, 20101
 static int rescert_as_resources_chk(X509 *x)
 {
   int asnum_flag = 0;
@@ -2825,7 +2826,7 @@ static int rescert_as_resources_chk(X509 *x)
   }
 
   if (!asnum_flag) {
-    log_msg(LOG_ERR, "[AS res] did not contain IP Resources ext");
+    log_msg(LOG_ERR, "[AS res] did not contain AS Resources ext");
     log_msg(LOG_ERR, "could be ok if IP resources are present and correct");
     return(0);
   } else if (asnum_flag > 1) {
@@ -2835,6 +2836,131 @@ static int rescert_as_resources_chk(X509 *x)
 
   return(0);
 }
+*/
+
+
+/**=============================================================================
+ * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
+ -----------------------------------------------------------------------------*/
+struct AsNumTest{
+    ulong lo;
+    ulong hi;
+};
+
+
+/**=============================================================================
+ * @brief Helper fcn for checking AS order.  Load AS num(s) from casn struct.
+ *
+ * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
+ *
+ * @param asntp (struct AsNumTest*)
+ * @param asNumOrRangep (struct ASNumberOrRangeA*)
+ * @return 0 on success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+static int fill_asnumtest(struct AsNumTest *asntp,
+        struct ASNumberOrRangeA *asNumOrRangep) {
+    if (vsize_casn(&asNumOrRangep->num) > 0) {  // just one
+        if (read_casn_num(&asNumOrRangep->num, (long *)&asntp->lo) < 0)
+            return -1;
+        asntp->hi = asntp->lo;
+    } else if (read_casn_num(&asNumOrRangep->range.min, (long *)&asntp->lo) < 0 ||
+            read_casn_num(&asNumOrRangep->range.max, (long *)&asntp->hi) < 0)
+        return -1;
+    return 0;
+}
+
+
+/**=============================================================================
+ * @brief Check for AS order
+ *
+ * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
+ *
+ * @param extsp (struct Extensions*)
+ * @return 0 or 1 success<br />a negative integer on failure
+ -----------------------------------------------------------------------------*/
+static int rescert_as_resources_chk(struct Certificate *certp) {
+    int ext_count = 0;
+    struct Extension *extp = get_extension(certp, id_pe_autonomousSysNum,
+            &ext_count);
+    if (!extp || !ext_count) {
+        log_msg(LOG_INFO, "no AS extension found");
+        return 0;
+    } else if (ext_count > 1) {
+        log_msg(LOG_ERR, "multiple AS extensions found");
+        return ERR_SCM_DUPAS;
+    }
+
+    if (!vsize_casn(&extp->self)) {
+        // TODO:  is AS-extension-found-but-empty an error?
+        log_msg(LOG_INFO, "AS extension is empty");
+        return 0;
+    }
+
+    if (!vsize_casn(&extp->critical)) {
+        log_msg(LOG_ERR, "AS extension not marked critical");
+        return ERR_SCM_NCEXT;
+    }
+
+    // TODO: what does the following note from Charlie mean?
+    //   again should we check that there is something there or inherit?
+
+    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
+        // TODO: should this be an error?
+        log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
+        return ERR_SCM_BADRANGE;
+    }
+
+    struct ASIdentifierChoiceA *asidcap = &extp->extnValue.autonomousSysNum.asnum;
+    if (size_casn(&asidcap->inherit)) {
+        log_msg(LOG_INFO, "AS resources marked as inherit");
+        return 1;
+    }
+    if (!(ext_count = num_items(&asidcap->asNumbersOrRanges.self))) {
+        log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
+        return ERR_SCM_BADRANGE;
+    }
+
+    struct AsNumTest anum;
+    struct AsNumTest bnum;
+    struct AsNumTest *lp = &anum;
+    struct AsNumTest *hp = &bnum;
+    struct ASNumberOrRangeA *asNumOrRangep = (struct ASNumberOrRangeA *)
+            member_casn(&asidcap->asNumbersOrRanges.self, 0);
+    if (fill_asnumtest(lp, asNumOrRangep)) {
+        log_msg(LOG_ERR, "error reading AS number");
+        return ERR_SCM_BADRANGE;
+    }
+    if (!(asNumOrRangep = (struct ASNumberOrRangeA *)next_of(
+            &asNumOrRangep->self))) {
+        log_msg(LOG_INFO, "done checking order of AS numbers");
+        return 1;
+    }
+    if (fill_asnumtest(hp, asNumOrRangep)) {
+        log_msg(LOG_ERR, "error reading AS number");
+        return ERR_SCM_BADRANGE;
+    }
+    while (hp) {
+        // TODO: should the " + 1" be there?
+        // TODO: wouldn't it preclude a short range, eg 4-5?
+        if (lp->hi + 1 >= hp->lo) {
+            log_msg(LOG_ERR, "AS numbers not in canonical order");
+            return ERR_SCM_BADRANGE;
+        }
+        lp = hp;
+        if (!(asNumOrRangep = (struct ASNumberOrRangeA *)next_of(
+                &asNumOrRangep->self))) {
+            log_msg(LOG_INFO, "done checking order of AS numbers");
+            return 1;
+        }
+        if (fill_asnumtest(hp, asNumOrRangep)) {
+            log_msg(LOG_ERR, "error reading AS number");
+            return ERR_SCM_BADRANGE;
+        }
+    }
+
+    return 1;
+}
+
 
 /*************************************************************
  * rescert_ip_asnum_chk(X509 *)                              *
@@ -2851,29 +2977,37 @@ static int rescert_as_resources_chk(X509 *x)
  * there are not multiple instances of the same extension    *
  * and that the extension(s) present are marked critical.    *
  ************************************************************/
-
-static int rescert_ip_asnum_chk(X509 *x)
+static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 {
+  int as = 0;
+  int ip = 0;
   int ret = 0;
 
-  if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
+//  if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
     if (x->rfc3779_addr) {
-      ret = rescert_ip_resources_chk(x);
-      if ( ret < 0 )
-        return(ret);
+      ip = rescert_ip_resources_chk(x);
+      if ( ip < 0 )
+        return(ip);
     }
     if (x->rfc3779_asid) {
-      ret = rescert_as_resources_chk(x);
-      if ( ret < 0 )
-        return(ret);
+      as = rescert_as_resources_chk(certp);
+      if ( as < 0 )
+        return(as);
     }
-  } else {
-    /* doesn't have IP resources OR AS Resources */
-    return(ERR_SCM_NOIPAS);
-  }
+//  } else {
+//    /* doesn't have IP resources OR AS Resources */
+//    return(ERR_SCM_NOIPAS);
+//  }
+
+    // openssl-1.0.0d does not check AS number canonicity
+    // So, we need this unusual condition, for now.
+    // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
+    if (ip >= 0 || as > 0)
+        ret = 0;
 
   return(ret);
 }
+
 
 /* from x509v3/v3_purp.c */
 static int res_nid_cmp(int *a, int *b)
@@ -3374,7 +3508,7 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   if (checkRPKI)
     {
-    ret = rescert_ip_asnum_chk(x);
+    ret = rescert_ip_asnum_chk(x, certp);
     log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
     }
   if ( ret < 0 )
