@@ -1904,19 +1904,18 @@ skip:
   return(ret);
 }
 
-/** @brief Check a cert's SKI.
+/**=============================================================================
+ * @brief Check a cert's SKI.
  *
- *  Subject Key Identifier - non-critical MUST be present
+ * Subject Key Identifier - non-critical MUST be present
  *
- *  We don't do anything with the cert_type as this is true
- *  of EE, CA, and TA certs in the resrouce cert profile
+ * We don't do anything with the cert_type as this is true
+ * of EE, CA, and TA certs in the resrouce cert profile
  *
- *  @param x (struct X509*)
+ * @param x (struct X509*)
  *
- *  @retval ret 0 on success
- *              a negative integer return value on failure
- ************************************************************/
-
+ * @return 0 on success<br />negative integer on failure
+ -----------------------------------------------------------------------------*/
 static int rescert_ski_chk(X509 *x, struct Certificate *certp)
 {
 
@@ -2526,6 +2525,8 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 					found_uri_obj_rsync = 1;
 			} else {
 				log_msg(LOG_ERR, "in EE-cert SIA, found accessMethod != id-ad-signedObject");
+		        if (uri_obj)
+		            free (uri_obj);
 				return ERR_SCM_BADSIA;
 			}
 		}
@@ -2891,7 +2892,6 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     }
 
     if (!vsize_casn(&extp->self)) {
-        // TODO:  is AS-extension-found-but-empty an error?
         log_msg(LOG_INFO, "AS extension is empty");
         return 0;
     }
@@ -2906,7 +2906,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 
     if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
         // TODO: should this be an error?
-        log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
+        log_msg(LOG_ERR, "AS extension contains non-NULL rdi element, thus no asnum element");
         return ERR_SCM_BADRANGE;
     }
 
@@ -3270,7 +3270,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
     // TODO: can we always count on an extra leading zero byte?
 	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
-		log_msg(LOG_ERR, "subj pub key modulus too long");
+		log_msg(LOG_ERR, "subj pub key modulus != SUBJ_PUBKEY_MODULUS_SZ");
 		return ERR_SCM_BADALG;
 	}
 	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
