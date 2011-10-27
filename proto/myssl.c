@@ -2892,20 +2892,35 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         return 0;
     }
 
-    if (!vsize_casn(&extp->critical)) {
-        log_msg(LOG_ERR, "AS extension not marked critical");
+    int size = vsize_casn((struct casn*)&extp->critical);
+    printf("size:  %d\n", size);
+    uchar critical = 0;
+    if (size != 1) {
+        if (size < 1)
+            log_msg(LOG_ERR, "AS extension not marked critical");
+        else
+            log_msg(LOG_ERR, "AS extension critical flag is longer than one byte");
         return ERR_SCM_NCEXT;
+    } else {
+        read_casn(&extp->critical, &critical);
+        if (!critical) {
+            log_msg(LOG_ERR, "AS extension not marked critical");
+            return ERR_SCM_NCEXT;
+        }
     }
+
+    printf("%s %d\n", __FILE__, __LINE__);
 
     // TODO: what does the following note from Charlie mean?
     //   again should we check that there is something there or inherit?
 
-    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
-        // TODO: should this be an error?
-        log_msg(LOG_ERR, "AS extension contains non-NULL rdi element, thus no asnum element");
+//    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
+    if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
+        log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
         return ERR_SCM_BADRANGE;
     }
 
+    printf("%s %d\n", __FILE__, __LINE__);
     struct ASIdentifierChoiceA *asidcap = &extp->extnValue.autonomousSysNum.asnum;
     if (size_casn(&asidcap->inherit)) {
         log_msg(LOG_INFO, "AS resources marked as inherit");
@@ -2916,6 +2931,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         return ERR_SCM_BADRANGE;
     }
 
+    printf("%s %d\n", __FILE__, __LINE__);
     struct AsNumTest anum;
     struct AsNumTest bnum;
     struct AsNumTest *lp = &anum;
@@ -2935,6 +2951,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         log_msg(LOG_ERR, "error reading AS number");
         return ERR_SCM_BADRANGE;
     }
+    printf("%s %d\n", __FILE__, __LINE__);
     while (hp) {
         // TODO: should the " + 1" be there?
         // TODO: wouldn't it preclude a short range, eg 4-5?
@@ -2975,31 +2992,26 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
  ************************************************************/
 static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 {
-  int as = 0;
-  int ip = 0;
   int ret = 0;
 
-//  if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
+  if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
     if (x->rfc3779_addr) {
-      ip = rescert_ip_resources_chk(x);
-      if ( ip < 0 )
-        return(ip);
+      ret = rescert_ip_resources_chk(x);
+      if ( ret < 0 )
+        return(ret);
     }
     if (x->rfc3779_asid) {
-      as = rescert_as_resources_chk(certp);
-      if ( as < 0 )
-        return(as);
+      ret = rescert_as_resources_chk(certp);
+      if ( ret < 0 )
+        return(ret);
     }
-//  } else {
-//    /* doesn't have IP resources OR AS Resources */
-//    return(ERR_SCM_NOIPAS);
-//  }
+  } else {
+    // has neither IP resources nor AS Resources
+    return(ERR_SCM_NOIPAS);
+  }
 
-    // openssl-1.0.0d does not check AS number canonicity
-    // So, we need this unusual condition, for now.
     // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
-    if (ip >= 0 || as > 0)
-        ret = 0;
+    // It provides a more accurate check that valid IP resources are present.
 
   return(ret);
 }
@@ -3531,7 +3543,7 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 	  return(ret);
 
   ret = rescert_subj_iss_UID_chk(certp);
-  log_msg(LOG_DEBUG, "rescert_dates_chk");
+  log_msg(LOG_DEBUG, "rescert_subj_iss_UID_chk");
   if ( ret < 0 )
       return(ret);
 
