@@ -54,7 +54,7 @@ rcli -y -F ../root.cer
 # rcli -y -f badCertPubKeyLth.cer           # Differing algorithms in cert (-95)
 # rcli -y -f badCertResourcesASNoCrit.cer   # Extension must be critical (-48)
 # rcli -y -f badCertResourcesBadAFI.cer     # Certificate validation error (-30)
-# rcli -y -f badCertResourcesBadASOrder.cer     # Add operation succeeded
+# rcli -y -f badCertResourcesBadASOrder.cer # Invalid IP or AS numbers (-99)
 # rcli -y -f badCertResourcesBadV4Order.cer # Certificate validation error (-30)
 # rcli -y -f badCertResourcesBadV6Order.cer # Certificate validation error (-30)
 # rcli -y -f badCertResourcesIPNoCrit.cer   # Extension must be critical (-48)

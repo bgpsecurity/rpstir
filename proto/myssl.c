@@ -2893,7 +2893,6 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     }
 
     int size = vsize_casn((struct casn*)&extp->critical);
-    printf("size:  %d\n", size);
     uchar critical = 0;
     if (size != 1) {
         if (size < 1)
@@ -2909,8 +2908,6 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         }
     }
 
-    printf("%s %d\n", __FILE__, __LINE__);
-
     // TODO: what does the following note from Charlie mean?
     //   again should we check that there is something there or inherit?
 
@@ -2920,7 +2917,6 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         return ERR_SCM_BADRANGE;
     }
 
-    printf("%s %d\n", __FILE__, __LINE__);
     struct ASIdentifierChoiceA *asidcap = &extp->extnValue.autonomousSysNum.asnum;
     if (size_casn(&asidcap->inherit)) {
         log_msg(LOG_INFO, "AS resources marked as inherit");
@@ -2931,47 +2927,34 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         return ERR_SCM_BADRANGE;
     }
 
-    printf("%s %d\n", __FILE__, __LINE__);
-    struct AsNumTest anum;
-    struct AsNumTest bnum;
-    struct AsNumTest *lp = &anum;
-    struct AsNumTest *hp = &bnum;
+    int found_as = 0;
+    struct AsNumTest lo;
+    struct AsNumTest hi;
     struct ASNumberOrRangeA *asNumOrRangep = (struct ASNumberOrRangeA *)
             member_casn(&asidcap->asNumbersOrRanges.self, 0);
-    if (fill_asnumtest(lp, asNumOrRangep)) {
+    if (fill_asnumtest(&lo, asNumOrRangep)) {
         log_msg(LOG_ERR, "error reading AS number");
         return ERR_SCM_BADRANGE;
     }
-    if (!(asNumOrRangep = (struct ASNumberOrRangeA *)next_of(
-            &asNumOrRangep->self))) {
-        log_msg(LOG_INFO, "done checking order of AS numbers");
-        return 1;
-    }
-    if (fill_asnumtest(hp, asNumOrRangep)) {
-        log_msg(LOG_ERR, "error reading AS number");
+    if (lo.lo < 1 || lo.lo > lo.hi) {
+        log_msg(LOG_ERR, "AS numbers are not canonical");
         return ERR_SCM_BADRANGE;
     }
-    printf("%s %d\n", __FILE__, __LINE__);
-    while (hp) {
-        // TODO: should the " + 1" be there?
-        // TODO: wouldn't it preclude a short range, eg 4-5?
-        if (lp->hi + 1 >= hp->lo) {
-            log_msg(LOG_ERR, "AS numbers not in canonical order");
-            return ERR_SCM_BADRANGE;
-        }
-        lp = hp;
-        if (!(asNumOrRangep = (struct ASNumberOrRangeA *)next_of(
-                &asNumOrRangep->self))) {
-            log_msg(LOG_INFO, "done checking order of AS numbers");
-            return 1;
-        }
-        if (fill_asnumtest(hp, asNumOrRangep)) {
+    found_as = 1;
+    while ((asNumOrRangep =
+            (struct ASNumberOrRangeA *)next_of(&asNumOrRangep->self))) {
+        if (fill_asnumtest(&hi, asNumOrRangep)) {
             log_msg(LOG_ERR, "error reading AS number");
             return ERR_SCM_BADRANGE;
         }
+        if (hi.lo - 2 <= lo.hi  ||  hi.lo > hi.hi) {
+            log_msg(LOG_ERR, "AS numbers not in canonical order");
+            return ERR_SCM_BADRANGE;
+        }
+        lo.hi = hi.hi;
     }
 
-    return 1;
+    return found_as;
 }
 
 
@@ -3006,7 +2989,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
         return(ret);
     }
   } else {
-    // has neither IP resources nor AS Resources
+    log_msg(LOG_ERR, "cert has neither IP resources, nor AS resources");
     return(ERR_SCM_NOIPAS);
   }
 
