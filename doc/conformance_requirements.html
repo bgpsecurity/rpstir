@@ -86,9 +86,29 @@
                         <th>source</th> <th>statement</th> <th>implementation</th>
                     </tr>
                     <tr>
+                        <td>rfc3779 3.2.1 OID</td>
+                        <td>The OID for this extension is id-pe-autonomousSysIds.</td>
+                        <td></td>
+                    <tr>
+                    <tr>
+                        <td>rfc3779 3.2.3.3 Element inherit</td>
+                        <td>If the ASIdentifierChoice choice contains the inherit element, then the set of authorized AS identifiers is taken from the issuer's certificate, or from the issuer's issuer's certificate, recursively, until a certificate containing an ASIdentifierChoice containing an asIdsOrRanges element is located.</td>
+                        <td></td>
+                    <tr>
+                    <tr>
+                        <td>rfc3779 3.2.3.4 Element asIdsOrRanges</td>
+                        <td>The asIdsOrRanges element is a SEQUENCE of ASIdOrRange types.  Any pair of items in the asIdsOrRanges SEQUENCE MUST NOT overlap.  Any contiguous series of AS identifiers MUST be combined into a single range whenever possible.  The AS identifiers in the asIdsOrRanges element MUST be sorted by increasing numeric value.</td>
+                        <td></td>
+                    <tr>
+                    <tr>
                         <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
                         <td>Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.</td>
                         <td>myssl.c - rescert_ip_asnum_chk()</td>
+                    <tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
+                        <td>RDI values are NOT supported in this profile and MUST NOT be used.</td>
+                        <td>myssl.c - rescert_as_resources_chk()</td>
                     <tr>
                         <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
                         <td>This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.</td>
