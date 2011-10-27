@@ -1,3 +1,5 @@
+#!/bin/sh -e
+
 ./make_test_crl L1 0D 1Y <makeL1
 ./make_test_crl L11 0D 3M <makeL11
 ./make_test_crl L111 -1M  2M <makeL111

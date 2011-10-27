@@ -1,3 +1,5 @@
+#!/bin/sh -e
+
 ./make_test_manifest M1 <makeM1
 ./make_test_manifest M11 <makeM11
 ./make_test_manifest M111 <makeM111
