@@ -199,3 +199,5 @@ ${single_CMS_cmd} CMS 541 SigInfoNoSigAlg
 ${single_CMS_cmd} CMS 542 SigInfoNoHashAlg
 ${single_CMS_cmd} CMS 543 KeyUsage
 ${single_CMS_cmd} CMS 544 BadSIAOid
+# NoSignerInfo?
+# SigInfoWrongSigAlg?
