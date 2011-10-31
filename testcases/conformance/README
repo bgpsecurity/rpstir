@@ -146,6 +146,8 @@ CMS signed objects, generic (using ROAs)
 540 SigInfo2Sig              # has two signatures
 541 SigInfoNoSigAlg          # has no signature algorithm
 542 SigInfoNoHashAlg         # had no hash algorithm
+                             # NoSignerInfo??
+			     # SigInfoWrongSigAlg??
 
 EE Certificates (embedded in ROAs)
 
