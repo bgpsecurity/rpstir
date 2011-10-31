@@ -1,3 +1,9 @@
+Problems to figure out:
+ * In the current design, the connection control thread can spin on a socket that's read-ready, incrementing the corresponding semaphore many times before the connection thread reads all available data.
+  * Possible fix: after incrementing a semaphore, remove the socket from the FD_SET and have the connection thread add it back somehow. This is probably problematic though.
+ * The database thread should be able to sleep until either there's a new request to handle or one of the response queues it's servicing is shorter than a specific limit. This may be difficult.
+
+
 Main thread:
   Create listening connection.
   Make queue of requests to the database {request, queue, semaphore}.
@@ -17,6 +23,7 @@ Notify state update function:
   Update the global notify state based on database queries.
  
 Database thread:   
+  Connect to database.
   ...
 
 Connection control thread:
@@ -32,7 +39,7 @@ Connection control thread:
       Spawn a connection thread with the connection socket, semaphore, the global request queue, and the global notify state.
 
 Connection thread:
-  Create a queue of responses from the database {request, bool is_done, array of response PDUs}.
+  Create a queue of responses from the database {request, bool is_done, array of response PDUs}. // NOTE: this only has responses to one request at a time
   Create a local queue of parsed and validated PDUs to be processed when the current response is done.
   Create a PDU reassembly buffer of constant size.
   Create a state variable in the READY state.
