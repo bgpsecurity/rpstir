@@ -9,6 +9,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.File;
 
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -16,56 +18,77 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.text.JTextComponent;
 
-import com.bbn.rpki.test.model.TestModel;
-
 /**
  * <Enter the description of this type here>
  *
  * @author RTomlinson
  */
 public class PropertiesEditor {
-  protected final TestModel testModel;
+  /**
+   * 
+   */
+  private static final int NCOLS = 5;
   protected final JFileChooser fileChooser = new JFileChooser(new File("."));
-  protected final JPanel taskPanel = new JPanel(new GridBagLayout());
+  protected final JPanel panel = new JPanel(new GridBagLayout());
   protected final GridBagConstraints gbc = new GridBagConstraints();
-  protected TaskDescriptionsEditor taskDescriptionsEditor;
 
   /**
    * @param testModel
    * @param taskDescriptionsEditor 
    */
-  protected PropertiesEditor(TestModel testModel, TaskDescriptionsEditor taskDescriptionsEditor) {
-    this.testModel = testModel;
-    this.taskDescriptionsEditor = taskDescriptionsEditor;
+  protected PropertiesEditor() {
+    panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+    gbc.gridy = 0;
+    gbc.insets = new Insets(1, 1, 1, 1);
   }
 
   /**
    * @return the UI component
    */
   public Component getComponent() {
-    return taskPanel;
+    return panel;
   }
 
   protected void addToTaskPanel(String label, Component... components) {
     addToTaskPanel(new JLabel(label), components);
   }
   
-  protected void addToTaskPanel(JLabel label, Component... components) {
-    if (gbc.gridy < 0) {
-      gbc.gridy = 0;
-      gbc.insets = new Insets(5, 5, 5, 5);
+  protected void addComponentsToTaskPanel(Component... components) {
+    gbc.gridx = 0;
+    gbc.weighty = 0f;
+    for (int i = 0; i < components.length; i++) {
+      if (i == components.length - 1)
+        gbc.gridwidth = NCOLS - i;
+      else
+        gbc.gridwidth = 1;
+      Component component = components[i];
+      if (component instanceof JButton || component instanceof JLabel) {
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0f;
+        gbc.anchor = GridBagConstraints.CENTER;
+      } else {
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1f;
+        gbc.anchor = GridBagConstraints.WEST;
+      }
+      panel.add(component, gbc);
+      gbc.gridx++;
     }
+    gbc.gridy++;
+  }
+  
+  protected void addToTaskPanel(JLabel label, Component... components) {
     gbc.gridx = 0;
     gbc.gridwidth = 1;
-    gbc.anchor = GridBagConstraints.NORTHWEST;
+    gbc.anchor = GridBagConstraints.WEST;
     gbc.weightx = 0;
     gbc.weighty = 0;
     gbc.fill = GridBagConstraints.NONE;
-    taskPanel.add(label, gbc);
+    panel.add(label, gbc);
     for (int i = 0; i < components.length; i++) {
       Component component = components[i];
       if (i == components.length - 1) {
-        gbc.gridwidth = 5 - i;
+        gbc.gridwidth = NCOLS - i - 1;
       } else {
         gbc.gridwidth = 1;
       }
@@ -77,7 +100,7 @@ public class PropertiesEditor {
       }
       gbc.weightx = 1f;
       gbc.gridx++;
-      taskPanel.add(component, gbc);
+      panel.add(component, gbc);
     }
     gbc.gridy++;    
   }

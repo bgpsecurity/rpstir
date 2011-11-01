@@ -135,4 +135,11 @@ public class TaskDescription extends XMLBase {
   public int getArgDescriptionCount() {
     return argDescriptions.size();
   }
+
+  /**
+   * @param index
+   */
+  public void removeArgDescription(int index) {
+    argDescriptions.remove(index);
+  }
 }

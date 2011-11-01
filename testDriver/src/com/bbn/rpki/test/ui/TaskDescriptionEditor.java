@@ -3,70 +3,35 @@
  */
 package com.bbn.rpki.test.ui;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import com.bbn.rpki.test.model.ArgDescription;
 import com.bbn.rpki.test.model.TaskDescription;
 import com.bbn.rpki.test.model.TestModel;
 
 /**
- * <Enter the description of this type here>
+ * Provides a component for editing a TaskDescription.
+ * 
+ * Provides text fields and areas for editing the name, description,
+ * and so forth.
  *
  * @author RTomlinson
  */
 public class TaskDescriptionEditor extends PropertiesEditor {
 
-  static class ArgComponents {
-    private final JLabel argNameLabel = new JLabel("Arg Name");
-    private final JLabel argName = new JLabel();
-    private final JLabel argType = new JLabel();
-    private final JLabel argValue = new JLabel();
-    private final JButton editButton;
-    ArgComponents(ActionListener editAction) {
-      editButton = new JButton("Edit");
-      editButton.addActionListener(editAction);
-    }
-    
-    void setVisible(boolean b, boolean b2) {
-      argNameLabel.setEnabled(b);
-      argName.setEnabled(b);
-      argType.setEnabled(b);
-      argValue.setEnabled(b);
-      editButton.setEnabled(b2);
-      if (b2) {
-        editButton.setText(b ? "Edit" : "New");
-      } else {
-        editButton.setText("");
-      }
-    }
-
-    /**
-     * @param argDescription
-     */
-    public void setValues(ArgDescription argDescription) {
-      if (argDescription != null) {
-        argName.setText(argDescription.getArgName());
-        argValue.setText(argDescription.getArgValue());
-        argType.setText(argDescription.isParameter() ? "Parameter" : "Default");
-      } else {
-        argName.setText("");
-        argValue.setText("");
-        argType.setText("");
-      }
-    }
-  }
   
   private final JTextField nameField = new JTextField(40);
   private final JTextField scriptField = new JTextField(40);
@@ -75,17 +40,38 @@ public class TaskDescriptionEditor extends PropertiesEditor {
     new JScrollPane(descriptionArea, 
                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                     JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-  private final ArgDescriptionEditor argDescriptionEditor;
   private TaskDescription selectedTaskDescription;
-  private final ArgComponents[] argComponentsArray = new ArgComponents[6];
+  private final ArgDescriptionsEditor argDescriptionsEditor;
+  private final TestModel testModel;
+  private final TaskDescriptionsEditor taskDescriptionsEditor;
+  private final Action viewScriptAction = new AbstractAction("View") {
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      viewScriptFile(selectedTaskDescription.getScriptFile());
+    }
+  };
+  private final Action changeScriptAction = new AbstractAction("Change...") {
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      int option = fileChooser.showOpenDialog(getComponent());
+      if (option == JFileChooser.APPROVE_OPTION) {
+        selectedTaskDescription.setScriptFile(fileChooser.getSelectedFile());
+        updateScriptFile();
+      }
+    }
+  };
 
   /**
    * @param testModel
    * @param taskDescriptionsEditor
    */
   public TaskDescriptionEditor(TestModel testModel, TaskDescriptionsEditor taskDescriptionsEditor) {
-    super(testModel, taskDescriptionsEditor);
-    argDescriptionEditor = new ArgDescriptionEditor(testModel, taskDescriptionsEditor);
+    this.testModel = testModel;
+    this.taskDescriptionsEditor = taskDescriptionsEditor;
+    this.argDescriptionsEditor = new ArgDescriptionsEditor();
+    viewScriptAction.setEnabled(false);
     initTaskPanel();
   }
   
@@ -93,6 +79,7 @@ public class TaskDescriptionEditor extends PropertiesEditor {
    * 
    */
   private void initTaskPanel() {
+    descriptionPane.setPreferredSize(new Dimension(400, 60));
     nameField.addActionListener(new ActionListener() {
 
       @Override
@@ -110,46 +97,21 @@ public class TaskDescriptionEditor extends PropertiesEditor {
     addToTaskPanel("Description", descriptionPane);
     JPanel scriptPanel = new JPanel();
     scriptPanel.add(scriptField);
-    Action changeScriptAction = new AbstractAction("Change...") {
-      
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        int option = fileChooser.showOpenDialog(getComponent());
-        if (option == JFileChooser.APPROVE_OPTION) {
-          selectedTaskDescription.setScriptFile(fileChooser.getSelectedFile());
-        }
-      }
-    };
     scriptPanel.add(new JButton(changeScriptAction));
+    scriptPanel.add(new JButton(viewScriptAction));
     addToTaskPanel("Executable", scriptPanel);
-    for (int i = 0; i < argComponentsArray.length; i++) {
-      final int index = i;
-      ActionListener editAction = new ActionListener() {
+    addComponentsToTaskPanel(argDescriptionsEditor.getComponent());              
+  }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          ArgDescription argDescription;
-          if (index == selectedTaskDescription.getArgDescriptionCount()) {
-            argDescription = new ArgDescription();
-            argDescription.setArgName("Arg");
-            argDescription.setArgValue("Value");
-            selectedTaskDescription.addArgDescription(argDescription);
-            ArgComponents argComponents = argComponentsArray[index];
-            argComponents.setValues(argDescription);
-            argComponents.setVisible(true, true);
-            
-          }
-          argDescription = selectedTaskDescription.getArgDescription(index);
-          argDescriptionEditor.setArgDescription(argDescription);
-        }
-      };
-      ArgComponents argComponents = new ArgComponents(editAction);
-      argComponentsArray[i] = argComponents;
-      addToTaskPanel(argComponents.argNameLabel, argComponents.argName, argComponents.argType,
-                     argComponents.argValue, argComponents.editButton);
-      argComponents.setVisible(false, false);
+  /**
+   * @param scriptFile
+   */
+  protected void viewScriptFile(File scriptFile) {
+    try {
+      new TextFileViewer(scriptFile);
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(getComponent(), e.getMessage(), "Exception Reading File", JOptionPane.WARNING_MESSAGE);
     }
-    addToTaskPanel("Arg Editor", argDescriptionEditor.getComponent());
   }
 
   /**
@@ -160,22 +122,26 @@ public class TaskDescriptionEditor extends PropertiesEditor {
     if (selectedTaskDescription == null) {
       initTextField(nameField, null);
       initTextField(descriptionArea, null);
+      initTextField(scriptField, null);
     } else {
       initTextField(nameField, selectedTaskDescription.getName());
       initTextField(descriptionArea, selectedTaskDescription.getDescription());
       descriptionArea.setEnabled(true);
-      int count = selectedTaskDescription.getArgDescriptionCount();
-      for (int i = 0; i < argComponentsArray.length; i++) {
-        ArgComponents argComponents = argComponentsArray[i];
-        if (i < count) {
-          ArgDescription argDescription = selectedTaskDescription.getArgDescription(i);
-          argComponents.setValues(argDescription);
-          argComponents.setVisible(true, true);
-        } else {
-          argComponents.setValues(null);
-          argComponents.setVisible(false, i == count);
-        }
-      }
+      updateScriptFile();
+    }
+    argDescriptionsEditor.setTaskDescription(selectedTaskDescription);
+  }
+
+  /**
+   */
+  private void updateScriptFile() {
+    File scriptFile = selectedTaskDescription.getScriptFile();
+    if (scriptFile != null) {
+      initTextField(scriptField, scriptFile.getPath());
+      viewScriptAction.setEnabled(scriptFile.canRead());
+    } else {
+      initTextField(scriptField, null);
+      viewScriptAction.setEnabled(false);
     }
   }
 }

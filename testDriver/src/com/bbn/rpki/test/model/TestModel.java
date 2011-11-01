@@ -17,7 +17,22 @@ import org.jdom.Element;
 public class TestModel extends XMLBase {
   private static final String TAG_TASK_DESCRIPTION = "task-description";
   private final Map<String, TaskDescription> taskDescriptions = new TreeMap<String, TaskDescription>();
+  private boolean modified;
   
+  /**
+   * @return the modified
+   */
+  public boolean isModified() {
+    return modified;
+  }
+
+  /**
+   * @param modified the modified to set
+   */
+  public void setModified(boolean modified) {
+    this.modified = modified;
+  }
+
   /**
    * Default constructor
    */
@@ -32,6 +47,7 @@ public class TestModel extends XMLBase {
       TaskDescription taskDescription = new TaskDescription(taskDescriptionElement);
       taskDescriptions.put(taskDescription.getName(), taskDescription);
     }
+    setModified(false);
   }
   
   /**
@@ -41,6 +57,7 @@ public class TestModel extends XMLBase {
     for (TaskDescription taskDescription : taskDescriptions.values()) {
       Element taskDescriptionElement = new Element(TAG_TASK_DESCRIPTION);
       taskDescription.toXML(taskDescriptionElement);
+      element.addContent(taskDescriptionElement);
     }
   }
                                                       
@@ -84,6 +101,6 @@ public class TestModel extends XMLBase {
    */
   public void addTaskDescription(TaskDescription taskDescription) {
     taskDescriptions.put(taskDescription.getName(), taskDescription);
+    setModified(true);
   }
-
 }

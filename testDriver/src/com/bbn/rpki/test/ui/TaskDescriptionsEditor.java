@@ -34,7 +34,7 @@ public class TaskDescriptionsEditor implements ListSelectionListener {
   private static final String ADD_VALUE = "Add...";
   private final DefaultListModel taskListModel = new DefaultListModel();
   private final JList taskList = new JList(taskListModel);
-  private final JScrollPane taskPane = new JScrollPane(taskList);
+  private final JScrollPane taskPane = new JScrollPane(taskList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
   private final TestModel testModel;
   private TaskDescription selectedTaskDescription;
   private final JPanel panel = new JPanel(new BorderLayout());
@@ -58,7 +58,7 @@ public class TaskDescriptionsEditor implements ListSelectionListener {
    * 
    */
   private void initTaskList() {
-    taskList.setPreferredSize(new Dimension(200, taskList.getPreferredSize().height));
+    taskPane.setPreferredSize(new Dimension(200, taskPane.getPreferredSize().height));
     taskList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     populateTaskList(null);
   }
