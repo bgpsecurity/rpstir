@@ -20,37 +20,18 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
-	-DHAVE_LONG_LONG
+AM_CFLAGS = -g -Wall -Wextra
 
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
 	-I../cg/casn -I../roa-lib -I../utils
 
-LDADD = libpdu.a ../proto/librpki.a ../utils/libutils.a
 
-bin_PROGRAMS = testClient server doUpdate sampleClient
-noinst_LIBRARIES = libpdu.a
+bin_PROGRAMS = doUpdate
 
 EXTRA_DIST = \
-	cleanServerData \
-	doServer \
-	INSTRUCTIONS \
-	runTestServer \
-	sampleHostsFile \
-	startAgent.sh \
-	testlog.1 \
-	testlog.2 \
-	testlog.3 \
-	testSpecs
+	cleanServerData
 
-testClient_SOURCES = testClient.c
-testClient_LDFLAGS = $(LIBS)
-server_SOURCES = server.c
-server_LDFLAGS = $(LIBS)
 doUpdate_SOURCES = doUpdate.c
 doUpdate_LDFLAGS = $(LIBS)
-sampleClient_SOURCES = sampleClient.c
-sampleClient_LDFLAGS = $(LIBS)
-
-libpdu_a_SOURCES = pdu.h pdu.c sshComms.h sshComms.c socket.h socket.c \
-	rtrUtils.h rtrUtils.c coreClient.h coreClient.c
+doUpdate_LDADD = ../proto/librpki.a ../utils/libutils.a
+doUpdate_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
