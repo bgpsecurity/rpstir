@@ -24,6 +24,7 @@
  ***********************/
 
 #include "err.h"
+#include "scmf.h"
 #include "querySupport.h"
 #include <stdio.h>
 #include <string.h>
@@ -55,6 +56,12 @@ static void setupSnQuery(scm *scmp) {
 	snSrch->wherestr = NULL;
 	updateTable = findtablescm(scmp, "rtr_update");
 	if (updateTable == NULL) printf("Cannot find table rtr_update\n");
+}
+
+/* helper function for getLastSerialNumber */
+static int setLastSN(scmcon *conp, scmsrcha *s, int numLine) {
+	lastSerialNum = *((uint *) (s->vec[0].valptr));
+	return -1;    // stop after first row
 }
 
 /****
