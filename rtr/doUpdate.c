@@ -23,10 +23,8 @@
  * Get the next round of RTR data into the database
  ***********************/
 
-#include "rtrUtils.h"
 #include "err.h"
 #include "querySupport.h"
-#include "pdu.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,11 +41,33 @@ static scmcon   *connection = NULL;
 static scmsrcha *roaSrch = NULL;
 static scmtab   *roaTable = NULL;
 static scmtab   *fullTable = NULL;
+static scmtab   *updateTable = NULL;
+static scmsrcha *snSrch = NULL;
 static scmsrcha *incrSrch = NULL;
 static scmtab   *incrTable = NULL;
 
 // serial number of this and previous update
-static uint prevSerialNum, currSerialNum;
+static uint prevSerialNum, currSerialNum, lastSerialNum;
+
+static void setupSnQuery(scm *scmp) {
+	snSrch = newsrchscm(NULL, 1, 0, 1);
+	addcolsrchscm(snSrch, "serial_num", SQL_C_ULONG, 8);
+	snSrch->wherestr = NULL;
+	updateTable = findtablescm(scmp, "rtr_update");
+	if (updateTable == NULL) printf("Cannot find table rtr_update\n");
+}
+
+/****
+ * find the serial number from the most recent update
+ ****/
+static uint getLastSerialNumber(scmcon *connect, scm *scmp) {
+	lastSerialNum = 0;
+	if (snSrch == NULL) setupSnQuery(scmp);
+	searchscm (connect, updateTable, snSrch, NULL, setLastSN,
+			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR,
+			   "create_time desc");
+	return lastSerialNum;
+}
 
 /*****
  * allows overriding of retention time for data via environment variable
