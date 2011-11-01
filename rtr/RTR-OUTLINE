@@ -51,7 +51,7 @@ Database thread:
       Create a new statement handle for the request with the appropriate query.
       Add (request, response queue, response semaphore, handle) to currently processing.
       Add (request, false, array {start-of-data PDU} of PDUs, our semaphore) to response queue.
-      Increment response queue.
+      Increment response semaphore.
       Increment our semaphore by buffer length - 1.
 
 Connection control thread:
