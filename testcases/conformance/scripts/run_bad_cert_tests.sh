@@ -1,17 +1,17 @@
 $RPKI_ROOT/run_scripts/initDB.sh
 rcli -y -F ../root.cer
-# rcli -y -f badCert2AKI.cer                # Duplicate AKI (-59)
-# rcli -y -f badCert2ASNum.cer              # Duplicate AS# resources (-80)
-# rcli -y -f badCert2BasicConstr.cer            # Invalid certificate flags (-46) # cg-110927:  this error result is not good
-# rcli -y -f badCert2Cpol.cer               # Duplicate policy ext (-75)
-# rcli -y -f badCert2CRLDP.cer              # Duplicate CRLDP (-64)
-# rcli -y -f badCert2IPAddr.cer             # Duplicate IP resources (-79)
-# rcli -y -f badCert2KeyUsage.cer               # Invalid certificate flags (-46) # cg-110927:  this error result is not good
-# rcli -y -f badCert2SKI.cer                # Duplicate SKI (-56)
-# rcli -y -f badCertAIA2AccessDesc.cer      # Duplicate AIA (-69)
-# rcli -y -f badCertAIA2x.cer               # Duplicate AIA (-69)
-# rcli -y -f badCertAIAAccessLoc.cer        # AIA not a URI (-70)
-# rcli -y -f badCertAIABadAccess.cer        # AIA not a URI (-70)
+# rcli -y -f badCert2AKI.cer                # Duplicate AKI (-59), log: [aki_chk] duplicate AKI extensions
+# rcli -y -f badCert2ASNum.cer              # Duplicate AS# resources (-80), log: multiple AS extensions found
+# rcli -y -f badCert2BasicConstr.cer        # Duplicate basic constraints (-52), log: [basic_const] multiple instances of extension
+# rcli -y -f badCert2Cpol.cer               # Duplicate policy ext (-75), log: [policy] multiple instances of policy extension
+# rcli -y -f badCert2CRLDP.cer              # Duplicate CRLDP (-64), log: [crldp] duplicate crldp extensions
+# rcli -y -f badCert2IPAddr.cer             # Duplicate IP resources (-79), log: [IP res] multiple instances of IP resources extension
+# rcli -y -f badCert2KeyUsage.cer           # Duplicate key usage (-61), log: [key_usage] multiple key_usage extensions
+# rcli -y -f badCert2SKI.cer                # Duplicate SKI (-56), log: [ski] multiple instances of ski extension
+# rcli -y -f badCertAIA2AccessDesc.cer      # Duplicate AIA (-69), log: [aia] multiple aia extensions
+# rcli -y -f badCertAIA2x.cer               # Duplicate AIA (-69), log: [aia] multiple aia extensions
+# rcli -y -f badCertAIAAccessLoc.cer        # AIA not a URI (-70), log: [aia] no aia name of type URI rsync
+# rcli -y -f badCertAIABadAccess.cer        # AIA not a URI (-70), log: [aia] no aia name of type URI rsync
 # rcli -y -f badCertAIACrit.cer                 # Invalid certificate flags (-46) # cg-110927:  this error result is not good
 # rcli -y -f badCertAKIHash.cer                 # I think a bad AKI hash should be added to the DB normally and garbage collected eventually. -- David Mandelberg
 # rcli -y -f badCertAKILth.cer              # Invalid AKI (-115)
