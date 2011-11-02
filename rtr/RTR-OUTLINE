@@ -1,7 +1,70 @@
+=====================================
+Top-level requirements for RTR server
+-------------------------------------
+
+T1. Provide timely, validated route origin information to multiple
+    router clients, as specified in
+    http://datatracker.ietf.org/doc/draft-ietf-sidr-rpki-rtr/
+
+T2. Security requirement: Availability of route origin information.
+    Client A must not be able to deny service to client B.
+
+T3. Security requirement: (Currently optional) Integrity of route
+    origin information.  RTR spec suggests TCP-AO transport and
+    others.
+
+Threat Model:
+
+* Who/Motivation: Adversary wishing to alter routing through DoS of
+  RTR server.
+  
+* Capability: Fully control/impersonate one or more RTR clients.  Can
+  initiate arbitrary client connections, and send arbitrary data over
+  RTR transport.
+
+Explicit non-requirements:
+
+* Confidentiality of route origin information is not required, since
+  the information is publicly available.
+
+
+===================================
+Derived requirements for RTR server
+-----------------------------------
+
+D1. (Derived from T1). The RTR server will create periodic snapshots
+    of the validated cache of ROAs, computing diffs and setting a new
+    serial number each time.
+
+D2. (Derived from T2). Basic authentication of client: firewall.  The RTR
+    server is ASSUMED to sit behind a firewall that will (1) limit RTR
+    clients to a set of pre-configured IP addresses, and (2) limit the
+    number of concurrent connections from each IP address.
+    
+D3. (Derived from T2). Rate limit on queries.  The RTR server must limit
+    the number of queries per connection, possibly by type, since
+    reset queries can be expensive.
+
+D4. (Derived from T1 and T2). Threads and timeouts.  Another way to abuse the
+    system is when the server reads a message from a client and the
+    actual transmission rate is *purposefully* very low. This should
+    not stall all other clients.
+
+D5. (Derived from T3). Future support for authenticated transport.
+    RTR server is initially designed to support vanilla TCP only.
+    Advanced functionality can be obtained through network shims such
+    as netcat/ssh-subsystem, or stunnel.
+    
+=======================
 Problems to figure out:
+-----------------------
+
  * In the current design, the connection control thread can spin on a socket that's read-ready, incrementing the corresponding semaphore many times before the connection thread reads all available data.
   * Possible fix: after incrementing a semaphore, remove the socket from the FD_SET and have the connection thread add it back somehow. This is probably problematic though.
 
+===============
+Detailed Design
+---------------
 
 Main thread:
   Create listening connection.
