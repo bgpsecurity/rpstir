@@ -2415,24 +2415,22 @@ skip:
 /**=============================================================================
  * @brief Check if Certificate is CA or EE.
  *
+ * Note:  TA not checked here.
+ * Note:  Validity of CA, EE flags not checked here.
+ *
  * @param certp (struct Certificate*)
  * @retval ret int type of the Certificate<br />-1 for error
  -----------------------------------------------------------------------------*/
 static int get_cert_type(struct Certificate *certp) {
-	int ret = -1;
 	struct Extension *extp = NULL;
 
 	extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
 	for ( ; extp; extp = (struct Extension *)next_of(&extp->self)) {
-		if (!diff_objid(&extp->extnID, id_basicConstraints)) {
-			if (size_casn(&extp->extnValue.basicConstraints.cA) > 0)
-    			ret = CA_CERT;
-	    	else
-		    	ret = EE_CERT;
-		}
+		if (diff_objid(&extp->extnID, id_basicConstraints))
+            return CA_CERT;
 	}
 
-	return ret;
+	return EE_CERT;
 }
 
 
