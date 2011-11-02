@@ -2137,6 +2137,13 @@ static int rescert_key_usage_chk(X509 *x)
          ASN1_BIT_STRING via usage=X509_get_ext_d2i(x, NID_key_usage,
          NULL, NULL) if we end up doing this correctly.
          */
+      /* TODO:  possibly replace this function.
+       * Notes from Charlie Oct 2, 2011:  In the file
+       * /home/gardiner/cwgrpki/trunk/proto/myssl.c around line 1271 there is
+       * code to check the usage bits.  It requires the variable "ct", which is
+       * available in rescerrt_profile_chk, and a pointer to the extension,
+       * which should be obtainable from the Certificate structure in
+       * rescert_profile_chk(). */
     }
   }
 
