@@ -5,7 +5,7 @@ LDADD = ../libutils.a
 
 noinst_PROGRAMS = queue-test
 
-queue_test_SOURCES = queue-test.c
+queue_test_SOURCES = queue-test.c ../unittest.h
 
 test: queue-test
 	./queue-test
