@@ -10,8 +10,8 @@ T2. Security requirement: Availability of route origin information.
     Client A must not be able to deny service to client B.
 
 T3. Security requirement: (Currently optional) Integrity of route
-    origin information.  RTR spec suggests TCP-AO transport and
-    others.
+    origin information.  RTR spec lists options such as TCP-AO, SSH,
+    IPsec, and TLS.
 
 Threat Model:
 
@@ -42,7 +42,7 @@ D2. (Derived from T2). Basic authentication of client: firewall.  The RTR
     number of concurrent connections from each IP address.
     
 D3. (Derived from T2). Rate limit on queries.  The RTR server must limit
-    the number of queries per connection, possibly by type, since
+    the number of queries per connection, possibly by type of query, since
     reset queries can be expensive.
 
 D4. (Derived from T1 and T2). Threads and timeouts.  Another way to abuse the
@@ -54,13 +54,57 @@ D5. (Derived from T3). Future support for authenticated transport.
     RTR server is initially designed to support vanilla TCP only.
     Advanced functionality can be obtained through network shims such
     as netcat/ssh-subsystem, or stunnel.
-    
+
+D6. (Derived from T1 and T2).  The server should handle graceful
+    shutdown, e.g. due to signal reception such as SIGINT.  A signal
+    should not abruptly terminate the server process, which is the
+    default behavior, but instead perform a graceful shutdown of all
+    active connections. Signal handling procedure must be carefully
+    written since it can easily induce race-conditions.
+
+D7. (Derived from T1 and D2).  TCP keepalive.  To prevent inactivity
+    from disconnecting the channel (e.g. due to firewall), and to
+    reliably detect dead peers, keepalive should be enabled if the
+    underlying OS supports it.
+
+
 =======================
 Problems to figure out:
 -----------------------
 
  * In the current design, the connection control thread can spin on a socket that's read-ready, incrementing the corresponding semaphore many times before the connection thread reads all available data.
   * Possible fix: after incrementing a semaphore, remove the socket from the FD_SET and have the connection thread add it back somehow. This is probably problematic though.
+
+
+===============
+Design Overview
+---------------
+
+??? General comment: request/response could refer to either DB or RTR
+protocol.  Need to disambiguate.
+
+Threads (and job descriptions):
+ . Main thread
+ . Database threads
+ . Connection control thread
+ . Connection threads
+
+Data structures and variables:
+ . global dbrequest queue
+ . global vector of dbresponse semaphores (one per database-querying thread)
+ . global notify state - latest locally-determined serial number
+ . per-connection dbresponse queue
+ . per-dbthread currently_processing vector {request, dbresponse queue, dbresponse semaphore, dbstatement handle}
+ . ??? per-dbrequest buffer length
+ . ??? per-dbrequest operation completed boolean
+ . ??? per-dbrequest array of PDUs
+
+Synchronization structures:
+ . dbresponse semaphores
+ . more data semaphore
+ . global notify state
+ . 
+ 
 
 ===============
 Detailed Design
@@ -93,19 +137,19 @@ Database thread:
   Create currently processing vector of {request, response queue, response semaphore, database statement handle}.
   Configured parameter buffer length: number of responses to buffer per request.
   Loop indefinitely:
-    Block, trying to decrement the semaphore.
+    Block, trying to decrement the semaphore. ??? which semaphore?
     Let operation completed = false.
     For each member of currently processing:
       If the length of the response queue is less than the buffer length:
         Fetch more data from the statement handle into an array of PDUs.
         Let is_done = false.
-        Let more data semaphore = our semaphore.
+        Let more data semaphore = our semaphore. ??? member's response semaphore?
         If the statement handle is at the end:
           Let is_done = true.
           Let more data semaphore = NULL.
           Remove this member from currently processing.
           Append an end-of-data PDU to the array of PDUs.
-        Add (request, is_done, array of PDUs, more data semaphore) to response queue.
+        Add (request, is_done, array of PDUs, more data semaphore) to response queue.  ??? more data semaphore
         Increment response semaphore.
         Let operation completed = true.
         Break the for loop.
@@ -113,9 +157,9 @@ Database thread:
       Pop the request queue.
       Create a new statement handle for the request with the appropriate query.
       Add (request, response queue, response semaphore, handle) to currently processing.
-      Add (request, false, array {start-of-data PDU} of PDUs, our semaphore) to response queue.
+      Add (request, false, array {start-of-data PDU} of PDUs, our semaphore) to response queue. ??? start-of-data PDU could be more clear
       Increment response semaphore.
-      Increment our semaphore by buffer length - 1.
+      Increment our semaphore by buffer length - 1.  ??? which semaphore is "our" semaphore?
 
 Connection control thread:
   Create a map of connection socket to semaphore.
@@ -172,3 +216,60 @@ Connection thread:
       If local notify state is earlier than tmp notify state:
         Block, sending notify PDU(s) for the differences from local notify state to tmp notify state.
         Set local notify state to tmp notify state.
+
+=====================
+Example Program Flows
+---------------------
+
+Example 1: Flow of control during "Start or Restart"
+http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.1
+
+   Cache                         Router
+     ~                             ~
+     | <----- Reset Query -------- | R requests data (or Serial Query)
+     |                             |
+     | ----- Cache Response -----> | C confirms request
+     | ------- IPvX Prefix ------> | C sends zero or more
+     | ------- IPvX Prefix ------> |   IPv4 and IPv6 Prefix
+     | ------- IPvX Prefix ------> |   Payload PDUs
+     | ------  End of Data ------> | C sends End of Data
+     |                             |   and sends new serial
+     ~                             ~
+
+???
+
+
+Example 2: Program flow during "Typical Exchange"
+http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.2
+
+   Cache                         Router
+     ~                             ~
+     | -------- Notify ----------> |  (optional)
+     |                             |
+     | <----- Serial Query ------- | R requests data
+     |                             |
+     | ----- Cache Response -----> | C confirms request
+     | ------- IPvX Prefix ------> | C sends zero or more
+     | ------- IPvX Prefix ------> |   IPv4 and IPv6 Prefix
+     | ------- IPvX Prefix ------> |   Payload PDUs
+     | ------  End of Data ------> | C sends End of Data
+     |                             |   and sends new serial
+     ~                             ~
+
+???
+
+
+Example 3: Program flow during "Cache has No Data Available"
+http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.4
+
+   Cache                         Router
+     ~                             ~
+     | <-----  Serial Query ------ | R requests data
+     | ---- Error Report PDU ----> | C No Data Available
+     ~                             ~
+
+???
+
+
+Example 4: Program flow in case of "Error"
+???
