@@ -3367,12 +3367,12 @@ static int rescert_dates_chk(struct Certificate *certp) {
  * @return 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
 static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
-    if (vsize_casn(&certp->toBeSigned.issuerUniqueID) > 0) {
+    if (size_casn(&certp->toBeSigned.issuerUniqueID) > 0) {
         log_msg(LOG_ERR, "certificate has issuer unique ID");
         return ERR_SCM_XPROFILE;
     }
 
-    if (vsize_casn(&certp->toBeSigned.subjectUniqueID) > 0) {
+    if (size_casn(&certp->toBeSigned.subjectUniqueID) > 0) {
         log_msg(LOG_ERR, "certificate has subject unique ID");
         return ERR_SCM_XPROFILE;
     }
