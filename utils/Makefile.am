@@ -25,6 +25,7 @@ AM_CFLAGS = -g -Wall
 
 noinst_LIBRARIES = libutils.a
 
-libutils_a_SOURCES = logutils.h logutils.c \
+libutils_a_SOURCES = macros.h \
+	logutils.h logutils.c \
 	stringutils.h stringutils.c \
-        hashutils.h hashutils.c
+	hashutils.h hashutils.c
