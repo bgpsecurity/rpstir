@@ -80,9 +80,6 @@ Problems to figure out:
 Design Overview
 ---------------
 
-??? General comment: request/response could refer to either DB or RTR
-protocol.  Need to disambiguate.
-
 Threads (and job descriptions):
  . Main thread
  . Database threads
@@ -90,11 +87,11 @@ Threads (and job descriptions):
  . Connection threads
 
 Data structures and variables:
- . global dbrequest queue
+ . global db request queue
  . global vector of dbresponse semaphores (one per database-querying thread)
  . global notify state - latest locally-determined serial number
  . per-connection dbresponse queue
- . per-dbthread currently_processing vector {request, dbresponse queue, dbresponse semaphore, dbstatement handle}
+ . per-dbthread currently_processing vector {db request, dbresponse queue, dbresponse semaphore, dbstatement handle}
  . ??? per-dbrequest buffer length
  . ??? per-dbrequest operation completed boolean
  . ??? per-dbrequest array of PDUs
@@ -112,15 +109,15 @@ Detailed Design
 
 Main thread:
   Create listening connection.
-  Make queue of requests to the database {request, queue, semaphore}.
-  Make a vector of semaphores for the request queue.
+  Make queue of db requests {db request, queue, semaphore}.
+  Make a vector of semaphores for the db request queue.
   Make a global notify state with a write-once/read-many lock, currently just the latest serial number.
   Call notify state update function on the global notify state.
   Repeat as many times as the desired initial number of database threads:
     Create a semaphore.
-    Add the semaphore to the request queue's vector of semaphores.
-    Spawn a database thread with the semaphore and request queue.
-  Spawn a connection control thread, with the listening socket, request queue and its semaphores, and global notify state
+    Add the semaphore to the db request queue's vector of semaphores.
+    Spawn a database thread with the semaphore and db request queue.
+  Spawn a connection control thread, with the listening socket, db request queue and its semaphores, and global notify state
   Loop indefinitely:
     Sleep for some amount of time.
     Check the load on the database threads, adding or removing threads as needed.
@@ -134,13 +131,13 @@ Notify state update function:
  
 Database thread:   
   Connect to database.
-  Create currently processing vector of {request, response queue, response semaphore, database statement handle}.
-  Configured parameter buffer length: number of responses to buffer per request.
+  Create currently processing vector of {db request, db response queue, db response semaphore, database statement handle}.
+  Configured parameter buffer length: number of db responses to buffer per db request.
   Loop indefinitely:
     Block, trying to decrement the semaphore. ??? which semaphore?
     Let operation completed = false.
     For each member of currently processing:
-      If the length of the response queue is less than the buffer length:
+      If the length of the db response queue is less than the buffer length:
         Fetch more data from the statement handle into an array of PDUs.
         Let is_done = false.
         Let more data semaphore = our semaphore. ??? member's response semaphore?
@@ -149,16 +146,16 @@ Database thread:
           Let more data semaphore = NULL.
           Remove this member from currently processing.
           Append an end-of-data PDU to the array of PDUs.
-        Add (request, is_done, array of PDUs, more data semaphore) to response queue.  ??? more data semaphore
-        Increment response semaphore.
+        Add (db request, is_done, array of PDUs, more data semaphore) to db response queue.  ??? more data semaphore
+        Increment db response semaphore.
         Let operation completed = true.
         Break the for loop.
-    If there's a new request on the request queue and not operation completed:
-      Pop the request queue.
-      Create a new statement handle for the request with the appropriate query.
-      Add (request, response queue, response semaphore, handle) to currently processing.
-      Add (request, false, array {start-of-data PDU} of PDUs, our semaphore) to response queue. ??? start-of-data PDU could be more clear
-      Increment response semaphore.
+    If there's a new request on the db request queue and not operation completed:
+      Pop the db request queue.
+      Create a new statement handle for the db request with the appropriate query.
+      Add (db request, db response queue, db response semaphore, handle) to currently processing.
+      Add (db request, false, array {start-of-data PDU} of PDUs, our semaphore) to db response queue. ??? start-of-data PDU could be more clear
+      Increment db response semaphore.
       Increment our semaphore by buffer length - 1.  ??? which semaphore is "our" semaphore?
 
 Connection control thread:
@@ -171,11 +168,11 @@ Connection control thread:
       accept()
       Create a semaphore.
       Add the just-created socket and semaphore to the map.
-      Spawn a connection thread with the connection socket, semaphore, the global request queue and its semaphores, and the global notify state.
+      Spawn a connection thread with the connection socket, semaphore, the global db request queue and its semaphores, and the global notify state.
 
 Connection thread:
-  Create a queue of responses from the database {request, bool is_done, array of response PDUs, more data semaphore}. // NOTE: this only has responses to one request at a time
-  Create a local queue of parsed and validated PDUs to be processed when the current response is done.
+  Create a queue of db responses from the database {db request, bool is_done, array of response PDUs, more data semaphore}. // NOTE: this only has responses to one db request at a time
+  Create a local queue of parsed and validated PDUs to be processed when the current db request is completed (i.e. is_done is set on a db response).
   Create a PDU reassembly buffer of constant size.
   Create a state variable in the READY state.
   Create a local notify state as a non-locked copy of the global notify state.
@@ -193,15 +190,15 @@ Connection thread:
       Else if state is RESPONDING:
         Add the PDU to the queue of to-be-processed PDUs.
       Else:
-        Add (request, response queue, our semaphore) to the database request queue and increment each of the queue's semaphores.
+        Add (db request, db response queue, our semaphore) to the database request queue and increment each of the queue's semaphores.
         Set state to RESPONDING.
-    Else if there is something on the response queue:
+    Else if there is something on the db response queue:
       Pop it from the queue.
       If the more data semaphore is not NULL:
         Increment the more data semaphore.
-      If the response indicates an update to local notify state:
+      If any of the db response PDUs indicate an update to local notify state:
         Update local notify state as appropriate.
-      Block, sending the response.
+      Block, sending the db response PDUs.
       If its is_done is true:
         Set state to READY.
         While the to-be-processed queue is nonempty and state is READY:
@@ -209,7 +206,7 @@ Connection thread:
           If the PDU can be handled/responded to without any database interaction:
             Block, handling/responding as necessary.
           Else:
-            Add (request, response queue, our semaphore) to the database request queue and increment each of the queue's semaphores.
+            Add (db request, db response queue, our semaphore) to the database request queue and increment each of the queue's semaphores.
             Set state to RESPONDING.
     If state is READY:
       Create tmp notify state as a non-locked copy of the global notify state.
