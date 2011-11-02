@@ -7,7 +7,7 @@
 struct _Queue_Entry {
 	struct _Queue_Entry * prev;
 	struct _Queue_Entry * next;
-	void * const data;
+	void * data;
 };
 
 struct _Queue {
@@ -95,7 +95,7 @@ bool Queue_trypop(Queue * queue, void ** data)
 
 		*data = entry->data;
 
-		free((void *)entry)
+		free((void *)entry);
 
 		return true;
 	}
