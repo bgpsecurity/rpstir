@@ -21,6 +21,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+SUBDIRS = . tests
+
 AM_CFLAGS = -g -Wall
 
 noinst_LIBRARIES = libutils.a
