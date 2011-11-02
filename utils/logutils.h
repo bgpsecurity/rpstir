@@ -22,6 +22,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef _UTILS_LOGUTILS_H
+#define _UTILS_LOGUTILS_H
+
+
 /* These definitions follow conventional meaning and numeric value of
    kernel loglevels defined in linux/kernel.h */
 #define LOG_ERR     3		/* error conditions */
@@ -37,3 +41,6 @@ int log_init(const char *logfile, const char *facility,
 void log_msg(int priority, const char *format, ...);
 void log_flush(void);
 void log_close(void);
+
+
+#endif
