@@ -80,83 +80,119 @@ Problems to figure out:
 Design Overview
 ---------------
 
-Threads (and job descriptions):
- . Main thread
- . Database threads
- . Connection control thread
- . Connection threads
+Threads (and short name as used below):
+ . Main thread (main)
+ . Database threads (db)
+ . Connection control thread (cxn_ctl)
+ . Connection threads (cxn)
 
-Data structures and variables:
- . global db request queue
- . global vector of dbresponse semaphores (one per database-querying thread)
- . global notify state - latest locally-determined serial number
- . per-connection dbresponse queue
- . per-dbthread currently_processing vector {db request, dbresponse queue, dbresponse semaphore, dbstatement handle}
- . ??? per-dbrequest buffer length
- . ??? per-dbrequest operation completed boolean
- . ??? per-dbrequest array of PDUs
+Configuration parameters:
+ . initial_db_threads: number of db threads to start initially
+ . main_loop_interval: number of seconds for main to sleep between each run through its management loop
+ . db_response_length: number of records query for and include in a single db_response_t
+ . db_response_buffer_length: number of db_response_t's to buffer in a db_response_queue_t per db_request_t
 
-Synchronization structures:
- . dbresponse semaphores
- . more data semaphore
- . global notify state
- . 
- 
+Data and synchronization types and structures:
+ . socket_fd_t: whatever the system wants it to be
+ . db_connection_t: whatever ODBC wants it to be
+
+ . notify_state_t: serial number
+ . global_notify_state_t: {notify_state_t notify_state, rwlock_t lock}
+
+ . db_query_t: something that indicates what the router/client wants
+ . db_query_progress_t: something that indicates where in a suspended SQL query to pick up
+
+ . PDU_t: data of a parsed and valid PDU
+
+ . cxn_semaphore_t: semaphore that a cxn thread waits for
+ . db_semaphore_t: semaphore that a db thread waits for
+
+ . db_request_t: {db_query_t query, db_response_queue_t response_queue, cxn_semaphore_t response_semaphore}
+ . db_request_queue_t: thread-safe queue of db_request_t
+
+ . db_response_t: {PDU_t[] PDUs, bool is_done, db_semaphore_t more_data_semaphore}
+ . db_response_queue_t: thread-safe queue of db_response_t
+
+ . db_run_state_t: {db_request_t request, db_query_progress_t progress}
+
+
+Variables (not including short-lived local variables):
++-----------------------+----------------------------+------------+--------------+
+| Type                  |  Variable                  | Created by | Used by      |
++-----------------------+----------------------------+------------+--------------+
+| socket_fd             | listen_fd                  | main       |
+| db_request_queue_t    | db_request_queue           | main       | db
+| db_semaphore_t[]      | db_semaphores_all          | main       |
+| global_notify_state_t | global_notify_state        | main       | main
+| db_semaphore_t        | db_semaphore per db thread | main       | db
+| db_connection_t       | notify().connection        | main       | main
+| db_connection_t       | <unnamed>                  | db         | db
+| db_run_state_t[]      | currently_processing       | db         | db
+
+Note that `[]' is used to denote a container, not necessarily a C array.
+
 
 ===============
 Detailed Design
 ---------------
 
 Main thread:
-  Create listening connection.
-  Make queue of db requests {db request, queue, semaphore}.
-  Make a vector of semaphores for the db request queue.
-  Make a global notify state with a write-once/read-many lock, currently just the latest serial number.
-  Call notify state update function on the global notify state.
-  Repeat as many times as the desired initial number of database threads:
-    Create a semaphore.
-    Add the semaphore to the db request queue's vector of semaphores.
-    Spawn a database thread with the semaphore and db request queue.
-  Spawn a connection control thread, with the listening socket, db request queue and its semaphores, and global notify state
+  Make a socket_fd_t listen_fd in the listening state.
+  Make a db_request_queue_t db_request_queue.
+  Make a db_semaphore_t[] db_semaphores_all.
+  Make a global_notify_state_t global_notify_state.
+  Call notify state update function on (global_notify_state).
+  Repeat initial_db_threads times:
+    Make a db_semaphore_t db_semaphore.
+    Add db_semaphore to db_semaphores_all.
+    Spawn a database thread with (db_semaphore, db_request_queue).
+  Spawn a connection control thread with (listen_fd, db_request_queue, db_semaphores_all, global_notify_state).
   Loop indefinitely:
-    Sleep for some amount of time.
+    Sleep for main_loop_interval seconds.
     Check the load on the database threads, adding or removing threads as needed.
-    Call notify state update function on the global notify state.
+    Call notify state update function on (global_notify_state).
 
-Notify state update function:
-  Static variable connection.
-  If the connection isn't already present:
+Notify state update function (global_notify_state_t global_notify_state):
+  Static db_connection_t connection.
+  If connection isn't connected:
     Connect to database.
-  Update the global notify state based on database queries.
+  Acquire global_notify_state.lock for writing.
+  Update global_notify_state.notify_state based on a database query.
+  Release global_notify_state.lock.
  
-Database thread:   
+Database thread (db_semaphore_t db_semaphore, db_request_queue_t db_request_queue):
   Connect to database.
-  Create currently processing vector of {db request, db response queue, db response semaphore, database statement handle}.
-  Configured parameter buffer length: number of db responses to buffer per db request.
+  Make a db_run_state_t[] currently_processing.
   Loop indefinitely:
-    Block, trying to decrement the semaphore. ??? which semaphore?
-    Let operation completed = false.
-    For each member of currently processing:
-      If the length of the db response queue is less than the buffer length:
-        Fetch more data from the statement handle into an array of PDUs.
+    Block, trying to decrement db_semaphore.
+    Let operation_completed = false.
+    For each db_run_state_t run_state in currently_processing:
+      If length(run_state.request.response_queue) < db_response_buffer_length:
+        Query the database
+            for the next up to db_response_length records
+            of the query run_state.request.query
+            starting where run_state.progress indicates.
+        Update run_state.progress based on the number of records returned, if necessary.
+        Make a PDU_t[] PDUs of the records.
         Let is_done = false.
-        Let more data semaphore = our semaphore. ??? member's response semaphore?
-        If the statement handle is at the end:
+        Let db_semaphore_t more_data_semaphore = db_semaphore.
+        If run_state.progress is at the end of run_state.request.query:
           Let is_done = true.
-          Let more data semaphore = NULL.
-          Remove this member from currently processing.
-          Append an end-of-data PDU to the array of PDUs.
-        Add (db request, is_done, array of PDUs, more data semaphore) to db response queue.  ??? more data semaphore
-        Increment db response semaphore.
-        Let operation completed = true.
-        Break the for loop.
-    If there's a new request on the db request queue and not operation completed:
-      Pop the db request queue.
-      Create a new statement handle for the db request with the appropriate query.
-      Add (db request, db response queue, db response semaphore, handle) to currently processing.
-      Add (db request, false, array {start-of-data PDU} of PDUs, our semaphore) to db response queue. ??? start-of-data PDU could be more clear
-      Increment db response semaphore.
-      Increment our semaphore by buffer length - 1.  ??? which semaphore is "our" semaphore?
+          Let more_data_semaphore = NULL.
+          Remove run_state from currently_processing.
+          Append an end-of-data PDU to PDUs.
+        Add (PDUs, is_done, more_data_semaphore) to run_state.request.response_queue.
+        Increment run_state.request.response_semaphore.
+        Let operation_completed = true.
+        Break the for each loop.
+    If !operation_completed and db_request_queue can be popped:
+      Pop db_request_queue into db_request_t db_request.
+      Make a db_query_progress_t query_progress at the start of db_request.query.
+      Add (db_request, query_progress) to currently_processing.
+      Make a PDU_t[] start_PDUs that contains the start-of-data PDU appropriate for db_request.query.
+      Add (start_PDUs, false, db_semaphore) to db_request.response_queue.
+      Increment db_request.response_semaphore.
+      Increment db_semaphore by (db_response_buffer_length - 1).
 
 Connection control thread:
   Create a map of connection socket to semaphore.
