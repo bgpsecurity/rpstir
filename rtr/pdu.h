@@ -24,11 +24,9 @@
  *    between server and clients
  ***************/
 
-#ifndef _PDU_H
-#define _PDU_H
+#ifndef _RTR_PDU_H
+#define _RTR_PDU_H
 
-#include <cryptlib.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stddef.h>
 
@@ -124,64 +122,7 @@ struct _PDU {
 	};
 } PACKED_STRUCT;
 
-#define PDU_HEADER_LENGTH offsetof(PDU, serialNumber)
+#define PDU_HEADER_LENGTH (offsetof(PDU, serialNumber))
 
-/*****
- * if using an SSH session for comms, indicate it by calling this function
- * if using stdin/stdout for comms, do not call this function
- *****/
-void setSession(CRYPT_SESSION session);
-
-/*****
- * If no longer using a session, let the read/write functions know
- *****/
-void unsetSession(void);
-
-/*****
- * if using pipes for comms and want to specify other pipes besides
- *   stdin and stdout, call this function
- *****/
-void setPipes(int readPipe, int writePipe);
-
-/*****
- * close the pipes specified in setPipes
- *****/
-void closePipes(void);
-
-/*****
- * read a PDU from the SSH session, waiting until there is data on the socket
- *   returns a NULL PDU on error
- * Arg: errMsg - provide a buffer where any error message can be returned
- * Arg: mutex - if non-NULL, lock this mutex after receiving the first byte
- * Remember to free the PDU returned when done with it
- *****/
-PDU *readPDU(char *errMsg);
-
-/*****
- * same as readPDU, except also set a lock on the mutex, if the mutex
- *   is non-NULL, after receiving the first byte of data
- *****/
-PDU *readPduAndLock(char *errMsg, pthread_mutex_t *mutex);
-
-/*****
- * write a PDU to the SSH session, returning a non-zero value for an error
- *****/
-int writePDU(PDU *pdu);
-
-/*****
- * free a PDU returned from readPDU (does a deep free)
- *****/
-void freePDU(PDU *pdu);
-
-/*****
- * fill in the header portion of a PDU given its type,
- *   optionally allocating memory for the type-specific portion
- *****/
-void fillInPDUHeader(PDU *pdu, uchar pduType, char allocRest);
-
-/*****
- * utility routine that gives the expected length for a given type
- *****/
-int lengthForType(uchar pduType);
 
 #endif
