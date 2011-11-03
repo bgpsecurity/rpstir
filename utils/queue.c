@@ -74,6 +74,8 @@ Queue * Queue_new(bool thread_safe)
 	queue->last = NULL;
 
 	QUEUE_INVARIANTS(queue);
+
+	return queue;
 }
 
 void Queue_free(Queue * queue)
