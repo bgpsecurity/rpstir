@@ -4,7 +4,7 @@
 #include "queue.h"
 
 
-#ifdef QUEUE_DEBUG
+#ifdef DEBUG
 	#include <assert.h>
 	#define QUEUE_INVARIANTS(queue) \
 		do { \
@@ -41,7 +41,7 @@ struct _Queue {
 	bool thread_safe; // NOTE: this must not be changed once Queue_new returns
 	pthread_mutex_t mutex;
 
-	#ifdef QUEUE_DEBUG
+	#ifdef DEBUG
 		ssize_t size; // helps make sure size is never decremented from 0
 	#else
 		size_t size;

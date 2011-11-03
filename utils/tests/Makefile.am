@@ -1,7 +1,7 @@
 AM_CFLAGS = -g -Wall -Wextra -Werror
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I..
 
-LDADD = ../libutils.a
+LDADD = ../libutilsdebug.a
 
 noinst_PROGRAMS = queue-test
 

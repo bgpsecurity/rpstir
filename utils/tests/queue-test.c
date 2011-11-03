@@ -1,9 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define QUEUE_DEBUG
 #include "queue.h"
-
 #include "unittest.h"
 
 
