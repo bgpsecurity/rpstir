@@ -52,6 +52,8 @@ static bool test_empty(Queue * queue)
 
 static bool run_test(Queue * queue)
 {
+	TEST(void *, "%p", ((void *)queue), !=, NULL);
+
 	if (!test_empty(queue)) return false;
 
 	if (!push_range(queue, 0, (void*)0, (void*)4000)) return false;
