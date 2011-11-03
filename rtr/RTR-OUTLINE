@@ -119,7 +119,7 @@ Data and synchronization types and structures:
  . db_response_t: {PDU_t[] PDUs, bool is_done, db_semaphore_t more_data_semaphore}
  . db_response_queue_t: thread-safe queue of db_response_t
 
- . db_run_state_t: {db_request_t request, db_query_progress_t progress}
+ . db_request_state_t: {db_request_t request, db_query_progress_t progress}
 
  . cxnctl_socket_map_t: map of socket_fd_t to cxn_semaphore_t
 
@@ -138,7 +138,7 @@ Variables (not including short-lived local variables):
 | db_semaphore_t         | db_semaphore per db thread      | main       | db          |
 | db_connection_t        | cache_state_update().connection | main       | main        |
 | db_connection_t        | <unnamed>                       | db         | db          |
-| db_run_state_t[]       | currently_processing            | db         | db          |
+| db_request_state_t[]   | currently_processing            | db         | db          |
 | cxnctl_socket_map_t    | socket_map                      | cxnctl     | cxnctl      |
 | socket_fd_t            | cxn_socket per cxn thread       | cxnctl     | cxnctl, cxn |
 | cxn_semaphore_t        | cxn_semaphore per cxn thread    | cxnctl     | cxnctl, cxn |
@@ -182,27 +182,27 @@ Function cache_state_update(global_cache_state_t global_cache_state):
  
 Database thread (db_semaphore_t db_semaphore, db_request_queue_t db_request_queue):
   Connect to database.
-  Make a db_run_state_t[] currently_processing.
+  Make a db_request_state_t[] currently_processing.
   Loop indefinitely:
     Block, trying to decrement db_semaphore.
     Let operation_completed = false.
-    For each db_run_state_t run_state in currently_processing:
-      If length(run_state.request.response_queue) < db_response_buffer_length:
+    For each db_request_state_t request_state in currently_processing:
+      If length(request_state.request.response_queue) < db_response_buffer_length:
         Query the database
             for the next up to db_response_length records
-            of the query run_state.request.query
-            starting where run_state.progress indicates.
-        Update run_state.progress based on the number of records returned, if necessary.
+            of the query request_state.request.query
+            starting where request_state.progress indicates.
+        Update request_state.progress based on the number of records returned, if necessary.
         Make a PDU_t[] PDUs of the records.
         Let is_done = false.
         Let db_semaphore_t more_data_semaphore = db_semaphore.
-        If run_state.progress is at the end of run_state.request.query:
+        If request_state.progress is at the end of request_state.request.query:
           Let is_done = true.
           Let more_data_semaphore = NULL.
-          Remove run_state from currently_processing.
+          Remove request_state from currently_processing.
           Append an end-of-data PDU to PDUs.
-        Add (PDUs, is_done, more_data_semaphore) to run_state.request.response_queue.
-        Increment run_state.request.response_semaphore.
+        Add (PDUs, is_done, more_data_semaphore) to request_state.request.response_queue.
+        Increment request_state.request.response_semaphore.
         Let operation_completed = true.
         Break the for each loop.
     If !operation_completed and db_request_queue can be popped:
