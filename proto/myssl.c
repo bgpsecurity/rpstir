@@ -2137,6 +2137,13 @@ static int rescert_key_usage_chk(X509 *x)
          ASN1_BIT_STRING via usage=X509_get_ext_d2i(x, NID_key_usage,
          NULL, NULL) if we end up doing this correctly.
          */
+      /* TODO:  possibly replace this function.
+       * Notes from Charlie Oct 2, 2011:  In the file
+       * /home/gardiner/cwgrpki/trunk/proto/myssl.c around line 1271 there is
+       * code to check the usage bits.  It requires the variable "ct", which is
+       * available in rescerrt_profile_chk, and a pointer to the extension,
+       * which should be obtainable from the Certificate structure in
+       * rescert_profile_chk(). */
     }
   }
 
@@ -2408,24 +2415,22 @@ skip:
 /**=============================================================================
  * @brief Check if Certificate is CA or EE.
  *
+ * Note:  TA not checked here.
+ * Note:  Validity of CA, EE flags not checked here.
+ *
  * @param certp (struct Certificate*)
  * @retval ret int type of the Certificate<br />-1 for error
  -----------------------------------------------------------------------------*/
 static int get_cert_type(struct Certificate *certp) {
-	int ret = -1;
 	struct Extension *extp = NULL;
 
 	extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
 	for ( ; extp; extp = (struct Extension *)next_of(&extp->self)) {
-		if (!diff_objid(&extp->extnID, id_basicConstraints)) {
-			if (size_casn(&extp->extnValue.basicConstraints.cA) > 0)
-    			ret = CA_CERT;
-	    	else
-		    	ret = EE_CERT;
-		}
+		if (diff_objid(&extp->extnID, id_basicConstraints))
+            return CA_CERT;
 	}
 
-	return ret;
+	return EE_CERT;
 }
 
 
@@ -3360,12 +3365,12 @@ static int rescert_dates_chk(struct Certificate *certp) {
  * @return 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
 static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
-    if (vsize_casn(&certp->toBeSigned.issuerUniqueID) > 0) {
+    if (size_casn(&certp->toBeSigned.issuerUniqueID) > 0) {
         log_msg(LOG_ERR, "certificate has issuer unique ID");
         return ERR_SCM_XPROFILE;
     }
 
-    if (vsize_casn(&certp->toBeSigned.subjectUniqueID) > 0) {
+    if (size_casn(&certp->toBeSigned.subjectUniqueID) > 0) {
         log_msg(LOG_ERR, "certificate has subject unique ID");
         return ERR_SCM_XPROFILE;
     }
