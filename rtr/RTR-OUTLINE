@@ -83,14 +83,16 @@ Design Overview
 Threads (and short name as used below):
  . Main thread (main)
  . Database threads (db)
- . Connection control thread (cxn_ctl)
+ . Connection control thread (cxnctl)
  . Connection threads (cxn)
 
-Configuration parameters:
+Configuration parameters and constants:
  . initial_db_threads: number of db threads to start initially
  . main_loop_interval: number of seconds for main to sleep between each run through its management loop
  . db_response_length: number of records query for and include in a single db_response_t
  . db_response_buffer_length: number of db_response_t's to buffer in a db_response_queue_t per db_request_t
+ . max_PDU_size: largest PDU to attempt to parse
+ . cxn_notify_check_interval: maximum number of seconds (more or less) that connection should wait between checks if the global notify state has changed
 
 Data and synchronization types and structures:
  . socket_fd_t: whatever the system wants it to be
@@ -103,6 +105,7 @@ Data and synchronization types and structures:
  . db_query_progress_t: something that indicates where in a suspended SQL query to pick up
 
  . PDU_t: data of a parsed and valid PDU
+ . PDU_buffer_t: uint8_t[max_PDU_size]
 
  . cxn_semaphore_t: semaphore that a cxn thread waits for
  . db_semaphore_t: semaphore that a db thread waits for
@@ -115,19 +118,26 @@ Data and synchronization types and structures:
 
  . db_run_state_t: {db_request_t request, db_query_progress_t progress}
 
+ . cxnctl_socket_map_t: map of socket_fd_t to cxn_semaphore_t
+
+ . cxn_state_t: enum {READY, RESPONDING}
+
 
 Variables (not including short-lived local variables):
-+-----------------------+----------------------------+------------+--------------+
-| Type                  |  Variable                  | Created by | Used by      |
-+-----------------------+----------------------------+------------+--------------+
-| socket_fd             | listen_fd                  | main       |
-| db_request_queue_t    | db_request_queue           | main       | db
-| db_semaphore_t[]      | db_semaphores_all          | main       |
-| global_notify_state_t | global_notify_state        | main       | main
-| db_semaphore_t        | db_semaphore per db thread | main       | db
-| db_connection_t       | notify().connection        | main       | main
-| db_connection_t       | <unnamed>                  | db         | db
-| db_run_state_t[]      | currently_processing       | db         | db
++-----------------------+------------------------------+------------+--------------+
+| Type                  |  Variable                    | Created by | Used by      |
++-----------------------+------------------------------+------------+--------------+
+| socket_fd_t           | listen_fd                    | main       | cxnctl
+| db_request_queue_t    | db_request_queue             | main       | db, cxn
+| db_semaphore_t[]      | db_semaphores_all            | main       | cxn
+| global_notify_state_t | global_notify_state          | main       | main, cxn
+| db_semaphore_t        | db_semaphore per db thread   | main       | db
+| db_connection_t       | notify().connection          | main       | main
+| db_connection_t       | <unnamed>                    | db         | db
+| db_run_state_t[]      | currently_processing         | db         | db
+| cxnctl_socket_map_t   | socket_map                   | cxnctl     | cxnctl
+| socket_fd_t           | cxn_socket per cxn thread    | cxnctl     | cxnctl, cxn
+| cxn_semaphore_t       | cxn_semaphore per cxn thread | cxnctl     | cxnctl, cxn
 
 Note that `[]' is used to denote a container, not necessarily a C array.
 
@@ -194,19 +204,19 @@ Database thread (db_semaphore_t db_semaphore, db_request_queue_t db_request_queu
       Increment db_request.response_semaphore.
       Increment db_semaphore by (db_response_buffer_length - 1).
 
-Connection control thread:
-  Create a map of connection socket to semaphore.
+Connection control thread (socket_fd listen_fd, db_request_queue_t db_request_queue, db_semaphore_t[] db_semaphores_all, global_notify_state_t global_notify_state):
+  Make a cxnctl_socket_map_t socket_map.
   Loop indefinitely:
-    select() on the listening socket and all connection sockets in the map.
-    For each connection socket that's read-ready:
-      Lookup the socket in the map and increment the associated semaphore.
-    If the listening socket is accept-ready:
-      accept()
-      Create a semaphore.
-      Add the just-created socket and semaphore to the map.
-      Spawn a connection thread with the connection socket, semaphore, the global db request queue and its semaphores, and the global notify state.
+    select() on listen_fd and all keys of socket_map.
+    For each socket_fd_t cxn_socket in keys(socket_map) that's read-ready:
+      Increment socket_map(cxn_socket).
+    If listen_fd is accept-ready:
+      Let socket_fd_t cxn_socket = accept(listen_fd, ...).
+      Make a cxn_semaphore_t cxn_semaphore.
+      Add (cxn_socket, cxn_semaphore) to socket_map.
+      Spawn a connection thread with (cxn_socket, cxn_semaphore, db_request_queue, db_semaphores_all, global_notify_state).
 
-Connection thread:
+Connection thread (socket_fd_t cxn_socket, cxn_semaphore_t cxn_semaphore, db_request_queue_t db_request_queue, db_semaphore_t[] db_semaphores_all):
   Create a queue of db responses from the database {db request, bool is_done, array of response PDUs, more data semaphore}. // NOTE: this only has responses to one db request at a time
   Create a local queue of parsed and validated PDUs to be processed when the current db request is completed (i.e. is_done is set on a db response).
   Create a PDU reassembly buffer of constant size.
