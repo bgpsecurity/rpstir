@@ -2426,7 +2426,7 @@ static int get_cert_type(struct Certificate *certp) {
 
 	extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
 	for ( ; extp; extp = (struct Extension *)next_of(&extp->self)) {
-		if (diff_objid(&extp->extnID, id_basicConstraints))
+		if (!diff_objid(&extp->extnID, id_basicConstraints))
             return CA_CERT;
 	}
 
