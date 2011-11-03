@@ -15,56 +15,42 @@ void Bag_free(Bag * bag);
 /**
 	Try to add data to the bag. This can fail if there isn't enough memory.
 
+	NOTE: this invalidates any iterators.
+
 	@return Whether or not the add was successful.
 */
 bool Bag_add(Bag * bag, void * data);
 
+/** Treat this as an opaque type that can only be passed to Bag functions and compared for equality with other iterators. */
+typedef void * Bag_iterator;
+
+/** This function MUST be called before using any other iterator-related function. */
+void Bag_start_iteration(Bag * bag);
+
+/** The function MUST be called when done with iterator-related functions. Note that it invalidates any existing iterators. */
+void Bag_stop_iteration(Bag * bag);
+
+/** @return an iterator pointing to the first element in the bag, or Bag_end(bag) if the bag is empty. */
+Bag_iterator Bag_begin(Bag * bag);
+
+/** @return an iterator pointing one past the last element in the bag. */
+inline Bag_iterator Bag_end(Bag * bag) { return NULL; }
+
+/** @return an iterator to the next element in the set, or Bag_end(bag) if there are not more elements. */
+Bag_iterator Bag_iterator_next(Bag * bag, Bag_iterator iterator);
+
+/** @return the element pointed to by iterator. */
+void * Bag_get(Bag * bag, Bag_iterator iterator);
+
 /**
-	Foreach macros to help with iterating over a bag. Caveats:
-		* You MUST call Bag_foreach_cleanup in every case that control can pass out of the Bag_foreach loop.
-		* You MUST NOT use any data created by Bag_foreach after calling Bag_foreach_cleanup.
-		* You MUST NOT use the bag for any other purposes between Bag_foreach and Bag_foreach_cleanup.
+	Remove the element pointed to by iterator from the bag.
 
-	Example that prints the elements of a bag (my_bag) that contains C strings:
+	NOTE: Bag_get(bag, iterator) MUST be called and its return value MUST be stored or free'd before calling Bag_erase(bag, iterator), or memory will be leaked.
 
-	printf("my_bag:\n");
-	Bag_foreach(char *, str, my_bag)
-	{
-		if (str == NULL || str[0] == 'a')
-		{
-			Bag_foreach_cleanup(my_bag);
-			printf("  my_bag has something ugly!\n");
-			exit(EXIT_FAILURE);
-		}
+	NOTE: This function invalidates all iterators except the one it returns.
 
-		if (str[0] == '\0')
-			continue;
-
-		printf("  %s", str);
-	}
-	Bag_foreach_cleanup(my_bag);
+	@return the same iterator that would have been returned by Bag_iterator_next(bag, iterator) if Bag_erase hadn't been called.
 */
-#define Bag_foreach(type, var, bag) \
-	for ( \
-		Bag * _Bag_foreach_bag = (bag), \
-			_Bag_lock(_Bag_foreach_bag), \
-			void * _Bag_foreach_iterator = _Bag_begin(_Bag_foreach_bag), \
-			type var = (type)_Bag_iterator_get(_Bag_foreach_bag, _Bag_foreach_iterator); \
-		_Bag_foreach_iterator != NULL; \
-		_Bag_iterator_next(_Bag_foreach_bag, _Bag_foreach_iterator), \
-			var = (type)_Bag_iterator_get(_Bag_foreach_bag, _Bag_foreach_iterator))
-#define Bag_foreach_cleanup(bag) \
-	do { \
-		_Bag_unlock(bag); \
-	} while (false)
-
-/*
- * NOTE: DO NOT CALL THE BELOW FUNCTIONS DIRECTLY. Use Bag_foreach above instead.
- */
-void _Bag_lock(Bag * bag);
-void _Bag_unlock(Bag * bag);
-void * _Bag_begin(Bag * bag);
-void * _Bag_iterator_get(Bag * bag, void * iterator);
-_Bag_iterator_next(Bag * bag, void * iterator);
+Bag_iterator Bag_erase(Bag * bag, Bag_iterator iterator);
 
 #endif
