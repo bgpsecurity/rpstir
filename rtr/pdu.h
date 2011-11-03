@@ -68,6 +68,11 @@
 #define ERR_UNKNOWN_WITHDRAW 6
 #define ERR_DUPLICATE_ANNOUNCE 7
 
+
+typedef uint16_t cache_nonce_t;
+typedef uint32_t serial_number_t;
+
+
 struct _PDU;
 typedef struct _PDU PDU;
 
@@ -109,13 +114,13 @@ struct _PDU {
 	uint8_t protocolVersion;
 	uint8_t pduType;
 	union {
-		uint16_t cacheNonce;
+		cache_nonce_t cacheNonce;
 		uint16_t reserved;
 		uint16_t errorCode;
 	};
 	uint32_t length;
 	union {
-		uint32_t serialNumber;
+		serial_number_t serialNumber;
 		IP4PrefixData ip4PrefixData;
 		IP6PrefixData ip6PrefixData;
 		ErrorData errorData;
