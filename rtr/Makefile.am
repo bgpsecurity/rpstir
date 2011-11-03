@@ -26,7 +26,7 @@ AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
 	-I../cg/casn -I../roa-lib -I../utils
 
 
-bin_PROGRAMS = doUpdate
+bin_PROGRAMS = doUpdate rtrd
 
 EXTRA_DIST = \
 	cleanServerData
@@ -35,3 +35,11 @@ doUpdate_SOURCES = doUpdate.c
 doUpdate_LDFLAGS = $(LIBS)
 doUpdate_LDADD = ../proto/librpki.a ../utils/libutils.a
 doUpdate_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
+
+rtrd_SOURCES = \
+	cache_state.h \
+	connection.h \
+	db.c db.h \
+	pdu.h
+rtrd_LDADD = ../utils/libutils.a
+rtrd_CFLAGS = $(AM_CFLAGS) -Werror
