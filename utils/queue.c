@@ -22,6 +22,9 @@
 			} \
 		} while (false)
 #else
+	#define assert(x) \
+		do { \
+		} while (false)
 	#define QUEUE_INVARIANTS(queue) \
 		do { \
 		} while (false)
@@ -80,6 +83,8 @@ void Queue_free(Queue * queue)
 	if (queue == NULL)
 		return;
 
+	assert(queue->size == 0);
+
 	if (queue->thread_safe)
 		pthread_mutex_destroy(&queue->mutex);
 
@@ -88,6 +93,8 @@ void Queue_free(Queue * queue)
 
 static inline void Queue_lock(Queue * queue)
 {
+	assert(queue != NULL);
+
 	if (queue->thread_safe)
 		pthread_mutex_lock(&queue->mutex);
 
@@ -96,6 +103,8 @@ static inline void Queue_lock(Queue * queue)
 
 static inline void Queue_unlock(Queue * queue)
 {
+	assert(queue != NULL);
+
 	QUEUE_INVARIANTS(queue);
 
 	if (queue->thread_safe)
@@ -105,6 +114,8 @@ static inline void Queue_unlock(Queue * queue)
 bool Queue_trypop(Queue * queue, void ** data)
 {
 	struct _Queue_Entry * entry;
+
+	assert(queue != NULL);
 
 	Queue_lock(queue);
 
@@ -143,6 +154,8 @@ bool Queue_push(Queue * queue, void * data)
 {
 	struct _Queue_Entry * entry;
 
+	assert(queue != NULL);
+
 	entry = (struct _Queue_Entry *)malloc(sizeof(struct _Queue_Entry));
 	if (entry == NULL)
 		return false;
@@ -172,6 +185,8 @@ bool Queue_push(Queue * queue, void * data)
 size_t Queue_size(Queue * queue)
 {
 	size_t size;
+
+	assert(queue != NULL);
 
 	Queue_lock(queue);
 
