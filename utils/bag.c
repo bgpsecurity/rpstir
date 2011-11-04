@@ -185,9 +185,14 @@ size_t Bag_size(Bag * bag)
 /**
 	Reallocate the bag to support num_entries entries.
 
+	@param bag		Bag to operate on.
+	@param num_entries	Number of entries to support after reallocating.
+	@param automatic	Whether or not this realloc was explitly requested by the user.
+	@param track_index	A pointer to an index to a entry. If the entry is moved, the index is updated. Can be NULL.
+
 	NOTE: you MUST hold the lock for writing when calling this.
 */
-static bool Bag_realloc(Bag * bag, size_t num_entries, bool automatic)
+static bool Bag_realloc(Bag * bag, size_t num_entries, bool automatic, size_t * track_index)
 {
 	assert(bag != NULL);
 
@@ -230,6 +235,9 @@ static bool Bag_realloc(Bag * bag, size_t num_entries, bool automatic)
 		{
 			if (bitmap_get(bag->used, index))
 			{
+				if (track_index != NULL && *track_index == index)
+					*track_index = new_index;
+
 				new_entries[new_index] = bag->entries[index];
 				bitmap_set(new_used, new_index);
 				++new_index;
@@ -308,9 +316,150 @@ bool Bag_reserve(Bag * bag, size_t num_entries)
 		return true;
 	}
 
-	bool ret = Bag_realloc(bag, num_entries, false);
+	bool ret = Bag_realloc(bag, num_entries, false, NULL);
 
 	Bag_unlock(bag);
 
 	return ret;
+}
+
+bool Bag_add(Bag * bag, void * data)
+{
+	assert(bag != NULL);
+
+	Bag_wrlock(bag);
+
+	if (!Bag_realloc(bag, bag->size + 1, true, NULL))
+	{
+		Bag_unlock(bag);
+		return false;
+	}
+
+	for (size_t i = 0; i < bag->allocated_size; ++i)
+	{
+		if (!bitmap_get(bag->used, i))
+		{
+			bitmap_set(bag->used, i);
+			bag->entries[i] = data;
+			++bag->size;
+			Bag_unlock(bag);
+			return true;
+		}
+	}
+
+	// Execution should never reach here because Bag_realloc above
+	// (if successful) ensures there are unset bits in bag->used.
+	Bag_unlock(bag);
+	assert(false);
+	return false;
+}
+
+
+void Bag_start_iteration(Bag * bag) { Bag_wrlock(bag); }
+void Bag_start_const_iteration(Bag * bag) { Bag_rdlock(bag); }
+void Bag_stop_iteration(Bag * bag) { Bag_unlock(bag); }
+void Bag_stop_const_iteration(Bag * bag) { Bag_unlock(bag); }
+
+
+#define BAG_BEGIN_BODY \
+	assert(bag != NULL); \
+	BAG_INVARIANTS(bag); \
+	return bag->entries;
+
+Bag_iterator Bag_begin(Bag * bag) { BAG_BEGIN_BODY }
+Bag_const_iterator Bag_const_begin(Bag * bag) { BAG_BEGIN_BODY }
+
+#undef BAG_BEGIN_BODY
+
+
+#define BAG_ITERATOR_NEXT_BODY \
+	assert(bag != NULL); \
+	\
+	BAG_INVARIANTS(bag); \
+	\
+	if (iterator == NULL) \
+		return NULL; \
+	\
+	assert(iterator >= bag->entries); \
+	assert(iterator < bag->entries + bag->allocated_size); \
+	\
+	size_t index = (void const * const *)iterator - bag->entries; \
+	\
+	assert(index < bag->allocated_size); \
+	assert(bitmap_get(bag->used, index)); \
+	\
+	while (++index < bag->allocated_size) \
+	{ \
+		if (bitmap_get(bag->used, index)) \
+			return bag->entries + index; \
+	} \
+	return NULL;
+
+Bag_iterator Bag_iterator_next(Bag * bag, Bag_iterator iterator) { BAG_ITERATOR_NEXT_BODY }
+Bag_const_iterator Bag_const_iterator_next(Bag * bag, Bag_const_iterator iterator) { BAG_ITERATOR_NEXT_BODY }
+
+#undef BAG_ITERATOR_NEXT_BODY
+
+
+#define BAG_GET_BODY \
+	assert(bag != NULL); \
+	\
+	BAG_INVARIANTS(bag); \
+	\
+	assert(iterator != NULL) \
+	\
+	assert(iterator >= bag->entries); \
+	assert(iterator < bag->entries + bag->allocated_size); \
+	\
+	assert((bitmap_get(bag->used, (void const * const *)iterator - bag->entries)); \
+	\
+	return *iterator;
+
+void * Bag_get(Bag * bag, Bag_iterator iterator) { BAG_GET_BODY }
+const void * Bag_const_get(Bag * bag, Bag_const_iterator iterator) { BAG_GET_BODY }
+
+#undef BAG_GET_BODY
+
+
+Bag_iterator Bag_erase(Bag * bag, Bag_iterator iterator)
+{
+	assert(bag != NULL);
+
+	BAG_INVARIANTS(bag);
+
+	if (iterator == NULL)
+		return NULL;
+
+	assert(iterator >= bag->entries);
+	assert(iterator < bag->entries + bag->allocated_size);
+
+	size_t index = (void const * const *)iterator - bag->entries;
+
+	assert(index < bag->allocated_size);
+	assert(bitmap_get(bag->used, index));
+
+	#ifdef DEBUG
+	bag->entries[index] = NULL;
+	#endif
+
+	bitmap_clear(bag->used, index);
+
+	--bag->size;
+
+	for (; index < bag->allocated_size; ++index)
+		if (bitmap_get(bag->used, index))
+			break;
+
+	// The return value of Bag_realloc is ignored because even if
+	// the shrink fails, the results of Bag_erase are still correct.
+	if (index < bag->allocated_size)
+	{
+		Bag_realloc(bag, bag->size, true, &index);
+		return bag->entries + index;
+	}
+	else
+	{
+		Bag_realloc(bag, bag->size, true, NULL);
+		return NULL;
+	}
 }
