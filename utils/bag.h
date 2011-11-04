@@ -13,9 +13,29 @@ Bag * Bag_new(bool thread_safe);
 void Bag_free(Bag * bag);
 
 /**
+	NOTE: this MUST NOT be called between calling Bag_start_iteration() and Bag_stop_iteration(),
+	but MAY be called between their const counterparts.
+
+	@return the number of items in the bag
+*/
+size_t Bag_size(Bag * bag);
+
+/**
+	Try to reserve space in the bag for a total of num_entries entries.
+	This can fail if there isn't enough memory.
+
+	NOTE: this MUST NOT be called between calling Bag_start_iteration() and Bag_stop_iteration()
+	or their const counterparts.
+
+	@return Whether or not the add was successful.
+*/
+bool Bag_reserve(Bag * bag, size_t num_entries);
+
+/**
 	Try to add data to the bag. This can fail if there isn't enough memory.
 
-	NOTE: this invalidates any iterators.
+	NOTE: this MUST NOT be called between calling Bag_start_iteration() and Bag_stop_iteration()
+	or their const counterparts.
 
 	@return Whether or not the add was successful.
 */
