@@ -21,26 +21,33 @@ void Bag_free(Bag * bag);
 */
 bool Bag_add(Bag * bag, void * data);
 
-/** Treat this as an opaque type that can only be passed to Bag functions and compared for equality with other iterators. */
+/** Treat these as opaque types that can only be passed to Bag functions and compared for equality with other iterators. */
 typedef void * Bag_iterator;
+typedef void const * Bag_const_iterator;
 
-/** This function MUST be called before using any other iterator-related function. */
+/** The appropriate one of these functions MUST be called before using any other iterator-related function. */
 void Bag_start_iteration(Bag * bag);
+void Bag_start_const_iteration(Bag * bag);
 
-/** The function MUST be called when done with iterator-related functions. Note that it invalidates any existing iterators. */
+/** The appropriate one of these functions MUST be called when done with iterator-related functions. Note that it invalidates any existing iterators. */
 void Bag_stop_iteration(Bag * bag);
+void Bag_stop_const_iteration(Bag * bag);
 
 /** @return an iterator pointing to the first element in the bag, or Bag_end(bag) if the bag is empty. */
 Bag_iterator Bag_begin(Bag * bag);
+Bag_const_iterator Bag_const_begin(Bag * bag);
 
 /** @return an iterator pointing one past the last element in the bag. */
 inline Bag_iterator Bag_end(Bag * bag) { return NULL; }
+inline Bag_const_iterator Bag_const_end(Bag * bag) { return NULL; }
 
 /** @return an iterator to the next element in the set, or Bag_end(bag) if there are not more elements. */
 Bag_iterator Bag_iterator_next(Bag * bag, Bag_iterator iterator);
+Bag_const_iterator Bag_const_iterator_next(Bag * bag, Bag_const_iterator iterator);
 
 /** @return the element pointed to by iterator. */
 void * Bag_get(Bag * bag, Bag_iterator iterator);
+const void * Bag_const_get(Bag * bag, Bag_const_iterator iterator);
 
 /**
 	Remove the element pointed to by iterator from the bag.
