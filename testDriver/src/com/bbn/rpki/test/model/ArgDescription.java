@@ -15,7 +15,22 @@ public class ArgDescription {
   private static final String ATTR_IS_PARAMETER = "is-parameter";
   private static final String ATTR_VALUE = "value";
   private static final String ATTR_NAME = "name";
+  private static final String ATTR_FORMAT = "format";
   private String argName;
+  private String argFormat;
+  /**
+   * @return the argFormat
+   */
+  public String getArgFormat() {
+    return argFormat;
+  }
+
+  /**
+   * @param argFormat the argFormat to set
+   */
+  public void setArgFormat(String argFormat) {
+    this.argFormat = argFormat;
+  }
   private boolean isParameter;
   private String argValue;
   
@@ -23,7 +38,9 @@ public class ArgDescription {
    * Default constructor
    */
   public ArgDescription() {
-    // nada
+    argFormat = "%s";
+    argValue = "";
+    argName = "";
   }
   
   /**
@@ -33,7 +50,11 @@ public class ArgDescription {
   public ArgDescription(Element element) {
     argName = element.getAttributeValue(ATTR_NAME);
     argValue = element.getAttributeValue(ATTR_VALUE);
+    argFormat = element.getAttributeValue(ATTR_FORMAT);
     isParameter = Boolean.TRUE.equals(element.getAttribute(ATTR_IS_PARAMETER));
+    if (argFormat == null) argFormat = "%s";
+    if (argValue == null) argValue = "";
+    if (argName == null) argName = "";
   }
   
   /**
@@ -42,6 +63,7 @@ public class ArgDescription {
   public void toXML(Element element) {
     element.setAttribute(ATTR_NAME, argName);
     element.setAttribute(ATTR_VALUE, argValue);
+    element.setAttribute(ATTR_FORMAT, argFormat);
     element.setAttribute(ATTR_IS_PARAMETER, Boolean.FALSE.toString());
   }
   

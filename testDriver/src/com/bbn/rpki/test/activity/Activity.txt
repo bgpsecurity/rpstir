@@ -1,0 +1,7 @@
+Activity
+
+An Activity is generally a series of primitive activities performed in
+sequence, in parallel, or iteratively. Each primitive activity
+performs a task as described by a TaskDescription. Arguments described
+by the TaskDescription are supplied by the primitive activity from a
+parameter stream or from the outputs of earlier activities.

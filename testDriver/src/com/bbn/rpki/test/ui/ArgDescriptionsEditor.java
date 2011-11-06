@@ -28,6 +28,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
   
   static class ArgComponents {
     private final JTextField argName = new JTextField(20);
+    private final JTextField argFormat = new JTextField(20);
     private final JCheckBox isParameter = new JCheckBox();
     private final JTextField argValue = new JTextField(20);
     private final JButton editButton;
@@ -35,6 +36,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
 
     ArgComponents(ActionListener editAction) {
       argName.setToolTipText("Enter the name by which this argument will be referenced");
+      argFormat.setToolTipText("Enter the command line format for this argument (e.g. subjkeyfile=%s)");
       isParameter.setToolTipText("Select if this argument should always have the specified value");
       editButton = new JButton("Add");
       editButton.addActionListener(editAction);
@@ -46,6 +48,15 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
         @Override
         public void focusLost(FocusEvent e) {
           argDescription.setArgName(argName.getText());
+        }});
+      argFormat.addFocusListener(new FocusAdapter() {
+
+        /**
+         * @see java.awt.event.FocusAdapter#focusLost(java.awt.event.FocusEvent)
+         */
+        @Override
+        public void focusLost(FocusEvent e) {
+          argDescription.setArgFormat(argFormat.getText());
         }});
       argValue.addFocusListener(new FocusAdapter() {
 
@@ -68,6 +79,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
 
     void setVisible(AS s) {
       argName.setEnabled(s == AS.EDIT);
+      argFormat.setEnabled(s == AS.EDIT);
       isParameter.setEnabled(s == AS.EDIT);
       argValue.setEnabled(s == AS.EDIT);
       editButton.setVisible(s != AS.BLANK);
@@ -94,12 +106,14 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
       if (argDescription != null) {
         argName.setText(argDescription.getArgName());
         argValue.setText(argDescription.getArgValue());
+        argFormat.setText(argDescription.getArgFormat());
         boolean parameter = argDescription.isParameter();
         isParameter.setSelected(parameter);
         updateToolTips();
       } else {
         argName.setText("");
         argValue.setText("");
+        argFormat.setText("");
       }
     }
 
@@ -131,6 +145,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
             argDescription = new ArgDescription();
             argDescription.setArgName("<Enter Arg Name>");
             argDescription.setArgValue("<Enter Arg Value>");
+            argDescription.setArgFormat("<Enter Arg Format>");
             taskDescription.addArgDescription(argDescription);
             ArgComponents argComponents = argComponentsArray[index];
             argComponents.setValues(argDescription);
@@ -146,7 +161,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
       };
       ArgComponents argComponents = new ArgComponents(editAction);
       argComponentsArray[i] = argComponents;
-      addComponentsToTaskPanel(argComponents.argName, argComponents.isParameter,
+      addComponentsToTaskPanel(argComponents.argName, argComponents.argFormat, argComponents.isParameter,
                      argComponents.argValue, argComponents.editButton);
       argComponents.setVisible(AS.BLANK);
     }

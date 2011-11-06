@@ -11,7 +11,7 @@ expected database.
 Primitive Tasks
 
 The framework consists of a set of descriptions of individual,
-primitive task that can be used to control the component. A set of
+primitive tasks that can be used to control a component. A set of
 rules allows the composition of these primitive tasks into "correct"
 composite tasks. There may be several equivalent composite (or
 primitive) tasks. For example task A might be equivalent to task B
@@ -23,10 +23,13 @@ exagerating timing hazards and races.
 Activity Definition
 
 Primitive tasks may be composed into activities. This process is
+
 Representing Sequentiality, Parallelism and Iteration
 
 Sequentiality is represented by lists. Parallelism is represented by
-collections. Iteration is represented Activity is recursively represented by alternations of
+collections. Iteration is represented
+
+Activity is recursively represented by alternations of
 these simple structures using singletons for degenerate cases.
 
 Representing the System Under Test
