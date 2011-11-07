@@ -12,8 +12,23 @@
 
 typedef sem_t db_semaphore_t;
 
-struct db_query; // TODO
-struct db_query_progress; // TODO
+struct db_query {
+	enum { SERIAL_QUERY, RESET_QUERY; } type;
+	union {
+		struct {
+			cache_nonce_t nonce;
+			serial_number_t serial;
+		} serial_query;
+		struct {
+		} reset_query;
+	};
+};
+
+// The below should work for a query like SELECT ... FROM ... WHERE serial = last_serial ORDER BY ... LIMIT last_row, ...
+struct db_query_progress {
+	serial_number_t last_serial;
+	size_t last_row;
+};
 
 struct db_request {
 	struct db_query query;
