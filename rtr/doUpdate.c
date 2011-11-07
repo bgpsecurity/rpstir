@@ -41,6 +41,7 @@ static scm      *scmp = NULL;
 static scmcon   *connection = NULL;
 static scmsrcha *roaSrch = NULL;
 static scmtab   *roaTable = NULL;
+static scmtab   *nonceTable = NULL;
 static scmtab   *fullTable = NULL;
 static scmtab   *updateTable = NULL;
 static scmsrcha *snSrch = NULL;
@@ -142,6 +143,8 @@ static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
 
 int main(int argc, char **argv) {
 	char msg[1024];
+	int sta;
+	uint nonce_count;
 
 	// initialize the database connection
 	scmp = initscm();
@@ -149,11 +152,23 @@ int main(int argc, char **argv) {
 	connection = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkErr(connection == NULL, "Cannot connect to database: %s\n", msg);
 
-	if (number of rows in table rtr_nonce != 1) {
-		truncate all tables used by RTR, including rtr_nonce; // TODO: does order matter?
-		insert a random value into rtr_nonce;
+	nonceTable = findtablescm(scmp, "rtr_nonce");
+	checkErr(nonceTable == NULL, "Cannot find table rtr_nonce\n");
+
+	sta = newhstmt(connection);
+	checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
+	sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_nonce;");
+	checkErr(sta >= 0, "Can't query rtr_nonce\n");
+	sta = getuintscm(connection, &nonce_count);
+	pophstmt(connection);
+	checkErr(sta >= 0, "Can't get results of querying rtr_nonce\n");
+	if (nonce_count != 1) {
+		statementscm_no_data(connection, "TRUNCATE TABLE rtr_nonce;");
+		statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
+		statementscm_no_data(connection, "TRUNCATE TABLE rtr_full;");
+		statementscm_no_data(connection, "TRUNCATE TABLE rtr_incremental;");
+		statementscm_no_data(connection, "INSERT INTO rtr_nonce (cache_nonce) VALUES (FLOOR(RAND() * (1 << 16)));");
 	}
-	assert(number of rows in table rtr_nonce == 1);
 
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
