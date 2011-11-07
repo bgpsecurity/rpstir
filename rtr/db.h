@@ -13,7 +13,7 @@
 typedef sem_t db_semaphore_t;
 
 struct db_query {
-	enum { SERIAL_QUERY, RESET_QUERY; } type;
+	enum { SERIAL_QUERY, RESET_QUERY } type;
 	union {
 		struct {
 			cache_nonce_t nonce;

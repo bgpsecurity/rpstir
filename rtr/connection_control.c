@@ -1,4 +1,8 @@
 #include <assert.h>
+#include <errno.h>
+#include <pthread.h>
+#include <signal.h>
+#include <string.h>
 #include <sys/select.h>
 #include <unistd.h>
 
@@ -19,18 +23,18 @@ struct connection_info {
 };
 
 
-static void log_error(int errno, char const * prefix)
+static void log_error(int err, char const * prefix)
 {
 	// static is ok because it's only used from one thread
 	static char errorbuf[1024];
 
-	if (strerror_r(errno, errorbuf, 1024) == 0)
+	if (strerror_r(err, errorbuf, 1024) == 0)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "%s: %s", prefix, errorbuf);
 	}
 	else
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "%s: error code %d", prefix, errno);
+		log_msg(LOG_ERR, LOG_PREFIX "%s: error code %d", prefix, err);
 	}
 }
 
@@ -60,7 +64,7 @@ static void cleanup_connection(struct connection_info * cxn_info)
 
 	int retval1;
 
-	retval1 = close(cxn_info->fd)
+	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
 		log_error(retval1, "close()");
 
@@ -106,7 +110,7 @@ void * connection_control_main(void * args_voidp)
 		Bag_start_iteration(connections);
 		for (connections_it = Bag_begin(connections);
 			connections_it != Bag_end(connections);
-			did_erase || connections_it = Bag_iterator_next(connections, connections_it))
+			(void)(did_erase || (connections_it = Bag_iterator_next(connections, connections_it))))
 		{
 			did_erase = false;
 
@@ -122,7 +126,7 @@ void * connection_control_main(void * args_voidp)
 				continue;
 			}
 
-			FD_SET(cxn_info->fd);
+			FD_SET(cxn_info->fd, &read_fds);
 			if (cxn_info->fd + 1 > nfds) nfds = cxn_info->fd + 1;
 		}
 		Bag_stop_iteration(connections);
@@ -143,7 +147,7 @@ void * connection_control_main(void * args_voidp)
 		Bag_start_iteration(connections);
 		for (connections_it = Bag_begin(connections);
 			connections_it != Bag_end(connections);
-			did_erase || connections_it = Bag_next(connections, connections_it))
+			(void)(did_erase || (connections_it = Bag_iterator_next(connections, connections_it))))
 		{
 			did_erase = false;
 
@@ -185,7 +189,7 @@ void * connection_control_main(void * args_voidp)
 			if (sem_init(cxn_info->semaphore, 0, 0) != 0)
 			{
 				log_error(errno, "sem_init()");
-				free((void *)cxn_info->semphore);
+				free((void *)cxn_info->semaphore);
 				free((void *)cxn_info);
 				continue;
 			}
@@ -198,7 +202,7 @@ void * connection_control_main(void * args_voidp)
 				{
 					log_error(errno, "sem_destroy()");
 				}
-				free((void *)cxn_info->semphore);
+				free((void *)cxn_info->semaphore);
 				free((void *)cxn_info);
 				continue;
 			}
