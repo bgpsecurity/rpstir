@@ -4,6 +4,7 @@
 #include <semaphore.h>
 
 #include "queue.h"
+#include "bag.h"
 
 #include "pdu.h"
 #include "connection.h"
