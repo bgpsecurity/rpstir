@@ -67,7 +67,7 @@ Bag_const_iterator Bag_const_iterator_next(Bag * bag, Bag_const_iterator iterato
 
 /** @return the element pointed to by iterator. */
 void * Bag_get(Bag * bag, Bag_iterator iterator);
-const void * Bag_const_get(Bag * bag, Bag_const_iterator iterator);
+const void * Bag_const_get(Bag const * bag, Bag_const_iterator iterator);
 
 /**
 	Remove the element pointed to by iterator from the bag.

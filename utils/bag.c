@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -231,7 +232,8 @@ static bool Bag_realloc(Bag * bag, size_t num_entries, bool automatic, size_t * 
 			return false;
 		}
 
-		for (size_t new_index = 0, index = 0; index < bag->allocated_size; ++index)
+		size_t new_index, index;
+		for (new_index = 0, index = 0; index < bag->allocated_size; ++index)
 		{
 			if (bitmap_get(bag->used, index))
 			{
@@ -335,7 +337,8 @@ bool Bag_add(Bag * bag, void * data)
 		return false;
 	}
 
-	for (size_t i = 0; i < bag->allocated_size; ++i)
+	size_t i;
+	for (i = 0; i < bag->allocated_size; ++i)
 	{
 		if (!bitmap_get(bag->used, i))
 		{
@@ -372,6 +375,22 @@ Bag_const_iterator Bag_const_begin(Bag * bag) { BAG_BEGIN_BODY }
 #undef BAG_BEGIN_BODY
 
 
+static inline size_t _Bag_iterator_to_index(Bag const * bag, Bag_const_iterator iterator)
+{
+	assert(bag != NULL);
+	assert(iterator != NULL);
+
+	assert(iterator >= (Bag_const_iterator)bag->entries);
+	assert(iterator < (Bag_const_iterator)(bag->entries + bag->allocated_size));
+
+	size_t index = (void const * const *)iterator - (void const * const *)bag->entries;
+
+	assert(index < bag->allocated_size);
+
+	return index;
+}
+
+
 #define BAG_ITERATOR_NEXT_BODY \
 	assert(bag != NULL); \
 	\
@@ -380,12 +399,8 @@ Bag_const_iterator Bag_const_begin(Bag * bag) { BAG_BEGIN_BODY }
 	if (iterator == NULL) \
 		return NULL; \
 	\
-	assert(iterator >= bag->entries); \
-	assert(iterator < bag->entries + bag->allocated_size); \
+	size_t index = _Bag_iterator_to_index(bag, iterator); \
 	\
-	size_t index = (void const * const *)iterator - bag->entries; \
-	\
-	assert(index < bag->allocated_size); \
 	assert(bitmap_get(bag->used, index)); \
 	\
 	while (++index < bag->allocated_size) \
@@ -401,22 +416,22 @@ Bag_const_iterator Bag_const_iterator_next(Bag * bag, Bag_const_iterator iterato
 #undef BAG_ITERATOR_NEXT_BODY
 
 
-#define BAG_GET_BODY \
+#define BAG_GET_BODY(iterator_type, return_type) \
 	assert(bag != NULL); \
 	\
 	BAG_INVARIANTS(bag); \
 	\
-	assert(iterator != NULL) \
+	assert(iterator != NULL); \
 	\
-	assert(iterator >= bag->entries); \
-	assert(iterator < bag->entries + bag->allocated_size); \
+	assert(iterator >= (iterator_type)bag->entries); \
+	assert(iterator < (iterator_type)(bag->entries + bag->allocated_size)); \
 	\
-	assert((bitmap_get(bag->used, (void const * const *)iterator - bag->entries)); \
+	assert(bitmap_get(bag->used, (void const * const *)iterator - (void const * const *)bag->entries)); \
 	\
-	return *iterator;
+	return *((return_type *)iterator);
 
-void * Bag_get(Bag * bag, Bag_iterator iterator) { BAG_GET_BODY }
-const void * Bag_const_get(Bag * bag, Bag_const_iterator iterator) { BAG_GET_BODY }
+void * Bag_get(Bag * bag, Bag_iterator iterator) { BAG_GET_BODY(Bag_iterator, void *) }
+const void * Bag_const_get(Bag const * bag, Bag_const_iterator iterator) { BAG_GET_BODY(Bag_const_iterator, const void *) }
 
 #undef BAG_GET_BODY
 
@@ -430,12 +445,8 @@ Bag_iterator Bag_erase(Bag * bag, Bag_iterator iterator)
 	if (iterator == NULL)
 		return NULL;
 
-	assert(iterator >= bag->entries);
-	assert(iterator < bag->entries + bag->allocated_size);
+	size_t index = _Bag_iterator_to_index(bag, iterator);
 
-	size_t index = (void const * const *)iterator - bag->entries;
-
-	assert(index < bag->allocated_size);
 	assert(bitmap_get(bag->used, index));
 
 	#ifdef DEBUG
