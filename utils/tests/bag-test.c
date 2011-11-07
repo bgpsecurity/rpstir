@@ -36,9 +36,9 @@ bool correctness_test(Bag * bag)
 				TEST(int, "%d", (int)data, >=, 0); \
 				TEST(int, "%d", (int)data, <, 64); \
 				\
-				TEST_BOOL(found & (1 << (int)data), false); \
+				TEST_BOOL(found & ((uint64_t)1 << (int)data), false); \
 				\
-				found |= 1 << (int)data; \
+				found |= (uint64_t)1 << (int)data; \
 			} \
 			stop_iteration(bag); \
 			\
