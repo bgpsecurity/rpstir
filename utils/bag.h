@@ -1,7 +1,8 @@
-#ifndef _UTILS_QUEUE_H
-#define _UTILS_QUEUE_H
+#ifndef _UTILS_BAG_H
+#define _UTILS_BAG_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 struct _Bag;
 typedef struct _Bag Bag;
@@ -58,8 +59,8 @@ Bag_iterator Bag_begin(Bag * bag);
 Bag_const_iterator Bag_const_begin(Bag * bag);
 
 /** @return an iterator pointing one past the last element in the bag. */
-inline Bag_iterator Bag_end(Bag * bag) { return NULL; }
-inline Bag_const_iterator Bag_const_end(Bag * bag) { return NULL; }
+inline Bag_iterator Bag_end(Bag * bag) { (void)bag; return NULL; }
+inline Bag_const_iterator Bag_const_end(Bag * bag) { (void)bag; return NULL; }
 
 /** @return an iterator to the next element in the set, or Bag_end(bag) if there are not more elements. */
 Bag_iterator Bag_iterator_next(Bag * bag, Bag_iterator iterator);
