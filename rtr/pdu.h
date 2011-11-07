@@ -71,6 +71,7 @@
 
 typedef uint16_t cache_nonce_t;
 typedef uint32_t serial_number_t;
+typedef uint32_t as_number_t;
 
 
 struct _PDU;
@@ -85,7 +86,7 @@ typedef struct _IP4PrefixData {
 	uint8_t maxLength;
 	uint8_t reserved;
 	struct in_addr prefix4;
-	uint32_t asNumber;
+	as_number_t asNumber;
 } PACKED_STRUCT IP4PrefixData;
 
 typedef struct _IP6PrefixData {
@@ -94,7 +95,7 @@ typedef struct _IP6PrefixData {
 	uint8_t maxLength;
 	uint8_t reserved;
 	struct in6_addr prefix6;
-	uint32_t asNumber;
+	as_number_t asNumber;
 } PACKED_STRUCT IP6PrefixData;
 
 /*****
