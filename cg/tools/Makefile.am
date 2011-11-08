@@ -26,7 +26,7 @@ bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	extractCMScert add_cms_cert test_cert makeLTAtest checkLTAtest \
         dumpIPAddr update_cert extractPubKeyInfo get_sernum put_sernum \
 	extractSIA extractValidityDate fix_manifest check_signature \
-        put_subj put_sia add_cms_cert_no_check
+        put_subj put_sia add_cms_cert_no_check sign_cms
 
 AM_CFLAGS = -g -Wall -I../asn -I../asn_gen -I../casn -I../../roa-lib \
 	-I../../proto -I../../utils
@@ -42,55 +42,34 @@ bin_to_six_SOURCES = bin_to_six.c prencode.c
 six_to_bin_SOURCES = six_to_bin.c prencode.c
 six2hex_SOURCES = six2hex.c prencode.c
 loadkey_SOURCES = loadkey.c
-loadkey_LDFLAGS = $(LIBS)
 gen_key_SOURCES = gen_key.c
-gen_key_LDFLAGS = $(LIBS)
 whatsfcs_SOURCES = whatsfcs.c prencode.c
 make_oidtable_SOURCES = make_oidtable.c
 make_TA_SOURCES = make_TA.c
-make_TA_LDFLAGS = $(LIBS)
 set_cert_ski_SOURCES = set_cert_ski.c
-set_cert_ski_LDFLAGS = $(LIBS)
 sign_cert_SOURCES = sign_cert.c
-sign_cert_LDFLAGS = $(LIBS)
+sign_cms_SOURCES = sign_cms.c
 add_key_info_SOURCES = add_key_info.c
-add_key_info_LDFLAGS = $(LIBS)
 read_roa_SOURCES = read_roa.c
-read_roa_LDFLAGS = $(LIBS)
 encode_oid_SOURCES = encode-oid.c
 dumpasn1_SOURCES = dumpasn1.c
 dump_smart_SOURCES = dump_smart.c
-dump_smart_LDFLAGS = $(LIBS)
 extractCMScert_SOURCES = extractCMScert.c
-extractCMScert_LDFLAGS = $(LIBS)
 add_cms_cert_SOURCES = add_cms_cert.c
-add_cms_cert_LDFLAGS = $(LIBS)
 add_cms_cert_no_check_SOURCES = add_cms_cert_no_check.c
-add_cms_cert_no_check_LDFLAGS = $(LIBS)
 test_cert_SOURCES = test_cert.c
-test_cert_LDFLAGS = $(LIBS)
 makeLTAtest_SOURCES = makeLTAtest.c
-makeLTAtest_LDFLAGS = $(LIBS)
 checkLTAtest_SOURCES = checkLTAtest.c
-checkLTAtest_LDFLAGS = $(LIBS)
 dumpIPAddr_SOURCES = dumpIPAddr.c
-dumpIPAddr_LDFLAGS = $(LIBS)
 update_cert_SOURCES = update_cert.c
-update_cert_LDFLAGS = $(LIBS)
 extractPubKeyInfo_SOURCES = extractPubKeyInfo.c
-extractPubKeyInfo_LDFLAGS = $(LIBS)
 get_sernum_SOURCES = get_sernum.c
-get_sernum_LDFLAGS = $(LIBS)
 put_sernum_SOURCES = put_sernum.c
-put_sernum_LDFLAGS = $(LIBS)
 put_subj_SOURCES = put_subj.c
-put_subj_LDFLAGS = $(LIBS)
 put_sia_SOURCES = put_sia.c
 extractSIA_SOURCES = extractSIA.c
 extractValidityDate_SOURCES = extractValidityDate.c
 fix_manifest_SOURCES = fix_manifest.c
-fix_manifest_LDFLAGS = $(LIBS)
 check_signature_SOURCES = check_signature.c
-check_signature_LDFLAGS = $(LIBS)
 
 EXTRA_DIST = convert-oidtable.sh dumpasn1.cfg test_casn_random_driver.sh

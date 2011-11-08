@@ -27,6 +27,7 @@ read_roa
 rr
 set_cert_ski
 sign_cert
+sign_cms
 six2hex
 six_to_bin
 test_casn_random
