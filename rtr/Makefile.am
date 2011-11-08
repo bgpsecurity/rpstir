@@ -43,6 +43,7 @@ rtrd_SOURCES = \
 	connection.c connection.h \
 	connection_control.c connection_control.h \
 	db.c db.h \
+	main.c \
 	pdu.h
 rtrd_LDADD = ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
 rtrd_CFLAGS = $(AM_CFLAGS) -Werror
