@@ -70,6 +70,7 @@
 
 
 typedef uint16_t cache_nonce_t;
+typedef uint16_t error_code_t;
 typedef uint32_t serial_number_t;
 typedef uint32_t as_number_t;
 
@@ -108,6 +109,8 @@ typedef struct _ErrorData {
 	uint8_t *errorText;
 } ErrorData;
 
+#define PDU_ERROR_HEADERS_LENGTH (sizeof(uint32_t) + sizeof(uint32_t))
+
 /*****
  * Basic structure of a PDU
  *****/
@@ -117,7 +120,7 @@ struct _PDU {
 	union {
 		cache_nonce_t cacheNonce;
 		uint16_t reserved;
-		uint16_t errorCode;
+		error_code_t errorCode;
 	};
 	uint32_t length;
 	union {
