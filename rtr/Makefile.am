@@ -38,6 +38,7 @@ doUpdate_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
 
 rtrd_SOURCES = \
 	cache_state.h \
+	config.h \
 	connection.c connection.h \
 	connection_control.c connection_control.h \
 	db.c db.h \
