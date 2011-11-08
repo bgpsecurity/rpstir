@@ -2866,7 +2866,8 @@ static int fill_asnumtest(struct AsNumTest *asntp,
             return -1;
         asntp->hi = asntp->lo;
     } else if (read_casn_num(&asNumOrRangep->range.min, (long *)&asntp->lo) < 0 ||
-            read_casn_num(&asNumOrRangep->range.max, (long *)&asntp->hi) < 0)
+            read_casn_num(&asNumOrRangep->range.max, (long *)&asntp->hi) < 0 ||
+        asntp->lo >= asntp->hi)
         return -1;
     return 0;
 }
@@ -2952,7 +2953,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
             log_msg(LOG_ERR, "error reading AS number");
             return ERR_SCM_BADRANGE;
         }
-        if (hi.lo - 2 <= lo.hi  ||  hi.lo > hi.hi) {
+        if (hi.lo - 1 <= lo.hi) {
             log_msg(LOG_ERR, "AS numbers not in canonical order");
             return ERR_SCM_BADRANGE;
         }
