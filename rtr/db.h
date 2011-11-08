@@ -38,8 +38,14 @@ struct db_request {
 
 struct db_response {
 	PDU * PDUs;
-	bool is_done;
+	size_t num_PDUs;
 	db_semaphore_t * more_data_semaphore;
 };
+
+struct db_main_args {
+	db_semaphore_t * semaphore;
+	Queue * db_request_queue;
+};
+void * db_main(void * args_voidp);
 
 #endif
