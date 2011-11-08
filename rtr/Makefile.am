@@ -37,7 +37,7 @@ doUpdate_LDADD = ../proto/librpki.a ../utils/libutils.a
 doUpdate_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
 
 rtrd_SOURCES = \
-	cache_state.h \
+	cache_state.c cache_state.h \
 	common.c common.h \
 	config.h \
 	connection.c connection.h \
