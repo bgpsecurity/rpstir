@@ -23,7 +23,7 @@
 
 SUBDIRS = . tests
 
-AM_CFLAGS = -g -Wall
+AM_CFLAGS = -g -Wall -Wextra -Werror
 
 noinst_LIBRARIES = libutils.a libutilsdebug.a
 

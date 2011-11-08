@@ -428,6 +428,8 @@ Bag_const_iterator Bag_const_iterator_next(Bag * bag, Bag_const_iterator iterato
 	\
 	assert(bitmap_get(bag->used, (void const * const *)iterator - (void const * const *)bag->entries)); \
 	\
+	(void)bag; \
+	\
 	return *((return_type *)iterator);
 
 void * Bag_get(Bag * bag, Bag_iterator iterator) { BAG_GET_BODY(Bag_iterator, void *) }
