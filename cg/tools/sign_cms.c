@@ -1,8 +1,20 @@
+/**
+ * sign_cms - bare-bones CMS signing tool
+ *
+ * This is a bare-bones CMS signing tool.  It does NOT hash the
+ * encapContentInfo to set the message digest in the signedAttrs
+ * field.  It simply takes as input a user-provided private key and
+ * the already-constructed signedAttrs.  It just hashes signedAttrs,
+ * computes the RSA signature, and sets a signature value in the
+ * SignerInfo.
+ */
+
 #include <stdio.h>
 #include <cryptlib.h>
 #include <stdlib.h>
 #include "roa.h"
 #include "logutils.h"
+
 
 /* TODO: this function is duplicated from signCMS.c, due to
    dependencies on build-order (libroa cannot be linked in cg/tools).

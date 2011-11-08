@@ -129,8 +129,8 @@ CMS signed objects, generic (using ROAs)
 523 SigInfoVersion           # wrong Signer Info version -- 2
 524 SigInfoVersion4          # wrong Signer Info version -- 4
 525 SigInfoNoSid             # no Signer Identifier
-526 SigInfoWrongSid          # wrong Signer Identifier
-527 SigInfoBadSid            # wrong choice of Signer Identifier
+526 SigInfoWrongSid          # wrong choice of Signer Identifier
+527 SigInfoBadSid            # bad Signer Identifier (wrong SKI)
 528 SigInfoHashAlg           # wrong hash algorithm in Signer Info
 529 SigInfoNoAttrs           # no attributes in Signer Info
 530 SigInfoAttrsNoContType   # no content type in Signer Info
