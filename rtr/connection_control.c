@@ -8,6 +8,8 @@
 
 #include "logutils.h"
 
+#include "common.h"
+
 #include "connection_control.h"
 #include "connection.h"
 
@@ -23,20 +25,8 @@ struct connection_info {
 };
 
 
-static void log_error(int err, char const * prefix)
-{
-	// static is ok because it's only used from one thread
-	static char errorbuf[1024];
-
-	if (strerror_r(err, errorbuf, 1024) == 0)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "%s: %s", prefix, errorbuf);
-	}
-	else
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "%s: error code %d", prefix, err);
-	}
-}
+// this is ok because there's only one connection control thread
+static char errorbuf[ERROR_BUF_SIZE];
 
 
 static void kill_connection(struct connection_info * cxn_info)
@@ -50,7 +40,7 @@ static void kill_connection(struct connection_info * cxn_info)
 	{
 		retval2 = pthread_join(cxn_info->thread, NULL);
 		if (retval2 != 0)
-			log_error(retval2, "pthread_join()");
+			log_error(retval2, errorbuf, LOG_PREFIX "pthread_join()");
 	}
 	else if (retval1 != ESRCH)
 	{
@@ -66,11 +56,11 @@ static void cleanup_connection(struct connection_info * cxn_info)
 
 	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
-		log_error(retval1, "close()");
+		log_error(retval1, errorbuf, LOG_PREFIX "close()");
 
 	retval1 = sem_destroy(cxn_info->semaphore);
 	if (retval1 != 0)
-		log_error(retval1, "sem_destroy()");
+		log_error(retval1, errorbuf, LOG_PREFIX "sem_destroy()");
 
 	free((void *)cxn_info->semaphore);
 	free((void *)cxn_info);
@@ -135,7 +125,7 @@ void * connection_control_main(void * args_voidp)
 
 		if (retval < 0)
 		{
-			log_error(errno, "select()");
+			log_error(errno, errorbuf, LOG_PREFIX "select()");
 			continue;
 		}
 		else if (retval == 0)
@@ -159,7 +149,7 @@ void * connection_control_main(void * args_voidp)
 			{
 				if (sem_post(cxn_info->semaphore) != 0)
 				{
-					log_error(errno, "sem_post()");
+					log_error(errno, errorbuf, LOG_PREFIX "sem_post()");
 					kill_connection(cxn_info);
 					cleanup_connection(cxn_info);
 					connections_it = Bag_erase(connections, connections_it);
@@ -188,7 +178,7 @@ void * connection_control_main(void * args_voidp)
 
 			if (sem_init(cxn_info->semaphore, 0, 0) != 0)
 			{
-				log_error(errno, "sem_init()");
+				log_error(errno, errorbuf, LOG_PREFIX "sem_init()");
 				free((void *)cxn_info->semaphore);
 				free((void *)cxn_info);
 				continue;
@@ -197,10 +187,10 @@ void * connection_control_main(void * args_voidp)
 			cxn_info->fd = accept(argsp->listen_fd, NULL, NULL);
 			if (cxn_info->fd < 0)
 			{
-				log_error(errno, "accept()");
+				log_error(errno, errorbuf, LOG_PREFIX "accept()");
 				if (sem_destroy(cxn_info->semaphore) != 0)
 				{
-					log_error(errno, "sem_destroy()");
+					log_error(errno, errorbuf, LOG_PREFIX "sem_destroy()");
 				}
 				free((void *)cxn_info->semaphore);
 				free((void *)cxn_info);
@@ -224,7 +214,7 @@ void * connection_control_main(void * args_voidp)
 			retval = pthread_create(&cxn_info->thread, NULL, connection_main, (void *)connection_args);
 			if (retval != 0)
 			{
-				log_error(retval, "pthread_create()");
+				log_error(retval, errorbuf, LOG_PREFIX "pthread_create()");
 				free((void *)connection_args);
 				cleanup_connection(cxn_info);
 				continue;
