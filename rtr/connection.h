@@ -3,9 +3,12 @@
 
 #include <semaphore.h>
 
-typedef sem_t cxn_semaphore_t;
+#include "bag.h"
+#include "queue.h"
 
-enum cxn_state {READY, RUNNING};
+#include "cache_state.h"
+
+typedef sem_t cxn_semaphore_t;
 
 struct connection_main_args {
 	int socket;
