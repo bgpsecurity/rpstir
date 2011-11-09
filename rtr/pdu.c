@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "pdu.h"
 
@@ -55,7 +57,7 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 		case PDU_SERIAL_NOTIFY:
 		case PDU_SERIAL_QUERY:
 		case PDU_CACHE_RESPONSE:
-		case PDU_END_OF_DATA
+		case PDU_END_OF_DATA:
 			EXTRACT_FIELD(PDU, pdu, 0, cacheNonce);
 			break;
 		case PDU_RESET_QUERY:
@@ -270,7 +272,7 @@ void pdu_free_array(PDU * pdus, size_t num_pdus)
 	size_t i;
 
 	for (i = 0; i < num_pdus; ++i)
-		_pdu_free_internal(pdus[i]);
+		_pdu_free_internal(&pdus[i]);
 
 	free((void *)pdus);
 }

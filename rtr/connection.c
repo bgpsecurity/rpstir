@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -10,6 +11,7 @@
 #include "pdu.h"
 
 #include "connection.h"
+#include "db.h"
 
 #define LOG_PREFIX "[connection] "
 
@@ -160,7 +162,7 @@ static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t
 		db_sem_it != Bag_end(db_semaphores_all);
 		db_sem_it = Bag_iterator_next(db_semaphores_all, db_sem_it))
 	{
-		db_sem = Bag_iterator_get(db_semaphores_all, db_sem_it);
+		db_sem = Bag_get(db_semaphores_all, db_sem_it);
 		if (db_sem == NULL)
 		{
 			log_msg(LOG_ERR, LOG_PREFIX "found NULL db semaphore");
@@ -182,7 +184,7 @@ static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t
 void * connection_main(void * args_voidp)
 {
 	int retval1;
-	ssize_t ssz_retval1
+	ssize_t ssz_retval1;
 	char errorbuf[ERROR_BUF_SIZE];
 
 	ssize_t i;
@@ -218,13 +220,12 @@ void * connection_main(void * args_voidp)
 	}
 
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
-	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH > MAX_PDU_SIZE); // This should fail.. remove it once I know it fails
 	uint8_t pdu_buffer[MAX_PDU_SIZE];
 	PDU pdu; // this can have pointers into pdu_buffer
 	PDU * pdup; // this can't
 	size_t length;
 
-	struct db_response response;
+	struct db_response * response;
 
 	enum cxn_state state = READY;
 
@@ -366,9 +367,9 @@ void * connection_main(void * args_voidp)
 						Update cache_state as appropriate.
 				*/
 
-				for (i = 0; i < response->num_PDUs; ++i)
+				for (i = 0; i < (ssize_t)response->num_PDUs; ++i)
 				{
-					if (!send_pdu(argsp->socket, pdu_buffer, response->PDUs[i], errorbuf))
+					if (!send_pdu(argsp->socket, pdu_buffer, &response->PDUs[i], errorbuf))
 					{
 						log_msg(LOG_ERR, LOG_PREFIX "failed sending a PDU response from the db");
 						pdu_free_array(response->PDUs, response->num_PDUs);
