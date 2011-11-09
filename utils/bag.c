@@ -366,8 +366,16 @@ void Bag_stop_const_iteration(Bag * bag) { Bag_unlock(bag); }
 
 #define BAG_BEGIN_BODY \
 	assert(bag != NULL); \
+	\
 	BAG_INVARIANTS(bag); \
-	return bag->entries;
+	\
+	size_t index; \
+	for (index = 0; index < bag->allocated_size; ++index) \
+	{ \
+		if (bitmap_get(bag->used, index)) \
+			return bag->entries + index; \
+	} \
+	return NULL;
 
 Bag_iterator Bag_begin(Bag * bag) { BAG_BEGIN_BODY }
 Bag_const_iterator Bag_const_begin(Bag * bag) { BAG_BEGIN_BODY }

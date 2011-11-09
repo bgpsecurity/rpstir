@@ -6,6 +6,30 @@
 #include "bag.h"
 #include "unittest.h"
 
+bool empty_test(Bag * bag)
+{
+	size_t size = 0;
+	Bag_const_iterator it;
+
+	assert(bag != NULL);
+	assert(Bag_size(bag) == 0);
+
+	Bag_start_const_iteration(bag);
+	for (it = Bag_const_begin(bag);
+		it != Bag_const_end(bag);
+		it = Bag_const_iterator_next(bag, it))
+	{
+		++size;
+	}
+	Bag_stop_const_iteration(bag);
+
+	TEST(size_t, "%zd", size, ==, 0);
+
+	TEST(size_t, "%zd", Bag_size(bag), ==, 0);
+
+	return true;
+}
+
 bool correctness_test(Bag * bag)
 {
 	ssize_t i;
@@ -118,11 +142,17 @@ bool run_test(Bag * bag)
 {
 	TEST(void *, "%p", (void *)bag, !=, NULL);
 
+	if (!empty_test(bag)) return false;
 	if (!correctness_test(bag)) return false;
+	if (!empty_test(bag)) return false;
 	if (!stress_test(bag, 5000)) return false;
+	if (!empty_test(bag)) return false;
 	if (!correctness_test(bag)) return false;
+	if (!empty_test(bag)) return false;
 	if (!stress_test(bag, 1000)) return false;
+	if (!empty_test(bag)) return false;
 	if (!correctness_test(bag)) return false;
+	if (!empty_test(bag)) return false;
 
 	Bag_free(bag);
 
