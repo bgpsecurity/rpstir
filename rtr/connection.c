@@ -182,7 +182,8 @@ void * connection_main(void * args_voidp)
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH > MAX_PDU_SIZE); // This should fail.. remove it once I know it fails
 	uint8_t pdu_buffer[MAX_PDU_SIZE];
-	PDU pdu;
+	PDU pdu; // this can have pointers into pdu_buffer
+	PDU * pdu_copy; // this can't
 	size_t length;
 
 	enum cxn_state state = READY;
@@ -260,7 +261,37 @@ void * connection_main(void * args_voidp)
 				case PDU_WARNING:
 					log_msg(LOG_NOTICE, LOG_PREFIX "received a PDU with unsupported feature(s)");
 				case PDU_GOOD:
-					// TODO
+					// TODO: handle this correctly instead of this stub
+					if (state == RESPONDING)
+					{
+						pdu_copy = pdu_deepcopy(&pdu);
+						if (pdu_copy == NULL || !Queue_push(to_process_queue, (void *)pdu_copy))
+						{
+							if (pdu_copy == NULL)
+							{
+								log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a copy of the PDU");
+							}
+							else
+							{
+								pdu_free(pdu_copy);
+								log_msg(LOG_ERR, LOG_PREFIX "can't push a PDU onto the to-process queue");
+							}
+							// TODO: send error
+							// TODO: cleanup
+							return NULL;
+						}
+					}
+					else
+					{
+						if (!add_db_request(&pdu, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
+						{
+							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
+							// TODO: send error
+							// TODO: cleanup
+							return NULL;
+						}
+						state = RESPONDING;
+					}
 				default:
 					log_msg(LOG_ERR, LOG_PREFIX "parse_pdu() returned an unknown value");
 					// TODO: cleanup
