@@ -134,4 +134,16 @@ struct _PDU {
 #define PDU_HEADER_LENGTH (offsetof(PDU, serialNumber))
 
 
+#define PDU_GOOD 0 /* valid PDU */
+#define PDU_TRUNCATED -1 /* PDU doesn't have errors but is truncated */
+#define PDU_WARNING -2 /* PDU has warnings but no errors */
+#define PDU_ERROR -3 /* PDU is invalid */
+/**
+	Attempt to parse as much of buffer as possible into pdu.
+
+	@return one of the above constants, PDU_GOOD, PDU_TRUNCATED, or PDU_ERROR
+*/
+int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu);
+
+
 #endif
