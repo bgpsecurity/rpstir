@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "logutils.h"
@@ -84,6 +85,7 @@ void * connection_control_main(void * args_voidp)
 
 	Bag_iterator connections_it;
 
+	struct timeval timeout;
 	fd_set read_fds;
 	int nfds;
 
@@ -121,7 +123,10 @@ void * connection_control_main(void * args_voidp)
 		}
 		Bag_stop_iteration(connections);
 
-		retval = select(nfds, &read_fds, NULL, NULL, NULL);
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
+
+		retval = select(nfds, &read_fds, NULL, NULL, &timeout);
 
 		if (retval < 0)
 		{
@@ -130,7 +135,6 @@ void * connection_control_main(void * args_voidp)
 		}
 		else if (retval == 0)
 		{
-			log_msg(LOG_ERR, LOG_PREFIX "select() returned even though there was no activity");
 			continue;
 		}
 
