@@ -145,5 +145,11 @@ struct _PDU {
 */
 int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu);
 
+/**
+	@param pdu a parsed and valid PDU
+	@return a deep copy of pdu, or NULL if there isn't enough memory
+*/
+PDU * pdu_deepcopy(const PDU * pdu);
+
 
 #endif

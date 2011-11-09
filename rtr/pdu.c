@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 
 #include "pdu.h"
 
@@ -119,4 +120,52 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 	}
 
 	#undef EXTRACT_FIELD
+}
+
+
+PDU * pdu_deepcopy(const PDU * pdu)
+{
+	PDU * ret = malloc(sizeof(PDU));
+	if (ret == NULL)
+		return NULL;
+
+	memcpy(ret, pdu, sizeof(PDU));
+
+	if (ret->pduType == PDU_ERROR_REPORT)
+	{
+		if (ret->errorData.encapsulatedPDU != NULL)
+		{
+			ret->errorData.encapsulatedPDU = malloc(ret->errorData.encapsulatedPDULength);
+			if (ret->errorData.encapsulatedPDU == NULL)
+			{
+				free((void *)ret);
+				return NULL;
+			}
+
+			if (ret->errorData.encapsulatedPDU->pduType == PDU_ERROR_REPORT)
+			{
+				// This isn't a valid PDU, so it shouldn't have been passed to this function.
+				// Allowing error report PDUs to contain error report PDUs could allow infinite loops.
+				free((void *)ret);
+				return NULL;
+			}
+
+			memcpy(ret->errorData.encapsulatedPDU, pdu->errorData.encapsulatedPDU, ret->errorData.encapsulatedPDULength);
+		}
+
+		if (ret->errorData.errorText != NULL)
+		{
+			ret->errorData.errorText = malloc(ret->errorData.errorTextLength);
+			if (ret->errorData.errorText == NULL)
+			{
+				free((void *)ret->errorData.encapsulatedPDU);
+				free((void *)ret);
+				return NULL;
+			}
+
+			memcpy(ret->errorData.errorText, pdu->errorData.errorText, ret->errorData.errorTextLength);
+		}
+	}
+
+	return ret;
 }
