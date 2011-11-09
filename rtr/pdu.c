@@ -169,3 +169,18 @@ PDU * pdu_deepcopy(const PDU * pdu)
 
 	return ret;
 }
+
+
+void pdu_free(PDU * pdu)
+{
+	if (pdu == NULL)
+		return;
+
+	if (pdu->pduType == PDU_ERROR_REPORT)
+	{
+		free((void *)pdu->errorData.encapsulatedPDU);
+		free((void *)pdu->errorData.errorText);
+	}
+
+	free((void *)pdu);
+}

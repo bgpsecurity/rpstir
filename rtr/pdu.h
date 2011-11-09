@@ -151,5 +151,8 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu);
 */
 PDU * pdu_deepcopy(const PDU * pdu);
 
+/** deep free the pdu */
+void pdu_free(PDU * pdu);
+
 
 #endif
