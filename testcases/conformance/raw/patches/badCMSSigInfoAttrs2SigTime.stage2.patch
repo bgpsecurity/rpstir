@@ -1,11 +1,13 @@
---- badCMSSigInfoAttrs2SigTime.roa.raw.old	2011-05-25 18:03:48.000000000 -0400
-+++ badCMSSigInfoAttrs2SigTime.roa.raw	2011-05-25 18:04:30.000000000 -0400
-@@ -122,6 +122,8 @@
+--- badCMSSigInfoAttrs2SigTime.raw.old	2011-11-09 17:09:08.826610415 -0500
++++ badCMSSigInfoAttrs2SigTime.raw	2011-11-09 17:10:20.959595922 -0500
+@@ -116,6 +116,10 @@
                          seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
                              set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
                                      0x25CF8ED649BF1E425CA765083E0493A7
 +                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
 +                            set utc "110525220348Z"
-                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
++                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
++                            set utc "110525220348Z"
+                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
                          nul 
-                     oct 0x6710736CF55C3E87B060DC40FEB747FB
+                     oct 0x063BBA346AA1C0E4C7543CA43E6A0A49

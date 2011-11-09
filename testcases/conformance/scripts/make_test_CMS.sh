@@ -309,7 +309,7 @@ else
     echo "Successfully created ${PATCHES_DIR}/${child_name}.stage2.patch"
 fi
 
-# Sign using EE private key
+# Sign the potentially modified SignedAttributes area using EE private key
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
 ${CGTOOLS}/sign_cms ${child_name}.roa ${ee_key_path}
 ${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw

@@ -139,20 +139,19 @@ CMS signed objects, generic (using ROAs)
 533 SigInfoAttrsNoMsgDigest  # no message digest
 534 SigInfoAttrs2ContType    # duplicate content type attributes
 535 SigInfoAttrs2MsgDigest   # duplicate digest attributes
-536 SigInfoAttrs2SigTime     # duplicate signng time attributes
+536 SigInfoAttrs2SigTime     # duplicate signing time attributes
 537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes
 538 SigInfoUnSigAttrs        # has unsigned attribute
 539 SigInfoNoSig             # no signature
 540 SigInfo2Sig              # has two signatures
 541 SigInfoNoSigAlg          # has no signature algorithm
-542 SigInfoNoHashAlg         # had no hash algorithm
-                             # NoSignerInfo??
-			     # SigInfoWrongSigAlg??
+542 SigInfoWrongSigAlg       # has wrong signature algorithm
+543 SigInfoNoHashAlg         # had no hash algorithm
 
 EE Certificates (embedded in ROAs)
 
-543 KeyUsage                 * permission to sign certs and CRLs
-544 SIAWrongOID              * improper OID in SIA
+544 KeyUsage                 # permission to sign certs and CRLs
+545 SIAWrongOID              # improper OID in SIA
 
 
 ROAs

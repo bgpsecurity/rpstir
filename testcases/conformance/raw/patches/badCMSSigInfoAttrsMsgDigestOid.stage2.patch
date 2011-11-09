@@ -1,11 +1,11 @@
---- badCMSSigInfoAttrsMsgDigestOid.raw.old	2011-09-22 17:43:15.000000000 -0400
-+++ badCMSSigInfoAttrsMsgDigestOid.raw	2011-09-22 17:43:32.000000000 -0400
-@@ -108,7 +108,7 @@
-                     ctx+0x00
-                         0xAA945D9F85DFDB064E007DD92C25E28E
-                         0xC1FDB3E2
--                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
-+                    seq oid 2.16.840.1.101.3.4.2.3 /* id_sha256 */
-                         nul 
+--- badCMSSigInfoAttrsMsgDigestOid.raw.old	2011-11-09 15:54:53.451049243 -0500
++++ badCMSSigInfoAttrsMsgDigestOid.raw	2011-11-09 15:55:29.117038006 -0500
+@@ -113,7 +113,7 @@
                      ctx+0x20
                          seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+                             set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+-                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
++                        seq oid 1.2.840.113549.1.9.6 /* id_messageDigestAttr */
+                             set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
+                                     0x25CF8ED649BF1E425CA765083E0493A7
+                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */

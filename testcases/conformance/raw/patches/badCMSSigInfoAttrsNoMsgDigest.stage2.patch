@@ -1,5 +1,5 @@
---- badCMSSigInfoAttrsNoMsgDigest.raw.old	2011-09-28 12:14:29.000000000 -0400
-+++ badCMSSigInfoAttrsNoMsgDigest.raw	2011-09-28 12:15:04.000000000 -0400
+--- badCMSSigInfoAttrsNoMsgDigest.raw.old	2011-11-09 16:58:29.698022783 -0500
++++ badCMSSigInfoAttrsNoMsgDigest.raw	2011-11-09 16:58:42.789382931 -0500
 @@ -113,9 +113,6 @@
                      ctx+0x20
                          seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
@@ -7,6 +7,6 @@
 -                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
 -                            set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
 -                                    0x25CF8ED649BF1E425CA765083E0493A7
-                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
                          nul 
-                     oct 0x571AB2EC02872CC1FF35BC301CCFDB57
+                     oct 0x2CC2C8B6DC9AE25B0EE9899D2A108B99
