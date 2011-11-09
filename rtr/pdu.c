@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include "pdu.h"
 
@@ -123,6 +124,74 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 }
 
 
+ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu)
+{
+	if (buffer == NULL)
+		return -1;
+
+	if (pdu == NULL)
+		return 0;
+
+	ssize_t retval;
+
+	size_t offset = 0;
+
+	#define INCR_OFFSET(num_bytes) \
+		do { \
+			if (offset + (num_bytes) > buflen) \
+			{ \
+				return -1; \
+			} \
+			offset += (num_bytes); \
+		} while (false)
+
+	INCR_OFFSET(2); // protocolVersion and pduType
+	memcpy(buffer, (void *)pdu, 2);
+
+	INCR_OFFSET(2); // cacheNonce, reserved, and errorCode
+	*(uint16_t *)(buffer + offset - 2) = htons(pdu->cacheNonce);
+
+	INCR_OFFSET(4); // length
+	*(uint32_t *)(buffer + offset - 4) = htonl(pdu->length);
+
+	assert(offset == PDU_HEADER_LENGTH);
+
+	if (pdu->pduType == PDU_ERROR_REPORT)
+	{
+		INCR_OFFSET(4);
+		*(uint32_t *)(buffer + offset - 4) = htonl(pdu->errorData.encapsulatedPDULength);
+
+		retval = dump_pdu(buffer + offset, buflen - offset, pdu->errorData.encapsulatedPDU);
+		if (retval < 0)
+			return retval;
+		else
+			offset += retval;
+
+		INCR_OFFSET(4);
+		*(uint32_t *)(buffer + offset - 4) = htonl(pdu->errorData.errorTextLength);
+
+		INCR_OFFSET(pdu->errorData.errorTextLength);
+		if (pdu->errorData.errorTextLength > 0)
+			memcpy(buffer + offset - pdu->errorData.errorTextLength, pdu->errorData.errorText, pdu->errorData.errorTextLength);
+	}
+	else
+	{
+		INCR_OFFSET(pdu->length - PDU_HEADER_LENGTH);
+		memcpy(buffer + PDU_HEADER_LENGTH, (void *)pdu + PDU_HEADER_LENGTH, pdu->length - PDU_HEADER_LENGTH);
+
+		if (pdu->pduType == PDU_IPV4_PREFIX || pdu->pduType == PDU_IPV6_PREFIX)
+		{
+			// IP4PrefixData and IP6PrefixData are both in the correct order except for the as_number_t at the end
+			*(uint32_t *)(buffer + offset - 4) = htonl(*(uint32_t *)(buffer + offset - 4));
+		}
+	}
+
+	#undef INCR_OFFSET
+
+	return (ssize_t)offset;
+}
+
+
 PDU * pdu_deepcopy(const PDU * pdu)
 {
 	PDU * ret = malloc(sizeof(PDU));
@@ -171,7 +240,7 @@ PDU * pdu_deepcopy(const PDU * pdu)
 }
 
 
-void pdu_free(PDU * pdu)
+static void _pdu_free_internal(PDU * pdu)
 {
 	if (pdu == NULL)
 		return;
@@ -181,6 +250,27 @@ void pdu_free(PDU * pdu)
 		free((void *)pdu->errorData.encapsulatedPDU);
 		free((void *)pdu->errorData.errorText);
 	}
+}
+
+void pdu_free(PDU * pdu)
+{
+	if (pdu == NULL)
+		return;
+
+	_pdu_free_internal(pdu);
 
 	free((void *)pdu);
+}
+
+void pdu_free_array(PDU * pdus, size_t num_pdus)
+{
+	if (pdus == NULL)
+		return;
+
+	size_t i;
+
+	for (i = 0; i < num_pdus; ++i)
+		_pdu_free_internal(pdus[i]);
+
+	free((void *)pdus);
 }

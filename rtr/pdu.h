@@ -145,6 +145,14 @@ struct _PDU {
 */
 int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu);
 
+
+/**
+	Attempt to dump a valid PDU into a buffer.
+
+	@return Number of bytes written, or -1 if there's an error.
+*/
+ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu);
+
 /**
 	@param pdu a parsed and valid PDU
 	@return a deep copy of pdu, or NULL if there isn't enough memory
@@ -153,6 +161,9 @@ PDU * pdu_deepcopy(const PDU * pdu);
 
 /** deep free the pdu */
 void pdu_free(PDU * pdu);
+
+/** deep free the array of PDUs */
+void pdu_free_array(PDU * pdus, size_t num_pdus);
 
 
 #endif
