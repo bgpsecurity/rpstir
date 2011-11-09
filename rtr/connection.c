@@ -1,3 +1,6 @@
+#include <unistd.h>
+#include <fcntl.h>
+
 #include "logutils.h"
 
 #include "config.h"
@@ -65,6 +68,15 @@ void * connection_main(void * args_voidp)
 	*/
 
 	const struct timespec semaphore_timeout = {CXN_CACHE_STATE_INTERVAL, 0};
+
+	if (fnctl(argsp->socket, F_SETFL, O_NONBLOCK | fnctl(argsp->socket, F_GETFL)) != 0)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't set socket to non-blocking mode");
+		Queue_free(to_process_queue);
+		Queue_free(db_response_queue);
+		free((void *)argsp);
+		return NULL;
+	}
 
 	while (true)
 	{
