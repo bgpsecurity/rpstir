@@ -141,7 +141,7 @@ struct _PDU {
 /**
 	Attempt to parse as much of buffer as possible into pdu.
 
-	@return one of the above constants, PDU_GOOD, PDU_TRUNCATED, or PDU_ERROR
+	@return one of the above constants
 */
 int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu);
 
