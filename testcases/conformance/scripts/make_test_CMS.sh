@@ -215,6 +215,7 @@ then
     ensure_file_exists $PATCHES_DIR/${ee_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage3.patch
     ensure_file_exists ${ee_key_path}
 fi
 
