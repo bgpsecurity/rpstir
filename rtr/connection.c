@@ -25,6 +25,7 @@ Make sure that cleanup cancels any DB requests.
 
 enum cxn_state {READY, RESPONDING};
 
+
 /** Repeatedly read until count is fulfilled, return false if there are errors. */
 static bool read_block(int fd, void * buffer, size_t offset, ssize_t count, PDU * pdu, char errorbuf[ERROR_BUF_SIZE])
 {
@@ -68,6 +69,79 @@ static bool read_block(int fd, void * buffer, size_t offset, ssize_t count, PDU 
 
 	return true;
 }
+
+
+static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t * cxn_semaphore, Queue * db_request_queue, Bag * db_semaphores_all, char errorbuf[ERROR_BUF_SIZE])
+{
+	#define NOT_NULL(var) \
+		do { \
+			if ((var) == NULL) \
+			{ \
+				log_msg(LOG_ERR, LOG_PREFIX "add_db_request called with NULL " #var); \
+				return false; \
+			} \
+		} while (false)
+
+	NOT_NULL(pdu);
+	NOT_NULL(db_response_queue);
+	NOT_NULL(cxn_semaphore);
+	NOT_NULL(db_request_queue);
+	NOT_NULL(db_semaphores_all);
+
+	#undef NOT_NULL
+
+	if (Queue_size(db_response_queue) != 0)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "add_db_request called with non-empty response queue");
+		return false;
+	}
+
+	struct db_request * request = malloc(sizeof(struct db_request));
+	if (request == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "couldn't allocate memory for a new request");
+		return false;
+	}
+
+	// TODO: fill out query correctly
+	(void)pdu;
+	request->query.type = RESET_QUERY;
+
+	request->response_queue = db_response_queue;
+	request->response_semaphore = cxn_semaphore;
+
+	if (!Queue_push(db_request_queue, (void *)request))
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "couldn't add new request to request queue");
+		free((void *)request);
+		return false;
+	}
+
+	Bag_start_iteration(db_semaphores_all);
+	Bag_iterator db_sem_it;
+	db_semaphore_t * db_sem;
+	for (db_sem_it = Bag_begin(db_semaphores_all);
+		db_sem_it != Bag_end(db_semaphores_all);
+		db_sem_it = Bag_iterator_next(db_semaphores_all, db_sem_it))
+	{
+		db_sem = Bag_iterator_get(db_semaphores_all, db_sem_it);
+		if (db_sem == NULL)
+		{
+			log_msg(LOG_ERR, LOG_PREFIX "found NULL db semaphore");
+		}
+		else
+		{
+			if (sem_post(db_sem) != 0)
+			{
+				log_error(errno, errorbuf, LOG_PREFIX "sem_post()");
+			}
+		}
+	}
+	Bag_stop_iteration(db_semaphores_all);
+
+	return true;
+}
+
 
 void * connection_main(void * args_voidp)
 {
