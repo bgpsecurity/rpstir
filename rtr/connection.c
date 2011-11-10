@@ -52,7 +52,7 @@ static bool read_block(int fd, void * buffer, size_t offset, ssize_t count, PDU 
 				return false;
 		}
 
-		retval = read(fd, buffer, (size_t)count);
+		retval = read(fd, buffer + offset, (size_t)count);
 		if (retval < 0)
 		{
 			log_error(errno, errorbuf, "read()");
