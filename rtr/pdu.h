@@ -165,5 +165,12 @@ void pdu_free(PDU * pdu);
 /** deep free the array of PDUs */
 void pdu_free_array(PDU * pdus, size_t num_pdus);
 
+/**
+	Print information from the valid pdu onto one line in buffer.
+	This is primarily useful for debugging.
+*/
+#define PDU_SPRINT_BUFSZ (168 + INET6_ADDRSTRLEN + 1)
+void pdu_sprint(PDU * pdu, char buffer[PDU_SPRINT_BUFSZ]);
+
 
 #endif

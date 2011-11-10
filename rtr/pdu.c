@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <inttypes.h>
 
 #include "pdu.h"
 
@@ -275,4 +277,234 @@ void pdu_free_array(PDU * pdus, size_t num_pdus)
 		_pdu_free_internal(&pdus[i]);
 
 	free((void *)pdus);
+}
+
+
+void pdu_sprint(PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
+{
+	bool truncated = false;
+	int offset = 0;
+
+	#define SNPRINTF(format, ...) \
+		do { \
+			if (offset < PDU_SPRINT_BUFSZ) \
+			{ \
+				offset += snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
+			} \
+			else \
+			{ \
+				truncated = true; \
+			} \
+		} while (false)
+
+	#define SNPRINTF_FLAGS(flags) \
+		do { \
+			SNPRINTF("0x%" PRIx8 " [", (flags)); \
+			if ((flags) & FLAG_WITHDRAW_ANNOUNCE) \
+			{ \
+				SNPRINTF("ANNOUNCE"); \
+			} \
+			else \
+			{ \
+				SNPRINTF("WITHDRAW"); \
+			} \
+			if ((flags) & FLAGS_RESERVED) \
+			{ \
+				SNPRINTF(", <RESERVED>"); \
+			} \
+			SNPRINTF("]"); \
+		} while (false)
+
+	#define SNPRINTF_IP4(ip) \
+		do { \
+			if (offset + INET_ADDRSTRLEN < PDU_SPRINT_BUFSZ) \
+			{ \
+				if (inet_ntop(AF_INET, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
+				{ \
+					SNPRINTF("(ERROR)"); \
+				} \
+				else \
+				{ \
+					while (buffer[offset] != '\0') \
+						++offset; \
+				} \
+			} \
+			else \
+			{ \
+				SNPRINTF("..."); \
+			} \
+		} while (false)
+
+	#define SNPRINTF_IP6(ip) \
+		do { \
+			if (offset + INET6_ADDRSTRLEN < PDU_SPRINT_BUFSZ) \
+			{ \
+				if (inet_ntop(AF_INET6, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
+				{ \
+					SNPRINTF("(ERROR)"); \
+				} \
+				else \
+				{ \
+					while (buffer[offset] != '\0') \
+						++offset; \
+				} \
+			} \
+			else \
+			{ \
+				SNPRINTF("..."); \
+			} \
+		} while (false)
+
+	if (pdu == NULL)
+	{
+		SNPRINTF("(NULL)");
+		return;
+	}
+
+	SNPRINTF("version %" PRIu8, pdu->protocolVersion);
+
+	switch (pdu->pduType)
+	{
+		case PDU_SERIAL_NOTIFY:
+			SNPRINTF(" Serial Notify");
+			break;
+		case PDU_SERIAL_QUERY:
+			SNPRINTF(" Serial Query");
+			break;
+		case PDU_RESET_QUERY:
+			SNPRINTF(" Reset Query");
+			break;
+		case PDU_CACHE_RESPONSE:
+			SNPRINTF(" Cache Response");
+			break;
+		case PDU_IPV4_PREFIX:
+			SNPRINTF(" IPv4 Prefix");
+			break;
+		case PDU_IPV6_PREFIX:
+			SNPRINTF(" IPv6 Prefix");
+			break;
+		case PDU_END_OF_DATA:
+			SNPRINTF(" End of Data");
+			break;
+		case PDU_CACHE_RESET:
+			SNPRINTF(" Cache Reset");
+			break;
+		case PDU_ERROR_REPORT:
+			SNPRINTF(" Error Report");
+			break;
+		default:
+			SNPRINTF(" unknown type (%" PRIu8 ")", pdu->pduType);
+			break;
+	}
+
+	switch (pdu->pduType)
+	{
+		case PDU_SERIAL_NOTIFY:
+		case PDU_SERIAL_QUERY:
+		case PDU_CACHE_RESPONSE:
+		case PDU_END_OF_DATA:
+			SNPRINTF(", cache nonce = %" PRIu16, pdu->cacheNonce);
+			break;
+		case PDU_RESET_QUERY:
+		case PDU_IPV4_PREFIX:
+		case PDU_IPV6_PREFIX:
+		case PDU_CACHE_RESET:
+			// don't bother printing the reserved field
+			break;
+		case PDU_ERROR_REPORT:
+			switch (pdu->errorCode)
+			{
+				case ERR_CORRUPT_DATA:
+					SNPRINTF(" (Corrupt Data)");
+					break;
+				case ERR_INTERNAL_ERROR:
+					SNPRINTF(" (Internal Error)");
+					break;
+				case ERR_NO_DATA:
+					SNPRINTF(" (No Data)");
+					break;
+				case ERR_INVALID_REQUEST:
+					SNPRINTF(" (Invalid Request)");
+					break;
+				case ERR_UNSUPPORTED_VERSION:
+					SNPRINTF(" (Unsupported Version)");
+					break;
+				case ERR_UNSUPPORTED_TYPE:
+					SNPRINTF(" (Unsupported Type)");
+					break;
+				case ERR_UNKNOWN_WITHDRAW:
+					SNPRINTF(" (Unknown Withdraw)");
+					break;
+				case ERR_DUPLICATE_ANNOUNCE:
+					SNPRINTF(" (Duplicate Announce)");
+					break;
+				default:
+					SNPRINTF(" (unknown error code %" PRIu16 ")", pdu->errorCode);
+					break;
+			}
+			break;
+		default:
+			break;
+	}
+
+	SNPRINTF(", length = %" PRIu32, pdu->length);
+
+	switch (pdu->pduType)
+	{
+		case PDU_SERIAL_NOTIFY:
+		case PDU_SERIAL_QUERY:
+		case PDU_END_OF_DATA:
+			SNPRINTF(", serial number = %" PRIu32, pdu->serialNumber);
+			break;
+		case PDU_RESET_QUERY:
+		case PDU_CACHE_RESPONSE:
+		case PDU_CACHE_RESET:
+			break;
+		case PDU_IPV4_PREFIX:
+			SNPRINTF(", flags = ");
+			SNPRINTF_FLAGS(pdu->ip4PrefixData.flags);
+			SNPRINTF(", prefix length = %" PRIu8, pdu->ip4PrefixData.prefixLength);
+			SNPRINTF(", max length = %" PRIu8, pdu->ip4PrefixData.maxLength);
+			SNPRINTF(", prefix = ");
+			SNPRINTF_IP4(pdu->ip4PrefixData.prefix4);
+			SNPRINTF(", AS number = %" PRIu32, pdu->ip4PrefixData.asNumber);
+			break;
+		case PDU_IPV6_PREFIX:
+			SNPRINTF(", flags = ");
+			SNPRINTF_FLAGS(pdu->ip6PrefixData.flags);
+			SNPRINTF(", prefix length = %" PRIu8, pdu->ip6PrefixData.prefixLength);
+			SNPRINTF(", max length = %" PRIu8, pdu->ip6PrefixData.maxLength);
+			SNPRINTF(", prefix = ");
+			SNPRINTF_IP6(pdu->ip6PrefixData.prefix6);
+			SNPRINTF(", AS number = %" PRIu32, pdu->ip6PrefixData.asNumber);
+			break;
+		case PDU_ERROR_REPORT:
+			// TODO
+			break;
+		default:
+			break;
+	}
+
+	#undef SNPRINTF_IP6
+	#undef SNPRINTF_IP4
+	#undef SNPRINTF_FLAGS
+	#undef SNPRINTF
+
+	#define TRUNCATED_STR " ..."
+	#define TRUNCATED_STRLEN 4
+
+	if (truncated)
+	{
+		if (offset + TRUNCATED_STRLEN + 1 < PDU_SPRINT_BUFSZ)
+		{
+			strncpy(buffer + offset, TRUNCATED_STR, TRUNCATED_STRLEN + 1);
+		}
+		else
+		{
+			strncpy(buffer + PDU_SPRINT_BUFSZ - TRUNCATED_STRLEN - 1, TRUNCATED_STR, TRUNCATED_STRLEN + 1);
+		}
+	}
+
+	#undef TRUNCATED_STRLEN
+	#undef TRUNCATED_STR
 }
