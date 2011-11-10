@@ -170,7 +170,7 @@ void pdu_free_array(PDU * pdus, size_t num_pdus);
 	This is primarily useful for debugging.
 */
 #define PDU_SPRINT_BUFSZ (168 + INET6_ADDRSTRLEN + 1)
-void pdu_sprint(PDU * pdu, char buffer[PDU_SPRINT_BUFSZ]);
+void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ]);
 
 
 #endif

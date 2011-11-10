@@ -280,7 +280,7 @@ void pdu_free_array(PDU * pdus, size_t num_pdus)
 }
 
 
-void pdu_sprint(PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
+void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
 {
 	bool truncated = false;
 	int offset = 0;
