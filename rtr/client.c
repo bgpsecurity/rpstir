@@ -172,6 +172,17 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 				return false;
 		}
 
+		if (offset == PDU_HEADER_LENGTH)
+		{
+			if (pdu->length > MAX_PDU_SIZE)
+			{
+				fprintf(stderr, "received %" PRIu32 "-byte PDU (maximum size is %d)\n", pdu->length, MAX_PDU_SIZE);
+				return false;
+			}
+
+			count = pdu->length - offset;
+		}
+
 		retval = read(fd, buffer + offset, (size_t)count);
 		if (retval < 0)
 		{
@@ -186,17 +197,6 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 		{
 			count -= retval;
 			offset += retval;
-		}
-
-		if (offset == PDU_HEADER_LENGTH)
-		{
-			if (pdu->length > MAX_PDU_SIZE)
-			{
-				fprintf(stderr, "received PDU that's longer than the maximum size of %d\n", MAX_PDU_SIZE);
-				return false;
-			}
-
-			count = pdu->length - offset;
 		}
 	}
 
