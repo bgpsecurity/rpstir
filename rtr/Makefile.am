@@ -25,11 +25,15 @@ AM_CFLAGS = -g -Wall -Wextra
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
 	-I../cg/casn -I../roa-lib -I../utils
 
+noinst_LIBRARIES = libpdu.a
 
-bin_PROGRAMS = doUpdate rtrd
+bin_PROGRAMS = doUpdate rtrd rtr-client
 
 EXTRA_DIST = \
 	cleanServerData
+
+libpdu_a_SOURCES = pdu.c pdu.h
+libpdu_a_CFLAGS = $(AM_CFLAGS) -Werror
 
 doUpdate_SOURCES = doUpdate.c
 doUpdate_LDFLAGS = $(LIBS)
@@ -43,7 +47,10 @@ rtrd_SOURCES = \
 	connection.c connection.h \
 	connection_control.c connection_control.h \
 	db.c db.h \
-	main.c \
-	pdu.c pdu.h
-rtrd_LDADD = ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
+	main.c
+rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
 rtrd_CFLAGS = $(AM_CFLAGS) -Werror
+
+rtr_client_SOURCES = client.c
+rtr_client_LDADD = libpdu.a
+rtr_client_CFLAGS = $(AM_CFLAGS) -Werror
