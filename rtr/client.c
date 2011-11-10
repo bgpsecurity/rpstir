@@ -220,7 +220,7 @@ static int do_recv()
 	while (read_pdu(STDIN_FILENO, buffer, &pdu))
 	{
 		pdu_sprint(&pdu, sprint_buffer);
-		fprintf(stderr, RECV_PREFIX "%s\n", sprint_buffer);
+		printf(RECV_PREFIX "%s\n", sprint_buffer);
 	}
 
 	return EXIT_SUCCESS;
