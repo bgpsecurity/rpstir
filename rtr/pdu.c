@@ -45,6 +45,19 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			} \
 		} while (false)
 
+	#define EXTRACT_BIN_FIELD(field) \
+		do { \
+			if (buflen >= offset + sizeof(field)) \
+			{ \
+				memcpy(&field, buffer + offset, sizeof(field)); \
+				offset += sizeof(field); \
+			} \
+			else \
+			{ \
+				return PDU_TRUNCATED; \
+			} \
+		} while (false)
+
 	EXTRACT_FIELD(pdu->protocolVersion);
 	if (pdu->protocolVersion != PROTOCOL_VERSION)
 	{
@@ -109,8 +122,77 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			}
 			return ret;
 		case PDU_IPV4_PREFIX:
+			if (pdu->length != PDU_HEADER_LENGTH + sizeof(IP4PrefixData))
+			{
+				return PDU_ERROR;
+			}
+
+			EXTRACT_FIELD(pdu->ip4PrefixData.flags);
+			if (pdu->ip4PrefixData.flags & FLAGS_RESERVED)
+			{
+				ret = PDU_WARNING;
+			}
+
+			EXTRACT_FIELD(pdu->ip4PrefixData.prefixLength);
+			if (pdu->ip4PrefixData.prefixLength > 32)
+			{
+				ret = PDU_WARNING;
+			}
+
+			EXTRACT_FIELD(pdu->ip4PrefixData.maxLength);
+			if (pdu->ip4PrefixData.maxLength > 32)
+			{
+				ret = PDU_WARNING;
+			}
+			// TODO: check if max length >= prefix length?
+
+			EXTRACT_FIELD(pdu->ip4PrefixData.reserved);
+			if (pdu->ip4PrefixData.reserved != 0)
+			{
+				ret = PDU_WARNING;
+			}
+
+			EXTRACT_BIN_FIELD(pdu->ip4PrefixData.prefix4);
+
+			EXTRACT_FIELD(pdu->ip4PrefixData.asNumber);
+
+			return ret;
 		case PDU_IPV6_PREFIX:
-			return PDU_ERROR; // TODO: these obviously aren't always errors
+			if (pdu->length != PDU_HEADER_LENGTH + sizeof(IP6PrefixData))
+			{
+				return PDU_ERROR;
+			}
+
+			EXTRACT_FIELD(pdu->ip6PrefixData.flags);
+			if (pdu->ip6PrefixData.flags & FLAGS_RESERVED)
+			{
+				ret = PDU_WARNING;
+			}
+
+			EXTRACT_FIELD(pdu->ip6PrefixData.prefixLength);
+			if (pdu->ip6PrefixData.prefixLength > 128)
+			{
+				ret = PDU_WARNING;
+			}
+
+			EXTRACT_FIELD(pdu->ip6PrefixData.maxLength);
+			if (pdu->ip6PrefixData.maxLength > 128)
+			{
+				ret = PDU_WARNING;
+			}
+			// TODO: check if max length >= prefix length?
+
+			EXTRACT_FIELD(pdu->ip6PrefixData.reserved);
+			if (pdu->ip6PrefixData.reserved != 0)
+			{
+				ret = PDU_WARNING;
+			}
+
+			EXTRACT_BIN_FIELD(pdu->ip6PrefixData.prefix6);
+
+			EXTRACT_FIELD(pdu->ip6PrefixData.asNumber);
+
+			return ret;
 		case PDU_ERROR_REPORT:
 			if (pdu->length < PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH)
 			{
@@ -149,6 +231,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			return PDU_ERROR;
 	}
 
+	#undef EXTRACT_BIN_FIELD
 	#undef EXTRACT_FIELD
 }
 
