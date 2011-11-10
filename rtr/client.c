@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -8,10 +8,13 @@
 #include "pdu.h"
 
 
+#define DELIM " \t\n\r"
+
 #define SEND_PROMPT "> "
 #define RECV_PREFIX "< "
 
 #define MAX_PDU_SIZE 65536
+#define LINEBUF_SIZE 128
 
 
 static void do_help(const char * argv0)
@@ -29,9 +32,117 @@ static void do_help(const char * argv0)
 	fprintf(stderr, "    error <code>\n");
 }
 
+
+static bool send_pdu(const PDU * pdu, uint8_t buffer[MAX_PDU_SIZE])
+{
+	ssize_t length = dump_pdu(buffer, MAX_PDU_SIZE, pdu);
+
+	if (length < 0)
+	{
+		fprintf(stderr, "error in pdu to send");
+		return false;
+	}
+
+	ssize_t retval;
+	ssize_t offset = 0;
+
+	while (offset < length)
+	{
+		retval = write(STDOUT_FILENO, buffer + offset, (size_t)(length - offset));
+		if (retval < 0)
+		{
+			perror("write()");
+			return false;
+		}
+
+		offset += retval;
+	}
+
+	return true;
+}
+
 static int do_send()
 {
-	// TODO
+	char linebuf[LINEBUF_SIZE];
+	char * tok;
+
+	PDU pdu;
+	uint8_t pdu_buffer[MAX_PDU_SIZE];
+
+	pdu.protocolVersion = PROTOCOL_VERSION;
+
+	while (true)
+	{
+		fprintf(stderr, "\n%s", SEND_PROMPT);
+
+		if (fgets(linebuf, LINEBUF_SIZE, stdin) == NULL)
+		{
+			return EXIT_FAILURE;
+		}
+
+		tok = strtok(linebuf, DELIM);
+
+		if (tok == NULL)
+		{
+			continue;
+		}
+		else if (strcmp(tok, "serial") == 0)
+		{
+			tok = strtok(NULL, DELIM);
+			if (tok == NULL || sscanf(tok, "%" SCNu16, &pdu.cacheNonce) != 1)
+			{
+				fprintf(stderr, "usage: serial <nonce> <serial>\n");
+				continue;
+			}
+
+			tok = strtok(NULL, DELIM);
+			if (tok == NULL || sscanf(tok, "%" SCNu32, &pdu.serialNumber) != 1)
+			{
+				fprintf(stderr, "usage: serial <nonce> <serial>\n");
+				continue;
+			}
+
+			pdu.pduType = PDU_SERIAL_QUERY;
+			pdu.length = PDU_HEADER_LENGTH + sizeof(pdu.serialNumber);
+
+			if (!send_pdu(&pdu, pdu_buffer))
+				return EXIT_FAILURE;
+		}
+		else if (strcmp(tok, "reset") == 0)
+		{
+			pdu.pduType = PDU_RESET_QUERY;
+			pdu.reserved = 0;
+			pdu.length = PDU_HEADER_LENGTH;
+
+			if (!send_pdu(&pdu, pdu_buffer))
+				return EXIT_FAILURE;
+		}
+		else if (strcmp(tok, "error") == 0)
+		{
+			tok = strtok(NULL, DELIM);
+			if (tok == NULL || sscanf(tok, "%" SCNu16, &pdu.errorCode) != 1)
+			{
+				fprintf(stderr, "usage: error <code>\n");
+				continue;
+			}
+
+			pdu.pduType = PDU_ERROR_REPORT;
+			pdu.length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH;
+			pdu.errorData.encapsulatedPDULength = 0;
+			pdu.errorData.encapsulatedPDU = NULL;
+			pdu.errorData.errorTextLength = 0;
+			pdu.errorData.errorText = NULL;
+
+			if (!send_pdu(&pdu, pdu_buffer))
+				return EXIT_FAILURE;
+		}
+		else
+		{
+			fprintf(stderr, "invalid command: %s\n", tok);
+			continue;
+		}
+	}
+
 	return EXIT_FAILURE;
 }
 
