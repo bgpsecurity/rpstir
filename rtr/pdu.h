@@ -104,7 +104,7 @@ typedef struct _IP6PrefixData {
  *****/
 typedef struct _ErrorData {
 	uint32_t encapsulatedPDULength;
-	PDU *encapsulatedPDU;
+	uint8_t *encapsulatedPDU;
 	uint32_t errorTextLength;
 	uint8_t *errorText;
 } ErrorData;
@@ -141,9 +141,12 @@ struct _PDU {
 /**
 	Attempt to parse as much of buffer as possible into pdu.
 
+	NOTE: pdu may contain pointers into buffer after parsing.
+	Use pdu_deepcopy to get a copy that isn't tied to buffer.
+
 	@return one of the above constants
 */
-int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu);
+int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu);
 
 
 /**

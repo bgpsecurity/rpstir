@@ -24,22 +24,20 @@ static uint_fast32_t extract_uint(const uint8_t * buffer, size_t length)
 	return ret;
 }
 
-int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
+int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 {
 	int ret = PDU_GOOD;
+	size_t offset = 0;
 
 	if (buffer == NULL || pdu == NULL)
 		return PDU_ERROR;
 
-	#define EXTRACT_FIELD(container_type, container, container_offset, field) \
+	#define EXTRACT_FIELD(field) \
 		do { \
-			if (buflen >= container_offset + \
-				offsetof(container_type, field) + \
-				sizeof(container->field) ) \
+			if (buflen >= offset + sizeof(field)) \
 			{ \
-				container->field = extract_uint( \
-					buffer + container_offset + offsetof(container_type, field), \
-					sizeof(container->field)); \
+				field = extract_uint(buffer + offset, sizeof(field)); \
+				offset += sizeof(field); \
 			} \
 			else \
 			{ \
@@ -47,33 +45,33 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 			} \
 		} while (false)
 
-	EXTRACT_FIELD(PDU, pdu, 0, protocolVersion);
+	EXTRACT_FIELD(pdu->protocolVersion);
 	if (pdu->protocolVersion != PROTOCOL_VERSION)
 	{
 		return PDU_ERROR;
 	}
 
-	EXTRACT_FIELD(PDU, pdu, 0, pduType);
+	EXTRACT_FIELD(pdu->pduType);
 	switch (pdu->pduType)
 	{
 		case PDU_SERIAL_NOTIFY:
 		case PDU_SERIAL_QUERY:
 		case PDU_CACHE_RESPONSE:
 		case PDU_END_OF_DATA:
-			EXTRACT_FIELD(PDU, pdu, 0, cacheNonce);
+			EXTRACT_FIELD(pdu->cacheNonce);
 			break;
 		case PDU_RESET_QUERY:
 		case PDU_IPV4_PREFIX:
 		case PDU_IPV6_PREFIX:
 		case PDU_CACHE_RESET:
-			EXTRACT_FIELD(PDU, pdu, 0, reserved);
+			EXTRACT_FIELD(pdu->reserved);
 			if (pdu->reserved != 0)
 			{
 				ret = PDU_WARNING;
 			}
 			break;
 		case PDU_ERROR_REPORT:
-			EXTRACT_FIELD(PDU, pdu, 0, errorCode);
+			EXTRACT_FIELD(pdu->errorCode);
 			if (pdu->errorCode != ERR_CORRUPT_DATA &&
 				pdu->errorCode != ERR_INTERNAL_ERROR &&
 				pdu->errorCode != ERR_NO_DATA &&
@@ -90,7 +88,7 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 			return PDU_ERROR;
 	}
 
-	EXTRACT_FIELD(PDU, pdu, 0, length);
+	EXTRACT_FIELD(pdu->length);
 	switch (pdu->pduType)
 	{
 		case PDU_SERIAL_NOTIFY:
@@ -100,7 +98,7 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 			{
 				return PDU_ERROR;
 			}
-			EXTRACT_FIELD(PDU, pdu, 0, serialNumber);
+			EXTRACT_FIELD(pdu->serialNumber);
 			return ret;
 		case PDU_RESET_QUERY:
 		case PDU_CACHE_RESPONSE:
@@ -118,7 +116,34 @@ int parse_pdu(const uint8_t * buffer, size_t buflen, PDU * pdu)
 			{
 				return PDU_ERROR;
 			}
-			return PDU_ERROR; // TODO: these obviously aren't always errors
+
+			EXTRACT_FIELD(pdu->errorData.encapsulatedPDULength);
+			if (pdu->length < PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + pdu->errorData.encapsulatedPDULength)
+			{
+				return PDU_ERROR;
+			}
+
+			if (buflen < offset + pdu->errorData.encapsulatedPDULength)
+			{
+				return PDU_TRUNCATED;
+			}
+			pdu->errorData.encapsulatedPDU = buffer + offset;
+			offset += pdu->errorData.encapsulatedPDULength;
+
+			EXTRACT_FIELD(pdu->errorData.errorTextLength);
+			if (pdu->length != PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + pdu->errorData.encapsulatedPDULength + pdu->errorData.errorTextLength)
+			{
+				return PDU_ERROR;
+			}
+
+			if (buflen < offset + pdu->errorData.errorTextLength)
+			{
+				return PDU_TRUNCATED;
+			}
+			pdu->errorData.errorText = buffer + offset;
+			offset += pdu->errorData.errorTextLength;
+
+			return ret;
 		default:
 			// this really shouldn't happen...
 			return PDU_ERROR;
@@ -135,8 +160,6 @@ ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu)
 
 	if (pdu == NULL)
 		return 0;
-
-	ssize_t retval;
 
 	size_t offset = 0;
 
@@ -165,11 +188,10 @@ ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu)
 		INCR_OFFSET(4);
 		*(uint32_t *)(buffer + offset - 4) = htonl(pdu->errorData.encapsulatedPDULength);
 
-		retval = dump_pdu(buffer + offset, buflen - offset, pdu->errorData.encapsulatedPDU);
-		if (retval < 0)
-			return retval;
-		else
-			offset += retval;
+		INCR_OFFSET(pdu->errorData.encapsulatedPDULength);
+		memcpy(buffer + offset - pdu->errorData.encapsulatedPDULength,
+			pdu->errorData.encapsulatedPDU,
+			pdu->errorData.encapsulatedPDULength);
 
 		INCR_OFFSET(4);
 		*(uint32_t *)(buffer + offset - 4) = htonl(pdu->errorData.errorTextLength);
@@ -211,14 +233,6 @@ PDU * pdu_deepcopy(const PDU * pdu)
 			ret->errorData.encapsulatedPDU = malloc(ret->errorData.encapsulatedPDULength);
 			if (ret->errorData.encapsulatedPDU == NULL)
 			{
-				free((void *)ret);
-				return NULL;
-			}
-
-			if (ret->errorData.encapsulatedPDU->pduType == PDU_ERROR_REPORT)
-			{
-				// This isn't a valid PDU, so it shouldn't have been passed to this function.
-				// Allowing error report PDUs to contain error report PDUs could allow infinite loops.
 				free((void *)ret);
 				return NULL;
 			}
