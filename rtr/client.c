@@ -190,7 +190,14 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 		}
 		else if (retval == 0)
 		{
-			fprintf(stderr, "remote side closed connection in the middle of sending a PDU\n");
+			if (offset == 0)
+			{
+				fprintf(stderr, "remote side closed connection\n");
+			}
+			else
+			{
+				fprintf(stderr, "remote side closed connection in the middle of sending a PDU\n");
+			}
 			return false;
 		}
 		else
