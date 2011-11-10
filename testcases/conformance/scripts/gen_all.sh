@@ -39,3 +39,4 @@ cp raw/*.cer output/
 cp -r raw/root output/
 find output -name '*.ee.cer' -delete
 find output -name '*.mft.cer' -delete
+find output -name '.gitignore' -delete
