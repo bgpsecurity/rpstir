@@ -16,7 +16,6 @@ struct db_query {
 	enum { SERIAL_QUERY, RESET_QUERY } type;
 	union {
 		struct {
-			cache_nonce_t nonce;
 			serial_number_t serial;
 		} serial_query;
 		struct {

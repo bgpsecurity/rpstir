@@ -141,9 +141,20 @@ static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t
 		return false;
 	}
 
-	// TODO: fill out query correctly
-	(void)pdu;
-	request->query.type = RESET_QUERY;
+	switch (pdu->pduType)
+	{
+		case PDU_SERIAL_QUERY:
+			request->query.type = SERIAL_QUERY;
+			request->query.serial_query.serial = pdu->serialNumber;
+			break;
+		case PDU_RESET_QUERY:
+			request->query.type = RESET_QUERY;
+			break;
+		default:
+			log_msg(LOG_ERR, LOG_PREFIX "add_db_request() called with a non-query PDU");
+			free((void *)request);
+			return false;
+	}
 
 	request->response_queue = db_response_queue;
 	request->response_semaphore = cxn_semaphore;
