@@ -333,6 +333,7 @@ void * connection_main(void * args_voidp)
 						}
 						state = RESPONDING;
 					}
+					break;
 				default:
 					log_msg(LOG_ERR, LOG_PREFIX "parse_pdu() returned an unknown value");
 					// TODO: cleanup
