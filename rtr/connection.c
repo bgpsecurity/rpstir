@@ -109,7 +109,7 @@ static bool send_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], const PDU * pdu, char
 }
 
 
-static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t * cxn_semaphore, Queue * db_request_queue, Bag * db_semaphores_all, char errorbuf[ERROR_BUF_SIZE])
+static bool add_db_request(struct db_request * request, PDU * pdu, Queue * db_response_queue, cxn_semaphore_t * cxn_semaphore, Queue * db_request_queue, Bag * db_semaphores_all, char errorbuf[ERROR_BUF_SIZE])
 {
 	#define NOT_NULL(var) \
 		do { \
@@ -120,6 +120,7 @@ static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t
 			} \
 		} while (false)
 
+	NOT_NULL(request);
 	NOT_NULL(pdu);
 	NOT_NULL(db_response_queue);
 	NOT_NULL(cxn_semaphore);
@@ -134,13 +135,6 @@ static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t
 		return false;
 	}
 
-	struct db_request * request = malloc(sizeof(struct db_request));
-	if (request == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "couldn't allocate memory for a new request");
-		return false;
-	}
-
 	switch (pdu->pduType)
 	{
 		case PDU_SERIAL_QUERY:
@@ -152,17 +146,16 @@ static bool add_db_request(PDU * pdu, Queue * db_response_queue, cxn_semaphore_t
 			break;
 		default:
 			log_msg(LOG_ERR, LOG_PREFIX "add_db_request() called with a non-query PDU");
-			free((void *)request);
 			return false;
 	}
 
 	request->response_queue = db_response_queue;
 	request->response_semaphore = cxn_semaphore;
+	request->cancel_request = false;
 
 	if (!Queue_push(db_request_queue, (void *)request))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "couldn't add new request to request queue");
-		free((void *)request);
 		return false;
 	}
 
@@ -237,6 +230,9 @@ void * connection_main(void * args_voidp)
 	size_t length;
 
 	struct db_response * response;
+
+	// There can only be one outstanding request at a time, so this is it. No malloc() or free().
+	struct db_request request;
 
 	enum cxn_state state = READY;
 
@@ -335,7 +331,7 @@ void * connection_main(void * args_voidp)
 					}
 					else
 					{
-						if (!add_db_request(&pdu, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
+						if (!add_db_request(&request, &pdu, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
 						{
 							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
 							// TODO: send error
@@ -397,7 +393,7 @@ void * connection_main(void * args_voidp)
 					while (state == READY && Queue_trypop(to_process_queue, (void **)&pdup))
 					{
 						// TODO: handle this for real instead of this stub
-						if (!add_db_request(pdup, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
+						if (!add_db_request(&request, pdup, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
 						{
 							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
 							// TODO: send error
