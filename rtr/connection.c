@@ -26,17 +26,82 @@ Make sure that cleanup ensures no other threads (e.g. db threads) have access to
 Make sure that cleanup cancels any DB requests.
 */
 
-enum cxn_state {READY, RESPONDING};
+struct run_state {
+	int fd;
+	cxn_semaphore_t * semaphore;
+	Queue * db_request_queue;
+	Bag * db_semaphores_all;
+	struct global_cache_state * global_cache_state;
+
+	enum {READY, RESPONDING} state;
+
+	char errorbuf[ERROR_BUF_SIZE];
+
+	Queue * db_response_queue;
+	Queue * to_process_queue;
+
+	uint8_t pdu_buffer[MAX_PDU_SIZE];
+	size_t pdu_buffer_length;
+
+	PDU pdu; // this can have pointers into pdu_buffer
+	PDU * pdup; // this can't
+
+	struct db_response * response;
+
+	// There can only be one outstanding request at a time, so this is it. No malloc() or free().
+	struct db_request request;
+};
+
+static const struct timespec semaphore_timeout = {CXN_CACHE_STATE_INTERVAL, 0};
 
 
-/** Repeatedly read until count is fulfilled, return false if there are errors. */
-static bool read_block(int fd, void * buffer, size_t offset, ssize_t count, PDU * pdu, char errorbuf[ERROR_BUF_SIZE])
+static void initialize_run_state(struct run_state * run_state, void * args_voidp)
+{
+	struct connection_main_args * argsp = (struct connection_main_args *)args_voidp;
+
+	if (argsp == NULL ||
+		argsp->semaphore == NULL ||
+		argsp->db_request_queue == NULL ||
+		argsp->db_semaphores_all == NULL ||
+		argsp->global_cache_state == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "got NULL argument");
+		free(args_voidp);
+		pthread_exit(NULL);
+	}
+
+	run_state->fd = argsp->fd;
+	run_state->semaphore = argsp->semaphore;
+	run_state->db_request_queue = argsp->db_request_queue;
+	run_state->db_semaphores_all = argsp->db_semaphores_all;
+	run_state->global_cache_state = argsp->global_cache_state;
+
+	free(args_voidp);
+	args_voidp = NULL;
+
+	run_state->state = READY;
+
+	run_state->db_response_queue = NULL;
+	run_state->to_process_queue = NULL;
+
+	run_state->pdu_buffer_length = 0;
+
+	run_state->pdup = NULL;
+
+	run_state->response = NULL;
+
+	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
+}
+
+
+/** Repeatedly read into run_state->pdu_buffer until count is fulfilled, return false if there are errors. */
+static bool read_block(struct run_state * run_state, size_t offset, ssize_t count)
 {
 	ssize_t retval;
 
 	while (count > 0)
 	{
-		switch (parse_pdu(buffer, offset, pdu))
+		switch (parse_pdu(run_state->pdu_buffer, offset, &run_state->pdu))
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
@@ -53,10 +118,10 @@ static bool read_block(int fd, void * buffer, size_t offset, ssize_t count, PDU 
 				return false;
 		}
 
-		retval = read(fd, buffer + offset, (size_t)count);
+		retval = read(run_state->fd, run_state->pdu_buffer + offset, (size_t)count);
 		if (retval < 0)
 		{
-			log_error(errno, errorbuf, "read()");
+			log_error(errno, run_state->errorbuf, "read()");
 		}
 		else if (retval == 0)
 		{
@@ -74,7 +139,7 @@ static bool read_block(int fd, void * buffer, size_t offset, ssize_t count, PDU 
 }
 
 /** Send a PDU, return false if there are errors. */
-static bool send_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], const PDU * pdu, char errorbuf[ERROR_BUF_SIZE])
+static bool send_pdu(struct run_state * run_state, const PDU * pdu)
 {
 	ssize_t retval;
 	ssize_t offset = 0;
@@ -86,7 +151,7 @@ static bool send_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], const PDU * pdu, char
 		return false;
 	}
 
-	count = dump_pdu(buffer, MAX_PDU_SIZE, pdu);
+	count = dump_pdu(run_state->pdu_buffer, MAX_PDU_SIZE, pdu);
 	if (count < 0)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "dump_pdu failed");
@@ -95,10 +160,10 @@ static bool send_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], const PDU * pdu, char
 
 	while (count > 0)
 	{
-		retval = write(fd, buffer + offset, (size_t)count);
+		retval = write(run_state->fd, run_state->pdu_buffer + offset, (size_t)count);
 		if (retval < 0)
 		{
-			log_error(errno, errorbuf, LOG_PREFIX "write()");
+			log_error(errno, run_state->errorbuf, LOG_PREFIX "write()");
 			return false;
 		}
 
@@ -110,27 +175,9 @@ static bool send_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], const PDU * pdu, char
 }
 
 
-static bool add_db_request(struct db_request * request, PDU * pdu, Queue * db_response_queue, cxn_semaphore_t * cxn_semaphore, Queue * db_request_queue, Bag * db_semaphores_all, char errorbuf[ERROR_BUF_SIZE])
+static bool add_db_request(struct run_state * run_state, PDU * pdu)
 {
-	#define NOT_NULL(var) \
-		do { \
-			if ((var) == NULL) \
-			{ \
-				log_msg(LOG_ERR, LOG_PREFIX "add_db_request called with NULL " #var); \
-				return false; \
-			} \
-		} while (false)
-
-	NOT_NULL(request);
-	NOT_NULL(pdu);
-	NOT_NULL(db_response_queue);
-	NOT_NULL(cxn_semaphore);
-	NOT_NULL(db_request_queue);
-	NOT_NULL(db_semaphores_all);
-
-	#undef NOT_NULL
-
-	if (Queue_size(db_response_queue) != 0)
+	if (Queue_size(run_state->db_response_queue) != 0)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "add_db_request called with non-empty response queue");
 		return false;
@@ -139,35 +186,35 @@ static bool add_db_request(struct db_request * request, PDU * pdu, Queue * db_re
 	switch (pdu->pduType)
 	{
 		case PDU_SERIAL_QUERY:
-			request->query.type = SERIAL_QUERY;
-			request->query.serial_query.serial = pdu->serialNumber;
+			run_state->request.query.type = SERIAL_QUERY;
+			run_state->request.query.serial_query.serial = pdu->serialNumber;
 			break;
 		case PDU_RESET_QUERY:
-			request->query.type = RESET_QUERY;
+			run_state->request.query.type = RESET_QUERY;
 			break;
 		default:
 			log_msg(LOG_ERR, LOG_PREFIX "add_db_request() called with a non-query PDU");
 			return false;
 	}
 
-	request->response_queue = db_response_queue;
-	request->response_semaphore = cxn_semaphore;
-	request->cancel_request = false;
+	run_state->request.response_queue = db_response_queue;
+	run_state->request.response_semaphore = cxn_semaphore;
+	run_state->request.cancel_request = false;
 
-	if (!Queue_push(db_request_queue, (void *)request))
+	if (!Queue_push(run_state->db_request_queue, (void *)&run_state->request))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "couldn't add new request to request queue");
 		return false;
 	}
 
-	Bag_start_iteration(db_semaphores_all);
+	Bag_start_iteration(run_state->db_semaphores_all);
 	Bag_iterator db_sem_it;
 	db_semaphore_t * db_sem;
-	for (db_sem_it = Bag_begin(db_semaphores_all);
-		db_sem_it != Bag_end(db_semaphores_all);
-		db_sem_it = Bag_iterator_next(db_semaphores_all, db_sem_it))
+	for (db_sem_it = Bag_begin(run_state->db_semaphores_all);
+		db_sem_it != Bag_end(run_state->db_semaphores_all);
+		db_sem_it = Bag_iterator_next(run_state->db_semaphores_all, db_sem_it))
 	{
-		db_sem = Bag_get(db_semaphores_all, db_sem_it);
+		db_sem = Bag_get(run_state->db_semaphores_all, db_sem_it);
 		if (db_sem == NULL)
 		{
 			log_msg(LOG_ERR, LOG_PREFIX "found NULL db semaphore");
@@ -176,101 +223,108 @@ static bool add_db_request(struct db_request * request, PDU * pdu, Queue * db_re
 		{
 			if (sem_post(db_sem) != 0)
 			{
-				log_error(errno, errorbuf, LOG_PREFIX "sem_post()");
+				log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
 			}
 		}
 	}
-	Bag_stop_iteration(db_semaphores_all);
+	Bag_stop_iteration(run_state->db_semaphores_all);
 
 	return true;
 }
 
 
-void cleanup_db_response_queue(void * db_response_queue_voidp)
+static void cleanup(void * run_state_voidp)
 {
-	Queue * db_response_queue = (Queue *)db_response_queue_voidp;
+	struct run_state * run_state = (struct run_state *)run_state_voidp;
 
-	// TODO: make sure the queue is empty
-
-	Queue_free(db_response_queue);
-}
-
-void cleanup_to_process_queue(void * to_process_queue_voidp)
-{
-	Queue * to_process_queue = (Queue *)to_process_queue_voidp;
-	if (to_process_queue == NULL)
-		return;
-
-	PDU * pdu;
-
-	while (Queue_trypop(to_process_queue, (void **)&pdu))
+	if (run_state->response != NULL)
 	{
-		pdu_free(pdu);
+		if (run_state->response->more_data_semaphore == NULL)
+			run_state->state = READY;
+
+		pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
+		free((void *)run_state->response);
+		run_state->response = NULL;
 	}
 
+	if (run_state->state == RESPONDING)
+	{
+		run_state->request.cancel_request = true;
+		while (true)
+		{
+			// TODO: wait on the semaphore
+
+			if (!Queue_trypop(run_state->db_response_queue, (void **)run_state->response))
+				continue;
+
+			if (run_state->response == NULL)
+				continue;
+
+			pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
+
+			if (run_state->response->more_data_semaphore == NULL)
+			{
+				free((void *)run_state->response);
+				break;
+			}
+
+			free((void *)run_state->response);
+		}
+		run_state->response = NULL;
+	}
+
+	Queue_free(run_state->db_response_queue);
+	run_state->db_response_queue = NULL;
+
+	if (run_state->pdup != NULL)
+	{
+		pdu_free(run_state->pdup);
+		run_state->pdup = NULL;
+	}
+
+	while (Queue_trypop(to_process_queue, (void **)&run_state->pdup))
+	{
+		pdu_free(run_state->pdup);
+	}
+	run_state->pdup = NULL;
 	Queue_free(to_process_queue);
+	run_state->to_process_queue = NULL;
+}
+
+
+void initialize_data_structures_in_run_state(struct run_state * run_state)
+{
+	run_state->db_response_queue = Queue_new(true);
+	if (run_state->db_response_queue == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't create db response queue");
+		pthread_exit(NULL);
+	}
+
+	run_state->to_process_queue = Queue_new(false);
+	if (run_state->to_process_queue == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't create to-process queue");
+		pthread_exit(NULL);
+	}
 }
 
 
 void * connection_main(void * args_voidp)
 {
-	pthread_cleanup_push(free, args_voidp);
+	struct run_state run_state;
+	initialize_run_state(&run_state, args_voidp);
 
-	int retval1;
-	ssize_t ssz_retval1;
-	char errorbuf[ERROR_BUF_SIZE];
+	pthread_cleanup_push(cleanup, &run_state);
 
-	ssize_t i;
+	initialize_data_structures_in_run_state(&run_state);
 
-	struct connection_main_args * argsp = (struct connection_main_args *)args_voidp;
-
-	if (argsp == NULL ||
-		argsp->semaphore == NULL ||
-		argsp->db_request_queue == NULL ||
-		argsp->db_semaphores_all == NULL ||
-		argsp->global_cache_state == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "got NULL argument");
-		free((void *)argsp);
-		return NULL;
-	}
-
-	Queue * db_response_queue = Queue_new(true);
-	if (db_response_queue == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't create db response queue");
-		pthread_exit(NULL);
-	}
-	pthread_cleanup_push(cleanup_db_response_queue, db_response_queue);
-
-	Queue * to_process_queue = Queue_new(false);
-	if (to_process_queue == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't create to-process queue");
-		pthread_exit(NULL);
-	}
-	pthread_cleanup_push(cleanup_to_process_queue, to_process_queue);
-
-	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
-	uint8_t pdu_buffer[MAX_PDU_SIZE];
-	PDU pdu; // this can have pointers into pdu_buffer
-	PDU * pdup; // this can't
-	size_t length;
-
-	struct db_response * response;
-
-	// There can only be one outstanding request at a time, so this is it. No malloc() or free().
-	struct db_request request;
-
-	enum cxn_state state = READY;
 
 	/* TODO:
 	Lock global_cache_state.lock for reading.
 	Let cache_state_t cache_state = copy of global_cache_state.cache_state.
 	Unlock global_cache_state.lock.
 	*/
-
-	const struct timespec semaphore_timeout = {CXN_CACHE_STATE_INTERVAL, 0};
 
 	while (true)
 	{
