@@ -32,7 +32,7 @@ how it handles a convoluted repository structure.
 
 CA Certificates
 
-101 AIA2AccessDesc      # two AccessDescriptors
+101 AIA2AccessDesc      # two AIA extensions -- remove, dup of AIA2x?
 102 AIABadAccess        # wrong accessMethod for rsync URI
 103 AIAAccessLoc        # single HTTP accessLoc, no rsync
 104 AIACrit             # wrongly mark AIA extension as critical
@@ -42,12 +42,12 @@ CA Certificates
 109 BasicConstrNoCA     # BasicConstr present, but cA not set
 110 BasicConstrNoCrit   # BasicConstr present, crit bit unset
 111 BasicConstrPathLth  # BasicConstr path length present
-112 Cpol2oid            # More than one Certificate Policy OID (more?)
+112 Cpol2oid            # More than one Certificate Policy OID -- use same one?
 113 CpolNoCrit          # CertPolicy extension, crit bit unset
 114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points -- actually allowed?
 115 CRLDPCrit           # CRL Dist Pt marked critical
 116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer
-117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt
+117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt -- zero-length str?
 118 CRLDPReasons        # CRL Dist Pt has reasons
 119 EKU                 # has Extended KeyUsage
 120 InnerSigAlg         # wrong signature algorithm in toBeSigned
@@ -64,7 +64,7 @@ CA Certificates
 134 OuterSigAlg         # wrong signature algorithm in cert.algorithm
 135 PubKeyAlg           # wrong SubjectPublicKey algorithm
 136 PubKeyExp           # wrong SubjectPublicKey exponent
-137 PubKeyLth           # wrong SubjectPublicKey length
+137 PubKeyLth           # wrong SubjectPublicKey length -- need to be shorter?
 138 ResourcesASNoCrit   # AS number extension not critical
 139 ResourcesBadAFI     # invalid IP address family
 140 ResourcesBadASOrder # AS numbers out of order
@@ -93,7 +93,7 @@ CA Certificates
 165 Version1            # version number is v1, i.e. 0
 166 Version2            # version number is v2, i.e. 1
 167 Version4            # version number is v4, i.e. 3
-168 SerNum              # negative serial number
+168 SerNum              # negative serial number -- also need zero?
 169 AIA2x               # two authority info access extensions
 170 SIA2x               # two subject info access extensions
 171 NoAIA               # no authority info access extension
@@ -117,7 +117,6 @@ CA Certificates
 189 Subject2SerNums     # subject name has 2 serial numbers
 
 
-
 CMS signed objects, generic (using ROAs)
 
 512 ContentType              # wrong content type
@@ -125,12 +124,12 @@ CMS signed objects, generic (using ROAs)
 514 2Certs                   # two certificates
 515 Version2                 # version 2
 516 Version4                 # version 4
-517 DigestAlg                # wrong digest algorithm
+517 DigestAlg                # wrong digest algorithm -- inconsistent?
 518 2DigestAlgs              # two digest algorithms
 519 NoDigestAlgs             # no digest algorithm
 520 HasCRL                   # has a CRL
-523 SigInfoVersion           # wrong Signer Info version -- 2
-524 SigInfoVersion4          # wrong Signer Info version -- 4
+523 SigInfoVersion           # wrong Signer Info version (2)
+524 SigInfoVersion4          # wrong Signer Info version (4)
 525 SigInfoNoSid             # no Signer Identifier
 526 SigInfoWrongSid          # wrong choice of Signer Identifier
 527 SigInfoBadSid            # bad Signer Identifier (wrong SKI)
@@ -210,3 +209,11 @@ Manifests
 780 MFTFileHashLong          # too long hash of a file
 781 MFTFileNotIA5            # file name not IA5
 782 MFTHashOctetStr          # file hash is octet, not bit string
+
+
+TODO: Trust Anchor (self-signed) certificates
+
+AIA present
+CRLDP present
+bad AKI
+issuer != subject (tricky, will be interpreted as non-self-signed)
