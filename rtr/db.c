@@ -6,8 +6,15 @@
 
 #define LOG_PREFIX "[db] "
 
+
+// The below should work for a query like SELECT ... FROM ... WHERE serial = last_serial ORDER BY ... LIMIT last_row, ...
+struct db_query_progress {
+	serial_number_t last_serial;
+	size_t last_row;
+};
+
 struct db_request_state {
-	struct db_request request;
+	struct db_request * request;
 	struct db_query_progress progress;
 };
 
@@ -84,7 +91,7 @@ static void cancel_all(Bag * currently_processing)
 			continue;
 		}
 
-		send_error(&request_state->request, ERR_INTERNAL_ERROR, NULL);
+		send_error(request_state->request, ERR_INTERNAL_ERROR, NULL);
 
 		free((void *)request_state);
 	}
