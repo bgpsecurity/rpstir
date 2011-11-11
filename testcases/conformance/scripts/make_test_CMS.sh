@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # ***** BEGIN LICENSE BLOCK *****
 #
@@ -208,12 +208,14 @@ ensure_file_exists $CGTOOLS/add_key_info
 ensure_file_exists $CGTOOLS/add_cms_cert
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
+ensure_file_exists $CGTOOLS/sign_cms
 
 if [ $USE_EXISTING_PATCHES ]
 then
     ensure_file_exists $PATCHES_DIR/${ee_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage3.patch
     ensure_file_exists ${ee_key_path}
 fi
 
@@ -267,14 +269,14 @@ echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 echo "Making ROA"
 cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
 
-# Stage 1: Modify ROA's to-be-signed portions automatically or manually
+# Stage 1: Modify encapContentInfo (to-be-signed) automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 1: Modify ROA's to-be-signed portions automatically"
+    echo "Stage 1: Modify ROA's encapContentInfo (to-be-signed) automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
     rm -f ${child_name}.orig
 else
-    echo "Stage 1: Modify ROA's to-be-signed portions manually"
+    echo "Stage 1: Modify ROA's encapContentInfo (to-be-signed) manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
@@ -283,26 +285,50 @@ else
     echo "Successfully created ${PATCHES_DIR}/${child_name}.stage1.patch"
 fi
 
-# Embed EE into ROA and sign using EE private key
+# Embed EE into ROA and compute the message digest, filling in the
+# signedAttrs.  Note that this operation also computes a signature
+# using the EE private key, but this signature computation is
+# superfluous because it will get overwritten later by sign_cms.
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
 ${CGTOOLS}/add_cms_cert ${ee_name}.cer ${child_name}.roa \
     ${ee_key_path} ${child_name}.roa
 ${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
 
-# Stage 2: Modify ROA's not-signed portions automatically or manually
+# Stage 2: Modify ROA's SignedAttributes area, automatically or manually.
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 2: Modify ROA's not-signed portions automatically"
+    echo "Stage 2: Modify ROA's signedAttrs area automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
     rm -f ${child_name}.raw.orig
 else
-    echo "Stage 2: Modify ROA's not-signed portions manually"
+    echo "Stage 2: Modify ROA's signedAttrs area manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
         >${PATCHES_DIR}/${child_name}.stage2.patch || true
     rm ${child_name}.raw.old
     echo "Successfully created ${PATCHES_DIR}/${child_name}.stage2.patch"
+fi
+
+# Sign the potentially modified SignedAttributes area using EE private key
+${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
+${CGTOOLS}/sign_cms ${child_name}.roa ${ee_key_path}
+${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
+
+# Stage 3: Modify ROA's not-signed portions automatically or manually
+if [ $USE_EXISTING_PATCHES ]
+then
+    echo "Stage 3: Modify ROA's not-signed portions automatically"
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage3.patch
+    rm -f ${child_name}.raw.orig
+else
+    echo "Stage 3: Modify ROA's not-signed portions manually"
+    cp ${child_name}.raw ${child_name}.raw.old
+    ${EDITOR} ${child_name}.raw
+    diff -u ${child_name}.raw.old ${child_name}.raw \
+        >${PATCHES_DIR}/${child_name}.stage3.patch || true
+    rm ${child_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${child_name}.stage3.patch"
 fi
 
 # Convert back into binary

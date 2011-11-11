@@ -1,0 +1,11 @@
+--- badCMSSigInfoNoSigAlg.raw.old	2011-11-09 17:12:33.138234540 -0500
++++ badCMSSigInfoNoSigAlg.raw	2011-11-09 17:12:47.005616299 -0500
+@@ -85,8 +85,6 @@
+                                     ocw seq ctx+0x20
+                                                 seq seq int 0x01 /* 1 */ 
+                                                         int 0x0100 /* 256 */ 
+-                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+-                        nul 
+                     bit 0x0038BE2725E96088BE2EAE67FDC0BD92
+                         0xEC1A5E5B0E3D117D4EE5FC53AA2FC990
+                         0x19AE815C9A956E784C2C488A0E39EB34

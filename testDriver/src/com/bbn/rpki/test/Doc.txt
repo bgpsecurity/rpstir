@@ -1,0 +1,35 @@
+RPKI Test Framework
+
+The RPKI Test Framework (framework) exercises a collection of four
+kinds of components by executing scripts on a number of computers
+(virtual or otherwise). The four kinds correspond to entities that
+create RPKI artifacts such as ROAs certificates, etc., repositories
+that store the artifacts, the validating cache, and a suite of
+measurement tools that can can compare the resulting database with the
+expected database.
+
+Primitive Tasks
+
+The framework consists of a set of descriptions of individual,
+primitive task that can be used to control the component. A set of
+rules allows the composition of these primitive tasks into "correct"
+composite tasks. There may be several equivalent composite (or
+primitive) tasks. For example task A might be equivalent to task B
+followed by task C followed by task D. Task E might be equivalent to
+task F, etc. This concept of task equivalence allows the creation of
+alternative tests that might expose defects in the overall system by
+exagerating timing hazards and races.
+
+Activity Definition
+
+Primitive tasks may be composed into activities. This process is
+Representing Sequentiality, Parallelism and Iteration
+
+Sequentiality is represented by lists. Parallelism is represented by
+collections. Iteration is represented Activity is recursively represented by alternations of
+these simple structures using singletons for degenerate cases.
+
+Representing the System Under Test
+
+The system under test is specified in terms of a description of every
+component including the other components with which it is associated. Each component

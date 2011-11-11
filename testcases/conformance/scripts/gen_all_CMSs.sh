@@ -196,8 +196,12 @@ ${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs
 ${single_CMS_cmd} CMS 539 SigInfoNoSig
 ${single_CMS_cmd} CMS 540 SigInfo2Sig
 ${single_CMS_cmd} CMS 541 SigInfoNoSigAlg
-${single_CMS_cmd} CMS 542 SigInfoNoHashAlg
-${single_CMS_cmd} CMS 543 KeyUsage
-${single_CMS_cmd} CMS 544 BadSIAOid
-# NoSignerInfo?
-# SigInfoWrongSigAlg?
+${single_CMS_cmd} CMS 542 SigInfoWrongSigAlg
+${single_CMS_cmd} CMS 543 SigInfoNoHashAlg
+
+###############################################################################
+# Generate EE certificate cases (embedded in ROAs)
+###############################################################################
+
+${single_CMS_cmd} EE 544 KeyUsage
+${single_CMS_cmd} EE 545 BadSIAOid

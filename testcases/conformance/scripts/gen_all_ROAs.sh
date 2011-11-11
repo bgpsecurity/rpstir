@@ -168,10 +168,10 @@ ensure_file_exists "${single_ROA_script}"
 # Generate ROA cases
 ###############################################################################
 
-${single_CMS_cmd} ROA 551 ASID    
-${single_CMS_cmd} ROA 552 Family
-${single_CMS_cmd} ROA 553 FamilyLth
-${single_CMS_cmd} ROA 554 IPMaxLth
-${single_CMS_cmd} ROA 555 IP2Big
-${single_CMS_cmd} ROA 556 VersionV1Explicit
-${single_CMS_cmd} ROA 557 VersionV2
+${single_ROA_cmd} ROA 551 ASID    
+${single_ROA_cmd} ROA 552 Family
+${single_ROA_cmd} ROA 553 FamilyLth
+${single_ROA_cmd} ROA 554 IPMaxLth
+${single_ROA_cmd} ROA 555 IP2Big
+${single_ROA_cmd} ROA 556 VersionV1Explicit
+${single_ROA_cmd} ROA 557 VersionV2

@@ -246,9 +246,10 @@ int main(int argc, char **argv)
 */
        // sig alg
   write_objid(&signerInfop->signatureAlgorithm.algorithm, 
-    id_rsadsi_rsaEncryption);
-  write_casn(&signerInfop->signatureAlgorithm.parameters.rsadsi_rsaEncryption,
-    (uchar *)"", 0);
+    id_sha_256WithRSAEncryption);
+  /* sets the "I've written it" flag */
+  write_casn(&signerInfop->signatureAlgorithm.parameters.
+	     sha256WithRSAEncryption, (uchar *)"", 0);
      // sign it!
   char *msg = signCMS(&roa, argv[3], 0);
   if (msg)

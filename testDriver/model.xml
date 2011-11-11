@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test-model>
+  <task-description name="New Task">
+    <description>&lt;Enter task description&gt;</description>
+    <script-file>C:\Projects\rpki\run_scripts\sampleQuerySpecs</script-file>
+    <arg-description name="Arg" value="Value" is-parameter="false" />
+    <arg-description name="Arg" value="Value" is-parameter="false" />
+  </task-description>
+</test-model>
+
