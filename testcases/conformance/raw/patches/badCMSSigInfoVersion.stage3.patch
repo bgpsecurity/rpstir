@@ -1,12 +1,11 @@
---- badCMSSigInfoVersion.raw.old	2011-09-22 17:14:01.000000000 -0400
-+++ badCMSSigInfoVersion.raw	2011-09-22 17:14:30.000000000 -0400
-@@ -104,8 +104,7 @@
-                         0x7A5B464C5813B3E5A505208317A95BF7
-                         0x3A445F1AFA39BF874F498CF8C2CF4FA4
-                         0x3F
+--- badCMSSigInfoVersion.raw.old	2011-11-11 08:32:43.883090136 -0500
++++ badCMSSigInfoVersion.raw	2011-11-11 08:33:55.910091451 -0500
+@@ -104,7 +104,7 @@
+                         0x1FF8147FB67A20DC2CCD51D08990B76E
+                         0x24FA2FF981FAB782F95E4703BB26FB66
+                         0xA9
 -            set seq int 0x03 /* 3 */ 
--                    ctx+0x00
-+            set seq ctx+0x00
-                         0xE2FDED57B2E89E38412FB0950899EB09
-                         0x53E09691
-                     seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++            set seq int 0x02 /* 2 */
+                     ctx+0x00
+                         0x100187AA93A3F4395634325A010DEEC3
+                         0xE339E0E7
