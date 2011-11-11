@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 #include "logutils.h"
 #include "macros.h"
@@ -52,8 +53,6 @@ struct run_state {
 	struct db_request request;
 };
 
-static const struct timespec semaphore_timeout = {CXN_CACHE_STATE_INTERVAL, 0};
-
 
 static void initialize_run_state(struct run_state * run_state, void * args_voidp)
 {
@@ -70,7 +69,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 		pthread_exit(NULL);
 	}
 
-	run_state->fd = argsp->fd;
+	run_state->fd = argsp->socket;
 	run_state->semaphore = argsp->semaphore;
 	run_state->db_request_queue = argsp->db_request_queue;
 	run_state->db_semaphores_all = argsp->db_semaphores_all;
@@ -94,31 +93,73 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 }
 
 
-/** Repeatedly read into run_state->pdu_buffer until count is fulfilled, return false if there are errors. */
-static bool read_block(struct run_state * run_state, size_t offset, ssize_t count)
+/** Send a PDU */
+static void send_pdu(struct run_state * run_state, const PDU * pdu)
+{
+	ssize_t retval;
+	ssize_t count;
+
+	if (pdu == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "send_pdu got NULL pdu");
+		pthread_exit(NULL);
+	}
+
+	count = dump_pdu(run_state->pdu_buffer, MAX_PDU_SIZE, pdu);
+	if (count < 0)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "dump_pdu failed");
+		pthread_exit(NULL);
+	}
+	else
+	{
+		run_state->pdu_buffer_length = count;
+	}
+
+	while (count > 0)
+	{
+		retval = write(run_state->fd,
+			run_state->pdu_buffer + run_state->pdu_buffer_length - count,
+			(size_t)count);
+		if (retval < 0)
+		{
+			log_error(errno, run_state->errorbuf, LOG_PREFIX "write()");
+			pthread_exit(NULL);
+		}
+
+		count -= retval;
+	}
+}
+
+
+/** Repeatedly read into run_state->pdu_buffer until count is fulfilled. */
+static void read_block(struct run_state * run_state, ssize_t count)
 {
 	ssize_t retval;
 
 	while (count > 0)
 	{
-		switch (parse_pdu(run_state->pdu_buffer, offset, &run_state->pdu))
+		switch (parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu))
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
 				log_msg(LOG_WARNING, LOG_PREFIX "tried to read past the end of a PDU");
-				return false;
+				// TODO: send error
+				pthread_exit(NULL);
 			case PDU_ERROR:
 				log_msg(LOG_NOTICE, LOG_PREFIX "received invalid PDU");
-				return false;
+				// TODO: send error
+				pthread_exit(NULL);
 			case PDU_TRUNCATED:
 				// this is good because we're expecting to read more
 				break;
 			default:
 				log_msg(LOG_ERR, LOG_PREFIX "unexpected return value from parse_pdu()");
-				return false;
+				// TODO: send error
+				pthread_exit(NULL);
 		}
 
-		retval = read(run_state->fd, run_state->pdu_buffer + offset, (size_t)count);
+		retval = read(run_state->fd, run_state->pdu_buffer + run_state->pdu_buffer_length, (size_t)count);
 		if (retval < 0)
 		{
 			log_error(errno, run_state->errorbuf, "read()");
@@ -126,61 +167,92 @@ static bool read_block(struct run_state * run_state, size_t offset, ssize_t coun
 		else if (retval == 0)
 		{
 			log_msg(LOG_NOTICE, LOG_PREFIX "remote side closed connection in the middle of sending a PDU");
-			return false;
+			pthread_exit(NULL);
 		}
 		else
 		{
 			count -= retval;
-			offset += retval;
+			run_state->pdu_buffer_length += retval;
 		}
 	}
-
-	return true;
 }
 
-/** Send a PDU, return false if there are errors. */
-static bool send_pdu(struct run_state * run_state, const PDU * pdu)
+/** Try to read into run_state->pdu_buffer up to count bytes, return true if any data was read, false if no data was read. */
+static bool read_nonblock(struct run_state * run_state, size_t count)
 {
+	if (count <= 0)
+		return true;
+
 	ssize_t retval;
-	ssize_t offset = 0;
-	ssize_t count;
 
-	if (pdu == NULL)
+	retval = recv(run_state->fd,
+		run_state->pdu_buffer + run_state->pdu_buffer_length,
+		count,
+		MSG_DONTWAIT);
+
+	if (retval < 0)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "send_pdu got NULL pdu");
+		if (errno != EAGAIN && errno != EWOULDBLOCK)
+			log_error(errno, run_state->errorbuf, LOG_PREFIX "recv()");
+
 		return false;
 	}
-
-	count = dump_pdu(run_state->pdu_buffer, MAX_PDU_SIZE, pdu);
-	if (count < 0)
+	else if (retval == 0)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "dump_pdu failed");
-		return false;
+		log_msg(LOG_INFO, LOG_PREFIX "remote side closed connection");
+		pthread_exit(NULL);
 	}
-
-	while (count > 0)
+	else
 	{
-		retval = write(run_state->fd, run_state->pdu_buffer + offset, (size_t)count);
-		if (retval < 0)
-		{
-			log_error(errno, run_state->errorbuf, LOG_PREFIX "write()");
-			return false;
-		}
+		run_state->pdu_buffer_length += retval;
 
-		offset += retval;
-		count -= retval;
+		return true;
 	}
-
-	return true;
 }
 
+/** Read (blocking) up to a PDU boundary. See parse_pdu() for return value. */
+static int read_and_parse_pdu(struct run_state * run_state)
+{
+	int retval;
 
-static bool add_db_request(struct run_state * run_state, PDU * pdu)
+	retval = parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu);
+
+	if (retval == PDU_ERROR)
+	{
+		return retval;
+	}
+
+	read_block(run_state, PDU_HEADER_LENGTH - run_state->pdu_buffer_length);
+
+	retval = parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu);
+
+	if (retval == PDU_TRUNCATED)
+	{
+		if (run_state->pdu.length > MAX_PDU_SIZE)
+		{
+			log_msg(LOG_NOTICE,
+				LOG_PREFIX "received PDU that's too long (%" PRIu32 " bytes)",
+				run_state->pdu.length);
+			// TODO: send error
+			pthread_exit(NULL);
+		}
+
+		read_block(run_state,
+			run_state->pdu.length - run_state->pdu_buffer_length);
+
+		retval = parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu);
+	}
+
+	return retval;
+}
+
+static void add_db_request(struct run_state * run_state, PDU * pdu)
 {
 	if (Queue_size(run_state->db_response_queue) != 0)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "add_db_request called with non-empty response queue");
-		return false;
+		// TODO: send error
+		pthread_exit(NULL);
 	}
 
 	switch (pdu->pduType)
@@ -194,18 +266,22 @@ static bool add_db_request(struct run_state * run_state, PDU * pdu)
 			break;
 		default:
 			log_msg(LOG_ERR, LOG_PREFIX "add_db_request() called with a non-query PDU");
-			return false;
+			// TODO: send error
+			pthread_exit(NULL);
 	}
 
-	run_state->request.response_queue = db_response_queue;
-	run_state->request.response_semaphore = cxn_semaphore;
+	run_state->request.response_queue = run_state->db_response_queue;
+	run_state->request.response_semaphore = run_state->semaphore;
 	run_state->request.cancel_request = false;
 
 	if (!Queue_push(run_state->db_request_queue, (void *)&run_state->request))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "couldn't add new request to request queue");
-		return false;
+		// TODO: send error
+		pthread_exit(NULL);
 	}
+
+	run_state->state = RESPONDING;
 
 	Bag_start_iteration(run_state->db_semaphores_all);
 	Bag_iterator db_sem_it;
@@ -228,8 +304,134 @@ static bool add_db_request(struct run_state * run_state, PDU * pdu)
 		}
 	}
 	Bag_stop_iteration(run_state->db_semaphores_all);
+}
 
-	return true;
+static void push_to_process_queue(struct run_state * run_state, const PDU * pdu)
+{
+	PDU * pdup = pdu_deepcopy(pdu);
+	if (pdup == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a copy of the PDU");
+		// TODO: send error
+		pthread_exit(NULL);
+	}
+
+	// TODO: make the thread temporarily not cancelable so pdup always gets free()d?
+
+	if (!Queue_push(run_state->to_process_queue, (void *)pdup))
+	{
+		pdu_free(pdup);
+		log_msg(LOG_ERR, LOG_PREFIX "can't push a PDU onto the to-process queue");
+		// TODO: send error
+		pthread_exit(NULL);
+	}
+}
+
+static void read_and_handle_pdu(struct run_state * run_state)
+{
+	int retval = read_and_parse_pdu(run_state);
+
+	switch (retval)
+	{
+		case PDU_ERROR:
+			log_msg(LOG_NOTICE, LOG_PREFIX "received invalid PDU");
+			// TODO: send error
+			pthread_exit(NULL);
+		case PDU_WARNING:
+			log_msg(LOG_NOTICE, LOG_PREFIX "received a PDU with unsupported feature(s)");
+		case PDU_GOOD:
+			// TODO: handle this correctly instead of this stub
+			if (run_state->state == RESPONDING)
+			{
+				push_to_process_queue(run_state, &run_state->pdu);
+			}
+			else
+			{
+				add_db_request(run_state, &run_state->pdu);
+			}
+			break;
+		default:
+			log_msg(LOG_ERR,
+				LOG_PREFIX "read_and_parse_pdu() returned an unexpected value (%d)",
+				retval);
+			// TODO: send error
+			pthread_exit(NULL);
+	}
+}
+
+static void handle_response(struct run_state * run_state)
+{
+	size_t i;
+
+	if (run_state->response == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "got NULL response from db");
+		return;
+	}
+
+	if (run_state->response->more_data_semaphore != NULL)
+	{
+		if (sem_post(run_state->response->more_data_semaphore) != 0)
+		{
+			log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
+		}
+	}
+
+	/* TODO:
+		If any of response.PDUs indicate an update to cache_state:
+			Update cache_state as appropriate.
+	*/
+
+	for (i = 0; i < run_state->response->num_PDUs; ++i)
+	{
+		send_pdu(run_state, &run_state->response->PDUs[i]);
+	}
+
+	if (run_state->response->more_data_semaphore == NULL)
+	{
+		run_state->state = READY;
+		while (run_state->state == READY &&
+			Queue_trypop(run_state->to_process_queue, (void **)&run_state->pdup))
+		{
+			// TODO: handle this for real instead of this stub
+			add_db_request(run_state, run_state->pdup);
+
+			pdu_free(run_state->pdup);
+			run_state->pdup = NULL;
+		}
+	}
+
+	pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
+	free((void *)run_state->response);
+	run_state->response = NULL;
+}
+
+
+// I think this function shouldn't call pthread_exit() because it's called from cleanup()
+static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
+{
+	static const struct timespec semaphore_timeout = {CXN_CACHE_STATE_INTERVAL, 0};
+
+	int retval;
+
+	if (use_timeout)
+		retval = sem_timedwait(run_state->semaphore, &semaphore_timeout);
+	else
+		retval = sem_wait(run_state->semaphore);
+
+	if (retval == -1 && errno == ETIMEDOUT)
+	{
+		return true;
+	}
+	else if (retval != 0)
+	{
+		log_error(errno, run_state->errorbuf, LOG_PREFIX "waiting for semaphore");
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 
@@ -252,7 +454,11 @@ static void cleanup(void * run_state_voidp)
 		run_state->request.cancel_request = true;
 		while (true)
 		{
-			// TODO: wait on the semaphore
+			if (!wait_on_semaphore(run_state, false))
+			{
+				log_msg(LOG_ERR, LOG_PREFIX "failed to wait on semaphore in cleanup(), continuing without clearing the db response queue");
+				break;
+			}
 
 			if (!Queue_trypop(run_state->db_response_queue, (void **)run_state->response))
 				continue;
@@ -282,17 +488,17 @@ static void cleanup(void * run_state_voidp)
 		run_state->pdup = NULL;
 	}
 
-	while (Queue_trypop(to_process_queue, (void **)&run_state->pdup))
+	while (Queue_trypop(run_state->to_process_queue, (void **)&run_state->pdup))
 	{
 		pdu_free(run_state->pdup);
 	}
 	run_state->pdup = NULL;
-	Queue_free(to_process_queue);
+	Queue_free(run_state->to_process_queue);
 	run_state->to_process_queue = NULL;
 }
 
 
-void initialize_data_structures_in_run_state(struct run_state * run_state)
+static void initialize_data_structures_in_run_state(struct run_state * run_state)
 {
 	run_state->db_response_queue = Queue_new(true);
 	if (run_state->db_response_queue == NULL)
@@ -307,6 +513,26 @@ void initialize_data_structures_in_run_state(struct run_state * run_state)
 		log_msg(LOG_ERR, LOG_PREFIX "can't create to-process queue");
 		pthread_exit(NULL);
 	}
+}
+
+static void connection_main_loop(struct run_state * run_state)
+{
+	if (!wait_on_semaphore(run_state, true))
+		pthread_exit(NULL);
+
+	run_state->pdu_buffer_length = 0;
+
+	if (read_nonblock(run_state, PDU_HEADER_LENGTH))
+	{
+		read_and_handle_pdu(run_state);
+	}
+	else if (run_state->state == RESPONDING &&
+		Queue_trypop(run_state->db_response_queue, (void **)&run_state->response))
+	{
+		handle_response(run_state);
+	}
+
+	// TODO: check global_cache_state
 }
 
 
@@ -328,155 +554,8 @@ void * connection_main(void * args_voidp)
 
 	while (true)
 	{
-		retval1 = sem_timedwait(argsp->semaphore, &semaphore_timeout);
-		if (retval1 == -1 && errno == ETIMEDOUT)
-		{
-			continue; // TODO: stuff with cache_state
-		}
-		else if (retval1 != 0)
-		{
-			log_error(errno, errorbuf, LOG_PREFIX "sem_timedwait()");
-			pthread_exit(NULL);
-		}
-
-		ssz_retval1 = recv(argsp->socket, pdu_buffer, PDU_HEADER_LENGTH, MSG_DONTWAIT);
-		if (ssz_retval1 < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-		{
-			log_error(errno, errorbuf, LOG_PREFIX "recv()");
-		}
-		else if (ssz_retval1 == 0)
-		{
-			log_msg(LOG_INFO, LOG_PREFIX "remote side closed connection");
-			pthread_exit(NULL);
-		}
-		else if (ssz_retval1 > 0)
-		{
-			if (!read_block(argsp->socket, pdu_buffer, ssz_retval1, PDU_HEADER_LENGTH - ssz_retval1, &pdu, errorbuf))
-			{
-				pthread_exit(NULL);
-			}
-
-			retval1 = parse_pdu(pdu_buffer, PDU_HEADER_LENGTH, &pdu);
-			if (retval1 == PDU_ERROR || pdu.length > MAX_PDU_SIZE)
-			{
-				// TODO: log and send error
-				pthread_exit(NULL);
-			}
-			else if (retval1 == PDU_TRUNCATED)
-			{
-				length = pdu.length;
-				if (!read_block(argsp->socket, pdu_buffer, PDU_HEADER_LENGTH, length - PDU_HEADER_LENGTH, &pdu, errorbuf))
-				{
-					pthread_exit(NULL);
-				}
-
-				retval1 = parse_pdu(pdu_buffer, length, &pdu);
-			}
-
-			switch (retval1)
-			{
-				case PDU_ERROR:
-					// TODO: log and send error
-					pthread_exit(NULL);
-				case PDU_TRUNCATED:
-					log_msg(LOG_ERR, LOG_PREFIX "parse_pdu() returned truncated when passed a non-truncated pdu");
-					pthread_exit(NULL);
-				case PDU_WARNING:
-					log_msg(LOG_NOTICE, LOG_PREFIX "received a PDU with unsupported feature(s)");
-				case PDU_GOOD:
-					// TODO: handle this correctly instead of this stub
-					if (state == RESPONDING)
-					{
-						pdup = pdu_deepcopy(&pdu);
-						if (pdup == NULL || !Queue_push(to_process_queue, (void *)pdup))
-						{
-							if (pdup == NULL)
-							{
-								log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a copy of the PDU");
-							}
-							else
-							{
-								pdu_free(pdup);
-								log_msg(LOG_ERR, LOG_PREFIX "can't push a PDU onto the to-process queue");
-							}
-							// TODO: send error
-							pthread_exit(NULL);
-						}
-					}
-					else
-					{
-						if (!add_db_request(&request, &pdu, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
-						{
-							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
-							// TODO: send error
-							pthread_exit(NULL);
-						}
-						state = RESPONDING;
-					}
-					break;
-				default:
-					log_msg(LOG_ERR, LOG_PREFIX "parse_pdu() returned an unknown value");
-					pthread_exit(NULL);
-			}
-		}
-		else if (state == RESPONDING && Queue_trypop(db_response_queue, (void **)&response))
-		{
-			if (response == NULL)
-			{
-				log_msg(LOG_ERR, LOG_PREFIX "got NULL response from db");
-			}
-			else
-			{
-				if (response->more_data_semaphore != NULL)
-				{
-					if (sem_post(response->more_data_semaphore) != 0)
-					{
-						log_error(errno, errorbuf, LOG_PREFIX "sem_post()");
-					}
-				}
-
-				/* TODO:
-					If any of response.PDUs indicate an update to cache_state:
-						Update cache_state as appropriate.
-				*/
-
-				for (i = 0; i < (ssize_t)response->num_PDUs; ++i)
-				{
-					if (!send_pdu(argsp->socket, pdu_buffer, &response->PDUs[i], errorbuf))
-					{
-						log_msg(LOG_ERR, LOG_PREFIX "failed sending a PDU response from the db");
-						pdu_free_array(response->PDUs, response->num_PDUs);
-						free((void *)response);
-						pthread_exit(NULL);
-					}
-				}
-
-				if (response->more_data_semaphore == NULL)
-				{
-					state = READY;
-					while (state == READY && Queue_trypop(to_process_queue, (void **)&pdup))
-					{
-						// TODO: handle this for real instead of this stub
-						if (!add_db_request(&request, pdup, db_response_queue, argsp->semaphore, argsp->db_request_queue, argsp->db_semaphores_all, errorbuf))
-						{
-							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
-							// TODO: send error
-							pdu_free(pdup);
-							pthread_exit(NULL);
-						}
-
-						pdu_free(pdup);
-
-						state = RESPONDING;
-					}
-				}
-			}
-		}
-
-		// TODO: check global_cache_state
+		connection_main_loop(&run_state);
 	}
 
-	pthread_cleanup_pop(1);
-	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
 }
