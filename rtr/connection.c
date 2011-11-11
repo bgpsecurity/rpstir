@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "logutils.h"
 #include "macros.h"
@@ -185,8 +186,36 @@ static bool add_db_request(struct db_request * request, PDU * pdu, Queue * db_re
 }
 
 
+void cleanup_db_response_queue(void * db_response_queue_voidp)
+{
+	Queue * db_response_queue = (Queue *)db_response_queue_voidp;
+
+	// TODO: make sure the queue is empty
+
+	Queue_free(db_response_queue);
+}
+
+void cleanup_to_process_queue(void * to_process_queue_voidp)
+{
+	Queue * to_process_queue = (Queue *)to_process_queue_voidp;
+	if (to_process_queue == NULL)
+		return;
+
+	PDU * pdu;
+
+	while (Queue_trypop(to_process_queue, (void **)&pdu))
+	{
+		pdu_free(pdu);
+	}
+
+	Queue_free(to_process_queue);
+}
+
+
 void * connection_main(void * args_voidp)
 {
+	pthread_cleanup_push(free, args_voidp);
+
 	int retval1;
 	ssize_t ssz_retval1;
 	char errorbuf[ERROR_BUF_SIZE];
@@ -210,18 +239,17 @@ void * connection_main(void * args_voidp)
 	if (db_response_queue == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't create db response queue");
-		free((void *)argsp);
-		return NULL;
+		pthread_exit(NULL);
 	}
+	pthread_cleanup_push(cleanup_db_response_queue, db_response_queue);
 
 	Queue * to_process_queue = Queue_new(false);
 	if (to_process_queue == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't create to-process queue");
-		Queue_free(db_response_queue);
-		free((void *)argsp);
-		return NULL;
+		pthread_exit(NULL);
 	}
+	pthread_cleanup_push(cleanup_to_process_queue, to_process_queue);
 
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
 	uint8_t pdu_buffer[MAX_PDU_SIZE];
@@ -254,8 +282,7 @@ void * connection_main(void * args_voidp)
 		else if (retval1 != 0)
 		{
 			log_error(errno, errorbuf, LOG_PREFIX "sem_timedwait()");
-			// TODO: cleanup
-			return NULL;
+			pthread_exit(NULL);
 		}
 
 		ssz_retval1 = recv(argsp->socket, pdu_buffer, PDU_HEADER_LENGTH, MSG_DONTWAIT);
@@ -266,31 +293,27 @@ void * connection_main(void * args_voidp)
 		else if (ssz_retval1 == 0)
 		{
 			log_msg(LOG_INFO, LOG_PREFIX "remote side closed connection");
-			// TODO: cleanup
-			return NULL;
+			pthread_exit(NULL);
 		}
 		else if (ssz_retval1 > 0)
 		{
 			if (!read_block(argsp->socket, pdu_buffer, ssz_retval1, PDU_HEADER_LENGTH - ssz_retval1, &pdu, errorbuf))
 			{
-				// TODO: cleanup
-				return NULL;
+				pthread_exit(NULL);
 			}
 
 			retval1 = parse_pdu(pdu_buffer, PDU_HEADER_LENGTH, &pdu);
 			if (retval1 == PDU_ERROR || pdu.length > MAX_PDU_SIZE)
 			{
 				// TODO: log and send error
-				// TODO: cleanup
-				return NULL;
+				pthread_exit(NULL);
 			}
 			else if (retval1 == PDU_TRUNCATED)
 			{
 				length = pdu.length;
 				if (!read_block(argsp->socket, pdu_buffer, PDU_HEADER_LENGTH, length - PDU_HEADER_LENGTH, &pdu, errorbuf))
 				{
-					// TODO cleanup
-					return NULL;
+					pthread_exit(NULL);
 				}
 
 				retval1 = parse_pdu(pdu_buffer, length, &pdu);
@@ -300,12 +323,10 @@ void * connection_main(void * args_voidp)
 			{
 				case PDU_ERROR:
 					// TODO: log and send error
-					// TODO: cleanup
-					return NULL;
+					pthread_exit(NULL);
 				case PDU_TRUNCATED:
 					log_msg(LOG_ERR, LOG_PREFIX "parse_pdu() returned truncated when passed a non-truncated pdu");
-					// TODO: cleanup
-					return NULL;
+					pthread_exit(NULL);
 				case PDU_WARNING:
 					log_msg(LOG_NOTICE, LOG_PREFIX "received a PDU with unsupported feature(s)");
 				case PDU_GOOD:
@@ -325,8 +346,7 @@ void * connection_main(void * args_voidp)
 								log_msg(LOG_ERR, LOG_PREFIX "can't push a PDU onto the to-process queue");
 							}
 							// TODO: send error
-							// TODO: cleanup
-							return NULL;
+							pthread_exit(NULL);
 						}
 					}
 					else
@@ -335,19 +355,17 @@ void * connection_main(void * args_voidp)
 						{
 							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
 							// TODO: send error
-							// TODO: cleanup
-							return NULL;
+							pthread_exit(NULL);
 						}
 						state = RESPONDING;
 					}
 					break;
 				default:
 					log_msg(LOG_ERR, LOG_PREFIX "parse_pdu() returned an unknown value");
-					// TODO: cleanup
-					return NULL;
+					pthread_exit(NULL);
 			}
 		}
-		else if (Queue_trypop(db_response_queue, (void **)&response))
+		else if (state == RESPONDING && Queue_trypop(db_response_queue, (void **)&response))
 		{
 			if (response == NULL)
 			{
@@ -363,13 +381,6 @@ void * connection_main(void * args_voidp)
 					}
 				}
 
-				if (state != RESPONDING)
-				{
-					log_msg(LOG_ERR, LOG_PREFIX "received extraneous response from db");
-					pdu_free_array(response->PDUs, response->num_PDUs);
-					free((void *)response);
-				}
-
 				/* TODO:
 					If any of response.PDUs indicate an update to cache_state:
 						Update cache_state as appropriate.
@@ -382,8 +393,7 @@ void * connection_main(void * args_voidp)
 						log_msg(LOG_ERR, LOG_PREFIX "failed sending a PDU response from the db");
 						pdu_free_array(response->PDUs, response->num_PDUs);
 						free((void *)response);
-						// TODO: cleanup
-						return NULL;
+						pthread_exit(NULL);
 					}
 				}
 
@@ -397,8 +407,8 @@ void * connection_main(void * args_voidp)
 						{
 							log_msg(LOG_ERR, LOG_PREFIX "can't send a db request");
 							// TODO: send error
-							// TODO: cleanup
-							return NULL;
+							pdu_free(pdup);
+							pthread_exit(NULL);
 						}
 
 						pdu_free(pdup);
@@ -411,4 +421,8 @@ void * connection_main(void * args_voidp)
 
 		// TODO: check global_cache_state
 	}
+
+	pthread_cleanup_pop(1);
+	pthread_cleanup_pop(1);
+	pthread_cleanup_pop(1);
 }
