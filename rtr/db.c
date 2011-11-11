@@ -19,40 +19,25 @@ struct db_request_state {
 };
 
 
-static bool send_error(const struct db_request * request, error_code_t error_code, db_semaphore_t * more_data_semaphore)
+// after calling, pdus will be freed or passed along to a response queue
+static bool send_response(const struct db_request * request, PDU * pdus, size_t num_pdus, db_semaphore_t * more_data_semaphore)
 {
 	struct db_response * response = malloc(sizeof(struct db_response));
 	if (response == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response");
+		pdu_free_array(pdus, num_pdus);
 		return false;
 	}
 
-	response->PDUs = malloc(sizeof(PDU));
-	if (response->PDUs == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response PDU");
-		free((void *)response);
-		return false;
-	}
-
-	response->PDUs[0].protocolVersion = PROTOCOL_VERSION;
-	response->PDUs[0].pduType = PDU_ERROR_REPORT;
-	response->PDUs[0].errorCode = error_code;
-	response->PDUs[0].length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH;
-	response->PDUs[0].errorData.encapsulatedPDULength = 0;
-	response->PDUs[0].errorData.encapsulatedPDU = NULL;
-	response->PDUs[0].errorData.errorTextLength = 0;
-	response->PDUs[0].errorData.errorText = NULL;
-
-	response->num_PDUs = 1;
-
+	response->PDUs = pdus;
+	response->num_PDUs = num_pdus;
 	response->more_data_semaphore = more_data_semaphore;
 
 	if (!Queue_push(request->response_queue, (void *)response))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't push response to queue");
-		free((void *)response->PDUs);
+		pdu_free_array(response->PDUs, response->num_PDUs);
 		free((void *)response);
 		return false;
 	}
@@ -64,6 +49,28 @@ static bool send_error(const struct db_request * request, error_code_t error_cod
 	}
 
 	return true;
+}
+
+
+static bool send_error(const struct db_request * request, error_code_t error_code, db_semaphore_t * more_data_semaphore)
+{
+	PDU * pdu = malloc(sizeof(PDU));
+	if (pdu == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response error PDU");
+		return false;
+	}
+
+	pdu->protocolVersion = PROTOCOL_VERSION;
+	pdu->pduType = PDU_ERROR_REPORT;
+	pdu->errorCode = error_code;
+	pdu->length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH;
+	pdu->errorData.encapsulatedPDULength = 0;
+	pdu->errorData.encapsulatedPDU = NULL;
+	pdu->errorData.errorTextLength = 0;
+	pdu->errorData.errorText = NULL;
+
+	return send_response(request, pdu, 1, more_data_semaphore);
 }
 
 
@@ -118,8 +125,10 @@ void * db_main(void * args_voidp)
 	}
 
 	bool operation_completed;
+	bool did_erase;
 	Bag_iterator it;
 	struct db_request * request;
+	struct db_request_state * request_state;
 
 	while (true)
 	{
@@ -127,6 +136,7 @@ void * db_main(void * args_voidp)
 		{
 			cancel_all(currently_processing);
 			Bag_free(currently_processing);
+			// XXX: DB threads can still have access to argsp->semaphore in their response queues
 			return NULL;
 		}
 
@@ -135,8 +145,31 @@ void * db_main(void * args_voidp)
 		Bag_start_iteration(currently_processing);
 		for (it = Bag_begin(currently_processing);
 			it != Bag_end(currently_processing);
-			it = Bag_iterator_next(currently_processing, it))
+			(void)(did_erase || (it = Bag_iterator_next(currently_processing, it))))
 		{
+			did_erase = false;
+
+			request_state = (struct db_request_state *)Bag_get(currently_processing, it);
+
+			if (request_state == NULL)
+			{
+				log_msg(LOG_ERR, LOG_PREFIX "got NULL request state");
+				continue;
+			}
+
+			if (request_state->request->cancel_request)
+			{
+				if (!send_response(request_state->request, NULL, 0, NULL))
+				{
+					log_msg(LOG_ERR, LOG_PREFIX "can't acknowledge a canceled request");
+				}
+
+				free((void *)request_state);
+
+				it = Bag_erase(currently_processing, it);
+				did_erase = true;
+			}
+
 			// TODO
 		}
 		Bag_stop_iteration(currently_processing);
@@ -152,8 +185,6 @@ void * db_main(void * args_voidp)
 			{
 				if (!send_error(request, ERR_INTERNAL_ERROR, NULL))
 					log_msg(LOG_ERR, LOG_PREFIX "couldn't send error");
-
-				free((void *)request);
 			}
 		}
 	}
