@@ -168,6 +168,9 @@ void * db_main(void * args_voidp)
 
 				it = Bag_erase(currently_processing, it);
 				did_erase = true;
+
+				operation_completed = true;
+				break;
 			}
 
 			// TODO
