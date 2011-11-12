@@ -452,6 +452,9 @@ static void cleanup(void * run_state_voidp)
 	if (run_state->state == RESPONDING)
 	{
 		run_state->request.cancel_request = true;
+
+		// TODO: increment all the DB semaphores (or the correct one if we can determine which it is)
+
 		while (true)
 		{
 			if (!wait_on_semaphore(run_state, false))
