@@ -191,7 +191,7 @@ $TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
     subject="${SUBJECTNAME}-mft-ee" \
     crldp=${CRLDP} \
     aia=${PARENT_URI} \
-    sia="m:${ee_sia_mft}" \
+    sia="s:${ee_sia_mft}" \
     ipv4=inherit \
     ipv6=inherit \
     as=inherit
