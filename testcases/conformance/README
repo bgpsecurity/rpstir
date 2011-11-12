@@ -1,9 +1,9 @@
 RPKI Syntax Conformance Test Cases
 
-# Directory layout
+# Directory layout of rsync://rpki.bbn.com/conformance/
 root.cer
 root/root.crl
-     root.mft  # Doesn't exist yet
+     root.mft
      badCert*.cer
      badCMS*.roa
      badROA.roa
