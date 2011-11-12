@@ -1,13 +1,13 @@
---- badCRLNoAKI.crl.raw.old	2011-09-29 18:26:10.000000000 -0400
-+++ badCRLNoAKI.crl.raw	2011-09-29 18:26:42.000000000 -0400
+--- badCRLNoAKI.crl.raw.old	2011-11-12 04:53:02.904158978 -0500
++++ badCRLNoAKI.crl.raw	2011-11-12 04:53:25.449160191 -0500
 @@ -8,10 +8,6 @@
          ctx+0x20
              seq seq oid 2.5.29.20 /* id_cRLNumber */
                      ocw int 0x01 /* 1 */ 
 -                seq oid 2.5.29.35 /* id_authKeyId */
 -                    ocw seq ctx+0x00
--                                0xD27F6E783B2B5CE535940D54C0A6F38F
--                                0x5B7804D4
+-                                0xE856567DF0F4FC5AF0B5EEA02CB539D0
+-                                0x4ED0A2E7
      seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
          nul 
-     bit 0x00B6D239851E9A296FFA400E34B10E331CA949C59C5DB114C39D3EB2322ABE06
+     bit 0x007C3B079C790515D90DDF6D5BD7731815BAA8C211D8403D97196400CBCBA510

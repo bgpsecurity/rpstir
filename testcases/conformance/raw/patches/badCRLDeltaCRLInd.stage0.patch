@@ -1,11 +1,13 @@
---- badCRLDeltaCRLInd.crl.raw.old	2011-09-29 18:21:49.000000000 -0400
-+++ badCRLDeltaCRLInd.crl.raw	2011-09-29 18:22:51.000000000 -0400
-@@ -12,6 +12,8 @@
-                     ocw seq ctx+0x00
-                                 0xD27F6E783B2B5CE535940D54C0A6F38F
-                                 0x5B7804D4
-+                seq oid 2.5.29.27 /* id_deltaCRLIndicator */
+--- badCRLDeltaCRLInd.crl.raw.old	2011-11-12 04:49:54.265148822 -0500
++++ badCRLDeltaCRLInd.crl.raw	2011-11-12 04:51:07.448152802 -0500
+@@ -6,7 +6,9 @@
+         utc "110411185728Z"
+         utc "460515185928Z"
+         ctx+0x20
+-            seq seq oid 2.5.29.20 /* id_cRLNumber */
++            seq seq oid 2.5.29.27 /* id_deltaCRLIndicator */
 +                    ocw int 2
-     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
-         nul 
-     bit 0x0059AD5907AB88F88E13BD2A162D14F430CFAB002BCC6B8FFAABF5925A66A8D9
++                seq oid 2.5.29.20 /* id_cRLNumber */
+                     ocw int 0x01 /* 1 */ 
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
