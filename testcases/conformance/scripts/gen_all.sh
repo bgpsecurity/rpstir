@@ -18,6 +18,10 @@ CFSCRIPTS=$RPKI_ROOT/testcases/conformance/scripts # conformance scripts
 ensure_file_exists $CGTOOLS/rr
 hash sed
 
+# Clean out raw/root directory
+cd $RPKI_ROOT/testcases/conformance
+rm -rf raw/root/*
+
 # Build trust anchors
 cd $RPKI_ROOT/testcases/conformance/raw
 for f in badRootBadAKI badRootBadCRLDP badRootNameDiff root
@@ -36,6 +40,7 @@ $CFSCRIPTS/gen_all_MFTs.sh -P
 
 # Copy to output directory
 cd $RPKI_ROOT/testcases/conformance
+rm -rf output
 mkdir -p output
 cp raw/*.cer output/
 cp -r raw/root output/
