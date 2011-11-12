@@ -23,7 +23,7 @@
 #include "connection_control.h"
 
 
-#define LOG_PREFIX "[main ]"
+#define LOG_PREFIX "[main ] "
 
 // this is ok because there's only one main thread
 static char errorbuf[ERROR_BUF_SIZE];
