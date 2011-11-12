@@ -450,10 +450,8 @@ static int cmsValidate(struct ROA *rp)
      read_casn(&attrp->attrValues.array.messageDigest, digestbuf) != 32)
      return ERR_SCM_BADSIGINFO;
 
-  // make sure there is a signing time
+  // if there is a signing time, make sure it is the right format
   attrp = find_unique_attr(&sigInfop->signedAttrs, id_signingTimeAttr);
-  if (!attrp && notRTA) return ERR_SCM_BADSIGINFO;
-     // make sure it is the right format      
   if (attrp)
     {
     uchar loctime[30];
