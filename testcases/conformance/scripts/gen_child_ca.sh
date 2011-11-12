@@ -251,6 +251,7 @@ ensure_dir_exists $OUTPUT_DIR
 ensure_file_exists ${PARENT_CERT_FILE}
 ensure_file_exists ${PARENT_KEY_FILE}
 ensure_file_exists ${CACERT_TEMPLATE}
+ensure_file_exists ${EECERT_TEMPLATE}
 if [ ${USE_EXISTING_KEYS} ]
 then
     ensure_file_exists $child_key_path
