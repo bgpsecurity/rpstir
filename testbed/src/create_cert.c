@@ -104,7 +104,7 @@ struct object_field *get_cert_field_table()
  * fields of interest:
  *    signature algorithm ID - overwrite (from template)
  *    issuer     - if filled in then don't overwrite
- *    aki        - use ski from issuers cert if not filled in
+ *    aki        - use ski from issuer's cert
  *    algorithm ID  overwrite (from template)
  */
 int use_parent_cert(void *cert, void *val)
@@ -276,11 +276,11 @@ int use_subject_keyfile(void *cert, void *val)
       if (fillPublicKey(spkp, val) < 0)
 	return -1;
     }
+
+  // always update SKI to match subjectPublicKey
   if (!(extp = findExtension(extsp, id_subjectKeyIdentifier)))
-    {
       extp = makeExtension(extsp, id_subjectKeyIdentifier);
-      writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
-    }
+  writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
 
   return (SUCCESS);
 }
