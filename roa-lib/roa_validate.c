@@ -285,7 +285,7 @@ int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
   return err == 0 ? hash_lth : err;
 }
 
-static struct Attribute *find_attr(struct SignedAttributes *attrsp, char *oidp)
+static struct Attribute *find_unique_attr(struct SignedAttributes *attrsp, char *oidp)
   {
   struct Attribute *attrp, *ch_attrp = NULL;
   int num = 0;
@@ -294,12 +294,14 @@ static struct Attribute *find_attr(struct SignedAttributes *attrsp, char *oidp)
     {
     if (!diff_objid(&attrp->attrType, oidp))
       {
-      if (ch_attrp) return NULL;
+      if (ch_attrp)           // attribute encountered already
+        return NULL;
       ch_attrp = attrp;
       }
     }
-    // make sure there is one and only one value there
-  if (num_items(&ch_attrp->attrValues.self) != 1) return NULL;
+  // make sure there is one and only one attrValue in the attribute
+  if (ch_attrp && num_items(&ch_attrp->attrValues.self) != 1)
+    return NULL;
   return ch_attrp;
   }
 
@@ -436,20 +438,20 @@ static int cmsValidate(struct ROA *rp)
 
   struct Attribute *attrp;
   // make sure there is content
-  attrp = find_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
+  attrp = find_unique_attr(&sigInfop->signedAttrs, id_contentTypeAttr);
   if (!attrp ||
   // make sure it is the same as in EncapsulatedContentInfo
       diff_casn(&attrp->attrValues.array.contentType, 
       &rp->content.signedData.encapContentInfo.eContentType) ||
   // make sure there is a message digest
-     !(attrp = find_attr(&sigInfop->signedAttrs, id_messageDigestAttr)) ||
+     !(attrp = find_unique_attr(&sigInfop->signedAttrs, id_messageDigestAttr)) ||
   // make sure the message digest is 32 bytes long and we can get it
      vsize_casn(&attrp->attrValues.array.messageDigest) != 32 ||
      read_casn(&attrp->attrValues.array.messageDigest, digestbuf) != 32)
      return ERR_SCM_BADSIGINFO;
 
   // make sure there is a signing time
-  attrp = find_attr(&sigInfop->signedAttrs, id_signingTimeAttr);
+  attrp = find_unique_attr(&sigInfop->signedAttrs, id_signingTimeAttr);
   if (!attrp && notRTA) return ERR_SCM_BADSIGINFO;
      // make sure it is the right format      
   if (attrp)
