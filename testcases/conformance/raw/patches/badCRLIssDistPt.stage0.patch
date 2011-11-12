@@ -1,13 +1,15 @@
---- badCRLIssDistPt.crl.raw.old	2011-11-12 04:46:56.581939255 -0500
-+++ badCRLIssDistPt.crl.raw	2011-11-12 04:48:00.865484116 -0500
-@@ -12,6 +12,10 @@
-                     ocw seq ctx+0x00
-                                 0xE856567DF0F4FC5AF0B5EEA02CB539D0
-                                 0x4ED0A2E7
-+                seq oid 2.5.29.28 /* id_issuingDistributionPoint */
+--- badCRLIssDistPt.crl.raw.old	2011-11-12 11:46:22.073670064 -0500
++++ badCRLIssDistPt.crl.raw	2011-11-12 11:47:27.968197249 -0500
+@@ -6,7 +6,11 @@
+         utc "110411185728Z"
+         utc "460515185928Z"
+         ctx+0x20
+-            seq seq oid 2.5.29.20 /* id_cRLNumber */
++            seq seq oid 2.5.29.28 /* id_issuingDistributionPoint */
 +                    ocw seq ctx+0x20
 +                                ctx+0x20
 +                                    ctx+0x01 "some name"
-     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
-         nul 
-     bit 0x00778F1615A223D5538DD948E55C5B2B8EFEB03136833A1A94C111900C52D262
++                seq oid 2.5.29.20 /* id_cRLNumber */
+                     ocw int 0x01 /* 1 */ 
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00

@@ -1,11 +1,11 @@
---- badMFTFileNotIA5.raw.old	2011-11-12 05:07:44.423015204 -0500
-+++ badMFTFileNotIA5.raw	2011-11-12 05:07:51.858015604 -0500
+--- badMFTFileNotIA5.raw.old	2011-11-12 11:54:55.110328099 -0500
++++ badMFTFileNotIA5.raw	2011-11-12 11:55:03.612328556 -0500
 @@ -9,7 +9,7 @@
                              gen "20110411185728Z"
                              gen "20460515185928Z"
                              oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
 -                            seq seq ia5 "MFTFileNotIA5.crl"
 +                            seq seq prt "MFTFileNotIA5.crl"
-                                     bit 0x00B6B30C4278F01869682CDA33ED5B19
-                                         0x049D1F0FB0E1489A9614878C863E5244
-                                         0x52
+                                     bit 0x00BE2DD4DEB8C394E6707243966CAD90
+                                         0x76A704E804109C07D4A385862239AA74
+                                         0xBB
