@@ -35,6 +35,7 @@ $CGTOOLS/rr < root.crl.raw > root/root.crl
 # Generate all types of conformance cases
 $CFSCRIPTS/gen_all_certs.sh -P
 $CFSCRIPTS/gen_all_CMSs.sh -P
+$CFSCRIPTS/gen_all_ROAs.sh -P
 $CFSCRIPTS/gen_all_CRLs.sh -P
 $CFSCRIPTS/gen_all_MFTs.sh -P
 
