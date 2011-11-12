@@ -136,7 +136,7 @@ void * db_main(void * args_voidp)
 		{
 			cancel_all(currently_processing);
 			Bag_free(currently_processing);
-			// XXX: DB threads can still have access to argsp->semaphore in their response queues
+			// XXX: connection threads can still have access to argsp->semaphore in their response queues
 			return NULL;
 		}
 
