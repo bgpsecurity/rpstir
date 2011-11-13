@@ -528,8 +528,12 @@ static int cmsValidate(struct ROA *rp)
   // check that roa->content->signerInfoStruct->signatureAlgorithm ==
   //   RSAEncryption (= OID 1.2.240.113549.1.1.1)
   if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.
-    signatureAlgorithm.algorithm, id_rsadsi_rsaEncryption))
-	return ERR_SCM_INVALSIG;
+                 signatureAlgorithm.algorithm, id_rsadsi_rsaEncryption))
+    {
+      // FIXME: Temporary mod for IETF 82 before we settle the algorithm issue.
+      fprintf(stderr, "Warning: CMS Signature Algorithm != RSAEncryption\n");
+      // return ERR_SCM_INVALSIG;
+    }
 
   // check that the subject key identifier has proper length
   if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.
