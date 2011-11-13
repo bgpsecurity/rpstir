@@ -59,6 +59,6 @@ $CFSCRIPTS/gen_mft.sh \
     rsync://rpki.bbn.com/conformance/root.cer \
     ../raw/root.p15 \
     rsync://rpki.bbn.com/conformance/root/root.crl \
-    root/*.cer root/*.roa
+    root/*.cer root/*.roa root/*.crl
 rm root.mft.cer root.mft.p15
 mv root.mft root/
