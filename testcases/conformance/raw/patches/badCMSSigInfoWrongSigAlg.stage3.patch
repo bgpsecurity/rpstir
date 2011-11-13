@@ -1,11 +1,11 @@
---- badCMSSigInfoWrongSigAlg.raw.old	2011-11-09 17:18:34.223176172 -0500
-+++ badCMSSigInfoWrongSigAlg.raw	2011-11-09 17:19:36.938903151 -0500
+--- badCMSSigInfoWrongSigAlg.raw.old	2011-11-13 02:40:02.358659705 -0500
++++ badCMSSigInfoWrongSigAlg.raw	2011-11-13 02:40:32.290215501 -0500
 @@ -116,7 +116,7 @@
                          seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
-                             set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
-                                     0x25CF8ED649BF1E425CA765083E0493A7
+                             set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
+                                     0x234CB1D2DD939DB9BC65DAC7014366E4
 -                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
 +                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                          nul 
-                     oct 0x45C5083C07C6F46B076DF25C29C8EC8C
-                         0x06081E43CBCAE4D1B6B5F3DAB8CEBAE0
+                     oct 0x12AE9D79FE9DD0BF62C6775CE51B2C80
+                         0x078387CA31E8EFD1DB3B7ED45BD7F520
