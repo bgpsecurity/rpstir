@@ -2333,6 +2333,8 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     trustAnchor;
   else certp = (struct Certificate *)member_casn(
       &roap->content.signedData.certificates.self, 0);
+  if (!certp)
+    return ERR_SCM_BADNUMCERTS;
   if ((certp->self.flags & ASN_INDEF_LTH_FLAG)) return ERR_SCM_ASN1_LTH;
   // read the embedded cert information, in particular the ski
   if ((sta = hexify_ski(certp, skip)) < 0) return sta;
