@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <ctype.h>
 
 #include "pdu.h"
 
@@ -381,6 +382,7 @@ void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
 {
 	bool truncated = false;
 	int offset = 0;
+	uint32_t i;
 
 	#define SNPRINTF(format, ...) \
 		do { \
@@ -578,7 +580,27 @@ void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
 			SNPRINTF(", AS number = %" PRIu32, pdu->ip6PrefixData.asNumber);
 			break;
 		case PDU_ERROR_REPORT:
-			// TODO
+			SNPRINTF(", encapsulated PDU length = %" PRIu32, pdu->errorData.encapsulatedPDULength);
+			SNPRINTF(", error text = [%" PRIu32 "] \"", pdu->errorData.errorTextLength);
+			for (i = 0; i < pdu->errorData.errorTextLength; ++i)
+			{
+				if (pdu->errorData.errorText[i] == '"' ||
+					pdu->errorData.errorText[i] == '\\')
+				{
+					SNPRINTF("\\%c", pdu->errorData.errorText[i]);
+				}
+				else if (!isprint(pdu->errorData.errorText[i]) ||
+					(isspace(pdu->errorData.errorText[i]) &&
+						pdu->errorData.errorText[i] != ' '))
+				{
+					SNPRINTF("\\x%02" PRIx8, pdu->errorData.errorText[i]);
+				}
+				else
+				{
+					SNPRINTF("%c", pdu->errorData.errorText[i]);
+				}
+			}
+			SNPRINTF("\"");
 			break;
 		default:
 			break;
