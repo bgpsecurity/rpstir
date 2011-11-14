@@ -558,7 +558,13 @@ static void handle_response(struct run_state * run_state)
 		send_pdu(run_state, &run_state->response->PDUs[i]);
 	}
 
-	if (run_state->response->more_data_semaphore == NULL)
+	bool end_of_request = (run_state->response->more_data_semaphore == NULL);
+
+	pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
+	free((void *)run_state->response);
+	run_state->response = NULL;
+
+	if (end_of_request)
 	{
 		run_state->state = READY;
 		while (run_state->state == READY &&
@@ -570,10 +576,6 @@ static void handle_response(struct run_state * run_state)
 			run_state->pdup = NULL;
 		}
 	}
-
-	pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
-	free((void *)run_state->response);
-	run_state->response = NULL;
 }
 
 
