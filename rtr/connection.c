@@ -32,8 +32,11 @@ struct run_state {
 	Queue * db_response_queue;
 	Queue * to_process_queue;
 
-	uint8_t pdu_buffer[MAX_PDU_SIZE];
-	size_t pdu_buffer_length;
+	uint8_t pdu_recv_buffer[MAX_PDU_SIZE];
+	size_t pdu_recv_buffer_length;
+
+	uint8_t pdu_send_buffer[MAX_PDU_SIZE];
+	size_t pdu_send_buffer_length;
 
 	PDU pdu; // this can have pointers into pdu_buffer
 	PDU * pdup; // this can't
@@ -74,7 +77,8 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	run_state->db_response_queue = NULL;
 	run_state->to_process_queue = NULL;
 
-	run_state->pdu_buffer_length = 0;
+	run_state->pdu_recv_buffer_length = 0;
+	run_state->pdu_send_buffer_length = 0;
 
 	run_state->pdup = NULL;
 
@@ -96,7 +100,7 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 		pthread_exit(NULL);
 	}
 
-	count = dump_pdu(run_state->pdu_buffer, MAX_PDU_SIZE, pdu);
+	count = dump_pdu(run_state->pdu_send_buffer, MAX_PDU_SIZE, pdu);
 	if (count < 0)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "dump_pdu failed");
@@ -104,13 +108,13 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 	}
 	else
 	{
-		run_state->pdu_buffer_length = count;
+		run_state->pdu_send_buffer_length = count;
 	}
 
 	while (count > 0)
 	{
 		retval = write(run_state->fd,
-			run_state->pdu_buffer + run_state->pdu_buffer_length - count,
+			run_state->pdu_send_buffer + run_state->pdu_send_buffer_length - count,
 			(size_t)count);
 		if (retval < 0)
 		{
@@ -130,7 +134,7 @@ static void read_block(struct run_state * run_state, ssize_t count)
 
 	while (count > 0)
 	{
-		switch (parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu))
+		switch (parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu))
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
@@ -150,7 +154,7 @@ static void read_block(struct run_state * run_state, ssize_t count)
 				pthread_exit(NULL);
 		}
 
-		retval = read(run_state->fd, run_state->pdu_buffer + run_state->pdu_buffer_length, (size_t)count);
+		retval = read(run_state->fd, run_state->pdu_recv_buffer + run_state->pdu_recv_buffer_length, (size_t)count);
 		if (retval < 0)
 		{
 			log_error(errno, run_state->errorbuf, "read()");
@@ -163,7 +167,7 @@ static void read_block(struct run_state * run_state, ssize_t count)
 		else
 		{
 			count -= retval;
-			run_state->pdu_buffer_length += retval;
+			run_state->pdu_recv_buffer_length += retval;
 		}
 	}
 }
@@ -177,7 +181,7 @@ static bool read_nonblock(struct run_state * run_state, size_t count)
 	ssize_t retval;
 
 	retval = recv(run_state->fd,
-		run_state->pdu_buffer + run_state->pdu_buffer_length,
+		run_state->pdu_recv_buffer + run_state->pdu_recv_buffer_length,
 		count,
 		MSG_DONTWAIT);
 
@@ -195,7 +199,7 @@ static bool read_nonblock(struct run_state * run_state, size_t count)
 	}
 	else
 	{
-		run_state->pdu_buffer_length += retval;
+		run_state->pdu_recv_buffer_length += retval;
 
 		return true;
 	}
@@ -206,16 +210,16 @@ static int read_and_parse_pdu(struct run_state * run_state)
 {
 	int retval;
 
-	retval = parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu);
+	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu);
 
 	if (retval == PDU_ERROR)
 	{
 		return retval;
 	}
 
-	read_block(run_state, PDU_HEADER_LENGTH - run_state->pdu_buffer_length);
+	read_block(run_state, PDU_HEADER_LENGTH - run_state->pdu_recv_buffer_length);
 
-	retval = parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu);
+	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu);
 
 	if (retval == PDU_TRUNCATED)
 	{
@@ -229,9 +233,9 @@ static int read_and_parse_pdu(struct run_state * run_state)
 		}
 
 		read_block(run_state,
-			run_state->pdu.length - run_state->pdu_buffer_length);
+			run_state->pdu.length - run_state->pdu_recv_buffer_length);
 
-		retval = parse_pdu(run_state->pdu_buffer, run_state->pdu_buffer_length, &run_state->pdu);
+		retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu);
 	}
 
 	return retval;
@@ -514,7 +518,7 @@ static void connection_main_loop(struct run_state * run_state)
 	if (!wait_on_semaphore(run_state, true))
 		pthread_exit(NULL);
 
-	run_state->pdu_buffer_length = 0;
+	run_state->pdu_recv_buffer_length = 0;
 
 	if (read_nonblock(run_state, PDU_HEADER_LENGTH))
 	{
