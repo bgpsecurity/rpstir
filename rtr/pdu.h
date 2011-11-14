@@ -137,7 +137,11 @@ struct _PDU {
 #define PDU_GOOD 0 /* valid PDU */
 #define PDU_TRUNCATED -1 /* PDU doesn't have errors but is truncated */
 #define PDU_WARNING -2 /* PDU has warnings but no errors */
-#define PDU_ERROR -3 /* PDU is invalid */
+#define PDU_CORRUPT_DATA -3
+#define PDU_INTERNAL_ERROR -4
+#define PDU_UNSUPPORTED_PROTOCOL_VERSION -5
+#define PDU_UNSUPPORTED_PDU_TYPE -6
+#define PDU_IS_ERROR(retval) ((retval) <= PDU_CORRUPT_DATA)
 /**
 	Attempt to parse as much of buffer as possible into pdu.
 

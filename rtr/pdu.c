@@ -30,7 +30,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 	size_t offset = 0;
 
 	if (buffer == NULL || pdu == NULL)
-		return PDU_ERROR;
+		return PDU_INTERNAL_ERROR;
 
 	#define EXTRACT_FIELD(field) \
 		do { \
@@ -61,7 +61,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 	EXTRACT_FIELD(pdu->protocolVersion);
 	if (pdu->protocolVersion != PROTOCOL_VERSION)
 	{
-		return PDU_ERROR;
+		return PDU_UNSUPPORTED_PROTOCOL_VERSION;
 	}
 
 	EXTRACT_FIELD(pdu->pduType);
@@ -98,7 +98,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			}
 			break;
 		default:
-			return PDU_ERROR;
+			return PDU_UNSUPPORTED_PDU_TYPE;
 	}
 
 	EXTRACT_FIELD(pdu->length);
@@ -109,7 +109,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 		case PDU_END_OF_DATA:
 			if (pdu->length != PDU_HEADER_LENGTH + sizeof(pdu->serialNumber))
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 			EXTRACT_FIELD(pdu->serialNumber);
 			return ret;
@@ -118,13 +118,13 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 		case PDU_CACHE_RESET:
 			if (pdu->length != PDU_HEADER_LENGTH)
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 			return ret;
 		case PDU_IPV4_PREFIX:
 			if (pdu->length != PDU_HEADER_LENGTH + sizeof(IP4PrefixData))
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 
 			EXTRACT_FIELD(pdu->ip4PrefixData.flags);
@@ -160,7 +160,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 		case PDU_IPV6_PREFIX:
 			if (pdu->length != PDU_HEADER_LENGTH + sizeof(IP6PrefixData))
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 
 			EXTRACT_FIELD(pdu->ip6PrefixData.flags);
@@ -196,13 +196,13 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 		case PDU_ERROR_REPORT:
 			if (pdu->length < PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH)
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 
 			EXTRACT_FIELD(pdu->errorData.encapsulatedPDULength);
 			if (pdu->length < PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + pdu->errorData.encapsulatedPDULength)
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 
 			if (buflen < offset + pdu->errorData.encapsulatedPDULength)
@@ -215,7 +215,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			EXTRACT_FIELD(pdu->errorData.errorTextLength);
 			if (pdu->length != PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + pdu->errorData.encapsulatedPDULength + pdu->errorData.errorTextLength)
 			{
-				return PDU_ERROR;
+				return PDU_CORRUPT_DATA;
 			}
 
 			if (buflen < offset + pdu->errorData.errorTextLength)
@@ -228,7 +228,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			return ret;
 		default:
 			// this really shouldn't happen...
-			return PDU_ERROR;
+			return PDU_INTERNAL_ERROR;
 	}
 
 	#undef EXTRACT_BIN_FIELD
