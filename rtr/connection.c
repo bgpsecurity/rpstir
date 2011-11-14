@@ -38,7 +38,8 @@ struct run_state {
 	uint8_t pdu_send_buffer[MAX_PDU_SIZE];
 	size_t pdu_send_buffer_length;
 
-	PDU pdu; // this can have pointers into pdu_buffer
+	PDU recv_pdu; // this can have pointers into pdu_recv_buffer
+	PDU send_pdu; // ditto
 	PDU * pdup; // this can't
 
 	struct db_response * response;
@@ -127,14 +128,14 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 }
 
 
-/** Repeatedly read into run_state->pdu_buffer until count is fulfilled. */
+/** Repeatedly read into run_state->pdu_recv_buffer until count is fulfilled. */
 static void read_block(struct run_state * run_state, ssize_t count)
 {
 	ssize_t retval;
 
 	while (count > 0)
 	{
-		switch (parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu))
+		switch (parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu))
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
@@ -210,7 +211,7 @@ static int read_and_parse_pdu(struct run_state * run_state)
 {
 	int retval;
 
-	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu);
+	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu);
 
 	if (retval == PDU_ERROR)
 	{
@@ -219,23 +220,23 @@ static int read_and_parse_pdu(struct run_state * run_state)
 
 	read_block(run_state, PDU_HEADER_LENGTH - run_state->pdu_recv_buffer_length);
 
-	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu);
+	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu);
 
 	if (retval == PDU_TRUNCATED)
 	{
-		if (run_state->pdu.length > MAX_PDU_SIZE)
+		if (run_state->recv_pdu.length > MAX_PDU_SIZE)
 		{
 			log_msg(LOG_NOTICE,
 				LOG_PREFIX "received PDU that's too long (%" PRIu32 " bytes)",
-				run_state->pdu.length);
+				run_state->recv_pdu.length);
 			// TODO: send error
 			pthread_exit(NULL);
 		}
 
 		read_block(run_state,
-			run_state->pdu.length - run_state->pdu_recv_buffer_length);
+			run_state->recv_pdu.length - run_state->pdu_recv_buffer_length);
 
-		retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->pdu);
+		retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu);
 	}
 
 	return retval;
@@ -338,11 +339,11 @@ static void read_and_handle_pdu(struct run_state * run_state)
 			// TODO: handle this correctly instead of this stub
 			if (run_state->state == RESPONDING)
 			{
-				push_to_process_queue(run_state, &run_state->pdu);
+				push_to_process_queue(run_state, &run_state->recv_pdu);
 			}
 			else
 			{
-				add_db_request(run_state, &run_state->pdu);
+				add_db_request(run_state, &run_state->recv_pdu);
 			}
 			break;
 		default:
