@@ -340,6 +340,31 @@ static int read_and_parse_pdu(struct run_state * run_state)
 	return retval;
 }
 
+static void increment_db_semaphores_all(struct run_state * run_state)
+{
+	Bag_start_iteration(run_state->db_semaphores_all);
+	Bag_iterator db_sem_it;
+	db_semaphore_t * db_sem;
+	for (db_sem_it = Bag_begin(run_state->db_semaphores_all);
+		db_sem_it != Bag_end(run_state->db_semaphores_all);
+		db_sem_it = Bag_iterator_next(run_state->db_semaphores_all, db_sem_it))
+	{
+		db_sem = Bag_get(run_state->db_semaphores_all, db_sem_it);
+		if (db_sem == NULL)
+		{
+			log_msg(LOG_ERR, LOG_PREFIX "found NULL db semaphore");
+		}
+		else
+		{
+			if (sem_post(db_sem) != 0)
+			{
+				log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
+			}
+		}
+	}
+	Bag_stop_iteration(run_state->db_semaphores_all);
+}
+
 static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_from_recv_buffer)
 {
 	if (Queue_size(run_state->db_response_queue) != 0)
@@ -383,27 +408,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 
 	run_state->state = RESPONDING;
 
-	Bag_start_iteration(run_state->db_semaphores_all);
-	Bag_iterator db_sem_it;
-	db_semaphore_t * db_sem;
-	for (db_sem_it = Bag_begin(run_state->db_semaphores_all);
-		db_sem_it != Bag_end(run_state->db_semaphores_all);
-		db_sem_it = Bag_iterator_next(run_state->db_semaphores_all, db_sem_it))
-	{
-		db_sem = Bag_get(run_state->db_semaphores_all, db_sem_it);
-		if (db_sem == NULL)
-		{
-			log_msg(LOG_ERR, LOG_PREFIX "found NULL db semaphore");
-		}
-		else
-		{
-			if (sem_post(db_sem) != 0)
-			{
-				log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
-			}
-		}
-	}
-	Bag_stop_iteration(run_state->db_semaphores_all);
+	increment_db_semaphores_all(run_state);
 }
 
 static void push_to_process_queue(struct run_state * run_state, const PDU * pdu, bool pdu_from_recv_buffer)
@@ -550,7 +555,7 @@ static void cleanup(void * run_state_voidp)
 	{
 		run_state->request.cancel_request = true;
 
-		// TODO: increment all the DB semaphores (or the correct one if we can determine which it is)
+		increment_db_semaphores_all(run_state);
 
 		while (true)
 		{
