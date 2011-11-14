@@ -388,9 +388,11 @@ void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
 			{ \
 				offset += snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
 			} \
-			else \
+			\
+			if (offset >= PDU_SPRINT_BUFSZ) \
 			{ \
 				truncated = true; \
+				goto buffer_full; \
 			} \
 		} while (false)
 
@@ -590,6 +592,7 @@ void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
 	#define TRUNCATED_STR " ..."
 	#define TRUNCATED_STRLEN 4
 
+buffer_full:
 	if (truncated)
 	{
 		if (offset + TRUNCATED_STRLEN + 1 < PDU_SPRINT_BUFSZ)
