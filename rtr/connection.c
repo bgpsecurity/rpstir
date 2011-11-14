@@ -18,6 +18,8 @@
 
 #define LOG_PREFIX "[connection] "
 
+#define ERROR_TEXT(str) (uint8_t *)str, strlen(str)
+
 
 struct run_state {
 	int fd;
@@ -30,6 +32,7 @@ struct run_state {
 	enum {READY, RESPONDING} state;
 
 	char errorbuf[ERROR_BUF_SIZE];
+	char pdustrbuf[PDU_SPRINT_BUFSZ];
 
 	Queue * db_response_queue;
 	Queue * to_process_queue;
@@ -365,7 +368,7 @@ static int read_and_parse_pdu(struct run_state * run_state)
 				run_state->recv_pdu.length);
 			send_error(run_state, ERR_CORRUPT_DATA,
 				run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length,
-				(uint8_t *)"PDU too large", strlen("PDU too large"));
+				ERROR_TEXT("PDU too large"));
 			pthread_exit(NULL);
 		}
 
@@ -474,6 +477,42 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 	}
 }
 
+static void handle_pdu(struct run_state * run_state, PDU * pdup, bool pdu_from_recv_buffer)
+{
+	switch (pdup->pduType)
+	{
+		case PDU_SERIAL_QUERY:
+			if (pdup->cacheNonce != run_state->local_cache_state.nonce)
+			{
+				send_error_from_parsed_pdu(run_state, ERR_INVALID_REQUEST,
+					pdup, pdu_from_recv_buffer,
+					ERROR_TEXT("mismatched cache nonce"));
+				pthread_exit(NULL);
+			}
+		case PDU_RESET_QUERY:
+			if (run_state->state == RESPONDING)
+			{
+				push_to_process_queue(run_state, pdup, pdu_from_recv_buffer);
+			}
+			else
+			{
+				add_db_request(run_state, pdup, pdu_from_recv_buffer);
+			}
+			break;
+		case PDU_ERROR_REPORT:
+			pdu_sprint(pdup, run_state->pdustrbuf);
+			log_msg(LOG_NOTICE, LOG_PREFIX "received %s", run_state->pdustrbuf);
+			pthread_exit(NULL);
+		default:
+			pdu_sprint(pdup, run_state->pdustrbuf);
+			log_msg(LOG_NOTICE, LOG_PREFIX "received unexpected PDU: %s", run_state->pdustrbuf);
+			send_error_from_parsed_pdu(run_state, ERR_INVALID_REQUEST,
+				pdup, pdu_from_recv_buffer,
+				ERROR_TEXT("unexpected PDU type"));
+			pthread_exit(NULL);
+	}
+}
+
 static void read_and_handle_pdu(struct run_state * run_state)
 {
 	int retval = read_and_parse_pdu(run_state);
@@ -483,15 +522,7 @@ static void read_and_handle_pdu(struct run_state * run_state)
 		case PDU_WARNING:
 			log_msg(LOG_NOTICE, LOG_PREFIX "received a PDU with unsupported feature(s)");
 		case PDU_GOOD:
-			// TODO: handle this correctly instead of this stub
-			if (run_state->state == RESPONDING)
-			{
-				push_to_process_queue(run_state, &run_state->recv_pdu, true);
-			}
-			else
-			{
-				add_db_request(run_state, &run_state->recv_pdu, true);
-			}
+			handle_pdu(run_state, &run_state->recv_pdu, true);
 			break;
 		default:
 			log_and_send_parse_error(run_state, retval);
@@ -533,8 +564,7 @@ static void handle_response(struct run_state * run_state)
 		while (run_state->state == READY &&
 			Queue_trypop(run_state->to_process_queue, (void **)&run_state->pdup))
 		{
-			// TODO: handle this for real instead of this stub
-			add_db_request(run_state, run_state->pdup, false);
+			handle_pdu(run_state, run_state->pdup, false);
 
 			pdu_free(run_state->pdup);
 			run_state->pdup = NULL;
