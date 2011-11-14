@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include "logutils.h"
 #include "macros.h"
@@ -127,31 +128,126 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 	}
 }
 
+static void send_error(struct run_state * run_state, error_code_t code,
+	uint8_t * embedded_pdu, size_t embedded_pdu_length,
+	uint8_t * error_text, size_t error_text_length)
+{
+	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length > MAX_PDU_SIZE)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "send_error() called with too long of an error text");
+		pthread_exit(NULL);
+	}
+
+	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + embedded_pdu_length + error_text_length > MAX_PDU_SIZE)
+	{
+		embedded_pdu_length = MAX_PDU_SIZE - (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length);
+	}
+
+	run_state->send_pdu.protocolVersion = PROTOCOL_VERSION;
+	run_state->send_pdu.pduType = PDU_ERROR_REPORT;
+	run_state->send_pdu.errorCode = code;
+	run_state->send_pdu.length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + embedded_pdu_length + error_text_length;
+	run_state->send_pdu.errorData.encapsulatedPDULength = embedded_pdu_length;
+	run_state->send_pdu.errorData.encapsulatedPDU = embedded_pdu;
+	run_state->send_pdu.errorData.errorTextLength = error_text_length;
+	run_state->send_pdu.errorData.errorText = error_text;
+
+	send_pdu(run_state, &run_state->send_pdu);
+}
+
+// If embed_from_recv_buffer: get the PDU from the receive buffer and ignore embedded_pdu.
+// It !embed_from_recv_buffer: dump embedded_pdu into the receive buffer.
+static void send_error_from_parsed_pdu(struct run_state * run_state, error_code_t code,
+	const PDU * embedded_pdu, bool embed_from_recv_buffer,
+	uint8_t * error_text, size_t error_text_length)
+{
+	if (embed_from_recv_buffer)
+	{
+		send_error(run_state, code,
+			run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length,
+			error_text, error_text_length);
+		return;
+	}
+
+	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length > MAX_PDU_SIZE)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "send_error_from_parsed_pdu() called with too long of an error text");
+		pthread_exit(NULL);
+	}
+
+	size_t max_embedded_length = MAX_PDU_SIZE - (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length);
+
+	ssize_t retval = dump_pdu(run_state->pdu_recv_buffer, max_embedded_length, embedded_pdu);
+	run_state->pdu_recv_buffer_length = 0;
+
+	if (retval <= 0)
+	{
+		send_error(run_state, code,
+			NULL, 0,
+			error_text, error_text_length);
+		return;
+	}
+
+	send_error(run_state, code,
+		run_state->pdu_recv_buffer, (size_t)retval,
+		error_text, error_text_length);
+}
+
+static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu_retval)
+{
+	error_code_t code;
+
+	switch (parse_pdu_retval)
+	{
+		case PDU_CORRUPT_DATA:
+			log_msg(LOG_NOTICE, LOG_PREFIX "received PDU with corrupt data");
+			code = ERR_CORRUPT_DATA;
+			break;
+		case PDU_INTERNAL_ERROR:
+			log_msg(LOG_NOTICE, LOG_PREFIX "internal error from parsing a PDU");
+			code = ERR_INTERNAL_ERROR;
+			break;
+		case PDU_UNSUPPORTED_PROTOCOL_VERSION:
+			log_msg(LOG_NOTICE, LOG_PREFIX "received PDU with unsupported protocol version");
+			code = ERR_UNSUPPORTED_VERSION;
+			break;
+		case PDU_UNSUPPORTED_PDU_TYPE:
+			log_msg(LOG_NOTICE, LOG_PREFIX "received PDU with unsupported PDU type");
+			code = ERR_UNSUPPORTED_TYPE;
+			break;
+		default:
+			log_msg(LOG_ERR, LOG_PREFIX "log_and_send_parse_error() called with unexpected parse_pdu_retval (%d)", parse_pdu_retval);
+			code = ERR_INTERNAL_ERROR;
+			break;
+	}
+
+	send_error(run_state, code,
+		run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length,
+		NULL, 0);
+}
+
 
 /** Repeatedly read into run_state->pdu_recv_buffer until count is fulfilled. */
 static void read_block(struct run_state * run_state, ssize_t count)
 {
 	ssize_t retval;
+	int parse_retval;
 
 	while (count > 0)
 	{
-		switch (parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu))
+		parse_retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu);
+		switch (parse_retval)
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
 				log_msg(LOG_WARNING, LOG_PREFIX "tried to read past the end of a PDU");
-				// TODO: send error
-				pthread_exit(NULL);
-			case PDU_ERROR:
-				log_msg(LOG_NOTICE, LOG_PREFIX "received invalid PDU");
-				// TODO: send error
+				send_error(run_state, ERR_INTERNAL_ERROR, NULL, 0, NULL, 0);
 				pthread_exit(NULL);
 			case PDU_TRUNCATED:
 				// this is good because we're expecting to read more
 				break;
 			default:
-				log_msg(LOG_ERR, LOG_PREFIX "unexpected return value from parse_pdu()");
-				// TODO: send error
+				log_and_send_parse_error(run_state, parse_retval);
 				pthread_exit(NULL);
 		}
 
@@ -213,7 +309,7 @@ static int read_and_parse_pdu(struct run_state * run_state)
 
 	retval = parse_pdu(run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length, &run_state->recv_pdu);
 
-	if (retval == PDU_ERROR)
+	if (PDU_IS_ERROR(retval))
 	{
 		return retval;
 	}
@@ -229,7 +325,9 @@ static int read_and_parse_pdu(struct run_state * run_state)
 			log_msg(LOG_NOTICE,
 				LOG_PREFIX "received PDU that's too long (%" PRIu32 " bytes)",
 				run_state->recv_pdu.length);
-			// TODO: send error
+			send_error(run_state, ERR_CORRUPT_DATA,
+				run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length,
+				(uint8_t *)"PDU too large", strlen("PDU too large"));
 			pthread_exit(NULL);
 		}
 
@@ -242,12 +340,14 @@ static int read_and_parse_pdu(struct run_state * run_state)
 	return retval;
 }
 
-static void add_db_request(struct run_state * run_state, PDU * pdu)
+static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_from_recv_buffer)
 {
 	if (Queue_size(run_state->db_response_queue) != 0)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "add_db_request called with non-empty response queue");
-		// TODO: send error
+		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
+			pdu, pdu_from_recv_buffer,
+			NULL, 0);
 		pthread_exit(NULL);
 	}
 
@@ -262,7 +362,9 @@ static void add_db_request(struct run_state * run_state, PDU * pdu)
 			break;
 		default:
 			log_msg(LOG_ERR, LOG_PREFIX "add_db_request() called with a non-query PDU");
-			// TODO: send error
+			send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
+				pdu, pdu_from_recv_buffer,
+				NULL, 0);
 			pthread_exit(NULL);
 	}
 
@@ -273,7 +375,9 @@ static void add_db_request(struct run_state * run_state, PDU * pdu)
 	if (!Queue_push(run_state->db_request_queue, (void *)&run_state->request))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "couldn't add new request to request queue");
-		// TODO: send error
+		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
+			pdu, pdu_from_recv_buffer,
+			NULL, 0);
 		pthread_exit(NULL);
 	}
 
@@ -302,13 +406,15 @@ static void add_db_request(struct run_state * run_state, PDU * pdu)
 	Bag_stop_iteration(run_state->db_semaphores_all);
 }
 
-static void push_to_process_queue(struct run_state * run_state, const PDU * pdu)
+static void push_to_process_queue(struct run_state * run_state, const PDU * pdu, bool pdu_from_recv_buffer)
 {
 	PDU * pdup = pdu_deepcopy(pdu);
 	if (pdup == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a copy of the PDU");
-		// TODO: send error
+		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
+			pdu, pdu_from_recv_buffer,
+			NULL, 0);
 		pthread_exit(NULL);
 	}
 
@@ -318,7 +424,9 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu)
 	{
 		pdu_free(pdup);
 		log_msg(LOG_ERR, LOG_PREFIX "can't push a PDU onto the to-process queue");
-		// TODO: send error
+		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
+			pdu, pdu_from_recv_buffer,
+			NULL, 0);
 		pthread_exit(NULL);
 	}
 }
@@ -329,28 +437,21 @@ static void read_and_handle_pdu(struct run_state * run_state)
 
 	switch (retval)
 	{
-		case PDU_ERROR:
-			log_msg(LOG_NOTICE, LOG_PREFIX "received invalid PDU");
-			// TODO: send error
-			pthread_exit(NULL);
 		case PDU_WARNING:
 			log_msg(LOG_NOTICE, LOG_PREFIX "received a PDU with unsupported feature(s)");
 		case PDU_GOOD:
 			// TODO: handle this correctly instead of this stub
 			if (run_state->state == RESPONDING)
 			{
-				push_to_process_queue(run_state, &run_state->recv_pdu);
+				push_to_process_queue(run_state, &run_state->recv_pdu, true);
 			}
 			else
 			{
-				add_db_request(run_state, &run_state->recv_pdu);
+				add_db_request(run_state, &run_state->recv_pdu, true);
 			}
 			break;
 		default:
-			log_msg(LOG_ERR,
-				LOG_PREFIX "read_and_parse_pdu() returned an unexpected value (%d)",
-				retval);
-			// TODO: send error
+			log_and_send_parse_error(run_state, retval);
 			pthread_exit(NULL);
 	}
 }
@@ -390,7 +491,7 @@ static void handle_response(struct run_state * run_state)
 			Queue_trypop(run_state->to_process_queue, (void **)&run_state->pdup))
 		{
 			// TODO: handle this for real instead of this stub
-			add_db_request(run_state, run_state->pdup);
+			add_db_request(run_state, run_state->pdup, false);
 
 			pdu_free(run_state->pdup);
 			run_state->pdup = NULL;
