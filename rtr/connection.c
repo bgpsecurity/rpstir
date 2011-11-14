@@ -25,6 +25,7 @@ struct run_state {
 	Queue * db_request_queue;
 	Bag * db_semaphores_all;
 	struct global_cache_state * global_cache_state;
+	struct cache_state local_cache_state;
 
 	enum {READY, RESPONDING} state;
 
@@ -50,6 +51,30 @@ struct run_state {
 };
 
 
+static void copy_cache_state(struct run_state * run_state, struct cache_state * cache_state)
+{
+	int retval;
+
+	retval = pthread_rwlock_rdlock(&run_state->global_cache_state->lock);
+
+	if (retval != 0)
+	{
+		log_error(retval, run_state->errorbuf, LOG_PREFIX "pthread_rwlock_rdlock()");
+		pthread_exit(NULL);
+	}
+
+	*cache_state = run_state->global_cache_state->cache_state;
+
+	retval = pthread_rwlock_unlock(&run_state->global_cache_state->lock);
+
+	if (retval != 0)
+	{
+		log_error(retval, run_state->errorbuf, LOG_PREFIX "pthread_rwlock_unlock()");
+		pthread_exit(NULL);
+	}
+}
+
+
 static void initialize_run_state(struct run_state * run_state, void * args_voidp)
 {
 	struct connection_main_args * argsp = (struct connection_main_args *)args_voidp;
@@ -73,6 +98,8 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 
 	free(args_voidp);
 	args_voidp = NULL;
+
+	copy_cache_state(run_state, &run_state->local_cache_state);
 
 	run_state->state = READY;
 
@@ -224,6 +251,17 @@ static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu
 	send_error(run_state, code,
 		run_state->pdu_recv_buffer, run_state->pdu_recv_buffer_length,
 		NULL, 0);
+}
+
+static void send_notify(struct run_state * run_state)
+{
+	run_state->send_pdu.protocolVersion = PROTOCOL_VERSION;
+	run_state->send_pdu.pduType = PDU_SERIAL_NOTIFY;
+	run_state->send_pdu.cacheNonce = run_state->local_cache_state.nonce;
+	run_state->send_pdu.length = PDU_HEADER_LENGTH + sizeof(serial_number_t);
+	run_state->send_pdu.serialNumber = run_state->local_cache_state.serial_number;
+
+	send_pdu(run_state, &run_state->send_pdu);
 }
 
 
@@ -509,6 +547,32 @@ static void handle_response(struct run_state * run_state)
 }
 
 
+static void check_global_cache_state(struct run_state * run_state)
+{
+	struct cache_state tmp_cache_state;
+
+	if (run_state->state != READY)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "check_global_cache_state() called when not in READY state");
+		pthread_exit(NULL);
+	}
+
+	copy_cache_state(run_state, &tmp_cache_state);
+
+	if (run_state->local_cache_state.nonce != tmp_cache_state.nonce)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "cache nonce has changed");
+		pthread_exit(NULL);
+	}
+
+	if (run_state->local_cache_state.serial_number != tmp_cache_state.serial_number)
+	{
+		run_state->local_cache_state.serial_number = tmp_cache_state.serial_number;
+		send_notify(run_state);
+	}
+}
+
+
 // I think this function shouldn't call pthread_exit() because it's called from cleanup()
 static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 {
@@ -637,7 +701,10 @@ static void connection_main_loop(struct run_state * run_state)
 		handle_response(run_state);
 	}
 
-	// TODO: check global_cache_state
+	if (run_state->state == READY)
+	{
+		check_global_cache_state(run_state);
+	}
 }
 
 
@@ -649,13 +716,6 @@ void * connection_main(void * args_voidp)
 	pthread_cleanup_push(cleanup, &run_state);
 
 	initialize_data_structures_in_run_state(&run_state);
-
-
-	/* TODO:
-	Lock global_cache_state.lock for reading.
-	Let cache_state_t cache_state = copy of global_cache_state.cache_state.
-	Unlock global_cache_state.lock.
-	*/
 
 	while (true)
 	{
