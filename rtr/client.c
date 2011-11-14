@@ -161,14 +161,11 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 			case PDU_GOOD:
 			case PDU_WARNING:
 				return true;
-			case PDU_ERROR:
-				fprintf(stderr, "received invalid PDU\n");
-				return false;
 			case PDU_TRUNCATED:
 				// more to read
 				break;
 			default:
-				fprintf(stderr, "unexpected return value from parse_pdu()\n");
+				fprintf(stderr, "received invalid PDU\n");
 				return false;
 		}
 
