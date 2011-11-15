@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "logutils.h"
 
 #include "common.h"
@@ -15,7 +17,7 @@ static bool get_cache_state(struct cache_state * state /* TODO: DB connection */
 	// TODO: real implementation instead of this stub
 
 	state->nonce = 0;
-	state->serial_number = 0;
+	state->serial_number = rand();
 
 	return true;
 }
