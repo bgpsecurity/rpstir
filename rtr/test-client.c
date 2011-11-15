@@ -12,7 +12,6 @@
 
 #define DELIM " \t\n\r"
 
-#define SEND_PROMPT "> "
 #define RECV_PREFIX "received "
 
 #define MAX_PDU_SIZE 65536
@@ -75,8 +74,6 @@ static int do_send()
 
 	while (true)
 	{
-		fprintf(stderr, "\n%s", SEND_PROMPT);
-
 		if (fgets(linebuf, LINEBUF_SIZE, stdin) == NULL)
 		{
 			return EXIT_FAILURE;

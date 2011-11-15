@@ -27,7 +27,8 @@ AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
 
 noinst_LIBRARIES = libpdu.a
 
-bin_PROGRAMS = doUpdate rtrd rtr-client
+bin_PROGRAMS = doUpdate rtrd
+noinst_PROGRAMS = rtr-test-client
 
 EXTRA_DIST = \
 	cleanServerData
@@ -51,6 +52,6 @@ rtrd_SOURCES = \
 rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
 rtrd_CFLAGS = $(AM_CFLAGS) -Werror
 
-rtr_client_SOURCES = client.c
-rtr_client_LDADD = libpdu.a ../utils/libutils.a
-rtr_client_CFLAGS = $(AM_CFLAGS) -Werror
+rtr_test_client_SOURCES = test-client.c
+rtr_test_client_LDADD = libpdu.a ../utils/libutils.a
+rtr_test_client_CFLAGS = $(AM_CFLAGS) -Werror
