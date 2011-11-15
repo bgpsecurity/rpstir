@@ -74,8 +74,6 @@ Problems to figure out:
 
  * In the current design, the connection control thread can spin on a socket that's read-ready, incrementing the corresponding semaphore many times before the connection thread reads all available data.
   * Possible fix: after incrementing a semaphore, remove the socket from the FD_SET and have the connection thread add it back somehow. This is probably problematic though.
- * There's no way for a connection thread to cancel its open db request so it can quit and cxn_ctl can destroy its semaphore.
-  * Possible fix: add a Bag of canceled requests, have db threads check it and delete any matching requests, then send an empty response to let the cxn know its request was cancelled
  * It may be difficult to correctly delete a DB thread. If the DB thread just stops taking new requests and finishes processing its already accepted requests, its semaphore can still be post()ed by a cxn thread that hasn't gotten through its response queue.
 
 
