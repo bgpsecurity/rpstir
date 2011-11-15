@@ -53,7 +53,8 @@ struct run_state {
 	// There can only be one outstanding request at a time, so this is it. No malloc() or free().
 	struct db_request request;
 
-	time_t last_notify_time;
+	// tv_nsec MUST be zero
+	struct timespec next_cache_state_check_time;
 };
 
 
@@ -78,6 +79,8 @@ static void copy_cache_state(struct run_state * run_state, struct cache_state * 
 		log_error(retval, run_state->errorbuf, LOG_PREFIX "pthread_rwlock_unlock()");
 		pthread_exit(NULL);
 	}
+
+	run_state->next_cache_state_check_time.tv_sec = time(NULL) + CXN_CACHE_STATE_INTERVAL;
 }
 
 
@@ -119,7 +122,8 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 
 	run_state->response = NULL;
 
-	run_state->last_notify_time = time(NULL);
+	run_state->next_cache_state_check_time.tv_sec = time(NULL) + CXN_NOTIFY_INTERVAL;
+	run_state->next_cache_state_check_time.tv_nsec = 0;
 
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
 }
@@ -269,9 +273,9 @@ static void send_notify(struct run_state * run_state)
 	run_state->send_pdu.length = PDU_HEADER_LENGTH + sizeof(serial_number_t);
 	run_state->send_pdu.serialNumber = run_state->local_cache_state.serial_number;
 
-	run_state->last_notify_time = time(NULL);
-
 	send_pdu(run_state, &run_state->send_pdu);
+
+	run_state->next_cache_state_check_time.tv_sec = time(NULL) + CXN_NOTIFY_INTERVAL;
 }
 
 
@@ -619,12 +623,8 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 
 	if (use_timeout && run_state->state == READY) // if we're RESPONDING, we can't send a Notify anyway
 	{
-		struct timespec semaphore_timeout;
-
-		semaphore_timeout.tv_sec = run_state->last_notify_time + CXN_CACHE_STATE_INTERVAL + 1;
-		semaphore_timeout.tv_nsec = 0;
-
-		retval = sem_timedwait(run_state->semaphore, &semaphore_timeout);
+		run_state->next_cache_state_check_time.tv_sec += 1;
+		retval = sem_timedwait(run_state->semaphore, &run_state->next_cache_state_check_time);
 	}
 	else
 	{
@@ -748,7 +748,7 @@ static void connection_main_loop(struct run_state * run_state)
 	}
 
 	if (run_state->state == READY &&
-		time(NULL) > run_state->last_notify_time + CXN_CACHE_STATE_INTERVAL)
+		time(NULL) >= run_state->next_cache_state_check_time.tv_sec)
 	{
 		check_global_cache_state(run_state);
 	}
