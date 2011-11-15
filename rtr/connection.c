@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <inttypes.h>
 #include <string.h>
+#include <time.h>
 
 #include "logutils.h"
 #include "macros.h"
@@ -51,6 +52,8 @@ struct run_state {
 
 	// There can only be one outstanding request at a time, so this is it. No malloc() or free().
 	struct db_request request;
+
+	time_t last_notify_time;
 };
 
 
@@ -115,6 +118,8 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	run_state->pdup = NULL;
 
 	run_state->response = NULL;
+
+	run_state->last_notify_time = time(NULL);
 
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
 }
@@ -263,6 +268,8 @@ static void send_notify(struct run_state * run_state)
 	run_state->send_pdu.cacheNonce = run_state->local_cache_state.nonce;
 	run_state->send_pdu.length = PDU_HEADER_LENGTH + sizeof(serial_number_t);
 	run_state->send_pdu.serialNumber = run_state->local_cache_state.serial_number;
+
+	run_state->last_notify_time = time(NULL);
 
 	send_pdu(run_state, &run_state->send_pdu);
 }
@@ -608,14 +615,21 @@ static void check_global_cache_state(struct run_state * run_state)
 // I think this function shouldn't call pthread_exit() because it's called from cleanup()
 static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 {
-	static const struct timespec semaphore_timeout = {CXN_CACHE_STATE_INTERVAL, 0};
-
 	int retval;
 
-	if (use_timeout)
+	if (use_timeout && run_state->state == READY) // if we're RESPONDING, we can't send a Notify anyway
+	{
+		struct timespec semaphore_timeout;
+
+		semaphore_timeout.tv_sec = run_state->last_notify_time + CXN_CACHE_STATE_INTERVAL + 1;
+		semaphore_timeout.tv_nsec = 0;
+
 		retval = sem_timedwait(run_state->semaphore, &semaphore_timeout);
+	}
 	else
+	{
 		retval = sem_wait(run_state->semaphore);
+	}
 
 	if (retval == -1 && errno == ETIMEDOUT)
 	{
@@ -733,7 +747,8 @@ static void connection_main_loop(struct run_state * run_state)
 		handle_response(run_state);
 	}
 
-	if (run_state->state == READY)
+	if (run_state->state == READY &&
+		time(NULL) > run_state->last_notify_time + CXN_CACHE_STATE_INTERVAL)
 	{
 		check_global_cache_state(run_state);
 	}
