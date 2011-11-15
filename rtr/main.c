@@ -73,8 +73,34 @@ static bool create_db_thread(Bag * db_threads, struct db_main_args * db_main_arg
 
 static void cancel_all_db_threads(Bag * db_threads)
 {
-	// TODO
-	(void)db_threads;
+	Bag_iterator it;
+	int retval;
+	pthread_t * thread;
+
+	// TODO: join the threads after cancelling them
+
+	Bag_start_iteration(db_threads);
+	for (it = Bag_begin(db_threads);
+		it != Bag_end(db_threads);
+		it = Bag_erase(db_threads, it))
+	{
+		thread = Bag_get(db_threads, it);
+
+		if (thread == NULL)
+		{
+			log_msg(LOG_ERR, LOG_PREFIX "got NULL thread id pointer");
+			continue;
+		}
+
+		retval = pthread_cancel(*thread);
+		if (retval != 0)
+		{
+			log_error(retval, errorbuf, LOG_PREFIX "in cancel_all_db_threads(): pthread_cancel()");
+		}
+
+		free((void *)thread);
+	}
+	Bag_stop_iteration(db_threads);
 }
 
 
