@@ -28,6 +28,7 @@ test: all test-recursive
 	cd subsystemTests && ./runSubsystemTest.sh 2 8
 	cd subsystemTests && ./runSubsystemTest.sh 3 9
 	cd subsystemTests && ./runSubsystemTest4.sh
+	cd subsystemTests/rtr && ./runRTRTest.sh
 	@echo '**** All RPKI Subsystem tests ran successfully. ****'
 
 tags:
