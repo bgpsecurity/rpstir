@@ -7,21 +7,8 @@ cd "`dirname "$0"`"
 
 SERVER="$RPKI_ROOT/rtr/rtrd"
 CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
-LOGS="rtrd.log rtr-test-client.log"
+LOGS="rtrd rtr-test-client"
 PORT=1234
-
-
-rm -f $LOGS
-
-
-"$SERVER" &
-SERVER_PID=$!
-sleep 1
-
-cleanup () {
-	kill $SERVER_PID
-	wait $SERVER_PID
-}
 
 compare () {
 	name="$1"
@@ -31,14 +18,34 @@ compare () {
 	else
 		echo >&2 "failed!"
 		echo >&2 "See \"$name.diff\" for the differences."
-		cleanup
 		exit 1
 	fi
 }
 
-cat commands | "$CLIENT" send | nc localhost "$PORT" | "$CLIENT" recv
-for LOG in $LOGS; do
-	compare "$LOG"
-done
+start_test () {
+	TEST="$1"
 
-cleanup
+	for LOG in $LOGS; do
+		rm -f "$LOG.log" "$LOG.$TEST.log"
+	done
+
+	"$SERVER" &
+	SERVER_PID=$!
+	sleep 1
+}
+
+stop_test () {
+	TEST="$1"
+
+	kill $SERVER_PID
+	wait $SERVER_PID || true
+
+	for LOG in $LOGS; do
+		mv -f "$LOG.log" "$LOG.$TEST.log"
+		compare "$LOG.$TEST.log"
+	done
+}
+
+start_test simple
+cat commands | "$CLIENT" send | nc localhost "$PORT" | "$CLIENT" recv
+stop_test simple
