@@ -234,7 +234,7 @@ static scmtab scmtabbuilder[] =
 	  "rtr_nonce",
 	  "RTR_NONCE",
 	  "cache_nonce SMALLINT UNSIGNED NOT NULL,"
-	  "            PRIMARY_KEY (cache_nonce)",
+	  "            PRIMARY KEY (cache_nonce)",
 	  NULL,
 	  0
 	},
