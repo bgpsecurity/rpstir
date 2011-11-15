@@ -29,9 +29,10 @@
 static char errorbuf[ERROR_BUF_SIZE];
 
 
-static bool create_db_thread(Queue * db_request_queue, Bag * db_semaphores_all)
+static bool create_db_thread(Bag * db_threads, struct db_main_args * db_main_args)
 {
-	if (db_request_queue == NULL || db_semaphores_all == NULL)
+	if (db_threads == NULL ||
+		db_main_args == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "create_db_thread() got NULL argument");
 		return false;
@@ -39,57 +40,41 @@ static bool create_db_thread(Queue * db_request_queue, Bag * db_semaphores_all)
 
 	int retval;
 
-	struct db_main_args * args = malloc(sizeof(struct db_main_args));
-	if (args == NULL)
+	pthread_t * thread = malloc(sizeof(pthread_t));
+	if (thread == NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a db thread's arguments");
+		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for db thread id");
 		return false;
 	}
 
-	args->db_request_queue = db_request_queue;
-
-	args->semaphore = malloc(sizeof(db_semaphore_t));
-	if (args->semaphore == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a db semaphore");
-		free((void *)args);
-		return false;
-	}
-
-
-	if (sem_init(args->semaphore, 0, 0) != 0)
-	{
-		log_error(errno, errorbuf, LOG_PREFIX "in create_db_thread(): sem_init()");
-		free((void *)args->semaphore);
-		free((void *)args);
-		return false;
-	}
-
-	if (!Bag_add(db_semaphores_all, (void *)args->semaphore))
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't add new db semaphore to db_semaphores_all");
-		if (sem_destroy(args->semaphore) != 0) log_error(errno, errorbuf, LOG_PREFIX "in create_db_thread(): sem_destroy()");
-		free((void *)args->semaphore);
-		free((void *)args);
-		return false;
-	}
-
-	pthread_t thread;
-	retval = pthread_create(&thread, NULL, db_main, (void *)args);
+	retval = pthread_create(thread, NULL, db_main, (void *)db_main_args);
 	if (retval != 0)
 	{
 		log_error(retval, errorbuf, LOG_PREFIX "in create_db_thread(): pthread_create()");
-		// TODO: remove args->semaphore from db_semaphores_all, destroy it, and free it
-		free((void *)args);
+		free((void *)thread);
+		return false;
+	}
+
+	if (!Bag_add(db_threads, (void *)thread))
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't add db thread id to bag");
+
+		retval = pthread_cancel(*thread);
+		if (retval != 0)
+		{
+			log_error(retval, errorbuf, LOG_PREFIX "in create_db_thread(): pthread_cancel()");
+		}
+		free((void *)thread);
 		return false;
 	}
 
 	return true;
 }
 
-static void cancel_all_db_threads(/* TODO */)
+static void cancel_all_db_threads(Bag * db_threads)
 {
 	// TODO
+	(void)db_threads;
 }
 
 
@@ -137,23 +122,48 @@ int main (int argc, char ** argv)
 		goto err_listen_fd;
 	}
 
-	Bag * db_semaphores_all = Bag_new(true);
-	if (db_semaphores_all == NULL)
+	Bag * db_currently_processing = Bag_new(true);
+	if (db_currently_processing == NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't create db_semaphores_all");
+		log_msg(LOG_ERR, LOG_PREFIX "can't create db_currently_processing");
 		goto err_db_request_queue;
+	}
+
+	db_semaphore_t * db_semaphore = malloc(sizeof(db_semaphore_t));
+	if (db_semaphore == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't allocate space for db_semaphore");
+		goto err_db_currently_processing;
+	}
+
+	if (sem_init(db_semaphore, 0, 0) != 0)
+	{
+		log_error(errno, errorbuf, LOG_PREFIX "sem_init() for db_semaphore");
+		goto err_db_seamphore_malloc;
 	}
 
 	struct global_cache_state global_cache_state;
 	if (!initialize_global_cache_state(&global_cache_state))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't initialize global cache state");
-		goto err_db_semaphores_all;
+		goto err_db_semaphore_init;
 	}
+
+	Bag * db_threads = Bag_new(false);
+	if (db_threads == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't create db_threads");
+		goto err_global_cache_state_init;
+	}
+
+	struct db_main_args db_main_args;
+	db_main_args.semaphore = db_semaphore;
+	db_main_args.db_request_queue = db_request_queue;
+	db_main_args.db_currently_processing = db_currently_processing;
 
 	for (i = 0; i < DB_INITIAL_THREADS; ++i)
 	{
-		if (!create_db_thread(db_request_queue, db_semaphores_all))
+		if (!create_db_thread(db_threads, &db_main_args))
 		{
 			log_msg(LOG_ERR, LOG_PREFIX "error creating db thread");
 			goto err_db_threads;
@@ -169,7 +179,7 @@ int main (int argc, char ** argv)
 
 	connection_control_main_args->listen_fd = listen_fd;
 	connection_control_main_args->db_request_queue = db_request_queue;
-	connection_control_main_args->db_semaphores_all = db_semaphores_all;
+	connection_control_main_args->db_semaphore = db_semaphore;
 	connection_control_main_args->global_cache_state = &global_cache_state;
 
 	pthread_t connection_control_thread;
@@ -196,10 +206,16 @@ int main (int argc, char ** argv)
 	return EXIT_SUCCESS;
 
 err_db_threads:
-	cancel_all_db_threads();
+	cancel_all_db_threads(db_threads);
+	Bag_free(db_threads);
+err_global_cache_state_init:
 	close_global_cache_state(&global_cache_state);
-err_db_semaphores_all:
-	Bag_free(db_semaphores_all);
+err_db_semaphore_init:
+	if (sem_destroy(db_semaphore) != 0) log_error(errno, errorbuf, LOG_PREFIX "sem_destroy()");
+err_db_seamphore_malloc:
+	free((void *)db_semaphore);
+err_db_currently_processing:
+	Bag_free(db_currently_processing);
 err_db_request_queue:
 	Queue_free(db_request_queue);
 err_listen_fd:

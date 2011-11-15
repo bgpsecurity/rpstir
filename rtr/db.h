@@ -1,16 +1,12 @@
 #ifndef _RTR_DB_H
 #define _RTR_DB_H
 
-#include <semaphore.h>
-
 #include "queue.h"
 #include "bag.h"
 
 #include "pdu.h"
-#include "connection.h"
+#include "semaphores.h"
 
-
-typedef sem_t db_semaphore_t;
 
 struct db_query {
 	enum { SERIAL_QUERY, RESET_QUERY } type;

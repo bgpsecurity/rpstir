@@ -48,7 +48,8 @@ rtrd_SOURCES = \
 	connection.c connection.h \
 	connection_control.c connection_control.h \
 	db.c db.h \
-	main.c
+	main.c \
+	semaphores.h
 rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
 rtrd_CFLAGS = $(AM_CFLAGS) -Werror
 

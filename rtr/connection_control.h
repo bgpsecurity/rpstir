@@ -6,7 +6,7 @@
 struct connection_control_main_args {
 	int listen_fd;
 	Queue * db_request_queue;
-	Bag * db_semaphores_all;
+	db_semaphore_t * db_semaphore;
 	struct global_cache_state * global_cache_state;
 };
 void * connection_control_main(void * args_voidp);

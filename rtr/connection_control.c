@@ -212,7 +212,7 @@ void * connection_control_main(void * args_voidp)
 			connection_args->socket = cxn_info->fd;
 			connection_args->semaphore = cxn_info->semaphore;
 			connection_args->db_request_queue = argsp->db_request_queue;
-			connection_args->db_semaphores_all = argsp->db_semaphores_all;
+			connection_args->db_semaphore = argsp->db_semaphore;
 			connection_args->global_cache_state = argsp->global_cache_state;
 
 			retval = pthread_create(&cxn_info->thread, NULL, connection_main, (void *)connection_args);

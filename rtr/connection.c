@@ -26,7 +26,7 @@ struct run_state {
 	int fd;
 	cxn_semaphore_t * semaphore;
 	Queue * db_request_queue;
-	Bag * db_semaphores_all;
+	db_semaphore_t * db_semaphore;
 	struct global_cache_state * global_cache_state;
 	struct cache_state local_cache_state;
 
@@ -91,7 +91,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	if (argsp == NULL ||
 		argsp->semaphore == NULL ||
 		argsp->db_request_queue == NULL ||
-		argsp->db_semaphores_all == NULL ||
+		argsp->db_semaphore == NULL ||
 		argsp->global_cache_state == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "got NULL argument");
@@ -102,7 +102,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	run_state->fd = argsp->socket;
 	run_state->semaphore = argsp->semaphore;
 	run_state->db_request_queue = argsp->db_request_queue;
-	run_state->db_semaphores_all = argsp->db_semaphores_all;
+	run_state->db_semaphore = argsp->db_semaphore;
 	run_state->global_cache_state = argsp->global_cache_state;
 
 	free(args_voidp);
@@ -392,29 +392,12 @@ static int read_and_parse_pdu(struct run_state * run_state)
 	return retval;
 }
 
-static void increment_db_semaphores_all(struct run_state * run_state)
+static void increment_db_semaphore(struct run_state * run_state)
 {
-	Bag_start_iteration(run_state->db_semaphores_all);
-	Bag_iterator db_sem_it;
-	db_semaphore_t * db_sem;
-	for (db_sem_it = Bag_begin(run_state->db_semaphores_all);
-		db_sem_it != Bag_end(run_state->db_semaphores_all);
-		db_sem_it = Bag_iterator_next(run_state->db_semaphores_all, db_sem_it))
+	if (sem_post(run_state->db_semaphore) != 0)
 	{
-		db_sem = Bag_get(run_state->db_semaphores_all, db_sem_it);
-		if (db_sem == NULL)
-		{
-			log_msg(LOG_ERR, LOG_PREFIX "found NULL db semaphore");
-		}
-		else
-		{
-			if (sem_post(db_sem) != 0)
-			{
-				log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
-			}
-		}
+		log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
 	}
-	Bag_stop_iteration(run_state->db_semaphores_all);
 }
 
 static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_from_recv_buffer)
@@ -460,7 +443,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 
 	run_state->state = RESPONDING;
 
-	increment_db_semaphores_all(run_state);
+	increment_db_semaphore(run_state);
 }
 
 static void push_to_process_queue(struct run_state * run_state, const PDU * pdu, bool pdu_from_recv_buffer)
@@ -551,12 +534,9 @@ static void handle_response(struct run_state * run_state)
 		return;
 	}
 
-	if (run_state->response->more_data_semaphore != NULL)
+	if (!run_state->response->is_done)
 	{
-		if (sem_post(run_state->response->more_data_semaphore) != 0)
-		{
-			log_error(errno, run_state->errorbuf, LOG_PREFIX "sem_post()");
-		}
+		increment_db_semaphore(run_state);
 	}
 
 	/* TODO:
@@ -569,13 +549,13 @@ static void handle_response(struct run_state * run_state)
 		send_pdu(run_state, &run_state->response->PDUs[i]);
 	}
 
-	bool end_of_request = (run_state->response->more_data_semaphore == NULL);
+	bool is_done = run_state->response->is_done;
 
 	pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
 	free((void *)run_state->response);
 	run_state->response = NULL;
 
-	if (end_of_request)
+	if (is_done)
 	{
 		run_state->state = READY;
 		while (run_state->state == READY &&
@@ -653,7 +633,7 @@ static void cleanup(void * run_state_voidp)
 
 	if (run_state->response != NULL)
 	{
-		if (run_state->response->more_data_semaphore == NULL)
+		if (run_state->response->is_done)
 			run_state->state = READY;
 
 		pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
@@ -665,7 +645,7 @@ static void cleanup(void * run_state_voidp)
 	{
 		run_state->request.cancel_request = true;
 
-		increment_db_semaphores_all(run_state);
+		increment_db_semaphore(run_state);
 
 		while (true)
 		{
@@ -683,7 +663,7 @@ static void cleanup(void * run_state_voidp)
 
 			pdu_free_array(run_state->response->PDUs, run_state->response->num_PDUs);
 
-			if (run_state->response->more_data_semaphore == NULL)
+			if (run_state->response->is_done)
 			{
 				free((void *)run_state->response);
 				break;
