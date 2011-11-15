@@ -224,7 +224,7 @@ static int do_recv()
 
 int main(int argc, char ** argv)
 {
-	if (log_init("rtr-client.log", "rtr-client", LOG_DEBUG, LOG_DEBUG) != 0)
+	if (log_init("rtr-test-client.log", "rtr-test-client", LOG_DEBUG, LOG_DEBUG) != 0)
 	{
 		perror("log_init()");
 		return EXIT_FAILURE;
