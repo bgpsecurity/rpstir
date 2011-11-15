@@ -1,6 +1,11 @@
+#include <pthread.h>
+#include <errno.h>
+
 #include "logutils.h"
 #include "macros.h"
 
+#include "config.h"
+#include "common.h"
 #include "db.h"
 
 
@@ -9,9 +14,18 @@
 
 // The below should work for a query like SELECT ... FROM ... WHERE serial = last_serial ORDER BY ... LIMIT last_row, ...
 struct db_query_progress {
+	bool in_progress;
 	serial_number_t last_serial;
 	size_t last_row;
 };
+
+static void initialize_query_progress(struct db_query_progress * qp)
+{
+	qp->in_progress = false;
+	qp->last_serial = 0;
+	qp->last_row = 0;
+}
+
 
 struct db_request_state {
 	struct db_request * request;
@@ -19,176 +33,265 @@ struct db_request_state {
 };
 
 
-// after calling, pdus will be freed or passed along to a response queue
-static bool send_response(const struct db_request * request, PDU * pdus, size_t num_pdus, db_semaphore_t * more_data_semaphore)
+struct run_state {
+	db_semaphore_t * semaphore;
+	Queue * db_request_queue;
+	Bag * db_currently_processing;
+
+	char errorbuf[ERROR_BUF_SIZE];
+
+	struct db_request * request;
+	struct db_request_state * request_state;
+
+	struct db_response * response;
+};
+
+static void initialize_run_state(struct run_state * run_state, void * args_voidp)
 {
-	struct db_response * response = malloc(sizeof(struct db_response));
-	if (response == NULL)
+	const struct db_main_args * args = (const struct db_main_args *)args_voidp;
+
+	if (args == NULL ||
+		args->semaphore == NULL ||
+		args->db_request_queue == NULL ||
+		args->db_currently_processing == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "db thread called with NULL argument");
+		pthread_exit(NULL);
+	}
+
+	run_state->semaphore = args->semaphore;
+	run_state->db_request_queue = args->db_request_queue;
+	run_state->db_currently_processing = args->db_currently_processing;
+
+	run_state->request = NULL;
+	run_state->request_state = NULL;
+
+	run_state->response = NULL;
+}
+
+
+static void allocate_response(struct run_state * run_state, size_t num_pdus)
+{
+	if (run_state->response != NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "allocate_response() called when there already is a response");
+		pthread_exit(NULL);
+	}
+
+	run_state->response = malloc(sizeof(struct db_response));
+	if (run_state->response == NULL)
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response");
-		pdu_free_array(pdus, num_pdus);
-		return false;
+		pthread_exit(NULL);
 	}
 
-	response->PDUs = pdus;
-	response->num_PDUs = num_pdus;
-	response->more_data_semaphore = more_data_semaphore;
+	run_state->response->PDUs = (num_pdus == 0 ?
+		NULL :
+		malloc(sizeof(PDU) * num_pdus));
+	run_state->response->num_PDUs = num_pdus;
 
-	if (!Queue_push(request->response_queue, (void *)response))
+	if (run_state->response->PDUs == NULL && num_pdus > 0)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response PDUs");
+		pthread_exit(NULL);
+	}
+}
+
+static void send_response(struct run_state * run_state)
+{
+	if (!Queue_push(run_state->request_state->request->response_queue, (void *)run_state->response))
 	{
 		log_msg(LOG_ERR, LOG_PREFIX "can't push response to queue");
-		pdu_free_array(response->PDUs, response->num_PDUs);
-		free((void *)response);
-		return false;
+		pthread_exit(NULL);
 	}
 
-	if (sem_post(request->response_semaphore) != 0)
+	run_state->response = NULL;
+
+	if (sem_post(run_state->request_state->request->response_semaphore) != 0)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't post to the response semaphore");
+		log_error(errno, run_state->errorbuf, "sem_post()");
+	}
+}
+
+static void send_empty_response(struct run_state * run_state)
+{
+	allocate_response(run_state, 0);
+	run_state->response->is_done = true;
+	send_response(run_state);
+}
+
+
+static void send_error(struct run_state * run_state, error_code_t error_code)
+{
+	allocate_response(run_state, 1);
+
+	run_state->response->is_done = true;
+
+	run_state->response->PDUs[0].protocolVersion = PROTOCOL_VERSION;
+	run_state->response->PDUs[0].pduType = PDU_ERROR_REPORT;
+	run_state->response->PDUs[0].errorCode = error_code;
+	run_state->response->PDUs[0].length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH;
+	run_state->response->PDUs[0].errorData.encapsulatedPDULength = 0;
+	run_state->response->PDUs[0].errorData.encapsulatedPDU = NULL;
+	run_state->response->PDUs[0].errorData.errorTextLength = 0;
+	run_state->response->PDUs[0].errorData.errorText = NULL;
+
+	send_response(run_state);
+}
+
+
+static void wait_on_semaphore(struct run_state * run_state)
+{
+	if (sem_wait(run_state->semaphore) != 0)
+	{
+		log_error(errno, run_state->errorbuf, "sem_wait()");
+		pthread_exit(NULL);
+	}
+}
+
+
+/**
+	Service run_state->request_state for exactly one step.
+
+	If the request can't be finished, request_state gets put back in db_currently_processing.
+*/
+static void service_request(struct run_state * run_state, bool is_new_request)
+{
+	if (run_state->request_state->request->cancel_request)
+	{
+		send_empty_response(run_state);
+
+		free((void *)run_state->request_state);
+		run_state->request_state = NULL;
+		return;
+	}
+
+	// TODO: implement this for real instead of this stub
+	(void)is_new_request;
+	send_error(run_state, ERR_INTERNAL_ERROR);
+	free((void *)run_state->request_state);
+	run_state->request_state = NULL;
+}
+
+
+// Postcondition: run_state->request_state is non-NULL iff there is a request to service
+static void find_existing_request_to_service(struct run_state * run_state)
+{
+	Bag_iterator it;
+	bool did_erase;
+
+	Bag_start_iteration(run_state->db_currently_processing);
+	for (it = Bag_begin(run_state->db_currently_processing);
+		it != Bag_end(run_state->db_currently_processing);
+		(void)(did_erase || (it = Bag_iterator_next(run_state->db_currently_processing, it))))
+	{
+		did_erase = false;
+
+		// TODO: see if we need to change thread cancelability here
+
+		run_state->request_state = (struct db_request_state *)
+			Bag_get(run_state->db_currently_processing, it);
+
+		if (run_state->request_state == NULL)
+		{
+			log_msg(LOG_ERR, LOG_PREFIX "got NULL request state");
+			it = Bag_erase(run_state->db_currently_processing, it);
+			did_erase = true;
+			continue;
+		}
+
+		if (run_state->request_state->request->cancel_request ||
+			Queue_size(run_state->request_state->request->response_queue) < DB_RESPONSE_BUFFER_LENGTH)
+		{
+			it = Bag_erase(run_state->db_currently_processing, it);
+			did_erase = true;
+			Bag_stop_iteration(run_state->db_currently_processing);
+			return;
+		}
+	}
+	Bag_stop_iteration(run_state->db_currently_processing);
+
+	// if control reaches here, there are no existing requests to service
+	run_state->request_state = NULL;
+}
+
+static bool try_service_existing_request(struct run_state * run_state)
+{
+	find_existing_request_to_service(run_state);
+
+	if (run_state->request_state == NULL)
+	{
 		return false;
 	}
+	else
+	{
+		service_request(run_state, false);
+		return true;
+	}
+}
+
+
+static bool try_service_new_request(struct run_state * run_state)
+{
+	if (!Queue_trypop(run_state->db_request_queue, (void**)&run_state->request))
+		return false;
+
+	run_state->request_state = malloc(sizeof(struct db_request_state));
+	if (run_state->request_state == NULL)
+	{
+		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for request state");
+		pthread_exit(NULL);
+	}
+
+	run_state->request_state->request = run_state->request;
+	initialize_query_progress(&run_state->request_state->progress);
+	run_state->request = NULL;
+
+	service_request(run_state, true);
 
 	return true;
 }
 
 
-static bool send_error(const struct db_request * request, error_code_t error_code, db_semaphore_t * more_data_semaphore)
+static void db_main_loop(struct run_state * run_state)
 {
-	PDU * pdu = malloc(sizeof(PDU));
-	if (pdu == NULL)
+	wait_on_semaphore(run_state);
+
+	if (run_state->request != NULL ||
+		run_state->request_state != NULL ||
+		run_state->response != NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response error PDU");
-		return false;
+		log_msg(LOG_ERR, LOG_PREFIX "got non-NULL state variable that should be NULL");
+		pthread_exit(NULL);
 	}
 
-	pdu->protocolVersion = PROTOCOL_VERSION;
-	pdu->pduType = PDU_ERROR_REPORT;
-	pdu->errorCode = error_code;
-	pdu->length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH;
-	pdu->errorData.encapsulatedPDULength = 0;
-	pdu->errorData.encapsulatedPDU = NULL;
-	pdu->errorData.errorTextLength = 0;
-	pdu->errorData.errorText = NULL;
-
-	return send_response(request, pdu, 1, more_data_semaphore);
+	if (try_service_existing_request(run_state)) return;
+	if (try_service_new_request(run_state)) return;
 }
 
 
-static void cancel_all(Bag * currently_processing)
+
+static void cleanup(void * run_state_voidp)
 {
-	if (currently_processing == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "got NULL currently_processing");
-		return;
-	}
+	struct run_state * run_state = (struct run_state *)run_state_voidp;
 
-	Bag_iterator it;
-	struct db_request_state * request_state;
-
-	Bag_start_iteration(currently_processing);
-	for (it = Bag_begin(currently_processing);
-		it != Bag_end(currently_processing);
-		it = Bag_erase(currently_processing, it))
-	{
-		request_state = (struct db_request_state *)Bag_get(currently_processing, it);
-
-		if (request_state == NULL)
-		{
-			log_msg(LOG_ERR, LOG_PREFIX "got NULL request state");
-			continue;
-		}
-
-		send_error(request_state->request, ERR_INTERNAL_ERROR, NULL);
-
-		free((void *)request_state);
-	}
-	Bag_stop_iteration(currently_processing);
+	// TODO
+	(void)run_state;
 }
 
 
 void * db_main(void * args_voidp)
 {
-	struct db_main_args * argsp = (struct db_main_args *)args_voidp;
+	struct run_state run_state;
 
-	if (argsp == NULL || argsp->semaphore == NULL || argsp->db_request_queue == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "received NULL argument");
-		return NULL;
-	}
+	initialize_run_state(&run_state, args_voidp);
 
-	Bag * currently_processing = Bag_new(false);
-
-	if (currently_processing == NULL)
-	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't create currently_processing bag");
-		return NULL;
-	}
-
-	bool operation_completed;
-	bool did_erase;
-	Bag_iterator it;
-	struct db_request * request;
-	struct db_request_state * request_state;
+	pthread_cleanup_push(cleanup, &run_state);
 
 	while (true)
 	{
-		if (sem_wait(argsp->semaphore) != 0)
-		{
-			cancel_all(currently_processing);
-			Bag_free(currently_processing);
-			// XXX: connection threads can still have access to argsp->semaphore in their response queues
-			return NULL;
-		}
-
-		operation_completed = false;
-
-		Bag_start_iteration(currently_processing);
-		for (it = Bag_begin(currently_processing);
-			it != Bag_end(currently_processing);
-			(void)(did_erase || (it = Bag_iterator_next(currently_processing, it))))
-		{
-			did_erase = false;
-
-			request_state = (struct db_request_state *)Bag_get(currently_processing, it);
-
-			if (request_state == NULL)
-			{
-				log_msg(LOG_ERR, LOG_PREFIX "got NULL request state");
-				continue;
-			}
-
-			if (request_state->request->cancel_request)
-			{
-				if (!send_response(request_state->request, NULL, 0, NULL))
-				{
-					log_msg(LOG_ERR, LOG_PREFIX "can't acknowledge a canceled request");
-				}
-
-				free((void *)request_state);
-
-				it = Bag_erase(currently_processing, it);
-				did_erase = true;
-
-				operation_completed = true;
-				break;
-			}
-
-			// TODO
-		}
-		Bag_stop_iteration(currently_processing);
-
-		if (!operation_completed && Queue_trypop(argsp->db_request_queue, (void**)&request))
-		{
-			// FIXME/TODO: real implementation instead of this stub
-			if (request == NULL)
-			{
-				log_msg(LOG_ERR, LOG_PREFIX "got NULL db request");
-			}
-			else
-			{
-				if (!send_error(request, ERR_INTERNAL_ERROR, NULL))
-					log_msg(LOG_ERR, LOG_PREFIX "couldn't send error");
-			}
-		}
+		db_main_loop(&run_state);
 	}
+
+	pthread_cleanup_pop(1);
 }

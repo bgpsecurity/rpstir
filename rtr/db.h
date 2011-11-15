@@ -35,12 +35,14 @@ struct db_request {
 struct db_response {
 	PDU * PDUs;
 	size_t num_PDUs;
-	db_semaphore_t * more_data_semaphore; // this is not free()ed or destroyed by the cxn thread
+	bool is_done;
 };
 
+// memory is handled entirely by the main thread, db threads must not free() these
 struct db_main_args {
 	db_semaphore_t * semaphore;
 	Queue * db_request_queue;
+	Bag * db_currently_processing;
 };
 void * db_main(void * args_voidp);
 
