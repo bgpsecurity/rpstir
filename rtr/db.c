@@ -153,7 +153,7 @@ static void wait_on_semaphore(struct run_state * run_state)
 /**
 	Service run_state->request_state for exactly one step.
 
-	If the request can't be finished, request_state gets put back in db_currently_processing.
+	If the request can't be finished, request_state gets put (back) in db_currently_processing.
 */
 static void service_request(struct run_state * run_state, bool is_new_request)
 {
