@@ -675,7 +675,7 @@ static void cleanup(void * run_state_voidp)
 				break;
 			}
 
-			if (!Queue_trypop(run_state->db_response_queue, (void **)run_state->response))
+			if (!Queue_trypop(run_state->db_response_queue, (void **)&run_state->response))
 				continue;
 
 			if (run_state->response == NULL)
