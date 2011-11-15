@@ -5,13 +5,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "logutils.h"
+
 #include "pdu.h"
 
 
 #define DELIM " \t\n\r"
 
 #define SEND_PROMPT "> "
-#define RECV_PREFIX "< "
+#define RECV_PREFIX "received "
 
 #define MAX_PDU_SIZE 65536
 #define LINEBUF_SIZE 128
@@ -165,7 +167,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 				// more to read
 				break;
 			default:
-				fprintf(stderr, "received invalid PDU\n");
+				log_msg(LOG_NOTICE, "received invalid PDU");
 				return false;
 		}
 
@@ -173,7 +175,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 		{
 			if (pdu->length > MAX_PDU_SIZE)
 			{
-				fprintf(stderr, "received %" PRIu32 "-byte PDU (maximum size is %d)\n", pdu->length, MAX_PDU_SIZE);
+				log_msg(LOG_NOTICE, "received %" PRIu32 "-byte PDU (maximum size is %d)", pdu->length, MAX_PDU_SIZE);
 				return false;
 			}
 
@@ -189,11 +191,11 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 		{
 			if (offset == 0)
 			{
-				fprintf(stderr, "remote side closed connection\n");
+				log_msg(LOG_NOTICE, "remote side closed connection");
 			}
 			else
 			{
-				fprintf(stderr, "remote side closed connection in the middle of sending a PDU\n");
+				log_msg(LOG_NOTICE, "remote side closed connection in the middle of sending a PDU");
 			}
 			return false;
 		}
@@ -204,7 +206,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 		}
 	}
 
-	fprintf(stderr, "this should never happen\n");
+	log_msg(LOG_ERR, "this should never happen");
 	return false;
 }
 
@@ -217,7 +219,7 @@ static int do_recv()
 	while (read_pdu(STDIN_FILENO, buffer, &pdu))
 	{
 		pdu_sprint(&pdu, sprint_buffer);
-		printf(RECV_PREFIX "%s\n", sprint_buffer);
+		log_msg(LOG_INFO, RECV_PREFIX "%s", sprint_buffer);
 	}
 
 	return EXIT_SUCCESS;
@@ -225,6 +227,12 @@ static int do_recv()
 
 int main(int argc, char ** argv)
 {
+	if (log_init("rtr-client.log", "rtr-client", LOG_DEBUG, LOG_DEBUG) != 0)
+	{
+		perror("log_init()");
+		return EXIT_FAILURE;
+	}
+
 	if (argc != 2)
 	{
 		do_help(argv[0]);

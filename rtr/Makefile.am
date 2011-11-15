@@ -52,5 +52,5 @@ rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a befo
 rtrd_CFLAGS = $(AM_CFLAGS) -Werror
 
 rtr_client_SOURCES = client.c
-rtr_client_LDADD = libpdu.a
+rtr_client_LDADD = libpdu.a ../utils/libutils.a
 rtr_client_CFLAGS = $(AM_CFLAGS) -Werror
