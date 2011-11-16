@@ -1,9 +1,11 @@
 #ifndef _RTR_CONFIG_H
 #define _RTR_CONFIG_H
 
+#include <syslog.h>
 
-#define LOG_FILE "rtrd.log"
-#define LOG_FACILITY "rtrd"
+#define RTR_LOG_IDENT "rtrd"
+#define RTR_LOG_OPTION (LOG_PERROR)
+#define RTR_LOG_FACILITY LOG_DAEMON
 
 #define LISTEN_PORT 1234
 

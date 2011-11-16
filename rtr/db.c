@@ -1,15 +1,11 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include "logutils.h"
 #include "macros.h"
 
 #include "config.h"
-#include "common.h"
+#include "logging.h"
 #include "db.h"
-
-
-#define LOG_PREFIX "[db] "
 
 
 // The below should work for a query like SELECT ... FROM ... WHERE serial = last_serial ORDER BY ... LIMIT last_row, ...
@@ -55,7 +51,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 		args->db_request_queue == NULL ||
 		args->db_currently_processing == NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "db thread called with NULL argument");
+		RTR_LOG(LOG_ERR, "db thread called with NULL argument");
 		pthread_exit(NULL);
 	}
 
@@ -74,14 +70,14 @@ static void allocate_response(struct run_state * run_state, size_t num_pdus)
 {
 	if (run_state->response != NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "allocate_response() called when there already is a response");
+		RTR_LOG(LOG_ERR, "allocate_response() called when there already is a response");
 		pthread_exit(NULL);
 	}
 
 	run_state->response = malloc(sizeof(struct db_response));
 	if (run_state->response == NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response");
+		RTR_LOG(LOG_ERR, "can't allocate memory for response");
 		pthread_exit(NULL);
 	}
 
@@ -92,7 +88,7 @@ static void allocate_response(struct run_state * run_state, size_t num_pdus)
 
 	if (run_state->response->PDUs == NULL && num_pdus > 0)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for response PDUs");
+		RTR_LOG(LOG_ERR, "can't allocate memory for response PDUs");
 		pthread_exit(NULL);
 	}
 }
@@ -101,7 +97,7 @@ static void send_response(struct run_state * run_state)
 {
 	if (!Queue_push(run_state->request_state->request->response_queue, (void *)run_state->response))
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't push response to queue");
+		RTR_LOG(LOG_ERR, "can't push response to queue");
 		pthread_exit(NULL);
 	}
 
@@ -109,7 +105,7 @@ static void send_response(struct run_state * run_state)
 
 	if (sem_post(run_state->request_state->request->response_semaphore) != 0)
 	{
-		log_error(errno, run_state->errorbuf, "sem_post()");
+		RTR_LOG_ERR(errno, run_state->errorbuf, "sem_post()");
 	}
 }
 
@@ -144,7 +140,7 @@ static void wait_on_semaphore(struct run_state * run_state)
 {
 	if (sem_wait(run_state->semaphore) != 0)
 	{
-		log_error(errno, run_state->errorbuf, "sem_wait()");
+		RTR_LOG_ERR(errno, run_state->errorbuf, "sem_wait()");
 		pthread_exit(NULL);
 	}
 }
@@ -204,7 +200,7 @@ static void find_existing_request_to_service(struct run_state * run_state)
 
 		if (run_state->request_state == NULL)
 		{
-			log_msg(LOG_ERR, LOG_PREFIX "got NULL request state");
+			RTR_LOG(LOG_ERR, "got NULL request state");
 			it = Bag_erase(run_state->db_currently_processing, it);
 			did_erase = true;
 			continue;
@@ -249,7 +245,7 @@ static bool try_service_new_request(struct run_state * run_state)
 	run_state->request_state = malloc(sizeof(struct db_request_state));
 	if (run_state->request_state == NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for request state");
+		RTR_LOG(LOG_ERR, "can't allocate memory for request state");
 		pthread_exit(NULL);
 	}
 
@@ -271,7 +267,7 @@ static void db_main_loop(struct run_state * run_state)
 		run_state->request_state != NULL ||
 		run_state->response != NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "got non-NULL state variable that should be NULL");
+		RTR_LOG(LOG_ERR, "got non-NULL state variable that should be NULL");
 		pthread_exit(NULL);
 	}
 

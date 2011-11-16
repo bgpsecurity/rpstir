@@ -7,15 +7,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "logutils.h"
-
-#include "common.h"
+#include "logging.h"
 
 #include "connection_control.h"
 #include "connection.h"
 
-
-#define LOG_PREFIX "[connection control] "
 
 // TODO: setup pthread cleanup functions so main can cancel us cleanly
 
@@ -41,11 +37,11 @@ static void kill_connection(struct connection_info * cxn_info)
 	{
 		retval2 = pthread_join(cxn_info->thread, NULL);
 		if (retval2 != 0)
-			log_error(retval2, errorbuf, LOG_PREFIX "pthread_join()");
+			RTR_LOG_ERR(retval2, errorbuf, "pthread_join()");
 	}
 	else if (retval1 != ESRCH)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "unknown error code from pthread_cancel: %d", retval1);
+		RTR_LOG(LOG_ERR, "unknown error code from pthread_cancel: %d", retval1);
 	}
 }
 
@@ -57,11 +53,11 @@ static void cleanup_connection(struct connection_info * cxn_info)
 
 	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
-		log_error(retval1, errorbuf, LOG_PREFIX "close()");
+		RTR_LOG_ERR(retval1, errorbuf, "close()");
 
 	retval1 = sem_destroy(cxn_info->semaphore);
 	if (retval1 != 0)
-		log_error(retval1, errorbuf, LOG_PREFIX "sem_destroy()");
+		RTR_LOG_ERR(retval1, errorbuf, "sem_destroy()");
 
 	free((void *)cxn_info->semaphore);
 	free((void *)cxn_info);
@@ -79,7 +75,7 @@ void * connection_control_main(void * args_voidp)
 	Bag * connections = Bag_new(false);
 	if (connections == NULL)
 	{
-		log_msg(LOG_ERR, LOG_PREFIX "error creating Bag of connection info");
+		RTR_LOG(LOG_ERR, "error creating Bag of connection info");
 		return NULL;
 	}
 
@@ -130,7 +126,7 @@ void * connection_control_main(void * args_voidp)
 
 		if (retval < 0)
 		{
-			log_error(errno, errorbuf, LOG_PREFIX "select()");
+			RTR_LOG_ERR(errno, errorbuf, "select()");
 			continue;
 		}
 		else if (retval == 0)
@@ -153,7 +149,7 @@ void * connection_control_main(void * args_voidp)
 			{
 				if (sem_post(cxn_info->semaphore) != 0)
 				{
-					log_error(errno, errorbuf, LOG_PREFIX "sem_post()");
+					RTR_LOG_ERR(errno, errorbuf, "sem_post()");
 					kill_connection(cxn_info);
 					cleanup_connection(cxn_info);
 					connections_it = Bag_erase(connections, connections_it);
@@ -168,21 +164,21 @@ void * connection_control_main(void * args_voidp)
 			struct connection_info * cxn_info = malloc(sizeof(struct connection_info));
 			if (cxn_info == NULL)
 			{
-				log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a new connection");
+				RTR_LOG(LOG_ERR, "can't allocate memory for a new connection");
 				continue;
 			}
 
 			cxn_info->semaphore = malloc(sizeof(cxn_semaphore_t));
 			if (cxn_info->semaphore == NULL)
 			{
-				log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a new connection semaphore");
+				RTR_LOG(LOG_ERR, "can't allocate memory for a new connection semaphore");
 				free((void *)cxn_info);
 				continue;
 			}
 
 			if (sem_init(cxn_info->semaphore, 0, 0) != 0)
 			{
-				log_error(errno, errorbuf, LOG_PREFIX "sem_init()");
+				RTR_LOG_ERR(errno, errorbuf, "sem_init()");
 				free((void *)cxn_info->semaphore);
 				free((void *)cxn_info);
 				continue;
@@ -191,10 +187,10 @@ void * connection_control_main(void * args_voidp)
 			cxn_info->fd = accept(argsp->listen_fd, NULL, NULL);
 			if (cxn_info->fd < 0)
 			{
-				log_error(errno, errorbuf, LOG_PREFIX "accept()");
+				RTR_LOG_ERR(errno, errorbuf, "accept()");
 				if (sem_destroy(cxn_info->semaphore) != 0)
 				{
-					log_error(errno, errorbuf, LOG_PREFIX "sem_destroy()");
+					RTR_LOG_ERR(errno, errorbuf, "sem_destroy()");
 				}
 				free((void *)cxn_info->semaphore);
 				free((void *)cxn_info);
@@ -204,7 +200,7 @@ void * connection_control_main(void * args_voidp)
 			struct connection_main_args * connection_args = malloc(sizeof(struct connection_main_args));
 			if (connection_args == NULL)
 			{
-				log_msg(LOG_ERR, LOG_PREFIX "can't allocate memory for a new connection's arguments");
+				RTR_LOG(LOG_ERR, "can't allocate memory for a new connection's arguments");
 				cleanup_connection(cxn_info);
 				continue;
 			}
@@ -218,7 +214,7 @@ void * connection_control_main(void * args_voidp)
 			retval = pthread_create(&cxn_info->thread, NULL, connection_main, (void *)connection_args);
 			if (retval != 0)
 			{
-				log_error(retval, errorbuf, LOG_PREFIX "pthread_create()");
+				RTR_LOG_ERR(retval, errorbuf, "pthread_create()");
 				free((void *)connection_args);
 				cleanup_connection(cxn_info);
 				continue;
@@ -226,12 +222,12 @@ void * connection_control_main(void * args_voidp)
 
 			if (!Bag_add(connections, (void *)cxn_info))
 			{
-				log_msg(LOG_ERR, LOG_PREFIX "can't add new connection's information to the set of existing connections");
+				RTR_LOG(LOG_ERR, "can't add new connection's information to the set of existing connections");
 				cleanup_connection(cxn_info);
 				continue;
 			}
 
-			log_msg(LOG_INFO, LOG_PREFIX "new connection"); // TODO remote socket information (e.g. host:port)
+			RTR_LOG(LOG_INFO, "new connection"); // TODO remote socket information (e.g. host:port)
 		}
 	}
 }

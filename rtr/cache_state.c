@@ -1,8 +1,6 @@
 #include <stdlib.h>
 
-#include "logutils.h"
-
-#include "common.h"
+#include "logging.h"
 
 #include "cache_state.h"
 
@@ -10,7 +8,7 @@ static bool get_cache_state(struct cache_state * state /* TODO: DB connection */
 {
 	if (state == NULL)
 	{
-		log_msg(LOG_ERR, "get_cache_state() got NULL state");
+		RTR_LOG(LOG_ERR, "get_cache_state() got NULL state");
 		return false;
 	}
 
@@ -26,7 +24,7 @@ bool initialize_global_cache_state(struct global_cache_state * state)
 {
 	if (state == NULL)
 	{
-		log_msg(LOG_ERR, "initialize_global_cache_state got NULL state");
+		RTR_LOG(LOG_ERR, "initialize_global_cache_state got NULL state");
 		return false;
 	}
 
@@ -38,7 +36,7 @@ bool initialize_global_cache_state(struct global_cache_state * state)
 	if (retval != 0)
 	{
 		char errorbuf[ERROR_BUF_SIZE];
-		log_error(retval, errorbuf, "pthread_rwlock_init() for global cache state");
+		RTR_LOG_ERR(retval, errorbuf, "pthread_rwlock_init() for global cache state");
 		return false;
 	}
 
@@ -49,7 +47,7 @@ bool update_global_cache_state(struct global_cache_state * state)
 {
 	if (state == NULL)
 	{
-		log_msg(LOG_ERR, "update_global_cache_state got NULL state");
+		RTR_LOG(LOG_ERR, "update_global_cache_state got NULL state");
 		return false;
 	}
 
@@ -60,7 +58,7 @@ bool update_global_cache_state(struct global_cache_state * state)
 	retval = pthread_rwlock_wrlock(&state->lock);
 	if (retval != 0)
 	{
-		log_error(retval, errorbuf, "pthread_rwlock_wrlock() for global cache state");
+		RTR_LOG_ERR(retval, errorbuf, "pthread_rwlock_wrlock() for global cache state");
 		return false;
 	}
 
@@ -69,7 +67,7 @@ bool update_global_cache_state(struct global_cache_state * state)
 	retval = pthread_rwlock_unlock(&state->lock);
 	if (retval != 0)
 	{
-		log_error(retval, errorbuf, "pthread_rwlock_unlock() for global cache state");
+		RTR_LOG_ERR(retval, errorbuf, "pthread_rwlock_unlock() for global cache state");
 		return false;
 	}
 
@@ -80,7 +78,7 @@ void close_global_cache_state(struct global_cache_state * state)
 {
 	if (state == NULL)
 	{
-		log_msg(LOG_ERR, "close_global_cache_state got NULL state");
+		RTR_LOG(LOG_ERR, "close_global_cache_state got NULL state");
 		return;
 	}
 
@@ -90,7 +88,7 @@ void close_global_cache_state(struct global_cache_state * state)
 	retval = pthread_rwlock_destroy(&state->lock);
 	if (retval != 0)
 	{
-		log_error(retval, errorbuf, "pthread_rwlock_destroy() for global cache state");
+		RTR_LOG_ERR(retval, errorbuf, "pthread_rwlock_destroy() for global cache state");
 	}
 
 	// TODO: DB connection

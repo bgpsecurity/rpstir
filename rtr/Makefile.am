@@ -43,11 +43,11 @@ doUpdate_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
 
 rtrd_SOURCES = \
 	cache_state.c cache_state.h \
-	common.c common.h \
 	config.h \
 	connection.c connection.h \
 	connection_control.c connection_control.h \
 	db.c db.h \
+	logging.h \
 	main.c \
 	semaphores.h
 rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
