@@ -146,6 +146,12 @@ int main(int argc, char **argv) {
 	int sta;
 	uint nonce_count;
 
+	if (argc != 2)
+	{
+		fprintf(stderr, "Usage: %s <staleness spec file>\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
 	// initialize the database connection
 	scmp = initscm();
 	checkErr(scmp == NULL, "Cannot initialize database schema\n");
