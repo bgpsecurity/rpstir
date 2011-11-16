@@ -158,10 +158,10 @@ int main(int argc, char **argv) {
 	sta = newhstmt(connection);
 	checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
 	sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_nonce;");
-	checkErr(sta >= 0, "Can't query rtr_nonce\n");
+	checkErr(sta < 0, "Can't query rtr_nonce\n");
 	sta = getuintscm(connection, &nonce_count);
 	pophstmt(connection);
-	checkErr(sta >= 0, "Can't get results of querying rtr_nonce\n");
+	checkErr(sta < 0, "Can't get results of querying rtr_nonce\n");
 	if (nonce_count != 1) {
 		statementscm_no_data(connection, "TRUNCATE TABLE rtr_nonce;");
 		statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
