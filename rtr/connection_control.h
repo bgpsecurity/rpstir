@@ -3,6 +3,7 @@
 
 #include "db.h"
 
+// memory is handled entirely by main
 struct connection_control_main_args {
 	int listen_fd;
 	Queue * db_request_queue;

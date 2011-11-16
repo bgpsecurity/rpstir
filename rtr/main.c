@@ -189,24 +189,17 @@ int main (int argc, char ** argv)
 		}
 	}
 
-	struct connection_control_main_args * connection_control_main_args = malloc(sizeof(struct connection_control_main_args));
-	if (connection_control_main_args == NULL)
-	{
-		RTR_LOG(LOG_ERR, "can't allocate memory for connection_control_main_args");
-		goto err_db_threads;
-	}
-
-	connection_control_main_args->listen_fd = listen_fd;
-	connection_control_main_args->db_request_queue = db_request_queue;
-	connection_control_main_args->db_semaphore = db_semaphore;
-	connection_control_main_args->global_cache_state = &global_cache_state;
+	struct connection_control_main_args connection_control_main_args;
+	connection_control_main_args.listen_fd = listen_fd;
+	connection_control_main_args.db_request_queue = db_request_queue;
+	connection_control_main_args.db_semaphore = db_semaphore;
+	connection_control_main_args.global_cache_state = &global_cache_state;
 
 	pthread_t connection_control_thread;
-	retval1 = pthread_create(&connection_control_thread, NULL, connection_control_main, connection_control_main_args);
+	retval1 = pthread_create(&connection_control_thread, NULL, connection_control_main, &connection_control_main_args);
 	if (retval1 != 0)
 	{
 		RTR_LOG_ERR(retval1, errorbuf, "pthread_create() for connection control thread");
-		free((void *)connection_control_main_args);
 		goto err_db_threads;
 	}
 

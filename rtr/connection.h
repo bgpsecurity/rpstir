@@ -8,6 +8,7 @@
 #include "semaphores.h"
 
 
+// memory is alocated by connection_control and free()d by connection
 struct connection_main_args {
 	int socket;
 	cxn_semaphore_t * semaphore;
