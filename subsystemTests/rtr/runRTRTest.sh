@@ -29,7 +29,7 @@ start_test () {
 		rm -f "$LOG.log" "$LOG.$TEST.log"
 	done
 
-	"$SERVER" &
+	"$SERVER" > rtrd.log 2>&1 &
 	SERVER_PID=$!
 	sleep 1
 }
