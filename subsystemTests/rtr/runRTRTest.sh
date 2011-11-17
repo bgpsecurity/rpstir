@@ -69,7 +69,7 @@ make_serial () {
 			>> "$COMMAND_FILE"
 	fi
 
-	printf 'INSERT INTO rtr_update VALUES (%u, now());\n' "$SERIAL">> "$COMMAND_FILE"
+	printf 'INSERT INTO rtr_update VALUES (%u, now());\n' "$SERIAL" >> "$COMMAND_FILE"
 
 	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
 
