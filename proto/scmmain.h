@@ -241,9 +241,10 @@ static scmtab scmtabbuilder[] =
 	{             /* RTR_UPDATE */
 	  "rtr_update",
 	  "RTR_UPDATE",
-	  "serial_num  INT UNSIGNED NOT NULL UNIQUE," /* which snapshot */
+	  "serial_num  INT UNSIGNED NOT NULL,"
 	  "create_time DATETIME NOT NULL,"
-	  "            PRIMARY KEY (serial_num)",
+	  "            PRIMARY KEY (serial_num),"
+	  "            KEY create_time (create_time)",
 	  NULL,
 	  0
 	},
@@ -251,21 +252,20 @@ static scmtab scmtabbuilder[] =
 	  "rtr_full",
 	  "RTR_FULL",
 	  "serial_num  INT UNSIGNED NOT NULL,"
-	  "roa_filename VARCHAR(256) NOT NULL,"
 	  "asn         INT UNSIGNED NOT NULL,"
 	  "ip_addr     VARCHAR(50) NOT NULL,"
-	  "KEY asn (asn), KEY ip_addr (ip_addr)",
+	  "            PRIMARY KEY (serial_num, asn, ip_addr)",
 	  NULL,
 	  0
 	},
 	{            /* RTR_INCREMENTAL */
 	  "rtr_incremental",
 	  "RTR_INCREMENTAL",
-	  "serial_num  INT UNSIGNED NOT NULL,"
-	  "is_announce BOOLEAN NOT NULL," /* announcement or retraction */
+	  "serial_num  INT UNSIGNED NOT NULL," /* the serial number that this row modifies to form the next serial number */
+	  "is_announce BOOLEAN NOT NULL," /* announcement or withdrawal */
 	  "asn         INT UNSIGNED NOT NULL,"
 	  "ip_addr     VARCHAR(50) NOT NULL,"
-	  "KEY asn (asn), KEY ip_addr (ip_addr)",
+	  "            PRIMARY KEY (serial_num, asn, ip_addr)",
 	  NULL,
 	  0
 	},
