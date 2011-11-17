@@ -20,7 +20,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-AM_CFLAGS = -g -Wall -Wextra
+AM_CFLAGS = -g -Wall -Wextra -Werror
 
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
 	-I../cg/casn -I../roa-lib -I../utils
@@ -34,7 +34,6 @@ EXTRA_DIST = \
 	cleanServerData
 
 libpdu_a_SOURCES = pdu.c pdu.h
-libpdu_a_CFLAGS = $(AM_CFLAGS) -Werror
 
 doUpdate_SOURCES = doUpdate.c
 doUpdate_LDFLAGS = $(LIBS)
@@ -51,8 +50,6 @@ rtrd_SOURCES = \
 	main.c \
 	semaphores.h
 rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
-rtrd_CFLAGS = $(AM_CFLAGS) -Werror
 
 rtr_test_client_SOURCES = test-client.c
 rtr_test_client_LDADD = libpdu.a ../utils/libutils.a
-rtr_test_client_CFLAGS = $(AM_CFLAGS) -Werror
