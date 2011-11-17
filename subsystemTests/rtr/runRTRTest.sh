@@ -55,14 +55,14 @@ make_serial () {
 	if test x"$PREV_SERIAL" != x; then
 		echo \
 			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)" \
-			"SELECT $SERIAL, 1, t1.asn, t1.ip_addr" \
+			"SELECT DISTINCT $PREV_SERIAL, 1, t1.asn, t1.ip_addr" \
 			"FROM rtr_full AS t1" \
 			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = $PREV_SERIAL AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr" \
 			"WHERE t1.serial_num = $SERIAL AND t2.serial_num IS NULL;" \
 			>> "$COMMAND_FILE"
 		echo \
 			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)" \
-			"SELECT $SERIAL, 0, t1.asn, t1.ip_addr" \
+			"SELECT DISTINCT $PREV_SERIAL, 0, t1.asn, t1.ip_addr" \
 			"FROM rtr_full AS t1" \
 			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = $SERIAL AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr" \
 			"WHERE t1.serial_num = $PREV_SERIAL AND t2.serial_num IS NULL;" \
