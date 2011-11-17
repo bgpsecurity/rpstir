@@ -99,13 +99,20 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 	conp = conp; numLine = numLine;
 
 	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connection)) return -1;
-	while ((end = strchr(ptr, '\n')) != 0) {
-		*end = '\0';
+	while ((end = strstr(ptr, ", ")) != NULL) {
+		end[0] = '\0';
+		end[1] = '\0';
 		snprintf(msg, sizeof(msg),
 				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
 				 fullTable->tabname, currSerialNum, filename, asn, ptr);
 		statementscm_no_data(connection, msg);
-		ptr = end + 1;
+		ptr = end + 2;
+	}
+	if (ptr[0] != '\0') {
+		snprintf(msg, sizeof(msg),
+				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
+				 fullTable->tabname, currSerialNum, filename, asn, ptr);
+		statementscm_no_data(connection, msg);
 	}
 	return 1;
 }
