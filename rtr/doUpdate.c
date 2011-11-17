@@ -219,8 +219,11 @@ int main(int argc, char **argv) {
 	statementscm_no_data(connection, msg);
 
 	snprintf(msg, sizeof(msg),
-		"delete from rtr_update were create_time < adddate(now(), interval -%d hour);",
-		retentionHours());
+		"delete from rtr_update\n"
+		"where create_time < adddate(now(), interval -%d hour)\n"
+		"and serial_num<>%u and serial_num<>%u;",
+		retentionHours(),
+		prevSerialNum, currSerialNum);
 	statementscm_no_data(connection, msg);
 
 	statementscm_no_data(connection,
