@@ -45,8 +45,6 @@ static scmtab   *nonceTable = NULL;
 static scmtab   *fullTable = NULL;
 static scmtab   *updateTable = NULL;
 static scmsrcha *snSrch = NULL;
-static scmsrcha *incrSrch = NULL;
-static scmtab   *incrTable = NULL;
 
 // serial number of this and previous update
 static uint prevSerialNum, currSerialNum, lastSerialNum;
@@ -61,6 +59,8 @@ static void setupSnQuery(scm *scmp) {
 
 /* helper function for getLastSerialNumber */
 static int setLastSN(scmcon *conp, scmsrcha *s, int numLine) {
+	(void)conp;
+	(void)numLine;
 	lastSerialNum = *((uint *) (s->vec[0].valptr));
 	return -1;    // stop after first row
 }
@@ -94,7 +94,6 @@ static int retentionHours() {
 static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 	uint asn = *((uint *)s->vec[0].valptr);
 	char *ptr = (char *)s->vec[1].valptr, *end;
-	char *filename = (char *)s->vec[3].valptr;
 	char msg[1024];
 	conp = conp; numLine = numLine;
 
@@ -103,47 +102,17 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 		end[0] = '\0';
 		end[1] = '\0';
 		snprintf(msg, sizeof(msg),
-				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
-				 fullTable->tabname, currSerialNum, filename, asn, ptr);
+				 "insert ignore into %s values (%u, %u, \"%s\");",
+				 fullTable->tabname, currSerialNum, asn, ptr);
 		statementscm_no_data(connection, msg);
 		ptr = end + 2;
 	}
 	if (ptr[0] != '\0') {
 		snprintf(msg, sizeof(msg),
-				 "insert into %s values (%d, \"%s\", %d, \"%s\");",
-				 fullTable->tabname, currSerialNum, filename, asn, ptr);
+				 "insert ignore into %s values (%u, %u, \"%s\");",
+				 fullTable->tabname, currSerialNum, asn, ptr);
 		statementscm_no_data(connection, msg);
 	}
-	return 1;
-}
-
-/******
- * callback that writes withdrawals into the incremental table
- *****/
-static int writeWithdrawal(scmcon *conp, scmsrcha *s, int numLine) {
-	char msg[1024];
-	conp = conp; numLine = numLine;
-	uint asn = *((uint *)s->vec[0].valptr);
-	char *ipAddr = (char *)s->vec[1].valptr;
-	snprintf(msg, sizeof(msg),
-			 "insert into %s values (%d, false, %d, \"%s\");",
-			 incrTable->tabname, currSerialNum, asn, ipAddr);
-	statementscm_no_data(connection, msg);
-	return 1;
-}
-
-/******
- * callback that writes announcements into the incremental table
- *****/
-static int writeAnnouncement(scmcon *conp, scmsrcha *s, int numLine) {
-	char msg[1024];
-	conp = conp; numLine = numLine;
-	uint asn = *((uint *)s->vec[0].valptr);
-	char *ipAddr = (char *)s->vec[1].valptr;
-	snprintf(msg, sizeof(msg),
-			 "insert into %s values (%d, true, %d, \"%s\");",
-			 incrTable->tabname, currSerialNum, asn, ipAddr);
-	statementscm_no_data(connection, msg);
 	return 1;
 }
 
@@ -152,6 +121,7 @@ int main(int argc, char **argv) {
 	char msg[1024];
 	int sta;
 	uint nonce_count;
+	int first_time = 0;
 
 	if (argc != 2)
 	{
@@ -181,26 +151,25 @@ int main(int argc, char **argv) {
 		statementscm_no_data(connection, "TRUNCATE TABLE rtr_full;");
 		statementscm_no_data(connection, "TRUNCATE TABLE rtr_incremental;");
 		statementscm_no_data(connection, "INSERT INTO rtr_nonce (cache_nonce) VALUES (FLOOR(RAND() * (1 << 16)));");
+		first_time = 1;
 	}
 
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
-	currSerialNum = (prevSerialNum == UINT_MAX) ? 1 : (prevSerialNum + 1);
+	currSerialNum = (prevSerialNum == UINT_MAX) ? 0 : (prevSerialNum + 1);
 
 	// setup up the query if this is the first time
 	// note that the where string is set to only select valid roa's, where
     //   the definition of valid is given by the staleness specs
 	if (roaSrch == NULL) {
 		QueryField *field;
-		roaSrch = newsrchscm(NULL, 4, 0, 1);
+		roaSrch = newsrchscm(NULL, 3, 0, 1);
 		field = findField("asn");
 		addcolsrchscm(roaSrch, "asn", field->sqlType, field->maxSize);
 		field = findField("ip_addrs");
 		addcolsrchscm(roaSrch, "ip_addrs", field->sqlType, field->maxSize);
 		field = findField("ski");
 		addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
-		field = findField("filename");
-		addcolsrchscm(roaSrch, "filename", field->sqlType, field->maxSize);
 		roaSrch->wherestr[0] = 0;
 		parseStalenessSpecsFile(argv[1]);
 		addQueryFlagTests(roaSrch->wherestr, 0);
@@ -214,47 +183,51 @@ int main(int argc, char **argv) {
 	searchscm (connection, roaTable, roaSrch, NULL,
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
-        // setup to compute incremental
+	if (!first_time)
+	{
+		char differences_query_fmt[] =
+			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)\n"
+			"SELECT %u, %d, t1.asn, t1.ip_addr\n"
+			"FROM rtr_full AS t1\n"
+			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = %u AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr\n"
+			"WHERE t1.serial_num = %u AND t2.serial_num IS NULL;";
 
-	if (incrSrch == NULL) {
-		incrSrch = newsrchscm(NULL, 2, 0, 1);
-		addcolsrchscm(incrSrch, "t1.asn", SQL_C_ULONG, 8);
-		addcolsrchscm(incrSrch, "t1.ip_addr", SQL_C_CHAR, 50);
-		incrTable = findtablescm(scmp, "rtr_incremental");
+		// announcements
+		snprintf(msg, sizeof(msg), differences_query_fmt,
+			prevSerialNum, 1,
+			prevSerialNum, currSerialNum);
+		statementscm_no_data(connection, msg);
+
+		// withdrawals
+		snprintf(msg, sizeof(msg), differences_query_fmt,
+			prevSerialNum, 0,
+			currSerialNum, prevSerialNum);
+		statementscm_no_data(connection, msg);
 	}
 
-	// first, find withdrawal
-	snprintf (incrSrch->wherestr, WHERESTR_SIZE,
-			  "t1.serial_num = t2.serial_num - 1 and t1.roa_filename = t2.roa_filename and t1.ip_addr = t2.ip_addr\nt2.serial_num is null and t1.serial_num = %d", prevSerialNum);
-	searchscm (connection, fullTable, incrSrch, NULL, writeWithdrawal,
-			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_SELF, NULL);
-
-	// then, find announcements
-	snprintf (incrSrch->wherestr, WHERESTR_SIZE,
-			  "t1.serial_num = t2.serial_num + 1 and t1.roa_filename = t2.roa_filename and t1.ip_addr = t2.ip_addr\nt2.serial_num is null and t1.serial_num = %d", currSerialNum);
-	searchscm (connection, fullTable, incrSrch, NULL, writeAnnouncement,
-			   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_SELF, NULL);
-
 	// write the current serial number and time, making the data available
-	snprintf(msg, sizeof(msg), "insert into rtr_update values (%d, now());",
+	snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, now());",
 			 currSerialNum);
 	statementscm_no_data(connection, msg);
 
     // clean up all the data no longer needed
 	// save last two full updates so that no problems at transition
 	//   (with client still receiving data from previous one)
-	char *str = "%s where create_time < adddate(now(), interval -%d hour);";
 	snprintf(msg, sizeof(msg),
-			 "delete from rtr_full where serial_num<>%d and serial_num<>%d;",
+			 "delete from rtr_full where serial_num<>%u and serial_num<>%u;",
 			 prevSerialNum, currSerialNum);
 	statementscm_no_data(connection, msg);
-	snprintf(msg, sizeof(msg), str,
-			 "delete rtr_incremental from rtr_incremental inner join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num",
-			 retentionHours());
+
+	snprintf(msg, sizeof(msg),
+		"delete from rtr_update were create_time < adddate(now(), interval -%d hour);",
+		retentionHours());
 	statementscm_no_data(connection, msg);
-	snprintf(msg, sizeof(msg), str, "delete from rtr_update",
-			 retentionHours());
-	statementscm_no_data(connection, msg);
+
+	statementscm_no_data(connection,
+		 "delete rtr_incremental\n"
+		 "from rtr_incremental\n"
+		 "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
+		 "where rtr_update.serial_num is null;");
 
 	return 0;
 }
