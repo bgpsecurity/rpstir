@@ -1,0 +1,16 @@
+CC = gcc
+CFLAGS = -Wall -g -ggdb
+LDFLAGS = -L/usr/lib/mysql -lmysqlclient
+CPPFLAGS = -I/usr/include/mysql -I../../utils
+
+
+all: main
+
+
+main: main.c ../../utils/logutils.c
+	$(CC) $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) -o $@ $^
+
+
+clean:
+	$(RM) *.o
+	$(RM) main
