@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.TimeZone;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -44,6 +45,7 @@ public class TestMain {
    * @throws JDOMException
    */
   public static void main(String...args) throws IOException, JDOMException {
+    TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
     File modelFile = new File("model.xml");
     JFrame frame = new JFrame("Task Description Editor");
     frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

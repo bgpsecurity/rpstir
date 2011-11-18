@@ -103,4 +103,12 @@ public class TestModel extends XMLBase {
     taskDescriptions.put(taskDescription.getName(), taskDescription);
     setModified(true);
   }
+
+  /**
+   * @param taskName
+   * @return the named TaskDescription
+   */
+  public TaskDescription getTaskDescription(String taskName) {
+    return taskDescriptions.get(taskName);
+  }
 }

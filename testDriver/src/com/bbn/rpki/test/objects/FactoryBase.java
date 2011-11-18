@@ -1,0 +1,54 @@
+/*
+ * Created on Nov 14, 2011
+ */
+package com.bbn.rpki.test.objects;
+
+import java.util.List;
+
+/**
+ * <Enter the description of this type here>
+ *
+ * @author RTomlinson
+ */
+public abstract class FactoryBase {
+
+  /**
+   * bp name
+   */
+  protected String bluePrintName;
+  /**
+   * time to live in days
+   */
+  protected int ttl;
+  public String subjKeyFile;
+  public String serverName;
+  public boolean breakAway;
+  public String SIA_path;
+
+  final List<Pair> childSpec;
+
+  abstract IPRangeList getIPV4RangeList();
+  abstract IPRangeList getIPV6RangeList();
+  abstract IPRangeList getASRangeList();
+  
+  protected FactoryBase(String bluePrintName, 
+                        List<Pair> childSpec,
+                        String serverName,
+                        boolean breakAway,
+                        int ttl,
+                        String subjKeyFile) {
+    this.bluePrintName = bluePrintName;
+    this.childSpec = childSpec;
+    this.serverName = serverName;
+    this.breakAway = breakAway;
+    this.ttl = ttl;
+    this.subjKeyFile = subjKeyFile;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
+   */
+  CA_Object create(CA_Object parent) {
+    return new CA_Object(this, parent, null);
+  }
+}
