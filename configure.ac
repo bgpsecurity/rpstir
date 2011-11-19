@@ -79,6 +79,20 @@ AC_ARG_WITH(
     [ odbc_lib=/usr/local/lib]
 )
 
+AC_ARG_WITH(
+    [mysql-include],
+    AS_HELP_STRING([--with-mysql-include],[Path to mysql install location: Defaults to /usr/local/include/mysql ]),
+    [ mysql_include=$withval],
+    [ mysql_include=/usr/local/include/mysql]
+)
+
+AC_ARG_WITH(
+    [mysql-lib],
+    AS_HELP_STRING([--with-mysql-lib],[Path to mysql install location: Defaults to /usr/local/lib/mysql ]),
+    [ mysql_lib=$withval],
+    [ mysql_lib=/usr/local/lib/mysql]
+)
+
 if test x${ssl_lib} != x; then
   LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
 fi
@@ -87,6 +101,9 @@ if test x${odbc_lib} != x; then
 fi
 if test x${cryptlib_lib} != x; then
   LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
+fi
+if test x${mysql_lib} != x; then
+  LDFLAGS="-L${mysql_lib} -Wl,-rpath -Wl,${mysql_lib} ${LDFLAGS-}"
 fi
 
 if test x${odbc_include} != x; then
@@ -97,6 +114,9 @@ if test x${cryptlib_include} != x; then
 fi
 if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
+fi
+if test x${mysql_include} != x; then
+  CFLAGS="-isystem${mysql_include} ${CFLAGS-}"
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
@@ -143,11 +163,15 @@ AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
 	echo "Error: openSSL is required for building this project"
 	exit -1;
 ])
+AC_SEARCH_LIBS([mysql_real_connect], [mysqlclient],[],[
+	echo "Error: MySQL client is required for building this project"
+	exit -1;
+])
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h netdb.h netinet/in.h semaphore.h stdbool.h stdlib.h string.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h wchar.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h my_global.h mysql.h netdb.h netinet/in.h semaphore.h stdbool.h stdlib.h string.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -186,9 +210,10 @@ AC_CONFIG_FILES([Makefile
                  rsync_aur/Makefile
                  rtr/Makefile
                  testcases/Makefile
-		 testbed/Makefile
-		 testbed/src/Makefile
-		 utils/Makefile
-		 utils/tests/Makefile
+                 testbed/Makefile
+                 testbed/src/Makefile
+                 utils/Makefile
+                 utils/tests/Makefile
+                 utils/mysql-c-api/Makefile
 ])
 AC_OUTPUT

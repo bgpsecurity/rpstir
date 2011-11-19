@@ -5,6 +5,7 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#include "connect.h"
 #include "logutils.h"
 
 
@@ -27,7 +28,7 @@ void useDbConn(MYSQL *mysqlp) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int main(int argc, char **argv) {
+int main(/*int argc, char **argv*/) {
     MYSQL mysql;
     const char host[] = "localhost";
     const char user[] = "rpki";

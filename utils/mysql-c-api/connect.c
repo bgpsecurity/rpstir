@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -12,39 +13,42 @@
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int ch2int(int *out, char in) {
-    switch ((int8_t) in) {
-    case 0x30:
+    switch (in) {
+    case '0':
         *out = 0;
         break;
-    case 0x31:
+    case '1':
         *out = 1;
         break;
-    case 0x32:
+    case '2':
         *out = 2;
         break;
-    case 0x33:
+    case '3':
         *out = 3;
         break;
-    case 0x34:
+    case '4':
         *out = 4;
         break;
-    case 0x35:
+    case '5':
         *out = 5;
         break;
-    case 0x36:
+    case '6':
         *out = 6;
         break;
-    case 0x37:
+    case '7':
         *out = 7;
         break;
-    case 0x38:
+    case '8':
         *out = 8;
         break;
-    case 0x39:
+    case '9':
         *out = 9;
         break;
     default:
-        log_msg(LOG_ERR, "expecting ascii encoded digit, got %c [%s:%u]", in, __FILE__, __LINE__);
+        if (isprint(in))
+            log_msg(LOG_ERR, "expected digit, got '%c' [%s:%u]", in, __FILE__, __LINE__);
+        else
+            log_msg(LOG_ERR, "expected digit, got '0x%02x' [%s:%u]", (unsigned char)in, __FILE__, __LINE__);
         return(-1);
         break;
     }

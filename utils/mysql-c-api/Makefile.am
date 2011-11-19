@@ -1,7 +1,5 @@
 #
-# Makefile for utilities convenience library: logging, strings
-#
-# $Id$
+# Makefile for a MySQL utility using the C API
 #
 # ***** BEGIN LICENSE BLOCK *****
 #  
@@ -17,20 +15,19 @@
 #  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.
 #  All Rights Reserved.
 # 
-#  Contributor(s):  Andrew Chi
+#  Contributor(s):  Tony Weber
 # 
 # ***** END LICENSE BLOCK *****
 
-SUBDIRS = . tests mysql-c-api
+#SUBDIRS = .
 
-AM_CFLAGS = -g -Wall -Wextra -Werror
+AM_CFLAGS = -g -Wall -Wextra
+AM_CPPFLAGS = $(DEPS_CFLAGS) -I..
 
-noinst_LIBRARIES = libutils.a libutilsdebug.a
+noinst_LIBRARIES = libmysqlcapi.a
+bin_PROGRAMS = test-driver
 
-libutils_a_SOURCES = logutils.h logutils.c macros.h \
-	stringutils.h stringutils.c hash_utils.c \
-	bag.c bag.h \
-	queue.c queue.h
+libmysqlcapi_a_SOURCES = connect.c ../logutils.h ../logutils.c
 
-libutilsdebug_a_SOURCES = $(libutils_a_SOURCES)
-libutilsdebug_a_CFLAGS = $(AM_CFLAGS) -DDEBUG
+test_driver_SOURCES = test-driver.c connect.c connect.h ../logutils.h ../logutils.c
+
