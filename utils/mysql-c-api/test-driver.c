@@ -1,12 +1,13 @@
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <my_global.h>
-#include <mysql.h>
+#include <mysql/my_global.h>
+#include <mysql/mysql.h>
 
 #include "connect.h"
 #include "logutils.h"
+
 
 
 /*==============================================================================
