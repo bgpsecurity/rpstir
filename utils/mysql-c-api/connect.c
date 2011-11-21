@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <mysql/my_global.h>
-#include <mysql/mysql.h>
+#include <my_global.h>
+#include <mysql.h>
 
 #include "logutils.h"
 
@@ -59,9 +59,29 @@ int ch2int(int *out, char in) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
+/*int charp2uint32_t(uint32_t *out, const char *in, int len) {
+    int ret = 0;
+    const int MAX_LEN = 10;
+    char terminated_input[MAX_LEN + 1];
+
+    if (len > 10) {
+        log_msg(LOG_ERR, "input exceeds max length [%s:%u]", __FILE__, __LINE__);
+        return(-1);
+    }
+
+    terminated_input[MAX_LEN] = '\0';
+
+    ret = sscanf()
+
+    return(0);
+}*/
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
 int char_arr2uint32_t(uint32_t *out, const char *in, int len) {
     int i;
-    int digit;
+    int digit = 0;
     uint64_t val = 0;
 
     if (len > 10) {

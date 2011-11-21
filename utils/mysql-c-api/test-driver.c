@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <mysql/my_global.h>
-#include <mysql/mysql.h>
+#include <my_global.h>
+#include <mysql.h>
 
 #include "connect.h"
 #include "logutils.h"
