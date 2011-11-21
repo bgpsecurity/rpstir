@@ -29,7 +29,6 @@ LDADD = ../libutils.a libmysqlcapi.a
 noinst_LIBRARIES = libmysqlcapi.a
 bin_PROGRAMS = test-driver
 
-libmysqlcapi_a_SOURCES = connect.c ../logutils.h ../logutils.c
+libmysqlcapi_a_SOURCES = connect.c ../libutils.a
 
-test_driver_SOURCES = test-driver.c connect.c connect.h ../logutils.h ../logutils.c
-
+test_driver_SOURCES = test-driver.c
