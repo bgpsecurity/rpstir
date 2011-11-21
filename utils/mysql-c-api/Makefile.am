@@ -24,6 +24,8 @@
 AM_CFLAGS = -g -Wall -Wextra
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I..
 
+LDADD = ../libutils.a libmysqlcapi.a
+
 noinst_LIBRARIES = libmysqlcapi.a
 bin_PROGRAMS = test-driver
 
