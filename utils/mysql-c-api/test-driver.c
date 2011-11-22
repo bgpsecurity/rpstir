@@ -6,7 +6,7 @@
 #include <mysql.h>
 
 #include "connect.h"
-#include "logutils.h"
+#include "logging.h"
 
 
 
@@ -17,9 +17,9 @@ void useDbConn(MYSQL *mysqlp) {
 //    uint32_t new_ser_num = 0xfffffffc;
 //    addNewSerNum(mysqlp, &new_ser_num);
 
-    addNewSerNum(mysqlp, NULL);
+//    addNewSerNum(mysqlp, NULL);
 
-//    deleteSerNum(mysqlp, 1);
+    deleteSerNum(mysqlp, 99);
 
 //    deleteAllSerNums(mysqlp);
 
@@ -36,14 +36,18 @@ int main(/*int argc, char **argv*/) {
     const char pass[] = "validator";
     const char db[] = "rpkidb7";
 
+    DB_C_OPEN_LOG();
+
     if (connectMysqlCApi(&mysql, host, user, pass, db)) {
-        log_msg(LOG_ERR, "could not get a connection to the db");
+        DB_C_LOG(LOG_ERR, "could not get a connection to the db");
         return(-1);
     }
 
     useDbConn(&mysql);
 
     mysql_close(&mysql);
+
+    DB_C_CLOSE_LOG();
 
     return EXIT_SUCCESS;
 }

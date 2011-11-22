@@ -7,7 +7,7 @@
 #include <my_global.h>
 #include <mysql.h>
 
-#include "logutils.h"
+#include "logging.h"
 
 
 /*==============================================================================
@@ -46,9 +46,9 @@ int ch2int(int *out, char in) {
         break;
     default:
         if (isprint(in))
-            log_msg(LOG_ERR, "expected digit, got '%c' [%s:%u]", in, __FILE__, __LINE__);
+            DB_C_LOG(LOG_ERR, "expected digit, got '%c' [%s:%u]", in, __FILE__, __LINE__);
         else
-            log_msg(LOG_ERR, "expected digit, got '0x%02x' [%s:%u]", (unsigned char)in, __FILE__, __LINE__);
+            DB_C_LOG(LOG_ERR, "expected digit, got '0x%02x' [%s:%u]", (unsigned char)in, __FILE__, __LINE__);
         return(-1);
         break;
     }
@@ -65,7 +65,7 @@ int charp2uint32_t(uint32_t *out, const char *in, int len) {
     uint64_t tmp_out = 0;
 
     if (len > MAX_LEN) {
-        log_msg(LOG_ERR, "input exceeds max length [%s:%u]", __FILE__, __LINE__);
+        DB_C_LOG(LOG_ERR, "input exceeds max length [%s:%u]", __FILE__, __LINE__);
         return (-1);
     }
 
@@ -74,7 +74,7 @@ int charp2uint32_t(uint32_t *out, const char *in, int len) {
         if (isdigit(in[i])) {
             terminated_input[i] = in[i];
         } else {
-            log_msg(LOG_ERR, "input char was not a digit [%s:%u]", __FILE__, __LINE__);
+            DB_C_LOG(LOG_ERR, "input char was not a digit [%s:%u]", __FILE__, __LINE__);
             return (-1);
         }
     }
@@ -83,15 +83,15 @@ int charp2uint32_t(uint32_t *out, const char *in, int len) {
     int ret = 0;
     ret = sscanf(terminated_input, "%" SCNu64, &tmp_out);
     if (ret == 0) {
-        log_msg(LOG_ERR, "no sscanf conversion done, [%s:%u]", ret, __FILE__, __LINE__);
+        DB_C_LOG(LOG_ERR, "no sscanf conversion done, [%s:%u]", __FILE__, __LINE__);
         return (-1);
     } else if (ret < 0) {
-        log_msg(LOG_ERR, "sscanf error %d, [%s:%u]", ret, __FILE__, __LINE__);
+        DB_C_LOG(LOG_ERR, "sscanf error %d, [%s:%u]", ret, __FILE__, __LINE__);
         return (-1);
     }
 
     if (tmp_out > UINT32_MAX) {
-        log_msg(LOG_ERR, "input exceeds max value [%s:%u]", __FILE__, __LINE__);
+        DB_C_LOG(LOG_ERR, "input exceeds max value [%s:%u]", __FILE__, __LINE__);
         return (-1);
     } else
         *out = (uint32_t) tmp_out;
@@ -108,7 +108,7 @@ int char_arr2uint32_t(uint32_t *out, const char *in, int len) {
     uint64_t val = 0;
 
     if (len > 10) {
-        log_msg(LOG_ERR, "input exceeds max length [%s:%u]", __FILE__, __LINE__);
+        DB_C_LOG(LOG_ERR, "input exceeds max length [%s:%u]", __FILE__, __LINE__);
         return(-1);
     }
 
@@ -121,7 +121,7 @@ int char_arr2uint32_t(uint32_t *out, const char *in, int len) {
     }
 
     if (val > 0xffffffff) {
-        log_msg(LOG_ERR, "value exceeds max size [%s:%u]", __FILE__, __LINE__);
+        DB_C_LOG(LOG_ERR, "value exceeds max size [%s:%u]", __FILE__, __LINE__);
         return(-1);
     }
 
@@ -140,14 +140,14 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
             "(select max(create_time) from rtr_update)";
 
     if (mysql_query(mysqlp, qry)) {
-        log_msg(LOG_ERR, "could not get latest serial number from db");
-        log_msg(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not get latest serial number from db");
+        DB_C_LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
     if ((result = mysql_store_result(mysqlp)) == NULL) {
-        log_msg(LOG_ERR, "could not read result set");
-        log_msg(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not read result set");
+        DB_C_LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
@@ -159,7 +159,7 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
         sz = lengths[0];
 
         if (charp2uint32_t(sn, row[0], sz)) {
-            log_msg(LOG_ERR, "error converting char[] to uint32_t for serial number");
+            DB_C_LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
             return (-1);
         }
 
@@ -171,7 +171,7 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
         return(0);
     } else {
         mysql_free_result(result);
-        log_msg(LOG_ERR, "query returned an unexpected number of rows");
+        DB_C_LOG(LOG_ERR, "query returned an unexpected number of rows");
         return(-1);
     }
 }
@@ -195,7 +195,7 @@ int addNewSerNum(MYSQL *mysqlp, const uint32_t *in) {
         else
             new_ser_num = 0;
     } else {
-        log_msg(LOG_ERR, "error reading latest serial number");
+        DB_C_LOG(LOG_ERR, "error reading latest serial number");
         return(-1);
     }
 
@@ -205,20 +205,20 @@ int addNewSerNum(MYSQL *mysqlp, const uint32_t *in) {
             new_ser_num);
 
     if (mysql_query(mysqlp, qry)) {
-        log_msg(LOG_ERR, "could not delete serial number %u from db", new_ser_num);
-        log_msg(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not delete serial number %u from db", new_ser_num);
+        DB_C_LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
     if (mysql_affected_rows(mysqlp))
-        log_msg(LOG_INFO, "serial_num %u had to be deleted from db before inserting it", new_ser_num);
+        DB_C_LOG(LOG_INFO, "serial_num %u had to be deleted from db before inserting it", new_ser_num);
 
     snprintf(qry, QRY_SZ, "%s%u %s", "insert into rtr_update values (",
             new_ser_num, ", now())");
 
     if (mysql_query(mysqlp, qry)) {
-        log_msg(LOG_ERR, "could not add new serial number to db");
-        log_msg(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not add new serial number to db");
+        DB_C_LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
@@ -238,10 +238,12 @@ int deleteSerNum(MYSQL *mysqlp, uint32_t ser_num) {
             ser_num);
 
     if (mysql_query(mysqlp, qry)) {
-        log_msg(LOG_ERR, "could not delete serial number from db");
-        log_msg(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not delete serial number from db");
+        DB_C_LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
+
+    DB_C_LOG(LOG_DEBUG, "%llu rows affected for '%s'", mysql_affected_rows(mysqlp), qry);
 
     return(0);
 }
@@ -255,8 +257,8 @@ int deleteAllSerNums(MYSQL *mysqlp) {
     const char qry[] = "delete from rtr_update";
 
     if (mysql_query(mysqlp, qry)) {
-        log_msg(LOG_ERR, "could not delete all serial numbers from db");
-        log_msg(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not delete all serial numbers from db");
+        DB_C_LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
@@ -273,14 +275,14 @@ int connectMysqlCApi(MYSQL *mysqlp,
         const char *db) {
 
     if (!mysql_init(mysqlp)) {
-        log_msg(LOG_ERR, "insufficient memory to alloc MYSQL object");
-        log_msg(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "insufficient memory to alloc MYSQL object");
+        DB_C_LOG(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
     if (!mysql_real_connect(mysqlp, host, user, pass, db, 0, NULL, 0) ) {
-        log_msg(LOG_ERR, "could not connect to MySQL db");
-        log_msg(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
+        DB_C_LOG(LOG_ERR, "could not connect to MySQL db");
+        DB_C_LOG(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
         return(-1);
     }
 
