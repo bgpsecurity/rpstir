@@ -5,6 +5,7 @@
 
 #include <syslog.h>
 #include <stdbool.h>
+#include <string.h>
 
 
 #define OPEN_LOG(ident, facility) \
