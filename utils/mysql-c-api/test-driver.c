@@ -6,48 +6,47 @@
 #include <mysql.h>
 
 #include "connect.h"
-#include "logging.h"
+#include "test-driver.h"
 
 
 
 /*==============================================================================
  * Use this for temporary test calls.
 ------------------------------------------------------------------------------*/
-void useDbConn(MYSQL *mysqlp) {
+void useDbConn(void *connp) {
 //    uint32_t new_ser_num = 0xfffffffc;
-//    addNewSerNum(mysqlp, &new_ser_num);
+//    addNewSerNum(connp, &new_ser_num);
 
-//    addNewSerNum(mysqlp, NULL);
+//    addNewSerNum(connp, NULL);
 
-    deleteSerNum(mysqlp, 99);
+    deleteSerNum(connp, 99);
 
-//    deleteAllSerNums(mysqlp);
+//    deleteAllSerNums(connp);
 
-//    getLatestSerNum(mysqlp);
+//    getLatestSerNum(connp);
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int main(/*int argc, char **argv*/) {
-    MYSQL mysql;
+int main() {
+    void *connp = 0;
     const char host[] = "localhost";
     const char user[] = "rpki";
     const char pass[] = "validator";
     const char db[] = "rpkidb7";
 
-    DB_C_OPEN_LOG();
+    OPEN_LOG();
 
-    if (connectMysqlCApi(&mysql, host, user, pass, db)) {
-        DB_C_LOG(LOG_ERR, "could not get a connection to the db");
+    if (connectDb(connp, host, user, pass, db)) {
         return(-1);
     }
 
-    useDbConn(&mysql);
+    useDbConn(connp);
 
-    mysql_close(&mysql);
+    disconnectDb(connp);
 
-    DB_C_CLOSE_LOG();
+    CLOSE_LOG();
 
     return EXIT_SUCCESS;
 }
