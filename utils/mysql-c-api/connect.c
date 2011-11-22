@@ -59,22 +59,45 @@ int ch2int(int *out, char in) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-/*int charp2uint32_t(uint32_t *out, const char *in, int len) {
-    int ret = 0;
-    const int MAX_LEN = 10;
+int charp2uint32_t(uint32_t *out, const char *in, int len) {
+    const int MAX_LEN = 10;  // decimal digits for type
     char terminated_input[MAX_LEN + 1];
+    uint64_t tmp_out = 0;
 
-    if (len > 10) {
+    if (len > MAX_LEN) {
         log_msg(LOG_ERR, "input exceeds max length [%s:%u]", __FILE__, __LINE__);
-        return(-1);
+        return (-1);
     }
 
-    terminated_input[MAX_LEN] = '\0';
+    int i = 0;
+    for (i = 0; i < len; i++) {
+        if (isdigit(in[i])) {
+            terminated_input[i] = in[i];
+        } else {
+            log_msg(LOG_ERR, "input char was not a digit [%s:%u]", __FILE__, __LINE__);
+            return (-1);
+        }
+    }
+    terminated_input[i] = '\0';
 
-    ret = sscanf()
+    int ret = 0;
+    ret = sscanf(terminated_input, "%" SCNu64, &tmp_out);
+    if (ret == 0) {
+        log_msg(LOG_ERR, "no sscanf conversion done, [%s:%u]", ret, __FILE__, __LINE__);
+        return (-1);
+    } else if (ret < 0) {
+        log_msg(LOG_ERR, "sscanf error %d, [%s:%u]", ret, __FILE__, __LINE__);
+        return (-1);
+    }
+
+    if (tmp_out > UINT32_MAX) {
+        log_msg(LOG_ERR, "input exceeds max value [%s:%u]", __FILE__, __LINE__);
+        return (-1);
+    } else
+        *out = (uint32_t) tmp_out;
 
     return(0);
-}*/
+}
 
 
 /*==============================================================================
@@ -135,7 +158,7 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
         lengths = mysql_fetch_lengths(result);
         sz = lengths[0];
 
-        if (char_arr2uint32_t(sn, row[0], sz)) {
+        if (charp2uint32_t(sn, row[0], sz)) {
             log_msg(LOG_ERR, "error converting char[] to uint32_t for serial number");
             return (-1);
         }
@@ -143,7 +166,7 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
         mysql_free_result(result);
         return(0);
     } else if (mysql_num_rows(result) == 0) {
-        *sn = (uint32_t)-1;
+        *sn = UINT32_MAX;
         mysql_free_result(result);
         return(0);
     } else {
@@ -213,8 +236,6 @@ int deleteSerNum(MYSQL *mysqlp, uint32_t ser_num) {
 
     snprintf(qry, QRY_SZ, "%s%u", "delete from rtr_update where serial_num=",
             ser_num);
-
-    printf("query:  %s\n", qry);
 
     if (mysql_query(mysqlp, qry)) {
         log_msg(LOG_ERR, "could not delete serial number from db");
