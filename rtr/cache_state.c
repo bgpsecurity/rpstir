@@ -65,7 +65,13 @@ bool update_global_cache_state(struct global_cache_state * state)
 	struct cache_state tmp_cache_state;
 	ret = get_cache_state(&tmp_cache_state);
 	if (ret)
+	{
 		state->cache_state = tmp_cache_state;
+	}
+	else
+	{
+		RTR_LOG(LOG_WARNING, "couldn't update global cache state, leaving cache state unchanged");
+	}
 
 	retval = pthread_rwlock_unlock(&state->lock);
 	if (retval != 0)
