@@ -62,7 +62,10 @@ bool update_global_cache_state(struct global_cache_state * state)
 		return false;
 	}
 
-	ret = get_cache_state(&state->cache_state);
+	struct cache_state tmp_cache_state;
+	ret = get_cache_state(&tmp_cache_state);
+	if (ret)
+		state->cache_state = tmp_cache_state;
 
 	retval = pthread_rwlock_unlock(&state->lock);
 	if (retval != 0)
