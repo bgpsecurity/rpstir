@@ -153,8 +153,8 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
 
     ulong *lengths;
     ulong sz;
-    uint rows = mysql_num_rows;
-    if (rows == 1) {
+    uint num_rows = mysql_num_rows(result);
+    if (num_rows == 1) {
         row = mysql_fetch_row(result);
         lengths = mysql_fetch_lengths(result);
         sz = lengths[0];
@@ -166,13 +166,13 @@ int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
 
         mysql_free_result(result);
         return (0);
-    } else if (rows == 0) {
+    } else if (num_rows == 0) {
         *sn = UINT32_MAX;
         mysql_free_result(result);
         return (0);
     } else {
         mysql_free_result(result);
-        DB_C_LOG(LOG_ERR, "returned %u rows for query:  %s", rows, qry);
+        DB_C_LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
         return (-1);
     }
 }
@@ -268,6 +268,7 @@ int deleteAllSerNums(MYSQL *mysqlp) {
 
 
 /*==============================================================================
+ * TODO: return a void* so the type of db is hidden. and make fcn-name generic.
 ------------------------------------------------------------------------------*/
 int connectMysqlCApi(MYSQL *mysqlp,
         const char *host,
