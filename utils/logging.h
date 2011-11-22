@@ -1,10 +1,21 @@
-#ifndef _DB_C_LOGGING_H
-#define _DB_C_LOGGING_H
+#ifndef _UTILS_LOGGING_H
+#define _UTILS_LOGGING_H
 
+// NOTE: see logutils.h for older (non-syslog) logging system
 
 #include <syslog.h>
 #include <stdbool.h>
 
+
+#define OPEN_LOG(ident, facility) \
+    do { \
+        openlog((ident), LOG_PID | LOG_PERROR, (facility)); \
+    } while (false)
+
+#define CLOSE_LOG() \
+    do { \
+        closelog(); \
+    } while (false)
 
 #define LOG(priority, format, ...) \
     do { \

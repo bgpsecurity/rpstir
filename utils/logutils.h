@@ -1,7 +1,7 @@
 /*
   Logging utilities
 
-  $Id$
+  NOTE: See logging.h for newer logging system, recommended for new code.
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
