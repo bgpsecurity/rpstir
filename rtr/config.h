@@ -4,7 +4,6 @@
 #include <syslog.h>
 
 #define RTR_LOG_IDENT "rtrd"
-#define RTR_LOG_OPTION (LOG_PERROR)
 #define RTR_LOG_FACILITY LOG_DAEMON
 
 #define LISTEN_PORT 1234

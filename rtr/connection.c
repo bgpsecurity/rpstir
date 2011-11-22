@@ -64,7 +64,7 @@ static void copy_cache_state(struct run_state * run_state, struct cache_state * 
 
 	if (retval != 0)
 	{
-		RTR_LOG_ERR(retval, run_state->errorbuf, "pthread_rwlock_rdlock()");
+		ERR_LOG(retval, run_state->errorbuf, "pthread_rwlock_rdlock()");
 		pthread_exit(NULL);
 	}
 
@@ -74,7 +74,7 @@ static void copy_cache_state(struct run_state * run_state, struct cache_state * 
 
 	if (retval != 0)
 	{
-		RTR_LOG_ERR(retval, run_state->errorbuf, "pthread_rwlock_unlock()");
+		ERR_LOG(retval, run_state->errorbuf, "pthread_rwlock_unlock()");
 		pthread_exit(NULL);
 	}
 
@@ -92,7 +92,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 		argsp->db_semaphore == NULL ||
 		argsp->global_cache_state == NULL)
 	{
-		RTR_LOG(LOG_ERR, "got NULL argument");
+		LOG(LOG_ERR, "got NULL argument");
 		free(args_voidp);
 		pthread_exit(NULL);
 	}
@@ -135,14 +135,14 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 
 	if (pdu == NULL)
 	{
-		RTR_LOG(LOG_ERR, "send_pdu got NULL pdu");
+		LOG(LOG_ERR, "send_pdu got NULL pdu");
 		pthread_exit(NULL);
 	}
 
 	count = dump_pdu(run_state->pdu_send_buffer, MAX_PDU_SIZE, pdu);
 	if (count < 0)
 	{
-		RTR_LOG(LOG_ERR, "dump_pdu failed");
+		LOG(LOG_ERR, "dump_pdu failed");
 		pthread_exit(NULL);
 	}
 	else
@@ -157,7 +157,7 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 			(size_t)count);
 		if (retval < 0)
 		{
-			RTR_LOG_ERR(errno, run_state->errorbuf, "write()");
+			ERR_LOG(errno, run_state->errorbuf, "write()");
 			pthread_exit(NULL);
 		}
 
@@ -171,7 +171,7 @@ static void send_error(struct run_state * run_state, error_code_t code,
 {
 	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length > MAX_PDU_SIZE)
 	{
-		RTR_LOG(LOG_ERR, "send_error() called with too long of an error text");
+		LOG(LOG_ERR, "send_error() called with too long of an error text");
 		pthread_exit(NULL);
 	}
 
@@ -208,7 +208,7 @@ static void send_error_from_parsed_pdu(struct run_state * run_state, error_code_
 
 	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length > MAX_PDU_SIZE)
 	{
-		RTR_LOG(LOG_ERR, "send_error_from_parsed_pdu() called with too long of an error text");
+		LOG(LOG_ERR, "send_error_from_parsed_pdu() called with too long of an error text");
 		pthread_exit(NULL);
 	}
 
@@ -237,23 +237,23 @@ static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu
 	switch (parse_pdu_retval)
 	{
 		case PDU_CORRUPT_DATA:
-			RTR_LOG(LOG_NOTICE, "received PDU with corrupt data");
+			LOG(LOG_NOTICE, "received PDU with corrupt data");
 			code = ERR_CORRUPT_DATA;
 			break;
 		case PDU_INTERNAL_ERROR:
-			RTR_LOG(LOG_NOTICE, "internal error from parsing a PDU");
+			LOG(LOG_NOTICE, "internal error from parsing a PDU");
 			code = ERR_INTERNAL_ERROR;
 			break;
 		case PDU_UNSUPPORTED_PROTOCOL_VERSION:
-			RTR_LOG(LOG_NOTICE, "received PDU with unsupported protocol version");
+			LOG(LOG_NOTICE, "received PDU with unsupported protocol version");
 			code = ERR_UNSUPPORTED_VERSION;
 			break;
 		case PDU_UNSUPPORTED_PDU_TYPE:
-			RTR_LOG(LOG_NOTICE, "received PDU with unsupported PDU type");
+			LOG(LOG_NOTICE, "received PDU with unsupported PDU type");
 			code = ERR_UNSUPPORTED_TYPE;
 			break;
 		default:
-			RTR_LOG(LOG_ERR, "log_and_send_parse_error() called with unexpected parse_pdu_retval (%d)", parse_pdu_retval);
+			LOG(LOG_ERR, "log_and_send_parse_error() called with unexpected parse_pdu_retval (%d)", parse_pdu_retval);
 			code = ERR_INTERNAL_ERROR;
 			break;
 	}
@@ -290,7 +290,7 @@ static void read_block(struct run_state * run_state, ssize_t count)
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
-				RTR_LOG(LOG_WARNING, "tried to read past the end of a PDU");
+				LOG(LOG_WARNING, "tried to read past the end of a PDU");
 				send_error(run_state, ERR_INTERNAL_ERROR, NULL, 0, NULL, 0);
 				pthread_exit(NULL);
 			case PDU_TRUNCATED:
@@ -304,11 +304,11 @@ static void read_block(struct run_state * run_state, ssize_t count)
 		retval = read(run_state->fd, run_state->pdu_recv_buffer + run_state->pdu_recv_buffer_length, (size_t)count);
 		if (retval < 0)
 		{
-			RTR_LOG_ERR(errno, run_state->errorbuf, "read()");
+			ERR_LOG(errno, run_state->errorbuf, "read()");
 		}
 		else if (retval == 0)
 		{
-			RTR_LOG(LOG_NOTICE, "remote side closed connection in the middle of sending a PDU");
+			LOG(LOG_NOTICE, "remote side closed connection in the middle of sending a PDU");
 			pthread_exit(NULL);
 		}
 		else
@@ -335,13 +335,13 @@ static bool read_nonblock(struct run_state * run_state, size_t count)
 	if (retval < 0)
 	{
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
-			RTR_LOG_ERR(errno, run_state->errorbuf, "recv()");
+			ERR_LOG(errno, run_state->errorbuf, "recv()");
 
 		return false;
 	}
 	else if (retval == 0)
 	{
-		RTR_LOG(LOG_INFO, "remote side closed connection");
+		LOG(LOG_INFO, "remote side closed connection");
 		pthread_exit(NULL);
 	}
 	else
@@ -372,7 +372,7 @@ static int read_and_parse_pdu(struct run_state * run_state)
 	{
 		if (run_state->recv_pdu.length > MAX_PDU_SIZE)
 		{
-			RTR_LOG(LOG_NOTICE,
+			LOG(LOG_NOTICE,
 				"received PDU that's too long (%" PRIu32 " bytes)",
 				run_state->recv_pdu.length);
 			send_error(run_state, ERR_CORRUPT_DATA,
@@ -394,7 +394,7 @@ static void increment_db_semaphore(struct run_state * run_state)
 {
 	if (sem_post(run_state->db_semaphore) != 0)
 	{
-		RTR_LOG_ERR(errno, run_state->errorbuf, "sem_post()");
+		ERR_LOG(errno, run_state->errorbuf, "sem_post()");
 	}
 }
 
@@ -402,7 +402,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 {
 	if (Queue_size(run_state->db_response_queue) != 0)
 	{
-		RTR_LOG(LOG_ERR, "add_db_request called with non-empty response queue");
+		LOG(LOG_ERR, "add_db_request called with non-empty response queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -419,7 +419,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 			run_state->request.query.type = RESET_QUERY;
 			break;
 		default:
-			RTR_LOG(LOG_ERR, "add_db_request() called with a non-query PDU");
+			LOG(LOG_ERR, "add_db_request() called with a non-query PDU");
 			send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 				pdu, pdu_from_recv_buffer,
 				NULL, 0);
@@ -432,7 +432,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 
 	if (!Queue_push(run_state->db_request_queue, (void *)&run_state->request))
 	{
-		RTR_LOG(LOG_ERR, "couldn't add new request to request queue");
+		LOG(LOG_ERR, "couldn't add new request to request queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -449,7 +449,7 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 	PDU * pdup = pdu_deepcopy(pdu);
 	if (pdup == NULL)
 	{
-		RTR_LOG(LOG_ERR, "can't allocate memory for a copy of the PDU");
+		LOG(LOG_ERR, "can't allocate memory for a copy of the PDU");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -461,7 +461,7 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 	if (!Queue_push(run_state->to_process_queue, (void *)pdup))
 	{
 		pdu_free(pdup);
-		RTR_LOG(LOG_ERR, "can't push a PDU onto the to-process queue");
+		LOG(LOG_ERR, "can't push a PDU onto the to-process queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -493,11 +493,11 @@ static void handle_pdu(struct run_state * run_state, PDU * pdup, bool pdu_from_r
 			break;
 		case PDU_ERROR_REPORT:
 			pdu_sprint(pdup, run_state->pdustrbuf);
-			RTR_LOG(LOG_NOTICE, "received %s", run_state->pdustrbuf);
+			LOG(LOG_NOTICE, "received %s", run_state->pdustrbuf);
 			pthread_exit(NULL);
 		default:
 			pdu_sprint(pdup, run_state->pdustrbuf);
-			RTR_LOG(LOG_NOTICE, "received unexpected PDU: %s", run_state->pdustrbuf);
+			LOG(LOG_NOTICE, "received unexpected PDU: %s", run_state->pdustrbuf);
 			send_error_from_parsed_pdu(run_state, ERR_INVALID_REQUEST,
 				pdup, pdu_from_recv_buffer,
 				ERROR_TEXT("unexpected PDU type"));
@@ -512,7 +512,7 @@ static void read_and_handle_pdu(struct run_state * run_state)
 	switch (retval)
 	{
 		case PDU_WARNING:
-			RTR_LOG(LOG_NOTICE, "received a PDU with unsupported feature(s)");
+			LOG(LOG_NOTICE, "received a PDU with unsupported feature(s)");
 		case PDU_GOOD:
 			handle_pdu(run_state, &run_state->recv_pdu, true);
 			break;
@@ -528,7 +528,7 @@ static void handle_response(struct run_state * run_state)
 
 	if (run_state->response == NULL)
 	{
-		RTR_LOG(LOG_ERR, "got NULL response from db");
+		LOG(LOG_ERR, "got NULL response from db");
 		return;
 	}
 
@@ -574,7 +574,7 @@ static void check_global_cache_state(struct run_state * run_state)
 
 	if (run_state->state != READY)
 	{
-		RTR_LOG(LOG_ERR, "check_global_cache_state() called when not in READY state");
+		LOG(LOG_ERR, "check_global_cache_state() called when not in READY state");
 		pthread_exit(NULL);
 	}
 
@@ -582,7 +582,7 @@ static void check_global_cache_state(struct run_state * run_state)
 
 	if (run_state->local_cache_state.nonce != tmp_cache_state.nonce)
 	{
-		RTR_LOG(LOG_ERR, "cache nonce has changed");
+		LOG(LOG_ERR, "cache nonce has changed");
 		pthread_exit(NULL);
 	}
 
@@ -615,7 +615,7 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 	}
 	else if (retval != 0)
 	{
-		RTR_LOG_ERR(errno, run_state->errorbuf,
+		ERR_LOG(errno, run_state->errorbuf,
 			((use_timeout && run_state->state == READY) ?
 				"sem_timedwait()" :
 				"sem_wait()"));
@@ -652,7 +652,7 @@ static void cleanup(void * run_state_voidp)
 		{
 			if (!wait_on_semaphore(run_state, false))
 			{
-				RTR_LOG(LOG_ERR, "failed to wait on semaphore in cleanup(), continuing without clearing the db response queue");
+				LOG(LOG_ERR, "failed to wait on semaphore in cleanup(), continuing without clearing the db response queue");
 				break;
 			}
 
@@ -699,14 +699,14 @@ static void initialize_data_structures_in_run_state(struct run_state * run_state
 	run_state->db_response_queue = Queue_new(true);
 	if (run_state->db_response_queue == NULL)
 	{
-		RTR_LOG(LOG_ERR, "can't create db response queue");
+		LOG(LOG_ERR, "can't create db response queue");
 		pthread_exit(NULL);
 	}
 
 	run_state->to_process_queue = Queue_new(false);
 	if (run_state->to_process_queue == NULL)
 	{
-		RTR_LOG(LOG_ERR, "can't create to-process queue");
+		LOG(LOG_ERR, "can't create to-process queue");
 		pthread_exit(NULL);
 	}
 }
