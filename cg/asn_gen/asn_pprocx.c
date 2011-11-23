@@ -9,23 +9,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
- ***** BEGIN LICENSE BLOCK *****
- * 
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- * 
- * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
- * US government users are permitted restricted rights as
- * defined in the FAR.  
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 1995-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK *****
 *****************************************************************************/
 
 const char asn_pprocx_rcsid[]="$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_pproc.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
