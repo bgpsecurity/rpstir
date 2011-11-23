@@ -14,14 +14,14 @@ bool empty_test(Bag * bag)
 	assert(bag != NULL);
 	assert(Bag_size(bag) == 0);
 
-	Bag_start_const_iteration(bag);
+	TEST_BOOL(Bag_start_const_iteration(bag), true);
 	for (it = Bag_const_begin(bag);
 		it != Bag_const_end(bag);
 		it = Bag_const_iterator_next(bag, it))
 	{
 		++size;
 	}
-	Bag_stop_const_iteration(bag);
+	TEST_BOOL(Bag_stop_const_iteration(bag), true);
 
 	TEST(size_t, "%zd", size, ==, 0);
 
@@ -52,7 +52,7 @@ bool correctness_test(Bag * bag)
 		do { \
 			found = 0; \
 			\
-			start_iteration(bag); \
+			TEST_BOOL(start_iteration(bag), true); \
 			for (iterator = begin(bag); iterator != end(bag); iterator = next(bag, iterator)) \
 			{ \
 				data = get(bag, iterator); \
@@ -64,7 +64,7 @@ bool correctness_test(Bag * bag)
 				\
 				found |= (uint64_t)1 << (int)data; \
 			} \
-			stop_iteration(bag); \
+			TEST_BOOL(stop_iteration(bag), true); \
 			\
 			TEST(uint64_t, "%" PRIu64, found, ==, UINT64_MAX); \
 		} while (false)
@@ -107,11 +107,11 @@ bool stress_test(Bag * bag, size_t num_entries)
 
 	#define CLEAR_ENTRIES \
 		do { \
-			Bag_start_iteration(bag); \
+			TEST_BOOL(Bag_start_iteration(bag), true); \
 			it = Bag_begin(bag); \
 			while (it != Bag_end(bag)) \
 				it = Bag_erase(bag, it); \
-			Bag_stop_iteration(bag); \
+			TEST_BOOL(Bag_stop_iteration(bag), true); \
 			\
 			TEST(size_t, "%zd", Bag_size(bag), ==, 0); \
 		} while (false)
