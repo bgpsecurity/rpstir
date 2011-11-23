@@ -18,7 +18,7 @@ void useDbConn(void *connp) {
     getCacheNonce((MYSQL*) connp, &nonce);
     printf("nonce = %hu\n", nonce);
 
-//    setCacheNonce((MYSQL*) connp, 13579);
+//    setCacheNonce((MYSQL*) connp, 3434);
 
 //    getLatestSerNum(connp);
 
@@ -45,7 +45,8 @@ int main() {
 
     OPEN_LOG();
 
-    if ((connp = connectDb(host, user, pass, db)) == NULL) {
+//    if ((connp = connectDb(host, user, pass, db)) == NULL) {
+    if ((connp = connectDbDefault()) == NULL) {
         CLOSE_LOG();
         return(-1);
     }

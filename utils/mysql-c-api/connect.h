@@ -1,3 +1,10 @@
+#ifndef _DB_CONNECT_H
+#define _DB_CONNECT_H
+
+
+#include <inttypes.h>
+
+
 int getCacheNonce(MYSQL *mysqlp, const uint16_t *nonce);
 
 int addCacheNonce(MYSQL *mysqlp, const uint16_t *nonce);
@@ -16,4 +23,9 @@ void *connectDb(
         const char *pass,
         const char *db);
 
+void *connectDbDefault();
+
 void disconnectDb(void *connp);
+
+
+#endif // _DB_CONNECT_H

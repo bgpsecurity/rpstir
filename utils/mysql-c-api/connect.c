@@ -220,6 +220,7 @@ int getCacheNonce(MYSQL *mysqlp, uint16_t *nonce) {
 /*==============================================================================
  * not currently an API function.  currently for testing
  * Precondition:  table rtr_nonce has exactly 0 or 1 rows.
+ * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
 ------------------------------------------------------------------------------*/
 int setCacheNonce(MYSQL *mysqlp, uint16_t nonce) {
     const char qry_delete[] = "delete from rtr_nonce";
@@ -406,6 +407,10 @@ static void *connectMysqlCApi(
     MYSQL *mysqlp = NULL;
 
     mysqlp = (MYSQL*) calloc(1, sizeof(MYSQL));
+    if (!mysqlp) {
+        LOG(LOG_ERR, "could not alloc for MYSQL" );
+        return (NULL);
+    }
 
     if (!mysql_init(mysqlp)) {
         LOG(LOG_ERR, "insufficient memory to alloc MYSQL object");
@@ -438,6 +443,18 @@ void *connectDb(
         const char *user,
         const char *pass,
         const char *db) {
+
+    return connectMysqlCApi(host, user, pass, db);
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+void *connectDbDefault() {
+    const char *host = "localhost";
+    const char *user = getenv("RPKI_DBUSER");
+    const char *pass = getenv("RPKI_DBPASS");
+    const char *db =   getenv("RPKI_DB");
 
     return connectMysqlCApi(host, user, pass, db);
 }
