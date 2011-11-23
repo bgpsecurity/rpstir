@@ -4,10 +4,12 @@ BEGIN {
 	PRE_LINE = "^[ \t]*";
 	POST_LINE = "[ \t]*$";
 
-	# tmp variable
-	X = "(\\* *)?";
+	# tmp variables
+	X = "((\\*|#( *\\*)?) *)?";
+	PRE_BLOCK = "(/\\* *|# *(/\\* *)?)?";
+	POST_BLOCK = " *(\\*/)?";
 
-	BLOCK[ 0] = "/\\* \\*\\*\\*\\*\\* BEGIN LICENSE BLOCK \\*\\*\\*\\*\\*";
+	BLOCK[ 0] = PRE_BLOCK "\\*\\*\\*\\*\\* BEGIN LICENSE BLOCK \\*\\*\\*\\*\\*";
 	BLOCK[ 1] = X;
 	BLOCK[ 2] = X "BBN Address and AS Number PKI Database/repository software";
 	BLOCK[ 3] = X "Version [^ ]*";
@@ -22,7 +24,7 @@ BEGIN {
 	BLOCK[12] = X;
 	BLOCK[13] = X "Contributor(\\(s\\)|s)?: .*";
 	BLOCK[14] = X;
-	BLOCK[15] = X "\\*\\*\\*\\*\\* END LICENSE BLOCK \\*\\*\\*\\*\\* \\*/";
+	BLOCK[15] = X "\\*\\*\\*\\*\\* END LICENSE BLOCK \\*\\*\\*\\*\\*" POST_BLOCK;
 
 	BLOCK_END = 15;
 }
