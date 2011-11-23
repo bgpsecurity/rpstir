@@ -28,6 +28,8 @@ BEGIN {
 	BLOCK[BLOCK_END++] = X "Contributor(\\(s\\)|s)?: .*";
 	BLOCK[BLOCK_END++] = X;
 	BLOCK[BLOCK_END++] = X "\\*\\*\\*\\*\\* END LICENSE BLOCK \\*\\*\\*\\*\\*" POST_BLOCK;
+
+	BLOCK_END--;
 }
 
 {
