@@ -2,37 +2,100 @@
 #include <errno.h>
 
 #include "macros.h"
+#include "logging.h"
+#include "mysql-c-api/connect.h"
+#include "mysql-c-api/rtr.h"
 
 #include "config.h"
-#include "logging.h"
 #include "db.h"
-
-
-// The below should work for a query like SELECT ... FROM ... WHERE serial = last_serial ORDER BY ... LIMIT last_row, ...
-struct db_query_progress {
-	bool in_progress;
-	serial_number_t last_serial;
-	size_t last_row;
-};
-
-static void initialize_query_progress(struct db_query_progress * qp)
-{
-	qp->in_progress = false;
-	qp->last_serial = 0;
-	qp->last_row = 0;
-}
 
 
 struct db_request_state {
 	struct db_request * request;
-	struct db_query_progress progress;
+	void * query_state;
 };
+
+static void initialize_request_state(struct db_request_state * rq, struct db_request * request)
+{
+	rq->request = request;
+	rq->query_state = NULL;
+}
+
+static int start_query(struct db_request_state * rq, void * db)
+{
+	switch (rq->request.query.type)
+	{
+		case SERIAL_QUERY:
+			return startSerialQuery(db, &rq->query_state,
+				rq->request.query.serial_query.serial);
+		case RESET_QUERY:
+			return startResetQuery(db, &rq->query_state);
+		default:
+			LOG(LOG_ERR, "got unexpected query type");
+			return -1; // TODO: check if this is a good error code
+	}
+}
+
+static ssize_t query_get_next(struct db_request_state * rq, void * db,
+	size_t num_rows, PDU ** pdus, bool * is_done)
+{
+	switch (rq->request.query.type)
+	{
+		case SERIAL_QUERY:
+			return serialQueryGetNext(db, rq->query_state,
+				num_rows, pdus, is_done);
+		case RESET_QUERY:
+			return resetQueryGetNext(db, rq->query_state,
+				num_rows, pdus, is_done);
+		default:
+			LOG(LOG_ERR, "got unexpected query type");
+			*is_done = true;
+			return -1; // TODO: check if this is a good error code
+	}
+}
+
+static void stop_query(struct db_request_state * rq, void * db)
+{
+	if (rq->query_state != NULL)
+	{
+		switch (rq->request.query.type)
+		{
+			case SERIAL_QUERY:
+				stopSerialQuery(db, rq->query_state);
+				break;
+			case RESET_QUERY:
+				stopResetQuery(db, rq->query_state);
+				break;
+			default:
+				LOG(LOG_ERR, "got unexpected query type");
+				break;
+		}
+		rq->query_state = NULL;
+	}
+}
+
+static void free_request_state(struct db_request_state * rq, void * db)
+{
+	if (rq == NULL)
+		return;
+
+	if (rq->request == NULL)
+	{
+		free(rq);
+		return;
+	}
+
+	stop_query(rq, db);
+
+	free(rq);
+}
 
 
 struct run_state {
 	db_semaphore_t * semaphore;
 	Queue * db_request_queue;
 	Bag * db_currently_processing;
+	void * db;
 
 	char errorbuf[ERROR_BUF_SIZE];
 
@@ -58,6 +121,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	run_state->semaphore = args->semaphore;
 	run_state->db_request_queue = args->db_request_queue;
 	run_state->db_currently_processing = args->db_currently_processing;
+	run_state->db = NULL;
 
 	run_state->request = NULL;
 	run_state->request_state = NULL;
@@ -157,26 +221,97 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 	{
 		send_empty_response(run_state);
 
-		free((void *)run_state->request_state);
+		free_request_state(run_state->request_state);
 		run_state->request_state = NULL;
 		return;
 	}
 
-	/*
-		XXX/NOTE: after putting the request back in db_currently_processing
-		db_semaphore should be incremented to prevent problems in the below case:
+	if (is_new_request)
+	{
+		int retval = start_query(run_state->request_state, run_state->db);
+		// TODO: check for specific error codes
+		if (retval != 0)
+		{
+			LOG(LOG_ERR, "error in start_query (error code %d)", retval);
+			send_error(run_state, ERR_INTERNAL_ERROR);
+			free_request_state(run_state->request_state);
+			run_state->request_state = NULL;
+			return;
+		}
+	}
 
-		1. DB Thread 1: take CXN Thread 1's request out of db_currently_processing and start servicing it
-		2. CXN Thread 1: take a previous response out if its response queue and increment db_semaphore
-		3. DB Thread 2: decrement db_semaphore, do nothing because it can't see CXN Thread 1's request because DB Thread 1 has it
-		4. DB Thread 1: finish servicing CXN Thread 1's request and put it back in db_currently_processing
-	*/
+	allocate_response(run_state, 0); // 0 because query_get_next() will allocate the PDUs
 
-	// TODO: implement this for real instead of this stub
-	(void)is_new_request;
-	send_error(run_state, ERR_INTERNAL_ERROR);
-	free((void *)run_state->request_state);
-	run_state->request_state = NULL;
+	bool is_done;
+	ssize_t retval = query_get_next(run_state->request_state, run_state->db,
+		DB_ROWS_PER_RESPONSE, &run_state->response->PDUs, &is_done);
+
+	if (retval < 0)
+	{
+		is_done = true; // TODO: handle non-fatal errors?
+		free(run_state->response)
+		run_state->response = NULL;
+	}
+	else
+	{
+		run_state->response->is_done = is_done;
+		run_state->response->num_PDUs = (size_t)retval;
+	}
+
+	if (is_done)
+	{
+		stop_query(run_state->request_state, run_state->db);
+	}
+
+	if (retval < 0)
+	{
+		// TODO: check for specific error codes
+		LOG(LOG_ERR, "error in query_get_next (error code %zd)", retval);
+		send_error(run_state, ERR_INTERNAL_ERROR);
+		free_request_state(run_state->request_state);
+		run_state->request_state = NULL;
+		return;
+	}
+
+	send_response(run_state);
+
+	if (is_done)
+	{
+		free_request_state(run_state->request_state);
+		run_state->request_state = NULL;
+	}
+	else
+	{
+		if (!Bag_add(run_state->db_currently_processing, (void *)run_state->request_state))
+		{
+			LOG(LOG_ERR, "can't add a request state to the currently processing bag");
+			send_error(run_state, ERR_INTERNAL_ERROR);
+			free_request_state(run_state->request_state);
+			run_state->request_state = NULL;
+			return;
+		}
+
+		run_state->request_state = NULL;
+
+		/*
+			NOTE: after putting the request back in db_currently_processing
+			db_semaphore should be incremented to prevent problems in the below case:
+
+			1. DB Thread 1: take CXN Thread 1's request out of db_currently_processing
+				and start servicing it
+			2. CXN Thread 1: take a previous response out if its response queue
+				and increment db_semaphore
+			3. DB Thread 2: decrement db_semaphore, do nothing because it can't see
+				CXN Thread 1's request because DB Thread 1 has it
+			4. DB Thread 1: finish servicing CXN Thread 1's request and put it back
+				in db_currently_processing
+		*/
+
+		if (sem_post(run_state->semaphore) != 0)
+		{
+			ERR_LOG(errno, run_state->errorbuf, "sem_post()");
+		}
+	}
 }
 
 
@@ -249,8 +384,7 @@ static bool try_service_new_request(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	run_state->request_state->request = run_state->request;
-	initialize_query_progress(&run_state->request_state->progress);
+	initialize_request_state(&run_state->request_state, run_state->request);
 	run_state->request = NULL;
 
 	service_request(run_state, true);
@@ -293,6 +427,13 @@ void * db_main(void * args_voidp)
 	initialize_run_state(&run_state, args_voidp);
 
 	pthread_cleanup_push(cleanup, &run_state);
+
+	run_state->db = connectDb();
+	if (run_state->db == NULL)
+	{
+		LOG(LOG_ERR, "can't connect to database");
+		pthread_exit(NULL);
+	}
 
 	while (true)
 	{
