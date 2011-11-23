@@ -1,10 +1,13 @@
 #include <stdlib.h>
 
 #include "logging.h"
+#include "mysql-c-api/connect.h"
+#include "mysql-c-api/rtr.h"
 
 #include "cache_state.h"
 
-static bool get_cache_state(struct cache_state * state /* TODO: DB connection */)
+// NOTE: if this returns false, the contents of state are undefined
+static bool get_cache_state(struct cache_state * state, void * db)
 {
 	if (state == NULL)
 	{
@@ -12,15 +15,16 @@ static bool get_cache_state(struct cache_state * state /* TODO: DB connection */
 		return false;
 	}
 
-	// TODO: real implementation instead of this stub
+	if (!getCacheNonce(db, &state->nonce))
+		return false;
 
-	state->nonce = 0;
-	state->serial_number = rand();
+	if (!getLatestSerialNumber(db, &state->serial_number))
+		return false;
 
 	return true;
 }
 
-bool initialize_global_cache_state(struct global_cache_state * state)
+bool initialize_global_cache_state(struct global_cache_state * state, void * db)
 {
 	if (state == NULL)
 	{
@@ -28,9 +32,8 @@ bool initialize_global_cache_state(struct global_cache_state * state)
 		return false;
 	}
 
-	// TODO: DB connection
-
-	bool ret = get_cache_state(&state->cache_state);
+	if (!get_cache_state(&state->cache_state, db))
+		return false;
 
 	int retval = pthread_rwlock_init(&state->lock, NULL);
 	if (retval != 0)
@@ -40,10 +43,10 @@ bool initialize_global_cache_state(struct global_cache_state * state)
 		return false;
 	}
 
-	return ret;
+	return true;
 }
 
-bool update_global_cache_state(struct global_cache_state * state)
+bool update_global_cache_state(struct global_cache_state * state, void * db)
 {
 	if (state == NULL)
 	{
@@ -63,7 +66,7 @@ bool update_global_cache_state(struct global_cache_state * state)
 	}
 
 	struct cache_state tmp_cache_state;
-	ret = get_cache_state(&tmp_cache_state);
+	ret = get_cache_state(&tmp_cache_state, db);
 	if (ret)
 	{
 		state->cache_state = tmp_cache_state;
@@ -99,6 +102,4 @@ void close_global_cache_state(struct global_cache_state * state)
 	{
 		ERR_LOG(retval, errorbuf, "pthread_rwlock_destroy() for global cache state");
 	}
-
-	// TODO: DB connection
 }
