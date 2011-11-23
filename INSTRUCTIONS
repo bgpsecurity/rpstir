@@ -1,4 +1,4 @@
-BBN Resource PKI Relying Party Database
+Relying Party Security Technology for Internet Routing
 Installation and Usage Manual
 Version 4.0
 
@@ -6,10 +6,12 @@ Version 4.0
 
 1. Organization of this document
 
-This document describes how to install and use the BBN Resource PKI
-validator.  Please refer to the design document, rpkidesign.doc, for a
-detailed description of the various software components in this
-release.
+This document describes how to install and use the Relying Party Security
+Technology for Internet Routing (RPSTIR, pronounced rip-ster) software
+by Raytheon BBN Technologies.  Please refer to the design document,
+rpkidesign.doc, for a detailed description of the various software
+components in this release. Note that various files may refer to this
+software by its old name, RPKI.
 
 Section 2 of this document describes how to install that software,
 including all its dependencies.  Section 3 provides a quick-start
