@@ -77,7 +77,11 @@ static void cancel_all_db_threads(Bag * db_threads)
 
 	// TODO: join the threads after cancelling them
 
-	Bag_start_iteration(db_threads);
+	if (!Bag_start_iteration(db_threads))
+	{
+		LOG(LOG_ERR, "error in Bag_start_iteration(db_threads)");
+		return;
+	}
 	for (it = Bag_begin(db_threads);
 		it != Bag_end(db_threads);
 		it = Bag_erase(db_threads, it))
@@ -98,7 +102,7 @@ static void cancel_all_db_threads(Bag * db_threads)
 
 		free((void *)thread);
 	}
-	Bag_stop_iteration(db_threads);
+	Bag_stop_iteration(db_threads); // return value doesn't really matter here
 }
 
 

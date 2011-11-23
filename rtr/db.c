@@ -321,7 +321,11 @@ static void find_existing_request_to_service(struct run_state * run_state)
 	Bag_iterator it;
 	bool did_erase;
 
-	Bag_start_iteration(run_state->db_currently_processing);
+	if (!Bag_start_iteration(run_state->db_currently_processing))
+	{
+		LOG(LOG_ERR, "error in Bag_start_iteration(run_state->db_currently_processing)");
+		pthread_exit(NULL);
+	}
 	for (it = Bag_begin(run_state->db_currently_processing);
 		it != Bag_end(run_state->db_currently_processing);
 		(void)(did_erase || (it = Bag_iterator_next(run_state->db_currently_processing, it))))
@@ -346,11 +350,19 @@ static void find_existing_request_to_service(struct run_state * run_state)
 		{
 			it = Bag_erase(run_state->db_currently_processing, it);
 			did_erase = true;
-			Bag_stop_iteration(run_state->db_currently_processing);
+			if (!Bag_stop_iteration(run_state->db_currently_processing))
+			{
+				LOG(LOG_ERR, "error in Bag_stop_iteration(run_state->db_currently_processing)");
+				pthread_exit(NULL);
+			}
 			return;
 		}
 	}
-	Bag_stop_iteration(run_state->db_currently_processing);
+	if (!Bag_stop_iteration(run_state->db_currently_processing))
+	{
+		LOG(LOG_ERR, "error in Bag_stop_iteration(run_state->db_currently_processing)");
+		pthread_exit(NULL);
+	}
 
 	// if control reaches here, there are no existing requests to service
 	run_state->request_state = NULL;

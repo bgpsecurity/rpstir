@@ -95,7 +95,11 @@ void * connection_control_main(void * args_voidp)
 		FD_SET(argsp->listen_fd, &read_fds);
 		if (argsp->listen_fd + 1 > nfds) nfds = argsp->listen_fd + 1;
 
-		Bag_start_iteration(connections);
+		if (!Bag_start_iteration(connections))
+		{
+			LOG(LOG_ERR, "error in Bag_start_iteration(connections)");
+			continue;
+		}
 		for (connections_it = Bag_begin(connections);
 			connections_it != Bag_end(connections);
 			(void)(did_erase || (connections_it = Bag_iterator_next(connections, connections_it))))
@@ -117,7 +121,7 @@ void * connection_control_main(void * args_voidp)
 			FD_SET(cxn_info->fd, &read_fds);
 			if (cxn_info->fd + 1 > nfds) nfds = cxn_info->fd + 1;
 		}
-		Bag_stop_iteration(connections);
+		Bag_stop_iteration(connections); // return value doesn't really matter here
 
 		timeout.tv_sec = 1;
 		timeout.tv_usec = 0;
@@ -134,7 +138,11 @@ void * connection_control_main(void * args_voidp)
 			continue;
 		}
 
-		Bag_start_iteration(connections);
+		if (!Bag_start_iteration(connections))
+		{
+			LOG(LOG_ERR, "error in Bag_start_iteration(connections)");
+			continue;
+		}
 		for (connections_it = Bag_begin(connections);
 			connections_it != Bag_end(connections);
 			(void)(did_erase || (connections_it = Bag_iterator_next(connections, connections_it))))
@@ -157,7 +165,7 @@ void * connection_control_main(void * args_voidp)
 				}
 			}
 		}
-		Bag_stop_iteration(connections);
+		Bag_stop_iteration(connections); // return value doesn't really matter here
 
 		if (FD_ISSET(argsp->listen_fd, &read_fds))
 		{
