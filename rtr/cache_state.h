@@ -13,7 +13,6 @@ struct cache_state {
 
 struct global_cache_state {
 	struct cache_state cache_state;
-	// TODO: DB connection
 	pthread_rwlock_t lock;
 };
 
@@ -24,14 +23,14 @@ struct global_cache_state {
 
 	@return Whether or not the initialization was successful.
 */
-bool initialize_global_cache_state(struct global_cache_state * state);
+bool initialize_global_cache_state(struct global_cache_state * state, void * db);
 
 /**
 	Update the global cache state from the database.
 
 	@return Whether or not the update was successful.
 */
-bool update_global_cache_state(struct global_cache_state * state);
+bool update_global_cache_state(struct global_cache_state * state, void * db);
 
 /** Free up any resources associated with the global cache state. */
 void close_global_cache_state(struct global_cache_state * state);

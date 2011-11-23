@@ -13,6 +13,7 @@
 
 #include "bag.h"
 #include "queue.h"
+#include "mysql-c-api/connect.h"
 
 #include "cache_state.h"
 #include "config.h"
@@ -161,11 +162,18 @@ int main (int argc, char ** argv)
 		goto err_db_seamphore_malloc;
 	}
 
+	void * db = connectDb();
+	if (db == NULL)
+	{
+		LOG(LOG_ERR, "can't connect to database");
+		goto err_db_semaphore_init;
+	}
+
 	struct global_cache_state global_cache_state;
-	if (!initialize_global_cache_state(&global_cache_state))
+	if (!initialize_global_cache_state(&global_cache_state, db))
 	{
 		LOG(LOG_ERR, "can't initialize global cache state");
-		goto err_db_semaphore_init;
+		goto err_db;
 	}
 
 	Bag * db_threads = Bag_new(false);
@@ -209,7 +217,7 @@ int main (int argc, char ** argv)
 
 		// TODO: Check the load on the database threads, adding or removing threads as needed.
 
-		if (!update_global_cache_state(&global_cache_state))
+		if (!update_global_cache_state(&global_cache_state, db))
 		{
 			LOG(LOG_NOTICE, "error updating global cache state");
 		}
@@ -222,6 +230,8 @@ err_db_threads:
 	Bag_free(db_threads);
 err_global_cache_state_init:
 	close_global_cache_state(&global_cache_state);
+err_db:
+	disconnectDb(db);
 err_db_semaphore_init:
 	if (sem_destroy(db_semaphore) != 0) ERR_LOG(errno, errorbuf, "sem_destroy()");
 err_db_seamphore_malloc:
