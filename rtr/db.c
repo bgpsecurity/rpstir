@@ -23,11 +23,11 @@ static void initialize_request_state(struct db_request_state * rq, struct db_req
 
 static int start_query(struct db_request_state * rq, void * db)
 {
-	switch (rq->request.query.type)
+	switch (rq->request->query.type)
 	{
 		case SERIAL_QUERY:
 			return startSerialQuery(db, &rq->query_state,
-				rq->request.query.serial_query.serial);
+				rq->request->query.serial_query.serial);
 		case RESET_QUERY:
 			return startResetQuery(db, &rq->query_state);
 		default:
@@ -39,7 +39,7 @@ static int start_query(struct db_request_state * rq, void * db)
 static ssize_t query_get_next(struct db_request_state * rq, void * db,
 	size_t num_rows, PDU ** pdus, bool * is_done)
 {
-	switch (rq->request.query.type)
+	switch (rq->request->query.type)
 	{
 		case SERIAL_QUERY:
 			return serialQueryGetNext(db, rq->query_state,
@@ -58,7 +58,7 @@ static void stop_query(struct db_request_state * rq, void * db)
 {
 	if (rq->query_state != NULL)
 	{
-		switch (rq->request.query.type)
+		switch (rq->request->query.type)
 		{
 			case SERIAL_QUERY:
 				stopSerialQuery(db, rq->query_state);
@@ -221,7 +221,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 	{
 		send_empty_response(run_state);
 
-		free_request_state(run_state->request_state);
+		free_request_state(run_state->request_state, run_state->db);
 		run_state->request_state = NULL;
 		return;
 	}
@@ -234,7 +234,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		{
 			LOG(LOG_ERR, "error in start_query (error code %d)", retval);
 			send_error(run_state, ERR_INTERNAL_ERROR);
-			free_request_state(run_state->request_state);
+			free_request_state(run_state->request_state, run_state->db);
 			run_state->request_state = NULL;
 			return;
 		}
@@ -249,7 +249,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 	if (retval < 0)
 	{
 		is_done = true; // TODO: handle non-fatal errors?
-		free(run_state->response)
+		free(run_state->response);
 		run_state->response = NULL;
 	}
 	else
@@ -268,7 +268,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		// TODO: check for specific error codes
 		LOG(LOG_ERR, "error in query_get_next (error code %zd)", retval);
 		send_error(run_state, ERR_INTERNAL_ERROR);
-		free_request_state(run_state->request_state);
+		free_request_state(run_state->request_state, run_state->db);
 		run_state->request_state = NULL;
 		return;
 	}
@@ -277,7 +277,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 
 	if (is_done)
 	{
-		free_request_state(run_state->request_state);
+		free_request_state(run_state->request_state, run_state->db);
 		run_state->request_state = NULL;
 	}
 	else
@@ -286,7 +286,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		{
 			LOG(LOG_ERR, "can't add a request state to the currently processing bag");
 			send_error(run_state, ERR_INTERNAL_ERROR);
-			free_request_state(run_state->request_state);
+			free_request_state(run_state->request_state, run_state->db);
 			run_state->request_state = NULL;
 			return;
 		}
@@ -384,7 +384,7 @@ static bool try_service_new_request(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	initialize_request_state(&run_state->request_state, run_state->request);
+	initialize_request_state(run_state->request_state, run_state->request);
 	run_state->request = NULL;
 
 	service_request(run_state, true);
@@ -428,8 +428,8 @@ void * db_main(void * args_voidp)
 
 	pthread_cleanup_push(cleanup, &run_state);
 
-	run_state->db = connectDbDefault();
-	if (run_state->db == NULL)
+	run_state.db = connectDbDefault();
+	if (run_state.db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
 		pthread_exit(NULL);
