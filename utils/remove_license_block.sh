@@ -10,6 +10,7 @@ AWK_FILE="`dirname "$0"`/remove_license_block-helper.awk"
 
 for file in "$@"; do
 	TMP="`mktemp`"
+	echo >&2 "$file"
 	awk -f "$AWK_FILE" < "$file" > "$TMP"
 	mv "$TMP" "$file"
 done
