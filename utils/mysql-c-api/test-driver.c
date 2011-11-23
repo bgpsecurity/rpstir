@@ -14,16 +14,23 @@
  * Use this for temporary test calls.
 ------------------------------------------------------------------------------*/
 void useDbConn(void *connp) {
-//    uint32_t new_ser_num = 0xfffffffc;
-//    addNewSerNum(connp, &new_ser_num);
+    uint16_t nonce;
+    getCacheNonce((MYSQL*) connp, &nonce);
+    printf("nonce = %hu\n", nonce);
+
+//    setCacheNonce((MYSQL*) connp, 13579);
+
+//    getLatestSerNum(connp);
+
+//    uint32_t ser_num = 0xfffffffc;
+//    addNewSerNum(connp, &ser_num);
+//    printf("serial number = %u\n", ser_num);
 
 //    addNewSerNum(connp, NULL);
 
-    deleteSerNum(connp, 99);
+//    deleteSerNum(connp, 99);
 
 //    deleteAllSerNums(connp);
-
-//    getLatestSerNum(connp);
 }
 
 
@@ -38,7 +45,8 @@ int main() {
 
     OPEN_LOG();
 
-    if (connectDb(connp, host, user, pass, db)) {
+    if ((connp = connectDb(host, user, pass, db)) == NULL) {
+        CLOSE_LOG();
         return(-1);
     }
 

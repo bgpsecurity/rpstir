@@ -10,9 +10,9 @@
 #include "pdu.h"
 
 // <cache_state>
-int getCacheNonce(void *dbp, cache_nonce_t * nonce);
+int getCacheNonce(void *connp, cache_nonce_t * nonce);
 
-int getLatestSerialNumber(/* db connection param */, serial_number_t * serial);
+int getLatestSerialNumber(void *connp, serial_number_t * serial);
 // </cache_state>
 
 
@@ -24,7 +24,7 @@ int getLatestSerialNumber(/* db connection param */, serial_number_t * serial);
 	@param serial The serial number to start the query after.
 	@return 0 on success or an error code on failure.
 */
-int startSerialQuery(void *dbp, void ** query_state, serial_number_t serial);
+int startSerialQuery(void *connp, void ** query_state, serial_number_t serial);
 
 /**
 	@param query_state A query state returned by startSerialQuery().
@@ -44,7 +44,7 @@ int startSerialQuery(void *dbp, void ** query_state, serial_number_t serial);
 		for any return value and must be true for any fatal error
 		code.
 */
-ssize_t serialQueryGetNext(void *dbp, void * query_state, size_t num_rows,
+ssize_t serialQueryGetNext(void *connp, void * query_state, size_t num_rows,
 	PDU ** pdus, bool * is_done);
 
 /**
@@ -54,16 +54,16 @@ ssize_t serialQueryGetNext(void *dbp, void * query_state, size_t num_rows,
 	after calling serialQueryGetNext() but before it returns with is_done
 	set to true, or after any cancelation point in serialQueryGetNext().
 */
-void stopSerialQuery(void *dbp, void * query_state);
+void stopSerialQuery(void *connp, void * query_state);
 
 // see the equivalent functions for serial queries above for descriptions
 // of parameters and return values
-int startResetQuery(/* db connection param */, void ** query_state);
+int startResetQuery(void *connp, void ** query_state);
 
-ssize_t resetQueryGetNext(void *dbp, void * query_state, size_t num_rows,
+ssize_t resetQueryGetNext(void *connp, void * query_state, size_t num_rows,
 	PDU ** pdus, bool * is_done);
 
-void stopResetQuery(void *dbp, void * query_state);
+void stopResetQuery(void *connp, void * query_state);
 // </db>
 
 #endif

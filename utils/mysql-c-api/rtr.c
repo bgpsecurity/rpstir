@@ -8,7 +8,21 @@
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int getCacheNonce(void *dbp, cache_nonce_t * nonce) {
+int getCacheNonce(void *connp, cache_nonce_t *nonce) {
+    return getCacheNone((MYSQL*) connp, nonce);
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int getLatestSerialNumber(void *connp, serial_number_t *serial) {
+    return getLatestSerialNumber((MYSQL*) connp, serial);
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int startSerialQuery(void *connp, void ** query_state, serial_number_t serial) {
 
     return (0);
 }
@@ -16,7 +30,8 @@ int getCacheNonce(void *dbp, cache_nonce_t * nonce) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int getLatestSerialNumber(void *dbp, serial_number_t * serial) {
+ssize_t serialQueryGetNext(void *connp, void * query_state, size_t num_rows,
+        PDU ** pdus, bool * is_done) {
 
     return (0);
 }
@@ -24,24 +39,7 @@ int getLatestSerialNumber(void *dbp, serial_number_t * serial) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int startSerialQuery(void *dbp, void ** query_state, serial_number_t serial) {
-
-    return (0);
-}
-
-
-/*==============================================================================
-------------------------------------------------------------------------------*/
-ssize_t serialQueryGetNext(void *dbp, void * query_state, size_t num_rows,
-	PDU ** pdus, bool * is_done) {
-
-    return (0);
-}
-
-
-/*==============================================================================
-------------------------------------------------------------------------------*/
-void stopSerialQuery(void *dbp, void * query_state) {
+void stopSerialQuery(void *connp, void * query_state) {
 
     return;
 }
@@ -49,7 +47,7 @@ void stopSerialQuery(void *dbp, void * query_state) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int startResetQuery(void *dbp, void ** query_state) {
+int startResetQuery(void *connp, void ** query_state) {
 
     return (0);
 }
@@ -57,8 +55,8 @@ int startResetQuery(void *dbp, void ** query_state) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-ssize_t resetQueryGetNext(void *dbp, void * query_state, size_t num_rows,
-	PDU ** pdus, bool * is_done) {
+ssize_t resetQueryGetNext(void *connp, void * query_state, size_t num_rows,
+        PDU ** pdus, bool * is_done) {
 
     return (0);
 }
@@ -66,7 +64,7 @@ ssize_t resetQueryGetNext(void *dbp, void * query_state, size_t num_rows,
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void stopResetQuery(void *dbp, void * query_state) {
+void stopResetQuery(void *connp, void * query_state) {
 
     return;
 }
