@@ -4,10 +4,13 @@
 
 #include <inttypes.h>
 
+#include <my_global.h>
+#include <mysql.h>
 
-int getCacheNonce(MYSQL *mysqlp, const uint16_t *nonce);
 
-int addCacheNonce(MYSQL *mysqlp, const uint16_t *nonce);
+int getCacheNonce(void *connp, uint16_t *nonce);
+
+int addCacheNonce(void *connp, uint16_t nonce);
 
 int getLatestSerNum(void *connp, uint32_t *sn);
 

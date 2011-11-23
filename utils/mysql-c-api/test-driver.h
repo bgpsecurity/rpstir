@@ -1,6 +1,7 @@
 #ifndef _TEST_DRIVER_MYSQL_C_API_H
 #define _TEST_DRIVER_MYSQL_C_API_H
 
+
 #include <syslog.h>
 #include <stdbool.h>
 
@@ -21,4 +22,4 @@
     } while (false)
 
 
-#endif
+#endif  // _TEST_DRIVER_MYSQL_C_API_H

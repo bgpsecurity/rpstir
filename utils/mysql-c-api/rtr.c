@@ -48,14 +48,35 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
 }
 
 
+struct query_state {
+    uint32_t ser_num;  // ser_num from which rows should be taken
+    uint64_t first_row;  // first row to send
+};
+
+
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int startSerialQuery(void *connp, void ** query_state, serial_number_t serial) {
-    return startSerialQuery((MYSQL*) connp, query_state, serial);
+    MYSQL *mysql;
+
+    // recs = get all records after serial
+    // if (recs == 0)
+    //     return 0
+    //     send End of Data PDU
+    //     send empty query_state
+
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
+            "where serial_num=%u order by asn then by ip_addr", serial);
+
+    return (0);
 }
 
 
 /*==============================================================================
+ * Assumption:  all rows in rtr_incremental related to a single serial number
+ *     are added atomically.
 ------------------------------------------------------------------------------*/
 ssize_t serialQueryGetNext(void *connp, void * query_state, size_t num_rows,
         PDU ** pdus, bool * is_done) {

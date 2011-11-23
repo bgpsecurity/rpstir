@@ -15,10 +15,10 @@
 ------------------------------------------------------------------------------*/
 void useDbConn(void *connp) {
     uint16_t nonce;
-    getCacheNonce((MYSQL*) connp, &nonce);
+    getCacheNonce(connp, &nonce);
     printf("nonce = %hu\n", nonce);
 
-//    setCacheNonce((MYSQL*) connp, 3434);
+//    setCacheNonce(connp, 3434);
 
 //    getLatestSerNum(connp);
 

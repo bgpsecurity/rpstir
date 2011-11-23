@@ -4,9 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <my_global.h>
-#include <mysql.h>
-
+#include "connect.h"
 #include "logging.h"
 
 
@@ -101,6 +99,7 @@ static int charp2uint32_t(uint32_t *out, const char *in, int len) {
 
 
 /*==============================================================================
+ * TODO: possibly generalize to more numeric types.
 ------------------------------------------------------------------------------*/
 static int charp2uint16_t(uint16_t *out, const char *in, int len) {
     const int MAX_LEN = 5;  // decimal digits for type
@@ -177,7 +176,8 @@ static int char_arr2uint32_t(uint32_t *out, const char *in, int len) {
 /*==============================================================================
  * not an API function
 ------------------------------------------------------------------------------*/
-int getCacheNonce(MYSQL *mysqlp, uint16_t *nonce) {
+int getCacheNonce(void *connp, uint16_t *nonce) {
+    MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
     MYSQL_ROW row;
     const char qry[] = "select cache_nonce from rtr_nonce";
@@ -222,9 +222,10 @@ int getCacheNonce(MYSQL *mysqlp, uint16_t *nonce) {
  * Precondition:  table rtr_nonce has exactly 0 or 1 rows.
  * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
 ------------------------------------------------------------------------------*/
-int setCacheNonce(MYSQL *mysqlp, uint16_t nonce) {
+int setCacheNonce(void *connp, uint16_t nonce) {
+    MYSQL *mysqlp = (MYSQL*) connp;
     const char qry_delete[] = "delete from rtr_nonce";
-    const int QRY_SZ = 1024;
+    const int QRY_SZ = 256;
     char qry_insert[QRY_SZ];
 
     if (mysql_query(mysqlp, qry_delete)) {
@@ -233,8 +234,8 @@ int setCacheNonce(MYSQL *mysqlp, uint16_t nonce) {
         return (-1);
     }
 
-    snprintf(qry_insert, QRY_SZ, "%s%u)", "insert into rtr_nonce (cache_nonce) "
-            "value (", nonce);
+    snprintf(qry_insert, QRY_SZ, "insert into rtr_nonce (cache_nonce) "
+            "value (%u)", nonce);
 
     if (mysql_query(mysqlp, qry_insert)) {
         LOG(LOG_ERR, "query failed:  %s", qry_insert);
@@ -259,7 +260,8 @@ int setCacheNonce(MYSQL *mysqlp, uint16_t nonce) {
  * Precondition:  if rtr_update contains any rows, then the latest timestamp
  *     occurs in exactly 1 row.
 ------------------------------------------------------------------------------*/
-int getLatestSerNum(MYSQL *mysqlp, uint32_t *sn) {
+int getLatestSerNum(void *connp, uint32_t *sn) {
+    MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
     MYSQL_ROW row;
     const char qry[] = "select serial_num from rtr_update where create_time="
@@ -329,7 +331,7 @@ int addNewSerNum(void *connp, const uint32_t *in) {
 
     // Note:  Silently deleting the serial_num I am about to insert.
     // Assumption:  it is no longer needed.
-    snprintf(qry, QRY_SZ, "%s%u", "delete from rtr_update where serial_num=",
+    snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
             new_ser_num);
 
     if (mysql_query(mysqlp, qry)) {
@@ -341,8 +343,8 @@ int addNewSerNum(void *connp, const uint32_t *in) {
     if (mysql_affected_rows(mysqlp))
         LOG(LOG_INFO, "serial_num %u had to be deleted from db before inserting it", new_ser_num);
 
-    snprintf(qry, QRY_SZ, "%s%u %s", "insert into rtr_update values (",
-            new_ser_num, ", now())");
+    snprintf(qry, QRY_SZ, "insert into rtr_update values (%u, now())",
+            new_ser_num);
 
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not add new serial number to db");
@@ -363,7 +365,7 @@ int deleteSerNum(void *connp, uint32_t ser_num) {
     const int QRY_SZ = 1024;
     char qry[QRY_SZ];
 
-    snprintf(qry, QRY_SZ, "%s%u", "delete from rtr_update where serial_num=",
+    snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
             ser_num);
 
     if (mysql_query(mysqlp, qry)) {
