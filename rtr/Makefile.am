@@ -49,7 +49,7 @@ rtrd_SOURCES = \
 	logging.h \
 	main.c \
 	semaphores.h
-rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a # TODO: switch to libutils.a before merging into master
+rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a ../utils/mysql-c-api/libmysqlcapi.a # TODO: switch to libutils.a before merging into master
 
 rtr_test_client_SOURCES = test-client.c
 rtr_test_client_LDADD = libpdu.a ../utils/libutils.a
