@@ -3,22 +3,6 @@
 #
 # $Id: Makefile 1135 2010-05-24 13:17:17Z achi $
 #
-# ***** BEGIN LICENSE BLOCK *****
-#  
-#  BBN Address and AS Number PKI Database/repository software
-#  Version 3.0-beta
-#  
-#  US government users are permitted unrestricted rights as
-#  defined in the FAR.  
-# 
-#  This software is distributed on an "AS IS" basis, WITHOUT
-#  WARRANTY OF ANY KIND, either express or implied.
-# 
-#  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
-# 
-#  Contributor(s):  Brenton Kohler
-# 
-# ***** END LICENSE BLOCK *****
 
 bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
