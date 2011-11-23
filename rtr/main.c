@@ -162,7 +162,7 @@ int main (int argc, char ** argv)
 		goto err_db_seamphore_malloc;
 	}
 
-	void * db = connectDb();
+	void * db = connectDbDefault();
 	if (db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
