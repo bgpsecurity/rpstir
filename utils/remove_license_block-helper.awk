@@ -16,6 +16,7 @@ BEGIN {
 	BLOCK[BLOCK_END++] = X "BBN Address and AS Number PKI Database/repository software";
 	BLOCK[BLOCK_END++] = X "Version [^ ]*";
 	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS.*";
 	BLOCK[BLOCK_END++] = X "US government users are permitted unrestricted rights as";
 	BLOCK[BLOCK_END++] = X "defined in the FAR.";
 	BLOCK[BLOCK_END++] = X;
