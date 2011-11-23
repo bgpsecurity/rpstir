@@ -60,7 +60,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 		} while (false)
 
 	EXTRACT_FIELD(pdu->protocolVersion);
-	if (pdu->protocolVersion != PROTOCOL_VERSION)
+	if (pdu->protocolVersion != RTR_PROTOCOL_VERSION)
 	{
 		return PDU_UNSUPPORTED_PROTOCOL_VERSION;
 	}

@@ -52,7 +52,7 @@
 /*****
  * Constants for use in the PDUs
  *****/
-#define PROTOCOL_VERSION 0
+#define RTR_PROTOCOL_VERSION 0
 #define FLAG_WITHDRAW_ANNOUNCE 0x1
 #define FLAGS_RESERVED (0x2 | 0x4 | 0x8 | 0x10 | 0x20 | 0x40 | 0x80)
 

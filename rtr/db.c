@@ -187,7 +187,7 @@ static void send_error(struct run_state * run_state, error_code_t error_code)
 
 	run_state->response->is_done = true;
 
-	run_state->response->PDUs[0].protocolVersion = PROTOCOL_VERSION;
+	run_state->response->PDUs[0].protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->response->PDUs[0].pduType = PDU_ERROR_REPORT;
 	run_state->response->PDUs[0].errorCode = error_code;
 	run_state->response->PDUs[0].length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH;

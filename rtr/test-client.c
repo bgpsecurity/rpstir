@@ -70,7 +70,7 @@ static int do_send()
 	PDU pdu;
 	uint8_t pdu_buffer[MAX_PDU_SIZE];
 
-	pdu.protocolVersion = PROTOCOL_VERSION;
+	pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 
 	while (true)
 	{

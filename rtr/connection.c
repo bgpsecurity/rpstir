@@ -180,7 +180,7 @@ static void send_error(struct run_state * run_state, error_code_t code,
 		embedded_pdu_length = MAX_PDU_SIZE - (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length);
 	}
 
-	run_state->send_pdu.protocolVersion = PROTOCOL_VERSION;
+	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->send_pdu.pduType = PDU_ERROR_REPORT;
 	run_state->send_pdu.errorCode = code;
 	run_state->send_pdu.length = PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + embedded_pdu_length + error_text_length;
@@ -265,7 +265,7 @@ static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu
 
 static void send_notify(struct run_state * run_state)
 {
-	run_state->send_pdu.protocolVersion = PROTOCOL_VERSION;
+	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->send_pdu.pduType = PDU_SERIAL_NOTIFY;
 	run_state->send_pdu.cacheNonce = run_state->local_cache_state.nonce;
 	run_state->send_pdu.length = PDU_HEADER_LENGTH + sizeof(serial_number_t);
