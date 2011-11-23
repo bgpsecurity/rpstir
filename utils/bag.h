@@ -47,12 +47,12 @@ typedef void * Bag_iterator;
 typedef void const * Bag_const_iterator;
 
 /** The appropriate one of these functions MUST be called before using any other iterator-related function. */
-void Bag_start_iteration(Bag * bag);
-void Bag_start_const_iteration(Bag * bag);
+bool Bag_start_iteration(Bag * bag);
+bool Bag_start_const_iteration(Bag * bag);
 
 /** The appropriate one of these functions MUST be called when done with iterator-related functions. Note that it invalidates any existing iterators. */
-void Bag_stop_iteration(Bag * bag);
-void Bag_stop_const_iteration(Bag * bag);
+bool Bag_stop_iteration(Bag * bag);
+bool Bag_stop_const_iteration(Bag * bag);
 
 /** @return an iterator pointing to the first element in the bag, or Bag_end(bag) if the bag is empty. */
 Bag_iterator Bag_begin(Bag * bag);
