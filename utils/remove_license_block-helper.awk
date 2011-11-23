@@ -32,13 +32,13 @@ BEGIN {
 		if ($0 ~ PRE_LINE BLOCK[0] POST_LINE) {
 			IN_BLOCK = 1;
 			BLOCK_LINENO = 0;
-			SAVED_BLOCK = $0 RS;
+			SAVED_BLOCK = $0;
 		} else {
 			print;
 		}
 	} else {
 		if ($0 ~ PRE_LINE BLOCK[BLOCK_LINENO + 1] POST_LINE) {
-			SAVED_BLOCK = SAVED_BLOCK $0 RS;
+			SAVED_BLOCK = SAVED_BLOCK RS $0;
 			BLOCK_LINENO += 1;
 			if (BLOCK_LINENO == BLOCK_END) {
 				IN_BLOCK = 0;
