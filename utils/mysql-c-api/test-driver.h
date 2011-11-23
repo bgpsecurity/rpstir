@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 
-#define LOG_IDENT "db_test_driver"
+#define LOG_IDENT  PACKAGE_NAME "-db_test_driver"
 #define LOG_OPTION (LOG_PERROR)
 #define LOG_FACILITY LOG_USER
 
