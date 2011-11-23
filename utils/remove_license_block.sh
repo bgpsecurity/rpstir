@@ -12,5 +12,6 @@ for file in "$@"; do
 	TMP="`mktemp`"
 	echo >&2 "$file"
 	awk -f "$AWK_FILE" < "$file" > "$TMP"
+	chmod --reference="$file" "$TMP"
 	mv "$TMP" "$file"
 done
