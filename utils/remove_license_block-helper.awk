@@ -9,24 +9,25 @@ BEGIN {
 	PRE_BLOCK = "(/\\* *|# *(/\\* *)?)?";
 	POST_BLOCK = " *(\\*/)?";
 
-	BLOCK[ 0] = PRE_BLOCK "\\*\\*\\*\\*\\* BEGIN LICENSE BLOCK \\*\\*\\*\\*\\*";
-	BLOCK[ 1] = X;
-	BLOCK[ 2] = X "BBN Address and AS Number PKI Database/repository software";
-	BLOCK[ 3] = X "Version [^ ]*";
-	BLOCK[ 4] = X;
-	BLOCK[ 5] = X "US government users are permitted unrestricted rights as";
-	BLOCK[ 6] = X "defined in the FAR.";
-	BLOCK[ 7] = X;
-	BLOCK[ 8] = X "This software is distributed on an \"AS IS\" basis, WITHOUT";
-	BLOCK[ 9] = X "WARRANTY OF ANY KIND, either express or implied.";
-	BLOCK[10] = X;
-	BLOCK[11] = X "Copyright .*";
-	BLOCK[12] = X;
-	BLOCK[13] = X "Contributor(\\(s\\)|s)?: .*";
-	BLOCK[14] = X;
-	BLOCK[15] = X "\\*\\*\\*\\*\\* END LICENSE BLOCK \\*\\*\\*\\*\\*" POST_BLOCK;
+	BLOCK_END = 0;
 
-	BLOCK_END = 15;
+	BLOCK[BLOCK_END++] = PRE_BLOCK "\\*\\*\\*\\*\\* BEGIN LICENSE BLOCK \\*\\*\\*\\*\\*";
+	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "BBN Address and AS Number PKI Database/repository software";
+	BLOCK[BLOCK_END++] = X "Version [^ ]*";
+	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "US government users are permitted unrestricted rights as";
+	BLOCK[BLOCK_END++] = X "defined in the FAR.";
+	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "This software is distributed on an \"AS IS\" basis, WITHOUT";
+	BLOCK[BLOCK_END++] = X "WARRANTY OF ANY KIND, either express or implied.";
+	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "Copyright .*";
+	BLOCK[BLOCK_END++] = X "All Rights Reserved.";
+	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "Contributor(\\(s\\)|s)?: .*";
+	BLOCK[BLOCK_END++] = X;
+	BLOCK[BLOCK_END++] = X "\\*\\*\\*\\*\\* END LICENSE BLOCK \\*\\*\\*\\*\\*" POST_BLOCK;
 }
 
 {
