@@ -23,17 +23,40 @@ bad_PDUs_hex = [
 	# Reset Query
 	'00 02 00 00 00 00 00 09 f0', # length too long
 
-	# TODO: Cache Response
+	# Cache Response
+	'00 03 f0 0f 00 00 00 09 f0', # length too long
 
-	# TODO: IPv4 Prefix
+	# IPv4 Prefix
+	'00 04 00 00 00 00 00 08', # length too short
+	'00 04 00 00 00 00 00 0c f0 0f f0 0f', # length too short
+	'00 04 00 00 ' + '00 00 00 13 ' + '00 00 00 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0', # length too short
+	'00 04 00 00 ' + '00 00 00 15 ' + '00 00 00 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0 0f ' + 'f0', # length too long
+	'00 04 00 00 ' + '00 00 00 14 ' + '00 21 21 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0 0f', # prefix length too large
+	'00 04 00 00 ' + '00 00 00 14 ' + '00 00 21 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0 0f', # max length too large
+	# TODO: prefix length > max length
 
-	# TODO: IPv6 Prefix
+	# IPv6 Prefix
+	'00 06 00 00 00 00 00 08', # length too short
+	'00 06 00 00 00 00 00 0c f0 0f f0 0f', # length too short
+	'00 06 00 00 ' + '00 00 00 1f ' + '00 00 00 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0', # length too short
+	'00 06 00 00 ' + '00 00 00 21 ' + '00 00 00 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0 0f ' + 'f0', # length too long
+	'00 06 00 00 ' + '00 00 00 20 ' + '00 81 81 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0 0f', # prefix length too large
+	'00 06 00 00 ' + '00 00 00 20 ' + '00 00 81 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0 0f', # max length too large
+	# TODO: prefix length > max length
 
-	# TODO: End of Data
+	# End of Data
+	'00 07 f0 0f 00 00 00 08', # length too short
+	'00 07 f0 0f 00 00 00 0b f0 0f f0', # length too short
+	'00 07 f0 0f 00 00 00 0d f0 0f f0 0f f0', # length too long
 
-	# TODO: Cache Reset
+	# Cache Reset
+	'00 08 00 00 00 00 00 09 f0', # length too long
 
 	# Error Report
+	'00 0a 00 01 00 00 00 08', # Internal Error, length too short
+	'00 0a 00 01 00 00 00 0c 00 00 00 00', # Internal Error, length too short
+	'00 0a 00 01 00 00 00 0f 00 00 00 00 00 00 00', # Internal Error, length too short
+	'00 0a 00 01 00 00 00 10 ' + '00 00 00 01 ' + 'f0 ' + '00 00 00', # Internal Error, truncated Length of Error Text field
 	'00 0a 00 01 ' + '00 00 00 11 ' + '00 00 00 00 ' + '00 00 00 00 ' + 'f0', # Internal Error with internal lengths less than total length
 	'00 0a 00 01 ' + '00 00 00 10 ' + '00 00 00 00 ' + '00 00 00 01', # Internal Error with internal lengths greater than total length
 ]
