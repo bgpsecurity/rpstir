@@ -165,6 +165,16 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 	}
 }
 
+static void send_cache_reset(struct run_state * run_state)
+{
+	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
+	run_state->send_pdu.pduType = PDU_CACHE_RESET;
+	run_state->send_pdu.reserved = 0;
+	run_state->send_pdu.length = PDU_HEADER_LENGTH;
+
+	send_pdu(run_state, &run_state->send_pdu);
+}
+
 static void send_error(struct run_state * run_state, error_code_t code,
 	uint8_t * embedded_pdu, size_t embedded_pdu_length,
 	uint8_t * error_text, size_t error_text_length)
@@ -476,10 +486,11 @@ static void handle_pdu(struct run_state * run_state, PDU * pdup, bool pdu_from_r
 		case PDU_SERIAL_QUERY:
 			if (pdup->cacheNonce != run_state->local_cache_state.nonce)
 			{
-				send_error_from_parsed_pdu(run_state, ERR_INVALID_REQUEST,
-					pdup, pdu_from_recv_buffer,
-					ERROR_TEXT("mismatched cache nonce"));
-				pthread_exit(NULL);
+				LOG(LOG_INFO, "received wrong nonce (%" PRIu16 "), expected %" PRIu16,
+					pdup->cacheNonce,
+					run_state->local_cache_state.nonce);
+				send_cache_reset(run_state);
+				break;
 			}
 		case PDU_RESET_QUERY:
 			if (run_state->state == RESPONDING)
