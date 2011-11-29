@@ -12,7 +12,11 @@
 
 struct query_state {
     uint32_t ser_num;  // ser_num to search for first row to send
-    uint first_row;  // first row to send.  zero-based
+    uint first_row;    // first row to send.  zero-based
+    int bad_ser_num;   // neither the given ser_num, nor its successor, exist
+    int data_sent;
+    int no_new_data;   // the given ser_num exists, but its successor does not
+    int not_ready;     // no valid ser_nums exist, yet
 };
 //struct _query_state {
 //    uint32_t ser_num;  // ser_num to search for first row to send
@@ -59,6 +63,7 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
 
         if (charp2uint16_t(nonce, row[0], sz)) {
             LOG(LOG_ERR, "error converting char[] to uint16_t for cache nonce");
+            mysql_free_result(result);
             return (-1);
         }
 
@@ -105,6 +110,7 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
 
         if (charp2uint32_t(serial, row[0], sz)) {
             LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
+            mysql_free_result(result);
             return (-1);
         }
 
@@ -123,30 +129,52 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
 
 
 /*==============================================================================
-recs = get all records after serial
-if (recs == 0)
-    return 1
-else if (recs > 0)
-    assign real values to the query_state arg.
-    return 0
-if some error
-    return -1
+ * Precondition:  serial_num is the first field in the results.
+------------------------------------------------------------------------------*/
+int resultHasSerNum(MYSQL_RES *result, uint16_t sn) {
+    MYSQL_ROW row;
+    uint16_t num = 0;
+    my_ulonglong num_rows = mysql_num_rows(result);
+    ulong *lengths = 0;
+    uint i;
+
+    mysql_data_seek(result, 0);
+    for (i = 0; i < num_rows; i++) {
+        row = mysql_fetch_row(result);
+        lengths = mysql_fetch_lengths(result);
+        if (lengths == NULL) {
+            LOG(LOG_ERR, "should never get here.  check mysql api for mysql_fetch_lengths");
+        }
+        if (charp2uint16_t(&num, row[0], lengths[0])) {
+            LOG(LOG_ERR, "could not convert field to number");
+            return (-1);
+        }
+        if (num == sn)
+            return (1);
+    }
+
+    return (0);
+}
+
+
+/*==============================================================================
+ * Precondition:  All rows in rtr_update are valid.
 ------------------------------------------------------------------------------*/
 int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
     int num_rows = 0;
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
     struct query_state *state;
+    uint16_t new_ser_num = 0;
 
-    // TODO: change this to check for existence of ser_num in rtr_update
-    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
-            "where serial_num=%" PRIu16 " order by asn, ip_addr", serial);
-    printf("query:  %s\n", qry);
+    if (serial != UINT16_MAX)
+        new_ser_num = serial + 1;
+    else
+        new_ser_num = 0;
 
+    char qry[] = "select serial_num, create_time from rtr_update";
     if (mysql_query(mysqlp, qry)) {
-        LOG(LOG_ERR, "could not get cache nonce from db");
+        LOG(LOG_ERR, "could not read rtr_update from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
         return (-1);
     }
@@ -157,20 +185,46 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
         return (-1);
     }
 
+    state = calloc(1, sizeof(struct query_state));
+    if (!state) {
+        LOG(LOG_ERR, "could not alloc for query_state");
+        mysql_free_result(result);
+        return (-1);
+    }
+    state->ser_num = 0;
+    state->first_row = 0;
+    state->bad_ser_num = 0;
+    state->data_sent = 0;
+    state->no_new_data = 0;
+    state->not_ready = 0;
+    *query_state = (void*) state;
+
     num_rows = mysql_num_rows(result);
     if (num_rows == 0) {
-        return (1);
-    } else if (num_rows > 0) {
-        state = calloc(1, sizeof(query_state));
-        if (!state) {
-            LOG(LOG_ERR, "could not alloc for query_state" );
-            return (-1);
-        }
-        state->ser_num = serial + 1;
-        state->first_row = 0;
-        query_state = (void**) &state;
+        state->not_ready = 1;
+        mysql_free_result(result);
         return (0);
     }
+
+    int ret = resultHasSerNum(result, new_ser_num);
+    if (ret == 1) {
+        state->ser_num = new_ser_num;
+    } else if (ret == -1) {
+        mysql_free_result(result);
+        return (-1);
+    } else {
+        ret = resultHasSerNum(result, serial);
+        if (ret == 1) {
+            state->no_new_data = 1;
+        } else if (ret == -1) {
+            mysql_free_result(result);
+            return (-1);
+        } else {
+            state->bad_ser_num = 1;
+        }
+    }
+
+    mysql_free_result(result);
 
     return (0);
 }
@@ -195,8 +249,6 @@ int fillPdu(MYSQL_ROW *row, PDU *pdu) {
 
 
 /*==============================================================================
- * Assumption:  all rows in rtr_incremental related to a single serial number
- *     are added atomically.
  * If there's an error, I call pdu_free_array(); otherwise, the caller does.
 ------------------------------------------------------------------------------*/
 ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
@@ -211,7 +263,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     char qry[QRY_SZ];
     struct query_state *state = (struct query_state*) query_state;
 
-    (void) _pdus;  // to avoid -Wunused-parameter  TODO: remove this
+//    (void) _pdus;  // to avoid -Wunused-parameter
 
     snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
             "where serial_num=%" PRIu16 " order by asn, ip_addr", state->ser_num);
@@ -250,16 +302,64 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 
     // TODO: set query_state
     *is_done = true;  // TODO: set this
-    _pdus = &pdus;
+    *_pdus = pdus;
     mysql_free_result(result);
     return (0);  // TODO: set this
+
+/*
+if (query_state.not-ready)
+    return Error-Report:No-Data-Avail
+
+if (query_state.bad-sn)
+    return Cache-Reset
+
+if (query_state.no-new-data)
+    return Cache-Response and End-of-Data
+
+if (max_rows < 1)
+    complain
+
+if (!query_state.data_sent)
+    append Cache-Response
+    set query_state.data_sent
+    ++num_pdus
+
+result = query rtr_incremental
+
+current_row = query_state.first_row
+last_row = result.num_rows - 1
+
+if (current_row <= last_row)
+    mysql_data_seek(current_row);  // goes to zero-based row index
+
+while (current_row <= last_row  &&  num_pdus < max_pdus)
+    make pdu from current_row
+    num_pdus++
+    current_row++
+
+if (max-pdus)
+    update query_state to sn, current_row
+    return pdus
+else  // if we got here, current_row > last_row
+    if (sn still valid)
+        if (sn+1 is valid)
+            update query_state to sn+1, 0
+            return pdus
+        else
+            append End-of-Data
+            set is_done
+            return pdus
+    else
+        scrap pdus
+        return Error-Report:No-Data-Avail
+*/
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 void stopSerialQuery(void *connp, void * query_state) {
-    (void) connp;  // to trick -Wunused-parameter
+    (void) connp;  // to avoid -Wunused-parameter
     free_query_state(query_state);
 
     return;
