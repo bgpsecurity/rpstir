@@ -7,7 +7,13 @@
 
 #include <stdbool.h>
 
-#include "pdu.h"
+#include "../../rtr/pdu.h"
+
+
+struct query_state;
+//struct _query_state;
+//typedef struct _query_state query_state;
+
 
 // <cache_state>
 int getCacheNonce(void *connp, cache_nonce_t * nonce);
@@ -44,8 +50,8 @@ int startSerialQuery(void *connp, void ** query_state, serial_number_t serial);
 		for any return value and must be true for any fatal error
 		code.
 */
-ssize_t serialQueryGetNext(void *connp, void * query_state, size_t num_rows,
-	PDU ** pdus, bool * is_done);
+ssize_t serialQueryGetNext(void *connp, void * query_state, size_t max_rows,
+	PDU ** _pdus, bool * is_done);
 
 /**
 	Free any resources needed. This must be called when the calling
@@ -60,7 +66,7 @@ void stopSerialQuery(void *connp, void * query_state);
 // of parameters and return values
 int startResetQuery(void *connp, void ** query_state);
 
-ssize_t resetQueryGetNext(void *connp, void * query_state, size_t num_rows,
+ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 	PDU ** pdus, bool * is_done);
 
 void stopResetQuery(void *connp, void * query_state);

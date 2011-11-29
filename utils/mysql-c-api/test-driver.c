@@ -6,17 +6,18 @@
 #include <mysql.h>
 
 #include "connect.h"
+#include "rtr.h"
 #include "test-driver.h"
-
+#include "util.h"
 
 
 /*==============================================================================
  * Use this for temporary test calls.
 ------------------------------------------------------------------------------*/
 void useDbConn(void *connp) {
-    uint16_t nonce;
-    getCacheNonce(connp, &nonce);
-    printf("nonce = %hu\n", nonce);
+//    uint16_t nonce;
+//    getCacheNonce(connp, &nonce);
+//    printf("nonce = %hu\n", nonce);
 
 //    setCacheNonce(connp, 3434);
 
@@ -31,6 +32,9 @@ void useDbConn(void *connp) {
 //    deleteSerNum(connp, 99);
 
 //    deleteAllSerNums(connp);
+
+    void **ptr = NULL;
+    startSerialQuery(connp, ptr, 5);
 }
 
 
@@ -38,10 +42,10 @@ void useDbConn(void *connp) {
 ------------------------------------------------------------------------------*/
 int main() {
     void *connp = 0;
-    const char host[] = "localhost";
-    const char user[] = "rpki";
-    const char pass[] = "validator";
-    const char db[] = "rpkidb7";
+//    const char host[] = "localhost";
+//    const char user[] = "rpki";
+//    const char pass[] = "validator";
+//    const char db[] = "rpkidb7";
 
     OPEN_LOG();
 

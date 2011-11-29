@@ -4,21 +4,6 @@
 
 #include <inttypes.h>
 
-#include <my_global.h>
-#include <mysql.h>
-
-
-int getCacheNonce(void *connp, uint16_t *nonce);
-
-int addCacheNonce(void *connp, uint16_t nonce);
-
-int getLatestSerNum(void *connp, uint32_t *sn);
-
-int addNewSerNum(void *connp, const uint32_t *in);
-
-int deleteSerNum(void *connp, uint32_t ser_num);
-
-int deleteAllSerNums(void *connp);
 
 void *connectDb(
         const char *host,

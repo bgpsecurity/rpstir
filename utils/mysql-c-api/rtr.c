@@ -2,73 +2,193 @@
 	Functions used for accessing the RTR database.
 */
 
+#include <my_global.h>
+#include <mysql.h>
+
 #include "logging.h"
 #include "rtr.h"
+#include "util.h"
 
 
-
-
-/*==============================================================================
-------------------------------------------------------------------------------*/
-static int startSerialQuery(MYSQL *mysqlp, void **query_state, serial_number_t serial) {
-
-
-    return (0);
-}
-
-
-/*==============================================================================
-------------------------------------------------------------------------------*/
-ssize_t serialQueryGetNext(MYSQL *mysql, void * query_state, size_t num_rows,
-        PDU ** pdus, bool * is_done) {
-
-
-    return (0);
-}
+struct query_state {
+    uint32_t ser_num;  // ser_num to search for first row to send
+    uint first_row;  // first row to send.  zero-based
+};
+//struct _query_state {
+//    uint32_t ser_num;  // ser_num to search for first row to send
+//    uint64_t first_row;  // first row to send.  zero-based
+//};
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void stopSerialQuery(MYSQL *mysql, void * query_state) {
-    return;
+void free_query_state(void *qs) {
+    if (qs)
+        free (qs);
+    qs = NULL;
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int getCacheNonce(void *connp, cache_nonce_t *nonce) {
-    return getCacheNone((MYSQL*) connp, nonce);
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+    const char qry[] = "select cache_nonce from rtr_nonce";
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not get cache nonce from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    ulong *lengths;
+    ulong sz;
+    uint num_rows = mysql_num_rows(result);
+    if (num_rows == 1) {
+        row = mysql_fetch_row(result);
+        lengths = mysql_fetch_lengths(result);
+        sz = lengths[0];
+
+        if (charp2uint16_t(nonce, row[0], sz)) {
+            LOG(LOG_ERR, "error converting char[] to uint16_t for cache nonce");
+            return (-1);
+        }
+
+        mysql_free_result(result);
+        return (0);
+    } else {
+        mysql_free_result(result);
+        LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
+        return (-1);
+    }
 }
 
 
 /*==============================================================================
+ * Precondition:  if rtr_update contains any rows, then the latest timestamp
+ *     occurs in exactly 1 row.
 ------------------------------------------------------------------------------*/
 int getLatestSerialNumber(void *connp, serial_number_t *serial) {
-    return getLatestSerialNumber((MYSQL*) connp, serial);
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+    const char qry[] = "select serial_num from rtr_update where create_time="
+            "(select max(create_time) from rtr_update)";
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not get latest serial number from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    ulong *lengths;
+    ulong sz;
+    uint num_rows = mysql_num_rows(result);
+    if (num_rows == 1) {
+        row = mysql_fetch_row(result);
+        lengths = mysql_fetch_lengths(result);
+        sz = lengths[0];
+
+        if (charp2uint32_t(serial, row[0], sz)) {
+            LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
+            return (-1);
+        }
+
+        mysql_free_result(result);
+        return (0);
+    } else if (num_rows == 0) {
+        *serial = UINT32_MAX;
+        mysql_free_result(result);
+        return (0);
+    } else {
+        mysql_free_result(result);
+        LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
+        return (-1);
+    }
 }
 
 
-struct query_state {
-    uint32_t ser_num;  // ser_num from which rows should be taken
-    uint64_t first_row;  // first row to send
-};
+/*==============================================================================
+recs = get all records after serial
+if (recs == 0)
+    return 1
+else if (recs > 0)
+    assign real values to the query_state arg.
+    return 0
+if some error
+    return -1
+------------------------------------------------------------------------------*/
+int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    int num_rows = 0;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+    struct query_state *state;
+
+    // TODO: change this to check for existence of ser_num in rtr_update
+    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
+            "where serial_num=%" PRIu16 " order by asn, ip_addr", serial);
+    printf("query:  %s\n", qry);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not get cache nonce from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    num_rows = mysql_num_rows(result);
+    if (num_rows == 0) {
+        return (1);
+    } else if (num_rows > 0) {
+        state = calloc(1, sizeof(query_state));
+        if (!state) {
+            LOG(LOG_ERR, "could not alloc for query_state" );
+            return (-1);
+        }
+        state->ser_num = serial + 1;
+        state->first_row = 0;
+        query_state = (void**) &state;
+        return (0);
+    }
+
+    return (0);
+}
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int startSerialQuery(void *connp, void ** query_state, serial_number_t serial) {
-    MYSQL *mysql;
+int fillPdu(MYSQL_ROW *row, PDU *pdu) {
+    (void) row;  // to avoid -Wunused-parameter  TODO: remove this
 
-    // recs = get all records after serial
-    // if (recs == 0)
-    //     return 0
-    //     send End of Data PDU
-    //     send empty query_state
+    // set protocolVersion
+    pdu->protocolVersion = RTR_PROTOCOL_VERSION;
 
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
-    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
-            "where serial_num=%u order by asn then by ip_addr", serial);
+    // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
+
+    // set cacheNonce
+
+    // set ipxPrefixData
 
     return (0);
 }
@@ -77,31 +197,99 @@ int startSerialQuery(void *connp, void ** query_state, serial_number_t serial) {
 /*==============================================================================
  * Assumption:  all rows in rtr_incremental related to a single serial number
  *     are added atomically.
+ * If there's an error, I call pdu_free_array(); otherwise, the caller does.
 ------------------------------------------------------------------------------*/
-ssize_t serialQueryGetNext(void *connp, void * query_state, size_t num_rows,
-        PDU ** pdus, bool * is_done) {
-    return serialQueryGetNext((MYSQL*) connp, query_state, num_rows, pdus, is_done);
+ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
+        PDU **_pdus, bool *is_done) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    int num_rows = 0;
+    size_t unsent_rows = 0;
+    size_t num_pdus = 0;
+    PDU *pdus;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+    struct query_state *state = (struct query_state*) query_state;
+
+    (void) _pdus;  // to avoid -Wunused-parameter  TODO: remove this
+
+    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
+            "where serial_num=%" PRIu16 " order by asn, ip_addr", state->ser_num);
+    printf("query:  %s\n", qry);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not get cache nonce from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    num_rows = mysql_num_rows(result);
+    unsent_rows = num_rows - (state->first_row + 1);
+    if (unsent_rows >= max_rows)
+        num_pdus = max_rows;
+    else
+        num_pdus = unsent_rows + 1;
+
+    pdus = calloc(num_pdus, sizeof(PDU));
+    if (!pdus) {
+        LOG(LOG_ERR, "could not alloc for array of PDU");
+        mysql_free_result(result);
+        return (-1);
+    }
+
+    size_t i;
+    for (i = 0; i < num_pdus; i++) {
+
+    }
+
+    // TODO: set query_state
+    *is_done = true;  // TODO: set this
+    _pdus = &pdus;
+    mysql_free_result(result);
+    return (0);  // TODO: set this
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 void stopSerialQuery(void *connp, void * query_state) {
-    return stopSerialQuery((MYSQL*) connp, query_state);
+    (void) connp;  // to trick -Wunused-parameter
+    free_query_state(query_state);
+
+    return;
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int startResetQuery(void *connp, void ** query_state) {
-    return startResetQuery((MYSQL*) connp, query_state);
+    MYSQL *mysqlp = (MYSQL*) connp;
+
+    (void) mysqlp;  // to avoid -Wunused-parameter  TODO: remove this
+    (void) query_state;  // to avoid -Wunused-parameter  TODO: remove this
+
+    return (0);
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-ssize_t resetQueryGetNext(void *connp, void * query_state, size_t num_rows,
+ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         PDU ** pdus, bool * is_done) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    (void) mysqlp;  // to trick -Wunused-parameter
+    (void) query_state;  // to avoid -Wunused-parameter  TODO: remove this
+    (void) max_rows;  // to avoid -Wunused-parameter  TODO: remove this
+    (void) pdus;  // to avoid -Wunused-parameter  TODO: remove this
+    (void) is_done;  // to avoid -Wunused-parameter  TODO: remove this
+
+    // Note: all IPvXPrefix PDUs must be announce (not withdrawal).
 
     return (0);
 }
@@ -110,6 +298,139 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t num_rows,
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 void stopResetQuery(void *connp, void * query_state) {
+    (void) connp;  // to trick -Wunused-parameter
+    free_query_state(query_state);
 
     return;
+}
+
+
+/*==============================================================================
+ * not currently an API function.  currently for testing
+ * Precondition:  table rtr_nonce has exactly 0 or 1 rows.
+ * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
+------------------------------------------------------------------------------*/
+int setCacheNonce(void *connp, uint16_t nonce) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    const char qry_delete[] = "delete from rtr_nonce";
+    const int QRY_SZ = 256;
+    char qry_insert[QRY_SZ];
+
+    if (mysql_query(mysqlp, qry_delete)) {
+        LOG(LOG_ERR, "query failed:  %s", qry_delete);
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    snprintf(qry_insert, QRY_SZ, "insert into rtr_nonce (cache_nonce) "
+            "value (%u)", nonce);
+
+    if (mysql_query(mysqlp, qry_insert)) {
+        LOG(LOG_ERR, "query failed:  %s", qry_insert);
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    int rows;
+    if ((rows = mysql_affected_rows(mysqlp)) != 1) {
+        LOG(LOG_ERR, "failed to insert db.rtr_nonce.cache_nonce=%u", nonce);
+        LOG(LOG_ERR, "affected rows = %d", rows);
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    return (0);
+}
+
+
+/*==============================================================================
+ * This function is only for testing.  Someone else is responsible for inserting
+ *   records into rtr_update.
+------------------------------------------------------------------------------*/
+int addNewSerNum(void *connp, const uint32_t *in) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    uint32_t latest_ser_num = 0;
+    uint32_t new_ser_num = 0;
+    const int QRY_SZ = 1024;
+    char qry[QRY_SZ];
+
+    if (in) {
+        new_ser_num = *in;
+    } else if (getLatestSerialNumber(connp, &latest_ser_num) == 0) {
+        if (latest_ser_num != 0xffffffff)
+            new_ser_num = latest_ser_num + 1;
+        else
+            new_ser_num = 0;
+    } else {
+        LOG(LOG_ERR, "error reading latest serial number");
+        return (-1);
+    }
+
+    // Note:  Silently deleting the serial_num I am about to insert.
+    // Assumption:  it is no longer needed.
+    snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
+            new_ser_num);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not delete serial number %u from db", new_ser_num);
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if (mysql_affected_rows(mysqlp))
+        LOG(LOG_INFO, "serial_num %u had to be deleted from db before inserting it", new_ser_num);
+
+    snprintf(qry, QRY_SZ, "insert into rtr_update values (%u, now())",
+            new_ser_num);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not add new serial number to db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    return (0);
+}
+
+
+/*==============================================================================
+ * This function is only for testing.  Someone else is responsible for deleting
+ *   records from rtr_update.
+------------------------------------------------------------------------------*/
+int deleteSerNum(void *connp, uint32_t ser_num) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    const int QRY_SZ = 1024;
+    char qry[QRY_SZ];
+
+    snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
+            ser_num);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not delete serial number from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    LOG(LOG_DEBUG, "%llu rows affected for '%s'", mysql_affected_rows(mysqlp), qry);
+
+    return (0);
+}
+
+
+/*==============================================================================
+ * This function is only for testing.  Someone else is responsible for deleting
+ *   records from rtr_update.
+------------------------------------------------------------------------------*/
+int deleteAllSerNums(void *connp) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    const char qry[] = "delete from rtr_update";
+
+    LOG(LOG_ERR, "x");
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not delete all serial numbers from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    return (0);
 }
