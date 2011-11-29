@@ -18,7 +18,7 @@ alias client_raw="nc -q 1 localhost $PORT | $CLIENT recv"
 compare () {
 	name="$1"
 	printf >&2 "comparing \"%s\" to \"%s\"... " "$name" "$name.correct"
-	if diff -uN "$name" "$name.correct" > "$name.diff" 2>/dev/null; then
+	if diff -uN "$name.correct" "$name" > "$name.diff" 2>/dev/null; then
 		echo >&2 "success."
 	else
 		echo >&2 "failed!"

@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-#include "../../rtr/pdu.h"
+#include "pdu.h"
 
 
 struct query_state;

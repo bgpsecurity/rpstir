@@ -141,6 +141,7 @@ struct _PDU {
 #define PDU_INTERNAL_ERROR -4
 #define PDU_UNSUPPORTED_PROTOCOL_VERSION -5
 #define PDU_UNSUPPORTED_PDU_TYPE -6
+#define PDU_INVALID_VALUE -7 /* PDU is well-formed but has a field with an invalid value */
 #define PDU_IS_ERROR(retval) ((retval) <= PDU_CORRUPT_DATA)
 /**
 	Attempt to parse as much of buffer as possible into pdu.

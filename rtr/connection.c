@@ -262,6 +262,10 @@ static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu
 			LOG(LOG_NOTICE, "received PDU with unsupported PDU type");
 			code = ERR_UNSUPPORTED_TYPE;
 			break;
+		case PDU_INVALID_VALUE:
+			LOG(LOG_NOTICE, "received PDU with an invalid value for a field");
+			code = ERR_INVALID_REQUEST;
+			break;
 		default:
 			LOG(LOG_ERR, "log_and_send_parse_error() called with unexpected parse_pdu_retval (%d)", parse_pdu_retval);
 			code = ERR_INTERNAL_ERROR;
