@@ -22,7 +22,7 @@
 #SUBDIRS = .
 
 AM_CFLAGS = -g -Wall -Wextra
-AM_CPPFLAGS = $(DEPS_CFLAGS) -I..
+AM_CPPFLAGS = $(DEPS_CFLAGS) -I.. -I../../rtr
 
 LDADD = ../libutils.a libmysqlcapi.a
 
