@@ -15,10 +15,10 @@ static bool get_cache_state(struct cache_state * state, void * db)
 		return false;
 	}
 
-	if (!getCacheNonce(db, &state->nonce))
+	if (getCacheNonce(db, &state->nonce) != 0)
 		return false;
 
-	if (!getLatestSerialNumber(db, &state->serial_number))
+	if (getLatestSerialNumber(db, &state->serial_number) != 0)
 		return false;
 
 	return true;
