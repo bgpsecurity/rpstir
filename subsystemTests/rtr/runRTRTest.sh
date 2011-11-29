@@ -13,6 +13,7 @@ NONCE=42
 WRONG_NONCE=4242
 
 alias client="$CLIENT send | nc -q 1 localhost $PORT | $CLIENT recv"
+alias client_raw="nc -q 1 localhost $PORT | $CLIENT recv"
 
 compare () {
 	name="$1"
@@ -137,9 +138,16 @@ echo "serial $NONCE 5" | client # Cache Reset
 echo "serial $NONCE 7" | client # difference from 7 to 8
 stop_test serial_queries
 
-start_test error_conditions
+start_test bad_pdus
+TOTAL_BAD_PDUS="`./badPDUs.py length`"
+for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
+	./badPDUs.py "$i" | client_raw
+done
+stop_test bad_pdus
+
+start_test bad_protocol_operation # erroneous use of valid PDUs
 # TODO
-stop_test error_conditions
+stop_test bad_protocol_operation
 
 start_test reset_query_last
 echo "reset" | client # all data for serial 8
