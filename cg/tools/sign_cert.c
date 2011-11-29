@@ -37,6 +37,7 @@ char *msgs[] = {
     "Error in %s\n",
     "Usage: TBS filename, Key filename [1 to adjust dates | 2 to keep tbs alg]\n",
     "Couldn't open %s\n",
+    "Error getting memory\n",
     };
 
 static void adjust_time(struct casn *fromp, struct casn *tillp)
@@ -59,14 +60,9 @@ static void fatal(int err, char *paramp)
 
 int CryptInitState = 0;
 
-struct keyring
-  {
-  char filename[80];
-  char label[10];
-  char password[20];
-  } keyring;
 
-static int setSignature(struct casn *tbhash, struct casn *newsignature)
+static int setSignature(struct casn *tbhash, struct casn *newsignature,
+			const char *keyfile)
   {
   CRYPT_CONTEXT hashContext;
   CRYPT_CONTEXT sigKeyContext;
@@ -77,6 +73,10 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature)
   char *msg;
   uchar *signstring = NULL;
   int sign_lth;
+
+  /* constants for encrypting and storing RSA private keys in p15 files */
+  static const char *P15_LABEL = "label";
+  static const char *P15_PASSWORD = "password";
 
   if ((sign_lth = size_casn(tbhash)) < 0) fatal(1, "sizing");
   signstring = (uchar *)calloc(1, sign_lth);
@@ -99,10 +99,10 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature)
       CRYPT_CTXINFO_HASHVALUE, hash,
       &signatureLength)) != 0) msg = "getting attribute string";
   else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, 
-      CRYPT_KEYSET_FILE, keyring.filename, CRYPT_KEYOPT_READONLY)) != 0) 
+      CRYPT_KEYSET_FILE, keyfile, CRYPT_KEYOPT_READONLY)) != 0)
       msg = "opening key set";
   else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext, 
-      CRYPT_KEYID_NAME, keyring.label, keyring.password)) != 0) 
+      CRYPT_KEYID_NAME, P15_LABEL, P15_PASSWORD)) != 0)
       msg = "getting key";
   else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength, 
       sigKeyContext, hashContext)) != 0) msg = "signing";
@@ -152,8 +152,12 @@ int main(int argc, char **argv)
   Blob(&blob, (ushort)0);
   struct AlgorithmIdentifier *algp, *tbsalgp; 
   struct casn *casnp, *sigp, *selfp;
-  if (argc < 3) fatal(2, (char *)0);
-  char *sfx = strrchr(argv[1], (int)'.'); 
+  const char *keyfile = NULL;
+
+  if (argc < 3)
+    fatal(2, (char *)0);
+  char *sfx = strrchr(argv[1], (int)'.');
+  keyfile = argv[2];
   if (!strcmp(sfx, ".cer")) 
     {
     selfp = &cert.self;
@@ -194,10 +198,7 @@ int main(int argc, char **argv)
     write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption, 
       (uchar *)"", 0);
     }
-  strcpy(keyring.label, "label");
-  strcpy(keyring.password, "password");
-  strcpy(keyring.filename, argv[2]);
-  setSignature(casnp, sigp);
+  setSignature(casnp, sigp, keyfile);
   if (!argv[3] || !(*argv[3] & 4))
     {
     write_objid(&algp->algorithm, id_sha_256WithRSAEncryption);

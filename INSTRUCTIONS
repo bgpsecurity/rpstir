@@ -470,15 +470,15 @@ out-of-band and online means [draft-ietf-sidr-ta].  In practice,
 relying parties obtain TAL files through a trusted out-of-band channel
 of their choice.  For testing purposes, these instructions use Rob
 Austein's collection of sample trust anchors found at
-http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors .
+http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
 
     cd $RPKI_ROOT
     # The following three commands retrieve three example long-term
     # trust anchors in the form of TALs.  Operationally, these TALs
     # must be obtained through a trusted channel, not HTTP!
-    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-ripe.tal
-    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-arin.tal
-    wget http://subvert-rpki.hactrn.net/rcynic/sample-trust-anchors/testbed-apnic.tal
+    wget http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors/testbed-ripe.tal
+    wget http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors/testbed-arin.tal
+    wget http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors/testbed-apnic.tal
     # The following command parses the TAL files, downloads the trust
     # anchor certificates, verifies their public key and signature, and
     # inserts them into the local database.
