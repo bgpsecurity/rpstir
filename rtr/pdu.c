@@ -137,13 +137,13 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			EXTRACT_FIELD(pdu->ip4PrefixData.prefixLength);
 			if (pdu->ip4PrefixData.prefixLength > 32)
 			{
-				ret = PDU_WARNING;
+				return PDU_INVALID_VALUE;
 			}
 
 			EXTRACT_FIELD(pdu->ip4PrefixData.maxLength);
 			if (pdu->ip4PrefixData.maxLength > 32)
 			{
-				ret = PDU_WARNING;
+				return PDU_INVALID_VALUE;
 			}
 			// TODO: check if max length >= prefix length?
 
@@ -173,13 +173,13 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 			EXTRACT_FIELD(pdu->ip6PrefixData.prefixLength);
 			if (pdu->ip6PrefixData.prefixLength > 128)
 			{
-				ret = PDU_WARNING;
+				return PDU_INVALID_VALUE;
 			}
 
 			EXTRACT_FIELD(pdu->ip6PrefixData.maxLength);
 			if (pdu->ip6PrefixData.maxLength > 128)
 			{
-				ret = PDU_WARNING;
+				return PDU_INVALID_VALUE;
 			}
 			// TODO: check if max length >= prefix length?
 
