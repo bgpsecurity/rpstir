@@ -15,13 +15,23 @@
  * Use this for temporary test calls.
 ------------------------------------------------------------------------------*/
 void useDbConn(void *connp) {
+    (void) connp;  // to avoid -Wunused-parameter
 //    uint16_t nonce;
 //    getCacheNonce(connp, &nonce);
 //    printf("nonce = %hu\n", nonce);
 
 //    setCacheNonce(connp, 3434);
 
-//    getLatestSerNum(connp);
+//    int ret;
+//    uint32_t sn = 0;
+//    ret = getLatestSerialNumber(connp, &sn);
+//    if (ret == 0) {
+//        printf("serial number found:  %" PRIu32 "\n", sn);
+//    } else if (ret == 1) {
+//        puts("no serial numbers in the db\n");
+//    } else if (ret == -1) {
+//        puts("some error occurred\n");
+//    }
 
 //    uint32_t ser_num = 0xfffffffc;
 //    addNewSerNum(connp, &ser_num);
@@ -33,8 +43,8 @@ void useDbConn(void *connp) {
 
 //    deleteAllSerNums(connp);
 
-    void **ptr = NULL;
-    startSerialQuery(connp, ptr, 5);
+//    void **ptr = NULL;
+//    startSerialQuery(connp, ptr, 5);
 }
 
 

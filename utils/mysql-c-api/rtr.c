@@ -78,8 +78,9 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
 
 
 /*==============================================================================
- * Precondition:  if rtr_update contains any rows, then the latest timestamp
- *     occurs in exactly 1 row.
+ * @pre Each timestamp in rtr_update occurs in exactly 1 row.
+ * @param[out] serial A return parameter for the serial number.
+ * @return 0 if latest is found, -1 on error, 1 if no serial number found.
 ------------------------------------------------------------------------------*/
 int getLatestSerialNumber(void *connp, serial_number_t *serial) {
     MYSQL *mysqlp = (MYSQL*) connp;
@@ -101,14 +102,12 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
     }
 
     ulong *lengths;
-    ulong sz;
     uint num_rows = mysql_num_rows(result);
     if (num_rows == 1) {
         row = mysql_fetch_row(result);
-        lengths = mysql_fetch_lengths(result);
-        sz = lengths[0];
+        lengths = mysql_fetch_lengths(result);  // mysql allocs the memory
 
-        if (charp2uint32_t(serial, row[0], sz)) {
+        if (charp2uint32_t(serial, row[0], lengths[0])) {
             LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
             mysql_free_result(result);
             return (-1);
@@ -117,9 +116,8 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
         mysql_free_result(result);
         return (0);
     } else if (num_rows == 0) {
-        *serial = UINT32_MAX;
         mysql_free_result(result);
-        return (0);
+        return (1);
     } else {
         mysql_free_result(result);
         LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
@@ -129,7 +127,7 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
 
 
 /*==============================================================================
- * Precondition:  serial_num is the first field in the results.
+ * @pre serial_num is the first field in the results.
 ------------------------------------------------------------------------------*/
 int resultHasSerNum(MYSQL_RES *result, uint16_t sn) {
     MYSQL_ROW row;
@@ -167,7 +165,7 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
     struct query_state *state;
     uint16_t new_ser_num = 0;
 
-    if (serial != UINT16_MAX)
+    if (serial != UINT32_MAX)  // TODO: fix this
         new_ser_num = serial + 1;
     else
         new_ser_num = 0;
@@ -263,7 +261,19 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     char qry[QRY_SZ];
     struct query_state *state = (struct query_state*) query_state;
 
-//    (void) _pdus;  // to avoid -Wunused-parameter
+    if (max_rows < 2) {
+        LOG(LOG_ERR, "max_rows too small");
+        *is_done = 1;
+        return (-1);
+    }
+
+    if (state->not_ready) {
+        LOG(LOG_INFO, "it appears that no data is available to send to routers");
+        // TODO: send Error-Report-PDU:2:No-Data-Avail
+        *is_done = 1;
+        return (1);
+    }
+
 
     snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
             "where serial_num=%" PRIu16 " order by asn, ip_addr", state->ser_num);
@@ -307,6 +317,9 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     return (0);  // TODO: set this
 
 /*
+if (max_rows < 2)
+    complain
+
 if (query_state.not-ready)
     return Error-Report:No-Data-Avail
 
@@ -315,9 +328,6 @@ if (query_state.bad-sn)
 
 if (query_state.no-new-data)
     return Cache-Response and End-of-Data
-
-if (max_rows < 1)
-    complain
 
 if (!query_state.data_sent)
     append Cache-Response
