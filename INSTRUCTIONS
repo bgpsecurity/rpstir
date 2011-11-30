@@ -320,6 +320,8 @@ variables, so make sure to set these yourself.
 
 2.4 SSH Subsystem
 
+TODO: update this section.
+
 If you plan to use the RTR Server, you will need to configure it as an
 SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
 line:
@@ -376,7 +378,7 @@ Chaser Client (proto/chaser)         Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server                           Continuously as SSH subsystem
+RTR Server                           Continuously as daemon (TODO: mention other RTR components)
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
