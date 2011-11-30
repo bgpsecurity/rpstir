@@ -302,6 +302,90 @@ ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu)
 }
 
 
+static void _fill_pdu_common(PDU * pdu, uint8_t type, uint32_t length)
+{
+	pdu->protocolVersion = RTR_PROTOCOL_VERSION;
+	pdu->pduType = type;
+	pdu->length = length;
+}
+
+static void _fill_pdu_with_serial_number(
+	PDU * pdu,
+	uint8_t type,
+	uint16_t nonce_or_zero, // nonce if the type has one, zero if the type doesn't
+	serial_number_t serial
+) {
+	_fill_pdu_common(pdu, type, PDU_HEADER_LENGTH + sizeof(pdu->serialNumber));
+	pdu->cacheNonce = nonce_or_zero;
+	pdu->serialNumber = serial;
+}
+
+static void _fill_pdu_header_only(
+	PDU * pdu,
+	uint8_t type,
+	uint16_t nonce_or_zero // nonce if the type has one, zero if the type doesn't
+) {
+	_fill_pdu_common(pdu, type, PDU_HEADER_LENGTH);
+	pdu->cacheNonce = nonce_or_zero;
+}
+
+void fill_pdu_serial_notify(PDU * pdu, cache_nonce_t nonce, serial_number_t serial)
+{
+	_fill_pdu_with_serial_number(pdu, PDU_SERIAL_NOTIFY, nonce, serial);
+}
+
+void fill_pdu_serial_query(PDU * pdu, cache_nonce_t nonce, serial_number_t serial)
+{
+	_fill_pdu_with_serial_number(pdu, PDU_SERIAL_QUERY, nonce, serial);
+}
+
+void fill_pdu_reset_query(PDU * pdu)
+{
+	_fill_pdu_header_only(pdu, PDU_RESET_QUERY, 0);
+}
+
+void fill_pdu_cache_response(PDU * pdu, cache_nonce_t nonce)
+{
+	_fill_pdu_header_only(pdu, PDU_CACHE_RESPONSE, nonce);
+}
+
+void fill_pdu_ipv4_prefix(PDU * pdu, uint8_t flags,
+	uint8_t prefix_length, uint8_t max_length, const struct in_addr * prefix, as_number_t asn)
+{
+	_fill_pdu_common(pdu, PDU_IPV4_PREFIX, PDU_HEADER_LENGTH + sizeof(pdu->ip4PrefixData));
+	pdu->reserved = 0;
+	pdu->ip4PrefixData.flags = flags;
+	pdu->ip4PrefixData.prefixLength = prefix_length;
+	pdu->ip4PrefixData.maxLength = max_length;
+	pdu->ip4PrefixData.reserved = 0;
+	pdu->ip4PrefixData.prefix4 = *prefix;
+	pdu->ip4PrefixData.asNumber = asn;
+}
+
+void fill_pdu_ipv6_prefix(PDU * pdu, uint8_t flags,
+	uint8_t prefix_length, uint8_t max_length, const struct in6_addr * prefix, as_number_t asn)
+{
+	_fill_pdu_common(pdu, PDU_IPV6_PREFIX, PDU_HEADER_LENGTH + sizeof(pdu->ip6PrefixData));
+	pdu->reserved = 0;
+	pdu->ip6PrefixData.flags = flags;
+	pdu->ip6PrefixData.prefixLength = prefix_length;
+	pdu->ip6PrefixData.maxLength = max_length;
+	pdu->ip6PrefixData.reserved = 0;
+	pdu->ip6PrefixData.prefix6 = *prefix;
+	pdu->ip6PrefixData.asNumber = asn;
+}
+
+void fill_pdu_end_of_data(PDU * pdu, cache_nonce_t nonce, serial_number_t serial)
+{
+	_fill_pdu_with_serial_number(pdu, PDU_END_OF_DATA, nonce, serial);
+}
+
+void fill_pdu_cache_reset(PDU * pdu)
+{
+	_fill_pdu_header_only(pdu, PDU_CACHE_RESET, 0);
+}
+
+
 PDU * pdu_deepcopy(const PDU * pdu)
 {
 	PDU * ret = malloc(sizeof(PDU));
