@@ -206,28 +206,40 @@ int main(int argc, char **argv) {
 
 		// announcements
 		snprintf(msg, sizeof(msg), differences_query_fmt,
-			prevSerialNum, 1,
+			currSerialNum, 1,
 			prevSerialNum, currSerialNum);
 		statementscm_no_data(connection, msg);
 
 		// withdrawals
 		snprintf(msg, sizeof(msg), differences_query_fmt,
-			prevSerialNum, 0,
+			currSerialNum, 0,
 			currSerialNum, prevSerialNum);
 		statementscm_no_data(connection, msg);
 	}
 
 	// write the current serial number and time, making the data available
-	snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, now());",
-			 currSerialNum);
+	if (first_time)
+	{
+		snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, NULL, now(), true);",
+			currSerialNum);
+	}
+	else
+	{
+		snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, %u, now(), true);",
+			currSerialNum, prevSerialNum);
+	}
 	statementscm_no_data(connection, msg);
 
-    // clean up all the data no longer needed
+	// clean up all the data no longer needed
 	// save last two full updates so that no problems at transition
 	//   (with client still receiving data from previous one)
 	snprintf(msg, sizeof(msg),
-			 "delete from rtr_full where serial_num<>%u and serial_num<>%u;",
-			 prevSerialNum, currSerialNum);
+		"update rtr_update set has_full = false where where serial_num<>%u and serial_num<>%u;",
+		prevSerialNum, currSerialNum);
+	statementscm_no_data(connection, msg);
+	snprintf(msg, sizeof(msg),
+		"delete from rtr_full where serial_num<>%u and serial_num<>%u;",
+		prevSerialNum, currSerialNum);
 	statementscm_no_data(connection, msg);
 
 	snprintf(msg, sizeof(msg),
@@ -239,10 +251,16 @@ int main(int argc, char **argv) {
 	statementscm_no_data(connection, msg);
 
 	statementscm_no_data(connection,
+		"update rtr_update as r1\n"
+		"left join rtr_update as r2 on r2.serial_num = r1.prev_serial_num\n"
+		"set r1.prev_serial_num = NULL\n"
+		"where r2.serial_num is null;");
+
+	statementscm_no_data(connection,
 		 "delete rtr_incremental\n"
 		 "from rtr_incremental\n"
 		 "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
-		 "where rtr_update.serial_num is null;");
+		 "where rtr_update.prev_serial_num is null;");
 
 	return 0;
 }
