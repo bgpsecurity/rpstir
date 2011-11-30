@@ -241,10 +241,13 @@ static scmtab scmtabbuilder[] =
 	{             /* RTR_UPDATE */
 	  "rtr_update",
 	  "RTR_UPDATE",
-	  "serial_num  INT UNSIGNED NOT NULL,"
-	  "create_time DATETIME NOT NULL,"
-	  "            PRIMARY KEY (serial_num),"
-	  "            KEY create_time (create_time)",
+	  "serial_num      INT UNSIGNED NOT NULL,"
+	  "prev_serial_num INT UNSIGNED," // NULL indicates no previous serial number currently exists
+	  "create_time     DATETIME NOT NULL,"
+	  "has_full        BOOLEAN NOT NULL,"
+	  "                PRIMARY KEY (serial_num),"
+	  "                UNIQUE KEY (prev_serial_num),"
+	  "                KEY create_time (create_time)",
 	  NULL,
 	  0
 	},
@@ -261,7 +264,11 @@ static scmtab scmtabbuilder[] =
 	{            /* RTR_INCREMENTAL */
 	  "rtr_incremental",
 	  "RTR_INCREMENTAL",
-	  "serial_num  INT UNSIGNED NOT NULL," /* the serial number that this row modifies to form the next serial number */
+	  "serial_num  INT UNSIGNED NOT NULL," /* serial number immediately after
+	                                          the incremental changes, i.e.
+	                                          after reading all of rtr_incremental
+	                                          where serial_num = x, the client
+	                                          is at serial number x */
 	  "is_announce BOOLEAN NOT NULL," /* announcement or withdrawal */
 	  "asn         INT UNSIGNED NOT NULL,"
 	  "ip_addr     VARCHAR(50) NOT NULL,"
