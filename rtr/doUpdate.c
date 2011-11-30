@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
 	// save last two full updates so that no problems at transition
 	//   (with client still receiving data from previous one)
 	snprintf(msg, sizeof(msg),
-		"update rtr_update set has_full = false where where serial_num<>%u and serial_num<>%u;",
+		"update rtr_update set has_full = false where serial_num<>%u and serial_num<>%u;",
 		prevSerialNum, currSerialNum);
 	statementscm_no_data(connection, msg);
 	snprintf(msg, sizeof(msg),
