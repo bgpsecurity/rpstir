@@ -294,6 +294,13 @@ ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu)
 			// IP4PrefixData and IP6PrefixData are both in the correct order except for the as_number_t at the end
 			*(uint32_t *)(buffer + offset - 4) = htonl(*(uint32_t *)(buffer + offset - 4));
 		}
+		else if (pdu->pduType == PDU_SERIAL_NOTIFY ||
+			pdu->pduType == PDU_SERIAL_QUERY ||
+			pdu->pduType == PDU_END_OF_DATA)
+		{
+			// These require fixing the order of the serial number
+			*(uint32_t *)(buffer + PDU_HEADER_LENGTH) = htonl(*(uint32_t *)(buffer + PDU_HEADER_LENGTH));
+		}
 	}
 
 	#undef INCR_OFFSET
