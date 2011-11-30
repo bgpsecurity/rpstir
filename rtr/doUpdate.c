@@ -154,6 +154,18 @@ int main(int argc, char **argv) {
 		first_time = 1;
 	}
 
+	// delete any updates that weren't completed
+	statementscm_no_data(connection,
+		 "delete rtr_incremental\n"
+		 "from rtr_incremental\n"
+		 "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
+		 "where rtr_update.serial_num is null;");
+	statementscm_no_data(connection,
+		 "delete rtr_full\n"
+		 "from rtr_full\n"
+		 "left join rtr_update on rtr_full.serial_num = rtr_update.serial_num\n"
+		 "where rtr_update.serial_num is null;");
+
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
 	currSerialNum = (prevSerialNum == UINT_MAX) ? 0 : (prevSerialNum + 1);
