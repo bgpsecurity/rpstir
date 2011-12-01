@@ -19,7 +19,7 @@ CLEANFILES = \
 
 ACLOCAL_AMFLAGS = -I build-aux
 
-test: all
+check-local:
 	cd testcases && ./makeall
 	cd subsystemTests && ./runSubsystemTest.sh 1 9
 	cd subsystemTests && ./runSubsystemTest.sh 2 8
