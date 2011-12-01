@@ -7,7 +7,10 @@
 #include "pdu.h"
 
 struct cache_state {
+	bool data_available;
 	cache_nonce_t nonce;
+
+	// this is undefined if data_available is false
 	serial_number_t serial_number;
 };
 

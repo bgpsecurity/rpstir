@@ -279,6 +279,12 @@ static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu
 
 static void send_notify(struct run_state * run_state)
 {
+	if (!run_state->local_cache_state.data_available)
+	{
+		LOG(LOG_ERR, "can't send a Serial Notify when no data is available in the cache");
+		pthread_exit(NULL);
+	}
+
 	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->send_pdu.pduType = PDU_SERIAL_NOTIFY;
 	run_state->send_pdu.cacheNonce = run_state->local_cache_state.nonce;
@@ -601,9 +607,12 @@ static void check_global_cache_state(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	if (run_state->local_cache_state.serial_number != tmp_cache_state.serial_number)
+	if (tmp_cache_state.data_available && (
+		!run_state->local_cache_state.data_available ||
+		run_state->local_cache_state.serial_number != tmp_cache_state.serial_number))
 	{
 		run_state->local_cache_state.serial_number = tmp_cache_state.serial_number;
+		run_state->local_cache_state.data_available = tmp_cache_state.data_available;
 		send_notify(run_state);
 	}
 }

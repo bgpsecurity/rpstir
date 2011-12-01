@@ -21,10 +21,18 @@ static bool get_cache_state(struct cache_state * state, void * db)
 		return false;
 	}
 
-	if (getLatestSerialNumber(db, &state->serial_number) != 0)
+	switch (getLatestSerialNumber(db, &state->serial_number))
 	{
-		LOG(LOG_WARNING, "error getting latest serial number");
-		return false;
+		case GET_SERNUM_SUCCESS:
+			state->data_available = true;
+			break;
+		case GET_SERNUM_NONE:
+			LOG(LOG_NOTICE, "no cache data available");
+			state->data_available = false;
+			break;
+		default:
+			LOG(LOG_ERR, "error getting latest serial number");
+			return false;
 	}
 
 	return true;
