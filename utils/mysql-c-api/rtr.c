@@ -186,7 +186,7 @@ int isValidSerNum(MYSQL *connp, uint32_t sn) {
 
 
 /*==============================================================================
- * Precondition:  All rows in rtr_update are valid.
+ * @pre All rows in rtr_update are valid.
 ------------------------------------------------------------------------------*/
 int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
     struct query_state *state;
@@ -322,7 +322,7 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
-    (void) pdu;  // to avoid -Wunused-parameter
+    (void) pdu;  // to silence -Wunused-parameter
 
     // set protocolVersion
     (*pdu)->protocolVersion = RTR_PROTOCOL_VERSION;
@@ -569,7 +569,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 void stopSerialQuery(void *connp, void * query_state) {
-    (void) connp;  // to avoid -Wunused-parameter
+    (void) connp;  // to silence -Wunused-parameter
     free_query_state(query_state);
 
     return;
@@ -581,8 +581,8 @@ void stopSerialQuery(void *connp, void * query_state) {
 int startResetQuery(void *connp, void ** query_state) {
     MYSQL *mysqlp = (MYSQL*) connp;
 
-    (void) mysqlp;  // to avoid -Wunused-parameter  TODO: remove this
-    (void) query_state;  // to avoid -Wunused-parameter  TODO: remove this
+    (void) mysqlp;  // to silence -Wunused-parameter
+    (void) query_state;  // to silence -Wunused-parameter
 
     return (0);
 }
@@ -593,11 +593,11 @@ int startResetQuery(void *connp, void ** query_state) {
 ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         PDU ** pdus, bool * is_done) {
     MYSQL *mysqlp = (MYSQL*) connp;
-    (void) mysqlp;  // to trick -Wunused-parameter
-    (void) query_state;  // to avoid -Wunused-parameter  TODO: remove this
-    (void) max_rows;  // to avoid -Wunused-parameter  TODO: remove this
-    (void) pdus;  // to avoid -Wunused-parameter  TODO: remove this
-    (void) is_done;  // to avoid -Wunused-parameter  TODO: remove this
+    (void) mysqlp;  // to silence -Wunused-parameter
+    (void) query_state;  // to silence -Wunused-parameter
+    (void) max_rows;  // to silence -Wunused-parameter
+    (void) pdus;  // to silence -Wunused-parameter
+    (void) is_done;  // to silence -Wunused-parameter
 
     // Note: all IPvXPrefix PDUs must be announce (not withdrawal).
 
@@ -617,7 +617,7 @@ void stopResetQuery(void *connp, void * query_state) {
 
 /*==============================================================================
  * not currently an API function.  currently for testing
- * Precondition:  table rtr_nonce has exactly 0 or 1 rows.
+ * @pre table rtr_nonce has exactly 0 or 1 rows.
  * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
 ------------------------------------------------------------------------------*/
 int setCacheNonce(void *connp, uint16_t nonce) {
