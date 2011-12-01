@@ -3,9 +3,8 @@ AM_CPPFLAGS = $(DEPS_CFLAGS) -I..
 
 LDADD = ../libutilsdebug.a
 
-noinst_PROGRAMS = queue-test
+check_PROGRAMS = queue-test
 
 queue_test_SOURCES = queue-test.c ../unittest.h
 
-test: queue-test
-	./queue-test
+TESTS = queue-test
