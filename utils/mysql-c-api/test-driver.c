@@ -46,8 +46,13 @@ void useDbConn(void *connp) {
 //    void **ptr = NULL;
 //    startSerialQuery(connp, ptr, 5);
 
+//    char field_str[] = "192.ec.44.55/18(22)";  // not accepted
 //    char field_str[] = "192.168.44.55/18(22)";
-    char field_str[] = "1:2:3:4:5:6:7:8/18(22)";
+//    char field_str[] = "1:2:3:4:5:6:7:8/18(22)";
+    char field_str[] = "fe80:2:3:4:5:6:7:8/18(22)";
+//    char field_str[] = "1:2:0:0:5:6:7:8/18(22)";
+//    char field_str[] = "1:2::5:6:7:8/18(22)";
+//    char field_str[] = "1:0002:3:4:5:6:7:8/18(22)";
     uint family = 0;
     struct in_addr addr4;
     struct in6_addr addr6;

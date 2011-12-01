@@ -239,6 +239,7 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
  * @param field_str has the format:  <address>/<length>(<max_length>)
  * It originates from a database field `ip_addr' and is null terminated
  *     before being passed to this function.
+ * @return 0 on success or an error code on failure.
 ------------------------------------------------------------------------------*/
 int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
         uint *prefix_len, uint *max_len, const char field_str[]) {
@@ -253,12 +254,14 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     size_t max_last;
     size_t i;
 
+    // locate indices of the substrings
     ip_last = strcspn(field_str, "/") - 1;
     prefix_first = strcspn(field_str, "/") + 1;
     prefix_last = strcspn(field_str, "(") - 1;
     max_first = strcspn(field_str, "(") + 1;
     max_last = strcspn(field_str, ")") - 1;
 
+    // check that all expected substring delimiters were found
     size_t in_len = strlen(field_str);
     if (in_len == ip_last ||
             in_len == prefix_first ||
@@ -269,6 +272,7 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
         return (-1);
     }
 
+    // retrieve the substrings
     for (i = 0; i <= ip_last && i < SZ - 1; i++) {
         ip_txt[i] = field_str[i];
     }
@@ -326,15 +330,51 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
     // set cacheNonce
     (*pdu)->cacheNonce = nonce;
 
-    // set ipxPrefixData
-    char *field_str;
+    // collect info to set ipxPrefixData
     MYSQL_ROW row;
 
     row = mysql_fetch_row(result);
-    if (getStringByFieldname(&field_str, result, row, "ip_addr")) {
+
+    // read is_announce from db
+    char *is_announce_str;
+    if (getStringByFieldname(&is_announce_str, result, row, "is_announce")) {
+        LOG(LOG_ERR, "could not read is_announce");
+        return (-1);
+    }
+    uint8_t is_announce;
+    if (strcmp(is_announce_str, "0"))
+        is_announce = 0;
+    else if (strcmp(is_announce_str, "1"))
+        is_announce = 1;
+    else {
+        LOG(LOG_ERR, "unexpected value for is_announce");
+        return (-1);
+    }
+    if (is_announce_str)
+        free (is_announce_str);
+
+    // read asn from db
+    char *asn_str;
+    if (getStringByFieldname(&asn_str, result, row, "asn")) {
+        LOG(LOG_ERR, "could not read asn");
+        return (-1);
+    }
+    uint32_t asn;
+    if (sscanf(asn_str, "%" SCNu32, &asn) < 1) {
+        LOG(LOG_ERR, "unexpected value for is_announce");
+        return (-1);
+    }
+    if (asn_str)
+        free (asn_str);
+
+    // read ip_addr from db
+    char *ip_addr_str;
+    if (getStringByFieldname(&ip_addr_str, result, row, "ip_addr")) {
         LOG(LOG_ERR, "could not read ip_addr");
         return (-1);
     }
+    if (ip_addr_str)
+        free (ip_addr_str);
 
     uint family = 0;
     struct in_addr addr4;
@@ -342,21 +382,44 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
     uint prefix_len = 0;
     uint max_prefix_len = 0;
     if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
-            field_str)) {
+            ip_addr_str)) {
         LOG(LOG_ERR, "could not parse ip_addr");
         return (-1);
     }
 
-    if (field_str)
-        free (field_str);
+    // check prefix lengths and max prefix lengths vs spec
+    if ((family == AF_INET  &&  prefix_len > 32) ||
+            (family == AF_INET6  &&  prefix_len > 128)) {
+        LOG(LOG_ERR, "prefix length is out of spec");
+        return (-1);
+    }
+    if ((family == AF_INET &&  max_prefix_len > 32) ||
+            (family == AF_INET6 &&  max_prefix_len > 128)) {
+        LOG(LOG_ERR, "max prefix length is out of spec");
+        return (-1);
+    }
 
     // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
-    // TODO:  set IPxPrefixData
-    // TODO:  set length
+    // set length
+    // set IPxPrefixData
     if (family == AF_INET) {
         (*pdu)->pduType = PDU_IPV4_PREFIX;
+        (*pdu)->length = htonl(20);
+        (*pdu)->ip4PrefixData.flags = is_announce;
+        (*pdu)->ip4PrefixData.prefixLength = prefix_len;
+        (*pdu)->ip4PrefixData.maxLength = max_prefix_len;
+        (*pdu)->ip4PrefixData.reserved = (uint8_t) 0;
+        (*pdu)->ip4PrefixData.asNumber = htonl(asn);
+        (*pdu)->ip4PrefixData.prefix4 = addr4;
     } else if (family == AF_INET6) {
         (*pdu)->pduType = PDU_IPV6_PREFIX;
+        (*pdu)->length = htonl(32);
+        (*pdu)->ip4PrefixData.flags = is_announce;
+        (*pdu)->ip6PrefixData.prefixLength = prefix_len;
+        (*pdu)->ip6PrefixData.maxLength = max_prefix_len;
+        (*pdu)->ip6PrefixData.reserved = (uint8_t) 0;
+        (*pdu)->ip6PrefixData.asNumber = htonl(asn);
+        (*pdu)->ip6PrefixData.prefix6 = addr6;
     } else {
         LOG(LOG_ERR, "invalid ip family");
         return (-1);
@@ -367,7 +430,7 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
 
 
 /*==============================================================================
- * If error, call pdu_free_array(); else, caller does.
+ * If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
 ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         PDU **_pdus, bool *is_done) {
