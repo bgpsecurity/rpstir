@@ -19,10 +19,7 @@ CLEANFILES = \
 
 ACLOCAL_AMFLAGS = -I build-aux
 
-test-recursive: all
-	$(MAKE) -C utils/tests test
-
-test: all test-recursive
+check-local:
 	cd testcases && ./makeall
 	cd subsystemTests && ./runSubsystemTest.sh 1 9
 	cd subsystemTests && ./runSubsystemTest.sh 2 8
