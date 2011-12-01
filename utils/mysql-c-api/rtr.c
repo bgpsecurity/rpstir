@@ -130,11 +130,27 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
 
 
 /*==============================================================================
+------------------------------------------------------------------------------*/
+int isValidSerNumPrev(void *connp, uint32_t sn) {
+
+    return (0);
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int isValidSerNumData(void *connp, uint32_t sn) {
+
+    return (0);
+}
+
+
+/*==============================================================================
  * @pre serial_num is the first field in the rtr_update.
  * @ret 1 if serial number is found in rtr_update, -1 on error, 0 if serial
  *      number is not found, -2 if no rows are found.
 ------------------------------------------------------------------------------*/
-int isValidSerNum(MYSQL *connp, uint32_t sn) {
+int isValidSerNum(void *connp, uint32_t sn) {
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
     MYSQL_ROW row;

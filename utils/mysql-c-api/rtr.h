@@ -17,13 +17,21 @@ struct query_state;
 
 // <cache_state>
 int getCacheNonce(void *connp, cache_nonce_t * nonce);
+// </cache_state>
 
 
 #define GET_SERNUM_SUCCESS 0  // success, returning latest ser num
 #define GET_SERNUM_ERROR  -1  // some undefined error
 #define GET_SERNUM_NONE   -2  // no error, but db contains no ser nums
 int getLatestSerialNumber(void *connp, serial_number_t * serial);
-// </cache_state>
+
+
+#define VAL_SERNUM_IS_PREV    0  // sn in db.rtr_update.prev_serial_num
+#define VAL_SERNUM_DATA_INCR  1  // sn in db.rtr_update.serial_num
+#define VAL_SERNUM_DATA_FULL  2  // sn in db.rtr_update.serial_num and has_full
+#define VAL_SERNUM_ERR       -1  // some undefined error
+int isValidSerNumPrev(void *connp, uint32_t sn);
+int isValidSerNumData(void *connp, uint32_t sn);
 
 
 // <db>
