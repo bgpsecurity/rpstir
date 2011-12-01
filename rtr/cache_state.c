@@ -16,10 +16,16 @@ static bool get_cache_state(struct cache_state * state, void * db)
 	}
 
 	if (getCacheNonce(db, &state->nonce) != 0)
+	{
+		LOG(LOG_WARNING, "error getting cache nonce");
 		return false;
+	}
 
 	if (getLatestSerialNumber(db, &state->serial_number) != 0)
+	{
+		LOG(LOG_WARNING, "error getting latest serial number");
 		return false;
+	}
 
 	return true;
 }
