@@ -24,10 +24,8 @@
 AM_CFLAGS = -g -Wall -Wextra
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I.. -I../../rtr
 
-LDADD = ../libutils.a libmysqlcapi.a ../../rtr/libpdu.a
-
 noinst_LIBRARIES = libmysqlcapi.a
-bin_PROGRAMS = test-driver
+check_PROGRAMS = test-driver
 
 libmysqlcapi_a_SOURCES = \
 	connect.c connect.h \
@@ -35,3 +33,4 @@ libmysqlcapi_a_SOURCES = \
 	util.c util.h
 
 test_driver_SOURCES = test-driver.c test-driver.h 
+test_driver_LDADD = ../libutils.a libmysqlcapi.a ../../rtr/libpdu.a
