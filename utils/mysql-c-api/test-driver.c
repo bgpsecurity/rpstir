@@ -45,6 +45,25 @@ void useDbConn(void *connp) {
 
 //    void **ptr = NULL;
 //    startSerialQuery(connp, ptr, 5);
+
+//    char field_str[] = "192.168.44.55/18(22)";
+    char field_str[] = "1:2:3:4:5:6:7:8/18(22)";
+    uint family = 0;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uint prefix_len = 0;
+    uint max_prefix_len = 0;
+    printf("sending <%s>\n", field_str);
+    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
+            field_str)) {
+        puts("could not parse ip_addr");
+        return;
+    }
+
+    printf("family is %d\n", family);
+    printf("prefix_len is %u\n", prefix_len);
+    printf("max_prefix_len is %u\n", max_prefix_len);
+    printf("\n");
 }
 
 

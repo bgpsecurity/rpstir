@@ -72,4 +72,8 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 void stopResetQuery(void *connp, void * query_state);
 // </db>
 
+int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
+        uint *prefix_len, uint *max_len, const char field_str[]);
+
+
 #endif

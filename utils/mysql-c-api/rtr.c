@@ -2,6 +2,9 @@
 	Functions used for accessing the RTR database.
 */
 
+#include <arpa/inet.h>
+#include <bits/socket.h>
+
 #include <my_global.h>
 #include <mysql.h>
 
@@ -189,7 +192,7 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
     struct query_state *state;
     uint32_t next_ser_num = 0;
 
-    if (serial != UINT32_MAX)  // TODO: better way to find next-ser-num?
+    if (serial != UINT32_MAX)  // TODO: change to use rtr_update.prev_serial_num
         next_ser_num = serial + 1;
     else
         next_ser_num = 0;
@@ -233,19 +236,131 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
 
 
 /*==============================================================================
+ * @param field_str has the format:  <address>/<length>(<max_length>)
+ * It originates from a database field `ip_addr' and is null terminated
+ *     before being passed to this function.
 ------------------------------------------------------------------------------*/
-int fillPduFromDbRow(PDU *pdu, MYSQL_ROW row) {
-    (void) row;  // to avoid -Wunused-parameter
+int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
+        uint *prefix_len, uint *max_len, const char field_str[]) {
+    const size_t SZ = 40;  // max length of ipv6 string with \0
+    char ip_txt[SZ];
+    char prefix_len_txt[SZ];
+    char max_len_txt[SZ];
+    size_t ip_last;
+    size_t prefix_first;
+    size_t prefix_last;
+    size_t max_first;
+    size_t max_last;
+    size_t i;
+
+    ip_last = strcspn(field_str, "/") - 1;
+    prefix_first = strcspn(field_str, "/") + 1;
+    prefix_last = strcspn(field_str, "(") - 1;
+    max_first = strcspn(field_str, "(") + 1;
+    max_last = strcspn(field_str, ")") - 1;
+
+    size_t in_len = strlen(field_str);
+    if (in_len == ip_last ||
+            in_len == prefix_first ||
+            in_len == prefix_last ||
+            in_len == max_first ||
+            in_len == max_last) {
+        LOG(LOG_ERR, "could not parse ip_addr:  %s", field_str);
+        return (-1);
+    }
+
+    for (i = 0; i <= ip_last && i < SZ - 1; i++) {
+        ip_txt[i] = field_str[i];
+    }
+    ip_txt[i] = '\0';
+
+    for (i = prefix_first; i <= prefix_last && i - prefix_first < SZ - 1; i++) {
+        prefix_len_txt[i - prefix_first] = field_str[i];
+    }
+    prefix_len_txt[i - prefix_first] = '\0';
+
+    for (i = max_first; i <= max_last && i - max_first < SZ - 1; i++) {
+        max_len_txt[i - max_first] = field_str[i];
+    }
+    max_len_txt[i - max_first] = '\0';
+
+    if (strcspn(ip_txt, ".") < strlen(ip_txt)) {
+        *family = AF_INET;
+        if (inet_pton(AF_INET, ip_txt, addr4) < 1) {
+            LOG(LOG_ERR, "could not parse ip address text to in_addr");
+            return (-1);
+        }
+    } else if (strcspn(ip_txt, ":") < strlen(ip_txt)) {
+        *family = AF_INET6;
+        if (inet_pton(AF_INET6, ip_txt, addr6) < 1) {
+            LOG(LOG_ERR, "could not parse ip address text to in6_addr");
+            return (-1);
+        }
+    } else {
+        LOG(LOG_ERR, "could not parse ip_addr.family");
+        return (-1);
+    }
+
+    if (sscanf(prefix_len_txt, "%u", prefix_len) < 1) {
+        LOG(LOG_ERR, "could not parse ip_addr.prefix_length");
+        return (-1);
+    }
+
+    if (sscanf(max_len_txt, "%u", max_len) < 1) {
+        LOG(LOG_ERR, "could not parse ip_addr.max_prefix_length");
+        return (-1);
+    }
+
+    return (0);
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
     (void) pdu;  // to avoid -Wunused-parameter
 
     // set protocolVersion
-    pdu->protocolVersion = RTR_PROTOCOL_VERSION;
-
-    // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
+    (*pdu)->protocolVersion = RTR_PROTOCOL_VERSION;
 
     // set cacheNonce
+    (*pdu)->cacheNonce = nonce;
 
     // set ipxPrefixData
+    char *field_str;
+    MYSQL_ROW row;
+
+    row = mysql_fetch_row(result);
+    if (getStringByFieldname(&field_str, result, row, "ip_addr")) {
+        LOG(LOG_ERR, "could not read ip_addr");
+        return (-1);
+    }
+
+    uint family = 0;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uint prefix_len = 0;
+    uint max_prefix_len = 0;
+    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
+            field_str)) {
+        LOG(LOG_ERR, "could not parse ip_addr");
+        return (-1);
+    }
+
+    if (field_str)
+        free (field_str);
+
+    // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
+    // TODO:  set IPxPrefixData
+    // TODO:  set length
+    if (family == AF_INET) {
+        (*pdu)->pduType = PDU_IPV4_PREFIX;
+    } else if (family == AF_INET6) {
+        (*pdu)->pduType = PDU_IPV6_PREFIX;
+    } else {
+        LOG(LOG_ERR, "invalid ip family");
+        return (-1);
+    }
 
     return (0);
 }
@@ -309,7 +424,6 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
-    MYSQL_ROW row;
     my_ulonglong current_row = 0;
     my_ulonglong last_row = 0;
     int QRY_SZ = 256;
@@ -341,8 +455,12 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         mysql_data_seek(result, current_row);
 
     while (current_row <= last_row  &&  num_pdus < max_rows) {
-        row = mysql_fetch_row(result);
-        fillPduFromDbRow(&pdus[num_pdus++], row);
+        if (fillPduFromDbResult(&(_pdus[num_pdus++]), result, nonce)) {
+            LOG(LOG_ERR, "could not read result set");
+            mysql_free_result(result);
+            pdu_free_array(pdus, max_rows);
+            return (-1);
+        }
         current_row++;
     }
 
