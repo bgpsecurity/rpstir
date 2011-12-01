@@ -121,6 +121,7 @@ int main(int argc, char **argv) {
 	char msg[1024];
 	int sta;
 	uint nonce_count;
+	uint update_had_changes; // whether there are any changes from prevSerialNum to currSerialNum
 	int first_time = 0;
 
 	if (argc != 2)
@@ -237,16 +238,45 @@ int main(int argc, char **argv) {
 	// write the current serial number and time, making the data available
 	if (first_time)
 	{
+		update_had_changes = 1;
+
 		snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, NULL, now(), true);",
 			currSerialNum);
 	}
 	else
 	{
+		sta = newhstmt(connection);
+		checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
+		snprintf(msg, sizeof(msg),
+			"SELECT COUNT(*) > 0 FROM rtr_incremental WHERE serial_num = %u;",
+			currSerialNum);
+		sta = statementscm(connection, msg);
+		checkErr(sta < 0, "Can't query rtr_incremental to find out if there are any changes\n");
+		sta = getuintscm(connection, &update_had_changes);
+		pophstmt(connection);
+		checkErr(sta < 0, "Can't get results of querying rtr_incremental to find out if there are any changes\n");
+
 		snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, %u, now(), true);",
 			currSerialNum, prevSerialNum);
 	}
-	sta = statementscm_no_data(connection, msg);
-	checkErr(sta < 0, "Can't make updates available");
+
+	// msg should now contain a statement to make updates available
+	if (update_had_changes)
+	{
+		sta = statementscm_no_data(connection, msg);
+		checkErr(sta < 0, "Can't make updates available");
+	}
+	else
+	{
+		fprintf(stderr, "Note: data had no changes since the last update, so no update was made.\n");
+
+		snprintf(msg, sizeof(msg), "delete from rtr_full where serial_num = %u;",
+			currSerialNum);
+		sta = statementscm_no_data(connection, msg);
+		checkErr(sta < 0, "Can't delete duplicate data in rtr_full");
+
+		// there's nothing to delete from rtr_incremental
+	}
 
 	// clean up all the data no longer needed
 	// save last two full updates so that no problems at transition
