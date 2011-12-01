@@ -59,6 +59,7 @@ int ch2int(int *out, char in) {
 
 
 /*==============================================================================
+ * TODO: possibly generalize to more numeric types.
 ------------------------------------------------------------------------------*/
 int charp2uint32_t(uint32_t *out, const char *in, int len) {
     const int MAX_LEN = 10;  // decimal digits for type
@@ -172,6 +173,76 @@ int char_arr2uint32_t(uint32_t *out, const char *in, int len) {
     }
 
     *out = (uint32_t) val;
+
+    return (0);
+}
+
+
+/*==============================================================================
+ * @note Caller must free memory returned in first argument.
+ * @ret 0 on success, -1 on failure, 1 on NULL value.
+------------------------------------------------------------------------------*/
+int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char field_name[]) {
+    uint num_fields;
+    int field_no = -1;
+    uint i = 0;
+    MYSQL_FIELD *fields = NULL;
+    ulong *lengths = NULL;
+    ulong len;
+
+    if (row == NULL) {
+        LOG(LOG_ERR, "the argument row is NULL");
+        return (-1);
+    }
+
+    num_fields = mysql_num_fields(result);
+    fields = mysql_fetch_fields(result);
+    for (i = 0; i < num_fields; i++) {
+        if (!strcmp(fields[i].name, field_name)) {
+            field_no = i;
+            break;
+        }
+    }
+    if (field_no == -1) {
+        LOG(LOG_ERR, "could not find field name:  %s", field_name);
+        return (-1);
+    }
+
+    lengths = mysql_fetch_lengths(result);  // mysql allocs the memory
+    len = lengths[field_no];
+
+    *out = (char*) malloc(len + 1);
+    if (!(*out)) {
+        LOG(LOG_ERR, "could not alloc memory");
+        return (-1);
+    }
+
+    (*out)[len] = '\0';
+    for (i = 0; i < len; i++) {
+        (*out)[i] = row[field_no][i];
+    }
+
+//    (void) out;  // to avoid -Wunused-parameter
+    printf("In getString(), *out is %s\n", *out);
+
+    return (0);
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int ipaddr2char(char *out, size_t out_max_sz, MYSQL_ROW row,
+        uint field_num, ulong field_len) {
+    ulong i;
+
+    if (field_len > out_max_sz) {
+        LOG(LOG_ERR, "length of ip_addr field greater than expected");
+    }
+
+    for (i = 0; i < field_len; i++) {
+        *(out + i) = row[field_num][i];
+    }
+    *(out + i + 1) = '\0';
 
     return (0);
 }

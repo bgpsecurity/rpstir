@@ -17,5 +17,7 @@ int deleteAllSerNums(void *connp);
 
 int deleteSerNum(void *connp, uint32_t ser_num);
 
+int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char field_name[]);
+
 
 #endif // _DB_UTIL_H
