@@ -56,21 +56,24 @@ make_serial () {
 	if test x"$PREV_SERIAL" != x; then
 		echo \
 			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)" \
-			"SELECT DISTINCT $PREV_SERIAL, 1, t1.asn, t1.ip_addr" \
+			"SELECT DISTINCT $SERIAL, 1, t1.asn, t1.ip_addr" \
 			"FROM rtr_full AS t1" \
 			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = $PREV_SERIAL AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr" \
 			"WHERE t1.serial_num = $SERIAL AND t2.serial_num IS NULL;" \
 			>> "$COMMAND_FILE"
 		echo \
 			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)" \
-			"SELECT DISTINCT $PREV_SERIAL, 0, t1.asn, t1.ip_addr" \
+			"SELECT DISTINCT $SERIAL, 0, t1.asn, t1.ip_addr" \
 			"FROM rtr_full AS t1" \
 			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = $SERIAL AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr" \
 			"WHERE t1.serial_num = $PREV_SERIAL AND t2.serial_num IS NULL;" \
 			>> "$COMMAND_FILE"
+
+		printf 'INSERT INTO rtr_update VALUES (%u, %u, now(), true);\n' "$SERIAL" "$PREV_SERIAL" >> "$COMMAND_FILE"
+	else
+		printf 'INSERT INTO rtr_update VALUES (%u, NULL, now(), true);\n' "$SERIAL" >> "$COMMAND_FILE"
 	fi
 
-	printf 'INSERT INTO rtr_update VALUES (%u, now());\n' "$SERIAL" >> "$COMMAND_FILE"
 
 	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
 
@@ -84,7 +87,8 @@ drop_serial () {
 
 	printf 'DELETE FROM rtr_update WHERE serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
 	printf 'DELETE FROM rtr_full WHERE serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
-	printf 'DELETE FROM rtr_incremental WHERE serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
+	printf 'DELETE rtr_incremental FROM rtr_incremental LEFT JOIN rtr_update ON rtr_incremental.serial_num = rtr_update.serial_num WHERE rtr_update.prev_serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
+	printf 'UPDATE rtr_update SET prev_serial_num = NULL WHERE prev_serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
 
 	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
 
