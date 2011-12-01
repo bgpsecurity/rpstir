@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
 	int sta;
 	uint nonce_count;
 	uint update_had_changes; // whether there are any changes from prevSerialNum to currSerialNum
+	uint dont_proceed;
 	int first_time = 0;
 
 	if (argc != 2)
@@ -183,6 +184,24 @@ int main(int argc, char **argv) {
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
 	currSerialNum = (prevSerialNum == UINT_MAX) ? 0 : (prevSerialNum + 1);
+
+	if (!first_time)
+	{
+		// make sure we're not about to overwrite currSerialNum, create a loop,
+		// or start a diverging history, even though these should be *really* unlikely
+		sta = newhstmt(connection);
+		checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
+		snprintf(msg, sizeof(msg), "SELECT COUNT(*) > 0 FROM rtr_update WHERE\n"
+			"serial_num = %u OR prev_serial_num = %u OR prev_serial_num = %u;",
+			currSerialNum, currSerialNum, prevSerialNum);
+		sta = statementscm(connection, msg);
+		checkErr(sta < 0, "Can't query rtr_update for unusual corner cases\n");
+		sta = getuintscm(connection, &dont_proceed);
+		pophstmt(connection);
+		checkErr(sta < 0, "Can't get results of querying rtr_update for unusual corner cases\n");
+
+		checkErr(dont_proceed, "Error: rtr_update table is either full or in an unusual state\n");
+	}
 
 	// setup up the query if this is the first time
 	// note that the where string is set to only select valid roa's, where
