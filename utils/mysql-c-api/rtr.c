@@ -350,8 +350,10 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
         LOG(LOG_ERR, "unexpected value for is_announce");
         return (-1);
     }
-    if (is_announce_str)
+    if (is_announce_str) {
         free (is_announce_str);
+        is_announce_str = NULL;
+    }
 
     // read asn from db
     char *asn_str;
@@ -364,8 +366,10 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
         LOG(LOG_ERR, "unexpected value for is_announce");
         return (-1);
     }
-    if (asn_str)
+    if (asn_str) {
         free (asn_str);
+        asn_str = NULL;
+    }
 
     // read ip_addr from db
     char *ip_addr_str;
@@ -373,8 +377,6 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
         LOG(LOG_ERR, "could not read ip_addr");
         return (-1);
     }
-    if (ip_addr_str)
-        free (ip_addr_str);
 
     uint family = 0;
     struct in_addr addr4;
@@ -385,6 +387,10 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
             ip_addr_str)) {
         LOG(LOG_ERR, "could not parse ip_addr");
         return (-1);
+    }
+    if (ip_addr_str) {
+        free (ip_addr_str);
+        ip_addr_str = NULL;
     }
 
     // check prefix lengths and max prefix lengths vs spec
