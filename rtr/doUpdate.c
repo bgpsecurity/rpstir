@@ -146,25 +146,38 @@ int main(int argc, char **argv) {
 	pophstmt(connection);
 	checkErr(sta < 0, "Can't get results of querying rtr_nonce\n");
 	if (nonce_count != 1) {
-		statementscm_no_data(connection, "TRUNCATE TABLE rtr_nonce;");
-		statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
-		statementscm_no_data(connection, "TRUNCATE TABLE rtr_full;");
-		statementscm_no_data(connection, "TRUNCATE TABLE rtr_incremental;");
-		statementscm_no_data(connection, "INSERT INTO rtr_nonce (cache_nonce) VALUES (FLOOR(RAND() * (1 << 16)));");
+		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_nonce;");
+		checkErr(sta < 0, "Can't truncate rtr_nonce");
+
+		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
+		checkErr(sta < 0, "Can't truncate rtr_update");
+
+		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_full;");
+		checkErr(sta < 0, "Can't truncate rtr_full");
+
+		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_incremental;");
+		checkErr(sta < 0, "Can't truncate rtr_incremental");
+
+		sta = statementscm_no_data(connection, "INSERT INTO rtr_nonce (cache_nonce) VALUES (FLOOR(RAND() * (1 << 16)));");
+		checkErr(sta < 0, "Can't generate a cache nonce");
+
 		first_time = 1;
 	}
 
 	// delete any updates that weren't completed
-	statementscm_no_data(connection,
+	sta = statementscm_no_data(connection,
 		 "delete rtr_incremental\n"
 		 "from rtr_incremental\n"
 		 "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
 		 "where rtr_update.serial_num is null;");
-	statementscm_no_data(connection,
+	checkErr(sta < 0, "Can't remove unfinished entries from rtr_incremental");
+
+	sta = statementscm_no_data(connection,
 		 "delete rtr_full\n"
 		 "from rtr_full\n"
 		 "left join rtr_update on rtr_full.serial_num = rtr_update.serial_num\n"
 		 "where rtr_update.serial_num is null;");
+	checkErr(sta < 0, "Can't remove unfinished entries from rtr_full");
 
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
@@ -208,13 +221,17 @@ int main(int argc, char **argv) {
 		snprintf(msg, sizeof(msg), differences_query_fmt,
 			currSerialNum, 1,
 			prevSerialNum, currSerialNum);
-		statementscm_no_data(connection, msg);
+		sta = statementscm_no_data(connection, msg);
+		checkErr(sta < 0, "Can't populate rtr_incremental with announcements from serial number %u to %u",
+			prevSerialNum, currSerialNum);
 
 		// withdrawals
 		snprintf(msg, sizeof(msg), differences_query_fmt,
 			currSerialNum, 0,
 			currSerialNum, prevSerialNum);
-		statementscm_no_data(connection, msg);
+		sta = statementscm_no_data(connection, msg);
+		checkErr(sta < 0, "Can't populate rtr_incremental with withdrawals from serial number %u to %u",
+			prevSerialNum, currSerialNum);
 	}
 
 	// write the current serial number and time, making the data available
@@ -228,7 +245,8 @@ int main(int argc, char **argv) {
 		snprintf(msg, sizeof(msg), "insert into rtr_update values (%u, %u, now(), true);",
 			currSerialNum, prevSerialNum);
 	}
-	statementscm_no_data(connection, msg);
+	sta = statementscm_no_data(connection, msg);
+	checkErr(sta < 0, "Can't make updates available");
 
 	// clean up all the data no longer needed
 	// save last two full updates so that no problems at transition
@@ -236,11 +254,14 @@ int main(int argc, char **argv) {
 	snprintf(msg, sizeof(msg),
 		"update rtr_update set has_full = false where serial_num<>%u and serial_num<>%u;",
 		prevSerialNum, currSerialNum);
-	statementscm_no_data(connection, msg);
+	sta = statementscm_no_data(connection, msg);
+	checkErr(sta < 0, "Can't mark old rtr_full data as no longer available");
+
 	snprintf(msg, sizeof(msg),
 		"delete from rtr_full where serial_num<>%u and serial_num<>%u;",
 		prevSerialNum, currSerialNum);
-	statementscm_no_data(connection, msg);
+	sta = statementscm_no_data(connection, msg);
+	checkErr(sta < 0, "Can't delete old rtr_full data");
 
 	snprintf(msg, sizeof(msg),
 		"delete from rtr_update\n"
@@ -248,19 +269,22 @@ int main(int argc, char **argv) {
 		"and serial_num<>%u and serial_num<>%u;",
 		retentionHours(),
 		prevSerialNum, currSerialNum);
-	statementscm_no_data(connection, msg);
+	sta = statementscm_no_data(connection, msg);
+	checkErr(sta < 0, "Can't delete expired update metadata");
 
-	statementscm_no_data(connection,
+	sta = statementscm_no_data(connection,
 		"update rtr_update as r1\n"
 		"left join rtr_update as r2 on r2.serial_num = r1.prev_serial_num\n"
 		"set r1.prev_serial_num = NULL\n"
 		"where r2.serial_num is null;");
+	checkErr(sta < 0, "Can't mark old rtr_incremental data as no longer available");
 
-	statementscm_no_data(connection,
+	sta = statementscm_no_data(connection,
 		 "delete rtr_incremental\n"
 		 "from rtr_incremental\n"
 		 "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
 		 "where rtr_update.prev_serial_num is null;");
+	checkErr(sta < 0, "Can't delete old rtr_incremental data");
 
 	return 0;
 }
