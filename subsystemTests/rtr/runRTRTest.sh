@@ -126,20 +126,20 @@ init
 
 start_test reset_query_first
 make_serial "" 5 1 30
-echo "reset" | client # all data for serial 5
+echo "reset_query" | client # all data for serial 5
 stop_test reset_query_first
 
 start_test serial_queries
-echo "serial $WRONG_NONCE 5" | client # Cache Reset
-echo "serial $NONCE 5" | client # empty set
+echo "serial_query $WRONG_NONCE 5" | client # Cache Reset
+echo "serial_query $NONCE 5" | client # empty set
 make_serial 5 7 2 32
-echo "serial $NONCE 5" | client # difference from 5 to 7
+echo "serial_query $NONCE 5" | client # difference from 5 to 7
 make_serial 7 8 1 20
 drop_serial 5
-echo "serial $NONCE 5" | client # difference from 5 to 8
+echo "serial_query $NONCE 5" | client # difference from 5 to 8
 drop_serial 7
-echo "serial $NONCE 5" | client # Cache Reset
-echo "serial $NONCE 7" | client # difference from 7 to 8
+echo "serial_query $NONCE 5" | client # Cache Reset
+echo "serial_query $NONCE 7" | client # difference from 7 to 8
 stop_test serial_queries
 
 start_test bad_pdus
@@ -154,5 +154,5 @@ start_test bad_protocol_operation # erroneous use of valid PDUs
 stop_test bad_protocol_operation
 
 start_test reset_query_last
-echo "reset" | client # all data for serial 8
+echo "reset_query" | client # all data for serial 8
 stop_test reset_query_last
