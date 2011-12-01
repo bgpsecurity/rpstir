@@ -18,6 +18,10 @@ struct query_state;
 // <cache_state>
 int getCacheNonce(void *connp, cache_nonce_t * nonce);
 
+
+#define GET_SERNUM_SUCCESS 0  // success, returning latest ser num
+#define GET_SERNUM_ERROR  -1  // some undefined error
+#define GET_SERNUM_NONE   -2  // no error, but db contains no ser nums
 int getLatestSerialNumber(void *connp, serial_number_t * serial);
 // </cache_state>
 

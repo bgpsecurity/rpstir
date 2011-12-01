@@ -95,13 +95,13 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not get latest serial number from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
+        return (GET_SERNUM_ERROR);
     }
 
     if ((result = mysql_store_result(mysqlp)) == NULL) {
         LOG(LOG_ERR, "could not read result set");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
+        return (GET_SERNUM_ERROR);
     }
 
     ulong *lengths;
@@ -113,18 +113,18 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
         if (charp2uint32_t(serial, row[0], lengths[0])) {
             LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
             mysql_free_result(result);
-            return (-1);
+            return (GET_SERNUM_ERROR);
         }
 
         mysql_free_result(result);
-        return (0);
+        return (GET_SERNUM_SUCCESS);
     } else if (num_rows == 0) {
         mysql_free_result(result);
-        return (1);
+        return (GET_SERNUM_NONE);
     } else {
         mysql_free_result(result);
         LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
-        return (-1);
+        return (GET_SERNUM_ERROR);
     }
 }
 
