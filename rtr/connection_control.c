@@ -13,8 +13,6 @@
 #include "connection.h"
 
 
-// TODO: setup pthread cleanup functions so main can cancel us cleanly
-
 struct connection_info {
 	int fd;
 	cxn_semaphore_t * semaphore;
@@ -76,7 +74,44 @@ static void cleanup(void * connections_voidp)
 		return;
 	}
 
-	// TODO
+	Bag_iterator it;
+	struct connection_info * cxn_info;
+
+	if (!Bag_start_iteration(connections))
+	{
+		LOG(LOG_ERR, "error in Bag_start_iteration(connections)");
+	}
+	for (it = Bag_begin(connections);
+		it != Bag_end(connections);
+		it = Bag_iterator_next(connections, it))
+	{
+		cxn_info = (struct connection_info *)Bag_get(connections, it);
+
+		if (cxn_info == NULL)
+		{
+			LOG(LOG_ERR, "found NULL connection info");
+			continue;
+		}
+
+		kill_connection(cxn_info);
+	}
+	for (it = Bag_begin(connections);
+		it != Bag_end(connections);
+		it = Bag_erase(connections, it))
+	{
+		cxn_info = (struct connection_info *)Bag_get(connections, it);
+
+		if (cxn_info == NULL)
+			continue;
+
+		cleanup_connection(cxn_info);
+	}
+	if (!Bag_stop_iteration(connections))
+	{
+		LOG(LOG_ERR, "error in Bag_stop_iteration(connections)");
+	}
+
+	Bag_free(connections);
 }
 
 
