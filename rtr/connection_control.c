@@ -51,11 +51,11 @@ static void cleanup_connection(struct connection_info * cxn_info)
 
 	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
-		ERR_LOG(retval1, errorbuf, "close()");
+		ERR_LOG(errno, errorbuf, "close()");
 
 	retval1 = sem_destroy(cxn_info->semaphore);
 	if (retval1 != 0)
-		ERR_LOG(retval1, errorbuf, "sem_destroy()");
+		ERR_LOG(errno, errorbuf, "sem_destroy()");
 
 	free((void *)cxn_info->semaphore);
 	free((void *)cxn_info);
