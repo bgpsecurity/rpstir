@@ -745,14 +745,14 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
-        fill_pdu_error_report(&pdus[num_pdus++], ERR_NO_DATA, 0, NULL, 0, NULL);
+        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         *is_done = 1;
         return (num_pdus);
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_INFO, "can't update the router from the given serial number");
-        fill_pdu_cache_reset(&pdus[num_pdus++]);
+        fill_pdu_cache_reset(&((*_pdus)[num_pdus++]));
         *is_done = 1;
         return (num_pdus);
     }
@@ -765,14 +765,14 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 
     if (state->no_new_data) {
         LOG(LOG_INFO, "no new data for the router from the given serial number");
-        fill_pdu_cache_response(&pdus[num_pdus++], nonce);
-        fill_pdu_end_of_data(&pdus[num_pdus++], nonce, state->ser_num);
+        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
+        fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
         *is_done = 1;
         return (num_pdus);
     }
 
     if (!state->data_sent) {
-        fill_pdu_cache_response(&pdus[num_pdus++], nonce);
+        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
         state->data_sent = 1;
     }
 
@@ -810,7 +810,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         mysql_data_seek(result, current_row);
 
     while (current_row <= last_row  &&  num_pdus < max_rows) {
-        if (fillPduFromDbResult(_pdus[num_pdus++], result, nonce, 0)) {
+        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 0)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
@@ -835,7 +835,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         } else if (prev_was_null) {
             LOG(LOG_INFO, "serial number became invalid after creating PDUs");
             num_pdus = 0;
-            fill_pdu_error_report(&pdus[num_pdus++], ERR_NO_DATA, 0, NULL, 0, NULL);
+            fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
             *is_done = 1;
             pdu_free_array(pdus, max_rows);
             mysql_free_result(result);
@@ -847,7 +847,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
                 // NOTE:  even though error, still feeding previous results,
                 //     which should be unaffected by this error.
                 LOG(LOG_ERR, "error while checking next serial number");
-                fill_pdu_end_of_data(&pdus[num_pdus++], nonce, state->ser_num);
+                fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
                 *is_done = 1;
                 mysql_free_result(result);
                 return (num_pdus);
@@ -902,7 +902,7 @@ int startResetQuery(void *connp, void ** query_state) {
 //    int prev_was_null = 0;
     int has_full;
     ret = readSerNumAsCurrent(connp, ser_num, 0, NULL, NULL,
-            0, &has_full);
+            1, &has_full);
 //    ret = readSerNumAsCurrent(connp, ser_num, 0, &ser_num_prev, &prev_was_null,
 //            0, &has_full);
     if (ret) {
@@ -951,13 +951,13 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
-        fill_pdu_error_report(&pdus[num_pdus++], ERR_NO_DATA, 0, NULL, 0, NULL);
+        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         *is_done = 1;
         return (num_pdus);
     }
 
     if (!state->data_sent) {
-        fill_pdu_cache_response(&pdus[num_pdus++], nonce);
+        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
         state->data_sent = 1;
     }
 
@@ -994,7 +994,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         mysql_data_seek(result, current_row);
 
     while (current_row <= last_row  &&  num_pdus < max_rows) {
-        if (fillPduFromDbResult(_pdus[num_pdus++], result, nonce, 0)) {
+        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 0)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
@@ -1023,12 +1023,12 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 //        } else if (prev_was_null) {
 //            LOG(LOG_INFO, "serial number became invalid after creating PDUs");
 //            num_pdus = 0;
-//            fill_pdu_error_report(&pdus[num_pdus++], ERR_NO_DATA, 0, NULL, 0, NULL);
+//            fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
 //            *is_done = 1;
 //            mysql_free_result(result);
 //            return (num_pdus);
         } else {
-            fill_pdu_end_of_data(_pdus[num_pdus++], nonce, state->ser_num);
+            fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
             *is_done = 1;
             mysql_free_result(result);
             return (0);
