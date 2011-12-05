@@ -898,16 +898,18 @@ int startResetQuery(void *connp, void ** query_state) {
         return (-1);
     }
 
-    uint32_t ser_num_prev;  // I don't use the value, but the called fcn wants a place to put it.
-    int prev_was_null;
+//    uint32_t ser_num_prev;  // I don't use the value, but the called fcn wants a place to put it.
+//    int prev_was_null = 0;
     int has_full;
-    ret = readSerNumAsCurrent(connp, ser_num, 0, &ser_num_prev, &prev_was_null,
+    ret = readSerNumAsCurrent(connp, ser_num, 0, NULL, NULL,
             0, &has_full);
+//    ret = readSerNumAsCurrent(connp, ser_num, 0, &ser_num_prev, &prev_was_null,
+//            0, &has_full);
     if (ret) {
         LOG(LOG_ERR, "error reading data about latest serial number");
         return (-1);
     }
-    if (prev_was_null  ||  !has_full) {
+    if (!has_full) {
         LOG(LOG_INFO, "data not yet available");
         state->not_ready = 1;
         return (0);
@@ -965,8 +967,8 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     my_ulonglong last_row = 0;
     int QRY_SZ = 256;
     char qry[QRY_SZ];
-    uint32_t prev_ser_num;
-    int prev_was_null;
+//    uint32_t prev_ser_num;
+//    int prev_was_null;
 
     snprintf(qry, QRY_SZ, "select asn, ip_addr from rtr_full "
             "where serial_num=%" PRIu32 " order by asn, ip_addr", state->ser_num);
@@ -1007,20 +1009,24 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         return (num_pdus);
     } else {  // If we're here, current_row > last_row, num_pdus < max_rows
         ret = readSerNumAsCurrent(connp, state->ser_num,
-                0, &prev_ser_num, &prev_was_null,
+                0, NULL, NULL,
                 0, NULL);
+//        ret = readSerNumAsCurrent(connp, state->ser_num,
+//                0, &prev_ser_num, &prev_was_null,
+//                0, NULL);
         if (ret == -1) {
             LOG(LOG_ERR, "error while checking validity of serial number");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
             return (-1);
-        } else if (prev_was_null) {
-            LOG(LOG_INFO, "serial number became invalid after creating PDUs");
-            num_pdus = 0;
-            fill_pdu_error_report(&pdus[num_pdus++], ERR_NO_DATA, 0, NULL, 0, NULL);
-            *is_done = 1;
-            mysql_free_result(result);
-            return (num_pdus);
+            // prev_ser_num shouldn't matter for reset query
+//        } else if (prev_was_null) {
+//            LOG(LOG_INFO, "serial number became invalid after creating PDUs");
+//            num_pdus = 0;
+//            fill_pdu_error_report(&pdus[num_pdus++], ERR_NO_DATA, 0, NULL, 0, NULL);
+//            *is_done = 1;
+//            mysql_free_result(result);
+//            return (num_pdus);
         } else {
             fill_pdu_end_of_data(_pdus[num_pdus++], nonce, state->ser_num);
             *is_done = 1;
