@@ -62,9 +62,9 @@ make_serial () {
 				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
 			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%u.0.%u.0/24(25)'\'');\n' \
 				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%02x::%02x:0/120'\'');\n' \
+			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%x::%x00/120'\'');\n' \
 				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%02x:%02x::/16(127)'\'');\n' \
+			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%x:%x::/32(127)'\'');\n' \
 				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
 		done
 	done
