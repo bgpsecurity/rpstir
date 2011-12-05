@@ -83,25 +83,48 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
 /*==============================================================================
  * @pre Each timestamp in rtr_update occurs in exactly 1 row.
  * @param[out] serial A return parameter for the serial number.
- * @return 0 if latest is found, -1 on error, 1 if no serial number found.
+ * @return 0 if latest is found, -1 on error
 ------------------------------------------------------------------------------*/
-int getLatestSerialNumber(void *connp, serial_number_t *serial) {
+int getLatestSerialNumber(void *connp, serial_number_t *serial,
+        int must_be_valid) {
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
     MYSQL_ROW row;
-    const char qry[] = "select serial_num from rtr_update where create_time="
-            "(select max(create_time) from rtr_update)";
+    char *qry;
+    char qry_any[] = "select serial_num from rtr_update "
+            "where create_time="
+            "    (select max(create_time) "
+            "     from rtr_update)";
+    char qry_must_be_valid[] = "select serial_num from rtr_update "
+            "where create_time="
+            "    (select max(create_time) "
+            "     from "
+            "        (select * from rtr_update "
+            "         where prev_serial_num <> NULL "
+            "         and has_full = 1"
+            "        ) as valids"
+            "    )";
+
+    if (serial == NULL) {
+        LOG(LOG_ERR, "bad input");
+        return (-1);
+    }
+
+    if (must_be_valid)
+        qry = qry_must_be_valid;
+    else
+        qry = qry_any;
 
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not get latest serial number from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (GET_SERNUM_ERROR);
+        return (-1);
     }
 
     if ((result = mysql_store_result(mysqlp)) == NULL) {
         LOG(LOG_ERR, "could not read result set");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (GET_SERNUM_ERROR);
+        return (-1);
     }
 
     ulong *lengths;
@@ -113,43 +136,75 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
         if (charp2uint32_t(serial, row[0], lengths[0])) {
             LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
             mysql_free_result(result);
-            return (GET_SERNUM_ERROR);
+            return (-1);
         }
 
         mysql_free_result(result);
-        return (GET_SERNUM_SUCCESS);
-    } else if (num_rows == 0) {
-        mysql_free_result(result);
-        return (GET_SERNUM_NONE);
+        return (0);
     } else {
         mysql_free_result(result);
         LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
-        return (GET_SERNUM_ERROR);
+        return (-1);
     }
 }
 
 
 /*==============================================================================
-------------------------------------------------------------------------------*/
+ * Probably obsolete.  If not used by Dec 19, 11, then delete
+------------------------------------------------------------------------------
 int isValidSerNumPrev(void *connp, uint32_t sn) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    MYSQL_ROW row;
 
-    return (0);
-}
+    return (VAL_SERNUM_IS_PREV);
+}*/
 
 
 /*==============================================================================
-------------------------------------------------------------------------------*/
+ * Probably obsolete.  If not used by Dec 19, 11, then delete
+------------------------------------------------------------------------------
 int isValidSerNumData(void *connp, uint32_t sn) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+
+    snprintf(qry, QRY_SZ, "select serial_num, has_full from rtr_update "
+            "where serial_num=%" PRIu32, sn);
+
+
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not read rtr_update from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    num_rows = mysql_num_rows(result);
+    if (num_rows == 0) {
+        LOG(LOG_INFO, "rtr_update is empty");
+        mysql_free_result(result);
+        return (-2);
+    }
 
     return (0);
-}
+}*/
 
 
 /*==============================================================================
+ * Probably obsolete.  If not used by Dec 19, 11, then delete
  * @pre serial_num is the first field in the rtr_update.
  * @ret 1 if serial number is found in rtr_update, -1 on error, 0 if serial
  *      number is not found, -2 if no rows are found.
-------------------------------------------------------------------------------*/
+------------------------------------------------------------------------------
 int isValidSerNum(void *connp, uint32_t sn) {
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
@@ -198,20 +253,250 @@ int isValidSerNum(void *connp, uint32_t sn) {
 
     mysql_free_result(result);
     return (0);
+}*/
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int getNumRowsInTable(void *connp, char *table_name) {
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+
+    snprintf(qry, QRY_SZ, "select count(*) from %s", table_name);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not read from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    return ((int) mysql_num_rows(result));
 }
 
 
 /*==============================================================================
+ * @param[in] ser_num_prev The serial_num to find in rtr_update.prev_serial_num.
+ * @param[in] get_ser_num If non-zero, read serial_num.
+ * @param[out] ser_num The value from the db.
+------------------------------------------------------------------------------*/
+int readSerNumAsPrev(void *connp, uint32_t ser_num_prev,
+        int get_ser_num, uint32_t *ser_num){
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+    int num_rows;
+    char *ser_num_str = NULL;
+
+    snprintf(qry, QRY_SZ, "select serial_num, prev_serial_num, has_full "
+            "from rtr_update "
+            "where prev_serial_num=%" PRIu32, ser_num_prev);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not read rtr_update from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    num_rows = mysql_num_rows(result);
+    if (num_rows == 0) {
+        mysql_free_result(result);
+        return (-1);
+    } else if (num_rows > 1) {
+        LOG(LOG_ERR, "unexpected result from rtr_update");
+        mysql_free_result(result);
+        return (-1);
+    }
+
+    if (!get_ser_num) {
+        mysql_free_result(result);
+        return (0);
+    } else {
+        row = mysql_fetch_row(result);
+        if (getStringByFieldname(&ser_num_str, result, row, "serial_num")) {
+            if (ser_num_str) {
+                free (ser_num_str);
+                ser_num_str = NULL;
+            }
+            mysql_free_result(result);
+            return (-1);
+        } else {
+            if (sscanf(ser_num_str, "%" SCNu32, ser_num) < 1) {
+                LOG(LOG_ERR, "unexpected value for serial number");
+                return (-1);
+            }
+            if (ser_num_str) {
+                free (ser_num_str);
+                ser_num_str = NULL;
+            }
+            mysql_free_result(result);
+            return (0);
+        }
+    }
+}
+
+
+/*==============================================================================
+ * @param[in] serial The serial_num to find in rtr_update.serial_num.
+ * @param[in] get_ser_num_prev If non-zero, read prev_serial_num.
+ * @param[out] serial_prev The value from the db.
+ * @param[out] prev_was_null self-explanatory.
+ * @param[in] get_has_full If non-zero, read has_full.
+ * @param[out] has_full The value from the db.
+------------------------------------------------------------------------------*/
+int readSerNumAsCurrent(void *connp, uint32_t serial,
+        int get_ser_num_prev, uint32_t *serial_prev, int *prev_was_null,
+        int get_has_full, int *has_full){
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+    int num_rows;
+
+    snprintf(qry, QRY_SZ, "select serial_num, prev_serial_num, has_full "
+            "from rtr_update "
+            "where serial_num=%" PRIu32, serial);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not read rtr_update from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    num_rows = mysql_num_rows(result);
+    if (num_rows == 0) {
+        mysql_free_result(result);
+        return (-1);
+    } else if (num_rows > 1) {
+        LOG(LOG_ERR, "unexpected result from rtr_update");
+        mysql_free_result(result);
+        return (-1);
+    }
+
+    row = mysql_fetch_row(result);
+
+    char *sn_prev_str = NULL;
+    if (get_ser_num_prev) {
+        if (getStringByFieldname(&sn_prev_str, result, row, "prev_serial_num")) {
+            if (sn_prev_str) {
+                free (sn_prev_str);
+                sn_prev_str = NULL;
+            }
+            mysql_free_result(result);
+            return (-1);
+        } else {
+            if (!strcmp(sn_prev_str, "NULL")) {
+                *prev_was_null = 1;
+                if (sn_prev_str) {
+                    free (sn_prev_str);
+                    sn_prev_str = NULL;
+                }
+                mysql_free_result(result);
+                return (0);
+            } else if (sscanf(sn_prev_str, "%" SCNu32, serial_prev) < 1) {
+                LOG(LOG_ERR, "unexpected value for serial number");
+                if (sn_prev_str) {
+                    free (sn_prev_str);
+                    sn_prev_str = NULL;
+                }
+                mysql_free_result(result);
+                return (-1);
+            }
+        }
+    }
+
+    char *has_full_str = NULL;
+    if (get_has_full) {
+        if (getStringByFieldname(&has_full_str, result, row, "has_full")) {
+            if (has_full_str) {
+                free (has_full_str);
+                has_full_str = NULL;
+            }
+            if (sn_prev_str) {
+                free (sn_prev_str);
+                sn_prev_str = NULL;
+            }
+            mysql_free_result(result);
+            return (-1);
+        } else {
+            if (sscanf(has_full_str, "%d", has_full) < 1) {
+                LOG(LOG_ERR, "unexpected value for has_full");
+                if (has_full_str) {
+                    free (has_full_str);
+                    has_full_str = NULL;
+                }
+                if (sn_prev_str) {
+                    free (sn_prev_str);
+                    sn_prev_str = NULL;
+                }
+                mysql_free_result(result);
+                return (-1);
+            }
+        }
+    }
+
+    if (sn_prev_str) {
+        free (sn_prev_str);
+        sn_prev_str = NULL;
+    }
+    if (has_full_str) {
+        free (has_full_str);
+        has_full_str = NULL;
+    }
+    mysql_free_result(result);
+    return (0);
+}
+
+
+/*==============================================================================
+when deleting from either rtr_full or rtr_incremental, I ensured that the
+conditions for valid serial numbers I wrote above are invalidated before
+deletes, so let me know if you find a problem with those conditions
+
+me: For rtr_incr:
+SELECT serial_num FROM rtr_update WHERE prev_serial_num=sn-router-sent
+So s/ IS NOT NULL/=sn-router-sent/
+
+Dave: more or less
+that query returns the first serial_num to send from rtr_incr to the client
+you then need to repeatedly query rtr_update for the next one until there is no next one
+does that fit your understanding?
+
+me: Yes, that's how I understand using it for deciding what I can send to the router.
+Ah, so before deleting from rtr_incr, you will set the prev_ser_num to NULL in rtr_update?
+
+Dave: yup
+
+me: ok. looks good to me.
+
  * @pre All rows in rtr_update are valid.
 ------------------------------------------------------------------------------*/
 int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
-    struct query_state *state;
-    uint32_t next_ser_num = 0;
-
-    if (serial != UINT32_MAX)  // TODO: change to use rtr_update.prev_serial_num
-        next_ser_num = serial + 1;
-    else
-        next_ser_num = 0;
+    struct query_state *state = NULL;
+    uint32_t serial_next = 0;
+    int ret = 0;
 
     state = calloc(1, sizeof(struct query_state));
     if (!state) {
@@ -226,25 +511,31 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
     state->not_ready = 0;
     *query_state = (void*) state;
 
-    // first check if next-ser-num is valid
-    int ret = isValidSerNum(connp, next_ser_num);
-    if (ret == -2) {
-        state->not_ready = 1;
+    ret = readSerNumAsPrev(connp, serial, 1, &serial_next);
+    if (ret == 0) {  // prepare to feed data
+        state->ser_num = serial_next;
         return (0);
-    }
-    if (ret == 1) {
-        state->ser_num = next_ser_num;
-    } else if (ret == -1) {
+    } else if (ret == -1) {  // some unspecified error
         return (-1);
-    } else {  // if not, then check if given-ser-num is valid
-        ret = isValidSerNum(connp, serial);
-        if (ret == 1) {
-            state->no_new_data = 1;
-        } else if (ret == -1) {
-            return (-1);
-        } else {
-            state->bad_ser_num = 1;
-        }
+    }
+
+    ret = readSerNumAsCurrent(connp, serial, 0, NULL, NULL, 0, NULL);
+    if (ret == 0) {  // no new data
+        state->no_new_data = 1;
+        return (0);
+    } else if (ret == -1) {  // some unspecified error
+        return (-1);
+    }
+
+    ret = getNumRowsInTable(connp, "rtr_update");
+    if (ret == -1) {
+        LOG(LOG_ERR, "could not retrieve number of rows from rtr_update");
+        return (-1);
+    } else if (ret == 0) {  // rtr_update is empty
+        state->not_ready = 1;
+    } else if (ret > 0) {  // rtr_update is not empty,
+        // but the given serial number is not recognized
+        state->bad_ser_num = 1;
     }
 
     return (0);
@@ -460,10 +751,10 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     PDU *pdus = NULL;
     struct query_state *state = (struct query_state*) query_state;
     cache_nonce_t nonce = 0;
+    int ret = 0;
 
     if (max_rows < 2) {
         LOG(LOG_ERR, "max_rows too small");
-        *is_done = 1;
         return (-1);
     }
 
@@ -513,11 +804,12 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     my_ulonglong last_row = 0;
     int QRY_SZ = 256;
     char qry[QRY_SZ];
-    uint32_t next_ser_num = 0;
+    uint32_t next_ser_num;
+    uint32_t prev_ser_num;
+    int prev_was_null;
 
     snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
             "where serial_num=%" PRIu32 " order by asn, ip_addr", state->ser_num);
-    printf("query:  %s\n", qry);
 
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not read rtr_incremental from db");
@@ -554,29 +846,35 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         mysql_free_result(result);
         return (num_pdus);
     } else {  // If we got here, then current_row > last_row.
-        if (isValidSerNum(connp, state->ser_num)) {
-            if (state->ser_num != UINT32_MAX)  // TODO: better way to find next-ser-num?
-                next_ser_num = state->ser_num + 1;
-            else
-                next_ser_num = 0;
-
-            if (isValidSerNum(connp, next_ser_num)) {
-                state->ser_num = next_ser_num;
-                state->first_row = 0;
-                mysql_free_result(result);
-                return (num_pdus);
-            } else {
-                fill_pdu_end_of_data(&pdus[num_pdus++], nonce, state->ser_num);
-                *is_done = 1;
-                mysql_free_result(result);
-                return (num_pdus);
-            }
-        } else {
+        ret = readSerNumAsCurrent(connp, state->ser_num,
+                1, &prev_ser_num, &prev_was_null,
+                0, NULL);
+        if (ret == -1) {
+            LOG(LOG_ERR, "error while checking validity of serial number");
+            return (-1);
+        } else if (prev_was_null) {
             LOG(LOG_INFO, "serial number became invalid after creating PDUs");
             num_pdus = 0;
             // TODO: fill_pdu_error_report(&pdus[num_pdus++], NO_DATA_AVAILABLE);
             *is_done = 1;
             return (num_pdus);
+        } else {
+            // check whether to End or continue with next ser num
+            ret = readSerNumAsPrev(connp, state->ser_num, 1, &next_ser_num);
+            if (ret == -1) {
+                // NOTE:  even though error, still feeding previous results,
+                //     which should be unaffected by this error.
+                LOG(LOG_ERR, "error while checking next serial number");
+                fill_pdu_end_of_data(&pdus[num_pdus++], nonce, state->ser_num);
+                *is_done = 1;
+                mysql_free_result(result);
+                return (num_pdus);
+            } else {
+                state->ser_num = next_ser_num;
+                state->first_row = 0;
+                mysql_free_result(result);
+                return (num_pdus);
+            }
         }
     }
 }
@@ -682,7 +980,7 @@ int addNewSerNum(void *connp, const uint32_t *in) {
 
     if (in) {
         new_ser_num = *in;
-    } else if (getLatestSerialNumber(connp, &latest_ser_num) == 0) {
+    } else if (getLatestSerialNumber(connp, &latest_ser_num, 0) == 0) {
         if (latest_ser_num != 0xffffffff)
             new_ser_num = latest_ser_num + 1;
         else
