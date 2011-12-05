@@ -21,7 +21,7 @@
 
 #SUBDIRS = .
 
-AM_CFLAGS = -g -Wall -Wextra
+AM_CFLAGS = -g -Wall -Wextra -Werror
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I.. -I../../rtr
 
 noinst_LIBRARIES = libmysqlcapi.a

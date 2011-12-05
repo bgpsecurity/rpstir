@@ -332,8 +332,6 @@ static void find_existing_request_to_service(struct run_state * run_state)
 	{
 		did_erase = false;
 
-		// TODO: see if we need to change thread cancelability here
-
 		run_state->request_state = (struct db_request_state *)
 			Bag_get(run_state->db_currently_processing, it);
 
@@ -407,6 +405,8 @@ static bool try_service_new_request(struct run_state * run_state)
 
 static void db_main_loop(struct run_state * run_state)
 {
+	int retval, oldstate;
+
 	wait_on_semaphore(run_state);
 
 	if (run_state->request != NULL ||
@@ -417,8 +417,20 @@ static void db_main_loop(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
+	}
+
 	if (try_service_existing_request(run_state)) return;
 	if (try_service_new_request(run_state)) return;
+
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
+	}
 }
 
 
@@ -427,8 +439,16 @@ static void cleanup(void * run_state_voidp)
 {
 	struct run_state * run_state = (struct run_state *)run_state_voidp;
 
-	// TODO
-	(void)run_state;
+	if (run_state->db != NULL)
+	{
+		disconnectDb(run_state->db);
+		run_state->db = NULL;
+	}
+
+	/* Unfortunately there doesn't seem to be a better option for
+	request, request_state, and response than letting their memory
+	be potentially lost. This is mitigated by making the thread
+	not cancelable when their values are non-null. */
 }
 
 

@@ -19,6 +19,7 @@ struct connection_info {
 	int fd;
 	cxn_semaphore_t * semaphore;
 	pthread_t thread;
+	bool started;
 };
 
 
@@ -30,18 +31,12 @@ static void kill_connection(struct connection_info * cxn_info)
 {
 	assert(cxn_info != NULL);
 
-	int retval1, retval2;
+	int retval1;
 
 	retval1 = pthread_cancel(cxn_info->thread);
-	if (retval1 == 0)
+	if (retval1 != 0 && retval1 != ESRCH)
 	{
-		retval2 = pthread_join(cxn_info->thread, NULL);
-		if (retval2 != 0)
-			ERR_LOG(retval2, errorbuf, "pthread_join()");
-	}
-	else if (retval1 != ESRCH)
-	{
-		LOG(LOG_ERR, "unknown error code from pthread_cancel: %d", retval1);
+		ERR_LOG(retval1, errorbuf, "pthread_cancel()");
 	}
 }
 
@@ -51,13 +46,20 @@ static void cleanup_connection(struct connection_info * cxn_info)
 
 	int retval1;
 
+	if (cxn_info->started)
+	{
+		retval1 = pthread_join(cxn_info->thread, NULL);
+		if (retval1 != 0)
+			ERR_LOG(retval1, errorbuf, "pthread_join()");
+	}
+
 	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
-		ERR_LOG(retval1, errorbuf, "close()");
+		ERR_LOG(errno, errorbuf, "close()");
 
 	retval1 = sem_destroy(cxn_info->semaphore);
 	if (retval1 != 0)
-		ERR_LOG(retval1, errorbuf, "sem_destroy()");
+		ERR_LOG(errno, errorbuf, "sem_destroy()");
 
 	free((void *)cxn_info->semaphore);
 	free((void *)cxn_info);
@@ -176,6 +178,8 @@ void * connection_control_main(void * args_voidp)
 				continue;
 			}
 
+			cxn_info->started = false;
+
 			cxn_info->semaphore = malloc(sizeof(cxn_semaphore_t));
 			if (cxn_info->semaphore == NULL)
 			{
@@ -227,6 +231,7 @@ void * connection_control_main(void * args_voidp)
 				cleanup_connection(cxn_info);
 				continue;
 			}
+			cxn_info->started = true;
 
 			if (!Bag_add(connections, (void *)cxn_info))
 			{
