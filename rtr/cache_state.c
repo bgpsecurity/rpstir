@@ -21,8 +21,7 @@ static bool get_cache_state(struct cache_state * state, void * db)
 		return false;
 	}
 
-	switch (getLatestSerialNumber(db, &state->serial_number,
-	        GET_SERNUM_ONLY_VALIDS))
+	switch (getLatestSerialNumber(db, &state->serial_number))
 	{
 		case GET_SERNUM_SUCCESS:
 			state->data_available = true;

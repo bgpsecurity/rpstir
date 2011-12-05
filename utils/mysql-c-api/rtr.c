@@ -77,41 +77,23 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
 
 
 /*==============================================================================
+ * @note Does not matter if serial_num is not null, or has_full.
  * @pre Each timestamp in rtr_update occurs in exactly 1 row.
  * @param[out] serial A return parameter for the serial number.
- * @param[in] must_be_valid If non-zero, restrict serial to cases that have
- *     prev_serial_num <> NULL and has_full = 1.
- * @return 0 if latest is found, -1 on error
+ * @return 0 if latest is found, a negative integer on error, a different
+ *     negative integer if no rows found (but no error)
 ------------------------------------------------------------------------------*/
-int getLatestSerialNumber(void *connp, serial_number_t *serial,
-        int must_be_valid) {
+int getLatestSerialNumber(void *connp, serial_number_t *serial) {
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
     MYSQL_ROW row;
-    char *qry;
-    char qry_any[] = "select serial_num from rtr_update "
-            "where create_time="
-            "    (select max(create_time) "
-            "     from rtr_update)";
-    char qry_must_be_valid[] = "select serial_num from rtr_update "
-            "where create_time="
-            "    (select max(create_time) "
-            "     from "
-            "        (select * from rtr_update "
-            "         where prev_serial_num <> NULL "
-            "         and has_full = 1"
-            "        ) as valids"
-            "    )";
+    char qry[] = "select serial_num from rtr_update "
+            "order by create_time desc limit 1";
 
     if (serial == NULL) {
         LOG(LOG_ERR, "bad input");
         return (GET_SERNUM_ERR);
     }
-
-    if (must_be_valid)
-        qry = qry_must_be_valid;
-    else
-        qry = qry_any;
 
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not get latest serial number from db");
@@ -139,14 +121,10 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial,
 
         mysql_free_result(result);
         return (GET_SERNUM_SUCCESS);
-    } else if (num_rows == 0) {
+    } else {  // num_rows == 0
         mysql_free_result(result);
         LOG(LOG_INFO, "returned 0 rows for query:  %s", qry);
         return (GET_SERNUM_NONE);
-    } else {
-        mysql_free_result(result);
-        LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
-        return (GET_SERNUM_ERR);
     }
 }
 
@@ -914,7 +892,7 @@ int startResetQuery(void *connp, void ** query_state) {
     state->not_ready = 0;
     *query_state = (void*) state;
 
-    ret = getLatestSerialNumber(connp, &ser_num, 1);
+    ret = getLatestSerialNumber(connp, &ser_num);
     if (ret) {
         LOG(LOG_ERR, "error getting latest serial number");
         return (-1);
@@ -1116,7 +1094,7 @@ int addNewSerNum(void *connp, const uint32_t *in) {
 
     if (in) {
         new_ser_num = *in;
-    } else if (getLatestSerialNumber(connp, &latest_ser_num, 0) == 0) {
+    } else if (getLatestSerialNumber(connp, &latest_ser_num) == 0) {
         if (latest_ser_num != 0xffffffff)
             new_ser_num = latest_ser_num + 1;
         else

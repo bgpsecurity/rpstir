@@ -18,10 +18,7 @@ int getCacheNonce(void *connp, cache_nonce_t * nonce);
 #define GET_SERNUM_SUCCESS 0
 #define GET_SERNUM_ERR -1
 #define GET_SERNUM_NONE -2
-#define GET_SERNUM_ANY 0
-#define GET_SERNUM_ONLY_VALIDS 1
-int getLatestSerialNumber(void *connp, serial_number_t * serial,
-        int must_be_valid);
+int getLatestSerialNumber(void *connp, serial_number_t * serial);
 
 
 // possibly obsolete
