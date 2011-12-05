@@ -222,8 +222,7 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
         (*out)[i] = row[field_no][i];
     }
 
-//    (void) out;  // to avoid -Wunused-parameter
-    printf("In getString(), *out is %s\n", *out);
+    LOG(LOG_DEBUG, "In getString(), *out is %s\n", *out);
 
     return (0);
 }
