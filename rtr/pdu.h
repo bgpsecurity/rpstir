@@ -67,6 +67,8 @@
 #define ERR_UNSUPPORTED_TYPE 5
 #define ERR_UNKNOWN_WITHDRAW 6
 #define ERR_DUPLICATE_ANNOUNCE 7
+#define ERR_IS_FATAL(code) \
+	((code) != ERR_NO_DATA)
 
 
 typedef uint16_t cache_nonce_t;
