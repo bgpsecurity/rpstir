@@ -74,7 +74,7 @@ void stopSerialQuery(void *connp, void * query_state);
 int startResetQuery(void *connp, void ** query_state);
 
 ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
-	PDU ** pdus, bool * is_done);
+	PDU ** _pdus, bool * is_done);
 
 void stopResetQuery(void *connp, void * query_state);
 // </db>

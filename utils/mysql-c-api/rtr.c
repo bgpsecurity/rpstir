@@ -630,39 +630,37 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
-    (void) pdu;  // to silence -Wunused-parameter
-
-    // set protocolVersion
-    (*pdu)->protocolVersion = RTR_PROTOCOL_VERSION;
-
-    // set cacheNonce
-    (*pdu)->cacheNonce = nonce;
+int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
+        int check_is_announce) {
+    pdu->protocolVersion = RTR_PROTOCOL_VERSION;
+    pdu->cacheNonce = nonce;
 
     // collect info to set ipxPrefixData
     MYSQL_ROW row;
-
     row = mysql_fetch_row(result);
 
     // read is_announce from db
-    char *is_announce_str;
-    if (getStringByFieldname(&is_announce_str, result, row, "is_announce")) {
-        LOG(LOG_ERR, "could not read is_announce");
-        return (-1);
-    }
     uint8_t is_announce;
-    if (strcmp(is_announce_str, "0"))
-        is_announce = 0;
-    else if (strcmp(is_announce_str, "1"))
+    char *is_announce_str;
+    if (check_is_announce) {
+        if (getStringByFieldname(&is_announce_str, result, row, "is_announce")) {
+            LOG(LOG_ERR, "could not read is_announce");
+            return (-1);
+        }
+        if (strcmp(is_announce_str, "0"))
+            is_announce = 0;
+        else if (strcmp(is_announce_str, "1"))
+            is_announce = 1;
+        else {
+            LOG(LOG_ERR, "unexpected value for is_announce");
+            return (-1);
+        }
+        if (is_announce_str) {
+            free (is_announce_str);
+            is_announce_str = NULL;
+        }
+    } else
         is_announce = 1;
-    else {
-        LOG(LOG_ERR, "unexpected value for is_announce");
-        return (-1);
-    }
-    if (is_announce_str) {
-        free (is_announce_str);
-        is_announce_str = NULL;
-    }
 
     // read asn from db
     char *asn_str;
@@ -672,7 +670,7 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
     }
     uint32_t asn;
     if (sscanf(asn_str, "%" SCNu32, &asn) < 1) {
-        LOG(LOG_ERR, "unexpected value for is_announce");
+        LOG(LOG_ERR, "unexpected value for asn");
         return (-1);
     }
     if (asn_str) {
@@ -718,23 +716,23 @@ int fillPduFromDbResult(PDU **pdu, MYSQL_RES *result, cache_nonce_t nonce) {
     // set length
     // set IPxPrefixData
     if (family == AF_INET) {
-        (*pdu)->pduType = PDU_IPV4_PREFIX;
-        (*pdu)->length = htonl(20);
-        (*pdu)->ip4PrefixData.flags = is_announce;
-        (*pdu)->ip4PrefixData.prefixLength = prefix_len;
-        (*pdu)->ip4PrefixData.maxLength = max_prefix_len;
-        (*pdu)->ip4PrefixData.reserved = (uint8_t) 0;
-        (*pdu)->ip4PrefixData.asNumber = htonl(asn);
-        (*pdu)->ip4PrefixData.prefix4 = addr4;
+        pdu->pduType = PDU_IPV4_PREFIX;
+        pdu->length = htonl(20);
+        pdu->ip4PrefixData.flags = is_announce;
+        pdu->ip4PrefixData.prefixLength = prefix_len;
+        pdu->ip4PrefixData.maxLength = max_prefix_len;
+        pdu->ip4PrefixData.reserved = (uint8_t) 0;
+        pdu->ip4PrefixData.asNumber = htonl(asn);
+        pdu->ip4PrefixData.prefix4 = addr4;
     } else if (family == AF_INET6) {
-        (*pdu)->pduType = PDU_IPV6_PREFIX;
-        (*pdu)->length = htonl(32);
-        (*pdu)->ip4PrefixData.flags = is_announce;
-        (*pdu)->ip6PrefixData.prefixLength = prefix_len;
-        (*pdu)->ip6PrefixData.maxLength = max_prefix_len;
-        (*pdu)->ip6PrefixData.reserved = (uint8_t) 0;
-        (*pdu)->ip6PrefixData.asNumber = htonl(asn);
-        (*pdu)->ip6PrefixData.prefix6 = addr6;
+        pdu->pduType = PDU_IPV6_PREFIX;
+        pdu->length = htonl(32);
+        pdu->ip4PrefixData.flags = is_announce;
+        pdu->ip6PrefixData.prefixLength = prefix_len;
+        pdu->ip6PrefixData.maxLength = max_prefix_len;
+        pdu->ip6PrefixData.reserved = (uint8_t) 0;
+        pdu->ip6PrefixData.asNumber = htonl(asn);
+        pdu->ip6PrefixData.prefix6 = addr6;
     } else {
         LOG(LOG_ERR, "invalid ip family");
         return (-1);
@@ -834,7 +832,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         mysql_data_seek(result, current_row);
 
     while (current_row <= last_row  &&  num_pdus < max_rows) {
-        if (fillPduFromDbResult(&(_pdus[num_pdus++]), result, nonce)) {
+        if (fillPduFromDbResult(_pdus[num_pdus++], result, nonce, 0)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
@@ -847,18 +845,22 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         state->first_row = current_row;
         mysql_free_result(result);
         return (num_pdus);
-    } else {  // If we got here, then current_row > last_row.
+    } else {  // If we're here, current_row > last_row, num_pdus < max_rows
         ret = readSerNumAsCurrent(connp, state->ser_num,
                 1, &prev_ser_num, &prev_was_null,
                 0, NULL);
         if (ret == -1) {
             LOG(LOG_ERR, "error while checking validity of serial number");
+            pdu_free_array(pdus, max_rows);
+            mysql_free_result(result);
             return (-1);
         } else if (prev_was_null) {
             LOG(LOG_INFO, "serial number became invalid after creating PDUs");
             num_pdus = 0;
             // TODO: fill_pdu_error_report(&pdus[num_pdus++], NO_DATA_AVAILABLE);
             *is_done = 1;
+            pdu_free_array(pdus, max_rows);
+            mysql_free_result(result);
             return (num_pdus);
         } else {
             // check whether to End or continue with next ser num
@@ -895,27 +897,159 @@ void stopSerialQuery(void *connp, void * query_state) {
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int startResetQuery(void *connp, void ** query_state) {
-    MYSQL *mysqlp = (MYSQL*) connp;
+    struct query_state *state = NULL;
+    uint32_t ser_num = 0;
+    int ret = 0;
 
-    (void) mysqlp;  // to silence -Wunused-parameter
-    (void) query_state;  // to silence -Wunused-parameter
+    state = calloc(1, sizeof(struct query_state));
+    if (!state) {
+        LOG(LOG_ERR, "could not alloc for query_state");
+        return (-1);
+    }
+    state->ser_num = 0;
+    state->first_row = 0;
+    state->bad_ser_num = 0;
+    state->data_sent = 0;
+    state->no_new_data = 0;
+    state->not_ready = 0;
+    *query_state = (void*) state;
 
+    ret = getLatestSerialNumber(connp, &ser_num, 1);
+    if (ret) {
+        LOG(LOG_ERR, "error getting latest serial number");
+        return (-1);
+    }
+
+    uint32_t ser_num_prev;  // I don't use the value, but the called fcn wants a place to put it.
+    int prev_was_null;
+    int has_full;
+    ret = readSerNumAsCurrent(connp, ser_num, 1, &ser_num_prev, &prev_was_null,
+            1, &has_full);
+    if (ret) {
+        LOG(LOG_ERR, "error reading data about latest serial number");
+        return (-1);
+    }
+    if (prev_was_null  ||  !has_full) {
+        LOG(LOG_INFO, "data not yet available");
+        state->not_ready = 1;
+        return (0);
+    }
+
+    // data ready to send
     return (0);
 }
 
 
 /*==============================================================================
+ * If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
 ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
-        PDU ** pdus, bool * is_done) {
-    MYSQL *mysqlp = (MYSQL*) connp;
-    (void) mysqlp;  // to silence -Wunused-parameter
-    (void) query_state;  // to silence -Wunused-parameter
-    (void) max_rows;  // to silence -Wunused-parameter
-    (void) pdus;  // to silence -Wunused-parameter
-    (void) is_done;  // to silence -Wunused-parameter
+        PDU ** _pdus, bool * is_done) {
+    size_t num_pdus = 0;
+    PDU *pdus = NULL;
+    struct query_state *state = (struct query_state*) query_state;
+    cache_nonce_t nonce = 0;
+    int ret = 0;
 
-    // Note: all IPvXPrefix PDUs must be announce (not withdrawal).
+    if (max_rows < 2) {
+        LOG(LOG_ERR, "max_rows too small");
+        return (-1);
+    }
+
+    pdus = calloc(max_rows, sizeof(PDU));
+    if (!pdus) {
+        LOG(LOG_ERR, "could not alloc for array of PDU");
+        return (-1);
+    }
+    *_pdus = pdus;
+
+    if (getCacheNonce(connp, &nonce)) {
+        LOG(LOG_ERR, "couldn't get cache nonce");
+        pdu_free_array(pdus, max_rows);
+        return (-1);
+    }
+
+    if (state->not_ready) {
+        LOG(LOG_INFO, "no data is available to send to routers");
+        // TODO: fill_pdu_error_report(_pdus[num_pdus++], NO_DATA_AVAILABLE);
+        *is_done = 1;
+        return (num_pdus);
+    }
+
+    if (!state->data_sent) {
+        fill_pdu_cache_response(&pdus[num_pdus++], nonce);
+        state->data_sent = 1;
+    }
+
+    MYSQL *mysqlp = (MYSQL*) connp;
+    MYSQL_RES *result;
+    my_ulonglong current_row = 0;
+    my_ulonglong last_row = 0;
+    int QRY_SZ = 256;
+    char qry[QRY_SZ];
+    uint32_t prev_ser_num;
+    int prev_was_null;
+
+    snprintf(qry, QRY_SZ, "select asn, ip_addr from rtr_full "
+            "where serial_num=%" PRIu32 " order by asn, ip_addr", state->ser_num);
+
+    if (mysql_query(mysqlp, qry)) {
+        LOG(LOG_ERR, "could not read rtr_full from db");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        pdu_free_array(pdus, max_rows);
+        return (-1);
+    }
+
+    if ((result = mysql_store_result(mysqlp)) == NULL) {
+        LOG(LOG_ERR, "could not read result set");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        pdu_free_array(pdus, max_rows);
+        return (-1);
+    }
+
+    current_row = state->first_row;
+    last_row = mysql_num_rows(result) - 1;
+
+    if (current_row <= last_row)
+        mysql_data_seek(result, current_row);
+
+    while (current_row <= last_row  &&  num_pdus < max_rows) {
+        if (fillPduFromDbResult(_pdus[num_pdus++], result, nonce, 0)) {
+            LOG(LOG_ERR, "could not read result set");
+            mysql_free_result(result);
+            pdu_free_array(pdus, max_rows);
+            return (-1);
+        }
+        current_row++;
+    }
+
+    if (num_pdus == max_rows) {
+        state->first_row = current_row;
+        mysql_free_result(result);
+        return (num_pdus);
+    } else {  // If we're here, current_row > last_row, num_pdus < max_rows
+        ret = readSerNumAsCurrent(connp, state->ser_num,
+                1, &prev_ser_num, &prev_was_null,
+                0, NULL);
+        if (ret == -1) {
+            LOG(LOG_ERR, "error while checking validity of serial number");
+            mysql_free_result(result);
+            pdu_free_array(pdus, max_rows);
+            return (-1);
+        } else if (prev_was_null) {
+            LOG(LOG_INFO, "serial number became invalid after creating PDUs");
+            num_pdus = 0;
+            // TODO: fill_pdu_error_report(_pdus[num_pdus++], NO_DATA_AVAILABLE);
+            *is_done = 1;
+            mysql_free_result(result);
+            return (num_pdus);
+        } else {
+            fill_pdu_end_of_data(_pdus[num_pdus++], nonce, state->ser_num);
+            *is_done = 1;
+            mysql_free_result(result);
+            return (0);
+        }
+    }
 
     return (0);
 }
@@ -924,7 +1058,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 void stopResetQuery(void *connp, void * query_state) {
-    (void) connp;  // to trick -Wunused-parameter
+    (void) connp;  // to silence -Wunused-parameter
     free_query_state(query_state);
 
     return;
