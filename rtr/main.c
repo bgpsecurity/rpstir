@@ -75,8 +75,6 @@ static void cancel_all_db_threads(Bag * db_threads)
 	int retval;
 	pthread_t * thread;
 
-	// TODO: join the threads after cancelling them
-
 	if (!Bag_start_iteration(db_threads))
 	{
 		LOG(LOG_ERR, "error in Bag_start_iteration(db_threads)");
@@ -84,7 +82,7 @@ static void cancel_all_db_threads(Bag * db_threads)
 	}
 	for (it = Bag_begin(db_threads);
 		it != Bag_end(db_threads);
-		it = Bag_erase(db_threads, it))
+		it = Bag_iterator_next(db_threads, it))
 	{
 		thread = Bag_get(db_threads, it);
 
@@ -98,6 +96,21 @@ static void cancel_all_db_threads(Bag * db_threads)
 		if (retval != 0)
 		{
 			ERR_LOG(retval, errorbuf, "pthread_cancel()");
+		}
+	}
+	for (it = Bag_begin(db_threads);
+		it != Bag_end(db_threads);
+		it = Bag_erase(db_threads, it))
+	{
+		thread = Bag_get(db_threads, it);
+
+		if (thread == NULL)
+			continue;
+
+		retval = pthread_join(*thread, NULL);
+		if (retval != 0)
+		{
+			ERR_LOG(retval, errorbuf, "pthread_join()");
 		}
 
 		free((void *)thread);
