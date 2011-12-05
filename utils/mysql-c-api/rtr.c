@@ -21,10 +21,6 @@ struct query_state {
     int no_new_data;   // the given ser_num exists, but its successor does not
     int not_ready;     // no valid ser_nums exist, yet
 };
-//struct _query_state {
-//    uint32_t ser_num;  // ser_num to search for first row to send
-//    uint64_t first_row;  // first row to send.  zero-based
-//};
 
 
 /*==============================================================================
@@ -109,7 +105,7 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial,
 
     if (serial == NULL) {
         LOG(LOG_ERR, "bad input");
-        return (-1);
+        return (GET_SERNUM_ERR);
     }
 
     if (must_be_valid)
@@ -120,13 +116,13 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial,
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not get latest serial number from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
+        return (GET_SERNUM_ERR);
     }
 
     if ((result = mysql_store_result(mysqlp)) == NULL) {
         LOG(LOG_ERR, "could not read result set");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
+        return (GET_SERNUM_ERR);
     }
 
     ulong *lengths;
@@ -138,15 +134,19 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial,
         if (charp2uint32_t(serial, row[0], lengths[0])) {
             LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
             mysql_free_result(result);
-            return (-1);
+            return (GET_SERNUM_ERR);
         }
 
         mysql_free_result(result);
-        return (0);
+        return (GET_SERNUM_SUCCESS);
+    } else if (num_rows == 0) {
+        mysql_free_result(result);
+        LOG(LOG_INFO, "returned 0 rows for query:  %s", qry);
+        return (GET_SERNUM_NONE);
     } else {
         mysql_free_result(result);
         LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
-        return (-1);
+        return (GET_SERNUM_ERR);
     }
 }
 

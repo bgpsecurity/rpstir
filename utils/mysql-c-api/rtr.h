@@ -10,16 +10,16 @@
 #include "pdu.h"
 
 
-struct query_state;
-//struct _query_state;
-//typedef struct _query_state query_state;
-
-
 // <cache_state>
 int getCacheNonce(void *connp, cache_nonce_t * nonce);
 // </cache_state>
 
 
+#define GET_SERNUM_SUCCESS 0
+#define GET_SERNUM_ERR -1
+#define GET_SERNUM_NONE -2
+#define GET_SERNUM_ANY 0
+#define GET_SERNUM_ONLY_VALIDS 1
 int getLatestSerialNumber(void *connp, serial_number_t * serial,
         int must_be_valid);
 
