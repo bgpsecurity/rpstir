@@ -58,9 +58,13 @@ make_serial () {
 
 	for ASN in `seq "$FIRST_ASN" "$LAST_ASN"`; do
 		for IP_LAST_OCTET in `seq 1 "$ASN"`; do
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%u.0.0.%u'\'');\n' \
+			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%u.%u.0.0/16'\'');\n' \
 				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%02x::%02x'\'');\n' \
+			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%u.0.%u.0/24(25)'\'');\n' \
+				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
+			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%02x::%02x:0/120'\'');\n' \
+				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
+			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%02x:%02x::/16(127)'\'');\n' \
 				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
 		done
 	done

@@ -66,13 +66,28 @@ static void cleanup_connection(struct connection_info * cxn_info)
 }
 
 
+static void cleanup(void * connections_voidp)
+{
+	Bag * connections = (Bag *)connections_voidp;
+
+	if (connections == NULL)
+	{
+		LOG(LOG_ERR, "unexpected NULL pointer");
+		return;
+	}
+
+	// TODO
+}
+
+
 void * connection_control_main(void * args_voidp)
 {
 	struct connection_control_main_args * argsp = (struct connection_control_main_args *) args_voidp;
 
 	assert(argsp != NULL);
 
-	int retval;
+	int retval, retval2;
+	int oldstate;
 
 	Bag * connections = Bag_new(false);
 	if (connections == NULL)
@@ -81,6 +96,8 @@ void * connection_control_main(void * args_voidp)
 		return NULL;
 	}
 
+	pthread_cleanup_push(cleanup, (void *)connections);
+
 	Bag_iterator connections_it;
 
 	struct timeval timeout;
@@ -88,6 +105,12 @@ void * connection_control_main(void * args_voidp)
 	int nfds;
 
 	bool did_erase;
+
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, errorbuf, "pthread_setcancelstate()");
+	}
 
 	while (true)
 	{
@@ -125,10 +148,28 @@ void * connection_control_main(void * args_voidp)
 		}
 		Bag_stop_iteration(connections); // return value doesn't really matter here
 
+		retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+		if (retval != 0)
+		{
+			ERR_LOG(retval, errorbuf, "pthread_setcancelstate()");
+		}
+
+		// One the thread has started in the loop, this is the only
+		// place it can be canceled. This should be acceptable because
+		// connection_control is designed to do very little in each
+		// loop iteration and to never block on anything other than
+		// select().
+
 		timeout.tv_sec = 1;
 		timeout.tv_usec = 0;
 
 		retval = select(nfds, &read_fds, NULL, NULL, &timeout);
+
+		retval2 = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+		if (retval2 != 0)
+		{
+			ERR_LOG(retval2, errorbuf, "pthread_setcancelstate()");
+		}
 
 		if (retval < 0)
 		{
@@ -243,4 +284,6 @@ void * connection_control_main(void * args_voidp)
 			LOG(LOG_INFO, "new connection"); // TODO remote socket information (e.g. host:port)
 		}
 	}
+
+	pthread_cleanup_pop(1);
 }
