@@ -876,7 +876,6 @@ void stopSerialQuery(void *connp, void * query_state) {
 ------------------------------------------------------------------------------*/
 int startResetQuery(void *connp, void ** query_state) {
     struct query_state *state = NULL;
-    uint32_t ser_num = 0;
     int ret = 0;
 
     state = calloc(1, sizeof(struct query_state));
@@ -892,21 +891,23 @@ int startResetQuery(void *connp, void ** query_state) {
     state->not_ready = 0;
     *query_state = (void*) state;
 
-    ret = getLatestSerialNumber(connp, &ser_num);
+    ret = getLatestSerialNumber(connp, &state->ser_num);
     if (ret) {
         LOG(LOG_ERR, "error getting latest serial number");
+        if (state) free(state);
         return (-1);
     }
 
 //    uint32_t ser_num_prev;  // I don't use the value, but the called fcn wants a place to put it.
 //    int prev_was_null = 0;
     int has_full;
-    ret = readSerNumAsCurrent(connp, ser_num, 0, NULL, NULL,
+    ret = readSerNumAsCurrent(connp, state->ser_num, 0, NULL, NULL,
             1, &has_full);
 //    ret = readSerNumAsCurrent(connp, ser_num, 0, &ser_num_prev, &prev_was_null,
 //            0, &has_full);
     if (ret) {
         LOG(LOG_ERR, "error reading data about latest serial number");
+        if (state) free(state);
         return (-1);
     }
     if (!has_full) {
