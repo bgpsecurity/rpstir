@@ -30,18 +30,12 @@ static void kill_connection(struct connection_info * cxn_info)
 {
 	assert(cxn_info != NULL);
 
-	int retval1, retval2;
+	int retval1;
 
 	retval1 = pthread_cancel(cxn_info->thread);
-	if (retval1 == 0)
+	if (retval1 != 0 && retval1 != ESRCH)
 	{
-		retval2 = pthread_join(cxn_info->thread, NULL);
-		if (retval2 != 0)
-			ERR_LOG(retval2, errorbuf, "pthread_join()");
-	}
-	else if (retval1 != ESRCH)
-	{
-		LOG(LOG_ERR, "unknown error code from pthread_cancel: %d", retval1);
+		ERR_LOG(retval1, errorbuf, "pthread_cancel()");
 	}
 }
 
@@ -50,6 +44,10 @@ static void cleanup_connection(struct connection_info * cxn_info)
 	assert(cxn_info != NULL);
 
 	int retval1;
+
+	retval1 = pthread_join(cxn_info->thread, NULL);
+	if (retval1 != 0)
+		ERR_LOG(retval1, errorbuf, "pthread_join()");
 
 	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
