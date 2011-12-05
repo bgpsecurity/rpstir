@@ -13,8 +13,6 @@
 
 #define DELIM " \t\n\r"
 
-#define RECV_PREFIX "received "
-
 #define MAX_PDU_SIZE 65536
 #define LINEBUF_SIZE 128
 
@@ -416,7 +414,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 				// more to read
 				break;
 			default:
-				log_msg(LOG_NOTICE, "received invalid PDU");
+				puts("received invalid PDU");
 				return false;
 		}
 
@@ -424,7 +422,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 		{
 			if (pdu->length > MAX_PDU_SIZE)
 			{
-				log_msg(LOG_NOTICE, "received %" PRIu32 "-byte PDU (maximum size is %d)", pdu->length, MAX_PDU_SIZE);
+				printf("received %" PRIu32 "-byte PDU (maximum size is %d)\n", pdu->length, MAX_PDU_SIZE);
 				return false;
 			}
 
@@ -444,6 +442,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 			}
 			else
 			{
+				puts("received partial PDU before remote side closed connection");
 				log_msg(LOG_NOTICE, "remote side closed connection in the middle of sending a PDU");
 			}
 			return false;
@@ -468,7 +467,7 @@ static int do_recv()
 	while (read_pdu(STDIN_FILENO, buffer, &pdu))
 	{
 		pdu_sprint(&pdu, sprint_buffer);
-		log_msg(LOG_INFO, RECV_PREFIX "%s", sprint_buffer);
+		puts(sprint_buffer);
 	}
 
 	return EXIT_SUCCESS;
