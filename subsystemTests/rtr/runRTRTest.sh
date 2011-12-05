@@ -7,13 +7,25 @@ cd "`dirname "$0"`"
 
 SERVER="$RPKI_ROOT/rtr/rtrd"
 CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
-LOGS="rtrd rtr-test-client"
 PORT=1234
 NONCE=42
 WRONG_NONCE=4242
 
-alias client="$CLIENT send | nc -q 1 localhost $PORT | $CLIENT recv"
-alias client_raw="nc -q 1 localhost $PORT | $CLIENT recv"
+client_raw () {
+	SUBTEST_NAME="$1"
+	shift
+	echo "--- $SUBTEST_NAME" | tee -a response.log
+	"$@" | nc -q 1 localhost $PORT | "$CLIENT" recv | tee -a response.log
+}
+
+client () {
+	COMMAND="$1"
+	INPUT_PDU_FILE="`mktemp`"
+	echo "$COMMAND" | "$CLIENT" send > "$INPUT_PDU_FILE"
+	client_raw "$COMMAND" cat "$INPUT_PDU_FILE"
+	rm -f "$INPUT_PDU_FILE"
+}
+
 
 compare () {
 	name="$1"
@@ -98,11 +110,9 @@ drop_serial () {
 start_test () {
 	TEST="$1"
 
-	for LOG in $LOGS; do
-		rm -f "$LOG.log" "$LOG.$TEST.log"
-	done
+	rm -f "response.log" "response.$TEST.log"
 
-	"$SERVER" > rtrd.log 2>&1 &
+	"$SERVER" &
 	SERVER_PID=$!
 	sleep 1
 }
@@ -113,10 +123,8 @@ stop_test () {
 	kill $SERVER_PID
 	wait $SERVER_PID || true
 
-	for LOG in $LOGS; do
-		mv -f "$LOG.log" "$LOG.$TEST.log"
-		compare "$LOG.$TEST.log"
-	done
+	mv -f "response.log" "response.$TEST.log"
+	compare "response.$TEST.log"
 }
 
 
@@ -126,26 +134,26 @@ init
 
 start_test reset_query_first
 make_serial "" 5 1 30
-echo "reset_query" | client # all data for serial 5
+client "reset_query" # all data for serial 5
 stop_test reset_query_first
 
 start_test serial_queries
-echo "serial_query $WRONG_NONCE 5" | client # Cache Reset
-echo "serial_query $NONCE 5" | client # empty set
+client "serial_query $WRONG_NONCE 5" # Cache Reset
+client "serial_query $NONCE 5" # empty set
 make_serial 5 7 2 32
-echo "serial_query $NONCE 5" | client # difference from 5 to 7
+client "serial_query $NONCE 5" # difference from 5 to 7
 make_serial 7 8 1 20
 drop_serial 5
-echo "serial_query $NONCE 5" | client # difference from 5 to 8
+client "serial_query $NONCE 5" # difference from 5 to 8
 drop_serial 7
-echo "serial_query $NONCE 5" | client # Cache Reset
-echo "serial_query $NONCE 7" | client # difference from 7 to 8
+client "serial_query $NONCE 5" # Cache Reset
+client "serial_query $NONCE 7" # difference from 7 to 8
 stop_test serial_queries
 
 start_test bad_pdus
 TOTAL_BAD_PDUS="`./badPDUs.py length`"
 for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
-	./badPDUs.py "$i" | client_raw
+	client_raw "Bad PDU #$i" ./badPDUs.py "$i"
 done
 stop_test bad_pdus
 
@@ -154,5 +162,5 @@ start_test bad_protocol_operation # erroneous use of valid PDUs
 stop_test bad_protocol_operation
 
 start_test reset_query_last
-echo "reset_query" | client # all data for serial 8
+client "reset_query" # all data for serial 8
 stop_test reset_query_last
