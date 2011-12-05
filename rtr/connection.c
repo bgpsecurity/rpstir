@@ -466,6 +466,9 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 
 static void push_to_process_queue(struct run_state * run_state, const PDU * pdu, bool pdu_from_recv_buffer)
 {
+	int retval, oldstate;
+	bool push_successful;
+
 	PDU * pdup = pdu_deepcopy(pdu);
 	if (pdup == NULL)
 	{
@@ -476,11 +479,27 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 		pthread_exit(NULL);
 	}
 
-	// TODO: make the thread temporarily not cancelable so pdup always gets free()d?
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
+	}
 
-	if (!Queue_push(run_state->to_process_queue, (void *)pdup))
+	push_successful = Queue_push(run_state->to_process_queue, (void *)pdup);
+
+	if (!push_successful)
 	{
 		pdu_free(pdup);
+	}
+
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
+	}
+
+	if (!push_successful)
+	{
 		LOG(LOG_ERR, "can't push a PDU onto the to-process queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
