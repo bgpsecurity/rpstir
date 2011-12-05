@@ -171,7 +171,17 @@ void fill_pdu_ipv6_prefix(PDU * pdu, uint8_t flags,
 	uint8_t prefix_length, uint8_t max_length, const struct in6_addr * prefix, as_number_t asn);
 void fill_pdu_end_of_data(PDU * pdu, cache_nonce_t nonce, serial_number_t serial);
 void fill_pdu_cache_reset(PDU * pdu);
-// TODO: fill_pdu_error_report
+
+/**
+	The encapsulated_pdu and error_text parameters are stored in pdu
+	without copying. The calling code should handle any necessary copying.
+
+	If encapsulated_pdu or error_text is NULL, its respective length field
+	must be 0.
+*/
+void fill_pdu_error_report(PDU * pdu, error_code_t code,
+	uint32_t encapsulated_pdu_length, uint8_t * encapsulated_pdu,
+	uint32_t error_text_length, uint8_t * error_text);
 
 /**
 	@param pdu a parsed and valid PDU

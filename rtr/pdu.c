@@ -400,6 +400,20 @@ void fill_pdu_cache_reset(PDU * pdu)
 	_fill_pdu_header_only(pdu, PDU_CACHE_RESET, 0);
 }
 
+void fill_pdu_error_report(PDU * pdu, error_code_t code,
+	uint32_t encapsulated_pdu_length, uint8_t * encapsulated_pdu,
+	uint32_t error_text_length, uint8_t * error_text)
+{
+	_fill_pdu_common(pdu, PDU_ERROR_REPORT,
+		PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH +
+		encapsulated_pdu_length + error_text_length);
+	pdu->errorCode = code;
+	pdu->errorData.encapsulatedPDULength = encapsulated_pdu_length;
+	pdu->errorData.encapsulatedPDU = encapsulated_pdu;
+	pdu->errorData.errorTextLength = error_text_length;
+	pdu->errorData.errorText = error_text;
+}
+
 
 PDU * pdu_deepcopy(const PDU * pdu)
 {
