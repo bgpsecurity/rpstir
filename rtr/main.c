@@ -22,6 +22,18 @@
 #include "db.h"
 #include "connection_control.h"
 
+/*
+	TODO: handle signals properly
+	TODO: make sure other threads handle signals properly
+
+	Before exiting:
+		1. Cancel cxn_ctl
+		2. Join cxn_ctl
+		3. Cancel all db threads
+		4. Join all db threads
+		* Close and free resources.
+*/
+
 
 // this is ok because there's only one main thread
 static char errorbuf[ERROR_BUF_SIZE];
