@@ -19,6 +19,7 @@ struct connection_info {
 	int fd;
 	cxn_semaphore_t * semaphore;
 	pthread_t thread;
+	bool started;
 };
 
 
@@ -45,9 +46,12 @@ static void cleanup_connection(struct connection_info * cxn_info)
 
 	int retval1;
 
-	retval1 = pthread_join(cxn_info->thread, NULL);
-	if (retval1 != 0)
-		ERR_LOG(retval1, errorbuf, "pthread_join()");
+	if (cxn_info->started)
+	{
+		retval1 = pthread_join(cxn_info->thread, NULL);
+		if (retval1 != 0)
+			ERR_LOG(retval1, errorbuf, "pthread_join()");
+	}
 
 	retval1 = close(cxn_info->fd);
 	if (retval1 != 0)
@@ -174,6 +178,8 @@ void * connection_control_main(void * args_voidp)
 				continue;
 			}
 
+			cxn_info->started = false;
+
 			cxn_info->semaphore = malloc(sizeof(cxn_semaphore_t));
 			if (cxn_info->semaphore == NULL)
 			{
@@ -225,6 +231,7 @@ void * connection_control_main(void * args_voidp)
 				cleanup_connection(cxn_info);
 				continue;
 			}
+			cxn_info->started = true;
 
 			if (!Bag_add(connections, (void *)cxn_info))
 			{
