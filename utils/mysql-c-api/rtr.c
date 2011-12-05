@@ -523,7 +523,7 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
 
 
 /*==============================================================================
- * @param field_str has the format:  <address>/<length>(<max_length>)
+ * @param field_str has the format:  <address>/<length>[(<max_length>)]
  * It originates from a database field `ip_addr' and is null terminated
  *     before being passed to this function.
  * @return 0 on success or an error code on failure.
@@ -540,6 +540,7 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     size_t max_first;
     size_t max_last;
     size_t i;
+    int max_found;
 
     // locate indices of the substrings
     ip_last = strcspn(field_str, "/") - 1;
@@ -549,12 +550,19 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     max_last = strcspn(field_str, ")") - 1;
 
     // check that all expected substring delimiters were found
+    // and check whether max_length was included
     size_t in_len = strlen(field_str);
-    if (in_len == ip_last ||
-            in_len == prefix_first ||
-            in_len == prefix_last ||
-            in_len == max_first ||
-            in_len == max_last) {
+    if (in_len != ip_last &&
+            in_len != prefix_first &&
+            in_len != prefix_last &&
+            in_len != max_first &&
+            in_len != max_last) {
+        max_found = 1;
+    } else if (in_len != ip_last &&
+            in_len != prefix_first &&
+            in_len != prefix_last) {
+        max_found = 0;
+    } else {
         LOG(LOG_ERR, "could not parse ip_addr:  %s", field_str);
         return (-1);
     }
@@ -570,10 +578,12 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     }
     prefix_len_txt[i - prefix_first] = '\0';
 
-    for (i = max_first; i <= max_last && i - max_first < SZ - 1; i++) {
-        max_len_txt[i - max_first] = field_str[i];
+    if (max_found) {
+        for (i = max_first; i <= max_last && i - max_first < SZ - 1; i++) {
+            max_len_txt[i - max_first] = field_str[i];
+        }
+        max_len_txt[i - max_first] = '\0';
     }
-    max_len_txt[i - max_first] = '\0';
 
     if (strcspn(ip_txt, ".") < strlen(ip_txt)) {
         *family = AF_INET;
@@ -597,9 +607,16 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
         return (-1);
     }
 
-    if (sscanf(max_len_txt, "%u", max_len) < 1) {
-        LOG(LOG_ERR, "could not parse ip_addr.max_prefix_length");
-        return (-1);
+    if (max_found) {
+        if (sscanf(max_len_txt, "%u", max_len) < 1) {
+            LOG(LOG_ERR, "could not parse ip_addr.max_prefix_length");
+            return (-1);
+        }
+    } else {
+        if (*family == AF_INET)
+            *max_len = 32;
+        else
+            *max_len = 128;
     }
 
     return (0);
