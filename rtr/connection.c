@@ -546,6 +546,7 @@ static void read_and_handle_pdu(struct run_state * run_state)
 static void handle_response(struct run_state * run_state)
 {
 	size_t i;
+	bool stop_after_responding = false;
 
 	if (run_state->response == NULL)
 	{
@@ -565,6 +566,12 @@ static void handle_response(struct run_state * run_state)
 
 	for (i = 0; i < run_state->response->num_PDUs; ++i)
 	{
+		if (run_state->response->PDUs[i].pduType == PDU_ERROR_REPORT &&
+			ERR_IS_FATAL(run_state->response->PDUs[i].errorCode))
+		{
+			stop_after_responding = true;
+		}
+
 		send_pdu(run_state, &run_state->response->PDUs[i]);
 	}
 
@@ -578,6 +585,7 @@ static void handle_response(struct run_state * run_state)
 	{
 		run_state->state = READY;
 		while (run_state->state == READY &&
+			!stop_after_responding &&
 			Queue_trypop(run_state->to_process_queue, (void **)&run_state->pdup))
 		{
 			handle_pdu(run_state, run_state->pdup, false);
@@ -585,6 +593,11 @@ static void handle_response(struct run_state * run_state)
 			pdu_free(run_state->pdup);
 			run_state->pdup = NULL;
 		}
+	}
+
+	if (stop_after_responding)
+	{
+		pthread_exit(NULL);
 	}
 }
 
