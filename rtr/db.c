@@ -332,8 +332,6 @@ static void find_existing_request_to_service(struct run_state * run_state)
 	{
 		did_erase = false;
 
-		// TODO: see if we need to change thread cancelability here
-
 		run_state->request_state = (struct db_request_state *)
 			Bag_get(run_state->db_currently_processing, it);
 
