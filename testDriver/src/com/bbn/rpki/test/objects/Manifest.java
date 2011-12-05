@@ -26,11 +26,24 @@ public class Manifest extends CMS {
     EE_cert eeCert;
   }
 
+  /** Manifest number */
   public final int manNum;
+
+  /** The date of this update  */
   public final Calendar thisupdate;
+
+  /** The date of the next expected update */
   public final Calendar nextupdate;
+
+  /** Information about the files in this manifest */
   public final List<String> fileList;
   
+  /**
+   * Construct a new manifest
+   * 
+   * @param parent
+   * @param myFactory
+   */
   public Manifest(CA_Object parent, Factory myFactory) {
     this(parent, myFactory, new S(parent, myFactory));
   }

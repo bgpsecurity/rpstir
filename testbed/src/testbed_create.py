@@ -236,7 +236,7 @@ def create_children(ca_node, repo_size):
 #   and functionality is correctly working. SPACED not TABBED function
 #
 def main():
-        fileName = 'test.ini'
+        fileName = 'small.ini'
 
         configuration_parser(FACTORIES,fileName)
         print FACTORIES

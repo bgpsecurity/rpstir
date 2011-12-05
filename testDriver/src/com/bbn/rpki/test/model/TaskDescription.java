@@ -3,7 +3,6 @@
  */
 package com.bbn.rpki.test.model;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,14 +21,12 @@ import org.jdom.Element;
  */
 public class TaskDescription extends XMLBase {
 
-  private static final String TAG_SCRIPT_FILE = "script-file";
   private static final String TAG_DESCRIPTION = "description";
   private static final String ATTR_NAME = "name";
   private static final String TAG_ARG_DESCRIPTION = "arg-description";
   
   private String name;
   private final String description;
-  private File scriptFile;
   private final List<ArgDescription> argDescriptions = new ArrayList<ArgDescription>();
   /**
    * @param name
@@ -47,7 +44,6 @@ public class TaskDescription extends XMLBase {
   public TaskDescription(Element element) {
     this.name = element.getAttributeValue(ATTR_NAME);
     this.description = element.getChildText(TAG_DESCRIPTION);
-    this.scriptFile = new File(element.getChildText(TAG_SCRIPT_FILE));
     List<Element> argDescriptionElements = getChildren(element, TAG_ARG_DESCRIPTION);
     for (Element argDescriptionElement : argDescriptionElements) {
       ArgDescription argDescription = new ArgDescription(argDescriptionElement);
@@ -63,9 +59,6 @@ public class TaskDescription extends XMLBase {
     Element descriptionElement = new Element(TAG_DESCRIPTION);
     descriptionElement.setText(description);
     element.addContent(descriptionElement);
-    Element scriptFileElement = new Element(TAG_SCRIPT_FILE);
-    scriptFileElement.setText(scriptFile.toString());
-    element.addContent(scriptFileElement);
     for (ArgDescription argDescription : argDescriptions) {
       Element argDescriptionElement = new Element(TAG_ARG_DESCRIPTION);
       argDescription.toXML(argDescriptionElement);
@@ -106,20 +99,6 @@ public class TaskDescription extends XMLBase {
    */
   public void addArgDescription(ArgDescription argDescription) {
     argDescriptions.add(argDescription);
-  }
-  
-  /**
-   * @return the scriptFile
-   */
-  public File getScriptFile() {
-    return scriptFile;
-  }
-  
-  /**
-   * @param scriptFile
-   */
-  public void setScriptFile(File scriptFile) {
-    this.scriptFile = scriptFile;
   }
   
   /**

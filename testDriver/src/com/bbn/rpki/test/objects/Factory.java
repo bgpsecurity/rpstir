@@ -13,10 +13,13 @@ import java.util.List;
  */
 public class Factory extends FactoryBase {
 
+  /** Initial allocation requests that should be made */
   public List<Pair> asList;
 
+  /** Initial allocation requests that should be made */
   public List<Pair> ipv4List;
 
+  /** Initial allocation requests that should be made */
   public List<Pair> ipv6List;
 
 
@@ -58,6 +61,9 @@ public class Factory extends FactoryBase {
     return RangeAllocator.allocate(ipv4Everything, ipv4List, false);
   }
   
+  /**
+   * @see com.bbn.rpki.test.objects.FactoryBase#getIPV6RangeList()
+   */
   @Override
   public IPRangeList getIPV6RangeList() {
     IPRangeList ipv6Everything = new IPRangeList(IPRangeType.ipv6);
@@ -66,6 +72,9 @@ public class Factory extends FactoryBase {
     return RangeAllocator.allocate(ipv6Everything, ipv6List, false);
   }
   
+  /**
+   * @see com.bbn.rpki.test.objects.FactoryBase#getASRangeList()
+   */
   @Override
   public IPRangeList getASRangeList() {
     IPRangeList asEverything = new IPRangeList(IPRangeType.as);

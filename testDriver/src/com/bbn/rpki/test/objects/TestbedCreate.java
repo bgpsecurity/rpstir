@@ -21,7 +21,7 @@ import org.ini4j.Wini;
  *
  * @author RTomlinson
  */
-public class Main implements Constants {
+public class TestbedCreate implements Constants {
   enum Option {
     childspec,
     ipv4list,

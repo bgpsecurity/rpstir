@@ -16,13 +16,13 @@ public class EE_Object extends Allocator {
   private final IPRangeList ipv4Resources;
   private final IPRangeList ipv6Resources;
   private final IPRangeList asResources;
-  private final String bluePrintName;
-  private final FactoryBase myFactory;
+  final String bluePrintName;
+  final FactoryBase myFactory;
   final CA_Object parent;
-  private final List<EE_Object> children;
-  public final EE_cert certificate;
-  private final String SIA_path;
-  private final int id;
+  final List<EE_Object> children;
+  final EE_cert certificate;
+  final String SIA_path;
+  final int id;
   final String path_ROA;
  
   EE_Object(Factory myFactory,CA_Object parent) {

@@ -25,9 +25,10 @@ public class IANAFactory extends FactoryBase {
     super(bluePrintName, childSpec, serverName, breakAway, ttl, subjKeyFile);
   }
   
-  public IPRangeList ipv4List = new IPRangeList(IPRangeType.ipv4);
-  public IPRangeList ipv6List = new IPRangeList(IPRangeType.ipv6);
-  public IPRangeList asList = new IPRangeList(IPRangeType.as);
+  IPRangeList ipv4List = new IPRangeList(IPRangeType.ipv4);
+  IPRangeList ipv6List = new IPRangeList(IPRangeType.ipv6);
+  IPRangeList asList = new IPRangeList(IPRangeType.as);
+  
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#getIPV4RangeList()
    */

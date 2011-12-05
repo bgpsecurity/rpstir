@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * <Enter the description of this type here>
+ * Holds a list of ranges representing an allocation, free list, etc.
  *
  * @author RTomlinson
  */
@@ -64,7 +64,8 @@ public class IPRangeList extends ArrayList<Range> {
   }
   
   /**
-   * @param i
+   * @param size 
+   * @param version 
    */
   public IPRangeList(int size, IPRangeType version) {
     super(size);
@@ -85,18 +86,21 @@ public class IPRangeList extends ArrayList<Range> {
     return ipVersion;
   }
   
+  /**
+   * @see java.util.AbstractCollection#toString()
+   */
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     for (Range range : this) {
-      
+      sb.append(range);
     }
     return sb.toString();
   }
 
   /**
-   * @param zero
-   * @param bigInteger
+   * @param min 
+   * @param max 
    */
   public void addRange(BigInteger min, BigInteger max) {
     add(new Range(min, max, ipVersion));

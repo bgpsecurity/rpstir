@@ -20,10 +20,10 @@ public abstract class FactoryBase {
    * time to live in days
    */
   protected int ttl;
-  public String subjKeyFile;
-  public String serverName;
-  public boolean breakAway;
-  public String SIA_path;
+  String subjKeyFile;
+  String serverName;
+  boolean breakAway;
+  String SIA_path;
 
   final List<Pair> childSpec;
 
