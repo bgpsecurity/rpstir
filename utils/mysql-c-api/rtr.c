@@ -83,6 +83,8 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
 /*==============================================================================
  * @pre Each timestamp in rtr_update occurs in exactly 1 row.
  * @param[out] serial A return parameter for the serial number.
+ * @param[in] must_be_valid If non-zero, restrict serial to cases that have
+ *     prev_serial_num <> NULL and has_full = 1.
  * @return 0 if latest is found, -1 on error
 ------------------------------------------------------------------------------*/
 int getLatestSerialNumber(void *connp, serial_number_t *serial,
