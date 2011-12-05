@@ -361,7 +361,7 @@ static int do_send()
 	{
 		if (fgets(linebuf, LINEBUF_SIZE, stdin) == NULL)
 		{
-			return EXIT_FAILURE;
+			return EXIT_SUCCESS;
 		}
 
 		tok = strtok(linebuf, DELIM);
