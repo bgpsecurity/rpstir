@@ -542,12 +542,12 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     size_t i;
     int max_found;
 
-    // locate indices of the substrings
-    ip_last = strcspn(field_str, "/") - 1;
-    prefix_first = strcspn(field_str, "/") + 1;
-    prefix_last = strcspn(field_str, "(") - 1;
-    max_first = strcspn(field_str, "(") + 1;
-    max_last = strcspn(field_str, ")") - 1;
+    // locate indices of the substrings' delimiters
+    ip_last = strcspn(field_str, "/");
+    prefix_first = strcspn(field_str, "/");
+    prefix_last = strcspn(field_str, "(");
+    max_first = strcspn(field_str, "(");
+    max_last = strcspn(field_str, ")");
 
     // check that all expected substring delimiters were found
     // and check whether max_length was included
@@ -560,12 +560,19 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
         max_found = 1;
     } else if (in_len != ip_last &&
             in_len != prefix_first &&
-            in_len != prefix_last) {
+            in_len == prefix_last) {
         max_found = 0;
     } else {
         LOG(LOG_ERR, "could not parse ip_addr:  %s", field_str);
         return (-1);
     }
+
+    // adjust indices off of the delimiters and onto the substrings
+    ip_last -= 1;
+    prefix_first += 1;
+    prefix_last -= 1;
+    max_first += 1;
+    max_last -= 1;
 
     // retrieve the substrings
     for (i = 0; i <= ip_last && i < SZ - 1; i++) {
@@ -614,9 +621,9 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
         }
     } else {
         if (*family == AF_INET)
-            *max_len = 32;
+            *max_len = *prefix_len;
         else
-            *max_len = 128;
+            *max_len = *prefix_len;
     }
 
     return (0);
