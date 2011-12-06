@@ -15,7 +15,7 @@ client_raw () {
 	SUBTEST_NAME="$1"
 	shift
 	echo "--- $SUBTEST_NAME" | tee -a response.log
-	"$@" | nc localhost $PORT | "$CLIENT" recv | tee -a response.log
+	"$@" | nc localhost $PORT | "$CLIENT" recv_one | tee -a response.log
 }
 
 client () {

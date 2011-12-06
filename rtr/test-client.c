@@ -105,6 +105,7 @@ static void do_help(const char * argv0)
 	fprintf(stderr, "    %s [-h | --help]    Print this help text.\n", argv0);
 	fprintf(stderr, "    %s send             Run the sending end of a connection.\n", argv0);
 	fprintf(stderr, "    %s recv             Run the receiving end of a connection.\n", argv0);
+	fprintf(stderr, "    %s recv_one         As above, but quit after receiving one full response.\n", argv0);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "    $ %s send | nc <rtr server host> <rtr server port> | %s recv\n", argv0, argv0);
 	fprintf(stderr, "\n");
@@ -458,7 +459,7 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 	return false;
 }
 
-static int do_recv()
+static int do_recv(bool quit_after_response)
 {
 	char sprint_buffer[PDU_SPRINT_BUFSZ];
 	uint8_t buffer[MAX_PDU_SIZE];
@@ -468,6 +469,31 @@ static int do_recv()
 	{
 		pdu_sprint(&pdu, sprint_buffer);
 		puts(sprint_buffer);
+
+		if (quit_after_response)
+		{
+			switch (pdu.pduType)
+			{
+				// expected PDU types that don't end a response
+				case PDU_CACHE_RESPONSE:
+				case PDU_IPV4_PREFIX:
+				case PDU_IPV6_PREFIX:
+					break;
+
+				// expected PDU types that do end a response
+				case PDU_END_OF_DATA:
+				case PDU_CACHE_RESET:
+				case PDU_ERROR_REPORT:
+
+				// unexpected PDU types
+				case PDU_SERIAL_NOTIFY:
+				case PDU_SERIAL_QUERY:
+				case PDU_RESET_QUERY:
+
+				default:
+					return EXIT_SUCCESS;
+			}
+		}
 	}
 
 	return EXIT_SUCCESS;
@@ -497,7 +523,11 @@ int main(int argc, char ** argv)
 	}
 	else if (strcmp(argv[1], "recv") == 0)
 	{
-		return do_recv();
+		return do_recv(false);
+	}
+	else if (strcmp(argv[1], "recv_one") == 0)
+	{
+		return do_recv(true);
 	}
 	else
 	{
