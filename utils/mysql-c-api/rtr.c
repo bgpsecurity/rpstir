@@ -298,7 +298,7 @@ int readSerNumAsPrev(void *connp, uint32_t ser_num_prev,
     num_rows = mysql_num_rows(result);
     if (num_rows == 0) {
         mysql_free_result(result);
-        return (-1);
+        return (1);
     } else if (num_rows > 1) {
         LOG(LOG_ERR, "unexpected result from rtr_update");
         mysql_free_result(result);
