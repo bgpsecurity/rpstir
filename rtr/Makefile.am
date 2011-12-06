@@ -46,7 +46,6 @@ rtrd_SOURCES = \
 	connection.c connection.h \
 	connection_control.c connection_control.h \
 	db.c db.h \
-	logging.h \
 	main.c \
 	semaphores.h
 rtrd_LDADD = libpdu.a ../utils/libutilsdebug.a ../utils/mysql-c-api/libmysqlcapi.a # TODO: switch to libutils.a before merging into master
