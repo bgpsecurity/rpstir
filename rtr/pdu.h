@@ -70,6 +70,10 @@
 #define ERR_IS_FATAL(code) \
 	((code) != ERR_NO_DATA)
 
+/**
+	NOTE: all values in structs are stored in host byte order.
+	The functions parse_pdu and dump_pdu will handle byte order issues.
+*/
 
 typedef uint16_t cache_nonce_t;
 typedef uint16_t error_code_t;

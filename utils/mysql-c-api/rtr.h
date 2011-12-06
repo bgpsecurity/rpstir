@@ -42,17 +42,20 @@ int startSerialQuery(void *connp, void ** query_state, serial_number_t serial);
 		so that subsequent calls don't return the same data.
 	@param num_rows The maximum number of rows to fetch.
 	@param pdus A return parameter for an array of PDUs with the results.
+		This is only filled in if the function returns a postive number.
+		The rest of this paragraph only applies when this function returns a nonnegative number.
 		This array must be free()d with pdu_free_array() when it's no longer needed.
-		On the first call to serialQueryGetNext(), this array must start with
-		a Cache Response, Cache Reset, or Error Report PDU as appropriate.
-		If is_done is set to true or an error code is returned,
-		this array must end with either an End of Data or Error Report PDU.
+		On the first successful call to serialQueryGetNext(), this array must
+		start with a Cache Response, Cache Reset, or Error Report PDU as appropriate.
+		If is_done is set to true, this must end with a PDU that the client
+		will understand to indicate the end of a response, such as Error Report
+		or End of Data. Note that if the function returns 1, the previous two
+		sentences can refer to the same PDU.
 	@param is_done A return parameter for whether the query finished or not.
-	@return A nonnegative number of rows returned on success,
+	@return A nonnegative number of PDUs returned on success,
 		or a negative error code on failure. Zero is returned only
 		if is_done is set to true, but note that is_done may be true
-		for any return value and must be true for any fatal error
-		code.
+		for any return value and must be true for any error code.
 */
 ssize_t serialQueryGetNext(void *connp, void * query_state, size_t max_rows,
 	PDU ** _pdus, bool * is_done);
