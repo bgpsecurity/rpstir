@@ -1046,7 +1046,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         } else {
             fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
             mysql_free_result(result);
-            return (0);
+            return (num_pdus);
         }
     }
 
