@@ -15,7 +15,7 @@ client_raw () {
 	SUBTEST_NAME="$1"
 	shift
 	echo "--- $SUBTEST_NAME" | tee -a response.log
-	"$@" | nc -w 5 localhost $PORT | "$CLIENT" recv_one | tee -a response.log
+	"$@" | nc -w 15 localhost $PORT | "$CLIENT" recv_one | tee -a response.log
 }
 
 client () {
@@ -142,15 +142,21 @@ client "reset_query" # all data for serial 5
 stop_test reset_query_first
 
 start_test serial_queries
+echo '--- expected:  Cache Reset ---'
 client "serial_query $WRONG_NONCE 5" # Cache Reset
+echo '--- expected:  empty set ---'
 client "serial_query $NONCE 5" # empty set
 make_serial 5 7 2 6
+echo '--- expected:  difference from 5 to 7 ---'
 client "serial_query $NONCE 5" # difference from 5 to 7
 make_serial 7 8 1 3
 drop_serial 5
+echo '--- expected:  difference from 5 to 8 ---'
 client "serial_query $NONCE 5" # difference from 5 to 8
 drop_serial 7
+echo '--- expected:  Cache Reset ---'
 client "serial_query $NONCE 5" # Cache Reset
+echo '--- expected:  difference from 7 to 8 ---'
 client "serial_query $NONCE 7" # difference from 7 to 8
 stop_test serial_queries
 
