@@ -74,22 +74,6 @@ static void stop_query(struct db_request_state * rq, void * db)
 	}
 }
 
-static void free_request_state(struct db_request_state * rq, void * db)
-{
-	if (rq == NULL)
-		return;
-
-	if (rq->request == NULL)
-	{
-		free(rq);
-		return;
-	}
-
-	stop_query(rq, db);
-
-	free(rq);
-}
-
 
 struct run_state {
 	db_semaphore_t * semaphore;
@@ -219,9 +203,11 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 {
 	if (run_state->request_state->request->cancel_request)
 	{
+		stop_query(run_state->request_state, run_state->db);
+
 		send_empty_response(run_state);
 
-		free_request_state(run_state->request_state, run_state->db);
+		free(run_state->request_state);
 		run_state->request_state = NULL;
 		return;
 	}
@@ -234,7 +220,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		{
 			LOG(LOG_ERR, "error in start_query (error code %d)", retval);
 			send_error(run_state, ERR_INTERNAL_ERROR);
-			free_request_state(run_state->request_state, run_state->db);
+			free(run_state->request_state);
 			run_state->request_state = NULL;
 			return;
 		}
@@ -258,7 +244,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		run_state->response->num_PDUs = (size_t)retval;
 	}
 
-	if (is_done)
+	if (is_done || retval < 0)
 	{
 		stop_query(run_state->request_state, run_state->db);
 	}
@@ -268,7 +254,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		// TODO: check for specific error codes
 		LOG(LOG_ERR, "error in query_get_next (error code %zd)", retval);
 		send_error(run_state, ERR_INTERNAL_ERROR);
-		free_request_state(run_state->request_state, run_state->db);
+		free(run_state->request_state);
 		run_state->request_state = NULL;
 		return;
 	}
@@ -277,7 +263,7 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 
 	if (is_done)
 	{
-		free_request_state(run_state->request_state, run_state->db);
+		free(run_state->request_state);
 		run_state->request_state = NULL;
 	}
 	else
@@ -285,8 +271,9 @@ static void service_request(struct run_state * run_state, bool is_new_request)
 		if (!Bag_add(run_state->db_currently_processing, (void *)run_state->request_state))
 		{
 			LOG(LOG_ERR, "can't add a request state to the currently processing bag");
+			stop_query(run_state->request_state, run_state->db);
 			send_error(run_state, ERR_INTERNAL_ERROR);
-			free_request_state(run_state->request_state, run_state->db);
+			free(run_state->request_state);
 			run_state->request_state = NULL;
 			return;
 		}
