@@ -137,16 +137,16 @@ init
 # Comments after queries indicate what's expected to be returned.
 
 start_test reset_query_first
-make_serial "" 5 1 30
+make_serial "" 5 1 4
 client "reset_query" # all data for serial 5
 stop_test reset_query_first
 
 start_test serial_queries
 client "serial_query $WRONG_NONCE 5" # Cache Reset
 client "serial_query $NONCE 5" # empty set
-make_serial 5 7 2 32
+make_serial 5 7 2 6
 client "serial_query $NONCE 5" # difference from 5 to 7
-make_serial 7 8 1 20
+make_serial 7 8 1 3
 drop_serial 5
 client "serial_query $NONCE 5" # difference from 5 to 8
 drop_serial 7
