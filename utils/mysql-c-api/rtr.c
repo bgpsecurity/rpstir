@@ -266,6 +266,8 @@ int getNumRowsInTable(void *connp, char *table_name) {
  * @param[in] ser_num_prev The serial_num to find in rtr_update.prev_serial_num.
  * @param[in] get_ser_num If non-zero, read serial_num.
  * @param[out] ser_num The value from the db.
+ * @ret 0 if returning a value in ser_num, -1 for an unspecified error,
+ *     1 if not returning a value in ser_num (but also no error)
 ------------------------------------------------------------------------------*/
 int readSerNumAsPrev(void *connp, uint32_t ser_num_prev,
         int get_ser_num, uint32_t *ser_num){
@@ -305,7 +307,7 @@ int readSerNumAsPrev(void *connp, uint32_t ser_num_prev,
 
     if (!get_ser_num) {
         mysql_free_result(result);
-        return (0);
+        return (1);
     } else {
         row = mysql_fetch_row(result);
         if (getStringByFieldname(&ser_num_str, result, row, "serial_num")) {
@@ -338,6 +340,8 @@ int readSerNumAsPrev(void *connp, uint32_t ser_num_prev,
  * @param[out] prev_was_null self-explanatory.
  * @param[in] get_has_full If non-zero, read has_full.
  * @param[out] has_full The value from the db.
+ * @ret 0 if ser num found and returning data, -1 if unspecified error,
+ *     1 if ser num not found (but no error)
 ------------------------------------------------------------------------------*/
 int readSerNumAsCurrent(void *connp, uint32_t serial,
         int get_ser_num_prev, uint32_t *serial_prev, int *prev_was_null,
@@ -368,7 +372,7 @@ int readSerNumAsCurrent(void *connp, uint32_t serial,
     num_rows = mysql_num_rows(result);
     if (num_rows == 0) {
         mysql_free_result(result);
-        return (-1);
+        return (1);
     } else if (num_rows > 1) {
         LOG(LOG_ERR, "unexpected result from rtr_update");
         mysql_free_result(result);
@@ -451,26 +455,6 @@ int readSerNumAsCurrent(void *connp, uint32_t serial,
 
 
 /*==============================================================================
-when deleting from either rtr_full or rtr_incremental, I ensured that the
-conditions for valid serial numbers I wrote above are invalidated before
-deletes, so let me know if you find a problem with those conditions
-
-me: For rtr_incr:
-SELECT serial_num FROM rtr_update WHERE prev_serial_num=sn-router-sent
-So s/ IS NOT NULL/=sn-router-sent/
-
-Dave: more or less
-that query returns the first serial_num to send from rtr_incr to the client
-you then need to repeatedly query rtr_update for the next one until there is no next one
-does that fit your understanding?
-
-me: Yes, that's how I understand using it for deciding what I can send to the router.
-Ah, so before deleting from rtr_incr, you will set the prev_ser_num to NULL in rtr_update?
-
-Dave: yup
-
-me: ok. looks good to me.
-
  * @pre All rows in rtr_update are valid.
 ------------------------------------------------------------------------------*/
 int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
@@ -492,17 +476,21 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
     *query_state = (void*) state;
 
     ret = readSerNumAsPrev(connp, serial, 1, &serial_next);
-    if (ret == 0) {  // prepare to feed data
+    if (ret == 0) {  // ser num found (as prev)
         state->ser_num = serial_next;
         return (0);
+    } else if (ret == 1) {  // ser num not found (as prev)
+        // continue after this if-block
     } else if (ret == -1) {  // some unspecified error
         return (-1);
     }
 
     ret = readSerNumAsCurrent(connp, serial, 0, NULL, NULL, 0, NULL);
-    if (ret == 0) {  // no new data
+    if (ret == 0) {  // ser num found (as current)
         state->no_new_data = 1;
         return (0);
+    } else if (ret == 1) {  // ser num not found (as current)
+        // continue after this if-block
     } else if (ret == -1) {  // some unspecified error
         return (-1);
     }
@@ -861,9 +849,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
             return (-1);
         } else if (prev_was_null) {
             LOG(LOG_INFO, "serial number became invalid after creating PDUs");
-            num_pdus = 0;
             fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-            pdu_free_array(pdus, max_rows);
             mysql_free_result(result);
             return (num_pdus);
         } else {
