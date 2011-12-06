@@ -542,6 +542,8 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     size_t i;
     int max_found;
 
+    LOG(LOG_DEBUG, "ip_addr is %s", field_str);
+
     // locate indices of the substrings' delimiters
     ip_last = strcspn(field_str, "/");
     prefix_first = strcspn(field_str, "/");
@@ -719,21 +721,21 @@ int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
     // set IPxPrefixData
     if (family == AF_INET) {
         pdu->pduType = PDU_IPV4_PREFIX;
-        pdu->length = htonl(20);
+        pdu->length = 20;
         pdu->ip4PrefixData.flags = is_announce;
         pdu->ip4PrefixData.prefixLength = prefix_len;
         pdu->ip4PrefixData.maxLength = max_prefix_len;
         pdu->ip4PrefixData.reserved = (uint8_t) 0;
-        pdu->ip4PrefixData.asNumber = htonl(asn);
+        pdu->ip4PrefixData.asNumber = asn;
         pdu->ip4PrefixData.prefix4 = addr4;
     } else if (family == AF_INET6) {
         pdu->pduType = PDU_IPV6_PREFIX;
-        pdu->length = htonl(32);
+        pdu->length = 32;
         pdu->ip4PrefixData.flags = is_announce;
         pdu->ip6PrefixData.prefixLength = prefix_len;
         pdu->ip6PrefixData.maxLength = max_prefix_len;
         pdu->ip6PrefixData.reserved = (uint8_t) 0;
-        pdu->ip6PrefixData.asNumber = htonl(asn);
+        pdu->ip6PrefixData.asNumber = asn;
         pdu->ip6PrefixData.prefix6 = addr6;
     } else {
         LOG(LOG_ERR, "invalid ip family");
@@ -745,7 +747,8 @@ int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
 
 
 /*==============================================================================
- * If error, I call pdu_free_array(); else, caller does.
+ * @note see rtr.h about when to set is_done to 0 or 1.
+ * @note If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
 ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         PDU **_pdus, bool *is_done) {
@@ -754,6 +757,8 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     struct query_state *state = (struct query_state*) query_state;
     cache_nonce_t nonce = 0;
     int ret = 0;
+
+    *is_done = 1;
 
     if (max_rows < 2) {
         LOG(LOG_ERR, "max_rows too small");
@@ -770,14 +775,12 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        *is_done = 1;
         return (num_pdus);
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_INFO, "can't update the router from the given serial number");
         fill_pdu_cache_reset(&((*_pdus)[num_pdus++]));
-        *is_done = 1;
         return (num_pdus);
     }
 
@@ -791,7 +794,6 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         LOG(LOG_INFO, "no new data for the router from the given serial number");
         fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
         fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-        *is_done = 1;
         return (num_pdus);
     }
 
@@ -846,6 +848,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     if (num_pdus == max_rows) {
         state->first_row = current_row;
         mysql_free_result(result);
+        *is_done = 0;
         return (num_pdus);
     } else {  // If we're here, current_row > last_row, num_pdus < max_rows
         ret = readSerNumAsCurrent(connp, state->ser_num,
@@ -860,7 +863,6 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
             LOG(LOG_INFO, "serial number became invalid after creating PDUs");
             num_pdus = 0;
             fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-            *is_done = 1;
             pdu_free_array(pdus, max_rows);
             mysql_free_result(result);
             return (num_pdus);
@@ -872,13 +874,13 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
                 //     which should be unaffected by this error.
                 LOG(LOG_ERR, "error while checking next serial number");
                 fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-                *is_done = 1;
                 mysql_free_result(result);
                 return (num_pdus);
             } else {
                 state->ser_num = next_ser_num;
                 state->first_row = 0;
                 mysql_free_result(result);
+                *is_done = 0;
                 return (num_pdus);
             }
         }
@@ -956,6 +958,8 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     cache_nonce_t nonce = 0;
     int ret = 0;
 
+    *is_done = 1;
+
     if (max_rows < 2) {
         LOG(LOG_ERR, "max_rows too small");
         return (-1);
@@ -977,7 +981,6 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        *is_done = 1;
         return (num_pdus);
     }
 
@@ -992,8 +995,6 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     my_ulonglong last_row = 0;
     int QRY_SZ = 256;
     char qry[QRY_SZ];
-//    uint32_t prev_ser_num;
-//    int prev_was_null;
 
     snprintf(qry, QRY_SZ, "select asn, ip_addr from rtr_full "
             "where serial_num=%" PRIu32 " order by asn, ip_addr", state->ser_num);
@@ -1031,30 +1032,19 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     if (num_pdus == max_rows) {
         state->first_row = current_row;
         mysql_free_result(result);
+        *is_done = 0;
         return (num_pdus);
     } else {  // If we're here, current_row > last_row, num_pdus < max_rows
         ret = readSerNumAsCurrent(connp, state->ser_num,
                 0, NULL, NULL,
                 0, NULL);
-//        ret = readSerNumAsCurrent(connp, state->ser_num,
-//                0, &prev_ser_num, &prev_was_null,
-//                0, NULL);
         if (ret == -1) {
             LOG(LOG_ERR, "error while checking validity of serial number");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
             return (-1);
-            // prev_ser_num shouldn't matter for reset query
-//        } else if (prev_was_null) {
-//            LOG(LOG_INFO, "serial number became invalid after creating PDUs");
-//            num_pdus = 0;
-//            fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-//            *is_done = 1;
-//            mysql_free_result(result);
-//            return (num_pdus);
         } else {
             fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-            *is_done = 1;
             mysql_free_result(result);
             return (0);
         }

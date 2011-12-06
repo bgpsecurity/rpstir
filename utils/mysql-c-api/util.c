@@ -222,8 +222,6 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
         (*out)[i] = row[field_no][i];
     }
 
-    LOG(LOG_DEBUG, "In getString(), *out is %s\n", *out);
-
     return (0);
 }
 

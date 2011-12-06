@@ -22,16 +22,16 @@ void useDbConn(void *connp) {
 
 //    setCacheNonce(connp, 3434);
 
-    int ret;
-    uint32_t sn = 0;
-    ret = getLatestSerialNumber(connp, &sn, 0);
-    if (ret == 0) {
-        printf("serial number found:  %" PRIu32 "\n", sn);
-    } else if (ret == 1) {
-        puts("no serial numbers in the db\n");
-    } else if (ret == -1) {
-        puts("some error occurred\n");
-    }
+//    int ret;
+//    uint32_t sn = 0;
+//    ret = getLatestSerialNumber(connp, &sn, 0);
+//    if (ret == 0) {
+//        printf("serial number found:  %" PRIu32 "\n", sn);
+//    } else if (ret == 1) {
+//        puts("no serial numbers in the db\n");
+//    } else if (ret == -1) {
+//        puts("some error occurred\n");
+//    }
 
 //    uint32_t ser_num = 0xfffffffc;
 //    addNewSerNum(connp, &ser_num);
@@ -47,28 +47,29 @@ void useDbConn(void *connp) {
 //    startSerialQuery(connp, ptr, 5);
 
 //    char field_str[] = "192.ec.44.55/18(22)";  // not accepted
-//    char field_str[] = "192.168.44.55/18(22)";
+    char field_str[] = "192.168.44.55/18(22)";
+//    char field_str[] = "192.168.44.55/18";
 //    char field_str[] = "1:2:3:4:5:6:7:8/18(22)";
 //    char field_str[] = "fe80:2:3:4:5:6:7:8/18(22)";
 //    char field_str[] = "1:2:0:0:5:6:7:8/18(22)";
 //    char field_str[] = "1:2::5:6:7:8/18(22)";
 //    char field_str[] = "1:0002:3:4:5:6:7:8/18(22)";
-//    uint family = 0;
-//    struct in_addr addr4;
-//    struct in6_addr addr6;
-//    uint prefix_len = 0;
-//    uint max_prefix_len = 0;
-//    printf("sending <%s>\n", field_str);
-//    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
-//            field_str)) {
-//        puts("could not parse ip_addr");
-//        return;
-//    }
-//
-//    printf("family is %d\n", family);
-//    printf("prefix_len is %u\n", prefix_len);
-//    printf("max_prefix_len is %u\n", max_prefix_len);
-//    printf("\n");
+    uint family = 0;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uint prefix_len = 0;
+    uint max_prefix_len = 0;
+    printf("sending <%s>\n", field_str);
+    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
+            field_str)) {
+        puts("could not parse ip_addr");
+        return;
+    }
+
+    printf("family is %d\n", family);
+    printf("prefix_len is %u\n", prefix_len);
+    printf("max_prefix_len is %u\n", max_prefix_len);
+    printf("\n");
 }
 
 
