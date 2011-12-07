@@ -391,6 +391,13 @@ static bool try_service_new_request(struct run_state * run_state)
 }
 
 
+static void try_service_request(struct run_state * run_state)
+{
+	if (try_service_existing_request(run_state)) return;
+	if (try_service_new_request(run_state)) return;
+}
+
+
 static void db_main_loop(struct run_state * run_state)
 {
 	int retval, oldstate;
@@ -411,8 +418,7 @@ static void db_main_loop(struct run_state * run_state)
 		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
 	}
 
-	if (try_service_existing_request(run_state)) return;
-	if (try_service_new_request(run_state)) return;
+	try_service_request(run_state);
 
 	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
 	if (retval != 0)
