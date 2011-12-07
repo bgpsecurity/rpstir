@@ -146,7 +146,6 @@ CMS signed objects, generic (using ROAs)
 538 SigInfoUnSigAttrs        # has unsigned attribute
 539 SigInfoNoSig             # no signature
 540 SigInfo2Sig              # has two signatures
-541 SigInfoNoSigAlg          # has no signature algorithm
 542 SigInfoWrongSigAlg       # has wrong signature algorithm
 543 SigInfoNoHashAlg         # had no hash algorithm
 

@@ -195,7 +195,6 @@ ${single_CMS_cmd} CMS 537 SigInfoAttrs2BinSigTime
 ${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs
 ${single_CMS_cmd} CMS 539 SigInfoNoSig
 ${single_CMS_cmd} CMS 540 SigInfo2Sig
-${single_CMS_cmd} CMS 541 SigInfoNoSigAlg
 ${single_CMS_cmd} CMS 542 SigInfoWrongSigAlg
 ${single_CMS_cmd} CMS 543 SigInfoNoHashAlg
 

@@ -56,17 +56,16 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier
         crls [1] IMPLICIT RevocationInfoChoices OPTIONAL, 
         signerInfos SignerInfos }
 
-      CMSVersion ::= INTEGER (3..3)
+      CMSVersion ::= INTEGER 
         {
---	v0 (0),
---	v1 (1),
+	v0 (0),
+	v1 (1),
 	v3 (3)
---      } (v3 | 3)
-        }
+        } 
     
-      DigestAlgorithmIdentifiers ::= SET (SIZE(1..1)) OF CMSAlgorithmIdentifier
+      DigestAlgorithmIdentifiers ::= SET OF CMSAlgorithmIdentifier
 
-      CertificateSet ::= SET (SIZE (0..1)) OF Certificate
+      CertificateSet ::= SET  OF Certificate
 
       CertificateChoices ::= CHOICE {
         certificate Certificate }
@@ -167,7 +166,7 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier
       id-signingTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 5 }
       id-binSigningTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 16.2.46 }
 
-      SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+      SignedAttributes ::= SET SIZE (0..MAX) OF Attribute
 
       UnsignedAttributes ::= SET SIZE (0..0) OF Attribute
 
@@ -175,7 +174,7 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier
         attrType OBJECT IDENTIFIER TABLE AttrTable,
         attrValues AttributeValues }
 
-      AttributeValues ::= SET SIZE (1..1) OF ANY DEFINED BY attrType IN Attribute
+      AttributeValues ::= SET OF ANY DEFINED BY attrType IN Attribute
 
     AttrTable ::= TABLE {
       contentType  id-contentTypeAttr OBJECT IDENTIFIER,

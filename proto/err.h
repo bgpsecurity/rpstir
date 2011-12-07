@@ -73,8 +73,8 @@
 #define ERR_SCM_INVALASN    -44         /* ASN.1 library error */
 #define ERR_SCM_NOTEE       -45         /* not an EE cert */
 #define ERR_SCM_BADFLAGS    -46         /* cert flags don't match cert type */
-#define ERR_SCM_BADVERS     -47         /* bad X509 profile version */
-#define ERR_SCM_NCEXT       -48         /* critical extension was marked non-crit */
+#define ERR_SCM_BADCERTVERS -47         /* bad certificate version */
+#define ERR_SCM_NCEXT       -48         /* extension must be critical */
 #define ERR_SCM_NOTCA       -49         /* cA boolean should have been set */
 #define ERR_SCM_BADPATHLEN  -50         /* pathlen should not have been present */
 #define ERR_SCM_NOBC        -51         /* missing basic constraints */
@@ -113,7 +113,7 @@
 #define ERR_SCM_BADAF       -84         /* bad address family */
 #define ERR_SCM_BADDA       -85         /* bad digest algorithm */
 #define ERR_SCM_BADCT       -86         /* bad content type */
-#define ERR_SCM_BADATTR     -87         /* bad attributes */
+#define ERR_SCM_UNSIGATTR   -87         /* unsigned attributes */
 #define ERR_SCM_INVALFAM    -88         /* invalid address family */
 #define ERR_SCM_NOSIG       -89         /* no signature */
 #define ERR_SCM_DUPSIG      -90         /* duplicate signature */
@@ -125,7 +125,7 @@
 #define ERR_SCM_BCPRES      -96         /* basic constraints present in EE cert */
 #define ERR_SCM_BADSIGINFO  -97         /* error in SignerInfo */
 #define ERR_SCM_BADPARACERT -98         /* error making paracert */
-#define ERR_SCM_BADRANGE    -99         /* invalid IP or AS numbers */
+#define ERR_SCM_BADIPRANGE  -99         /* invalid IP numbers */
 #define ERR_SCM_BADSKIBLOCK -100        /* invalid constraints entry */
 #define ERR_SCM_USECONFLICT -101        /* conflicting usages */
 #define ERR_SCM_NOSKIFILE   -102        /* can't open constraints file */
@@ -144,8 +144,28 @@
 #define ERR_SCM_INVALAKI    -115        /* invalid AKI */
 #define ERR_SCM_CRLDPNMRS   -116        /* no rsync URI in CRLDP */
 #define ERR_SCM_BADSERNUM   -117        /* bad serial number */
-
-#define ERR_SCM_MAXERR      -117
+#define ERR_SCM_HASCRL      -118        /* should not have CRL */
+#define ERR_SCM_CRYPTLIB    -119        /* error starting Cryptlib */
+#define ERR_SCM_BADHASHALG  -120        /* bad hash algorithm */
+#define ERR_SCM_BADNUMDALG  -121        /* bad number of digest algorithms */
+#define ERR_SCM_NUMSIGINFO  -122        /* bad number of signer infos */
+#define ERR_SCM_SIGINFOVER  -123        /* invalid signer infos version */
+#define ERR_SCM_SIGINFOSID  -124        /* invalid signer info sid */
+#define ERR_SCM_SIGINFOTIM  -125        /* invalid signer info time */
+#define ERR_SCM_BADCMSVER   -126        /* invalid CMS version */
+#define ERR_SCM_BADMSGDIGEST -127       /* invalid message digest */
+#define ERR_SCM_BADSIGATTRS -128        /* invalid signed attributes */
+#define ERR_SCM_BADCONTTYPE -129        /* invalid content type */
+#define ERR_SCM_BINSIGTIME  -130        /* invalid binary signing time */
+#define ERR_SCM_BADSIGALG   -131        /* invalid signature algorithm */
+#define ERR_SCM_BADROAVER   -132        /* invalid ROA version */
+#define ERR_SCM_BADMANVER   -133        /* invalid manifest version */
+#define ERR_SCM_BADASRANGE  -134        /* invalid AS numbers */
+#define ERR_SCM_BADASNUM    -135        /* AS number outside range */ 
+#define ERR_SCM_NOIPADDR    -136        /* no IP addresses */
+#define ERR_SCM_NOASNUM     -137        /* no AS numbers */
+#define ERR_SCM_ROAIPTOOBIG -138        /* ROA IP addresses too big */
+#define ERR_SCM_MAXERR      -138
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
