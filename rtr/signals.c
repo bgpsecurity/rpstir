@@ -29,16 +29,28 @@ void handle_signals(void (*handler)(int))
 		sigaction(signals[i], &action, NULL);
 }
 
-void block_signals()
+static void block_unblock_signals(bool block)
 {
 	int retval;
 	sigset_t set;
 
 	initialize_sigset(&set);
 
-	retval = pthread_sigmask(SIG_BLOCK, &set, NULL);
+	retval = pthread_sigmask(block ? SIG_BLOCK : SIG_UNBLOCK, &set, NULL);
 	if (retval != 0)
 	{
-		LOG(LOG_WARNING, "can't block signals (error code %d)", retval);
+		LOG(LOG_WARNING, "can't %s signals (error code %d)",
+			block ? "block" : "unblock",
+			retval);
 	}
+}
+
+void block_signals()
+{
+	block_unblock_signals(true);
+}
+
+void unblock_signals()
+{
+	block_unblock_signals(false);
 }
