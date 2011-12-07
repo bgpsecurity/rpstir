@@ -150,12 +150,20 @@ client "serial_query $WRONG_NONCE 5" "Cache Reset"
 client "serial_query $NONCE 5" "empty set"
 make_serial 5 7 2 6
 client "serial_query $NONCE 5" "difference from 5 to 7"
+client "serial_query $NONCE 7" "empty set"
 make_serial 7 8 1 3
-drop_serial 5
 client "serial_query $NONCE 5" "difference from 5 to 8"
-drop_serial 7
-client "serial_query $NONCE 5" "Cache Reset"
+client "serial_query $NONCE 6" "Cache Reset"
 client "serial_query $NONCE 7" "difference from 7 to 8"
+client "serial_query $NONCE 8" "empty set"
+drop_serial 5
+client "serial_query $NONCE 5" "Cache Reset"
+client "serial_query $NONCE 6" "Cache Reset"
+client "serial_query $NONCE 7" "difference from 7 to 8"
+client "serial_query $NONCE 8" "empty set"
+drop_serial 7
+client "serial_query $NONCE 7" "Cache Reset"
+client "serial_query $NONCE 8" "empty set"
 stop_test serial_queries
 
 start_test bad_pdus
