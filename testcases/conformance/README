@@ -169,8 +169,8 @@ ROAs
 
 CRLs
 
-640 CRLNoVersion             # no version
-641 CRLVersion0              # version 0
+640 CRLNoVersion             # no CRL version field
+641 CRLVersion0              # CRL version v1 (integer value 0)
 642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 
 643 CRLSigAlgOuter           # wrong outer signature algorithm ID
 644 CRLIssuerOID             # wrong OID for issuer name
@@ -178,8 +178,8 @@ CRLs
 646 CRLIssuerUTF             # issuer name in utf not printable string
 647 CRLIssuer2Seq            # two SEQUENCEs in issuer name
 648 CRLIssuer2SerNums        # two serial numbers
-649 CRLLastUpdateFuture      # last update is in the future
-650 CRLLastUpdateTyp         # wrong type of date in last Update
+649 CRLThisUpdateFuture      # this update is in the future
+650 CRLThisUpdateTyp         # wrong type of date in this update
 651 CRLNextUpdatePast        # next update is in the past
 652 CRLNextUpdateTyp         # wrong type of date in next update  
 653 CRLUpdatesCrossed        # last date is later then next date

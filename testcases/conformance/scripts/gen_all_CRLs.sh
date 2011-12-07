@@ -197,8 +197,8 @@ ${single_CRL_cmd} 645 CRLIssuer2Sets
 ${single_CRL_cmd} 646 CRLIssuerUTF
 ${single_CRL_cmd} 647 CRLIssuer2Seq
 ${single_CRL_cmd} 648 CRLIssuer2SerNums
-${single_CRL_cmd} 649 CRLLastUpdateFuture
-${single_CRL_cmd} 650 CRLLastUpdateTyp
+${single_CRL_cmd} 649 CRLThisUpdateFuture
+${single_CRL_cmd} 650 CRLThisUpdateTyp
 ${single_CRL_cmd} 651 CRLNextUpdatePast
 ${single_CRL_cmd} 652 CRLNextUpdateTyp
 ${single_CRL_cmd} 653 CRLUpdatesCrossed
