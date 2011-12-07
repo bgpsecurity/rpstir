@@ -51,7 +51,12 @@ public class TestbedCreate implements Constants {
   private static int MAX_NODES;
   private static Map<String, FactoryBase> FACTORIES;
   
+  /**
+   * @param args
+   */
   public static void main (String...args) {
+    String encoded = Util.b64encode_wrapper("0x112CBAA71CAE782E7AB4F49DC93CFEB8AC238249");
+    assert "ESy6pxyueC56tPSdyTz-uKwjgkk".equals(encoded);
     String fileName = "test.ini";
     if (args.length > 0) {
       fileName = args[0];
@@ -73,10 +78,11 @@ public class TestbedCreate implements Constants {
   private static void create_driver(CA_Object iana) {
 
     // create our CA queue with no limit and place iana in it
-    BlockingDeque<CA_Object> ca_queue = new LinkedBlockingDeque<CA_Object>();
+    BlockingDeque<Object> ca_queue = new LinkedBlockingDeque<Object>();
     ca_queue.add(iana);
     // Add a flag to the queue track depth of repository
-//    ca_queue.put("FLAG - NEW LEVEL");
+    String flag = "FLAG - NEW LEVEL";
+    ca_queue.add(flag);
     // locals to keep track of where we are in creation
     int repo_depth = 0;
     int repo_size = 1;
@@ -84,28 +90,29 @@ public class TestbedCreate implements Constants {
     // check our conditionals
     while (!(ca_queue.isEmpty()) && (MAX_DEPTH > repo_depth) && MAX_NODES > repo_size) {
         
-      CA_Object ca_node = ca_queue.removeFirst();
+      Object qItem = ca_queue.removeFirst();
 
         // Check if this is the start of a new level
-        if (ca_node.equals("FLAG - NEW LEVEL")) {
+        if (qItem == flag) {
             // If we're at the end of the queue already then just break
             if (ca_queue.isEmpty()) {
                 break;
             }
-            // Otherwise add the falg back into the queue to 
+            // Otherwise add the flag back into the queue to 
             // track for the next level
-            ca_queue.add(ca_node);
+            ca_queue.add(flag);
             repo_depth += 1;
             // continue onto the next node in the queue
             continue;
         }
+        CA_Object ca_node = (CA_Object) qItem;
         // Create the directory for the objects we're about to store
         String dir_path = REPO_PATH + ca_node.SIA_path;
         if (!new File(dir_path).isDirectory()) {
           new File(dir_path).mkdirs();
         }
 
-        List<Object> child_list = new ArrayList<Object>();
+        List<CA_Obj> child_list = new ArrayList<CA_Obj>();
         // Creates all child CA's and ROA's for a the CA ca_node
         repo_size = create_children(child_list, ca_node, repo_size);
         // crl_list
@@ -129,10 +136,10 @@ public class TestbedCreate implements Constants {
 
         
         // Add all of our children to the queue of CAs
-        for (Object child : child_list) {
+        for (CA_Obj child : child_list) {
             if (child instanceof CA_Object) {
                 ca_node.children.add((CA_Object) child);
-                ca_queue.add((CA_Object) child);
+                ca_queue.add(child);
             } else if (child instanceof Roa) {
                 ca_node.roas.add((Roa) child);
             } else {
@@ -141,9 +148,8 @@ public class TestbedCreate implements Constants {
         }
     }
 
-    System.out.println("Finished creation driver loop. repo_depth = " + repo_depth +
-            " repo_size = " + repo_size);
-    System.out.println("MAX_REPO depth " + MAX_DEPTH);
+    System.out.format("Finished creation driver loop. repo_depth = %d repo_size = %d%n", repo_depth, repo_size);
+    System.out.format("MAX_REPO depth %d%n", MAX_DEPTH);
   }
 
   /**
@@ -152,13 +158,13 @@ public class TestbedCreate implements Constants {
    * @param repo_size
    * @return
    */
-  private static int create_children(List<Object> child_list, CA_Object ca_node, int repo_size) {
+  private static int create_children(List<CA_Obj> child_list, CA_Object ca_node, int repo_size) {
     if (DEBUG_ON) System.out.println(ca_node.bluePrintName);
     List<Pair> list = FACTORIES.get(ca_node.bluePrintName).childSpec;
     for (Pair ca_def : list) {
       for (int n = 0; n < ca_def.arg.intValue(); n++) {
         if (MAX_NODES > repo_size) {
-          CA_Object child = FACTORIES.get(ca_def.tag).create(ca_node);
+          CA_Obj child = FACTORIES.get(ca_def.tag).create(ca_node);
           child_list.add(child);
           repo_size += 1;
           if (DEBUG_ON) System.out.format("Child created. repo_size = %d%n", repo_size);

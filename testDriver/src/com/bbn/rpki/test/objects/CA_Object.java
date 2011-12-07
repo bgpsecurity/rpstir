@@ -79,8 +79,7 @@ public class CA_Object extends Allocator {
   // Grab what I need from the certificate 
   // Obtain just the SIA path and cut off the r:rsync://
   String[] sia_list = this.certificate.sia.substring(RSYNC_EXTENSION.length()).split(",");
-  // Remove the '/' appended on the end for easier string concatenation
-  this.SIA_path = sia_list[0].substring(0, sia_list[0].length() - 1);
+  this.SIA_path = sia_list[0].substring(0, sia_list[0].length());
   this.manifest_path = Util.removePrefix(sia_list[1], RSYNC_EXTENSION);
   this.id = this.certificate.serial;
   this.path_CA_cert = this.certificate.outputfilename;

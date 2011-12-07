@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.objects;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +12,7 @@ import java.util.List;
  *
  * @author RTomlinson
  */
-public class RoaFactory extends Factory {
+public class RoaFactory extends Factory implements Constants {
 
   /**
    * @param name
@@ -37,12 +39,21 @@ public class RoaFactory extends Factory {
                     List<Pair> roav6l,
                     int a) {
     super(name, ipv4, ipv6, as_list, child, server, breakA, t, null);
-    asid = a;
+    asid = new ArrayList<Pair>(1);
+    asid.add(new Pair("r", BigInteger.valueOf(a)));
     ROAipv4List = roav4l;
     ROAipv6List = roav6l;
   }
-  public int asid;
+  public List<Pair> asid;
   public List<Pair> ROAipv4List;
   public List<Pair> ROAipv6List;
 
+  @Override
+  public Roa create(CA_Object parent) {
+    if (DEBUG_ON)
+      System.out.println("creating a ROA for "+ bluePrintName);
+
+    EE_Object ee_object = new EE_Object(this, parent);
+    return new Roa(this, ee_object);
+  }
 }

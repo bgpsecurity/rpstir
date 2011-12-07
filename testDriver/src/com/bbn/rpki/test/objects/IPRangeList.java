@@ -103,6 +103,6 @@ public class IPRangeList extends ArrayList<Range> {
    * @param max 
    */
   public void addRange(BigInteger min, BigInteger max) {
-    add(new Range(min, max, ipVersion));
+    add(new Range(min, max, ipVersion, true));
   }
 }

@@ -62,12 +62,12 @@ public class RangeAllocator implements Constants {
 
    * @param freeList 
    * @param requests 
-   * @param noPrefix 
+   * @param expressAsRange 
    * @return the allocated ranges
    */
   public static IPRangeList allocate(IPRangeList freeList,
                                      List<Pair> requests,
-                                     boolean noPrefix) {
+                                     boolean expressAsRange) {
     IPRangeList ret = new IPRangeList(freeList.getIpVersion());
     
     for (Pair request : requests) {
@@ -75,9 +75,9 @@ public class RangeAllocator implements Constants {
       BigInteger reqSize = request.arg;
       Range issuedBlock;
       if (reqType == 'r') {
-        issuedBlock = allocateSingleRange(freeList, reqSize, ret, noPrefix);
+        issuedBlock = allocateSingleRange(freeList, reqSize, ret, expressAsRange);
       } else if (reqType == 'p') {
-        issuedBlock = allocateSinglePrefix(freeList, ret, reqSize);
+        issuedBlock = allocateSinglePrefix(freeList, ret, reqSize, expressAsRange);
       } else {
         throw new AllocationError("Invalid requestType: " + reqType);
       }
@@ -89,13 +89,14 @@ public class RangeAllocator implements Constants {
   /**
    * @param freeList
    * @param reqSize
+   * @param expressAsRange 
    * @return
    */
-  private static Range allocateSinglePrefix(IPRangeList freeList, IPRangeList allocatedList, BigInteger reqSize) {
+  private static Range allocateSinglePrefix(IPRangeList freeList, IPRangeList allocatedList, BigInteger reqSize, boolean expressAsRange) {
     if (!Range.isPowerOfTwo(reqSize))
       throw new AllocationError("Illegal prefix size: " + reqSize);
     for (int i = 0, n = freeList.size(); i < n; i++) {
-      Range x = firstFitPrefix(freeList.get(i), allocatedList, reqSize);
+      Range x = firstFitPrefix(freeList.get(i), allocatedList, reqSize, expressAsRange);
       if (x != null) {
         List<Range> perforated = perforate(freeList.get(i), x);
         List<Range> insertion = freeList.subList(i, i + 1);
@@ -113,10 +114,10 @@ public class RangeAllocator implements Constants {
    * @return
    */
   private static Range allocateSingleRange(IPRangeList freeList, BigInteger reqSize, 
-                                           IPRangeList allocatedBlocks, boolean noPrefix) {
+                                           IPRangeList allocatedBlocks, boolean expressAsRange) {
     for (int i = 0, n = freeList.size(); i < n; i++) {
       Range firstRange = freeList.get(i);
-      Range x = firstFitRange(firstRange, reqSize, allocatedBlocks, noPrefix);
+      Range x = firstFitRange(firstRange, reqSize, allocatedBlocks, expressAsRange);
       if (x != null) {
         List<Range> perforated = perforate(firstRange, x);
         List<Range> insertion = freeList.subList(i,  i + 1);
@@ -138,10 +139,10 @@ public class RangeAllocator implements Constants {
     if (!a.contains(b)) throw new AllocationError("Cannot perforate " + b + " from " + a);
     IPRangeList ret = new IPRangeList(2, a.version);
     if (a.min.compareTo(b.min) < 0) {
-      ret.addRange(a.min, b.min);
+      ret.addRange(a.min, b.min.subtract(ONE));
     }
     if (a.max.compareTo(b.max) > 0) {
-      ret.addRange(b.max, a.max);
+      ret.addRange(b.max.add(ONE), a.max);
     }
     return ret;
   }
@@ -152,10 +153,10 @@ public class RangeAllocator implements Constants {
    * @return
    */
   private static Range firstFitPrefix(Range free_block, IPRangeList allocated_blocks,
-                                      BigInteger amount) {
+                                      BigInteger amount, boolean expressAsRange) {
     BigInteger search_position = free_block.min;
     while (true) {
-      Range candidate = next_prefix(search_position, amount, allocated_blocks.getIpVersion());
+      Range candidate = next_prefix(search_position, amount, allocated_blocks.getIpVersion(), expressAsRange);
       if (!free_block.contains(candidate)) {
         // out of resources
         break;
@@ -169,7 +170,7 @@ public class RangeAllocator implements Constants {
     return null;
   }
 
-  private static Range next_prefix(BigInteger start_pos, BigInteger amount, IPRangeType version) {
+  private static Range next_prefix(BigInteger start_pos, BigInteger amount, IPRangeType version, boolean expressAsRange) {
     // Return the next prefix of the requested size.
 
     if (!Range.isPowerOfTwo(amount)) {
@@ -183,8 +184,8 @@ public class RangeAllocator implements Constants {
     }
     Range prefix = new Range(next_multiple,
                              next_multiple.add(amount).subtract(BigInteger.ONE),
-                             version);
-    if (!prefix.isPrefix())
+                             version, expressAsRange);
+    if (!prefix.couldBePrefix())
       throw new RuntimeException(prefix + " should have been a prefix");
     return prefix;
   }
@@ -205,7 +206,7 @@ public class RangeAllocator implements Constants {
        */
       Range expanded = new Range(candidate_block.min.subtract(ONE),
                                  candidate_block.max.add(ONE), 
-                                 candidate_block.version);
+                                 candidate_block.version, true);
       for (Range a : allocated_blocks) {
         if (a.overlaps(expanded)) {
           return a;
@@ -219,13 +220,13 @@ public class RangeAllocator implements Constants {
    * @param reqSize
    * @return
    */
-  private static Range firstFitRange(Range freeRange, BigInteger reqSize, IPRangeList allocatedBlocks, boolean noPrefix) {
+  private static Range firstFitRange(Range freeRange, BigInteger reqSize, IPRangeList allocatedBlocks, boolean expressAsRange) {
     // TODO Auto-generated method stub
     BigInteger searchPosition = freeRange.min;
     while (true) {
-      Range candidate = new Range(searchPosition, searchPosition.add(reqSize).subtract(BigInteger.ONE), freeRange.version);
+      Range candidate = new Range(searchPosition, searchPosition.add(reqSize).subtract(BigInteger.ONE), freeRange.version, expressAsRange);
       if (!freeRange.contains(candidate)) return null;
-      if (noPrefix && candidate.isPrefix()) {
+      if (expressAsRange && candidate.couldBePrefix()) {
         searchPosition = searchPosition.add(BigInteger.ONE);
         continue;
       }
@@ -243,7 +244,7 @@ public class RangeAllocator implements Constants {
   private static Range detectConflict(Range candidate, IPRangeList allocatedBlocks) {
     Range expanded = new Range(candidate.min.subtract(BigInteger.ONE),
                                candidate.max.add(BigInteger.ONE),
-                               candidate.version);
+                               candidate.version, true);
     for (Range a : allocatedBlocks) {
       if (a.overlaps(expanded)) return a;
     }

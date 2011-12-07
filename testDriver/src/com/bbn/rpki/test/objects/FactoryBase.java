@@ -48,7 +48,7 @@ public abstract class FactoryBase {
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
    */
-  CA_Object create(CA_Object parent) {
+  CA_Obj create(CA_Object parent) {
     return new CA_Object(this, parent, null);
   }
 }

@@ -12,17 +12,17 @@ package com.bbn.rpki.test.objects;
 public class CMS extends CA_Obj {
 
   /** location of the cert */
-   public final String eeCertLocation;
+   public final String EECertLocation;
    
    /** location of the key */
-  public final String eeKeyLocation;
+  public final String EEKeyLocation;
 
   /**
    * @param eeCertLocation
    * @param eeKeyLocation
    */
   public CMS(String eeCertLocation, String eeKeyLocation) {
-    this.eeCertLocation = eeCertLocation;
-    this.eeKeyLocation = eeKeyLocation;
+    this.EECertLocation = eeCertLocation;
+    this.EEKeyLocation = eeKeyLocation;
   }
 }

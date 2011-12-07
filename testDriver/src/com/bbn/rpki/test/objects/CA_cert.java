@@ -25,8 +25,8 @@ public class CA_cert extends Certificate {
     }
   }
 
-  private final String crldp;
-  private final String aia;
+  public final String crldp;
+  public final String aia;
   
   /**
    * @param parent
@@ -46,9 +46,9 @@ public class CA_cert extends Certificate {
   private CA_cert(CA_Object parent, FactoryBase myFactory, S s, IPRangeList ipv4,
                   IPRangeList ipv6, IPRangeList asList, String subjKeyFile) {
     super(parent, myFactory, s.sia_path, s.serial, ipv4, ipv6, asList, subjKeyFile);
-    this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski);
+    this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".crl";
     this.aia   = "rsync://" + Util.removePrefix(parent.path_CA_cert, REPO_PATH);
-    this.sia   = "r:rsync://" + s.sia_path + "/,m:rsync://" + s.sia_path + "/" + Util.b64encode_wrapper(this.ski) + ".mft";
+    this.sia   = "r:rsync://" + s.sia_path + ",m:rsync://" + s.sia_path + Util.b64encode_wrapper(this.ski) + ".mft";
     Util.writeConfig(this);
     Util.create_binary(this, "CERTIFICATE selfsigned=False");
 

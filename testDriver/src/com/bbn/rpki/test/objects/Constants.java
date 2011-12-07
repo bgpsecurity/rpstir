@@ -12,7 +12,7 @@ import java.math.BigInteger;
  */
 public interface Constants {  
   /** Path to the objects directory */
-  public static final String OBJECT_PATH = "../objects/";
+  public static final String OBJECT_PATH = "../javaObjects/";
   
   /** Path to the repository directory */
   public static final String REPO_PATH = OBJECT_PATH + "REPOSITORY/";

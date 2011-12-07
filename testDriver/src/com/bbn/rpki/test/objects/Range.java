@@ -11,6 +11,16 @@ import java.math.BigInteger;
  * @author RTomlinson
  */
 public class Range implements Constants, Comparable<Range> {
+  
+  public enum Type {
+    /** UNSET */
+    UNSET,
+    /** RANGE */
+    RANGE,
+    /** PREFIX */
+    PREFIX
+  }
+  
   /**
    * @param base
    * @param bits
@@ -21,7 +31,8 @@ public class Range implements Constants, Comparable<Range> {
     BigInteger min = stringToBigInteger(base);
     BigInteger max = min.add(TWO.pow(version.getBits() - bits).subtract(BigInteger.ONE));
     assert min.and(max).equals(ZERO);
-    return new Range(min, max, version);
+    Range range = new Range(min, max, version, false);
+    return range;
   }
 
   /**
@@ -33,7 +44,8 @@ public class Range implements Constants, Comparable<Range> {
   public static Range createRange(String min_s, String max_s, IPRangeType version) {
     BigInteger min = stringToBigInteger(min_s);
     BigInteger max = stringToBigInteger(max_s);
-    return new Range(min, max, version);
+    Range range = new Range(min, max, version, true);
+    return range;
   }
 
   /**
@@ -52,17 +64,19 @@ public class Range implements Constants, Comparable<Range> {
   IPRangeType version;
   BigInteger min;
   BigInteger max;
+  private final boolean range;;
   
   /**
    * @param min
    * @param max
    * @param version 
    */
-  public Range(BigInteger min, BigInteger max, IPRangeType version) {
+  public Range(BigInteger min, BigInteger max, IPRangeType version, boolean range) {
     super();
     this.version = version;
     this.min = min;
     this.max = max;
+    this.range = range;
   }
 
   /**
@@ -181,12 +195,19 @@ public class Range implements Constants, Comparable<Range> {
    * the min address is a multiple of the size.
    * @return true if this is a prefix
    */
-  public boolean isPrefix() {
+  public boolean couldBePrefix() {
     BigInteger sizem1 = max.subtract(min);
     if (isPowerOfTwo(sizem1.add(BigInteger.ONE))) {
       return min.and(sizem1).equals(BigInteger.ZERO);
     }
     return false;
+  }
+  
+  /**
+   * @return true if this Range is being used as a prefix
+   */
+  public boolean isPrefix() {
+    return !range;
   }
 
   /**
@@ -203,6 +224,6 @@ public class Range implements Constants, Comparable<Range> {
    * @return true if b overlaps this Range
    */
   public boolean overlaps(Range b) {
-    return min.compareTo(b.max) < 0 && max.compareTo(b.min) > 0; 
+    return min.compareTo(b.max) < 0 && max.compareTo(b.min) >= 0; 
   }
 }

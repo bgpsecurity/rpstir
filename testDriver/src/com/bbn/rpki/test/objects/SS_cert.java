@@ -40,7 +40,7 @@ public class SS_cert extends Certificate {
   
   private SS_cert(CA_Object parent, FactoryBase myFactory, S s, String subjKeyFile) {
     super(parent, myFactory, s.siaPath, s.serial, s.ipv4, s.ipv6, s.asList, subjKeyFile);
-    this.sia = "r:rsync://" + s.siaPath + "/,m:rsync://" + s.siaPath + "/" + Util.b64encode_wrapper(this.ski) + ".mft";
+    this.sia = "r:rsync://" + s.siaPath + ",m:rsync://" + s.siaPath + Util.b64encode_wrapper(this.ski) + ".mft";
     Util.writeConfig(this);
     Util.create_binary(this, "CERTIFICATE", "selfsigned=True");
   }

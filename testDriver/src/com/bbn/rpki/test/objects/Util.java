@@ -97,7 +97,7 @@ public class Util implements Constants {
   private static StringBuilder appendList(StringBuilder sb, String member, List<?> words) {
    sb.append(member).append("=");
    boolean first = true;
-    String sep = " ";
+    String sep = ",";
     for (Object word : words) {
       if (first) {
         first = false;
@@ -253,7 +253,6 @@ public class Util implements Constants {
    * @param ignoreStatus TODO
    */
   static String exec(String[] cmdArray, String title, boolean ignoreStatus) {
-    ignoreStatus = true;
     int status;
     final StringBuilder sb = new StringBuilder();
     try {
@@ -323,7 +322,7 @@ public class Util implements Constants {
           "-n",
           file.getPath()
       };
-    return exec(cmdArray, "gen_hash", false);
+    return exec(cmdArray, "gen_hash", true);
     }
   }
 
