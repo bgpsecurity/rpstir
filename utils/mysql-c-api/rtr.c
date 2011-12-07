@@ -531,8 +531,6 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
     size_t i;
     int max_found;
 
-    LOG(LOG_DEBUG, "ip_addr is %s", field_str);
-
     // locate indices of the substrings' delimiters
     ip_last = strcspn(field_str, "/");
     prefix_first = strcspn(field_str, "/");
@@ -764,12 +762,14 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
+        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
         return (num_pdus);
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_INFO, "can't update the router from the given serial number");
         fill_pdu_cache_reset(&((*_pdus)[num_pdus++]));
+        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
         return (num_pdus);
     }
 
@@ -784,6 +784,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
+        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
         return (num_pdus);
     }
 
@@ -839,6 +840,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         state->first_row = current_row;
         mysql_free_result(result);
         *is_done = 0;
+        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
         return (num_pdus);
     } else {  // If we're here, current_row > last_row, num_pdus < max_rows
         ret = readSerNumAsCurrent(connp, state->ser_num,
@@ -853,6 +855,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
             LOG(LOG_INFO, "serial number became invalid after creating PDUs");
             fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
             mysql_free_result(result);
+            LOG(LOG_INFO, "returning %u PDUs", num_pdus);
             return (num_pdus);
         } else {
             // check whether to End or continue with next ser num
@@ -862,11 +865,13 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
                 state->ser_num = next_ser_num;
                 state->first_row = 0;
                 mysql_free_result(result);
+                LOG(LOG_INFO, "returning %u PDUs", num_pdus);
                 return (num_pdus);
             } else if (ret == 1) {  // db has no sn_next for this sn
                 LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
                 fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
                 mysql_free_result(result);
+                LOG(LOG_INFO, "returning %u PDUs", num_pdus);
                 return (num_pdus);
             } else {
                 // NOTE:  even though error, still feeding previous results,
@@ -875,6 +880,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
                 LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
                 fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
                 mysql_free_result(result);
+                LOG(LOG_INFO, "returning %u PDUs", num_pdus);
                 return (num_pdus);
             }
         }
@@ -975,6 +981,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
+        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
         return (num_pdus);
     }
 
@@ -1027,6 +1034,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         state->first_row = current_row;
         mysql_free_result(result);
         *is_done = 0;
+        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
         return (num_pdus);
     } else {  // If we're here, current_row > last_row, num_pdus < max_rows
         ret = readSerNumAsCurrent(connp, state->ser_num,
@@ -1041,6 +1049,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
             LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
             fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
             mysql_free_result(result);
+            LOG(LOG_INFO, "returning %u PDUs", num_pdus);
             return (num_pdus);
         }
     }
