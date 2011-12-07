@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "bag.h"
 #include "queue.h"
@@ -320,6 +321,9 @@ static void cleanup(void * run_state_voidp)
 		CLOSE_LOG();
 		run_state->log_opened = false;
 	}
+
+	// main should be the only thread left at this point, but just in case:
+	exit(EXIT_SUCCESS);
 }
 
 
