@@ -3,13 +3,15 @@
 version 0 Cache Reset, length = 8
 --- serial_query 42 5
 --- expecting: empty set
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 5
 --- serial_query 42 5
 --- expecting: difference from 5 to 7
 TODO
 --- serial_query 42 7
 --- expecting: empty set
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 7
 --- serial_query 42 5
 --- expecting: difference from 5 to 8
 TODO
@@ -21,7 +23,8 @@ version 0 Cache Reset, length = 8
 TODO
 --- serial_query 42 8
 --- expecting: empty set
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
 --- serial_query 42 5
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
@@ -33,10 +36,12 @@ version 0 Cache Reset, length = 8
 TODO
 --- serial_query 42 8
 --- expecting: empty set
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
 --- serial_query 42 7
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
 --- serial_query 42 8
 --- expecting: empty set
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
