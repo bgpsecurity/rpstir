@@ -202,6 +202,8 @@ static void cleanup(void * run_state_voidp)
 
 	if (run_state->connection_control_thread_initialized)
 	{
+		LOG(LOG_NOTICE, "Stopping connection control thread...");
+
 		retval = pthread_cancel(run_state->connection_control_thread);
 		if (retval != 0)
 		{
@@ -215,19 +217,27 @@ static void cleanup(void * run_state_voidp)
 		}
 
 		run_state->connection_control_thread_initialized = false;
+
+		LOG(LOG_NOTICE, "... done stopping connection control thread");
 	}
 
 	if (run_state->db_threads != NULL)
 	{
+		LOG(LOG_NOTICE, "Stopping active db threads...");
+
 		cancel_all_db_threads(run_state->db_threads);
 		Bag_free(run_state->db_threads);
 		run_state->db_threads = NULL;
+
+		LOG(LOG_NOTICE, "... done stopping active db threads");
 	}
 
 	if (run_state->db_thread != NULL)
 	{
 		if (run_state->db_thread_initialized)
 		{
+			LOG(LOG_NOTICE, "Stopping inactive db thread...");
+
 			retval = pthread_cancel(*run_state->db_thread);
 			if (retval != 0)
 			{
@@ -241,6 +251,8 @@ static void cleanup(void * run_state_voidp)
 			}
 
 			run_state->db_thread_initialized = false;
+
+			LOG(LOG_NOTICE, "... done stopping inactive db thread");
 		}
 
 		free(run_state->db_thread);
@@ -284,6 +296,8 @@ static void cleanup(void * run_state_voidp)
 			ERR_LOG(errno, errorbuf, "close(listen_fd)");
 		run_state->listen_fd_initialized = false;
 	}
+
+	LOG(LOG_NOTICE, "shutting down");
 
 	if (run_state->log_opened)
 	{
