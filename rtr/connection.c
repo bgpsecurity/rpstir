@@ -8,9 +8,10 @@
 #include <time.h>
 
 #include "macros.h"
+#include "logging.h"
 
 #include "config.h"
-#include "logging.h"
+#include "signals.h"
 #include "pdu.h"
 
 #include "connection.h"
@@ -794,6 +795,8 @@ static void connection_main_loop(struct run_state * run_state)
 
 void * connection_main(void * args_voidp)
 {
+	block_signals();
+
 	struct run_state run_state;
 	initialize_run_state(&run_state, args_voidp);
 

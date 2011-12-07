@@ -9,6 +9,7 @@
 
 #include "logging.h"
 
+#include "signals.h"
 #include "connection_control.h"
 #include "connection.h"
 
@@ -117,6 +118,8 @@ static void cleanup(void * connections_voidp)
 
 void * connection_control_main(void * args_voidp)
 {
+	block_signals();
+
 	struct connection_control_main_args * argsp = (struct connection_control_main_args *) args_voidp;
 
 	assert(argsp != NULL);
