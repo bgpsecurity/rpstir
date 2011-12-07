@@ -18,14 +18,14 @@ client_raw () {
 	shift
 	echo "--- $SUBTEST_NAME" | tee -a response.log
 	echo "--- expecting: $EXPECTED_RESULTS" | tee -a response.log
-	"$@" | nc -w 15 localhost $PORT | "$CLIENT" recv_one | tee -a response.log
+	"$@" | "$CLIENT" client_one localhost $PORT | tee -a response.log
 }
 
 client () {
 	COMMAND="$1"
 	EXPECTED_RESULTS="$2"
 	INPUT_PDU_FILE="`mktemp`"
-	echo "$COMMAND" | "$CLIENT" send > "$INPUT_PDU_FILE"
+	echo "$COMMAND" | "$CLIENT" write > "$INPUT_PDU_FILE"
 	client_raw "$COMMAND" "$EXPECTED_RESULTS" cat "$INPUT_PDU_FILE"
 	rm -f "$INPUT_PDU_FILE"
 }
