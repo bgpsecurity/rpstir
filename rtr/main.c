@@ -28,6 +28,8 @@
 static char errorbuf[ERROR_BUF_SIZE];
 
 
+// NOTE: you must call block_signals() before any call to pthread_exit() that's
+// outside of signal_handler(), to prevent duplicate calls to pthread_exit().
 static void signal_handler(int signal)
 {
 	LOG(LOG_NOTICE, "received signal %d", signal);
@@ -93,19 +95,22 @@ static void initialize_run_state(struct run_state * run_state)
 
 static bool create_db_thread(struct run_state * run_state)
 {
-	// TODO: handle signals
-
 	int retval;
 
+	block_signals();
 	run_state->db_thread_initialized = false;
 	run_state->db_thread = malloc(sizeof(pthread_t));
+	unblock_signals();
 	if (run_state->db_thread == NULL)
 	{
 		LOG(LOG_ERR, "can't allocate memory for db thread id");
 		return false;
 	}
 
+	block_signals();
 	retval = pthread_create(run_state->db_thread, NULL, db_main, &run_state->db_main_args);
+	run_state->db_thread_initialized = (retval == 0);
+	unblock_signals();
 	if (retval != 0)
 	{
 		ERR_LOG(retval, errorbuf, "pthread_create()");
@@ -113,8 +118,8 @@ static bool create_db_thread(struct run_state * run_state)
 		run_state->db_thread = NULL;
 		return false;
 	}
-	run_state->db_thread_initialized = true;
 
+	block_signals();
 	if (!Bag_add(run_state->db_threads, run_state->db_thread))
 	{
 		LOG(LOG_ERR, "can't add db thread id to bag");
@@ -133,8 +138,15 @@ static bool create_db_thread(struct run_state * run_state)
 
 		run_state->db_thread_initialized = false;
 
+		// Commented out because free and pointer assignment should be pretty fast,
+		// so testing for signals is unnecessary here.
+		//unblock_signals();
+		//block_signals();
+
 		free(run_state->db_thread);
 		run_state->db_thread = NULL;
+
+		unblock_signals();
 
 		return false;
 	}
@@ -142,9 +154,13 @@ static bool create_db_thread(struct run_state * run_state)
 	run_state->db_thread = NULL;
 	run_state->db_thread_initialized = false;
 
+	unblock_signals();
+
 	return true;
 }
 
+// NOTE: this does not do signal handling, so it can only be called when signals
+// are already blocked, e.g. in cleanup().
 static void cancel_all_db_threads(Bag * db_threads)
 {
 	Bag_iterator it;
@@ -309,14 +325,14 @@ static void cleanup(void * run_state_voidp)
 
 static void startup(struct run_state * run_state)
 {
-	// TODO: block signals at some key points to ensure run_state
-	// always has pointers to all threads
-
 	int retval, i;
 
+	block_signals();
 	OPEN_LOG(RTR_LOG_IDENT, RTR_LOG_FACILITY);
 	run_state->log_opened = true;
+	unblock_signals();
 
+	block_signals();
 	run_state->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (run_state->listen_fd == -1)
 	{
@@ -324,6 +340,7 @@ static void startup(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 	run_state->listen_fd_initialized = true;
+	unblock_signals();
 
 	struct sockaddr_in bind_addr;
 	bind_addr.sin_family = AF_INET;
@@ -332,56 +349,70 @@ static void startup(struct run_state * run_state)
 	if (bind(run_state->listen_fd, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "bind()");
+		block_signals();
 		pthread_exit(NULL);
 	}
 
 	if (listen(run_state->listen_fd, INT_MAX) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "listen()");
+		block_signals();
 		pthread_exit(NULL);
 	}
 
+	block_signals();
 	run_state->db_request_queue = Queue_new(true);
 	if (run_state->db_request_queue == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_request_queue");
 		pthread_exit(NULL);
 	}
+	unblock_signals();
 
+	block_signals();
 	run_state->db_currently_processing = Bag_new(true);
 	if (run_state->db_currently_processing == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_currently_processing");
 		pthread_exit(NULL);
 	}
+	unblock_signals();
 
+	block_signals();
 	if (sem_init(&run_state->db_semaphore, 0, 0) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "sem_init() for db_semaphore");
 		pthread_exit(NULL);
 	}
 	run_state->db_semaphore_initialized = true;
+	unblock_signals();
 
+	block_signals();
 	run_state->db = connectDbDefault();
 	if (run_state->db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
 		pthread_exit(NULL);
 	}
+	unblock_signals();
 
+	block_signals();
 	if (!initialize_global_cache_state(&run_state->global_cache_state, run_state->db))
 	{
 		LOG(LOG_ERR, "can't initialize global cache state");
 		pthread_exit(NULL);
 	}
 	run_state->global_cache_state_initialized = true;
+	unblock_signals();
 
+	block_signals();
 	run_state->db_threads = Bag_new(false);
 	if (run_state->db_threads == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_threads");
 		pthread_exit(NULL);
 	}
+	unblock_signals();
 
 	run_state->db_main_args.semaphore = &run_state->db_semaphore;
 	run_state->db_main_args.db_request_queue = run_state->db_request_queue;
@@ -392,6 +423,7 @@ static void startup(struct run_state * run_state)
 		if (!create_db_thread(run_state))
 		{
 			LOG(LOG_ERR, "error creating db thread");
+			block_signals();
 			pthread_exit(NULL);
 		}
 	}
@@ -401,6 +433,7 @@ static void startup(struct run_state * run_state)
 	run_state->connection_control_main_args.db_semaphore = &run_state->db_semaphore;
 	run_state->connection_control_main_args.global_cache_state = &run_state->global_cache_state;
 
+	block_signals();
 	retval = pthread_create(&run_state->connection_control_thread, NULL,
 		connection_control_main, &run_state->connection_control_main_args);
 	if (retval != 0)
@@ -409,6 +442,7 @@ static void startup(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 	run_state->connection_control_thread_initialized = true;
+	unblock_signals();
 }
 
 
@@ -432,10 +466,12 @@ int main (int argc, char ** argv)
 
 		// TODO: Check the load on the database threads, adding or removing threads as needed.
 
+		block_signals();
 		if (!update_global_cache_state(&run_state.global_cache_state, run_state.db))
 		{
 			LOG(LOG_NOTICE, "error updating global cache state");
 		}
+		unblock_signals();
 	}
 
 	pthread_cleanup_pop(1);
