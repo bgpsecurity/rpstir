@@ -1,4 +1,5 @@
 --- reset_query
+--- expecting: all data for serial 5
 version 0 Cache Response, cache nonce = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1

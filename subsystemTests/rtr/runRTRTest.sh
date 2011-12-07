@@ -14,15 +14,19 @@ WRONG_NONCE=4242
 client_raw () {
 	SUBTEST_NAME="$1"
 	shift
+	EXPECTED_RESULTS="$1"
+	shift
 	echo "--- $SUBTEST_NAME" | tee -a response.log
+	echo "--- expecting: $EXPECTED_RESULTS" | tee -a response.log
 	"$@" | nc -w 15 localhost $PORT | "$CLIENT" recv_one | tee -a response.log
 }
 
 client () {
 	COMMAND="$1"
+	EXPECTED_RESULTS="$2"
 	INPUT_PDU_FILE="`mktemp`"
 	echo "$COMMAND" | "$CLIENT" send > "$INPUT_PDU_FILE"
-	client_raw "$COMMAND" cat "$INPUT_PDU_FILE"
+	client_raw "$COMMAND" "$EXPECTED_RESULTS" cat "$INPUT_PDU_FILE"
 	rm -f "$INPUT_PDU_FILE"
 }
 
@@ -138,32 +142,26 @@ init
 
 start_test reset_query_first
 make_serial "" 5 1 4
-client "reset_query" # all data for serial 5
+client "reset_query" "all data for serial 5"
 stop_test reset_query_first
 
 start_test serial_queries
-echo '--- expected:  Cache Reset ---'
-client "serial_query $WRONG_NONCE 5" # Cache Reset
-echo '--- expected:  empty set ---'
-client "serial_query $NONCE 5" # empty set
+client "serial_query $WRONG_NONCE 5" "Cache Reset"
+client "serial_query $NONCE 5" "empty set"
 make_serial 5 7 2 6
-echo '--- expected:  difference from 5 to 7 ---'
-client "serial_query $NONCE 5" # difference from 5 to 7
+client "serial_query $NONCE 5" "difference from 5 to 7"
 make_serial 7 8 1 3
 drop_serial 5
-echo '--- expected:  difference from 5 to 8 ---'
-client "serial_query $NONCE 5" # difference from 5 to 8
+client "serial_query $NONCE 5" "difference from 5 to 8"
 drop_serial 7
-echo '--- expected:  Cache Reset ---'
-client "serial_query $NONCE 5" # Cache Reset
-echo '--- expected:  difference from 7 to 8 ---'
-client "serial_query $NONCE 7" # difference from 7 to 8
+client "serial_query $NONCE 5" "Cache Reset"
+client "serial_query $NONCE 7" "difference from 7 to 8"
 stop_test serial_queries
 
 start_test bad_pdus
 TOTAL_BAD_PDUS="`./badPDUs.py length`"
 for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
-	client_raw "Bad PDU #$i" ./badPDUs.py "$i"
+	client_raw "Bad PDU #$i" "Error Report" ./badPDUs.py "$i"
 done
 stop_test bad_pdus
 
@@ -172,5 +170,5 @@ start_test bad_protocol_operation # erroneous use of valid PDUs
 stop_test bad_protocol_operation
 
 start_test reset_query_last
-client "reset_query" # all data for serial 8
+client "reset_query" "all data for serial 8"
 stop_test reset_query_last
