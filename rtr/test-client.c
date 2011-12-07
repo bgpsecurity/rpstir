@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <errno.h>
 
 #include "logutils.h"
 
@@ -15,6 +20,7 @@
 
 #define MAX_PDU_SIZE 65536
 #define LINEBUF_SIZE 128
+
 
 // all the arguments a command (for sending) can take
 enum command_argument {
@@ -102,14 +108,16 @@ static void do_help(const char * argv0)
 	size_t i;
 
 	fprintf(stderr, "Usage:\n");
-	fprintf(stderr, "    %s [-h | --help]    Print this help text.\n", argv0);
-	fprintf(stderr, "    %s send             Run the sending end of a connection.\n", argv0);
-	fprintf(stderr, "    %s recv             Run the receiving end of a connection.\n", argv0);
-	fprintf(stderr, "    %s recv_one         As above, but quit after receiving one full response.\n", argv0);
+	fprintf(stderr, "    %s [-h | --help]             Print this help text.\n", argv0);
+	fprintf(stderr, "    %s write                     Convert human-readable commands to PDUs.\n", argv0);
+	fprintf(stderr, "    %s client <host> <port>      Connect to rtrd, reading PDUs from stdin and\n"
+	                "                                 writing human-readable PDUs to stdout.\n", argv0);
+	fprintf(stderr, "    %s client_one <host> <port>  As above, but quit after receiving one full response.\n", argv0);
 	fprintf(stderr, "\n");
-	fprintf(stderr, "    $ %s send | nc <rtr server host> <rtr server port> | %s recv\n", argv0, argv0);
+	fprintf(stderr, "Typical usage:\n");
+	fprintf(stderr, "    $ %s write | %s client <host> <port>\n", argv0, argv0);
 	fprintf(stderr, "\n");
-	fprintf(stderr, "On the sending end, you can type the following commands to send PDUs to the server:\n");
+	fprintf(stderr, "In write mode, you can type the following commands to send PDUs to the server:\n");
 	for (i = 0; commands[i].name != NULL; ++i)
 	{
 		command_print_usage_signature(stderr, &commands[i], "    ", "\n");
@@ -351,7 +359,7 @@ static void cmd_error_report(const struct command * command, char const * const 
 	send_pdu(&pdu);
 }
 
-static int do_send()
+static int do_write()
 {
 	char linebuf[LINEBUF_SIZE];
 	char * tok;
@@ -459,42 +467,134 @@ static bool read_pdu(int fd, uint8_t buffer[MAX_PDU_SIZE], PDU * pdu)
 	return false;
 }
 
-static int do_recv(bool quit_after_response)
+static int do_client(const char * host, const char * port, bool quit_after_response)
 {
 	char sprint_buffer[PDU_SPRINT_BUFSZ];
 	uint8_t buffer[MAX_PDU_SIZE];
 	PDU pdu;
+	int retval;
+	ssize_t read_len, write_len;
+	fd_set rfds;
 
-	while (read_pdu(STDIN_FILENO, buffer, &pdu))
+	struct addrinfo hints, *addr, *addrp;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = 0;
+	hints.ai_protocol = 0;
+	retval = getaddrinfo(host, port, &hints, &addr);
+	if (retval != 0)
 	{
-		pdu_sprint(&pdu, sprint_buffer);
-		puts(sprint_buffer);
+		log_msg(LOG_ERR, "getaddrinfo(): %s", gai_strerror(retval));
+		return EXIT_FAILURE;
+	}
 
-		if (quit_after_response)
+	int cxn;
+	for (addrp = addr; addrp != NULL; addrp = addrp->ai_next)
+	{
+		cxn = socket(addrp->ai_family, addrp->ai_socktype, addrp->ai_protocol);
+		if (cxn == -1)
 		{
-			switch (pdu.pduType)
+			log_msg(LOG_WARNING, "socket(): %s", strerror(errno));
+			continue;
+		}
+
+		if (connect(cxn, addrp->ai_addr, addrp->ai_addrlen) != 0)
+		{
+			log_msg(LOG_WARNING, "connect(): %s", strerror(errno));
+			if (close(cxn) != 0)
+				log_msg(LOG_WARNING, "close(): %s", strerror(errno));
+			continue;
+		}
+		else
+		{
+			break;
+		}
+	}
+	if (addrp == NULL)
+	{
+		log_msg(LOG_ERR, "could not connect to host \"%s\" port \"%s\"", host, port);
+		return EXIT_FAILURE;
+	}
+	freeaddrinfo(addr);
+	addr = NULL;
+	addrp = NULL;
+
+	while (true)
+	{
+		FD_ZERO(&rfds);
+		FD_SET(cxn, &rfds);
+		FD_SET(STDIN_FILENO, &rfds);
+		int nfds = (cxn > STDIN_FILENO ? cxn + 1 : STDIN_FILENO + 1);
+
+		retval = select(nfds, &rfds, NULL, NULL, NULL);
+		if (retval == -1)
+		{
+			log_msg(LOG_ERR, "select(): %s", strerror(errno));
+			if (close(cxn) != 0)
+				log_msg(LOG_ERR, "close(): %s", strerror(errno));
+			return EXIT_FAILURE;
+		}
+
+		if (FD_ISSET(cxn, &rfds))
+		{
+			read_pdu(cxn, buffer, &pdu);
+			pdu_sprint(&pdu, sprint_buffer);
+			puts(sprint_buffer);
+
+			if (quit_after_response)
 			{
-				// expected PDU types that don't end a response
-				case PDU_CACHE_RESPONSE:
-				case PDU_IPV4_PREFIX:
-				case PDU_IPV6_PREFIX:
-					break;
+				switch (pdu.pduType)
+				{
+					// expected PDU types that don't end a response
+					case PDU_CACHE_RESPONSE:
+					case PDU_IPV4_PREFIX:
+					case PDU_IPV6_PREFIX:
+						break;
 
-				// expected PDU types that do end a response
-				case PDU_END_OF_DATA:
-				case PDU_CACHE_RESET:
-				case PDU_ERROR_REPORT:
+					// expected PDU types that do end a response
+					case PDU_END_OF_DATA:
+					case PDU_CACHE_RESET:
+					case PDU_ERROR_REPORT:
 
-				// unexpected PDU types
-				case PDU_SERIAL_NOTIFY:
-				case PDU_SERIAL_QUERY:
-				case PDU_RESET_QUERY:
+					// unexpected PDU types
+					case PDU_SERIAL_NOTIFY:
+					case PDU_SERIAL_QUERY:
+					case PDU_RESET_QUERY:
 
-				default:
-					return EXIT_SUCCESS;
+					default:
+						if (close(cxn) != 0)
+							log_msg(LOG_ERR, "close(): %s", strerror(errno));
+						return EXIT_SUCCESS;
+				}
+			}
+		}
+
+		if (FD_ISSET(STDIN_FILENO, &rfds))
+		{
+			read_len = read(STDIN_FILENO, buffer, MAX_PDU_SIZE);
+			if (read_len < 0)
+			{
+				log_msg(LOG_ERR, "read(): %s", strerror(errno));
+			}
+			else if (read_len > 0)
+			{
+				write_len = write(cxn, buffer, read_len);
+				if (write_len < 0)
+					log_msg(LOG_ERR, "write(): %s", strerror(errno));
+				if (write_len != read_len)
+				{
+					log_msg(LOG_ERR, "couldn't send full PDU");
+					if (close(cxn) != 0)
+						log_msg(LOG_ERR, "close(): %s", strerror(errno));
+					return EXIT_FAILURE;
+				}
 			}
 		}
 	}
+
+	if (close(cxn) != 0)
+		log_msg(LOG_ERR, "close(): %s", strerror(errno));
 
 	return EXIT_SUCCESS;
 }
@@ -507,27 +607,27 @@ int main(int argc, char ** argv)
 		return EXIT_FAILURE;
 	}
 
-	if (argc != 2)
+	if (argc < 2)
 	{
 		do_help(argv[0]);
 		return EXIT_FAILURE;
 	}
-	else if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
+	else if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
 	{
 		do_help(argv[0]);
 		return EXIT_SUCCESS;
 	}
-	else if (strcmp(argv[1], "send") == 0)
+	else if (argc == 2 && strcmp(argv[1], "write") == 0)
 	{
-		return do_send();
+		return do_write();
 	}
-	else if (strcmp(argv[1], "recv") == 0)
+	else if (argc == 4 && strcmp(argv[1], "client") == 0)
 	{
-		return do_recv(false);
+		return do_client(argv[2], argv[3], false);
 	}
-	else if (strcmp(argv[1], "recv_one") == 0)
+	else if (argc == 4 && strcmp(argv[1], "client_one") == 0)
 	{
-		return do_recv(true);
+		return do_client(argv[2], argv[3], true);
 	}
 	else
 	{
