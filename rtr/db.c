@@ -7,6 +7,7 @@
 #include "mysql-c-api/rtr.h"
 
 #include "config.h"
+#include "signals.h"
 #include "db.h"
 
 
@@ -441,6 +442,8 @@ static void cleanup(void * run_state_voidp)
 
 void * db_main(void * args_voidp)
 {
+	block_signals();
+
 	struct run_state run_state;
 
 	initialize_run_state(&run_state, args_voidp);

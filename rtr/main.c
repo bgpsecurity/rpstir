@@ -13,70 +13,134 @@
 
 #include "bag.h"
 #include "queue.h"
+#include "logging.h"
 #include "mysql-c-api/connect.h"
 
 #include "cache_state.h"
 #include "config.h"
-#include "logging.h"
+#include "signals.h"
 
 #include "db.h"
 #include "connection_control.h"
-
-/*
-	TODO: handle signals properly
-	TODO: make sure other threads handle signals properly
-
-	Before exiting:
-		1. Cancel cxn_ctl
-		2. Join cxn_ctl
-		3. Cancel all db threads
-		4. Join all db threads
-		* Close and free resources.
-*/
 
 
 // this is ok because there's only one main thread
 static char errorbuf[ERROR_BUF_SIZE];
 
 
-static bool create_db_thread(Bag * db_threads, struct db_main_args * db_main_args)
+static void signal_handler(int signal)
 {
-	if (db_threads == NULL ||
-		db_main_args == NULL)
-	{
-		LOG(LOG_ERR, "got NULL argument");
-		return false;
-	}
+	LOG(LOG_NOTICE, "received signal %d", signal);
+
+	pthread_exit(NULL);
+}
+
+
+struct run_state {
+	bool log_opened;
+
+	bool listen_fd_initialized;
+	int listen_fd;
+
+	Queue * db_request_queue;
+	Bag * db_currently_processing;
+
+	bool db_semaphore_initialized;
+	db_semaphore_t db_semaphore;
+
+	void * db;
+
+	bool global_cache_state_initialized;
+	struct global_cache_state global_cache_state;
+
+	bool db_thread_initialized;
+	pthread_t * db_thread;
+
+	Bag * db_threads;
+
+	bool connection_control_thread_initialized;
+	pthread_t connection_control_thread;
+
+	// the below members are initialized by startup() and are not involved in cleanup
+	struct db_main_args db_main_args;
+	struct connection_control_main_args connection_control_main_args;
+};
+
+
+static void initialize_run_state(struct run_state * run_state)
+{
+	run_state->log_opened = false;
+
+	run_state->listen_fd_initialized = false;
+
+	run_state->db_request_queue = NULL;
+	run_state->db_currently_processing = NULL;
+
+	run_state->db_semaphore_initialized = false;
+
+	run_state->db = NULL;
+
+	run_state->global_cache_state_initialized = false;
+
+	run_state->db_thread_initialized = false;
+	run_state->db_thread = NULL;
+
+	run_state->db_threads = NULL;
+
+	run_state->connection_control_thread_initialized = false;
+}
+
+
+static bool create_db_thread(struct run_state * run_state)
+{
+	// TODO: handle signals
 
 	int retval;
 
-	pthread_t * thread = malloc(sizeof(pthread_t));
-	if (thread == NULL)
+	run_state->db_thread_initialized = false;
+	run_state->db_thread = malloc(sizeof(pthread_t));
+	if (run_state->db_thread == NULL)
 	{
 		LOG(LOG_ERR, "can't allocate memory for db thread id");
 		return false;
 	}
 
-	retval = pthread_create(thread, NULL, db_main, (void *)db_main_args);
+	retval = pthread_create(run_state->db_thread, NULL, db_main, &run_state->db_main_args);
 	if (retval != 0)
 	{
 		ERR_LOG(retval, errorbuf, "pthread_create()");
-		free((void *)thread);
+		free(run_state->db_thread);
+		run_state->db_thread = NULL;
 		return false;
 	}
+	run_state->db_thread_initialized = true;
 
-	if (!Bag_add(db_threads, (void *)thread))
+	if (!Bag_add(run_state->db_threads, run_state->db_thread))
 	{
 		LOG(LOG_ERR, "can't add db thread id to bag");
 
-		retval = pthread_cancel(*thread);
+		retval = pthread_cancel(*run_state->db_thread);
 		if (retval != 0)
 		{
 			ERR_LOG(retval, errorbuf, "pthread_cancel()");
 		}
-		free((void *)thread);
+
+		retval = pthread_join(*run_state->db_thread, NULL);
+		if (retval != 0)
+		{
+			ERR_LOG(retval, errorbuf, "pthread_join()");
+		}
+
+		run_state->db_thread_initialized = false;
+
+		free(run_state->db_thread);
+		run_state->db_thread = NULL;
+
 		return false;
 	}
+
+	run_state->db_thread = NULL;
+	run_state->db_thread_initialized = false;
 
 	return true;
 }
@@ -131,114 +195,222 @@ static void cancel_all_db_threads(Bag * db_threads)
 }
 
 
-int main (int argc, char ** argv)
+static void cleanup(void * run_state_voidp)
 {
-	ssize_t i;
-	int retval1;
+	struct run_state * run_state = (struct run_state *)run_state_voidp;
+	int retval;
 
-	(void)argc;
-	(void)argv;
+	if (run_state->connection_control_thread_initialized)
+	{
+		retval = pthread_cancel(run_state->connection_control_thread);
+		if (retval != 0)
+		{
+			ERR_LOG(retval, errorbuf, "pthread_cancel(connection_control)");
+		}
+
+		retval = pthread_join(run_state->connection_control_thread, NULL);
+		if (retval != 0)
+		{
+			ERR_LOG(retval, errorbuf, "pthread_join(connection_control)");
+		}
+
+		run_state->connection_control_thread_initialized = false;
+	}
+
+	if (run_state->db_threads != NULL)
+	{
+		cancel_all_db_threads(run_state->db_threads);
+		Bag_free(run_state->db_threads);
+		run_state->db_threads = NULL;
+	}
+
+	if (run_state->db_thread != NULL)
+	{
+		if (run_state->db_thread_initialized)
+		{
+			retval = pthread_cancel(*run_state->db_thread);
+			if (retval != 0)
+			{
+				ERR_LOG(retval, errorbuf, "pthread_cancel(db_thread)");
+			}
+
+			retval = pthread_join(*run_state->db_thread, NULL);
+			if (retval != 0)
+			{
+				ERR_LOG(retval, errorbuf, "pthread_join(db_thread)");
+			}
+
+			run_state->db_thread_initialized = false;
+		}
+
+		free(run_state->db_thread);
+		run_state->db_thread = NULL;
+	}
+
+	if (run_state->global_cache_state_initialized)
+	{
+		close_global_cache_state(&run_state->global_cache_state);
+		run_state->global_cache_state_initialized = false;
+	}
+
+	if (run_state->db != NULL)
+	{
+		disconnectDb(run_state->db);
+		run_state->db = NULL;
+	}
+
+	if (run_state->db_semaphore_initialized)
+	{
+		if (sem_destroy(&run_state->db_semaphore) != 0)
+			ERR_LOG(errno, errorbuf, "sem_destroy()");
+		run_state->db_semaphore_initialized = false;
+	}
+
+	if (run_state->db_currently_processing != NULL)
+	{
+		Bag_free(run_state->db_currently_processing);
+		run_state->db_currently_processing = NULL;
+	}
+
+	if (run_state->db_request_queue != NULL)
+	{
+		Queue_free(run_state->db_request_queue);
+		run_state->db_request_queue = NULL;
+	}
+
+	if (run_state->listen_fd_initialized)
+	{
+		if (close(run_state->listen_fd) != 0)
+			ERR_LOG(errno, errorbuf, "close(listen_fd)");
+		run_state->listen_fd_initialized = false;
+	}
+
+	if (run_state->log_opened)
+	{
+		CLOSE_LOG();
+		run_state->log_opened = false;
+	}
+}
+
+
+static void startup(struct run_state * run_state)
+{
+	// TODO: block signals at some key points to ensure run_state
+	// always has pointers to all threads
+
+	int retval, i;
 
 	OPEN_LOG(RTR_LOG_IDENT, RTR_LOG_FACILITY);
+	run_state->log_opened = true;
 
-	int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (listen_fd == -1)
+	run_state->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (run_state->listen_fd == -1)
 	{
 		ERR_LOG(errno, errorbuf, "socket()");
-		goto err_log;
+		pthread_exit(NULL);
 	}
+	run_state->listen_fd_initialized = true;
 
 	struct sockaddr_in bind_addr;
 	bind_addr.sin_family = AF_INET;
 	bind_addr.sin_port = htons(LISTEN_PORT);
 	bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (bind(listen_fd, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) != 0)
+	if (bind(run_state->listen_fd, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "bind()");
-		goto err_listen_fd;
+		pthread_exit(NULL);
 	}
 
-	if (listen(listen_fd, INT_MAX) != 0)
+	if (listen(run_state->listen_fd, INT_MAX) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "listen()");
-		goto err_listen_fd;
+		pthread_exit(NULL);
 	}
 
-	Queue * db_request_queue = Queue_new(true);
-	if (db_request_queue == NULL)
+	run_state->db_request_queue = Queue_new(true);
+	if (run_state->db_request_queue == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_request_queue");
-		goto err_listen_fd;
+		pthread_exit(NULL);
 	}
 
-	Bag * db_currently_processing = Bag_new(true);
-	if (db_currently_processing == NULL)
+	run_state->db_currently_processing = Bag_new(true);
+	if (run_state->db_currently_processing == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_currently_processing");
-		goto err_db_request_queue;
+		pthread_exit(NULL);
 	}
 
-	db_semaphore_t * db_semaphore = malloc(sizeof(db_semaphore_t));
-	if (db_semaphore == NULL)
-	{
-		LOG(LOG_ERR, "can't allocate space for db_semaphore");
-		goto err_db_currently_processing;
-	}
-
-	if (sem_init(db_semaphore, 0, 0) != 0)
+	if (sem_init(&run_state->db_semaphore, 0, 0) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "sem_init() for db_semaphore");
-		goto err_db_seamphore_malloc;
+		pthread_exit(NULL);
 	}
+	run_state->db_semaphore_initialized = true;
 
-	void * db = connectDbDefault();
-	if (db == NULL)
+	run_state->db = connectDbDefault();
+	if (run_state->db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
-		goto err_db_semaphore_init;
+		pthread_exit(NULL);
 	}
 
-	struct global_cache_state global_cache_state;
-	if (!initialize_global_cache_state(&global_cache_state, db))
+	if (!initialize_global_cache_state(&run_state->global_cache_state, run_state->db))
 	{
 		LOG(LOG_ERR, "can't initialize global cache state");
-		goto err_db;
+		pthread_exit(NULL);
 	}
+	run_state->global_cache_state_initialized = true;
 
-	Bag * db_threads = Bag_new(false);
-	if (db_threads == NULL)
+	run_state->db_threads = Bag_new(false);
+	if (run_state->db_threads == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_threads");
-		goto err_global_cache_state_init;
+		pthread_exit(NULL);
 	}
 
-	struct db_main_args db_main_args;
-	db_main_args.semaphore = db_semaphore;
-	db_main_args.db_request_queue = db_request_queue;
-	db_main_args.db_currently_processing = db_currently_processing;
+	run_state->db_main_args.semaphore = &run_state->db_semaphore;
+	run_state->db_main_args.db_request_queue = run_state->db_request_queue;
+	run_state->db_main_args.db_currently_processing = run_state->db_currently_processing;
 
 	for (i = 0; i < DB_INITIAL_THREADS; ++i)
 	{
-		if (!create_db_thread(db_threads, &db_main_args))
+		if (!create_db_thread(run_state))
 		{
 			LOG(LOG_ERR, "error creating db thread");
-			goto err_db_threads;
+			pthread_exit(NULL);
 		}
 	}
 
-	struct connection_control_main_args connection_control_main_args;
-	connection_control_main_args.listen_fd = listen_fd;
-	connection_control_main_args.db_request_queue = db_request_queue;
-	connection_control_main_args.db_semaphore = db_semaphore;
-	connection_control_main_args.global_cache_state = &global_cache_state;
+	run_state->connection_control_main_args.listen_fd = run_state->listen_fd;
+	run_state->connection_control_main_args.db_request_queue = run_state->db_request_queue;
+	run_state->connection_control_main_args.db_semaphore = &run_state->db_semaphore;
+	run_state->connection_control_main_args.global_cache_state = &run_state->global_cache_state;
 
-	pthread_t connection_control_thread;
-	retval1 = pthread_create(&connection_control_thread, NULL, connection_control_main, &connection_control_main_args);
-	if (retval1 != 0)
+	retval = pthread_create(&run_state->connection_control_thread, NULL,
+		connection_control_main, &run_state->connection_control_main_args);
+	if (retval != 0)
 	{
-		ERR_LOG(retval1, errorbuf, "pthread_create() for connection control thread");
-		goto err_db_threads;
+		ERR_LOG(retval, errorbuf, "pthread_create() for connection control thread");
+		pthread_exit(NULL);
 	}
+	run_state->connection_control_thread_initialized = true;
+}
+
+
+int main (int argc, char ** argv)
+{
+	(void)argc;
+	(void)argv;
+
+	struct run_state run_state;
+	initialize_run_state(&run_state);
+
+	pthread_cleanup_push(cleanup, &run_state);
+
+	handle_signals(signal_handler);
+
+	startup(&run_state);
 
 	while (true)
 	{
@@ -246,32 +418,13 @@ int main (int argc, char ** argv)
 
 		// TODO: Check the load on the database threads, adding or removing threads as needed.
 
-		if (!update_global_cache_state(&global_cache_state, db))
+		if (!update_global_cache_state(&run_state.global_cache_state, run_state.db))
 		{
 			LOG(LOG_NOTICE, "error updating global cache state");
 		}
 	}
 
-	return EXIT_SUCCESS;
+	pthread_cleanup_pop(1);
 
-err_db_threads:
-	cancel_all_db_threads(db_threads);
-	Bag_free(db_threads);
-err_global_cache_state_init:
-	close_global_cache_state(&global_cache_state);
-err_db:
-	disconnectDb(db);
-err_db_semaphore_init:
-	if (sem_destroy(db_semaphore) != 0) ERR_LOG(errno, errorbuf, "sem_destroy()");
-err_db_seamphore_malloc:
-	free((void *)db_semaphore);
-err_db_currently_processing:
-	Bag_free(db_currently_processing);
-err_db_request_queue:
-	Queue_free(db_request_queue);
-err_listen_fd:
-	if (close(listen_fd) != 0) ERR_LOG(errno, errorbuf, "close(listen_fd)");
-err_log:
-	CLOSE_LOG();
 	return EXIT_FAILURE;
 }
