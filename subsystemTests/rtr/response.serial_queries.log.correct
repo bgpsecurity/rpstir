@@ -1,0 +1,42 @@
+--- serial_query 4242 5
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
+--- serial_query 42 5
+--- expecting: empty set
+TODO
+--- serial_query 42 5
+--- expecting: difference from 5 to 7
+TODO
+--- serial_query 42 7
+--- expecting: empty set
+TODO
+--- serial_query 42 5
+--- expecting: difference from 5 to 8
+TODO
+--- serial_query 42 6
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
+--- serial_query 42 7
+--- expecting: difference from 7 to 8
+TODO
+--- serial_query 42 8
+--- expecting: empty set
+TODO
+--- serial_query 42 5
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
+--- serial_query 42 6
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
+--- serial_query 42 7
+--- expecting: difference from 7 to 8
+TODO
+--- serial_query 42 8
+--- expecting: empty set
+TODO
+--- serial_query 42 7
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
+--- serial_query 42 8
+--- expecting: empty set
+TODO
