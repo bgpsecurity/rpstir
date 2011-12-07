@@ -383,6 +383,7 @@ int readSerNumAsCurrent(void *connp, uint32_t serial,
 
     char *sn_prev_str = NULL;
     if (get_ser_num_prev) {
+        *prev_was_null = 0;
         if (getStringByFieldname(&sn_prev_str, result, row, "prev_serial_num")) {
             if (sn_prev_str) {
                 free (sn_prev_str);
@@ -781,6 +782,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     if (state->no_new_data) {
         LOG(LOG_INFO, "no new data for the router from the given serial number");
         fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
+        LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
         return (num_pdus);
     }
@@ -855,18 +857,24 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         } else {
             // check whether to End or continue with next ser num
             ret = readSerNumAsPrev(connp, state->ser_num, 1, &next_ser_num);
-            if (ret == -1) {
-                // NOTE:  even though error, still feeding previous results,
-                //     which should be unaffected by this error.
-                LOG(LOG_ERR, "error while checking next serial number");
+            if (ret == 0) {  // db has sn_next for this sn
+                *is_done = 0;
+                state->ser_num = next_ser_num;
+                state->first_row = 0;
+                mysql_free_result(result);
+                return (num_pdus);
+            } else if (ret == 1) {  // db has no sn_next for this sn
+                LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
                 fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
                 mysql_free_result(result);
                 return (num_pdus);
             } else {
-                state->ser_num = next_ser_num;
-                state->first_row = 0;
+                // NOTE:  even though error, still feeding previous results,
+                //     which should be unaffected by this error.
+                LOG(LOG_ERR, "error while looking for next serial number");
+                LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+                fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
                 mysql_free_result(result);
-                *is_done = 0;
                 return (num_pdus);
             }
         }
@@ -1030,6 +1038,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
             pdu_free_array(pdus, max_rows);
             return (-1);
         } else {
+            LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
             fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
             mysql_free_result(result);
             return (num_pdus);
