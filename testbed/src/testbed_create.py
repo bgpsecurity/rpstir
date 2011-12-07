@@ -206,7 +206,7 @@ def create_driver(iana):
 
     print "Finished creation driver loop. repo_depth = "+ str(repo_depth)+\
             " repo_size = "+str(repo_size)
-    print "MAX_REPO depth" + str(MAX_DEPTH)
+    print "MAX_REPO depth " + str(MAX_DEPTH)
 
 
 def create_children(ca_node, repo_size):
@@ -236,7 +236,9 @@ def create_children(ca_node, repo_size):
 #   and functionality is correctly working. SPACED not TABBED function
 #
 def main():
-        fileName = 'small.ini'
+        fileName = 'test.ini'
+        if len(sys.argv) > 1:
+            fileName = sys.argv[1]
 
         configuration_parser(FACTORIES,fileName)
         print FACTORIES
