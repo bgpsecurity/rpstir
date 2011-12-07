@@ -538,7 +538,13 @@ static int do_client(const char * host, const char * port, bool quit_after_respo
 
 		if (FD_ISSET(cxn, &rfds))
 		{
-			read_pdu(cxn, buffer, &pdu);
+			if (!read_pdu(cxn, buffer, &pdu))
+			{
+				if (close(cxn) != 0)
+					log_msg(LOG_ERR, "close(): %s", strerror(errno));
+				return EXIT_SUCCESS;
+			}
+
 			pdu_sprint(&pdu, sprint_buffer);
 			puts(sprint_buffer);
 
