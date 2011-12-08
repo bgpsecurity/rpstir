@@ -476,6 +476,8 @@ static int do_client(const char * host, const char * port, bool quit_after_respo
 	int retval;
 	ssize_t read_len, write_len;
 	fd_set rfds;
+	int nfds;
+	bool stdin_open = true;
 
 	struct addrinfo hints, *addr, *addrp;
 	memset(&hints, 0, sizeof(hints));
@@ -524,9 +526,16 @@ static int do_client(const char * host, const char * port, bool quit_after_respo
 	while (true)
 	{
 		FD_ZERO(&rfds);
+
 		FD_SET(cxn, &rfds);
-		FD_SET(STDIN_FILENO, &rfds);
-		int nfds = (cxn > STDIN_FILENO ? cxn + 1 : STDIN_FILENO + 1);
+		nfds = cxn + 1;
+
+		if (stdin_open)
+		{
+			FD_SET(STDIN_FILENO, &rfds);
+			if (STDIN_FILENO + 1 > nfds)
+				nfds = STDIN_FILENO + 1;
+		}
 
 		retval = select(nfds, &rfds, NULL, NULL, NULL);
 		if (retval == -1)
@@ -579,12 +588,18 @@ static int do_client(const char * host, const char * port, bool quit_after_respo
 			}
 		}
 
-		if (FD_ISSET(STDIN_FILENO, &rfds))
+		if (stdin_open && FD_ISSET(STDIN_FILENO, &rfds))
 		{
 			read_len = read(STDIN_FILENO, buffer, MAX_PDU_SIZE);
 			if (read_len < 0)
 			{
 				log_msg(LOG_ERR, "read(): %s", strerror(errno));
+			}
+			else if (read_len == 0)
+			{
+				if (close(STDIN_FILENO) != 0)
+					log_msg(LOG_ERR, "close(): %s", strerror(errno));
+				stdin_open = false;
 			}
 			else if (read_len > 0)
 			{
