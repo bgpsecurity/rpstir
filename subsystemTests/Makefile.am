@@ -20,5 +20,9 @@ EXTRA_DIST = \
 	test.include \
 	ttest*.par
 
-CLEANFILES = *.log
+CLEANFILES = \
+	garbage.log \
+	query.log \
+	rcli.log \
+	rsync_aur.log
 # TODO: are there more CLEANFILES? C*.cer?
