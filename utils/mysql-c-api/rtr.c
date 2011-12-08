@@ -23,7 +23,7 @@ struct query_state {
 };
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 void free_query_state(void *qs) {
     if (qs)
@@ -32,7 +32,7 @@ void free_query_state(void *qs) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 int getCacheNonce(void *connp, cache_nonce_t *nonce) {
     MYSQL *mysqlp = (MYSQL*) connp;
@@ -76,7 +76,7 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
  * @note Does not matter if serial_num is not null, or has_full.
  * @pre Each timestamp in rtr_update occurs in exactly 1 row.
  * @param[out] serial A return parameter for the serial number.
@@ -129,7 +129,7 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
  * Probably obsolete.  If not used by Dec 19, 11, then delete
 ------------------------------------------------------------------------------
 int isValidSerNumPrev(void *connp, uint32_t sn) {
@@ -141,7 +141,7 @@ int isValidSerNumPrev(void *connp, uint32_t sn) {
 }*/
 
 
-/*==============================================================================
+/**=============================================================================
  * Probably obsolete.  If not used by Dec 19, 11, then delete
 ------------------------------------------------------------------------------
 int isValidSerNumData(void *connp, uint32_t sn) {
@@ -179,7 +179,7 @@ int isValidSerNumData(void *connp, uint32_t sn) {
 }*/
 
 
-/*==============================================================================
+/**=============================================================================
  * Probably obsolete.  If not used by Dec 19, 11, then delete
  * @pre serial_num is the first field in the rtr_update.
  * @ret 1 if serial number is found in rtr_update, -1 on error, 0 if serial
@@ -236,7 +236,7 @@ int isValidSerNum(void *connp, uint32_t sn) {
 }*/
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 int getNumRowsInTable(void *connp, char *table_name) {
     MYSQL *mysqlp = (MYSQL*) connp;
@@ -262,7 +262,8 @@ int getNumRowsInTable(void *connp, char *table_name) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
+ * @brief Get info from db row where ser_num_prev = rtr_update.prev_serial_num.
  * @param[in] ser_num_prev The serial_num to find in rtr_update.prev_serial_num.
  * @param[in] get_ser_num If non-zero, read serial_num.
  * @param[out] ser_num The value from the db.
@@ -333,7 +334,8 @@ int readSerNumAsPrev(void *connp, uint32_t ser_num_prev,
 }
 
 
-/*==============================================================================
+/**=============================================================================
+ * @brief Get info from db row where serial = rtr_update.serial_num.
  * @param[in] serial The serial_num to find in rtr_update.serial_num.
  * @param[in] get_ser_num_prev If non-zero, read prev_serial_num.
  * @param[out] serial_prev The value from the db.
@@ -455,64 +457,7 @@ int readSerNumAsCurrent(void *connp, uint32_t serial,
 }
 
 
-/*==============================================================================
- * @pre All rows in rtr_update are valid.
-------------------------------------------------------------------------------*/
-int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
-    struct query_state *state = NULL;
-    uint32_t serial_next = 0;
-    int ret = 0;
-
-    state = calloc(1, sizeof(struct query_state));
-    if (!state) {
-        LOG(LOG_ERR, "could not alloc for query_state");
-        return (-1);
-    }
-    state->ser_num = 0;
-    state->first_row = 0;
-    state->bad_ser_num = 0;
-    state->data_sent = 0;
-    state->no_new_data = 0;
-    state->not_ready = 0;
-    *query_state = (void*) state;
-
-    ret = readSerNumAsPrev(connp, serial, 1, &serial_next);
-    if (ret == 0) {  // ser num found (as prev)
-        state->ser_num = serial_next;
-        return (0);
-    } else if (ret == 1) {  // ser num not found (as prev)
-        // continue after this if-block
-    } else if (ret == -1) {  // some unspecified error
-        return (-1);
-    }
-
-    ret = readSerNumAsCurrent(connp, serial, 0, NULL, NULL, 0, NULL);
-    if (ret == 0) {  // ser num found (as current)
-        state->ser_num = serial;
-        state->no_new_data = 1;
-        return (0);
-    } else if (ret == 1) {  // ser num not found (as current)
-        // continue after this if-block
-    } else if (ret == -1) {  // some unspecified error
-        return (-1);
-    }
-
-    ret = getNumRowsInTable(connp, "rtr_update");
-    if (ret == -1) {
-        LOG(LOG_ERR, "could not retrieve number of rows from rtr_update");
-        return (-1);
-    } else if (ret == 0) {  // rtr_update is empty
-        state->not_ready = 1;
-    } else if (ret > 0) {  // rtr_update is not empty,
-        // but the given serial number is not recognized
-        state->bad_ser_num = 1;
-    }
-
-    return (0);
-}
-
-
-/*==============================================================================
+/**=============================================================================
  * @param field_str has the format:  <address>/<length>[(<max_length>)]
  * It originates from a database field `ip_addr' and gets null terminated
  *     before being passed to this function.
@@ -620,7 +565,7 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
 }
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
         int check_is_announce) {
@@ -734,7 +679,64 @@ int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
 }
 
 
-/*==============================================================================
+/**=============================================================================
+ * @pre All rows in rtr_update are valid.
+------------------------------------------------------------------------------*/
+int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
+    struct query_state *state = NULL;
+    uint32_t serial_next = 0;
+    int ret = 0;
+
+    state = calloc(1, sizeof(struct query_state));
+    if (!state) {
+        LOG(LOG_ERR, "could not alloc for query_state");
+        return (-1);
+    }
+    state->ser_num = 0;
+    state->first_row = 0;
+    state->bad_ser_num = 0;
+    state->data_sent = 0;
+    state->no_new_data = 0;
+    state->not_ready = 0;
+    *query_state = (void*) state;
+
+    ret = readSerNumAsPrev(connp, serial, 1, &serial_next);
+    if (ret == 0) {  // ser num found (as prev)
+        state->ser_num = serial_next;
+        return (0);
+    } else if (ret == 1) {  // ser num not found (as prev)
+        // continue after this if-block
+    } else if (ret == -1) {  // some unspecified error
+        return (-1);
+    }
+
+    ret = readSerNumAsCurrent(connp, serial, 0, NULL, NULL, 0, NULL);
+    if (ret == 0) {  // ser num found (as current)
+        state->ser_num = serial;
+        state->no_new_data = 1;
+        return (0);
+    } else if (ret == 1) {  // ser num not found (as current)
+        // continue after this if-block
+    } else if (ret == -1) {  // some unspecified error
+        return (-1);
+    }
+
+    ret = getNumRowsInTable(connp, "rtr_update");
+    if (ret == -1) {
+        LOG(LOG_ERR, "could not retrieve number of rows from rtr_update");
+        return (-1);
+    } else if (ret == 0) {  // rtr_update is empty
+        state->not_ready = 1;
+    } else if (ret > 0) {  // rtr_update is not empty,
+        // but the given serial number is not recognized
+        state->bad_ser_num = 1;
+    }
+
+    return (0);
+}
+
+
+/**=============================================================================
  * @note see rtr.h about when to set is_done to 0 or 1.
  * @note If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
@@ -889,7 +891,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 }
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 void stopSerialQuery(void *connp, void * query_state) {
     (void) connp;  // to silence -Wunused-parameter
@@ -899,7 +901,7 @@ void stopSerialQuery(void *connp, void * query_state) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 int startResetQuery(void *connp, void ** query_state) {
     struct query_state *state = NULL;
@@ -948,8 +950,8 @@ int startResetQuery(void *connp, void ** query_state) {
 }
 
 
-/*==============================================================================
- * If error, I call pdu_free_array(); else, caller does.
+/**=============================================================================
+ * @note If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
 ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         PDU ** _pdus, bool * is_done) {
@@ -1059,7 +1061,7 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 }
 
 
-/*==============================================================================
+/**=============================================================================
 ------------------------------------------------------------------------------*/
 void stopResetQuery(void *connp, void * query_state) {
     (void) connp;  // to silence -Wunused-parameter
@@ -1069,7 +1071,7 @@ void stopResetQuery(void *connp, void * query_state) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
  * not currently an API function.  currently for testing
  * @pre table rtr_nonce has exactly 0 or 1 rows.
  * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
@@ -1107,7 +1109,7 @@ int setCacheNonce(void *connp, uint16_t nonce) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
  * This function is only for testing.  Someone else is responsible for inserting
  *   records into rtr_update.
 ------------------------------------------------------------------------------*/
@@ -1157,7 +1159,7 @@ int addNewSerNum(void *connp, const uint32_t *in) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
  * This function is only for testing.  Someone else is responsible for deleting
  *   records from rtr_update.
 ------------------------------------------------------------------------------*/
@@ -1181,7 +1183,7 @@ int deleteSerNum(void *connp, uint32_t ser_num) {
 }
 
 
-/*==============================================================================
+/**=============================================================================
  * This function is only for testing.  Someone else is responsible for deleting
  *   records from rtr_update.
 ------------------------------------------------------------------------------*/
