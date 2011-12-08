@@ -41,6 +41,7 @@ int startSerialQuery(void *connp, void ** query_state, serial_number_t serial);
 		This structure is updated with each call to serialQueryGetNext()
 		so that subsequent calls don't return the same data.
 	@param num_rows The maximum number of rows to fetch.
+	    The number of PDUs returned are allowed to exceed this.
 	@param pdus A return parameter for an array of PDUs with the results.
 		This is only filled in if the function returns a postive number.
 		The rest of this paragraph only applies when this function returns a nonnegative number.
