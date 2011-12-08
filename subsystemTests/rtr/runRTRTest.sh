@@ -30,6 +30,23 @@ client () {
 	rm -f "$INPUT_PDU_FILE"
 }
 
+client_multiple_start () {
+	SUBTEST_NAME="$1"
+	EXPECTED_RESULTS="$2"
+	N="$3"
+	echo "--- $SUBTEST_NAME" | tee -a response.log
+	echo "--- expecting: $EXPECTED_RESULTS x$N" | tee -a response.log
+
+	CLIENT_MULTIPLE_pids=""
+	for x in `seq 1 "$N"`; do
+		"$CLIENT" client_one localhost $PORT | tee -a response.log &
+		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids $!"
+	done
+}
+client_multiple_wait () {
+	wait $CLIENT_MULTIPLE_pids
+}
+
 
 compare () {
 	name="$1"
@@ -178,9 +195,11 @@ start_test bad_protocol_operation # erroneous use of valid PDUs
 stop_test bad_protocol_operation
 
 start_test serial_notify
-# TODO
+client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
+make_serial 8 20 1 3
+client_multiple_wait
 stop_test serial_notify
 
 start_test reset_query_last
-client "reset_query" "all data for serial 8"
+client "reset_query" "all data for serial 20"
 stop_test reset_query_last
