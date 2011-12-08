@@ -1,31 +1,21 @@
 AUTOMAKE_OPTIONS = 1.6 foreign
 
-SUBDIRS = utils cg roa-lib proto roa-utils rsync_aur testcases server testbed
+SUBDIRS = utils cg roa-lib proto roa-utils rsync_aur testcases server testbed subsystemTests
 
 EXTRA_DIST = \
 	autogen.sh \
 	doc \
 	envir.setup \
 	INSTRUCTIONS \
-	license \
+	LICENSE \
 	README-AUTOCONF \
 	run_scripts \
-	subsystemTests \
-	testing \
 	trap_errors
 
 CLEANFILES = \
 	query.log
 
 ACLOCAL_AMFLAGS = -I build-aux
-
-check-local:
-	cd testcases && ./makeall
-	cd subsystemTests && ./runSubsystemTest.sh 1 9
-	cd subsystemTests && ./runSubsystemTest.sh 2 8
-	cd subsystemTests && ./runSubsystemTest.sh 3 9
-	cd subsystemTests && ./runSubsystemTest4.sh
-	@echo '**** All RPKI Subsystem tests ran successfully. ****'
 
 tags:
 	find ${PWD} -name \*.[ch] | xargs etags --declarations
