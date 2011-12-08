@@ -7,9 +7,9 @@
 .ds LF Reynolds, et al 
 .ds RF FORMFEED[Page %]
 .ds LH Internet-Draft
-.ds RH June 2011
+.ds RH December 3, 2011
 .ds CH RPKI Local TA Management
-.ds CF Expires December 4, 2011
+.ds CF Expires June 5, 2012
 .hy 0
 .nh
 .ad l
@@ -17,9 +17,10 @@
 
 .nf
 .tl 'Secure Inter-Domain Routing''M. Reynolds'
-.tl 'Internet-Draft''S. Kent'
-.tl 'Intended status: Standards Track''BBN'
-.tl 'Expires: December 4, 2011''June 2, 2011'
+.tl 'Internet-Draft''IPSw'
+.tl 'Intended status: Standards Track''S. Kent'
+.tl 'Expires: June 5, 2012''BBN'
+.tl '''December 3, 2011'
 .fi
 
 .\" Note. The ".tl" directive is used to generate the leading header 
@@ -34,7 +35,7 @@
 
 .ce 2
 Local Trust Anchor Management for the Resource Public Key Infrastructure 
-<draft-ietf-sidr-ltamgmt-02.txt>
+<draft-ietf-sidr-ltamgmt-03.txt>
 .fi
 .in 3
 
@@ -52,7 +53,7 @@ The list of current Internet-Drafts can be accessed at \%http://www.ietf.org/1id
 
 The list of Internet-Draft Shadow Directories can be accessed at http://www.ietf.org/shadow.html
 
-This Internet-Draft will expire on December 4, 2011.
+This Internet-Draft will expire on June 5, 2012.
 
 .ti 0
 Copyright and License Notice\" Boilerplate from September 2009
@@ -62,63 +63,63 @@ Copyright (c) 2011 IETF Trust and the persons identified as the document authors
 
 This document is subject to BCP\078 and the IETF Trust's Legal Provisions Relating to IETF Documents \%(http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
 
-.bp
+.\".bp
 .ti 0
 Abstract
 
 This document describes a facility to enable a relying party (RP) to manage trust anchors (TAs) in the context of the Resource Public Key Infrastructure (RPKI). It is common to allow an RP to import TA material in the form of self-signed certificates. The facility described in this document allows an RP to impose constraints on such TAs. Because this mechanism is designed to operate in the RPKI context, the relevant constraints are the RFC 3779 extensions that bind address spaces and/or autonomous system (AS) numbers to entities. The primary motivation for this facility is to enable an RP to ensure that resource allocation information that it has acquired via some trusted channel is not overridden by the information acquired from the RPKI repository system or by the putative TAs that the RP imports. Specifically, the mechanism allows an RP to specify a set of bindings between public key identifiers and RFC 3779 extension data and will override any conflicting bindings expressed via the putative TAs and the certificates downloaded from the RPKI repository system. Although this mechanism is designed for local use by an RP, an entity that is accorded administrative control over a set of RPs may use this mechanism to convey its view of the RPKI to a set of RPs within its jurisdiction. The means by which this latter use case is effected is outside the scope of this document.
 
 
-
+.bp
 .\" \# TD4  -- Set TOC depth by altering this value (TD5 = depth 5)
 .\" \# TOC  -- Beginning of auto updated Table of Contents
 .in 0
 Table of Contents
 
 .nf
-   1  Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . 4
-      1.1  Terminology . . . . . . . . . . . . . . . . . . . . . . . . 5
-   2  Overview of Certificate Processing . . . . . . . . . . . . . . . 5
-      2.1  Target Certificate Processing . . . . . . . . . . . . . . . 5
-      2.2  Perforation . . . . . . . . . . . . . . . . . . . . . . . . 5
-      2.3  TA Re-parenting . . . . . . . . . . . . . . . . . . . . . . 6
-      2.4  Paracertificates  . . . . . . . . . . . . . . . . . . . . . 6
-   3  Format of the constraints file . . . . . . . . . . . . . . . . . 8
-      3.1  Relying party subsection  . . . . . . . . . . . . . . . . . 8
-      3.2  Flags subsection  . . . . . . . . . . . . . . . . . . . . . 8
-      3.3  Tags subsection . . . . . . . . . . . . . . . . . . . . . . 9
-         3.3.1  Xvalidity_dates tag  . . . . . . . . . . . . . . . .  10
-         3.3.2  Xcrldp tag . . . . . . . . . . . . . . . . . . . . .  10
-         3.3.3  Xcp tag  . . . . . . . . . . . . . . . . . . . . . .  11
-         3.3.4  Xaia tag . . . . . . . . . . . . . . . . . . . . . .  11
-      3.4  Blocks subsection . . . . . . . . . . . . . . . . . . . .  12
-   4  Certificate Processing Algorithm . . . . . . . . . . . . . . .  13
-      4.1  Proofreading algorithm  . . . . . . . . . . . . . . . . .  14
-      4.2  TA processing algorithm . . . . . . . . . . . . . . . . .  15
-         4.2.1  Preparatory processing (stage 0) . . . . . . . . . .  16
-         4.2.2  Target processing (stage 1)  . . . . . . . . . . . .  17
-         4.2.3  Ancestor processing (stage 2)  . . . . . . . . . . .  18
-         4.2.4  Tree processing (stage 3)  . . . . . . . . . . . . .  19
-         4.2.5  TA re-parenting (stage 4)  . . . . . . . . . . . . .  20
-      4.3  Discussion  . . . . . . . . . . . . . . . . . . . . . . .  21
-   5  Implications for Path Discovery  . . . . . . . . . . . . . . .  21
-      5.1  Two answers . . . . . . . . . . . . . . . . . . . . . . .  21
-      5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . .  22
-      5.3  No answer . . . . . . . . . . . . . . . . . . . . . . . .  22
-   6  Implications for Revocation  . . . . . . . . . . . . . . . . .  22
-      6.1  No state bits set . . . . . . . . . . . . . . . . . . . .  22
-      6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . .  23
-      6.3  PARA state bit set  . . . . . . . . . . . . . . . . . . .  23
-      6.4  Both ORIGINAL and PARA state bits set . . . . . . . . . .  23
-   7  Security Considerations  . . . . . . . . . . . . . . . . . . .  24
-   8  IANA Considerations  . . . . . . . . . . . . . . . . . . . . .  24
-   9  Acknowledgements . . . . . . . . . . . . . . . . . . . . . . .  24
-   10  References  . . . . . . . . . . . . . . . . . . . . . . . . .  24
-      10.1  Normative References . . . . . . . . . . . . . . . . . .  24
-      10.2  Informative References . . . . . . . . . . . . . . . . .  25
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  25
-   Appendix A: Sample Constraints File . . . . . . . . . . . . . . .  26
-   Appendix B: Optional Sorting Algorithm for Ancestor Processing  .  27
+   1  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     1.1  Terminology . . . . . . . . . . . . . . . . . . . . . . . .  5
+   2  Overview of Certificate Processing  . . . . . . . . . . . . . .  5
+     2.1  Target Certificate Processing . . . . . . . . . . . . . . .  5
+     2.2  Perforation . . . . . . . . . . . . . . . . . . . . . . . .  5
+     2.3  TA Re-parenting . . . . . . . . . . . . . . . . . . . . . .  6
+     2.4  Paracertificates  . . . . . . . . . . . . . . . . . . . . .  6
+   3  Format of the constraints file  . . . . . . . . . . . . . . . .  8
+     3.1  Relying party subsection  . . . . . . . . . . . . . . . . .  8
+     3.2  Flags subsection  . . . . . . . . . . . . . . . . . . . . .  8
+     3.3  Tags subsection . . . . . . . . . . . . . . . . . . . . . .  9
+       3.3.1  Xvalidity_dates tag . . . . . . . . . . . . . . . . . . 10
+       3.3.2  Xcrldp tag  . . . . . . . . . . . . . . . . . . . . . . 10
+       3.3.3  Xcp tag . . . . . . . . . . . . . . . . . . . . . . . . 11
+       3.3.4  Xaia tag  . . . . . . . . . . . . . . . . . . . . . . . 11
+     3.4  Blocks subsection . . . . . . . . . . . . . . . . . . . . . 12
+   4  Certificate Processing Algorithm  . . . . . . . . . . . . . . . 13
+     4.1  Proofreading algorithm  . . . . . . . . . . . . . . . . . . 14
+     4.2  TA processing algorithm . . . . . . . . . . . . . . . . . . 15
+       4.2.1  Preparatory processing (stage 0)  . . . . . . . . . . . 16
+       4.2.2  Target processing (stage 1) . . . . . . . . . . . . . . 17
+       4.2.3  Ancestor processing (stage 2) . . . . . . . . . . . . . 18
+       4.2.4  Tree processing (stage 3) . . . . . . . . . . . . . . . 19
+       4.2.5  TA re-parenting (stage 4) . . . . . . . . . . . . . . . 20
+     4.3  Discussion  . . . . . . . . . . . . . . . . . . . . . . . . 21
+   5  Implications for Path Discovery . . . . . . . . . . . . . . . . 21
+     5.1  Two answers . . . . . . . . . . . . . . . . . . . . . . . . 21
+     5.2  One answer  . . . . . . . . . . . . . . . . . . . . . . . . 22
+     5.3  No answer . . . . . . . . . . . . . . . . . . . . . . . . . 22
+   6  Implications for Revocation . . . . . . . . . . . . . . . . . . 22
+     6.1  No state bits set . . . . . . . . . . . . . . . . . . . . . 23
+     6.2  ORIGINAL state bit set  . . . . . . . . . . . . . . . . . . 23
+     6.3  PARA state bit set  . . . . . . . . . . . . . . . . . . . . 23
+     6.4  Both ORIGINAL and PARA state bits set . . . . . . . . . . . 24
+   7  Security Considerations . . . . . . . . . . . . . . . . . . . . 24
+   8  IANA Considerations . . . . . . . . . . . . . . . . . . . . . . 24
+   9  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . . . 24
+   10  References . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+     10.1  Normative References . . . . . . . . . . . . . . . . . . . 24
+     10.2  Informative References . . . . . . . . . . . . . . . . . . 25
+   Authors' Addresses . . . . . . . . . . . . . . . . . . . . . . . . 25
+   Appendix A: Sample Constraints File  . . . . . . . . . . . . . . . 26
+   Appendix B: Optional Sorting Algorithm for Ancestor Processing . . 27
 .fi
 .in 3
 
@@ -152,7 +153,7 @@ The fundamental aspect of the facility described in this document is one of cert
 .ti 0
 2.1  Target Certificate Processing
 
-If a certificate is acquired from the RPKI repository system and it's SKI is listed in the constraints file, it will be reissued directly under the RP TA certificate, with (possibly) modified RFC 3779 extensions. The modified extensions will include any RFC 3779 data expressed in the constraints file. In Section 4.2, target certificate processing corresponds to stage one of the algorithm.
+If a certificate is acquired from the RPKI repository system and its SKI is listed in the constraints file, it will be reissued directly under the RP TA certificate, with (possibly) modified RFC 3779 extensions. The modified extensions will include any RFC 3779 data expressed in the constraints file. In Section 4.2, target certificate processing corresponds to stage one of the algorithm.
 
 .ti 0
 2.2  Perforation
@@ -290,9 +291,9 @@ If this tag line is not present in the constraints file the default behavior is 
 .ti 0
 3.3.2  Xcrldp tag
 
-This tag line is used to control the value of the CRL distribution point extension in paracertificates. If this tag line is specified and there is a single tagvalue that is the string literal C, the CRLDP of the paracertificate is copied from the CRLDP of the original certificate from which it is derived. If this tag line is specified and there is a single tagvalue that is the string literal R, the CRLDP of the paracertificate is copied from the CRLDP of the RP's top level certificate. If this tag line is specified and there is a single tagvalue that is not one of these two reserved literals, or if there is more than one tagvalue, then each tagvalue is interpreted as a URL that will be placed in the CRLDP sequence in the paracertificate.
+This tag line is used to control the value of the CRL distribution point extension in paracertificates. If this tag line is specified and there is a single tagvalue that is the string literal C, the CRLDP of the paracertificate is copied from the CRLDP of the original certificate from which it is derived. If this tag line is specified and there is a single tagvalue that is the string literal R, the CRLDP of the paracertificate is copied from the CRLDP of the RP's top level certificate. If this tag line is specified and there is a single tagvalue that is not one of these two reserved literals, or if there is more than one tagvalue, then each tagvalue is interpreted as a URI that will be placed in the CRLDP sequence in the paracertificate.
 
-If this tag line is not present in the constraints file the default behavior is to copy the CRLDP from the original certificate to the corresponding paracertificate.
+If this tag line is not present in the constraints file the default behavior is to copy the CRLDP from the original certificate into the corresponding paracertificate.
 
 .ti 0
 3.3.3  Xcp tag
@@ -306,7 +307,7 @@ This option permits the RP to convert a value of the policyQualifierId field in 
 .ti 0
 3.3.4  Xaia tag
 
-This tag line is used to control the value of the Authority Information Access (AIA) extension in the paracertificate. If this tag line is present then it MUST have exactly one tagvalue. If this tagvalue is the string literal C, then the AIA field in the paracertificate is copied from the AIA field in the original certificate from which it is derived. If this tag line is present and the tagvalue is not the reserved string literal, then the tagvalue MUST be a URL. This URL is set as the AIA extension of the paracertificates that are created.
+This tag line is used to control the value of the Authority Information Access (AIA) extension in the paracertificate. If this tag line is present then it MUST have exactly one tagvalue. If this tagvalue is the string literal C, then the AIA field in the paracertificate is copied from the AIA field in the original certificate from which it is derived. If this tag line is present and the tagvalue is not the reserved string literal, then the tagvalue MUST be a URI. This URI is set as the AIA extension of the paracertificates that are created.
 
 If this tag line is not specified the default behavior is to use copy the AIA field from the original certificate to the AIA field of the paracertificate.
 
@@ -351,26 +352,26 @@ TARGET
 
 If the NOCHAIN bit is set, this indicates that a full path between the given certificate and a TA has not yet been discovered. If the ORIGINAL bit is set, this indicates that the certificate is question has been processed by some part of the processing algorithm described in Section 4.2. If it was processed as part of stage one processing, as described in section 4.2.2, the TARGET bit will also be set. Finally, any paracertificate will have the PARA bit set.
 
-At the beginning of algorithm processing each certificate in the local RPKI repository has the ORIGINAL, PARA and TARGET bits clear. If a certificate has a complete, validated path to a TA, or is itself a TA, then that certificate will have the NOCHAIN bit clear, otherwise it will have the NOCHAIN bit set. As the certificate processing algorithm is executed, the bit state of original certificates may changed. In addition, since the certificate processing algorithm may also be creating paracertificates, it is responsible for actively setting or clearing the state of these four bits on those paracertificates.
+At the beginning of algorithm processing each certificate in the local RPKI repository has the ORIGINAL, PARA and TARGET bits clear. If a certificate has a complete, validated path to a TA, or is itself a TA, then that certificate will have the NOCHAIN bit clear, otherwise it will have the NOCHAIN bit set. As the certificate processing algorithm is executed, the bit state of original certificates may change. In addition, since the certificate processing algorithm may also be creating paracertificates, it is responsible for actively setting or clearing the state of these four bits on those paracertificates.
 
 The certificate processing algorithm consists of two sub-algorithms: "proofreading" and "TA processing". Conceptually, the proofreading sub-algorithm performs syntactic checks on the constraints file, while the TA processing sub-algorithm performs the actual certificate transformation processing. If the proofreading sub-algorithm does not succeed in parsing the constraints file, the TA processing sub-algorithm is not executed. Note also that if the constraints file is not present, neither sub-algorithm is executed and the local RPKI repository is not modified. Each of the constituent algorithms will now be described in detail.
 
 .ti 0
 4.1  Proofreading algorithm
 
-The goal of the proofreading algorithm is to check the constraints file for syntactic errors, such as missing REQUIRED subsections, or malformed addresses such as 1.2.300/24. It also performs a set of heuristic checks, such as checking for prefixes that are too large (larger than /8). The proofreading algorithm SHOULD also examine resource regions (IPv4, IPv6 and AS# regions) within the blocks subsection, and reorder such resources within a region in ascending numeric order. On encountering any error the proofreading algorithm SHOULD provide an error message indicating the line on which the error occurred as well as informative text that is sufficiently descriptive as to allow the user to identify and correct the error. An implementation of the proofreading algorithm MUST NOT assume that is has access to the local RPKI repository (even read-only access). An implementation of the proofreading algorithm MUST NOT alter the local RPKI repository in any way; it also MUST NOT change any of the state/metadata information associated with certificates in that repository. (Recall that the processing described here is creating a copy of that local repository.) Finally, the proofreading algorithm MAY produce a transformed output file containing the same syntactic information as in the text version of the constraints file, so long as the format of the transformed file is understood by the TA processing algorithm.
+The goal of the proofreading algorithm is to check the constraints file for syntactic errors, such as missing REQUIRED subsections, or malformed addresses such as 1.2.300/24. It also performs a set of heuristic checks, such as checking for prefixes that are too large (larger than /8). The proofreading algorithm SHOULD also examine resource regions (IPv4, IPv6 and AS# regions) within the blocks subsection, and reorder such resources within a region in ascending numeric order. On encountering any error the proofreading algorithm SHOULD provide an error message indicating the line on which the error occurred as well as informative text that is sufficiently descriptive as to allow the user to identify and correct the error. An implementation of the proofreading algorithm MUST NOT assume that it has access to the local RPKI repository (even read-only access). An implementation of the proofreading algorithm MUST NOT alter the local RPKI repository in any way; it also MUST NOT change any of the state/metadata information associated with certificates in that repository. (Recall that the processing described here is creating a copy of that local repository.) Finally, the proofreading algorithm MAY produce a transformed output file containing the same syntactic information as in the text version of the constraints file, so long as the format of the transformed file is understood by the TA processing algorithm.
 
-The proofreading algorithm performs the following syntactic checks on the constraints file. It checks for the presence of the REQUIRED relying party subsection and the REQUIRED blocks subsection. It checks that the order of the two, three or four subsections is as stated above. It checks that the relying party subsection conforms to the specification given in section 3.1 above. If present, it checks that the tags and flags subsections conform to the specifications in sections 3.2 and 3.3 above. It then checks the blocks subsection. It splits the blocks subsection into constituent target blocks, as delimited by the SKI region line(s), and verifies that at least one target block is present. It verifies that each SKI region line contains exactly forty hexadecimal digits and contains no additional characters other than whitespace or colon characters. For each target block, it then verifies the presence of the IPv4, IPv6 and AS# regions, and also verifies that at least one such resource is present. For each IPv4 prefix, IPv6 prefix and autonomous system number given, it checks that the indicated resource is syntactically valid according to the appropriate RFC definition, as described in section 3.4. It also verifies that no IPv4 resource has a prefix larger than /8. The proofreading algorithm SHOULD performing reordering within each of the three resource regions so that stated resource occur in ascending numerical order. If the proofreading algorithm has performed any reordering of information it MAY overwrite the constraints file. If it does so, however, it MUST preserve all information contained within the file, including information that is not parsed (such as comments). If the proofreading algorithm has performed any reordering of information but has not overwritten the constraints file, it MAY produce a transformed output file, as described above. If the proofreading algorithm has performed any reordering of information, but has neither overwritten the constraints file nor produced a transformed output file, it MUST provide an error message to the user indicating what reordering was performed.
+The proofreading algorithm performs the following syntactic checks on the constraints file. It checks for the presence of the REQUIRED relying party subsection and the REQUIRED blocks subsection. It checks that the order of the two, three or four subsections is as stated above. It checks that the relying party subsection conforms to the specification given in section 3.1 above. If present, it checks that the tags and flags subsections conform to the specifications in sections 3.2 and 3.3 above. It then checks the blocks subsection. It splits the blocks subsection into constituent target blocks, as delimited by the SKI region line(s), and verifies that at least one target block is present. It verifies that each SKI region line contains exactly forty hexadecimal digits and contains no additional characters other than whitespace or colon characters. For each target block, it then verifies the presence of the IPv4, IPv6 and AS# regions, and also verifies that at least one such resource is present. For each IPv4 prefix, IPv6 prefix and autonomous system number given, it checks that the indicated resource is syntactically valid according to the appropriate RFC definition, as described in section 3.4. It also verifies that no IPv4 resource has a prefix larger than /8. The proofreading algorithm SHOULD performing reordering within each of the three resource regions so that stated resources occur in ascending numerical order. If the proofreading algorithm has performed any reordering of information it MAY overwrite the constraints file. If it does so, however, it MUST preserve all information contained within the file, including information that is not parsed (such as comments). If the proofreading algorithm has performed any reordering of information but has not overwritten the constraints file, it MAY produce a transformed output file, as described above. If the proofreading algorithm has performed any reordering of information, but has neither overwritten the constraints file nor produced a transformed output file, it MUST provide an error message to the user indicating what reordering was performed.
 
 .ti 0
 4.2  TA processing algorithm
 
-The TA processing algorithm acts on the constraints file (or the output file produced by the proofreading algorithm) and the contents of the local RPKI repository to produce paracertificates for the purpose of enforcing the resource allocations as expressed in the constraints file. The TA processing algorithm operates in five stages, a preparatory stage (stage 0), target processing (stage 1), ancestor processing (stage 2), tree processing (state 3) and TA re-parenting (stage 4). Conceptually, during the preparatory stage the constraints (or proofreader output) file is read and a set of internal RP, tag and flag variables are set based on the contents of that file. (If the constraint file has not specified one or more of the tags and/or flags, those tags and flags are set to default values). During target processing all certificates specified by a target block are processed, and the resources for those certificates are (potentially) expanded; for each target found a new paracertificate is manufactured with its various fields set, as shown in Table 1, using the values of the internal variables set in the preparatory stage and also, of course, the fields of the original certificate (and, potentially, fields of the RP's TA certificate). In stage 2 (ancestor) processing, all ancestors of the each target certificate are found, and the claimed resources are then removed (perforated). A new paracertificate with these diminished resources is crafted, with its fields generated based on internal variable settings, original certificate field values, and, potentially, the fields of the RP's TA certificate. In tree processing (stage 3), the entire local RPKI repository is searching for any other certificates that have resources that intersect a target resource, and that were not otherwise processed during a preceding stage. Perforation is again performed for any such intersecting certificates, and paracertificates created as in stage 2. Finally, in the fourth and last stage, TA re-parenting, any TA certificates in the local RPKI repository that have not already been processed are now re-parented under the RP's TA certificate. This transformation will create paracertificates; however, these paracertificates may have RFC 3779 resources that were not altered during algorithm processing. The final output of algorithm processing will be threefold. First, the state/metadata information on some (original) certificates in the repository MAY be altered. Second, paracertificates will be created, with the appropriate metadata, and entered into the repository. Finally, the TA processing algorithm SHOULD produce a human readable log of its actions, indicating which paracertificates were created and why. The remainder of this section describes the processing stages of the algorithm in detail.
+The TA processing algorithm acts on the constraints file (or the output file produced by the proofreading algorithm) and the contents of the local RPKI repository to produce paracertificates for the purpose of enforcing the resource allocations as expressed in the constraints file. The TA processing algorithm operates in five stages, a preparatory stage (stage 0), target processing (stage 1), ancestor processing (stage 2), tree processing (state 3) and TA re-parenting (stage 4). Conceptually, during the preparatory stage the constraints (or proofreader output) file is read and a set of internal RP, tag and flag variables are set based on the contents of that file. (If the constraint file has not specified one or more of the tags and/or flags, those tags and flags are set to default values.) During target processing all certificates specified by a target block are processed, and the resources for those certificates are (potentially) expanded; for each target found a new paracertificate is manufactured with its various fields set, as shown in Table 1, using the values of the internal variables set in the preparatory stage and also, of course, the fields of the original certificate (and, potentially, fields of the RP's TA certificate). In stage 2 (ancestor) processing, all ancestors of the each target certificate are found, and the claimed resources are then removed (perforated). A new paracertificate with these diminished resources is crafted, with its fields generated based on internal variable settings, original certificate field values, and, potentially, the fields of the RP's TA certificate. In tree processing (stage 3), the entire local RPKI repository is searching for any other certificates that have resources that intersect a target resource, and that were not otherwise processed during a preceding stage. Perforation is again performed for any such intersecting certificates, and paracertificates created as in stage 2. Finally, in the fourth and last stage, TA re-parenting, any TA certificates in the local RPKI repository that have not already been processed are now re-parented under the RP's TA certificate. This transformation will create paracertificates; however, these paracertificates may have RFC 3779 resources that were not altered during algorithm processing. The final output of algorithm processing will be threefold. First, the state/metadata information on some (original) certificates in the repository MAY be altered. Second, paracertificates will be created, with the appropriate metadata, and entered into the repository. Finally, the TA processing algorithm SHOULD produce a human readable log of its actions, indicating which paracertificates were created and why. The remainder of this section describes the processing stages of the algorithm in detail.
 
 .ti 0
 4.2.1  Preparatory processing (stage 0)
 
-During preparatory processing, the constraints file, or the corresponding output file of the proofreader algorithm, is read. Internal variables are set corresponding to each tag and flag, if present, or to their defaults, if absent. Internal variables are also set corresponding to the PRIVATEKEYMETHOD value string(s) and the TOPLEVELCERTIFICATE string. The TA processing algorithm is queried to determine if it supports the indicated private key access methodology. This query is performed in an implementation-specific manner. In particular, an implementation is free to vacuously return success to this query. The TA processing algorithm next uses the value string for the TOPLEVELCERTIFICATE to locate this certificate, again in an implementation=specific manner. The certificate in question may already be present in the local RPKI repository, or it may be located elsewhere. The implementation is also free to create the top level certificate at this time, and then assign to this newly-created certificate the name indicated. It is necessary only that, at the conclusion of this processing, a valid trust anchor certificate for the relying party has been created or otherwise obtained.
+During preparatory processing, the constraints file, or the corresponding output file of the proofreader algorithm, is read. Internal variables are set corresponding to each tag and flag, if present, or to their defaults, if absent. Internal variables are also set corresponding to the PRIVATEKEYMETHOD value string(s) and the TOPLEVELCERTIFICATE string. The TA processing algorithm is queried to determine if it supports the indicated private key access methodology. This query is performed in an implementation-specific manner. In particular, an implementation is free to vacuously return success to this query. The TA processing algorithm next uses the value string for the TOPLEVELCERTIFICATE to locate this certificate, again in an implementation-specific manner. The certificate in question may already be present in the local RPKI repository, or it may be located elsewhere. The implementation is also free to create the top level certificate at this time, and then assign to this newly-created certificate the name indicated. It is necessary only that, at the conclusion of this processing, a valid trust anchor certificate for the relying party has been created or otherwise obtained.
 
 Some form of access to the RP's private key and top level certificate are required for subsequent correct operation of the algorithm. Therefore, stage 0 processing MUST terminate if one or both conditions are not satisfied. In the error case, the implementation SHOULD provide an error message of sufficient detail that the user can correct the error(s). If stage 0 processing does not succeed, no further stages of TA processing are executed.
 
@@ -379,7 +380,7 @@ Some form of access to the RP's private key and top level certificate are requir
 
 During target processing, the TA processing algorithm reads all target blocks in the constraints file or corresponding proofreader output file. It then processes each target block in the order specified in the file. In the description that follows, except where noted, the operation of the algorithm on a single target block will be described. Note, however, that all stage 1 processing is executed before any processing in subsequent stages is performed.
 
-The algorithm first obtains the SKI region of the target block. It then locates, in an implementation-dependent manner, the certificate the SKI extension field of which contains that value. Note that if paracertificates have been created by virtue of previous target blocks being processed, those paracertificates are not searched in attempting to locate a certificate with a matching SKI; only original certificates are searched. If more than one original certificate is found matching this SKI, there are two possible scenarios. If a resource holder has two certificates issued by the same CA, with overlapping validity intervals and the same key, but distinct subject names (typically, by virtue of the SerialNumber parts being different), then these two certificates are both consider to be (distinct) targets, and are both processed. If, however, a resource holder has certificates issued by two different CAs, containing different resources, but using the same key, there is no unambiguous method to decide which of the certificates is intended as the target. In this latter case the algorithm MUST issue a warning to that effect, mark the target block in question as unavailable for processing by subsequent stages and proceed to the next target block. If no certificate is found then the algorithm SHOULD issue a warning to that effect and proceed to process the next target block.
+The algorithm first obtains the SKI region of the target block. It then locates, in an implementation-dependent manner, the certificate the SKI extension field of which contains that value. Note that if paracertificates have been created by virtue of previous target blocks being processed, those paracertificates are not searched in attempting to locate a certificate with a matching SKI; only original certificates are searched. If more than one original certificate is found matching this SKI, there are two possible scenarios. If a resource holder has two certificates issued by the same CA, with overlapping validity intervals and the same key, but distinct subject names (typically, by virtue of the SerialNumber parts being different), then these two certificates are both considered to be (distinct) targets, and are both processed. If, however, a resource holder has certificates issued by two different CAs, containing different resources, but using the same key, there is no unambiguous method to decide which of the certificates is intended as the target. In this latter case the algorithm MUST issue a warning to that effect, mark the target block in question as unavailable for processing by subsequent stages and proceed to the next target block. If no certificate is found then the algorithm SHOULD issue a warning to that effect and proceed to process the next target block.
 
 If a single original certificate is found matching the indicated SKI, then the algorithm takes the following actions. First, it sets the ORIGINAL state bit for the certificate found. Second, it sets the TARGET state bit for the certificate found. Third, it extracts the RFC 3779 resources from the certificate. If the global resource_nounion flag is TRUE, it compares the extracted certificate resources with the resources specified in the constraints file. If the two resource sets are different, the algorithm SHOULD issue a warning noting the difference. An output resource set is then formed that is identical to the resource set extracted from the certificate. If, however, the resource_nounion flag is FALSE, then the output resource set is calculated by forming the union of the resources extracted from the certificate and the resources specified for this target block in the constraints file. A paracertificate is then constructed according to Table 1, using fields from the original certificate, the tags that had been set during stage 0, and, if necessary, fields from the RP's TA certificate. The RFC 3779 resources of the paracertificate are equated to the derived output resource set. The PARA state bit is set for the newly created paracertificate.
 
@@ -390,9 +391,9 @@ The goal of ancestor processing is to discover all ancestors of target certifica
 
 In detail, the algorithm is as follows. First, all original target certificates processed during stage 1 processing are collected. Second, any such certificates that have the NOCHAIN state bit set are eliminated from the collection. (Note that, as a result of eliminating such certificates, the resulting collection may be empty, in which case this stage of algorithm processing terminates, and processing advances to stage 3.) Next, an implementation MAY sort the collection. The optional sorting algorithm is described in Appendix B. Note that all stage 2 processing is completed before any stage 3 processing.
 
-Two levels of nested iteration are performed. The outer iteration is effected over all certificates in the collection; the inner iteration is over all ancestors of the designated certificate being processed. The first certificate in the collection is chosen, and a resource set R is initialized based on the resources of the target block for that certificate (since the certificate is in collection, it must be a target certificate, and thus correspond to a target block). The parent of the certificate is then located using ordinary path discovery over original certificates only. The ancestor's certificate resources A are then extracted. These resources are then perforated with respect to R. That is, an output set of resources is created by forming the intersection I of A and R, and then taking the set difference A - I as the output resources. A paracertificate is then created containing resources tat are these output resources, and containing other fields and extensions from the original certificate (and possibly the RP's TA certificate) according to the procedure given in Table 1. The PARA state bit is set on this paracertificate and the ORIGINAL state bit is set on A. If A is also a target certificate, as indicated by its TARGET state bit being set, then there will already have been a paracertificate created for it. This previous paracertificate is destroyed in favor of the newly created paracertificate. In this case also, the set R is augmented by adding into it the set of resources of the target block for A. The algorithm then proceeds to process the parent of A. This inner iteration continues until the self-signed certificate at the root of the path is encountered and processed. The outer iteration then continues by clearing R and proceeding to the next certificate in the target collection.
+Two levels of nested iteration are performed. The outer iteration is effected over all certificates in the collection; the inner iteration is over all ancestors of the designated certificate being processed. The first certificate in the collection is chosen, and a resource set R is initialized based on the resources of the target block for that certificate (since the certificate is in the collection, it must be a target certificate, and thus correspond to a target block). The parent of the certificate is then located using ordinary path discovery over original certificates only. The ancestor's certificate resources A are then extracted. These resources are then perforated with respect to R. That is, an output set of resources is created by forming the intersection I of A and R, and then taking the set difference A - I as the output resources. A paracertificate is then created containing resources that are these output resources, and containing other fields and extensions from the original certificate (and possibly the RP's TA certificate) according to the procedure given in Table 1. The PARA state bit is set on this paracertificate and the ORIGINAL state bit is set on A. If A is also a target certificate, as indicated by its TARGET state bit being set, then there will already have been a paracertificate created for it. This previous paracertificate is destroyed in favor of the newly created paracertificate. In this case also, the set R is augmented by adding into it the set of resources of the target block for A. The algorithm then proceeds to process the parent of A. This inner iteration continues until the self-signed certificate at the root of the path is encountered and processed. The outer iteration then continues by clearing R and proceeding to the next certificate in the target collection.
 
-Note that ancestor processing has the potential for order dependency as mentioned earlier in this document. If sorting is not implemented, or if the sorting algorithm fails to completely process the collection of target certificates because the allotted maximum number of iterations has been realized, it may be the case that an ancestor of a certificate logically occurs before that certificate in the collection. Whenever an existing paracertificate is replaced by a newly created paracertificate during ancestor processing, the algorithm SHOULD alert the user, and SHOULD log sufficient detail such that the user is able to determine which resources were perforated from the original certificate in order to create the (new) paracertificate.
+Note that ancestor processing has the potential for order dependency, as mentioned earlier in this document. If sorting is not implemented, or if the sorting algorithm fails to completely process the collection of target certificates because the allotted maximum number of iterations has been realized, it may be the case that an ancestor of a certificate logically occurs before that certificate in the collection. Whenever an existing paracertificate is replaced by a newly created paracertificate during ancestor processing, the algorithm SHOULD alert the user, and SHOULD log sufficient detail such that the user is able to determine which resources were perforated from the original certificate in order to create the (new) paracertificate.
 
 In addition, implementations MUST provide for conflict detection and notification during ancestor processing. In particular, if a certificate is encountered two or more times during any part of the ancestor processing algorithm, and the modifications dictated by the ancestor processing algorithm are in conflict, the implementation MUST refrain from processing that certificate. Further, the implementation MUST present the user with an error message that contains enough detail that the user can locate those directives in the constraints file that are creating the conflict. For example, during one stage of the processing algorithm it may be directed that resources R1 be added to a certificate C, while during a different stage of the processing algorithm it may be directed that resources R2 be removed from certificate C. If the resource sets R1 and R2 have a non-empty intersection, that is a conflict.
 
@@ -437,7 +438,7 @@ hierarchy or the paracertificate hierarchy. In this case the parent P is NULL an
 .ti 0
 6  Implications for Revocation
 
-In a standard implementation of revocation in a PKI, a valid CRL names a (sibling) certificate by serial number. That certificate is revoked and is purged from the local RPKI repository. In the mechanism described in this document, the original certificate hierarchy and the paracertificate hierarchy are closely related. It can thus be asked how revocation is handled in the presence of these two hierarchies, in particular with regard to whether changes in one of the hierarchies triggers corresponding changes in the other hierarchy. There are four cases.
+In a standard implementation of revocation in a PKI, a valid CRL names a (sibling) certificate by serial number. That certificate is revoked and is purged from the local RPKI repository. In the mechanism described in this document, the original certificate hierarchy and the paracertificate hierarchy are closely related. It can thus be asked how revocation is handled in the presence of these two hierarchies, in particular with regard to whether changes in one of the hierarchies triggers corresponding changes in the other hierarchy. There are four cases based on the state of the ORIGINAL and PARA bits. These will be discussed in the subsections below. It should be noted that the existence of two hierarchies presents a particular challenge with respect to revocation. If a CRL arrives, and is processed, that can result in the destruction of one of the path chains. In the case of a single hierarchy this would mean that certain objects would fail to validate. In the presence of two hierarchies, however, a CRL revocation action can force one of the two possible paths to be used. If the RP later determines that the CRL revocation should not be occurred, he is faced with the undesirable situation of the incorrect path being discovered. In order to prevent this outcome, an RP MUST be able to configure one or more additional repository URIs in support of local trust anchor management.
 
 .ti 0
 6.1  No state bits set
@@ -461,7 +462,7 @@ Note that the serial numbers of paracertificates are synthesized according to th
 
 This is an error. The revocation algorithm MUST alert the user and take no further action.
 
-.bp
+'\".bp
 .ti 0
 7  Security Considerations
 
@@ -508,7 +509,7 @@ Lepinski, M. and S. Kent, "An Infrastructure to Support Secure Internet Routing"
 .ti 3
 [I-D. sidr-repos-struct]
 .ti 15
-Huston, G., Loomans, R., and G. Michaelson, "A Profile for Resource Certificate Policy Structure", draft-ietf-sidr-repos-struct-07.txt (work in progress), February 2011.
+Huston, G., Loomans, R., and G. Michaelson, "A Profile for Resource Certificate Policy Structure", draft-ietf-sidr-repos-struct-09.txt (work in progress), July 2011.
 
 .ti 3
 [I-D. sidr-res-cert-prof]
@@ -528,18 +529,18 @@ Authors' Addresses
 .sp
 .nf
   Stephen Kent
-  BBN Technologies
+  Raytheon BBN Technologies
   10 Moulton St.
   Cambridge, MA 02138
 
   Email: kent@bbn.com
 
   Mark Reynolds
-  BBN Technologies
-  10 Moulton St.
-  Cambridge, MA 02138
+  Island Peak Software
+  328 Virginia Road
+  Concord, MA 01742
 
-  Email: mreynold@bbn.com
+  Email: mcr@islandpeaksoftware.com
 .sp
 .fi
 
@@ -613,7 +614,7 @@ SKI 00112233445566778899998877665544332211
     5507
 
 ;
-; Second block: TBO LTA Test enforcement division
+; Second block: TBO LTA Test Enforcement Division
 ;
 
 SKI 653420AF758421CF600029FF857422AA6833299F
@@ -644,5 +645,5 @@ SKI 19:82:34:90:8b:a0:9c:ef:00:af:a0:98:23:09:82:4b:ef:ab:98:09
 .ti 0
 Appendix B: Optional Sorting Algorithm for Ancestor Processing
 
-Sorting is performed in an effort to eliminate any order dependencies in ancestor processing, as described in section 4.2.3 of this document. The sorting algorithm does this by rearranging the processing of certificates such that if A is an ancestor of B, B is processed before A. The sorting algorithm is an OPTIONAL part of ancestor processing. Sorting proceeds as follows. The collection created at the beginning of ancestor processing is traversed and any certificate in the collection that is visited as a result of path discovery is temporarily marked. After the traversal, all unmarked certificates are moved to the beginning of the collection. The remaining marked certificates are unmarked, and a traversal again performed through this sub-collection of previously marked certificates. The sorting algorithm proceeds iteratively until all certificates have been sorted or until a predetermined fixed number of iterations has been performed. (Eight is suggested as a munificent value for the upper bound, since the number of sorting steps need should be no greater than the maximum depth of the tree). Finally, the ancestor processing algorithm is applied in turn to each certificate in the remaining sorted collection. If the sorting algorithm fails to converge, that is if the maximum number of iterations has been reached and unsorted certificates remain, the implementation SHOULD warn the user.
+Sorting is performed in an effort to eliminate any order dependencies in ancestor processing, as described in section 4.2.3 of this document. The sorting algorithm does this by rearranging the processing of certificates such that if A is an ancestor of B, B is processed before A. The sorting algorithm is an OPTIONAL part of ancestor processing. Sorting proceeds as follows. The collection created at the beginning of ancestor processing is traversed and any certificate in the collection that is visited as a result of path discovery is temporarily marked. After the traversal, all unmarked certificates are moved to the beginning of the collection. The remaining marked certificates are unmarked, and a traversal again performed through this sub-collection of previously marked certificates. The sorting algorithm proceeds iteratively until all certificates have been sorted or until a predetermined fixed number of iterations has been performed. (Eight is suggested as a munificent value for the upper bound, since the number of sorting steps need not be any greater than the maximum depth of the tree.) Finally, the ancestor processing algorithm is applied in turn to each certificate in the remaining sorted collection. If the sorting algorithm fails to converge, that is if the maximum number of iterations has been reached and unsorted certificates remain, the implementation SHOULD warn the user.
 
