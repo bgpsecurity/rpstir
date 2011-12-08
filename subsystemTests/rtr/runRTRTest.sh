@@ -201,7 +201,7 @@ stop_test bad_protocol_operation
 
 start_test serial_notify
 client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
-make_serial 8 20 1 3
+make_serial 14 20 1 3
 client_multiple_wait
 stop_test serial_notify
 
