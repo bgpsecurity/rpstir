@@ -182,6 +182,10 @@ client "serial_query $NONCE 8" "empty set"
 drop_serial 7
 client "serial_query $NONCE 7" "Cache Reset"
 client "serial_query $NONCE 8" "empty set"
+make_serial 8 14 1 3
+client "serial_query $NONCE 8" "empty set"
+client "serial_query $NONCE 10" "Cache Reset"
+client "serial_query $NONCE 14" "empty set"
 stop_test serial_queries
 
 start_test bad_pdus
