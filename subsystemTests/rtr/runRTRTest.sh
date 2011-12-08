@@ -132,22 +132,28 @@ drop_serial () {
 	rm -f "$COMMAND_FILE"
 }
 
-start_test () {
-	TEST="$1"
 
-	rm -f "response.log" "response.$TEST.log"
-	touch "response.log"
-
+start_rtrd () {
 	"$SERVER" &
 	SERVER_PID=$!
 	sleep 1
 }
 
-stop_test () {
-	TEST="$1"
-
+stop_rtrd () {
 	kill $SERVER_PID
 	wait $SERVER_PID || true
+}
+
+
+start_test () {
+	TEST="$1"
+
+	rm -f "response.log" "response.$TEST.log"
+	touch "response.log"
+}
+
+stop_test () {
+	TEST="$1"
 
 	mv -f "response.log" "response.$TEST.log"
 	compare "response.$TEST.log"
@@ -156,7 +162,8 @@ stop_test () {
 
 init
 
-# Comments after queries indicate what's expected to be returned.
+start_rtrd
+
 
 start_test reset_query_first
 make_serial "" 5 1 4
@@ -231,3 +238,6 @@ stop_test serial_notify
 start_test reset_query_last
 client "reset_query" "all data for serial 20"
 stop_test reset_query_last
+
+
+stop_rtrd
