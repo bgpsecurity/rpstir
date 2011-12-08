@@ -7,10 +7,9 @@ EXTRA_DIST = \
 	doc \
 	envir.setup \
 	INSTRUCTIONS \
-	license \
+	LICENSE \
 	README-AUTOCONF \
 	run_scripts \
-	testing \
 	trap_errors
 
 CLEANFILES = \
