@@ -177,6 +177,10 @@ start_test bad_protocol_operation # erroneous use of valid PDUs
 # TODO
 stop_test bad_protocol_operation
 
+start_test serial_notify
+# TODO
+stop_test serial_notify
+
 start_test reset_query_last
 client "reset_query" "all data for serial 8"
 stop_test reset_query_last
