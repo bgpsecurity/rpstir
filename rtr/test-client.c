@@ -112,7 +112,8 @@ static void do_help(const char * argv0)
 	fprintf(stderr, "    %s write                     Convert human-readable commands to PDUs.\n", argv0);
 	fprintf(stderr, "    %s client <host> <port>      Connect to rtrd, reading PDUs from stdin and\n"
 	                "                                 writing human-readable PDUs to stdout.\n", argv0);
-	fprintf(stderr, "    %s client_one <host> <port>  As above, but quit after receiving one full response.\n", argv0);
+	fprintf(stderr, "    %s client_one <host> <port>  As above, but quit after receiving one full response\n"
+			"                                 or any non-response PDUs (e.g. Serial Notify).\n", argv0);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Typical usage:\n");
 	fprintf(stderr, "    $ %s write | %s client <host> <port>\n", argv0, argv0);
@@ -563,8 +564,10 @@ static int do_client(const char * host, const char * port, bool quit_after_respo
 					case PDU_CACHE_RESET:
 					case PDU_ERROR_REPORT:
 
-					// unexpected PDU types
+					// expected PDU types that aren't part of a response
 					case PDU_SERIAL_NOTIFY:
+
+					// unexpected PDU types
 					case PDU_SERIAL_QUERY:
 					case PDU_RESET_QUERY:
 
