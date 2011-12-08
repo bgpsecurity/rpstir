@@ -136,6 +136,7 @@ start_test () {
 	TEST="$1"
 
 	rm -f "response.log" "response.$TEST.log"
+	touch "response.log"
 
 	"$SERVER" &
 	SERVER_PID=$!
