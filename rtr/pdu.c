@@ -9,6 +9,21 @@
 
 #include "pdu.h"
 
+
+// based on RFC 1982, Section 3.2
+bool serial_number_greater(serial_number_t s1, serial_number_t s2)
+{
+	#define SERIAL_BITS (sizeof(serial_number_t) * 8)
+
+	if (s1 == s2)
+		return false;
+
+	return (s1 < s2 && s2 - s1 > ((serial_number_t)1 << (SERIAL_BITS - 1))) ||
+		(s1 > s2 && s1 - s2 < ((serial_number_t)1 << (SERIAL_BITS - 1)));
+
+	#undef SERIAL_BITS
+}
+
 // switch to uintmax_t instead of uint_fast32_t? 32 should be enough for this protocol version
 static uint_fast32_t extract_uint(const uint8_t * buffer, size_t length)
 {

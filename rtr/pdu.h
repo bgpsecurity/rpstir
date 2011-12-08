@@ -81,6 +81,14 @@ typedef uint32_t serial_number_t;
 typedef uint32_t as_number_t;
 
 
+/**
+	@return true iff s1 is greater than s2 using serial number arithmetic
+
+	See RFC 1982 for caveats.
+*/
+bool serial_number_greater(serial_number_t s1, serial_number_t s2);
+
+
 struct _PDU;
 typedef struct _PDU PDU;
 
