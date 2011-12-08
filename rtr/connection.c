@@ -563,6 +563,34 @@ static void read_and_handle_pdu(struct run_state * run_state)
 	}
 }
 
+
+static void update_local_cache_state(
+	struct run_state * run_state,
+	const struct cache_state * new_cache_state,
+	bool do_notify)
+{
+	if (run_state->local_cache_state.nonce != new_cache_state->nonce)
+	{
+		LOG(LOG_ERR, "cache nonce has changed from %" PRINONCE " to %" PRINONCE,
+			run_state->local_cache_state.nonce, new_cache_state->nonce);
+		pthread_exit(NULL);
+	}
+
+	if (!new_cache_state->data_available)
+		return;
+
+	if (!run_state->local_cache_state.data_available ||
+		serial_number_greater(new_cache_state->serial_number,
+			run_state->local_cache_state.serial_number))
+	{
+		run_state->local_cache_state.serial_number = new_cache_state->serial_number;
+		run_state->local_cache_state.data_available = true;
+		if (do_notify)
+			send_notify(run_state);
+	}
+}
+
+
 static void handle_response(struct run_state * run_state)
 {
 	size_t i;
@@ -579,17 +607,22 @@ static void handle_response(struct run_state * run_state)
 		increment_db_semaphore(run_state);
 	}
 
-	/* TODO:
-		If any of response.PDUs indicate an update to cache_state:
-			Update cache_state as appropriate.
-	*/
-
 	for (i = 0; i < run_state->response->num_PDUs; ++i)
 	{
 		if (run_state->response->PDUs[i].pduType == PDU_ERROR_REPORT &&
 			ERR_IS_FATAL(run_state->response->PDUs[i].errorCode))
 		{
 			stop_after_responding = true;
+		}
+
+		if (run_state->response->PDUs[i].pduType == PDU_END_OF_DATA)
+		{
+			// cache state as indicated by the PDU
+			struct cache_state pdu_cache_state;
+			pdu_cache_state.data_available = true;
+			pdu_cache_state.nonce = run_state->response->PDUs[i].cacheNonce;
+			pdu_cache_state.serial_number = run_state->response->PDUs[i].serialNumber;
+			update_local_cache_state(run_state, &pdu_cache_state, false);
 		}
 
 		send_pdu(run_state, &run_state->response->PDUs[i]);
@@ -634,20 +667,7 @@ static void check_global_cache_state(struct run_state * run_state)
 
 	copy_cache_state(run_state, &tmp_cache_state);
 
-	if (run_state->local_cache_state.nonce != tmp_cache_state.nonce)
-	{
-		LOG(LOG_ERR, "cache nonce has changed");
-		pthread_exit(NULL);
-	}
-
-	if (tmp_cache_state.data_available && (
-		!run_state->local_cache_state.data_available ||
-		run_state->local_cache_state.serial_number != tmp_cache_state.serial_number))
-	{
-		run_state->local_cache_state.serial_number = tmp_cache_state.serial_number;
-		run_state->local_cache_state.data_available = tmp_cache_state.data_available;
-		send_notify(run_state);
-	}
+	update_local_cache_state(run_state, &tmp_cache_state, true);
 }
 
 

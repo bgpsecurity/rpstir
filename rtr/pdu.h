@@ -80,6 +80,8 @@ typedef uint16_t error_code_t;
 typedef uint32_t serial_number_t;
 typedef uint32_t as_number_t;
 
+#define PRINONCE PRIu16
+
 
 /**
 	@return true iff s1 is greater than s2 using serial number arithmetic
