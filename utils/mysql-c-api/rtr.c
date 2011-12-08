@@ -1,6 +1,6 @@
 /**
 	Functions used for accessing the RTR database.
-*/
+ */
 
 #include <arpa/inet.h>
 #include <bits/socket.h>
@@ -127,113 +127,6 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
         return (GET_SERNUM_NONE);
     }
 }
-
-
-/**=============================================================================
- * Probably obsolete.  If not used by Dec 19, 11, then delete
-------------------------------------------------------------------------------
-int isValidSerNumPrev(void *connp, uint32_t sn) {
-    MYSQL *mysqlp = (MYSQL*) connp;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-
-    return (VAL_SERNUM_IS_PREV);
-}*/
-
-
-/**=============================================================================
- * Probably obsolete.  If not used by Dec 19, 11, then delete
-------------------------------------------------------------------------------
-int isValidSerNumData(void *connp, uint32_t sn) {
-    MYSQL *mysqlp = (MYSQL*) connp;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
-
-    snprintf(qry, QRY_SZ, "select serial_num, has_full from rtr_update "
-            "where serial_num=%" PRIu32, sn);
-
-
-
-    if (mysql_query(mysqlp, qry)) {
-        LOG(LOG_ERR, "could not read rtr_update from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
-    }
-
-    if ((result = mysql_store_result(mysqlp)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
-    }
-
-    num_rows = mysql_num_rows(result);
-    if (num_rows == 0) {
-        LOG(LOG_INFO, "rtr_update is empty");
-        mysql_free_result(result);
-        return (-2);
-    }
-
-    return (0);
-}*/
-
-
-/**=============================================================================
- * Probably obsolete.  If not used by Dec 19, 11, then delete
- * @pre serial_num is the first field in the rtr_update.
- * @ret 1 if serial number is found in rtr_update, -1 on error, 0 if serial
- *      number is not found, -2 if no rows are found.
-------------------------------------------------------------------------------
-int isValidSerNum(void *connp, uint32_t sn) {
-    MYSQL *mysqlp = (MYSQL*) connp;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-    uint32_t num = 0;
-    my_ulonglong num_rows = 0;
-    ulong *lengths = 0;
-    uint i;
-
-    char qry[] = "select serial_num, create_time from rtr_update";
-    if (mysql_query(mysqlp, qry)) {
-        LOG(LOG_ERR, "could not read rtr_update from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
-    }
-
-    if ((result = mysql_store_result(mysqlp)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (-1);
-    }
-
-    num_rows = mysql_num_rows(result);
-    if (num_rows == 0) {
-        LOG(LOG_INFO, "rtr_update is empty");
-        mysql_free_result(result);
-        return (-2);
-    }
-
-    mysql_data_seek(result, 0);
-    for (i = 0; i < num_rows; i++) {
-        row = mysql_fetch_row(result);
-        lengths = mysql_fetch_lengths(result);
-        if (lengths == NULL) {
-            LOG(LOG_ERR, "should never get here.  check mysql.mysql_fetch_lengths");
-        }
-        if (charp2uint32_t(&num, row[0], lengths[0])) {
-            LOG(LOG_ERR, "could not convert field to number");
-            mysql_free_result(result);
-            return (-1);
-        }
-        if (num == sn)
-            mysql_free_result(result);
-            return (1);
-    }
-
-    mysql_free_result(result);
-    return (0);
-}*/
 
 
 /**=============================================================================
@@ -755,7 +648,8 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         return (-1);
     }
 
-    pdus = calloc(max_rows, sizeof(PDU));
+    // alloc enough for max_rows + header & footer PDUs
+    pdus = calloc(max_rows + 2, sizeof(PDU));
     if (!pdus) {
         LOG(LOG_ERR, "could not alloc for array of PDU");
         return (-1);
@@ -765,14 +659,14 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return (num_pdus);
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_INFO, "can't update the router from the given serial number");
         fill_pdu_cache_reset(&((*_pdus)[num_pdus++]));
-        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return (num_pdus);
     }
 
@@ -787,7 +681,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return (num_pdus);
     }
 
@@ -798,16 +692,19 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
 
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
-    my_ulonglong current_row = 0;
-    my_ulonglong last_row = 0;
+    my_ulonglong num_rows = 0;
     int QRY_SZ = 256;
     char qry[QRY_SZ];
     uint32_t next_ser_num;
     uint32_t prev_ser_num;
     int prev_was_null;
 
-    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce from rtr_incremental "
-            "where serial_num=%" PRIu32 " order by asn, ip_addr", state->ser_num);
+    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce "
+            " from rtr_incremental "
+            " where serial_num=%" PRIu32
+            " order by asn, ip_addr "
+            " limit %u, %zu",
+            state->ser_num, state->first_row, max_rows - num_pdus);
 
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not read rtr_incremental from db");
@@ -823,71 +720,68 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         return (-1);
     }
 
-    current_row = state->first_row;
-    last_row = mysql_num_rows(result) - 1;
+    num_rows = mysql_num_rows(result);
 
-    if (current_row <= last_row)
-        mysql_data_seek(result, current_row);
-
-    while (current_row <= last_row  &&  num_pdus < max_rows) {
+    while (num_rows > 0) {
         if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 1)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
             return (-1);
         }
-        current_row++;
+        --num_rows;
+        ++state->first_row;
     }
 
     if (num_pdus == max_rows) {
-        state->first_row = current_row;
         mysql_free_result(result);
         *is_done = 0;
-        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return (num_pdus);
-    } else {  // If we're here, current_row > last_row, num_pdus < max_rows
-        ret = readSerNumAsCurrent(connp, state->ser_num,
-                1, &prev_ser_num, &prev_was_null,
-                0, NULL);
-        if (ret == -1) {
-            LOG(LOG_ERR, "error while checking validity of serial number");
-            pdu_free_array(pdus, max_rows);
-            mysql_free_result(result);
-            return (-1);
-        } else if (prev_was_null) {
-            LOG(LOG_INFO, "serial number became invalid after creating PDUs");
-            fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-            mysql_free_result(result);
-            LOG(LOG_INFO, "returning %u PDUs", num_pdus);
-            return (num_pdus);
-        } else {
-            // check whether to End or continue with next ser num
-            ret = readSerNumAsPrev(connp, state->ser_num, 1, &next_ser_num);
-            if (ret == 0) {  // db has sn_next for this sn
-                *is_done = 0;
-                state->ser_num = next_ser_num;
-                state->first_row = 0;
-                mysql_free_result(result);
-                LOG(LOG_INFO, "returning %u PDUs", num_pdus);
-                return (num_pdus);
-            } else if (ret == 1) {  // db has no sn_next for this sn
-                LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-                fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-                mysql_free_result(result);
-                LOG(LOG_INFO, "returning %u PDUs", num_pdus);
-                return (num_pdus);
-            } else {
-                // NOTE:  even though error, still feeding previous results,
-                //     which should be unaffected by this error.
-                LOG(LOG_ERR, "error while looking for next serial number");
-                LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-                fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-                mysql_free_result(result);
-                LOG(LOG_INFO, "returning %u PDUs", num_pdus);
-                return (num_pdus);
-            }
-        }
     }
+
+    // check whether sn is still valid
+    ret = readSerNumAsCurrent(connp, state->ser_num,
+            1, &prev_ser_num, &prev_was_null,
+            0, NULL);
+    if (prev_was_null) {
+        LOG(LOG_INFO, "serial number became invalid after creating PDUs");
+        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
+        mysql_free_result(result);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        return (num_pdus);
+    } else if (ret == -1) {
+        LOG(LOG_ERR, "error while checking validity of serial number");
+        pdu_free_array(pdus, max_rows);
+        mysql_free_result(result);
+        return (-1);
+    }
+
+    // check whether to End or continue with next ser num
+    ret = readSerNumAsPrev(connp, state->ser_num, 1, &next_ser_num);
+    if (ret == 0) {  // db has sn_next for this sn
+        *is_done = 0;
+        state->ser_num = next_ser_num;
+        state->first_row = 0;
+        mysql_free_result(result);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        return (num_pdus);
+    } else if (ret == 1) {  // db has no sn_next for this sn
+        LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+        fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
+        mysql_free_result(result);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        return (num_pdus);
+    }
+
+    // NOTE:  even though error, still feeding previous results,
+    //     which should be unaffected by this error.
+    LOG(LOG_ERR, "error while looking for next serial number");
+    LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+    fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
+    mysql_free_result(result);
+    LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+    return (num_pdus);
 }
 
 
@@ -927,13 +821,9 @@ int startResetQuery(void *connp, void ** query_state) {
         return (-1);
     }
 
-//    uint32_t ser_num_prev;  // I don't use the value, but the called fcn wants a place to put it.
-//    int prev_was_null = 0;
     int has_full;
     ret = readSerNumAsCurrent(connp, state->ser_num, 0, NULL, NULL,
             1, &has_full);
-//    ret = readSerNumAsCurrent(connp, ser_num, 0, &ser_num_prev, &prev_was_null,
-//            0, &has_full);
     if (ret) {
         LOG(LOG_ERR, "error reading data about latest serial number");
         if (state) free(state);
@@ -959,7 +849,6 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
     PDU *pdus = NULL;
     struct query_state *state = (struct query_state*) query_state;
     cache_nonce_t nonce = 0;
-    int ret = 0;
 
     *is_done = 1;
 
@@ -968,24 +857,25 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         return (-1);
     }
 
-    pdus = calloc(max_rows, sizeof(PDU));
+    // alloc enough for max_rows + header & footer PDUs
+    pdus = calloc(max_rows + 2, sizeof(PDU));
     if (!pdus) {
         LOG(LOG_ERR, "could not alloc for array of PDU");
         return (-1);
     }
     *_pdus = pdus;
 
+    if (state->not_ready) {
+        LOG(LOG_INFO, "no data is available to send to routers");
+        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        return (num_pdus);
+    }
+
     if (getCacheNonce(connp, &nonce)) {
         LOG(LOG_ERR, "couldn't get cache nonce");
         pdu_free_array(pdus, max_rows);
         return (-1);
-    }
-
-    if (state->not_ready) {
-        LOG(LOG_INFO, "no data is available to send to routers");
-        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
-        return (num_pdus);
     }
 
     if (!state->data_sent) {
@@ -995,13 +885,16 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
 
     MYSQL *mysqlp = (MYSQL*) connp;
     MYSQL_RES *result;
-    my_ulonglong current_row = 0;
-    my_ulonglong last_row = 0;
+    my_ulonglong num_rows = 0;
     int QRY_SZ = 256;
     char qry[QRY_SZ];
 
-    snprintf(qry, QRY_SZ, "select asn, ip_addr from rtr_full "
-            "where serial_num=%" PRIu32 " order by asn, ip_addr", state->ser_num);
+    snprintf(qry, QRY_SZ, "select asn, ip_addr "
+            " from rtr_full "
+            " where serial_num=%" PRIu32
+            " order by asn, ip_addr"
+            " limit %u, %zu",
+            state->ser_num, state->first_row, max_rows - num_pdus);
 
     if (mysql_query(mysqlp, qry)) {
         LOG(LOG_ERR, "could not read rtr_full from db");
@@ -1017,47 +910,35 @@ ssize_t resetQueryGetNext(void *connp, void * query_state, size_t max_rows,
         return (-1);
     }
 
-    current_row = state->first_row;
-    last_row = mysql_num_rows(result) - 1;
+    num_rows = mysql_num_rows(result);
 
-    if (current_row <= last_row)
-        mysql_data_seek(result, current_row);
-
-    while (current_row <= last_row  &&  num_pdus < max_rows) {
+    while (num_rows > 0) {
         if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 0)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
             return (-1);
         }
-        current_row++;
+        --num_rows;
+        ++state->first_row;
     }
 
     if (num_pdus == max_rows) {
-        state->first_row = current_row;
         mysql_free_result(result);
         *is_done = 0;
-        LOG(LOG_INFO, "returning %u PDUs", num_pdus);
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return (num_pdus);
-    } else {  // If we're here, current_row > last_row, num_pdus < max_rows
-        ret = readSerNumAsCurrent(connp, state->ser_num,
-                0, NULL, NULL,
-                0, NULL);
-        if (ret == -1) {
-            LOG(LOG_ERR, "error while checking validity of serial number");
-            mysql_free_result(result);
-            pdu_free_array(pdus, max_rows);
-            return (-1);
-        } else {
-            LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-            fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-            mysql_free_result(result);
-            LOG(LOG_INFO, "returning %u PDUs", num_pdus);
-            return (num_pdus);
-        }
     }
 
-    return (0);
+    // See draft-ietf-sidr-rpki-rtr-19, section 5.4 Cache Response
+    // Even if there is a newer sn, don't feed it.  rtr_incremental may contain
+    //     a withdrawal, which must not be sent during a Cache Response.
+
+    LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+    fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
+    mysql_free_result(result);
+    LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+    return (num_pdus);
 }
 
 
