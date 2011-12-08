@@ -195,6 +195,16 @@ make_serial 14 1 3
 client "serial_query $NONCE 8" "empty set"
 client "serial_query $NONCE 10" "Cache Reset"
 client "serial_query $NONCE 14" "empty set"
+make_serial 15 1 3
+client "serial_query $NONCE 8" "empty set, ending at serial $SERIAL"
+make_serial 16 1 3
+client "serial_query $NONCE 8" "empty set, ending at serial $SERIAL"
+make_serial 17 2 3
+client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+make_serial 18 2 3
+client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+make_serial 19 2 3
+client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
 stop_test serial_queries
 
 start_test bad_pdus
