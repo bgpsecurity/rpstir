@@ -827,7 +827,7 @@ ssize_t serialQueryGetNext(void *connp, void *query_state, size_t max_rows,
         mysql_data_seek(result, current_row);
 
     while (current_row <= last_row  &&  num_pdus < max_rows) {
-        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 0)) {
+        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 1)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
