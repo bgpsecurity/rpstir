@@ -584,9 +584,9 @@ int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
             LOG(LOG_ERR, "could not read is_announce");
             return (-1);
         }
-        if (strcmp(is_announce_str, "0"))
+        if (!strncmp(is_announce_str, "0", 1))
             is_announce = 0;
-        else if (strcmp(is_announce_str, "1"))
+        else if (!strncmp(is_announce_str, "1", 1))
             is_announce = 1;
         else {
             LOG(LOG_ERR, "unexpected value for is_announce");
@@ -664,7 +664,7 @@ int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
     } else if (family == AF_INET6) {
         pdu->pduType = PDU_IPV6_PREFIX;
         pdu->length = 32;
-        pdu->ip4PrefixData.flags = is_announce;
+        pdu->ip6PrefixData.flags = is_announce;
         pdu->ip6PrefixData.prefixLength = prefix_len;
         pdu->ip6PrefixData.maxLength = max_prefix_len;
         pdu->ip6PrefixData.reserved = (uint8_t) 0;
