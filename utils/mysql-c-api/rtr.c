@@ -488,6 +488,7 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
 
     ret = readSerNumAsCurrent(connp, serial, 0, NULL, NULL, 0, NULL);
     if (ret == 0) {  // ser num found (as current)
+        state->ser_num = serial;
         state->no_new_data = 1;
         return (0);
     } else if (ret == 1) {  // ser num not found (as current)
@@ -513,7 +514,7 @@ int startSerialQuery(void *connp, void **query_state, serial_number_t serial) {
 
 /*==============================================================================
  * @param field_str has the format:  <address>/<length>[(<max_length>)]
- * It originates from a database field `ip_addr' and is null terminated
+ * It originates from a database field `ip_addr' and gets null terminated
  *     before being passed to this function.
  * @return 0 on success or an error code on failure.
 ------------------------------------------------------------------------------*/
