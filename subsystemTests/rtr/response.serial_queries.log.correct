@@ -348,3 +348,18 @@ version 0 Cache Reset, length = 8
 --- expecting: empty set
 version 0 Cache Response, cache nonce = 42, length = 8
 version 0 End of Data, cache nonce = 42, length = 12, serial number = 14
+--- serial_query 42 8
+--- expecting: empty set, ending at serial 15
+TODO
+--- serial_query 42 8
+--- expecting: empty set, ending at serial 16
+TODO
+--- serial_query 42 8
+--- expecting: withdraw AS 1, ending at serial 17
+TODO
+--- serial_query 42 8
+--- expecting: withdraw AS 1, ending at serial 18
+TODO
+--- serial_query 42 8
+--- expecting: withdraw AS 1, ending at serial 19
+TODO

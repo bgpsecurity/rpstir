@@ -63,13 +63,15 @@ compare () {
 init () {
 	"$RPKI_ROOT"/proto/rcli -x -t . -y
 	echo "INSERT INTO rtr_nonce VALUES ($NONCE);" | $RPKI_MYSQL_CMD
+
+	SERIAL=""
 }
 
 make_serial () {
-	PREV_SERIAL="$1" # a number or empty string if this is the first call
-	SERIAL="$2"
-	FIRST_ASN="$3"
-	LAST_ASN="$4"
+	PREV_SERIAL="$SERIAL"
+	SERIAL="$1"
+	FIRST_ASN="$2"
+	LAST_ASN="$3"
 
 	test "$FIRST_ASN" -ge 1
 	test "$LAST_ASN" -le 255
@@ -118,36 +120,42 @@ make_serial () {
 }
 
 drop_serial () {
-	SERIAL="$1"
+	DROP_SERIAL="$1"
 
 	COMMAND_FILE="`mktemp`"
 
-	printf 'DELETE FROM rtr_update WHERE serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
-	printf 'DELETE FROM rtr_full WHERE serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
-	printf 'DELETE rtr_incremental FROM rtr_incremental LEFT JOIN rtr_update ON rtr_incremental.serial_num = rtr_update.serial_num WHERE rtr_update.prev_serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
-	printf 'UPDATE rtr_update SET prev_serial_num = NULL WHERE prev_serial_num = %u;\n' "$SERIAL" >> "$COMMAND_FILE"
+	printf 'DELETE FROM rtr_update WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+	printf 'DELETE FROM rtr_full WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+	printf 'DELETE rtr_incremental FROM rtr_incremental LEFT JOIN rtr_update ON rtr_incremental.serial_num = rtr_update.serial_num WHERE rtr_update.prev_serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+	printf 'UPDATE rtr_update SET prev_serial_num = NULL WHERE prev_serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
 
 	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
 
 	rm -f "$COMMAND_FILE"
 }
 
-start_test () {
-	TEST="$1"
 
-	rm -f "response.log" "response.$TEST.log"
-	touch "response.log"
-
+start_rtrd () {
 	"$SERVER" &
 	SERVER_PID=$!
 	sleep 1
 }
 
-stop_test () {
-	TEST="$1"
-
+stop_rtrd () {
 	kill $SERVER_PID
 	wait $SERVER_PID || true
+}
+
+
+start_test () {
+	TEST="$1"
+
+	rm -f "response.log" "response.$TEST.log"
+	touch "response.log"
+}
+
+stop_test () {
+	TEST="$1"
 
 	mv -f "response.log" "response.$TEST.log"
 	compare "response.$TEST.log"
@@ -156,36 +164,47 @@ stop_test () {
 
 init
 
-# Comments after queries indicate what's expected to be returned.
+start_rtrd
+
 
 start_test reset_query_first
-make_serial "" 5 1 4
-client "reset_query" "all data for serial 5"
+make_serial 5 1 4
+client "reset_query" "all data for serial $SERIAL"
 stop_test reset_query_first
 
 start_test serial_queries
 client "serial_query $WRONG_NONCE 5" "Cache Reset"
 client "serial_query $NONCE 5" "empty set"
-make_serial 5 7 2 6
-client "serial_query $NONCE 5" "difference from 5 to 7"
+make_serial 7 2 6
+client "serial_query $NONCE 5" "difference from 5 to $SERIAL"
 client "serial_query $NONCE 7" "empty set"
-make_serial 7 8 1 3
-client "serial_query $NONCE 5" "difference from 5 to 8"
+make_serial 8 1 3
+client "serial_query $NONCE 5" "difference from 5 to $SERIAL"
 client "serial_query $NONCE 6" "Cache Reset"
-client "serial_query $NONCE 7" "difference from 7 to 8"
+client "serial_query $NONCE 7" "difference from 7 to $SERIAL"
 client "serial_query $NONCE 8" "empty set"
 drop_serial 5
 client "serial_query $NONCE 5" "Cache Reset"
 client "serial_query $NONCE 6" "Cache Reset"
-client "serial_query $NONCE 7" "difference from 7 to 8"
+client "serial_query $NONCE 7" "difference from 7 to $SERIAL"
 client "serial_query $NONCE 8" "empty set"
 drop_serial 7
 client "serial_query $NONCE 7" "Cache Reset"
 client "serial_query $NONCE 8" "empty set"
-make_serial 8 14 1 3
+make_serial 14 1 3
 client "serial_query $NONCE 8" "empty set"
 client "serial_query $NONCE 10" "Cache Reset"
 client "serial_query $NONCE 14" "empty set"
+make_serial 15 1 3
+client "serial_query $NONCE 8" "empty set, ending at serial $SERIAL"
+make_serial 16 1 3
+client "serial_query $NONCE 8" "empty set, ending at serial $SERIAL"
+make_serial 17 2 3
+client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+make_serial 18 2 3
+client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+make_serial 19 2 3
+client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
 stop_test serial_queries
 
 start_test bad_pdus
@@ -195,16 +214,42 @@ for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
 done
 stop_test bad_pdus
 
-start_test bad_protocol_operation # erroneous use of valid PDUs
-# TODO
-stop_test bad_protocol_operation
+start_test bad_pdu_usage # valid PDUs that should never be sent by the client
+client "serial_notify $WRONG_NONCE 123456" "Error Report"
+client "serial_notify $NONCE $SERIAL" "Error Report"
+client "cache_response $WRONG_NONCE" "Error Report"
+client "cache_response $NONCE" "Error Report"
+client "ipv4_prefix 255 255 255 255.255.255.255 4294967295" "Error Report"
+client "ipv6_prefix 255 255 255 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
+client "ipv4_prefix 1 32 32 255.255.255.255 4294967295" "Error Report"
+client "ipv6_prefix 1 128 128 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
+client "ipv4_prefix 0 0 0 0.0.0.0 0" "Error Report"
+client "ipv6_prefix 0 0 0 :: 0" "Error Report"
+client "end_of_data $WRONG_NONCE 123456" "Error Report"
+client "end_of_data $NONCE $SERIAL" "Error Report"
+client "cache_reset" "Error Report"
+client "error_report 2" "no response" # No Data Available
+client "error_report 3" "no response" # Invalid Request
+stop_test bad_pdu_usage
+
+start_test bad_pdu_sequence # valid PDUs that can be send by the client, but are sent at the wrong time or indicate an error
+client "error_report 0" "no response" # Corrupt Data
+client "error_report 1" "no response" # Internal Error
+client "error_report 4" "no response" # Unsupported Protocol Version
+client "error_report 5" "no response" # Unsupported PDU Type
+client "error_report 6" "no response" # Withdrawal of Unknown Record
+client "error_report 7" "no response" # Duplicate Announcement Received
+stop_test bad_pdu_sequence
 
 start_test serial_notify
 client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
-make_serial 14 20 1 3
+make_serial 20 1 3
 client_multiple_wait
 stop_test serial_notify
 
 start_test reset_query_last
-client "reset_query" "all data for serial 20"
+client "reset_query" "all data for serial $SERIAL"
 stop_test reset_query_last
+
+
+stop_rtrd
