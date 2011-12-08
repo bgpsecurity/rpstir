@@ -195,9 +195,32 @@ for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
 done
 stop_test bad_pdus
 
-start_test bad_protocol_operation # erroneous use of valid PDUs
-# TODO
-stop_test bad_protocol_operation
+start_test bad_pdu_usage # valid PDUs that should never be sent by the client
+client "serial_notify $WRONG_NONCE 123456" "Error Report"
+client "serial_notify $NONCE 14" "Error Report"
+client "cache_response $WRONG_NONCE" "Error Report"
+client "cache_response $NONCE" "Error Report"
+client "ipv4_prefix 255 255 255 255.255.255.255 4294967295" "Error Report"
+client "ipv6_prefix 255 255 255 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
+client "ipv4_prefix 1 32 32 255.255.255.255 4294967295" "Error Report"
+client "ipv6_prefix 1 128 128 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
+client "ipv4_prefix 0 0 0 0.0.0.0 0" "Error Report"
+client "ipv6_prefix 0 0 0 :: 0" "Error Report"
+client "end_of_data $WRONG_NONCE 123456" "Error Report"
+client "end_of_data $NONCE 14" "Error Report"
+client "cache_reset" "Error Report"
+client "error_report 2" "no response" # No Data Available
+client "error_report 3" "no response" # Invalid Request
+stop_test bad_pdu_usage
+
+start_test bad_pdu_sequence # valid PDUs that can be send by the client, but are sent at the wrong time or indicate an error
+client "error_report 0" "no response" # Corrupt Data
+client "error_report 1" "no response" # Internal Error
+client "error_report 4" "no response" # Unsupported Protocol Version
+client "error_report 5" "no response" # Unsupported PDU Type
+client "error_report 6" "no response" # Withdrawal of Unknown Record
+client "error_report 7" "no response" # Duplicate Announcement Received
+stop_test bad_pdu_sequence
 
 start_test serial_notify
 client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
