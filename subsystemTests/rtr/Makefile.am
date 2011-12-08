@@ -7,4 +7,4 @@ EXTRA_DIST = \
 	*.correct \
 	runRTRTest.sh
 
-CLEANFILES = *.log
+CLEANFILES = *.log *.diff
