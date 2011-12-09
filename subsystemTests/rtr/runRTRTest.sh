@@ -135,15 +135,17 @@ drop_serial () {
 }
 
 
-start_rtrd () {
-	"$SERVER" &
-	SERVER_PID=$!
-	sleep 1
-}
-
 stop_rtrd () {
 	kill $SERVER_PID
 	wait $SERVER_PID || true
+	trap - 0
+}
+
+start_rtrd () {
+	"$SERVER" &
+	SERVER_PID=$!
+	trap stop_rtrd 0
+	sleep 1
 }
 
 
