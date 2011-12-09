@@ -4,6 +4,7 @@
 
 #include <arpa/inet.h>
 #include <bits/socket.h>
+#include <inttypes.h>
 
 #include <my_global.h>
 #include <mysql.h>
@@ -52,22 +53,29 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
         return (-1);
     }
 
-    ulong *lengths;
-    ulong sz;
     uint num_rows = mysql_num_rows(result);
+    char *nonce_str = NULL;
     if (num_rows == 1) {
         row = mysql_fetch_row(result);
-        lengths = mysql_fetch_lengths(result);
-        sz = lengths[0];
-
-        if (charp2uint16_t(nonce, row[0], sz)) {
-            LOG(LOG_ERR, "error converting char[] to uint16_t for cache nonce");
+        if (getStringByFieldname(&nonce_str, result, row, "cache_nonce")) {
+            if (nonce_str) {
+                free (nonce_str);
+                nonce_str = NULL;
+            }
             mysql_free_result(result);
             return (-1);
+        } else {
+            if (sscanf(nonce_str, "%" SCNu16, nonce) < 1) {
+                LOG(LOG_ERR, "unexpected value for cache_nonce");
+                return (-1);
+            }
+            if (nonce_str) {
+                free (nonce_str);
+                nonce_str = NULL;
+            }
+            mysql_free_result(result);
+            return (0);
         }
-
-        mysql_free_result(result);
-        return (0);
     } else {
         mysql_free_result(result);
         LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
@@ -107,20 +115,29 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
         return (GET_SERNUM_ERR);
     }
 
-    ulong *lengths;
     uint num_rows = mysql_num_rows(result);
+    char *sn_str = NULL;
     if (num_rows == 1) {
         row = mysql_fetch_row(result);
-        lengths = mysql_fetch_lengths(result);  // mysql allocs the memory
-
-        if (charp2uint32_t(serial, row[0], lengths[0])) {
-            LOG(LOG_ERR, "error converting char[] to uint32_t for serial number");
+        if (getStringByFieldname(&sn_str, result, row, "serial_num")) {
+            if (sn_str) {
+                free (sn_str);
+                sn_str = NULL;
+            }
             mysql_free_result(result);
             return (GET_SERNUM_ERR);
+        } else {
+            if (sscanf(sn_str, "%" SCNu32, serial) < 1) {
+                LOG(LOG_ERR, "unexpected value for serial_num");
+                return (GET_SERNUM_ERR);
+            }
+            if (sn_str) {
+                free (sn_str);
+                sn_str = NULL;
+            }
+            mysql_free_result(result);
+            return (GET_SERNUM_SUCCESS);
         }
-
-        mysql_free_result(result);
-        return (GET_SERNUM_SUCCESS);
     } else {  // num_rows == 0
         mysql_free_result(result);
         LOG(LOG_INFO, "returned 0 rows for query:  %s", qry);
