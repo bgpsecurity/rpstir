@@ -1,7 +1,7 @@
 --- serial_notify 4242 123456
 --- expecting: Error Report
 version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
---- serial_notify 42 14
+--- serial_notify 42 19
 --- expecting: Error Report
 version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
 --- cache_response 4242
@@ -31,7 +31,7 @@ version 0 Error Report (Invalid Request), length = 67, encapsulated PDU length =
 --- end_of_data 4242 123456
 --- expecting: Error Report
 version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
---- end_of_data 42 14
+--- end_of_data 42 19
 --- expecting: Error Report
 version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
 --- cache_reset
