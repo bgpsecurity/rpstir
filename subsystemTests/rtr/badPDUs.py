@@ -33,7 +33,6 @@ bad_PDUs_hex = [
 	'00 04 00 00 ' + '00 00 00 15 ' + '00 00 00 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0 0f ' + 'f0', # length too long
 	'00 04 00 00 ' + '00 00 00 14 ' + '00 21 21 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0 0f', # prefix length too large
 	'00 04 00 00 ' + '00 00 00 14 ' + '00 00 21 00 ' + 'f0 0f f0 0f ' + 'f0 0f f0 0f', # max length too large
-	# TODO: prefix length > max length
 
 	# IPv6 Prefix
 	'00 06 00 00 00 00 00 08', # length too short
@@ -42,7 +41,6 @@ bad_PDUs_hex = [
 	'00 06 00 00 ' + '00 00 00 21 ' + '00 00 00 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0 0f ' + 'f0', # length too long
 	'00 06 00 00 ' + '00 00 00 20 ' + '00 81 81 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0 0f', # prefix length too large
 	'00 06 00 00 ' + '00 00 00 20 ' + '00 00 81 00 ' + 'f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f f0 0f ' + 'f0 0f f0 0f', # max length too large
-	# TODO: prefix length > max length
 
 	# End of Data
 	'00 07 f0 0f 00 00 00 08', # length too short
