@@ -228,12 +228,12 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named resource-pki-N.NN.tar.gz, where N.NN is a version number.  Extract
+named rpstir-N.NN.tar.gz, where N.NN is a version number.  Extract
 the file using:
 
-    tar xvzpf resource-pki-N.NN.tar.gz
+    tar xvzpf rpstir-N.NN.tar.gz
     
-This will create a directory named resource-pki-N.NN which will contain
+This will create a directory named rpstir-N.NN which will contain
 various subdirectories.
 
 2.2.2 Configure
