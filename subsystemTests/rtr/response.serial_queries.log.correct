@@ -350,16 +350,33 @@ version 0 Cache Response, cache nonce = 42, length = 8
 version 0 End of Data, cache nonce = 42, length = 12, serial number = 14
 --- serial_query 42 8
 --- expecting: empty set, ending at serial 15
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 15
 --- serial_query 42 8
 --- expecting: empty set, ending at serial 16
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 16
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 17
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
+version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 17
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 18
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
+version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 18
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 19
-TODO
+version 0 Cache Response, cache nonce = 42, length = 8
+version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
+version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 End of Data, cache nonce = 42, length = 12, serial number = 19
