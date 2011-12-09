@@ -318,17 +318,17 @@ variables, so make sure to set these yourself.
 
 2.4 SSH Subsystem
 
-TODO: update this section.
+If you plan to use the RTR Server as an SSH subsystem, you will need
+to run the rtr/rtrd server as a daemon and set up an ssh subsystem
+to connect to rtrd on localhost.  The netcat program, nc(1), is
+recommended for the ssh subsystem.  There are different versions of
+netcat, so read its manpage for caveats before setting it up as
+a subsystem.  In particular, read the "-q" option's description, if your
+version of netcat has a "-q" option, to prevent runaway nc processes
+when clients disconnect. Edit the /etc/ssh/sshd_config file to contain
+the below line, modified for the options you want to pass to netcat:
 
-If you plan to use the RTR Server, you will need to configure it as an
-SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
-line:
-  Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
-  
-NOTE: the RTR code only lightly tested in version 4.0 of the BBN
-relying party software.  The instructions below do not make use of the
-RTR server, but interested users may read
-$RPKI_ROOT/server/INSTRUCTIONS for more information.
+  Subsystem	rpki-rtr	nc <nc-options>... localhost <rtr-port>
 
 
 2.5 Self Test
@@ -376,7 +376,10 @@ Chaser Client (proto/chaser)         Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server                           Continuously as daemon (TODO: mention other RTR components)
+RTR Server (rtr/rtrd)                Continuously as daemon
+RTR updater (rtr/doUpdate)           After each call to chaser
+RTR client (rtr/rtr-test-client)     On demand by user
+
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
