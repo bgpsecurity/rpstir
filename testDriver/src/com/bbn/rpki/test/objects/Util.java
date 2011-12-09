@@ -35,7 +35,12 @@ public class Util implements Constants {
   private static DateFormat dateFormat1 = new SimpleDateFormat("yyMMddHHmmss'Z'");
 
   private static DateFormat dateFormat2 = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
+
+  public static File RPKI_ROOT;
   
+  static {
+    RPKI_ROOT = new File(System.getenv("RPKI_ROOT")).getAbsoluteFile();
+  }
   /**
    * @param from
    * @param to
@@ -231,7 +236,7 @@ public class Util implements Constants {
     cmdArray[1] = "-f";
     cmdArray[2] = CA_Obj.CONFIG_PATH + file + ".cfg";
     System.arraycopy(xargs, 0, cmdArray, 3, xargs.length);
-    exec(cmdArray, "create_object", false);
+    exec(cmdArray, "create_object", false, null);
   }
 
   /**
@@ -244,32 +249,42 @@ public class Util implements Constants {
         "-f",
         fileName
     };
-    return exec(cmdArray, "gen_hash", true);
+    return exec(cmdArray, "gen_hash", true, null);
   }
 
+  /**
+   * Execute a command in the rpki root directory
+   * @param cmdArray
+   * @return stdout
+   */
+  public static String execInRoot(String...cmdArray) {
+    return exec(cmdArray, cmdArray[0], true, RPKI_ROOT);
+  }
+  
   /**
    * @param cmdArray
    * @param title
    * @param ignoreStatus TODO
+   * @param cwd 
+   * @return stdout string
    */
-  static String exec(String[] cmdArray, String title, boolean ignoreStatus) {
+  public static String exec(String[] cmdArray, String title, boolean ignoreStatus, File cwd) {
     int status;
     final StringBuilder sb = new StringBuilder();
     try {
-      File cwd = new File(System.getProperty("user.dir")).getAbsoluteFile();
+      if (cwd == null) {
+        cwd = new File(System.getProperty("user.dir")).getAbsoluteFile();
+      }
       final Process f = runtime.exec(cmdArray, null, cwd);
-      Sucker stdout = new Sucker(f.getInputStream(), "stdout");
-      Sucker stderr = new Sucker(f.getErrorStream(), "stderr");
-      stdout.start();
-      stderr.start();
+      Sucker stdout = new Sucker(f.getInputStream(), "stdout", System.out);
+      Sucker stderr = new Sucker(f.getErrorStream(), "stderr", System.err);
       status = f.waitFor();
       stdout.join();
       stderr.join();
-      String stderrOut = stderr.getString();
       String string = stdout.getString();
+      String errString = stderr.getString();
       if (status != 0) {
-        String msg = String.format("%s failed status = %d%n   stderr:%n%s%n   stdout:%n%s",
-                                                 title, status, stderrOut, string);
+        String msg = String.format("%s failed status = %d%n", title, status);
         if (ignoreStatus) {
           if (DEBUG_ON) System.out.println(msg);
         } else {
@@ -322,7 +337,7 @@ public class Util implements Constants {
           "-n",
           file.getPath()
       };
-    return exec(cmdArray, "gen_hash", true);
+    return exec(cmdArray, "gen_hash", true, null);
     }
   }
 
@@ -334,5 +349,61 @@ public class Util implements Constants {
   public static String removePrefix(String string, String prefix) {
     assert string.startsWith(prefix);
     return string.substring(prefix.length());
+  }
+
+  /**
+   * @param dirs
+   */
+  public static void deleteDirectories(File...dirs) {
+    for (File dir : dirs) {
+      deleteDirectory(dir);
+    }
+  }
+  
+  private static void deleteDirectory(File dir) {
+    if (!dir.exists()) return;
+    assert dir.isDirectory();
+    for (File file : dir.listFiles()) {
+      if (file.isDirectory()) {
+        deleteDirectory(file);
+      } else {
+        file.delete();
+      }
+    }
+  }
+
+  /**
+   * Find and kill processes running the indicated program as this user
+   * @param string grep argument for finding the process
+   */
+  public static void killProcessesRunning(String string) {
+    // ps command to find processes of this user
+    String[] psCmd = {
+        "ps",
+        "aw"
+    };
+    String psOutput = Util.exec(psCmd, "ps aw", true, null);
+    String[] lines = psOutput.split("\n");
+    for (String line : lines) {
+      if (line.contains(string)) {
+        if (line.contains("grep")) continue;
+        String pid = line.trim().split(" +")[0];
+        String[] killCmd = {
+            "kill",
+            pid
+        };
+        exec(killCmd, "kill " + pid, true, RPKI_ROOT);
+      }
+    }
+  }
+
+  /**
+   * Initialize the database
+   */
+  public static void initDB() {
+    String[] cmd = {
+        "run_scripts/initDB.sh"
+    };
+    exec(cmd, "initDB", true, RPKI_ROOT);
   }
 }

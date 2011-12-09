@@ -6,7 +6,10 @@ package com.bbn.rpki.test.objects;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Reader;
+import java.io.Writer;
 
 /**
  * <Enter the description of this type here>
@@ -17,10 +20,13 @@ public class Sucker extends Thread {
   private final InputStream stream;
   private final StringBuilder sb = new StringBuilder();
   private IOException threadException;
+  private final Writer out;
 
-  Sucker(InputStream is, String name) {
+  Sucker(InputStream is, String name, PrintStream out) {
     super(name);
     this.stream = is;
+    this.out = new OutputStreamWriter(out);
+    start();
   }
   
   /**
@@ -44,6 +50,7 @@ public class Sucker extends Thread {
     int n;
     try {
       while ((n = r.read(bf)) > 0) {
+        if (out != null) out.write(bf, 0, n);
         String s = new String(bf, 0, n);
         sb.append(s);
       }

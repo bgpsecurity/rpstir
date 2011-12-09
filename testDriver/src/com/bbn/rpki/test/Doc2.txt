@@ -1,0 +1,25 @@
+RPKI Test Framework
+
+The RPKI test framework has two relatively independent parts: The
+first is building a model of the RP hierarchy including the artifacts
+(certs, roas, etc.) of the nodes over time based on the depth of the
+hierarchy, its fan out characteristics, and how it should evolve over
+time. The second is an emulation of the operation of the overall
+system including the upload of artifacts to rsync repositories and the
+updating of the cache.
+
+The model building part is reasonably straightforward and is adapted
+from the testbed_create python script by introducing evolution over
+time.
+
+The second part emulates the operation of the various relying parties
+including their autonomy, inter-dependence, and eventually their
+misbehavior. The basic steps of uploading the artifacts of the model
+to repositories and updating the cache can be broken down into
+independent activities corresponding to the independent nodes of the
+model and the independent steps within a node that may either be
+performed in parallel or in an arbitrary order. Further breakdown
+allows for emulating the operational dynamics of computers and
+networks such upload failure, updating in the middle of an upload.
+The ways in which the steps can be broken down is explicitly
+represented allowing the granularity of the breakdown to be varied.

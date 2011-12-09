@@ -69,7 +69,7 @@ public class Certificate extends CA_Obj {
             this.subjkeyfile,
             "2048"
             };
-        Util.exec(command_strings, "gen_key", false);
+        Util.exec(command_strings, "gen_key", false, null);
     }
     // Generate our ski by getting the hash of the public key 
     // Result from .p15 -> hash(public_key) which is a hex string

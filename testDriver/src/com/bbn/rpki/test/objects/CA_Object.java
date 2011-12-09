@@ -23,7 +23,7 @@ public class CA_Object extends Allocator {
   public String path_CA_cert;
   /** My factory */
   public FactoryBase myFactory;
- 
+
   private int nextChildSN;
   final String bluePrintName;
   private final CA_Object parent;
@@ -34,59 +34,58 @@ public class CA_Object extends Allocator {
   private final String manifest_path;
   private final int id;
   private final String nickName;
-  
+
   /**
+   * @param factoryBase 
    * @param myFactory
    * @param parent
    * @param subjKeyFile
    */
   public CA_Object(FactoryBase factoryBase, CA_Object parent, String subjKeyFile) {
-  
+    this.nextChildSN = 0;
+    this.bluePrintName = factoryBase.bluePrintName;
+    this.myFactory = factoryBase;
+    this.parent = parent;
 
-  this.nextChildSN = 0;
-  this.bluePrintName = factoryBase.bluePrintName;
-  this.myFactory = factoryBase;
-  this.parent = parent;
+    if (parent != null) {
+      Factory myFactory = (Factory) factoryBase;
+      this.ipv4Resources = parent.subAllocateIPv4(myFactory.ipv4List);
+      this.ipv6Resources = parent.subAllocateIPv6(myFactory.ipv6List);
+      this.asResources = parent.subAllocateAS(myFactory.asList);
+    } else {
+      //  trust anchor CA
+      IANAFactory myFactory = (IANAFactory) factoryBase;
+      this.ipv4Resources = myFactory.ipv4List;
+      this.ipv6Resources = myFactory.ipv6List;
+      this.asResources = myFactory.asList;
+    }
+    this.ipv4ResourcesFree = new IPRangeList(this.ipv4Resources);
+    this.ipv6ResourcesFree = new IPRangeList(this.ipv6Resources);
+    this.asResourcesFree = new IPRangeList(this.asResources);
 
-  if (parent != null) {
-    Factory myFactory = (Factory) factoryBase;
-    this.ipv4Resources = parent.subAllocateIPv4(myFactory.ipv4List);
-    this.ipv6Resources = parent.subAllocateIPv6(myFactory.ipv6List);
-    this.asResources = parent.subAllocateAS(myFactory.asList);
-  } else {
-    //  trust anchor CA
-    IANAFactory myFactory = (IANAFactory) factoryBase;
-    this.ipv4Resources = myFactory.ipv4List;
-    this.ipv6Resources = myFactory.ipv6List;
-    this.asResources = myFactory.asList;
-  }
-  this.ipv4ResourcesFree = new IPRangeList(this.ipv4Resources);
-  this.ipv6ResourcesFree = new IPRangeList(this.ipv6Resources);
-  this.asResourcesFree = new IPRangeList(this.asResources);
-  
-  // Initialize our certificate
-  if (parent != null) {
+    // Initialize our certificate
+    if (parent != null) {
       this.certificate = new CA_cert(parent,
                                      factoryBase,
                                      this.ipv4Resources,
                                      this.ipv6Resources,
                                      this.asResources,
                                      subjKeyFile);
-  } else {
-    this.certificate = new SS_cert(parent, myFactory,
-                                   subjKeyFile);
-  }
-  // Grab what I need from the certificate 
-  // Obtain just the SIA path and cut off the r:rsync://
-  String[] sia_list = this.certificate.sia.substring(RSYNC_EXTENSION.length()).split(",");
-  this.SIA_path = sia_list[0].substring(0, sia_list[0].length());
-  this.manifest_path = Util.removePrefix(sia_list[1], RSYNC_EXTENSION);
-  this.id = this.certificate.serial;
-  this.path_CA_cert = this.certificate.outputfilename;
-  this.nickName= this.myFactory.bluePrintName + "-" + this.id;
-  if (parent != null)
+    } else {
+      this.certificate = new SS_cert(parent, myFactory,
+                                     subjKeyFile);
+    }
+    // Grab what I need from the certificate 
+    // Obtain just the SIA path and cut off the r:rsync://
+    String[] sia_list = this.certificate.sia.substring(RSYNC_EXTENSION.length()).split(",");
+    this.SIA_path = sia_list[0].substring(0, sia_list[0].length());
+    this.manifest_path = Util.removePrefix(sia_list[1], RSYNC_EXTENSION);
+    this.id = this.certificate.serial;
+    this.path_CA_cert = this.certificate.outputfilename;
+    this.nickName= this.myFactory.bluePrintName + "-" + this.id;
+    if (parent != null)
       this.commonName = parent.commonName + "." + this.nickName;
-  else
+    else
       this.commonName = this.nickName;
   }
 

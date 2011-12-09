@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,5 +121,21 @@ public class TaskDescription extends XMLBase {
    */
   public void removeArgDescription(int index) {
     argDescriptions.remove(index);
+  }
+
+  /**
+   * @return
+   */
+  public File getScriptFile() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  /**
+   * @param selectedFile
+   */
+  public void setScriptFile(File selectedFile) {
+    // TODO Auto-generated method stub
+    
   }
 }
