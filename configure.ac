@@ -35,6 +35,7 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
+AC_PROG_SED
 
 
 AC_ARG_WITH(
@@ -107,9 +108,36 @@ if test x${ssl_include} != x; then
 fi
 
 AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
-if test x${MYSQL_CONFIG} != x; then
-  CPPFLAGS="`$MYSQL_CONFIG --include` $CPPFLAGS"
-  LDFLAGS="`$MYSQL_CONFIG --libs_r` $LDFLAGS"
+if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
+  # this is a bit of a hack because mysql_config --include specified non-system include flags
+  for flag in `$MYSQL_CONFIG --include`; do
+    case $flag in
+      -I*)
+        dir="`echo $flag | $SED 's/^-I//'`"
+        CPPFLAGS="-isystem${dir} $CPPFLAGS"
+        ;;
+      *)
+        CPPFLAGS="$flag $CPPFLAGS"
+        ;;
+    esac
+  done
+
+  # this is a bit of a hack because mysql_config --libs_r specifies compiler flags, not linker flags
+  for flag in `$MYSQL_CONFIG --libs_r`; do
+    case $flag in
+      -L*)
+        libpath="`echo $flag | $SED 's/^-L//'`"
+        LDFLAGS="-L${libpath} -Wl,-rpath -Wl,${libpath} ${LDFLAGS}"
+        ;;
+      -l*)
+        LDFLAGS="${flag} ${LDFLAGS}"
+        ;;
+      *)
+        ;;
+    esac
+  done
+else
+  AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
@@ -156,10 +184,6 @@ AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
 	echo "Error: openSSL is required for building this project"
 	exit -1;
 ])
-AC_SEARCH_LIBS([mysql_real_connect], [mysqlclient_r],[],[
-	echo "Error: MySQL client is required for building this project"
-	exit -1;
-])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -189,7 +213,7 @@ AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir munmap select socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir mysql_real_connect munmap select socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 
 AC_CONFIG_FILES([Makefile
                  cg/Makefile
