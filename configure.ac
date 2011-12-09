@@ -80,17 +80,10 @@ AC_ARG_WITH(
 )
 
 AC_ARG_WITH(
-    [mysql-include],
-    AS_HELP_STRING([--with-mysql-include],[Path to mysql install location: Defaults to /usr/local/include/mysql ]),
-    [ mysql_include=$withval],
-    [ mysql_include=/usr/local/include/mysql]
-)
-
-AC_ARG_WITH(
-    [mysql-lib],
-    AS_HELP_STRING([--with-mysql-lib],[Path to mysql install location: Defaults to /usr/local/lib/mysql ]),
-    [ mysql_lib=$withval],
-    [ mysql_lib=/usr/local/lib/mysql]
+    [mysql-config],
+    AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ]),
+    [ mysql_config=$withval],
+    [ mysql_config=mysql_config]
 )
 
 if test x${ssl_lib} != x; then
@@ -102,9 +95,6 @@ fi
 if test x${cryptlib_lib} != x; then
   LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
 fi
-if test x${mysql_lib} != x; then
-  LDFLAGS="-L${mysql_lib} -Wl,-rpath -Wl,${mysql_lib} ${LDFLAGS-}"
-fi
 
 if test x${odbc_include} != x; then
   CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
@@ -115,8 +105,11 @@ fi
 if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
 fi
-if test x${mysql_include} != x; then
-  CFLAGS="-isystem${mysql_include} ${CFLAGS-}"
+
+AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
+if test x${MYSQL_CONFIG} != x; then
+  CPPFLAGS="`$MYSQL_CONFIG --include` $CPPFLAGS"
+  LDFLAGS="`$MYSQL_CONFIG --libs_r` $LDFLAGS"
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
