@@ -26,15 +26,20 @@ public class UploadNode implements Task {
     }};
   
   private final File nodeDir;
-  private final String repository;
+
+  private final Model model;
+
+  private final File repositoryRootDir;
 
   /**
-   * @param modelDir
-   * @param repository
+   * @param model 
+   * @param repositoryRootDir 
+   * @param nodeDir 
    */
-  public UploadNode(File modelDir, String repository) {
-    this.repository = repository;
-    this.nodeDir = modelDir.getAbsoluteFile();
+  public UploadNode(Model model, File repositoryRootDir, File nodeDir) {
+    this.model = model;
+    this.repositoryRootDir = repositoryRootDir;
+    this.nodeDir = nodeDir;
   }
   
   /**
@@ -48,9 +53,10 @@ public class UploadNode implements Task {
     for (File file : nodeDir.listFiles(fileFilter)) {
       cmd.add(file.getPath());
     }
+    String repository = model.constructUploadRepositoryArg(repositoryRootDir, nodeDir);
     cmd.add(repository);
     String[] cmdArray = cmd.toArray(new String[cmd.size()]);
-    Util.exec(cmdArray, "UploadModel", false, Util.RPKI_ROOT);
+    Util.exec(cmdArray, "UploadModel", false, Util.RPKI_ROOT, null);
   }
 
   /**
@@ -71,15 +77,15 @@ public class UploadNode implements Task {
   public TaskBreakdown getTaskBreakdown(int epochIndex, int n) {
     assert n == 0;
     List<Task> subtasks = new ArrayList<Task>();
-    buildTasks(subtasks, nodeDir, repository);
+    buildTasks(subtasks, nodeDir);
     return new TaskBreakdown(subtasks, TaskBreakdown.Type.PARALLEL);
   }
 
-  private void buildTasks(List<Task> subtasks, File dir, String repository) {
+  private void buildTasks(List<Task> subtasks, File dir) {
     // A task for each file
     File[] files = dir.listFiles(fileFilter);
     for (File file : files) {
-      subtasks.add(new UploadFile(file, repository));
+      subtasks.add(new UploadFile(model, repositoryRootDir, file));
     }
   }
   

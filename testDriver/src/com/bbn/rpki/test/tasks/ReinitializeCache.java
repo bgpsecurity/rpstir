@@ -33,11 +33,11 @@ public class ReinitializeCache implements Task {
   @Override
   public void run(int epochIndex) {
     if (epochIndex > 0) return;
-    Util.deleteDirectories(new File(model.getRoot(), REPOSITORY), new File(LOGS));
+    Util.deleteDirectories(new File(model.getRPKIRoot(), REPOSITORY), new File(model.getRPKIRoot(), LOGS));
     Util.killProcessesRunning("run_scripts/loader.sh");
-    File rpkiRoot = model.getRoot();
+    File rpkiRoot = model.getRPKIRoot();
     new File(rpkiRoot, RCLI_LOG).delete();
-    new File(rpkiRoot, RSYNC_AUR_LOG);
+    new File(rpkiRoot, RSYNC_AUR_LOG).delete();
     Util.initDB();
   }
 

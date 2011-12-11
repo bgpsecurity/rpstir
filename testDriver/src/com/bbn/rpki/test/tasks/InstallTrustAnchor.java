@@ -4,11 +4,11 @@
 package com.bbn.rpki.test.tasks;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.Writer;
 
-import com.bbn.rpki.test.utils.OS;
+import com.bbn.rpki.test.objects.Util;
 
 /**
  * Installs a new trust anchor certificate
@@ -23,13 +23,15 @@ public class InstallTrustAnchor implements Task {
 
   private final File talFile;
 
+  private final String talPrefix;
+
   /**
-   * @param certFile
-   * @param talFile
+   * @param model 
    */
   public InstallTrustAnchor(Model model) {
     this.certFile = model.getTrustAnchorCert();
     this.talFile = model.getTALFile();
+    this.talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
   }
 
   /**
@@ -39,7 +41,6 @@ public class InstallTrustAnchor implements Task {
   public void run(int epochIndex) {
     if (epochIndex > 0) return;
     try {
-      OutputStream talOutputStream = new FileOutputStream(talFile);
       String[] opensslCmd = {
           "openssl",
           "x509",
@@ -48,15 +49,21 @@ public class InstallTrustAnchor implements Task {
           "-in",
           certFile.getPath(),
           "-pubkey",
-      "-noout"};
+          "-noout"
+      };
+      String rawOutput = Util.exec(opensslCmd, "openSSL", false, null, null);
       String[] awkCmd = {"awk", "!/-----(BEGIN|END)/"};
-      OS.exec(null, talOutputStream, System.err, opensslCmd, awkCmd);
+      String cookedOutput = Util.exec(awkCmd, "awk", false, null, rawOutput);
+      Writer talWriter = new FileWriter(talFile);
+      talWriter.write(talPrefix);
+      talWriter.write(cookedOutput);
+      talWriter.close();
       
       String[] cmd = {
           "run_scripts/updateTA.py",
           talFile.getPath()
       };
-      OS.exec(null, System.out, System.err, cmd);
+      Util.exec(cmd, "updateTA.py", false, null, null);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

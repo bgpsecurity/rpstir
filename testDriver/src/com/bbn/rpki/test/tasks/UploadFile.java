@@ -17,15 +17,17 @@ import com.bbn.rpki.test.objects.Util;
 public class UploadFile implements Task {
 
   private final File file;
-  private final String repository;
+  private final File repositoryRootDir;
+  private final Model model;
 
   /**
+   * @param repositoryRootDir 
    * @param file
-   * @param repository
    */
-  public UploadFile(File file, String repository) {
+  public UploadFile(Model model, File repositoryRootDir, File file) {
+    this.model = model;
     this.file = file;
-    this.repository = repository;
+    this.repositoryRootDir = repositoryRootDir;
   }
 
   /**
@@ -36,9 +38,10 @@ public class UploadFile implements Task {
     List<String> cmd = new ArrayList<String>();
     cmd.add("scp");
     cmd.add(file.getPath());
+    String repository = model.constructUploadRepositoryArg(repositoryRootDir, file);
     cmd.add(repository);
     String[] cmdArray = cmd.toArray(new String[cmd.size()]);
-    Util.exec(cmdArray, "UploadFile", false, Util.RPKI_ROOT);
+    Util.exec(cmdArray, "UploadFile", false, Util.RPKI_ROOT, null);
   }
 
   /**

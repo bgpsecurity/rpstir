@@ -6,6 +6,7 @@ package com.bbn.rpki.test.tasks;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * <Enter the description of this type here>
  *
@@ -25,8 +26,9 @@ public class TopTask implements Task {
    */
   @Override
   public void run(int epochIndex) {
-    // TODO Auto-generated method stub
-    
+      for (Task task : tasks) {
+        task.run(epochIndex);
+      }
   }
 
   /**

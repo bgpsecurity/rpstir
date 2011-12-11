@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -236,7 +237,7 @@ public class Util implements Constants {
     cmdArray[1] = "-f";
     cmdArray[2] = CA_Obj.CONFIG_PATH + file + ".cfg";
     System.arraycopy(xargs, 0, cmdArray, 3, xargs.length);
-    exec(cmdArray, "create_object", false, null);
+    exec(cmdArray, "create_object", false, null, null);
   }
 
   /**
@@ -249,7 +250,7 @@ public class Util implements Constants {
         "-f",
         fileName
     };
-    return exec(cmdArray, "gen_hash", true, null);
+    return exec(cmdArray, "gen_hash", true, null, null);
   }
 
   /**
@@ -258,7 +259,7 @@ public class Util implements Constants {
    * @return stdout
    */
   public static String execInRoot(String...cmdArray) {
-    return exec(cmdArray, cmdArray[0], true, RPKI_ROOT);
+    return exec(cmdArray, cmdArray[0], true, RPKI_ROOT, null);
   }
   
   /**
@@ -266,9 +267,10 @@ public class Util implements Constants {
    * @param title
    * @param ignoreStatus TODO
    * @param cwd 
+   * @param input TODO
    * @return stdout string
    */
-  public static String exec(String[] cmdArray, String title, boolean ignoreStatus, File cwd) {
+  public static String exec(String[] cmdArray, String title, boolean ignoreStatus, File cwd, String input) {
     int status;
     final StringBuilder sb = new StringBuilder();
     try {
@@ -278,11 +280,21 @@ public class Util implements Constants {
       final Process f = runtime.exec(cmdArray, null, cwd);
       Sucker stdout = new Sucker(f.getInputStream(), "stdout", System.out);
       Sucker stderr = new Sucker(f.getErrorStream(), "stderr", System.err);
+      if (input != null) {
+        OutputStream os = f.getOutputStream();
+        Writer writer = new OutputStreamWriter(os);
+        writer.write(input);
+        writer.close();
+      }
       status = f.waitFor();
       stdout.join();
       stderr.join();
       String string = stdout.getString();
       String errString = stderr.getString();
+      if (DEBUG_ON) {
+        System.out.println(Arrays.asList(cmdArray));
+        System.out.println(string);
+      }
       if (status != 0) {
         String msg = String.format("%s failed status = %d%n", title, status);
         if (ignoreStatus) {
@@ -290,10 +302,6 @@ public class Util implements Constants {
         } else {
         throw new RuntimeException(msg);
         }
-      }
-      if (DEBUG_ON) {
-        System.out.println(Arrays.asList(cmdArray));
-        System.out.println(string);
       }
       return string;
     } catch (Exception e) {
@@ -337,7 +345,7 @@ public class Util implements Constants {
           "-n",
           file.getPath()
       };
-    return exec(cmdArray, "gen_hash", true, null);
+    return exec(cmdArray, "gen_hash", true, null, null);
     }
   }
 
@@ -370,6 +378,7 @@ public class Util implements Constants {
         file.delete();
       }
     }
+    dir.delete();
   }
 
   /**
@@ -382,7 +391,7 @@ public class Util implements Constants {
         "ps",
         "aw"
     };
-    String psOutput = Util.exec(psCmd, "ps aw", true, null);
+    String psOutput = Util.exec(psCmd, "ps aw", true, null, null);
     String[] lines = psOutput.split("\n");
     for (String line : lines) {
       if (line.contains(string)) {
@@ -392,7 +401,7 @@ public class Util implements Constants {
             "kill",
             pid
         };
-        exec(killCmd, "kill " + pid, true, RPKI_ROOT);
+        exec(killCmd, "kill " + pid, true, RPKI_ROOT, null);
       }
     }
   }
@@ -404,6 +413,6 @@ public class Util implements Constants {
     String[] cmd = {
         "run_scripts/initDB.sh"
     };
-    exec(cmd, "initDB", true, RPKI_ROOT);
+    exec(cmd, "initDB", true, RPKI_ROOT, null);
   }
 }

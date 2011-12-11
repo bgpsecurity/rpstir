@@ -51,4 +51,10 @@ public abstract class FactoryBase {
   CA_Obj create(CA_Object parent) {
     return new CA_Object(this, parent, null);
   }
+  /**
+   * the serverName
+   */
+  public String getServerName() {
+    return serverName;
+  }
 }
