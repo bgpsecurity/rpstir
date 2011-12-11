@@ -14,20 +14,50 @@ import java.util.Calendar;
 public class Certificate extends CA_Obj {
   
   // Fields
+
+  /** serial */
   public final int serial;
+
+    /** notBefore */
   public final Calendar notBefore;
+
+    /** notAfter */
   public final Calendar notAfter;
+
+    /** subjkeyfile */
   public final String subjkeyfile;
+
+    /** ski */
   public final String ski;
+
+    /** aki */
   public final String aki;
+
+    /** sia */
   public String sia;
+
+    /** SIA_path */
   public String SIA_path;
+
+    /** commonName */
   public String commonName;
+
+    /** issuer */
   public String issuer;
+
+    /** subject */
   public String subject;
+
+    /** parentkeyfile */
   public String parentkeyfile;
+
+    /** as_list */
   public IPRangeList as_list;
+
+    /** ipv4 */
   public IPRangeList ipv4;
+
+    /** ipv6 */
   public IPRangeList ipv6;
 
   Certificate(CA_Object parent, FactoryBase myFactory, String siaPath, int serial, IPRangeList ipv4,

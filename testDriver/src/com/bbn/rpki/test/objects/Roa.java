@@ -14,10 +14,14 @@ import java.util.List;
  */
 public class Roa extends CMS {
 
+    /** asID */
   public final List<String> asID;
+
+    /** roaipv4 */
   public final IPRangeList roaipv4;
+
+    /** roaipv6 */
   public final IPRangeList roaipv6;
-  private final String dir_path;
 
   /**
    * @param myFactory
@@ -34,7 +38,7 @@ public class Roa extends CMS {
     this.roaipv6        = ee_object.subAllocateIPv6(myFactory.ROAipv6List);
     this.outputfilename = REPO_PATH + "/" + ee_object.path_ROA;
     // Make our directory to place our ROA if it doesn't already exist
-    dir_path = REPO_PATH + ee_object.parent.SIA_path;
+//    String dir_path = REPO_PATH + ee_object.parent.SIA_path;
     
     Util.writeConfig(this);
     Util.create_binary(this, "ROA");

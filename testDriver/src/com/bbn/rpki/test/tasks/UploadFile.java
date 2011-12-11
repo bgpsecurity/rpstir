@@ -21,6 +21,7 @@ public class UploadFile implements Task {
   private final Model model;
 
   /**
+   * @param model 
    * @param repositoryRootDir 
    * @param file
    */

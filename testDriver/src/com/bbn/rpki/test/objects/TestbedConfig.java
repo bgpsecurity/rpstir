@@ -207,7 +207,7 @@ public class TestbedConfig implements Constants {
   }
 
   /**
-   * @return
+   * @return the maximum depth allowed
    */
   public int getMaxDepth() {
     return maxDepth;

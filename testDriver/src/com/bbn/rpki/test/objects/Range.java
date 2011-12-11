@@ -11,16 +11,7 @@ import java.math.BigInteger;
  * @author RTomlinson
  */
 public class Range implements Constants, Comparable<Range> {
-  
-  public enum Type {
-    /** UNSET */
-    UNSET,
-    /** RANGE */
-    RANGE,
-    /** PREFIX */
-    PREFIX
-  }
-  
+    
   /**
    * @param base
    * @param bits
@@ -64,12 +55,13 @@ public class Range implements Constants, Comparable<Range> {
   IPRangeType version;
   BigInteger min;
   BigInteger max;
-  private final boolean range;;
+  private final boolean range;
   
   /**
    * @param min
    * @param max
    * @param version 
+   * @param range 
    */
   public Range(BigInteger min, BigInteger max, IPRangeType version, boolean range) {
     super();

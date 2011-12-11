@@ -13,8 +13,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -37,6 +35,9 @@ public class Util implements Constants {
 
   private static DateFormat dateFormat2 = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
 
+  /**
+   * The value of the RPKI_ROOT environment variable
+   */
   public static File RPKI_ROOT;
   
   static {
@@ -272,7 +273,6 @@ public class Util implements Constants {
    */
   public static String exec(String[] cmdArray, String title, boolean ignoreStatus, File cwd, String input) {
     int status;
-    final StringBuilder sb = new StringBuilder();
     try {
       if (cwd == null) {
         cwd = new File(System.getProperty("user.dir")).getAbsoluteFile();
@@ -290,6 +290,7 @@ public class Util implements Constants {
       stdout.join();
       stderr.join();
       String string = stdout.getString();
+      @SuppressWarnings("unused") // For debugging
       String errString = stderr.getString();
       if (DEBUG_ON) {
         System.out.println(Arrays.asList(cmdArray));
@@ -316,30 +317,7 @@ public class Util implements Constants {
    * @return the hash
    */
   public static String generate_file_hash(File file) {
-    if (false) {
-      try {
-        MessageDigest md = MessageDigest.getInstance("SHA-1");
-        InputStream stream = new FileInputStream(file);
-        try {
-        DigestInputStream dis = new DigestInputStream(stream, md);
-        byte[] bf = new byte[1000];
-        while ((dis.read(bf)) > 0) {
-          continue;
-        }
-        bf = md.digest();
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bf) {
-          sb.append("0123456789ABCDEF".charAt((b >> 4) & 0xf));
-          sb.append("0123456789ABCDEF".charAt((b     ) & 0xf));
-        }
-        return sb.toString();
-        } finally {
-          stream.close();
-        }
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    } else {
+    {
       String[] cmdArray = {
           Constants.BIN_DIR + "/gen_hash",
           "-n",

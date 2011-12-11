@@ -10,6 +10,7 @@ package com.bbn.rpki.test.objects;
  * @author RTomlinson
  */
 public class CA_Obj implements Constants {
+  /** the name of the output file for the file created for this object */
   public String outputfilename;
 
 }

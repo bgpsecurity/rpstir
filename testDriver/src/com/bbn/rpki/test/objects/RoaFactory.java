@@ -44,10 +44,19 @@ public class RoaFactory extends Factory implements Constants {
     ROAipv4List = roav4l;
     ROAipv6List = roav6l;
   }
+    /** asid */
   public List<Pair> asid;
+
+    /** ROAipv4List */
   public List<Pair> ROAipv4List;
+
+    /** ROAipv6List */
   public List<Pair> ROAipv6List;
 
+
+  /**
+   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
+   */
   @Override
   public Roa create(CA_Object parent) {
     if (DEBUG_ON)

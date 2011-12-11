@@ -15,6 +15,10 @@ import java.util.List;
 public class TopTask implements Task {
   private final List<Task> tasks = new ArrayList<Task>();
   
+  /**
+   * Construct top-level tasks
+   * @param model
+   */
   public TopTask(Model model) {
     tasks.add(new ReinitializeCache(model));
     tasks.add(new InstallTrustAnchor(model));

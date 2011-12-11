@@ -25,7 +25,10 @@ public class CA_cert extends Certificate {
     }
   }
 
+  /** The crl dp */
   public final String crldp;
+  
+  /** The aia */
   public final String aia;
   
   /**

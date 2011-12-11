@@ -52,7 +52,7 @@ public abstract class FactoryBase {
     return new CA_Object(this, parent, null);
   }
   /**
-   * the serverName
+   * @return the serverName
    */
   public String getServerName() {
     return serverName;

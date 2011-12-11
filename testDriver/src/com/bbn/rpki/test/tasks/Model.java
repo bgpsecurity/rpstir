@@ -62,6 +62,7 @@ public class Model {
   private String ianaServerName;
 
   /**
+   * @param rpkiRoot 
    * @param root
    * @param modelDir
    * @throws IOException 
@@ -126,7 +127,6 @@ public class Model {
    */
   public String getTrustAnchorURL() {
     // TODO need a positive way to determine where trust anchors are
-    File epoch0Dir = getEpochDir(0);
     return String.format("rsync://%s", ianaServerName);
   }
 
