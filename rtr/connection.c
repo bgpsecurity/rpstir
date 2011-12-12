@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "macros.h"
 #include "logging.h"
@@ -821,6 +822,11 @@ void * connection_main(void * args_voidp)
 	initialize_run_state(&run_state, args_voidp);
 
 	pthread_cleanup_push(cleanup, &run_state);
+
+	if (fcntl(run_state.fd, F_SETFL, 0) != 0)
+	{
+		ERR_LOG(errno, run_state.errorbuf, "fcntl()");
+	}
 
 	initialize_data_structures_in_run_state(&run_state);
 
