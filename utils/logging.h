@@ -26,17 +26,17 @@
 
 
 #define ERROR_BUF_SIZE 256
-#define ERR_LOG(err, errorbuf, msg) \
+#define ERR_LOG(err, errorbuf, format, ...) \
     do { \
         if (strerror_r((err), (errorbuf), ERROR_BUF_SIZE) == 0) \
         { \
-            syslog(LOG_ERR, "%s:%d in %s(): %s: %s", \
-                __FILE__, __LINE__, __func__, (msg), (errorbuf)); \
+            syslog(LOG_ERR, "%s:%d in %s(): " format ": %s", \
+                __FILE__, __LINE__, __func__, ## __VA_ARGS__, (errorbuf)); \
         } \
         else \
         { \
-            syslog(LOG_ERR, "%s:%d in %s(): %s: error code %d", \
-                __FILE__, __LINE__, __func__, (msg), (err)); \
+            syslog(LOG_ERR, "%s:%d in %s(): " format ": error code %d", \
+                __FILE__, __LINE__, __func__, ## __VA_ARGS__, (err)); \
         } \
     } while (false)
 

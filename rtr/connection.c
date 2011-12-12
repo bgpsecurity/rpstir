@@ -697,10 +697,10 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 	}
 	else if (retval != 0)
 	{
-		ERR_LOG(errno, run_state->errorbuf,
-			((use_timeout && run_state->state == READY) ?
-				"sem_timedwait()" :
-				"sem_wait()"));
+		if (use_timeout && run_state->state == READY)
+			ERR_LOG(errno, run_state->errorbuf, "sem_timedwait()");
+		else
+			ERR_LOG(errno, run_state->errorbuf, "sem_wait()");
 		return false;
 	}
 	else
