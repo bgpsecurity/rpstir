@@ -21,6 +21,13 @@
 
 #define ERROR_TEXT(str) (uint8_t *)str, strlen(str)
 
+#define CXN_LOG(run_statep, priority, format, ...) \
+	LOG((priority), "[%s]:%s: " format, \
+		(run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
+
+#define CXN_ERR_LOG(run_statep, err, format, ...) \
+	ERR_LOG((err), (run_statep)->errorbuf, format, ## __VA_ARGS__)
+
 
 struct run_state {
 	int fd;
@@ -68,7 +75,7 @@ static void copy_cache_state(struct run_state * run_state, struct cache_state * 
 
 	if (retval != 0)
 	{
-		ERR_LOG(retval, run_state->errorbuf, "pthread_rwlock_rdlock()");
+		CXN_ERR_LOG(run_state, retval, "pthread_rwlock_rdlock()");
 		pthread_exit(NULL);
 	}
 
@@ -78,7 +85,7 @@ static void copy_cache_state(struct run_state * run_state, struct cache_state * 
 
 	if (retval != 0)
 	{
-		ERR_LOG(retval, run_state->errorbuf, "pthread_rwlock_unlock()");
+		CXN_ERR_LOG(run_state, retval, "pthread_rwlock_unlock()");
 		pthread_exit(NULL);
 	}
 
@@ -91,6 +98,9 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	struct connection_main_args * argsp = (struct connection_main_args *)args_voidp;
 
 	if (argsp == NULL ||
+		argsp->addr == NULL ||
+		argsp->host == NULL ||
+		argsp->serv == NULL ||
 		argsp->semaphore == NULL ||
 		argsp->db_request_queue == NULL ||
 		argsp->db_semaphore == NULL ||
@@ -141,14 +151,14 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 
 	if (pdu == NULL)
 	{
-		LOG(LOG_ERR, "send_pdu got NULL pdu");
+		CXN_LOG(run_state, LOG_ERR, "send_pdu got NULL pdu");
 		pthread_exit(NULL);
 	}
 
 	count = dump_pdu(run_state->pdu_send_buffer, MAX_PDU_SIZE, pdu);
 	if (count < 0)
 	{
-		LOG(LOG_ERR, "dump_pdu failed");
+		CXN_LOG(run_state, LOG_ERR, "dump_pdu failed");
 		pthread_exit(NULL);
 	}
 	else
@@ -163,7 +173,7 @@ static void send_pdu(struct run_state * run_state, const PDU * pdu)
 			(size_t)count);
 		if (retval < 0)
 		{
-			ERR_LOG(errno, run_state->errorbuf, "write()");
+			CXN_ERR_LOG(run_state, errno, "write()");
 			pthread_exit(NULL);
 		}
 
@@ -187,7 +197,7 @@ static void send_error(struct run_state * run_state, error_code_t code,
 {
 	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length > MAX_PDU_SIZE)
 	{
-		LOG(LOG_ERR, "send_error() called with too long of an error text");
+		CXN_LOG(run_state, LOG_ERR, "send_error() called with too long of an error text");
 		pthread_exit(NULL);
 	}
 
@@ -224,7 +234,7 @@ static void send_error_from_parsed_pdu(struct run_state * run_state, error_code_
 
 	if (PDU_HEADER_LENGTH + PDU_ERROR_HEADERS_LENGTH + error_text_length > MAX_PDU_SIZE)
 	{
-		LOG(LOG_ERR, "send_error_from_parsed_pdu() called with too long of an error text");
+		CXN_LOG(run_state, LOG_ERR, "send_error_from_parsed_pdu() called with too long of an error text");
 		pthread_exit(NULL);
 	}
 
@@ -253,27 +263,27 @@ static void log_and_send_parse_error(struct run_state * run_state, int parse_pdu
 	switch (parse_pdu_retval)
 	{
 		case PDU_CORRUPT_DATA:
-			LOG(LOG_NOTICE, "received PDU with corrupt data");
+			CXN_LOG(run_state, LOG_NOTICE, "received PDU with corrupt data");
 			code = ERR_CORRUPT_DATA;
 			break;
 		case PDU_INTERNAL_ERROR:
-			LOG(LOG_NOTICE, "internal error from parsing a PDU");
+			CXN_LOG(run_state, LOG_NOTICE, "internal error from parsing a PDU");
 			code = ERR_INTERNAL_ERROR;
 			break;
 		case PDU_UNSUPPORTED_PROTOCOL_VERSION:
-			LOG(LOG_NOTICE, "received PDU with unsupported protocol version");
+			CXN_LOG(run_state, LOG_NOTICE, "received PDU with unsupported protocol version");
 			code = ERR_UNSUPPORTED_VERSION;
 			break;
 		case PDU_UNSUPPORTED_PDU_TYPE:
-			LOG(LOG_NOTICE, "received PDU with unsupported PDU type");
+			CXN_LOG(run_state, LOG_NOTICE, "received PDU with unsupported PDU type");
 			code = ERR_UNSUPPORTED_TYPE;
 			break;
 		case PDU_INVALID_VALUE:
-			LOG(LOG_NOTICE, "received PDU with an invalid value for a field");
+			CXN_LOG(run_state, LOG_NOTICE, "received PDU with an invalid value for a field");
 			code = ERR_INVALID_REQUEST;
 			break;
 		default:
-			LOG(LOG_ERR, "log_and_send_parse_error() called with unexpected parse_pdu_retval (%d)", parse_pdu_retval);
+			CXN_LOG(run_state, LOG_ERR, "log_and_send_parse_error() called with unexpected parse_pdu_retval (%d)", parse_pdu_retval);
 			code = ERR_INTERNAL_ERROR;
 			break;
 	}
@@ -287,7 +297,7 @@ static void send_notify(struct run_state * run_state)
 {
 	if (!run_state->local_cache_state.data_available)
 	{
-		LOG(LOG_ERR, "can't send a Serial Notify when no data is available in the cache");
+		CXN_LOG(run_state, LOG_ERR, "can't send a Serial Notify when no data is available in the cache");
 		pthread_exit(NULL);
 	}
 
@@ -316,7 +326,7 @@ static void read_block(struct run_state * run_state, ssize_t count)
 		{
 			case PDU_GOOD:
 			case PDU_WARNING:
-				LOG(LOG_WARNING, "tried to read past the end of a PDU");
+				CXN_LOG(run_state, LOG_WARNING, "tried to read past the end of a PDU");
 				send_error(run_state, ERR_INTERNAL_ERROR, NULL, 0, NULL, 0);
 				pthread_exit(NULL);
 			case PDU_TRUNCATED:
@@ -330,11 +340,11 @@ static void read_block(struct run_state * run_state, ssize_t count)
 		retval = read(run_state->fd, run_state->pdu_recv_buffer + run_state->pdu_recv_buffer_length, (size_t)count);
 		if (retval < 0)
 		{
-			ERR_LOG(errno, run_state->errorbuf, "read()");
+			CXN_ERR_LOG(run_state, errno, "read()");
 		}
 		else if (retval == 0)
 		{
-			LOG(LOG_NOTICE, "remote side closed connection in the middle of sending a PDU");
+			CXN_LOG(run_state, LOG_NOTICE, "remote side closed connection in the middle of sending a PDU");
 			pthread_exit(NULL);
 		}
 		else
@@ -361,13 +371,13 @@ static bool read_nonblock(struct run_state * run_state, size_t count)
 	if (retval < 0)
 	{
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
-			ERR_LOG(errno, run_state->errorbuf, "recv()");
+			CXN_ERR_LOG(run_state, errno, "recv()");
 
 		return false;
 	}
 	else if (retval == 0)
 	{
-		LOG(LOG_INFO, "remote side closed connection");
+		CXN_LOG(run_state, LOG_INFO, "remote side closed connection");
 		pthread_exit(NULL);
 	}
 	else
@@ -398,7 +408,7 @@ static int read_and_parse_pdu(struct run_state * run_state)
 	{
 		if (run_state->recv_pdu.length > MAX_PDU_SIZE)
 		{
-			LOG(LOG_NOTICE,
+			CXN_LOG(run_state, LOG_NOTICE,
 				"received PDU that's too long (%" PRIu32 " bytes)",
 				run_state->recv_pdu.length);
 			send_error(run_state, ERR_CORRUPT_DATA,
@@ -420,7 +430,7 @@ static void increment_db_semaphore(struct run_state * run_state)
 {
 	if (sem_post(run_state->db_semaphore) != 0)
 	{
-		ERR_LOG(errno, run_state->errorbuf, "sem_post()");
+		CXN_ERR_LOG(run_state, errno, "sem_post()");
 	}
 }
 
@@ -428,7 +438,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 {
 	if (Queue_size(run_state->db_response_queue) != 0)
 	{
-		LOG(LOG_ERR, "add_db_request called with non-empty response queue");
+		CXN_LOG(run_state, LOG_ERR, "add_db_request called with non-empty response queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -445,7 +455,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 			run_state->request.query.type = RESET_QUERY;
 			break;
 		default:
-			LOG(LOG_ERR, "add_db_request() called with a non-query PDU");
+			CXN_LOG(run_state, LOG_ERR, "add_db_request() called with a non-query PDU");
 			send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 				pdu, pdu_from_recv_buffer,
 				NULL, 0);
@@ -458,7 +468,7 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 
 	if (!Queue_push(run_state->db_request_queue, (void *)&run_state->request))
 	{
-		LOG(LOG_ERR, "couldn't add new request to request queue");
+		CXN_LOG(run_state, LOG_ERR, "couldn't add new request to request queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -478,7 +488,7 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 	PDU * pdup = pdu_deepcopy(pdu);
 	if (pdup == NULL)
 	{
-		LOG(LOG_ERR, "can't allocate memory for a copy of the PDU");
+		CXN_LOG(run_state, LOG_ERR, "can't allocate memory for a copy of the PDU");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -488,7 +498,7 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 	retval = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
 	if (retval != 0)
 	{
-		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
+		CXN_ERR_LOG(run_state, retval, "pthread_setcancelstate()");
 	}
 
 	push_successful = Queue_push(run_state->to_process_queue, (void *)pdup);
@@ -501,12 +511,12 @@ static void push_to_process_queue(struct run_state * run_state, const PDU * pdu,
 	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
 	if (retval != 0)
 	{
-		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
+		CXN_ERR_LOG(run_state, retval, "pthread_setcancelstate()");
 	}
 
 	if (!push_successful)
 	{
-		LOG(LOG_ERR, "can't push a PDU onto the to-process queue");
+		CXN_LOG(run_state, LOG_ERR, "can't push a PDU onto the to-process queue");
 		send_error_from_parsed_pdu(run_state, ERR_INTERNAL_ERROR,
 			pdu, pdu_from_recv_buffer,
 			NULL, 0);
@@ -521,7 +531,7 @@ static void handle_pdu(struct run_state * run_state, PDU * pdup, bool pdu_from_r
 		case PDU_SERIAL_QUERY:
 			if (pdup->cacheNonce != run_state->local_cache_state.nonce)
 			{
-				LOG(LOG_INFO, "received wrong nonce (%" PRIu16 "), expected %" PRIu16,
+				CXN_LOG(run_state, LOG_INFO, "received wrong nonce (%" PRIu16 "), expected %" PRIu16,
 					pdup->cacheNonce,
 					run_state->local_cache_state.nonce);
 				send_cache_reset(run_state);
@@ -539,11 +549,11 @@ static void handle_pdu(struct run_state * run_state, PDU * pdup, bool pdu_from_r
 			break;
 		case PDU_ERROR_REPORT:
 			pdu_sprint(pdup, run_state->pdustrbuf);
-			LOG(LOG_NOTICE, "received %s", run_state->pdustrbuf);
+			CXN_LOG(run_state, LOG_NOTICE, "received %s", run_state->pdustrbuf);
 			pthread_exit(NULL);
 		default:
 			pdu_sprint(pdup, run_state->pdustrbuf);
-			LOG(LOG_NOTICE, "received unexpected PDU: %s", run_state->pdustrbuf);
+			CXN_LOG(run_state, LOG_NOTICE, "received unexpected PDU: %s", run_state->pdustrbuf);
 			send_error_from_parsed_pdu(run_state, ERR_INVALID_REQUEST,
 				pdup, pdu_from_recv_buffer,
 				ERROR_TEXT("unexpected PDU type"));
@@ -558,7 +568,7 @@ static void read_and_handle_pdu(struct run_state * run_state)
 	switch (retval)
 	{
 		case PDU_WARNING:
-			LOG(LOG_NOTICE, "received a PDU with unsupported feature(s)");
+			CXN_LOG(run_state, LOG_NOTICE, "received a PDU with unsupported feature(s)");
 		case PDU_GOOD:
 			handle_pdu(run_state, &run_state->recv_pdu, true);
 			break;
@@ -576,7 +586,7 @@ static void update_local_cache_state(
 {
 	if (run_state->local_cache_state.nonce != new_cache_state->nonce)
 	{
-		LOG(LOG_ERR, "cache nonce has changed from %" PRINONCE " to %" PRINONCE,
+		CXN_LOG(run_state, LOG_ERR, "cache nonce has changed from %" PRINONCE " to %" PRINONCE,
 			run_state->local_cache_state.nonce, new_cache_state->nonce);
 		pthread_exit(NULL);
 	}
@@ -603,7 +613,7 @@ static void handle_response(struct run_state * run_state)
 
 	if (run_state->response == NULL)
 	{
-		LOG(LOG_ERR, "got NULL response from db");
+		CXN_LOG(run_state, LOG_ERR, "got NULL response from db");
 		return;
 	}
 
@@ -666,7 +676,7 @@ static void check_global_cache_state(struct run_state * run_state)
 
 	if (run_state->state != READY)
 	{
-		LOG(LOG_ERR, "check_global_cache_state() called when not in READY state");
+		CXN_LOG(run_state, LOG_ERR, "check_global_cache_state() called when not in READY state");
 		pthread_exit(NULL);
 	}
 
@@ -698,9 +708,9 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 	else if (retval != 0)
 	{
 		if (use_timeout && run_state->state == READY)
-			ERR_LOG(errno, run_state->errorbuf, "sem_timedwait()");
+			CXN_ERR_LOG(run_state, errno, "sem_timedwait()");
 		else
-			ERR_LOG(errno, run_state->errorbuf, "sem_wait()");
+			CXN_ERR_LOG(run_state, errno, "sem_wait()");
 		return false;
 	}
 	else
@@ -734,7 +744,7 @@ static void cleanup(void * run_state_voidp)
 		{
 			if (!wait_on_semaphore(run_state, false))
 			{
-				LOG(LOG_ERR, "failed to wait on semaphore in cleanup(), continuing without clearing the db response queue");
+				CXN_LOG(run_state, LOG_ERR, "failed to wait on semaphore in cleanup(), continuing without clearing the db response queue");
 				break;
 			}
 
@@ -781,14 +791,14 @@ static void initialize_data_structures_in_run_state(struct run_state * run_state
 	run_state->db_response_queue = Queue_new(true);
 	if (run_state->db_response_queue == NULL)
 	{
-		LOG(LOG_ERR, "can't create db response queue");
+		CXN_LOG(run_state, LOG_ERR, "can't create db response queue");
 		pthread_exit(NULL);
 	}
 
 	run_state->to_process_queue = Queue_new(false);
 	if (run_state->to_process_queue == NULL)
 	{
-		LOG(LOG_ERR, "can't create to-process queue");
+		CXN_LOG(run_state, LOG_ERR, "can't create to-process queue");
 		pthread_exit(NULL);
 	}
 }
@@ -829,7 +839,7 @@ void * connection_main(void * args_voidp)
 
 	if (fcntl(run_state.fd, F_SETFL, 0) != 0)
 	{
-		ERR_LOG(errno, run_state.errorbuf, "fcntl()");
+		CXN_ERR_LOG(&run_state, errno, "fcntl()");
 	}
 
 	initialize_data_structures_in_run_state(&run_state);
