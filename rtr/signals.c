@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <signal.h>
 
 #include "logging.h"
