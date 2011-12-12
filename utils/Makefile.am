@@ -29,6 +29,7 @@ noinst_LIBRARIES = libutils.a libutilsdebug.a
 
 libutils_a_SOURCES = logutils.h logutils.c macros.h \
 	stringutils.h stringutils.c hash_utils.c \
+	semaphore_compat.c semaphore_compat.h \
 	bag.c bag.h \
 	queue.c queue.h \
 	logging.h

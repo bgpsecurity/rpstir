@@ -1,6 +1,6 @@
 BBN Resource PKI Relying Party Database
 Installation and Usage Manual
-Version 4.0
+Version 0.1
 
 ===============================================================================
 
@@ -224,12 +224,11 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named resource-pki-N.NN.tar.gz, where N.NN is a version number.  Extract
-the file using:
+named resource-pki-0.1.tar.gz.  Extract the file using:
 
-    tar xvzpf resource-pki-N.NN.tar.gz
+    tar xvzpf resource-pki-0.1.tar.gz
     
-This will create a directory named resource-pki-N.NN which will contain
+This will create a directory named resource-pki-0.1 which will contain
 various subdirectories.
 
 2.2.2 Configure
@@ -361,7 +360,7 @@ database.
 
 Except for the query client, all RPKI processes should run as the RPKI
 user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (4.0)
+configuration will be used for final deployment, this release (0.1)
 does not include suggested crontab entries.  It is assumed that for
 trial purposes, manual execution gives the user/debugger maximum
 control.
