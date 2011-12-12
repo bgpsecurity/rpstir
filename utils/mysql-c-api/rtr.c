@@ -2,8 +2,10 @@
 	Functions used for accessing the RTR database.
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <bits/socket.h>
 #include <inttypes.h>
 
 #include <my_global.h>
