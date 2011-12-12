@@ -327,6 +327,10 @@ void * connection_control_main(void * args_voidp)
 			}
 
 			connection_args->socket = cxn_info->fd;
+			connection_args->addr = (struct sockaddr *)&cxn_info->addr;
+			connection_args->addr_len = cxn_info->addr_len;
+			connection_args->host = cxn_info->host;
+			connection_args->serv = cxn_info->serv;
 			connection_args->semaphore = cxn_info->semaphore;
 			connection_args->db_request_queue = argsp->db_request_queue;
 			connection_args->db_semaphore = argsp->db_semaphore;

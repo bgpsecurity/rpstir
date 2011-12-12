@@ -24,6 +24,8 @@
 
 struct run_state {
 	int fd;
+	const char * host;
+	const char * serv;
 	cxn_semaphore_t * semaphore;
 	Queue * db_request_queue;
 	db_semaphore_t * db_semaphore;
@@ -100,6 +102,8 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	}
 
 	run_state->fd = argsp->socket;
+	run_state->host = argsp->host;
+	run_state->serv = argsp->serv;
 	run_state->semaphore = argsp->semaphore;
 	run_state->db_request_queue = argsp->db_request_queue;
 	run_state->db_semaphore = argsp->db_semaphore;
