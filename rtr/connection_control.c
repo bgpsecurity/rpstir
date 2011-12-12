@@ -6,6 +6,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "logging.h"
 
@@ -123,6 +124,11 @@ void * connection_control_main(void * args_voidp)
 	struct connection_control_main_args * argsp = (struct connection_control_main_args *) args_voidp;
 
 	assert(argsp != NULL);
+
+	if (fcntl(argsp->listen_fd, F_SETFL, O_NONBLOCK) != 0)
+	{
+		ERR_LOG(errno, errorbuf, "fcntl() to make listen_fd nonblocking");
+	}
 
 	int retval, retval2;
 	int oldstate;
