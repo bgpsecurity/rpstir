@@ -141,24 +141,47 @@ public class Model {
     }
     return files;
   }
+  
+  /**
+   * @param repositoryRootDir
+   * @return the server name for the specified root
+   */
+  public String getServerName(File repositoryRootDir) {
+    return repositoryRootDir.getParentFile().getName();
+  }
 
   /**
+   * Get the name of a file on a server
+   * The name does not include any servername prefix
+   * 
    * @param repositoryRootDir a root
    * @param nodeDir a node at or under the root
-   * @return scp target for the node
+   * @return target filename for the node
    */
-  public String constructUploadRepositoryArg(File repositoryRootDir, File nodeDir) {
+  public String getUploadRepositoryFileName(File repositoryRootDir, File nodeDir) {
     // TODO Because I want to upload using scp, I need to know how each rsync
     // server is set up.
     // For now assume roots are sub-directories of /home/rsync
     File rootDir = repositoryRootDir;
     String moduleName = rootDir.getName();
-    String serverName = rootDir.getParentFile().getName();
     String rootPath = rootDir.getPath();
     String nodePath = nodeDir.getPath();
     assert nodePath.startsWith(rootPath);
-    assert rootPath.endsWith("/");
+    assert !rootPath.endsWith("/");
     String nodeTail = nodePath.substring(rootPath.length());
-    return String.format("%s:/home/rsync/%s/%s", serverName, moduleName, nodeTail);
+    String ret = "/home/rsync/" + moduleName + nodeTail;
+    return ret;
+  }
+  
+  /**
+   * Get an scp argument for a remote file
+   * @param repositoryRootDir
+   * @param file
+   * @return the scp argument
+   */
+  public String getSCPFileNameArg(File repositoryRootDir, File file) {
+    String serverName = getServerName(repositoryRootDir);
+    String remoteFileName = getUploadRepositoryFileName(repositoryRootDir, file);
+    return serverName + ":" + remoteFileName;
   }
 }

@@ -7,9 +7,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -28,6 +30,15 @@ import java.util.List;
 public class Util implements Constants {
   private static Runtime runtime = Runtime.getRuntime();
   
+  private static PrintWriter commandLog;
+  static {
+    try {
+      commandLog = new PrintWriter(new FileWriter("command.log"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+    
   private static final String B64_ALPHABET =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
@@ -264,6 +275,18 @@ public class Util implements Constants {
   }
   
   /**
+   * @param cmds
+   * @param title
+   * @param ignoreStatus
+   * @param cwd
+   * @param input
+   * @return stdout string
+   */
+  public static String exec(List<String> cmds, String title, boolean ignoreStatus, File cwd, String input) {
+    return exec(cmds.toArray(new String[cmds.size()]), title, ignoreStatus, cwd, input);
+  }
+  
+  /**
    * @param cmdArray
    * @param title
    * @param ignoreStatus TODO
@@ -296,6 +319,8 @@ public class Util implements Constants {
         System.out.println(Arrays.asList(cmdArray));
         System.out.println(string);
       }
+      commandLog.println(Arrays.asList(cmdArray));
+      commandLog.flush();
       if (status != 0) {
         String msg = String.format("%s failed status = %d%n", title, status);
         if (ignoreStatus) {

@@ -6,31 +6,37 @@ package com.bbn.rpki.test.tasks;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Uploads a model
  *
  * @author tomlinso
  */
-public class UploadEpoch implements Task {
+public class UploadEpoch extends Task {
   
   private final Model model;
+  private final List<Task> subtasks;
+  private final int epochIndex;
  
   /**
    * @param model
+   * @param epochIndex 
    */
-  public UploadEpoch(Model model) {
+  public UploadEpoch(Model model, int epochIndex) {
     this.model = model;
+    this.epochIndex = epochIndex;
+    subtasks = getSubtasks();
   }
 
   /**
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
-  public void run(int epochIndex) {
-    List<Task> subtasks = getSubtasks(epochIndex);
+  public void run() {
     for (Task task : subtasks) {
-      task.run(epochIndex);
+      task.run();
     }
   }
 
@@ -38,7 +44,7 @@ public class UploadEpoch implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
    */
   @Override
-  public int getBreakdownCount(int epochIndex) {
+  public int getBreakdownCount() {
     return 1;
   }
 
@@ -47,18 +53,24 @@ public class UploadEpoch implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int epochIndex, int n) {
+  public TaskBreakdown getTaskBreakdown(int n) {
     assert n == 0;
-    List<Task> subtasks = getSubtasks(epochIndex);
     return new TaskBreakdown(subtasks, TaskBreakdown.Type.PARALLEL);
   }
 
-  private List<Task> getSubtasks(int epochIndex) {
+  private List<Task> getSubtasks() {
     List<File> roots = model.getRepositoryRoots(epochIndex);
+    Map<String, File> prevRoots = new TreeMap<String, File>();
+    if (epochIndex > 0) {
+      for (File root : model.getRepositoryRoots(epochIndex - 1)) {
+        prevRoots.put(root.getName(), root);
+      }
+    }
     List<Task> ret = new ArrayList<Task>(roots.size());
     for (File repositoryRootDir : roots) {
-      ret.add(new UploadRepositoryRoot(model, repositoryRootDir));
+      File previousRootDir = prevRoots.get(repositoryRootDir.getName());
+      ret.add(new UploadRepositoryRoot(model, repositoryRootDir, previousRootDir));
     }
     return ret;
-  }  
+  }
 }

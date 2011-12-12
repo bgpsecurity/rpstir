@@ -8,24 +8,38 @@ package com.bbn.rpki.test.tasks;
  *
  * @author tomlinso
  */
-public interface Task {
+public abstract class Task {
+  
+  private Task successTest;
+  
+  /**
+   * @return the successTest
+   */
+  public Task getSuccessTest() {
+    return successTest;
+  }
+
+  /**
+   * @param successTest the successTest to set
+   */
+  public void setSuccessTest(Task successTest) {
+    this.successTest = successTest;
+  }
+
   /**
    * Runs the task
-   * @param epochIndex specifies which epoch is wanted
    */
-  void run(int epochIndex);
+  public abstract void run();
   
   /**
-   * @param epochIndex Specifies which epoch
    * @return the number of different breakdown options available
    */
-  int getBreakdownCount(int epochIndex);
+  public abstract int getBreakdownCount();
   
   /**
-   * @param epochIndex Specifies which epoch
    * @param n
    * @return the specified TaskBreakdown
    */
-  TaskBreakdown getTaskBreakdown(int epochIndex, int n);
+  public abstract TaskBreakdown getTaskBreakdown(int n);
   
 }

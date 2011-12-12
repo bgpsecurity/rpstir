@@ -10,39 +10,44 @@ import java.util.List;
 import com.bbn.rpki.test.objects.Util;
 
 /**
- * Task to upload one file
+ * Task to upload one node
+ * 
+ * Can be broken down into individual UploadFile tasks for each file in the node
  *
  * @author tomlinso
  */
-public class UploadFile extends Task {
+public class MakeNodeDir extends Task {
+  private final File nodeDir;
 
-  private final File file;
-  private final File repositoryRootDir;
   private final Model model;
+
+  private final File repositoryRootDir;
 
   /**
    * @param model 
    * @param repositoryRootDir 
-   * @param file
+   * @param nodeDir 
    */
-  public UploadFile(Model model, File repositoryRootDir, File file) {
+  public MakeNodeDir(Model model, File repositoryRootDir, File nodeDir) {
     this.model = model;
-    this.file = file;
     this.repositoryRootDir = repositoryRootDir;
+    this.nodeDir = nodeDir;
   }
-
+  
   /**
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
   public void run() {
     List<String> cmd = new ArrayList<String>();
-    cmd.add("scp");
-    cmd.add(file.getPath());
-    String repository = model.getSCPFileNameArg(repositoryRootDir, file);
+    String repository = model.getUploadRepositoryFileName(repositoryRootDir, nodeDir);
+    String serverName = model.getServerName(repositoryRootDir);
+    cmd.add("ssh");
+    cmd.add(serverName);
+    cmd.add("mkdir");
+    cmd.add("-p");
     cmd.add(repository);
-    String[] cmdArray = cmd.toArray(new String[cmd.size()]);
-    Util.exec(cmdArray, "UploadFile", false, Util.RPKI_ROOT, null);
+    Util.exec(cmd, "Make remote dir", false, null, null);
   }
 
   /**
@@ -54,6 +59,9 @@ public class UploadFile extends Task {
   }
 
   /**
+   * The one breakdown case we have is to upload individual files as separate,
+   * parallel tasks
+   * 
    * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
    */
   @Override
@@ -61,5 +69,4 @@ public class UploadFile extends Task {
     assert false;
     return null;
   }
-
 }

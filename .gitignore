@@ -17,6 +17,9 @@ TAGS
 *.swp
 resource-pki-*.tar.gz
 
+# eclipse metadata
+.metadata
+
 # directories generated during program execution
 *REPOSITORY
 *LOGS

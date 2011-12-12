@@ -18,7 +18,7 @@ import com.bbn.rpki.test.objects.Util;
  * 
  * @author tomlinso
  */
-public class InstallTrustAnchor implements Task {
+public class InstallTrustAnchor extends Task {
   private final File certFile;
 
   private final File talFile;
@@ -38,8 +38,7 @@ public class InstallTrustAnchor implements Task {
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
-  public void run(int epochIndex) {
-    if (epochIndex > 0) return;
+  public void run() {
     try {
       String[] opensslCmd = {
           "openssl",
@@ -61,6 +60,7 @@ public class InstallTrustAnchor implements Task {
       
       String[] cmd = {
           "run_scripts/updateTA.py",
+          "--verbose",
           talFile.getPath()
       };
       Util.exec(cmd, "updateTA.py", false, null, null);
@@ -73,7 +73,7 @@ public class InstallTrustAnchor implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
    */
   @Override
-  public int getBreakdownCount(int epochIndex) {
+  public int getBreakdownCount() {
     return 0;
   }
 
@@ -81,7 +81,7 @@ public class InstallTrustAnchor implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int epochIndex, int n) {
+  public TaskBreakdown getTaskBreakdown(int n) {
     assert false;
     return null;
   }

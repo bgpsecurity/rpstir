@@ -12,7 +12,7 @@ import com.bbn.rpki.test.objects.Util;
  *
  * @author tomlinso
  */
-public class ReinitializeCache implements Task {
+public class InitializeCache extends Task {
   
   private static final String RSYNC_AUR_LOG = "rsync_aur.log";
   private static final String RCLI_LOG = "rcli.log";
@@ -23,7 +23,7 @@ public class ReinitializeCache implements Task {
   /**
    * @param model
    */
-  public ReinitializeCache(Model model) {
+  public InitializeCache(Model model) {
     this.model = model;
   }
   
@@ -31,8 +31,7 @@ public class ReinitializeCache implements Task {
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
-  public void run(int epochIndex) {
-    if (epochIndex > 0) return;
+  public void run() {
     Util.deleteDirectories(new File(model.getRPKIRoot(), REPOSITORY), new File(model.getRPKIRoot(), LOGS));
     Util.killProcessesRunning("run_scripts/loader.sh");
     File rpkiRoot = model.getRPKIRoot();
@@ -45,7 +44,7 @@ public class ReinitializeCache implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
    */
   @Override
-  public int getBreakdownCount(int epochIndex) {
+  public int getBreakdownCount() {
     return 0;
   }
 
@@ -53,7 +52,7 @@ public class ReinitializeCache implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int epochIndex, int n) {
+  public TaskBreakdown getTaskBreakdown(int n) {
     assert false;
     return null;
   }

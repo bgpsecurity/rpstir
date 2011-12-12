@@ -17,7 +17,7 @@ import com.bbn.rpki.test.objects.Util;
  *
  * @author tomlinso
  */
-public class UploadNode implements Task {
+public class UploadNode extends Task {
   private static final FileFilter fileFilter = new FileFilter() {
 
     @Override
@@ -46,14 +46,14 @@ public class UploadNode implements Task {
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
-  public void run(int epochIndex) {
+  public void run() {
     List<String> cmd = new ArrayList<String>();
+    String repository = model.getSCPFileNameArg(repositoryRootDir, nodeDir);
     cmd.add("scp");
-    cmd.add("-q");
+    cmd.add("-qB");
     for (File file : nodeDir.listFiles(fileFilter)) {
       cmd.add(file.getPath());
     }
-    String repository = model.constructUploadRepositoryArg(repositoryRootDir, nodeDir);
     cmd.add(repository);
     String[] cmdArray = cmd.toArray(new String[cmd.size()]);
     Util.exec(cmdArray, "UploadModel", false, Util.RPKI_ROOT, null);
@@ -63,7 +63,7 @@ public class UploadNode implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
    */
   @Override
-  public int getBreakdownCount(int epochIndex) {
+  public int getBreakdownCount() {
     return 1;
   }
 
@@ -74,7 +74,7 @@ public class UploadNode implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int epochIndex, int n) {
+  public TaskBreakdown getTaskBreakdown(int n) {
     assert n == 0;
     List<Task> subtasks = new ArrayList<Task>();
     buildTasks(subtasks, nodeDir);

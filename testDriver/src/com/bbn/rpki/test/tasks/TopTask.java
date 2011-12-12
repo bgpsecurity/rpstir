@@ -8,30 +8,33 @@ import java.util.List;
 
 
 /**
- * <Enter the description of this type here>
+ * Run the cache updater
  *
  * @author tomlinso
  */
-public class TopTask implements Task {
+public class TopTask extends Task {
   private final List<Task> tasks = new ArrayList<Task>();
   
   /**
    * Construct top-level tasks
+    tasks.add(new ReinitializeCache(model));
+    tasks.add(new InstallTrustAnchor(model));
+    for (int epochIndex = 0; epochIndex < model.getEpochCount(); epochIndex++) {
+      tasks.add(new UploadEpoch(model, epochIndex));
+      tasks.add(new UpdateCache(model));
+    }
    * @param model
    */
   public TopTask(Model model) {
-    tasks.add(new ReinitializeCache(model));
-    tasks.add(new InstallTrustAnchor(model));
-    tasks.add(new UploadEpoch(model));
   }
   
   /**
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
-  public void run(int epochIndex) {
+  public void run() {
       for (Task task : tasks) {
-        task.run(epochIndex);
+        task.run();
       }
   }
 
@@ -39,8 +42,7 @@ public class TopTask implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
    */
   @Override
-  public int getBreakdownCount(int epochIndex) {
-    // TODO Auto-generated method stub
+  public int getBreakdownCount() {
     return 0;
   }
 
@@ -48,8 +50,8 @@ public class TopTask implements Task {
    * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int epochIndex, int n) {
-    // TODO Auto-generated method stub
+  public TaskBreakdown getTaskBreakdown(int n) {
+    assert false;
     return null;
   }
 
