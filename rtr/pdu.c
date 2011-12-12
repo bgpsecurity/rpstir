@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <string.h>
-#include <arpa/inet.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
