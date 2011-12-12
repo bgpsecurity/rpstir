@@ -5,6 +5,9 @@
 #include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -17,6 +20,12 @@
 
 struct connection_info {
 	int fd;
+
+	struct sockaddr_storage addr;
+	socklen_t addr_len;
+	char host[256];
+	char serv[16];
+
 	cxn_semaphore_t * semaphore;
 	pthread_t thread;
 	bool started;
@@ -264,6 +273,7 @@ void * connection_control_main(void * args_voidp)
 			}
 
 			cxn_info->started = false;
+			cxn_info->addr_len = 0;
 
 			cxn_info->semaphore = malloc(sizeof(cxn_semaphore_t));
 			if (cxn_info->semaphore == NULL)
@@ -281,7 +291,8 @@ void * connection_control_main(void * args_voidp)
 				continue;
 			}
 
-			cxn_info->fd = accept(argsp->listen_fd, NULL, NULL);
+			cxn_info->addr_len = sizeof(cxn_info->addr);
+			cxn_info->fd = accept(argsp->listen_fd, (struct sockaddr *)&cxn_info->addr, &cxn_info->addr_len);
 			if (cxn_info->fd < 0)
 			{
 				ERR_LOG(errno, errorbuf, "accept()");
@@ -293,6 +304,19 @@ void * connection_control_main(void * args_voidp)
 				free((void *)cxn_info);
 				continue;
 			}
+
+			retval = getnameinfo((struct sockaddr *)&cxn_info->addr, cxn_info->addr_len,
+				cxn_info->host, sizeof(cxn_info->host),
+				cxn_info->serv, sizeof(cxn_info->serv),
+				NI_NUMERICHOST | NI_NUMERICSERV);
+			if (retval != 0)
+			{
+				LOG(LOG_ERR, "getnameinfo(): %s", gai_strerror(retval));
+				cleanup_connection(cxn_info);
+				continue;
+			}
+
+			LOG(LOG_INFO, "new connection from [%s]:%s", cxn_info->host, cxn_info->serv);
 
 			struct connection_main_args * connection_args = malloc(sizeof(struct connection_main_args));
 			if (connection_args == NULL)
@@ -324,8 +348,6 @@ void * connection_control_main(void * args_voidp)
 				cleanup_connection(cxn_info);
 				continue;
 			}
-
-			LOG(LOG_INFO, "new connection"); // TODO remote socket information (e.g. host:port)
 		}
 	}
 
