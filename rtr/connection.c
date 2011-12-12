@@ -26,7 +26,8 @@
 		(run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
 
 #define CXN_ERR_LOG(run_statep, err, format, ...) \
-	ERR_LOG((err), (run_statep)->errorbuf, format, ## __VA_ARGS__)
+	ERR_LOG((err), (run_statep)->errorbuf, "[%s]:%s: " format, \
+		(run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
 
 
 struct run_state {
