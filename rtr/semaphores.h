@@ -2,7 +2,7 @@
 #define _RTR_SEMAPHORES_H
 
 
-#include <semaphore.h>
+#include "semaphore_compat.h"
 
 
 typedef sem_t db_semaphore_t;
