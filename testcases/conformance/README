@@ -168,28 +168,30 @@ ROAs
 
 CRLs
 
-640 CRLNoVersion             # no version
-641 CRLVersion0              # version 0
+640 CRLNoVersion             # no CRL version field
+641 CRLVersion0              # CRL version v1 (integer value 0)
 642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 
 643 CRLSigAlgOuter           # wrong outer signature algorithm ID
 644 CRLIssuerOID             # wrong OID for issuer name
-645 CRLIssuer2Sets           # two SETs in issuer name
+645 CRLIssuer2Sets           # two SETs in issuer name - NEED CLEARER TEXT
 646 CRLIssuerUTF             # issuer name in utf not printable string
-647 CRLIssuer2Seq            # two SEQUENCEs in issuer name
-648 CRLIssuer2SerNums        # two serial numbers
-649 CRLLastUpdateFuture      # last update is in the future
-650 CRLLastUpdateTyp         # wrong type of date in last Update
-651 CRLNextUpdatePast        # next update is in the past
-652 CRLNextUpdateTyp         # wrong type of date in next update  
+647 CRLIssuer2Seq            # two SEQUENCEs in issuer name - NEED CLEARER TEXT
+648 CRLIssuer2SerNums        # two serial numbers in issuer name
+649 CRLThisUpdateFuture      # this update is in the future
+650 CRLThisUpdateTyp         # wrong type of date in this update
+651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK)
+652 CRLNextUpdateTyp         # wrong type of date in next update
 653 CRLUpdatesCrossed        # last date is later then next date
 654 CRLIssAltName            # has issuer alternative name extension
 655 CRLIssDistPt             # has issuing distribution point extension
 656 CRLDeltaCRLInd           # has delta CRL indicator extension
 657 CRLNoAKI                 # has no authority key identifier extension
 658 CRLNoCRLNum              # has no CRL number
-659 CRLEntryNoSerNum         # entry has no certificate serial number
-660 CRLEntryNoRevDate        # entry has no revocation date
-661 CRLEntryReason           # entry has a revocation reason
+659 CRLEntryReason           # entry has a revocation reason
+
+TODO: CRLnum needs more test cases, e.g., duplicate CRLnum.  Also, see
+rfc5280 Appendix B. ASN.1 notes for restrictions on cRLNumber values
+(20 octets).
 
 
 Manifests
