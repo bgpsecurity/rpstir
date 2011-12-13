@@ -320,7 +320,7 @@ variables, so make sure to set these yourself.
 2.4 SSH Subsystem
 
 If you plan to use the RTR Server as an SSH subsystem, you will need
-to run the rtr/rtrd server as a daemon and set up an ssh subsystem
+to run the rtr/rpstir-rtrd server as a daemon and set up an ssh subsystem
 to connect to rtrd on localhost.  The netcat program, nc(1), is
 recommended for the ssh subsystem.  There are different versions of
 netcat, so read its manpage for caveats before setting it up as
@@ -377,8 +377,8 @@ Chaser Client (proto/chaser)         Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server (rtr/rtrd)                Continuously as daemon
-RTR updater (rtr/doUpdate)           After each call to chaser
+RTR Server (rtr/rpstir-rtrd)         Continuously as daemon
+RTR updater (rtr/rpstir-rtr-update)  After each call to chaser
 RTR client (rtr/rtr-test-client)     On demand by user
 
 Query Client (query.sh)              On demand by user
