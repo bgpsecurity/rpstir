@@ -13,6 +13,7 @@
 
 #include "logging.h"
 
+#include "config.h"
 #include "signals.h"
 #include "connection_control.h"
 #include "connection.h"
@@ -23,8 +24,8 @@ struct connection_info {
 
 	struct sockaddr_storage addr;
 	socklen_t addr_len;
-	char host[256];
-	char serv[16];
+	char host[MAX_HOST_LENGTH];
+	char serv[MAX_SERVICE_LENGTH];
 
 	cxn_semaphore_t * semaphore;
 	pthread_t thread;

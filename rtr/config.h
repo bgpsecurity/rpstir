@@ -41,5 +41,9 @@ Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2:
 // switch to dynamic storage later if needed.
 #define MAX_LISTENING_SOCKETS 64
 
+// Lengths for strings of hosts and services.
+#define MAX_HOST_LENGTH 256
+#define MAX_SERVICE_LENGTH 16
+
 
 #endif

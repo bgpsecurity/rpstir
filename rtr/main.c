@@ -99,6 +99,8 @@ static void make_listen_sockets(struct run_state * run_state,
 {
 	int retval;
 	struct addrinfo hints, *res, *resp;
+	char listen_host[MAX_HOST_LENGTH];
+	char listen_serv[MAX_SERVICE_LENGTH];
 
 	hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
 	hints.ai_family = AF_UNSPEC;
@@ -139,19 +141,31 @@ static void make_listen_sockets(struct run_state * run_state,
 		}
 		++run_state->listen_fds_initialized;
 
+		retval = getnameinfo(resp->ai_addr, resp->ai_addrlen,
+			listen_host, sizeof(listen_host),
+			listen_serv, sizeof(listen_serv),
+			NI_NUMERICHOST | NI_NUMERICSERV);
+		if (retval != 0)
+		{
+			LOG(LOG_ERR, "getnameinfo(): %s", gai_strerror(retval));
+			pthread_exit(NULL);
+		}
+
 		if (bind(run_state->listen_fds[run_state->listen_fds_initialized - 1],
 			resp->ai_addr, resp->ai_addrlen) != 0)
 		{
-			ERR_LOG(errno, errorbuf, "bind()");
+			ERR_LOG(errno, errorbuf, "bind([%s]:%s)", listen_host, listen_serv);
 			pthread_exit(NULL);
 		}
 
 		if (listen(run_state->listen_fds[run_state->listen_fds_initialized - 1],
 			INT_MAX) != 0)
 		{
-			ERR_LOG(errno, errorbuf, "listen()");
+			ERR_LOG(errno, errorbuf, "listen([%s]:%s)", listen_host, listen_serv);
 			pthread_exit(NULL);
 		}
+
+		LOG(LOG_INFO, "listening on [%s]:%s", listen_host, listen_serv);
 	}
 
 	freeaddrinfo(res);
