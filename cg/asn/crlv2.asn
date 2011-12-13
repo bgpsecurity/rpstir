@@ -47,7 +47,7 @@ EXPORTS
     CertificateRevocationList, CrlVersion, CRLEntry; 
 
 CertificateRevocationList ::= SIGNED SEQUENCE {
-    version     CrlVersion DEFAULT v1,
+    version     CrlVersion OPTIONAL,
                         -- if present, must be v2 
     signature   AlgorithmIdentifier,
     issuer      Name,
