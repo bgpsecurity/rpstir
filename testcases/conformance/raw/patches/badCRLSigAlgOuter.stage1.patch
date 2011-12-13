@@ -5,7 +5,7 @@
                      oct 0x301680148352C38A6BA2DE5BE34A9EBF /* 0....R..k..[.J.. */
                          0x54D96E9722ECFDA2 /* T.n."... */
 -    seq oid 1.2.840.113549.1.1.11  /* id_sha_256WithRSAEncryption */
-+    seq oid 1.2.840.113549.1.1.12  /* not id_sha_256WithRSAEncryption */
++    seq oid 1.2.840.113549.1.1.12  /* id_sha_384WithRSAEncryption */
          nul 
      bit 0x001DB0E9CBFE06746532DC369DBD2EC5 /* .......te2.6.... */
          0x025DFA44F97C91C33DB7EF1023CCC9FB /* .].D.|..=...#... */

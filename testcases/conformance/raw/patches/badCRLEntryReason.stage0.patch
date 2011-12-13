@@ -1,5 +1,5 @@
---- badCRLEntryReason.raw.old	2011-06-07 13:42:10.000000000 -0400
-+++ badCRLEntryReason.raw	2011-06-07 13:48:02.000000000 -0400
+--- badCRLEntryReason.crl.raw.old	2011-12-12 19:44:11.430277493 -0500
++++ badCRLEntryReason.crl.raw	2011-12-12 19:53:56.549699297 -0500
 @@ -5,6 +5,11 @@
                      prt "CRLEntryReason"
          utc "110411185728Z"
@@ -7,8 +7,8 @@
 +        seq seq int 2
 +                utc "110301010101Z"
 +                ctx+0x20
-+                    oid 2.5.29.21
-+                    ocw int 1
++                    seq seq oid 2.5.29.21 /* id_reasonCode */
++                            ocw int 0x01 /* 1 = enum keyCompromise */
          ctx+0x20
              seq seq oid 2.5.29.20 /* id_cRLNumber */
                      ocw int 0x01 /* 1 */ 
