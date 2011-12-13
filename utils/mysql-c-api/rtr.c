@@ -142,7 +142,7 @@ int getLatestSerialNumber(void *connp, serial_number_t *serial) {
         }
     } else {  // num_rows == 0
         mysql_free_result(result);
-        LOG(LOG_INFO, "returned 0 rows for query:  %s", qry);
+        LOG(LOG_DEBUG, "returned 0 rows for query:  %s", qry);
         return (GET_SERNUM_NONE);
     }
 }

@@ -27,7 +27,6 @@ static bool get_cache_state(struct cache_state * state, void * db)
 			state->data_available = true;
 			break;
 		case GET_SERNUM_NONE:
-			LOG(LOG_NOTICE, "no cache data available");
 			state->data_available = false;
 			break;
 		default:
@@ -48,6 +47,9 @@ bool initialize_global_cache_state(struct global_cache_state * state, void * db)
 
 	if (!get_cache_state(&state->cache_state, db))
 		return false;
+
+	if (!state->cache_state.data_available)
+		LOG(LOG_NOTICE, "no cache data available");
 
 	int retval = pthread_rwlock_init(&state->lock, NULL);
 	if (retval != 0)
@@ -83,6 +85,15 @@ bool update_global_cache_state(struct global_cache_state * state, void * db)
 	ret = get_cache_state(&tmp_cache_state, db);
 	if (ret)
 	{
+		if (tmp_cache_state.data_available && !state->cache_state.data_available)
+		{
+			LOG(LOG_NOTICE, "cache data became available");
+		}
+		else if (!tmp_cache_state.data_available && state->cache_state.data_available)
+		{
+			LOG(LOG_WARNING, "cache data became no longer available");
+		}
+
 		state->cache_state = tmp_cache_state;
 	}
 	else
