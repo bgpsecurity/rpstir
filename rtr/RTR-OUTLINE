@@ -74,215 +74,66 @@ Problems to figure out:
 
  * In the current design, the connection control thread can spin on a socket that's read-ready, incrementing the corresponding semaphore many times before the connection thread reads all available data.
   * Possible fix: after incrementing a semaphore, remove the socket from the FD_SET and have the connection thread add it back somehow. This is probably problematic though.
- * It may be difficult to correctly delete a DB thread. If the DB thread just stops taking new requests and finishes processing its already accepted requests, its semaphore can still be post()ed by a cxn thread that hasn't gotten through its response queue.
 
 
 ===============
 Design Overview
 ---------------
 
-Threads (and short name as used below):
- . Main thread (main)
- . Database threads (db)
- . Connection control thread (cxnctl)
- . Connection threads (cxn)
+Threads:
++--------------------+------------+------------------+-----------+----------------------------------+----------------+
+| Name               | Short name | Count            | Waits on  | Blocks on                        | Killed by      |
++--------------------+------------+------------------+-----------+----------------------------------+----------------+
+| main               | main       | 1                | timer     | <unimportant>                    | signals        |
+| database           | db         | configurable     | semaphore | database, acquiring locks        | pthread cancel |
+| connection control | cxnctl     | 1                | select()  | nothing                          | pthread cancel |
+| connection         | cxn        | 1 per connection | semaphore | read(), write(), acquiring locks | pthread cancel |
++--------------------+------------+------------------+-----------+----------------------------------+----------------+
 
 Configuration parameters and constants:
- . initial_db_threads: number of db threads to start initially
- . main_loop_interval: number of seconds for main to sleep between each run through its management loop
- . db_response_length: number of records query for and include in a single db_response_t
- . db_response_buffer_length: number of db_response_t's to buffer in a db_response_queue_t per db_request_t
- . max_PDU_size: largest PDU to attempt to parse
- . cxn_notify_check_interval: maximum number of seconds (more or less) that connection should wait between checks if the global notify state has changed
- . cxn_timeout: longest amount of time to wait for something that should be ready "soon," e.g. the ability to send an error report PDU.
+See config.h.
 
-Data and synchronization types and structures:
- . socket_fd_t: whatever the system wants it to be
- . db_connection_t: whatever ODBC wants it to be
+Important variable types:
+Note that the types are pseudo-code and `[]' is used to denote a container,
+not necessarily a C array
+ . socket_fd_t: a file descriptor for a network socket
+ . db_connection_t: opaque data type for a database connection
 
- . cache_nonce_t: uint16_t
- . serial_number_t: uint32_t
- . cache_state_t: {cache_nonce_t nonce, serial_number_t serial_number}
- . global_cache_state_t: {cache_state_t cache_state, rwlock_t lock}
+ . cache_nonce_t: an integer type of the same signedness and width as a cache nonce
+ . serial_number_t: an integer type of the same signedness and width as a serial number
+ . struct cache_state: a local store of the cache's state
+ . struct global_cache_state: a struct cache_state with a synchronization mechanism
 
- . db_query_t: something that indicates what the router/client wants
- . db_query_progress_t: something that indicates where in a suspended SQL query to pick up
-
- . PDU_t: data of a parsed and valid PDU
- . PDU_buffer_t: uint8_t[max_PDU_size]
+ . PDU: data of a parsed and valid PDU
 
  . cxn_semaphore_t: semaphore that a cxn thread waits for
  . db_semaphore_t: semaphore that a db thread waits for
 
- . db_request_t: {db_query_t query, db_response_queue_t response_queue, cxn_semaphore_t response_semaphore}
- . db_request_queue_t: thread-safe queue of db_request_t
-
- . db_response_t: {PDU_t[] PDUs, bool is_done, db_semaphore_t more_data_semaphore}
- . db_response_queue_t: thread-safe queue of db_response_t
-
- . db_request_state_t: {db_request_t request, db_query_progress_t progress}
-
- . cxnctl_socket_map_t: map of socket_fd_t to cxn_semaphore_t
-
- . cxn_state_t: enum {READY, RESPONDING}
- . cxn_to_process_queue_t: queue of PDU_t
+ . struct db_query: something that indicates what the router/client wants
+ . struct db_request: a query, information on how to return results, and a mechanism to cancel the request
+ . struct db_response: response PDUs and a flag indicating if more responses are expected
+ . struct db_request_state: a request with information about the request's progress
 
 
-Variables (not including short-lived local variables):
+Important variables (not including short-lived local variables):
+Unless otherwise specified, if a variable foo is created by thread bar,
+there is exactly one variable foo per thread bar.
 +------------------------+---------------------------------+------------+-------------+
 | Type                   |  Variable                       | Created by | Used by     |
 +------------------------+---------------------------------+------------+-------------+
-| socket_fd_t            | listen_fd                       | main       | cxnctl      |
-| db_request_queue_t     | db_request_queue                | main       | db, cxn     |
-| db_semaphore_t[]       | db_semaphores_all               | main       | cxn         |
-| global_cache_state_t   | global_cache_state              | main       | main, cxn   |
-| db_semaphore_t         | db_semaphore per db thread      | main       | db          |
-| db_connection_t        | cache_state_update().connection | main       | main        |
-| db_connection_t        | <unnamed>                       | db         | db          |
-| db_request_state_t[]   | currently_processing            | db         | db          |
-| cxnctl_socket_map_t    | socket_map                      | cxnctl     | cxnctl      |
-| socket_fd_t            | cxn_socket per cxn thread       | cxnctl     | cxnctl, cxn |
-| cxn_semaphore_t        | cxn_semaphore per cxn thread    | cxnctl     | cxnctl, cxn |
-| db_response_queue_t    | db_response_queue               | cxn        | cxn, db     |
-| cxn_to_process_queue_t | to_process_queue                | cxn        | cxn         |
-| PDU_buffer_t           | pdu_buffer                      | cxn        | cxn         |
-| cxn_state_t            | cxn_state                       | cxn        | cxn         |
-| cache_state_t          | cache_state                     | cxn        | cxn         |
+| socket_fd_t[]          | listen_fds                      | main       | cxnctl      |
+| queue <db_request>     | db_request_queue                | main       | db, cxn     |
+| db_semaphore_t         | db_semaphore                    | main       | db, cxn     |
+| global_cache_state     | global_cache_state              | main       | main, cxn   |
+| db_connection_t        | db                              | main       | main        |
+| db_connection_t        | db                              | db         | db          |
+| db_request_state[]     | db_currently_processing         | main       | db          |
+| socket_fd_t            | fd per cxn thread               | cxnctl     | cxnctl, cxn |
+| cxn_semaphore_t        | semaphore per cxn thread        | cxnctl     | cxnctl, cxn |
+| queue <db_response>    | db_response_queue               | cxn        | cxn, db     |
+| cache_state            | local_cache_state               | cxn        | cxn         |
 +------------------------+---------------------------------+------------+-------------+
 
-Note that `[]' is used to denote a container, not necessarily a C array.
-
-
-===============
-Detailed Design
----------------
-
-Main thread:
-  Make a socket_fd_t listen_fd in the listening state.
-  Make a db_request_queue_t db_request_queue.
-  Make a db_semaphore_t[] db_semaphores_all.
-  Make a global_cache_state_t global_cache_state.
-  Call notify state update function on (global_cache_state).
-  Repeat initial_db_threads times:
-    Make a db_semaphore_t db_semaphore.
-    Add db_semaphore to db_semaphores_all.
-    Spawn a database thread with (db_semaphore, db_request_queue).
-  Spawn a connection control thread with (listen_fd, db_request_queue, db_semaphores_all, global_cache_state).
-  Loop indefinitely:
-    Sleep for main_loop_interval seconds.
-    Check the load on the database threads, adding or removing threads as needed.
-    Call cache_state_update with (global_cache_state).
-
-Function cache_state_update(global_cache_state_t global_cache_state):
-  Static db_connection_t connection.
-  If connection isn't connected:
-    Connect to database.
-  Acquire global_cache_state.lock for writing.
-  Update global_cache_state.cache_state based on a database query.
-  Release global_cache_state.lock.
- 
-Database thread (db_semaphore_t db_semaphore, db_request_queue_t db_request_queue):
-  Connect to database.
-  Make a db_request_state_t[] currently_processing.
-  Loop indefinitely:
-    Block, trying to decrement db_semaphore.
-    Let operation_completed = false.
-    For each db_request_state_t request_state in currently_processing:
-      If length(request_state.request.response_queue) < db_response_buffer_length:
-        Query the database
-            for the next up to db_response_length records
-            of the query request_state.request.query
-            starting where request_state.progress indicates.
-        Update request_state.progress based on the number of records returned, if necessary.
-        Make a PDU_t[] PDUs of the records.
-        Let is_done = false.
-        Let db_semaphore_t more_data_semaphore = db_semaphore.
-        If request_state.progress is at the end of request_state.request.query:
-          Let is_done = true.
-          Let more_data_semaphore = NULL.
-          Remove request_state from currently_processing.
-          Append an end-of-data PDU to PDUs.
-        Add (PDUs, is_done, more_data_semaphore) to request_state.request.response_queue.
-        Increment request_state.request.response_semaphore.
-        Let operation_completed = true.
-        Break the for each loop.
-    If !operation_completed and db_request_queue can be popped:
-      Pop db_request_queue into db_request_t db_request.
-      Make a db_query_progress_t query_progress at the start of db_request.query.
-      Add (db_request, query_progress) to currently_processing.
-      Make a PDU_t[] start_PDUs that contains the start-of-data PDU appropriate for db_request.query.
-      Add (start_PDUs, false, db_semaphore) to db_request.response_queue.
-      Increment db_request.response_semaphore.
-      Increment db_semaphore by (db_response_buffer_length - 1).
-
-Connection control thread (socket_fd listen_fd, db_request_queue_t db_request_queue, db_semaphore_t[] db_semaphores_all, global_cache_state_t global_cache_state):
-  Make a cxnctl_socket_map_t socket_map.
-  Loop indefinitely:
-    select() on listen_fd and all keys of socket_map.
-    For each socket_fd_t cxn_socket in keys(socket_map) that's read-ready:
-      Increment socket_map(cxn_socket).
-    If listen_fd is accept-ready:
-      Let socket_fd_t cxn_socket = accept(listen_fd, ...).
-      Make a cxn_semaphore_t cxn_semaphore.
-      Add (cxn_socket, cxn_semaphore) to socket_map.
-      Spawn a connection thread with (cxn_socket, cxn_semaphore, db_request_queue, db_semaphores_all, global_cache_state).
-
-Connection thread (socket_fd_t cxn_socket, cxn_semaphore_t cxn_semaphore, db_request_queue_t db_request_queue, db_semaphore_t[] db_semaphores_all, global_cache_state_t global_cache_state):
-  Make a db_response_queue_t db_response_queue. // NOTE: this only has responses to one db request at a time
-  Make a cxn_to_process_queue_t to_process_queue. // PDUs to be processed when the current db request is completed (i.e. is_done is set on a db_response_t in db_response_queue).
-  Make a PDU_buffer_t pdu_buffer.
-  Let cxn_state_t cxn_state = READY.
-  Lock global_cache_state.lock for reading.
-  Let cache_state_t cache_state = copy of global_cache_state.cache_state.
-  Unlock global_cache_state.lock.
-  Loop indefinitely:
-    Block for at most cxn_notify_check_interval, trying to decrement cxn_semaphore.
-    If cxn_socket is read-ready:
-      Block, reading from cxn_socket into pdu_buffer only enough bytes to get the PDU length field.
-      If the partial PDU in pdu_buffer is invalid or its advertised length is larger than max_PDU_size:
-        Log an error.
-        Block for at most cxn_timeout, sending an error report PDU.
-        Close cxn_socket.
-        Quit thread.
-      Block, reading from cxn_socket and appending to pdu_buffer as many bytes as the length field specifies.
-      Parse the PDU into PDU_t pdu.
-      If the PDU can be handled/responded to without any database interaction in the current state: // This includes if the PDU is invalid, if it's an error report PDU, or if its cache nonce doesn't match cache_state.nonce.
-        Block, handling/responding as necessary.
-      Else if cxn_state is RESPONDING:
-        Add pdu to to_process_queue.
-      Else:
-        Call add_db_request with (pdu, db_response_queue, cxn_semaphore, db_request_queue, db_semaphores_all).
-        Set cxn_state to RESPONDING.
-    Else if db_response_queue can be popped:
-      Let db_response_t response = pop from db_response_queue.
-      If response.more_data_semaphore is not NULL:
-        Increment response.more_data_semaphore.
-      If any of response.PDUs indicate an update to cache_state:
-        Update cache_state as appropriate.
-      Block, sending response.PDUs over cxn_socket.
-      If response.is_done:
-        Set cxn_state to READY.
-        While to_process_queue is nonempty and cxn_state is READY:
-          Let PDU_t pdu = pop to_process_queue.
-          If pdu can be handled/responded to without any database interaction: // See note above about what this includes.
-            Block, handling/responding as necessary.
-          Else:
-            Call add_db_request with (pdu, db_response_queue, cxn_semaphore, db_request_queue, db_semaphores_all).
-            Set cxn_state to RESPONDING.
-    If cxn_state is READY:
-      Lock global_cache_state.lock for reading.
-      Let cache_state_t tmp_cache_state = copy of global_cache_state.cache_state.
-      Unlock global_cache_state.lock.
-      If cache_state is earlier than tmp_cache_state:
-        Block, sending notify PDU(s) for the differences from cache_state to tmp_cache_state over cxn_socket.
-        Set cache_state to tmp_cache_state.
-
-Function add_db_request(PDU_t pdu, db_response_queue_t db_response_queue, cxn_semaphore_t cxn_semaphore, db_request_queue_t db_request_queue, db_semaphore_t[] db_semaphores_all):
-  Assert db_response_queue is empty.
-  Let db_query_t query = the query indicated by pdu.
-  Add (query, db_response_queue, cxn_semaphore) to db_request_queue.
-  For each db_semaphore_t sem in db_semaphores_all:
-    Increment sem.
 
 =====================
 Example Program Flows
