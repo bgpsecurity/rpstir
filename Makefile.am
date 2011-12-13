@@ -7,11 +7,10 @@ EXTRA_DIST = \
 	doc \
 	envir.setup \
 	INSTRUCTIONS \
-	license \
+	LICENSE \
 	README-AUTOCONF \
 	run_scripts \
 	subsystemTests \
-	testing \
 	trap_errors
 
 CLEANFILES = \
