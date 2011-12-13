@@ -5,7 +5,7 @@ cd "`dirname "$0"`"
 . ../../envir.setup
 
 
-SERVER="$RPKI_ROOT/rtr/rtrd"
+SERVER="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtrd"
 CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
 PORT=1234
 NONCE=42

@@ -27,7 +27,7 @@ AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
 
 noinst_LIBRARIES = libpdu.a
 
-bin_PROGRAMS = doUpdate rtrd
+bin_PROGRAMS = @PACKAGE_NAME@-rtr-update @PACKAGE_NAME@-rtrd
 noinst_PROGRAMS = rtr-test-client
 
 EXTRA_DIST = \
@@ -35,12 +35,12 @@ EXTRA_DIST = \
 
 libpdu_a_SOURCES = pdu.c pdu.h
 
-doUpdate_SOURCES = doUpdate.c
-doUpdate_LDFLAGS = $(LIBS)
-doUpdate_LDADD = ../proto/librpki.a ../utils/libutils.a
-doUpdate_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
+@PACKAGE_NAME@_rtr_update_SOURCES = rtr-update.c
+@PACKAGE_NAME@_rtr_update_LDFLAGS = $(LIBS)
+@PACKAGE_NAME@_rtr_update_LDADD = ../proto/librpki.a ../utils/libutils.a
+@PACKAGE_NAME@_rtr_update_CFLAGS = $(AM_CFLAGS) -DHAVE_LONG_LONG
 
-rtrd_SOURCES = \
+@PACKAGE_NAME@_rtrd_SOURCES = \
 	cache_state.c cache_state.h \
 	config.h \
 	connection.c connection.h \
@@ -49,7 +49,7 @@ rtrd_SOURCES = \
 	main.c \
 	semaphores.h \
 	signals.c signals.h
-rtrd_LDADD = libpdu.a ../utils/libutils.a ../utils/mysql-c-api/libmysqlcapi.a
+@PACKAGE_NAME@_rtrd_LDADD = libpdu.a ../utils/libutils.a ../utils/mysql-c-api/libmysqlcapi.a
 
 rtr_test_client_SOURCES = test-client.c
 rtr_test_client_LDADD = libpdu.a ../utils/libutils.a

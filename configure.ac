@@ -235,4 +235,8 @@ AC_CONFIG_FILES([Makefile
                  utils/tests/Makefile
                  utils/mysql-c-api/Makefile
 ])
+
+AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
+                [chmod +x subsystemTests/rtr/runRTRTest.sh])
+
 AC_OUTPUT

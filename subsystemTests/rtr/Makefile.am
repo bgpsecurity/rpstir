@@ -5,6 +5,6 @@ TESTS = ./runRTRTest.sh
 EXTRA_DIST = \
 	badPDUs.py \
 	*.correct \
-	runRTRTest.sh
+	runRTRTest.sh.in
 
 CLEANFILES = *.log *.diff
