@@ -34,7 +34,7 @@ Derived requirements for RTR server
 
 D1. (Derived from T1). The RTR server will create periodic snapshots
     of the validated cache of ROAs, computing diffs and setting a new
-    serial number each time.
+    serial number each time, if there have been any changes.
 
 D2. (Derived from T2). Basic authentication of client: firewall.  The RTR
     server is ASSUMED to sit behind a firewall that will (1) limit RTR
