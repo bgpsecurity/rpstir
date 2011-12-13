@@ -829,6 +829,24 @@ static void connection_main_loop(struct run_state * run_state)
 }
 
 
+void prepare_socket(struct run_state * run_state)
+{
+	int optval;
+
+	if (fcntl(run_state->fd, F_SETFL, 0) != 0)
+	{
+		CXN_ERR_LOG(run_state, errno, "fcntl()");
+	}
+
+	optval = true;
+	if (setsockopt(run_state->fd, SOL_SOCKET, SO_KEEPALIVE,
+		&optval, sizeof(optval)) != 0)
+	{
+		CXN_ERR_LOG(run_state, errno, "setsockopt()");
+	}
+}
+
+
 void * connection_main(void * args_voidp)
 {
 	block_signals();
@@ -838,10 +856,7 @@ void * connection_main(void * args_voidp)
 
 	pthread_cleanup_push(cleanup, &run_state);
 
-	if (fcntl(run_state.fd, F_SETFL, 0) != 0)
-	{
-		CXN_ERR_LOG(&run_state, errno, "fcntl()");
-	}
+	prepare_socket(&run_state);
 
 	initialize_data_structures_in_run_state(&run_state);
 
