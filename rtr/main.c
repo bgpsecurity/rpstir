@@ -141,6 +141,17 @@ static void make_listen_sockets(struct run_state * run_state,
 		}
 		++run_state->listen_fds_initialized;
 
+		if (resp->ai_family == AF_INET6)
+		{
+			// prevent AF_INET6 sockets from contending with AF_INET sockets
+			int optval = true;
+			if (setsockopt(run_state->listen_fds[run_state->listen_fds_initialized - 1],
+				IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval)) != 0)
+			{
+				ERR_LOG(errno, errorbuf, "setsockopt()");
+			}
+		}
+
 		retval = getnameinfo(resp->ai_addr, resp->ai_addrlen,
 			listen_host, sizeof(listen_host),
 			listen_serv, sizeof(listen_serv),
