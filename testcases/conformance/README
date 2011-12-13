@@ -190,6 +190,10 @@ CRLs
 658 CRLNoCRLNum              # has no CRL number
 659 CRLEntryReason           # entry has a revocation reason
 
+TODO: CRLnum needs more test cases, e.g., duplicate CRLnum.  Also, see
+rfc5280 Appendix B. ASN.1 notes for restrictions on cRLNumber values
+(20 octets).
+
 
 Manifests
 
