@@ -154,7 +154,38 @@ http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.1
      |                             |   and sends new serial
      ~                             ~
 
-???
+Overall:
+1. cxnctl accepts the new connection and spawns a cxn thread.
+2. cxnctl notices that there is data on the cxn's socket (via select()).
+3. cxnctl increments cxn's semaphore.
+4. cxn decrements its semaphore.
+5. cxn reads the reset query.
+6. cxn creates a db_request for the query and adds it to db_request_queue.
+7. cxn increments db_semaphore.
+8. One of the db threads decrements db_semaphore.
+9. The same db thread (from step 8)  dequeues the request off db_request_queue,
+   creates a db_request_state for the request, and runs the Service Request
+   procedure (below) on the db_request_state.
+Repeat until the request is finished, working on other requests or sleeping when the cxn isn't ready for more data.
+   10. One of the db threads decrements db_semaphore.
+   11. The same db thread (from step 10) removes the db_request_state from
+       db_currently_processing and runs the Service Request procedure.
+
+Service Request:
+1. db gets the next N (for some value of N) PDUs from the database API.
+2. db constructs a db_response with those PDUs.
+3. db enqueues the db_response on the cxn's db_response_queue.
+4. db increments the cxn's semaphore.
+5. cxn decrements its semaphore.
+6. cxn dequeues the db_response from its db_response_queue.
+7. cxn sends the PDUs over the network.
+If this is the last response:
+   8. cxn free()s the db_request.
+   9. db free()s the db_request_state.
+Else:
+   8. db adds the db_request_state to db_currently_processing.
+   9. db increments db_semaphore.
+10. cxn free()s the db_response.
 
 
 Example 2: Program flow during "Typical Exchange"
@@ -174,7 +205,11 @@ http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.2
      |                             |   and sends new serial
      ~                             ~
 
-???
+1. main updates the global_cache_state from the database.
+2. cxn's wait on its semaphore times out.
+3. cxn compares global_cache_state and local_cache_state and updates local_cache_state.
+4. cxn sends a Serial Notify to the client.
+5. See Example 1 for how rtrd handles queries.
 
 
 Example 3: Program flow during "Cache has No Data Available"
@@ -186,7 +221,8 @@ http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.4
      | ---- Error Report PDU ----> | C No Data Available
      ~                             ~
 
-???
+See Example 1 for how rtrd handles queries.
+The database API returns the appropriate Error Report PDU in this case.
 
 
 Example 4: Program flow in case of "Error"
