@@ -15,7 +15,7 @@ config.status
 configure
 TAGS
 *.swp
-resource-pki-*.tar.gz
+rpstir-*.tar.gz
 
 # directories generated during program execution
 *REPOSITORY
