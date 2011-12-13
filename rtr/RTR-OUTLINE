@@ -226,4 +226,23 @@ The database API returns the appropriate Error Report PDU in this case.
 
 
 Example 4: Program flow in case of "Error"
-???
+
+Errors can occur many places in the code. In general, each thread has
+a struct that stores enough of its run state for that thread to cleanup
+its resources and quit gracefully. Before doing anything important,
+each thread sets up a cleanup handler (often a static function called
+cleanup) with its run state as a parameter. Threads that spawn other
+threads (main and cxnctl) have cleanup handlers that cancel and wait on
+all their children threads. All threads other than main are designed to
+be safely cancelable any time their cancel state is enabled and main is
+designed to be safely interruptable any time its signal disposition for a
+few specific signals is not blocked.
+
+Any time a non-recoverable error happens in a thread, the thread calls
+pthread_exit(), which invokes the cleanup handler which cleans up all
+its resources and quits the thread (and any child threads) gracefully.
+Note that the different types of threads have different definitions of
+"non-recoverable error." In general, the cxn threads are the most likely
+to give up on an error, followed by db, cxnctl, and main in that order.
+Also, cxn threads send Error Report PDUs for some errors before calling
+pthread_exit.
