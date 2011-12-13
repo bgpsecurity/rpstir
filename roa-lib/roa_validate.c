@@ -23,6 +23,8 @@
 
 #include "roa_utils.h"
 #include "cryptlib.h"
+#include "logutils.h"
+#include "hashutils.h"
 
 /*
   This file contains the functions that semantically validate the ROA.
@@ -32,8 +34,8 @@
 
 #define MINMAXBUFSIZE 20
 
-static int CryptInitState;
-
+extern int CryptInitState;
+/*
 static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 
 		    CRYPT_ALGO_TYPE alg)
 { // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
@@ -59,7 +61,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
   memcpy(outbufp, hash, ansr);
   return ansr;
 }
-
+*/
 int check_sig(struct ROA *rp, struct Certificate *certp)
   {
   CRYPT_CONTEXT pubkeyContext, hashContext;
@@ -272,7 +274,7 @@ int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
       if ( hash_lth < 0 )
 	{
 	  free(contentsp);
-	  return(ERR_SCM_BADHASH);
+	  return(ERR_SCM_BADMKHASH);
 	}
     }
   bit_lth = vsize_casn(&fahp->hash);
@@ -280,7 +282,7 @@ int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
   read_casn(&fahp->hash, hashp);
   if ( hash_lth != (bit_lth - 1) ||
        memcmp(&hashp[1], contentsp, hash_lth) != 0 )
-    err = ERR_SCM_BADHASH;
+    err = ERR_SCM_BADMFTHASH;
   free(hashp);
   if ( inhash != NULL && inhashtotlen >= hash_lth && inhashlen == 0 && err == 0 )
     memcpy(inhash, contentsp, hash_lth);
@@ -420,8 +422,6 @@ static int cmsValidate(struct ROA *rp)
   // check that roa->content->version == 3
   if (diff_casn_num(&rp->content.signedData.version.self, 3) != 0)
 	return ERR_SCM_BADCMSVER;
-  int notRTA = diff_objid(&rp->content.signedData.encapContentInfo.
-    eContentType, id_ct_RPKITrustAnchor);
 
   // check that roa->content->digestAlgorithms == SHA-256 and NOTHING ELSE
   //   (= OID 2.16.840.1.101.3.4.2.1)
@@ -500,7 +500,7 @@ static int cmsValidate(struct ROA *rp)
   // hash it, make sure it's the right length and it matches the digest
   if (gen_hash(tbsp, tbs_lth, hashbuf, CRYPT_ALGO_SHA2) != 32 ||
 	memcmp(digestbuf, hashbuf, 32) != 0) 
-	ret =ERR_SCM_BADHASH;
+	ret =ERR_SCM_BADDIGEST; 
   free(tbsp);			// done with the content now
 
   // if the hash didn't match, bail now
@@ -542,9 +542,17 @@ static int cmsValidate(struct ROA *rp)
 
   // check that roa->content->signerInfoStruct->signatureAlgorithm ==
   //    1.2.240.113549.1.1.11)
-  if (diff_objid(&rp->content.signedData.signerInfos.signerInfo.
-                 signatureAlgorithm.algorithm, id_sha_256WithRSAEncryption))
-      return ERR_SCM_BADSIGALG;
+  struct casn *oidp = &rp->content.signedData.signerInfos.signerInfo.
+                 signatureAlgorithm.algorithm;
+  if (diff_objid(oidp, id_sha_256WithRSAEncryption))
+      {
+      if (diff_objid(oidp, id_rsadsi_rsaEncryption))
+        {
+        log_msg(LOG_ERR, "invalid signature algorithm in ROA");
+        return ERR_SCM_BADSIGALG;
+        }
+      log_msg(LOG_WARNING, "deprecated signature algorithm in ROA");
+      }
 
   // check that the subject key identifier has proper length
   if (vsize_casn(&rp->content.signedData.signerInfos.signerInfo.sid.
@@ -665,7 +673,7 @@ static int check_asnums(struct Certificate *certp, int iAS_ID)
     self, 0); 
     extp && diff_objid(&extp->extnID, id_pe_autonomousSysNum);
     extp = (struct Extension *)next_of(&extp->self));
-  if (!extp) return ERR_SCM_BADASRANGE;
+  if (!extp) return 0;
   struct ASNumberOrRangeA *asNumOrRangeAp;
   if (size_casn(&extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges.self))
     {
@@ -695,7 +703,7 @@ static int check_asnums(struct Certificate *certp, int iAS_ID)
       }
     if (!isWithin) return ERR_SCM_BADASNUM;  
     }
-  return 0;
+  return 1;
   }
 
 struct certrange
@@ -729,7 +737,7 @@ static int checkIPAddrs(struct Certificate *certp,
     self, 0); 
     extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock);
     extp = (struct Extension *)next_of(&extp->self));
-  if (!extp) return ERR_SCM_BADIPRANGE;
+  if (!extp) return 0;
   struct IpAddrBlock *certIpAddrBlockp = &extp->extnValue.ipAddressBlock;
 
   struct ROAIPAddressFamily *roaFamilyp;
@@ -745,7 +753,7 @@ static int checkIPAddrs(struct Certificate *certp,
       {   
       if (diff_casn(&certFamilyp->addressFamily, &roaFamilyp->addressFamily))
         continue;
-    // OK now at matching families. If inheriting, take a shortcut
+    // now at matching families. If inheriting, skip it
       if (size_casn(&certFamilyp->ipAddressChoice.inherit)) break;
       // for each ROA entry, see if it is in cert  
       struct ROAIPAddress *roaIPAddrp;
@@ -764,12 +772,11 @@ static int checkIPAddrs(struct Certificate *certp,
           &certIPAddressOrRangeAp->self))  
           {
           // certIPAddressOrRangep is either a prefix (BIT string) or a range
-          if (size_casn(&certIPAddressOrRangeAp->addressRange))
+          if (size_casn(&certIPAddressOrRangeAp->addressRange.self))
             setuprange(&certrange, &certIPAddressOrRangeAp->addressRange.min,
               &certIPAddressOrRangeAp->addressRange.max);
           else setuprange(&certrange, &certIPAddressOrRangeAp->addressPrefix,
             &certIPAddressOrRangeAp->addressPrefix);
-          fprintf(stderr, "Here\n");  
           if (memcmp(roarange.lo, certrange.lo, sizeof(roarange.lo)) < 0 ||
              memcmp(roarange.hi, certrange.hi, sizeof(roarange.hi)) > 0)
           return ERR_SCM_ROAIPTOOBIG;        
@@ -777,7 +784,7 @@ static int checkIPAddrs(struct Certificate *certp,
         }
       }
     }
-  return 0;
+  return 1;
   }
 
 int roaValidate(struct ROA *rp)
@@ -808,8 +815,11 @@ int roaValidate(struct ROA *rp)
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
   if (!certp) return ERR_SCM_BADNUMCERTS;
+  int rescount = 0;
   // check that the asID is within the EE cert's scope, if any
   if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;
+  rescount += iRes; // count that we got an (optional) AS number extension
+  iRes = 0;
   // check that the contents are valid
   struct ROAIPAddrBlocks *roaIPAddrBlocksp = &rp->content.signedData.
     encapContentInfo.eContent.roa.ipAddrBlocks;
@@ -817,6 +827,8 @@ int roaValidate(struct ROA *rp)
   // and that they are within the cert's resources
   if ((iRes = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
     return iRes; 
+  rescount += iRes;
+  if (!rescount) return ERR_SCM_NOIPAS;
   return 0;
   }
 

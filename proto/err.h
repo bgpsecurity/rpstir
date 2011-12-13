@@ -114,10 +114,10 @@
 #define ERR_SCM_BADDA       -85         /* bad digest algorithm */
 #define ERR_SCM_BADCT       -86         /* bad content type */
 #define ERR_SCM_UNSIGATTR   -87         /* unsigned attributes */
-#define ERR_SCM_INVALFAM    -88         /* invalid address family */
+#define ERR_SCM_INVALFAM    -88         /* invalid IP family */
 #define ERR_SCM_NOSIG       -89         /* no signature */
 #define ERR_SCM_DUPSIG      -90         /* duplicate signature */
-#define ERR_SCM_BADHASH     -91         /* error in hash */
+#define ERR_SCM_BADMKHASH   -91         /* error making hash */
 #define ERR_SCM_BADFAH      -92         /* error reading FileAndHash */
 #define ERR_SCM_BADNUMCERTS -93         /* wrong number of certificates */
 #define ERR_SCM_BADDATES    -94         /* invalid dates */
@@ -165,7 +165,11 @@
 #define ERR_SCM_NOIPADDR    -136        /* no IP addresses */
 #define ERR_SCM_NOASNUM     -137        /* no AS numbers */
 #define ERR_SCM_ROAIPTOOBIG -138        /* ROA IP addresses too big */
-#define ERR_SCM_MAXERR      -138
+#define ERR_SCM_IPTOUCH     -139        /* IP addresses overlap */
+#define ERR_SCM_BADMFTHASH  -140        /* bad manifest hash */
+#define ERR_SCM_BADDIGEST   -141        /* invalid digest */
+#define ERR_SCM_BADMFTDBHASH -141       /* wrong manifest hash in DB */
+#define ERR_SCM_MAXERR      -141
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

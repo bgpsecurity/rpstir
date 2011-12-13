@@ -113,6 +113,7 @@ struct keyring
 void cvt_asn(struct iprange *torangep, struct IPAddressOrRangeA *asnp),
     cvt_asnum(struct iprange *certrangep,
         struct ASNumberOrRangeA *asNumberOrRangeA),
+    mk_certranges(struct ipranges*, struct Certificate *),
     decrement_iprange(uchar *lim, int lth),
     increment_iprange(uchar *lim, int lth),
     clear_ipranges(struct ipranges *);

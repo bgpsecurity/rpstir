@@ -38,6 +38,7 @@
 #include "sqhl.h"
 #include "err.h"
 #include "logutils.h"
+#include "rpwork.h"
 
 /*
   Convert between a time string in a certificate and a time string
@@ -1761,7 +1762,7 @@ static int rescert_version_chk(X509 *x)
 
   log_msg(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
   if (l != 2)  /* see above: value of 2 means v3 */
-    return(ERR_SCM_BADVERS);
+    return(ERR_SCM_BADCERTVERS);
   else
     return(0);
 }
@@ -2764,7 +2765,7 @@ skip:
  *   marked as critical                                      *
  *                                                           *
  ************************************************************/
-
+/*
 static int rescert_ip_resources_chk(X509 *x)
 {
   int ipaddr_flag = 0;
@@ -2796,7 +2797,109 @@ static int rescert_ip_resources_chk(X509 *x)
 
   return(0);
 }
+*/
+/*
+#define V4Typ 4
+#define V6Typ 6
+struct IPtest
+  {
+  int typ;
+  uchar lo[18], hi[18];
+  };
 
+static int fill_iptest(struct IPtest *iptp,
+    struct IPAddressOrRangeA *ipAddrOrRangep)
+  {
+  struct casn *locasn, *hicasn;
+  if (vsize_casn(&ipAddrOrRangep->addressPrefix) > 0)  // just one
+    locasn = hicasn = &ipAddrOrRangep->addressPrefix;
+  else
+    {
+    locasn = &ipAddrOrRangep->addressRange.min;
+    hicasn = &ipAddrOrRangep->addressRange.max;
+    }
+  uchar locbuf[20];
+  int siz, limit = (iptp->typ == V4Typ? 4: 16);
+  if ((siz = read_casn(locasn, locbuf)) < 0 ||
+    siz > limit) return -1;
+  memset(iptp->lo, 0, sizeof(iptp->lo));
+  memcpy(iptp->lo, &locbuf[1], --siz);
+  if ((siz = read_casn(hicasn, locbuf)) < 0 ||
+    siz > limit) return -1;
+  memset(iptp->hi, -1, sizeof(iptp->lo));
+  memcpy(iptp->hi, &locbuf[1], --siz);
+  if (locbuf[0]) iptp->hi[siz - 1] |= ((1 << locbuf[0]) - 1);
+  return 0;
+  }
+*/
+static int rescert_ip_resources_chk(struct Certificate *certp) {
+    int ext_count = 0;
+    struct Extension *extp = get_extension(certp, id_pe_ipAddrBlock,
+            &ext_count);
+    if (!extp || !ext_count) {
+        log_msg(LOG_INFO, "no IP extension found");
+        return 0;
+    } else if (ext_count > 1) {
+        log_msg(LOG_ERR, "multiple IP extensions found");
+        return ERR_SCM_DUPAS;
+    }
+
+    if (!vsize_casn(&extp->self)) {
+        log_msg(LOG_INFO, "IP extension is empty");
+        return 0;
+    }
+
+    int size = vsize_casn((struct casn*)&extp->critical);
+    uchar critical = 0;
+    if (size != 1) {
+        if (size < 1)
+            log_msg(LOG_ERR, "IP extension not marked critical");
+        else
+            log_msg(LOG_ERR, "IP extension critical flag is longer than one byte");
+        return ERR_SCM_NCEXT;
+    } else {
+        read_casn(&extp->critical, &critical);
+        if (!critical) {
+            log_msg(LOG_ERR, "IP extension not marked critical");
+            return ERR_SCM_NCEXT;
+        }
+    }
+/*
+    int types = 0;
+    struct IPAddressFamilyA *ipfamap;
+    for (ipfamap = (struct IPAddressFamilyA *)member_casn(&extp->extnValue.
+    ipAddressBlock.self, 0); ipfamap;
+    ipfamap = (struct IPAddressFamilyA *)next_of(&ipfamap->self)) {
+        uchar fam[4];
+        read_casn(&ipfamap->addressFamily, fam);
+        if ((fam[1] != 1 && fam[1] != 2) ||
+          (types & fam[1])) return ERR_SCM_INVALFAM;
+        types |= fam[1];
+        struct IPAddressChoiceA *ipaddchap = &ipfamap->ipAddressChoice;
+        if (size_casn(&ipaddchap->inherit)) continue;
+        if (!num_items(&ipfamap->ipAddressChoice.addressesOrRanges.self))
+          return ERR_SCM_BADIPRANGE;
+        struct IPAddressOrRangeA *ipaddrOrRangep = (struct IPAddressOrRangeA *)
+          member_casn( &ipaddchap->addressesOrRanges.self, 0);
+        struct IPtest arange, brange, *lo = &arange, *hi = &brange;
+        lo->typ = (fam[1] == '1')? V4Typ: V6Typ;
+        fill_iptest(lo, ipaddrOrRangep);
+        ipaddrOrRangep = (struct IPAddressOrRangeA *)
+        next_of(&ipaddrOrRangep->self);
+        if (!ipaddrOrRangep) return 1;
+        hi->typ = (fam[1] == '1')? V4Typ: V6Typ;
+        fill_iptest(hi, ipaddrOrRangep);
+        if (touches(lo, hi))
+          {
+          log_msg(LOG_ERR, "IP addresses touch");
+          return ERR_SCM_IPTOUCH;
+          }
+        }
+*/
+     return 1;
+  }
+ 
+  
 /*************************************************************
  * rescert_as_resources_chk(X509 *)                          *
  *                                                           *
@@ -2844,11 +2947,12 @@ static int rescert_as_resources_chk(X509 *x)
 /**=============================================================================
  * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
  -----------------------------------------------------------------------------*/
+/*
 struct AsNumTest{
     ulong lo;
     ulong hi;
 };
-
+*/
 
 /**=============================================================================
  * @brief Helper fcn for checking AS order.  Load AS num(s) from casn struct.
@@ -2859,6 +2963,7 @@ struct AsNumTest{
  * @param asNumOrRangep (struct ASNumberOrRangeA*)
  * @return 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
+/*
 static int fill_asnumtest(struct AsNumTest *asntp,
         struct ASNumberOrRangeA *asNumOrRangep) {
     if (vsize_casn(&asNumOrRangep->num) > 0) {  // just one
@@ -2871,7 +2976,7 @@ static int fill_asnumtest(struct AsNumTest *asntp,
         return -1;
     return 0;
 }
-
+*/
 
 /**=============================================================================
  * @brief Check for AS order
@@ -2881,6 +2986,7 @@ static int fill_asnumtest(struct AsNumTest *asntp,
  * @param extsp (struct Extensions*)
  * @return 0 or 1 success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
+
 static int rescert_as_resources_chk(struct Certificate *certp) {
     int ext_count = 0;
     struct Extension *extp = get_extension(certp, id_pe_autonomousSysNum,
@@ -2920,7 +3026,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 //    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
     if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
         log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
-        return ERR_SCM_BADRANGE;
+        return ERR_SCM_BADASRANGE;
     }
 
     struct ASIdentifierChoiceA *asidcap = &extp->extnValue.autonomousSysNum.asnum;
@@ -2930,9 +3036,9 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     }
     if (!(ext_count = num_items(&asidcap->asNumbersOrRanges.self))) {
         log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
-        return ERR_SCM_BADRANGE;
+        return ERR_SCM_BADASRANGE;
     }
-
+/*
     int found_as = 0;
     struct AsNumTest lo;
     struct AsNumTest hi;
@@ -2940,29 +3046,29 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
             member_casn(&asidcap->asNumbersOrRanges.self, 0);
     if (fill_asnumtest(&lo, asNumOrRangep)) {
         log_msg(LOG_ERR, "error reading AS number");
-        return ERR_SCM_BADRANGE;
+        return ERR_SCM_BADASRANGE;
     }
     if (lo.lo < 1 || lo.lo > lo.hi) {
         log_msg(LOG_ERR, "AS numbers are not canonical");
-        return ERR_SCM_BADRANGE;
+        return ERR_SCM_BADASRANGE;
     }
     found_as = 1;
     while ((asNumOrRangep =
             (struct ASNumberOrRangeA *)next_of(&asNumOrRangep->self))) {
         if (fill_asnumtest(&hi, asNumOrRangep)) {
             log_msg(LOG_ERR, "error reading AS number");
-            return ERR_SCM_BADRANGE;
+            return ERR_SCM_BADASRANGE;
         }
         if (hi.lo - 1 <= lo.hi) {
             log_msg(LOG_ERR, "AS numbers not in canonical order");
-            return ERR_SCM_BADRANGE;
+            return ERR_SCM_BADASRANGE;
         }
         lo.hi = hi.hi;
     }
-
     return found_as;
+*/
+return 1;
 }
-
 
 /*************************************************************
  * rescert_ip_asnum_chk(X509 *)                              *
@@ -2985,7 +3091,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 
   if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
     if (x->rfc3779_addr) {
-      ret = rescert_ip_resources_chk(x);
+      ret = rescert_ip_resources_chk(certp);
       if ( ret < 0 )
         return(ret);
     }
@@ -3001,7 +3107,52 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 
     // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
     // It provides a more accurate check that valid IP resources are present.
-
+  struct ipranges locranges;
+  
+  mk_certranges(&locranges, certp);
+  struct iprange *lorangep = &locranges.iprangep[0], *hirangep;
+  int i;
+  if (lorangep->typ == IPv4)
+    {
+    for (i = 0; i < locranges.numranges; i++)
+      {
+      hirangep = &lorangep[1]; 
+      if (hirangep->typ != IPv4) break;
+      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
+        {
+        log_msg(LOG_ERR, "IP address overlap");
+        return ERR_SCM_IPTOUCH;   
+        }
+      }
+    lorangep = hirangep;
+    }
+  if (lorangep->typ == IPv6)
+    {
+    for ( ; i < locranges.numranges; i++)
+      {
+      hirangep = &lorangep[1]; 
+      if (hirangep->typ != IPv6) break;
+      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
+        {
+        log_msg(LOG_ERR, "IP address overlap");
+        return ERR_SCM_IPTOUCH;   
+        }
+      }
+    lorangep = hirangep;
+    }
+  if (lorangep->typ == ASNUM)
+    {
+    for ( ; i < locranges.numranges; i++)
+      {
+      hirangep = &lorangep[1]; 
+      if (hirangep->typ != ASNUM) break;
+      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
+        {
+        log_msg(LOG_ERR, "AS number overlap");
+        return ERR_SCM_IPTOUCH;   
+        }
+      }
+    } 
   return(ret);
 }
 

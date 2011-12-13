@@ -121,11 +121,11 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Bad digest algorithm",         /* ERR_SCM_BADDA */
     "Bad Content type",             /* ERR_SCM_BADCT */
     "Unsigned attributes",          /* ERR_SCM_UNSIGATTR */
-    "Invalid addr family",          /* ERR_SCM_INVALFAM */
+    "Invalid IP family",            /* ERR_SCM_INVALFAM */
     "No signature",                 /* ERR_SCM_NOSIG */
     "Duplicate signature",          /* ERR_SCM_DUPSIG -90 */
 
-    "Hash error",                   /* ERR_SCM_BADHASH */
+    "Error creating hash",          /* ERR_SCM_BADMKHASH */
     "Error in FileAndHash",         /* ERR_SCM_FAH */
     "Wrong number of certificates", /* ERR_SCM_BADNUMCERTS */
     "Invalid dates",                /* ERR_SCM_BADDATES */
@@ -177,6 +177,11 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "No IP addresses",              /* ERR_SCM_NOIPADDR */
     "No AS number",                 /* ERR_SCM_NOASNUM */
     "ROA IP addresses too big",     /* ERR_SCM_ROAIPTOOBIG */
+    "IP addresses overlap",         /* ERR_SCM_IPTOUCH */
+
+    "Bad hash in manifest",         /* ERR_SCM_BADMFTHASH -140 */
+    "Invalid digest in CMS",        /* ERR_SCM_BADDIGEST */
+    "Wrong manifest hash in DB",    /* ERR_SCM_MADMFTDBHASH */
   } ;
 
 char *err2string(int err)

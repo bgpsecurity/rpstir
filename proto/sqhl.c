@@ -1593,7 +1593,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 	  bhashlen = strlen(updateManHash);
 	  bhash = unhexify(bhashlen, updateManHash);
 	  if ( bhash == NULL )
-	    sta = ERR_SCM_BADHASH;
+	    sta = ERR_SCM_BADMFTDBHASH;
 	  else
 	    {
 	      bhashlen /= 2;
