@@ -134,9 +134,14 @@ void * connection_control_main(void * args_voidp)
 
 	assert(argsp != NULL);
 
-	if (fcntl(argsp->listen_fd, F_SETFL, O_NONBLOCK) != 0)
+	size_t i;
+
+	for (i = 0; i < argsp->num_listen_fds; ++i)
 	{
-		ERR_LOG(errno, errorbuf, "fcntl() to make listen_fd nonblocking");
+		if (fcntl(argsp->listen_fds[i], F_SETFL, O_NONBLOCK) != 0)
+		{
+			ERR_LOG(errno, errorbuf, "fcntl() to make listen_fd nonblocking");
+		}
 	}
 
 	int retval, retval2;
@@ -170,8 +175,12 @@ void * connection_control_main(void * args_voidp)
 		FD_ZERO(&read_fds);
 		nfds = 0;
 
-		FD_SET(argsp->listen_fd, &read_fds);
-		if (argsp->listen_fd + 1 > nfds) nfds = argsp->listen_fd + 1;
+		for (i = 0; i < argsp->num_listen_fds; ++i)
+		{
+			FD_SET(argsp->listen_fds[i], &read_fds);
+			if (argsp->listen_fds[i] + 1 > nfds)
+				nfds = argsp->listen_fds[i] + 1;
+		}
 
 		if (!Bag_start_iteration(connections))
 		{
@@ -263,8 +272,11 @@ void * connection_control_main(void * args_voidp)
 		}
 		Bag_stop_iteration(connections); // return value doesn't really matter here
 
-		if (FD_ISSET(argsp->listen_fd, &read_fds))
+		for (i = 0; i < argsp->num_listen_fds; ++i)
 		{
+			if (!FD_ISSET(argsp->listen_fds[i], &read_fds))
+				continue;
+
 			struct connection_info * cxn_info = malloc(sizeof(struct connection_info));
 			if (cxn_info == NULL)
 			{
@@ -292,7 +304,9 @@ void * connection_control_main(void * args_voidp)
 			}
 
 			cxn_info->addr_len = sizeof(cxn_info->addr);
-			cxn_info->fd = accept(argsp->listen_fd, (struct sockaddr *)&cxn_info->addr, &cxn_info->addr_len);
+			cxn_info->fd = accept(argsp->listen_fds[i],
+				(struct sockaddr *)&cxn_info->addr,
+				&cxn_info->addr_len);
 			if (cxn_info->fd < 0)
 			{
 				ERR_LOG(errno, errorbuf, "accept()");

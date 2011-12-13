@@ -6,7 +6,7 @@
 #define RTR_LOG_IDENT PACKAGE_NAME "-rtrd"
 #define RTR_LOG_FACILITY LOG_DAEMON
 
-#define LISTEN_PORT 1234
+#define LISTEN_PORT "1234"
 
 #define MAIN_LOOP_INTERVAL 5
 
@@ -33,6 +33,13 @@ Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2:
 // = 48 + length of error text. I.e. 1024 should almost definitely
 // be large enough and is probably significantly larger than necessary.
 #define MAX_PDU_SIZE 1024
+
+// The maximum number of listening sockets to support.
+// Each one is only sizeof(int) large and isn't stored
+// in many places, so it seems easier to pick a limit than
+// to bother with dynamic storage. It shouldn't be hard to
+// switch to dynamic storage later if needed.
+#define MAX_LISTENING_SOCKETS 64
 
 
 #endif

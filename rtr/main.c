@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <netdb.h>
 
 #include "bag.h"
 #include "queue.h"
@@ -41,8 +42,8 @@ static void signal_handler(int signal)
 struct run_state {
 	bool log_opened;
 
-	bool listen_fd_initialized;
-	int listen_fd;
+	size_t listen_fds_initialized;
+	int listen_fds[MAX_LISTENING_SOCKETS];
 
 	Queue * db_request_queue;
 	Bag * db_currently_processing;
@@ -73,7 +74,7 @@ static void initialize_run_state(struct run_state * run_state)
 {
 	run_state->log_opened = false;
 
-	run_state->listen_fd_initialized = false;
+	run_state->listen_fds_initialized = 0;
 
 	run_state->db_request_queue = NULL;
 	run_state->db_currently_processing = NULL;
@@ -90,6 +91,72 @@ static void initialize_run_state(struct run_state * run_state)
 	run_state->db_threads = NULL;
 
 	run_state->connection_control_thread_initialized = false;
+}
+
+
+static void make_listen_sockets(struct run_state * run_state,
+	const char * node, const char * service)
+{
+	int retval;
+	struct addrinfo hints, *res, *resp;
+
+	hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+	hints.ai_addrlen = 0;
+	hints.ai_addr = NULL;
+	hints.ai_canonname = NULL;
+	hints.ai_next = NULL;
+
+	block_signals();
+	retval = getaddrinfo(node, service, &hints, &res);
+	if (retval != 0)
+	{
+		LOG(LOG_ERR, "getaddrinfo() on node \"%s\" port \"%s\": %s",
+			(node == NULL ? "(any)" : node),
+			(service == NULL ? "(any)" : service),
+			gai_strerror(retval));
+		pthread_exit(NULL);
+	}
+
+	for (resp = res; resp != NULL; resp = resp->ai_next)
+	{
+		if (run_state->listen_fds_initialized >= MAX_LISTENING_SOCKETS)
+		{
+			LOG(LOG_ERR, "can't listen on more than %d sockets, "
+				"increase the limit in rtr/config.h if needed",
+				MAX_LISTENING_SOCKETS);
+			pthread_exit(NULL);
+		}
+
+		run_state->listen_fds[run_state->listen_fds_initialized] =
+			socket(resp->ai_family, resp->ai_socktype, resp->ai_protocol);
+		if (run_state->listen_fds[run_state->listen_fds_initialized] == -1)
+		{
+			ERR_LOG(errno, errorbuf, "socket()");
+			pthread_exit(NULL);
+		}
+		++run_state->listen_fds_initialized;
+
+		if (bind(run_state->listen_fds[run_state->listen_fds_initialized - 1],
+			resp->ai_addr, resp->ai_addrlen) != 0)
+		{
+			ERR_LOG(errno, errorbuf, "bind()");
+			pthread_exit(NULL);
+		}
+
+		if (listen(run_state->listen_fds[run_state->listen_fds_initialized - 1],
+			INT_MAX) != 0)
+		{
+			ERR_LOG(errno, errorbuf, "listen()");
+			pthread_exit(NULL);
+		}
+	}
+
+	freeaddrinfo(res);
+
+	unblock_signals();
 }
 
 
@@ -306,11 +373,10 @@ static void cleanup(void * run_state_voidp)
 		run_state->db_request_queue = NULL;
 	}
 
-	if (run_state->listen_fd_initialized)
+	for (; run_state->listen_fds_initialized > 0; --run_state->listen_fds_initialized)
 	{
-		if (close(run_state->listen_fd) != 0)
-			ERR_LOG(errno, errorbuf, "close(listen_fd)");
-		run_state->listen_fd_initialized = false;
+		if (close(run_state->listen_fds[run_state->listen_fds_initialized - 1]) != 0)
+			ERR_LOG(errno, errorbuf, "close()");
 	}
 
 	LOG(LOG_NOTICE, "shutting down");
@@ -335,30 +401,11 @@ static void startup(struct run_state * run_state)
 	run_state->log_opened = true;
 	unblock_signals();
 
-	block_signals();
-	run_state->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (run_state->listen_fd == -1)
-	{
-		ERR_LOG(errno, errorbuf, "socket()");
-		pthread_exit(NULL);
-	}
-	run_state->listen_fd_initialized = true;
-	unblock_signals();
+	make_listen_sockets(run_state, NULL, LISTEN_PORT);
 
-	struct sockaddr_in bind_addr;
-	bind_addr.sin_family = AF_INET;
-	bind_addr.sin_port = htons(LISTEN_PORT);
-	bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (bind(run_state->listen_fd, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) != 0)
+	if (run_state->listen_fds_initialized <= 0)
 	{
-		ERR_LOG(errno, errorbuf, "bind()");
-		block_signals();
-		pthread_exit(NULL);
-	}
-
-	if (listen(run_state->listen_fd, INT_MAX) != 0)
-	{
-		ERR_LOG(errno, errorbuf, "listen()");
+		LOG(LOG_ERR, "no sockets to listen on");
 		block_signals();
 		pthread_exit(NULL);
 	}
@@ -431,7 +478,8 @@ static void startup(struct run_state * run_state)
 		}
 	}
 
-	run_state->connection_control_main_args.listen_fd = run_state->listen_fd;
+	run_state->connection_control_main_args.listen_fds = run_state->listen_fds;
+	run_state->connection_control_main_args.num_listen_fds = run_state->listen_fds_initialized;
 	run_state->connection_control_main_args.db_request_queue = run_state->db_request_queue;
 	run_state->connection_control_main_args.db_semaphore = &run_state->db_semaphore;
 	run_state->connection_control_main_args.global_cache_state = &run_state->global_cache_state;
