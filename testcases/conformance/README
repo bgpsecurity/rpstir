@@ -188,9 +188,7 @@ CRLs
 656 CRLDeltaCRLInd           # has delta CRL indicator extension
 657 CRLNoAKI                 # has no authority key identifier extension
 658 CRLNoCRLNum              # has no CRL number
-659 CRLEntryNoSerNum         # entry has no certificate serial number
-660 CRLEntryNoRevDate        # entry has no revocation date
-661 CRLEntryReason           # entry has a revocation reason
+659 CRLEntryReason           # entry has a revocation reason
 
 
 Manifests

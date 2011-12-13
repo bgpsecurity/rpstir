@@ -207,6 +207,4 @@ ${single_CRL_cmd} 655 CRLIssDistPt
 ${single_CRL_cmd} 656 CRLDeltaCRLInd
 ${single_CRL_cmd} 657 CRLNoAKI
 ${single_CRL_cmd} 658 CRLNoCRLNum
-${single_CRL_cmd} 659 CRLEntryNoSerNum
-${single_CRL_cmd} 660 CRLEntryNoRevDate
-${single_CRL_cmd} 661 CRLEntryReason
+${single_CRL_cmd} 659 CRLEntryReason

@@ -205,7 +205,6 @@ ensure_dir_exists $PATCHES_DIR
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $ROOT_CERT_PATH
 ensure_file_exists $CGTOOLS/rr
-ensure_file_exists $CGTOOLS/dump
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
 ensure_file_exists $CGTOOLS/fix_manifest
@@ -262,7 +261,7 @@ echo "Signing CRL"
 ${CGTOOLS}/rr <${crl_name}.crl.raw >${crl_name}.blb
 ${CGTOOLS}/sign_cert ${crl_name}.blb ${child_key_path}
 mv ${crl_name}.blb ${crl_name}.crl
-${CGTOOLS}/dump -a ${crl_name}.crl >${crl_name}.crl.raw
+${CGTOOLS}/dump_smart ${crl_name}.crl >${crl_name}.crl.raw
 
 # Stage 1: Post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
