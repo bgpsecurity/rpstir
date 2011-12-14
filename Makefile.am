@@ -11,7 +11,6 @@ EXTRA_DIST = \
 	README-AUTOCONF \
 	run_scripts \
 	subsystemTests \
-	testing \
 	trap_errors
 
 CLEANFILES = \

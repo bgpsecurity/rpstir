@@ -144,7 +144,8 @@ static void signCRL(struct CertificateRevocationList *crlp, char *keyfile)
  * val is filename of the parent certificate
  * fields of interest:
  *    signature algorithm ID - overwrite (from template)
- *    issuer     - if filled in then don't overwrite
+ *    issuer     - overwrite using issuer cert's subject
+ *    aki        - overwrite using issuer cert's ski
  *    algorithm ID  overwrite (from template)
  */
 int use_pcert(void *crl, void *val)
@@ -172,19 +173,22 @@ int use_pcert(void *crl, void *val)
   // not filled in.
   copy_casn(&crltbsp->issuer.self, &issuer.toBeSigned.subject.self);
 
-  // if aki extension of crl is empty, use ski from issuer's cert
-  if (!(cextp = findCrlExtension(&crltbsp->extensions, id_authKeyId)))
+  // overwrite crl aki extension using ski from issuer's cert
+  if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
+                              id_subjectKeyIdentifier)))
     {
-      if ((iextp=findExtension(&issuer.toBeSigned.extensions, id_subjectKeyIdentifier)))
-	{
-	  if (iextp == NULL)
-	    return -1;
-	  cextp = (struct CRLExtension *)inject_casn(&crltbsp->extensions.self, 0);
-	  write_objid(&cextp->extnID, id_cRLNumber);
-	  copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
-		    &iextp->extnValue.subjectKeyIdentifier);
-	}
+      fprintf(stderr, "Error: could not obtain SKI from issuer cert");
+      return -1;
     }
+  cextp = findCrlExtension(&crltbsp->extensions, id_authKeyId);
+  if (!cextp)
+    {
+      cextp = (struct CRLExtension *) inject_casn(&crltbsp->extensions.self, 0);
+      write_objid(&cextp->extnID, id_authKeyId);
+    }
+  copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
+            &iextp->extnValue.subjectKeyIdentifier);
+  
   return (SUCCESS);
 }
 

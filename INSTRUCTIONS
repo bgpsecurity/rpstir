@@ -1,15 +1,17 @@
-BBN Resource PKI Relying Party Database
+Relying Party Security Technology for Internet Routing
 Installation and Usage Manual
-Version 4.0
+Version 0.1
 
 ===============================================================================
 
 1. Organization of this document
 
-This document describes how to install and use the BBN Resource PKI
-validator.  Please refer to the design document, rpkidesign.doc, for a
-detailed description of the various software components in this
-release.
+This document describes how to install and use the Relying Party Security
+Technology for Internet Routing (RPSTIR, pronounced rip-ster) software
+by Raytheon BBN Technologies.  Please refer to the design document,
+rpkidesign.doc, for a detailed description of the various software
+components in this release. Note that various files may refer to this
+software by its old name, RPKI.
 
 Section 2 of this document describes how to install that software,
 including all its dependencies.  Section 3 provides a quick-start
@@ -83,14 +85,12 @@ the custom-compiled binary that supports RFC 3779 extensions.
 
 2.1.3 MySQL and ODBC
 
-Install the MySQL database server from http://mysql.org, at least
-version 5.1.  We recommend the default installation target of
-/usr/local/mysql, but this is not required.  Install the MySQL
-Connector/ODBC driver from the same site, at least version 3.51, into
-an accessible lib directory such as /usr/local/lib.  On many systems,
-MySQL Connector/ODBC depends on unixODBC.  During later compilation of
-the RPKI software, if you get a variety of link errors in the "proto"
-directory, missing unixODBC is probably the problem.
+Install unixODBC from your operating system's package manager or
+http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
+recommended.  Install the MySQL database server, at least version 5.1,
+from the package manager or http://mysql.org.  Install the MySQL
+Connector/ODBC driver, at least version 3.51, from the package manager
+or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
@@ -226,12 +226,11 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named resource-pki-N.NN.tar.gz, where N.NN is a version number.  Extract
-the file using:
+named rpstir-0.1.tar.gz.  Extract the file using:
 
-    tar xvzpf resource-pki-N.NN.tar.gz
+    tar xvzpf rpstir-0.1.tar.gz
     
-This will create a directory named resource-pki-N.NN which will contain
+This will create a directory named rpstir-0.1 which will contain
 various subdirectories.
 
 2.2.2 Configure
@@ -322,7 +321,7 @@ SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
 line:
   Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
   
-NOTE: the RTR code only lightly tested in version 4.0 of the BBN
+NOTE: the RTR code only lightly tested in version 0.1 of the BBN
 relying party software.  The instructions below do not make use of the
 RTR server, but interested users may read
 $RPKI_ROOT/server/INSTRUCTIONS for more information.
@@ -358,7 +357,7 @@ database.
 
 Except for the query client, all RPKI processes should run as the RPKI
 user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (4.0)
+configuration will be used for final deployment, this release (0.1)
 does not include suggested crontab entries.  It is assumed that for
 trial purposes, manual execution gives the user/debugger maximum
 control.

@@ -8,11 +8,10 @@
 #include <sys/file.h>
 #include <stdio.h>
 #include "asn.h"
-#include "md2.h"
 
 char rr_sfcsid[] = "@(#)rr.c 845p";
 
-void dump_asn(), fatal(int, char *), hash_asn(), putasn(uchar),
+void dump_asn(), fatal(int, char *), putasn(uchar),
     putout(uchar);
 
 char buf[512], *hash_start,
@@ -143,7 +142,6 @@ Outputs: Standard output is result
                 Set the length in varfld
          	Write varfld to output
 	    ELSE IF char is '/' OR '-', note half in comment
-            ELSE IF md2 hash is called for, do that
 	    ELSE IF starting a hash here, mark that
             ELSE
                 IF not at a reserved word, skip it
@@ -243,11 +241,6 @@ for (lmarg = (char *)0; 1; ) 			            /* step 1 */
             bytes += write_varfld(&varfld);
             }
         else if (*c == '/' || *c == '-') comment[0] = *c;
-	else if (!wdcmp ("md2",c))
-	    {
-	    hash_asn ();
-	    c += 3;
-	    }
 	else if (!wdcmp("sth", c))
 	    {
             hash_start = &asn_area.area[asn_area.next];
@@ -512,20 +505,6 @@ else
 	}
     }
 return to;
-}
-
-void hash_asn()
-{
-MD2_CTX md;
-uchar *c, *e, typ, *asn_typ_lth();
-struct asn asnb;
-MD2Init(&md);
-if (!hash_start) asnb.stringp = (uchar *)&asn_area.area[2];
- else asnb.stringp = (uchar *)hash_start;
-c = asn_typ_lth(&asnb, &typ, 1);
-MD2Update(&md, asnb.stringp, asnb.lth + (c - asnb.stringp));
-MD2Final(&md);
-for (c = md.buf, e = &c[16]; c < e; putout (*c++));
 }
 
 int numconv(char *c)
