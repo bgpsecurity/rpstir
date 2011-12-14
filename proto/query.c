@@ -199,13 +199,16 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
     QueryField *field = globalFields[display];
     if (field->displayer != NULL) {
       result += field->displayer (s, result, resultStr);
-    } else {
+    } else if (s->vec[result].avalsize != SQL_NULL_DATA) {
       if (field->sqlType == SQL_C_CHAR || field->sqlType == SQL_C_BINARY)
         snprintf (resultStr, MAX_RESULT_SZ,
 		  "%s", (char *) s->vec[result].valptr);
       else
         snprintf (resultStr, MAX_RESULT_SZ,
 		  "%d", *((unsigned int *) s->vec[result].valptr));
+      result++;
+    } else {
+      resultStr[0] = '\0';
       result++;
     }
     if (multiline) fprintf (output, "%s ", (display == 0) ? "*" : " ");
