@@ -463,7 +463,7 @@ static void startup(struct run_state * run_state)
 	unblock_signals();
 
 	block_signals();
-	run_state->db = connectDbDefault();
+	run_state->db = connectDbDefault(1);
 	if (run_state->db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");

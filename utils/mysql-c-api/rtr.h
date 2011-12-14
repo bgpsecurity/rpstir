@@ -11,7 +11,8 @@
 
 
 // <cache_state>
-int getCacheNonce(void *connp, cache_nonce_t * nonce);
+int getCacheNonce(conn *connp, cache_nonce_t * nonce);
+//int getCacheNoncePs(void *connp, cache_nonce_t * nonce);
 // </cache_state>
 
 

@@ -6,6 +6,8 @@
 #include <mysql.h>
 
 #include "connect.h"
+#include "prep-stmt.h"
+#include "prep-stmt-rtr.h"
 #include "rtr.h"
 #include "test-driver.h"
 #include "util.h"
@@ -16,9 +18,10 @@
 ------------------------------------------------------------------------------*/
 void useDbConn(void *connp) {
     (void) connp;  // to avoid -Wunused-parameter
-//    uint16_t nonce;
-//    getCacheNonce(connp, &nonce);
-//    printf("nonce = %hu\n", nonce);
+
+    uint16_t nonce;
+    getCacheNonce(connp, &nonce);
+    printf("nonce = %" PRIu16 "\n", nonce);
 
 //    setCacheNonce(connp, 3434);
 
@@ -47,36 +50,37 @@ void useDbConn(void *connp) {
 //    startSerialQuery(connp, ptr, 5);
 
 //    char field_str[] = "192.ec.44.55/18(22)";  // not accepted
-    char field_str[] = "192.168.44.55/18(22)";
+//    char field_str[] = "192.168.44.55/18(22)";
 //    char field_str[] = "192.168.44.55/18";
 //    char field_str[] = "1:2:3:4:5:6:7:8/18(22)";
 //    char field_str[] = "fe80:2:3:4:5:6:7:8/18(22)";
 //    char field_str[] = "1:2:0:0:5:6:7:8/18(22)";
 //    char field_str[] = "1:2::5:6:7:8/18(22)";
 //    char field_str[] = "1:0002:3:4:5:6:7:8/18(22)";
-    uint family = 0;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    uint prefix_len = 0;
-    uint max_prefix_len = 0;
-    printf("sending <%s>\n", field_str);
-    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
-            field_str)) {
-        puts("could not parse ip_addr");
-        return;
-    }
-
-    printf("family is %d\n", family);
-    printf("prefix_len is %u\n", prefix_len);
-    printf("max_prefix_len is %u\n", max_prefix_len);
-    printf("\n");
+//    uint family = 0;
+//    struct in_addr addr4;
+//    struct in6_addr addr6;
+//    uint prefix_len = 0;
+//    uint max_prefix_len = 0;
+//    printf("sending <%s>\n", field_str);
+//    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
+//            field_str)) {
+//        puts("could not parse ip_addr");
+//        return;
+//    }
+//
+//    printf("family is %d\n", family);
+//    printf("prefix_len is %u\n", prefix_len);
+//    printf("max_prefix_len is %u\n", max_prefix_len);
+//    printf("\n");
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int main() {
-    void *connp = 0;
+    int client_types = 0;
+    conn *connp = NULL;
 //    const char host[] = "localhost";
 //    const char user[] = "rpki";
 //    const char pass[] = "validator";
@@ -85,7 +89,8 @@ int main() {
     OPEN_LOG();
 
 //    if ((connp = connectDb(host, user, pass, db)) == NULL) {
-    if ((connp = connectDbDefault()) == NULL) {
+    client_types |= DB_CLIENT_RTR;
+    if ((connp = connectDbDefault(client_types)) == NULL) {
         CLOSE_LOG();
         return(-1);
     }

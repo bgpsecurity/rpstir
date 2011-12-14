@@ -456,7 +456,7 @@ void * db_main(void * args_voidp)
 
 	pthread_cleanup_push(cleanup, &run_state);
 
-	run_state.db = connectDbDefault();
+	run_state.db = connectDbDefault(1);
 	if (run_state.db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");

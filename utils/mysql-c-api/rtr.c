@@ -11,7 +11,10 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#include "connect.h"
 #include "logging.h"
+#include "prep-stmt.h"
+#include "prep-stmt-rtr.h"
 #include "rtr.h"
 #include "util.h"
 
@@ -20,7 +23,7 @@ struct query_state {
     uint32_t ser_num;  // ser_num to search for first row to send
     uint first_row;    // first row to send.  zero-based
     int bad_ser_num;   // neither the given ser_num, nor its successor, exist
-    int data_sent;
+    int data_sent;     // true if a pdu has been created for this serial/reset query
     int no_new_data;   // the given ser_num exists, but its successor does not
     int not_ready;     // no valid ser_nums exist, yet
 };
@@ -37,8 +40,9 @@ void free_query_state(void *qs) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int getCacheNonce(void *connp, cache_nonce_t *nonce) {
-    MYSQL *mysqlp = (MYSQL*) connp;
+/*
+int getCacheNonce_old(conn *connp, cache_nonce_t *nonce) {
+    MYSQL *mysqlp = connp->mysqlp;
     MYSQL_RES *result;
     MYSQL_ROW row;
     const char qry[] = "select cache_nonce from rtr_nonce";
@@ -83,6 +87,74 @@ int getCacheNonce(void *connp, cache_nonce_t *nonce) {
         LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
         return (-1);
     }
+}
+*/
+
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
+int getCacheNonce(conn *connp, cache_nonce_t *nonce) {
+    MYSQL *mysqlp = connp->mysqlp;
+    static MYSQL_STMT *stmt = NULL;
+    int ret;
+    ulong length[1];
+    uint16_t data;
+    my_bool is_null[1];
+    my_bool error[1];
+
+    if (stmt == NULL) {
+        ret = stmtNodesGetStmt(&stmt, connp, DB_CLIENT_RTR, DB_PSTMT_RTR_GET_NONCE);
+        // TODO:  check ret
+
+        if (!stmt) {
+            LOG(LOG_ERR, "could not bind to prepared statement");
+            LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+            return (-1);
+        }
+    }
+
+    if (mysql_stmt_execute(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_execute() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    MYSQL_BIND bind[1];
+    memset(bind, 0, sizeof(bind));
+
+    bind[0].buffer_type= MYSQL_TYPE_SHORT;
+    bind[0].buffer= &data;
+    bind[0].is_null= &is_null[0];
+    bind[0].length= &length[0];
+    bind[0].error= &error[0];
+
+    if (mysql_stmt_bind_result(stmt, bind)) {
+        LOG(LOG_ERR, "mysql_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if (mysql_stmt_store_result(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    ret = mysql_stmt_fetch(stmt);
+    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        return (-1);
+    }
+
+    if (is_null[0])
+        fprintf(stdout, "NULL\n");
+    else
+        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
+
+    *nonce = data;
+
+    return (0);
 }
 
 
