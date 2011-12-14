@@ -24,7 +24,7 @@ int stmtsCreateAllRtr(conn *connp) {
         // create the node
         node = malloc(sizeof(struct stmt_node));
         if (!node) {
-            LOG(LOG_ERR, "could not alloc for node");
+            LOG(LOG_ERR, "could not alloc for struct stmt_node");
             return (-1);
         }
         node->client_flags = DB_CLIENT_RTR;

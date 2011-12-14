@@ -32,26 +32,20 @@ static void *connectMysqlCApi(
     if (!mysqlp) {
         LOG(LOG_ERR, "insufficient memory to alloc MYSQL object");
         LOG(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
-        if (mysqlp) {
-            free (mysqlp);
-            mysqlp = NULL;
-        }
         return (NULL);
     }
 
     if (!mysql_real_connect(mysqlp, host, user, pass, db, 0, NULL, 0) ) {
         LOG(LOG_ERR, "could not connect to MySQL db");
         LOG(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
-        if (mysqlp) {
-            free (mysqlp);
-            mysqlp = NULL;
-        }
+        if (mysqlp) {mysql_close(mysqlp);}
         return (NULL);
     }
 
     connp = malloc(sizeof(conn));
     if (!connp) {
         LOG(LOG_ERR, "could not alloc for connp" );
+        if (mysqlp) {mysql_close(mysqlp);}
         return (NULL);
     }
     connp->client_flags = client_flags;
@@ -59,6 +53,8 @@ static void *connectMysqlCApi(
     connp->head = malloc(sizeof(struct stmt_node));
     if (!(connp->head)) {
         LOG(LOG_ERR, "could not alloc for struct stmt_node" );
+        if (connp) {free (connp); connp = NULL;}
+        if (mysqlp) {mysql_close(mysqlp);}
         return (NULL);
     }
     connp->head->client_flags = 0;
@@ -68,9 +64,13 @@ static void *connectMysqlCApi(
 
     // TODO:  check table descriptions
 
-    if (client_flags  &  DB_CLIENT_RTR)
-        stmtsCreateAllRtr(connp);
-    // TODO:  check ret
+    // add one of these sequences for each DB_CLIENT_*
+    if (client_flags  &  DB_CLIENT_RTR) {
+        if (stmtsCreateAllRtr(connp) == -1) {
+            disconnectDb(connp);
+            return (NULL);
+        }
+    }
 
     return (connp);
 }
@@ -103,9 +103,10 @@ void *connectDbDefault(int client_flags) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void disconnectDb(void *connp) {
-    // TODO:  db_rtr_prep_stmt_close();
+void disconnectDb(conn *connp) {
     stmtNodesDeleteAll(connp);
 
-    mysql_close((MYSQL *) connp);
+    if (connp->head) {free(connp->head); connp->head = NULL;}
+
+    mysql_close(connp->mysqlp);
 }

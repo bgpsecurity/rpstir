@@ -147,10 +147,10 @@ int getCacheNonce(conn *connp, cache_nonce_t *nonce) {
         return (-1);
     }
 
-    if (is_null[0])
-        fprintf(stdout, "NULL\n");
-    else
-        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
+//    if (is_null[0])
+//        fprintf(stdout, "NULL\n");
+//    else
+//        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
 
     *nonce = data;
 
