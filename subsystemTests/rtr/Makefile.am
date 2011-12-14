@@ -5,12 +5,12 @@ TESTS = ./runRTRTest.sh
 check_SCRIPTS = runRTRTest.sh
 check_DATA = \
 	root.cer \
-	as-1.roa \
-	as-2.roa \
-	as-3.roa \
-	as-4.roa \
-	as-5.roa \
-	as-6.roa
+	as-1.ee.cer as-1.roa \
+	as-2.ee.cer as-2.roa \
+	as-3.ee.cer as-3.roa \
+	as-4.ee.cer as-4.roa \
+	as-5.ee.cer as-5.roa \
+	as-6.ee.cer as-6.roa
 
 %.key:
 	../../cg/tools/gen_key "$@" 2048
@@ -21,7 +21,7 @@ root.cer: root.key root.options
 		outputfilename=../../subsystemTests/rtr/"$@" \
 		subjkeyfile=../../subsystemTests/rtr/"$<"
 
-as-%.ee.cer: ee.key root.key root.cer ee.options
+as-%.ee.cer: ee-%.key root.key root.cer ee.options
 	IP4=""; IP6=""; \
 	for IP_OCTET in `seq 1 "$*"`; do \
 		IP4="$$IP4,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`,`printf '%u.0.%u.0/24' '$*' $$IP_OCTET`"; \
@@ -41,7 +41,7 @@ as-%.ee.cer: ee.key root.key root.cer ee.options
 		ipv6="$$IP6" \
 		as="$*"
 
-as-%.roa: as-%.ee.cer ee.key
+as-%.roa: as-%.ee.cer ee-%.key
 	IP4=""; IP6=""; \
 	for IP_OCTET in `seq 1 "$*"`; do \
 		IP4="$$IP4,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`,`printf '%u.0.%u.0/24%%25' '$*' $$IP_OCTET`"; \
@@ -52,7 +52,7 @@ as-%.roa: as-%.ee.cer ee.key
 	cd ../../testbed/src && ./create_object ROA \
 		outputfilename=../../subsystemTests/rtr/"$@" \
 		eecertlocation=../../subsystemTests/rtr/"$<" \
-		eekeylocation=../../subsystemTests/rtr/ee.key \
+		eekeylocation=../../subsystemTests/rtr/"ee-$*.key" \
 		asid="$*" \
 		roaipv4="$$IP4" \
 		roaipv6="$$IP6"
