@@ -7,6 +7,8 @@ cd "`dirname "$0"`"
 
 SERVER="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtrd"
 CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
+UPDATE="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtr-update"
+RCLI="$RPKI_ROOT/proto/rcli"
 PORT=1234
 NONCE=42
 WRONG_NONCE=4242
@@ -61,14 +63,15 @@ compare () {
 }
 
 init () {
-	"$RPKI_ROOT"/proto/rcli -x -t . -y
+	"$RCLI" -x -t . -y
+	"$RCLI" -y -F "`pwd`/root.cer"
 	echo "INSERT INTO rtr_nonce VALUES ($NONCE);" | $RPKI_MYSQL_CMD
 
 	SERIAL=""
+	ASNS_IN_DB=""
 }
 
 make_serial () {
-	PREV_SERIAL="$SERIAL"
 	SERIAL="$1"
 	FIRST_ASN="$2"
 	LAST_ASN="$3"
@@ -77,46 +80,19 @@ make_serial () {
 	test "$LAST_ASN" -le 255
 	test "$FIRST_ASN" -le "$LAST_ASN"
 
-	COMMAND_FILE="`mktemp`"
-
-	for ASN in `seq "$FIRST_ASN" "$LAST_ASN"`; do
-		for IP_LAST_OCTET in `seq 1 "$ASN"`; do
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%u.%u.0.0/16'\'');\n' \
-				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%u.0.%u.0/24(25)'\'');\n' \
-				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%x::%x00/120'\'');\n' \
-				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-			printf 'INSERT INTO rtr_full (serial_num, asn, ip_addr) VALUES (%u, %u, '\''%x:%x::/32(127)'\'');\n' \
-				"$SERIAL" "$ASN" "$ASN" "$IP_LAST_OCTET" >> "$COMMAND_FILE"
-		done
+	for ASN in $ASNS_IN_DB; do
+		"$RCLI" -y -d "`pwd`/as-$ASN.ee.cer"
+		"$RCLI" -y -d "`pwd`/as-$ASN.roa"
 	done
 
-	if test x"$PREV_SERIAL" != x; then
-		echo \
-			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)" \
-			"SELECT DISTINCT $SERIAL, 1, t1.asn, t1.ip_addr" \
-			"FROM rtr_full AS t1" \
-			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = $PREV_SERIAL AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr" \
-			"WHERE t1.serial_num = $SERIAL AND t2.serial_num IS NULL;" \
-			>> "$COMMAND_FILE"
-		echo \
-			"INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)" \
-			"SELECT DISTINCT $SERIAL, 0, t1.asn, t1.ip_addr" \
-			"FROM rtr_full AS t1" \
-			"LEFT JOIN rtr_full AS t2 ON t2.serial_num = $SERIAL AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr" \
-			"WHERE t1.serial_num = $PREV_SERIAL AND t2.serial_num IS NULL;" \
-			>> "$COMMAND_FILE"
+	ASNS_IN_DB=`seq "$FIRST_ASN" "$LAST_ASN"`
 
-		printf 'INSERT INTO rtr_update VALUES (%u, %u, now(), true);\n' "$SERIAL" "$PREV_SERIAL" >> "$COMMAND_FILE"
-	else
-		printf 'INSERT INTO rtr_update VALUES (%u, NULL, now(), true);\n' "$SERIAL" >> "$COMMAND_FILE"
-	fi
+	for ASN in $ASNS_IN_DB; do
+		"$RCLI" -y -f "`pwd`/as-$ASN.ee.cer"
+		"$RCLI" -y -f "`pwd`/as-$ASN.roa"
+	done
 
-
-	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
-
-	rm -f "$COMMAND_FILE"
+	"$UPDATE" querySpecs "$SERIAL"
 }
 
 drop_serial () {
