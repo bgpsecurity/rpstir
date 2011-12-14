@@ -125,6 +125,7 @@ int main(int argc, char **argv) {
 	char msg[1024];
 	int sta;
 	uint nonce_count;
+	uint update_count;
 	uint update_had_changes; // whether there are any changes from prevSerialNum to currSerialNum
 	uint dont_proceed;
 	int first_time = 0;
@@ -170,6 +171,20 @@ int main(int argc, char **argv) {
 		checkErr(sta < 0, "Can't generate a cache nonce");
 
 		first_time = 1;
+	}
+
+	// if there's a nonce but no updates, treat it as the first time
+	if (!first_time)
+	{
+		sta = newhstmt(connection);
+		checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
+		sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_update;");
+		checkErr(sta < 0, "Can't query rtr_update\n");
+		sta = getuintscm(connection, &update_count);
+		pophstmt(connection);
+		checkErr(sta < 0, "Can't get results of querying rtr_update\n");
+		if (update_count <= 0)
+			first_time = 1;
 	}
 
 	// delete any updates that weren't completed
