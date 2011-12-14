@@ -22,7 +22,7 @@ int stmtsCreateAllRtr(conn *connp) {
 
     for (i = 0; i < DB_PSTMT_RTR_NUM_STMTS; i++) {
         // create the node
-        node = malloc(sizeof(node));
+        node = malloc(sizeof(struct stmt_node));
         if (!node) {
             LOG(LOG_ERR, "could not alloc for node");
             return (-1);
