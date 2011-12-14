@@ -1,2 +1,5 @@
 runRTRTest.sh
 *.diff
+*.cer
+*.roa
+*.key
