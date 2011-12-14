@@ -24,8 +24,12 @@ root.cer: root.key root.options
 as-%.ee.cer: ee-%.key root.key root.cer ee.options
 	IP4=""; IP6=""; \
 	for IP_OCTET in `seq 1 "$*"`; do \
-		IP4="$$IP4,`printf '%u.0.%u.0/24' '$*' $$IP_OCTET`,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`"; \
-		IP6="$$IP6,`printf '%x::%x00/120' '$*' $$IP_OCTET`,`printf '%x:%x::/32' '$*' $$IP_OCTET`"; \
+		IP4="$$IP4,`printf '%u.0.%u.0/24' '$*' $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x::%x00/120' '$*' $$IP_OCTET`"; \
+	done; \
+	for IP_OCTET in `seq 1 "$*"`; do \
+		IP4="$$IP4,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x:%x::/32' '$*' $$IP_OCTET`"; \
 	done; \
 	IP4=`echo "$$IP4" | cut -c 2-`; \
 	IP6=`echo "$$IP6" | cut -c 2-`; \
@@ -44,8 +48,12 @@ as-%.ee.cer: ee-%.key root.key root.cer ee.options
 as-%.roa: as-%.ee.cer ee-%.key
 	IP4=""; IP6=""; \
 	for IP_OCTET in `seq 1 "$*"`; do \
-		IP4="$$IP4,`printf '%u.0.%u.0/24%%25' '$*' $$IP_OCTET`,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`"; \
-		IP6="$$IP6,`printf '%x::%x00/120' '$*' $$IP_OCTET`,`printf '%x:%x::/32%%127' '$*' $$IP_OCTET`"; \
+		IP4="$$IP4,`printf '%u.0.%u.0/24%%25' '$*' $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x::%x00/120' '$*' $$IP_OCTET`"; \
+	done; \
+	for IP_OCTET in `seq 1 "$*"`; do \
+		IP4="$$IP4,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x:%x::/32%%127' '$*' $$IP_OCTET`"; \
 	done; \
 	IP4=`echo "$$IP4" | cut -c 2-`; \
 	IP6=`echo "$$IP6" | cut -c 2-`; \
