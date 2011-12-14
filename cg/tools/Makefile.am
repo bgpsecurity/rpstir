@@ -37,7 +37,7 @@ LDADD = ../asn/libasn.a ../casn/libcasn.a ../../utils/libutils.a
 
 test_casn_random_SOURCES = test_casn_random.c 
 dump_SOURCES = dump.c asn.c asn_dump.c util.c asn.h
-rr_SOURCES = rr.c md2.c md2.h asn.c asn.h
+rr_SOURCES = rr.c asn.c asn.h
 bin_to_six_SOURCES = bin_to_six.c prencode.c
 six_to_bin_SOURCES = six_to_bin.c prencode.c
 six2hex_SOURCES = six2hex.c prencode.c
