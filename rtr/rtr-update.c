@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
 	// write all the data into the database (done writing "full")
 	sta = searchscm (connection, roaTable, roaSrch, NULL,
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
-	checkErr(sta < 0, "searchscm for ROAs failed\n");
+	checkErr(sta < 0 && sta != ERR_SCM_NODATA, "searchscm for ROAs failed\n");
 
 	if (!first_time)
 	{
