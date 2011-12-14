@@ -11,6 +11,7 @@
 ------------------------------------------------------------------------------*/
 int stmtsCreateAllRtr(conn *connp) {
     int i;
+    int ret;
     struct stmt_node *node;
 
     // Note:  keep in sync with enum in header file
@@ -33,8 +34,11 @@ int stmtsCreateAllRtr(conn *connp) {
         node->stmt = NULL;
 
         // add the stmt to the node, and the node to the linked list
-        stmtNodesAddNode(connp, &node, qrys[i]);
-        // TODO:  check ret
+        ret = stmtNodesAddNode(connp, &node, qrys[i]);
+        if (ret) {
+            free(node);
+            return (-1);
+        }
     }
 
     return (0);

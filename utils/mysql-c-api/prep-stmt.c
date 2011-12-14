@@ -9,6 +9,7 @@
 
 
 /**=============================================================================
+ * @ret 0 on success, -1 on error.
 ------------------------------------------------------------------------------*/
 int stmtNodesAddNode(conn *connp,
         struct stmt_node **node,
@@ -25,6 +26,7 @@ int stmtNodesAddNode(conn *connp,
     if (mysql_stmt_prepare(stmt, qry, strlen(qry))) {
         LOG(LOG_ERR, "error preparing statement");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysqlp), mysql_error(mysqlp));
+        mysql_stmt_close(stmt);
         return (-1);
     }
 
