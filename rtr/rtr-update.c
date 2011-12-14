@@ -95,6 +95,7 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 	uint asn = *((uint *)s->vec[0].valptr);
 	char *ptr = (char *)s->vec[1].valptr, *end;
 	char msg[1024];
+	int sta;
 	conp = conp; numLine = numLine;
 
 	if (! checkValidity((char *)s->vec[2].valptr, 0, scmp, connection)) return -1;
@@ -104,7 +105,8 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 		snprintf(msg, sizeof(msg),
 				 "insert ignore into %s values (%u, %u, \"%s\");",
 				 fullTable->tabname, currSerialNum, asn, ptr);
-		statementscm_no_data(connection, msg);
+		sta = statementscm_no_data(connection, msg);
+		checkErr(sta < 0, "Can't insert into %s", fullTable->tabname);
 		ptr = end + 2;
 	}
 	if (ptr[0] != '\0') {
@@ -112,6 +114,7 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 				 "insert ignore into %s values (%u, %u, \"%s\");",
 				 fullTable->tabname, currSerialNum, asn, ptr);
 		statementscm_no_data(connection, msg);
+		checkErr(sta < 0, "Can't insert into %s", fullTable->tabname);
 	}
 	return 1;
 }
@@ -225,8 +228,9 @@ int main(int argc, char **argv) {
 	}
 
 	// write all the data into the database (done writing "full")
-	searchscm (connection, roaTable, roaSrch, NULL,
+	sta = searchscm (connection, roaTable, roaSrch, NULL,
 			   writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+	checkErr(sta < 0, "searchscm for ROAs failed\n");
 
 	if (!first_time)
 	{
