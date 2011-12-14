@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <inttypes.h>
 
 // number of hours to retain incremental updates
 // should be at least 24 + the maximum time between updates, since need
@@ -128,9 +129,11 @@ int main(int argc, char **argv) {
 	uint dont_proceed;
 	int first_time = 0;
 
-	if (argc != 2)
+	if (argc < 2 || argc > 3)
 	{
-		fprintf(stderr, "Usage: %s <staleness spec file>\n", argv[0]);
+		fprintf(stderr, "Usage: %s <staleness spec file> [<next serial number>]\n", argv[0]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "The next serial number should only be specified in test mode.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -186,7 +189,18 @@ int main(int argc, char **argv) {
 
 	// find the last serial number
 	prevSerialNum = getLastSerialNumber(connection, scmp);
-	currSerialNum = (prevSerialNum == UINT_MAX) ? 0 : (prevSerialNum + 1);
+	if (argc > 2)
+	{
+		if (sscanf(argv[2], "%" SCNu32, &currSerialNum) != 1)
+		{
+			fprintf(stderr, "Error: next serial number must be a nonnegative integer\n");
+			return EXIT_FAILURE;
+		}
+	}
+	else
+	{
+		currSerialNum = (prevSerialNum == UINT_MAX) ? 0 : (prevSerialNum + 1);
+	}
 
 	if (!first_time)
 	{
@@ -203,7 +217,14 @@ int main(int argc, char **argv) {
 		pophstmt(connection);
 		checkErr(sta < 0, "Can't get results of querying rtr_update for unusual corner cases\n");
 
-		checkErr(dont_proceed, "Error: rtr_update table is either full or in an unusual state\n");
+		if (argc > 2)
+		{
+			checkErr(dont_proceed, "Error: rtr_update is full or in an unusual state, or the specified next serial number already exists\n");
+		}
+		else
+		{
+			checkErr(dont_proceed, "Error: rtr_update table is either full or in an unusual state\n");
+		}
 	}
 
 	// setup up the query if this is the first time
