@@ -1,7 +1,6 @@
 type=EE
-serial=1
 issuer=root
-notbefore=00010101010101Z
+notbefore=000101010101Z
 notafter=21001231235959Z
 crldp=rsync://invalid/invalid.crl
 aia=rsync://invalid/

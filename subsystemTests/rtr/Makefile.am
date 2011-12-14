@@ -13,15 +13,15 @@ check_DATA = \
 	as-6.roa
 
 %.key:
-	../../cg/tools/gen_key "$@" 1024
+	../../cg/tools/gen_key "$@" 2048
 
-root.cer: root.key
+root.cer: root.key root.options
 	cd ../../testbed/src && ./create_object CERT \
 		-f ../../subsystemTests/rtr/root.options \
 		outputfilename=../../subsystemTests/rtr/"$@" \
 		subjkeyfile=../../subsystemTests/rtr/"$<"
 
-as-%.ee.cer: ee.key root.key root.cer
+as-%.ee.cer: ee.key root.key root.cer ee.options
 	IP4=""; IP6=""; \
 	for IP_OCTET in `seq 1 "$*"`; do \
 		IP4="$$IP4,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`,`printf '%u.0.%u.0/24' '$*' $$IP_OCTET`"; \
@@ -35,6 +35,7 @@ as-%.ee.cer: ee.key root.key root.cer
 		parentcertfile=../../subsystemTests/rtr/root.cer \
 		parentkeyfile=../../subsystemTests/rtr/root.key \
 		subjkeyfile=../../subsystemTests/rtr/"$<" \
+		serial="$*" \
 		subject="as$*" \
 		ipv4="$$IP4" \
 		ipv6="$$IP6" \
