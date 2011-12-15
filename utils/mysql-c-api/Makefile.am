@@ -29,8 +29,8 @@ check_PROGRAMS = test-driver
 
 libmysqlcapi_a_SOURCES = \
 	connect.c connect.h \
+	db-internal.h \
 	prep-stmt.c prep-stmt.h \
-	prep-stmt-rtr.c prep-stmt-rtr.h \
 	rtr.c rtr.h \
 	util.c util.h
 

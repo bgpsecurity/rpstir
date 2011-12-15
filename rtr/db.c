@@ -22,31 +22,31 @@ static void initialize_request_state(struct db_request_state * rq, struct db_req
 	rq->query_state = NULL;
 }
 
-static int start_query(struct db_request_state * rq, void * db)
+static int start_query(struct db_request_state * rq, dbconn * db)
 {
 	switch (rq->request->query.type)
 	{
 		case SERIAL_QUERY:
-			return startSerialQuery(db, &rq->query_state,
+			return db_rtr_serial_query_init(db, &rq->query_state,
 				rq->request->query.serial_query.serial);
 		case RESET_QUERY:
-			return startResetQuery(db, &rq->query_state);
+			return db_rtr_reset_query_init(db, &rq->query_state);
 		default:
 			LOG(LOG_ERR, "got unexpected query type");
 			return -1; // TODO: check if this is a good error code
 	}
 }
 
-static ssize_t query_get_next(struct db_request_state * rq, void * db,
+static ssize_t query_get_next(struct db_request_state * rq, dbconn * db,
 	size_t num_rows, PDU ** pdus, bool * is_done)
 {
 	switch (rq->request->query.type)
 	{
 		case SERIAL_QUERY:
-			return serialQueryGetNext(db, rq->query_state,
+			return db_rtr_serial_query_get_next(db, rq->query_state,
 				num_rows, pdus, is_done);
 		case RESET_QUERY:
-			return resetQueryGetNext(db, rq->query_state,
+			return db_rtr_reset_query_get_next(db, rq->query_state,
 				num_rows, pdus, is_done);
 		default:
 			LOG(LOG_ERR, "got unexpected query type");
@@ -55,17 +55,17 @@ static ssize_t query_get_next(struct db_request_state * rq, void * db,
 	}
 }
 
-static void stop_query(struct db_request_state * rq, void * db)
+static void stop_query(struct db_request_state * rq, dbconn * db)
 {
 	if (rq->query_state != NULL)
 	{
 		switch (rq->request->query.type)
 		{
 			case SERIAL_QUERY:
-				stopSerialQuery(db, rq->query_state);
+				db_rtr_serial_query_close(db, rq->query_state);
 				break;
 			case RESET_QUERY:
-				stopResetQuery(db, rq->query_state);
+				db_rtr_reset_query_close(db, rq->query_state);
 				break;
 			default:
 				LOG(LOG_ERR, "got unexpected query type");
@@ -80,7 +80,7 @@ struct run_state {
 	db_semaphore_t * semaphore;
 	Queue * db_request_queue;
 	Bag * db_currently_processing;
-	void * db;
+	dbconn * db;
 
 	char errorbuf[ERROR_BUF_SIZE];
 
@@ -435,7 +435,7 @@ static void cleanup(void * run_state_voidp)
 
 	if (run_state->db != NULL)
 	{
-		disconnectDb(run_state->db);
+		db_disconnect(run_state->db);
 		run_state->db = NULL;
 	}
 
@@ -456,7 +456,7 @@ void * db_main(void * args_voidp)
 
 	pthread_cleanup_push(cleanup, &run_state);
 
-	run_state.db = connectDbDefault(1);
+	run_state.db = db_connect_default(DB_CLIENT_RTR);
 	if (run_state.db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");

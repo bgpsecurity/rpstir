@@ -5,16 +5,16 @@
 #include <stdlib.h>
 
 #include "connect.h"
-#include "prep-stmt.h"
-#include "prep-stmt-rtr.h"
+#include "db-internal.h"
 #include "logging.h"
+#include "prep-stmt.h"
 
 
-//struct connection {
-//    MYSQL *mysqlp;
-//    uint32_t client_type_flags;
-//    struct stmt_node *head;
-//};
+struct connection {
+    MYSQL *mysql;
+    int client_flags;
+    struct stmt_node *head;
+};
 
 
 /*==============================================================================
@@ -25,60 +25,60 @@ static void *connectMysqlCApi(
         const char *user,
         const char *pass,
         const char *db) {
-    conn *connp = NULL;
-    MYSQL *mysqlp = NULL;
+    dbconn *conn = NULL;
+    MYSQL *mysql = NULL;
 
-    mysqlp = mysql_init(NULL);
-    if (!mysqlp) {
+    mysql = mysql_init(NULL);
+    if (!mysql) {
         LOG(LOG_ERR, "insufficient memory to alloc MYSQL object");
-        LOG(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
-        return (NULL);
+        LOG(LOG_ERR, "    %u: %s", mysql_errno(mysql), mysql_error(mysql));
+        return NULL;
     }
 
-    if (!mysql_real_connect(mysqlp, host, user, pass, db, 0, NULL, 0) ) {
+    if (!mysql_real_connect(mysql, host, user, pass, db, 0, NULL, 0) ) {
         LOG(LOG_ERR, "could not connect to MySQL db");
-        LOG(LOG_ERR, "    %u: %s", mysql_errno(mysqlp), mysql_error(mysqlp));
-        if (mysqlp) {mysql_close(mysqlp);}
-        return (NULL);
+        LOG(LOG_ERR, "    %u: %s", mysql_errno(mysql), mysql_error(mysql));
+        if (mysql) {mysql_close(mysql);}
+        return NULL;
     }
 
-    connp = malloc(sizeof(conn));
-    if (!connp) {
-        LOG(LOG_ERR, "could not alloc for connp" );
-        if (mysqlp) {mysql_close(mysqlp);}
-        return (NULL);
+    conn = malloc(sizeof(dbconn));
+    if (!conn) {
+        LOG(LOG_ERR, "could not alloc for conn" );
+        if (mysql) {mysql_close(mysql);}
+        return NULL;
     }
-    connp->client_flags = client_flags;
-    connp->mysqlp = mysqlp;
-    connp->head = malloc(sizeof(struct stmt_node));
-    if (!(connp->head)) {
+    conn->client_flags = client_flags;
+    conn->mysql = mysql;
+    conn->head = malloc(sizeof(struct _stmt_node));
+    if (!(conn->head)) {
         LOG(LOG_ERR, "could not alloc for struct stmt_node" );
-        if (connp) {free (connp); connp = NULL;}
-        if (mysqlp) {mysql_close(mysqlp);}
-        return (NULL);
+        if (conn) {free (conn); conn = NULL;}
+        if (mysql) {mysql_close(mysql);}
+        return NULL;
     }
-    connp->head->client_flags = 0;
-    connp->head->next = NULL;
-    connp->head->qry_num = -1;
-    connp->head->stmt = NULL;
+    conn->head->client_flags = 0;
+    conn->head->next = NULL;
+    conn->head->qry_num = -1;
+    conn->head->stmt = NULL;
 
     // TODO:  check table descriptions
 
     // add one of these sequences for each DB_CLIENT_*
     if (client_flags  &  DB_CLIENT_RTR) {
-        if (stmtsCreateAllRtr(connp) == -1) {
-            disconnectDb(connp);
-            return (NULL);
+        if (stmtsCreateAllRtr(conn) == -1) {
+            db_disconnect(conn);
+            return NULL;
         }
     }
 
-    return (connp);
+    return conn;
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void *connectDb(
+dbconn *db_connect(
         int client_flags,
         const char *host,
         const char *user,
@@ -91,7 +91,7 @@ void *connectDb(
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void *connectDbDefault(int client_flags) {
+dbconn *db_connect_default(int client_flags) {
     const char *host = "localhost";
     const char *user = getenv("RPKI_DBUSER");
     const char *pass = getenv("RPKI_DBPASS");
@@ -103,10 +103,12 @@ void *connectDbDefault(int client_flags) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void disconnectDb(conn *connp) {
-    stmtNodesDeleteAll(connp);
+void db_disconnect(dbconn *conn) {
+    stmtNodesDeleteAll(conn);
 
-    if (connp->head) {free(connp->head); connp->head = NULL;}
+    if (conn->head) {free(conn->head); conn->head = NULL;}
 
-    mysql_close(connp->mysqlp);
+    mysql_close(conn->mysql);
+
+    if (conn) {free(conn);}
 }

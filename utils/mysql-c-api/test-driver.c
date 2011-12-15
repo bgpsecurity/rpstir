@@ -7,7 +7,6 @@
 
 #include "connect.h"
 #include "prep-stmt.h"
-#include "prep-stmt-rtr.h"
 #include "rtr.h"
 #include "test-driver.h"
 #include "util.h"
@@ -16,18 +15,18 @@
 /*==============================================================================
  * Use this for temporary test calls.
 ------------------------------------------------------------------------------*/
-void useDbConn(void *connp) {
-    (void) connp;  // to avoid -Wunused-parameter
+void db_use_conn(void *conn) {
+    (void) conn;  // to avoid -Wunused-parameter
 
     uint16_t nonce;
-    getCacheNonce(connp, &nonce);
+    db_rtr_get_cache_nonce(conn, &nonce);
     printf("nonce = %" PRIu16 "\n", nonce);
 
-//    setCacheNonce(connp, 3434);
+//    setCacheNonce(conn, 3434);
 
 //    int ret;
 //    uint32_t sn = 0;
-//    ret = getLatestSerialNumber(connp, &sn, 0);
+//    ret = getLatestSerialNumber(conn, &sn, 0);
 //    if (ret == 0) {
 //        printf("serial number found:  %" PRIu32 "\n", sn);
 //    } else if (ret == 1) {
@@ -37,17 +36,17 @@ void useDbConn(void *connp) {
 //    }
 
 //    uint32_t ser_num = 0xfffffffc;
-//    addNewSerNum(connp, &ser_num);
+//    addNewSerNum(conn, &ser_num);
 //    printf("serial number = %u\n", ser_num);
 
-//    addNewSerNum(connp, NULL);
+//    addNewSerNum(conn, NULL);
 
-//    deleteSerNum(connp, 99);
+//    deleteSerNum(conn, 99);
 
-//    deleteAllSerNums(connp);
+//    deleteAllSerNums(conn);
 
 //    void **ptr = NULL;
-//    startSerialQuery(connp, ptr, 5);
+//    startSerialQuery(conn, ptr, 5);
 
 //    char field_str[] = "192.ec.44.55/18(22)";  // not accepted
 //    char field_str[] = "192.168.44.55/18(22)";
@@ -80,7 +79,7 @@ void useDbConn(void *connp) {
 ------------------------------------------------------------------------------*/
 int main() {
     int client_types = 0;
-    conn *connp = NULL;
+    dbconn *conn = NULL;
 //    const char host[] = "localhost";
 //    const char user[] = "rpki";
 //    const char pass[] = "validator";
@@ -88,16 +87,16 @@ int main() {
 
     OPEN_LOG();
 
-//    if ((connp = connectDb(host, user, pass, db)) == NULL) {
+//    if ((conn = connectDb(host, user, pass, db)) == NULL) {
     client_types |= DB_CLIENT_RTR;
-    if ((connp = connectDbDefault(client_types)) == NULL) {
+    if ((conn = db_connect_default(client_types)) == NULL) {
         CLOSE_LOG();
-        return(-1);
+        return -1;
     }
 
-    useDbConn(connp);
+    db_use_conn(conn);
 
-    disconnectDb(connp);
+    db_disconnect(conn);
 
     CLOSE_LOG();
 

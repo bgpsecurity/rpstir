@@ -1,13 +1,12 @@
 #include <stdlib.h>
 
 #include "logging.h"
-#include "mysql-c-api/connect.h"
 #include "mysql-c-api/rtr.h"
 
 #include "cache_state.h"
 
 // NOTE: if this returns false, the contents of state are undefined
-static bool get_cache_state(struct cache_state * state, void * db)
+static bool get_cache_state(struct cache_state * state, dbconn * db)
 {
 	if (state == NULL)
 	{
@@ -15,13 +14,13 @@ static bool get_cache_state(struct cache_state * state, void * db)
 		return false;
 	}
 
-	if (getCacheNonce(db, &state->nonce) != 0)
+	if (db_rtr_get_cache_nonce(db, &state->nonce) != 0)
 	{
 		LOG(LOG_WARNING, "error getting cache nonce");
 		return false;
 	}
 
-	switch (getLatestSerialNumber(db, &state->serial_number))
+	switch (db_rtr_get_latest_sernum(db, &state->serial_number))
 	{
 		case GET_SERNUM_SUCCESS:
 			state->data_available = true;
@@ -37,7 +36,7 @@ static bool get_cache_state(struct cache_state * state, void * db)
 	return true;
 }
 
-bool initialize_global_cache_state(struct global_cache_state * state, void * db)
+bool initialize_global_cache_state(struct global_cache_state * state, dbconn * db)
 {
 	if (state == NULL)
 	{
@@ -62,7 +61,7 @@ bool initialize_global_cache_state(struct global_cache_state * state, void * db)
 	return true;
 }
 
-bool update_global_cache_state(struct global_cache_state * state, void * db)
+bool update_global_cache_state(struct global_cache_state * state, dbconn * db)
 {
 	if (state == NULL)
 	{

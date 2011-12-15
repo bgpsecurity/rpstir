@@ -7,8 +7,8 @@
 #include <my_global.h>
 #include <mysql.h>
 
-#include "util.h"
 #include "logging.h"
+#include "util.h"
 
 
 /*==============================================================================
@@ -25,7 +25,7 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
 
     if (row == NULL) {
         LOG(LOG_ERR, "the argument row is NULL");
-        return (-1);
+        return -1;
     }
 
     num_fields = mysql_num_fields(result);
@@ -38,7 +38,7 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
     }
     if (field_no == -1) {
         LOG(LOG_ERR, "could not find field name:  %s", field_name);
-        return (-1);
+        return -1;
     }
 
     lengths = mysql_fetch_lengths(result);  // mysql allocs the memory
@@ -47,7 +47,7 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
     *out = (char*) malloc(len + 1);
     if (!(*out)) {
         LOG(LOG_ERR, "could not alloc memory");
-        return (-1);
+        return -1;
     }
 
     (*out)[len] = '\0';
@@ -55,5 +55,5 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
         (*out)[i] = row[field_no][i];
     }
 
-    return (0);
+    return 0;
 }
