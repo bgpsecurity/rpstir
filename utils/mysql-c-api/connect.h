@@ -4,9 +4,6 @@
 
 #include <inttypes.h>
 
-#include <my_global.h>
-#include <mysql.h>
-
 
 enum client_flags {
     DB_CLIENT_RTR = 1
