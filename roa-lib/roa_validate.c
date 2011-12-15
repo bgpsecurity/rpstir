@@ -765,6 +765,7 @@ static int checkIPAddrs(struct Certificate *certp,
         struct certrange roarange, certrange;
         setuprange(&roarange, &roaIPAddrp->address, &roaIPAddrp->address); 
         struct IPAddressOrRangeA *certIPAddressOrRangeAp; 
+        int matchedCertRange = 0;
         for (certIPAddressOrRangeAp = 
           &certFamilyp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA; 
           certIPAddressOrRangeAp;
@@ -777,10 +778,19 @@ static int checkIPAddrs(struct Certificate *certp,
               &certIPAddressOrRangeAp->addressRange.max);
           else setuprange(&certrange, &certIPAddressOrRangeAp->addressPrefix,
             &certIPAddressOrRangeAp->addressPrefix);
-          if (memcmp(roarange.lo, certrange.lo, sizeof(roarange.lo)) < 0 ||
-             memcmp(roarange.hi, certrange.hi, sizeof(roarange.hi)) > 0)
-          return ERR_SCM_ROAIPTOOBIG;        
+          if (memcmp(roarange.lo, certrange.hi, sizeof(roarange.lo)) > 0)
+            continue;
+          if (memcmp(roarange.hi, certrange.lo, sizeof(roarange.hi)) < 0)
+            break;
+          if (memcmp(roarange.lo, certrange.lo, sizeof(roarange.lo)) >= 0 &&
+             memcmp(roarange.hi, certrange.hi, sizeof(roarange.hi)) <= 0)
+            {
+              matchedCertRange = 1;
+              break;
+            }
           }
+        if (!matchedCertRange)
+          return ERR_SCM_ROAIPTOOBIG;
         }
       }
     }
