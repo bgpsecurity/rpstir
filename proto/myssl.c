@@ -3689,3 +3689,178 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   return(0);
 }
+
+
+static int crl_version_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_sigalg_inner_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_sigalg_outer_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_issuer_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_dates_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_entries_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_aki_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_crlnum_chk(struct CertificateRevocationList *crlp)
+{
+  return 0;
+}
+
+
+static int crl_forbidden_ext_chk(struct CertificationRevocationList *crlp)
+{
+  return 0;
+}
+
+/**=============================================================================
+ * @brief Check CRL conformance to rescert profile, standalone/syntax only
+ *
+ * @param crlp (struct CertificateRevocationList*)
+ * @return 0 on success<br />a negative integer on failure
+ *
+ * Check CRL conformance with respect to RFC 5280 and the RPKI
+ * resource cert and CRL profile (draft-ietf-sidr-res-certs).
+ *
+ * CRL ASN.1 Definition from RFC 5280 section 5.1
+ *
+ * CertificateList  ::=  SEQUENCE  {
+ *      tbsCertList          TBSCertList,
+ *      signatureAlgorithm   AlgorithmIdentifier,
+ *      signatureValue       BIT STRING  }
+ *
+ * TBSCertList  ::=  SEQUENCE  {
+ *      version                 Version OPTIONAL,
+ *                                   -- if present, MUST be v2
+ *      signature               AlgorithmIdentifier,
+ *      issuer                  Name,
+ *      thisUpdate              Time,
+ *      nextUpdate              Time OPTIONAL,
+ *      revokedCertificates     SEQUENCE OF SEQUENCE  {
+ *           userCertificate         CertificateSerialNumber,
+ *           revocationDate          Time,
+ *           crlEntryExtensions      Extensions OPTIONAL
+ *                                    -- if present, version MUST be v2
+ *                                }  OPTIONAL,
+ *      crlExtensions           [0]  EXPLICIT Extensions OPTIONAL
+ *                                    -- if present, version MUST be v2
+ *                                }
+ *
+ * RPKI CRL profile
+ * (http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-5)
+ *
+ * 5. Resource Certificate Revocation Lists
+ *
+ * Each CA MUST issue a version 2 Certificate Revocation List (CRL),
+ * consistent with [RFC5280].  RPs are NOT required to process version 1
+ * CRLs (in contrast to [RFC5280]).  The CRL Issuer is the CA.  CRLs
+ * conforming to this profile MUST NOT include Indirect or Delta CRLs.
+ * The scope of each CRL MUST be all certificates issued by this CA.
+ *
+ * The Issuer name is as in Section 4.4 above.
+ *
+ * Where two or more CRLs issued by the same CA, the CRL with the
+ * highest value of the "CRL Number" field supersedes all other CRLs
+ * issued by this CA.
+ *
+ * The algorithm used in CRLs issued under this profile is specified in
+ * [ID.sidr-rpki-algs].
+ *
+ * The contents of the CRL are a list of all non-expired certificates
+ * that have been revoked by the CA.
+ *
+ * An RPKI CA MUST include the two extensions Authority Key Identifier
+ * and CRL Number in every CRL that it issues.  RPs MUST be prepared to
+ * process CRLs with these extensions.  No other CRL extensions are
+ * allowed.
+ *
+ * For each revoked resource certificate only the two fields Serial
+ * Number and Revocation Date MUST be present, and all other fields MUST
+ * NOT be present.  No CRL entry extensions are supported in this
+ * profile, and CRL entry extensions MUST NOT be present in a CRL.
+ -----------------------------------------------------------------------------*/
+int crl_profile_chk(struct CertificateRevocationList *crlp)
+{
+  int ret = 0;
+
+  if (!crlp)
+    return ERR_SCM_INTERNAL;
+
+  log_msg(LOG_DEBUG, "crl_version_chk");
+  ret = crl_version_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  log_msg(LOG_DEBUG, "crl_sigalg_inner_chk");
+  ret = crl_sigalg_inner_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  log_msg(LOG_DEBUG, "crl_sigalg_outer_chk");
+  ret = crl_sigalg_outer_chk(crlp);
+  if (ret < 0)
+    return ret;
+ 
+  log_msg(LOG_DEBUG, "crl_issuer_chk");
+  ret = crl_issuer_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  log_msg(LOG_DEBUG, "crl_dates_chk");
+  ret = crl_dates_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  log_msg(LOG_DEBUG, "crl_entries_chk");
+  ret = crl_entries_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  log_msg(LOG_DEBUG, "crl_aki_chk");
+  ret = crl_aki_chk(crlp);
+  if (ret < 0)
+    return ret;
+ 
+  log_msg(LOG_DEBUG, "crl_crlnum_chk");
+  ret = crl_crlnum_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  log_msg(LOG_DEBUG, "crl_forbidden_ext_chk");
+  ret = crl_forbidden_ext_chk(crlp);
+  if (ret < 0)
+    return ret;
+
+  return 0;
+}

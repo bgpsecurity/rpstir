@@ -2248,10 +2248,25 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int   sta = 0;
   unsigned int i;
   int chainOK, x509sta;
-//  struct CertificateRevocationList CRL;
+  struct CertificateRevocationList crl;
 
   if (!goodoids[0].lth) make_goodoids();
   UNREFERENCED_PARAMETER(utrust);
+
+  // standalone profile check against draft-ietf-sidr-res-certs
+  CertificateRevocationList(&crl, 0);
+  if (get_casn_file(&crl.self, outfull, 0) < 0) {
+    log_msg(LOG_ERR, "Failed to load CRL: %s", outfile);
+    delete_casn(&crl.self);
+    return ERR_SCM_INVALASN;
+  }
+  if ((sta = crl_profile_chk(&crl)) != 0) {
+    log_msg(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
+    delete_casn(&crl.self);
+    return sta;
+  }
+  delete_casn(&crl.self);
+
   cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, goodoids);
   if ( cf == NULL || x == NULL )
     {
