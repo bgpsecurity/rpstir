@@ -10,13 +10,6 @@
 #include "prep-stmt.h"
 
 
-struct connection {
-    MYSQL *mysql;
-    int client_flags;
-    struct stmt_node *head;
-};
-
-
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 static void *connectMysqlCApi(
