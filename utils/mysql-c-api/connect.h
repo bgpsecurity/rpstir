@@ -13,24 +13,19 @@ enum client_flags {
     // assign DB_CLIENT_NEXT = 2 * DB_CLIENT_PREV
 };
 
-//typedef struct connection conn;
-typedef struct connection {
-    MYSQL *mysqlp;
-    int client_flags;
-    struct stmt_node *head;
-} conn;
+struct _dbconn;
+typedef struct _dbconn dbconn;
 
-
-void *connectDb(
+dbconn *db_connect(
         int client_flags,
         const char *host,
         const char *user,
         const char *pass,
         const char *db);
 
-void *connectDbDefault(int client_flags);
+dbconn *db_connect_default(int client_flags);
 
-void disconnectDb(void *connp);
+void db_disconnect(dbconn *conn);
 
 
 #endif // DB_CONNECT_H

@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#include "mysql-c-api/connect.h"
 #include "pdu.h"
 
 struct cache_state {
@@ -26,14 +27,14 @@ struct global_cache_state {
 
 	@return Whether or not the initialization was successful.
 */
-bool initialize_global_cache_state(struct global_cache_state * state, void * db);
+bool initialize_global_cache_state(struct global_cache_state * state, dbconn * db);
 
 /**
 	Update the global cache state from the database.
 
 	@return Whether or not the update was successful.
 */
-bool update_global_cache_state(struct global_cache_state * state, void * db);
+bool update_global_cache_state(struct global_cache_state * state, dbconn * db);
 
 /** Free up any resources associated with the global cache state. */
 void close_global_cache_state(struct global_cache_state * state);

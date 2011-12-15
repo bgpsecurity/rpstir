@@ -375,7 +375,7 @@ static void cleanup(void * run_state_voidp)
 
 	if (run_state->db != NULL)
 	{
-		disconnectDb(run_state->db);
+		db_disconnect(run_state->db);
 		run_state->db = NULL;
 	}
 
@@ -463,7 +463,7 @@ static void startup(struct run_state * run_state)
 	unblock_signals();
 
 	block_signals();
-	run_state->db = connectDbDefault(1);
+	run_state->db = db_connect_default(DB_CLIENT_RTR);
 	if (run_state->db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
