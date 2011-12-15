@@ -129,6 +129,7 @@ int main(int argc, char **argv) {
 	uint update_had_changes; // whether there are any changes from prevSerialNum to currSerialNum
 	uint dont_proceed;
 	int first_time = 0;
+	int force_update = 0;
 
 	if (argc < 2 || argc > 3)
 	{
@@ -206,6 +207,7 @@ int main(int argc, char **argv) {
 	prevSerialNum = getLastSerialNumber(connection, scmp);
 	if (argc > 2)
 	{
+		force_update = 1;
 		if (sscanf(argv[2], "%" SCNu32, &currSerialNum) != 1)
 		{
 			fprintf(stderr, "Error: next serial number must be a nonnegative integer\n");
@@ -320,7 +322,7 @@ int main(int argc, char **argv) {
 	}
 
 	// msg should now contain a statement to make updates available
-	if (update_had_changes)
+	if (update_had_changes || force_update)
 	{
 		sta = statementscm_no_data(connection, msg);
 		checkErr(sta < 0, "Can't make updates available");
