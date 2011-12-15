@@ -5,12 +5,12 @@ TESTS = ./runRTRTest.sh
 check_SCRIPTS = runRTRTest.sh
 check_DATA = \
 	root.cer \
-	as-1.ee.cer as-1.roa \
-	as-2.ee.cer as-2.roa \
-	as-3.ee.cer as-3.roa \
-	as-4.ee.cer as-4.roa \
-	as-5.ee.cer as-5.roa \
-	as-6.ee.cer as-6.roa
+	as-1.roa \
+	as-2.roa \
+	as-3.roa \
+	as-4.roa \
+	as-5.roa \
+	as-6.roa
 
 %.key:
 	../../cg/tools/gen_key "$@" 2048

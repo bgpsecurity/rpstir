@@ -65,9 +65,6 @@ compare () {
 init () {
 	"$RCLI" -x -t . -y
 	"$RCLI" -y -F "`pwd`/root.cer"
-	for ee in "`pwd`"/*.ee.cer; do
-		"$RCLI" -y -f "$ee"
-	done
 	echo "INSERT INTO rtr_nonce VALUES ($NONCE);" | $RPKI_MYSQL_CMD
 
 	SERIAL=""
