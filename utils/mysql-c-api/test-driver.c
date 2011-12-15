@@ -15,7 +15,7 @@
 /*==============================================================================
  * Use this for temporary test calls.
 ------------------------------------------------------------------------------*/
-void db_use_conn(void *conn) {
+void db_use_conn(dbconn *conn) {
     (void) conn;  // to avoid -Wunused-parameter
 
     uint16_t nonce;
@@ -87,7 +87,7 @@ int main() {
 
     OPEN_LOG();
 
-//    if ((conn = connectDb(host, user, pass, db)) == NULL) {
+//    if ((conn = db_connect(host, user, pass, db)) == NULL) {
     client_types |= DB_CLIENT_RTR;
     if ((conn = db_connect_default(client_types)) == NULL) {
         CLOSE_LOG();

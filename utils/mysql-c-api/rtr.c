@@ -166,7 +166,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
  *     negative integer if no rows found (but no error)
 ------------------------------------------------------------------------------*/
 int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     MYSQL_ROW row;
     char qry[] = "select serial_num from rtr_update "
@@ -223,7 +223,7 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int getNumRowsInTable(dbconn *conn, char *table_name) {
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     int QRY_SZ = 256;
     char qry[QRY_SZ];
@@ -256,7 +256,7 @@ int getNumRowsInTable(dbconn *conn, char *table_name) {
 ------------------------------------------------------------------------------*/
 int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
         int get_ser_num, uint32_t *ser_num){
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     MYSQL_ROW row;
     int QRY_SZ = 256;
@@ -332,7 +332,7 @@ int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
 int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         int get_ser_num_prev, uint32_t *serial_prev, int *prev_was_null,
         int get_has_full, int *has_full){
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     MYSQL_ROW row;
     int QRY_SZ = 256;
@@ -781,7 +781,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
         state->data_sent = 1;
     }
 
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     my_ulonglong num_rows = 0;
     int QRY_SZ = 256;
@@ -972,7 +972,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         state->data_sent = 1;
     }
 
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     my_ulonglong num_rows = 0;
     int QRY_SZ = 256;
@@ -1045,7 +1045,7 @@ void db_rtr_reset_query_close(dbconn *conn, void * query_state) {
  * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
 ------------------------------------------------------------------------------*/
 int setCacheNonce(dbconn *conn, uint16_t nonce) {
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     const char qry_delete[] = "delete from rtr_nonce";
     const int QRY_SZ = 256;
     char qry_insert[QRY_SZ];
@@ -1082,7 +1082,7 @@ int setCacheNonce(dbconn *conn, uint16_t nonce) {
  *   records into rtr_update.
 ------------------------------------------------------------------------------*/
 int addNewSerNum(dbconn *conn, const uint32_t *in) {
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     uint32_t latest_ser_num = 0;
     uint32_t new_ser_num = 0;
     const int QRY_SZ = 1024;
@@ -1132,7 +1132,7 @@ int addNewSerNum(dbconn *conn, const uint32_t *in) {
  *   records from rtr_update.
 ------------------------------------------------------------------------------*/
 int deleteSerNum(dbconn *conn, uint32_t ser_num) {
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     const int QRY_SZ = 1024;
     char qry[QRY_SZ];
 
@@ -1156,7 +1156,7 @@ int deleteSerNum(dbconn *conn, uint32_t ser_num) {
  *   records from rtr_update.
 ------------------------------------------------------------------------------*/
 int deleteAllSerNums(dbconn *conn) {
-    MYSQL *mysql = (MYSQL*) conn;
+    MYSQL *mysql = conn->mysql;
     const char qry[] = "delete from rtr_update";
 
     LOG(LOG_ERR, "x");
