@@ -451,12 +451,26 @@ void * db_main(void * args_voidp)
 	block_signals();
 
 	struct run_state run_state;
+	int retval, oldstate;
 
 	initialize_run_state(&run_state, args_voidp);
 
 	pthread_cleanup_push(cleanup, &run_state);
 
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, run_state.errorbuf, "pthread_setcancelstate()");
+	}
+
 	run_state.db = db_connect_default(DB_CLIENT_RTR);
+
+	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+	if (retval != 0)
+	{
+		ERR_LOG(retval, run_state.errorbuf, "pthread_setcancelstate()");
+	}
+
 	if (run_state.db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
