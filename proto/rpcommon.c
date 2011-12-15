@@ -141,7 +141,7 @@ static int check_cp(char *cpp)
   return 1;
   }
 
-int check_date(char *datep, struct casn *casnp, ulong *datenump)
+int check_date(char *datep, struct casn *casnp, int64_t *datenump)
   {
   char *c;
   for (c = datep; *c >= '0' && *c <= '9'; c++);
@@ -162,7 +162,7 @@ int check_date(char *datep, struct casn *casnp, ulong *datenump)
 
 int check_dates(char *datesp)
   {
-  ulong fromDate, toDate;
+  int64_t fromDate, toDate;
   time_t now = time((time_t *)0);
   char *enddatep = nextword(datesp);
   if (!enddatep || datesp[14] != 'Z' || datesp[15] != ' ' ||

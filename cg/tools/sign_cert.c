@@ -42,7 +42,7 @@ char *msgs[] = {
 
 static void adjust_time(struct casn *fromp, struct casn *tillp)
   {
-  ulong begt, till;
+  int64_t begt, till;
   read_casn_time(fromp, &begt);
   read_casn_time(tillp, &till);
   till -= begt;
@@ -84,7 +84,7 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature,
   memset(hash, 0, 40);
   if (!CryptInitState) 
     {
-    cryptInit();
+    if (!cryptInit()) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
   if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) 

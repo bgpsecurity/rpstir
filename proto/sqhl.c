@@ -2562,7 +2562,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int   sta, cert_added = 0;
   struct ROA roa;
   char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
-  ulong ltime;
+  int64_t ltime;
   unsigned int man_id = 0;
 
   // manifest stored in same format as a roa

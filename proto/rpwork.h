@@ -131,7 +131,7 @@ char *nextword(char *), myrootfullname[PATH_MAX];
 int parse_SKI_blocks(FILE *, char *, int, int *), 
   get_CAcert(char *, struct done_cert **),
   getSKIBlock(FILE *, char *, int), 
-  check_date(char *datep, struct casn *casnp, ulong *datenump),
+  check_date(char *datep, struct casn *casnp, int64_t *datenump),
   check_dates(char *datesp), check_jetring(char *),
   sort_resources(struct iprange *, int),
   touches(struct iprange *, struct iprange *, int); 
