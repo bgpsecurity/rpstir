@@ -84,15 +84,13 @@ Function: Converts lth decimal digits, starting at c, to a number
 
 int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
     {
-    int diff;
     int64_t t1, t2;
 
     if (read_casn_time(casnp1, &t1) <= 0 || read_casn_time(casnp2, &t2) <= 0)
 	return -2;
-    diff = t1 - t2;
-    if (diff > 1) diff = 1;
-    if (diff < -1) diff = -1;
-    return diff;
+    if (t1 > t2) return 1;
+    if (t1 < t2) return -1;
+    return 0;
     }
 
 int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
