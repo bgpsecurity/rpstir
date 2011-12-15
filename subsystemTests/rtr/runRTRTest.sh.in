@@ -65,6 +65,9 @@ compare () {
 init () {
 	"$RCLI" -x -t . -y
 	"$RCLI" -y -F "`pwd`/root.cer"
+	for ee in "`pwd`"/*.ee.cer; do
+		"$RCLI" -y -f "$ee"
+	done
 	echo "INSERT INTO rtr_nonce VALUES ($NONCE);" | $RPKI_MYSQL_CMD
 
 	SERIAL=""
@@ -81,14 +84,12 @@ make_serial () {
 	test "$FIRST_ASN" -le "$LAST_ASN"
 
 	for ASN in $ASNS_IN_DB; do
-		"$RCLI" -y -d "`pwd`/as-$ASN.ee.cer"
 		"$RCLI" -y -d "`pwd`/as-$ASN.roa"
 	done
 
 	ASNS_IN_DB=`seq "$FIRST_ASN" "$LAST_ASN"`
 
 	for ASN in $ASNS_IN_DB; do
-		"$RCLI" -y -f "`pwd`/as-$ASN.ee.cer"
 		"$RCLI" -y -f "`pwd`/as-$ASN.roa"
 	done
 
