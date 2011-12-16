@@ -552,6 +552,66 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
+int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
+        cache_nonce_t nonce) {
+    pdu->protocolVersion = RTR_PROTOCOL_VERSION;
+    pdu->cacheNonce = nonce;
+
+    uint family = 0;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uint prefix_len = 0;
+    uint max_prefix_len = 0;
+    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
+            ip_addr)) {
+        LOG(LOG_ERR, "could not parse ip_addr");
+        return -1;
+    }
+
+    // check prefix lengths and max prefix lengths vs spec
+    if ((family == AF_INET  &&  prefix_len > 32) ||
+            (family == AF_INET6  &&  prefix_len > 128)) {
+        LOG(LOG_ERR, "prefix length is out of spec");
+        return -1;
+    }
+    if ((family == AF_INET &&  max_prefix_len > 32) ||
+            (family == AF_INET6 &&  max_prefix_len > 128)) {
+        LOG(LOG_ERR, "max prefix length is out of spec");
+        return -1;
+    }
+
+    // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
+    // set length
+    // set IPxPrefixData
+    if (family == AF_INET) {
+        pdu->pduType = PDU_IPV4_PREFIX;
+        pdu->length = 20;
+        pdu->ip4PrefixData.flags = is_announce;
+        pdu->ip4PrefixData.prefixLength = prefix_len;
+        pdu->ip4PrefixData.maxLength = max_prefix_len;
+        pdu->ip4PrefixData.reserved = (uint8_t) 0;
+        pdu->ip4PrefixData.asNumber = asn;
+        pdu->ip4PrefixData.prefix4 = addr4;
+    } else if (family == AF_INET6) {
+        pdu->pduType = PDU_IPV6_PREFIX;
+        pdu->length = 32;
+        pdu->ip6PrefixData.flags = is_announce;
+        pdu->ip6PrefixData.prefixLength = prefix_len;
+        pdu->ip6PrefixData.maxLength = max_prefix_len;
+        pdu->ip6PrefixData.reserved = (uint8_t) 0;
+        pdu->ip6PrefixData.asNumber = asn;
+        pdu->ip6PrefixData.prefix6 = addr6;
+    } else {
+        LOG(LOG_ERR, "invalid ip family");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
 int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
         int check_is_announce) {
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
@@ -725,8 +785,8 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
  * @note see rtr.h about when to set is_done to 0 or 1.
  * @note If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
-ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max_rows,
-        PDU **_pdus, bool *is_done) {
+ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, bool *is_done) {
     size_t num_pdus = 0;
     PDU *pdus = NULL;
     struct query_state *state = (struct query_state*) query_state;
@@ -740,8 +800,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
         return -1;
     }
 
-    // alloc enough for max_rows + header & footer PDUs
-    pdus = calloc(max_rows + 2, sizeof(PDU));
+    pdus = calloc(max_rows, sizeof(PDU));
     if (!pdus) {
         LOG(LOG_ERR, "could not alloc for array of PDU");
         return -1;
@@ -782,55 +841,100 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
         state->data_sent = 1;
     }
 
+
+    // ------------------- section --------------------
     MYSQL *mysql = conn->mysql;
-    MYSQL_RES *result;
-    my_ulonglong num_rows = 0;
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
-    uint32_t next_ser_num;
-    uint32_t prev_ser_num;
-    int prev_was_null;
+    static MYSQL_STMT *stmt = NULL;
+    MYSQL_BIND bind_in[3];
 
-    snprintf(qry, QRY_SZ, "select asn, ip_addr, is_announce "
-            " from rtr_incremental "
-            " where serial_num=%" PRIu32
-            " order by asn, ip_addr "
-            " limit %u, %zu",
-            state->ser_num, state->first_row, max_rows - num_pdus);
+    MYSQL_BIND bind_out[2];
+    uint32_t asn;
+    const size_t IPADDR_STR_LEN = 50;
+    char ip_addr[IPADDR_STR_LEN + 1];
+    const int ALWAYS_ANNOUNCE = 1;
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not read rtr_incremental from db");
+    if (stmt == NULL) {
+        ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT);
+        if (ret  ||  !stmt) {
+            LOG(LOG_ERR, "could not bind to prepared statement");
+            LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+            return -1;
+        }
+    }
+
+    memset(bind_in, 0, sizeof(bind_in));
+    // serial_num parameter
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].is_unsigned = 1;
+    bind_in[0].buffer = &(state->ser_num);
+    // offset parameter
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].is_unsigned = 1;
+    bind_in[1].buffer = &(state->first_row);
+    // limit parameter
+    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[2].is_unsigned = 1;
+    size_t limit = max_rows - num_pdus;
+    bind_in[2].buffer = &limit;
+
+    if (wrap_mysql_stmt_execute(conn, stmt)) {
+        LOG(LOG_ERR, "could not read from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         pdu_free_array(pdus, max_rows);
         return -1;
     }
 
-    if ((result = mysql_store_result(mysql)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
+    memset(bind_out, 0, sizeof(bind_out));
+    // asn output
+    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_out[0].is_unsigned = 1;
+    bind_out[0].buffer = (char*)&asn;
+    // ip_addr output
+    bind_out[1].buffer_type = MYSQL_TYPE_STRING;
+    bind_out[1].buffer_length = IPADDR_STR_LEN;
+    bind_out[1].buffer = (char*)&ip_addr;
+
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
+        LOG(LOG_ERR, "mysql_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        pdu_free_array(pdus, max_rows);
         return -1;
     }
 
-    num_rows = mysql_num_rows(result);
+    // mysql_stmt_store_result is optional.  mysql_stmt_fetch will produce the
+    //   same data whether or not it is called.  But calling it brings the
+    //   whole result from the db at one time.
+    if (mysql_stmt_store_result(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        return -1;
+    }
 
-    while (num_rows > 0) {
-        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 1)) {
-            LOG(LOG_ERR, "could not read result set");
-            mysql_free_result(result);
+    while ((ret = mysql_stmt_fetch(stmt)) == 0) {
+        if (fillPduIpPrefix(&((*_pdus)[num_pdus++]), asn, ip_addr,
+                ALWAYS_ANNOUNCE, nonce)) {
+            LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             pdu_free_array(pdus, max_rows);
             return -1;
         }
-        --num_rows;
         ++state->first_row;
+    }
+    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+        LOG(LOG_ERR, "error during mysql_stmt_fetch()");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        return -1;
     }
 
     if (num_pdus == max_rows) {
-        mysql_free_result(result);
         *is_done = 0;
         LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return num_pdus;
     }
+
+
+    // ------------------- section --------------------
+    uint32_t next_ser_num;
+    uint32_t prev_ser_num;
+    int prev_was_null;
 
     // check whether sn is still valid
     ret = readSerNumAsCurrent(conn, state->ser_num,
@@ -839,13 +943,11 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
     if (prev_was_null) {
         LOG(LOG_INFO, "serial number became invalid after creating PDUs");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        mysql_free_result(result);
         LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return num_pdus;
     } else if (ret == -1) {
         LOG(LOG_ERR, "error while checking validity of serial number");
         pdu_free_array(pdus, max_rows);
-        mysql_free_result(result);
         return -1;
     }
 
@@ -855,13 +957,11 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
         *is_done = 0;
         state->ser_num = next_ser_num;
         state->first_row = 0;
-        mysql_free_result(result);
         LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return num_pdus;
     } else if (ret == 1) {  // db has no sn_next for this sn
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-        mysql_free_result(result);
         LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
         return num_pdus;
     }
@@ -871,7 +971,6 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
     LOG(LOG_ERR, "error while looking for next serial number");
     LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-    mysql_free_result(result);
     LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
     return num_pdus;
 }

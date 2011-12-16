@@ -109,7 +109,14 @@ int stmtsCreateAllRtr(dbconn *conn) {
     // Note:  keep in sync with enum in header file
     char *qrys[] = {
             "select cache_nonce from rtr_nonce",
-            "select serial_num from rtr_update order by create_time desc limit 1"
+
+            "select serial_num from rtr_update order by create_time desc limit 1",
+
+            "select asn, ip_addr "
+            " from rtr_incremental "
+            " where serial_num=? "
+            " order by asn, ip_addr "
+            " limit ?, ?"
 //            "select count(*) from ?"
     };
 
