@@ -26,6 +26,7 @@ struct query_state {
     int data_sent;     // true if a pdu has been created for this serial/reset query
     int no_new_data;   // the given ser_num exists, but its successor does not
     int not_ready;     // no valid ser_nums exist, yet
+    uint16_t nonce;
 };
 
 
@@ -783,44 +784,10 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-ssize_t serial_query_pre_query(/*dbconn *conn, void *query_state,
-        size_t max_rows, PDU **_pdus, bool *is_done*/) {
-
-    return 0;
-}
-
-
-/**=============================================================================
-------------------------------------------------------------------------------*/
-ssize_t serial_query_do_query(/*dbconn *conn, void *query_state,
-        size_t max_rows, PDU **_pdus, bool *is_done*/) {
-
-    return 0;
-}
-
-
-/**=============================================================================
-------------------------------------------------------------------------------*/
-ssize_t serial_query_post_query(/*dbconn *conn, void *query_state,
-        size_t max_rows, PDU **_pdus, bool *is_done*/) {
-
-    return 0;
-}
-
-
-/**=============================================================================
- * @note see rtr.h about when to set is_done to 0 or 1.
- * @note If error, I call pdu_free_array(); else, caller does.
-------------------------------------------------------------------------------*/
-ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
-        size_t max_rows, PDU **_pdus, bool *is_done) {
-    size_t num_pdus = 0;
+int serial_query_pre_query(dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, size_t *num_pdus) {
     PDU *pdus = NULL;
     struct query_state *state = (struct query_state*) query_state;
-    cache_nonce_t nonce = 0;
-    int ret = 0;
-
-    *is_done = 1;
 
     if (max_rows < 2) {
         LOG(LOG_ERR, "max_rows too small");
@@ -836,19 +803,19 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
 
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
-        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
+        fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
+        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        return *num_pdus;
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_INFO, "can't update the router from the given serial number");
-        fill_pdu_cache_reset(&((*_pdus)[num_pdus++]));
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
+        fill_pdu_cache_reset(&((*_pdus)[(*num_pdus)++]));
+        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        return *num_pdus;
     }
 
-    if (db_rtr_get_cache_nonce(conn, &nonce)) {
+    if (db_rtr_get_cache_nonce(conn, &(state->nonce))) {
         LOG(LOG_ERR, "couldn't get cache nonce");
         pdu_free_array(pdus, max_rows);
         return -1;
@@ -856,20 +823,29 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
 
     if (state->no_new_data) {
         LOG(LOG_INFO, "no new data for the router from the given serial number");
-        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
+        fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->nonce);
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-        fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
+        fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->nonce, state->ser_num);
+        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        return *num_pdus;
     }
 
     if (!state->data_sent) {
-        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
+        fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->nonce);
         state->data_sent = 1;
     }
 
+    return *num_pdus;
+}
 
-    // ------------------- section --------------------
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
+ssize_t serial_query_do_query(dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, size_t *num_pdus) {
+    struct query_state *state = (struct query_state*) query_state;
+    int ret;
+
     MYSQL *mysql = conn->mysql;
     static MYSQL_STMT *stmt = NULL;
     MYSQL_BIND bind_in[3];
@@ -883,7 +859,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
     if (stmt == NULL) {
         ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT);
         if (ret  ||  !stmt) {
-            LOG(LOG_ERR, "could not bind to prepared statement");
+            LOG(LOG_ERR, "could not retrieve prepared statement");
             LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
             return -1;
         }
@@ -901,13 +877,12 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
     // limit parameter
     bind_in[2].buffer_type = MYSQL_TYPE_LONG;
     bind_in[2].is_unsigned = 1;
-    size_t limit = max_rows - num_pdus;
+    size_t limit = max_rows - *num_pdus;
     bind_in[2].buffer = &limit;
 
     if (wrap_mysql_stmt_execute(conn, stmt)) {
         LOG(LOG_ERR, "could not read from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        pdu_free_array(pdus, max_rows);
         return -1;
     }
 
@@ -937,10 +912,9 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
     }
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
-        if (fillPduIpPrefix(&((*_pdus)[num_pdus++]), asn, ip_addr,
-                ALWAYS_ANNOUNCE, nonce)) {
+        if (fillPduIpPrefix(&((*_pdus)[(*num_pdus)++]), asn, ip_addr,
+                ALWAYS_ANNOUNCE, state->nonce)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
-            pdu_free_array(pdus, max_rows);
             return -1;
         }
         ++state->first_row;
@@ -951,14 +925,17 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
         return -1;
     }
 
-    if (num_pdus == max_rows) {
-        *is_done = 0;
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
-    }
+    return 0;
+}
 
 
-    // ------------------- section --------------------
+/**=============================================================================
+------------------------------------------------------------------------------*/
+ssize_t serial_query_post_query(dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, size_t *num_pdus, bool *is_done) {
+    struct query_state *state = (struct query_state*) query_state;
+    int ret;
+
     uint32_t next_ser_num;
     uint32_t prev_ser_num;
     int prev_was_null;
@@ -969,12 +946,12 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
             0, NULL);
     if (prev_was_null) {
         LOG(LOG_INFO, "serial number became invalid after creating PDUs");
-        fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
+        fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
+        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        return *num_pdus;
     } else if (ret == -1) {
         LOG(LOG_ERR, "error while checking validity of serial number");
-        pdu_free_array(pdus, max_rows);
+        pdu_free_array(*_pdus, max_rows);
         return -1;
     }
 
@@ -984,21 +961,57 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
         *is_done = 0;
         state->ser_num = next_ser_num;
         state->first_row = 0;
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
+        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        return *num_pdus;
     } else if (ret == 1) {  // db has no sn_next for this sn
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-        fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
-        return num_pdus;
+        fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->nonce, state->ser_num);
+        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        return *num_pdus;
     }
 
     // NOTE:  even though error, still feeding previous results,
     //     which should be unaffected by this error.
     LOG(LOG_ERR, "error while looking for next serial number");
     LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-    fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
-    LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+    fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->nonce, state->ser_num);
+    LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+    return *num_pdus;
+}
+
+
+/**=============================================================================
+ * @note see rtr.h about when to set is_done to 0 or 1.
+ * @note If error, I call pdu_free_array(); else, caller does.
+------------------------------------------------------------------------------*/
+ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, bool *is_done) {
+    struct query_state *state = (struct query_state*) query_state;
+    size_t num_pdus = 0;
+    int ret;
+
+    *is_done = 1;
+
+    if (!state->data_sent) {
+        ret = serial_query_pre_query(conn, state, max_rows, _pdus, &num_pdus);
+        if (ret == -1 || state->not_ready || state->bad_ser_num || state->no_new_data) {
+            return -1;
+        }
+    }
+
+    ret = serial_query_do_query(conn, state, max_rows, _pdus, &num_pdus);
+    if (ret == -1) {
+        pdu_free_array(*_pdus, max_rows);
+        return -1;
+    }
+    if (num_pdus == max_rows) {
+        *is_done = 0;
+        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        return num_pdus;
+    }
+
+    ret = serial_query_post_query(conn, state, max_rows, _pdus, &num_pdus, is_done);
+
     return num_pdus;
 }
 
