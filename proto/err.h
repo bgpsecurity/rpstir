@@ -168,8 +168,8 @@
 #define ERR_SCM_IPTOUCH     -139        /* IP addresses overlap */
 #define ERR_SCM_BADMFTHASH  -140        /* bad manifest hash */
 #define ERR_SCM_BADDIGEST   -141        /* invalid digest */
-#define ERR_SCM_BADMFTDBHASH -141       /* wrong manifest hash in DB */
-#define ERR_SCM_MAXERR      -141
+#define ERR_SCM_BADMFTDBHASH -142       /* wrong manifest hash in DB */
+#define ERR_SCM_MAXERR      -142
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
