@@ -782,6 +782,33 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
 
 
 /**=============================================================================
+------------------------------------------------------------------------------*/
+ssize_t serial_query_pre_query(/*dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, bool *is_done*/) {
+
+    return 0;
+}
+
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
+ssize_t serial_query_do_query(/*dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, bool *is_done*/) {
+
+    return 0;
+}
+
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
+ssize_t serial_query_post_query(/*dbconn *conn, void *query_state,
+        size_t max_rows, PDU **_pdus, bool *is_done*/) {
+
+    return 0;
+}
+
+
+/**=============================================================================
  * @note see rtr.h about when to set is_done to 0 or 1.
  * @note If error, I call pdu_free_array(); else, caller does.
 ------------------------------------------------------------------------------*/
