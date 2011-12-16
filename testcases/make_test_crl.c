@@ -124,7 +124,7 @@ static void signCRL(struct CertificateRevocationList *crlp, char *certname)
   signstring = (uchar *)calloc(1, sign_lth);
   sign_lth = encode_casn(&crlp->toBeSigned.self, signstring);
   memset(hash, 0, 40);
-  if (cryptInit() <= 0) fatal(5, "cryptInit failed");
+  if (cryptInit() != CRYPT_OK) fatal(5, "cryptInit failed");
   if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
       (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
     msg = "creating context";
