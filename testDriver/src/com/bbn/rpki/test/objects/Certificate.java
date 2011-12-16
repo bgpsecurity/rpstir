@@ -93,13 +93,10 @@ public class Certificate extends CA_Obj {
             System.out.println("Copying factory pre-specified key file: " + 
                   myFactory.subjKeyFile + " to " + this.subjkeyfile);
         }
-    } else {
-        String[] command_strings = {
-            "../../cg/tools/gen_key",
-            this.subjkeyfile,
-            "2048"
-            };
-        Util.exec(command_strings, "gen_key", false, null, null);
+        Util.exec("gen_key", false, null, null, 
+                  null,
+                  "../../cg/tools/gen_key",
+                  this.subjkeyfile, "2048");
     }
     // Generate our ski by getting the hash of the public key 
     // Result from .p15 -> hash(public_key) which is a hex string

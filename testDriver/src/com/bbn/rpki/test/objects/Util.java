@@ -9,18 +9,23 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
+import com.bbn.rpki.test.util.Sucker;
 
 /**
  * <Enter the description of this type here>
@@ -51,6 +56,22 @@ public class Util implements Constants {
    */
   public static File RPKI_ROOT;
   
+  private static TypescriptLogger typescriptLogger = null;
+
+  /**
+   * @return the typescriptLogger
+   */
+  public static TypescriptLogger getTypescriptLogger() {
+    return typescriptLogger;
+  }
+
+  /**
+   * @param typescriptLogger the typescriptLogger to set
+   */
+  public static void setTypescriptLogger(TypescriptLogger typescriptLogger) {
+    Util.typescriptLogger = typescriptLogger;
+  }
+
   static {
     RPKI_ROOT = new File(System.getenv("RPKI_ROOT")).getAbsoluteFile();
   }
@@ -249,7 +270,7 @@ public class Util implements Constants {
     cmdArray[1] = "-f";
     cmdArray[2] = CA_Obj.CONFIG_PATH + file + ".cfg";
     System.arraycopy(xargs, 0, cmdArray, 3, xargs.length);
-    exec(cmdArray, "create_object", false, null, null);
+    exec("create_object", false, null, null, null, cmdArray);
   }
 
   /**
@@ -257,52 +278,49 @@ public class Util implements Constants {
    * @return
    */
   static String generate_ski(String fileName) {
-    String[] cmdArray = {
-        Constants.BIN_DIR + "/gen_hash",
-        "-f",
-        fileName
-    };
-    return exec(cmdArray, "gen_hash", true, null, null);
-  }
-
-  /**
-   * Execute a command in the rpki root directory
-   * @param cmdArray
-   * @return stdout
-   */
-  public static String execInRoot(String...cmdArray) {
-    return exec(cmdArray, cmdArray[0], true, RPKI_ROOT, null);
+    return exec("gen_hash", true, null, null, 
+                null,
+                Constants.BIN_DIR + "/gen_hash",
+                "-f", fileName);
   }
   
   /**
-   * @param cmds
    * @param title
    * @param ignoreStatus
    * @param cwd
    * @param input
+   * @param cleanCommand TODO
+   * @param cmds
    * @return stdout string
    */
-  public static String exec(List<String> cmds, String title, boolean ignoreStatus, File cwd, String input) {
-    return exec(cmds.toArray(new String[cmds.size()]), title, ignoreStatus, cwd, input);
+  public static String exec(String title, boolean ignoreStatus, File cwd, String input, String cleanCommand, List<String> cmds) {
+    return exec(title, ignoreStatus, cwd, input, cleanCommand, cmds.toArray(new String[cmds.size()]));
   }
   
   /**
-   * @param cmdArray
    * @param title
    * @param ignoreStatus TODO
    * @param cwd 
    * @param input TODO
+   * @param cleanCommand TODO
+   * @param cmdArray
    * @return stdout string
    */
-  public static String exec(String[] cmdArray, String title, boolean ignoreStatus, File cwd, String input) {
+  public static String exec(String title, boolean ignoreStatus, File cwd, String input, String cleanCommand, String... cmdArray) {
     int status;
     try {
       if (cwd == null) {
         cwd = new File(System.getProperty("user.dir")).getAbsoluteFile();
       }
       final Process f = runtime.exec(cmdArray, null, cwd);
-      Sucker stdout = new Sucker(f.getInputStream(), "stdout", System.out);
-      Sucker stderr = new Sucker(f.getErrorStream(), "stderr", System.err);
+      Reader stdoutReader = new InputStreamReader(f.getInputStream());
+      Reader stderrReader = new InputStreamReader(f.getErrorStream());
+      if (typescriptLogger != null) {
+        stdoutReader = typescriptLogger.addSource(stdoutReader, "stdout");
+        stderrReader = typescriptLogger.addSource(stderrReader, "stderr");
+      }
+      Sucker stdout = new Sucker(stdoutReader, "stdout");
+      Sucker stderr = new Sucker(stderrReader, "stderr");
       if (input != null) {
         OutputStream os = f.getOutputStream();
         Writer writer = new OutputStreamWriter(os);
@@ -310,21 +328,24 @@ public class Util implements Constants {
         writer.close();
       }
       status = f.waitFor();
+      if (cleanCommand != null) {
+        Util.killProcessesRunning(cleanCommand);
+      }
       stdout.join();
       stderr.join();
       String string = stdout.getString();
       @SuppressWarnings("unused") // For debugging
       String errString = stderr.getString();
-      if (DEBUG_ON) {
-        System.out.println(Arrays.asList(cmdArray));
-        System.out.println(string);
+      if (DEBUG_ON && typescriptLogger != null) {
+        typescriptLogger.log(Arrays.asList(cmdArray));
+        typescriptLogger.log(string);
       }
       commandLog.println(Arrays.asList(cmdArray));
       commandLog.flush();
       if (status != 0) {
         String msg = String.format("%s failed status = %d%n", title, status);
         if (ignoreStatus) {
-          if (DEBUG_ON) System.out.println(msg);
+          if (DEBUG_ON && typescriptLogger != null) typescriptLogger.log(msg, "stderr");
         } else {
         throw new RuntimeException(msg);
         }
@@ -348,7 +369,7 @@ public class Util implements Constants {
           "-n",
           file.getPath()
       };
-    return exec(cmdArray, "gen_hash", true, null, null);
+    return exec("gen_hash", true, null, null, null, cmdArray);
     }
   }
 
@@ -378,10 +399,12 @@ public class Util implements Constants {
       if (file.isDirectory()) {
         deleteDirectory(file);
       } else {
-        file.delete();
+        boolean success = file.delete();
+        assert success;
       }
     }
-    dir.delete();
+    boolean success = dir.delete();
+    assert success;
   }
 
   /**
@@ -390,22 +413,19 @@ public class Util implements Constants {
    */
   public static void killProcessesRunning(String string) {
     // ps command to find processes of this user
-    String[] psCmd = {
-        "ps",
-        "aw"
-    };
-    String psOutput = Util.exec(psCmd, "ps aw", true, null, null);
+    String psOutput = Util.exec("ps -aef", true, null, null, null, "ps", "-aef");
     String[] lines = psOutput.split("\n");
+    List<String> cmd = new ArrayList<String>();
+    cmd.add("kill");
     for (String line : lines) {
       if (line.contains(string)) {
         if (line.contains("grep")) continue;
-        String pid = line.trim().split(" +")[0];
-        String[] killCmd = {
-            "kill",
-            pid
-        };
-        exec(killCmd, "kill " + pid, true, RPKI_ROOT, null);
+        String pid = line.trim().split(" +")[1];
+        cmd.add(pid);
       }
+    }
+    if (cmd.size() > 1) {
+      exec("Kill", true, RPKI_ROOT, null, null, cmd);
     }
   }
 
@@ -413,9 +433,6 @@ public class Util implements Constants {
    * Initialize the database
    */
   public static void initDB() {
-    String[] cmd = {
-        "run_scripts/initDB.sh"
-    };
-    exec(cmd, "initDB", true, RPKI_ROOT, null);
+    exec("initDB", true, RPKI_ROOT, null, null, "run_scripts/initDB.sh");
   }
 }

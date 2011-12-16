@@ -31,9 +31,10 @@ public class TestDriver {
       Model model = new Model(Util.RPKI_ROOT, new File(Util.RPKI_ROOT, arg));
       Test[] tests = {
           new TestBasic(model),
-          new TestExpanded(model),
-          new TestUpdateEveryStep(model),
+//          new TestExpanded(model),
+//          new TestUpdateEveryStep(model),
       };
+      RunLoader.singleton().start();
       for (Test test : tests) {
         String testName = test.getClass().getSimpleName();
         System.out.println("Starting " + testName);
@@ -43,6 +44,7 @@ public class TestDriver {
         }
         System.out.println(testName + " completed");
       }
+      RunLoader.singleton().stop();
     }
   }
 }

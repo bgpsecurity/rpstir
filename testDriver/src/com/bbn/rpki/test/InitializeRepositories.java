@@ -33,15 +33,12 @@ public class InitializeRepositories extends Task {
   public void run() {
     for (int epochIndex = 0; epochIndex < model.getEpochCount(); epochIndex++) {
       for (File root : model.getRepositoryRoots(epochIndex)) {
-        // We want to clear the root in the module on the server
-        String[] cmd = {
+        Util.exec("Initialize Repository", false, null, null,
+            null,
             "ssh",
             model.getServerName(root),
             "rm",
-            "-rf",
-            model.getUploadRepositoryFileName(root, new File(root, "*"))
-        };
-        Util.exec(cmd, "Initialize Repository", false, null, null);
+            "-rf", model.getUploadRepositoryFileName(root, new File(root, "*")));
       }
     }
   }
@@ -60,6 +57,15 @@ public class InitializeRepositories extends Task {
   @Override
   public TaskBreakdown getTaskBreakdown(int n) {
     assert false;
+    return null;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    // TODO Auto-generated method stub
     return null;
   }
 

@@ -46,5 +46,17 @@ public class CompoundTask extends Task {
   public TaskBreakdown getTaskBreakdown(int n) {
     return new TaskBreakdown(tasks, type);
   }
-
+  
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#toString()
+   */
+  @Override
+  public String getLogDetail() {
+    StringBuilder sb = new StringBuilder();
+    for (Task task : tasks) {
+      sb.append("\n  ");
+      sb.append(task.toString());
+    }
+    return sb.toString();
+  }
 }

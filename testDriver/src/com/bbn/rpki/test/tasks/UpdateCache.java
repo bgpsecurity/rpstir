@@ -25,12 +25,10 @@ public class UpdateCache extends Task {
    */
   @Override
   public void run() {
-    String[] cmd = {
-        "proto/chaser",
-        "-f",
-        "initial_rsync.config"
-    };
-    Util.exec(cmd, "Chaser", false, model.getRPKIRoot(), null);
+    Util.exec("Chaser", false, Util.RPKI_ROOT, null,
+              "rsync_aur/rsync_listener",
+              "proto/chaser",
+              "-f", "initial_rsync.config");
   }
 
   /**
@@ -50,4 +48,11 @@ public class UpdateCache extends Task {
     return null;
   }
 
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    return null;
+  }
 }

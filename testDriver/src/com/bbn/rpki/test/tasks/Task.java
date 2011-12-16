@@ -42,4 +42,14 @@ public abstract class Task {
    */
   public abstract TaskBreakdown getTaskBreakdown(int n);
   
+  protected abstract String getLogDetail();
+  
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public final String toString() { 
+    String logDetail = getLogDetail();
+    return getClass().getSimpleName() + (logDetail == null ? "" : " " + logDetail);
+  }  
 }

@@ -13,9 +13,6 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class InitializeCache extends Task {
-  
-  private static final String RSYNC_AUR_LOG = "rsync_aur.log";
-  private static final String RCLI_LOG = "rcli.log";
   private static final String REPOSITORY = "REPOSITORY";
   private static final String LOGS = "LOGS";
   private final Model model;
@@ -33,11 +30,10 @@ public class InitializeCache extends Task {
   @Override
   public void run() {
     Util.deleteDirectories(new File(model.getRPKIRoot(), REPOSITORY), new File(model.getRPKIRoot(), LOGS));
-    Util.killProcessesRunning("run_scripts/loader.sh");
-    File rpkiRoot = model.getRPKIRoot();
-    new File(rpkiRoot, RCLI_LOG).delete();
-    new File(rpkiRoot, RSYNC_AUR_LOG).delete();
+    new File(Util.RPKI_ROOT, "chaser.log").delete();
+    
     Util.initDB();
+    model.clearDatabase();
   }
 
   /**
@@ -57,4 +53,11 @@ public class InitializeCache extends Task {
     return null;
   }
 
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    return null;
+  }
 }

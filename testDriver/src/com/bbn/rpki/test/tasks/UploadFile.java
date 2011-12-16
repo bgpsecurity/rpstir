@@ -41,8 +41,8 @@ public class UploadFile extends Task {
     cmd.add(file.getPath());
     String repository = model.getSCPFileNameArg(repositoryRootDir, file);
     cmd.add(repository);
-    String[] cmdArray = cmd.toArray(new String[cmd.size()]);
-    Util.exec(cmdArray, "UploadFile", false, Util.RPKI_ROOT, null);
+    Util.exec("UploadFile", false, Util.RPKI_ROOT, null, null, cmd);
+    model.uploadedFile(file);
   }
 
   /**
@@ -62,4 +62,26 @@ public class UploadFile extends Task {
     return null;
   }
 
+  /**
+   * @return the file
+   */
+  public File getFile() {
+    return file;
+  }
+
+  /**
+   * @return the repositoryRootDir
+   */
+  public File getRepositoryRootDir() {
+    return repositoryRootDir;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    String repository = model.getSCPFileNameArg(repositoryRootDir, file);
+    return String.format("%s to %s", file, repository);
+  }
 }

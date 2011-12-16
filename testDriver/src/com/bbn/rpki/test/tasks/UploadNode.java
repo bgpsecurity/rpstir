@@ -6,6 +6,7 @@ package com.bbn.rpki.test.tasks;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.bbn.rpki.test.objects.Util;
@@ -31,6 +32,8 @@ public class UploadNode extends Task {
 
   private final File repositoryRootDir;
 
+  private final File[] filesToUpload;
+
   /**
    * @param model 
    * @param repositoryRootDir 
@@ -40,6 +43,7 @@ public class UploadNode extends Task {
     this.model = model;
     this.repositoryRootDir = repositoryRootDir;
     this.nodeDir = nodeDir;
+    filesToUpload = nodeDir.listFiles(fileFilter);
   }
   
   /**
@@ -51,12 +55,12 @@ public class UploadNode extends Task {
     String repository = model.getSCPFileNameArg(repositoryRootDir, nodeDir);
     cmd.add("scp");
     cmd.add("-qB");
-    for (File file : nodeDir.listFiles(fileFilter)) {
+    for (File file : filesToUpload) {
       cmd.add(file.getPath());
     }
     cmd.add(repository);
-    String[] cmdArray = cmd.toArray(new String[cmd.size()]);
-    Util.exec(cmdArray, "UploadModel", false, Util.RPKI_ROOT, null);
+    Util.exec("UploadModel", false, Util.RPKI_ROOT, null, null, cmd);
+    model.uploadedFiles(Arrays.asList(filesToUpload));
   }
 
   /**
@@ -87,6 +91,15 @@ public class UploadNode extends Task {
     for (File file : files) {
       subtasks.add(new UploadFile(model, repositoryRootDir, file));
     }
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    String repository = model.getSCPFileNameArg(repositoryRootDir, nodeDir);
+    return String.format("%d files to %s", filesToUpload.length, repository);
   }
   
   

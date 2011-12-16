@@ -25,10 +25,13 @@ public class InstallTrustAnchor extends Task {
 
   private final String talPrefix;
 
+  private final Model model;
+
   /**
    * @param model 
    */
   public InstallTrustAnchor(Model model) {
+    this.model = model;
     this.certFile = model.getTrustAnchorCert();
     this.talFile = model.getTALFile();
     this.talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
@@ -40,30 +43,27 @@ public class InstallTrustAnchor extends Task {
   @Override
   public void run() {
     try {
-      String[] opensslCmd = {
-          "openssl",
-          "x509",
-          "-inform",
-          "DER",
-          "-in",
-          certFile.getPath(),
-          "-pubkey",
-          "-noout"
-      };
-      String rawOutput = Util.exec(opensslCmd, "openSSL", false, null, null);
-      String[] awkCmd = {"awk", "!/-----(BEGIN|END)/"};
-      String cookedOutput = Util.exec(awkCmd, "awk", false, null, rawOutput);
+      String rawOutput = Util.exec("openssl", false, Util.RPKI_ROOT, null,
+                                   null,
+                                   "openssl",
+                                   "x509",
+                                   "-inform",
+                                   "DER",
+                                   "-in",
+                                   certFile.getPath(),
+                                   "-pubkey", "-noout");
+      String cookedOutput = Util.exec("awk", false, Util.RPKI_ROOT, rawOutput, 
+                                      null, "awk", "!/-----(BEGIN|END)/");
       Writer talWriter = new FileWriter(talFile);
       talWriter.write(talPrefix);
       talWriter.write(cookedOutput);
       talWriter.close();
       
-      String[] cmd = {
-          "run_scripts/updateTA.py",
-          "--verbose",
-          talFile.getPath()
-      };
-      Util.exec(cmd, "updateTA.py", false, null, null);
+      Util.exec("updateTA", false, Util.RPKI_ROOT, null,
+                null,
+                "run_scripts/updateTA.py",
+                "--verbose", talFile.getPath());
+      model.addTrustAnchor(certFile);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -84,5 +84,13 @@ public class InstallTrustAnchor extends Task {
   public TaskBreakdown getTaskBreakdown(int n) {
     assert false;
     return null;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    return certFile.toString();
   }
 }

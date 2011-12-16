@@ -184,4 +184,52 @@ public class Model {
     String remoteFileName = getUploadRepositoryFileName(repositoryRootDir, file);
     return serverName + ":" + remoteFileName;
   }
+
+  /**
+   * @param file
+   */
+  public void uploadedFile(File file) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * @param filesToDelete
+   */
+  public void deletedFiles(List<File> filesToDelete) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * @param file
+   */
+  public void deletedFile(File file) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * @param certFile
+   */
+  public void addTrustAnchor(File certFile) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * @param filesToUpload
+   */
+  public void uploadedFiles(List<File> filesToUpload) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * 
+   */
+  public void clearDatabase() {
+    // TODO Auto-generated method stub
+    
+  }
 }

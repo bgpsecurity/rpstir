@@ -18,7 +18,7 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class UploadRepositoryRootFiles extends Task {
-  
+
   private static final FileFilter dirFilter = new FileFilter() {
 
     @Override
@@ -26,10 +26,28 @@ public class UploadRepositoryRootFiles extends Task {
       return f.isDirectory();
     }
   };
+
+  private static final FileFilter fileFilter = new FileFilter() {
+
+    @Override
+    public boolean accept(File f) {
+      return f.isFile();
+    }
+  };
   
   private final File repositoryRootDir;
   
+  /**
+   * @return the repositoryRootDir
+   */
+  public File getRepositoryRootDir() {
+    return repositoryRootDir;
+  }
+
+
   private final Model model;
+
+  private File[] filesToUpload;
 
   /**
    * @param model
@@ -38,6 +56,7 @@ public class UploadRepositoryRootFiles extends Task {
   public UploadRepositoryRootFiles(Model model, File repositoryRootDir) {
     this.model = model;
     this.repositoryRootDir = repositoryRootDir;
+    filesToUpload = repositoryRootDir.listFiles();
   }
 
   /**
@@ -46,16 +65,14 @@ public class UploadRepositoryRootFiles extends Task {
   @Override
   public void run() {
     List<String> cmd = new ArrayList<String>();
-    File rootDir = repositoryRootDir;
     cmd.add("scp");
     cmd.add("-qrB");
-    for (File file : rootDir.listFiles()) {
+    for (File file : filesToUpload) {
       cmd.add(file.getPath());
     }
-    String f = model.getSCPFileNameArg(rootDir, rootDir);
+    String f = model.getSCPFileNameArg(repositoryRootDir, repositoryRootDir);
     cmd.add(f);
-    String[] cmdArray = cmd.toArray(new String[cmd.size()]);
-    Util.exec(cmdArray, "UploadRepositoryRoot", false, null, null);
+    Util.exec("UploadRepositoryRoot", false, null, null, null, cmd);
   }
 
   /**
@@ -75,7 +92,11 @@ public class UploadRepositoryRootFiles extends Task {
     assert n == 0;
     List<File> nodes = new ArrayList<File>();
     getNodes(nodes, repositoryRootDir);
-    List<Task> tasks = new ArrayList<Task>(nodes.size());
+    File[] topFiles = repositoryRootDir.listFiles(fileFilter);
+    List<Task> tasks = new ArrayList<Task>(nodes.size() + topFiles.length);
+    for (File file : topFiles) {
+      tasks.add(new UploadFile(model, repositoryRootDir, file));
+    }
     for (File node : nodes) {
       tasks.add(new MakeNodeDir(model, repositoryRootDir, node));
       tasks.add(new UploadNode(model, repositoryRootDir, node));
@@ -84,11 +105,19 @@ public class UploadRepositoryRootFiles extends Task {
   }
 
 
-  private void getNodes(List<File> nodes, File node) {
-    nodes.add(node);
-    File[] subdirs = node.listFiles(dirFilter);
-    for (File subdir : subdirs) {
-      getNodes(nodes, subdir);
+  private void getNodes(List<File> nodes, File parent) {
+    File[] nodeDirs = parent.listFiles(dirFilter);
+    for (File nodeDir : nodeDirs) {
+      nodes.add(nodeDir);
+      getNodes(nodes, nodeDir);
     }
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    return filesToUpload.length + " files";
   }
 }

@@ -73,4 +73,12 @@ public class UploadEpoch extends Task {
     }
     return ret;
   }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    return subtasks.size() + " sub-tasks";
+  }
 }

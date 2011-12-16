@@ -63,7 +63,8 @@ public class DeleteFromRepositoryRoot extends Task {
       String name = model.getUploadRepositoryFileName(repositoryRootDir, file);
       cmd.add(name);
     }
-    Util.exec(cmd, "UploadRepositoryRootDelete", false, null, null);
+    Util.exec("UploadRepositoryRootDelete", false, null, null, null, cmd);
+    model.deletedFiles(filesToDelete);
   }
 
   /**
@@ -92,7 +93,14 @@ public class DeleteFromRepositoryRoot extends Task {
         addDeleteTask(tasks, subfile);
       }
     }
-    String name = model.getUploadRepositoryFileName(repositoryRootDir, file);
-    tasks.add(new DeleteRepositoryFile(model.getServerName(repositoryRootDir), name));
+    tasks.add(new DeleteRepositoryFile(model, repositoryRootDir, file));
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    return filesToDelete.size() + " files";
   }
 }

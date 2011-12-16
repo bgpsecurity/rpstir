@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.tasks;
 
+import java.io.File;
+
 import com.bbn.rpki.test.objects.Util;
 
 /**
@@ -12,16 +14,19 @@ import com.bbn.rpki.test.objects.Util;
  */
 public class DeleteRepositoryFile extends Task {
 
-  private final String serverName;
-  private final String fileName;
+  private final File repositoryRootDir;
+  private final File file;
+  private final Model model;
 
   /**
-   * @param serverName
-   * @param fileName
+   * @param model 
+   * @param repositoryRootDir 
+   * @param file 
    */
-  public DeleteRepositoryFile(String serverName, String fileName) {
-    this.serverName = serverName;
-    this.fileName = fileName;
+  public DeleteRepositoryFile(Model model, File repositoryRootDir, File file) {
+    this.model = model;
+    this.repositoryRootDir = repositoryRootDir;
+    this.file = file;
   }
 
   /**
@@ -29,14 +34,16 @@ public class DeleteRepositoryFile extends Task {
    */
   @Override
   public void run() {
-    String[] cmdArray = {
-        "ssh",
-        serverName,
-        "rm",
-        "-rf",
-        fileName
-    };
-    Util.exec(cmdArray, "DeleteRepositoryFile", false, null, null);
+    String serverName = model.getServerName(repositoryRootDir);
+    String name = model.getUploadRepositoryFileName(repositoryRootDir, file);
+    Util.exec("DeleteRepositoryFile", false, null, null,
+              null,
+              "ssh",
+              serverName,
+              "rm",
+              "-rf", name
+    );
+    model.deletedFile(file);
   }
 
   /**
@@ -54,5 +61,15 @@ public class DeleteRepositoryFile extends Task {
   public TaskBreakdown getTaskBreakdown(int n) {
     assert false;
     return null;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    String serverName = model.getServerName(repositoryRootDir);
+    String name = model.getUploadRepositoryFileName(repositoryRootDir, file);
+    return String.format("%s from %s", name, serverName);
   }
 }

@@ -47,7 +47,7 @@ public class MakeNodeDir extends Task {
     cmd.add("mkdir");
     cmd.add("-p");
     cmd.add(repository);
-    Util.exec(cmd, "Make remote dir", false, null, null);
+    Util.exec("Make remote dir", false, null, null, null, cmd);
   }
 
   /**
@@ -68,5 +68,15 @@ public class MakeNodeDir extends Task {
   public TaskBreakdown getTaskBreakdown(int n) {
     assert false;
     return null;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
+    String repository = model.getUploadRepositoryFileName(repositoryRootDir, nodeDir);
+    String serverName = model.getServerName(repositoryRootDir);
+    return String.format("%s on %s", repository, serverName);
   }
 }

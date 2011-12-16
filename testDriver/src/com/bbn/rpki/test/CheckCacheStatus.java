@@ -26,10 +26,7 @@ public class CheckCacheStatus extends Task {
    */
   @Override
   public void run() {
-    String[] cmd = {
-        "run_scripts/results.py"
-    };
-    Util.exec(cmd, "Reports", false, null, null);
+    Util.exec("Reports", false, Util.RPKI_ROOT, null, null, "run_scripts/results.py");
   }
 
   /**
@@ -47,6 +44,14 @@ public class CheckCacheStatus extends Task {
   @Override
   public TaskBreakdown getTaskBreakdown(int n) {
     // TODO Auto-generated method stub
+    return null;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   */
+  @Override
+  protected String getLogDetail() {
     return null;
   }
 
