@@ -423,7 +423,7 @@ int get_CAcert(char *ski, struct done_cert **done_certpp)
   return i;
   }
 
-static int CryptInitState = 0;
+extern int CryptInitState;
 
 static int sign_cert(struct Certificate *certp)
   {
