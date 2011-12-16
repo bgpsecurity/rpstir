@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <inttypes.h>
+#include <time.h>
 
 // number of hours to retain incremental updates
 // should be at least 24 + the maximum time between updates, since need
@@ -204,7 +205,15 @@ int main(int argc, char **argv) {
 	checkErr(sta < 0, "Can't remove unfinished entries from rtr_full");
 
 	// find the last serial number
-	prevSerialNum = getLastSerialNumber(connection, scmp);
+	if (first_time)
+	{
+		srandom((unsigned int)time(NULL));
+		prevSerialNum = (uint)random();
+	}
+	else
+	{
+		prevSerialNum = getLastSerialNumber(connection, scmp);
+	}
 	if (argc > 2)
 	{
 		force_update = 1;
