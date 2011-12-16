@@ -178,7 +178,7 @@ static void fill_max(uchar *max)
   max[max[1] + 1] |= ((1 << max[2]) - 1);
   }
 
-static int getTime(struct CertificateValidityDate *cvdp, ulong *datep)
+static int getTime(struct CertificateValidityDate *cvdp, int64_t *datep)
   {
   int ansr;
   if (size_casn(&cvdp->utcTime) == 0)
@@ -192,7 +192,7 @@ static int getTime(struct CertificateValidityDate *cvdp, ulong *datep)
 static int check_cert(struct Certificate *certp, int isEE)
   {
   int tmp;
-  ulong lo, hi;
+  int64_t lo, hi;
   struct CertificateToBeSigned *certtbsp = &certp->toBeSigned;
 
   if (read_casn_num(&certp->toBeSigned.version.self, (long*)&tmp) < 0 ||
