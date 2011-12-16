@@ -7,8 +7,76 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#include "db-internal.h"
 #include "logging.h"
 #include "util.h"
+
+
+int reconnectMysqlCApi(dbconn **conn);
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
+    MYSQL *mysql = conn->mysql;
+    int tried = 0;
+    int ret = 0;
+    uint err_no = 0;
+
+    ret = mysql_stmt_execute(stmt);
+    while (ret) {
+        err_no = mysql_errno(mysql);
+        if (err_no == 2006  ||  err_no == 2013) {  // lost server connection
+            LOG(LOG_WARNING, "connection to MySQL server was lost");
+            if (tried) {
+                LOG(LOG_ERR, "not able to reconnect to MySQL server");
+                return -1;
+            }
+            tried++;
+            if (!reconnectMysqlCApi(&conn)) {
+                LOG(LOG_WARNING, "reconnection to MySQL server failed");
+                return -1;
+            }
+            ret = mysql_stmt_execute(stmt);
+        } else {  // error, but not server disconnect
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+int wrap_mysql_query(dbconn *conn, const char *qry) {
+    MYSQL *mysql = conn->mysql;
+    int tried = 0;
+    int ret = 0;
+    uint err_no = 0;
+
+    ret = mysql_query(mysql, qry);
+    while (ret) {
+        err_no = mysql_errno(mysql);
+        if (err_no == 2006  ||  err_no == 2013) {  // lost server connection
+            LOG(LOG_WARNING, "connection to MySQL server was lost");
+            if (tried) {
+                LOG(LOG_ERR, "not able to reconnect to MySQL server");
+                return -1;
+            }
+            tried++;
+            if (!reconnectMysqlCApi(&conn)) {
+                LOG(LOG_WARNING, "reconnection to MySQL server failed");
+                return -1;
+            }
+            ret = mysql_query(mysql, qry);
+        } else {  // error, but not server disconnect
+            return ret;
+        }
+    }
+
+    return 0;
+}
 
 
 /*==============================================================================

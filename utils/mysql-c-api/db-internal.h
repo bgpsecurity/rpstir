@@ -10,6 +10,10 @@ struct _dbconn {
     int client_flags;
     struct _stmt_node *head;
     MYSQL *mysql;
+    char *host;
+    char *user;
+    char *pass;
+    char *db;
 };
 
 

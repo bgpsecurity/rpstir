@@ -47,7 +47,7 @@ int getCacheNonce_old(conn *conn, cache_nonce_t *nonce) {
     MYSQL_ROW row;
     const char qry[] = "select cache_nonce from rtr_nonce";
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not get cache nonce from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -113,7 +113,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
         }
     }
 
-    if (mysql_stmt_execute(stmt)) {
+    if (wrap_mysql_stmt_execute(conn, stmt)) {
         LOG(LOG_ERR, "mysql_stmt_execute() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -177,7 +177,8 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
         return GET_SERNUM_ERR;
     }
 
-    if (mysql_query(mysql, qry)) {
+//    if (wrap_mysql_query(conn, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not get latest serial number from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return GET_SERNUM_ERR;
@@ -230,7 +231,7 @@ int getNumRowsInTable(dbconn *conn, char *table_name) {
 
     snprintf(qry, QRY_SZ, "select count(*) from %s", table_name);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not read from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -268,7 +269,7 @@ int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
             "from rtr_update "
             "where prev_serial_num=%" PRIu32, ser_num_prev);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not read rtr_update from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -343,7 +344,7 @@ int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
             "from rtr_update "
             "where serial_num=%" PRIu32, serial);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not read rtr_update from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -797,7 +798,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state, size_t max
             " limit %u, %zu",
             state->ser_num, state->first_row, max_rows - num_pdus);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not read rtr_incremental from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         pdu_free_array(pdus, max_rows);
@@ -985,7 +986,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
             " limit %u, %zu",
             state->ser_num, state->first_row, max_rows - num_pdus);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not read rtr_full from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         pdu_free_array(pdus, max_rows);
@@ -1050,7 +1051,7 @@ int setCacheNonce(dbconn *conn, uint16_t nonce) {
     const int QRY_SZ = 256;
     char qry_insert[QRY_SZ];
 
-    if (mysql_query(mysql, qry_delete)) {
+    if (wrap_mysql_query(conn, qry_delete)) {
         LOG(LOG_ERR, "query failed:  %s", qry_delete);
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -1059,7 +1060,7 @@ int setCacheNonce(dbconn *conn, uint16_t nonce) {
     snprintf(qry_insert, QRY_SZ, "insert into rtr_nonce (cache_nonce) "
             "value (%u)", nonce);
 
-    if (mysql_query(mysql, qry_insert)) {
+    if (wrap_mysql_query(conn, qry_insert)) {
         LOG(LOG_ERR, "query failed:  %s", qry_insert);
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -1105,7 +1106,7 @@ int addNewSerNum(dbconn *conn, const uint32_t *in) {
     snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
             new_ser_num);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not delete serial number %u from db", new_ser_num);
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -1117,7 +1118,7 @@ int addNewSerNum(dbconn *conn, const uint32_t *in) {
     snprintf(qry, QRY_SZ, "insert into rtr_update values (%u, now())",
             new_ser_num);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not add new serial number to db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -1139,7 +1140,7 @@ int deleteSerNum(dbconn *conn, uint32_t ser_num) {
     snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
             ser_num);
 
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not delete serial number from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
@@ -1160,7 +1161,7 @@ int deleteAllSerNums(dbconn *conn) {
     const char qry[] = "delete from rtr_update";
 
     LOG(LOG_ERR, "x");
-    if (mysql_query(mysql, qry)) {
+    if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not delete all serial numbers from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;

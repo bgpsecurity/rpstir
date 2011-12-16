@@ -1,11 +1,8 @@
-#ifndef DB_CONNECT_H
-#define DB_CONNECT_H
+#ifndef DB_CONNECT_H_
+#define DB_CONNECT_H_
 
 
-#include <inttypes.h>
-
-#include <my_global.h>
-#include <mysql.h>
+#include <stdbool.h>
 
 
 enum client_flags {
@@ -15,6 +12,20 @@ enum client_flags {
 
 struct _dbconn;
 typedef struct _dbconn dbconn;
+
+/**=============================================================================
+ * The order for calling these is
+ *     db_init()                         - per program
+ *     db_connect[_default]()            - per thread
+ *     { any other db functions, here }  - per thread
+ *     db_disconnect()                   - per thread
+ *     db_close()                        - per program
+ *
+ * @ret true if initialization succeeds.
+------------------------------------------------------------------------------*/
+bool db_init();
+
+void db_close();
 
 dbconn *db_connect(
         int client_flags,
@@ -28,4 +39,4 @@ dbconn *db_connect_default(int client_flags);
 void db_disconnect(dbconn *conn);
 
 
-#endif // DB_CONNECT_H
+#endif // DB_CONNECT_H_
