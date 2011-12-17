@@ -169,6 +169,7 @@ AC_CONFIG_FILES([Makefile
                  roa-utils/Makefile
                  rsync_aur/Makefile
                  server/Makefile
+                 subsystemTests/Makefile
                  testcases/Makefile
 		 testbed/Makefile
 		 testbed/src/Makefile
