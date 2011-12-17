@@ -39,6 +39,7 @@
 #include "err.h"
 #include "logutils.h"
 #include "rpwork.h"
+#include "crlv2.h"
 
 /*
   Convert between a time string in a certificate and a time string
@@ -3691,56 +3692,210 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 }
 
 
+/**=============================================================================
+ * @brief Check CRL version number
+ *
+ * @param crlp (struct CertificateRevocationList*)
+ * @return 0 on success<br />a negative integer on failure
+ *
+ * RFC 5280:
+ * TBSCertList  ::=  SEQUENCE  {
+ *      version                 Version OPTIONAL,
+ *                                   -- if present, MUST be v2
+ *      ...
+ *
+ * draft-ietf-sidr-res-certs:
+ * Each CA MUST issue a version 2 Certificate Revocation List (CRL),
+ * consistent with [RFC5280].  RPs are NOT required to process version 1
+ * CRLs (in contrast to [RFC5280]).
+ -----------------------------------------------------------------------------*/
 static int crl_version_chk(struct CertificateRevocationList *crlp)
 {
+  int ret = 0;
+  long version = 0;
+  
+  if (!crlp)
+    return ERR_SCM_INTERNAL;
+  
+  ret = read_casn_num(&crlp->toBeSigned.version.self, &version);
+  if (ret < 0)
+    return ERR_SCM_NOCRLVER;
+
+  if (version != 1)             // CRL v2 = integer value 1
+    return ERR_SCM_BADCRLVER;
+
   return 0;
 }
 
 
-static int crl_sigalg_inner_chk(struct CertificateRevocationList *crlp)
+/**=============================================================================
+ * @brief Check CRL inner and outer signature algorithms
+ *
+ * @param crlp (struct CertificateRevocationList*)
+ * @return 0 on success<br />a negative integer on failure
+ *
+ * When used to generate and verify digital signatures the hash and
+ * digital signature algorithms are referred together, i.e., "RSA PKCS#1
+ * v1.5 with SHA-256" or more simply "RSA with SHA-256".  The Object
+ * Identifier (OID) sha256withRSAEncryption from [RFC4055] MUST be used.
+ -----------------------------------------------------------------------------*/
+static int crl_sigalg_chk(struct CertificateRevocationList *crlp)
 {
+  if (!crlp)
+    return ERR_SCM_INTERNAL;
+  if (diff_objid(&crlp->toBeSigned.signature.algorithm,
+                 id_sha_256WithRSAEncryption) != 0) {
+    log_msg(LOG_ERR, "Wrong CRL inner signature algorithm");
+    return ERR_SCM_BADSIGALG;
+  }
+  if (diff_objid(&crlp->algorithm.algorithm,
+                 id_sha_256WithRSAEncryption) != 0) {
+    log_msg(LOG_ERR, "Wrong CRL outer signature algorithm");
+    return ERR_SCM_BADSIGALG;
+  }
   return 0;
 }
 
 
-static int crl_sigalg_outer_chk(struct CertificateRevocationList *crlp)
-{
-  return 0;
-}
-
-
+/**=============================================================================
+ * @brief Check CRL issuer against draft-ietf-sidr-res-certs
+ *
+ * @param crlp (struct CertificateRevocationList*)
+ * @return 0 on success<br />a negative integer on failure
+ *
+ * http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.4
+ * (same as for certificates)
+ -----------------------------------------------------------------------------*/
 static int crl_issuer_chk(struct CertificateRevocationList *crlp)
 {
+  if (!crlp)
+    return ERR_SCM_INTERNAL;
+  if (rescert_name_chk(&crlp->toBeSigned.issuer.rDNSequence) < 0) {
+    log_msg(LOG_ERR, "Bad CRL issuer");
+    return ERR_SCM_BADISSUER;
+  }
   return 0;
 }
 
 
 static int crl_dates_chk(struct CertificateRevocationList *crlp)
 {
+  if (!crlp)
+    return ERR_SCM_INTERNAL;
+  int ret = diff_casn_time(&crlp->toBeSigned.lastUpdate.self,
+                           &crlp->toBeSigned.nextUpdate.self);
+  if (ret == -2) {
+    log_msg(LOG_ERR, "failed to read CRL time fields");
+    return ERR_SCM_INVALDT;
+  }
+  if (ret > 0) {
+    log_msg(LOG_ERR, "Invalid CRL, thisUpdate > nextUpdate");
+    return ERR_SCM_BADDATES;
+  }
+  // TODO: check thisUpdate against current time (must not be future)
+  // TODO: check time format (UTCTime < 2050; GeneralizedTime >= 2050)
   return 0;
 }
 
 
+/**=============================================================================
+ * @brief Check one CRL entry against draft-ietf-sidr-res-certs, section 5
+ *
+ * @param entryp (struct CRLEntry*)
+ * @retval ret 0 on success<br />a negative integer on failure
+ *
+ * For each revoked resource certificate only the two fields Serial
+ * Number and Revocation Date MUST be present, and all other fields
+ * MUST NOT be present.  No CRL entry extensions are supported in this
+ * profile, and CRL entry extensions MUST NOT be present in a CRL.
+ -----------------------------------------------------------------------------*/
+static int crl_entry_chk(struct CRLEntry *entryp)
+{
+  if (!entryp)
+    return ERR_SCM_INTERNAL;
+  // TODO: check time format (UTCTime < 2050; GeneralizedTime >= 2050)
+  // Forbid CRLEntryExtensions
+  if (size_casn(&entryp->extensions.self) > 0)
+    return ERR_SCM_CRLENTRYEXT;
+  return 0;
+}
+
+
+/**=============================================================================
+ * @brief Check CRL entries against draft-ietf-sidr-res-certs, section 5
+ *
+ * @param crlp (struct CertificateRevocationList *)
+ * @retval ret 0 on success<br />a negative integer on failure
+ *
+ * For each revoked resource certificate only the two fields Serial
+ * Number and Revocation Date MUST be present, and all other fields
+ * MUST NOT be present.  No CRL entry extensions are supported in this
+ * profile, and CRL entry extensions MUST NOT be present in a CRL.
+ -----------------------------------------------------------------------------*/
 static int crl_entries_chk(struct CertificateRevocationList *crlp)
 {
+  struct RevokedCertificatesInCertificateRevocationListToBeSigned *revlistp = 0;
+  struct CRLEntry *entryp = 0;
+  
+  if (!crlp)
+    return ERR_SCM_INTERNAL;
+  revlistp = &crlp->toBeSigned.revokedCertificates;
+  for (entryp = (struct CRLEntry *)member_casn(&revlistp->self, 0);
+       entryp != NULL;
+       entryp = (struct CRLEntry *)next_of(&entryp->self))
+    {
+      int ret = crl_entry_chk(entryp);
+      if (ret < 0)
+        return ret;
+    }
   return 0;
 }
 
 
+/**=============================================================================
+ * @brief Check CRL AKI against draft-ietf-sidr-res-certs, section 5
+ *
+ * @param crlp (struct CertificateRevocationList *)
+ * @retval ret 0 on success<br />a negative integer on failure
+ *
+ * An RPKI CA MUST include the two extensions Authority Key Identifier
+ * and CRL Number in every CRL that it issues.  RPs MUST be prepared
+ * to process CRLs with these extensions.  No other CRL extensions are
+ * allowed.
+ *
+ * 4.8.3. Authority Key Identifier
+ *
+ * This extension MUST appear in all Resource Certificates, with the
+ * exception of a CA who issues a "self-signed" certificate.  In a
+ * self-signed certificate, a CA MAY include this extension, and set
+ * it equal to the Subject Key Identifier.  The authorityCertIssuer
+ * and authorityCertSerialNumber fields MUST NOT be present.  This
+ * extension is non-critical.
+ *
+ * The Key Identifier used for resource certificates is the 160-bit
+ * SHA-1 hash of the value of the DER-encoded ASN.1 bit string of the
+ * Issuer's public key, as described in Section 4.2.1.1 of [RFC5280].
+ -----------------------------------------------------------------------------*/
 static int crl_aki_chk(struct CertificateRevocationList *crlp)
 {
+  // Check for exactly one AKI extension
+  // Check non-critical
+  // Forbid authorityCertIssuer and authorityCertSerialNumber
   return 0;
 }
 
 
 static int crl_crlnum_chk(struct CertificateRevocationList *crlp)
 {
+  // Check for exactly one CRLnum extension
+  // Check non-critical
   return 0;
 }
 
 
-static int crl_forbidden_ext_chk(struct CertificationRevocationList *crlp)
+static int crl_forbidden_ext_chk(struct CertificateRevocationList *crlp)
 {
+  // Look for forbidden extensions (non-AKI, non-CRLnum)
   return 0;
 }
 
@@ -3822,13 +3977,8 @@ int crl_profile_chk(struct CertificateRevocationList *crlp)
   if (ret < 0)
     return ret;
 
-  log_msg(LOG_DEBUG, "crl_sigalg_inner_chk");
-  ret = crl_sigalg_inner_chk(crlp);
-  if (ret < 0)
-    return ret;
-
-  log_msg(LOG_DEBUG, "crl_sigalg_outer_chk");
-  ret = crl_sigalg_outer_chk(crlp);
+  log_msg(LOG_DEBUG, "crl_sigalg_chk");
+  ret = crl_sigalg_chk(crlp);
   if (ret < 0)
     return ret;
  

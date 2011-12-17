@@ -201,7 +201,7 @@ Returns: IF error, -1, ELSE length of time field
         casnp->type != ASN_GENTIME)) return -1;
     if (!ansr) return 0;
     ansr = casnp->lth;
-    uchar timebuf[32];
+    uchar timebuf[32]; /* is this enough? potential buffer overflow? */
     if (casnp->type == ASN_GENTIME) memcpy(timebuf, casnp->startp, ansr);
     else 
 	{
