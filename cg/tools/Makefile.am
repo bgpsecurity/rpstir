@@ -6,7 +6,7 @@
 
 bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
-	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
+	sign_cert add_key_info read_roa encode-oid dump_smart \
 	extractCMScert add_cms_cert test_cert makeLTAtest checkLTAtest \
         dumpIPAddr update_cert extractPubKeyInfo get_sernum put_sernum \
 	extractSIA extractValidityDate fix_manifest check_signature \
@@ -42,7 +42,6 @@ add_key_info_LDFLAGS = $(LIBS)
 read_roa_SOURCES = read_roa.c
 read_roa_LDFLAGS = $(LIBS)
 encode_oid_SOURCES = encode-oid.c
-dumpasn1_SOURCES = dumpasn1.c
 dump_smart_SOURCES = dump_smart.c
 dump_smart_LDFLAGS = $(LIBS)
 extractCMScert_SOURCES = extractCMScert.c
@@ -75,4 +74,4 @@ fix_manifest_LDFLAGS = $(LIBS)
 check_signature_SOURCES = check_signature.c
 check_signature_LDFLAGS = $(LIBS)
 
-EXTRA_DIST = convert-oidtable.sh dumpasn1.cfg test_casn_random_driver.sh
+EXTRA_DIST = convert-oidtable.sh test_casn_random_driver.sh
