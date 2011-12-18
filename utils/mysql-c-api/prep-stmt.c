@@ -112,7 +112,7 @@ int stmtsCreateAllRtr(dbconn *conn) {
 
             "select serial_num from rtr_update order by create_time desc limit 1",
 
-            "select asn, ip_addr "
+            "select asn, ip_addr, is_announce "
             " from rtr_incremental "
             " where serial_num=? "
             " order by asn, ip_addr "

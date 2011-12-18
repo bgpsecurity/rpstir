@@ -786,20 +786,13 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
 ------------------------------------------------------------------------------*/
 int serial_query_pre_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
-    PDU *pdus = NULL;
+    PDU *pdus = *_pdus;
     struct query_state *state = (struct query_state*) query_state;
 
     if (max_rows < 2) {
         LOG(LOG_ERR, "max_rows too small");
         return -1;
     }
-
-    pdus = calloc(max_rows, sizeof(PDU));
-    if (!pdus) {
-        LOG(LOG_ERR, "could not alloc for array of PDU");
-        return -1;
-    }
-    *_pdus = pdus;
 
     if (state->not_ready) {
         LOG(LOG_INFO, "no data is available to send to routers");
@@ -850,11 +843,11 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     static MYSQL_STMT *stmt = NULL;
     MYSQL_BIND bind_in[3];
 
-    MYSQL_BIND bind_out[2];
+    MYSQL_BIND bind_out[3];
     uint32_t asn;
     const size_t IPADDR_STR_LEN = 50;
     char ip_addr[IPADDR_STR_LEN + 1];
-    const int ALWAYS_ANNOUNCE = 1;
+    unsigned char is_announce;
 
     if (stmt == NULL) {
         ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT);
@@ -880,6 +873,8 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     size_t limit = max_rows - *num_pdus;
     bind_in[2].buffer = &limit;
 
+    ret = mysql_stmt_bind_param(stmt, bind_in);
+
     if (wrap_mysql_stmt_execute(conn, stmt)) {
         LOG(LOG_ERR, "could not read from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
@@ -895,6 +890,10 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     bind_out[1].buffer_type = MYSQL_TYPE_STRING;
     bind_out[1].buffer_length = IPADDR_STR_LEN;
     bind_out[1].buffer = (char*)&ip_addr;
+    // is_announce output
+    bind_out[2].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[2].is_unsigned = 1;
+    bind_out[2].buffer = (char*)&is_announce;
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_bind_result() failed");
@@ -913,7 +912,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
         if (fillPduIpPrefix(&((*_pdus)[(*num_pdus)++]), asn, ip_addr,
-                ALWAYS_ANNOUNCE, state->nonce)) {
+                is_announce, state->nonce)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             return -1;
         }
@@ -986,16 +985,26 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
 ------------------------------------------------------------------------------*/
 ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, bool *is_done) {
+    PDU *pdus = NULL;
     struct query_state *state = (struct query_state*) query_state;
     size_t num_pdus = 0;
     int ret;
 
     *is_done = 1;
 
+    pdus = calloc(max_rows, sizeof(PDU));
+    if (!pdus) {
+        LOG(LOG_ERR, "could not alloc for array of PDU");
+        return -1;
+    }
+    *_pdus = pdus;
+
     if (!state->data_sent) {
         ret = serial_query_pre_query(conn, state, max_rows, _pdus, &num_pdus);
-        if (ret == -1 || state->not_ready || state->bad_ser_num || state->no_new_data) {
+        if (ret == -1) {
             return -1;
+        } else if (state->not_ready || state->bad_ser_num || state->no_new_data) {
+            return num_pdus;
         }
     }
 
