@@ -136,6 +136,12 @@ static void *connectMysqlCApi(
 
     // TODO:  check table descriptions
 
+    if (client_flags & ~DB_CLIENT_ALL) {
+        LOG(LOG_ERR, "got invalid flags");
+        db_disconnect(conn);
+        return NULL;
+    }
+
     // add one of these sequences for each DB_CLIENT_*
     if (client_flags  &  DB_CLIENT_RTR) {
         if (stmtsCreateAllRtr(conn) == -1) {
@@ -176,11 +182,15 @@ dbconn *db_connect_default(int client_flags) {
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 void db_disconnect(dbconn *conn) {
-    stmtNodesDeleteAll(conn);
+    if (conn) {
+        if (conn->head) {
+            stmtNodesDeleteAll(conn);
+            free(conn->head);
+            conn->head = NULL;
+        }
 
-    if (conn->head) {free(conn->head); conn->head = NULL;}
+        mysql_close(conn->mysql);
 
-    mysql_close(conn->mysql);
-
-    if (conn) {free(conn);}
+        free(conn);
+    }
 }

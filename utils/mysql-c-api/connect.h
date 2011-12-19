@@ -6,8 +6,11 @@
 
 
 enum client_flags {
-    DB_CLIENT_RTR = 1
+    DB_CLIENT_RTR = 1,
     // assign DB_CLIENT_NEXT = 2 * DB_CLIENT_PREV
+
+    DB_CLIENT_NONE = 0,
+    DB_CLIENT_ALL = DB_CLIENT_RTR /* | DB_CLIENT_OTHER | ... */
 };
 
 struct _dbconn;
