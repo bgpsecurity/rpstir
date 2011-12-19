@@ -22,7 +22,7 @@ static scm      *scmp = NULL;
 static scmcon   *connection = NULL;
 static scmsrcha *roaSrch = NULL;
 static scmtab   *roaTable = NULL;
-static scmtab   *nonceTable = NULL;
+static scmtab   *sessionTable = NULL;
 static scmtab   *fullTable = NULL;
 static scmtab   *updateTable = NULL;
 static scmsrcha *snSrch = NULL;
@@ -104,7 +104,7 @@ static int writeROAData(scmcon *conp, scmsrcha *s, int numLine) {
 int main(int argc, char **argv) {
 	char msg[1024];
 	int sta;
-	uint nonce_count;
+	uint session_count;
 	uint update_count;
 	uint update_had_changes; // whether there are any changes from prevSerialNum to currSerialNum
 	uint dont_proceed;
@@ -125,19 +125,19 @@ int main(int argc, char **argv) {
 	connection = connectscm (scmp->dsn, msg, sizeof(msg));
 	checkErr(connection == NULL, "Cannot connect to database: %s\n", msg);
 
-	nonceTable = findtablescm(scmp, "rtr_nonce");
-	checkErr(nonceTable == NULL, "Cannot find table rtr_nonce\n");
+	sessionTable = findtablescm(scmp, "rtr_session");
+	checkErr(sessionTable == NULL, "Cannot find table rtr_session\n");
 
 	sta = newhstmt(connection);
 	checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-	sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_nonce;");
-	checkErr(sta < 0, "Can't query rtr_nonce\n");
-	sta = getuintscm(connection, &nonce_count);
+	sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_session;");
+	checkErr(sta < 0, "Can't query rtr_session\n");
+	sta = getuintscm(connection, &session_count);
 	pophstmt(connection);
-	checkErr(sta < 0, "Can't get results of querying rtr_nonce\n");
-	if (nonce_count != 1) {
-		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_nonce;");
-		checkErr(sta < 0, "Can't truncate rtr_nonce");
+	checkErr(sta < 0, "Can't get results of querying rtr_session\n");
+	if (session_count != 1) {
+		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_session;");
+		checkErr(sta < 0, "Can't truncate rtr_session");
 
 		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
 		checkErr(sta < 0, "Can't truncate rtr_update");
@@ -148,13 +148,13 @@ int main(int argc, char **argv) {
 		sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_incremental;");
 		checkErr(sta < 0, "Can't truncate rtr_incremental");
 
-		sta = statementscm_no_data(connection, "INSERT INTO rtr_nonce (cache_nonce) VALUES (FLOOR(RAND() * (1 << 16)));");
-		checkErr(sta < 0, "Can't generate a cache nonce");
+		sta = statementscm_no_data(connection, "INSERT INTO rtr_session (session_id) VALUES (FLOOR(RAND() * (1 << 16)));");
+		checkErr(sta < 0, "Can't generate a session id");
 
 		first_time = 1;
 	}
 
-	// if there's a nonce but no updates, treat it as the first time
+	// if there's a session but no updates, treat it as the first time
 	if (!first_time)
 	{
 		sta = newhstmt(connection);

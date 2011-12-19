@@ -49,12 +49,12 @@
 	The functions parse_pdu and dump_pdu will handle byte order issues.
 */
 
-typedef uint16_t cache_nonce_t;
+typedef uint16_t session_id_t;
 typedef uint16_t error_code_t;
 typedef uint32_t serial_number_t;
 typedef uint32_t as_number_t;
 
-#define PRINONCE PRIu16
+#define PRISESSION PRIu16
 
 
 /**
@@ -108,7 +108,7 @@ struct _PDU {
 	uint8_t protocolVersion;
 	uint8_t pduType;
 	union {
-		cache_nonce_t cacheNonce;
+		session_id_t sessionId;
 		uint16_t reserved;
 		error_code_t errorCode;
 	};
@@ -151,15 +151,15 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu);
 */
 ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu);
 
-void fill_pdu_serial_notify(PDU * pdu, cache_nonce_t nonce, serial_number_t serial);
-void fill_pdu_serial_query(PDU * pdu, cache_nonce_t nonce, serial_number_t serial);
+void fill_pdu_serial_notify(PDU * pdu, session_id_t session, serial_number_t serial);
+void fill_pdu_serial_query(PDU * pdu, session_id_t session, serial_number_t serial);
 void fill_pdu_reset_query(PDU * pdu);
-void fill_pdu_cache_response(PDU * pdu, cache_nonce_t nonce);
+void fill_pdu_cache_response(PDU * pdu, session_id_t session);
 void fill_pdu_ipv4_prefix(PDU * pdu, uint8_t flags,
 	uint8_t prefix_length, uint8_t max_length, const struct in_addr * prefix, as_number_t asn);
 void fill_pdu_ipv6_prefix(PDU * pdu, uint8_t flags,
 	uint8_t prefix_length, uint8_t max_length, const struct in6_addr * prefix, as_number_t asn);
-void fill_pdu_end_of_data(PDU * pdu, cache_nonce_t nonce, serial_number_t serial);
+void fill_pdu_end_of_data(PDU * pdu, session_id_t session, serial_number_t serial);
 void fill_pdu_cache_reset(PDU * pdu);
 
 /**

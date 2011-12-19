@@ -29,7 +29,7 @@ int stmtNodesDeleteAll(dbconn *conn);
 
 // Note:  keep in sync with array in implementation file
 enum prep_stmts_rtr {
-    DB_PSTMT_RTR_GET_NONCE,
+    DB_PSTMT_RTR_GET_SESSION,
     DB_PSTMT_RTR_GET_LATEST_SERNUM,
 //    DB_PSTMT_RTR_GET_NUM_ROWS_IN_TABLE,
 //    DB_PSTMT_RTR_READ_SER_NUM_AS_PREV,

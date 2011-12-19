@@ -86,7 +86,7 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu)
 		case PDU_SERIAL_QUERY:
 		case PDU_CACHE_RESPONSE:
 		case PDU_END_OF_DATA:
-			EXTRACT_FIELD(pdu->cacheNonce);
+			EXTRACT_FIELD(pdu->sessionId);
 			break;
 		case PDU_RESET_QUERY:
 		case PDU_IPV4_PREFIX:
@@ -281,8 +281,8 @@ ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu)
 	INCR_OFFSET(2); // protocolVersion and pduType
 	memcpy(buffer, (void *)pdu, 2);
 
-	INCR_OFFSET(2); // cacheNonce, reserved, and errorCode
-	*(uint16_t *)(buffer + offset - 2) = htons(pdu->cacheNonce);
+	INCR_OFFSET(2); // sessionId, reserved, and errorCode
+	*(uint16_t *)(buffer + offset - 2) = htons(pdu->sessionId);
 
 	INCR_OFFSET(4); // length
 	*(uint32_t *)(buffer + offset - 4) = htonl(pdu->length);
@@ -341,31 +341,31 @@ static void _fill_pdu_common(PDU * pdu, uint8_t type, uint32_t length)
 static void _fill_pdu_with_serial_number(
 	PDU * pdu,
 	uint8_t type,
-	uint16_t nonce_or_zero, // nonce if the type has one, zero if the type doesn't
+	uint16_t session_or_zero, // session if the type has one, zero if the type doesn't
 	serial_number_t serial
 ) {
 	_fill_pdu_common(pdu, type, PDU_HEADER_LENGTH + sizeof(pdu->serialNumber));
-	pdu->cacheNonce = nonce_or_zero;
+	pdu->sessionId = session_or_zero;
 	pdu->serialNumber = serial;
 }
 
 static void _fill_pdu_header_only(
 	PDU * pdu,
 	uint8_t type,
-	uint16_t nonce_or_zero // nonce if the type has one, zero if the type doesn't
+	uint16_t session_or_zero // session if the type has one, zero if the type doesn't
 ) {
 	_fill_pdu_common(pdu, type, PDU_HEADER_LENGTH);
-	pdu->cacheNonce = nonce_or_zero;
+	pdu->sessionId = session_or_zero;
 }
 
-void fill_pdu_serial_notify(PDU * pdu, cache_nonce_t nonce, serial_number_t serial)
+void fill_pdu_serial_notify(PDU * pdu, session_id_t session, serial_number_t serial)
 {
-	_fill_pdu_with_serial_number(pdu, PDU_SERIAL_NOTIFY, nonce, serial);
+	_fill_pdu_with_serial_number(pdu, PDU_SERIAL_NOTIFY, session, serial);
 }
 
-void fill_pdu_serial_query(PDU * pdu, cache_nonce_t nonce, serial_number_t serial)
+void fill_pdu_serial_query(PDU * pdu, session_id_t session, serial_number_t serial)
 {
-	_fill_pdu_with_serial_number(pdu, PDU_SERIAL_QUERY, nonce, serial);
+	_fill_pdu_with_serial_number(pdu, PDU_SERIAL_QUERY, session, serial);
 }
 
 void fill_pdu_reset_query(PDU * pdu)
@@ -373,9 +373,9 @@ void fill_pdu_reset_query(PDU * pdu)
 	_fill_pdu_header_only(pdu, PDU_RESET_QUERY, 0);
 }
 
-void fill_pdu_cache_response(PDU * pdu, cache_nonce_t nonce)
+void fill_pdu_cache_response(PDU * pdu, session_id_t session)
 {
-	_fill_pdu_header_only(pdu, PDU_CACHE_RESPONSE, nonce);
+	_fill_pdu_header_only(pdu, PDU_CACHE_RESPONSE, session);
 }
 
 void fill_pdu_ipv4_prefix(PDU * pdu, uint8_t flags,
@@ -404,9 +404,9 @@ void fill_pdu_ipv6_prefix(PDU * pdu, uint8_t flags,
 	pdu->ip6PrefixData.asNumber = asn;
 }
 
-void fill_pdu_end_of_data(PDU * pdu, cache_nonce_t nonce, serial_number_t serial)
+void fill_pdu_end_of_data(PDU * pdu, session_id_t session, serial_number_t serial)
 {
-	_fill_pdu_with_serial_number(pdu, PDU_END_OF_DATA, nonce, serial);
+	_fill_pdu_with_serial_number(pdu, PDU_END_OF_DATA, session, serial);
 }
 
 void fill_pdu_cache_reset(PDU * pdu)
@@ -631,7 +631,7 @@ void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ])
 		case PDU_SERIAL_QUERY:
 		case PDU_CACHE_RESPONSE:
 		case PDU_END_OF_DATA:
-			SNPRINTF(", cache nonce = %" PRIu16, pdu->cacheNonce);
+			SNPRINTF(", session id = %" PRIu16, pdu->sessionId);
 			break;
 		case PDU_RESET_QUERY:
 		case PDU_IPV4_PREFIX:

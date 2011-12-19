@@ -304,7 +304,7 @@ static void send_notify(struct run_state * run_state)
 
 	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->send_pdu.pduType = PDU_SERIAL_NOTIFY;
-	run_state->send_pdu.cacheNonce = run_state->local_cache_state.nonce;
+	run_state->send_pdu.sessionId = run_state->local_cache_state.session;
 	run_state->send_pdu.length = PDU_HEADER_LENGTH + sizeof(serial_number_t);
 	run_state->send_pdu.serialNumber = run_state->local_cache_state.serial_number;
 
@@ -530,11 +530,11 @@ static void handle_pdu(struct run_state * run_state, PDU * pdup, bool pdu_from_r
 	switch (pdup->pduType)
 	{
 		case PDU_SERIAL_QUERY:
-			if (pdup->cacheNonce != run_state->local_cache_state.nonce)
+			if (pdup->sessionId != run_state->local_cache_state.session)
 			{
-				CXN_LOG(run_state, LOG_INFO, "received wrong nonce (%" PRIu16 "), expected %" PRIu16,
-					pdup->cacheNonce,
-					run_state->local_cache_state.nonce);
+				CXN_LOG(run_state, LOG_INFO, "received wrong session id (%" PRISESSION "), expected %" PRISESSION,
+					pdup->sessionId,
+					run_state->local_cache_state.session);
 				send_cache_reset(run_state);
 				break;
 			}
@@ -585,10 +585,10 @@ static void update_local_cache_state(
 	const struct cache_state * new_cache_state,
 	bool do_notify)
 {
-	if (run_state->local_cache_state.nonce != new_cache_state->nonce)
+	if (run_state->local_cache_state.session != new_cache_state->session)
 	{
-		CXN_LOG(run_state, LOG_ERR, "cache nonce has changed from %" PRINONCE " to %" PRINONCE,
-			run_state->local_cache_state.nonce, new_cache_state->nonce);
+		CXN_LOG(run_state, LOG_ERR, "session id has changed from %" PRISESSION " to %" PRISESSION,
+			run_state->local_cache_state.session, new_cache_state->session);
 		pthread_exit(NULL);
 	}
 
@@ -636,7 +636,7 @@ static void handle_response(struct run_state * run_state)
 			// cache state as indicated by the PDU
 			struct cache_state pdu_cache_state;
 			pdu_cache_state.data_available = true;
-			pdu_cache_state.nonce = run_state->response->PDUs[i].cacheNonce;
+			pdu_cache_state.session = run_state->response->PDUs[i].sessionId;
 			pdu_cache_state.serial_number = run_state->response->PDUs[i].serialNumber;
 			update_local_cache_state(run_state, &pdu_cache_state, false);
 		}

@@ -108,7 +108,7 @@ int stmtsCreateAllRtr(dbconn *conn) {
 
     // Note:  keep in sync with enum in header file
     char *qrys[] = {
-            "select cache_nonce from rtr_nonce",
+            "select session_id from rtr_session",
 
             "select serial_num from rtr_update order by create_time desc limit 1",
 

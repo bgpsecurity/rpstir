@@ -1,7 +1,7 @@
 --- serial_notify
 --- expecting: Serial Notify for serial 20 x5
-version 0 Serial Notify, cache nonce = 42, length = 12, serial number = 20
-version 0 Serial Notify, cache nonce = 42, length = 12, serial number = 20
-version 0 Serial Notify, cache nonce = 42, length = 12, serial number = 20
-version 0 Serial Notify, cache nonce = 42, length = 12, serial number = 20
-version 0 Serial Notify, cache nonce = 42, length = 12, serial number = 20
+version 0 Serial Notify, session id = 42, length = 12, serial number = 20
+version 0 Serial Notify, session id = 42, length = 12, serial number = 20
+version 0 Serial Notify, session id = 42, length = 12, serial number = 20
+version 0 Serial Notify, session id = 42, length = 12, serial number = 20
+version 0 Serial Notify, session id = 42, length = 12, serial number = 20

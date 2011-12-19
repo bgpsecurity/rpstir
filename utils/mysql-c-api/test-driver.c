@@ -18,9 +18,9 @@
 void db_use_conn(dbconn *conn) {
     (void) conn;  // to avoid -Wunused-parameter
 
-    uint16_t nonce;
-    db_rtr_get_cache_nonce(conn, &nonce);
-    printf("nonce = %" PRIu16 "\n", nonce);
+    uint16_t session;
+    db_rtr_get_session_id(conn, &session);
+    printf("session = %" PRIu16 "\n", session);
 
 //    setCacheNonce(conn, 3434);
 

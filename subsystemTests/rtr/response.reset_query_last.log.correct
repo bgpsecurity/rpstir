@@ -1,6 +1,6 @@
 --- reset_query
 --- expecting: all data for serial 20
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
@@ -25,4 +25,4 @@ version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, 
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 3::100, AS number = 3
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 3::200, AS number = 3
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 3::300, AS number = 3
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 20
+version 0 End of Data, session id = 42, length = 12, serial number = 20

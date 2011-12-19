@@ -10,8 +10,8 @@ CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
 UPDATE="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtr-update"
 RCLI="$RPKI_ROOT/proto/rcli"
 PORT=1234
-NONCE=42
-WRONG_NONCE=4242
+SESSION=42
+WRONG_SESSION=4242
 
 client_raw () {
 	SUBTEST_NAME="$1"
@@ -65,7 +65,7 @@ compare () {
 init () {
 	"$RCLI" -x -t . -y
 	"$RCLI" -y -F "`pwd`/root.cer"
-	echo "INSERT INTO rtr_nonce VALUES ($NONCE);" | $RPKI_MYSQL_CMD
+	echo "INSERT INTO rtr_session VALUES ($SESSION);" | $RPKI_MYSQL_CMD
 
 	SERIAL=""
 	ASNS_IN_DB=""
@@ -149,38 +149,38 @@ client "reset_query" "all data for serial $SERIAL"
 stop_test reset_query_first
 
 start_test serial_queries
-client "serial_query $WRONG_NONCE 5" "Cache Reset"
-client "serial_query $NONCE 5" "empty set"
+client "serial_query $WRONG_SESSION 5" "Cache Reset"
+client "serial_query $SESSION 5" "empty set"
 make_serial 7 2 6
-client "serial_query $NONCE 5" "difference from 5 to $SERIAL"
-client "serial_query $NONCE 7" "empty set"
+client "serial_query $SESSION 5" "difference from 5 to $SERIAL"
+client "serial_query $SESSION 7" "empty set"
 make_serial 8 1 3
-client "serial_query $NONCE 5" "difference from 5 to $SERIAL"
-client "serial_query $NONCE 6" "Cache Reset"
-client "serial_query $NONCE 7" "difference from 7 to $SERIAL"
-client "serial_query $NONCE 8" "empty set"
+client "serial_query $SESSION 5" "difference from 5 to $SERIAL"
+client "serial_query $SESSION 6" "Cache Reset"
+client "serial_query $SESSION 7" "difference from 7 to $SERIAL"
+client "serial_query $SESSION 8" "empty set"
 drop_serial 5
-client "serial_query $NONCE 5" "Cache Reset"
-client "serial_query $NONCE 6" "Cache Reset"
-client "serial_query $NONCE 7" "difference from 7 to $SERIAL"
-client "serial_query $NONCE 8" "empty set"
+client "serial_query $SESSION 5" "Cache Reset"
+client "serial_query $SESSION 6" "Cache Reset"
+client "serial_query $SESSION 7" "difference from 7 to $SERIAL"
+client "serial_query $SESSION 8" "empty set"
 drop_serial 7
-client "serial_query $NONCE 7" "Cache Reset"
-client "serial_query $NONCE 8" "empty set"
+client "serial_query $SESSION 7" "Cache Reset"
+client "serial_query $SESSION 8" "empty set"
 make_serial 14 1 3
-client "serial_query $NONCE 8" "empty set"
-client "serial_query $NONCE 10" "Cache Reset"
-client "serial_query $NONCE 14" "empty set"
+client "serial_query $SESSION 8" "empty set"
+client "serial_query $SESSION 10" "Cache Reset"
+client "serial_query $SESSION 14" "empty set"
 make_serial 15 1 3
-client "serial_query $NONCE 8" "empty set, ending at serial $SERIAL"
+client "serial_query $SESSION 8" "empty set, ending at serial $SERIAL"
 make_serial 16 1 3
-client "serial_query $NONCE 8" "empty set, ending at serial $SERIAL"
+client "serial_query $SESSION 8" "empty set, ending at serial $SERIAL"
 make_serial 17 2 3
-client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
 make_serial 18 2 3
-client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
 make_serial 19 2 3
-client "serial_query $NONCE 8" "withdraw AS 1, ending at serial $SERIAL"
+client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
 stop_test serial_queries
 
 start_test bad_pdus
@@ -191,18 +191,18 @@ done
 stop_test bad_pdus
 
 start_test bad_pdu_usage # valid PDUs that should never be sent by the client
-client "serial_notify $WRONG_NONCE 123456" "Error Report"
-client "serial_notify $NONCE $SERIAL" "Error Report"
-client "cache_response $WRONG_NONCE" "Error Report"
-client "cache_response $NONCE" "Error Report"
+client "serial_notify $WRONG_SESSION 123456" "Error Report"
+client "serial_notify $SESSION $SERIAL" "Error Report"
+client "cache_response $WRONG_SESSION" "Error Report"
+client "cache_response $SESSION" "Error Report"
 client "ipv4_prefix 255 255 255 255.255.255.255 4294967295" "Error Report"
 client "ipv6_prefix 255 255 255 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
 client "ipv4_prefix 1 32 32 255.255.255.255 4294967295" "Error Report"
 client "ipv6_prefix 1 128 128 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
 client "ipv4_prefix 0 0 0 0.0.0.0 0" "Error Report"
 client "ipv6_prefix 0 0 0 :: 0" "Error Report"
-client "end_of_data $WRONG_NONCE 123456" "Error Report"
-client "end_of_data $NONCE $SERIAL" "Error Report"
+client "end_of_data $WRONG_SESSION 123456" "Error Report"
+client "end_of_data $SESSION $SERIAL" "Error Report"
 client "cache_reset" "Error Report"
 client "error_report 2" "no response" # No Data Available
 client "error_report 3" "no response" # Invalid Request

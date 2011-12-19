@@ -3,11 +3,11 @@
 version 0 Cache Reset, length = 8
 --- serial_query 42 5
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 5
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 5
 --- serial_query 42 5
 --- expecting: difference from 5 to 7
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
@@ -56,14 +56,14 @@ version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120,
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 7
+version 0 End of Data, session id = 42, length = 12, serial number = 7
 --- serial_query 42 7
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 7
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 7
 --- serial_query 42 5
 --- expecting: difference from 5 to 8
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
@@ -176,13 +176,13 @@ version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120,
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 6
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
 --- serial_query 42 7
 --- expecting: difference from 7 to 8
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
@@ -247,11 +247,11 @@ version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120,
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 8
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 5
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
@@ -260,7 +260,7 @@ version 0 Cache Reset, length = 8
 version 0 Cache Reset, length = 8
 --- serial_query 42 7
 --- expecting: difference from 7 to 8
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
@@ -325,58 +325,58 @@ version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120,
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 8
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 7
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
 --- serial_query 42 8
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 8
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 8
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 14
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 14
 --- serial_query 42 10
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
 --- serial_query 42 14
 --- expecting: empty set
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 14
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 14
 --- serial_query 42 8
 --- expecting: empty set, ending at serial 15
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 15
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 15
 --- serial_query 42 8
 --- expecting: empty set, ending at serial 16
-version 0 Cache Response, cache nonce = 42, length = 8
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 16
+version 0 Cache Response, session id = 42, length = 8
+version 0 End of Data, session id = 42, length = 12, serial number = 16
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 17
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 17
+version 0 End of Data, session id = 42, length = 12, serial number = 17
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 18
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 18
+version 0 End of Data, session id = 42, length = 12, serial number = 18
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 19
-version 0 Cache Response, cache nonce = 42, length = 8
+version 0 Cache Response, session id = 42, length = 8
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
-version 0 End of Data, cache nonce = 42, length = 12, serial number = 19
+version 0 End of Data, session id = 42, length = 12, serial number = 19

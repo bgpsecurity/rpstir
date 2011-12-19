@@ -25,7 +25,7 @@
 
 // all the arguments a command (for sending) can take
 enum command_argument {
-	ARG_NONCE,
+	ARG_SESSION,
 	ARG_SERIAL,
 	ARG_PREFIX_FLAGS,
 	ARG_PREFIX_LENGTH,
@@ -41,7 +41,7 @@ static const char * arg_name(enum command_argument arg)
 {
 	switch (arg)
 	{
-		case ARG_NONCE: return "nonce";
+		case ARG_SESSION: return "session id";
 		case ARG_SERIAL: return "serial";
 		case ARG_PREFIX_FLAGS: return "prefix flags";
 		case ARG_PREFIX_LENGTH: return "prefix length";
@@ -75,13 +75,13 @@ struct command {
 };
 
 static const struct command commands[] = {
-	{"serial_notify", cmd_serial_notify, {ARG_NONCE, ARG_SERIAL, ARG_END}},
-	{"serial_query", cmd_serial_query, {ARG_NONCE, ARG_SERIAL, ARG_END}},
+	{"serial_notify", cmd_serial_notify, {ARG_SESSION, ARG_SERIAL, ARG_END}},
+	{"serial_query", cmd_serial_query, {ARG_SESSION, ARG_SERIAL, ARG_END}},
 	{"reset_query", cmd_reset_query, {ARG_END}},
-	{"cache_response", cmd_cache_response, {ARG_NONCE, ARG_END}},
+	{"cache_response", cmd_cache_response, {ARG_SESSION, ARG_END}},
 	{"ipv4_prefix", cmd_ipv4_prefix, {ARG_PREFIX_FLAGS, ARG_PREFIX_LENGTH, ARG_PREFIX_MAX_LENGTH, ARG_IPv4, ARG_AS_NUMBER, ARG_END}},
 	{"ipv6_prefix", cmd_ipv6_prefix, {ARG_PREFIX_FLAGS, ARG_PREFIX_LENGTH, ARG_PREFIX_MAX_LENGTH, ARG_IPv6, ARG_AS_NUMBER, ARG_END}},
-	{"end_of_data", cmd_end_of_data, {ARG_NONCE, ARG_SERIAL, ARG_END}},
+	{"end_of_data", cmd_end_of_data, {ARG_SESSION, ARG_SERIAL, ARG_END}},
 	{"cache_reset", cmd_cache_reset, {ARG_END}},
 	{"error_report", cmd_error_report, {ARG_ERROR_CODE, ARG_END}},
 	{NULL, NULL, {ARG_END}}
@@ -151,7 +151,7 @@ static bool command_get_arg(
 
 	switch(command->args[arg_index])
 	{
-		case ARG_NONCE:
+		case ARG_SESSION:
 			ret = _command_get_arg_sscanf(arg_string, "%" SCNu16, arg_value);
 			goto done;
 
@@ -231,28 +231,28 @@ static void send_pdu(const PDU * pdu)
 
 static void cmd_serial_notify(const struct command * command, char const * const * args)
 {
-	cache_nonce_t nonce;
+	session_id_t session;
 	serial_number_t serial;
 
-	if (!command_get_arg(command, args, 0, &nonce)) return;
+	if (!command_get_arg(command, args, 0, &session)) return;
 	if (!command_get_arg(command, args, 1, &serial)) return;
 
 	PDU pdu;
-	fill_pdu_serial_notify(&pdu, nonce, serial);
+	fill_pdu_serial_notify(&pdu, session, serial);
 
 	send_pdu(&pdu);
 }
 
 static void cmd_serial_query(const struct command * command, char const * const * args)
 {
-	cache_nonce_t nonce;
+	session_id_t session;
 	serial_number_t serial;
 
-	if (!command_get_arg(command, args, 0, &nonce)) return;
+	if (!command_get_arg(command, args, 0, &session)) return;
 	if (!command_get_arg(command, args, 1, &serial)) return;
 
 	PDU pdu;
-	fill_pdu_serial_query(&pdu, nonce, serial);
+	fill_pdu_serial_query(&pdu, session, serial);
 
 	send_pdu(&pdu);
 }
@@ -270,12 +270,12 @@ static void cmd_reset_query(const struct command * command, char const * const *
 
 static void cmd_cache_response(const struct command * command, char const * const * args)
 {
-	cache_nonce_t nonce;
+	session_id_t session;
 
-	if (!command_get_arg(command, args, 0, &nonce)) return;
+	if (!command_get_arg(command, args, 0, &session)) return;
 
 	PDU pdu;
-	fill_pdu_cache_response(&pdu, nonce);
+	fill_pdu_cache_response(&pdu, session);
 
 	send_pdu(&pdu);
 }
@@ -322,14 +322,14 @@ static void cmd_ipv6_prefix(const struct command * command, char const * const *
 
 static void cmd_end_of_data(const struct command * command, char const * const * args)
 {
-	cache_nonce_t nonce;
+	session_id_t session;
 	serial_number_t serial;
 
-	if (!command_get_arg(command, args, 0, &nonce)) return;
+	if (!command_get_arg(command, args, 0, &session)) return;
 	if (!command_get_arg(command, args, 1, &serial)) return;
 
 	PDU pdu;
-	fill_pdu_end_of_data(&pdu, nonce, serial);
+	fill_pdu_end_of_data(&pdu, session, serial);
 
 	send_pdu(&pdu);
 }

@@ -9,7 +9,7 @@
 
 struct cache_state {
 	bool data_available;
-	cache_nonce_t nonce;
+	session_id_t session;
 
 	// this is undefined if data_available is false
 	serial_number_t serial_number;
@@ -23,7 +23,7 @@ struct global_cache_state {
 /**
 	\brief Initialize the global cache state.
 
-	Initialize the lock and get the nonce and serial number from the database.
+	Initialize the lock and get the session and serial number from the database.
 
 	@return Whether or not the initialization was successful.
 */

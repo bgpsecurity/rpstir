@@ -14,9 +14,9 @@ static bool get_cache_state(struct cache_state * state, dbconn * db)
 		return false;
 	}
 
-	if (db_rtr_get_cache_nonce(db, &state->nonce) != 0)
+	if (db_rtr_get_session_id(db, &state->session) != 0)
 	{
-		LOG(LOG_WARNING, "error getting cache nonce");
+		LOG(LOG_WARNING, "error getting session id");
 		return false;
 	}
 

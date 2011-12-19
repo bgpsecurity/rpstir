@@ -215,10 +215,10 @@ static scmtab scmtabbuilder[] =
 	//   risk them not being created at initialization
 
 	{             /* RTR_NONCE */
-	  "rtr_nonce",
-	  "RTR_NONCE",
-	  "cache_nonce SMALLINT UNSIGNED NOT NULL,"
-	  "            PRIMARY KEY (cache_nonce)",
+	  "rtr_session",
+	  "RTR_SESSION",
+	  "session_id SMALLINT UNSIGNED NOT NULL,"
+	  "           PRIMARY KEY (session_id)",
 	  NULL,
 	  0
 	},

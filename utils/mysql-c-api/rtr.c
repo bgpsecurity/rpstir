@@ -26,7 +26,7 @@ struct query_state {
     int data_sent;     // true if a pdu has been created for this serial/reset query
     int no_new_data;   // the given ser_num exists, but its successor does not
     int not_ready;     // no valid ser_nums exist, yet
-    uint16_t nonce;
+    uint16_t session;
 };
 
 
@@ -94,7 +94,7 @@ int getCacheNonce_old(conn *conn, cache_nonce_t *nonce) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
+int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL *mysql = conn->mysql;
     static MYSQL_STMT *stmt = NULL;
     int ret;
@@ -104,7 +104,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
     my_bool error[1];
 
     if (stmt == NULL) {
-        ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_GET_NONCE);
+        ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_GET_SESSION);
         if (ret  ||  !stmt) {
             LOG(LOG_ERR, "could not retrieve prepared statement");
             LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
@@ -155,7 +155,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
     //    else
     //        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
 
-    *nonce = data;
+    *session = data;
     mysql_stmt_free_result(stmt);
 
     return 0;
@@ -557,9 +557,9 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
-        cache_nonce_t nonce) {
+        session_id_t session) {
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
-    pdu->cacheNonce = nonce;
+    pdu->sessionId = session;
 
     uint family = 0;
     struct in_addr addr4;
@@ -616,10 +616,10 @@ int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, cache_nonce_t nonce,
+int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session,
         int check_is_announce) {
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
-    pdu->cacheNonce = nonce;
+    pdu->sessionId = session;
 
     // collect info to set ipxPrefixData
     MYSQL_ROW row;
@@ -811,23 +811,23 @@ int serial_query_pre_query(dbconn *conn, void *query_state,
         return *num_pdus;
     }
 
-    if (db_rtr_get_cache_nonce(conn, &(state->nonce))) {
-        LOG(LOG_ERR, "couldn't get cache nonce");
+    if (db_rtr_get_session_id(conn, &(state->session))) {
+        LOG(LOG_ERR, "couldn't get session id");
         pdu_free_array(pdus, max_rows);
         return -1;
     }
 
     if (state->no_new_data) {
         LOG(LOG_INFO, "no new data for the router from the given serial number");
-        fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->nonce);
+        fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->session);
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-        fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->nonce, state->ser_num);
+        fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
         return *num_pdus;
     }
 
     if (!state->data_sent) {
-        fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->nonce);
+        fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->session);
         state->data_sent = 1;
     }
 
@@ -919,7 +919,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
         if (fillPduIpPrefix(&((*_pdus)[(*num_pdus)++]), asn, ip_addr,
-                is_announce, state->nonce)) {
+                is_announce, state->session)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
             return -1;
@@ -974,7 +974,7 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
         return *num_pdus;
     } else if (ret == 1) {  // db has no sn_next for this sn
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-        fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->nonce, state->ser_num);
+        fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
         return *num_pdus;
     }
@@ -983,7 +983,7 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
     //     which should be unaffected by this error.
     LOG(LOG_ERR, "error while looking for next serial number");
     LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-    fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->nonce, state->ser_num);
+    fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
     LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
     return *num_pdus;
 }
@@ -1096,7 +1096,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     size_t num_pdus = 0;
     PDU *pdus = NULL;
     struct query_state *state = (struct query_state*) query_state;
-    cache_nonce_t nonce = 0;
+    session_id_t session = 0;
 
     *is_done = 1;
 
@@ -1120,14 +1120,14 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         return num_pdus;
     }
 
-    if (db_rtr_get_cache_nonce(conn, &nonce)) {
-        LOG(LOG_ERR, "couldn't get cache nonce");
+    if (db_rtr_get_session_id(conn, &session)) {
+        LOG(LOG_ERR, "couldn't get session id");
         pdu_free_array(pdus, max_rows);
         return -1;
     }
 
     if (!state->data_sent) {
-        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), nonce);
+        fill_pdu_cache_response(&((*_pdus)[num_pdus++]), session);
         state->data_sent = 1;
     }
 
@@ -1161,7 +1161,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     num_rows = mysql_num_rows(result);
 
     while (num_rows > 0) {
-        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, nonce, 0)) {
+        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, session, 0)) {
             LOG(LOG_ERR, "could not read result set");
             mysql_free_result(result);
             pdu_free_array(pdus, max_rows);
@@ -1183,7 +1183,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     //     a withdrawal, which must not be sent during a Cache Response.
 
     LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
-    fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), nonce, state->ser_num);
+    fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), session, state->ser_num);
     mysql_free_result(result);
     LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
     return num_pdus;
@@ -1200,12 +1200,12 @@ void db_rtr_reset_query_close(dbconn *conn, void * query_state) {
 
 /**=============================================================================
  * not currently an API function.  currently for testing
- * @pre table rtr_nonce has exactly 0 or 1 rows.
- * NOTE: If this becomes used beyond testing, check that old_nonce != new_nonce.
+ * @pre table rtr_session has exactly 0 or 1 rows.
+ * NOTE: If this becomes used beyond testing, check that old_session != new_session.
 ------------------------------------------------------------------------------*/
-int setCacheNonce(dbconn *conn, uint16_t nonce) {
+int setSessionId(dbconn *conn, uint16_t session) {
     MYSQL *mysql = conn->mysql;
-    const char qry_delete[] = "delete from rtr_nonce";
+    const char qry_delete[] = "delete from rtr_session";
     const int QRY_SZ = 256;
     char qry_insert[QRY_SZ];
 
@@ -1215,8 +1215,8 @@ int setCacheNonce(dbconn *conn, uint16_t nonce) {
         return -1;
     }
 
-    snprintf(qry_insert, QRY_SZ, "insert into rtr_nonce (cache_nonce) "
-            "value (%u)", nonce);
+    snprintf(qry_insert, QRY_SZ, "insert into rtr_session (session_id) "
+            "value (%u)", session);
 
     if (wrap_mysql_query(conn, qry_insert)) {
         LOG(LOG_ERR, "query failed:  %s", qry_insert);
@@ -1226,7 +1226,7 @@ int setCacheNonce(dbconn *conn, uint16_t nonce) {
 
     int rows;
     if ((rows = mysql_affected_rows(mysql)) != 1) {
-        LOG(LOG_ERR, "failed to insert db.rtr_nonce.cache_nonce=%u", nonce);
+        LOG(LOG_ERR, "failed to insert db.rtr_session.session_id=%u", session);
         LOG(LOG_ERR, "affected rows = %d", rows);
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
