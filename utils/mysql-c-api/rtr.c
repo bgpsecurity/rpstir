@@ -837,7 +837,6 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     struct query_state *state = (struct query_state*) query_state;
     int ret;
 
-    MYSQL *mysql = conn->mysql;
     static MYSQL_STMT *stmt = NULL;
     MYSQL_BIND bind_in[3];
 
@@ -851,7 +850,6 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
         ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT);
         if (ret  ||  !stmt) {
             LOG(LOG_ERR, "could not retrieve prepared statement");
-            LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
             return -1;
         }
     }
@@ -871,11 +869,15 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     size_t limit = max_rows - *num_pdus;
     bind_in[2].buffer = &limit;
 
-    ret = mysql_stmt_bind_param(stmt, bind_in);
+    if (mysql_stmt_bind_param(stmt, bind_in)) {
+        LOG(LOG_ERR, "mysql_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        return -1;
+    }
 
     if (wrap_mysql_stmt_execute(conn, stmt)) {
         LOG(LOG_ERR, "could not read from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 
@@ -895,7 +897,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_bind_result() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 
@@ -904,7 +906,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     //   whole result from the db at one time.
     if (mysql_stmt_store_result(stmt)) {
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 
@@ -918,7 +920,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     }
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
         LOG(LOG_ERR, "error during mysql_stmt_fetch()");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 

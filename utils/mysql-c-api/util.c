@@ -18,16 +18,14 @@ int reconnectMysqlCApi(dbconn **conn);
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
-    MYSQL *mysql = conn->mysql;
     int tried = 0;
     int ret = 0;
     uint err_no = 0;
 
     ret = mysql_stmt_execute(stmt);
+    // currently limited to a single reconnect attempt
     while (ret) {
         err_no = mysql_stmt_errno(stmt);
-        LOG(LOG_ERR, "error during mysql_stmt_execute");
-        LOG(LOG_ERR, "    %u: %s", err_no, mysql_stmt_error(stmt));
         if (err_no == 2006  ||  err_no == 2013) {  // lost server connection
             LOG(LOG_WARNING, "connection to MySQL server was lost");
             if (tried) {
@@ -41,8 +39,6 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
             }
             ret = mysql_stmt_execute(stmt);
         } else {  // error, but not server disconnect
-            LOG(LOG_ERR, "error during mysql_stmt_execute");
-            LOG(LOG_ERR, "    %u: %s\n", err_no, mysql_error(mysql));
             return ret;
         }
     }
@@ -60,6 +56,7 @@ int wrap_mysql_query(dbconn *conn, const char *qry) {
     uint err_no = 0;
 
     ret = mysql_query(mysql, qry);
+    // currently limited to a single reconnect attempt
     while (ret) {
         err_no = mysql_errno(mysql);
         if (err_no == 2006  ||  err_no == 2013) {  // lost server connection
