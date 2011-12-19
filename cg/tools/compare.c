@@ -1,21 +1,5 @@
 /* $Id: compare.c 453 2008-07-25 15:30:40Z cgardiner $ */
 
-/* ***** BEGIN LICENSE BLOCK *****
- * 
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- * 
- * US government users are permitted unrestricted rights as
- * defined in the FAR.  
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles iW. Gardiner
- *
- * ***** END LICENSE BLOCK ***** */
 /* COMPARE */
 #include "includes.h"
 #include "sfcs.h"

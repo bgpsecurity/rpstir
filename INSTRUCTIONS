@@ -337,7 +337,7 @@ the below line, modified for the options you want to pass to netcat:
 To perform a basic validation of your install, run the self-test
 target by issuing the command:
 
-   make test
+   make check
 
 You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
@@ -348,7 +348,7 @@ that it's because of a known bug (#174). The workaround is to insert
 sleep commands into subsystemTests/runSubsystemTest.sh at the bottom
 of the loop that contains the line "./step${TESTID}.${N}". The amount
 of time needed to sleep depends on a number of factors and can be
-increased (within limits) until make test succeeds.
+increased (within limits) until make check succeeds.
 
 
 2.6 Post-Installation Procedures
