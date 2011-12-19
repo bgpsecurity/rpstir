@@ -35,6 +35,20 @@ void db_close() {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
+bool db_thread_init() {
+    return mysql_thread_init() == 0;
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
+void db_thread_close() {
+    mysql_thread_end();
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
 int reconnectMysqlCApi(dbconn **old_conn) {
     dbconn *conn = *old_conn;
     MYSQL *mysql = conn->mysql;
@@ -182,6 +196,11 @@ void db_disconnect(dbconn *conn) {
             free(conn->node);
             conn->node = NULL;
         }
+
+        free(conn->host); conn->host = NULL;
+        free(conn->user); conn->user = NULL;
+        free(conn->pass); conn->pass = NULL;
+        free(conn->db); conn->db = NULL;
 
         mysql_close(conn->mysql);
 

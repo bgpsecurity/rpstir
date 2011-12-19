@@ -437,6 +437,7 @@ static void cleanup(void * run_state_voidp)
 	{
 		db_disconnect(run_state->db);
 		run_state->db = NULL;
+		db_thread_close();
 	}
 
 	/* Unfortunately there doesn't seem to be a better option for
@@ -463,18 +464,25 @@ void * db_main(void * args_voidp)
 		ERR_LOG(retval, run_state.errorbuf, "pthread_setcancelstate()");
 	}
 
+	if (!db_thread_init())
+	{
+		LOG(LOG_ERR, "can't initialize per-thread DB state");
+		pthread_exit(NULL);
+	}
+
 	run_state.db = db_connect_default(DB_CLIENT_RTR);
+
+	if (run_state.db == NULL)
+	{
+		LOG(LOG_ERR, "can't connect to database");
+		db_thread_close();
+		pthread_exit(NULL);
+	}
 
 	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
 	if (retval != 0)
 	{
 		ERR_LOG(retval, run_state.errorbuf, "pthread_setcancelstate()");
-	}
-
-	if (run_state.db == NULL)
-	{
-		LOG(LOG_ERR, "can't connect to database");
-		pthread_exit(NULL);
 	}
 
 	while (true)
