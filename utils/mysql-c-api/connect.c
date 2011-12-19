@@ -61,7 +61,7 @@ int reconnectMysqlCApi(dbconn **old_conn) {
     // TODO:  check table descriptions
 
     // add one of these sequences for each DB_CLIENT_*
-    if (conn->client_type  &  DB_CLIENT_RTR) {
+    if (conn->client_flags  &  DB_CLIENT_RTR) {
         if (stmtsCreateAllRtr(conn) == -1) {
             db_disconnect(conn);
             return -1;
@@ -112,7 +112,7 @@ static void *connectMysqlCApi(
         if (mysql) {mysql_close(mysql);}
         return NULL;
     }
-    conn->client_type = client_flags;
+    conn->client_flags = client_flags;
     conn->mysql = mysql;
     conn->head = malloc(sizeof(struct _stmt_node));
     if (!(conn->head)) {

@@ -3,7 +3,7 @@ Notes:
 - prep-stmt.c needs both DB_CLIENT_FLAG and DB_CLIENT_PSTMT_SUMMARY to determine
       which stmt to return per request from each function in client-foo.c.
 - Client needs to see:
-    - connect.h:  enum client_type { DB_CLIENT; };
+    - connect.h:  enum client_flags { DB_CLIENT; };
     - connect.c:  void connectDb();
     - connect.c:  void disconnectDb();
     - prep-stmt.c:  stmtNodesGetStmt();
@@ -17,7 +17,7 @@ stmtsCreateAllClient();
 ========== prep-stmt.c
 public struct stmt_node
     MYSQL_STMT *stmt;
-    int client-type;
+    int client_type;
     int qry_num;
     struct stmt_node *next;
 
@@ -36,11 +36,11 @@ int get_session_id(void *connp, session_id_t *session) {
 
 
 ========== connect.c
-connect.h:  enum client_type { DB_RTR; };
+connect.h:  enum client_flags { DB_RTR; };
 static void connectMysqlCApi();
     // after connection is made:
     struct stmt_node *head = {NULL, -1, -1, NULL};
-    switch (client-type)
+    switch (client_type)
     case DB_RTR:
         stmtNodesCreateAllRtr(head)
     // put head into connp to return to client
