@@ -504,7 +504,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         'readvsize_objid' combines 'vsize_objid', a  'calloc'  operation  and  a
         'read_objid'  to  obtain the value in dot notation, the address of which
         is put into 'pp'.  These return -1  if  the  object  is  not  an  OBJECT
-        IDENTIFIER.  <<NEED TEXT: write_objid will often have the side-effect of causing a CHOICE to be made in a 'DEFINED BY'.  Actually, things can be DEFINED BY anything else, not just OID, but OID is the most common.>>
+        IDENTIFIER.  <<NEED TEXT: write_objid will often have the side-effect of causing a CHOICE to be made in a 'DEFINED BY'.  Actually, things can be DEFINED BY anything else, not just OID, but OID is the most common.  Also, please mention diff_objid because it will be used frequently.>>
 
         The special 'bits' functions are valid only for BIT STRINGs;  any  other
         use  returns  -1.  If the object does not have named bits, it is assumed
