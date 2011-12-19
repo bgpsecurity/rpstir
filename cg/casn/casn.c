@@ -1415,7 +1415,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     {
     uchar bb, *b, *c, buf[8];
     int i, lth, num, of;
-    ulong secs;
+    int64_t secs;
     struct casn time_casn, *tcasnp, *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;

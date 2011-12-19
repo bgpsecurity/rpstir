@@ -89,7 +89,7 @@ echo "-------------------------------------------------------------------"
 echo "Subsystem Test $TESTID: $NUM_PASSED out of $NUM_TOTAL steps passed."
 echo "Subsystem Test $TESTID: $TEST_STATUS"
 echo "-------------------------------------------------------------------"
-
+sleep 10
 # exit with nonzero if test failed
 if [ "$TEST_STATUS" != "PASS" ]; then
     exit 2

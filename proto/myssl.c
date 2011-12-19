@@ -39,6 +39,7 @@
 #include "err.h"
 #include "logutils.h"
 #include "rpwork.h"
+#include "crlv2.h"
 
 /*
   Convert between a time string in a certificate and a time string
@@ -3739,7 +3740,8 @@ static int crl_crlnum_chk(struct CertificateRevocationList *crlp)
 }
 
 
-static int crl_forbidden_ext_chk(struct CertificationRevocationList *crlp)
+static int crl_forbidden_ext_chk(struct CertificateRevocationList *crlp)
+
 {
   return 0;
 }
