@@ -31,7 +31,7 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
                 return -1;
             }
             tried++;
-            if (!reconnectMysqlCApi(&conn)) {
+            if (reconnectMysqlCApi(&conn)) {
                 LOG(LOG_WARNING, "reconnection to MySQL server failed");
                 return -1;
             }
@@ -64,7 +64,7 @@ int wrap_mysql_query(dbconn *conn, const char *qry) {
                 return -1;
             }
             tried++;
-            if (!reconnectMysqlCApi(&conn)) {
+            if (reconnectMysqlCApi(&conn)) {
                 LOG(LOG_WARNING, "reconnection to MySQL server failed");
                 return -1;
             }
