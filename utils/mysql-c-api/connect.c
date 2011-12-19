@@ -132,6 +132,12 @@ static void *connectMysqlCApi(
 
     // TODO:  check table descriptions
 
+    if (client_flags & ~DB_CLIENT_ALL) {
+        LOG(LOG_ERR, "got invalid flags");
+        db_disconnect(conn);
+        return NULL;
+    }
+
     // add one of these sequences for each DB_CLIENT_*
     if (client_flags  &  DB_CLIENT_RTR) {
         if (stmtsCreateAllRtr(conn) == -1) {
