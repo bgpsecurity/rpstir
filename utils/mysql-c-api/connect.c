@@ -118,12 +118,11 @@ static void *connectMysqlCApi(
     conn->head->qry_num = -1;
     conn->head->stmt = NULL;
 
-    // store parameters to enable reconnec
-    const size_t STR_LIMIT = 100;
-    conn->host = strndup(host, STR_LIMIT - 1);
-    conn->user = strndup(user, STR_LIMIT - 1);
-    conn->pass = strndup(pass, STR_LIMIT - 1);
-    conn->db   = strndup(  db, STR_LIMIT - 1);
+    // store parameters to enable reconnect
+    conn->host = strdup(host);
+    conn->user = strdup(user);
+    conn->pass = strdup(pass);
+    conn->db   = strdup(db);
     if (conn->host == NULL  ||  conn->user == NULL ||
             conn->pass == NULL  ||  conn->db == NULL) {
         LOG(LOG_ERR, "could not alloc for strings");
