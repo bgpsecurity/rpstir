@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <my_global.h>
 #include <mysql.h>
@@ -31,7 +32,7 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt, const char *err_msg_
                 return -1;
             }
             tried++;
-            if (!reconnectMysqlCApi(&conn)) {
+            if (reconnectMysqlCApi(&conn)) {
                 LOG(LOG_WARNING, "reconnection to MySQL server failed");
                 return -1;
             }
@@ -67,7 +68,7 @@ int wrap_mysql_query(dbconn *conn, const char *qry, const char *err_msg_in) {
                 return -1;
             }
             tried++;
-            if (!reconnectMysqlCApi(&conn)) {
+            if (reconnectMysqlCApi(&conn)) {
                 LOG(LOG_WARNING, "reconnection to MySQL server failed");
                 return -1;
             }
@@ -123,10 +124,8 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
         return -1;
     }
 
+    memcpy(*out, row[field_no], len);
     (*out)[len] = '\0';
-    for (i = 0; i < len; i++) {
-        (*out)[i] = row[field_no][i];
-    }
 
     return 0;
 }
