@@ -89,7 +89,7 @@ int getCacheNonce_old(conn *conn, cache_nonce_t *nonce) {
         return -1;
     }
 }
-*/
+ */
 
 
 /**=============================================================================
@@ -105,10 +105,8 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
 
     if (stmt == NULL) {
         ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_GET_NONCE);
-        // TODO:  check ret
-
-        if (!stmt) {
-            LOG(LOG_ERR, "could not bind to prepared statement");
+        if (ret  ||  !stmt) {
+            LOG(LOG_ERR, "could not retrieve prepared statement");
             LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
             return -1;
         }
@@ -148,10 +146,10 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
         return -1;
     }
 
-//    if (is_null[0])
-//        fprintf(stdout, "NULL\n");
-//    else
-//        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
+    //    if (is_null[0])
+    //        fprintf(stdout, "NULL\n");
+    //    else
+    //        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
 
     *nonce = data;
 
@@ -178,7 +176,7 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
         return GET_SERNUM_ERR;
     }
 
-//    if (wrap_mysql_query(conn, qry)) {
+    //    if (wrap_mysql_query(conn, qry)) {
     if (wrap_mysql_query(conn, qry)) {
         LOG(LOG_ERR, "could not get latest serial number from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
@@ -1191,7 +1189,7 @@ void db_rtr_reset_query_close(dbconn *conn, void * query_state) {
 /**=============================================================================
  * not currently an API function.  currently for testing
  * @pre table rtr_nonce has exactly 0 or 1 rows.
- * TODO: If this becomes used beyond testing, check that old_nonce != new_nonce.
+ * NOTE: If this becomes used beyond testing, check that old_nonce != new_nonce.
 ------------------------------------------------------------------------------*/
 int setCacheNonce(dbconn *conn, uint16_t nonce) {
     MYSQL *mysql = conn->mysql;
