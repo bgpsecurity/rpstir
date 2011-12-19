@@ -17,4 +17,7 @@ struct _dbconn {
 };
 
 
+int reconnectMysqlCApi(struct _dbconn **old_conn);
+
+
 #endif // DB_INTERNAL_H_
