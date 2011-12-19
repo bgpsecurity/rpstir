@@ -207,6 +207,11 @@ void db_disconnect(dbconn *conn) {
             conn->head = NULL;
         }
 
+        free(conn->host); conn->host = NULL;
+        free(conn->user); conn->user = NULL;
+        free(conn->pass); conn->pass = NULL;
+        free(conn->db); conn->db = NULL;
+
         mysql_close(conn->mysql);
 
         free(conn);
