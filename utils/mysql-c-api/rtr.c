@@ -94,20 +94,18 @@ int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
 ------------------------------------------------------------------------------*/
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL *mysql = conn->mysql;
-    static MYSQL_STMT *stmt = NULL;
+    MYSQL_STMT *stmt;
     int ret;
     ulong length[1];
     uint16_t data;
     my_bool is_null[1];
     my_bool error[1];
 
-    if (stmt == NULL) {
-        ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_GET_SESSION);
-        if (ret  ||  !stmt) {
-            LOG(LOG_ERR, "could not retrieve prepared statement");
-            LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-            return -1;
-        }
+    ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_GET_SESSION);
+    if (ret  ||  !stmt) {
+         LOG(LOG_ERR, "could not retrieve prepared statement");
+         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+         return -1;
     }
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
@@ -830,7 +828,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     struct query_state *state = (struct query_state*) query_state;
     int ret;
 
-    static MYSQL_STMT *stmt = NULL;
+    MYSQL_STMT *stmt;
     MYSQL_BIND bind_in[3];
 
     MYSQL_BIND bind_out[3];
@@ -839,12 +837,10 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     char ip_addr[IPADDR_STR_LEN + 1];
     unsigned char is_announce;
 
-    if (stmt == NULL) {
-        ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT);
-        if (ret  ||  !stmt) {
-            LOG(LOG_ERR, "could not retrieve prepared statement");
-            return -1;
-        }
+    ret = stmtNodesGetStmt(&stmt, conn, DB_CLIENT_RTR, DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT);
+    if (ret  ||  !stmt) {
+        LOG(LOG_ERR, "could not retrieve prepared statement");
+        return -1;
     }
 
     memset(bind_in, 0, sizeof(bind_in));
