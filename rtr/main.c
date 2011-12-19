@@ -129,6 +129,7 @@ static void make_listen_sockets(struct run_state * run_state,
 			LOG(LOG_ERR, "can't listen on more than %d sockets, "
 				"increase the limit in rtr/config.h if needed",
 				MAX_LISTENING_SOCKETS);
+			freeaddrinfo(res);
 			pthread_exit(NULL);
 		}
 
@@ -137,6 +138,7 @@ static void make_listen_sockets(struct run_state * run_state,
 		if (run_state->listen_fds[run_state->listen_fds_initialized] == -1)
 		{
 			ERR_LOG(errno, errorbuf, "socket()");
+			freeaddrinfo(res);
 			pthread_exit(NULL);
 		}
 		++run_state->listen_fds_initialized;
@@ -159,6 +161,7 @@ static void make_listen_sockets(struct run_state * run_state,
 		if (retval != 0)
 		{
 			LOG(LOG_ERR, "getnameinfo(): %s", gai_strerror(retval));
+			freeaddrinfo(res);
 			pthread_exit(NULL);
 		}
 
@@ -166,6 +169,7 @@ static void make_listen_sockets(struct run_state * run_state,
 			resp->ai_addr, resp->ai_addrlen) != 0)
 		{
 			ERR_LOG(errno, errorbuf, "bind([%s]:%s)", listen_host, listen_serv);
+			freeaddrinfo(res);
 			pthread_exit(NULL);
 		}
 
@@ -173,6 +177,7 @@ static void make_listen_sockets(struct run_state * run_state,
 			INT_MAX) != 0)
 		{
 			ERR_LOG(errno, errorbuf, "listen([%s]:%s)", listen_host, listen_serv);
+			freeaddrinfo(res);
 			pthread_exit(NULL);
 		}
 
