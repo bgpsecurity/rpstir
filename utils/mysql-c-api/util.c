@@ -12,9 +12,6 @@
 #include "util.h"
 
 
-int reconnectMysqlCApi(dbconn **conn);
-
-
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
