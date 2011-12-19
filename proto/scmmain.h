@@ -214,7 +214,7 @@ static scmtab scmtabbuilder[] =
 	//   directory, but there was no good way to do that and not
 	//   risk them not being created at initialization
 
-	{             /* RTR_NONCE */
+	{             /* RTR_SESSION */
 	  "rtr_session",
 	  "RTR_SESSION",
 	  "session_id SMALLINT UNSIGNED NOT NULL,"

@@ -99,7 +99,7 @@ not necessarily a C array
  . socket_fd_t: a file descriptor for a network socket
  . db_connection_t: opaque data type for a database connection
 
- . cache_nonce_t: an integer type of the same signedness and width as a cache nonce
+ . session_id_t: an integer type of the same signedness and width as a session id
  . serial_number_t: an integer type of the same signedness and width as a serial number
  . struct cache_state: a local store of the cache's state
  . struct global_cache_state: a struct cache_state with a synchronization mechanism

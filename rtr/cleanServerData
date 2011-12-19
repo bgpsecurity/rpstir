@@ -5,7 +5,7 @@
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
-echo "TRUNCATE TABLE rtr_nonce;" | $RPKI_MYSQL_CMD
+echo "TRUNCATE TABLE rtr_session;" | $RPKI_MYSQL_CMD
 echo "TRUNCATE TABLE rtr_update;" | $RPKI_MYSQL_CMD
 echo "TRUNCATE TABLE rtr_full;" | $RPKI_MYSQL_CMD
 echo "TRUNCATE TABLE rtr_incremental;" | $RPKI_MYSQL_CMD
