@@ -48,9 +48,7 @@ int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
     MYSQL_ROW row;
     const char qry[] = "select session_id from rtr_session";
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not get session_id from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not get session_id from db")) {
         return -1;
     }
 
@@ -112,9 +110,7 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
         }
     }
 
-    if (wrap_mysql_stmt_execute(conn, stmt)) {
-        LOG(LOG_ERR, "mysql_stmt_execute() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -182,9 +178,7 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
     }
 
     //    if (wrap_mysql_query(conn, qry)) {
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not get latest serial number from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not get latest serial number from db")) {
         return GET_SERNUM_ERR;
     }
 
@@ -235,9 +229,7 @@ int getNumRowsInTable(dbconn *conn, char *table_name) {
 
     snprintf(qry, QRY_SZ, "select count(*) from %s", table_name);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not read from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not read from db")) {
         return -1;
     }
 
@@ -273,9 +265,7 @@ int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
             "from rtr_update "
             "where prev_serial_num=%" PRIu32, ser_num_prev);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not read rtr_update from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not read rtr_update from db")) {
         return -1;
     }
 
@@ -348,9 +338,7 @@ int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
             "from rtr_update "
             "where serial_num=%" PRIu32, serial);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not read rtr_update from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not read rtr_update from db")) {
         return -1;
     }
 
@@ -880,9 +868,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
         return -1;
     }
 
-    if (wrap_mysql_stmt_execute(conn, stmt)) {
-        LOG(LOG_ERR, "could not read from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+    if (wrap_mysql_stmt_execute(conn, stmt, "could not retrieve data from rtr_incremental")) {
         return -1;
     }
 
@@ -1144,9 +1130,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
             " limit %u, %zu",
             state->ser_num, state->first_row, max_rows - num_pdus);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not read rtr_full from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not read rtr_full from db")) {
         pdu_free_array(pdus, max_rows);
         return -1;
     }
@@ -1209,18 +1193,14 @@ int setSessionId(dbconn *conn, uint16_t session) {
     const int QRY_SZ = 256;
     char qry_insert[QRY_SZ];
 
-    if (wrap_mysql_query(conn, qry_delete)) {
-        LOG(LOG_ERR, "query failed:  %s", qry_delete);
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry_delete, "could not delete from rtr_session")) {
         return -1;
     }
 
     snprintf(qry_insert, QRY_SZ, "insert into rtr_session (session_id) "
             "value (%u)", session);
 
-    if (wrap_mysql_query(conn, qry_insert)) {
-        LOG(LOG_ERR, "query failed:  %s", qry_insert);
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry_insert, "could not insert into rtr_session")) {
         return -1;
     }
 
@@ -1264,9 +1244,7 @@ int addNewSerNum(dbconn *conn, const uint32_t *in) {
     snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
             new_ser_num);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not delete serial number %u from db", new_ser_num);
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not delete serial number from db")) {
         return -1;
     }
 
@@ -1276,9 +1254,7 @@ int addNewSerNum(dbconn *conn, const uint32_t *in) {
     snprintf(qry, QRY_SZ, "insert into rtr_update values (%u, now())",
             new_ser_num);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not add new serial number to db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not add new serial number to db")) {
         return -1;
     }
 
@@ -1298,9 +1274,7 @@ int deleteSerNum(dbconn *conn, uint32_t ser_num) {
     snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
             ser_num);
 
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not delete serial number from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not delete serial number from db")) {
         return -1;
     }
 
@@ -1315,13 +1289,10 @@ int deleteSerNum(dbconn *conn, uint32_t ser_num) {
  *   records from rtr_update.
 ------------------------------------------------------------------------------*/
 int deleteAllSerNums(dbconn *conn) {
-    MYSQL *mysql = conn->mysql;
     const char qry[] = "delete from rtr_update";
 
     LOG(LOG_ERR, "x");
-    if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not delete all serial numbers from db");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_query(conn, qry, "could not delete all serial numbers from db")) {
         return -1;
     }
 

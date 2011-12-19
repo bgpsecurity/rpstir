@@ -15,7 +15,7 @@
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
+int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt, const char *err_msg_in) {
     int tried = 0;
     int ret = 0;
     uint err_no = 0;
@@ -37,6 +37,9 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
             }
             ret = mysql_stmt_execute(stmt);
         } else {  // error, but not server disconnect
+            if (err_msg_in != NULL)
+                LOG(LOG_ERR, "%s", err_msg_in);
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
             return ret;
         }
     }
@@ -47,7 +50,7 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int wrap_mysql_query(dbconn *conn, const char *qry) {
+int wrap_mysql_query(dbconn *conn, const char *qry, const char *err_msg_in) {
     MYSQL *mysql = conn->mysql;
     int tried = 0;
     int ret = 0;
@@ -70,6 +73,9 @@ int wrap_mysql_query(dbconn *conn, const char *qry) {
             }
             ret = mysql_query(mysql, qry);
         } else {  // error, but not server disconnect
+            if (err_msg_in != NULL)
+                LOG(LOG_ERR, "%s", err_msg_in);
+            LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
             return ret;
         }
     }
