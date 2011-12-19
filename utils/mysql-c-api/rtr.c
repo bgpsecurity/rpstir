@@ -115,6 +115,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
     if (wrap_mysql_stmt_execute(conn, stmt)) {
         LOG(LOG_ERR, "mysql_stmt_execute() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
 
@@ -130,12 +131,14 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
     if (mysql_stmt_bind_result(stmt, bind)) {
         LOG(LOG_ERR, "mysql_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
 
     if (mysql_stmt_store_result(stmt)) {
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
 
@@ -143,6 +146,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
 
@@ -152,6 +156,7 @@ int db_rtr_get_cache_nonce(dbconn *conn, cache_nonce_t *nonce) {
     //        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
 
     *nonce = data;
+    mysql_stmt_free_result(stmt);
 
     return 0;
 }
@@ -898,6 +903,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
 
@@ -907,6 +913,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     if (mysql_stmt_store_result(stmt)) {
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
 
@@ -914,6 +921,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
         if (fillPduIpPrefix(&((*_pdus)[(*num_pdus)++]), asn, ip_addr,
                 is_announce, state->nonce)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
+            mysql_stmt_free_result(stmt);
             return -1;
         }
         ++state->first_row;
@@ -921,8 +929,10 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
         LOG(LOG_ERR, "error during mysql_stmt_fetch()");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
         return -1;
     }
+    mysql_stmt_free_result(stmt);
 
     return 0;
 }
