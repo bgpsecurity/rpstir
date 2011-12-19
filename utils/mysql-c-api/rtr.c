@@ -42,14 +42,14 @@ void free_query_state(void *qs) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 /*
-int getCacheNonce_old(conn *conn, cache_nonce_t *nonce) {
+int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
     MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     MYSQL_ROW row;
-    const char qry[] = "select cache_nonce from rtr_nonce";
+    const char qry[] = "select session_id from rtr_session";
 
     if (wrap_mysql_query(conn, qry)) {
-        LOG(LOG_ERR, "could not get cache nonce from db");
+        LOG(LOG_ERR, "could not get session_id from db");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
         return -1;
     }
@@ -61,24 +61,24 @@ int getCacheNonce_old(conn *conn, cache_nonce_t *nonce) {
     }
 
     uint num_rows = mysql_num_rows(result);
-    char *nonce_str = NULL;
+    char *session_id_str = NULL;
     if (num_rows == 1) {
         row = mysql_fetch_row(result);
-        if (getStringByFieldname(&nonce_str, result, row, "cache_nonce")) {
-            if (nonce_str) {
-                free (nonce_str);
-                nonce_str = NULL;
+        if (getStringByFieldname(&session_id_str, result, row, "session_id")) {
+            if (session_id_str) {
+                free (session_id_str);
+                session_id_str = NULL;
             }
             mysql_free_result(result);
             return -1;
         } else {
-            if (sscanf(nonce_str, "%" SCNu16, nonce) < 1) {
-                LOG(LOG_ERR, "unexpected value for cache_nonce");
+            if (sscanf(session_id_str, "%" SCNu16, session) < 1) {
+                LOG(LOG_ERR, "unexpected value for session_id");
                 return -1;
             }
-            if (nonce_str) {
-                free (nonce_str);
-                nonce_str = NULL;
+            if (session_id_str) {
+                free (session_id_str);
+                session_id_str = NULL;
             }
             mysql_free_result(result);
             return 0;

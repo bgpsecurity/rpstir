@@ -22,7 +22,7 @@ void db_use_conn(dbconn *conn) {
     db_rtr_get_session_id(conn, &session);
     printf("session = %" PRIu16 "\n", session);
 
-//    setCacheNonce(conn, 3434);
+//    setSessionId(conn, 3434);
 
 //    int ret;
 //    uint32_t sn = 0;

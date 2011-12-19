@@ -29,9 +29,9 @@ int stmtNodesDeleteNode(struct stmt_node *head);
 
 
 ========== client-rtr.c
-int getCacheNonce(void *connp, cache_nonce_t *nonce) {
+int get_session_id(void *connp, session_id_t *session) {
     MYSQL_STMT *stmt;
-    ret = stmtNodeGetStmt(stmt, connp, DB_RTR_FLAG, DB_RTR_PSTMT_GET_NONCE);
+    ret = stmtNodeGetStmt(stmt, connp, DB_RTR_FLAG, DB_RTR_PSTMT_GET_SESSION_ID);
 }
 
 

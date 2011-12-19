@@ -13,7 +13,7 @@
 
 // <cache_state>
 int db_rtr_get_session_id(dbconn *conn, session_id_t * session);
-//int getCacheNoncePs(dbconn *conn, session_id_t * session);
+//int db_rtr_get_session_id_old(dbconn *conn, session_id_t * session);
 // </cache_state>
 
 
