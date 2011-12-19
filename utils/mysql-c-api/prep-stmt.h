@@ -7,7 +7,7 @@
 
 
 struct _stmt_node {
-    int client_flags;
+    int client_type;
     struct _stmt_node *next;
     int qry_num;
     MYSQL_STMT *stmt;

@@ -31,7 +31,7 @@ bool db_init();
 void db_close();
 
 dbconn *db_connect(
-        int client_flags,
+        int client_type,
         const char *host,
         const char *user,
         const char *pass,

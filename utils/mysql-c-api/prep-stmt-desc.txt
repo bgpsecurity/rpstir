@@ -17,7 +17,7 @@ stmtsCreateAllClient();
 ========== prep-stmt.c
 public struct stmt_node
     MYSQL_STMT *stmt;
-    int client_flags;
+    int client-type;
     int qry_num;
     struct stmt_node *next;
 
@@ -40,7 +40,7 @@ connect.h:  enum client_type { DB_RTR; };
 static void connectMysqlCApi();
     // after connection is made:
     struct stmt_node *head = {NULL, -1, -1, NULL};
-    switch (client_flags)
+    switch (client-type)
     case DB_RTR:
         stmtNodesCreateAllRtr(head)
     // put head into connp to return to client

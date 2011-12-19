@@ -49,7 +49,7 @@ int stmtNodesGetStmt(MYSQL_STMT **stmt, dbconn *conn, int client_type, int qry_n
 
     node = conn->head;
     while ((node = node->next) != NULL) {
-        if (node->client_flags == client_type  &&  node->qry_num == qry_num) {
+        if (node->client_type == client_type  &&  node->qry_num == qry_num) {
             *stmt = node->stmt;
             found_it = 1;
             break;
@@ -127,7 +127,7 @@ int stmtsCreateAllRtr(dbconn *conn) {
             LOG(LOG_ERR, "could not alloc for struct stmt_node");
             return -1;
         }
-        node->client_flags = DB_CLIENT_RTR;
+        node->client_type = DB_CLIENT_RTR;
         node->next = NULL;
         node->qry_num = i;
         node->stmt = NULL;
