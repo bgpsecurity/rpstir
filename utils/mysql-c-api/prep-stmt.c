@@ -13,7 +13,7 @@
  * @ret 0 on success, -1 on error.
 ------------------------------------------------------------------------------*/
 int stmtNodesAddNode(dbconn *conn,
-        struct _stmt_node **node,
+        struct _stmt_node *node,
         char *qry) {
     MYSQL *mysql = conn->mysql;
     MYSQL_STMT *stmt = NULL;
@@ -31,9 +31,9 @@ int stmtNodesAddNode(dbconn *conn,
         return -1;
     }
 
-    (*node)->stmt = stmt;
-    (*node)->next = conn->head->next;
-    conn->head->next = *node;
+    node->stmt = stmt;
+    node->next = conn->head->next;
+    conn->head->next = node;
 
     return 0;
 }
@@ -133,7 +133,7 @@ int stmtsCreateAllRtr(dbconn *conn) {
         node->stmt = NULL;
 
         // add the stmt to the node, and the node to the linked list
-        ret = stmtNodesAddNode(conn, &node, qrys[i]);
+        ret = stmtNodesAddNode(conn, node, qrys[i]);
         if (ret) {
             free(node);
             return -1;

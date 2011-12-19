@@ -15,7 +15,7 @@ struct _stmt_node {
 typedef struct _stmt_node stmt_node;
 
 int stmtNodesAddNode(dbconn *conn,
-        stmt_node **node,
+        stmt_node *node,
         char *qry);
 
 int stmtNodesGetStmt(MYSQL_STMT **stmt,
