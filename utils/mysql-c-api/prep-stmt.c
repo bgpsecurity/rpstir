@@ -32,8 +32,12 @@ int stmtNodesAddNode(dbconn *conn,
     }
 
     node->stmt = stmt;
-    node->next = conn->head->next;
-    conn->head->next = node;
+    if (conn->node == NULL) {
+        conn->node = node;
+    } else {
+        node->next = conn->node;
+        conn->node = node;
+    }
 
     return 0;
 }
@@ -47,13 +51,15 @@ int stmtNodesGetStmt(MYSQL_STMT **stmt, dbconn *conn, int client_type, int qry_n
     int found_it = 0;
     (void) stmt;  // to avoid -Wunused-parameter
 
-    node = conn->head;
-    while ((node = node->next) != NULL) {
+    node = conn->node;
+    while (node != NULL) {
         if (node->client_type == client_type  &&  node->qry_num == qry_num) {
             *stmt = node->stmt;
             found_it = 1;
             break;
         }
+
+        node = node->next;
     }
 
     if (found_it)
@@ -66,14 +72,14 @@ int stmtNodesGetStmt(MYSQL_STMT **stmt, dbconn *conn, int client_type, int qry_n
 /**=============================================================================
  * @ret number of nodes deleted.
 ------------------------------------------------------------------------------*/
-int stmtNodesDeleteNode(struct _stmt_node *head) {
+int stmtNodesDeleteNode(struct _stmt_node *node) {
     int num_nodes_deleted = 0;
     stmt_node *tmp;
 
-    if (head->next != NULL) {
-        mysql_stmt_close(head->next->stmt);
-        tmp = head->next;
-        head->next = tmp->next;
+    if (node != NULL) {
+        mysql_stmt_close(node->stmt);
+        tmp = node;
+        node = node->next;
         free(tmp);
         num_nodes_deleted++;
     }
@@ -88,7 +94,7 @@ int stmtNodesDeleteAll(dbconn *conn) {
     int ret = 0;
 
     while (1) {
-        ret = stmtNodesDeleteNode(conn->head);
+        ret = stmtNodesDeleteNode(conn->node);
         if (ret > 0)
             num_nodes_deleted += ret;
         if (ret == 0)

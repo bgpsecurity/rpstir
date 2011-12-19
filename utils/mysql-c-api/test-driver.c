@@ -80,6 +80,7 @@ void db_use_conn(dbconn *conn) {
 int main() {
     int client_types = 0;
     dbconn *conn = NULL;
+
 //    const char host[] = "localhost";
 //    const char user[] = "rpki";
 //    const char pass[] = "validator";
@@ -87,8 +88,8 @@ int main() {
 
     OPEN_LOG();
 
-//    if ((conn = db_connect(host, user, pass, db)) == NULL) {
     client_types |= DB_CLIENT_RTR;
+//    if ((conn = db_connect(client_flags, host, user, pass, db)) == NULL) {
     if ((conn = db_connect_default(client_types)) == NULL) {
         CLOSE_LOG();
         return -1;

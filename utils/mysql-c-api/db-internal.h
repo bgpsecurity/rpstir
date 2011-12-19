@@ -8,7 +8,7 @@
 
 struct _dbconn {
     int client_flags;
-    struct _stmt_node *head;
+    struct _stmt_node *node;
     MYSQL *mysql;
     char *host;
     char *user;

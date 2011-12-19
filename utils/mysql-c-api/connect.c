@@ -114,17 +114,7 @@ static void *connectMysqlCApi(
     }
     conn->client_flags = client_flags;
     conn->mysql = mysql;
-    conn->head = malloc(sizeof(struct _stmt_node));
-    if (!(conn->head)) {
-        LOG(LOG_ERR, "could not alloc for struct stmt_node" );
-        if (conn) {free (conn); conn = NULL;}
-        if (mysql) {mysql_close(mysql);}
-        return NULL;
-    }
-    conn->head->client_type = 0;
-    conn->head->next = NULL;
-    conn->head->qry_num = -1;
-    conn->head->stmt = NULL;
+    conn->node = NULL;
 
     // store parameters to enable reconnect
     conn->host = strdup(host);
@@ -187,10 +177,10 @@ dbconn *db_connect_default(int client_flags) {
 ------------------------------------------------------------------------------*/
 void db_disconnect(dbconn *conn) {
     if (conn) {
-        if (conn->head) {
+        if (conn->node) {
             stmtNodesDeleteAll(conn);
-            free(conn->head);
-            conn->head = NULL;
+            free(conn->node);
+            conn->node = NULL;
         }
 
         mysql_close(conn->mysql);
