@@ -221,7 +221,7 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
   // mark it as encrypted with rsa, no params
   write_objid(&sigInfop->signatureAlgorithm.algorithm, 
     id_sha_256WithRSAEncryption); 
-  write_casn(&sigInfop->signatureAlgorithm.parameters.rsadsi_rsaEncryption, (uchar *)"", 0);
+  write_casn(&sigInfop->signatureAlgorithm.parameters, (uchar *)"", 0);
 
   // no errors, we return NULL
   return NULL;

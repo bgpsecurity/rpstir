@@ -819,7 +819,8 @@ int roaValidate(struct ROA *rp)
 
   // check that the ROA version is right
   long val;
-  if (read_casn_num(&roap->version.self, &val) > 0) return ERR_SCM_BADROAVER;
+  if (read_casn_num(&roap->version.self, &val) > 0 && val != 0) 
+    return ERR_SCM_BADROAVER;
   // check that the asID is  a positive nonzero integer
   if (read_casn_num(&roap->asID, &iAS_ID) < 0 || iAS_ID <= 0) 
     return ERR_SCM_INVALASID;
