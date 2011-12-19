@@ -6,6 +6,7 @@
 
 #include <my_global.h>
 #include <mysql.h>
+#include <errmsg.h>
 
 #include "db-internal.h"
 #include "logging.h"
@@ -23,7 +24,7 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt) {
     // currently limited to a single reconnect attempt
     while (ret) {
         err_no = mysql_stmt_errno(stmt);
-        if (err_no == 2006  ||  err_no == 2013) {  // lost server connection
+        if (err_no == CR_SERVER_GONE_ERROR  ||  err_no == CR_SERVER_LOST) {  // lost server connection
             LOG(LOG_WARNING, "connection to MySQL server was lost");
             if (tried) {
                 LOG(LOG_ERR, "not able to reconnect to MySQL server");
@@ -56,7 +57,7 @@ int wrap_mysql_query(dbconn *conn, const char *qry) {
     // currently limited to a single reconnect attempt
     while (ret) {
         err_no = mysql_errno(mysql);
-        if (err_no == 2006  ||  err_no == 2013) {  // lost server connection
+        if (err_no == CR_SERVER_GONE_ERROR  ||  err_no == CR_SERVER_LOST) {  // lost server connection
             LOG(LOG_WARNING, "connection to MySQL server was lost");
             if (tried) {
                 LOG(LOG_ERR, "not able to reconnect to MySQL server");
