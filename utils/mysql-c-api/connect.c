@@ -44,7 +44,9 @@ int reconnectMysqlCApi(dbconn **old_conn) {
     // @see MySQL 5.1 Reference Manual, section 20.9.3.49 under
     //     MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
     my_bool reconnect = 0;
-    mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect);
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+        LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
+    }
     if (!mysql_real_connect(mysql, conn->host, conn->user, conn->pass,
             conn->db, 0, NULL, 0) ) {
         LOG(LOG_ERR, "could not reconnect to MySQL db");
@@ -52,7 +54,9 @@ int reconnectMysqlCApi(dbconn **old_conn) {
         if (mysql) {mysql_close(mysql);}
         return -1;
     }
-    mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect);
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+        LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
+    }
 
     // TODO:  check table descriptions
 
