@@ -93,14 +93,18 @@ static void *connectMysqlCApi(
     // @see MySQL 5.1 Reference Manual, section 20.9.3.49 under
     //     MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
     my_bool reconnect = 0;
-    mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect);
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+        LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
+    }
     if (!mysql_real_connect(mysql, host, user, pass, db, 0, NULL, 0) ) {
         LOG(LOG_ERR, "could not connect to MySQL db");
         LOG(LOG_ERR, "    %u: %s", mysql_errno(mysql), mysql_error(mysql));
         if (mysql) {mysql_close(mysql);}
         return NULL;
     }
-    mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect);
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+        LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
+    }
 
     conn = malloc(sizeof(dbconn));
     if (!conn) {
