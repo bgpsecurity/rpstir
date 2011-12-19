@@ -377,6 +377,8 @@ static void cleanup(void * run_state_voidp)
 	{
 		db_disconnect(run_state->db);
 		run_state->db = NULL;
+		db_thread_close();
+		db_close();
 	}
 
 	if (run_state->db_semaphore_initialized)
@@ -463,10 +465,23 @@ static void startup(struct run_state * run_state)
 	unblock_signals();
 
 	block_signals();
+	if (!db_init())
+	{
+		LOG(LOG_ERR, "can't initialize global DB state");
+		pthread_exit(NULL);
+	}
+	if (!db_thread_init())
+	{
+		LOG(LOG_ERR, "can't initialize thread-local DB state");
+		db_close();
+		pthread_exit(NULL);
+	}
 	run_state->db = db_connect_default(DB_CLIENT_RTR);
 	if (run_state->db == NULL)
 	{
 		LOG(LOG_ERR, "can't connect to database");
+		db_thread_close();
+		db_close();
 		pthread_exit(NULL);
 	}
 	unblock_signals();
