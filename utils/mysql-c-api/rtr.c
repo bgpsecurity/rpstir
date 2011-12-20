@@ -882,12 +882,13 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     }
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
-        if (fillPduIpPrefix(&((*_pdus)[(*num_pdus)++]), asn, ip_addr,
+        if (fillPduIpPrefix(&((*_pdus)[*num_pdus]), asn, ip_addr,
                 is_announce, state->session)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
             return -1;
         }
+        ++*num_pdus;
         ++state->first_row;
     }
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
