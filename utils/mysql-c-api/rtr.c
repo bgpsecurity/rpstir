@@ -93,7 +93,6 @@ int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
-    MYSQL *mysql = conn->mysql;
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
     ulong length[1];
@@ -115,15 +114,15 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     bind[0].error= &error[0];
 
     if (mysql_stmt_bind_result(stmt, bind)) {
-        LOG(LOG_ERR, "mysql_bind_result() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
 
     if (mysql_stmt_store_result(stmt)) {
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -131,7 +130,7 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     ret = mysql_stmt_fetch(stmt);
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -845,7 +844,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     bind_in[2].buffer = &limit;
 
     if (mysql_stmt_bind_param(stmt, bind_in)) {
-        LOG(LOG_ERR, "mysql_bind_param() failed");
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
@@ -869,7 +868,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     bind_out[2].buffer = (char*)&is_announce;
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
-        LOG(LOG_ERR, "mysql_bind_result() failed");
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
