@@ -93,7 +93,7 @@ int stmtAddAll(dbconn *conn) {
         // find number of queries
         for (qry_num = 0; queries[client_type][qry_num] != NULL; ++qry_num) {}
 
-        conn->stmts[client_type] = malloc(sizeof(MYSQL_STMT *) * qry_num);
+        conn->stmts[client_type] = calloc(qry_num, sizeof(MYSQL_STMT *));
         if (conn->stmts[client_type] == NULL) {
             LOG(LOG_ERR, "coult not alloc array of statement handles");
             stmtDeleteAll(conn);
