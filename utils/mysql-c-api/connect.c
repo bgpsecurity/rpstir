@@ -53,7 +53,7 @@ int reconnectMysqlCApi(dbconn **old_conn) {
     dbconn *conn = *old_conn;
     MYSQL *mysql = conn->mysql;
 
-    stmtNodesDeleteAll(conn);
+    stmtDeleteAll(conn);
 
     // @see MySQL 5.1 Reference Manual, section 20.9.3.49 under
     //     MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
@@ -74,12 +74,9 @@ int reconnectMysqlCApi(dbconn **old_conn) {
 
     // TODO:  check table descriptions
 
-    // add one of these sequences for each DB_CLIENT_*
-    if (conn->client_flags  &  DB_CLIENT_RTR) {
-        if (stmtsCreateAllRtr(conn) == -1) {
-            db_disconnect(conn);
-            return -1;
-        }
+    if (stmtAddAll(conn) != 0) {
+        db_disconnect(conn);
+        return -1;
     }
 
     return 0;
@@ -128,7 +125,11 @@ static void *connectMysqlCApi(
     }
     conn->client_flags = client_flags;
     conn->mysql = mysql;
-    conn->node = NULL;
+
+    if (stmtAddAll(conn) != 0) {
+        db_disconnect(conn);
+        return NULL;
+    }
 
     // store parameters to enable reconnect
     conn->host = strdup(host);
@@ -148,14 +149,6 @@ static void *connectMysqlCApi(
         LOG(LOG_ERR, "got invalid flags");
         db_disconnect(conn);
         return NULL;
-    }
-
-    // add one of these sequences for each DB_CLIENT_*
-    if (client_flags  &  DB_CLIENT_RTR) {
-        if (stmtsCreateAllRtr(conn) == -1) {
-            db_disconnect(conn);
-            return NULL;
-        }
     }
 
     return conn;
@@ -191,11 +184,7 @@ dbconn *db_connect_default(int client_flags) {
 ------------------------------------------------------------------------------*/
 void db_disconnect(dbconn *conn) {
     if (conn) {
-        if (conn->node) {
-            stmtNodesDeleteAll(conn);
-            free(conn->node);
-            conn->node = NULL;
-        }
+        stmtDeleteAll(conn);
 
         free(conn->host); conn->host = NULL;
         free(conn->user); conn->user = NULL;

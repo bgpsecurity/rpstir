@@ -7,10 +7,10 @@
 
 // NOTE: don't use this outside of mysql-c-api, use enum client_flags instead
 enum client_types {
-    DB_CLIENT_TYPE_RTR = 0,
+    DB_CLIENT_TYPE_RTR,
     // DB_CLIENT_NEXT = 1 + DB_CLIENT_PREV
 
-    DB_CLIENT_TYPES_LENGTH = 1
+    DB_CLIENT_NUM_TYPES
 };
 
 enum client_flags {
