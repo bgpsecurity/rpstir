@@ -5,9 +5,16 @@
 #include <stdbool.h>
 
 
+// NOTE: don't use this outside of mysql-c-api, use enum client_flags instead
+enum client_types {
+    DB_CLIENT_TYPE_RTR = 0,
+    // DB_CLIENT_NEXT = 1 + DB_CLIENT_PREV
+
+    DB_CLIENT_TYPES_LENGTH = 1
+};
+
 enum client_flags {
-    DB_CLIENT_RTR = 1,
-    // assign DB_CLIENT_NEXT = 2 * DB_CLIENT_PREV
+    DB_CLIENT_RTR = (1 << DB_CLIENT_TYPE_RTR),
 
     DB_CLIENT_NONE = 0,
     DB_CLIENT_ALL = DB_CLIENT_RTR /* | DB_CLIENT_OTHER | ... */
