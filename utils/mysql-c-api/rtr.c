@@ -724,6 +724,8 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
     } else if (ret == 1) {  // ser num not found (as prev)
         // continue after this if-block
     } else if (ret == -1) {  // some unspecified error
+        free(state);
+        *query_state = NULL;
         return -1;
     }
 
@@ -735,12 +737,16 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
     } else if (ret == 1) {  // ser num not found (as current)
         // continue after this if-block
     } else if (ret == -1) {  // some unspecified error
+        free(state);
+        *query_state = NULL;
         return -1;
     }
 
     ret = getNumRowsInTable(conn, "rtr_update");
     if (ret == -1) {
         LOG(LOG_ERR, "could not retrieve number of rows from rtr_update");
+        free(state);
+        *query_state = NULL;
         return -1;
     } else if (ret == 0) {  // rtr_update is empty
         state->not_ready = 1;
