@@ -912,6 +912,8 @@ int serial_query_post_query(dbconn *conn, void *query_state,
     uint32_t prev_ser_num;
     int prev_was_null;
 
+    *is_done = 1;
+
     // check whether sn is still valid
     ret = readSerNumAsCurrent(conn, state->ser_num,
             1, &prev_ser_num, &prev_was_null,
