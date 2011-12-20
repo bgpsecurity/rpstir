@@ -93,7 +93,7 @@ int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
-    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_RTR][DB_PSTMT_RTR_GET_SESSION];
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
     ulong length[1];
     uint16_t data;
@@ -819,7 +819,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
     struct query_state *state = (struct query_state*) query_state;
     int ret;
 
-    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_RTR][DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT];
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT];
     MYSQL_BIND bind_in[3];
 
     MYSQL_BIND bind_out[3];
