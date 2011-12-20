@@ -919,7 +919,6 @@ int serial_query_post_query(dbconn *conn, void *query_state,
     if (prev_was_null) {
         LOG(LOG_INFO, "serial number became invalid after creating PDUs");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
         return 0;
     } else if (ret == -1) {
         LOG(LOG_ERR, "error while checking validity of serial number");
@@ -932,12 +931,10 @@ int serial_query_post_query(dbconn *conn, void *query_state,
         *is_done = 0;
         state->ser_num = next_ser_num;
         state->first_row = 0;
-        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
         return 0;
     } else if (ret == 1) {  // db has no sn_next for this sn
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
-        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
         return 0;
     }
 
@@ -946,7 +943,6 @@ int serial_query_post_query(dbconn *conn, void *query_state,
     LOG(LOG_ERR, "error while looking for next serial number");
     LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
-    LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
     return 0;
 }
 
@@ -1002,6 +998,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
         return -1;
     }
 
+    LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
     return num_pdus;
 }
 
