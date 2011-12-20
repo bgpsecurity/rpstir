@@ -32,15 +32,6 @@ struct query_state {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-void free_query_state(void *qs) {
-    if (qs)
-        free (qs);
-    qs = NULL;
-}
-
-
-/**=============================================================================
-------------------------------------------------------------------------------*/
 /*
 int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
     MYSQL *mysql = conn->mysql;
@@ -1006,7 +997,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
 ------------------------------------------------------------------------------*/
 void db_rtr_serial_query_close(dbconn *conn, void * query_state) {
     (void) conn;  // to silence -Wunused-parameter
-    free_query_state(query_state);
+    free(query_state);
 }
 
 
@@ -1159,7 +1150,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 ------------------------------------------------------------------------------*/
 void db_rtr_reset_query_close(dbconn *conn, void * query_state) {
     (void) conn;  // to silence -Wunused-parameter
-    free_query_state(query_state);
+    free(query_state);
 }
 
 
