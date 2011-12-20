@@ -62,7 +62,7 @@ int wrap_mysql_query(dbconn *conn, const char *qry, const char *err_msg_in) {
     while (ret) {
         err_no = mysql_errno(mysql);
         if (err_no == CR_SERVER_GONE_ERROR  ||  err_no == CR_SERVER_LOST) {  // lost server connection
-            LOG(LOG_WARNING, "connection to MySQL server was lost: %s", mysql_error(stmt));
+            LOG(LOG_WARNING, "connection to MySQL server was lost: %s", mysql_error(mysql));
             if (tried) {
                 LOG(LOG_ERR, "not able to reconnect to MySQL server");
                 return -1;
