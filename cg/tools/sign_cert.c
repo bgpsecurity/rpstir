@@ -84,7 +84,7 @@ static int setSignature(struct casn *tbhash, struct casn *newsignature,
   memset(hash, 0, 40);
   if (!CryptInitState) 
     {
-    if (!cryptInit()) fatal(1, "CryptInit");
+    if (cryptInit() < 0) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
   if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) 
