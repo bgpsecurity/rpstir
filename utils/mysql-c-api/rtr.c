@@ -774,14 +774,14 @@ int serial_query_pre_query(dbconn *conn, void *query_state,
         LOG(LOG_INFO, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-        return *num_pdus;
+        return 0;
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_INFO, "can't update the router from the given serial number");
         fill_pdu_cache_reset(&((*_pdus)[(*num_pdus)++]));
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-        return *num_pdus;
+        return 0;
     }
 
     if (db_rtr_get_session_id(conn, &(state->session))) {
@@ -795,7 +795,7 @@ int serial_query_pre_query(dbconn *conn, void *query_state,
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-        return *num_pdus;
+        return 0;
     }
 
     if (!state->data_sent) {
@@ -803,13 +803,13 @@ int serial_query_pre_query(dbconn *conn, void *query_state,
         state->data_sent = 1;
     }
 
-    return *num_pdus;
+    return 0;
 }
 
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-ssize_t serial_query_do_query(dbconn *conn, void *query_state,
+int serial_query_do_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
     struct query_state *state = (struct query_state*) query_state;
     int ret;
@@ -903,7 +903,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-ssize_t serial_query_post_query(dbconn *conn, void *query_state,
+int serial_query_post_query(dbconn *conn, void *query_state,
         PDU **_pdus, size_t *num_pdus, bool *is_done) {
     struct query_state *state = (struct query_state*) query_state;
     int ret;
@@ -920,7 +920,7 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
         LOG(LOG_INFO, "serial number became invalid after creating PDUs");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-        return *num_pdus;
+        return 0;
     } else if (ret == -1) {
         LOG(LOG_ERR, "error while checking validity of serial number");
         return -1;
@@ -933,12 +933,12 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
         state->ser_num = next_ser_num;
         state->first_row = 0;
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-        return *num_pdus;
+        return 0;
     } else if (ret == 1) {  // db has no sn_next for this sn
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-        return *num_pdus;
+        return 0;
     }
 
     // NOTE:  even though error, still feeding previous results,
@@ -947,7 +947,7 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
     LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
     LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
-    return *num_pdus;
+    return 0;
 }
 
 
