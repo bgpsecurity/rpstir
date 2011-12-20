@@ -182,7 +182,13 @@ PDU * pdu_deepcopy(const PDU * pdu);
 /** deep free the pdu */
 void pdu_free(PDU * pdu);
 
-/** deep free the array of PDUs */
+/**
+	Deep free the array of PDUs.
+
+	NOTE: num_pdus is the number of fully initialized PDUs
+	in the array, which is less than or equal to the length
+	of the array.
+*/
 void pdu_free_array(PDU * pdus, size_t num_pdus);
 
 /**
