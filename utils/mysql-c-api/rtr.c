@@ -763,7 +763,6 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
 ------------------------------------------------------------------------------*/
 int serial_query_pre_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
-    PDU *pdus = *_pdus;
     struct query_state *state = (struct query_state*) query_state;
 
     if (max_rows < 2) {
@@ -787,7 +786,6 @@ int serial_query_pre_query(dbconn *conn, void *query_state,
 
     if (db_rtr_get_session_id(conn, &(state->session))) {
         LOG(LOG_ERR, "couldn't get session id");
-        pdu_free_array(pdus, max_rows);
         return -1;
     }
 
@@ -906,7 +904,7 @@ ssize_t serial_query_do_query(dbconn *conn, void *query_state,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 ssize_t serial_query_post_query(dbconn *conn, void *query_state,
-        size_t max_rows, PDU **_pdus, size_t *num_pdus, bool *is_done) {
+        PDU **_pdus, size_t *num_pdus, bool *is_done) {
     struct query_state *state = (struct query_state*) query_state;
     int ret;
 
@@ -925,7 +923,6 @@ ssize_t serial_query_post_query(dbconn *conn, void *query_state,
         return *num_pdus;
     } else if (ret == -1) {
         LOG(LOG_ERR, "error while checking validity of serial number");
-        pdu_free_array(*_pdus, max_rows);
         return -1;
     }
 
@@ -977,6 +974,8 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
     if (!state->data_sent) {
         ret = serial_query_pre_query(conn, state, max_rows, _pdus, &num_pdus);
         if (ret == -1) {
+            pdu_free_array(pdus, num_pdus);
+            *_pdus = NULL;
             return -1;
         } else if (state->not_ready || state->bad_ser_num || state->no_new_data) {
             return num_pdus;
@@ -985,7 +984,8 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
 
     ret = serial_query_do_query(conn, state, max_rows, _pdus, &num_pdus);
     if (ret == -1) {
-        pdu_free_array(*_pdus, max_rows);
+        pdu_free_array(*_pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
     if (num_pdus == max_rows) {
@@ -994,7 +994,13 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
         return num_pdus;
     }
 
-    ret = serial_query_post_query(conn, state, max_rows, _pdus, &num_pdus, is_done);
+    ret = serial_query_post_query(conn, state, _pdus, &num_pdus, is_done);
+    if (ret == -1)
+    {
+        pdu_free_array(*_pdus, num_pdus);
+        *_pdus = NULL;
+        return -1;
+    }
 
     return num_pdus;
 }
