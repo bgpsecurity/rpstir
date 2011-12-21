@@ -201,7 +201,7 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int getNumRowsInTable(dbconn *conn, char *table_name) {
+static int getNumRowsInTable(dbconn *conn, char *table_name) {
     MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
     int QRY_SZ = 256;
@@ -231,7 +231,7 @@ int getNumRowsInTable(dbconn *conn, char *table_name) {
  * @ret 0 if returning a value in ser_num, -1 for an unspecified error,
  *     1 if not returning a value in ser_num (but also no error)
 ------------------------------------------------------------------------------*/
-int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
+static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
         int get_ser_num, uint32_t *ser_num){
     MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
@@ -304,7 +304,7 @@ int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
  * @ret 0 if ser num found and returning data, -1 if unspecified error,
  *     1 if ser num not found (but no error)
 ------------------------------------------------------------------------------*/
-int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
+static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         int get_ser_num_prev, uint32_t *serial_prev, int *prev_was_null,
         int get_has_full, int *has_full){
     MYSQL *mysql = conn->mysql;
@@ -420,7 +420,7 @@ int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
  *     before being passed to this function.
  * @return 0 on success or an error code on failure.
 ------------------------------------------------------------------------------*/
-int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
+static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
         uint *prefix_len, uint *max_len, const char field_str[]) {
     const size_t SZ = 40;  // max length of ipv6 string with \0
     char ip_txt[SZ];
@@ -524,7 +524,7 @@ int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
+static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
         session_id_t session) {
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
     pdu->sessionId = session;
@@ -584,7 +584,7 @@ int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session,
+static int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session,
         int check_is_announce) {
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
     pdu->sessionId = session;
@@ -761,7 +761,7 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int serial_query_pre_query(dbconn *conn, void *query_state,
+static int serial_query_pre_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
     struct query_state *state = (struct query_state*) query_state;
 
@@ -809,7 +809,7 @@ int serial_query_pre_query(dbconn *conn, void *query_state,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int serial_query_do_query(dbconn *conn, void *query_state,
+static int serial_query_do_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
     struct query_state *state = (struct query_state*) query_state;
     int ret;
@@ -903,7 +903,7 @@ int serial_query_do_query(dbconn *conn, void *query_state,
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int serial_query_post_query(dbconn *conn, void *query_state,
+static int serial_query_post_query(dbconn *conn, void *query_state,
         PDU **_pdus, size_t *num_pdus, bool *is_done) {
     struct query_state *state = (struct query_state*) query_state;
     int ret;
