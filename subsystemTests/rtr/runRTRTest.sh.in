@@ -111,8 +111,8 @@ drop_serial () {
 
 stop_rtrd () {
 	kill $SERVER_PID
-	wait $SERVER_PID
 	trap - 0
+	wait $SERVER_PID
 }
 
 start_rtrd () {
