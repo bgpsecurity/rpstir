@@ -111,12 +111,16 @@ drop_serial () {
 
 stop_rtrd () {
 	kill $SERVER_PID
-	wait $SERVER_PID || true
+	wait $SERVER_PID
 	trap - 0
 }
 
 start_rtrd () {
-	"$SERVER" &
+	if test x"$VALGRIND" = x1; then
+		valgrind --log-file=valgrind.log --track-fds=full --leak-check=full --error-exitcode=1 "$SERVER" &
+	else
+		"$SERVER" &
+	fi
 	SERVER_PID=$!
 	trap stop_rtrd 0
 	sleep 1
