@@ -123,6 +123,10 @@ struct _PDU {
 
 #define PDU_HEADER_LENGTH (offsetof(PDU, serialNumber))
 
+// Serial Query: headers + serial
+// Reset Query: headers
+#define MAX_QUERY_PDU_LENGTH (PDU_HEADER_LENGTH + sizeof(serial_number_t))
+
 
 #define PDU_GOOD 0 /* valid PDU */
 #define PDU_TRUNCATED -1 /* PDU doesn't have errors but is truncated */

@@ -62,6 +62,8 @@ struct run_state {
 
 	// There can only be one outstanding request at a time, so this is it. No malloc() or free().
 	struct db_request request;
+	uint8_t pdu_request_buffer[MAX_QUERY_PDU_LENGTH];
+	size_t pdu_request_buffer_length;
 
 	// tv_nsec MUST be zero
 	struct timespec next_cache_state_check_time;
@@ -437,6 +439,8 @@ static void increment_db_semaphore(struct run_state * run_state)
 
 static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_from_recv_buffer)
 {
+	ssize_t ret;
+
 	if (Queue_size(run_state->db_response_queue) != 0)
 	{
 		CXN_LOG(run_state, LOG_ERR, "add_db_request called with non-empty response queue");
@@ -466,6 +470,22 @@ static void add_db_request(struct run_state * run_state, PDU * pdu, bool pdu_fro
 	run_state->request.response_queue = run_state->db_response_queue;
 	run_state->request.response_semaphore = run_state->semaphore;
 	run_state->request.cancel_request = false;
+
+	ret = dump_pdu(run_state->pdu_request_buffer, sizeof(run_state->pdu_request_buffer), pdu);
+	if (ret < 0)
+	{
+		CXN_LOG(run_state, LOG_ERR, "error dumping validated PDU");
+		run_state->pdu_request_buffer_length = 0;
+	}
+	else if ((size_t)ret > sizeof(run_state->pdu_request_buffer))
+	{
+		CXN_LOG(run_state, LOG_ERR, "dump_pdu() returned a length that's too large");
+		run_state->pdu_request_buffer_length = sizeof(run_state->pdu_request_buffer);
+	}
+	else
+	{
+		run_state->pdu_request_buffer_length = (size_t)ret;
+	}
 
 	if (!Queue_push(run_state->db_request_queue, (void *)&run_state->request))
 	{
@@ -611,6 +631,7 @@ static void handle_response(struct run_state * run_state)
 {
 	size_t i;
 	bool stop_after_responding = false;
+	bool used_pdu_request_buffer;
 
 	if (run_state->response == NULL)
 	{
@@ -625,6 +646,8 @@ static void handle_response(struct run_state * run_state)
 
 	for (i = 0; i < run_state->response->num_PDUs; ++i)
 	{
+		used_pdu_request_buffer = false;
+
 		if (run_state->response->PDUs[i].pduType == PDU_ERROR_REPORT &&
 			ERR_IS_FATAL(run_state->response->PDUs[i].errorCode))
 		{
@@ -641,7 +664,31 @@ static void handle_response(struct run_state * run_state)
 			update_local_cache_state(run_state, &pdu_cache_state, false);
 		}
 
+		if (run_state->response->PDUs[i].pduType == PDU_ERROR_REPORT &&
+			run_state->response->PDUs[i].errorData.encapsulatedPDULength == 0 &&
+			run_state->response->PDUs[i].errorData.encapsulatedPDU == NULL &&
+			run_state->pdu_request_buffer_length > 0)
+		{
+			run_state->response->PDUs[i].errorData.encapsulatedPDU =
+				run_state->pdu_request_buffer;
+			run_state->response->PDUs[i].errorData.encapsulatedPDULength =
+				run_state->pdu_request_buffer_length;
+			run_state->response->PDUs[i].length +=
+				run_state->pdu_request_buffer_length;
+
+			used_pdu_request_buffer = true;
+		}
+
 		send_pdu(run_state, &run_state->response->PDUs[i]);
+
+		if (used_pdu_request_buffer)
+		{
+			// Below is needed to prevent pdu_free_array() from free()ing pdu_request_buffer
+			run_state->response->PDUs[i].length -=
+				run_state->response->PDUs[i].errorData.encapsulatedPDULength;
+			run_state->response->PDUs[i].errorData.encapsulatedPDU = NULL;
+			run_state->response->PDUs[i].errorData.encapsulatedPDULength = 0;
+		}
 	}
 
 	bool is_done = run_state->response->is_done;
