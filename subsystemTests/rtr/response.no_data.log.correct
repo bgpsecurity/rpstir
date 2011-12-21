@@ -1,6 +1,6 @@
 --- reset_query
 --- expecting: No Data Available
-TODO
+version 0 Error Report (No Data), length = 16, encapsulated PDU length = 0, error text = [0] ""
 --- serial_query 4242 0
 --- expecting: Cache Reset
 version 0 Cache Reset, length = 8
