@@ -203,7 +203,7 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
  * @ret 0 if no rows, 1 if rows, -1 on error.
 ------------------------------------------------------------------------------*/
 static int hasRowsRtrUpdate(dbconn *conn) {
-    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_NUM_ROWS_RTR_UPDATE];
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_TEST_HAS_ROWS_RTR_UPDATE];
     int ret;
     uint data;
 
