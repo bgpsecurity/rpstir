@@ -20,13 +20,13 @@
 
 
 struct query_state {
-    uint32_t ser_num;  // ser_num to search for first row to send
-    uint first_row;    // first row to send.  zero-based
-    int bad_ser_num;   // neither the given ser_num, nor its successor, exist
-    int data_sent;     // true if a pdu has been created for this serial/reset query
-    int no_new_data;   // the given ser_num exists, but its successor does not
-    int not_ready;     // no valid ser_nums exist, yet
-    uint16_t session;
+    uint32_t ser_num;   // ser_num to search for first row to send
+    uint64_t first_row; // first row to send.  zero-based
+    int bad_ser_num;    // neither the given ser_num, nor its successor, exist
+    int data_sent;      // true if a pdu has been created for this serial/reset query
+    int no_new_data;    // the given ser_num exists, but its successor does not
+    int not_ready;      // no valid ser_nums exist, yet
+    uint16_t session;   // the session_id number
 };
 
 
@@ -829,7 +829,7 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
     bind_in[0].is_unsigned = 1;
     bind_in[0].buffer = &(state->ser_num);
     // offset parameter
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer_type = MYSQL_TYPE_LONGLONG;
     bind_in[1].is_unsigned = 1;
     bind_in[1].buffer = &(state->first_row);
     // limit parameter
@@ -1111,7 +1111,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
             " from rtr_full "
             " where serial_num=%" PRIu32
             " order by asn, ip_addr"
-            " limit %u, %zu",
+            " limit %" PRIu64 ", %zu",
             state->ser_num, state->first_row, max_rows - num_pdus);
 
     if (wrap_mysql_query(conn, qry, "could not read rtr_full from db")) {
