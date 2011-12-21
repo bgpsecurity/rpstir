@@ -832,16 +832,16 @@ static int serial_query_pre_query(dbconn *conn, void *query_state,
     }
 
     if (state->not_ready) {
-        LOG(LOG_INFO, "no data is available to send to routers");
+        LOG(LOG_DEBUG, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        LOG(LOG_DEBUG, "returning %zu PDUs", *num_pdus);
         return 0;
     }
 
     if (state->bad_ser_num) {
-        LOG(LOG_INFO, "can't update the router from the given serial number");
+        LOG(LOG_DEBUG, "can't update the router from the given serial number");
         fill_pdu_cache_reset(&((*_pdus)[(*num_pdus)++]));
-        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        LOG(LOG_DEBUG, "returning %zu PDUs", *num_pdus);
         return 0;
     }
 
@@ -851,11 +851,11 @@ static int serial_query_pre_query(dbconn *conn, void *query_state,
     }
 
     if (state->no_new_data) {
-        LOG(LOG_INFO, "no new data for the router from the given serial number");
+        LOG(LOG_DEBUG, "no new data for the router from the given serial number");
         fill_pdu_cache_response(&((*_pdus)[(*num_pdus)++]), state->session);
-        LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+        LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
-        LOG(LOG_INFO, "returning %zu PDUs", *num_pdus);
+        LOG(LOG_DEBUG, "returning %zu PDUs", *num_pdus);
         return 0;
     }
 
@@ -996,7 +996,7 @@ static int serial_query_post_query(dbconn *conn, void *query_state,
         state->first_row = 0;
         return 0;
     } else if (ret == GET_SERNUM_NONE) {  // db has no sn_next for this sn
-        LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+        LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         return 0;
     }
@@ -1004,7 +1004,7 @@ static int serial_query_post_query(dbconn *conn, void *query_state,
     // NOTE:  even though error, still feeding previous results,
     //     which should be unaffected by this error.
     LOG(LOG_ERR, "error while looking for next serial number");
-    LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+    LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
     return 0;
 }
@@ -1049,7 +1049,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
     }
     if (num_pdus == max_rows) {
         *is_done = 0;
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
         return num_pdus;
     }
 
@@ -1061,7 +1061,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
         return -1;
     }
 
-    LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+    LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
     return num_pdus;
 }
 
@@ -1146,9 +1146,9 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     *_pdus = pdus;
 
     if (state->not_ready) {
-        LOG(LOG_INFO, "no data is available to send to routers");
+        LOG(LOG_DEBUG, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[num_pdus++]), ERR_NO_DATA, 0, NULL, 0, NULL);
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
         return num_pdus;
     }
 
@@ -1204,7 +1204,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     if (num_pdus == max_rows) {
         mysql_free_result(result);
         *is_done = 0;
-        LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+        LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
         return num_pdus;
     }
 
@@ -1212,10 +1212,10 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     // Even if there is a newer sn, don't feed it.  rtr_incremental may contain
     //     a withdrawal, which must not be sent during a Cache Response.
 
-    LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
+    LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), session, state->ser_num);
     mysql_free_result(result);
-    LOG(LOG_INFO, "returning %zu PDUs", num_pdus);
+    LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
     return num_pdus;
 }
 
