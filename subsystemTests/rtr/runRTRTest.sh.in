@@ -147,6 +147,12 @@ init
 start_rtrd
 
 
+start_test no_data
+client "reset_query" "No Data Available"
+client "serial_query $WRONG_SESSION 0" "Cache Reset"
+client "serial_query $SESSION 0" "Cache Reset"
+stop_test no_data
+
 start_test reset_query_first
 make_serial 5 1 4
 client "reset_query" "all data for serial $SERIAL"

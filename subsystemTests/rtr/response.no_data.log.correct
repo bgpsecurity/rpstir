@@ -1,0 +1,9 @@
+--- reset_query
+--- expecting: No Data Available
+TODO
+--- serial_query 4242 0
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
+--- serial_query 42 0
+--- expecting: Cache Reset
+version 0 Cache Reset, length = 8
