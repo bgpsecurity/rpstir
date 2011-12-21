@@ -15,6 +15,8 @@ static const char * _queries_rtr[] = {
 
     "select serial_num from rtr_update order by create_time desc limit 1",
 
+    "select count(*) > 0 from rtr_update",
+
     "select asn, ip_addr, is_announce "
     " from rtr_incremental "
     " where serial_num=? "

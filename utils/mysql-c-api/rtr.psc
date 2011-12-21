@@ -1,4 +1,29 @@
-========== serialQueryGetNext() - abstract ==========
+========== db_rtr_serial_query_init() ==========
+
+if no session_id in rtr_session
+    cache-reset
+    
+if no sn in rtr_update
+    cache-reset
+
+if sn in prev_serial_num in rtr_update
+    new data avail
+
+if sn in serial_num in rtr_update
+    no new data avail
+else
+    cache reset
+
+
+========== db_rtr_reset_query_init() ==========
+
+if no session_id in rtr_session
+    not ready
+    
+
+
+
+========== db_rtr_serial_query_get_next() - abstract ==========
 
 result = query db
 
@@ -22,7 +47,7 @@ append End-of-Data
 return
 
 
-========== serialQueryGetNext() - detailed ==========
+========== db_rtr_serial_query_get_next() - detailed ==========
 
 *is_done = 1
 

@@ -200,7 +200,58 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
 
 
 /**=============================================================================
+ * @ret 0 if no rows, 1 if rows, -1 on error.
 ------------------------------------------------------------------------------*/
+static int hasRowsRtrUpdate(dbconn *conn) {
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_NUM_ROWS_RTR_UPDATE];
+    int ret;
+    uint data;
+
+    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
+        return -1;
+    }
+
+    MYSQL_BIND bind[1];
+    memset(bind, 0, sizeof(bind));
+
+    bind[0].buffer_type = MYSQL_TYPE_LONG;
+    bind[0].is_unsigned = 1;
+    bind[0].buffer = &data;
+
+    if (mysql_stmt_bind_result(stmt, bind)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    if (mysql_stmt_store_result(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    ret = mysql_stmt_fetch(stmt);
+    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    mysql_stmt_free_result(stmt);
+
+    if (data)
+        return 1;
+    else
+        return 0;
+}
+
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
+/*
 static int getNumRowsInTable(dbconn *conn, char *table_name) {
     MYSQL *mysql = conn->mysql;
     MYSQL_RES *result;
@@ -220,7 +271,7 @@ static int getNumRowsInTable(dbconn *conn, char *table_name) {
     }
 
     return ((int) mysql_num_rows(result));
-}
+}*/
 
 
 /**=============================================================================
@@ -228,8 +279,9 @@ static int getNumRowsInTable(dbconn *conn, char *table_name) {
  * @param[in] ser_num_prev The serial_num to find in rtr_update.prev_serial_num.
  * @param[in] get_ser_num If non-zero, read serial_num.
  * @param[out] ser_num The value from the db.
- * @ret 0 if returning a value in ser_num, -1 for an unspecified error,
- *     1 if not returning a value in ser_num (but also no error)
+ * @ret GET_SERNUM_SUCCESS if given sn found as a previous-sn.,
+ *      GET_SERNUM_ERR for an unspecified error,
+ *      GET_SERNUM_NONE if given sn not found as a previous-sn. (but no error)
 ------------------------------------------------------------------------------*/
 static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
         int get_ser_num, uint32_t *ser_num){
@@ -246,28 +298,28 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
             "where prev_serial_num=%" PRIu32, ser_num_prev);
 
     if (wrap_mysql_query(conn, qry, "could not read rtr_update from db")) {
-        return -1;
+        return GET_SERNUM_ERR;
     }
 
     if ((result = mysql_store_result(mysql)) == NULL) {
         LOG(LOG_ERR, "could not read result set");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        return -1;
+        return GET_SERNUM_ERR;
     }
 
     num_rows = mysql_num_rows(result);
     if (num_rows == 0) {
         mysql_free_result(result);
-        return 1;
+        return GET_SERNUM_NONE;
     } else if (num_rows > 1) {
         LOG(LOG_ERR, "unexpected result from rtr_update");
         mysql_free_result(result);
-        return -1;
+        return GET_SERNUM_ERR;
     }
 
     if (!get_ser_num) {
         mysql_free_result(result);
-        return 1;
+        return GET_SERNUM_NONE;
     } else {
         row = mysql_fetch_row(result);
         if (getStringByFieldname(&ser_num_str, result, row, "serial_num")) {
@@ -276,18 +328,18 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
                 ser_num_str = NULL;
             }
             mysql_free_result(result);
-            return -1;
+            return GET_SERNUM_ERR;
         } else {
             if (sscanf(ser_num_str, "%" SCNu32, ser_num) < 1) {
                 LOG(LOG_ERR, "unexpected value for serial number");
-                return -1;
+                return GET_SERNUM_ERR;
             }
             if (ser_num_str) {
                 free (ser_num_str);
                 ser_num_str = NULL;
             }
             mysql_free_result(result);
-            return 0;
+            return GET_SERNUM_SUCCESS;
         }
     }
 }
@@ -301,8 +353,9 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
  * @param[out] prev_was_null self-explanatory.
  * @param[in] get_has_full If non-zero, read has_full.
  * @param[out] has_full The value from the db.
- * @ret 0 if ser num found and returning data, -1 if unspecified error,
- *     1 if ser num not found (but no error)
+ * @ret GET_SERNUM_SUCCESS if given sn found as a current-sn.,
+ *      GET_SERNUM_ERR for an unspecified error,
+ *      GET_SERNUM_NONE if given sn not found as a current-sn. (but no error)
 ------------------------------------------------------------------------------*/
 static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         int get_ser_num_prev, uint32_t *serial_prev, int *prev_was_null,
@@ -319,23 +372,23 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
             "where serial_num=%" PRIu32, serial);
 
     if (wrap_mysql_query(conn, qry, "could not read rtr_update from db")) {
-        return -1;
+        return GET_SERNUM_ERR;
     }
 
     if ((result = mysql_store_result(mysql)) == NULL) {
         LOG(LOG_ERR, "could not read result set");
         LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        return -1;
+        return GET_SERNUM_ERR;
     }
 
     num_rows = mysql_num_rows(result);
     if (num_rows == 0) {
         mysql_free_result(result);
-        return 1;
+        return GET_SERNUM_NONE;
     } else if (num_rows > 1) {
         LOG(LOG_ERR, "unexpected result from rtr_update");
         mysql_free_result(result);
-        return -1;
+        return GET_SERNUM_ERR;
     }
 
     row = mysql_fetch_row(result);
@@ -349,7 +402,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
                 sn_prev_str = NULL;
             }
             mysql_free_result(result);
-            return -1;
+            return GET_SERNUM_ERR;
         } else {
             if (!strcmp(sn_prev_str, "NULL")) {
                 *prev_was_null = 1;
@@ -358,7 +411,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
                     sn_prev_str = NULL;
                 }
                 mysql_free_result(result);
-                return 0;
+                return GET_SERNUM_SUCCESS;
             } else if (sscanf(sn_prev_str, "%" SCNu32, serial_prev) < 1) {
                 LOG(LOG_ERR, "unexpected value for serial number");
                 if (sn_prev_str) {
@@ -366,7 +419,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
                     sn_prev_str = NULL;
                 }
                 mysql_free_result(result);
-                return -1;
+                return GET_SERNUM_ERR;
             }
         }
     }
@@ -383,7 +436,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
                 sn_prev_str = NULL;
             }
             mysql_free_result(result);
-            return -1;
+            return GET_SERNUM_ERR;
         } else {
             if (sscanf(has_full_str, "%d", has_full) < 1) {
                 LOG(LOG_ERR, "unexpected value for has_full");
@@ -396,7 +449,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
                     sn_prev_str = NULL;
                 }
                 mysql_free_result(result);
-                return -1;
+                return GET_SERNUM_ERR;
             }
         }
     }
@@ -410,7 +463,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         has_full_str = NULL;
     }
     mysql_free_result(result);
-    return 0;
+    return GET_SERNUM_SUCCESS;
 }
 
 
@@ -583,6 +636,7 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announc
 
 
 /**=============================================================================
+ * TODO: eliminate this, or call fillPduIpPrefix() from it.
 ------------------------------------------------------------------------------*/
 static int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session,
         int check_is_announce) {
@@ -702,7 +756,7 @@ static int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session
 int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t serial) {
     struct query_state *state = NULL;
     uint32_t serial_next = 0;
-    int ret = 0;
+    int64_t ret = 0;
 
     state = calloc(1, sizeof(struct query_state));
     if (!state) {
@@ -711,45 +765,52 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
     }
     state->ser_num = 0;
     state->first_row = 0;
-    state->bad_ser_num = 0;
     state->data_sent = 0;
+    state->bad_ser_num = 0;
     state->no_new_data = 0;
     state->not_ready = 0;
     *query_state = (void*) state;
 
+
+    // If sn is in prev_serial_num, then send data.
     ret = readSerNumAsPrev(conn, serial, 1, &serial_next);
-    if (ret == 0) {  // ser num found (as prev)
+    if (ret == GET_SERNUM_SUCCESS) {  // ser num found (as prev)
         state->ser_num = serial_next;
         return 0;
-    } else if (ret == 1) {  // ser num not found (as prev)
+    } else if (ret == GET_SERNUM_NONE) {  // ser num not found (as prev)
         // continue after this if-block
-    } else if (ret == -1) {  // some unspecified error
+    } else if (ret == GET_SERNUM_ERR) {  // some unspecified error
         free(state);
         *query_state = NULL;
         return -1;
     }
 
+    // If sn is in serial_num, then send no-new-data.
     ret = readSerNumAsCurrent(conn, serial, 0, NULL, NULL, 0, NULL);
-    if (ret == 0) {  // ser num found (as current)
+    if (ret == GET_SERNUM_SUCCESS) {  // ser num found (as current)
         state->ser_num = serial;
         state->no_new_data = 1;
         return 0;
-    } else if (ret == 1) {  // ser num not found (as current)
+    } else if (ret == GET_SERNUM_NONE) {  // ser num not found (as current)
         // continue after this if-block
-    } else if (ret == -1) {  // some unspecified error
+    } else if (ret == GET_SERNUM_ERR) {  // some unspecified error
         free(state);
         *query_state = NULL;
         return -1;
     }
 
-    ret = getNumRowsInTable(conn, "rtr_update");
+    // If rtr_update is not empty, then send cache reset.
+    // If rtr_update is empty, then send cache-reset.
+    // By spec, this could send not-ready, but rtr-client's session_id and
+    //     serial_num will never become valid.
+    ret = hasRowsRtrUpdate(conn);
     if (ret == -1) {
         LOG(LOG_ERR, "could not retrieve number of rows from rtr_update");
         free(state);
         *query_state = NULL;
         return -1;
     } else if (ret == 0) {  // rtr_update is empty
-        state->not_ready = 1;
+        state->bad_ser_num = 1;
     } else if (ret > 0) {  // rtr_update is not empty,
         // but the given serial number is not recognized
         state->bad_ser_num = 1;
@@ -910,7 +971,7 @@ static int serial_query_post_query(dbconn *conn, void *query_state,
 
     uint32_t next_ser_num;
     uint32_t prev_ser_num;
-    int prev_was_null;
+    int prev_was_null = -1;
 
     *is_done = 1;
 
@@ -918,23 +979,23 @@ static int serial_query_post_query(dbconn *conn, void *query_state,
     ret = readSerNumAsCurrent(conn, state->ser_num,
             1, &prev_ser_num, &prev_was_null,
             0, NULL);
-    if (prev_was_null) {
+    if (prev_was_null == 1) {
         LOG(LOG_INFO, "serial number became invalid after creating PDUs");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         return 0;
-    } else if (ret == -1) {
+    } else if (ret == GET_SERNUM_ERR) {
         LOG(LOG_ERR, "error while checking validity of serial number");
         return -1;
     }
 
     // check whether to End or continue with next ser num
     ret = readSerNumAsPrev(conn, state->ser_num, 1, &next_ser_num);
-    if (ret == 0) {  // db has sn_next for this sn
+    if (ret == GET_SERNUM_SUCCESS) {  // db has sn_next for this sn
         *is_done = 0;
         state->ser_num = next_ser_num;
         state->first_row = 0;
         return 0;
-    } else if (ret == 1) {  // db has no sn_next for this sn
+    } else if (ret == GET_SERNUM_NONE) {  // db has no sn_next for this sn
         LOG(LOG_INFO, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         return 0;
@@ -1033,22 +1094,23 @@ int db_rtr_reset_query_init(dbconn *conn, void ** query_state) {
     *query_state = (void*) state;
 
     ret = db_rtr_get_latest_sernum(conn, &state->ser_num);
-    if (ret) {
-        LOG(LOG_ERR, "error getting latest serial number");
+    if (ret == GET_SERNUM_ERR) {
         if (state) free(state);
         return -1;
+    } else if (ret == GET_SERNUM_NONE) {
+        state->not_ready = 1;
+        return 0;
     }
 
     int has_full;
     ret = readSerNumAsCurrent(conn, state->ser_num, 0, NULL, NULL,
             1, &has_full);
     if (ret) {
-        LOG(LOG_ERR, "error reading data about latest serial number");
         if (state) free(state);
         return -1;
     }
     if (!has_full) {
-        LOG(LOG_INFO, "data not yet available");
+        LOG(LOG_ERR, "no has_full for latest serial number");
         state->not_ready = 1;
         return 0;
     }
