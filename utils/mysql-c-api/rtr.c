@@ -1094,7 +1094,7 @@ int db_rtr_reset_query_init(dbconn *conn, void ** query_state) {
     int has_full;
     ret = readSerNumAsCurrent(conn, state->ser_num, 0, NULL, NULL,
             1, &has_full);
-    if (ret) {
+    if (ret != GET_SERNUM_SUCCESS) {
         if (state) free(state);
         return -1;
     }
