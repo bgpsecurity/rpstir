@@ -74,18 +74,19 @@ static int stmtAdd(dbconn *conn,
         int qry_num) {
     MYSQL *mysql = conn->mysql;
     const char *qry = queries[client_type][qry_num];
+    MYSQL_STMT *stmt;
 
-    conn->stmts[client_type][qry_num] = mysql_stmt_init(mysql);
-    if (conn->stmts[client_type][qry_num] == NULL) {
+    stmt = conn->stmts[client_type][qry_num] = mysql_stmt_init(mysql);
+    if (stmt == NULL) {
         LOG(LOG_ERR, "could not alloc for prepared statement");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 
-    if (mysql_stmt_prepare(conn->stmts[client_type][qry_num], qry, strlen(qry))) {
+    if (mysql_stmt_prepare(stmt, qry, strlen(qry))) {
         LOG(LOG_ERR, "error preparing statement");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        mysql_stmt_close(conn->stmts[client_type][qry_num]);
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_close(stmt);
         conn->stmts[client_type][qry_num] = NULL;
         return -1;
     }
