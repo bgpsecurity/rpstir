@@ -86,10 +86,7 @@ int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
-    ulong length[1];
     uint16_t data;
-    my_bool is_null[1];
-    my_bool error[1];
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return -1;
@@ -100,9 +97,6 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
 
     bind[0].buffer_type= MYSQL_TYPE_SHORT;
     bind[0].buffer= &data;
-    bind[0].is_null= &is_null[0];
-    bind[0].length= &length[0];
-    bind[0].error= &error[0];
 
     if (mysql_stmt_bind_result(stmt, bind)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -125,11 +119,6 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
         mysql_stmt_free_result(stmt);
         return -1;
     }
-
-    //    if (is_null[0])
-    //        fprintf(stdout, "NULL\n");
-    //    else
-    //        fprintf(stdout,"%" PRIu16 "(%ld)\n", data, length[0]);
 
     *session = data;
     mysql_stmt_free_result(stmt);
