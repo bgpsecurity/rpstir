@@ -21,6 +21,9 @@ static const char * _queries_rtr[] = {
     "select count(*) > 0 from rtr_update",
 
     // DB_PSTMT_RTR_READ_SER_NUM_AS_PREV
+    "select serial_num "
+    " from rtr_update "
+    " where prev_serial_num=?",
 
     // DB_PSTMT_RTR_READ_SER_NUM_AS_CURRENT
     "select prev_serial_num, has_full "
