@@ -80,7 +80,7 @@ static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
 
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
     // get the size of signed attributes and allocate space for them

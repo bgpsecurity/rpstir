@@ -90,7 +90,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
 

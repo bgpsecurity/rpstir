@@ -51,7 +51,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
       
 
   memset(hash, 0, 40);
-  cryptInit();
+  if (cryptInit() != CRYPT_OK) fatal(2, "CryptInit");;
   cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
@@ -91,7 +91,7 @@ static int check_signature(struct casn *locertp, struct Certificate *hicertp,
   encode_casn(locertp, buf);
 
   // (re)init the crypt library
-  cryptInit();
+  if (cryptInit() != CRYPT_OK) fatal(2, "CryptInit");;
   cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   cryptEncrypt(hashContext, buf, bsize);
   cryptEncrypt(hashContext, buf, 0);
