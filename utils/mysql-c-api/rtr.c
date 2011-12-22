@@ -194,7 +194,7 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
 static int hasRowsRtrUpdate(dbconn *conn) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_HAS_ROWS_RTR_UPDATE];
     int ret;
-    uint data;
+    uint data = 0;
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return -1;
@@ -231,7 +231,7 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
     mysql_stmt_free_result(stmt);
 
-    if (data)
+    if (data == 1)
         return 1;
     else
         return 0;
