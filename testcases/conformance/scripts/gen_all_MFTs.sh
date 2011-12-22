@@ -201,3 +201,5 @@ ${single_MFT_cmd} 779 MFTFileHashShort
 ${single_MFT_cmd} 780 MFTFileHashLong
 ${single_MFT_cmd} 781 MFTFileNotIA5
 ${single_MFT_cmd} 782 MFTHashOctetStr
+${single_MFT_cmd} 783 MFTDuplicateFileOneHash
+${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
