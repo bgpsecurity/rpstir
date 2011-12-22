@@ -349,109 +349,77 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
 static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         int get_ser_num_prev, uint32_t *serial_prev, int *prev_was_null,
         int get_has_full, int *has_full){
-    MYSQL *mysql = conn->mysql;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
-    int num_rows;
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_READ_SER_NUM_AS_CURRENT];
+    int ret;
 
-    snprintf(qry, QRY_SZ, "select serial_num, prev_serial_num, has_full "
-            "from rtr_update "
-            "where serial_num=%" PRIu32, serial);
-
-    if (wrap_mysql_query(conn, qry, "could not read rtr_update from db")) {
+    MYSQL_BIND bind_in[1];
+    memset(bind_in, 0, sizeof(bind_in));
+    // serial_num parameter
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].is_unsigned = 1;
+    bind_in[0].buffer = &serial;
+    if (mysql_stmt_bind_param(stmt, bind_in)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return GET_SERNUM_ERR;
     }
 
-    if ((result = mysql_store_result(mysql)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
+    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return GET_SERNUM_ERR;
     }
 
-    num_rows = mysql_num_rows(result);
-    if (num_rows == 0) {
-        mysql_free_result(result);
+    my_bool db_is_null_prev_sn;
+    signed char db_has_full;
+    uint32_t db_sn_prev;
+    MYSQL_BIND bind[2];
+    memset(bind, 0, sizeof(bind));
+    //prev_serial_num
+    bind[0].buffer_type= MYSQL_TYPE_LONG;
+    bind[0].buffer= &db_sn_prev;
+    bind[0].is_null= &db_is_null_prev_sn;
+    // has_full
+    bind[1].buffer_type = MYSQL_TYPE_TINY;
+    bind[1].buffer = &db_has_full;
+
+    if (mysql_stmt_bind_result(stmt, bind)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return GET_SERNUM_ERR;
+    }
+
+    if (mysql_stmt_store_result(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return GET_SERNUM_ERR;
+    }
+
+    ret = mysql_stmt_fetch(stmt);
+    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return GET_SERNUM_ERR;
+    } else if (ret == MYSQL_NO_DATA) {
+        mysql_stmt_free_result(stmt);
         return GET_SERNUM_NONE;
-    } else if (num_rows > 1) {
-        LOG(LOG_ERR, "unexpected result from rtr_update");
-        mysql_free_result(result);
-        return GET_SERNUM_ERR;
     }
 
-    row = mysql_fetch_row(result);
+    if (get_ser_num_prev  &&  prev_was_null != NULL) {
+        *serial_prev = db_sn_prev;
 
-    char *sn_prev_str = NULL;
-    if (get_ser_num_prev) {
-        *prev_was_null = 0;
-        if (getStringByFieldname(&sn_prev_str, result, row, "prev_serial_num")) {
-            if (sn_prev_str) {
-                free (sn_prev_str);
-                sn_prev_str = NULL;
-            }
-            mysql_free_result(result);
-            return GET_SERNUM_ERR;
+        if (db_is_null_prev_sn) {
+            *prev_was_null = 1;
         } else {
-            if (!strcmp(sn_prev_str, "NULL")) {
-                *prev_was_null = 1;
-                if (sn_prev_str) {
-                    free (sn_prev_str);
-                    sn_prev_str = NULL;
-                }
-                mysql_free_result(result);
-                return GET_SERNUM_SUCCESS;
-            } else if (sscanf(sn_prev_str, "%" SCNu32, serial_prev) < 1) {
-                LOG(LOG_ERR, "unexpected value for serial number");
-                if (sn_prev_str) {
-                    free (sn_prev_str);
-                    sn_prev_str = NULL;
-                }
-                mysql_free_result(result);
-                return GET_SERNUM_ERR;
-            }
+            *prev_was_null = 0;
         }
     }
 
-    char *has_full_str = NULL;
-    if (get_has_full) {
-        if (getStringByFieldname(&has_full_str, result, row, "has_full")) {
-            if (has_full_str) {
-                free (has_full_str);
-                has_full_str = NULL;
-            }
-            if (sn_prev_str) {
-                free (sn_prev_str);
-                sn_prev_str = NULL;
-            }
-            mysql_free_result(result);
-            return GET_SERNUM_ERR;
-        } else {
-            if (sscanf(has_full_str, "%d", has_full) < 1) {
-                LOG(LOG_ERR, "unexpected value for has_full");
-                if (has_full_str) {
-                    free (has_full_str);
-                    has_full_str = NULL;
-                }
-                if (sn_prev_str) {
-                    free (sn_prev_str);
-                    sn_prev_str = NULL;
-                }
-                mysql_free_result(result);
-                return GET_SERNUM_ERR;
-            }
-        }
-    }
+    if (get_has_full  &&  has_full != NULL)
+        *has_full = (int) db_has_full;
 
-    if (sn_prev_str) {
-        free (sn_prev_str);
-        sn_prev_str = NULL;
-    }
-    if (has_full_str) {
-        free (has_full_str);
-        has_full_str = NULL;
-    }
-    mysql_free_result(result);
+    mysql_stmt_free_result(stmt);
     return GET_SERNUM_SUCCESS;
 }
 

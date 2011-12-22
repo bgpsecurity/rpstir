@@ -11,17 +11,30 @@
 
 // Note:  keep in sync with enum client_types and each enum prep_stmts_X
 static const char * _queries_rtr[] = {
+    // DB_PSTMT_RTR_GET_SESSION
     "select session_id from rtr_session",
 
+    // DB_PSTMT_RTR_GET_LATEST_SERNUM
     "select serial_num from rtr_update order by create_time desc limit 1",
 
+    // DB_PSTMT_RTR_HAS_ROWS_RTR_UPDATE
     "select count(*) > 0 from rtr_update",
 
+    // DB_PSTMT_RTR_READ_SER_NUM_AS_PREV
+
+    // DB_PSTMT_RTR_READ_SER_NUM_AS_CURRENT
+    "select prev_serial_num, has_full "
+    " from rtr_update "
+    " where serial_num=?",
+
+    // DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT
     "select asn, ip_addr, is_announce "
     " from rtr_incremental "
     " where serial_num=? "
     " order by asn, ip_addr "
     " limit ?, ?",
+
+    // DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT
 
     NULL
 };
