@@ -131,59 +131,53 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
  * @note Does not matter if serial_num is not null, or has_full.
  * @pre Each timestamp in rtr_update occurs in exactly 1 row.
  * @param[out] serial A return parameter for the serial number.
- * @return 0 if latest is found, a negative integer on error, a different
- *     negative integer if no rows found (but no error)
+ * @ret GET_SERNUM_SUCCESS if given sn found as a previous-sn.,
+ *      GET_SERNUM_ERR for an unspecified error,
+ *      GET_SERNUM_NONE if given sn not found as a previous-sn. (but no error)
 ------------------------------------------------------------------------------*/
 int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
-    MYSQL *mysql = conn->mysql;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-    char qry[] = "select serial_num from rtr_update "
-            "order by create_time desc limit 1";
+    //    "select serial_num from rtr_update order by create_time desc limit 1"
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_LATEST_SERNUM];
+    int ret;
+    uint32_t db_sn;
 
-    if (serial == NULL) {
-        LOG(LOG_ERR, "bad input");
+    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return GET_SERNUM_ERR;
     }
 
-    //    if (wrap_mysql_query(conn, qry)) {
-    if (wrap_mysql_query(conn, qry, "could not get latest serial number from db")) {
-        return GET_SERNUM_ERR;
+    MYSQL_BIND bind[1];
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONG;
+    bind[0].is_unsigned = (my_bool) 1;
+    bind[0].buffer = &db_sn;
+
+    if (mysql_stmt_bind_result(stmt, bind)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
     }
 
-    if ((result = mysql_store_result(mysql)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        return GET_SERNUM_ERR;
+    if (mysql_stmt_store_result(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
     }
 
-    uint num_rows = mysql_num_rows(result);
-    char *sn_str = NULL;
-    if (num_rows == 1) {
-        row = mysql_fetch_row(result);
-        if (getStringByFieldname(&sn_str, result, row, "serial_num")) {
-            if (sn_str) {
-                free (sn_str);
-                sn_str = NULL;
-            }
-            mysql_free_result(result);
-            return GET_SERNUM_ERR;
-        } else {
-            if (sscanf(sn_str, "%" SCNu32, serial) < 1) {
-                LOG(LOG_ERR, "unexpected value for serial_num");
-                return GET_SERNUM_ERR;
-            }
-            if (sn_str) {
-                free (sn_str);
-                sn_str = NULL;
-            }
-            mysql_free_result(result);
-            return GET_SERNUM_SUCCESS;
-        }
-    } else {  // num_rows == 0
-        mysql_free_result(result);
-        LOG(LOG_DEBUG, "returned 0 rows for query:  %s", qry);
+    ret = mysql_stmt_fetch(stmt);
+    if (ret == 0) {
+        *serial = db_sn;
+        mysql_stmt_free_result(stmt);
+        return GET_SERNUM_SUCCESS;
+    } else if (ret == MYSQL_NO_DATA) {
+        mysql_stmt_free_result(stmt);
         return GET_SERNUM_NONE;
+    } else {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return GET_SERNUM_ERR;
     }
 }
 
