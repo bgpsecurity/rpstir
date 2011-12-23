@@ -32,57 +32,6 @@ struct query_state {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-/*
-int db_rtr_get_session_id_old(conn *conn, session_id_t *session) {
-    MYSQL *mysql = conn->mysql;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-    const char qry[] = "select session_id from rtr_session";
-
-    if (wrap_mysql_query(conn, qry, "could not get session_id from db")) {
-        return -1;
-    }
-
-    if ((result = mysql_store_result(mysql)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        return -1;
-    }
-
-    uint num_rows = mysql_num_rows(result);
-    char *session_id_str = NULL;
-    if (num_rows == 1) {
-        row = mysql_fetch_row(result);
-        if (getStringByFieldname(&session_id_str, result, row, "session_id")) {
-            if (session_id_str) {
-                free (session_id_str);
-                session_id_str = NULL;
-            }
-            mysql_free_result(result);
-            return -1;
-        } else {
-            if (sscanf(session_id_str, "%" SCNu16, session) < 1) {
-                LOG(LOG_ERR, "unexpected value for session_id");
-                return -1;
-            }
-            if (session_id_str) {
-                free (session_id_str);
-                session_id_str = NULL;
-            }
-            mysql_free_result(result);
-            return 0;
-        }
-    } else {
-        mysql_free_result(result);
-        LOG(LOG_ERR, "returned %u rows for query:  %s", num_rows, qry);
-        return -1;
-    }
-}
- */
-
-
-/**=============================================================================
-------------------------------------------------------------------------------*/
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
@@ -1115,11 +1064,6 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         state->data_sent = 1;
     }
 
-//    "select asn, ip_addr "
-//    " from rtr_full "
-//    " where serial_num=? "
-//    " order by asn, ip_addr "
-//    " limit ?, ?",
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_RESET_QRY_GET_NEXT];
     MYSQL_BIND bind_in[3];
     memset(bind_in, 0, sizeof(bind_in));
