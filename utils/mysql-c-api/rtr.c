@@ -65,7 +65,7 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     if (ret != 0) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
         if (ret == 1)
-	        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
