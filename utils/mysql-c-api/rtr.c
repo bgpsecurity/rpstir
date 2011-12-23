@@ -378,7 +378,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
  *     before being passed to this function.
  * @return 0 on success or an error code on failure.
 ------------------------------------------------------------------------------*/
-static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
+static int parseIpaddr(sa_family_t *family, struct in_addr *addr4, struct in6_addr *addr6,
         uint8_t *prefix_len, uint8_t *max_len, const char field_str[]) {
     const size_t SZ = 40;  // max length of ipv6 string with \0
     char ip_txt[SZ];
@@ -482,7 +482,7 @@ static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *add
 //static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce,
 //        session_id_t session) {
 static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce) {
-    uint family = 0;
+    sa_family_t family = 0;
     struct in_addr addr4;
     struct in6_addr addr6;
     uint8_t prefix_len = 0;
