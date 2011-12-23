@@ -50,42 +50,6 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt, const char *err_msg_
 
 
 /*==============================================================================
-------------------------------------------------------------------------------*/
-int wrap_mysql_query(dbconn *conn, const char *qry, const char *err_msg_in) {
-    MYSQL *mysql = conn->mysql;
-    int tried = 0;
-    int ret = 0;
-    uint err_no = 0;
-
-    ret = mysql_query(mysql, qry);
-    // currently limited to a single reconnect attempt
-    while (ret) {
-        err_no = mysql_errno(mysql);
-        if (err_no == CR_SERVER_GONE_ERROR  ||  err_no == CR_SERVER_LOST) {  // lost server connection
-            LOG(LOG_WARNING, "connection to MySQL server was lost: %s", mysql_error(mysql));
-            if (tried) {
-                LOG(LOG_ERR, "not able to reconnect to MySQL server");
-                return -1;
-            }
-            tried++;
-            if (reconnectMysqlCApi(&conn)) {
-                LOG(LOG_WARNING, "reconnection to MySQL server failed");
-                return -1;
-            }
-            ret = mysql_query(mysql, qry);
-        } else {  // error, but not server disconnect
-            if (err_msg_in != NULL)
-                LOG(LOG_ERR, "%s", err_msg_in);
-            LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-            return ret;
-        }
-    }
-
-    return 0;
-}
-
-
-/*==============================================================================
  * @note Caller must free memory returned in first argument.
  * @ret 0 on success, -1 on failure, 1 on NULL value.
 ------------------------------------------------------------------------------*/
