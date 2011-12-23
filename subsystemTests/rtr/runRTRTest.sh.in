@@ -12,6 +12,7 @@ RCLI="$RPKI_ROOT/proto/rcli"
 PORT=1234
 SESSION=42
 WRONG_SESSION=4242
+SERVER_START_TIMEOUT=10
 
 client_raw () {
 	SUBTEST_NAME="$1"
@@ -123,7 +124,25 @@ start_rtrd () {
 	fi
 	SERVER_PID=$!
 	trap stop_rtrd 0
-	sleep 1
+
+	SERVER_STARTED=0
+
+	for _discard in `seq 1 $SERVER_START_TIMEOUT`; do
+		sleep 1
+		if nc -z localhost "$PORT"; then
+			SERVER_STARTED=1
+			break
+		fi
+	done
+
+	if test $SERVER_STARTED -ne 0; then
+		echo >&2 "Server started"
+		return 0
+	else
+		echo >&2 "Failed to start server"
+		stop_rtrd
+		return 1
+	fi
 }
 
 
