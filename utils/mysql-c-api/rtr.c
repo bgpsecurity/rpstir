@@ -348,7 +348,13 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         return GET_SERNUM_NONE;
     }
 
-    if (get_ser_num_prev  &&  prev_was_null != NULL) {
+    if (get_ser_num_prev) {
+        if (prev_was_null == NULL || serial_prev == NULL) {
+            LOG(LOG_ERR, "got NULL parameter");
+            mysql_stmt_free_result(stmt);
+            return GET_SERNUM_ERR;
+        }
+
         *serial_prev = db_prev_sn;
 
         if (db_is_null_prev_sn) {
