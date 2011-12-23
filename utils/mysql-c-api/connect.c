@@ -49,15 +49,6 @@ void db_thread_close() {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int db_check_table_descriptions() {
-    // TODO:  compare db schema to what the code expects
-
-    return 0;
-}
-
-
-/*==============================================================================
-------------------------------------------------------------------------------*/
 int reconnectMysqlCApi(dbconn **old_conn) {
     dbconn *conn = *old_conn;
     MYSQL *mysql = conn->mysql;
@@ -79,12 +70,6 @@ int reconnectMysqlCApi(dbconn **old_conn) {
     }
     if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
         LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
-    }
-
-    if (db_check_table_descriptions()) {
-        LOG(LOG_ERR, "the database schema does not match what the program expects");
-        db_disconnect(conn);
-        return -1;
     }
 
     if (stmtAddAll(conn) != 0) {
@@ -152,12 +137,6 @@ static void *connectMysqlCApi(
     if (conn->host == NULL  ||  conn->user == NULL ||
             conn->pass == NULL  ||  conn->db == NULL) {
         LOG(LOG_ERR, "could not alloc for strings");
-        db_disconnect(conn);
-        return NULL;
-    }
-
-    if (db_check_table_descriptions()) {
-        LOG(LOG_ERR, "the database schema does not match what the program expects");
         db_disconnect(conn);
         return NULL;
     }
