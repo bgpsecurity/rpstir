@@ -182,31 +182,6 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
 
 /**=============================================================================
-------------------------------------------------------------------------------*/
-/*
-static int getNumRowsInTable(dbconn *conn, char *table_name) {
-    MYSQL *mysql = conn->mysql;
-    MYSQL_RES *result;
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
-
-    snprintf(qry, QRY_SZ, "select count(*) from %s", table_name);
-
-    if (wrap_mysql_query(conn, qry, "could not read from db")) {
-        return -1;
-    }
-
-    if ((result = mysql_store_result(mysql)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        return -1;
-    }
-
-    return ((int) mysql_num_rows(result));
-}*/
-
-
-/**=============================================================================
  * @brief Get info from db row where ser_num_prev = rtr_update.prev_serial_num.
  * @param[in] ser_num_prev The serial_num to find in rtr_update.prev_serial_num.
  * @param[in] get_ser_num If non-zero, read serial_num.
