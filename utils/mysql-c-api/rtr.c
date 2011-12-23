@@ -590,7 +590,7 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announc
 /**=============================================================================
  * TODO: eliminate this, or call fillPduIpPrefix() from it.
 ------------------------------------------------------------------------------*/
-static int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session,
+/*static int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session,
         int check_is_announce) {
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
     pdu->sessionId = session;
@@ -699,7 +699,7 @@ static int fillPduFromDbResult(PDU *pdu, MYSQL_RES *result, session_id_t session
     }
 
     return 0;
-}
+}*/
 
 
 /**=============================================================================
@@ -1115,46 +1115,89 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         state->data_sent = 1;
     }
 
-    MYSQL *mysql = conn->mysql;
-    MYSQL_RES *result;
-    my_ulonglong num_rows = 0;
-    int QRY_SZ = 256;
-    char qry[QRY_SZ];
+//    "select asn, ip_addr "
+//    " from rtr_full "
+//    " where serial_num=? "
+//    " order by asn, ip_addr "
+//    " limit ?, ?",
+    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_RESET_QRY_GET_NEXT];
+    MYSQL_BIND bind_in[3];
+    memset(bind_in, 0, sizeof(bind_in));
+    // serial_num parameter
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].is_unsigned = 1;
+    bind_in[0].buffer = &(state->ser_num);
+    // offset parameter
+    bind_in[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind_in[1].is_unsigned = 1;
+    bind_in[1].buffer = &(state->first_row);
+    // limit parameter
+    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[2].is_unsigned = 1;
+    size_t limit = max_rows - num_pdus;
+    bind_in[2].buffer = &limit;
 
-    snprintf(qry, QRY_SZ, "select asn, ip_addr "
-            " from rtr_full "
-            " where serial_num=%" PRIu32
-            " order by asn, ip_addr"
-            " limit %" PRIu64 ", %zu",
-            state->ser_num, state->first_row, max_rows - num_pdus);
-
-    if (wrap_mysql_query(conn, qry, "could not read rtr_full from db")) {
-        pdu_free_array(pdus, max_rows);
+    if (mysql_stmt_bind_param(stmt, bind_in)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 
-    if ((result = mysql_store_result(mysql)) == NULL) {
-        LOG(LOG_ERR, "could not read result set");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        pdu_free_array(pdus, max_rows);
+    if (wrap_mysql_stmt_execute(conn, stmt, "could not retrieve data from rtr_incremental")) {
         return -1;
     }
 
-    num_rows = mysql_num_rows(result);
+    MYSQL_BIND bind_out[2];
+    uint32_t asn;
+    const size_t IPADDR_STR_LEN = 50;
+    char ip_addr[IPADDR_STR_LEN + 1];
+    memset(bind_out, 0, sizeof(bind_out));
+    // asn output
+    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_out[0].is_unsigned = 1;
+    bind_out[0].buffer = (char*)&asn;
+    // ip_addr output
+    bind_out[1].buffer_type = MYSQL_TYPE_STRING;
+    bind_out[1].buffer_length = IPADDR_STR_LEN;
+    bind_out[1].buffer = (char*)&ip_addr;
 
-    while (num_rows > 0) {
-        if (fillPduFromDbResult(&((*_pdus)[num_pdus++]), result, session, 0)) {
-            LOG(LOG_ERR, "could not read result set");
-            mysql_free_result(result);
-            pdu_free_array(pdus, max_rows);
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    // mysql_stmt_store_result is optional.  mysql_stmt_fetch will produce the
+    //   same data whether or not it is called.  But calling it brings the
+    //   whole result from the db at one time.
+    if (mysql_stmt_store_result(stmt)) {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    int ret;
+    while ((ret = mysql_stmt_fetch(stmt)) == 0) {
+        if (fillPduIpPrefix(&((*_pdus)[num_pdus]), asn, ip_addr,
+                1, state->session)) {
+            LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
+            mysql_stmt_free_result(stmt);
             return -1;
         }
-        --num_rows;
+        ++num_pdus;
         ++state->first_row;
+    }
+    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+        LOG(LOG_ERR, "error during mysql_stmt_fetch()");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
     }
 
     if (num_pdus == max_rows) {
-        mysql_free_result(result);
+        mysql_stmt_free_result(stmt);
         *is_done = 0;
         LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
         return num_pdus;
@@ -1166,7 +1209,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 
     LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[num_pdus++]), session, state->ser_num);
-    mysql_free_result(result);
+    mysql_stmt_free_result(stmt);
     LOG(LOG_DEBUG, "returning %zu PDUs", num_pdus);
     return num_pdus;
 }

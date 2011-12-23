@@ -38,6 +38,11 @@ static const char * _queries_rtr[] = {
     " limit ?, ?",
 
     // DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT
+    "select asn, ip_addr "
+    " from rtr_full "
+    " where serial_num=? "
+    " order by asn, ip_addr "
+    " limit ?, ?",
 
     NULL
 };
