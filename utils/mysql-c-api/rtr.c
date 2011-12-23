@@ -195,7 +195,7 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
     mysql_stmt_free_result(stmt);
 
-    if (db_has_rows == 1)
+    if (db_has_rows)
         return 1;
     else
         return 0;
