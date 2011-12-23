@@ -36,6 +36,18 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
 
+    MYSQL_BIND bind_in[1];
+    uint32_t limit = 2; // 2 keeps the fetch small while letting num_rows() ensure there's only one row in the table
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].is_unsigned = 1;
+    bind_in[0].buffer = &limit;
+    if (mysql_stmt_bind_param(stmt, bind_in)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        return -1;
+    }
+
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return -1;
     }
@@ -57,6 +69,12 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     if (mysql_stmt_store_result(stmt)) {
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    if (mysql_stmt_num_rows(stmt) != 1) {
+        LOG(LOG_ERR, "more or less than one session id exists");
         mysql_stmt_free_result(stmt);
         return -1;
     }
