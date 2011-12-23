@@ -165,7 +165,7 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
     MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
-    uint db_has_rows = 0;
+    uint32_t db_has_rows = 0;
     bind[0].buffer_type = MYSQL_TYPE_LONG;
     bind[0].is_unsigned = 1;
     bind[0].buffer = &db_has_rows;
