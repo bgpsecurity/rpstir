@@ -49,6 +49,15 @@ void db_thread_close() {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
+int db_check_table_descriptions() {
+    // TODO:  compare db schema to what the code expects
+
+    return 0;
+}
+
+
+/*==============================================================================
+------------------------------------------------------------------------------*/
 int reconnectMysqlCApi(dbconn **old_conn) {
     dbconn *conn = *old_conn;
     MYSQL *mysql = conn->mysql;
@@ -72,7 +81,11 @@ int reconnectMysqlCApi(dbconn **old_conn) {
         LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
     }
 
-    // TODO:  check table descriptions
+    if (db_check_table_descriptions()) {
+        LOG(LOG_ERR, "the database schema does not match what the program expects");
+        db_disconnect(conn);
+        return -1;
+    }
 
     if (stmtAddAll(conn) != 0) {
         db_disconnect(conn);
@@ -143,7 +156,11 @@ static void *connectMysqlCApi(
         return NULL;
     }
 
-    // TODO:  check table descriptions
+    if (db_check_table_descriptions()) {
+        LOG(LOG_ERR, "the database schema does not match what the program expects");
+        db_disconnect(conn);
+        return NULL;
+    }
 
     if (client_flags & ~DB_CLIENT_ALL) {
         LOG(LOG_ERR, "got invalid flags");

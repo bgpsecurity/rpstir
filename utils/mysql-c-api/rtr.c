@@ -35,7 +35,6 @@ struct query_state {
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
-    uint16_t data;
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return -1;
@@ -43,9 +42,10 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
 
     MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
-
+    uint16_t db_session;
+    // session_id parameter
     bind[0].buffer_type= MYSQL_TYPE_SHORT;
-    bind[0].buffer= &data;
+    bind[0].buffer= &db_session;
 
     if (mysql_stmt_bind_result(stmt, bind)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -69,7 +69,7 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
         return -1;
     }
 
-    *session = data;
+    *session = db_session;
     mysql_stmt_free_result(stmt);
 
     return 0;
@@ -88,7 +88,6 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
     //    "select serial_num from rtr_update order by create_time desc limit 1"
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_LATEST_SERNUM];
     int ret;
-    uint32_t db_sn;
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return GET_SERNUM_ERR;
@@ -96,6 +95,8 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
 
     MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
+    uint32_t db_sn;
+    // serial_num
     bind[0].buffer_type = MYSQL_TYPE_LONG;
     bind[0].is_unsigned = (my_bool) 1;
     bind[0].buffer = &db_sn;
@@ -137,7 +138,6 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
 static int hasRowsRtrUpdate(dbconn *conn) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_HAS_ROWS_RTR_UPDATE];
     int ret;
-    uint data = 0;
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return -1;
@@ -145,10 +145,10 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
     MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
-
+    uint db_has_rows = 0;
     bind[0].buffer_type = MYSQL_TYPE_LONG;
     bind[0].is_unsigned = 1;
-    bind[0].buffer = &data;
+    bind[0].buffer = &db_has_rows;
 
     if (mysql_stmt_bind_result(stmt, bind)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -174,7 +174,7 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
     mysql_stmt_free_result(stmt);
 
-    if (data == 1)
+    if (db_has_rows == 1)
         return 1;
     else
         return 0;
@@ -214,7 +214,7 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
     uint32_t db_sn;
     MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
-    //serial_num
+    // serial_num
     bind[0].buffer_type = MYSQL_TYPE_LONG;
     bind[0].buffer = &db_sn;
     bind[0].is_unsigned = (my_bool) 1;
@@ -289,12 +289,12 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
 
     my_bool db_is_null_prev_sn;
     signed char db_has_full;
-    uint32_t db_sn_prev;
+    uint32_t db_prev_sn;
     MYSQL_BIND bind[2];
     memset(bind, 0, sizeof(bind));
-    //prev_serial_num
+    // prev_serial_num
     bind[0].buffer_type= MYSQL_TYPE_LONG;
-    bind[0].buffer= &db_sn_prev;
+    bind[0].buffer= &db_prev_sn;
     bind[0].is_null= &db_is_null_prev_sn;
     // has_full
     bind[1].buffer_type = MYSQL_TYPE_TINY;
@@ -326,7 +326,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
     }
 
     if (get_ser_num_prev  &&  prev_was_null != NULL) {
-        *serial_prev = db_sn_prev;
+        *serial_prev = db_prev_sn;
 
         if (db_is_null_prev_sn) {
             *prev_was_null = 1;
@@ -635,16 +635,9 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
     struct query_state *state = (struct query_state*) query_state;
     int ret;
-
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT];
+
     MYSQL_BIND bind_in[3];
-
-    MYSQL_BIND bind_out[3];
-    uint32_t asn;
-    const size_t IPADDR_STR_LEN = 50;
-    char ip_addr[IPADDR_STR_LEN + 1];
-    unsigned char is_announce;
-
     memset(bind_in, 0, sizeof(bind_in));
     // serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
@@ -670,19 +663,24 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
         return -1;
     }
 
+    MYSQL_BIND bind_out[3];
+    uint32_t db_asn;
+    const size_t IPADDR_STR_LEN = 50;
+    char db_ip_addr[IPADDR_STR_LEN + 1];
+    unsigned char db_is_announce;
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
     bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = (char*)&asn;
+    bind_out[0].buffer = (char*)&db_asn;
     // ip_addr output
     bind_out[1].buffer_type = MYSQL_TYPE_STRING;
     bind_out[1].buffer_length = IPADDR_STR_LEN;
-    bind_out[1].buffer = (char*)&ip_addr;
+    bind_out[1].buffer = (char*)&db_ip_addr;
     // is_announce output
     bind_out[2].buffer_type = MYSQL_TYPE_TINY;
     bind_out[2].is_unsigned = 1;
-    bind_out[2].buffer = (char*)&is_announce;
+    bind_out[2].buffer = (char*)&db_is_announce;
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -702,8 +700,8 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
     }
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
-        if (fillPduIpPrefix(&((*_pdus)[*num_pdus]), asn, ip_addr,
-                is_announce, state->session)) {
+        if (fillPduIpPrefix(&((*_pdus)[*num_pdus]), db_asn, db_ip_addr,
+                db_is_announce, state->session)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
             return -1;
@@ -717,6 +715,7 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
         mysql_stmt_free_result(stmt);
         return -1;
     }
+
     mysql_stmt_free_result(stmt);
 
     return 0;
@@ -898,8 +897,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         return -1;
     }
 
-    // alloc enough for max_rows + header & footer PDUs
-    pdus = calloc(max_rows + 2, sizeof(PDU));
+    pdus = calloc(max_rows, sizeof(PDU));
     if (!pdus) {
         LOG(LOG_ERR, "could not alloc for array of PDU");
         return -1;
@@ -952,18 +950,18 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     }
 
     MYSQL_BIND bind_out[2];
-    uint32_t asn;
+    uint32_t db_asn;
     const size_t IPADDR_STR_LEN = 50;
-    char ip_addr[IPADDR_STR_LEN + 1];
+    char db_ip_addr[IPADDR_STR_LEN + 1];
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
     bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = (char*)&asn;
+    bind_out[0].buffer = (char*)&db_asn;
     // ip_addr output
     bind_out[1].buffer_type = MYSQL_TYPE_STRING;
     bind_out[1].buffer_length = IPADDR_STR_LEN;
-    bind_out[1].buffer = (char*)&ip_addr;
+    bind_out[1].buffer = (char*)&db_ip_addr;
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -984,7 +982,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 
     int ret;
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
-        if (fillPduIpPrefix(&((*_pdus)[num_pdus]), asn, ip_addr,
+        if (fillPduIpPrefix(&((*_pdus)[num_pdus]), db_asn, db_ip_addr,
                 1, state->session)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
