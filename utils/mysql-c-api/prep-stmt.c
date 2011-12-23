@@ -86,7 +86,6 @@ static int stmtAdd(dbconn *conn,
     stmt = conn->stmts[client_type][qry_num] = mysql_stmt_init(mysql);
     if (stmt == NULL) {
         LOG(LOG_ERR, "could not alloc for prepared statement");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         return -1;
     }
 
