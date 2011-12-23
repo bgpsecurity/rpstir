@@ -62,9 +62,10 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     }
 
     ret = mysql_stmt_fetch(stmt);
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
