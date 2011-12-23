@@ -512,62 +512,6 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_ann
         return -1;
 
     return 0;
-
-/*
-    pdu->protocolVersion = RTR_PROTOCOL_VERSION;
-    pdu->sessionId = session;
-
-    uint family = 0;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    uint prefix_len = 0;
-    uint max_prefix_len = 0;
-    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
-            ip_addr)) {
-        LOG(LOG_ERR, "could not parse ip_addr");
-        return -1;
-    }
-
-    // check prefix lengths and max prefix lengths vs spec
-    if ((family == AF_INET  &&  prefix_len > 32) ||
-            (family == AF_INET6  &&  prefix_len > 128)) {
-        LOG(LOG_ERR, "prefix length is out of spec");
-        return -1;
-    }
-    if ((family == AF_INET &&  max_prefix_len > 32) ||
-            (family == AF_INET6 &&  max_prefix_len > 128)) {
-        LOG(LOG_ERR, "max prefix length is out of spec");
-        return -1;
-    }
-
-    // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
-    // set length
-    // set IPxPrefixData
-    if (family == AF_INET) {
-        pdu->pduType = PDU_IPV4_PREFIX;
-        pdu->length = 20;
-        pdu->ip4PrefixData.flags = is_announce;
-        pdu->ip4PrefixData.prefixLength = prefix_len;
-        pdu->ip4PrefixData.maxLength = max_prefix_len;
-        pdu->ip4PrefixData.reserved = (uint8_t) 0;
-        pdu->ip4PrefixData.asNumber = asn;
-        pdu->ip4PrefixData.prefix4 = addr4;
-    } else if (family == AF_INET6) {
-        pdu->pduType = PDU_IPV6_PREFIX;
-        pdu->length = 32;
-        pdu->ip6PrefixData.flags = is_announce;
-        pdu->ip6PrefixData.prefixLength = prefix_len;
-        pdu->ip6PrefixData.maxLength = max_prefix_len;
-        pdu->ip6PrefixData.reserved = (uint8_t) 0;
-        pdu->ip6PrefixData.asNumber = asn;
-        pdu->ip6PrefixData.prefix6 = addr6;
-    } else {
-        LOG(LOG_ERR, "invalid ip family");
-        return -1;
-    }
-
-    return 0;
-*/
 }
 
 
