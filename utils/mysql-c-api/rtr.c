@@ -913,7 +913,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 
     if (db_rtr_get_session_id(conn, &session)) {
         LOG(LOG_ERR, "couldn't get session id");
-        pdu_free_array(pdus, max_rows);
+        pdu_free_array(pdus, num_pdus);
         return -1;
     }
 
