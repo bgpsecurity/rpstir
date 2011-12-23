@@ -11,10 +11,7 @@
 #include "pdu.h"
 
 
-// <cache_state>
 int db_rtr_get_session_id(dbconn *conn, session_id_t * session);
-//int db_rtr_get_session_id_old(dbconn *conn, session_id_t * session);
-// </cache_state>
 
 
 #define GET_SERNUM_SUCCESS 0
@@ -23,12 +20,6 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t * session);
 int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t * serial);
 
 
-// possibly obsolete
-//int isValidSerNumPrev(dbconn *conn, uint32_t sn);
-//int isValidSerNumData(dbconn *conn, uint32_t sn);
-
-
-// <db>
 /**
 	@param query_state A return parameter for an opaque data type that
 		stores the information needed by serialQueryGetNext() to
@@ -80,10 +71,6 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 	PDU ** _pdus, bool * is_done);
 
 void db_rtr_reset_query_close(dbconn *conn, void * query_state);
-// </db>
-
-//int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
-//        uint *prefix_len, uint *max_len, const char field_str[]);
 
 
 #endif
