@@ -121,14 +121,14 @@ int stmtAddAll(dbconn *conn) {
 
         conn->stmts[client_type] = calloc(qry_num, sizeof(MYSQL_STMT *));
         if (conn->stmts[client_type] == NULL) {
-            LOG(LOG_ERR, "coult not alloc array of statement handles");
+            LOG(LOG_ERR, "could not alloc array of statement handles");
             stmtDeleteAll(conn);
             return -1;
         }
 
         for (qry_num = 0; queries[client_type][qry_num] != NULL; ++qry_num) {
             if (stmtAdd(conn, client_type, qry_num) != 0) {
-                LOG(LOG_ERR, "coult not prepare a statement");
+                LOG(LOG_ERR, "could not prepare a statement");
                 stmtDeleteAll(conn);
                 return -1;
             }

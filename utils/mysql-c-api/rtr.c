@@ -384,7 +384,7 @@ static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *add
             in_len == prefix_last) {
         max_found = 0;
     } else {
-        LOG(LOG_ERR, "could not parse ip_addr:  %s", field_str);
+        LOG(LOG_ERR, "could not find substring delimiters in ip_addr:  %s", field_str);
         return -1;
     }
 
@@ -763,7 +763,7 @@ static int serial_query_post_query(dbconn *conn, void *query_state,
 
     // NOTE:  even though error, still feeding previous results,
     //     which should be unaffected by this error.
-    LOG(LOG_ERR, "error while looking for next serial number");
+    LOG(LOG_ERR, "error while looking for next serial number.  still sending pdus");
     LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
     fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
     return 0;
