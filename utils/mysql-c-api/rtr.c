@@ -350,7 +350,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
  * @return 0 on success or an error code on failure.
 ------------------------------------------------------------------------------*/
 static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
-        uint *prefix_len, uint *max_len, const char field_str[]) {
+        uint8_t *prefix_len, uint8_t *max_len, const char field_str[]) {
     const size_t SZ = 40;  // max length of ipv6 string with \0
     char ip_txt[SZ];
     char prefix_len_txt[SZ];
@@ -430,21 +430,18 @@ static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *add
         return -1;
     }
 
-    if (sscanf(prefix_len_txt, "%u", prefix_len) < 1) {
+    if (sscanf(prefix_len_txt, "%" SCNu8, prefix_len) < 1) {
         LOG(LOG_ERR, "could not parse ip_addr.prefix_length");
         return -1;
     }
 
     if (max_found) {
-        if (sscanf(max_len_txt, "%u", max_len) < 1) {
+        if (sscanf(max_len_txt, "%" SCNu8, max_len) < 1) {
             LOG(LOG_ERR, "could not parse ip_addr.max_prefix_length");
             return -1;
         }
     } else {
-        if (*family == AF_INET)
-            *max_len = *prefix_len;
-        else
-            *max_len = *prefix_len;
+        *max_len = *prefix_len;
     }
 
     return 0;
@@ -453,8 +450,41 @@ static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *add
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announce,
-        session_id_t session) {
+//static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce,
+//        session_id_t session) {
+static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce) {
+    uint family = 0;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uint8_t prefix_len = 0;
+    uint8_t max_prefix_len = 0;
+
+    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
+            ip_addr)) {
+        LOG(LOG_ERR, "could not parse ip_addr");
+        return -1;
+    }
+
+    if (family == AF_INET)
+        fill_pdu_ipv4_prefix(pdu,
+                is_announce,
+                prefix_len,
+                max_prefix_len,
+                &addr4,
+                asn);
+    else if (family == AF_INET6)
+        fill_pdu_ipv6_prefix(pdu,
+                is_announce,
+                prefix_len,
+                max_prefix_len,
+                &addr6,
+                asn);
+    else
+        return -1;
+
+    return 0;
+
+/*
     pdu->protocolVersion = RTR_PROTOCOL_VERSION;
     pdu->sessionId = session;
 
@@ -508,6 +538,7 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, int is_announc
     }
 
     return 0;
+*/
 }
 
 
@@ -667,7 +698,7 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
     uint32_t db_asn;
     const size_t IPADDR_STR_LEN = 50;
     char db_ip_addr[IPADDR_STR_LEN + 1];
-    unsigned char db_is_announce;
+    uint8_t db_is_announce;
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
@@ -680,7 +711,7 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
     // is_announce output
     bind_out[2].buffer_type = MYSQL_TYPE_TINY;
     bind_out[2].is_unsigned = 1;
-    bind_out[2].buffer = (char*)&db_is_announce;
+    bind_out[2].buffer = &db_is_announce;
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -701,7 +732,7 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
         if (fillPduIpPrefix(&((*_pdus)[*num_pdus]), db_asn, db_ip_addr,
-                db_is_announce, state->session)) {
+                db_is_announce/*, state->session*/)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
             return -1;
@@ -983,7 +1014,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     int ret;
     while ((ret = mysql_stmt_fetch(stmt)) == 0) {
         if (fillPduIpPrefix(&((*_pdus)[num_pdus]), db_asn, db_ip_addr,
-                1, state->session)) {
+                1/*, state->session*/)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
             return -1;
