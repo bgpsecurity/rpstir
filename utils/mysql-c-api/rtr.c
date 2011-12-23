@@ -144,7 +144,8 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
         return GET_SERNUM_NONE;
     } else {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return GET_SERNUM_ERR;
     }
@@ -184,9 +185,10 @@ static int hasRowsRtrUpdate(dbconn *conn) {
     }
 
     ret = mysql_stmt_fetch(stmt);
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -265,7 +267,8 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
         return GET_SERNUM_NONE;
     } else {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return GET_SERNUM_ERR;
     }
@@ -336,7 +339,8 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
     ret = mysql_stmt_fetch(stmt);
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return GET_SERNUM_ERR;
     } else if (ret == MYSQL_NO_DATA) {
@@ -759,9 +763,10 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
         ++*num_pdus;
         ++state->first_row;
     }
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0 && ret != MYSQL_NO_DATA) {
         LOG(LOG_ERR, "error during mysql_stmt_fetch()");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -1041,9 +1046,10 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         ++num_pdus;
         ++state->first_row;
     }
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0 && ret != MYSQL_NO_DATA) {
         LOG(LOG_ERR, "error during mysql_stmt_fetch()");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
