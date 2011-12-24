@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <my_global.h>
 #include <mysql.h>
@@ -380,97 +381,84 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
 ------------------------------------------------------------------------------*/
 static int parseIpaddr(sa_family_t *family, struct in_addr *addr4, struct in6_addr *addr6,
         uint8_t *prefix_len, uint8_t *max_len, const char field_str[]) {
-    const size_t SZ = 40;  // max length of ipv6 string with \0
-    char ip_txt[SZ];
-    char prefix_len_txt[SZ];
-    char max_len_txt[SZ];
-    size_t ip_last;
-    size_t prefix_first;
-    size_t prefix_last;
-    size_t max_first;
-    size_t max_last;
+    char ip_txt[INET_ADDRSTRLEN > INET6_ADDRSTRLEN ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN];
     size_t i;
-    int max_found;
+    int chars_consumed;
 
-    // locate indices of the substrings' delimiters
-    ip_last = strcspn(field_str, "/");
-    prefix_first = strcspn(field_str, "/");
-    prefix_last = strcspn(field_str, "(");
-    max_first = strcspn(field_str, "(");
-    max_last = strcspn(field_str, ")");
-
-    // check that all expected substring delimiters were found
-    // and check whether max_length was included
-    size_t in_len = strlen(field_str);
-    if (in_len != ip_last &&
-            in_len != prefix_first &&
-            in_len != prefix_last &&
-            in_len != max_first &&
-            in_len != max_last) {
-        max_found = 1;
-    } else if (in_len != ip_last &&
-            in_len != prefix_first &&
-            in_len == prefix_last) {
-        max_found = 0;
-    } else {
-        LOG(LOG_ERR, "could not find substring delimiters in ip_addr:  %s", field_str);
+    if (field_str[0] == '\0') {
+        LOG(LOG_ERR, "empty field string");
         return -1;
     }
 
-    // adjust indices off of the delimiters and onto the substrings
-    ip_last -= 1;
-    prefix_first += 1;
-    prefix_last -= 1;
-    max_first += 1;
-    max_last -= 1;
-
-    // retrieve the substrings
-    for (i = 0; i <= ip_last && i < SZ - 1; i++) {
+    // copy IP field
+    for (i = 0; field_str[i] != '\0' && field_str[i] != '/' && i < sizeof(ip_txt); ++i) {
         ip_txt[i] = field_str[i];
     }
-    ip_txt[i] = '\0';
-
-    for (i = prefix_first; i <= prefix_last && i - prefix_first < SZ - 1; i++) {
-        prefix_len_txt[i - prefix_first] = field_str[i];
-    }
-    prefix_len_txt[i - prefix_first] = '\0';
-
-    if (max_found) {
-        for (i = max_first; i <= max_last && i - max_first < SZ - 1; i++) {
-            max_len_txt[i - max_first] = field_str[i];
-        }
-        max_len_txt[i - max_first] = '\0';
+    if (field_str[i] == '\0') {
+        LOG(LOG_ERR, "no prefix length present");
+        return -1;
+    } else if (field_str[i] == '/') {
+        ip_txt[i] = '\0';
+        ++i;
+    } else {
+        LOG(LOG_ERR, "IP address string too long");
+        return -1;
     }
 
-    if (strcspn(ip_txt, ".") < strlen(ip_txt)) {
+    // parse IP field
+    if (inet_pton(AF_INET, ip_txt, addr4) == 1) {
         *family = AF_INET;
-        if (inet_pton(AF_INET, ip_txt, addr4) < 1) {
-            LOG(LOG_ERR, "could not parse ip address text to in_addr");
-            return -1;
-        }
-    } else if (strcspn(ip_txt, ":") < strlen(ip_txt)) {
+    } else if (inet_pton(AF_INET6, ip_txt, addr6) == 1) {
         *family = AF_INET6;
-        if (inet_pton(AF_INET6, ip_txt, addr6) < 1) {
-            LOG(LOG_ERR, "could not parse ip address text to in6_addr");
-            return -1;
-        }
     } else {
-        LOG(LOG_ERR, "could not parse ip_addr.family");
+        LOG(LOG_ERR, "malformed IP address");
         return -1;
     }
 
-    if (sscanf(prefix_len_txt, "%" SCNu8, prefix_len) < 1) {
-        LOG(LOG_ERR, "could not parse ip_addr.prefix_length");
+    // parse prefix length field
+    if (sscanf(field_str + i, "%" SCNu8 "%n", prefix_len, &chars_consumed) < 1) {
+        LOG(LOG_ERR, "error parsing prefix length");
         return -1;
+    } else {
+        i += chars_consumed;
     }
 
-    if (max_found) {
-        if (sscanf(max_len_txt, "%" SCNu8, max_len) < 1) {
-            LOG(LOG_ERR, "could not parse ip_addr.max_prefix_length");
-            return -1;
-        }
-    } else {
+    // return early if there's no max length field
+    if (field_str[i] == '\0') {
         *max_len = *prefix_len;
+        return 0;
+    }
+
+    // parse max length field
+    if (field_str[i] == '(') {
+        ++i;
+    } else {
+        LOG(LOG_ERR, "expecting `(' after the prefix length");
+        return -1;
+    }
+
+    if (sscanf(field_str + i, "%" SCNu8 "%n", max_len, &chars_consumed) < 1) {
+        LOG(LOG_ERR, "error parsing max length");
+        return -1;
+    } else {
+        i += chars_consumed;
+    }
+
+    if (field_str[i] == '\0') {
+        LOG(LOG_ERR, "truncated max length");
+        return -1;
+    } else if (field_str[i] != ')') {
+        LOG(LOG_ERR, "garbage at end of max length field");
+        return -1;
+    } else {
+        ++i;
+    }
+
+    // done all parsing
+
+    if (field_str[i] != '\0') {
+        LOG(LOG_ERR, "garbage at end");
+        return -1;
     }
 
     return 0;
