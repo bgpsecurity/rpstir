@@ -1,21 +1,5 @@
 #!/bin/sh
 #
-# ***** BEGIN LICENSE BLOCK *****
-# 
-#  BBN Resource PKI Database/repository software
-#  Version 0
-# 
-#  US government users are permitted unrestricted rights as
-#  defined in the FAR.
-# 
-#  This software is distributed on an "AS IS" basis, WITHOUT
-#  WARRANTY OF ANY KIND, either express or implied.
-# 
-#  Copyright (C) BBN Technologies 2011.  All Rights Reserved.
-# 
-#  Contributor(s): Mark Reynolds, Andrew Chi
-# 
-#  ***** END LICENSE BLOCK ***** */
 
 # Sets up the environment variables for the RPKI relying party system,
 # but allows the user to override by setting existing variables.

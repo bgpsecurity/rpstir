@@ -2,22 +2,6 @@
   $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $
 */
 
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- *
- * US government users are permitted unrestricted rights as
- * defined in the FAR.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2009-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK ***** */
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
@@ -624,8 +608,8 @@ Procedure:
       else if (!strncmp(cc, "Xaia ", 5))
         {
         cc = nextword(cc);
-        Xaia = (char *)calloc(1, strlen(cc));
-        strncpy(Xaia, cc, strlen(cc));
+        Xaia = (char *)calloc(1, strlen(cc) + 1);
+        strncpy(Xaia, cc, strlen(cc) + 1);
         }
       else
         {
