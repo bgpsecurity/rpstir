@@ -188,6 +188,7 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
   aone.vec = &one;
   aone.ntot = 1;
   aone.nused = 1;
+  aone.vald = 0;
   sta = insertscm(conp, mtab, &aone);
   if ( sta == 0 )
     log_msg(LOG_NOTICE, "Init metadata table succeeded");

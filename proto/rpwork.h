@@ -80,7 +80,7 @@ struct done_certs
   struct done_cert *done_certp;
   };
 
-char *Xaia;
+extern char *Xaia;
 struct validity_dates
   {
   struct casn lodate;

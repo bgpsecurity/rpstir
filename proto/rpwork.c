@@ -9,21 +9,22 @@
 
 extern struct done_certs done_certs;
 
-static char Xvalidity_dates[40];
-static scm *locscmp;
-static scmcon *locconp;
+static char Xvalidity_dates[40] = "";
+static scm *locscmp = NULL;
+static scmcon *locconp = NULL;
 struct Certificate myrootcert;
-char myrootfullname[PATH_MAX];
+char myrootfullname[PATH_MAX] = "";
 struct ipranges certranges, ruleranges, lessranges, fromranges;
-char errbuf[160]; 
-char currskibuf[SKIBUFSIZ], nextskibuf[SKIBUFSIZ], skibuf[SKIBUFSIZ];
+char errbuf[160] = "";
+char currskibuf[SKIBUFSIZ] = "", nextskibuf[SKIBUFSIZ] = "", skibuf[SKIBUFSIZ] = "";
 
-char *Xcrldp;
-char *Xcp;
-char *Xrpdir;
-unsigned int XrpdirId;
+char *Xaia = NULL;
+char *Xcrldp = NULL;
+char *Xcp = NULL;
+char *Xrpdir = NULL;
+unsigned int XrpdirId = 0;
 
-int locflags;
+int locflags = 0;
 
 extern struct keyring keyring;
 
@@ -353,7 +354,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp,
       else write_objid(&polInfop->policyIdentifier, Xcp);
       }
     }
-  if (Xaia && *Xaia != 'C' && Xaia[1] > 0)
+  if (Xaia && *Xaia != 'C' && Xaia[0] != 0 && Xaia[1] > 0)
     {
     textp = find_extn(paracertp, id_pkix_authorityInfoAccess, 1);
     clear_casn(&textp->extnValue.self);
