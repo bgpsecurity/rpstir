@@ -467,8 +467,6 @@ static int parseIpaddr(sa_family_t *family, struct in_addr *addr4, struct in6_ad
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-//static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce,
-//        session_id_t session) {
 static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce) {
     sa_family_t family = 0;
     struct in_addr addr4;
