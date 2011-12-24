@@ -471,8 +471,8 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_ann
     sa_family_t family = 0;
     struct in_addr addr4;
     struct in6_addr addr6;
-    uint8_t prefix_len = 0;
-    uint8_t max_prefix_len = 0;
+    uint8_t prefix_len;
+    uint8_t max_prefix_len;
 
     if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
             ip_addr)) {
