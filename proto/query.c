@@ -112,17 +112,26 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   if (isRPSL) {
     unsigned int asn = 0;
     char *ip_addrs = 0;
-    char *filename = 0;
+    const char *filename = 0;
 
     for (display = 0; globalFields[display] != NULL; display++) {
       QueryField *field = globalFields[display];
-      if (!strcasecmp(field->name, "ip_addrs"))
-	ip_addrs = (char *)s->vec[display].valptr;
-      else if (!strcasecmp(field->name, "asn"))
-	asn = *(unsigned int *) s->vec[display].valptr;
-      else if (!strcasecmp(field->name, "filename"))
-	filename = (char *)s->vec[display].valptr;
-      else
+      if (!strcasecmp(field->name, "ip_addrs")) {
+        if (s->vec[display].avalsize != SQL_NULL_DATA)
+	  ip_addrs = (char *)s->vec[display].valptr;
+	else
+	  ip_addrs = NULL;
+      } else if (!strcasecmp(field->name, "asn")) {
+        if (s->vec[display].avalsize != SQL_NULL_DATA)
+	  asn = *(unsigned int *) s->vec[display].valptr;
+	else
+	  asn = 0;
+      } else if (!strcasecmp(field->name, "filename")) {
+        if (s->vec[display].avalsize != SQL_NULL_DATA)
+	  filename = (char *)s->vec[display].valptr;
+	else
+	  filename = "";
+      } else
 	log_msg(LOG_WARNING, "unexpected field %s in RPSL query",
 		field->name);
     }
@@ -183,13 +192,16 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
     QueryField *field = globalFields[display];
     if (field->displayer != NULL) {
       result += field->displayer (s, result, resultStr);
-    } else {
+    } else if (s->vec[result].avalsize != SQL_NULL_DATA) {
       if (field->sqlType == SQL_C_CHAR || field->sqlType == SQL_C_BINARY)
         snprintf (resultStr, MAX_RESULT_SZ,
 		  "%s", (char *) s->vec[result].valptr);
       else
         snprintf (resultStr, MAX_RESULT_SZ,
 		  "%d", *((unsigned int *) s->vec[result].valptr));
+      result++;
+    } else {
+      resultStr[0] = '\0';
       result++;
     }
     if (multiline) fprintf (output, "%s ", (display == 0) ? "*" : " ");
