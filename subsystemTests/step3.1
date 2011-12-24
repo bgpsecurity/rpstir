@@ -15,5 +15,6 @@ echo "Loading data"
 sleep 2
 ../rsync_aur/rsync_aur -t $RPKI_PORT -f test3.1b.log -w -e -i -d $RPKI_ROOT/testcases || \
   check_errs $? "$0 rsync_aur on test3.1b.log failed"
-sleep 3
+sleep 6
+
 echo $0 PASS
