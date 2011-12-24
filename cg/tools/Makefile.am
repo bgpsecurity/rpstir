@@ -3,26 +3,10 @@
 #
 # $Id: Makefile 1135 2010-05-24 13:17:17Z achi $
 #
-# ***** BEGIN LICENSE BLOCK *****
-#  
-#  BBN Address and AS Number PKI Database/repository software
-#  Version 3.0-beta
-#  
-#  US government users are permitted unrestricted rights as
-#  defined in the FAR.  
-# 
-#  This software is distributed on an "AS IS" basis, WITHOUT
-#  WARRANTY OF ANY KIND, either express or implied.
-# 
-#  Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
-# 
-#  Contributor(s):  Brenton Kohler
-# 
-# ***** END LICENSE BLOCK *****
 
 bin_PROGRAMS=test_casn_random dump rr bin_to_six six_to_bin six2hex \
 	loadkey gen_key whatsfcs make_oidtable make_TA set_cert_ski  \
-	sign_cert add_key_info read_roa encode-oid dumpasn1 dump_smart \
+	sign_cert add_key_info read_roa encode-oid dump_smart \
 	extractCMScert add_cms_cert test_cert makeLTAtest checkLTAtest \
         dumpIPAddr update_cert extractPubKeyInfo get_sernum put_sernum \
 	extractSIA extractValidityDate fix_manifest check_signature \
@@ -37,7 +21,7 @@ LDADD = ../asn/libasn.a ../casn/libcasn.a ../../utils/libutils.a
 
 test_casn_random_SOURCES = test_casn_random.c 
 dump_SOURCES = dump.c asn.c asn_dump.c util.c asn.h
-rr_SOURCES = rr.c md2.c md2.h asn.c asn.h
+rr_SOURCES = rr.c asn.c asn.h
 bin_to_six_SOURCES = bin_to_six.c prencode.c
 six_to_bin_SOURCES = six_to_bin.c prencode.c
 six2hex_SOURCES = six2hex.c prencode.c
@@ -52,7 +36,6 @@ sign_cms_SOURCES = sign_cms.c
 add_key_info_SOURCES = add_key_info.c
 read_roa_SOURCES = read_roa.c
 encode_oid_SOURCES = encode-oid.c
-dumpasn1_SOURCES = dumpasn1.c
 dump_smart_SOURCES = dump_smart.c
 extractCMScert_SOURCES = extractCMScert.c
 add_cms_cert_SOURCES = add_cms_cert.c
@@ -72,4 +55,4 @@ extractValidityDate_SOURCES = extractValidityDate.c
 fix_manifest_SOURCES = fix_manifest.c
 check_signature_SOURCES = check_signature.c
 
-EXTRA_DIST = convert-oidtable.sh dumpasn1.cfg test_casn_random_driver.sh
+EXTRA_DIST = convert-oidtable.sh test_casn_random_driver.sh
