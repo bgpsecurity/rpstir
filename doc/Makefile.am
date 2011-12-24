@@ -4,12 +4,8 @@ EXTRA_DIST = \
 	add_key_info.1 \
 	api.txt \
 	asn_gen.1 \
-	BGPSEC_Architecture_Outline.doc \
-	caselist.txt \
 	casn_functions.3 \
 	check_signature.1 \
-	codereview.doc \
-	codereview.pdf \
 	doxygen \
 	dump.1 \
 	dump_smart.1 \
@@ -19,36 +15,8 @@ EXTRA_DIST = \
 	make_oidtable.1 \
 	make_roa.1 \
 	make_TA.1 \
-	ManifestProcessing.doc \
-	PottedPinks.doc \
-	privateTAdesign.txt \
-	pt.txt \
 	read_roa.1 \
-	rpkidesign.doc \
-	rpkidesign.pdf \
-	RPKI_DoS_Assessment-1.doc \
-	RPKI_DoS_Assessment.pdf \
-	RPKI-Testing-Data-and-Procedures-2.doc \
-	RPKI-Testing-Data-and-Procedures-2.pdf \
 	rr.1 \
 	rsync_aur.1 \
-	rsync_aur.txt \
-	SDD.doc \
-	security_review.doc \
-	security_review.pdf \
 	sign_cert.1 \
-	st.txt \
-	System_And_Performance_Tests \
-	TA.doc \
-	TA.pdf \
-	testbed3.doc \
-	testbed3.pdf \
-	testbed.doc \
-	testbed.pdf \
-	testplan_conformance.doc \
-	testplan.doc \
-	testplan_local_trust_anchor_mgmt.txt \
-	testplan.pdf \
-	testreport-053007.txt \
-	testreport-061807.txt \
 	validateTA.1
