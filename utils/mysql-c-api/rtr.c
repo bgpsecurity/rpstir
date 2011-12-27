@@ -31,6 +31,15 @@ struct query_state {
 };
 
 
+static const size_t IPADDR_STR_LEN =
+        ((INET6_ADDRSTRLEN > INET_ADDRSTRLEN) ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN) +
+        1 + // '/'
+        3 + // prefix length
+        1 + // '('
+        3 + // max length
+        1; // ')'
+
+
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
@@ -657,13 +666,6 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
 
     MYSQL_BIND bind_out[3];
     uint32_t db_asn;
-    static const size_t IPADDR_STR_LEN =
-            ((INET6_ADDRSTRLEN > INET_ADDRSTRLEN) ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN) +
-            1 + // '/'
-            3 + // prefix length
-            1 + // '('
-            3 + // max length
-            1; // ')'
     char db_ip_addr[IPADDR_STR_LEN + 1];
     uint8_t db_is_announce;
     memset(bind_out, 0, sizeof(bind_out));
@@ -950,7 +952,6 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 
     MYSQL_BIND bind_out[2];
     uint32_t db_asn;
-    const size_t IPADDR_STR_LEN = 50;
     char db_ip_addr[IPADDR_STR_LEN + 1];
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
