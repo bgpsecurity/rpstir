@@ -738,13 +738,13 @@ static int serial_query_post_query(dbconn *conn, void *query_state,
     ret = readSerNumAsCurrent(conn, state->ser_num,
             1, &prev_ser_num, &prev_was_null,
             0, NULL);
-    if (prev_was_null == 1) {
+    if (ret == GET_SERNUM_ERR) {
+        LOG(LOG_ERR, "error while checking validity of serial number");
+        return -1;
+    } else if (ret == GET_SERNUM_NONE || prev_was_null) {
         LOG(LOG_INFO, "serial number became invalid after creating PDUs");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         return 0;
-    } else if (ret == GET_SERNUM_ERR) {
-        LOG(LOG_ERR, "error while checking validity of serial number");
-        return -1;
     }
 
     // check whether to End or continue with next ser num
