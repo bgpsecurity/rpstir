@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <my_global.h>
 #include <mysql.h>
@@ -36,6 +37,18 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
 
+    MYSQL_BIND bind_in[1];
+    uint32_t limit = 2; // 2 keeps the fetch small while letting num_rows() ensure there's only one row in the table
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].is_unsigned = 1;
+    bind_in[0].buffer = &limit;
+    if (mysql_stmt_bind_param(stmt, bind_in)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        return -1;
+    }
+
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
         return -1;
     }
@@ -57,6 +70,12 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     if (mysql_stmt_store_result(stmt)) {
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    if (mysql_stmt_num_rows(stmt) != 1) {
+        LOG(LOG_ERR, "more or less than one session id exists");
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -126,7 +145,8 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
         return GET_SERNUM_NONE;
     } else {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return GET_SERNUM_ERR;
     }
@@ -146,7 +166,7 @@ static int hasRowsRtrUpdate(dbconn *conn) {
 
     MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
-    uint db_has_rows = 0;
+    uint32_t db_has_rows = 0;
     bind[0].buffer_type = MYSQL_TYPE_LONG;
     bind[0].is_unsigned = 1;
     bind[0].buffer = &db_has_rows;
@@ -166,16 +186,17 @@ static int hasRowsRtrUpdate(dbconn *conn) {
     }
 
     ret = mysql_stmt_fetch(stmt);
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
 
     mysql_stmt_free_result(stmt);
 
-    if (db_has_rows == 1)
+    if (db_has_rows)
         return 1;
     else
         return 0;
@@ -247,7 +268,8 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
         return GET_SERNUM_NONE;
     } else {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return GET_SERNUM_ERR;
     }
@@ -318,7 +340,8 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
     ret = mysql_stmt_fetch(stmt);
     if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
         LOG(LOG_ERR, "mysql_stmt_fetch() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return GET_SERNUM_ERR;
     } else if (ret == MYSQL_NO_DATA) {
@@ -326,7 +349,13 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
         return GET_SERNUM_NONE;
     }
 
-    if (get_ser_num_prev  &&  prev_was_null != NULL) {
+    if (get_ser_num_prev) {
+        if (prev_was_null == NULL || serial_prev == NULL) {
+            LOG(LOG_ERR, "got NULL parameter");
+            mysql_stmt_free_result(stmt);
+            return GET_SERNUM_ERR;
+        }
+
         *serial_prev = db_prev_sn;
 
         if (db_is_null_prev_sn) {
@@ -350,99 +379,86 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
  *     before being passed to this function.
  * @return 0 on success or an error code on failure.
 ------------------------------------------------------------------------------*/
-static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *addr6,
+static int parseIpaddr(sa_family_t *family, struct in_addr *addr4, struct in6_addr *addr6,
         uint8_t *prefix_len, uint8_t *max_len, const char field_str[]) {
-    const size_t SZ = 40;  // max length of ipv6 string with \0
-    char ip_txt[SZ];
-    char prefix_len_txt[SZ];
-    char max_len_txt[SZ];
-    size_t ip_last;
-    size_t prefix_first;
-    size_t prefix_last;
-    size_t max_first;
-    size_t max_last;
+    char ip_txt[INET_ADDRSTRLEN > INET6_ADDRSTRLEN ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN];
     size_t i;
-    int max_found;
+    int chars_consumed;
 
-    // locate indices of the substrings' delimiters
-    ip_last = strcspn(field_str, "/");
-    prefix_first = strcspn(field_str, "/");
-    prefix_last = strcspn(field_str, "(");
-    max_first = strcspn(field_str, "(");
-    max_last = strcspn(field_str, ")");
-
-    // check that all expected substring delimiters were found
-    // and check whether max_length was included
-    size_t in_len = strlen(field_str);
-    if (in_len != ip_last &&
-            in_len != prefix_first &&
-            in_len != prefix_last &&
-            in_len != max_first &&
-            in_len != max_last) {
-        max_found = 1;
-    } else if (in_len != ip_last &&
-            in_len != prefix_first &&
-            in_len == prefix_last) {
-        max_found = 0;
-    } else {
-        LOG(LOG_ERR, "could not find substring delimiters in ip_addr:  %s", field_str);
+    if (field_str[0] == '\0') {
+        LOG(LOG_ERR, "empty field string");
         return -1;
     }
 
-    // adjust indices off of the delimiters and onto the substrings
-    ip_last -= 1;
-    prefix_first += 1;
-    prefix_last -= 1;
-    max_first += 1;
-    max_last -= 1;
-
-    // retrieve the substrings
-    for (i = 0; i <= ip_last && i < SZ - 1; i++) {
+    // copy IP field
+    for (i = 0; field_str[i] != '\0' && field_str[i] != '/' && i < sizeof(ip_txt); ++i) {
         ip_txt[i] = field_str[i];
     }
-    ip_txt[i] = '\0';
-
-    for (i = prefix_first; i <= prefix_last && i - prefix_first < SZ - 1; i++) {
-        prefix_len_txt[i - prefix_first] = field_str[i];
-    }
-    prefix_len_txt[i - prefix_first] = '\0';
-
-    if (max_found) {
-        for (i = max_first; i <= max_last && i - max_first < SZ - 1; i++) {
-            max_len_txt[i - max_first] = field_str[i];
-        }
-        max_len_txt[i - max_first] = '\0';
+    if (field_str[i] == '\0') {
+        LOG(LOG_ERR, "no prefix length present");
+        return -1;
+    } else if (field_str[i] == '/') {
+        ip_txt[i] = '\0';
+        ++i;
+    } else {
+        LOG(LOG_ERR, "IP address string too long");
+        return -1;
     }
 
-    if (strcspn(ip_txt, ".") < strlen(ip_txt)) {
+    // parse IP field
+    if (inet_pton(AF_INET, ip_txt, addr4) == 1) {
         *family = AF_INET;
-        if (inet_pton(AF_INET, ip_txt, addr4) < 1) {
-            LOG(LOG_ERR, "could not parse ip address text to in_addr");
-            return -1;
-        }
-    } else if (strcspn(ip_txt, ":") < strlen(ip_txt)) {
+    } else if (inet_pton(AF_INET6, ip_txt, addr6) == 1) {
         *family = AF_INET6;
-        if (inet_pton(AF_INET6, ip_txt, addr6) < 1) {
-            LOG(LOG_ERR, "could not parse ip address text to in6_addr");
-            return -1;
-        }
     } else {
-        LOG(LOG_ERR, "could not parse ip_addr.family");
+        LOG(LOG_ERR, "malformed IP address");
         return -1;
     }
 
-    if (sscanf(prefix_len_txt, "%" SCNu8, prefix_len) < 1) {
-        LOG(LOG_ERR, "could not parse ip_addr.prefix_length");
+    // parse prefix length field
+    if (sscanf(field_str + i, "%" SCNu8 "%n", prefix_len, &chars_consumed) < 1) {
+        LOG(LOG_ERR, "error parsing prefix length");
         return -1;
+    } else {
+        i += chars_consumed;
     }
 
-    if (max_found) {
-        if (sscanf(max_len_txt, "%" SCNu8, max_len) < 1) {
-            LOG(LOG_ERR, "could not parse ip_addr.max_prefix_length");
-            return -1;
-        }
-    } else {
+    // return early if there's no max length field
+    if (field_str[i] == '\0') {
         *max_len = *prefix_len;
+        return 0;
+    }
+
+    // parse max length field
+    if (field_str[i] == '(') {
+        ++i;
+    } else {
+        LOG(LOG_ERR, "expecting `(' after the prefix length");
+        return -1;
+    }
+
+    if (sscanf(field_str + i, "%" SCNu8 "%n", max_len, &chars_consumed) < 1) {
+        LOG(LOG_ERR, "error parsing max length");
+        return -1;
+    } else {
+        i += chars_consumed;
+    }
+
+    if (field_str[i] == '\0') {
+        LOG(LOG_ERR, "truncated max length");
+        return -1;
+    } else if (field_str[i] != ')') {
+        LOG(LOG_ERR, "garbage at end of max length field");
+        return -1;
+    } else {
+        ++i;
+    }
+
+    // done all parsing
+
+    if (field_str[i] != '\0') {
+        LOG(LOG_ERR, "garbage at end");
+        return -1;
     }
 
     return 0;
@@ -451,14 +467,12 @@ static int parseIpaddr(uint *family, struct in_addr *addr4, struct in6_addr *add
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-//static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce,
-//        session_id_t session) {
 static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce) {
-    uint family = 0;
+    sa_family_t family = 0;
     struct in_addr addr4;
     struct in6_addr addr6;
-    uint8_t prefix_len = 0;
-    uint8_t max_prefix_len = 0;
+    uint8_t prefix_len;
+    uint8_t max_prefix_len;
 
     if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
             ip_addr)) {
@@ -484,62 +498,6 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_ann
         return -1;
 
     return 0;
-
-/*
-    pdu->protocolVersion = RTR_PROTOCOL_VERSION;
-    pdu->sessionId = session;
-
-    uint family = 0;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    uint prefix_len = 0;
-    uint max_prefix_len = 0;
-    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
-            ip_addr)) {
-        LOG(LOG_ERR, "could not parse ip_addr");
-        return -1;
-    }
-
-    // check prefix lengths and max prefix lengths vs spec
-    if ((family == AF_INET  &&  prefix_len > 32) ||
-            (family == AF_INET6  &&  prefix_len > 128)) {
-        LOG(LOG_ERR, "prefix length is out of spec");
-        return -1;
-    }
-    if ((family == AF_INET &&  max_prefix_len > 32) ||
-            (family == AF_INET6 &&  max_prefix_len > 128)) {
-        LOG(LOG_ERR, "max prefix length is out of spec");
-        return -1;
-    }
-
-    // set pduType {PDU_IPV4_PREFIX | PDU_IPV6_PREFIX}
-    // set length
-    // set IPxPrefixData
-    if (family == AF_INET) {
-        pdu->pduType = PDU_IPV4_PREFIX;
-        pdu->length = 20;
-        pdu->ip4PrefixData.flags = is_announce;
-        pdu->ip4PrefixData.prefixLength = prefix_len;
-        pdu->ip4PrefixData.maxLength = max_prefix_len;
-        pdu->ip4PrefixData.reserved = (uint8_t) 0;
-        pdu->ip4PrefixData.asNumber = asn;
-        pdu->ip4PrefixData.prefix4 = addr4;
-    } else if (family == AF_INET6) {
-        pdu->pduType = PDU_IPV6_PREFIX;
-        pdu->length = 32;
-        pdu->ip6PrefixData.flags = is_announce;
-        pdu->ip6PrefixData.prefixLength = prefix_len;
-        pdu->ip6PrefixData.maxLength = max_prefix_len;
-        pdu->ip6PrefixData.reserved = (uint8_t) 0;
-        pdu->ip6PrefixData.asNumber = asn;
-        pdu->ip6PrefixData.prefix6 = addr6;
-    } else {
-        LOG(LOG_ERR, "invalid ip family");
-        return -1;
-    }
-
-    return 0;
-*/
 }
 
 
@@ -741,9 +699,10 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
         ++*num_pdus;
         ++state->first_row;
     }
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0 && ret != MYSQL_NO_DATA) {
         LOG(LOG_ERR, "error during mysql_stmt_fetch()");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -1023,9 +982,10 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         ++num_pdus;
         ++state->first_row;
     }
-    if (ret == 1  ||  ret == MYSQL_DATA_TRUNCATED) {
+    if (ret != 0 && ret != MYSQL_NO_DATA) {
         LOG(LOG_ERR, "error during mysql_stmt_fetch()");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -1054,122 +1014,4 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
 void db_rtr_reset_query_close(dbconn *conn, void * query_state) {
     (void) conn;  // to silence -Wunused-parameter
     free(query_state);
-}
-
-
-/**=============================================================================
- * not currently an API function.  currently for testing
- * @pre table rtr_session has exactly 0 or 1 rows.
- * NOTE: If this becomes used beyond testing, check that old_session != new_session.
-------------------------------------------------------------------------------*/
-int setSessionId(dbconn *conn, uint16_t session) {
-    MYSQL *mysql = conn->mysql;
-    const char qry_delete[] = "delete from rtr_session";
-    const int QRY_SZ = 256;
-    char qry_insert[QRY_SZ];
-
-    if (wrap_mysql_query(conn, qry_delete, "could not delete from rtr_session")) {
-        return -1;
-    }
-
-    snprintf(qry_insert, QRY_SZ, "insert into rtr_session (session_id) "
-            "value (%u)", session);
-
-    if (wrap_mysql_query(conn, qry_insert, "could not insert into rtr_session")) {
-        return -1;
-    }
-
-    int rows;
-    if ((rows = mysql_affected_rows(mysql)) != 1) {
-        LOG(LOG_ERR, "failed to insert db.rtr_session.session_id=%u", session);
-        LOG(LOG_ERR, "affected rows = %d", rows);
-        LOG(LOG_ERR, "    %u: %s\n", mysql_errno(mysql), mysql_error(mysql));
-        return -1;
-    }
-
-    return 0;
-}
-
-
-/**=============================================================================
- * This function is only for testing.  Someone else is responsible for inserting
- *   records into rtr_update.
-------------------------------------------------------------------------------*/
-int addNewSerNum(dbconn *conn, const uint32_t *in) {
-    MYSQL *mysql = conn->mysql;
-    uint32_t latest_ser_num = 0;
-    uint32_t new_ser_num = 0;
-    const int QRY_SZ = 1024;
-    char qry[QRY_SZ];
-
-    if (in) {
-        new_ser_num = *in;
-    } else if (db_rtr_get_latest_sernum(conn, &latest_ser_num) == 0) {
-        if (latest_ser_num != 0xffffffff)
-            new_ser_num = latest_ser_num + 1;
-        else
-            new_ser_num = 0;
-    } else {
-        LOG(LOG_ERR, "error reading latest serial number");
-        return -1;
-    }
-
-    // Note:  Silently deleting the serial_num I am about to insert.
-    // Assumption:  it is no longer needed.
-    snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
-            new_ser_num);
-
-    if (wrap_mysql_query(conn, qry, "could not delete serial number from db")) {
-        return -1;
-    }
-
-    if (mysql_affected_rows(mysql))
-        LOG(LOG_INFO, "serial_num %u had to be deleted from db before inserting it", new_ser_num);
-
-    snprintf(qry, QRY_SZ, "insert into rtr_update values (%u, now())",
-            new_ser_num);
-
-    if (wrap_mysql_query(conn, qry, "could not add new serial number to db")) {
-        return -1;
-    }
-
-    return 0;
-}
-
-
-/**=============================================================================
- * This function is only for testing.  Someone else is responsible for deleting
- *   records from rtr_update.
-------------------------------------------------------------------------------*/
-int deleteSerNum(dbconn *conn, uint32_t ser_num) {
-    MYSQL *mysql = conn->mysql;
-    const int QRY_SZ = 1024;
-    char qry[QRY_SZ];
-
-    snprintf(qry, QRY_SZ, "delete from rtr_update where serial_num=%u",
-            ser_num);
-
-    if (wrap_mysql_query(conn, qry, "could not delete serial number from db")) {
-        return -1;
-    }
-
-    LOG(LOG_DEBUG, "%llu rows affected for '%s'", mysql_affected_rows(mysql), qry);
-
-    return 0;
-}
-
-
-/**=============================================================================
- * This function is only for testing.  Someone else is responsible for deleting
- *   records from rtr_update.
-------------------------------------------------------------------------------*/
-int deleteAllSerNums(dbconn *conn) {
-    const char qry[] = "delete from rtr_update";
-
-    LOG(LOG_ERR, "x");
-    if (wrap_mysql_query(conn, qry, "could not delete all serial numbers from db")) {
-        return -1;
-    }
-
-    return 0;
 }

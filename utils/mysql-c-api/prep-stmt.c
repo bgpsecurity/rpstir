@@ -12,7 +12,7 @@
 // Note:  keep in sync with enum client_types and each enum prep_stmts_X
 static const char * _queries_rtr[] = {
         // DB_PSTMT_RTR_GET_SESSION
-        "select session_id from rtr_session",
+        "select session_id from rtr_session limit ?",
 
         // DB_PSTMT_RTR_GET_LATEST_SERNUM
         "select serial_num from rtr_update order by create_time desc limit 1",
