@@ -573,6 +573,7 @@ int db_rtr_serial_query_init(dbconn *conn, void **query_state, serial_number_t s
 
 
 /**=============================================================================
+@return -1 on error, 1 if the query is done, 0 otherwise
 ------------------------------------------------------------------------------*/
 static int serial_query_pre_query(dbconn *conn, void *query_state,
         size_t max_rows, PDU **_pdus, size_t *num_pdus) {
@@ -587,14 +588,14 @@ static int serial_query_pre_query(dbconn *conn, void *query_state,
         LOG(LOG_DEBUG, "no data is available to send to routers");
         fill_pdu_error_report(&((*_pdus)[(*num_pdus)++]), ERR_NO_DATA, 0, NULL, 0, NULL);
         LOG(LOG_DEBUG, "returning %zu PDUs", *num_pdus);
-        return 0;
+        return 1;
     }
 
     if (state->bad_ser_num) {
         LOG(LOG_DEBUG, "can't update the router from the given serial number");
         fill_pdu_cache_reset(&((*_pdus)[(*num_pdus)++]));
         LOG(LOG_DEBUG, "returning %zu PDUs", *num_pdus);
-        return 0;
+        return 1;
     }
 
     if (db_rtr_get_session_id(conn, &(state->session))) {
@@ -608,7 +609,7 @@ static int serial_query_pre_query(dbconn *conn, void *query_state,
         LOG(LOG_DEBUG, "calling fill_pdu_end_of_data()");
         fill_pdu_end_of_data(&((*_pdus)[(*num_pdus)++]), state->session, state->ser_num);
         LOG(LOG_DEBUG, "returning %zu PDUs", *num_pdus);
-        return 0;
+        return 1;
     }
 
     if (!state->data_sent) {
@@ -788,7 +789,7 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void *query_state,
             pdu_free_array(pdus, num_pdus);
             *_pdus = NULL;
             return -1;
-        } else if (state->not_ready || state->bad_ser_num || state->no_new_data) {
+        } else if (ret != 0) {
             return num_pdus;
         }
     }
