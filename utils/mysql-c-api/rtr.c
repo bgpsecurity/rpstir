@@ -857,6 +857,7 @@ int db_rtr_reset_query_init(dbconn *conn, void ** query_state) {
     ret = db_rtr_get_latest_sernum(conn, &state->ser_num);
     if (ret == GET_SERNUM_ERR) {
         if (state) free(state);
+        *query_state = NULL;
         return -1;
     } else if (ret == GET_SERNUM_NONE) {
         state->not_ready = 1;
@@ -868,6 +869,7 @@ int db_rtr_reset_query_init(dbconn *conn, void ** query_state) {
             1, &has_full);
     if (ret != GET_SERNUM_SUCCESS) {
         if (state) free(state);
+        *query_state = NULL;
         return -1;
     }
     if (!has_full) {
@@ -915,6 +917,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     if (db_rtr_get_session_id(conn, &session)) {
         LOG(LOG_ERR, "couldn't get session id");
         pdu_free_array(pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
 
@@ -943,10 +946,14 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        pdu_free_array(pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
 
     if (wrap_mysql_stmt_execute(conn, stmt, "could not retrieve data from rtr_incremental")) {
+        pdu_free_array(pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
 
@@ -967,6 +974,8 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
+        pdu_free_array(pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
 
@@ -977,6 +986,8 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         LOG(LOG_ERR, "mysql_stmt_store_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
+        pdu_free_array(pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
 
@@ -986,6 +997,8 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
                 1/*, state->session*/)) {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
+            pdu_free_array(pdus, num_pdus);
+            *_pdus = NULL;
             return -1;
         }
         ++num_pdus;
@@ -996,6 +1009,8 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
         if (ret == 1)
             LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
+        pdu_free_array(pdus, num_pdus);
+        *_pdus = NULL;
         return -1;
     }
 
