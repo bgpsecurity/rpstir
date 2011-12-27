@@ -467,12 +467,13 @@ static int parseIpaddr(sa_family_t *family, struct in_addr *addr4, struct in6_ad
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_announce) {
+static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, bool is_announce) {
     sa_family_t family = 0;
     struct in_addr addr4;
     struct in6_addr addr6;
     uint8_t prefix_len;
     uint8_t max_prefix_len;
+    uint8_t flags = is_announce ? FLAG_WITHDRAW_ANNOUNCE : 0;
 
     if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
             ip_addr)) {
@@ -482,14 +483,14 @@ static int fillPduIpPrefix(PDU *pdu, uint32_t asn, char *ip_addr, uint8_t is_ann
 
     if (family == AF_INET)
         fill_pdu_ipv4_prefix(pdu,
-                is_announce,
+                flags,
                 prefix_len,
                 max_prefix_len,
                 &addr4,
                 asn);
     else if (family == AF_INET6)
         fill_pdu_ipv6_prefix(pdu,
-                is_announce,
+                flags,
                 prefix_len,
                 max_prefix_len,
                 &addr6,
