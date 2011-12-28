@@ -10,11 +10,13 @@
 		type _TEST_ ## __LINE__ ## _value = (value); \
 		type _TEST_ ## __LINE__ ## _cmp_value = (cmp_value); \
 		if (!(_TEST_ ## __LINE__ ## _value condition _TEST_ ## __LINE__ ## _cmp_value)) { \
-			fprintf(stderr, "Failed test in " __FILE__ ":%d.\n", __LINE__); \
-			fprintf(stderr, "    Expected: " #value " " #condition " " #cmp_value "\n"); \
-			fprintf(stderr, "    Got LHS: " #value " = " fmt "\n", \
+			fprintf(stderr, "Failed test in %s:%d.\n", __FILE__, __LINE__); \
+			fprintf(stderr, "    Expected: %s %s %s\n", #value, #condition, #cmp_value); \
+			fprintf(stderr, "    Got LHS: %s = " fmt "\n", \
+				#value, \
 				_TEST_ ## __LINE__ ## _value); \
-			fprintf(stderr, "    Got RHS: " #cmp_value " = " fmt "\n", \
+			fprintf(stderr, "    Got RHS: %s = " fmt "\n", \
+				#cmp_value, \
 				_TEST_ ## __LINE__ ## _cmp_value); \
 			return false; \
 		} \
@@ -28,9 +30,10 @@
 		if ((_TEST_ ## __LINE__ ## _value || _TEST_ ## __LINE__ ## _cmp_value) && \
 			!(_TEST_ ## __LINE__ ## _value && _TEST_ ## __LINE__ ## _cmp_value)) \
 		{ \
-			fprintf(stderr, "Failed test in " __FILE__ ":%d.\n", __LINE__); \
-			fprintf(stderr, "    Expected to be %s: " #value "\n", \
-				(_TEST_ ## __LINE__ ## _cmp_value ? "true" : "false")); \
+			fprintf(stderr, "Failed test in %s:%d.\n", __FILE__, __LINE__); \
+			fprintf(stderr, "    Expected to be %s: %s\n", \
+				(_TEST_ ## __LINE__ ## _cmp_value ? "true" : "false"), \
+				#value); \
 			return false; \
 		} \
 	} while (false)

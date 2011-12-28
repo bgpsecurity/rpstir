@@ -21,6 +21,8 @@
 				} \
 			} \
 		} while (false)
+         // Should we also assert that e->next->prev == e and
+         // e->prev->next == e for all relevant entries?
 #else
 	#define assert(x) \
 		do { \
@@ -85,6 +87,9 @@ void Queue_free(Queue * queue)
 	if (queue == NULL)
 		return;
 
+	/* N.B. The following check is necessary but not sufficient
+	for safety.  The caller is responsible for ensuring that all
+	threads are finished with this queue. */
 	assert(queue->size == 0);
 
 	if (queue->thread_safe)

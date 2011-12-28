@@ -1,18 +1,20 @@
 #include <stdbool.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "queue.h"
 #include "unittest.h"
 
+// TODO: Maybe add tests with 2 and 3 threads to truly exercise the mutexes.
 
-static bool push_range(Queue * queue, ssize_t initial_size, void * start, void * stop)
+static bool push_range(Queue * queue, ssize_t initial_size, uintptr_t start, uintptr_t stop)
 {
-	void * data;
+	uintptr_t data;
 	bool push_successful;
 
 	for (data = start; data < stop; ++data)
 	{
-		push_successful = Queue_push(queue, data);
+		push_successful = Queue_push(queue, (void *)data);
 		TEST_BOOL(push_successful, true);
 		TEST(ssize_t, "%zd", Queue_size(queue), ==, initial_size + (ssize_t)(data - start + 1));
 	}
@@ -20,17 +22,17 @@ static bool push_range(Queue * queue, ssize_t initial_size, void * start, void *
 	return true;
 }
 
-static bool pop_range(Queue * queue, ssize_t initial_size, void * start, void * stop)
+static bool pop_range(Queue * queue, ssize_t initial_size, uintptr_t start, uintptr_t stop)
 {
-	void * data1;
+	uintptr_t data1;
 	void * data2;
 	bool pop_successful;
 
-	for (data1 = start; data1 < (void*) stop; ++data1)
+	for (data1 = start; data1 < stop; ++data1)
 	{
 		pop_successful = Queue_trypop(queue, &data2);
 		TEST_BOOL(pop_successful, true);
-		TEST(void*, "%p", data2, ==, data1);
+		TEST(uintptr_t, "%" PRIuPTR, (uintptr_t)data2, ==, data1);
 		TEST(ssize_t, "%zd", Queue_size(queue), ==, initial_size - (ssize_t)(data1 - start + 1));
 	}
 
@@ -56,24 +58,24 @@ static bool run_test(Queue * queue)
 
 	if (!test_empty(queue)) return false;
 
-	if (!push_range(queue, 0, (void*)0, (void*)4000)) return false;
-	if (!pop_range(queue, 4000, (void*)0, (void*)1000)) return false;
-	if (!push_range(queue, 3000, (void*)4000, (void*)6000)) return false;
-	if (!pop_range(queue, 5000, (void*)1000, (void*)6000)) return false;
+	if (!push_range(queue, 0, 0, 4000)) return false;
+	if (!pop_range(queue, 4000, 0, 1000)) return false;
+	if (!push_range(queue, 3000, 4000, 6000)) return false;
+	if (!pop_range(queue, 5000, 1000, 6000)) return false;
 
 	if (!test_empty(queue)) return false;
 
-	if (!push_range(queue, 0, (void*)0, (void*)1000)) return false;
-	if (!pop_range(queue, 1000, (void*)0, (void*)999)) return false;
-	if (!push_range(queue, 1, (void*)1000, (void*)6000)) return false;
-	if (!pop_range(queue, 5001, (void*)999, (void*)6000)) return false;
+	if (!push_range(queue, 0, 0, 1000)) return false;
+	if (!pop_range(queue, 1000, 0, 999)) return false;
+	if (!push_range(queue, 1, 1000, 6000)) return false;
+	if (!pop_range(queue, 5001, 999, 6000)) return false;
 
 	if (!test_empty(queue)) return false;
 
-	if (!push_range(queue, 0, (void*)0, (void*)2000)) return false;
-	if (!pop_range(queue, 2000, (void*)0, (void*)1998)) return false;
-	if (!push_range(queue, 2, (void*)2000, (void*)10000)) return false;
-	if (!pop_range(queue, 8002, (void*)1998, (void*)10000)) return false;
+	if (!push_range(queue, 0, 0, 2000)) return false;
+	if (!pop_range(queue, 2000, 0, 1998)) return false;
+	if (!push_range(queue, 2, 2000, 10000)) return false;
+	if (!pop_range(queue, 8002, 1998, 10000)) return false;
 
 	if (!test_empty(queue)) return false;
 
