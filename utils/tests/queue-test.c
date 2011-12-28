@@ -4,6 +4,10 @@
 #include "queue.h"
 #include "unittest.h"
 
+// TODO:
+// A) Incrementing void* is borderline undefined behavior; use char*
+//    and don't assume sizeof(char) == 1.
+// B) Maybe add tests with 2 and 3 threads to truly exercise the mutexes.
 
 static bool push_range(Queue * queue, ssize_t initial_size, void * start, void * stop)
 {
