@@ -106,8 +106,8 @@ not necessarily a C array
 
  . PDU: data of a parsed and valid PDU
 
- . cxn_semaphore_t: semaphore that a cxn thread waits for
- . db_semaphore_t: semaphore that a db thread waits for
+ . cxn_semaphore_t: semaphore that a cxn thread waits for (indicates incoming client PDU or db_response available)
+ . db_semaphore_t: semaphore that a db thread waits for (indicates db_request available)
 
  . struct db_query: something that indicates what the router/client wants
  . struct db_request: a query, information on how to return results, and a mechanism to cancel the request

@@ -60,7 +60,11 @@ typedef uint32_t as_number_t;
 /**
 	@return true iff s1 is greater than s2 using serial number arithmetic
 
-	See RFC 1982 for caveats.
+	See RFC 1982 for caveats on serial number arithmetic.
+        Briefly, RFC 1982 defines 4 possible answers to comparison of
+        s1 and s2: >, ==, <, and not-comparable.  This function
+        returns true if s1 > s2, and it returns false for the other
+        three states.
 */
 bool serial_number_greater(serial_number_t s1, serial_number_t s2);
 

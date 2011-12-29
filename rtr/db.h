@@ -1,12 +1,15 @@
 #ifndef _RTR_DB_H
 #define _RTR_DB_H
 
+// Declarations related to db (database) threads.
+// Currently: main entry point and related arguments, as well as
+// database request/response data structures.
+
 #include "queue.h"
 #include "bag.h"
 
 #include "pdu.h"
 #include "semaphores.h"
-
 
 struct db_query {
 	enum { SERIAL_QUERY, RESET_QUERY } type;

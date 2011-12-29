@@ -1,6 +1,9 @@
 #ifndef _RTR_CONNECTION_CONTROL_H
 #define _RTR_CONNECTION_CONTROL_H
 
+// Declarations related to the connection control thread.
+// Currently: main entry point and related arguments.
+
 #include "db.h"
 
 // memory is handled entirely by main

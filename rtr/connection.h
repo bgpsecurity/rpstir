@@ -1,6 +1,9 @@
 #ifndef _RTR_CONNECTION_H
 #define _RTR_CONNECTION_H
 
+// Declarations related to connection threads.
+// Currently: main entry point and related arguments.
+
 #include "bag.h"
 #include "queue.h"
 
