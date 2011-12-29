@@ -250,11 +250,6 @@ static int yorn(char *q)
     return(1);
 }
 
-/*
-  The port name has one of the forms tN or uN or N, indicating
-  tcp port N, udp port N, or just plain (tcp) port N.
-*/
-
 static int makesock(char *porto, int *protosp)
 {
   struct sockaddr_in sinn;
@@ -263,17 +258,12 @@ static int makesock(char *porto, int *protosp)
   uint16_t port;
   int  protos;
   int  sta;
-  int  offs = 0;
   int  consumed;
 //  int  one = 1;
   int  s;
 
-  if ( porto[0] == 'u' || porto[0] == 'U' )
-    offs = 1;
-  else if ( porto[0] == 't' || porto[0] == 'T' )
-    offs = 1;
-  if ( sscanf(porto+offs, "%" SCNu16 "%n", &port, &consumed) < 1 ||
-       porto[offs+consumed] != '\0' )
+  if ( sscanf(porto, "%" SCNu16 "%n", &port, &consumed) < 1 ||
+       porto[consumed] != '\0' )
     {
       return(-1);
     }
