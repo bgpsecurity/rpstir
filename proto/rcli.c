@@ -272,7 +272,10 @@ static int makesock(char *porto, int *protosp)
     {
       protos = socket(AF_INET, SOCK_STREAM, 0);
       if ( protos < 0 )
-	return(protos);
+        {
+          perror("Failed to create socket");
+          return(protos);
+        }
       memset(&sinn, 0, sizeof(sinn));
       sinn.sin_addr.s_addr = htonl(INADDR_ANY);
       sinn.sin_family = AF_INET;
@@ -288,6 +291,7 @@ static int makesock(char *porto, int *protosp)
       sta = listen(protos, 5);
       if ( sta < 0 )
 	{
+	  perror("Failed to listen on socket");
 	  close(protos);
 	  return(sta);
 	}
