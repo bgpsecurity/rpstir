@@ -14,6 +14,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <netdb.h>
+#include <inttypes.h>
 #ifdef __NetBSD__
 #include <netinet/in.h>
 #endif
@@ -259,10 +260,11 @@ static int makesock(char *porto, int *protosp)
   struct sockaddr_in sinn;
   struct sockaddr_in sout;
   socklen_t leen;
+  uint16_t port;
   int  protos;
   int  sta;
-  int  port;
   int  offs = 0;
+  int  consumed;
 //  int  one = 1;
   int  s;
 
@@ -270,9 +272,11 @@ static int makesock(char *porto, int *protosp)
     offs = 1;
   else if ( porto[0] == 't' || porto[0] == 'T' )
     offs = 1;
-  port = atoi(porto+offs);
-  if ( port <= 0 )
-    return(-1);
+  if ( sscanf(porto+offs, "%" SCNu16 "%n", &port, &consumed) < 1 ||
+       porto[offs+consumed] != '\0' )
+    {
+      return(-1);
+    }
   protos = *protosp;
   if ( protos < 0 )
     {
