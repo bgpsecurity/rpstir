@@ -258,10 +258,7 @@ static int makesock(char *porto, int *protosp)
 {
   struct sockaddr_in sinn;
   struct sockaddr_in sout;
-  struct hostent    *hen;
   socklen_t leen;
-  char hn[256];
-  char tu = 't';
   int  protos;
   int  sta;
   int  port;
@@ -270,9 +267,9 @@ static int makesock(char *porto, int *protosp)
   int  s;
 
   if ( porto[0] == 'u' || porto[0] == 'U' )
-    tu = 'u', offs = 1;
+    offs = 1;
   else if ( porto[0] == 't' || porto[0] == 'T' )
-    tu = 't', offs = 1;
+    offs = 1;
   port = atoi(porto+offs);
   if ( port <= 0 )
     return(-1);
@@ -282,28 +279,14 @@ static int makesock(char *porto, int *protosp)
       protos = socket(AF_INET, SOCK_STREAM, 0);
       if ( protos < 0 )
 	return(protos);
-      hn[0] = 0;
-      sta = gethostname(hn, 256);
-      if ( sta < 0 )
-	{
-	  close(protos);
-	  return(sta);
-	}
-      hen = gethostbyname(hn);
-      if ( hen == NULL )
-	{
-          log_msg(LOG_ERR, "Cannot lookup hostname %s", hn);
-	  close(protos);
-	  return(-1);
-	}
       memset(&sinn, 0, sizeof(sinn));
-      memcpy(&sinn.sin_addr.s_addr, hen->h_addr_list[0],
-	     hen->h_length);
+      sinn.sin_addr.s_addr = htonl(INADDR_ANY);
       sinn.sin_family = AF_INET;
       sinn.sin_port = htons(port);
       sta = bind(protos, (struct sockaddr *)&sinn, sizeof(sinn));
       if ( sta < 0 )
 	{
+	  perror("Failed to bind to port");
 	  close(protos);
 	  return(sta);
 	}
