@@ -133,39 +133,51 @@ void Bag_free(Bag * bag)
 	free(bag->used);
 
 	if (bag->thread_safe)
-		pthread_rwlock_destroy(&bag->lock); // TODO: check return code, maybe
+	{
+		// NOTE: return code is ignored, but there's not much that can be done anyway
+		pthread_rwlock_destroy(&bag->lock);
+	}
 
 	free(bag);
 }
 
-static void Bag_rdlock(Bag * bag)
+static bool Bag_rdlock(Bag * bag)
 {
 	assert(bag != NULL);
 
 	if (bag->thread_safe)
-		pthread_rwlock_rdlock(&bag->lock); // TODO: check return code
+		if (pthread_rwlock_rdlock(&bag->lock) != 0)
+			return false;
 
 	BAG_INVARIANTS(bag);
+
+	return true;
 }
 
-static void Bag_wrlock(Bag * bag)
+static bool Bag_wrlock(Bag * bag)
 {
 	assert(bag != NULL);
 
 	if (bag->thread_safe)
-		pthread_rwlock_wrlock(&bag->lock); // TODO: check return code
+		if (pthread_rwlock_wrlock(&bag->lock) != 0)
+			return false;
 
 	BAG_INVARIANTS(bag);
+
+	return true;
 }
 
-static void Bag_unlock(Bag * bag)
+static bool Bag_unlock(Bag * bag)
 {
 	assert(bag != NULL);
 
 	BAG_INVARIANTS(bag);
 
 	if (bag->thread_safe)
-		pthread_rwlock_unlock(&bag->lock); // TODO: check return code
+		if (pthread_rwlock_unlock(&bag->lock) != 0)
+			return false;
+
+	return true;
 }
 
 size_t Bag_size(Bag * bag)
@@ -173,6 +185,9 @@ size_t Bag_size(Bag * bag)
 	size_t size;
 
 	assert(bag != NULL);
+
+	// See comments in queue.c:Queue_size() for why the return values of
+	// lock() and unlock() are ignored.
 
 	Bag_rdlock(bag);
 
@@ -310,29 +325,29 @@ bool Bag_reserve(Bag * bag, size_t num_entries)
 {
 	assert(bag != NULL);
 
-	Bag_wrlock(bag);
+	if (!Bag_wrlock(bag))
+		return false;
 
 	if (num_entries <= bag->allocated_size)
 	{
-		Bag_unlock(bag);
-		return true;
+		return Bag_unlock(bag);
 	}
 
 	bool ret = Bag_realloc(bag, num_entries, false, NULL);
 
-	Bag_unlock(bag);
-
-	return ret;
+	return Bag_unlock(bag) && ret; // order of the operands to '&&' matters here
 }
 
 bool Bag_add(Bag * bag, void * data)
 {
 	assert(bag != NULL);
 
-	Bag_wrlock(bag);
+	if (!Bag_wrlock(bag))
+		return false;
 
 	if (!Bag_realloc(bag, bag->size + 1, true, NULL))
 	{
+		// return value of unlock is ignored because there's nothing good to do with it
 		Bag_unlock(bag);
 		return false;
 	}
@@ -345,8 +360,7 @@ bool Bag_add(Bag * bag, void * data)
 			bitmap_set(bag->used, i);
 			bag->entries[i] = data;
 			++bag->size;
-			Bag_unlock(bag);
-			return true;
+			return Bag_unlock(bag);
 		}
 	}
 
@@ -358,16 +372,24 @@ bool Bag_add(Bag * bag, void * data)
 }
 
 
-void Bag_start_iteration(Bag * bag) { Bag_wrlock(bag); }
-void Bag_start_const_iteration(Bag * bag) { Bag_rdlock(bag); }
-void Bag_stop_iteration(Bag * bag) { Bag_unlock(bag); }
-void Bag_stop_const_iteration(Bag * bag) { Bag_unlock(bag); }
+bool Bag_start_iteration(Bag * bag) { return Bag_wrlock(bag); }
+bool Bag_start_const_iteration(Bag * bag) { return Bag_rdlock(bag); }
+bool Bag_stop_iteration(Bag * bag) { return Bag_unlock(bag); }
+bool Bag_stop_const_iteration(Bag * bag) { return Bag_unlock(bag); }
 
 
 #define BAG_BEGIN_BODY \
 	assert(bag != NULL); \
+	\
 	BAG_INVARIANTS(bag); \
-	return bag->entries;
+	\
+	size_t index; \
+	for (index = 0; index < bag->allocated_size; ++index) \
+	{ \
+		if (bitmap_get(bag->used, index)) \
+			return bag->entries + index; \
+	} \
+	return NULL;
 
 Bag_iterator Bag_begin(Bag * bag) { BAG_BEGIN_BODY }
 Bag_const_iterator Bag_const_begin(Bag * bag) { BAG_BEGIN_BODY }
