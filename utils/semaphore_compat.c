@@ -5,6 +5,33 @@
 
 #include "semaphore_compat.h"
 
+/*
+   OpenBSD lacks sem_timedwait(), so we implement a simple version
+   here.  This function is sufficient for the RTR server
+   implementation because threads call this only when they are waiting
+   with nothing to do.  In addition, for the RTR server, the max
+   number of threads waiting on each semaphore is anticipated to be 1.
+
+   Warning: this function may have limitations when compared to a
+   standard implementation of sem_timedwait().
+
+   According to Tanenbaum in _Modern Operating Systems_, critical
+   regions should be designed to obey the following four conditions:
+
+   1. (Mutal Exclusion) No two processes may be simultaneously inside
+      their critical regions.
+   2. No assumptions may be made about speeds or the number of CPUs.
+   3. (Progress) No process running outside its critical region may
+      block other processes.
+   4. (Bounded wait) No process should have to wait forever to enter
+      its critical region.
+
+   Warning: this function does NOT ensure #4 (Bounded wait).  Also,
+   this is minor, but in the unlikely event that nanosleep() fails
+   repeatedly and we spin, there could be a soft violation of #3
+   (Progress) due to priority inversion.
+*/
+
 #ifndef HAVE_SEM_TIMEDWAIT
 int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)
 {

@@ -14,6 +14,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <netdb.h>
+#include <inttypes.h>
 #ifdef __NetBSD__
 #include <netinet/in.h>
 #endif
@@ -188,6 +189,7 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
   aone.vec = &one;
   aone.ntot = 1;
   aone.nused = 1;
+  aone.vald = 0;
   sta = insertscm(conp, mtab, &aone);
   if ( sta == 0 )
     log_msg(LOG_NOTICE, "Init metadata table succeeded");
@@ -248,61 +250,40 @@ static int yorn(char *q)
     return(1);
 }
 
-/*
-  The port name has one of the forms tN or uN or N, indicating
-  tcp port N, udp port N, or just plain (tcp) port N.
-*/
-
 static int makesock(char *porto, int *protosp)
 {
   struct sockaddr_in sinn;
   struct sockaddr_in sout;
-  struct hostent    *hen;
   socklen_t leen;
-  char hn[256];
-  char tu = 't';
+  uint16_t port;
   int  protos;
   int  sta;
-  int  port;
-  int  offs = 0;
+  int  consumed;
 //  int  one = 1;
   int  s;
 
-  if ( porto[0] == 'u' || porto[0] == 'U' )
-    tu = 'u', offs = 1;
-  else if ( porto[0] == 't' || porto[0] == 'T' )
-    tu = 't', offs = 1;
-  port = atoi(porto+offs);
-  if ( port <= 0 )
-    return(-1);
+  if ( sscanf(porto, "%" SCNu16 "%n", &port, &consumed) < 1 ||
+       porto[consumed] != '\0' )
+    {
+      return(-1);
+    }
   protos = *protosp;
   if ( protos < 0 )
     {
       protos = socket(AF_INET, SOCK_STREAM, 0);
       if ( protos < 0 )
-	return(protos);
-      hn[0] = 0;
-      sta = gethostname(hn, 256);
-      if ( sta < 0 )
-	{
-	  close(protos);
-	  return(sta);
-	}
-      hen = gethostbyname(hn);
-      if ( hen == NULL )
-	{
-          log_msg(LOG_ERR, "Cannot lookup hostname %s", hn);
-	  close(protos);
-	  return(-1);
-	}
+        {
+          perror("Failed to create socket");
+          return(protos);
+        }
       memset(&sinn, 0, sizeof(sinn));
-      memcpy(&sinn.sin_addr.s_addr, hen->h_addr_list[0],
-	     hen->h_length);
+      sinn.sin_addr.s_addr = htonl(INADDR_ANY);
       sinn.sin_family = AF_INET;
       sinn.sin_port = htons(port);
       sta = bind(protos, (struct sockaddr *)&sinn, sizeof(sinn));
       if ( sta < 0 )
 	{
+	  perror("Failed to bind to port");
 	  close(protos);
 	  return(sta);
 	}
@@ -310,6 +291,7 @@ static int makesock(char *porto, int *protosp)
       sta = listen(protos, 5);
       if ( sta < 0 )
 	{
+	  perror("Failed to listen on socket");
 	  close(protos);
 	  return(sta);
 	}

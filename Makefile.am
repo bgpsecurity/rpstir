@@ -1,10 +1,20 @@
 AUTOMAKE_OPTIONS = 1.6 foreign
 
-SUBDIRS = utils cg roa-lib proto roa-utils rsync_aur testcases rtr testbed subsystemTests
+SUBDIRS = \
+	utils \
+	cg \
+	roa-lib \
+	proto \
+	roa-utils \
+	rsync_aur \
+	testcases \
+	rtr \
+	testbed \
+	subsystemTests \
+	doc
 
 EXTRA_DIST = \
 	autogen.sh \
-	doc \
 	envir.setup \
 	INSTRUCTIONS \
 	LICENSE \

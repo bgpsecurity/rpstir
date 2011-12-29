@@ -10,12 +10,15 @@ AM_CFLAGS = -g -Wall -Wextra -Werror
 
 noinst_LIBRARIES = libutils.a libutilsdebug.a
 
-libutils_a_SOURCES = logutils.h logutils.c macros.h \
-	stringutils.h stringutils.c hash_utils.c \
-	semaphore_compat.c semaphore_compat.h \
+libutils_a_SOURCES = \
 	bag.c bag.h \
+	hash_utils.c \
+	logging.h \
+	logutils.c logutils.h \
+	macros.h \
 	queue.c queue.h \
-	logging.h
+	semaphore_compat.c semaphore_compat.h \
+	stringutils.c stringutils.h
 
 libutilsdebug_a_SOURCES = $(libutils_a_SOURCES)
 libutilsdebug_a_CFLAGS = $(AM_CFLAGS) -DDEBUG

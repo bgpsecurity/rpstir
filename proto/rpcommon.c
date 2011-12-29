@@ -91,7 +91,8 @@ static char *next_cmd(char *buf, int siz, FILE *SKI)
       if (*cc == '\t' || *cc == ' ')
         {
         *cc = ' ';
-        while (cc[1] == ' ' || cc[1] == '\t') strcpy(&cc[1], &cc[2]);
+        while (cc[1] == ' ' || cc[1] == '\t')
+	  memmove(&cc[1], &cc[2], strlen(&cc[2]));
         }
       }
   return c;
@@ -535,8 +536,8 @@ Procedure:
       else if (!strncmp(cc, "Xaia ", 5))
         {
         cc = nextword(cc);
-        Xaia = (char *)calloc(1, strlen(cc));
-        strncpy(Xaia, cc, strlen(cc));
+        Xaia = (char *)calloc(1, strlen(cc) + 1);
+        strncpy(Xaia, cc, strlen(cc) + 1);
         }
       else
         {
