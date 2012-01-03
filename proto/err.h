@@ -172,7 +172,10 @@
 #define ERR_SCM_NOCRLVER    -143        /* missing CRL version */
 #define ERR_SCM_BADCRLVER   -144        /* wrong CRL version */
 #define ERR_SCM_CRLENTRYEXT -145        /* CRL Entry Extension present */
-#define ERR_SCM_MAXERR      -145
+#define ERR_SCM_NOCRLNUM    -146        /* No CRL number extension */
+#define ERR_SCM_BADREVDATE  -147        /* Invalid revocation date */
+#define ERR_SCM_BADREVSNUM  -148        /* Invalid revoked serial number */
+#define ERR_SCM_MAXERR      -148
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

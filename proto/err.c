@@ -184,7 +184,10 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Wrong manifest hash in DB",    /* ERR_SCM_MADMFTDBHASH */
     "Missing CRL version",          /* ERR_SCM_NOCRLVER */
     "Wrong CRL version",            /* ERR_SCM_BADCRLVER */
-    "CRL Entry Extension present"   /* ERR_SCM_CRLENTRYEXT */
+    "CRL Entry Extension present",  /* ERR_SCM_CRLENTRYEXT */
+    "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
+    "Invalid revocation date",      /* ERR_SCM_BADREVDATE */
+    "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
   } ;
 
 char *err2string(int err)

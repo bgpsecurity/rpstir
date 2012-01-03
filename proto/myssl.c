@@ -1147,7 +1147,7 @@ static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
-      *stap = ERR_SCM_NOMEM;
+      *stap = ERR_SCM_INVALDT;
       return(NULL);
     }
   return(dptr);
@@ -3777,14 +3777,46 @@ static int crl_issuer_chk(struct CertificateRevocationList *crlp)
   return 0;
 }
 
-
+static int cvt_crldate2DB(char *fieldp, struct ChoiceOfTime *cotp)
+  {
+  char *buf;
+  int i = vsize_casn(&cotp->utcTime);
+  if (i > 0) // utc time
+    {
+    if (i != 13) return ERR_SCM_INVALDT;
+    if (!(buf = (char *)calloc(1, i + 2))) return ERR_SCM_NOMEM;
+    read_casn(&cotp->utcTime, (uchar *)buf);
+    }
+  else // generalTime
+    {
+    i = vsize_casn(&cotp->generalTime);
+    if (i < 15) return ERR_SCM_INVALDT;
+    if (!(buf = (char *)calloc(1, i + 2))) return ERR_SCM_NOMEM;
+    read_casn(&cotp->generalTime, (uchar *)buf);
+    if (i > 15 && (buf[i - 1] == '0' || buf[i - 1] == '.'))
+      {
+      free(buf);
+      return ERR_SCM_INVALDT;
+      }
+    }
+  int sta = 0;
+  fieldp = ASNTimeToDBTime(buf, &sta);
+  return sta;
+  }
+                                                              
 static int crl_dates_chk(struct CertificateRevocationList *crlp)
 {
   if (!crlp)
     return ERR_SCM_INTERNAL;
-  int ret = diff_casn_time(&crlp->toBeSigned.lastUpdate.self,
-                           &crlp->toBeSigned.nextUpdate.self);
-  if (ret == -2) {
+  struct CertificateRevocationListToBeSigned *crltbsp =
+    &crlp->toBeSigned;
+  char dat[30];
+
+  int ret = diff_casn_time(&crltbsp->lastUpdate.self,
+                           &crltbsp->nextUpdate.self);
+  if ( ret == -2 ||
+    cvt_crldate2DB(dat, &crltbsp->lastUpdate) < 0 ||
+    cvt_crldate2DB(dat, &crltbsp->nextUpdate) < 0 ) {
     log_msg(LOG_ERR, "failed to read CRL time fields");
     return ERR_SCM_INVALDT;
   }
@@ -3792,8 +3824,15 @@ static int crl_dates_chk(struct CertificateRevocationList *crlp)
     log_msg(LOG_ERR, "Invalid CRL, thisUpdate > nextUpdate");
     return ERR_SCM_BADDATES;
   }
-  // TODO: check thisUpdate against current time (must not be future)
-  // TODO: check time format (UTCTime < 2050; GeneralizedTime >= 2050)
+  time_t now; 
+  int64_t lastdate; 
+  time(&now);
+  read_casn_time(&crltbsp->lastUpdate.self, &lastdate);
+  if (lastdate > now)
+    {
+    log_msg(LOG_ERR, "Last update in the future"); 
+    return ERR_SCM_INVALDT;
+    }
   return 0;
 }
 
@@ -3813,10 +3852,30 @@ static int crl_entry_chk(struct CRLEntry *entryp)
 {
   if (!entryp)
     return ERR_SCM_INTERNAL;
-  // TODO: check time format (UTCTime < 2050; GeneralizedTime >= 2050)
+  long snum;
+
   // Forbid CRLEntryExtensions
-  if (size_casn(&entryp->extensions.self) > 0)
+  if (size_casn(&entryp->extensions.self) > 0) {
+    log_msg(LOG_ERR, "Revocation entry has extension(s)");
     return ERR_SCM_CRLENTRYEXT;
+  }
+  // check serial number
+  if (read_casn_num(&entryp->userCertificate, &snum) <= 0 ||
+    snum < 0) {
+    log_msg(LOG_ERR, "Invalid revoked serial number");
+    return ERR_SCM_BADREVSNUM;
+  } 
+  // and the date
+  int64_t revdate = 0;
+  int64_t now = time(0);
+  char dat[30];
+  if (read_casn_time(&entryp->revocationDate.self, &revdate) < 0 ||
+    revdate > now ||
+    cvt_crldate2DB(dat, &entryp->revocationDate) < 0) {
+    log_msg(LOG_ERR, "Invalid revocation date");
+    return ERR_SCM_BADREVDATE;
+  }
+  
   return 0;
 }
 
@@ -3827,9 +3886,7 @@ static int crl_entry_chk(struct CRLEntry *entryp)
  * @param crlp (struct CertificateRevocationList *)
  * @retval ret 0 on success<br />a negative integer on failure
  *
- * For each revoked resource certificate only the two fields Serial
- * Number and Revocation Date MUST be present, and all other fields
- * MUST NOT be present.  No CRL entry extensions are supported in this
+ * No CRL entry extensions are supported in this
  * profile, and CRL entry extensions MUST NOT be present in a CRL.
  -----------------------------------------------------------------------------*/
 static int crl_entries_chk(struct CertificateRevocationList *crlp)
@@ -3876,27 +3933,69 @@ static int crl_entries_chk(struct CertificateRevocationList *crlp)
  * SHA-1 hash of the value of the DER-encoded ASN.1 bit string of the
  * Issuer's public key, as described in Section 4.2.1.1 of [RFC5280].
  -----------------------------------------------------------------------------*/
-static int crl_aki_chk(struct CertificateRevocationList *crlp)
+static int crl_extensions_chk(struct CertificateRevocationList *crlp)
 {
-  // Check for exactly one AKI extension
-  // Check non-critical
-  // Forbid authorityCertIssuer and authorityCertSerialNumber
-  return 0;
-}
-
-
-static int crl_crlnum_chk(struct CertificateRevocationList *crlp)
-{
-  // Check for exactly one CRLnum extension
-  // Check non-critical
-  return 0;
-}
-
-
-static int crl_forbidden_ext_chk(struct CertificateRevocationList *crlp)
-
-{
-  // Look for forbidden extensions (non-AKI, non-CRLnum)
+  // Check for exactly one AKI extension and one CRL number extension
+  struct CrlExtensions *crlextsp = &crlp->toBeSigned.extensions;
+  struct AuthorityKeyId *authkeyIdp = NULL;
+  struct CRLNumber *crlnump = NULL;
+  struct CRLExtension *crlextp;
+  long i;
+  for (crlextp = (struct CRLExtension *)member_casn(&crlextsp->self, 0);
+    crlextp; crlextp = (struct CRLExtension *)next_of(&crlextp->self)) {
+    if (!diff_objid(&crlextp->extnID, id_authKeyId)) {
+      i = 0;
+      if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0) {
+        log_msg(LOG_ERR, 
+          "CRL Authority Key Identifier extension marked critical");
+        return ERR_SCM_BADEXT;
+      }
+      if (authkeyIdp) {
+        log_msg(LOG_ERR, "Duplicate CRL Authority Key Identifier extension");
+        return ERR_SCM_BADEXT;
+      }
+      authkeyIdp = &crlextp->extnValue.authKeyId;
+    }
+    else if (!diff_objid(&crlextp->extnID, id_cRLNumber)) {
+      i = 0;
+      if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0) {
+        log_msg(LOG_ERR, 
+          "CRL number extension marked critical");
+        return ERR_SCM_BADEXT;
+      }
+      if (crlnump) {
+        log_msg(LOG_ERR, "Duplicate CRL number extension");
+        return ERR_SCM_BADEXT;
+      }
+      crlnump = &crlextp->extnValue.cRLNumber;
+    }
+    else {
+  // Forbid any other extension
+      char *oidp;
+      i = vsize_objid(&crlextp->extnID);
+      if (i > 0) {
+        if (!(oidp = (char *)calloc(1, i + 2))) {
+          log_msg(LOG_ERR, "Can't get memory while checking CRL");
+          return ERR_SCM_NOMEM;
+        }
+      }
+      if (read_objid(&crlextp->extnID, oidp) <= 0) {
+        free(oidp);
+        log_msg(LOG_ERR, "Error reading CRLExtension OID");
+        return ERR_SCM_BADCRL;
+      }
+    log_msg(LOG_ERR, "Invalid extension %s", oidp);
+    free(oidp);
+    }
+  }
+  if (!authkeyIdp) {
+    log_msg(LOG_ERR, "No Authority Key Identifier extension");
+    return ERR_SCM_NOAKI;
+  }
+  if (!crlnump) {
+    log_msg(LOG_ERR, "No CRL number extension");
+    return ERR_SCM_NOCRLNUM;
+  }
   return 0;
 }
 
@@ -3998,18 +4097,8 @@ int crl_profile_chk(struct CertificateRevocationList *crlp)
   if (ret < 0)
     return ret;
 
-  log_msg(LOG_DEBUG, "crl_aki_chk");
-  ret = crl_aki_chk(crlp);
-  if (ret < 0)
-    return ret;
- 
-  log_msg(LOG_DEBUG, "crl_crlnum_chk");
-  ret = crl_crlnum_chk(crlp);
-  if (ret < 0)
-    return ret;
-
-  log_msg(LOG_DEBUG, "crl_forbidden_ext_chk");
-  ret = crl_forbidden_ext_chk(crlp);
+  log_msg(LOG_DEBUG, "crl_extensions_chk");
+  ret = crl_extensions_chk(crlp);
   if (ret < 0)
     return ret;
 
