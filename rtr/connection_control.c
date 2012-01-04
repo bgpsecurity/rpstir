@@ -364,6 +364,7 @@ void * connection_control_main(void * args_voidp)
 			if (!Bag_add(connections, (void *)cxn_info))
 			{
 				LOG(LOG_ERR, "can't add new connection's information to the set of existing connections");
+				kill_connection(cxn_info);
 				cleanup_connection(cxn_info);
 				continue;
 			}
