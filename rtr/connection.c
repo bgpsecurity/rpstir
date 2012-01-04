@@ -142,6 +142,7 @@ static void initialize_run_state(struct run_state * run_state, void * args_voidp
 	run_state->next_cache_state_check_time.tv_sec = time(NULL) + CXN_NOTIFY_INTERVAL;
 	run_state->next_cache_state_check_time.tv_nsec = 0;
 
+	// The receive buffer is not bounds checked while reading the first PDU_HEADER_LENGTH bytes.
 	COMPILE_TIME_ASSERT(PDU_HEADER_LENGTH <= MAX_PDU_SIZE);
 }
 

@@ -23,7 +23,8 @@ bool serial_number_greater(serial_number_t s1, serial_number_t s2)
 	#undef SERIAL_BITS
 }
 
-// switch to uintmax_t instead of uint_fast32_t? 32 should be enough for this protocol version
+// TODO: switch to uintmax_t instead of uint_fast32_t? 32 should be enough for this protocol version
+// NOTE: this handles converting from network to host byte order
 static uint_fast32_t extract_uint(const uint8_t * buffer, size_t length)
 {
 	assert(buffer != NULL);
