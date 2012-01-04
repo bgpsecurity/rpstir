@@ -207,14 +207,15 @@ static bool create_db_thread(struct run_state * run_state)
 	block_signals();
 	retval = pthread_create(run_state->db_thread, NULL, db_main, &run_state->db_main_args);
 	run_state->db_thread_initialized = (retval == 0);
-	unblock_signals();
 	if (retval != 0)
 	{
 		ERR_LOG(retval, errorbuf, "pthread_create()");
 		free(run_state->db_thread);
 		run_state->db_thread = NULL;
+		unblock_signals();
 		return false;
 	}
+	unblock_signals();
 
 	block_signals();
 	if (!Bag_add(run_state->db_threads, run_state->db_thread))
