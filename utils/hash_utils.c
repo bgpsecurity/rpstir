@@ -22,11 +22,11 @@ int gen_hash(unsigned char *inbufp, int bsize, unsigned char *outbufp,
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) return -1;
     CryptInitState = 1;
     }
 
-  cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2); 
+  if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) != CRYPT_OK) return -1;
   cryptEncrypt(hashContext, inbufp, bsize);
   cryptEncrypt(hashContext, inbufp, 0);
   cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);

@@ -214,12 +214,24 @@ static scmtab scmtabbuilder[] =
 	//   directory, but there was no good way to do that and not
 	//   risk them not being created at initialization
 
+	{             /* RTR_SESSION */
+	  "rtr_session",
+	  "RTR_SESSION",
+	  "session_id SMALLINT UNSIGNED NOT NULL,"
+	  "           PRIMARY KEY (session_id)",
+	  NULL,
+	  0
+	},
 	{             /* RTR_UPDATE */
 	  "rtr_update",
 	  "RTR_UPDATE",
-	  "serial_num  INT UNSIGNED NOT NULL UNIQUE," /* which snapshot */
-	  "create_time DATETIME NOT NULL,"
-	  "            PRIMARY KEY (serial_num)",
+	  "serial_num      INT UNSIGNED NOT NULL,"
+	  "prev_serial_num INT UNSIGNED," // NULL indicates no previous serial number currently exists
+	  "create_time     DATETIME NOT NULL,"
+	  "has_full        BOOLEAN NOT NULL,"
+	  "                PRIMARY KEY (serial_num),"
+	  "                UNIQUE KEY (prev_serial_num),"
+	  "                KEY create_time (create_time)",
 	  NULL,
 	  0
 	},
@@ -227,21 +239,24 @@ static scmtab scmtabbuilder[] =
 	  "rtr_full",
 	  "RTR_FULL",
 	  "serial_num  INT UNSIGNED NOT NULL,"
-	  "roa_filename VARCHAR(256) NOT NULL,"
 	  "asn         INT UNSIGNED NOT NULL,"
 	  "ip_addr     VARCHAR(50) NOT NULL,"
-	  "KEY asn (asn), KEY ip_addr (ip_addr)",
+	  "            PRIMARY KEY (serial_num, asn, ip_addr)",
 	  NULL,
 	  0
 	},
 	{            /* RTR_INCREMENTAL */
 	  "rtr_incremental",
 	  "RTR_INCREMENTAL",
-	  "serial_num  INT UNSIGNED NOT NULL,"
-	  "is_announce BOOLEAN NOT NULL," /* announcement or retraction */
+	  "serial_num  INT UNSIGNED NOT NULL," /* serial number immediately after
+	                                          the incremental changes, i.e.
+	                                          after reading all of rtr_incremental
+	                                          where serial_num = x, the client
+	                                          is at serial number x */
+	  "is_announce BOOLEAN NOT NULL," /* announcement or withdrawal */
 	  "asn         INT UNSIGNED NOT NULL,"
 	  "ip_addr     VARCHAR(50) NOT NULL,"
-	  "KEY asn (asn), KEY ip_addr (ip_addr)",
+	  "            PRIMARY KEY (serial_num, asn, ip_addr)",
 	  NULL,
 	  0
 	},

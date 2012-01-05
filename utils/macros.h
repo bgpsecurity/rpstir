@@ -1,6 +1,15 @@
 #ifndef _UTILS_MACROS_H
 #define _UTILS_MACROS_H
 
+#define COMPILE_TIME_ASSERT(pred) \
+	do { \
+		switch(0) { \
+			case 0: \
+			case (pred): \
+				break; \
+		} \
+	} while (false)
+
 #ifdef __GNUC__
 
   // check printfs

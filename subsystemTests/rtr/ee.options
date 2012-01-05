@@ -1,0 +1,7 @@
+type=EE
+issuer=root
+notbefore=000101010101Z
+notafter=21001231235959Z
+crldp=rsync://invalid/invalid.crl
+aia=rsync://invalid/
+sia=s:rsync://invalid/
