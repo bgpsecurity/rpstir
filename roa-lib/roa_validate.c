@@ -774,7 +774,7 @@ static int checkIPAddrs(struct Certificate *certp,
             }
           }
         if (!matchedCertRange)
-          return ERR_SCM_ROAIPTOOBIG;
+          return ERR_SCM_ROAIPMISMATCH;
         }
       }
     }

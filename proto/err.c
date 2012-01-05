@@ -155,7 +155,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "AS number outside range",      /* ERR_SCM_BADASNUM */
     "No IP addresses",              /* ERR_SCM_NOIPADDR */
     "No AS number",                 /* ERR_SCM_NOASNUM */
-    "ROA IP addresses too big",     /* ERR_SCM_ROAIPTOOBIG */
+    "ROA IP addresses not in EE",   /* ERR_SCM_ROAIPMISMATCH */
     "IP addresses overlap",         /* ERR_SCM_IPTOUCH */
 
     "Bad hash in manifest",         /* ERR_SCM_BADMFTHASH -140 */

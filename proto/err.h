@@ -143,7 +143,7 @@
 #define ERR_SCM_BADASNUM    -135        /* AS number outside range */ 
 #define ERR_SCM_NOIPADDR    -136        /* no IP addresses */
 #define ERR_SCM_NOASNUM     -137        /* no AS numbers */
-#define ERR_SCM_ROAIPTOOBIG -138        /* ROA IP addresses too big */
+#define ERR_SCM_ROAIPMISMATCH -138        /* ROA IP addressess aren't covered by EE's IPs */
 #define ERR_SCM_IPTOUCH     -139        /* IP addresses overlap */
 #define ERR_SCM_BADMFTHASH  -140        /* bad manifest hash */
 #define ERR_SCM_BADDIGEST   -141        /* invalid digest */
