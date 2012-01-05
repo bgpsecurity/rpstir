@@ -1,6 +1,6 @@
 Relying Party Security Technology for Internet Routing
 Installation and Usage Manual
-Version 0.1
+Version 0.2
 
 ===============================================================================
 
@@ -226,11 +226,11 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named rpstir-0.1.tar.gz.  Extract the file using:
+named rpstir-0.2.tar.gz.  Extract the file using:
 
-    tar xvzpf rpstir-0.1.tar.gz
+    tar xvzpf rpstir-0.2.tar.gz
     
-This will create a directory named rpstir-0.1 which will contain
+This will create a directory named rpstir-0.2 which will contain
 various subdirectories.
 
 2.2.2 Configure
@@ -262,6 +262,9 @@ output.  If you are using GNU make, then you have the option to use
 ./configure --enable-silent-rules [other options]
 
 which will give much shorter compilation/linking notifications.
+
+The RTR code currently only compiles under gcc. If you have multiple
+compilers installed, add the option "CC=gcc" to ./configure.
 
 2.2.3 Build the Executables
 
@@ -316,15 +319,17 @@ variables, so make sure to set these yourself.
 
 2.4 SSH Subsystem
 
-If you plan to use the RTR Server, you will need to configure it as an
-SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
-line:
-  Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
-  
-NOTE: the RTR code only lightly tested in version 0.1 of the BBN
-relying party software.  The instructions below do not make use of the
-RTR server, but interested users may read
-$RPKI_ROOT/server/INSTRUCTIONS for more information.
+If you plan to use the RTR Server as an SSH subsystem, you will need
+to run the rtr/rpstir-rtrd server as a daemon and set up an ssh subsystem
+to connect to rtrd on localhost.  The netcat program, nc(1), is
+recommended for the ssh subsystem.  There are different versions of
+netcat, so read its manpage for caveats before setting it up as
+a subsystem.  In particular, read the "-q" option's description, if your
+version of netcat has a "-q" option, to prevent runaway nc processes
+when clients disconnect. Edit the /etc/ssh/sshd_config file to contain
+the below line, modified for the options you want to pass to netcat:
+
+  Subsystem	rpki-rtr	nc <nc-options>... localhost <rtr-port>
 
 
 2.5 Self Test
@@ -345,6 +350,11 @@ of the loop that contains the line "./step${TESTID}.${N}". The amount
 of time needed to sleep depends on a number of factors and can be
 increased (within limits) until make check succeeds.
 
+If you have valgrind installed, you can run some tests under valgrind
+by running the command:
+
+   make check VALGRIND=1
+
 
 2.6 Post-Installation Procedures
 
@@ -357,7 +367,7 @@ database.
 
 Except for the query client, all RPKI processes should run as the RPKI
 user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (0.1)
+configuration will be used for final deployment, this release (0.2)
 does not include suggested crontab entries.  It is assumed that for
 trial purposes, manual execution gives the user/debugger maximum
 control.
@@ -372,7 +382,10 @@ Chaser Client (proto/chaser)         Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server                           Continuously as SSH subsystem
+RTR Server (rtr/rpstir-rtrd)         Continuously as daemon
+RTR updater (rtr/rpstir-rtr-update)  After each call to chaser
+RTR client (rtr/rtr-test-client)     On demand by user
+
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
