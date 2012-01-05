@@ -703,12 +703,13 @@ static int setuprange(struct certrange *certrangep, struct casn *lorangep,
   memset(certrangep->lo, 0, sizeof(certrangep->lo));
   memset(certrangep->hi, -1, sizeof(certrangep->hi));
   int lth = read_casn(lorangep, locbuf);   
-  int unused = *certrangep->lo;
+  int unused = locbuf[0];
   memcpy(certrangep->lo, &locbuf[1], --lth);
+  certrangep->lo[lth - 1] &= (0xFF << unused);
   lth = read_casn(hirangep, locbuf);
-  unused = *certrangep->hi;
+  unused = locbuf[0];
   memcpy(certrangep->hi, &locbuf[1], --lth);
-  if (unused) certrangep->hi[lth - 1] |= (0xFF << unused);
+  certrangep->hi[lth - 1] |= (0xFF >> (8 - unused));
   return 0;
   }
 
