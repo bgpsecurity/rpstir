@@ -732,12 +732,14 @@ static int checkIPAddrs(struct Certificate *certp,
     &roaIPAddrBlocksp->self, 0); roaFamilyp; 
     roaFamilyp = (struct ROAIPAddressFamily *)next_of(&roaFamilyp->self))
     {
+    int matchedCertFamily = 0;
     for (certFamilyp = (struct IPAddressFamilyA *)member_casn(
       &certIpAddrBlockp->self, 0); certFamilyp; 
       certFamilyp = (struct IPAddressFamilyA *)next_of(&certFamilyp->self))
       {   
       if (diff_casn(&certFamilyp->addressFamily, &roaFamilyp->addressFamily))
         continue;
+      matchedCertFamily = 1;
     // now at matching families. If inheriting, skip it
       if (size_casn(&certFamilyp->ipAddressChoice.inherit)) break;
       // for each ROA entry, see if it is in cert  
@@ -778,6 +780,8 @@ static int checkIPAddrs(struct Certificate *certp,
           return ERR_SCM_ROAIPMISMATCH;
         }
       }
+    if (!matchedCertFamily)
+      return ERR_SCM_ROAIPMISMATCH;
     }
   return 1;
   }
