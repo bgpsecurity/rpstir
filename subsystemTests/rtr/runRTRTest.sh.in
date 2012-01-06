@@ -68,6 +68,8 @@ client_multiple_wait () {
 		sleep 1
 	done
 
+	echo >&2 "Timed out waiting for multiple clients"
+
 	kill $CLIENT_MULTIPLE_pids || true
 	wait $CLIENT_MULTIPLE_pids
 }
