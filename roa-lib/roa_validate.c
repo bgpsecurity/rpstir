@@ -4,6 +4,8 @@
 
 
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "roa_utils.h"
 #include "cryptlib.h"
@@ -713,6 +715,36 @@ static int setuprange(struct certrange *certrangep, struct casn *lorangep,
   return 0;
   }
 
+static int certrangecmp(const void * range1_voidp, const void * range2_voidp)
+  {
+  const struct certrange * range1 = (const struct certrange *)range1_voidp;
+  const struct certrange * range2 = (const struct certrange *)range2_voidp;
+
+  int ret = memcmp(range1->lo, range2->lo, sizeof(range1->lo));
+  if (ret != 0)
+    return ret;
+  else
+    return memcmp(range1->hi, range2->hi, sizeof(range1->hi));
+  }
+
+/** @return non-zero iff range1 fully contains range2 */
+static int certrangeContains(
+  const struct certrange * range1,
+  const struct certrange * range2)
+  {
+    return memcmp(range2->lo, range1->lo, sizeof(range1->lo)) >= 0 &&
+      memcmp(range2->hi, range1->hi, sizeof(range1->hi)) <= 0;
+  }
+
+/** @return non-zero iff range1 does not intersect range2
+  and range1 is before range2 */
+static int certrangeBefore(
+  const struct certrange * range1,
+  const struct certrange * range2)
+  {
+    return memcmp(range1->hi, range2->lo, sizeof(range1->hi)) < 0;
+  }
+
 static int checkIPAddrs(struct Certificate *certp, 
     struct ROAIPAddrBlocks *roaIPAddrBlocksp)
   {
@@ -743,42 +775,60 @@ static int checkIPAddrs(struct Certificate *certp,
     // now at matching families. If inheriting, skip it
       if (size_casn(&certFamilyp->ipAddressChoice.inherit)) break;
       // for each ROA entry, see if it is in cert  
+      const int roaNumPrefixes = num_items(&roaFamilyp->addresses.self);
+      struct certrange * roaRanges =
+        malloc(roaNumPrefixes * sizeof(struct certrange));
+      if (!roaRanges) return ERR_SCM_NOMEM;
       struct ROAIPAddress *roaIPAddrp;
+      int roaPrefixNum;
       for (roaIPAddrp = (struct ROAIPAddress *)member_casn(
-        &roaFamilyp->addresses.self, 0); roaIPAddrp;
-        roaIPAddrp = (struct ROAIPAddress *)next_of(&roaIPAddrp->self))
+        &roaFamilyp->addresses.self, 0), roaPrefixNum = 0;
+        roaIPAddrp;
+        roaIPAddrp = (struct ROAIPAddress *)next_of(&roaIPAddrp->self),
+        ++roaPrefixNum)
         {
         // roaIPAddrp->address is a prefix (BIT string)
-        struct certrange roarange, certrange;
-        setuprange(&roarange, &roaIPAddrp->address, &roaIPAddrp->address); 
-        struct IPAddressOrRangeA *certIPAddressOrRangeAp; 
-        int matchedCertRange = 0;
-        for (certIPAddressOrRangeAp = 
-          &certFamilyp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA; 
-          certIPAddressOrRangeAp;
-          certIPAddressOrRangeAp = (struct IPAddressOrRangeA*)next_of(
-          &certIPAddressOrRangeAp->self))  
+        setuprange(&roaRanges[roaPrefixNum], &roaIPAddrp->address, &roaIPAddrp->address);
+        }
+      qsort(roaRanges, roaNumPrefixes, sizeof(roaRanges[0]), certrangecmp);
+      struct IPAddressOrRangeA *certIPAddressOrRangeAp =
+        &certFamilyp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
+      struct certrange certrange;
+      roaPrefixNum = 0;
+      while (roaPrefixNum < roaNumPrefixes)
+        {
+        do
           {
+          if (certIPAddressOrRangeAp == NULL)
+            {
+            // reached end of certranges when there are still roaranges to match
+            free(roaRanges);
+            return ERR_SCM_ROAIPMISMATCH;
+            }
           // certIPAddressOrRangep is either a prefix (BIT string) or a range
           if (size_casn(&certIPAddressOrRangeAp->addressRange.self))
             setuprange(&certrange, &certIPAddressOrRangeAp->addressRange.min,
               &certIPAddressOrRangeAp->addressRange.max);
           else setuprange(&certrange, &certIPAddressOrRangeAp->addressPrefix,
             &certIPAddressOrRangeAp->addressPrefix);
-          if (memcmp(roarange.lo, certrange.hi, sizeof(roarange.lo)) > 0)
-            continue;
-          if (memcmp(roarange.hi, certrange.lo, sizeof(roarange.hi)) < 0)
-            break;
-          if (memcmp(roarange.lo, certrange.lo, sizeof(roarange.lo)) >= 0 &&
-             memcmp(roarange.hi, certrange.hi, sizeof(roarange.hi)) <= 0)
-            {
-              matchedCertRange = 1;
-              break;
-            }
-          }
-        if (!matchedCertRange)
+          certIPAddressOrRangeAp = (struct IPAddressOrRangeA*)
+            next_of(&certIPAddressOrRangeAp->self);
+          } while (!certrangeContains(&certrange, &roaRanges[roaPrefixNum]) &&
+            !certrangeBefore(&roaRanges[roaPrefixNum], &certrange));
+        if (!certrangeContains(&certrange, &roaRanges[roaPrefixNum]))
+          {
+          // roarange is unmatched and all remaining certrange are greater than roarange
+          free(roaRanges);
           return ERR_SCM_ROAIPMISMATCH;
+          }
+        while (roaPrefixNum < roaNumPrefixes &&
+          certrangeContains(&certrange, &roaRanges[roaPrefixNum]))
+          {
+          // skip all roaranges contained by this certrange
+          ++roaPrefixNum;
+          }
         }
+      free(roaRanges);
       }
     if (!matchedCertFamily)
       return ERR_SCM_ROAIPMISMATCH;
