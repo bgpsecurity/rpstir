@@ -94,8 +94,8 @@ can set and test environment variables.
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
-version 0.9.8e) from http://www.openssl.org.  We recommend the default
-installation target directory /usr/local/ssl.  As of version 0.9.8l,
+version 1.0.0f) from http://www.openssl.org.  We recommend the default
+installation target directory /usr/local/ssl.  As of version 1.0.0f,
 the steps were:
 
 	$ ./config enable-rfc3779
