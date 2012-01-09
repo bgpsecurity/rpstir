@@ -4,13 +4,11 @@
  *
  * yet to do:
  * - check all return values.  free memory before any quit
- * - trim "rsync://" for internal storage, or for printing?
  * - fix memory leak from addcolsrchscm()
  * - fix unidentified memory leak
  * - check how we define subsume
  * - implement chase-not-yet-validated
  * - check uri for validity before adding to list
- * - ? trim trailing slash or newline?
  * - coordinate return values with caller
  * - consider OOM killer in notes about `man realloc`
  *
@@ -20,6 +18,7 @@
  * - are bad chars warned, removed?
  * - correct output for -a, -c, -s, -t, -y combinations?
  * - can crafted bad uri crash the program?  or get thru?
+ * - start from very small array size to test realloc of uris
  */
 
 #include <ctype.h>
@@ -45,6 +44,7 @@ static size_t uris_max_sz = 2;
 static size_t num_uris = 0;
 static char *prevTimestamp;
 static char *currTimestamp;
+static char const * const RSYNC_SCHEME = "rsync://";
 
 /**=============================================================================
  * @note This function only does a string comparison, not a file lookup.
@@ -125,21 +125,37 @@ static int append_uri(const char *in) {
         }
     }
 
-    uris[num_uris] = strdup(in);
-
-    if (!uris[num_uris]) {
+    char *in_copy = strdup(in);
+    char *in_trimmed = NULL;
+    if (!in_copy) {
         LOG(LOG_ERR, "out of memory\n");
-        return -1;
+        return -2;
+    }
+
+    // trim rsync scheme
+    size_t len = strlen(RSYNC_SCHEME);
+    if (!strncmp(RSYNC_SCHEME, in_copy, len)) {
+        in_trimmed = in_copy + len;
+    } else {
+        in_trimmed = in_copy;
     }
 
     // trim trailing newlines
-    int len = strlen(uris[num_uris]);
-    while ('\n' == uris[num_uris][len - 1] && len > 0) {
-        uris[num_uris][len - 1] = '\0';
+    len = strlen(in_trimmed);
+    while ('\n' == in_trimmed[len - 1] && len > 0) {
+        in_trimmed[len - 1] = '\0';
         len--;
     }
 
+    uris[num_uris] = strdup(in_trimmed);
+    if (!uris[num_uris]) {
+        LOG(LOG_ERR, "Could not alloc for uri");
+        free(in_copy);
+        return -2;
+    }
     num_uris++;
+
+    free(in_copy);
     return 0;
 }
 
@@ -224,7 +240,7 @@ static int printUsage() {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  -a          chase AIAs, default = don't chase AIAs\n");
     fprintf(stderr, "  -c          do not chase CRLDPs, default = chase CRLDPs\n");
-    fprintf(stderr, "  -f filename rsync configuration file to model on\n");
+    fprintf(stderr, "  -f filename configuration file\n");
     fprintf(stderr, "  -s          do not chase SIAs, default = chase SIAs\n");
     fprintf(stderr, "  -t          chase only Trust Anchor URIs from the database\n");
     fprintf(stderr, "                  default = don't chase only TAs\n");
@@ -490,7 +506,7 @@ int main(int argc, char **argv) {
     // print to stdout
     LOG(LOG_DEBUG, "outputting %zu rsync uris", num_uris);
     for (i = 0; i < num_uris; i++) {
-        fprintf(stdout, "%s\n", uris[i]);
+        fprintf(stdout, "%s%s\n", RSYNC_SCHEME, uris[i]);
     }
 
     // write timestamp into database
