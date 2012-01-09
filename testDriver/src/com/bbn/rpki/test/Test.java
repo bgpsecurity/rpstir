@@ -8,7 +8,9 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.InitializeCache;
+import com.bbn.rpki.test.tasks.InitializeRepositories;
 import com.bbn.rpki.test.tasks.InstallTrustAnchor;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.Task;

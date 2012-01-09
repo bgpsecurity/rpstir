@@ -1,14 +1,11 @@
 /*
  * Created on Dec 12, 2011
  */
-package com.bbn.rpki.test;
+package com.bbn.rpki.test.tasks;
 
 import java.io.File;
 
 import com.bbn.rpki.test.objects.Util;
-import com.bbn.rpki.test.tasks.Model;
-import com.bbn.rpki.test.tasks.Task;
-import com.bbn.rpki.test.tasks.TaskBreakdown;
 
 /**
  * <Enter the description of this type here>
