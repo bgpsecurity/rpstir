@@ -798,7 +798,7 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       for(i=0;i<srch->where->nused;i++)
 	{
 	  leen += strlen(srch->where->vec[i].column) + 9;
-	  leen += strlen(srch->where->vec[i].value);
+	  leen += 2*strlen(srch->where->vec[i].value);
 	}
     }
   if ( srch->wherestr != NULL )
@@ -846,14 +846,16 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       (void)strcat(stmt, " WHERE ");
       (void)strcat(stmt, srch->where->vec[0].column);
       (void)strcat(stmt, "=\"");
-      (void)strcat(stmt, srch->where->vec[0].value);
+      (void)mysql_escape_string(stmt + strlen(stmt),
+        srch->where->vec[0].value, strlen(srch->where->vec[0].value));
       (void)strcat(stmt, "\"");
       for(i=1;i<srch->where->nused;i++)
 	{
 	  (void)strcat(stmt, " AND ");
 	  (void)strcat(stmt, srch->where->vec[i].column);
 	  (void)strcat(stmt, "=\"");
-	  (void)strcat(stmt, srch->where->vec[i].value);
+	  (void)mysql_escape_string(stmt + strlen(stmt),
+	    srch->where->vec[i].value, strlen(srch->where->vec[i].value));
 	  (void)strcat(stmt, "\"");
 	}
     }
