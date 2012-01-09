@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
+
+#include <mysql.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -532,7 +535,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   int   leen = 128;
   int   wsta = (-1);
   int   doq;
-  int   i;
+  int   i, j;
 
   if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
        tabp->tabname == NULL )
@@ -555,7 +558,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   for(i=0;i<arr->nused;i++)
     {
       leen += strlen(arr->vec[i].column) + 2;
-      leen += strlen(arr->vec[i].value) + 4;
+      leen += 2*strlen(arr->vec[i].value) + 4;
     }
 // construct the statement
   stmt = (char *)calloc(leen, sizeof(char));
@@ -583,42 +586,57 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   as NULefg but if we said "0x00656667" it would get inserted as the string
   0x00656667.
 */
-  doq = strncmp(arr->vec[0].value, "^x", 2);
-  if ( doq == 0 )
+  for (i = 0; i < arr->nused; ++i)
     {
-      arr->vec[0].value[0] = '0';
-      wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
-    }
-  else
-    wsta = strwillfit(stmt, leen, wsta, ") VALUES (\"");
-  if ( wsta >= 0 )
-    wsta = strwillfit(stmt, leen, wsta, arr->vec[0].value);
-  if ( doq != 0 && wsta >= 0 )
-    wsta = strwillfit(stmt, leen, wsta, "\"");
-  if ( wsta < 0 )
-    {
-      free((void *)stmt);
-      return(wsta);
-    }
-  for(i=1;i<arr->nused;i++)
-    {
+      if (i == 0)
+        wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
+      else
+        wsta = strwillfit(stmt, leen, wsta, ", ");
+      if ( wsta < 0 )
+        {
+          free((void *)stmt);
+          return(wsta);
+        }
+
       doq = strncmp(arr->vec[i].value, "^x", 2);
       if ( doq == 0 )
-	{
-	  arr->vec[i].value[0] = '0';
-	  wsta = strwillfit(stmt, leen, wsta, ", ");
-	}
+        {
+          wsta = strwillfit(stmt, leen, wsta, "0x");
+        }
       else
-	wsta = strwillfit(stmt, leen, wsta, ", \"");
-      if ( wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, arr->vec[i].value);
-      if ( doq != 0 && wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, "\"");
+        {
+          wsta = strwillfit(stmt, leen, wsta, "\"");
+        }
       if ( wsta < 0 )
-	{
-	  free((void *)stmt);
-	  return(wsta);
-	}
+        {
+          free((void *)stmt);
+          return(wsta);
+        }
+      if ( doq == 0 )
+        {
+          for (j = 2; arr->vec[i].value[j] != '\0'; ++j)
+            {
+              if (isxdigit(arr->vec[i].value[j]))
+                stmt[wsta++] = arr->vec[i].value[j];
+              else
+                {
+                  free((void *)stmt);
+                  return ERR_SCM_INVALARG;
+                }
+            }
+          stmt[wsta] = '\0';
+        }
+      else
+        {
+          wsta += mysql_escape_string(stmt + wsta, arr->vec[i].value,
+            strlen(arr->vec[i].value));
+          wsta = strwillfit(stmt, leen, wsta, "\"");
+          if (wsta < 0)
+            {
+              free((void *)stmt);
+              return(wsta);
+            }
+        }
     }
   wsta = strwillfit(stmt, leen, wsta, ");");
   if ( wsta < 0 )
