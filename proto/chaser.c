@@ -41,13 +41,16 @@
 #define CHASER_LOG_FACILITY LOG_DAEMON
 
 
-static char **uris = NULL;
-//static size_t uris_max_sz = 1024 * 1024;
-static size_t uris_max_sz = 2;
-static size_t num_uris = 0;
-static char *prevTimestamp;
-static char *currTimestamp;
-static char const * const RSYNC_SCHEME = "rsync://";
+static char  **uris = NULL;
+//static size_t  uris_max_sz = 1024 * 1024;
+static size_t  uris_max_sz = 2;
+static size_t  num_uris = 0;
+static char   *prevTimestamp;
+static char   *currTimestamp;
+static char const * const  RSYNC_SCHEME = "rsync://";
+
+static scm     *scmp = NULL;
+static scmcon  *connect = NULL;
 
 /**=============================================================================
  * @note This function only does a string comparison, not a file lookup.
@@ -190,6 +193,53 @@ static int handleAIAResults(scmcon *conp, scmsrcha *s, int numLine) {
     return 0;
 }
 
+/**=============================================================================
+ * @note Add aia field if cert has no parent.
+ *
+ * sql:  select aki, aia from rpki_cert where flags matches SCM_FLAG_NOCHAIN;
+------------------------------------------------------------------------------*/
+static int query_aia() {
+    scmtab   *table = NULL;
+    scmsrcha *srcha;
+    size_t const NUM_FIELDS = 2;
+    scmsrch  srch[NUM_FIELDS];
+    ulong    context_field = 0;
+    int      status;
+    char     msg[1024];
+
+    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
+
+    table = findtablescm(scmp, "certificate");
+    if (table == NULL) {
+        LOG(LOG_ERR, "Cannot find table metadata\n");
+        return -1;
+    }
+
+    srcha->vec = srch;
+    srcha->sname = NULL;
+    srcha->ntot = 2;
+    srcha->where = NULL;
+    srcha->wherestr = NULL;
+    srcha->context = &context_field;
+    srcha->nused = 0;
+    srcha->vald = 0;
+    msg[0] = 0;
+    addFlagTest(msg, SCM_FLAG_NOCHAIN, 1, 0);
+    addcolsrchscm(srcha, "aki", SQL_C_CHAR, SKISIZE);
+    addcolsrchscm(srcha, "aia", SQL_C_CHAR, SIASIZE);
+    status = searchscm(connect, table, srcha, NULL, handleAIAResults,
+            SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != ERR_SCM_NOERR) {
+        LOG(LOG_ERR, "Error chasing AIAs: %s (%d)",
+                err2string(status), status);
+        freesrchscm(srcha);
+        return -1;
+    }
+
+    freesrchscm(srcha);
+
+    return 0;
+}
 
 /**=============================================================================
  * callback function for searchscm that accumulates the crldp's
@@ -211,6 +261,57 @@ static int handleCRLDPResults(scmcon *conp, scmsrcha *s, int numLine) {
 }
 
 /**=============================================================================
+ * @note Get CRLDP info from db.
+ *
+ * add crldp field if cert either has no crl or crl is out-of-date
+ * sql:  select crldp from rpki_cert left join rpki_crl
+ *       on rpki_cert.aki = rpki_crl.aki
+ *       where rpki_crl.filename is null or rpki_crl.next_upd < currTimestamp;
+------------------------------------------------------------------------------*/
+static int query_crldp() {
+    scmtab   *table = NULL;
+    scmsrcha *srcha;
+    size_t const NUM_FIELDS = 1;
+//    scmsrch  srch[NUM_FIELDS];
+//    ulong    context_field = 0;
+    int      status;
+    char     msg[1024];
+
+    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
+
+    table = findtablescm(scmp, "certificate");
+    if (table == NULL) {
+        LOG(LOG_ERR, "Cannot find table metadata\n");
+        return -1;
+    }
+
+//    srcha->vec = srch;
+//    srcha->sname = NULL;
+//    srcha->ntot = 2;
+//    srcha->where = NULL;
+//    srcha->context = &context_field;
+//    srcha->nused = 0;
+//    srcha->vald = 0;
+    snprintf(msg, sizeof(msg),
+            "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
+            currTimestamp);
+    srcha->wherestr = msg;
+    addcolsrchscm(srcha, "crldp", SQL_C_CHAR, SIASIZE);
+    status = searchscm(connect, table, srcha, NULL, handleCRLDPResults,
+            SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
+    if (status != ERR_SCM_NOERR) {
+        LOG(LOG_ERR, "Error chasing CRLDPs: %s (%d)",
+                err2string(status), status);
+        freesrchscm(srcha);
+        return -1;
+    }
+
+    freesrchscm(srcha);
+
+    return 0;
+}
+
+/**=============================================================================
  * callback function for searchscm that accumulates the sia's
 ------------------------------------------------------------------------------*/
 static int handleSIAResults(scmcon *conp, scmsrcha *s, int numLine) {
@@ -228,12 +329,195 @@ static int handleSIAResults(scmcon *conp, scmsrcha *s, int numLine) {
 }
 
 /**=============================================================================
+ * @note Add sia field.
+ *
+ * sql:  select sia from rpki_cert;
+------------------------------------------------------------------------------*/
+static int query_sia() {
+    scmtab   *table = NULL;
+    scmsrcha *srcha;
+    size_t const NUM_FIELDS = 1;
+    scmsrch  srch[NUM_FIELDS];
+    ulong    context_field = 0;
+    int      status;
+
+    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
+
+    table = findtablescm(scmp, "certificate");
+    if (table == NULL) {
+        LOG(LOG_ERR, "Cannot find table metadata\n");
+        return -1;
+    }
+
+    srcha->vec = srch;
+    srcha->sname = NULL;
+    srcha->ntot = 2;
+    srcha->where = NULL;
+    srcha->wherestr = NULL;
+    srcha->context = &context_field;
+    srcha->nused = 0;
+    srcha->vald = 0;
+    addcolsrchscm(srcha, "sia", SQL_C_CHAR, SIASIZE);
+    status = searchscm(connect, table, srcha, NULL, handleSIAResults,
+            SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != ERR_SCM_NOERR) {
+        LOG(LOG_ERR, "Error chasing SIAs: %s (%d)",
+                err2string(status), status);
+        freesrchscm(srcha);
+        return -1;
+    }
+
+    freesrchscm(srcha);
+
+    return 0;
+}
+
+/**=============================================================================
+ * @note Add sia field, only if trusted.
+ *
+ * sql:  select sia from rpki_cert where flags match SCM_FLAG_TRUSTED;
+------------------------------------------------------------------------------*/
+static int query_sia_trusted() {
+    scmtab   *table = NULL;
+    scmsrcha *srcha;
+    size_t const NUM_FIELDS = 1;
+    scmsrch  srch[NUM_FIELDS];
+    ulong    context_field = 0;
+    int      status;
+    char     msg[1024];
+
+    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 1);
+
+    table = findtablescm(scmp, "certificate");
+    if (table == NULL) {
+        LOG(LOG_ERR, "Cannot find table metadata\n");
+        return -1;
+    }
+
+    srcha->vec = srch;
+    srcha->sname = NULL;
+    srcha->ntot = 2;
+    srcha->where = NULL;
+    srcha->context = &context_field;
+    srcha->nused = 0;
+    srcha->vald = 0;
+    snprintf(msg, sizeof(msg),"((flags%%%d)>=%d)",2*SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
+    srcha->wherestr = msg;
+    addcolsrchscm(srcha, "sia", SQL_C_CHAR, SIASIZE);
+    status = searchscm(connect, table, srcha, NULL, handleSIAResults,
+            SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != ERR_SCM_NOERR) {
+        LOG(LOG_ERR, "Error chasing SIAs: %s (%d)",
+                err2string(status), status);
+        freesrchscm(srcha);
+        return 1;
+    }
+
+    freesrchscm(srcha);
+
+    return 0;
+}
+
+/**=============================================================================
  * callback function for searchscm that records the timestamps
 ------------------------------------------------------------------------------*/
 static int handleTimestamps(scmcon *conp, scmsrcha *s, int numLine) {
     (void) conp; (void) numLine;  // silence compiler warnings
     currTimestamp = (char *) s->vec[0].valptr;
     prevTimestamp = (char *) s->vec[1].valptr;
+    return 0;
+}
+
+/**=============================================================================
+ * @note Write timestamp to db.
+ *
+ * sql:  update rpki_metadata set ch_last = currTimestamp;
+------------------------------------------------------------------------------*/
+static int write_timestamp() {
+    scmtab   *table = NULL;
+    scmsrcha *srcha;
+    size_t const NUM_FIELDS = 0;
+//    scmsrch  srch[NUM_FIELDS];
+//    ulong    context_field = 0;
+    int      status;
+    char     msg[1024];
+
+    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
+
+    table = findtablescm(scmp, "metadata");
+    if (table == NULL) {
+        LOG(LOG_ERR, "Cannot find table metadata\n");
+        return -1;
+    }
+
+//    srcha->vec = NULL;
+//    srcha->sname = NULL;
+//    srcha->ntot = 2;
+//    srcha->where = NULL;
+//    srcha->wherestr = NULL;
+//    srcha->context = &context_field;
+//    srcha->nused = 0;
+//    srcha->vald = 0;
+    snprintf(msg, sizeof(msg), "update %s set ch_last=\"%s\";",
+            table->tabname, currTimestamp);
+    status = statementscm_no_data(connect, msg);
+    if (status != ERR_SCM_NOERR) {
+        LOG(LOG_ERR, "Error writing timestamp to db: %s (%d)",
+                err2string(status), status);
+        freesrchscm(srcha);
+        return -1;
+    }
+
+    freesrchscm(srcha);
+
+    return 0;
+}
+
+/**=============================================================================
+ * @note Get the current time, and read the last time chaser ran from db.
+ *
+ * sql:  select current_timestamp, ch_last from rpki_metadata;
+------------------------------------------------------------------------------*/
+static int query_timestamps() {
+    scmtab   *table = NULL;
+    scmsrcha *srch;
+    size_t const NUM_FIELDS = 2;
+//    scmsrch  vec[NUM_FIELDS];
+//    ulong    context_field = 0;
+    int      status;
+
+    srch = newsrchscm(NULL, NUM_FIELDS, 50, 0);
+
+    table = findtablescm(scmp, "metadata");
+    if (table == NULL) {
+        LOG(LOG_ERR, "Cannot find table metadata\n");
+        return -1;
+    }
+
+    srch->vec[0].colname = "asdf";
+    srch->vec[1].colname = "asdf";
+
+//    srch->vec = &vec[0];
+//    srch->sname = NULL;
+//    srch->ntot = 2;
+//    srch->where = NULL;
+//    srch->wherestr = NULL;
+//    srch->context = &context_field;
+//    srch->nused = 2;
+//    srch->vald = 0;
+    addcolsrchscm(srch, "current_timestamp", SQL_C_CHAR, 24);
+    addcolsrchscm(srch, "ch_last", SQL_C_CHAR, 24);
+    status = searchscm(connect, table, srch, NULL, handleTimestamps,
+            SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != ERR_SCM_NOERR) {
+        LOG(LOG_ERR, "@@@@@@@@@@ Error reading timestamps from db: %s (%d)",
+                err2string(status), status);
+        freesrchscm(srch);
+        return -1;
+    }
+
+    freesrchscm(srch);
+
     return 0;
 }
 
@@ -262,14 +546,6 @@ static int compare_str_p(const void *p1, const void *p2) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    scm      *scmp = NULL;
-    scmcon   *connect = NULL;
-    scmtab   *table = NULL;
-    scmsrcha srch;
-    scmsrch  srch1[2];
-    ulong    blah = 0;  // used for srch.context field
-    int      status;    // return code for scm ops
-
     int chase_aia = 0;
     int chase_crldp = 1;
     int chase_sia = 1;
@@ -352,102 +628,29 @@ int main(int argc, char **argv) {
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
     // initialize database
     scmp = initscm();
-    checkErr(scmp == NULL, "Cannot initialize database schema\n");
+    if (!scmp) {
+        LOG(LOG_ERR, "Cannot initialize database schema\n");
+        return -1;
+    }
     connect = connectscm(scmp->dsn, msg, sizeof(msg));
-    checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
-    // set up query
-    srch.vec = srch1;
-    srch.sname = NULL;
-    srch.ntot = 2;
-    srch.where = NULL;
-    srch.wherestr = NULL;
-    srch.context = &blah;
+    if (!scmp) {
+        LOG(LOG_ERR, "Cannot connect to database\n");
+        return -1;
+    }
 
-    if(!chase_only_ta) {
-        // find the current time and last time chaser ran
-        // select current_timestamp, ch_last from rpki_metadata;
-        // currTimestamp = current_timestamp;
-        // prevTimestamp = ch_last;
-        table = findtablescm(scmp, "metadata");
-        checkErr(table == NULL, "Cannot find table metadata\n");
-        srch.nused = 0;
-        srch.vald = 0;
-        addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
-        addcolsrchscm(&srch, "ch_last", SQL_C_CHAR, 24);
-        status = searchscm(connect, table, &srch, NULL, handleTimestamps,
-                SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if(chase_only_ta) {
+        query_sia_trusted();
+    } else {
+        query_timestamps();
 
-        table = findtablescm(scmp, "certificate");
-        checkErr(table == NULL, "Cannot find table certificate\n");
-        theCertTable = table;
+        if (chase_crldp)
+            query_crldp();
 
-        // add crldp field if cert either has no crl or crl is out-of-date
-        // select crldp from rpki_cert left join rpki_crl
-        //   on rpki_cert.aki = rpki_crl.aki
-        //   where rpki_crl.filename is null or rpki_crl.next_upd < currTimestamp;
-        if (chase_crldp) {
-            srch.nused = 0;
-            srch.vald = 0;
-            snprintf(msg, sizeof(msg),
-                    "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
-                    currTimestamp);
-            srch.wherestr = msg;
-            addcolsrchscm(&srch, "crldp", SQL_C_CHAR, SIASIZE);
-            status = searchscm(connect, table, &srch, NULL, handleCRLDPResults,
-                    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
-            free(srch1[0].valptr);
-            free(srch1[0].colname);
-        }
+        if (chase_aia)
+            query_aia();
 
-        // add aia field if cert has no parent
-        // select aki, aia from rpki_cert where flags matches SCM_FLAG_NOCHAIN;
-        if (chase_aia) {
-            srch.nused = 0;
-            srch.vald = 0;
-            msg[0] = 0;
-            addFlagTest(msg, SCM_FLAG_NOCHAIN, 1, 0);
-            addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
-            addcolsrchscm(&srch, "aia", SQL_C_CHAR, SIASIZE);
-            status = searchscm(connect, table, &srch, NULL, handleAIAResults,
-                    SCM_SRCH_DOVALUE_ALWAYS, NULL);
-            free(srch1[0].valptr);
-            free(srch1[1].valptr);
-            free(srch1[0].colname);
-            free(srch1[1].colname);
-        }
-
-        // add sia field (command line option)
-        // select sia from rpki_cert;
-        if (chase_sia) {
-            srch.nused = 0;
-            srch.vald = 0;
-            msg[0] = 0;
-            srch.where = NULL;
-            srch.wherestr = NULL;
-            addcolsrchscm(&srch, "sia", SQL_C_CHAR, SIASIZE);
-            status = searchscm(connect, table, &srch, NULL, handleSIAResults,
-                    SCM_SRCH_DOVALUE_ALWAYS, NULL);
-            if (status != ERR_SCM_NOERR) {
-                LOG(LOG_ERR, "Error chasing SIAs: %s (%d)",
-                        err2string(status), status);
-            }
-            free(srch1[0].valptr);
-            free(srch1[0].colname);
-        }
-    } else {  // this ends the normal operation
-        // select sia from rpki_cert where flags match;
-        table = findtablescm(scmp, "certificate");
-        checkErr(table == NULL, "Cannot find table certificate\n");
-        theCertTable = table;
-        srch.nused = 0;
-        srch.vald = 0;
-        snprintf(msg, sizeof(msg),"((flags%%%d)>=%d)",2*SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
-        srch.wherestr = msg;
-        addcolsrchscm(&srch, "sia", SQL_C_CHAR, SIASIZE);
-        status = searchscm(connect, table, &srch, NULL, handleSIAResults,
-                SCM_SRCH_DOVALUE_ALWAYS, NULL);
-        free(srch1[0].valptr);
-        free(srch1[0].colname);
+        if (chase_sia)
+            query_sia();
     }
 
     LOG(LOG_DEBUG, "found total of %zu rsync uris", num_uris);
@@ -497,10 +700,7 @@ int main(int argc, char **argv) {
     }
 
     // write timestamp into database
-    table = findtablescm(scmp, "metadata");
-    snprintf(msg, sizeof(msg), "update %s set ch_last=\"%s\";",
-            table->tabname, currTimestamp);
-    status = statementscm_no_data(connect, msg);
+    write_timestamp();
 
     // release memory
     disconnectscm(connect);
