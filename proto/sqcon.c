@@ -1246,7 +1246,7 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
   for(i=0;i<deld->nused;i++)
     {
       leen += strlen(deld->vec[i].column) + 2;
-      leen += strlen(deld->vec[i].value) + 9;
+      leen += 2*strlen(deld->vec[i].value) + 9;
     }
 // construct the DELETE statement
   conp->mystat.tabname = tabp->hname;
@@ -1262,7 +1262,8 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "=\"");
       if ( wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, deld->vec[0].value);
+        wsta += mysql_escape_string(stmt + wsta, deld->vec[0].value,
+          strlen(deld->vec[0].value));
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "\"");
       if ( wsta < 0 )
@@ -1278,7 +1279,8 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
 	  if ( wsta >= 0 )
 	    wsta = strwillfit(stmt, leen, wsta, "=\"");
 	  if ( wsta >= 0 )
-	    wsta = strwillfit(stmt, leen, wsta, deld->vec[i].value);
+	    wsta += mysql_escape_string(stmt + wsta, deld->vec[i].value,
+	      strlen(deld->vec[i].value));
 	  if ( wsta >= 0 )
 	    wsta = strwillfit(stmt, leen, wsta, "\"");
 	  if ( wsta < 0 )
@@ -1323,7 +1325,7 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
   for(i=0;i<where->nused;i++)
     {
       leen += strlen(where->vec[i].column) + 7;
-      leen += strlen(where->vec[i].value) + 3;
+      leen += 2*strlen(where->vec[i].value) + 3;
     }
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
@@ -1333,7 +1335,8 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
   if ( wsta >= 0 )
     wsta = strwillfit(stmt, leen, wsta, "=\"");
   if ( wsta >= 0 )
-    wsta = strwillfit(stmt, leen, wsta, where->vec[0].value);
+    wsta += mysql_escape_string(stmt + wsta, where->vec[0].value,
+      strlen(where->vec[0].value));
   if ( wsta >= 0 )
     wsta = strwillfit(stmt, leen, wsta, "\"");
   if ( wsta < 0 )
@@ -1349,7 +1352,8 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "=\"");
       if ( wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, where->vec[i].value);
+        wsta += mysql_escape_string(stmt + wsta, where->vec[i].value,
+          strlen(where->vec[i].value));
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "\"");
       if ( wsta < 0 )
