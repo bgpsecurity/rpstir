@@ -3,22 +3,23 @@
  * authorities that have signed certs.  It outputs the URIs to stdout.
  *
  * yet to do:
- * - alloc more memory as needed
+ * - check all return values.  free memory before any quit
+ * - trim "rsync://" for internal storage, or for printing?
  * - fix memory leak from addcolsrchscm()
  * - fix unidentified memory leak
  * - check how we define subsume
- * - add cmd-line flags that Andrew listed
+ * - implement chase-not-yet-validated
  * - check uri for validity before adding to list
- * - possibly cache some high level directories, to check is_subsumed before insert
  * - ? trim trailing slash or newline?
- * - trim "rsync://" for internal storage, or for printing?
- * - check all return values.  free memory before any quit
+ * - coordinate return values with caller
  * - consider OOM killer in notes about `man realloc`
  *
  * test cases:
  * - is x subsumed by y?
  * - are trailing chars removed?
  * - are bad chars warned, removed?
+ * - correct output for -a, -c, -s, -t, -y combinations?
+ * - can crafted bad uri crash the program?  or get thru?
  */
 
 #include <ctype.h>
@@ -73,20 +74,13 @@ static void free_uris() {
         return;
 
     while (num_uris) {
-//    while (num_uris > 7) {
-//        fprintf(stderr, "line %u\n", __LINE__);
         if (uris[num_uris]) {
-//            fprintf(stderr, "line %u\n", __LINE__);
             free(uris[num_uris]);
-//            fprintf(stderr, "line %u\n", __LINE__);
         }
-//        fprintf(stderr, "line %u\n", __LINE__);
         uris[num_uris] = NULL;
-//        fprintf(stderr, "line %u\n", __LINE__);
         num_uris--;
-//        fprintf(stderr, "num_uris:  %zu\n", num_uris);
-        fprintf(stderr, "uris[%2zu]:  0x%.8x:  0x%.8x:  %s\n",
-                num_uris, (uint) &uris[num_uris], (uint) uris[num_uris], uris[num_uris]);
+//        fprintf(stderr, "uris[%2zu]:  0x%.8x:  0x%.8x:  %s\n",
+//                num_uris, (uint) &uris[num_uris], (uint) uris[num_uris], uris[num_uris]);
     }
 
     free(uris);
@@ -124,7 +118,6 @@ static int append_uri(const char *in) {
     // check if array is big enough
     if (num_uris == uris_max_sz) {
         uris_max_sz *= 1.6;
-        fprintf(stdout, "before realloc(), uris:  %zu\n", uris_max_sz * sizeof(uris));
         uris = (char **) realloc(uris, uris_max_sz * sizeof(char *));
         if (!uris) {
             LOG(LOG_ERR, "Could not realloc for uris");
@@ -229,8 +222,14 @@ static int handleTimestamps(scmcon *conp, scmsrcha *s, int numLine) {
 ------------------------------------------------------------------------------*/
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "  -a          chase AIAs, default = don't chase AIAs\n");
+    fprintf(stderr, "  -c          do not chase CRLDPs, default = chase CRLDPs\n");
     fprintf(stderr, "  -f filename rsync configuration file to model on\n");
-    fprintf(stderr, "  -t          run by grabbing only Trust Anchor URIs from the database\n");
+    fprintf(stderr, "  -s          do not chase SIAs, default = chase SIAs\n");
+    fprintf(stderr, "  -t          chase only Trust Anchor URIs from the database\n");
+    fprintf(stderr, "                  default = don't chase only TAs\n");
+    fprintf(stderr, "                  overrides options:  acsy\n");
+    fprintf(stderr, "  -y          chase not-yet-validated, default = don't chase not-yet-validated\n");
     fprintf(stderr, "  -h          this help listing\n");
     return -1;
 }
@@ -249,34 +248,51 @@ int main(int argc, char **argv) {
     scmtab   *table = NULL;
     scmsrcha srch;
     scmsrch  srch1[2];
-
-    char     msg[1024];  // temp storage
     ulong    blah = 0;  // used for srch.context field
-    size_t   i;
-    int      ch, status;  // return code for scm ops
-    int      num_dirs;  // counter for dirs found in initial_rsync.config
-    int      ta_only = 0;  // cmd-line opt
-    int      chase_sia = 1;  // change to cmd-line opt
+    int      status;    // return code for scm ops
+
+    int      chase_aia = 0;
+    int      chase_crldp = 1;
+    int      chase_sia = 1;
+    int      chase_only_ta = 0;
+    int      chase_not_yet_validated = 0;
+
+    size_t   num_dirs;       // counter for dirs found in initial_rsync.config
     char     dirs[50][120];  // get strings from initial_rsync.config to put into uris.
-    char     str[180];  // temp storage
-    char     *str2;  // temp storage
     char     *orig_file = "initial_rsync.config";
     FILE     *fp;
+
+    char     msg[1024];  // temp string storage
+    size_t   i;
 
     OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
 
     (void) setbuf(stdout, NULL);
 
     // parse the command-line flags
-    while ((ch = getopt(argc, argv, "f:th")) != -1) {
+    int ch;
+    while ((ch = getopt(argc, argv, "acf:styh")) != -1) {
         switch (ch) {
-        case 'f':   // configuration file
-//            orig_file = optarg;
+        case 'a':
+            chase_aia = 1;
             break;
-        case 't':   // chase trust anchor SIAs only
-            ta_only = 1;
+        case 'c':
+            chase_crldp = 0;
             break;
-        case 'h':   // help
+        case 'f':
+            orig_file = optarg;
+            break;
+        case 's':
+            chase_sia = 0;
+            break;
+        case 't':
+            chase_only_ta = 1;
+            break;
+        case 'y':
+            // TODO:  implement this in queries
+            chase_not_yet_validated = 1;
+            break;
+        case 'h':
         default:
             return printUsage();
         }
@@ -289,6 +305,8 @@ int main(int argc, char **argv) {
     fp = fopen(orig_file, "r");
     checkErr(fp == NULL, "Unable to open rsync config file: %s\n", orig_file);
     dirs[0][0] = 0;
+    char str[180];
+    char *str2;
     while (fgets (msg, sizeof(msg), fp) != NULL) {
         sscanf (strtok (strdup (msg), "="), "%s", str);
         if (strcmp (str, "DIRS") == 0) {
@@ -327,7 +345,6 @@ int main(int argc, char **argv) {
     // load from current repositories
     for (i = 0; i < num_dirs; i++) {
         snprintf(str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
-        fprintf(stderr, "========= from file got:  %s\n", str);
         if (strlen(str) > strlen(RSYNC_PREFIX) + 1) {
             append_uri(str);
         }
@@ -343,7 +360,7 @@ int main(int argc, char **argv) {
     srch.wherestr = NULL;
     srch.context = &blah;
 
-    if(!ta_only) {
+    if(!chase_only_ta) {
         // find the current time and last time chaser ran
         // select current_timestamp, ch_last from rpki_metadata;
         // currTimestamp = current_timestamp;
@@ -357,39 +374,44 @@ int main(int argc, char **argv) {
         status = searchscm(connect, table, &srch, NULL, handleTimestamps,
                 SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
+        table = findtablescm(scmp, "certificate");
+        checkErr(table == NULL, "Cannot find table certificate\n");
+        theCertTable = table;
+
         // add crldp field if cert either has no crl or crl is out-of-date
         // select crldp from rpki_cert left join rpki_crl
         //   on rpki_cert.aki = rpki_crl.aki
         //   where rpki_crl.filename is null or rpki_crl.next_upd < currTimestamp;
-        table = findtablescm(scmp, "certificate");
-        checkErr(table == NULL, "Cannot find table certificate\n");
-        theCertTable = table;
-        srch.nused = 0;
-        srch.vald = 0;
-        snprintf(msg, sizeof(msg),
-                "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
-                currTimestamp);
-        srch.wherestr = msg;
-        addcolsrchscm(&srch, "crldp", SQL_C_CHAR, SIASIZE);
-        status = searchscm(connect, table, &srch, NULL, handleCRLDPResults,
-                SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
-        free(srch1[0].valptr);
-        free(srch1[0].colname);
+        if (chase_crldp) {
+            srch.nused = 0;
+            srch.vald = 0;
+            snprintf(msg, sizeof(msg),
+                    "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
+                    currTimestamp);
+            srch.wherestr = msg;
+            addcolsrchscm(&srch, "crldp", SQL_C_CHAR, SIASIZE);
+            status = searchscm(connect, table, &srch, NULL, handleCRLDPResults,
+                    SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
+            free(srch1[0].valptr);
+            free(srch1[0].colname);
+        }
 
         // add aia field if cert has no parent
         // select aki, aia from rpki_cert where flags matches SCM_FLAG_NOCHAIN;
-        srch.nused = 0;
-        srch.vald = 0;
-        msg[0] = 0;
-        addFlagTest(msg, SCM_FLAG_NOCHAIN, 1, 0);
-        addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
-        addcolsrchscm(&srch, "aia", SQL_C_CHAR, SIASIZE);
-        status = searchscm(connect, table, &srch, NULL, handleAIAResults,
-                SCM_SRCH_DOVALUE_ALWAYS, NULL);
-        free(srch1[0].valptr);
-        free(srch1[1].valptr);
-        free(srch1[0].colname);
-        free(srch1[1].colname);
+        if (chase_aia) {
+            srch.nused = 0;
+            srch.vald = 0;
+            msg[0] = 0;
+            addFlagTest(msg, SCM_FLAG_NOCHAIN, 1, 0);
+            addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
+            addcolsrchscm(&srch, "aia", SQL_C_CHAR, SIASIZE);
+            status = searchscm(connect, table, &srch, NULL, handleAIAResults,
+                    SCM_SRCH_DOVALUE_ALWAYS, NULL);
+            free(srch1[0].valptr);
+            free(srch1[1].valptr);
+            free(srch1[0].colname);
+            free(srch1[1].colname);
+        }
 
         // add sia field (command line option)
         // select sia from rpki_cert;
@@ -424,6 +446,8 @@ int main(int argc, char **argv) {
         free(srch1[0].valptr);
         free(srch1[0].colname);
     }
+
+    LOG(LOG_DEBUG, "found total of %zu rsync uris", num_uris);
 
     if (num_uris == 0)
         return 0;
@@ -460,11 +484,13 @@ int main(int argc, char **argv) {
         lo++;
         hi++;
     }
+    LOG(LOG_DEBUG, "compacted uris from %zu to %zu", num_uris, new_max);
     num_uris = new_max;
 
     // print to stdout
+    LOG(LOG_DEBUG, "outputting %zu rsync uris", num_uris);
     for (i = 0; i < num_uris; i++) {
-        fprintf(stdout, "%zu:  %s\n", i, uris[i]);
+        fprintf(stdout, "%s\n", uris[i]);
     }
 
     // write timestamp into database
