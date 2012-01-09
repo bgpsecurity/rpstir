@@ -6,7 +6,10 @@
  * - check all return values.  free memory before any quit
  * - fix memory leak from addcolsrchscm()
  * - fix unidentified memory leak
- * - check how we define subsume
+ * - check how we define subsume.  Andrew:
+ *       The real definition is this: A subsumes B if "rsync --recursive"
+ *       on A automatically retrieves B.  This usually happens when A is a
+ *       directory and B lives within it or within a subdirectory.
  * - implement chase-not-yet-validated
  * - check uri for validity before adding to list
  * - coordinate return values with caller
@@ -79,8 +82,8 @@ static void free_uris() {
         }
         uris[num_uris] = NULL;
         num_uris--;
-//        fprintf(stderr, "uris[%2zu]:  0x%.8x:  0x%.8x:  %s\n",
-//                num_uris, (uint) &uris[num_uris], (uint) uris[num_uris], uris[num_uris]);
+        //        fprintf(stderr, "uris[%2zu]:  0x%.8x:  0x%.8x:  %s\n",
+        //                num_uris, (uint) &uris[num_uris], (uint) uris[num_uris], uris[num_uris]);
     }
 
     free(uris);
@@ -267,23 +270,18 @@ int main(int argc, char **argv) {
     ulong    blah = 0;  // used for srch.context field
     int      status;    // return code for scm ops
 
-    int      chase_aia = 0;
-    int      chase_crldp = 1;
-    int      chase_sia = 1;
-    int      chase_only_ta = 0;
-    int      chase_not_yet_validated = 0;
+    int chase_aia = 0;
+    int chase_crldp = 1;
+    int chase_sia = 1;
+    int chase_only_ta = 0;
+    int chase_not_yet_validated = 0;
+    int load_uris_from_file = 0;
 
-    size_t   num_dirs;       // counter for dirs found in initial_rsync.config
-    char     dirs[50][120];  // get strings from initial_rsync.config to put into uris.
-    char     *orig_file = "initial_rsync.config";
-    FILE     *fp;
+    char   *config_file = "initial_chaser.config";
+    FILE   *fp;
 
-    char     msg[1024];  // temp string storage
-    size_t   i;
-
-    OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
-
-    (void) setbuf(stdout, NULL);
+    char   msg[1024];  // temp string storage
+    size_t i;
 
     // parse the command-line flags
     int ch;
@@ -296,7 +294,8 @@ int main(int argc, char **argv) {
             chase_crldp = 0;
             break;
         case 'f':
-            orig_file = optarg;
+            load_uris_from_file = 1;
+            config_file = optarg;
             break;
         case 's':
             chase_sia = 0;
@@ -314,60 +313,48 @@ int main(int argc, char **argv) {
         }
     }
 
-    // read in from rsync config file
-    // TODO:  Is reading from file still needed?
-    //        Is there a max length per uri, max # uris from file?
-    //        Get rid of strdup, strtok (or assign to freeable var)
-    fp = fopen(orig_file, "r");
-    checkErr(fp == NULL, "Unable to open rsync config file: %s\n", orig_file);
-    dirs[0][0] = 0;
-    char str[180];
-    char *str2;
-    while (fgets (msg, sizeof(msg), fp) != NULL) {
-        sscanf (strtok (strdup (msg), "="), "%s", str);
-        if (strcmp (str, "DIRS") == 0) {
-            str2 = strtok (strtok (NULL, "\""), " ");
-            for (num_dirs = 0; num_dirs < 50; str2 = strtok (NULL, " ")) {
-                if (str2 == NULL) break;
-                if (strlen (str2) > 0) {
-                    strncpy (dirs[num_dirs++], str2, sizeof(dirs[0]));
-                }
-            }
-        }
+    OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
+    (void) setbuf(stdout, NULL);
+    uris = calloc(sizeof(char *), uris_max_sz);
+    if (!uris) {
+        LOG(LOG_ERR, "Could not allocate memory for URI list.");
+        return -2;
     }
-    fclose(fp);
-    if (!dirs[0][0])
-        LOG(LOG_WARNING, "DIRS variable not specified in config file\n");
 
+    // expecting one rsync uri per line, no whitespace, staring with "DIR="
+    //   max length of uri is a little less than sizeof(msg)
+    char const *LINE_PREFIX = "DIR=";
+    size_t const LEN_PREFIX = strlen(LINE_PREFIX);
+    if (load_uris_from_file) {
+        fp = fopen(config_file, "r");
+        if (!fp) {
+            LOG(LOG_WARNING, "Could not open file: %s", config_file);
+            goto cant_open_file;
+        }
+
+        while (fgets (msg, sizeof(msg), fp) != NULL) {
+            if (strncmp(LINE_PREFIX, msg, LEN_PREFIX)) {
+                continue;
+            }
+            if (sizeof(msg) == strlen(msg)) {
+                LOG(LOG_WARNING, "uri string too long, dropping:  %s", msg);
+                continue;
+            }
+            fprintf(stderr, "sending line to append_uri\n");
+            append_uri(&msg[LEN_PREFIX]);
+        }
+
+        fclose(fp);
+        LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris, config_file);
+    }
+    cant_open_file:
+
+    LOG(LOG_DEBUG, "Searching database for rsync uris...");
     // initialize database
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
     connect = connectscm(scmp->dsn, msg, sizeof(msg));
     checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
-
-    // Run chaser
-    // Prepare a blank new URI list.
-    if (uris) {
-        free_uris();
-        uris = NULL;
-        num_uris = 0;
-    }
-    uris = calloc(sizeof(char *), uris_max_sz);
-    if (!uris) {
-        LOG(LOG_ERR, "Could not allocate memory for URI list.");
-        exit(1);
-    }
-
-    // load from current repositories
-    for (i = 0; i < num_dirs; i++) {
-        snprintf(str, sizeof(str), RSYNC_PREFIX "%s", dirs[i]);
-        if (strlen(str) > strlen(RSYNC_PREFIX) + 1) {
-            append_uri(str);
-        }
-    }
-
-    LOG(LOG_INFO, "Searching database for URIs...");
-
     // set up query
     srch.vec = srch1;
     srch.sname = NULL;
@@ -500,7 +487,7 @@ int main(int argc, char **argv) {
         lo++;
         hi++;
     }
-    LOG(LOG_DEBUG, "compacted uris from %zu to %zu", num_uris, new_max);
+    LOG(LOG_DEBUG, "compacted rsync uris from %zu to %zu", num_uris, new_max);
     num_uris = new_max;
 
     // print to stdout
