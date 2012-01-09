@@ -805,6 +805,8 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
     leen += strlen(srch->wherestr) + 24;
   if ( (what & SCM_SRCH_DO_JOIN) )
     leen += strlen(tabp->tabname) + 48;
+  if (orderp)
+    leen += strlen(orderp) + 16;
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
