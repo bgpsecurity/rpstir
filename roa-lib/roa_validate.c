@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "roa_utils.h"
 #include "cryptlib.h"
@@ -634,6 +635,33 @@ int rtaValidate(struct ROA *rtap)
   return 0;
   }
 
+static int check_mft_filenames(struct Manifest *manp)
+  {
+  struct FileAndHash * fahp;
+  char file[NAME_MAX];
+  int file_length, i;
+  for (fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, 0);
+    fahp != NULL;
+    fahp = (struct FileAndHash *)next_of(&fahp->self))
+    {
+    if (vsize_casn(&fahp->file) > NAME_MAX)
+      return ERR_SCM_BADMFTFILENAME;
+    file_length = read_casn(&fahp->file, (unsigned char *)file);
+    if (file_length <= 0)
+      return ERR_SCM_BADMFTFILENAME;
+    for (i = 0; i < file_length; ++i)
+      {
+      if (file[i] == '\0' || file[i] == '/')
+        return ERR_SCM_BADMFTFILENAME;
+      }
+    if (file_length == 1 && file[0] == '.')
+      return ERR_SCM_BADMFTFILENAME;
+    if (file_length == 2 && file[0] == '.' && file[1] == '.')
+      return ERR_SCM_BADMFTFILENAME;
+    }
+  return 0;
+  }
+
 int manifestValidate(struct ROA *manp)
   {
   int iRes = cmsValidate(manp);
@@ -649,6 +677,10 @@ int manifestValidate(struct ROA *manp)
   long val;
   if (size_casn(casnp) > 0 && (read_casn_num(casnp, &val) > 1 ||
       val > 0)) return ERR_SCM_BADMANVER;
+  iRes = check_mft_filenames(
+    &manp->content.signedData.encapContentInfo.eContent.manifest);
+  if (iRes < 0)
+    return iRes;
   return 0;
   }
 

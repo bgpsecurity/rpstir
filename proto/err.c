@@ -163,7 +163,8 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Wrong manifest hash in DB",    /* ERR_SCM_MADMFTDBHASH */
     "Missing CRL version",          /* ERR_SCM_NOCRLVER */
     "Wrong CRL version",            /* ERR_SCM_BADCRLVER */
-    "CRL Entry Extension present"   /* ERR_SCM_CRLENTRYEXT */
+    "CRL Entry Extension present",  /* ERR_SCM_CRLENTRYEXT */
+    "Invalid filename in manifest", /* ERR_SCM_BADMFTFILENAME */
   } ;
 
 char *err2string(int err)
