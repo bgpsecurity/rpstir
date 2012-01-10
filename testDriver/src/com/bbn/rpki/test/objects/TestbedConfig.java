@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.ini4j.Profile.Section;
@@ -68,128 +69,148 @@ public class TestbedConfig implements Constants {
    */
   public TestbedConfig(File file) {
     try {
-      // construct the configparser and read in the config file
       Wini config = new Wini(file);
       Collection<Map.Entry<String, Section>> sectionEntries = config.entrySet();
 
       // loop over all sections and options and build factories
       for (Map.Entry<String, Section> sectionEntry : sectionEntries) {
-        List<Pair> child = new ArrayList<Pair>();
-        List<Pair> ipv4 = new ArrayList<Pair>();
-        List<Pair> ipv6 = new ArrayList<Pair>();
-        List<Pair> as_list = new ArrayList<Pair>();
-        List<Pair> roav4l = new ArrayList<Pair>();
-        List<Pair> roav6l = new ArrayList<Pair>();
-        int a = 0;
-        String server = null;
-        boolean breakA = false;
-        Integer t = 0;
-        String subjkeyfile = null;
-
         String section = sectionEntry.getKey();
-        Section sectionMap = sectionEntry.getValue();
-        for (Map.Entry<String, String> entry : sectionMap.entrySet()) {
-
-          Option option = Option.valueOf(entry.getKey().toLowerCase());
-          if (option == null) {
-            System.err.println("Opt in config file not recognized: " + entry.getKey());
-            continue;
-          }
-          String prop = entry.getValue().trim();
-          switch (option) {
-
-          case childspec:
-            parse(child, prop);
-            break;
-          case ipv4list:
-            parse(ipv4, prop);
-            break;
-          case ipv6list:
-            parse(ipv6, prop);
-            break;
-          case aslist:
-            parse(as_list, prop);
-            break;
-          case servername:
-            server = prop;
-            break;
-          case breakaway:
-            breakA = prop.equalsIgnoreCase("true");
-            break;
-          case ttl:
-            t = new Integer(prop);
-            break;
-          case max_depth:
-            maxDepth = new Integer(prop);
-            break;
-          case max_nodes:
-            maxNodes = new Integer(prop);
-            break;
-          case roaipv4list:
-            parse(roav4l, prop);
-            break;
-          case roaipv6list:
-            // FIXME: maxlength not yet supported
-            parse(roav6l, prop);
-            break;
-          case asid:
-            a = new Integer(prop);
-            break;
-          case subjkeyfile:
-            subjkeyfile = prop;
-            break;
-          }
+        if (section.startsWith("EPOCH-")) {
+          configureEpoch(sectionEntry);
+        } else {
+          configureFactory(sectionEntry);
         }
-        String[] typeAndName = section.split("-");
-        String type = typeAndName[0];
-        String name = typeAndName[1];
-        FactoryType factoryType = FactoryType.valueOf(type);
-        if (factoryType == null) {
-          System.out.println("Unrecognized type included in name of section in the .ini: " + type);
-          return;
-        }
-        FactoryBase f = null;
-        switch (factoryType) {
-        case C: {
-          if ("IANA".equals(name)) {
-            f = new IANAFactory(name, child, server, breakA, t, subjkeyfile);
-          } else {
-            f = new Factory(name, 
-                            ipv4,
-                            ipv6, 
-                            as_list,
-                            child,
-                            server,
-                            breakA,
-                            t,
-                            subjkeyfile);
-          }
-          break;
-        }
-        case M:
-          continue;
-        case CR:
-          continue;
-        case R: {
-          f = new RoaFactory(name,
-                             ipv4,
-                             ipv6,
-                             as_list, child,
-                             server, 
-                             breakA,
-                             t,
-                             roav4l,
-                             roav6l, 
-                             a);
-          break;
-        }
-        }
-        // Add our bluePrintName to the factory dictionary
-        factories.put(name, f);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * @param sectionEntry
+   */
+  private void configureEpoch(Entry<String, Section> sectionEntry) {
+    int epochNumber = Integer.parseInt(sectionEntry.getKey().split("-")[1]);
+    
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * @param sectionEntry
+   */
+  private void configureFactory(Map.Entry<String, Section> sectionEntry) {
+    List<Pair> child = new ArrayList<Pair>();
+    List<Pair> ipv4 = new ArrayList<Pair>();
+    List<Pair> ipv6 = new ArrayList<Pair>();
+    List<Pair> as_list = new ArrayList<Pair>();
+    List<Pair> roav4l = new ArrayList<Pair>();
+    List<Pair> roav6l = new ArrayList<Pair>();
+    int a = 0;
+    String server = null;
+    boolean breakA = false;
+    Integer t = 0;
+    String subjkeyfile = null;
+
+    String section = sectionEntry.getKey();
+    Section sectionMap = sectionEntry.getValue();
+    for (Map.Entry<String, String> entry : sectionMap.entrySet()) {
+
+      Option option = Option.valueOf(entry.getKey().toLowerCase());
+      if (option == null) {
+        System.err.println("Opt in config file not recognized: " + entry.getKey());
+        continue;
+      }
+      String prop = entry.getValue().trim();
+      switch (option) {
+
+      case childspec:
+        parse(child, prop);
+        break;
+      case ipv4list:
+        parse(ipv4, prop);
+        break;
+      case ipv6list:
+        parse(ipv6, prop);
+        break;
+      case aslist:
+        parse(as_list, prop);
+        break;
+      case servername:
+        server = prop;
+        break;
+      case breakaway:
+        breakA = prop.equalsIgnoreCase("true");
+        break;
+      case ttl:
+        t = new Integer(prop);
+        break;
+      case max_depth:
+        maxDepth = new Integer(prop);
+        break;
+      case max_nodes:
+        maxNodes = new Integer(prop);
+        break;
+      case roaipv4list:
+        parse(roav4l, prop);
+        break;
+      case roaipv6list:
+        // FIXME: maxlength not yet supported
+        parse(roav6l, prop);
+        break;
+      case asid:
+        a = new Integer(prop);
+        break;
+      case subjkeyfile:
+        subjkeyfile = prop;
+        break;
+      }
+    }
+    String[] typeAndName = section.split("-");
+    String type = typeAndName[0];
+    String name = typeAndName[1];
+    FactoryType factoryType = FactoryType.valueOf(type);
+    if (factoryType == null) {
+      throw new RuntimeException("Unrecognized type included in name of section in the .ini: " + type);
+    }
+    FactoryBase f = null;
+    switch (factoryType) {
+    case C: {
+      if ("IANA".equals(name)) {
+        f = new IANAFactory(name, child, server, breakA, t, subjkeyfile);
+      } else {
+        f = new Factory(name, 
+                        ipv4,
+                        ipv6, 
+                        as_list,
+                        child,
+                        server,
+                        breakA,
+                        t,
+                        subjkeyfile);
+      }
+      break;
+    }
+    case M:
+      return;
+    case CR:
+      return;
+    case R: {
+      f = new RoaFactory(name,
+                         ipv4,
+                         ipv6,
+                         as_list, child,
+                         server, 
+                         breakA,
+                         t,
+                         roav4l,
+                         roav6l, 
+                         a);
+      break;
+    }
+    }
+    // Add our bluePrintName to the factory dictionary
+    factories.put(name, f);
   }
 
   /**

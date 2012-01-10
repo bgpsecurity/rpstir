@@ -4,11 +4,10 @@
 package com.bbn.rpki.test.objects;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * <Enter the description of this type here>
@@ -72,31 +71,22 @@ public class TestbedCreate implements Constants {
   private static void create_driver(CA_Object iana) {
 
     // create our CA queue with no limit and place iana in it
-    BlockingDeque<Object> ca_queue = new LinkedBlockingDeque<Object>();
+    Deque<CA_Object> ca_queue = new ArrayDeque<CA_Object>();
+    Deque<CA_Object> child_queue = new ArrayDeque<CA_Object>();
     ca_queue.add(iana);
-    // Add a flag to the queue track depth of repository
-    String flag = "FLAG - NEW LEVEL";
-    ca_queue.add(flag);
     // locals to keep track of where we are in creation
     int repo_depth = 0;
     int repo_size = 1;
 
     // check our conditionals
-    while (!(ca_queue.isEmpty()) && (MAX_DEPTH > repo_depth) && MAX_NODES > repo_size) {
+    while (!(ca_queue.isEmpty() && child_queue.isEmpty()) && (MAX_DEPTH > repo_depth) && MAX_NODES > repo_size) {
 
-      Object qItem = ca_queue.removeFirst();
-
-      // Check if this is the start of a new level
-      if (qItem == flag) {
-        // If we're at the end of the queue already then just break
-        if (ca_queue.isEmpty()) {
-          break;
-        }
-        // Otherwise add the flag back into the queue to 
-        // track for the next level
-        ca_queue.add(flag);
-        repo_depth += 1;
-        // continue onto the next node in the queue
+      Object qItem = ca_queue.poll();
+      if (qItem == null) {
+        // Queue empty, advance to the next level
+        repo_depth++;
+        ca_queue.addAll(child_queue);
+        child_queue.clear();
         continue;
       }
       CA_Object ca_node = (CA_Object) qItem;
@@ -106,9 +96,10 @@ public class TestbedCreate implements Constants {
         new File(dir_path).mkdirs();
       }
 
-      List<CA_Obj> child_list = new ArrayList<CA_Obj>();
       // Creates all child CA's and ROA's for a the CA ca_node
-      repo_size = create_children(child_list, ca_node, repo_size);
+      repo_size = create_children(ca_node, repo_size);
+
+      child_queue.addAll(ca_node.children);
       // crl_list
       Crl new_crl = new Crl(ca_node);
       ca_node.crl.add(new_crl);
@@ -127,19 +118,6 @@ public class TestbedCreate implements Constants {
       Manifest new_manifest = new Manifest(ca_node, eeFactory);
       ca_node.manifests.add(new_manifest);
       repo_size += 1;
-
-
-      // Add all of our children to the queue of CAs
-      for (CA_Obj child : child_list) {
-        if (child instanceof CA_Object) {
-          ca_node.children.add((CA_Object) child);
-          ca_queue.add(child);
-        } else if (child instanceof Roa) {
-          ca_node.roas.add((Roa) child);
-        } else {
-          System.err.println("Somehow got something besides CA or ROA in child list");
-        }
-      }
     }
 
     System.out.format("Finished creation driver loop. repo_depth = %d repo_size = %d%n", repo_depth, repo_size);
@@ -152,14 +130,20 @@ public class TestbedCreate implements Constants {
    * @param repo_size
    * @return
    */
-  private static int create_children(List<CA_Obj> child_list, CA_Object ca_node, int repo_size) {
+  private static int create_children(CA_Object ca_node, int repo_size) {
     if (DEBUG_ON) System.out.println(ca_node.bluePrintName);
     List<Pair> list = FACTORIES.get(ca_node.bluePrintName).childSpec;
     for (Pair ca_def : list) {
       for (int n = 0; n < ca_def.arg.intValue(); n++) {
         if (MAX_NODES > repo_size) {
           CA_Obj child = FACTORIES.get(ca_def.tag).create(ca_node);
-          child_list.add(child);
+          if (child instanceof CA_Object) {
+            ca_node.children.add((CA_Object) child);
+          } else if (child instanceof Roa) {
+            ca_node.roas.add((Roa) child);
+          } else {
+            System.err.println("Somehow got something besides CA or ROA as a child");
+          }
           repo_size += 1;
           if (DEBUG_ON) System.out.format("Child created. repo_size = %d%n", repo_size);
         } else {

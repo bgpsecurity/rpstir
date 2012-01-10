@@ -10,7 +10,13 @@ updating of the cache.
 
 The model building part is reasonably straightforward and is adapted
 from the testbed_create python script by introducing evolution over
-time.
+time. The description has also been altered to express time in terms
+epochs. Because it is desirable for the test to execute as quickly as
+possible, everything is run faster than normal; we cannot wait a year
+for a certificate to expire. Instead, time-to-live values will
+typically be a few seconds long and will depend on how fast testbed
+setup, rsync downloads, validating cache update, and validity checking
+can be performed.
 
 The second part emulates the operation of the various relying parties
 including their autonomy, inter-dependence, and eventually their
@@ -23,3 +29,19 @@ allows for emulating the operational dynamics of computers and
 networks such upload failure, updating in the middle of an upload.
 The ways in which the steps can be broken down is explicitly
 represented allowing the granularity of the breakdown to be varied.
+
+A particular test is described by a test configuration file in .ini
+format. The format is an extension of the test.ini file previously
+used with the Python testbed creation script. Time is described in
+terms of epochs. Each epoch represents the moment when the state of
+one or more entities (nodes) changes. An epoch might correspond to
+when a particular LIR publishes ROAs for a new allocation or when a
+RIR publishes a new sub-allocation.
+
+While an epoch corresponds to a point in time, the corresponding
+sequence of events actually occurs over a period of time. These events
+can be orchestrated to bear a particular relationship to when the
+cache should be updated. For example, a new manifest might be
+published, then the cache updated, and finally the remaining files
+might be published.
+
