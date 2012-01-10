@@ -249,14 +249,17 @@ static int query_aia() {
 static int handleCRLDPResults(scmcon *conp, scmsrcha *s, int numLine) {
     char *res;
     char *oneres;
+    char *ptrcpy;
 
     (void) conp; (void) numLine;  // silence compiler warnings
     res = (char *)(s->vec[0].valptr);
+    ptrcpy = res = strdup((s->vec[0].valptr));
     oneres = strtok(res, ";");
     while (oneres  &&  oneres[0] != 0) {
         append_uri(oneres);
         oneres = strtok(NULL, ";");
     }
+    free(ptrcpy);
     return 0;
 }
 
@@ -272,12 +275,11 @@ static int query_crldp() {
     scmtab   *table = NULL;
     scmsrcha *srcha;
     size_t const NUM_FIELDS = 1;
-//    scmsrch  srch[NUM_FIELDS];
-//    ulong    context_field = 0;
     int      status;
-    char     msg[1024];
+    char     buf[1024];
+    char     *wherestr;
 
-    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
+    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 1);
 
     table = findtablescm(scmp, "certificate");
     if (table == NULL) {
@@ -285,17 +287,15 @@ static int query_crldp() {
         return -1;
     }
 
-//    srcha->vec = srch;
-//    srcha->sname = NULL;
-//    srcha->ntot = 2;
-//    srcha->where = NULL;
-//    srcha->context = &context_field;
-//    srcha->nused = 0;
-//    srcha->vald = 0;
-    snprintf(msg, sizeof(msg),
+    snprintf(buf, sizeof(buf),
             "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
             currTimestamp);
-    srcha->wherestr = msg;
+    wherestr = strdup(buf);
+    if (!wherestr) {
+        LOG(LOG_ERR, "Out of memory.");
+        return -1;
+    }
+    srcha->wherestr = wherestr;
     addcolsrchscm(srcha, "crldp", SQL_C_CHAR, SIASIZE);
     status = searchscm(connect, table, srcha, NULL, handleCRLDPResults,
             SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
@@ -423,8 +423,16 @@ static int query_sia_trusted() {
 ------------------------------------------------------------------------------*/
 static int handleTimestamps(scmcon *conp, scmsrcha *s, int numLine) {
     (void) conp; (void) numLine;  // silence compiler warnings
-    currTimestamp = (char *) s->vec[0].valptr;
-    prevTimestamp = (char *) s->vec[1].valptr;
+    currTimestamp = strdup(s->vec[0].valptr);
+    if (s->vec[0].valptr  &&  !currTimestamp) {
+        LOG(LOG_ERR, "Out of memory.");
+        return -1;
+    }
+    prevTimestamp = strdup(s->vec[1].valptr);
+    if (s->vec[1].valptr  &&  !prevTimestamp) {
+        LOG(LOG_ERR, "Out of memory.");
+        return -1;
+    }
     return 0;
 }
 
@@ -482,11 +490,9 @@ static int query_timestamps() {
     scmtab   *table = NULL;
     scmsrcha *srch;
     size_t const NUM_FIELDS = 2;
-//    scmsrch  vec[NUM_FIELDS];
-//    ulong    context_field = 0;
     int      status;
 
-    srch = newsrchscm(NULL, NUM_FIELDS, 50, 0);
+    srch = newsrchscm(NULL, NUM_FIELDS, 0, 0);
 
     table = findtablescm(scmp, "metadata");
     if (table == NULL) {
@@ -494,23 +500,12 @@ static int query_timestamps() {
         return -1;
     }
 
-    srch->vec[0].colname = "asdf";
-    srch->vec[1].colname = "asdf";
-
-//    srch->vec = &vec[0];
-//    srch->sname = NULL;
-//    srch->ntot = 2;
-//    srch->where = NULL;
-//    srch->wherestr = NULL;
-//    srch->context = &context_field;
-//    srch->nused = 2;
-//    srch->vald = 0;
     addcolsrchscm(srch, "current_timestamp", SQL_C_CHAR, 24);
     addcolsrchscm(srch, "ch_last", SQL_C_CHAR, 24);
     status = searchscm(connect, table, srch, NULL, handleTimestamps,
             SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "@@@@@@@@@@ Error reading timestamps from db: %s (%d)",
+        LOG(LOG_ERR, "Error reading timestamps from db: %s (%d)",
                 err2string(status), status);
         freesrchscm(srch);
         return -1;
@@ -703,9 +698,10 @@ int main(int argc, char **argv) {
     write_timestamp();
 
     // release memory
+    if (prevTimestamp) free(prevTimestamp);
+    if (currTimestamp) free(currTimestamp);
     disconnectscm(connect);
-    if (scmp)
-        freescm(scmp);
+    if (scmp) freescm(scmp);
     free_uris();
 
     CLOSE_LOG();
