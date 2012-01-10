@@ -12,7 +12,7 @@ import java.util.Calendar;
  * @author RTomlinson
  */
 public class Certificate extends CA_Obj {
-  
+
   // Fields
 
   /** serial */
@@ -93,10 +93,22 @@ public class Certificate extends CA_Obj {
             System.out.println("Copying factory pre-specified key file: " + 
                   myFactory.subjKeyFile + " to " + this.subjkeyfile);
         }
-        Util.exec("gen_key", false, null, null, 
-                  null,
-                  "../../cg/tools/gen_key",
-                  this.subjkeyfile, "2048");
+    } else {
+        String pregeneratedKeyFileName = PregeneratedKeys.getPregeneratedKey();
+        if (pregeneratedKeyFileName != null) {
+          Util.copyfile(pregeneratedKeyFileName, this.subjkeyfile);
+          if (DEBUG_ON) {
+            System.out.println("Using pre-generated key for " + this.subjkeyfile);
+          }
+        } else {
+          Util.exec("gen_key", false, null, null, 
+                    null,
+                    "../../cg/tools/gen_key",
+                    this.subjkeyfile, "2048");
+          if (DEBUG_ON) {
+            System.out.println("Creating new key for " + this.subjkeyfile);
+          }
+        }
     }
     // Generate our ski by getting the hash of the public key 
     // Result from .p15 -> hash(public_key) which is a hex string
