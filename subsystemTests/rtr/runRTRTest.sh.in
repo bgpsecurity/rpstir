@@ -13,6 +13,7 @@ PORT=1234
 SESSION=42
 WRONG_SESSION=4242
 SERVER_START_TIMEOUT=10
+CLIENT_MULTIPLE_TIMEOUT=120
 
 client_raw () {
 	SUBTEST_NAME="$1"
@@ -47,7 +48,37 @@ client_multiple_start () {
 	done
 }
 client_multiple_wait () {
-	wait $CLIENT_MULTIPLE_pids
+	echo >&2 "Waiting for multiple clients..."
+	echo >&2 "(This may take up to $CLIENT_MULTIPLE_TIMEOUT seconds.)"
+	for _discard in `seq 1 "$CLIENT_MULTIPLE_TIMEOUT"`; do
+		CLIENT_MULTIPLE_pids_new=""
+		have_pids=0
+		for client_pid in $CLIENT_MULTIPLE_pids; do
+			if kill -0 "$client_pid" > /dev/null 2>&1; then
+				CLIENT_MULTIPLE_pids_new="$CLIENT_MULTIPLE_pids_new $client_pid"
+				have_pids=1
+			else
+				wait "$client_pid"
+			fi
+		done
+		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids_new"
+
+		if test $have_pids -eq 0; then
+			echo >&2 "...done waiting for multiple clients."
+			return
+		fi
+
+		sleep 1
+	done
+
+
+	if kill $CLIENT_MULTIPLE_pids; then
+		echo >&2 "Timed out waiting for multiple clients"
+		wait $CLIENT_MULTIPLE_pids
+	else
+		wait $CLIENT_MULTIPLE_pids
+		echo >&2 "...done waiting for multiple clients."
+	fi
 }
 
 
