@@ -53,6 +53,7 @@ if [ "${RPKI_DBUSER}x" = "x" ]; then
     export RPKI_DBUSER=$DEFAULT_RPKI_DBUSER
 fi
 if [ "${RPKI_DBPASS}x" = "x" ]; then
+    echo Warning: RPKI_DBPASS not set, defaulting to $DEFAULT_RPKI_DBPASS
     export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
 fi
 
