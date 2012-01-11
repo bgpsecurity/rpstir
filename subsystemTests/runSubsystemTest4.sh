@@ -63,6 +63,8 @@ while [ $N -le "4" ]; do
      cd ../../
     if [ -z "$failures" ]; then
 	NUM_PASSED=$(( $NUM_PASSED + 1 ))
+    else
+        echo "Failed: $failures"
     fi
     N=$(( $N + 1 ))
 done
