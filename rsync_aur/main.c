@@ -329,10 +329,14 @@ int main(int argc, char *argv[])
   } /* Process entire logfile, one directory block at a time. */
 
   free (topDir);
-  char *c;
+
+  char c;
   if (sflag) {
     outputMsg(&wport, "Y \r\n", 4);
-    recv(wport.out_desc, &c, 1, MSG_WAITALL);
+    if (recv(wport.out_desc, &c, 1, MSG_WAITALL) != 1 || (c != 'Y' && c != 'y')) {
+      log_msg(LOG_ERR, "failed to synchronize with rcli, bailing");
+      exit(EXIT_FAILURE);
+    }
   }
 
   /****************************************************/
