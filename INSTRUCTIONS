@@ -603,8 +603,8 @@ Options:
 Example output:
 
 [bbn@rpki-fc13 rpki]$ run_scripts/results.py 
-Using RPKI root directory: /home/bbn/rpki/rpki
-Using local repository path: /home/bbn/rpki/rpki/REPOSITORY
+Using RPKI root directory: /home/bbn/rpki
+Using local repository path: /home/bbn/rpki/REPOSITORY
 
 -------------------------------------------------------------------------------
 Certficate Information:
