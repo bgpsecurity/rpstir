@@ -898,7 +898,7 @@ int main(int argc, char **argv)
       return(1);
     }
   if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && 
-      thefile == 0 && thedelfile == 0)
+      thefile == 0 && thedelfile == 0 && skifile == 0)
     {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
