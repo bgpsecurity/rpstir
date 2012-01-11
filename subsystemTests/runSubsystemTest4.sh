@@ -59,6 +59,7 @@ while [ $N -le "4" ]; do
      cd testcases4_LTA/LTA 
      $RPKI_ROOT/cg/tools/checkLTAtest case${N} C*.cer || failures="$failures checkLTAtest"
      cd ../../
+     wait "$LOADER_PID" || failures="$failures rcli"
     if [ -z "$failures" ]; then
 	NUM_PASSED=$(( $NUM_PASSED + 1 ))
     fi
