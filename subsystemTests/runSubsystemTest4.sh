@@ -50,16 +50,17 @@ N=1
 while [ $N -le "4" ]; do
 # clear database
     ./initDB4 || check_errs $? "initDB failed!"
-    ../proto/rcli -w $RPKI_PORT -c testcases4_LTA/LTA/case${N} &
+    ../proto/rcli -w $RPKI_PORT &
     LOADER_PID=$!
      echo "Loader started for case ${N}"
      sleep 1
      failures=""
      ./step4 || failures="$failures step4"
+     wait "$LOADER_PID" || failures="$failures rcli-w"
+     ../proto/rcli -c testcases4_LTA/LTA/case${N} || failures="$failures rcli-c"
      cd testcases4_LTA/LTA 
      $RPKI_ROOT/cg/tools/checkLTAtest case${N} C*.cer || failures="$failures checkLTAtest"
      cd ../../
-     wait "$LOADER_PID" || failures="$failures rcli"
     if [ -z "$failures" ]; then
 	NUM_PASSED=$(( $NUM_PASSED + 1 ))
     fi
