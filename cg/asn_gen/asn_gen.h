@@ -6,23 +6,6 @@
  *
  * DESCRIPTION: Header file for the ASN_GEN program.
  *
- ***** BEGIN LICENSE BLOCK *****
- * 
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- * 
- * COMMERCIAL COMPUTER SOFTWARE RESTRICTED RIGHTS (JUNE 1987)
- * US government users are permitted restricted rights as
- * defined in the FAR.  
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 1995-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK *****
  */
 
 /* sfcsid[] = "@(#)asn_gen.h 828P" */

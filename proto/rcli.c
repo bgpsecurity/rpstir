@@ -32,22 +32,6 @@
 #include "err.h"
 #include "logutils.h"
 
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- *
- * US government users are permitted unrestricted rights as
- * defined in the FAR.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
- *
- * Contributor(s):  David Montana, Mark Reynolds
- *
- * ***** END LICENSE BLOCK ***** */
 
 static char *tdir = NULL;   // top level dir of the repository
 static int   tdirlen = 0;   // length of tdir
@@ -204,6 +188,7 @@ static int create2op(scm *scmp, scmcon *conp, char *topdir)
   aone.vec = &one;
   aone.ntot = 1;
   aone.nused = 1;
+  aone.vald = 0;
   sta = insertscm(conp, mtab, &aone);
   if ( sta == 0 )
     log_msg(LOG_NOTICE, "Init metadata table succeeded");

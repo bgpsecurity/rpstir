@@ -1,21 +1,5 @@
 /* $Id: update_cert.c 453 2008-05-28 15:30:40Z cgardiner $ */
 
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- *
- * US government users are permitted unrestricted rights as
- * defined in the FAR.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2008-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles W. Gardiner
- *
- * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -98,8 +82,12 @@ static int setSignature(struct Certificate *certp, char *keyfile)
   signstring = (uchar *)calloc(1, sign_lth);
   sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
   memset(hash, 0, sizeof(hash));
-  cryptInit();
-  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
+  if (cryptInit() != CRYPT_OK) 
+    {
+    msg = "Couldn't get Cryptlib";
+    ansr = -1;
+    }
+  else if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
       (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
     msg = "creating context";
   else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||

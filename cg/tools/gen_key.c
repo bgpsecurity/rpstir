@@ -5,22 +5,6 @@
 
 /* $Id: genkey.c 506 2008-06-03 21:20:05Z gardiner $ */
 
-/* ***** BEGIN LICENSE BLOCK *****
- * 
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- * 
- * US government users are permitted unrestricted rights as
- * defined in the FAR.  
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK ***** */
 
 int main(int argc, char **argv)
   {
@@ -38,7 +22,11 @@ int main(int argc, char **argv)
     return 1;
     }
   printf("Making %s with key size %d bits \n", argv[1], ksize);
-  cryptInit();
+  if (cryptInit() != CRYPT_OK)
+    {
+    fprintf(stderr, "Can't open Cryptlib\n");
+    return 1;
+    }
   cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
   cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
   cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, ksize/8);

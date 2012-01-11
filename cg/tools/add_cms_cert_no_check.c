@@ -76,7 +76,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
 
@@ -104,7 +104,7 @@ static char *signCMS(struct CMSBlob* roa, char *keyfilename, int bad)
 
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
     // get the size of signed attributes and allocate space for them

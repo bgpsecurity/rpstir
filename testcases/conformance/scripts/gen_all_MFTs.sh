@@ -1,21 +1,4 @@
 #!/bin/bash
-#
-# ***** BEGIN LICENSE BLOCK *****
-#
-#  BBN Address and AS Number PKI Database/repository software
-#  Version 4.0
-#
-#  US government users are permitted unrestricted rights as
-#  defined in the FAR.
-#
-#  This software is distributed on an "AS IS" basis, WITHOUT
-#  WARRANTY OF ANY KIND, either express or implied.
-#
-#  Copyright (C) Raytheon BBN Technologies 2011.  All Rights Reserved.
-#
-#  Contributor(s): Charlie Gardiner, Andrew Chi
-#
-#  ***** END LICENSE BLOCK ***** */
 
 # gen_all_MFTs.sh - create all MFT test cases for RPKI syntactic
 #                   conformance test
@@ -201,3 +184,5 @@ ${single_MFT_cmd} 779 MFTFileHashShort
 ${single_MFT_cmd} 780 MFTFileHashLong
 ${single_MFT_cmd} 781 MFTFileNotIA5
 ${single_MFT_cmd} 782 MFTHashOctetStr
+${single_MFT_cmd} 783 MFTDuplicateFileOneHash
+${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
