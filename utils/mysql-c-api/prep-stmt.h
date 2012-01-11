@@ -23,6 +23,7 @@ enum prep_stmts_rtr {
 
 enum prep_stmts_chaser {
     DB_PSTMT_CHASER_GET_TIME,
+    DB_PSTMT_CHASER_WRITE_TIME,
     DB_PSTMT_CHASER_GET_CRLDP
 };
 

@@ -52,6 +52,9 @@ static const char * _queries_chaser[] = {
         // DB_PSTMT_CHASER_GET_TIME
         "select now(), ch_last from rpki_metadata",
 
+        // DB_PSTMT_CHASER_WRITE_TIME
+        "update rpki_metadata set ch_last = ?",
+
         // DB_PSTMT_CHASER_GET_CRLDP
         "select crldp from rpki_cert left join rpki_crl "
         " on rpki_cert.aki = rpki_crl.aki "

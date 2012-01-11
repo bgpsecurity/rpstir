@@ -304,8 +304,8 @@ static int query_read_timestamps(dbconn *db) {
         return -1;
     }
 
-    fprintf(stdout, "previous ts:  %s\n", timestamp_prev);
-    fprintf(stdout, " current ts:  %s\n", timestamp_curr);
+    LOG(LOG_DEBUG, "previous ts:  %s", timestamp_prev);
+    LOG(LOG_DEBUG, " current ts:  %s", timestamp_curr);
 
     return 0;
 }
@@ -313,45 +313,18 @@ static int query_read_timestamps(dbconn *db) {
 /**=============================================================================
  * @note Write timestamp to db.
  *
- * sql:  update rpki_metadata set ch_last = currTimestamp;
+ * sql:  update rpki_metadata set ch_last = current time;
 ------------------------------------------------------------------------------*/
-static int query_write_timestamp() {
-/*    scmtab   *table = NULL;
-    scmsrcha *srcha;
-    size_t const NUM_FIELDS = 0;
-//    scmsrch  srch[NUM_FIELDS];
-//    ulong    context_field = 0;
-    int      status;
-    char     msg[1024];
+static int query_write_timestamp(dbconn *db) {
+    int ret;
 
-    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
-
-    table = findtablescm(scmp, "metadata");
-    if (table == NULL) {
-        LOG(LOG_ERR, "Cannot find table metadata\n");
+    ret = db_chaser_write_time(db, timestamp_curr);
+    if (ret) {
+        LOG(LOG_ERR, "didn't write time");
+        // TODO:  handle the error
         return -1;
     }
 
-//    srcha->vec = NULL;
-//    srcha->sname = NULL;
-//    srcha->ntot = 2;
-//    srcha->where = NULL;
-//    srcha->wherestr = NULL;
-//    srcha->context = &context_field;
-//    srcha->nused = 0;
-//    srcha->vald = 0;
-    snprintf(msg, sizeof(msg), "update %s set ch_last=\"%s\";",
-            table->tabname, currTimestamp);
-    status = statementscm_no_data(connect, msg);
-    if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "Error writing timestamp to db: %s (%d)",
-                err2string(status), status);
-        freesrchscm(srcha);
-        return -1;
-    }
-
-    freesrchscm(srcha);
-*/
     return 0;
 }
 
