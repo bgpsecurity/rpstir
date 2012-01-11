@@ -270,6 +270,7 @@ static int makesock(char *porto, int *protosp)
   protos = *protosp;
   if ( protos < 0 )
     {
+      log_msg(LOG_INFO, "Creating a socket on port %s", porto);
       protos = socket(AF_INET, SOCK_STREAM, 0);
       if ( protos < 0 )
         {
@@ -297,6 +298,7 @@ static int makesock(char *porto, int *protosp)
 	}
       *protosp = protos;
     }
+  log_msg(LOG_INFO, "Accepting a new connection on port %s", porto);
   leen = sizeof(sout);
   s = accept(protos, (struct sockaddr *)&sout, &leen);
 //  (void)close(protos);
@@ -1158,7 +1160,6 @@ int main(int argc, char **argv)
 	{
 	  if ( do_sockopts > 0 )
 	    {
-	      log_msg(LOG_INFO, "Creating a socket on port %s", porto);
 	      s = makesock(porto, &protos);
 	      if ( s < 0 )
 		log_msg(LOG_ERR, "Could not create socket");
