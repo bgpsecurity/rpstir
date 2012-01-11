@@ -61,6 +61,13 @@ static const char * _queries_chaser[] = {
         " where rpki_crl.filename is null "
         " or rpki_crl.next_upd < ?",
 
+        // DB_PSTMT_CHASER_GET_SIA
+        "select sia from rpki_cert ",
+
+        // DB_PSTMT_CHASER_GET_SIA_TRUSTED_ONLY
+        "select sia from rpki_cert "
+        " where flags % ? >= ? ",
+
         NULL
 };
 

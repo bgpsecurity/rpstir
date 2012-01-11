@@ -35,6 +35,9 @@
 #include "logging.h"
 #include "mysql-c-api/connect.h"
 #include "mysql-c-api/client-chaser.h"
+// TODO:  fix this include and remove manual definition
+//#include "sqhl.h"  // only for SCM_FLAG_TRUSTED
+#define SCM_FLAG_TRUSTED 2
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON
@@ -85,10 +88,10 @@ static void free_uris() {
         uris[num_uris] = NULL;
         num_uris--;
     }
-    if (uris[0]) {
-        free(uris[0]);
+    if (uris[num_uris]) {
+        free(uris[num_uris]);
     }
-    uris[0] = NULL;
+    uris[num_uris] = NULL;
 
     free(uris);
 }
@@ -169,45 +172,7 @@ static int append_uri(char *in) {
  * sql:  select aki, aia from rpki_cert where flags matches SCM_FLAG_NOCHAIN;
 ------------------------------------------------------------------------------*/
 static int query_aia(dbconn *conn) {
-/*    scmtab   *table = NULL;
-    scmsrcha *srcha;
-    size_t const NUM_FIELDS = 2;
-    scmsrch  srch[NUM_FIELDS];
-    ulong    context_field = 0;
-    int      status;
-    char     msg[1024];
 
-    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
-
-    table = findtablescm(scmp, "certificate");
-    if (table == NULL) {
-        LOG(LOG_ERR, "Cannot find table metadata\n");
-        return -1;
-    }
-
-    srcha->vec = srch;
-    srcha->sname = NULL;
-    srcha->ntot = 2;
-    srcha->where = NULL;
-    srcha->wherestr = NULL;
-    srcha->context = &context_field;
-    srcha->nused = 0;
-    srcha->vald = 0;
-    msg[0] = 0;
-    addFlagTest(msg, SCM_FLAG_NOCHAIN, 1, 0);
-    addcolsrchscm(srcha, "aki", SQL_C_CHAR, SKISIZE);
-    addcolsrchscm(srcha, "aia", SQL_C_CHAR, SIASIZE);
-    status = searchscm(connect, table, srcha, NULL, handleAIAResults,
-            SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "Error chasing AIAs: %s (%d)",
-                err2string(status), status);
-        freesrchscm(srcha);
-        return -1;
-    }
-
-    freesrchscm(srcha);
-*/
     return 0;
 }
 
@@ -226,13 +191,13 @@ static int query_crldp(dbconn *db) {
     int64_t i;
 
     ret = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr);
-    LOG(LOG_DEBUG, "read %" PRIi64 " lines from db;  %" PRIi64 " were null",
+    LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
             num_malloced, num_malloced - ret);
     if (ret == -1) {
         return -1;
     } else {
         for (i = 0; i < ret; i++) {
-            fprintf(stderr, "%s\n", results[i]);
+            LOG(LOG_DEBUG, "query_crldp() --> %s\n", results[i]);
             append_uri(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -246,44 +211,30 @@ static int query_crldp(dbconn *db) {
 /**=============================================================================
  * @note Add sia field.
  *
- * sql:  select sia from rpki_cert;
+ * sql:  select sia from rpki_cert [where trusted];
 ------------------------------------------------------------------------------*/
 static int query_sia(dbconn *db, int trusted_only) {
-/*    scmtab   *table = NULL;
-    scmsrcha *srcha;
-    size_t const NUM_FIELDS = 1;
-    scmsrch  srch[NUM_FIELDS];
-    ulong    context_field = 0;
-    int      status;
+    char **results = NULL;
+    int64_t num_malloced = 0;
+    int64_t ret;
+    int64_t i;
 
-    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 0);
-
-    table = findtablescm(scmp, "certificate");
-    if (table == NULL) {
-        LOG(LOG_ERR, "Cannot find table metadata\n");
+    ret = db_chaser_read_sia(db, &results, &num_malloced,
+            trusted_only, SCM_FLAG_TRUSTED);
+    LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
+            num_malloced, num_malloced - ret);
+    if (ret == -1) {
         return -1;
+    } else {
+        for (i = 0; i < ret; i++) {
+            LOG(LOG_DEBUG, "query_sia() --> %s\n", results[i]);
+            append_uri(results[i]);
+            free(results[i]);
+            results[i] = NULL;
+        }
+        if (results) free(results);
     }
 
-    srcha->vec = srch;
-    srcha->sname = NULL;
-    srcha->ntot = 2;
-    srcha->where = NULL;
-    srcha->wherestr = NULL;
-    srcha->context = &context_field;
-    srcha->nused = 0;
-    srcha->vald = 0;
-    addcolsrchscm(srcha, "sia", SQL_C_CHAR, SIASIZE);
-    status = searchscm(connect, table, srcha, NULL, handleSIAResults,
-            SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "Error chasing SIAs: %s (%d)",
-                err2string(status), status);
-        freesrchscm(srcha);
-        return -1;
-    }
-
-    freesrchscm(srcha);
-*/
     return 0;
 }
 
@@ -452,11 +403,10 @@ int main(int argc, char **argv) {
     }
 
     // look up rsync uris from the db
+    query_read_timestamps(db);
     if(chase_only_ta) {
         query_sia(db, 1);
     } else {
-        query_read_timestamps(db);
-
         if (chase_crldp)
             query_crldp(db);
 
@@ -503,11 +453,15 @@ int main(int argc, char **argv) {
             hi = lo + 1;
         while (hi < num_uris  &&  uris[hi] == NULL)
             hi++;
-        if (hi >= num_uris  ||  lo >= num_uris)
+        if (lo >= num_uris)
             break;
+        if (hi >= num_uris) {
+            new_max = lo;
+            break;
+        }
         uris[lo] = uris[hi];
         uris[hi] = NULL;
-        new_max = lo;
+        new_max = lo + 1;
         lo++;
         hi++;
     }

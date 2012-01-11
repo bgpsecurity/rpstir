@@ -123,7 +123,7 @@ int db_chaser_write_time(dbconn *conn, char const *ts) {
     }
 
     if (mysql_stmt_affected_rows(stmt) != 1) {
-        LOG(LOG_ERR, "more or less than one metadata record exists");
+        LOG(LOG_ERR, "could not write timestamp to db");
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -249,21 +249,28 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         int64_t *num_malloced, int trusted_only, int trusted_flag) {
     MYSQL_STMT *stmt;
-    if (trusted_only)
-        stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
-    else
+    if (trusted_only) {
         stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA_TRUSTED_ONLY];
+    } else {
+        stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
+    }
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
 
-    MYSQL_BIND bind_in[1];
+    int trusted_flag_times_2 = 2 * trusted_flag;
+    MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
-    // the trusted_flag
+    // 2* the trusted_flag
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &trusted_flag;
+    bind_in[0].buffer = &trusted_flag_times_2;
     bind_in[0].is_unsigned = (my_bool) 0;
     bind_in[0].is_null = (my_bool*) 0;
+    // the trusted_flag
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer = &trusted_flag;
+    bind_in[1].is_unsigned = (my_bool) 0;
+    bind_in[1].is_null = (my_bool*) 0;
 
     if (trusted_only) {
         if (mysql_stmt_bind_param(stmt, bind_in)) {
