@@ -8,15 +8,15 @@
 // NOTE: don't use this outside of mysql-c-api, use enum client_flags instead
 enum client_types {
     DB_CLIENT_TYPE_RTR,
-
+    DB_CLIENT_TYPE_CHASER,
     DB_CLIENT_NUM_TYPES
 };
 
 enum client_flags {
     DB_CLIENT_RTR = (1 << DB_CLIENT_TYPE_RTR),
-
+    DB_CLIENT_CHASER = (1 << DB_CLIENT_TYPE_CHASER),
     DB_CLIENT_NONE = 0,
-    DB_CLIENT_ALL = DB_CLIENT_RTR /* | DB_CLIENT_OTHER | ... */
+    DB_CLIENT_ALL = DB_CLIENT_RTR | DB_CLIENT_CHASER
 };
 
 struct _dbconn;

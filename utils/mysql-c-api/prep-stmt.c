@@ -48,8 +48,23 @@ static const char * _queries_rtr[] = {
 };
 
 
+static const char * _queries_chaser[] = {
+        // DB_PSTMT_CHASER_GET_TIME
+        "select now(), ch_last from rpki_metadata",
+
+        // DB_PSTMT_CHASER_GET_CRLDP
+        "select crldp from rpki_cert left join rpki_crl "
+        " on rpki_cert.aki = rpki_crl.aki "
+        " where rpki_crl.filename is null "
+        " or rpki_crl.next_upd < ?",
+
+        NULL
+};
+
+
 static const char * * queries[] = {
-        _queries_rtr
+        _queries_rtr,
+        _queries_chaser
 };
 
 

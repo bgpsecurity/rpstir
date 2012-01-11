@@ -21,5 +21,10 @@ enum prep_stmts_rtr {
     DB_PSTMT_RTR_RESET_QRY_GET_NEXT,
 };
 
+enum prep_stmts_chaser {
+    DB_PSTMT_CHASER_GET_TIME,
+    DB_PSTMT_CHASER_GET_CRLDP
+};
+
 
 #endif  // PREP_STMS_H_

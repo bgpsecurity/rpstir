@@ -4,8 +4,6 @@
  *
  * yet to do:
  * - check all return values.  free memory before any quit
- * - fix memory leak from addcolsrchscm()
- * - fix unidentified memory leak
  * - check how we define subsume.  Andrew:
  *       The real definition is this: A subsumes B if "rsync --recursive"
  *       on A automatically retrieves B.  This usually happens when A is a
@@ -22,9 +20,11 @@
  * - correct output for -a, -c, -s, -t, -y combinations?
  * - can crafted bad uri crash the program?  or get thru?
  * - start from very small array size to test realloc of uris
+ * - add multiple uris that are semicolon delimited on a single line
  */
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,24 +33,23 @@
 
 #include "err.h"
 #include "logging.h"
-#include "scm.h"
-#include "scmf.h"
-#include "sqhl.h"
+#include "mysql-c-api/connect.h"
+#include "mysql-c-api/client-chaser.h"
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON
 
 
-static char  **uris = NULL;
+static char    **uris = NULL;
 //static size_t  uris_max_sz = 1024 * 1024;
 static size_t  uris_max_sz = 2;
 static size_t  num_uris = 0;
-static char   *prevTimestamp;
-static char   *currTimestamp;
+
+static size_t const TS_LEN = 20;  // "0000-00-00 00:00:00" plus '\0'
+static char *timestamp_prev;
+static char *timestamp_curr;
 static char const * const  RSYNC_SCHEME = "rsync://";
 
-static scm     *scmp = NULL;
-static scmcon  *connect = NULL;
 
 /**=============================================================================
  * @note This function only does a string comparison, not a file lookup.
@@ -85,37 +84,31 @@ static void free_uris() {
         }
         uris[num_uris] = NULL;
         num_uris--;
-        //        fprintf(stderr, "uris[%2zu]:  0x%.8x:  0x%.8x:  %s\n",
-        //                num_uris, (uint) &uris[num_uris], (uint) uris[num_uris], uris[num_uris]);
     }
+    if (uris[0]) {
+        free(uris[0]);
+    }
+    uris[0] = NULL;
 
     free(uris);
 }
 
-/**=============================================================================
- * static variables for searching for parent
-------------------------------------------------------------------------------*/
-static scmsrcha parentSrch;
-static scmsrch  parentSrch1[1];
-static char parentWhere[1024];
-static unsigned long parentBlah = 0;
-static int parentNeedsInit = 1;
-static int parentCount;
-static scmtab *theCertTable = NULL;
 
 /**=============================================================================
  * callback function for searchscm that just notes that parent exists
 ------------------------------------------------------------------------------*/
-static int foundIt(scmcon *conp, scmsrcha *s, int numLine) {
+/*static int foundIt(scmcon *conp, scmsrcha *s, int numLine) {
     (void) conp; (void) numLine;  // silence compiler warnings
     parentCount++;
     return 0;
-}
+}*/
 
 /**=============================================================================
+ * @note caller frees param "in"
  * TODO:  handle returns from this function
+ * TODO:  handle semi-colon separated uris
 ------------------------------------------------------------------------------*/
-static int append_uri(const char *in) {
+static int append_uri(char *in) {
     if (!in) {
         LOG(LOG_ERR, "bad input\n");
         return -1;
@@ -131,65 +124,42 @@ static int append_uri(const char *in) {
         }
     }
 
-    char *in_copy = strdup(in);
-    char *in_trimmed = NULL;
-    if (!in_copy) {
-        LOG(LOG_ERR, "out of memory\n");
-        return -2;
-    }
+    char *start = in;
 
-    // trim rsync scheme
-    size_t len = strlen(RSYNC_SCHEME);
-    if (!strncmp(RSYNC_SCHEME, in_copy, len)) {
-        in_trimmed = in_copy + len;
-    } else {
-        in_trimmed = in_copy;
-    }
-
-    // trim trailing newlines
-    len = strlen(in_trimmed);
-    while ('\n' == in_trimmed[len - 1] && len > 0) {
-        in_trimmed[len - 1] = '\0';
+    // trim leading space and quote
+    size_t len = strlen(start);
+    while ((' ' == start[0]  ||  '\'' == start[0]  ||  '"' == start[0])
+            &&  len > 0) {
+        start += 1;
         len--;
     }
 
-    uris[num_uris] = strdup(in_trimmed);
+    // trim rsync scheme
+    size_t len_scheme = strlen(RSYNC_SCHEME);
+    if (!strncmp(RSYNC_SCHEME, start, len)) {
+        start += len_scheme;
+    }
+
+    // trim trailing space and newline
+    len = strlen(start);
+    while ((' ' == start[0]  ||  '\n' == start[len - 1])  &&  len > 0) {
+        start[len - 1] = '\0';
+        len--;
+    }
+
+    // an arbitrary limit
+    if (len < 10) {
+        LOG(LOG_DEBUG, "skipping input:  %s", in);
+        return 0;
+    }
+
+    uris[num_uris] = strdup(start);
     if (!uris[num_uris]) {
         LOG(LOG_ERR, "Could not alloc for uri");
-        free(in_copy);
         return -2;
     }
     num_uris++;
 
-    free(in_copy);
-    return 0;
-}
-
-/**=============================================================================
- * callback function for searchscm that accumulates the aia's
-------------------------------------------------------------------------------*/
-static int handleAIAResults(scmcon *conp, scmsrcha *s, int numLine) {
-    (void) conp; (void) numLine;  // silence compiler warnings
-    if (parentNeedsInit) {
-        parentNeedsInit = 0;
-        parentSrch.sname = NULL;
-        parentSrch.where = NULL;
-        parentSrch.ntot = 1;
-        parentSrch.nused = 0;
-        parentSrch.context = &parentBlah;
-        parentSrch.wherestr = parentWhere;
-        parentSrch.vec = parentSrch1;
-        addcolsrchscm(&parentSrch, "filename", SQL_C_CHAR, FNAMESIZE);
-    }
-    snprintf(parentWhere, sizeof(parentWhere), "ski=\"%s\"",
-            (char *) s->vec[0].valptr);
-    parentCount = 0;
-    searchscm(conp, theCertTable, &parentSrch, NULL, foundIt,
-            SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (parentCount == 0) {
-        char *str = (char *) s->vec[1].valptr;
-        append_uri(str);
-    }
     return 0;
 }
 
@@ -198,8 +168,8 @@ static int handleAIAResults(scmcon *conp, scmsrcha *s, int numLine) {
  *
  * sql:  select aki, aia from rpki_cert where flags matches SCM_FLAG_NOCHAIN;
 ------------------------------------------------------------------------------*/
-static int query_aia() {
-    scmtab   *table = NULL;
+static int query_aia(dbconn *conn) {
+/*    scmtab   *table = NULL;
     scmsrcha *srcha;
     size_t const NUM_FIELDS = 2;
     scmsrch  srch[NUM_FIELDS];
@@ -237,29 +207,7 @@ static int query_aia() {
     }
 
     freesrchscm(srcha);
-
-    return 0;
-}
-
-/**=============================================================================
- * callback function for searchscm that accumulates the crldp's
- * note that a CRLDP in the cert table can now be a single URI or a set
- *   of URIs separated by semicolons
-------------------------------------------------------------------------------*/
-static int handleCRLDPResults(scmcon *conp, scmsrcha *s, int numLine) {
-    char *res;
-    char *oneres;
-    char *ptrcpy;
-
-    (void) conp; (void) numLine;  // silence compiler warnings
-    res = (char *)(s->vec[0].valptr);
-    ptrcpy = res = strdup((s->vec[0].valptr));
-    oneres = strtok(res, ";");
-    while (oneres  &&  oneres[0] != 0) {
-        append_uri(oneres);
-        oneres = strtok(NULL, ";");
-    }
-    free(ptrcpy);
+*/
     return 0;
 }
 
@@ -269,62 +217,29 @@ static int handleCRLDPResults(scmcon *conp, scmsrcha *s, int numLine) {
  * add crldp field if cert either has no crl or crl is out-of-date
  * sql:  select crldp from rpki_cert left join rpki_crl
  *       on rpki_cert.aki = rpki_crl.aki
- *       where rpki_crl.filename is null or rpki_crl.next_upd < currTimestamp;
+ *       where rpki_crl.filename is null or rpki_crl.next_upd < timestamp_curr;
 ------------------------------------------------------------------------------*/
-static int query_crldp() {
-    scmtab   *table = NULL;
-    scmsrcha *srcha;
-    size_t const NUM_FIELDS = 1;
-    int      status;
-    char     buf[1024];
-    char     *wherestr;
+static int query_crldp(dbconn *db) {
+    char **results = NULL;
+    int64_t num_malloced = 0;
+    int64_t ret;
+    int64_t i;
 
-    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 1);
-
-    table = findtablescm(scmp, "certificate");
-    if (table == NULL) {
-        LOG(LOG_ERR, "Cannot find table metadata\n");
+    ret = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr);
+    LOG(LOG_DEBUG, "read %" PRIi64 " lines from db;  %" PRIi64 " were null",
+            num_malloced, num_malloced - ret);
+    if (ret == -1) {
         return -1;
+    } else {
+        for (i = 0; i < ret; i++) {
+            fprintf(stderr, "%s\n", results[i]);
+            append_uri(results[i]);
+            free(results[i]);
+            results[i] = NULL;
+        }
+        if (results) free(results);
     }
 
-    snprintf(buf, sizeof(buf),
-            "rpki_crl.filename is null or rpki_crl.next_upd < \"%s\"",
-            currTimestamp);
-    wherestr = strdup(buf);
-    if (!wherestr) {
-        LOG(LOG_ERR, "Out of memory.");
-        return -1;
-    }
-    srcha->wherestr = wherestr;
-    addcolsrchscm(srcha, "crldp", SQL_C_CHAR, SIASIZE);
-    status = searchscm(connect, table, srcha, NULL, handleCRLDPResults,
-            SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN_CRL, NULL);
-    if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "Error chasing CRLDPs: %s (%d)",
-                err2string(status), status);
-        freesrchscm(srcha);
-        return -1;
-    }
-
-    freesrchscm(srcha);
-
-    return 0;
-}
-
-/**=============================================================================
- * callback function for searchscm that accumulates the sia's
-------------------------------------------------------------------------------*/
-static int handleSIAResults(scmcon *conp, scmsrcha *s, int numLine) {
-    char *res;
-    char *oneres;
-
-    (void) conp; (void) numLine;  // silence compiler warnings
-    res = (char *)(s->vec[0].valptr);
-    oneres = strtok(res, ";");
-    while(oneres  &&  oneres[0] != 0) {
-        append_uri(oneres);
-        oneres = strtok(NULL, ";");
-    }
     return 0;
 }
 
@@ -333,8 +248,8 @@ static int handleSIAResults(scmcon *conp, scmsrcha *s, int numLine) {
  *
  * sql:  select sia from rpki_cert;
 ------------------------------------------------------------------------------*/
-static int query_sia() {
-    scmtab   *table = NULL;
+static int query_sia(dbconn *db, int trusted_only) {
+/*    scmtab   *table = NULL;
     scmsrcha *srcha;
     size_t const NUM_FIELDS = 1;
     scmsrch  srch[NUM_FIELDS];
@@ -368,71 +283,30 @@ static int query_sia() {
     }
 
     freesrchscm(srcha);
-
+*/
     return 0;
 }
 
 /**=============================================================================
- * @note Add sia field, only if trusted.
+ * @note Get the current time, and read the last time chaser ran from db.
  *
- * sql:  select sia from rpki_cert where flags match SCM_FLAG_TRUSTED;
+ * sql:  select current_timestamp, ch_last from rpki_metadata;
 ------------------------------------------------------------------------------*/
-static int query_sia_trusted() {
-    scmtab   *table = NULL;
-    scmsrcha *srcha;
-    size_t const NUM_FIELDS = 1;
-    scmsrch  srch[NUM_FIELDS];
-    ulong    context_field = 0;
-    int      status;
-    char     msg[1024];
+static int query_read_timestamps(dbconn *db) {
+    int ret;
 
-    srcha = newsrchscm(NULL, NUM_FIELDS, 0, 1);
-
-    table = findtablescm(scmp, "certificate");
-    if (table == NULL) {
-        LOG(LOG_ERR, "Cannot find table metadata\n");
+    ret = db_chaser_read_time(db,
+            timestamp_prev, TS_LEN,
+            timestamp_curr, TS_LEN);
+    if (ret) {
+        LOG(LOG_ERR, "didn't read times");
+        // TODO:  handle the error
         return -1;
     }
 
-    srcha->vec = srch;
-    srcha->sname = NULL;
-    srcha->ntot = 2;
-    srcha->where = NULL;
-    srcha->context = &context_field;
-    srcha->nused = 0;
-    srcha->vald = 0;
-    snprintf(msg, sizeof(msg),"((flags%%%d)>=%d)",2*SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
-    srcha->wherestr = msg;
-    addcolsrchscm(srcha, "sia", SQL_C_CHAR, SIASIZE);
-    status = searchscm(connect, table, srcha, NULL, handleSIAResults,
-            SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "Error chasing SIAs: %s (%d)",
-                err2string(status), status);
-        freesrchscm(srcha);
-        return 1;
-    }
+    fprintf(stdout, "previous ts:  %s\n", timestamp_prev);
+    fprintf(stdout, " current ts:  %s\n", timestamp_curr);
 
-    freesrchscm(srcha);
-
-    return 0;
-}
-
-/**=============================================================================
- * callback function for searchscm that records the timestamps
-------------------------------------------------------------------------------*/
-static int handleTimestamps(scmcon *conp, scmsrcha *s, int numLine) {
-    (void) conp; (void) numLine;  // silence compiler warnings
-    currTimestamp = strdup(s->vec[0].valptr);
-    if (s->vec[0].valptr  &&  !currTimestamp) {
-        LOG(LOG_ERR, "Out of memory.");
-        return -1;
-    }
-    prevTimestamp = strdup(s->vec[1].valptr);
-    if (s->vec[1].valptr  &&  !prevTimestamp) {
-        LOG(LOG_ERR, "Out of memory.");
-        return -1;
-    }
     return 0;
 }
 
@@ -441,8 +315,8 @@ static int handleTimestamps(scmcon *conp, scmsrcha *s, int numLine) {
  *
  * sql:  update rpki_metadata set ch_last = currTimestamp;
 ------------------------------------------------------------------------------*/
-static int write_timestamp() {
-    scmtab   *table = NULL;
+static int query_write_timestamp() {
+/*    scmtab   *table = NULL;
     scmsrcha *srcha;
     size_t const NUM_FIELDS = 0;
 //    scmsrch  srch[NUM_FIELDS];
@@ -477,42 +351,7 @@ static int write_timestamp() {
     }
 
     freesrchscm(srcha);
-
-    return 0;
-}
-
-/**=============================================================================
- * @note Get the current time, and read the last time chaser ran from db.
- *
- * sql:  select current_timestamp, ch_last from rpki_metadata;
-------------------------------------------------------------------------------*/
-static int query_timestamps() {
-    scmtab   *table = NULL;
-    scmsrcha *srch;
-    size_t const NUM_FIELDS = 2;
-    int      status;
-
-    srch = newsrchscm(NULL, NUM_FIELDS, 0, 0);
-
-    table = findtablescm(scmp, "metadata");
-    if (table == NULL) {
-        LOG(LOG_ERR, "Cannot find table metadata\n");
-        return -1;
-    }
-
-    addcolsrchscm(srch, "current_timestamp", SQL_C_CHAR, 24);
-    addcolsrchscm(srch, "ch_last", SQL_C_CHAR, 24);
-    status = searchscm(connect, table, srch, NULL, handleTimestamps,
-            SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (status != ERR_SCM_NOERR) {
-        LOG(LOG_ERR, "Error reading timestamps from db: %s (%d)",
-                err2string(status), status);
-        freesrchscm(srch);
-        return -1;
-    }
-
-    freesrchscm(srch);
-
+*/
     return 0;
 }
 
@@ -611,7 +450,6 @@ int main(int argc, char **argv) {
                 LOG(LOG_WARNING, "uri string too long, dropping:  %s", msg);
                 continue;
             }
-            fprintf(stderr, "sending line to append_uri\n");
             append_uri(&msg[LEN_PREFIX]);
         }
 
@@ -621,31 +459,46 @@ int main(int argc, char **argv) {
     cant_open_file:
 
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
-    // initialize database
-    scmp = initscm();
-    if (!scmp) {
-        LOG(LOG_ERR, "Cannot initialize database schema\n");
-        return -1;
-    }
-    connect = connectscm(scmp->dsn, msg, sizeof(msg));
-    if (!scmp) {
-        LOG(LOG_ERR, "Cannot connect to database\n");
+
+    timestamp_prev = (char*)calloc(TS_LEN, sizeof(char));
+    timestamp_curr = (char*)calloc(TS_LEN, sizeof(char));
+    if (!timestamp_prev  ||  !timestamp_curr) {
+        LOG(LOG_ERR, "out of memory");
         return -1;
     }
 
+    // initialize database
+    if (!db_init()) {
+        LOG(LOG_ERR, "can't initialize global DB state");
+        return -1;
+    }
+    dbconn *db = db_connect_default(DB_CLIENT_CHASER);
+    if (db == NULL) {
+        LOG(LOG_ERR, "can't connect to database");
+        return -1;
+    }
+
+    // look up rsync uris from the db
     if(chase_only_ta) {
-        query_sia_trusted();
+        query_sia(db, 1);
     } else {
-        query_timestamps();
+        query_read_timestamps(db);
 
         if (chase_crldp)
-            query_crldp();
+            query_crldp(db);
 
         if (chase_aia)
-            query_aia();
+            query_aia(db);
 
         if (chase_sia)
-            query_sia();
+            query_sia(db, 0);
+    }
+    query_write_timestamp(db);
+    if (timestamp_prev) free(timestamp_prev);
+    if (timestamp_curr) free(timestamp_curr);
+    if (db != NULL) {
+        db_disconnect(db);
+        db_close();
     }
 
     LOG(LOG_DEBUG, "found total of %zu rsync uris", num_uris);
@@ -694,14 +547,7 @@ int main(int argc, char **argv) {
         fprintf(stdout, "%s%s\n", RSYNC_SCHEME, uris[i]);
     }
 
-    // write timestamp into database
-    write_timestamp();
-
     // release memory
-    if (prevTimestamp) free(prevTimestamp);
-    if (currTimestamp) free(currTimestamp);
-    disconnectscm(connect);
-    if (scmp) freescm(scmp);
     free_uris();
 
     CLOSE_LOG();
