@@ -3,7 +3,11 @@
  * authorities that have signed certs.  It outputs the URIs to stdout.
  *
  * yet to do:
- * - check all return values.  free memory before any quit
+ * - add query for aia
+ * - fix the include for sqhl.h, and remove def of SCM_FLAG_TRUSTED
+ * - check all return values (handle_uri_string).  free memory before any quit
+ * - handle semi-colon delimited uri groups
+ * - implement chase_not_yet_validated
  * - check how we define subsume.  Andrew:
  *       The real definition is this: A subsumes B if "rsync --recursive"
  *       on A automatically retrieves B.  This usually happens when A is a
@@ -35,7 +39,6 @@
 #include "logging.h"
 #include "mysql-c-api/connect.h"
 #include "mysql-c-api/client-chaser.h"
-// TODO:  fix this include and remove manual definition
 //#include "sqhl.h"  // only for SCM_FLAG_TRUSTED
 #define SCM_FLAG_TRUSTED 2
 
@@ -107,11 +110,17 @@ static void free_uris() {
 }*/
 
 /**=============================================================================
- * @note caller frees param "in"
- * TODO:  handle returns from this function
- * TODO:  handle semi-colon separated uris
 ------------------------------------------------------------------------------*/
-static int append_uri(char *in) {
+static int check_uri_chars(char *in) {
+
+
+    return 0;
+}
+
+/**=============================================================================
+ * @note caller frees param "in"
+------------------------------------------------------------------------------*/
+static int append_uri(char const *in) {
     if (!in) {
         LOG(LOG_ERR, "bad input\n");
         return -1;
@@ -127,36 +136,7 @@ static int append_uri(char *in) {
         }
     }
 
-    char *start = in;
-
-    // trim leading space and quote
-    size_t len = strlen(start);
-    while ((' ' == start[0]  ||  '\'' == start[0]  ||  '"' == start[0])
-            &&  len > 0) {
-        start += 1;
-        len--;
-    }
-
-    // trim rsync scheme
-    size_t len_scheme = strlen(RSYNC_SCHEME);
-    if (!strncmp(RSYNC_SCHEME, start, len)) {
-        start += len_scheme;
-    }
-
-    // trim trailing space and newline
-    len = strlen(start);
-    while ((' ' == start[0]  ||  '\n' == start[len - 1])  &&  len > 0) {
-        start[len - 1] = '\0';
-        len--;
-    }
-
-    // an arbitrary limit
-    if (len < 10) {
-        LOG(LOG_DEBUG, "skipping input:  %s", in);
-        return 0;
-    }
-
-    uris[num_uris] = strdup(start);
+    uris[num_uris] = strdup(in);
     if (!uris[num_uris]) {
         LOG(LOG_ERR, "Could not alloc for uri");
         return -2;
@@ -164,6 +144,75 @@ static int append_uri(char *in) {
     num_uris++;
 
     return 0;
+}
+
+
+/**=============================================================================
+ * @note caller frees param "in"
+------------------------------------------------------------------------------*/
+static void handle_uri_string(char const *in) {
+    char *copy;
+    char *section;
+    char const delimiter[] = ";";
+    size_t len_in = strlen(in);
+    size_t len;
+
+    copy = malloc((len_in + 1) * sizeof(char));
+    if (!copy) {
+        LOG(LOG_ERR, "out of memory");
+        return;
+    }
+    memcpy(copy, in, len_in);
+    copy[len_in] = '\0';
+    char * const ptr = copy;
+
+    // split by semicolons
+    section = strtok(copy, delimiter);
+    while (section) {
+        // trim leading space and quote
+        len = strlen(section);
+        while ((' ' == section[0]  ||  '\'' == section[0]  ||  '"' == section[0])
+                &&  len > 0) {
+            section += 1;
+            len--;
+        }
+
+        // trim rsync scheme
+        size_t len_scheme = strlen(RSYNC_SCHEME);
+        if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
+            section += len_scheme;
+        }
+
+        // trim trailing space and newline
+        len = strlen(section);
+        while ((' ' == section[len - 1]  ||  '\n' == section[len - 1])  &&  len > 0) {
+            section[len - 1] = '\0';
+            len--;
+        }
+
+        // an arbitrary limit
+        if (len < 10) {
+            LOG(LOG_WARNING, "input too short, skipping:  \"%s\"", in);
+            section = strtok(NULL, delimiter);
+            continue;
+        }
+
+        // regex check
+        if (check_uri_chars(section)) {
+            LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", in);
+            section = strtok(NULL, delimiter);
+            continue;
+        }
+
+        // append to uris[]
+        append_uri(section);
+
+        section = strtok(NULL, delimiter);
+    }
+
+    if (ptr) free(ptr);
+
+    return;
 }
 
 /**=============================================================================
@@ -198,7 +247,7 @@ static int query_crldp(dbconn *db) {
     } else {
         for (i = 0; i < ret; i++) {
             LOG(LOG_DEBUG, "query_crldp() --> %s\n", results[i]);
-            append_uri(results[i]);
+            handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
         }
@@ -228,7 +277,7 @@ static int query_sia(dbconn *db, int trusted_only) {
     } else {
         for (i = 0; i < ret; i++) {
             LOG(LOG_DEBUG, "query_sia() --> %s\n", results[i]);
-            append_uri(results[i]);
+            handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
         }
@@ -338,7 +387,6 @@ int main(int argc, char **argv) {
             chase_only_ta = 1;
             break;
         case 'y':
-            // TODO:  implement this in queries
             chase_not_yet_validated = 1;
             break;
         case 'h':
@@ -374,7 +422,7 @@ int main(int argc, char **argv) {
                 LOG(LOG_WARNING, "uri string too long, dropping:  %s", msg);
                 continue;
             }
-            append_uri(&msg[LEN_PREFIX]);
+            handle_uri_string(&msg[LEN_PREFIX]);
         }
 
         fclose(fp);

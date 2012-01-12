@@ -245,6 +245,8 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 }
 
 /**=============================================================================
+ * The flags field is stored in the db as an integer.  If a particular bit of
+ *     the integer is set, then:  flags % (2 * bit_value) >= bit_value
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         int64_t *num_malloced, int trusted_only, int trusted_flag) {
