@@ -245,8 +245,6 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 }
 
 /**=============================================================================
- * The flags field is stored in the db as an integer.  If a particular bit of
- *     the integer is set, then:  flags % (2 * bit_value) >= bit_value
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         int64_t *num_malloced, int trusted_only, int trusted_flag) {
@@ -260,17 +258,17 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     uint64_t num_rows_used = 0;
     int ret;
 
-    int trusted_flag_times_2 = 2 * trusted_flag;
+    int flag = trusted_flag;
     MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
-    // 2* the trusted_flag
+    // the flag
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &trusted_flag_times_2;
+    bind_in[0].buffer = &flag;
     bind_in[0].is_unsigned = (my_bool) 0;
     bind_in[0].is_null = (my_bool*) 0;
     // the trusted_flag
     bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &trusted_flag;
+    bind_in[1].buffer = &flag;
     bind_in[1].is_unsigned = (my_bool) 0;
     bind_in[1].is_null = (my_bool*) 0;
 

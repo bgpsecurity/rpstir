@@ -445,11 +445,12 @@ publication points, write the following configuration file.  The
 example below needs no pre-configured publication points since the
 publication points will be derived from the trust anchors.
 
-    #### Contents of initial_rsync.config ####
+    #### Contents of initial_chaser.config ####
     RSYNC=/usr/local/bin/rsync
     REPOSITORY=/home/bbn/rpki/REPOSITORY
     LOGS=/home/bbn/rpki/LOGS
-    DIRS=""
+    # one line like the following per rsync uri:
+    DIR=<rsync-uri>
     ##########################################
 
 Adjust the paths for REPOSITORY and LOGS above to match your
@@ -536,7 +537,7 @@ repositories.  When each rsync transfer completes, the chaser invokes
 the rsync log parser, which notifies the DB Updater (activated in the
 previous step) of any changes.
 
-    proto/chaser -f initial_rsync.config
+    proto/chaser -f initial_chaser.config
 
 The process of chasing URIs and then invoking rsync will automatically
 continue until no new publication directories have been found, or

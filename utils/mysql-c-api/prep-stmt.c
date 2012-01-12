@@ -66,7 +66,7 @@ static const char * _queries_chaser[] = {
 
         // DB_PSTMT_CHASER_GET_SIA_TRUSTED_ONLY
         "select sia from rpki_cert "
-        " where flags % ? >= ? ",
+        " where flags & ? = ? ",
 
         NULL
 };

@@ -4,24 +4,22 @@
  *
  * yet to do:
  * - add query for aia
- * - fix the include for sqhl.h, and remove def of SCM_FLAG_TRUSTED
  * - check all return values (handle_uri_string).  free memory before any quit
- * - handle semi-colon delimited uri groups
- * - implement chase_not_yet_validated
+ * - implement chase_not_yet_validated (check neither flag:  VALIDATED, NO_CHAIN)
  * - check how we define subsume.  Andrew:
  *       The real definition is this: A subsumes B if "rsync --recursive"
  *       on A automatically retrieves B.  This usually happens when A is a
  *       directory and B lives within it or within a subdirectory.
- * - implement chase-not-yet-validated
  * - check uri for validity before adding to list
  * - coordinate return values with caller
+ * - check other lines of initial_chaser.config before using defaults
  * - consider OOM killer in notes about `man realloc`
  *
  * test cases:
  * - is x subsumed by y?
  * - are trailing chars removed?
  * - are bad chars warned, removed?
- * - correct output for -a, -c, -s, -t, -y combinations?
+ * - correct output for cmd-line combinations?
  * - can crafted bad uri crash the program?  or get thru?
  * - start from very small array size to test realloc of uris
  * - add multiple uris that are semicolon delimited on a single line
@@ -39,8 +37,9 @@
 #include "logging.h"
 #include "mysql-c-api/connect.h"
 #include "mysql-c-api/client-chaser.h"
-//#include "sqhl.h"  // only for SCM_FLAG_TRUSTED
-#define SCM_FLAG_TRUSTED 2
+#include "scm.h"  // for SCM_FLAG_FOO
+#include "scmf.h"  // for SCM_FLAG_FOO
+#include "sqhl.h"  // for SCM_FLAG_FOO
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON
@@ -218,7 +217,9 @@ static void handle_uri_string(char const *in) {
 /**=============================================================================
  * @note Add aia field if cert has no parent.
  *
- * sql:  select aki, aia from rpki_cert where flags matches SCM_FLAG_NOCHAIN;
+ * sql:  select aki, aia from rpki_cert where flags matches VALIDATED and SCM_FLAG_NOCHAIN;
+ * sql:  select filename from rpki_cert where ski = previously-found-aki;
+ *     if filename not found, add the aia
 ------------------------------------------------------------------------------*/
 static int query_aia(dbconn *conn) {
 
@@ -226,9 +227,8 @@ static int query_aia(dbconn *conn) {
 }
 
 /**=============================================================================
- * @note Get CRLDP info from db.
+ * @note Add crldp field if cert either has no crl or crl is out-of-date.
  *
- * add crldp field if cert either has no crl or crl is out-of-date
  * sql:  select crldp from rpki_cert left join rpki_crl
  *       on rpki_cert.aki = rpki_crl.aki
  *       where rpki_crl.filename is null or rpki_crl.next_upd < timestamp_curr;
