@@ -325,13 +325,18 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   for (i = 0; ip[i] != '\0' && isspace(ip[i]); ++i); \
   \
   j = 0; \
-  for (; ip[i] != '\0' && (number_func(ip[i]) || ip[i] == separator); ++i) \
+  for (; \
+    ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
+      (number_func(ip[i]) || ip[i] == separator); \
+    ++i) \
+  { \
     ipstr[j++] = ip[i]; \
+  } \
   ipstr[j] = '\0'; \
   \
   if (inet_pton(family, ipstr, &ipbin0) != 1) \
     return -1; \
- \
+  \
   for (; ip[i] != '\0' && isspace(ip[i]); ++i); \
   \
   switch (ip[i]) \
@@ -348,7 +353,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
       if (sscanf(&ip[i], "%d%n", &prefix_len, &consumed) < 1) \
         return -1; \
       if (prefix_len < 0 || prefix_len > sizeof(ipbin0) * 8) \
-        return 0; \
+        return -1; \
       for (i += consumed; ip[i] != '\0' && isspace(ip[i]); ++i); \
       if (ip[i] != '\0') \
         return -1; \
@@ -388,8 +393,13 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
       /* range */ \
       for (++i; ip[i] != '\0' && isspace(ip[i]); ++i); \
       j = 0; \
-      for (; ip[i] != '\0' && (number_func(ip[i]) || ip[i] == separator); ++i) \
+      for (; \
+        ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
+          (number_func(ip[i]) || ip[i] == separator); \
+        ++i) \
+      { \
         ipstr[j++] = ip[i]; \
+      } \
       ipstr[j] = '\0'; \
       if (inet_pton(family, ipstr, &ipbin1) != 1) \
         return -1; \
