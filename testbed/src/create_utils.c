@@ -311,7 +311,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
     return extp;
   }
 
-{
+
 #define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separator, family) \
   char ipstr[addrstrlen]; \
   ip_type ipbin0, ipbin1; \
@@ -423,6 +423,7 @@ int cvtv6(uchar fill, char *ip, uchar *buf)
 { CVTV_BODY_COMMON(INET6_ADDRSTRLEN, struct in6_addr, isxdigit, ':', AF_INET6) }
 
 #undef CVTV_BODY_COMMON
+
 
 int write_ASNums(struct ASNum *asnump, char *buf, int num)
 {
