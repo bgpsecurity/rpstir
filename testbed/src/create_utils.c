@@ -17,6 +17,9 @@
 #include "create_object.h"
 #include "obj_err.h"
 #include "roa.h"
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <string.h>
 
 #define IPv4 4
 #define IPv6 6
@@ -308,217 +311,118 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
     return extp;
   }
 
-int cvtv4(uchar fill, char *ip, uchar *buf)
 {
-  /**
-   * THIS IS A TEMPORARY FIX(AND A POOR ONE) FOR TESTBED GENERATION
-   * WE WANT THIS CODE TO BE REMOVED AND THE ORIGINAL
-   * CVTV4 FUNCTION TO BE CORRECTED AND LEFT HERE.
-   **/
-
-  //This is the python command we want to run
-  int commandLen = 100;
-  char* cmd;
-  cmd = calloc(commandLen, sizeof(char));
-  snprintf (cmd, commandLen, "python parse_ip.py %s", ip);
-
-  //Run it and read in the std output
-  FILE *output = popen(cmd, "r");
-  if(!output)return -1;
-  char buffer[1024];
-  (void)fgets(buffer, sizeof(buffer), output);
-  pclose(output);
-
-  //Parse up the space delimited return value
-  //  char* tmp = calloc(strlen(buf), sizeof(char));
-  //memcpy(tmp, buffer,strlen(buffer));
-  int firstLen;
-  char* second = NULL;      
-  //Set up two char lengths 
-  second = strchr(buffer,' ');
-  firstLen = (char*)second - (char*)buffer;
-  second++;
-  //get a null terminated filename to copy into the casn
-  char* first = calloc(firstLen+1,sizeof(char));
-  memcpy(first,buffer,firstLen);
-  //free(tmp);
-
-  //Parse the two strings in hex value into binary
-  uchar* firstHex = calloc(firstLen,sizeof(char));
-  uchar* secHex = calloc(strlen(second),sizeof(char));
-  read_hex_val(first, firstLen, firstHex);  
-  read_hex_val(second, strlen(second), secHex);
-
-  //firstHex and secHex are the first and last hex values for the ip prefix/range
-  if(fill == (uchar)0)
-    memcpy(buf, firstHex, 4);
-  else
-    memcpy(buf, secHex, 4);
-  
-  free(cmd);
-  free(firstHex);
-  free(secHex);
-  free(first);  
-
-
-  /* uchar *uc, *ue = &buf[4]; */
-/*   char *c; */
-/*   int fld; */
-/*   for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') ||  */
-/*     *c == '.' || *c == '/'); */
-/*     c++); */
-/*   if (*c > ' ') return -2; */
-/*   memset(buf, fill, 4); */
-/*   for (c = ip, uc = buf; *c && *c != '/'; ) */
-/*     { */
-/*     if (*c == '.') c++; */
-/*     sscanf(c, "%d", &fld); */
-/*     if (uc >= ue || fld > 255) return -1; */
-/*     *uc++ = (uchar)fld; */
-/*     while (*c > ' ' && *c != '.' && *c != '/') c++; */
-/*     } */
-/*   if (*c)  */
-/*     { */
-/*     uchar mask; */
-/*     c++; */
-/*     sscanf(c, "%d", &fld); // fld has total number of bits */
-/*     if (fld >= 32) return (fld > 32)? -1: 0; */
-/*     if (uc < &buf[fld >> 3]) return -1; */
-/*     uc = &buf[(fld >> 3)];  // points to char having bit beyond last */
-/*     fld %= 8;   // number of used bits in last byte */
-/*     fld = 8 - fld;   // number of unused  */
-/*     mask = ~(0xFF << fld);  // mask for last byte */
-/*     if (fill)  */
-/*       { */
-/*       if ((mask & *uc) && mask != *uc) return -1; */
-/*       *uc |= mask; */
-/*       } */
-/*     else  */
-/*       { */
-/*       if ((mask & *uc)) return -1; */
-/*       *uc &= ~(mask); */
-/*       } */
-/*     } */
-  return 0;
+#define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separator, family) \
+  char ipstr[addrstrlen]; \
+  ip_type ipbin0, ipbin1; \
+  size_t i, j; \
+  int prefix_len; \
+  int consumed; \
+  \
+  if (ip == NULL || buf == NULL) \
+    return -1; \
+  \
+  for (i = 0; ip[i] != '\0' && isspace(ip[i]); ++i); \
+  \
+  j = 0; \
+  for (; ip[i] != '\0' && (number_func(ip[i]) || ip[i] == separator); ++i) \
+    ipstr[j++] = ip[i]; \
+  ipstr[j] = '\0'; \
+  \
+  if (inet_pton(family, ipstr, &ipbin0) != 1) \
+    return -1; \
+ \
+  for (; ip[i] != '\0' && isspace(ip[i]); ++i); \
+  \
+  switch (ip[i]) \
+  { \
+    case '\0': \
+      /* single IP, no prefix */ \
+      memcpy(buf, &ipbin0, sizeof(ipbin0)); \
+      return 0; \
+    \
+    case '/': \
+      /* CIDR notation */ \
+      memcpy(buf, &ipbin0, sizeof(ipbin0)); \
+      for (++i; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      if (sscanf(&ip[i], "%d%n", &prefix_len, &consumed) < 1) \
+        return -1; \
+      if (prefix_len < 0 || prefix_len > sizeof(ipbin0) * 8) \
+        return 0; \
+      for (i += consumed; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      if (ip[i] != '\0') \
+        return -1; \
+      if (fill == 0x00) \
+      { \
+        if (prefix_len % 8 != 0) \
+        { \
+          buf[prefix_len / 8] &= 0xFF << (8 - prefix_len % 8); \
+          j = prefix_len / 8 + 1; \
+        } \
+        else \
+        { \
+          j = prefix_len / 8; \
+        } \
+        memset(&buf[j], 0, sizeof(ipbin0) - j); \
+      } \
+      else if (fill == 0xFF) \
+      { \
+        if (prefix_len % 8 != 0) \
+        { \
+          buf[prefix_len / 8] |= 0xFF >> (prefix_len % 8); \
+          j = prefix_len / 8 + 1; \
+        } \
+        else \
+        { \
+          j = prefix_len / 8; \
+        } \
+        memset(&buf[j], 0xFF, sizeof(ipbin0) - j); \
+      } \
+      else \
+      { \
+        return -1; \
+      } \
+      return 0; \
+    \
+    case '-': \
+      /* range */ \
+      for (++i; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      j = 0; \
+      for (; ip[i] != '\0' && (number_func(ip[i]) || ip[i] == separator); ++i) \
+        ipstr[j++] = ip[i]; \
+      ipstr[j] = '\0'; \
+      if (inet_pton(family, ipstr, &ipbin1) != 1) \
+        return -1; \
+      for (; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      if (ip[i] != '\0') \
+        return -1; \
+      if (memcmp(&ipbin0, &ipbin1, sizeof(ipbin0)) > 0) \
+        return -1; \
+      if (fill == 0x00) \
+      { \
+        memcpy(buf, &ipbin0, sizeof(ipbin0)); \
+      } \
+      else if (fill == 0xFF) \
+      { \
+        memcpy(buf, &ipbin1, sizeof(ipbin1)); \
+      } \
+      else \
+      { \
+        return -1; \
+      } \
+      return 0; \
+    \
+    default: \
+      return -1; \
   }
-    
+
+int cvtv4(uchar fill, char *ip, uchar *buf)
+{ CVTV_BODY_COMMON(INET_ADDRSTRLEN, struct in_addr, isdigit, '.', AF_INET) }
+
 int cvtv6(uchar fill, char *ip, uchar *buf)
-{
-  /**
-   * THIS IS A TEMPORARY FIX(AND A POOR ONE) FOR TESTBED GENERATION
-   * WE WANT THIS CODE TO BE REMOVED AND THE ORIGINAL
-   * CVTV6 FUNCTION TO BE CORRECTED AND LEFT HERE.
-   **/
+{ CVTV_BODY_COMMON(INET6_ADDRSTRLEN, struct in6_addr, isxdigit, ':', AF_INET6) }
 
-  //This is the python command we want to run
-  int commandLen = 100;
-  char* cmd;
-  cmd = calloc(commandLen, sizeof(char));
-  snprintf (cmd, commandLen, "python parse_ip.py %s", ip);
-
-  //Run it and read in the std output
-  FILE *output = popen(cmd, "r");
-  if(!output)return -1;
-  char buffer[1024];
-  (void)fgets(buffer, sizeof(buffer), output);
-  pclose(output);
-
-  //Parse up the space delimited return value
-  //  char* tmp = calloc(strlen(buf), sizeof(char));
-  //memcpy(tmp, buffer,strlen(buffer));
-  int firstLen;
-  char* second = NULL;      
-  //Set up two char lengths 
-  second = strchr(buffer,' ');
-  firstLen = (char*)second - (char*)buffer;
-  second++;
-  //get a null terminated filename to copy into the casn
-  char* first = calloc(firstLen+1,sizeof(char));
-  memcpy(first,buffer,firstLen);
-  //free(tmp);
-
-  //Parse the two strings in hex value into binary
-  uchar* firstHex = calloc(firstLen,sizeof(char));
-  uchar* secHex = calloc(strlen(second),sizeof(char));
-  read_hex_val(first, firstLen, firstHex);  
-  read_hex_val(second, strlen(second), secHex);
-
-  //firstHex and secHex are the first and last hex values for the ip prefix/range
-  if(fill == (uchar)0)
-    memcpy(buf, firstHex, 16);
-  else
-    memcpy(buf, secHex, 16);
-
-  free(cmd);
-  free(firstHex);
-  free(secHex);
-  free(first);
-
-  /* uchar *up, *ue; */
-/*   char *c; */
-/*   int fld, elided; */
-/*   for (c = ip; *c > ' ' && ((*c >= '0' && *c <= '9') ||  */
-/*     ((*c | 0x20) >= 'a' && (*c | 0x20) <= 'f') || *c == ':' || *c == '/'); */
-/*     c++); */
-/*   if (*c > ' ') return -2; */
-/*   for (up = buf, ue = &buf[16]; up < ue; *up++ = fill); */
-/*   for (c = ip, elided = 8; *c && *c != '/'; c++) */
-/*     { */
-/*     if (*c == ':') elided--; */
-/*     }  */
-/*   for (c = ip, up = buf; *c > ' ' && *c != '/';) */
-/*     { */
-/*     if (*c == ':') c++; */
-/*     sscanf(c, "%x", &fld); */
-/*     if (up >= ue || fld > 0xFFFF) return -1; */
-/*     *up++ = (uchar)((fld >> 8) &0xFF); */
-/*     *up++ = (uchar)(fld & 0xFF); */
-/*     while(*c && *c != ':' && *c != '/') c++; */
-/*     if (*c == ':' && c[1] == ':') */
-/*       { */
-/*       while(elided)  */
-/*         { */
-/* 	  if (c[2] == '/') */
-/* 	  { */
-/* 	    *up++ = fill; */
-/* 	    *up++ = fill; */
-/* 	  } */
-/* 	else */
-/* 	  { */
-/* 	    *up++ = 0; */
-/* 	    *up++ = 0; */
-/* 	  } */
-/* 	elided--; */
-/*         } */
-/*       c+=2; */
-/*       } */
-/*     } */
-/*   if (*c)  */
-/*     { */
-/*     ushort mask; */
-/*     c++; */
-/*     sscanf(c, "%d", &fld); // fld has total number of bits */
-/*     if (fld >= 128) return (fld > 128)? -1: 0; */
-/*     if (up < &buf[fld >> 3]) return -1; */
-/*     up = &buf[(fld >> 3)]; */
-/*     fld %= 16;   // number of used bits in last ushort */
-/*     fld = 16 - fld;  // number of unused bits */
-/*     mask = (0xFFFF << fld);  // mask for last ushort */
-/*     if (fill)  */
-/*       { */
-/* 	mask = ~mask; */
-/* 	// if up is at the high byte in a short */
-/* 	if (!((up - buf) & 1)) *up++ |= ((mask >> 8) & 0xFF); */
-/* 	*up |= (mask & 0xFF); */
-/*       } */
-/*     else */
-/*       { */
-/* 	*up++ &= ((mask >> 8) & 0xFF); */
-/* 	*up   &= (mask & 0xFF); */
-/*       } */
-/*     } */
-  return 0;
-}
+#undef CVTV_BODY_COMMON
 
 int write_ASNums(struct ASNum *asnump, char *buf, int num)
 {
