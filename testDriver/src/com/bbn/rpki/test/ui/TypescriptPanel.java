@@ -88,7 +88,7 @@ public class TypescriptPanel implements TypescriptLogger {
   }
 
   /**
-   * 
+   * @param title display at the top of the panel
    */
   public TypescriptPanel(String title) {
     textPane.setEditable(false);

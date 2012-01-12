@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.objects;
 
+import java.util.Map;
+
 /**
  * <Enter the description of this type here>
  *
@@ -12,6 +14,7 @@ public class CA_cert extends Certificate {
   private static class S {
     int serial;
     String sia_path;
+    
     S(FactoryBase myFactory, CA_Object parent) {
       serial = parent.getNextChildSN();
       // Local variable to help with naming conventions
@@ -56,4 +59,15 @@ public class CA_cert extends Certificate {
     Util.create_binary(this, "CERTIFICATE selfsigned=False");
 
   }
+
+  /**
+   * @see com.bbn.rpki.test.objects.Certificate#getFieldMap(java.util.Map)
+   */
+  @Override
+  public void getFieldMap(Map<String, Object> map) {
+    super.getFieldMap(map);
+    map.put("crldp", crldp);
+    map.put("aia", aia);
+  }
+  
 }

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.ini4j.Profile.Section;
@@ -74,26 +73,11 @@ public class TestbedConfig implements Constants {
 
       // loop over all sections and options and build factories
       for (Map.Entry<String, Section> sectionEntry : sectionEntries) {
-        String section = sectionEntry.getKey();
-        if (section.startsWith("EPOCH-")) {
-          configureEpoch(sectionEntry);
-        } else {
-          configureFactory(sectionEntry);
-        }
+        configureFactory(sectionEntry);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  /**
-   * @param sectionEntry
-   */
-  private void configureEpoch(Entry<String, Section> sectionEntry) {
-    int epochNumber = Integer.parseInt(sectionEntry.getKey().split("-")[1]);
-    
-    // TODO Auto-generated method stub
-    
   }
 
   /**

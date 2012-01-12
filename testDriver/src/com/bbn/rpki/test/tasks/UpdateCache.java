@@ -11,15 +11,7 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class UpdateCache extends Task {
-  private final Model model;
-  
-  /**
-   * @param model
-   */
-  public UpdateCache(Model model) {
-    this.model = model;
-  }
-  
+    
   /**
    * @see com.bbn.rpki.test.tasks.Task#run()
    */

@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.objects;
 
+import java.util.Map;
 
 /**
  * <Enter the description of this type here>
@@ -48,7 +49,6 @@ public class EE_cert extends Certificate {
   EE_cert(CA_Object parent, Factory myFactory, IPRangeList ipv4,
           IPRangeList ipv6, IPRangeList asList) {
     this(parent, myFactory, new S(parent, myFactory), ipv4, ipv6, asList);
-    // TODO Auto-generated constructor stub
   }
   
   private EE_cert(CA_Object parent, Factory myFactory, S s, IPRangeList ipv4,
@@ -70,4 +70,14 @@ public class EE_cert extends Certificate {
     Util.create_binary(this, "CERTIFICATE", "selfsigned=False");
   }
 
+  /**
+   * @see com.bbn.rpki.test.objects.Certificate#getFieldMap(java.util.Map)
+   */
+  @Override
+  public void getFieldMap(Map<String, Object> map) {
+    super.getFieldMap(map);
+    map.put("aia", aia);
+    map.put("crldp", crldp);
+  }
+  
 }

@@ -16,6 +16,7 @@ public class CheckCacheStatus extends Task {
    * @param model
    */
   public CheckCacheStatus(Model model) {
+    // Nothing to do, yet
   }
 
   /**
@@ -31,7 +32,7 @@ public class CheckCacheStatus extends Task {
    */
   @Override
   public int getBreakdownCount() {
-    // TODO Auto-generated method stub
+    // CAnnot be broken down
     return 0;
   }
 
@@ -40,7 +41,7 @@ public class CheckCacheStatus extends Task {
    */
   @Override
   public TaskBreakdown getTaskBreakdown(int n) {
-    // TODO Auto-generated method stub
+    // Should not be called
     return null;
   }
 
@@ -51,5 +52,4 @@ public class CheckCacheStatus extends Task {
   protected String getLogDetail() {
     return null;
   }
-
 }

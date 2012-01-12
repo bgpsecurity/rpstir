@@ -6,6 +6,7 @@ package com.bbn.rpki.test.objects;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <Enter the description of this type here>
@@ -65,5 +66,19 @@ public class Crl extends CA_Obj {
     Util.writeConfig(this);
     Util.create_binary(this, "CRL");
   }
-
+   
+  /**
+   * @see com.bbn.rpki.test.objects.CA_Obj#getFieldMap(java.util.Map)
+   */
+  @Override
+  public void getFieldMap(Map<String, Object> map) {
+    super.getFieldMap(map);
+    map.put("parentcertfile", parentcertfile);
+    map.put("parentkeyfile", parentkeyfile);
+    map.put("issuer", issuer);
+    map.put("thisupdate", thisupdate);
+    map.put("nextupdate", nextupdate);
+    map.put("crlnum", crlnum);
+    map.put("aki", aki);
+  }
 }

@@ -218,4 +218,17 @@ public class Range implements Constants, Comparable<Range> {
   public boolean overlaps(Range b) {
     return min.compareTo(b.max) < 0 && max.compareTo(b.min) >= 0; 
   }
+  
+  /**
+   * @param b
+   * @return the overlapping range or null if no overlap
+   */
+  public Range intersection(Range b) {
+    BigInteger maxMin = min.max(b.min);
+    BigInteger minMax = max.min(b.max);
+    if (maxMin.compareTo(minMax) <= 0) {
+      return new Range(maxMin, minMax, version, true);
+    }
+    return null;
+  }
 }

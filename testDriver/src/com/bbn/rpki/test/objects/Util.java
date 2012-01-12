@@ -15,8 +15,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,6 +22,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.bbn.rpki.test.util.Sucker;
 
@@ -174,12 +174,12 @@ public class Util implements Constants {
 
   // loops through all member of this class and writes them to the config file
 
-      Field[] fields = ca_obj.getClass().getFields();
-      for (Field field : fields) {
-        if (Modifier.isStatic(field.getModifiers())) continue;
-        Object val = field.get(ca_obj);
+      Map<String, Object> fieldMap = new TreeMap<String, Object>();
+      ca_obj.getFieldMap(fieldMap);
+      for (Map.Entry<String, Object> entry : fieldMap.entrySet()) {
+        Object val = entry.getValue();
         if (val != null) {
-          String member = field.getName();
+          String member = entry.getKey();
           if (member.equals("issuer") || member.equals("subject")) {
             // deal with the issuer and subject name
             String[] fieldNames;

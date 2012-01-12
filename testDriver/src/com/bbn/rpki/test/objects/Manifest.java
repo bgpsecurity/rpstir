@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <Enter the description of this type here>
@@ -71,5 +72,17 @@ public class Manifest extends CMS {
 
     Util.writeConfig(this);
     Util.create_binary(this, "MANIFEST");
+  }
+
+  /**
+   * @see com.bbn.rpki.test.objects.CA_Obj#getFieldMap(java.util.Map)
+   */
+  @Override
+  public void getFieldMap(Map<String, Object> map) {
+    super.getFieldMap(map);
+    map.put("manNum", manNum);
+    map.put("thisupdate", thisupdate);
+    map.put("nextupdate", nextupdate);
+    map.put("fileList", fileList);
   }
 }

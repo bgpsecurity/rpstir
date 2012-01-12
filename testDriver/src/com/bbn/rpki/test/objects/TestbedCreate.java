@@ -136,7 +136,7 @@ public class TestbedCreate implements Constants {
     for (Pair ca_def : list) {
       for (int n = 0; n < ca_def.arg.intValue(); n++) {
         if (MAX_NODES > repo_size) {
-          CA_Obj child = FACTORIES.get(ca_def.tag).create(ca_node);
+          Object child = FACTORIES.get(ca_def.tag).create(ca_node);
           if (child instanceof CA_Object) {
             ca_node.children.add((CA_Object) child);
           } else if (child instanceof Roa) {

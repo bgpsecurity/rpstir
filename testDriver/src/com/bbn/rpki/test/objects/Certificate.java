@@ -5,6 +5,7 @@ package com.bbn.rpki.test.objects;
 
 import java.io.File;
 import java.util.Calendar;
+import java.util.Map;
 
 /**
  * <Enter the description of this type here>
@@ -151,5 +152,28 @@ public class Certificate extends CA_Obj {
         this.ipv6 = myFactory.getIPV6RangeList();
         this.as_list = myFactory.getASRangeList();
     }
+  }
+
+  /**
+   * @see com.bbn.rpki.test.objects.CA_Obj#getFieldMap(java.util.Map)
+   */
+  @Override
+  public void getFieldMap(Map<String, Object> map) {
+    super.getFieldMap(map);
+    map.put("serial", serial);
+    map.put("notBefore", notBefore);
+    map.put("notAfter", notAfter);
+    map.put("subjkeyfile", subjkeyfile);
+    map.put("ski", ski);
+    map.put("aki", aki);
+    map.put("sia", sia);
+    map.put("SIA_path", SIA_path);
+    map.put("commonName", commonName);
+    map.put("issuer", issuer);
+    map.put("subject", subject);
+    map.put("parentkeyfile", parentkeyfile);
+    map.put("as_list", as_list);
+    map.put("ipv4", ipv4);
+    map.put("ipv6", ipv6);
   }
 }

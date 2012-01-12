@@ -12,13 +12,13 @@ package com.bbn.rpki.test.objects;
 public class SS_cert extends Certificate {
   private static class S {
 
-    public String siaPath;
-    public int serial = 0;
-    public IPRangeList ipv4 = new IPRangeList(IPRangeType.ipv4);
-    public IPRangeList ipv6 = new IPRangeList(IPRangeType.ipv6);
-    public IPRangeList asList = new IPRangeList(IPRangeType.as);
+    String siaPath;
+    int serial = 0;
+    IPRangeList ipv4 = new IPRangeList(IPRangeType.ipv4);
+    IPRangeList ipv6 = new IPRangeList(IPRangeType.ipv6);
+    IPRangeList asList = new IPRangeList(IPRangeType.as);
     
-    S(CA_Object parent, FactoryBase myFactory) {
+    S(Allocator parent, FactoryBase myFactory) {
       String nickName = myFactory.bluePrintName + "-" + serial;
       siaPath = myFactory.serverName + "/" + nickName + "/";
     }

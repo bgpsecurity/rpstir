@@ -5,6 +5,7 @@ package com.bbn.rpki.test.objects;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -44,4 +45,14 @@ public class Roa extends CMS {
     Util.create_binary(this, "ROA");
   }
 
+  /**
+   * @see com.bbn.rpki.test.objects.CA_Obj#getFieldMap(java.util.Map)
+   */
+  @Override
+  public void getFieldMap(Map<String, Object> map) {
+    super.getFieldMap(map);
+    map.put("asID", asID);
+    map.put("roaipv4", roaipv4);
+    map.put("roaipv6", roaipv6);
+  }
 }

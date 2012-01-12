@@ -26,7 +26,7 @@ public interface TypescriptLogger {
   public void log(Object msg, String style);
 
   /**
-   * @param asList
+   * @param msg the message to log
    */
   public void log(Object msg);
 

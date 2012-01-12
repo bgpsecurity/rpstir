@@ -43,7 +43,7 @@ public class Test {
     for (int epochIndex = 0; epochIndex < model.getEpochCount(); epochIndex++) {
       breakDown(new UploadEpoch(model, epochIndex), epochIndex);
     }
-    tasks.add(new UpdateCache(model));
+    tasks.add(new UpdateCache());
     tasks.add(new CheckCacheStatus(model));
   }
   
@@ -82,7 +82,7 @@ public class Test {
       tasks.add(new InstallTrustAnchor(model));
     }
     if (shouldUpdateCache(task)) {
-      tasks.add(new UpdateCache(model));
+      tasks.add(new UpdateCache());
       tasks.add(new CheckCacheStatus(model));
     }
   }

@@ -13,17 +13,14 @@ import java.util.List;
  * @author RTomlinson
  */
 public class EE_Object extends Allocator {
-  private final IPRangeList ipv4Resources;
-  private final IPRangeList ipv6Resources;
-  private final IPRangeList asResources;
   final String bluePrintName;
-  final FactoryBase myFactory;
+  final Factory myFactory;
   final CA_Object parent;
   final List<EE_Object> children;
-  final EE_cert certificate;
   final String SIA_path;
   final int id;
   final String path_ROA;
+  EE_cert certificate;
  
   EE_Object(Factory myFactory,CA_Object parent) {
 
@@ -41,16 +38,27 @@ public class EE_Object extends Allocator {
       this.asResourcesFree = new IPRangeList(this.asResources);
   
       // Initialize our certificate
+      Certificate certificate = getCertificate();
+      
+      // Grab what I need from the certificate 
+      // Obtain just the SIA path and cut off the r:rsync
+      this.SIA_path = Util.removePrefix(certificate.sia, RSYNC_EXTENSION);
+      this.id = certificate.serial;
+      this.path_ROA = this.SIA_path;
+  }
+  
+  /**
+   * @return the Certificate for this EE
+   */
+  public EE_cert getCertificate() {
+    if (this.certificate == null || isModified()) {
       this.certificate = new EE_cert(parent,
                                      myFactory,
                                  this.ipv4Resources,
                                  this.ipv6Resources,
                                  this.asResources);
-      
-      // Grab what I need from the certificate 
-      // Obtain just the SIA path and cut off the r:rsync
-      this.SIA_path = Util.removePrefix(this.certificate.sia, RSYNC_EXTENSION);
-      this.id = this.certificate.serial;
-      this.path_ROA = this.SIA_path;
+      setModified(false);
+    }
+    return this.certificate;
   }
 }

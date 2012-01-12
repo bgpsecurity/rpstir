@@ -15,8 +15,6 @@ import javax.swing.JSplitPane;
 import com.bbn.rpki.test.RunLoader;
 import com.bbn.rpki.test.Test;
 import com.bbn.rpki.test.TestBasic;
-import com.bbn.rpki.test.TestExpanded;
-import com.bbn.rpki.test.TestUpdateEveryStep;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.Task;
@@ -58,8 +56,8 @@ public class Main {
       Model model = new Model(Util.RPKI_ROOT, new File(Util.RPKI_ROOT, arg));
       Test[] tests = {
           new TestBasic(model),
-          new TestExpanded(model),
-          new TestUpdateEveryStep(model),
+//          new TestExpanded(model),
+//          new TestUpdateEveryStep(model),
       };
       RunLoader.singleton().start();
       for (Test test : tests) {

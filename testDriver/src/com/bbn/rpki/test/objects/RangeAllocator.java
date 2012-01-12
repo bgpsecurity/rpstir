@@ -77,7 +77,7 @@ public class RangeAllocator implements Constants {
       if (reqType == 'r') {
         issuedBlock = allocateSingleRange(freeList, reqSize, ret, expressAsRange);
       } else if (reqType == 'p') {
-        issuedBlock = allocateSinglePrefix(freeList, ret, reqSize, expressAsRange);
+        issuedBlock = allocateSinglePrefix(freeList, reqSize, ret, expressAsRange);
       } else {
         throw new AllocationError("Invalid requestType: " + reqType);
       }
@@ -92,20 +92,29 @@ public class RangeAllocator implements Constants {
    * @param expressAsRange 
    * @return
    */
-  private static Range allocateSinglePrefix(IPRangeList freeList, IPRangeList allocatedList, BigInteger reqSize, boolean expressAsRange) {
+  private static Range allocateSinglePrefix(IPRangeList freeList, BigInteger reqSize, IPRangeList allocatedList, boolean expressAsRange) {
     if (!Range.isPowerOfTwo(reqSize))
       throw new AllocationError("Illegal prefix size: " + reqSize);
     for (int i = 0, n = freeList.size(); i < n; i++) {
       Range x = firstFitPrefix(freeList.get(i), allocatedList, reqSize, expressAsRange);
       if (x != null) {
-        List<Range> perforated = perforate(freeList.get(i), x);
-        List<Range> insertion = freeList.subList(i, i + 1);
-        insertion.clear();
-        insertion.addAll(perforated);
+        removeRange(freeList, i, x);
         return x;
       }
     }
     throw new AllocationError("Unable to fulfill request for prefix of size " + reqSize);
+  }
+
+  /**
+   * @param freeList
+   * @param i
+   * @param x
+   */
+  private static void removeRange(IPRangeList freeList, int i, Range x) {
+    List<Range> perforated = perforate(freeList.get(i), x);
+    List<Range> insertion = freeList.subList(i, i + 1);
+    insertion.clear();
+    insertion.addAll(perforated);
   }
 
   /**
@@ -249,5 +258,72 @@ public class RangeAllocator implements Constants {
       if (a.overlaps(expanded)) return a;
     }
     return null;
+  }
+
+  /**
+   * @param resourcesFree
+   * @param range
+   */
+  public static void addRange(IPRangeList resourcesFree, Range range) {
+    for (int i = 0, n = resourcesFree.size(); i < n; i++) {
+      Range test = resourcesFree.get(i);
+      Range test2 = null;
+      if (test.compareTo(range) > 0) {
+        assert !test.overlaps(range);
+        // There are four legal cases:
+        //  range is adjacent to test
+        //  range is adjacent to the preceding range
+        //  range is adjacent to neither
+        //  range is adjacent to both
+        int x = 0;
+        if (range.max.equals(test.min.subtract(BigInteger.ONE))) {
+          // Adjacent to test
+          x |= 1;
+        }
+        if (i > 0) {
+          // May be adjacent to the preceding range
+          test2 = resourcesFree.get(i - 1);
+          assert !test2.overlaps(range);
+          if (range.min.equals(test2.max.add(BigInteger.ONE))) {
+            x |= 2;
+          }
+        }
+        switch (x) {
+        case 0:
+          // Not adjacent at all
+          resourcesFree.add(i, range);
+          return;
+        case 1:
+          // Adjacent to following range
+          test.min = range.min;
+          return;
+        case 2:
+          // Adjacent to preceding range
+          test2.max = range.max;
+          return;
+        case 3:
+          // adjacent to both
+          test2.max = test.max;
+          resourcesFree.remove(i);
+          return;
+        }
+        return;
+      }
+    }
+    resourcesFree.add(range);
+  }
+  /**
+   * @param resourcesFree
+   * @param range
+   */
+  public static void removeRange(IPRangeList resourcesFree, Range range) {
+    for (int i = 0, n = resourcesFree.size(); i < n; i++) {
+      Range test = resourcesFree.get(i);
+      if (test.min.compareTo(range.max) > 0) return;
+      Range intersection = test.intersection(range);
+      if (intersection != null) {
+        resourcesFree.set(i, intersection);
+      }
+    }
   }
 }
