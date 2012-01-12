@@ -20,7 +20,14 @@ resource-pki-*.tar.gz
 # eclipse metadata
 .metadata
 
+# files generated during program execution
+
+chaser_rsync.config
+initial_rsync.config
+test.tal
+
 # directories generated during program execution
+
 *REPOSITORY
 *LOGS
 *EEcertificates
