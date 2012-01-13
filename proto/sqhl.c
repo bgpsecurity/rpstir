@@ -1399,7 +1399,7 @@ static int make_goodoids()
   delete_casn(&casn);
   return lth;
   }
-  
+
 /*
  * callback function for verify_children
  */
@@ -1416,7 +1416,7 @@ static int verifyChildCRL (scmcon *conp, scmsrcha *s, int idx)
 
   UNREFERENCED_PARAMETER(idx);
   if (s->nused < 4) return ERR_SCM_INVALARG;
-  
+
   if (!goodoids[0].lth) make_goodoids();
   // try verifying crl
   snprintf (pathname, PATH_MAX, "%s/%s", (char *) s->vec[0].valptr,
@@ -1577,7 +1577,7 @@ static int updateManifestObjs(scmcon *conp, struct Manifest *manifest)
 	  bhashlen = strlen(updateManHash);
 	  bhash = unhexify(bhashlen, updateManHash);
 	  if ( bhash == NULL )
-	    sta = ERR_SCM_BADHASH;
+	    sta = ERR_SCM_BADMFTDBHASH;
 	  else
 	    {
 	      bhashlen /= 2;
@@ -2040,7 +2040,44 @@ int addStateToFlags(unsigned int *flags, int isValid, char *filename,
   return sta >= 0 ? 0 : sta;
 }
 
-static struct Extension *find_extension(struct Certificate *certp, char *idp)
+
+/**=============================================================================
+ * @brief Get an extension from a Cert, and a count of that type of extn.
+ *
+ * If multiple extensions of the given type are found, return the first one.
+ *
+ * @param certp (struct Certificate*)
+ * @param idp (char*) an id pointer
+ * @param count (int*) count of extensions of type id found
+ * @retval extp a pointer to the extension<br />null on failure
+------------------------------------------------------------------------------*/
+struct Extension *get_extension(struct Certificate *certp,
+        char *idp, int *count) {
+    struct Extensions *extsp = &certp->toBeSigned.extensions;
+    struct Extension *extp = NULL;
+    struct Extension *ret = NULL;
+    int cnt = 0;
+
+    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
+            extp != NULL;
+            extp = (struct Extension *)next_of(&extp->self)) {
+        if (!diff_objid(&extp->extnID, idp)) {
+            if (!cnt)
+                ret = extp;
+            cnt++;
+        }
+    }
+
+    if (count)
+        *count = cnt;
+
+    return ret;
+}
+
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
+struct Extension *find_extension(struct Certificate *certp, char *idp)
   {
   struct Extensions *exts = &certp->toBeSigned.extensions;
   struct Extension *extp;
@@ -2068,15 +2105,21 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
   int   x509sta = 0;
 
   cf->dirid = id;
+  struct Certificate cert;
+  Certificate(&cert, (ushort)0);
+  struct Extension *ski_extp, *aki_extp;
+  int locerr = 0;
+  if (get_casn_file(&cert.self, fullpath, 0) < 0) locerr = ERR_SCM_BADCERT;
+  else if (!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)))
+    locerr = ERR_SCM_NOSKI;
+  if (locerr)
+    {
+    delete_casn(&cert.self);
+    return locerr;
+    }
   if ( utrust > 0 )
     {
-    struct Certificate cert;
-    Certificate(&cert, (ushort)0);
-    struct Extension *ski_extp, *aki_extp;
-    int locerr = 0;
-    if (get_casn_file(&cert.self, fullpath, 0) < 0 ||
-	!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)) ||
-	((aki_extp = find_extension(&cert, id_authKeyId)) &&
+    if (((aki_extp = find_extension(&cert, id_authKeyId)) &&
 	 diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
 		   &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
 	strcmp(cf->fields[CF_FIELD_SUBJECT],
@@ -2084,10 +2127,10 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     else if (vsize_casn(&cert.signature) < 256 ||
 	     vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.subjectPublicKey)
 	     < 265) locerr = ERR_SCM_SMALLKEY;
-    delete_casn(&cert.self);
     if (locerr)
       {
       X509_free(x);
+      delete_casn(&cert.self);
       return(locerr < 0) ?locerr: ERR_SCM_NOTSS;
       }
     cf->flags |= SCM_FLAG_TRUSTED;
@@ -2097,7 +2140,8 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
     ct = TA_CERT;
   else
     ct = ( cf->flags & SCM_FLAG_CA ) ? CA_CERT : EE_CERT;
-  sta = rescert_profile_chk(x, ct, checkRPKI);
+  sta = rescert_profile_chk(x, &cert, ct, checkRPKI);
+  delete_casn(&cert.self);
 // MCR: new code to check for expiration. Ignore this
 // check if "allowex" is non-zero
   if ( (sta == 0) && (allowex == 0) )
@@ -2188,10 +2232,25 @@ int add_crl(scm *scmp, scmcon *conp, char *outfile, char *outfull,
   int   sta = 0;
   unsigned int i;
   int chainOK, x509sta;
-//  struct CertificateRevocationList CRL;
+  struct CertificateRevocationList crl;
 
   if (!goodoids[0].lth) make_goodoids();
   UNREFERENCED_PARAMETER(utrust);
+
+  // standalone profile check against draft-ietf-sidr-res-certs
+  CertificateRevocationList(&crl, 0);
+  if (get_casn_file(&crl.self, outfull, 0) < 0) {
+    log_msg(LOG_ERR, "Failed to load CRL: %s", outfile);
+    delete_casn(&crl.self);
+    return ERR_SCM_INVALASN;
+  }
+  if ((sta = crl_profile_chk(&crl)) != 0) {
+    log_msg(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
+    delete_casn(&crl.self);
+    return sta;
+  }
+  delete_casn(&crl.self);
+
   cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, goodoids);
   if ( cf == NULL || x == NULL )
     {
@@ -2273,6 +2332,8 @@ static int extractAndAddCert(struct ROA *roap, scm *scmp, scmcon *conp,
     trustAnchor;
   else certp = (struct Certificate *)member_casn(
       &roap->content.signedData.certificates.self, 0);
+  if (!certp)
+    return ERR_SCM_BADNUMCERTS;
   if ((certp->self.flags & ASN_INDEF_LTH_FLAG)) return ERR_SCM_ASN1_LTH;
   // read the embedded cert information, in particular the ski
   if ((sta = hexify_ski(certp, skip)) < 0) return sta;
@@ -2500,14 +2561,14 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int   sta, cert_added = 0;
   struct ROA roa;
   char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
-  ulong ltime;
+  int64_t ltime;
   unsigned int man_id = 0;
 
   // manifest stored in same format as a roa
   ROA(&roa, 0);
   initTables (scmp);
   sta = get_casn_file(&roa.self, outfull, 0);
-  if (sta < 0) 
+  if (sta < 0)
     {
     log_msg(LOG_ERR, "invalid manifest %s", outfull);
     delete_casn(&roa.self);

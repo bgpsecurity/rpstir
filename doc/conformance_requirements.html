@@ -1,0 +1,563 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="keywords" content="" />
+        <meta name="description" content="" />
+        <title>RPKI Conformance Requirements</title>
+        <link rel="stylesheet" type="text/css" href="conformance_requirements.css" />
+        <link rel="shortcut icon" href="images/favicon.ico" />
+    </head>
+
+<body>
+
+    <div id="outer">
+
+        <div id="links">
+            <a href="conformance_requirements.html#asip">AS, IP</a><br />
+            <a href="conformance_requirements.html#ca or ee">CA or EE?</a><br />
+            <a href="conformance_requirements.html#crldp">CRLDP</a><br />
+            <a href="conformance_requirements.html#crlissuer">CRLIssuer</a><br />
+            <a href="conformance_requirements.html#extensions">Extensions</a><br />
+            <a href="conformance_requirements.html#isselfsigned">isSelfSigned?</a><br />
+            <a href="conformance_requirements.html#issuer">Issuer</a><br />
+            <a href="conformance_requirements.html#issuid">IssUID</a><br />
+            <a href="conformance_requirements.html#serial number">serial number</a><br />
+            <a href="conformance_requirements.html#sia">SIA</a><br />
+            <a href="conformance_requirements.html#signature">signature</a><br />
+            <a href="conformance_requirements.html#uid">UID</a><br />
+            <a href="conformance_requirements.html#version">version</a><br />
+            <a href="conformance_requirements.html#empty">empty</a><br />
+        </div>
+
+        <div id="content">
+
+
+            <div id="asip">
+                <table>
+                    <caption>AS, IP</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr>
+                        <td>badCert2ASNum.cer</td>
+                        <td>two AS number extensions</td>
+                    </tr>
+                    <tr>
+                        <td>badCert2IPAddr.cer</td>
+                        <td>two IP address extensions</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesASNoCrit.cer</td>
+                        <td>AS number extension not critical</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadAFI.cer</td>
+                        <td>invalid IP address family</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadASOrder.cer</td>
+                        <td>AS numbers out of order</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadV4Order.cer</td>
+                        <td>IPv4 addresses out of order</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesBadV6Order.cer</td>
+                        <td>IPv6 addresses out of order</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesIPNoCrit.cer</td>
+                        <td>IP address extension not critical</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesNone.cer</td>
+                        <td>no IP addresses or AS numbers</td>
+                    </tr>
+                    <tr>
+                        <td>badCertResourcesSAFI.cer</td>
+                        <td>IP addresses has SAFI digit</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr>
+                        <th>source</th> <th>statement</th> <th>implementation</th>
+                    </tr>
+                    <tr>
+                        <td>rfc3779 3.2.1 OID</td>
+                        <td>The OID for this extension is id-pe-autonomousSysIds.</td>
+                        <td></td>
+                    <tr>
+                    <tr>
+                        <td>rfc3779 3.2.3.3 Element inherit</td>
+                        <td>If the ASIdentifierChoice choice contains the inherit element, then the set of authorized AS identifiers is taken from the issuer's certificate, or from the issuer's issuer's certificate, recursively, until a certificate containing an ASIdentifierChoice containing an asIdsOrRanges element is located.</td>
+                        <td></td>
+                    <tr>
+                    <tr>
+                        <td>rfc3779 3.2.3.4 Element asIdsOrRanges</td>
+                        <td>The asIdsOrRanges element is a SEQUENCE of ASIdOrRange types.  Any pair of items in the asIdsOrRanges SEQUENCE MUST NOT overlap.  Any contiguous series of AS identifiers MUST be combined into a single range whenever possible.  The AS identifiers in the asIdsOrRanges element MUST be sorted by increasing numeric value.</td>
+                        <td></td>
+                    <tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
+                        <td>Either the AS Resources extension, or the IP Resources extension, or both, MUST be present in all RPKI certificates, and if present, MUST be marked critical.</td>
+                        <td>myssl.c - rescert_ip_asnum_chk()</td>
+                    <tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
+                        <td>RDI values are NOT supported in this profile and MUST NOT be used.</td>
+                        <td>myssl.c - rescert_as_resources_chk()</td>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.11 AS Resources </td>
+                        <td>This extension MUST either specify a non-empty set AS number records, or use the "inherit" setting to indicate that the AS number resource set of this certificate is inherited from that of the certificate's issuer.</td>
+                        <td>myssl.c - rescert_asnums_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>?</td>
+                        <td>IP numbers must be in canonical order.</td>
+                        <td>sqhl.c - checkit() - openssl/crypto/x509v3/v3_addr.c - v3_addr_is_canonical()</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="ca or ee">
+                <table>
+                    <caption>CA or EE?</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr><td>-</td> <td>is a Certificate CA or EE</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>rfc5280 4.2.1.9 Basic Constraints</td>
+                        <td>The basic constraints extension identifies whether the subject of the certificate is a CA and the maximum depth of valid certification paths that include this certificate.<br />
+                        The cA boolean indicates whether the certified public key may be used to verify certificate signatures.  If the cA boolean is not asserted, then the keyCertSign bit in the key usage extension MUST NOT be asserted.  If the basic constraints extension is not present in a version 3 certificate, or the extension is present but the cA boolean is not asserted, then the certified public key MUST NOT be used to verify certificate signatures.</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.1 Basic Constraints</td>
+                        <td>The Basic Constraints extension field is a critical extension in the Resource Certificate profile, and MUST be present when the Subject is a CA, and MUST NOT be present otherwise.</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.1 Basic Constraints</td>
+                        <td>The Path Length Constraint is not specified for RPKI certificates, and MUST NOT be present.</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="crldp">
+                <table>
+                    <caption>CRLDP</caption>
+                    <tr><th>.cer in raw/root/</th>            <th>in run_bad_.sh</th>               <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCert2CRLDP.cer</td>            <td>badCert2CRLDP.cer</td>            <td>2CRLDP</td>            <td>two CRLDP extensions</td></tr>
+                    <tr><td>badCertCRLDP2DistPt.cer</td>      <td>badCertCRLDP2DistPt.cer</td>      <td>CRLDP2DistPt</td>      <td>CRL Dist Pt has 2 Dist points</td></tr>
+                    <tr><td>badCertCRLDPCrit.cer</td>         <td>badCertCRLDPCrit.cer</td>         <td>CRLDPCrit</td>         <td>CRL Dist Pt marked critical</td></tr>
+                    <tr><td>badCertCRLDPCrlIssuer.cer</td>    <td>badCertCRLDPCrlIssuer.cer</td>    <td>CRLDPCrlIssuer</td>    <td>CRL Dist Pt has CRL Issuer</td></tr>
+                    <tr><td>badCertCRLDPNoDistPt.cer</td>     <td>badCertCRLDPNoDistPt.cer</td>     <td>CRLDPNoDistPt</td>     <td>CRL DIST PT hs no Dist Pt</td></tr>
+                    <tr><td>badCertCRLDPReasons.cer</td>      <td>badCertCRLDPReasons.cer</td>      <td>CRLDPReasons</td>      <td>CRL Dist Pt has reasons</td></tr>
+                    <tr><td>badCertCRLDPNoRsyncDistPt.cer</td><td>badCertCRLDPNoRsyncDistPt.cer</td><td>CRLDPNoRsyncDistPt</td><td>no rsync URI in CRLDP</td></tr>
+                    <tr><td>badCertNoCRLDP.cer</td>           <td>badCertNoCRLDP.cer</td>           <td>NoCRLDP</td>           <td>no CRLDP extension</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="crlissuer">
+                <table>
+                    <caption>CRLIssuer</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>           <th>in README</th>         <th>problem</th></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuerOID</td>      <td>wrong OID for issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Sets</td>    <td>two SETs in issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuerUTF</td>      <td>issuer name in utf not printable string</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2Seq</td>     <td>two SEQUENCEs in issuer name</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssuer2SerNums</td> <td>two serial numbers</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssAltName</td>     <td>has issuer alternative name extension</td></tr>
+                    <tr><td></td>                            <td></td>                         <td>CRLIssDistPt</td>      <td>has issuing distribution point extension</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="extensions">
+                <table>
+                    <caption>Extensions</caption>
+                    <tr> <th>.cer</th> <th>problem</th> <th>notes</th></tr>
+                    <tr><td>badCertExtension1.cer</td> <td>illegal extension (PolicyMappings)</td> <td>Acceptable if not marked critical.</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 1 Introduction</td>
+                        <td>This profile defines those fields that are used in a Resource Certificate that MUST be present for the certificate to be valid.  Any extensions not explicitly mentioned MUST be absent.</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8 Resource Certificate Extensions</td>
+                        <td>The following X.509 V3 extensions MUST be present in a conforming Resource Certificate, except where explicitly noted otherwise.  Each extension in a resource certificate is designated as either critical or non-critical.  A certificate-using system MUST reject the certificate if it encounters a critical extension it does not recognise; however, a non-critical extension MAY be ignored if it is not recognised [RFC5280].</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /> <br />
+            <div id="isselfsigned">
+                <table>
+                    <caption>Is self signed?</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr>
+                        <td>na</td>
+                        <td>is_self_signed()</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ieft-sidr-ta-07 2.1 Trust Anchor Locator Format</td>
+                        <td>A TA in the RPKI is represented by a self-signed X.509 CA certificate...</td>
+                        <td>proto/myssl.c - ?</td>
+                    </tr>
+                    <tr>
+                        <td>rfc5280 3.2 Certification Paths and Trust</td>
+                        <td>Self-issued certificates are CA certificates in which the issuer and subject are the same entity.<br />
+                            Self-signed certificates are self-issued certificates where the digital signature may be verified by the public key bound into the certificate.</td>
+                        <td>proto/myssl.c - ?</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.3 Authority Key Identifier</td>
+                        <td>This extension MUST appear in all Resource Certificates, with the exception of a CA who issues a "self-signed" certificate.  In a self-signed certificate, a CA MAY include this extension, and set it equal to the Subject Key Identifier.  The authorityCertIssuer and authorityCertSerialNumber fields MUST NOT be present.  This extension is non-critical.</td>
+                        <td>proto/myssl.c - <br />?</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.7 Authority Information Access</td>
+                        <td>..."self-signed" certificate, in which case the extension MUST be omitted.  This extension is non-critical.</td>
+                        <td>proto/myssl.c - ?</td>
+                    </tr>
+                    <tr>
+                        <td>rfc5280 4.2.1.1 Authority Key Identifier</td>
+                        <td>...where a CA distributes its public key in the form of a "self-signed" certificate, the authority key identifier MAY be omitted.</td>
+                        <td>proto/myssl.c - ?</td>
+                    </tr>
+                    <tr>
+                        <td>rfc5280 4.1.2.4 Issuer</td>
+                        <td>If the names in the issuer and subject field in a certificate match according to the rules specified in Section 7.1, then the certificate is self-issued.</td>
+                        <td>proto/myssl.c - ?</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="issuer">
+                <table>
+                    <caption>Issuer</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>              <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCertIssuer2ComName.cer</td>   <td>Issuer2ComName</td>              <td>Issuer2ComName</td>    <td>issuer name has 2 common names</td></tr>
+                    <tr><td>badCertIssuer2SerNums.cer</td>   <td>badCertIssuer2SerNums.cer</td>   <td>Issuer2SerNums</td>    <td>issuer name has 2 serial numbers</td></tr>
+                    <tr><td>badCertIssuer2SetComName.cer</td><td>badCertIssuer2SetComName.cer</td><td>Issuer2SetComName</td> <td>issuer name has 2 sets with common names</td></tr>
+                    <tr><td>badCertIssuerOID.cer</td>        <td>badCertIssuerOID.cer</td>        <td>IssuerOID</td>         <td>issuer name is not id_commonName</td></tr>
+                    <tr><td>badCertIssuerSerNum.cer</td>     <td>badCertIssuerSerNum.cer</td>     <td>IssuerSerNum</td>      <td>issuer name has only a serial number</td></tr>
+                    <tr><td>badCertIssuerUtf.cer</td>        <td>badCertIssuerUtf.cer</td>        <td>IssuerUtf</td>         <td>issuer name has utf name</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.4 Issuer</td>
+                        <td>An Issuer name MUST contain one instance of the Common Name attribute and MAY contain one instance of the Serial Number attribute.</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.4 Issuer</td>
+                        <td>The Common Name attribute MUST be encoded using the ASN.1 type PrintableString [X.680].</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="issuid">
+                <table>
+                    <caption>IssUID</caption>
+                    <tr><th>.cer in raw/root/</th>           <th>in run_bad_.sh</th>           <th>in README</th>         <th>problem</th></tr>
+                    <tr><td>badCertIssUID.cer</td>           <td>badCertIssUID.cer</td>        <td>IssUID</td>            <td>has issuer unique ID</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /> <br />
+            <div id="serial number">
+                <table>
+                    <caption>Serial Number</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr> <tr>
+                        <td>SerNum</td>
+                        <td>negative number</td>
+                    </tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr> <tr>
+                        <td>rfc5280 4.1.2.2 Serial Number</td>
+                        <td>The serial number MUST be a positive integer ... .  It MUST be unique for each certificate issued by a given CA ... .  CAs MUST force the serialNumber to be a non-negative integer.</td>
+                        <td>proto/myssl.c - rescert_ser_num_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>rfc5280 4.1.2.2 Serial Number</td>
+                        <td>Certificate users MUST be able to handle serialNumber values up to 20 octets.  Conforming CAs MUST NOT use serialNumber values longer than 20 octets.</td>
+                        <td>proto/myssl.c - rescert_ser_num_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>rfc5280 4.1.2.2 Serial Number</td>
+                        <td>The serial number MUST be a positive integer ... .  It MUST be unique for each certificate issued by a given CA ... .  CAs MUST force the serialNumber to be a non-negative integer.</td>
+                        <td>proto/myssl.c - rescert_ser_num_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.2 Serial number</td>
+                        <td>The serial number value is a positive integer that is unique for each certificate issued by a given CA.</td>
+                        <td>proto/myssl.c - rescert_ser_num_chk()</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /> <br />
+            <div id="sia">
+                <table>
+                    <caption>SIA</caption>
+                    <tr> <th>.cer in raw/root/</th> <th>in README</th> <th>problem</th> </tr>
+                    <tr><td>.</td>        <td>-</td>                    <td>-</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>for</th> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>all</td>
+                        <td>rfc5280 4.2.2.2 Subject Information Access</td>
+                        <td>This extension may be included in end entity or CA certificates.  Conforming CAs MUST mark this extension as non-critical.</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>all</td>
+                        <td>rfc5280 4.2.2.2 Subject Information Access</td>
+                        <td>id-pe-subjectInfoAccess </td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>CA</td>
+                        <td>rfc5280 4.2.2.2 Subject Information Access</td>
+                        <td>The id-ad-caRepository OID is used when the subject is a CA that publishes certificates it issues in a repository.</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>all</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
+                        <td>This extension MUST be present, and is non-critical.</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>CA</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
+                        <td>This extension MUST have an instance of an accessMethod of id-ad-caRepository, with an accessLocation form of a URI that MUST specify an RSYNC URI [RFC5781].</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>CA</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
+                        <td>Other accessDescription elements with an accessMethod of id-ad-caRepository MAY be present. In such cases, the accessLocation values describe alternate supported URI access mechanisms for the same directory.</td>
+                        <td>not currently checked</td>
+                    </tr>
+                    <tr>
+                        <td>CA</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates</td>
+                        <td>This extension MUST have an instance of an AccessDescription with an accessMethod of id-ad-rpkiManifest, with an RSYNC URI [RFC5781] form of accessLocation.  The URI points to the CA's manifest of published objects [ID.sidr-rpki-manifests] as an object URL.</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>CA</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.1 SIA for CA Certificates </td>
+                        <td>Other accessDescription elements MAY exist for the id-ad-rpkiManifest accessMethod, where the accessLocation value indicates alternate access mechanisms for the same manifest object.</td>
+                        <td>not currently checked</td>
+                    </tr>
+                    <tr>
+                        <td>EE</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.2 SIA for EE Certificates</td>
+                        <td>This extension MUST have an instance of an accessMethod of id-ad-signedObject, with an accessLocation form of a URI that MUST include an RSYNC URI [RFC5781].  This URI points to the signed object that is verified using this EE certificate [ID.sidr-repos-struct].</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                    <tr>
+                        <td>EE</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.2 SIA for EE Certificates</td>
+                        <td>Other accessDescription elements may exist for the id-ad-signedObject accessMethod, where the accessLocation value indicates alternate URI access mechanisms for the same object, ...</td>
+                        <td>not currently checked</td>
+                    </tr>
+                    <tr>
+                        <td>EE</td>
+                        <td>draft-ietf-sidr-res-certs-22 4.8.8.2 SIA for EE Certificates</td>
+                        <td>Other AccessMethods MUST NOT be used for an EE certificates's SIA.</td>
+                        <td>myssl.c, rescert_sia_chk()</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="signature">
+                <table>
+                    <caption>Signature</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr><td>InnerSigAlg</td> <td>wrong signature algorithm in cert.toBeSigned</td></tr>
+                    <tr><td>OuterSigAlg</td> <td>wrong signature algorithm in cert.algorithm</td></tr>
+                    <tr><td>PubKeyAlg</td> <td>wrong SubjectPublicKey algorithm</td></tr>
+                    <tr><td>PubKeyExp</td> <td>wrong SubjectPublicKey exponent</td></tr>
+                    <tr><td>PubKeyLth</td> <td>wrong SubjectPublicKey length</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>rfc 5280 4.1.1.2 signatureAlgorithm</td>
+                        <td>This field MUST contain the same algorithm identifier as the signature field in the sequence tbsCertificate (Section 4.1.2.3).</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.7 Subject Public Key Info</td>
+                        <td>The algorithm used in this profile is specified in [ID.sidr-rpki-algs].</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-rpki-algs-05 2 Algorithms</td>
+                        <td>sig alg = RSA PKCS #1, ver 1.5<br />hash alg = SHA-256<br />exception:  hash alg = SHA-1 for AKI, SKI</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-rpki-algs-05 3 Asymmetric Key Pair Formats</td>
+                        <td>The RSA key pairs used to compute the signatures MUST have a 2048-bit modulus and a public exponent (e) of 65,537.</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="uid">
+                <table>
+                    <caption>UID</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr><td>IssUID</td> <td>has issuer unique ID</td></tr>
+                    <tr><td>SubjUID</td> <td>has subject unique ID</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4 Resource Certificates</td>
+                        <td>Unless specifically noted as being OPTIONAL, all the fields listed here MUST be present, and any other field MUST NOT appear in a conforming Resource Certificate.  Where a field value is specified here, this value MUST be used in conforming Resource Certificates.<br />
+                            - Issuer UID is not listed.<br />
+                            - Subject UID is not listed.</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="version">
+                <table>
+                    <caption>version</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr><td>badCertVersion1.cer</td> <td>version number is v1, i.e. 0</td></tr>
+                    <tr><td>badCertVersion2.cer</td> <td>version number is v2, i.e. 1</td></tr>
+                    <tr><td>badCertVersion4.cer</td> <td>version number is v4, i.e. 3</td></tr>
+                    <tr><td>badCertVersionNeg.cer</td> <td>version number is negative</td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td>draft-ietf-sidr-res-certs-22 4.1 Version</td>
+                        <td>As Resource Certificates are X.509 Version 3 certificates, the version MUST be 3 (i.e. the value of this field is 2).</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br /><br />
+            <div id="empty">
+                <table>
+                    <caption>empty</caption>
+                    <tr> <th>.cer</th> <th>problem</th> </tr>
+                    <tr><td></td> <td></td></tr>
+                </table>
+                <br />
+                <table>
+                    <caption> </caption>
+                    <tr> <th>source</th> <th>statement</th> <th>implementation</th> </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+
+
+        </div>  <!-- content -->
+
+        <div class="clearFloats"></div>
+
+    </div>  <!-- outer -->
+
+</body>
+</html>

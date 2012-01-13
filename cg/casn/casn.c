@@ -251,14 +251,17 @@ int eject_casn(struct casn *casnp, int num)
     int icount, err = 0;
 
     if (_clear_error(casnp) < 0) return -1;
-    if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_OF_ERR;
+    if (!(casnp->flags & ASN_OF_FLAG)) 
+      err = ASN_OF_ERR;
     else
 	{
         for (icount = 0, tcasnp = &casnp[1]; tcasnp->ptr; tcasnp = tcasnp->ptr,
             icount++);
-        if (num >= icount) err = ASN_OF_BOUNDS_ERR;
+        if (num >= icount) 
+          err = ASN_OF_BOUNDS_ERR;
 	}
-    if (err) return _casn_obj_err(casnp, err);
+    if (err) 
+      return _casn_obj_err(casnp, err);
     fcasnp = &casnp[1];  // first member in OF
     if (!num)
 	{
@@ -282,6 +285,22 @@ int eject_casn(struct casn *casnp, int num)
     _free_it(tcasnp);
     casnp->num_items--;
     return num;
+    }
+
+int eject_all_casn(struct casn *casnp)
+    {
+    int num= 0;
+    if ((num = num_items(casnp)) < 0) 
+      return _casn_obj_err(casnp, num);
+    if (num == 0) 
+      return 0;
+    int i, err = 0;
+    for (i = 1; i < num; i++)  // more efficient not to start with zeroth
+      {
+      if ((err = eject_casn(casnp, 1)) < 0) 
+        return err;
+      }
+    return eject_casn(casnp, 0);
     }
 
 int encode_casn(struct casn *casnp, uchar *to)
@@ -1379,7 +1398,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     {
     uchar bb, *b, *c, buf[8];
     int i, lth, num, of;
-    ulong secs;
+    int64_t secs;
     struct casn time_casn, *tcasnp, *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;

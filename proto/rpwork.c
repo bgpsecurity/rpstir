@@ -190,77 +190,6 @@ static struct done_cert *have_already(char *ski)
   return (struct done_cert *)0;
   }
 
-static struct AddressesOrRangesInIPAddressChoiceA *find_IP(int typ,
-    struct Extension *extp)
-  {
-  uchar fambuf[4];
-  int loctyp;
-  if (typ == IPv4) loctyp = 1;
-  else if (typ == IPv6) loctyp = 2;
-  else return (struct AddressesOrRangesInIPAddressChoiceA *)0;
-  struct IpAddrBlock *ipAddrBlock = &extp->extnValue.ipAddressBlock;
-  struct IPAddressFamilyA *ipFamp;
-  for (ipFamp = (struct IPAddressFamilyA *)member_casn(
-        &ipAddrBlock->self, 0);  ipFamp;
-    ipFamp = (struct IPAddressFamilyA *)next_of(&ipFamp->self))
-    {
-    read_casn(&ipFamp->addressFamily, fambuf);
-    if (fambuf[1] == loctyp)  // OK the cert has some
-     return &ipFamp->ipAddressChoice.addressesOrRanges;
-    }
-  return (struct AddressesOrRangesInIPAddressChoiceA *)0;
-  }
-
-static void mk_certranges(struct ipranges *rangep,
-  struct Certificate *certp)
-  {
-  if (rangep->numranges > 0 || rangep->iprangep)
-      clear_ipranges(rangep);
-  struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
-  int num;
-  struct IPAddressOrRangeA *ipAddrOrRangep;
-  struct iprange *certrangep;
-  struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp;
-  if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
-    {
-    for (num = 0, ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      member_casn(&ipAddrOrRangesp->self, 0);
-      ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      next_of(&ipAddrOrRangep->self))
-      {
-      certrangep = inject_range(rangep, num++);
-      certrangep->typ = IPv4;
-      cvt_asn(certrangep, ipAddrOrRangep);
-      }
-    }
-  if ((ipAddrOrRangesp = find_IP(IPv6, extp)))
-    {
-    for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      member_casn(&ipAddrOrRangesp->self, 0);
-      ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      next_of(&ipAddrOrRangep->self))
-      {
-      certrangep = inject_range(rangep, num++);
-      certrangep->typ = IPv6;
-      cvt_asn(certrangep, ipAddrOrRangep);
-      }
-    }
-  extp = find_extn(certp, id_pe_autonomousSysNum, 0);
-  struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp =
-    &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges;
-  struct ASNumberOrRangeA *asNumOrRangep;
-  for (asNumOrRangep = (struct ASNumberOrRangeA *)
-    member_casn(&asNumbersOrRangesp->self, 0); asNumOrRangep;
-    asNumOrRangep = (struct ASNumberOrRangeA *)next_of(&asNumOrRangep->self))
-    {
-    certrangep = inject_range(rangep, num++);
-    certrangep->typ = ASNUM;
-    cvt_asnum(certrangep, asNumOrRangep);
-    }
-  certrangep = inject_range(rangep, num++);
-  certrangep->typ = 0;
-  }
-
 static int snum_sfx;
 
 static struct Certificate *mk_paracert(struct Certificate *origcertp, 
@@ -479,7 +408,7 @@ int get_CAcert(char *ski, struct done_cert **done_certpp)
   return i;
   }
 
-static int CryptInitState = 0;
+extern int CryptInitState;
 
 static int sign_cert(struct Certificate *certp)
   {
@@ -500,7 +429,8 @@ static int sign_cert(struct Certificate *certp)
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    int i = cryptInit();
+    if (i) return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
   if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2))

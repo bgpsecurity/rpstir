@@ -78,7 +78,7 @@ script.
                | Empty Directory (MFT intentionally omitted)  |
                +----------------------------------------------+
 
-Inputs:
+Explanation of inputs, not in original order:
   filestem - subject name (and filename stem) for 'Child' to be created
   serial - serial number for 'Child' to be created
   -P - (optional) use patch mode for automatic insertion of errors
@@ -91,10 +91,10 @@ Inputs:
              paths/validation.  This option is meant to provide
              compatibility if the templates directory changes.
 
-Outputs:
+Explanation of outputs, not in original order:
   child CA certificate - AS/IP resources are hardcoded in goodCert.raw template
   patch files - manual edits are saved as diff output in
-                'badCert<filestem>.stageN.patch' (N=0..1)
+                'badCert<filestem>.stageN.patch' (N=0..2)
     "
     printf "${usagestr}\n"
     exit 1
@@ -102,12 +102,9 @@ Outputs:
 
 # NOTES
 
-# 1. Variable naming convention -- preset constants and command line
+# Variable naming convention -- preset constants and command line
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
-
-# 2. Assumes write-access to current directory even though the output
-# directory will be different.
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
@@ -194,6 +191,7 @@ if [ $USE_EXISTING_PATCHES ]
 then
     ensure_file_exists $PATCHES_DIR/${child_name}.stage0.patch
     ensure_file_exists $PATCHES_DIR/${child_name}.stage1.patch
+    ensure_file_exists $PATCHES_DIR/${child_name}.stage2.patch
 fi
 
 ###############################################################################
@@ -203,38 +201,67 @@ fi
 cd ${OUTPUT_DIR}
 
 # Customize w/ serial number and subject name (based on $child_name)
+echo "Customizing cert w/ serial number $SERIAL and subject name ${child_name}"
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
 ${CGTOOLS}/put_sernum ${child_name}.cer ${SERIAL}
 ${CGTOOLS}/put_subj ${child_name}.cer ${child_name}
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Pre-signing modification: manual or automatic (can be no-op)
+# Stage 0: pre-setting SKI modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
 then
+    echo "Stage 0: modify to-be-hashed-in-SKI portions automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage0.patch
+    rm -f ${child_name}.raw.orig
 else
+    echo "Stage 0: modify to-be-hashed-in-SKI portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
 	>${PATCHES_DIR}/${child_name}.stage0.patch || true
 fi
 
+# Set the SKI
+echo "Setting SKI"
+${CGTOOLS}/rr <${child_name}.raw >${child_name}.blb
+${CGTOOLS}/set_cert_ski ${child_name}.blb ${child_name}.cer
+${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
+rm ${child_name}.blb ${child_name}.cer
+
+# Stage 1: post-setting SKI, pre-signing modification: manual or automatic (can be no-op)
+if [ $USE_EXISTING_PATCHES ]
+then
+    echo "Stage 1: modify to-be-signed portions automatically"
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
+    rm -f ${child_name}.raw.orig
+else
+    echo "Stage 1: modify to-be-signed portions manually"
+    cp ${child_name}.raw ${child_name}.raw.old
+    ${EDITOR} ${child_name}.raw
+    diff -u ${child_name}.raw.old ${child_name}.raw \
+	>${PATCHES_DIR}/${child_name}.stage1.patch || true
+fi
+
 # Sign it
+echo "Signing cert"
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.blb
 ${CGTOOLS}/sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
 mv ${child_name}.blb ${child_name}.cer
 ${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
 
-# Post-signing modification: manual or automatic (can be no-op)
+# Stage 2: post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
 then
-    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
+    echo "Stage 2: modify not-signed portions automatically"
+    patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
+    rm -f ${child_name}.raw.orig
 else
+    echo "Stage 2: modify not-signed portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
-	>${PATCHES_DIR}/${child_name}.stage1.patch || true
+	>${PATCHES_DIR}/${child_name}.stage2.patch || true
 fi
 
 # Convert back into DER-encoded binary.
@@ -253,4 +280,5 @@ if [ ! $USE_EXISTING_PATCHES ]
 then
     echo Successfully created "${PATCHES_DIR}/${child_name}.stage0.patch"
     echo Successfully created "${PATCHES_DIR}/${child_name}.stage1.patch"
+    echo Successfully created "${PATCHES_DIR}/${child_name}.stage2.patch"
 fi

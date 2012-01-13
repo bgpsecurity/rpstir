@@ -1,10 +1,10 @@
---- badCertCRLDP2DistPt.raw.old	2011-05-25 14:28:46.000000000 -0400
-+++ badCertCRLDP2DistPt.raw	2011-05-25 14:30:30.000000000 -0400
+--- badCertCRLDP2DistPt.raw.old	2011-09-19 15:59:51.000000000 -0400
++++ badCertCRLDP2DistPt.raw	2011-09-19 16:01:29.000000000 -0400
 @@ -48,6 +48,11 @@
                                          ctx+0x06
                                              "rsync://rpki.bbn.com/conformance/r"
                                              "oot/root.crl"
-+                            seq ctx+0x20
++                             seq ctx+0x20
 +                                    ctx+0x20
 +                                        ctx+0x06
 +                                            "http://rpki.bbn.com/conformance/r"

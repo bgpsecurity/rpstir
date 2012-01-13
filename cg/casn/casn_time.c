@@ -13,6 +13,7 @@ Remarks:
 char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include "casn.h"
 #include <stdio.h>
+#include <stdint.h>
 
 #define UTCBASE 70
 #define UTCYR 0
@@ -66,20 +67,16 @@ Function: Converts lth decimal digits, starting at c, to a number
 
 int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
     {
-    int diff;
-    ulong t1, t2;
+    int64_t t1, t2;
 
-    if ((casnp1->type != ASN_UTCTIME && casnp1->type != ASN_GENTIME) ||
-        (casnp2->type != ASN_UTCTIME && casnp2->type != ASN_GENTIME) ||
-        read_casn_time(casnp1, &t1) <= 0 || read_casn_time(casnp2, &t2) <= 0)
+    if (read_casn_time(casnp1, &t1) <= 0 || read_casn_time(casnp2, &t2) <= 0)
 	return -2;
-    diff = t1 - t2;
-    if (diff > 1) diff = 1;
-    if (diff < -1) diff = -1;
-    return diff;
+    if (t1 > t2) return 1;
+    if (t1 < t2) return -1;
+    return 0;
     }
 
-int _utctime_to_ulong(ulong *valp, char *fromp, int lth)
+int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
     {
     int yr, mo, da;
     ulong val;
@@ -121,10 +118,10 @@ int _utctime_to_ulong(ulong *valp, char *fromp, int lth)
     return 1;
     }
 
-int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
+int _gentime_to_ulong(int64_t *valp, char *fromp, int lth)
     {
     int yr, mo, da;
-    long long val = 0;
+    int64_t val = 0;
     char *b, *ep;
 
     for (b = fromp, ep = &fromp[lth]; b < ep && *b >= '0' && *b <= '9'; b++);
@@ -136,7 +133,7 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
     if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0) yr += 100;
     if ((mo = (int)get_num (&fromp[GENMO],GENMOSIZ)) < 1 || mo > 12)
         return -1;
-    val = (yr * 365) + _mos[mo - 1] + ((yr + (GENBASE % 4)) / 4) -
+    val = ((int64_t)yr * 365) + _mos[mo - 1] + ((yr + (GENBASE % 4)) / 4) -
         ((!((yr + GENBASE) % 4) && mo < 3)? 1: 0);
     if ((da = (int)get_num (&fromp[GENDA],GENDASIZ)) < 1 ||
         da > _mos[mo] - _mos[mo - 1] +
@@ -150,7 +147,6 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
     if (b <= &fromp[GENSE]) mo = 0;                             /* seconds */
     else if ((mo = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59) return -1;
     val = (val * 3600) + (yr * 60) + mo;
-    if (val > 0xFFFFFFFF) return -1;
     if (*b == '+' || *b == '-')
         {
         if ((yr = (int)get_num (&b[GENSFXHR],GENHRSIZ)) > 23 ||
@@ -160,12 +156,14 @@ int _gentime_to_ulong(ulong *valp, char *fromp, int lth)
         if (*b == '+') yr = -yr;
         val += (60 * yr);           /* adjust by diff of seconds */
         }
+    if (val > 0xFFFFFFFF) return -1;
+    if (val < 0) return -1;
     *valp = val;
     return 1;
     }
 
 
-int read_casn_time(struct casn *casnp, ulong *valp)
+int read_casn_time(struct casn *casnp, int64_t *valp)
     {
 /*
 Function: Converts contents of decoded UTC or GEN time to a number of seconds
@@ -176,17 +174,23 @@ Returns: IF error, -1, ELSE length of time field
 */
     int ansr;  
 
+    if (casnp->type == ASN_CHOICE)
+      {
+      if (vsize_casn(&casnp[1])) casnp = &casnp[1];
+      else if (vsize_casn(&casnp[2])) casnp = &casnp[2];
+      else return _casn_obj_err(casnp, ASN_TIME_ERR);
+      }
     if ((ansr = _check_filled(casnp)) < 0 || (casnp->type != ASN_UTCTIME &&
         casnp->type != ASN_GENTIME)) return -1;
     if (!ansr) return 0;
     ansr = casnp->lth;
-    uchar timebuf[32];
+    uchar timebuf[32]; /* is this enough? potential buffer overflow? */
     if (casnp->type == ASN_GENTIME) memcpy(timebuf, casnp->startp, ansr);
     else 
 	{
-        timebuf[0] = '1';
-        timebuf[1] = '9';
         memcpy(&timebuf[2], casnp->startp, ansr);
+        if (timebuf[2] < '7') strncpy((char *)timebuf, "19", 2);
+        else strncpy((char *)timebuf, "20", 2);
         ansr += 2;
         }
     timebuf[ansr] = 0;
@@ -206,7 +210,7 @@ static ulong put_num (char *to, ulong val, int lth)
     return val;
     }
 
-int write_casn_time(struct casn *casnp, ulong time) 
+int write_casn_time(struct casn *casnp, int64_t time) 
     {
     ushort *mop;
     long da, min, sec, leap;
@@ -243,6 +247,8 @@ int write_casn_time(struct casn *casnp, ulong time)
         }
     put_num (&c[UTCDA],(ulong)(da + 1 - mop[-1]),UTCDASIZ);
     put_num (&c[UTCMO],(ulong)(mop - _mos),UTCMOSIZ);
+    if (casnp->type == ASN_UTCTIME && (leap + UTCBASE) >= 170)
+      return -1; 
     put_num (&c[UTCYR],(ulong)(leap + UTCBASE),UTCYRSIZ);
     c += UTCSE + UTCSESIZ;
     *c++ = 'Z';

@@ -1195,11 +1195,19 @@ int main(int argc, char **argv)
 		}
 	    }
         if (sta == 0 && skifile) 
-          sta = read_SKI_blocks(scmp, realconp, skifile); 
+          {
+          log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
+          sta = read_SKI_blocks(scmp, realconp, skifile);
+          } 
 	} while ( perpetual > 0 ) ;
       if ( protos >= 0 )
 	(void)close(protos);
     }
+    if (sta == 0 && skifile)
+      {
+      log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
+      sta = read_SKI_blocks(scmp, realconp, skifile); 
+      }
   (void)ranlast(scmp, realconp, "RSYNC");
   sqcleanup();
   if ( realconp != NULL )
