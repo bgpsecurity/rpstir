@@ -27,18 +27,11 @@ int _table_op(struct casn *casnp),
 
 int diff_casn_num(struct casn *casnp, long val)
     {
-    int neg;
     long tmp;
-    uchar *b, *e;
 
-    if ((casnp->type != ASN_INTEGER && casnp->type != ASN_ENUMERATED) ||
-        casnp->lth > sizeof(long) || !(casnp->flags & ASN_FILLED_FLAG)) 
-        return _casn_obj_err(casnp, ASN_TYPE_ERR) - 1;
-    if (casnp->type == ASN_INTEGER && (*casnp->startp & 0x80)) neg = 1;
-    else neg = 0;
-    e = &(b = casnp->startp)[casnp->lth];
-    for (tmp = (*b++ & ~0x80); b < e; tmp = (tmp << 8) + *b++);
-    if (neg) tmp = -tmp;
+    if (read_casn_num(casnp, &tmp) < 0)
+        return -2;
+
     if (val > tmp) return 1;
     else return (val == tmp)? 0: -1;
     }
