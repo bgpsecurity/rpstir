@@ -1198,6 +1198,8 @@ int main(int argc, char **argv)
           {
           log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
           sta = read_SKI_blocks(scmp, realconp, skifile);
+          if (sta)
+            log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
           } 
 	} while ( perpetual > 0 ) ;
       if ( protos >= 0 )
@@ -1207,6 +1209,8 @@ int main(int argc, char **argv)
       {
       log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
       sta = read_SKI_blocks(scmp, realconp, skifile); 
+      if (sta)
+        log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
       }
   (void)ranlast(scmp, realconp, "RSYNC");
   sqcleanup();
