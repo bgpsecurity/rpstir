@@ -59,8 +59,7 @@ int read_casn_num(struct casn *casnp, long *valp)
         if (tcasnp->type != ASN_INTEGER && tcasnp->type != ASN_ENUMERATED &&
             tcasnp->type != ASN_BOOLEAN)
     	    err = ASN_TYPE_ERR;
-	else if (tcasnp->lth > sizeof(long) + 1 ||
-	    (tcasnp->lth == sizeof(long) + 1 && *tcasnp->startp != 0xFF))
+	else if (tcasnp->lth > sizeof(long) || tcasnp->lth <= 0)
             err = ASN_LENGTH_ERR;
 	}
     if (err) return _casn_obj_err(casnp, err);
