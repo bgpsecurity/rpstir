@@ -176,7 +176,7 @@ Returns: IF error, -1, ELSE length of time field
     else 
 	{
         memcpy(&timebuf[2], casnp->startp, ansr);
-        if (timebuf[2] < '7') strncpy((char *)timebuf, "19", 2);
+        if (timebuf[2] >= '7') strncpy((char *)timebuf, "19", 2);
         else strncpy((char *)timebuf, "20", 2);
         ansr += 2;
         }
