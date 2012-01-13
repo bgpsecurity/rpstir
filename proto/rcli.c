@@ -1198,6 +1198,7 @@ int main(int argc, char **argv)
           {
           log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
           sta = read_SKI_blocks(scmp, realconp, skifile);
+          if (sta > 0) sta = 0;
           if (sta)
             log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
           } 
@@ -1209,6 +1210,7 @@ int main(int argc, char **argv)
       {
       log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
       sta = read_SKI_blocks(scmp, realconp, skifile); 
+      if (sta > 0) sta = 0;
       if (sta)
         log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
       }
