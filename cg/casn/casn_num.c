@@ -27,7 +27,8 @@ int _table_op(struct casn *casnp),
 
 int diff_casn_num(struct casn *casnp, long val)
     {
-    int neg, tmp;
+    int neg;
+    long tmp;
     uchar *b, *e;
 
     if ((casnp->type != ASN_INTEGER && casnp->type != ASN_ENUMERATED) ||
