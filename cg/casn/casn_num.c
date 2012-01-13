@@ -32,8 +32,12 @@ int diff_casn_num(struct casn *casnp, long val)
     if (read_casn_num(casnp, &tmp) < 0)
         return -2;
 
-    if (val > tmp) return 1;
-    else return (val == tmp)? 0: -1;
+    if (tmp > val)
+        return 1;
+    else if (tmp < val)
+        return -1;
+    else
+        return 0;
     }
 
 int read_casn_num(struct casn *casnp, long *valp)
