@@ -66,7 +66,14 @@ static const char * _queries_chaser[] = {
 
         // DB_PSTMT_CHASER_GET_SIA_TRUSTED_ONLY
         "select sia from rpki_cert "
-        " where flags & ? = ? ",
+        " where flags & ? = ? ",  // SCM_FLAG_TRUSTED
+
+        // DB_PSTMT_CHASER_GET_AIA
+        "select aia, aki from rpki_cert "
+        " where flags & ? = ? "  // SCM_FLAG_NOCHAIN
+        " and flags & ? <> ? "   // ! SCM_FLAG_VALIDATED
+        " and aki not in "
+        " (select ski from rpki_cert)",
 
         NULL
 };

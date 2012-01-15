@@ -98,16 +98,6 @@ static void free_uris() {
     free(uris);
 }
 
-
-/**=============================================================================
- * callback function for searchscm that just notes that parent exists
-------------------------------------------------------------------------------*/
-/*static int foundIt(scmcon *conp, scmsrcha *s, int numLine) {
-    (void) conp; (void) numLine;  // silence compiler warnings
-    parentCount++;
-    return 0;
-}*/
-
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 static int check_uri_chars(char *in) {
@@ -215,23 +205,33 @@ static void handle_uri_string(char const *in) {
 }
 
 /**=============================================================================
- * @note Add aia field if cert has no parent.
- *
- * sql:  select aki, aia from rpki_cert where flags matches VALIDATED and SCM_FLAG_NOCHAIN;
- * sql:  select filename from rpki_cert where ski = previously-found-aki;
- *     if filename not found, add the aia
 ------------------------------------------------------------------------------*/
-static int query_aia(dbconn *conn) {
+static int query_aia(dbconn *db) {
+    char **results = NULL;
+    int64_t num_malloced = 0;
+    int64_t ret;
+    int64_t i;
+
+    ret = db_chaser_read_aia(db, &results, &num_malloced,
+            SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
+    LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
+            num_malloced, num_malloced - ret);
+    if (ret == -1) {
+        return -1;
+    } else {
+        for (i = 0; i < ret; i++) {
+            LOG(LOG_DEBUG, "query_aia() --> %s\n", results[i]);
+            handle_uri_string(results[i]);
+            free(results[i]);
+            results[i] = NULL;
+        }
+        if (results) free(results);
+    }
 
     return 0;
 }
 
 /**=============================================================================
- * @note Add crldp field if cert either has no crl or crl is out-of-date.
- *
- * sql:  select crldp from rpki_cert left join rpki_crl
- *       on rpki_cert.aki = rpki_crl.aki
- *       where rpki_crl.filename is null or rpki_crl.next_upd < timestamp_curr;
 ------------------------------------------------------------------------------*/
 static int query_crldp(dbconn *db) {
     char **results = NULL;
@@ -258,9 +258,6 @@ static int query_crldp(dbconn *db) {
 }
 
 /**=============================================================================
- * @note Add sia field.
- *
- * sql:  select sia from rpki_cert [where trusted];
 ------------------------------------------------------------------------------*/
 static int query_sia(dbconn *db, int trusted_only) {
     char **results = NULL;
@@ -288,9 +285,7 @@ static int query_sia(dbconn *db, int trusted_only) {
 }
 
 /**=============================================================================
- * @note Get the current time, and read the last time chaser ran from db.
- *
- * sql:  select current_timestamp, ch_last from rpki_metadata;
+ * @brief Get the current time; and read the last time chaser ran from db.
 ------------------------------------------------------------------------------*/
 static int query_read_timestamps(dbconn *db) {
     int ret;
@@ -311,9 +306,7 @@ static int query_read_timestamps(dbconn *db) {
 }
 
 /**=============================================================================
- * @note Write timestamp to db.
- *
- * sql:  update rpki_metadata set ch_last = current time;
+ * @note Write timestamp to db as last time chaser ran.
 ------------------------------------------------------------------------------*/
 static int query_write_timestamp(dbconn *db) {
     int ret;
