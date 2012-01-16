@@ -23,3 +23,29 @@ check_num_output_lines()
 
     return 0
 }
+
+run_bg () {
+    LOG="$1"
+    shift
+    if test "x$VALGRIND" = x1; then
+        valgrind --log-file="valgrind.$LOG.log" --error-exitcode=1 "$@" &
+    else
+        "$@" &
+    fi
+}
+
+run () {
+    run_bg "$@"
+    wait $!
+}
+
+wait_tcp () {
+    # params are timeout (in seconds) and port number
+    for _discard in `seq 1 $1`; do
+        sleep 1
+        if nc -z localhost "$2"; then
+            return 0
+        fi
+    done
+    return 1
+}
