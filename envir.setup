@@ -1,21 +1,5 @@
 #!/bin/sh
 #
-# ***** BEGIN LICENSE BLOCK *****
-# 
-#  BBN Resource PKI Database/repository software
-#  Version 0
-# 
-#  US government users are permitted unrestricted rights as
-#  defined in the FAR.
-# 
-#  This software is distributed on an "AS IS" basis, WITHOUT
-#  WARRANTY OF ANY KIND, either express or implied.
-# 
-#  Copyright (C) BBN Technologies 2011.  All Rights Reserved.
-# 
-#  Contributor(s): Mark Reynolds, Andrew Chi
-# 
-#  ***** END LICENSE BLOCK ***** */
 
 # Sets up the environment variables for the RPKI relying party system,
 # but allows the user to override by setting existing variables.
@@ -33,9 +17,9 @@
 
 DEFAULT_RPKI_ROOT=${HOME}/trunk  # caller should set RPKI_ROOT
 DEFAULT_RPKI_PORT=7344
-DEFAULT_RPKI_DB=rpki
-DEFAULT_RPKI_DBUSER=mysql
-DEFAULT_RPKI_DBPASS=
+DEFAULT_RPKI_DB=rpkidb7
+DEFAULT_RPKI_DBUSER=rpki
+DEFAULT_RPKI_DBPASS=bbn
 DEFAULT_RPKI_TCOUNT=8
 DEFAULT_RPKI_LISTPORT=3450
 DEFAULT_RPKI_DSN=myodbc3
@@ -69,6 +53,7 @@ if [ "${RPKI_DBUSER}x" = "x" ]; then
     export RPKI_DBUSER=$DEFAULT_RPKI_DBUSER
 fi
 if [ "${RPKI_DBPASS}x" = "x" ]; then
+    echo Warning: RPKI_DBPASS not set, defaulting to $DEFAULT_RPKI_DBPASS
     export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
 fi
 

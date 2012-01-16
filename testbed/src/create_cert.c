@@ -1,19 +1,3 @@
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- *
- * US government users are permitted unrestricted rights as
- * defined in the FAR.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2008-2010.  All Rights Reserved.
- *
- * Contributor(s):  Karen Sirois
- *
- * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,7 +88,7 @@ struct object_field *get_cert_field_table()
  * fields of interest:
  *    signature algorithm ID - overwrite (from template)
  *    issuer     - if filled in then don't overwrite
- *    aki        - use ski from issuers cert if not filled in
+ *    aki        - use ski from issuer's cert
  *    algorithm ID  overwrite (from template)
  */
 int use_parent_cert(void *cert, void *val)
@@ -136,21 +120,28 @@ int use_parent_cert(void *cert, void *val)
   copy_casn(&ctftbsp->issuer.self, &issuer.toBeSigned.subject.self);
   //fprintf(stdout,"copied issuer name\n");
 
-  // if aki extension of certificate is empty, use ski from issuer's cert
-  if (!(cextp = findExtension(&ctftbsp->extensions, id_authKeyId)))
+  // replace aki extension of certificate with ski from issuer's cert
+  cextp = findExtension(&ctftbsp->extensions, id_authKeyId);
+  if (!cextp)
+    cextp = makeExtension(&ctftbsp->extensions, id_authKeyId);
+  //fprintf(stdout,"copying ski as aki\n");
+  if ((iextp = findExtension(&issuer.toBeSigned.extensions,
+			     id_subjectKeyIdentifier)))
     {
-      //fprintf(stdout,"coping ski as aki\n");
-      if ((iextp = findExtension(&ctftbsp->extensions, id_subjectKeyIdentifier)))
-	{
-	  cextp = makeExtension(&ctftbsp->extensions, id_authKeyId);
-	  copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
-		    &iextp->extnValue.subjectKeyIdentifier);
-	}
-      //fprintf(stdout,"done\n");
+      copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
+		&iextp->extnValue.subjectKeyIdentifier);
     }
-  return (SUCCESS);
+  else
+    {
+      fprintf(stdout,"Error: issuer cert has no SKI. AKI not set.");
+      delete_casn(&issuer.self);
+      return -1;
+    }
 
+  delete_casn(&issuer.self);
+  return (SUCCESS);
 }
+
 
 int write_default_fields(struct Certificate *certp)
 {
@@ -269,11 +260,11 @@ int use_subject_keyfile(void *cert, void *val)
       if (fillPublicKey(spkp, val) < 0)
 	return -1;
     }
+
+  // always update SKI to match subjectPublicKey
   if (!(extp = findExtension(extsp, id_subjectKeyIdentifier)))
-    {
       extp = makeExtension(extsp, id_subjectKeyIdentifier);
-      writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
-    }
+  writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
 
   return (SUCCESS);
 }

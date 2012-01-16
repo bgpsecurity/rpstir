@@ -1,0 +1,248 @@
+=====================================
+Top-level requirements for RTR server
+-------------------------------------
+
+T1. Provide timely, validated route origin information to multiple
+    router clients, as specified in
+    http://datatracker.ietf.org/doc/draft-ietf-sidr-rpki-rtr/
+
+T2. Security requirement: Availability of route origin information.
+    Client A must not be able to deny service to client B.
+
+T3. Security requirement: (Currently optional) Integrity of route
+    origin information.  RTR spec lists options such as TCP-AO, SSH,
+    IPsec, and TLS.
+
+Threat Model:
+
+* Who/Motivation: Adversary wishing to alter routing through DoS of
+  RTR server.
+  
+* Capability: Fully control/impersonate one or more RTR clients.  Can
+  initiate arbitrary client connections, and send arbitrary data over
+  RTR transport.
+
+Explicit non-requirements:
+
+* Confidentiality of route origin information is not required, since
+  the information is publicly available.
+
+
+===================================
+Derived requirements for RTR server
+-----------------------------------
+
+D1. (Derived from T1). The RTR server will create periodic snapshots
+    of the validated cache of ROAs, computing diffs and setting a new
+    serial number each time, if there have been any changes.
+
+D2. (Derived from T2). Basic authentication of client: firewall.  The RTR
+    server is ASSUMED to sit behind a firewall that will (1) limit RTR
+    clients to a set of pre-configured IP addresses, and (2) limit the
+    number of concurrent connections from each IP address.
+    
+D3. (Derived from T2). Rate limit on queries.  The RTR server must limit
+    the number of queries per connection, possibly by type of query, since
+    reset queries can be expensive.
+
+D4. (Derived from T1 and T2). Threads and timeouts.  Another way to abuse the
+    system is when the server reads a message from a client and the
+    actual transmission rate is *purposefully* very low. This should
+    not stall all other clients.
+
+D5. (Derived from T3). Future support for authenticated transport.
+    RTR server is initially designed to support vanilla TCP only.
+    Advanced functionality can be obtained through network shims such
+    as netcat/ssh-subsystem, or stunnel.
+
+D6. (Derived from T1 and T2).  The server should handle graceful
+    shutdown, e.g. due to signal reception such as SIGINT.  A signal
+    should not abruptly terminate the server process, which is the
+    default behavior, but instead perform a graceful shutdown of all
+    active connections. Signal handling procedure must be carefully
+    written since it can easily induce race-conditions.
+
+D7. (Derived from T1 and D2).  TCP keepalive.  To prevent inactivity
+    from disconnecting the channel (e.g. due to firewall), and to
+    reliably detect dead peers, keepalive should be enabled if the
+    underlying OS supports it.
+
+
+=======================
+Problems to figure out:
+-----------------------
+
+ * In the current design, the connection control thread can spin on a socket that's read-ready, incrementing the corresponding semaphore many times before the connection thread reads all available data.
+  * Possible fix: after incrementing a semaphore, remove the socket from the FD_SET and have the connection thread add it back somehow. This is probably problematic though.
+
+
+===============
+Design Overview
+---------------
+
+Threads:
++--------------------+------------+------------------+-----------+----------------------------------+----------------+
+| Name               | Short name | Count            | Waits on  | Blocks on                        | Killed by      |
++--------------------+------------+------------------+-----------+----------------------------------+----------------+
+| main               | main       | 1                | timer     | <unimportant>                    | signals        |
+| database           | db         | configurable     | semaphore | database, acquiring locks        | pthread cancel |
+| connection control | cxnctl     | 1                | select()  | nothing                          | pthread cancel |
+| connection         | cxn        | 1 per connection | semaphore | read(), write(), acquiring locks | pthread cancel |
++--------------------+------------+------------------+-----------+----------------------------------+----------------+
+
+Configuration parameters and constants:
+See config.h.
+
+Important variable types:
+Note that the types are pseudo-code and `[]' is used to denote a container,
+not necessarily a C array
+ . socket_fd_t: a file descriptor for a network socket
+ . db_connection_t: opaque data type for a database connection
+
+ . session_id_t: an integer type of the same signedness and width as a session id
+ . serial_number_t: an integer type of the same signedness and width as a serial number
+ . struct cache_state: a local store of the cache's state
+ . struct global_cache_state: a struct cache_state with a synchronization mechanism
+
+ . PDU: data of a parsed and valid PDU
+
+ . cxn_semaphore_t: semaphore that a cxn thread waits for (indicates incoming client PDU or db_response available)
+ . db_semaphore_t: semaphore that a db thread waits for (indicates db_request newly available, ready for more data, or canceled)
+
+ . struct db_query: something that indicates what the router/client wants
+ . struct db_request: a query, information on how to return results, and a mechanism to cancel the request
+ . struct db_response: response PDUs and a flag indicating if more responses are expected
+ . struct db_request_state: a request with information about the request's progress
+
+
+Important variables (not including short-lived local variables):
+Unless otherwise specified, if a variable foo is created by thread bar,
+there is exactly one variable foo per thread bar.
++------------------------+---------------------------------+------------+-------------+
+| Type                   |  Variable                       | Created by | Used by     |
++------------------------+---------------------------------+------------+-------------+
+| socket_fd_t[]          | listen_fds                      | main       | cxnctl      |
+| queue <db_request>     | db_request_queue                | main       | db, cxn     |
+| db_semaphore_t         | db_semaphore                    | main       | db, cxn     |
+| global_cache_state     | global_cache_state              | main       | main, cxn   |
+| db_connection_t        | db                              | main       | main        |
+| db_connection_t        | db                              | db         | db          |
+| db_request_state[]     | db_currently_processing         | main       | db          |
+| socket_fd_t            | fd per cxn thread               | cxnctl     | cxnctl, cxn |
+| cxn_semaphore_t        | semaphore per cxn thread        | cxnctl     | cxnctl, cxn |
+| queue <db_response>    | db_response_queue               | cxn        | cxn, db     |
+| cache_state            | local_cache_state               | cxn        | cxn         |
++------------------------+---------------------------------+------------+-------------+
+
+
+=====================
+Example Program Flows
+---------------------
+
+Example 1: Flow of control during "Start or Restart"
+http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.1
+
+   Cache                         Router
+     ~                             ~
+     | <----- Reset Query -------- | R requests data (or Serial Query)
+     |                             |
+     | ----- Cache Response -----> | C confirms request
+     | ------- IPvX Prefix ------> | C sends zero or more
+     | ------- IPvX Prefix ------> |   IPv4 and IPv6 Prefix
+     | ------- IPvX Prefix ------> |   Payload PDUs
+     | ------  End of Data ------> | C sends End of Data
+     |                             |   and sends new serial
+     ~                             ~
+
+Overall:
+1. cxnctl accepts the new connection and spawns a cxn thread.
+2. cxnctl notices that there is data on the cxn's socket (via select()).
+3. cxnctl increments cxn's semaphore.
+4. cxn decrements its semaphore.
+5. cxn reads the reset query.
+6. cxn creates a db_request for the query and adds it to db_request_queue.
+7. cxn increments db_semaphore.
+8. One of the db threads decrements db_semaphore.
+9. The same db thread (from step 8)  dequeues the request off db_request_queue,
+   creates a db_request_state for the request, and runs the Service Request
+   procedure (below) on the db_request_state.
+Repeat until the request is finished, working on other requests or sleeping when the cxn isn't ready for more data.
+   10. One of the db threads decrements db_semaphore.
+   11. The same db thread (from step 10) removes the db_request_state from
+       db_currently_processing and runs the Service Request procedure.
+
+Service Request:
+1. db gets the next N (for some value of N) PDUs from the database API.
+2. db constructs a db_response with those PDUs.
+3. db enqueues the db_response on the cxn's db_response_queue.
+4. db increments the cxn's semaphore.
+5. cxn decrements its semaphore.
+6. cxn dequeues the db_response from its db_response_queue.
+7. cxn sends the PDUs over the network.
+If this is the last response:
+   8. cxn free()s the db_request.
+   9. db free()s the db_request_state.
+Else:
+   8. db adds the db_request_state to db_currently_processing.
+   9. db increments db_semaphore.
+10. cxn free()s the db_response.
+
+
+Example 2: Program flow during "Typical Exchange"
+http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.2
+
+   Cache                         Router
+     ~                             ~
+     | -------- Notify ----------> |  (optional)
+     |                             |
+     | <----- Serial Query ------- | R requests data
+     |                             |
+     | ----- Cache Response -----> | C confirms request
+     | ------- IPvX Prefix ------> | C sends zero or more
+     | ------- IPvX Prefix ------> |   IPv4 and IPv6 Prefix
+     | ------- IPvX Prefix ------> |   Payload PDUs
+     | ------  End of Data ------> | C sends End of Data
+     |                             |   and sends new serial
+     ~                             ~
+
+1. main updates the global_cache_state from the database.
+2. cxn's wait on its semaphore times out.
+3. cxn compares global_cache_state and local_cache_state and updates local_cache_state.
+4. cxn sends a Serial Notify to the client.
+5. See Example 1 for how rtrd handles queries.
+
+
+Example 3: Program flow during "Cache has No Data Available"
+http://tools.ietf.org/html/draft-ietf-sidr-rpki-rtr-19#section-6.4
+
+   Cache                         Router
+     ~                             ~
+     | <-----  Serial Query ------ | R requests data
+     | ---- Error Report PDU ----> | C No Data Available
+     ~                             ~
+
+See Example 1 for how rtrd handles queries.
+The database API returns the appropriate Error Report PDU in this case.
+
+
+Example 4: Program flow in case of "Error"
+
+Errors can occur many places in the code. In general, each thread has
+a struct that stores enough of its run state for that thread to cleanup
+its resources and quit gracefully. Before doing anything important,
+each thread sets up a cleanup handler (often a static function called
+cleanup) with its run state as a parameter. Threads that spawn other
+threads (main and cxnctl) have cleanup handlers that cancel and wait on
+all their children threads. All threads other than main are designed to
+be safely cancelable any time their cancel state is enabled and main is
+designed to be safely interruptable any time its signal disposition for a
+few specific signals is not blocked.
+
+Any time a non-recoverable error happens in a thread, the thread calls
+pthread_exit(), which invokes the cleanup handler which cleans up all
+its resources and quits the thread (and any child threads) gracefully.
+Note that the different types of threads have different definitions of
+"non-recoverable error." In general, the cxn threads are the most likely
+to give up on an error, followed by db, cxnctl, and main in that order.
+Also, cxn threads send Error Report PDUs for some errors before calling
+pthread_exit.

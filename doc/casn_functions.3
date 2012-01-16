@@ -225,7 +225,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         up all the memory that 'delete_casn' does.  It is automatically  invoked
         by  any  'decode_casn' or 'write_casn' function (see below) to clear out
         space before re-filling it.  When applied to an 'OF' object (see below),
-        it removes all members of the 'OF'.
+        it removes all members of the 'OF'. <<NEED TEXT: commentary that the 'OF' object becomes uninitialized, not just zero-length.  Also any CHOICE/DEFINED BY also becomes unititialized.>>
 
 
     Accessing Members
@@ -504,7 +504,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         'readvsize_objid' combines 'vsize_objid', a  'calloc'  operation  and  a
         'read_objid'  to  obtain the value in dot notation, the address of which
         is put into 'pp'.  These return -1  if  the  object  is  not  an  OBJECT
-        IDENTIFIER.
+        IDENTIFIER.  <<NEED TEXT: write_objid will often have the side-effect of causing a CHOICE to be made in a 'DEFINED BY'.  Actually, things can be DEFINED BY anything else, not just OID, but OID is the most common.  Also, please mention diff_objid because it will be used frequently.>>
 
         The special 'bits' functions are valid only for BIT STRINGs;  any  other
         use  returns  -1.  If the object does not have named bits, it is assumed
@@ -728,8 +728,10 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
             inject_casn(&body.legs.self, count);
 
-        After the injection 'legp' will point to same one it did  before,  which
-        is now the the one at member(count+1).
+        After the injection 'legp' will point to same one it did
+        before, which is now the the one at member(count+1).  <<NEED
+        TEXT: We need an eject_all_casn to clear sequence of and set
+        of data with a zero-length.>>
 
     Comparison Functions
 
@@ -972,6 +974,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
             inject_casn(member_casn(member_casn(&jj.self, 0), 0);
             write_casn_num(member_casn(member_casn(&jj.self, 0), 0), (long)1);
 
+   << NEED TEXT: There should be a warning about clear_casn()
+   destroying the choice state of the DEFINED BY, which can only be
+   remedied by rewriting the definer. >>
 
 
     Addressing in a DEFINED BY

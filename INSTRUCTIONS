@@ -1,32 +1,19 @@
-BBN Resource PKI Relying Party Database
+Relying Party Security Technology for Internet Routing
 Installation and Usage Manual
-Version 4.0
+Version 0.2
 
 ===============================================================================
+Table of Contents
 
 1. Organization of this document
-
-This document describes how to install and use the BBN Resource PKI
-validator.  Please refer to the design document, rpkidesign.doc, for a
-detailed description of the various software components in this
-release.
-
-Section 2 of this document describes how to install that software,
-including all its dependencies.  Section 3 provides a quick-start
-guide on how to get your system running.  Finally, Appendix A provides
-troubleshooting tips for some common problems.
-
-===============================================================================
-
 2. Installation
-
-    Contents
     2.1 Prerequisites
       2.1.1 User Account
       2.1.2 OpenSSL
       2.1.3 MySQL and ODBC
       2.1.4 cryptlib
       2.1.5 rsync
+      2.1.6 python-netaddr
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
@@ -38,6 +25,47 @@ troubleshooting tips for some common problems.
     2.6 Post-Installation Procedures
       2.6.1 Cron Job Configuration
       2.6.2 Adjust Permissions
+3. Running the RPKI Software
+    3.1 Walkthrough
+      3.1.1 Create initial rsync configuration file.
+      3.1.2 Clear database and local repository cache.
+      3.1.3 Invoke DB Updater (rcli) in listening mode.
+      3.1.4 Automatically download Trust Anchors using TAL files.
+      3.1.5 Manually insert trust anchors (optional).
+      3.1.6 Run URI Chaser.
+      3.1.7 Run Garbage Collector.
+    3.2 Results and Analysis
+      3.2.1 Validation Report (results.py)
+      3.2.2 Query Client
+    3.3 Warning
+Appendix A. Troubleshooting
+    A.1 Database troubleshooting
+    A.2 64-bit support
+    A.3 Python path
+    A.4 Specific Operating Systems
+      A.4.1 OpenBSD
+      A.4.2 FreeBSD
+
+===============================================================================
+
+1. Organization of this document
+
+This document describes how to install and use the Relying Party Security
+Technology for Internet Routing (RPSTIR, pronounced rip-ster) software
+by Raytheon BBN Technologies.  Please refer to the design document,
+rpkidesign.doc, for a detailed description of the various software
+components in this release. Note that various files may refer to this
+software by its old name, RPKI.
+
+Section 2 describes how to install that software, including its dependencies.
+
+Section 3 provides a quick-start guide on how to get your system running.
+
+Appendix A provides troubleshooting tips for some common problems.
+
+===============================================================================
+
+2. Installation
 
 The RPKI software is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.  After reading this section,
@@ -67,8 +95,8 @@ can set and test environment variables.
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
-version 0.9.8e) from http://www.openssl.org.  We recommend the default
-installation target directory /usr/local/ssl.  As of version 0.9.8l,
+version 1.0.0f) from http://www.openssl.org.  We recommend the default
+installation target directory /usr/local/ssl.  As of version 1.0.0f,
 the steps were:
 
 	$ ./config enable-rfc3779
@@ -83,14 +111,12 @@ the custom-compiled binary that supports RFC 3779 extensions.
 
 2.1.3 MySQL and ODBC
 
-Install the MySQL database server from http://mysql.org, at least
-version 5.1.  We recommend the default installation target of
-/usr/local/mysql, but this is not required.  Install the MySQL
-Connector/ODBC driver from the same site, at least version 3.51, into
-an accessible lib directory such as /usr/local/lib.  On many systems,
-MySQL Connector/ODBC depends on unixODBC.  During later compilation of
-the RPKI software, if you get a variety of link errors in the "proto"
-directory, missing unixODBC is probably the problem.
+Install unixODBC from your operating system's package manager or
+http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
+recommended.  Install the MySQL database server, at least version 5.1,
+from the package manager or http://mysql.org.  Install the MySQL
+Connector/ODBC driver, at least version 3.51, from the package manager
+or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
@@ -217,6 +243,13 @@ not necessarily support the necessary flags.  Check your version with
 rsync --version, and install from rsync.samba.org.  We recommend the
 latest version due to security and bug fixes.
 
+2.1.6 python-netaddr
+
+Currently, the generation of some test cases requires python-netaddr.
+It can be found at http://code.google.com/p/netaddr/, or through your
+package management system.  This dependency will be removed in future
+versions of the software.
+
 
 2.2 RPKI Software
 
@@ -226,12 +259,11 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named resource-pki-N.NN.tar.gz, where N.NN is a version number.  Extract
-the file using:
+named rpstir-0.2.tar.gz.  Extract the file using:
 
-    tar xvzpf resource-pki-N.NN.tar.gz
+    tar xvzpf rpstir-0.2.tar.gz
     
-This will create a directory named resource-pki-N.NN which will contain
+This will create a directory named rpstir-0.2 which will contain
 various subdirectories.
 
 2.2.2 Configure
@@ -263,6 +295,9 @@ output.  If you are using GNU make, then you have the option to use
 ./configure --enable-silent-rules [other options]
 
 which will give much shorter compilation/linking notifications.
+
+The RTR code currently only compiles under gcc. If you have multiple
+compilers installed, add the option "CC=gcc" to ./configure.
 
 2.2.3 Build the Executables
 
@@ -302,11 +337,11 @@ Each script will check for the required environment, and if any
 variables are not set, the script will warn the user and automatically
 set them to the following defaults:
 
-RPKI_DB = rpki
+RPKI_DB = rpkidb7
 RPKI_PORT = 7344
 RPKI_ROOT = ${HOME}/rpki
-RPKI_DBUSER = mysql
-RPKI_DBPASS =
+RPKI_DBUSER = rpki
+RPKI_DBPASS = bbn
 RPKI_DSN = myodbc3
 RPKI_LISTPORT = 3450
 
@@ -317,15 +352,17 @@ variables, so make sure to set these yourself.
 
 2.4 SSH Subsystem
 
-If you plan to use the RTR Server, you will need to configure it as an
-SSH subsystem.  Edit the /etc/ssh/sshd_config file to contain the
-line:
-  Subsystem	rpki-rtr	<RPKI_ROOT>/run_scripts/rtrServer.sh
-  
-NOTE: the RTR code only lightly tested in version 4.0 of the BBN
-relying party software.  The instructions below do not make use of the
-RTR server, but interested users may read
-$RPKI_ROOT/server/INSTRUCTIONS for more information.
+If you plan to use the RTR Server as an SSH subsystem, you will need
+to run the rtr/rpstir-rtrd server as a daemon and set up an ssh subsystem
+to connect to rtrd on localhost.  The netcat program, nc(1), is
+recommended for the ssh subsystem.  There are different versions of
+netcat, so read its manpage for caveats before setting it up as
+a subsystem.  In particular, read the "-q" option's description, if your
+version of netcat has a "-q" option, to prevent runaway nc processes
+when clients disconnect. Edit the /etc/ssh/sshd_config file to contain
+the below line, modified for the options you want to pass to netcat:
+
+  Subsystem	rpki-rtr	nc <nc-options>... localhost <rtr-port>
 
 
 2.5 Self Test
@@ -333,7 +370,7 @@ $RPKI_ROOT/server/INSTRUCTIONS for more information.
 To perform a basic validation of your install, run the self-test
 target by issuing the command:
 
-   make test
+   make check
 
 You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
@@ -344,7 +381,12 @@ that it's because of a known bug (#174). The workaround is to insert
 sleep commands into subsystemTests/runSubsystemTest.sh at the bottom
 of the loop that contains the line "./step${TESTID}.${N}". The amount
 of time needed to sleep depends on a number of factors and can be
-increased (within limits) until make test succeeds.
+increased (within limits) until make check succeeds.
+
+If you have valgrind installed, you can run some tests under valgrind
+by running the command:
+
+   make check VALGRIND=1
 
 
 2.6 Post-Installation Procedures
@@ -358,7 +400,7 @@ database.
 
 Except for the query client, all RPKI processes should run as the RPKI
 user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (4.0)
+configuration will be used for final deployment, this release (0.2)
 does not include suggested crontab entries.  It is assumed that for
 trial purposes, manual execution gives the user/debugger maximum
 control.
@@ -373,7 +415,10 @@ Chaser Client (proto/chaser)         Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server                           Continuously as SSH subsystem
+RTR Server (rtr/rpstir-rtrd)         Continuously as daemon
+RTR updater (rtr/rpstir-rtr-update)  After each call to chaser
+RTR client (rtr/rtr-test-client)     On demand by user
+
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
@@ -390,21 +435,6 @@ software out.
 ===============================================================================
 
 3. Running the RPKI Software
-
-    Contents
-    3.1 Walkthrough
-      3.1.1 Create initial rsync configuration file.
-      3.1.2 Clear database and local repository cache.
-      3.1.3 Invoke DB Updater (rcli) in listening mode.
-      3.1.4 Automatically download Trust Anchors using TAL files.
-      3.1.5 Manually insert trust anchors (optional).
-      3.1.6 Run URI Chaser.
-      3.1.7 Run Garbage Collector.
-    3.2 Results and Analysis
-      3.2.1 Validation Report (results.py)
-      3.2.2 Query Client
-    3.3 Warning
-
 
 3.1 Walkthrough
 
@@ -544,8 +574,7 @@ Successful garbage collection may not produce any screen output.
 
 3.2 Results and Analysis
 
-There are three ways to obtain results from the BBN RPKI validation
-software.
+There are three ways to obtain results from RPSTIR.
 . For an overview, generate a Validation Report (results.py).
 . For detailed information about validation state, use the Query Client.
 . For error analysis, search through rcli.log.
@@ -574,8 +603,8 @@ Options:
 Example output:
 
 [bbn@rpki-fc13 rpki]$ run_scripts/results.py 
-Using RPKI root directory: /home/bbn/rpki/30b/rpki
-Using local repository path: /home/bbn/rpki/30b/rpki/REPOSITORY
+Using RPKI root directory: /home/bbn/rpki
+Using local repository path: /home/bbn/rpki/REPOSITORY
 
 -------------------------------------------------------------------------------
 Certficate Information:

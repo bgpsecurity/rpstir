@@ -1,0 +1,99 @@
+--- Bad PDU #1
+--- expecting: Error Report
+version 0 Error Report (Unsupported Version), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #2
+--- expecting: Error Report
+version 0 Error Report (Unsupported Type), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #3
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #4
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #5
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #6
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #7
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #8
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #9
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #10
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #11
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #12
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #13
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #14
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #15
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #16
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 36, encapsulated PDU length = 20, error text = [0] ""
+--- Bad PDU #17
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 36, encapsulated PDU length = 20, error text = [0] ""
+--- Bad PDU #18
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #19
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #20
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #21
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #22
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 48, encapsulated PDU length = 32, error text = [0] ""
+--- Bad PDU #23
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 48, encapsulated PDU length = 32, error text = [0] ""
+--- Bad PDU #24
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #25
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #26
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #27
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #28
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #29
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #30
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 24, encapsulated PDU length = 8, error text = [0] ""
+--- Bad PDU #31
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 32, encapsulated PDU length = 16, error text = [0] ""
+--- Bad PDU #32
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 33, encapsulated PDU length = 17, error text = [0] ""
+--- Bad PDU #33
+--- expecting: Error Report
+version 0 Error Report (Corrupt Data), length = 32, encapsulated PDU length = 16, error text = [0] ""

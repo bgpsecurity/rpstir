@@ -1,30 +1,14 @@
-#/* ***** BEGIN LICENSE BLOCK *****
-# *
-# * BBN Address and AS Number PKI Database/repository software
-# * Version 3.0-beta
-# *
-# * US government users are permitted unrestricted rights as
-# * defined in the FAR.
-# *
-# * This software is distributed on an "AS IS" basis, WITHOUT
-# * WARRANTY OF ANY KIND, either express or implied.
-# *
-# * Copyright (C) Raytheon BBN Technologies Corp. 2007-2010.  All Rights Reserved.
-# *
-# * Contributor(s):  Brenton Kohler
-# *
-# * ***** END LICENSE BLOCK ***** */
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(resource-PKI, 0.01, mreynolds@bbn.com)
+AC_INIT(rpstir, 0.2, achi@bbn.com)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
-AC_CONFIG_SRCDIR([server/pdu.h])
+AC_CONFIG_SRCDIR([rtr/pdu.h])
 
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
@@ -35,6 +19,7 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
+AC_PROG_SED
 
 
 AC_ARG_WITH(
@@ -79,6 +64,13 @@ AC_ARG_WITH(
     [ odbc_lib=/usr/local/lib]
 )
 
+AC_ARG_WITH(
+    [mysql-config],
+    AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ]),
+    [ mysql_config=$withval],
+    [ mysql_config=mysql_config]
+)
+
 if test x${ssl_lib} != x; then
   LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
 fi
@@ -97,6 +89,39 @@ if test x${cryptlib_include} != x; then
 fi
 if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
+fi
+
+AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
+if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
+  # this is a bit of a hack because mysql_config --include specified non-system include flags
+  for flag in `$MYSQL_CONFIG --include`; do
+    case $flag in
+      -I*)
+        dir="`echo $flag | $SED 's/^-I//'`"
+        CPPFLAGS="-isystem${dir} $CPPFLAGS"
+        ;;
+      *)
+        CPPFLAGS="$flag $CPPFLAGS"
+        ;;
+    esac
+  done
+
+  # this is a bit of a hack because mysql_config --libs_r specifies compiler flags, not linker flags
+  for flag in `$MYSQL_CONFIG --libs_r`; do
+    case $flag in
+      -L*)
+        libpath="`echo $flag | $SED 's/^-L//'`"
+        LDFLAGS="-L${libpath} -Wl,-rpath -Wl,${libpath} ${LDFLAGS}"
+        ;;
+      -l*)
+        LDFLAGS="${flag} ${LDFLAGS}"
+        ;;
+      *)
+        ;;
+    esac
+  done
+else
+  AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
@@ -147,7 +172,7 @@ AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h wchar.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h my_global.h mysql.h netdb.h netinet/in.h semaphore.h stdbool.h stdlib.h string.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -172,7 +197,7 @@ AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir munmap select socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 
 AC_CONFIG_FILES([Makefile
                  cg/Makefile
@@ -180,14 +205,23 @@ AC_CONFIG_FILES([Makefile
                  cg/asn_gen/Makefile
                  cg/casn/Makefile
                  cg/tools/Makefile
+                 doc/Makefile
                  proto/Makefile
                  roa-lib/Makefile
                  roa-utils/Makefile
                  rsync_aur/Makefile
-                 server/Makefile
+                 rtr/Makefile
+                 subsystemTests/Makefile
+                 subsystemTests/rtr/Makefile
                  testcases/Makefile
-		 testbed/Makefile
-		 testbed/src/Makefile
-		 utils/Makefile
+                 testbed/Makefile
+                 testbed/src/Makefile
+                 utils/Makefile
+                 utils/tests/Makefile
+                 utils/mysql-c-api/Makefile
 ])
+
+AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
+                [chmod +x subsystemTests/rtr/runRTRTest.sh])
+
 AC_OUTPUT
