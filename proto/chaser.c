@@ -3,7 +3,6 @@
  * authorities that have signed certs.  It outputs the URIs to stdout.
  *
  * yet to do:
- * - add query for aia
  * - check all return values (handle_uri_string).  free memory before any quit
  * - implement chase_not_yet_validated (check neither flag:  VALIDATED, NO_CHAIN)
  * - check how we define subsume.  Andrew:
@@ -99,6 +98,9 @@ static void free_uris() {
 }
 
 /**=============================================================================
+allowed?:  space !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+allowed:  0-9 A-Z a-z
+not allowed:
 ------------------------------------------------------------------------------*/
 static int check_uri_chars(char *in) {
 
@@ -135,7 +137,6 @@ static int append_uri(char const *in) {
     return 0;
 }
 
-
 /**=============================================================================
  * @note caller frees param "in"
 ------------------------------------------------------------------------------*/
@@ -166,29 +167,27 @@ static void handle_uri_string(char const *in) {
             len--;
         }
 
-        // trim rsync scheme
-        size_t len_scheme = strlen(RSYNC_SCHEME);
-        if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
-            section += len_scheme;
-        }
-
-        // trim trailing space and newline
+        // trim trailing space, newline, and quote
         len = strlen(section);
-        while ((' ' == section[len - 1]  ||  '\n' == section[len - 1])  &&  len > 0) {
+        while ((' ' == section[len - 1]  ||  '\n' == section[len - 1]  ||
+                '\'' == section[0]  ||  '"' == section[0])  &&  len > 0) {
             section[len - 1] = '\0';
             len--;
         }
 
-        // an arbitrary limit
-        if (len < 10) {
-            LOG(LOG_WARNING, "input too short, skipping:  \"%s\"", in);
+        // check,trim rsync scheme
+        size_t len_scheme = strlen(RSYNC_SCHEME);
+        if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
+            section += len_scheme;
+        } else {
+            LOG(LOG_DEBUG, "dropping non-rsync uri:  \"%s\"", section);
             section = strtok(NULL, delimiter);
             continue;
         }
 
         // regex check
         if (check_uri_chars(section)) {
-            LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", in);
+            LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", section);
             section = strtok(NULL, delimiter);
             continue;
         }
