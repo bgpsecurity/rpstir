@@ -59,13 +59,13 @@ public class TypescriptPanel implements TypescriptLogger {
     StyleConstants.setFontFamily(stdoutStyle, "Monospaced");
     StyleConstants.setFontFamily(stderrStyle, "Monospaced");
   }
-  
+
   private final StyledDocument styledDocument = new DefaultStyledDocument(styleContext);
   private final JTextPane textPane = new JTextPane(styledDocument);
   private final JScrollPane scrollPane = new JScrollPane(textPane);
-  private final JPanel panel = new JPanel(new BorderLayout()); 
+  private final JPanel panel = new JPanel(new BorderLayout());
   private ScrollLock scrollLock = ScrollLock.OFF;
-  
+
   /**
    * @return the scrollLock
    */
@@ -79,7 +79,7 @@ public class TypescriptPanel implements TypescriptLogger {
   public void setScrollLock(ScrollLock scrollLock) {
     this.scrollLock = scrollLock;
   }
-  
+
   /**
    * @return the component
    */
@@ -98,7 +98,7 @@ public class TypescriptPanel implements TypescriptLogger {
     titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
     panel.add(titleLabel, BorderLayout.NORTH);
   }
-  
+
   /**
    * Add a source of text for this typescript.
    * The text will read until EOF is reached and appended to the document in
@@ -137,7 +137,7 @@ public class TypescriptPanel implements TypescriptLogger {
         }
         return ret;
       }
-      
+
       /**
        * @see java.io.FilterInputStream#read(byte[])
        */
@@ -178,23 +178,29 @@ public class TypescriptPanel implements TypescriptLogger {
     } catch (BadLocationException e) {
       e.printStackTrace();
     }
-    if (doScroll) textPane.setCaretPosition(styledDocument.getLength());
+    if (doScroll) {
+      textPane.setCaretPosition(styledDocument.getLength());
+    }
   }
 
   /**
-   * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.Object, java.lang.String)
+   * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.String, java.lang.Object...)
    */
   @Override
-  public void log(Object msg, String style) {
-    processString(msg.toString(), style);
+  public void log(String style, Object...msg) {
+    StringBuilder sb = new StringBuilder();
+    for (Object o : msg) {
+      sb.append(o);
+    }
+    processString(sb.toString(), style);
   }
 
   /**
-   * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.Object)
+   * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.Object...)
    */
   @Override
-  public void log(Object msg) {
-    processString(msg.toString(), "stdout");
+  public void log(Object...msg) {
+    log("stdout", msg);
   }
 
   /**

@@ -19,14 +19,13 @@ public class Sucker extends Thread {
   /**
    * @param is
    * @param name
-   * @param out
    */
   public Sucker(Reader is, String name) {
     super(name);
     this.reader = is;
     start();
   }
-  
+
   /**
    * @return the string captured from the process
    * @throws IOException
@@ -37,7 +36,7 @@ public class Sucker extends Thread {
     }
     return sb.toString();
   }
-  
+
   /**
    * @see java.lang.Thread#run()
    */

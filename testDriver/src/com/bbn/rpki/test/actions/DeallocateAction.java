@@ -27,11 +27,6 @@ import com.bbn.rpki.test.objects.Range;
  */
 public class DeallocateAction extends AbstractAction {
  
-  /**
-   * Element tag for this
-   */
-  public static final String TAG_DEALLOCATE = "deallocate";
-  
   private final List<Pair> allocationPairs = new ArrayList<Pair>();
   private final CA_Object parent;
   private final CA_Object child;
@@ -61,7 +56,6 @@ public class DeallocateAction extends AbstractAction {
    * @param element
    */
   public DeallocateAction(Element element) {
-    assert element.getName().equals(TAG_DEALLOCATE);
     String commonName = element.getAttributeValue(ATTR_COMMON_NAME);
     String parentCommonName = element.getAttributeValue(ATTR_PARENT_COMMON_NAME);
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
@@ -80,7 +74,7 @@ public class DeallocateAction extends AbstractAction {
    * @return an element encoding this action
    */
   public Element toXML() {
-    Element element = new Element(TAG_DEALLOCATE);
+    Element element = createElement(VALUE_DEALLOCATE);
     if (parent != null) {
       element.setAttribute(ATTR_PARENT_COMMON_NAME, parent.commonName);
     }

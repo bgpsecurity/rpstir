@@ -34,7 +34,7 @@ import com.bbn.rpki.test.util.Sucker;
  */
 public class Util implements Constants {
   private static Runtime runtime = Runtime.getRuntime();
-  
+
   private static PrintWriter commandLog;
   static {
     try {
@@ -43,7 +43,7 @@ public class Util implements Constants {
       e.printStackTrace();
     }
   }
-    
+
   private static final String B64_ALPHABET =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
@@ -55,7 +55,7 @@ public class Util implements Constants {
    * The value of the RPKI_ROOT environment variable
    */
   public static File RPKI_ROOT;
-  
+
   private static TypescriptLogger typescriptLogger = null;
 
   /**
@@ -132,10 +132,10 @@ public class Util implements Constants {
     }
     return sb.toString();
   }
-  
-  private static StringBuilder appendList(StringBuilder sb, String member, List<?> words) {
-   sb.append(member).append("=");
-   boolean first = true;
+
+  private static StringBuilder appendList(StringBuilder sb, String member, Iterable<?> words) {
+    sb.append(member).append("=");
+    boolean first = true;
     String sep = ",";
     for (Object word : words) {
       if (first) {
@@ -155,24 +155,25 @@ public class Util implements Constants {
   public static void writeConfig(CA_Obj ca_obj) {
     try {
       // Use introspection to print out all the member variables and their values to a file
-      File configDir = new File(CA_Obj.CONFIG_PATH);
-      if (!configDir.isDirectory())
-          configDir.mkdirs();
+      File configDir = new File(Constants.CONFIG_PATH);
+      if (!configDir.isDirectory()) {
+        configDir.mkdirs();
+      }
       File outputFile = new File(ca_obj.outputfilename);
       String name = outputFile.getName();
-      String cfgName = CA_Obj.CONFIG_PATH + name + ".cfg";
+      String cfgName = Constants.CONFIG_PATH + name + ".cfg";
       Writer f = new FileWriter(cfgName);
-      
+
       // Gets all the attributes of this class that are only member variables(not functions)
       // builds the string to print to the file
       StringBuilder sb = new StringBuilder();
       if (ca_obj instanceof EE_cert) {
-          sb.append("type=ee\n");
+        sb.append("type=ee\n");
       } else if (ca_obj instanceof Certificate) {
-          sb.append("type=ca\n");
+        sb.append("type=ca\n");
       }
 
-  // loops through all member of this class and writes them to the config file
+      // loops through all member of this class and writes them to the config file
 
       Map<String, Object> fieldMap = new TreeMap<String, Object>();
       ca_obj.getFieldMap(fieldMap);
@@ -227,7 +228,7 @@ public class Util implements Constants {
           }
         }
       }
-              
+
       f.write(sb.toString());
       f.close();
     } catch (Exception e) {
@@ -248,7 +249,7 @@ public class Util implements Constants {
       sb.append(String.format("%s=%s%n", member, dateFormat2.format(cal.getTime())));
     }
   }
-  
+
   /**
    * @param date
    * @return String form of date
@@ -258,17 +259,16 @@ public class Util implements Constants {
   }
 
   /**
-   * @param ca_obj 
-   * @param xargs 
-   * @param string
+   * @param ca_obj
    */
-  public static void create_binary(CA_Obj ca_obj, String... xargs) {
+  public static void create_binary(CA_Obj ca_obj) {
+    String[] xargs = ca_obj.xargs;
     String[] path = ca_obj.outputfilename.split("/");
     String file = path[path.length - 1];
     String[] cmdArray = new String[3 + xargs.length];
     cmdArray[0] = Constants.BIN_DIR + "/create_object";
     cmdArray[1] = "-f";
-    cmdArray[2] = CA_Obj.CONFIG_PATH + file + ".cfg";
+    cmdArray[2] = Constants.CONFIG_PATH + file + ".cfg";
     System.arraycopy(xargs, 0, cmdArray, 3, xargs.length);
     exec("create_object", false, null, null, null, cmdArray);
   }
@@ -278,12 +278,12 @@ public class Util implements Constants {
    * @return
    */
   static String generate_ski(String fileName) {
-    return exec("gen_hash", true, null, null, 
+    return exec("gen_hash", true, null, null,
                 null,
                 Constants.BIN_DIR + "/gen_hash",
                 "-f", fileName);
   }
-  
+
   /**
    * @param title
    * @param ignoreStatus
@@ -296,11 +296,11 @@ public class Util implements Constants {
   public static String exec(String title, boolean ignoreStatus, File cwd, String input, String cleanCommand, List<String> cmds) {
     return exec(title, ignoreStatus, cwd, input, cleanCommand, cmds.toArray(new String[cmds.size()]));
   }
-  
+
   /**
    * @param title
    * @param ignoreStatus TODO
-   * @param cwd 
+   * @param cwd
    * @param input TODO
    * @param cleanCommand TODO
    * @param cmdArray
@@ -338,16 +338,17 @@ public class Util implements Constants {
       String errString = stderr.getString();
       if (DEBUG_ON && typescriptLogger != null) {
         typescriptLogger.log(Arrays.asList(cmdArray));
-        typescriptLogger.log(string);
+        typescriptLogger.log(string, System.getProperty("line.separator", "\n"));
       }
       commandLog.println(Arrays.asList(cmdArray));
       commandLog.flush();
       if (status != 0) {
-        String msg = String.format("%s failed status = %d%n", title, status);
-        if (ignoreStatus) {
-          if (DEBUG_ON && typescriptLogger != null) typescriptLogger.log(msg, "stderr");
-        } else {
-        throw new RuntimeException(msg);
+        String msg = String.format("%s %s status = %d%n", title, ignoreStatus ? "ignored" : "failed", status);
+        if (DEBUG_ON && typescriptLogger != null) {
+          typescriptLogger.log(ignoreStatus ? "stdout" : "stderr", msg);
+          if (!ignoreStatus) {
+            throw new RuntimeException(msg);
+          }
         }
       }
       return string;
@@ -359,7 +360,7 @@ public class Util implements Constants {
   /**
    * Calls the gen_hash C executable and grabs the STDOUT from it
    *  and returns it as the hash of the contents of the filename
-   * @param file 
+   * @param file
    * @return the hash
    */
   public static String generate_file_hash(File file) {
@@ -369,7 +370,7 @@ public class Util implements Constants {
           "-n",
           file.getPath()
       };
-    return exec("gen_hash", true, null, null, null, cmdArray);
+      return exec("gen_hash", true, null, null, null, cmdArray);
     }
   }
 
@@ -391,9 +392,11 @@ public class Util implements Constants {
       deleteDirectory(dir);
     }
   }
-  
+
   private static void deleteDirectory(File dir) {
-    if (!dir.exists()) return;
+    if (!dir.exists()) {
+      return;
+    }
     assert dir.isDirectory();
     for (File file : dir.listFiles()) {
       if (file.isDirectory()) {
@@ -419,7 +422,9 @@ public class Util implements Constants {
     cmd.add("kill");
     for (String line : lines) {
       if (line.contains(string)) {
-        if (line.contains("grep")) continue;
+        if (line.contains("grep")) {
+          continue;
+        }
         String pid = line.trim().split(" +")[1];
         cmd.add(pid);
       }

@@ -20,11 +20,6 @@ import com.bbn.rpki.test.objects.Pair;
  */
 public class AllocateAction extends AbstractAction {
 
-  /**
-   * Element tag for this
-   */
-  public static final String TAG_ALLOCATE = "allocate";
-  
   private final List<Pair> allocationPairs = new ArrayList<Pair>();
   private final CA_Object parent;
   private final CA_Object child;
@@ -51,7 +46,6 @@ public class AllocateAction extends AbstractAction {
    * @param element
    */
   public AllocateAction(Element element) {
-    assert element.getName().equals(TAG_ALLOCATE);
     String commonName = element.getAttributeValue(ATTR_COMMON_NAME);
     String parentCommonName = element.getAttributeValue(ATTR_PARENT_COMMON_NAME);
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
@@ -69,7 +63,7 @@ public class AllocateAction extends AbstractAction {
    * @return an element encoding this action
    */
   public Element toXML() {
-    Element element = new Element(TAG_ALLOCATE);
+    Element element = createElement(VALUE_ALLOCATE);
     if (parent != null) {
       element.setAttribute(ATTR_PARENT_COMMON_NAME, parent.commonName);
     }

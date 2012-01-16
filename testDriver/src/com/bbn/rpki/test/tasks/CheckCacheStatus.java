@@ -24,7 +24,7 @@ public class CheckCacheStatus extends Task {
    */
   @Override
   public void run() {
-    Util.exec("Reports", false, Util.RPKI_ROOT, null, null, "run_scripts/results.py");
+    Util.exec("Reports", false, Util.RPKI_ROOT, null, null, "run_scripts/results.py", "-v");
   }
 
   /**

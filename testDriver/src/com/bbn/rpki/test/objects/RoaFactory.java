@@ -33,8 +33,8 @@ public class RoaFactory extends Factory implements Constants {
                     List<Pair> as_list,
                     List<Pair> child,
                     String server,
-                    boolean breakA, 
-                    Integer t, 
+                    boolean breakA,
+                    Integer t,
                     List<Pair> roav4l,
                     List<Pair> roav6l,
                     int a) {
@@ -44,13 +44,13 @@ public class RoaFactory extends Factory implements Constants {
     ROAipv4List = roav4l;
     ROAipv6List = roav6l;
   }
-    /** asid */
+  /** asid */
   public List<Pair> asid;
 
-    /** ROAipv4List */
+  /** ROAipv4List */
   public List<Pair> ROAipv4List;
 
-    /** ROAipv6List */
+  /** ROAipv6List */
   public List<Pair> ROAipv6List;
 
 
@@ -58,9 +58,10 @@ public class RoaFactory extends Factory implements Constants {
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
    */
   @Override
-  public Roa create(CA_Object parent) {
-    if (DEBUG_ON)
+  public Roa create(CA_Object parent, int id) {
+    if (DEBUG_ON) {
       System.out.println("creating a ROA for "+ bluePrintName);
+    }
 
     EE_Object ee_object = new EE_Object(this, parent);
     return new Roa(this, ee_object);

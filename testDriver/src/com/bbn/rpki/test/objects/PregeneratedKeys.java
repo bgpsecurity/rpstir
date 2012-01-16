@@ -46,7 +46,7 @@ public class PregeneratedKeys {
       pregeneratedKeyFileNames = new ArrayList<String>(Arrays.asList(fileNames));
       int keyIndex = pregeneratedKeyFileNames.size();
       // Add up to 100 additional keys up to KEYS_DESIRED
-      int endIndex = Math.min(KEYS_DESIRED, keyIndex + 100);
+      int endIndex = Math.min(KEYS_DESIRED, keyIndex + 10000);
       final LinkedBlockingDeque<String> queue = new LinkedBlockingDeque<String>();
       for (; keyIndex < endIndex; keyIndex++) {
         String name = String.format("genkey_%05d.key", keyIndex);

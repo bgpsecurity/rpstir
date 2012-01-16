@@ -4,17 +4,31 @@
 package com.bbn.rpki.test.tasks;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
 
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
+
+import com.bbn.rpki.test.actions.AbstractAction;
+import com.bbn.rpki.test.actions.AllocateAction;
+import com.bbn.rpki.test.actions.EpochActions;
+import com.bbn.rpki.test.objects.CA_Obj;
+import com.bbn.rpki.test.objects.CA_Object;
+import com.bbn.rpki.test.objects.Constants;
+import com.bbn.rpki.test.objects.FactoryBase;
+import com.bbn.rpki.test.objects.IPRangeType;
+import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.TestbedConfig;
+import com.bbn.rpki.test.objects.TestbedCreate;
+import com.bbn.rpki.test.objects.Util;
 
 /**
  * The test model is primarily held in a file system directory.
@@ -24,29 +38,10 @@ import com.bbn.rpki.test.objects.TestbedConfig;
  *
  * @author tomlinso
  */
-public class Model {
+public class Model implements Constants {
 
-  /**
-   * 
-   */
+  private static final File REPO_DIR = new File(REPO_PATH);
   private static final String TAL_NAME = "test.tal";
-
-  private static final FileFilter epochDirFilter = new FileFilter() {
-    private final Matcher matcher = Pattern.compile("epoch_\\d\\d\\d").matcher("");
-
-    @Override
-    public boolean accept(File file) {
-      return file.isDirectory() && matcher.reset(file.getName()).matches();
-    }
-  };
-
-  private static final FileFilter dirFilter = new FileFilter() {
-
-    @Override
-    public boolean accept(File file) {
-      return file.isDirectory();
-    }
-  };
 
   private static final FilenameFilter cerFilter = new FilenameFilter() {
 
@@ -57,28 +52,101 @@ public class Model {
   };
 
   private final File rpkiRoot;
-  private final File[] epochDirs;
 
-  private String ianaServerName;
+  private final List<EpochActions> epochs = new ArrayList<EpochActions>();
+
+  private final String ianaServerName;
+
+  private final CA_Object iana;
+  private final List<String> objectList = new ArrayList<String>();
+  private int epochIndex;
+  private final List<File> roots = new ArrayList<File>();
+  private final List<File> previousRoots = new ArrayList<File>();
+  private final TestbedConfig testbedConfig;
 
   /**
-   * @param rpkiRoot 
-   * @param root
-   * @param modelDir
-   * @throws IOException 
+   * @param rpkiRoot
+   * @param iniFile
+   * @throws IOException
    */
-  public Model(File rpkiRoot, File modelDir) throws IOException {
+  public Model(File rpkiRoot, File iniFile) throws IOException {
     this.rpkiRoot = rpkiRoot;
-    TestbedConfig testbedConfig = new TestbedConfig(new File(modelDir, "model.ini"));
+    testbedConfig = new TestbedConfig(iniFile);
+    TestbedCreate tbc = new TestbedCreate(testbedConfig);
+    tbc.createDriver();
+    iana = tbc.getRoot();
     this.ianaServerName = testbedConfig.getFactory("IANA").getServerName();
-    epochDirs = modelDir.listFiles(epochDirFilter);
-    Arrays.sort(epochDirs, new Comparator<File>() {
 
-      @Override
-      public int compare(File f1, File f2) {
-        return f1.getName().compareTo(f2.getName());
+    // Build some actions
+    CA_Object ripe = iana.findNode("RIPE-2");
+    CA_Object lir1 = ripe.findNode("LIR-2");
+    AbstractAction action1 = new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, new Pair("p", 8));
+    EpochActions epochActions = new EpochActions(0, action1);
+    epochs.add(epochActions);
+    epochIndex = -1;
+
+    Element root = new Element("test-actions");
+    root.addContent(epochActions.toXML());
+    Document doc = new Document(root);
+    XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+    outputter.output(doc, System.out);
+  }
+
+  /**
+   * @return all the server names
+   */
+  public Collection<String> getAllServerNames() {
+    Set<String> ret = new HashSet<String>();
+    for (FactoryBase factory : testbedConfig.getFactories().values()) {
+      if (factory.isBreakAway() || factory == iana.myFactory) {
+        ret.add(factory.getServerName());
       }
-    });
+    }
+    return ret;
+  }
+
+  /**
+   * @return the current list of objects
+   */
+  public List<String> getObjectList() {
+    return objectList;
+  }
+
+  /**
+   * Advance to the next epoch -- copy the current object list to the previous
+   * object list. Apply the actions of the epoch and record the new current
+   * object list.
+   */
+  public void advanceEpoch() {
+    List<String> previousFiles = new ArrayList<String>(objectList);
+    objectList.clear();
+
+    previousRoots.clear();
+    previousRoots.addAll(roots);
+    roots.clear();
+    if (++epochIndex > 0) {
+      EpochActions epochActions = epochs.get(epochIndex - 1);
+      epochActions.execute();
+    }
+    List<CA_Obj> objects = new ArrayList<CA_Obj>();
+    iana.appendObjectsToWrite(objects);
+    for (CA_Obj ca_Obj : objects) {
+      if (!ca_Obj.isWritten()) {
+        Util.writeConfig(ca_Obj);
+        Util.create_binary(ca_Obj);
+        ca_Obj.setWritten(true);
+      }
+      objectList.add(ca_Obj.outputfilename);
+    }
+    previousFiles.removeAll(objectList);
+    for (String file : previousFiles) {
+      new File(file).delete();
+    }
+    List<CA_Object> nodes = new ArrayList<CA_Object>();
+    iana.appendRoots(nodes);
+    for (CA_Object node : nodes) {
+      roots.add(new File(Constants.REPO_PATH, node.SIA_path));
+    }
   }
 
   /**
@@ -92,15 +160,7 @@ public class Model {
    * @return count o number of epochs
    */
   public int getEpochCount() {
-    return epochDirs.length;
-  }
-
-  /**
-   * @param n the index of the desired epoch
-   * @return the modelDir
-   */
-  public File getEpochDir(int n) {
-    return epochDirs[n];
+    return epochs.size() + 1;
   }
 
   /**
@@ -109,7 +169,7 @@ public class Model {
    * @return the trust anchor cert file
    */
   public File getTrustAnchorCert() {
-    File epochDir = new File(getEpochDir(0), ianaServerName);
+    File epochDir = new File(REPO_DIR, ianaServerName);
     File[] certFiles = epochDir.listFiles(cerFilter);
     assert certFiles.length == 1;
     return certFiles[0];
@@ -121,7 +181,7 @@ public class Model {
   public File getTALFile() {
     return new File(getRPKIRoot(), TAL_NAME);
   }
-  
+
   /**
    * @return the rsync url of the top-most node
    */
@@ -131,17 +191,19 @@ public class Model {
   }
 
   /**
-   * @param epochIndex
    * @return the repository root files
    */
-  public List<File> getRepositoryRoots(int epochIndex) {
-    List<File> files = new ArrayList<File>();
-    for (File serverDir : getEpochDir(epochIndex).listFiles(dirFilter)) {
-      files.addAll(Arrays.asList(serverDir.listFiles(dirFilter)));
-    }
-    return files;
+  public List<File> getRepositoryRoots() {
+    return roots;
   }
-  
+
+  /**
+   * @return the repository root files
+   */
+  public List<File> getPreviousRepositoryRoots() {
+    return previousRoots;
+  }
+
   /**
    * @param repositoryRootDir
    * @return the server name for the specified root
@@ -159,20 +221,33 @@ public class Model {
    * @return target filename for the node
    */
   public String getUploadRepositoryFileName(File repositoryRootDir, File nodeDir) {
-    // TODO Because I want to upload using scp, I need to know how each rsync
-    // server is set up.
-    // For now assume roots are sub-directories of /home/rsync
     File rootDir = repositoryRootDir;
+    String serverHostName = rootDir.getParentFile().getName();
     String moduleName = rootDir.getName();
+    String serverName = serverHostName + "/" + moduleName;
     String rootPath = rootDir.getPath();
     String nodePath = nodeDir.getPath();
     assert nodePath.startsWith(rootPath);
     assert !rootPath.endsWith("/");
     String nodeTail = nodePath.substring(rootPath.length());
-    String ret = "/home/rsync/" + moduleName + nodeTail;
+    String ret = getRsyncBase(serverName) + nodeTail;
     return ret;
   }
-  
+
+  /**
+   * @param serverName
+   * @return the directory on the rsync server named by serverName
+   */
+  public String getRsyncBase(String serverName) {
+    // TODO Because I want to upload using scp, I need to know how each rsync
+    // server is set up.
+    // For now assume roots are sub-directories of /home/rsync
+    String[] parts = serverName.split("/");
+    assert parts.length == 2;
+    String moduleName = parts[1];
+    return "/home/rsync/" + moduleName + "/";
+  }
+
   /**
    * Get an scp argument for a remote file
    * @param repositoryRootDir
@@ -190,7 +265,7 @@ public class Model {
    */
   public void uploadedFile(File file) {
     // TODO Auto-generated method stub
-    
+
   }
 
   /**
@@ -198,7 +273,7 @@ public class Model {
    */
   public void deletedFiles(List<File> filesToDelete) {
     // TODO Auto-generated method stub
-    
+
   }
 
   /**
@@ -206,7 +281,7 @@ public class Model {
    */
   public void deletedFile(File file) {
     // TODO Auto-generated method stub
-    
+
   }
 
   /**
@@ -214,7 +289,7 @@ public class Model {
    */
   public void addTrustAnchor(File certFile) {
     // TODO Auto-generated method stub
-    
+
   }
 
   /**
@@ -222,7 +297,7 @@ public class Model {
    */
   public void uploadedFiles(List<File> filesToUpload) {
     // TODO Auto-generated method stub
-    
+
   }
 
   /**
@@ -230,6 +305,13 @@ public class Model {
    */
   public void clearDatabase() {
     // TODO Auto-generated method stub
-    
+
+  }
+
+  /**
+   * @return the epochIndex
+   */
+  public int getEpochIndex() {
+    return epochIndex;
   }
 }

@@ -1,24 +1,27 @@
 /*
- * Created on Dec 12, 2011
+ * Created on Jan 13, 2012
  */
 package com.bbn.rpki.test.tasks;
 
-import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.Test;
 
 /**
  * <Enter the description of this type here>
  *
  * @author tomlinso
  */
-public class InitializeRepositories extends Task {
+public class AdvanceEpoch extends Task {
 
   private final Model model;
+  private final Test test;
 
   /**
    * @param model
+   * @param test
    */
-  public InitializeRepositories(Model model) {
+  public AdvanceEpoch(Model model,Test test) {
     this.model = model;
+    this.test = test;
   }
 
   /**
@@ -26,16 +29,9 @@ public class InitializeRepositories extends Task {
    */
   @Override
   public void run() {
-    for (String serverName : model.getAllServerNames()) {
-      String[] parts = serverName.split("/");
-      String rsyncBase = model.getRsyncBase(serverName);
-      Util.exec("Initialize Repository", false, null, null,
-                null,
-                "ssh",
-                parts[0],
-                "rm",
-                "-rf",
-                rsyncBase + "/*");
+    model.advanceEpoch();
+    if (model.getEpochIndex() + 1 < model.getEpochCount()) {
+      test.addTask(this);
     }
   }
 
@@ -61,7 +57,6 @@ public class InitializeRepositories extends Task {
    */
   @Override
   protected String getLogDetail() {
-    // TODO Auto-generated method stub
     return null;
   }
 

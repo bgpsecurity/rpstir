@@ -14,28 +14,26 @@ public class EE_cert extends Certificate {
   private static class S {
 
     public String siaPath;
-    public int serial;
-    public String subjKeyFile;
+    public String nickname;
 
     /**
      * @param parent
+     * @param childId
      * @param myFactory
      */
-    public S(CA_Object parent, FactoryBase myFactory) {
-      serial = parent.getNextChildSN();
+    public S(CA_Object parent, int childId, FactoryBase myFactory) {
       // Local variable to help with naming conventions
-      String nickName = "EE-" + serial;
-
-      siaPath = parent.SIA_path + nickName + "/";
+      nickname = "EE-" + childId;
+      siaPath = parent.SIA_path + nickname + "/";
     }
   }
 
   /** */
   public final Object aia;
-  
+
   /** */
   public final Object crldp;
-  
+
   /**
    * @param parent
    * @param myFactory
@@ -46,28 +44,35 @@ public class EE_cert extends Certificate {
    * @param asList
    * @param subjkeyfile
    */
-  EE_cert(CA_Object parent, Factory myFactory, IPRangeList ipv4,
+  EE_cert(CA_Object parent, int childId, Factory myFactory, IPRangeList ipv4,
           IPRangeList ipv6, IPRangeList asList) {
-    this(parent, myFactory, new S(parent, myFactory), ipv4, ipv6, asList);
+    this(parent, myFactory, new S(parent, childId, myFactory), ipv4, ipv6, asList);
   }
-  
+
   private EE_cert(CA_Object parent, Factory myFactory, S s, IPRangeList ipv4,
                   IPRangeList ipv6, IPRangeList asList) {
-    super(parent, myFactory, s.siaPath, s.serial, ipv4, ipv6, asList, s.subjKeyFile);
+    super(parent,
+          myFactory,
+          s.siaPath,
+          s.nickname,
+          ipv4,
+          ipv6,
+          asList,
+          null,
+          "CERTIFICATE",
+    "selfsigned=False");
     this.aia   = "rsync://" + Util.removePrefix(parent.path_CA_cert, REPO_PATH);
     this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".crl";
     // Set our SIA based on the hash of our public key, which will be the name
-    // of the ROA or Manifest this EE will be signing 
+    // of the ROA or Manifest this EE will be signing
     if (myFactory.bluePrintName.equals("Manifest-EE")) {
-        this.sia = "s:rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".mft";
-        this.ipv4 = IPRangeList.IPV4_INHERIT;
-        this.ipv6 = IPRangeList.IPV6_INHERIT;
-        this.as_list = IPRangeList.AS_INHERIT;
+      this.sia = "s:rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".mft";
+      this.ipv4 = IPRangeList.IPV4_INHERIT;
+      this.ipv6 = IPRangeList.IPV6_INHERIT;
+      this.as_list = IPRangeList.AS_INHERIT;
     } else {
-        this.sia = "s:rsync://" + parent.SIA_path + Util.b64encode_wrapper(this.ski) + ".roa";
+      this.sia = "s:rsync://" + parent.SIA_path + Util.b64encode_wrapper(this.ski) + ".roa";
     }
-    Util.writeConfig(this);
-    Util.create_binary(this, "CERTIFICATE", "selfsigned=False");
   }
 
   /**
@@ -79,5 +84,5 @@ public class EE_cert extends Certificate {
     map.put("aia", aia);
     map.put("crldp", crldp);
   }
-  
+
 }

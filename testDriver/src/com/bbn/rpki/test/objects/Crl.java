@@ -14,25 +14,25 @@ import java.util.Map;
  * @author RTomlinson
  */
 public class Crl extends CA_Obj {
-  
+
   /** */
   public String parentcertfile;
-  
+
   /** */
   public String parentkeyfile;
-  
+
   /** */
   public String issuer;
-  
+
   /** */
   public Calendar thisupdate;
-  
+
   /** */
   public Calendar nextupdate;
-  
+
   /** */
   public int crlnum;
-  
+
   /** */
   public String aki;
 
@@ -47,7 +47,7 @@ public class Crl extends CA_Obj {
    * @param parent
    */
   public Crl(CA_Object parent) {
-
+    super("CRL");
     this.parentcertfile  = parent.path_CA_cert;
     this.parentkeyfile   = parent.certificate.subjkeyfile;
     this.issuer          = parent.commonName;
@@ -59,14 +59,12 @@ public class Crl extends CA_Obj {
     this.crlnum          = parent.getNextChildSN();
     this.revokedcertlist = new ArrayList<RevokedCert>();
     this.aki             = parent.certificate.ski;
-     
+
     // Create the output file directory if it doesn't exist
     String dir_path  = REPO_PATH + parent.SIA_path;
     this.outputfilename = dir_path + Util.b64encode_wrapper(parent.certificate.ski)+".crl";
-    Util.writeConfig(this);
-    Util.create_binary(this, "CRL");
   }
-   
+
   /**
    * @see com.bbn.rpki.test.objects.CA_Obj#getFieldMap(java.util.Map)
    */
@@ -80,5 +78,13 @@ public class Crl extends CA_Obj {
     map.put("nextupdate", nextupdate);
     map.put("crlnum", crlnum);
     map.put("aki", aki);
+  }
+
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return String.format("Crl(%s)", issuer);
   }
 }

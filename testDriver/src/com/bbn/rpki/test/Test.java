@@ -5,9 +5,12 @@ package com.bbn.rpki.test;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
+import com.bbn.rpki.test.tasks.AdvanceEpoch;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.InitializeCache;
 import com.bbn.rpki.test.tasks.InitializeRepositories;
@@ -33,35 +36,59 @@ public class Test {
       return file.isFile() && file.getName().endsWith(".cer");
     }
   };
-  protected List<Task> tasks = new ArrayList<Task>();
+  protected Deque<Task> tasks = new ArrayDeque<Task>();
   protected Model model;
-  
+
   protected Test(Model model) {
     this.model = model;
     tasks.add(new InitializeCache(model));
     tasks.add(new InitializeRepositories(model));
-    for (int epochIndex = 0; epochIndex < model.getEpochCount(); epochIndex++) {
-      breakDown(new UploadEpoch(model, epochIndex), epochIndex);
-    }
-    tasks.add(new UpdateCache());
-    tasks.add(new CheckCacheStatus(model));
+    addTask(new AdvanceEpoch(model, this));
   }
-  
-  private void breakDown(Task task, int epochIndex) {
-    int breakdownCount = task.getBreakdownCount();
-    TaskBreakdown taskBreakdown;
-    if (breakdownCount > 0) {
-      taskBreakdown = getTaskBreakdown(task);
-    } else {
-      taskBreakdown = null;
-    }
-    if (taskBreakdown == null) {
-      addTask(task, epochIndex);
-    } else {
-      for (Task subtask : taskBreakdown.getTasks()) {
-        breakDown(subtask, epochIndex);
+
+  /**
+   * @return the tasks of this test
+   */
+  public Iterable<Task> getTasks() {
+    return new Iterable<Task>() {
+
+      @Override
+      public Iterator<Task> iterator() {
+        return new Iterator<Task>() {
+          Task nextTask = null;
+
+          @Override
+          public boolean hasNext() {
+            if (nextTask == null) {
+              nextTask = nextTask();
+            }
+            return nextTask != null;
+          }
+
+          @Override
+          public Task next() {
+            if (!hasNext()) {
+              throw new NoSuchElementException();
+            }
+            Task ret = nextTask;
+            nextTask = null;
+            return ret;
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
       }
-    }
+    };
+  }
+
+  /**
+   * @return the next Task or null if finished
+   */
+  public Task nextTask() {
+    return tasks.poll();
   }
 
   /**
@@ -76,9 +103,9 @@ public class Test {
   /**
    * @param task
    */
-  private void addTask(Task task, int epochIndex) {
+  public void addTask(Task task) {
     tasks.add(task);
-    if (shouldInstallTrustAnchor(task, epochIndex)) {
+    if (shouldInstallTrustAnchor(task, model.getEpochIndex())) {
       tasks.add(new InstallTrustAnchor(model));
     }
     if (shouldUpdateCache(task)) {
@@ -86,14 +113,16 @@ public class Test {
       tasks.add(new CheckCacheStatus(model));
     }
   }
-  
+
   /**
    * @param task
    * @return
    */
   private boolean shouldInstallTrustAnchor(Task task, int epochIndex) {
     if (epochIndex == 0) {
-      if (task instanceof UploadEpoch) return true;
+      if (task instanceof UploadEpoch) {
+        return true;
+      }
       if (task instanceof UploadRepositoryRoot) {
         UploadRepositoryRootFiles urr = (UploadRepositoryRootFiles) task;
         File[] topFiles = urr.getRepositoryRootDir().listFiles(certFilter);
@@ -106,7 +135,6 @@ public class Test {
         return file.getParentFile().equals(rootDir) && file.getName().endsWith(".cer");
       }
     }
-    // TODO Auto-generated method stub
     return false;
   }
 
@@ -117,12 +145,5 @@ public class Test {
   protected boolean shouldUpdateCache(Task task) {
     // Update the cache after each epoch, by default
     return task instanceof UploadEpoch;
-  }
-
-  /**
-   * @return the tasks to execute
-   */
-  public final List<Task> getTasks() {
-    return tasks;
   }
 }

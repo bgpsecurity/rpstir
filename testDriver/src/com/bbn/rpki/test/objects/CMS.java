@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.objects;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -13,19 +14,11 @@ import java.util.Map;
  */
 public abstract class CMS extends CA_Obj {
 
-  /** location of the cert */
-   public final String EECertLocation;
-   
-   /** location of the key */
-  public final String EEKeyLocation;
-
   /**
-   * @param eeCertLocation
-   * @param eeKeyLocation
+   * @param xargs extra args to pase to create_object
    */
-  public CMS(String eeCertLocation, String eeKeyLocation) {
-    this.EECertLocation = eeCertLocation;
-    this.EEKeyLocation = eeKeyLocation;
+  public CMS(String...xargs) {
+    super(xargs);
   }
 
   /**
@@ -34,7 +27,20 @@ public abstract class CMS extends CA_Obj {
   @Override
   public void getFieldMap(Map<String, Object> map) {
     super.getFieldMap(map);
-    map.put("EECertLocation", EECertLocation);
-    map.put("EEKeyLocation", EEKeyLocation);
+    EE_cert ee_cert = getEECert();
+    map.put("EECertLocation", ee_cert.outputfilename);
+    map.put("EEKeyLocation", ee_cert.subjkeyfile);
   }
+
+  /**
+   * @see com.bbn.rpki.test.objects.CA_Obj#appendObjectsToWrite(java.util.List)
+   */
+  @Override
+  public void appendObjectsToWrite(List<CA_Obj> list) {
+    CA_Obj eeCert = getEECert();
+    list.add(eeCert);
+    eeCert.appendObjectsToWrite(list);
+  }
+
+  protected abstract EE_cert getEECert();
 }

@@ -30,8 +30,8 @@ public abstract class FactoryBase {
   abstract IPRangeList getIPV4RangeList();
   abstract IPRangeList getIPV6RangeList();
   abstract IPRangeList getASRangeList();
-  
-  protected FactoryBase(String bluePrintName, 
+
+  protected FactoryBase(String bluePrintName,
                         List<Pair> childSpec,
                         String serverName,
                         boolean breakAway,
@@ -48,13 +48,20 @@ public abstract class FactoryBase {
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
    */
-  Object create(CA_Object parent) {
-    return new CA_Object(this, parent, null);
+  Object create(CA_Object parent, int id) {
+    return new CA_Object(this, parent, id, null);
   }
   /**
    * @return the serverName
    */
   public String getServerName() {
     return serverName;
+  }
+
+  /**
+   * @return true if the server name here should be used
+   */
+  public boolean isBreakAway() {
+    return breakAway;
   }
 }

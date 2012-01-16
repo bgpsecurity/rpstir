@@ -20,7 +20,6 @@ public class Pair {
 
   private static final String ATTR_ARG = "arg";
 
-
   private static final String ATTR_TAG = "tag";
 
   /** The text tag of the value */
@@ -30,12 +29,21 @@ public class Pair {
   public BigInteger arg;
   
   /**
-   * @param tag
-   * @param arg
+   * @param tag normally "r" or "p" for range or prefix
+   * @param arg 
    */
   public Pair(String tag, BigInteger arg) {
     this.tag = tag;
     this.arg = arg;
+  }
+  
+  /**
+   * Construct from long or int
+   * @param tag
+   * @param arg
+   */
+  public Pair(String tag, long arg) {
+    this(tag, BigInteger.valueOf(arg));
   }
   
   /**

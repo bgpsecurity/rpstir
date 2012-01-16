@@ -20,19 +20,19 @@ public interface TypescriptLogger {
   public Reader addSource(Reader reader, String styleName);
 
   /**
-   * @param msg
    * @param style
+   * @param msg
    */
-  public void log(Object msg, String style);
+  public void log(String style, Object...msg);
 
   /**
    * @param msg the message to log
    */
-  public void log(Object msg);
+  public void log(Object...msg);
 
   /**
    * @param inputStreamReader
-   * @param styleName 
+   * @param styleName
    */
   public void suckOn(InputStreamReader inputStreamReader, String styleName);
 }

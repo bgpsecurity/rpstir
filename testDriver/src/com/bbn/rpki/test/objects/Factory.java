@@ -25,16 +25,16 @@ public class Factory extends FactoryBase {
 
   /**
    * @param bluePrintName
-   * @param ipv4List 
-   * @param ipv6List 
-   * @param asList 
-   * @param childSpec 
-   * @param serverName 
-   * @param breakAway 
+   * @param ipv4List
+   * @param ipv6List
+   * @param asList
+   * @param childSpec
+   * @param serverName
+   * @param breakAway
    * @param ttl
-   * @param subjKeyFile 
+   * @param subjKeyFile
    */
-  public Factory(String bluePrintName, 
+  public Factory(String bluePrintName,
                  List<Pair> ipv4List,
                  List<Pair> ipv6List,
                  List<Pair> asList,
@@ -47,7 +47,7 @@ public class Factory extends FactoryBase {
     this.ipv4List = ipv4List;
     this.ipv6List = ipv6List;
     this.asList = asList;
-    
+
     // TODO Auto-generated constructor stub
   }
 
@@ -58,28 +58,28 @@ public class Factory extends FactoryBase {
   public IPRangeList getIPV4RangeList() {
     IPRangeList ipv4Everything = new IPRangeList(IPRangeType.ipv4);
     ipv4Everything.addRange(BigInteger.ZERO, new BigInteger("0xffffffff"));
-    return RangeAllocator.allocate(ipv4Everything, ipv4List, false);
+    return ipv4Everything.allocate(ipv4List, false);
   }
-  
+
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#getIPV6RangeList()
    */
   @Override
   public IPRangeList getIPV6RangeList() {
     IPRangeList ipv6Everything = new IPRangeList(IPRangeType.ipv6);
-    ipv6Everything.addRange(BigInteger.ZERO, 
+    ipv6Everything.addRange(BigInteger.ZERO,
                             new BigInteger("0xffffffffffffffffffffffffffffffff"));
-    return RangeAllocator.allocate(ipv6Everything, ipv6List, false);
+    return ipv6Everything.allocate(ipv6List, false);
   }
-  
+
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#getASRangeList()
    */
   @Override
   public IPRangeList getASRangeList() {
     IPRangeList asEverything = new IPRangeList(IPRangeType.as);
-    asEverything.addRange(BigInteger.ZERO, 
+    asEverything.addRange(BigInteger.ZERO,
                           new BigInteger("0xffffffff"));
-    return RangeAllocator.allocate(asEverything, asList, false);
+    return asEverything.allocate(asList, false);
   }
 }

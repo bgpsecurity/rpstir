@@ -19,7 +19,7 @@ public class RunLoader {
   private static RunLoader singleton;
   private static final String RCLI_LOG = "rcli.log";
   private static final String RSYNC_AUR_LOG = "rsync_aur.log";
-  
+
   /**
    * @return the singleton instance
    */
@@ -34,13 +34,13 @@ public class RunLoader {
   private Thread watcher;
   private boolean stopping;
   private TypescriptLogger typescriptLogger;
-  
+
   private RunLoader() {
     // Private constructor;
   }
-  
+
   /**
-   * @throws IOException
+   * Start the loader
    */
   public void start() {
     assert process == null;
@@ -62,7 +62,7 @@ public class RunLoader {
       throw new RuntimeException(e);
     }
   }
-  
+
   /**
    * Override Thread.run() to watch the process and barf it it terminates
    * prematurely.
@@ -75,7 +75,7 @@ public class RunLoader {
     }
     assert stopping;
   }
-  
+
   /**
    * 
    */

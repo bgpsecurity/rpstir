@@ -5,6 +5,7 @@ package com.bbn.rpki.test.objects;
 
 import java.io.File;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -38,37 +39,64 @@ public class TestbedCreate implements Constants {
     R
   }
 
-  private static Map<String, FactoryBase> FACTORIES;
-  private static int MAX_DEPTH;
-  private static int MAX_NODES;
-
   /**
    * @param args
    */
   public static void main (String...args) {
-    String encoded = Util.b64encode_wrapper("0x112CBAA71CAE782E7AB4F49DC93CFEB8AC238249");
-    assert "ESy6pxyueC56tPSdyTz-uKwjgkk".equals(encoded);
     String fileName = "test.ini";
     if (args.length > 0) {
       fileName = args[0];
     }
     TestbedConfig testbedConfig = new TestbedConfig(fileName);
+    TestbedCreate tbc = new TestbedCreate(testbedConfig);
+    tbc.writeFiles();
+  }
+
+  private final Map<String, FactoryBase> FACTORIES;
+  private final int MAX_DEPTH;
+  private final int MAX_NODES;
+  private final IANAFactory ianaFactory;
+  private final CA_Object iana;
+
+  /**
+   * @param testbedConfig
+   */
+  public TestbedCreate(TestbedConfig testbedConfig) {
     FACTORIES = testbedConfig.getFactories();
     MAX_DEPTH = testbedConfig.getMaxDepth();
     MAX_NODES = testbedConfig.getMaxNodes();
-    IANAFactory ianaFactory = (IANAFactory) FACTORIES.get("IANA");
+    ianaFactory = (IANAFactory) FACTORIES.get("IANA");
     ianaFactory.ipv4List.add(Range.createPrefix("0", 0, IPRangeType.ipv4));
     ianaFactory.ipv6List.add(Range.createPrefix("0", 0, IPRangeType.ipv6));
     ianaFactory.asList.add(Range.createRange("0", "0xffffffff", IPRangeType.as));
-    removeDirContents(new File(CA_Obj.OBJECT_PATH));
-    CA_Object iana = new CA_Object(ianaFactory, null, null);
-    create_driver(iana);
+    iana = new CA_Object(ianaFactory, null, 0, null);
   }
 
   /**
-   * @param ianaFactory
+   * @return the root of the tree (IANA)
    */
-  private static void create_driver(CA_Object iana) {
+  public CA_Object getRoot() {
+    return iana;
+  }
+
+  /**
+   * 
+   */
+  public void writeFiles() {
+    removeDirContents(new File(Constants.OBJECT_PATH));
+    create_driver(iana);
+    List<CA_Obj> rpkiObjects = new ArrayList<CA_Obj>();
+    iana.appendObjectsToWrite(rpkiObjects);
+    for (CA_Obj ca_Obj : rpkiObjects) {
+      Util.writeConfig(ca_Obj);
+      Util.create_binary(ca_Obj);
+    }
+  }
+
+  /**
+   * @param iana
+   */
+  public void create_driver(CA_Object iana) {
 
     // create our CA queue with no limit and place iana in it
     Deque<CA_Object> ca_queue = new ArrayDeque<CA_Object>();
@@ -90,11 +118,6 @@ public class TestbedCreate implements Constants {
         continue;
       }
       CA_Object ca_node = (CA_Object) qItem;
-      // Create the directory for the objects we're about to store
-      String dir_path = REPO_PATH + ca_node.SIA_path;
-      if (!new File(dir_path).isDirectory()) {
-        new File(dir_path).mkdirs();
-      }
 
       // Creates all child CA's and ROA's for a the CA ca_node
       repo_size = create_children(ca_node, repo_size);
@@ -113,7 +136,7 @@ public class TestbedCreate implements Constants {
                                       null,
                                       null,
                                       false,
-                                      ca_node.myFactory.ttl, 
+                                      ca_node.myFactory.ttl,
                                       null);
       Manifest new_manifest = new Manifest(ca_node, eeFactory);
       ca_node.manifests.add(new_manifest);
@@ -130,13 +153,15 @@ public class TestbedCreate implements Constants {
    * @param repo_size
    * @return
    */
-  private static int create_children(CA_Object ca_node, int repo_size) {
-    if (DEBUG_ON) System.out.println(ca_node.bluePrintName);
+  private int create_children(CA_Object ca_node, int repo_size) {
+    if (DEBUG_ON) {
+      System.out.println(ca_node.bluePrintName);
+    }
     List<Pair> list = FACTORIES.get(ca_node.bluePrintName).childSpec;
     for (Pair ca_def : list) {
       for (int n = 0; n < ca_def.arg.intValue(); n++) {
         if (MAX_NODES > repo_size) {
-          Object child = FACTORIES.get(ca_def.tag).create(ca_node);
+          Object child = FACTORIES.get(ca_def.tag).create(ca_node, ca_node.children.size());
           if (child instanceof CA_Object) {
             ca_node.children.add((CA_Object) child);
           } else if (child instanceof Roa) {
@@ -145,9 +170,11 @@ public class TestbedCreate implements Constants {
             System.err.println("Somehow got something besides CA or ROA as a child");
           }
           repo_size += 1;
-          if (DEBUG_ON) System.out.format("Child created. repo_size = %d%n", repo_size);
+          if (DEBUG_ON) {
+            System.out.format("Child created. repo_size = %d%n", repo_size);
+          }
         } else {
-          return repo_size;  
+          return repo_size;
         }
       }
     }
@@ -157,7 +184,7 @@ public class TestbedCreate implements Constants {
   /**
    * @param file
    */
-  private static void removeDirContents(File file) {
+  private void removeDirContents(File file) {
     File[] contents = file.listFiles();
     if (contents != null) {
       for (File sub : contents) {
@@ -167,5 +194,12 @@ public class TestbedCreate implements Constants {
         sub.delete();
       }
     }
+  }
+
+  /**
+   * Create all the children
+   */
+  public void createDriver() {
+    create_driver(iana);
   }
 }

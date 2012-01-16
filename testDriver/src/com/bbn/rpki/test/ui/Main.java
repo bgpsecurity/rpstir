@@ -7,7 +7,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
@@ -32,11 +31,10 @@ public class Main {
   private final Component rightPanel = tsPanel.getComponent();
   private final JSplitPane leftRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
   private final JSplitPane topBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tlPanel.getComponent(), leftRight);
-  private String[] args;
-  
+  private final String[] args;
+
   /**
    * @param args
-   * @throws IOException 
    */
   public Main(String[] args) {
     Util.setTypescriptLogger(tsPanel);
@@ -45,32 +43,28 @@ public class Main {
     leftRight.setResizeWeight(0.5);
     topBottom.setDividerLocation(0.5);
     topBottom.setResizeWeight(0.5);
-    this.args = args;
-  }
-  
-  void run() throws IOException {
     if (args.length == 0) {
-      args = new String[] {"TestModel"};
+      this.args = new String[] {"smaller.ini"};
+    } else {
+      this.args = args;
     }
+  }
+
+  void run() throws IOException {
     for (String arg : args) {
-      Model model = new Model(Util.RPKI_ROOT, new File(Util.RPKI_ROOT, arg));
-      Test[] tests = {
-          new TestBasic(model),
-//          new TestExpanded(model),
-//          new TestUpdateEveryStep(model),
-      };
+      File iniFile = new File(arg);
+      assert iniFile.isFile();
       RunLoader.singleton().start();
-      for (Test test : tests) {
-        String testName = test.getClass().getSimpleName();
-        System.out.println("Starting " + testName);
-        List<Task> tasks = test.getTasks();
-        for (Task task : tasks) {
-          tlPanel.log(task.toString() + "...");
-          task.run();
-          tlPanel.log("done\n");
-        }
-        System.out.println(testName + " completed");
+      System.out.println("Starting " + iniFile);
+      Model model = new Model(Util.RPKI_ROOT, iniFile);
+      Test test = new TestBasic(model);
+      Iterable<Task> tasks = test.getTasks();
+      for (Task task : tasks) {
+        tlPanel.log(task.toString() + "...");
+        task.run();
+        tlPanel.log("done\n");
       }
+      System.out.println(iniFile + " completed");
       RunLoader.singleton().stop();
     }
   }
@@ -78,10 +72,10 @@ public class Main {
   Container getComponent() {
     return topBottom;
   }
-  
+
   /**
    * @param args
-   * @throws IOException 
+   * @throws IOException
    */
   public static void main(String[] args) throws IOException {
     Main main = new Main(args);

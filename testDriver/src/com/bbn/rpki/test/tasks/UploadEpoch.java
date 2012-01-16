@@ -15,18 +15,15 @@ import java.util.TreeMap;
  * @author tomlinso
  */
 public class UploadEpoch extends Task {
-  
+
   private final Model model;
   private final List<Task> subtasks;
-  private final int epochIndex;
- 
+
   /**
    * @param model
-   * @param epochIndex 
    */
-  public UploadEpoch(Model model, int epochIndex) {
+  public UploadEpoch(Model model) {
     this.model = model;
-    this.epochIndex = epochIndex;
     subtasks = getSubtasks();
   }
 
@@ -59,12 +56,10 @@ public class UploadEpoch extends Task {
   }
 
   private List<Task> getSubtasks() {
-    List<File> roots = model.getRepositoryRoots(epochIndex);
+    List<File> roots = model.getRepositoryRoots();
     Map<String, File> prevRoots = new TreeMap<String, File>();
-    if (epochIndex > 0) {
-      for (File root : model.getRepositoryRoots(epochIndex - 1)) {
-        prevRoots.put(root.getName(), root);
-      }
+    for (File root : model.getPreviousRepositoryRoots()) {
+      prevRoots.put(root.getName(), root);
     }
     List<Task> ret = new ArrayList<Task>(roots.size());
     for (File repositoryRootDir : roots) {

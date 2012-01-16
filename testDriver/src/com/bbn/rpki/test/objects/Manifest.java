@@ -15,20 +15,6 @@ import java.util.Map;
  * @author RTomlinson
  */
 public class Manifest extends CMS {
-  private static class S {
-    /**
-     * @param parent
-     * @param myFactory
-     */
-    public S(CA_Object parent, Factory myFactory) {
-      eeCert = new EE_cert(parent, myFactory, IPRangeList.IPV4_EMPTY, IPRangeList.IPV6_EMPTY, IPRangeList.AS_EMPTY);
-    }
-
-    EE_cert eeCert;
-  }
-
-  /** Manifest number */
-  public final int manNum;
 
   /** The date of this update  */
   public final Calendar thisupdate;
@@ -36,9 +22,14 @@ public class Manifest extends CMS {
   /** The date of the next expected update */
   public final Calendar nextupdate;
 
-  /** Information about the files in this manifest */
-  public final List<String> fileList;
-  
+  private final CA_Object parent;
+
+  private final Factory myFactory;
+
+  private EE_cert eeCert;
+
+  private final int manNum;
+
   /**
    * Construct a new manifest
    * 
@@ -46,32 +37,18 @@ public class Manifest extends CMS {
    * @param myFactory
    */
   public Manifest(CA_Object parent, Factory myFactory) {
-    this(parent, myFactory, new S(parent, myFactory));
-  }
-  
-  private Manifest(CA_Object parent, FactoryBase myFactory, S s) {
-    super(s.eeCert.outputfilename, s.eeCert.subjkeyfile);
-    this.manNum = s.eeCert.serial;
+    super("MANIFEST");
+    this.parent = parent;
+    this.myFactory = myFactory;
     this.thisupdate = Calendar.getInstance();
     // Not sure on this nextUpdate time frame
     this.nextupdate = Calendar.getInstance();
     this.nextupdate.setTimeInMillis(this.thisupdate.getTimeInMillis());
     this.nextupdate.add(Calendar.DATE, parent.myFactory.ttl);
+    this.manNum = parent.getNextManifestNumber();
     // Chop off our rsync:// portion and append the repo path
     this.outputfilename = REPO_PATH + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".mft";
-    
-    File dirname = new File(REPO_PATH, parent.SIA_path);
-    List<String> fileList = new ArrayList<String>();
-    for (File f : dirname.listFiles()) {
-        if (f.isFile()) {
-            fileList.add(f.getName() + "%" + Util.generate_file_hash(f));
-        }
-    }
-    
-    this.fileList = fileList;
 
-    Util.writeConfig(this);
-    Util.create_binary(this, "MANIFEST");
   }
 
   /**
@@ -80,9 +57,36 @@ public class Manifest extends CMS {
   @Override
   public void getFieldMap(Map<String, Object> map) {
     super.getFieldMap(map);
+    File dirname = new File(REPO_PATH, parent.SIA_path);
+    List<String> fileList = new ArrayList<String>();
+    for (File f : dirname.listFiles()) {
+      if (f.isFile()) {
+        fileList.add(f.getName() + "%" + Util.generate_file_hash(f));
+      }
+    }
     map.put("manNum", manNum);
     map.put("thisupdate", thisupdate);
     map.put("nextupdate", nextupdate);
     map.put("fileList", fileList);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.objects.CMS#getEECert()
+   */
+  @Override
+  protected EE_cert getEECert() {
+    if (eeCert == null) {
+      // Create single-use EE certificate
+      eeCert = new EE_cert(parent, manNum, myFactory, IPRangeList.IPV4_EMPTY, IPRangeList.IPV6_EMPTY, IPRangeList.AS_EMPTY);
+    }
+    return eeCert;
+  }
+
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return String.format("Manifest(%s)", parent.commonName);
   }
 }

@@ -5,7 +5,6 @@ package com.bbn.rpki.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.Model;
@@ -21,7 +20,7 @@ public class TestDriver {
 
   /**
    * @param args
-   * @throws IOException 
+   * @throws IOException
    */
   public static void main(String[] args) throws IOException {
     if (args.length == 0) {
@@ -31,15 +30,14 @@ public class TestDriver {
       Model model = new Model(Util.RPKI_ROOT, new File(Util.RPKI_ROOT, arg));
       Test[] tests = {
           new TestBasic(model),
-//          new TestExpanded(model),
-//          new TestUpdateEveryStep(model),
+          //          new TestExpanded(model),
+          //          new TestUpdateEveryStep(model),
       };
       RunLoader.singleton().start();
       for (Test test : tests) {
         String testName = test.getClass().getSimpleName();
         System.out.println("Starting " + testName);
-        List<Task> tasks = test.getTasks();
-        for (Task task : tasks) {
+        for (Task task : test.getTasks()) {
           task.run();
         }
         System.out.println(testName + " completed");
