@@ -64,6 +64,7 @@ struct ipranges
   int numranges;
   struct iprange *iprangep;
   };
+#define IPRANGES_EMPTY_INITIALIZER {0, NULL}
 
 struct done_cert
   {
