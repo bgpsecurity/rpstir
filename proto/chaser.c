@@ -324,15 +324,17 @@ static int query_write_timestamp(dbconn *db) {
 ------------------------------------------------------------------------------*/
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  -a          chase AIAs, default = don't chase AIAs\n");
-    fprintf(stderr, "  -c          do not chase CRLDPs, default = chase CRLDPs\n");
-    fprintf(stderr, "  -f filename configuration file\n");
-    fprintf(stderr, "  -s          do not chase SIAs, default = chase SIAs\n");
-    fprintf(stderr, "  -t          chase only Trust Anchor URIs from the database\n");
-    fprintf(stderr, "                  default = don't chase only TAs\n");
-    fprintf(stderr, "                  overrides options:  acsy\n");
-    fprintf(stderr, "  -y          chase not-yet-validated, default = don't chase not-yet-validated\n");
-    fprintf(stderr, "  -h          this help listing\n");
+    fprintf(stderr, "  -a           chase AIAs, default = don't chase AIAs\n");
+    fprintf(stderr, "  -c           do not chase CRLDPs, default = chase CRLDPs\n");
+    fprintf(stderr, "  -d delimiter output delimiter, default = newline\n");
+    fprintf(stderr, "                   use '-d \"\"' to delimit with the null character\n");
+    fprintf(stderr, "  -f filename  configuration file\n");
+    fprintf(stderr, "  -s           do not chase SIAs, default = chase SIAs\n");
+    fprintf(stderr, "  -t           chase only Trust Anchor URIs from the database\n");
+    fprintf(stderr, "                   default = don't chase only TAs\n");
+    fprintf(stderr, "                   overrides options:  acsy\n");
+    fprintf(stderr, "  -y           chase not-yet-validated, default = don't chase not-yet-validated\n");
+    fprintf(stderr, "  -h           this help listing\n");
     return -1;
 }
 
@@ -357,10 +359,11 @@ int main(int argc, char **argv) {
 
     char   msg[1024];  // temp string storage
     size_t i;
+    char delimiter = '\n';
 
     // parse the command-line flags
     int ch;
-    while ((ch = getopt(argc, argv, "acf:styh")) != -1) {
+    while ((ch = getopt(argc, argv, "acd:f:styh")) != -1) {
         switch (ch) {
         case 'a':
             chase_aia = 1;
@@ -368,7 +371,10 @@ int main(int argc, char **argv) {
         case 'c':
             chase_crldp = 0;
             break;
-        case 'f':
+        case 'd':
+            delimiter = optarg[0];
+            break;
+         case 'f':
             load_uris_from_file = 1;
             config_file = optarg;
             break;
@@ -511,10 +517,10 @@ int main(int argc, char **argv) {
     // print to stdout
     LOG(LOG_DEBUG, "outputting %zu rsync uris", num_uris);
     for (i = 0; i < num_uris; i++) {
-        fprintf(stdout, "%s%s\n", RSYNC_SCHEME, uris[i]);
+        fprintf(stdout, "%s%s", RSYNC_SCHEME, uris[i]);
+        putchar(delimiter);
     }
 
-    // release memory
     free_uris();
 
     CLOSE_LOG();
