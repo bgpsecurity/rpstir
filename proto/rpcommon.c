@@ -276,6 +276,7 @@ struct iprange *inject_range(struct ipranges *iprangesp, int num)
 struct iprange *next_range(struct ipranges *iprangesp,
   struct iprange *iprangep)
   {
+  if (iprangep - iprangesp->iprangep + 1 >= iprangesp->numranges) return NULL;
   if (iprangep[1].typ != iprangep->typ) return (struct iprange *)0;
   return ++iprangep;
   }
