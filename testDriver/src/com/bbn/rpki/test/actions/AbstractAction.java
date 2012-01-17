@@ -5,6 +5,8 @@ package com.bbn.rpki.test.actions;
 
 import org.jdom.Element;
 
+import com.bbn.rpki.test.objects.TypescriptLogger;
+
 /**
  * Interface and support for all actions
  *
@@ -50,6 +52,7 @@ public abstract class AbstractAction {
   public abstract Element toXML();
   /**
    * Perform the action
+   * @param logger TODO
    */
-  public abstract void execute();
+  public abstract void execute(TypescriptLogger logger);
 }

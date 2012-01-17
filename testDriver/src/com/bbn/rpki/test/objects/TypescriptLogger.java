@@ -11,28 +11,30 @@ import java.io.Reader;
  *
  * @author tomlinso
  */
-public interface TypescriptLogger {
+public abstract class TypescriptLogger {
   /**
    * @param reader
    * @param styleName
    * @return a Reader equivalent to the supplied reader
    */
-  public Reader addSource(Reader reader, String styleName);
-
-  /**
-   * @param style
-   * @param msg
-   */
-  public void log(String style, Object...msg);
+  public abstract Reader addSource(Reader reader, String styleName);
 
   /**
    * @param msg the message to log
    */
-  public void log(Object...msg);
+  public abstract void log(Object...msg);
+
+  /**
+   * @param fmt
+   * @param args
+   */
+  public void format(String fmt, Object...args) {
+    log(String.format(fmt, args));
+  }
 
   /**
    * @param inputStreamReader
    * @param styleName
    */
-  public void suckOn(InputStreamReader inputStreamReader, String styleName);
+  public abstract void suckOn(InputStreamReader inputStreamReader, String styleName);
 }

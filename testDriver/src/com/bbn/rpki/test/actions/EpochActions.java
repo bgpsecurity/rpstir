@@ -9,6 +9,8 @@ import java.util.List;
 
 import org.jdom.Element;
 
+import com.bbn.rpki.test.objects.TypescriptLogger;
+
 /**
  * Container for the actions of an epoch
  *
@@ -17,7 +19,7 @@ import org.jdom.Element;
 public class EpochActions extends AbstractAction {
   private final int epochIndex;
   private final List<AbstractAction> actions;
-  
+
   /**
    * @param element
    */
@@ -72,14 +74,17 @@ public class EpochActions extends AbstractAction {
     }
     return element;
   }
-  
+
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#execute()
+   * @see com.bbn.rpki.test.actions.AbstractAction#execute(TypescriptLogger)
    */
   @Override
-  public void execute() {
+  public void execute(TypescriptLogger logger) {
+    if (logger != null) {
+      logger.format("Executing %d action%n", actions.size());
+    }
     for (AbstractAction action : actions) {
-      action.execute();
+      action.execute(logger);
     }
   }
 }

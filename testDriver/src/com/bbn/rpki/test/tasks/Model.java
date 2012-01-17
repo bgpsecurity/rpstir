@@ -28,6 +28,7 @@ import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.TestbedConfig;
 import com.bbn.rpki.test.objects.TestbedCreate;
+import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.objects.Util;
 
 /**
@@ -60,17 +61,20 @@ public class Model implements Constants {
   private final CA_Object iana;
   private final List<String> objectList = new ArrayList<String>();
   private int epochIndex;
-  private final List<File> roots = new ArrayList<File>();
-  private final List<File> previousRoots = new ArrayList<File>();
+  private final List<File> repositoryRoots = new ArrayList<File>();
+  private final List<File> previousRepositoryRoots = new ArrayList<File>();
   private final TestbedConfig testbedConfig;
+  private final TypescriptLogger logger;
 
   /**
    * @param rpkiRoot
    * @param iniFile
+   * @param logger 
    * @throws IOException
    */
-  public Model(File rpkiRoot, File iniFile) throws IOException {
+  public Model(File rpkiRoot, File iniFile, TypescriptLogger logger) throws IOException {
     this.rpkiRoot = rpkiRoot;
+    this.logger = logger;
     testbedConfig = new TestbedConfig(iniFile);
     TestbedCreate tbc = new TestbedCreate(testbedConfig);
     tbc.createDriver();
@@ -121,16 +125,17 @@ public class Model implements Constants {
     List<String> previousFiles = new ArrayList<String>(objectList);
     objectList.clear();
 
-    previousRoots.clear();
-    previousRoots.addAll(roots);
-    roots.clear();
+    previousRepositoryRoots.clear();
+    previousRepositoryRoots.addAll(repositoryRoots);
+    repositoryRoots.clear();
     if (++epochIndex > 0) {
       EpochActions epochActions = epochs.get(epochIndex - 1);
-      epochActions.execute();
+      epochActions.execute(logger);
     }
     List<CA_Obj> objects = new ArrayList<CA_Obj>();
     iana.appendObjectsToWrite(objects);
-    for (CA_Obj ca_Obj : objects) {
+    for (int i = 0; i < objects.size(); i++) {
+      CA_Obj ca_Obj = objects.get(i);
       if (!ca_Obj.isWritten()) {
         Util.writeConfig(ca_Obj);
         Util.create_binary(ca_Obj);
@@ -145,7 +150,7 @@ public class Model implements Constants {
     List<CA_Object> nodes = new ArrayList<CA_Object>();
     iana.appendRoots(nodes);
     for (CA_Object node : nodes) {
-      roots.add(new File(Constants.REPO_PATH, node.SIA_path));
+      repositoryRoots.add(new File(Constants.REPO_PATH, node.SIA_path));
     }
   }
 
@@ -194,14 +199,14 @@ public class Model implements Constants {
    * @return the repository root files
    */
   public List<File> getRepositoryRoots() {
-    return roots;
+    return repositoryRoots;
   }
 
   /**
    * @return the repository root files
    */
   public List<File> getPreviousRepositoryRoots() {
-    return previousRoots;
+    return previousRepositoryRoots;
   }
 
   /**

@@ -13,6 +13,7 @@ import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.Range;
+import com.bbn.rpki.test.objects.TypescriptLogger;
 
 /**
  * Represents an deallocation action to be performed as part of a test.
@@ -26,20 +27,20 @@ import com.bbn.rpki.test.objects.Range;
  * @author tomlinso
  */
 public class DeallocateAction extends AbstractAction {
- 
+
   private final List<Pair> allocationPairs = new ArrayList<Pair>();
   private final CA_Object parent;
   private final CA_Object child;
   private final String allocationId;
   private final int allocationIndex;
   private final IPRangeType rangeType;
-  
+
   /**
-   * @param parent 
-   * @param child 
-   * @param allocationId 
-   * @param allocationIndex 
-   * @param rangeType 
+   * @param parent
+   * @param child
+   * @param allocationId
+   * @param allocationIndex
+   * @param rangeType
    * @param pairs the ranges or prefixes to be allocated
    */
   public DeallocateAction(CA_Object parent, CA_Object child, String allocationId, int allocationIndex, IPRangeType rangeType, Pair...pairs) {
@@ -50,7 +51,7 @@ public class DeallocateAction extends AbstractAction {
     this.rangeType = rangeType;
     this.allocationPairs.addAll(Arrays.asList(pairs));
   }
-  
+
   /**
    * Constructor from xml Element
    * @param element
@@ -69,10 +70,11 @@ public class DeallocateAction extends AbstractAction {
       allocationPairs.add(new Pair(childElement));
     }
   }
-  
+
   /**
    * @return an element encoding this action
    */
+  @Override
   public Element toXML() {
     Element element = createElement(VALUE_DEALLOCATE);
     if (parent != null) {
@@ -89,12 +91,15 @@ public class DeallocateAction extends AbstractAction {
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#execute()
+   * @see com.bbn.rpki.test.actions.AbstractAction#execute(TypescriptLogger)
    */
   @Override
-  public void execute() {
+  public void execute(TypescriptLogger logger) {
     Range range = ActionManager.singleton().findAllocation(rangeType, allocationId, allocationIndex);
     child.removeRange(rangeType, range);
     parent.addRange(rangeType, range);
+    if (logger != null) {
+      logger.format("Deallocate %s from %s.%d of %s to %s%n", range, allocationId, allocationIndex, child, parent);
+    }
   }
 }

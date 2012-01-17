@@ -166,19 +166,19 @@ public class CA_Object extends Allocator {
     }
     list.add(getCertificate());
     for (CA_Obj obj : crl) {
-      list.add(obj);
       obj.appendObjectsToWrite(list);
+      list.add(obj);
     }
     for (Roa obj : roas) {
-      list.add(obj);
       obj.appendObjectsToWrite(list);
+      list.add(obj);
     }
     for (CA_Object obj : children) {
       obj.appendObjectsToWrite(list);
     }
     for (CA_Obj obj : manifests) {
-      list.add(obj);
       obj.appendObjectsToWrite(list);
+      list.add(obj);
     }
   }
 

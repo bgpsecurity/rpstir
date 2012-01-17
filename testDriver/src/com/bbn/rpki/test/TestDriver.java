@@ -27,7 +27,7 @@ public class TestDriver {
       args = new String[] {"TestModel"};
     }
     for (String arg : args) {
-      Model model = new Model(Util.RPKI_ROOT, new File(Util.RPKI_ROOT, arg));
+      Model model = new Model(Util.RPKI_ROOT, new File(Util.RPKI_ROOT, arg), null);
       Test[] tests = {
           new TestBasic(model),
           //          new TestExpanded(model),

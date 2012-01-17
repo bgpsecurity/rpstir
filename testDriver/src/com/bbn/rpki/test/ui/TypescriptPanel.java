@@ -31,7 +31,7 @@ import com.bbn.rpki.test.objects.TypescriptLogger;
  *
  * @author tomlinso
  */
-public class TypescriptPanel implements TypescriptLogger {
+public class TypescriptPanel extends TypescriptLogger {
   /**
    * Specify how scrolling should occur. Options are ON, OFF, and AUTO. If OFF,
    * no scrolling ever occurs. If ON, scrolling always occurs. If AUTO,
@@ -184,23 +184,15 @@ public class TypescriptPanel implements TypescriptLogger {
   }
 
   /**
-   * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.String, java.lang.Object...)
-   */
-  @Override
-  public void log(String style, Object...msg) {
-    StringBuilder sb = new StringBuilder();
-    for (Object o : msg) {
-      sb.append(o);
-    }
-    processString(sb.toString(), style);
-  }
-
-  /**
    * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.Object...)
    */
   @Override
   public void log(Object...msg) {
-    log("stdout", msg);
+    StringBuilder sb = new StringBuilder();
+    for (Object o : msg) {
+      sb.append(o);
+    }
+    processString(sb.toString(), "stdout");
   }
 
   /**

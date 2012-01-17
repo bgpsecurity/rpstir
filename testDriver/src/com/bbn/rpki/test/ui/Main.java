@@ -56,7 +56,7 @@ public class Main {
       assert iniFile.isFile();
       RunLoader.singleton().start();
       System.out.println("Starting " + iniFile);
-      Model model = new Model(Util.RPKI_ROOT, iniFile);
+      Model model = new Model(Util.RPKI_ROOT, iniFile, tlPanel);
       Test test = new TestBasic(model);
       Iterable<Task> tasks = test.getTasks();
       for (Task task : tasks) {
