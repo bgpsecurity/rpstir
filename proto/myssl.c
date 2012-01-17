@@ -3843,7 +3843,8 @@ static int crl_entry_chk(struct CRLEntry *entryp)
     return ERR_SCM_CRLENTRYEXT;
   }
   // check serial number
-  if (read_casn_num(&entryp->userCertificate, &snum) <= 0 ||
+  if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH || 
+    read_casn_num(&entryp->userCertificate, &snum) <= 0 ||
     snum < 0) {
     log_msg(LOG_ERR, "Invalid revoked serial number");
     return ERR_SCM_BADREVSNUM;
