@@ -11,22 +11,6 @@ import java.util.Map;
  * @author RTomlinson
  */
 public class EE_cert extends Certificate {
-  private static class S {
-
-    public String siaPath;
-    public String nickname;
-
-    /**
-     * @param parent
-     * @param childId
-     * @param myFactory
-     */
-    public S(CA_Object parent, int childId, FactoryBase myFactory) {
-      // Local variable to help with naming conventions
-      nickname = "EE-" + childId;
-      siaPath = parent.SIA_path + nickname + "/";
-    }
-  }
 
   /** */
   public final Object aia;
@@ -46,15 +30,10 @@ public class EE_cert extends Certificate {
    */
   EE_cert(CA_Object parent, int childId, Factory myFactory, IPRangeList ipv4,
           IPRangeList ipv6, IPRangeList asList) {
-    this(parent, myFactory, new S(parent, childId, myFactory), ipv4, ipv6, asList);
-  }
-
-  private EE_cert(CA_Object parent, Factory myFactory, S s, IPRangeList ipv4,
-                  IPRangeList ipv6, IPRangeList asList) {
     super(parent,
           myFactory,
-          s.siaPath,
-          s.nickname,
+          parent.SIA_path + "EE-" + childId + "/",
+          myFactory.bluePrintName + "-" + childId,
           ipv4,
           ipv6,
           asList,
