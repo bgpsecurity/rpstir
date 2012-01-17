@@ -89,7 +89,7 @@ free_URI_attempt(URI_attempt *uri_attemptp)
 set_state(const thread_state * statep) // warn if return value unused?
 {
   char * path;
-  if (statep->path == NULL)
+  if (statep->state_path == NULL)
     path = cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/thread", get_globally_unique_thread_id());
   else
     path = statep->state_path;
@@ -195,7 +195,7 @@ bool run_rsync(thread_state *statep)
   return true;
 }
 
-run_aur(thread_state *statep)
+bool run_aur(thread_state *statep)
 {
   assert(statep->rsync_done == DIR_CUR);
   assert(statep->aur_done == DIR_OLD);
@@ -205,15 +205,19 @@ run_aur(thread_state *statep)
 
   run rsync_aur on logfile
   flush rcli
+  if (aur or rcli failed)
+    return false; // no rollback because AUR should be idempotent and read-only on logfile
+
   statep->aur_done = DIR_CUR;
   set_state(statep);
 
   assert(statep->rsync_done == DIR_CUR);
   assert(statep->aur_done == DIR_CUR);
   assert(statep->log_done == LOG_CUR);
+  return true;
 }
 
-archive_log(thread_state *statep)
+bool archive_log(thread_state *statep)
 {
   assert(statep->rsync_done == DIR_CUR);
   assert(statep->aur_done == DIR_CUR);
@@ -230,17 +234,19 @@ archive_log(thread_state *statep)
   else if (ret indicates cur_file didn't exist)
   {
     /*
-      This isn't an error, because this can only happen if somebody is messing
-      with the filesystem, in which case we're in trouble anyway, or if this
+      This can only happen if somebody is messing with the filesystem or if this
       is during a recovery, in which case the program crashed between archiving
       the log and setting log_done to LOG_ARCHIVE.
+
+      In the first case, we're screwed anyway. In the second case, it's better
+      to keep going because the log is already in the correct place.
     */
     log warning
   }
   else
   {
     log error
-    exit
+    return false;
   }
 
   statep->log_done = LOG_ARCHIVE;
@@ -249,18 +255,25 @@ archive_log(thread_state *statep)
   assert(statep->rsync_done == DIR_CUR);
   assert(statep->aur_done == DIR_CUR);
   assert(statep->log_done == LOG_ARCHIVE);
+  return true;
 }
 
-bool update_directory(thread_state *statep)
+enum {
+  UPDATE_GOOD = 0,
+  UPDATE_REMOTE_FAIL,
+  UPDATE_LOCAL_FAIL
+} update_directory(thread_state *statep)
 {
   start_directory_update(statep);
 
   if (!run_rsync(statep))
-    return false;
+    return UPDATE_REMOTE_FAIL;
 
-  run_aur(statep);
+  if (!run_aur(statep))
+    return UPDATE_LOCAL_FAIL;
 
-  archive_log(statep);
+  if (!archive_log(statep))
+    return UPDATE_LOCAL_FAIL;
 
   return true;
 }
@@ -497,7 +510,8 @@ rsync_thread(void *to_process_voidp, void *currently_processing_voidp)
 
     log attempting uri_attemptp->uri, try number uri_attemptp->attempt at now
 
-    if (update_directory(statep))
+    ret = update_directory(statep);
+    if (ret == UPDATE_GOOD)
     {
       log succeeded uri_attemptp->uri, try number uri_attemptp->attempt at now
 
@@ -508,9 +522,14 @@ rsync_thread(void *to_process_voidp, void *currently_processing_voidp)
       remove_from_set(currently_processing, statep->rsync_uri);
       unlock(currently_processing);
     }
-    else
+    else if (ret == UPDATE_REMOTE_FAIL)
     {
       failed_attempt(uri_attemptp, to_process);
+    }
+    else
+    {
+      // should be a quit cleanly, but for now:
+      exit
     }
   }
 
