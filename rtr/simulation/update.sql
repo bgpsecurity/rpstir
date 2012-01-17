@@ -14,8 +14,7 @@ SET @ser = IF(@prev_set IS NULL,
 	FLOOR(RAND(@session_id) * (1 << 32)),
 	IF(@prev_ser >= (1 << 32) - 1, 0, @session_id + 1));
 
--- TODO: insert multiple rows
-INSERT INTO rtr_full (serial_num, asn, ip_addr)
+INSERT IGNORE INTO rtr_full (serial_num, asn, ip_addr)
 SELECT
 	@ser,
 	FLOOR(1 + RAND(@session_id * @ser + 1) * ((1 << 32) - 1)),
@@ -53,7 +52,8 @@ SELECT
 			@len := FLOOR(RAND(@session_id * @ser + 11) * 129),
 			'(',
 			@len + FLOOR(RAND(@session_id * @ser + 12) * (129 - @len)),
-			')'));
+			')'))
+FROM rtr_simulation_count;
 
 INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)
 SELECT @ser, 1, t1.asn, t1.ip_addr
