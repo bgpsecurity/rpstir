@@ -1,0 +1,12 @@
+type=CA
+serial=1
+issuer=root
+subject=root
+notbefore=000101010101Z
+notafter=21001231235959Z
+crldp=rsync://invalid/invalid.crl
+sia=r:rsync://invalid/,m:rsync://invalid/invalid.mft
+ipv4=0.0.0.0/0
+ipv6=::/0
+as=0-4294967295
+selfsigned=true

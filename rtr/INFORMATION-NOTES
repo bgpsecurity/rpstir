@@ -1,0 +1,26 @@
+Database:
+
+rtr_full has ~1M rows
+rtr_incremental is usually much smaller than rtr_full
+
+
+Cache Server:
+
+There are generally at most ~100 clients
+
+
+Data flows:
+
+doUpdate -> server: notification that db was updated (signal or change DB and have rtr server loop looking for changes)
+client -> server: query (single PDU)
+client -> server: error in response to any PDU (single PDU)
+server -> client: header, data, and footer in response to a query (multiple PDUs)
+server -> client: cache reset in response to a query (single PDU)
+server -> client: error in response to any PDU (single PDU)
+server -> db: simple SELECT query
+db -> server: response to SELECT query
+
+
+Things to be aware of:
+
+TCP connections can drop without either side being aware.

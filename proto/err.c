@@ -155,7 +155,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "AS number outside range",      /* ERR_SCM_BADASNUM */
     "No IP addresses",              /* ERR_SCM_NOIPADDR */
     "No AS number",                 /* ERR_SCM_NOASNUM */
-    "ROA IP addresses too big",     /* ERR_SCM_ROAIPTOOBIG */
+    "ROA IP addresses not in EE",   /* ERR_SCM_ROAIPMISMATCH */
     "IP addresses overlap",         /* ERR_SCM_IPTOUCH */
 
     "Bad hash in manifest",         /* ERR_SCM_BADMFTHASH -140 */
@@ -164,9 +164,10 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Missing CRL version",          /* ERR_SCM_NOCRLVER */
     "Wrong CRL version",            /* ERR_SCM_BADCRLVER */
     "CRL Entry Extension present",  /* ERR_SCM_CRLENTRYEXT */
-    "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
+    "Invalid filename in manifest", /* ERR_SCM_BADMFTFILENAME */
     "Invalid revocation date",      /* ERR_SCM_BADREVDATE */
     "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
+    "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
   } ;
 
 char *err2string(int err)

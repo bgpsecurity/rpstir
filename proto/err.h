@@ -143,7 +143,7 @@
 #define ERR_SCM_BADASNUM    -135        /* AS number outside range */ 
 #define ERR_SCM_NOIPADDR    -136        /* no IP addresses */
 #define ERR_SCM_NOASNUM     -137        /* no AS numbers */
-#define ERR_SCM_ROAIPTOOBIG -138        /* ROA IP addresses too big */
+#define ERR_SCM_ROAIPMISMATCH -138      /* ROA IP addressess aren't covered by EE's IPs */
 #define ERR_SCM_IPTOUCH     -139        /* IP addresses overlap */
 #define ERR_SCM_BADMFTHASH  -140        /* bad manifest hash */
 #define ERR_SCM_BADDIGEST   -141        /* invalid digest */
@@ -151,10 +151,13 @@
 #define ERR_SCM_NOCRLVER    -143        /* missing CRL version */
 #define ERR_SCM_BADCRLVER   -144        /* wrong CRL version */
 #define ERR_SCM_CRLENTRYEXT -145        /* CRL Entry Extension present */
-#define ERR_SCM_NOCRLNUM    -146        /* No CRL number extension */
+#define ERR_SCM_BADMFTFILENAME -146     /* invalid filename in a manifest */
 #define ERR_SCM_BADREVDATE  -147        /* Invalid revocation date */
 #define ERR_SCM_BADREVSNUM  -148        /* Invalid revoked serial number */
-#define ERR_SCM_MAXERR      -148
+#define ERR_SCM_NOCRLNUM    -149        /* No CRL number extension */
+#define ERR_SCM_MAXERR      -150
+=======
+#define ERR_SCM_MAXERR      -150
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

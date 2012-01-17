@@ -1,0 +1,43 @@
+--- serial_notify 4242 123456
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
+--- serial_notify 42 19
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
+--- cache_response 4242
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 43, encapsulated PDU length = 8, error text = [19] "unexpected PDU type"
+--- cache_response 42
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 43, encapsulated PDU length = 8, error text = [19] "unexpected PDU type"
+--- ipv4_prefix 255 255 255 255.255.255.255 4294967295
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 36, encapsulated PDU length = 20, error text = [0] ""
+--- ipv6_prefix 255 255 255 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 48, encapsulated PDU length = 32, error text = [0] ""
+--- ipv4_prefix 1 32 32 255.255.255.255 4294967295
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 55, encapsulated PDU length = 20, error text = [19] "unexpected PDU type"
+--- ipv6_prefix 1 128 128 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 67, encapsulated PDU length = 32, error text = [19] "unexpected PDU type"
+--- ipv4_prefix 0 0 0 0.0.0.0 0
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 55, encapsulated PDU length = 20, error text = [19] "unexpected PDU type"
+--- ipv6_prefix 0 0 0 :: 0
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 67, encapsulated PDU length = 32, error text = [19] "unexpected PDU type"
+--- end_of_data 4242 123456
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
+--- end_of_data 42 19
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 47, encapsulated PDU length = 12, error text = [19] "unexpected PDU type"
+--- cache_reset
+--- expecting: Error Report
+version 0 Error Report (Invalid Request), length = 43, encapsulated PDU length = 8, error text = [19] "unexpected PDU type"
+--- error_report 2
+--- expecting: no response
+--- error_report 3
+--- expecting: no response
