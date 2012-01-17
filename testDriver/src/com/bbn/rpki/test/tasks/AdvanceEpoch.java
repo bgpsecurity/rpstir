@@ -30,6 +30,8 @@ public class AdvanceEpoch extends Task {
   @Override
   public void run() {
     model.advanceEpoch();
+    test.addTask(new UploadEpoch(model));
+    test.addTask(new CheckCacheStatus(model));
     if (model.getEpochIndex() + 1 < model.getEpochCount()) {
       test.addTask(this);
     }
