@@ -77,6 +77,7 @@ public class Crl extends CA_Obj {
     map.put("thisupdate", thisupdate);
     map.put("nextupdate", nextupdate);
     map.put("crlnum", crlnum);
+    map.put("revokedcertlist", revokedcertlist);
     map.put("aki", aki);
   }
 
