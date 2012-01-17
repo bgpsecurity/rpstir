@@ -133,8 +133,11 @@ public class Util implements Constants {
     return sb.toString();
   }
 
-  private static StringBuilder appendList(StringBuilder sb, String member, Iterable<?> words) {
+  private static StringBuilder appendList(StringBuilder sb, String member, Iterable<?> words, boolean bracketed) {
     sb.append(member).append("=");
+    if (bracketed) {
+      sb.append("[");
+    }
     boolean first = true;
     String sep = ",";
     for (Object word : words) {
@@ -144,6 +147,9 @@ public class Util implements Constants {
         sb.append(sep);
       }
       sb.append(word);
+    }
+    if (bracketed) {
+      sb.append("]");
     }
     sb.append(String.format("%n"));
     return sb;
@@ -198,18 +204,18 @@ public class Util implements Constants {
             if (IPRangeList.isInherit(rangeList)) {
               sb.append(String.format("%s=%s%n", member, "inherit"));
             } else {
-              appendList(sb, member, rangeList);
+              appendList(sb, member, rangeList, false);
             }
           } else if (member.equals("ipv4") || member.equals("ipv6")) {
             IPRangeList range = (IPRangeList) val;
             if (IPRangeList.isInherit(range)) {
               sb.append(String.format("%s=%s%n", member, "inherit"));
             } else {
-              appendList(sb, member, range);
+              appendList(sb, member, range, false);
             }
           } else if (member.equals("roaipv4") || member.equals("roaipv6")) {
             IPRangeList rangeList = (IPRangeList) val;
-            appendList(sb, member, rangeList);
+            appendList(sb, member, rangeList, false);
           } else if (member.equals("notBefore") || member.equals("notAfter")) {
             appendDateTime(sb, member, (Calendar) val, true);
           } else if (member.equals("thisupdate") || member.equals("nextupdate")) {
@@ -218,11 +224,11 @@ public class Util implements Constants {
           } else if (member.equals("fileList")) {
             @SuppressWarnings("unchecked")
             List<?> list = (List<Object>) val;
-            appendList(sb, member, list);
+            appendList(sb, member, list, false);
           } else if (member.equals("revokedcertlist")) {
             @SuppressWarnings("unchecked")
             List<?> list = (List<Object>) val;
-            appendList(sb, member, list);
+            appendList(sb, member, list, true);
           } else {
             sb.append(String.format("%s=%s%n", member, val));
           }
@@ -353,6 +359,9 @@ public class Util implements Constants {
       }
       return string;
     } catch (Exception e) {
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
+      }
       throw new RuntimeException(e);
     }
   }
