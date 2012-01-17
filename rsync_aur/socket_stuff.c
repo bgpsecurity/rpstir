@@ -132,16 +132,28 @@ outputMsg(struct write_port *wport, char *str, unsigned int len)
   
   if (wport->protocol == LOCAL) {
     ret = write(wport->out_desc, (const void *)str, len);
+    if (ret < 0)
+      perror("write()");
+    else if (ret != len)
+      log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
     return(ret);
   } else if (wport->protocol == TCP) {
     /* send it */
     ret = write(wport->out_desc, (const void *)str, len);
+    if (ret < 0)
+      perror("write()");
+    else if (ret != len)
+      log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
     return(ret);
   } else if (wport->protocol == UDP) {
       /* send it */
       ret = sendto(wport->out_desc, (const void *)str, len, 0, 
                   (struct sockaddr *)&(wport->server_addr), 
                   wport->to_length);
+      if (ret < 0)
+        perror("sendto()");
+      else if (ret != len)
+        log_msg(LOG_ERR, "Sent %d bytes instead of %u", ret, len);
   } else {
     log_msg(LOG_ERR, "unknown protocol specification: %d",
 	    wport->protocol);
