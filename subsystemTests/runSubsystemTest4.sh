@@ -53,7 +53,7 @@ while [ $N -le "4" ]; do
     run_bg "subsys4.rcli-w-$N" ../proto/rcli -w $RPKI_PORT
     LOADER_PID=$!
      echo "Loader started for case ${N}"
-     wait_tcp 10 $RPKI_PORT
+     sleep 5
      failures=""
      ./step4 || failures="$failures step4"
      wait "$LOADER_PID" || failures="$failures rcli-w"

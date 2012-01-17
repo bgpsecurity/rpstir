@@ -38,14 +38,3 @@ run () {
     run_bg "$@"
     wait $!
 }
-
-wait_tcp () {
-    # params are timeout (in seconds) and port number
-    for _discard in `seq 1 $1`; do
-        sleep 1
-        if nc -z localhost "$2"; then
-            return 0
-        fi
-    done
-    return 1
-}
