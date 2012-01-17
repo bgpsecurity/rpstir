@@ -60,8 +60,8 @@ while [ $N -le $NUM_TOTAL ]; do
 done
 
 # cleanup
-kill -9 $LOADER_PID
-sleep 1
+kill $LOADER_PID
+wait $LOADER_PID || true
 
 # display results
 if [ "$NUM_PASSED" -eq "$NUM_TOTAL" ]; then

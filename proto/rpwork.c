@@ -14,7 +14,10 @@ static scm *locscmp = NULL;
 static scmcon *locconp = NULL;
 struct Certificate myrootcert;
 char myrootfullname[PATH_MAX] = "";
-struct ipranges certranges, ruleranges, lessranges, fromranges;
+struct ipranges certranges = IPRANGES_EMPTY_INITIALIZER;
+struct ipranges ruleranges = IPRANGES_EMPTY_INITIALIZER;
+struct ipranges lessranges = IPRANGES_EMPTY_INITIALIZER;
+struct ipranges fromranges = IPRANGES_EMPTY_INITIALIZER;
 char errbuf[160] = "";
 char currskibuf[SKIBUFSIZ] = "", nextskibuf[SKIBUFSIZ] = "", skibuf[SKIBUFSIZ] = "";
 

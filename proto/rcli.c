@@ -270,6 +270,7 @@ static int makesock(char *porto, int *protosp)
   protos = *protosp;
   if ( protos < 0 )
     {
+      log_msg(LOG_INFO, "Creating a socket on port %s", porto);
       protos = socket(AF_INET, SOCK_STREAM, 0);
       if ( protos < 0 )
         {
@@ -297,6 +298,7 @@ static int makesock(char *porto, int *protosp)
 	}
       *protosp = protos;
     }
+  log_msg(LOG_INFO, "Accepting a new connection on port %s", porto);
   leen = sizeof(sout);
   s = accept(protos, (struct sockaddr *)&sout, &leen);
 //  (void)close(protos);
@@ -898,7 +900,7 @@ int main(int argc, char **argv)
       return(1);
     }
   if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && 
-      thefile == 0 && thedelfile == 0)
+      thefile == 0 && thedelfile == 0 && skifile == 0)
     {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
@@ -1158,7 +1160,6 @@ int main(int argc, char **argv)
 	{
 	  if ( do_sockopts > 0 )
 	    {
-	      log_msg(LOG_INFO, "Creating a socket on port %s", porto);
 	      s = makesock(porto, &protos);
 	      if ( s < 0 )
 		log_msg(LOG_ERR, "Could not create socket");
@@ -1197,6 +1198,9 @@ int main(int argc, char **argv)
           {
           log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
           sta = read_SKI_blocks(scmp, realconp, skifile);
+          if (sta > 0) sta = 0;
+          if (sta)
+            log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
           } 
 	} while ( perpetual > 0 ) ;
       if ( protos >= 0 )
@@ -1206,6 +1210,9 @@ int main(int argc, char **argv)
       {
       log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
       sta = read_SKI_blocks(scmp, realconp, skifile); 
+      if (sta > 0) sta = 0;
+      if (sta)
+        log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
       }
   (void)ranlast(scmp, realconp, "RSYNC");
   sqcleanup();
