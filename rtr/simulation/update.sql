@@ -10,7 +10,7 @@ WHERE rtr_update.serial_num IS NULL;
 
 SET @session_id = (SELECT session_id FROM rtr_session);
 SET @prev_ser = (SELECT serial_num FROM rtr_update ORDER BY create_time DESC LIMIT 1);
-SET @ser = IF(@prev_set IS NULL,
+SET @ser = IF(@prev_ser IS NULL,
 	FLOOR(RAND(@session_id) * (1 << 32)),
 	IF(@prev_ser >= (1 << 32) - 1, 0, @session_id + 1));
 
