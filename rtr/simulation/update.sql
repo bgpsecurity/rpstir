@@ -12,7 +12,7 @@ SET @session_id = (SELECT session_id FROM rtr_session);
 SET @prev_ser = (SELECT serial_num FROM rtr_update ORDER BY create_time DESC LIMIT 1);
 SET @ser = IF(@prev_ser IS NULL,
 	FLOOR(RAND(@session_id) * (1 << 32)),
-	IF(@prev_ser >= (1 << 32) - 1, 0, @session_id + 1));
+	IF(@prev_ser >= (1 << 32) - 1, 0, @prev_ser + 1));
 
 INSERT IGNORE INTO rtr_full (serial_num, asn, ip_addr)
 SELECT
