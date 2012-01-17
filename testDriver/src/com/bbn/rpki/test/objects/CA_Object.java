@@ -214,16 +214,6 @@ public class CA_Object extends Allocator {
   }
 
   /**
-   * @param nodes
-   */
-  public void appendRoots(List<CA_Object> nodes) {
-    nodes.add(this);
-    for (CA_Object child : children) {
-      child.appendRoots(nodes);
-    }
-  }
-
-  /**
    * @return the nickName
    */
   public String getNickname() {

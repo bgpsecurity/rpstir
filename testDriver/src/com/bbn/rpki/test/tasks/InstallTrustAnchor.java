@@ -28,7 +28,7 @@ public class InstallTrustAnchor extends Task {
   private final Model model;
 
   /**
-   * @param model 
+   * @param model
    */
   public InstallTrustAnchor(Model model) {
     this.model = model;
@@ -43,7 +43,7 @@ public class InstallTrustAnchor extends Task {
   @Override
   public void run() {
     try {
-      String rawOutput = Util.exec("openssl", false, Util.RPKI_ROOT, null,
+      String rawOutput = Util.exec("openssl", false, null, null,
                                    null,
                                    "openssl",
                                    "x509",
@@ -52,13 +52,13 @@ public class InstallTrustAnchor extends Task {
                                    "-in",
                                    certFile.getPath(),
                                    "-pubkey", "-noout");
-      String cookedOutput = Util.exec("awk", false, Util.RPKI_ROOT, rawOutput, 
+      String cookedOutput = Util.exec("awk", false, Util.RPKI_ROOT, rawOutput,
                                       null, "awk", "!/-----(BEGIN|END)/");
       Writer talWriter = new FileWriter(talFile);
       talWriter.write(talPrefix);
       talWriter.write(cookedOutput);
       talWriter.close();
-      
+
       Util.exec("updateTA", false, Util.RPKI_ROOT, null,
                 null,
                 "run_scripts/updateTA.py",

@@ -4,9 +4,11 @@
 package com.bbn.rpki.test.tasks;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +54,14 @@ public class Model implements Constants {
     }
   };
 
+  private static final FileFilter dirFilter = new FileFilter() {
+
+    @Override
+    public boolean accept(File file) {
+      return file.isDirectory();
+    }
+  };
+
   private final File rpkiRoot;
 
   private final List<EpochActions> epochs = new ArrayList<EpochActions>();
@@ -59,7 +69,7 @@ public class Model implements Constants {
   private final String ianaServerName;
 
   private final CA_Object iana;
-  private final List<String> objectList = new ArrayList<String>();
+  private final List<File> objectList = new ArrayList<File>();
   private int epochIndex;
   private final List<File> repositoryRoots = new ArrayList<File>();
   private final List<File> previousRepositoryRoots = new ArrayList<File>();
@@ -69,7 +79,7 @@ public class Model implements Constants {
   /**
    * @param rpkiRoot
    * @param iniFile
-   * @param logger 
+   * @param logger
    * @throws IOException
    */
   public Model(File rpkiRoot, File iniFile, TypescriptLogger logger) throws IOException {
@@ -110,19 +120,12 @@ public class Model implements Constants {
   }
 
   /**
-   * @return the current list of objects
-   */
-  public List<String> getObjectList() {
-    return objectList;
-  }
-
-  /**
    * Advance to the next epoch -- copy the current object list to the previous
    * object list. Apply the actions of the epoch and record the new current
    * object list.
    */
   public void advanceEpoch() {
-    List<String> previousFiles = new ArrayList<String>(objectList);
+    List<File> previousFiles = new ArrayList<File>(objectList);
     objectList.clear();
 
     previousRepositoryRoots.clear();
@@ -141,16 +144,19 @@ public class Model implements Constants {
         Util.create_binary(ca_Obj);
         ca_Obj.setWritten(true);
       }
-      objectList.add(ca_Obj.outputfilename);
+      objectList.add(new File(ca_Obj.outputfilename));
     }
     previousFiles.removeAll(objectList);
-    for (String file : previousFiles) {
-      new File(file).delete();
+    for (File file : previousFiles) {
+      file.delete();
     }
     List<CA_Object> nodes = new ArrayList<CA_Object>();
-    iana.appendRoots(nodes);
-    for (CA_Object node : nodes) {
-      repositoryRoots.add(new File(Constants.REPO_PATH, node.SIA_path));
+    File repoDir = new File(REPO_PATH);
+    for (File serverFile : repoDir.listFiles(dirFilter)) {
+      if (serverFile.getName().equals("EE")) {
+        continue;
+      }
+      repositoryRoots.addAll(Arrays.asList(serverFile.listFiles(dirFilter)));
     }
   }
 
