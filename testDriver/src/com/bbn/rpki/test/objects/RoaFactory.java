@@ -53,9 +53,8 @@ public class RoaFactory extends Factory implements Constants {
   /** ROAipv6List */
   public List<Pair> ROAipv6List;
 
-
   /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
+   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object, int)
    */
   @Override
   public Roa create(CA_Object parent, int id) {
