@@ -58,15 +58,11 @@ static const char * _queries_chaser[] = {
         // DB_PSTMT_CHASER_GET_CRLDP
         "select crldp from rpki_cert left join rpki_crl "
         " on rpki_cert.aki = rpki_crl.aki "
-        " where rpki_crl.filename is null "
-        " or rpki_crl.next_upd < ?",
+        " where rpki_crl.next_upd < TIMESTAMPADD(HOUR, ?, ?)",
 
         // DB_PSTMT_CHASER_GET_SIA
-        "select sia from rpki_cert ",
-
-        // DB_PSTMT_CHASER_GET_SIA_TRUSTED_ONLY
         "select sia from rpki_cert "
-        " where flags & ? = ? ",  // SCM_FLAG_TRUSTED
+        " where flags & ? = ?",   // either SCM_FLAG_VALIDATED, or 0
 
         // DB_PSTMT_CHASER_GET_AIA
         "select aia, aki from rpki_cert "

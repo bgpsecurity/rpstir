@@ -3,21 +3,15 @@
  * authorities that have signed certs.  It outputs the URIs to stdout.
  *
  * yet to do:
+ * - update INSTRUCTIONS for additional_rsync_uris.config
+ * - switch to Dave's safe printing function for user provided strings
  * - check all return values (handle_uri_string).  free memory before any quit
- * - implement chase_not_yet_validated (check neither flag:  VALIDATED, NO_CHAIN)
- * - check how we define subsume.  Andrew:
- *       The real definition is this: A subsumes B if "rsync --recursive"
- *       on A automatically retrieves B.  This usually happens when A is a
- *       directory and B lives within it or within a subdirectory.
- * - check uri for validity before adding to list
- * - coordinate return values with caller
- * - check other lines of initial_chaser.config before using defaults
  * - consider OOM killer in notes about `man realloc`
  *
  * test cases:
  * - is x subsumed by y?
  * - are trailing chars removed?
- * - are bad chars warned, removed?
+ * - properly distinguish crldps based on next_upd?
  * - correct output for cmd-line combinations?
  * - can crafted bad uri crash the program?  or get thru?
  * - start from very small array size to test realloc of uris
@@ -57,20 +51,23 @@ static char const * const  RSYNC_SCHEME = "rsync://";
 
 /**=============================================================================
  * @note This function only does a string comparison, not a file lookup.
+ * @pre str1 precedes str2, lexicographically.
  * @ret 1 if str2 is a file or directory under str1.
  *      0 otherwise.
 ------------------------------------------------------------------------------*/
-static int is_subsumed (const char *str1, const char *str2) {
+static int is_subsumed(const char *str1, const char *str2) {
     if (!str1)
         return 0;
 
-    if (strncmp (str1, str2, strlen (str1)) != 0)
+    size_t len1;
+
+    if (strncmp (str1, str2, len1 = strlen (str1)) != 0)
         return 0;
     if (strlen (str1) == strlen (str2))
         return 1;
-    if (str1 [strlen(str1) - 1] == '/')
+    if (str1 [len1 - 1] == '/')
         return 1;
-    if (str2 [strlen(str1)] == '/')
+    if (str2 [len1] == '/')
         return 1;
 
     return 0;
@@ -98,9 +95,9 @@ static void free_uris() {
 }
 
 /**=============================================================================
-allowed?:  space !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
-allowed:  0-9 A-Z a-z
-not allowed:
+// TODO:  David:  let ? and # pass.  Probly not relevant to rsync.
+// TODO:  David is checking what he wants me to do with isprint().Andrew:  warn. uri rfc mention this?
+// TODO:  collapse:  //  (helps is_subsumed() algo, no change to semantics)  (Andrew:  warn)
 ------------------------------------------------------------------------------*/
 static int check_uri_chars(char *in) {
 
@@ -143,6 +140,7 @@ static int append_uri(char const *in) {
 static void handle_uri_string(char const *in) {
     char *copy;
     char *section;
+    // TODO:  Using ; as delimiter is planned to change when the db schema is updated.
     char const delimiter[] = ";";
     size_t len_in = strlen(in);
     size_t len;
@@ -159,6 +157,7 @@ static void handle_uri_string(char const *in) {
     // split by semicolons
     section = strtok(copy, delimiter);
     while (section) {
+        //TODO:  any change to a uri gets a warning, at least
         // trim leading space and quote
         len = strlen(section);
         while ((' ' == section[0]  ||  '\'' == section[0]  ||  '"' == section[0])
@@ -170,7 +169,7 @@ static void handle_uri_string(char const *in) {
         // trim trailing space, newline, and quote
         len = strlen(section);
         while ((' ' == section[len - 1]  ||  '\n' == section[len - 1]  ||
-                '\'' == section[0]  ||  '"' == section[0])  &&  len > 0) {
+                '\'' == section[len - 1]  ||  '"' == section[len - 1])  &&  len > 0) {
             section[len - 1] = '\0';
             len--;
         }
@@ -180,12 +179,14 @@ static void handle_uri_string(char const *in) {
         if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
             section += len_scheme;
         } else {
-            LOG(LOG_DEBUG, "dropping non-rsync uri:  \"%s\"", section);
+            LOG(LOG_WARNING, "dropping non-rsync uri:  \"%s\"", section);
+            // TODO:  don't print section, cause it's user input.
+            // TODO:  see PDU_ERROR_REPORT section near bottom of pdu.c.  Split that out into utils/ and use that.
             section = strtok(NULL, delimiter);
             continue;
         }
 
-        // regex check
+        // regex check  (this may move to check_chars)
         if (check_uri_chars(section)) {
             LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", section);
             section = strtok(NULL, delimiter);
@@ -213,13 +214,13 @@ static int query_aia(dbconn *db) {
 
     ret = db_chaser_read_aia(db, &results, &num_malloced,
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
-    LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
-            num_malloced, num_malloced - ret);
     if (ret == -1) {
         return -1;
     } else {
+        LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
+                num_malloced, num_malloced - ret);
         for (i = 0; i < ret; i++) {
-            LOG(LOG_DEBUG, "query_aia() --> %s\n", results[i]);
+            LOG(LOG_DEBUG, "%s\n", results[i]);
             handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -232,20 +233,21 @@ static int query_aia(dbconn *db) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-static int query_crldp(dbconn *db) {
+static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours) {
     char **results = NULL;
     int64_t num_malloced = 0;
     int64_t ret;
     int64_t i;
 
-    ret = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr);
-    LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
-            num_malloced, num_malloced - ret);
+    ret = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
+            restrict_by_next_update, num_hours);
     if (ret == -1) {
         return -1;
     } else {
+        LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
+                num_malloced, num_malloced - ret);
         for (i = 0; i < ret; i++) {
-            LOG(LOG_DEBUG, "query_crldp() --> %s\n", results[i]);
+            LOG(LOG_DEBUG, "%s\n", results[i]);
             handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -258,21 +260,21 @@ static int query_crldp(dbconn *db) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-static int query_sia(dbconn *db, int trusted_only) {
+static int query_sia(dbconn *db, int chase_not_yet_validated) {
     char **results = NULL;
     int64_t num_malloced = 0;
     int64_t ret;
     int64_t i;
 
     ret = db_chaser_read_sia(db, &results, &num_malloced,
-            trusted_only, SCM_FLAG_TRUSTED);
-    LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
-            num_malloced, num_malloced - ret);
+            chase_not_yet_validated, SCM_FLAG_VALIDATED);
     if (ret == -1) {
         return -1;
     } else {
+        LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
+                num_malloced, num_malloced - ret);
         for (i = 0; i < ret; i++) {
-            LOG(LOG_DEBUG, "query_sia() --> %s\n", results[i]);
+            LOG(LOG_DEBUG, "%s\n", results[i]);
             handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -321,19 +323,19 @@ static int query_write_timestamp(dbconn *db) {
 }
 
 /**=============================================================================
+Always chase CRLDP.
+Always delimit with '\0'.
+Always chase SIA.
 ------------------------------------------------------------------------------*/
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  -a           chase AIAs, default = don't chase AIAs\n");
-    fprintf(stderr, "  -c           do not chase CRLDPs, default = chase CRLDPs\n");
-    fprintf(stderr, "  -d delimiter output delimiter, default = newline\n");
-    fprintf(stderr, "                   use '-d \"\"' to delimit with the null character\n");
-    fprintf(stderr, "  -f filename  configuration file\n");
-    fprintf(stderr, "  -s           do not chase SIAs, default = chase SIAs\n");
-    fprintf(stderr, "  -t           chase only Trust Anchor URIs from the database\n");
-    fprintf(stderr, "                   default = don't chase only TAs\n");
-    fprintf(stderr, "                   overrides options:  acsy\n");
-    fprintf(stderr, "  -y           chase not-yet-validated, default = don't chase not-yet-validated\n");
+    fprintf(stderr, "  -a           chase AIAs\n");
+    fprintf(stderr, "                   default = don't chase AIAs\n");
+    fprintf(stderr, "  -d hours     only chase CRLs with 'next_update < hours'\n");
+    fprintf(stderr, "                   default is to chase all CRLs\n");
+    fprintf(stderr, "  -f filename  use provided config file instead of 'additional_rsync_uris.config'\n");
+    fprintf(stderr, "  -y           chase not-yet-validated");
+    fprintf(stderr, "                   default = don't chase not-yet-validated\n");
     fprintf(stderr, "  -h           this help listing\n");
     return -1;
 }
@@ -348,18 +350,17 @@ static int compare_str_p(const void *p1, const void *p2) {
 ------------------------------------------------------------------------------*/
 int main(int argc, char **argv) {
     int chase_aia = 0;
-    int chase_crldp = 1;
-    int chase_sia = 1;
-    int chase_only_ta = 0;
+    int restrict_crls_by_next_update = 0;
+    size_t num_hours = 0;
     int chase_not_yet_validated = 0;
     int load_uris_from_file = 0;
 
-    char   *config_file = "initial_chaser.config";
+    char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
 
     char   msg[1024];  // temp string storage
     size_t i;
-    char delimiter = '\n';
+    char delimiter = '\0';
 
     // parse the command-line flags
     int ch;
@@ -368,21 +369,13 @@ int main(int argc, char **argv) {
         case 'a':
             chase_aia = 1;
             break;
-        case 'c':
-            chase_crldp = 0;
-            break;
         case 'd':
-            delimiter = optarg[0];
+            restrict_crls_by_next_update = 1;
+            num_hours = (size_t) strtoul(optarg, NULL, 10);
             break;
-         case 'f':
+        case 'f':
             load_uris_from_file = 1;
             config_file = optarg;
-            break;
-        case 's':
-            chase_sia = 0;
-            break;
-        case 't':
-            chase_only_ta = 1;
             break;
         case 'y':
             chase_not_yet_validated = 1;
@@ -445,24 +438,21 @@ int main(int argc, char **argv) {
     dbconn *db = db_connect_default(DB_CLIENT_CHASER);
     if (db == NULL) {
         LOG(LOG_ERR, "can't connect to database");
+        db_close();
         return -1;
     }
 
     // look up rsync uris from the db
     query_read_timestamps(db);
-    if(chase_only_ta) {
-        query_sia(db, 1);
-    } else {
-        if (chase_crldp)
-            query_crldp(db);
+    query_crldp(db, restrict_crls_by_next_update, num_hours);
 
-        if (chase_aia)
-            query_aia(db);
+    if (chase_aia)
+        query_aia(db);
 
-        if (chase_sia)
-            query_sia(db, 0);
-    }
+    query_sia(db, chase_not_yet_validated);
+
     query_write_timestamp(db);
+
     if (timestamp_prev) free(timestamp_prev);
     if (timestamp_curr) free(timestamp_curr);
     if (db != NULL) {

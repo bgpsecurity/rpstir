@@ -22,11 +22,12 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
         int64_t *num_malloced, int flag_no_chain, int flag_validated);
 
 int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
-        int64_t *num_malloced, char const *ts);
+        int64_t *num_malloced, char const *ts,
+        int restrict_by_next_update, size_t hours);
 
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         int64_t *num_malloced,
-        int trusted_only, int trusted_flag);
+        int chase_not_yet_validated, int validated_flag);
 
 void db_chaser_close(dbconn *conn);
 

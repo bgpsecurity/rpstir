@@ -260,14 +260,23 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
-        int64_t *num_malloced, char const *ts) {
+        int64_t *num_malloced, char const *ts, int restrict_by_next_update, size_t hours) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_CRLDP];
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
 
-    MYSQL_BIND bind_in[1];
+    MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
+    // the interval to add, expressed in hours
+    size_t default_hours = 24 * 365 * 1000;
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    if (restrict_by_next_update)
+        bind_in[0].buffer = &hours;
+    else
+        bind_in[0].buffer = &default_hours;
+    bind_in[0].is_unsigned = (my_bool) 0;
+    bind_in[0].is_null = (my_bool*) 0;
     // the current timestamp
     MYSQL_TIME curr_ts;
     sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u",
@@ -279,9 +288,9 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
             &curr_ts.second);
     curr_ts.neg = (my_bool) 0;
     curr_ts.second_part = (ulong) 0;
-    bind_in[0].buffer_type = MYSQL_TYPE_TIMESTAMP;
-    bind_in[0].buffer = &curr_ts;
-    bind_in[0].is_null = (my_bool*) 0;
+    bind_in[1].buffer_type = MYSQL_TYPE_TIMESTAMP;
+    bind_in[1].buffer = &curr_ts;
+    bind_in[1].is_null = (my_bool*) 0;
 
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
@@ -373,37 +382,35 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
-        int64_t *num_malloced, int trusted_only, int trusted_flag) {
+        int64_t *num_malloced, int chase_not_yet_validated, int validated_flag) {
     MYSQL_STMT *stmt;
-    if (trusted_only) {
-        stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA_TRUSTED_ONLY];
-    } else {
-        stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
-    }
+    stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
+    int flag;
     int ret;
 
-    int flag = trusted_flag;
-    MYSQL_BIND bind_in[2];
+    if (chase_not_yet_validated)
+        flag = 0;
+    else
+        flag = validated_flag;
+    MYSQL_BIND bind_in[1];
     memset(bind_in, 0, sizeof(bind_in));
     // the flag
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
     bind_in[0].buffer = &flag;
     bind_in[0].is_unsigned = (my_bool) 0;
     bind_in[0].is_null = (my_bool*) 0;
-    // the trusted_flag
+    // the same flag
     bind_in[1].buffer_type = MYSQL_TYPE_LONG;
     bind_in[1].buffer = &flag;
     bind_in[1].is_unsigned = (my_bool) 0;
     bind_in[1].is_null = (my_bool*) 0;
 
-    if (trusted_only) {
-        if (mysql_stmt_bind_param(stmt, bind_in)) {
-            LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
-            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
-            return -1;
-        }
+    if (mysql_stmt_bind_param(stmt, bind_in)) {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+        return -1;
     }
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed")) {
