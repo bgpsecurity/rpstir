@@ -19,12 +19,12 @@ CREATE TABLE rpki_files (
   KEY uri (uri, downloaded) -- find latest hash for a specified uri
 );
 
--- TODO: is this table necessary?
 -- map internal hash to any other hash algs used in e.g. manifests
+-- This should make algorithm agility somewhat more feasible in the future.
 CREATE TABLE rpki_hashes (
   hash binary(32) NOT NULL, -- hash used throughout the schema
   alg ENUM('sha256') NOT NULL, -- alternate hash algorithm
-  data varbinary(64) NOT NULL, -- alternate hash
+  data varbinary(512) NOT NULL, -- alternate hash
 
   -- NOTE: these keys assume there are no hash collisions for any algorithm
   PRIMARY KEY (hash, alg), -- lookup an alternate hash based on local hash
