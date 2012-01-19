@@ -1,6 +1,47 @@
+-- (bi)map URIs to file hashes
+-- hashes are used as unique IDs for all types of rpki objects in this schema
+CREATE TABLE rpki_files (
+  uri varchar(1024) NOT NULL, -- where the file was downloaded from
+  hash binary(32) NOT NULL, -- sha256 maybe?, filename could be e.g. /path/to/rpki/CACHE/01/23456789abcdef...
+                            -- hash maybe should be the same as the alg used by manifests?
+                            -- length would be different for different choice of hash function
+  downloaded datetime NOT NULL,
+  PRIMARY KEY (hash, uri), -- more useful as a constraint than for SELECT
+  KEY uri (uri, downloaded) -- find latest hash for a specified uri
+);
+
+-- TODO: is this table necessary?
+-- map internal hash to any other hash algs used in e.g. manifests
+CREATE TABLE rpki_hashes (
+  hash binary(32) NOT NULL, -- hash used throughout the schema
+  alg ENUM('sha256') NOT NULL, -- alternate hash algorithm
+  data varbinary(64) NOT NULL, -- alternate hash
+
+  -- NOTE: these keys assume there are no hash collisions for any algorithm
+  PRIMARY KEY (hash, alg), -- lookup an alternate hash based on local hash
+  UNIQUE KEY (alg, data) -- lookup a local hash based on alternate hash
+);
+
+-- TODO: is it true that all certs, ROAs, etc. either have one or more ASN resources, or have inherit set?
+-- if so, no results in this table can indicate the inherit bit
+CREATE TABLE rpki_asn (
+  hash binary(32) NOT NULL,
+  asn int unsigned NOT NULL,
+  PRIMARY KEY (hash, asn),
+  KEY asn (asn) -- maybe unnecessary
+);
+
+-- TODO: see comment above rpki_asn
+CREATE TABLE rpki_ip (
+  hash binary(32) NOT NULL,
+  ip varbinary(16) NOT NULL, -- binary encoding, network byte order
+  PRIMARY KEY (hash, ip),
+  KEY ip (ip), -- maybe unnecessary
+  CHECK (length(ip) = 4 OR length(ip) = 16)
+);
+
 CREATE TABLE `rpki_cert` (
-  `filename` varchar(256) NOT NULL,
-  `dir_id` int(10) unsigned NOT NULL DEFAULT '1',
+  `hash` binary(32) NOT NULL,
   `subject` varchar(512) DEFAULT NULL,
   `issuer` varchar(512) NOT NULL,
   `sn` bigint(20) NOT NULL,
@@ -11,22 +52,23 @@ CREATE TABLE `rpki_cert` (
   `aia` varchar(1024) DEFAULT NULL,
   `crldp` varchar(1024) DEFAULT NULL,
   `sig` varchar(520) NOT NULL,
-  `hash` varchar(256) DEFAULT NULL,
+  `hash` varchar(256) DEFAULT NULL, -- XXX: what is this?
   `valfrom` datetime NOT NULL,
   `valto` datetime NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0',
-  `ipblen` int(10) unsigned DEFAULT '0',
-  `ipb` blob,
   `ts_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `local_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`filename`,`dir_id`),
-  UNIQUE KEY `local_id` (`local_id`),
+  PRIMARY KEY (hash),
   KEY `ski` (`ski`,`subject`),
   KEY `aki` (`aki`,`issuer`),
-  KEY `lid` (`local_id`),
   KEY `sig` (`sig`),
   KEY `isn` (`issuer`,`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE rpki_crl_sn (
+  hash binary(32) NOT NULL,
+  serial int unsigned NOT NULL, -- TODO: check type
+  PRIMARY KEY (hash, serial)
+);
 
 CREATE TABLE `rpki_crl` (
   `filename` varchar(256) NOT NULL,
@@ -38,9 +80,6 @@ CREATE TABLE `rpki_crl` (
   `aki` varchar(128) DEFAULT NULL,
   `sig` varchar(520) NOT NULL,
   `hash` varchar(256) DEFAULT NULL,
-  `snlen` int(10) unsigned DEFAULT '0',
-  `sninuse` int(10) unsigned DEFAULT '0',
-  `snlist` mediumblob,
   `flags` int(10) unsigned DEFAULT '0',
   `local_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`filename`,`dir_id`),
@@ -51,25 +90,12 @@ CREATE TABLE `rpki_crl` (
   KEY `lid` (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `rpki_cta` (
-  `filename` varchar(256) NOT NULL,
-  `dir_id` int(10) unsigned NOT NULL DEFAULT '1',
-  `ski_rta` varchar(128) NOT NULL,
-  `ski_ee` varchar(128) NOT NULL,
-  `hash` varchar(256) DEFAULT NULL,
-  `flags` int(10) unsigned DEFAULT '0',
-  `local_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`filename`,`dir_id`),
-  UNIQUE KEY `local_id` (`local_id`),
-  KEY `lid` (`local_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-CREATE TABLE `rpki_dir` (
-  `dirname` varchar(4096) NOT NULL,
-  `dir_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`dir_id`),
-  KEY `dirname` (`dirname`(767))
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE rpki_manifest_files (
+  hash binary(32) NOT NULL,
+  filename varchar(256) NOT NULL,
+  filehash binary(32) NOT NULL, -- TODO: is this the right size?
+  PRIMARY KEY (hash, filename)
+);
 
 CREATE TABLE `rpki_manifest` (
   `filename` varchar(256) NOT NULL,
@@ -79,8 +105,6 @@ CREATE TABLE `rpki_manifest` (
   `this_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
   `cert_id` int(10) unsigned NOT NULL,
-  `files` mediumblob,
-  `fileslen` int(10) unsigned DEFAULT '0',
   `flags` int(10) unsigned DEFAULT '0',
   `local_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`filename`,`dir_id`),
