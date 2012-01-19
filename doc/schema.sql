@@ -1,3 +1,12 @@
+-- database-level metadata
+-- current version: SELECT schema_version FROM rpstir_metadata ORDER BY installed DESC LIMIT 1;
+-- on initializing or upgrading the schema to version foo: INSERT INTO rpstir_metadata (schema_version) VALUES (foo);
+CREATE TABLE rpstir_metadata (
+  schema_version int unsigned DEFAULT NULL, -- NULL indicates a development version with no version number
+  installed datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (installed)
+);
+
 -- (bi)map URIs to file hashes
 -- hashes are used as unique IDs for all types of rpki objects in this schema
 CREATE TABLE rpki_files (
