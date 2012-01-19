@@ -112,6 +112,7 @@ CREATE TABLE `rpki_manifest` (
   KEY `lid` (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- TODO: merge this table with rpki_files?
 CREATE TABLE `rpki_metadata` (
   `rootdir` varchar(4096) NOT NULL,
   `inited` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -131,8 +132,6 @@ CREATE TABLE `rpki_roa` (
   `sig` varchar(520) NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0',
   `hash` varchar(256) DEFAULT NULL,
-  `ip_addrs` varchar(32768) NOT NULL,
-  `asn` int(10) unsigned NOT NULL,
   `flags` int(10) unsigned DEFAULT '0',
   `local_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`filename`,`dir_id`),
