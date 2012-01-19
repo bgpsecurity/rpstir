@@ -67,6 +67,7 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     uint16_t db_session;
     // session_id parameter
     bind[0].buffer_type= MYSQL_TYPE_SHORT;
+    bind[0].is_unsigned = 1;
     bind[0].buffer= &db_session;
 
     if (mysql_stmt_bind_result(stmt, bind)) {
