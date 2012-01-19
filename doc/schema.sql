@@ -162,10 +162,6 @@ CREATE TABLE `rtr_session` (
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `rtr_simulation_count` (
-  `col` tinyint(4) DEFAULT '0'
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
 CREATE TABLE `rtr_update` (
   `serial_num` int(10) unsigned NOT NULL,
   `prev_serial_num` int(10) unsigned DEFAULT NULL,
