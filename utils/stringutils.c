@@ -1,11 +1,12 @@
 /*
   Low-level string parsing utilities
-
-  $Id$
 */
 
 
+#include <ctype.h>
+#include <inttypes.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "stringutils.h"
@@ -357,4 +358,38 @@ int expand_by_doubling(void **ptr, size_t size, size_t *current_nmemb,
   *ptr = new_ptr;
   *current_nmemb = new_nmemb;
   return 0;
+}
+
+/**=============================================================================
+ * @brief Replace questionable chars from string for printing.
+ *
+ * @note Caller handles memory for dst.
+ * @note Output might be truncated, compared to input.
+ * @note dst will be null terminated, at or before index dst_len.
+------------------------------------------------------------------------------*/
+char * scrub_for_print(char *dst, char const *src, size_t const dst_len) {
+  size_t i, j;
+  size_t const MAX_EXPANSION = 4;  // one input char could make 4 output chars
+  char tmp[dst_len + MAX_EXPANSION + 1];
+
+  tmp[0] = '\0';
+
+  for (i = 0, j = 0; i < dst_len - 1; i++) {
+    if ('\0' == src[i]) {
+      break;
+    } else if (!isprint(src[i])  ||  (isspace(src[i]) && ' ' != src[i])) {
+      snprintf(&tmp[j], 5, "\\x%02" PRIx8, src[i]);
+      j += 4;
+    } else {
+      snprintf(&tmp[j], 2, "%c", src[i]);
+      j++;
+    }
+
+    if (j > dst_len)
+      break;
+  }
+
+  snprintf(dst, dst_len, "%s", tmp);
+
+  return dst;
 }
