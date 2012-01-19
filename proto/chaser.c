@@ -329,14 +329,11 @@ Always chase SIA.
 ------------------------------------------------------------------------------*/
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  -a           chase AIAs\n");
-    fprintf(stderr, "                   default = don't chase AIAs\n");
-    fprintf(stderr, "  -d hours     only chase CRLs with 'next_update < hours'\n");
-    fprintf(stderr, "                   default is to chase all CRLs\n");
-    fprintf(stderr, "  -f filename  use provided config file instead of 'additional_rsync_uris.config'\n");
-    fprintf(stderr, "  -y           chase not-yet-validated");
-    fprintf(stderr, "                   default = don't chase not-yet-validated\n");
-    fprintf(stderr, "  -h           this help listing\n");
+    fprintf(stderr, "  -a           chase AIAs  (default:  don't chase AIAs)\n");
+    fprintf(stderr, "  -d hours     chase CRLs where 'next update < hours'  (default:  chase all CRLs)\n");
+    fprintf(stderr, "  -f filename  use filename instead of 'additional_rsync_uris.config'\n");
+    fprintf(stderr, "  -y           chase not-yet-validated  (default:  only chase validated)\n");
+    fprintf(stderr, "  -h           this listing\n");
     return -1;
 }
 
