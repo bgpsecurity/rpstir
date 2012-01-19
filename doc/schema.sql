@@ -41,12 +41,21 @@ CREATE TABLE rpki_asn (
 );
 
 -- TODO: see comment above rpki_asn
+-- XXX: this table is problematic and should probably be split into _cert and _roa tables
 CREATE TABLE rpki_ip (
   hash binary(32) NOT NULL,
-  ip varbinary(16) NOT NULL, -- binary encoding, network byte order
-  PRIMARY KEY (hash, ip),
+  first_ip varbinary(16) NOT NULL, -- binary encoding, network byte order
+  last_ip varbinary(16) DEFAULT NULL, -- ditto
+  prefix_length tinyint unsigned DEFAULT NULL,
+  max_prefix_length tinyint unsigned DEFAULT NULL,
+  PRIMARY KEY (hash, first_ip),
   KEY ip (ip), -- maybe unnecessary
-  CHECK (length(ip) = 4 OR length(ip) = 16)
+  CHECK ((last_ip IS NULL OR prefix_length IS NULL) AND (last_ip IS NOT NULL OR prefix_length IS NOT NULL)),
+  CHECK (length(first_ip) = 4 OR length(first_ip) = 16),
+  CHECK (last_ip IS NULL OR length(first_ip) = length(last_ip)),
+  CHECK (last_ip IS NULL OR last_ip >= first_ip)
+  CHECK (max_prefix_length IS NULL OR prefix_length IS NOT NULL),
+  CHECK (max_prefix_length IS NULL OR max_prefix_length >= prefix_length),
 );
 
 CREATE TABLE `rpki_cert` (
