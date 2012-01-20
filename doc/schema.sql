@@ -1,3 +1,5 @@
+-- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
+
 -- database-level metadata
 -- current version: SELECT schema_version FROM rpstir_metadata ORDER BY installed DESC LIMIT 1;
 -- on initializing or upgrading the schema to version foo: INSERT INTO rpstir_metadata (schema_version) VALUES (foo);
@@ -9,7 +11,7 @@ CREATE TABLE rpstir_metadata (
 
 -- (bi)map URIs to file hashes
 -- hashes are used as unique IDs for all types of rpki objects in this schema
-CREATE TABLE rpki_file (
+CREATE TABLE rpstir_rpki_file (
   uri varchar(1024) NOT NULL, -- where the file was downloaded from
   hash binary(32) NOT NULL, -- sha256 maybe?, filename could be e.g. /path/to/rpki/CACHE/01/23456789abcdef...
                             -- hash maybe should be the same as the alg used by manifests?
@@ -21,7 +23,7 @@ CREATE TABLE rpki_file (
 
 -- map internal hash to any other hash algs used in e.g. manifests
 -- This should make algorithm agility somewhat more feasible in the future.
-CREATE TABLE rpki_hashes (
+CREATE TABLE rpstir_rpki_hash (
   hash binary(32) NOT NULL, -- hash used throughout the schema
   alg ENUM('sha256') NOT NULL, -- alternate hash algorithm
   data varbinary(512) NOT NULL, -- alternate hash
@@ -31,7 +33,7 @@ CREATE TABLE rpki_hashes (
   UNIQUE KEY (alg, data) -- lookup a local hash based on alternate hash
 );
 
-CREATE TABLE rpki_cert_asn (
+CREATE TABLE rpstir_rpki_cert_asn (
   hash binary(32) NOT NULL,
   first_asn int unsigned NOT NULL,
   last_asn int unsigned NOT NULL,
@@ -39,7 +41,7 @@ CREATE TABLE rpki_cert_asn (
   CHECK (first_asn <= last_asn)
 );
 
-CREATE TABLE rpki_cert_ip (
+CREATE TABLE rpstir_rpki_cert_ip (
   hash binary(32) NOT NULL,
   first_ip varbinary(16) NOT NULL, -- binary encoding, network byte order
   last_ip varbinary(16) NOT NULL, -- ditto
@@ -49,7 +51,7 @@ CREATE TABLE rpki_cert_ip (
   CHECK (first_ip <= last_ip)
 );
 
-CREATE TABLE `rpki_cert` (
+CREATE TABLE `rpstir_rpki_cert` (
   `hash` binary(32) NOT NULL,
   `subject` varchar(512) DEFAULT NULL,
   `issuer` varchar(512) NOT NULL,
@@ -72,13 +74,13 @@ CREATE TABLE `rpki_cert` (
   KEY `isn` (`issuer`,`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE rpki_crl_sn (
+CREATE TABLE rpstir_rpki_crl_sn (
   hash binary(32) NOT NULL,
   serial int unsigned NOT NULL, -- TODO: check type
   PRIMARY KEY (hash, serial)
 );
 
-CREATE TABLE `rpki_crl` (
+CREATE TABLE `rpstir_rpki_crl` (
   `hash` binary(32) NOT NULL,
   `issuer` varchar(512) NOT NULL,
   `last_upd` datetime NOT NULL,
@@ -93,14 +95,14 @@ CREATE TABLE `rpki_crl` (
   KEY `sig` (`sig`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE rpki_manifest_files (
+CREATE TABLE rpstir_rpki_manifest_files (
   hash binary(32) NOT NULL,
   filename varchar(256) NOT NULL,
   filehash binary(32) NOT NULL,
   PRIMARY KEY (hash, filename)
 );
 
-CREATE TABLE `rpki_manifest` (
+CREATE TABLE `rpstir_rpki_manifest` (
   `hash` binary(32) NOT NULL,
   `ski` varchar(128) NOT NULL,
   `this_upd` datetime NOT NULL,
@@ -123,7 +125,7 @@ CREATE TABLE `rpki_metadata` (
   PRIMARY KEY (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE prefix (
+CREATE TABLE rpstir_prefix (
   id bigint unsigned NOT NULL AUTO_INCREMENT,
   prefix varbinary(16) NOT NULL, -- binary encoding, network byte order, filled with 0s to the full length for the address family
   prefix_length tinyint unsigned NOT NULL,
@@ -135,13 +137,13 @@ CREATE TABLE prefix (
   CHECK (max_prefix_length <= length(prefix) * 8)
 );
 
-CREATE TABLE rpki_roa_prefix (
+CREATE TABLE rpstir_rpki_roa_prefix (
   hash binary(32) NOT NULL,
   prefix_id bigint unsigned NOT NULL,
   PRIMARY KEY (hash, prefix_authz_id)
 );
 
-CREATE TABLE `rpki_roa` (
+CREATE TABLE `rpstir_rpki_roa` (
   `hash` binary(32) NOT NULL,
   `ski` varchar(128) NOT NULL,
   `sig` varchar(520) NOT NULL,
@@ -152,14 +154,14 @@ CREATE TABLE `rpki_roa` (
   KEY `ski` (`ski`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `rtr_full` (
+CREATE TABLE `rpstir_rtr_full` (
   `serial_num` int(10) unsigned NOT NULL,
   `asn` int(10) unsigned NOT NULL,
   prefix_id bigint unsigned NOT NULL
   PRIMARY KEY (`serial_num`,`asn`,`prefix_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `rtr_incremental` (
+CREATE TABLE `rpstir_rtr_incremental` (
   `serial_num` int(10) unsigned NOT NULL,
   `is_announce` tinyint(1) NOT NULL,
   `asn` int(10) unsigned NOT NULL,
@@ -167,12 +169,12 @@ CREATE TABLE `rtr_incremental` (
   PRIMARY KEY (`serial_num`,`asn`,`prefix_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `rtr_session` (
+CREATE TABLE `rpstir_rtr_session` (
   `session_id` smallint(5) unsigned NOT NULL,
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `rtr_update` (
+CREATE TABLE `rpstir_rtr_update` (
   `serial_num` int(10) unsigned NOT NULL,
   `prev_serial_num` int(10) unsigned DEFAULT NULL,
   `create_time` datetime NOT NULL,
