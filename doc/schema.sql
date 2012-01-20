@@ -9,7 +9,7 @@ CREATE TABLE rpstir_metadata (
 
 -- (bi)map URIs to file hashes
 -- hashes are used as unique IDs for all types of rpki objects in this schema
-CREATE TABLE rpki_files (
+CREATE TABLE rpki_file (
   uri varchar(1024) NOT NULL, -- where the file was downloaded from
   hash binary(32) NOT NULL, -- sha256 maybe?, filename could be e.g. /path/to/rpki/CACHE/01/23456789abcdef...
                             -- hash maybe should be the same as the alg used by manifests?
@@ -61,7 +61,6 @@ CREATE TABLE `rpki_cert` (
   `aia` varchar(1024) DEFAULT NULL,
   `crldp` varchar(1024) DEFAULT NULL,
   `sig` varchar(520) NOT NULL,
-  `hash` varchar(256) DEFAULT NULL, -- XXX: what is this?
   `valfrom` datetime NOT NULL,
   `valto` datetime NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0',
@@ -80,45 +79,35 @@ CREATE TABLE rpki_crl_sn (
 );
 
 CREATE TABLE `rpki_crl` (
-  `filename` varchar(256) NOT NULL,
-  `dir_id` int(10) unsigned NOT NULL DEFAULT '1',
+  `hash` binary(32) NOT NULL,
   `issuer` varchar(512) NOT NULL,
   `last_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
   `crlno` bigint(20) DEFAULT '0',
   `aki` varchar(128) DEFAULT NULL,
   `sig` varchar(520) NOT NULL,
-  `hash` varchar(256) DEFAULT NULL,
   `flags` int(10) unsigned DEFAULT '0',
-  `local_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`filename`,`dir_id`),
-  UNIQUE KEY `local_id` (`local_id`),
+  PRIMARY KEY (`hash`),
   KEY `issuer` (`issuer`),
   KEY `aki` (`aki`),
   KEY `sig` (`sig`),
-  KEY `lid` (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE rpki_manifest_files (
   hash binary(32) NOT NULL,
   filename varchar(256) NOT NULL,
-  filehash binary(32) NOT NULL, -- TODO: is this the right size?
+  filehash binary(32) NOT NULL,
   PRIMARY KEY (hash, filename)
 );
 
 CREATE TABLE `rpki_manifest` (
-  `filename` varchar(256) NOT NULL,
-  `dir_id` int(10) unsigned NOT NULL DEFAULT '1',
+  `hash` binary(32) NOT NULL,
   `ski` varchar(128) NOT NULL,
-  `hash` varchar(256) DEFAULT NULL,
   `this_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
-  `cert_id` int(10) unsigned NOT NULL,
+  `cert_hash` binary(32) NOT NULL,
   `flags` int(10) unsigned DEFAULT '0',
-  `local_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`filename`,`dir_id`),
-  UNIQUE KEY `local_id` (`local_id`),
-  KEY `lid` (`local_id`)
+  PRIMARY KEY (`hash`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- TODO: merge this table with rpki_files?
@@ -146,19 +135,13 @@ CREATE TABLE rpki_roa_prefix (
 );
 
 CREATE TABLE `rpki_roa` (
-  `filename` varchar(256) NOT NULL,
-  `dir_id` int(10) unsigned NOT NULL DEFAULT '1',
+  `hash` binary(32) NOT NULL,
   `ski` varchar(128) NOT NULL,
   `sig` varchar(520) NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0',
-  `hash` varchar(256) DEFAULT NULL,
   `flags` int(10) unsigned DEFAULT '0',
-  `local_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`filename`,`dir_id`),
-  UNIQUE KEY `local_id` (`local_id`),
-  KEY `asn` (`asn`),
+  PRIMARY KEY (`hash`),
   KEY `sig` (`sig`),
-  KEY `lid` (`local_id`),
   KEY `ski` (`ski`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
