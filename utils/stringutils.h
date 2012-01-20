@@ -18,4 +18,5 @@ int split_string(char *s, const char *delimiters,
 		 char ***pfields, int *pnumfields);
 int expand_by_doubling(void **ptr, size_t size, size_t *current_nmemb,
 		       size_t min_nmemb);
-char *scrub_for_print(char *dst, char const *src, size_t const dst_len);
+char *scrub_for_print(char *dst, char const *src, size_t const dst_sz,
+        size_t *dst_len_out, char const *other_chars_to_escape);

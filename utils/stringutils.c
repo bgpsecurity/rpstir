@@ -365,31 +365,31 @@ int expand_by_doubling(void **ptr, size_t size, size_t *current_nmemb,
  *
  * @note Caller handles memory for dst.
  * @note Output might be truncated, compared to input.
- * @note dst will be null terminated, at or before index dst_len.
+ * @note dst will be null terminated, at or before index dst_sz-1.
 ------------------------------------------------------------------------------*/
-char * scrub_for_print(char *dst, char const *src, size_t const dst_len) {
-  size_t i, j;
-  size_t const MAX_EXPANSION = 4;  // one input char could make 4 output chars
-  char tmp[dst_len + MAX_EXPANSION + 1];
+char * scrub_for_print(char *dst, char const *src, size_t const dst_sz,
+        size_t *dst_len_out, char const *other_chars_to_escape) {
+  size_t i;
+  size_t used;
 
-  tmp[0] = '\0';
+  dst[0] = '\0';
 
-  for (i = 0, j = 0; i < dst_len - 1; i++) {
+  for (i = 0, used = 0; i < dst_sz - 1; i++) {
     if ('\0' == src[i]) {
       break;
     } else if (!isprint(src[i])  ||  (isspace(src[i]) && ' ' != src[i])) {
-      snprintf(&tmp[j], 5, "\\x%02" PRIx8, src[i]);
-      j += 4;
+      used += snprintf(&dst[used], dst_sz - used, "\\x%02" PRIx8, src[i]);
+    } else if (strchr(other_chars_to_escape, src[i])) {
+      used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
+    } else if ('\\' == src[i]) {
+      used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
     } else {
-      snprintf(&tmp[j], 2, "%c", src[i]);
-      j++;
+      used += snprintf(&dst[used], dst_sz - used, "%c", src[i]);
     }
-
-    if (j > dst_len)
-      break;
   }
 
-  snprintf(dst, dst_len, "%s", tmp);
+  if (dst_len_out)
+      *dst_len_out = used;
 
   return dst;
 }
