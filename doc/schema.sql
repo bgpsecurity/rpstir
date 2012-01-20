@@ -74,9 +74,15 @@ CREATE TABLE `rpstir_rpki_cert` (
   KEY `isn` (`issuer`,`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+CREATE TABLE rpstir_rpki_cms (
+  hash binary(32) NOT NULL,
+  cert_hash binary(32) NOT NULL,
+  PRIMARY KEY (hash)
+);
+
 CREATE TABLE rpstir_rpki_crl_sn (
   hash binary(32) NOT NULL,
-  serial int unsigned NOT NULL, -- TODO: check type
+  serial bigint unsigned NOT NULL,
   PRIMARY KEY (hash, serial)
 );
 
@@ -138,17 +144,13 @@ CREATE TABLE rpstir_prefix (
 CREATE TABLE rpstir_rpki_roa_prefix (
   hash binary(32) NOT NULL,
   prefix_id bigint unsigned NOT NULL,
-  PRIMARY KEY (hash, prefix_authz_id)
+  PRIMARY KEY (hash, prefix_id)
 );
 
 CREATE TABLE `rpstir_rpki_roa` (
   `hash` binary(32) NOT NULL,
-  `ski` varchar(128) NOT NULL,
-  `sig` varchar(520) NOT NULL,
-  `sigval` int(10) unsigned DEFAULT '0',
+  asn int unsigned NOT NULL,
   PRIMARY KEY (`hash`),
-  KEY `sig` (`sig`),
-  KEY `ski` (`ski`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `rpstir_rtr_full` (
