@@ -123,15 +123,22 @@ CREATE TABLE `rpki_metadata` (
   PRIMARY KEY (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE rpki_roa_prefix (
-  hash binary(32) NOT NULL,
+CREATE TABLE prefix (
+  id bigint unsigned NOT NULL AUTO_INCREMENT,
   prefix varbinary(16) NOT NULL, -- binary encoding, network byte order, filled with 0s to the full length for the address family
   prefix_length tinyint unsigned NOT NULL,
   max_prefix_length tinyint unsigned NOT NULL,
-  PRIMARY KEY (hash, prefix, prefix_length),
+  PRIMARY KEY (id),
+  UNIQUE KEY (prefix, prefix_length, max_prefix_length),
   CHECK (length(prefix) = 4 OR length(prefix) = 16),
   CHECK (prefix_length <= max_prefix_length),
   CHECK (max_prefix_length <= length(prefix) * 8)
+);
+
+CREATE TABLE rpki_roa_prefix (
+  hash binary(32) NOT NULL,
+  prefix_id bigint unsigned NOT NULL,
+  PRIMARY KEY (hash, prefix_authz_id)
 );
 
 CREATE TABLE `rpki_roa` (
@@ -148,16 +155,16 @@ CREATE TABLE `rpki_roa` (
 CREATE TABLE `rtr_full` (
   `serial_num` int(10) unsigned NOT NULL,
   `asn` int(10) unsigned NOT NULL,
-  `ip_addr` varchar(50) NOT NULL,
-  PRIMARY KEY (`serial_num`,`asn`,`ip_addr`)
+  prefix_id bigint unsigned NOT NULL
+  PRIMARY KEY (`serial_num`,`asn`,`prefix_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `rtr_incremental` (
   `serial_num` int(10) unsigned NOT NULL,
   `is_announce` tinyint(1) NOT NULL,
   `asn` int(10) unsigned NOT NULL,
-  `ip_addr` varchar(50) NOT NULL,
-  PRIMARY KEY (`serial_num`,`asn`,`ip_addr`)
+  prefix_id bigint unsigned NOT NULL
+  PRIMARY KEY (`serial_num`,`asn`,`prefix_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `rtr_session` (
