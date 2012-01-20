@@ -17,6 +17,7 @@ CREATE TABLE rpstir_rpki_file (
                             -- hash maybe should be the same as the alg used by manifests?
                             -- length would be different for different choice of hash function
   downloaded datetime NOT NULL,
+  flags bigint unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (hash, uri), -- more useful as a constraint than for SELECT
   KEY uri (uri, downloaded) -- find latest hash for a specified uri
 );
@@ -56,7 +57,6 @@ CREATE TABLE `rpstir_rpki_cert` (
   `subject` varchar(512) DEFAULT NULL,
   `issuer` varchar(512) NOT NULL,
   `sn` bigint(20) NOT NULL,
-  `flags` int(10) unsigned DEFAULT '0',
   `ski` varchar(128) NOT NULL,
   `aki` varchar(128) DEFAULT NULL,
   `sia` varchar(1024) DEFAULT NULL,
@@ -88,7 +88,6 @@ CREATE TABLE `rpstir_rpki_crl` (
   `crlno` bigint(20) DEFAULT '0',
   `aki` varchar(128) DEFAULT NULL,
   `sig` varchar(520) NOT NULL,
-  `flags` int(10) unsigned DEFAULT '0',
   PRIMARY KEY (`hash`),
   KEY `issuer` (`issuer`),
   KEY `aki` (`aki`),
@@ -108,7 +107,6 @@ CREATE TABLE `rpstir_rpki_manifest` (
   `this_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
   `cert_hash` binary(32) NOT NULL,
-  `flags` int(10) unsigned DEFAULT '0',
   PRIMARY KEY (`hash`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -148,7 +146,6 @@ CREATE TABLE `rpstir_rpki_roa` (
   `ski` varchar(128) NOT NULL,
   `sig` varchar(520) NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0',
-  `flags` int(10) unsigned DEFAULT '0',
   PRIMARY KEY (`hash`),
   KEY `sig` (`sig`),
   KEY `ski` (`ski`)
