@@ -31,31 +31,22 @@ CREATE TABLE rpki_hashes (
   UNIQUE KEY (alg, data) -- lookup a local hash based on alternate hash
 );
 
--- TODO: is it true that all certs, ROAs, etc. either have one or more ASN resources, or have inherit set?
--- if so, no results in this table can indicate the inherit bit
-CREATE TABLE rpki_asn (
+CREATE TABLE rpki_cert_asn (
   hash binary(32) NOT NULL,
-  asn int unsigned NOT NULL,
-  PRIMARY KEY (hash, asn),
-  KEY asn (asn) -- maybe unnecessary
+  first_asn int unsigned NOT NULL,
+  last_asn int unsigned NOT NULL,
+  PRIMARY KEY (hash, first_asn),
+  CHECK (first_asn <= last_asn)
 );
 
--- TODO: see comment above rpki_asn
--- XXX: this table is problematic and should probably be split into _cert and _roa tables
-CREATE TABLE rpki_ip (
+CREATE TABLE rpki_cert_ip (
   hash binary(32) NOT NULL,
   first_ip varbinary(16) NOT NULL, -- binary encoding, network byte order
-  last_ip varbinary(16) DEFAULT NULL, -- ditto
-  prefix_length tinyint unsigned DEFAULT NULL,
-  max_prefix_length tinyint unsigned DEFAULT NULL,
+  last_ip varbinary(16) NOT NULL, -- ditto
   PRIMARY KEY (hash, first_ip),
-  KEY ip (ip), -- maybe unnecessary
-  CHECK ((last_ip IS NULL OR prefix_length IS NULL) AND (last_ip IS NOT NULL OR prefix_length IS NOT NULL)),
   CHECK (length(first_ip) = 4 OR length(first_ip) = 16),
-  CHECK (last_ip IS NULL OR length(first_ip) = length(last_ip)),
-  CHECK (last_ip IS NULL OR last_ip >= first_ip)
-  CHECK (max_prefix_length IS NULL OR prefix_length IS NOT NULL),
-  CHECK (max_prefix_length IS NULL OR max_prefix_length >= prefix_length),
+  CHECK (length(first_ip) = length(last_ip)),
+  CHECK (first_ip <= last_ip)
 );
 
 CREATE TABLE `rpki_cert` (
@@ -142,6 +133,17 @@ CREATE TABLE `rpki_metadata` (
   `local_id` int(10) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE rpki_roa_prefix (
+  hash binary(32) NOT NULL,
+  prefix varbinary(16) NOT NULL, -- binary encoding, network byte order, filled with 0s to the full length for the address family
+  prefix_length tinyint unsigned NOT NULL,
+  max_prefix_length tinyint unsigned NOT NULL,
+  PRIMARY KEY (hash, prefix, prefix_length),
+  CHECK (length(prefix) = 4 OR length(prefix) = 16),
+  CHECK (prefix_length <= max_prefix_length),
+  CHECK (max_prefix_length <= length(prefix) * 8)
+);
 
 CREATE TABLE `rpki_roa` (
   `filename` varchar(256) NOT NULL,
