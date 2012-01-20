@@ -83,6 +83,7 @@ CREATE TABLE rpstir_rpki_cms (
 CREATE TABLE rpstir_rpki_crl_sn (
   hash binary(32) NOT NULL,
   serial bigint unsigned NOT NULL,
+  revocation_date datetime NOT NULL,
   PRIMARY KEY (hash, serial)
 );
 
