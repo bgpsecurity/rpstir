@@ -56,6 +56,27 @@ CREATE TABLE rpstir_rpki_cert_ip (
   CHECK (first_ip <= last_ip)
 );
 
+CREATE TABLE rpstir_rpki_cert_aia (
+  hash binary(32) NOT NULL,
+  preference int unsigned NOT NULL, -- lower number is more preferred
+  uri varchar(1024) NOT NULL,
+  PRIMARY KEY (hash, preference)
+);
+
+CREATE TABLE rpstir_rpki_cert_sia (
+  hash binary(32) NOT NULL,
+  method ENUM('id-ad-caRepository', 'id-ad-rpkiManifest', 'id-ad-signedObject') NOT NULL,
+  preference int unsigned NOT NULL, -- lower number is more preferred
+  uri varchar(1024) NOT NULL,
+  PRIMARY KEY (hash, method, preference)
+);
+
+CREATE TABLE rpstir_rpki_cert_crldp (
+  hash binary(32) NOT NULL,
+  uri varchar(1024) NOT NULL,
+  PRIMARY KEY (hash, uri)
+);
+
 CREATE TABLE `rpstir_rpki_cert` (
   `hash` binary(32) NOT NULL,
   `subject` varchar(512) DEFAULT NULL,
@@ -63,9 +84,6 @@ CREATE TABLE `rpstir_rpki_cert` (
   `sn` bigint(20) NOT NULL,
   `ski` varchar(128) NOT NULL,
   `aki` varchar(128) DEFAULT NULL,
-  `sia` varchar(1024) DEFAULT NULL,
-  `aia` varchar(1024) DEFAULT NULL,
-  `crldp` varchar(1024) DEFAULT NULL,
   `sig` varchar(520) NOT NULL,
   `valfrom` datetime NOT NULL,
   `valto` datetime NOT NULL,
