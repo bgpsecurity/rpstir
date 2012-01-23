@@ -77,6 +77,7 @@ CREATE TABLE rpstir_rpki_cert_crldp (
   PRIMARY KEY (hash, uri)
 );
 
+-- TODO: ask Andrew if there's anything else here to change
 CREATE TABLE `rpstir_rpki_cert` (
   `hash` binary(32) NOT NULL,
   `subject` varchar(512) DEFAULT NULL,
@@ -84,10 +85,10 @@ CREATE TABLE `rpstir_rpki_cert` (
   `sn` bigint(20) NOT NULL,
   `ski` varchar(128) NOT NULL,
   `aki` varchar(128) DEFAULT NULL,
-  `sig` varchar(520) NOT NULL,
+  `sig` varchar(520) NOT NULL, -- TODO: should this be in the database?
   `valfrom` datetime NOT NULL,
   `valto` datetime NOT NULL,
-  `sigval` int(10) unsigned DEFAULT '0',
+  `sigval` int(10) unsigned DEFAULT '0', -- TODO: what is this?
   `ts_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   inherit_asn boolean NOT NULL DEFAULT FALSE,
   inherit_ip boolean NOT NULL DEFAULT FALSE,
