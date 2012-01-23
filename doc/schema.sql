@@ -6,6 +6,7 @@
 CREATE TABLE rpstir_metadata (
   schema_version int unsigned DEFAULT NULL, -- NULL indicates a development version with no version number
   installed timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  root_dir varchar(4096) NOT NULL,
   PRIMARY KEY (installed)
 );
 
@@ -115,19 +116,6 @@ CREATE TABLE `rpstir_rpki_manifest` (
   `next_upd` datetime NOT NULL,
   `cert_hash` binary(32) NOT NULL,
   PRIMARY KEY (`hash`),
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- TODO: merge this table with rpki_files?
-CREATE TABLE `rpki_metadata` (
-  `rootdir` varchar(4096) NOT NULL,
-  `inited` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `rs_last` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `qu_last` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `gc_last` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `ch_last` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `flags` int(10) unsigned DEFAULT '0',
-  `local_id` int(10) unsigned NOT NULL DEFAULT '1',
-  PRIMARY KEY (`local_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE rpstir_prefix (
