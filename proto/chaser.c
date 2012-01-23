@@ -3,7 +3,6 @@
  * authorities that have signed certs.  It outputs the URIs to stdout.
  *
  * yet to do:
- * - update INSTRUCTIONS for additional_rsync_uris.config
  * - check all return values (handle_uri_string).  free memory before any quit
  * - consider OOM killer in notes about `man realloc`
  *
