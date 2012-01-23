@@ -4,7 +4,6 @@
  *
  * yet to do:
  * - update INSTRUCTIONS for additional_rsync_uris.config
- * - switch to Dave's safe printing function for user provided strings
  * - check all return values (handle_uri_string).  free memory before any quit
  * - consider OOM killer in notes about `man realloc`
  *
@@ -140,6 +139,8 @@ static int append_uri(char const *in) {
 static void handle_uri_string(char const *in) {
     char *copy;
     char *section;
+    size_t const DST_SZ = 1030;
+    char scrubbed_str[DST_SZ];
     // TODO:  Using ; as delimiter is planned to change when the db schema is updated.
     char const delimiter[] = ";";
     size_t len_in = strlen(in);
@@ -179,16 +180,16 @@ static void handle_uri_string(char const *in) {
         if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
             section += len_scheme;
         } else {
-            LOG(LOG_WARNING, "dropping non-rsync uri:  \"%s\"", section);
-            // TODO:  don't print section, cause it's user input.
-            // TODO:  see PDU_ERROR_REPORT section near bottom of pdu.c.  Split that out into utils/ and use that.
+            scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
+            LOG(LOG_WARNING, "dropping non-rsync uri:  \"%s\"", scrubbed_str);
             section = strtok(NULL, delimiter);
             continue;
         }
 
         // regex check  (this may move to check_chars)
         if (check_uri_chars(section)) {
-            LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", section);
+            scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
+            LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", scrubbed_str);
             section = strtok(NULL, delimiter);
             continue;
         }
@@ -211,6 +212,8 @@ static int query_aia(dbconn *db) {
     int64_t num_malloced = 0;
     int64_t ret;
     int64_t i;
+    size_t const DST_SZ = 1030;
+    char scrubbed_str[DST_SZ];
 
     ret = db_chaser_read_aia(db, &results, &num_malloced,
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
@@ -220,7 +223,8 @@ static int query_aia(dbconn *db) {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - ret);
         for (i = 0; i < ret; i++) {
-            LOG(LOG_DEBUG, "%s\n", results[i]);
+            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
+            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -238,6 +242,8 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
     int64_t num_malloced = 0;
     int64_t ret;
     int64_t i;
+    size_t const DST_SZ = 1030;
+    char scrubbed_str[DST_SZ];
 
     ret = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
             restrict_by_next_update, num_hours);
@@ -247,7 +253,8 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - ret);
         for (i = 0; i < ret; i++) {
-            LOG(LOG_DEBUG, "%s\n", results[i]);
+            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
+            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -265,6 +272,8 @@ static int query_sia(dbconn *db, int chase_not_yet_validated) {
     int64_t num_malloced = 0;
     int64_t ret;
     int64_t i;
+    size_t const DST_SZ = 1030;
+    char scrubbed_str[DST_SZ];
 
     ret = db_chaser_read_sia(db, &results, &num_malloced,
             chase_not_yet_validated, SCM_FLAG_VALIDATED);
@@ -274,7 +283,8 @@ static int query_sia(dbconn *db, int chase_not_yet_validated) {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - ret);
         for (i = 0; i < ret; i++) {
-            LOG(LOG_DEBUG, "%s\n", results[i]);
+            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
+            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -323,9 +333,6 @@ static int query_write_timestamp(dbconn *db) {
 }
 
 /**=============================================================================
-Always chase CRLDP.
-Always delimit with '\0'.
-Always chase SIA.
 ------------------------------------------------------------------------------*/
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
@@ -346,18 +353,20 @@ static int compare_str_p(const void *p1, const void *p2) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int chase_aia = 0;
-    int restrict_crls_by_next_update = 0;
+    int    chase_aia = 0;
+    int    restrict_crls_by_next_update = 0;
     size_t num_hours = 0;
-    int chase_not_yet_validated = 0;
-    int load_uris_from_file = 0;
+    int    chase_not_yet_validated = 0;
+    int    load_uris_from_file = 0;
 
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
 
     char   msg[1024];  // temp string storage
     size_t i;
-    char delimiter = '\0';
+    char   delimiter = '\0';
+    size_t const DST_SZ = 1030;
+    char   scrubbed_str[DST_SZ];
 
     // parse the command-line flags
     int ch;
@@ -391,8 +400,7 @@ int main(int argc, char **argv) {
         return -2;
     }
 
-    // expecting one rsync uri per line, no whitespace, staring with "DIR="
-    //   max length of uri is a little less than sizeof(msg)
+    // read uris from file
     char const *LINE_PREFIX = "DIR=";
     size_t const LEN_PREFIX = strlen(LINE_PREFIX);
     if (load_uris_from_file) {
@@ -407,7 +415,8 @@ int main(int argc, char **argv) {
                 continue;
             }
             if (sizeof(msg) == strlen(msg)) {
-                LOG(LOG_WARNING, "uri string too long, dropping:  %s", msg);
+                scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
+                LOG(LOG_WARNING, "uri string too long, dropping:  %s", scrubbed_str);
                 continue;
             }
             handle_uri_string(&msg[LEN_PREFIX]);
