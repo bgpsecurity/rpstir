@@ -6,25 +6,23 @@ package com.bbn.rpki.test.tasks;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
- * Uploads a model
+ * Uploads a model.
+ * 
+ * There are two breakdowns:
+ *   byRepositoryRoot -- provides tasks for uploading individual roots
+ *   byNode -- provides tasks for uploading individual nodes
  *
  * @author tomlinso
  */
 public class UploadEpoch extends Task {
 
-  private final Model model;
-  private final List<Task> subtasks;
-
   /**
    * @param model
    */
   public UploadEpoch(Model model) {
-    this.model = model;
-    subtasks = getSubtasks();
+    super("UploadEpoch", model);
   }
 
   /**
@@ -32,39 +30,40 @@ public class UploadEpoch extends Task {
    */
   @Override
   public void run() {
-    for (Task task : subtasks) {
+    for (Task task : getSubtasks()) {
       task.run();
     }
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
-   */
-  @Override
-  public int getBreakdownCount() {
-    return 1;
-  }
-
-  /**
    * Break down this task into its individual roots
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
+   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
-    assert n == 0;
-    return new TaskBreakdown(subtasks, TaskBreakdown.Type.PARALLEL);
+  public TaskBreakdown getTaskBreakdown(String breakdownName) {
+    if ("byRepositoryRoot".equals(breakdownName)) {
+      return new TaskBreakdown(breakdownName, this, getSubtasks());
+    }
+    if ("byNode".equals(breakdownName)) {
+      return new TaskBreakdown(breakdownName, this, getSubtasksByNode());
+    }
+    return null;
   }
 
   private List<Task> getSubtasks() {
     List<File> roots = model.getRepositoryRoots();
-    Map<String, File> prevRoots = new TreeMap<String, File>();
-    for (File root : model.getPreviousRepositoryRoots()) {
-      prevRoots.put(root.getName(), root);
-    }
     List<Task> ret = new ArrayList<Task>(roots.size());
     for (File repositoryRootDir : roots) {
-      File previousRootDir = prevRoots.get(repositoryRootDir.getName());
-      ret.add(new UploadRepositoryRoot(model, repositoryRootDir, previousRootDir));
+      ret.add(new UploadRepositoryRoot(model, repositoryRootDir));
+    }
+    return ret;
+  }
+
+  private List<Task> getSubtasksByNode() {
+    List<File> nodeDirectories = model.getNodeDirectories();
+    List<Task> ret = new ArrayList<Task>(nodeDirectories.size());
+    for (File nodeDir : nodeDirectories) {
+      ret.add(new UploadNode(model, nodeDir));
     }
     return ret;
   }
@@ -74,6 +73,9 @@ public class UploadEpoch extends Task {
    */
   @Override
   protected String getLogDetail() {
-    return subtasks.size() + " sub-tasks";
+    if (getSelectedBreakdown() != null) {
+      return getSelectedBreakdown().getTasks().size() + " sub-tasks";
+    }
+    return getSubtasksByNode().size() + " nodes";
   }
 }

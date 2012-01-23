@@ -19,54 +19,48 @@ import com.bbn.rpki.test.objects.Util;
 public class MakeNodeDir extends Task {
   private final File nodeDir;
 
-  private final Model model;
-
-  private final File repositoryRootDir;
-
   /**
-   * @param model 
-   * @param repositoryRootDir 
-   * @param nodeDir 
+   * @param model
+   * @param nodeDir
    */
-  public MakeNodeDir(Model model, File repositoryRootDir, File nodeDir) {
-    this.model = model;
-    this.repositoryRootDir = repositoryRootDir;
+  public MakeNodeDir(Model model, File nodeDir) {
+    super("MakeNodeDir", model);
     this.nodeDir = nodeDir;
   }
-  
+
   /**
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
   @Override
   public void run() {
+    String[] sourceParts = model.getSourcePath(nodeDir);
     List<String> cmd = new ArrayList<String>();
-    String repository = model.getUploadRepositoryFileName(repositoryRootDir, nodeDir);
-    String serverName = model.getServerName(repositoryRootDir);
+    String serverName = sourceParts[0];
+    String rootName = sourceParts[1];
+    StringBuilder sb = new StringBuilder(model.getRsyncBase(serverName, rootName));
+    for (int i = 2; i < sourceParts.length; i++) {
+      if (i > 2) {
+        sb.append("/");
+      }
+      sb.append(sourceParts[i]);
+    }
     cmd.add("ssh");
     cmd.add(serverName);
     cmd.add("mkdir");
     cmd.add("-p");
-    cmd.add(repository);
+    cmd.add(sb.toString());
     Util.exec("Make remote dir", false, null, null, null, cmd);
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
-   */
-  @Override
-  public int getBreakdownCount() {
-    return 0;
   }
 
   /**
    * The one breakdown case we have is to upload individual files as separate,
    * parallel tasks
    * 
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
+   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
-    assert false;
+  public TaskBreakdown getTaskBreakdown(String n) {
+    // No breakdowns
     return null;
   }
 
@@ -75,8 +69,15 @@ public class MakeNodeDir extends Task {
    */
   @Override
   protected String getLogDetail() {
-    String repository = model.getUploadRepositoryFileName(repositoryRootDir, nodeDir);
-    String serverName = model.getServerName(repositoryRootDir);
-    return String.format("%s on %s", repository, serverName);
+    String[] sourceParts = model.getSourcePath(nodeDir);
+    String serverName = sourceParts[0];
+    StringBuilder sb = new StringBuilder();
+    for (int i = 1; i < sourceParts.length; i++) {
+      if (i > 1) {
+        sb.append("/");
+      }
+      sb.append(sourceParts[i]);
+    }
+    return String.format("%s on %s", sb.toString(), serverName);
   }
 }

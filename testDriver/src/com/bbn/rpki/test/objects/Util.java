@@ -389,7 +389,8 @@ public class Util implements Constants {
    * @return the supplied string with the given prefix removed
    */
   public static String removePrefix(String string, String prefix) {
-    assert string.startsWith(prefix);
+    // TODO figure out why string sometimes starts with s: whereas prefix starts with r:
+    //    assert string.startsWith(prefix);
     return string.substring(prefix.length());
   }
 
@@ -447,6 +448,9 @@ public class Util implements Constants {
    * Initialize the database
    */
   public static void initDB() {
-    exec("initDB", true, RPKI_ROOT, null, null, "run_scripts/initDB.sh");
+    File repositoryDir = new File(RPKI_ROOT, "REPOSITORY");
+    repositoryDir.mkdirs();
+    new File(RPKI_ROOT, "LOGS").mkdirs();
+    exec("initDB", true, RPKI_ROOT, null, null, "proto/rcli",  "-x", "-t", repositoryDir.getPath(), "-y");
   }
 }

@@ -179,7 +179,7 @@ public class Certificate extends CA_Obj {
    * @see java.lang.Object#toString()
    */
   @Override
-  public String toString() {
-    return String.format("%s(%s)", getClass().getSimpleName(), subject);
+  public void appendString(StringBuilder sb) {
+    sb.append(String.format("%s(%s)", getClass().getSimpleName(), subject));
   }
 }

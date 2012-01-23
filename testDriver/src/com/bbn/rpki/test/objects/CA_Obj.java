@@ -17,18 +17,18 @@ public abstract class CA_Obj implements Constants {
   public String outputfilename;
   final String[] xargs;
   private boolean written = false;
-  
+
   protected CA_Obj(String...xargs) {
     this.xargs = xargs;
   }
-  
+
   /**
    * @return true if this object has been written
    */
   public boolean isWritten() {
     return written;
   }
-  
+
   /**
    * Set written flag
    * @param b
@@ -36,7 +36,7 @@ public abstract class CA_Obj implements Constants {
   public void setWritten(boolean b) {
     written = b;
   }
-  
+
   /**
    * @param list the list to append to
    */
@@ -52,4 +52,19 @@ public abstract class CA_Obj implements Constants {
   public void getFieldMap(Map<String, Object> map) {
     map.put("outputfilename", outputfilename);
   }
+
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public final String toString() {
+    StringBuilder sb = new StringBuilder();
+    if (!isWritten()) {
+      sb.append("*");
+    }
+    appendString(sb);
+    return sb.toString();
+  }
+
+  protected abstract void appendString(StringBuilder sb);
 }

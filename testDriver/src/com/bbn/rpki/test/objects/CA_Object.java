@@ -78,9 +78,6 @@ public class CA_Object extends Allocator {
     String[] sia_list = certificate.sia.substring(RSYNC_EXTENSION.length()).split(",");
     this.SIA_path = sia_list[0].substring(0, sia_list[0].length());
     //    this.manifest_path = Util.removePrefix(sia_list[1], RSYNC_EXTENSION);
-    // Note the following is functionally correct, but not logically. We are
-    // using the certificate serial to uniquely number this child of the parent.
-    // Better would be for the parent to assign a unique id.
     this.path_CA_cert = certificate.outputfilename;
     this.nickName= this.myFactory.bluePrintName + "-" + this.id;
     if (parent != null) {
@@ -225,5 +222,16 @@ public class CA_Object extends Allocator {
    */
   public int getNextManifestNumber() {
     return manNum++;
+  }
+
+  /**
+   * @param list
+   */
+  public void appendNodeDirectories(List<File> list) {
+    File dir = new File(new File(REPO_PATH), SIA_path);
+    list.add(dir);
+    for (CA_Object child : children) {
+      child.appendNodeDirectories(list);
+    }
   }
 }

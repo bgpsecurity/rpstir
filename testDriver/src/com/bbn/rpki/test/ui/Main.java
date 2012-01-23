@@ -7,16 +7,18 @@ import java.awt.Component;
 import java.awt.Container;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 
 import com.bbn.rpki.test.RunLoader;
-import com.bbn.rpki.test.Test;
-import com.bbn.rpki.test.TestBasic;
 import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.Task;
+import com.bbn.rpki.test.tasks.TaskBreakdown;
+import com.bbn.rpki.test.tasks.UpdateCache;
 
 /**
  * <Enter the description of this type here>
@@ -54,18 +56,38 @@ public class Main {
     for (String arg : args) {
       File iniFile = new File(arg);
       assert iniFile.isFile();
-      RunLoader.singleton().start();
       System.out.println("Starting " + iniFile);
       Model model = new Model(Util.RPKI_ROOT, iniFile, tlPanel);
-      Test test = new TestBasic(model);
-      Iterable<Task> tasks = test.getTasks();
-      for (Task task : tasks) {
-        tlPanel.log(task.toString() + "...");
-        task.run();
-        tlPanel.log("done\n");
-      }
+      Iterable<Task> tasks = model.getTasks();
+      executeTasks(tasks, model, "");
       System.out.println(iniFile + " completed");
       RunLoader.singleton().stop();
+    }
+  }
+
+  private void executeTasks(Iterable<Task> tasks, Model model, String indent) {
+    for (Task task : tasks) {
+      tlPanel.format("%s%s...", indent, task.toString());
+      TaskBreakdown breakdown = task.getSelectedBreakdown();
+      Iterable<Task> subtasks = null;
+      if (breakdown == null) {
+        task.run();
+        if (task.isTestEnabled()) {
+          Task[] subArray = {
+              new UpdateCache(model),
+              new CheckCacheStatus(model)
+          };
+          subtasks = Arrays.asList(subArray);
+        }
+      } else {
+        subtasks = breakdown.getTasks();
+      }
+      if (subtasks != null) {
+        tlPanel.format("%n");
+        executeTasks(subtasks, model, indent + "  ");
+        tlPanel.format("%s...", indent);
+      }
+      tlPanel.format("done%n");
     }
   }
 

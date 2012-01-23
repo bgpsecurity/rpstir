@@ -82,10 +82,10 @@ public class Crl extends CA_Obj {
   }
 
   /**
-   * @see java.lang.Object#toString()
+   * @see com.bbn.rpki.test.objects.CA_Obj#appendString(java.lang.StringBuilder)
    */
   @Override
-  public String toString() {
-    return String.format("Crl(%s)", issuer);
+  public void appendString(StringBuilder sb) {
+    sb.append(String.format("Crl(%s)", issuer));
   }
 }

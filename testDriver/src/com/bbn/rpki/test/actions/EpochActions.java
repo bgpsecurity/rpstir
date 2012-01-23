@@ -81,7 +81,7 @@ public class EpochActions extends AbstractAction {
   @Override
   public void execute(TypescriptLogger logger) {
     if (logger != null) {
-      logger.format("Executing %d action%n", actions.size());
+      logger.format("Executing %d action%s%n", actions.size(), actions.size() != 1 ? "s" : "");
     }
     for (AbstractAction action : actions) {
       action.execute(logger);

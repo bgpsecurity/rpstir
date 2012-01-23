@@ -19,7 +19,7 @@ import com.bbn.rpki.test.objects.Range;
  */
 public class ActionManager {
   private static ActionManager singleton;
-  
+
   /**
    * @return the singleton ActionManager instance
    */
@@ -29,15 +29,15 @@ public class ActionManager {
     }
     return singleton;
   }
-  
+
   private final Map<String, IPRangeList> ipv4Allocations = new TreeMap<String, IPRangeList>();
-  
+
   private final Map<String, IPRangeList> ipv6Allocations = new TreeMap<String, IPRangeList>();
-  
+
   private final Map<String, IPRangeList> asAllocations = new TreeMap<String, IPRangeList>();
-  
+
   private final Map<String, CA_Object> caObjects = new TreeMap<String, CA_Object>();
-  
+
   private ActionManager() {
     // Nothing to do here
   }
@@ -60,8 +60,8 @@ public class ActionManager {
     case as:
       map = asAllocations;
       break;
-      default:
-        return null;
+    default:
+      return null;
     }
     IPRangeList rangeList = map.get(allocationId);
     return rangeList.get(allocationIndex);
@@ -88,8 +88,10 @@ public class ActionManager {
     default:
       return;
     }
+    // TODO need a better key incorporating the parent
+    @SuppressWarnings("unused")
     IPRangeList old = map.put(allocationId, list);
-    assert old == null;
+    //    assert old == null;
   }
 
   /**

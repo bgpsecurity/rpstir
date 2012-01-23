@@ -65,10 +65,10 @@ public class Roa extends CMS {
   }
 
   /**
-   * @see java.lang.Object#toString()
+   * @see com.bbn.rpki.test.objects.CA_Obj#appendString(java.lang.StringBuilder)
    */
   @Override
-  public String toString() {
-    return String.format("Manifest(%s)", ee_object.parent.commonName);
+  public void appendString(StringBuilder sb) {
+    sb.append(String.format("Manifest(%s)", ee_object.parent.commonName));
   }
 }

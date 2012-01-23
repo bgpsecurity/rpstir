@@ -3,25 +3,23 @@
  */
 package com.bbn.rpki.test.tasks;
 
-import com.bbn.rpki.test.Test;
 
 /**
- * <Enter the description of this type here>
+ * Advances to the next epoch and sets up the standard tasks for that epoch
+ * including the next AdvanceEpoch task if there are more epochs to follow.
  *
  * @author tomlinso
  */
 public class AdvanceEpoch extends Task {
 
   private final Model model;
-  private final Test test;
 
   /**
    * @param model
-   * @param test
    */
-  public AdvanceEpoch(Model model,Test test) {
+  public AdvanceEpoch(Model model) {
+    super("AdvanceEpoch", model);
     this.model = model;
-    this.test = test;
   }
 
   /**
@@ -30,28 +28,9 @@ public class AdvanceEpoch extends Task {
   @Override
   public void run() {
     model.advanceEpoch();
-    test.addTask(new UploadEpoch(model));
-    test.addTask(new CheckCacheStatus(model));
     if (model.getEpochIndex() + 1 < model.getEpochCount()) {
-      test.addTask(this);
+      model.addTask(this);
     }
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
-   */
-  @Override
-  public int getBreakdownCount() {
-    return 0;
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
-   */
-  @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
-    assert false;
-    return null;
   }
 
   /**
@@ -61,5 +40,4 @@ public class AdvanceEpoch extends Task {
   protected String getLogDetail() {
     return null;
   }
-
 }

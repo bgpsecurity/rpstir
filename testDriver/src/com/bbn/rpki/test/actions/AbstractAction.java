@@ -31,8 +31,11 @@ public abstract class AbstractAction {
   protected static final String ATTR_EPOCH_INDEX = "epoch-index";
 
   protected static final String ATTR_ACTION_TYPE = "actionType";
+
+  protected static final String ATTR_PATH = "path";
   protected static final String VALUE_ALLOCATE = "allocate";
   protected static final String VALUE_DEALLOCATE = "deallocate";
+  protected static final String VALUE_CHOOSE_CACHE_CHECK_TASK = "choose-check-task";
 
   enum ActionType {
     allocate,

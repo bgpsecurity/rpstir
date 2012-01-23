@@ -17,18 +17,13 @@ import com.bbn.rpki.test.objects.Util;
 public class UploadFile extends Task {
 
   private final File file;
-  private final File repositoryRootDir;
-  private final Model model;
-
   /**
-   * @param model 
-   * @param repositoryRootDir 
+   * @param model
    * @param file
    */
-  public UploadFile(Model model, File repositoryRootDir, File file) {
-    this.model = model;
+  public UploadFile(Model model, File file) {
+    super("Upload " + file.getName(), model);
     this.file = file;
-    this.repositoryRootDir = repositoryRootDir;
   }
 
   /**
@@ -39,25 +34,16 @@ public class UploadFile extends Task {
     List<String> cmd = new ArrayList<String>();
     cmd.add("scp");
     cmd.add(file.getPath());
-    String repository = model.getSCPFileNameArg(repositoryRootDir, file);
-    cmd.add(repository);
+    cmd.add(model.getSCPFileNameArg(file));
     Util.exec("UploadFile", false, Util.RPKI_ROOT, null, null, cmd);
     model.uploadedFile(file);
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
+   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
    */
   @Override
-  public int getBreakdownCount() {
-    return 0;
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
-   */
-  @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
+  public TaskBreakdown getTaskBreakdown(String n) {
     assert false;
     return null;
   }
@@ -70,18 +56,11 @@ public class UploadFile extends Task {
   }
 
   /**
-   * @return the repositoryRootDir
-   */
-  public File getRepositoryRootDir() {
-    return repositoryRootDir;
-  }
-
-  /**
    * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
    */
   @Override
   protected String getLogDetail() {
-    String repository = model.getSCPFileNameArg(repositoryRootDir, file);
+    String repository = model.getSCPFileNameArg(file);
     return String.format("%s to %s", file, repository);
   }
 }

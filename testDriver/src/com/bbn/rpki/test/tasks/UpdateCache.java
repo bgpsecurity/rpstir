@@ -11,7 +11,14 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class UpdateCache extends Task {
-    
+
+  /**
+   * @param model
+   */
+  public UpdateCache(Model model) {
+    super("UpdateCache", model);
+  }
+
   /**
    * @see com.bbn.rpki.test.tasks.Task#run()
    */
@@ -21,23 +28,6 @@ public class UpdateCache extends Task {
               "rsync_aur/rsync_listener",
               "proto/chaser",
               "-f", "initial_rsync.config");
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
-   */
-  @Override
-  public int getBreakdownCount() {
-    return 0;
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
-   */
-  @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
-    assert false;
-    return null;
   }
 
   /**

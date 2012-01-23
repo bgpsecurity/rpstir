@@ -12,15 +12,15 @@ import java.util.List;
  *
  * @author tomlinso
  */
-public class DeleteFromRepositoryRoot extends DeleteRemoteFiles {
+public class DeleteFromRepositoryNode extends DeleteRemoteFiles {
   private final ExtensionHandler xHandler;
 
   /**
    * @param model
-   * @param publicationSource
+   * @param nodeDir
    */
-  public DeleteFromRepositoryRoot(Model model, File publicationSource) {
-    super("DeleteFrom" + publicationSource.getName(), model, publicationSource);
+  public DeleteFromRepositoryNode(Model model, File nodeDir) {
+    super("delete(" + nodeDir.getName() + ")", model, nodeDir);
     xHandler = new ExtensionHandler();
   }
 

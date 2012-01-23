@@ -12,13 +12,11 @@ import com.bbn.rpki.test.objects.Util;
  */
 public class InitializeRepositories extends Task {
 
-  private final Model model;
-
   /**
    * @param model
    */
   public InitializeRepositories(Model model) {
-    this.model = model;
+    super("InitializeRepositories", model);
   }
 
   /**
@@ -27,32 +25,27 @@ public class InitializeRepositories extends Task {
   @Override
   public void run() {
     for (String serverName : model.getAllServerNames()) {
-      String[] parts = serverName.split("/");
-      String rsyncBase = model.getRsyncBase(serverName);
+      String[] sourceParts = serverName.split("/");
+      String remotePath = model.getRemotePath(sourceParts);
+      if (!remotePath.endsWith("/")) {
+        remotePath += "/";
+      }
       Util.exec("Initialize Repository", false, null, null,
                 null,
                 "ssh",
-                parts[0],
+                sourceParts[0],
                 "rm",
                 "-rf",
-                rsyncBase + "/*");
+                remotePath + "*");
     }
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
+   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
    */
   @Override
-  public int getBreakdownCount() {
-    return 0;
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
-   */
-  @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
-    assert false;
+  public TaskBreakdown getTaskBreakdown(String n) {
+    // There no breakdowns
     return null;
   }
 

@@ -25,13 +25,11 @@ public class InstallTrustAnchor extends Task {
 
   private final String talPrefix;
 
-  private final Model model;
-
   /**
    * @param model
    */
   public InstallTrustAnchor(Model model) {
-    this.model = model;
+    super("InstallTA", model);
     this.certFile = model.getTrustAnchorCert();
     this.talFile = model.getTALFile();
     this.talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
@@ -70,19 +68,11 @@ public class InstallTrustAnchor extends Task {
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getBreakdownCount()
+   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
    */
   @Override
-  public int getBreakdownCount() {
-    return 0;
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(int)
-   */
-  @Override
-  public TaskBreakdown getTaskBreakdown(int n) {
-    assert false;
+  public TaskBreakdown getTaskBreakdown(String n) {
+    // There are no breakdowns
     return null;
   }
 

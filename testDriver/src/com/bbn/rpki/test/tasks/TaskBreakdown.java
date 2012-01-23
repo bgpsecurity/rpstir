@@ -3,40 +3,69 @@
  */
 package com.bbn.rpki.test.tasks;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * <Enter the description of this type here>
+ * Represents a particular breakdown of a task
  *
  * @author tomlinso
  */
 public class TaskBreakdown {
-  enum Type {
-    SEQUENCE,
-    SHUFFLE,
-    PARALLEL
-  }
   private final List<Task> tasks;
-  private final Type type;
+  private Map<String, Task> taskMap = null;
+  private final String breakdownName;
+  private final Task parentTask;
+
   /**
+   * @param breakdownName
+   * @param parentTask
    * @param tasks
-   * @param type
    */
-  public TaskBreakdown(List<Task> tasks, Type type) {
-    super();
-    this.tasks = tasks;
-    this.type = type;
+  public TaskBreakdown(String breakdownName, Task parentTask, Task...tasks) {
+    this(breakdownName, parentTask, Arrays.asList(tasks));
   }
+
+  /**
+   * @param breakdownName
+   * @param parentTask
+   * @param tasks
+   */
+  public TaskBreakdown(String breakdownName, Task parentTask, List<Task> tasks) {
+    super();
+    this.breakdownName = breakdownName;
+    this.parentTask = parentTask;
+    this.tasks = tasks;
+  }
+
+  /**
+   * @param taskName
+   * @return the named task or null if none found
+   */
+  public Task getTask(String taskName) {
+    if (taskMap == null) {
+      taskMap = new HashMap<String, Task>();
+      for (Task task : tasks) {
+        taskMap.put(task.getTaskName(), task);
+      }
+    }
+    return taskMap.get(taskName);
+  }
+
   /**
    * @return the tasks
    */
   public List<Task> getTasks() {
     return tasks;
   }
+
   /**
-   * @return the type
+   * @see java.lang.Object#toString()
    */
-  public Type getType() {
-    return type;
+  @Override
+  public String toString() {
+    return "Breakdown " + breakdownName + " for " + parentTask.getTaskName();
   }
 }
