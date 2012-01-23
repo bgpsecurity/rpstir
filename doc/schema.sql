@@ -68,6 +68,8 @@ CREATE TABLE `rpstir_rpki_cert` (
   `valto` datetime NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0',
   `ts_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  inherit_asn boolean NOT NULL DEFAULT FALSE,
+  inherit_ip boolean NOT NULL DEFAULT FALSE,
   PRIMARY KEY (hash),
   KEY `ski` (`ski`,`subject`),
   KEY `aki` (`aki`,`issuer`),
