@@ -89,7 +89,7 @@ CREATE TABLE `rpstir_rpki_cert` (
   `valfrom` datetime NOT NULL,
   `valto` datetime NOT NULL,
   `sigval` int(10) unsigned DEFAULT '0', -- TODO: what is this?
-  `ts_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ts_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- TODO: is this needed?
   inherit_asn boolean NOT NULL DEFAULT FALSE,
   inherit_ip boolean NOT NULL DEFAULT FALSE,
   PRIMARY KEY (hash),
