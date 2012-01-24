@@ -168,6 +168,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid revocation date",      /* ERR_SCM_BADREVDATE */
     "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
     "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
+    "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
   } ;
 
 char *err2string(int err)
