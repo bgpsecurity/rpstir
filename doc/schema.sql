@@ -99,6 +99,7 @@ CREATE TABLE `rpstir_rpki_cert` (
   KEY `isn` (`issuer`,`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- TODO: should CMS EE certs just be added to rpstir_rpki_cert with the overall CMS hash instead of using this table?
 CREATE TABLE rpstir_rpki_cms (
   hash binary(32) NOT NULL,
   cert_hash binary(32) NOT NULL,
@@ -129,7 +130,8 @@ CREATE TABLE `rpstir_rpki_crl` (
 CREATE TABLE rpstir_rpki_manifest_files (
   hash binary(32) NOT NULL,
   filename varchar(256) NOT NULL,
-  filehash binary(32) NOT NULL,
+  file_hash_alg ENUM('sha256') NOT NULL,
+  file_hash varbinary(512) NOT NULL,
   PRIMARY KEY (hash, filename)
 );
 
