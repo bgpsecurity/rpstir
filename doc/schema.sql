@@ -113,19 +113,16 @@ CREATE TABLE rpstir_rpki_crl_sn (
   PRIMARY KEY (hash, serial)
 );
 
--- TODO: read RFC
 CREATE TABLE `rpstir_rpki_crl` (
   `hash` binary(32) NOT NULL,
   `issuer` varchar(512) NOT NULL,
   `last_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
   `crlno` bigint(20) DEFAULT '0',
-  `aki` varchar(128) DEFAULT NULL,
-  `sig` varchar(520) NOT NULL, -- TODO: should this be in the database?
+  `aki` varchar(128) NOT NULL,
   PRIMARY KEY (`hash`),
   KEY `issuer` (`issuer`),
   KEY `aki` (`aki`),
-  KEY `sig` (`sig`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE rpstir_rpki_manifest_files (
