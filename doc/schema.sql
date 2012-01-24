@@ -99,6 +99,13 @@ CREATE TABLE `rpstir_rpki_cert` (
   KEY `isn` (`issuer`,`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+CREATE TABLE rpstir_rpki_signs (
+  signed_hash binary(32) NOT NULL,
+  signer_hash binary(32) NOT NULL,
+  correct boolean NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (signed_hash, signer_hash)
+);
+
 CREATE TABLE rpstir_rpki_crl_sn (
   hash binary(32) NOT NULL,
   serial bigint unsigned NOT NULL,
