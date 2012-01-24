@@ -113,6 +113,7 @@ CREATE TABLE rpstir_rpki_crl_sn (
   PRIMARY KEY (hash, serial)
 );
 
+-- TODO: read RFC
 CREATE TABLE `rpstir_rpki_crl` (
   `hash` binary(32) NOT NULL,
   `issuer` varchar(512) NOT NULL,
@@ -120,7 +121,7 @@ CREATE TABLE `rpstir_rpki_crl` (
   `next_upd` datetime NOT NULL,
   `crlno` bigint(20) DEFAULT '0',
   `aki` varchar(128) DEFAULT NULL,
-  `sig` varchar(520) NOT NULL,
+  `sig` varchar(520) NOT NULL, -- TODO: should this be in the database?
   PRIMARY KEY (`hash`),
   KEY `issuer` (`issuer`),
   KEY `aki` (`aki`),
@@ -135,12 +136,13 @@ CREATE TABLE rpstir_rpki_manifest_files (
   PRIMARY KEY (hash, filename)
 );
 
+-- TODO: read I-D
 CREATE TABLE `rpstir_rpki_manifest` (
   `hash` binary(32) NOT NULL,
-  `ski` varchar(128) NOT NULL,
+  `ski` varchar(128) NOT NULL, -- TODO: is this from the EE? if it is, it should be deleted
   `this_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
-  `cert_hash` binary(32) NOT NULL,
+  `cert_hash` binary(32) NOT NULL, -- TODO: delete if reduntant with rpstir_rpki_cms.cert_hash?
   PRIMARY KEY (`hash`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -162,6 +164,7 @@ CREATE TABLE rpstir_rpki_roa_prefix (
   PRIMARY KEY (hash, prefix_id)
 );
 
+-- TODO: read I-D
 CREATE TABLE `rpstir_rpki_roa` (
   `hash` binary(32) NOT NULL,
   asn int unsigned NOT NULL,
