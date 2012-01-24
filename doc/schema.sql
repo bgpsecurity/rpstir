@@ -1,7 +1,6 @@
 -- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
 
 -- TODO: check KEYs
--- TODO: check type of crlno. maybe it should be int unsigned
 -- TODO: check type of aki and ski. maybe should be (var)binary
 
 -- database-level metadata
@@ -121,7 +120,7 @@ CREATE TABLE rpstir_rpki_crl (
   issuer varchar(512) NOT NULL,
   last_upd datetime NOT NULL,
   next_upd datetime NOT NULL,
-  crlno bigint DEFAULT '0',
+  crlno int unsigned NOT NULL,
   aki varchar(128) NOT NULL,
   PRIMARY KEY (hash),
   KEY issuer (issuer),
