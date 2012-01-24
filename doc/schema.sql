@@ -1,7 +1,6 @@
 -- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
 
 -- TODO: check KEYs
--- TODO: check type of aki and ski. maybe should be (var)binary
 
 -- database-level metadata
 -- current version: SELECT schema_version FROM rpstir_metadata ORDER BY installed DESC LIMIT 1;
@@ -85,8 +84,8 @@ CREATE TABLE rpstir_rpki_cert (
   subject varchar(512) DEFAULT NULL, -- TODO: should be NOT NULL?
   issuer varchar(512) NOT NULL,
   sn bigint unsigned NOT NULL,
-  ski varchar(128) NOT NULL,
-  aki varchar(128) DEFAULT NULL,
+  ski binary(20) NOT NULL,
+  aki binary(20) DEFAULT NULL,
   sig varchar(520) NOT NULL, -- TODO: should this be in the database?
   valfrom datetime NOT NULL,
   valto datetime NOT NULL,
@@ -121,7 +120,7 @@ CREATE TABLE rpstir_rpki_crl (
   last_upd datetime NOT NULL,
   next_upd datetime NOT NULL,
   crlno int unsigned NOT NULL,
-  aki varchar(128) NOT NULL,
+  aki binary(20) NOT NULL,
   PRIMARY KEY (hash),
   KEY issuer (issuer),
   KEY aki (aki)
