@@ -142,7 +142,6 @@ CREATE TABLE `rpstir_rpki_manifest` (
   `ski` varchar(128) NOT NULL, -- TODO: is this from the EE? if it is, it should be deleted
   `this_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
-  `cert_hash` binary(32) NOT NULL, -- TODO: delete if reduntant with rpstir_rpki_cms.cert_hash?
   PRIMARY KEY (`hash`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
