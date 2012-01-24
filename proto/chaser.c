@@ -95,27 +95,91 @@ static void free_uris() {
 
 
 /**=============================================================================
-rsync://foo.com/../ should be removed
-rsync://foo.com/a/../b should be collapsed to rsync://foo.com/b
-rsync://foo.com/a/../.. should be removed
+ * rsync://foo.com/../ should be removed
+ * rsync://foo.com/a/../b should be collapsed to rsync://foo.com/b
+ * rsync://foo.com/a/../.. should be removed
+ *
+ * @note Might modify parameter.
+ * @ret 0 if input was not modified
+ *     -1 if input was modified, but remains valid
+ *     -2 if input was invalid
 ------------------------------------------------------------------------------*/
-static int remove_dot_dot(char *in) {
+static int remove_dot_dot(char *s) {
+    int modified = 0;
+    int found_dots = 1;
+    int found_slash;
+    size_t i;
+    size_t j;
+    size_t len;
+    size_t dots_lo;
+    size_t dots_hi;
+    size_t dir_lo;
+
+    while (found_dots) {
+        found_dots = 0;
+        len = strlen(s);
+
+        // find "/.."
+        for (i = 0; i < len - 2; i++) {
+            if ('/' == s[i]  &&  '.' == s[i + 1]  &&  '.' == s[i + 2])
+                dots_lo = i;
+            else
+                continue;
+
+            if (i + 3 == len  ||  (i + 3 < len  &&  '/' == s[i + 3])) {
+                dots_hi = i + 2;
+                found_dots = 1;
+                break;
+            }
+        }
+
+        if (!found_dots)
+            break;
+
+        // find preceding dir
+        found_slash = 0;
+        for (i = dots_lo - 1; i > 0; i--) {
+            if ('/' == s[i]) {
+                dir_lo = i;
+                found_slash = 1;
+                break;
+            }
+        }
+
+        if (!found_slash)
+            return -2;
+
+        // remove preceding dir
+        for (i = 0, j = 0; i < len; i++) {
+            if (i < dir_lo  ||  i > dots_hi) {
+                s[j] = s[i];
+                j++;
+            }
+        }
+        s[j] = s[i];
+        modified = 1;
+    }
+
+    if (modified)
+        return -1;
 
     return 0;
 }
 
 /**=============================================================================
-// TODO:  warn if any change to a uri.
-
-@note Might modify parameter.
+ * @note Might modify parameter.
+ * @ret 0 if input was not modified
+ *     -1 if input was modified, but remains valid
+ *     -2 if input was invalid
 ------------------------------------------------------------------------------*/
 static int check_uri_chars(char *str) {
-    int changed = 0;
-    int found_dot_dot = 0;
+    int modified = 0;
+    int found_dots = 0;
     int i;
     int j;
     char last;
     char this;
+    int ret;
 
     // remove nonprintables
     if (remove_nonprintables) {
@@ -124,7 +188,7 @@ static int check_uri_chars(char *str) {
                 str[j] = str[i];
                 j++;
             } else {
-                changed = 1;
+                modified = 1;
             }
         }
         str[j] = str[i];
@@ -135,16 +199,17 @@ static int check_uri_chars(char *str) {
     for (i = 1, j = 1; i < strlen(str); i++) {
         if ('/' == (this = str[i])  &&  '/' == last) {
             // neither copy the char, nor increment j
-            changed = 1;
+            modified = 1;
         } else if ('.' == (this = str[i])  &&  '.' == last) {
-            found_dot_dot = 1;
+            found_dots = 1;
             str[j] = str[i];
             j++;
             last = this;
-        } else if ('.' == (this = str[i])  &&  '/' == last  &&  '/' == str[i + 1]) {
+        } else if ('.' == (this = str[i])  &&  '/' == last  &&
+                ('/' == str[i + 1]  ||  '\0' == str[i + 1])) {
             // neither copy the char, nor increment j
             // increment i one extra
-            changed = 1;
+            modified = 1;
             i++;
         } else {
             str[j] = str[i];
@@ -154,11 +219,15 @@ static int check_uri_chars(char *str) {
     }
     str[j] = str[i];
 
-    if (found_dot_dot) {
-        remove_dot_dot(str);
+    if (found_dots) {
+        ret = remove_dot_dot(str);
+        if (-1 == ret)
+            modified = 1;
+        else if (-2 == ret)
+            return ret;
     }
 
-    if (changed)
+    if (modified)
         return 1;
 
     return 0;
@@ -193,27 +262,34 @@ static int append_uri(char const *in) {
  * @note caller frees param "in"
 ------------------------------------------------------------------------------*/
 static int handle_uri_string(char const *in) {
-    char *copy;
+    size_t const DST_SZ = DB_URI_LEN + 1;
     char *section;
-    size_t const DST_SZ = 1030;
     char scrubbed_str[DST_SZ];
-    // TODO:  Using ; as delimiter is planned to change when the db schema is updated.
-    char const delimiter[] = ";";
+    char scrubbed_str2[DST_SZ];
+    char *ptr;
     size_t len_in = strlen(in);
     size_t len;
+    int ret;
+    size_t i, j, next_i;
 
-    copy = malloc((len_in + 1) * sizeof(char));
-    if (!copy) {
-        LOG(LOG_ERR, "out of memory");
+    section = (char*) malloc(sizeof(char) * (DB_URI_LEN + 1));
+    if (!section)
         return OUT_OF_MEMORY;
-    }
-    memcpy(copy, in, len_in);
-    copy[len_in] = '\0';
-    char * const ptr = copy;
+    ptr = section;
 
+    // TODO:  Using ; as delimiter is planned to change when the db schema is updated.
     // split by semicolons
-    section = strtok(copy, delimiter);
-    while (section) {
+    section[0] = '\0';
+    for (i = 0, j = 0; i < len_in + 1; i++) {
+        if (';' == in[i]  ||  '\0' == in[i]) {
+            section[j] = '\0';
+            next_i = i + 1;
+            break;
+        } else {
+            section[j++] = in[i];
+        }
+    }
+    while ('\0' != section[0]) {
         //TODO:  any change to a uri gets a warning, at least
         // trim leading space and quote
         len = strlen(section);
@@ -238,28 +314,42 @@ static int handle_uri_string(char const *in) {
         } else {
             scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
             LOG(LOG_DEBUG, "dropping non-rsync uri:  \"%s\"", scrubbed_str);
-            section = strtok(NULL, delimiter);
-            continue;
+            goto get_next_section;
         }
 
-        // regex check  (this may move to check_chars)
-        if (check_uri_chars(section)) {
-            scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
-            LOG(LOG_WARNING, "possible invalid rsync uri, skipping:  \"%s\"", scrubbed_str);
-            section = strtok(NULL, delimiter);
-            continue;
+        scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
+        // remove some special characters
+        ret = check_uri_chars(section);
+        if (-1 == ret) {
+            scrub_for_print(scrubbed_str2, section, DST_SZ, NULL, "");
+            LOG(LOG_WARNING, "modified rsync uri, replaced:  \"%s\" with \"%s\"",
+                    scrubbed_str, scrubbed_str2);
+            goto get_next_section;
+        } else if (-2 == ret) {
+            LOG(LOG_WARNING, "possible invalid rsync uri, dropping:  \"%s\"", scrubbed_str);
+            goto get_next_section;
         }
 
         // append to uris[]
         if (OUT_OF_MEMORY == append_uri(section)) {
-            if (ptr) free(ptr);
+            if (ptr)  free(ptr);
             return OUT_OF_MEMORY;
         }
 
-        section = strtok(NULL, delimiter);
+        get_next_section:
+        section[0] = '\0';
+        for (i = next_i, j = 0; i < len_in + 1; i++) {
+            if (';' == in[i]  ||  '\0' == in[i]) {
+                section[j] = '\0';
+                next_i = i + 1;
+                break;
+            } else {
+                section[j++] = in[i];
+            }
+        }
     }
 
-    if (ptr) free(ptr);
+    if (ptr)  free(ptr);
 
     return 0;
 }
@@ -272,8 +362,8 @@ static int query_aia(dbconn *db) {
     int64_t result;
     int64_t i;
     int ret;
-    size_t const DST_SZ = 1030;
-    char scrubbed_str[DST_SZ];
+//    size_t const DST_SZ = DB_URI_LEN + 1;
+//    char scrubbed_str[DST_SZ];
 
     result = db_chaser_read_aia(db, &results, &num_malloced,
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
@@ -283,8 +373,8 @@ static int query_aia(dbconn *db) {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - result);
         for (i = 0; i < result; i++) {
-            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
-            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
+//            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
+//            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -307,8 +397,8 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
     int64_t result;
     int64_t i;
     int ret;
-    size_t const DST_SZ = 1030;
-    char scrubbed_str[DST_SZ];
+//    size_t const DST_SZ = DB_URI_LEN + 1;
+//    char scrubbed_str[DST_SZ];
 
     result = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
             restrict_by_next_update, num_hours);
@@ -318,8 +408,8 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - result);
         for (i = 0; i < result; i++) {
-            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
-            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
+//            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
+//            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -342,8 +432,8 @@ static int query_sia(dbconn *db, int chase_not_yet_validated) {
     int64_t result;
     int64_t i;
     int ret;
-    size_t const DST_SZ = 1030;
-    char scrubbed_str[DST_SZ];
+//    size_t const DST_SZ = DB_URI_LEN + 1;
+//    char scrubbed_str[DST_SZ];
 
     result = db_chaser_read_sia(db, &results, &num_malloced,
             chase_not_yet_validated, SCM_FLAG_VALIDATED);
@@ -353,8 +443,8 @@ static int query_sia(dbconn *db, int chase_not_yet_validated) {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - result);
         for (i = 0; i < result; i++) {
-            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
-            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
+//            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
+//            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -434,12 +524,12 @@ int main(int argc, char **argv) {
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
 
-    size_t const MAX_URI_LEN = 1024;
-    size_t const TMP_STR_LEN = MAX_URI_LEN + 2;
-    char   msg[TMP_STR_LEN];  // temp string storage
+    char const *LINE_PREFIX = "DIR=";
+    size_t const LEN_PREFIX = strlen(LINE_PREFIX);
+    char   msg[LEN_PREFIX + DB_URI_LEN + 1];  // temp string storage
     size_t i;
-    char   delimiter = '\0';
-    size_t const DST_SZ = TMP_STR_LEN + 1;
+    char   output_delimiter = '\0';
+    size_t const DST_SZ = sizeof(msg);
     char   scrubbed_str[DST_SZ];  // for printing user input
 
     // parse the command-line flags
@@ -477,8 +567,6 @@ int main(int argc, char **argv) {
     }
 
     // read uris from file
-    char const *LINE_PREFIX = "DIR=";
-    size_t const LEN_PREFIX = strlen(LINE_PREFIX);
     fp = fopen(config_file, "r");
     if (!fp) {
         LOG(LOG_ERR, "Could not open file: %s", config_file);
@@ -488,15 +576,15 @@ int main(int argc, char **argv) {
         if (strncmp(LINE_PREFIX, msg, LEN_PREFIX)) {
             continue;
         }
-        if (MAX_URI_LEN < strlen(msg)) {
-            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
-            snprintf(msg, MAX_URI_LEN, "%s", scrubbed_str);
-            LOG(LOG_WARNING, "uri too long, dropping:  %s <truncated>", msg);
+        if (DB_URI_LEN < strlen(msg)) {
+            scrub_for_print(scrubbed_str, msg + LEN_PREFIX, DST_SZ, NULL, "");
+            snprintf(msg, 50, "%s", scrubbed_str);
+            LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
             continue;
         }
         if (handle_uri_string(&msg[LEN_PREFIX])) {
-            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
-            LOG(LOG_WARNING, "did not load uri:  %s", scrubbed_str);
+            scrub_for_print(scrubbed_str, msg + LEN_PREFIX, DST_SZ, NULL, "");
+            LOG(LOG_WARNING, "did not load uri from file:  %s", scrubbed_str);
         }
     }
     fclose(fp);
@@ -593,7 +681,7 @@ int main(int argc, char **argv) {
     LOG(LOG_DEBUG, "outputting %zu rsync uris", num_uris);
     for (i = 0; i < num_uris; i++) {
         fprintf(stdout, "%s%s", RSYNC_SCHEME, uris[i]);
-        putchar(delimiter);
+        putchar(output_delimiter);
     }
 
     free_uris();
