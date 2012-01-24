@@ -82,26 +82,26 @@ CREATE TABLE rpstir_rpki_cert_crldp (
 );
 
 -- TODO: ask Andrew if there's anything else here to change
-CREATE TABLE `rpstir_rpki_cert` (
-  `hash` binary(32) NOT NULL,
-  `subject` varchar(512) DEFAULT NULL,
-  `issuer` varchar(512) NOT NULL,
-  `sn` bigint(20) NOT NULL,
-  `ski` varchar(128) NOT NULL,
-  `aki` varchar(128) DEFAULT NULL,
-  `sig` varchar(520) NOT NULL, -- TODO: should this be in the database?
-  `valfrom` datetime NOT NULL,
-  `valto` datetime NOT NULL,
-  `sigval` int(10) unsigned DEFAULT '0', -- TODO: what is this?
-  `ts_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- TODO: is this needed?
+CREATE TABLE rpstir_rpki_cert (
+  hash binary(32) NOT NULL,
+  subject varchar(512) DEFAULT NULL,
+  issuer varchar(512) NOT NULL,
+  sn bigint NOT NULL,
+  ski varchar(128) NOT NULL,
+  aki varchar(128) DEFAULT NULL,
+  sig varchar(520) NOT NULL, -- TODO: should this be in the database?
+  valfrom datetime NOT NULL,
+  valto datetime NOT NULL,
+  sigval int unsigned DEFAULT '0', -- TODO: what is this?
+  ts_mod timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- TODO: is this needed?
   inherit_asn boolean NOT NULL DEFAULT FALSE,
   inherit_ip boolean NOT NULL DEFAULT FALSE,
   PRIMARY KEY (hash),
-  KEY `ski` (`ski`,`subject`),
-  KEY `aki` (`aki`,`issuer`),
-  KEY `sig` (`sig`),
-  KEY `isn` (`issuer`,`sn`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  KEY ski (ski, subject),
+  KEY aki (aki, issuer),
+  KEY sig (sig),
+  KEY isn (issuer, sn)
+);
 
 CREATE TABLE rpstir_rpki_signs (
   signed_hash binary(32) NOT NULL,
@@ -117,17 +117,17 @@ CREATE TABLE rpstir_rpki_crl_sn (
   PRIMARY KEY (hash, serial)
 );
 
-CREATE TABLE `rpstir_rpki_crl` (
-  `hash` binary(32) NOT NULL,
-  `issuer` varchar(512) NOT NULL,
-  `last_upd` datetime NOT NULL,
-  `next_upd` datetime NOT NULL,
-  `crlno` bigint(20) DEFAULT '0',
-  `aki` varchar(128) NOT NULL,
-  PRIMARY KEY (`hash`),
-  KEY `issuer` (`issuer`),
-  KEY `aki` (`aki`),
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE rpstir_rpki_crl (
+  hash binary(32) NOT NULL,
+  issuer varchar(512) NOT NULL,
+  last_upd datetime NOT NULL,
+  next_upd datetime NOT NULL,
+  crlno bigint DEFAULT '0',
+  aki varchar(128) NOT NULL,
+  PRIMARY KEY (hash),
+  KEY issuer (issuer),
+  KEY aki (aki)
+);
 
 CREATE TABLE rpstir_rpki_manifest_files (
   hash binary(32) NOT NULL,
@@ -136,14 +136,14 @@ CREATE TABLE rpstir_rpki_manifest_files (
   PRIMARY KEY (hash, filename)
 );
 
-CREATE TABLE `rpstir_rpki_manifest` (
-  `hash` binary(32) NOT NULL,
+CREATE TABLE rpstir_rpki_manifest (
+  hash binary(32) NOT NULL,
   manifest_number int unsigned NOT NULL,
-  `this_upd` datetime NOT NULL,
-  `next_upd` datetime NOT NULL,
+  this_upd datetime NOT NULL,
+  next_upd datetime NOT NULL,
   file_hash_alg ENUM('sha256') NOT NULL,
-  PRIMARY KEY (`hash`),
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (hash),
+);
 
 CREATE TABLE rpstir_prefix (
   id bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -163,38 +163,38 @@ CREATE TABLE rpstir_rpki_roa_prefix (
   PRIMARY KEY (hash, prefix_id)
 );
 
-CREATE TABLE `rpstir_rpki_roa` (
-  `hash` binary(32) NOT NULL,
+CREATE TABLE rpstir_rpki_roa (
+  hash binary(32) NOT NULL,
   asn int unsigned NOT NULL,
-  PRIMARY KEY (`hash`),
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (hash)
+);
 
-CREATE TABLE `rpstir_rtr_full` (
-  `serial_num` int(10) unsigned NOT NULL,
-  `asn` int(10) unsigned NOT NULL,
+CREATE TABLE rpstir_rtr_full (
+  serial_num int unsigned NOT NULL,
+  asn unsigned NOT NULL,
   prefix_id bigint unsigned NOT NULL
-  PRIMARY KEY (`serial_num`,`asn`,`prefix_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (serial_num, asn, prefix_id)
+);
 
-CREATE TABLE `rpstir_rtr_incremental` (
-  `serial_num` int(10) unsigned NOT NULL,
-  `is_announce` tinyint(1) NOT NULL,
-  `asn` int(10) unsigned NOT NULL,
-  prefix_id bigint unsigned NOT NULL
-  PRIMARY KEY (`serial_num`,`asn`,`prefix_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE rpstir_rtr_incremental (
+  serial_num int unsigned NOT NULL,
+  is_announce boolean NOT NULL,
+  asn int unsigned NOT NULL,
+  prefix_id bigint unsigned NOT NULL,
+  PRIMARY KEY (serial_num, asn, prefix_id)
+);
 
-CREATE TABLE `rpstir_rtr_session` (
-  `session_id` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`session_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE rpstir_rtr_session (
+  session_id smallint unsigned NOT NULL,
+  PRIMARY KEY (session_id)
+);
 
-CREATE TABLE `rpstir_rtr_update` (
-  `serial_num` int(10) unsigned NOT NULL,
-  `prev_serial_num` int(10) unsigned DEFAULT NULL,
-  `create_time` datetime NOT NULL,
-  `has_full` tinyint(1) NOT NULL,
-  PRIMARY KEY (`serial_num`),
-  UNIQUE KEY `prev_serial_num` (`prev_serial_num`),
-  KEY `create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE rpstir_rtr_update (
+  serial_num int unsigned NOT NULL,
+  prev_serial_num int unsigned DEFAULT NULL,
+  create_time datetime NOT NULL,
+  has_full boolean NOT NULL,
+  PRIMARY KEY (serial_num),
+  UNIQUE KEY prev_serial_num (prev_serial_num),
+  KEY create_time (create_time)
+);
