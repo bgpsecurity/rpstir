@@ -156,7 +156,7 @@
 #define ERR_SCM_BADREVSNUM  -148        /* Invalid revoked serial number */
 #define ERR_SCM_NOCRLNUM    -149        /* No CRL number extension */
 #define ERR_SCM_BADMFTNUM   -150        /* invalid manifest number */
-#define ERR_SCM_MAXERR      -151
+#define ERR_SCM_MAXERR      -150
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \

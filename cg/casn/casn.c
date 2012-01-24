@@ -974,7 +974,7 @@ int _mark_definees(struct casn *casnp, uchar *wherep, int index)
 	    tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'));
             if (!tcasnp) return 0;
 		// if more than 1 'digit', go down
-            if (wherep[1] >= '0' && !(tcasnp++)->type & ASN_CONSTRUCTED)
+            if (wherep[1] >= '0' && (!((tcasnp++)->type & ASN_CONSTRUCTED)))
                 return 0;
             }
         }
