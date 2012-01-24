@@ -177,16 +177,15 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     ulong length_aki;
     memset(bind, 0, sizeof(bind));
     // the aia.  note: this can be null in the db
-    size_t const DB_AIA_LEN = 1024;
-    char aia[DB_AIA_LEN + 2];
+    char aia[DB_URI_LEN + 1];  // size of db field plus null terminator
     bind[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind[0].buffer = aia;
-    bind[0].buffer_length = DB_AIA_LEN + 1;
+    bind[0].buffer_length = DB_URI_LEN + 1;
     bind[0].is_null = &is_null;
     bind[0].length = &length;
     // the aki.  note: this can be null in the db
     size_t const DB_AKI_LEN = 128;
-    char aki[DB_AKI_LEN + 2];
+    char aki[DB_AKI_LEN + 1];  // size of db field plus null terminator
     bind[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind[0].buffer = aki;
     bind[0].buffer_length = DB_AKI_LEN + 1;
@@ -312,11 +311,10 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     ulong length;
     memset(bind, 0, sizeof(bind));
     // the crldp.  note: this can be null in the db
-    size_t const DB_CRLDP_LEN = 1024;
-    char crldp[DB_CRLDP_LEN + 2];
+    char crldp[DB_URI_LEN + 1];  // size of db field plus null terminator
     bind[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind[0].buffer = crldp;
-    bind[0].buffer_length = DB_CRLDP_LEN + 1;
+    bind[0].buffer_length = DB_URI_LEN + 1;
     bind[0].is_null = &is_null;
     bind[0].length = &length;
 
@@ -432,11 +430,10 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     ulong length;
     memset(bind, 0, sizeof(bind));
     // the sia.  note: this can be null in the db
-    size_t const DB_SIA_LEN = 1024;
-    char sia[DB_SIA_LEN + 2];
+    char sia[DB_URI_LEN + 1];  // size of db field plus null terminator
     bind[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind[0].buffer = sia;
-    bind[0].buffer_length = DB_SIA_LEN + 1;
+    bind[0].buffer_length = DB_URI_LEN + 1;
     bind[0].is_null = &is_null;
     bind[0].length = &length;
 

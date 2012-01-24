@@ -10,6 +10,7 @@
 #include "connect.h"
 
 #define OUT_OF_MEMORY -2
+#define DB_URI_LEN 1024
 
 
 int db_chaser_read_time(dbconn *conn,
