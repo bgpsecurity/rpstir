@@ -1,7 +1,6 @@
 -- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
 
 -- TODO: check KEYs
--- TODO: check type of serial number. maybe it should be int unsigned
 -- TODO: check type of crlno. maybe it should be int unsigned
 -- TODO: check type of aki and ski. maybe should be (var)binary
 
@@ -86,7 +85,7 @@ CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
   subject varchar(512) DEFAULT NULL, -- TODO: should be NOT NULL?
   issuer varchar(512) NOT NULL,
-  sn bigint NOT NULL,
+  sn bigint unsigned NOT NULL,
   ski varchar(128) NOT NULL,
   aki varchar(128) DEFAULT NULL,
   sig varchar(520) NOT NULL, -- TODO: should this be in the database?
