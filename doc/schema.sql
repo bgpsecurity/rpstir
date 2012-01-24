@@ -22,7 +22,7 @@ CREATE TABLE rpstir_rpki_file (
                             -- hash maybe should be the same as the alg used by manifests?
                             -- length would be different for different choice of hash function
   downloaded datetime NOT NULL,
-  file_type ENUM('cer', 'crl', 'roa') DEFAULT NULL, -- NULL indicates unrecognized
+  file_type ENUM('cer', 'crl', 'roa', 'mft') DEFAULT NULL, -- NULL indicates unrecognized
   parses boolean NOT NULL DEFAULT FALSE, -- avoid trying to reparse the same file if it fails the first time
   flags bigint unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (hash, uri), -- more useful as a constraint than for SELECT
