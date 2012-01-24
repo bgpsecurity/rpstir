@@ -6,7 +6,6 @@
 CREATE TABLE rpstir_metadata (
   schema_version int unsigned DEFAULT NULL, -- NULL indicates a development version with no version number
   installed timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  root_dir varchar(4096) NOT NULL,
   PRIMARY KEY (installed)
 );
 
