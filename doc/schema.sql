@@ -1,5 +1,10 @@
 -- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
 
+-- TODO: check KEYs
+-- TODO: check type of serial number. maybe it should be int unsigned
+-- TODO: check type of crlno. maybe it should be int unsigned
+-- TODO: check type of aki and ski. maybe should be (var)binary
+
 -- database-level metadata
 -- current version: SELECT schema_version FROM rpstir_metadata ORDER BY installed DESC LIMIT 1;
 -- on initializing or upgrading the schema to version foo: INSERT INTO rpstir_metadata (schema_version) VALUES (foo);
