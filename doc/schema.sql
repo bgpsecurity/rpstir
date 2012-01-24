@@ -81,7 +81,7 @@ CREATE TABLE rpstir_rpki_cert_crldp (
 -- TODO: ask Andrew if there's anything else here to change
 CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
-  subject varchar(512) DEFAULT NULL, -- TODO: should be NOT NULL?
+  subject varchar(512) NOT NULL,
   issuer varchar(512) NOT NULL,
   sn bigint unsigned NOT NULL,
   ski binary(20) NOT NULL,
