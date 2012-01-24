@@ -1,5 +1,5 @@
 /**
-	Functions used for accessing the RTR database.
+    Functions to access the database for chaser.
 */
 
 #ifndef _UTILS_MYSQL_CHASE_H
@@ -9,8 +9,8 @@
 
 #include "connect.h"
 
+#define OUT_OF_MEMORY -2
 
-int db_chaser_init(dbconn *conn);
 
 int db_chaser_read_time(dbconn *conn,
         char *prev, size_t const prev_len,
@@ -28,8 +28,6 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         int64_t *num_malloced,
         int chase_not_yet_validated, int validated_flag);
-
-void db_chaser_close(dbconn *conn);
 
 
 #endif

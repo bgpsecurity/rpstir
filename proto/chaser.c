@@ -31,25 +31,26 @@
 #include "scm.h"  // for SCM_FLAG_FOO
 #include "scmf.h"  // for SCM_FLAG_FOO
 #include "sqhl.h"  // for SCM_FLAG_FOO
+#include "stringutils.h"
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON
 
 
 static char    **uris = NULL;
-//static size_t  uris_max_sz = 1024 * 1024;
-static size_t  uris_max_sz = 2;
+static size_t  uris_max_sz = 1024 * 1024;
 static size_t  num_uris = 0;
 
 static size_t const TS_LEN = 20;  // "0000-00-00 00:00:00" plus '\0'
 static char *timestamp_prev;
 static char *timestamp_curr;
 static char const * const  RSYNC_SCHEME = "rsync://";
+static int remove_nonprintables = 0;
 
 
 /**=============================================================================
  * @note This function only does a string comparison, not a file lookup.
- * @pre str1 precedes str2, lexicographically.
+ * @pre str1 <= str2, lexicographically.
  * @ret 1 if str2 is a file or directory under str1.
  *      0 otherwise.
 ------------------------------------------------------------------------------*/
@@ -92,13 +93,73 @@ static void free_uris() {
     free(uris);
 }
 
-/**=============================================================================
-// TODO:  David:  let ? and # pass.  Probly not relevant to rsync.
-// TODO:  David is checking what he wants me to do with isprint().Andrew:  warn. uri rfc mention this?
-// TODO:  collapse:  //  (helps is_subsumed() algo, no change to semantics)  (Andrew:  warn)
-------------------------------------------------------------------------------*/
-static int check_uri_chars(char *in) {
 
+/**=============================================================================
+rsync://foo.com/../ should be removed
+rsync://foo.com/a/../b should be collapsed to rsync://foo.com/b
+rsync://foo.com/a/../.. should be removed
+------------------------------------------------------------------------------*/
+static int remove_dot_dot(char *in) {
+
+    return 0;
+}
+
+/**=============================================================================
+// TODO:  warn if any change to a uri.
+
+@note Might modify parameter.
+------------------------------------------------------------------------------*/
+static int check_uri_chars(char *str) {
+    int changed = 0;
+    int found_dot_dot = 0;
+    int i;
+    int j;
+    char last;
+    char this;
+
+    // remove nonprintables
+    if (remove_nonprintables) {
+        for (i = 0, j = 0; i < strlen(str); i++) {
+            if (isprint(str[i])) {
+                str[j] = str[i];
+                j++;
+            } else {
+                changed = 1;
+            }
+        }
+        str[j] = str[i];
+    }
+
+    // Check for "..".  Collapse "//" to "/".  Collapse "/./" to "/".
+    last = str[0];
+    for (i = 1, j = 1; i < strlen(str); i++) {
+        if ('/' == (this = str[i])  &&  '/' == last) {
+            // neither copy the char, nor increment j
+            changed = 1;
+        } else if ('.' == (this = str[i])  &&  '.' == last) {
+            found_dot_dot = 1;
+            str[j] = str[i];
+            j++;
+            last = this;
+        } else if ('.' == (this = str[i])  &&  '/' == last  &&  '/' == str[i + 1]) {
+            // neither copy the char, nor increment j
+            // increment i one extra
+            changed = 1;
+            i++;
+        } else {
+            str[j] = str[i];
+            j++;
+            last = this;
+        }
+    }
+    str[j] = str[i];
+
+    if (found_dot_dot) {
+        remove_dot_dot(str);
+    }
+
+    if (changed)
+        return 1;
 
     return 0;
 }
@@ -107,25 +168,21 @@ static int check_uri_chars(char *in) {
  * @note caller frees param "in"
 ------------------------------------------------------------------------------*/
 static int append_uri(char const *in) {
-    if (!in) {
-        LOG(LOG_ERR, "bad input\n");
-        return -1;
-    }
-
     // check if array is big enough
     if (num_uris == uris_max_sz) {
         uris_max_sz *= 1.6;
         uris = (char **) realloc(uris, uris_max_sz * sizeof(char *));
         if (!uris) {
             LOG(LOG_ERR, "Could not realloc for uris");
-            return -2;
+            return OUT_OF_MEMORY;
         }
     }
 
+    // copy input to array
     uris[num_uris] = strdup(in);
     if (!uris[num_uris]) {
         LOG(LOG_ERR, "Could not alloc for uri");
-        return -2;
+        return OUT_OF_MEMORY;
     }
     num_uris++;
 
@@ -135,7 +192,7 @@ static int append_uri(char const *in) {
 /**=============================================================================
  * @note caller frees param "in"
 ------------------------------------------------------------------------------*/
-static void handle_uri_string(char const *in) {
+static int handle_uri_string(char const *in) {
     char *copy;
     char *section;
     size_t const DST_SZ = 1030;
@@ -148,7 +205,7 @@ static void handle_uri_string(char const *in) {
     copy = malloc((len_in + 1) * sizeof(char));
     if (!copy) {
         LOG(LOG_ERR, "out of memory");
-        return;
+        return OUT_OF_MEMORY;
     }
     memcpy(copy, in, len_in);
     copy[len_in] = '\0';
@@ -180,7 +237,7 @@ static void handle_uri_string(char const *in) {
             section += len_scheme;
         } else {
             scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
-            LOG(LOG_WARNING, "dropping non-rsync uri:  \"%s\"", scrubbed_str);
+            LOG(LOG_DEBUG, "dropping non-rsync uri:  \"%s\"", scrubbed_str);
             section = strtok(NULL, delimiter);
             continue;
         }
@@ -194,14 +251,17 @@ static void handle_uri_string(char const *in) {
         }
 
         // append to uris[]
-        append_uri(section);
+        if (OUT_OF_MEMORY == append_uri(section)) {
+            if (ptr) free(ptr);
+            return OUT_OF_MEMORY;
+        }
 
         section = strtok(NULL, delimiter);
     }
 
     if (ptr) free(ptr);
 
-    return;
+    return 0;
 }
 
 /**=============================================================================
@@ -209,24 +269,29 @@ static void handle_uri_string(char const *in) {
 static int query_aia(dbconn *db) {
     char **results = NULL;
     int64_t num_malloced = 0;
-    int64_t ret;
+    int64_t result;
     int64_t i;
+    int ret;
     size_t const DST_SZ = 1030;
     char scrubbed_str[DST_SZ];
 
-    ret = db_chaser_read_aia(db, &results, &num_malloced,
+    result = db_chaser_read_aia(db, &results, &num_malloced,
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
-    if (ret == -1) {
+    if (result == -1) {
         return -1;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
-                num_malloced, num_malloced - ret);
-        for (i = 0; i < ret; i++) {
+                num_malloced, num_malloced - result);
+        for (i = 0; i < result; i++) {
             scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
             LOG(LOG_DEBUG, "%s\n", scrubbed_str);
-            handle_uri_string(results[i]);
+            ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
+            if (OUT_OF_MEMORY == ret) {
+                if (results) free(results);
+                return ret;
+            }
         }
         if (results) free(results);
     }
@@ -239,24 +304,29 @@ static int query_aia(dbconn *db) {
 static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours) {
     char **results = NULL;
     int64_t num_malloced = 0;
-    int64_t ret;
+    int64_t result;
     int64_t i;
+    int ret;
     size_t const DST_SZ = 1030;
     char scrubbed_str[DST_SZ];
 
-    ret = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
+    result = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
             restrict_by_next_update, num_hours);
-    if (ret == -1) {
+    if (result == -1) {
         return -1;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
-                num_malloced, num_malloced - ret);
-        for (i = 0; i < ret; i++) {
+                num_malloced, num_malloced - result);
+        for (i = 0; i < result; i++) {
             scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
             LOG(LOG_DEBUG, "%s\n", scrubbed_str);
-            handle_uri_string(results[i]);
+            ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
+            if (OUT_OF_MEMORY == ret) {
+                if (results) free(results);
+                return ret;
+            }
         }
         if (results) free(results);
     }
@@ -269,24 +339,29 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
 static int query_sia(dbconn *db, int chase_not_yet_validated) {
     char **results = NULL;
     int64_t num_malloced = 0;
-    int64_t ret;
+    int64_t result;
     int64_t i;
+    int ret;
     size_t const DST_SZ = 1030;
     char scrubbed_str[DST_SZ];
 
-    ret = db_chaser_read_sia(db, &results, &num_malloced,
+    result = db_chaser_read_sia(db, &results, &num_malloced,
             chase_not_yet_validated, SCM_FLAG_VALIDATED);
-    if (ret == -1) {
+    if (result == -1) {
         return -1;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
-                num_malloced, num_malloced - ret);
-        for (i = 0; i < ret; i++) {
+                num_malloced, num_malloced - result);
+        for (i = 0; i < result; i++) {
             scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
             LOG(LOG_DEBUG, "%s\n", scrubbed_str);
-            handle_uri_string(results[i]);
+            ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
+            if (OUT_OF_MEMORY == ret) {
+                if (results) free(results);
+                return ret;
+            }
         }
         if (results) free(results);
     }
@@ -305,7 +380,6 @@ static int query_read_timestamps(dbconn *db) {
             timestamp_curr, TS_LEN);
     if (ret) {
         LOG(LOG_ERR, "didn't read times");
-        // TODO:  handle the error
         return -1;
     }
 
@@ -323,8 +397,7 @@ static int query_write_timestamp(dbconn *db) {
 
     ret = db_chaser_write_time(db, timestamp_curr);
     if (ret) {
-        LOG(LOG_ERR, "didn't write time");
-        // TODO:  handle the error
+        LOG(LOG_ERR, "didn't write timestamp to db");
         return -1;
     }
 
@@ -338,6 +411,7 @@ static int printUsage() {
     fprintf(stderr, "  -a           chase AIAs  (default:  don't chase AIAs)\n");
     fprintf(stderr, "  -d hours     chase CRLs where 'next update < hours'  (default:  chase all CRLs)\n");
     fprintf(stderr, "  -f filename  use filename instead of 'additional_rsync_uris.config'\n");
+    fprintf(stderr, "  -p           remove nonprintable chars from uris  (default:  don't remove)\n");
     fprintf(stderr, "  -y           chase not-yet-validated  (default:  only chase validated)\n");
     fprintf(stderr, "  -h           this listing\n");
     return -1;
@@ -356,16 +430,17 @@ int main(int argc, char **argv) {
     int    restrict_crls_by_next_update = 0;
     size_t num_hours = 0;
     int    chase_not_yet_validated = 0;
-    int    load_uris_from_file = 0;
 
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
 
-    char   msg[1024];  // temp string storage
+    size_t const MAX_URI_LEN = 1024;
+    size_t const TMP_STR_LEN = MAX_URI_LEN + 2;
+    char   msg[TMP_STR_LEN];  // temp string storage
     size_t i;
     char   delimiter = '\0';
-    size_t const DST_SZ = 1030;
-    char   scrubbed_str[DST_SZ];
+    size_t const DST_SZ = TMP_STR_LEN + 1;
+    char   scrubbed_str[DST_SZ];  // for printing user input
 
     // parse the command-line flags
     int ch;
@@ -379,8 +454,10 @@ int main(int argc, char **argv) {
             num_hours = (size_t) strtoul(optarg, NULL, 10);
             break;
         case 'f':
-            load_uris_from_file = 1;
             config_file = optarg;
+            break;
+        case 'p':
+            remove_nonprintables = 1;
             break;
         case 'y':
             chase_not_yet_validated = 1;
@@ -402,39 +479,37 @@ int main(int argc, char **argv) {
     // read uris from file
     char const *LINE_PREFIX = "DIR=";
     size_t const LEN_PREFIX = strlen(LINE_PREFIX);
-    if (load_uris_from_file) {
-        fp = fopen(config_file, "r");
-        if (!fp) {
-            LOG(LOG_WARNING, "Could not open file: %s", config_file);
-            goto cant_open_file;
-        }
-
-        while (fgets (msg, sizeof(msg), fp) != NULL) {
-            if (strncmp(LINE_PREFIX, msg, LEN_PREFIX)) {
-                continue;
-            }
-            if (sizeof(msg) == strlen(msg)) {
-                scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
-                LOG(LOG_WARNING, "uri string too long, dropping:  %s", scrubbed_str);
-                continue;
-            }
-            handle_uri_string(&msg[LEN_PREFIX]);
-        }
-
-        fclose(fp);
-        LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris, config_file);
+    fp = fopen(config_file, "r");
+    if (!fp) {
+        LOG(LOG_ERR, "Could not open file: %s", config_file);
+        goto cant_open_file;
     }
+    while (fgets (msg, sizeof(msg), fp) != NULL) {
+        if (strncmp(LINE_PREFIX, msg, LEN_PREFIX)) {
+            continue;
+        }
+        if (MAX_URI_LEN < strlen(msg)) {
+            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
+            snprintf(msg, MAX_URI_LEN, "%s", scrubbed_str);
+            LOG(LOG_WARNING, "uri too long, dropping:  %s <truncated>", msg);
+            continue;
+        }
+        if (handle_uri_string(&msg[LEN_PREFIX])) {
+            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
+            LOG(LOG_WARNING, "did not load uri:  %s", scrubbed_str);
+        }
+    }
+    fclose(fp);
+    LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris, config_file);
     cant_open_file:
 
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
-
     timestamp_prev = (char*)calloc(TS_LEN, sizeof(char));
     timestamp_curr = (char*)calloc(TS_LEN, sizeof(char));
     if (!timestamp_prev  ||  !timestamp_curr) {
         LOG(LOG_ERR, "out of memory");
         return -1;
     }
-
     // initialize database
     if (!db_init()) {
         LOG(LOG_ERR, "can't initialize global DB state");
@@ -448,25 +523,30 @@ int main(int argc, char **argv) {
     }
 
     // look up rsync uris from the db
-    query_read_timestamps(db);
-    query_crldp(db, restrict_crls_by_next_update, num_hours);
-
-    if (chase_aia)
-        query_aia(db);
-
-    query_sia(db, chase_not_yet_validated);
-
-    query_write_timestamp(db);
-
+    int db_ok = 1;
+    if (query_read_timestamps(db))
+        db_ok = 0;
+    if (db_ok  &&  query_crldp(db, restrict_crls_by_next_update, num_hours))
+        db_ok = 0;
+    if (db_ok  &&  chase_aia) {
+        if (query_aia(db))
+            db_ok = 0;
+    }
+    if (db_ok  &&  query_sia(db, chase_not_yet_validated))
+        db_ok = 0;
+    if (db_ok  &&  query_write_timestamp(db))
+        db_ok = 0;
+    // cleanup
     if (timestamp_prev) free(timestamp_prev);
     if (timestamp_curr) free(timestamp_curr);
     if (db != NULL) {
         db_disconnect(db);
         db_close();
     }
-
+    if (!db_ok) {
+        return -1;
+    }
     LOG(LOG_DEBUG, "found total of %zu rsync uris", num_uris);
-
     if (num_uris == 0)
         return 0;
 

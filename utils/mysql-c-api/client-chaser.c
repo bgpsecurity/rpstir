@@ -1,5 +1,5 @@
 /**
-	Functions access the database for the chaser.
+	Functions to access the database for chaser.
  */
 
 #include <inttypes.h>
@@ -219,7 +219,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return -1;
+        return OUT_OF_MEMORY;
     }
 
     uint64_t i;
@@ -245,6 +245,11 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
             continue;
         } else {
             tmp = malloc((length + 1) * sizeof(char));
+            if (!tmp) {
+                LOG(LOG_ERR, "out of memory");
+                mysql_stmt_free_result(stmt);
+                return OUT_OF_MEMORY;
+            }
             memcpy(tmp, aia, length);
             *(tmp + length) = '\0';
             (*results)[num_rows_used] = tmp;
@@ -341,7 +346,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return -1;
+        return OUT_OF_MEMORY;
     }
 
     uint64_t i;
@@ -367,6 +372,11 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
             continue;
         } else {
             tmp = malloc((length + 1) * sizeof(char));
+            if (!tmp) {
+                LOG(LOG_ERR, "out of memory");
+                mysql_stmt_free_result(stmt);
+                return OUT_OF_MEMORY;
+            }
             memcpy(tmp, crldp, length);
             *(tmp + length) = '\0';
             (*results)[num_rows_used] = tmp;
@@ -456,7 +466,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return -1;
+        return OUT_OF_MEMORY;
     }
 
     uint64_t i;
@@ -482,6 +492,11 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
             continue;
         } else {
             tmp = malloc((length + 1) * sizeof(char));
+            if (!tmp) {
+                LOG(LOG_ERR, "out of memory");
+                mysql_stmt_free_result(stmt);
+                return OUT_OF_MEMORY;
+            }
             memcpy(tmp, sia, length);
             *(tmp + length) = '\0';
             (*results)[num_rows_used] = tmp;
