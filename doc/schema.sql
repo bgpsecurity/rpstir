@@ -128,17 +128,16 @@ CREATE TABLE `rpstir_rpki_crl` (
 CREATE TABLE rpstir_rpki_manifest_files (
   hash binary(32) NOT NULL,
   filename varchar(256) NOT NULL,
-  file_hash_alg ENUM('sha256') NOT NULL,
   file_hash varbinary(512) NOT NULL,
   PRIMARY KEY (hash, filename)
 );
 
--- TODO: read I-D
 CREATE TABLE `rpstir_rpki_manifest` (
   `hash` binary(32) NOT NULL,
-  `ski` varchar(128) NOT NULL, -- TODO: is this from the EE? if it is, it should be deleted
+  manifest_number int unsigned NOT NULL,
   `this_upd` datetime NOT NULL,
   `next_upd` datetime NOT NULL,
+  file_hash_alg ENUM('sha256') NOT NULL,
   PRIMARY KEY (`hash`),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
