@@ -159,7 +159,6 @@ CREATE TABLE rpstir_rpki_roa_prefix (
   PRIMARY KEY (hash, prefix_id)
 );
 
--- TODO: read I-D
 CREATE TABLE `rpstir_rpki_roa` (
   `hash` binary(32) NOT NULL,
   asn int unsigned NOT NULL,
