@@ -14,3 +14,17 @@ CMS objects do not need to be stored in the database, except as a recognized mor
 Manifests are lists of files and their hashes in a directory, signed and stored as a CMS object and used to check the contents of a directory.
 ROAs are lists of IP prefixes authorized to be announced by a specified AS number, signed and stored as a CMS object.
 Additionally, the rpstir database is used by the RTR server to store snapshots of ROA data at each serial number and to store the differences between these snapshots.
+
+
+= Requirements =
+
+== Performance ==
+
+TODO: algorithm complexity, e.g. adding a CRL or adding a bunch of certs and testing against a CRL
+
+TODO: common queries that need to be fast
+
+
+== Authenticated Deletion ==
+
+TODO: description of how Content-Addressed Storage helps prevent unauthenticated deletion.
