@@ -268,7 +268,6 @@ static int handle_uri_string(char const *in) {
     char scrubbed_str2[DST_SZ];
     char *ptr;
     size_t len_in = strlen(in);
-    size_t len;
     int ret;
     size_t i, j, next_i;
 
@@ -290,23 +289,6 @@ static int handle_uri_string(char const *in) {
         }
     }
     while ('\0' != section[0]) {
-        //TODO:  any change to a uri gets a warning, at least
-        // trim leading space and quote
-        len = strlen(section);
-        while ((' ' == section[0]  ||  '\'' == section[0]  ||  '"' == section[0])
-                &&  len > 0) {
-            section += 1;
-            len--;
-        }
-
-        // trim trailing space, newline, and quote
-        len = strlen(section);
-        while ((' ' == section[len - 1]  ||  '\n' == section[len - 1]  ||
-                '\'' == section[len - 1]  ||  '"' == section[len - 1])  &&  len > 0) {
-            section[len - 1] = '\0';
-            len--;
-        }
-
         // check,trim rsync scheme
         size_t len_scheme = strlen(RSYNC_SCHEME);
         if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
@@ -582,6 +564,9 @@ int main(int argc, char **argv) {
             LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
             continue;
         }
+        // strip the trailing \n from fgets
+        if (0 < strlen(msg))
+            msg[strlen(msg) - 1] = '\0';
         if (handle_uri_string(&msg[LEN_PREFIX])) {
             scrub_for_print(scrubbed_str, msg + LEN_PREFIX, DST_SZ, NULL, "");
             LOG(LOG_WARNING, "did not load uri from file:  %s", scrubbed_str);
