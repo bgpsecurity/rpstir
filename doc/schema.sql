@@ -2,6 +2,8 @@
 
 -- NOTE: unless otherwise specified, all hash columns of type binary(32) are the sha256 of the entire file
 
+-- NOTE: CMS objects are stored with the same hash in both rpstir_rpki_cert and their respective type's table (e.g. rpstir_rpki_manifest)
+
 -- TODO: check KEYs
 
 -- database-level metadata
