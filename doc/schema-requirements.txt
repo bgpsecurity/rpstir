@@ -1,0 +1,16 @@
+= Introduction =
+
+The RPSTIR software uses a SQL database to keep track of its local cache of the global Resource Public Key Infrastructure (RPKI).
+The database speeds up common use cases by allowing RPSTIR to cryptographically check the validity and freshness of each affected object as new objects are added instead, of needing to check for each query of the RPKI.
+It's generally assumed RPKI objects will be read more than they will be added or updated.
+
+There are various types of objects in RPKI that need to be represented by the database.
+Trust Anchors are certificates that are trusted via external means to sign any CA or EE certificate.
+CA certificates are certificates that may sign other CA or EE certificates, but may only grant those certificates resources it possesses itself.
+EE certificates are signed by CA certificates are used to sign things other than certificates.
+CRLs are lists of revoked certificates, signed by a CA certificate.
+CMS objects are files that contain both an EE certificate signed by a CA and a blob of data signed by the EE.
+CMS objects do not need to be stored in the database, except as a recognized more specific type below combined with an EE certificate.
+Manifests are lists of files and their hashes in a directory, signed and stored as a CMS object and used to check the contents of a directory.
+ROAs are lists of IP prefixes authorized to be announced by a specified AS number, signed and stored as a CMS object.
+Additionally, the rpstir database is used by the RTR server to store snapshots of ROA data at each serial number and to store the differences between these snapshots.
