@@ -58,7 +58,7 @@ static const char * _queries_chaser[] = {
         // DB_PSTMT_CHASER_GET_CRLDP
         "select crldp from rpki_cert left join rpki_crl "
         " on rpki_cert.aki = rpki_crl.aki "
-        " where rpki_crl.next_upd < TIMESTAMPADD(HOUR, ?, ?)",
+        " where rpki_crl.next_upd < TIMESTAMPADD(SECOND, ?, ?)",
 
         // DB_PSTMT_CHASER_GET_SIA
         "select sia from rpki_cert "
