@@ -206,6 +206,7 @@ int main(int argc, char *argv[])
         log_msg(LOG_ERR, "tcpsocket failed...");
         exit(-1);
       }
+      log_msg(LOG_INFO, "Established connection to port %d", portno);
     } else if (uflag) {
       if (udpsocket(&wport, portno) != TRUE) {
         log_msg(LOG_ERR, "udpsocket failed...");
