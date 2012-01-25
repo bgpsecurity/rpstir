@@ -16,7 +16,7 @@ CREATE TABLE rpstir_metadata (
 -- (bi)map URIs to file hashes
 -- hashes are used as unique IDs for all types of rpki objects in this schema
 CREATE TABLE rpstir_rpki_file (
-  uri varchar(1024) NOT NULL, -- where the file was downloaded from
+  uri varchar(1023) NOT NULL, -- where the file was downloaded from
   hash binary(32) NOT NULL, -- sha256 maybe?, filename could be e.g. /path/to/rpki/CACHE/01/23456789abcdef...
                             -- hash maybe should be the same as the alg used by manifests?
                             -- length would be different for different choice of hash function
@@ -62,7 +62,7 @@ CREATE TABLE rpstir_rpki_cert_ip (
 CREATE TABLE rpstir_rpki_cert_aia (
   hash binary(32) NOT NULL,
   preference int unsigned NOT NULL, -- lower number is more preferred
-  uri varchar(1024) NOT NULL,
+  uri varchar(1023) NOT NULL,
   PRIMARY KEY (hash, preference)
 );
 
@@ -70,20 +70,20 @@ CREATE TABLE rpstir_rpki_cert_sia (
   hash binary(32) NOT NULL,
   method ENUM('id-ad-caRepository', 'id-ad-rpkiManifest', 'id-ad-signedObject') NOT NULL,
   preference int unsigned NOT NULL, -- lower number is more preferred
-  uri varchar(1024) NOT NULL,
+  uri varchar(1023) NOT NULL,
   PRIMARY KEY (hash, method, preference)
 );
 
 CREATE TABLE rpstir_rpki_cert_crldp (
   hash binary(32) NOT NULL,
-  uri varchar(1024) NOT NULL,
+  uri varchar(1023) NOT NULL,
   PRIMARY KEY (hash, uri)
 );
 
 CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
-  subject varchar(512) NOT NULL,
-  issuer varchar(512) NOT NULL,
+  subject varchar(511) NOT NULL,
+  issuer varchar(511) NOT NULL,
   sn bigint unsigned NOT NULL,
   ski binary(20) NOT NULL,
   aki binary(20) DEFAULT NULL,
@@ -114,7 +114,7 @@ CREATE TABLE rpstir_rpki_crl_sn (
 
 CREATE TABLE rpstir_rpki_crl (
   hash binary(32) NOT NULL,
-  issuer varchar(512) NOT NULL,
+  issuer varchar(511) NOT NULL,
   last_upd datetime NOT NULL,
   next_upd datetime NOT NULL,
   crlno int unsigned NOT NULL,
@@ -126,7 +126,7 @@ CREATE TABLE rpstir_rpki_crl (
 
 CREATE TABLE rpstir_rpki_manifest_files (
   hash binary(32) NOT NULL,
-  filename varchar(256) NOT NULL,
+  filename varchar(255) NOT NULL,
   file_hash varbinary(512) NOT NULL,
   PRIMARY KEY (hash, filename)
 );
