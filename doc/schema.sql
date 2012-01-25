@@ -1,5 +1,7 @@
 -- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
 
+-- NOTE: unless otherwise specified, all hash columns of type binary(32) are the sha256 of the entire file
+
 -- TODO: check KEYs
 
 -- database-level metadata
@@ -78,7 +80,6 @@ CREATE TABLE rpstir_rpki_cert_crldp (
   PRIMARY KEY (hash, uri)
 );
 
--- TODO: ask Andrew if there's anything else here to change
 CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
   subject varchar(512) NOT NULL,
@@ -86,11 +87,8 @@ CREATE TABLE rpstir_rpki_cert (
   sn bigint unsigned NOT NULL,
   ski binary(20) NOT NULL,
   aki binary(20) DEFAULT NULL,
-  sig varchar(520) NOT NULL, -- TODO: should this be in the database?
   valfrom datetime NOT NULL,
   valto datetime NOT NULL,
-  sigval int unsigned DEFAULT '0', -- TODO: what is this?
-  ts_mod timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- TODO: is this needed?
   inherit_asn boolean NOT NULL DEFAULT FALSE,
   inherit_ip boolean NOT NULL DEFAULT FALSE,
   PRIMARY KEY (hash),
@@ -103,7 +101,7 @@ CREATE TABLE rpstir_rpki_cert (
 CREATE TABLE rpstir_rpki_signs (
   signed_hash binary(32) NOT NULL,
   signer_hash binary(32) NOT NULL,
-  correct boolean NOT NULL DEFAULT FALSE,
+  correct boolean NOT NULL DEFAULT FALSE, -- correctness of the signature only
   PRIMARY KEY (signed_hash, signer_hash)
 );
 
