@@ -35,17 +35,8 @@ tcpsocket(struct write_port *wport, int portno)
     return(FALSE);
   }
                                                               
-//  wport->host = gethostbyname("127.0.0.1");                        
-  gethostname(hn, 256);
-  wport->host = gethostbyname(hn);                        
-  if (!(wport->host)) {
-    perror("could not create hostent from gethostbyname(\"127.0.0.1\")");
-    return(FALSE);
-  }
-
   memset(&(wport->server_addr), '\0', sizeof(struct sockaddr_in));
-  memcpy(&(wport->server_addr.sin_addr.s_addr), wport->host->h_addr,
-         wport->host->h_length);
+  wport->server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   wport->server_addr.sin_family = AF_INET;
   wport->server_addr.sin_port = htons(portno);
 
@@ -93,15 +84,8 @@ udpsocket(struct write_port *wport, int portno)
     return(FALSE);
   }
 
-  wport->host = gethostbyname("127.0.0.1");
-  if (!(wport->host)) {
-    perror("could not create hostent from gethostbyname(\"127.0.0.1\")");
-    return(FALSE);
-  }
-
   memset(&(wport->server_addr), '\0', sizeof(struct sockaddr_in));
-  memcpy(&(wport->server_addr.sin_addr.s_addr), wport->host->h_addr,
-         wport->host->h_length);
+  wport->server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   wport->server_addr.sin_family = AF_INET;
   wport->server_addr.sin_port = htons(portno);
 
