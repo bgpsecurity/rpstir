@@ -4,6 +4,8 @@
 AM_CFLAGS= -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
+chaser_CFLAGS = $(AM_CFLAGS) -Wextra -Werror
+
 AM_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
 
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../roa-lib -I../roa-utils -I../cg/asn \

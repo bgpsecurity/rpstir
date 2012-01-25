@@ -175,8 +175,8 @@ static int remove_dot_dot(char *s) {
 static int check_uri_chars(char *str) {
     int modified = 0;
     int found_dots = 0;
-    int i;
-    int j;
+    size_t i;
+    size_t j;
     char last;
     char this;
     int ret;
