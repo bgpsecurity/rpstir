@@ -74,7 +74,7 @@ UPDATE rtr_update SET has_full = false WHERE serial_num != @ser AND serial_num !
 DELETE FROM rtr_full WHERE serial_num != @ser AND serial_num != @prev_ser;
 
 DELETE FROM rtr_update
-WHERE create_time < adddate(now(), interval -24 hour)
+WHERE create_time < adddate(now(), interval -4 hour)
 AND serial_num != @ser AND serial_num != @prev_ser;
 
 UPDATE rtr_update AS r1
