@@ -26,18 +26,18 @@
 int
 tcpsocket(struct write_port *wport, int portno)
 {
-  char hn[256];
-
   /* set the wport file descriptor to the socket we've created */
   wport->out_desc = socket(AF_INET, SOCK_STREAM, 0);
   if ( (wport->out_desc) < 0) {
     perror("failed to create socket");
     return(FALSE);
   }
-                                                              
-//  wport->host = gethostbyname("127.0.0.1");                        
-  gethostname(hn, 256);
-  wport->host = gethostbyname(hn);                        
+
+  wport->host = gethostbyname("127.0.0.1");
+  /* // Depending on DNS config, the following could become a remote host.
+    gethostname(hn, 256);
+    wport->host = gethostbyname(hn);
+  */
   if (!(wport->host)) {
     perror("could not create hostent from gethostbyname(\"127.0.0.1\")");
     return(FALSE);
