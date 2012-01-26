@@ -8,7 +8,6 @@
  *
  * test cases:
  * - is x subsumed by y?
- * - are trailing chars removed?
  * - properly distinguish crldps based on next_upd?
  * - correct output for cmd-line combinations?
  * - can crafted bad uri crash the program?  or get thru?
@@ -484,6 +483,7 @@ static int printUsage() {
     fprintf(stderr, "  -d hours     chase CRLs where 'next update < hours'  (default:  chase all CRLs)\n");
     fprintf(stderr, "  -f filename  use filename instead of 'additional_rsync_uris.config'\n");
     fprintf(stderr, "  -p           remove nonprintable chars from uris  (default:  don't remove)\n");
+    fprintf(stderr, "  -t           for testing, don't access the database\n");
     fprintf(stderr, "  -y           chase not-yet-validated  (default:  only chase validated)\n");
     fprintf(stderr, "  -h           this listing\n");
     return -1;
@@ -502,6 +502,7 @@ int main(int argc, char **argv) {
     int    restrict_crls_by_next_update = 0;
     size_t num_hours = 0;
     int    chase_not_yet_validated = 0;
+    int    skip_database = 0;
 
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
@@ -530,6 +531,9 @@ int main(int argc, char **argv) {
             break;
         case 'p':
             remove_nonprintables = 1;
+            break;
+        case 't':
+            skip_database = 1;
             break;
         case 'y':
             chase_not_yet_validated = 1;
@@ -576,6 +580,8 @@ int main(int argc, char **argv) {
     LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris, config_file);
     cant_open_file:
 
+    if (skip_database)  goto skip_database_for_testing;
+
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
     timestamp_prev = (char*)calloc(TS_LEN, sizeof(char));
     timestamp_curr = (char*)calloc(TS_LEN, sizeof(char));
@@ -619,6 +625,7 @@ int main(int argc, char **argv) {
     if (!db_ok) {
         return -1;
     }
+    skip_database_for_testing:
     LOG(LOG_DEBUG, "found total of %zu rsync uris", num_uris);
     if (num_uris == 0)
         return 0;
