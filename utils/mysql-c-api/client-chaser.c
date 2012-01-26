@@ -402,7 +402,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         flag = 0;
     else
         flag = validated_flag;
-    MYSQL_BIND bind_in[1];
+    MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
     // the flag
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
