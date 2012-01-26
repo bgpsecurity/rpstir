@@ -26,8 +26,13 @@ TODO: common queries that need to be fast
 
 == Scope ==
 
-TODO: what goes in the database, what stays in the files
+In general, any data item that can only be used by operations that require the entire file should not go in the database.
+Other file fields should go in the database unless they would impose significant overhead and aren't needed at the current time.
+For example, the signature of a certificate can only be used in combination with the entire certificate and its parent's public key, so the signature should not go in the database.
+On the other hand, the list of revoked certificates in a CRL can be used knowing only the serial number of a certificate covered by that CRL, so the list should go in the database.
 
-== Authenticated Deletion ==
+== Authenticated Deletion and Update ==
 
-TODO: description of how Content-Addressed Storage helps prevent unauthenticated deletion.
+A malicious person with access to a repository but not the CA private key should not be able to cause removal of an RPKI object or revert an object to a previous version.
+To address this, the database may need to reference multiple files with the same URI.
+This is done by storing files by their file hash and mapping URIs to unique files, which has the additional benefit of reducing space requirements if there are duplicated files.
