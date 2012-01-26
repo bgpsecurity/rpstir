@@ -186,11 +186,11 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     // the aki.  note: this can be null in the db
     size_t const DB_AKI_LEN = 128;
     char aki[DB_AKI_LEN + 1];  // size of db field plus null terminator
-    bind[0].buffer_type = MYSQL_TYPE_VAR_STRING;
-    bind[0].buffer = aki;
-    bind[0].buffer_length = DB_AKI_LEN + 1;
-    bind[0].is_null = &is_null_aki;
-    bind[0].length = &length_aki;
+    bind[1].buffer_type = MYSQL_TYPE_VAR_STRING;
+    bind[1].buffer = aki;
+    bind[1].buffer_length = DB_AKI_LEN + 1;
+    bind[1].is_null = &is_null_aki;
+    bind[1].length = &length_aki;
 
     if (mysql_stmt_bind_result(stmt, bind)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
