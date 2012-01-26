@@ -662,6 +662,49 @@ static int check_mft_filenames(struct Manifest *manp)
   return 0;
   }
 
+static int check_mft_duplicate_filenames(struct Manifest *manp)
+  {
+  struct FileAndHash * fahp;
+  char ** filenames;
+  int ret = 0;
+  int file_length, total, i, j;
+  total = num_items(&manp->fileList.self);
+  filenames = malloc(total * sizeof(char *));
+  if (filenames == NULL)
+    {
+    return ERR_SCM_NOMEM;
+    }
+  for (i = 0; i < total; ++i)
+    {
+    fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, i);
+    file_length = vsize_casn(&fahp->file);
+    filenames[i] = malloc(file_length + 1);
+    if (filenames[i] == NULL)
+      {
+      for (j = 0; j < i; ++j)
+        free(filenames[j]);
+      free(filenames);
+      return ERR_SCM_NOMEM;
+      }
+    read_casn(&fahp->file, (unsigned char *)filenames[i]);
+    filenames[i][file_length] = '\0';
+    }
+  qsort(filenames, total, sizeof(char *), strcmp);
+  for (i = 0; i < total; ++i)
+    {
+    if (ret == 0 && i + 1 < total)
+      {
+      if (strcmp(filenames[i], filenames[i+1]) == 0)
+        {
+        ret = ERR_SCM_MFTDUPFILE;
+        }
+      }
+    free(filenames[i]);
+    }
+  free(filenames);
+  return ret;
+  }
+
 int manifestValidate(struct ROA *manp)
   {
   int iRes = cmsValidate(manp);
@@ -678,6 +721,10 @@ int manifestValidate(struct ROA *manp)
   if (size_casn(casnp) > 0 && (read_casn_num(casnp, &val) > 1 ||
       val > 0)) return ERR_SCM_BADMANVER;
   iRes = check_mft_filenames(
+    &manp->content.signedData.encapContentInfo.eContent.manifest);
+  if (iRes < 0)
+    return iRes;
+  iRes = check_mft_duplicate_filenames(
     &manp->content.signedData.encapContentInfo.eContent.manifest);
   if (iRes < 0)
     return iRes;

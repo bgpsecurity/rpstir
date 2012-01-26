@@ -169,6 +169,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
     "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
     "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
+    "Duplicate filenames in manifest", /* ERR_SCM_MFTDUPFILE */
   } ;
 
 char *err2string(int err)
