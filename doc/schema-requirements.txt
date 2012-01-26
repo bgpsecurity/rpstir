@@ -24,6 +24,9 @@ TODO: algorithm complexity, e.g. adding a CRL or adding a bunch of certs and tes
 
 TODO: common queries that need to be fast
 
+== Scope ==
+
+TODO: what goes in the database, what stays in the files
 
 == Authenticated Deletion ==
 
