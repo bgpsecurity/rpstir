@@ -18,11 +18,47 @@ Additionally, the rpstir database is used by the RTR server to store snapshots o
 
 = Requirements =
 
+== Common Operations and Queries ==
+
+Adding any file other than a manifest:
+ * Check manifest if hashes match.
+ * If all files on the manifest are present and there are no files not on the manifest, mark all relevant files as manifest-clean.
+ * If the new file is not on the manifest, mark all relevant files as not manifest-clean.
+
+Adding a cert:
+ * Find parent cert's validity.
+ * Check CRL(s) if the cert is revoked.
+ * If the cert has a chain to a chained cert, recurse over the certs children:
+  * If the child is a ROA with unchecked IP prefixes, check the IP resources (see "Adding a ROA").
+  * Mark the child as chained.
+
+Adding or Updating a CRL:
+ * Find parent cert's validity.
+ * If the new CRL is cryptographically newer than the old CRL, delete the old CRL.
+ * Check all covered certs to see if they're revoked.
+
+Adding a manifest:
+ * If the new manifest is cryptographically newer than the old manifest, delete the old manifest and set all covered files as not manifest-clean.
+ * Check all covered files' hashes.
+ * If the files all match and there are no extra or missing files, mark all the files as manifest-clean.
+
+Adding a ROA:
+ * Recursively find the closest parent cert that doesn't have the inherit bit set for IP addresses.
+ * If there is one, check that the ROAs prefixes are a subset of the above cert's IP resources.
+ * If there is no parent with inherit not set, mark the ROA as needing checking.
+
+Expiring or revoking a cert:
+ * Recurse over the children:
+  * Mark the child as not chained.
+  * If the child is a ROA and all certs between the removed cert and the ROA have inherit set, mark the ROA as needing checking.
+ * Remove the cert.
+
+Finding all valid ROAs:
+ * Query for all ROA data given a set of flags (e.g. chained, manifest-clean, and not needs checking).
+
 == Performance ==
 
 TODO: algorithm complexity, e.g. adding a CRL or adding a bunch of certs and testing against a CRL
-
-TODO: common queries that need to be fast
 
 == Scope ==
 
