@@ -528,21 +528,7 @@ to manually add each of the trust anchors.
 
 3.1.6 Run URI Chaser.
 
-This chases down objects from repositories that may not have been
-loaded but are required.  It checks the AIA, SIA and CRLDP fields of
-all certificates in the database.  A list of repositories to check is
-compiled and written to chaser_rsync.config.
-
-The chaser automatically invokes rsync to download from all the
-repositories.  When each rsync transfer completes, the chaser invokes
-the rsync log parser, which notifies the DB Updater (activated in the
-previous step) of any changes.
-
-    proto/chaser -f initial_chaser.config
-
-The process of chasing URIs and then invoking rsync will automatically
-continue until no new publication directories have been found, or
-until a maximum depth is reached.
+TODO:  rewrite this section for the new rsync wrapper.
 
 3.1.7 Run Garbage Collector.
 
