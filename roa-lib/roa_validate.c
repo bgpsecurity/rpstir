@@ -662,6 +662,11 @@ static int check_mft_filenames(struct Manifest *manp)
   return 0;
   }
 
+static int strcmp_ptr(const void *s1, const void *s2)
+  {
+  return strcmp(*(char const * const *)s1, *(char const * const *)s2);
+  }
+
 static int check_mft_duplicate_filenames(struct Manifest *manp)
   {
   struct FileAndHash * fahp;
@@ -689,7 +694,7 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
     read_casn(&fahp->file, (unsigned char *)filenames[i]);
     filenames[i][file_length] = '\0';
     }
-  qsort(filenames, total, sizeof(char *), strcmp);
+  qsort(filenames, total, sizeof(char *), strcmp_ptr);
   for (i = 0; i < total; ++i)
     {
     if (ret == 0 && i + 1 < total)
