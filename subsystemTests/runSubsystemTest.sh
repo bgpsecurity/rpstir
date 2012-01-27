@@ -27,6 +27,9 @@ THIS_SCRIPT_DIR=$(dirname $0)
 
 . $RPKI_ROOT/trap_errors
 
+# for the run and run_bg functions
+export TEST_LOG_NAME="subsys$TESTID"
+
 # test functions
 . $THIS_SCRIPT_DIR/test.include
 
@@ -42,9 +45,9 @@ if nc -z localhost $RPKI_PORT; then
 fi
 
 # start loader
-../proto/rcli -w $RPKI_PORT -p &
+run_bg "rcli-w" ../proto/rcli -w $RPKI_PORT -p
 LOADER_PID=$!
-sleep 1
+sleep 5
 echo "Loader started (pid = $LOADER_PID)..."
 
 # run all steps
@@ -60,6 +63,7 @@ while [ $N -le $NUM_TOTAL ]; do
 done
 
 # cleanup
+# TODO: make rcli close cleanly so its return value can be checked reliably
 kill $LOADER_PID
 wait $LOADER_PID || true
 

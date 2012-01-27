@@ -10,6 +10,6 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/test.include
 
 echo "Running the garbage collector"
-../proto/garbage || check_errs $? "$0 ../proto/garbage failed"
+run "step5.garbage" ../proto/garbage || check_errs $? "$0 ../proto/garbage failed"
 
 echo $0 PASS
