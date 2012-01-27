@@ -18,7 +18,9 @@ $CHASER "$@" > "$CUR_LIST"
 while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	rsync, aur, rcli, etc "$CUR_LIST" # XXX
 
-	mv "$CUR_LIST" "$OLD_LIST"
+	rm -f "$OLD_LIST"
+	OLD_LIST="$CUR_LIST"
+	CUR_LIST="`mktemp`"
 	$CHASER "$@" > "$CUR_LIST"
 done
 
