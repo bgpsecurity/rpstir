@@ -1530,9 +1530,18 @@ Procedure:
   if (!ansr) ansr = locansr;
   if (SKI) fclose(SKI);
   delete_casn(&myrootcert.self);
-  if (Xcp) free(Xcp);
-  if (Xaia) free(Xaia);
+  if (Xcp)
+    {
+    free(Xcp);
+    Xcp = NULL;
+    }
+  if (Xaia)
+    {
+    free(Xaia);
+    Xaia = NULL;
+    }
   free(Xcrldp);
+  Xcrldp = NULL;
   free_keyring();
   if (*errbuf)
     {
