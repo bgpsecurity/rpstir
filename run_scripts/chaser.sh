@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 #
 # run the chaser, one argument is the name of the original config file
 #   used for doing the rsync_pull
@@ -7,7 +7,19 @@
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
-unset arg
-if [ "$2x" = "noexecx" ] || [ "$2X" = "NOEXECX" ]; then arg="-n"; fi
+# XXX: check this command line, also make sure it outputs NULL-separated URIs only, in sorted order
+CHASER="$RPKI_ROOT/proto/chaser ..."
 
-$RPKI_ROOT/proto/chaser -f $1 $arg
+OLD_LIST="`mktemp`"
+CUR_LIST="`mktemp`"
+
+$CHASER "$@" > "$CUR_LIST"
+
+while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
+	rsync, aur, rcli, etc "$CUR_LIST" # XXX
+
+	mv "$CUR_LIST" "$OLD_LIST"
+	$CHASER "$@" > "$CUR_LIST"
+done
+
+rm -f "$OLD_LIST" "$CUR_LIST"
