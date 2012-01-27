@@ -44,7 +44,7 @@
 
 #define CF_NFIELDS          (CF_FIELD_CRLDP+1)
 
-
+#define CRL_MAX_SNUM_LTH    20  // maximum length of cert serial number in CRL
 /*
   A certificate X509 * must be torn apart into this type of structure.
   This structure can then be entered into the database.

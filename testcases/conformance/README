@@ -188,11 +188,20 @@ CRLs
 657 CRLNoAKI                 # has no authority key identifier extension
 658 CRLNoCRLNum              # has no CRL number
 659 CRLEntryReason           # entry has a revocation reason
-
-TODO: CRLnum needs more test cases, e.g., duplicate CRLnum.  Also, see
-rfc5280 Appendix B. ASN.1 notes for restrictions on cRLNumber values
-(20 octets).
-
+660 CRLEntryNoSerNum         # entry has no serial number
+661 CRLEntryNoRevDate        # entry has no revocation date
+662 CRLBadDateFeb29          # has Feb. 29 on non-leap year
+663 CRLBadDateDayGT30        # has day 31 of 30-day month
+664 CRLBadDateDayGT31        # has day 32 of 31-day month
+665 CRLBadDateHour           # has hour> 23
+666 CRLBadDateMin            # has minute > 59
+667 CRLBadDateSec            # has seconds > 59
+668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year
+669 CRLNumber2Big            # has too long a CRL number
+670 CRL2CRLNums              # has 2 CRL numbers
+671 CRLBadDateDay0           # has a day number 0
+672 CRLBadDateMonth0         # has a month number 0
+673 CRLBadDateMonth13        # has a month number > 12
 
 Manifests
 

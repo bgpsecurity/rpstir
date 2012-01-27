@@ -165,6 +165,11 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Wrong CRL version",            /* ERR_SCM_BADCRLVER */
     "CRL Entry Extension present",  /* ERR_SCM_CRLENTRYEXT */
     "Invalid filename in manifest", /* ERR_SCM_BADMFTFILENAME */
+    "Invalid revocation date",      /* ERR_SCM_BADREVDATE */
+    "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
+    "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
+    "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
+    "Duplicate filenames in manifest", /* ERR_SCM_MFTDUPFILE */
   } ;
 
 char *err2string(int err)

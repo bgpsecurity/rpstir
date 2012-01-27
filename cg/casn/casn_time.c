@@ -76,51 +76,9 @@ int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
     return 0;
     }
 
-int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
-    {
-    int yr, mo, da;
-    ulong val;
-    char *b, *ep;
-
-    for (b = fromp, ep = &fromp[lth]; b < ep && *b >= '0' && *b <= '9'; b++);
-    if (b < ep && (b < &fromp[UTCSE] ||
-        (*b != 'Z' && *b != '+' && *b != '-') ||
-        (*b == 'Z' && ep != &b[UTCSFXHR]) ||
-        (*b < '0' && ep != &b[UTCSFXMI + UTCMISIZ])))
-        return -1;
-    if ((yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ) - UTCBASE) < 0) yr += 100;
-    if ((mo = (int)get_num (&fromp[UTCMO],UTCMOSIZ)) < 1 || mo > 12)
-        return -1;
-    val = (yr * 365) + _mos[mo - 1] + ((yr + (UTCBASE % 4)) / 4) -
-        ((!((yr + UTCBASE) % 4) && mo < 3)? 1: 0);
-    if ((da = (int)get_num (&fromp[UTCDA],UTCDASIZ)) < 1 ||
-        da > _mos[mo] - _mos[mo - 1] +
-        ((!((yr + UTCBASE) % 4) && mo == 2)? 1: 0)) return -1;
-    val += da - 1;
-    if (&fromp[UTCHR] >= ep ||                                   /* hour */
-        (yr = (int)get_num (&fromp[UTCHR],UTCHRSIZ)) > 23) return -1;
-    val = (val * 24) + yr;
-    if (&fromp[UTCMI] >= ep ||                                   /* min */
-        (yr = (int)get_num(&fromp[UTCMI], UTCMISIZ)) > 59) return -1;
-    if (b <= &fromp[UTCSE]) mo = 0;                             /* seconds */
-    else if ((mo = (int)get_num(&fromp[UTCSE], UTCSESIZ)) > 59) return -1;
-    val = (val * 3600) + (yr * 60) + mo;
-    if (*b == '+' || *b == '-')
-        {
-        if ((yr = (int)get_num (&b[UTCSFXHR],UTCHRSIZ)) > 23 ||
-            (mo = (int)get_num (&b[UTCSFXMI],UTCMISIZ)) > 59)
-            return -1;
-        if ((yr = (yr * 60) + mo) > 780) return -1;  /* diff in minutes */
-        if (*b == '+') yr = -yr;
-        val += (60 * yr);           /* adjust by diff of seconds */
-        }
-    *valp = val;
-    return 1;
-    }
-
 int _gentime_to_ulong(int64_t *valp, char *fromp, int lth)
     {
-    int yr, mo, da;
+    int yr, mo, da, hr, mi, se;
     int64_t val = 0;
     char *b, *ep;
 
@@ -130,37 +88,66 @@ int _gentime_to_ulong(int64_t *valp, char *fromp, int lth)
         (*b == 'Z' && ep != &b[GENSFXHR]) ||
         (*b < '0' && ep != &b[GENSFXMI + GENMISIZ])))
         return -1;
-    if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0) yr += 100;
+    if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0) 
+      return -1;
     if ((mo = (int)get_num (&fromp[GENMO],GENMOSIZ)) < 1 || mo > 12)
         return -1;
-    val = ((int64_t)yr * 365) + _mos[mo - 1] + ((yr + (GENBASE % 4)) / 4) -
-        ((!((yr + GENBASE) % 4) && mo < 3)? 1: 0);
+     // calculate number of days until start of the month
+    val = (yr * 365) + _mos[mo - 1] + ((yr + (UTCBASE % 4)) / 4);
+    if (!((yr + UTCBASE) % 4) && mo < 3) val--;
     if ((da = (int)get_num (&fromp[GENDA],GENDASIZ)) < 1 ||
-        da > _mos[mo] - _mos[mo - 1] +
-        ((!((yr + GENBASE) % 4) && mo == 2)? 1: 0)) return -1;
+       da > _mos[mo] - _mos[mo - 1] +
+       ((!((yr + UTCBASE) % 4) && mo == 2)? 1: 0)) return -1;
+    if (val < 0) return -1;   // went around the end?
+      // add in this month's days
     val += da - 1;
     if (&fromp[GENHR] >= ep ||                                   /* hour */
-        (yr = (int)get_num (&fromp[GENHR],GENHRSIZ)) > 23) return -1;
-    val = (val * 24) + yr;
+        (hr = (int)get_num (&fromp[GENHR],GENHRSIZ)) > 23) return -1;
+    val = (val * 24) + hr;
+    if (val < 0) return -1;   
     if (&fromp[GENMI] >= ep ||                                   /* min */
-        (yr = (int)get_num(&fromp[GENMI], GENMISIZ)) > 59) return -1;
-    if (b <= &fromp[GENSE]) mo = 0;                             /* seconds */
-    else if ((mo = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59) return -1;
-    val = (val * 3600) + (yr * 60) + mo;
+        (mi = (int)get_num(&fromp[GENMI], GENMISIZ)) > 59) return -1;
+    if (b <= &fromp[GENSE]) se = 0;                             /* seconds */
+    else if ((se = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59) return -1;
+    val = (val * 3600) + (mi * 60) + se;
+    if (val < 0) return -1;   
     if (*b == '+' || *b == '-')
         {
-        if ((yr = (int)get_num (&b[GENSFXHR],GENHRSIZ)) > 23 ||
-            (mo = (int)get_num (&b[GENSFXMI],GENMISIZ)) > 59)
+        int xtra = 0;
+        if ((hr = (int)get_num (&b[GENSFXHR],GENHRSIZ)) > 23 ||
+            (mi = (int)get_num (&b[GENSFXMI],GENMISIZ)) > 59)
             return -1;
-        if ((yr = (yr * 60) + mo) > 780) return -1;  /* diff in minutes */
-        if (*b == '+') yr = -yr;
-        val += (60 * yr);           /* adjust by diff of seconds */
+        if ((xtra = (hr * 60) + mi) > 780) return -1;  /* diff in minutes */
+        if (*b == '+') xtra = -xtra;
+        val += (60 * xtra);           /* adjust by diff of seconds */
         }
-    if (val > 0xFFFFFFFF) return -1;
     if (val < 0) return -1;
     *valp = val;
     return 1;
     }
+
+int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
+    {
+    int yr;
+    char *b, *ep;
+
+    for (b = fromp, ep = &fromp[lth]; b < ep && *b >= '0' && *b <= '9'; b++);
+    if (lth > UTCT_SIZE || 
+        (b < ep && b < &fromp[UTCSE]) ||
+        (*b != 'Z' && *b != '+' && *b != '-') ||
+        (*b == 'Z' && ep != &b[UTCSFXHR]) ||
+        (*b < '0' && ep != &b[UTCSFXMI + UTCMISIZ]))
+        return -1;
+    char genfrom[32];
+    memset(genfrom, 0, 32);
+     
+    yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ);
+    if (yr < 70) strcpy(genfrom, "20");
+    else strcpy(genfrom, "19");
+    memcpy(&genfrom[2], fromp, lth);
+    return _gentime_to_ulong(valp, genfrom, lth += 2);
+    }
+
 
 
 int read_casn_time(struct casn *casnp, int64_t *valp)
@@ -189,7 +176,7 @@ Returns: IF error, -1, ELSE length of time field
     else 
 	{
         memcpy(&timebuf[2], casnp->startp, ansr);
-        if (timebuf[2] < '7') strncpy((char *)timebuf, "19", 2);
+        if (timebuf[2] >= '7') strncpy((char *)timebuf, "19", 2);
         else strncpy((char *)timebuf, "20", 2);
         ansr += 2;
         }

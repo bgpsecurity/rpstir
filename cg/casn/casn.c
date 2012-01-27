@@ -317,17 +317,18 @@ struct casn *index_casn(struct casn *casnp, int num)
     struct casn *tcasnp;
     int err = 0;
 
-    if (_clear_error(casnp) < 0) return (struct casn *)0;
+    if (_clear_error(casnp) < 0) 
+      return (struct casn *)0;
     if (!casnp->level || !(_go_up(casnp)->flags & ASN_OF_FLAG))
         err = ASN_NOT_OF_ERR;
-/*
+    else if (num >= casnp->num_items) 
+        err = ASN_OF_BOUNDS_ERR;
     else
 	{
         for (tcasnp = casnp ; num-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
-        if (num >= 0) err = ASN_OF_BOUNDS_ERR;
+        if (num >= 0) 
+            err = ASN_OF_BOUNDS_ERR;
 	}
-*/
-    else if (num >= casnp->num_items) err = ASN_OF_BOUNDS_ERR;
     if (err)
 	{
 	_casn_obj_err(casnp, err);
@@ -970,10 +971,11 @@ int _mark_definees(struct casn *casnp, uchar *wherep, int index)
             }
         else if (*wherep > '0')
             {
-	    if (!(tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'))) ||
+	    tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'));
+            if (!tcasnp) return 0;
 		// if more than 1 'digit', go down
-                (wherep[1] >= '0' && (!(tcasnp++)->type & ASN_CONSTRUCTED)))
-            return 0;
+            if (wherep[1] >= '0' && (!((tcasnp++)->type & ASN_CONSTRUCTED)))
+                return 0;
             }
         }
     return 1;
@@ -1065,7 +1067,7 @@ Procedure:
 **/
     struct casn *curr_casnp, *ch_casnp, *sav_casnp, *set_casnp,
         *tcasnp;
-    int ansr, did, err, num, lth, explicit_extra, break_out, num_ofs,
+    int ansr, did, num, lth, explicit_extra, break_out, num_ofs,
       indefs = 0, has_indef, skip_match;
     uchar *b, *c, ftag = 0;
     long tag;
@@ -1080,7 +1082,6 @@ Procedure:
         has_indef = skip_match = 0;
         if (!curr_casnp) return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
         c = from;  // note that NONE case uses this to reset c
-	err = 0;
         if (of_casnp)
 	    {
             if (!(curr_casnp = inject_casn(of_casnp, num_ofs++)))
@@ -1650,11 +1651,10 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
 
 int _set_all_lths(uchar *top, uchar *tag_endp, uchar *val_endp, int mode)
     {
-    ulong tag;
     uchar *c = top;
     int lth;
 
-    tag = _get_tag(&c);
+    _get_tag(&c); // to advance pointer
     c++;    // at end of tag-lth;
     if (c < tag_endp) lth = _set_all_lths(c, tag_endp, val_endp, mode);
     else lth = 0;
