@@ -28,7 +28,7 @@ run_bg () {
     LOG="$1"
     shift
     if test "x$VALGRIND" = x1; then
-        valgrind --log-file="valgrind.$LOG.log" --error-exitcode=1 "$@" &
+        valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$@" &
     else
         "$@" &
     fi
