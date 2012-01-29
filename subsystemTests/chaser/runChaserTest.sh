@@ -72,41 +72,21 @@ $CMD > response.log
 stop_test collapse_dots
 
 #===============================================================================
+CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_slashes"
+add_valgrind
+start_test collapse_slashes
+$CMD > response.log
+stop_test collapse_slashes
+
+#===============================================================================
 #    Tests
 #-------------------------------------------------------------------------------
 : <<'END'
-    Is x subsumed by y?
-rsync://example.com/a
-rsync://example.com/a/
-rsync://example.com/a/b/c
-rsync://example.com/a/c/b
-rsync://example.com/a/b/c/d
-rsync://example.com/abcdefg/b
+Properly distinguish crldps based on next_upd?
 
-    Properly collapse "..".
-rsync://foo.com/../
-rsync://foo.com/a/../b
-rsync://foo.com/a/../..
-rsync://foo.com/a/.../b
+Correct output for cmd-line combinations?
 
-    Properly collapse "//".
-rsync://foo.com/a//
-rsync://foo.com/a//b
-rsync://foo.com/a///b
-rsync://foo.com/a//////////////b
-rsync://foo.com/a///b///c/
-
-    Properly collapse "/./".
-rsync://foo.com/./
-rsync://foo.com/a/./
-rsync://foo.com/a/./b/c
-rsync://foo.com/a/./b/./c
-
-    Properly distinguish crldps based on next_upd?
-
-    Correct output for cmd-line combinations?
-
-    Test limit of realloc of uris[].
+Test limit of realloc of uris[].
 
 END
 
