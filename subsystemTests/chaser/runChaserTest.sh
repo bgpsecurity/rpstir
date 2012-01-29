@@ -58,6 +58,13 @@ $CMD > response.log
 stop_test max_length
 
 #===============================================================================
+CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_slash_dot"
+add_valgrind
+start_test collapse_slash_dot
+$CMD > response.log
+stop_test collapse_slash_dot
+
+#===============================================================================
 CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_dots"
 add_valgrind
 start_test collapse_dots
@@ -95,21 +102,11 @@ rsync://foo.com/a/./
 rsync://foo.com/a/./b/c
 rsync://foo.com/a/./b/./c
 
-    Handle random chars in uri path.
-
     Properly distinguish crldps based on next_upd?
 
     Correct output for cmd-line combinations?
 
-    Can crafted bad uri crash the program?  or get thru?
-
     Test limit of realloc of uris[].
-
-    Add multiple uris that are semicolon delimited on a single line.
-
-    Various off-by-one errors.
-uris have lengths 1023, 1024.  One should pass and the other be dropped.
-
 
 END
 
