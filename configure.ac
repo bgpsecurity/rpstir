@@ -216,6 +216,7 @@ AC_CONFIG_FILES([Makefile
                  rsync_aur/Makefile
                  rtr/Makefile
                  subsystemTests/Makefile
+                 subsystemTests/chaser/Makefile
                  subsystemTests/rtr/Makefile
                  testcases/Makefile
                  testbed/Makefile

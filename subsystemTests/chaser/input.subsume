@@ -1,0 +1,8 @@
+DIR=rsync://a.b.com/a///b
+DIR=rsync://a.b.com/b/
+DIR=rsync://a.b.com/aa/b
+DIR=rsync://a.b.com/aa/b/c/d/e/ffgsdfjkhglkhfglkhsdflgjhsldfkgjhsldfhglshfgsjhfglhsdf
+DIR=rsync://a.b.com/aa/
+DIR=rsync://a.b.com/a/b
+DIR=rsync://a.b.com/a/
+DIR=rsync://a.b.com/a
