@@ -41,7 +41,6 @@ static size_t  uris_max_sz = 1024 * 1024;
 static size_t  num_uris = 0;
 
 static size_t const TS_LEN = 20;  // "0000-00-00 00:00:00" plus '\0'
-static char *timestamp_prev;
 static char *timestamp_curr;
 static char const * const  RSYNC_SCHEME = "rsync://";
 static int remove_nonprintables = 0;
@@ -441,36 +440,18 @@ static int query_sia(dbconn *db, int chase_not_yet_validated) {
 }
 
 /**=============================================================================
- * @brief Get the current time; and read the last time chaser ran from db.
+ * @brief Get the current time from the db.
 ------------------------------------------------------------------------------*/
-static int query_read_timestamps(dbconn *db) {
+static int query_read_timestamp(dbconn *db) {
     int ret;
 
-    ret = db_chaser_read_time(db,
-            timestamp_prev, TS_LEN,
-            timestamp_curr, TS_LEN);
+    ret = db_chaser_read_time(db, timestamp_curr, TS_LEN);
     if (ret) {
-        LOG(LOG_ERR, "didn't read times");
+        LOG(LOG_ERR, "didn't read time");
         return -1;
     }
 
-    LOG(LOG_DEBUG, "previous ts:  %s", timestamp_prev);
     LOG(LOG_DEBUG, " current ts:  %s", timestamp_curr);
-
-    return 0;
-}
-
-/**=============================================================================
- * @note Write timestamp to db as last time chaser ran.
-------------------------------------------------------------------------------*/
-static int query_write_timestamp(dbconn *db) {
-    int ret;
-
-    ret = db_chaser_write_time(db, timestamp_curr);
-    if (ret) {
-        LOG(LOG_ERR, "didn't write timestamp to db");
-        return -1;
-    }
 
     return 0;
 }
@@ -584,9 +565,8 @@ int main(int argc, char **argv) {
         goto skip_database_for_testing;
     }
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
-    timestamp_prev = (char*)calloc(TS_LEN, sizeof(char));
     timestamp_curr = (char*)calloc(TS_LEN, sizeof(char));
-    if (!timestamp_prev  ||  !timestamp_curr) {
+    if (!timestamp_curr) {
         LOG(LOG_ERR, "out of memory");
         return -1;
     }
@@ -604,7 +584,7 @@ int main(int argc, char **argv) {
 
     // look up rsync uris from the db
     int db_ok = 1;
-    if (query_read_timestamps(db))
+    if (query_read_timestamp(db))
         db_ok = 0;
     if (db_ok  &&  query_crldp(db, restrict_crls_by_next_update, num_hours))
         db_ok = 0;
@@ -614,10 +594,7 @@ int main(int argc, char **argv) {
     }
     if (db_ok  &&  query_sia(db, chase_not_yet_validated))
         db_ok = 0;
-    if (db_ok  &&  query_write_timestamp(db))
-        db_ok = 0;
     // cleanup
-    if (timestamp_prev) free(timestamp_prev);
     if (timestamp_curr) free(timestamp_curr);
     if (db != NULL) {
         db_disconnect(db);

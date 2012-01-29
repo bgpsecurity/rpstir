@@ -13,11 +13,7 @@
 #define DB_URI_LEN 1024
 
 
-int db_chaser_read_time(dbconn *conn,
-        char *prev, size_t const prev_len,
-        char *curr, size_t const curr_len);
-
-int db_chaser_write_time(dbconn *conn, char const *ts);
+int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len);
 
 int64_t db_chaser_read_aia(dbconn *conn, char ***results,
         int64_t *num_malloced, int flag_no_chain, int flag_validated);

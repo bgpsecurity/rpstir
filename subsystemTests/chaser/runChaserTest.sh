@@ -79,7 +79,7 @@ $CMD > response.log
 stop_test collapse_slashes
 
 #===============================================================================
-#    Tests
+#    More tests
 #-------------------------------------------------------------------------------
 : <<'END'
 Properly distinguish crldps based on next_upd?

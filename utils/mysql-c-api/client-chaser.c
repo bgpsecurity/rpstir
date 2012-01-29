@@ -17,9 +17,7 @@
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-int db_chaser_read_time(dbconn *conn,
-        char *prev, size_t const prev_len,
-        char *curr, size_t const curr_len) {
+int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_TIME];
     int ret;
 
@@ -27,16 +25,12 @@ int db_chaser_read_time(dbconn *conn,
         return -1;
     }
 
-    MYSQL_BIND bind[2];
+    MYSQL_BIND bind[1];
     memset(bind, 0, sizeof(bind));
     // the current timestamp
     MYSQL_TIME curr_ts;
     bind[0].buffer_type = MYSQL_TYPE_TIMESTAMP;
     bind[0].buffer = &curr_ts;
-    // the previous timestamp
-    MYSQL_TIME prev_ts;
-    bind[1].buffer_type = MYSQL_TYPE_TIMESTAMP;
-    bind[1].buffer = &prev_ts;
 
     if (mysql_stmt_bind_result(stmt, bind)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
@@ -53,7 +47,7 @@ int db_chaser_read_time(dbconn *conn,
     }
 
     if (mysql_stmt_num_rows(stmt) != 1) {
-        LOG(LOG_ERR, "more or less than one metadata record exists");
+        LOG(LOG_ERR, "couldn't read time from db");
         mysql_stmt_free_result(stmt);
         return -1;
     }
@@ -67,15 +61,6 @@ int db_chaser_read_time(dbconn *conn,
         return -1;
     }
 
-    snprintf(prev, prev_len, "%04d-%02d-%02d %02d:%02d:%02d",
-            prev_ts.year,
-            prev_ts.month,
-            prev_ts.day,
-            prev_ts.hour,
-            prev_ts.minute,
-            prev_ts.second
-    );
-
     snprintf(curr, curr_len, "%04d-%02d-%02d %02d:%02d:%02d",
             curr_ts.year,
             curr_ts.month,
@@ -86,47 +71,6 @@ int db_chaser_read_time(dbconn *conn,
     );
 
     mysql_stmt_free_result(stmt);
-
-    return 0;
-}
-
-/**=============================================================================
-------------------------------------------------------------------------------*/
-int db_chaser_write_time(dbconn *conn, char const *ts) {
-    MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_WRITE_TIME];
-
-    MYSQL_BIND bind[1];
-    memset(bind, 0, sizeof(bind));
-    // the current timestamp
-    MYSQL_TIME curr_ts;
-    sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u",
-            &curr_ts.year,
-            &curr_ts.month,
-            &curr_ts.day,
-            &curr_ts.hour,
-            &curr_ts.minute,
-            &curr_ts.second);
-    curr_ts.neg = (my_bool) 0;
-    curr_ts.second_part = (ulong) 0;
-    bind[0].buffer_type = MYSQL_TYPE_TIMESTAMP;
-    bind[0].buffer = &curr_ts;
-    bind[0].is_null = (my_bool*) 0;
-
-    if (mysql_stmt_bind_param(stmt, bind)) {
-        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
-        return -1;
-    }
-
-    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed to update timestamp")) {
-        return -1;
-    }
-
-    if (mysql_stmt_affected_rows(stmt) != 1) {
-        LOG(LOG_ERR, "could not write timestamp to db");
-        mysql_stmt_free_result(stmt);
-        return -1;
-    }
 
     return 0;
 }
