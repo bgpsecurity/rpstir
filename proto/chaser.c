@@ -176,7 +176,7 @@ static int check_uri_chars(char *str) {
     int found_dots = 0;
     size_t i;
     size_t j;
-    char last;
+    char prev;
     char this;
     int ret;
 
@@ -194,17 +194,17 @@ static int check_uri_chars(char *str) {
     }
 
     // Check for "..".  Collapse "//" to "/".  Collapse "/./" to "/".
-    last = str[0];
+    prev = str[0];
     for (i = 1, j = 1; i < strlen(str); i++) {
-        if ('/' == (this = str[i])  &&  '/' == last) {
+        if ('/' == (this = str[i])  &&  '/' == prev) {
             // neither copy the char, nor increment j
             modified = 1;
-        } else if ('.' == (this = str[i])  &&  '.' == last) {
+        } else if ('.' == (this = str[i])  &&  '.' == prev) {
             found_dots = 1;
             str[j] = str[i];
             j++;
-            last = this;
-        } else if ('.' == (this = str[i])  &&  '/' == last  &&
+            prev = this;
+        } else if ('.' == (this = str[i])  &&  '/' == prev  &&
                 ('/' == str[i + 1]  ||  '\0' == str[i + 1])) {
             // neither copy the char, nor increment j
             // increment i one extra
@@ -213,7 +213,7 @@ static int check_uri_chars(char *str) {
         } else {
             str[j] = str[i];
             j++;
-            last = this;
+            prev = this;
         }
     }
     str[j] = str[i];
@@ -290,7 +290,7 @@ static int handle_uri_string(char const *in) {
     while ('\0' != section[0]) {
         // check,trim rsync scheme
         size_t len_scheme = strlen(RSYNC_SCHEME);
-        if (!strncmp(RSYNC_SCHEME, section, len_scheme)) {
+        if (!strncasecmp(RSYNC_SCHEME, section, len_scheme)) {
             section += len_scheme;
         } else {
             scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
@@ -580,8 +580,10 @@ int main(int argc, char **argv) {
     LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris, config_file);
     cant_open_file:
 
-    if (skip_database)  goto skip_database_for_testing;
-
+    if (skip_database) {
+        LOG(LOG_WARNING, "Test mode - not looking in the database for rsync uris...");
+        goto skip_database_for_testing;
+    }
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
     timestamp_prev = (char*)calloc(TS_LEN, sizeof(char));
     timestamp_curr = (char*)calloc(TS_LEN, sizeof(char));
