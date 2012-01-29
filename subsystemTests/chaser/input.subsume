@@ -1,8 +1,8 @@
-DIR=rsync://a.b.com/a///b
-DIR=rsync://a.b.com/b/
-DIR=rsync://a.b.com/aa/b
-DIR=rsync://a.b.com/aa/b/c/d/e/ffgsdfjkhglkhfglkhsdflgjhsldfkgjhsldfhglshfgsjhfglhsdf
-DIR=rsync://a.b.com/aa/
-DIR=rsync://a.b.com/a/b
-DIR=rsync://a.b.com/a/
-DIR=rsync://a.b.com/a
+rsync://a.b.com/a///b
+rsync://a.b.com/b/
+rsync://a.b.com/aa/b
+rsync://a.b.com/aa/b/c/d/e/ffgsdfjkhglkhfglkhsdflgjhsldfkgjhsldfhglshfgsjhfglhsdf
+rsync://a.b.com/aa/
+rsync://a.b.com/a/b
+rsync://a.b.com/a/
+rsync://a.b.com/a

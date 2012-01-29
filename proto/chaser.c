@@ -507,9 +507,8 @@ int main(int argc, char **argv) {
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
 
-    char const *LINE_PREFIX = "DIR=";
-    size_t const LEN_PREFIX = strlen(LINE_PREFIX);
-    char   msg[LEN_PREFIX + DB_URI_LEN + 1];  // temp string storage
+    // size = length of string + \0 + \n + char to detect oversized
+    char   msg[DB_URI_LEN + 3];  // temp string storage
     size_t i;
     char   output_delimiter = '\0';
     size_t const DST_SZ = sizeof(msg);
@@ -559,20 +558,20 @@ int main(int argc, char **argv) {
         goto cant_open_file;
     }
     while (fgets (msg, sizeof(msg), fp) != NULL) {
-        if (strncmp(LINE_PREFIX, msg, LEN_PREFIX)) {
-            continue;
-        }
-        if (DB_URI_LEN < strlen(msg)) {
-            scrub_for_print(scrubbed_str, msg + LEN_PREFIX, DST_SZ, NULL, "");
-            snprintf(msg, 50, "%s", scrubbed_str);
-            LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
+        if (strncasecmp(RSYNC_SCHEME, msg, strlen(RSYNC_SCHEME))) {
             continue;
         }
         // strip the trailing \n from fgets
         if (0 < strlen(msg))
             msg[strlen(msg) - 1] = '\0';
-        if (handle_uri_string(&msg[LEN_PREFIX])) {
-            scrub_for_print(scrubbed_str, msg + LEN_PREFIX, DST_SZ, NULL, "");
+        if (DB_URI_LEN < strlen(msg)) {
+            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
+            snprintf(msg, 50, "%s", scrubbed_str);
+            LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
+            continue;
+        }
+        if (handle_uri_string(msg)) {
+            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
             LOG(LOG_WARNING, "did not load uri from file:  %s", scrubbed_str);
         }
     }

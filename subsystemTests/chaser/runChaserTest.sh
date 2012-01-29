@@ -10,9 +10,11 @@ compare () {
 	printf >&2 "comparing \"%s\" to \"%s\"... " "$name" "$name.correct"
 	if diff -u "$name.correct" "$name" > "$name.diff" 2>/dev/null; then
 		echo >&2 "success."
+        echo >&2
 	else
 		echo >&2 "failed!"
 		echo >&2 "See \"$name.diff\" for the differences."
+        echo >&2
 		exit 1
 	fi
 }
@@ -20,8 +22,8 @@ compare () {
 #===============================================================================
 add_valgrind () {
 	if test x"$VALGRIND" = x1; then
-		CMD=valgrind --log-file=valgrind.log --track-fds=full \
-        --leak-check=full --error-exitcode=1 "$CMD"
+		CMD="valgrind --log-file=valgrind.log --track-fds=full \
+        --leak-check=full --error-exitcode=1 $CMD"
 	fi
 }
 
@@ -47,6 +49,20 @@ add_valgrind
 start_test subsume
 $CMD > response.log
 stop_test subsume
+
+#===============================================================================
+CMD="$RPKI_ROOT/proto/chaser -t -f input.max_length"
+add_valgrind
+start_test max_length
+$CMD > response.log
+stop_test max_length
+
+#===============================================================================
+CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_dots"
+add_valgrind
+start_test collapse_dots
+$CMD > response.log
+stop_test collapse_dots
 
 #===============================================================================
 #    Tests
