@@ -4,6 +4,10 @@ cd "`dirname "$0"`"
 
 . ../../envir.setup
 
+TEST_LOG_NAME=rtr
+STRICT_CHECKS=1
+. ../test.include
+
 
 SERVER="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtrd"
 CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
@@ -148,11 +152,7 @@ stop_rtrd () {
 }
 
 start_rtrd () {
-	if test x"$VALGRIND" = x1; then
-		valgrind --log-file=valgrind.log --track-fds=full --leak-check=full --error-exitcode=1 "$SERVER" &
-	else
-		"$SERVER" &
-	fi
+	run_bg "rtrd" "$SERVER"
 	SERVER_PID=$!
 	trap stop_rtrd 0
 
