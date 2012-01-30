@@ -34,14 +34,14 @@ run_bg () {
     fi
 
     case "$CHECKTOOL" in
-        valgrind)
+        "valgrind")
             if test "x$STRICT_CHECKS" = x1; then
                 valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$@" &
             else
                 valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$@" &
             fi
             ;;
-        )
+        "" | "none")
             "$@" &
             ;;
         *)
