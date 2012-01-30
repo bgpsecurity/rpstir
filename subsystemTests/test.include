@@ -44,6 +44,9 @@ run_bg () {
         )
             "$@" &
             ;;
+        *)
+            echo >&2 "Error: invalid value for \$CHECKTOOL: $CHECKTOOL"
+            exit 1
     esac
 }
 
