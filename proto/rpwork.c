@@ -253,14 +253,14 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp,
         inject_casn(&textp->extnValue.cRLDistributionPoints.self, numpts++);
       if (!distp)
         {
-        sprintf(errbuf, "Too many CRLDP extensions");
+        snprintf(errbuf, sizeof(errbuf), "Too many CRLDP extensions");
         return (struct Certificate *)0;
         }
       struct GeneralName *gennamep = (struct GeneralName *) inject_casn(
         &distp->distributionPoint.fullName.self, 0);
       if (!gennamep)
         {
-        sprintf(errbuf, "Too many general names in CRLDP extensions");
+        snprintf(errbuf, sizeof(errbuf), "Too many general names in CRLDP extensions");
         return (struct Certificate *)0;
         }
       for (ept = pt; *ept > ' '; ept++);
@@ -300,7 +300,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp,
         *akiExtp;   // new cert's aki
   if (!(skiExtp = find_extn(&myrootcert, id_subjectKeyIdentifier, 0)))
     {
-    sprintf(errbuf, "Certificate has no SKI.");
+    snprintf(errbuf, sizeof(errbuf), "Certificate has no SKI.");
     return (struct Certificate *)0;
     }
   if (!(akiExtp = find_extn(paracertp, id_authKeyId, 0)))
@@ -313,7 +313,7 @@ static struct Certificate *mk_paracert(struct Certificate *origcertp,
       }
     else 
       {
-      sprintf(errbuf, "Certificate has no AKI.");
+      snprintf(errbuf, sizeof(errbuf), "Certificate has no AKI.");
       return (struct Certificate *)0;
       }
     }
@@ -378,12 +378,12 @@ int get_CAcert(char *ski, struct done_cert **done_certpp)
       }
     if (!j) 
       {
-      sprintf(errbuf, "No CA certificate found for SKI %s\n", ski);
+      snprintf(errbuf, sizeof(errbuf), "No CA certificate found for SKI %s\n", ski);
       return -1;
       }
     else if (j > 2 || (j == 2 && !have_para)) 
       {
-      sprintf(errbuf, "Found %d certificates for SKI %s\n", j, ski);
+      snprintf(errbuf, sizeof(errbuf), "Found %d certificates for SKI %s\n", j, ski);
       return -1;
       }
     get_casn_file(&certp->self, this_cert_ansrp->fullname, 0);
@@ -487,7 +487,7 @@ static int sign_cert(struct Certificate *certp)
   if (ansr)
     {
     ansr = ERR_SCM_SIGNINGERR;
-    sprintf(errbuf, "Error %s\n", msg);
+    snprintf(errbuf, sizeof(errbuf), "Error %s\n", msg);
     fflush(stderr);
     }
   return ansr;
@@ -1343,7 +1343,7 @@ Procedure:
       if (conflict_test(run, done_certp))
         {
         currskibuf[strlen(currskibuf) - 1] = 0; // trim CR
-        sprintf(errbuf, "in block %s at %s", currskibuf, skibuf);
+        snprintf(errbuf, sizeof(errbuf), "in block %s at %s", currskibuf, skibuf);
         *skibuf = 0;
         return ERR_SCM_USECONFLICT;
         }
@@ -1400,13 +1400,13 @@ Procedure:
       {
       for (cc = skip; *cc != '\n'; cc++);
       if (*cc == '\n') *cc = 0;
-      sprintf(errbuf, "Invalid SKI: %s", skip);
+      snprintf(errbuf, sizeof(errbuf), "Invalid SKI: %s", skip);
       return ERR_SCM_BADSKIBLOCK;
       }
     *cc = 0;
     if ((ansr = get_CAcert(skip, &done_certp)) < 0) 
       {
-      sprintf(errbuf, "No file for SKI %s.", skip);
+      snprintf(errbuf, sizeof(errbuf), "No file for SKI %s.", skip);
       return ansr;
       }
     ruleranges.numranges = 0;
@@ -1415,8 +1415,15 @@ Procedure:
       {
       cc = strchr(skibuf, (int)'\n');
       if (cc && *cc) *cc = 0;
-      if (*errbuf) strcat(strcat(errbuf, "at "), skibuf);
-      else sprintf(errbuf, "Invalid prefix/range %s", skibuf); 
+      if (*errbuf)
+        {
+        size_t errlen = strlen(errbuf);
+        if (errlen + 1 < sizeof(errbuf))
+          {
+          snprintf(&errbuf[errlen], sizeof(errbuf) - errlen, "at %s", skibuf);
+          }
+        }
+      else snprintf(errbuf, sizeof(errbuf), "Invalid prefix/range %s", skibuf);
       return ansr; // with error message in errbuf BADSKIBLOCK
       }    // otherwise skibuf has another SKI line or NULL
 
@@ -1498,7 +1505,7 @@ Procedure:
     locconp = conp;
     if (findorcreatedir(locscmp, locconp, Xrpdir, &XrpdirId) < 0)
       {
-      sprintf(errbuf, "Cannot find directory %s.", Xrpdir);
+      snprintf(errbuf, sizeof(errbuf), "Cannot find directory %s.", Xrpdir);
       ansr = ERR_SCM_BADSKIFILE;
       }
     else ansr = process_control_blocks(SKI);
@@ -1530,14 +1537,24 @@ Procedure:
   if (!ansr) ansr = locansr;
   if (SKI) fclose(SKI);
   delete_casn(&myrootcert.self);
-  if (Xcp) free(Xcp);
-  if (Xaia) free(Xaia);
+  if (Xcp)
+    {
+    free(Xcp);
+    Xcp = NULL;
+    }
+  if (Xaia)
+    {
+    free(Xaia);
+    Xaia = NULL;
+    }
   free(Xcrldp);
+  Xcrldp = NULL;
   free_keyring();
   if (*errbuf)
     {
-    if (errbuf[strlen(errbuf) - 1] != '.' &&
-      errbuf[strlen(errbuf) - 1] != '\n') strcat(errbuf, "."); 
+    if (strlen(errbuf) + strlen(".") + 1 <= sizeof(errbuf) &&
+      errbuf[strlen(errbuf) - 1] != '.' &&
+      errbuf[strlen(errbuf) - 1] != '\n') strcat(errbuf, ".");
     log_msg(LOG_ERR, "%s", errbuf);
     }
   log_msg(LOG_DEBUG, "Finished LTA work");

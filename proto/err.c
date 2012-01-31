@@ -170,7 +170,6 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
     "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
     "Duplicate file in manifest"    /* ERR_SCM_DUPMFTFNAME */
-    "Duplicate hash in manifest"    /* ERR_SCM_DUPMFTHASH */
   } ;
 
 char *err2string(int err)

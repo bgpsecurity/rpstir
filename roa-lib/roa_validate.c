@@ -22,33 +22,7 @@
 #define MINMAXBUFSIZE 20
 
 extern int CryptInitState;
-/*
-static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, 
-		    CRYPT_ALGO_TYPE alg)
-{ // used for manifests      alg = 1 for SHA-1; alg = 2 for SHA2
-  CRYPT_CONTEXT hashContext;
-  uchar hash[40];
-  int   ansr = -1;
 
-  if ( alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2 )
-    return ERR_SCM_BADALG;
-  memset(hash, 0, sizeof(hash));
-  if ( !CryptInitState )
-    {
-    if (cryptInit()) return ERR_SCM_CRYPTLIB;
-    CryptInitState = 1;
-    }
-  if (cryptCreateContext(&hashContext, CRYPT_UNUSED, alg)) 
-    return ERR_SCM_CRYPTLIB;
-  cryptEncrypt(hashContext, inbufp, bsize);
-  cryptEncrypt(hashContext, inbufp, 0);
-  cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-  cryptDestroyContext(hashContext);
-  //  cryptEnd();
-  memcpy(outbufp, hash, ansr);
-  return ansr;
-}
-*/
 int check_sig(struct ROA *rp, struct Certificate *certp)
   {
   CRYPT_CONTEXT pubkeyContext, hashContext;
@@ -82,7 +56,8 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   // (re)init the crypt library
   if (!CryptInitState)
     {
-    if (cryptInit()) return ERR_SCM_CRYPTLIB;
+    if (cryptInit()) 
+      return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
   if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2))
@@ -713,6 +688,55 @@ static int check_mft_filenames(struct FileListInManifest *fileListp)
     }
   return 0;
   }
+
+static int strcmp_ptr(const void *s1, const void *s2)
+  {
+  return strcmp(*(char const * const *)s1, *(char const * const *)s2);
+  }
+
+static int check_mft_duplicate_filenames(struct Manifest *manp)
+  {
+  struct FileAndHash * fahp;
+  char ** filenames;
+  int ret = 0;
+  int file_length, total, i, j;
+  total = num_items(&manp->fileList.self);
+  filenames = malloc(total * sizeof(char *));
+  if (filenames == NULL)
+    {
+    return ERR_SCM_NOMEM;
+    }
+  for (i = 0; i < total; ++i)
+    {
+    fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, i);
+    file_length = vsize_casn(&fahp->file);
+    filenames[i] = malloc(file_length + 1);
+    if (filenames[i] == NULL)
+      {
+      for (j = 0; j < i; ++j)
+        free(filenames[j]);
+      free(filenames);
+      return ERR_SCM_NOMEM;
+      }
+    read_casn(&fahp->file, (unsigned char *)filenames[i]);
+    filenames[i][file_length] = '\0';
+    }
+  qsort(filenames, total, sizeof(char *), strcmp_ptr);
+  for (i = 0; i < total; ++i)
+    {
+    if (ret == 0 && i + 1 < total)
+      {
+      if (strcmp(filenames[i], filenames[i+1]) == 0)
+        {
+        ret = ERR_SCM_MFTDUPFILE;
+        }
+      }
+    free(filenames[i]);
+    }
+  free(filenames);
+  return ret;
+  }
+
 /**=========================================================================
  * @brief Check conformance to manifest profile
  *
@@ -813,6 +837,9 @@ int manifestValidate(struct ROA *roap)
     }
                                                     // step 6
   if ((iRes = check_mft_filenames(&manp->fileList)) < 0)
+    return iRes;
+  iRes = check_mft_duplicate_filenames(manp);
+  if (iRes < 0)
     return iRes;
                                                     // step 7
   iRes = cmsValidate(roap);

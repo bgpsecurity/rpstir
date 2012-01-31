@@ -406,7 +406,8 @@ static int getIPBlock(FILE *SKI, int typ, char *skibuf, int siz)
         (j = touches(&iprangep[-1], iprangep, (iprangep->typ == IPv4)? 4: 16))
          >= 0)
         {
-        strcpy(errbuf, (!j)? "Ranges touch ": "Ranges out of order ");
+        snprintf(errbuf, sizeof(errbuf),
+          (!j)? "Ranges touch ": "Ranges out of order ");
         return  ERR_SCM_BADSKIBLOCK;
         }
       }
@@ -421,21 +422,21 @@ int getSKIBlock(FILE *SKI, char *skibuf, int siz)
   {
   int ansr = ERR_SCM_BADSKIBLOCK;
   if (!next_cmd(skibuf, siz, SKI) || strcmp(skibuf, "IPv4\n"))
-    strcpy(errbuf, "Missing/invalid IPv4 ");
+    snprintf(errbuf, sizeof(errbuf), "Missing/invalid IPv4 ");
   else if (getIPBlock(SKI, IPv4, skibuf, siz) < 0)
     {
-    if (!*errbuf) strcpy(errbuf, "Bad/disordered IPv4 group ");
+    if (!*errbuf) snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv4 group ");
     }
   else if (strcmp(skibuf, "IPv6\n")) 
-    strcpy(errbuf, "Missing/invalid IPv6 ");
+    snprintf(errbuf, sizeof(errbuf), "Missing/invalid IPv6 ");
   else if (getIPBlock(SKI, IPv6, skibuf, siz) < 0)
-    strcpy(errbuf, "Bad/disordered IPv6 group ");
+    snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv6 group ");
   else if (strcmp(skibuf, "AS#\n"))
-    strcpy(errbuf, "Missing/invalid AS# ");
+    snprintf(errbuf, sizeof(errbuf), "Missing/invalid AS# ");
   else if(getIPBlock(SKI, ASNUM, skibuf, siz) < 0)
-    strcpy(errbuf, "Bad/disordered AS# group ");
+    snprintf(errbuf, sizeof(errbuf), "Bad/disordered AS# group ");
   else if (ruleranges.numranges == 0)
-    strcpy(errbuf, "Empty SKI block ");
+    snprintf(errbuf, sizeof(errbuf), "Empty SKI block ");
   else 
     {
     ansr = 1;
@@ -469,7 +470,7 @@ Procedure:
     strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
     {
     ansr = ERR_SCM_BADSKIFILE;
-    strcpy(errbuf, "No private key method.");
+    snprintf(errbuf, sizeof(errbuf), "No private key method.");
     }
   else
     {
@@ -477,7 +478,7 @@ Procedure:
     if (strncmp(cc, "Keyring", 7) || check_keyring(cc) < 0)
       {
       ansr = ERR_SCM_BADSKIFILE;
-      strcpy(errbuf, "Invalid private key method.");
+      snprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
       }
     }
   if (!ansr)
@@ -486,7 +487,7 @@ Procedure:
       strncmp(skibuf, "TOPLEVELCERTIFICATE ", 20))
       {
       ansr = ERR_SCM_NORPCERT;
-      strcpy(errbuf, "No top level certificate.");
+      snprintf(errbuf, sizeof(errbuf), "No top level certificate.");
       }
     else
       {           // get root cert
@@ -496,7 +497,7 @@ Procedure:
       strcpy(myrootfullname, &skibuf[20]);
       if (get_casn_file(&myrootcert.self, &skibuf[20], 0) < 0)
         {
-        sprintf(errbuf, "Invalid top level certificate: %s.", myrootfullname);
+        snprintf(errbuf, sizeof(errbuf), "Invalid top level certificate: %s.", myrootfullname);
         ansr = ERR_SCM_NORPCERT;
         }
       else
@@ -514,7 +515,7 @@ Procedure:
     }
   if (!ansr && !next_cmd(skibuf, siz, SKI))
     {
-    strcpy(errbuf, "No control section.");
+    snprintf(errbuf, sizeof(errbuf), "No control section.");
     ansr = ERR_SCM_BADSKIFILE;
     }
   else if (!ansr)   // CONTROL section
@@ -545,13 +546,13 @@ Procedure:
       else
         {
         ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "Invalid control message: %s.\n", cc);
+        snprintf(errbuf, sizeof(errbuf), "Invalid control message: %s.\n", cc);
         }
       if (!ansr) c = next_cmd(skibuf, siz, SKI);
       }
     if (ansr == -1)
       {
-      sprintf(errbuf, "No/not TRUE or FALSE in %s.", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "No/not TRUE or FALSE in %s.", skibuf);
       ansr = ERR_SCM_BADSKIFILE;
       }
     while (c && !ansr && !strncmp(skibuf, "TAG", 3))
@@ -560,7 +561,7 @@ Procedure:
       cc = nextword(skibuf);
       if (skibuf[3] != ' ')
         {
-        sprintf(errbuf, "Invalid line: %s.", skibuf);
+        snprintf(errbuf, sizeof(errbuf), "Invalid line: %s.", skibuf);
         ansr = ERR_SCM_BADSKIFILE;
         break;
         }
@@ -603,7 +604,7 @@ Procedure:
         else if (nextword(cc))
           {
           ansr = ERR_SCM_BADSKIFILE;
-          sprintf(errbuf, "Invalid Xcp entry: %s.", skibuf);
+          snprintf(errbuf, sizeof(errbuf), "Invalid Xcp entry: %s.", skibuf);
           } 
         else if (check_cp(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
         }
@@ -616,31 +617,31 @@ Procedure:
       else
         {
         ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "Invalid TAG entry: %s.", cc);
+        snprintf(errbuf, sizeof(errbuf), "Invalid TAG entry: %s.", cc);
         }
       if (!ansr) c = next_cmd(skibuf, siz, SKI);
       }
     if (!*errbuf && !strncmp(skibuf, "CONTROL ", 8))
       {
-      sprintf(errbuf, "CONTROL message out of order: %s", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "CONTROL message out of order: %s", skibuf);
       ansr = ERR_SCM_BADSKIFILE;
       }
     else if (ansr < 0)
       {
       if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      if (!*errbuf) sprintf(errbuf, "Invalid entry in file: %s.", skibuf);
+      if (!*errbuf) snprintf(errbuf, sizeof(errbuf), "Invalid entry in file: %s.", skibuf);
       }
     else if (!ansr)
       {
       if (!c || strncmp(skibuf, "SKI ", 4))
         {
         ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "No SKI entry in file.");
+        snprintf(errbuf, sizeof(errbuf), "No SKI entry in file.");
         }
       else if (!(cc = nextword(skibuf)) || *cc < ' ')
         {
         ansr = ERR_SCM_BADSKIFILE;
-        strcpy(errbuf, "Incomplete SKI entry.");
+        snprintf(errbuf, sizeof(errbuf), "Incomplete SKI entry.");
         }
       }
     }

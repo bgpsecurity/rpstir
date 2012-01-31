@@ -156,9 +156,8 @@
 #define ERR_SCM_BADREVSNUM  -148        /* Invalid revoked serial number */
 #define ERR_SCM_NOCRLNUM    -149        /* No CRL number extension */
 #define ERR_SCM_BADMFTNUM   -150        /* invalid manifest number */
-#define ERR_SCM_DUPMFTFNAME -151        /* duplicate file in manifest */
-#define ERR_SCM_DUPMFTHASH  -152        /* duplicate hash in manifest */
-#define ERR_SCM_MAXERR      -152
+#define ERR_SCM_MFTDUPFILE  -151        /* duplicate file in manifest */
+#define ERR_SCM_MAXERR      -151
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
