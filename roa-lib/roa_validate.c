@@ -528,7 +528,7 @@ static int cmsValidate(struct ROA *rp)
 	return ERR_SCM_UNSIGATTR;
 
   // check that roa->content->signerInfoStruct->signatureAlgorithm ==
-  //    1.2.240.113549.1.1.11)
+  //    1.2.840.113549.1.1.11)
   struct casn *oidp = &rp->content.signedData.signerInfos.signerInfo.
                  signatureAlgorithm.algorithm;
   if (diff_objid(oidp, id_sha_256WithRSAEncryption))
@@ -635,14 +635,63 @@ int rtaValidate(struct ROA *rtap)
   return 0;
   }
 
-static int check_mft_filenames(struct Manifest *manp)
+static int check_mft_version(struct casn *casnp)
+  {
+  long val = 0;
+  int lth = read_casn_num(casnp, &val);
+     
+  if (val > 0 ||   
+      (val == 0 && lth > 0)) // check explicit zero
+      return ERR_SCM_BADMANVER;
+  return 0;
+  }
+
+static int check_mft_number(struct casn *casnp)
+  {
+  int lth;
+  long val;                                                      
+  lth = read_casn_num(casnp, &val);
+  if (!lth || val < 0) return ERR_SCM_BADMFTNUM;
+  return 0;
+  }
+
+static int check_mft_dates(struct Manifest *manp)
+  {
+  time_t now;
+  time(&now);
+  int64_t testdate;
+  if (read_casn_time(&manp->thisUpdate, &testdate) < 0)
+    {
+    log_msg(LOG_ERR, "This update is invalid");
+    return ERR_SCM_INVALDT;
+    }
+  if (testdate > now)
+    {
+    log_msg(LOG_ERR, "This update in the future");
+    return ERR_SCM_INVALDT;
+    }
+  now = testdate;
+  if (read_casn_time(&manp->nextUpdate, &testdate) < 0)
+    {
+    log_msg(LOG_ERR, "Next update is invalid");
+    return ERR_SCM_INVALDT;
+    }
+  if (testdate < now)
+    {
+    log_msg(LOG_ERR, "Next update earlier than this update");
+    return ERR_SCM_INVALDT;
+    }
+  return 0;
+  }
+
+static int check_mft_filenames(struct FileListInManifest *fileListp)
   {
   struct FileAndHash * fahp;
   char file[NAME_MAX];
-  int file_length, i;
-  for (fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, 0);
+  int file_length, i, filenum = 0;
+  for (fahp = (struct FileAndHash *)member_casn(&fileListp->self, 0);
     fahp != NULL;
-    fahp = (struct FileAndHash *)next_of(&fahp->self))
+    fahp = (struct FileAndHash *)next_of(&fahp->self), filenum++)
     {
     if (vsize_casn(&fahp->file) > NAME_MAX)
       return ERR_SCM_BADMFTFILENAME;
@@ -658,28 +707,116 @@ static int check_mft_filenames(struct Manifest *manp)
       return ERR_SCM_BADMFTFILENAME;
     if (file_length == 2 && file[0] == '.' && file[1] == '.')
       return ERR_SCM_BADMFTFILENAME;
+    int hash_lth = vsize_casn(&fahp->hash);
+    if (hash_lth != 33)
+      return ERR_SCM_BADMFTHASH;
     }
   return 0;
   }
-
-int manifestValidate(struct ROA *manp)
+/**=========================================================================
+ * @brief Check conformance to manifest profile
+ *
+ * @param manp (struct ROA *)
+ * @return 0 on success<br />a negative integer on failure
+ *
+ * Check manifest conformance with respect to the manifest profile
+ *   (draft-ietf-sidr-rpki-manifests).
+ *    
+ * 4. Manifest definition 
+ *
+ * A manifest is an RPKI signed object, as specified in
+ * [ID.sidr-signed-object].  The RPKI signed object template requires
+ * specification of the following data elements in the context of the
+ * manifest structure.
+ *
+ * 4.1 eContentType
+ *
+ * The eContentType for a Manifest is defined as id-ct-rpkiManifest, and
+ * has the numerical value of 1.2.840.113549.1.9.16.1.26.
+ *
+ *   id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840)
+ *                                    rsadsi(113549) pkcs(1) pkcs9(9) 16 }
+ *
+ *   id-ct OBJECT IDENTIFIER ::= { id-smime 1 }
+ *
+ *   id-ct-rpkiManifest OBJECT IDENTIFIER ::= { id-ct 26 }
+ *
+ * 4.2 eContent
+ *
+ *   The content of a manifest is defined as follows:
+ *
+ * Manifest ::= SEQUENCE {
+ *   version     [0] INTEGER DEFAULT 0,
+ *   manifestNumber  INTEGER (0..MAX),
+ *   thisUpdate      GeneralizedTime,
+ *   nextUpdate      GeneralizedTime,
+ *   fileHashAlg     OBJECT IDENTIFIER,
+ *   fileList        SEQUENCE SIZE (0..MAX) OF FileAndHash
+ *   }
+ * 
+ * FileAndHash ::=     SEQUENCE {
+ *   file            IA5String,
+ *   hash            BIT STRING
+ *   }
+ *   
+ * 4.2.1 Manifest
+ *
+ *   The manifestNumber, thisUpdate, and nextUpdate fields are modeled
+ *   after the corresponding fields in X.509 CRLs (see [RFC5280]).
+ *   Analogous to CRLs, a manifest is nominally current until the time
+ *   specified in nextUpdate or until a manifest is issued with a greater
+ *   manifest number, whichever comes first.
+ *
+ *   If a "one-time-use" EE certificate is employed to verify a manifest,
+ *   the EE certificate MUST have an validity period that coincides with
+ *   the interval from thisUpdate to nextUpdate, to prevent needless
+ *   growth of the CA's CRL.
+ *
+ *   If a "sequential-use" EE certificate is employed to verify a
+ *   manifest, the EE certificate's validity period needs to be no shorter
+ *   than the nextUpdate time of the current manifest.  The extended
+ *   validity time raises the possibility of a substitution attack using a
+ *   stale manifest, as described in Section 6.4.
+ */
+int manifestValidate(struct ROA *roap)
   {
-  int iRes = cmsValidate(manp);
-  if (iRes < 0) return iRes;
-
-  // check that eContentType is id-roa-pki-manifest(= OID 
-  //    1.2.240.113549.1.9.16.1.26)
-  if (diff_objid(&manp->content.signedData.encapContentInfo.eContentType,
+/* Procedure:
+   Step 1 Check that content type is id-ct-rpkiManifest
+        2 Check version
+        3 Check manifest number
+        4 Check dates
+        5 Check the hash algorithm
+        6 Check the list of files and hashes
+        7 Check general CMS structure
+*/
+  int iRes;
+//                                                  step 1
+  if (diff_objid(&roap->content.signedData.encapContentInfo.eContentType,
     id_roa_pki_manifest)) return ERR_SCM_BADCT;
-  // check that the version is right
-  struct casn *casnp = &manp->content.signedData.encapContentInfo.
-    eContent.manifest.version.self;
-  long val;
-  if (size_casn(casnp) > 0 && (read_casn_num(casnp, &val) > 1 ||
-      val > 0)) return ERR_SCM_BADMANVER;
-  iRes = check_mft_filenames(
-    &manp->content.signedData.encapContentInfo.eContent.manifest);
-  if (iRes < 0)
+//                                                   step 2
+  struct Manifest *manp = &roap->content.signedData.encapContentInfo.
+    eContent.manifest;
+  if (size_casn(&manp->self) <= 0) return ERR_SCM_BADCT;
+  if ((iRes = check_mft_version(&manp->version.self)) < 0)
+    return iRes;
+//                                                    step 3
+  if ((iRes = check_mft_number(&manp->manifestNumber)) < 0) 
+    return iRes;
+//                                                    step 4
+  if ((iRes = check_mft_dates(manp)) < 0)
+    return iRes;
+//                                                   step 5
+  if (diff_objid(&manp->fileHashAlg, id_sha256))
+    {
+    log_msg(LOG_ERR, "Incorrect hash algorithm");
+    return ERR_SCM_BADHASHALG;
+    }
+                                                    // step 6
+  if ((iRes = check_mft_filenames(&manp->fileList)) < 0)
+    return iRes;
+                                                    // step 7
+  iRes = cmsValidate(roap);
+  if (iRes < 0) 
     return iRes;
   return 0;
   }
