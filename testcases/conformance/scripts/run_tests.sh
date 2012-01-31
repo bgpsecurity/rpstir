@@ -17,7 +17,7 @@ add_file () {
 	FLAGS="$2" # -f or -F
 	FILE="$3" # file to add
 
-	if test x"$TYPE" = "bad"; then
+	if test x"$TYPE" = x"bad"; then
 		if "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
 			exit 1
