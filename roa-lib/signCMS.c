@@ -98,7 +98,8 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
 
   // set up the context, initialize crypt
   memset(hash, 0, 40);
-  int xxx = cryptInit();
+  if (cryptInit())
+    return ERR_SCM_CRYPTLIB;
 
   // the following calls function f, and if f doesn't return 0 sets
   // msg to m, then breaks out of the loop. Used immediately below.
@@ -205,7 +206,7 @@ char * signCMS(struct ROA* roa, char *keyfilename, int bad)
   // mark it as encrypted with rsa, no params
   write_objid(&sigInfop->signatureAlgorithm.algorithm, 
     id_sha_256WithRSAEncryption); 
-  write_casn(&sigInfop->signatureAlgorithm.parameters, (uchar *)"", 0);
+  write_casn(&sigInfop->signatureAlgorithm.parameters.self, (uchar *)"", 0);
 
   // no errors, we return NULL
   return NULL;
