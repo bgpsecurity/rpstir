@@ -188,8 +188,6 @@ CRLs
 657 CRLNoAKI                 # has no authority key identifier extension
 658 CRLNoCRLNum              # has no CRL number
 659 CRLEntryReason           # entry has a revocation reason
-660 CRLEntryNoSerNum         # entry has no serial number
-661 CRLEntryNoRevDate        # entry has no revocation date
 662 CRLBadDateFeb29          # has Feb. 29 on non-leap year
 663 CRLBadDateDayGT30        # has day 31 of 30-day month
 664 CRLBadDateDayGT31        # has day 32 of 31-day month
@@ -219,6 +217,8 @@ Manifests
 780 MFTFileHashLong          # too long hash of a file
 781 MFTFileNotIA5            # file name not IA5
 782 MFTHashOctetStr          # file hash is octet, not bit string
+783 MFTDuplicateFileOneHash  # duplicate file name with same hash
+784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash
 
 
 TODO: Trust Anchor (self-signed) certificates
