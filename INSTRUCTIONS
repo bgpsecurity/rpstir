@@ -377,6 +377,8 @@ target by issuing the command:
 
    make check
 
+Note:  this will clear any data in the RPKI database.
+
 You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
