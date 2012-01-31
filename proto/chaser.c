@@ -339,20 +339,20 @@ static int handle_uri_string(char const *in) {
 static int query_aia(dbconn *db) {
     char **results = NULL;
     int64_t num_malloced = 0;
-    int64_t result;
+    int64_t num_results;
     int64_t i;
     int ret;
 //    size_t const DST_SZ = DB_URI_LEN + 1;
 //    char scrubbed_str[DST_SZ];
 
-    result = db_chaser_read_aia(db, &results, &num_malloced,
+    num_results = db_chaser_read_aia(db, &results, &num_malloced,
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
-    if (result == -1) {
+    if (num_results == -1) {
         return -1;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
-                num_malloced, num_malloced - result);
-        for (i = 0; i < result; i++) {
+                num_malloced, num_malloced - num_results);
+        for (i = 0; i < num_results; i++) {
 //            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
 //            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
@@ -374,20 +374,20 @@ static int query_aia(dbconn *db) {
 static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours) {
     char **results = NULL;
     int64_t num_malloced = 0;
-    int64_t result;
+    int64_t num_results;
     int64_t i;
     int ret;
 //    size_t const DST_SZ = DB_URI_LEN + 1;
 //    char scrubbed_str[DST_SZ];
 
-    result = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
+    num_results = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
             restrict_by_next_update, num_hours);
-    if (result == -1) {
+    if (num_results == -1) {
         return -1;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
-                num_malloced, num_malloced - result);
-        for (i = 0; i < result; i++) {
+                num_malloced, num_malloced - num_results);
+        for (i = 0; i < num_results; i++) {
 //            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
 //            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
@@ -409,20 +409,20 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
 static int query_sia(dbconn *db, int chase_not_yet_validated) {
     char **results = NULL;
     int64_t num_malloced = 0;
-    int64_t result;
+    int64_t num_results;
     int64_t i;
     int ret;
 //    size_t const DST_SZ = DB_URI_LEN + 1;
 //    char scrubbed_str[DST_SZ];
 
-    result = db_chaser_read_sia(db, &results, &num_malloced,
+    num_results = db_chaser_read_sia(db, &results, &num_malloced,
             chase_not_yet_validated, SCM_FLAG_VALIDATED);
-    if (result == -1) {
+    if (num_results == -1) {
         return -1;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
-                num_malloced, num_malloced - result);
-        for (i = 0; i < result; i++) {
+                num_malloced, num_malloced - num_results);
+        for (i = 0; i < num_results; i++) {
 //            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
 //            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
