@@ -328,6 +328,7 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
     // prev_serial_num
     bind[0].buffer_type= MYSQL_TYPE_LONG;
     bind[0].buffer= &db_prev_sn;
+    bind[0].is_unsigned = (my_bool) 1;
     bind[0].is_null= &db_is_null_prev_sn;
     // has_full
     bind[1].buffer_type = MYSQL_TYPE_TINY;
