@@ -371,7 +371,7 @@ static int query_aia(dbconn *db) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours) {
+static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_seconds) {
     char **results = NULL;
     int64_t num_malloced = 0;
     int64_t num_results;
@@ -381,7 +381,7 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_hours
 //    char scrubbed_str[DST_SZ];
 
     num_results = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
-            restrict_by_next_update, num_hours);
+            restrict_by_next_update, num_seconds);
     if (num_results == -1) {
         return -1;
     } else {
@@ -461,7 +461,7 @@ static int query_read_timestamp(dbconn *db) {
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  -a           chase AIAs  (default:  don't chase AIAs)\n");
-    fprintf(stderr, "  -d hours     chase CRLs where 'next update < hours'  (default:  chase all CRLs)\n");
+    fprintf(stderr, "  -d seconds   chase CRLs where 'next update < seconds'  (default:  chase all CRLs)\n");
     fprintf(stderr, "  -f filename  use filename instead of 'additional_rsync_uris.config'\n");
     fprintf(stderr, "  -p           remove nonprintable chars from uris  (default:  don't remove)\n");
     fprintf(stderr, "  -t           for testing, don't access the database\n");
@@ -481,7 +481,7 @@ static int compare_str_p(const void *p1, const void *p2) {
 int main(int argc, char **argv) {
     int    chase_aia = 0;
     int    restrict_crls_by_next_update = 0;
-    size_t num_hours = 0;
+    size_t num_seconds = 0;
     int    chase_not_yet_validated = 0;
     int    skip_database = 0;
 
@@ -504,7 +504,7 @@ int main(int argc, char **argv) {
             break;
         case 'd':
             restrict_crls_by_next_update = 1;
-            num_hours = (size_t) strtoul(optarg, NULL, 10);
+            num_seconds = (size_t) strtoul(optarg, NULL, 10);
             break;
         case 'f':
             config_file = optarg;
@@ -586,7 +586,7 @@ int main(int argc, char **argv) {
     int db_ok = 1;
     if (query_read_timestamp(db))
         db_ok = 0;
-    if (db_ok  &&  query_crldp(db, restrict_crls_by_next_update, num_hours))
+    if (db_ok  &&  query_crldp(db, restrict_crls_by_next_update, num_seconds))
         db_ok = 0;
     if (db_ok  &&  chase_aia) {
         if (query_aia(db))
