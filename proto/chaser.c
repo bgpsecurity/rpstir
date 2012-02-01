@@ -497,7 +497,7 @@ int main(int argc, char **argv) {
 
     // parse the command-line flags
     int ch;
-    while ((ch = getopt(argc, argv, "acd:f:styh")) != -1) {
+    while ((ch = getopt(argc, argv, "ad:f:tyh")) != -1) {
         switch (ch) {
         case 'a':
             chase_aia = 1;
