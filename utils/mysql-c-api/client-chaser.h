@@ -16,7 +16,7 @@
 int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len);
 
 int64_t db_chaser_read_aia(dbconn *conn, char ***results,
-        int64_t *num_malloced, int flag_no_chain, int flag_validated);
+        int64_t *num_malloced, uint flag_no_chain, uint flag_validated);
 
 int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
         int64_t *num_malloced, char const *ts,
@@ -24,7 +24,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
         int64_t *num_malloced,
-        int chase_not_yet_validated, int validated_flag);
+        uint chase_not_yet_validated, uint validated_flag);
 
 
 #endif

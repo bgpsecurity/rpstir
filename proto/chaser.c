@@ -406,7 +406,7 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
-static int query_sia(dbconn *db, int chase_not_yet_validated) {
+static int query_sia(dbconn *db, uint chase_not_yet_validated) {
     char **results = NULL;
     int64_t num_malloced = 0;
     int64_t num_results;
@@ -482,7 +482,7 @@ int main(int argc, char **argv) {
     int    chase_aia = 0;
     int    restrict_crls_by_next_update = 0;
     size_t num_seconds = 0;
-    int    chase_not_yet_validated = 0;
+    uint   chase_not_yet_validated = 0;
     int    skip_database = 0;
 
     char   *config_file = "additional_rsync_uris.config";
