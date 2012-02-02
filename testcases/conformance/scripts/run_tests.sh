@@ -10,6 +10,9 @@ cd "$THIS_SCRIPT_DIR"/..
 
 ./scripts/gen_all.sh
 
+FAILED=""
+PASSED=""
+
 cd output
 
 add_file () {
@@ -20,14 +23,21 @@ add_file () {
 	if test x"$TYPE" = x"bad"; then
 		if "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
-			exit 1
+			PASSED="$FILE $PASSED"
 		fi
 	else
 		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding good file $FILE failed"
-			exit 1
+			FAILED="$FILE $FAILED"
 		fi
 	fi
+}
+
+list_files () {
+	PREFIX="$1"
+	FILES="$2"
+
+	for FILE in $FILES; do echo "$PREFIX$FILE"; done | sort
 }
 
 init_db () {
@@ -79,3 +89,15 @@ for MFT_CERT in MFT*.cer; do
 	add_file good -f "$MFT_NAME/$MFT_NAME.crl"
 	add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
 done
+
+if test -n "$FAILED" -o -n "$PASSED"; then
+	if test -n "$FAILED"; then
+		echo "Failed but should pass:" >&2
+		list_files "    " "$FAILED" >&2
+	fi
+	if test -n "$PASSED"; then
+		echo "Passed but should fail:" >&2
+		list_files "    " "$PASSED" >&2
+	fi
+	exit 1
+fi
