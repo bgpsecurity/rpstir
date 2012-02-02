@@ -23,12 +23,18 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	echo "REPOSITORY=\"$RPKI_ROOT/REPOSITORY\"" >> "$RSYNC_CORD_CONF"
 	echo "LOGS=\"$RPKI_ROOT/LOGS\"" >> "$RSYNC_CORD_CONF"
 
+	DONE_URI=0
 	printf "DIRS=\"" >> "$RSYNC_CORD_CONF"
 	while read -r -d "" URI; do
 		if printf "%s" "$URI" | grep -q "$BAD_URI_CHARS"; then
 			echo >&2 "Discarding URI: $URI"
 		else
-			printf "%s " "$URI" >> "$RSYNC_CORD_CONF"
+			if test $DONE_URI -eq 0; then
+				DONE_URI=1
+			else
+				printf " " >> "$RSYNC_CORD_CONF"
+			fi
+			printf "%s" "$URI" >> "$RSYNC_CORD_CONF"
 		fi
 	done < "$CUR_LIST"
 	echo "\"" >> "$RSYNC_CORD_CONF"
