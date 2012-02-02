@@ -37,7 +37,7 @@
 
 
 static char    **uris = NULL;
-static size_t  uris_max_sz = 1024 * 1024;
+static size_t  uris_max_sz = 20;
 static size_t  num_uris = 0;
 
 static size_t const TS_LEN = 20;  // "0000-00-00 00:00:00" plus '\0'
