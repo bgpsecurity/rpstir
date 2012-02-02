@@ -39,9 +39,9 @@ reset_db () {
 	rm -r "$RPKI_ROOT/REPOSITORY"
 	mkdir "$RPKI_ROOT/REPOSITORY"
 	"$RPKI_ROOT/proto/rcli" -x -t "$RPKI_ROOT/REPOSITORY" -y
-	add_file good -F "$OUTPUT_DIR"/root.cer
-	add_file good -f "$OUTPUT_DIR"/root/root.crl
-	add_file good -f "$OUTPUT_DIR"/root/root.mft
+	"$RPKI_ROOT/proto/rcli" -y -F "$OUTPUT_DIR"/root.cer
+	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.crl
+	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
 
