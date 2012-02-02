@@ -18,7 +18,7 @@ CREATE TABLE rpstir_metadata (
 -- (bi)map URIs to file hashes
 -- hashes are used as unique IDs for all types of rpki objects in this schema
 CREATE TABLE rpstir_rpki_file (
-  uri varchar(1023) NOT NULL, -- where the file was downloaded from
+  uri varchar(1023) NOT NULL, -- where the file was downloaded from, in normalized form
   hash binary(32) NOT NULL, -- sha256 maybe?, filename could be e.g. /path/to/rpki/CACHE/01/23456789abcdef...
                             -- hash maybe should be the same as the alg used by manifests?
                             -- length would be different for different choice of hash function
@@ -43,6 +43,13 @@ CREATE TABLE rpstir_rpki_hash (
   UNIQUE KEY (alg, data) -- lookup a local hash based on alternate hash
 );
 
+CREATE TABLE rpstir_uri_normalize (
+  uri varchar(1023) NOT NULL, -- not normalized
+  normalized varchar(1023) NOT NULL,
+  PRIMARY KEY (uri),
+  KEY (normalized)
+);
+
 CREATE TABLE rpstir_rpki_cert_asn (
   hash binary(32) NOT NULL,
   first_asn int unsigned NOT NULL,
@@ -64,7 +71,7 @@ CREATE TABLE rpstir_rpki_cert_ip (
 CREATE TABLE rpstir_rpki_cert_aia (
   hash binary(32) NOT NULL,
   preference int unsigned NOT NULL, -- lower number is more preferred
-  uri varchar(1023) NOT NULL,
+  uri varchar(1023) NOT NULL, -- not normalized
   PRIMARY KEY (hash, preference)
 );
 
@@ -72,13 +79,13 @@ CREATE TABLE rpstir_rpki_cert_sia (
   hash binary(32) NOT NULL,
   method ENUM('id-ad-caRepository', 'id-ad-rpkiManifest', 'id-ad-signedObject') NOT NULL,
   preference int unsigned NOT NULL, -- lower number is more preferred
-  uri varchar(1023) NOT NULL,
+  uri varchar(1023) NOT NULL, -- not normalized
   PRIMARY KEY (hash, method, preference)
 );
 
 CREATE TABLE rpstir_rpki_cert_crldp (
   hash binary(32) NOT NULL,
-  uri varchar(1023) NOT NULL,
+  uri varchar(1023) NOT NULL, -- not normalized
   PRIMARY KEY (hash, uri)
 );
 
