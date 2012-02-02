@@ -175,7 +175,7 @@ CREATE TABLE rpstir_rpki_roa (
 
 CREATE TABLE rpstir_rtr_full (
   serial_num int unsigned NOT NULL,
-  asn unsigned NOT NULL,
+  asn int unsigned NOT NULL,
   prefix_id bigint unsigned NOT NULL
   PRIMARY KEY (serial_num, asn, prefix_id)
 );
