@@ -34,7 +34,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 			else
 				printf " " >> "$RSYNC_CORD_CONF"
 			fi
-			printf "%s" "$URI" >> "$RSYNC_CORD_CONF"
+			printf "%s" "$URI" | sed 's!^rsync://!!i' | sed 's!/$!!' >> "$RSYNC_CORD_CONF"
 		fi
 	done < "$CUR_LIST"
 	echo "\"" >> "$RSYNC_CORD_CONF"
