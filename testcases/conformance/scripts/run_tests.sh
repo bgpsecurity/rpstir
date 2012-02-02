@@ -14,6 +14,7 @@ FAILED=""
 PASSED=""
 
 cd output
+OUTPUT_DIR="`pwd`"
 
 add_file () {
 	TYPE="$1" # "good" or "bad"
@@ -45,10 +46,7 @@ init_db () {
 }
 
 reset_db () {
-	OUTPUT_DIR="$1"
-	rm -r "$RPKI_ROOT/REPOSITORY"
-	mkdir "$RPKI_ROOT/REPOSITORY"
-	"$RPKI_ROOT/proto/rcli" -x -t "$RPKI_ROOT/REPOSITORY" -y
+	"$RPKI_ROOT/proto/rcli" -x -t "$OUTPUT_DIR" -y
 	"$RPKI_ROOT/proto/rcli" -y -F "$OUTPUT_DIR"/root.cer
 	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.crl
 	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.mft
@@ -58,25 +56,25 @@ reset_db () {
 init_db
 
 for BAD_ROOT in badRoot*.cer; do
-	reset_db .
+	reset_db
 	add_file bad -F "$BAD_ROOT"
 done
 
 cd root
 
 for GOOD_SINGLE_FILE in good*; do
-	reset_db ..
+	reset_db
 	add_file good -f "$GOOD_SINGLE_FILE"
 done
 
 for BAD_SINGLE_FILE in bad*; do
-	reset_db ..
+	reset_db
 	add_file bad -f "$BAD_SINGLE_FILE"
 done
 
 for CRL_CERT in CRL*.cer; do
 	CRL_NAME=`basename "$CRL_CERT" .cer`
-	reset_db ..
+	reset_db
 	add_file good -f "$CRL_CERT"
 	add_file good -f "$CRL_NAME/$CRL_NAME.mft"
 	add_file bad -f "$CRL_NAME/bad$CRL_NAME.crl"
@@ -84,7 +82,7 @@ done
 
 for MFT_CERT in MFT*.cer; do
 	MFT_NAME=`basename "$MFT_CERT" .cer`
-	reset_db ..
+	reset_db
 	add_file good -f "$MFT_CERT"
 	add_file good -f "$MFT_NAME/$MFT_NAME.crl"
 	add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
