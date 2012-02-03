@@ -10,9 +10,17 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 4. Correctness. Files should be downloaded from the specified URIs, not randomly filled with verses from Shakespeare's less well-known works. Monkeys on typewriters are right out.
 
+5. Per-directory integrity. Each directory fetched from a remote URI should be in a consistent state if possible.
+
 
 = Derived Requirements =
 
 1. (T1, T2, and T4) Concurrency. Multiple downloads should happen in parallel so one slow download doesn't slow down the entire fetch process or prevent any subsequent fetches from running.
 
 2. (T2 and T3) Partial recovery. Only tasks that were in progress during a crash should need to be recovered; recovery should not require re-downloading everything from all remote repositories.
+
+3. (T5) Multiple fetches. More than one fetch may be required per directory in order to verify that directory contents did not change in the middle of one or both of the transfers.
+
+4. (T1) URI normalizing or filtering. URIs containing the relative path reference `..', or any characters with special meanings that may affect local security must be normalized or filtered before use.
+
+5. (T1 and T2) URI blacklisting. There should be a way to temporarily or permanently blacklist URIs that interfere with normal operation, e.g. by sending gibberish data very slowly or by sending many invalid files.
