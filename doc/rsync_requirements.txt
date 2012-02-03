@@ -1,0 +1,18 @@
+Parallel rsync is the rpstir component that fetches data from rsync URIs.
+
+= Top-level Requirements =
+
+1. Security. Remote repositories are not trusted and should not be allowed to take up too much local resources, interfere with other remote repositories, or gain access to the local system.
+
+2. Speed. Updating the local cache from all repositories should happen as quickly as reasonably possible.
+
+3. Durability. A failed download or system crash should be recoverable.
+
+4. Correctness. Files should be downloaded from the specified URIs, not randomly filled with verses from Shakespeare's less well-known works. Monkeys on typewriters are right out.
+
+
+= Derived Requirements =
+
+1. (T1, T2, and T4) Concurrency. Multiple downloads should happen in parallel so one slow download doesn't slow down the entire fetch process or prevent any subsequent fetches from running.
+
+2. (T2 and T3) Partial recovery. Only tasks that were in progress during a crash should need to be recovered; recovery should not require re-downloading everything from all remote repositories.
