@@ -344,7 +344,6 @@ int get_CAcert(char *ski, struct done_cert **done_certpp)
   struct Certificate *certp = (struct Certificate *)0;
   int i, j;
   struct done_cert *done_certp;
-
   if (ski && (done_certp = have_already(ski)))
     {
     *done_certpp = done_certp;
@@ -1523,7 +1522,8 @@ Procedure:
       // flag original cert as having a paracert
       if (locansr >= 0 && (locansr = add_paracert2DB(done_certp)) < 0)
         {
-	  log_msg(LOG_DEBUG, "%s ", done_certp->filename);
+        log_msg(LOG_DEBUG, "Error adding paracert %s to DB", 
+          done_certp->filename);
         strcpy(locfilename, done_certp->filename);
         *skibuf = 0;
         }
