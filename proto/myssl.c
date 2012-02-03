@@ -1725,10 +1725,16 @@ static int rescert_flags_chk(X509 *x, int ct)
     cert_type = EE_CERT;
   else
     cert_type = UN_CERT;
-  if ( ct == cert_type )
+  if ( ct == cert_type ) {
     return(0);
-  else
+  } else {
+    if (x->ex_flags & EXFLAG_CRITICAL) {
+      log_msg(LOG_ERR, "OpenSSL reports an unsupported critical extension "
+	      "in an X.509 certificate.  Please ensure that OpenSSL "
+	      "was compiled with RFC 3779 support.");
+    }
     return(ERR_SCM_BADFLAGS);
+  }
 }
 
 /*************************************************************

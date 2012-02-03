@@ -84,6 +84,11 @@ this file before continuing.
 
 2.1 Prerequisites
 
+When installing prerequisites from your operating system's package
+manager, you may need to look for a -dev or -devel version of each
+package. These versions generally contain header files that are needed
+to build rpstir.
+
 2.1.1 User Account
 
 You must establish a user account from which you can build and run the
@@ -371,6 +376,8 @@ To perform a basic validation of your install, run the self-test
 target by issuing the command:
 
    make check
+
+Note:  this will clear any data in the RPKI database.
 
 You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
