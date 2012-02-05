@@ -5,3 +5,7 @@ proofreader
 query
 rcli
 testrpwork
+
+# Eclipse files to ignore for now
+.cproject
+.project
