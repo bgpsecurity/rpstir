@@ -30,6 +30,13 @@ public class CA_Object extends Allocator {
   private int nextChildSN;
   final String bluePrintName;
   private final CA_Object parent;
+  /**
+   * @return the parent
+   */
+  public CA_Object getParent() {
+    return parent;
+  }
+
   final List<CA_Object> children = new ArrayList<CA_Object>();
   final List<Manifest> manifests = new ArrayList<Manifest>();
   final List<Roa> roas = new ArrayList<Roa>();
@@ -233,5 +240,35 @@ public class CA_Object extends Allocator {
     for (CA_Object child : children) {
       child.appendNodeDirectories(list);
     }
+  }
+
+  /**
+   * @return the number of children
+   */
+  public int getChildCount() {
+    return children.size();
+  }
+
+  /**
+   * @param index
+   * @return the child at the specified index
+   */
+  public CA_Object getChild(int index) {
+    return children.get(index);
+  }
+
+  /**
+   * @param child
+   * @return the index of the specified child
+   */
+  public int indexOf(CA_Object child) {
+    return children.indexOf(child);
+  }
+
+  /**
+   * @return the common name
+   */
+  public String getCommonName() {
+    return commonName;
   }
 }

@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.actions;
 
+import java.util.LinkedHashMap;
+
 import org.jdom.Element;
 
 import com.bbn.rpki.test.objects.TypescriptLogger;
@@ -24,9 +26,9 @@ public abstract class AbstractAction {
 
   protected static final String ATTR_ALLOCATION_INDEX = "allocationIndex";
 
-  protected static final String ATTR_PARENT_COMMON_NAME = "parentCommonName";
+  protected static final String ATTR_PARENT_NAME = "parentName";
 
-  protected static final String ATTR_COMMON_NAME = "commonName";
+  protected static final String ATTR_CHILD_NAME = "childName";
 
   protected static final String ATTR_EPOCH_INDEX = "epoch-index";
 
@@ -49,6 +51,11 @@ public abstract class AbstractAction {
   }
 
   /**
+   * @return attributes map
+   */
+  public abstract LinkedHashMap<String, Object> getAttributes();
+
+  /**
    * Encode this object as XML
    * @return an Element representing this AbstractAction
    */
@@ -58,4 +65,10 @@ public abstract class AbstractAction {
    * @param logger TODO
    */
   public abstract void execute(TypescriptLogger logger);
+
+  /**
+   * @param label
+   * @param newValue
+   */
+  public abstract void updateAttribute(String label, Object newValue);
 }

@@ -317,6 +317,14 @@ public class Model implements Constants {
   }
 
   /**
+   * @param epochIndex
+   * @return
+   */
+  public EpochActions getEpochActions(int epochIndex) {
+    return epochs.get(epochIndex - 1);
+  }
+
+  /**
    * The trust anchor,for now is specified only once as the topmost SS cert
    * in the first topmost root.
    * @return the trust anchor cert file
@@ -535,5 +543,13 @@ public class Model implements Constants {
       sb.append(sourceParts[i]);
     }
     return sb.toString();
+  }
+
+  /**
+   * @return the root CA
+   * TODO local trust anchors mean multiple roots.
+   */
+  public CA_Object getRootCA() {
+    return iana;
   }
 }

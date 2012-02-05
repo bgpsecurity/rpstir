@@ -5,6 +5,7 @@ package com.bbn.rpki.test.actions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.jdom.Element;
@@ -62,6 +63,15 @@ public class EpochActions extends AbstractAction {
   }
 
   /**
+   * Add an action at a specific index
+   * @param index
+   * @param action
+   */
+  public void addAction(int index, AbstractAction action) {
+    actions.add(index, action);
+  }
+
+  /**
    * @see com.bbn.rpki.test.actions.AbstractAction#toXML()
    */
   @Override
@@ -86,5 +96,67 @@ public class EpochActions extends AbstractAction {
     for (AbstractAction action : actions) {
       action.execute(logger);
     }
+  }
+
+  /**
+   * @param index
+   * @return the action at the specified index
+   */
+  public Object getAction(int index) {
+    return actions.get(index);
+  }
+
+  /**
+   * @return the cound of actions in the epoch
+   */
+  public int getActionCount() {
+    return actions.size();
+  }
+
+  /**
+   * @param child
+   * @return the index of the specified action
+   */
+  public int indexOf(Object child) {
+    return actions.indexOf(child);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getAttributes()
+   */
+  @Override
+  public LinkedHashMap<String, Object> getAttributes() {
+    // Not editable
+    return null;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#updateAttribute(java.lang.String, java.lang.Object)
+   */
+  @Override
+  public void updateAttribute(String label, Object newValue) {
+    // Not editable
+  }
+
+  /**
+   * @return the epoch index
+   */
+  public int getEpochIndex() {
+    return epochIndex;
+  }
+
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "Actions of Epoch " + epochIndex;
+  }
+
+  /**
+   * @param index
+   */
+  public void removeAction(int index) {
+    actions.remove(index);
   }
 }

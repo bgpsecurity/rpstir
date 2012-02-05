@@ -3,9 +3,9 @@
  */
 package com.bbn.rpki.test.actions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.jdom.Element;
 
@@ -14,6 +14,7 @@ import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.Range;
 import com.bbn.rpki.test.objects.TypescriptLogger;
+import com.bbn.rpki.test.tasks.Model;
 
 /**
  * Represents an deallocation action to be performed as part of a test.
@@ -28,12 +29,39 @@ import com.bbn.rpki.test.objects.TypescriptLogger;
  */
 public class DeallocateAction extends AbstractAction {
 
-  private final List<Pair> allocationPairs = new ArrayList<Pair>();
-  private final CA_Object parent;
-  private final CA_Object child;
-  private final String allocationId;
-  private final int allocationIndex;
-  private final IPRangeType rangeType;
+  enum AttributeType {
+    INR_TYPE("INR Type"),
+    ISSUER("Issuer"),
+    SUBJECT("Subject"),
+    ALLOCATION_ID("Allocation Id"),
+    ALLOCATION_INDEX("Allocation Index");
+
+    static Map<String, AttributeType> d2o = null;
+
+    static AttributeType forDisplayName(String displayName) {
+      if (d2o == null) {
+        d2o = new HashMap<String, AttributeType>();
+        for (AttributeType at : values()) {
+          d2o.put(at.getDisplayName(), at);
+        }
+      }
+      return d2o.get(displayName);
+    }
+
+    private String displayName;
+    AttributeType(String displayName) {
+      this.displayName = displayName;
+    }
+    public String getDisplayName() {
+      return displayName;
+    }
+  }
+
+  private CA_Object parent;
+  private CA_Object child;
+  private String allocationId;
+  private int allocationIndex;
+  private IPRangeType rangeType;
 
   /**
    * @param parent
@@ -49,7 +77,14 @@ public class DeallocateAction extends AbstractAction {
     this.allocationId = allocationId;
     this.allocationIndex = allocationIndex;
     this.rangeType = rangeType;
-    this.allocationPairs.addAll(Arrays.asList(pairs));
+  }
+
+  /**
+   * Default constructor must have a model to make any sense
+   * @param model
+   */
+  public DeallocateAction(Model model) {
+    this(model.getRootCA(), model.getRootCA().getChild(0), "", 0, IPRangeType.ipv4);
   }
 
   /**
@@ -57,18 +92,13 @@ public class DeallocateAction extends AbstractAction {
    * @param element
    */
   public DeallocateAction(Element element) {
-    String commonName = element.getAttributeValue(ATTR_COMMON_NAME);
-    String parentCommonName = element.getAttributeValue(ATTR_PARENT_COMMON_NAME);
+    String commonName = element.getAttributeValue(ATTR_CHILD_NAME);
+    String parentCommonName = element.getAttributeValue(ATTR_PARENT_NAME);
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
     allocationIndex = Integer.parseInt(element.getAttributeValue(ATTR_ALLOCATION_INDEX));
     rangeType = IPRangeType.valueOf(element.getAttributeValue(ATTR_TYPE));
     parent = ActionManager.singleton().findCA_Object(parentCommonName);
     child = ActionManager.singleton().findCA_Object(commonName);
-    @SuppressWarnings("unchecked")
-    List<Element> children = element.getChildren(Pair.TAG_PAIR);
-    for (Element childElement : children) {
-      allocationPairs.add(new Pair(childElement));
-    }
   }
 
   /**
@@ -78,15 +108,12 @@ public class DeallocateAction extends AbstractAction {
   public Element toXML() {
     Element element = createElement(VALUE_DEALLOCATE);
     if (parent != null) {
-      element.setAttribute(ATTR_PARENT_COMMON_NAME, parent.commonName);
+      element.setAttribute(ATTR_PARENT_NAME, parent.commonName);
     }
-    element.setAttribute(ATTR_COMMON_NAME, child.commonName);
+    element.setAttribute(ATTR_CHILD_NAME, child.commonName);
     element.setAttribute(ATTR_ALLOCATION_ID, allocationId);
     element.setAttribute(ATTR_ALLOCATION_INDEX, String.valueOf(allocationIndex));
     element.setAttribute(ATTR_TYPE, rangeType.name());
-    for (Pair pair : allocationPairs) {
-      element.addContent(pair.toXML());
-    }
     return element;
   }
 
@@ -101,5 +128,52 @@ public class DeallocateAction extends AbstractAction {
     if (logger != null) {
       logger.format("Deallocate %s from %s.%d of %s to %s%n", range, allocationId, allocationIndex, child, parent);
     }
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getAttributes()
+   */
+  @Override
+  public LinkedHashMap<String, Object> getAttributes() {
+    LinkedHashMap<String, Object> ret = new LinkedHashMap<String, Object>();
+    ret.put(AttributeType.INR_TYPE.getDisplayName(), rangeType);
+    ret.put(AttributeType.ISSUER.getDisplayName(), parent);
+    ret.put(AttributeType.SUBJECT.getDisplayName(), child);
+    ret.put(AttributeType.ALLOCATION_ID.getDisplayName(), allocationId);
+    ret.put(AttributeType.ALLOCATION_INDEX.getDisplayName(), allocationIndex);
+    return ret;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#updateAttribute(java.lang.String, java.lang.Object)
+   */
+  @Override
+  public void updateAttribute(String label, Object newValue) {
+    AttributeType at = AttributeType.forDisplayName(label);
+    switch (at) {
+    case ALLOCATION_ID:
+      allocationId = (String) newValue;
+      break;
+    case ALLOCATION_INDEX:
+      allocationIndex = (Integer) newValue;
+      break;
+    case INR_TYPE:
+      rangeType = (IPRangeType) newValue;
+      break;
+    case ISSUER:
+      parent = (CA_Object) newValue;
+      break;
+    case SUBJECT:
+      child = (CA_Object) newValue;
+      break;
+    }
+  }
+
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return String.format("Deallocate %s:%d from %s to %s", allocationId, allocationIndex, parent.getNickname(), child.getNickname());
   }
 }

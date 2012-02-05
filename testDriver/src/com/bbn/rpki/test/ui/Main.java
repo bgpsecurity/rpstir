@@ -9,10 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
+import javax.swing.SwingUtilities;
 
 import com.bbn.rpki.test.RunLoader;
+import com.bbn.rpki.test.actions.ui.ActionsEditor;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.Model;
@@ -58,6 +61,13 @@ public class Main {
       assert iniFile.isFile();
       System.out.println("Starting " + iniFile);
       Model model = new Model(Util.RPKI_ROOT, iniFile, tlPanel);
+      ActionsEditor actionsEditor = new ActionsEditor(model);
+      JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
+      dialog.setModal(true);
+      dialog.setResizable(true);
+      dialog.add(actionsEditor.getComponent());
+      dialog.pack();
+      dialog.setVisible(true);
       Iterable<Task> tasks = model.getTasks();
       executeTasks(tasks, model, "");
       System.out.println(iniFile + " completed");
