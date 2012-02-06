@@ -20,7 +20,7 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 7. Audit.  Ability to log RPKI repository failures and changes.  E.g. Would we be able to go back and find evidence of DNS cache poisoning?
 
-8. Detect and respond to failures to access RPKI respositories (should this feature be preserved across crashes?)
+8. Partial success. Remote repositories may not always be available. RPSTIR needs to continue running as much as possible when some repositories are unavailable.
 
 = Derived Requirements =
 
@@ -28,7 +28,7 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 2. (A1 and T2) Component/resource concurrency. Memory-, disk-, and CPU-bound activities should run in parallel with network-bound downloads.
 
-3. (T2 and T3) Partial recovery. Only tasks that were in progress during a crash should need to be recovered; recovery should not require re-downloading everything from all remote repositories.
+3. (T2, T3, and T8) Partial recovery. Only tasks that were in progress during a crash should need to be recovered; recovery should not require re-downloading everything from all remote repositories.
 
 4. (T4) Multiple fetches. More than one fetch may be required per directory in order to verify that directory contents did not change in the middle of one or both of the transfers.
 
@@ -36,4 +36,12 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 6. (T1 and T2) URI blacklisting. There should be a way to temporarily or permanently blacklist URIs that interfere with normal operation, e.g. by sending gibberish data very slowly or by sending many invalid files.
 
-7. Support for configurable limits on download time/disk usage.
+7. (T1, T2, and T8) Retries. Failed downloads should be retried. The time between retries and the number of retries before giving up should be configurable.
+
+8. Support for configurable limits on download time/disk usage.
+
+= Open Questions =
+
+1. (T3, T8, and D7) Does information about which repositories are failing need to be durable or can all repositories be reverted to a clean state on crash and recovery?
+
+2. (T8) Does there need to be a way to communicate to the rest of rpstir that an update failed?
