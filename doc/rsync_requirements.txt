@@ -12,7 +12,7 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 3. Durability. A failed download or system crash should be recoverable.
 
-4. Intra-directory integrity. Each directory fetched from a remote URI should be in a consistent state if possible.  ?? This requires context.
+4. Intra-directory integrity. It is possible for rsync to fetch a directory while it's in the middle of being updated on the remote end. This can result in failed directory integrity checks in later parts of RPSTIR. If possible, steps should be taken such that each directory fetched from a remote URI is in a consistent state
 
 5. Inter-directory integrity. Remote repositories should not be allowed to interfere with other remote repositories.
 
