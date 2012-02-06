@@ -1,5 +1,9 @@
 Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
+= Assumptions =
+
+1. Network-bound update. Updating a RPSTIR cache from remote repositories is primarily network intensive and other system resources are secondary.
+
 = Top-level Requirements =
 
 1. Availability. Remote repositories should not be allowed to take up too much local resources.
@@ -20,14 +24,16 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 = Derived Requirements =
 
-1. (T1 and T2) Concurrency. Multiple downloads should happen in parallel so one slow download doesn't slow down the entire fetch process or prevent any subsequent fetches from running.
+1. (T1 and T2) Network concurrency. Multiple downloads should happen in parallel so one slow download doesn't slow down the entire fetch process or prevent any subsequent fetches from running.
 
-2. (T2 and T3) Partial recovery. Only tasks that were in progress during a crash should need to be recovered; recovery should not require re-downloading everything from all remote repositories.
+2. (A1 and T2) Component/resource concurrency. Memory-, disk-, and CPU-bound activities should run in parallel with network-bound downloads.
 
-3. (T4) Multiple fetches. More than one fetch may be required per directory in order to verify that directory contents did not change in the middle of one or both of the transfers.
+3. (T2 and T3) Partial recovery. Only tasks that were in progress during a crash should need to be recovered; recovery should not require re-downloading everything from all remote repositories.
 
-4. (T5 and T6) URI normalizing or filtering. URIs containing the relative path reference `..', or any characters with special meanings that may affect local security must be normalized or filtered before use.
+4. (T4) Multiple fetches. More than one fetch may be required per directory in order to verify that directory contents did not change in the middle of one or both of the transfers.
 
-5. (T1 and T2) URI blacklisting. There should be a way to temporarily or permanently blacklist URIs that interfere with normal operation, e.g. by sending gibberish data very slowly or by sending many invalid files.
+5. (T5 and T6) URI normalizing or filtering. URIs containing the relative path reference `..', or any characters with special meanings that may affect local security must be normalized or filtered before use.
 
-6. Support for configurable limits on download time/disk usage.
+6. (T1 and T2) URI blacklisting. There should be a way to temporarily or permanently blacklist URIs that interfere with normal operation, e.g. by sending gibberish data very slowly or by sending many invalid files.
+
+7. Support for configurable limits on download time/disk usage.
