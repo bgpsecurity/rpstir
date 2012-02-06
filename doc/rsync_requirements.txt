@@ -4,7 +4,7 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 1. Availability. Remote repositories should not be allowed to take up too much local resources.
 
-2. Speed. Updating the local cache from all repositories should happen as quickly as reasonably possible.  ?? This is vague.  Tie this into 4-hour cycle (from DB schema requirements)
+2. Bounded run time. Each complete update from all available remote repositories should finish and be committed to the RPSTIR system in less than 4 hours.
 
 3. Durability. A failed download or system crash should be recoverable.
 
