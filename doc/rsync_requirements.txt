@@ -1,8 +1,10 @@
 Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
+
 = Assumptions =
 
 1. Network-bound update. Updating a RPSTIR cache from remote repositories is primarily network intensive and other system resources are secondary.
+
 
 = Top-level Requirements =
 
@@ -22,6 +24,7 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 
 8. Partial success. Remote repositories may not always be available. RPSTIR needs to continue running as much as possible when some repositories are unavailable.
 
+
 = Derived Requirements =
 
 1. (T1 and T2) Network concurrency. Multiple downloads should happen in parallel so one slow download doesn't slow down the entire fetch process or prevent any subsequent fetches from running.
@@ -39,6 +42,7 @@ Parallel rsync is the rpstir component that fetches data from rsync URIs.
 7. (T1, T2, and T8) Retries. Failed downloads should be retried. The time between retries and the number of retries before giving up should be configurable.
 
 8. Support for configurable limits on download time/disk usage.
+
 
 = Open Questions =
 
