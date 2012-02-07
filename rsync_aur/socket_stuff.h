@@ -30,7 +30,6 @@
 struct write_port {
   int out_desc;
   struct sockaddr_in server_addr;
-  struct hostent *host;
   int to_length;
   int protocol;
 };
