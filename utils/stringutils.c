@@ -1,11 +1,12 @@
 /*
   Low-level string parsing utilities
-
-  $Id$
 */
 
 
+#include <ctype.h>
+#include <inttypes.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "stringutils.h"
@@ -357,4 +358,38 @@ int expand_by_doubling(void **ptr, size_t size, size_t *current_nmemb,
   *ptr = new_ptr;
   *current_nmemb = new_nmemb;
   return 0;
+}
+
+/**=============================================================================
+ * @brief Replace questionable chars from string for printing.
+ *
+ * @note Caller handles memory for dst.
+ * @note Output might be truncated, compared to input.
+ * @note dst will be null terminated, at or before index dst_sz-1.
+------------------------------------------------------------------------------*/
+char * scrub_for_print(char *dst, char const *src, size_t const dst_sz,
+        size_t *dst_len_out, char const *other_chars_to_escape) {
+  size_t i;
+  size_t used;
+
+  dst[0] = '\0';
+
+  for (i = 0, used = 0; i < dst_sz - 1; i++) {
+    if ('\0' == src[i]) {
+      break;
+    } else if (!isprint(src[i])  ||  (isspace(src[i]) && ' ' != src[i])) {
+      used += snprintf(&dst[used], dst_sz - used, "\\x%02" PRIx8, src[i]);
+    } else if (strchr(other_chars_to_escape, src[i])) {
+      used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
+    } else if ('\\' == src[i]) {
+      used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
+    } else {
+      used += snprintf(&dst[used], dst_sz - used, "%c", src[i]);
+    }
+  }
+
+  if (dst_len_out)
+      *dst_len_out = used;
+
+  return dst;
 }
