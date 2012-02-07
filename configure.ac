@@ -24,14 +24,14 @@ AC_PROG_SED
 
 AC_ARG_WITH(
     [ssl-include],
-    AS_HELP_STRING([--with-ssl-include],[Path to openssl library install location: Defaults to /usr/local/ssl/include ]),
+    AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ]),
     [ ssl_include=$withval],
     [ ssl_include=/usr/local/ssl/include]
 )
 
 AC_ARG_WITH(
     [ssl-lib],
-    AS_HELP_STRING([--with-ssl-lib],[Path to openssl library install location: Defaults to /usr/local/ssl/lib ]),
+    AS_HELP_STRING([--with-ssl-lib],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/lib ]),
     [ ssl_lib=$withval],
     [ ssl_lib=/usr/local/ssl/lib]
 )
@@ -165,7 +165,11 @@ AC_SEARCH_LIBS([cryptInit], [cl],[],[
 	exit -1;
 ])
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
-	echo "Error: openSSL is required for building this project"
+	echo "Error: OpenSSL is required for building this project"
+	exit -1;
+])
+AC_SEARCH_LIBS([v3_addr_validate_path], [crypto],[],[
+	echo "Error: OpenSSL with RFC 3779 is required for building this project"
 	exit -1;
 ])
 
