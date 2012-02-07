@@ -1,11 +1,11 @@
---- badCRLBadDateMonth13.crl.raw.old	2012-01-17 11:23:11.643150671 -0500
-+++ badCRLBadDateMonth13.crl.raw	2012-01-17 11:23:21.596429205 -0500
+--- badCRLBadDateMonth13.crl.raw.old	2012-02-07 11:13:36.865766949 -0500
++++ badCRLBadDateMonth13.crl.raw	2012-02-07 11:13:53.552231659 -0500
 @@ -3,7 +3,7 @@
              nul 
          seq set seq oid 2.5.4.3 /* id_commonName */
                      prt "CRLBadDateMonth13"
--        utc "110322185728Z"
-+        utc "111322185728Z"
-         utc "460407185928Z"
+-        utc "110411185728Z"
++        utc "111311185728Z"
+         utc "460515185928Z"
          ctx+0x20
              seq seq oid 2.5.29.20 /* id_cRLNumber */
