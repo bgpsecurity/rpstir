@@ -337,13 +337,13 @@ void mk_certranges(struct ipranges *rangep,
   if (rangep->numranges > 0 || rangep->iprangep)
       clear_ipranges(rangep);
   struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
-  int num;
+  int num = 0;
   struct IPAddressOrRangeA *ipAddrOrRangep;
   struct iprange *certrangep;
   struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp;
   if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
     {
-    for (num = 0, ipAddrOrRangep = (struct IPAddressOrRangeA *)
+    for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
       member_casn(&ipAddrOrRangesp->self, 0);
       ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
       next_of(&ipAddrOrRangep->self))
