@@ -21,13 +21,45 @@ add_file () {
 	FLAGS="$2" # -f or -F
 	FILE="$3" # file to add
 
+	FILEBASENAME=`basename "$FILE"`
+
+	case "$FILEBASENAME" in
+		*.cer)
+			FILETYPE=cert
+			;;
+		*.roa)
+			FILETYPE=roa
+			;;
+		*.crl)
+			FILETYPE=crl
+			;;
+		*.mft|*.man|*.mnf)
+			FILETYPE=man
+			;;
+		*)
+			echo >&2 "Error: unknown filetype for file $FILE"
+			exit 1
+	esac
+
 	if test x"$TYPE" = x"bad"; then
-		if "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+			return
+		fi
+
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" 2> /dev/null | wc -l`
+		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
 			PASSED="$FILE $PASSED"
 		fi
 	else
 		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+			echo >&2 "Error: adding good file $FILE failed"
+			FAILED="$FILE $FAILED"
+			return
+		fi
+
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" 2> /dev/null | wc -l`
+		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
 			FAILED="$FILE $FAILED"
 		fi
