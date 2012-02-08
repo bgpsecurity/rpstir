@@ -1,8 +1,5 @@
 #!/bin/sh -e
 
-# XXX: remove this once this script works
-exit 0
-
 THIS_SCRIPT_DIR=`dirname "$0"`
 . "$THIS_SCRIPT_DIR/../../../envir.setup"
 
