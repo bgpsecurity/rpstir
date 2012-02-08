@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -59,7 +61,54 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class Model implements Constants {
-
+  static class TaskFactoryKey {
+    private final Class<? extends TaskFactory> factoryClass;
+    private final Object arg;
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((arg == null) ? 0 : arg.hashCode());
+      result = prime * result + (factoryClass.hashCode());
+      return result;
+    }
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      TaskFactoryKey other = (TaskFactoryKey) obj;
+      if (arg == null) {
+        if (other.arg != null) {
+          return false;
+        }
+      } else if (!arg.equals(other.arg)) {
+        return false;
+      }
+      return factoryClass == other.factoryClass;
+    }
+    /**
+     * @param factoryClass
+     * @param arg
+     */
+    protected TaskFactoryKey(Class<? extends TaskFactory> factoryClass, Object arg) {
+      super();
+      this.factoryClass = factoryClass;
+      this.arg = arg;
+    }
+  }
   static final File REPO_DIR = new File(REPO_PATH);
   private static final String TAL_NAME = "test.tal";
   private static final String FILE_SEP = System.getProperty("file.separator", "/");
@@ -96,8 +145,11 @@ public class Model implements Constants {
   private final List<File> previousRepositoryRoots = new ArrayList<File>();
   private final TestbedConfig testbedConfig;
   private final TypescriptLogger logger;
-  protected Deque<Task> tasks = new ArrayDeque<Task>();
-  private final Map<String, Task> taskMap = new HashMap<String, Task>();
+  protected Deque<TaskFactory.Task> tasks = new ArrayDeque<TaskFactory.Task>();
+  private final Map<String, TaskFactory.Task> taskMap = new HashMap<String, TaskFactory.Task>();
+  private final Map<TaskFactoryKey, TaskFactory> taskFactories = new HashMap<TaskFactoryKey, TaskFactory>();
+  private final List<File> nodeDirectories = new ArrayList<File>();
+  private final Map<String, File> nodeDirectoryByName = new TreeMap<String, File>();
 
   /**
    * @param rpkiRoot
@@ -112,6 +164,16 @@ public class Model implements Constants {
     TestbedCreate tbc = new TestbedCreate(testbedConfig);
     tbc.createDriver();
     iana = tbc.getRoot();
+    iana.iterate(new CA_Object.IterationAction() {
+
+      @Override
+      public boolean performAction(CA_Object caObject) {
+        File dir = new File(new File(REPO_PATH), caObject.SIA_path);
+        nodeDirectories.add(dir);
+        nodeDirectoryByName.put(caObject.getCommonName(), dir);
+        return true;
+      }
+    });
     this.ianaServerName = testbedConfig.getFactory("IANA").getServerName();
 
     // Build some actions
@@ -129,26 +191,65 @@ public class Model implements Constants {
     Document doc = new Document(root);
     XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
     outputter.output(doc, System.out);
-    addTask(new InitializeCache(this));
-    addTask(new StartLoader(this));
-    addTask(new InitializeRepositories(this));
-    addTask(new AdvanceEpoch(this));
+    addTask(getTaskFactory(InitializeCache.class).createTask(InitializeCache.TASK_NAME));
+    addTask(getTaskFactory(StartLoader.class).createTask(StartLoader.TASK_NAME));
+    addTask(getTaskFactory(InitializeRepositories.class).createTask(InitializeRepositories.TASK_NAME));
+    addTask(getTaskFactory(AdvanceEpoch.class).createTask("AdvanceEpoch"));
+  }
+
+  /**
+   * @param <T>
+   * @param cls
+   * @return the TaskFactory for the specified class
+   */
+  public<T extends TaskFactory> T getTaskFactory(Class<T> cls) {
+    return getTaskFactory(cls, null);
+  }
+
+  /**
+   * @param <T>
+   * @param cls
+   * @param arg
+   * @return the TaskFactory for the specified class
+   */
+  @SuppressWarnings("unchecked")
+  public<T extends TaskFactory> T getTaskFactory(Class<T> cls, Object arg) {
+    TaskFactoryKey key = new TaskFactoryKey(cls, arg);
+    T ret = (T) taskFactories.get(key);
+    if (ret == null) {
+      try {
+        if (arg == null) {
+          Constructor<T> constructor = cls.getConstructor(Model.class);
+          ret = constructor.newInstance(this);
+        } else {
+          Constructor<T> constructor = cls.getConstructor(Model.class, arg.getClass());
+          ret = constructor.newInstance(this, arg);
+        }
+      } catch (Exception e) {
+        if (e instanceof RuntimeException) {
+          throw (RuntimeException) e;
+        }
+        throw new RuntimeException(e);
+      }
+      taskFactories.put(key, ret);
+    }
+    return ret;
   }
 
   /**
    * @param task
    */
-  public void addTask(Task task) {
+  public void addTask(TaskFactory.Task task) {
     addTaskInner(task);
     if (shouldInstallTrustAnchor(task, getEpochIndex())) {
-      addTaskInner(new InstallTrustAnchor(this));
+      addTaskInner(getTaskFactory(InstallTrustAnchor.class).createTask(InstallTrustAnchor.TASK_NAME));
     }
     if (shouldUpdateCache(task)) {
-      addTaskInner(new UpdateCache(this));
-      addTaskInner(new CheckCacheStatus(this));
+      addTaskInner(getTaskFactory(UpdateCache.class).createTask(UpdateCache.TASK_NAME));
+      addTaskInner(getTaskFactory(CheckCacheStatus.class).createTask("CheckCache"));
     }
   }
-  private void addTaskInner(Task task) {
+  private void addTaskInner(TaskFactory.Task task) {
     tasks.add(task);
     Object old = taskMap.put(task.getTaskName(), task);
     assert old == null;
@@ -157,13 +258,13 @@ public class Model implements Constants {
   /**
    * @return the tasks of this test
    */
-  public Iterable<Task> getTasks() {
-    return new Iterable<Task>() {
+  public Iterable<TaskFactory.Task> getTasks() {
+    return new Iterable<TaskFactory.Task>() {
 
       @Override
-      public Iterator<Task> iterator() {
-        return new Iterator<Task>() {
-          Task nextTask = null;
+      public Iterator<TaskFactory.Task> iterator() {
+        return new Iterator<TaskFactory.Task>() {
+          TaskFactory.Task nextTask = null;
 
           @Override
           public boolean hasNext() {
@@ -174,11 +275,11 @@ public class Model implements Constants {
           }
 
           @Override
-          public Task next() {
+          public TaskFactory.Task next() {
             if (!hasNext()) {
               throw new NoSuchElementException();
             }
-            Task ret = nextTask;
+            TaskFactory.Task ret = nextTask;
             taskMap.remove(ret.getTaskName());
             nextTask = null;
             return ret;
@@ -196,7 +297,7 @@ public class Model implements Constants {
   /**
    * @return the next Task or null if finished
    */
-  private Task nextTask() {
+  private TaskFactory.Task nextTask() {
     return tasks.poll();
   }
 
@@ -204,25 +305,28 @@ public class Model implements Constants {
    * @param task
    * @return
    */
-  private boolean shouldInstallTrustAnchor(Task task, int epochIndex) {
-    if (epochIndex == 0) {
-      // For not only install trust anchors for epoch 0
-      // Upload just after uploading an entire epoch (if not broken down)
-      if (task instanceof UploadEpoch) {
-        return true;
-      }
-      // Upload just after uploading any root (only trust anchors within)
-      if (task instanceof UploadRepositoryRoot) {
-        UploadRepositoryRootFiles urr = (UploadRepositoryRootFiles) task;
-        File[] topFiles = urr.getRepositoryRootDir().listFiles(cerFilter);
-        return topFiles.length > 0;
-      }
-      if (task instanceof UploadFile) {
-        UploadFile uploadFileTask = (UploadFile) task;
-        File file = uploadFileTask.getFile();
-        String[] path = getSourcePath(file);
-        File rootDir = new File(new File(REPO_DIR, path[0]), path[1]);
-        return file.getParentFile().equals(rootDir) && file.getName().endsWith(".cer");
+  private boolean shouldInstallTrustAnchor(TaskFactory.Task task, int epochIndex) {
+    // For not only install trust anchors for epoch 0
+    // Upload just after uploading an entire epoch (if not broken down)
+    if (task instanceof UploadEpoch.Task) {
+      return true;
+    }
+    // Upload just after uploading any root (only trust anchors within)
+    if (task instanceof UploadRepositoryRoot.Task) {
+      UploadRepositoryRoot.Task urr = (UploadRepositoryRoot.Task) task;
+      File[] topFiles = urr.getRepositoryRootDir().listFiles(cerFilter);
+      return topFiles.length > 0;
+    }
+    if (task instanceof UploadFiles.Task) {
+      UploadFiles.Task uploadFilesTask = (UploadFiles.Task) task;
+      if (getRepositoryRoots().contains(uploadFilesTask.getDirectory())) {
+        // If the directory is a repository root
+        for (File file : uploadFilesTask.getFilesToUpload()) {
+          // any file is a cert
+          if (file.getName().endsWith(".cer")) {
+            return true;
+          }
+        }
       }
     }
     return false;
@@ -232,9 +336,9 @@ public class Model implements Constants {
    * @param task
    * @return
    */
-  protected boolean shouldUpdateCache(Task task) {
+  protected boolean shouldUpdateCache(TaskFactory.Task task) {
     // Update the cache after each epoch, by default
-    return task instanceof UploadEpoch;
+    return task instanceof UploadEpoch.Task;
   }
   /**
    * @return all the server names
@@ -262,7 +366,7 @@ public class Model implements Constants {
    */
   public void advanceEpoch() {
     ++epochIndex;
-    addTask(new UploadEpoch(this));
+    addTask(getTaskFactory(UploadEpoch.class).createTask(UploadEpoch.TASK_NAME));
     previousRepositoryRoots.clear();
     previousRepositoryRoots.addAll(repositoryRoots);
     repositoryRoots.clear();
@@ -318,7 +422,7 @@ public class Model implements Constants {
 
   /**
    * @param epochIndex
-   * @return
+   * @return the EpochActions for the specified epoch
    */
   public EpochActions getEpochActions(int epochIndex) {
     return epochs.get(epochIndex - 1);
@@ -490,7 +594,7 @@ public class Model implements Constants {
    * @param string
    * @return the task with the given name
    */
-  public Task getTask(String string) {
+  public TaskFactory.Task getTask(String string) {
     return taskMap.get(string);
   }
 
@@ -498,9 +602,7 @@ public class Model implements Constants {
    * @return a list of the directories of all nodes
    */
   public List<File> getNodeDirectories() {
-    List<File> ret = new ArrayList<File>();
-    iana.appendNodeDirectories(ret);
-    return ret;
+    return nodeDirectories;
   }
 
   /**
@@ -551,5 +653,44 @@ public class Model implements Constants {
    */
   public CA_Object getRootCA() {
     return iana;
+  }
+
+  /**
+   * @param nodeName
+   * @return the node directory corresponding to the node name
+   */
+  public File getNodeDirectory(String nodeName) {
+    return nodeDirectoryByName.get(nodeName);
+  }
+
+  /**
+   * @param repositoryRootName
+   * @return the File corresponding to the named repository rooot
+   */
+  public File getRepositoryRoot(String repositoryRootName) {
+    return new File(REPO_DIR, repositoryRootName);
+  }
+
+  /**
+   * @return the names of the repository roots
+   */
+  public Collection<String> getRepositoryRootNames() {
+    List<String> ret = new ArrayList<String>(repositoryRoots.size());
+    for (File root : repositoryRoots) {
+      String repositoryRootName = getRepositoryRootName(root);
+      ret.add(repositoryRootName);
+    }
+    return ret;
+  }
+
+  /**
+   * @param root
+   * @return the name for the repository root
+   */
+  public String getRepositoryRootName(File root) {
+    String serverName = root.getParentFile().getName();
+    String rootName = root.getName();
+    String repositoryRootName = serverName + "/" + rootName;
+    return repositoryRootName;
   }
 }

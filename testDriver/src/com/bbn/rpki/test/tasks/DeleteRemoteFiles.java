@@ -16,53 +16,52 @@ import com.bbn.rpki.test.objects.Util;
  *
  * @author tomlinso
  */
-public abstract class DeleteRemoteFiles extends Task {
+public abstract class DeleteRemoteFiles extends TaskFactory {
+  protected abstract class Task extends TaskFactory.Task {
 
-  protected final Model model;
+    protected final File publicationSource;
 
-  protected final File publicationSource;
-
-  protected DeleteRemoteFiles(String taskName, Model model, File publicationSource) {
-    super(taskName, model);
-    this.model = model;
-    this.publicationSource = publicationSource;
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#run()
-   */
-  @Override
-  public void run() {
-    List<File> supercededFiles = getSupercededFiles();
-    if (supercededFiles.isEmpty()) {
-      return;
+    protected Task(String taskName, File publicationSource) {
+      super(taskName);
+      this.publicationSource = publicationSource;
     }
-    List<String> cmd = new ArrayList<String>();
-    String[] sourceParts = model.getSourcePath(publicationSource);
-    String remotePath = model.getRemotePath(sourceParts);
-    String serverName = sourceParts[0];
-    cmd.addAll(Arrays.asList("ssh",
-                             serverName,
-                             "cd",
-                             remotePath,
-    "rm"));
-    for (File file : supercededFiles) {
-      String name = file.getName();
-      cmd.add(name);
+
+    @Override
+    public void run() {
+      List<File> supercededFiles = getSupercededFiles();
+      if (supercededFiles.isEmpty()) {
+        return;
+      }
+      List<String> cmd = new ArrayList<String>();
+      String[] sourceParts = model.getSourcePath(publicationSource);
+      String remotePath = model.getRemotePath(sourceParts);
+      String serverName = sourceParts[0];
+      cmd.addAll(Arrays.asList("ssh",
+                               serverName,
+                               "cd",
+                               remotePath,
+      "rm"));
+      for (File file : supercededFiles) {
+        String name = file.getName();
+        cmd.add(name);
+      }
+      Util.exec(getTaskName(), false, null, null, null, cmd);
+      model.deletedFiles(supercededFiles);
     }
-    Util.exec(getTaskName(), false, null, null, null, cmd);
-    model.deletedFiles(supercededFiles);
+
+    protected abstract List<File> getSupercededFiles();
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+     */
+    @Override
+    protected String getLogDetail() {
+      // TODO Auto-generated method stub
+      return null;
+    }
   }
 
-  protected abstract List<File> getSupercededFiles();
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
-   */
-  @Override
-  protected String getLogDetail() {
-    // TODO Auto-generated method stub
-    return null;
+  protected DeleteRemoteFiles(Model model) {
+    super(model);
   }
-
 }

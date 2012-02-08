@@ -3,6 +3,10 @@
  */
 package com.bbn.rpki.test.tasks;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import com.bbn.rpki.test.RunLoader;
 
 /**
@@ -12,37 +16,61 @@ import com.bbn.rpki.test.RunLoader;
  *
  * @author tomlinso
  */
-public class StartLoader extends Task {
+public class StartLoader extends TaskFactory {
+  protected class Task extends TaskFactory.Task {
+
+    /**
+     * @param taskName
+     */
+    protected Task() {
+      super(TASK_NAME);
+    }
+
+    @Override
+    public void run() {
+      RunLoader.singleton().start();
+    }
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+     */
+    @Override
+    protected String getLogDetail() {
+      return "Loader started";
+    }
+  }
+
+  static final String TASK_NAME = "StartLoader";
 
   /**
    * @param model
    */
   public StartLoader(Model model) {
-    super("StartLoader", model);
+    super(model);
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#run()
+   * @return a new Task
    */
   @Override
-  public void run() {
-    RunLoader.singleton().start();
+  public Task createTask(String taskName) {
+    return new Task();
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
+   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(String n) {
-    return null;
+  protected void appendBreakdowns(List<Breakdown> list) {
+    // There are no breakdowns
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
    */
   @Override
-  protected String getLogDetail() {
-    return "Loader started";
+  public Collection<String> getTaskNames() {
+    return Collections.singleton(TASK_NAME);
   }
-
 }
+

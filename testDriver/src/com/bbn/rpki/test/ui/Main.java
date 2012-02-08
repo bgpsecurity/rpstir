@@ -19,8 +19,8 @@ import com.bbn.rpki.test.actions.ui.ActionsEditor;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.Model;
-import com.bbn.rpki.test.tasks.Task;
 import com.bbn.rpki.test.tasks.TaskBreakdown;
+import com.bbn.rpki.test.tasks.TaskFactory;
 import com.bbn.rpki.test.tasks.UpdateCache;
 
 /**
@@ -68,24 +68,24 @@ public class Main {
       dialog.add(actionsEditor.getComponent());
       dialog.pack();
       dialog.setVisible(true);
-      Iterable<Task> tasks = model.getTasks();
+      Iterable<TaskFactory.Task> tasks = model.getTasks();
       executeTasks(tasks, model, "");
       System.out.println(iniFile + " completed");
       RunLoader.singleton().stop();
     }
   }
 
-  private void executeTasks(Iterable<Task> tasks, Model model, String indent) {
-    for (Task task : tasks) {
+  private void executeTasks(Iterable<TaskFactory.Task> tasks, Model model, String indent) {
+    for (TaskFactory.Task task : tasks) {
       tlPanel.format("%s%s...", indent, task.toString());
-      TaskBreakdown breakdown = task.getSelectedBreakdown();
-      Iterable<Task> subtasks = null;
+      TaskBreakdown breakdown = task.getSelectedTaskBreakdown();
+      Iterable<TaskFactory.Task> subtasks = null;
       if (breakdown == null) {
         task.run();
         if (task.isTestEnabled()) {
-          Task[] subArray = {
-              new UpdateCache(model),
-              new CheckCacheStatus(model)
+          TaskFactory.Task[] subArray = {
+              model.getTaskFactory(UpdateCache.class).createTask(),
+              model.getTaskFactory(CheckCacheStatus.class).createTask(),
           };
           subtasks = Arrays.asList(subArray);
         }

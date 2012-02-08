@@ -15,7 +15,19 @@ import com.bbn.rpki.test.actions.ActionManager;
  * @author RTomlinson
  */
 public class CA_Object extends Allocator {
-
+  /**
+   * Interface to be implemented when iteration over the tree.
+   *
+   * @author tomlinso
+   */
+  public interface IterationAction {
+    /**
+     * Implementation performs the desired action
+     * @param caObject
+     * @return true to continue the iteration
+     */
+    boolean performAction(CA_Object caObject);
+  }
   /** sia directory path (ends with /) */
   public String SIA_path;
   /** cert common name */
@@ -232,13 +244,12 @@ public class CA_Object extends Allocator {
   }
 
   /**
-   * @param list
+   * @param action the action to perform on every CA_Object
    */
-  public void appendNodeDirectories(List<File> list) {
-    File dir = new File(new File(REPO_PATH), SIA_path);
-    list.add(dir);
+  public void iterate(IterationAction action) {
+    action.performAction(this);
     for (CA_Object child : children) {
-      child.appendNodeDirectories(list);
+      child.iterate(action);
     }
   }
 

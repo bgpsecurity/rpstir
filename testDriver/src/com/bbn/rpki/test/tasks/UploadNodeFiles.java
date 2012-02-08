@@ -5,6 +5,7 @@ package com.bbn.rpki.test.tasks;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,43 +17,46 @@ import java.util.List;
  */
 public class UploadNodeFiles extends UploadFiles {
 
-  private final ExtensionHandler xHandler;
+  private final ExtensionHandler xHandler = new ExtensionHandler();
 
   /**
    * @param model
    * @param nodeDir
    */
   public UploadNodeFiles(Model model, File nodeDir) {
-    super("upload(" + model.getNodeName(nodeDir) + ")", model, nodeDir);
-    xHandler = new ExtensionHandler();
-  }
-
-  @Override
-  protected List<File> getFilesToUpload() {
-    List<File> filesToUpload = new ArrayList<File>();
-    for (File file : model.getWrittenFiles()) {
-      if (file.getParentFile().equals(nodeDir)) {
-        filesToUpload.add(file);
-      }
-    }
-    return filesToUpload;
+    super(model, new Args(nodeDir, null));
   }
 
   /**
-   * The one breakdown case we have is to upload individual files as separate,
-   * parallel tasks
-   * 
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
+   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
    */
   @Override
-  public TaskBreakdown getTaskBreakdown(String breakdownName) {
-    List<ExtensionHandler.Group> groups =
-      xHandler.getGroups(breakdownName, getFilesToUpload());
-    List<Task> tasks = new ArrayList<Task>();
-    for (ExtensionHandler.Group group : groups) {
-      List<File> files = group.getFiles();
-      tasks.add(new UploadGroup(group.getExtension(), model, nodeDir, files));
+  public void appendBreakdowns(List<Breakdown> list) {
+    for (String bdn : xHandler.getBreakdownNames()) {
+      final String breakdownName = bdn;
+      list.add(new Breakdown(breakdownName) {
+        @Override
+        public TaskBreakdown getTaskBreakdown(TaskFactory.Task task) {
+          ExtensionHandler.ExtensionFilter[] filters =
+            xHandler.getExtensionFilter(breakdownName);
+          Task parentTask = (Task) task;
+          List<TaskFactory.Task> tasks = new ArrayList<TaskFactory.Task>();
+          for (ExtensionHandler.ExtensionFilter filter : filters) {
+            UploadFiles.Args args = new UploadFiles.Args(directory, filter);
+            UploadFiles subFactory = model.getTaskFactory(UploadFiles.class, args);
+            tasks.add(subFactory.createTask(filter.getExtension()));
+          }
+          return new TaskBreakdown(breakdownName, parentTask, tasks);
+        }
+      });
     }
-    return new TaskBreakdown(breakdownName, this, tasks);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
+   */
+  @Override
+  public Collection<String> getTaskNames() {
+    return null;
   }
 }

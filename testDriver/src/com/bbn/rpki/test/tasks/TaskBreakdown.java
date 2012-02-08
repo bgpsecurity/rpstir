@@ -14,17 +14,17 @@ import java.util.Map;
  * @author tomlinso
  */
 public class TaskBreakdown {
-  private final List<Task> tasks;
-  private Map<String, Task> taskMap = null;
+  private final List<TaskFactory.Task> tasks;
+  private Map<String, TaskFactory.Task> taskMap = null;
   private final String breakdownName;
-  private final Task parentTask;
+  private final TaskFactory.Task parentTask;
 
   /**
    * @param breakdownName
    * @param parentTask
    * @param tasks
    */
-  public TaskBreakdown(String breakdownName, Task parentTask, Task...tasks) {
+  public TaskBreakdown(String breakdownName, TaskFactory.Task parentTask, TaskFactory.Task...tasks) {
     this(breakdownName, parentTask, Arrays.asList(tasks));
   }
 
@@ -33,7 +33,7 @@ public class TaskBreakdown {
    * @param parentTask
    * @param tasks
    */
-  public TaskBreakdown(String breakdownName, Task parentTask, List<Task> tasks) {
+  public TaskBreakdown(String breakdownName, TaskFactory.Task parentTask, List<TaskFactory.Task> tasks) {
     super();
     this.breakdownName = breakdownName;
     this.parentTask = parentTask;
@@ -44,10 +44,10 @@ public class TaskBreakdown {
    * @param taskName
    * @return the named task or null if none found
    */
-  public Task getTask(String taskName) {
+  public TaskFactory.Task getTask(String taskName) {
     if (taskMap == null) {
-      taskMap = new HashMap<String, Task>();
-      for (Task task : tasks) {
+      taskMap = new HashMap<String, TaskFactory.Task>();
+      for (TaskFactory.Task task : tasks) {
         taskMap.put(task.getTaskName(), task);
       }
     }
@@ -57,7 +57,7 @@ public class TaskBreakdown {
   /**
    * @return the tasks
    */
-  public List<Task> getTasks() {
+  public List<TaskFactory.Task> getTasks() {
     return tasks;
   }
 

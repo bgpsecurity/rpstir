@@ -5,8 +5,7 @@ package com.bbn.rpki.test.tasks;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,33 +15,8 @@ import java.util.TreeMap;
  * @author tomlinso
  */
 public class ExtensionHandler {
-  static class Group {
-    private final String extension;
-    private final List<File> files;
-    /**
-     * @param extension
-     * @param files
-     */
-    public Group(String extension, List<File> files) {
-      super();
-      this.extension = extension;
-      this.files = files;
-    }
-    /**
-     * @return the extension
-     */
-    public String getExtension() {
-      return extension;
-    }
-    /**
-     * @return the files
-     */
-    public List<File> getFiles() {
-      return files;
-    }
-  }
 
-  static class ExtensionFilter implements FileFilter {
+  public static class ExtensionFilter implements FileFilter {
     private final String extension;
     ExtensionFilter(String extension) {
       this.extension = extension;
@@ -52,7 +26,50 @@ public class ExtensionHandler {
     public boolean accept(File file) {
       return file.getName().endsWith("." + extension);
     }
+
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+      return extension.hashCode();
+    }
+
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      ExtensionFilter other = (ExtensionFilter) obj;
+      return extension.equals(other.extension);
+    }
+
+    /**
+     * @return
+     */
+    public String getExtension() {
+      return extension;
+    }
   }
+
+  /**
+   * The extensions for file groups
+   */
+  public static String[] extensions = {
+    "cer",
+    "mft",
+    "crl",
+    "roa",
+  };
 
   private final Map<String, ExtensionFilter[]> breakdownMap = new TreeMap<String, ExtensionFilter[]>();
 
@@ -60,12 +77,6 @@ public class ExtensionHandler {
    * Constructor
    */
   public ExtensionHandler() {
-    String[] extensions = {
-        "cer",
-        "mft",
-        "crl",
-        "roa",
-    };
     ExtensionFilter[] filters = new ExtensionFilter[extensions.length];
     for (int i = 0; i < extensions.length; i++) {
       filters[i] = new ExtensionFilter(extensions[i]);
@@ -102,23 +113,17 @@ public class ExtensionHandler {
   }
 
   /**
-   * @param breakdownName
-   * @param files
-   * @return all the groups
+   * @return the names of the possible breakdowns
    */
-  public List<Group> getGroups(String breakdownName, List<File> files) {
-    List<Group> ret = new ArrayList<Group>();
-    ExtensionFilter[] filters = breakdownMap.get(breakdownName);
-    for (ExtensionFilter filter : filters) {
-      List<File> groupFiles = new ArrayList<File>();
-      for (File file : files) {
-        if (filter.accept(file)) {
-          groupFiles.add(file);
-        }
-      }
-      ret.add(new Group(filter.extension, groupFiles));
-    }
-    return ret;
+  public Collection<String> getBreakdownNames() {
+    return breakdownMap.keySet();
   }
 
+  /**
+   * @param breakdownName
+   * @return
+   */
+  public ExtensionFilter[] getExtensionFilter(String breakdownName) {
+    return breakdownMap.get(breakdownName);
+  }
 }

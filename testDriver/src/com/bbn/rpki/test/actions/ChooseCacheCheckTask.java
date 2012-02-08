@@ -11,8 +11,8 @@ import org.jdom.Element;
 
 import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.tasks.Model;
-import com.bbn.rpki.test.tasks.Task;
 import com.bbn.rpki.test.tasks.TaskBreakdown;
+import com.bbn.rpki.test.tasks.TaskFactory;
 import com.bbn.rpki.test.tasks.TaskPath;
 
 /**
@@ -97,11 +97,11 @@ public class ChooseCacheCheckTask extends AbstractAction {
   public void execute(TypescriptLogger logger) {
     // Navigate to the Task
     String[] path = this.path.getPath();
-    Task task = model.getTask(path[0]);
+    TaskFactory.Task task = model.getTask(path[0]);
     TaskBreakdown breakdown = null;
     for (int i = 1; i < path.length; i++) {
       if (i % 2 == 0) {
-        Task nTask = breakdown.getTask(path[i]);
+        TaskFactory.Task nTask = breakdown.getTask(path[i]);
         assert nTask != null;
         task = nTask;
       } else {

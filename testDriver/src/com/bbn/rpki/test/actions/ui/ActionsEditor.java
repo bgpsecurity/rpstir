@@ -127,7 +127,7 @@ public class ActionsEditor implements SelectionListener {
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.ui.ActionTree.SelectionListener#actionChanged(com.bbn.rpki.test.actions.AbstractAction)
+   * @see com.bbn.rpki.test.actions.ui.ActionTree.SelectionListener#selectionChanged(javax.swing.tree.TreePath)
    */
   @Override
   public void selectionChanged(TreePath newPath) {

@@ -4,45 +4,105 @@
 package com.bbn.rpki.test.tasks;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import com.bbn.rpki.test.tasks.ExtensionHandler.ExtensionFilter;
+
 /**
- * Delete a bunch of files from a publication point. Current usage is for all
- * files in a group to be of the same type (extension).
+ * Delete a bunch of files from a publication point.
+ * 
+ * The group is defined by the publication point and the extension of the files
  *
  * @author tomlinso
  */
 public class DeleteGroupFromRepository extends DeleteRemoteFiles {
+  /**
+   * Encapsulates the factory-specific parameters
+   * @author tomlinso
+   */
+  public static class Args {
 
-  private final List<File> groupFiles;
+    private final File publicationSource;
+    private final ExtensionHandler.ExtensionFilter filter;
+
+    /**
+     * @param publicationSource
+     * @param filter
+     */
+    public Args(File publicationSource, ExtensionFilter filter) {
+      this.publicationSource = publicationSource;
+      this.filter = filter;
+    }
+
+  }
+
+  protected class Task extends DeleteRemoteFiles.Task {
+
+    private final List<File> groupFiles;
+
+    /**
+     * @param taskName
+     * @param publicationSource
+     */
+    protected Task(String taskName, File publicationSource, List<File> groupFiles) {
+      super(taskName, publicationSource);
+      this.groupFiles = groupFiles;
+    }
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+     */
+    @Override
+    protected String getLogDetail() {
+      return String.format("Delete Group of %d Files", groupFiles.size());
+    }
+
+    /**
+     * @see com.bbn.rpki.test.tasks.DeleteRemoteFiles#getSupercededFiles()
+     */
+    @Override
+    protected List<File> getSupercededFiles() {
+      return groupFiles;
+    }
+  }
+
+  private final Args args;
+
   /**
    * @param model
+   * @param args
+   */
+  public DeleteGroupFromRepository(Model model, Args args) {
+    super(model);
+    this.args = args;
+  }
+
+  /**
    * @param extension
-   * @param publicationSource
-   * @param groupFiles
+   * @return a new Task
    */
-  public DeleteGroupFromRepository(Model model,
-                                   String extension,
-                                   File publicationSource,
-                                   List<File> groupFiles) {
-    super(extension, model, publicationSource);
-    this.groupFiles = groupFiles;
+  @Override
+  public Task createTask(String extension) {
+    File[] files = args.publicationSource.listFiles(args.filter);
+    return new Task(extension, args.publicationSource, Arrays.asList(files));
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
    */
   @Override
-  protected String getLogDetail() {
-    return String.format("Delete Group of %d Files", groupFiles.size());
+  protected void appendBreakdowns(List<Breakdown> list) {
+    // There are no breakdowns here
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.DeleteRemoteFiles#getSupercededFiles()
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
    */
   @Override
-  protected List<File> getSupercededFiles() {
-    return groupFiles;
+  public Collection<String> getTaskNames() {
+    return Arrays.asList(ExtensionHandler.extensions);
   }
 
 }

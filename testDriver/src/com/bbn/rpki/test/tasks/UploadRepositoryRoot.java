@@ -5,6 +5,7 @@ package com.bbn.rpki.test.tasks;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,57 +17,95 @@ import java.util.List;
  *
  * @author tomlinso
  */
-public class UploadRepositoryRoot extends Task {
+public class UploadRepositoryRoot extends TaskFactory {
 
-  private final File repositoryRootDir;
+  protected class Task extends TaskFactory.Task {
 
-  UploadRepositoryRoot(Model model, File repositoryRootDir) {
-    super(repositoryRootDir.getName(), model);
-    this.repositoryRootDir = repositoryRootDir;
-  }
+    private final File repositoryRootDir;
 
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(java.lang.String)
-   */
-  @Override
-  protected TaskBreakdown getTaskBreakdown(String breakdownName) {
-    if ("byNode".equals(breakdownName)) {
-      List<Task> tasks = new ArrayList<Task>();
-      for (File nodeDir :model.getNodeDirectories()) {
-        File rootDir = model.getRootDirectory(nodeDir);
-        if (rootDir.equals(repositoryRootDir)) {
-          tasks.add(new UploadNode(model, nodeDir));
-        }
+    /**
+     * @param taskName
+     */
+    protected Task(File repositoryRootDir) {
+      super(repositoryRootDir.getName());
+      this.repositoryRootDir = repositoryRootDir;
+    }
+
+    public File getRepositoryRootDir() {
+      return repositoryRootDir;
+    }
+
+    @Override
+    public void run() {
+      // We use the one and only breakdown
+      Breakdown breakdown = getBreakdowns().iterator().next();
+      for (com.bbn.rpki.test.tasks.TaskFactory.Task task : breakdown.getTaskBreakdown(this).getTasks()) {
+        task.run();
       }
-      return new TaskBreakdown(breakdownName, this, tasks);
     }
-    if ("deleteFirst".equals(breakdownName)) {
-      UploadRepositoryRootFiles uploadTask = new UploadRepositoryRootFiles(model, repositoryRootDir);
-      DeleteFromRepositoryRoot deleteTask = new DeleteFromRepositoryRoot(model, repositoryRootDir);
-      return new TaskBreakdown(breakdownName, this, deleteTask, uploadTask);
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+     */
+    @Override
+    protected String getLogDetail() {
+      return repositoryRootDir.getName();
     }
-    if ("updateFirst".equals(breakdownName)) {
-      UploadRepositoryRootFiles uploadTask = new UploadRepositoryRootFiles(model, repositoryRootDir);
-      DeleteFromRepositoryRoot deleteTask = new DeleteFromRepositoryRoot(model, repositoryRootDir);
-      return new TaskBreakdown(breakdownName, this, uploadTask, deleteTask);
-    }
-    return null;
+  }
+
+  UploadRepositoryRoot(Model model) {
+    super(model);
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#run()
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskBreakdown(java.lang.String)
    */
   @Override
-  public void run() {
-    new UploadRepositoryRootFiles(model, repositoryRootDir).run();
-    new DeleteFromRepositoryRoot(model, repositoryRootDir).run();
+  protected void appendBreakdowns(List<Breakdown> list) {
+    list.add(new Breakdown("byNode") {
+      @Override
+      public TaskBreakdown getTaskBreakdown(TaskFactory.Task task) {
+        UploadRepositoryRoot.Task parentTask = (Task) task;
+        List<TaskFactory.Task> tasks = new ArrayList<TaskFactory.Task>();
+        UploadNode factory = model.getTaskFactory(UploadNode.class);
+        for (File nodeDir :model.getNodeDirectories()) {
+          File rootDir = model.getRootDirectory(nodeDir);
+          if (rootDir.equals(parentTask.repositoryRootDir)) {
+            String nodeName = model.getNodeName(nodeDir);
+            tasks.add(factory.createTask(nodeName));
+          }
+        }
+        // TODO Trust anchors are certs in the repository root(for now)
+        ExtensionHandler.ExtensionFilter filter = new ExtensionHandler.ExtensionFilter("cer");
+        UploadFiles.Args args = new UploadFiles.Args(parentTask.repositoryRootDir, filter);
+        UploadFiles uploadFilesFactory = model.getTaskFactory(UploadFiles.class, args);
+        uploadFilesFactory.createTask("Trust Anchors");
+        return new TaskBreakdown(getBreakdownName(), parentTask, tasks);
+      }
+    });
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   * @param repositoryRootName
+   * @return a new Task
    */
   @Override
-  protected String getLogDetail() {
-    return repositoryRootDir.getName();
+  public Task createTask(String repositoryRootName) {
+    File repositoryRootDir = model.getRepositoryRoot(repositoryRootName);
+    return new Task(repositoryRootDir);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
+   */
+  @Override
+  public Collection<String> getTaskNames() {
+    List<File> roots = model.getRepositoryRoots();
+    List<String> ret = new ArrayList<String>();
+    for (File root : roots) {
+      String repositoryRootName = model.getRepositoryRootName(root);
+      ret.add(repositoryRootName);
+    }
+    return ret;
   }
 }

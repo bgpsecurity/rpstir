@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import com.bbn.rpki.test.objects.Util;
 
@@ -18,69 +21,98 @@ import com.bbn.rpki.test.objects.Util;
  * 
  * @author tomlinso
  */
-public class InstallTrustAnchor extends Task {
-  private final File certFile;
+public class InstallTrustAnchor extends TaskFactory {
+  protected class Task extends TaskFactory.Task {
 
-  private final File talFile;
 
-  private final String talPrefix;
+    private final File certFile;
+
+    private final File talFile;
+
+    private final String talPrefix;
+
+    /**
+     * @param taskName
+     */
+    protected Task() {
+      super(TASK_NAME);
+      this.certFile = model.getTrustAnchorCert();
+      this.talFile = model.getTALFile();
+      this.talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
+    }
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory.Task#run()
+     */
+    @Override
+    public void run() {
+      try {
+        String rawOutput = Util.exec("openssl", false, null, null,
+                                     null,
+                                     "openssl",
+                                     "x509",
+                                     "-inform",
+                                     "DER",
+                                     "-in",
+                                     certFile.getPath(),
+                                     "-pubkey", "-noout");
+        String cookedOutput = Util.exec("awk", false, Util.RPKI_ROOT, rawOutput,
+                                        null, "awk", "!/-----(BEGIN|END)/");
+        Writer talWriter = new FileWriter(talFile);
+        talWriter.write(talPrefix);
+        talWriter.write(cookedOutput);
+        talWriter.close();
+
+        Util.exec("updateTA", false, Util.RPKI_ROOT, null,
+                  null,
+                  "run_scripts/updateTA.py",
+                  "--verbose", talFile.getPath());
+        model.addTrustAnchor(certFile);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+     */
+    @Override
+    protected String getLogDetail() {
+      return certFile.toString();
+    }
+  }
+  static final String TASK_NAME = "InstallTA";
 
   /**
    * @param model
    */
   public InstallTrustAnchor(Model model) {
-    super("InstallTA", model);
-    this.certFile = model.getTrustAnchorCert();
-    this.talFile = model.getTALFile();
-    this.talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
+    super(model);
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#run()
+   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
    */
   @Override
-  public void run() {
-    try {
-      String rawOutput = Util.exec("openssl", false, null, null,
-                                   null,
-                                   "openssl",
-                                   "x509",
-                                   "-inform",
-                                   "DER",
-                                   "-in",
-                                   certFile.getPath(),
-                                   "-pubkey", "-noout");
-      String cookedOutput = Util.exec("awk", false, Util.RPKI_ROOT, rawOutput,
-                                      null, "awk", "!/-----(BEGIN|END)/");
-      Writer talWriter = new FileWriter(talFile);
-      talWriter.write(talPrefix);
-      talWriter.write(cookedOutput);
-      talWriter.close();
-
-      Util.exec("updateTA", false, Util.RPKI_ROOT, null,
-                null,
-                "run_scripts/updateTA.py",
-                "--verbose", talFile.getPath());
-      model.addTrustAnchor(certFile);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(String)
-   */
-  @Override
-  public TaskBreakdown getTaskBreakdown(String n) {
+  public void appendBreakdowns(List<Breakdown> list) {
     // There are no breakdowns
-    return null;
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   * @param taskName ignored
+   * @return a new InstallTrushAnchor.Task
    */
   @Override
-  protected String getLogDetail() {
-    return certFile.toString();
+  public Task createTask(String taskName) {
+    assert TASK_NAME.equals(taskName);
+    return new Task();
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
+   */
+  @Override
+  public Collection<String> getTaskNames() {
+    return Collections.singleton(TASK_NAME);
   }
 }

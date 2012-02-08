@@ -4,6 +4,9 @@
 package com.bbn.rpki.test.tasks;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Task to upload a repository root.
@@ -14,64 +17,99 @@ import java.io.File;
  *
  * @author tomlinso
  */
-public class UploadNode extends Task {
+public class UploadNode extends TaskFactory {
+  protected class Task extends TaskFactory.Task {
+    private final File nodeDir;
+    private TaskFactory.Task uploadTask;
+    private TaskFactory.Task deleteTask;
 
-  private final File nodeDir;
-  private UploadNodeFiles uploadTask;
-  private DeleteFromRepositoryNode deleteTask;
+    Task(File nodeDir) {
+      super(getModel().getNodeName(nodeDir));
+      this.nodeDir = nodeDir;
+    }
 
-  UploadNode(Model model, File nodeDir) {
-    super(model.getNodeName(nodeDir), model);
-    this.nodeDir = nodeDir;
+    private TaskFactory.Task getUploadTask() {
+      if (uploadTask == null) {
+        UploadNodeFiles factory = model.getTaskFactory(UploadNodeFiles.class);
+        String nodeName = model.getNodeName(nodeDir);
+        uploadTask = factory.createTask(nodeName);
+      }
+      return uploadTask;
+    }
+
+    private TaskFactory.Task getDeleteTask() {
+      if (deleteTask == null) {
+        String nodeName = model.getNodeName(nodeDir);
+        DeleteFromRepositoryNode factory = model.getTaskFactory(DeleteFromRepositoryNode.class);
+        deleteTask = factory.createTask(nodeName);
+      }
+      return deleteTask;
+    }
+
+    @Override
+    public void run() {
+      getUploadTask().run();
+      getDeleteTask().run();
+    }
+
+    /**
+     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+     */
+    @Override
+    protected String getLogDetail() {
+      if (getSelectedTaskBreakdown() == null) {
+        return String.format("%s upload %s and delete %s", nodeDir.getName(), getUploadTask().getLogDetail(), getDeleteTask().getLogDetail());
+      }
+      return nodeDir.getName();
+    }
+  }
+
+  UploadNode(Model model) {
+    super(model);
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getTaskBreakdown(java.lang.String)
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskBreakdown(java.lang.String)
    */
   @Override
-  protected TaskBreakdown getTaskBreakdown(String breakdownName) {
-    if ("deleteFirst".equals(breakdownName)) {
-      return new TaskBreakdown(breakdownName, this, getDeleteTask(), getUploadTask());
-    }
-    if ("updateFirst".equals(breakdownName)) {
-      return new TaskBreakdown(breakdownName, this, getUploadTask(), getDeleteTask());
-    }
-    return null;
-  }
-
-  private Task getUploadTask() {
-    if (uploadTask == null) {
-      uploadTask = new UploadNodeFiles(model, nodeDir);
-    }
-    return uploadTask;
-  }
-
-  private Task getDeleteTask() {
-    if (deleteTask == null) {
-      deleteTask = new DeleteFromRepositoryNode(model, nodeDir);
-    }
-    return deleteTask;
-  }
-
-
-
-  /**
-   * @see com.bbn.rpki.test.tasks.Task#run()
-   */
-  @Override
-  public void run() {
-    new UploadNodeFiles(model, nodeDir).run();
-    new DeleteFromRepositoryNode(model, nodeDir).run();
+  protected void appendBreakdowns(List<Breakdown> list) {
+    list.add(new Breakdown("deleteFirst") {
+      @Override
+      public TaskBreakdown getTaskBreakdown(TaskFactory.Task task) {
+        Task parentTask = (Task) task;
+        return new TaskBreakdown(getBreakdownName(), parentTask, parentTask.getDeleteTask(), parentTask.getUploadTask());
+      }
+    });
+    list.add(new Breakdown("updateFirst") {
+      @Override
+      public TaskBreakdown getTaskBreakdown(TaskFactory.Task task) {
+        Task parentTask = (Task) task;
+        return new TaskBreakdown(getBreakdownName(), parentTask, parentTask.getUploadTask(), parentTask.getDeleteTask());
+      }
+    });
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.Task#getLogDetail()
+   * @param taskName
+   * @return a new Task
    */
   @Override
-  protected String getLogDetail() {
-    if (getSelectedBreakdown() == null) {
-      return String.format("%s upload %s and delete %s", nodeDir.getName(), getUploadTask().getLogDetail(), getDeleteTask().getLogDetail());
+  public Task createTask(String taskName) {
+    assert getTaskNames().contains(taskName);
+    File nodeDir = model.getNodeDirectory(taskName);
+    return new Task(nodeDir);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
+   */
+  @Override
+  public Collection<String> getTaskNames() {
+    List<File> nodeDirs = model.getNodeDirectories();
+    List<String> ret = new ArrayList<String>(nodeDirs.size());
+    for (File nodeDir : nodeDirs) {
+      ret.add(model.getNodeName(nodeDir));
     }
-    return nodeDir.getName();
+    return ret;
   }
 }

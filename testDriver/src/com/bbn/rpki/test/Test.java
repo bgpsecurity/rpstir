@@ -4,7 +4,7 @@
 package com.bbn.rpki.test;
 
 import com.bbn.rpki.test.tasks.Model;
-import com.bbn.rpki.test.tasks.Task;
+import com.bbn.rpki.test.tasks.TaskFactory;
 import com.bbn.rpki.test.tasks.TaskBreakdown;
 
 /**
@@ -24,7 +24,7 @@ public class Test {
    * @param task
    * @return the TaskBreakdown (null by default)
    */
-  protected TaskBreakdown getTaskBreakdown(Task task) {
+  protected TaskBreakdown getTaskBreakdown(TaskFactory task) {
     return null;
   }
 }
