@@ -3408,7 +3408,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
     // TODO: can we always count on an extra leading zero byte?
 	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
-		log_msg(LOG_ERR, "subj pub key modulus != %d", SUBJ_PUBKEY_MODULUS_SZ);
+		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ);
 		return ERR_SCM_BADALG;
 	}
 	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
