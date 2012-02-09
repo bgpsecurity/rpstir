@@ -152,7 +152,6 @@ ensure_file_exists "${single_ROA_script}"
 ###############################################################################
 
 ${single_ROA_cmd} -x good ROA 550 NothingWrong
-${single_ROA_cmd} ROA 551 ASID
 ${single_ROA_cmd} ROA 552 Family
 ${single_ROA_cmd} ROA 553 FamilyLth
 ${single_ROA_cmd} ROA 554 IPMaxLth

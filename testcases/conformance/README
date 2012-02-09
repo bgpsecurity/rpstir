@@ -157,7 +157,6 @@ EE Certificates (embedded in ROAs)
 
 ROAs
 
-551 ASID                     # AS number outside of root's
 552 Family                   # invalid family
 553 FamilyLth                # family name too long
 554 IPMaxLth                 # IP max length too long
