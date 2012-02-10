@@ -2480,12 +2480,19 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_caRepository)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_repo = calloc(1, size + 1);
+                if (!uri_repo)
+                    return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_repo);
 				if (!strncasecmp((char *)uri_repo, RSYNC_PREFIX, 8))
 					found_uri_repo_rsync = 1;
 			} else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_mft = calloc(1, size + 1);
+                if (!uri_mft) {
+                    if (uri_repo)
+                        free (uri_repo);
+                    return ERR_SCM_NOMEM;
+                }
 				read_casn((struct casn *)&adp->accessLocation.url, uri_mft);
 				if (!strncasecmp((char *)uri_mft, RSYNC_PREFIX, 8))
 					found_uri_mft_rsync = 1;
@@ -2512,6 +2519,8 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_signedObject)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_obj = calloc(1, size + 1);
+                if (!uri_obj)
+                    return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
 				if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
 					found_uri_obj_rsync = 1;
@@ -2971,7 +2980,7 @@ static int fill_asnumtest(struct AsNumTest *asntp,
 /**=============================================================================
  * @brief Check for AS order
  *
- * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
+ * From roa-pki:/home/gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
  *
  * @param extsp (struct Extensions*)
  * @return 0 or 1 success<br />a negative integer on failure
@@ -3313,6 +3322,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	char *outer_sig_alg_oidp = calloc(1, length + 1);
+    if (!outer_sig_alg_oidp)
+        return ERR_SCM_NOMEM;
 	if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length) {
 		free(outer_sig_alg_oidp);
 		log_msg(LOG_ERR, "outer sig alg oid actual length != stated length");
@@ -3332,6 +3343,11 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	char *inner_sig_alg_oidp = calloc(1, length + 1);
+    if (!inner_sig_alg_oidp) {
+        if (outer_sig_alg_oidp)
+            free(outer_sig_alg_oidp);
+        return ERR_SCM_NOMEM;
+    }
 	if (read_objid(&certp->toBeSigned.signature.algorithm, inner_sig_alg_oidp) != length) {
 		free(inner_sig_alg_oidp);
 		free(outer_sig_alg_oidp);
@@ -3364,6 +3380,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	char *alg_pubkey_oidp = calloc(1, length + 1);
+    if (!alg_pubkey_oidp)
+        return ERR_SCM_NOMEM;
 	if (read_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm,
 			alg_pubkey_oidp) != length) {
 		free(alg_pubkey_oidp);
@@ -3387,6 +3405,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	uchar *pubkey_buf = calloc(1, SUBJ_PUBKEY_MAX_SZ + 1);
+    if (!pubkey_buf)
+        return ERR_SCM_NOMEM;
 	int bytes_read;
     bytes_read = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
 			subjectPublicKey, &pubkey_buf);
@@ -3408,11 +3428,13 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
     // TODO: can we always count on an extra leading zero byte?
 	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
-		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ);
+		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
 		return ERR_SCM_BADALG;
 	}
 	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
     uchar *pubkey_modulus_buf = calloc(1, bytes_to_read+1);
+    if (!pubkey_modulus_buf)
+        return ERR_SCM_NOMEM;
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
 	free(pubkey_modulus_buf);
     if (bytes_read != bytes_to_read) {
@@ -3421,24 +3443,30 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     }
 
 	// Subject public key exponent must = 65,537.
+    int incorrect_length = 0;
+    int different_lengths = 0;
+    int bad_exponent = 0;
     bytes_to_read = vsize_casn(&rsapubkey.exponent);
-	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ) {
-		log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
-		return ERR_SCM_BADALG;
-	}
+	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ)
+        incorrect_length = 1;
     uchar *pubkey_exponent_buf = calloc(1, sizeof(uint32_t));
+    if (!pubkey_exponent_buf)
+        return ERR_SCM_NOMEM;
     bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
-    if (bytes_read != bytes_to_read) {
-		log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
-		free(pubkey_exponent_buf);
-		return ERR_SCM_BADALG;
-    }
-    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT) {
-		log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
-		free(pubkey_exponent_buf);
-		return ERR_SCM_BADALG;
-    }
+    if (bytes_read != bytes_to_read)
+        different_lengths = 1;
+    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT)
+        bad_exponent = 1;
 	free(pubkey_exponent_buf);
+    if (incorrect_length  ||  different_lengths  ||  bad_exponent) {
+        if (bad_exponent)
+		    log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
+        if (incorrect_length)
+		    log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
+        if (different_lengths)
+		    log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
+		return ERR_SCM_BADALG;
+    }
 
 	return 0;
 }
