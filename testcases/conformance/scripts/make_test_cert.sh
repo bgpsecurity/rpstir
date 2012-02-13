@@ -29,6 +29,7 @@ Options:
   -o outdir \tOutput directory (default = .../conformance/raw/root/)
   -t template\tTemplate cert (default = ...conformance/raw/templates/goodCert.raw)
   -p patchdir\tDirectory for saving/getting patches (default = .../conformance/raw/patches/)
+  -x prefix\tPrefix (default = 'bad')
   -h        \tDisplay this help file
 
 This script creates a certificate, prompts the user multiple times to
@@ -94,7 +95,7 @@ Explanation of inputs, not in original order:
 Explanation of outputs, not in original order:
   child CA certificate - AS/IP resources are hardcoded in goodCert.raw template
   patch files - manual edits are saved as diff output in
-                'badCert<filestem>.stageN.patch' (N=0..2)
+                '<prefix>Cert<filestem>.stageN.patch' (N=0..2)
     "
     printf "${usagestr}\n"
     exit 1
@@ -114,11 +115,12 @@ OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
 PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
 ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
 TEMPLATE_CERT_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCert.raw"
+PREFIX="bad"
 USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
 
 # Process command line arguments.
-while getopts Pk:o:t:p:h opt
+while getopts Pk:o:t:p:x:h opt
 do
   case $opt in
       P)
@@ -136,6 +138,9 @@ do
       p)
 	  PATCHES_DIR=$OPTARG
 	  ;;
+      x)
+          PREFIX=$OPTARG
+          ;;
       h)
 	  usage
 	  ;;
@@ -154,7 +159,7 @@ fi
 # Computed Variables
 ###############################################################################
 
-child_name=badCert${FILESTEM}
+child_name=${PREFIX}Cert${FILESTEM}
 
 
 ###############################################################################

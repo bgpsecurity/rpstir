@@ -170,7 +170,7 @@ ${single_cert_cmd} 110 BasicConstrNoCrit # BasicConstr present, crit bit unset
 ${single_cert_cmd} 111 BasicConstrPathLth # BasicConstr path length present
 ${single_cert_cmd} 112 Cpol2oid # More than one Certificate Policy OID (more?)
 ${single_cert_cmd} 113 CpolNoCrit # CertPolicy extension, crit bit unset
-${single_cert_cmd} 114 CRLDP2DistPt
+${single_cert_cmd} -x good 114 CRLDP2DistPt
 ${single_cert_cmd} 115 CRLDPCrit
 ${single_cert_cmd} 116 CRLDPCrlIssuer
 ${single_cert_cmd} 117 CRLDPNoDistPt
