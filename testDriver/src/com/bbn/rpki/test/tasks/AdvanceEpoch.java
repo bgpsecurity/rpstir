@@ -4,6 +4,7 @@
 package com.bbn.rpki.test.tasks;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -19,8 +20,8 @@ public class AdvanceEpoch extends TaskFactory {
     /**
      * @param taskName
      */
-    protected Task(String taskName) {
-      super(taskName);
+    protected Task() {
+      super(TASK_NAME);
     }
 
     @Override
@@ -40,6 +41,8 @@ public class AdvanceEpoch extends TaskFactory {
     }
   }
 
+  private static final String TASK_NAME = "";
+
   /**
    * @param model
    */
@@ -47,12 +50,10 @@ public class AdvanceEpoch extends TaskFactory {
     super(model);
   }
 
-  /**
-   * @return a new AdvanceEpoch.Task
-   */
   @Override
-  public Task createTask(String taskName) {
-    return new Task(taskName);
+  protected Task reallyCreateTask(String taskName) {
+    assert TASK_NAME.equals(taskName);
+    return new Task();
   }
 
   /**
@@ -63,12 +64,8 @@ public class AdvanceEpoch extends TaskFactory {
     // There are no breakdowns here
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
-    // Should not appear in a TaskPath
-    return null;
+  protected Collection<String> getRelativeTaskNames() {
+    return Collections.singleton(TASK_NAME);
   }
 }

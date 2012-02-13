@@ -18,7 +18,7 @@ import com.bbn.rpki.test.objects.TypescriptLogger;
  * @author tomlinso
  */
 public class EpochActions extends AbstractAction {
-  private final int epochIndex;
+  private int epochIndex;
   private final List<AbstractAction> actions;
 
   /**
@@ -158,5 +158,12 @@ public class EpochActions extends AbstractAction {
    */
   public void removeAction(int index) {
     actions.remove(index);
+  }
+
+  /**
+   * @param index
+   */
+  public void setEpochIndex(int index) {
+    this.epochIndex = index;
   }
 }

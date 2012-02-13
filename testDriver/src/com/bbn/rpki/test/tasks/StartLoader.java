@@ -40,7 +40,7 @@ public class StartLoader extends TaskFactory {
     }
   }
 
-  static final String TASK_NAME = "StartLoader";
+  private static final String TASK_NAME = "";
 
   /**
    * @param model
@@ -49,11 +49,8 @@ public class StartLoader extends TaskFactory {
     super(model);
   }
 
-  /**
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String taskName) {
+  protected Task reallyCreateTask(String taskName) {
     return new Task();
   }
 
@@ -65,11 +62,8 @@ public class StartLoader extends TaskFactory {
     // There are no breakdowns
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     return Collections.singleton(TASK_NAME);
   }
 }

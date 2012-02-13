@@ -16,14 +16,12 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class InitializeCache extends TaskFactory {
-  /**
-   * 
-   */
-  static final String TASK_NAME = "InitializeCache";
+
+  private static final String TASK_NAME = "InitializeCache";
 
   protected class Task extends TaskFactory.Task {
-    protected Task(String taskName) {
-      super(taskName);
+    protected Task() {
+      super(TASK_NAME);
     }
 
     /**
@@ -54,12 +52,10 @@ public class InitializeCache extends TaskFactory {
     super(model);
   }
 
-  /**
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String ignored) {
-    return new Task(TASK_NAME);
+  protected Task reallyCreateTask(String relativeTaskName) {
+    assert TASK_NAME.equals(relativeTaskName);
+    return new Task();
   }
 
   /**
@@ -70,11 +66,8 @@ public class InitializeCache extends TaskFactory {
     // There are no breakdowns to append
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     return Collections.singleton(TASK_NAME);
   }
 }

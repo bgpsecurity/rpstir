@@ -79,12 +79,8 @@ public class DeleteGroupFromRepository extends DeleteRemoteFiles {
     this.args = args;
   }
 
-  /**
-   * @param extension
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String extension) {
+  protected Task reallyCreateTask(String extension) {
     File[] files = args.publicationSource.listFiles(args.filter);
     return new Task(extension, args.publicationSource, Arrays.asList(files));
   }
@@ -97,12 +93,8 @@ public class DeleteGroupFromRepository extends DeleteRemoteFiles {
     // There are no breakdowns here
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     return Arrays.asList(ExtensionHandler.extensions);
   }
-
 }

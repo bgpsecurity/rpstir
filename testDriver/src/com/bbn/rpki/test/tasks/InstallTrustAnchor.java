@@ -24,7 +24,6 @@ import com.bbn.rpki.test.objects.Util;
 public class InstallTrustAnchor extends TaskFactory {
   protected class Task extends TaskFactory.Task {
 
-
     private final File certFile;
 
     private final File talFile;
@@ -81,7 +80,8 @@ public class InstallTrustAnchor extends TaskFactory {
       return certFile.toString();
     }
   }
-  static final String TASK_NAME = "InstallTA";
+
+  private static final String TASK_NAME = "";
 
   /**
    * @param model
@@ -98,21 +98,14 @@ public class InstallTrustAnchor extends TaskFactory {
     // There are no breakdowns
   }
 
-  /**
-   * @param taskName ignored
-   * @return a new InstallTrushAnchor.Task
-   */
   @Override
-  public Task createTask(String taskName) {
+  protected Task reallyCreateTask(String taskName) {
     assert TASK_NAME.equals(taskName);
     return new Task();
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     return Collections.singleton(TASK_NAME);
   }
 }

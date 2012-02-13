@@ -16,9 +16,11 @@ import com.bbn.rpki.test.objects.Util;
  */
 public class CheckCacheStatus extends TaskFactory {
 
+  private static final String TASK_NAME = "";
+
   protected class Task extends TaskFactory.Task {
     protected Task() {
-      super("CheckCacheStatus");
+      super(TASK_NAME);
     }
 
     @Override
@@ -50,20 +52,14 @@ public class CheckCacheStatus extends TaskFactory {
     // There are no breakdowns here
   }
 
-  /**
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String taskName) {
+  protected Task reallyCreateTask(String relativeTaskName) {
+    assert TASK_NAME.equals(relativeTaskName);
     return new Task();
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
-    // Should not appear in a TaskPath
-    return Collections.singleton("CheckCacheStatus");
+  protected Collection<String> getRelativeTaskNames() {
+    return Collections.singleton(TASK_NAME);
   }
 }

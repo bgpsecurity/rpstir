@@ -21,10 +21,9 @@ public class UploadNodeFiles extends UploadFiles {
 
   /**
    * @param model
-   * @param nodeDir
    */
-  public UploadNodeFiles(Model model, File nodeDir) {
-    super(model, new Args(nodeDir, null));
+  public UploadNodeFiles(Model model) {
+    super(model);
   }
 
   /**
@@ -42,9 +41,8 @@ public class UploadNodeFiles extends UploadFiles {
           Task parentTask = (Task) task;
           List<TaskFactory.Task> tasks = new ArrayList<TaskFactory.Task>();
           for (ExtensionHandler.ExtensionFilter filter : filters) {
-            UploadFiles.Args args = new UploadFiles.Args(directory, filter);
-            UploadFiles subFactory = model.getTaskFactory(UploadFiles.class, args);
-            tasks.add(subFactory.createTask(filter.getExtension()));
+            UploadGroupFiles subFactory = model.getTaskFactory(UploadGroupFiles.class, parentTask.getDirectory());
+            tasks.add(subFactory.createRelativeTask(filter.getExtension()));
           }
           return new TaskBreakdown(breakdownName, parentTask, tasks);
         }
@@ -53,10 +51,23 @@ public class UploadNodeFiles extends UploadFiles {
   }
 
   /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
+   * @see com.bbn.rpki.test.tasks.TaskFactory#reallyCreateTask(java.lang.String)
    */
   @Override
-  public Collection<String> getTaskNames() {
-    return null;
+  protected Task reallyCreateTask(String relativeTaskName) {
+    File nodeDir = model.getNodeDirectory(relativeTaskName);
+    return new Task(relativeTaskName, nodeDir, null);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.tasks.TaskFactory#getRelativeTaskNames()
+   */
+  @Override
+  protected Collection<String> getRelativeTaskNames() {
+    List<String> ret = new ArrayList<String>();
+    for (File nodeDir : model.getNodeDirectories()) {
+      ret.add(model.getNodeName(nodeDir));
+    }
+    return ret;
   }
 }

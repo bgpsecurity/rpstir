@@ -15,10 +15,8 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class UpdateCache extends TaskFactory {
-  /**
-   * 
-   */
-  static final String TASK_NAME = "Update Cache";
+
+  private static final String TASK_NAME = "";
 
   protected class Task extends TaskFactory.Task {
 
@@ -53,12 +51,8 @@ public class UpdateCache extends TaskFactory {
     super(model);
   }
 
-  /**
-   * @param taskName
-   * @return a new UpdateCache.Task
-   */
   @Override
-  public Task createTask(String taskName) {
+  protected Task reallyCreateTask(String taskName) {
     assert TASK_NAME.equals(taskName);
     return new Task();
   }
@@ -71,11 +65,8 @@ public class UpdateCache extends TaskFactory {
     // There are no breakdowns to append
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     return Collections.singleton(TASK_NAME);
   }
 }

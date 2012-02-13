@@ -74,7 +74,7 @@ public class DeleteFromRepositoryNode extends DeleteRemoteFiles {
           for (ExtensionHandler.ExtensionFilter filter : filters) {
             DeleteGroupFromRepository.Args args = new DeleteGroupFromRepository.Args(((Task) parentTask).publicationSource, filter);
             DeleteGroupFromRepository subFactory = model.getTaskFactory(DeleteGroupFromRepository.class, args);
-            tasks.add(subFactory.createTask(filter.getExtension()));
+            tasks.add(subFactory.createRelativeTask(filter.getExtension()));
           }
           return new TaskBreakdown(breakdownName, parentTask, tasks);
         }
@@ -83,29 +83,18 @@ public class DeleteFromRepositoryNode extends DeleteRemoteFiles {
     }
   }
 
-  /**
-   * @param nodeName
-   * @return a DeleteFromRepository Task
-   */
   @Override
-  public Task createTask(String nodeName) {
-    File nodeDir = model.getNodeDirectory(nodeName);
-    return new Task(makeTaskName(nodeDir), nodeDir);
+  protected Task reallyCreateTask(String relativeTaskName) {
+    File nodeDir = model.getNodeDirectory(relativeTaskName);
+    return new Task(relativeTaskName, nodeDir);
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     List<String> ret = new ArrayList<String>();
     for (File nodeDir : model.getNodeDirectories()) {
-      ret.add(makeTaskName(nodeDir));
+      ret.add(model.getNodeName(nodeDir));
     }
     return ret;
-  }
-
-  private String makeTaskName(File nodeDir) {
-    return "delete(" + nodeDir.getName() + ")";
   }
 }

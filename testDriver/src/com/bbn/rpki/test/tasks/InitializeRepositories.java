@@ -15,10 +15,8 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class InitializeRepositories extends TaskFactory {
-  /**
-   * 
-   */
-  static final String TASK_NAME = "InitializeRepositories";
+
+  private static final String TASK_NAME = "InitializeRepositories";
 
   protected class Task extends TaskFactory.Task {
 
@@ -69,22 +67,14 @@ public class InitializeRepositories extends TaskFactory {
     // There no breakdowns
   }
 
-  /**
-   * @param arg ignored
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String arg) {
+  protected Task reallyCreateTask(String arg) {
     assert TASK_NAME.equals(arg);
     return new Task();
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
-    // ignored
-    return Collections.emptyList();
+  protected Collection<String> getRelativeTaskNames() {
+    return Collections.singleton(TASK_NAME);
   }
 }

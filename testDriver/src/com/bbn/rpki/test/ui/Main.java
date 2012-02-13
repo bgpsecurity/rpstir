@@ -84,8 +84,8 @@ public class Main {
         task.run();
         if (task.isTestEnabled()) {
           TaskFactory.Task[] subArray = {
-              model.getTaskFactory(UpdateCache.class).createTask(),
-              model.getTaskFactory(CheckCacheStatus.class).createTask(),
+              model.getTaskFactory(UpdateCache.class).createOnlyTask(),
+              model.getTaskFactory(CheckCacheStatus.class).createOnlyTask(),
           };
           subtasks = Arrays.asList(subArray);
         }

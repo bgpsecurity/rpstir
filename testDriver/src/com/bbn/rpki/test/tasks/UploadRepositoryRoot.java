@@ -53,7 +53,10 @@ public class UploadRepositoryRoot extends TaskFactory {
     }
   }
 
-  UploadRepositoryRoot(Model model) {
+  /**
+   * @param model
+   */
+  public UploadRepositoryRoot(Model model) {
     super(model);
   }
 
@@ -72,35 +75,27 @@ public class UploadRepositoryRoot extends TaskFactory {
           File rootDir = model.getRootDirectory(nodeDir);
           if (rootDir.equals(parentTask.repositoryRootDir)) {
             String nodeName = model.getNodeName(nodeDir);
-            tasks.add(factory.createTask(nodeName));
+            tasks.add(factory.createRelativeTask(nodeName));
           }
         }
         // TODO Trust anchors are certs in the repository root(for now)
-        ExtensionHandler.ExtensionFilter filter = new ExtensionHandler.ExtensionFilter("cer");
-        UploadFiles.Args args = new UploadFiles.Args(parentTask.repositoryRootDir, filter);
-        UploadFiles uploadFilesFactory = model.getTaskFactory(UploadFiles.class, args);
-        uploadFilesFactory.createTask("Trust Anchors");
+        UploadTrustAnchors uploadTrustAnchorsFactory = model.getTaskFactory(UploadTrustAnchors.class);
+        String rootName = model.getRepositoryRootName(parentTask.getRepositoryRootDir());
+        uploadTrustAnchorsFactory.createRelativeTask(rootName);
         return new TaskBreakdown(getBreakdownName(), parentTask, tasks);
       }
     });
   }
 
-  /**
-   * @param repositoryRootName
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String repositoryRootName) {
+  protected Task reallyCreateTask(String repositoryRootName) {
     File repositoryRootDir = model.getRepositoryRoot(repositoryRootName);
     return new Task(repositoryRootDir);
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
-    List<File> roots = model.getRepositoryRoots();
+  protected Collection<String> getRelativeTaskNames() {
+    Collection<File> roots = model.getRepositoryRoots();
     List<String> ret = new ArrayList<String>();
     for (File root : roots) {
       String repositoryRootName = model.getRepositoryRootName(root);

@@ -11,7 +11,15 @@ import java.util.TreeMap;
 
 
 /**
- * The interface for all tasks
+ * The interface for all tasks.
+ * 
+ * Tasks have names composed of the name of the TaskFactory and a
+ * factory-relative part. Generally, factory-relative names are used with a Task
+ * and its factory and full names are used externally. The form of a full name
+ * is:
+ *    TaskFactory(relativePart)
+ * TaskFactory provides convenience functions for conversion
+ * from factory-relative names to full names and vice versa.
  *
  * @author tomlinso
  */
@@ -23,21 +31,28 @@ public abstract class TaskFactory {
    */
   public abstract class Task {
 
-    private final String taskName;
+    private final String relativeTaskName;
 
     private boolean testEnabled;
 
     private TaskBreakdown selectedTaskBreakdown = null;
 
-    protected Task(String taskName) {
-      this.taskName = taskName;
+    protected Task(String relativeTaskName) {
+      this.relativeTaskName = relativeTaskName;
     }
 
     /**
-     * @return the name of this task (for indexing)
+     * @return the full name of this task (for indexing)
      */
     public String getTaskName() {
-      return taskName;
+      return TaskFactory.this.getClass().getSimpleName() + "(" + relativeTaskName +")";
+    }
+
+    /**
+     * @return the TaskFactory for this Task
+     */
+    public TaskFactory getTaskFactory() {
+      return TaskFactory.this;
     }
 
     /**
@@ -74,8 +89,7 @@ public abstract class TaskFactory {
      */
     @Override
     public final String toString() {
-      String logDetail = getLogDetail();
-      return getClass().getSimpleName() + (logDetail == null ? "" : " " + logDetail);
+      return getTaskName();
     }
 
     /**
@@ -111,10 +125,52 @@ public abstract class TaskFactory {
   }
 
   /**
-   * @param taskName
+   * @return the only Task this factory creates
+   */
+  public final Task createOnlyTask() {
+    Collection<String> allowedNames = getTaskNames();
+    assert allowedNames != null && allowedNames.size() == 1;
+    return createTask(allowedNames.iterator().next());
+  }
+
+  /**
+   * @param relativeTaskName
+   * @return
+   */
+  public final Task createRelativeTask(String relativeTaskName) {
+    assert getRelativeTaskNames().contains(relativeTaskName);
+    return reallyCreateTask(relativeTaskName);
+  }
+
+  /**
+   * @param taskName a full task name
    * @return a Task
    */
-  public abstract Task createTask(String taskName);
+  public final Task createTask(String taskName) {
+    String relativeTaskName = relativeTaskName(taskName);
+    return reallyCreateTask(relativeTaskName);
+  }
+
+  protected abstract Task reallyCreateTask(String relativeTaskName);
+
+  private String relativeTaskName(String taskName) {
+    String className = TaskFactory.this.getClass().getSimpleName();
+    String relativeTaskName = null;
+    if (taskName.startsWith(className)) {
+      String rest = taskName.substring(className.length());
+      if (rest.isEmpty()) {
+        relativeTaskName = "";
+      } else {
+        if (rest.startsWith("(") && rest.endsWith(")")) {
+          relativeTaskName = rest.substring(1, rest.length() - 1);
+        }
+      }
+    }
+    assert relativeTaskName != null;
+    assert getRelativeTaskNames().contains(relativeTaskName);
+    return relativeTaskName;
+  }
+
 
   /**
    * @return the breakdown names available from this factory
@@ -124,9 +180,18 @@ public abstract class TaskFactory {
   }
 
   /**
-   * @return then possible names of tasks
+   * @return the allowed full names of tasks
    */
-  public abstract Collection<String> getTaskNames();
+  public final Collection<String> getTaskNames() {
+    Collection<String> relativeTaskNames = getRelativeTaskNames();
+    List<String> ret = new ArrayList<String>(relativeTaskNames.size());
+    for (String relativeTaskName : relativeTaskNames) {
+      ret.add(String.format("%s(%s)", getClass().getSimpleName(), relativeTaskName));
+    }
+    return ret;
+  }
+
+  protected abstract Collection<String> getRelativeTaskNames();
 
   /**
    * @param breakdownName

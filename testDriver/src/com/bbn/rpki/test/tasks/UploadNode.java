@@ -31,8 +31,7 @@ public class UploadNode extends TaskFactory {
     private TaskFactory.Task getUploadTask() {
       if (uploadTask == null) {
         UploadNodeFiles factory = model.getTaskFactory(UploadNodeFiles.class);
-        String nodeName = model.getNodeName(nodeDir);
-        uploadTask = factory.createTask(nodeName);
+        uploadTask = factory.createRelativeTask(model.getNodeName(nodeDir));
       }
       return uploadTask;
     }
@@ -41,7 +40,7 @@ public class UploadNode extends TaskFactory {
       if (deleteTask == null) {
         String nodeName = model.getNodeName(nodeDir);
         DeleteFromRepositoryNode factory = model.getTaskFactory(DeleteFromRepositoryNode.class);
-        deleteTask = factory.createTask(nodeName);
+        deleteTask = factory.createRelativeTask(nodeName);
       }
       return deleteTask;
     }
@@ -64,7 +63,10 @@ public class UploadNode extends TaskFactory {
     }
   }
 
-  UploadNode(Model model) {
+  /**
+   * @param model
+   */
+  public UploadNode(Model model) {
     super(model);
   }
 
@@ -89,22 +91,15 @@ public class UploadNode extends TaskFactory {
     });
   }
 
-  /**
-   * @param taskName
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String taskName) {
-    assert getTaskNames().contains(taskName);
+  protected Task reallyCreateTask(String taskName) {
+    assert getRelativeTaskNames().contains(taskName);
     File nodeDir = model.getNodeDirectory(taskName);
     return new Task(nodeDir);
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     List<File> nodeDirs = model.getNodeDirectories();
     List<String> ret = new ArrayList<String>(nodeDirs.size());
     for (File nodeDir : nodeDirs) {

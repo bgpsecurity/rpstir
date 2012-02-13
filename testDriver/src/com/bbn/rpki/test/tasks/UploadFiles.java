@@ -16,33 +16,19 @@ import com.bbn.rpki.test.tasks.ExtensionHandler.ExtensionFilter;
  * @author tomlinso
  */
 public abstract class UploadFiles extends TaskFactory {
-  /**
-   * Encapsulates the factory-specific parameters
-   * @author tomlinso
-   */
-  public static class Args {
-
-    private final File publicationSource;
-    private final ExtensionHandler.ExtensionFilter filter;
-
-    /**
-     * @param publicationSource
-     * @param filter
-     */
-    public Args(File publicationSource, ExtensionFilter filter) {
-      this.publicationSource = publicationSource;
-      this.filter = filter;
-    }
-
-  }
 
   protected class Task extends TaskFactory.Task {
+
+    private final File directory;
+    private final ExtensionFilter filter;
 
     /**
      * @param taskName
      */
-    protected Task(String taskName) {
+    protected Task(String taskName, File directory, ExtensionFilter filter) {
       super(taskName);
+      this.directory = directory;
+      this.filter = filter;
     }
 
     @Override
@@ -66,7 +52,7 @@ public abstract class UploadFiles extends TaskFactory {
     public List<File> getFilesToUpload() {
       List<File> ret = new ArrayList<File>();
       for (File file : model.getWrittenFiles()) {
-        if (file.getParentFile().equals(directory) && filter.accept(file)) {
+        if (file.getParentFile().equals(directory) && (filter == null || filter.accept(file))) {
           ret.add(file);
         }
       }
@@ -90,21 +76,10 @@ public abstract class UploadFiles extends TaskFactory {
     }
   }
 
-  private final ExtensionFilter filter;
-
-  protected final File directory;
-
-  protected UploadFiles(Model model, Args args) {
-    super(model);
-    this.directory = args.publicationSource;
-    this.filter = args.filter;
-  }
-
   /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#createTask(java.lang.String)
+   * @param model
    */
-  @Override
-  public final Task createTask(String taskName) {
-    return new Task(taskName);
+  public UploadFiles(Model model) {
+    super(model);
   }
 }

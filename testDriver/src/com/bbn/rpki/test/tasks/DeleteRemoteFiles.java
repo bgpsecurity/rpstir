@@ -56,7 +56,6 @@ public abstract class DeleteRemoteFiles extends TaskFactory {
      */
     @Override
     protected String getLogDetail() {
-      // TODO Auto-generated method stub
       return null;
     }
   }

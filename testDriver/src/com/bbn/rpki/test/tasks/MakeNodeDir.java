@@ -79,20 +79,13 @@ public class MakeNodeDir extends TaskFactory {
     // No breakdowns
   }
 
-  /**
-   * @param nodeName
-   * @return a new Task
-   */
   @Override
-  public Task createTask(String nodeName) {
+  protected Task reallyCreateTask(String nodeName) {
     return new Task(model.getNodeDirectory(nodeName));
   }
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#getTaskNames()
-   */
   @Override
-  public Collection<String> getTaskNames() {
+  protected Collection<String> getRelativeTaskNames() {
     List<String> ret = new ArrayList<String>();
     for (File nodeDir : model.getNodeDirectories()) {
       String nodeName = model.getNodeName(nodeDir);

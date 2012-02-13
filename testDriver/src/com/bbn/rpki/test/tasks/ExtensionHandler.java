@@ -16,12 +16,20 @@ import java.util.TreeMap;
  */
 public class ExtensionHandler {
 
+  /**
+   * A FileFilter for a specific extension
+   *
+   * @author tomlinso
+   */
   public static class ExtensionFilter implements FileFilter {
     private final String extension;
     ExtensionFilter(String extension) {
       this.extension = extension;
     }
 
+    /**
+     * @see java.io.FileFilter#accept(java.io.File)
+     */
     @Override
     public boolean accept(File file) {
       return file.getName().endsWith("." + extension);
@@ -54,7 +62,7 @@ public class ExtensionHandler {
     }
 
     /**
-     * @return
+     * @return the extension of this filter
      */
     public String getExtension() {
       return extension;
@@ -121,7 +129,7 @@ public class ExtensionHandler {
 
   /**
    * @param breakdownName
-   * @return
+   * @return The extension filters for the specified breakdownName
    */
   public ExtensionFilter[] getExtensionFilter(String breakdownName) {
     return breakdownMap.get(breakdownName);
