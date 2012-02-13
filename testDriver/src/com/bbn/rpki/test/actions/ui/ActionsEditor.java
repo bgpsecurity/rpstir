@@ -84,6 +84,20 @@ public class ActionsEditor implements SelectionListener {
     }
   };
 
+  private final Action expandAction = new javax.swing.AbstractAction("Expand") {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      actionTree.expand();
+    }
+  };
+
+  private final Action collapseAction = new javax.swing.AbstractAction("Collapse") {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      actionTree.collapse();
+    }
+  };
+
   /**
    * @param model
    */
@@ -97,7 +111,9 @@ public class ActionsEditor implements SelectionListener {
     JButton[] buttons = {
         new JButton(addAction),
         new JButton(insertAction),
-        new JButton(deleteAction)
+        new JButton(deleteAction),
+        new JButton(expandAction),
+        new JButton(collapseAction)
     };
     for (JButton jButton : buttons) {
       treeButtons.add(jButton);

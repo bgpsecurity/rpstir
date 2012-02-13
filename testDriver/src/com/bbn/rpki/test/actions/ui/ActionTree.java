@@ -148,4 +148,22 @@ public class ActionTree {
     }
     return null;
   }
+
+  /**
+   * Expand everything
+   */
+  public void expand() {
+    for (int i = 0; i < actionTree.getRowCount(); i++) {
+      actionTree.expandRow(i);
+    }
+  }
+
+  /**
+   * Collapse everything
+   */
+  public void collapse() {
+    for (int i = 0; i < actionTree.getRowCount(); i++) {
+      actionTree.collapseRow(i);
+    }
+  }
 }

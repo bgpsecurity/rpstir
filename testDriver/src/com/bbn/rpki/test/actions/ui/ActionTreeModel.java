@@ -209,6 +209,10 @@ public class ActionTreeModel implements TreeModel {
    */
   private EpochActions insertEpoch(int index) {
     EpochActions newEpochActions = new EpochActions(index);
+    for (int ix = index + 1; ix < epochsNode.epochs.size(); ix++) {
+      EpochActions epochActions = epochsNode.epochs.get(ix);
+      epochActions.setEpochIndex(ix);
+    }
     epochsNode.epochs.add(index, newEpochActions);
     fireTreeNodesInserted(index, newEpochActions, epochsNode);
     return newEpochActions;

@@ -170,7 +170,7 @@ public class ActionDetail {
         return getCAComponent((CA_Object) value, setter);
       }
       if (value instanceof TaskPath) {
-        return getTaskPathComponent(value, setter);
+        return getTaskPathComponent((TaskPath) value, setter);
       }
       assert false;
       return null;
@@ -181,32 +181,20 @@ public class ActionDetail {
      * @param setter
      * @return
      */
-    private Component getTaskPathComponent(Object value, final AbstractSetter setter) {
-      AbstractFormatter formatter = new AbstractFormatter() {
+    private Component getTaskPathComponent(final TaskPath taskPath, final AbstractSetter setter) {
+      final TaskPathEditor tpe = new TaskPathEditor(model);
+      tpe.addActionListener(new ActionListener() {
 
         @Override
-        public Object stringToValue(String text) throws ParseException {
-          return new TaskPath(text);
-        }
-
-        @Override
-        public String valueToString(Object value) throws ParseException {
-          if (value == null) {
-            return "null";
+        public void actionPerformed(ActionEvent e) {
+          TaskPath newTaskPath = tpe.getTaskPath();
+          if (newTaskPath != null) {
+            setter.setValue(newTaskPath);
           }
-          return value.toString();
-        }
-      };
-      final JFormattedTextField component = new JFormattedTextField(formatter);
-      component.setValue(value);
-      registerListener(new Saver() {
-
-        @Override
-        public void save() {
-          setter.setValue(component.getValue());
         }
       });
-      return component;
+      tpe.setTaskPath(taskPath);
+      return tpe.getComponent();
     }
 
     /**
@@ -217,7 +205,6 @@ public class ActionDetail {
     private Component getCAComponent(final CA_Object ca, final AbstractSetter setter) {
       Box c = Box.createHorizontalBox();
       c.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(0, 5, 0, 0)));
-      c.setBackground(Color.GREEN);
       final JLabel nameLabel = new JLabel(ca.getCommonName());
       c.add(nameLabel);
       final JButton editButton = new JButton("Edit");

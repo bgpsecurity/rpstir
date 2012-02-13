@@ -180,7 +180,7 @@ public class Model implements Constants {
     CA_Object ripe = iana.findNode("RIPE-2");
     CA_Object lir1 = ripe.findNode("LIR-2");
     AbstractAction action1 = new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, new Pair("p", 8));
-    String path = "UploadEpoch:byNode:IANA-0/RIPE-2/LIR-3:deleteFirst:upload(IANA-0/RIPE-2/LIR-3):cer-mft-roa-crl:cer";
+    String path = "UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)";
     AbstractAction action2 = new ChooseCacheCheckTask(this, path);
     EpochActions epochActions = new EpochActions(0, action1, action2);
     epochs.add(epochActions);
@@ -191,10 +191,10 @@ public class Model implements Constants {
     Document doc = new Document(root);
     XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
     outputter.output(doc, System.out);
-    addTask(getTaskFactory(InitializeCache.class).createTask(InitializeCache.TASK_NAME));
-    addTask(getTaskFactory(StartLoader.class).createTask(StartLoader.TASK_NAME));
-    addTask(getTaskFactory(InitializeRepositories.class).createTask(InitializeRepositories.TASK_NAME));
-    addTask(getTaskFactory(AdvanceEpoch.class).createTask("AdvanceEpoch"));
+    addTask(getTaskFactory(InitializeCache.class).createOnlyTask());
+    addTask(getTaskFactory(StartLoader.class).createOnlyTask());
+    addTask(getTaskFactory(InitializeRepositories.class).createOnlyTask());
+    addTask(getTaskFactory(AdvanceEpoch.class).createOnlyTask());
   }
 
   /**
@@ -242,11 +242,12 @@ public class Model implements Constants {
   public void addTask(TaskFactory.Task task) {
     addTaskInner(task);
     if (shouldInstallTrustAnchor(task, getEpochIndex())) {
-      addTaskInner(getTaskFactory(InstallTrustAnchor.class).createTask(InstallTrustAnchor.TASK_NAME));
+      InstallTrustAnchor taskFactory = getTaskFactory(InstallTrustAnchor.class);
+      addTaskInner(taskFactory.createOnlyTask());
     }
     if (shouldUpdateCache(task)) {
-      addTaskInner(getTaskFactory(UpdateCache.class).createTask(UpdateCache.TASK_NAME));
-      addTaskInner(getTaskFactory(CheckCacheStatus.class).createTask("CheckCache"));
+      addTaskInner(getTaskFactory(UpdateCache.class).createOnlyTask());
+      addTaskInner(getTaskFactory(CheckCacheStatus.class).createOnlyTask());
     }
   }
   private void addTaskInner(TaskFactory.Task task) {
@@ -366,7 +367,7 @@ public class Model implements Constants {
    */
   public void advanceEpoch() {
     ++epochIndex;
-    addTask(getTaskFactory(UploadEpoch.class).createTask(UploadEpoch.TASK_NAME));
+    addTask(getTaskFactory(UploadEpoch.class).createOnlyTask());
     previousRepositoryRoots.clear();
     previousRepositoryRoots.addAll(repositoryRoots);
     repositoryRoots.clear();
@@ -458,7 +459,11 @@ public class Model implements Constants {
   /**
    * @return the repository root files
    */
-  public List<File> getRepositoryRoots() {
+  public Collection<File> getRepositoryRoots() {
+    if (repositoryRoots.isEmpty()) {
+      // Use the configuration roots if empty
+      return testbedConfig.getRepositoryRoots();
+    }
     return repositoryRoots;
   }
 
@@ -623,7 +628,7 @@ public class Model implements Constants {
     StringBuilder sb = new StringBuilder();
     for (int i = 2; i < sourcePath.length; i++) {
       if (i > 2) {
-        sb.append("/");
+        sb.append(".");
       }
       sb.append(sourcePath[i]);
     }
@@ -692,5 +697,16 @@ public class Model implements Constants {
     String rootName = root.getName();
     String repositoryRootName = serverName + "/" + rootName;
     return repositoryRootName;
+  }
+
+  /**
+   * @return the top level tasks
+   */
+  public TaskFactory.Task[] getTopTasks() {
+    UploadEpoch factory = getTaskFactory(UploadEpoch.class);
+    TaskFactory.Task[] tasks = {
+        factory.createOnlyTask()
+    };
+    return tasks;
   }
 }

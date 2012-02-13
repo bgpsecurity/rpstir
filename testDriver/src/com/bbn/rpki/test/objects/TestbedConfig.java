@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
@@ -61,7 +63,7 @@ public class TestbedConfig implements Constants {
   TestbedConfig(String fileName) {
     this(new File(fileName));
   }
-  
+
   /**
    * Construct config for the specified file
    * @param file
@@ -163,9 +165,9 @@ public class TestbedConfig implements Constants {
       if ("IANA".equals(name)) {
         f = new IANAFactory(name, child, server, breakA, t, subjkeyfile);
       } else {
-        f = new Factory(name, 
+        f = new Factory(name,
                         ipv4,
-                        ipv6, 
+                        ipv6,
                         as_list,
                         child,
                         server,
@@ -184,11 +186,11 @@ public class TestbedConfig implements Constants {
                          ipv4,
                          ipv6,
                          as_list, child,
-                         server, 
+                         server,
                          breakA,
                          t,
                          roav4l,
-                         roav6l, 
+                         roav6l,
                          a);
       break;
     }
@@ -224,6 +226,19 @@ public class TestbedConfig implements Constants {
    */
   public FactoryBase getFactory(String nodeName) {
     return factories.get(nodeName);
-    
+
+  }
+
+  /**
+   * @return all the repository roots
+   */
+  public Collection<File> getRepositoryRoots() {
+    Set<File> ret = new TreeSet<File>();
+    for (FactoryBase factoryBase : factories.values()) {
+      if (factoryBase.isBreakAway() || factoryBase instanceof IANAFactory) {
+        ret.add(new File(new File(REPO_PATH), factoryBase.serverName));
+      }
+    }
+    return ret;
   }
 }

@@ -15,7 +15,14 @@ public class TaskPath {
    * @param path
    */
   public TaskPath(String path) {
-    this.path = path.split(":");
+    this(path.isEmpty() ? new String[0] : path.split(":"));
+  }
+
+  /**
+   * @param path
+   */
+  public TaskPath(String[] path) {
+    this.path = path;
   }
 
   /**
