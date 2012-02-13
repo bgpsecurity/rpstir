@@ -2204,13 +2204,16 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	    }
 	}
     }
+
+  if ( ct == TA_CERT )
+    {
+      /* CRLDP must be omitted if TA */
+      ret = crldp_flag ? ERR_SCM_CRLDPTA : 0;
+      goto skip;
+    }
+
   if ( crldp_flag == 0 )
     {
-      if (ct == TA_CERT)
-	{  /* must be omitted if TA */
-	  ret = 0;
-	  goto skip;
-	}
       log_msg(LOG_ERR, "[crldp] missing crldp extension");
       return(ERR_SCM_NOCRLDP);
     }
