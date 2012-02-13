@@ -135,7 +135,7 @@ public abstract class TaskFactory {
 
   /**
    * @param relativeTaskName
-   * @return
+   * @return a new tasks named relative to this TaskFactory
    */
   public final Task createRelativeTask(String relativeTaskName) {
     assert getRelativeTaskNames().contains(relativeTaskName);
