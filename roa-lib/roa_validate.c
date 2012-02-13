@@ -318,7 +318,7 @@ static int setup_roa_minmax(struct IPAddress *ripAddrp, uchar *rmin, uchar *rmax
   return 0;
   }
 
-static int test_maxLength(struct ROAIPAddress *roaAddrp)
+static int test_maxLength(struct ROAIPAddress *roaAddrp, int familyMaxLength)
   {
   if (size_casn(&roaAddrp->maxLength) == 0) return 0;
   long maxLength = 0;
@@ -332,6 +332,7 @@ static int test_maxLength(struct ROAIPAddress *roaAddrp)
   free(addr);
   read_casn_num(&roaAddrp->maxLength, &maxLength);
   if (addrLength > maxLength) return ERR_SCM_INVALIPL;
+  if (maxLength > familyMaxLength) return ERR_SCM_INVALIPL;
   return 0;
   }
 
@@ -362,7 +363,10 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
       int siz = vsize_casn(&roaAddrp->address);
       if ((family == 1 && siz > 5) || (family == 2 && siz > 17))
           return ERR_SCM_INVALIPL;        
-      if ((err = test_maxLength(roaAddrp)) < 0 ||
+      int familyMaxLength = 0;
+      if (family == 1) familyMaxLength = 32;
+      if (family == 2) familyMaxLength = 128;
+      if ((err = test_maxLength(roaAddrp, familyMaxLength)) < 0 ||
 	  (err = setup_roa_minmax(&roaAddrp->address, rmin, rmax, i)) < 0) 
 	  return err;
       if (memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
