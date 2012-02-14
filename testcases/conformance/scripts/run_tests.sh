@@ -43,7 +43,7 @@ add_file () {
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$THIS_SCRIPT_DIR"/querySpecs -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" 2> /dev/null | wc -l`
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$THIS_SCRIPT_DIR"/querySpecs -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
 			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
@@ -56,7 +56,7 @@ add_file () {
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$THIS_SCRIPT_DIR"/querySpecs -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" 2> /dev/null | wc -l`
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$THIS_SCRIPT_DIR"/querySpecs -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
 			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
