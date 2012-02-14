@@ -2153,6 +2153,50 @@ skip:
   return(ret);
 }
 
+/** Checks based on http://tools.ietf.org/html/rfc6487#section-4.8.5 */
+static int rescert_extended_key_usage_chk(X509 *x, int ct)
+{
+  int i;
+  int eku_flag = 0;
+  int ex_nid;
+  int ret = 0;
+  X509_EXTENSION *ex = NULL;
+
+  for (i = 0; i < X509_get_ext_count(x); ++i) {
+    ex = X509_get_ext(x, i);
+    ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
+
+    if (ex_nid == NID_ext_key_usage) {
+      ++eku_flag;
+      if (X509_EXTENSION_get_critical(ex)) {
+        log_msg(LOG_ERR, "[extended_key_usage] marked critical, violation");
+        ret = ERR_SCM_CEXT;
+        goto skip;
+      }
+    }
+  }
+
+  if (ct == TA_CERT || ct == CA_CERT) {
+    if (eku_flag) {
+      log_msg(LOG_ERR, "[extended_key_usage] EKU present in CA cert");
+      ret = ERR_SCM_EKU;
+      goto skip;
+    }
+  } else if (ct == EE_CERT) {
+    // XXX: this should check if it's a CMS EE cert, other EE
+    // certs are allowed to have EKU
+    if (eku_flag) {
+      log_msg(LOG_ERR, "[extended_key_usage] EKU present in CMS EE cert");
+      ret = ERR_SCM_EKU;
+      goto skip;
+    }
+  }
+
+skip:
+  log_msg(LOG_DEBUG, "[extended_key_usage] jump to return...");
+  return ret;
+}
+
 /*************************************************************
  * rescert_crldp_chk(X509 *, int)                            *
  *                                                           *
@@ -3652,6 +3696,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   ret = rescert_key_usage_chk(x);
   log_msg(LOG_DEBUG, "rescert_key_usage_chk");
+  if ( ret < 0 )
+    return(ret);
+
+  ret = rescert_extended_key_usage_chk(x, ct);
+  log_msg(LOG_DEBUG, "rescert_extended_key_usage_chk");
   if ( ret < 0 )
     return(ret);
 
