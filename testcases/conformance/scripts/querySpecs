@@ -1,0 +1,5 @@
+StaleValidationChain yes
+NoManifest yes
+StaleCRL no
+StaleManifest yes
+NotYet no
