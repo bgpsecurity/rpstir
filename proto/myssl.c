@@ -1396,6 +1396,8 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
     }
 // get flags, snlen and snlist; note that snlen is the count in BIGINTs
   cf->flags = 0;
+  if (X509_cmp_current_time(X509_CRL_get_nextUpdate(x)) < 0)
+    cf->flags |= SCM_FLAG_STALECRL;
   rev = X509_CRL_get_REVOKED(x);
   if ( rev == NULL )
     cf->snlen = 0;
