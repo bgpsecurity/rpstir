@@ -20,8 +20,8 @@ char casn_sfcsid[] = "@(#)casn.c 871P";
 
 #define ASN_READ 1          // modes for encode & read
 
-extern int _utctime_to_ulong(ulong *valp, char *fromp, int lth);
-extern int _gentime_to_ulong(ulong *valp, char *fromp, int lth);
+extern int _utctime_to_ulong(int64_t *valp, char *fromp, int lth);
+extern int _gentime_to_ulong(int64_t *valp, char *fromp, int lth);
 extern int _dump_tag(int tag, char *to, int offset, ushort flags,
     int mode);
 
@@ -804,7 +804,7 @@ int _encodesize(struct casn *casnp, uchar *to, int mode)
 	tcasnp = _find_filled(tcasnp);
 	i = _encodesize(tcasnp, c, mode);
 	}
-    else if ((i = _readsize(tcasnp, c, mode)) < 0) return i - lth;
+    else if ((i = _readvsize(tcasnp, c, mode)) < 0) return i - lth;
     c += i;
     lth += i;
     if (contp > to) lth += _set_all_lths(to, contp, c, mode);
@@ -1400,7 +1400,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     uchar bb, *b, *c, buf[8];
     int i, lth, num, of;
     int64_t secs;
-    struct casn time_casn, *tcasnp, *ch_casnp;
+    struct casn *tcasnp, *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;
 #endif
@@ -1449,11 +1449,17 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
 	    lth = 1 + (b - casnp->startp);
 	    }
 	else if (casnp->type == ASN_UTCTIME || casnp->type == ASN_GENTIME)
-	    {
+	    { // convert to DER
+            struct casn time_casn;
             simple_constructor(&time_casn, (ushort)0, casnp->type);
 	    if (read_casn_time(casnp, &secs) > 0 &&
 	        (lth = write_casn_time(&time_casn, secs)) > 0)
+                {
 		tcasnp = &time_casn;
+                if (casnp->lth != tcasnp->lth ||
+                    memcmp(casnp->startp, tcasnp->startp, casnp->lth))
+                    log_msg(LOG_DEBUG, "Converted date to DER");
+                }
 	    else
                 {
                 clear_casn(&time_casn);
@@ -1605,47 +1611,56 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     return lth;
     }
 
+static int _check_empty_default(struct casn *casnp)
+  {
+  if ((casnp->flags & ASN_DEFAULT_FLAG) &&
+      !(casnp->flags & ASN_FILLED_FLAG)) return 1;
+  return 0;
+  }
+
 int _readvsize(struct casn *casnp, uchar *to, int mode)
     {      // handles default cases at level above _readsize()
-    int ansr, tmp;
-    struct casn *tcasnp;
-    ushort flags = casnp->flags & (ASN_FILLED_FLAG | ASN_DEFAULT_FLAG);
+    int ansr = 0;
+    struct casn *ch_casnp = NULL;
     uchar *c;
 
     if (_clear_error(casnp) < 0) return -1;
-    tcasnp = (struct casn *)0;
     if (casnp->type == ASN_CHOICE)
-	{
-        if (!(tcasnp = _find_filled_or_chosen(casnp, &ansr)))
+	{ // anything chosen?
+        if (!(ch_casnp = _find_filled_or_chosen(casnp, &ansr)))
     	    return _casn_obj_err(casnp, ansr);
-	casnp = tcasnp;
-	}           // is it (or a CHOICE above it) an empty default?
-    if ((casnp->flags & (ASN_FILLED_FLAG | ASN_DEFAULT_FLAG)) ==
-        ASN_DEFAULT_FLAG || (tcasnp && flags == ASN_DEFAULT_FLAG))
+	}    
+       // is it (or a chosen item below it) an empty default?
+    if (_check_empty_default(casnp) > 0 ||
+      (ch_casnp &&_check_empty_default(ch_casnp)))
 	{
-        if (casnp->type == ASN_BOOLEAN)
+        if (!ch_casnp) ch_casnp = casnp; 
+        if (ch_casnp->type == ASN_BOOLEAN)
 	    {
-            if ((casnp->min & BOOL_DEFINED))
-    	        *to = (casnp->min & BOOL_DEFINED_VAL)? 0xFF: 0;
-            else *to = (casnp->min & BOOL_DEFAULT)? 0xFF: 0;
+            if ((ch_casnp->min & BOOL_DEFINED))
+    	        *to = (ch_casnp->min & BOOL_DEFINED_VAL)? 0xFF: 0;
+            else *to = (ch_casnp->min & BOOL_DEFAULT)? 0xFF: 0;
 	    return 1;
 	    }
-	else if (casnp->type == ASN_INTEGER || casnp->type == ASN_ENUMERATED)
+	else if (ch_casnp->type == ASN_INTEGER || 
+            ch_casnp->type == ASN_ENUMERATED)
 	    {
-   	    tmp = ansr = (int)tcasnp->ptr;
+            int tmp, i;
+            tmp = i = (int)ch_casnp->ptr;
 		// how big?
-    	    if (ansr < 0) ansr = -ansr;
-    	    for (c = to; ansr; ansr >>= 8, c++);
+    	    if (i < 0) i = -i;
+    	    for (c = to; i; i >>= 8, c++);
 		// fill it in
 	    for (ansr = c - to; --c >= to; *c = (tmp & 0xFF), tmp >>= 8);
 	    return ansr;
 	    }
 	else return 0;
 	}
-    if ((ansr = _readsize(casnp, to, mode)) > 0 &&
-        // pure read of bit-string-defined-by
-        casnp->type == (ASN_CHOICE | ASN_BITSTRING) && ansr > 0)
-        memcpy(to, &to[1], --ansr);   // shift to left 1 byte
+    if ((ansr = _readsize(casnp, to, mode)) > 0)
+        { // pure read of bit-string-defined-by 
+        if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
+          memcpy(to, &to[1], --ansr);   // shift to left 1 byte
+        }
     return ansr;
     }
 
@@ -1860,6 +1875,7 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	casnp = tcasnp;
 	}
     tmp = _csize(casnp, c, lth); // tmp is 'byte' count
+    int64_t timeval = 0;
     if (casnp->type == ASN_NONE) err = ASN_NONE_ERR;
     else if ((casnp->type == ASN_INTEGER && lth > 1 &&
         ((!*c && !(c[1] & 0x80)) ||
@@ -1867,12 +1883,12 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
     else if (casnp->type == ASN_NULL && lth) err = ASN_LENGTH_ERR;
     else if (casnp->type == ASN_UTCTIME)
 	{
-	if (_utctime_to_ulong(&val, (char *)c, lth) < 0)
+	if ((lth = _utctime_to_ulong(&timeval, (char *)c, lth)) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (casnp->type == ASN_GENTIME)
 	{
-	if (_gentime_to_ulong(&val, (char *)c, lth) < 0)
+	if ((lth = _gentime_to_ulong(&timeval, (char *)c, lth)) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
