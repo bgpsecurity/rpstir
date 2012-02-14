@@ -3,14 +3,16 @@
 THIS_SCRIPT_DIR=`dirname "$0"`
 . "$THIS_SCRIPT_DIR/../../../envir.setup"
 
-cd "$THIS_SCRIPT_DIR"/..
+cd "$THIS_SCRIPT_DIR"
 
-./scripts/gen_all.sh
+QUERY_SPECS="`pwd`/querySpecs"
+
+./gen_all.sh
 
 FAILED=""
 PASSED=""
 
-cd output
+cd ../output
 OUTPUT_DIR="`pwd`"
 
 add_file () {
@@ -43,7 +45,7 @@ add_file () {
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$THIS_SCRIPT_DIR"/querySpecs -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
 			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
@@ -56,7 +58,7 @@ add_file () {
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$THIS_SCRIPT_DIR"/querySpecs -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
 			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
