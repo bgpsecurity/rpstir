@@ -13,6 +13,8 @@
 #include "logutils.h"
 #include "hashutils.h"
 
+int strict_profile_checks = 0;
+
 /*
   This file contains the functions that semantically validate the ROA.
   Any and all syntactic validation against existing structures is assumed
@@ -512,7 +514,7 @@ static int cmsValidate(struct ROA *rp)
                  signatureAlgorithm.algorithm;
   if (diff_objid(oidp, id_sha_256WithRSAEncryption))
       {
-      if (diff_objid(oidp, id_rsadsi_rsaEncryption))
+      if (strict_profile_checks || diff_objid(oidp, id_rsadsi_rsaEncryption))
         {
         log_msg(LOG_ERR, "invalid signature algorithm in ROA");
         return ERR_SCM_BADSIGALG;

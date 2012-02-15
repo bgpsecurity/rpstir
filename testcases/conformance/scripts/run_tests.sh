@@ -46,7 +46,7 @@ add_file () {
 	esac
 
 	if test x"$TYPE" = x"bad"; then
-		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+		if ! "$RPKI_ROOT/proto/rcli" -s -y $FLAGS "$FILE"; then
 			return
 		fi
 
@@ -61,7 +61,7 @@ add_file () {
 			fi
 		fi
 	else
-		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+		if ! "$RPKI_ROOT/proto/rcli" -s -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding good file $FILE failed"
 			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
 				FAILED_IGNORE="$FILE $FAILED_IGNORE"
@@ -97,9 +97,9 @@ init_db () {
 
 reset_db () {
 	"$RPKI_ROOT/proto/rcli" -x -t "$OUTPUT_DIR" -y
-	"$RPKI_ROOT/proto/rcli" -y -F "$OUTPUT_DIR"/root.cer
-	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.crl
-	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.mft
+	"$RPKI_ROOT/proto/rcli" -s -y -F "$OUTPUT_DIR"/root.cer
+	"$RPKI_ROOT/proto/rcli" -s -y -f "$OUTPUT_DIR"/root/root.crl
+	"$RPKI_ROOT/proto/rcli" -s -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
 

@@ -30,6 +30,7 @@
 #include "sqhl.h"
 #include "diru.h"
 #include "myssl.h"
+#include "roa_utils.h"
 #include "err.h"
 #include "logutils.h"
 
@@ -228,6 +229,7 @@ static void usage(void)
   (void)printf("  -x         destroy all database tables\n");
   (void)printf("  -y         force operation: do not ask for confirmation\n");
   (void)printf("  -a         allow expired certificates\n");
+  (void)printf("  -s         do stricter profile checks\n");
   (void)printf("  -h         display usage and exit\n");
 }
 
@@ -865,7 +867,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:s")) != EOF )
     {
       switch ( c )
 	{
@@ -911,6 +913,9 @@ int main(int argc, char **argv)
 	case 'h':
 	  usage();
 	  return(0);
+	case 's':
+	  strict_profile_checks = 1; // global from myssl.c
+	  break;
 	default:
 	  (void)fprintf(stderr, "Invalid option '%c'\n", c);
 	  usage();
