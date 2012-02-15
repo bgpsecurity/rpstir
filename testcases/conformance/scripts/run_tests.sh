@@ -1,5 +1,8 @@
 #!/bin/sh -e
 
+# whitespace separated list of files to ignore the results from
+IGNORE="badCertResourcesBadASOrder.cer"
+
 THIS_SCRIPT_DIR=`dirname "$0"`
 . "$THIS_SCRIPT_DIR/../../../envir.setup"
 
@@ -10,7 +13,9 @@ QUERY_SPECS="`pwd`/querySpecs"
 ./gen_all.sh
 
 FAILED=""
+FAILED_IGNORE=""
 PASSED=""
+PASSED_IGNORE=""
 
 cd ../output
 OUTPUT_DIR="`pwd`"
@@ -49,12 +54,20 @@ add_file () {
 		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
 			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
-			PASSED="$FILE $PASSED"
+			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
+				PASSED_IGNORE="$FILE $PASSED_IGNORE"
+			else
+				PASSED="$FILE $PASSED"
+			fi
 		fi
 	else
 		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding good file $FILE failed"
-			FAILED="$FILE $FAILED"
+			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
+				FAILED_IGNORE="$FILE $FAILED_IGNORE"
+			else
+				FAILED="$FILE $FAILED"
+			fi
 			return
 		fi
 
@@ -62,7 +75,11 @@ add_file () {
 		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
 			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
-			FAILED="$FILE $FAILED"
+			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
+				FAILED_IGNORE="$FILE $FAILED_IGNORE"
+			else
+				FAILED="$FILE $FAILED"
+			fi
 		fi
 	fi
 }
@@ -121,14 +138,22 @@ for MFT_CERT in MFT*.cer; do
 	add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
 done
 
+if test -n "$FAILED"; then
+	echo "Failed but should pass:" >&2
+	list_files "    " "$FAILED" >&2
+fi
+if test -n "$FAILED_IGNORE"; then
+	echo "Failed but should pass (ignored):" >&2
+	list_files "    " "$FAILED_IGNORE" >&2
+fi
+if test -n "$PASSED"; then
+	echo "Passed but should fail:" >&2
+	list_files "    " "$PASSED" >&2
+fi
+if test -n "$PASSED_IGNORE"; then
+	echo "Passed but should fail (ignored):" >&2
+	list_files "    " "$PASSED_IGNORE" >&2
+fi
 if test -n "$FAILED" -o -n "$PASSED"; then
-	if test -n "$FAILED"; then
-		echo "Failed but should pass:" >&2
-		list_files "    " "$FAILED" >&2
-	fi
-	if test -n "$PASSED"; then
-		echo "Passed but should fail:" >&2
-		list_files "    " "$PASSED" >&2
-	fi
 	exit 1
 fi
