@@ -1,5 +1,5 @@
---- badCertSIAMissing.raw.old	2011-06-21 15:07:11.000000000 -0400
-+++ badCertSIAMissing.raw	2011-06-21 15:07:37.000000000 -0400
+--- badCertSIAMissing.raw.old	2011-09-19 16:57:17.000000000 -0400
++++ badCertSIAMissing.raw	2011-09-19 16:59:12.000000000 -0400
 @@ -52,15 +52,6 @@
                      ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                  ctx+0x06

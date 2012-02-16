@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 
+#include "certificate.h"
+
 /*
   Object types
 */
@@ -82,7 +84,7 @@ typedef struct _crlinfo
   crlfunc  cfunc;
 } crlinfo;
 
-struct goodoid 
+struct goodoid
 {
   int lth;
   unsigned char *oid;
@@ -119,10 +121,13 @@ extern int   ranlast(scm *scmp, scmcon *conp, char *whichcli);
 extern int   addStateToFlags(unsigned int *flags, int isValid, char *filename,
 			     char *fullpath, scm *scmp, scmcon *conp);
 extern int   set_cert_flag(scmcon *conp, unsigned int id, unsigned int flags);
-extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp, 
+extern struct cert_answers *find_cert_by_aKI(char *ski, char *aki, scm *sscmp,
     scmcon *conp);
 extern struct cert_answers * find_parent_cert(char *, char *, scmcon *);
 extern struct cert_answers *find_trust_anchors(scm *sscmp, scmcon *conp);
+extern struct Extension *find_extension(struct Certificate *certp, char *idp);
+extern struct Extension *get_extension(struct Certificate *certp,
+        char *idp, int *count);
 extern int read_SKI_blocks(scm *scmp, scmcon *conp, char *skiblockfile);
 extern char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap);
 

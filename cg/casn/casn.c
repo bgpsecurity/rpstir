@@ -251,14 +251,17 @@ int eject_casn(struct casn *casnp, int num)
     int icount, err = 0;
 
     if (_clear_error(casnp) < 0) return -1;
-    if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_OF_ERR;
+    if (!(casnp->flags & ASN_OF_FLAG)) 
+      err = ASN_OF_ERR;
     else
 	{
         for (icount = 0, tcasnp = &casnp[1]; tcasnp->ptr; tcasnp = tcasnp->ptr,
             icount++);
-        if (num >= icount) err = ASN_OF_BOUNDS_ERR;
+        if (num >= icount) 
+          err = ASN_OF_BOUNDS_ERR;
 	}
-    if (err) return _casn_obj_err(casnp, err);
+    if (err) 
+      return _casn_obj_err(casnp, err);
     fcasnp = &casnp[1];  // first member in OF
     if (!num)
 	{
@@ -284,6 +287,22 @@ int eject_casn(struct casn *casnp, int num)
     return num;
     }
 
+int eject_all_casn(struct casn *casnp)
+    {
+    int num= 0;
+    if ((num = num_items(casnp)) < 0) 
+      return _casn_obj_err(casnp, num);
+    if (num == 0) 
+      return 0;
+    int i, err = 0;
+    for (i = 1; i < num; i++)  // more efficient not to start with zeroth
+      {
+      if ((err = eject_casn(casnp, 1)) < 0) 
+        return err;
+      }
+    return eject_casn(casnp, 0);
+    }
+
 int encode_casn(struct casn *casnp, uchar *to)
     {
     int ansr;
@@ -298,17 +317,18 @@ struct casn *index_casn(struct casn *casnp, int num)
     struct casn *tcasnp;
     int err = 0;
 
-    if (_clear_error(casnp) < 0) return (struct casn *)0;
+    if (_clear_error(casnp) < 0) 
+      return (struct casn *)0;
     if (!casnp->level || !(_go_up(casnp)->flags & ASN_OF_FLAG))
         err = ASN_NOT_OF_ERR;
-/*
+    else if (num >= casnp->num_items) 
+        err = ASN_OF_BOUNDS_ERR;
     else
 	{
         for (tcasnp = casnp ; num-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
-        if (num >= 0) err = ASN_OF_BOUNDS_ERR;
+        if (num >= 0) 
+            err = ASN_OF_BOUNDS_ERR;
 	}
-*/
-    else if (num >= casnp->num_items) err = ASN_OF_BOUNDS_ERR;
     if (err)
 	{
 	_casn_obj_err(casnp, err);
@@ -951,10 +971,11 @@ int _mark_definees(struct casn *casnp, uchar *wherep, int index)
             }
         else if (*wherep > '0')
             {
-	    if (!(tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'))) ||
+	    tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'));
+            if (!tcasnp) return 0;
 		// if more than 1 'digit', go down
-                (wherep[1] >= '0' && (!(tcasnp++)->type & ASN_CONSTRUCTED)))
-            return 0;
+            if (wherep[1] >= '0' && (!((tcasnp++)->type & ASN_CONSTRUCTED)))
+                return 0;
             }
         }
     return 1;
@@ -1046,7 +1067,7 @@ Procedure:
 **/
     struct casn *curr_casnp, *ch_casnp, *sav_casnp, *set_casnp,
         *tcasnp;
-    int ansr, did, err, num, lth, explicit_extra, break_out, num_ofs,
+    int ansr, did, num, lth, explicit_extra, break_out, num_ofs,
       indefs = 0, has_indef, skip_match;
     uchar *b, *c, ftag = 0;
     long tag;
@@ -1061,7 +1082,6 @@ Procedure:
         has_indef = skip_match = 0;
         if (!curr_casnp) return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
         c = from;  // note that NONE case uses this to reset c
-	err = 0;
         if (of_casnp)
 	    {
             if (!(curr_casnp = inject_casn(of_casnp, num_ofs++)))
@@ -1379,7 +1399,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     {
     uchar bb, *b, *c, buf[8];
     int i, lth, num, of;
-    ulong secs;
+    int64_t secs;
     struct casn time_casn, *tcasnp, *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;
@@ -1631,11 +1651,10 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
 
 int _set_all_lths(uchar *top, uchar *tag_endp, uchar *val_endp, int mode)
     {
-    ulong tag;
     uchar *c = top;
     int lth;
 
-    tag = _get_tag(&c);
+    _get_tag(&c); // to advance pointer
     c++;    // at end of tag-lth;
     if (c < tag_endp) lth = _set_all_lths(c, tag_endp, val_endp, mode);
     else lth = 0;

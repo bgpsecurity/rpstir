@@ -1,24 +1,230 @@
-output/root.cer
-       root/root.crl
-            root.roa
-            root.mft
-            badCert*.cer
-            badCMS*.roa
-            badROA.roa
-            goodCert.cer
-            goodCert/goodCert.crl
-                     goodCert.roa
-                     goodCert.mft
-            testCRL*.cer
-            testCRL*/badCRL*.crl
-                     goodmft.mft
-                     goodroa*.roa?
-             :
-             :
-            testMFT*.cer
-            testMFT*/goodcrl.crl
-                     badMFT*.mft
-                     goodroa*.roa?
-             :
-             :        
-                  
+RPKI Syntax Conformance Test Cases
+
+# Directory layout of rsync://rpki.bbn.com/conformance/
+root.cer
+root/root.crl
+     root.mft
+     badCert*.cer
+     badCMS*.roa
+     badROA.roa
+     testCRL*.cer
+     testCRL*/badCRL*.crl
+              goodmft.mft
+      :
+      :
+     testMFT*.cer
+     testMFT*/goodcrl.crl
+              badMFT*.mft
+      :
+      :
+
+In theory, a conforming RPKI validator should reject any file whose
+filename begins with "bad", and accept all other files.  We chose to
+give each CRL and MFT test case its own subdirectory; this is because
+we wanted to test the way a validator handles individual files, not
+how it handles a convoluted repository structure.
+
+# Caveat emptor: these test cases aren't finished yet, and some will
+# be removed.  E.g., some are not "syntax" conformance cases because
+# they would require checking the relationship *between* files, not
+# just checking the syntax of a single file.
+
+
+CA Certificates
+
+101 AIA2AccessDesc      # two AIA extensions -- remove, dup of AIA2x?
+102 AIABadAccess        # wrong accessMethod for rsync URI
+103 AIAAccessLoc        # single HTTP accessLoc, no rsync
+104 AIACrit             # wrongly mark AIA extension as critical
+105 AKIHash             # AKI doesn't match parent SKI -- NOT syntax check?
+106 AKILth              # AKI is too short (do we want too long?)
+107 BadExtension1       # illegal extension (PolicyMappings) -- need critical?
+109 BasicConstrNoCA     # BasicConstr present, but cA not set
+110 BasicConstrNoCrit   # BasicConstr present, crit bit unset
+111 BasicConstrPathLth  # BasicConstr path length present
+112 Cpol2oid            # More than one Certificate Policy OID -- use same one?
+113 CpolNoCrit          # CertPolicy extension, crit bit unset
+114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points -- actually allowed?
+115 CRLDPCrit           # CRL Dist Pt marked critical
+116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer
+117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt -- zero-length str?
+118 CRLDPReasons        # CRL Dist Pt has reasons
+119 EKU                 # has Extended KeyUsage
+120 InnerSigAlg         # wrong signature algorithm in toBeSigned
+121 IssuerOID           # issuer name is not id_commonName
+122 Issuer2ComName      # issuer name has 2 common names
+123 IssuerUtf           # issuer name has utf name
+124 Issuer2SetComName   # issuer name has 2 sets with common names
+125 IssuerSerNum        # issuer name has only a serial number
+126 IssUID              # has issuer unique ID
+127 KUsageExtra         # has disallowed key usage bit
+128 KUsageNoCertSign    # lacks bit for signing certificates
+129 KUsageNoCrit        # key usage extension not critical
+131 KUsageNoCRLSign     # lacks bit for signing CRLs
+134 OuterSigAlg         # wrong signature algorithm in cert.algorithm
+135 PubKeyAlg           # wrong SubjectPublicKey algorithm
+136 PubKeyExp           # wrong SubjectPublicKey exponent
+137 PubKeyLth           # wrong SubjectPublicKey length -- need to be shorter?
+138 ResourcesASNoCrit   # AS number extension not critical
+139 ResourcesBadAFI     # invalid IP address family
+140 ResourcesBadASOrder # AS numbers out of order
+141 ResourcesBadV4Order # IPv4 addresses out of order
+142 ResourcesBadV6Order # IPv6 addresses out of order
+143 ResourcesIPNoCrit   # IP address extension not critical
+144 ResourcesNone       # no IP addresses or AS numbers
+145 ResourcesSAFI       # IP addresses has SAFI digit
+147 SIAAccessLoc        # subject info access extension has non-rsync locator
+148 SIAAccessMethod     # subject info access extension has bad access method
+149 SIAMissing          # no subject info access extension
+150 SKIHash             # incorrect subject key identifier
+151 SKILth              # incorrect subject key identifier length
+152 SubjectOID          # subject name is not id_commonName
+153 Subject2ComName     # subject name has 2 common names
+154 SubjectUtf          # subject name has utf name
+155 Subject2SetComName  # subject name has 2 sets with common names
+156 SubjectSerNum       # subject name has only a serial number
+157 SubjUID             # has subject unique ID
+158 ValCrossed          # beginning validity date > ending date
+159 ValFromFuture       # starting validity date is in future -- UNK state OK?
+160 ValFromTyp          # starting validity is of wrong type
+162 ValToPast           # ending validity date has passed
+163 ValToTyp            # ending date is of wrong type
+164 VersionNeg          # version number is negative
+165 Version1            # version number is v1, i.e. 0
+166 Version2            # version number is v2, i.e. 1
+167 Version4            # version number is v4, i.e. 3
+168 SerNum              # negative serial number -- also need zero?
+169 AIA2x               # two authority info access extensions
+170 SIA2x               # two subject info access extensions
+171 NoAIA               # no authority info access extension
+172 NoSIA               # no subject info access extension
+173 NoBasicConstr       # no basic constraints extension
+174 2BasicConstr        # two basic constraints extensions
+175 NoSKI               # no subject key identifier extension
+176 2SKI                # two subject key identifier extensions
+177 NoAKI               # no authority key identifier extension
+178 2AKI                # two authority key identifier extensions
+179 NoKeyUsage          # no key usage extension
+180 2KeyUsage           # two key usage extensions
+181 2CRLDP              # two CRLDP extensions
+182 NoCRLDP             # no CRLDP extension
+183 NoCpol              # no certificate policies extension
+184 2Cpol               # two certificate policies extensions
+185 2IPAddr             # two IP address extensions
+186 2ASNum              # two AS number extensions
+187 CRLDPNoRsyncDistPt  # no rsync URI in CRLDP
+188 Issuer2SerNums      # issuer name has 2 serial numbers
+189 Subject2SerNums     # subject name has 2 serial numbers
+
+
+CMS signed objects, generic (using ROAs)
+
+512 ContentType              # wrong content type
+513 NoCerts                  # no certificate
+514 2Certs                   # two certificates
+515 Version2                 # version 2
+516 Version4                 # version 4
+517 DigestAlg                # wrong digest algorithm -- inconsistent?
+518 2DigestAlgs              # two digest algorithms
+519 NoDigestAlgs             # no digest algorithm
+520 HasCRL                   # has a CRL
+523 SigInfoVersion           # wrong Signer Info version (2)
+524 SigInfoVersion4          # wrong Signer Info version (4)
+525 SigInfoNoSid             # no Signer Identifier
+526 SigInfoWrongSid          # wrong choice of Signer Identifier
+527 SigInfoBadSid            # bad Signer Identifier (wrong SKI)
+528 SigInfoHashAlg           # wrong hash algorithm in Signer Info
+529 SigInfoNoAttrs           # no attributes in Signer Info
+530 SigInfoAttrsNoContType   # no content type in Signer Info
+531 SigInfoAttrsContTypeOid  # wrong content type OID
+532 SigInfoAttrsMsgDigestOid # wrong digest OID attribute
+533 SigInfoAttrsNoMsgDigest  # no message digest
+534 SigInfoAttrs2ContType    # duplicate content type attributes
+535 SigInfoAttrs2MsgDigest   # duplicate digest attributes
+536 SigInfoAttrs2SigTime     # duplicate signing time attributes
+537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes
+538 SigInfoUnSigAttrs        # has unsigned attribute
+539 SigInfoNoSig             # no signature
+540 SigInfo2Sig              # has two signatures
+542 SigInfoWrongSigAlg       # has wrong signature algorithm
+543 SigInfoNoHashAlg         # had no hash algorithm
+
+EE Certificates (embedded in ROAs)
+
+544 KeyUsage                 # permission to sign certs and CRLs
+545 SIAWrongOID              # improper OID in SIA
+
+
+ROAs
+
+551 ASIDSmall                # AS number out of bounds (too low)
+552 ASIDLarge                # AS number out of bounds (too high)
+553 Family                   # invalid family
+554 FamilyLth                # family name too long
+555 IPMaxLth                 # IP max length too long
+556 IP2Big                   # IP addresses exceed parent's
+557 VersionV1Explicit        # explicit V1 version (int 0)
+558 VersionV2                # Version V2 (int 1)
+                             # IP addresses exceed via inherit?
+
+CRLs
+
+640 CRLNoVersion             # no CRL version field
+641 CRLVersion0              # CRL version v1 (integer value 0)
+642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 
+643 CRLSigAlgOuter           # wrong outer signature algorithm ID
+644 CRLIssuerOID             # wrong OID for issuer name
+645 CRLIssuer2Sets           # two SETs in issuer name - NEED CLEARER TEXT
+646 CRLIssuerUTF             # issuer name in utf not printable string
+647 CRLIssuer2Seq            # two SEQUENCEs in issuer name - NEED CLEARER TEXT
+648 CRLIssuer2SerNums        # two serial numbers in issuer name
+649 CRLThisUpdateFuture      # this update is in the future
+650 CRLThisUpdateTyp         # wrong type of date in this update
+651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK)
+652 CRLNextUpdateTyp         # wrong type of date in next update
+653 CRLUpdatesCrossed        # last date is later then next date
+654 CRLIssAltName            # has issuer alternative name extension
+655 CRLIssDistPt             # has issuing distribution point extension
+656 CRLDeltaCRLInd           # has delta CRL indicator extension
+657 CRLNoAKI                 # has no authority key identifier extension
+658 CRLNoCRLNum              # has no CRL number
+659 CRLEntryReason           # entry has a revocation reason
+662 CRLBadDateFeb29          # has Feb. 29 on non-leap year
+663 CRLBadDateDayGT30        # has day 31 of 30-day month
+664 CRLBadDateDayGT31        # has day 32 of 31-day month
+665 CRLBadDateHour           # has hour> 23
+666 CRLBadDateMin            # has minute > 59
+667 CRLBadDateSec            # has seconds > 59
+668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year
+669 CRLNumber2Big            # has too long a CRL number
+670 CRL2CRLNums              # has 2 CRL numbers
+671 CRLBadDateDay0           # has a day number 0
+672 CRLBadDateMonth0         # has a month number 0
+673 CRLBadDateMonth13        # has a month number > 12
+
+Manifests
+
+768 MFTWrongType             # wrong eContentType
+769 MFTVersion0              # non-default version 0
+770 MFTVersion1              # version 1
+771 MFTNoNum                 # no manifest number
+772 MFTNegNum                # negative manifest number
+773 MFTThisUpdUTC            # thisUpdate in UTC
+774 MFTThisUpdFuture         # thisUpdate in future
+775 MFTNextUpdUTC            # nextUpdate in UTC
+776 MFTNextUpdPast           # nextUpdate in past
+777 MFTHashAlg               # wrong hash algorithm
+779 MFTFileHashShort         # too short hash of a file
+780 MFTFileHashLong          # too long hash of a file
+781 MFTFileNotIA5            # file name not IA5
+782 MFTHashOctetStr          # file hash is octet, not bit string
+783 MFTDuplicateFileOneHash  # duplicate file name with same hash
+784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash
+
+
+TODO: Trust Anchor (self-signed) certificates
+
+AIA present
+CRLDP present
+bad AKI
+issuer != subject (tricky, will be interpreted as non-self-signed)

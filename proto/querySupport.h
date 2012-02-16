@@ -18,7 +18,8 @@ extern int parseStalenessSpecsFile(char *specsFilename);
  * read out the values from parsing the staleness specs
  *****/
 extern void getSpecsVals(int *rejectStaleChainp, int *rejectStaleManifestp,
-						 int *rejectStaleCRLp, int *rejectNoManifestp);
+						 int *rejectStaleCRLp, int *rejectNoManifestp,
+						 int *rejectNotYetp);
 
 /******
  * put the appropriate tests for SCM_FLAG_XXX flags in the where

@@ -22,7 +22,9 @@ gen_test_key_LDFLAGS = -lpthread $(LIBS)
 cert_validate_SOURCES = cert_validate.c
 cert_validate_LDFLAGS = -lpthread $(LIBS)
 
-TESTS = ./makeall
+TESTS = \
+	./conformance/scripts/run_tests.sh \
+	./makeall
 
 EXTRA_DIST = \
 	$(filter-out C.raw,$(wildcard *.p15 *.raw false*)) C.orig \

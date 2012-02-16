@@ -1,5 +1,5 @@
---- badCertNoCpol.raw.old	2011-06-21 15:26:52.000000000 -0400
-+++ badCertNoCpol.raw	2011-06-21 15:27:21.000000000 -0400
+--- badCertNoCpol.raw.old	2011-09-19 17:41:51.000000000 -0400
++++ badCertNoCpol.raw	2011-09-19 17:42:43.000000000 -0400
 @@ -61,9 +61,6 @@
                                  ctx+0x06
                                      "rsync://rpki.bbn.com/conformance/root/empt"

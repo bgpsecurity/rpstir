@@ -19,6 +19,11 @@
 #include <openssl/rsa.h>
 #endif
 #include <openssl/bn.h>
+#include <certificate.h>
+#include "crlv2.h"
+
+
+extern int strict_profile_checks;
 
 
 /*
@@ -42,7 +47,7 @@
 
 #define CF_NFIELDS          (CF_FIELD_CRLDP+1)
 
-
+#define CRL_MAX_SNUM_LTH    20  // maximum length of cert serial number in CRL
 /*
   A certificate X509 * must be torn apart into this type of structure.
   This structure can then be entered into the database.
@@ -103,7 +108,9 @@ extern char *UnixTimeToDBTime(time_t clck, int *stap);
 extern char *X509_to_ski(X509 *x, int *stap, int *x509stap);
 extern char *X509_to_subject(X509 *x, int *stap, int *x509stap);
 
-extern int   rescert_profile_chk(X509 *x, int ct, int checkRPKI);
+extern int   rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, 
+    int checkRPKI);
+extern int   crl_profile_chk(struct CertificateRevocationList *crlp);
 
 extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 				X509 **xp, int *stap, int *x509stap);

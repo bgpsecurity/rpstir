@@ -1,7 +1,7 @@
 /* $Id: compare.c 453 2008-07-25 15:30:40Z cgardiner $ */
 
 /* COMPARE */
-#include "includes.h"
+// #include "includes.h"
 #include "sfcs.h"
 
 #define A_LEN 3000

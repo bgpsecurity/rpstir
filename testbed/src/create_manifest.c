@@ -199,6 +199,7 @@ struct object_field *get_man_field_table()
 int create_manifest(struct object_field *table)
 {
   struct ROA roa;
+  struct FileListInManifest *f;
   //struct CMSAlgorithmIdentifier *algidp;
    
   ROA(&roa, 0);
@@ -213,6 +214,11 @@ int create_manifest(struct object_field *table)
       warn(FILE_OPEN_ERR, (char*)templateFile);
       return(FILE_OPEN_ERR);
     }
+
+  // Remove existing manifest file list.
+  // FIXME: THIS CAUSES PROBLEMS IF USER PROVIDES EMPTY FILE LIST!!
+  f = &roa.content.signedData.encapContentInfo.eContent.manifest.fileList;
+  clear_casn(&f->self);
 
   //Setup the outerlying CMS structure
   int i = 0;
