@@ -3462,9 +3462,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		log_msg(LOG_ERR, "subj pub key too long");
 		return ERR_SCM_BADALG;
 	}
-	uchar *pubkey_buf = calloc(1, SUBJ_PUBKEY_MAX_SZ + 1);
-    if (!pubkey_buf)
-        return ERR_SCM_NOMEM;
+	uchar *pubkey_buf;
 	int bytes_read;
     bytes_read = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
 			subjectPublicKey, &pubkey_buf);
@@ -3484,15 +3482,12 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 
 	// Subject public key modulus must be 2048-bits.
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
-    // TODO: can we always count on an extra leading zero byte?
 	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
 		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
 		return ERR_SCM_BADALG;
 	}
 	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
-    uchar *pubkey_modulus_buf = calloc(1, bytes_to_read+1);
-    if (!pubkey_modulus_buf)
-        return ERR_SCM_NOMEM;
+    uchar *pubkey_modulus_buf;
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
 	free(pubkey_modulus_buf);
     if (bytes_read != bytes_to_read) {
@@ -3507,9 +3502,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     bytes_to_read = vsize_casn(&rsapubkey.exponent);
 	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ)
         incorrect_length = 1;
-    uchar *pubkey_exponent_buf = calloc(1, sizeof(uint32_t));
-    if (!pubkey_exponent_buf)
-        return ERR_SCM_NOMEM;
+    uchar *pubkey_exponent_buf;
     bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
     if (bytes_read != bytes_to_read)
         different_lengths = 1;
@@ -3543,12 +3536,7 @@ static int rescert_serial_number_chk(struct Certificate *certp) {
 		return (ERR_SCM_BADSERNUM);
 	}
 
-	uint8_t *sernump = calloc(1, bytes_to_read + 1);
-	if (!sernump) {
-		log_msg(LOG_ERR, "could not alloc for serial number");
-		return ERR_SCM_NOMEM;
-	}
-
+	uint8_t *sernump;
 	int bytes_read = readvsize_casn(&certp->toBeSigned.serialNumber, &sernump);
 	if (bytes_read != bytes_to_read) {
 		log_msg(LOG_ERR, "serial number actual length != stated length");
