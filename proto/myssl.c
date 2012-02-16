@@ -24,6 +24,8 @@
 #include "rpwork.h"
 #include "crlv2.h"
 
+int strict_profile_checks = 0;
+
 /*
   Convert between a time string in a certificate and a time string
   that will be acceptable to the DB. The return value is allocated memory.
@@ -3333,8 +3335,15 @@ static int rescert_name_chk(struct RDNSequence *rdnseqp)
         cnames++;
         if (!vsize_casn(&avap->value.commonName.printableString) > 0)
           {
-          log_msg(LOG_ERR, "CommonName not printableString");
-          return -1;
+          if (strict_profile_checks)
+            {
+            log_msg(LOG_ERR, "CommonName not printableString");
+            return -1;
+            }
+          else
+            {
+            log_msg(LOG_WARNING, "CommonName not printableString");
+            }
           }
         } else if (diff_objid(&avap->objid, id_serialNumber))  // this limit applies to Issuer/Subject, not to AttributeValueAssertion
         {

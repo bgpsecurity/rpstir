@@ -51,7 +51,7 @@
 // JFG - Reinsert this definition here if ranges are reinstated in asn
 //#define IP_RANGES_ALLOWED
 
-extern int strict_profile_checks;
+extern int strict_profile_checks_cms;
 
 enum asnFileFormat {
   FMT_CONF = 0,

@@ -915,6 +915,7 @@ int main(int argc, char **argv)
 	  return(0);
 	case 's':
 	  strict_profile_checks = 1; // global from myssl.c
+	  strict_profile_checks_cms = 1; // global from roa_validate.c
 	  break;
 	default:
 	  (void)fprintf(stderr, "Invalid option '%c'\n", c);
