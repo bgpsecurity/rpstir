@@ -92,7 +92,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
 
 // return a printable message indicating the error (if any) or NULL if not
 //
-static char *signCMS(struct CMSBlob* roa, char *keyfilename, int bad)
+static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
   {
   CRYPT_CONTEXT sigKeyContext;
   CRYPT_KEYSET cryptKeyset;
@@ -164,8 +164,8 @@ static char *signCMS(struct CMSBlob* roa, char *keyfilename, int bad)
 
 int main(int argc, char **argv)
   {
-  struct CMSBlob roa;
-  CMSBlob(&roa, (ushort)0);
+  struct ROA roa;
+  ROA(&roa, (ushort)0);
   if (argc < 4 || argc > 5 )
     {
       fprintf(stderr, "Usage: %s EEcert CMSfile EEkeyfile [outfile]\n",
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
   if (!(sextp = find_extension(&EEcert, id_authKeyId))) 
       fatal(3, "key identifier");
      // add cert to CMS object 
-  struct BlobSignedData *signedDatap = &roa.content.signedData;
+  struct SignedData *signedDatap = &roa.content.signedData;
   struct Certificate *certp;
   clear_casn(&signedDatap->certificates.self);
   certp = (struct Certificate *)inject_casn(&signedDatap->certificates.self, 0);

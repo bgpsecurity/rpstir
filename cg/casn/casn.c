@@ -1021,6 +1021,7 @@ Procedure:
 	    Call the constructor
 	    Make the pointed-to be the current item
         IF have indefinite length, return error
+3a.
         Calculate the length
         Count up the bytes processed so far
         IF have overshot or will with this item, return error
@@ -1039,12 +1040,12 @@ Procedure:
             ELSE IF item is explicit AND tag not equal to current type OR
               item is not explicit AND tag not equal to current tag, error
             IF too many bytes, error
-        Check that the next byte matches the type
+4a      Check that the next byte matches the type
 	    IF have indefinite length, return error
 	    Calculate the length
         ELSE IF at a CHOICE where the current tag is not the type
           Get the tag and length
-
+4b
         IF at a primitive item which isn't a wrapper
             Note what the call to write a primitive returns.
         ELSE IF current item has no contents, its length is zero
@@ -1163,6 +1164,7 @@ Procedure:
 	    }
 	if ((curr_casnp->flags & ASN_POINTER_FLAG))
             curr_casnp = _dup_casn(curr_casnp);
+                                                   // step 3a
 	if ((lth = _calc_lth(&c, ftag)) < -1)
             return _casn_obj_err(curr_casnp, ASN_LENGTH_ERR) - did - 1;
         if (lth == -1)
@@ -1240,7 +1242,7 @@ Procedure:
             }
         if (!skip_match)
           {
-    	  ansr = -1;
+    	  ansr = -1;                             // step 4b
             // IF at a primitive item which isn't a wrapper
             //    Note what the call to write a primitive returns.
     	  if (!(curr_casnp->type & ASN_CONSTRUCTED))
@@ -1254,7 +1256,7 @@ Procedure:
                     return ansr - did;
               }
     	    }
-      	  else if (!curr_casnp->lth)
+      	  else if (!curr_casnp->lth)      // no contents?
     	    {
     	    if (curr_casnp->min)
                return _casn_obj_err(curr_casnp, ASN_OF_BOUNDS_ERR);
@@ -1611,10 +1613,18 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     return lth;
     }
 
-static int _check_empty_default(struct casn *casnp)
+static int _check_filled_default(struct casn *casnp)
   {
-  if ((casnp->flags & ASN_DEFAULT_FLAG) &&
-      !(casnp->flags & ASN_FILLED_FLAG)) return 1;
+  if ((casnp->flags & ASN_DEFAULT_FLAG)) 
+    {
+    if (((casnp->flags & ASN_FILLED_FLAG)))
+      {
+      struct casn *xcasnp = &casnp[2]; // the default value
+      if (xcasnp->lth != casnp->lth) return 0;
+      if (!memcmp(xcasnp->startp, casnp->startp, casnp->lth))
+        return 1; 
+      }
+    }
   return 0;
   }
 
@@ -1622,7 +1632,6 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
     {      // handles default cases at level above _readsize()
     int ansr = 0;
     struct casn *ch_casnp = NULL;
-    uchar *c;
 
     if (_clear_error(casnp) < 0) return -1;
     if (casnp->type == ASN_CHOICE)
@@ -1630,32 +1639,10 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
         if (!(ch_casnp = _find_filled_or_chosen(casnp, &ansr)))
     	    return _casn_obj_err(casnp, ansr);
 	}    
-       // is it (or a chosen item below it) an empty default?
-    if (_check_empty_default(casnp) > 0 ||
-      (ch_casnp &&_check_empty_default(ch_casnp)))
-	{
-        if (!ch_casnp) ch_casnp = casnp; 
-        if (ch_casnp->type == ASN_BOOLEAN)
-	    {
-            if ((ch_casnp->min & BOOL_DEFINED))
-    	        *to = (ch_casnp->min & BOOL_DEFINED_VAL)? 0xFF: 0;
-            else *to = (ch_casnp->min & BOOL_DEFAULT)? 0xFF: 0;
-	    return 1;
-	    }
-	else if (ch_casnp->type == ASN_INTEGER || 
-            ch_casnp->type == ASN_ENUMERATED)
-	    {
-            int tmp, i;
-            tmp = i = (int)ch_casnp->ptr;
-		// how big?
-    	    if (i < 0) i = -i;
-    	    for (c = to; i; i >>= 8, c++);
-		// fill it in
-	    for (ansr = c - to; --c >= to; *c = (tmp & 0xFF), tmp >>= 8);
-	    return ansr;
-	    }
-	else return 0;
-	}
+       // is it (or a chosen item below it) the default value?
+    if (_check_filled_default(casnp) > 0 ||
+      (ch_casnp &&_check_filled_default(ch_casnp))) // if so, skip it
+      return 0;
     if ((ansr = _readsize(casnp, to, mode)) > 0)
         { // pure read of bit-string-defined-by 
         if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
