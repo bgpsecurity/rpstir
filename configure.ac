@@ -23,6 +23,15 @@ AC_PROG_SED
 
 
 AC_ARG_WITH(
+    [purify-setup-script],
+    AS_HELP_STRING([--with-purify-setup-script],[Path to IBM Rational Purify setup script: Defaults to not available ]),
+    [ PURIFY_SETUP=$withval],
+    [ PURIFY_SETUP=]
+)
+AC_SUBST(PURIFY_SETUP)
+AM_CONDITIONAL([HAVE_PURIFY], [test -n "$PURIFY_SETUP"])
+
+AC_ARG_WITH(
     [ssl-include],
     AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ]),
     [ ssl_include=$withval],

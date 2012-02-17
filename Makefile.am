@@ -27,6 +27,11 @@ CLEANFILES = \
 
 ACLOCAL_AMFLAGS = -I build-aux
 
+if HAVE_PURIFY
+purify: all
+	. "@PURIFY_SETUP@" && $(MAKE) all CC="purify $(CC)" EXEEXT=".purify$(EXEEXT)"
+endif
+
 tags:
 	find ${PWD} -name \*.[ch] | xargs etags --declarations
 
