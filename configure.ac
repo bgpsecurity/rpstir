@@ -212,6 +212,10 @@ AC_FUNC_STAT
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 
+# for use in Makefile.am to prevent automake from parsing ifeq/else/endif
+EMPTY=""
+AC_SUBST(EMPTY)
+
 AC_CONFIG_FILES([Makefile
                  cg/Makefile
                  cg/asn/Makefile

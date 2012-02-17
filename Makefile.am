@@ -28,8 +28,12 @@ CLEANFILES = \
 ACLOCAL_AMFLAGS = -I build-aux
 
 if HAVE_PURIFY
+.PHONY: purify
 purify: all
 	. "@PURIFY_SETUP@" && $(MAKE) all CC="purify $(CC)" EXEEXT=".purify$(EXEEXT)"
+@EMPTY@ifeq ($(CHECKTOOL),purify)
+check: purify
+@EMPTY@endif
 endif
 
 tags:
