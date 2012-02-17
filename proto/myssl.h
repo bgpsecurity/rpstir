@@ -23,6 +23,9 @@
 #include "crlv2.h"
 
 
+extern int strict_profile_checks;
+
+
 /*
   This data structure defines the fields that must be extracted from a
   certificate in order to insert it into the DB.

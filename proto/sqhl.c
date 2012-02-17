@@ -2149,6 +2149,13 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
       if ( X509_cmp_time(X509_get_notAfter(x), NULL) < 0 )
 	sta = ERR_SCM_EXPIRED;
     }
+  // Check if cert isn't valid yet, i.e. notBefore is in the future.
+  if ( sta == 0 ) {
+    if ( X509_cmp_time(X509_get_notBefore(x), NULL) > 0 ) {
+      log_msg(LOG_WARNING, "Certificate notBefore is in the future");
+      cf->flags |= SCM_FLAG_NOTYET;
+    }
+  }
 // MCR
 // verify the cert
   if ( sta == 0 ) {

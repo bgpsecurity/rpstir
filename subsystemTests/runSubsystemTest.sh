@@ -47,7 +47,9 @@ fi
 # start loader
 run_bg "rcli-w" ../proto/rcli -w $RPKI_PORT -p
 LOADER_PID=$!
-sleep 5
+while ! nc -z localhost $RPKI_PORT; do
+    sleep 1
+done
 echo "Loader started (pid = $LOADER_PID)..."
 
 # run all steps
@@ -66,6 +68,8 @@ done
 # TODO: make rcli close cleanly so its return value can be checked reliably
 kill $LOADER_PID
 wait $LOADER_PID || true
+# echo Socket state from netstat
+# netstat -ant | grep $RPKI_PORT
 
 # display results
 if [ "$NUM_PASSED" -eq "$NUM_TOTAL" ]; then

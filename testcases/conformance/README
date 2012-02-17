@@ -157,13 +157,14 @@ EE Certificates (embedded in ROAs)
 
 ROAs
 
-551 ASID                     # AS number outside of root's
-552 Family                   # invalid family
-553 FamilyLth                # family name too long
-554 IPMaxLth                 # IP max length too long
-555 IP2Big                   # IP addresses exceed parent's 
-556 VersionV1Explicit        # explicit V1 version (int 0)
-557 VersionV2                # Version V2 (int 1)
+551 ASIDSmall                # AS number out of bounds (too low)
+552 ASIDLarge                # AS number out of bounds (too high)
+553 Family                   # invalid family
+554 FamilyLth                # family name too long
+555 IPMaxLth                 # IP max length too long
+556 IP2Big                   # IP addresses exceed parent's
+557 VersionV1Explicit        # explicit V1 version (int 0)
+558 VersionV2                # Version V2 (int 1)
                              # IP addresses exceed via inherit?
 
 CRLs
@@ -188,8 +189,6 @@ CRLs
 657 CRLNoAKI                 # has no authority key identifier extension
 658 CRLNoCRLNum              # has no CRL number
 659 CRLEntryReason           # entry has a revocation reason
-660 CRLEntryNoSerNum         # entry has no serial number
-661 CRLEntryNoRevDate        # entry has no revocation date
 662 CRLBadDateFeb29          # has Feb. 29 on non-leap year
 663 CRLBadDateDayGT30        # has day 31 of 30-day month
 664 CRLBadDateDayGT31        # has day 32 of 31-day month
@@ -219,6 +218,8 @@ Manifests
 780 MFTFileHashLong          # too long hash of a file
 781 MFTFileNotIA5            # file name not IA5
 782 MFTHashOctetStr          # file hash is octet, not bit string
+783 MFTDuplicateFileOneHash  # duplicate file name with same hash
+784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash
 
 
 TODO: Trust Anchor (self-signed) certificates

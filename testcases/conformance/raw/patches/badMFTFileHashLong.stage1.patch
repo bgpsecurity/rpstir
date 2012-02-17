@@ -1,11 +1,11 @@
---- badMFTFileHashLong.raw.old	2011-11-12 11:53:26.086323307 -0500
-+++ badMFTFileHashLong.raw	2011-11-12 11:53:53.113324761 -0500
+--- badMFTFileHashLong.raw.old	2012-01-25 11:19:36.517086814 -0500
++++ badMFTFileHashLong.raw	2012-01-25 11:19:57.469685729 -0500
 @@ -12,7 +12,7 @@
                              seq seq ia5 "MFTFileHashLong.crl"
-                                     bit 0x00C6C5A1D3443EF98F36B34434D0BF09
-                                         0x5FEAF014410BC7F381B577BA204128D9
--                                        0xF4
-+                                        0xF4CE
+                                     bit 0x00115B78056ED86B9020E24E5CD159A3
+                                         0xE4C3AE6B7E4521F5C9E793A4D270D3CF
+-                                        0xA4
++                                        0xA4A4
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 

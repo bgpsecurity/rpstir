@@ -1,13 +1,13 @@
---- badMFTDuplicateFileOneHash.raw.old	2011-12-22 12:39:59.778945149 -0500
-+++ badMFTDuplicateFileOneHash.raw	2011-12-22 12:42:40.774938418 -0500
+--- badMFTDuplicateFileOneHash.raw.old	2012-01-25 11:25:58.778996116 -0500
++++ badMFTDuplicateFileOneHash.raw	2012-01-25 11:26:57.539672438 -0500
 @@ -13,6 +13,10 @@
-                                     bit 0x00A9DAD358A9345DADBA2AE802916103
-                                         0x9A2F6C605F8961C2432266EAB4CB0543
-                                         0x6D
+                                     bit 0x00B3B4C3D15BF9BF48AA9BAE422CA2BF
+                                         0x06C27A3F7E84E298ABEA832A62CAFE63
+                                         0xEC
 +                                seq ia5 "MFTDuplicateFileOneHash.crl"
-+                                    bit 0x00A9DAD358A9345DADBA2AE802916103
-+                                        0x9A2F6C605F8961C2432266EAB4CB0543
-+                                        0x6D
++                                    bit 0x00B3B4C3D15BF9BF48AA9BAE422CA2BF
++                                        0x06C27A3F7E84E298ABEA832A62CAFE63
++                                        0xEC
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 

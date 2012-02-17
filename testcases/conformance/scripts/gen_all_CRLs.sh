@@ -191,8 +191,6 @@ ${single_CRL_cmd} 656 CRLDeltaCRLInd
 ${single_CRL_cmd} 657 CRLNoAKI
 ${single_CRL_cmd} 658 CRLNoCRLNum
 ${single_CRL_cmd} 659 CRLEntryReason
-${single_CRL_cmd} 660 CRLEntryNoSerNum
-${single_CRL_cmd} 661 CRLEntryNoRevDate
 ${single_CRL_cmd} 662 CRLBadDateFeb29
 ${single_CRL_cmd} 663 CRLBadDateDayGT30
 ${single_CRL_cmd} 664 CRLBadDateDayGT31

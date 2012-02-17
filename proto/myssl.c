@@ -24,6 +24,8 @@
 #include "rpwork.h"
 #include "crlv2.h"
 
+int strict_profile_checks = 0;
+
 /*
   Convert between a time string in a certificate and a time string
   that will be acceptable to the DB. The return value is allocated memory.
@@ -1396,6 +1398,8 @@ crl_fields *crl2fields(char *fname, char *fullname, int typ, X509_CRL **xp,
     }
 // get flags, snlen and snlist; note that snlen is the count in BIGINTs
   cf->flags = 0;
+  if (X509_cmp_current_time(X509_CRL_get_nextUpdate(x)) < 0)
+    cf->flags |= SCM_FLAG_STALECRL;
   rev = X509_CRL_get_REVOKED(x);
   if ( rev == NULL )
     cf->snlen = 0;
@@ -1725,10 +1729,16 @@ static int rescert_flags_chk(X509 *x, int ct)
     cert_type = EE_CERT;
   else
     cert_type = UN_CERT;
-  if ( ct == cert_type )
+  if ( ct == cert_type ) {
     return(0);
-  else
+  } else {
+    if (x->ex_flags & EXFLAG_CRITICAL) {
+      log_msg(LOG_ERR, "OpenSSL reports an unsupported critical extension "
+	      "in an X.509 certificate.  Please ensure that OpenSSL "
+	      "was compiled with RFC 3779 support.");
+    }
     return(ERR_SCM_BADFLAGS);
+  }
 }
 
 /*************************************************************
@@ -2147,6 +2157,50 @@ skip:
   return(ret);
 }
 
+/** Checks based on http://tools.ietf.org/html/rfc6487#section-4.8.5 */
+static int rescert_extended_key_usage_chk(X509 *x, int ct)
+{
+  int i;
+  int eku_flag = 0;
+  int ex_nid;
+  int ret = 0;
+  X509_EXTENSION *ex = NULL;
+
+  for (i = 0; i < X509_get_ext_count(x); ++i) {
+    ex = X509_get_ext(x, i);
+    ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
+
+    if (ex_nid == NID_ext_key_usage) {
+      ++eku_flag;
+      if (X509_EXTENSION_get_critical(ex)) {
+        log_msg(LOG_ERR, "[extended_key_usage] marked critical, violation");
+        ret = ERR_SCM_CEXT;
+        goto skip;
+      }
+    }
+  }
+
+  if (ct == TA_CERT || ct == CA_CERT) {
+    if (eku_flag) {
+      log_msg(LOG_ERR, "[extended_key_usage] EKU present in CA cert");
+      ret = ERR_SCM_EKU;
+      goto skip;
+    }
+  } else if (ct == EE_CERT) {
+    // XXX: this should check if it's a CMS EE cert, other EE
+    // certs are allowed to have EKU
+    if (eku_flag) {
+      log_msg(LOG_ERR, "[extended_key_usage] EKU present in CMS EE cert");
+      ret = ERR_SCM_EKU;
+      goto skip;
+    }
+  }
+
+skip:
+  log_msg(LOG_DEBUG, "[extended_key_usage] jump to return...");
+  return ret;
+}
+
 /*************************************************************
  * rescert_crldp_chk(X509 *, int)                            *
  *                                                           *
@@ -2198,13 +2252,16 @@ static int rescert_crldp_chk(X509 *x, int ct)
 	    }
 	}
     }
+
+  if ( ct == TA_CERT )
+    {
+      /* CRLDP must be omitted if TA */
+      ret = crldp_flag ? ERR_SCM_CRLDPTA : 0;
+      goto skip;
+    }
+
   if ( crldp_flag == 0 )
     {
-      if (ct == TA_CERT)
-	{  /* must be omitted if TA */
-	  ret = 0;
-	  goto skip;
-	}
       log_msg(LOG_ERR, "[crldp] missing crldp extension");
       return(ERR_SCM_NOCRLDP);
     }
@@ -2474,12 +2531,19 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_caRepository)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_repo = calloc(1, size + 1);
+                if (!uri_repo)
+                    return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_repo);
 				if (!strncasecmp((char *)uri_repo, RSYNC_PREFIX, 8))
 					found_uri_repo_rsync = 1;
 			} else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_mft = calloc(1, size + 1);
+                if (!uri_mft) {
+                    if (uri_repo)
+                        free (uri_repo);
+                    return ERR_SCM_NOMEM;
+                }
 				read_casn((struct casn *)&adp->accessLocation.url, uri_mft);
 				if (!strncasecmp((char *)uri_mft, RSYNC_PREFIX, 8))
 					found_uri_mft_rsync = 1;
@@ -2506,6 +2570,8 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_signedObject)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_obj = calloc(1, size + 1);
+                if (!uri_obj)
+                    return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
 				if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
 					found_uri_obj_rsync = 1;
@@ -2965,7 +3031,7 @@ static int fill_asnumtest(struct AsNumTest *asntp,
 /**=============================================================================
  * @brief Check for AS order
  *
- * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
+ * From roa-pki:/home/gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
  *
  * @param extsp (struct Extensions*)
  * @return 0 or 1 success<br />a negative integer on failure
@@ -3269,8 +3335,15 @@ static int rescert_name_chk(struct RDNSequence *rdnseqp)
         cnames++;
         if (!vsize_casn(&avap->value.commonName.printableString) > 0)
           {
-          log_msg(LOG_ERR, "CommonName not printableString");
-          return -1;
+          if (strict_profile_checks)
+            {
+            log_msg(LOG_ERR, "CommonName not printableString");
+            return -1;
+            }
+          else
+            {
+            log_msg(LOG_WARNING, "CommonName not printableString");
+            }
           }
         } else if (diff_objid(&avap->objid, id_serialNumber))  // this limit applies to Issuer/Subject, not to AttributeValueAssertion
         {
@@ -3307,6 +3380,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	char *outer_sig_alg_oidp = calloc(1, length + 1);
+    if (!outer_sig_alg_oidp)
+        return ERR_SCM_NOMEM;
 	if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length) {
 		free(outer_sig_alg_oidp);
 		log_msg(LOG_ERR, "outer sig alg oid actual length != stated length");
@@ -3326,6 +3401,11 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	char *inner_sig_alg_oidp = calloc(1, length + 1);
+    if (!inner_sig_alg_oidp) {
+        if (outer_sig_alg_oidp)
+            free(outer_sig_alg_oidp);
+        return ERR_SCM_NOMEM;
+    }
 	if (read_objid(&certp->toBeSigned.signature.algorithm, inner_sig_alg_oidp) != length) {
 		free(inner_sig_alg_oidp);
 		free(outer_sig_alg_oidp);
@@ -3358,6 +3438,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
 	}
 	char *alg_pubkey_oidp = calloc(1, length + 1);
+    if (!alg_pubkey_oidp)
+        return ERR_SCM_NOMEM;
 	if (read_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm,
 			alg_pubkey_oidp) != length) {
 		free(alg_pubkey_oidp);
@@ -3380,7 +3462,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		log_msg(LOG_ERR, "subj pub key too long");
 		return ERR_SCM_BADALG;
 	}
-	uchar *pubkey_buf = calloc(1, SUBJ_PUBKEY_MAX_SZ + 1);
+	uchar *pubkey_buf;
 	int bytes_read;
     bytes_read = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
 			subjectPublicKey, &pubkey_buf);
@@ -3400,13 +3482,12 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 
 	// Subject public key modulus must be 2048-bits.
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
-    // TODO: can we always count on an extra leading zero byte?
 	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
-		log_msg(LOG_ERR, "subj pub key modulus != SUBJ_PUBKEY_MODULUS_SZ");
+		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
 		return ERR_SCM_BADALG;
 	}
 	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
-    uchar *pubkey_modulus_buf = calloc(1, bytes_to_read+1);
+    uchar *pubkey_modulus_buf;
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
 	free(pubkey_modulus_buf);
     if (bytes_read != bytes_to_read) {
@@ -3415,24 +3496,28 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     }
 
 	// Subject public key exponent must = 65,537.
+    int incorrect_length = 0;
+    int different_lengths = 0;
+    int bad_exponent = 0;
     bytes_to_read = vsize_casn(&rsapubkey.exponent);
-	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ) {
-		log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
-		return ERR_SCM_BADALG;
-	}
-    uchar *pubkey_exponent_buf = calloc(1, sizeof(uint32_t));
+	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ)
+        incorrect_length = 1;
+    uchar *pubkey_exponent_buf;
     bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
-    if (bytes_read != bytes_to_read) {
-		log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
-		free(pubkey_exponent_buf);
-		return ERR_SCM_BADALG;
-    }
-    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT) {
-		log_msg(LOG_ERR, "subj pub key exponent != SUBJ_PUBKEY_EXPONENT");
-		free(pubkey_exponent_buf);
-		return ERR_SCM_BADALG;
-    }
+    if (bytes_read != bytes_to_read)
+        different_lengths = 1;
+    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT)
+        bad_exponent = 1;
 	free(pubkey_exponent_buf);
+    if (incorrect_length  ||  different_lengths  ||  bad_exponent) {
+        if (bad_exponent)
+		    log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
+        if (incorrect_length)
+		    log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
+        if (different_lengths)
+		    log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
+		return ERR_SCM_BADALG;
+    }
 
 	return 0;
 }
@@ -3451,12 +3536,7 @@ static int rescert_serial_number_chk(struct Certificate *certp) {
 		return (ERR_SCM_BADSERNUM);
 	}
 
-	uint8_t *sernump = calloc(1, bytes_to_read + 1);
-	if (!sernump) {
-		log_msg(LOG_ERR, "could not alloc for serial number");
-		return ERR_SCM_NOMEM;
-	}
-
+	uint8_t *sernump;
 	int bytes_read = readvsize_casn(&certp->toBeSigned.serialNumber, &sernump);
 	if (bytes_read != bytes_to_read) {
 		log_msg(LOG_ERR, "serial number actual length != stated length");
@@ -3615,6 +3695,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   ret = rescert_key_usage_chk(x);
   log_msg(LOG_DEBUG, "rescert_key_usage_chk");
+  if ( ret < 0 )
+    return(ret);
+
+  ret = rescert_extended_key_usage_chk(x, ct);
+  log_msg(LOG_DEBUG, "rescert_extended_key_usage_chk");
   if ( ret < 0 )
     return(ret);
 
