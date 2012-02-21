@@ -53,9 +53,12 @@ class RSYNC_thread(Thread):
             #build and run the rsync command. This may block for awhile but that
             #is the beauty of the multiple threads.
             rsyncCom = [rsyncDir,
-                        "-airz",
+                        "-Lirzs",
                         "--del",
+                        #"--max-size=10K",
                         "--timeout=10",
+                        "--contimeout=10",
+                        "--no-motd",
                         "--",
                         "rsync://%s/" % nextURI,
                         "%s/%s" % (repoDir, nextURI),
