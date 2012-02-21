@@ -46,6 +46,7 @@ static int rejectStaleChain = 0;
 static int rejectStaleManifest = 0;
 static int rejectStaleCRL = 0;
 static int rejectNoManifest = 0;
+static int rejectNotYet = 0;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, validate, valIndex;
 static char *objectType;
@@ -495,7 +496,8 @@ int main(int argc, char **argv)
     } else if (strcasecmp (argv[i], "-s") == 0) {
       if (parseStalenessSpecsFile(argv[i+1])) return -1;
 	  getSpecsVals(&rejectStaleChain, &rejectStaleManifest,
-				   &rejectStaleCRL, &rejectNoManifest);
+				   &rejectStaleCRL, &rejectNoManifest,
+				   &rejectNotYet);
     } else {      // unknown switch
       return printUsage();
     }

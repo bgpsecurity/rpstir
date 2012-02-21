@@ -157,12 +157,14 @@ EE Certificates (embedded in ROAs)
 
 ROAs
 
-552 Family                   # invalid family
-553 FamilyLth                # family name too long
-554 IPMaxLth                 # IP max length too long
-555 IP2Big                   # IP addresses exceed parent's 
-556 VersionV1Explicit        # explicit V1 version (int 0)
-557 VersionV2                # Version V2 (int 1)
+551 ASIDSmall                # AS number out of bounds (too low)
+552 ASIDLarge                # AS number out of bounds (too high)
+553 Family                   # invalid family
+554 FamilyLth                # family name too long
+555 IPMaxLth                 # IP max length too long
+556 IP2Big                   # IP addresses exceed parent's
+557 VersionV1Explicit        # explicit V1 version (int 0)
+558 VersionV2                # Version V2 (int 1)
                              # IP addresses exceed via inherit?
 
 CRLs

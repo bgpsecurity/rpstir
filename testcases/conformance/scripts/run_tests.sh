@@ -1,19 +1,23 @@
 #!/bin/sh -e
 
-# XXX: remove this once this script works
-exit 0
+# whitespace separated list of files to ignore the results from
+IGNORE="badCertResourcesBadASOrder.cer"
 
 THIS_SCRIPT_DIR=`dirname "$0"`
 . "$THIS_SCRIPT_DIR/../../../envir.setup"
 
-cd "$THIS_SCRIPT_DIR"/..
+cd "$THIS_SCRIPT_DIR"
 
-./scripts/gen_all.sh
+QUERY_SPECS="`pwd`/querySpecs"
+
+./gen_all.sh
 
 FAILED=""
+FAILED_IGNORE=""
 PASSED=""
+PASSED_IGNORE=""
 
-cd output
+cd ../output
 OUTPUT_DIR="`pwd`"
 
 add_file () {
@@ -42,26 +46,40 @@ add_file () {
 	esac
 
 	if test x"$TYPE" = x"bad"; then
-		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+		if ! "$RPKI_ROOT/proto/rcli" -s -y $FLAGS "$FILE"; then
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" 2> /dev/null | wc -l`
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
-			PASSED="$FILE $PASSED"
+			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
+			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
+				PASSED_IGNORE="$FILE $PASSED_IGNORE"
+			else
+				PASSED="$FILE $PASSED"
+			fi
 		fi
 	else
-		if ! "$RPKI_ROOT/proto/rcli" -y $FLAGS "$FILE"; then
+		if ! "$RPKI_ROOT/proto/rcli" -s -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding good file $FILE failed"
-			FAILED="$FILE $FAILED"
+			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
+				FAILED_IGNORE="$FILE $FAILED_IGNORE"
+			else
+				FAILED="$FILE $FAILED"
+			fi
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" 2> /dev/null | wc -l`
+		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
-			FAILED="$FILE $FAILED"
+			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
+			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
+				FAILED_IGNORE="$FILE $FAILED_IGNORE"
+			else
+				FAILED="$FILE $FAILED"
+			fi
 		fi
 	fi
 }
@@ -79,9 +97,9 @@ init_db () {
 
 reset_db () {
 	"$RPKI_ROOT/proto/rcli" -x -t "$OUTPUT_DIR" -y
-	"$RPKI_ROOT/proto/rcli" -y -F "$OUTPUT_DIR"/root.cer
-	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.crl
-	"$RPKI_ROOT/proto/rcli" -y -f "$OUTPUT_DIR"/root/root.mft
+	"$RPKI_ROOT/proto/rcli" -s -y -F "$OUTPUT_DIR"/root.cer
+	"$RPKI_ROOT/proto/rcli" -s -y -f "$OUTPUT_DIR"/root/root.crl
+	"$RPKI_ROOT/proto/rcli" -s -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
 
@@ -120,14 +138,22 @@ for MFT_CERT in MFT*.cer; do
 	add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
 done
 
+if test -n "$FAILED"; then
+	echo "Failed but should pass:" >&2
+	list_files "    " "$FAILED" >&2
+fi
+if test -n "$FAILED_IGNORE"; then
+	echo "Failed but should pass (ignored):" >&2
+	list_files "    " "$FAILED_IGNORE" >&2
+fi
+if test -n "$PASSED"; then
+	echo "Passed but should fail:" >&2
+	list_files "    " "$PASSED" >&2
+fi
+if test -n "$PASSED_IGNORE"; then
+	echo "Passed but should fail (ignored):" >&2
+	list_files "    " "$PASSED_IGNORE" >&2
+fi
 if test -n "$FAILED" -o -n "$PASSED"; then
-	if test -n "$FAILED"; then
-		echo "Failed but should pass:" >&2
-		list_files "    " "$FAILED" >&2
-	fi
-	if test -n "$PASSED"; then
-		echo "Passed but should fail:" >&2
-		list_files "    " "$PASSED" >&2
-	fi
 	exit 1
 fi

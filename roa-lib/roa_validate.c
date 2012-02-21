@@ -13,6 +13,8 @@
 #include "logutils.h"
 #include "hashutils.h"
 
+int strict_profile_checks_cms = 0;
+
 /*
   This file contains the functions that semantically validate the ROA.
   Any and all syntactic validation against existing structures is assumed
@@ -318,7 +320,7 @@ static int setup_roa_minmax(struct IPAddress *ripAddrp, uchar *rmin, uchar *rmax
   return 0;
   }
 
-static int test_maxLength(struct ROAIPAddress *roaAddrp)
+static int test_maxLength(struct ROAIPAddress *roaAddrp, int familyMaxLength)
   {
   if (size_casn(&roaAddrp->maxLength) == 0) return 0;
   long maxLength = 0;
@@ -332,6 +334,7 @@ static int test_maxLength(struct ROAIPAddress *roaAddrp)
   free(addr);
   read_casn_num(&roaAddrp->maxLength, &maxLength);
   if (addrLength > maxLength) return ERR_SCM_INVALIPL;
+  if (maxLength > familyMaxLength) return ERR_SCM_INVALIPL;
   return 0;
   }
 
@@ -362,7 +365,10 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
       int siz = vsize_casn(&roaAddrp->address);
       if ((family == 1 && siz > 5) || (family == 2 && siz > 17))
           return ERR_SCM_INVALIPL;        
-      if ((err = test_maxLength(roaAddrp)) < 0 ||
+      int familyMaxLength = 0;
+      if (family == 1) familyMaxLength = 32;
+      if (family == 2) familyMaxLength = 128;
+      if ((err = test_maxLength(roaAddrp, familyMaxLength)) < 0 ||
 	  (err = setup_roa_minmax(&roaAddrp->address, rmin, rmax, i)) < 0) 
 	  return err;
       if (memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
@@ -508,7 +514,7 @@ static int cmsValidate(struct ROA *rp)
                  signatureAlgorithm.algorithm;
   if (diff_objid(oidp, id_sha_256WithRSAEncryption))
       {
-      if (diff_objid(oidp, id_rsadsi_rsaEncryption))
+      if (strict_profile_checks_cms || diff_objid(oidp, id_rsadsi_rsaEncryption))
         {
         log_msg(LOG_ERR, "invalid signature algorithm in ROA");
         return ERR_SCM_BADSIGALG;
