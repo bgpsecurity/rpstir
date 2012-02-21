@@ -52,17 +52,23 @@ class RSYNC_thread(Thread):
 
             #build and run the rsync command. This may block for awhile but that
             #is the beauty of the multiple threads.
-            rsyncCom = "%s -airz --del --timeout=10 rsync://%s/ %s/%s 1> %s" \
-                       % (rsyncDir, nextURI, repoDir, nextURI, rsync_log)
+            rsyncCom = [rsyncDir,
+                        "-airz",
+                        "--del",
+                        "--timeout=10",
+                        "--",
+                        "rsync://%s/" % nextURI,
+                        "%s/%s" % (repoDir, nextURI),
 
-            p = Popen(rsyncCom, shell=True, stderr=subprocess.PIPE)
-            stderror = p.communicate()[1]
-            rcode = p.returncode
+            with open(rsync_log, 'w') as rsync_log_file:
+                p = Popen(rsyncCom, stdout=rsync_log_file, stderr=subprocess.PIPE)
+                stderror = p.communicate()[1]
+                rcode = p.returncode
 
             cli.info( (nextURI + " had return code %s") % (rcode) )
             if not stderror == "":
                 cli.error( 'rsync returned errors: %s' % stderror )
-            cli.info( rsyncCom )
+            cli.info( ' '.join(rsyncCom) )
             data = ("%s %s/%s %s") % \
                 (nextURI, repoDir, nextURI, rsync_log)
             
@@ -78,7 +84,8 @@ class RSYNC_thread(Thread):
                 while sleep_time < 300:
                     time.sleep(sleep_time)
                     #re-run the rsync command
-                    rcode = subprocess.call(rsyncCom, shell=True)
+                    with open(rsync_log, 'w') as rsync_log_file:
+                        rcode = subprocess.call(rsyncCom, stdout=rsync_log_file)
                     retry_count += 1
                     if rcode == 0:
                         cli.info( (nextURI + " Retry %d return code: %d") %\
