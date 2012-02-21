@@ -20,7 +20,7 @@
    dependencies on build-order (libroa cannot be linked in cg/tools).
    When we refactor, this function ought to be removed entirely.  */
 
-static const char* signCMSBlob(struct ROA *cms, const char *keyfilename)
+static const char* signCMSBlob(struct CMSBlob *cms, const char *keyfilename)
 {
   CRYPT_CONTEXT sigKeyContext;
   CRYPT_KEYSET cryptKeyset;
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
   const char *cmsfilename = NULL; /* to-be-signed CMS file */
   const char *keyfilename = NULL; /* p15 key file */
   const char *errmsg = NULL;
-  struct ROA cms;
+  struct CMSBlob cms;
 
   if (cryptInit() != CRYPT_OK) {
     log_msg(LOG_ERR, "could not initialize cryptlib");
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
   keyfilename = argv[2];
 
   /* read CMS file */
-  ROA(&cms, (ushort)0);
+  CMSBlob(&cms, (ushort)0);
   if (get_casn_file(&cms.self, (char *)cmsfilename, 0) < 0) {
     log_msg(LOG_ERR, "could not load %s", cmsfilename);
     return -1;
