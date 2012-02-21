@@ -1401,7 +1401,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     {
     uchar bb, *b, *c, buf[8];
     int i, lth, num, of;
-    int64_t secs;
+    int64_t secs = 0;
     struct casn *tcasnp, *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;
@@ -1456,7 +1456,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
             simple_constructor(&time_casn, (ushort)0, casnp->type);
 	    if (read_casn_time(casnp, &secs) > 0 &&
 	        (lth = write_casn_time(&time_casn, secs)) > 0)
-                {
+                {   // check if time wasn't GMT
 		tcasnp = &time_casn;
                 if (casnp->lth != tcasnp->lth ||
                     memcmp(casnp->startp, tcasnp->startp, casnp->lth))
