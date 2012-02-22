@@ -169,7 +169,7 @@ static const struct config_option config_options[] = {
 		converter_string, NULL,
 		free,
 		NULL, NULL,
-		"this is SomeString's the default"
+		"\"this is SomeString's the default\""
 	},
 
 	// CONFIG_SOME_MANDATORY_STRING
