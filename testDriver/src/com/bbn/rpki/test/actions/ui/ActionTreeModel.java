@@ -11,8 +11,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import com.bbn.rpki.test.actions.AbstractAction;
-import com.bbn.rpki.test.actions.EpochActions;
+import com.bbn.rpki.test.tasks.EpochGroup;
 import com.bbn.rpki.test.tasks.Model;
 
 /**
@@ -22,28 +21,21 @@ import com.bbn.rpki.test.tasks.Model;
  */
 public class ActionTreeModel implements TreeModel {
   class EpochsNode {
-    List<EpochActions> epochs;
-    EpochsNode(List<EpochActions> epochs) {
-      this.epochs = epochs;
-    }
+    List<EpochGroup> epochs;
+
     @Override
     public String toString() {
       return "Epochs";
     }
   }
-  private final EpochsNode epochsNode;
+  private final EpochsNode epochsNode = new EpochsNode();
   private final List<TreeModelListener> listeners = new ArrayList<TreeModelListener>(1);
 
   /**
    * @param model
    */
   public ActionTreeModel(Model model) {
-    int epochCount = model.getEpochCount();
-    List<EpochActions> list = new ArrayList<EpochActions>(epochCount);
-    for (int i = 1; i < epochCount; i++) {
-      list.add(model.getEpochActions(i));
-    }
-    epochsNode = new EpochsNode(list);
+    update(model);
   }
 
   /**
@@ -62,9 +54,9 @@ public class ActionTreeModel implements TreeModel {
     if (parent == epochsNode) {
       return epochsNode.epochs.get(index);
     }
-    if (parent instanceof EpochActions) {
-      EpochActions epochActions = (EpochActions) parent;
-      return epochActions.getAction(index);
+    if (parent instanceof EpochGroup) {
+      EpochGroup epochGroup = (EpochGroup) parent;
+      return epochGroup.getEpoch(index);
     }
     // No more non-leaf nodes
     return null;
@@ -78,9 +70,9 @@ public class ActionTreeModel implements TreeModel {
     if (parent == epochsNode) {
       return epochsNode.epochs.size();
     }
-    if (parent instanceof EpochActions) {
-      EpochActions epochActions = (EpochActions) parent;
-      return epochActions.getActionCount();
+    if (parent instanceof EpochGroup) {
+      EpochGroup epochGroup = (EpochGroup) parent;
+      return epochGroup.getEpochCount();
     }
     return 0;
   }
@@ -93,7 +85,7 @@ public class ActionTreeModel implements TreeModel {
     if (node == epochsNode) {
       return false;
     }
-    if (node instanceof EpochActions) {
+    if (node instanceof EpochGroup) {
       return false;
     }
     return true;
@@ -113,11 +105,10 @@ public class ActionTreeModel implements TreeModel {
   @Override
   public int getIndexOfChild(Object parent, Object child) {
     if (parent == epochsNode) {
-      EpochActions ae = (EpochActions) child;
-      return epochsNode.epochs.indexOf(ae);
+      return epochsNode.epochs.indexOf(child);
     }
-    if (parent instanceof EpochActions) {
-      EpochActions ae = (EpochActions) parent;
+    if (parent instanceof EpochGroup) {
+      EpochGroup ae = (EpochGroup) parent;
       return ae.indexOf(child);
     }
     return -1;
@@ -157,86 +148,42 @@ public class ActionTreeModel implements TreeModel {
     }
   }
 
-  /**
-   * @param epochActions
-   * @param actionToRemove
-   */
-  public void removeAction(EpochActions epochActions, AbstractAction actionToRemove) {
-    int index = epochActions.indexOf(actionToRemove);
-    epochActions.removeAction(index);
-    fireTreeNodesRemoved(index, actionToRemove, epochsNode, epochActions);
-  }
-
-  /**
-   * @param epochActions
-   * @param action
-   * @param index
-   */
-  public void addAction(EpochActions epochActions, AbstractAction action, int index) {
-    epochActions.addAction(index, action);
-    fireTreeNodesInserted(index, action, epochsNode, epochActions);
-  }
-
-  /**
-   * @param epochToRemove
-   */
-  public void removeEpoch(EpochActions epochToRemove) {
-    int index = epochsNode.epochs.indexOf(epochToRemove);
-    epochsNode.epochs.remove(index);
-    fireTreeNodesRemoved(index, epochToRemove, epochsNode);
-  }
-
-  /**
-   * @param epochActions
-   */
-  public void insertEpochBefore(EpochActions epochActions) {
-    int index = epochsNode.epochs.indexOf(epochActions);
-    insertEpoch(index);
-  }
-
-  /**
-   * Append a new epoch
-   * @return the added EpochActions
-   */
-  public EpochActions addEpoch() {
-    int index = epochsNode.epochs.size();
-    return insertEpoch(index);
-  }
-
-  /**
-   * @param index
-   * @return
-   */
-  private EpochActions insertEpoch(int index) {
-    EpochActions newEpochActions = new EpochActions(index);
-    for (int ix = index + 1; ix < epochsNode.epochs.size(); ix++) {
-      EpochActions epochActions = epochsNode.epochs.get(ix);
-      epochActions.setEpochIndex(ix);
+  private void fireRootModified() {
+    Object[] path = {getRoot()};
+    TreeModelEvent e = new TreeModelEvent(this, path);
+    for (TreeModelListener l : listeners) {
+      l.treeStructureChanged(e);
     }
-    epochsNode.epochs.add(index, newEpochActions);
-    fireTreeNodesInserted(index, newEpochActions, epochsNode);
-    return newEpochActions;
   }
 
   /**
-   * @param epochActions
-   * @param selectedAction
-   * @param action
+   * @param model
    */
-  public void insertActionBefore(EpochActions epochActions, AbstractAction selectedAction,
-                                 AbstractAction action) {
-    int index = epochActions.indexOf(selectedAction);
-    epochActions.addAction(index, action);
-    fireTreeNodesInserted(index, action, epochsNode, epochActions);
+  public void update(Model model) {
+    epochsNode.epochs = new ArrayList<EpochGroup>(model.getEpochGroups());
+    fireRootModified();
   }
 
   /**
-   * @param epochActions
-   * @param action
+   * @param lastComponent
+   * @return the path to the specified component
    */
-  public void addAction(EpochActions epochActions, AbstractAction action) {
-    int index = epochActions.getActionCount();
-    epochActions.addAction(index, action);
-    fireTreeNodesInserted(index, action, epochsNode, epochActions);
+  public TreePath findPathTo(Object lastComponent) {
+    return findPathTo(new TreePath(getRoot()), lastComponent);
+  }
+
+  private TreePath findPathTo(TreePath parentPath, Object lastComponent) {
+    for (int i = 0, n = getChildCount(parentPath.getLastPathComponent()); i < n; i++) {
+      Object child = getChild(parentPath.getLastPathComponent(), i);
+      TreePath treePath = parentPath.pathByAddingChild(child);
+      if (child == lastComponent) {
+        return treePath;
+      }
+      treePath = findPathTo(treePath, lastComponent);
+      if (treePath != null) {
+        return treePath;
+      }
+    }
+    return null;
   }
 }

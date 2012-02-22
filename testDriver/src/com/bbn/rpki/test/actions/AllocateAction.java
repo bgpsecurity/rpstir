@@ -4,6 +4,7 @@
 package com.bbn.rpki.test.actions;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,10 +26,31 @@ import com.bbn.rpki.test.tasks.Model;
  */
 public class AllocateAction extends AbstractAction {
 
+  /**
+   * 
+   */
+  private static final String VALIDITY_END_TIME_OF_ALLOCATION = "Validity End Time of Allocation ";
+  /**
+   * 
+   */
+  private static final String VALIDITY_START_TIME_OF_ALLOCATION = "Validity Start Time of Allocation ";
+  /**
+   * 
+   */
+  private static final String PUBLICATION_TIME_OF_DEALLOCATION = "Publication Time of Deallocation ";
+  /**
+   * 
+   */
+  private static final String PUBLICATION_TIME_OF_ALLOCATION = "Publication Time of Allocation ";
+
   enum AttributeType {
     INR_TYPE("INR Type"),
     ISSUER("Issuer"),
     SUBJECT("Subject"),
+    ALLOCATION_PUBLICATION_TIME("Allocation Publication Time"),
+    DEALLOCATION_PUBLICATION_TIME("Deallocation Publication Time"),
+    VALIDITY_START_TIME("Validity Start Time"),
+    VALIDITY_END_TIME("Validity End Time"),
     ALLOCATION_ID("Allocation Id"),
     ALLOCATIONS("Allocations");
 
@@ -63,20 +85,34 @@ public class AllocateAction extends AbstractAction {
   private CA_Object child;
   private String allocationId;
   private IPRangeType rangeType;
+  private final Epoch allocationPublicationTime;
+  private final Epoch deallocationPublicationTime;
+  private final Epoch validityStartTime;
+  private final Epoch validityEndTime;
 
   /**
    * @param parent
    * @param child
    * @param allocationId
    * @param rangeType
+   * @param model
    * @param pairs the ranges or prefixes to be allocated
    */
-  public AllocateAction(CA_Object parent, CA_Object child, String allocationId, IPRangeType rangeType, Pair...pairs) {
+  public AllocateAction(CA_Object parent, CA_Object child, String allocationId, IPRangeType rangeType, Model model, Pair...pairs) {
     this.parent = parent;
     this.child = child;
     this.allocationId = allocationId;
     this.rangeType = rangeType;
     this.allocationPairs.addAll(Arrays.asList(pairs));
+    allocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_ALLOCATION + allocationId);
+    deallocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_DEALLOCATION + allocationId);
+    validityStartTime = new Epoch(this, VALIDITY_START_TIME_OF_ALLOCATION + allocationId);
+    validityEndTime = new Epoch(this, VALIDITY_END_TIME_OF_ALLOCATION + allocationId);
+    // Constrain start before end always
+    validityStartTime.addSuccessor(validityEndTime, true);
+    // Constrain publication when validity changes as default
+    validityStartTime.addCoincident(allocationPublicationTime, false);
+    validityEndTime.addCoincident(deallocationPublicationTime, false);
   }
 
   /**
@@ -84,20 +120,31 @@ public class AllocateAction extends AbstractAction {
    * @param model
    */
   public AllocateAction(Model model) {
-    this(model.getRootCA(), model.getRootCA().getChild(0), "", IPRangeType.ipv4);
+    this(model.getRootCA(), model.getRootCA().getChild(0), "", IPRangeType.ipv4, model);
   }
 
   /**
    * Constructor from xml Element
    * @param element
+   * @param model
+   * @param actionContext
    */
-  public AllocateAction(Element element) {
+  public AllocateAction(Element element, Model model, ActionContext actionContext) {
     String commonName = element.getAttributeValue(ATTR_CHILD_NAME);
     String parentCommonName = element.getAttributeValue(ATTR_PARENT_NAME);
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
     parent = ActionManager.singleton().findCA_Object(parentCommonName);
     child = ActionManager.singleton().findCA_Object(commonName);
     rangeType = IPRangeType.valueOf(element.getAttributeValue(ATTR_TYPE));
+    Element allocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());
+    Element deallocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());
+    Element validityStartTimeElement = element.getChild(AttributeType.VALIDITY_START_TIME.name());
+    Element validityEndTimeElement = element.getChild(AttributeType.VALIDITY_END_TIME.name());
+    allocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_ALLOCATION + allocationId, allocationPublicationTimeElement, actionContext);
+    deallocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_DEALLOCATION + allocationId, deallocationPublicationTimeElement, actionContext);
+    validityStartTime = new Epoch(this, VALIDITY_START_TIME_OF_ALLOCATION + allocationId, validityStartTimeElement, actionContext);
+    validityEndTime = new Epoch(this, VALIDITY_END_TIME_OF_ALLOCATION + allocationId, validityEndTimeElement, actionContext);
+
     @SuppressWarnings("unchecked")
     List<Element> children = element.getChildren(Pair.TAG_PAIR);
     for (Element childElement : children) {
@@ -109,13 +156,17 @@ public class AllocateAction extends AbstractAction {
    * @return an element encoding this action
    */
   @Override
-  public Element toXML() {
+  public Element toXML(ActionContext actionContext) {
     Element element = createElement(VALUE_ALLOCATE);
     if (parent != null) {
       element.setAttribute(ATTR_PARENT_NAME, parent.commonName);
     }
     element.setAttribute(ATTR_CHILD_NAME, child.commonName);
     element.setAttribute(ATTR_ALLOCATION_ID, allocationId);
+    element.addContent(allocationPublicationTime.toXML(AttributeType.ALLOCATION_PUBLICATION_TIME.name(), actionContext));
+    element.addContent(validityStartTime.toXML(AttributeType.VALIDITY_START_TIME.name(), actionContext));
+    element.addContent(validityEndTime.toXML(AttributeType.VALIDITY_END_TIME.name(), actionContext));
+
     for (Pair pair : allocationPairs) {
       element.addContent(pair.toXML());
     }
@@ -123,25 +174,40 @@ public class AllocateAction extends AbstractAction {
   }
 
   /**
-   * Perform the allocation described
-   * 
-   * @see com.bbn.rpki.test.actions.AbstractAction#execute(TypescriptLogger)
+   * @see com.bbn.rpki.test.actions.AbstractAction#getAllEpochs()
    */
   @Override
-  public void execute(TypescriptLogger logger) {
-    switch (rangeType) {
-    case ipv4:
-      child.takeIPv4(allocationPairs, allocationId);
-      break;
-    case ipv6:
-      child.takeIPv6(allocationPairs, allocationId);
-      break;
-    case as:
-      child.takeAS(allocationPairs, allocationId);
-      break;
-    }
-    if (logger != null) {
-      logger.format("Allocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+  public Collection<Epoch> getAllEpochs() {
+    return Arrays.asList(allocationPublicationTime, validityStartTime, deallocationPublicationTime, validityEndTime);
+  }
+
+  /**
+   * Perform the allocation described
+   * 
+   * @see com.bbn.rpki.test.actions.AbstractAction#execute(Epoch, TypescriptLogger)
+   */
+  @Override
+  public void execute(Epoch executionEpoch, TypescriptLogger logger) {
+    if (executionEpoch == allocationPublicationTime) {
+      switch (rangeType) {
+      case ipv4:
+        child.takeIPv4(allocationPairs, allocationId);
+        break;
+      case ipv6:
+        child.takeIPv6(allocationPairs, allocationId);
+        break;
+      case as:
+        child.takeAS(allocationPairs, allocationId);
+        break;
+      }
+      if (logger != null) {
+        logger.format("Allocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+      }
+    } else if (executionEpoch == validityEndTime) {
+      child.returnAllocation(rangeType, allocationId);
+      if (logger != null) {
+        logger.format("Deallocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+      }
     }
   }
 
@@ -151,9 +217,13 @@ public class AllocateAction extends AbstractAction {
   @Override
   public LinkedHashMap<String, Object> getAttributes() {
     LinkedHashMap<String, Object> ret = new LinkedHashMap<String, Object>();
+    ret.put(AttributeType.ALLOCATION_ID.getDisplayName(), allocationId);
     ret.put(AttributeType.ISSUER.getDisplayName(), parent);
     ret.put(AttributeType.SUBJECT.getDisplayName(), child);
-    ret.put(AttributeType.ALLOCATION_ID.getDisplayName(), allocationId);
+    ret.put(AttributeType.ALLOCATION_PUBLICATION_TIME.getDisplayName(), allocationPublicationTime);
+    ret.put(AttributeType.VALIDITY_START_TIME.getDisplayName(), validityStartTime);
+    ret.put(AttributeType.DEALLOCATION_PUBLICATION_TIME.getDisplayName(), deallocationPublicationTime);
+    ret.put(AttributeType.VALIDITY_END_TIME.getDisplayName(), validityEndTime);
     ret.put(AttributeType.INR_TYPE.getDisplayName(), rangeType);
     ret.put(AttributeType.ALLOCATIONS.getDisplayName(), allocationPairs);
     return ret;
@@ -164,7 +234,7 @@ public class AllocateAction extends AbstractAction {
    */
   @Override
   public String toString() {
-    return String.format("Allocate %s from %s to %s", rangeType.name(), parent.getNickname(), child.getNickname());
+    return String.format("Allocate %s: %s from %s to %s", allocationId, rangeType.name(), parent.getNickname(), child.getNickname());
   }
 
   /**
@@ -190,5 +260,13 @@ public class AllocateAction extends AbstractAction {
       child = (CA_Object) newValue;
       break;
     }
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getExecutionEpochs()
+   */
+  @Override
+  public Collection<Epoch> getExecutionEpochs() {
+    return Arrays.asList(allocationPublicationTime, deallocationPublicationTime);
   }
 }

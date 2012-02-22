@@ -164,6 +164,37 @@ public class CA_Object extends Allocator {
   }
 
   /**
+   * 
+   * @param rangeType The type of range being returned
+   * @param allocationId
+   */
+  public void returnAllocation(IPRangeType rangeType, String allocationId) {
+    IPRangeList allocation = ActionManager.singleton().findAllocation(parent, this, rangeType, allocationId);
+    IPRangeList resources;
+    IPRangeList resourcesFree;
+    switch(rangeType) {
+    default:
+      // Should never happen
+      return;
+    case ipv4:
+      resources = this.ipv4Resources;
+      resourcesFree = this.ipv4ResourcesFree;
+      break;
+    case ipv6:
+      resources = this.ipv6Resources;
+      resourcesFree = this.ipv6ResourcesFree;
+      break;
+    case as:
+      resources = this.asResources;
+      resourcesFree = this.asResourcesFree;
+      break;
+    }
+    resources.removeAll(allocation);
+    resourcesFree.removeAll(allocation);
+    parent.addAll(allocation);
+  }
+
+  /**
    * @return the next child serial number
    */
   public int getNextChildSN() {

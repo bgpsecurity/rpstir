@@ -28,9 +28,10 @@ import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 
 import com.bbn.rpki.test.actions.AbstractAction;
+import com.bbn.rpki.test.actions.ActionContext;
 import com.bbn.rpki.test.actions.AllocateAction;
 import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
-import com.bbn.rpki.test.actions.EpochActions;
+import com.bbn.rpki.test.actions.Epoch;
 import com.bbn.rpki.test.objects.CA_Obj;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.Constants;
@@ -61,6 +62,19 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class Model implements Constants {
+  /**
+   * Interface for listeners wanting to know when significant model changes have
+   * occured. For now only the epochs collection can be monitored.
+   *
+   * @author tomlinso
+   */
+  public interface Listener {
+    /**
+     * Called when the epochs collection has changed
+     */
+    void epochsChanged();
+  }
+
   static class TaskFactoryKey {
     private final Class<? extends TaskFactory> factoryClass;
     private final Object arg;
@@ -130,11 +144,10 @@ public class Model implements Constants {
   };
 
   private final File rpkiRoot;
-
-  private final List<EpochActions> epochs = new ArrayList<EpochActions>();
-
+  private final List<AbstractAction> actions = new ArrayList<AbstractAction>();
+  private final Set<Epoch> epochs = new HashSet<Epoch>();
+  private final List<EpochGroup> epochGroups = new ArrayList<EpochGroup>();
   private final String ianaServerName;
-
   private final CA_Object iana;
   private final List<File> objectList = new ArrayList<File>();
   private final List<File> writtenFiles = new ArrayList<File>();
@@ -150,6 +163,7 @@ public class Model implements Constants {
   private final Map<TaskFactoryKey, TaskFactory> taskFactories = new HashMap<TaskFactoryKey, TaskFactory>();
   private final List<File> nodeDirectories = new ArrayList<File>();
   private final Map<String, File> nodeDirectoryByName = new TreeMap<String, File>();
+  private final List<Listener> listeners = new ArrayList<Listener>(1);
 
   /**
    * @param rpkiRoot
@@ -179,15 +193,16 @@ public class Model implements Constants {
     // Build some actions
     CA_Object ripe = iana.findNode("RIPE-2");
     CA_Object lir1 = ripe.findNode("LIR-2");
-    AbstractAction action1 = new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, new Pair("p", 8));
+    addAction(new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, this, new Pair("p", 8)));
     String path = "UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)";
-    AbstractAction action2 = new ChooseCacheCheckTask(this, path);
-    EpochActions epochActions = new EpochActions(0, action1, action2);
-    epochs.add(epochActions);
+    addAction(new ChooseCacheCheckTask(this, path));
     epochIndex = -1;
 
     Element root = new Element("test-actions");
-    root.addContent(epochActions.toXML());
+    ActionContext actionContext = new ActionContext();
+    for (AbstractAction action : actions) {
+      root.addContent(action.toXML(actionContext));
+    }
     Document doc = new Document(root);
     XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
     outputter.output(doc, System.out);
@@ -195,6 +210,26 @@ public class Model implements Constants {
     addTask(getTaskFactory(StartLoader.class).createOnlyTask());
     addTask(getTaskFactory(InitializeRepositories.class).createOnlyTask());
     addTask(getTaskFactory(AdvanceEpoch.class).createOnlyTask());
+  }
+
+  /**
+   * @param l
+   */
+  public void addListener(Listener l) {
+    listeners.add(l);
+  }
+
+  /**
+   * @param l
+   */
+  public void removeListener(Listener l) {
+    listeners.remove(l);
+  }
+
+  private void fireEpochsChanged() {
+    for (Listener l : listeners) {
+      l.epochsChanged();
+    }
   }
 
   /**
@@ -372,8 +407,11 @@ public class Model implements Constants {
     previousRepositoryRoots.addAll(repositoryRoots);
     repositoryRoots.clear();
     if (epochIndex > 0) {
-      EpochActions epochActions = epochs.get(epochIndex - 1);
-      epochActions.execute(logger);
+      EpochGroup epochActions = epochGroups.get(epochIndex - 1);
+      for (Epoch epoch : epochActions.getEpochs()) {
+        AbstractAction action = epoch.getAction();
+        action.execute(null, logger);
+      }
     }
     Set<File> previousFiles = new HashSet<File>(objectList);
     objectList.clear();
@@ -418,15 +456,14 @@ public class Model implements Constants {
    * @return count of number of epochs
    */
   public int getEpochCount() {
-    return epochs.size() + 1;
+    return epochGroups.size() + 1;
   }
 
   /**
-   * @param epochIndex
-   * @return the EpochActions for the specified epoch
+   * @return the list of EpochActions
    */
-  public EpochActions getEpochActions(int epochIndex) {
-    return epochs.get(epochIndex - 1);
+  public Collection<EpochGroup> getEpochGroups() {
+    return epochGroups;
   }
 
   /**
@@ -708,5 +745,105 @@ public class Model implements Constants {
         factory.createOnlyTask()
     };
     return tasks;
+  }
+
+  /**
+   * @return the Epochs
+   */
+  public Collection<Epoch> getEpochs() {
+    return epochs;
+  }
+
+  /**
+   */
+  public void epochsChanged() {
+    sortEpochs();
+    fireEpochsChanged();
+  }
+
+  /**
+   * Build a new array of EpochActions placing every action in the epoch
+   * required by its constraints.
+   * 
+   * First the epoch constraint chains are searched to find epochs having no
+   * predecessor constraints. Such epochs are assigned an index of zero. Other
+   * epochs are assigned an index one greater than the max of all predecessor
+   */
+  private void sortEpochs() {
+    Map<Epoch, AbstractAction> actionMap = new HashMap<Epoch, AbstractAction>();
+    for (AbstractAction action : actions) {
+      for (Epoch epoch : action.getAllEpochs()) {
+        actionMap.put(epoch, action);
+      }
+    }
+    epochs.clear();
+    epochs.addAll(actionMap.keySet());
+    EpochSorter sorter = new EpochSorter(epochs);
+    epochGroups.clear();
+    epochGroups.addAll(sorter.sort());
+  }
+
+  /**
+   * Find the Epochs that can be successors of the given Epoch.
+   * This set is all epochs that are not already constrained to be coincident
+   * with or predecessors of the given epoch and that are not already constrained to be successors
+   * @param epoch
+   * @return the epochs that are not already constrained w.r.t. the given epoch
+   */
+  public Collection<Epoch> getPossibleSuccessors(Epoch epoch) {
+    Set<Epoch> ret = new HashSet<Epoch>(epochs);
+    ret.remove(epoch);
+    ret.removeAll(epoch.getSuccessorEpochs());
+    ret.removeAll(epoch.findCoincidentEpochs());
+    ret.removeAll(epoch.findPredecessorEpochs());
+    return ret;
+  }
+
+  /**
+   * Find the Epochs that can be predecessors of the given Epoch.
+   * This set is all epochs that are not already constrained to be coincident
+   * with of succcessors of the given epoch and that are not already constrained to be predecessors.
+   * @param epoch
+   * @return the epochs that are not already constrained w.r.t. the given epoch
+   */
+  public Collection<Epoch> getPossiblePredecessors(Epoch epoch) {
+    Set<Epoch> ret = new HashSet<Epoch>(epochs);
+    ret.remove(epoch);
+    ret.removeAll(epoch.getPredecessorEpochs());
+    ret.removeAll(epoch.findCoincidentEpochs());
+    ret.removeAll(epoch.findSuccessorEpochs());
+    return ret;
+  }
+
+  /**
+   * Find the Epochs that can be coincident with the given Epoch.
+   * This set is all epochs that are not already constrained to be successors of
+   * or predecessors of the given epoch and that are not already constrained to be coincident
+   * @param epoch
+   * @return the epochs that are not already constrained w.r.t. the given epoch
+   */
+  public Collection<Epoch> getPossibleCoincidentEpochs(Epoch epoch) {
+    Set<Epoch> ret = new HashSet<Epoch>(epochs);
+    ret.remove(epoch);
+    ret.removeAll(epoch.getCoincidentEpochs());
+    ret.removeAll(epoch.findSuccessorEpochs());
+    ret.removeAll(epoch.findPredecessorEpochs());
+    return ret;
+  }
+
+  /**
+   * @param action
+   */
+  public void addAction(AbstractAction action) {
+    actions.add(action);
+    epochsChanged();
+  }
+
+  /**
+   * @param action the action to remove
+   */
+  public void removeAction(AbstractAction action) {
+    actions.remove(action);
+    epochsChanged();
   }
 }

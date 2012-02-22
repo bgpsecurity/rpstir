@@ -7,16 +7,21 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.lang.reflect.Constructor;
 
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.tree.TreePath;
 
 import com.bbn.rpki.test.actions.AbstractAction;
-import com.bbn.rpki.test.actions.EpochActions;
+import com.bbn.rpki.test.actions.AllocateAction;
+import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
+import com.bbn.rpki.test.actions.Epoch;
 import com.bbn.rpki.test.actions.ui.ActionTree.SelectionListener;
 import com.bbn.rpki.test.tasks.Model;
 
@@ -31,36 +36,31 @@ public class ActionsEditor implements SelectionListener {
   private final JScrollPane treePane;
   private final ActionDetail actionDetail;
   private TreePath selectedPath = null;
-  private final Action insertAction = new javax.swing.AbstractAction("Insert") {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      assert selectedPath != null;
-      int pathCount = selectedPath.getPathCount();
-      if (pathCount >= 2) {
-        EpochActions epochActions = (EpochActions) selectedPath.getPathComponent(1);
-        if (pathCount == 2) {
-          actionTree.insertEpochBefore(epochActions);
-        } else {
-          assert pathCount == 3;
-          AbstractAction action = (AbstractAction) selectedPath.getPathComponent(2);
-          actionTree.insertActionBefore(epochActions, action);
-        }
-      }
-    }
-  };
 
-  private final Action addAction = new javax.swing.AbstractAction("Add") {
+  private final Action addAction = new javax.swing.AbstractAction("Add Action") {
     @Override
     public void actionPerformed(ActionEvent e) {
-      assert selectedPath != null;
-      int pathCount = selectedPath.getPathCount();
-      if (pathCount >= 1) {
-        if (pathCount == 1) {
-          actionTree.addEpoch();
-        } else {
-          assert pathCount == 2;
-          EpochActions epochActions = (EpochActions) selectedPath.getPathComponent(1);
-          actionTree.addAction(epochActions);
+      Class<?>[] classes = {
+          AllocateAction.class,
+          ChooseCacheCheckTask.class
+      };
+      String[] names = new String[classes.length];
+      for (int i = 0; i < names.length; i++) {
+        names[i] = classes[i].getSimpleName();
+      }
+      JComboBox box = new JComboBox(names);
+      int option = JOptionPane.showConfirmDialog(treePane, box, "Select a Type of Action", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+      if (option == JOptionPane.OK_OPTION) {
+        int index = box.getSelectedIndex();
+        if (index >= 0) {
+          Class<?> chosenClass = classes[index];
+          try {
+            Constructor<?> constructor = chosenClass.getConstructor(Model.class);
+            AbstractAction addedAction = (AbstractAction) constructor.newInstance(model);
+            model.addAction(addedAction);
+          } catch (Exception ex) {
+            return;
+          }
         }
       }
     }
@@ -71,15 +71,10 @@ public class ActionsEditor implements SelectionListener {
     public void actionPerformed(ActionEvent e) {
       assert selectedPath != null;
       int pathCount = selectedPath.getPathCount();
-      if (pathCount >= 2) {
-        EpochActions epochActions = (EpochActions) selectedPath.getPathComponent(1);
-        if (pathCount == 2) {
-          actionTree.deleteEpoch(epochActions);
-        } else {
-          assert pathCount == 3;
-          AbstractAction action = (AbstractAction) selectedPath.getPathComponent(2);
-          actionTree.deleteAction(epochActions, action);
-        }
+      if (pathCount == 3) {
+        Epoch epoch = (Epoch) selectedPath.getPathComponent(2);
+        AbstractAction action = epoch.getAction();
+        model.removeAction(action);
       }
     }
   };
@@ -97,11 +92,13 @@ public class ActionsEditor implements SelectionListener {
       actionTree.collapse();
     }
   };
+  private final Model model;
 
   /**
    * @param model
    */
   public ActionsEditor(Model model) {
+    this.model = model;
     actionTree = new ActionTree(model, this);
     actionDetail = new ActionDetail(model);
     treePane = new JScrollPane(actionTree.getComponent());
@@ -110,7 +107,6 @@ public class ActionsEditor implements SelectionListener {
     JPanel treeButtons = new JPanel();
     JButton[] buttons = {
         new JButton(addAction),
-        new JButton(insertAction),
         new JButton(deleteAction),
         new JButton(expandAction),
         new JButton(collapseAction)
@@ -121,8 +117,8 @@ public class ActionsEditor implements SelectionListener {
     treePanel.add(treeButtons, BorderLayout.SOUTH);
     splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treePanel, actionDetail.getComponent());
     splitPane.setDividerLocation(0.5);
-    splitPane.setResizeWeight(0.5);
-    splitPane.setPreferredSize(new Dimension(800, 600));
+    splitPane.setResizeWeight(0.0);
+    splitPane.setPreferredSize(new Dimension(1024, 768));
     selectionChanged(null);
   }
 
@@ -155,23 +151,13 @@ public class ActionsEditor implements SelectionListener {
       pathCount = 0;
     }
     if (pathCount > 2) {
-      AbstractAction action = (AbstractAction) newPath.getPathComponent(2);
-      actionDetail.setAction(action);
-      changeAction(insertAction, "Insert Action");
+      Epoch epoch = (Epoch) newPath.getPathComponent(2);
+      AbstractAction action = epoch.getAction();
+      actionDetail.setAction(action, epoch);
       changeAction(deleteAction, "Delete Action");
-      changeAction(addAction, null);
-    } else if (pathCount > 1) {
-      changeAction(insertAction, "Insert Epoch");
-      changeAction(deleteAction, "Delete Epoch");
-      changeAction(addAction, "Add Action");
     } else {
-      changeAction(insertAction, null);
+      actionDetail.setAction(null, null);
       changeAction(deleteAction, null);
-      if (pathCount > 0) {
-        changeAction(addAction, "Add Epoch");
-      } else {
-        changeAction(addAction, null);
-      }
     }
   }
 }

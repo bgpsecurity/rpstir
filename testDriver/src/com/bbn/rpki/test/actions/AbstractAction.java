@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.actions;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 
 import org.jdom.Element;
@@ -14,34 +15,11 @@ import com.bbn.rpki.test.objects.TypescriptLogger;
  *
  * @author tomlinso
  */
-public abstract class AbstractAction {
+public abstract class AbstractAction implements XMLConstants {
 
-  protected static final String TAG_ACTION = "action";
-
-  protected static final String TAG_EPOCH = "epoch";
-
-  protected static final String ATTR_TYPE = "type";
-
-  protected static final String ATTR_ALLOCATION_ID = "allocationId";
-
-  protected static final String ATTR_ALLOCATION_INDEX = "allocationIndex";
-
-  protected static final String ATTR_PARENT_NAME = "parentName";
-
-  protected static final String ATTR_CHILD_NAME = "childName";
-
-  protected static final String ATTR_EPOCH_INDEX = "epoch-index";
-
-  protected static final String ATTR_ACTION_TYPE = "actionType";
-
-  protected static final String ATTR_PATH = "path";
-  protected static final String VALUE_ALLOCATE = "allocate";
-  protected static final String VALUE_DEALLOCATE = "deallocate";
-  protected static final String VALUE_CHOOSE_CACHE_CHECK_TASK = "choose-check-task";
 
   enum ActionType {
     allocate,
-    deallocate,
   }
 
   protected Element createElement(String actionType) {
@@ -57,14 +35,29 @@ public abstract class AbstractAction {
 
   /**
    * Encode this object as XML
+   * @param actionContext Provides context for linking together cross references
    * @return an Element representing this AbstractAction
    */
-  public abstract Element toXML();
+  public abstract Element toXML(ActionContext actionContext);
+
+  /**
+   * Get the epochs when something happens in this action.
+   * @return the epochs
+   */
+  public abstract Collection<Epoch> getAllEpochs();
+
+  /**
+   * Get the epochs during which this action should be executed.
+   * @return the execution epochs
+   */
+  public abstract Collection<Epoch> getExecutionEpochs();
+
   /**
    * Perform the action
+   * @param executionEpoch TODO
    * @param logger TODO
    */
-  public abstract void execute(TypescriptLogger logger);
+  public abstract void execute(Epoch executionEpoch, TypescriptLogger logger);
 
   /**
    * @param label

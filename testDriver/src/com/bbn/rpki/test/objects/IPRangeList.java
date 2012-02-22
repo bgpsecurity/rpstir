@@ -47,13 +47,13 @@ public class IPRangeList implements Iterable<Range>, Constants {
   }
 
   private final IPRangeType ipVersion;
-  private final List<Range> freeList;
+  private final List<Range> rangeList;
 
   /**
    * @param ipVersion
    */
   public IPRangeList(IPRangeType ipVersion) {
-    this.freeList = new ArrayList<Range>();
+    this.rangeList = new ArrayList<Range>();
     this.ipVersion = ipVersion;
   }
 
@@ -63,7 +63,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @param orig
    */
   public IPRangeList(IPRangeList orig) {
-    freeList = new ArrayList<Range>(orig.freeList);
+    rangeList = new ArrayList<Range>(orig.rangeList);
     this.ipVersion = orig.ipVersion;
   }
 
@@ -72,7 +72,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @param version
    */
   public IPRangeList(int size, IPRangeType version) {
-    freeList = new ArrayList<Range>(size);
+    rangeList = new ArrayList<Range>(size);
     this.ipVersion = version;
   }
 
@@ -169,13 +169,13 @@ public class IPRangeList implements Iterable<Range>, Constants {
       } else {
         throw new AllocationError("Invalid requestType: " + reqType);
       }
-      ret.freeList.add(issuedBlock);
+      ret.rangeList.add(issuedBlock);
     }
     return ret;
   }
 
   /**
-   * @param freeList
+   * @param rangeList
    * @param reqSize
    * @param expressAsRange
    * @return
@@ -184,8 +184,8 @@ public class IPRangeList implements Iterable<Range>, Constants {
     if (!Range.isPowerOfTwo(reqSize)) {
       throw new AllocationError("Illegal prefix size: " + reqSize);
     }
-    for (int i = 0, n = freeList.size(); i < n; i++) {
-      Range x = firstFitPrefix(freeList.get(i), allocatedList, reqSize, expressAsRange);
+    for (int i = 0, n = rangeList.size(); i < n; i++) {
+      Range x = firstFitPrefix(rangeList.get(i), allocatedList, reqSize, expressAsRange);
       if (x != null) {
         removeRange(i, x);
         return x;
@@ -195,30 +195,30 @@ public class IPRangeList implements Iterable<Range>, Constants {
   }
 
   /**
-   * @param freeList
+   * @param rangeList
    * @param i
    * @param x
    */
   private void removeRange(int i, Range x) {
-    List<Range> perforated = perforate(freeList.get(i), x);
-    List<Range> insertion = freeList.subList(i, i + 1);
+    List<Range> perforated = perforate(rangeList.get(i), x);
+    List<Range> insertion = rangeList.subList(i, i + 1);
     insertion.clear();
     insertion.addAll(perforated);
   }
 
   /**
-   * @param freeList
+   * @param rangeList
    * @param reqSize
    * @return
    */
   private Range allocateSingleRange(BigInteger reqSize,
                                     IPRangeList allocatedBlocks, boolean expressAsRange) {
-    for (int i = 0, n = freeList.size(); i < n; i++) {
-      Range firstRange = freeList.get(i);
+    for (int i = 0, n = rangeList.size(); i < n; i++) {
+      Range firstRange = rangeList.get(i);
       Range x = firstFitRange(firstRange, reqSize, allocatedBlocks, expressAsRange);
       if (x != null) {
         List<Range> perforated = perforate(firstRange, x);
-        List<Range> insertion = freeList.subList(i,  i + 1);
+        List<Range> insertion = rangeList.subList(i,  i + 1);
         insertion.clear();
         insertion.addAll(perforated);
         return x;
@@ -348,8 +348,8 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @param range
    */
   public void add(Range range) {
-    for (int i = 0, n = freeList.size(); i < n; i++) {
-      Range test = freeList.get(i);
+    for (int i = 0, n = rangeList.size(); i < n; i++) {
+      Range test = rangeList.get(i);
       Range test2 = null;
       if (test.compareTo(range) > 0) {
         assert !test.overlaps(range);
@@ -365,7 +365,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
         }
         if (i > 0) {
           // May be adjacent to the preceding range
-          test2 = freeList.get(i - 1);
+          test2 = rangeList.get(i - 1);
           assert !test2.overlaps(range);
           if (range.min.equals(test2.max.add(BigInteger.ONE))) {
             x |= 2;
@@ -374,7 +374,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
         switch (x) {
         case 0:
           // Not adjacent at all
-          freeList.add(i, range);
+          rangeList.add(i, range);
           return;
         case 1:
           // Adjacent to following range
@@ -387,28 +387,99 @@ public class IPRangeList implements Iterable<Range>, Constants {
         case 3:
           // adjacent to both
           test2.max = test.max;
-          freeList.remove(i);
+          rangeList.remove(i);
           return;
         }
         return;
       }
     }
-    freeList.add(range);
+    rangeList.add(range);
   }
+
   /**
+   * Remove as much as possible of the given range
+   * Remember the invariants are that every range is separate from other ranges
+   * so that range must fall entirely within one range in the list.
    * @param range
+   * @return true if the range was successfully removed
    */
-  public void remove(Range range) {
-    for (int i = 0, n = freeList.size(); i < n; i++) {
-      Range test = freeList.get(i);
+  public boolean remove(Range range) {
+    for (int i = 0, n = rangeList.size(); i < n; i++) {
+      Range test = rangeList.get(i);
       if (test.min.compareTo(range.max) > 0) {
-        return;
+        // Never found an intersection
+        return false;
       }
-      Range intersection = test.intersection(range);
-      if (intersection != null) {
-        freeList.set(i, intersection);
+      if (test.max.compareTo(range.min) < 0) {
+        // Still looking
+        continue;
+      }
+      if (!test.contains(range)) {
+        // Error -- trying to remove a range that is not completely present.
+        return false;
+      }
+      // Removing range can leave behing 0, 1, or two pieces
+      List<Range> left = perforate(test, range);
+      // The sublist containing test
+      List<Range> sub = rangeList.subList(i, i + 1);
+      // Replace the sublist with what is left of it.
+      sub.clear();
+      sub.addAll(left);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Test if this range list contains the given range.
+   * Remember the invariants are that every range is separate from other ranges
+   * so that range must fall entirely within one range in the list.
+   * @param range
+   * @return true if range is contained within the rangeList
+   */
+  public boolean contains(Range range) {
+    for (int i = 0, n = rangeList.size(); i < n; i++) {
+      Range test = rangeList.get(i);
+      if (test.min.compareTo(range.max) > 0) {
+        // Never found an overlap
+        return false;
+      }
+      if (test.max.compareTo(range.min) < 0) {
+        // Still looking
+        continue;
+      }
+      return test.contains(range);
+    }
+    return false;
+  }
+
+  /**
+   * @param rangeList
+   * @return true if the entire rangeList is contained within this
+   */
+  public boolean containsAll(IPRangeList rangeList) {
+    for (Range range : rangeList) {
+      if (!contains(range)) {
+        return false;
       }
     }
+    return true;
+  }
+
+  /**
+   * @param rangeList
+   * @return true if the entire rangeList could be removed
+   */
+  public boolean removeAll(IPRangeList rangeList) {
+    for (Range range : rangeList) {
+      if (!contains(range)) {
+        return false;
+      }
+    }
+    for (Range range : rangeList) {
+      remove(range);
+    }
+    return true;
   }
 
   /**
@@ -425,7 +496,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @return the Range at the specified index
    */
   public Range get(int allocationIndex) {
-    return freeList.get(allocationIndex);
+    return rangeList.get(allocationIndex);
   }
 
   /**
@@ -433,6 +504,6 @@ public class IPRangeList implements Iterable<Range>, Constants {
    */
   @Override
   public Iterator<Range> iterator() {
-    return Collections.unmodifiableList(freeList).iterator();
+    return Collections.unmodifiableList(rangeList).iterator();
   }
 }

@@ -12,9 +12,11 @@ import java.util.List;
  */
 public abstract class Allocator implements Constants {
 
+  // These represent allocations that have been received and not re-allocated
   protected IPRangeList ipv4ResourcesFree;
   protected IPRangeList ipv6ResourcesFree;
   protected IPRangeList asResourcesFree;
+  // These represent the allocations that have been received by this allocator
   protected IPRangeList ipv4Resources = new IPRangeList(IPRangeType.ipv4);
   protected IPRangeList ipv6Resources = new IPRangeList(IPRangeType.ipv6);
   protected IPRangeList asResources = new IPRangeList(IPRangeType.as);
@@ -59,7 +61,7 @@ public abstract class Allocator implements Constants {
    * @param rangeType
    * @param range
    */
-  public void removeRange(IPRangeType rangeType, Range range) {
+  public void removeFreeRange(IPRangeType rangeType, Range range) {
     IPRangeList resourcesFree;
     switch (rangeType) {
     case ipv4:
@@ -81,7 +83,7 @@ public abstract class Allocator implements Constants {
    * @param rangeType
    * @param range
    */
-  public void addRange(IPRangeType rangeType, Range range) {
+  public void addFreeRange(IPRangeType rangeType, Range range) {
     IPRangeList resourcesFree;
     switch (rangeType) {
     case ipv4:
@@ -97,6 +99,16 @@ public abstract class Allocator implements Constants {
       return;
     }
     resourcesFree.add(range);
+  }
+
+  /**
+   * Return ranges to the free list
+   * @param rangeList
+   */
+  public void addAll(IPRangeList rangeList) {
+    for (Range range : rangeList) {
+      addFreeRange(rangeList.getIpVersion(), range);
+    }
   }
 
   /**

@@ -74,8 +74,19 @@ public class ActionManager {
    * @param list
    */
   public void recordAllocation(Allocator parent, Allocator child, String allocationId, IPRangeList list) {
+    // TODO need a better key incorporating the parent
+    @SuppressWarnings("unused")
+    IPRangeList old = selectMap(list.getIpVersion()).put(allocationId, list);
+    //    assert old == null;
+  }
+
+  /**
+   * @param ipVersion
+   * @return Map from allocationId to ranges for the specified INR type
+   */
+  public Map<String, IPRangeList> selectMap(IPRangeType ipVersion) {
     Map<String, IPRangeList> map;
-    switch (list.getIpVersion()) {
+    switch (ipVersion) {
     case ipv4:
       map = ipv4Allocations;
       break;
@@ -86,12 +97,9 @@ public class ActionManager {
       map = asAllocations;
       break;
     default:
-      return;
+      map = null;
     }
-    // TODO need a better key incorporating the parent
-    @SuppressWarnings("unused")
-    IPRangeList old = map.put(allocationId, list);
-    //    assert old == null;
+    return map;
   }
 
   /**
@@ -107,5 +115,16 @@ public class ActionManager {
    */
   public CA_Object findCA_Object(String commonName) {
     return caObjects.get(commonName);
+  }
+
+  /**
+   * @param parent
+   * @param ca_Object
+   * @param rangeType
+   * @param allocationId
+   * @return the allocation range list corresponding to the allocationid.
+   */
+  public IPRangeList findAllocation(CA_Object parent, CA_Object ca_Object, IPRangeType rangeType, String allocationId) {
+    return selectMap(rangeType).get(allocationId);
   }
 }

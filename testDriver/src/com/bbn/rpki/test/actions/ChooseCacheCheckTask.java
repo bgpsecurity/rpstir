@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.actions;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,6 +31,11 @@ import com.bbn.rpki.test.tasks.TaskPath;
  */
 public class ChooseCacheCheckTask extends AbstractAction {
 
+  /**
+   * 
+   */
+  private static final String TAG_EPOCH = "epoch";
+
   enum AttributeType {
     TASK_PATH("Task Path");
 
@@ -53,8 +60,20 @@ public class ChooseCacheCheckTask extends AbstractAction {
     }
   }
 
+  private static int nextId = 0;
+
+  /**
+   * @return
+   */
+  private static String nextId() {
+    nextId ++;
+    return String.valueOf(nextId);
+  }
+
   private TaskPath path;
   private final Model model;
+  private final String id;
+  private final Epoch epoch;
 
   /**
    * @param model
@@ -63,6 +82,8 @@ public class ChooseCacheCheckTask extends AbstractAction {
   public ChooseCacheCheckTask(Model model, String path) {
     this.model = model;
     this.path = new TaskPath(path);
+    this.id = nextId();
+    epoch = new Epoch(this, "Cache Check " + id);
   }
 
   /**
@@ -75,26 +96,41 @@ public class ChooseCacheCheckTask extends AbstractAction {
   /**
    * @param model
    * @param element
+   * @param actionContext
    */
-  public ChooseCacheCheckTask(Model model, Element element) {
-    this(model, element.getAttributeValue(ATTR_PATH));
+  public ChooseCacheCheckTask(Model model, Element element, ActionContext actionContext) {
+    this.model = model;
+    this.path = new TaskPath(element.getAttributeValue(ATTR_PATH));
+    this.id = nextId();
+    Element epochElement = element.getChild(TAG_EPOCH);
+    epoch = new Epoch(this, "Cache Check " + id, epochElement, actionContext);
+
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#toXML()
+   * @see com.bbn.rpki.test.actions.AbstractAction#toXML(ActionContext)
    */
   @Override
-  public Element toXML() {
+  public Element toXML(ActionContext actionContext) {
     Element element = createElement(VALUE_CHOOSE_CACHE_CHECK_TASK);
     element.setAttribute(ATTR_PATH, path.toString());
+    element.addContent(epoch.toXML(TAG_EPOCH, actionContext));
     return element;
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#execute(com.bbn.rpki.test.objects.TypescriptLogger)
+   * @see com.bbn.rpki.test.actions.AbstractAction#getAllEpochs()
    */
   @Override
-  public void execute(TypescriptLogger logger) {
+  public Collection<Epoch> getAllEpochs() {
+    return Collections.singleton(epoch);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#execute(Epoch, com.bbn.rpki.test.objects.TypescriptLogger)
+   */
+  @Override
+  public void execute(Epoch executionEpoch, TypescriptLogger logger) {
     // Navigate to the Task
     String[] path = this.path.getPath();
     TaskFactory.Task task = model.getTask(path[0]);
@@ -118,6 +154,8 @@ public class ChooseCacheCheckTask extends AbstractAction {
   @Override
   public LinkedHashMap<String, Object> getAttributes() {
     LinkedHashMap<String, Object> ret = new LinkedHashMap<String, Object>();
+    ret.put("id", id);
+    ret.put(TAG_EPOCH, epoch);
     ret.put(AttributeType.TASK_PATH.getDisplayName(), path);
     return ret;
   }
@@ -140,6 +178,16 @@ public class ChooseCacheCheckTask extends AbstractAction {
    */
   @Override
   public String toString() {
-    return String.format("Check Cache after %s", path);
+    String[] pathArray = path.getPath();
+    String lastTask = pathArray[pathArray.length - 1];
+    return String.format("Check Cache after %s", lastTask);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getExecutionEpochs()
+   */
+  @Override
+  public Collection<Epoch> getExecutionEpochs() {
+    return Collections.singleton(epoch);
   }
 }
