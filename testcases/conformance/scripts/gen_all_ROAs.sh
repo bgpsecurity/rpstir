@@ -159,4 +159,5 @@ ${single_ROA_cmd} ROA 554 FamilyLth
 ${single_ROA_cmd} ROA 555 IPMaxLth
 ${single_ROA_cmd} ROA 556 IP2Big
 ${single_ROA_cmd} -x good ROA 557 VersionV1Explicit
-${single_ROA_cmd} ROA 558 VersionV2
+${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
+${single_ROA_cmd} ROA 559 VersionV2
