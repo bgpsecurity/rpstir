@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "csapp.h"
 #include "signal.h"
 #include "logutils.h"
@@ -133,38 +134,53 @@ int main (int argc, char *argv [])
 			fclose(logfile);
 			fclose(reposit);
 			
-			/*Generate a command line string which will execute rsync_aur
-		  	once fed to another shell by popen*/
-			FILE *fp;
 			int status;
 			char path[MAXREAD];
 			char command[MAXREAD];
+			int pipefd[2];
+			pid_t cpid;
 			/*Initilize buffers to be safe due to issues with OpenBSD*/
 			memset(path,'\0',MAXREAD);
-			memset(command,'\0',MAXREAD);	
-			snprintf(command, MAXREAD,"%s/rsync_aur/rsync_aur -s -t %s -f %s -d %s",getenv("RPKI_ROOT"), getenv("RPKI_PORT"), log_loc, rep_loc);
-			log_msg(LOG_DEBUG,"%s",command);
-			log_flush();
+			memset(command,'\0',MAXREAD);
 
-			/*popen should spawn a new command line and invoke rsync_aur from there. fflush the stream
-			  so any responses from popen are appended properly.*/
-			fp = popen(command, "r");
-			if (fp == NULL){
-				log_msg(LOG_ERR, "Error forking process and starting Parser..exiting. Status = %d", pclose(fp));
-				err_flag =  POPEN_PARSER_ERR;
+			snprintf(command, sizeof(command), "%s/rsync_aur/rsync_aur", getenv("RPKI_ROOT"));
+
+			if (pipe(pipefd) != 0){
+				err_flag = POPEN_PARSER_ERR;
+				goto no_subproc;
 			}
-			else{
-				/*Read the response from the parser*/
-				while (fgets(path, MAXREAD, fp) != NULL){
-					log_msg(LOG_DEBUG,"rsync_aur output: %s", path);
-				}
-				status = pclose(fp);
-				log_msg((status == 0) ? LOG_INFO : LOG_ERR,
-					"Process ended with termination status %d (command = %s)\n", status, command);
+
+			cpid = fork();
+			if (cpid == -1){
+				err_flag = POPEN_PARSER_ERR;
+				goto no_subproc;
+			}
+			else if (cpid == 0){
+				close(pipefd[0]);
+				dup2(pipefd[1], STDOUT_FILENO);
+				close(pipefd[1]);
+				log_msg(LOG_DEBUG, "%s -s -t %s -f %s -d %s", command, getenv("RPKI_PORT"), log_loc, rep_loc);
 				log_flush();
+				execl(command, command, "-s", "-t", getenv("RPKI_PORT"), "-f", log_loc, "-d", rep_loc, (const char *)NULL);
+				exit(EXIT_FAILURE); //execl shouldn't return
 			}
+
+			close(pipefd[1]);
+			FILE * fp = fdopen(pipefd[0], "r");
+
+			/*Read the response from the parser*/
+			while (fgets(path, MAXREAD, fp) != NULL){
+				log_msg(LOG_DEBUG,"rsync_aur output: %s", path);
+			}
+			fclose(fp);
+			wait(&status);
+			log_msg((status == 0) ? LOG_INFO : LOG_ERR,
+				"Process ended with termination status %d (command = %s -s -t %s -f %s -d %s)\n", status,
+				command, getenv("RPKI_PORT"), log_loc, rep_loc);
+			log_flush();
 		}
 		/*Clean up and log some stuff if needed*/
+		no_subproc:
 		if(err_flag) {
 			log_msg(LOG_ERR, " Error Code: %d. Continuing.\n",err_flag);
 			log_flush();
