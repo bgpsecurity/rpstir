@@ -1,5 +1,5 @@
---- badROAVersionV1Explicit.raw.old	2012-02-16 14:14:45.814246090 -0500
-+++ badROAVersionV1Explicit.raw	2012-02-16 14:15:28.109433231 -0500
+--- goodROAVersionV1Explicit.raw.old	2012-02-16 14:14:45.814246090 -0500
++++ goodROAVersionV1Explicit.raw	2012-02-16 14:15:28.109433231 -0500
 @@ -5,7 +5,9 @@
                      nul 
              seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
