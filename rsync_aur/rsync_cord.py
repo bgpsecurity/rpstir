@@ -61,7 +61,7 @@ class RSYNC_thread(Thread):
                         "--no-motd",
                         "--",
                         "rsync://%s/" % nextURI,
-                        "%s/%s" % (repoDir, nextURI),
+                        "%s/%s" % (repoDir, nextURI)]
 
             with open(rsync_log, 'w') as rsync_log_file:
                 p = Popen(rsyncCom, stdout=rsync_log_file, stderr=subprocess.PIPE)
