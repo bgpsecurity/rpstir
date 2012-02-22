@@ -1,3 +1,12 @@
+/*
+Additional requirements not captured by this file:
+
+	* It must be possible to have an array with a default
+	  but have a config file override the default with a
+	  user-specified empty array.
+
+*/
+
 // PUBLIC HEADER FILE
 enum config_key {
 	CONFIG_SOME_STRING,
