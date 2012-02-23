@@ -6,7 +6,7 @@
 #define RTR_LOG_IDENT PACKAGE_NAME "-rtrd"
 #define RTR_LOG_FACILITY LOG_DAEMON
 
-#define LISTEN_PORT "1234"
+#define LISTEN_PORT "12709"
 
 #define MAIN_LOOP_INTERVAL 5
 
