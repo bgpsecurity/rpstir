@@ -13,6 +13,9 @@
 
 /* These definitions follow conventional meaning and numeric value of
    kernel loglevels defined in linux/kernel.h */
+#define LOG_EMERG   0           /* system is unusable (should never happen) */
+#define LOG_ALERT   1           /* action must be taken immediately */
+#define LOG_CRIT    2           /* critical conditions */
 #define LOG_ERR     3		/* error conditions */
 #define LOG_WARNING 4		/* warning conditions */
 #define LOG_NOTICE  5		/* normal but significant condition */

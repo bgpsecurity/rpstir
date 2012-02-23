@@ -1,8 +1,3 @@
-/*
-  $Id: roa_validate.c 506 2008-06-03 21:20:05Z csmall $
-*/
-
-
 #include <assert.h>
 
 #include "roa_utils.h"

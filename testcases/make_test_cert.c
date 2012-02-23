@@ -727,8 +727,11 @@ int main(int argc, char **argv)
         write_ASNums(asNump);
         }
       else if (strchr(subjfile, (int)'M')) // for signing manifest
+        {
         write_casn(&extp->extnValue.autonomousSysNum.asnum.inherit, (uchar *)
           "", 0);
+        copy_casn(&extp->critical, &iextp->critical);
+        }
       else copy_casn(&extp->self, &iextp->self);
       }
       // subjectInfoAccess

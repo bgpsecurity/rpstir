@@ -57,7 +57,7 @@ static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
 
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(1, "CryptInit");
     CryptInitState = 1;
     }
     // get the size of signed attributes and allocate space for them
@@ -192,8 +192,8 @@ int main(int argc, char **argv)
     inject_casn(&attrp->attrValues.self, 0);
   write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
   write_objid(&signerInfop->signatureAlgorithm.algorithm, 
-    id_rsadsi_rsaEncryption);
-  write_casn(&signerInfop->signatureAlgorithm.parameters.rsadsi_rsaEncryption,
+    id_sha_256WithRSAEncryption);
+  write_casn(&signerInfop->signatureAlgorithm.parameters.sha256WithRSAEncryption,
     (uchar *)"", 0);
   char *msg = signCMS(&roa, argv[2], 0);
   if (msg)

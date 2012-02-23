@@ -1,0 +1,11 @@
+--- badCRLBadDateFeb29.crl.raw.old	2012-02-08 12:16:06.758823530 -0500
++++ badCRLBadDateFeb29.crl.raw	2012-02-08 12:16:55.138181575 -0500
+@@ -3,7 +3,7 @@
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "CRLBadDateFeb29"
+-        utc "110411185728Z"
++        utc "110229185728Z"
+         utc "460515185928Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */

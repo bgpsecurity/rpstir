@@ -64,6 +64,7 @@ struct ipranges
   int numranges;
   struct iprange *iprangep;
   };
+#define IPRANGES_EMPTY_INITIALIZER {0, NULL}
 
 struct done_cert
   {
@@ -97,6 +98,7 @@ struct keyring
 void cvt_asn(struct iprange *torangep, struct IPAddressOrRangeA *asnp),
     cvt_asnum(struct iprange *certrangep,
         struct ASNumberOrRangeA *asNumberOrRangeA),
+    mk_certranges(struct ipranges*, struct Certificate *),
     decrement_iprange(uchar *lim, int lth),
     increment_iprange(uchar *lim, int lth),
     clear_ipranges(struct ipranges *);
@@ -114,7 +116,7 @@ char *nextword(char *), myrootfullname[PATH_MAX];
 int parse_SKI_blocks(FILE *, char *, int, int *), 
   get_CAcert(char *, struct done_cert **),
   getSKIBlock(FILE *, char *, int), 
-  check_date(char *datep, struct casn *casnp, ulong *datenump),
+  check_date(char *datep, struct casn *casnp, int64_t *datenump),
   check_dates(char *datesp), check_jetring(char *),
   sort_resources(struct iprange *, int),
   touches(struct iprange *, struct iprange *, int); 

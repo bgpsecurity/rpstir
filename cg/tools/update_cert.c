@@ -82,8 +82,12 @@ static int setSignature(struct Certificate *certp, char *keyfile)
   signstring = (uchar *)calloc(1, sign_lth);
   sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
   memset(hash, 0, sizeof(hash));
-  cryptInit();
-  if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
+  if (cryptInit() != CRYPT_OK) 
+    {
+    msg = "Couldn't get Cryptlib";
+    ansr = -1;
+    }
+  else if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
       (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
     msg = "creating context";
   else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||

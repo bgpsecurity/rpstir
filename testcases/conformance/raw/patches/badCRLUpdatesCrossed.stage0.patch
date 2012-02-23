@@ -1,12 +1,11 @@
---- badCRLUpdatesCrossed.raw.old	2011-06-07 13:23:48.000000000 -0400
-+++ badCRLUpdatesCrossed.raw	2011-06-07 13:23:59.000000000 -0400
-@@ -3,8 +3,8 @@
-             nul 
+--- badCRLUpdatesCrossed.crl.raw.old	2011-12-12 16:04:44.644233849 -0500
++++ badCRLUpdatesCrossed.crl.raw	2011-12-12 16:05:13.294047534 -0500
+@@ -4,7 +4,7 @@
          seq set seq oid 2.5.4.3 /* id_commonName */
                      prt "CRLUpdatesCrossed"
--        utc "110411185728Z"
-         utc "460515185928Z"
-+        utc "110411185728Z"
+         utc "110411185728Z"
+-        utc "460515185928Z"
++        utc "060515185928Z"
          ctx+0x20
              seq seq oid 2.5.29.20 /* id_cRLNumber */
                      ocw int 0x01 /* 1 */ 

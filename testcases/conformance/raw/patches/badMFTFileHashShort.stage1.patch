@@ -1,0 +1,10 @@
+--- badMFTFileHashShort.raw.old	2012-01-25 11:34:01.770765337 -0500
++++ badMFTFileHashShort.raw	2012-01-25 11:34:15.036143051 -0500
+@@ -12,7 +12,6 @@
+                             seq seq ia5 "MFTFileHashShort.crl"
+                                     bit 0x00B03517CED21832522EE1010CD58B64
+                                         0xE2E5BCD8E7A44CB1306005935031FB95
+-                                        0x77
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 

@@ -46,7 +46,7 @@ int read_casn_num(struct casn *casnp, long *valp)
     {
     struct casn *tcasnp;
     int ansr, err = 0;
-    uchar *c, buf[4];
+    uchar *c;
 
     if (_clear_error(casnp) < 0) return -1;
     if (casnp->type == ASN_NOTYPE)
@@ -72,6 +72,8 @@ int read_casn_num(struct casn *casnp, long *valp)
 	{
 	if (tcasnp->type == ASN_BOOLEAN)
     	    {
+            uchar buf[8];
+            memset(buf, 0, sizeof(buf)); 
     	    read_casn(tcasnp, buf);
 	    *valp = buf[0];
 	    return 1;

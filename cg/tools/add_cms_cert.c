@@ -60,7 +60,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(2, "CryptInit");
     CryptInitState = 1;
     }
 
@@ -88,7 +88,7 @@ static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
 
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) fatal(2, "CryptInit");
     CryptInitState = 1;
     }
     // get the size of signed attributes and allocate space for them
@@ -220,17 +220,20 @@ int main(int argc, char **argv)
   write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
   write_casn(&signerInfop->digestAlgorithm.parameters.sha256, (uchar *)"", 0);
       // signing time
+/* omitting these for now
   attrp = (struct Attribute *)inject_casn( &signerInfop->signedAttrs.self, 2);
   write_objid(&attrp->attrType, id_signingTimeAttr);
   time_t now = time(0);
   attrTbDefp = (struct AttrTableDefined *)
     inject_casn(&attrp->attrValues.self, 0);
   write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
+*/
        // sig alg
   write_objid(&signerInfop->signatureAlgorithm.algorithm, 
-    id_rsadsi_rsaEncryption);
-  write_casn(&signerInfop->signatureAlgorithm.parameters.rsadsi_rsaEncryption,
-    (uchar *)"", 0);
+    id_sha_256WithRSAEncryption);
+  /* sets the "I've written it" flag */
+  write_casn(&signerInfop->signatureAlgorithm.parameters.
+	     sha256WithRSAEncryption, (uchar *)"", 0);
      // sign it!
   char *msg = signCMS(&roa, argv[3], 0);
   if (msg)

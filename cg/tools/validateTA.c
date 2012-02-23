@@ -1,8 +1,3 @@
-/*
-  $Id validateTA.c 506 2008-06-03 21:20:05Z gardiner $
-*/
-
-
 #include <stdio.h>
 #include <cryptlib.h>
 #include <keyfile.h>

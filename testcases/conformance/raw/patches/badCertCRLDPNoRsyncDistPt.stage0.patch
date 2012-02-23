@@ -1,0 +1,11 @@
+--- badCertCRLDPNoRsyncDistPt.raw.old	2011-10-05 15:42:28.876967188 -0400
++++ badCertCRLDPNoRsyncDistPt.raw	2011-10-05 15:42:46.376967190 -0400
+@@ -46,7 +46,7 @@
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20
+                                         ctx+0x06
+-                                            "rsync://rpki.bbn.com/conformance/r"
++                                            "http://rpki.bbn.com/conformance/r"
+                                             "oot/root.crl"
+                 seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                     ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
