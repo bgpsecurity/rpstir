@@ -30,7 +30,7 @@ char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #define UTCSESIZ 2
 #define UTCSFXHR 1
 #define UTCSFXMI (UTCSFXHR + UTCHRSIZ)  // 3
-#define UTCT_SIZE 16
+#define UTCT_SIZE 17
 #define GENBASE (1900 + UTCBASE)
 #define GENYR 0
 #define GENYRSIZ 4
@@ -88,17 +88,22 @@ int _gentime_to_ulong(int64_t *valp, char *fromp, int lth)
         (*b == 'Z' && ep != &b[GENSFXHR]) ||
         (*b < '0' && ep != &b[GENSFXMI + GENMISIZ])))
         return -1;
-    if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0) 
+    if ((yr = (int)get_num (&fromp[GENYR],GENYRSIZ) - GENBASE) < 0)
       return -1;
     if ((mo = (int)get_num (&fromp[GENMO],GENMOSIZ)) < 1 || mo > 12)
         return -1;
      // calculate number of days until start of the month
     val = (yr * 365) + _mos[mo - 1] + ((yr + (UTCBASE % 4)) / 4);
     if (!((yr + UTCBASE) % 4) && mo < 3) val--;
-    if ((da = (int)get_num (&fromp[GENDA],GENDASIZ)) < 1 ||
-       da > _mos[mo] - _mos[mo - 1] +
-       ((!((yr + UTCBASE) % 4) && mo == 2)? 1: 0)) return -1;
     if (val < 0) return -1;   // went around the end?
+    int modays = _mos[mo] - _mos[mo - 1];
+    int leap = 1;  
+         // not leap year if not divisible by 4 OR 
+         // at even century that is not divisible by 4
+    if ((((yr + UTCBASE)) % 4) > 0 || ((yr / 100) % 4) > 0) leap = 0;
+    if (mo == 2 && leap) modays++; 
+    if ((da = (int)get_num (&fromp[GENDA],GENDASIZ)) < 1 ||
+       da > modays)  return -1;
       // add in this month's days
     val += da - 1;
     if (&fromp[GENHR] >= ep ||                                   /* hour */
@@ -117,13 +122,17 @@ int _gentime_to_ulong(int64_t *valp, char *fromp, int lth)
         if ((hr = (int)get_num (&b[GENSFXHR],GENHRSIZ)) > 23 ||
             (mi = (int)get_num (&b[GENSFXMI],GENMISIZ)) > 59)
             return -1;
-        if ((xtra = (hr * 60) + mi) > 780) return -1;  /* diff in minutes */
-        if (*b == '+') xtra = -xtra;
-        val += (60 * xtra);           /* adjust by diff of seconds */
+        xtra = (hr * 60) + mi;  /* diff in minutes */
+        if (*b == '-') xtra = -xtra;
+#define HIXTRA (14 * 60)  // easternmost time zone in minutes
+#define LOXTRA (-12 *60)  // westernmost time zone in minutes
+        if (xtra > HIXTRA || xtra < LOXTRA) 
+          return -1;
+        val -= (60 * xtra);  /* adjust to GMT by diff of seconds */
         }
     if (val < 0) return -1;
     *valp = val;
-    return 1;
+    return GENSE + GENSESIZ + 1 ;
     }
 
 int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
@@ -145,7 +154,9 @@ int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
     if (yr < 70) strcpy(genfrom, "20");
     else strcpy(genfrom, "19");
     memcpy(&genfrom[2], fromp, lth);
-    return _gentime_to_ulong(valp, genfrom, lth += 2);
+    int ansr = _gentime_to_ulong(valp, genfrom, lth += 2);
+    if (ansr <= 0) return ansr;
+    return ansr - 2;
     }
 
 
@@ -234,7 +245,8 @@ int write_casn_time(struct casn *casnp, int64_t time)
         }
     put_num (&c[UTCDA],(ulong)(da + 1 - mop[-1]),UTCDASIZ);
     put_num (&c[UTCMO],(ulong)(mop - _mos),UTCMOSIZ);
-    if (casnp->type == ASN_UTCTIME && (leap + UTCBASE) >= 170)
+       // is it UTCTIME beyond the upper limit?
+    if (casnp->type == ASN_UTCTIME && leap >= 100)
       return -1; 
     put_num (&c[UTCYR],(ulong)(leap + UTCBASE),UTCYRSIZ);
     c += UTCSE + UTCSESIZ;

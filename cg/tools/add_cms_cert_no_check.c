@@ -157,6 +157,7 @@ static char *signCMS(struct CMSBlob* roa, char *keyfilename, int bad)
     copy_casn(&signerInfop->signature, &sigInfo.signature);
     delete_casn(&sigInfo.self);
     }
+  else fprintf(stderr, "Signing failed when %s\n", msg);
   // all done with it now
   if (signature) free(signature);
   return NULL;
