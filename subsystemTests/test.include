@@ -51,7 +51,7 @@ run_bg () {
             fi
             ;;
         "" | "none")
-            "$@" &
+            "$PROG" "$@" &
             ;;
         *)
             echo >&2 "Error: invalid value for \$CHECKTOOL: $CHECKTOOL"
