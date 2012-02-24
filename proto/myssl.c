@@ -3466,6 +3466,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 	int bytes_read;
     bytes_read = readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.
 			subjectPublicKey, &pubkey_buf);
+    if (!pubkey_buf)
+        return ERR_SCM_NOMEM;
     if (bytes_read != bytes_to_read) {
 		log_msg(LOG_ERR, "subj pub key actual length != stated");
 		free(pubkey_buf);
@@ -3489,6 +3491,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
     uchar *pubkey_modulus_buf;
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
+    if (!pubkey_modulus_buf)
+        return ERR_SCM_NOMEM;
 	free(pubkey_modulus_buf);
     if (bytes_read != bytes_to_read) {
 		log_msg(LOG_ERR, "subj pub key modulus actual length != stated");
@@ -3504,6 +3508,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
         incorrect_length = 1;
     uchar *pubkey_exponent_buf;
     bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
+    if (!pubkey_exponent_buf)
+        return ERR_SCM_NOMEM;
     if (bytes_read != bytes_to_read)
         different_lengths = 1;
     if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT)
@@ -3538,6 +3544,8 @@ static int rescert_serial_number_chk(struct Certificate *certp) {
 
 	uint8_t *sernump;
 	int bytes_read = readvsize_casn(&certp->toBeSigned.serialNumber, &sernump);
+    if (!sernump)
+        return ERR_SCM_NOMEM;
 	if (bytes_read != bytes_to_read) {
 		log_msg(LOG_ERR, "serial number actual length != stated length");
 		free(sernump);

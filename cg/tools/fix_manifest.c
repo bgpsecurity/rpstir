@@ -193,7 +193,7 @@ int main(int argc, char **argv)
   write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
   write_objid(&signerInfop->signatureAlgorithm.algorithm, 
     id_sha_256WithRSAEncryption);
-  write_casn(&signerInfop->signatureAlgorithm.parameters.self,
+  write_casn(&signerInfop->signatureAlgorithm.parameters.sha256WithRSAEncryption,
     (uchar *)"", 0);
   char *msg = signCMS(&roa, argv[2], 0);
   if (msg)
