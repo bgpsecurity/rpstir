@@ -3,7 +3,7 @@
 cd $RPKI_ROOT
 
 # If loader is not running, start it
-if [ -z "$(pgrep -u $USER rcli.sh)" ]; then
+if [ -z "$(pgrep -u $USER loader.sh)" ]; then
     run_scripts/loader.sh &
     sleep 1
 fi
