@@ -9,7 +9,7 @@ mkdir -p LOGS
 run_scripts/initDB.sh
 
 # Start validator component in separate window
-xterm -e run_scripts/loader.sh &
+run_scripts/loader.sh &
 sleep 1
 
 # Out-of-band initialization of trust anchor

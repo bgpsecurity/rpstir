@@ -3,8 +3,8 @@
 cd $RPKI_ROOT
 
 # If loader is not running, start it
-if [ -z "$(pgrep -u demo loader.sh)" ]; then
-    xterm -e run_scripts/loader.sh &
+if [ -z "$(pgrep -u $USER rcli.sh)" ]; then
+    run_scripts/loader.sh &
     sleep 1
 fi
 
@@ -15,9 +15,9 @@ run_scripts/garbage.sh
 proto/chaser -f initial_rsync.config
 
 # Update the data for the rtr-server
-run_scripts/rtrUpdate.sh
+rtr/rpstir-rtr-update run_scripts/sampleQuerySpecs
 
 # If rtr-server is not running, run it
-if [ -z "$(pgrep -u demo rpstir-rtrd.sh)" ]; then
-    run_scripts/rtrServer.sh &
+if [ -z "$(pgrep -u $USER rpstir-rtrd.sh)" ]; then
+    rtr/rpstir-rtrd &
 fi
