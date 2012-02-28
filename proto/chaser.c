@@ -60,20 +60,16 @@ static int is_subsumed(const char *str1, const char *str2) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 static void free_uris() {
+    size_t i;
+
     if (!uris)
         return;
 
-    while (num_uris) {
-        if (uris[num_uris]) {
-            free(uris[num_uris]);
-        }
-        uris[num_uris] = NULL;
-        num_uris--;
+    for (i = 0; i < num_uris; i++) {
+        free(uris[i]);
+        uris[i] = NULL;
     }
-    if (uris[num_uris]) {
-        free(uris[num_uris]);
-    }
-    uris[num_uris] = NULL;
+    num_uris = 0;
 
     free(uris);
 }
@@ -608,7 +604,7 @@ int main(int argc, char **argv) {
 
     OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
     (void) setbuf(stdout, NULL);
-    uris = calloc(sizeof(char *), uris_max_sz);
+    uris = malloc(sizeof(char *) * uris_max_sz);
     if (!uris) {
         LOG(LOG_ERR, "Could not allocate memory for URI list.");
         return -1;
