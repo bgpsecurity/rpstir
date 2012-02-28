@@ -1,18 +1,6 @@
 /**
  * This is the chaser program, which tracks down all the URIs of all the
  * authorities that have signed certs.  It outputs the URIs to stdout.
- *
- * yet to do:
- * - check all return values (handle_uri_string).  free memory before any quit
- * - consider OOM killer in notes about `man realloc`
- *
- * test cases:
- * - is x subsumed by y?
- * - properly distinguish crldps based on next_upd?
- * - correct output for cmd-line combinations?
- * - can crafted bad uri crash the program?  or get thru?
- * - start from very small array size to test realloc of uris
- * - add multiple uris that are semicolon delimited on a single line
  */
 
 #include <ctype.h>
@@ -43,7 +31,6 @@ static size_t  num_uris = 0;
 static size_t const TS_LEN = 20;  // "0000-00-00 00:00:00" plus '\0'
 static char *timestamp_curr;
 static char const * const  RSYNC_SCHEME = "rsync://";
-static int remove_nonprintables = 0;
 
 
 /**=============================================================================
@@ -90,7 +77,6 @@ static void free_uris() {
 
     free(uris);
 }
-
 
 /**=============================================================================
  * rsync://foo.com/../ should be removed
@@ -179,17 +165,15 @@ static int check_uri_chars(char *str) {
     char this;
     int ret;
 
-    // remove nonprintables
-    if (remove_nonprintables) {
-        for (i = 0, j = 0; i < strlen(str); i++) {
-            if (isprint(str[i])) {
-                str[j] = str[i];
-                j++;
-            } else {
-                modified = 1;
-            }
+    // if bad char, drop and warn
+    char bad_chars[] = " \"#$<>?\\^`{|}";
+    char ch;
+    for (i = 0; i < strlen(str); i++) {
+        ch = str[i];
+        if (' ' > ch  ||  '~' < ch  ||  NULL != strchr(bad_chars, ch)) {
+            LOG(LOG_WARNING, "unallowed char(s) found in URI");
+            return -2;
         }
-        str[j] = str[i];
     }
 
     // Check for "..".  Collapse "//" to "/".  Collapse "/./" to "/".
@@ -226,7 +210,7 @@ static int check_uri_chars(char *str) {
     }
 
     if (modified)
-        return 1;
+        return -1;
 
     return 0;
 }
@@ -257,7 +241,91 @@ static int append_uri(char const *in) {
 }
 
 /**=============================================================================
+ * Warn if no path segments.
+ * If module only, use trailing slash, else no trailing slash.
+ *
+ * @note Call this after instances of "//" have been collapsed.
+ *
+ * @note Might modify parameter.
+ * @param in is of the general form "authority/module/path"
+ *
+ * @ret 0 if input was not modified
+ *     -1 if input was modified, but remains valid
+ *     -2 if input was invalid
+ *     -3 if input has no module
+ *     -4 if input becomes too long with added '/'
+------------------------------------------------------------------------------*/
+static int check_trailing_slash(char *in) {
+    size_t len = strlen(in);
+    size_t i;
+    size_t end_of_authority = 0;
+    size_t end_of_module = 0;
+
+    // find end of authority
+    i = 0;
+    while (i < len) {
+        if ('/' == in[i]) {
+            end_of_authority = i;
+            break;
+        } else
+            i++;
+    }
+    if (0 == end_of_authority)
+        return -2;
+
+    // find end of module
+    i += 2;
+    while (i < len) {
+        if ('/' == in[i]) {
+            end_of_module = i;
+            break;
+        } else
+            i++;
+    }
+
+    // if no '/' found to terminate authority section
+    if (!end_of_authority) {
+        if (len + strlen(RSYNC_SCHEME) + 1 > DB_URI_LEN)  // +1 for the added '/'
+            return -4;
+        in[len] = '/';
+        in[len + 1] = '\0';
+        return -1;
+    }
+
+    // if no '/' found to terminate module section
+    if (!end_of_module) {
+        if (end_of_authority == len - 1)  // no module section
+            return -3;
+        if ('/' != in[len - 1]) {
+            if (len + strlen(RSYNC_SCHEME) + 1 > DB_URI_LEN)  // +1 for the added '/'
+                return -4;
+            in[len] = '/';
+            in[len + 1] = '\0';
+            return -1;
+        }
+    }
+
+    // if uri ends with "module/"
+    if (end_of_module == len - 1)
+        return 0;
+
+    // if path does not end with '/'
+    if ('/' != in[len - 1])
+        return 0;
+
+    // path ends with '/'
+    while ('/' == in[len - 1]) {
+        in[len - 1] = '\0';
+        len = strlen(in);
+    }
+
+    return -1;
+}
+
+/**=============================================================================
  * @note caller frees param "in"
+ *
+ * TODO:  unit test for max_length needs to change when DB_URI_LEN changes.  Fix that.
 ------------------------------------------------------------------------------*/
 static int handle_uri_string(char const *in) {
     size_t const DST_SZ = DB_URI_LEN + 1;
@@ -274,7 +342,7 @@ static int handle_uri_string(char const *in) {
         return OUT_OF_MEMORY;
     ptr = section;
 
-    // TODO:  Using ; as delimiter is planned to change when the db schema is updated.
+    // TODO:  Using ';' as delimiter is planned to change when the db schema is updated.
     // split by semicolons
     section[0] = '\0';
     for (i = 0, j = 0; i < len_in + 1; i++) {
@@ -293,20 +361,37 @@ static int handle_uri_string(char const *in) {
             section += len_scheme;
         } else {
             scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
-            LOG(LOG_DEBUG, "dropping non-rsync uri:  \"%s\"", scrubbed_str);
+            LOG(LOG_WARNING, "dropping non-rsync uri:  \"%s\"", scrubbed_str);
             goto get_next_section;
         }
 
-        scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
         // remove some special characters
+        scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
         ret = check_uri_chars(section);
         if (-1 == ret) {
             scrub_for_print(scrubbed_str2, section, DST_SZ, NULL, "");
             LOG(LOG_WARNING, "modified rsync uri, replaced:  \"%s\" with \"%s\"",
                     scrubbed_str, scrubbed_str2);
-            goto get_next_section;
         } else if (-2 == ret) {
-            LOG(LOG_WARNING, "possible invalid rsync uri, dropping:  \"%s\"", scrubbed_str);
+            LOG(LOG_WARNING, "invalid rsync uri, dropping:  \"%s\"", scrubbed_str);
+            goto get_next_section;
+        }
+
+        // handle trailing '/'
+        scrub_for_print(scrubbed_str, section, DST_SZ, NULL, "");
+        ret = check_trailing_slash(section);
+        if (-1 == ret) {
+            scrub_for_print(scrubbed_str2, section, DST_SZ, NULL, "");
+            LOG(LOG_WARNING, "modified rsync uri, replaced:  \"%s\" with \"%s\"",
+                    scrubbed_str, scrubbed_str2);
+        } else if (-2 == ret) {
+            LOG(LOG_WARNING, "invalid rsync uri, dropping:  \"%s\"", scrubbed_str);
+            goto get_next_section;
+        } else if (-3 == ret) {
+            LOG(LOG_WARNING, "invalid rsync uri (no module):  \"%s\"", scrubbed_str);
+        } else if (-4 == ret) {
+            snprintf(scrubbed_str2, 50, "%s", scrubbed_str);
+            LOG(LOG_WARNING, "uri too long, dropping:  %s <truncated>", scrubbed_str2);
             goto get_next_section;
         }
 
@@ -342,19 +427,17 @@ static int query_aia(dbconn *db) {
     int64_t num_results;
     int64_t i;
     int ret;
-//    size_t const DST_SZ = DB_URI_LEN + 1;
-//    char scrubbed_str[DST_SZ];
 
     num_results = db_chaser_read_aia(db, &results, &num_malloced,
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
-    if (num_results == -1) {
+    if (-1 == num_results) {
         return -1;
+    } else if (OUT_OF_MEMORY == num_results) {
+        return OUT_OF_MEMORY;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
         for (i = 0; i < num_results; i++) {
-//            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
-//            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -377,19 +460,17 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
     int64_t num_results;
     int64_t i;
     int ret;
-//    size_t const DST_SZ = DB_URI_LEN + 1;
-//    char scrubbed_str[DST_SZ];
 
     num_results = db_chaser_read_crldp(db, &results, &num_malloced, timestamp_curr,
             restrict_by_next_update, num_seconds);
-    if (num_results == -1) {
+    if (-1 == num_results) {
         return -1;
+    } else if (OUT_OF_MEMORY == num_results) {
+        return OUT_OF_MEMORY;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
         for (i = 0; i < num_results; i++) {
-//            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
-//            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -412,19 +493,17 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
     int64_t num_results;
     int64_t i;
     int ret;
-//    size_t const DST_SZ = DB_URI_LEN + 1;
-//    char scrubbed_str[DST_SZ];
 
     num_results = db_chaser_read_sia(db, &results, &num_malloced,
             chase_not_yet_validated, SCM_FLAG_VALIDATED);
-    if (num_results == -1) {
+    if (-1 == num_results) {
         return -1;
+    } else if (OUT_OF_MEMORY == num_results) {
+        return OUT_OF_MEMORY;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
         for (i = 0; i < num_results; i++) {
-//            scrub_for_print(scrubbed_str, results[i], DST_SZ, NULL, "");
-//            LOG(LOG_DEBUG, "%s\n", scrubbed_str);
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
@@ -458,12 +537,18 @@ static int query_read_timestamp(dbconn *db) {
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
+static int compare_str_p(const void *p1, const void *p2) {
+    return strcmp(*(char* const *) p1, *(char* const *) p2);
+}
+
+/**=============================================================================
+------------------------------------------------------------------------------*/
 static int printUsage() {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  -a           chase AIAs  (default:  don't chase AIAs)\n");
     fprintf(stderr, "  -d seconds   chase CRLs where 'next update < seconds'  (default:  chase all CRLs)\n");
     fprintf(stderr, "  -f filename  use filename instead of 'additional_rsync_uris.config'\n");
-    fprintf(stderr, "  -p           remove nonprintable chars from uris  (default:  don't remove)\n");
+    fprintf(stderr, "  -s           delimit output with newlines  (default:  null byte)\n");
     fprintf(stderr, "  -t           for testing, don't access the database\n");
     fprintf(stderr, "  -y           chase not-yet-validated  (default:  only chase validated)\n");
     fprintf(stderr, "  -h           this listing\n");
@@ -471,12 +556,8 @@ static int printUsage() {
 }
 
 /**=============================================================================
-------------------------------------------------------------------------------*/
-static int compare_str_p(const void *p1, const void *p2) {
-    return strcmp(*(char* const *) p1, *(char* const *) p2);
-}
-
-/**=============================================================================
+ * @ ret 0 on success
+ *      -1 on failure
 ------------------------------------------------------------------------------*/
 int main(int argc, char **argv) {
     int    chase_aia = 0;
@@ -484,6 +565,7 @@ int main(int argc, char **argv) {
     size_t num_seconds = 0;
     uint   chase_not_yet_validated = 0;
     int    skip_database = 0;
+    int ret;
 
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
@@ -497,7 +579,7 @@ int main(int argc, char **argv) {
 
     // parse the command-line flags
     int ch;
-    while ((ch = getopt(argc, argv, "ad:f:tyh")) != -1) {
+    while ((ch = getopt(argc, argv, "ad:f:styh")) != -1) {
         switch (ch) {
         case 'a':
             chase_aia = 1;
@@ -509,8 +591,8 @@ int main(int argc, char **argv) {
         case 'f':
             config_file = optarg;
             break;
-        case 'p':
-            remove_nonprintables = 1;
+        case 's':
+            output_delimiter = '\n';
             break;
         case 't':
             skip_database = 1;
@@ -529,7 +611,7 @@ int main(int argc, char **argv) {
     uris = calloc(sizeof(char *), uris_max_sz);
     if (!uris) {
         LOG(LOG_ERR, "Could not allocate memory for URI list.");
-        return -2;
+        return -1;
     }
 
     // read uris from file
@@ -551,17 +633,15 @@ int main(int argc, char **argv) {
             LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
             continue;
         }
-        if (handle_uri_string(msg)) {
-            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
-            LOG(LOG_WARNING, "did not load uri from file:  %s", scrubbed_str);
-        }
+        if (OUT_OF_MEMORY == handle_uri_string(msg))
+            return -1;
     }
     fclose(fp);
     LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris, config_file);
     cant_open_file:
 
     if (skip_database) {
-        LOG(LOG_WARNING, "Test mode - not looking in the database for rsync uris...");
+        LOG(LOG_WARNING, "Test mode - not looking in the database for rsync uris");
         goto skip_database_for_testing;
     }
     LOG(LOG_DEBUG, "Searching database for rsync uris...");
@@ -586,14 +666,27 @@ int main(int argc, char **argv) {
     int db_ok = 1;
     if (query_read_timestamp(db))
         db_ok = 0;
-    if (db_ok  &&  query_crldp(db, restrict_crls_by_next_update, num_seconds))
-        db_ok = 0;
-    if (db_ok  &&  chase_aia) {
-        if (query_aia(db))
+    if (db_ok) {
+        ret = query_crldp(db, restrict_crls_by_next_update, num_seconds);
+        if (OUT_OF_MEMORY == ret)
+            return -1;
+        if (-1 == ret)
             db_ok = 0;
     }
-    if (db_ok  &&  query_sia(db, chase_not_yet_validated))
-        db_ok = 0;
+    if (db_ok  &&  chase_aia) {
+        ret = query_aia(db);
+        if (OUT_OF_MEMORY == ret)
+            return -1;
+        if (-1 == ret)
+            db_ok = 0;
+    }
+    if (db_ok) {
+        ret = query_sia(db, chase_not_yet_validated);
+        if (OUT_OF_MEMORY == ret)
+            return -1;
+        if (-1 == ret)
+            db_ok = 0;
+    }
     // cleanup
     if (timestamp_curr) free(timestamp_curr);
     if (db != NULL) {
@@ -601,6 +694,7 @@ int main(int argc, char **argv) {
         db_close();
     }
     if (!db_ok) {
+        LOG(LOG_ERR, "error attempting to read rsync uris from db");
         return -1;
     }
     skip_database_for_testing:
@@ -648,6 +742,7 @@ int main(int argc, char **argv) {
     num_uris = new_max;
 
     // print to stdout
+    // for n URIs, use n delimiters
     LOG(LOG_DEBUG, "outputting %zu rsync uris", num_uris);
     for (i = 0; i < num_uris; i++) {
         fprintf(stdout, "%s%s", RSYNC_SCHEME, uris[i]);
