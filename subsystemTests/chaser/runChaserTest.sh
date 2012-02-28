@@ -44,49 +44,51 @@ stop_test () {
 }
 
 #===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -t -f input.subsume"
+CMD="$RPKI_ROOT/proto/chaser -s -t -f input.subsume"
 add_valgrind
 start_test subsume
 $CMD > response.log
 stop_test subsume
 
 #===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -t -f input.max_length"
+CMD="$RPKI_ROOT/proto/chaser -s -t -f input.max_length"
 add_valgrind
 start_test max_length
 $CMD > response.log
 stop_test max_length
 
 #===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_slash_dot"
+CMD="$RPKI_ROOT/proto/chaser -s -t -f input.collapse_slash_dot"
 add_valgrind
 start_test collapse_slash_dot
 $CMD > response.log
 stop_test collapse_slash_dot
 
 #===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_dots"
+CMD="$RPKI_ROOT/proto/chaser -s -t -f input.collapse_dots"
 add_valgrind
 start_test collapse_dots
 $CMD > response.log
 stop_test collapse_dots
 
 #===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -t -f input.collapse_slashes"
+CMD="$RPKI_ROOT/proto/chaser -s -t -f input.collapse_slashes"
 add_valgrind
 start_test collapse_slashes
 $CMD > response.log
 stop_test collapse_slashes
 
 #===============================================================================
+CMD="$RPKI_ROOT/proto/chaser -s -t -f input.bad_chars"
+add_valgrind
+start_test bad_chars
+$CMD > response.log
+stop_test bad_chars
+
+#===============================================================================
 #    More tests
 #-------------------------------------------------------------------------------
-: <<'END'
-Properly distinguish crldps based on next_upd?
-
-Correct output for cmd-line combinations?
-
-Test limit of realloc of uris[].
-
-END
+# Properly distinguish crldps based on next_upd?
+# Correct output for cmd-line combinations?
+# Test limit of realloc of uris[].
 
