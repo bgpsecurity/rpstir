@@ -283,15 +283,6 @@ static int check_trailing_slash(char *in) {
             i++;
     }
 
-    // if no '/' found to terminate authority section
-    if (!end_of_authority) {
-        if (len + strlen(RSYNC_SCHEME) + 1 > DB_URI_LEN)  // +1 for the added '/'
-            return -4;
-        in[len] = '/';
-        in[len + 1] = '\0';
-        return -1;
-    }
-
     // if no '/' found to terminate module section
     if (!end_of_module) {
         if (end_of_authority == len - 1)  // no module section
@@ -314,10 +305,8 @@ static int check_trailing_slash(char *in) {
         return 0;
 
     // path ends with '/'
-    while ('/' == in[len - 1]) {
+    if ('/' == in[len - 1])
         in[len - 1] = '\0';
-        len = strlen(in);
-    }
 
     return -1;
 }
