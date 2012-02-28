@@ -30,7 +30,7 @@ static void adjust_time(struct casn *fromp, struct casn *tillp)
   read_casn_time(fromp, &begt);
   read_casn_time(tillp, &till);
   till -= begt;
-  time((time_t *)&begt);
+  begt = time(NULL);
   till += begt;
   write_casn_time(fromp, begt);
   write_casn_time(tillp, till);
