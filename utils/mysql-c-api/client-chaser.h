@@ -9,7 +9,7 @@
 
 #include "connect.h"
 
-#define OUT_OF_MEMORY -2
+#define ERR_CHASER_OOM -2
 #define DB_URI_LEN 1024
 
 

@@ -221,7 +221,7 @@ static int append_uri(char const *in) {
         uris = (char **) realloc(uris, uris_max_sz * sizeof(char *));
         if (!uris) {
             LOG(LOG_ERR, "Could not realloc for uris");
-            return OUT_OF_MEMORY;
+            return ERR_CHASER_OOM;
         }
     }
 
@@ -229,7 +229,7 @@ static int append_uri(char const *in) {
     uris[num_uris] = strdup(in);
     if (!uris[num_uris]) {
         LOG(LOG_ERR, "Could not alloc for uri");
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
     num_uris++;
 
@@ -335,7 +335,7 @@ static int handle_uri_string(char const *in) {
 
     section = (char*) malloc(sizeof(char) * (DB_URI_LEN + 1));
     if (!section)
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     ptr = section;
 
     // TODO:  Using ';' as delimiter is planned to change when the db schema is updated.
@@ -392,9 +392,9 @@ static int handle_uri_string(char const *in) {
         }
 
         // append to uris[]
-        if (OUT_OF_MEMORY == append_uri(section)) {
+        if (ERR_CHASER_OOM == append_uri(section)) {
             if (ptr)  free(ptr);
-            return OUT_OF_MEMORY;
+            return ERR_CHASER_OOM;
         }
 
         get_next_section:
@@ -428,8 +428,8 @@ static int query_aia(dbconn *db) {
             SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
     if (-1 == num_results) {
         return -1;
-    } else if (OUT_OF_MEMORY == num_results) {
-        return OUT_OF_MEMORY;
+    } else if (ERR_CHASER_OOM == num_results) {
+        return ERR_CHASER_OOM;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
@@ -437,7 +437,7 @@ static int query_aia(dbconn *db) {
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
-            if (OUT_OF_MEMORY == ret) {
+            if (ERR_CHASER_OOM == ret) {
                 if (results) free(results);
                 return ret;
             }
@@ -461,8 +461,8 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
             restrict_by_next_update, num_seconds);
     if (-1 == num_results) {
         return -1;
-    } else if (OUT_OF_MEMORY == num_results) {
-        return OUT_OF_MEMORY;
+    } else if (ERR_CHASER_OOM == num_results) {
+        return ERR_CHASER_OOM;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
@@ -470,7 +470,7 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
-            if (OUT_OF_MEMORY == ret) {
+            if (ERR_CHASER_OOM == ret) {
                 if (results) free(results);
                 return ret;
             }
@@ -494,8 +494,8 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
             chase_not_yet_validated, SCM_FLAG_VALIDATED);
     if (-1 == num_results) {
         return -1;
-    } else if (OUT_OF_MEMORY == num_results) {
-        return OUT_OF_MEMORY;
+    } else if (ERR_CHASER_OOM == num_results) {
+        return ERR_CHASER_OOM;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
@@ -503,7 +503,7 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
-            if (OUT_OF_MEMORY == ret) {
+            if (ERR_CHASER_OOM == ret) {
                 if (results) free(results);
                 return ret;
             }
@@ -629,7 +629,7 @@ int main(int argc, char **argv) {
             LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
             continue;
         }
-        if (OUT_OF_MEMORY == handle_uri_string(msg))
+        if (ERR_CHASER_OOM == handle_uri_string(msg))
             return -1;
     }
     fclose(fp);
@@ -664,21 +664,21 @@ int main(int argc, char **argv) {
         db_ok = 0;
     if (db_ok) {
         ret = query_crldp(db, restrict_crls_by_next_update, num_seconds);
-        if (OUT_OF_MEMORY == ret)
+        if (ERR_CHASER_OOM == ret)
             return -1;
         if (-1 == ret)
             db_ok = 0;
     }
     if (db_ok  &&  chase_aia) {
         ret = query_aia(db);
-        if (OUT_OF_MEMORY == ret)
+        if (ERR_CHASER_OOM == ret)
             return -1;
         if (-1 == ret)
             db_ok = 0;
     }
     if (db_ok) {
         ret = query_sia(db, chase_not_yet_validated);
-        if (OUT_OF_MEMORY == ret)
+        if (ERR_CHASER_OOM == ret)
             return -1;
         if (-1 == ret)
             db_ok = 0;

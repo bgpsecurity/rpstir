@@ -162,7 +162,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
 
     uint64_t i;
@@ -191,7 +191,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
-                return OUT_OF_MEMORY;
+                return ERR_CHASER_OOM;
             }
             memcpy(tmp, aia, length);
             *(tmp + length) = '\0';
@@ -288,7 +288,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
 
     uint64_t i;
@@ -317,7 +317,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
-                return OUT_OF_MEMORY;
+                return ERR_CHASER_OOM;
             }
             memcpy(tmp, crldp, length);
             *(tmp + length) = '\0';
@@ -407,7 +407,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
 
     uint64_t i;
@@ -436,7 +436,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
-                return OUT_OF_MEMORY;
+                return ERR_CHASER_OOM;
             }
             memcpy(tmp, sia, length);
             *(tmp + length) = '\0';
