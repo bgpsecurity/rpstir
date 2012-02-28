@@ -28,7 +28,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	while read -r -d "" URI; do
 		if printf "%s" "$URI" | grep -q "$BAD_URI_CHARS"; then
 			echo >&2 "Discarding URI: $URI"
-		elif test -n "$URI"
+		elif test -n "$URI"; then
 			if test $DONE_URI -eq 0; then
 				DONE_URI=1
 			else
