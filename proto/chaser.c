@@ -252,8 +252,7 @@ static int append_uri(char const *in) {
  * @ret 0 if input was not modified
  *     -1 if input was modified, but remains valid
  *     -2 if input was invalid
- *     -3 if input has no module
- *     -4 if input becomes too long with added '/'
+ *     -3 if input becomes too long with added '/'
 ------------------------------------------------------------------------------*/
 static int check_trailing_slash(char *in) {
     size_t len = strlen(in);
@@ -286,10 +285,10 @@ static int check_trailing_slash(char *in) {
     // if no '/' found to terminate module section
     if (!end_of_module) {
         if (end_of_authority == len - 1)  // no module section
-            return -3;
+            return -2;
         if ('/' != in[len - 1]) {
             if (len + strlen(RSYNC_SCHEME) + 1 > DB_URI_LEN)  // +1 for the added '/'
-                return -4;
+                return -3;
             in[len] = '/';
             in[len + 1] = '\0';
             return -1;
@@ -377,8 +376,6 @@ static int handle_uri_string(char const *in) {
             LOG(LOG_WARNING, "invalid rsync uri, dropping:  \"%s\"", scrubbed_str);
             goto get_next_section;
         } else if (-3 == ret) {
-            LOG(LOG_WARNING, "invalid rsync uri (no module):  \"%s\"", scrubbed_str);
-        } else if (-4 == ret) {
             snprintf(scrubbed_str2, 50, "%s", scrubbed_str);
             LOG(LOG_WARNING, "uri too long, dropping:  %s <truncated>", scrubbed_str2);
             goto get_next_section;
