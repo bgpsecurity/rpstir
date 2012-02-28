@@ -168,7 +168,7 @@ static int check_uri_chars(char *str) {
     // if bad char, drop and warn
     char bad_chars[] = " \"#$<>?\\^`{|}";
     char ch;
-    for (i = 0; i < strlen(str); i++) {
+    for (i = 0; '\0' != str[i]; i++) {
         ch = str[i];
         if (' ' > ch  ||  '~' < ch  ||  NULL != strchr(bad_chars, ch)) {
             LOG(LOG_WARNING, "unallowed char(s) found in URI");
@@ -178,7 +178,7 @@ static int check_uri_chars(char *str) {
 
     // Check for "..".  Collapse "//" to "/".  Collapse "/./" to "/".
     prev = str[0];
-    for (i = 1, j = 1; i < strlen(str); i++) {
+    for (i = 1, j = 1; '\0' != str[i]; i++) {
         if ('/' == (this = str[i])  &&  '/' == prev) {
             // neither copy the char, nor increment j
             modified = 1;
