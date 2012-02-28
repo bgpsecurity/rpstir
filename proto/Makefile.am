@@ -4,13 +4,15 @@
 AM_CFLAGS= -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
 	-DHAVE_LONG_LONG
 
+chaser_CFLAGS = $(AM_CFLAGS) -Wextra -Werror
+
 AM_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
 
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../roa-lib -I../roa-utils -I../cg/asn \
 	-I../cg/casn -I../utils -I. 
 
 LDADD = librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
-	../utils/libutils.a
+	../utils/libutils.a  ../utils/mysql-c-api/libmysqlcapi.a
 
 lib_rpki_headers = scm.h scmmain.h diru.h err.h scmf.h sqhl.h myssl.h rpwork.h \
 	querySupport.h conversion.h ../utils/logutils.h

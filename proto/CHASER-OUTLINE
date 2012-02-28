@@ -1,0 +1,63 @@
+================================================================================
+    Introduction
+--------------------------------------------------------------------------------
+This document is a portion of a Software Design Document for RPSTIR, pertaining
+to the "chaser".  Chaser collects publication points, specifically rsync URIs,
+for use in downloading the Repository Objects of the RPKI.
+
+
+================================================================================
+    Top-level requirements
+--------------------------------------------------------------------------------
+T1. 
+
+
+================================================================================
+    Derived requirements
+--------------------------------------------------------------------------------
+D1. Perform a top-down walk of the distributed repository structure, as
+    suggested in draft-ietf-sidr-repos-struct.
+
+
+================================================================================
+    Design Overview
+--------------------------------------------------------------------------------
+Chaser...
+
+Currently (Jan, 2012), chaser takes any input string and separates it into
+multiple input strings, delimited by the semicolon character.  It then processes
+each separate string as a potential rsync URI.  This is because the database
+currently stores multiple URIs in a single field, delimited by a semicolon.  The
+database is being redesigned and will store each URI separately.  Then, chaser
+will be changed to no longer separate input strings at semicolons.
+
+Chaser does not remove or escape character combinations from the URIs that may
+present a security risk when used on a shell command line.  That input
+sanitization is left to the program that uses chaser's output.
+
+
+================================================================================
+    Interface - external
+--------------------------------------------------------------------------------
+Chaser loads from file, additional_rsync_uris.config.
+
+The program that calls chaser sets flags to determine:
+  - whether to search bottom-to-top
+  - whether to process URIs from not-yet-validated objects
+  - what input file to use
+  - whether to limit CRLs by date
+  - whether to remove non-printable characters from URIs
+
+Chaser prints rsync uris to standard output, separated by null characters.
+
+
+================================================================================
+    Interface - internal
+--------------------------------------------------------------------------------
+The main internal interface is between the chaser logic and access to the
+database.  The chaser logic is in chaser.c, which uses files from
+$RPKI_ROOT/util/mysql-c-api/ to access the database.  Of those files,
+prep-stmt.c contains the prepared statements used to access the database, and
+client-chaser.c contains the functions that use the prepared statements and
+handle their results.
+
