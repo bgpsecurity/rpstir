@@ -116,6 +116,10 @@ static int remove_dot_dot(char *s) {
         if (!found_dots)
             break;
 
+        // protect i in for loop from being very large
+        if (1 > dots_lo)  // authority section of uri must have some chars
+            return -2;
+
         // find preceding dir
         found_slash = 0;
         for (i = dots_lo - 1; i > 0; i--) {
