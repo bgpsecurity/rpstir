@@ -415,7 +415,7 @@ static int query_aia(dbconn *db) {
     int ret;
 
     num_results = db_chaser_read_aia(db, &results, &num_malloced,
-            SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
+            SCM_FLAG_NOCHAIN, SCM_FLAG_VALIDATED);
     if (-1 == num_results) {
         return -1;
     } else if (ERR_CHASER_OOM == num_results) {

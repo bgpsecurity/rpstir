@@ -28,11 +28,16 @@ int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len);
 /**=============================================================================
  * @brief Get rsync URIs from AIAs from the db.
  *
+ * The parameters flag_no_chain and flag_validated are not intended to be set
+ * to a value by the user before calling.  They are set as macro definitions
+ * in the header files scm.h, scmf.h, and sqhl.h.  Using them as parameters is
+ * merely a mechanism to pass those values from the header files to the db.
+ *
  * @param conn an opaque pointer to a db connection
  * @param[out] results The URI strings.  Caller frees these.
  * @param[out] num_malloced number of pointers malloced in results
- * @param flag_no_chain value of the SCM_FLAG_VALIDATED macro
- * @param flag_validated value of the SCM_FLAG_NOCHAIN macro
+ * @param flag_no_chain value of the SCM_FLAG_NOCHAIN macro
+ * @param flag_validated value of the SCM_FLAG_VALIDATED macro
  *
  * @ret number of results filled on success
  *     -1 on failure
@@ -62,6 +67,15 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 
 /**=============================================================================
  * @brief Get rsync URIs from SIAs from the db.
+ *
+ * The parameter validated_flag is not intended to be set
+ * to a value by the user before calling.  It is set as macro definition
+ * in the header files scm.h, scmf.h, and sqhl.h.  Using it as a parameter is
+ * merely a mechanism to pass that value from the header files to the db.
+ *
+ * On the other hand, the parameter chase_not_yet_validated _is_ intended to
+ * be set to a value by the caller in order to influence the behavior of this
+ * function.
  *
  * @param conn an opaque pointer to a db connection
  * @param[out] results The URI strings.  Caller frees these.
