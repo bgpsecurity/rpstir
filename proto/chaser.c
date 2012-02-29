@@ -557,6 +557,7 @@ int main(int argc, char **argv) {
     uint   chase_not_yet_validated = 0;
     int    skip_database = 0;
     int ret;
+    int consumed;
 
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
@@ -577,7 +578,12 @@ int main(int argc, char **argv) {
             break;
         case 'd':
             restrict_crls_by_next_update = 1;
-            num_seconds = (size_t) strtoul(optarg, NULL, 10);
+            if (sscanf(optarg, "%zu%n", &num_seconds, &consumed) < 1 ||
+                    (size_t)consumed < strlen(optarg)) {
+                fprintf(stderr, "Invalid number of seconds: %s\n", optarg);
+                printUsage();
+                return EXIT_FAILURE;
+            }
             break;
         case 'f':
             config_file = optarg;
