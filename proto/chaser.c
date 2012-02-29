@@ -424,7 +424,10 @@ static int query_aia(dbconn *db) {
             free(results[i]);
             results[i] = NULL;
             if (ERR_CHASER_OOM == ret) {
-                if (results) free(results);
+                for (++i; i < num_results; ++i) {
+                    free(results[i]);
+                }
+                free(results);
                 return ret;
             }
         }
@@ -457,7 +460,10 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
             free(results[i]);
             results[i] = NULL;
             if (ERR_CHASER_OOM == ret) {
-                if (results) free(results);
+                for (++i; i < num_results; ++i) {
+                    free(results[i]);
+                }
+                free(results);
                 return ret;
             }
         }
@@ -490,7 +496,10 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
             free(results[i]);
             results[i] = NULL;
             if (ERR_CHASER_OOM == ret) {
-                if (results) free(results);
+                for (++i; i < num_results; ++i) {
+                    free(results[i]);
+                }
+                free(results);
                 return ret;
             }
         }
