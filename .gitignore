@@ -10,6 +10,7 @@ aclocal.m4
 autom4te.cache/
 *.deps
 *.log
+chaser_rsync.config
 conf*.dir/
 config.status
 configure
