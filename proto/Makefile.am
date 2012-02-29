@@ -15,7 +15,7 @@ LDADD = librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
 	../utils/libutils.a  ../utils/mysql-c-api/libmysqlcapi.a
 
 lib_rpki_headers = scm.h scmmain.h diru.h err.h scmf.h sqhl.h myssl.h rpwork.h \
-	querySupport.h conversion.h ../utils/logutils.h
+	querySupport.h conversion.h ../utils/logutils.h db_constants.h
 
 lib_rpki_files = $(lib_rpki_headers) \
 		initscm.c myssl.c sqhl.c sqcon.c diru.c err.c \

@@ -13,9 +13,7 @@
 #include "db-internal.h"
 #include "logging.h"
 #include "prep-stmt.h"
-#include "scm.h"  // for SCM_FLAG_FOO
-#include "scmf.h"  // for SCM_FLAG_FOO
-#include "sqhl.h"  // for SCM_FLAG_FOO
+#include "db_constants.h"  // for SCM_FLAG_FOO
 #include "util.h"
 
 /**=============================================================================
