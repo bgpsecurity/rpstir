@@ -286,6 +286,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     if (num_rows == 0) {
         LOG(LOG_DEBUG, "got zero results");
         mysql_stmt_free_result(stmt);
+        *results = NULL;
         return 0;
     }
 
