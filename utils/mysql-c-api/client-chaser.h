@@ -16,7 +16,7 @@
  * @brief Read current time from the db.
  *
  * @param conn an opaque pointer to a db connection
- * @param[out] curr ahe current time.  Caller handles memory
+ * @param[out] curr the current time.  Caller handles memory
  * @param curr_len size of curr
  *
  * @ret 0 on success
