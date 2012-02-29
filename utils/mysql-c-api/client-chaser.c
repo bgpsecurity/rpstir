@@ -360,7 +360,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     uint validated_flag = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
-    int flag;
+    uint flag;
     int ret;
 
     if (chase_not_yet_validated)
