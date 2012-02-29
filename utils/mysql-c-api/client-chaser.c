@@ -235,7 +235,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
             &curr_ts.hour,
             &curr_ts.minute,
             &curr_ts.second,
-            &consumed) < 6 || consumed < strlen(ts)) {
+            &consumed) < 6 || (size_t)consumed < strlen(ts)) {
         LOG(LOG_ERR, "invalid timestamp: %s", ts);
         return -1;
     }
