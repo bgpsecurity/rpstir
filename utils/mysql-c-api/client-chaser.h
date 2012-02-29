@@ -63,7 +63,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
         int64_t *num_malloced, char const *ts,
-        int restrict_by_next_update, size_t seconds);
+        int restrict_by_next_update, uint32_t seconds);
 
 /**=============================================================================
  * @brief Get rsync URIs from SIAs from the db.

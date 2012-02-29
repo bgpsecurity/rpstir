@@ -208,7 +208,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
-        int64_t *num_malloced, char const *ts, int restrict_by_next_update, size_t seconds) {
+        int64_t *num_malloced, char const *ts, int restrict_by_next_update, uint32_t seconds) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_CRLDP];
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
@@ -217,7 +217,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
     // the interval to add, expressed in seconds
-    size_t default_seconds = 60 * 60 * 24 * 365 * 100ul;
+    uint32_t default_seconds = 60 * 60 * 24 * 365 * 100ul;
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
     if (restrict_by_next_update)
         bind_in[0].buffer = &seconds;
