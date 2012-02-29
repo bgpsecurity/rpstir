@@ -15,9 +15,6 @@
 #include "logging.h"
 #include "mysql-c-api/connect.h"
 #include "mysql-c-api/client-chaser.h"
-#include "scm.h"  // for SCM_FLAG_FOO
-#include "scmf.h"  // for SCM_FLAG_FOO
-#include "sqhl.h"  // for SCM_FLAG_FOO
 #include "stringutils.h"
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
@@ -60,20 +57,16 @@ static int is_subsumed(const char *str1, const char *str2) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 static void free_uris() {
+    size_t i;
+
     if (!uris)
         return;
 
-    while (num_uris) {
-        if (uris[num_uris]) {
-            free(uris[num_uris]);
-        }
-        uris[num_uris] = NULL;
-        num_uris--;
+    for (i = 0; i < num_uris; i++) {
+        free(uris[i]);
+        uris[i] = NULL;
     }
-    if (uris[num_uris]) {
-        free(uris[num_uris]);
-    }
-    uris[num_uris] = NULL;
+    num_uris = 0;
 
     free(uris);
 }
@@ -119,6 +112,10 @@ static int remove_dot_dot(char *s) {
 
         if (!found_dots)
             break;
+
+        // protect i in for loop from being very large
+        if (1 > dots_lo)  // authority section of uri must have some chars
+            return -2;
 
         // find preceding dir
         found_slash = 0;
@@ -168,7 +165,7 @@ static int check_uri_chars(char *str) {
     // if bad char, drop and warn
     char bad_chars[] = " \"#$<>?\\^`{|}";
     char ch;
-    for (i = 0; i < strlen(str); i++) {
+    for (i = 0; '\0' != str[i]; i++) {
         ch = str[i];
         if (' ' > ch  ||  '~' < ch  ||  NULL != strchr(bad_chars, ch)) {
             LOG(LOG_WARNING, "unallowed char(s) found in URI");
@@ -178,7 +175,7 @@ static int check_uri_chars(char *str) {
 
     // Check for "..".  Collapse "//" to "/".  Collapse "/./" to "/".
     prev = str[0];
-    for (i = 1, j = 1; i < strlen(str); i++) {
+    for (i = 1, j = 1; '\0' != str[i]; i++) {
         if ('/' == (this = str[i])  &&  '/' == prev) {
             // neither copy the char, nor increment j
             modified = 1;
@@ -225,7 +222,7 @@ static int append_uri(char const *in) {
         uris = (char **) realloc(uris, uris_max_sz * sizeof(char *));
         if (!uris) {
             LOG(LOG_ERR, "Could not realloc for uris");
-            return OUT_OF_MEMORY;
+            return ERR_CHASER_OOM;
         }
     }
 
@@ -233,7 +230,7 @@ static int append_uri(char const *in) {
     uris[num_uris] = strdup(in);
     if (!uris[num_uris]) {
         LOG(LOG_ERR, "Could not alloc for uri");
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
     num_uris++;
 
@@ -252,8 +249,7 @@ static int append_uri(char const *in) {
  * @ret 0 if input was not modified
  *     -1 if input was modified, but remains valid
  *     -2 if input was invalid
- *     -3 if input has no module
- *     -4 if input becomes too long with added '/'
+ *     -3 if input becomes too long with added '/'
 ------------------------------------------------------------------------------*/
 static int check_trailing_slash(char *in) {
     size_t len = strlen(in);
@@ -283,22 +279,13 @@ static int check_trailing_slash(char *in) {
             i++;
     }
 
-    // if no '/' found to terminate authority section
-    if (!end_of_authority) {
-        if (len + strlen(RSYNC_SCHEME) + 1 > DB_URI_LEN)  // +1 for the added '/'
-            return -4;
-        in[len] = '/';
-        in[len + 1] = '\0';
-        return -1;
-    }
-
     // if no '/' found to terminate module section
     if (!end_of_module) {
         if (end_of_authority == len - 1)  // no module section
-            return -3;
+            return -2;
         if ('/' != in[len - 1]) {
             if (len + strlen(RSYNC_SCHEME) + 1 > DB_URI_LEN)  // +1 for the added '/'
-                return -4;
+                return -3;
             in[len] = '/';
             in[len + 1] = '\0';
             return -1;
@@ -314,10 +301,8 @@ static int check_trailing_slash(char *in) {
         return 0;
 
     // path ends with '/'
-    while ('/' == in[len - 1]) {
+    if ('/' == in[len - 1])
         in[len - 1] = '\0';
-        len = strlen(in);
-    }
 
     return -1;
 }
@@ -339,7 +324,7 @@ static int handle_uri_string(char const *in) {
 
     section = (char*) malloc(sizeof(char) * (DB_URI_LEN + 1));
     if (!section)
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     ptr = section;
 
     // TODO:  Using ';' as delimiter is planned to change when the db schema is updated.
@@ -388,17 +373,15 @@ static int handle_uri_string(char const *in) {
             LOG(LOG_WARNING, "invalid rsync uri, dropping:  \"%s\"", scrubbed_str);
             goto get_next_section;
         } else if (-3 == ret) {
-            LOG(LOG_WARNING, "invalid rsync uri (no module):  \"%s\"", scrubbed_str);
-        } else if (-4 == ret) {
             snprintf(scrubbed_str2, 50, "%s", scrubbed_str);
             LOG(LOG_WARNING, "uri too long, dropping:  %s <truncated>", scrubbed_str2);
             goto get_next_section;
         }
 
         // append to uris[]
-        if (OUT_OF_MEMORY == append_uri(section)) {
+        if (ERR_CHASER_OOM == append_uri(section)) {
             if (ptr)  free(ptr);
-            return OUT_OF_MEMORY;
+            return ERR_CHASER_OOM;
         }
 
         get_next_section:
@@ -428,12 +411,11 @@ static int query_aia(dbconn *db) {
     int64_t i;
     int ret;
 
-    num_results = db_chaser_read_aia(db, &results, &num_malloced,
-            SCM_FLAG_VALIDATED, SCM_FLAG_NOCHAIN);
+    num_results = db_chaser_read_aia(db, &results, &num_malloced);
     if (-1 == num_results) {
         return -1;
-    } else if (OUT_OF_MEMORY == num_results) {
-        return OUT_OF_MEMORY;
+    } else if (ERR_CHASER_OOM == num_results) {
+        return ERR_CHASER_OOM;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " aia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
@@ -441,8 +423,11 @@ static int query_aia(dbconn *db) {
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
-            if (OUT_OF_MEMORY == ret) {
-                if (results) free(results);
+            if (ERR_CHASER_OOM == ret) {
+                for (++i; i < num_results; ++i) {
+                    free(results[i]);
+                }
+                free(results);
                 return ret;
             }
         }
@@ -465,8 +450,8 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
             restrict_by_next_update, num_seconds);
     if (-1 == num_results) {
         return -1;
-    } else if (OUT_OF_MEMORY == num_results) {
-        return OUT_OF_MEMORY;
+    } else if (ERR_CHASER_OOM == num_results) {
+        return ERR_CHASER_OOM;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " crldp lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
@@ -474,8 +459,11 @@ static int query_crldp(dbconn *db, int restrict_by_next_update, size_t num_secon
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
-            if (OUT_OF_MEMORY == ret) {
-                if (results) free(results);
+            if (ERR_CHASER_OOM == ret) {
+                for (++i; i < num_results; ++i) {
+                    free(results[i]);
+                }
+                free(results);
                 return ret;
             }
         }
@@ -495,11 +483,11 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
     int ret;
 
     num_results = db_chaser_read_sia(db, &results, &num_malloced,
-            chase_not_yet_validated, SCM_FLAG_VALIDATED);
+            chase_not_yet_validated);
     if (-1 == num_results) {
         return -1;
-    } else if (OUT_OF_MEMORY == num_results) {
-        return OUT_OF_MEMORY;
+    } else if (ERR_CHASER_OOM == num_results) {
+        return ERR_CHASER_OOM;
     } else {
         LOG(LOG_DEBUG, "read %" PRIi64 " sia lines from db;  %" PRIi64 " were null",
                 num_malloced, num_malloced - num_results);
@@ -507,8 +495,11 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
             ret = handle_uri_string(results[i]);
             free(results[i]);
             results[i] = NULL;
-            if (OUT_OF_MEMORY == ret) {
-                if (results) free(results);
+            if (ERR_CHASER_OOM == ret) {
+                for (++i; i < num_results; ++i) {
+                    free(results[i]);
+                }
+                free(results);
                 return ret;
             }
         }
@@ -566,6 +557,7 @@ int main(int argc, char **argv) {
     uint   chase_not_yet_validated = 0;
     int    skip_database = 0;
     int ret;
+    int consumed;
 
     char   *config_file = "additional_rsync_uris.config";
     FILE   *fp;
@@ -586,7 +578,12 @@ int main(int argc, char **argv) {
             break;
         case 'd':
             restrict_crls_by_next_update = 1;
-            num_seconds = (size_t) strtoul(optarg, NULL, 10);
+            if (sscanf(optarg, "%zu%n", &num_seconds, &consumed) < 1 ||
+                    (size_t)consumed < strlen(optarg)) {
+                fprintf(stderr, "Invalid number of seconds: %s\n", optarg);
+                printUsage();
+                return EXIT_FAILURE;
+            }
             break;
         case 'f':
             config_file = optarg;
@@ -608,7 +605,7 @@ int main(int argc, char **argv) {
 
     OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
     (void) setbuf(stdout, NULL);
-    uris = calloc(sizeof(char *), uris_max_sz);
+    uris = malloc(sizeof(char *) * uris_max_sz);
     if (!uris) {
         LOG(LOG_ERR, "Could not allocate memory for URI list.");
         return -1;
@@ -633,7 +630,7 @@ int main(int argc, char **argv) {
             LOG(LOG_WARNING, "uri from file too long, dropping:  %s <truncated>", msg);
             continue;
         }
-        if (OUT_OF_MEMORY == handle_uri_string(msg))
+        if (ERR_CHASER_OOM == handle_uri_string(msg))
             return -1;
     }
     fclose(fp);
@@ -668,21 +665,21 @@ int main(int argc, char **argv) {
         db_ok = 0;
     if (db_ok) {
         ret = query_crldp(db, restrict_crls_by_next_update, num_seconds);
-        if (OUT_OF_MEMORY == ret)
+        if (ERR_CHASER_OOM == ret)
             return -1;
         if (-1 == ret)
             db_ok = 0;
     }
     if (db_ok  &&  chase_aia) {
         ret = query_aia(db);
-        if (OUT_OF_MEMORY == ret)
+        if (ERR_CHASER_OOM == ret)
             return -1;
         if (-1 == ret)
             db_ok = 0;
     }
     if (db_ok) {
         ret = query_sia(db, chase_not_yet_validated);
-        if (OUT_OF_MEMORY == ret)
+        if (ERR_CHASER_OOM == ret)
             return -1;
         if (-1 == ret)
             db_ok = 0;

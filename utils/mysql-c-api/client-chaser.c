@@ -8,11 +8,14 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#include "client-chaser.h"
 #include "connect.h"
 #include "db-internal.h"
 #include "logging.h"
 #include "prep-stmt.h"
-#include "client-chaser.h"
+#include "scm.h"  // for SCM_FLAG_FOO
+#include "scmf.h"  // for SCM_FLAG_FOO
+#include "sqhl.h"  // for SCM_FLAG_FOO
 #include "util.h"
 
 /**=============================================================================
@@ -78,8 +81,10 @@ int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_aia(dbconn *conn, char ***results,
-        int64_t *num_malloced, uint flag_no_chain, uint flag_validated) {
+        int64_t *num_malloced) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_AIA];
+    uint flag_no_chain = SCM_FLAG_NOCHAIN;
+    uint flag_validated = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
@@ -155,6 +160,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     if (num_rows == 0) {
         LOG(LOG_DEBUG, "got zero results");
         mysql_stmt_free_result(stmt);
+        *results = NULL;
         return 0;
     }
 
@@ -162,7 +168,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
 
     uint64_t i;
@@ -191,7 +197,11 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
-                return OUT_OF_MEMORY;
+                for (i = 0; i < num_rows_used; i++) {
+                    free((*results)[i]);
+                }
+                free(*results);
+                return ERR_CHASER_OOM;
             }
             memcpy(tmp, aia, length);
             *(tmp + length) = '\0';
@@ -208,16 +218,17 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
-        int64_t *num_malloced, char const *ts, int restrict_by_next_update, size_t seconds) {
+        int64_t *num_malloced, char const *ts, int restrict_by_next_update, uint32_t seconds) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_CRLDP];
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
+    int consumed;
 
     MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
     // the interval to add, expressed in seconds
-    size_t default_seconds = 60 * 60 * 24 * 365 * 100ul;
+    uint32_t default_seconds = 60 * 60 * 24 * 365 * 100ul;
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
     if (restrict_by_next_update)
         bind_in[0].buffer = &seconds;
@@ -227,13 +238,17 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     bind_in[0].is_null = (my_bool*) 0;
     // the current timestamp
     MYSQL_TIME curr_ts;
-    sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u",
+    if (sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u%n",
             &curr_ts.year,
             &curr_ts.month,
             &curr_ts.day,
             &curr_ts.hour,
             &curr_ts.minute,
-            &curr_ts.second);
+            &curr_ts.second,
+            &consumed) < 6 || (size_t)consumed < strlen(ts)) {
+        LOG(LOG_ERR, "invalid timestamp: %s", ts);
+        return -1;
+    }
     curr_ts.neg = (my_bool) 0;
     curr_ts.second_part = (ulong) 0;
     bind_in[1].buffer_type = MYSQL_TYPE_TIMESTAMP;
@@ -281,6 +296,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     if (num_rows == 0) {
         LOG(LOG_DEBUG, "got zero results");
         mysql_stmt_free_result(stmt);
+        *results = NULL;
         return 0;
     }
 
@@ -288,7 +304,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
 
     uint64_t i;
@@ -317,7 +333,11 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
-                return OUT_OF_MEMORY;
+                for (i = 0; i < num_rows_used; i++) {
+                    free((*results)[i]);
+                }
+                free(*results);
+                return ERR_CHASER_OOM;
             }
             memcpy(tmp, crldp, length);
             *(tmp + length) = '\0';
@@ -334,12 +354,13 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
-        int64_t *num_malloced, uint chase_not_yet_validated, uint validated_flag) {
+        int64_t *num_malloced, uint chase_not_yet_validated) {
     MYSQL_STMT *stmt;
     stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
+    uint validated_flag = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
-    int flag;
+    uint flag;
     int ret;
 
     if (chase_not_yet_validated)
@@ -400,6 +421,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     if (num_rows == 0) {
         LOG(LOG_DEBUG, "got zero results");
         mysql_stmt_free_result(stmt);
+        *results = NULL;
         return 0;
     }
 
@@ -407,7 +429,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     if (!(*results)) {
         LOG(LOG_ERR, "out of memory");
         mysql_stmt_free_result(stmt);
-        return OUT_OF_MEMORY;
+        return ERR_CHASER_OOM;
     }
 
     uint64_t i;
@@ -436,7 +458,11 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
-                return OUT_OF_MEMORY;
+                for (i = 0; i < num_rows_used; i++) {
+                    free((*results)[i]);
+                }
+                free(*results);
+                return ERR_CHASER_OOM;
             }
             memcpy(tmp, sia, length);
             *(tmp + length) = '\0';
