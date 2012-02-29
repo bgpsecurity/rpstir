@@ -213,6 +213,7 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
+    int consumed;
 
     MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
@@ -227,13 +228,17 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
     bind_in[0].is_null = (my_bool*) 0;
     // the current timestamp
     MYSQL_TIME curr_ts;
-    sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u",
+    if (sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u%n",
             &curr_ts.year,
             &curr_ts.month,
             &curr_ts.day,
             &curr_ts.hour,
             &curr_ts.minute,
-            &curr_ts.second);
+            &curr_ts.second,
+            &consumed) < 6 || consumed < strlen(ts)) {
+        LOG(LOG_ERR, "invalid timestamp: %s", ts);
+        return -1;
+    }
     curr_ts.neg = (my_bool) 0;
     curr_ts.second_part = (ulong) 0;
     bind_in[1].buffer_type = MYSQL_TYPE_TIMESTAMP;
