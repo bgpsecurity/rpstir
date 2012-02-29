@@ -20,6 +20,7 @@ DEFAULT_RPKI_PORT=30000
 DEFAULT_RPKI_DB=rpkidb8
 DEFAULT_RPKI_DBUSER=rpki
 DEFAULT_RPKI_DBPASS=validator
+DEFAULT_RPKI_ROOTPASSWORD=password  # for mysql
 DEFAULT_RPKI_TCOUNT=8
 DEFAULT_RPKI_LISTPORT=30001
 DEFAULT_RPKI_DSN=myodbc3
@@ -56,7 +57,10 @@ if [ "${RPKI_DBPASS}x" = "x" ]; then
     echo Warning: RPKI_DBPASS not set, defaulting to $DEFAULT_RPKI_DBPASS
     export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
 fi
-
+if [ "${RPKI_ROOTPASSWORD}x" = "x" ]; then
+    echo Warning: RPKI_ROOTPASSWORD not set, defaulting to $DEFAULT_RPKI_ROOTPASSWORD
+    export RPKI_ROOTPASSWORD=$DEFAULT_RPKI_ROOTPASSWORD
+fi
 if [ "${OIDTABLE}x" = "x" ]; then
     DEFAULT_OIDTABLE="$RPKI_ROOT/cg/oidtable"
     echo "Notice: OIDTABLE not set, defaulting to $DEFAULT_OIDTABLE"
