@@ -13,9 +13,9 @@ run_scripts/loader.sh &
 sleep 1
 
 # Out-of-band initialization of trust anchor
-run_scripts/updateTA.py trust-anchor/afrinic.tal
+#run_scripts/updateTA.py trust-anchor/afrinic.tal
 run_scripts/updateTA.py trust-anchor/apnic.tal
-run_scripts/updateTA.py trust-anchor/arin.tal
+#run_scripts/updateTA.py trust-anchor/arin.tal
 run_scripts/updateTA.py trust-anchor/lacnic.tal
 run_scripts/updateTA.py trust-anchor/ripe-ncc-root.tal
 
