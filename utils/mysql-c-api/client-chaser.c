@@ -323,6 +323,10 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
+                for (i = 0; i < num_rows_used; i++) {
+                    free((*results)[i]);
+                }
+                free(*results);
                 return ERR_CHASER_OOM;
             }
             memcpy(tmp, crldp, length);
