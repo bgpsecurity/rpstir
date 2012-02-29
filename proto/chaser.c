@@ -15,9 +15,6 @@
 #include "logging.h"
 #include "mysql-c-api/connect.h"
 #include "mysql-c-api/client-chaser.h"
-#include "scm.h"  // for SCM_FLAG_FOO
-#include "scmf.h"  // for SCM_FLAG_FOO
-#include "sqhl.h"  // for SCM_FLAG_FOO
 #include "stringutils.h"
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
@@ -414,8 +411,7 @@ static int query_aia(dbconn *db) {
     int64_t i;
     int ret;
 
-    num_results = db_chaser_read_aia(db, &results, &num_malloced,
-            SCM_FLAG_NOCHAIN, SCM_FLAG_VALIDATED);
+    num_results = db_chaser_read_aia(db, &results, &num_malloced);
     if (-1 == num_results) {
         return -1;
     } else if (ERR_CHASER_OOM == num_results) {
@@ -481,7 +477,7 @@ static int query_sia(dbconn *db, uint chase_not_yet_validated) {
     int ret;
 
     num_results = db_chaser_read_sia(db, &results, &num_malloced,
-            chase_not_yet_validated, SCM_FLAG_VALIDATED);
+            chase_not_yet_validated);
     if (-1 == num_results) {
         return -1;
     } else if (ERR_CHASER_OOM == num_results) {

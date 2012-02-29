@@ -8,11 +8,14 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#include "client-chaser.h"
 #include "connect.h"
 #include "db-internal.h"
 #include "logging.h"
 #include "prep-stmt.h"
-#include "client-chaser.h"
+#include "scm.h"  // for SCM_FLAG_FOO
+#include "scmf.h"  // for SCM_FLAG_FOO
+#include "sqhl.h"  // for SCM_FLAG_FOO
 #include "util.h"
 
 /**=============================================================================
@@ -78,8 +81,10 @@ int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len) {
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_aia(dbconn *conn, char ***results,
-        int64_t *num_malloced, uint flag_no_chain, uint flag_validated) {
+        int64_t *num_malloced) {
     MYSQL_STMT *stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_AIA];
+    uint flag_no_chain = SCM_FLAG_NOCHAIN;
+    uint flag_validated = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
@@ -344,9 +349,10 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_sia(dbconn *conn, char ***results,
-        int64_t *num_malloced, uint chase_not_yet_validated, uint validated_flag) {
+        int64_t *num_malloced, uint chase_not_yet_validated) {
     MYSQL_STMT *stmt;
     stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
+    uint validated_flag = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int flag;
