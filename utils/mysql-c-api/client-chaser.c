@@ -160,6 +160,7 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
     if (num_rows == 0) {
         LOG(LOG_DEBUG, "got zero results");
         mysql_stmt_free_result(stmt);
+        *results = NULL;
         return 0;
     }
 
@@ -196,6 +197,10 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
+                for (i = 0; i < num_rows_used; i++) {
+                    free((*results)[i]);
+                }
+                free(*results);
                 return ERR_CHASER_OOM;
             }
             memcpy(tmp, aia, length);
@@ -416,6 +421,7 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
     if (num_rows == 0) {
         LOG(LOG_DEBUG, "got zero results");
         mysql_stmt_free_result(stmt);
+        *results = NULL;
         return 0;
     }
 
@@ -452,6 +458,10 @@ int64_t db_chaser_read_sia(dbconn *conn, char ***results,
             if (!tmp) {
                 LOG(LOG_ERR, "out of memory");
                 mysql_stmt_free_result(stmt);
+                for (i = 0; i < num_rows_used; i++) {
+                    free((*results)[i]);
+                }
+                free(*results);
                 return ERR_CHASER_OOM;
             }
             memcpy(tmp, sia, length);
