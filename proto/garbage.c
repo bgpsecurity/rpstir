@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <mysql.h>
+
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
@@ -43,9 +45,13 @@ static int handleIfStale (scmcon *conp, scmsrcha *s, int cnt)
 {
   s = s;
   char msg[600];
+  char escaped_aki[2*strlen(theAKI) + 1];
+  char escaped_issuer[2*strlen(theIssuer) + 1];
   if (cnt > 0) return 0;   // exists another crl that is current
+  mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
+  mysql_escape_string(escaped_issuer, theIssuer, strlen(theIssuer));
   snprintf (msg, 600, "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
-	    certTable->tabname, SCM_FLAG_STALECRL, theAKI, theIssuer);
+	    certTable->tabname, SCM_FLAG_STALECRL, escaped_aki, escaped_issuer);
   addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
   addFlagTest(msg, SCM_FLAG_CA, 1, 1);
   snprintf(msg + strlen(msg), 600, ";");
@@ -82,12 +88,16 @@ static int countCurrentCRLs (scmcon *conp, scmsrcha *s, int numLine)
   }
   theIssuer = (char *) s->vec[0].valptr;
   theAKI = (char *) s->vec[1].valptr;
+  char escaped_aki[2*strlen(theAKI) + 1];
+  char escaped_issuer[2*strlen(theIssuer) + 1];
+  mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
+  mysql_escape_string(escaped_issuer, theIssuer, strlen(theIssuer));
   if (s->nused > 2) {
     theID = *((unsigned int *) s->vec[2].valptr);
   }
   snprintf (cntSrch->wherestr, WHERESTR_SIZE,
 	    "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
-	    theIssuer, theAKI, currTimestamp);
+	    escaped_issuer, escaped_aki, currTimestamp);
   return searchscm (conp, crlTable, cntSrch, countHandler, NULL,
                     SCM_SRCH_DOCOUNT, NULL);
 }
@@ -102,10 +112,12 @@ static int numStaleManFiles = 0;
 
 static int handleStaleMan2(scmcon *conp, scmtab *tab, char *files)
 {
+  char escaped_files[2*strlen(files) + 1];
+  mysql_escape_string(escaped_files, files, strlen(files));
   snprintf (staleManStmt, MANFILES_SIZE,
 	    "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
 	    tab->tabname, SCM_FLAG_STALEMAN,
-	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
+	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
   return statementscm_no_data (conp, staleManStmt);
 }
 
@@ -126,10 +138,12 @@ static int handleStaleMan (scmcon *conp, scmsrcha *s, int numLine)
  */
 static int handleFreshMan2(scmcon *conp, scmtab *tab, char *files)
 {
+  char escaped_files[2*strlen(files) + 1];
+  mysql_escape_string(escaped_files, files, strlen(files));
   snprintf (staleManStmt, MANFILES_SIZE,
 	    "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
 	    tab->tabname, SCM_FLAG_STALEMAN,
-	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, files);
+	    2*SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
   return statementscm_no_data (conp, staleManStmt);
 }
 
