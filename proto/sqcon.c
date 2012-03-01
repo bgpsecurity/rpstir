@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
+
+#include <mysql.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -532,7 +535,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   int   leen = 128;
   int   wsta = (-1);
   int   doq;
-  int   i;
+  int   i, j;
 
   if ( conp == NULL || conp->connected == 0 || tabp == NULL ||
        tabp->tabname == NULL )
@@ -555,7 +558,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   for(i=0;i<arr->nused;i++)
     {
       leen += strlen(arr->vec[i].column) + 2;
-      leen += strlen(arr->vec[i].value) + 4;
+      leen += 2*strlen(arr->vec[i].value) + 4;
     }
 // construct the statement
   stmt = (char *)calloc(leen, sizeof(char));
@@ -583,42 +586,57 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
   as NULefg but if we said "0x00656667" it would get inserted as the string
   0x00656667.
 */
-  doq = strncmp(arr->vec[0].value, "^x", 2);
-  if ( doq == 0 )
+  for (i = 0; i < arr->nused; ++i)
     {
-      arr->vec[0].value[0] = '0';
-      wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
-    }
-  else
-    wsta = strwillfit(stmt, leen, wsta, ") VALUES (\"");
-  if ( wsta >= 0 )
-    wsta = strwillfit(stmt, leen, wsta, arr->vec[0].value);
-  if ( doq != 0 && wsta >= 0 )
-    wsta = strwillfit(stmt, leen, wsta, "\"");
-  if ( wsta < 0 )
-    {
-      free((void *)stmt);
-      return(wsta);
-    }
-  for(i=1;i<arr->nused;i++)
-    {
+      if (i == 0)
+        wsta = strwillfit(stmt, leen, wsta, ") VALUES (");
+      else
+        wsta = strwillfit(stmt, leen, wsta, ", ");
+      if ( wsta < 0 )
+        {
+          free((void *)stmt);
+          return(wsta);
+        }
+
       doq = strncmp(arr->vec[i].value, "^x", 2);
       if ( doq == 0 )
-	{
-	  arr->vec[i].value[0] = '0';
-	  wsta = strwillfit(stmt, leen, wsta, ", ");
-	}
+        {
+          wsta = strwillfit(stmt, leen, wsta, "0x");
+        }
       else
-	wsta = strwillfit(stmt, leen, wsta, ", \"");
-      if ( wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, arr->vec[i].value);
-      if ( doq != 0 && wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, "\"");
+        {
+          wsta = strwillfit(stmt, leen, wsta, "\"");
+        }
       if ( wsta < 0 )
-	{
-	  free((void *)stmt);
-	  return(wsta);
-	}
+        {
+          free((void *)stmt);
+          return(wsta);
+        }
+      if ( doq == 0 )
+        {
+          for (j = 2; arr->vec[i].value[j] != '\0'; ++j)
+            {
+              if (isxdigit(arr->vec[i].value[j]))
+                stmt[wsta++] = arr->vec[i].value[j];
+              else
+                {
+                  free((void *)stmt);
+                  return ERR_SCM_INVALARG;
+                }
+            }
+          stmt[wsta] = '\0';
+        }
+      else
+        {
+          wsta += mysql_escape_string(stmt + wsta, arr->vec[i].value,
+            strlen(arr->vec[i].value));
+          wsta = strwillfit(stmt, leen, wsta, "\"");
+          if (wsta < 0)
+            {
+              free((void *)stmt);
+              return(wsta);
+            }
+        }
     }
   wsta = strwillfit(stmt, leen, wsta, ");");
   if ( wsta < 0 )
@@ -780,13 +798,15 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       for(i=0;i<srch->where->nused;i++)
 	{
 	  leen += strlen(srch->where->vec[i].column) + 9;
-	  leen += strlen(srch->where->vec[i].value);
+	  leen += 2*strlen(srch->where->vec[i].value);
 	}
     }
   if ( srch->wherestr != NULL )
     leen += strlen(srch->wherestr) + 24;
   if ( (what & SCM_SRCH_DO_JOIN) )
     leen += strlen(tabp->tabname) + 48;
+  if (orderp)
+    leen += strlen(orderp) + 16;
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
     return(ERR_SCM_NOMEM);
@@ -826,14 +846,16 @@ int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
       (void)strcat(stmt, " WHERE ");
       (void)strcat(stmt, srch->where->vec[0].column);
       (void)strcat(stmt, "=\"");
-      (void)strcat(stmt, srch->where->vec[0].value);
+      (void)mysql_escape_string(stmt + strlen(stmt),
+        srch->where->vec[0].value, strlen(srch->where->vec[0].value));
       (void)strcat(stmt, "\"");
       for(i=1;i<srch->where->nused;i++)
 	{
 	  (void)strcat(stmt, " AND ");
 	  (void)strcat(stmt, srch->where->vec[i].column);
 	  (void)strcat(stmt, "=\"");
-	  (void)strcat(stmt, srch->where->vec[i].value);
+	  (void)mysql_escape_string(stmt + strlen(stmt),
+	    srch->where->vec[i].value, strlen(srch->where->vec[i].value));
 	  (void)strcat(stmt, "\"");
 	}
     }
@@ -1224,7 +1246,7 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
   for(i=0;i<deld->nused;i++)
     {
       leen += strlen(deld->vec[i].column) + 2;
-      leen += strlen(deld->vec[i].value) + 9;
+      leen += 2*strlen(deld->vec[i].value) + 9;
     }
 // construct the DELETE statement
   conp->mystat.tabname = tabp->hname;
@@ -1240,7 +1262,8 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "=\"");
       if ( wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, deld->vec[0].value);
+        wsta += mysql_escape_string(stmt + wsta, deld->vec[0].value,
+          strlen(deld->vec[0].value));
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "\"");
       if ( wsta < 0 )
@@ -1256,7 +1279,8 @@ int deletescm(scmcon *conp, scmtab *tabp, scmkva *deld)
 	  if ( wsta >= 0 )
 	    wsta = strwillfit(stmt, leen, wsta, "=\"");
 	  if ( wsta >= 0 )
-	    wsta = strwillfit(stmt, leen, wsta, deld->vec[i].value);
+	    wsta += mysql_escape_string(stmt + wsta, deld->vec[i].value,
+	      strlen(deld->vec[i].value));
 	  if ( wsta >= 0 )
 	    wsta = strwillfit(stmt, leen, wsta, "\"");
 	  if ( wsta < 0 )
@@ -1301,7 +1325,7 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
   for(i=0;i<where->nused;i++)
     {
       leen += strlen(where->vec[i].column) + 7;
-      leen += strlen(where->vec[i].value) + 3;
+      leen += 2*strlen(where->vec[i].value) + 3;
     }
   stmt = (char *)calloc(leen, sizeof(char));
   if ( stmt == NULL )
@@ -1311,7 +1335,8 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
   if ( wsta >= 0 )
     wsta = strwillfit(stmt, leen, wsta, "=\"");
   if ( wsta >= 0 )
-    wsta = strwillfit(stmt, leen, wsta, where->vec[0].value);
+    wsta += mysql_escape_string(stmt + wsta, where->vec[0].value,
+      strlen(where->vec[0].value));
   if ( wsta >= 0 )
     wsta = strwillfit(stmt, leen, wsta, "\"");
   if ( wsta < 0 )
@@ -1327,7 +1352,8 @@ int setflagsscm(scmcon *conp, scmtab *tabp, scmkva *where,
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "=\"");
       if ( wsta >= 0 )
-	wsta = strwillfit(stmt, leen, wsta, where->vec[i].value);
+        wsta += mysql_escape_string(stmt + wsta, where->vec[i].value,
+          strlen(where->vec[i].value));
       if ( wsta >= 0 )
 	wsta = strwillfit(stmt, leen, wsta, "\"");
       if ( wsta < 0 )
