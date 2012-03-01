@@ -1649,7 +1649,7 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
     if ((ansr = _readsize(casnp, to, mode)) > 0)
         { // pure read of bit-string-defined-by 
         if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
-          memcpy(to, &to[1], --ansr);   // shift to left 1 byte
+          memmove(to, &to[1], --ansr);   // shift to left 1 byte
         }
     return ansr;
     }
