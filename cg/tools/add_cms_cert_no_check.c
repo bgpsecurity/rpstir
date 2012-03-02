@@ -1,24 +1,3 @@
-/*
-  $Id: make_TA.c c 506 2008-06-03 21:20:05Z gardiner $
-*/
-
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- *
- * US government users are permitted unrestricted rights as
- * defined in the FAR.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2008-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK ***** */
-
 #include <stdio.h>
 #include <cryptlib.h>
 #include <keyfile.h>
@@ -92,7 +71,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
 
 // return a printable message indicating the error (if any) or NULL if not
 //
-static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
+static char *signCMS(struct CMSBlob* roa, char *keyfilename, int bad)
   {
   CRYPT_CONTEXT sigKeyContext;
   CRYPT_KEYSET cryptKeyset;
@@ -157,6 +136,7 @@ static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
     copy_casn(&signerInfop->signature, &sigInfo.signature);
     delete_casn(&sigInfo.self);
     }
+  else fprintf(stderr, "Signing failed when %s\n", msg);
   // all done with it now
   if (signature) free(signature);
   return NULL;
@@ -164,8 +144,8 @@ static char *signCMS(struct ROA* roa, char *keyfilename, int bad)
 
 int main(int argc, char **argv)
   {
-  struct ROA roa;
-  ROA(&roa, (ushort)0);
+  struct CMSBlob roa;
+  CMSBlob(&roa, (ushort)0);
   if (argc < 4 || argc > 5 )
     {
       fprintf(stderr, "Usage: %s EEcert CMSfile EEkeyfile [outfile]\n",
@@ -187,7 +167,7 @@ int main(int argc, char **argv)
   if (!(sextp = find_extension(&EEcert, id_authKeyId))) 
       fatal(3, "key identifier");
      // add cert to CMS object 
-  struct SignedData *signedDatap = &roa.content.signedData;
+  struct BlobSignedData *signedDatap = &roa.content.signedData;
   struct Certificate *certp;
   clear_casn(&signedDatap->certificates.self);
   certp = (struct Certificate *)inject_casn(&signedDatap->certificates.self, 0);

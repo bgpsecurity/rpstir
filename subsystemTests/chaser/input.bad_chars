@@ -1,0 +1,15 @@
+rsync://foo.com/a/b
+rsync://foo.com/a/b 
+rsync://foo.com/a/b"
+rsync://foo.com/a/b#
+rsync://foo.com/a/b$
+rsync://foo.com/a/b<
+rsync://foo.com/a/b>
+rsync://foo.com/a/b?
+rsync://foo.com/a/b\
+rsync://foo.com/a/b^
+rsync://foo.com/a/b`
+rsync://foo.com/a/b{
+rsync://foo.com/a/b|
+rsync://foo.com/a/b}
+

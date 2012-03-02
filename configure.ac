@@ -203,6 +203,15 @@ AC_FUNC_STAT
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 
+# warn if the target isn't 32-bit
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([void *])
+if test "$ac_cv_sizeof_int" != 4 -o "$ac_cv_sizeof_long" != 4 -o "$ac_cv_sizeof_void_p" != 4; then
+	AC_MSG_WARN([currently only 32-bit targets are supported])
+fi
+
+
 AC_CONFIG_FILES([Makefile
                  cg/Makefile
                  cg/asn/Makefile
@@ -216,6 +225,7 @@ AC_CONFIG_FILES([Makefile
                  rsync_aur/Makefile
                  rtr/Makefile
                  subsystemTests/Makefile
+                 subsystemTests/chaser/Makefile
                  subsystemTests/rtr/Makefile
                  testcases/Makefile
                  testbed/Makefile

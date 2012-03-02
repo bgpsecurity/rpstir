@@ -45,9 +45,9 @@ rm -rf output
 mkdir -p output
 cp raw/*.cer output/
 cp -r raw/root output/
-find output -name '*.ee.cer' -delete
-find output -name '*.mft.cer' -delete
-find output -name '.gitignore' -delete
+find output -type f -name '*.ee.cer' -delete
+find output -type f -name '*.mft.cer' -delete
+find output -type f -name '.gitignore' -delete
 
 # Generate final manifest
 cd output

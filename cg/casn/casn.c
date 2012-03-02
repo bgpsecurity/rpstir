@@ -804,7 +804,7 @@ int _encodesize(struct casn *casnp, uchar *to, int mode)
 	tcasnp = _find_filled(tcasnp);
 	i = _encodesize(tcasnp, c, mode);
 	}
-    else if ((i = _readvsize(tcasnp, c, mode)) < 0) return i - lth;
+    else if ((i = _readsize(tcasnp, c, mode)) < 0) return i - lth;
     c += i;
     lth += i;
     if (contp > to) lth += _set_all_lths(to, contp, c, mode);
@@ -1081,7 +1081,8 @@ Procedure:
         {
         int def_lth = 0;
         has_indef = skip_match = 0;
-        if (!curr_casnp) return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
+        if (!curr_casnp) 
+          return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
         c = from;  // note that NONE case uses this to reset c
         if (of_casnp)
 	    {
@@ -1613,7 +1614,7 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     return lth;
     }
 
-static int _check_filled_default(struct casn *casnp)
+static int check_filled_default(struct casn *casnp)
   {
   if ((casnp->flags & ASN_DEFAULT_FLAG)) 
     {
@@ -1640,13 +1641,15 @@ int _readvsize(struct casn *casnp, uchar *to, int mode)
     	    return _casn_obj_err(casnp, ansr);
 	}    
        // is it (or a chosen item below it) the default value?
-    if (_check_filled_default(casnp) > 0 ||
-      (ch_casnp &&_check_filled_default(ch_casnp))) // if so, skip it
+    if (check_filled_default(casnp) > 0 ||
+      (ch_casnp && check_filled_default(ch_casnp))) // if so, skip it
       return 0;
+          // 
+    if (ch_casnp) casnp = ch_casnp;
     if ((ansr = _readsize(casnp, to, mode)) > 0)
         { // pure read of bit-string-defined-by 
         if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
-          memcpy(to, &to[1], --ansr);   // shift to left 1 byte
+          memmove(to, &to[1], --ansr);   // shift to left 1 byte
         }
     return ansr;
     }
