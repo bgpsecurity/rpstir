@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.2, achi@bbn.com)
+AC_INIT(rpstir, 0.3, achi@bbn.com)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
