@@ -168,6 +168,7 @@ int main (int argc, char *argv [])
 				log_msg(LOG_DEBUG, "%s -s -t %s -f %s -d %s", command, getenv("RPKI_PORT"), log_loc, rep_loc);
 				log_flush();
 				execl(command, command, "-s", "-t", getenv("RPKI_PORT"), "-f", log_loc, "-d", rep_loc, (const char *)NULL);
+				perror("execl()");
 				exit(EXIT_FAILURE); //execl shouldn't return
 			}
 
