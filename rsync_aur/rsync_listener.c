@@ -126,14 +126,20 @@ int main (int argc, char *argv [])
 			err_flag = OPEN_REPOSITORY_ERR;
 			log_msg(LOG_ERR, "Failed to open repository: rep_loc %s. Probably incorrect filename.", rep_loc);
 		}
+
+		/*just opened them to check existence, we can close them now*/
+		if (logfile){
+			fclose(logfile);
+			logfile = NULL;
+		}
+		if (reposit){
+			fclose(reposit);
+			reposit = NULL;
+		}
 		
 		/*If we haven't detected any problems thus far with our inuput, then we'll generate and make
 		  the call to rsync_aur*/
 		if(!err_flag){
-			/*just opened them to check existence, we can close them now*/
-			fclose(logfile);
-			fclose(reposit);
-			
 			int status;
 			char path[MAXREAD];
 			char command[MAXREAD];
