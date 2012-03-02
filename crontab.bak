@@ -1,0 +1,4 @@
+MAILTO=""
+PATH=/usr/local/ssl/bin:/home/demouser/rpki/proto:/home/demouser/rpki/cg/tools:/sbin:/bin:/usr/sbin:/usr/bin
+29 * * * *     /home/demouser/rpki/run_scripts/demo_loop.sh  >>/home/demouser/rpki/demo_loop.log  2>&1
+
