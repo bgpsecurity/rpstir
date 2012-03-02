@@ -1,4 +1,5 @@
-#
+SUBDIRS = . tests
+
 bin_PROGRAMS = create_object gen_hash
 
 AM_CFLAGS = -g -Wall -DDEBUG -I../../cg/asn -I../../cg/asn_gen -I../../cg/casn
