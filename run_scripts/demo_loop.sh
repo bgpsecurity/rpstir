@@ -13,7 +13,7 @@ if [ -z "$(pgrep -u $USER loader.sh)" ]; then
 fi
 
 # Run the rsync URI chaser
-./proto/chaser -f initial_rsync.config
+./run_scripts/chaser.sh
 
 # Run the garbage collector
 ./run_scripts/garbage.sh

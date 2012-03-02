@@ -20,4 +20,4 @@ sleep 1
 ./run_scripts/updateTA.py trust-anchor/ripe-ncc-root.tal
 
 # Chase downward from trust anchor(s) using rsync
-./proto/chaser -f initial_rsync.config
+./run_scripts/chaser.sh
