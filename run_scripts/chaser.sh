@@ -1,7 +1,6 @@
 #!/bin/bash -e
 #
-# run the chaser, one argument is the name of the original config file
-#   used for doing the rsync_pull
+
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=`dirname "$0"`
