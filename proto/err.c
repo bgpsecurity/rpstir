@@ -137,7 +137,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Error starting Cryptlib",      /* ERR_SCM_CRYPTLIB */
     "Bad hash algorithm",           /* ERR_SCM_BADHASHALG -120 */
 
-    "Bad number of digest algorithms", /* ERR_SCM_BADDIGALGS */
+    "Bad number of digest algorithms", /* ERR_SCM_BADNUMDALG */
     "Bad number of signer infos",   /* ERR_SCM_NUMSIGINFO */
     "Invalid signer infos version", /* ERR_SCM_SIGINFOVER */
     "Invalid signer info sid",      /* ERR_SCM_SIGINFOSID */
@@ -169,8 +169,8 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
     "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
     "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
-    "Duplicate file in manifest",   /* ERR_SCM_DUPMFTFNAME */
-    "EKU erroneously presenti",     /* ERR_SCM_EKU */
+    "Duplicate file in manifest",   /* ERR_SCM_MFTDUPFILE */
+    "EKU erroneously present",      /* ERR_SCM_EKU */
   } ;
 
 char *err2string(int err)
