@@ -418,7 +418,7 @@ Component (script or executable)     Frequency
 Parallelized rsync (rsync_cord.py)   Invoked by chaser
 RCLI Database Client (loader.sh)     Continuously as daemon
 Garbage Collector (garbage.sh)       Once per day
-Chaser Client (proto/chaser)         Once per day
+Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
