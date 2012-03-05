@@ -107,6 +107,7 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   done
 
   # this is a bit of a hack because mysql_config --libs_r specifies compiler flags, not linker flags
+  mysql_config_LIBS=""
   for flag in `$MYSQL_CONFIG --libs_r`; do
     case $flag in
       -L*)
@@ -114,12 +115,13 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
         LDFLAGS="-L${libpath} -Wl,-rpath -Wl,${libpath} ${LDFLAGS}"
         ;;
       -l*)
-        LDFLAGS="${flag} ${LDFLAGS}"
+        mysql_config_LIBS="${mysql_config_LIBS} ${flag}"
         ;;
       *)
         ;;
     esac
   done
+  LIBS="${mysql_config_LIBS} ${LIBS}"
 else
   AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
