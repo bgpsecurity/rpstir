@@ -1,4 +1,4 @@
-check_SCRIPTS = \
+dist_check_SCRIPTS = \
 	empty_manifest.sh
 
-TESTS = $(check_SCRIPTS)
+TESTS = $(dist_check_SCRIPTS)
