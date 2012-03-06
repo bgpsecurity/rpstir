@@ -150,6 +150,8 @@ int main(int argc, char **argv)
     {
       fprintf(stderr, "Usage: %s EEcert CMSfile EEkeyfile [outfile]\n",
          argv[0]);
+      fprintf(stderr, "If the environment variable RPKI_NO_SIGNING_TIME is set,\n");
+      fprintf(stderr, "the signing time won't be set.\n");
       return -1;
     }
   strcpy(keyring.label, "label");
@@ -217,14 +219,15 @@ int main(int argc, char **argv)
   write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
   write_casn(&signerInfop->digestAlgorithm.parameters.sha256, (uchar *)"", 0);
       // signing time
-/* omitting these for now
-  attrp = (struct Attribute *)inject_casn( &signerInfop->signedAttrs.self, 2);
-  write_objid(&attrp->attrType, id_signingTimeAttr);
-  time_t now = time(0);
-  attrTbDefp = (struct AttrTableDefined *)
-    inject_casn(&attrp->attrValues.self, 0);
-  write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
-*/
+  if (getenv("RPKI_NO_SIGNING_TIME") == NULL)
+    {
+    attrp = (struct Attribute *)inject_casn( &signerInfop->signedAttrs.self, 2);
+    write_objid(&attrp->attrType, id_signingTimeAttr);
+    time_t now = time(0);
+    attrTbDefp = (struct AttrTableDefined *)
+      inject_casn(&attrp->attrValues.self, 0);
+    write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
+    }
        // sig alg
   write_objid(&signerInfop->signatureAlgorithm.algorithm, 
     id_sha_256WithRSAEncryption);
