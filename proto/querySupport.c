@@ -171,8 +171,11 @@ int checkValidity(char *ski, unsigned int localID,
 	prevSKI[0] = 0;
       }
     } else {
+      char escaped_subject[2*strlen(nextSubject) + 1];
+      mysql_escape_string(escaped_subject, nextSubject,
+        strlen(nextSubject));
       snprintf (whereInsertPtr, WHERESTR_SIZE-strlen(validWhereStr),
-		" and ski=\"%s\" and subject=\"%s\"", nextSKI, nextSubject);
+		" and ski=\"%s\" and subject=\"%s\"", nextSKI, escaped_subject);
       strncpy (prevSKI, nextSKI, 128);
     }
     found = 0;
