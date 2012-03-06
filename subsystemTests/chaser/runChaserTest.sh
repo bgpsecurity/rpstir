@@ -2,7 +2,10 @@
 
 cd "`dirname "$0"`"
 . ../../envir.setup
-CMD=./proto/chaser
+
+TEST_LOG_NAME=chaser
+STRICT_CHECKS=1
+. ../test.include
 
 #===============================================================================
 compare () {
@@ -16,14 +19,6 @@ compare () {
 		echo >&2 "See \"$name.diff\" for the differences."
         echo >&2
 		exit 1
-	fi
-}
-
-#===============================================================================
-add_valgrind () {
-	if test x"$VALGRIND" = x1; then
-		CMD="valgrind --log-file=valgrind.log --track-fds=full \
-        --leak-check=full --error-exitcode=1 $CMD"
 	fi
 }
 
@@ -44,46 +39,18 @@ stop_test () {
 }
 
 #===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -s -t -f input.subsume"
-add_valgrind
-start_test subsume
-$CMD > response.log
-stop_test subsume
-
-#===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -s -t -f input.max_length"
-add_valgrind
-start_test max_length
-$CMD > response.log
-stop_test max_length
-
-#===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -s -t -f input.collapse_slash_dot"
-add_valgrind
-start_test collapse_slash_dot
-$CMD > response.log
-stop_test collapse_slash_dot
-
-#===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -s -t -f input.collapse_dots"
-add_valgrind
-start_test collapse_dots
-$CMD > response.log
-stop_test collapse_dots
-
-#===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -s -t -f input.collapse_slashes"
-add_valgrind
-start_test collapse_slashes
-$CMD > response.log
-stop_test collapse_slashes
-
-#===============================================================================
-CMD="$RPKI_ROOT/proto/chaser -s -t -f input.bad_chars"
-add_valgrind
-start_test bad_chars
-$CMD > response.log
-stop_test bad_chars
+for TEST_NAME in \
+	subsume \
+	max_length \
+	collapse_slash_dot \
+	collapse_dots \
+	collapse_slashes \
+	bad_chars
+do
+	start_test "$TEST_NAME"
+	run "$TEST_NAME" "$RPKI_ROOT/proto/chaser" -s -t -f "input.$TEST_NAME" > response.log
+	stop_test "$TEST_NAME"
+done
 
 #===============================================================================
 #    More tests
@@ -91,4 +58,3 @@ stop_test bad_chars
 # Properly distinguish crldps based on next_upd?
 # Correct output for cmd-line combinations?
 # Test limit of realloc of uris[].
-
