@@ -59,6 +59,7 @@ as-%.roa: as-%.ee.cer ee-%.key
 EXTRA_DIST = \
 	*.options \
 	badPDUs.py \
-	*.correct
+	*.correct \
+	querySpecs
 
 CLEANFILES = *.log *.diff *.key *.cer *.roa
