@@ -27,7 +27,8 @@ TESTS = \
 	./makeall
 
 EXTRA_DIST = \
-	$(filter-out C.raw,$(wildcard *.p15 *.raw false*)) C.orig \
+	$(filter-out C.raw,$(wildcard *.p15 *.raw false*)) \
+	C.*.orig \
 	certpattern \
 	conformance \
 	makeall \
