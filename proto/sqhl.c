@@ -577,9 +577,11 @@ static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
     initTables(theSCMP);
   if ( theCertTable == NULL )
     return ERR_SCM_NOSUCHTAB;
+  char escaped_subj[2*strlen(subj) + 1];
+  mysql_escape_string(escaped_subj, subj, strlen(subj));
   (void)snprintf(stmt, sizeof(stmt),
 		 "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
-		 theCertTable->tabname, valu, ski, subj);
+		 theCertTable->tabname, valu, ski, escaped_subj);
 //  (void)printf("SET: %s\n", stmt);
   sta = statementscm_no_data(conp, stmt);
 //  (void)printf("Statementscn returns %d\n", sta);
