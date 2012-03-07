@@ -67,7 +67,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
   char *msg = NULL;
@@ -111,7 +111,7 @@ static int check_cert_signature(struct Certificate *locertp,
   encode_casn(&locertp->toBeSigned.self, buf);
 
   // (re)init the crypt library
-  cryptInit();
+  if (cryptInit() != CRYPT_OK) fatal(5, "initialize cryptlib");
   cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   cryptEncrypt(hashContext, buf, bsize);
   cryptEncrypt(hashContext, buf, 0);
@@ -263,7 +263,7 @@ static int check_sig(struct ROA *rp, struct Certificate *certp)
   // (re)init the crypt library
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
   cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
