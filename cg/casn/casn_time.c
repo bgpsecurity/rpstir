@@ -149,6 +149,9 @@ int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
         return -1;
     char genfrom[32];
     memset(genfrom, 0, 32);
+
+    if ((size_t)lth + 2 > sizeof(genfrom))
+        return -1;
      
     yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ);
     if (yr < 70) strcpy(genfrom, "20");
