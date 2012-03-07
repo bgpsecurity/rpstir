@@ -243,7 +243,7 @@ static int check_sig(struct ROA *rp, struct Certificate *certp)
   // (needed for cryptlib; see below)
   memset(sid, 0, 40);
   bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self);
-  if (bsize < 0) return ERR_SCM_INVALSIG;;
+  if (bsize < 0) return ERR_SCM_INVALSIG;
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&certp->toBeSigned.subjectPublicKeyInfo.self, buf);
   sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
@@ -255,7 +255,7 @@ static int check_sig(struct ROA *rp, struct Certificate *certp)
       member_casn(&rp->content.signedData.signerInfos.self, 0);
   memset(hash, 0, 40);
   bsize = size_casn(&sigInfop->signedAttrs.self);
-  if (bsize < 0) return ERR_SCM_INVALSIG;;
+  if (bsize < 0) return ERR_SCM_INVALSIG;
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&sigInfop->signedAttrs.self, buf);
   *buf = ASN_SET;
