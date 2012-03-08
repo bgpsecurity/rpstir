@@ -58,7 +58,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   // (re)init the crypt library
   if (!CryptInitState)
     {
-    if (cryptInit()) 
+    if (cryptInit() != CRYPT_OK)
       return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
