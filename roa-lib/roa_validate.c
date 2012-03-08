@@ -640,24 +640,23 @@ static int check_mft_dates(struct Manifest *manp)
   {
   time_t now;
   time(&now);
-  int64_t testdate;
-  if (read_casn_time(&manp->thisUpdate, &testdate) < 0)
+  int64_t thisUpdate, nextUpdate;
+  if (read_casn_time(&manp->thisUpdate, &thisUpdate) < 0)
     {
     log_msg(LOG_ERR, "This update is invalid");
     return ERR_SCM_INVALDT;
     }
-  if (testdate > now)
+  if (thisUpdate > now)
     {
     log_msg(LOG_ERR, "This update in the future");
     return ERR_SCM_INVALDT;
     }
-  now = testdate;
-  if (read_casn_time(&manp->nextUpdate, &testdate) < 0)
+  if (read_casn_time(&manp->nextUpdate, &nextUpdate) < 0)
     {
     log_msg(LOG_ERR, "Next update is invalid");
     return ERR_SCM_INVALDT;
     }
-  if (testdate < now)
+  if (nextUpdate < thisUpdate)
     {
     log_msg(LOG_ERR, "Next update earlier than this update");
     return ERR_SCM_INVALDT;
