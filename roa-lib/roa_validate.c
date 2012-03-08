@@ -1071,7 +1071,7 @@ int roaValidate(struct ROA *rp)
   if (read_casn_num(&roap->asID, &iAS_ID) < 0 || iAS_ID <= 0) 
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
-  if (!certp) return ERR_SCM_BADNUMCERTS;
+  if (!certp) return ERR_SCM_BADNUMCERTS; // XXX: this never happens
   int rescount = 0;
   // check that the asID is within the EE cert's scope, if any
   if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;
