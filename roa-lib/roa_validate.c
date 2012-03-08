@@ -998,7 +998,8 @@ static int checkIPAddrs(struct Certificate *certp,
         setuprange(&roaRanges[roaPrefixNum], &roaIPAddrp->address, &roaIPAddrp->address);
         }
       qsort(roaRanges, roaNumPrefixes, sizeof(roaRanges[0]), certrangecmp);
-      struct IPAddressOrRangeA *certIPAddressOrRangeAp = member_casn(
+      struct IPAddressOrRangeA *certIPAddressOrRangeAp =
+        (struct IPAddressOrRangeA *)member_casn(
         &certFamilyp->ipAddressChoice.addressesOrRanges.self, 0);
       struct certrange certrange;
       roaPrefixNum = 0;
