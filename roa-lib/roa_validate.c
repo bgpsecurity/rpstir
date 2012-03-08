@@ -620,10 +620,16 @@ static int check_mft_version(struct casn *casnp)
   {
   long val = 0;
   int lth = read_casn_num(casnp, &val);
-     
-  if (val > 0 ||   
-      (val == 0 && lth > 0)) // check explicit zero
-      return ERR_SCM_BADMANVER;
+
+  if (lth < 0)
+    return ERR_SCM_BADMANVER; // invalid read
+
+  if (val != 0)
+    return ERR_SCM_BADMANVER; // incorrect version number
+
+  if (lth != 0)
+    return ERR_SCM_BADMANVER; // explicit zero (should be implicit default)
+
   return 0;
   }
 
@@ -632,7 +638,7 @@ static int check_mft_number(struct casn *casnp)
   int lth;
   long val;                                                      
   lth = read_casn_num(casnp, &val);
-  if (!lth || val < 0) return ERR_SCM_BADMFTNUM;
+  if (lth <= 0 || val < 0) return ERR_SCM_BADMFTNUM;
   return 0;
   }
 
