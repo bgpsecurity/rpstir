@@ -48,6 +48,9 @@ int strict_profile_checks = 0;
   Note that seconds can be given as either SS or SS.S.
 
   Both fields can have an optional suffix of the form +HHMM or -HHMM.
+
+  On success, *stap ("status pointer") is set to 0.  On failure, it is
+  set to the appropriate error code (e.g. ERR_SCM_INVALDT).
 */
 
 #define UTC10    10   // UTC format without seconds
@@ -1132,7 +1135,7 @@ static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
-      *stap = ERR_SCM_INVALDT;
+      // stap already set by ASNTimeToDBTime
       return(NULL);
     }
   return(dptr);
