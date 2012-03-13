@@ -48,6 +48,9 @@ int strict_profile_checks = 0;
   Note that seconds can be given as either SS or SS.S.
 
   Both fields can have an optional suffix of the form +HHMM or -HHMM.
+
+  On success, *stap ("status pointer") is set to 0.  On failure, it is
+  set to the appropriate error code (e.g. ERR_SCM_INVALDT).
 */
 
 #define UTC10    10   // UTC format without seconds
@@ -1132,7 +1135,7 @@ static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
-      *stap = ERR_SCM_INVALDT;
+      // stap already set by ASNTimeToDBTime
       return(NULL);
     }
   return(dptr);
@@ -1578,7 +1581,6 @@ static void x509v3_load_extensions(X509 *x)
    * instead of returning NULL, in certain error cases.  Also, it may return
    * error codes via those pointers.   */
   int crit = INT_MIN;
-  int idx = INT_MIN;
 
   if(x->ex_flags & EXFLAG_SET)
     return;
@@ -1592,7 +1594,7 @@ static void x509v3_load_extensions(X509 *x)
   if(!X509_get_version(x))
     x->ex_flags |= EXFLAG_V1;
   /* Handle basic constraints */
-  if((bs=X509_get_ext_d2i(x, NID_basic_constraints, &crit, &idx))) {
+  if((bs=X509_get_ext_d2i(x, NID_basic_constraints, &crit, NULL))) {
     if(bs->ca)
       x->ex_flags |= EXFLAG_CA;
     if(bs->pathlen) {
@@ -1611,7 +1613,7 @@ static void x509v3_load_extensions(X509 *x)
   }
 
   /* Handle proxy certificates */
-  if((pci=X509_get_ext_d2i(x, NID_proxyCertInfo, &crit, &idx))) {
+  if((pci=X509_get_ext_d2i(x, NID_proxyCertInfo, &crit, NULL))) {
     if (x->ex_flags & EXFLAG_CA ||
         X509_get_ext_by_NID(x, NID_subject_alt_name, 0) >= 0
         || X509_get_ext_by_NID(x, NID_issuer_alt_name, 0) >= 0) {
@@ -1627,7 +1629,7 @@ static void x509v3_load_extensions(X509 *x)
   }
 
   /* Handle key usage */
-  if((usage=X509_get_ext_d2i(x, NID_key_usage, &crit, &idx))) {
+  if((usage=X509_get_ext_d2i(x, NID_key_usage, &crit, NULL))) {
     if(usage->length > 0) {
       x->ex_kusage = usage->data[0];
       if(usage->length > 1)
@@ -1639,7 +1641,7 @@ static void x509v3_load_extensions(X509 *x)
     ASN1_BIT_STRING_free(usage);
   }
   x->ex_xkusage = 0;
-  if((extusage=X509_get_ext_d2i(x, NID_ext_key_usage, &crit, &idx))) {
+  if((extusage=X509_get_ext_d2i(x, NID_ext_key_usage, &crit, NULL))) {
     x->ex_flags |= EXFLAG_XKUSAGE;
     for(i = 0; i < sk_ASN1_OBJECT_num(extusage); i++) {
       switch(OBJ_obj2nid(sk_ASN1_OBJECT_value(extusage,i))) {
@@ -1680,18 +1682,18 @@ static void x509v3_load_extensions(X509 *x)
     sk_ASN1_OBJECT_pop_free(extusage, ASN1_OBJECT_free);
   }
 
-  if((ns=X509_get_ext_d2i(x, NID_netscape_cert_type, &crit, &idx))) {
+  if((ns=X509_get_ext_d2i(x, NID_netscape_cert_type, &crit, NULL))) {
     if(ns->length > 0) x->ex_nscert = ns->data[0];
     else x->ex_nscert = 0;
     x->ex_flags |= EXFLAG_NSCERT;
     ASN1_BIT_STRING_free(ns);
   }
 
-  x->skid =X509_get_ext_d2i(x, NID_subject_key_identifier, &crit, &idx);
-  x->akid =X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, &idx);
-  x->crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, &crit, &idx);
-  x->rfc3779_addr =X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, &crit, &idx);
-  x->rfc3779_asid =X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, &crit, &idx);
+  x->skid =X509_get_ext_d2i(x, NID_subject_key_identifier, &crit, NULL);
+  x->akid =X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, NULL);
+  x->crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, &crit, NULL);
+  x->rfc3779_addr =X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, &crit, NULL);
+  x->rfc3779_asid =X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, &crit, NULL);
 
   for (i = 0; i < X509_get_ext_count(x); i++) {
     ex = X509_get_ext(x, i);
@@ -1762,29 +1764,6 @@ static int rescert_version_chk(X509 *x)
 }
 
 
-/**=============================================================================
- * @brief Issuer-related checks
- *
- * @param certp (struct Certificate*)
- * @retval ret 0 on success<br />a negative integer on failure
- -----------------------------------------------------------------------------*/
-static int rescert_issuer_chk(struct Certificate *certp) {
-    /*
-	int size = INT_MIN;
-	struct Name *issuer = &certp->toBeSigned.issuer;
-
-	size = vsize_casn(&certp->toBeSigned.issuer);
-	printf("size of issuer.self is %d\n", size);
-	uchar *to1 = calloc(1, size + 1);
-	int ret = read_casn(&certp->toBeSigned.issuer.self, to1);
-    printf("ret: %d\n", ret);
-	printf("issuer.self: %s\n", to1);
-*/
-
-	return 0;
-}
-
-
 /*************************************************************
  * rescert_basic_constraints_chk(X509 *, int)                *
  *                                                           *
@@ -1813,8 +1792,6 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
   int ret = 0;
   X509_EXTENSION    *ex = NULL;
   BASIC_CONSTRAINTS *bs = NULL;
-  int crit = INT_MIN;
-  int idx = INT_MIN;
 
   /* test the basic_constraints based against either an
      CA_CERT (cert authority), EE_CERT (end entity), or TA_CERT
@@ -1846,7 +1823,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
             goto skip;
           }
 
-          bs=X509_get_ext_d2i(x, NID_basic_constraints, &crit, &idx);
+          bs=X509V3_EXT_d2i(ex);
           if (!(bs->ca)) {
             log_msg(LOG_ERR,
 		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
@@ -2891,7 +2868,7 @@ static int rescert_ip_resources_chk(struct Certificate *certp) {
         return 0;
     } else if (ext_count > 1) {
         log_msg(LOG_ERR, "multiple IP extensions found");
-        return ERR_SCM_DUPAS;
+        return ERR_SCM_DUPIP;
     }
 
     if (!vsize_casn(&extp->self)) {
@@ -3034,7 +3011,8 @@ static int fill_asnumtest(struct AsNumTest *asntp,
  * From roa-pki:/home/gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
  *
  * @param extsp (struct Extensions*)
- * @return 0 or 1 success<br />a negative integer on failure
+ * @return 0 on success with no AS info, 1 on success with AS info,
+ *         a negative integer on failure
  -----------------------------------------------------------------------------*/
 
 static int rescert_as_resources_chk(struct Certificate *certp) {
@@ -3137,20 +3115,17 @@ return 1;
  ************************************************************/
 static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 {
-  int ret = 0;
+  int have_ip_resources, have_as_resources;
 
-  if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
-    if (x->rfc3779_addr) {
-      ret = rescert_ip_resources_chk(certp);
-      if ( ret < 0 )
-        return(ret);
-    }
-    if (x->rfc3779_asid) {
-      ret = rescert_as_resources_chk(certp);
-      if ( ret < 0 )
-        return(ret);
-    }
-  } else {
+  have_ip_resources = rescert_ip_resources_chk(certp);
+  if ( have_ip_resources < 0 )
+    return(have_ip_resources);
+
+  have_as_resources = rescert_as_resources_chk(certp);
+  if ( have_as_resources < 0 )
+    return(have_as_resources);
+
+  if ( !have_ip_resources && !have_as_resources ) {
     log_msg(LOG_ERR, "cert has neither IP resources, nor AS resources");
     return(ERR_SCM_NOIPAS);
   }
@@ -3203,7 +3178,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
         }
       }
     } 
-  return(ret);
+  return(0);
 }
 
 
@@ -3675,11 +3650,6 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_version_chk");
   if ( ret < 0 )
     return(ret);
-
-  ret = rescert_issuer_chk(certp);
-  log_msg(LOG_DEBUG, "rescert_issuer_chk");
-  if ( ret < 0 )
-	  return(ret);
 
   if (rescert_name_chk(&certp->toBeSigned.issuer.rDNSequence) < 0)
 	  return ERR_SCM_BADISSUER;
