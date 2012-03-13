@@ -1764,29 +1764,6 @@ static int rescert_version_chk(X509 *x)
 }
 
 
-/**=============================================================================
- * @brief Issuer-related checks
- *
- * @param certp (struct Certificate*)
- * @retval ret 0 on success<br />a negative integer on failure
- -----------------------------------------------------------------------------*/
-static int rescert_issuer_chk(struct Certificate *certp) {
-    /*
-	int size = INT_MIN;
-	struct Name *issuer = &certp->toBeSigned.issuer;
-
-	size = vsize_casn(&certp->toBeSigned.issuer);
-	printf("size of issuer.self is %d\n", size);
-	uchar *to1 = calloc(1, size + 1);
-	int ret = read_casn(&certp->toBeSigned.issuer.self, to1);
-    printf("ret: %d\n", ret);
-	printf("issuer.self: %s\n", to1);
-*/
-
-	return 0;
-}
-
-
 /*************************************************************
  * rescert_basic_constraints_chk(X509 *, int)                *
  *                                                           *
@@ -3677,11 +3654,6 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_version_chk");
   if ( ret < 0 )
     return(ret);
-
-  ret = rescert_issuer_chk(certp);
-  log_msg(LOG_DEBUG, "rescert_issuer_chk");
-  if ( ret < 0 )
-	  return(ret);
 
   if (rescert_name_chk(&certp->toBeSigned.issuer.rDNSequence) < 0)
 	  return ERR_SCM_BADISSUER;
