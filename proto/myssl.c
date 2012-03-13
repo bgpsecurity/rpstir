@@ -1792,8 +1792,6 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
   int ret = 0;
   X509_EXTENSION    *ex = NULL;
   BASIC_CONSTRAINTS *bs = NULL;
-  int crit = INT_MIN;
-  int idx = INT_MIN;
 
   /* test the basic_constraints based against either an
      CA_CERT (cert authority), EE_CERT (end entity), or TA_CERT
