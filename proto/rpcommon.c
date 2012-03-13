@@ -633,7 +633,7 @@ static int parse_validity_dates(char *cc)
     {
     cc = nextword(cc);
     if (!*cc || (*cc != 'C'  && *cc != 'R' && check_dates(cc) < 0))
-    return ERR_SCM_BADSKIFILE;
+        return ERR_SCM_BADSKIFILE;
     return 0;
     }
 
