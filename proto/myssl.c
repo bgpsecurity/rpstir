@@ -1825,7 +1825,7 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
             goto skip;
           }
 
-          bs=X509_get_ext_d2i(x, NID_basic_constraints, &crit, &idx);
+          bs=X509V3_EXT_d2i(ex);
           if (!(bs->ca)) {
             log_msg(LOG_ERR,
 		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
