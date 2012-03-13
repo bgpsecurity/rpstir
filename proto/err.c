@@ -137,7 +137,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Error starting Cryptlib",      /* ERR_SCM_CRYPTLIB */
     "Bad hash algorithm",           /* ERR_SCM_BADHASHALG -120 */
 
-    "Bad number of digest algorithms", /* ERR_SCM_BADDIGALGS */
+    "Bad number of digest algorithms", /* ERR_SCM_BADNUMDALG */
     "Bad number of signer infos",   /* ERR_SCM_NUMSIGINFO */
     "Invalid signer infos version", /* ERR_SCM_SIGINFOVER */
     "Invalid signer info sid",      /* ERR_SCM_SIGINFOSID */
@@ -160,7 +160,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
 
     "Bad hash in manifest",         /* ERR_SCM_BADMFTHASH -140 */
     "Invalid digest in CMS",        /* ERR_SCM_BADDIGEST */
-    "Wrong manifest hash in DB",    /* ERR_SCM_MADMFTDBHASH */
+    "Wrong manifest hash in DB",    /* ERR_SCM_BADMFTDBHASH */
     "Missing CRL version",          /* ERR_SCM_NOCRLVER */
     "Wrong CRL version",            /* ERR_SCM_BADCRLVER */
     "CRL Entry Extension present",  /* ERR_SCM_CRLENTRYEXT */
@@ -169,7 +169,8 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
     "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
     "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
-    "Duplicate file in manifest"    /* ERR_SCM_DUPMFTFNAME */
+    "Duplicate file in manifest",   /* ERR_SCM_MFTDUPFILE */
+    "EKU erroneously present",      /* ERR_SCM_EKU */
   } ;
 
 char *err2string(int err)

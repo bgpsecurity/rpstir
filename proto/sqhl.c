@@ -577,9 +577,11 @@ static int set_cert_sigval(scmcon *conp, char *subj, char *ski,
     initTables(theSCMP);
   if ( theCertTable == NULL )
     return ERR_SCM_NOSUCHTAB;
+  char escaped_subj[2*strlen(subj) + 1];
+  mysql_escape_string(escaped_subj, subj, strlen(subj));
   (void)snprintf(stmt, sizeof(stmt),
 		 "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
-		 theCertTable->tabname, valu, ski, subj);
+		 theCertTable->tabname, valu, ski, escaped_subj);
 //  (void)printf("SET: %s\n", stmt);
   sta = statementscm_no_data(conp, stmt);
 //  (void)printf("Statementscn returns %d\n", sta);
@@ -2149,6 +2151,13 @@ static int add_cert_2(scm *scmp, scmcon *conp, cert_fields *cf, X509 *x,
       if ( X509_cmp_time(X509_get_notAfter(x), NULL) < 0 )
 	sta = ERR_SCM_EXPIRED;
     }
+  // Check if cert isn't valid yet, i.e. notBefore is in the future.
+  if ( sta == 0 ) {
+    if ( X509_cmp_time(X509_get_notBefore(x), NULL) > 0 ) {
+      log_msg(LOG_WARNING, "Certificate notBefore is in the future");
+      cf->flags |= SCM_FLAG_NOTYET;
+    }
+  }
 // MCR
 // verify the cert
   if ( sta == 0 ) {

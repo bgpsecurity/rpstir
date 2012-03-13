@@ -1,0 +1,4 @@
+rsync://a.b.com/a/
+rsync://a.b.com/b/c
+rsync://a.b.com/d/e
+rsync://a.b.com/f/g

@@ -13,6 +13,8 @@
 #include "logutils.h"
 #include "hashutils.h"
 
+int strict_profile_checks_cms = 0;
+
 /*
   This file contains the functions that semantically validate the ROA.
   Any and all syntactic validation against existing structures is assumed
@@ -56,7 +58,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   // (re)init the crypt library
   if (!CryptInitState)
     {
-    if (cryptInit()) 
+    if (cryptInit() != CRYPT_OK)
       return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
@@ -318,7 +320,7 @@ static int setup_roa_minmax(struct IPAddress *ripAddrp, uchar *rmin, uchar *rmax
   return 0;
   }
 
-static int test_maxLength(struct ROAIPAddress *roaAddrp)
+static int test_maxLength(struct ROAIPAddress *roaAddrp, int familyMaxLength)
   {
   if (size_casn(&roaAddrp->maxLength) == 0) return 0;
   long maxLength = 0;
@@ -332,6 +334,7 @@ static int test_maxLength(struct ROAIPAddress *roaAddrp)
   free(addr);
   read_casn_num(&roaAddrp->maxLength, &maxLength);
   if (addrLength > maxLength) return ERR_SCM_INVALIPL;
+  if (maxLength > familyMaxLength) return ERR_SCM_INVALIPL;
   return 0;
   }
 
@@ -362,7 +365,10 @@ static int validateIPContents(struct ROAIPAddrBlocks *ipAddrBlockp)
       int siz = vsize_casn(&roaAddrp->address);
       if ((family == 1 && siz > 5) || (family == 2 && siz > 17))
           return ERR_SCM_INVALIPL;        
-      if ((err = test_maxLength(roaAddrp)) < 0 ||
+      int familyMaxLength = 0;
+      if (family == 1) familyMaxLength = 32;
+      if (family == 2) familyMaxLength = 128;
+      if ((err = test_maxLength(roaAddrp, familyMaxLength)) < 0 ||
 	  (err = setup_roa_minmax(&roaAddrp->address, rmin, rmax, i)) < 0) 
 	  return err;
       if (memcmp(&rmax[3], &rmin[3],   sizeof(rmin) - 3) < 0) 
@@ -508,7 +514,7 @@ static int cmsValidate(struct ROA *rp)
                  signatureAlgorithm.algorithm;
   if (diff_objid(oidp, id_sha_256WithRSAEncryption))
       {
-      if (diff_objid(oidp, id_rsadsi_rsaEncryption))
+      if (strict_profile_checks_cms || diff_objid(oidp, id_rsadsi_rsaEncryption))
         {
         log_msg(LOG_ERR, "invalid signature algorithm in ROA");
         return ERR_SCM_BADSIGALG;
@@ -614,10 +620,16 @@ static int check_mft_version(struct casn *casnp)
   {
   long val = 0;
   int lth = read_casn_num(casnp, &val);
-     
-  if (val > 0 ||   
-      (val == 0 && lth > 0)) // check explicit zero
-      return ERR_SCM_BADMANVER;
+
+  if (lth < 0)
+    return ERR_SCM_BADMANVER; // invalid read
+
+  if (val != 0)
+    return ERR_SCM_BADMANVER; // incorrect version number
+
+  if (lth != 0)
+    return ERR_SCM_BADMANVER; // explicit zero (should be implicit default)
+
   return 0;
   }
 
@@ -626,7 +638,7 @@ static int check_mft_number(struct casn *casnp)
   int lth;
   long val;                                                      
   lth = read_casn_num(casnp, &val);
-  if (!lth || val < 0) return ERR_SCM_BADMFTNUM;
+  if (lth <= 0 || val < 0) return ERR_SCM_BADMFTNUM;
   return 0;
   }
 
@@ -634,24 +646,23 @@ static int check_mft_dates(struct Manifest *manp)
   {
   time_t now;
   time(&now);
-  int64_t testdate;
-  if (read_casn_time(&manp->thisUpdate, &testdate) < 0)
+  int64_t thisUpdate, nextUpdate;
+  if (read_casn_time(&manp->thisUpdate, &thisUpdate) < 0)
     {
     log_msg(LOG_ERR, "This update is invalid");
     return ERR_SCM_INVALDT;
     }
-  if (testdate > now)
+  if (thisUpdate > now)
     {
     log_msg(LOG_ERR, "This update in the future");
     return ERR_SCM_INVALDT;
     }
-  now = testdate;
-  if (read_casn_time(&manp->nextUpdate, &testdate) < 0)
+  if (read_casn_time(&manp->nextUpdate, &nextUpdate) < 0)
     {
     log_msg(LOG_ERR, "Next update is invalid");
     return ERR_SCM_INVALDT;
     }
-  if (testdate < now)
+  if (nextUpdate < thisUpdate)
     {
     log_msg(LOG_ERR, "Next update earlier than this update");
     return ERR_SCM_INVALDT;
@@ -988,7 +999,8 @@ static int checkIPAddrs(struct Certificate *certp,
         }
       qsort(roaRanges, roaNumPrefixes, sizeof(roaRanges[0]), certrangecmp);
       struct IPAddressOrRangeA *certIPAddressOrRangeAp =
-        &certFamilyp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
+        (struct IPAddressOrRangeA *)member_casn(
+        &certFamilyp->ipAddressChoice.addressesOrRanges.self, 0);
       struct certrange certrange;
       roaPrefixNum = 0;
       while (roaPrefixNum < roaNumPrefixes)
@@ -1054,13 +1066,13 @@ int roaValidate(struct ROA *rp)
 
   // check that the ROA version is right
   long val;
-  if (read_casn_num(&roap->version.self, &val) > 0 && val != 0) 
+  if (read_casn_num(&roap->version.self, &val) != 0 || val != 0)
     return ERR_SCM_BADROAVER;
   // check that the asID is  a positive nonzero integer
   if (read_casn_num(&roap->asID, &iAS_ID) < 0 || iAS_ID <= 0) 
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
-  if (!certp) return ERR_SCM_BADNUMCERTS;
+  if (!certp) return ERR_SCM_BADNUMCERTS; // XXX: this never happens
   int rescount = 0;
   // check that the asID is within the EE cert's scope, if any
   if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;

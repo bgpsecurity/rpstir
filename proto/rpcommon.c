@@ -396,33 +396,36 @@ void mk_certranges(struct ipranges *rangep,
   {
   if (rangep->numranges > 0 || rangep->iprangep)
       clear_ipranges(rangep);
-  struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
-  int num;
+  int num = 0;
   struct IPAddressOrRangeA *ipAddrOrRangep;
   struct iprange *certrangep;
   struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp;
-  if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
+  struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
+  if (extp)
     {
-    for (num = 0, ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      member_casn(&ipAddrOrRangesp->self, 0);
-      ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      next_of(&ipAddrOrRangep->self))
+    if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
       {
-      certrangep = inject_range(rangep, num++);
-      certrangep->typ = IPv4;
-      cvt_asn(certrangep, ipAddrOrRangep);
+      for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        member_casn(&ipAddrOrRangesp->self, 0);
+        ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        next_of(&ipAddrOrRangep->self))
+        {
+        certrangep = inject_range(rangep, num++);
+        certrangep->typ = IPv4;
+        cvt_asn(certrangep, ipAddrOrRangep);
+        }
       }
-    }
-  if ((ipAddrOrRangesp = find_IP(IPv6, extp)))
-    {
-    for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      member_casn(&ipAddrOrRangesp->self, 0);
-      ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
-      next_of(&ipAddrOrRangep->self))
+    if ((ipAddrOrRangesp = find_IP(IPv6, extp)))
       {
-      certrangep = inject_range(rangep, num++);
-      certrangep->typ = IPv6;
-      cvt_asn(certrangep, ipAddrOrRangep);
+      for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        member_casn(&ipAddrOrRangesp->self, 0);
+        ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        next_of(&ipAddrOrRangep->self))
+        {
+        certrangep = inject_range(rangep, num++);
+        certrangep->typ = IPv6;
+        cvt_asn(certrangep, ipAddrOrRangep);
+        }
       }
     }
   if ((extp = find_extn(certp, id_pe_autonomousSysNum, 0)))

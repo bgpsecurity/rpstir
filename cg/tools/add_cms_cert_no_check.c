@@ -1,24 +1,3 @@
-/*
-  $Id: make_TA.c c 506 2008-06-03 21:20:05Z gardiner $
-*/
-
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * BBN Address and AS Number PKI Database/repository software
- * Version 3.0-beta
- *
- * US government users are permitted unrestricted rights as
- * defined in the FAR.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT
- * WARRANTY OF ANY KIND, either express or implied.
- *
- * Copyright (C) Raytheon BBN Technologies Corp. 2008-2010.  All Rights Reserved.
- *
- * Contributor(s):  Charles Gardiner
- *
- * ***** END LICENSE BLOCK ***** */
-
 #include <stdio.h>
 #include <cryptlib.h>
 #include <keyfile.h>
@@ -157,6 +136,7 @@ static char *signCMS(struct CMSBlob* roa, char *keyfilename, int bad)
     copy_casn(&signerInfop->signature, &sigInfo.signature);
     delete_casn(&sigInfo.self);
     }
+  else fprintf(stderr, "Signing failed when %s\n", msg);
   // all done with it now
   if (signature) free(signature);
   return NULL;
@@ -170,6 +150,8 @@ int main(int argc, char **argv)
     {
       fprintf(stderr, "Usage: %s EEcert CMSfile EEkeyfile [outfile]\n",
          argv[0]);
+      fprintf(stderr, "If the environment variable RPKI_NO_SIGNING_TIME is set,\n");
+      fprintf(stderr, "the signing time won't be set.\n");
       return -1;
     }
   strcpy(keyring.label, "label");
@@ -237,14 +219,15 @@ int main(int argc, char **argv)
   write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
   write_casn(&signerInfop->digestAlgorithm.parameters.sha256, (uchar *)"", 0);
       // signing time
-/* omitting these for now
-  attrp = (struct Attribute *)inject_casn( &signerInfop->signedAttrs.self, 2);
-  write_objid(&attrp->attrType, id_signingTimeAttr);
-  time_t now = time(0);
-  attrTbDefp = (struct AttrTableDefined *)
-    inject_casn(&attrp->attrValues.self, 0);
-  write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
-*/
+  if (getenv("RPKI_NO_SIGNING_TIME") == NULL)
+    {
+    attrp = (struct Attribute *)inject_casn( &signerInfop->signedAttrs.self, 2);
+    write_objid(&attrp->attrType, id_signingTimeAttr);
+    time_t now = time(0);
+    attrTbDefp = (struct AttrTableDefined *)
+      inject_casn(&attrp->attrValues.self, 0);
+    write_casn_time(&attrTbDefp->signingTime.utcTime, (ulong)now);
+    }
        // sig alg
   write_objid(&signerInfop->signatureAlgorithm.algorithm, 
     id_sha_256WithRSAEncryption);
