@@ -3013,7 +3013,8 @@ static int fill_asnumtest(struct AsNumTest *asntp,
  * From roa-pki:/home/gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
  *
  * @param extsp (struct Extensions*)
- * @return 0 or 1 success<br />a negative integer on failure
+ * @return 0 on success with no AS info, 1 on success with AS info,
+ *         a negative integer on failure
  -----------------------------------------------------------------------------*/
 
 static int rescert_as_resources_chk(struct Certificate *certp) {
@@ -3116,20 +3117,17 @@ return 1;
  ************************************************************/
 static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 {
-  int ret = 0;
+  int have_ip_resources, have_as_resources;
 
-  if ( (x->rfc3779_addr) || (x->rfc3779_asid) ) {
-    if (x->rfc3779_addr) {
-      ret = rescert_ip_resources_chk(certp);
-      if ( ret < 0 )
-        return(ret);
-    }
-    if (x->rfc3779_asid) {
-      ret = rescert_as_resources_chk(certp);
-      if ( ret < 0 )
-        return(ret);
-    }
-  } else {
+  have_ip_resources = rescert_ip_resources_chk(certp);
+  if ( have_ip_resources < 0 )
+    return(have_ip_resources);
+
+  have_as_resources = rescert_as_resources_chk(certp);
+  if ( have_as_resources < 0 )
+    return(have_as_resources);
+
+  if ( !have_ip_resources && !have_as_resources ) {
     log_msg(LOG_ERR, "cert has neither IP resources, nor AS resources");
     return(ERR_SCM_NOIPAS);
   }
@@ -3182,7 +3180,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
         }
       }
     } 
-  return(ret);
+  return(0);
 }
 
 
