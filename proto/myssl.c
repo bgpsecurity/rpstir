@@ -2870,7 +2870,7 @@ static int rescert_ip_resources_chk(struct Certificate *certp) {
         return 0;
     } else if (ext_count > 1) {
         log_msg(LOG_ERR, "multiple IP extensions found");
-        return ERR_SCM_DUPAS;
+        return ERR_SCM_DUPIP;
     }
 
     if (!vsize_casn(&extp->self)) {
