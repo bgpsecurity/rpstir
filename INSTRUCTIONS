@@ -1,6 +1,6 @@
 Relying Party Security Technology for Internet Routing
 Installation and Usage Manual
-Version 0.2
+Version 0.3
 
 ===============================================================================
 Table of Contents
@@ -26,7 +26,7 @@ Table of Contents
       2.6.2 Adjust Permissions
 3. Running the RPKI Software
     3.1 Walkthrough
-      3.1.1 Create initial rsync configuration file.
+      3.1.1 Add rsync uris to configuration file.
       3.1.2 Clear database and local repository cache.
       3.1.3 Invoke DB Updater (rcli) in listening mode.
       3.1.4 Automatically download Trust Anchors using TAL files.
@@ -82,6 +82,11 @@ this file before continuing.
 
 
 2.1 Prerequisites
+
+When installing prerequisites from your operating system's package
+manager, you may need to look for a -dev or -devel version of each
+package. These versions generally contain header files that are needed
+to build rpstir.
 
 2.1.1 User Account
 
@@ -251,11 +256,11 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named rpstir-0.2.tar.gz.  Extract the file using:
+named rpstir-0.3.tar.gz.  Extract the file using:
 
-    tar xvzpf rpstir-0.2.tar.gz
+    tar xvzpf rpstir-0.3.tar.gz
     
-This will create a directory named rpstir-0.2 which will contain
+This will create a directory named rpstir-0.3 which will contain
 various subdirectories.
 
 2.2.2 Configure
@@ -364,6 +369,8 @@ target by issuing the command:
 
    make check
 
+Note:  this will clear any data in the RPKI database.
+
 You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
@@ -392,7 +399,7 @@ database.
 
 Except for the query client, all RPKI processes should run as the RPKI
 user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (0.2)
+configuration will be used for final deployment, this release (0.3)
 does not include suggested crontab entries.  It is assumed that for
 trial purposes, manual execution gives the user/debugger maximum
 control.
@@ -403,7 +410,7 @@ Component (script or executable)     Frequency
 Parallelized rsync (rsync_cord.py)   Invoked by chaser
 RCLI Database Client (loader.sh)     Continuously as daemon
 Garbage Collector (garbage.sh)       Once per day
-Chaser Client (proto/chaser)         Once per day
+Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
@@ -438,22 +445,11 @@ production, it is recommended that the user create a script to run
 3.1.4-3.1.6 and have a cron job that executes this script
 periodically.
 
-3.1.1 Create initial rsync configuration file.
+3.1.1 Add rsync uris to configuration file.
 
-In order to pre-configure rsync with default directories and
-publication points, write the following configuration file.  The
-example below needs no pre-configured publication points since the
-publication points will be derived from the trust anchors.
-
-    #### Contents of initial_rsync.config ####
-    RSYNC=/usr/local/bin/rsync
-    REPOSITORY=/home/bbn/rpki/REPOSITORY
-    LOGS=/home/bbn/rpki/LOGS
-    DIRS=""
-    ##########################################
-
-Adjust the paths for REPOSITORY and LOGS above to match your
-$RPKI_ROOT directory.
+If you wish to download from publication points other than those
+derived from the trust anchors, then add those publication points
+to the file, additional_rsync_uris.config.
 
 3.1.2 Clear database and local repository cache.
 
@@ -527,16 +523,12 @@ to manually add each of the trust anchors.
 3.1.6 Run URI Chaser.
 
 This chases down objects from repositories that may not have been
-loaded but are required.  It checks the AIA, SIA and CRLDP fields of
-all certificates in the database.  A list of repositories to check is
-compiled and written to chaser_rsync.config.
+loaded but are required.  The chaser automatically invokes rsync to
+download from all the repositories.  When each rsync transfer
+completes, the chaser invokes the rsync log parser, which notifies the
+DB Updater (activated in the previous step) of any changes.
 
-The chaser automatically invokes rsync to download from all the
-repositories.  When each rsync transfer completes, the chaser invokes
-the rsync log parser, which notifies the DB Updater (activated in the
-previous step) of any changes.
-
-    proto/chaser -f initial_rsync.config
+    run_scripts/chaser.sh
 
 The process of chasing URIs and then invoking rsync will automatically
 continue until no new publication directories have been found, or

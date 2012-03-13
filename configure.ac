@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.2, achi@bbn.com)
+AC_INIT(rpstir, 0.3, achi@bbn.com)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
@@ -24,14 +24,14 @@ AC_PROG_SED
 
 AC_ARG_WITH(
     [ssl-include],
-    AS_HELP_STRING([--with-ssl-include],[Path to openssl library install location: Defaults to /usr/local/ssl/include ]),
+    AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ]),
     [ ssl_include=$withval],
     [ ssl_include=/usr/local/ssl/include]
 )
 
 AC_ARG_WITH(
     [ssl-lib],
-    AS_HELP_STRING([--with-ssl-lib],[Path to openssl library install location: Defaults to /usr/local/ssl/lib ]),
+    AS_HELP_STRING([--with-ssl-lib],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/lib ]),
     [ ssl_lib=$withval],
     [ ssl_lib=/usr/local/ssl/lib]
 )
@@ -107,6 +107,7 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   done
 
   # this is a bit of a hack because mysql_config --libs_r specifies compiler flags, not linker flags
+  mysql_config_LIBS=""
   for flag in `$MYSQL_CONFIG --libs_r`; do
     case $flag in
       -L*)
@@ -114,12 +115,13 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
         LDFLAGS="-L${libpath} -Wl,-rpath -Wl,${libpath} ${LDFLAGS}"
         ;;
       -l*)
-        LDFLAGS="${flag} ${LDFLAGS}"
+        mysql_config_LIBS="${mysql_config_LIBS} ${flag}"
         ;;
       *)
         ;;
     esac
   done
+  LIBS="${mysql_config_LIBS} ${LIBS}"
 else
   AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
@@ -165,7 +167,11 @@ AC_SEARCH_LIBS([cryptInit], [cl],[],[
 	exit -1;
 ])
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
-	echo "Error: openSSL is required for building this project"
+	echo "Error: OpenSSL is required for building this project"
+	exit -1;
+])
+AC_SEARCH_LIBS([v3_addr_validate_path], [crypto],[],[
+	echo "Error: OpenSSL with RFC 3779 is required for building this project"
 	exit -1;
 ])
 
@@ -199,6 +205,15 @@ AC_FUNC_STAT
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 
+# warn if the target isn't 32-bit
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([void *])
+if test "$ac_cv_sizeof_int" != 4 -o "$ac_cv_sizeof_long" != 4 -o "$ac_cv_sizeof_void_p" != 4; then
+	AC_MSG_WARN([currently only 32-bit targets are supported])
+fi
+
+
 AC_CONFIG_FILES([Makefile
                  cg/Makefile
                  cg/asn/Makefile
@@ -212,6 +227,7 @@ AC_CONFIG_FILES([Makefile
                  rsync_aur/Makefile
                  rtr/Makefile
                  subsystemTests/Makefile
+                 subsystemTests/chaser/Makefile
                  subsystemTests/rtr/Makefile
                  testcases/Makefile
                  testbed/Makefile
