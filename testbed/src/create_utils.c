@@ -312,7 +312,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   }
 
 
-#define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separator, family) \
+#define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separators, family) \
   char ipstr[addrstrlen]; \
   ip_type ipbin0, ipbin1; \
   size_t i, j; \
@@ -327,7 +327,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   j = 0; \
   for (; \
     ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
-      (number_func(ip[i]) || ip[i] == separator); \
+      (number_func(ip[i]) || strchr(separators, ip[i]) != NULL); \
     ++i) \
   { \
     ipstr[j++] = ip[i]; \
@@ -395,7 +395,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
       j = 0; \
       for (; \
         ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
-          (number_func(ip[i]) || ip[i] == separator); \
+          (number_func(ip[i]) || strchr(separators, ip[i]) != NULL); \
         ++i) \
       { \
         ipstr[j++] = ip[i]; \
@@ -427,10 +427,10 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   }
 
 int cvtv4(uchar fill, char *ip, uchar *buf)
-{ CVTV_BODY_COMMON(INET_ADDRSTRLEN, struct in_addr, isdigit, '.', AF_INET) }
+{ CVTV_BODY_COMMON(INET_ADDRSTRLEN, struct in_addr, isdigit, ".", AF_INET) }
 
 int cvtv6(uchar fill, char *ip, uchar *buf)
-{ CVTV_BODY_COMMON(INET6_ADDRSTRLEN, struct in6_addr, isxdigit, ':', AF_INET6) }
+{ CVTV_BODY_COMMON(INET6_ADDRSTRLEN, struct in6_addr, isxdigit, ":.", AF_INET6) }
 
 #undef CVTV_BODY_COMMON
 
