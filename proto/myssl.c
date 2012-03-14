@@ -1824,6 +1824,11 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
           }
 
           bs=X509V3_EXT_d2i(ex);
+          if (!bs) {
+            log_msg(LOG_ERR, "Couldn't parse basic_constraints");
+            ret = ERR_SCM_BADEXT;
+            goto skip;
+          }
           if (!(bs->ca)) {
             log_msg(LOG_ERR,
 		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
@@ -2003,22 +2008,11 @@ static int rescert_aki_chk(X509 *x, int ct)
         goto skip;
       }
 
-      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, &idx);
+      akid = X509V3_EXT_d2i(ex);
       if (!akid) {
-          if (crit == -2) {  /* extension occurs more than once */
-              log_msg(LOG_ERR, "[aki] duplicate aki found");
-              return(ERR_SCM_DUPAKI);
-          }
-          if (crit == -1) {  /* extension not found */
-              log_msg(LOG_ERR, "[aki] aki extension not found");
-          }
-          if (crit >= 0) {   /* extension found but not decoded */
-              log_msg(LOG_ERR, "[aki] extension found but not decoded");
-          } else {
-              log_msg(LOG_ERR, "[aki] could not load aki");
-          }
-
-        return(ERR_SCM_NOAKI);
+         log_msg(LOG_ERR, "Failed to parse AKI");
+         ret = ERR_SCM_BADEXT;
+         goto skip;
       }
 
       /* Key Identifier sub field MUST be present in any certs that
