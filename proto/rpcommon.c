@@ -549,20 +549,20 @@ static int parse_topcert(char *skibuf, int siz, FILE *SKI)
       if (*c == '$') envp = translate_env(&skibuf[20]);
       if (!envp)
         {
-        strcpy(errbuf, "Error translating root cert file name");
+        snprintf(errbuf, sizeof(errbuf), "Error translating root cert file name");
         ansr = ERR_SCM_NORPCERT;
         }
       else if (strlen(envp) >= sizeof(myrootfullname) - 2)
         {
         ansr = ERR_SCM_NORPCERT;
-        strcpy(errbuf, "Top level certificate name too long");
+        snprintf(errbuf, sizeof(errbuf), "Top level certificate name too long");
         }
       else
         {
         strcpy(myrootfullname, envp);
         if (get_casn_file(&myrootcert.self, myrootfullname, 0) < 0)
           {
-          sprintf(errbuf, "Invalid top level certificate: %s.", myrootfullname);
+          snprintf(errbuf, sizeof(errbuf), "Invalid top level certificate: %s.", myrootfullname);
           ansr = ERR_SCM_NORPCERT;
           }
         else
@@ -618,13 +618,13 @@ static int parse_control_section(char *skibuf, int siz, FILE *SKI,
         if ((val = next_cmd(skibuf, siz, SKI)) <= 0)
           {
           c = NULL;
-          strcpy(errbuf, "Error in control section");
+          snprintf(errbuf, sizeof(errbuf), "Error in control section");
           }
         }
       }
     if (ansr == -1)
       {
-      sprintf(errbuf, "No/not TRUE or FALSE in %s.", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "No/not TRUE or FALSE in %s.", skibuf);
       ansr = ERR_SCM_BADSKIFILE;
       } 
     return ansr; 
@@ -668,7 +668,7 @@ static int parse_Xcp(char *cc, char *skibuf)
     else if (nextword(cc))
       {
       ansr = ERR_SCM_BADSKIFILE;
-      sprintf(errbuf, "Invalid Xcp entry: %s.", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "Invalid Xcp entry: %s.", skibuf);
       } 
     else if (check_cp(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
     return ansr;
@@ -684,7 +684,7 @@ static int parse_tag_section(char *skibuf, int siz, FILE *SKI)
     cc = nextword(skibuf);
     if (skibuf[3] != ' ')
       {
-      sprintf(errbuf, "Invalid line: %s.", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "Invalid line: %s.", skibuf);
       ansr = ERR_SCM_BADSKIFILE;
       break;
       }
@@ -703,14 +703,14 @@ static int parse_tag_section(char *skibuf, int siz, FILE *SKI)
     else
       {
       ansr = ERR_SCM_BADSKIFILE;
-      sprintf(errbuf, "Invalid TAG entry: %s.", cc);
+      snprintf(errbuf, sizeof(errbuf), "Invalid TAG entry: %s.", cc);
       }
     if (!ansr) 
       {
       if ((val = next_cmd(skibuf, siz, SKI)) <= 0)
         {
         ansr = ERR_SCM_BADSKIFILE;
-        strcpy(errbuf, "Error in TAG entries");
+        snprintf(errbuf, sizeof(errbuf), "Error in TAG entries");
         }
       }
     }
@@ -741,7 +741,7 @@ Procedure:
   if ((ansr = next_cmd(skibuf, siz, SKI)) <= 0)
     {
     ansr = ERR_SCM_BADSKIFILE;
-    strcpy(errbuf, "No private key material");
+    snprintf(errbuf, sizeof(errbuf), "No private key material");
     } 
   else ansr = parse_privatekey(skibuf);
 
@@ -749,8 +749,8 @@ Procedure:
     ansr = parse_topcert(skibuf, siz, SKI);
   if (!ansr && (val = next_cmd(skibuf, siz, SKI)) <= 0)
     {
-    if (val < 0) strcpy(errbuf, "Error in control section");
-    else strcpy(errbuf, "No control section.");
+    if (val < 0) snprintf(errbuf, sizeof(errbuf), "Error in control section");
+    else snprintf(errbuf, sizeof(errbuf), "No control section.");
     ansr = ERR_SCM_BADSKIFILE;
     }
                                                  // step 2
