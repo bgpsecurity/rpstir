@@ -1990,8 +1990,6 @@ static int rescert_aki_chk(X509 *x, int ct)
   int i;
   int ex_nid;
   int ret = 0;
-  int crit = INT_MIN;
-  int idx = INT_MIN;
   X509_EXTENSION  *ex = NULL;
   AUTHORITY_KEYID *akid = NULL;
 
