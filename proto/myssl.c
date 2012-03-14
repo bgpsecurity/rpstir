@@ -1824,6 +1824,11 @@ static int rescert_basic_constraints_chk(X509 *x, int ct)
           }
 
           bs=X509V3_EXT_d2i(ex);
+          if (!bs) {
+            log_msg(LOG_ERR, "Couldn't parse basic_constraints");
+            ret = ERR_SCM_BADEXT;
+            goto skip;
+          }
           if (!(bs->ca)) {
             log_msg(LOG_ERR,
 		    "[basic_const] testing for CA_CERT: cA boolean NOT set");
@@ -1931,7 +1936,11 @@ static int rescert_ski_chk(X509 *x, struct Certificate *certp)
       return ERR_SCM_INVALSKI;
     }
     // Subject public key info is a BIT STRING, so the first octet is the
-    // number of unused bits.  We assume it is zero and skip it.
+    // number of unused bits.  We require it to be zero, but skip it.
+    if (pub_key_infp[0] != 0) {
+      free(pub_key_infp);
+      return ERR_SCM_UNSUPPUBKEY;
+    }
     gen_hash(&pub_key_infp[1], key_info_len - 1, hash, CRYPT_ALGO_SHA1);
     free(pub_key_infp);
     pub_key_infp = NULL;
@@ -1981,8 +1990,6 @@ static int rescert_aki_chk(X509 *x, int ct)
   int i;
   int ex_nid;
   int ret = 0;
-  int crit = INT_MIN;
-  int idx = INT_MIN;
   X509_EXTENSION  *ex = NULL;
   AUTHORITY_KEYID *akid = NULL;
 
@@ -1999,22 +2006,11 @@ static int rescert_aki_chk(X509 *x, int ct)
         goto skip;
       }
 
-      akid = X509_get_ext_d2i(x, NID_authority_key_identifier, &crit, &idx);
+      akid = X509V3_EXT_d2i(ex);
       if (!akid) {
-          if (crit == -2) {  /* extension occurs more than once */
-              log_msg(LOG_ERR, "[aki] duplicate aki found");
-              return(ERR_SCM_DUPAKI);
-          }
-          if (crit == -1) {  /* extension not found */
-              log_msg(LOG_ERR, "[aki] aki extension not found");
-          }
-          if (crit >= 0) {   /* extension found but not decoded */
-              log_msg(LOG_ERR, "[aki] extension found but not decoded");
-          } else {
-              log_msg(LOG_ERR, "[aki] could not load aki");
-          }
-
-        return(ERR_SCM_NOAKI);
+         log_msg(LOG_ERR, "Failed to parse AKI");
+         ret = ERR_SCM_BADEXT;
+         goto skip;
       }
 
       /* Key Identifier sub field MUST be present in any certs that
