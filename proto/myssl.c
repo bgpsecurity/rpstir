@@ -1931,7 +1931,11 @@ static int rescert_ski_chk(X509 *x, struct Certificate *certp)
       return ERR_SCM_INVALSKI;
     }
     // Subject public key info is a BIT STRING, so the first octet is the
-    // number of unused bits.  We assume it is zero and skip it.
+    // number of unused bits.  We require it to be zero, but skip it.
+    if (pub_key_infp[0] != 0) {
+      free(pub_key_infp);
+      return ERR_SCM_UNSUPPUBKEY;
+    }
     gen_hash(&pub_key_infp[1], key_info_len - 1, hash, CRYPT_ALGO_SHA1);
     free(pub_key_infp);
     pub_key_infp = NULL;
