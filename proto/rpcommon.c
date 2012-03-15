@@ -513,20 +513,19 @@ int getSKIBlock(FILE *SKI, char *skibuf, int siz)
 
 static int parse_privatekey(char *skibuf)  
   {
-  int ansr = 0;
   char *cc;
   if (strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
     {
-    ansr = ERR_SCM_BADSKIFILE;
     snprintf(errbuf, sizeof(errbuf), "No private key method.");
+    return ERR_SCM_BADSKIFILE;
     }
   for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
   if (strncmp(cc, "Keyring", 7) || check_keyring(cc) < 0)
     {
-    ansr = ERR_SCM_BADSKIFILE;
     snprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
+    return ERR_SCM_BADSKIFILE;
     }
-  return ansr;
+  return 0;
   }
 
 static int parse_topcert(char *skibuf, int siz, FILE *SKI)
