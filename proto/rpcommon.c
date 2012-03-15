@@ -136,7 +136,7 @@ static int next_cmd(char *outbufp, int siz, FILE *SKI)
   do                                             // step1
     {
     *eip = 'x';   // a test character
-    if (!fgets(locbuf, siz, SKI)) 
+    if (!fgets(locbuf, sizeof(locbuf), SKI))
       return 0;
     if (*eip != 'x' || locbuf[0] <= ' ') return ERR_SCM_BADSKIFILE;
     }
