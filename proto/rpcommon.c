@@ -486,10 +486,12 @@ int getSKIBlock(FILE *SKI, char *skibuf, int siz)
   {
   int ansr = ERR_SCM_BADSKIBLOCK;
   int val; 
-  if ((val = next_cmd(skibuf, siz, SKI) || strcmp(skibuf, "IPv4\n")) < 0)
+  if ((val = next_cmd(skibuf, siz, SKI)) < 0)
     snprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
   else if (!val)
     snprintf(errbuf, sizeof(errbuf), "Missing IPv4 ");
+  else if (strcmp(skibuf, "IPv4\n"))
+    snprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
   else if (getIPBlock(SKI, IPv4, skibuf, siz) < 0)
     {
     if (!*errbuf) snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv4 group ");
