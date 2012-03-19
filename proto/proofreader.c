@@ -86,6 +86,7 @@ int main(int argc, char **argv)
   FILE *tmpstr;
   char *f = "xproof.tmp";
   int ansr, i = 0;
+  struct keyring keyring = {NULL, NULL, NULL};
 
   if (log_init("proofreader.log", "proofreader", LOG_DEBUG, LOG_DEBUG) != 0) {
     perror("Failed to initialize proofreader log file");
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
   
   if (!(tmpstr = fopen(f, "w+"))) fatal(7, f);
 
-  if ((ansr = parse_SKI_blocks(str, inbuf, sizeof(inbuf), &i)) < 0)
+  if ((ansr = parse_SKI_blocks(&keyring, str, inbuf, sizeof(inbuf), &i)) < 0)
     fatal(2, errbuf);
   fseek(str, (long)0, 0);
   *inbuf = 0;

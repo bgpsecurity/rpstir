@@ -113,7 +113,7 @@ struct Extension *find_extn(struct Certificate *certp, char *oid, int add);
 
 char *nextword(char *), myrootfullname[PATH_MAX];
 
-int parse_SKI_blocks(FILE *, char *, int, int *), 
+int parse_SKI_blocks(struct keyring *, FILE *, char *, int, int *), 
   get_CAcert(char *, struct done_cert **),
   getSKIBlock(FILE *, char *, int), 
   check_date(char *datep, struct casn *casnp, int64_t *datenump),

@@ -18,8 +18,6 @@ extern struct ipranges certranges, ruleranges, lessranges, fromranges;
 extern char *Xcrldp, *Xcp, *Xrpdir;
 
 
-struct keyring keyring;
-
 static char *translate_env(char *v)
   {
 /* 
@@ -43,12 +41,12 @@ static char *free_old_key_field(char *f)
   return NULL;
   }
 
-static int check_keyring(char *cc)
+static int check_keyring(struct keyring * keyring, char *cc)
   {
   char *b, *envp = NULL;
-  keyring.filename = free_old_key_field(keyring.filename);
-  keyring.label    = free_old_key_field(keyring.label);
-  keyring.password = free_old_key_field(keyring.password);
+  keyring->filename = free_old_key_field(keyring->filename);
+  keyring->label    = free_old_key_field(keyring->label);
+  keyring->password = free_old_key_field(keyring->password);
   if ((cc = nextword(cc)))
     {
     if (*cc == '$')
@@ -60,23 +58,23 @@ static int check_keyring(char *cc)
     for (b = cc; *b > ' '; b++);
     if (*b)
       {
-      keyring.filename = (char *)calloc(1, (b - cc) + 2);
-      if (keyring.filename)
+      keyring->filename = (char *)calloc(1, (b - cc) + 2);
+      if (keyring->filename)
         {
-        strncpy(keyring.filename, cc, (b - cc));
+        strncpy(keyring->filename, cc, (b - cc));
         if ((cc = nextword(cc)))
           {
           if ((b = strchr(cc, (int)' ')))
             {
-            keyring.label = (char *)calloc(1, (b - cc) + 2);
-            if (keyring.label)
+            keyring->label = (char *)calloc(1, (b - cc) + 2);
+            if (keyring->label)
               {
-              strncpy( keyring.label, cc, (b - cc));
+              strncpy( keyring->label, cc, (b - cc));
               if ((cc = nextword(cc)))
                 {
                 for (b = cc; *b > ' '; b++);
-                keyring.password = (char *)calloc(1, (b - cc) + 2);
-                strncpy( keyring.password, cc, (b - cc));
+                keyring->password = (char *)calloc(1, (b - cc) + 2);
+                strncpy( keyring->password, cc, (b - cc));
                 return 1;
                 }
               }
@@ -513,7 +511,7 @@ int getSKIBlock(FILE *SKI, char *skibuf, int siz)
   return ansr;
   }
 
-static int parse_privatekey(char *skibuf)  
+static int parse_privatekey(struct keyring * keyring, char *skibuf)
   {
   char *cc;
   if (strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
@@ -522,7 +520,7 @@ static int parse_privatekey(char *skibuf)
     return ERR_SCM_BADSKIFILE;
     }
   for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
-  if (strncmp(cc, "Keyring", 7) || check_keyring(cc) < 0)
+  if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc) < 0)
     {
     snprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
     return ERR_SCM_BADSKIFILE;
@@ -718,7 +716,7 @@ static int parse_tag_section(char *skibuf, int siz, FILE *SKI)
   return ansr;
   }
 
-int parse_SKI_blocks(FILE *SKI, char *skibuf, int siz, int *locflagsp)
+int parse_SKI_blocks(struct keyring * keyring, FILE *SKI, char *skibuf, int siz, int *locflagsp)
   {
 /*
 Procedure:
@@ -744,7 +742,7 @@ Procedure:
     ansr = ERR_SCM_BADSKIFILE;
     snprintf(errbuf, sizeof(errbuf), "No private key material");
     } 
-  else ansr = parse_privatekey(skibuf);
+  else ansr = parse_privatekey(keyring, skibuf);
 
   if (!ansr)
     ansr = parse_topcert(skibuf, siz, SKI);
