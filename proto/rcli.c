@@ -259,6 +259,8 @@ static int makesock(char *porto, int *protosp)
   int  protos;
   int  sta;
   int  consumed;
+  static int64_t num_accepted_connections = 0;
+  static int64_t num_failed_connections = 0;
 //  int  one = 1;
   int  s;
 
@@ -297,8 +299,18 @@ static int makesock(char *porto, int *protosp)
 	}
       *protosp = protos;
     }
+  log_msg(LOG_INFO, "Waiting for a connection on port %s", porto);
   leen = sizeof(sout);
   s = accept(protos, (struct sockaddr *)&sout, &leen);
+  if (s >= 0) {
+    num_accepted_connections++;
+    log_msg(LOG_INFO, "New connection accepted on port %s (#%" PRId64 ")",
+	    porto, num_accepted_connections);
+  } else {
+    num_failed_connections++;
+    log_msg(LOG_ERR, "Failed to accept connection on port %s (failure #%"
+	    PRId64 ")", porto, num_failed_connections);
+  }
 //  (void)close(protos);
   return(s);
 }
