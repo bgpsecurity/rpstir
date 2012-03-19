@@ -1,0 +1,11 @@
+--- badMFTHashOctetStr.raw.old	2012-01-25 11:23:07.443107740 -0500
++++ badMFTHashOctetStr.raw	2012-01-25 11:23:30.286761830 -0500
+@@ -10,7 +10,7 @@
+                             gen "20460515185928Z"
+                             oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                             seq seq ia5 "MFTHashOctetStr.crl"
+-                                    bit 0x00FB871FA3F4D796093446BB99785EAA
++                                    oct 0x00FB871FA3F4D796093446BB99785EAA
+                                         0x6317C7BD4A0FF286F3238D6055DA5397
+                                         0xE0
+             ctx+0x20

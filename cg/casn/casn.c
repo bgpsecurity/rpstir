@@ -20,8 +20,8 @@ char casn_sfcsid[] = "@(#)casn.c 871P";
 
 #define ASN_READ 1          // modes for encode & read
 
-extern int _utctime_to_ulong(ulong *valp, char *fromp, int lth);
-extern int _gentime_to_ulong(ulong *valp, char *fromp, int lth);
+extern int _utctime_to_ulong(int64_t *valp, char *fromp, int lth);
+extern int _gentime_to_ulong(int64_t *valp, char *fromp, int lth);
 extern int _dump_tag(int tag, char *to, int offset, ushort flags,
     int mode);
 
@@ -251,14 +251,17 @@ int eject_casn(struct casn *casnp, int num)
     int icount, err = 0;
 
     if (_clear_error(casnp) < 0) return -1;
-    if (!(casnp->flags & ASN_OF_FLAG)) err = ASN_OF_ERR;
+    if (!(casnp->flags & ASN_OF_FLAG)) 
+      err = ASN_OF_ERR;
     else
 	{
         for (icount = 0, tcasnp = &casnp[1]; tcasnp->ptr; tcasnp = tcasnp->ptr,
             icount++);
-        if (num >= icount) err = ASN_OF_BOUNDS_ERR;
+        if (num >= icount) 
+          err = ASN_OF_BOUNDS_ERR;
 	}
-    if (err) return _casn_obj_err(casnp, err);
+    if (err) 
+      return _casn_obj_err(casnp, err);
     fcasnp = &casnp[1];  // first member in OF
     if (!num)
 	{
@@ -284,6 +287,22 @@ int eject_casn(struct casn *casnp, int num)
     return num;
     }
 
+int eject_all_casn(struct casn *casnp)
+    {
+    int num= 0;
+    if ((num = num_items(casnp)) < 0) 
+      return _casn_obj_err(casnp, num);
+    if (num == 0) 
+      return 0;
+    int i, err = 0;
+    for (i = 1; i < num; i++)  // more efficient not to start with zeroth
+      {
+      if ((err = eject_casn(casnp, 1)) < 0) 
+        return err;
+      }
+    return eject_casn(casnp, 0);
+    }
+
 int encode_casn(struct casn *casnp, uchar *to)
     {
     int ansr;
@@ -298,17 +317,18 @@ struct casn *index_casn(struct casn *casnp, int num)
     struct casn *tcasnp;
     int err = 0;
 
-    if (_clear_error(casnp) < 0) return (struct casn *)0;
+    if (_clear_error(casnp) < 0) 
+      return (struct casn *)0;
     if (!casnp->level || !(_go_up(casnp)->flags & ASN_OF_FLAG))
         err = ASN_NOT_OF_ERR;
-/*
+    else if (num >= casnp->num_items) 
+        err = ASN_OF_BOUNDS_ERR;
     else
 	{
         for (tcasnp = casnp ; num-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
-        if (num >= 0) err = ASN_OF_BOUNDS_ERR;
+        if (num >= 0) 
+            err = ASN_OF_BOUNDS_ERR;
 	}
-*/
-    else if (num >= casnp->num_items) err = ASN_OF_BOUNDS_ERR;
     if (err)
 	{
 	_casn_obj_err(casnp, err);
@@ -569,12 +589,16 @@ int _check_enum(struct casn **casnpp)
     return 1;
     }
 
+// Mode 0 (just tell me whether it's filled)
+// 1 if filled, 0 if not (or none)
+// Mode 1 (== ASN_READ)
+// return error (< 0) if it was mandatory and not filled
 int _check_filled(struct casn *casnp, int mode)
     {
     ushort flags = (casnp->flags & (ASN_DEFAULT_FLAG | ASN_OPTIONAL_FLAG));
 
     if ((casnp->flags & ASN_FILLED_FLAG)) return 1;
-    if (casnp->type >= ASN_CHOICE && (casnp->flags & ASN_DEFINED_FLAG))
+    if (casnp->type == ASN_CHOICE && (casnp->flags & ASN_DEFINED_FLAG))
         casnp = _find_chosen(casnp);
   	  // error if couldn't find chosen OR (it's not a NONE AND not OPTIONAL)
     if (!casnp || (!flags && casnp->type != ASN_NONE))
@@ -951,10 +975,11 @@ int _mark_definees(struct casn *casnp, uchar *wherep, int index)
             }
         else if (*wherep > '0')
             {
-	    if (!(tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'))) ||
+	    tcasnp = _skip_casn(tcasnp, (int)(*wherep - '0'));
+            if (!tcasnp) return 0;
 		// if more than 1 'digit', go down
-                (wherep[1] >= '0' && (!(tcasnp++)->type & ASN_CONSTRUCTED)))
-            return 0;
+            if (wherep[1] >= '0' && (!((tcasnp++)->type & ASN_CONSTRUCTED)))
+                return 0;
             }
         }
     return 1;
@@ -1000,6 +1025,7 @@ Procedure:
 	    Call the constructor
 	    Make the pointed-to be the current item
         IF have indefinite length, return error
+3a.
         Calculate the length
         Count up the bytes processed so far
         IF have overshot or will with this item, return error
@@ -1018,12 +1044,12 @@ Procedure:
             ELSE IF item is explicit AND tag not equal to current type OR
               item is not explicit AND tag not equal to current tag, error
             IF too many bytes, error
-        Check that the next byte matches the type
+4a      Check that the next byte matches the type
 	    IF have indefinite length, return error
 	    Calculate the length
         ELSE IF at a CHOICE where the current tag is not the type
           Get the tag and length
-
+4b
         IF at a primitive item which isn't a wrapper
             Note what the call to write a primitive returns.
         ELSE IF current item has no contents, its length is zero
@@ -1046,7 +1072,7 @@ Procedure:
 **/
     struct casn *curr_casnp, *ch_casnp, *sav_casnp, *set_casnp,
         *tcasnp;
-    int ansr, did, err, num, lth, explicit_extra, break_out, num_ofs,
+    int ansr, did, num, lth, explicit_extra, break_out, num_ofs,
       indefs = 0, has_indef, skip_match;
     uchar *b, *c, ftag = 0;
     long tag;
@@ -1059,9 +1085,9 @@ Procedure:
         {
         int def_lth = 0;
         has_indef = skip_match = 0;
-        if (!curr_casnp) return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
+        if (!curr_casnp) 
+          return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
         c = from;  // note that NONE case uses this to reset c
-	err = 0;
         if (of_casnp)
 	    {
             if (!(curr_casnp = inject_casn(of_casnp, num_ofs++)))
@@ -1143,6 +1169,7 @@ Procedure:
 	    }
 	if ((curr_casnp->flags & ASN_POINTER_FLAG))
             curr_casnp = _dup_casn(curr_casnp);
+                                                   // step 3a
 	if ((lth = _calc_lth(&c, ftag)) < -1)
             return _casn_obj_err(curr_casnp, ASN_LENGTH_ERR) - did - 1;
         if (lth == -1)
@@ -1220,7 +1247,7 @@ Procedure:
             }
         if (!skip_match)
           {
-    	  ansr = -1;
+    	  ansr = -1;                             // step 4b
             // IF at a primitive item which isn't a wrapper
             //    Note what the call to write a primitive returns.
     	  if (!(curr_casnp->type & ASN_CONSTRUCTED))
@@ -1234,7 +1261,7 @@ Procedure:
                     return ansr - did;
               }
     	    }
-      	  else if (!curr_casnp->lth)
+      	  else if (!curr_casnp->lth)      // no contents?
     	    {
     	    if (curr_casnp->min)
                return _casn_obj_err(curr_casnp, ASN_OF_BOUNDS_ERR);
@@ -1379,8 +1406,8 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     {
     uchar bb, *b, *c, buf[8];
     int i, lth, num, of;
-    ulong secs;
-    struct casn time_casn, *tcasnp, *ch_casnp;
+    int64_t secs = 0;
+    struct casn *tcasnp, *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;
 #endif
@@ -1429,11 +1456,17 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
 	    lth = 1 + (b - casnp->startp);
 	    }
 	else if (casnp->type == ASN_UTCTIME || casnp->type == ASN_GENTIME)
-	    {
+	    { // convert to DER
+            struct casn time_casn;
             simple_constructor(&time_casn, (ushort)0, casnp->type);
 	    if (read_casn_time(casnp, &secs) > 0 &&
 	        (lth = write_casn_time(&time_casn, secs)) > 0)
+                {   // check if time wasn't GMT
 		tcasnp = &time_casn;
+                if (casnp->lth != tcasnp->lth ||
+                    memcmp(casnp->startp, tcasnp->startp, casnp->lth))
+                    log_msg(LOG_DEBUG, "Converted date to DER");
+                }
 	    else
                 {
                 clear_casn(&time_casn);
@@ -1585,57 +1618,52 @@ int _readsize(struct casn *casnp, uchar *to, int mode)
     return lth;
     }
 
+static int check_filled_default(struct casn *casnp)
+  {
+  if ((casnp->flags & ASN_DEFAULT_FLAG)) 
+    {
+    if (((casnp->flags & ASN_FILLED_FLAG)))
+      {
+      struct casn *xcasnp = &casnp[2]; // the default value
+      if (xcasnp->lth != casnp->lth) return 0;
+      if (!memcmp(xcasnp->startp, casnp->startp, casnp->lth))
+        return 1; 
+      }
+    }
+  return 0;
+  }
+
 int _readvsize(struct casn *casnp, uchar *to, int mode)
     {      // handles default cases at level above _readsize()
-    int ansr, tmp;
-    struct casn *tcasnp;
-    ushort flags = casnp->flags & (ASN_FILLED_FLAG | ASN_DEFAULT_FLAG);
-    uchar *c;
+    int ansr = 0;
+    struct casn *ch_casnp = NULL;
 
     if (_clear_error(casnp) < 0) return -1;
-    tcasnp = (struct casn *)0;
     if (casnp->type == ASN_CHOICE)
-	{
-        if (!(tcasnp = _find_filled_or_chosen(casnp, &ansr)))
+	{ // anything chosen?
+        if (!(ch_casnp = _find_filled_or_chosen(casnp, &ansr)))
     	    return _casn_obj_err(casnp, ansr);
-	casnp = tcasnp;
-	}           // is it (or a CHOICE above it) an empty default?
-    if ((casnp->flags & (ASN_FILLED_FLAG | ASN_DEFAULT_FLAG)) ==
-        ASN_DEFAULT_FLAG || (tcasnp && flags == ASN_DEFAULT_FLAG))
-	{
-        if (casnp->type == ASN_BOOLEAN)
-	    {
-            if ((casnp->min & BOOL_DEFINED))
-    	        *to = (casnp->min & BOOL_DEFINED_VAL)? 0xFF: 0;
-            else *to = (casnp->min & BOOL_DEFAULT)? 0xFF: 0;
-	    return 1;
-	    }
-	else if (casnp->type == ASN_INTEGER || casnp->type == ASN_ENUMERATED)
-	    {
-   	    tmp = ansr = (int)tcasnp->ptr;
-		// how big?
-    	    if (ansr < 0) ansr = -ansr;
-    	    for (c = to; ansr; ansr >>= 8, c++);
-		// fill it in
-	    for (ansr = c - to; --c >= to; *c = (tmp & 0xFF), tmp >>= 8);
-	    return ansr;
-	    }
-	else return 0;
-	}
-    if ((ansr = _readsize(casnp, to, mode)) > 0 &&
-        // pure read of bit-string-defined-by
-        casnp->type == (ASN_CHOICE | ASN_BITSTRING) && ansr > 0)
-        memcpy(to, &to[1], --ansr);   // shift to left 1 byte
+	}    
+       // is it (or a chosen item below it) the default value?
+    if (check_filled_default(casnp) > 0 ||
+      (ch_casnp && check_filled_default(ch_casnp))) // if so, skip it
+      return 0;
+          // 
+    if (ch_casnp) casnp = ch_casnp;
+    if ((ansr = _readsize(casnp, to, mode)) > 0)
+        { // pure read of bit-string-defined-by 
+        if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
+          memmove(to, &to[1], --ansr);   // shift to left 1 byte
+        }
     return ansr;
     }
 
 int _set_all_lths(uchar *top, uchar *tag_endp, uchar *val_endp, int mode)
     {
-    ulong tag;
     uchar *c = top;
     int lth;
 
-    tag = _get_tag(&c);
+    _get_tag(&c); // to advance pointer
     c++;    // at end of tag-lth;
     if (c < tag_endp) lth = _set_all_lths(c, tag_endp, val_endp, mode);
     else lth = 0;
@@ -1841,6 +1869,7 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
 	casnp = tcasnp;
 	}
     tmp = _csize(casnp, c, lth); // tmp is 'byte' count
+    int64_t timeval = 0;
     if (casnp->type == ASN_NONE) err = ASN_NONE_ERR;
     else if ((casnp->type == ASN_INTEGER && lth > 1 &&
         ((!*c && !(c[1] & 0x80)) ||
@@ -1848,12 +1877,12 @@ int _write_casn(struct casn *casnp, uchar *c, int lth)
     else if (casnp->type == ASN_NULL && lth) err = ASN_LENGTH_ERR;
     else if (casnp->type == ASN_UTCTIME)
 	{
-	if (_utctime_to_ulong(&val, (char *)c, lth) < 0)
+	if ((lth = _utctime_to_ulong(&timeval, (char *)c, lth)) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (casnp->type == ASN_GENTIME)
 	{
-	if (_gentime_to_ulong(&val, (char *)c, lth) < 0)
+	if ((lth = _gentime_to_ulong(&timeval, (char *)c, lth)) < 0)
             err = ASN_TIME_ERR;
 	}
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&

@@ -1,8 +1,3 @@
-/*
-  $Id validateTA.c 506 2008-06-03 21:20:05Z gardiner $
-*/
-
-
 #include <stdio.h>
 #include <cryptlib.h>
 #include <keyfile.h>
@@ -72,7 +67,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp,
   memset(hash, 0, 40);
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
   char *msg = NULL;
@@ -116,7 +111,7 @@ static int check_cert_signature(struct Certificate *locertp,
   encode_casn(&locertp->toBeSigned.self, buf);
 
   // (re)init the crypt library
-  cryptInit();
+  if (cryptInit() != CRYPT_OK) fatal(5, "initialize cryptlib");
   cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   cryptEncrypt(hashContext, buf, bsize);
   cryptEncrypt(hashContext, buf, 0);
@@ -248,7 +243,7 @@ static int check_sig(struct ROA *rp, struct Certificate *certp)
   // (needed for cryptlib; see below)
   memset(sid, 0, 40);
   bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self);
-  if (bsize < 0) return ERR_SCM_INVALSIG;;
+  if (bsize < 0) return ERR_SCM_INVALSIG;
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&certp->toBeSigned.subjectPublicKeyInfo.self, buf);
   sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
@@ -260,7 +255,7 @@ static int check_sig(struct ROA *rp, struct Certificate *certp)
       member_casn(&rp->content.signedData.signerInfos.self, 0);
   memset(hash, 0, 40);
   bsize = size_casn(&sigInfop->signedAttrs.self);
-  if (bsize < 0) return ERR_SCM_INVALSIG;;
+  if (bsize < 0) return ERR_SCM_INVALSIG;
   buf = (uchar *)calloc(1, bsize);
   encode_casn(&sigInfop->signedAttrs.self, buf);
   *buf = ASN_SET;
@@ -268,7 +263,7 @@ static int check_sig(struct ROA *rp, struct Certificate *certp)
   // (re)init the crypt library
   if (!CryptInitState)
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK) return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
   cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);

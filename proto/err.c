@@ -1,8 +1,3 @@
-/*
-  $Id$
-*/
-
-
 #include <stdio.h>
 
 #include "err.h"
@@ -56,11 +51,11 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
 
     "Invalid IP address block",     /* ERR_SCM_INVALIPB */
     "Invalid IP address length",    /* ERR_SCM_INVALIPL */
-    "Invalid version number",       /* ERR_SCM_INVALVER */
+    "Invalid version number",       /* ERR_SCM_BADVERSION */
     "ASN.1 library error",          /* ERR_SCM_INVALASN */
     "Not an EE certificate",        /* ERR_SCM_NOTEE */
     "Invalid certificate flags",    /* ERR_SCM_BADFLAGS */
-    "Bad certificate version",      /* ERR_SCM_BADVERS */
+    "Bad certificate version",      /* ERR_SCM_BADCERTVERS */
     "Extension must be critical",   /* ERR_SCM_NCEXT */
     "Must be CA cert",              /* ERR_SCM_NOTCA */
     "Pathlen invalid",              /* ERR_SCM_BADPATHLEN -50 */
@@ -104,12 +99,12 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Bad address family",           /* ERR_SCM_BADAF */
     "Bad digest algorithm",         /* ERR_SCM_BADDA */
     "Bad Content type",             /* ERR_SCM_BADCT */
-    "Bad attributes",               /* ERR_SCM_BADATTR */
-    "Invalid addr family",          /* ERR_SCM_INVALFAM */
+    "Unsigned attributes",          /* ERR_SCM_UNSIGATTR */
+    "Invalid IP family",            /* ERR_SCM_INVALFAM */
     "No signature",                 /* ERR_SCM_NOSIG */
-    
     "Duplicate signature",          /* ERR_SCM_DUPSIG -90 */
-    "Hash error",                   /* ERR_SCM_BADHASH */
+
+    "Error creating hash",          /* ERR_SCM_BADMKHASH */
     "Error in FileAndHash",         /* ERR_SCM_FAH */
     "Wrong number of certificates", /* ERR_SCM_BADNUMCERTS */
     "Invalid dates",                /* ERR_SCM_BADDATES */
@@ -117,20 +112,66 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Basic constraints in EE cert", /* ERR_SCM_BCPRES */
     "Error in SignerInfos",         /* ERR_SCM_BADSIGINFO */
     "Error making para-certificate", /* ERR_SCM_BADPARACERT */
-    "Invalid IP or AS numbers",     /* ERR_SCM_BADRANGE */
-    "Invalid constraints entry",    /* ERR_SCM_BADSKIBLOCK */
+    "Invalid IP numbers",           /* ERR_SCM_BADIPRANGE */
+    "Invalid constraints entry",    /* ERR_SCM_BADSKIBLOCK -100*/
+
     "Conflicting constraint entry", /* ERR_SCM_USECONFLICT */
     "Can't open constraints file",  /* ERR_SCM_NOSKIFILE */
     "Can't find RP certificate",    /* ERR_SCM_NORPCERT */
     "Defective constraints file",   /* ERR_SCM_BADSKIFILE */
     "Error signing para-cert",      /* ERR_SCM_SIGNINGERR */
-    "Invalid ROA",                  /* ERR_SCM_INVALROA */  
-    "Invalid RTA",                  /* ERR_SCM_INVALRTA */  
-    "Invalid manifest",             /* ERR_SCM_INVALMAN */  
+    "Invalid ROA",                  /* ERR_SCM_INVALROA */
+    "Invalid RTA",                  /* ERR_SCM_INVALRTA */
+    "Invalid manifest",             /* ERR_SCM_INVALMAN */
     "Error writing EE cert",        /* ERR_SCM_WRITE_EE */
-    "Key too small",                /* ERR_SCM_SMALLKEY */
+    "Key too small",                /* ERR_SCM_SMALLKEY -110 */
+
     "Invalid indefinite ASN.1 length",  /* ERR_SCM_ASN1_LTH */
     "Certificate expired",          /* ERR_SCM_EXPIRED */
+    "Invalid subject name",         /* ERR_SCM_BADSUBJECT */
+    "Invalid issuer name",          /* ERR_SCM_BADISSUER */
+    "Invalid AKI",                  /* ERR_SCM_INVALAKI */
+    "No rsync URI in CRLDP",        /* ERR_SCM_CRLDPNMRS */
+    "Bad serial number",	    /* ERR_SCM_BADSERNUM */
+    "Should not have CRL",          /* ERR_SCM_HASCRL */
+    "Error starting Cryptlib",      /* ERR_SCM_CRYPTLIB */
+    "Bad hash algorithm",           /* ERR_SCM_BADHASHALG -120 */
+
+    "Bad number of digest algorithms", /* ERR_SCM_BADNUMDALG */
+    "Bad number of signer infos",   /* ERR_SCM_NUMSIGINFO */
+    "Invalid signer infos version", /* ERR_SCM_SIGINFOVER */
+    "Invalid signer info sid",      /* ERR_SCM_SIGINFOSID */
+    "Invalid signer info time",     /* ERR_SCM_SIGINFOTIM */
+    "Invalid CMS version",          /* ERR_SCM_BADCMSVER */
+    "Invalid message digest",       /* ERR_SCM_MSGDIGEST */
+    "Invalid signed attributes",    /* ERR_SCM_BADSIGATTRS */
+    "Invalid content type",         /* ERR_SCM_BADCONTTYPE */
+    "Invalid binary signing time",  /* ERR_SCM_BINSIGTIME -130 */
+
+    "Invalid signature algorithm",  /* ERR_SCM_BADSIGALG */
+    "Invalid ROA version",          /* ERR_SCM_BADROAVER */
+    "Invalid manifest version",     /* ERR_SCM_BADMANVER */
+    "Invalid AS numbers",           /* ERR_SCM_BADASRANGE */
+    "AS number outside range",      /* ERR_SCM_BADASNUM */
+    "No IP addresses",              /* ERR_SCM_NOIPADDR */
+    "No AS number",                 /* ERR_SCM_NOASNUM */
+    "ROA IP addresses not in EE",   /* ERR_SCM_ROAIPMISMATCH */
+    "IP addresses overlap",         /* ERR_SCM_IPTOUCH */
+
+    "Bad hash in manifest",         /* ERR_SCM_BADMFTHASH -140 */
+    "Invalid digest in CMS",        /* ERR_SCM_BADDIGEST */
+    "Wrong manifest hash in DB",    /* ERR_SCM_BADMFTDBHASH */
+    "Missing CRL version",          /* ERR_SCM_NOCRLVER */
+    "Wrong CRL version",            /* ERR_SCM_BADCRLVER */
+    "CRL Entry Extension present",  /* ERR_SCM_CRLENTRYEXT */
+    "Invalid filename in manifest", /* ERR_SCM_BADMFTFILENAME */
+    "Invalid revocation date",      /* ERR_SCM_BADREVDATE */
+    "Invalid revoked serial number", /* ERR_SCM_BADREVSNUM */ 
+    "No CRL number extension",      /* ERR_SCM_NOCRLNUM */
+    "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
+    "Duplicate file in manifest",   /* ERR_SCM_MFTDUPFILE */
+    "EKU erroneously present",      /* ERR_SCM_EKU */
+    "Unsupported Public Key Info",  /* ERR_SCM_UNSUPPUBKEY */
   } ;
 
 char *err2string(int err)

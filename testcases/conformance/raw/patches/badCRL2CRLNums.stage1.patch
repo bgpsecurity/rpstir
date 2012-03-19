@@ -1,0 +1,11 @@
+--- badCRL2CRLNums.crl.raw.old	2012-02-08 13:25:40.349400328 -0500
++++ badCRL2CRLNums.crl.raw	2012-02-08 13:30:47.718999188 -0500
+@@ -12,6 +12,8 @@
+                     ocw seq ctx+0x00
+                                 0xF616E78FEF073A84B5D1BD948BD517AF
+                                 0xAE74D0D0
++                seq oid 2.5.29.20 /* id_cRLNumber */
++                    ocw int 0x01 /* 1 */ 
+     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+         nul 
+     bit 0x0069A3894789A30D450BEE4C5B71A79313B1027414067A72EFEBBC87DE94DC9A

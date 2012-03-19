@@ -22,7 +22,11 @@ int main(int argc, char **argv)
     return 1;
     }
   printf("Making %s with key size %d bits \n", argv[1], ksize);
-  cryptInit();
+  if (cryptInit() != CRYPT_OK)
+    {
+    fprintf(stderr, "Can't open Cryptlib\n");
+    return 1;
+    }
   cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
   cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
   cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, ksize/8);

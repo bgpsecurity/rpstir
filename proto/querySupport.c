@@ -24,6 +24,7 @@ static int rejectStaleChain = 0;
 static int rejectStaleManifest = 0;
 static int rejectStaleCRL = 0;
 static int rejectNoManifest = 0;
+static int rejectNotYet = 0;
 
 /* routine to parse the filter specification file which  determines how to
  * handle the various meta-data SCM_FLAG_XXX flags (ignore, matchset, matchclr)
@@ -53,6 +54,8 @@ int parseStalenessSpecsFile(char *specsFilename)
       rejectStaleChain = str3[0] == 'n' || str3[0] == 'N';
     } else if (strcmp(str2, "NoManifest") == 0) {
       rejectNoManifest = str3[0] == 'n' || str3[0] == 'N';
+    } else if (strcmp(str2, "NotYet") == 0) {
+      rejectNotYet = str3[0] == 'n' || str3[0] == 'N';
     } else {
       printf ("Bad keyword in specs file: %s\n", str2);
       return -1;
@@ -62,11 +65,13 @@ int parseStalenessSpecsFile(char *specsFilename)
 }
 
 void getSpecsVals(int *rejectStaleChainp, int *rejectStaleManifestp,
-				  int *rejectStaleCRLp, int *rejectNoManifestp) {
+				  int *rejectStaleCRLp, int *rejectNoManifestp,
+				  int *rejectNotYetp) {
   *rejectStaleChainp = rejectStaleChain;
   *rejectStaleManifestp = rejectStaleManifest;
   *rejectStaleCRLp = rejectStaleCRL;
   *rejectNoManifestp = rejectNoManifest;
+  *rejectNotYetp = rejectNotYet;
 }
 
 void addQueryFlagTests(char *whereStr, int needAnd) {
@@ -79,6 +84,8 @@ void addQueryFlagTests(char *whereStr, int needAnd) {
 	addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
   if (rejectNoManifest)
 	addFlagTest(whereStr, SCM_FLAG_ONMAN, 1, 1);
+  if (rejectNotYet)
+	addFlagTest(whereStr, SCM_FLAG_NOTYET, 0, 1);
 }
 
 
@@ -127,6 +134,8 @@ int checkValidity(char *ski, unsigned int localID,
       addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
     if (rejectStaleManifest)
       addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
+    if (rejectNotYet)
+      addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
     if (rejectNoManifest) {
       int len = strlen(validWhereStr);
       snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
