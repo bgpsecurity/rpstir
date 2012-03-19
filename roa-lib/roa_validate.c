@@ -886,8 +886,8 @@ static int check_asnums(struct Certificate *certp, int iAS_ID)
         }
       else // it's a range
         {
-        if (diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID) >= 0 &&
-           diff_casn_num(&asNumOrRangeAp->range.max, iAS_ID) <= 0)
+        if (diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID) <= 0 &&
+           diff_casn_num(&asNumOrRangeAp->range.max, iAS_ID) >= 0)
           {
           isWithin++;
           break;
