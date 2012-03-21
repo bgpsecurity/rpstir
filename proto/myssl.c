@@ -2866,7 +2866,6 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     // Should we make sure there's a non-empty set of AS resources if the AS
     // extension is present and not inherit?
 
-//    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
     if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
         log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
         return ERR_SCM_BADASRANGE;
@@ -2881,36 +2880,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
         return ERR_SCM_BADASRANGE;
     }
-/*
-    int found_as = 0;
-    struct AsNumTest lo;
-    struct AsNumTest hi;
-    struct ASNumberOrRangeA *asNumOrRangep = (struct ASNumberOrRangeA *)
-            member_casn(&asidcap->asNumbersOrRanges.self, 0);
-    if (fill_asnumtest(&lo, asNumOrRangep)) {
-        log_msg(LOG_ERR, "error reading AS number");
-        return ERR_SCM_BADASRANGE;
-    }
-    if (lo.lo < 1 || lo.lo > lo.hi) {
-        log_msg(LOG_ERR, "AS numbers are not canonical");
-        return ERR_SCM_BADASRANGE;
-    }
-    found_as = 1;
-    while ((asNumOrRangep =
-            (struct ASNumberOrRangeA *)next_of(&asNumOrRangep->self))) {
-        if (fill_asnumtest(&hi, asNumOrRangep)) {
-            log_msg(LOG_ERR, "error reading AS number");
-            return ERR_SCM_BADASRANGE;
-        }
-        if (hi.lo - 1 <= lo.hi) {
-            log_msg(LOG_ERR, "AS numbers not in canonical order");
-            return ERR_SCM_BADASRANGE;
-        }
-        lo.hi = hi.hi;
-    }
-    return found_as;
-*/
-return 1;
+    return 1;
 }
 
 /*************************************************************
