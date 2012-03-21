@@ -3222,6 +3222,12 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		free(pubkey_buf);
 		return ERR_SCM_BADALG;
     }
+    if (pubkey_buf[0] != 0) {
+        log_msg(LOG_ERR, "subj pub key not a whole number of bytes");
+        free(pubkey_buf);
+        return ERR_SCM_BADALG;
+    }
+
     struct RSAPubKey rsapubkey;
     RSAPubKey(&rsapubkey, 0);
     bytes_read = decode_casn(&rsapubkey.self, &pubkey_buf[1]);
