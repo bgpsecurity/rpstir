@@ -2868,7 +2868,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 
     if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
         log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
-        return ERR_SCM_BADASRANGE;
+        return ERR_SCM_BADASRDI;
     }
 
     struct ASIdentifierChoiceA *asidcap = &extp->extnValue.autonomousSysNum.asnum;

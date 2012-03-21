@@ -159,7 +159,8 @@
 #define ERR_SCM_MFTDUPFILE  -151        /* duplicate file in manifest */
 #define ERR_SCM_EKU         -152        /* EKU present when it shouldn't be */
 #define ERR_SCM_UNSUPPUBKEY -153        /* Unsupported Public Key Info */
-#define ERR_SCM_MAXERR      -153
+#define ERR_SCM_BADASRDI    -154        /* Routing Domain Identifier(s) present */
+#define ERR_SCM_MAXERR      -154
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
