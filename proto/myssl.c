@@ -2700,7 +2700,7 @@ static int rescert_cert_policy_chk(X509 *x)
   CERTIFICATEPOLICIES *ex_cpols = NULL;
   POLICYINFO *policy;
   char policy_id_str[32];
-  char *oid_policy_id = "1.3.6.1.5.5.7.14.2\0";
+  char *oid_policy_id = "1.3.6.1.5.5.7.14.2"; // http://tools.ietf.org/html/rfc6484#section-1.2
   int policy_id_len = strlen(oid_policy_id);
   int crit = INT_MIN;
   int idx = INT_MIN;
