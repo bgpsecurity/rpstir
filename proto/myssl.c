@@ -3228,6 +3228,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
         return ERR_SCM_BADALG;
     }
 
+    // interpret the BIT STRING pubkey_buf as a RSAPubKey
     struct RSAPubKey rsapubkey;
     RSAPubKey(&rsapubkey, 0);
     bytes_read = decode_casn(&rsapubkey.self, &pubkey_buf[1]);
@@ -3237,7 +3238,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		return ERR_SCM_BADALG;
     }
 
-	// Subject public key modulus must be 2048-bits.
+	// Subject public key modulus must be (SUBJ_PUBKEY_MODULUS_SZ * 8)-bits.
     bytes_to_read = vsize_casn(&rsapubkey.modulus);
 	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
 		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
