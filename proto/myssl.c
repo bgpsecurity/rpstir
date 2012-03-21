@@ -2804,11 +2804,13 @@ static int rescert_ip_resources_chk(struct Certificate *certp) {
     int size = vsize_casn((struct casn*)&extp->critical);
     uchar critical = 0;
     if (size != 1) {
-        if (size < 1)
+        if (size < 1) {
             log_msg(LOG_ERR, "IP extension not marked critical");
-        else
+            return ERR_SCM_NCEXT;
+        } else {
             log_msg(LOG_ERR, "IP extension critical flag is longer than one byte");
-        return ERR_SCM_NCEXT;
+            return ERR_SCM_INVALEXT;
+        }
     } else {
         read_casn(&extp->critical, &critical);
         if (!critical) {
@@ -2850,11 +2852,13 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     int size = vsize_casn((struct casn*)&extp->critical);
     uchar critical = 0;
     if (size != 1) {
-        if (size < 1)
+        if (size < 1) {
             log_msg(LOG_ERR, "AS extension not marked critical");
-        else
+            return ERR_SCM_NCEXT;
+        } else {
             log_msg(LOG_ERR, "AS extension critical flag is longer than one byte");
-        return ERR_SCM_NCEXT;
+            return ERR_SCM_INVALEXT;
+        }
     } else {
         read_casn(&extp->critical, &critical);
         if (!critical) {
