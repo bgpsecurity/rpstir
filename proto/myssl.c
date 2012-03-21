@@ -3559,9 +3559,13 @@ static int crl_issuer_chk(struct CertificateRevocationList *crlp)
   return 0;
 }
 
-static int cvt_crldate2DB(char *fieldp, struct ChoiceOfTime *cotp)
+/**
+  Check whether the ChoiceOfTime is convertible to a database-style
+  date and time.
+*/
+static int cvt_crldate2DB(struct ChoiceOfTime *cotp)
   {
-  char *buf;
+  char *buf = NULL;
   int i = vsize_casn(&cotp->utcTime);
   if (i > 0) // utc time
     {
@@ -3582,7 +3586,8 @@ static int cvt_crldate2DB(char *fieldp, struct ChoiceOfTime *cotp)
       }
     }
   int sta = 0;
-  fieldp = ASNTimeToDBTime(buf, &sta);
+  free(ASNTimeToDBTime(buf, &sta));
+  free(buf);
   return sta;
   }
                                                               
@@ -3592,15 +3597,17 @@ static int crl_dates_chk(struct CertificateRevocationList *crlp)
     return ERR_SCM_INTERNAL;
   struct CertificateRevocationListToBeSigned *crltbsp =
     &crlp->toBeSigned;
-  char dat[30];
 
   int ret = diff_casn_time(&crltbsp->lastUpdate.self,
                            &crltbsp->nextUpdate.self);
-  if ( ret == -2 ||
-    cvt_crldate2DB(dat, &crltbsp->lastUpdate) < 0 ||
-    cvt_crldate2DB(dat, &crltbsp->nextUpdate) < 0 ) {
-    log_msg(LOG_ERR, "failed to read CRL time fields");
+  if (ret == -2) {
+    log_msg(LOG_ERR, "failed to read CRL time field(s)");
     return ERR_SCM_INVALDT;
+  }
+  if (cvt_crldate2DB(&crltbsp->lastUpdate) < 0 ||
+    cvt_crldate2DB(&crltbsp->nextUpdate) < 0) {
+    log_msg(LOG_ERR, "CRL time field(s) don't fit into database");
+    return ERR_SCM_INTERNAL;
   }
   if (ret > 0) {
     log_msg(LOG_ERR, "Invalid CRL, thisUpdate > nextUpdate");
