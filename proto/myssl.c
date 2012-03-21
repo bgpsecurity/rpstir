@@ -2432,6 +2432,9 @@ skip:
  *
  * Note:  TA not checked here.
  * Note:  Validity of CA, EE flags not checked here.
+ * Note:  This really should check the cA boolean, but this works because of
+ *        http://tools.ietf.org/html/rfc6487#section-4.8.1 provided that
+ *        somewhere else checks that the cA boolean is set for CA certs.
  *
  * @param certp (struct Certificate*)
  * @retval ret int type of the Certificate<br />-1 for error
