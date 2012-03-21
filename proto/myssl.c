@@ -2922,7 +2922,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 
       1. Check the code removed by commits 136f663 and b90137c for
          bugs and reinstate it.
-      2. Check the code removed by commit XXX for bugs and reinstate
+      2. Check the code removed by commit fda500a for bugs and reinstate
          it.
       3. Call OpenSSL here and verify that it does what it's supposed
          to.
