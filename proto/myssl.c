@@ -3388,7 +3388,7 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   if (rescert_name_chk(&certp->toBeSigned.issuer.rDNSequence) < 0)
 	  return ERR_SCM_BADISSUER;
-  else if (rescert_name_chk(&certp->toBeSigned.subject.rDNSequence))
+  else if (rescert_name_chk(&certp->toBeSigned.subject.rDNSequence) < 0)
 	  return ERR_SCM_BADSUBJECT;
 
   ret = rescert_basic_constraints_chk(x, ct);
