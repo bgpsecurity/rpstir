@@ -173,6 +173,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "EKU erroneously present",      /* ERR_SCM_EKU */
     "Unsupported Public Key Info",  /* ERR_SCM_UNSUPPUBKEY */
     "Routing Domain Identifier(s) present", /* ERR_SCM_BADASRDI */
+    "Invalid CRLNumber",            /* ERR_SCM_BADCRLNUM */
   } ;
 
 char *err2string(int err)

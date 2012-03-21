@@ -3778,6 +3778,11 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
   if (!crlnump) {
     log_msg(LOG_ERR, "No CRL number extension");
     return ERR_SCM_NOCRLNUM;
+  } else {
+    if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH) {
+      log_msg(LOG_ERR, "CRLNumber too long");
+      return ERR_SCM_BADCRLNUM;
+    }
   }
   return 0;
 }
