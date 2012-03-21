@@ -2507,29 +2507,25 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_caRepository)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_repo = calloc(1, size + 1);
-                if (!uri_repo)
-                    return ERR_SCM_NOMEM;
+				if (!uri_repo)
+					return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_repo);
 				if (!strncasecmp((char *)uri_repo, RSYNC_PREFIX, 8))
 					found_uri_repo_rsync = 1;
+				free(uri_repo);
+				uri_repo = NULL;
 			} else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_mft = calloc(1, size + 1);
-                if (!uri_mft) {
-                    if (uri_repo)
-                        free (uri_repo);
-                    return ERR_SCM_NOMEM;
-                }
+				if (!uri_mft)
+					return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_mft);
 				if (!strncasecmp((char *)uri_mft, RSYNC_PREFIX, 8))
 					found_uri_mft_rsync = 1;
+				free(uri_mft);
+				uri_mft = NULL;
 			}
 		}
-
-		if (uri_repo)
-			free (uri_repo);
-		if (uri_mft)
-			free (uri_mft);
 
 		if (!found_uri_repo_rsync) {
 			log_msg(LOG_ERR, "did not find rsync uri for repository for SIA");
@@ -2546,21 +2542,18 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_signedObject)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_obj = calloc(1, size + 1);
-                if (!uri_obj)
-                    return ERR_SCM_NOMEM;
+				if (!uri_obj)
+					return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
 				if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
 					found_uri_obj_rsync = 1;
+				free(uri_obj);
+				uri_obj = NULL;
 			} else {
 				log_msg(LOG_ERR, "in EE-cert SIA, found accessMethod != id-ad-signedObject");
-		        if (uri_obj)
-		            free (uri_obj);
 				return ERR_SCM_BADSIA;
 			}
 		}
-
-		if (uri_obj)
-			free (uri_obj);
 
 		if (!found_uri_obj_rsync) {
 			log_msg(LOG_ERR, "did not find rsync uri for signedObject for SIA");
