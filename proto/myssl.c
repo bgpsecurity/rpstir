@@ -2797,8 +2797,8 @@ static int rescert_ip_resources_chk(struct Certificate *certp) {
     }
 
     if (!vsize_casn(&extp->self)) {
-        log_msg(LOG_INFO, "IP extension is empty");
-        return 0;
+        log_msg(LOG_ERR, "IP extension is empty");
+        return ERR_SCM_INVALEXT;
     }
 
     int size = vsize_casn((struct casn*)&extp->critical);
@@ -2843,8 +2843,8 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     }
 
     if (!vsize_casn(&extp->self)) {
-        log_msg(LOG_INFO, "AS extension is empty");
-        return 0;
+        log_msg(LOG_ERR, "AS extension is empty");
+        return ERR_SCM_INVALEXT;
     }
 
     int size = vsize_casn((struct casn*)&extp->critical);
