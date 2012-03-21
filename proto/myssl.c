@@ -2917,6 +2917,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 
     // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
     // It provides a more accurate check that valid IP resources are present.
+    // NOTE: in theory, the below IP and AS checks should be done by OpenSSL.
   struct ipranges locranges = IPRANGES_EMPTY_INITIALIZER;
   
   mk_certranges(&locranges, certp);
