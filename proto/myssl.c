@@ -2863,8 +2863,8 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         }
     }
 
-    // TODO: what does the following note from Charlie mean?
-    //   again should we check that there is something there or inherit?
+    // Should we make sure there's a non-empty set of AS resources if the AS
+    // extension is present and not inherit?
 
 //    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
     if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
