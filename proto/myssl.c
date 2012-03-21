@@ -12,6 +12,7 @@
 #include <time.h>
 #include <limits.h>
 #include <cryptlib.h>
+#include <stdbool.h>
 
 #include "globals.h"
 #include "hashutils.h"
@@ -3068,7 +3069,7 @@ static int rescert_name_chk(struct RDNSequence *rdnseqp)
         if (commonName)
           {
           log_msg(LOG_ERR, "multiple CommonNames");
-          return -1
+          return -1;
           }
         commonName = true;
         if (vsize_casn(&avap->value.commonName.printableString) <= 0)
@@ -3258,7 +3259,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     }
 	if (bytes_read != SUBJ_PUBKEY_MODULUS_SZ + 1 ||
 	    pubkey_modulus_buf[0] != 0 ||
-	    pubkey_modulus_buf[1] & 0x80 == 0) {
+	    (pubkey_modulus_buf[1] & 0x80) == 0) {
 		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
 		free(pubkey_modulus_buf);
 		delete_casn(&rsapubkey.self);
