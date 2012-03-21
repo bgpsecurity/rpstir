@@ -2888,11 +2888,10 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 }
 
 /*************************************************************
- * rescert_ip_asnum_chk(X509 *)                              *
+ * rescert_ip_asnum_chk(X509 *, struct Certificate *)        *
  *                                                           *
  *  IP Resources, AS Resources - critical - MUST have one    *
- *   of these or both. In the case of one, if present        *
- *   marked as critical                                      *
+ *   of these or both.                                       *
  *                                                           *
  * Note that OpenSSL now include Rob's code for 3779         *
  * extensions and it looks like the check and load them      *
@@ -3332,56 +3331,10 @@ static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
 }
 
 
-/**********************************************************
- * profile_check(X509 *, int cert_type)                   *
- *  This function makes sure the required base elements   *
- *  are present within the certificate.                   *
- *   cert_type can be one of CA_CERT, EE_CERT, TA_CERT    *
- *                                                        *
- *  Issuer and subject names must conform                 *
- *                                                        *
- *  Basic Constraints - critical MUST be present          *
- *    path length constraint MUST NOT be present          *
- *                                                        *
- *  Subject Key Identifier - non-critical MUST be present *
- *                                                        *
- *  Authority Key Identifier - non-critical MUST be       *
- *      present in CA and EE, optional in TAs.            *
- *    keyIdentifier - MUST be present                     *
- *    authorityCertIssuer - MUST NOT be present           *
- *    authorityCertSerialNumber - MUST NOT be present     *
- *                                                        *
- *  Key Usage - critical - MUST be present                *
- *    ({CA,EE} specific checks performed elsewhere)       *
- *    CA - keyCertSign and CRLSign only                   *
- *    EE - digitalSignature only                          *
- *                                                        *
- *  CRL Distribution Points - non-crit -                  *
- *    MUST be present unless the CA is self-signed (TA)   *
- *    in which case it MUST be omitted.  CRLissuer MUST   *
- *    be omitted; reasons MUST be omitted.                *
- *                                                        *
- *  Authority Information Access - non-crit - MUST        *
- *     be present                                         *
- *    (in the case of TAs this MUST be omitted - this     *
- *    check performed elsewhere)                          *
- *                                                        *
- *  Subject Information Access -                          *
- *    non-critical - MUST be present                      *
- *                                                        *
- *  Certificate Policies - critical - MUST be present     *
- *    PolicyQualifiers - MUST NOT be used in this profile *
- *    OID Policy Identifier value: "1.3.6.1.5.5.7.14.2"   *
- *                                                        *
- *  Subject Alt Name - optional, not checked for          *
- *                                                        *
- *  IP Resources, AS Resources - critical - MUST have one *
- *   of these or both. In the case of one, if present     *
- *   marked as critical                                   *
- *                                                        *
- *  Signature Algorithms - correct types listed           *
- *********************************************************/
-
+/*
+ Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
+ on a single file.
+*/
 int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPKI)
 {
   int ret = 0;
