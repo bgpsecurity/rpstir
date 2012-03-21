@@ -3719,19 +3719,6 @@ static int crl_entries_chk(struct CertificateRevocationList *crlp)
  * and CRL Number in every CRL that it issues.  RPs MUST be prepared
  * to process CRLs with these extensions.  No other CRL extensions are
  * allowed.
- *
- * 4.8.3. Authority Key Identifier
- *
- * This extension MUST appear in all Resource Certificates, with the
- * exception of a CA who issues a "self-signed" certificate.  In a
- * self-signed certificate, a CA MAY include this extension, and set
- * it equal to the Subject Key Identifier.  The authorityCertIssuer
- * and authorityCertSerialNumber fields MUST NOT be present.  This
- * extension is non-critical.
- *
- * The Key Identifier used for resource certificates is the 160-bit
- * SHA-1 hash of the value of the DER-encoded ASN.1 bit string of the
- * Issuer's public key, as described in Section 4.2.1.1 of [RFC5280].
  -----------------------------------------------------------------------------*/
 static int crl_extensions_chk(struct CertificateRevocationList *crlp)
 {
