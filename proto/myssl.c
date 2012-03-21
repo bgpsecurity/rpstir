@@ -12,6 +12,7 @@
 #include <time.h>
 #include <limits.h>
 #include <cryptlib.h>
+#include <stdbool.h>
 
 #include "globals.h"
 #include "hashutils.h"
@@ -2797,18 +2798,20 @@ static int rescert_ip_resources_chk(struct Certificate *certp) {
     }
 
     if (!vsize_casn(&extp->self)) {
-        log_msg(LOG_INFO, "IP extension is empty");
-        return 0;
+        log_msg(LOG_ERR, "IP extension is empty");
+        return ERR_SCM_INVALEXT;
     }
 
     int size = vsize_casn((struct casn*)&extp->critical);
     uchar critical = 0;
     if (size != 1) {
-        if (size < 1)
+        if (size < 1) {
             log_msg(LOG_ERR, "IP extension not marked critical");
-        else
+            return ERR_SCM_NCEXT;
+        } else {
             log_msg(LOG_ERR, "IP extension critical flag is longer than one byte");
-        return ERR_SCM_NCEXT;
+            return ERR_SCM_INVALEXT;
+        }
     } else {
         read_casn(&extp->critical, &critical);
         if (!critical) {
@@ -2843,18 +2846,20 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
     }
 
     if (!vsize_casn(&extp->self)) {
-        log_msg(LOG_INFO, "AS extension is empty");
-        return 0;
+        log_msg(LOG_ERR, "AS extension is empty");
+        return ERR_SCM_INVALEXT;
     }
 
     int size = vsize_casn((struct casn*)&extp->critical);
     uchar critical = 0;
     if (size != 1) {
-        if (size < 1)
+        if (size < 1) {
             log_msg(LOG_ERR, "AS extension not marked critical");
-        else
+            return ERR_SCM_NCEXT;
+        } else {
             log_msg(LOG_ERR, "AS extension critical flag is longer than one byte");
-        return ERR_SCM_NCEXT;
+            return ERR_SCM_INVALEXT;
+        }
     } else {
         read_casn(&extp->critical, &critical);
         if (!critical) {
@@ -2868,7 +2873,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 
     if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
         log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
-        return ERR_SCM_BADASRANGE;
+        return ERR_SCM_BADASRDI;
     }
 
     struct ASIdentifierChoiceA *asidcap = &extp->extnValue.autonomousSysNum.asnum;
@@ -2876,7 +2881,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         log_msg(LOG_INFO, "AS resources marked as inherit");
         return 1;
     }
-    if (!(ext_count = num_items(&asidcap->asNumbersOrRanges.self))) {
+    if (num_items(&asidcap->asNumbersOrRanges.self) <= 0) {
         log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
         return ERR_SCM_BADASRANGE;
     }
@@ -2884,11 +2889,10 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 }
 
 /*************************************************************
- * rescert_ip_asnum_chk(X509 *)                              *
+ * rescert_ip_asnum_chk(X509 *, struct Certificate *)        *
  *                                                           *
  *  IP Resources, AS Resources - critical - MUST have one    *
- *   of these or both. In the case of one, if present        *
- *   marked as critical                                      *
+ *   of these or both.                                       *
  *                                                           *
  * Note that OpenSSL now include Rob's code for 3779         *
  * extensions and it looks like the check and load them      *
@@ -2915,55 +2919,19 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
     return(ERR_SCM_NOIPAS);
   }
 
-    // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
-    // It provides a more accurate check that valid IP resources are present.
-    // NOTE: in theory, the below IP and AS checks should be done by OpenSSL.
-  struct ipranges locranges = IPRANGES_EMPTY_INITIALIZER;
-  
-  mk_certranges(&locranges, certp);
-  struct iprange *lorangep = &locranges.iprangep[0], *hirangep;
-  int i;
-  if (lorangep->typ == IPv4)
-    {
-    for (i = 0; i < locranges.numranges; i++)
-      {
-      hirangep = &lorangep[1]; 
-      if (hirangep->typ != IPv4) break;
-      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
-        {
-        log_msg(LOG_ERR, "IP address overlap");
-        return ERR_SCM_IPTOUCH;   
-        }
-      }
-    lorangep = hirangep;
-    }
-  if (lorangep->typ == IPv6)
-    {
-    for ( ; i < locranges.numranges; i++)
-      {
-      hirangep = &lorangep[1]; 
-      if (hirangep->typ != IPv6) break;
-      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
-        {
-        log_msg(LOG_ERR, "IP address overlap");
-        return ERR_SCM_IPTOUCH;   
-        }
-      }
-    lorangep = hirangep;
-    }
-  if (lorangep->typ == ASNUM)
-    {
-    for ( ; i < locranges.numranges; i++)
-      {
-      hirangep = &lorangep[1]; 
-      if (hirangep->typ != ASNUM) break;
-      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
-        {
-        log_msg(LOG_ERR, "AS number overlap");
-        return ERR_SCM_IPTOUCH;   
-        }
-      }
-    } 
+  /*
+    The IP and AS resources need to be checked to ensure that they
+    follow RFC 3779 rules. In theory, OpenSSL should check that
+    somewhere. The options for below are:
+
+      1. Check the code removed by commits 136f663 and b90137c for
+         bugs and reinstate it.
+      2. Check the code removed by commit fda500a for bugs and reinstate
+         it.
+      3. Call OpenSSL here and verify that it does what it's supposed
+         to.
+  */
+
   return(0);
 }
 
@@ -3072,29 +3040,39 @@ static int rescert_criticals_chk(X509 *x)
  -----------------------------------------------------------------------------*/
 static int rescert_name_chk(struct RDNSequence *rdnseqp)
   {
-  int i, j, k, l, cnames = 0;
-  if ((i = num_items(&rdnseqp->self)) > 2)
+  int sequence_length, sequence_idx;
+  int set_length, set_idx;
+  bool commonName = false;
+  bool serialNumber = false;
+  if ((sequence_length = num_items(&rdnseqp->self)) > 2)
     {
-    log_msg(LOG_ERR, "RDNSeq contains >1 RelativeDistinguishedName");
+    // RFC 6487 limits the total number of attributes, not the sequence length explicitly
+    log_msg(LOG_ERR, "RDNSeq contains >2 RelativeDistinguishedName");
     return -1;
     }
-  for (j = 0; j < i; j++)
+  for (sequence_idx = 0; sequence_idx < sequence_length; ++sequence_idx)
     {
     struct RelativeDistinguishedName *rdnp =
-      (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, j);
-    if ((k = num_items(&rdnp->self)) > 2)  // this limit applies to Issuer/Subject, not to RelativeDistinguishedName
+      (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, sequence_idx);
+    if ((set_length = num_items(&rdnp->self)) > 2)
       {
+      // RFC 6487 limits the total number of attributes, not the set length explicitly
       log_msg(LOG_ERR, "RelativeDistinguishedName contains >2 Attribute Value Assertions");
       return -1;
       }
-    for (l = 0; l < k; l++)
+    for (set_idx = 0; set_idx < set_length; ++set_idx)
       {
       struct AttributeValueAssertion *avap =
-        (struct AttributeValueAssertion *)member_casn(&rdnp->self, l);
+        (struct AttributeValueAssertion *)member_casn(&rdnp->self, set_idx);
       if (!diff_objid(&avap->objid, id_commonName))
         {
-        cnames++;
-        if (!vsize_casn(&avap->value.commonName.printableString) > 0)
+        if (commonName)
+          {
+          log_msg(LOG_ERR, "multiple CommonNames");
+          return -1;
+          }
+        commonName = true;
+        if (vsize_casn(&avap->value.commonName.printableString) <= 0)
           {
           if (strict_profile_checks)
             {
@@ -3106,16 +3084,27 @@ static int rescert_name_chk(struct RDNSequence *rdnseqp)
             log_msg(LOG_WARNING, "CommonName not printableString");
             }
           }
-        } else if (diff_objid(&avap->objid, id_serialNumber))  // this limit applies to Issuer/Subject, not to AttributeValueAssertion
+        }
+      else if (!diff_objid(&avap->objid, id_serialNumber))
+        {
+        if (serialNumber)
+          {
+          log_msg(LOG_ERR, "multiple SerialNumbers");
+          return -1;
+          }
+        serialNumber = true;
+        }
+      else
         {
         log_msg(LOG_ERR, "AttributeValueAssertion contains an OID that is neither id_commonName nor id_serialNumber");
         return -1;
         }
       }
     }
-  if (cnames != 1)
+
+  if (!commonName)
     {
-    log_msg(LOG_ERR, "AttributeValueAssertion contains 0, or >1, id_commonName");
+    log_msg(LOG_ERR, "no CommonName present");
     return -1;
     }
 
@@ -3234,57 +3223,64 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		free(pubkey_buf);
 		return ERR_SCM_BADALG;
     }
+    if (pubkey_buf[0] != 0) {
+        log_msg(LOG_ERR, "subj pub key not a whole number of bytes");
+        free(pubkey_buf);
+        return ERR_SCM_BADALG;
+    }
+
+    // interpret the BIT STRING pubkey_buf as a RSAPubKey
     struct RSAPubKey rsapubkey;
     RSAPubKey(&rsapubkey, 0);
     bytes_read = decode_casn(&rsapubkey.self, &pubkey_buf[1]);
     free(pubkey_buf);
     if (bytes_read < 0) {
 		log_msg(LOG_ERR, "error decoding subj pub key");
+		delete_casn(&rsapubkey.self);
 		return ERR_SCM_BADALG;
     }
 
-	// Subject public key modulus must be 2048-bits.
-    bytes_to_read = vsize_casn(&rsapubkey.modulus);
-	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
-		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
-		return ERR_SCM_BADALG;
-	}
-	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
+	// Subject public key modulus must be (SUBJ_PUBKEY_MODULUS_SZ * 8)-bits.
     uchar *pubkey_modulus_buf;
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
-    if (!pubkey_modulus_buf)
-        return ERR_SCM_NOMEM;
-	free(pubkey_modulus_buf);
-    if (bytes_read != bytes_to_read) {
-		log_msg(LOG_ERR, "subj pub key modulus actual length != stated");
-		return ERR_SCM_BADALG;
+    if (bytes_read < 0) {
+        log_msg(LOG_ERR, "error parsing public key modulus");
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
+    } else if (bytes_read == 0) {
+        log_msg(LOG_ERR, "empty public key modulus");
+        free(pubkey_modulus_buf);
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
     }
+    if (!pubkey_modulus_buf) {
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_NOMEM;
+    }
+	if (bytes_read != SUBJ_PUBKEY_MODULUS_SZ + 1 ||
+	    pubkey_modulus_buf[0] != 0 ||
+	    (pubkey_modulus_buf[1] & 0x80) == 0) {
+		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
+		free(pubkey_modulus_buf);
+		delete_casn(&rsapubkey.self);
+		return ERR_SCM_BADALG;
+	}
+	free(pubkey_modulus_buf);
 
 	// Subject public key exponent must = 65,537.
-    int incorrect_length = 0;
-    int different_lengths = 0;
-    int bad_exponent = 0;
-    bytes_to_read = vsize_casn(&rsapubkey.exponent);
-	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ)
-        incorrect_length = 1;
-    uchar *pubkey_exponent_buf;
-    bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
-    if (!pubkey_exponent_buf)
-        return ERR_SCM_NOMEM;
-    if (bytes_read != bytes_to_read)
-        different_lengths = 1;
-    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT)
-        bad_exponent = 1;
-	free(pubkey_exponent_buf);
-    if (incorrect_length  ||  different_lengths  ||  bad_exponent) {
-        if (bad_exponent)
-		    log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
-        if (incorrect_length)
-		    log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
-        if (different_lengths)
-		    log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
-		return ERR_SCM_BADALG;
+    long exponent;
+    if (read_casn_num(&rsapubkey.exponent, &exponent) < 0) {
+        log_msg(LOG_ERR, "error reading subj pub key exponent");
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
     }
+    if (exponent != SUBJ_PUBKEY_EXPONENT) {
+	log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
+	delete_casn(&rsapubkey.self);
+	return ERR_SCM_BADALG;
+    }
+
+    delete_casn(&rsapubkey.self);
 
 	return 0;
 }
@@ -3364,56 +3360,10 @@ static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
 }
 
 
-/**********************************************************
- * profile_check(X509 *, int cert_type)                   *
- *  This function makes sure the required base elements   *
- *  are present within the certificate.                   *
- *   cert_type can be one of CA_CERT, EE_CERT, TA_CERT    *
- *                                                        *
- *  Issuer and subject names must conform                 *
- *                                                        *
- *  Basic Constraints - critical MUST be present          *
- *    path length constraint MUST NOT be present          *
- *                                                        *
- *  Subject Key Identifier - non-critical MUST be present *
- *                                                        *
- *  Authority Key Identifier - non-critical MUST be       *
- *      present in CA and EE, optional in TAs.            *
- *    keyIdentifier - MUST be present                     *
- *    authorityCertIssuer - MUST NOT be present           *
- *    authorityCertSerialNumber - MUST NOT be present     *
- *                                                        *
- *  Key Usage - critical - MUST be present                *
- *    ({CA,EE} specific checks performed elsewhere)       *
- *    CA - keyCertSign and CRLSign only                   *
- *    EE - digitalSignature only                          *
- *                                                        *
- *  CRL Distribution Points - non-crit -                  *
- *    MUST be present unless the CA is self-signed (TA)   *
- *    in which case it MUST be omitted.  CRLissuer MUST   *
- *    be omitted; reasons MUST be omitted.                *
- *                                                        *
- *  Authority Information Access - non-crit - MUST        *
- *     be present                                         *
- *    (in the case of TAs this MUST be omitted - this     *
- *    check performed elsewhere)                          *
- *                                                        *
- *  Subject Information Access -                          *
- *    non-critical - MUST be present                      *
- *                                                        *
- *  Certificate Policies - critical - MUST be present     *
- *    PolicyQualifiers - MUST NOT be used in this profile *
- *    OID Policy Identifier value: "1.3.6.1.5.5.7.14.2"   *
- *                                                        *
- *  Subject Alt Name - optional, not checked for          *
- *                                                        *
- *  IP Resources, AS Resources - critical - MUST have one *
- *   of these or both. In the case of one, if present     *
- *   marked as critical                                   *
- *                                                        *
- *  Signature Algorithms - correct types listed           *
- *********************************************************/
-
+/*
+ Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
+ on a single file.
+*/
 int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPKI)
 {
   int ret = 0;
@@ -3439,7 +3389,7 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
 
   if (rescert_name_chk(&certp->toBeSigned.issuer.rDNSequence) < 0)
 	  return ERR_SCM_BADISSUER;
-  else if (rescert_name_chk(&certp->toBeSigned.subject.rDNSequence))
+  else if (rescert_name_chk(&certp->toBeSigned.subject.rDNSequence) < 0)
 	  return ERR_SCM_BADSUBJECT;
 
   ret = rescert_basic_constraints_chk(x, ct);
@@ -3609,9 +3559,13 @@ static int crl_issuer_chk(struct CertificateRevocationList *crlp)
   return 0;
 }
 
-static int cvt_crldate2DB(char *fieldp, struct ChoiceOfTime *cotp)
+/**
+  Check whether the ChoiceOfTime is convertible to a database-style
+  date and time.
+*/
+static int cvt_crldate2DB(struct ChoiceOfTime *cotp)
   {
-  char *buf;
+  char *buf = NULL;
   int i = vsize_casn(&cotp->utcTime);
   if (i > 0) // utc time
     {
@@ -3632,7 +3586,8 @@ static int cvt_crldate2DB(char *fieldp, struct ChoiceOfTime *cotp)
       }
     }
   int sta = 0;
-  fieldp = ASNTimeToDBTime(buf, &sta);
+  free(ASNTimeToDBTime(buf, &sta));
+  free(buf);
   return sta;
   }
                                                               
@@ -3642,15 +3597,17 @@ static int crl_dates_chk(struct CertificateRevocationList *crlp)
     return ERR_SCM_INTERNAL;
   struct CertificateRevocationListToBeSigned *crltbsp =
     &crlp->toBeSigned;
-  char dat[30];
 
   int ret = diff_casn_time(&crltbsp->lastUpdate.self,
                            &crltbsp->nextUpdate.self);
-  if ( ret == -2 ||
-    cvt_crldate2DB(dat, &crltbsp->lastUpdate) < 0 ||
-    cvt_crldate2DB(dat, &crltbsp->nextUpdate) < 0 ) {
-    log_msg(LOG_ERR, "failed to read CRL time fields");
+  if (ret == -2) {
+    log_msg(LOG_ERR, "failed to read CRL time field(s)");
     return ERR_SCM_INVALDT;
+  }
+  if (cvt_crldate2DB(&crltbsp->lastUpdate) < 0 ||
+    cvt_crldate2DB(&crltbsp->nextUpdate) < 0) {
+    log_msg(LOG_ERR, "CRL time field(s) don't fit into database");
+    return ERR_SCM_INTERNAL;
   }
   if (ret > 0) {
     log_msg(LOG_ERR, "Invalid CRL, thisUpdate > nextUpdate");
@@ -3692,8 +3649,13 @@ static int crl_entry_chk(struct CRLEntry *entryp)
     return ERR_SCM_CRLENTRYEXT;
   }
   // check serial number
-  if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH || 
-    read_casn_num(&entryp->userCertificate, &snum) <= 0 ||
+  if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH) {
+    log_msg(LOG_ERR, "Revoked serial number too long");
+    return ERR_SCM_BADREVSNUM;
+  } else if (vsize_casn(&entryp->userCertificate) > sizeof(long)) {
+    log_msg(LOG_ERR, "Revoked serial number too long for " PACKAGE_NAME);
+    return ERR_SCM_INTERNAL;
+  } else if (read_casn_num(&entryp->userCertificate, &snum) <= 0 ||
     snum < 0) {
     log_msg(LOG_ERR, "Invalid revoked serial number");
     return ERR_SCM_BADREVSNUM;
@@ -3702,11 +3664,16 @@ static int crl_entry_chk(struct CRLEntry *entryp)
   int64_t revdate = 0;
   int64_t now = time(0);
   char dat[30];
-  if (read_casn_time(&entryp->revocationDate.self, &revdate) < 0 ||
-    revdate > now ||
-    cvt_crldate2DB(dat, &entryp->revocationDate) < 0) {
+  if (read_casn_time(&entryp->revocationDate.self, &revdate) < 0) {
     log_msg(LOG_ERR, "Invalid revocation date");
     return ERR_SCM_BADREVDATE;
+  }
+  if (revdate > now) {
+    log_msg(LOG_WARNING, "Revocation date in the future");
+  }
+  if (cvt_crldate2DB(dat, &entryp->revocationDate) < 0) {
+    log_msg(LOG_ERR, "Revocation date doesn't fit in database");
+    return ERR_SCM_INTERNAL;
   }
   
   return 0;
@@ -3752,19 +3719,6 @@ static int crl_entries_chk(struct CertificateRevocationList *crlp)
  * and CRL Number in every CRL that it issues.  RPs MUST be prepared
  * to process CRLs with these extensions.  No other CRL extensions are
  * allowed.
- *
- * 4.8.3. Authority Key Identifier
- *
- * This extension MUST appear in all Resource Certificates, with the
- * exception of a CA who issues a "self-signed" certificate.  In a
- * self-signed certificate, a CA MAY include this extension, and set
- * it equal to the Subject Key Identifier.  The authorityCertIssuer
- * and authorityCertSerialNumber fields MUST NOT be present.  This
- * extension is non-critical.
- *
- * The Key Identifier used for resource certificates is the 160-bit
- * SHA-1 hash of the value of the DER-encoded ASN.1 bit string of the
- * Issuer's public key, as described in Section 4.2.1.1 of [RFC5280].
  -----------------------------------------------------------------------------*/
 static int crl_extensions_chk(struct CertificateRevocationList *crlp)
 {
@@ -3781,7 +3735,7 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
       if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0) {
         log_msg(LOG_ERR, 
           "CRL Authority Key Identifier extension marked critical");
-        return ERR_SCM_BADEXT;
+        return ERR_SCM_CEXT;
       }
       if (authkeyIdp) {
         log_msg(LOG_ERR, "Duplicate CRL Authority Key Identifier extension");
@@ -3794,7 +3748,7 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
       if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0) {
         log_msg(LOG_ERR, 
           "CRL number extension marked critical");
-        return ERR_SCM_BADEXT;
+        return ERR_SCM_CEXT;
       }
       if (crlnump) {
         log_msg(LOG_ERR, "Duplicate CRL number extension");
@@ -3804,6 +3758,7 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
     }
     else {
   // Forbid any other extension
+      log_msg(LOG_ERR, "Forbidden CRL extension");
       char *oidp;
       i = vsize_objid(&crlextp->extnID);
       if (i > 0) {
@@ -3811,14 +3766,17 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
           log_msg(LOG_ERR, "Can't get memory while checking CRL");
           return ERR_SCM_NOMEM;
         }
+      } else {
+        return ERR_SCM_BADEXT;
       }
       if (read_objid(&crlextp->extnID, oidp) <= 0) {
         free(oidp);
         log_msg(LOG_ERR, "Error reading CRLExtension OID");
-        return ERR_SCM_BADCRL;
+        return ERR_SCM_BADEXT;
       }
-    log_msg(LOG_ERR, "Invalid extension %s", oidp);
-    free(oidp);
+      log_msg(LOG_ERR, "Forbidden extension oid %s", oidp);
+      free(oidp);
+      return ERR_SCM_BADEXT;
     }
   }
   if (!authkeyIdp) {
@@ -3828,6 +3786,11 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
   if (!crlnump) {
     log_msg(LOG_ERR, "No CRL number extension");
     return ERR_SCM_NOCRLNUM;
+  } else {
+    if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH) {
+      log_msg(LOG_ERR, "CRLNumber too long");
+      return ERR_SCM_BADCRLNUM;
+    }
   }
   return 0;
 }
@@ -3838,66 +3801,8 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
  * @param crlp (struct CertificateRevocationList*)
  * @return 0 on success<br />a negative integer on failure
  *
- * Check CRL conformance with respect to RFC 5280 and the RPKI
- * resource cert and CRL profile (draft-ietf-sidr-res-certs).
- *
- * CRL ASN.1 Definition from RFC 5280 section 5.1
- *
- * CertificateList  ::=  SEQUENCE  {
- *      tbsCertList          TBSCertList,
- *      signatureAlgorithm   AlgorithmIdentifier,
- *      signatureValue       BIT STRING  }
- *
- * TBSCertList  ::=  SEQUENCE  {
- *      version                 Version OPTIONAL,
- *                                   -- if present, MUST be v2
- *      signature               AlgorithmIdentifier,
- *      issuer                  Name,
- *      thisUpdate              Time,
- *      nextUpdate              Time OPTIONAL,
- *      revokedCertificates     SEQUENCE OF SEQUENCE  {
- *           userCertificate         CertificateSerialNumber,
- *           revocationDate          Time,
- *           crlEntryExtensions      Extensions OPTIONAL
- *                                    -- if present, version MUST be v2
- *                                }  OPTIONAL,
- *      crlExtensions           [0]  EXPLICIT Extensions OPTIONAL
- *                                    -- if present, version MUST be v2
- *                                }
- *
- * RPKI CRL profile
- * (http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-5)
- *
- * 5. Resource Certificate Revocation Lists
- *
- * Each CA MUST issue a version 2 Certificate Revocation List (CRL),
- * consistent with [RFC5280].  RPs are NOT required to process version 1
- * CRLs (in contrast to [RFC5280]).  The CRL Issuer is the CA.  CRLs
- * conforming to this profile MUST NOT include Indirect or Delta CRLs.
- * The scope of each CRL MUST be all certificates issued by this CA.
- *
- * The Issuer name is as in Section 4.4 above.
- *
- * Where two or more CRLs issued by the same CA, the CRL with the
- * highest value of the "CRL Number" field supersedes all other CRLs
- * issued by this CA.
- *
- * The algorithm used in CRLs issued under this profile is specified in
- * [ID.sidr-rpki-algs].
- *
- * The contents of the CRL are a list of all non-expired certificates
- * that have been revoked by the CA.
- *
- * An RPKI CA MUST include the two extensions Authority Key Identifier
- * and CRL Number in every CRL that it issues.  RPs MUST be prepared to
- * process CRLs with these extensions.  No other CRL extensions are
- * allowed.
- *
- * For each revoked resource certificate only the two fields Serial
- * Number and Revocation Date MUST be present, and all other fields MUST
- * NOT be present.  No CRL entry extensions are supported in this
- * profile, and CRL entry extensions MUST NOT be present in a CRL.
- -----------------------------------------------------------------------------*/
+ * Check CRL conformance with respect to RFCs 5280 and 6487.
+  -----------------------------------------------------------------------------*/
 int crl_profile_chk(struct CertificateRevocationList *crlp)
 {
   int ret = 0;
