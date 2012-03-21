@@ -3664,11 +3664,16 @@ static int crl_entry_chk(struct CRLEntry *entryp)
   int64_t revdate = 0;
   int64_t now = time(0);
   char dat[30];
-  if (read_casn_time(&entryp->revocationDate.self, &revdate) < 0 ||
-    revdate > now ||
-    cvt_crldate2DB(dat, &entryp->revocationDate) < 0) {
+  if (read_casn_time(&entryp->revocationDate.self, &revdate) < 0) {
     log_msg(LOG_ERR, "Invalid revocation date");
     return ERR_SCM_BADREVDATE;
+  }
+  if (revdate > now) {
+    log_msg(LOG_WARNING, "Revocation date in the future");
+  }
+  if (cvt_crldate2DB(dat, &entryp->revocationDate) < 0) {
+    log_msg(LOG_ERR, "Revocation date doesn't fit in database");
+    return ERR_SCM_INTERNAL;
   }
   
   return 0;
