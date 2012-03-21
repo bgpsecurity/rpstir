@@ -3039,29 +3039,39 @@ static int rescert_criticals_chk(X509 *x)
  -----------------------------------------------------------------------------*/
 static int rescert_name_chk(struct RDNSequence *rdnseqp)
   {
-  int i, j, k, l, cnames = 0;
-  if ((i = num_items(&rdnseqp->self)) > 2)
+  int sequence_length, sequence_idx;
+  int set_length, set_idx;
+  bool commonName = false;
+  bool serialNumber = false;
+  if ((sequence_length = num_items(&rdnseqp->self)) > 2)
     {
-    log_msg(LOG_ERR, "RDNSeq contains >1 RelativeDistinguishedName");
+    // RFC 6487 limits the total number of attributes, not the sequence length explicitly
+    log_msg(LOG_ERR, "RDNSeq contains >2 RelativeDistinguishedName");
     return -1;
     }
-  for (j = 0; j < i; j++)
+  for (sequence_idx = 0; sequence_idx < sequence_length; ++sequence_idx)
     {
     struct RelativeDistinguishedName *rdnp =
-      (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, j);
-    if ((k = num_items(&rdnp->self)) > 2)  // this limit applies to Issuer/Subject, not to RelativeDistinguishedName
+      (struct RelativeDistinguishedName*)member_casn(&rdnseqp->self, sequence_idx);
+    if ((set_length = num_items(&rdnp->self)) > 2)
       {
+      // RFC 6487 limits the total number of attributes, not the set length explicitly
       log_msg(LOG_ERR, "RelativeDistinguishedName contains >2 Attribute Value Assertions");
       return -1;
       }
-    for (l = 0; l < k; l++)
+    for (set_idx = 0; set_idx < set_length; ++set_idx)
       {
       struct AttributeValueAssertion *avap =
-        (struct AttributeValueAssertion *)member_casn(&rdnp->self, l);
+        (struct AttributeValueAssertion *)member_casn(&rdnp->self, set_idx);
       if (!diff_objid(&avap->objid, id_commonName))
         {
-        cnames++;
-        if (!vsize_casn(&avap->value.commonName.printableString) > 0)
+        if (commonName)
+          {
+          log_msg(LOG_ERR, "multiple CommonNames");
+          return -1
+          }
+        commonName = true;
+        if (vsize_casn(&avap->value.commonName.printableString) <= 0)
           {
           if (strict_profile_checks)
             {
@@ -3073,16 +3083,27 @@ static int rescert_name_chk(struct RDNSequence *rdnseqp)
             log_msg(LOG_WARNING, "CommonName not printableString");
             }
           }
-        } else if (diff_objid(&avap->objid, id_serialNumber))  // this limit applies to Issuer/Subject, not to AttributeValueAssertion
+        }
+      else if (!diff_objid(&avap->objid, id_serialNumber))
+        {
+        if (serialNumber)
+          {
+          log_msg(LOG_ERR, "multiple SerialNumbers");
+          return -1;
+          }
+        serialNumber = true;
+        }
+      else
         {
         log_msg(LOG_ERR, "AttributeValueAssertion contains an OID that is neither id_commonName nor id_serialNumber");
         return -1;
         }
       }
     }
-  if (cnames != 1)
+
+  if (!commonName)
     {
-    log_msg(LOG_ERR, "AttributeValueAssertion contains 0, or >1, id_commonName");
+    log_msg(LOG_ERR, "no CommonName present");
     return -1;
     }
 
