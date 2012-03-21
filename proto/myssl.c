@@ -2915,55 +2915,19 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
     return(ERR_SCM_NOIPAS);
   }
 
-    // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
-    // It provides a more accurate check that valid IP resources are present.
-    // NOTE: in theory, the below IP and AS checks should be done by OpenSSL.
-  struct ipranges locranges = IPRANGES_EMPTY_INITIALIZER;
-  
-  mk_certranges(&locranges, certp);
-  struct iprange *lorangep = &locranges.iprangep[0], *hirangep;
-  int i;
-  if (lorangep->typ == IPv4)
-    {
-    for (i = 0; i < locranges.numranges; i++)
-      {
-      hirangep = &lorangep[1]; 
-      if (hirangep->typ != IPv4) break;
-      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
-        {
-        log_msg(LOG_ERR, "IP address overlap");
-        return ERR_SCM_IPTOUCH;   
-        }
-      }
-    lorangep = hirangep;
-    }
-  if (lorangep->typ == IPv6)
-    {
-    for ( ; i < locranges.numranges; i++)
-      {
-      hirangep = &lorangep[1]; 
-      if (hirangep->typ != IPv6) break;
-      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
-        {
-        log_msg(LOG_ERR, "IP address overlap");
-        return ERR_SCM_IPTOUCH;   
-        }
-      }
-    lorangep = hirangep;
-    }
-  if (lorangep->typ == ASNUM)
-    {
-    for ( ; i < locranges.numranges; i++)
-      {
-      hirangep = &lorangep[1]; 
-      if (hirangep->typ != ASNUM) break;
-      if (touches(lorangep, hirangep, lorangep->typ) >= 0)
-        {
-        log_msg(LOG_ERR, "AS number overlap");
-        return ERR_SCM_IPTOUCH;   
-        }
-      }
-    } 
+  /*
+    The IP and AS resources need to be checked to ensure that they
+    follow RFC 3779 rules. In theory, OpenSSL should check that
+    somewhere. The options for below are:
+
+      1. Check the code removed by commits 136f663 and b90137c for
+         bugs and reinstate it.
+      2. Check the code removed by commit XXX for bugs and reinstate
+         it.
+      3. Call OpenSSL here and verify that it does what it's supposed
+         to.
+  */
+
   return(0);
 }
 
