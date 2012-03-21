@@ -2432,6 +2432,9 @@ skip:
  *
  * Note:  TA not checked here.
  * Note:  Validity of CA, EE flags not checked here.
+ * Note:  This really should check the cA boolean, but this works because of
+ *        http://tools.ietf.org/html/rfc6487#section-4.8.1 provided that
+ *        somewhere else checks that the cA boolean is set for CA certs.
  *
  * @param certp (struct Certificate*)
  * @retval ret int type of the Certificate<br />-1 for error
@@ -2504,29 +2507,25 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_caRepository)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_repo = calloc(1, size + 1);
-                if (!uri_repo)
-                    return ERR_SCM_NOMEM;
+				if (!uri_repo)
+					return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_repo);
 				if (!strncasecmp((char *)uri_repo, RSYNC_PREFIX, 8))
 					found_uri_repo_rsync = 1;
+				free(uri_repo);
+				uri_repo = NULL;
 			} else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_mft = calloc(1, size + 1);
-                if (!uri_mft) {
-                    if (uri_repo)
-                        free (uri_repo);
-                    return ERR_SCM_NOMEM;
-                }
+				if (!uri_mft)
+					return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_mft);
 				if (!strncasecmp((char *)uri_mft, RSYNC_PREFIX, 8))
 					found_uri_mft_rsync = 1;
+				free(uri_mft);
+				uri_mft = NULL;
 			}
 		}
-
-		if (uri_repo)
-			free (uri_repo);
-		if (uri_mft)
-			free (uri_mft);
 
 		if (!found_uri_repo_rsync) {
 			log_msg(LOG_ERR, "did not find rsync uri for repository for SIA");
@@ -2543,21 +2542,18 @@ static int rescert_sia_chk(X509 *x, int ct, struct Certificate *certp) {
 			if (!diff_objid(&adp->accessMethod, id_ad_signedObject)) {
 				size = vsize_casn((struct casn *)&adp->accessLocation.url);
 				uri_obj = calloc(1, size + 1);
-                if (!uri_obj)
-                    return ERR_SCM_NOMEM;
+				if (!uri_obj)
+					return ERR_SCM_NOMEM;
 				read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
 				if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
 					found_uri_obj_rsync = 1;
+				free(uri_obj);
+				uri_obj = NULL;
 			} else {
 				log_msg(LOG_ERR, "in EE-cert SIA, found accessMethod != id-ad-signedObject");
-		        if (uri_obj)
-		            free (uri_obj);
 				return ERR_SCM_BADSIA;
 			}
 		}
-
-		if (uri_obj)
-			free (uri_obj);
 
 		if (!found_uri_obj_rsync) {
 			log_msg(LOG_ERR, "did not find rsync uri for signedObject for SIA");
@@ -2704,7 +2700,7 @@ static int rescert_cert_policy_chk(X509 *x)
   CERTIFICATEPOLICIES *ex_cpols = NULL;
   POLICYINFO *policy;
   char policy_id_str[32];
-  char *oid_policy_id = "1.3.6.1.5.5.7.14.2\0";
+  char *oid_policy_id = "1.3.6.1.5.5.7.14.2"; // http://tools.ietf.org/html/rfc6484#section-1.2
   int policy_id_len = strlen(oid_policy_id);
   int crit = INT_MIN;
   int idx = INT_MIN;
@@ -2781,80 +2777,13 @@ skip:
 }
 
 /*************************************************************
- * rescert_ip_resources_chk(X509 *)                          *
+ * rescert_ip_resources_chk(struct Certificate *)            *
  *                                                           *
- *  IP Resources, AS Resources - critical - MUST have one    *
- *   of these or both. In the case of one, if present        *
- *   marked as critical                                      *
+ * Returns 0 if there is no IP extension, 1 if there is      *
+ * exactly one extension that is critical, or a negative     *
+ * error code.                                               *
  *                                                           *
  ************************************************************/
-/*
-static int rescert_ip_resources_chk(X509 *x)
-{
-  int ipaddr_flag = 0;
-  int i;
-  int ex_nid;
-  X509_EXTENSION *ex = NULL;
-
-  for (i = 0; i < X509_get_ext_count(x); i++) {
-    ex = X509_get_ext(x, i);
-    ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
-
-    if (ex_nid == NID_sbgp_ipAddrBlock) {
-      ipaddr_flag++;
-      if (!X509_EXTENSION_get_critical(ex)) {
-        log_msg(LOG_ERR, "[IP res] not marked as critical");
-        return(ERR_SCM_NCEXT);
-      }
-    }
-  }
-
-  if (!ipaddr_flag) {
-    log_msg(LOG_ERR, "[IP res] did not contain IP Resources ext");
-    log_msg(LOG_ERR, "could be ok if AS resources are present and correct");
-    return(0);
-  } else if (ipaddr_flag > 1) {
-    log_msg(LOG_ERR, "[IP res] multiple instances of IP resources extension");
-    return(ERR_SCM_DUPIP);
-  }
-
-  return(0);
-}
-*/
-/*
-#define V4Typ 4
-#define V6Typ 6
-struct IPtest
-  {
-  int typ;
-  uchar lo[18], hi[18];
-  };
-
-static int fill_iptest(struct IPtest *iptp,
-    struct IPAddressOrRangeA *ipAddrOrRangep)
-  {
-  struct casn *locasn, *hicasn;
-  if (vsize_casn(&ipAddrOrRangep->addressPrefix) > 0)  // just one
-    locasn = hicasn = &ipAddrOrRangep->addressPrefix;
-  else
-    {
-    locasn = &ipAddrOrRangep->addressRange.min;
-    hicasn = &ipAddrOrRangep->addressRange.max;
-    }
-  uchar locbuf[20];
-  int siz, limit = (iptp->typ == V4Typ? 4: 16);
-  if ((siz = read_casn(locasn, locbuf)) < 0 ||
-    siz > limit) return -1;
-  memset(iptp->lo, 0, sizeof(iptp->lo));
-  memcpy(iptp->lo, &locbuf[1], --siz);
-  if ((siz = read_casn(hicasn, locbuf)) < 0 ||
-    siz > limit) return -1;
-  memset(iptp->hi, -1, sizeof(iptp->lo));
-  memcpy(iptp->hi, &locbuf[1], --siz);
-  if (locbuf[0]) iptp->hi[siz - 1] |= ((1 << locbuf[0]) - 1);
-  return 0;
-  }
-*/
 static int rescert_ip_resources_chk(struct Certificate *certp) {
     int ext_count = 0;
     struct Extension *extp = get_extension(certp, id_pe_ipAddrBlock,
@@ -2887,130 +2816,20 @@ static int rescert_ip_resources_chk(struct Certificate *certp) {
             return ERR_SCM_NCEXT;
         }
     }
-/*
-    int types = 0;
-    struct IPAddressFamilyA *ipfamap;
-    for (ipfamap = (struct IPAddressFamilyA *)member_casn(&extp->extnValue.
-    ipAddressBlock.self, 0); ipfamap;
-    ipfamap = (struct IPAddressFamilyA *)next_of(&ipfamap->self)) {
-        uchar fam[4];
-        read_casn(&ipfamap->addressFamily, fam);
-        if ((fam[1] != 1 && fam[1] != 2) ||
-          (types & fam[1])) return ERR_SCM_INVALFAM;
-        types |= fam[1];
-        struct IPAddressChoiceA *ipaddchap = &ipfamap->ipAddressChoice;
-        if (size_casn(&ipaddchap->inherit)) continue;
-        if (!num_items(&ipfamap->ipAddressChoice.addressesOrRanges.self))
-          return ERR_SCM_BADIPRANGE;
-        struct IPAddressOrRangeA *ipaddrOrRangep = (struct IPAddressOrRangeA *)
-          member_casn( &ipaddchap->addressesOrRanges.self, 0);
-        struct IPtest arange, brange, *lo = &arange, *hi = &brange;
-        lo->typ = (fam[1] == '1')? V4Typ: V6Typ;
-        fill_iptest(lo, ipaddrOrRangep);
-        ipaddrOrRangep = (struct IPAddressOrRangeA *)
-        next_of(&ipaddrOrRangep->self);
-        if (!ipaddrOrRangep) return 1;
-        hi->typ = (fam[1] == '1')? V4Typ: V6Typ;
-        fill_iptest(hi, ipaddrOrRangep);
-        if (touches(lo, hi))
-          {
-          log_msg(LOG_ERR, "IP addresses touch");
-          return ERR_SCM_IPTOUCH;
-          }
-        }
-*/
-     return 1;
+    return 1;
   }
  
   
 /*************************************************************
- * rescert_as_resources_chk(X509 *)                          *
+ * rescert_as_resources_chk(struct Certificate *)            *
  *                                                           *
- *  IP Resources, AS Resources - critical - MUST have one    *
- *   of these or both. In the case of one, if present        *
- *   marked as critical                                      *
+ * @return 0 on success with no AS info, 1 on success with   *
+ *           AS info, a negative integer on failure          *
  *                                                           *
  ************************************************************/
 /* openssl not checking AS number canonicity as of 1.0.0.d
  * even tho it contains Rob Austein's patch from Dec, 20101
-static int rescert_as_resources_chk(X509 *x)
-{
-  int asnum_flag = 0;
-  int i;
-  int ex_nid;
-  X509_EXTENSION *ex = NULL;
-
-  for (i = 0; i < X509_get_ext_count(x); i++) {
-    ex = X509_get_ext(x, i);
-    ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
-
-    if (ex_nid == NID_sbgp_autonomousSysNum) {
-      asnum_flag++;
-      if (!X509_EXTENSION_get_critical(ex)) {
-        log_msg(LOG_ERR, "[AS res] not marked as critical");
-        return(ERR_SCM_NCEXT);
-      }
-    }
-  }
-
-  if (!asnum_flag) {
-    log_msg(LOG_ERR, "[AS res] did not contain AS Resources ext");
-    log_msg(LOG_ERR, "could be ok if IP resources are present and correct");
-    return(0);
-  } else if (asnum_flag > 1) {
-    log_msg(LOG_ERR, "[AS res] multiple instances of AS resources extension");
-    return(ERR_SCM_DUPAS);
-  }
-
-  return(0);
-}
 */
-
-
-/**=============================================================================
- * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
- -----------------------------------------------------------------------------*/
-/*
-struct AsNumTest{
-    ulong lo;
-    ulong hi;
-};
-*/
-
-/**=============================================================================
- * @brief Helper fcn for checking AS order.  Load AS num(s) from casn struct.
- *
- * From roa-pki:../gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
- *
- * @param asntp (struct AsNumTest*)
- * @param asNumOrRangep (struct ASNumberOrRangeA*)
- * @return 0 on success<br />a negative integer on failure
- -----------------------------------------------------------------------------*/
-/*
-static int fill_asnumtest(struct AsNumTest *asntp,
-        struct ASNumberOrRangeA *asNumOrRangep) {
-    if (vsize_casn(&asNumOrRangep->num) > 0) {  // just one
-        if (read_casn_num(&asNumOrRangep->num, (long *)&asntp->lo) < 0)
-            return -1;
-        asntp->hi = asntp->lo;
-    } else if (read_casn_num(&asNumOrRangep->range.min, (long *)&asntp->lo) < 0 ||
-            read_casn_num(&asNumOrRangep->range.max, (long *)&asntp->hi) < 0 ||
-        asntp->lo >= asntp->hi)
-        return -1;
-    return 0;
-}
-*/
-
-/**=============================================================================
- * @brief Check for AS order
- *
- * From roa-pki:/home/gardiner/cwgrpki/trunk/proto/myssl.c : 1571-1631
- *
- * @param extsp (struct Extensions*)
- * @return 0 on success with no AS info, 1 on success with AS info,
- *         a negative integer on failure
- -----------------------------------------------------------------------------*/
-
 static int rescert_as_resources_chk(struct Certificate *certp) {
     int ext_count = 0;
     struct Extension *extp = get_extension(certp, id_pe_autonomousSysNum,
@@ -3044,10 +2863,9 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         }
     }
 
-    // TODO: what does the following note from Charlie mean?
-    //   again should we check that there is something there or inherit?
+    // Should we make sure there's a non-empty set of AS resources if the AS
+    // extension is present and not inherit?
 
-//    if (vsize_casn(&extp->extnValue.autonomousSysNum.rdi.self)) {
     if (size_casn((struct casn*)&extp->extnValue.autonomousSysNum.rdi.self)) {
         log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
         return ERR_SCM_BADASRANGE;
@@ -3062,36 +2880,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
         return ERR_SCM_BADASRANGE;
     }
-/*
-    int found_as = 0;
-    struct AsNumTest lo;
-    struct AsNumTest hi;
-    struct ASNumberOrRangeA *asNumOrRangep = (struct ASNumberOrRangeA *)
-            member_casn(&asidcap->asNumbersOrRanges.self, 0);
-    if (fill_asnumtest(&lo, asNumOrRangep)) {
-        log_msg(LOG_ERR, "error reading AS number");
-        return ERR_SCM_BADASRANGE;
-    }
-    if (lo.lo < 1 || lo.lo > lo.hi) {
-        log_msg(LOG_ERR, "AS numbers are not canonical");
-        return ERR_SCM_BADASRANGE;
-    }
-    found_as = 1;
-    while ((asNumOrRangep =
-            (struct ASNumberOrRangeA *)next_of(&asNumOrRangep->self))) {
-        if (fill_asnumtest(&hi, asNumOrRangep)) {
-            log_msg(LOG_ERR, "error reading AS number");
-            return ERR_SCM_BADASRANGE;
-        }
-        if (hi.lo - 1 <= lo.hi) {
-            log_msg(LOG_ERR, "AS numbers not in canonical order");
-            return ERR_SCM_BADASRANGE;
-        }
-        lo.hi = hi.hi;
-    }
-    return found_as;
-*/
-return 1;
+    return 1;
 }
 
 /*************************************************************
@@ -3128,6 +2917,7 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 
     // TODO: possibly switch to Charlie's version of this fcn and rescert_ip_resources_chk()
     // It provides a more accurate check that valid IP resources are present.
+    // NOTE: in theory, the below IP and AS checks should be done by OpenSSL.
   struct ipranges locranges = IPRANGES_EMPTY_INITIALIZER;
   
   mk_certranges(&locranges, certp);
