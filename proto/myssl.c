@@ -2880,7 +2880,7 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
         log_msg(LOG_INFO, "AS resources marked as inherit");
         return 1;
     }
-    if (!(ext_count = num_items(&asidcap->asNumbersOrRanges.self))) {
+    if (num_items(&asidcap->asNumbersOrRanges.self) <= 0) {
         log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
         return ERR_SCM_BADASRANGE;
     }
