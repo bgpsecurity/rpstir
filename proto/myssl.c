@@ -3240,21 +3240,31 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     }
 
 	// Subject public key modulus must be (SUBJ_PUBKEY_MODULUS_SZ * 8)-bits.
-    bytes_to_read = vsize_casn(&rsapubkey.modulus);
-	if (bytes_to_read != SUBJ_PUBKEY_MODULUS_SZ + 1) {
-		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
-		return ERR_SCM_BADALG;
-	}
-	// If you use pubkey_modulus_buf, be sure to strip the leading zero byte.
     uchar *pubkey_modulus_buf;
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
-    if (!pubkey_modulus_buf)
-        return ERR_SCM_NOMEM;
-	free(pubkey_modulus_buf);
-    if (bytes_read != bytes_to_read) {
-		log_msg(LOG_ERR, "subj pub key modulus actual length != stated");
-		return ERR_SCM_BADALG;
+    if (bytes_read < 0) {
+        log_msg(LOG_ERR, "error parsing public key modulus");
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
+    } else if (bytes_read == 0) {
+        log_msg(LOG_ERR, "empty public key modulus");
+        free(pubkey_modulus_buf);
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
     }
+    if (!pubkey_modulus_buf) {
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_NOMEM;
+    }
+	if (bytes_read != SUBJ_PUBKEY_MODULUS_SZ + 1 ||
+	    pubkey_modulus_buf[0] != 0 ||
+	    pubkey_modulus_buf[1] & 0x80 == 0) {
+		log_msg(LOG_ERR, "subj pub key modulus bit-length != %d", SUBJ_PUBKEY_MODULUS_SZ * 8);
+		free(pubkey_modulus_buf);
+		delete_casn(&rsapubkey.self);
+		return ERR_SCM_BADALG;
+	}
+	free(pubkey_modulus_buf);
 
 	// Subject public key exponent must = 65,537.
     int incorrect_length = 0;
