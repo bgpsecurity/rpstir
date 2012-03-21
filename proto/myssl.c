@@ -3235,6 +3235,7 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
     free(pubkey_buf);
     if (bytes_read < 0) {
 		log_msg(LOG_ERR, "error decoding subj pub key");
+		delete_casn(&rsapubkey.self);
 		return ERR_SCM_BADALG;
     }
 
@@ -3280,6 +3281,8 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 		    log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
 		return ERR_SCM_BADALG;
     }
+
+    delete_casn(&rsapubkey.self);
 
 	return 0;
 }
