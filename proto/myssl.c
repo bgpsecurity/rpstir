@@ -3267,29 +3267,16 @@ static int rescert_sig_algs_chk(struct Certificate *certp) {
 	free(pubkey_modulus_buf);
 
 	// Subject public key exponent must = 65,537.
-    int incorrect_length = 0;
-    int different_lengths = 0;
-    int bad_exponent = 0;
-    bytes_to_read = vsize_casn(&rsapubkey.exponent);
-	if (bytes_to_read != SUBJ_PUBKEY_EXPONENT_SZ)
-        incorrect_length = 1;
-    uchar *pubkey_exponent_buf;
-    bytes_read = readvsize_casn(&rsapubkey.exponent, &pubkey_exponent_buf);
-    if (!pubkey_exponent_buf)
-        return ERR_SCM_NOMEM;
-    if (bytes_read != bytes_to_read)
-        different_lengths = 1;
-    if ( *((uint32_t*)pubkey_exponent_buf) != SUBJ_PUBKEY_EXPONENT)
-        bad_exponent = 1;
-	free(pubkey_exponent_buf);
-    if (incorrect_length  ||  different_lengths  ||  bad_exponent) {
-        if (bad_exponent)
-		    log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
-        if (incorrect_length)
-		    log_msg(LOG_ERR, "subj pub key exponent is incorrect length");
-        if (different_lengths)
-		    log_msg(LOG_ERR, "subj pub key exponent actual length != stated");
-		return ERR_SCM_BADALG;
+    long exponent;
+    if (read_casn_num(&rsapubkey.exponent, &exponent) < 0) {
+        log_msg(LOG_ERR, "error reading subj pub key exponent");
+	delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
+    }
+    if (exponent != SUBJ_PUBKEY_EXPONENT) {
+	log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
+	delete_casn(&rsapubkey.self);
+	return ERR_SCM_BADALG;
     }
 
     delete_casn(&rsapubkey.self);
