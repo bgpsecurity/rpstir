@@ -3735,7 +3735,7 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
       if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0) {
         log_msg(LOG_ERR, 
           "CRL Authority Key Identifier extension marked critical");
-        return ERR_SCM_BADEXT;
+        return ERR_SCM_CEXT;
       }
       if (authkeyIdp) {
         log_msg(LOG_ERR, "Duplicate CRL Authority Key Identifier extension");
@@ -3748,7 +3748,7 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
       if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0) {
         log_msg(LOG_ERR, 
           "CRL number extension marked critical");
-        return ERR_SCM_BADEXT;
+        return ERR_SCM_CEXT;
       }
       if (crlnump) {
         log_msg(LOG_ERR, "Duplicate CRL number extension");
@@ -3758,6 +3758,7 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
     }
     else {
   // Forbid any other extension
+      log_msg(LOG_ERR, "Forbidden CRL extension");
       char *oidp;
       i = vsize_objid(&crlextp->extnID);
       if (i > 0) {
@@ -3765,14 +3766,17 @@ static int crl_extensions_chk(struct CertificateRevocationList *crlp)
           log_msg(LOG_ERR, "Can't get memory while checking CRL");
           return ERR_SCM_NOMEM;
         }
+      } else {
+        return ERR_SCM_BADEXT;
       }
       if (read_objid(&crlextp->extnID, oidp) <= 0) {
         free(oidp);
         log_msg(LOG_ERR, "Error reading CRLExtension OID");
-        return ERR_SCM_BADCRL;
+        return ERR_SCM_BADEXT;
       }
-    log_msg(LOG_ERR, "Invalid extension %s", oidp);
-    free(oidp);
+      log_msg(LOG_ERR, "Forbidden extension oid %s", oidp);
+      free(oidp);
+      return ERR_SCM_BADEXT;
     }
   }
   if (!authkeyIdp) {
