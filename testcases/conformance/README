@@ -32,60 +32,92 @@ how it handles a convoluted repository structure.
 
 CA Certificates
 
-101 AIA2AccessDesc      # two AIA extensions -- remove, dup of AIA2x?
-102 AIABadAccess        # wrong accessMethod for rsync URI
-103 AIAAccessLoc        # single HTTP accessLoc, no rsync
-104 AIACrit             # wrongly mark AIA extension as critical
-105 AKIHash             # AKI doesn't match parent SKI -- NOT syntax check?
-106 AKILth              # AKI is too short (do we want too long?)
-107 BadExtension1       # illegal extension (PolicyMappings) -- need critical?
-109 BasicConstrNoCA     # BasicConstr present, but cA not set
-110 BasicConstrNoCrit   # BasicConstr present, crit bit unset
-111 BasicConstrPathLth  # BasicConstr path length present
-112 Cpol2oid            # More than one Certificate Policy OID -- use same one?
-113 CpolNoCrit          # CertPolicy extension, crit bit unset
-114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points -- actually allowed?
-115 CRLDPCrit           # CRL Dist Pt marked critical
-116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer
-117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt -- zero-length str?
-118 CRLDPReasons        # CRL Dist Pt has reasons
-119 EKU                 # has Extended KeyUsage
-120 InnerSigAlg         # wrong signature algorithm in toBeSigned
-121 IssuerOID           # issuer name is not id_commonName
-122 Issuer2ComName      # issuer name has 2 common names
-123 IssuerUtf           # issuer name has utf name
-124 Issuer2SetComName   # issuer name has 2 sets with common names
-125 IssuerSerNum        # issuer name has only a serial number
-126 IssUID              # has issuer unique ID
-127 KUsageExtra         # has disallowed key usage bit
-128 KUsageNoCertSign    # lacks bit for signing certificates
-129 KUsageNoCrit        # key usage extension not critical
-131 KUsageNoCRLSign     # lacks bit for signing CRLs
-134 OuterSigAlg         # wrong signature algorithm in cert.algorithm
-135 PubKeyAlg           # wrong SubjectPublicKey algorithm
-136 PubKeyExp           # wrong SubjectPublicKey exponent
-137 PubKeyLth           # wrong SubjectPublicKey length -- need to be shorter?
-138 ResourcesASNoCrit   # AS number extension not critical
-139 ResourcesBadAFI     # invalid IP address family
-140 ResourcesBadASOrder # AS numbers out of order
-141 ResourcesBadV4Order # IPv4 addresses out of order
-142 ResourcesBadV6Order # IPv6 addresses out of order
-143 ResourcesIPNoCrit   # IP address extension not critical
-144 ResourcesNone       # no IP addresses or AS numbers
-145 ResourcesSAFI       # IP addresses has SAFI digit
-147 SIAAccessLoc        # subject info access extension has non-rsync locator
-148 SIAAccessMethod     # subject info access extension has bad access method
-149 SIAMissing          # no subject info access extension
-150 SKIHash             # incorrect subject key identifier
-151 SKILth              # incorrect subject key identifier length
-152 SubjectOID          # subject name is not id_commonName
-153 Subject2ComName     # subject name has 2 common names
-154 SubjectUtf          # subject name has utf name
-155 Subject2SetComName  # subject name has 2 sets with common names
-156 SubjectSerNum       # subject name has only a serial number
-157 SubjUID             # has subject unique ID
-158 ValCrossed          # beginning validity date > ending date
-159 ValFromFuture       # starting validity date is in future -- UNK state OK?
+101 AIA2AccessDescHtRs  # (good) AIA with two access descriptions (http+rsync) 6487#4.8.7
+    AIA2AccessDescRsRs  # (good) AIA with two access descriptions (2 rsync) 6487#4.8.7
+102 AIABadAccess        # wrong accessMethod for rsync URI 6487#4.8.7
+103 AIAAccessLoc        # single HTTP accessLoc, no rsync 6487#4.8.7
+104 AIACrit             # wrongly mark AIA extension as critical 6487#4.8.7
+105 AKIHash             # AKI doesn't match parent SKI -- NOTE: not syntax check 6487#4.8.3
+106 AKIShort            # AKI is too short 6487#4.8.3
+    AKILong             # AKI is too long 6487#4.8.3
+    AKIHasACI           # AKI has authorityCertIssuer present  6487#4.8.3
+    AKIHasACSN          # AKI has authorityCertSerialNumber present  6487#4.8.3
+107 UnkExtension        # unrecognized non-critical extension (PolicyMappings) 6487#1,4.8,8
+    UnkExtensionCrit    # unrecognized critical extension (PolicyMappings) 5280#4.2
+109 BasicConstrNoCA     # BasicConstr present, but cA not set 6487#4.8.1
+110 BasicConstrNoCrit   # BasicConstr present, crit bit unset 6487#4.8.1
+111 BasicConstrPathLth  # BasicConstr path length present 6487#4.8.1
+112 Cpol2oid1correct    # One correct, one incorrect Cert Policy OID 6487#4.8.9 6484#1.2
+    Cpol2oid2correct    # Two correct Cert Policy OIDs 6487#4.8.9 6484#1.2
+    CpolBadOid          # One incorrect Cert Policy OID 6487#4.8.9 6484#1.2
+113 CpolNoCrit          # CertPolicy extension, crit bit unset 6487#4.8.9
+114 CRLDP2DistPt        # (good) CRL Dist Pt has 2 Dist points 6487#4.8.6
+115 CRLDPCrit           # CRL Dist Pt marked critical 6487#4.8.6
+116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer 6487#4.8.6
+118 CRLDPReasons        # CRL Dist Pt has reasons 6487#4.8.6
+119 EKU                 # has Extended KeyUsage 6487#4.8.5
+120 InnerSigAlg         # wrong signature algorithm in toBeSigned (i.e. mismatch) 6485#2, 5280#4.1.2.3
+    BothSigAlg          # wrong signature algorithms (but matching each other) 6485#2
+121 IssuerOID           # issuer name is not id_commonName 6487#4.4
+122 Issuer2ComName      # issuer name has 2 common names (same set) 6487#4.4
+123 IssuerUtf           # issuer name has utf name 6487#4.4
+124 Issuer2SetComName   # issuer name has 2 sets with common names 6487#4.4
+125 IssuerSerNum        # issuer name has only a serial number 6487#4.4
+    IssuerSeqNameSer    # (good) issuer with name before serial number (2 sets) 6487#4.4
+    IssuerSeqSerName    # (good) issuer with serial number before name (2 sets) 6487#4.4
+    IssuerSetNameSer    # (good) issuer with serial number and name (1 set) 6487#4.4
+126 IssUID              # has issuer unique ID 6487#4
+127 KUsageExtra         # has disallowed key usage bit 6487#4.8.4
+128 KUsageNoCertSign    # lacks bit for signing certificates 6487#4.8.4
+129 KUsageNoCrit        # key usage extension not critical 6487#4.8.4
+131 KUsageNoCRLSign     # lacks bit for signing CRLs 6487#4.8.4
+134 OuterSigAlg         # wrong signature algorithm in cert.algorithm (i.e. mismatch) 6485#2, 5280#4.1.2.3
+135 PubKeyAlg           # wrong SubjectPublicKey algorithm 6485#3.1 Is this right???
+136 PubKeyExp           # wrong SubjectPublicKey exponent 6485#3
+137 PubKeyShort         # SubjectPublicKey is 2047-bit 6485#3
+    PubKeyLong          # SubjectPublicKey is 2049-bit 6485#3
+138 ResourcesASNoCrit   # AS number extension not critical 6487#4.8.11
+139 ResourcesBadAFI     # invalid IP address family 6487#4.8.10, IANA address-family-numbers
+140 ResourcesBadASOrder # AS numbers out of order 3779 (but full set is pending)
+141 ResourcesBadV4Order # IPv4 addresses out of order 3779 (but full set is pending)
+142 ResourcesBadV6Order # IPv6 addresses out of order 3779 (but full set is pending)
+143 ResourcesIPNoCrit   # IP address extension not critical 6487#4.8.10
+144 ResourcesNone       # neither AS nor IP 3779 extensions 6487#4.8.10
+    ResourcesIPEmpty    # empty set of IP addresses 6487#4.8.10
+    ResourcesASEmpty    # empty set of AS numbers 6487#4.8.11
+145 ResourcesSAFI       # IP addresses has SAFI digit 6487#4.8.10
+    ResourcesIP6Inherit # (good) inherit IPv6 resources only, others explicit 6487#4.8.10
+    ResourcesIP4Inherit # (good) inherit IPv4 resources only, others explicit 6487#4.8.10
+    ResourcesASInherit  # (good) inherit AS resources only, others explicit 6487#4.8.11
+    ResourcesAllInherit # (good) inherit all resources 6487#4.8.10
+    ResourcesIP6InhOnly # (good) inherit IPv6 resources only, others not present 6487#4.8.10
+    ResourcesIP4InhOnly # (good) inherit IPv4 resources only, others not present 6487#4.8.10
+    ResourcesASInhOnly  # (good) inherit AS resources only, others not present 6487#4.8.11
+147 SIARepoNoRsync      # SIA has no rsync locator for id-ad-caRepository 6487#4.8.8
+    SIAMFTNoRsync       # SIA has no rsync locator for id-ad-rpkiManifest 6487#4.8.8
+    SIARepo2Rsync       # (good) SIA has 2 rsync locators for id-ad-caRepository 6487#4.8.8
+    SIAMFT2Rsync        # (good) SIA has 2 rsync locators for id-ad-rpkiManifest 6487#4.8.8
+    SIARepoHtRs         # (good) SIA has http+rsync locators for id-ad-caRepository 6487#4.8.8
+    SIAMFTHtRs          # (good) SIA has http+rsync locators for id-ad-rpkiManifest 6487#4.8.8
+    SIARepoHasNonURI    # SIA has rsync+non-URI locators for id-ad-caRepository 6487#4.8.8
+    SIARepoHasNonURI    # (good) SIA has rsync+non-URI locators for id-ad-caRepository 6487#4.8.8
+148 SIAAccessMethod     # SIA has bad access method in addition to good accessMethods 6487#4.8.8
+    SIANoMFT            # SIA has no id-ad-rpkiManifest 6487#4.8.8
+    SIANoRepo           # SIA has no id-ad-caRepository 6487#4.8.8
+150 SKIHash             # incorrect subject key identifier 6487#4.8.2
+151 SKILong             # SKI length 21 octets 6487#4.8.2
+    SKIShort            # SKI length 19 octets 6487#4.8.2
+152 SubjectOID          # subject name is not id_commonName 6487#4.5
+153 Subject2ComName     # subject name has 2 common names (same set) 6487#4.5
+154 SubjectUtf          # subject name has utf name 6487#4.5
+155 Subject2SetComName  # subject name has 2 sets with common names 6487#4.5
+156 SubjectSerNum       # subject name has only a serial number 6487#4.5
+    SubjectSeqNameSer   # (good) subject with name before serial number (2 sets) 6487#4.5
+    SubjectSeqSerName   # (good) subject with serial number before name (2 sets) 6487#4.5
+    SubjectSetNameSer   # (good) subject with serial number and name (1 set) 6487#4.5
+157 SubjUID             # has subject unique ID 6487#4
+158 ValCrossed          # beginning validity date > ending date 6487#4.6
+159 ValFromFuture       # starting validity date is in future 6487#4.6.1
 160 ValFromTyp          # starting validity is of wrong type
 162 ValToPast           # ending validity date has passed
 163 ValToTyp            # ending date is of wrong type
@@ -95,9 +127,9 @@ CA Certificates
 167 Version4            # version number is v4, i.e. 3
 168 SerNum              # negative serial number -- also need zero?
 169 AIA2x               # two authority info access extensions
-170 SIA2x               # two subject info access extensions
+170 SIA2x               # two SIAs
 171 NoAIA               # no authority info access extension
-172 NoSIA               # no subject info access extension
+172 NoSIA               # no SIA
 173 NoBasicConstr       # no basic constraints extension
 174 2BasicConstr        # two basic constraints extensions
 175 NoSKI               # no subject key identifier extension
@@ -113,8 +145,10 @@ CA Certificates
 185 2IPAddr             # two IP address extensions
 186 2ASNum              # two AS number extensions
 187 CRLDPNoRsyncDistPt  # no rsync URI in CRLDP
-188 Issuer2SerNums      # issuer name has 2 serial numbers
-189 Subject2SerNums     # subject name has 2 serial numbers
+188 IssuerSet2SerNums   # issuer name has 2 serial numbers (same set) 6487#4.4
+189 SubjectSet2SerNums  # subject name has 2 serial numbers (same set) 6487#4.5
+    IssuerSeq2SerNums   # issuer name has 2 serial numbers (split across sets) 6487#4.4
+    SubjectSeq2SerNums  # subject name has 2 serial numbers (split across sets) 6487#4.5
 
 
 CMS signed objects, generic (using ROAs)
