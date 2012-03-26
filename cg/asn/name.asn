@@ -22,7 +22,7 @@ BEGIN
 EXPORTS Name, RDNSequence, DistinguishedName, RelativeDistinguishedName,
 AttributeValueAssertion, ub-name, DirectoryString;
 
-Name ::= CHOICE {
+Name ::= CHOICE { -- only one possibility for now (RFC 5280) --
     RDNSequence}
 
 RDNSequence ::= SEQUENCE OF RelativeDistinguishedName

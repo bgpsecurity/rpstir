@@ -589,12 +589,16 @@ int _check_enum(struct casn **casnpp)
     return 1;
     }
 
+// Mode 0 (just tell me whether it's filled)
+// 1 if filled, 0 if not (or none)
+// Mode 1 (== ASN_READ)
+// return error (< 0) if it was mandatory and not filled
 int _check_filled(struct casn *casnp, int mode)
     {
     ushort flags = (casnp->flags & (ASN_DEFAULT_FLAG | ASN_OPTIONAL_FLAG));
 
     if ((casnp->flags & ASN_FILLED_FLAG)) return 1;
-    if (casnp->type >= ASN_CHOICE && (casnp->flags & ASN_DEFINED_FLAG))
+    if (casnp->type == ASN_CHOICE && (casnp->flags & ASN_DEFINED_FLAG))
         casnp = _find_chosen(casnp);
   	  // error if couldn't find chosen OR (it's not a NONE AND not OPTIONAL)
     if (!casnp || (!flags && casnp->type != ASN_NONE))

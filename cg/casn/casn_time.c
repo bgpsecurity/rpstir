@@ -149,6 +149,9 @@ int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
         return -1;
     char genfrom[32];
     memset(genfrom, 0, 32);
+
+    if ((size_t)lth + 2 > sizeof(genfrom))
+        return -1;
      
     yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ);
     if (yr < 70) strcpy(genfrom, "20");
@@ -182,10 +185,17 @@ Returns: IF error, -1, ELSE length of time field
         casnp->type != ASN_GENTIME)) return -1;
     if (!ansr) return 0;
     ansr = casnp->lth;
-    uchar timebuf[32]; /* is this enough? potential buffer overflow? */
-    if (casnp->type == ASN_GENTIME) memcpy(timebuf, casnp->startp, ansr);
+    uchar timebuf[32];
+    if (casnp->type == ASN_GENTIME)
+        {
+        if ((size_t)ansr + 1 > sizeof(timebuf))
+            return _casn_obj_err(casnp, ASN_TIME_ERR);
+        memcpy(timebuf, casnp->startp, ansr);
+        }
     else 
 	{
+        if ((size_t)ansr + 2 + 1 > sizeof(timebuf))
+            return _casn_obj_err(casnp, ASN_TIME_ERR);
         memcpy(&timebuf[2], casnp->startp, ansr);
         if (timebuf[2] >= '7') strncpy((char *)timebuf, "19", 2);
         else strncpy((char *)timebuf, "20", 2);
