@@ -8,7 +8,7 @@
 
 #define LISTEN_PORT "12709"
 
-#define MAIN_LOOP_INTERVAL 5
+#define MAIN_LOOP_INTERVAL 1
 
 #define DB_RESPONSE_BUFFER_LENGTH 3
 #define DB_ROWS_PER_RESPONSE 1024
@@ -18,12 +18,13 @@
 Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2:
 	The cache MUST rate limit Serial Notifies to no more frequently
 	than one per minute.
+For demo VM only: This is lowered to make the demo go faster.
 */
-#define CXN_NOTIFY_INTERVAL 60
+#define CXN_NOTIFY_INTERVAL 2
 
 // How often to check the cache state when more than CXN_NOTIFY_INTERVAL
 // has elapsed without sending a Serial Notify.
-#define CXN_CACHE_STATE_INTERVAL 10
+#define CXN_CACHE_STATE_INTERVAL 1
 
 // The largest PDU should be an error report PDU.
 // The second largest is an IPv6 prefix at 32 bytes.
