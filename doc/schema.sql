@@ -93,7 +93,7 @@ CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
   subject varchar(511) NOT NULL,
   issuer varchar(511) NOT NULL,
-  sn bigint unsigned NOT NULL,
+  sn varbinary(20) NOT NULL,
   ski binary(20) NOT NULL,
   aki binary(20) DEFAULT NULL,
   valfrom datetime NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE rpstir_rpki_signs (
 
 CREATE TABLE rpstir_rpki_crl_sn (
   hash binary(32) NOT NULL,
-  serial bigint unsigned NOT NULL,
+  serial varbinary(20) NOT NULL,
   revocation_date datetime NOT NULL,
   PRIMARY KEY (hash, serial)
 );
