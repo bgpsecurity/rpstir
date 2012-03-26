@@ -216,6 +216,11 @@ Derived Requirements (“D”)
       iii. Q: Do we need a knob for treating expiration and revocation
            differently?
 
+10. The database must support different validation states for different
+    paths. I.e. a certificate may have state invalid-signature from one
+    parent, invalid-rfc3779 from another parent, and valid from a third
+    parent.
+
 Other Open Questions
 
 1. What fields should go into the database?  E.g.  Is it true that in
