@@ -48,8 +48,33 @@ static const char * _queries_rtr[] = {
 };
 
 
+static const char * _queries_chaser[] = {
+        // DB_PSTMT_CHASER_GET_TIME
+        "select now() from rpki_metadata",
+
+        // DB_PSTMT_CHASER_GET_CRLDP
+        "select crldp from rpki_cert left join rpki_crl "
+        " on rpki_cert.aki = rpki_crl.aki "
+        " where rpki_crl.next_upd < TIMESTAMPADD(SECOND, ?, ?)",
+
+        // DB_PSTMT_CHASER_GET_SIA
+        "select sia from rpki_cert "
+        " where flags & ? = ?",   // either SCM_FLAG_VALIDATED, or 0
+
+        // DB_PSTMT_CHASER_GET_AIA
+        "select aia, aki from rpki_cert "
+        " where flags & ? = ? "  // SCM_FLAG_NOCHAIN
+        " and flags & ? <> ? "   // ! SCM_FLAG_VALIDATED
+        " and aki not in "
+        " (select ski from rpki_cert)",
+
+        NULL
+};
+
+
 static const char * * queries[] = {
-        _queries_rtr
+        _queries_rtr,
+        _queries_chaser
 };
 
 

@@ -125,7 +125,9 @@ static void *connectMysqlCApi(
     conn->mysql = mysql;
 
     if (stmtAddAll(conn) != 0) {
-        db_disconnect(conn);
+        LOG(LOG_ERR, "could not add prepared statements to db connection");
+        if (mysql) {mysql_close(mysql);}
+        free(conn);
         return NULL;
     }
 

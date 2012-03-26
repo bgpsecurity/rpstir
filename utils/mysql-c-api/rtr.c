@@ -49,9 +49,11 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
     MYSQL_BIND bind_in[1];
     uint32_t limit = 2; // 2 keeps the fetch small while letting num_rows() ensure there's only one row in the table
     memset(bind_in, 0, sizeof(bind_in));
+    // limit number of rows to return
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].is_unsigned = 1;
     bind_in[0].buffer = &limit;
+    bind_in[0].is_unsigned = (my_bool) 1;
+    bind_in[0].is_null = (my_bool*) 0;
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
@@ -62,15 +64,15 @@ int db_rtr_get_session_id(dbconn *conn, session_id_t *session) {
         return -1;
     }
 
-    MYSQL_BIND bind[1];
-    memset(bind, 0, sizeof(bind));
+    MYSQL_BIND bind_out[1];
+    memset(bind_out, 0, sizeof(bind_out));
     uint16_t db_session;
     // session_id parameter
-    bind[0].buffer_type= MYSQL_TYPE_SHORT;
-    bind[0].is_unsigned = 1;
-    bind[0].buffer= &db_session;
+    bind_out[0].buffer_type= MYSQL_TYPE_SHORT;
+    bind_out[0].is_unsigned = 1;
+    bind_out[0].buffer= &db_session;
 
-    if (mysql_stmt_bind_result(stmt, bind)) {
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
@@ -123,15 +125,15 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t *serial) {
         return GET_SERNUM_ERR;
     }
 
-    MYSQL_BIND bind[1];
-    memset(bind, 0, sizeof(bind));
+    MYSQL_BIND bind_out[1];
+    memset(bind_out, 0, sizeof(bind_out));
     uint32_t db_sn;
     // serial_num
-    bind[0].buffer_type = MYSQL_TYPE_LONG;
-    bind[0].is_unsigned = (my_bool) 1;
-    bind[0].buffer = &db_sn;
+    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_out[0].is_unsigned = (my_bool) 1;
+    bind_out[0].buffer = &db_sn;
 
-    if (mysql_stmt_bind_result(stmt, bind)) {
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
@@ -174,14 +176,14 @@ static int hasRowsRtrUpdate(dbconn *conn) {
         return -1;
     }
 
-    MYSQL_BIND bind[1];
-    memset(bind, 0, sizeof(bind));
+    MYSQL_BIND bind_out[1];
+    memset(bind_out, 0, sizeof(bind_out));
     uint32_t db_has_rows = 0;
-    bind[0].buffer_type = MYSQL_TYPE_LONG;
-    bind[0].is_unsigned = 1;
-    bind[0].buffer = &db_has_rows;
+    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_out[0].is_unsigned = (my_bool) 1;
+    bind_out[0].buffer = &db_has_rows;
 
-    if (mysql_stmt_bind_result(stmt, bind)) {
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
@@ -231,8 +233,9 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
     memset(bind_in, 0, sizeof(bind_in));
     // prev_serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].is_unsigned = 1;
     bind_in[0].buffer = &ser_num_prev;
+    bind_in[0].is_unsigned = (my_bool) 1;
+    bind_in[0].is_null = (my_bool*) 0;
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
@@ -244,14 +247,14 @@ static int readSerNumAsPrev(dbconn *conn, uint32_t ser_num_prev,
     }
 
     uint32_t db_sn;
-    MYSQL_BIND bind[1];
-    memset(bind, 0, sizeof(bind));
+    MYSQL_BIND bind_out[1];
+    memset(bind_out, 0, sizeof(bind_out));
     // serial_num
-    bind[0].buffer_type = MYSQL_TYPE_LONG;
-    bind[0].buffer = &db_sn;
-    bind[0].is_unsigned = (my_bool) 1;
+    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_out[0].buffer = &db_sn;
+    bind_out[0].is_unsigned = (my_bool) 1;
 
-    if (mysql_stmt_bind_result(stmt, bind)) {
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
@@ -308,8 +311,9 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
     memset(bind_in, 0, sizeof(bind_in));
     // serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].is_unsigned = 1;
     bind_in[0].buffer = &serial;
+    bind_in[0].is_unsigned = (my_bool) 1;
+    bind_in[0].is_null = (my_bool*) 0;
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
@@ -321,19 +325,21 @@ static int readSerNumAsCurrent(dbconn *conn, uint32_t serial,
     }
 
     my_bool db_is_null_prev_sn;
-    signed char db_has_full;
+    int8_t db_has_full;
     uint32_t db_prev_sn;
-    MYSQL_BIND bind[2];
-    memset(bind, 0, sizeof(bind));
+    MYSQL_BIND bind_out[2];
+    memset(bind_out, 0, sizeof(bind_out));
     // prev_serial_num
-    bind[0].buffer_type= MYSQL_TYPE_LONG;
-    bind[0].buffer= &db_prev_sn;
-    bind[0].is_null= &db_is_null_prev_sn;
+    bind_out[0].buffer_type= MYSQL_TYPE_LONG;
+    bind_out[0].buffer= &db_prev_sn;
+    bind_out[0].is_unsigned = (my_bool) 1;
+    bind_out[0].is_null= &db_is_null_prev_sn;
     // has_full
-    bind[1].buffer_type = MYSQL_TYPE_TINY;
-    bind[1].buffer = &db_has_full;
+    bind_out[1].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[1].buffer = &db_has_full;
+    bind_out[1].is_unsigned = (my_bool) 0;
 
-    if (mysql_stmt_bind_result(stmt, bind)) {
+    if (mysql_stmt_bind_result(stmt, bind_out)) {
         LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
         mysql_stmt_free_result(stmt);
@@ -643,17 +649,20 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
     memset(bind_in, 0, sizeof(bind_in));
     // serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].is_unsigned = 1;
     bind_in[0].buffer = &(state->ser_num);
+    bind_in[0].is_unsigned = (my_bool) 1;
+    bind_in[0].is_null = (my_bool*) 0;
     // offset parameter
     bind_in[1].buffer_type = MYSQL_TYPE_LONGLONG;
-    bind_in[1].is_unsigned = 1;
     bind_in[1].buffer = &(state->first_row);
+    bind_in[1].is_unsigned = (my_bool) 1;
+    bind_in[1].is_null = (my_bool*) 0;
     // limit parameter
     bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].is_unsigned = 1;
     size_t limit = max_rows - *num_pdus;
     bind_in[2].buffer = &limit;
+    bind_in[2].is_unsigned = (my_bool) 1;
+    bind_in[2].is_null = (my_bool*) 0;
 
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
@@ -668,19 +677,19 @@ static int serial_query_do_query(dbconn *conn, void *query_state,
     MYSQL_BIND bind_out[3];
     uint32_t db_asn;
     char db_ip_addr[IPADDR_STR_LEN + 1];
-    uint8_t db_is_announce;
+    int8_t db_is_announce;
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = (char*)&db_asn;
+    bind_out[0].is_unsigned = (my_bool) 1;
+    bind_out[0].buffer = &db_asn;
     // ip_addr output
     bind_out[1].buffer_type = MYSQL_TYPE_STRING;
     bind_out[1].buffer_length = IPADDR_STR_LEN;
     bind_out[1].buffer = (char*)&db_ip_addr;
     // is_announce output
     bind_out[2].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[2].is_unsigned = 1;
+    bind_out[2].is_unsigned = (my_bool) 0;
     bind_out[2].buffer = &db_is_announce;
 
     if (mysql_stmt_bind_result(stmt, bind_out)) {
@@ -932,17 +941,20 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     memset(bind_in, 0, sizeof(bind_in));
     // serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].is_unsigned = 1;
     bind_in[0].buffer = &(state->ser_num);
+    bind_in[0].is_unsigned = (my_bool) 1;
+    bind_in[0].is_null = (my_bool*) 0;
     // offset parameter
     bind_in[1].buffer_type = MYSQL_TYPE_LONGLONG;
-    bind_in[1].is_unsigned = 1;
     bind_in[1].buffer = &(state->first_row);
+    bind_in[1].is_unsigned = (my_bool) 1;
+    bind_in[1].is_null = (my_bool*) 0;
     // limit parameter
     bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].is_unsigned = 1;
     size_t limit = max_rows - num_pdus;
     bind_in[2].buffer = &limit;
+    bind_in[2].is_unsigned = (my_bool) 1;
+    bind_in[2].is_null = (my_bool*) 0;
 
     if (mysql_stmt_bind_param(stmt, bind_in)) {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
@@ -965,7 +977,7 @@ ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
     bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = (char*)&db_asn;
+    bind_out[0].buffer = &db_asn;
     // ip_addr output
     bind_out[1].buffer_type = MYSQL_TYPE_STRING;
     bind_out[1].buffer_length = IPADDR_STR_LEN;
