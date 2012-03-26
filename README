@@ -1,18 +1,22 @@
 - this is a demo of rpstir
-- setup per INSTR
-- not intended to support this forever
-- see our sourceforge page
+- setup per INSTRUCTIONS
+- this is not intended to be supported forever
+- see http://sourceforge.net/projects/rpstir/ for supported versions
 
-- you should change your password
+- you should change your password with the passwd(1) command
 
-- to run the software, do this: ...
-- for problems or questions, please contact: ...
+- rpstir is initialized by running ./run_scripts/demo_init.sh
+- edit that file to use different trust anchors
+- rpstir runs fron cron, see crontab(1) for how to edit the cron job
 
-- in order to update the rpstir demo software, do this ...
+- for problems or questions, please contact: achi@bbn.com
+
+- in order to update the rpstir demo software, do this:
 $ cd
 $ cd rpki
 $ git fetch sf demo
 $ git merge sf/demo
+$ make clean
 $ ./autogen.sh
 $ ./configure --enable-silent-rules
 $ make
