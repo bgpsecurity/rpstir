@@ -11,6 +11,10 @@ if [ -n "$(pgrep -u $USER chaser)" ]; then
     kill "$(pgrep -u $USER chaser)"
 fi
 
+if [ -n "$(pgrep -u $USER chaser.sh)" ]; then
+    kill "$(pgrep -u $USER chaser.sh)"
+fi
+
 for PID in `pgrep -u $USER -f demo_loop.sh`
 do
     kill $PID 2>/dev/null
