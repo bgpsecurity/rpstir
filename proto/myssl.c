@@ -1,6 +1,6 @@
 /** @file */
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -3619,8 +3619,9 @@ static int crl_dates_chk(struct CertificateRevocationList *crlp)
   read_casn_time(&crltbsp->lastUpdate.self, &lastdate);
   if (lastdate > now)
     {
-    log_msg(LOG_ERR, "Last update in the future"); 
-    return ERR_SCM_INVALDT;
+    int64_t secsInFuture = lastdate - now;
+    // TODO: if (secsInFuture > user_configured_limit) { log; return ERR_SCM_INVALDT; }
+    log_msg(LOG_WARNING, "thisUpdate %" PRId64 " seconds in the future", secsInFuture); 
     }
   return 0;
 }
