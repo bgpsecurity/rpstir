@@ -19,9 +19,14 @@ CREATE TABLE rpstir_metadata (
 -- state shared by all objects with the same file contents and file type
 CREATE TABLE rpstir_rpki_object (
   hash binary(32) NOT NULL,
+
   file_type ENUM('tal', 'cer', 'crl', 'roa', 'mft') NOT NULL,
-  parses boolean NOT NULL DEFAULT FALSE, -- avoid trying to reparse the same file if it fails the first time
-  valid boolean NOT NULL DEFAULT FALSE, -- Single file validity only, e.g. profile checks. This does not include e.g. signature checks of RFC3779 checks.
+
+  -- 0: can't be parsed
+  -- 1: parses, but fails single-file validity checks
+  -- 2: passes single-file validity checks
+  status tinyint unsigned NOT NULL DEFAULT 0,
+
   PRIMARY KEY (hash, file_type)
 );
 
