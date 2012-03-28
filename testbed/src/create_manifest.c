@@ -110,7 +110,7 @@ int write_fileList(void* man, void* value)
     return -1;
   
   //copy the value into a local copy of the buffer
-  filesAndHashes = calloc(strlen((char*)value), sizeof(char));
+  filesAndHashes = calloc(strlen((char*)value) + 1, sizeof(char));
   memcpy(filesAndHashes, (char*)value, strlen( (char*)value));
   buf = NULL;
 
