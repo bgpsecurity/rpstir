@@ -162,6 +162,7 @@ CREATE TABLE rpstir_rpki_cert (
   KEY isn (issuer, sn)
 );
 
+-- NOTE: Extra care may need to be taken to avoid inserting loops.
 CREATE TABLE rpstir_rpki_cert_path (
   -- hash of parent. This can be equal to the hash of the child for TA certs.
   parent binary(32) NOT NULL,
