@@ -144,11 +144,30 @@ CREATE TABLE rpstir_rpki_cert (
   KEY isn (issuer, sn)
 );
 
-CREATE TABLE rpstir_rpki_signs (
-  signed_hash binary(32) NOT NULL,
-  signer_hash binary(32) NOT NULL,
-  correct boolean NOT NULL DEFAULT FALSE, -- correctness of the signature only
-  PRIMARY KEY (signed_hash, signer_hash)
+CREATE TABLE rpstir_rpki_cert_path (
+  -- hash of parent. This can be equal to the hash of the child for TA certs.
+  parent binary(32) NOT NULL,
+
+  -- hash of child
+  child binary(32) NOT NULL,
+
+  -- bit set, 0 = valid path step from child to parent, flags could include:
+  -- invalid-signature: child not correctly signed by parent
+  -- invalid-rfc3779: child has AS or IP resources that parent doesn't (this can only happen if parent does not have inherit set for that resource)
+  -- expired-parent: parent is expired
+  -- notyet-parent: parent's notBefore date is in the future
+  step_status bigint unsigned NOT NULL,
+
+  -- bit set, 0 = there exists a valid path from child to parent to TA, flags are as above, with slight changes
+  -- invalid-signature: there's no valid signature chain to TA
+  -- invalid-rfc3779: there's no valid RFC 3779 chain to TA that follows a valid signature chain (this chain can include certs with inherit set)
+  -- badtime-parent (= expired-parent & notyet-parent): there's no valid RFC 3779 + signature chain to TA that doesn't include expired or notyet certs
+  path_status bigint unsigned NOT NULL,
+
+  PRIMARY KEY (parent, child),
+  KEY (child, path_status),
+
+  CHECK (step_status = step_status & path_status)
 );
 
 CREATE TABLE rpstir_rpki_crl_sn (
