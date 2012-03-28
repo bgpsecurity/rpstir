@@ -124,7 +124,7 @@ int write_fileList(void* man, void* value)
     {
       // this is for safety. while using the strtok function
       // it's best to work on a copy of the tokenized item
-      char* testBuf = calloc(strlen(buf), sizeof(char));
+      char* testBuf = calloc(strlen(buf) + 1, sizeof(char));
       memcpy(testBuf, buf,strlen(buf));
       int fileNameLen;
       char* hash = NULL;
