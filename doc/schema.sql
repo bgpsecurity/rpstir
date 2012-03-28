@@ -68,6 +68,16 @@ CREATE TABLE rpstir_rpki_object_instance (
   KEY download (download_id)
 );
 
+-- list of hashes to never use:
+--   * Don't download from their URIs.
+--   * Don't consider them valid for any purposes.
+--   * TODO: more things not to use them for?
+CREATE TABLE rpstir_rpki_blacklist (
+  hash binary(32) NOT NULL,
+  explanation text DEFAULT NULL,
+  PRIMARY KEY (hash)
+);
+
 -- map internal hash to any other hash algs used in e.g. manifests
 -- This should make algorithm agility somewhat more feasible in the future.
 CREATE TABLE rpstir_rpki_hash (
