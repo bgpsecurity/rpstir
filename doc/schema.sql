@@ -87,6 +87,24 @@ CREATE TABLE rpstir_uri_normalize (
   KEY (normalized)
 );
 
+-- Unlike other objects, TALs are not included in the rpstir_rpki_object
+-- or rpstir_rpki_object_instance tables.
+CREATE TABLE rpstir_rpki_tal (
+  hash binary(32) NOT NULL,
+  uri varchar(1023) NOT NULL, -- not normalized, direct from first line of TAL
+  organization ENUM('IANA', 'RIR') DEFAULT NULL, -- NULL means other
+  PRIMARY KEY (hash)
+);
+
+-- Certs should only be added to this table if they were downloaded from the appropriate URI
+-- and have a matching public key.
+CREATE TABLE rpstir_rpki_tal_certs (
+  tal binary(32) NOT NULL, -- hash of TAL
+  cert binary(32) NOT NULL, -- hash of cert
+  latest boolean NOT NULL DEAFULT TRUE, -- only true for the latest valid cert for each TAL
+  PRIMARY KEY (tal, cert)
+);
+
 CREATE TABLE rpstir_rpki_cert_asn (
   hash binary(32) NOT NULL,
   first_asn int unsigned NOT NULL,
