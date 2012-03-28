@@ -30,18 +30,42 @@ CREATE TABLE rpstir_rpki_object (
   PRIMARY KEY (hash, file_type)
 );
 
--- (bi)map URIs to file hashes
--- hashes are used as unique IDs for all types of rpki objects in this schema
+-- state of a single attempt to download from a URI
+CREATE TABLE rpstir_rpki_download (
+  id bigint unsigned NOT NULL AUTO_INCREMENT,
+
+  uri varchar(1023) NOT NULL, -- root of download URI, in normalized form
+
+  start_time datetime NOT NULL,
+  duration int unsigned NOT NULL, -- in seconds
+
+  -- Example values and their meanings/examples:
+  -- SUCCESS
+  -- REMOTE_FAIL: network error, protocol error, remote side closed connection, etc.
+  -- LOCAL_FAIL: out of disk space, system shutting down, etc.
+  -- TIMEOUT: transfer took too long
+  -- TOOBIG: remote side offered up too much data
+  status tinyint unsigned NOT NULL,
+
+  PRIMARY KEY (id),
+  UNIQUE KEY (uri, start_time),
+  KEY (start_time)
+);
+
+-- state of a single object at a single URI from a single download (i.e. point in time)
 CREATE TABLE rpstir_rpki_object_instance (
-  uri varchar(1023) NOT NULL, -- where the file was downloaded from, in normalized form
-  hash binary(32) NOT NULL, -- sha256 maybe?, filename could be e.g. /path/to/rpki/CACHE/01/23456789abcdef...
-                            -- hash maybe should be the same as the alg used by manifests?
-                            -- length would be different for different choice of hash function
-  downloaded datetime NOT NULL,
+  -- where the file was downloaded from, in normalized form
+  -- this should be a sub-path of or equal to (SELECT uri FROM rpstir_rpki_download WHERE id = download_id)
+  uri varchar(1023) NOT NULL,
+  download_id bigint unsigned NOT NULL,
+
+  hash binary(32) NOT NULL,
+
   file_type ENUM('cer', 'crl', 'roa', 'mft') DEFAULT NULL, -- NULL indicates unrecognized
-  PRIMARY KEY (hash, uri), -- more useful as a constraint than for SELECT
-  KEY uri (uri, downloaded), -- find latest file for a specified uri
-  KEY uri_good (uri, file_type, parses, downloaded) -- find latest file of the same type that actually can be parsed for a specified uri
+
+  PRIMARY KEY (uri, download_id),
+  KEY object (hash, file_type),
+  KEY download (download_id)
 );
 
 -- map internal hash to any other hash algs used in e.g. manifests
