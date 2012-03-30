@@ -20,7 +20,7 @@ CREATE TABLE rpstir_metadata (
 CREATE TABLE rpstir_rpki_object (
   hash binary(32) NOT NULL,
 
-  file_type ENUM('tal', 'cer', 'crl', 'roa', 'mft') NOT NULL,
+  file_type ENUM('cer', 'crl', 'roa', 'mft') NOT NULL,
 
   -- 0: can't be parsed
   -- 1: parses, but fails single-file validity checks
