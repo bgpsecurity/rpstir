@@ -142,7 +142,7 @@ CREATE TABLE rpstir_rpki_cert_aia (
 
 CREATE TABLE rpstir_rpki_cert_sia (
   hash binary(32) NOT NULL,
-  method ENUM('id-ad-caRepository', 'id-ad-rpkiManifest', 'id-ad-signedObject') NOT NULL,
+  method ENUM('id-ad-caRepository', 'id-ad-rpkiManifest', 'id-ad-signedObject') NOT NULL, -- XXX: use real OIDs
   preference int unsigned NOT NULL, -- lower number is more preferred
   uri varchar(1023) NOT NULL, -- not normalized
   PRIMARY KEY (hash, method, preference)
