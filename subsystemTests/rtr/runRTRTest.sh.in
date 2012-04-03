@@ -74,7 +74,14 @@ client_multiple_wait () {
 
 	if kill $CLIENT_MULTIPLE_pids; then
 		echo >&2 "Timed out waiting for multiple clients"
-		wait $CLIENT_MULTIPLE_pids
+		sleep 1
+		for client_pid in $CLIENT_MULTIPLE_pids; do
+			if kill -0 "$client_pid" > /dev/null 2>&1; then
+				echo >&2 "Force killing pid $client_pid"
+				kill -9 "$client_pid"
+			fi
+			wait "$client_pid"
+		done
 	else
 		wait $CLIENT_MULTIPLE_pids
 		echo >&2 "...done waiting for multiple clients."
