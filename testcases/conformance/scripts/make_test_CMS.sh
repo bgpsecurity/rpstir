@@ -97,6 +97,7 @@ Explanation of outputs, not in original order:
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools     # Charlie Gardiner's tools
+export RPKI_NO_SIGNING_TIME=1
 
 # Options and defaults
 OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"

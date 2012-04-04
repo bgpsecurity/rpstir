@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # whitespace separated list of files to ignore the results from
-IGNORE="badCertResourcesBadASOrder.cer badROAVersionV1ExplicitBadSig.roa"
+IGNORE="badCertResourcesBadASOrder.cer"
 
 THIS_SCRIPT_DIR=`dirname "$0"`
 . "$THIS_SCRIPT_DIR/../../../envir.setup"
