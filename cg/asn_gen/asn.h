@@ -58,7 +58,7 @@ Remarks:
 #define ASN_INDEF_LTH        0x80
 #define ASN_INDEF            ASN_INDEF_LTH
 #define ASN_CHOICE           (0x100 | ASN_CONSTRUCTED)
-#define ASN_NONE             0x101
+#define ASN_NONE             0x101 /* not a real ASN.1 type (X.680-0207) */
 #define ASN_FUNCTION         0x102
 #define ASN_NOTASN1          0x103
 #define ASN_NOTYPE           0x104

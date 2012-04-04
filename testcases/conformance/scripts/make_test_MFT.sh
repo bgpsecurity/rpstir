@@ -113,6 +113,7 @@ Auxiliary Outputs: (not shown in diagram)
 
 # Set up paths to ASN.1 tools and conformance test scripts
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
+export RPKI_NO_SIGNING_TIME=1
 CONF_SCRIPTS=$RPKI_ROOT/testcases/conformance/scripts
 
 # Options and defaults
