@@ -171,6 +171,9 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Invalid manifest number",      /* ERR_SCM_BADMFTNUM */
     "Duplicate file in manifest",   /* ERR_SCM_MFTDUPFILE */
     "EKU erroneously present",      /* ERR_SCM_EKU */
+    "Unsupported Public Key Info",  /* ERR_SCM_UNSUPPUBKEY */
+    "Routing Domain Identifier(s) present", /* ERR_SCM_BADASRDI */
+    "Invalid CRLNumber",            /* ERR_SCM_BADCRLNUM */
   } ;
 
 char *err2string(int err)
