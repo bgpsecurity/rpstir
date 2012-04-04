@@ -46,7 +46,7 @@ client_multiple_start () {
 
 	CLIENT_MULTIPLE_pids=""
 	for x in `seq 1 "$N"`; do
-		"$CLIENT" client_one localhost $PORT > response.log &
+		"$CLIENT" client_one localhost $PORT >> response.log &
 		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids $!"
 	done
 }
