@@ -1,6 +1,6 @@
-Relying Party Security Technology for Internet Routing
+@PACKAGE_LONGNAME@
 Installation and Usage Manual
-Version 0.3
+Version @PACKAGE_VERSION@
 
 ===============================================================================
 Table of Contents
@@ -256,11 +256,11 @@ using the GNU build tools on Linux/Unix.
 2.2.1 Unpack the Source Code
 
 The RPKI software will have been delivered to you as a gzip-ed tarball
-named rpstir-0.3.tar.gz.  Extract the file using:
+named @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz.  Extract the file using:
 
-    tar xvzpf rpstir-0.3.tar.gz
+    tar xvzpf @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
     
-This will create a directory named rpstir-0.3 which will contain
+This will create a directory named @PACKAGE_TARNAME@-@PACKAGE_VERSION@ which will contain
 various subdirectories.
 
 2.2.2 Configure
@@ -399,7 +399,7 @@ database.
 
 Except for the query client, all RPKI processes should run as the RPKI
 user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (0.3)
+configuration will be used for final deployment, this release (@PACKAGE_VERSION@)
 does not include suggested crontab entries.  It is assumed that for
 trial purposes, manual execution gives the user/debugger maximum
 control.
