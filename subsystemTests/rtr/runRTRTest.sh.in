@@ -41,9 +41,12 @@ client_multiple_start () {
 	echo "--- $SUBTEST_NAME" | tee -a response.log
 	echo "--- expecting: $EXPECTED_RESULTS x$N" | tee -a response.log
 
+	tail -f -n 0 response.log &
+	CLIENT_MULTIPLE_tail_pid="$!"
+
 	CLIENT_MULTIPLE_pids=""
 	for x in `seq 1 "$N"`; do
-		"$CLIENT" client_one localhost $PORT | tee -a response.log &
+		"$CLIENT" client_one localhost $PORT > response.log &
 		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids $!"
 	done
 }
@@ -65,6 +68,8 @@ client_multiple_wait () {
 
 		if test $have_pids -eq 0; then
 			echo >&2 "...done waiting for multiple clients."
+			kill "$CLIENT_MULTIPLE_tail_pid"
+			wait "$CLIENT_MULTIPLE_tail_pid" || true
 			return
 		fi
 
@@ -87,6 +92,9 @@ client_multiple_wait () {
 		wait $CLIENT_MULTIPLE_pids
 		echo >&2 "...done waiting for multiple clients."
 	fi
+
+	kill "$CLIENT_MULTIPLE_tail_pid"
+	wait "$CLIENT_MULTIPLE_tail_pid" || true
 
 	return $RETURN
 }
