@@ -154,10 +154,35 @@ CREATE TABLE rpstir_rpki_cert_crldp (
   PRIMARY KEY (hash, uri)
 );
 
+-- store issuer and subject names
+-- NOTE: id equality should be equivalent to value equality and SQL can't handle that sort of constraint well.
+--       This means that this table neads a read/write lock and the write lock must be held before checking if
+--       a name is present before adding it to the table.
+CREATE TABLE rpstir_rpki_cert_name (
+  id bigint unsigned NOT NULL AUTO_INCREMENT,
+
+  -- 0-based index of the RelativeDistinguishedName SET
+  sequence_index smallint unsigned NOT NULL,
+
+  -- TODO: better OID type? ENUM maybe?
+  attr_type varchar(64) NOT NULL,
+
+  -- TODO: check type and length
+  attr_value varbinary(256) NOT NULL,
+
+  -- there is no PRIMARY KEY because each RelativeDistinguishedName is a SET
+
+  -- lookup the values in order given an id
+  KEY id (id, sequence_index),
+
+  -- lookup an id given the values in order
+  KEY value (sequence_index, attr_type, attr_value)
+);
+
 CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
-  subject varchar(511) NOT NULL,
-  issuer varchar(511) NOT NULL,
+  subject bigint unsigned NOT NULL, -- references 1 or more rows in rpstir_rpki_cert_name
+  issuer bigint unsigned NOT NULL, -- ditto
   sn varbinary(20) NOT NULL,
   ski binary(20) NOT NULL,
   aki binary(20) DEFAULT NULL,
@@ -211,7 +236,7 @@ CREATE TABLE rpstir_rpki_crl_sn (
 
 CREATE TABLE rpstir_rpki_crl (
   hash binary(32) NOT NULL,
-  issuer varchar(511) NOT NULL,
+  issuer varchar(511) NOT NULL, -- TODO: wrong type? see rpstir_rpki_cert_name
   last_upd datetime NOT NULL,
   next_upd datetime NOT NULL,
   crlno int unsigned NOT NULL,
