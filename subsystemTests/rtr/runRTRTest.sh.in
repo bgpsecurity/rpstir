@@ -301,6 +301,7 @@ client "error_report 6" "no response" # Withdrawal of Unknown Record
 client "error_report 7" "no response" # Duplicate Announcement Received
 stop_test bad_pdu_sequence
 
+sleep 10
 start_test serial_notify
 client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
 sleep 10
