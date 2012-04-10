@@ -747,12 +747,16 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 	if (use_timeout && run_state->state == READY) // if we're RESPONDING, we can't send a Notify anyway
 	{
 		run_state->next_cache_state_check_time.tv_sec += 1;
+		CXN_LOG(run_state, LOG_DEBUG, "waiting on semaphore for up to %" PRId64 " seconds",
+			(int64_t)run_state->next_cache_state_check_time.tv_sec - (int64_t)time(NULL));
 		retval = sem_timedwait(run_state->semaphore, &run_state->next_cache_state_check_time);
 	}
 	else
 	{
+		CXN_LOG(run_state, LOG_DEBUG, "waiting on semaphore");
 		retval = sem_wait(run_state->semaphore);
 	}
+	CXN_LOG(run_state, LOG_DEBUG, "done waiting on semaphore");
 
 	if (retval == -1 && errno == ETIMEDOUT)
 	{
