@@ -746,10 +746,11 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 
 	if (use_timeout && run_state->state == READY) // if we're RESPONDING, we can't send a Notify anyway
 	{
-		run_state->next_cache_state_check_time.tv_sec += 1;
+		struct timespec abs_timeout = run_state->next_cache_state_check_time;
+		abs_timeout.tv_sec += 1; // make sure we timeout *after* we're ready to check the cache state (avoiding boundary issues)
 		CXN_LOG(run_state, LOG_DEBUG, "waiting on semaphore for up to %" PRId64 " seconds",
-			(int64_t)run_state->next_cache_state_check_time.tv_sec - (int64_t)time(NULL));
-		retval = sem_timedwait(run_state->semaphore, &run_state->next_cache_state_check_time);
+			(int64_t)abs_timeout.tv_sec - (int64_t)time(NULL));
+		retval = sem_timedwait(run_state->semaphore, &abs_timeout);
 	}
 	else
 	{
