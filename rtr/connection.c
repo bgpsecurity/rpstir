@@ -305,8 +305,6 @@ static void send_notify(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	CXN_LOG(run_state, LOG_DEBUG, "sending notify for serial %" PRISERIAL, run_state->local_cache_state.serial_number);
-
 	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->send_pdu.pduType = PDU_SERIAL_NOTIFY;
 	run_state->send_pdu.sessionId = run_state->local_cache_state.session;
@@ -731,8 +729,6 @@ static void check_global_cache_state(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	CXN_LOG(run_state, LOG_DEBUG, "checking global cache state");
-
 	copy_cache_state(run_state, &tmp_cache_state);
 
 	update_local_cache_state(run_state, &tmp_cache_state, true);
@@ -748,16 +744,12 @@ static bool wait_on_semaphore(struct run_state * run_state, bool use_timeout)
 	{
 		struct timespec abs_timeout = run_state->next_cache_state_check_time;
 		abs_timeout.tv_sec += 1; // make sure we timeout *after* we're ready to check the cache state (avoiding boundary issues)
-		CXN_LOG(run_state, LOG_DEBUG, "waiting on semaphore for up to %" PRId64 " seconds",
-			(int64_t)abs_timeout.tv_sec - (int64_t)time(NULL));
 		retval = sem_timedwait(run_state->semaphore, &abs_timeout);
 	}
 	else
 	{
-		CXN_LOG(run_state, LOG_DEBUG, "waiting on semaphore");
 		retval = sem_wait(run_state->semaphore);
 	}
-	CXN_LOG(run_state, LOG_DEBUG, "done waiting on semaphore");
 
 	if (retval == -1 && errno == ETIMEDOUT)
 	{
