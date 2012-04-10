@@ -47,8 +47,17 @@ bool initialize_global_cache_state(struct global_cache_state * state, dbconn * d
 	if (!get_cache_state(&state->cache_state, db))
 		return false;
 
-	if (!state->cache_state.data_available)
-		LOG(LOG_NOTICE, "no cache data available");
+	if (state->cache_state.data_available)
+	{
+		LOG(LOG_INFO, "cache data initialized with session %" PRISESSION " and serial number %" PRISERIAL,
+			state->cache_state.session,
+			state->cache_state.serial_number);
+	}
+	else
+	{
+		LOG(LOG_NOTICE, "no cache data available (session = %" PRISESSION ")",
+			state->cache_state.session);
+	}
 
 	int retval = pthread_rwlock_init(&state->lock, NULL);
 	if (retval != 0)
@@ -86,11 +95,23 @@ bool update_global_cache_state(struct global_cache_state * state, dbconn * db)
 	{
 		if (tmp_cache_state.data_available && !state->cache_state.data_available)
 		{
-			LOG(LOG_NOTICE, "cache data became available");
+			LOG(LOG_NOTICE, "cache data became available (session = %" PRISESSION ", serial = %" PRISERIAL ")",
+				tmp_cache_state.session,
+				tmp_cache_state.serial_number);
 		}
 		else if (!tmp_cache_state.data_available && state->cache_state.data_available)
 		{
-			LOG(LOG_WARNING, "cache data became no longer available");
+			LOG(LOG_WARNING, "cache data became no longer available (old session = %" PRISESSION ", old serial = %" PRISERIAL ")",
+				state->cache_state.session,
+				state->cache_state.serial_number);
+		}
+		else if (tmp_cache_state.data_available &&
+			state->cache_state.data_available &&
+			tmp_cache_state.serial_number != state->cache_state.serial_number)
+		{
+			LOG(LOG_INFO, "cache serial number changed from %" PRISERIAL " to %" PRISERIAL,
+				state->cache_state.serial_number,
+				tmp_cache_state.serial_number);
 		}
 
 		state->cache_state = tmp_cache_state;
