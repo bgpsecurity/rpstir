@@ -305,7 +305,7 @@ static void send_notify(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	LOG(LOG_DEBUG, "sending notify for serial %" PRISERIAL, run_state->local_cache_state.serial_number);
+	CXN_LOG(run_state, LOG_DEBUG, "sending notify for serial %" PRISERIAL, run_state->local_cache_state.serial_number);
 
 	run_state->send_pdu.protocolVersion = RTR_PROTOCOL_VERSION;
 	run_state->send_pdu.pduType = PDU_SERIAL_NOTIFY;
@@ -731,7 +731,7 @@ static void check_global_cache_state(struct run_state * run_state)
 		pthread_exit(NULL);
 	}
 
-	LOG(LOG_DEBUG, "checking global cache state");
+	CXN_LOG(run_state, LOG_DEBUG, "checking global cache state");
 
 	copy_cache_state(run_state, &tmp_cache_state);
 
