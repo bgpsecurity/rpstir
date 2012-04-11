@@ -27,6 +27,7 @@
 
 // this is ok because there's only one main thread
 static char errorbuf[ERROR_BUF_SIZE];
+static int exit_code = EXIT_SUCCESS;
 
 
 // NOTE: you must call block_signals() before any call to pthread_exit() that's
@@ -119,6 +120,7 @@ static void make_listen_sockets(struct run_state * run_state,
 			(node == NULL ? "(any)" : node),
 			(service == NULL ? "(any)" : service),
 			gai_strerror(retval));
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 
@@ -130,6 +132,7 @@ static void make_listen_sockets(struct run_state * run_state,
 				"increase the limit in rtr/config.h if needed",
 				MAX_LISTENING_SOCKETS);
 			freeaddrinfo(res);
+			exit_code = EXIT_FAILURE;
 			pthread_exit(NULL);
 		}
 
@@ -139,6 +142,7 @@ static void make_listen_sockets(struct run_state * run_state,
 		{
 			ERR_LOG(errno, errorbuf, "socket()");
 			freeaddrinfo(res);
+			exit_code = EXIT_FAILURE;
 			pthread_exit(NULL);
 		}
 		++run_state->listen_fds_initialized;
@@ -162,6 +166,7 @@ static void make_listen_sockets(struct run_state * run_state,
 		{
 			LOG(LOG_ERR, "getnameinfo(): %s", gai_strerror(retval));
 			freeaddrinfo(res);
+			exit_code = EXIT_FAILURE;
 			pthread_exit(NULL);
 		}
 
@@ -170,6 +175,7 @@ static void make_listen_sockets(struct run_state * run_state,
 		{
 			ERR_LOG(errno, errorbuf, "bind([%s]:%s)", listen_host, listen_serv);
 			freeaddrinfo(res);
+			exit_code = EXIT_FAILURE;
 			pthread_exit(NULL);
 		}
 
@@ -178,6 +184,7 @@ static void make_listen_sockets(struct run_state * run_state,
 		{
 			ERR_LOG(errno, errorbuf, "listen([%s]:%s)", listen_host, listen_serv);
 			freeaddrinfo(res);
+			exit_code = EXIT_FAILURE;
 			pthread_exit(NULL);
 		}
 
@@ -421,7 +428,7 @@ static void cleanup(void * run_state_voidp)
 	}
 
 	// main should be the only thread left at this point, but just in case:
-	exit(EXIT_SUCCESS);
+	exit(exit_code);
 }
 
 
@@ -440,6 +447,7 @@ static void startup(struct run_state * run_state)
 	{
 		LOG(LOG_ERR, "no sockets to listen on");
 		block_signals();
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 
@@ -448,6 +456,7 @@ static void startup(struct run_state * run_state)
 	if (run_state->db_request_queue == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_request_queue");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	unblock_signals();
@@ -457,6 +466,7 @@ static void startup(struct run_state * run_state)
 	if (run_state->db_currently_processing == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_currently_processing");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	unblock_signals();
@@ -465,6 +475,7 @@ static void startup(struct run_state * run_state)
 	if (sem_init(&run_state->db_semaphore, 0, 0) != 0)
 	{
 		ERR_LOG(errno, errorbuf, "sem_init() for db_semaphore");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	run_state->db_semaphore_initialized = true;
@@ -474,12 +485,14 @@ static void startup(struct run_state * run_state)
 	if (!db_init())
 	{
 		LOG(LOG_ERR, "can't initialize global DB state");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	if (!db_thread_init())
 	{
 		LOG(LOG_ERR, "can't initialize thread-local DB state");
 		db_close();
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	run_state->db = db_connect_default(DB_CLIENT_RTR);
@@ -488,6 +501,7 @@ static void startup(struct run_state * run_state)
 		LOG(LOG_ERR, "can't connect to database");
 		db_thread_close();
 		db_close();
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	unblock_signals();
@@ -496,6 +510,7 @@ static void startup(struct run_state * run_state)
 	if (!initialize_global_cache_state(&run_state->global_cache_state, run_state->db))
 	{
 		LOG(LOG_ERR, "can't initialize global cache state");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	run_state->global_cache_state_initialized = true;
@@ -506,6 +521,7 @@ static void startup(struct run_state * run_state)
 	if (run_state->db_threads == NULL)
 	{
 		LOG(LOG_ERR, "can't create db_threads");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	unblock_signals();
@@ -520,6 +536,7 @@ static void startup(struct run_state * run_state)
 		{
 			LOG(LOG_ERR, "error creating db thread");
 			block_signals();
+			exit_code = EXIT_FAILURE;
 			pthread_exit(NULL);
 		}
 	}
@@ -536,6 +553,7 @@ static void startup(struct run_state * run_state)
 	if (retval != 0)
 	{
 		ERR_LOG(retval, errorbuf, "pthread_create() for connection control thread");
+		exit_code = EXIT_FAILURE;
 		pthread_exit(NULL);
 	}
 	run_state->connection_control_thread_initialized = true;
