@@ -16,16 +16,18 @@ check_DATA = \
 	../../cg/tools/gen_key "$@" 2048
 
 root.cer: root.key root.options
-	cd ../../testbed/src && ./create_object CERT \
+	cd ../../testbed/src && ./create_object \
 		-f ../../subsystemTests/rtr/root.options \
+		CERT \
 		outputfilename=../../subsystemTests/rtr/"$@" \
 		subjkeyfile=../../subsystemTests/rtr/"$<"
 
 as-%.ee.cer: ee-%.key root.key root.cer ee.options
 	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
 	IP6="`printf '%x::100-%x::%xff,%x:1::-%x:%x:ffff:ffff:ffff:ffff:ffff:ffff' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
-	cd ../../testbed/src && ./create_object CERT \
+	cd ../../testbed/src && ./create_object \
 		-f ../../subsystemTests/rtr/ee.options \
+		CERT \
 		outputfilename=../../subsystemTests/rtr/"$@" \
 		parentcertfile=../../subsystemTests/rtr/root.cer \
 		parentkeyfile=../../subsystemTests/rtr/root.key \
