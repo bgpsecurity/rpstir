@@ -156,7 +156,7 @@ char *stripws(char *str)
   int len;
 
   // Trim leading space
-  while(isspace(*str)) str++;
+  while(isspace((int)(unsigned char)*str)) str++;
 
   if(*str == 0)  // All spaces?
     return NULL;
@@ -168,7 +168,7 @@ char *stripws(char *str)
 
   memcpy(value,str, len);
   end = value + strlen(value) - 1;
-  while(end > value && isspace(*end)) end--;
+  while(end > value && isspace((int)(unsigned char)*end)) end--;
 
   // Write new null terminator
   *(end+1) = 0;

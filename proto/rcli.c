@@ -325,7 +325,7 @@ static char *afterwhite(char *ptr)
       c = *run;
       if ( c == 0 )
 	break;
-      if ( ! isspace((int)c) )
+      if ( ! isspace((int)(unsigned char)c) )
 	break;
       run++;
     }
@@ -335,11 +335,11 @@ static char *afterwhite(char *ptr)
 /*******************
 static char *splitOnWhite(char *ptr) {
   char *run = ptr;
-  while (*run && ! isspace((int)*run)) run++;
+  while (*run && ! isspace((int)(unsigned char)*run)) run++;
   if (! *run) return run;
   *run = 0;
   run++;
-  while (isspace((int)*run)) run++;
+  while (isspace((int)(unsigned char)*run)) run++;
   return run;
 }
 ********************/
@@ -586,7 +586,7 @@ static int sockline(scm *scmp, scmcon *conp, int s)
 	continue;
       log_msg(LOG_INFO, "Sockline: %s", ptr);
       c = ptr[0];
-      if ( !isspace((int)(ptr[1])) )
+      if ( !isspace((int)(unsigned char)(ptr[1])) )
 	{
 	  log_msg(LOG_ERR, "Invalid line: ignored");
 	  free((void *)ptr);
@@ -703,7 +703,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *s)
       *cp = 0;   // trim off CR/LF
       log_msg(LOG_INFO, "Sockline: %s", ptr);
       c = ptr[0];
-      if ( !isspace((int)(ptr[1])) )
+      if ( !isspace((int)(unsigned char)(ptr[1])) )
 	{
 	  log_msg(LOG_ERR, "Invalid line: ignored");
 	  continue;
