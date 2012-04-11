@@ -185,8 +185,14 @@ start_rtrd () {
 	done
 
 	if test $SERVER_STARTED -ne 0; then
-		echo >&2 "Server started"
-		return 0
+		if kill -0 "$SERVER_PID"; then
+			echo >&2 "Server started"
+			return 0
+		else
+			echo >&2 "Server died"
+			wait "$SERVER_PID"
+			return 1
+		fi
 	else
 		echo >&2 "Failed to start server"
 		stop_rtrd
@@ -297,6 +303,8 @@ stop_test bad_pdu_sequence
 
 start_test serial_notify
 client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
+echo >&2 "Sleeping to give rtrd time to settle..."
+sleep 5 # give rtrd time to start all the connection threads
 make_serial 20 1 3
 client_multiple_wait
 stop_test serial_notify
