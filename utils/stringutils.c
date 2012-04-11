@@ -377,7 +377,7 @@ char * scrub_for_print(char *dst, char const *src, size_t const dst_sz,
   for (i = 0, used = 0; i < dst_sz - 1; i++) {
     if ('\0' == src[i]) {
       break;
-    } else if (!isprint(src[i])  ||  (isspace(src[i]) && ' ' != src[i])) {
+    } else if (!isprint((int)(unsigned char)src[i])  ||  (isspace((int)(unsigned char)src[i]) && ' ' != src[i])) {
       used += snprintf(&dst[used], dst_sz - used, "\\x%02" PRIx8, src[i]);
     } else if (strchr(other_chars_to_escape, src[i])) {
       used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
