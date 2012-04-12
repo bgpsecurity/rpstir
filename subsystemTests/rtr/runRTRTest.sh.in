@@ -169,6 +169,7 @@ start_rtrd () {
 	if test x"$VALGRIND" = x1; then
 		valgrind --log-file=valgrind.log --track-fds=full --leak-check=full --error-exitcode=1 "$SERVER" &
 	else
+		true
 		"$SERVER" &
 	fi
 	SERVER_PID=$!
