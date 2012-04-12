@@ -246,10 +246,10 @@ AC_CONFIG_FILES([Makefile
                  INSTRUCTIONS
 ])
 
-AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
-                [chmod +x subsystemTests/rtr/runRTRTest.sh])
-
 AC_CONFIG_FILES([run_scripts/chaser.sh],
                 [chmod +x run_scripts/chaser.sh])
+
+AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
+                [chmod +x subsystemTests/rtr/runRTRTest.sh])
 
 AC_OUTPUT
