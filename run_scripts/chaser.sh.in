@@ -10,8 +10,8 @@ CHASER="$RPKI_ROOT/proto/chaser"
 RSYNC_CORD_CONF="$RPKI_ROOT/rsync_cord.config"
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
-OLD_LIST="`mktemp`"
-CUR_LIST="`mktemp`"
+OLD_LIST="`@MKTEMP@`"
+CUR_LIST="`@MKTEMP@`"
 
 $CHASER "$@" > "$CUR_LIST"
 
@@ -42,7 +42,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 
 	rm -f "$OLD_LIST"
 	OLD_LIST="$CUR_LIST"
-	CUR_LIST="`mktemp`"
+	CUR_LIST="`@MKTEMP@`"
 	$CHASER "$@" > "$CUR_LIST"
 done
 

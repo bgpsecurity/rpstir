@@ -23,6 +23,11 @@ AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 AC_PROG_SED
 
+# Ideally this should be a check for how to create a temporary file on each platform,
+# but this seems to work for now on multiple platforms.
+MKTEMP="mktemp -t tmp.XXXXXXXXXX"
+AC_SUBST([MKTEMP])
+
 
 AC_ARG_WITH(
     [ssl-include],
@@ -231,6 +236,7 @@ AC_CONFIG_FILES([Makefile
                  subsystemTests/Makefile
                  subsystemTests/chaser/Makefile
                  subsystemTests/rtr/Makefile
+                 subsystemTests/test.include
                  testcases/Makefile
                  testbed/Makefile
                  testbed/src/Makefile
@@ -242,5 +248,8 @@ AC_CONFIG_FILES([Makefile
 
 AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
                 [chmod +x subsystemTests/rtr/runRTRTest.sh])
+
+AC_CONFIG_FILES([run_scripts/chaser.sh],
+                [chmod +x run_scripts/chaser.sh])
 
 AC_OUTPUT

@@ -10,7 +10,7 @@ check_num_output_lines()
     # Parameter 3 is the number of expected output lines.
     # If anything fails, exit the script with the right error code.
 
-    TMPFILE=`mktemp /tmp/tmp.XXXXXXXXXX` || \
+    TMPFILE=`@MKTEMP@` || \
         check_errs $? "$0 could not create temp file"
 
     CMDLINE=${1}		# re-wordsplit on whitespace

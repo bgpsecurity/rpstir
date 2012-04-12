@@ -28,7 +28,7 @@ client_raw () {
 client () {
 	COMMAND="$1"
 	EXPECTED_RESULTS="$2"
-	INPUT_PDU_FILE="`mktemp`"
+	INPUT_PDU_FILE="`@MKTEMP@`"
 	echo "$COMMAND" | "$CLIENT" write > "$INPUT_PDU_FILE"
 	client_raw "$COMMAND" "$EXPECTED_RESULTS" cat "$INPUT_PDU_FILE"
 	rm -f "$INPUT_PDU_FILE"
@@ -146,7 +146,7 @@ make_serial () {
 drop_serial () {
 	DROP_SERIAL="$1"
 
-	COMMAND_FILE="`mktemp`"
+	COMMAND_FILE="`@MKTEMP@`"
 
 	printf 'DELETE FROM rtr_update WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
 	printf 'DELETE FROM rtr_full WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
