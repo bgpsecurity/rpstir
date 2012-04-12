@@ -161,6 +161,10 @@ drop_serial () {
 
 stop_rtrd () {
 	kill $SERVER_PID
+	sleep 1
+	if kill -0 $SERVER_PID; then
+		kill -9 $SERVER_PID
+	fi
 	trap - 0
 	wait $SERVER_PID
 }
