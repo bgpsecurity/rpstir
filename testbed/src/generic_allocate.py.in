@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@PYTHON@
 
 class AllocationError(Exception):
     """Exception raised for errors in trying to allocate."""

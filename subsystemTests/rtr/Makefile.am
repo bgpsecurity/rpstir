@@ -60,7 +60,6 @@ as-%.roa: as-%.ee.cer ee-%.key
 
 EXTRA_DIST = \
 	*.options \
-	badPDUs.py \
 	*.correct \
 	querySpecs
 

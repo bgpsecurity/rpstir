@@ -1,3 +1,4 @@
+#!@PYTHON@
 #
 # This file is meant to switch all of these rfc3779 test cases into a more widely distributed
 # system of testcasese that will validate and chain when entered into the database through

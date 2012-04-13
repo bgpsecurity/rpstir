@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!@PYTHON@
 
 # Run test cases using test driver file test.conf
 # open test driver file

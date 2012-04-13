@@ -22,6 +22,7 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 AC_PROG_SED
+AM_PATH_PYTHON([2.6])
 
 # Ideally this should be a check for how to create a temporary file on each platform,
 # but this seems to work for now on multiple platforms.
@@ -246,10 +247,40 @@ AC_CONFIG_FILES([Makefile
                  INSTRUCTIONS
 ])
 
+AC_CONFIG_FILES([rsync_aur/rsync_cord.py],
+                [chmod +x rsync_aur/rsync_cord.py])
+
 AC_CONFIG_FILES([run_scripts/chaser.sh],
                 [chmod +x run_scripts/chaser.sh])
 
+AC_CONFIG_FILES([run_scripts/results.py],
+                [chmod +x run_scripts/results.py])
+
+AC_CONFIG_FILES([run_scripts/updateTA.py],
+                [chmod +x run_scripts/updateTA.py])
+
+AC_CONFIG_FILES([subsystemTests/rtr/badPDUs.py],
+                [chmod +x subsystemTests/rtr/badPDUs.py])
+
 AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
                 [chmod +x subsystemTests/rtr/runRTRTest.sh])
+
+AC_CONFIG_FILES([testbed/src/create_objects.py],
+                [chmod +x testbed/src/create_objects.py])
+
+AC_CONFIG_FILES([testbed/src/generic_allocate.py],
+                [chmod +x testbed/src/generic_allocate.py])
+
+AC_CONFIG_FILES([testbed/src/rpkirepo.py],
+                [chmod +x testbed/src/rpkirepo.py])
+
+AC_CONFIG_FILES([testbed/src/testbed_create.py],
+                [chmod +x testbed/src/testbed_create.py])
+
+AC_CONFIG_FILES([testcases/tools/create_cert.py],
+                [chmod +x testcases/tools/create_cert.py])
+
+AC_CONFIG_FILES([testcases/tools/run_tc.py],
+                [chmod +x testcases/tools/run_tc.py])
 
 AC_OUTPUT

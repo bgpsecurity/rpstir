@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@PYTHON@
 
 import datetime, os, sys
 from subprocess import Popen
