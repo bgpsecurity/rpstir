@@ -29,7 +29,6 @@ EXTRA_DIST = \
 	create_objects.py \
 	crl.conf \
 	generic_allocate.py \
-	parse_ip.py \
 	roa.conf \
 	rpkirepo.py \
 	testbed_create.py \
