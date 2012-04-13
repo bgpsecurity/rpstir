@@ -194,7 +194,7 @@ start_rtrd () {
 	if test x"$VALGRIND" = x1; then
 		valgrind --log-file=valgrind.log --track-fds=full --leak-check=full --error-exitcode=1 "$SERVER" &
 	else
-		true
+		true # workaround for http://gnats.netbsd.org/cgi-bin/query-pr-single.pl?number=46327
 		"$SERVER" &
 	fi
 	SERVER_PID=$!
