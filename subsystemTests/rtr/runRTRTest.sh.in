@@ -13,6 +13,7 @@ PORT=1234
 SESSION=42
 WRONG_SESSION=4242
 SERVER_START_TIMEOUT=10
+SERVER_STOP_TIMEOUT=10
 CLIENT_MULTIPLE_TIMEOUT=120
 
 client_raw () {
@@ -172,7 +173,18 @@ RTRD_CLEANUP=0
 
 stop_rtrd () {
 	kill $SERVER_PID || true
-	sleep 1
+
+	for _discard in `seq 1 $SERVER_STOP_TIMEOUT`; do
+		sleep 1
+		if kill -0 $SERVER_PID; then
+			:
+		else
+			RTRD_CLEANUP=0
+			wait $SERVER_PID
+			return
+		fi
+	done
+
 	kill -9 $SERVER_PID || true
 	RTRD_CLEANUP=0
 	wait $SERVER_PID
