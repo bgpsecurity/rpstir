@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!@SHELL_BASH@ -e
 
 cd "`dirname "$0"`"
 

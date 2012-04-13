@@ -29,6 +29,11 @@ AM_PATH_PYTHON([2.6])
 MKTEMP="mktemp -t tmp.XXXXXXXXXX"
 AC_SUBST([MKTEMP])
 
+AC_PATH_PROG([SHELL_BASH], [bash])
+if test -z "$SHELL_BASH"; then
+  AC_MSG_WARN([cannot find bash, which is needed by some scripts])
+fi
+
 
 AC_ARG_WITH(
     [ssl-include],
