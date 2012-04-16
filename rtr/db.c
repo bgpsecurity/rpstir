@@ -443,10 +443,14 @@ static void cleanup(void * run_state_voidp)
 {
 	struct run_state * run_state = (struct run_state *)run_state_voidp;
 
+	LOG(LOG_DEBUG, "in cleanup()");
+
 	if (run_state->db != NULL)
 	{
+		LOG(LOG_DEBUG, "before db_disconnect()");
 		db_disconnect(run_state->db);
 		run_state->db = NULL;
+		LOG(LOG_DEBUG, "before db_thread_close()");
 		db_thread_close();
 	}
 
@@ -454,6 +458,8 @@ static void cleanup(void * run_state_voidp)
 	request, request_state, and response than letting their memory
 	be potentially lost. This is mitigated by making the thread
 	not cancelable when their values are non-null. */
+
+	LOG(LOG_DEBUG, "leaving cleanup()");
 }
 
 
