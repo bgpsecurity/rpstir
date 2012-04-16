@@ -402,7 +402,11 @@ static void db_main_loop(struct run_state * run_state)
 {
 	int retval, oldstate;
 
+	LOG(LOG_DEBUG, "waiting on semaphore");
+
 	wait_on_semaphore(run_state);
+
+	LOG(LOG_DEBUG, "done waiting on semaphore");
 
 	if (run_state->request != NULL ||
 		run_state->request_state != NULL ||
@@ -418,13 +422,19 @@ static void db_main_loop(struct run_state * run_state)
 		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
 	}
 
+	LOG(LOG_DEBUG, "cancel disabled");
+
 	try_service_request(run_state);
+
+	LOG(LOG_DEBUG, "done try_service_request");
 
 	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
 	if (retval != 0)
 	{
 		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
 	}
+
+	LOG(LOG_DEBUG, "cancel enabled");
 }
 
 
