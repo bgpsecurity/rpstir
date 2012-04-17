@@ -2753,12 +2753,6 @@ static int rescert_cert_policy_chk(X509 *x)
     goto skip;
   }
 
-  if (policy->qualifiers) {
-    log_msg(LOG_ERR, "[policy] must not contain PolicyQualifiers");
-    ret = ERR_SCM_POLICYQ;
-    goto skip;
-  }
-
   len = i2t_ASN1_OBJECT(policy_id_str, sizeof(policy_id_str), policy->policyid);
 
   if ( (len != policy_id_len) || (strcmp(policy_id_str, oid_policy_id)) ) {
