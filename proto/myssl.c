@@ -2899,6 +2899,8 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 {
   int have_ip_resources, have_as_resources;
+  ASIdentifiers *as_ext;
+  IPAddrBlocks *ip_ext;
 
   have_ip_resources = rescert_ip_resources_chk(certp);
   if ( have_ip_resources < 0 )
@@ -2913,18 +2915,39 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
     return(ERR_SCM_NOIPAS);
   }
 
-  /*
-    The IP and AS resources need to be checked to ensure that they
-    follow RFC 3779 rules. In theory, OpenSSL should check that
-    somewhere. The options for below are:
+  if (have_ip_resources) {
+    ip_ext = X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, NULL, NULL);
 
-      1. Check the code removed by commits 136f663 and b90137c for
-         bugs and reinstate it.
-      2. Check the code removed by commit fda500a for bugs and reinstate
-         it.
-      3. Call OpenSSL here and verify that it does what it's supposed
-         to.
-  */
+    if (!ip_ext) {
+      log_msg(LOG_ERR, "couldn't get IP extension");
+      return(ERR_SCM_INVALIPB);
+    }
+
+    if (!v3_addr_is_canonical(ip_ext)) {
+      log_msg(LOG_ERR, "cert IP resources are not in canonical form");
+      sk_IPAddressFamily_free(ip_ext);
+      return(ERR_SCM_INVALIPB);
+    }
+
+    sk_IPAddressFamily_free(ip_ext);
+  }
+
+  if (have_as_resources) {
+    as_ext = X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, NULL, NULL);
+
+    if (!as_ext) {
+      log_msg(LOG_ERR, "couldn't get AS extension");
+      return(ERR_SCM_BADASRANGE);
+    }
+
+    if (!v3_asid_is_canonical(as_ext)) {
+      log_msg(LOG_ERR, "cert AS resources are not in canonical form");
+      ASIdentifiers_free(as_ext);
+      return(ERR_SCM_BADASRANGE);
+    }
+
+    ASIdentifiers_free(as_ext);
+  }
 
   return(0);
 }
