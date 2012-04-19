@@ -12,7 +12,7 @@
 
 #define DB_RESPONSE_BUFFER_LENGTH 3
 #define DB_ROWS_PER_RESPONSE 1024
-#define DB_INITIAL_THREADS 8
+#define DB_INITIAL_THREADS 2
 
 /*
 Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2:
