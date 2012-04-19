@@ -174,10 +174,10 @@ RTRD_CLEANUP=0
 stop_rtrd () {
 	kill $SERVER_PID || true
 
-	for _discard in `seq 1 $SERVER_STOP_TIMEOUT`; do
+	for time_spent in `seq 1 $SERVER_STOP_TIMEOUT`; do
 		sleep 1
 		if kill -0 $SERVER_PID; then
-			:
+			echo "server (pid = $SERVER_PID) still alive after $time_spent seconds" >&2
 		else
 			RTRD_CLEANUP=0
 			wait $SERVER_PID
