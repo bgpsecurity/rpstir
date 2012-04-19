@@ -299,6 +299,16 @@ static void cancel_all_db_threads(Bag * db_threads)
 
 		LOG(LOG_DEBUG, "after cancel db thread");
 
+		LOG(LOG_DEBUG, "about to cancel db thread again");
+
+		retval = pthread_cancel(*thread);
+		if (retval != 0)
+		{
+			ERR_LOG(retval, errorbuf, "pthread_cancel()");
+		}
+
+		LOG(LOG_DEBUG, "after cancel db thread again");
+
 		LOG(LOG_DEBUG, "about to join db thread");
 
 		retval = pthread_join(*thread, NULL);
