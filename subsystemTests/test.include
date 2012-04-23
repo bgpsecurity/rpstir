@@ -28,11 +28,6 @@ run_bg () {
     LOG="$1"
     shift
 
-    # XXX: backwards compatability
-    if test "x$VALGRIND" = x1; then
-        CHECKTOOL=valgrind
-    fi
-
     case "$CHECKTOOL" in
         "valgrind")
             if test "x$STRICT_CHECKS" = x1; then
