@@ -216,7 +216,6 @@ CRLs
 646 CRLIssuerUTF             # issuer name in utf not printable string
 647 CRLIssuer2Seq            # two SEQUENCEs in issuer name - NEED CLEARER TEXT
 648 CRLIssuer2SerNums        # two serial numbers in issuer name
-649 CRLThisUpdateFuture      # this update is in the future
 650 CRLThisUpdateTyp         # wrong type of date in this update
 651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK)
 652 CRLNextUpdateTyp         # wrong type of date in next update
