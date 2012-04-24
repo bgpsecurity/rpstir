@@ -191,6 +191,11 @@ Refactoring (exlusive)
   Requirements: no other concurrent work and no significant outstanding branches
   Time estimate: 40
 
+Compile Warnings (weak depends on refactoring)
+  Goal: have no compile warnings on any of our supported platforms and add -Werror (turning warnings into errors)
+  Dependency: this would be easiest right after refactoring, but could be done at any time
+  Time estimate: 40
+
 Debian Package (depends on refactoring)
   Package OpenSSL+3779: 8
   Package cryptlib: 8
