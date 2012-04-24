@@ -14,6 +14,9 @@ EXTRA_DIST = \
 	doLoader \
 	INSTRUCTIONS \
 	make* \
+	runSubsystemTest1.sh \
+	runSubsystemTest2.sh \
+	runSubsystemTest3.sh \
 	specs.*.* \
 	test*.log \
 	testcases4_LTA \
