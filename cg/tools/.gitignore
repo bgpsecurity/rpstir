@@ -3,6 +3,7 @@ add_key_info
 bin_to_six
 checkLTAtest
 check_signature
+convert-oidtable.sh
 dump
 dumpIPAddr
 dump_smart

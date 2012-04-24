@@ -12,16 +12,11 @@ TESTS = \
 
 EXTRA_DIST = \
 	doLoader \
-	initDB \
-	initDB4 \
 	INSTRUCTIONS \
 	make* \
-	runSubsystemTest*.sh \
 	specs.*.* \
-	step* \
 	test*.log \
 	testcases4_LTA \
-	test.include \
 	ttest*.par
 
 CLEANFILES = \

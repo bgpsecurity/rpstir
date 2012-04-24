@@ -74,4 +74,4 @@ fix_manifest_LDFLAGS = $(LIBS)
 check_signature_SOURCES = check_signature.c
 check_signature_LDFLAGS = $(LIBS)
 
-EXTRA_DIST = convert-oidtable.sh test_casn_random_driver.sh
+EXTRA_DIST = test_casn_random_driver.sh

@@ -252,6 +252,9 @@ AC_CONFIG_FILES([Makefile
                  INSTRUCTIONS
 ])
 
+AC_CONFIG_FILES([cg/tools/convert-oidtable.sh],
+                [chmod +x cg/tools/convert-oidtable.sh])
+
 AC_CONFIG_FILES([rsync_aur/rsync_cord.py],
                 [chmod +x rsync_aur/rsync_cord.py])
 
@@ -270,6 +273,99 @@ AC_CONFIG_FILES([subsystemTests/rtr/badPDUs.py],
 AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
                 [chmod +x subsystemTests/rtr/runRTRTest.sh])
 
+AC_CONFIG_FILES([subsystemTests/initDB],
+                [chmod +x subsystemTests/initDB])
+
+AC_CONFIG_FILES([subsystemTests/initDB4],
+                [chmod +x subsystemTests/initDB4])
+
+AC_CONFIG_FILES([subsystemTests/runSubsystemTest.sh],
+                [chmod +x subsystemTests/runSubsystemTest.sh])
+
+AC_CONFIG_FILES([subsystemTests/runSubsystemTest4.sh],
+                [chmod +x subsystemTests/runSubsystemTest4.sh])
+
+AC_CONFIG_FILES([subsystemTests/step1.1],
+                [chmod +x subsystemTests/step1.1])
+
+AC_CONFIG_FILES([subsystemTests/step1.2],
+                [chmod +x subsystemTests/step1.2])
+
+AC_CONFIG_FILES([subsystemTests/step1.3],
+                [chmod +x subsystemTests/step1.3])
+
+AC_CONFIG_FILES([subsystemTests/step1.4],
+                [chmod +x subsystemTests/step1.4])
+
+AC_CONFIG_FILES([subsystemTests/step1.5],
+                [chmod +x subsystemTests/step1.5])
+
+AC_CONFIG_FILES([subsystemTests/step1.6],
+                [chmod +x subsystemTests/step1.6])
+
+AC_CONFIG_FILES([subsystemTests/step1.7],
+                [chmod +x subsystemTests/step1.7])
+
+AC_CONFIG_FILES([subsystemTests/step1.8],
+                [chmod +x subsystemTests/step1.8])
+
+AC_CONFIG_FILES([subsystemTests/step1.9],
+                [chmod +x subsystemTests/step1.9])
+
+AC_CONFIG_FILES([subsystemTests/step2.1],
+                [chmod +x subsystemTests/step2.1])
+
+AC_CONFIG_FILES([subsystemTests/step2.2],
+                [chmod +x subsystemTests/step2.2])
+
+AC_CONFIG_FILES([subsystemTests/step2.3],
+                [chmod +x subsystemTests/step2.3])
+
+AC_CONFIG_FILES([subsystemTests/step2.4],
+                [chmod +x subsystemTests/step2.4])
+
+AC_CONFIG_FILES([subsystemTests/step2.5],
+                [chmod +x subsystemTests/step2.5])
+
+AC_CONFIG_FILES([subsystemTests/step2.6],
+                [chmod +x subsystemTests/step2.6])
+
+AC_CONFIG_FILES([subsystemTests/step2.7],
+                [chmod +x subsystemTests/step2.7])
+
+AC_CONFIG_FILES([subsystemTests/step2.8],
+                [chmod +x subsystemTests/step2.8])
+
+AC_CONFIG_FILES([subsystemTests/step3.1],
+                [chmod +x subsystemTests/step3.1])
+
+AC_CONFIG_FILES([subsystemTests/step3.2],
+                [chmod +x subsystemTests/step3.2])
+
+AC_CONFIG_FILES([subsystemTests/step3.3],
+                [chmod +x subsystemTests/step3.3])
+
+AC_CONFIG_FILES([subsystemTests/step3.4],
+                [chmod +x subsystemTests/step3.4])
+
+AC_CONFIG_FILES([subsystemTests/step3.5],
+                [chmod +x subsystemTests/step3.5])
+
+AC_CONFIG_FILES([subsystemTests/step3.6],
+                [chmod +x subsystemTests/step3.6])
+
+AC_CONFIG_FILES([subsystemTests/step3.7],
+                [chmod +x subsystemTests/step3.7])
+
+AC_CONFIG_FILES([subsystemTests/step3.8],
+                [chmod +x subsystemTests/step3.8])
+
+AC_CONFIG_FILES([subsystemTests/step3.9],
+                [chmod +x subsystemTests/step3.9])
+
+AC_CONFIG_FILES([subsystemTests/step4],
+                [chmod +x subsystemTests/step4])
+
 AC_CONFIG_FILES([testbed/src/create_objects.py],
                 [chmod +x testbed/src/create_objects.py])
 
@@ -281,6 +377,12 @@ AC_CONFIG_FILES([testbed/src/rpkirepo.py],
 
 AC_CONFIG_FILES([testbed/src/testbed_create.py],
                 [chmod +x testbed/src/testbed_create.py])
+
+AC_CONFIG_FILES([testcases/runt.sh],
+                [chmod +x testcases/runt.sh])
+
+AC_CONFIG_FILES([testcases/runtAll.sh],
+                [chmod +x testcases/runtAll.sh])
 
 AC_CONFIG_FILES([testcases/tools/create_cert.py],
                 [chmod +x testcases/tools/create_cert.py])

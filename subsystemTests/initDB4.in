@@ -1,0 +1,16 @@
+#!@SHELL_BASH@
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $0)
+. $THIS_SCRIPT_DIR/../envir.setup
+
+. $RPKI_ROOT/trap_errors
+
+echo About to clear database $RPKI_DB ...
+
+# set up an initial database
+../proto/rcli -x -t $PWD/testcases4_LTA -y     # Rsync's local cache
+../proto/rcli -y -F $PWD/testcases4_LTA/MYTA.cer    
+../proto/rcli -y -F $PWD/testcases4_LTA/C.cer  # Normal trust anchor
+../proto/rcli -y -F $PWD/testcases4_LTA/LTA/LTA.cer    # Local trust anchor
+
