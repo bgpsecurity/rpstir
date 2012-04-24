@@ -279,7 +279,7 @@ static void cancel_all_db_threads(Bag * db_threads)
 	}
 	for (it = Bag_begin(db_threads);
 		it != Bag_end(db_threads);
-		it = Bag_erase(db_threads, it))
+		it = Bag_iterator_next(db_threads, it))
 	{
 		thread = Bag_get(db_threads, it);
 
@@ -289,39 +289,12 @@ static void cancel_all_db_threads(Bag * db_threads)
 			continue;
 		}
 
-		LOG(LOG_DEBUG, "about to cancel db thread");
-
 		retval = pthread_cancel(*thread);
 		if (retval != 0)
 		{
 			ERR_LOG(retval, errorbuf, "pthread_cancel()");
 		}
-
-		LOG(LOG_DEBUG, "after cancel db thread");
-
-		LOG(LOG_DEBUG, "about to cancel db thread again");
-
-		retval = pthread_cancel(*thread);
-		if (retval != 0)
-		{
-			ERR_LOG(retval, errorbuf, "pthread_cancel()");
-		}
-
-		LOG(LOG_DEBUG, "after cancel db thread again");
-
-		LOG(LOG_DEBUG, "about to join db thread");
-
-		retval = pthread_join(*thread, NULL);
-		if (retval != 0)
-		{
-			ERR_LOG(retval, errorbuf, "pthread_join()");
-		}
-
-		LOG(LOG_DEBUG, "after join db thread");
-
-		free((void *)thread);
 	}
-	#if 0
 	for (it = Bag_begin(db_threads);
 		it != Bag_end(db_threads);
 		it = Bag_erase(db_threads, it))
@@ -331,19 +304,14 @@ static void cancel_all_db_threads(Bag * db_threads)
 		if (thread == NULL)
 			continue;
 
-		LOG(LOG_DEBUG, "about to join db thread");
-
 		retval = pthread_join(*thread, NULL);
 		if (retval != 0)
 		{
 			ERR_LOG(retval, errorbuf, "pthread_join()");
 		}
 
-		LOG(LOG_DEBUG, "after join db thread");
-
 		free((void *)thread);
 	}
-	#endif
 	Bag_stop_iteration(db_threads); // return value doesn't really matter here
 }
 
@@ -379,7 +347,6 @@ static void cleanup(void * run_state_voidp)
 		LOG(LOG_NOTICE, "Stopping active db threads...");
 
 		cancel_all_db_threads(run_state->db_threads);
-		LOG(LOG_DEBUG, "done cancel_all_db_threads");
 		Bag_free(run_state->db_threads);
 		run_state->db_threads = NULL;
 

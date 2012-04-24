@@ -402,11 +402,7 @@ static void db_main_loop(struct run_state * run_state)
 {
 	int retval, oldstate;
 
-	LOG(LOG_DEBUG, "waiting on semaphore");
-
 	wait_on_semaphore(run_state);
-
-	LOG(LOG_DEBUG, "done waiting on semaphore");
 
 	if (run_state->request != NULL ||
 		run_state->request_state != NULL ||
@@ -422,19 +418,13 @@ static void db_main_loop(struct run_state * run_state)
 		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
 	}
 
-	LOG(LOG_DEBUG, "cancel disabled");
-
 	try_service_request(run_state);
-
-	LOG(LOG_DEBUG, "done try_service_request");
 
 	retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
 	if (retval != 0)
 	{
 		ERR_LOG(retval, run_state->errorbuf, "pthread_setcancelstate()");
 	}
-
-	LOG(LOG_DEBUG, "cancel enabled");
 }
 
 
@@ -443,14 +433,10 @@ static void cleanup(void * run_state_voidp)
 {
 	struct run_state * run_state = (struct run_state *)run_state_voidp;
 
-	LOG(LOG_DEBUG, "in cleanup()");
-
 	if (run_state->db != NULL)
 	{
-		LOG(LOG_DEBUG, "before db_disconnect()");
 		db_disconnect(run_state->db);
 		run_state->db = NULL;
-		LOG(LOG_DEBUG, "before db_thread_close()");
 		db_thread_close();
 	}
 
@@ -458,8 +444,6 @@ static void cleanup(void * run_state_voidp)
 	request, request_state, and response than letting their memory
 	be potentially lost. This is mitigated by making the thread
 	not cancelable when their values are non-null. */
-
-	LOG(LOG_DEBUG, "leaving cleanup()");
 }
 
 
