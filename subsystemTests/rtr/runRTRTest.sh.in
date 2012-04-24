@@ -174,16 +174,22 @@ RTRD_CLEANUP=0
 stop_rtrd () {
 	kill $SERVER_PID || true
 
+	echo >&2 "Waiting for server to quit cleanly..."
+	echo >&2 "(This may take up to $SERVER_STOP_TIMEOUT seconds.)"
+
 	for _discard in `seq 1 $SERVER_STOP_TIMEOUT`; do
 		sleep 1
 		if kill -0 $SERVER_PID; then
 			:
 		else
 			RTRD_CLEANUP=0
+			echo >&2 "...done. Server quit."
 			wait $SERVER_PID
 			return
 		fi
 	done
+
+	echo >&2 "Timed out waiting for server to quit cleanly"
 
 	kill -9 $SERVER_PID || true
 	RTRD_CLEANUP=0
