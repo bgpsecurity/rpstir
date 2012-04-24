@@ -1,0 +1,202 @@
+Units: person-hour (million monkey-year equivalent)
+
+
+Ghostusters (soft circular depends on DB Schema)
+  Review spec:
+  Refactor CMS/ROA:
+  DB schema update (if done before overall schema update):
+  DB schema update (if done after overall schema update):
+  Code
+    Process and validate:
+    Query mechanism (GBR by CA):
+    Query mechanism (GBR by contents):
+    Use GBR in logs/alerts:
+  Integration and Testing
+    Unit:
+    Subsystem:
+    Testbed
+      Code:
+      Test:
+    Conformance:
+
+ASN.1
+  Look at other libraries and determine their usability (do this before schema):
+  If there's a good candidate library
+    Possibly do this before schema
+      Activate new library (to use both old and new libraries):
+      Write conversion function between each libraries structs:
+    For each function that uses ASN.1
+      Modify function, using conversion function when calling unmodified subroutines:
+      If no test exists, write unit test:
+  If there's no good candidate library
+    If we don't give up
+      Redesign casn API:
+      Implement new API separately from old API:
+      Rewrite portions at a time using the same strategy as above:
+
+
+Database Schema (soft circular depends on Ghostbusters, partial dependency on ASN.1)
+  Requirements
+    Update:
+    Review and edit:
+  SQL schema
+    Update:
+    Review and edit:
+  Algorithm design
+    Capture pieces to keep:
+    Document
+      Add objects and authenticates delete:
+      Aging and fermentation (e.g. expiration or crossing the notBefore time):
+      Rollback:
+      Error reporting:
+      Cleanup
+        Automatic:
+        Manual:
+  Polish testbed creation tools:
+  Certs
+    Test cases:
+    Code:
+    Test:
+  CRLs
+    Test cases:
+    Code:
+    Test:
+  Certs with CRLs
+    Test cases:
+    Code:
+    Test:
+  Manifests:
+    Test cases:
+    Code:
+    Test:
+  Certs with manifests:
+    Test cases:
+    Code:
+    Test:
+  Certs with CRLs and manifests:
+    Test cases:
+    Code:
+    Test:
+  ROAs:
+    Test cases:
+    Code:
+    Test:
+  ROAs with manifests:
+    Test cases:
+    Code:
+    Test:
+  ROAs with CRLs and manifests:
+    Test cases:
+    Code:
+    Test:
+  Ghostbusters dependencies (count all as zero if Ghostbusters is to be done after schema)
+    GBR:
+      Test cases:
+      Code:
+      Test:
+    GBR with CRLs:
+      Test cases:
+      Code:
+      Test:
+    GBR special status (depending on spec) as being usable when it doesn't normally validate
+      Test cases:
+      Code:
+      Test:
+  All together
+    Test cases:
+    Test:
+
+Conformance / Some DoS
+  Review:
+  Some bug fixes:
+  Documentation
+    Marking TODOs:
+    Publishing externally:
+  ASN.1 commenting:
+
+Conformance Update
+  Cases:
+  Code:
+  Documentation
+    Marking TODOs:
+    Publishing externally:
+  ASN.1 commenting:
+
+DoS Countermeasures (multiple dependencies at different points)
+  Countermeasures that can be done now
+    Test cases:
+    Code:
+    Test:
+  Countermeasures that depend on schema
+    Test cases:
+    Code:
+    Test:
+  Countermeasures that depend on schema and config
+    Test cases:
+    Code:
+    Test:
+  Countermeasures that depend on schema, config, and parallel rsync
+    Test cases:
+    Code:
+    Test:
+
+LTA (spec isn't ready)
+
+Config Library
+  Review and update requirements:
+  Code:
+  Unit test:
+  Replace...
+    ...environment variables:
+    ...config headers:
+  Update...
+    ...subsystem tests:
+    ...conformance tests:
+  Documentation:
+
+Testbed
+  Ray's documentation:
+  Bugfixes:
+  Design scenarios
+    Normal:
+    Gray areas:
+    Key rollover:
+    Scalability experiments:
+  Code
+    ???
+  Exercise:
+  Fix bugs that are revealed by testbed:
+
+Parallel Rsync (depends on schema and config)
+  Design:
+  Code:
+  (Testing is counted in DoS Countermeasures for bad tests and Testbed for good tests)
+
+Gray Areas (spec isn't ready)
+
+Key Rollover (depends on Testbed)
+  Test:
+  Fixes:
+
+Algorithm Agility, 1st Phase (targetting RSA-1024/MD5 but supporting only existing algorithms, depends on config)
+  Make repo with both old and "new" algorithms:
+  Add config item for list of algorithms to silently ignore:
+  Test:
+
+OpenSSL / Cryptlib (depends on schema)
+  Reduce dependencies on OpenSSL as part of DB schema implementation. (no estimate needed)
+
+Refactoring (exlusive)
+  Goal: installable software, reduce code duplication, uniform style
+  Requirements: no other concurrent work and no significant outstanding branches
+  Time estimate:
+
+Compile Warnings (weak depends on refactoring)
+  Goal: have no compile warnings on any of our supported platforms and add -Werror (turning warnings into errors)
+  Dependency: this would be easiest right after refactoring, but could be done at any time
+  Time estimate:
+
+Debian Package (depends on refactoring)
+  Package OpenSSL+3779:
+  Package cryptlib:
+  Make package:
