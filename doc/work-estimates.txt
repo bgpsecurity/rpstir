@@ -20,6 +20,67 @@ DebianPkg: 40
 
 
 ==============================================================================
+Explanations
+==============================================================================
+
+Ghostbusters: Implement the Ghostbusters (RFC 6493) specification.
+This requires some DB modification, as well as untangling of CMS code
+from manifest and ROA code.
+
+ASN.1: Replace/rewrite ASN.1 library for security reasons.  Note that
+other libraries are not immune,
+e.g. http://lists.openwall.net/full-disclosure/2012/04/19/4 .
+
+DB Schema: Upgrade database schema and core algorithms as preparation
+for accommodating DoS countermeasures, parallel rsync, and
+caching/rollback.  Much of the countermeasure and parallel rsync code
+will be included in this work.
+
+Conformance: finish first phase of conformance testing in preparation
+for May 2012 release.
+
+Conformance Update: Add extra conformance cases through review and
+through discussion at IETF 83.
+
+DoS (done before ASN.1): Three sets of DoS countermeasures.
+1. Those that can be done now
+2. Those that depend on schema
+3. Those that depend on schema, config, and parallel rsync
+
+Config Library: Replace crude configuration via environment variables
+with a flexible configuration file.  This will be needed for
+per-CA limits and blacklisting.
+
+Testbed: Full-scale time-varying testbed.  Includes scenarios for
+1. Normal operation
+2. Gray areas
+3. Key rollover
+4. Scalability and performance experiments
+
+Parallel Rsync: A rewrite/tightening of parallel rsync code to be
+robust against crashes, and in preparation for DoS countermeasures
+(e.g. unbounded publication by one CA).
+
+Key Rollover: Testing that key rollover functions correctly as
+specified by RFC 6489.  Includes any related bug fixes.
+
+Refactor: Remove code duplication.  Reorganize code so that it can be
+installed in the traditional linux filesystem hierarchy (/usr/bin/,
+etc.).  Whack code into uniform style.  NOTE: this must be done
+exclusively, with no other branches outstanding, or version control
+will throw a fit when every line conflicts.
+
+CompileWarnings: Compiler warnings have grown over time for this code
+base.  The warnings should be heeded and code changed to compile
+without warning -- most are benign but a few might have security
+implications.
+
+Debian Package: package RPSTIR and its dependency requirements so that
+RPSTIR can be installed with a single command on Debian systems (or
+derivative, e.g. Ubuntu linux).
+
+
+==============================================================================
 Work Breakdown Structure with Estimates
 
 Units: person-hour (million monkey-year equivalent)
