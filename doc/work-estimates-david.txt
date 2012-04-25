@@ -116,11 +116,11 @@ Conformance / Some DoS
 
 Conformance Update
   Cases: 40
-  Code: 160
+  Code: 80
   Documentation
     Marking TODOs: 8
     Publishing externally: 1
-  ASN.1 commenting: 16
+  ASN.1 commenting: 8
 
 DoS Countermeasures (multiple dependencies at different points)
   Countermeasures that can be done now
