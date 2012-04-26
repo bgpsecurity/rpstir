@@ -215,16 +215,26 @@ EE Certificates (embedded in ROAs)
 
 ROAs
 
-    WrongType                # wrong eContentType
-551 ASIDSmall                # AS number out of bounds (too low)
-552 ASIDLarge                # AS number out of bounds (too high)
-553 Family                   # invalid family
-554 FamilyLth                # family name too long
-555 IPMaxLth                 # IP max length too long
-556 IP2Big                   # IP addresses exceed parent's
-557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature
-558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature
-559 VersionV2                # Version V2 (int 1)
+    WrongType                # wrong eContentType 6482#2
+551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
+552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
+553 Family                   # invalid family 6482#3.3
+554 FamilyLth                # family name too long 6482#3.3
+    IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
+    IPv6PrefixLong           # IPv4 prefix greater than 128 bits 6482#3.3
+555 IPv4MaxLthLong            # IP max length too long (greater than 32) 6482#3.3
+    IPv4MaxLthShort           # IP max length shorter than prefix length 6482#3.3
+    IPv6MaxLthLong            # IP max length too long (greater than 128) 6482#3.3
+    IPv6MaxLthShort           # IP max length shorter than prefix length 6482#3.3
+    IPv4DupPrefixSameMaxLen   # (good) IPv4 two copies of same prefix, same maxlength 6482#3.3
+    IPv6DupPrefixSameMaxLen   # (good) IPv6 two copies of same prefix, same maxlength 6482#3.3
+    IPv4DupPrefixDiffMaxLen   # (good) IPv4 two copies of same prefix, different maxlength 6482#3.3
+    IPv6DupPrefixDiffMaxLen   # (good) IPv6 two copies of same prefix, different maxlength 6482#3.3
+556 IP2Big                   # ROA eContent IP prefixes exceed EE IP resources 6482#4
+    <enumerate overlap cases> # all interactions btw 3779 and 6482 (at least 13 cases)
+557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature 6482#3
+558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature 6482#3
+559 VersionV2                # Version V2 (int 1) 6482#3.1
                              # IP addresses exceed via inherit?
 
 CRLs
