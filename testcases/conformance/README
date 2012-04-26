@@ -69,7 +69,8 @@ CA Certificates
     IssuerSeqSerName    # (good) issuer with serial number before name (2 sets) 6487#4.4
     IssuerSetNameSer    # (good) issuer with serial number and name (1 set) 6487#4.4
 126 IssUID              # has issuer unique ID 6487#4
-127 KUsageExtra         # has disallowed key usage bit 6487#4.8.4
+127 KUsageExtra         # has disallowed key usage bit (nonRepudiation) 6487#4.8.4
+    KUsageDigitalSig    # has disallowed key usage bit (digitalSignature) 6487#4.8.4
 128 KUsageNoCertSign    # lacks bit for signing certificates 6487#4.8.4
 129 KUsageNoCrit        # key usage extension not critical 6487#4.8.4
 131 KUsageNoCRLSign     # lacks bit for signing CRLs 6487#4.8.4
@@ -101,8 +102,8 @@ CA Certificates
     SIAMFT2Rsync        # (good) SIA has 2 rsync locators for id-ad-rpkiManifest 6487#4.8.8
     SIARepoHtRs         # (good) SIA has http+rsync locators for id-ad-caRepository 6487#4.8.8
     SIAMFTHtRs          # (good) SIA has http+rsync locators for id-ad-rpkiManifest 6487#4.8.8
-    SIARepoHasNonURI    # SIA has rsync+non-URI locators for id-ad-caRepository 6487#4.8.8
     SIARepoHasNonURI    # (good) SIA has rsync+non-URI locators for id-ad-caRepository 6487#4.8.8
+    SIAMFTHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-rpkiManifest 6487#4.8.8
 148 SIAAccessMethod     # SIA has bad access method in addition to good accessMethods 6487#4.8.8
     SIANoMFT            # SIA has no id-ad-rpkiManifest 6487#4.8.8
     SIANoRepo           # SIA has no id-ad-caRepository 6487#4.8.8
@@ -156,44 +157,65 @@ CA Certificates
 
 CMS signed objects, generic (using ROAs)
 
-512 ContentType              # wrong content type
-513 NoCerts                  # no certificate
-514 2Certs                   # two certificates
-515 Version2                 # version 2
-516 Version4                 # version 4
-517 DigestAlg                # wrong digest algorithm -- inconsistent?
-518 2DigestAlgs              # two digest algorithms
-519 NoDigestAlgs             # no digest algorithm
-520 HasCRL                   # has a CRL
-523 SigInfoVersion           # wrong Signer Info version (2)
-524 SigInfoVersion4          # wrong Signer Info version (4)
-525 SigInfoNoSid             # no Signer Identifier
-526 SigInfoWrongSid          # wrong choice of Signer Identifier
-527 SigInfoBadSid            # bad Signer Identifier (wrong SKI)
-528 SigInfoHashAlg           # wrong hash algorithm in Signer Info
-529 SigInfoNoAttrs           # no attributes in Signer Info
-530 SigInfoAttrsNoContType   # no content type in Signer Info
-531 SigInfoAttrsContTypeOid  # wrong content type OID
-532 SigInfoAttrsMsgDigestOid # wrong digest OID attribute
-533 SigInfoAttrsNoMsgDigest  # no message digest
-534 SigInfoAttrs2ContType    # duplicate content type attributes
-535 SigInfoAttrs2MsgDigest   # duplicate digest attributes
-536 SigInfoAttrs2SigTime     # duplicate signing time attributes
-537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes
-538 SigInfoUnSigAttrs        # has unsigned attribute
-539 SigInfoNoSig             # no signature
-540 SigInfo2Sig              # has two signatures
-542 SigInfoWrongSigAlg       # has wrong signature algorithm
-543 SigInfoNoHashAlg         # had no hash algorithm
+512 ContentType              # wrong content type 6488#2
+513 NoCerts                  # no certificate 6488#2.1
+514 2Certs                   # two certificates 6488#2.1
+515 Version2                 # version 2 6488#2.1.1
+516 Version4                 # version 4 6488#2.1.1
+517 DigestAlgSameWrong       # wrong digest algorithm (same in both places) 6488#2.1.2 6485#2
+    DigestAlgWrongOuter      # wrong digest algorithm (in SignedData) 6488#2.1.2 6485#2
+518 2DigestAlgs              # two digest algorithms 6488#2.1.2
+519 NoDigestAlgs             # no digest algorithm 6488#2.1.2
+520 HasCRL                   # has a CRL 6488#2.1.5
+    NoSigInfo                # empty set of SignerInfos 6488#2.1
+    2SigInfo                 # multiple SignerInfo objects in set 6488#2.1
+523 SigInfoVersion           # wrong Signer Info version (2) 6488#2.1.6.1
+524 SigInfoVersion4          # wrong Signer Info version (4) 6488#2.1.6.1
+525 SigInfoNoSid             # no Signer Identifier 6488#2.1.6.2
+526 SigInfoWrongSid          # wrong choice of Signer Identifier 6488#2.1.6.2
+527 SigInfoBadSid            # bad Signer Identifier (wrong SKI) 6488#2.1.6.2
+528 SigInfoHashAlg           # wrong digest algorithm (in SignerInfo) 6488#2.1.6.3 6485#2
+529 SigInfoNoAttrs           # no set of attributes in SignerInfo 6488#2.1.6.4
+    SigInfoForbiddenAttr     # extra, forbidden attribute 6488#2.1.6.4
+530 SigInfoAttrsNoContType   # no content type in Signer Info 6488#2.1.6.4.1
+531 SigInfoAttrsContTypeOid  # content type OID does not match eContentType 6488#2.1.6.4.1
+533 SigInfoAttrsNoMsgDigest  # no message digest 6488#2.1.6.4.2
+    SigInfoAttrsWrongDigest  # incorrect SHA-256 message digest 6488#2.1.6.4.2
+534 SigInfoAttrs2ContType    # duplicate content type attributes 6488#2.1.6.4
+535 SigInfoAttrs2MsgDigest   # duplicate digest attributes 6488#2.1.6.4
+536 SigInfoAttrs2SigTime     # duplicate signing time attributes 6488#2.1.6.4
+537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes 6488#2.1.6.4
+    SigInfoAttrsContType2Val    # duplicate content type attribute values 6488#2.1.6.4
+    SigInfoAttrsMsgDigest2Val   # duplicate digest attribute values 6488#2.1.6.4
+    SigInfoAttrsSigTime2Val     # duplicate signing time attribute values 6488#2.1.6.4
+    SigInfoAttrsBinSigTime2Val  # duplicate binary signing time attribute values 6488#2.1.6.4
+538 SigInfoUnSigAttrs        # has unsigned attribute 6488#2.1.6.7
+539 SigInfoNoSig             # no signature 6488#2.1.6.6
+540 SigInfo2Sig              # has two signatures 6488#2.1.6.6
+    SigInfoBadSigVal         # incorrect signature 6488#2.1.6.6
+542 SigInfoWrongSigAlg       # has wrong signature algorithm 6488#2.1.6.5 6485#2
+543 SigInfoNoHashAlg         # had no hash algorithm 6488#2.1.6.3
 
 EE Certificates (embedded in ROAs)
 
-544 KeyUsage                 # permission to sign certs and CRLs
-545 SIAWrongOID              # improper OID in SIA
-
+    HasBasicConstraints      # basic constraints extension present 6488#4.8.1
+544 KeyUsageCABits           # KU has only keyCertSign and CRLSign (like CA) 6487#4.8.4
+    KeyUsageNoDigitalSig     # KU missing digitalSignature bit 6487#4.8.4
+    KeyUsageHasKeyCertSign   # KU has digitalSignature and keyCertSign 6487#4.8.4
+    KeyUsageHasCRLSign       # KU has digitalSignature and CRLSign 6487#4.8.4
+    KeyUsageHasNonRepu       # KU has digitalSignature and nonRepudiation 6487#4.8.4
+    HasEKU                   # Has EKU 6487#4.8.5
+545 SIAWrongAccessMethod     # improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
+    SIAExtraAccessMethod     # extra copy of accessMethod (id-ad-signedObject) in SIA 6487#4.8.8.2
+    SIAExtraWrongAccessMethod # extra, improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
+    SIANoRsync       # SIA has no rsync locator for id-ad-signedObject 6487#4.8.8.2
+    SIA2Rsync        # (good) SIA has 2 rsync locators for id-ad-signedObject 6487#4.8.8.2
+    SIAHtRs          # (good) SIA has http+rsync locators for id-ad-signedObject 6487#4.8.8.2
+    SIAHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-signedObject 6487#4.8.8.2
 
 ROAs
 
+    WrongType                # wrong eContentType
 551 ASIDSmall                # AS number out of bounds (too low)
 552 ASIDLarge                # AS number out of bounds (too high)
 553 Family                   # invalid family
