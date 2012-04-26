@@ -101,6 +101,12 @@ Top-Level Requirements (“T”)
    (the certificates indicated by the TALs).  Changes to resources in
    Trust Anchors should be logged.
 
+12. DB should allow future implementation of BGPSEC without needing to
+    make unnecessary changes to the schema. I.e., while BGPSEC support
+    is not yet required, progress on BGPSEC standards should be
+    tracked so that the database does not make it unnecessarily hard
+    to later support BGPSEC.
+
 ======================================================================
 
 Derived Requirements (“D”)
