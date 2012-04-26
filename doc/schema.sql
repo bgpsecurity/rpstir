@@ -179,6 +179,19 @@ CREATE TABLE rpstir_rpki_cert_name (
   KEY value (sequence_index, attr_type, attr_value)
 );
 
+CREATE TABLE rpstir_rpki_cert_eku (
+  hash binary(32) NOT NULL,
+
+  -- index within sequence of KeyPurposeId
+  idx bigint unsigned NOT NULL,
+
+  -- TODO: better OID type?
+  purpose varchar(64) NOT NULL,
+
+  PRIMARY KEY (hash, idx),
+  KEY (hash, purpose)
+);
+
 CREATE TABLE rpstir_rpki_cert (
   hash binary(32) NOT NULL,
   subject bigint unsigned NOT NULL, -- references 1 or more rows in rpstir_rpki_cert_name
