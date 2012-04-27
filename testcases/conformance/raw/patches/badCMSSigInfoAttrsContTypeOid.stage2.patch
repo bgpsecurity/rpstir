@@ -1,11 +1,11 @@
---- badCMSSigInfoAttrsContTypeOid.raw.old	2011-11-09 15:49:25.291952502 -0500
-+++ badCMSSigInfoAttrsContTypeOid.raw	2011-11-09 15:49:57.026832151 -0500
-@@ -111,7 +111,7 @@
-                     seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+--- badCMSSigInfoAttrsContTypeOid.raw.old	2012-04-27 17:38:34.907368303 -0400
++++ badCMSSigInfoAttrsContTypeOid.raw	2012-04-27 17:41:17.791146116 -0400
+@@ -112,7 +112,7 @@
                          nul 
                      ctx+0x20
--                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
-+                        seq oid 1.2.840.113549.1.9.6 /* id_somethingElse */
-                             set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+-                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
++                            set oid 1.2.840.113549.1.9.16.1.23 /* id_somethingElse */
                          seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
-                             set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
+                             set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
+                                     0x234CB1D2DD939DB9BC65DAC7014366E4
