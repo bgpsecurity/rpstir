@@ -243,11 +243,16 @@ CRLs
 641 CRLVersion0              # CRL version v1 (integer value 0)
 642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 
 643 CRLSigAlgOuter           # wrong outer signature algorithm ID
-644 CRLIssuerOID             # wrong OID for issuer name
-645 CRLIssuer2Sets           # two SETs in issuer name - NEED CLEARER TEXT
-646 CRLIssuerUTF             # issuer name in utf not printable string
-647 CRLIssuer2Seq            # two SEQUENCEs in issuer name - NEED CLEARER TEXT
-648 CRLIssuer2SerNums        # two serial numbers in issuer name
+644 CRLIssuerOID             # wrong OID for issuer name 6487#5 6487#4.4
+645 CRLIssuer2Sets           # issuer name has 2 sets with common names 6487#5 6487#4.4
+646 CRLIssuerUTF             # issuer name in utf not printable string 6487#5 6487#4.4
+647 CRLIssuer2Seq            # issuer name has 2 common names (same set) 6487#5 6487#4.4
+648 CRLIssuerSet2SerNums     # issuer name has 2 serial numbers (same set) 6487#5 6487#4.4
+    CRLIssuerSeq2SerNums     # issuer name has 2 serial numbers (split across sets) 6487#5 6487#4.4
+    CRLIssuerSerNum          # issuer name has only a serial number 6487#5 6487#4.4
+    CRLIssuerSeqNameSer      # (good) issuer with name before serial number (2 sets) 6487#5 6487#4.4
+    CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
+    CRLIssuerSetNameSer      # (good) issuer with serial number and name (1 set) 6487#5 6487#4.4
 650 CRLThisUpdateTyp         # wrong type of date in this update
 651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK)
 652 CRLNextUpdateTyp         # wrong type of date in next update
