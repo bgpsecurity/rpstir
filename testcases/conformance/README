@@ -255,25 +255,27 @@ CRLs
     CRLIssuerSeqNameSer      # (good) issuer with name before serial number (2 sets) 6487#5 6487#4.4
     CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
     CRLIssuerSetNameSer      # (good) issuer with serial number and name (1 set) 6487#5 6487#4.4
-650 CRLThisUpdateTyp         # wrong type of date in this update
-651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK)
-652 CRLNextUpdateTyp         # wrong type of date in next update
-653 CRLUpdatesCrossed        # last date is later then next date
-654 CRLIssAltName            # has issuer alternative name extension
-655 CRLIssDistPt             # has issuing distribution point extension
-656 CRLDeltaCRLInd           # has delta CRL indicator extension
-657 CRLNoAKI                 # has no authority key identifier extension
-658 CRLNoCRLNum              # has no CRL number
-659 CRLEntryReason           # entry has a revocation reason
-662 CRLBadDateFeb29          # has Feb. 29 on non-leap year
-663 CRLBadDateDayGT30        # has day 31 of 30-day month
-664 CRLBadDateDayGT31        # has day 32 of 31-day month
-665 CRLBadDateHour           # has hour> 23
-666 CRLBadDateMin            # has minute > 59
-667 CRLBadDateSec            # has seconds > 59
-668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year
-669 CRLNumber2Big            # has too long a CRL number
-670 CRL2CRLNums              # has 2 CRL numbers
+650 CRLThisUpdateTyp         # wrong type of date in thisUpdate (should be UTC) 5280#5.1.2.4
+651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK) 5280#5.1.2.5
+652 CRLNextUpdateTyp         # wrong type of date in next update (should be UTC) 5280#5.1.2.5
+653 CRLUpdatesCrossed        # last date is later then next date 5280#5.1.2.4,5.1.2.5
+654 CRLIssAltName            # has issuer alternative name extension 6487#5
+655 CRLIssDistPt             # has issuing distribution point extension 6487#5
+656 CRLDeltaCRLInd           # has delta CRL indicator extension 6487#5
+657 CRLNoAKI                 # has no authority key identifier extension 6487#5
+658 CRLNoCRLNum              # has no CRL number 6487#5
+659 CRLEntryReason           # entry has a revocation reason 6487#5
+    CRLEntryHasExtension     # entry has a CRL entry extension CertificateIssuer 6487#5
+662 CRLBadDateFeb29          # has Feb. 29 on non-leap year (test of ASN.1 library)
+663 CRLBadDateDayGT30        # has day 31 of 30-day month (test of ASN.1 library)
+664 CRLBadDateDayGT31        # has day 32 of 31-day month (test of ASN.1 library)
+665 CRLBadDateHour           # has hour> 23 (test of ASN.1 library)
+666 CRLBadDateMin            # has minute > 59 (test of ASN.1 library)
+667 CRLBadDateSec            # has seconds > 59 (test of ASN.1 library)
+668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year (test of ASN.1 library)
+669 CRLNumber2Big            # has too long a CRL number 5280#5.2.3
+    CRLNumberMax             # has the maximum allowed 20-octet CRL number 5280#5.2.3
+670 CRL2CRLNums              # has 2 CRL numbers 6487#errata
 671 CRLBadDateDay0           # has a day number 0
 672 CRLBadDateMonth0         # has a month number 0
 673 CRLBadDateMonth13        # has a month number > 12
