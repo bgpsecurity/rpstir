@@ -1,11 +1,16 @@
---- badMFTHashAlg.raw.old	2012-01-25 16:01:54.359177777 -0500
-+++ badMFTHashAlg.raw	2012-01-25 16:02:45.206629068 -0500
-@@ -8,7 +8,7 @@
+--- badMFTHashAlg.raw.old	2012-04-30 17:02:45.547766240 -0400
++++ badMFTHashAlg.raw	2012-04-30 17:04:33.447761726 -0400
+@@ -8,11 +8,10 @@
                      ocw seq int 0x01 /* 1 */ 
                              gen "20110411185728Z"
                              gen "20460515185928Z"
 -                            oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
-+                            oid 2.16.840.1.101.3.4.2.2 /* id_sha256 */
++                            oid 1.3.14.3.2.26 /* id_sha1 */
                              seq seq ia5 "MFTHashAlg.crl"
-                                     bit 0x00D87660D54B4DD706686A0C5CF8A231
-                                         0x69D0DEA7EF95AE00D1A51EDE8A41F8AB
+                                     bit 0x003CD09A6AF07166550CA0857311CBF6
+-                                        0xC7F02D812874570E1E1D3B62554481BB
+-                                        0x2D
++                                        0xC7F02D8128
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 
