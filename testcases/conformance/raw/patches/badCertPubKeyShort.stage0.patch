@@ -1,14 +1,5 @@
 --- badCertPubKeyShort.raw.old	2011-09-19 16:30:33.000000000 -0400
 +++ badCertPubKeyShort.raw	2011-09-19 16:32:52.000000000 -0400
-@@ -11,7 +11,7 @@
-                     prt "badCertPubKeyLth"
-         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
-                 nul 
--            bit 0x003082010A0282010100BFBD06FD096D
-+            bit 0x00308201090282010000BFBD06FD096D
-                 0x521EBC459C635121DE5118755DED6887
-                 0x2600106715226FDEF783049BF1B83BC7
-                 0x53CE863CED62A0DE13476D36E1B467F2
 @@ -27,7 +27,7 @@
                  0xF3AEC3C6E9A52E3541A3AD92AD4D3DE2
                  0xD9156079DEED98DEBCF164836FCE4362
