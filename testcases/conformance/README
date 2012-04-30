@@ -1,33 +1,38 @@
 RPKI Syntax Conformance Test Cases
 
+This test suite checks for "syntax" conformance (i.e. that which can
+be tested using a single file).  It does not include cases where
+determining validity would require checking the relationship *between*
+files.
+
 # Directory layout of rsync://rpki.bbn.com/conformance/
 root.cer
+[bad|good]Root*.cer
 root/root.crl
      root.mft
-     badCert*.cer
-     badCMS*.roa
-     badROA.roa
-     testCRL*.cer
-     testCRL*/badCRL*.crl
-              goodmft.mft
+     [bad|good]Cert*.cer
+     [bad|good]CMS*.roa
+     [bad|good]ROA.roa
+     CRL*.cer
+     CRL*/[bad|good]CRL*.crl
+          CRL*.mft
       :
       :
-     testMFT*.cer
-     testMFT*/goodcrl.crl
-              badMFT*.mft
+     MFT*.cer
+     MFT*/MFT*.crl
+          [bad|good]MFT*.mft
       :
       :
+
+We chose to give each CRL and MFT test case its own subdirectory; this
+is because we wanted to test the way a validator handles individual
+files, not how it handles a convoluted repository structure.
 
 In theory, a conforming RPKI validator should reject any file whose
-filename begins with "bad", and accept all other files.  We chose to
-give each CRL and MFT test case its own subdirectory; this is because
-we wanted to test the way a validator handles individual files, not
-how it handles a convoluted repository structure.
-
-# Caveat emptor: these test cases aren't finished yet, and some will
-# be removed.  E.g., some are not "syntax" conformance cases because
-# they would require checking the relationship *between* files, not
-# just checking the syntax of a single file.
+filename begins with "bad", and accept any file that begins with
+"good".  Other files, i.e. those that begin with neither "bad" nor
+"good", MIGHT be rejected or accepted depending on a particular
+validator's gray-area configuration.
 
 
 CA Certificates
@@ -215,7 +220,7 @@ EE Certificates (embedded in ROAs)
 
 ROAs
 
-    WrongType                # wrong eContentType 6482#2
+    WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
 551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
 552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
 553 Family                   # invalid family 6482#3.3
@@ -276,33 +281,40 @@ CRLs
 669 CRLNumber2Big            # has too long a CRL number 5280#5.2.3
     CRLNumberMax             # has the maximum allowed 20-octet CRL number 5280#5.2.3
 670 CRL2CRLNums              # has 2 CRL numbers 6487#errata
-671 CRLBadDateDay0           # has a day number 0
-672 CRLBadDateMonth0         # has a month number 0
-673 CRLBadDateMonth13        # has a month number > 12
+671 CRLBadDateDay0           # has a day number 0 (test of ASN.1 library)
+672 CRLBadDateMonth0         # has a month number 0 (test of ASN.1 library)
+673 CRLBadDateMonth13        # has a month number > 12 (test of ASN.1 library)
 
 Manifests
 
-768 MFTWrongType             # wrong eContentType
-769 MFTVersion0              # non-default version 0
-770 MFTVersion1              # version 1
-771 MFTNoNum                 # no manifest number
-772 MFTNegNum                # negative manifest number
-773 MFTThisUpdUTC            # thisUpdate in UTC
-774 MFTThisUpdFuture         # thisUpdate in future
-775 MFTNextUpdUTC            # nextUpdate in UTC
-776 MFTNextUpdPast           # nextUpdate in past
-777 MFTHashAlg               # wrong hash algorithm
-779 MFTFileHashShort         # too short hash of a file
-780 MFTFileHashLong          # too long hash of a file
-781 MFTFileNotIA5            # file name not IA5
-782 MFTHashOctetStr          # file hash is octet, not bit string
-783 MFTDuplicateFileOneHash  # duplicate file name with same hash
-784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash
+768 MFTWrongType             # wrong eContentType (and signedAttrs content-type) 6486#4.1
+769 MFTVersion0              # non-default version 0 6486#4.1
+770 MFTVersion1              # version 1 6486#4.2.1
+771 MFTNoNum                 # no manifest number 6486#4.2.1
+    MFTNumMax                # (good) maximum manifest number (20 octets) 6486#4.2.1
+    MFTNumZero               # (good) manifest number is zero 6486#4.2
+    MFTNumTooBig             # manifest number exceeds max 6486#4.2.1
+772 MFTNegNum                # negative manifest number 6486#4.2.1
+773 MFTThisUpdUTC            # thisUpdate in UTC 6486#4.2
+774 MFTThisUpdFuture         # thisUpdate in future 6486#4.2.1
+775 MFTNextUpdUTC            # nextUpdate in UTC 6486#4.2
+776 MFTNextUpdPast           # nextUpdate in past (stale manifest, good/bad depends on config) 6486#4.2.1
+    MFTUpdCrossed            # thisUpdate postdates nextUpdate 6486#4.4
+777 MFTHashAlg               # wrong hash algorithm 6486#4.2.1,6485#2
+779 MFTFileHashShort         # too short hash of a file 6486#4.2.1,6485#2
+780 MFTFileHashLong          # too long hash of a file 6486#4.2.1,6485#2
+781 MFTFileNotIA5            # file name not IA5 6486#4.2
+782 MFTHashOctetStr          # file hash is octet, not bit string 6486#4.2
+783 MFTDuplicateFileOneHash  # duplicate file name with same hash 6486#4.2.1
+784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash 6486#4.2.1
 
 
-TODO: Trust Anchor (self-signed) certificates
+Trust Anchor (self-signed) certificates
 
-AIA present
-CRLDP present
-bad AKI
-issuer != subject (tricky, will be interpreted as non-self-signed)
+100 RootBadAKI              # AKI does not match SKI 6487#4.8.3
+    RootAKIMatches          # (good) AKI present, matches SKI 6487#4.8.3
+    RootAKIOmitted          # (good) AKI omitted 6487#4.8.3
+101 RootBadCRLDP            # CRLDP is present in the trust anchor 6487#4.8.6
+102 RootNameDiff            # Subject and Issuer don't match (tricky, will be interpreted as non-self-signed) 5280#3.2
+    RootBadAIA              # AIA is present in the trust anchor 6487#4.8.7
+TODO: change serial numbers
