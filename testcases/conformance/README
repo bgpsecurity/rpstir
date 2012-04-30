@@ -34,6 +34,9 @@ filename begins with "bad", and accept any file that begins with
 "good", MIGHT be rejected or accepted depending on a particular
 validator's gray-area configuration.
 
+NOTE: lines without a serial number are TODOs that still need to be
+created.
+
 
 CA Certificates
 
