@@ -268,7 +268,7 @@ CREATE TABLE rpstir_rpki_manifest_files (
 
 CREATE TABLE rpstir_rpki_manifest (
   hash binary(32) NOT NULL,
-  manifest_number int unsigned NOT NULL,
+  manifest_number varbinary(20) NOT NULL,
   this_upd datetime NOT NULL,
   next_upd datetime NOT NULL,
   file_hash_alg ENUM('sha256') NOT NULL,
