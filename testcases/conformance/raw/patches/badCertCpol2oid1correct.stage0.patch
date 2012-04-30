@@ -1,5 +1,5 @@
---- badCertCpol2oid.raw.old	2011-09-19 15:53:39.000000000 -0400
-+++ badCertCpol2oid.raw	2011-09-19 15:56:52.000000000 -0400
+--- badCertCpol2oid1correct.raw.old	2011-09-19 15:53:39.000000000 -0400
++++ badCertCpol2oid1correct.raw	2011-09-19 15:56:52.000000000 -0400
 @@ -64,6 +64,7 @@
                  seq oid 2.5.29.32 /* id_certificatePolicies */
                      boo 0xFF

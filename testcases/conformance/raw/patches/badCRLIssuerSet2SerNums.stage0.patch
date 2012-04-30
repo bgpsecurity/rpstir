@@ -1,5 +1,5 @@
---- badCRLIssuer2SerNums.crl.raw.old	2011-12-12 15:33:04.564213168 -0500
-+++ badCRLIssuer2SerNums.crl.raw	2011-12-12 15:37:44.357171335 -0500
+--- badCRLIssuerSet2SerNums.crl.raw.old	2011-12-12 15:33:04.564213168 -0500
++++ badCRLIssuerSet2SerNums.crl.raw	2011-12-12 15:37:44.357171335 -0500
 @@ -3,6 +3,10 @@
              nul 
          seq set seq oid 2.5.4.3 /* id_commonName */

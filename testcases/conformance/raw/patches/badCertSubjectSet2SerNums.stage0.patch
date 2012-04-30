@@ -1,5 +1,5 @@
---- badCertSubject2SerNums.raw.old	2011-10-24 12:44:14.452722435 -0400
-+++ badCertSubject2SerNums.raw	2011-10-24 12:45:53.049464521 -0400
+--- badCertSubjectSet2SerNums.raw.old	2011-10-24 12:44:14.452722435 -0400
++++ badCertSubjectSet2SerNums.raw	2011-10-24 12:45:53.049464521 -0400
 @@ -9,6 +9,10 @@
              utc "460515185928Z"
          seq set seq oid 2.5.4.3 /* id_commonName */

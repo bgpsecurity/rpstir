@@ -1,5 +1,5 @@
---- badCMSDigestAlg.raw.old	2011-05-26 17:59:39.000000000 -0400
-+++ badCMSDigestAlg.raw	2011-05-26 18:00:58.000000000 -0400
+--- badCMSDigestAlgSameWrong.raw.old	2011-05-26 17:59:39.000000000 -0400
++++ badCMSDigestAlgSameWrong.raw	2011-05-26 18:00:58.000000000 -0400
 @@ -1,7 +1,7 @@
  seq oid 1.2.840.113549.1.7.2 /* id_signedData */
      ctx+0x20

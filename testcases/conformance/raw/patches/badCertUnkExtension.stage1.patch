@@ -1,5 +1,5 @@
---- badCertBadExtension1.raw.old	2012-02-10 13:56:52.831209830 -0500
-+++ badCertBadExtension1.raw	2012-02-10 13:57:28.678221490 -0500
+--- badCertUnkExtension.raw.old	2012-02-10 13:56:52.831209830 -0500
++++ badCertUnkExtension.raw	2012-02-10 13:57:28.678221490 -0500
 @@ -64,6 +64,10 @@
                  seq oid 2.5.29.32 /* id_certificatePolicies */
                      boo 0xFF
