@@ -7,10 +7,10 @@
 -                            oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
 +                            oid 1.3.14.3.2.26 /* id_sha1 */
                              seq seq ia5 "MFTHashAlg.crl"
-                                     bit 0x003CD09A6AF07166550CA0857311CBF6
--                                        0xC7F02D812874570E1E1D3B62554481BB
--                                        0x2D
-+                                        0xC7F02D8128
+                                     bit 0x00D87660D54B4DD706686A0C5CF8A231
+-                                        0x69D0DEA7EF95AE00D1A51EDE8A41F8AB
+-                                        0x23
++                                        0x69D0DEA7EF
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 
