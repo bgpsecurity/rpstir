@@ -107,6 +107,13 @@ Top-Level Requirements (“T”)
     tracked so that the database does not make it unnecessarily hard
     to later support BGPSEC.
 
+13. DB should maintain integrity. If a program accessing the database
+    crashes, the database should be in a consistent state or there
+    should be a mechanism to bring the database back to a consistent
+    state. If multiple programs (or instances of the same program)
+    try to access the database simultaneously, they should not
+    trample one another.
+
 ======================================================================
 
 Derived Requirements (“D”)
