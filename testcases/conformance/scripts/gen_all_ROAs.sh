@@ -156,7 +156,7 @@ ${single_ROA_cmd} ROA 551 ASIDSmall
 ${single_ROA_cmd} ROA 552 ASIDLarge
 ${single_ROA_cmd} ROA 553 Family
 ${single_ROA_cmd} ROA 554 FamilyLth
-${single_ROA_cmd} ROA 555 IPMaxLth
+${single_ROA_cmd} ROA 555 IPv4MaxLthLong
 ${single_ROA_cmd} ROA 556 IP2Big
 ${single_ROA_cmd} ROA 557 VersionV1Explicit
 ${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
