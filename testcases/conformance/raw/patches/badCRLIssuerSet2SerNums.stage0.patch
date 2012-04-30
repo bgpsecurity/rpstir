@@ -3,7 +3,7 @@
 @@ -3,6 +3,10 @@
              nul 
          seq set seq oid 2.5.4.3 /* id_commonName */
-                     prt "CRLIssuer2SerNums"
+                     prt "CRLIssuerSet2SerNums"
 +                seq oid 2.5.4.5 /* id_serialNumber */
 +                    prt "10"
 +                seq oid 2.5.4.5 /* id_serialNumber */
