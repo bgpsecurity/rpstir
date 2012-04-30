@@ -3,7 +3,7 @@
 @@ -9,6 +9,10 @@
              utc "460515185928Z"
          seq set seq oid 2.5.4.3 /* id_commonName */
-                     prt "badCertSubject2SerNums"
+                     prt "badCertSubjectSet2SerNums"
 +		seq oid 2.5.4.5
 +		    prt "3"
 +		seq oid 2.5.4.5
