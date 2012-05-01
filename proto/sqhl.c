@@ -2567,7 +2567,7 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {
-  int   sta, cert_added = 0;
+  int   sta, cert_added = 0, stale;
   struct ROA roa;
   char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
   int64_t ltime;
@@ -2583,7 +2583,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     delete_casn(&roa.self);
     return ERR_SCM_INVALASN;
     }
-  if (sta < 0 || (sta = manifestValidate(&roa)) < 0)
+  if (sta < 0 || (sta = manifestValidate(&roa, &stale)) < 0)
     {
     delete_casn(&roa.self);
     return sta;
@@ -2645,7 +2645,12 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
   // the manifest is valid if the embedded cert is valid (since we already
   //  know that the cert validates the manifest)
-  int manValid = (v > 0)? SCM_FLAG_VALIDATED: 0;
+  int manValid = (v > 0);
+
+  unsigned int flags = manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN;
+  if (stale) {
+    flags |= SCM_FLAG_STALEMAN;
+  }
 
   // do the actual insert of the manifest in the db
   scmkva   aone;
@@ -2665,7 +2670,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   cols[idx++].value = nextUpdate;
   char flagn[24];
   (void)snprintf(flagn, sizeof(flagn), "%u",
-	 manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
+	 flags);
    cols[idx].column = "flags";
   cols[idx++].value = flagn;
   (void)snprintf(mid, sizeof(mid), "%u", man_id);

@@ -642,7 +642,7 @@ static int check_mft_number(struct casn *casnp)
   return 0;
   }
 
-static int check_mft_dates(struct Manifest *manp)
+static int check_mft_dates(struct Manifest *manp, int * stalep)
   {
   time_t now;
   time(&now);
@@ -666,6 +666,14 @@ static int check_mft_dates(struct Manifest *manp)
     {
     log_msg(LOG_ERR, "Next update earlier than this update");
     return ERR_SCM_INVALDT;
+    }
+  if (now > nextUpdate)
+    {
+    *stalep = 1;
+    }
+  else
+    {
+    *stalep = 0;
     }
   return 0;
   }
@@ -752,6 +760,9 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
  * @brief Check conformance to manifest profile
  *
  * @param manp (struct ROA *)
+ * @param stalep Return parameter to store whether or not the manifest is
+ *               stale. It's value is only guaranteed to be initialized if
+ *               this function returns 0.
  * @return 0 on success<br />a negative integer on failure
  *
  * Check manifest conformance with respect to the manifest profile
@@ -813,7 +824,7 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
  *   validity time raises the possibility of a substitution attack using a
  *   stale manifest, as described in Section 6.4.
  */
-int manifestValidate(struct ROA *roap)
+int manifestValidate(struct ROA *roap, int *stalep)
   {
 /* Procedure:
    Step 1 Check that content type is id-ct-rpkiManifest
@@ -838,7 +849,7 @@ int manifestValidate(struct ROA *roap)
   if ((iRes = check_mft_number(&manp->manifestNumber)) < 0) 
     return iRes;
 //                                                    step 4
-  if ((iRes = check_mft_dates(manp)) < 0)
+  if ((iRes = check_mft_dates(manp, stalep)) < 0)
     return iRes;
 //                                                   step 5
   if (diff_objid(&manp->fileHashAlg, id_sha256))
