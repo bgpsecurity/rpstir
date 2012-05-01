@@ -5,7 +5,7 @@
              seq oid 1.2.840.113549.1.9.16.1.26 /* id_roa_pki_manifest */
                  ctx+0x20
 -                    ocw seq int 0x01 /* 1 */ 
-+                    ocw seq ctx+0x80
++                    ocw seq ctx+0x00
 +                                0x01
 +                            int 0x01 /* 1 */ 
                              gen "20110411185728Z"
