@@ -223,6 +223,7 @@ EE Certificates (embedded in ROAs)
 
 ROAs
 
+550 NothingWrong             # (good) nothing wrong
     WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
 551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
 552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
