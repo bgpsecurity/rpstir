@@ -5,7 +5,7 @@
                                      "rsync://rpki.bbn.com/conformance/root.cer"
                  seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
 -                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
-+                    ocw seq seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_signedObject */
++                    ocw seq seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                  ctx+0x06
                                      "rsync://rpki.bbn.com/conformance/root/badC"
                                      "MSBadSIAOid.roa"

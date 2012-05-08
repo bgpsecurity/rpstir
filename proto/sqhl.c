@@ -2567,10 +2567,10 @@ int add_roa(scm *scmp, scmcon *conp, char *outfile, char *outdir,
 int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
    char *outfull, unsigned int id, int utrust, int typ)
 {
-  int   sta, cert_added = 0;
+  int   sta, cert_added = 0, stale;
   struct ROA roa;
   char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
-  int64_t ltime;
+  char asn_time[16];
   unsigned int man_id = 0;
 
   // manifest stored in same format as a roa
@@ -2583,7 +2583,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     delete_casn(&roa.self);
     return ERR_SCM_INVALASN;
     }
-  if (sta < 0 || (sta = manifestValidate(&roa)) < 0)
+  if (sta < 0 || (sta = manifestValidate(&roa, &stale)) < 0)
     {
     delete_casn(&roa.self);
     return sta;
@@ -2613,20 +2613,38 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   do
     {  // once through
   // read this_upd and next_upd
-    read_casn_time (&manifest->thisUpdate, &ltime);
+    if (vsize_casn(&manifest->thisUpdate) + 1 > sizeof(asn_time)) {
+      log_msg(LOG_ERR, "thisUpdate is too large");
+      sta = ERR_SCM_INVALDT;
+      break;
+    }
+    sta = read_casn (&manifest->thisUpdate, asn_time);
     if ( sta < 0 ) {
       log_msg(LOG_ERR, "Could not read time for thisUpdate");
       sta = ERR_SCM_INVALDT;
       break;
+    } else {
+      asn_time[sta] = '\0';
     }
-    thisUpdate = UnixTimeToDBTime(ltime, &sta);
+    thisUpdate = ASNTimeToDBTime(asn_time, &sta, 1);
+    if ( sta < 0 ) break;
 
-    read_casn_time (&manifest->nextUpdate, &ltime);
-    if ( sta < 0 ) {
-      log_msg(LOG_ERR, "Could not read time for nextUpdate");
+    if (vsize_casn(&manifest->nextUpdate) + 1 > sizeof(asn_time)) {
+      log_msg(LOG_ERR, "nextUpdate is too large");
+      sta = ERR_SCM_INVALDT;
       break;
     }
-    nextUpdate = UnixTimeToDBTime(ltime, &sta);
+    sta = read_casn (&manifest->nextUpdate, asn_time);
+    if ( sta < 0 ) {
+      log_msg(LOG_ERR, "Could not read time for nextUpdate");
+      sta = ERR_SCM_INVALDT;
+      break;
+    } else {
+      asn_time[sta] = '\0';
+    }
+    nextUpdate = ASNTimeToDBTime(asn_time, &sta, 1);
+    if ( sta < 0 ) break;
+
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ,
         outfile, ski, 0, certfilename)) < 0) break;
     cert_added = 1;
@@ -2645,7 +2663,12 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
     }
   // the manifest is valid if the embedded cert is valid (since we already
   //  know that the cert validates the manifest)
-  int manValid = (v > 0)? SCM_FLAG_VALIDATED: 0;
+  int manValid = (v > 0);
+
+  unsigned int flags = manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN;
+  if (stale) {
+    flags |= SCM_FLAG_STALEMAN;
+  }
 
   // do the actual insert of the manifest in the db
   scmkva   aone;
@@ -2665,7 +2688,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   cols[idx++].value = nextUpdate;
   char flagn[24];
   (void)snprintf(flagn, sizeof(flagn), "%u",
-	 manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
+	 flags);
    cols[idx].column = "flags";
   cols[idx++].value = flagn;
   (void)snprintf(mid, sizeof(mid), "%u", man_id);
