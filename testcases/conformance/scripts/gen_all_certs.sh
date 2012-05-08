@@ -158,7 +158,7 @@ ensure_file_exists "${single_cert_script}"
 # Generate Child certificates
 ###############################################################################
 
-${single_cert_cmd} 101 AIA2AccessDescHtRs
+${single_cert_cmd} -x good 101 AIA2AccessDescHtRs
 ${single_cert_cmd} 102 AIABadAccess
 ${single_cert_cmd} 103 AIAAccessLoc
 ${single_cert_cmd} 104 AIACrit
