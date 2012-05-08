@@ -2570,7 +2570,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int   sta, cert_added = 0, stale;
   struct ROA roa;
   char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
-  int64_t ltime;
+  char asn_time[16];
   unsigned int man_id = 0;
 
   // manifest stored in same format as a roa
@@ -2613,20 +2613,38 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   do
     {  // once through
   // read this_upd and next_upd
-    read_casn_time (&manifest->thisUpdate, &ltime);
+    if (vsize_casn(&manifest->thisUpdate) + 1 > sizeof(asn_time)) {
+      log_msg(LOG_ERR, "thisUpdate is too large");
+      sta = ERR_SCM_INVALDT;
+      break;
+    }
+    sta = read_casn (&manifest->thisUpdate, asn_time);
     if ( sta < 0 ) {
       log_msg(LOG_ERR, "Could not read time for thisUpdate");
       sta = ERR_SCM_INVALDT;
       break;
+    } else {
+      asn_time[sta] = '\0';
     }
-    thisUpdate = UnixTimeToDBTime(ltime, &sta);
+    thisUpdate = ASNTimeToDBTime(asn_time, &sta, 1);
+    if ( sta < 0 ) break;
 
-    read_casn_time (&manifest->nextUpdate, &ltime);
-    if ( sta < 0 ) {
-      log_msg(LOG_ERR, "Could not read time for nextUpdate");
+    if (vsize_casn(&manifest->nextUpdate) + 1 > sizeof(asn_time)) {
+      log_msg(LOG_ERR, "nextUpdate is too large");
+      sta = ERR_SCM_INVALDT;
       break;
     }
-    nextUpdate = UnixTimeToDBTime(ltime, &sta);
+    sta = read_casn (&manifest->nextUpdate, asn_time);
+    if ( sta < 0 ) {
+      log_msg(LOG_ERR, "Could not read time for nextUpdate");
+      sta = ERR_SCM_INVALDT;
+      break;
+    } else {
+      asn_time[sta] = '\0';
+    }
+    nextUpdate = ASNTimeToDBTime(asn_time, &sta, 1);
+    if ( sta < 0 ) break;
+
     if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ,
         outfile, ski, 0, certfilename)) < 0) break;
     cert_added = 1;
