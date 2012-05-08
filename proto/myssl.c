@@ -37,7 +37,7 @@ int strict_profile_checks = 0;
 
   The UTC format takes the form YYMMDDHHMMSST, where each of
   the fields is as follows:
-      if YY <= 36 the year is 2000+YY otherwise it is 1900+YY
+      if YY <= 49 the year is 2000+YY otherwise it is 1900+YY
       1 <= MM <= 12
       1 <= DD <= 31
       0 <= HH <= 24
@@ -121,7 +121,7 @@ char *ASNTimeToDBTime(char *bef, int *stap, int only_gentime)
 	  *stap = ERR_SCM_INVALDT;
 	  return(NULL);
 	}
-      if ( year > 36 )
+      if ( year > 49 )
 	year += 1900;
       else
 	year += 2000;
@@ -134,7 +134,7 @@ char *ASNTimeToDBTime(char *bef, int *stap, int only_gentime)
 	  *stap = ERR_SCM_INVALDT;
 	  return(NULL);
 	}
-      if ( year > 36 )
+      if ( year > 49 )
 	year += 1900;
       else
 	year += 2000;
