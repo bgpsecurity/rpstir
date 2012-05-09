@@ -3,7 +3,7 @@
 @@ -1,5 +1,5 @@
  seq seq ctx+0x20
 -            int 0x02 /* 2 */ 
-+            int 0x01 /* 2 */ 
++            int 0x01 /* 1 (version 2) */ 
          int 0x00A6 /* 166 */ 
          seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
              nul 
