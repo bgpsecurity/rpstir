@@ -1,9 +1,9 @@
---- badCMSNoSigInfo.raw.old	2011-09-27 13:54:13.000000000 -0400
-+++ badCMSNoSigInfo.raw	2011-09-27 13:55:59.000000000 -0400
-@@ -104,35 +104,4 @@
-                         0x22ECBB44C47994000304311409654DAD
-                         0x6CAB6012B7F91963342ADB2B26AAFAB3
-                         0xDA
+--- badCMSNoSigInfo.raw.old	2012-05-09 18:10:15.151690512 -0400
++++ badCMSNoSigInfo.raw	2012-05-09 18:10:28.819689940 -0400
+@@ -104,33 +104,4 @@
+                         0x340CC7AD85D34CD4017FF7380D7D000B
+                         0xCAE52A24A21C35A51F8E0E4A80F1DFF1
+                         0x51
 -            set seq int 0x03 /* 3 */ 
 -                    ctx+0x00
 -                        0x9E2264020FD16B44FA5C1A34583E2052
@@ -13,27 +13,25 @@
 -                    ctx+0x20
 -                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
 -                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
--                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
--                            set utc "110927175413Z"
 -                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
--                            set oct 0x986E8A564EE4C9A4078DB7336E63D3B4
--                                    0x25CF8ED649BF1E425CA765083E0493A7
--                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+-                            set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
+-                                    0x234CB1D2DD939DB9BC65DAC7014366E4
+-                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
 -                        nul 
--                    oct 0x1A7DC4724D93F5B987535C1DAE0FAC03
--                        0x94766E9C3A0CFED71303D5BF33D2BA4E
--                        0x9BB95086D53F1853836F0B342BFAF610
--                        0x22981CD481940519FADE08650256FC78
--                        0x10A8530F9BC258213C8E85088DDD32BD
--                        0xCF0E3241FE3425207161A5991692AF22
--                        0xDDBD6FADB937AD7BE26D4DA190382A7E
--                        0xB47C11F61F6538524876ED82CD8F88C0
--                        0xBCB98666952FCD70FAAC7D0D9BFBF13C
--                        0x17F85A448C08FF8A772F1AE2FB85B0D5
--                        0x25F59539B90FCFD24383FD2D3431D799
--                        0xC96B05D7AAFFFB4DB273FC965AEBF459
--                        0x3AC0474C3914C19100E1021503BEEC6D
--                        0x4123FC4B15D748B8765BA5D0D1F988F8
--                        0x0BD6E40F1F52B4CD501BCB097C112A75
--                        0xEF5AC47801B4FC56654251CDD3322698
-+            set 
+-                    oct 0x1E519D750601B7D01DD3738BA3887EB1
+-                        0xDD17144D4668EBA2E9E98A871ABC21E6
+-                        0x03D937750BF810251B18F0B035DC2F43
+-                        0x796FAB902226241D6A59B88000899314
+-                        0xE772AD0BED1032EBDB677FF3B4DEAFEF
+-                        0xF50304128835067F4814B82327047FDD
+-                        0xBAAD6F73E7662138C74AE131167438A0
+-                        0xBFCFE6D8CDDA4F672EE36EDE7B7464F8
+-                        0x058F829FBD87A8F1305715891F0FCB34
+-                        0x5F3196AA39BB95A561E4980EB296D0E9
+-                        0x75F073B4B201FCEC5EEFAE0254EFF7B7
+-                        0x8B563F58158DFD3199288B3420ABD267
+-                        0x13D129B55B6DC07812DFBA2C5463EB04
+-                        0x7953B6DED84B8F3732977DE2971EE324
+-                        0x3760830486DF63FC13C0E1282F877C44
+-                        0xAE5964607B8C1BC8AF4E2ACBF23F1152
++            set
