@@ -3438,6 +3438,7 @@ static int rescert_extensions_chk(struct Certificate *certp) {
                 read_objid(&extp->extnID, oid_print);
             }
             log_msg(LOG_ERR, "certificate has unknown extension %s", oid_print);
+            return ERR_SCM_BADEXT;
         }
     }
 
