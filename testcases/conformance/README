@@ -175,7 +175,7 @@ CMS signed objects, generic (using ROAs)
 518 2DigestAlgs              # two digest algorithms 6488#2.1.2
 519 NoDigestAlgs             # no digest algorithm 6488#2.1.2
 520 HasCRL                   # has a CRL 6488#2.1.5
-    NoSigInfo                # empty set of SignerInfos 6488#2.1
+521 NoSigInfo                # empty set of SignerInfos 6488#2.1
     2SigInfo                 # multiple SignerInfo objects in set 6488#2.1
 523 SigInfoVersion           # wrong Signer Info version (2) 6488#2.1.6.1
 524 SigInfoVersion4          # wrong Signer Info version (4) 6488#2.1.6.1
@@ -197,6 +197,10 @@ CMS signed objects, generic (using ROAs)
     SigInfoAttrsMsgDigest2Val   # duplicate digest attribute values 6488#2.1.6.4
     SigInfoAttrsSigTime2Val     # duplicate signing time attribute values 6488#2.1.6.4
     SigInfoAttrsBinSigTime2Val  # duplicate binary signing time attribute values 6488#2.1.6.4
+    SigInfoAttrsContType0Val    # empty set of content type attribute values 6488#2.1.6.4
+    SigInfoAttrsMsgDigest0Val   # empty set of digest attribute values 6488#2.1.6.4
+    SigInfoAttrsSigTime0Val     # empty set of signing time attribute values 6488#2.1.6.4
+    SigInfoAttrsBinSigTime0Val  # empty set of binary signing time attribute values 6488#2.1.6.4
 538 SigInfoUnSigAttrs        # has unsigned attribute 6488#2.1.6.7
 539 SigInfoNoSig             # no signature 6488#2.1.6.6
 540 SigInfo2Sig              # has two signatures 6488#2.1.6.6
