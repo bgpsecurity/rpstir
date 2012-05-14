@@ -265,12 +265,13 @@ int eject_casn(struct casn *casnp, int num)
     fcasnp = &casnp[1];  // first member in OF
     if (!num)
 	{
-	tcasnp = fcasnp->ptr;  // mark second for deletion
+	tcasnp = fcasnp->ptr;  // mark second for deletion (after it's copied into the first's place)
         _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
-        if (tcasnp->ptr)   // if second is not last
+        if (tcasnp)   // if first is not last
+            {
             copy_casn(fcasnp, tcasnp); //copy second to first
-        else casnp->flags &= ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG);
-        fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
+            fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
+            }
 	}
     else
         {
