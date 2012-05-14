@@ -110,7 +110,7 @@ int write_fileList(void* man, void* value)
     return -1;
   
   //copy the value into a local copy of the buffer
-  filesAndHashes = calloc(strlen((char*)value), sizeof(char));
+  filesAndHashes = calloc(strlen((char*)value) + 1, sizeof(char));
   memcpy(filesAndHashes, (char*)value, strlen( (char*)value));
   buf = NULL;
 
@@ -124,7 +124,7 @@ int write_fileList(void* man, void* value)
     {
       // this is for safety. while using the strtok function
       // it's best to work on a copy of the tokenized item
-      char* testBuf = calloc(strlen(buf), sizeof(char));
+      char* testBuf = calloc(strlen(buf) + 1, sizeof(char));
       memcpy(testBuf, buf,strlen(buf));
       int fileNameLen;
       char* hash = NULL;

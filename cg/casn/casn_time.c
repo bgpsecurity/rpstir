@@ -14,6 +14,7 @@ char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include "casn.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 
 #define UTCBASE 70
 #define UTCYR 0
@@ -63,6 +64,101 @@ Function: Converts lth decimal digits, starting at c, to a number
     long val;
     for (val = 0; lth--; val = (val * 10) + *c++ - '0');
     return val;
+    }
+
+/** Returns true (nonzero) if year is a leap year.
+ *
+ * \remark http://en.wikipedia.org/wiki/Gregorian_calendar
+ * 
+ * Every year that is exactly divisible by four is a leap year, except
+ * for years that are exactly divisible by 100; the centurial years
+ * that are exactly divisible by 400 are still leap years. For
+ * example, the year 1900 is not a leap year; the year 2000 is a leap
+ * year.
+ */
+static int is_leapyear(int year)
+{
+        if (year % 400 == 0)
+                return 1;
+        else if (year % 100 == 0)
+                return 0;
+        else if (year % 4 == 0)
+                return 1;
+        else
+                return 0;
+}
+
+/**
+ * Convert struct tm to 64-bit signed integer.
+ *
+ * Mostly analogous to mktime(), with 64 bit output (unlike time_t
+ * which may be 32 or 64 depending on the system).  The mktime64_gmt()
+ * function shall convert the broken-down time, expressed as GMT, in
+ * the structure pointed to by timeptr, into a time since the Epoch
+ * value. The original values of the tm_wday and tm_yday components of
+ * the structure are ignored, and the original values of the other
+ * components are not restricted to the ranges described in <time.h>.
+ *
+ * Unlike POSIX mktime(), timeptr is NOT modified upon successful
+ * completion.  Nor is the output corrected for timezone and seasonal
+ * time adjustments.  Therefore, the input is assumed to be GMT,
+ * e.g. the output of the gmtime() function.
+ *
+ * \return The specified time since the Epoch encoded as a value of
+ * type int64_t.  If the time since the Epoch cannot be represented,
+ * the function shall return the value (int64_t)-1.  In particular,
+ * times before January 1, 1970 GMT cannot be represented and will
+ * return -1.
+ *
+ * \remark Note that leap-seconds will cause ambiguities; "Unix time"
+ * is neither a linear representation of time nor a true
+ * representation of UTC, as it cannot unambiguously represent UTC
+ * leap seconds (e.g. December 31, 1998 23:59:60).
+ */
+static int64_t mktime64_gmt(const struct tm *timeptr)
+{
+        int64_t t = 0;
+        int64_t tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year,
+                tm_yday;
+
+        // Minimally check pointer and bounds.
+        if (!timeptr || timeptr->tm_year < 70)
+                return (int64_t)-1;
+
+        // Cast timeptr members to 64-bit integers.
+        tm_sec = timeptr->tm_sec;
+        tm_min = timeptr->tm_min;
+        tm_hour = timeptr->tm_hour;
+        tm_mday = timeptr->tm_mday;
+        tm_mon = timeptr->tm_mon;
+        tm_year = timeptr->tm_year;
+
+        // Compute tm_yday based on tm_mday, tm_mday, and tm_myear
+        if (tm_mon < 0 || tm_mon > 11)
+                return (int64_t)-1;
+        tm_yday = _mos[tm_mon] + (tm_mday - 1);
+        // Must add leap day if March or later and it's a leap year.
+        if (is_leapyear(tm_year + 1900) && tm_mon >= 2)
+                tm_yday++;
+
+        /* Compute seconds since epoch.  Equation reference: Base
+           Definitions volume of IEEE Std 1003.1-2001, Section 4.14,
+           Seconds Since the Epoch.
+           http://pubs.opengroup.org/onlinepubs/007904875/basedefs/xbd_chap04.html#tag_04_14
+           Note: since all timeptr members were converted from int to
+           int64_t, there is no danger of overflow on systems where
+           int is 32-bit.
+        */
+        t = tm_sec + tm_min*60 + tm_hour*3600 + tm_yday*86400 +
+                (tm_year-70)*31536000 + ((tm_year-69)/4)*86400 -
+                ((tm_year-1)/100)*86400 + ((tm_year+299)/400)*86400;
+
+        // As required by POSIX, we did not check bounds on timeptr members,
+        // so we must now check for a negative result.
+        if (t < 0)
+                return (int64_t)-1;
+
+        return t;
     }
 
 int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
@@ -149,6 +245,9 @@ int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
         return -1;
     char genfrom[32];
     memset(genfrom, 0, 32);
+
+    if ((size_t)lth + 2 > sizeof(genfrom))
+        return -1;
      
     yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ);
     if (yr < 70) strcpy(genfrom, "20");
@@ -182,10 +281,17 @@ Returns: IF error, -1, ELSE length of time field
         casnp->type != ASN_GENTIME)) return -1;
     if (!ansr) return 0;
     ansr = casnp->lth;
-    uchar timebuf[32]; /* is this enough? potential buffer overflow? */
-    if (casnp->type == ASN_GENTIME) memcpy(timebuf, casnp->startp, ansr);
+    uchar timebuf[32];
+    if (casnp->type == ASN_GENTIME)
+        {
+        if ((size_t)ansr + 1 > sizeof(timebuf))
+            return _casn_obj_err(casnp, ASN_TIME_ERR);
+        memcpy(timebuf, casnp->startp, ansr);
+        }
     else 
 	{
+        if ((size_t)ansr + 2 + 1 > sizeof(timebuf))
+            return _casn_obj_err(casnp, ASN_TIME_ERR);
         memcpy(&timebuf[2], casnp->startp, ansr);
         if (timebuf[2] >= '7') strncpy((char *)timebuf, "19", 2);
         else strncpy((char *)timebuf, "20", 2);

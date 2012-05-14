@@ -3,6 +3,8 @@
 
 AC_PREREQ(2.59)
 AC_INIT(rpstir, 0.3, achi@bbn.com)
+PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
+AC_SUBST([PACKAGE_LONGNAME])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
@@ -236,6 +238,7 @@ AC_CONFIG_FILES([Makefile
                  utils/Makefile
                  utils/tests/Makefile
                  utils/mysql-c-api/Makefile
+                 INSTRUCTIONS
 ])
 
 AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],

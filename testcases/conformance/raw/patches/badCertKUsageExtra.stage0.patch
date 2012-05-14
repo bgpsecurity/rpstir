@@ -5,7 +5,7 @@
                  seq oid 2.5.29.15 /* id_keyUsage */
                      boo 0xFF
 -                    ocw bit 0x0106
-+                    ocw bit 0x0186
++                    ocw bit 0x0146
                  seq oid 2.5.29.31 /* id_cRLDistributionPoints */
                      ocw seq seq ctx+0x20
                                      ctx+0x20

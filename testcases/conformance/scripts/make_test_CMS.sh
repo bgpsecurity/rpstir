@@ -97,6 +97,7 @@ Explanation of outputs, not in original order:
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools     # Charlie Gardiner's tools
+export RPKI_NO_SIGNING_TIME=1
 
 # Options and defaults
 OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
@@ -189,7 +190,7 @@ ensure_file_exists $CGTOOLS/put_sernum
 ensure_file_exists $CGTOOLS/put_subj
 ensure_file_exists $CGTOOLS/put_sia
 ensure_file_exists $CGTOOLS/add_key_info
-ensure_file_exists $CGTOOLS/add_cms_cert
+ensure_file_exists $CGTOOLS/add_cms_cert_no_check
 ensure_file_exists $CGTOOLS/dump_smart
 ensure_file_exists $CGTOOLS/sign_cert
 ensure_file_exists $CGTOOLS/sign_cms
@@ -274,7 +275,7 @@ fi
 # using the EE private key, but this signature computation is
 # superfluous because it will get overwritten later by sign_cms.
 ${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
-${CGTOOLS}/add_cms_cert ${ee_name}.cer ${child_name}.roa \
+${CGTOOLS}/add_cms_cert_no_check ${ee_name}.cer ${child_name}.roa \
     ${ee_key_path} ${child_name}.roa
 ${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
 

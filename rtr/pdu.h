@@ -1,7 +1,7 @@
 #ifndef _RTR_PDU_H
 #define _RTR_PDU_H
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <stddef.h>
 
 #include <sys/socket.h>
@@ -55,6 +55,7 @@ typedef uint32_t serial_number_t;
 typedef uint32_t as_number_t;
 
 #define PRISESSION PRIu16
+#define PRISERIAL PRIu32
 
 
 /**

@@ -48,6 +48,7 @@ extern int strict_profile_checks;
 #define CF_NFIELDS          (CF_FIELD_CRLDP+1)
 
 #define CRL_MAX_SNUM_LTH    20  // maximum length of cert serial number in CRL
+#define CRL_MAX_CRLNUM_LTH  20
 /*
   A certificate X509 * must be torn apart into this type of structure.
   This structure can then be entered into the database.
@@ -102,7 +103,7 @@ typedef struct _cfx_validator
 
 extern void  freecf(cert_fields *);
 
-extern char *ASNTimeToDBTime(char *in, int *stap);
+extern char *ASNTimeToDBTime(char *in, int *stap, int only_gentime);
 extern char *LocalTimeToDBTime(int *stap);
 extern char *UnixTimeToDBTime(time_t clck, int *stap);
 extern char *X509_to_ski(X509 *x, int *stap, int *x509stap);

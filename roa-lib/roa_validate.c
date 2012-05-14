@@ -58,7 +58,7 @@ int check_sig(struct ROA *rp, struct Certificate *certp)
   // (re)init the crypt library
   if (!CryptInitState)
     {
-    if (cryptInit()) 
+    if (cryptInit() != CRYPT_OK)
       return ERR_SCM_CRYPTLIB;
     CryptInitState = 1;
     }
@@ -620,10 +620,16 @@ static int check_mft_version(struct casn *casnp)
   {
   long val = 0;
   int lth = read_casn_num(casnp, &val);
-     
-  if (val > 0 ||   
-      (val == 0 && lth > 0)) // check explicit zero
-      return ERR_SCM_BADMANVER;
+
+  if (lth < 0)
+    return ERR_SCM_BADMANVER; // invalid read
+
+  if (val != 0)
+    return ERR_SCM_BADMANVER; // incorrect version number
+
+  if (lth != 0)
+    return ERR_SCM_BADMANVER; // explicit zero (should be implicit default)
+
   return 0;
   }
 
@@ -632,35 +638,42 @@ static int check_mft_number(struct casn *casnp)
   int lth;
   long val;                                                      
   lth = read_casn_num(casnp, &val);
-  if (!lth || val < 0) return ERR_SCM_BADMFTNUM;
+  if (lth <= 0 || val < 0) return ERR_SCM_BADMFTNUM;
   return 0;
   }
 
-static int check_mft_dates(struct Manifest *manp)
+static int check_mft_dates(struct Manifest *manp, int * stalep)
   {
   time_t now;
   time(&now);
-  int64_t testdate;
-  if (read_casn_time(&manp->thisUpdate, &testdate) < 0)
+  int64_t thisUpdate, nextUpdate;
+  if (read_casn_time(&manp->thisUpdate, &thisUpdate) < 0)
     {
     log_msg(LOG_ERR, "This update is invalid");
     return ERR_SCM_INVALDT;
     }
-  if (testdate > now)
+  if (thisUpdate > now)
     {
     log_msg(LOG_ERR, "This update in the future");
     return ERR_SCM_INVALDT;
     }
-  now = testdate;
-  if (read_casn_time(&manp->nextUpdate, &testdate) < 0)
+  if (read_casn_time(&manp->nextUpdate, &nextUpdate) < 0)
     {
     log_msg(LOG_ERR, "Next update is invalid");
     return ERR_SCM_INVALDT;
     }
-  if (testdate < now)
+  if (nextUpdate < thisUpdate)
     {
     log_msg(LOG_ERR, "Next update earlier than this update");
     return ERR_SCM_INVALDT;
+    }
+  if (now > nextUpdate)
+    {
+    *stalep = 1;
+    }
+  else
+    {
+    *stalep = 0;
     }
   return 0;
   }
@@ -747,6 +760,9 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
  * @brief Check conformance to manifest profile
  *
  * @param manp (struct ROA *)
+ * @param stalep Return parameter to store whether or not the manifest is
+ *               stale. It's value is only guaranteed to be initialized if
+ *               this function returns 0.
  * @return 0 on success<br />a negative integer on failure
  *
  * Check manifest conformance with respect to the manifest profile
@@ -808,7 +824,7 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
  *   validity time raises the possibility of a substitution attack using a
  *   stale manifest, as described in Section 6.4.
  */
-int manifestValidate(struct ROA *roap)
+int manifestValidate(struct ROA *roap, int *stalep)
   {
 /* Procedure:
    Step 1 Check that content type is id-ct-rpkiManifest
@@ -833,7 +849,7 @@ int manifestValidate(struct ROA *roap)
   if ((iRes = check_mft_number(&manp->manifestNumber)) < 0) 
     return iRes;
 //                                                    step 4
-  if ((iRes = check_mft_dates(manp)) < 0)
+  if ((iRes = check_mft_dates(manp, stalep)) < 0)
     return iRes;
 //                                                   step 5
   if (diff_objid(&manp->fileHashAlg, id_sha256))
@@ -994,7 +1010,8 @@ static int checkIPAddrs(struct Certificate *certp,
         }
       qsort(roaRanges, roaNumPrefixes, sizeof(roaRanges[0]), certrangecmp);
       struct IPAddressOrRangeA *certIPAddressOrRangeAp =
-        &certFamilyp->ipAddressChoice.addressesOrRanges.iPAddressOrRangeA;
+        (struct IPAddressOrRangeA *)member_casn(
+        &certFamilyp->ipAddressChoice.addressesOrRanges.self, 0);
       struct certrange certrange;
       roaPrefixNum = 0;
       while (roaPrefixNum < roaNumPrefixes)
@@ -1060,13 +1077,13 @@ int roaValidate(struct ROA *rp)
 
   // check that the ROA version is right
   long val;
-  if (read_casn_num(&roap->version.self, &val) > 0 && val != 0) 
+  if (read_casn_num(&roap->version.self, &val) != 0 || val != 0)
     return ERR_SCM_BADROAVER;
   // check that the asID is  a positive nonzero integer
   if (read_casn_num(&roap->asID, &iAS_ID) < 0 || iAS_ID <= 0) 
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
-  if (!certp) return ERR_SCM_BADNUMCERTS;
+  if (!certp) return ERR_SCM_BADNUMCERTS; // XXX: this never happens
   int rescount = 0;
   // check that the asID is within the EE cert's scope, if any
   if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;
