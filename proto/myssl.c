@@ -31,12 +31,13 @@ int strict_profile_checks = 0;
   Convert between a time string in a certificate and a time string
   that will be acceptable to the DB. The return value is allocated memory.
 
-  The time string can be either UTC or GENERALIZED. UTC is used for
-  dates <= 2049 and GENERALIZED is used for dates after >= 2050.
+  The time string can be either UTC or GENERALIZED. If only_gentime is
+  false, UTC is used for dates <= 2049 and GENERALIZED is used for dates
+  after >= 2050. Otherwise, GENERALIZED is use for all dates.
 
   The UTC format takes the form YYMMDDHHMMSST, where each of
   the fields is as follows:
-      if YY <= 36 the year is 2000+YY otherwise it is 1900+YY
+      if YY <= 49 the year is 2000+YY otherwise it is 1900+YY
       1 <= MM <= 12
       1 <= DD <= 31
       0 <= HH <= 24
@@ -59,7 +60,7 @@ int strict_profile_checks = 0;
 #define GEN14    14   // generalized format without fractions of a second
 #define GEN16    16   // generalized format with fractions of a second
 
-char *ASNTimeToDBTime(char *bef, int *stap)
+char *ASNTimeToDBTime(char *bef, int *stap, int only_gentime)
 {
   int   year;
   int   mon;
@@ -120,7 +121,7 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 	  *stap = ERR_SCM_INVALDT;
 	  return(NULL);
 	}
-      if ( year > 36 )
+      if ( year > 49 )
 	year += 1900;
       else
 	year += 2000;
@@ -133,7 +134,7 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 	  *stap = ERR_SCM_INVALDT;
 	  return(NULL);
 	}
-      if ( year > 36 )
+      if ( year > 49 )
 	year += 1900;
       else
 	year += 2000;
@@ -171,15 +172,26 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 // we should adjust the time if there is a suffix, but currently we don't
 // next check that the format matches the year. If the year is < 2050
 // it should be UTC, otherwise GEN.
-  if ( year < 2050 && (fmt==GEN14 || fmt==GEN16) )
+  if ( only_gentime )
     {
-      *stap = ERR_SCM_INVALDT;
-      return(NULL);
+      if ( fmt != GEN14 && fmt != GEN16 )
+        {
+          *stap = ERR_SCM_INVALDT;
+          return(NULL);
+        }
     }
-  if ( year >= 2050 && (fmt==UTC10 || fmt==UTC12) )
+  else
     {
-      *stap = ERR_SCM_INVALDT;
-      return(NULL);
+      if ( year < 2050 && (fmt==GEN14 || fmt==GEN16) )
+        {
+          *stap = ERR_SCM_INVALDT;
+          return(NULL);
+        }
+      if ( year >= 2050 && (fmt==UTC10 || fmt==UTC12) )
+        {
+          *stap = ERR_SCM_INVALDT;
+          return(NULL);
+        }
     }
   out = (char *)calloc(48, sizeof(char));
   if ( out == NULL )
@@ -431,7 +443,7 @@ static char *cf_get_from(X509 *x, int *stap, int *x509stap)
       return(NULL);
     }
   *stap = 0;
-  dptr = ASNTimeToDBTime((char *)bef, stap);
+  dptr = ASNTimeToDBTime((char *)bef, stap, 0);
   OPENSSL_free(bef);
   if ( dptr == NULL )
     {
@@ -467,7 +479,7 @@ static char *cf_get_to(X509 *x, int *stap, int *x509stap)
       *stap = ERR_SCM_NONAF;
       return(NULL);
     }
-  dptr = ASNTimeToDBTime((char *)aft, stap);
+  dptr = ASNTimeToDBTime((char *)aft, stap, 0);
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
@@ -1097,7 +1109,7 @@ static char *crf_get_last(X509_CRL *x, int *stap, int *crlstap)
       *stap = ERR_SCM_NONB4;
       return(NULL);
     }
-  dptr = ASNTimeToDBTime((char *)bef, stap);
+  dptr = ASNTimeToDBTime((char *)bef, stap, 0);
   OPENSSL_free(bef);
   if ( dptr == NULL )
     {
@@ -1132,7 +1144,7 @@ static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
       *stap = ERR_SCM_NONAF;
       return(NULL);
     }
-  dptr = ASNTimeToDBTime((char *)aft, stap);
+  dptr = ASNTimeToDBTime((char *)aft, stap, 0);
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
@@ -2753,12 +2765,6 @@ static int rescert_cert_policy_chk(X509 *x)
     goto skip;
   }
 
-  if (policy->qualifiers) {
-    log_msg(LOG_ERR, "[policy] must not contain PolicyQualifiers");
-    ret = ERR_SCM_POLICYQ;
-    goto skip;
-  }
-
   len = i2t_ASN1_OBJECT(policy_id_str, sizeof(policy_id_str), policy->policyid);
 
   if ( (len != policy_id_len) || (strcmp(policy_id_str, oid_policy_id)) ) {
@@ -2905,6 +2911,8 @@ static int rescert_as_resources_chk(struct Certificate *certp) {
 static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
 {
   int have_ip_resources, have_as_resources;
+  ASIdentifiers *as_ext;
+  IPAddrBlocks *ip_ext;
 
   have_ip_resources = rescert_ip_resources_chk(certp);
   if ( have_ip_resources < 0 )
@@ -2919,18 +2927,39 @@ static int rescert_ip_asnum_chk(X509 *x, struct Certificate *certp)
     return(ERR_SCM_NOIPAS);
   }
 
-  /*
-    The IP and AS resources need to be checked to ensure that they
-    follow RFC 3779 rules. In theory, OpenSSL should check that
-    somewhere. The options for below are:
+  if (have_ip_resources) {
+    ip_ext = X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, NULL, NULL);
 
-      1. Check the code removed by commits 136f663 and b90137c for
-         bugs and reinstate it.
-      2. Check the code removed by commit fda500a for bugs and reinstate
-         it.
-      3. Call OpenSSL here and verify that it does what it's supposed
-         to.
-  */
+    if (!ip_ext) {
+      log_msg(LOG_ERR, "couldn't get IP extension");
+      return(ERR_SCM_INVALIPB);
+    }
+
+    if (!v3_addr_is_canonical(ip_ext)) {
+      log_msg(LOG_ERR, "cert IP resources are not in canonical form");
+      sk_IPAddressFamily_free(ip_ext);
+      return(ERR_SCM_INVALIPB);
+    }
+
+    sk_IPAddressFamily_free(ip_ext);
+  }
+
+  if (have_as_resources) {
+    as_ext = X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum, NULL, NULL);
+
+    if (!as_ext) {
+      log_msg(LOG_ERR, "couldn't get AS extension");
+      return(ERR_SCM_BADASRANGE);
+    }
+
+    if (!v3_asid_is_canonical(as_ext)) {
+      log_msg(LOG_ERR, "cert AS resources are not in canonical form");
+      ASIdentifiers_free(as_ext);
+      return(ERR_SCM_BADASRANGE);
+    }
+
+    ASIdentifiers_free(as_ext);
+  }
 
   return(0);
 }
@@ -3360,6 +3389,63 @@ static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
 }
 
 
+/**
+    @brief Check for unknown extensions.
+*/
+static int rescert_extensions_chk(struct Certificate *certp) {
+    static char const * const allowed_extensions[] = {
+        id_basicConstraints,
+        id_subjectKeyIdentifier,
+        id_authKeyId,
+        id_keyUsage,
+        id_extKeyUsage,
+        id_cRLDistributionPoints,
+        id_pkix_authorityInfoAccess,
+        id_pe_subjectInfoAccess,
+        id_certificatePolicies,
+        id_pe_ipAddrBlock,
+        id_pe_autonomousSysNum,
+        NULL
+    };
+
+    // to prevent memory overflows
+    static const int max_oid_print_length = 50;
+
+    struct Extension *extp = NULL;
+    bool ext_allowed;
+    size_t i;
+
+    for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
+        extp != NULL;
+        extp = (struct Extension *)next_of(&extp->self))
+    {
+        ext_allowed = false;
+        for (i = 0; allowed_extensions[i] != NULL; ++i)
+        {
+            if (!diff_objid(&extp->extnID, allowed_extensions[i])) {
+                ext_allowed = true;
+                break;
+            }
+        }
+
+        if (!ext_allowed) {
+            int oid_size = vsize_objid(&extp->extnID);
+            char oid_print[max_oid_print_length + 1];
+
+            if (oid_size > max_oid_print_length) {
+                snprintf(oid_print, sizeof(oid_print), "<oid too large to print>");
+            } else {
+                read_objid(&extp->extnID, oid_print);
+            }
+            log_msg(LOG_ERR, "certificate has unknown extension %s", oid_print);
+            return ERR_SCM_BADEXT;
+        }
+    }
+
+    return 0;
+}
+
+
 /*
  Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
  on a single file.
@@ -3469,6 +3555,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_subj_iss_UID_chk");
   if ( ret < 0 )
       return(ret);
+
+  ret = rescert_extensions_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_extensions_chk");
+  if ( ret < 0 )
+    return(ret);
 
   return(0);
 }
@@ -3586,7 +3677,7 @@ static int cvt_crldate2DB(struct ChoiceOfTime *cotp)
       }
     }
   int sta = 0;
-  free(ASNTimeToDBTime(buf, &sta));
+  free(ASNTimeToDBTime(buf, &sta, 0));
   free(buf);
   return sta;
   }

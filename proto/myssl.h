@@ -103,7 +103,7 @@ typedef struct _cfx_validator
 
 extern void  freecf(cert_fields *);
 
-extern char *ASNTimeToDBTime(char *in, int *stap);
+extern char *ASNTimeToDBTime(char *in, int *stap, int only_gentime);
 extern char *LocalTimeToDBTime(int *stap);
 extern char *UnixTimeToDBTime(time_t clck, int *stap);
 extern char *X509_to_ski(X509 *x, int *stap, int *x509stap);

@@ -1,0 +1,20 @@
+--- badCMSDigestAlgSameWrong.raw.old	2012-05-09 17:10:33.848953773 -0400
++++ badCMSDigestAlgSameWrong.raw	2012-05-09 17:11:42.015974154 -0400
+@@ -1,7 +1,7 @@
+ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
+     ctx+0x20
+         seq int 0x03 /* 3 */ 
+-            set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++            set seq oid 2.16.840.1.101.3.4.2.2 /* id_sha384 */
+                     nul 
+             seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                 ctx+0x20
+@@ -108,7 +108,7 @@
+                     ctx+0x00
+                         0xC35D2EC167DCD7DA7C3C763EB3350253
+                         0x84C16B57
+-                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++                    seq oid 2.16.840.1.101.3.4.2.2 /* id_sha384 */
+                         nul 
+                     ctx+0x20
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */

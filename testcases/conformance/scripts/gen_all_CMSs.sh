@@ -156,10 +156,11 @@ ${single_CMS_cmd} CMS 513 NoCerts
 ${single_CMS_cmd} CMS 514 2Certs
 ${single_CMS_cmd} CMS 515 Version2
 ${single_CMS_cmd} CMS 516 Version4
-${single_CMS_cmd} CMS 517 DigestAlg
+${single_CMS_cmd} CMS 517 DigestAlgSameWrong
 ${single_CMS_cmd} CMS 518 2DigestAlgs
 ${single_CMS_cmd} CMS 519 NoDigestAlgs
 ${single_CMS_cmd} CMS 520 HasCRL
+${single_CMS_cmd} CMS 521 NoSigInfo
 ${single_CMS_cmd} CMS 523 SigInfoVersion
 ${single_CMS_cmd} CMS 524 SigInfoVersion4
 ${single_CMS_cmd} CMS 525 SigInfoNoSid
@@ -169,7 +170,6 @@ ${single_CMS_cmd} CMS 528 SigInfoHashAlg
 ${single_CMS_cmd} CMS 529 SigInfoNoAttrs
 ${single_CMS_cmd} CMS 530 SigInfoAttrsNoContType
 ${single_CMS_cmd} CMS 531 SigInfoAttrsContTypeOid
-${single_CMS_cmd} CMS 532 SigInfoAttrsMsgDigestOid
 ${single_CMS_cmd} CMS 533 SigInfoAttrsNoMsgDigest
 ${single_CMS_cmd} CMS 534 SigInfoAttrs2ContType
 ${single_CMS_cmd} CMS 535 SigInfoAttrs2MsgDigest
@@ -185,5 +185,5 @@ ${single_CMS_cmd} CMS 543 SigInfoNoHashAlg
 # Generate EE certificate cases (embedded in ROAs)
 ###############################################################################
 
-${single_CMS_cmd} EE 544 KeyUsage
-${single_CMS_cmd} EE 545 BadSIAOid
+${single_CMS_cmd} EE 544 KeyUsageCABits
+${single_CMS_cmd} EE 545 SIAWrongAccessMethod
