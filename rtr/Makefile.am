@@ -9,7 +9,10 @@ bin_PROGRAMS = @PACKAGE_NAME@-rtr-update @PACKAGE_NAME@-rtrd
 noinst_PROGRAMS = rtr-test-client
 
 EXTRA_DIST = \
-	cleanServerData
+	cleanServerData \
+	simulation/init_db.sh \
+	simulation/update.sh \
+	simulation/update.sql
 
 libpdu_a_SOURCES = pdu.c pdu.h
 
