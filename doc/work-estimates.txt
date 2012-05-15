@@ -1,0 +1,297 @@
+==============================================================================
+Summary
+
+Units: person-hour (million monkey-year equivalent)
+==============================================================================
+
+Ghostbusters: 130
+ASN.1 (add 320 if no good lib): 392
+DBschema (done after gbr): 761
+conformance: 119
+conformance update: 137
+DoS (done before ASN.1): 124
+config: 55
+Testbed (add 200???): 176
+parallel rsync: 88
+KeyRoll: 28
+Refactor: 64
+compile warnings: 40
+DebianPkg: 40
+
+
+==============================================================================
+Explanations
+==============================================================================
+
+Ghostbusters: Implement the Ghostbusters (RFC 6493) specification.
+This requires some DB modification, as well as untangling of CMS code
+from manifest and ROA code.
+
+ASN.1: Replace/rewrite ASN.1 library for security reasons.  Note that
+other libraries are not immune,
+e.g. http://lists.openwall.net/full-disclosure/2012/04/19/4 .
+
+DB Schema: Upgrade database schema and core algorithms as preparation
+for accommodating DoS countermeasures, parallel rsync, and
+caching/rollback.  Much of the countermeasure and parallel rsync code
+will be included in this work.
+
+Conformance: finish first phase of conformance testing in preparation
+for May 2012 release.
+
+Conformance Update: Add extra conformance cases through review and
+through discussion at IETF 83.
+
+DoS (done before ASN.1): Three sets of DoS countermeasures.
+1. Those that can be done now
+2. Those that depend on schema
+3. Those that depend on schema, config, and parallel rsync
+
+Config Library: Replace crude configuration via environment variables
+with a flexible configuration file.  This will be needed for
+per-CA limits and blacklisting.
+
+Testbed: Full-scale time-varying testbed.  Includes scenarios for
+1. Normal operation
+2. Gray areas
+3. Key rollover
+4. Scalability and performance experiments
+
+Parallel Rsync: A rewrite/tightening of parallel rsync code to be
+robust against crashes, and in preparation for DoS countermeasures
+(e.g. unbounded publication by one CA).
+
+Key Rollover: Testing that key rollover functions correctly as
+specified by RFC 6489.  Includes any related bug fixes.
+
+Refactor: Remove code duplication.  Reorganize code so that it can be
+installed in the traditional linux filesystem hierarchy (/usr/bin/,
+etc.).  Whack code into uniform style.  NOTE: this must be done
+exclusively, with no other branches outstanding, or version control
+will throw a fit when every line conflicts.
+
+CompileWarnings: Compiler warnings have grown over time for this code
+base.  The warnings should be heeded and code changed to compile
+without warning -- most are benign but a few might have security
+implications.
+
+Debian Package: package RPSTIR and its dependency requirements so that
+RPSTIR can be installed with a single command on Debian systems (or
+derivative, e.g. Ubuntu linux).
+
+
+==============================================================================
+Work Breakdown Structure with Estimates
+
+Units: person-hour (million monkey-year equivalent)
+==============================================================================
+
+
+Ghostbusters (soft circular depends on DB Schema)
+  Review spec: 4
+  Refactor CMS/ROA: 8
+  DB schema update (if done before overall schema update): 8
+  DB schema update (if done after overall schema update): 2
+  Code
+    Process and validate: 16
+    Query mechanism (GBR by CA): 8
+    Query mechanism (GBR by contents): 4
+    Use GBR in logs/alerts: 16
+  Integration and Testing
+    Unit: 8
+    Subsystem: 16
+    Testbed
+      Code: 16
+      Test: 16
+    Conformance: 8
+
+ASN.1
+  Look at other libraries and determine their usability (do this before schema): 24
+  If there's a good candidate library
+    Possibly do this before schema
+      Activate new library (to use both old and new libraries): 8
+      Write conversion function between each libraries structs: 40
+    For each function that uses ASN.1
+      Modify function, using conversion function when calling unmodified subroutines: 160
+      If no test exists, write unit test: 160
+  If there's no good candidate library
+    If we don't give up
+      Redesign casn API: 80
+      Implement new API separately from old API: 240
+      Rewrite portions at a time using the same strategy as above: <same>
+
+
+Database Schema (soft circular depends on Ghostbusters, partial dependency on ASN.1)
+  Requirements
+    Update: 8
+    Review and edit: 20
+  SQL schema
+    Update: 8
+    Review and edit: 22
+  Algorithm design
+    Capture pieces to keep: 16
+    Document
+      Add objects and authenticates delete: 2
+      Aging and fermentation (e.g. expiration or crossing the notBefore time): 2
+      Rollback: 4
+      Error reporting: 4
+      Cleanup
+        Automatic: 3
+        Manual: 1
+  Polish testbed creation tools: 40
+  Certs
+    Test cases: 3
+    Code: 40
+    Test: 40
+  CRLs
+    Test cases: 2
+    Code: 30
+    Test: 40
+  Certs with CRLs
+    Test cases: 3
+    Code: 4
+    Test: 8
+  Manifests:
+    Test cases: 8
+    Code: 40
+    Test: 40
+  Certs with manifests:
+    Test cases: 2
+    Code: 4
+    Test: 8
+  Certs with CRLs and manifests:
+    Test cases: 4
+    Code: 2
+    Test: 8
+  ROAs:
+    Test cases: 8
+    Code: 24
+    Test: 16
+  ROAs with manifests:
+    Test cases: 16
+    Code: 8
+    Test: 8
+  ROAs with CRLs and manifests:
+    Test cases: 4
+    Code: 8
+    Test: 8
+  Ghostbusters dependencies (count all as zero if Ghostbusters is to be done after schema)
+    GBR:
+      Test cases: 2
+      Code: 3
+      Test: 2
+    GBR with CRLs:
+      Test cases: 2
+      Code: 2
+      Test: 2
+    GBR special status (depending on spec) as being usable when it doesn't normally validate
+      Test cases: 4
+      Code: 4
+      Test: 4
+  All together
+    Test cases: 60
+    Test: 160
+
+Conformance / Some DoS
+  Review: 85
+  Some bug fixes: 20
+  Documentation
+    Marking TODOs: 4
+    Publishing externally: 2
+  ASN.1 commenting: 8
+
+Conformance Update
+  Cases: 40
+  Code: 80
+  Documentation
+    Marking TODOs: 8
+    Publishing externally: 1
+  ASN.1 commenting: 8
+
+Conformance Update
+  Cases:
+  Code:
+  Documentation
+    Marking TODOs:
+    Publishing externally:
+  ASN.1 commenting:
+
+DoS Countermeasures (multiple dependencies at different points)
+  Countermeasures that can be done now
+    Test cases: 24 (+4 for ASN.1 conversion overflows)
+    Code: 8 (+24 for ASN.1 conversion overflows)
+    Test: 13 (+16 for ASN.1 conversion overflows)
+  Countermeasures that depend on schema
+    Test cases: 9
+    Code: 0
+    Test: 4
+  Countermeasures that depend on schema and config
+    Test cases: 0
+    Code: 0
+    Test: 0
+  Countermeasures that depend on schema, config, and parallel rsync
+    Test cases: 6
+    Code: 4
+    Test: 12
+
+LTA (spec isn't ready)
+
+Config Library
+  Review and update requirements: 6
+  Code: 16
+  Unit test: 8
+  Replace...
+    ...environment variables: 8
+    ...config headers: 3
+  Update...
+    ...subsystem tests: 8
+    ...conformance tests: 2
+  Documentation: 4
+
+Testbed
+  Ray's documentation: 24
+  Bugfixes: ???
+  Design scenarios
+    Normal: 16
+    Gray areas: 40
+    Key rollover: 24
+    Scalability experiments: 40
+  Code
+    ???
+  Exercise: 8 for each area
+  Fix bugs that are revealed by testbed: 24 for each area
+
+Parallel Rsync (depends on schema and config)
+  Design: 8
+  Code: 80
+  (Testing is counted in DoS Countermeasures for bad tests and Testbed for good tests)
+
+Gray Areas (spec isn't ready)
+
+Key Rollover (depends on Testbed)
+  Test:  4
+  Fixes: 24
+
+Algorithm Agility, 1st Phase (targetting RSA-1024/MD5 but supporting
+  only existing algorithms, depends on config)
+  - Simulation of 'RP Ready Algorithm B Date' requires a significant
+  amount of planning. (no estimate at this point in time)
+
+OpenSSL / Cryptlib (depends on schema)
+  Reduce dependencies on OpenSSL as part of DB schema
+  implementation. (no separate estimate needed)
+
+Refactoring (exlusive)
+  Goal: installable software, reduce code duplication, uniform style
+  Requirements: no other concurrent work and no significant outstanding branches
+  Time estimate: 64
+
+Compile Warnings (weak depends on refactoring)
+  Goal: have no compile warnings on any of our supported platforms and add -Werror (turning warnings into errors)
+  Dependency: this would be easiest right after refactoring, but could be done at any time
+  Time estimate: 40
+
+Debian Package (depends on refactoring)
+  Package OpenSSL+3779: 16
+  Package cryptlib: 16
+  Make package: 8
