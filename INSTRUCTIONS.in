@@ -14,6 +14,7 @@ Table of Contents
       2.1.4 cryptlib
       2.1.5 rsync
       2.1.6 Python
+      2.1.7 netcat
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
@@ -252,6 +253,12 @@ latest version due to security and bug fixes.
 Install python, at least version 2.6.  Python is likely available in
 your operating system's package manager and is also available at
 http://python.org/download/.
+
+2.1.7 netcat
+
+Netcat comes preinstalled with many operating systems. If you do not
+already have the command nc, install netcat from your package manager
+or http://netcat.sourceforge.net/.
 
 
 2.2 RPKI Software
