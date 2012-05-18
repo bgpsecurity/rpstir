@@ -279,19 +279,9 @@ CRLs
 658 CRLNoCRLNum              # has no CRL number 6487#5
 659 CRLEntryReason           # entry has a revocation reason 6487#5
     CRLEntryHasExtension     # entry has a CRL entry extension CertificateIssuer 6487#5
-662 CRLBadDateFeb29          # has Feb. 29 on non-leap year (test of ASN.1 library)
-663 CRLBadDateDayGT30        # has day 31 of 30-day month (test of ASN.1 library)
-664 CRLBadDateDayGT31        # has day 32 of 31-day month (test of ASN.1 library)
-665 CRLBadDateHour           # has hour> 23 (test of ASN.1 library)
-666 CRLBadDateMin            # has minute > 59 (test of ASN.1 library)
-667 CRLBadDateSec            # has seconds > 59 (test of ASN.1 library)
-668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year (test of ASN.1 library)
 669 CRLNumber2Big            # has too long a CRL number 5280#5.2.3
     CRLNumberMax             # has the maximum allowed 20-octet CRL number 5280#5.2.3
 670 CRL2CRLNums              # has 2 CRL numbers 6487#errata
-671 CRLBadDateDay0           # has a day number 0 (test of ASN.1 library)
-672 CRLBadDateMonth0         # has a month number 0 (test of ASN.1 library)
-673 CRLBadDateMonth13        # has a month number > 12 (test of ASN.1 library)
 
 Manifests
 
