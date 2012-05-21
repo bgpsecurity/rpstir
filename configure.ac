@@ -11,6 +11,7 @@ AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([rtr/pdu.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
@@ -147,11 +148,14 @@ AC_ARG_ENABLE(
     [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
 )
 
+#Check for pthreads.
+m4_include([m4/ax_pthread.m4])
+AX_PTHREAD
+if test x"$ax_pthread_ok" != xyes; then
+	AC_MSG_ERROR([pthread support is required])
+fi
+
 #Checks for libraries.
-AC_SEARCH_LIBS([pthread_create],[pthread],[],[
-	echo "Error: libpthread is required for building this project"
-	exit -1;
-])
 AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
