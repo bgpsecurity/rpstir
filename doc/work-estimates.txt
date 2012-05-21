@@ -295,3 +295,8 @@ Debian Package (depends on refactoring)
   Package OpenSSL+3779: 16
   Package cryptlib: 16
   Make package: 8
+
+Fixing Memory Leaks (weak depends on refactoring)
+  Goal: have no memory leaks as reported by valgrind or purify and make regression tests check this
+  Dependency: this would be easiest right after refactoring, but could be done at any time
+  Time estimate:
