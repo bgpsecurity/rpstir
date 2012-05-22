@@ -74,26 +74,6 @@ AC_ARG_WITH(
     [ mysql_config=mysql_config]
 )
 
-if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
-fi
-if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
-fi
-if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
-fi
-
-if test x${odbc_include} != x; then
-  CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
-fi
-if test x${cryptlib_include} != x; then
-  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
-fi
-if test x${ssl_include} != x; then
-  CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
-fi
-
 AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
 if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --include specified non-system include flags
@@ -127,6 +107,26 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   LIBS="${mysql_config_LIBS} ${LIBS}"
 else
   AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
+fi
+
+if test x${ssl_lib} != x; then
+  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
+fi
+if test x${odbc_lib} != x; then
+  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
+fi
+if test x${cryptlib_lib} != x; then
+  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
+fi
+
+if test x${odbc_include} != x; then
+  CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
+fi
+if test x${cryptlib_include} != x; then
+  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
+fi
+if test x${ssl_include} != x; then
+  CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
