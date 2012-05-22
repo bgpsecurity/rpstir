@@ -261,7 +261,7 @@ static int makesock(char *porto, int *protosp)
   int  consumed;
   static int64_t num_accepted_connections = 0;
   static int64_t num_failed_connections = 0;
-//  int  one = 1;
+  int  one = 1;
   int  s;
 
   if ( sscanf(porto, "%" SCNu16 "%n", &port, &consumed) < 1 ||
@@ -278,6 +278,10 @@ static int makesock(char *porto, int *protosp)
           perror("Failed to create socket");
           return(protos);
         }
+      if (setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0)
+        {
+          perror("Failed to set SO_REUSEADDR option on socket");
+        }
       memset(&sinn, 0, sizeof(sinn));
       sinn.sin_addr.s_addr = htonl(INADDR_ANY);
       sinn.sin_family = AF_INET;
@@ -289,7 +293,6 @@ static int makesock(char *porto, int *protosp)
 	  close(protos);
 	  return(sta);
 	}
-//  (void)setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
       sta = listen(protos, 5);
       if ( sta < 0 )
 	{
