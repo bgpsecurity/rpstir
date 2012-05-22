@@ -149,7 +149,6 @@ AC_ARG_ENABLE(
 )
 
 #Check for pthreads.
-m4_include([m4/ax_pthread.m4])
 AX_PTHREAD
 if test x"$ax_pthread_ok" != xyes; then
 	AC_MSG_ERROR([pthread support is required])

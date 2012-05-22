@@ -25,7 +25,7 @@ EXTRA_DIST = \
 CLEANFILES = \
 	query.log
 
-ACLOCAL_AMFLAGS = -I build-aux
+ACLOCAL_AMFLAGS = -I build-aux -I m4
 
 tags:
 	find ${PWD} -name \*.[ch] | xargs etags --declarations
