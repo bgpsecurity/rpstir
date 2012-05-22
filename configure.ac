@@ -153,6 +153,9 @@ AX_PTHREAD
 if test x"$ax_pthread_ok" != xyes; then
 	AC_MSG_ERROR([pthread support is required])
 fi
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CC="$PTHREAD_CC"
 
 #Checks for libraries.
 AC_SEARCH_LIBS([dlopen],[dl],[],[

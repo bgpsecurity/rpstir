@@ -4,14 +4,12 @@
 # $Id: Makefile 1259 2010-09-14 17:53:17Z bkohler $
 #
 
-AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
-	$(PTHREAD_CFLAGS)
+AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 
 AM_CPPFLAGS = -I../proto -I../cg/casn -I../cg/asn -I../roa-lib -I../proto \
 	-I../utils
 
-LDADD = $(PTHREAD_LIBS) \
-	../roa-lib/libroa.a \
+LDADD = ../roa-lib/libroa.a \
 	../cg/asn/libasn.a \
 	../cg/casn/libcasn.a \
 	../utils/libutils.a
