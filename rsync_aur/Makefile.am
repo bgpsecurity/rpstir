@@ -22,6 +22,8 @@ EXTRA_DIST = \
 
 rsync_aur_SOURCES = main.c main.h parse.c socket_stuff.c sig_handler.c \
 	csapp.c csapp.h usage.c usage.h socket_stuff.h parse.h sig_handler.h
+rsync_aur_LDADD = $(PTHREAD_LIBS) $(LDADD)
+rsync_aur_CFLAGS = $(AM_CFLAGS) $(PTHREAD_CFLAGS)
 
 rsync_listener_SOURCES = rsync_listener.c csapp.h rsync_listener.h csapp.c
 rsync_listener_LDFLAGS = -lpthread

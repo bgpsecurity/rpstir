@@ -27,8 +27,8 @@ libpdu_a_SOURCES = pdu.c pdu.h
 	main.c \
 	semaphores.h \
 	signals.c signals.h
-@PACKAGE_NAME@_rtrd_LDADD = @PTHREAD_LIBS@ libpdu.a ../utils/libutils.a ../utils/mysql-c-api/libmysqlcapi.a
-@PACKAGE_NAME@_rtrd_CFLAGS = $(AM_CFLAGS) @PTHREAD_CFLAGS@
+@PACKAGE_NAME@_rtrd_LDADD = $(PTHREAD_LIBS) libpdu.a ../utils/libutils.a ../utils/mysql-c-api/libmysqlcapi.a
+@PACKAGE_NAME@_rtrd_CFLAGS = $(AM_CFLAGS) $(PTHREAD_CFLAGS)
 
 rtr_test_client_SOURCES = test-client.c
 rtr_test_client_LDADD = libpdu.a ../utils/libutils.a
