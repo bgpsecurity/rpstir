@@ -4,12 +4,16 @@
 # $Id: Makefile 1259 2010-09-14 17:53:17Z bkohler $
 #
 
-AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
+AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations \
+	$(PTHREAD_CFLAGS)
 
 AM_CPPFLAGS = -I../proto -I../cg/casn -I../cg/asn -I../roa-lib -I../proto \
 	-I../utils
 
-LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
+LDADD = $(PTHREAD_LIBS) \
+	../roa-lib/libroa.a \
+	../cg/asn/libasn.a \
+	../cg/casn/libcasn.a \
 	../utils/libutils.a
 
 bin_PROGRAMS = rsync_aur rsync_listener
@@ -22,8 +26,5 @@ EXTRA_DIST = \
 
 rsync_aur_SOURCES = main.c main.h parse.c socket_stuff.c sig_handler.c \
 	csapp.c csapp.h usage.c usage.h socket_stuff.h parse.h sig_handler.h
-rsync_aur_LDADD = $(PTHREAD_LIBS) $(LDADD)
-rsync_aur_CFLAGS = $(AM_CFLAGS) $(PTHREAD_CFLAGS)
 
 rsync_listener_SOURCES = rsync_listener.c csapp.h rsync_listener.h csapp.c
-rsync_listener_LDFLAGS = -lpthread
