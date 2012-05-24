@@ -45,9 +45,9 @@ run_bg () {
             ;;
         "purify")
             if test "x$STRICT_CHECKS" = x1; then
-                PUREOPTIONS="-log-file=purify.$TEST_LOG_NAME.$LOG.log -exit-status" "$PROG.purify" "$@" &
+                PUREOPTIONS="-log-file=`pwd`/purify.$TEST_LOG_NAME.$LOG.log -exit-status" "$PROG.purify" "$@" &
             else
-                PUREOPTIONS="-log-file=purify.$TEST_LOG_NAME.$LOG.log -exit-status -leaks-at-exit=no -fds-inuse-at-exit=no" "$PROG.purify" "$@" &
+                PUREOPTIONS="-log-file=`pwd`/purify.$TEST_LOG_NAME.$LOG.log -exit-status -leaks-at-exit=no -fds-inuse-at-exit=no" "$PROG.purify" "$@" &
             fi
             ;;
         "" | "none")
