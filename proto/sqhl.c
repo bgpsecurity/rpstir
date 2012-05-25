@@ -1006,7 +1006,7 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
     strcpy(parentIssuer, cert_ansrp->issuer);
     }
   else return NULL;
-  (void)snprintf(ofullname, PATH_MAX, cert_ansrp->fullname);
+  (void)snprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
   if ( pathname != NULL ) strncpy(*pathname, ofullname, PATH_MAX);
   if (flagsp) *flagsp = cert_ansrp->flags;
   return readCertFromFile(ofullname, stap);

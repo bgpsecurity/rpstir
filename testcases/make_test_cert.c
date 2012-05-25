@@ -691,7 +691,7 @@ int main(int argc, char **argv)
         ifamp =(struct IPAddressFamilyA *)next_of(&ifamp->self))
         {
         if (read_family(&a, ifamp) < 0) fatal(7, (char *)0);
-        if (!filein) fprintf(stdout, a);
+        if (!filein) fprintf(stdout, "%s", a);
         if (!numfam) copy_casn(&extp->extnID, &iextp->extnID);
         struct IPAddressFamilyA *famp = (struct IPAddressFamilyA *)inject_casn(
           &extp->extnValue.ipAddressBlock.self, numfam++);
@@ -720,7 +720,7 @@ int main(int argc, char **argv)
         read_ASNums(&a, iasNump);
         if (!filein)
           {
-          fprintf(stdout, a);
+          fprintf(stdout, "%s", a);
           fprintf(stdout, "What AS numbers?\n");
           }
         struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
