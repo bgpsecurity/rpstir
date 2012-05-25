@@ -170,12 +170,11 @@ int signflag,
 		  1= in imported file in an imported class, no details needed
 		  2=  "   "        "  "   "    "      " , but details needed */
 ulong loctag;
-long loctype;
 if (!in_sub) *classname = *token = 0;
 if (fd >= 0 && !in_sub && !real_start) scan_modules(fd);
 if (fd <= 0) active = -1;
 else active = 0;
-for (signflag = loctag = 0, loctype = -1,
+for (signflag = loctag = 0,
     *linebuf = *itemname = 0; pre_proc_get_token(fd, str, linebuf); )
     {
     switch (state)
@@ -195,7 +194,6 @@ for (signflag = loctag = 0, loctype = -1,
             &active)) == GLOBAL)
 	    {
             active = (fd <= 0)? -1: 0;
-            loctype = -1;
             *subclass = *classname = 0;
 	    if (fd >= 0) fflush(str);
 	    if (in_sub) return;
