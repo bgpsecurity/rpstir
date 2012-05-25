@@ -928,7 +928,7 @@ FILE *substr = (FILE *)0;
 char *b, *c, locclass[128], namebuf[128], subname[128],
     subfilename[20];
 int parens, is_of;
-long tmp, loctype;
+long tmp;
 ulong loctag;
 struct name_table *ntbp;
 struct class_table *ctbp;
@@ -1152,7 +1152,6 @@ do
 	    substr = (FILE *)0;
 	    fflush(str);
 	    }
-	loctype = -1;
 	}
     }
 while (state != GLOBAL && pre_proc_get_token(fd, str, linebuf));
