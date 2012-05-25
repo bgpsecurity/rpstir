@@ -2619,7 +2619,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_INVALDT;
       break;
     }
-    sta = read_casn (&manifest->thisUpdate, asn_time);
+    sta = read_casn (&manifest->thisUpdate, (unsigned char *)asn_time);
     if ( sta < 0 ) {
       log_msg(LOG_ERR, "Could not read time for thisUpdate");
       sta = ERR_SCM_INVALDT;
@@ -2635,7 +2635,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_INVALDT;
       break;
     }
-    sta = read_casn (&manifest->nextUpdate, asn_time);
+    sta = read_casn (&manifest->nextUpdate, (unsigned char *)asn_time);
     if ( sta < 0 ) {
       log_msg(LOG_ERR, "Could not read time for nextUpdate");
       sta = ERR_SCM_INVALDT;
