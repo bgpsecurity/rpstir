@@ -927,13 +927,13 @@ static int pre_proc_item(int fd, FILE *str, char *linebuf, char **linendpp,
 FILE *substr = (FILE *)0;
 char *b, *c, locclass[128], namebuf[128], subname[128],
     subfilename[20];
-int parens, is_of;
+int parens;
 long tmp;
 ulong loctag;
 struct name_table *ntbp;
 struct class_table *ctbp;
 struct macro_table *mtbp;
-is_of = parens = loctag = 0;
+parens = loctag = 0;
 *locclass = *namebuf = *subname = *table = 0;
 do
     {
