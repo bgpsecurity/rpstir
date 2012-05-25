@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <syslog.h>
 #include <assert.h>
+#include <mysql.h>
 
 #include "scm.h"
 #include "scmf.h"
