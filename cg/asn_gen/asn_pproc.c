@@ -164,8 +164,7 @@ Procedure:
 		state, return
 **/
 char linebuf[20*ASN_BSIZE], *linend = linebuf, *elinebuf = &linebuf[sizeof(linebuf)];
-int signflag,
-    active;   /* -1= in main file,
+int active;   /* -1= in main file,
                   0= in imported file but not imported class
 		  1= in imported file in an imported class, no details needed
 		  2=  "   "        "  "   "    "      " , but details needed */
@@ -174,7 +173,7 @@ if (!in_sub) *classname = *token = 0;
 if (fd >= 0 && !in_sub && !real_start) scan_modules(fd);
 if (fd <= 0) active = -1;
 else active = 0;
-for (signflag = loctag = 0,
+for (loctag = 0,
     *linebuf = *itemname = 0; pre_proc_get_token(fd, str, linebuf); )
     {
     switch (state)
