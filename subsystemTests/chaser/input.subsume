@@ -1,0 +1,8 @@
+rsync://a.b.com/a///b
+rsync://a.b.com/b/
+rsync://a.b.com/aa/b
+rsync://a.b.com/aa/b/c/d/e/ffgsdfjkhglkhfglkhsdflgjhsldfkgjhsldfhglshfgsjhfglhsdf
+rsync://a.b.com/aa/
+rsync://a.b.com/a/b
+rsync://a.b.com/a/
+rsync://a.b.com/a
