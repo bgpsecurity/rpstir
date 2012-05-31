@@ -60,7 +60,8 @@ struct config_value {
 	@note Arrays have this called once for each value.
 
 	@param[in] usr_arg	User argument provided to the callback.
-	@param[in] input	String from the config file.
+	@param[in] input	String from the config file. This may be copied,
+				but the pointer itself must not be put in *output.
 	@param[out] output	A value of the correct type for the config item.
 				May be NULL.
 	@return			True on success, false on failure. This means that
