@@ -142,8 +142,8 @@ static bool converter_string(void * usr_arg, const char * input, const void ** o
 	return true;
 }
 
-static const struct converter_sscanf_uint16 = {SCNu16, sizeof(uint16_t)};
-static const struct converter_sscanf_int64 = {SCNi64, sizeof(int64_t)};
+static const struct converter_sscanf_usr_arg converter_sscanf_uint16 = {SCNu16, sizeof(uint16_t)};
+static const struct converter_sscanf_usr_arg converter_sscanf_int64 = {SCNi64, sizeof(int64_t)};
 
 static bool validate_some_int64_array(void * usr_arg, const void ** input, size_t num_items)
 {
