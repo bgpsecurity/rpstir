@@ -78,6 +78,18 @@ const void ** config_get_array(size_t key)
 	return config_values[key].array_value.data;
 }
 
+
+struct config_context {
+	char * file;
+	size_t line;
+};
+
+void config_mesage(const config_context_t context_voidp, int priority, const char * format, ...)
+{
+	struct config_context * context = (struct config_context *)context_voidp;
+	// TODO
+}
+
 bool config_load(const char * filename)
 {
 	// TODO
