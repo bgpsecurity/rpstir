@@ -12,7 +12,6 @@ noinst_LIBRARIES = libutils.a libutilsdebug.a
 
 libutils_a_SOURCES = \
 	bag.c bag.h \
-	config.c config.h \
 	hash_utils.c \
 	logging.h \
 	logutils.c logutils.h \
