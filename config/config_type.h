@@ -1,0 +1,35 @@
+#ifndef _CONFIG_TYPE_H
+#define _CONFIG_TYPE_H
+
+/**
+	Internal header file used for defining configuration data types.
+
+	Note that all data types are passed around as (void *) so the
+	configuration system itself doesn't need to know anything about
+	each type.
+*/
+
+
+/**
+	Converts a string to a value of the correct type for the config item.
+
+	@note Arrays have this called once for each value.
+
+	@param[in] usr_arg	User argument provided to the callback.
+	@param[in] input	String from the config file. This may be copied,
+				but the pointer itself must not be put in *data.
+	@param[out] data	A value of the correct type for the config item.
+				May be NULL.
+	@return			True on success, false on failure. This means that
+				this function can be used to validate input.
+*/
+typedef bool (*config_value_converter)(void * usr_arg, const char * input, const void ** data);
+
+/** Deep free data for a config item. */
+typedef void (*config_value_free)(void * data);
+
+/** Check an array of values for inter-value consistency/correctness. */
+typedef bool (*config_array_validator)(void * usr_arg, void const * const * input, size_t num_items);
+
+
+#endif

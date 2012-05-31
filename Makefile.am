@@ -2,6 +2,7 @@ AUTOMAKE_OPTIONS = 1.6 foreign
 
 SUBDIRS = \
 	utils \
+	config \
 	cg \
 	roa-lib \
 	proto \
