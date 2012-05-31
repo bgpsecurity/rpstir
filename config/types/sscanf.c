@@ -1,6 +1,6 @@
 #include "sscanf.h"
 
-bool config_type_sscanf_converter(void * usr_arg, const char * input, const void ** data)
+bool config_type_sscanf_converter(config_context_t context, void * usr_arg, const char * input, const void ** data)
 {
 	struct converter_sscanf_usr_arg * args = (struct converter_sscanf_usr_arg *)usr_arg;
 	char scan_format[32];
@@ -23,7 +23,7 @@ bool config_type_sscanf_converter(void * usr_arg, const char * input, const void
 	if (sscanf(input, scan_format, *data, &consumed) < 1 ||
 		consumed < strlen(input))
 	{
-		LOG(LOG_ERR, "Invalid value: %s", input);
+		config_message(context, LOG_ERR, "invalid value: %s, should be %s", input, args->description);
 		free(*data);
 		return false;
 	}
@@ -31,5 +31,5 @@ bool config_type_sscanf_converter(void * usr_arg, const char * input, const void
 	return true;
 }
 
-const struct config_type_sscanf_usr_arg config_type_sscanf_arg_uint16_t = {SCNu16, sizeof(uint16_t)};
-const struct config_type_sscanf_usr_arg config_type_sscanf_arg_size_t = {"zu", sizeof(size_t)};
+const struct config_type_sscanf_usr_arg config_type_sscanf_arg_uint16_t = {SCNu16, sizeof(uint16_t), "an integer between 0 and 65535 inclusive"};
+const struct config_type_sscanf_usr_arg config_type_sscanf_arg_size_t = {"zu", sizeof(size_t), "a non-negative integer"};
