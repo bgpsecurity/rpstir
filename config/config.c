@@ -23,54 +23,14 @@ struct config_option {
 
 /** All available config options */
 static const struct config_option config_options[] = {
-	// CONFIG_SOME_STRING
+	// CONFIG_ROOT
 	{
-		"SomeString",
+		"Root",
 		false,
 		converter_string, NULL,
 		free,
 		NULL, NULL,
-		"\"this is SomeString's the default\""
-	},
-
-	// CONFIG_SOME_MANDATORY_STRING
-	{
-		"SomeMandatoryString",
-		false,
-		converter_string, NULL,
-		free,
-		NULL, NULL,
-		NULL
-	},
-
-	// CONFIG_SOME_UINT16
-	{
-		"SomeUInt16",
-		false,
-		converter_sscanf, converter_sscanf_uint16,
-		free,
-		NULL, NULL,
-		"42"
-	},
-
-	// CONFIG_SOME_INT64_ARRAY
-	{
-		"SomeInt64Array",
-		true,
-		converter_sscanf, converter_sscanf_int64,
-		free,
-		validate_some_int64_array, NULL,
-		"-42 5 56"
-	},
-
-	// CONFIG_SOME_STRING_ARRAY
-	{
-		"SomeStringArray",
-		true,
-		converter_string, NULL,
-		free,
-		NULL, NULL,
-		"\"string with spaces\" word1 word2 \"another with spaces\""
+		ABS_TOP_SRCDIR
 	},
 };
 

@@ -12,6 +12,8 @@ AM_SILENT_RULES
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([rtr/pdu.h])
 
+AC_DEFINE_UNQUOTED([ABS_TOP_SRCDIR], ["$abs_top_srcdir"])
+
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.
