@@ -219,6 +219,7 @@ fi
 
 
 AC_CONFIG_FILES([Makefile
+                 config/Makefile
                  cg/Makefile
                  cg/asn/Makefile
                  cg/asn_gen/Makefile
