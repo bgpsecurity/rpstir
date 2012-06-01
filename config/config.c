@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "logging.h"
+
 #include "config.h"
 #include "config_type.h"
 
@@ -82,14 +87,21 @@ void const * const * config_get_array(size_t key)
 
 
 struct config_context {
-	char * file;
+	const char * file;
 	size_t line;
 };
 
 void config_mesage(const config_context_t context_voidp, int priority, const char * format, ...)
 {
 	struct config_context * context = (struct config_context *)context_voidp;
-	// TODO
+	va_list ap;
+	char message[512];
+
+	va_start(ap, format);
+	vsnprintf(message, sizeof(message), format, ap);
+	va_end(ap);
+
+	LOG(priority, "%s:%zu: %s", context->file, context->line, message);
 }
 
 bool config_load(const char * filename)

@@ -1,4 +1,5 @@
 AM_CFLAGS = -g -Wall -Wextra -Werror
+AM_CPPFLAGS = $(DEPS_CFLAGS) -I../utils
 
 noinst_LIBRARIES = libconfig.a
 
