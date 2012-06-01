@@ -29,7 +29,7 @@ static const struct config_option config_options[] = {
 	{
 		"Root",
 		false,
-		converter_string, NULL,
+		config_type_string_converter, NULL,
 		free,
 		NULL, NULL,
 		ABS_TOP_SRCDIR
@@ -46,7 +46,7 @@ struct config_value {
 		struct {
 			// Filled by the appropriate config_value_converter,
 			// freed by the appropriate config_value_free.
-			const void * data;
+			void * data;
 		} single_value;
 
 		struct {
@@ -54,10 +54,10 @@ struct config_value {
 			// Overall array checked by the appropriate config_array_validator.
 			// Each item freed by the appropriate config_value_free.
 			// Overall array freed by free().
-			const void ** data;
+			void ** data;
 			size_t num_items;
 		} array_value;
-	}
+	};
 };
 
 

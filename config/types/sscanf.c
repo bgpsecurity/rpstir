@@ -2,7 +2,7 @@
 
 #include "sscanf.h"
 
-bool config_type_sscanf_converter(const config_context_t context, void * usr_arg, const char * input, const void ** data)
+bool config_type_sscanf_converter(const config_context_t context, void * usr_arg, const char * input, void ** data)
 {
 	struct converter_sscanf_usr_arg * args = (struct converter_sscanf_usr_arg *)usr_arg;
 	char scan_format[32];

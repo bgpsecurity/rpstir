@@ -38,7 +38,7 @@ void config_mesage(const config_context_t context, int priority, const char * fo
 	@return			True on success, false on failure. This means that
 				this function can be used to validate input.
 */
-typedef bool (*config_value_converter)(const config_context_t context, void * usr_arg, const char * input, const void ** data);
+typedef bool (*config_value_converter)(const config_context_t context, void * usr_arg, const char * input, void ** data);
 
 /** Deep free data for a config item. */
 typedef void (*config_value_free)(void * data);
