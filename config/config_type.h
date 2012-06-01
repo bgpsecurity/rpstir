@@ -19,7 +19,7 @@ typedef void * config_context_t;
 	@param context	Opaque data. Might include things like line number in the config file.
 	@param priority	See syslog(3).
 */
-void config_mesage(config_context_t context, int priority, const char * format, ...);
+void config_mesage(const config_context_t context, int priority, const char * format, ...);
 
 
 /**
@@ -35,13 +35,13 @@ void config_mesage(config_context_t context, int priority, const char * format, 
 	@return			True on success, false on failure. This means that
 				this function can be used to validate input.
 */
-typedef bool (*config_value_converter)(config_context_t context, void * usr_arg, const char * input, const void ** data);
+typedef bool (*config_value_converter)(const config_context_t context, void * usr_arg, const char * input, const void ** data);
 
 /** Deep free data for a config item. */
 typedef void (*config_value_free)(void * data);
 
 /** Check an array of values for inter-value consistency/correctness. */
-typedef bool (*config_array_validator)(config_context_t context, void * usr_arg, void const * const * input, size_t num_items);
+typedef bool (*config_array_validator)(const config_context_t context, void * usr_arg, void const * const * input, size_t num_items);
 
 
 #endif
