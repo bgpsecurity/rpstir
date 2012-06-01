@@ -5,6 +5,9 @@ AC_PREREQ(2.59)
 AC_INIT(rpstir, 0.3, achi@bbn.com)
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
+PACKAGE_NAME_UC="RPSTIR"
+AC_SUBST([PACKAGE_NAME_UC])
+AC_DEFINE_UNQUOTED([PACKAGE_NAME_UC], ["$PACKAGE_NAME_UC"])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
@@ -24,6 +27,16 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 AC_PROG_SED
+
+
+AC_ARG_WITH(
+    [config-file],
+    AS_HELP_STRING([--with-config-file],[Path to default configuration file. Defaults to $abs_top_srcdir/$PACKAGE_NAME.conf]),
+    [DEFAULT_CONFIG_FILE=$withval],
+    [DEFAULT_CONFIG_FILE=$abs_top_srcdir/$PACKAGE_NAME.conf]
+)
+AC_SUBST([DEFAULT_CONFIG_FILE])
+AC_DEFINE_UNQUOTED([DEFAULT_CONFIG_FILE], ["$DEFAULT_CONFIG_FILE"])
 
 
 AC_ARG_WITH(

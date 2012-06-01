@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "logging.h"
 
@@ -7,6 +8,9 @@
 #include "config_type.h"
 
 #include "types/string.h"
+
+
+#define CONFIG_ENV_VAR PACKAGE_NAME_UC "_CONFIG"
 
 
 /** Structure to describe an available config option. */
@@ -106,7 +110,25 @@ void config_mesage(const config_context_t context_voidp, int priority, const cha
 
 bool config_load(const char * filename)
 {
-	// TODO
+	if (filename == NULL)
+	{
+		filename = getenv(CONFIG_ENV_VAR);
+		if (filename != NULL)
+		{
+			LOG(LOG_DEBUG, "using configuration file \"%s\" from environment variable %s",
+				filename, CONFIG_ENV_VAR);
+		}
+	}
+
+	if (filename == NULL)
+	{
+		filename = DEFAULT_CONFIG_FILE;
+		LOG(LOG_DEBUG, "using default configuration file \"%s\"", filename);
+	}
+
+	// TODO: parse file
+
+	return false;
 }
 
 void config_unload()
