@@ -99,5 +99,21 @@ bool config_load(const char * filename)
 
 void config_unload()
 {
-	// TODO
+	size_t i, j;
+
+	for (i = 0; i < CONFIG_NUM_ITEMS; ++i)
+	{
+		if (config_options[i].is_array)
+		{
+			for (j = 0; j < config_values[i].array_value.num_items; ++j)
+			{
+				config_options[i].value_free(config_values[i].array_value.data[j]);
+			}
+			free(config_values[i].array_value.data);
+		}
+		else
+		{
+			config_options[i].value_free(config_values[i].single_value.data);
+		}
+	}
 }
