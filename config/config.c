@@ -1,6 +1,8 @@
 #include "config.h"
 #include "config_type.h"
 
+#include "types/string.h"
+
 
 /** Structure to describe an available config option. */
 struct config_option {
@@ -73,7 +75,7 @@ size_t config_get_length(size_t key)
 	return config_values[key].array_value.num_items;
 }
 
-const void ** config_get_array(size_t key)
+void const * const * config_get_array(size_t key)
 {
 	return config_values[key].array_value.data;
 }
