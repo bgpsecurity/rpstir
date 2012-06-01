@@ -1,6 +1,9 @@
 #ifndef _CONFIG_TYPE_H
 #define _CONFIG_TYPE_H
 
+#include <stdlib.h>
+#include <stdbool.h>
+
 /**
 	Internal header file used for defining configuration data types.
 

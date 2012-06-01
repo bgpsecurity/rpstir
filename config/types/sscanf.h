@@ -1,6 +1,8 @@
 #ifndef _CONFIG_TYPES_SSCANF_H
 #define _CONFIG_TYPES_SSCANF_H
 
+#include "config_type.h"
+
 bool config_type_sscanf_converter(const config_context_t context, void * usr_arg, const char * input, const void ** data);
 
 struct config_type_sscanf_usr_arg {

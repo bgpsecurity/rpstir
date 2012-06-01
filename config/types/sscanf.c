@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "sscanf.h"
 
 bool config_type_sscanf_converter(const config_context_t context, void * usr_arg, const char * input, const void ** data)

@@ -1,7 +1,8 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#include <inttypes.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 enum config_key {
 	CONFIG_ROOT, // $RPKI_ROOT
