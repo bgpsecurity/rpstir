@@ -147,10 +147,16 @@ bool config_parse_file(
 
 		if (option == CONFIG_OPTION_NONE)
 		{
-			if (line[line_offset] == '\n' || line[line_offset] = '\0')
+			if (line[line_offset] == '\n')
 			{
 				// empty line
 				continue;
+			}
+
+			if (line[line_offset] == '\0')
+			{
+				// empty line at end of file
+				goto done;
 			}
 
 			if (!get_option(config_options, head, line, &line_offset, &option))

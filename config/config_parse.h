@@ -16,7 +16,7 @@
 #define MAX_LINE_LENGTH 1024
 #define MAX_ARRAY_LENGTH 256
 
-#define CHARS_WHITESPACE " \t"
+#define CHARS_WHITESPACE " \t" // must not include newline
 #define CHARS_OPTION "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 #define INCLUDE_STR "Include"
