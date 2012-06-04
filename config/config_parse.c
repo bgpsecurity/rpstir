@@ -98,6 +98,23 @@ static bool get_option(
 	}
 }
 
+/**
+	Get the next value to an option.
+
+	@param line		The line itself.
+	@param line_offset	Input/output param for offset within line before/after the option name.
+	@param[out] value	Return a malloc()-allocated buffer with the option value.
+	@return	True on success, false on error.
+*/
+static bool get_value(
+	const struct config_context * context,
+	const char * line,
+	size_t * line_offset,
+	char ** value)
+{
+	// TODO
+}
+
 bool config_parse_file(
 	const struct config_option * config_options,
 	struct config_value * config_values,
@@ -116,11 +133,17 @@ bool config_parse_file(
 	// currently "active" option
 	size_t option = CONFIG_OPTION_NONE;
 
+	// line number where currently active option started
+	size_t option_line;
+
 	// input values for the currently active option
 	char ** values;
 
 	// amount of values array that's currently filled in
 	size_t num_values;
+
+	// whether or not an array is expected
+	bool is_array;
 
 	// return value of this function
 	bool ret = true;
@@ -185,9 +208,93 @@ bool config_parse_file(
 				ret = false;
 				goto done;
 			}
+
+			skip_whitespace(line, &line_offset);
+
+			option_line = tail->line;
+
+			for (; num_values != 0; --num_values)
+			{
+				free(values[num_values - 1]);
+			}
+
+			if (option == CONFIG_OPTION_INCLUDE)
+			{
+				is_array = false;
+			}
+			else if (option == CONFIG_OPTION_UNKNOWN)
+			{
+				is_array = true;
+			}
+			else
+			{
+				is_array = config_options[option].is_array;
+			}
 		}
 
-		// TODO
+		while (true)
+		{
+			if (strcmp(line + line_offset, "\\\n") == 0)
+			{
+				// line continuation
+				break;
+			}
+			else if (strcmp(line + line_offset, "\\") == 0)
+			{
+				config_message(head, LOG_ERR, "line continuation at end of file");
+				ret = false;
+				goto done;
+			}
+
+			skip_comment(line, &line_offset);
+
+			if (line[line_offset] == '\n')
+			{
+				// end of line
+				break;
+			}
+			else if (line[line_offset] == '\0')
+			{
+				// end of file
+				break;
+			}
+
+			if (num_values >= MAX_ARRAY_LENGTH)
+			{
+				tail->line = option_line;
+				config_message(head, LOG_ERR, "too many items in an array of values, limit is %d", MAX_ARRAY_LENGTH);
+				ret = false;
+				goto done;
+			}
+
+			if (!get_value(head, line, &line_offset, &values[num_values++]))
+			{
+				ret = false;
+				goto done;
+			}
+		}
+
+		if (strcmp(line + line_offset, "\\\n") == 0)
+		{
+			// line continuation
+			continue;
+		}
+
+		if (!is_array && num_values != 1)
+		{
+			tail->line = option_line;
+			config_message(head, LOG_ERR, "non-array option must have exactly one value");
+			ret = false
+			goto done;
+		}
+
+		// TODO: parse values
+
+		if (line[line_offset] == '\0')
+		{
+			// end of file
+			goto done;
+		}
 	}
 
 	// if control reaches here, fgets returned NULL
