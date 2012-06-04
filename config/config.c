@@ -6,30 +6,12 @@
 
 #include "config.h"
 #include "config_type.h"
+#include "config_parse.h"
 
 #include "types/string.h"
 
 
 #define CONFIG_ENV_VAR PACKAGE_NAME_UC "_CONFIG"
-
-
-/** Structure to describe an available config option. */
-struct config_option {
-	// configuration key, e.g. "SomeOption"
-	char * name;
-
-	// type information
-	bool is_array;
-	config_value_converter value_convert;
-	void * value_convert_usr_arg;
-	config_value_free value_free;
-	config_array_validator array_validate;
-	void * array_validate_usr_arg;
-
-	// Default value, as if it came from the config file.
-	// NULL indicates that the option is mandatory.
-	char * default_value;
-};
 
 
 /** All available config options */
@@ -43,30 +25,6 @@ static const struct config_option config_options[] = {
 		NULL, NULL,
 		ABS_TOP_SRCDIR
 	},
-};
-
-
-/**
-	Stores the configuration data, which is parsed from the configuration
-	file and/or preprogrammed defaults with preference towards the config file.
-*/
-struct config_value {
-	union {
-		struct {
-			// Filled by the appropriate config_value_converter,
-			// freed by the appropriate config_value_free.
-			void * data;
-		} single_value;
-
-		struct {
-			// Each item filled by the appropriate config_value_converter.
-			// Overall array checked by the appropriate config_array_validator.
-			// Each item freed by the appropriate config_value_free.
-			// Overall array freed by free().
-			void ** data;
-			size_t num_items;
-		} array_value;
-	};
 };
 
 
@@ -90,14 +48,9 @@ void const * const * config_get_array(size_t key)
 }
 
 
-struct config_context {
-	const char * file;
-	size_t line;
-};
-
 void config_mesage(const config_context_t context_voidp, int priority, const char * format, ...)
 {
-	struct config_context * context = (struct config_context *)context_voidp;
+	struct config_context * context;
 	va_list ap;
 	char message[512];
 
@@ -105,7 +58,20 @@ void config_mesage(const config_context_t context_voidp, int priority, const cha
 	vsnprintf(message, sizeof(message), format, ap);
 	va_end(ap);
 
-	LOG(priority, "%s:%zu: %s", context->file, context->line, message);
+	// modelled after gcc error messages for included files
+	for (context = (struct config_context *)context_voidp;
+		context != NULL;
+		context = context->includes)
+	{
+		if (context->includes != NULL)
+		{
+			LOG(priority, "In config file included from %s:%zu:", context->file, context->line);
+		}
+		else
+		{
+			LOG(priority, "%s:%zu: %s", context->file, context->line, message);
+		}
+	}
 }
 
 bool config_load(const char * filename)
@@ -126,9 +92,11 @@ bool config_load(const char * filename)
 		LOG(LOG_DEBUG, "using default configuration file \"%s\"", filename);
 	}
 
-	// TODO: parse file
+	struct config_context context;
+	context.filename = filename;
+	context.includes = NULL;
 
-	return false;
+	return config_parse_file(config_options, config_values, &context, &context);
 }
 
 void config_unload()
