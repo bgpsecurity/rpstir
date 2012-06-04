@@ -300,7 +300,95 @@ bool config_parse_file(
 			goto done;
 		}
 
-		// TODO: parse values
+		if (option == CONFIG_OPTION_INCLUDE)
+		{
+			tail->includes = malloc(sizeof(struct config_context));
+			if (tail->includes == NULL)
+			{
+				LOG(LOG_ERR, "out of memory");
+				ret = false;
+				goto done;
+			}
+
+			tail->includes->file = values[0];
+			tail->includes->line = 0;
+			tail->includes->includes = NULL;
+
+			ret = config_parse_file(config_options, config_values, head, tail->includes);
+
+			free(tail->includes);
+			tail->includes = NULL;
+
+			if (!ret)
+			{
+				goto done;
+			}
+		}
+		else if (option == CONFIG_OPTION_UNKNOWN)
+		{
+			// nothing to do here
+		}
+		else if (is_array)
+		{
+			for (;
+				config_values[option].array_value.num_items != 0;
+				--config_values[option].array_value.num_items)
+			{
+				config_options[option].value_free(
+					config_values[option].array_value.data[
+						config_values[option].array_value.num_items - 1]);
+			}
+			free(config_values[option].array_value.data);
+
+			config_values[option].array_value.data = malloc(sizeof(void *) * num_values);
+			if (config_values[option].array_value.data == NULL)
+			{
+				LOG(LOG_ERR, "out of memory");
+				ret = false;
+				goto done;
+			}
+
+			for (config_values[option].array_value.num_items = 0;
+				config_values[option].array_value.num_items < num_values;
+				++config_values[option].array_value.num_items)
+			{
+				if (!config_options[option].value_convert(
+					head,
+					config_options[option].value_convert_usr_arg,
+					values[config_values[option].array_value.num_items],
+					&config_values[option].array_value.data[
+						config_values[option].array_value.num_items]))
+				{
+					ret = false;
+					goto done;
+				}
+			}
+
+			if (!config_options[option].array_validate(
+				head,
+				config_options[option].array_validate_usr_arg,
+				config_values[option].array_value.data,
+				config_values[option].array_value.num_items))
+			{
+				ret = false;
+				goto done;
+			}
+		}
+		else
+		{
+			config_options[option].value_free(config_values[option].single_value.data);
+			config_values[option].single_value.data = NULL;
+
+			if (!config_options[option].value_convert(
+				head,
+				config_options[option].value_convert_usr_arg,
+				values[0],
+				&config_values[option].single_value.data))
+			{
+				ret = false;
+				goto done;
+			}
+		}
 
 		if (line[line_offset] == '\0')
 		{
