@@ -153,6 +153,7 @@ bool config_parse_file(
 
 	while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
 	{
+		++tail->line;
 		line_offset = 0;
 
 		if (strlen(line) == MAX_LINE_LENGTH - 1 && line[MAX_LINE_LENGTH - 1] != '\n')
