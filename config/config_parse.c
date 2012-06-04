@@ -43,7 +43,7 @@ static void skip_comment(const char * line, size_t * line_offset)
 
 	@param line_offset	Input/output param for offset within line before/after the option name.
 	@param[out] option	Return value of the parsed option, or CONFIG_OPTION_NONE if it's an empty line.
-	@return	Whether or not there was an error.
+	@return	True on success, false on error.
 */
 static bool get_option(
 	const struct config_option * config_options,
