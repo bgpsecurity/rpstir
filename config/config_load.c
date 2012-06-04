@@ -447,9 +447,25 @@ bool config_load_defaults(
 	struct config_value * config_values,
 	struct config_context * context)
 {
-	// TODO
-	(void)config_options;
-	(void)config_values;
+	size_t option;
+
+	// initialize config_values
+	for (option = 0; option < CONFIG_NUM_ITEMS; ++option)
+	{
+		config_values[option].filled = false;
+		if (config_options[options].is_array)
+		{
+			config_values[option].array_value.data = NULL;
+			config_values[option].array_value.num_items = NULL;
+		}
+		else
+		{
+			config_values[option].single_value.data = NULL;
+		}
+	}
+
+	// TODO: load from defaults
 	(void)context;
-	return false;
+
+	return true;
 }
