@@ -2,6 +2,9 @@
 
 bool config_type_string_converter(const struct config_context * context, void * usr_arg, const char * input, void ** data)
 {
+	(void)context;
+	(void)usr_arg;
+
 	*data = strdup(input);
 	if (*data == NULL)
 	{

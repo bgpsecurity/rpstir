@@ -113,6 +113,7 @@ static bool get_value(
 	char ** value)
 {
 	// TODO: real implementation with quoting, escape sequences, and environment variables
+	(void)context;
 	size_t value_length = strcspn(line + *line_offset, CHARS_WHITESPACE);
 
 	*value = strndup(line + *line_offset, value_length);
@@ -296,7 +297,7 @@ bool config_parse_file(
 		{
 			tail->line = option_line;
 			config_message(head, LOG_ERR, "non-array option must have exactly one value");
-			ret = false
+			ret = false;
 			goto done;
 		}
 
@@ -367,7 +368,7 @@ bool config_parse_file(
 			if (!config_options[option].array_validate(
 				head,
 				config_options[option].array_validate_usr_arg,
-				config_values[option].array_value.data,
+				(void const * const *)config_values[option].array_value.data,
 				config_values[option].array_value.num_items))
 			{
 				ret = false;

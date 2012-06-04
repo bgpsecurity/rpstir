@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "sscanf.h"
 
 bool config_type_sscanf_converter(const struct config_context * context, void * usr_arg, const char * input, void ** data)
 {
-	struct converter_sscanf_usr_arg * args = (struct converter_sscanf_usr_arg *)usr_arg;
+	struct config_type_sscanf_usr_arg * args = (struct config_type_sscanf_usr_arg *)usr_arg;
 	char scan_format[32];
 	int consumed;
 
@@ -15,7 +16,7 @@ bool config_type_sscanf_converter(const struct config_context * context, void * 
 		return false;
 	}
 
-	if (snprintf(scan_format, sizeof(scan_format), "%%%s%%n", args->scan_format) >= sizeof(scan_format))
+	if ((ssize_t)snprintf(scan_format, sizeof(scan_format), "%%%s%%n", args->scan_format) >= (ssize_t)sizeof(scan_format))
 	{
 		LOG(LOG_ERR, "scan_format too long: %s", args->scan_format);
 		free(*data);
@@ -23,7 +24,7 @@ bool config_type_sscanf_converter(const struct config_context * context, void * 
 	}
 
 	if (sscanf(input, scan_format, *data, &consumed) < 1 ||
-		consumed < strlen(input))
+		(size_t)consumed < strlen(input))
 	{
 		config_message(context, LOG_ERR, "invalid value: %s, should be %s", input, args->description);
 		free(*data);

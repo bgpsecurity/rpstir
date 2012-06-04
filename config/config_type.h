@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include <syslog.h>
+
+#include "logging.h"
 
 /**
 	Internal header file used for defining configuration data types.
