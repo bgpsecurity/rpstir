@@ -49,6 +49,8 @@ struct config_option {
 	file and/or preprogrammed defaults with preference towards the config file.
 */
 struct config_value {
+	bool filled;
+
 	union {
 		struct {
 			// Filled by the appropriate config_value_converter,
@@ -90,5 +92,13 @@ bool config_parse_file(
 	struct config_value * config_values,
 	struct config_context * head,
 	struct config_context * tail);
+
+/**
+	Loads defaults and initializes config_values.
+*/
+bool config_load_defaults(
+	const struct config_option * config_options,
+	struct config_value * config_values,
+	struct config_context * context);
 
 #endif

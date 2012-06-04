@@ -80,6 +80,8 @@ void config_message(const struct config_context * context, int priority, const c
 
 bool config_load(const char * filename)
 {
+	size_t i;
+
 	if (filename == NULL)
 	{
 		filename = getenv(CONFIG_ENV_VAR);
@@ -96,18 +98,34 @@ bool config_load(const char * filename)
 		LOG(LOG_DEBUG, "using default configuration file \"%s\"", filename);
 	}
 
-	// TODO: parse all defaults and initialize config_values
-
 	struct config_context context;
 	context.file = filename;
 	context.line = 0;
 	context.includes = NULL;
 
-	return config_parse_file(config_options, config_values, &context, &context);
+	if (!config_load_defaults(config_options, config_values, &context))
+	{
+		LOG(LOG_ERR, "couldn't load configuration defaults");
+		return false;
+	}
 
-	// TODO: make sure all options are filled in
+	if (!config_parse_file(config_options, config_values, &context, &context))
+	{
+		config_unload();
+		return false;
+	}
 
-	// TODO: if returning false, free up values in config_values
+	for (i = 0; i < CONFIG_NUM_ITEMS; ++i)
+	{
+		if (!config_values[i].filled)
+		{
+			LOG(LOG_ERR, "option %s must be set", config_options[i].name);
+			config_unload();
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void config_unload()
@@ -116,6 +134,7 @@ void config_unload()
 
 	for (i = 0; i < CONFIG_NUM_ITEMS; ++i)
 	{
+		config_values[i].filled = false;
 		if (config_options[i].is_array)
 		{
 			for (j = 0; j < config_values[i].array_value.num_items; ++j)
@@ -123,10 +142,12 @@ void config_unload()
 				config_options[i].value_free(config_values[i].array_value.data[j]);
 			}
 			free(config_values[i].array_value.data);
+			config_values[i].array_value.data = NULL;
 		}
 		else
 		{
 			config_options[i].value_free(config_values[i].single_value.data);
+			config_values[i].single_value.data = NULL;
 		}
 	}
 }

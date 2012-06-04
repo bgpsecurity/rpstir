@@ -331,6 +331,8 @@ bool config_parse_file(
 		}
 		else if (is_array)
 		{
+			config_values[option].filled = true;
+
 			for (;
 				config_values[option].array_value.num_items != 0;
 				--config_values[option].array_value.num_items)
@@ -377,6 +379,8 @@ bool config_parse_file(
 		}
 		else
 		{
+			config_values[option].filled = true;
+
 			config_options[option].value_free(config_values[option].single_value.data);
 			config_values[option].single_value.data = NULL;
 
@@ -435,4 +439,17 @@ done:
 	}
 
 	return ret;
+}
+
+
+bool config_load_defaults(
+	const struct config_option * config_options,
+	struct config_value * config_values,
+	struct config_context * context)
+{
+	// TODO
+	(void)config_options;
+	(void)config_values;
+	(void)context;
+	return false;
 }
