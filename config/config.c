@@ -44,7 +44,7 @@ size_t config_get_length(size_t key)
 
 void const * const * config_get_array(size_t key)
 {
-	return config_values[key].array_value.data;
+	return (void const * const *)config_values[key].array_value.data;
 }
 
 
