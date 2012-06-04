@@ -14,6 +14,14 @@
 
 
 #define MAX_LINE_LENGTH 1024
+#define MAX_ARRAY_LENGTH 256
+
+#define CHARS_WHITESPACE " \t"
+#define CHARS_OPTION "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+#define INCLUDE_STR "Include"
+
+#define ERROR_ON_UNKNOWN_OPTION false
 
 
 /** Structure to describe an available config option. */
