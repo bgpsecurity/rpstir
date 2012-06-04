@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "logging.h"
 
@@ -145,7 +146,7 @@ bool config_parse_file(
 	if (values == NULL)
 	{
 		LOG(LOG_ERROR, "out of memory");
-		ret = false
+		ret = false;
 		goto done;
 	}
 	num_values = 0;
