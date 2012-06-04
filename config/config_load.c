@@ -5,7 +5,7 @@
 #include "logging.h"
 
 #include "config.h"
-#include "config_parse.h"
+#include "config_load.h"
 
 
 // special values of enum config_key

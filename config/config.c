@@ -6,7 +6,7 @@
 
 #include "config.h"
 #include "config_type.h"
-#include "config_parse.h"
+#include "config_load.h"
 
 #include "types/string.h"
 

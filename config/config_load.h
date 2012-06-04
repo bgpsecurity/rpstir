@@ -1,9 +1,9 @@
-#ifndef _CONFIG_PARSE_H
-#define _CONFIG_PARSE_H
+#ifndef _CONFIG_LOAD_H
+#define _CONFIG_LOAD_H
 
 
 /**
-	Internal header file for parsing a config file.
+	Internal header file for loading a config.
 */
 
 
