@@ -20,6 +20,7 @@
 #define CHARS_OPTION "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 #define INCLUDE_STR "Include"
+#define COMMENT_START_STR "#"
 
 #define ERROR_ON_UNKNOWN_OPTION false
 

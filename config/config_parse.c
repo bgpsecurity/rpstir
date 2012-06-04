@@ -20,6 +20,24 @@ static void skip_whitespace(const char * line, size_t * line_offset)
 }
 
 /**
+	Increment the line_offset to the end of the line,
+	iff line_offset points to the start of a comment.
+*/
+static void skip_comment(const char * line, size_t * line_offset)
+{
+	if (strncmp(line + *line_offset, COMMENT_START_STR, strlen(COMMENT_START_STR)) == 0)
+	{
+		for (; line[*line_offset] != '\0'; ++*line_offset)
+		{
+			if (line[*line_offset] == '\n')
+			{
+				return;
+			}
+		}
+	}
+}
+
+/**
 	Get the option from the beginning of a line.
 
 	@param line_offset	Input/output param for offset within line before/after the option name.
@@ -147,13 +165,14 @@ bool config_parse_file(
 
 		if (option == CONFIG_OPTION_NONE)
 		{
+			skip_comment(line, &line_offset);
+
 			if (line[line_offset] == '\n')
 			{
 				// empty line
 				continue;
 			}
-
-			if (line[line_offset] == '\0')
+			else if (line[line_offset] == '\0')
 			{
 				// empty line at end of file
 				goto done;
