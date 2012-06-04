@@ -96,12 +96,18 @@ bool config_load(const char * filename)
 		LOG(LOG_DEBUG, "using default configuration file \"%s\"", filename);
 	}
 
+	// TODO: parse all defaults and initialize config_values
+
 	struct config_context context;
 	context.file = filename;
 	context.line = 0;
 	context.includes = NULL;
 
 	return config_parse_file(config_options, config_values, &context, &context);
+
+	// TODO: make sure all options are filled in
+
+	// TODO: if returning false, free up values in config_values
 }
 
 void config_unload()
