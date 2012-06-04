@@ -15,7 +15,7 @@
 
 
 /** Context in parsing a config file */
-typedef void * config_context_t;
+struct config_context;
 
 /**
 	Callback for config type functions to use to log messages about their config item.
@@ -23,7 +23,7 @@ typedef void * config_context_t;
 	@param context	Opaque data. Might include things like line number in the config file.
 	@param priority	See syslog(3).
 */
-void config_message(const config_context_t context, int priority, const char * format, ...);
+void config_message(const struct config_context * context, int priority, const char * format, ...);
 
 
 /**
@@ -39,13 +39,13 @@ void config_message(const config_context_t context, int priority, const char * f
 	@return			True on success, false on failure. This means that
 				this function can be used to validate input.
 */
-typedef bool (*config_value_converter)(const config_context_t context, void * usr_arg, const char * input, void ** data);
+typedef bool (*config_value_converter)(const struct config_context * context, void * usr_arg, const char * input, void ** data);
 
 /** Deep free data for a config item. */
 typedef void (*config_value_free)(void * data);
 
 /** Check an array of values for inter-value consistency/correctness. */
-typedef bool (*config_array_validator)(const config_context_t context, void * usr_arg, void const * const * input, size_t num_items);
+typedef bool (*config_array_validator)(const struct config_context * context, void * usr_arg, void const * const * input, size_t num_items);
 
 
 #endif

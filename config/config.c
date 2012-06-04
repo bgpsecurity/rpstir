@@ -48,9 +48,8 @@ void const * const * config_get_array(size_t key)
 }
 
 
-void config_message(const config_context_t context_voidp, int priority, const char * format, ...)
+void config_message(const struct config_context * context, int priority, const char * format, ...)
 {
-	struct config_context * context;
 	va_list ap;
 	char message[512];
 
@@ -59,9 +58,7 @@ void config_message(const config_context_t context_voidp, int priority, const ch
 	va_end(ap);
 
 	// modelled after gcc error messages for included files
-	for (context = (struct config_context *)context_voidp;
-		context != NULL;
-		context = context->includes)
+	for (; context != NULL; context = context->includes)
 	{
 		if (context->includes != NULL && context->includes->line != 0)
 		{

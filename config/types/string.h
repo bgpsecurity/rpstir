@@ -3,6 +3,6 @@
 
 #include "config_type.h"
 
-bool config_type_string_converter(const config_context_t context, void * usr_arg, const char * input, void ** data);
+bool config_type_string_converter(const struct config_context * context, void * usr_arg, const char * input, void ** data);
 
 #endif
