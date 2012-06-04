@@ -112,7 +112,19 @@ static bool get_value(
 	size_t * line_offset,
 	char ** value)
 {
-	// TODO
+	// TODO: real implementation with quoting, escape sequences, and environment variables
+	size_t value_length = strcspn(line + *line_offset, CHARS_WHITESPACE);
+
+	*value = strndup(line + *line_offset, value_length);
+
+	if (*value == NULL)
+	{
+		LOG(LOG_ERR, "out of memory");
+		return false;
+	}
+
+	*line_offset += value_length;
+	return true;
 }
 
 bool config_parse_file(
