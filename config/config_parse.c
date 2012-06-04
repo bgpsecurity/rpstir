@@ -56,13 +56,13 @@ static bool get_option(
 
 	if (option_length == 0)
 	{
-		config_message(context, LOG_ERROR, "line must start with an option");
+		config_message(context, LOG_ERR, "line must start with an option");
 		return false;
 	}
 
 	if (strspn(line + *line_offset, CHARS_OPTION) != option_length)
 	{
-		config_message(context, LOG_ERROR, "option name contains an invalid character");
+		config_message(context, LOG_ERR, "option name contains an invalid character");
 		return false;
 	}
 
@@ -86,7 +86,7 @@ static bool get_option(
 
 	if (ERROR_ON_UNKNOWN_OPTION)
 	{
-		config_message(context, LOG_ERROR, "unknown option");
+		config_message(context, LOG_ERR, "unknown option");
 		return false;
 	}
 	else
@@ -128,7 +128,7 @@ bool config_parse_file(
 	line = malloc(MAX_LINE_LENGTH);
 	if (line == NULL)
 	{
-		LOG(LOG_ERROR, "out of memory");
+		LOG(LOG_ERR, "out of memory");
 		ret = false;
 		goto done;
 	}
@@ -136,7 +136,7 @@ bool config_parse_file(
 	file = fopen(tail->file, "r");
 	if (file == NULL)
 	{
-		config_message(head, LOG_ERROR, "cannot open config file %s: %s",
+		config_message(head, LOG_ERR, "cannot open config file %s: %s",
 			tail->file, strerror(errno));
 		ret = false;
 		goto done;
@@ -145,7 +145,7 @@ bool config_parse_file(
 	values = malloc(sizeof(char *) * MAX_ARRAY_LENGTH);
 	if (values == NULL)
 	{
-		LOG(LOG_ERROR, "out of memory");
+		LOG(LOG_ERR, "out of memory");
 		ret = false;
 		goto done;
 	}
@@ -158,7 +158,7 @@ bool config_parse_file(
 
 		if (strlen(line) == MAX_LINE_LENGTH - 1 && line[MAX_LINE_LENGTH - 1] != '\n')
 		{
-			config_message(head, LOG_ERROR, "line too long");
+			config_message(head, LOG_ERR, "line too long");
 			ret = false;
 			goto done;
 		}
@@ -194,7 +194,7 @@ bool config_parse_file(
 	if (errno != 0)
 	{
 		tail->line = 0;
-		config_message(head, LOG_ERROR, "error reading config file %s: %s",
+		config_message(head, LOG_ERR, "error reading config file %s: %s",
 			tail->file, strerror(errno));
 	}
 
@@ -214,7 +214,7 @@ done:
 	{
 		if (fclose(file) != 0)
 		{
-			config_message(head, LOG_ERROR, "cannot close config file %s: %s",
+			config_message(head, LOG_ERR, "cannot close config file %s: %s",
 				tail->file, strerror(errno));
 		}
 		file = NULL;
