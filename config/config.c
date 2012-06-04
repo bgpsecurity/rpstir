@@ -63,13 +63,20 @@ void config_mesage(const config_context_t context_voidp, int priority, const cha
 		context != NULL;
 		context = context->includes)
 	{
-		if (context->includes != NULL)
+		if (context->includes != NULL && context->includes->line != 0)
 		{
-			LOG(priority, "In config file included from %s:%zu:", context->file, context->line);
+			LOG(priority, "In config file included from %s:%zu:",
+				context->file, context->line);
+		}
+		else if (context->line != 0)
+		{
+			LOG(priority, "%s:%zu: %s", context->file, context->line, message);
+			break;
 		}
 		else
 		{
-			LOG(priority, "%s:%zu: %s", context->file, context->line, message);
+			LOG(priority, "%s", message);
+			break;
 		}
 	}
 }
@@ -94,6 +101,7 @@ bool config_load(const char * filename)
 
 	struct config_context context;
 	context.filename = filename;
+	context.line = 0;
 	context.includes = NULL;
 
 	return config_parse_file(config_options, config_values, &context, &context);
