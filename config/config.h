@@ -30,6 +30,9 @@ void const * const * config_get_array(size_t key);
 /**
 	Load configuration data from a config file.
 
+	@note This MUST be called before any threads that could possibly
+		use configuration data are started.
+
 	@param filename	The file to load data from. If this is NULL, the
 			default configuration file is used.
 */
@@ -39,6 +42,9 @@ bool config_load(const char * filename);
 	Call this after configuration data is no longer needed to free resources.
 
 	This is usually only called before a program exits.
+
+	@note This MUST NOT be called when any threads could possibly use
+		configuration data.
 */
 void config_unload();
 
