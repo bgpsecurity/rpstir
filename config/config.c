@@ -100,7 +100,7 @@ bool config_load(const char * filename)
 	}
 
 	struct config_context context;
-	context.filename = filename;
+	context.file = filename;
 	context.line = 0;
 	context.includes = NULL;
 
