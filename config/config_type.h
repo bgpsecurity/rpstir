@@ -22,7 +22,7 @@ typedef void * config_context_t;
 	@param context	Opaque data. Might include things like line number in the config file.
 	@param priority	See syslog(3).
 */
-void config_mesage(const config_context_t context, int priority, const char * format, ...);
+void config_message(const config_context_t context, int priority, const char * format, ...);
 
 
 /**

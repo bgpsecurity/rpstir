@@ -48,7 +48,7 @@ void const * const * config_get_array(size_t key)
 }
 
 
-void config_mesage(const config_context_t context_voidp, int priority, const char * format, ...)
+void config_message(const config_context_t context_voidp, int priority, const char * format, ...)
 {
 	struct config_context * context;
 	va_list ap;
