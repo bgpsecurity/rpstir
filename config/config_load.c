@@ -206,6 +206,89 @@ static bool get_all_values(
 
 }
 
+/**
+	Convert and validate values from strings to their native types.
+
+	@note config_option and config_value are pointers to individual
+		structures, not arrays.
+*/
+static bool convert_values(
+	const struct config_context * context,
+	const struct config_option * config_option,
+	struct config_value * config_value,
+	char const * const * values,
+	size_t num_values)
+{
+	config_value->filled = true;
+
+	if (config_option->is_array)
+	{
+		for (;
+			config_value->array_value.num_items != 0;
+			--config_value->array_value.num_items)
+		{
+			config_option->value_free(
+				config_value->array_value.data[
+					config_value->array_value.num_items - 1]);
+		}
+		free(config_value->array_value.data);
+
+		config_value->array_value.data = malloc(sizeof(void *) * num_values);
+		if (config_value->array_value.data == NULL)
+		{
+			LOG(LOG_ERR, "out of memory");
+			return false;
+		}
+
+		for (config_value->array_value.num_items = 0;
+			config_value->array_value.num_items < num_values;
+			++config_value->array_value.num_items)
+		{
+			if (!config_option->value_convert(
+				context,
+				config_option->value_convert_usr_arg,
+				values[config_value->array_value.num_items],
+				&config_value->array_value.data[
+					config_value->array_value.num_items]))
+			{
+				return false;
+			}
+		}
+
+		if (!config_option->array_validate(
+			context,
+			config_option->array_validate_usr_arg,
+			(void const * const *)config_value->array_value.data,
+			config_value->array_value.num_items))
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (num_values != 1)
+		{
+			config_message(context, LOG_ERR,
+				"non-array option must have exactly one value");
+			return false;
+		}
+
+		config_option->value_free(config_value->single_value.data);
+		config_value->single_value.data = NULL;
+
+		if (!config_option->value_convert(
+			context,
+			config_option->value_convert_usr_arg,
+			values[0],
+			&config_value->single_value.data))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool config_parse_file(
 	const struct config_option * config_options,
 	struct config_value * config_values,
@@ -226,6 +309,9 @@ bool config_parse_file(
 
 	// line number where currently active option started
 	size_t option_line;
+
+	// backup line number
+	size_t line_backup;
 
 	// input values for the currently active option
 	char ** values;
@@ -371,76 +457,18 @@ bool config_parse_file(
 		{
 			// nothing to do here
 		}
-		else if (is_array)
-		{
-			config_values[option].filled = true;
-
-			for (;
-				config_values[option].array_value.num_items != 0;
-				--config_values[option].array_value.num_items)
-			{
-				config_options[option].value_free(
-					config_values[option].array_value.data[
-						config_values[option].array_value.num_items - 1]);
-			}
-			free(config_values[option].array_value.data);
-
-			config_values[option].array_value.data = malloc(sizeof(void *) * num_values);
-			if (config_values[option].array_value.data == NULL)
-			{
-				LOG(LOG_ERR, "out of memory");
-				ret = false;
-				goto done;
-			}
-
-			for (config_values[option].array_value.num_items = 0;
-				config_values[option].array_value.num_items < num_values;
-				++config_values[option].array_value.num_items)
-			{
-				if (!config_options[option].value_convert(
-					head,
-					config_options[option].value_convert_usr_arg,
-					values[config_values[option].array_value.num_items],
-					&config_values[option].array_value.data[
-						config_values[option].array_value.num_items]))
-				{
-					ret = false;
-					goto done;
-				}
-			}
-
-			if (!config_options[option].array_validate(
-				head,
-				config_options[option].array_validate_usr_arg,
-				(void const * const *)config_values[option].array_value.data,
-				config_values[option].array_value.num_items))
-			{
-				ret = false;
-				goto done;
-			}
-		}
 		else
 		{
-			if (num_values != 1)
+			line_backup = tail->line;
+			tail->line = option_line;
+			ret = convert_values(head,
+				&config_options[option],
+				&config_values[option],
+				values,
+				num_values);
+			tail->line = line_backup;
+			if (!ret)
 			{
-				tail->line = option_line;
-				config_message(head, LOG_ERR, "non-array option must have exactly one value");
-				ret = false;
-				goto done;
-			}
-
-			config_values[option].filled = true;
-
-			config_options[option].value_free(config_values[option].single_value.data);
-			config_values[option].single_value.data = NULL;
-
-			if (!config_options[option].value_convert(
-				head,
-				config_options[option].value_convert_usr_arg,
-				values[0],
-				&config_values[option].single_value.data))
-			{
-				ret = false;
 				goto done;
 			}
 		}
