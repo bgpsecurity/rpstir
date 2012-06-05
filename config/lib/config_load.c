@@ -492,11 +492,14 @@ bool config_parse_file(
 			tail->includes->line = 0;
 			tail->includes->includes = NULL;
 
+			line_backup = tail->line;
+			tail->line = option_line;
 			ret = config_parse_file(num_options,
 				config_options,
 				config_values,
 				head,
 				tail->includes);
+			tail->line = line_backup;
 
 			free(tail->includes);
 			tail->includes = NULL;
