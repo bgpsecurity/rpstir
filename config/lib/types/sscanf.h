@@ -11,6 +11,7 @@ struct config_type_sscanf_usr_arg {
 	const char * description; // e.g. "an integer between 0 and 255 inclusive"
 };
 
+const struct config_type_sscanf_usr_arg config_type_sscanf_arg_int;
 const struct config_type_sscanf_usr_arg config_type_sscanf_arg_uint16_t;
 const struct config_type_sscanf_usr_arg config_type_sscanf_arg_size_t;
 
