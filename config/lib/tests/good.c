@@ -153,6 +153,39 @@ static bool test_config(const char * conf_file)
 	ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file);
 	TEST_BOOL(ret, true);
 
+	TEST(int, "%d", *(const int *)config_get(CONFIG_SOME_INT), ==, -5);
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_EMPTY_ARRAY), ==, 0);
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY), ==, 3);
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[0], ==, "foo");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[1], ==, "bar");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[2], ==, "quux");
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_INT_ARRAY), ==, 4);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_INT_ARRAY))[0], ==, 8);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_INT_ARRAY))[1], ==, -3);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_INT_ARRAY))[2], ==, 40);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_INT_ARRAY))[3], ==, 0xff);
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_LONG_ARRAY), ==, 5);
+	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[0], ==, "foo");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[1], ==, "bar");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[2], ==, "quux");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[3], ==, "baz");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[4], ==, "something");
+
+	TEST(int, "%d", *(const int *)config_get(CONFIG_INCLUDED_INT), ==, 42);
+
+	TEST_STR((const char *)config_get(CONFIG_DEFAULT_STRING), ==, "this-is-the-default");
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_INT_ARRAY), ==, 3);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[0], ==, -1);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[1], ==, 0);
+	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[2], ==, 1);
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_EMPTY_ARRAY), ==, 0);
+
 	config_unload();
 
 	return true;
