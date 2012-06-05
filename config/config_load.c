@@ -319,9 +319,6 @@ bool config_parse_file(
 	// amount of values array that's currently filled in
 	size_t num_values;
 
-	// whether or not an array is expected
-	bool is_array;
-
 	// return value of this function
 	bool ret = true;
 
@@ -394,19 +391,6 @@ bool config_parse_file(
 			{
 				free(values[num_values - 1]);
 			}
-
-			if (option == CONFIG_OPTION_INCLUDE)
-			{
-				is_array = false;
-			}
-			else if (option == CONFIG_OPTION_UNKNOWN)
-			{
-				is_array = true;
-			}
-			else
-			{
-				is_array = config_options[option].is_array;
-			}
 		}
 
 		if (!get_all_values(head, tail, option_line, line, &line_offset, values, &num_values))
@@ -464,7 +448,7 @@ bool config_parse_file(
 			ret = convert_values(head,
 				&config_options[option],
 				&config_values[option],
-				values,
+				(char const * const *)values,
 				num_values);
 			tail->line = line_backup;
 			if (!ret)
