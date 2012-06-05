@@ -1,5 +1,5 @@
-#ifndef _CONFIG_LOAD_H
-#define _CONFIG_LOAD_H
+#ifndef _LIB_CONFIG_LOAD_H
+#define _LIB_CONFIG_LOAD_H
 
 
 /**
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "config_type.h"
+#include "configlib.h"
 
 
 #define MAX_LINE_LENGTH 1024
@@ -24,25 +24,6 @@
 #define COMMENT_START_STR "#"
 
 #define ERROR_ON_UNKNOWN_OPTION false
-
-
-/** Structure to describe an available config option. */
-struct config_option {
-	// configuration key, e.g. "SomeOption"
-	char * name;
-
-	// type information
-	bool is_array;
-	config_value_converter value_convert;
-	void * value_convert_usr_arg;
-	config_value_free value_free;
-	config_array_validator array_validate;
-	void * array_validate_usr_arg;
-
-	// Default value, as if it came from the config file.
-	// NULL indicates that the option is mandatory.
-	char * default_value;
-};
 
 
 /**
@@ -89,6 +70,7 @@ struct config_context {
 			i.e. the one currently being parsed.
 */
 bool config_parse_file(
+	size_t num_options,
 	const struct config_option * config_options,
 	struct config_value * config_values,
 	struct config_context * head,
@@ -98,6 +80,7 @@ bool config_parse_file(
 	Loads defaults and initializes config_values.
 */
 bool config_load_defaults(
+	size_t num_options,
 	const struct config_option * config_options,
 	struct config_value * config_values,
 	struct config_context * context);

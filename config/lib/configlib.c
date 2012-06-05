@@ -4,32 +4,16 @@
 
 #include "logging.h"
 
-#include "config.h"
-#include "config_type.h"
+#include "configlib.h"
 #include "config_load.h"
-
-#include "types/string.h"
 
 
 #define CONFIG_ENV_VAR PACKAGE_NAME_UC "_CONFIG"
 
 
-/** All available config options */
-static const struct config_option config_options[] = {
-	// CONFIG_ROOT
-	{
-		"Root",
-		false,
-		config_type_string_converter, NULL,
-		free,
-		NULL, NULL,
-		"\"" ABS_TOP_SRCDIR "\""
-	},
-};
-
-
-/** Stores all config data. */
-static struct config_value config_values[CONFIG_NUM_ITEMS];
+static size_t config_num_options = 0;
+static const struct config_option * config_options = NULL;
+static struct config_value * config_values = NULL;
 
 
 const void * config_get(size_t key)
@@ -78,9 +62,24 @@ void config_message(const struct config_context * context, int priority, const c
 	}
 }
 
-bool config_load(const char * filename)
+bool config_load(
+	size_t num_options,
+	const struct config_option * options,
+	const char * filename)
 {
 	size_t i;
+
+	config_num_options = num_options;
+	config_options = options;
+
+	config_values = malloc(sizeof(struct config_value) * config_num_options);
+	if (config_values == NULL)
+	{
+		LOG(LOG_ERR, "out of memory");
+		config_num_options = 0;
+		config_options = NULL;
+		return false;
+	}
 
 	if (filename == NULL)
 	{
@@ -103,20 +102,20 @@ bool config_load(const char * filename)
 	context.line = 0;
 	context.includes = NULL;
 
-	if (!config_load_defaults(config_options, config_values, &context))
+	if (!config_load_defaults(config_num_options, config_options, config_values, &context))
 	{
 		LOG(LOG_ERR, "couldn't load configuration defaults");
 		config_unload();
 		return false;
 	}
 
-	if (!config_parse_file(config_options, config_values, &context, &context))
+	if (!config_parse_file(config_num_options, config_options, config_values, &context, &context))
 	{
 		config_unload();
 		return false;
 	}
 
-	for (i = 0; i < CONFIG_NUM_ITEMS; ++i)
+	for (i = 0; i < config_num_options; ++i)
 	{
 		if (!config_values[i].filled)
 		{
@@ -133,9 +132,8 @@ void config_unload()
 {
 	size_t i, j;
 
-	for (i = 0; i < CONFIG_NUM_ITEMS; ++i)
+	for (i = 0; i < config_num_options; ++i)
 	{
-		config_values[i].filled = false;
 		if (config_options[i].is_array)
 		{
 			for (j = 0; j < config_values[i].array_value.num_items; ++j)
@@ -143,12 +141,17 @@ void config_unload()
 				config_options[i].value_free(config_values[i].array_value.data[j]);
 			}
 			free(config_values[i].array_value.data);
-			config_values[i].array_value.data = NULL;
 		}
 		else
 		{
 			config_options[i].value_free(config_values[i].single_value.data);
-			config_values[i].single_value.data = NULL;
 		}
 	}
+
+	free(config_values);
+	config_values = NULL;
+
+	config_options = NULL;
+
+	config_num_options = 0;
 }

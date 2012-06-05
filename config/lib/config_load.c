@@ -4,14 +4,14 @@
 
 #include "logging.h"
 
-#include "config.h"
+#include "configlib.h"
 #include "config_load.h"
 
 
-// special values of enum config_key
-#define CONFIG_OPTION_NONE (CONFIG_NUM_ITEMS + 1)
-#define CONFIG_OPTION_INCLUDE (CONFIG_NUM_ITEMS + 2)
-#define CONFIG_OPTION_UNKNOWN (CONFIG_NUM_ITEMS + 3)
+// special values of options
+#define CONFIG_OPTION_NONE -1
+#define CONFIG_OPTION_INCLUDE -2
+#define CONFIG_OPTION_UNKNOWN -3
 
 
 /** Increment the line_offset past all whitespace. */
@@ -46,11 +46,12 @@ static void skip_comment(const char * line, size_t * line_offset)
 	@return	True on success, false on error.
 */
 static bool get_option(
+	size_t num_options,
 	const struct config_option * config_options,
 	const struct config_context * context,
 	const char * line,
 	size_t * line_offset,
-	size_t * option)
+	ssize_t * option)
 {
 	size_t option_length = strcspn(line + *line_offset, CHARS_ALL_WHITESPACE);
 
@@ -74,7 +75,7 @@ static bool get_option(
 		return true;
 	}
 
-	for (*option = 0; *option < CONFIG_NUM_ITEMS; ++*option)
+	for (*option = 0; (size_t)*option < num_options; ++*option)
 	{
 		if (strncmp(line + *line_offset, config_options[*option].name, option_length) == 0 &&
 			strlen(config_options[*option].name) == option_length)
@@ -290,6 +291,7 @@ static bool convert_values(
 }
 
 bool config_parse_file(
+	size_t num_options,
 	const struct config_option * config_options,
 	struct config_value * config_values,
 	struct config_context * head,
@@ -305,7 +307,7 @@ bool config_parse_file(
 	FILE * file = NULL;
 
 	// currently "active" option
-	size_t option = CONFIG_OPTION_NONE;
+	ssize_t option = CONFIG_OPTION_NONE;
 
 	// line number where currently active option started
 	size_t option_line;
@@ -377,7 +379,12 @@ bool config_parse_file(
 				goto done;
 			}
 
-			if (!get_option(config_options, head, line, &line_offset, &option))
+			if (!get_option(num_options,
+				config_options,
+				head,
+				line,
+				&line_offset,
+				&option))
 			{
 				ret = false;
 				goto done;
@@ -427,7 +434,11 @@ bool config_parse_file(
 			tail->includes->line = 0;
 			tail->includes->includes = NULL;
 
-			ret = config_parse_file(config_options, config_values, head, tail->includes);
+			ret = config_parse_file(num_options,
+				config_options,
+				config_values,
+				head,
+				tail->includes);
 
 			free(tail->includes);
 			tail->includes = NULL;
@@ -505,6 +516,7 @@ done:
 
 
 bool config_load_defaults(
+	size_t num_options,
 	const struct config_option * config_options,
 	struct config_value * config_values,
 	struct config_context * context)
@@ -516,7 +528,7 @@ bool config_load_defaults(
 	size_t num_values = 0;
 
 	// initialize config_values
-	for (option = 0; option < CONFIG_NUM_ITEMS; ++option)
+	for (option = 0; option < num_options; ++option)
 	{
 		config_values[option].filled = false;
 		if (config_options[option].is_array)
@@ -531,7 +543,7 @@ bool config_load_defaults(
 	}
 
 	// parse defaults
-	for (option = 0; option < CONFIG_NUM_ITEMS; ++option)
+	for (option = 0; option < num_options; ++option)
 	{
 		line_offset = 0;
 
