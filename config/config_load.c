@@ -453,10 +453,10 @@ bool config_load_defaults(
 	for (option = 0; option < CONFIG_NUM_ITEMS; ++option)
 	{
 		config_values[option].filled = false;
-		if (config_options[options].is_array)
+		if (config_options[option].is_array)
 		{
 			config_values[option].array_value.data = NULL;
-			config_values[option].array_value.num_items = NULL;
+			config_values[option].array_value.num_items = 0;
 		}
 		else
 		{
