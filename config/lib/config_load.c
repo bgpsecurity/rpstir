@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
+#include <libgen.h>
 
 #include "logging.h"
 
@@ -321,6 +323,11 @@ bool config_parse_file(
 	// amount of values array that's currently filled in
 	size_t num_values;
 
+	// for changing directories and going back
+	char * oldpwd = NULL;
+	char * filename_dirname = NULL; // copy of file name for dirname(3)
+	char * newpwd;
+
 	// return value of this function
 	bool ret = true;
 
@@ -337,6 +344,38 @@ bool config_parse_file(
 	{
 		config_message(head, LOG_ERR, "cannot open config file %s: %s",
 			tail->file, strerror(errno));
+		ret = false;
+		goto done;
+	}
+
+	oldpwd = malloc(PATH_MAX);
+	if (oldpwd == NULL)
+	{
+		LOG(LOG_ERR, "out of memory");
+		ret = false;
+		goto done;
+	}
+	if (getcwd(oldpwd, PATH_MAX) == NULL)
+	{
+		LOG(LOG_ERR, "getcwd(): %s", strerror(errno));
+		free(oldpwd);
+		oldpwd = NULL;
+		ret = false;
+		goto done;
+	}
+
+	filename_dirname = strdup(tail->file);
+	if (filename_dirname = NULL)
+	{
+		LOG(LOG_ERR, "out of memory");
+		ret = false;
+		goto done;
+	}
+	newpwd = dirname(filename_dirname);
+
+	if (chdir(newpwd) != 0)
+	{
+		LOG(LOG_ERR, "chdir(%s): %s", newpwd, strerror(errno));
 		ret = false;
 		goto done;
 	}
@@ -493,6 +532,22 @@ done:
 		}
 		free(values);
 		values = NULL;
+	}
+
+	newpwd = NULL;
+	free(filename_dirname);
+	filename_dirname = NULL;
+
+	if (oldpwd != NULL)
+	{
+		if (chdir(oldpwd) != 0)
+		{
+			LOG(LOG_ERR, "chdir(%s): %s", oldpwd, strerror(errno));
+			ret = false;
+		}
+
+		free(oldpwd);
+		oldpwd = NULL;
 	}
 
 	if (file != NULL)
