@@ -511,6 +511,8 @@ bool config_parse_file(
 			}
 		}
 
+		option = CONFIG_OPTION_NONE;
+
 		if (line[line_offset] == '\0')
 		{
 			// end of file
