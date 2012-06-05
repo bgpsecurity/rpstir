@@ -128,6 +128,84 @@ static bool get_value(
 	return true;
 }
 
+/**
+	Get all the values on a line.
+
+	@param head		Context of the line.
+	@param tail		Innermost file of the line's context.
+	@param option_line	Line where the the option started.
+	@param line_offset	Input param for offset within the line before
+				the first value to parse. Output param for the
+				offset after the inter-word whitespace and
+				optional comment after the last value on the
+				line. On output, line[*line_offset] should be
+				one of: '\n', '\\', or '\0'.
+	@param values		Input array of size *num_values (on input),
+				allocated to MAX_ARRAY_LENGTH. Output array of
+				size *num_values (on output).
+	@param num_values	See param values above.
+	@return			True on success, false on error.
+*/
+static bool get_all_values(
+	const struct config_context * head,
+	struct config_context * tail,
+	size_t option_line,
+	const char * line,
+	size_t * line_offset,
+	char ** values,
+	size_t * num_values)
+{
+	size_t line_backup;
+
+	while (true)
+	{
+		if (strcmp(line + *line_offset, "\\\n") == 0)
+		{
+			// line continuation
+			return true;
+		}
+		else if (strcmp(line + *line_offset, "\\") == 0)
+		{
+			config_message(head, LOG_ERR, "line continuation at end of file");
+			return false;
+		}
+
+		skip_comment(line, line_offset);
+
+		if (line[*line_offset] == '\n')
+		{
+			// end of line
+			return true;
+		}
+		else if (line[*line_offset] == '\0')
+		{
+			// end of file
+			return true;
+		}
+
+		if (*num_values >= MAX_ARRAY_LENGTH)
+		{
+			line_backup = tail->line;
+			tail->line = option_line;
+			config_message(head, LOG_ERR, "too many items in an array of values, limit is %d", MAX_ARRAY_LENGTH);
+			tail->line = line_backup;
+			return false;
+		}
+
+		if (get_value(head, line, line_offset, &values[*num_values]))
+		{
+			++*num_values;
+		}
+		else
+		{
+			return false;
+		}
+
+		skip_whitespace(line, &line_offset);
+	}
+
+}
+
 bool config_parse_file(
 	const struct config_option * config_options,
 	struct config_value * config_values,
@@ -245,48 +323,10 @@ bool config_parse_file(
 			}
 		}
 
-		while (true)
+		if (!get_all_values(head, tail, option_line, line, &line_offset, values, &num_values))
 		{
-			if (strcmp(line + line_offset, "\\\n") == 0)
-			{
-				// line continuation
-				break;
-			}
-			else if (strcmp(line + line_offset, "\\") == 0)
-			{
-				config_message(head, LOG_ERR, "line continuation at end of file");
-				ret = false;
-				goto done;
-			}
-
-			skip_comment(line, &line_offset);
-
-			if (line[line_offset] == '\n')
-			{
-				// end of line
-				break;
-			}
-			else if (line[line_offset] == '\0')
-			{
-				// end of file
-				break;
-			}
-
-			if (num_values >= MAX_ARRAY_LENGTH)
-			{
-				tail->line = option_line;
-				config_message(head, LOG_ERR, "too many items in an array of values, limit is %d", MAX_ARRAY_LENGTH);
-				ret = false;
-				goto done;
-			}
-
-			if (!get_value(head, line, &line_offset, &values[num_values++]))
-			{
-				ret = false;
-				goto done;
-			}
-
-			skip_whitespace(line, &line_offset);
+			ret = false;
+			goto done;
 		}
 
 		if (strcmp(line + line_offset, "\\\n") == 0)
