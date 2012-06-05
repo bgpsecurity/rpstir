@@ -134,7 +134,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		"-1 0 1"
 	},
 
-	// CONFIG_DEFAULT_EMPTY_ARRAY,
+	// CONFIG_DEFAULT_EMPTY_ARRAY
 	{
 		"DefaultEmptyArray",
 		true,
