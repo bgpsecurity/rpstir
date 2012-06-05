@@ -106,6 +106,7 @@ bool config_load(const char * filename)
 	if (!config_load_defaults(config_options, config_values, &context))
 	{
 		LOG(LOG_ERR, "couldn't load configuration defaults");
+		config_unload();
 		return false;
 	}
 
