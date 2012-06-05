@@ -335,16 +335,16 @@ bool config_parse_file(
 			continue;
 		}
 
-		if (!is_array && num_values != 1)
-		{
-			tail->line = option_line;
-			config_message(head, LOG_ERR, "non-array option must have exactly one value");
-			ret = false;
-			goto done;
-		}
-
 		if (option == CONFIG_OPTION_INCLUDE)
 		{
+			if (num_values != 1)
+			{
+				tail->line = option_line;
+				config_message(head, LOG_ERR, "include should take exactly one file");
+				ret = false;
+				goto done;
+			}
+
 			tail->includes = malloc(sizeof(struct config_context));
 			if (tail->includes == NULL)
 			{
@@ -421,6 +421,14 @@ bool config_parse_file(
 		}
 		else
 		{
+			if (num_values != 1)
+			{
+				tail->line = option_line;
+				config_message(head, LOG_ERR, "non-array option must have exactly one value");
+				ret = false;
+				goto done;
+			}
+
 			config_values[option].filled = true;
 
 			config_options[option].value_free(config_values[option].single_value.data);
