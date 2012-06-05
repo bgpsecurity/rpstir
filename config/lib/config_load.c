@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <limits.h>
 
 #include "logging.h"
 
@@ -365,7 +366,7 @@ bool config_parse_file(
 	}
 
 	filename_dirname = strdup(tail->file);
-	if (filename_dirname = NULL)
+	if (filename_dirname == NULL)
 	{
 		LOG(LOG_ERR, "out of memory");
 		ret = false;
