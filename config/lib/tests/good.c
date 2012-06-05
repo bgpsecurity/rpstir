@@ -1,4 +1,5 @@
 #include "unittest.h"
+#include "logging.h"
 
 #include "lib/configlib.h"
 
@@ -164,6 +165,8 @@ int main(int argc, char **argv)
 
 	(void)argc;
 
+	OPEN_LOG("config-test-good", LOG_USER);
+
 	char * conf_file = malloc(strlen(argv[0]) + strlen(".conf") + 1);
 	if (conf_file == NULL)
 	{
@@ -182,6 +185,8 @@ int main(int argc, char **argv)
 	}
 
 	free(conf_file);
+
+	CLOSE_LOG();
 
 	return retval;
 }
