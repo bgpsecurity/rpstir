@@ -16,6 +16,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	autogen.sh \
+	ChangeLog \
 	envir.setup \
 	INSTRUCTIONS \
 	LICENSE \
