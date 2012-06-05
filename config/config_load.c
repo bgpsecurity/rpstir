@@ -540,7 +540,7 @@ bool config_load_defaults(
 			free(values[num_values - 1]);
 		}
 
-		if (!get_all_values(context
+		if (!get_all_values(context,
 			context,
 			0,
 			config_options[option].default_value,
