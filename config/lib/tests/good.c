@@ -3,6 +3,7 @@
 
 #include "lib/configlib.h"
 
+#include "lib/types/bool.h"
 #include "lib/types/sscanf.h"
 #include "lib/types/string.h"
 
@@ -16,6 +17,8 @@ enum config_key {
 	CONFIG_DEFAULT_STRING,
 	CONFIG_DEFAULT_INT_ARRAY,
 	CONFIG_DEFAULT_EMPTY_ARRAY,
+	CONFIG_SOME_BOOL_TRUE,
+	CONFIG_SOME_BOOL_FALSE,
 
 	CONFIG_NUM_OPTIONS
 };
@@ -143,6 +146,26 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		NULL, NULL,
 		""
 	},
+
+	// CONFIG_SOME_BOOL_TRUE
+	{
+		"SomeBoolTrue",
+		false,
+		config_type_bool_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_SOME_BOOL_FALSE
+	{
+		"SomeBoolFalse",
+		false,
+		config_type_bool_converter, NULL,
+		free,
+		NULL, NULL,
+		"True"
+	},
 };
 
 
@@ -185,6 +208,10 @@ static bool test_config(const char * conf_file)
 	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[2], ==, 1);
 
 	TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_EMPTY_ARRAY), ==, 0);
+
+	TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_TRUE), true);
+
+	TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_FALSE), false);
 
 	config_unload();
 

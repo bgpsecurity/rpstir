@@ -11,6 +11,7 @@ noinst_LIBRARIES = \
 lib_libconfig_a_SOURCES = \
 	lib/configlib.c lib/configlib.h \
 	lib/config_load.c lib/config_load.h \
+	lib/types/bool.c lib/types/bool.h \
 	lib/types/sscanf.c lib/types/sscanf.h \
 	lib/types/string.c lib/types/string.h
 
