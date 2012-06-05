@@ -201,7 +201,7 @@ static bool get_all_values(
 			return false;
 		}
 
-		skip_whitespace(line, &line_offset);
+		skip_whitespace(line, line_offset);
 	}
 
 }
