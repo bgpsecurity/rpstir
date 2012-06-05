@@ -601,6 +601,11 @@ bool config_load_defaults(
 	// parse defaults
 	for (option = 0; option < num_options; ++option)
 	{
+		if (config_options[option].default_value == NULL)
+		{
+			continue;
+		}
+
 		line_offset = 0;
 
 		for (; num_values != 0; --num_values)
