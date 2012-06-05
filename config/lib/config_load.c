@@ -259,13 +259,16 @@ static bool convert_values(
 			}
 		}
 
-		if (!config_option->array_validate(
-			context,
-			config_option->array_validate_usr_arg,
-			(void const * const *)config_value->array_value.data,
-			config_value->array_value.num_items))
+		if (config_option->array_validate != NULL)
 		{
-			return false;
+			if (!config_option->array_validate(
+				context,
+				config_option->array_validate_usr_arg,
+				(void const * const *)config_value->array_value.data,
+				config_value->array_value.num_items))
+			{
+				return false;
+			}
 		}
 	}
 	else
