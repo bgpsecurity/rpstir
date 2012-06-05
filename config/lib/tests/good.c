@@ -57,7 +57,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
 	{
 		"SomeInt",
 		false,
-		config_type_sscanf_converter, config_type_sscanf_arg_int,
+		config_type_sscanf_converter, &config_type_sscanf_arg_int,
 		free,
 		NULL, NULL,
 		NULL
@@ -87,8 +87,8 @@ static const struct config_option CONFIG_OPTIONS[] = {
 	{
 		"IntArray",
 		true,
-		config_type_sscanf_converter, config_type_sscanf_arg_int,
-		free
+		config_type_sscanf_converter, &config_type_sscanf_arg_int,
+		free,
 		NULL, NULL,
 		"1 2 3"
 	},
@@ -107,8 +107,8 @@ static const struct config_option CONFIG_OPTIONS[] = {
 	{
 		"IncludedInt",
 		false,
-		config_type_sscanf_converter, config_type_sscanf_arg_int,
-		free
+		config_type_sscanf_converter, &config_type_sscanf_arg_int,
+		free,
 		NULL, NULL,
 		"7"
 	},
@@ -127,7 +127,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
 	{
 		"DefaultIntArray",
 		true,
-		config_type_sscanf_converter, config_type_sscanf_arg_int,
+		config_type_sscanf_converter, &config_type_sscanf_arg_int,
 		free,
 		NULL, NULL,
 		"-1 0 1"
@@ -137,9 +137,51 @@ static const struct config_option CONFIG_OPTIONS[] = {
 	{
 		"DefaultEmptyArray",
 		true,
-		config_type_sscanf_converter, config_type_sscanf_arg_int,
+		config_type_sscanf_converter, &config_type_sscanf_arg_int,
 		free,
 		NULL, NULL,
 		""
 	},
 };
+
+
+static bool test_config(const char * conf_file)
+{
+	bool ret;
+
+	ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file);
+	TEST_BOOL(ret, true);
+
+	config_unload();
+
+	return true;
+}
+
+
+int main(int argc, char **argv)
+{
+	int retval = EXIT_SUCCESS;
+
+	(void)argc;
+
+	char * conf_file = malloc(strlen(argv[0]) + strlen(".conf") + 1);
+	if (conf_file == NULL)
+	{
+		fprintf(stderr, "out of memory\n");
+		return EXIT_FAILURE;
+	}
+
+	snprintf(conf_file,
+		strlen(argv[0]) + strlen(".conf") + 1,
+		"%s.conf",
+		argv[0]);
+
+	if (!test_config(conf_file))
+	{
+		retval = EXIT_FAILURE;
+	}
+
+	free(conf_file);
+
+	return retval;
+}

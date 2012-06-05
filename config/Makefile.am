@@ -21,5 +21,6 @@ lib@PACKAGE_NAME@conf_a_SOURCES = \
 check_PROGRAMS = lib/tests/good
 
 lib_tests_good_SOURCES = lib/tests/good.c
+lib_tests_good_LDADD = lib/libconfig.a
 
 TESTS = $(check_PROGRAMS)

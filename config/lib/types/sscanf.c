@@ -34,6 +34,6 @@ bool config_type_sscanf_converter(const struct config_context * context, void * 
 	return true;
 }
 
-const struct config_type_sscanf_usr_arg config_type_sscanf_arg_int = {"d", sizeof(int), "an integer"};
-const struct config_type_sscanf_usr_arg config_type_sscanf_arg_uint16_t = {SCNu16, sizeof(uint16_t), "an integer between 0 and 65535 inclusive"};
-const struct config_type_sscanf_usr_arg config_type_sscanf_arg_size_t = {"zu", sizeof(size_t), "a non-negative integer"};
+struct config_type_sscanf_usr_arg config_type_sscanf_arg_int = {"d", sizeof(int), "an integer"};
+struct config_type_sscanf_usr_arg config_type_sscanf_arg_uint16_t = {SCNu16, sizeof(uint16_t), "an integer between 0 and 65535 inclusive"};
+struct config_type_sscanf_usr_arg config_type_sscanf_arg_size_t = {"zu", sizeof(size_t), "a non-negative integer"};
