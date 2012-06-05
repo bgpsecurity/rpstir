@@ -70,7 +70,7 @@ static bool get_option(
 		return false;
 	}
 
-	if (strncmp(line + *line_offset, INCLUDE_STR, option_length) &&
+	if (strncmp(line + *line_offset, INCLUDE_STR, option_length) == 0 &&
 		strlen(INCLUDE_STR) == option_length)
 	{
 		*line_offset += option_length;
