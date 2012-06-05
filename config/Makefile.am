@@ -1,6 +1,9 @@
 AM_CFLAGS = -g -Wall -Wextra -Werror
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../utils
 
+EXTRA_DIST = \
+	lib/tests/*.conf
+
 noinst_LIBRARIES = \
 	lib/libconfig.a \
 	lib@PACKAGE_NAME@conf.a
@@ -14,3 +17,9 @@ lib_libconfig_a_SOURCES = \
 lib@PACKAGE_NAME@conf_a_SOURCES = \
 	$(lib_libconfig_a_SOURCES) \
 	config.c config.h
+
+check_PROGRAMS = lib/tests/good
+
+lib_tests_good_SOURCES = lib/tests/good.c
+
+TESTS = $(check_PROGRAMS)
