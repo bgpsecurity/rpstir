@@ -52,7 +52,7 @@ static bool get_option(
 	size_t * line_offset,
 	size_t * option)
 {
-	size_t option_length = strcspn(line + *line_offset, CHARS_WHITESPACE);
+	size_t option_length = strcspn(line + *line_offset, CHARS_ALL_WHITESPACE);
 
 	if (option_length == 0)
 	{
@@ -114,7 +114,7 @@ static bool get_value(
 {
 	// TODO: real implementation with quoting, escape sequences, and environment variables
 	(void)context;
-	size_t value_length = strcspn(line + *line_offset, CHARS_WHITESPACE);
+	size_t value_length = strcspn(line + *line_offset, CHARS_ALL_WHITESPACE);
 
 	*value = strndup(line + *line_offset, value_length);
 
@@ -285,6 +285,8 @@ bool config_parse_file(
 				ret = false;
 				goto done;
 			}
+
+			skip_whitespace(line, &line_offset);
 		}
 
 		if (strcmp(line + line_offset, "\\\n") == 0)
