@@ -102,7 +102,7 @@ static bool get_option(
 	Get the next value to an option.
 
 	@param line		The line itself.
-	@param line_offset	Input/output param for offset within line before/after the option name.
+	@param line_offset	Input/output param for offset within line before/after the option value.
 	@param[out] value	Return a malloc()-allocated buffer with the option value.
 	@return	True on success, false on error.
 */
