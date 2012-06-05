@@ -32,6 +32,7 @@
 */
 struct config_value {
 	bool filled;
+	bool filled_not_default; // filled by a config file (as opposed to a default in C)
 
 	union {
 		struct {

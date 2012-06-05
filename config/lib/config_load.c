@@ -215,15 +215,30 @@ static bool get_all_values(
 
 	@note config_option and config_value are pointers to individual
 		structures, not arrays.
+
+	@param is_default	True if this is being called on values from
+				the option's defaults, false if this is being
+				called on values from a config file.
 */
 static bool convert_values(
 	const struct config_context * context,
 	const struct config_option * config_option,
 	struct config_value * config_value,
 	char const * const * values,
-	size_t num_values)
+	size_t num_values,
+	bool is_default)
 {
 	config_value->filled = true;
+	if (!is_default)
+	{
+		if (config_value->filled_not_default)
+		{
+			config_message(context, LOG_NOTICE,
+				"duplicate option overwriting previous value");
+		}
+
+		config_value->filled_not_default = true;
+	}
 
 	if (config_option->is_array)
 	{
@@ -503,7 +518,8 @@ bool config_parse_file(
 				&config_options[option],
 				&config_values[option],
 				(char const * const *)values,
-				num_values);
+				num_values,
+				false);
 			tail->line = line_backup;
 			if (!ret)
 			{
@@ -592,6 +608,7 @@ bool config_load_defaults(
 	for (option = 0; option < num_options; ++option)
 	{
 		config_values[option].filled = false;
+		config_values[option].filled_not_default = false;
 		if (config_options[option].is_array)
 		{
 			config_values[option].array_value.data = NULL;
@@ -645,7 +662,8 @@ bool config_load_defaults(
 			&config_options[option],
 			&config_values[option],
 			(char const * const *)values,
-			num_values))
+			num_values,
+			true))
 		{
 			config_message(context, LOG_ERR, "error parsing %s's default value",
 				config_options[option].name);
