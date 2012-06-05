@@ -23,7 +23,7 @@ static const struct config_option config_options[] = {
 		config_type_string_converter, NULL,
 		free,
 		NULL, NULL,
-		ABS_TOP_SRCDIR
+		"\"" ABS_TOP_SRCDIR "\""
 	},
 };
 
