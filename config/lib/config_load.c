@@ -322,7 +322,7 @@ bool config_parse_file(
 	size_t line_backup;
 
 	// input values for the currently active option
-	char ** values;
+	char ** values = NULL;
 
 	// amount of values array that's currently filled in
 	size_t num_values;
