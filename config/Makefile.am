@@ -1,11 +1,11 @@
 AM_CFLAGS = -g -Wall -Wextra -Werror
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../utils
 
-noinst_LIBRARIES = libconfig.a
+noinst_LIBRARIES = lib/libconfig.a
 
-libconfig_a_SOURCES = \
-	config.c config.h \
-	config_load.c config_load.h \
-	config_type.h \
-	types/sscanf.c types/sscanf.h \
-	types/string.c types/string.h
+lib_libconfig_a_SOURCES = \
+	lib/config.c lib/config.h \
+	lib/config_load.c lib/config_load.h \
+	lib/config_type.h \
+	lib/types/sscanf.c lib/types/sscanf.h \
+	lib/types/string.c lib/types/string.h
