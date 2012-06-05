@@ -17,6 +17,7 @@ TAGS
 *.swp
 rpstir-*.tar.gz
 INSTRUCTIONS
+.dirstamp
 
 # directories generated during program execution
 rsync_cord.config
