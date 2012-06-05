@@ -525,7 +525,11 @@ bool config_load_defaults(
 	struct config_value * config_values,
 	struct config_context * context)
 {
+	bool ret = true;
 	size_t option;
+	size_t line_offset;
+	char * values[MAX_ARRAY_LENGTH];
+	size_t num_values = 0;
 
 	// initialize config_values
 	for (option = 0; option < CONFIG_NUM_ITEMS; ++option)
@@ -542,8 +546,58 @@ bool config_load_defaults(
 		}
 	}
 
-	// TODO: load from defaults
-	(void)context;
+	// parse defaults
+	for (option = 0; option < CONFIG_NUM_ITEMS; ++option)
+	{
+		line_offset = 0;
 
-	return true;
+		for (; num_values != 0; --num_values)
+		{
+			free(values[num_values - 1]);
+		}
+
+		if (!get_all_values(context
+			context,
+			0,
+			config_options[option].default_value,
+			&line_offset,
+			values,
+			&num_values))
+		{
+			config_message(context, LOG_ERR, "%s has invalid default value",
+				config_options[option].name);
+			ret = false;
+			goto done;
+		}
+
+		if (config_options[option].default_value[line_offset] != '\0')
+		{
+			config_message(context, LOG_ERR,
+				"%s's default values should only use one line",
+				config_options[option].name);
+			ret = false;
+			goto done;
+		}
+
+		if (!convert_values(context,
+			&config_options[option],
+			&config_values[option],
+			(char const * const *)values,
+			num_values))
+		{
+			config_message(context, LOG_ERR, "error parsing %s's default value",
+				config_options[option].name);
+			ret = false;
+			goto done;
+		}
+	}
+
+done:
+
+	for (; num_values != 0; --num_values)
+	{
+		free(values[num_values - 1]);
+	}
+
+	return ret;
 }
