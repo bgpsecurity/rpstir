@@ -19,6 +19,7 @@
 #define CHARS_WHITESPACE " \t" // must not include newline
 #define CHARS_ALL_WHITESPACE CHARS_WHITESPACE "\n"
 #define CHARS_OPTION "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+#define CHARS_SPECIAL "\"$\\"
 
 #define INCLUDE_STR "Include"
 #define COMMENT_START_STR "#"

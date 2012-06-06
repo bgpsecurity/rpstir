@@ -134,15 +134,32 @@ static bool get_value(
 
 	bool ret = true;
 
-	size_t value_index = 0;
+	size_t value_size = 0;
+	size_t value_allocated = DYNAMIC_START;
 
-	*value = malloc(DYNAMIC_START);
+	*value = malloc(value_allocated);
 	if (*value == NULL)
 	{
 		LOG(LOG_ERR, "out of memory");
 		ret = false;
 		goto done;
 	}
+
+	#define ADD_CHAR(c) \
+		do { \
+			if (value_size >= value_allocated) \
+			{ \
+				value_allocated *= DYNAMIC_GROW_BY; \
+				*value = realloc(*value, value_allocated); \
+				if (*value == NULL) \
+				{ \
+					LOG(LOG_ERR, "out of memory"); \
+					ret = false; \
+					goto done; \
+				} \
+			} \
+			*value[value_size++] = (c); \
+		} while (false)
 
 	if (quoted)
 	{
@@ -186,17 +203,57 @@ static bool get_value(
 		// NOTE: at this point, the current character is either invalid or a continuation
 		// of the value. It cannot end the value unless it's invalid.
 
-		// TODO: real implementation instead of the below
-		ret = false;
-		goto done;
+		if (quoted && !escaped && line[*line_offset] == '\\')
+		{
+			escaped = true;
+			continue;
+		}
+
+		if (quoted && escaped)
+		{
+			if (strchr(CHARS_SPECIAL, line[*line_offset]) == NULL)
+			{
+				config_message(context, LOG_ERR,
+					"unknown escape sequence \"\\%c\"",
+					line[*line_offset]);
+				ret = false;
+				goto done;
+			}
+			else
+			{
+				ADD_CHAR(line[*line_offset]);
+				escaped = false;
+				continue;
+			}
+		}
+
+		// TODO: handle '$'
+
+		if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
+		{
+			config_message(context, LOG_ERR,
+				"special character (%c) used in an invalid way",
+				line[*line_offset]);
+			ret = false;
+			goto done;
+		}
+
+		// TODO: is this right?
+		ADD_CHAR(line[*line_offset]);
 	}
 
 done:
 
-	if (!ret)
+	if (ret)
+	{
+		ADD_CHAR('\0');
+	}
+	else
 	{
 		free(*value);
 	}
+
+	#undef ADD_CHAR
 
 	return ret;
 }
