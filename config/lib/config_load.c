@@ -16,6 +16,12 @@
 #define CONFIG_OPTION_INCLUDE -2
 #define CONFIG_OPTION_UNKNOWN -3
 
+// start a dynamic array with this many elements
+#define DYNAMIC_START 16
+
+// when a dynamic array needs to be expanded, grow it by this factor
+#define DYNAMIC_GROW_BY 1.6
+
 
 /** Increment the line_offset past all whitespace. */
 static void skip_whitespace(const char * line, size_t * line_offset)
@@ -116,20 +122,83 @@ static bool get_value(
 	size_t * line_offset,
 	char ** value)
 {
-	// TODO: real implementation with quoting, escape sequences, and environment variables
-	(void)context;
-	size_t value_length = strcspn(line + *line_offset, CHARS_ALL_WHITESPACE);
+	// is the value in quotes?
+	bool quoted = (line[*line_offset] == '"');
 
-	*value = strndup(line + *line_offset, value_length);
+	// does the current character follow a '\\'?
+	bool escaped = false;
 
+	// has the value ended normally?
+	// (this is used to make sure there's nothing after an ending quote)
+	bool done = false;
+
+	bool ret = true;
+
+	size_t value_index = 0;
+
+	*value = malloc(DYNAMIC_START);
 	if (*value == NULL)
 	{
 		LOG(LOG_ERR, "out of memory");
-		return false;
+		ret = false;
+		goto done;
 	}
 
-	*line_offset += value_length;
-	return true;
+	if (quoted)
+	{
+		++*line_offset;
+	}
+
+	for (; true; ++*line_offset)
+	{
+		if (done)
+		{
+			if (line[*line_offset] != '\0' &&
+				strchr(CHARS_ALL_WHITESPACE, line[*line_offset]) == NULL)
+			{
+				config_message(context, LOG_ERR,
+					"extraneous character after end of value");
+				ret = false;
+			}
+
+			goto done;
+		}
+		else if (quoted && (line[*line_offset] == '\0' || line[*line_offset] == '\n'))
+		{
+			config_message(context, LOG_ERR,
+				"line ended without closing quote");
+			ret = false;
+			goto done;
+		}
+		else if (!quoted && (line[*line_offset] == '\0' ||
+			strchr(CHARS_ALL_WHITESPACE, line[*line_offset]) != NULL))
+		{
+			// end of unquoted value
+			goto done;
+		}
+		else if (quoted && !escaped && line[*line_offset] == '"')
+		{
+			// found end quote
+			done = true;
+			continue;
+		}
+
+		// NOTE: at this point, the current character is either invalid or a continuation
+		// of the value. It cannot end the value unless it's invalid.
+
+		// TODO: real implementation instead of the below
+		ret = false;
+		goto done;
+	}
+
+done:
+
+	if (!ret)
+	{
+		free(*value);
+	}
+
+	return ret;
 }
 
 /**
