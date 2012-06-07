@@ -48,8 +48,9 @@ ASN.1 UTCTime or GeneralizedTime implementation, but rather follows
 the restrictions prescribed by RFC 5280 sections 4.1.2.5.1 and
 4.1.2.5.2.
 
-KNOWN BUG: There are problems with leap year adjustments starting the
-year 2100.
+KNOWN BUGS: There are problems with leap year adjustments starting the
+year 2100.  In addition, it is not clear that [read/write]_casn_time
+handle time zones correctly.
 *****************************************************************************/
 
 char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
