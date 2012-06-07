@@ -155,7 +155,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		config_type_string_converter, NULL,
 		free,
 		NULL, NULL,
-		"foo \"\\\"\" \"'\" \"\\\\\" \"\\$\" \"\t\" \" \" \"#\""
+		"foo \"\\\"\" \"'\" \"\\\\\" \"\\$\" \"\t\" \" \" \"#\" \"\\n\" \"\\r\" \"\\t\""
 	},
 
 	// CONFIG_SOME_BOOL_TRUE
@@ -220,7 +220,7 @@ static bool test_config(const char * conf_file)
 
 	TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_EMPTY_ARRAY), ==, 0);
 
-	TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY_CHARS), ==, 7);
+	TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY_CHARS), ==, 10);
 	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[0], ==, "\"");
 	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[1], ==, "'");
 	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[2], ==, "\\");
@@ -228,6 +228,9 @@ static bool test_config(const char * conf_file)
 	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[4], ==, "\t");
 	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[5], ==, " ");
 	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[6], ==, "#");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[7], ==, "\n");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[8], ==, "\r");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[9], ==, "\t");
 
 	TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_TRUE), true);
 

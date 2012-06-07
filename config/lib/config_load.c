@@ -211,7 +211,23 @@ static bool get_value(
 
 		if (quoted && escaped)
 		{
-			if (strchr(CHARS_SPECIAL, line[*line_offset]) == NULL)
+			if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
+			{
+				ADD_CHAR(line[*line_offset]);
+			}
+			else if (line[*line_offset] == 'n')
+			{
+				ADD_CHAR('\n');
+			}
+			else if (line[*line_offset] == 'r')
+			{
+				ADD_CHAR('\r');
+			}
+			else if (line[*line_offset] == 't')
+			{
+				ADD_CHAR('\t');
+			}
+			else
 			{
 				config_message(context, LOG_ERR,
 					"unknown escape sequence \"\\%c\"",
@@ -219,12 +235,9 @@ static bool get_value(
 				ret = false;
 				goto done;
 			}
-			else
-			{
-				ADD_CHAR(line[*line_offset]);
-				escaped = false;
-				continue;
-			}
+
+			escaped = false;
+			continue;
 		}
 
 		// TODO: handle '$'
