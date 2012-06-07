@@ -158,7 +158,7 @@ static bool get_value(
 					goto done; \
 				} \
 			} \
-			*value[value_size++] = (c); \
+			(*value)[value_size++] = (c); \
 		} while (false)
 
 	if (quoted)
