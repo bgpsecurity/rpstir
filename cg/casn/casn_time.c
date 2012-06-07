@@ -8,6 +8,22 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
+The BER encodings of time are defined by X.680-0207 and ISO 8601
+UTCTime: YYMMDDHHMM{suffix} or YYMMDDHHMMSS{suffix}
+GeneralizedTime: YYYYMMDDHHMMSS[.fff...]{suffix}
+{suffix} can be one of
+1. Z
+2. +hhmm
+3. -hhmm
+
+The DER encodings of time are defined by X.690-0207, which further
+restrict the BER encodings to provide a canonical form.  For example,
+"Z" is required, and trailing zeros in fractional seconds are
+forbidden.
+
+WARNING: The code does not currently support fractional seconds in
+GeneralizedTime, nor minutes-only UTCTime.  It also has problems with
+leap year adjustments starting the year 2100.
 *****************************************************************************/
 
 char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
@@ -16,37 +32,37 @@ char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include <stdint.h>
 #include <time.h>
 
-#define UTCBASE 70
-#define UTCYR 0
-#define UTCYRSIZ 2
-#define UTCMO (UTCYR + UTCYRSIZ) // 2
-#define UTCMOSIZ 2
-#define UTCDA  (UTCMO + UTCMOSIZ) //4
-#define UTCDASIZ 2
-#define UTCHR  (UTCDA + UTCDASIZ) // 6
-#define UTCHRSIZ 2
-#define UTCMI  (UTCHR + UTCHRSIZ) // 8
-#define UTCMISIZ 2
-#define UTCSE (UTCMI + UTCMISIZ) // 10
-#define UTCSESIZ 2
-#define UTCSFXHR 1
-#define UTCSFXMI (UTCSFXHR + UTCHRSIZ)  // 3
-#define UTCT_SIZE 17
-#define GENBASE (1900 + UTCBASE)
-#define GENYR 0
-#define GENYRSIZ 4
-#define GENMO 4
-#define GENMOSIZ UTCMOSIZ
-#define GENDA 6
-#define GENDASIZ UTCDASIZ
-#define GENHR 8
-#define GENHRSIZ UTCHRSIZ
-#define GENMI 10
-#define GENMISIZ UTCMISIZ
-#define GENSE 12
-#define GENSESIZ UTCSESIZ
-#define GENSFXHR 1
-#define GENSFXMI 3
+#define UTCBASE 70     // base year 1970 (unix epoch)
+#define UTCYR 0        // 0 (UTC year position)
+#define UTCYRSIZ 2     // 2-digit year
+#define UTCMO (UTCYR + UTCYRSIZ) // 2 (UTC month position)
+#define UTCMOSIZ 2     // 2-digit month
+#define UTCDA  (UTCMO + UTCMOSIZ) //4 (UTC day position)
+#define UTCDASIZ 2     // 2-digit day
+#define UTCHR  (UTCDA + UTCDASIZ) // 6 (UTC hour position)
+#define UTCHRSIZ 2     // 2-digit hour
+#define UTCMI  (UTCHR + UTCHRSIZ) // 8 (UTC minute position)
+#define UTCMISIZ 2     // 2-digit minute
+#define UTCSE (UTCMI + UTCMISIZ) // 10 (UTC seconds position)
+#define UTCSESIZ 2     // 2-digit seconds
+#define UTCSFXHR 1     // suffix hour position (after +/-)
+#define UTCSFXMI (UTCSFXHR + UTCHRSIZ)  // 3 (suffix minute position)
+#define UTCT_SIZE 17   // 12 (YYMMDDHHMMSS) + 1 (Z/+/-) + 4 (hhmm)
+#define GENBASE (1900 + UTCBASE)  // base year 1970 (unix epoch)
+#define GENYR 0        // GeneralizedTime year position
+#define GENYRSIZ 4     // 4-digit year
+#define GENMO 4        // GeneralizedTime month position
+#define GENMOSIZ UTCMOSIZ // 2-digit month
+#define GENDA 6           // GeneralizedTime day position
+#define GENDASIZ UTCDASIZ // 2-digit day
+#define GENHR 8           // GeneralizedTime hour position
+#define GENHRSIZ UTCHRSIZ // 2-digit hour
+#define GENMI 10          // GeneralizedTime minute position
+#define GENMISIZ UTCMISIZ // 2-digit minute
+#define GENSE 12          // GeneralizedTime seconds position
+#define GENSESIZ UTCSESIZ // 2-digit seconds
+#define GENSFXHR 1     // suffix hour position (after +/-)
+#define GENSFXMI 3     // suffix minute position
 
 extern int _casn_obj_err(struct casn *, int),
         _check_filled(struct casn *casnp),
