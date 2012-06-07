@@ -122,6 +122,8 @@ static bool get_value(
 	size_t * line_offset,
 	char ** value)
 {
+	size_t i;
+
 	// is the value in quotes?
 	bool quoted = (line[*line_offset] == '"');
 
@@ -133,6 +135,15 @@ static bool get_value(
 	bool done = false;
 
 	bool ret = true;
+
+	// length of variable name
+	size_t variable_size;
+
+	// variable name
+	char * variable;
+
+	// variable value from environment
+	const char * variable_value;
 
 	size_t value_size = 0;
 	size_t value_allocated = DYNAMIC_START;
@@ -240,7 +251,61 @@ static bool get_value(
 			continue;
 		}
 
-		// TODO: handle '$'
+		if (line[*line_offset] == '$')
+		{
+			if (line[*line_offset + 1] != '{')
+			{
+				config_message(context, LOG_ERR,
+					"currently, only variable substitution of the form ${FOO} "
+					"is supported. The form $FOO is not supported.");
+				ret = false;
+				goto done;
+			}
+
+			variable_size = strcspn(line + *line_offset + 2,
+				CHARS_ALL_WHITESPACE CHARS_SPECIAL "}");
+
+			if (line[*line_offset + 2 + variable_size] != '}')
+			{
+				config_message(context, LOG_ERR,
+					"incomplete environment variable. "
+					"Variables must end with '}'.");
+				ret = false;
+				goto done;
+			}
+
+			variable = malloc(variable_size + 1);
+			if (variable == NULL)
+			{
+				LOG(LOG_ERR, "out of memory");
+				ret = false;
+				goto done;
+			}
+
+			snprintf(variable, variable_size + 1, "%s", line + *line_offset + 2);
+
+			variable_value = getenv(variable);
+			if (variable_value == NULL)
+			{
+				variable_value = "";
+				config_message(context, LOG_WARNING,
+					"variable ${%s} not found, using the empty string instead",
+					variable);
+			}
+
+			free(variable);
+
+			for (i = 0; variable_value[i] != '\0'; ++i)
+			{
+				ADD_CHAR(variable_value[i]);
+			}
+
+			// In addition to the variable name (of length variable_size),
+			// there's "${" and "}". The 2 is because after 'continue',
+			// *line_offset gets incremented.
+			*line_offset += variable_size + 2;
+			continue;
+		}
 
 		if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
 		{
