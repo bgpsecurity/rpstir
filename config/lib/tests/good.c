@@ -289,7 +289,7 @@ static bool test_config(const char * conf_file)
 
 	TEST(int, "%d", *(const int *)config_get(CONFIG_ENV_VAR_INT), ==, 0xfe0f);
 
-	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_STRING), ==, "foo bar \" # \\n ${ENV_VAR_STRING}");
+	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_STRING), ==, "/foo bar \" # \\n ${ENV_VAR_STRING}/");
 
 	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_EMPTY), ==, " barfoo  quux ");
 
