@@ -20,6 +20,9 @@ enum config_key {
 	CONFIG_STRING_ARRAY_CHARS,
 	CONFIG_SOME_BOOL_TRUE,
 	CONFIG_SOME_BOOL_FALSE,
+	CONFIG_ENV_VAR_INT,
+	CONFIG_ENV_VAR_STRING,
+	CONFIG_ENV_VAR_EMPTY,
 
 	CONFIG_NUM_OPTIONS
 };
@@ -177,12 +180,60 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		NULL, NULL,
 		"True"
 	},
+
+	// CONFIG_ENV_VAR_INT
+	{
+		"EnvVarInt",
+		false,
+		config_type_sscanf_converter, &config_type_sscanf_arg_int,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_ENV_VAR_STRING
+	{
+		"EnvVarString",
+		false,
+		config_type_string_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_ENV_VAR_EMPTY
+	{
+		"EnvVarEmpty",
+		false,
+		config_type_string_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
 };
 
 
 static bool test_config(const char * conf_file)
 {
 	bool ret;
+
+	if (setenv("ENV_VAR_INT", "0xfe0f", 1) != 0)
+	{
+		perror("setenv(ENV_VAR_INT)");
+		return false;
+	}
+
+	if (setenv("ENV_VAR_STRING", "foo bar \" # \\n ${ENV_VAR_STRING}", 1) != 0)
+	{
+		perror("setenv(ENV_VAR_STRING)");
+		return false;
+	}
+
+	if (unsetenv("ENV_VAR_UNSET") != 0)
+	{
+		perror("unsetenv(ENV_VAR_UNSET)");
+		return false;
+	}
 
 	ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file);
 	TEST_BOOL(ret, true);
@@ -235,6 +286,12 @@ static bool test_config(const char * conf_file)
 	TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_TRUE), true);
 
 	TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_FALSE), false);
+
+	TEST(int, "%d", *(const int *)config_get(CONFIG_ENV_VAR_INT), ==, 0xfe0f);
+
+	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_STRING), ==, "foo bar \" # \\n ${ENV_VAR_STRING}");
+
+	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_EMPTY), ==, " barfoo  quux ");
 
 	config_unload();
 
