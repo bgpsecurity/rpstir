@@ -21,9 +21,35 @@ restrict the BER encodings to provide a canonical form.  For example,
 "Z" is required, and trailing zeros in fractional seconds are
 forbidden.
 
-WARNING: The code does not currently support fractional seconds in
-GeneralizedTime, nor minutes-only UTCTime.  It also has problems with
-leap year adjustments starting the year 2100.
+In the code below, UTCTime's two-digit year is interpreted as
+described by RFC 5280, Section 4.1.2.5.1.
+
+4.1.2.5.1. UTCTime
+
+   The universal time type, UTCTime, is a standard ASN.1 type intended
+   for representation of dates and time.  UTCTime specifies the year
+   through the two low-order digits and time is specified to the
+   precision of one minute or one second.  UTCTime includes either Z
+   (for Zulu, or Greenwich Mean Time) or a time differential.
+
+   For the purposes of this profile, UTCTime values MUST be expressed in
+   Greenwich Mean Time (Zulu) and MUST include seconds (i.e., times are
+   YYMMDDHHMMSSZ), even where the number of seconds is zero.  Conforming
+   systems MUST interpret the year field (YY) as follows:
+
+      Where YY is greater than or equal to 50, the year SHALL be
+      interpreted as 19YY; and
+
+      Where YY is less than 50, the year SHALL be interpreted as 20YY.
+
+WARNING: The code does not currently handle fractional seconds in
+GeneralizedTime, nor minutes-only UTCTime.  Thus, it is not a general
+ASN.1 UTCTime or GeneralizedTime implementation, but rather follows
+the restrictions prescribed by RFC 5280 sections 4.1.2.5.1 and
+4.1.2.5.2.
+
+KNOWN BUG: There are problems with leap year adjustments starting the
+year 2100.
 *****************************************************************************/
 
 char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
@@ -266,10 +292,12 @@ int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
         return -1;
      
     yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ);
-    if (yr < 70) strcpy(genfrom, "20");
-    else strcpy(genfrom, "19");
+    if (yr < 50) // rfc5280#section-4.1.2.5.1
+        strcpy(genfrom, "20");
+    else
+        strcpy(genfrom, "19");
     memcpy(&genfrom[2], fromp, lth);
-    int ansr = _gentime_to_ulong(valp, genfrom, lth += 2);
+    int ansr = _gentime_to_ulong(valp, genfrom, lth + 2);
     if (ansr <= 0) return ansr;
     return ansr - 2;
     }
@@ -309,8 +337,10 @@ Returns: IF error, -1, ELSE length of time field
         if ((size_t)ansr + 2 + 1 > sizeof(timebuf))
             return _casn_obj_err(casnp, ASN_TIME_ERR);
         memcpy(&timebuf[2], casnp->startp, ansr);
-        if (timebuf[2] >= '7') strncpy((char *)timebuf, "19", 2);
-        else strncpy((char *)timebuf, "20", 2);
+        if (timebuf[2] >= '5') // rfc5280#section-4.1.2.5.1
+            strncpy((char *)timebuf, "19", 2);
+        else
+            strncpy((char *)timebuf, "20", 2);
         ansr += 2;
         }
     timebuf[ansr] = 0;
