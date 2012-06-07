@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "logging.h"
+#include "macros.h"
 
 
 /** Context in parsing a config file */
@@ -21,7 +22,7 @@ void config_message(
 	const struct config_context * context,
 	int priority,
 	const char * format,
-	...);
+	...) WARN_PRINTF(3, 4);
 
 
 /**
