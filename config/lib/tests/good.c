@@ -17,6 +17,7 @@ enum config_key {
 	CONFIG_DEFAULT_STRING,
 	CONFIG_DEFAULT_INT_ARRAY,
 	CONFIG_DEFAULT_EMPTY_ARRAY,
+	CONFIG_STRING_ARRAY_CHARS,
 	CONFIG_SOME_BOOL_TRUE,
 	CONFIG_SOME_BOOL_FALSE,
 
@@ -44,10 +45,10 @@ static bool stringarray_validator(
 		return false;
 	}
 
-	if (strcmp((const char *)input[0], "foo") != 0)
+	if (strcmp((const char *)input[0], "foo bar") != 0)
 	{
 		config_message(context, LOG_ERR,
-			"first element must be \"foo\", but was \"%s\"",
+			"first element must be \"foo bar\", but was \"%s\"",
 			(const char *)input[0]);
 		return false;
 	}
@@ -84,7 +85,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		config_type_string_converter, NULL,
 		free,
 		stringarray_validator, (void*)1,
-		"foo 1 3"
+		"\"foo bar\" 1 3"
 	},
 
 	// CONFIG_INT_ARRAY
@@ -147,6 +148,16 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		""
 	},
 
+	// CONFIG_STRING_ARRAY_CHARS
+	{
+		"StringArrayChars",
+		true,
+		config_type_string_converter, NULL,
+		free,
+		NULL, NULL,
+		"foo \"\\\"\" \"'\" \"\\\\\" \"\\$\" \"\t\" \" \" \"#\""
+	},
+
 	// CONFIG_SOME_BOOL_TRUE
 	{
 		"SomeBoolTrue",
@@ -181,9 +192,9 @@ static bool test_config(const char * conf_file)
 	TEST(size_t, "%zu", config_get_length(CONFIG_EMPTY_ARRAY), ==, 0);
 
 	TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY), ==, 3);
-	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[0], ==, "foo");
-	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[1], ==, "bar");
-	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[2], ==, "quux");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[0], ==, "foo bar");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[1], ==, "quux");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY))[2], ==, "blah # this is not a comment");
 
 	TEST(size_t, "%zu", config_get_length(CONFIG_INT_ARRAY), ==, 4);
 	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_INT_ARRAY))[0], ==, 8);
@@ -196,7 +207,7 @@ static bool test_config(const char * conf_file)
 	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[1], ==, "bar");
 	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[2], ==, "quux");
 	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[3], ==, "baz");
-	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[4], ==, "something");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_LONG_ARRAY))[4], ==, "something else");
 
 	TEST(int, "%d", *(const int *)config_get(CONFIG_INCLUDED_INT), ==, 42);
 
@@ -208,6 +219,15 @@ static bool test_config(const char * conf_file)
 	TEST(int, "%d", *((int const * const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[2], ==, 1);
 
 	TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_EMPTY_ARRAY), ==, 0);
+
+	TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY_CHARS), ==, 7);
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[0], ==, "\"");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[1], ==, "'");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[2], ==, "\\");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[3], ==, "$");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[4], ==, "\t");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[5], ==, " ");
+	TEST_STR(((char const * const *)config_get_array(CONFIG_STRING_ARRAY_CHARS))[6], ==, "#");
 
 	TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_TRUE), true);
 
