@@ -251,7 +251,6 @@ static bool get_value(
 			goto done;
 		}
 
-		// TODO: is this right?
 		ADD_CHAR(line[*line_offset]);
 	}
 
