@@ -364,7 +364,7 @@ static ulong put_num (char *to, ulong val, int lth)
 int write_casn_time(struct casn *casnp, int64_t time) 
     {
     ushort *mop;
-    long da, min, sec, leap;
+    long da, min, sec, years_since_base;
     char *c, *to;
     int err = 0;
 
@@ -385,13 +385,13 @@ int write_casn_time(struct casn *casnp, int64_t time)
     time += (((UTCBASE - 1) % 4) * 365); /* days since leap year before base year */
     da = time  % 1461; /* da # in quadrenniad */
     time /= 1461;                        /* quadrenniads since prior leap yr */
-    leap = ((time * 4) + ((da == 1460)? 3 : (da / 365)) - ((UTCBASE - 1) % 4));
+    years_since_base = ((time * 4) + ((da == 1460)? 3 : (da / 365)) - ((UTCBASE - 1) % 4));
                                     /* yrs since base yr */
     if (da == 1460) da = 365;
     else da %= 365;
     for (mop = _mos; da >= *mop; mop++);
     if (mop > &_mos[12]) mop--;
-    if ((leap % 4) == (UTCBASE % 4))  /* leap year */
+    if ((years_since_base % 4) == (UTCBASE % 4))  /* leap year */
         {
         if (da == 59) mop--;  /* Feb 29  */
         else if (da > 59 && (da -= 1) < mop[-1]) mop--;
@@ -399,17 +399,18 @@ int write_casn_time(struct casn *casnp, int64_t time)
     put_num (&c[UTCDA],(ulong)(da + 1 - mop[-1]),UTCDASIZ);
     put_num (&c[UTCMO],(ulong)(mop - _mos),UTCMOSIZ);
        // is it UTCTIME beyond the upper limit?
-    if (casnp->type == ASN_UTCTIME && leap >= 100)
+    if (casnp->type == ASN_UTCTIME && years_since_base >= (2050 - 1970))
       return -1; 
-    put_num (&c[UTCYR],(ulong)(leap + UTCBASE),UTCYRSIZ);
+    put_num (&c[UTCYR],(ulong)(years_since_base + UTCBASE),UTCYRSIZ);
     c += UTCSE + UTCSESIZ;
     *c++ = 'Z';
     if (casnp->type == ASN_GENTIME)
 	{
-	if (leap >= 30)
+	if (years_since_base >= 30)
           {
+          // FIXME: this is broken for dates beyond 2199
           *to = '2';
-          to[1] = (leap < 130)? '0': '1';
+          to[1] = (years_since_base < 130)? '0': '1';
           }
 	else
 	    {
