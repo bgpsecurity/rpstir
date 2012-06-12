@@ -31,12 +31,13 @@ int strict_profile_checks = 0;
   Convert between a time string in a certificate and a time string
   that will be acceptable to the DB. The return value is allocated memory.
 
-  The time string can be either UTC or GENERALIZED. UTC is used for
-  dates <= 2049 and GENERALIZED is used for dates after >= 2050.
+  The time string can be either UTC or GENERALIZED. If only_gentime is
+  false, UTC is used for dates <= 2049 and GENERALIZED is used for dates
+  after >= 2050. Otherwise, GENERALIZED is use for all dates.
 
   The UTC format takes the form YYMMDDHHMMSST, where each of
   the fields is as follows:
-      if YY <= 36 the year is 2000+YY otherwise it is 1900+YY
+      if YY <= 49 the year is 2000+YY otherwise it is 1900+YY
       1 <= MM <= 12
       1 <= DD <= 31
       0 <= HH <= 24
@@ -59,7 +60,7 @@ int strict_profile_checks = 0;
 #define GEN14    14   // generalized format without fractions of a second
 #define GEN16    16   // generalized format with fractions of a second
 
-char *ASNTimeToDBTime(char *bef, int *stap)
+char *ASNTimeToDBTime(char *bef, int *stap, int only_gentime)
 {
   int   year;
   int   mon;
@@ -120,7 +121,7 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 	  *stap = ERR_SCM_INVALDT;
 	  return(NULL);
 	}
-      if ( year > 36 )
+      if ( year > 49 )
 	year += 1900;
       else
 	year += 2000;
@@ -133,7 +134,7 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 	  *stap = ERR_SCM_INVALDT;
 	  return(NULL);
 	}
-      if ( year > 36 )
+      if ( year > 49 )
 	year += 1900;
       else
 	year += 2000;
@@ -171,15 +172,26 @@ char *ASNTimeToDBTime(char *bef, int *stap)
 // we should adjust the time if there is a suffix, but currently we don't
 // next check that the format matches the year. If the year is < 2050
 // it should be UTC, otherwise GEN.
-  if ( year < 2050 && (fmt==GEN14 || fmt==GEN16) )
+  if ( only_gentime )
     {
-      *stap = ERR_SCM_INVALDT;
-      return(NULL);
+      if ( fmt != GEN14 && fmt != GEN16 )
+        {
+          *stap = ERR_SCM_INVALDT;
+          return(NULL);
+        }
     }
-  if ( year >= 2050 && (fmt==UTC10 || fmt==UTC12) )
+  else
     {
-      *stap = ERR_SCM_INVALDT;
-      return(NULL);
+      if ( year < 2050 && (fmt==GEN14 || fmt==GEN16) )
+        {
+          *stap = ERR_SCM_INVALDT;
+          return(NULL);
+        }
+      if ( year >= 2050 && (fmt==UTC10 || fmt==UTC12) )
+        {
+          *stap = ERR_SCM_INVALDT;
+          return(NULL);
+        }
     }
   out = (char *)calloc(48, sizeof(char));
   if ( out == NULL )
@@ -431,7 +443,7 @@ static char *cf_get_from(X509 *x, int *stap, int *x509stap)
       return(NULL);
     }
   *stap = 0;
-  dptr = ASNTimeToDBTime((char *)bef, stap);
+  dptr = ASNTimeToDBTime((char *)bef, stap, 0);
   OPENSSL_free(bef);
   if ( dptr == NULL )
     {
@@ -467,7 +479,7 @@ static char *cf_get_to(X509 *x, int *stap, int *x509stap)
       *stap = ERR_SCM_NONAF;
       return(NULL);
     }
-  dptr = ASNTimeToDBTime((char *)aft, stap);
+  dptr = ASNTimeToDBTime((char *)aft, stap, 0);
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
@@ -1097,7 +1109,7 @@ static char *crf_get_last(X509_CRL *x, int *stap, int *crlstap)
       *stap = ERR_SCM_NONB4;
       return(NULL);
     }
-  dptr = ASNTimeToDBTime((char *)bef, stap);
+  dptr = ASNTimeToDBTime((char *)bef, stap, 0);
   OPENSSL_free(bef);
   if ( dptr == NULL )
     {
@@ -1132,7 +1144,7 @@ static char *crf_get_next(X509_CRL *x, int *stap, int *crlstap)
       *stap = ERR_SCM_NONAF;
       return(NULL);
     }
-  dptr = ASNTimeToDBTime((char *)aft, stap);
+  dptr = ASNTimeToDBTime((char *)aft, stap, 0);
   OPENSSL_free(aft);
   if ( dptr == NULL )
     {
@@ -3603,7 +3615,7 @@ static int cvt_crldate2DB(struct ChoiceOfTime *cotp)
       }
     }
   int sta = 0;
-  free(ASNTimeToDBTime(buf, &sta));
+  free(ASNTimeToDBTime(buf, &sta, 0));
   free(buf);
   return sta;
   }

@@ -196,7 +196,7 @@ int roaValidate(struct ROA *r);
   returns a negative error code.
 */
 
-int manifestValidate(struct ROA *r);
+int manifestValidate(struct ROA *r, int *stalep);
 
 /*
   This function performs all validations steps on a manifest that do not

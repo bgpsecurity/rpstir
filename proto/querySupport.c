@@ -256,9 +256,9 @@ static int displayFlags (scmsrcha *s, int idx1, char* returnStr)
     }
   addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
   addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
+  addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
   if (!isManifest)
     {
-    addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");
     addFlagIfSet(returnStr, flags, SCM_FLAG_ONMAN, "ONMAN");
     }
   addFlagIfSet(returnStr, flags, SCM_FLAG_HASPARACERT, "HASPARACERT");

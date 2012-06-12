@@ -1,5 +1,5 @@
-StaleValidationChain yes
+StaleValidationChain no
 NoManifest yes
 StaleCRL no
-StaleManifest yes
+StaleManifest no
 NotYet no

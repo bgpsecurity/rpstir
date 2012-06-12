@@ -1,230 +1,324 @@
 RPKI Syntax Conformance Test Cases
 
+This test suite checks for "syntax" conformance (i.e. that which can
+be tested using a single file).  It does not include cases where
+determining validity would require checking the relationship *between*
+files.
+
 # Directory layout of rsync://rpki.bbn.com/conformance/
 root.cer
+[bad|good]Root*.cer
 root/root.crl
      root.mft
-     badCert*.cer
-     badCMS*.roa
-     badROA.roa
-     testCRL*.cer
-     testCRL*/badCRL*.crl
-              goodmft.mft
+     [bad|good]Cert*.cer
+     [bad|good]CMS*.roa
+     [bad|good]ROA.roa
+     CRL*.cer
+     CRL*/[bad|good]CRL*.crl
+          CRL*.mft
       :
       :
-     testMFT*.cer
-     testMFT*/goodcrl.crl
-              badMFT*.mft
+     MFT*.cer
+     MFT*/MFT*.crl
+          [bad|good]MFT*.mft
       :
       :
+
+We chose to give each CRL and MFT test case its own subdirectory; this
+is because we wanted to test the way a validator handles individual
+files, not how it handles a convoluted repository structure.
 
 In theory, a conforming RPKI validator should reject any file whose
-filename begins with "bad", and accept all other files.  We chose to
-give each CRL and MFT test case its own subdirectory; this is because
-we wanted to test the way a validator handles individual files, not
-how it handles a convoluted repository structure.
+filename begins with "bad", and accept any file that begins with
+"good".  Other files, i.e. those that begin with neither "bad" nor
+"good", MIGHT be rejected or accepted depending on a particular
+validator's gray-area configuration.
 
-# Caveat emptor: these test cases aren't finished yet, and some will
-# be removed.  E.g., some are not "syntax" conformance cases because
-# they would require checking the relationship *between* files, not
-# just checking the syntax of a single file.
+NOTE: lines without a serial number are TODOs that still need to be
+created.
 
 
 CA Certificates
 
-101 AIA2AccessDesc      # two AIA extensions -- remove, dup of AIA2x?
-102 AIABadAccess        # wrong accessMethod for rsync URI
-103 AIAAccessLoc        # single HTTP accessLoc, no rsync
-104 AIACrit             # wrongly mark AIA extension as critical
-105 AKIHash             # AKI doesn't match parent SKI -- NOT syntax check?
-106 AKILth              # AKI is too short (do we want too long?)
-107 BadExtension1       # illegal extension (PolicyMappings) -- need critical?
-109 BasicConstrNoCA     # BasicConstr present, but cA not set
-110 BasicConstrNoCrit   # BasicConstr present, crit bit unset
-111 BasicConstrPathLth  # BasicConstr path length present
-112 Cpol2oid            # More than one Certificate Policy OID -- use same one?
-113 CpolNoCrit          # CertPolicy extension, crit bit unset
-114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points -- actually allowed?
-115 CRLDPCrit           # CRL Dist Pt marked critical
-116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer
-117 CRLDPNoDistPt       # CRL DIST PT has no Dist Pt -- zero-length str?
-118 CRLDPReasons        # CRL Dist Pt has reasons
-119 EKU                 # has Extended KeyUsage
-120 InnerSigAlg         # wrong signature algorithm in toBeSigned
-121 IssuerOID           # issuer name is not id_commonName
-122 Issuer2ComName      # issuer name has 2 common names
-123 IssuerUtf           # issuer name has utf name
-124 Issuer2SetComName   # issuer name has 2 sets with common names
-125 IssuerSerNum        # issuer name has only a serial number
-126 IssUID              # has issuer unique ID
-127 KUsageExtra         # has disallowed key usage bit
-128 KUsageNoCertSign    # lacks bit for signing certificates
-129 KUsageNoCrit        # key usage extension not critical
-131 KUsageNoCRLSign     # lacks bit for signing CRLs
-134 OuterSigAlg         # wrong signature algorithm in cert.algorithm
-135 PubKeyAlg           # wrong SubjectPublicKey algorithm
-136 PubKeyExp           # wrong SubjectPublicKey exponent
-137 PubKeyLth           # wrong SubjectPublicKey length -- need to be shorter?
-138 ResourcesASNoCrit   # AS number extension not critical
-139 ResourcesBadAFI     # invalid IP address family
-140 ResourcesBadASOrder # AS numbers out of order
-141 ResourcesBadV4Order # IPv4 addresses out of order
-142 ResourcesBadV6Order # IPv6 addresses out of order
-143 ResourcesIPNoCrit   # IP address extension not critical
-144 ResourcesNone       # no IP addresses or AS numbers
-145 ResourcesSAFI       # IP addresses has SAFI digit
-147 SIAAccessLoc        # subject info access extension has non-rsync locator
-148 SIAAccessMethod     # subject info access extension has bad access method
-149 SIAMissing          # no subject info access extension
-150 SKIHash             # incorrect subject key identifier
-151 SKILth              # incorrect subject key identifier length
-152 SubjectOID          # subject name is not id_commonName
-153 Subject2ComName     # subject name has 2 common names
-154 SubjectUtf          # subject name has utf name
-155 Subject2SetComName  # subject name has 2 sets with common names
-156 SubjectSerNum       # subject name has only a serial number
-157 SubjUID             # has subject unique ID
-158 ValCrossed          # beginning validity date > ending date
-159 ValFromFuture       # starting validity date is in future -- UNK state OK?
-160 ValFromTyp          # starting validity is of wrong type
-162 ValToPast           # ending validity date has passed
-163 ValToTyp            # ending date is of wrong type
-164 VersionNeg          # version number is negative
-165 Version1            # version number is v1, i.e. 0
-166 Version2            # version number is v2, i.e. 1
-167 Version4            # version number is v4, i.e. 3
-168 SerNum              # negative serial number -- also need zero?
-169 AIA2x               # two authority info access extensions
-170 SIA2x               # two subject info access extensions
-171 NoAIA               # no authority info access extension
-172 NoSIA               # no subject info access extension
-173 NoBasicConstr       # no basic constraints extension
-174 2BasicConstr        # two basic constraints extensions
-175 NoSKI               # no subject key identifier extension
-176 2SKI                # two subject key identifier extensions
-177 NoAKI               # no authority key identifier extension
-178 2AKI                # two authority key identifier extensions
-179 NoKeyUsage          # no key usage extension
-180 2KeyUsage           # two key usage extensions
-181 2CRLDP              # two CRLDP extensions
-182 NoCRLDP             # no CRLDP extension
-183 NoCpol              # no certificate policies extension
-184 2Cpol               # two certificate policies extensions
-185 2IPAddr             # two IP address extensions
-186 2ASNum              # two AS number extensions
-187 CRLDPNoRsyncDistPt  # no rsync URI in CRLDP
-188 Issuer2SerNums      # issuer name has 2 serial numbers
-189 Subject2SerNums     # subject name has 2 serial numbers
+101 AIA2AccessDescHtRs  # (good) AIA with two access descriptions (http+rsync) 6487#4.8.7
+    AIA2AccessDescRsRs  # (good) AIA with two access descriptions (2 rsync) 6487#4.8.7
+102 AIABadAccess        # wrong accessMethod for rsync URI 6487#4.8.7
+103 AIAAccessLoc        # single HTTP accessLoc, no rsync 6487#4.8.7
+104 AIACrit             # wrongly mark AIA extension as critical 6487#4.8.7
+105 AKIHash             # AKI doesn't match parent SKI -- NOTE: not syntax check 6487#4.8.3
+106 AKIShort            # AKI is too short 6487#4.8.3
+    AKILong             # AKI is too long 6487#4.8.3
+    AKIHasACI           # AKI has authorityCertIssuer present  6487#4.8.3
+    AKIHasACSN          # AKI has authorityCertSerialNumber present  6487#4.8.3
+107 UnkExtension        # unrecognized non-critical extension (PolicyMappings) 6487#1,4.8,8
+    UnkExtensionCrit    # unrecognized critical extension (PolicyMappings) 5280#4.2
+109 BasicConstrNoCA     # BasicConstr present, but cA not set 6487#4.8.1
+110 BasicConstrNoCrit   # BasicConstr present, crit bit unset 6487#4.8.1
+111 BasicConstrPathLth  # BasicConstr path length present 6487#4.8.1
+112 Cpol2oid1correct    # One correct, one incorrect Cert Policy OID 6487#4.8.9 6484#1.2
+    Cpol2oid2correct    # Two correct Cert Policy OIDs 6487#4.8.9 6484#1.2
+    CpolBadOid          # One incorrect Cert Policy OID 6487#4.8.9 6484#1.2
+113 CpolNoCrit          # CertPolicy extension, crit bit unset 6487#4.8.9
+    CpolQualCps         # (good) correct Cert Policy OID with a certification practice statement (CPS) qualifier 6487#4.8.9 5280#4.2.1.4
+    CpolQualCpsUnotice  # (good) correct Cert Policy OID with CPS and user notice qualifiers 6487#4.8.9 5280#4.2.1.4
+114 CRLDP2DistPt        # (good) CRL Dist Pt has 2 Dist points 6487#4.8.6
+115 CRLDPCrit           # CRL Dist Pt marked critical 6487#4.8.6
+116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer 6487#4.8.6
+118 CRLDPReasons        # CRL Dist Pt has reasons 6487#4.8.6
+119 EKU                 # has Extended KeyUsage 6487#4.8.5
+120 InnerSigAlg         # wrong signature algorithm in toBeSigned (i.e. mismatch) 6485#2, 5280#4.1.2.3
+    BothSigAlg          # wrong signature algorithms (but matching each other) 6485#2
+121 IssuerOID           # issuer name is not id_commonName 6487#4.4
+122 Issuer2ComName      # issuer name has 2 common names (same set) 6487#4.4
+123 IssuerUtf           # issuer name has utf name 6487#4.4
+124 Issuer2SetComName   # issuer name has 2 sets with common names 6487#4.4
+125 IssuerSerNum        # issuer name has only a serial number 6487#4.4
+    IssuerSeqNameSer    # (good) issuer with name before serial number (2 sets) 6487#4.4
+    IssuerSeqSerName    # (good) issuer with serial number before name (2 sets) 6487#4.4
+    IssuerSetNameSer    # (good) issuer with serial number and name (1 set) 6487#4.4
+126 IssUID              # has issuer unique ID 6487#4
+127 KUsageExtra         # has disallowed key usage bit (nonRepudiation) 6487#4.8.4
+    KUsageDigitalSig    # has disallowed key usage bit (digitalSignature) 6487#4.8.4
+128 KUsageNoCertSign    # lacks bit for signing certificates 6487#4.8.4
+129 KUsageNoCrit        # key usage extension not critical 6487#4.8.4
+131 KUsageNoCRLSign     # lacks bit for signing CRLs 6487#4.8.4
+134 OuterSigAlg         # wrong signature algorithm in cert.algorithm (i.e. mismatch) 6485#2, 5280#4.1.2.3
+135 PubKeyAlg           # wrong SubjectPublicKey algorithm 6485#3.1 Is this right???
+136 PubKeyExp           # wrong SubjectPublicKey exponent 6485#3
+137 PubKeyShort         # SubjectPublicKey is 2047-bit 6485#3
+    PubKeyLong          # SubjectPublicKey is 2049-bit 6485#3
+138 ResourcesASNoCrit   # AS number extension not critical 6487#4.8.11
+139 ResourcesBadAFI     # invalid IP address family 6487#4.8.10, IANA address-family-numbers
+140 ResourcesBadASOrder # AS numbers out of order 3779 (but full set is pending)
+141 ResourcesBadV4Order # IPv4 addresses out of order 3779 (but full set is pending)
+142 ResourcesBadV6Order # IPv6 addresses out of order 3779 (but full set is pending)
+143 ResourcesIPNoCrit   # IP address extension not critical 6487#4.8.10
+144 ResourcesNone       # neither AS nor IP 3779 extensions 6487#4.8.10
+    ResourcesIPEmpty    # empty set of IP addresses 6487#4.8.10
+    ResourcesASEmpty    # empty set of AS numbers 6487#4.8.11
+145 ResourcesSAFI       # IP addresses has SAFI digit 6487#4.8.10
+    ResourcesIP6Inherit # (good) inherit IPv6 resources only, others explicit 6487#4.8.10
+    ResourcesIP4Inherit # (good) inherit IPv4 resources only, others explicit 6487#4.8.10
+    ResourcesASInherit  # (good) inherit AS resources only, others explicit 6487#4.8.11
+    ResourcesAllInherit # (good) inherit all resources 6487#4.8.10
+    ResourcesIP6InhOnly # (good) inherit IPv6 resources only, others not present 6487#4.8.10
+    ResourcesIP4InhOnly # (good) inherit IPv4 resources only, others not present 6487#4.8.10
+    ResourcesASInhOnly  # (good) inherit AS resources only, others not present 6487#4.8.11
+147 SIARepoNoRsync      # SIA has no rsync locator for id-ad-caRepository 6487#4.8.8
+    SIAMFTNoRsync       # SIA has no rsync locator for id-ad-rpkiManifest 6487#4.8.8
+    SIARepo2Rsync       # (good) SIA has 2 rsync locators for id-ad-caRepository 6487#4.8.8
+    SIAMFT2Rsync        # (good) SIA has 2 rsync locators for id-ad-rpkiManifest 6487#4.8.8
+    SIARepoHtRs         # (good) SIA has http+rsync locators for id-ad-caRepository 6487#4.8.8
+    SIAMFTHtRs          # (good) SIA has http+rsync locators for id-ad-rpkiManifest 6487#4.8.8
+    SIARepoHasNonURI    # (good) SIA has rsync+non-URI locators for id-ad-caRepository 6487#4.8.8
+    SIAMFTHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-rpkiManifest 6487#4.8.8
+148 SIAAccessMethod     # SIA has bad access method in addition to good accessMethods 6487#4.8.8
+    SIANoMFT            # SIA has no id-ad-rpkiManifest 6487#4.8.8
+    SIANoRepo           # SIA has no id-ad-caRepository 6487#4.8.8
+150 SKIHash             # incorrect subject key identifier 6487#4.8.2
+151 SKILong             # SKI length 21 octets 6487#4.8.2
+    SKIShort            # SKI length 19 octets 6487#4.8.2
+152 SubjectOID          # subject name is not id_commonName 6487#4.5
+153 Subject2ComName     # subject name has 2 common names (same set) 6487#4.5
+154 SubjectUtf          # subject name has utf name 6487#4.5
+155 Subject2SetComName  # subject name has 2 sets with common names 6487#4.5
+156 SubjectSerNum       # subject name has only a serial number 6487#4.5
+    SubjectSeqNameSer   # (good) subject with name before serial number (2 sets) 6487#4.5
+    SubjectSeqSerName   # (good) subject with serial number before name (2 sets) 6487#4.5
+    SubjectSetNameSer   # (good) subject with serial number and name (1 set) 6487#4.5
+157 SubjUID             # has subject unique ID 6487#4
+158 ValCrossed          # beginning validity date > ending date 6487#4.6
+159 ValFromFuture       # starting validity date is in future 6487#4.6.1
+160 ValFromTyp          # starting validity is of wrong type (gen vs utc) 5280#4.1.2.5
+162 ValToPast           # ending validity date has passed 6487#4.6.2
+163 ValToTyp            # ending date is of wrong type (gen vs utc) 5280#4.1.2.5
+164 VersionNeg          # version number is negative 5280#4.1.2.1
+165 Version1            # version number is v1, i.e. 0 6487#4.1
+166 Version2            # version number is v2, i.e. 1 6487#4.1
+167 Version4            # version number is v4, i.e. 3 6487#4.1
+168 SerNum              # negative serial number 6487#4.2 5280#4.1.2.2
+    SerNum0             # zero serial number 6487#4.2 5280#4.1.2.2
+169 AIA2x               # two authority info access extensions 5280#4.2
+170 SIA2x               # two SIAs 5280#4.2
+171 NoAIA               # no authority info access extension 6487#4.8,4.8.7
+172 NoSIA               # no SIA 6487#4.8,4.8.8
+173 NoBasicConstr       # no basic constraints extension 6487#4.8,4.8.1
+174 2BasicConstr        # two basic constraints extensions 5280#4.2
+175 NoSKI               # no subject key identifier extension 6487#4.8,4.8.2
+176 2SKI                # two subject key identifier extensions 5280#4.2
+177 NoAKI               # no authority key identifier extension 6487#4.8,4.8.3
+178 2AKI                # two authority key identifier extensions 5280#4.2
+179 NoKeyUsage          # no key usage extension 6487#4.8,4.8.4
+180 2KeyUsage           # two key usage extensions 5280#4.2
+181 2CRLDP              # two CRLDP extensions 5280#4.2
+182 NoCRLDP             # no CRLDP extension 6487#4.8,4.8.6
+183 NoCpol              # no certificate policies extension 6487#4.8,4.8.9
+184 2Cpol               # two certificate policies extensions 5280#4.2
+185 2IPAddr             # two IP address extensions 5280#4.2
+186 2ASNum              # two AS number extensions 5280#4.2
+187 CRLDPNoRsyncDistPt  # no rsync URI in CRLDP 6487#4.8.6
+188 IssuerSet2SerNums   # issuer name has 2 serial numbers (same set) 6487#4.4
+189 SubjectSet2SerNums  # subject name has 2 serial numbers (same set) 6487#4.5
+    IssuerSeq2SerNums   # issuer name has 2 serial numbers (split across sets) 6487#4.4
+    SubjectSeq2SerNums  # subject name has 2 serial numbers (split across sets) 6487#4.5
 
 
 CMS signed objects, generic (using ROAs)
 
-512 ContentType              # wrong content type
-513 NoCerts                  # no certificate
-514 2Certs                   # two certificates
-515 Version2                 # version 2
-516 Version4                 # version 4
-517 DigestAlg                # wrong digest algorithm -- inconsistent?
-518 2DigestAlgs              # two digest algorithms
-519 NoDigestAlgs             # no digest algorithm
-520 HasCRL                   # has a CRL
-523 SigInfoVersion           # wrong Signer Info version (2)
-524 SigInfoVersion4          # wrong Signer Info version (4)
-525 SigInfoNoSid             # no Signer Identifier
-526 SigInfoWrongSid          # wrong choice of Signer Identifier
-527 SigInfoBadSid            # bad Signer Identifier (wrong SKI)
-528 SigInfoHashAlg           # wrong hash algorithm in Signer Info
-529 SigInfoNoAttrs           # no attributes in Signer Info
-530 SigInfoAttrsNoContType   # no content type in Signer Info
-531 SigInfoAttrsContTypeOid  # wrong content type OID
-532 SigInfoAttrsMsgDigestOid # wrong digest OID attribute
-533 SigInfoAttrsNoMsgDigest  # no message digest
-534 SigInfoAttrs2ContType    # duplicate content type attributes
-535 SigInfoAttrs2MsgDigest   # duplicate digest attributes
-536 SigInfoAttrs2SigTime     # duplicate signing time attributes
-537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes
-538 SigInfoUnSigAttrs        # has unsigned attribute
-539 SigInfoNoSig             # no signature
-540 SigInfo2Sig              # has two signatures
-542 SigInfoWrongSigAlg       # has wrong signature algorithm
-543 SigInfoNoHashAlg         # had no hash algorithm
+512 ContentType              # wrong content type 6488#2
+513 NoCerts                  # no certificate 6488#2.1
+514 2Certs                   # two certificates 6488#2.1
+515 Version2                 # version 2 6488#2.1.1
+516 Version4                 # version 4 6488#2.1.1
+517 DigestAlgSameWrong       # wrong digest algorithm (same in both places) 6488#2.1.2 6485#2
+    DigestAlgWrongOuter      # wrong digest algorithm (in SignedData) 6488#2.1.2 6485#2
+518 2DigestAlgs              # two digest algorithms 6488#2.1.2
+519 NoDigestAlgs             # no digest algorithm 6488#2.1.2
+520 HasCRL                   # has a CRL 6488#2.1.5
+    NoSigInfo                # empty set of SignerInfos 6488#2.1
+    2SigInfo                 # multiple SignerInfo objects in set 6488#2.1
+523 SigInfoVersion           # wrong Signer Info version (2) 6488#2.1.6.1
+524 SigInfoVersion4          # wrong Signer Info version (4) 6488#2.1.6.1
+525 SigInfoNoSid             # no Signer Identifier 6488#2.1.6.2
+526 SigInfoWrongSid          # wrong choice of Signer Identifier 6488#2.1.6.2
+527 SigInfoBadSid            # bad Signer Identifier (wrong SKI) 6488#2.1.6.2
+528 SigInfoHashAlg           # wrong digest algorithm (in SignerInfo) 6488#2.1.6.3 6485#2
+529 SigInfoNoAttrs           # no set of attributes in SignerInfo 6488#2.1.6.4
+    SigInfoForbiddenAttr     # extra, forbidden attribute 6488#2.1.6.4
+530 SigInfoAttrsNoContType   # no content type in Signer Info 6488#2.1.6.4.1
+531 SigInfoAttrsContTypeOid  # content type OID does not match eContentType 6488#2.1.6.4.1
+533 SigInfoAttrsNoMsgDigest  # no message digest 6488#2.1.6.4.2
+    SigInfoAttrsWrongDigest  # incorrect SHA-256 message digest 6488#2.1.6.4.2
+534 SigInfoAttrs2ContType    # duplicate content type attributes 6488#2.1.6.4
+535 SigInfoAttrs2MsgDigest   # duplicate digest attributes 6488#2.1.6.4
+536 SigInfoAttrs2SigTime     # duplicate signing time attributes 6488#2.1.6.4
+537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes 6488#2.1.6.4
+    SigInfoAttrsContType2Val    # duplicate content type attribute values 6488#2.1.6.4
+    SigInfoAttrsMsgDigest2Val   # duplicate digest attribute values 6488#2.1.6.4
+    SigInfoAttrsSigTime2Val     # duplicate signing time attribute values 6488#2.1.6.4
+    SigInfoAttrsBinSigTime2Val  # duplicate binary signing time attribute values 6488#2.1.6.4
+538 SigInfoUnSigAttrs        # has unsigned attribute 6488#2.1.6.7
+539 SigInfoNoSig             # no signature 6488#2.1.6.6
+540 SigInfo2Sig              # has two signatures 6488#2.1.6.6
+    SigInfoBadSigVal         # incorrect signature 6488#2.1.6.6
+542 SigInfoWrongSigAlg       # has wrong signature algorithm 6488#2.1.6.5 6485#2
+543 SigInfoNoHashAlg         # had no hash algorithm 6488#2.1.6.3
 
 EE Certificates (embedded in ROAs)
 
-544 KeyUsage                 # permission to sign certs and CRLs
-545 SIAWrongOID              # improper OID in SIA
-
+    HasBasicConstraints      # basic constraints extension present 6488#4.8.1
+544 KeyUsageCABits           # KU has only keyCertSign and CRLSign (like CA) 6487#4.8.4
+    KeyUsageNoDigitalSig     # KU missing digitalSignature bit 6487#4.8.4
+    KeyUsageHasKeyCertSign   # KU has digitalSignature and keyCertSign 6487#4.8.4
+    KeyUsageHasCRLSign       # KU has digitalSignature and CRLSign 6487#4.8.4
+    KeyUsageHasNonRepu       # KU has digitalSignature and nonRepudiation 6487#4.8.4
+    HasEKU                   # Has EKU 6487#4.8.5
+545 SIAWrongAccessMethod     # improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
+    SIAExtraAccessMethod     # extra copy of accessMethod (id-ad-signedObject) in SIA 6487#4.8.8.2
+    SIAExtraWrongAccessMethod # extra, improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
+    SIANoRsync       # SIA has no rsync locator for id-ad-signedObject 6487#4.8.8.2
+    SIA2Rsync        # (good) SIA has 2 rsync locators for id-ad-signedObject 6487#4.8.8.2
+    SIAHtRs          # (good) SIA has http+rsync locators for id-ad-signedObject 6487#4.8.8.2
+    SIAHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-signedObject 6487#4.8.8.2
 
 ROAs
 
-551 ASIDSmall                # AS number out of bounds (too low)
-552 ASIDLarge                # AS number out of bounds (too high)
-553 Family                   # invalid family
-554 FamilyLth                # family name too long
-555 IPMaxLth                 # IP max length too long
-556 IP2Big                   # IP addresses exceed parent's
-557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature
-558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature
-559 VersionV2                # Version V2 (int 1)
+    WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
+551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
+552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
+553 Family                   # invalid family 6482#3.3
+554 FamilyLth                # family name too long 6482#3.3
+    IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
+    IPv6PrefixLong           # IPv4 prefix greater than 128 bits 6482#3.3
+555 IPv4MaxLthLong            # IP max length too long (greater than 32) 6482#3.3
+    IPv4MaxLthShort           # IP max length shorter than prefix length 6482#3.3
+    IPv6MaxLthLong            # IP max length too long (greater than 128) 6482#3.3
+    IPv6MaxLthShort           # IP max length shorter than prefix length 6482#3.3
+    IPv4DupPrefixSameMaxLen   # (good) IPv4 two copies of same prefix, same maxlength 6482#3.3
+    IPv6DupPrefixSameMaxLen   # (good) IPv6 two copies of same prefix, same maxlength 6482#3.3
+    IPv4DupPrefixDiffMaxLen   # (good) IPv4 two copies of same prefix, different maxlength 6482#3.3
+    IPv6DupPrefixDiffMaxLen   # (good) IPv6 two copies of same prefix, different maxlength 6482#3.3
+556 IP2Big                   # ROA eContent IP prefixes exceed EE IP resources 6482#4
+    <enumerate overlap cases> # all interactions btw 3779 and 6482 (at least 13 cases)
+557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature 6482#3
+558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature 6482#3
+559 VersionV2                # Version V2 (int 1) 6482#3.1
                              # IP addresses exceed via inherit?
 
 CRLs
 
-640 CRLNoVersion             # no CRL version field
-641 CRLVersion0              # CRL version v1 (integer value 0)
-642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 
-643 CRLSigAlgOuter           # wrong outer signature algorithm ID
-644 CRLIssuerOID             # wrong OID for issuer name
-645 CRLIssuer2Sets           # two SETs in issuer name - NEED CLEARER TEXT
-646 CRLIssuerUTF             # issuer name in utf not printable string
-647 CRLIssuer2Seq            # two SEQUENCEs in issuer name - NEED CLEARER TEXT
-648 CRLIssuer2SerNums        # two serial numbers in issuer name
-650 CRLThisUpdateTyp         # wrong type of date in this update
-651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK)
-652 CRLNextUpdateTyp         # wrong type of date in next update
-653 CRLUpdatesCrossed        # last date is later then next date
-654 CRLIssAltName            # has issuer alternative name extension
-655 CRLIssDistPt             # has issuing distribution point extension
-656 CRLDeltaCRLInd           # has delta CRL indicator extension
-657 CRLNoAKI                 # has no authority key identifier extension
-658 CRLNoCRLNum              # has no CRL number
-659 CRLEntryReason           # entry has a revocation reason
-662 CRLBadDateFeb29          # has Feb. 29 on non-leap year
-663 CRLBadDateDayGT30        # has day 31 of 30-day month
-664 CRLBadDateDayGT31        # has day 32 of 31-day month
-665 CRLBadDateHour           # has hour> 23
-666 CRLBadDateMin            # has minute > 59
-667 CRLBadDateSec            # has seconds > 59
-668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year
-669 CRLNumber2Big            # has too long a CRL number
-670 CRL2CRLNums              # has 2 CRL numbers
-671 CRLBadDateDay0           # has a day number 0
-672 CRLBadDateMonth0         # has a month number 0
-673 CRLBadDateMonth13        # has a month number > 12
+640 CRLNoVersion             # no CRL version field 6487#5
+641 CRLVersion0              # CRL version v1 (integer value 0) 6487#5
+    CRLVersion2              # CRL version v3 (integer value 2) 6487#5
+642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 6487#5 6485#2
+643 CRLSigAlgOuter           # wrong outer signature algorithm ID 6487#5 6485#2
+    CRLSigAlgMatchButWrong   # matching inner/outer signature algorithm IDs, but wrong 6487#5 6485#2
+644 CRLIssuerOID             # wrong OID for issuer name 6487#5 6487#4.4
+645 CRLIssuer2Sets           # issuer name has 2 sets with common names 6487#5 6487#4.4
+646 CRLIssuerUTF             # issuer name in utf not printable string 6487#5 6487#4.4
+647 CRLIssuer2Seq            # issuer name has 2 common names (same set) 6487#5 6487#4.4
+648 CRLIssuerSet2SerNums     # issuer name has 2 serial numbers (same set) 6487#5 6487#4.4
+    CRLIssuerSeq2SerNums     # issuer name has 2 serial numbers (split across sets) 6487#5 6487#4.4
+    CRLIssuerSerNum          # issuer name has only a serial number 6487#5 6487#4.4
+    CRLIssuerSeqNameSer      # (good) issuer with name before serial number (2 sets) 6487#5 6487#4.4
+    CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
+    CRLIssuerSetNameSer      # (good) issuer with serial number and name (1 set) 6487#5 6487#4.4
+650 CRLThisUpdateTyp         # wrong type of date in thisUpdate (should be UTC) 5280#5.1.2.4
+651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK) 5280#5.1.2.5
+652 CRLNextUpdateTyp         # wrong type of date in next update (should be UTC) 5280#5.1.2.5
+653 CRLUpdatesCrossed        # last date is later then next date 5280#5.1.2.4,5.1.2.5
+654 CRLIssAltName            # has issuer alternative name extension 6487#5
+655 CRLIssDistPt             # has issuing distribution point extension 6487#5
+656 CRLDeltaCRLInd           # has delta CRL indicator extension 6487#5
+657 CRLNoAKI                 # has no authority key identifier extension 6487#5
+658 CRLNoCRLNum              # has no CRL number 6487#5
+659 CRLEntryReason           # entry has a revocation reason 6487#5
+    CRLEntryHasExtension     # entry has a CRL entry extension CertificateIssuer 6487#5
+662 CRLBadDateFeb29          # has Feb. 29 on non-leap year (test of ASN.1 library)
+663 CRLBadDateDayGT30        # has day 31 of 30-day month (test of ASN.1 library)
+664 CRLBadDateDayGT31        # has day 32 of 31-day month (test of ASN.1 library)
+665 CRLBadDateHour           # has hour> 23 (test of ASN.1 library)
+666 CRLBadDateMin            # has minute > 59 (test of ASN.1 library)
+667 CRLBadDateSec            # has seconds > 59 (test of ASN.1 library)
+668 CRLBadDate21000229       # has date Feb. 29 2100 -- not a leap year (test of ASN.1 library)
+669 CRLNumber2Big            # has too long a CRL number 5280#5.2.3
+    CRLNumberMax             # has the maximum allowed 20-octet CRL number 5280#5.2.3
+670 CRL2CRLNums              # has 2 CRL numbers 6487#errata
+671 CRLBadDateDay0           # has a day number 0 (test of ASN.1 library)
+672 CRLBadDateMonth0         # has a month number 0 (test of ASN.1 library)
+673 CRLBadDateMonth13        # has a month number > 12 (test of ASN.1 library)
 
 Manifests
 
-768 MFTWrongType             # wrong eContentType
-769 MFTVersion0              # non-default version 0
-770 MFTVersion1              # version 1
-771 MFTNoNum                 # no manifest number
-772 MFTNegNum                # negative manifest number
-773 MFTThisUpdUTC            # thisUpdate in UTC
-774 MFTThisUpdFuture         # thisUpdate in future
-775 MFTNextUpdUTC            # nextUpdate in UTC
-776 MFTNextUpdPast           # nextUpdate in past
-777 MFTHashAlg               # wrong hash algorithm
-779 MFTFileHashShort         # too short hash of a file
-780 MFTFileHashLong          # too long hash of a file
-781 MFTFileNotIA5            # file name not IA5
-782 MFTHashOctetStr          # file hash is octet, not bit string
-783 MFTDuplicateFileOneHash  # duplicate file name with same hash
-784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash
+768 MFTWrongType             # wrong eContentType (and signedAttrs content-type) 6486#4.1
+769 MFTVersion0              # non-default version 0 6486#4.1
+770 MFTVersion1              # version 1 6486#4.2.1
+771 MFTNoNum                 # no manifest number 6486#4.2.1
+    MFTNumMax                # (good) maximum manifest number (20 octets) 6486#4.2.1
+    MFTNumZero               # (good) manifest number is zero 6486#4.2
+    MFTNumTooBig             # manifest number exceeds max 6486#4.2.1
+772 MFTNegNum                # negative manifest number 6486#4.2.1
+773 MFTThisUpdUTC            # thisUpdate in UTC 6486#4.2
+774 MFTThisUpdFuture         # thisUpdate in future 6486#4.2.1
+775 MFTNextUpdUTC            # nextUpdate in UTC 6486#4.2
+776 MFTNextUpdPast           # nextUpdate in past (stale manifest, good/bad depends on config) 6486#4.2.1
+    MFTUpdCrossed            # thisUpdate postdates nextUpdate 6486#4.4
+777 MFTHashAlg               # wrong hash algorithm (SHA1) 6486#4.2.1,6485#2
+    MFTHashAlgSameLength     # wrong hash algorithm, but with the same output length as SHA-256 6486#4.2.1,6485#2
+779 MFTFileHashShort         # too short hash of a file 6486#4.2.1,6485#2
+780 MFTFileHashLong          # too long hash of a file 6486#4.2.1,6485#2
+781 MFTFileNotIA5            # file name not IA5 6486#4.2
+782 MFTHashOctetStr          # file hash is octet, not bit string 6486#4.2
+783 MFTDuplicateFileOneHash  # duplicate file name with same hash 6486#4.2.1
+784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash 6486#4.2.1
 
 
-TODO: Trust Anchor (self-signed) certificates
+Trust Anchor (self-signed) certificates
 
-AIA present
-CRLDP present
-bad AKI
-issuer != subject (tricky, will be interpreted as non-self-signed)
+100 RootBadAKI              # AKI does not match SKI 6487#4.8.3
+    RootAKIMatches          # (good) AKI present, matches SKI 6487#4.8.3
+    RootAKIOmitted          # (good) AKI omitted 6487#4.8.3
+101 RootBadCRLDP            # CRLDP is present in the trust anchor 6487#4.8.6
+102 RootNameDiff            # Subject and Issuer don't match (tricky, will be interpreted as non-self-signed) 5280#3.2
+    RootBadAIA              # AIA is present in the trust anchor 6487#4.8.7
+TODO: change serial numbers
