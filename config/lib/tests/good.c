@@ -4,6 +4,7 @@
 #include "lib/configlib.h"
 
 #include "lib/types/bool.h"
+#include "lib/types/path.h"
 #include "lib/types/sscanf.h"
 #include "lib/types/string.h"
 
@@ -23,6 +24,9 @@ enum config_key {
 	CONFIG_ENV_VAR_INT,
 	CONFIG_ENV_VAR_STRING,
 	CONFIG_ENV_VAR_EMPTY,
+	CONFIG_FILE,
+	CONFIG_DIR,
+	CONFIG_FILE_NOT_FOUND,
 
 	CONFIG_NUM_OPTIONS
 };
@@ -210,6 +214,36 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		NULL, NULL,
 		NULL
 	},
+
+	// CONFIG_FILE
+	{
+		"File",
+		false,
+		config_type_path_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_DIR
+	{
+		"Dir",
+		false,
+		config_type_path_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_FILE_NOT_FOUND
+	{
+		"FileNotFound",
+		false,
+		config_type_path_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
 };
 
 
@@ -292,6 +326,14 @@ static bool test_config(const char * conf_file)
 	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_STRING), ==, "/foo bar \" # \\n ${ENV_VAR_STRING}/");
 
 	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_EMPTY), ==, " barfoo  quux ");
+
+	TEST_STR((const char *)config_get(CONFIG_FILE), ==,
+		ABS_TOP_SRCDIR "/config/lib/tests/good.conf");
+
+	TEST_STR((const char *)config_get(CONFIG_DIR), ==, ABS_TOP_SRCDIR "/config/lib");
+
+	TEST_STR((const char *)config_get(CONFIG_FILE_NOT_FOUND), ==,
+		ABS_TOP_SRCDIR "/config/lib/tests/this-file-does-not-exist");
 
 	config_unload();
 
