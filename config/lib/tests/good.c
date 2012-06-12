@@ -234,16 +234,6 @@ static const struct config_option CONFIG_OPTIONS[] = {
 		NULL, NULL,
 		NULL
 	},
-
-	// CONFIG_FILE_NOT_FOUND
-	{
-		"FileNotFound",
-		false,
-		config_type_path_converter, NULL,
-		free,
-		NULL, NULL,
-		NULL
-	},
 };
 
 
@@ -331,9 +321,6 @@ static bool test_config(const char * conf_file)
 		ABS_TOP_SRCDIR "/config/lib/tests/good.conf");
 
 	TEST_STR((const char *)config_get(CONFIG_DIR), ==, ABS_TOP_SRCDIR "/config/lib");
-
-	TEST_STR((const char *)config_get(CONFIG_FILE_NOT_FOUND), ==,
-		ABS_TOP_SRCDIR "/config/lib/tests/this-file-does-not-exist");
 
 	config_unload();
 
