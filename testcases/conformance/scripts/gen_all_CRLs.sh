@@ -179,7 +179,7 @@ ${single_CRL_cmd} 644 CRLIssuerOID
 ${single_CRL_cmd} 645 CRLIssuer2Sets
 ${single_CRL_cmd} 646 CRLIssuerUTF
 ${single_CRL_cmd} 647 CRLIssuer2Seq
-${single_CRL_cmd} 648 CRLIssuer2SerNums
+${single_CRL_cmd} 648 CRLIssuerSet2SerNums
 ${single_CRL_cmd} 650 CRLThisUpdateTyp
 ${single_CRL_cmd} 651 CRLNextUpdatePast
 ${single_CRL_cmd} 652 CRLNextUpdateTyp
@@ -190,15 +190,5 @@ ${single_CRL_cmd} 656 CRLDeltaCRLInd
 ${single_CRL_cmd} 657 CRLNoAKI
 ${single_CRL_cmd} 658 CRLNoCRLNum
 ${single_CRL_cmd} 659 CRLEntryReason
-${single_CRL_cmd} 662 CRLBadDateFeb29
-${single_CRL_cmd} 663 CRLBadDateDayGT30
-${single_CRL_cmd} 664 CRLBadDateDayGT31
-${single_CRL_cmd} 665 CRLBadDateHour
-${single_CRL_cmd} 666 CRLBadDateMin
-${single_CRL_cmd} 667 CRLBadDateSec
-${single_CRL_cmd} 668 CRLBadDate21000229
 ${single_CRL_cmd} 669 CRLNumber2Big
 ${single_CRL_cmd} 670 CRL2CRLNums
-${single_CRL_cmd} 671 CRLBadDateDay0
-${single_CRL_cmd} 672 CRLBadDateMonth0
-${single_CRL_cmd} 673 CRLBadDateMonth13

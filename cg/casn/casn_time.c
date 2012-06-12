@@ -8,44 +8,88 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 
 Remarks:
 
+The BER encodings of time are defined by X.680-0207 and ISO 8601
+UTCTime: YYMMDDHHMM{suffix} or YYMMDDHHMMSS{suffix}
+GeneralizedTime: YYYYMMDDHHMMSS[.fff...]{suffix}
+{suffix} can be one of
+1. Z
+2. +hhmm
+3. -hhmm
+
+The DER encodings of time are defined by X.690-0207, which further
+restrict the BER encodings to provide a canonical form.  For example,
+"Z" is required, and trailing zeros in fractional seconds are
+forbidden.
+
+In the code below, UTCTime's two-digit year is interpreted as
+described by RFC 5280, Section 4.1.2.5.1.
+
+4.1.2.5.1. UTCTime
+
+   The universal time type, UTCTime, is a standard ASN.1 type intended
+   for representation of dates and time.  UTCTime specifies the year
+   through the two low-order digits and time is specified to the
+   precision of one minute or one second.  UTCTime includes either Z
+   (for Zulu, or Greenwich Mean Time) or a time differential.
+
+   For the purposes of this profile, UTCTime values MUST be expressed in
+   Greenwich Mean Time (Zulu) and MUST include seconds (i.e., times are
+   YYMMDDHHMMSSZ), even where the number of seconds is zero.  Conforming
+   systems MUST interpret the year field (YY) as follows:
+
+      Where YY is greater than or equal to 50, the year SHALL be
+      interpreted as 19YY; and
+
+      Where YY is less than 50, the year SHALL be interpreted as 20YY.
+
+WARNING: The code does not currently handle fractional seconds in
+GeneralizedTime, nor minutes-only UTCTime.  Thus, it is not a general
+ASN.1 UTCTime or GeneralizedTime implementation, but rather follows
+the restrictions prescribed by RFC 5280 sections 4.1.2.5.1 and
+4.1.2.5.2.
+
+KNOWN BUGS: There are problems with leap year adjustments starting the
+year 2100.  In addition, it is not clear that [read/write]_casn_time
+handle time zones correctly.
 *****************************************************************************/
 
 char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include "casn.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 
-#define UTCBASE 70
-#define UTCYR 0
-#define UTCYRSIZ 2
-#define UTCMO (UTCYR + UTCYRSIZ) // 2
-#define UTCMOSIZ 2
-#define UTCDA  (UTCMO + UTCMOSIZ) //4
-#define UTCDASIZ 2
-#define UTCHR  (UTCDA + UTCDASIZ) // 6
-#define UTCHRSIZ 2
-#define UTCMI  (UTCHR + UTCHRSIZ) // 8
-#define UTCMISIZ 2
-#define UTCSE (UTCMI + UTCMISIZ) // 10
-#define UTCSESIZ 2
-#define UTCSFXHR 1
-#define UTCSFXMI (UTCSFXHR + UTCHRSIZ)  // 3
-#define UTCT_SIZE 17
-#define GENBASE (1900 + UTCBASE)
-#define GENYR 0
-#define GENYRSIZ 4
-#define GENMO 4
-#define GENMOSIZ UTCMOSIZ
-#define GENDA 6
-#define GENDASIZ UTCDASIZ
-#define GENHR 8
-#define GENHRSIZ UTCHRSIZ
-#define GENMI 10
-#define GENMISIZ UTCMISIZ
-#define GENSE 12
-#define GENSESIZ UTCSESIZ
-#define GENSFXHR 1
-#define GENSFXMI 3
+#define UTCBASE 70     // base year 1970 (unix epoch)
+#define UTCYR 0        // 0 (UTC year position)
+#define UTCYRSIZ 2     // 2-digit year
+#define UTCMO (UTCYR + UTCYRSIZ) // 2 (UTC month position)
+#define UTCMOSIZ 2     // 2-digit month
+#define UTCDA  (UTCMO + UTCMOSIZ) //4 (UTC day position)
+#define UTCDASIZ 2     // 2-digit day
+#define UTCHR  (UTCDA + UTCDASIZ) // 6 (UTC hour position)
+#define UTCHRSIZ 2     // 2-digit hour
+#define UTCMI  (UTCHR + UTCHRSIZ) // 8 (UTC minute position)
+#define UTCMISIZ 2     // 2-digit minute
+#define UTCSE (UTCMI + UTCMISIZ) // 10 (UTC seconds position)
+#define UTCSESIZ 2     // 2-digit seconds
+#define UTCSFXHR 1     // suffix hour position (after +/-)
+#define UTCSFXMI (UTCSFXHR + UTCHRSIZ)  // 3 (suffix minute position)
+#define UTCT_SIZE 17   // 12 (YYMMDDHHMMSS) + 1 (Z/+/-) + 4 (hhmm)
+#define GENBASE (1900 + UTCBASE)  // base year 1970 (unix epoch)
+#define GENYR 0        // GeneralizedTime year position
+#define GENYRSIZ 4     // 4-digit year
+#define GENMO 4        // GeneralizedTime month position
+#define GENMOSIZ UTCMOSIZ // 2-digit month
+#define GENDA 6           // GeneralizedTime day position
+#define GENDASIZ UTCDASIZ // 2-digit day
+#define GENHR 8           // GeneralizedTime hour position
+#define GENHRSIZ UTCHRSIZ // 2-digit hour
+#define GENMI 10          // GeneralizedTime minute position
+#define GENMISIZ UTCMISIZ // 2-digit minute
+#define GENSE 12          // GeneralizedTime seconds position
+#define GENSESIZ UTCSESIZ // 2-digit seconds
+#define GENSFXHR 1     // suffix hour position (after +/-)
+#define GENSFXMI 3     // suffix minute position
 
 extern int _casn_obj_err(struct casn *, int),
         _check_filled(struct casn *casnp),
@@ -63,6 +107,101 @@ Function: Converts lth decimal digits, starting at c, to a number
     long val;
     for (val = 0; lth--; val = (val * 10) + *c++ - '0');
     return val;
+    }
+
+/** Returns true (nonzero) if year is a leap year.
+ *
+ * \remark http://en.wikipedia.org/wiki/Gregorian_calendar
+ * 
+ * Every year that is exactly divisible by four is a leap year, except
+ * for years that are exactly divisible by 100; the centurial years
+ * that are exactly divisible by 400 are still leap years. For
+ * example, the year 1900 is not a leap year; the year 2000 is a leap
+ * year.
+ */
+static int is_leapyear(int year)
+{
+        if (year % 400 == 0)
+                return 1;
+        else if (year % 100 == 0)
+                return 0;
+        else if (year % 4 == 0)
+                return 1;
+        else
+                return 0;
+}
+
+/**
+ * Convert struct tm to 64-bit signed integer.
+ *
+ * Mostly analogous to mktime(), with 64 bit output (unlike time_t
+ * which may be 32 or 64 depending on the system).  The mktime64_gmt()
+ * function shall convert the broken-down time, expressed as GMT, in
+ * the structure pointed to by timeptr, into a time since the Epoch
+ * value. The original values of the tm_wday and tm_yday components of
+ * the structure are ignored, and the original values of the other
+ * components are not restricted to the ranges described in <time.h>.
+ *
+ * Unlike POSIX mktime(), timeptr is NOT modified upon successful
+ * completion.  Nor is the output corrected for timezone and seasonal
+ * time adjustments.  Therefore, the input is assumed to be GMT,
+ * e.g. the output of the gmtime() function.
+ *
+ * \return The specified time since the Epoch encoded as a value of
+ * type int64_t.  If the time since the Epoch cannot be represented,
+ * the function shall return the value (int64_t)-1.  In particular,
+ * times before January 1, 1970 GMT cannot be represented and will
+ * return -1.
+ *
+ * \remark Note that leap-seconds will cause ambiguities; "Unix time"
+ * is neither a linear representation of time nor a true
+ * representation of UTC, as it cannot unambiguously represent UTC
+ * leap seconds (e.g. December 31, 1998 23:59:60).
+ */
+static int64_t mktime64_gmt(const struct tm *timeptr)
+{
+        int64_t t = 0;
+        int64_t tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year,
+                tm_yday;
+
+        // Minimally check pointer and bounds.
+        if (!timeptr || timeptr->tm_year < 70)
+                return (int64_t)-1;
+
+        // Cast timeptr members to 64-bit integers.
+        tm_sec = timeptr->tm_sec;
+        tm_min = timeptr->tm_min;
+        tm_hour = timeptr->tm_hour;
+        tm_mday = timeptr->tm_mday;
+        tm_mon = timeptr->tm_mon;
+        tm_year = timeptr->tm_year;
+
+        // Compute tm_yday based on tm_mday, tm_mday, and tm_myear
+        if (tm_mon < 0 || tm_mon > 11)
+                return (int64_t)-1;
+        tm_yday = _mos[tm_mon] + (tm_mday - 1);
+        // Must add leap day if March or later and it's a leap year.
+        if (is_leapyear(tm_year + 1900) && tm_mon >= 2)
+                tm_yday++;
+
+        /* Compute seconds since epoch.  Equation reference: Base
+           Definitions volume of IEEE Std 1003.1-2001, Section 4.14,
+           Seconds Since the Epoch.
+           http://pubs.opengroup.org/onlinepubs/007904875/basedefs/xbd_chap04.html#tag_04_14
+           Note: since all timeptr members were converted from int to
+           int64_t, there is no danger of overflow on systems where
+           int is 32-bit.
+        */
+        t = tm_sec + tm_min*60 + tm_hour*3600 + tm_yday*86400 +
+                (tm_year-70)*31536000 + ((tm_year-69)/4)*86400 -
+                ((tm_year-1)/100)*86400 + ((tm_year+299)/400)*86400;
+
+        // As required by POSIX, we did not check bounds on timeptr members,
+        // so we must now check for a negative result.
+        if (t < 0)
+                return (int64_t)-1;
+
+        return t;
     }
 
 int diff_casn_time(struct casn *casnp1, struct casn *casnp2)
@@ -154,10 +293,12 @@ int _utctime_to_ulong(int64_t *valp, char *fromp, int lth)
         return -1;
      
     yr = (int)get_num (&fromp[UTCYR],UTCYRSIZ);
-    if (yr < 70) strcpy(genfrom, "20");
-    else strcpy(genfrom, "19");
+    if (yr < 50) // rfc5280#section-4.1.2.5.1
+        strcpy(genfrom, "20");
+    else
+        strcpy(genfrom, "19");
     memcpy(&genfrom[2], fromp, lth);
-    int ansr = _gentime_to_ulong(valp, genfrom, lth += 2);
+    int ansr = _gentime_to_ulong(valp, genfrom, lth + 2);
     if (ansr <= 0) return ansr;
     return ansr - 2;
     }
@@ -197,8 +338,10 @@ Returns: IF error, -1, ELSE length of time field
         if ((size_t)ansr + 2 + 1 > sizeof(timebuf))
             return _casn_obj_err(casnp, ASN_TIME_ERR);
         memcpy(&timebuf[2], casnp->startp, ansr);
-        if (timebuf[2] >= '7') strncpy((char *)timebuf, "19", 2);
-        else strncpy((char *)timebuf, "20", 2);
+        if (timebuf[2] >= '5') // rfc5280#section-4.1.2.5.1
+            strncpy((char *)timebuf, "19", 2);
+        else
+            strncpy((char *)timebuf, "20", 2);
         ansr += 2;
         }
     timebuf[ansr] = 0;
@@ -221,7 +364,7 @@ static ulong put_num (char *to, ulong val, int lth)
 int write_casn_time(struct casn *casnp, int64_t time) 
     {
     ushort *mop;
-    long da, min, sec, leap;
+    long da, min, sec, years_since_base;
     char *c, *to;
     int err = 0;
 
@@ -242,13 +385,13 @@ int write_casn_time(struct casn *casnp, int64_t time)
     time += (((UTCBASE - 1) % 4) * 365); /* days since leap year before base year */
     da = time  % 1461; /* da # in quadrenniad */
     time /= 1461;                        /* quadrenniads since prior leap yr */
-    leap = ((time * 4) + ((da == 1460)? 3 : (da / 365)) - ((UTCBASE - 1) % 4));
+    years_since_base = ((time * 4) + ((da == 1460)? 3 : (da / 365)) - ((UTCBASE - 1) % 4));
                                     /* yrs since base yr */
     if (da == 1460) da = 365;
     else da %= 365;
     for (mop = _mos; da >= *mop; mop++);
     if (mop > &_mos[12]) mop--;
-    if ((leap % 4) == (UTCBASE % 4))  /* leap year */
+    if ((years_since_base % 4) == (UTCBASE % 4))  /* leap year */
         {
         if (da == 59) mop--;  /* Feb 29  */
         else if (da > 59 && (da -= 1) < mop[-1]) mop--;
@@ -256,17 +399,18 @@ int write_casn_time(struct casn *casnp, int64_t time)
     put_num (&c[UTCDA],(ulong)(da + 1 - mop[-1]),UTCDASIZ);
     put_num (&c[UTCMO],(ulong)(mop - _mos),UTCMOSIZ);
        // is it UTCTIME beyond the upper limit?
-    if (casnp->type == ASN_UTCTIME && leap >= 100)
+    if (casnp->type == ASN_UTCTIME && years_since_base >= (2050 - 1970))
       return -1; 
-    put_num (&c[UTCYR],(ulong)(leap + UTCBASE),UTCYRSIZ);
+    put_num (&c[UTCYR],(ulong)(years_since_base + UTCBASE),UTCYRSIZ);
     c += UTCSE + UTCSESIZ;
     *c++ = 'Z';
     if (casnp->type == ASN_GENTIME)
 	{
-	if (leap >= 30)
+	if (years_since_base >= 30)
           {
+          // FIXME: this is broken for dates beyond 2199
           *to = '2';
-          to[1] = (leap < 130)? '0': '1';
+          to[1] = (years_since_base < 130)? '0': '1';
           }
 	else
 	    {
