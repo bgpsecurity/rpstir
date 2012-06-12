@@ -160,6 +160,7 @@ ${single_CMS_cmd} CMS 517 DigestAlgSameWrong
 ${single_CMS_cmd} CMS 518 2DigestAlgs
 ${single_CMS_cmd} CMS 519 NoDigestAlgs
 ${single_CMS_cmd} CMS 520 HasCRL
+${single_CMS_cmd} CMS 521 NoSigInfo
 ${single_CMS_cmd} CMS 523 SigInfoVersion
 ${single_CMS_cmd} CMS 524 SigInfoVersion4
 ${single_CMS_cmd} CMS 525 SigInfoNoSid

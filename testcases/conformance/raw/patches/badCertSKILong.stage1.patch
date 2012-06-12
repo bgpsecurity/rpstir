@@ -5,7 +5,7 @@
                  seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
                      ocw oct 0xE3A5B96E6D0AC790FECC28C625CCE8D5
 -                            0x26417857
-+                            0x264178
++                            0x26417857A7
                  seq oid 2.5.29.35 /* id_authKeyId */
                      ocw seq ctx+0x00
                                  0xD27F6E783B2B5CE535940D54C0A6F38F

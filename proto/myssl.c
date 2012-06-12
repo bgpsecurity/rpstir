@@ -3389,6 +3389,63 @@ static int rescert_subj_iss_UID_chk(struct Certificate *certp) {
 }
 
 
+/**
+    @brief Check for unknown extensions.
+*/
+static int rescert_extensions_chk(struct Certificate *certp) {
+    static char const * const allowed_extensions[] = {
+        id_basicConstraints,
+        id_subjectKeyIdentifier,
+        id_authKeyId,
+        id_keyUsage,
+        id_extKeyUsage,
+        id_cRLDistributionPoints,
+        id_pkix_authorityInfoAccess,
+        id_pe_subjectInfoAccess,
+        id_certificatePolicies,
+        id_pe_ipAddrBlock,
+        id_pe_autonomousSysNum,
+        NULL
+    };
+
+    // to prevent memory overflows
+    static const int max_oid_print_length = 50;
+
+    struct Extension *extp = NULL;
+    bool ext_allowed;
+    size_t i;
+
+    for (extp = (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
+        extp != NULL;
+        extp = (struct Extension *)next_of(&extp->self))
+    {
+        ext_allowed = false;
+        for (i = 0; allowed_extensions[i] != NULL; ++i)
+        {
+            if (!diff_objid(&extp->extnID, allowed_extensions[i])) {
+                ext_allowed = true;
+                break;
+            }
+        }
+
+        if (!ext_allowed) {
+            int oid_size = vsize_objid(&extp->extnID);
+            char oid_print[max_oid_print_length + 1];
+
+            if (oid_size > max_oid_print_length) {
+                snprintf(oid_print, sizeof(oid_print), "<oid too large to print>");
+            } else {
+                read_objid(&extp->extnID, oid_print);
+            }
+            log_msg(LOG_ERR, "certificate has unknown extension %s", oid_print);
+            return ERR_SCM_BADEXT;
+        }
+    }
+
+    return 0;
+}
+
+
 /*
  Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
  on a single file.
@@ -3498,6 +3555,11 @@ int rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, int checkRPK
   log_msg(LOG_DEBUG, "rescert_subj_iss_UID_chk");
   if ( ret < 0 )
       return(ret);
+
+  ret = rescert_extensions_chk(certp);
+  log_msg(LOG_DEBUG, "rescert_extensions_chk");
+  if ( ret < 0 )
+    return(ret);
 
   return(0);
 }

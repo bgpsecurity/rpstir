@@ -2570,7 +2570,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
   int   sta, cert_added = 0, stale;
   struct ROA roa;
   char *thisUpdate, *nextUpdate, certfilename[PATH_MAX];
-  char asn_time[16];
+  char asn_time[16]; // DER GenTime: strlen("YYYYMMDDhhmmssZ") == 15
   unsigned int man_id = 0;
 
   // manifest stored in same format as a roa

@@ -1,0 +1,37 @@
+--- badCMSNoSigInfo.raw.old	2012-05-09 18:10:15.151690512 -0400
++++ badCMSNoSigInfo.raw	2012-05-09 18:10:28.819689940 -0400
+@@ -104,33 +104,4 @@
+                         0x340CC7AD85D34CD4017FF7380D7D000B
+                         0xCAE52A24A21C35A51F8E0E4A80F1DFF1
+                         0x51
+-            set seq int 0x03 /* 3 */ 
+-                    ctx+0x00
+-                        0x9E2264020FD16B44FA5C1A34583E2052
+-                        0x9089EC4C
+-                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+-                        nul 
+-                    ctx+0x20
+-                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+-                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+-                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+-                            set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
+-                                    0x234CB1D2DD939DB9BC65DAC7014366E4
+-                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+-                        nul 
+-                    oct 0x1E519D750601B7D01DD3738BA3887EB1
+-                        0xDD17144D4668EBA2E9E98A871ABC21E6
+-                        0x03D937750BF810251B18F0B035DC2F43
+-                        0x796FAB902226241D6A59B88000899314
+-                        0xE772AD0BED1032EBDB677FF3B4DEAFEF
+-                        0xF50304128835067F4814B82327047FDD
+-                        0xBAAD6F73E7662138C74AE131167438A0
+-                        0xBFCFE6D8CDDA4F672EE36EDE7B7464F8
+-                        0x058F829FBD87A8F1305715891F0FCB34
+-                        0x5F3196AA39BB95A561E4980EB296D0E9
+-                        0x75F073B4B201FCEC5EEFAE0254EFF7B7
+-                        0x8B563F58158DFD3199288B3420ABD267
+-                        0x13D129B55B6DC07812DFBA2C5463EB04
+-                        0x7953B6DED84B8F3732977DE2971EE324
+-                        0x3760830486DF63FC13C0E1282F877C44
+-                        0xAE5964607B8C1BC8AF4E2ACBF23F1152
++            set

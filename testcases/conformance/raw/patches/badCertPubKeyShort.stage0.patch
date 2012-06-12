@@ -1,11 +1,20 @@
---- badCertPubKeyShort.raw.old	2011-09-19 16:30:33.000000000 -0400
-+++ badCertPubKeyShort.raw	2011-09-19 16:32:52.000000000 -0400
+--- badCertPubKeyShort.raw.old	2012-05-09 15:53:22.584621413 -0400
++++ badCertPubKeyShort.raw	2012-05-09 15:54:26.445521745 -0400
+@@ -11,7 +11,7 @@
+                     prt "badCertPubKeyShort"
+         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                 nul 
+-            bit 0x003082010A0282010100BFBD06FD096D
++            bit 0x00308201090282010000BFBD06FD096D
+                 0x521EBC459C635121DE5118755DED6887
+                 0x2600106715226FDEF783049BF1B83BC7
+                 0x53CE863CED62A0DE13476D36E1B467F2
 @@ -27,7 +27,7 @@
                  0xF3AEC3C6E9A52E3541A3AD92AD4D3DE2
                  0xD9156079DEED98DEBCF164836FCE4362
                  0x42BB042C32385930388091C46DCA1ECD
 -                0x2C7A91231D55453592430203010001
-+                0x2C7A91231D554535930203010001
++                0x2C7A91231D554535920203010001
          ctx+0x23
              seq seq oid 2.5.29.19 /* id_basicConstraints */
                      boo 0xFF
