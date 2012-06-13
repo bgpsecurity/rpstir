@@ -27,17 +27,19 @@ check_num_output_lines()
 run_bg () {
     LOG="$1"
     shift
+    PROG="$1"
+    shift
 
     case "$CHECKTOOL" in
         "valgrind")
             if test "x$STRICT_CHECKS" = x1; then
-                valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$@" &
+                valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$PROG" "$@" &
             else
-                valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$@" &
+                valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$PROG" "$@" &
             fi
             ;;
         "" | "none")
-            "$@" &
+            "$PROG" "$@" &
             ;;
         *)
             echo >&2 "Error: invalid value for \$CHECKTOOL: $CHECKTOOL"
