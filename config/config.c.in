@@ -16,4 +16,34 @@ const struct config_option CONFIG_OPTIONS[] = {
 		NULL, NULL,
 		"\"@abs_top_srcdir@\""
 	},
+
+	// CONFIG_DATABASE
+	{
+		"Database",
+		false,
+		config_type_string_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_DATABASE_USER
+	{
+		"DatabaseUser",
+		false,
+		config_type_string_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
+
+	// CONFIG_DATABASE_PASSWORD
+	{
+		"DatabasePassword",
+		false,
+		config_type_string_converter, NULL,
+		free,
+		NULL, NULL,
+		NULL
+	},
 };
