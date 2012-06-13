@@ -736,6 +736,8 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
   int ret = 0;
   int file_length, total, i, j;
   total = num_items(&manp->fileList.self);
+  if (total == 0)
+    return 0;
   filenames = malloc(total * sizeof(char *));
   if (filenames == NULL)
     {
