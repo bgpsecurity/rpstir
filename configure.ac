@@ -15,8 +15,6 @@ AM_SILENT_RULES
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([rtr/pdu.h])
 
-AC_DEFINE_UNQUOTED([ABS_TOP_SRCDIR], ["$abs_top_srcdir"])
-
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.
@@ -31,9 +29,9 @@ AC_PROG_SED
 
 AC_ARG_WITH(
     [config-file],
-    AS_HELP_STRING([--with-config-file],[Path to default configuration file. Defaults to $abs_top_srcdir/$PACKAGE_NAME.conf]),
+    AS_HELP_STRING([--with-config-file],[Path to default configuration file. Defaults to rpstir.conf in the source directory.]),
     [DEFAULT_CONFIG_FILE=$withval],
-    [DEFAULT_CONFIG_FILE=$abs_top_srcdir/$PACKAGE_NAME.conf]
+    [DEFAULT_CONFIG_FILE=`pwd`/$PACKAGE_NAME.conf] # XXX: this only works if configure is run from srcdir (but that's all we support now anyway)
 )
 AC_SUBST([DEFAULT_CONFIG_FILE])
 AC_DEFINE_UNQUOTED([DEFAULT_CONFIG_FILE], ["$DEFAULT_CONFIG_FILE"])
@@ -232,6 +230,8 @@ fi
 
 
 AC_CONFIG_FILES([Makefile
+                 config/config.c
+                 config/lib/tests/good.c
                  config/Makefile
                  cg/Makefile
                  cg/asn/Makefile

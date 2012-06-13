@@ -14,6 +14,6 @@ const struct config_option CONFIG_OPTIONS[] = {
 		config_type_string_converter, NULL,
 		free,
 		NULL, NULL,
-		"\"" ABS_TOP_SRCDIR "\""
+		"\"@abs_top_srcdir@\""
 	},
 };

@@ -317,9 +317,9 @@ static bool test_config(const char * conf_file)
 	TEST_STR((const char *)config_get(CONFIG_ENV_VAR_EMPTY), ==, " barfoo  quux ");
 
 	TEST_STR((const char *)config_get(CONFIG_FILE), ==,
-		ABS_TOP_SRCDIR "/config/lib/tests/good.conf");
+		"@abs_top_srcdir@/config/lib/tests/good.conf");
 
-	TEST_STR((const char *)config_get(CONFIG_DIR), ==, ABS_TOP_SRCDIR "/config/lib");
+	TEST_STR((const char *)config_get(CONFIG_DIR), ==, "@abs_top_srcdir@/config/lib");
 
 	config_unload();
 
