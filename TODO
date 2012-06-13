@@ -1,2 +1,1 @@
-* types/path.[ch]: a type that converts paths relative to the config file into absolute types
 * integrate with the rest of RPSTIR
