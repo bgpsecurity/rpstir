@@ -254,24 +254,40 @@ int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
   return err == 0 ? hash_lth : err;
 }
 
+/* Find unique attribute, according to
+   http://tools.ietf.org/html/rfc6488#section-2.1.6.4
+
+     SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+
+     Attribute ::= SEQUENCE {
+       attrType OBJECT IDENTIFIER,
+       attrValues SET OF AttributeValue }
+
+     AttributeValue ::= ANY
+
+   The signedAttrs element MUST include only a single instance of any
+   particular attribute.  Additionally, even though the syntax allows
+   for a SET OF AttributeValue, in an RPKI signed object, the attrValues
+   MUST consist of only a single AttributeValue.
+ */
 static struct Attribute *find_unique_attr(struct SignedAttributes *attrsp, 
   char *oidp, int *nump)
   {
   struct Attribute *attrp, *ch_attrp = NULL;
-  int num = 0;
-  *nump = 0;
-  for (attrp = (struct Attribute *)member_casn(&attrsp->self, num);
-    attrp; attrp = (struct Attribute *)next_of(&attrp->self), num++)
+  int num_found = 0;
+  for (attrp = (struct Attribute *)member_casn(&attrsp->self, 0);
+       attrp != NULL; attrp = (struct Attribute *)next_of(&attrp->self))
     {
     if (!diff_objid(&attrp->attrType, oidp))
       {
-      (*nump)++;
-      if (ch_attrp)           // attribute encountered already
-        return NULL;
+      num_found++;
       ch_attrp = attrp;
       }
     }
-  // make sure there is one and only one attrValue in the attribute
+  *nump = num_found;
+  if (num_found != 1) // attribute must be encountered exactly once
+    return NULL;
+  // within the attribute, ensure there is exactly one attrValue
   if (ch_attrp && num_items(&ch_attrp->attrValues.self) != 1)
     return NULL;
   return ch_attrp;
