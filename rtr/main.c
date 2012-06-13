@@ -15,6 +15,7 @@
 #include "bag.h"
 #include "queue.h"
 #include "logging.h"
+#include "config.h"
 #include "mysql-c-api/connect.h"
 
 #include "cache_state.h"
@@ -42,6 +43,8 @@ static void signal_handler(int signal)
 
 struct run_state {
 	bool log_opened;
+
+	bool config_loaded;
 
 	size_t listen_fds_initialized;
 	int listen_fds[MAX_LISTENING_SOCKETS];
@@ -419,6 +422,12 @@ static void cleanup(void * run_state_voidp)
 			ERR_LOG(errno, errorbuf, "close()");
 	}
 
+	if (run_state->config_loaded)
+	{
+		config_unload();
+		run_state->config_loaded = false;
+	}
+
 	LOG(LOG_NOTICE, "shutting down");
 
 	if (run_state->log_opened)
@@ -439,6 +448,16 @@ static void startup(struct run_state * run_state)
 	block_signals();
 	OPEN_LOG(RTR_LOG_IDENT, RTR_LOG_FACILITY);
 	run_state->log_opened = true;
+	unblock_signals();
+
+	block_signals();
+	run_state->config_loaded = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, NULL);
+	if (!run_state->config_loaded)
+	{
+		LOG(LOG_ERR, "can't load configuration");
+		exit_code = EXIT_FAILURE;
+		pthread_exit(NULL);
+	}
 	unblock_signals();
 
 	make_listen_sockets(run_state, NULL, LISTEN_PORT);

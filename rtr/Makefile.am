@@ -1,7 +1,7 @@
 AM_CFLAGS = -g -Wall -Wextra -Werror
 
 AM_CPPFLAGS = $(DEPS_CFLAGS) -I../cg/asn -I../proto -I../cg/asn_gen \
-	-I../cg/casn -I../roa-lib -I../utils
+	-I../cg/casn -I../roa-lib -I../utils -I../config
 
 noinst_LIBRARIES = libpdu.a
 
