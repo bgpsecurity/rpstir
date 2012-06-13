@@ -8,6 +8,8 @@
 #include <my_sys.h>
 #include <mysql.h>
 
+#include "config.h"
+
 #include "connect.h"
 #include "db-internal.h"
 #include "logging.h"
@@ -170,9 +172,9 @@ dbconn *db_connect(
 ------------------------------------------------------------------------------*/
 dbconn *db_connect_default(int client_flags) {
     const char *host = "localhost";
-    const char *user = getenv("RPKI_DBUSER");
-    const char *pass = getenv("RPKI_DBPASS");
-    const char *db =   getenv("RPKI_DB");
+    const char *user = config_get(CONFIG_DATABASE_USER);
+    const char *pass = config_get(CONFIG_DATABASE_PASSWORD);
+    const char *db =   config_get(CONFIG_DATABASE);
 
     return connectMysqlCApi(client_flags, host, user, pass, db);
 }
