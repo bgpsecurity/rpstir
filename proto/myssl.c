@@ -3398,7 +3398,7 @@ static int rescert_extensions_chk(struct Certificate *certp) {
         id_subjectKeyIdentifier,
         id_authKeyId,
         id_keyUsage,
-        id_extKeyUsage,
+        id_extKeyUsage, // allowed in future BGPSEC EE certs
         id_cRLDistributionPoints,
         id_pkix_authorityInfoAccess,
         id_pe_subjectInfoAccess,
