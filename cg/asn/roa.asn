@@ -123,11 +123,11 @@ IMPORTS AlgorithmIdentifier RPKIAlgorithmIdentifier CMSAlgorithmIdentifier
  
       ASID ::= INTEGER 
     
-      ROAIPAddrBlocks ::= SEQUENCE OF ROAIPAddressFamily 
+      ROAIPAddrBlocks ::= SEQUENCE (SIZE (1..MAX)) OF ROAIPAddressFamily 
     
       ROAIPAddressFamily ::= SEQUENCE {
         addressFamily OCTET STRING (SIZE (2..3)),
-        addresses SEQUENCE OF ROAIPAddress }
+        addresses SEQUENCE (SIZE (1..MAX)) OF ROAIPAddress }
       -- Only two address families are allowed: IPv4 and IPv6
 
       ROAIPAddress ::= SEQUENCE {

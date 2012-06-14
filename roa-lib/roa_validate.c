@@ -888,6 +888,9 @@ int manifestValidate(struct ROA *roap, int *stalep)
   return 0;
   }
 
+/*
+// NOTE: check_asnums function is not needed for validating a ROA.
+// Keeping it here (commented out) because it may be useful elsewhere.
 static int check_asnums(struct Certificate *certp, int iAS_ID)
   {
   struct Extension *extp;
@@ -927,6 +930,7 @@ static int check_asnums(struct Certificate *certp, int iAS_ID)
     }
   return 1;
   }
+*/
 
 struct certrange
   {
@@ -1073,10 +1077,13 @@ static int checkIPAddrs(struct Certificate *certp,
   return 1;
   }
 
+/*
+ * Make sure that the ROA meets the provisions outlined in RFC 6482.
+ * Checks are limited to those that can be done using the standalone
+ * ROA.
+ */
 int roaValidate(struct ROA *rp)
   {
-  // Make sure that the ROA meets the provisions outlined in
-  // Kent/Kong ROA IETF draft
   int iRes = 0;
   long iAS_ID = 0;
 
@@ -1102,11 +1109,9 @@ int roaValidate(struct ROA *rp)
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
   if (!certp) return ERR_SCM_BADNUMCERTS; // XXX: this never happens
-  int rescount = 0;
-  // check that the asID is within the EE cert's scope, if any
-  if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;
-  rescount += iRes; // count that we got an (optional) AS number extension
-  iRes = 0;
+
+  // NOTE: ROA asID need not be within EE cert's AS allocation!
+
   // check that the contents are valid
   struct ROAIPAddrBlocks *roaIPAddrBlocksp = &rp->content.signedData.
     encapContentInfo.eContent.roa.ipAddrBlocks;
@@ -1114,8 +1119,6 @@ int roaValidate(struct ROA *rp)
   // and that they are within the cert's resources
   if ((iRes = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
     return iRes; 
-  rescount += iRes;
-  if (!rescount) return ERR_SCM_NOIPAS;
   return 0;
   }
 
