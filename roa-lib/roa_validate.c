@@ -254,24 +254,40 @@ int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
   return err == 0 ? hash_lth : err;
 }
 
+/* Find unique attribute, according to
+   http://tools.ietf.org/html/rfc6488#section-2.1.6.4
+
+     SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+
+     Attribute ::= SEQUENCE {
+       attrType OBJECT IDENTIFIER,
+       attrValues SET OF AttributeValue }
+
+     AttributeValue ::= ANY
+
+   The signedAttrs element MUST include only a single instance of any
+   particular attribute.  Additionally, even though the syntax allows
+   for a SET OF AttributeValue, in an RPKI signed object, the attrValues
+   MUST consist of only a single AttributeValue.
+ */
 static struct Attribute *find_unique_attr(struct SignedAttributes *attrsp, 
   char *oidp, int *nump)
   {
   struct Attribute *attrp, *ch_attrp = NULL;
-  int num = 0;
-  *nump = 0;
-  for (attrp = (struct Attribute *)member_casn(&attrsp->self, num);
-    attrp; attrp = (struct Attribute *)next_of(&attrp->self), num++)
+  int num_found = 0;
+  for (attrp = (struct Attribute *)member_casn(&attrsp->self, 0);
+       attrp != NULL; attrp = (struct Attribute *)next_of(&attrp->self))
     {
     if (!diff_objid(&attrp->attrType, oidp))
       {
-      (*nump)++;
-      if (ch_attrp)           // attribute encountered already
-        return NULL;
+      num_found++;
       ch_attrp = attrp;
       }
     }
-  // make sure there is one and only one attrValue in the attribute
+  *nump = num_found;
+  if (num_found != 1) // attribute must be encountered exactly once
+    return NULL;
+  // within the attribute, ensure there is exactly one attrValue
   if (ch_attrp && num_items(&ch_attrp->attrValues.self) != 1)
     return NULL;
   return ch_attrp;
@@ -720,6 +736,8 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
   int ret = 0;
   int file_length, total, i, j;
   total = num_items(&manp->fileList.self);
+  if (total == 0)
+    return 0;
   filenames = malloc(total * sizeof(char *));
   if (filenames == NULL)
     {
@@ -870,6 +888,9 @@ int manifestValidate(struct ROA *roap, int *stalep)
   return 0;
   }
 
+/*
+// NOTE: check_asnums function is not needed for validating a ROA.
+// Keeping it here (commented out) because it may be useful elsewhere.
 static int check_asnums(struct Certificate *certp, int iAS_ID)
   {
   struct Extension *extp;
@@ -909,6 +930,7 @@ static int check_asnums(struct Certificate *certp, int iAS_ID)
     }
   return 1;
   }
+*/
 
 struct certrange
   {
@@ -1055,10 +1077,13 @@ static int checkIPAddrs(struct Certificate *certp,
   return 1;
   }
 
+/*
+ * Make sure that the ROA meets the provisions outlined in RFC 6482.
+ * Checks are limited to those that can be done using the standalone
+ * ROA.
+ */
 int roaValidate(struct ROA *rp)
   {
-  // Make sure that the ROA meets the provisions outlined in
-  // Kent/Kong ROA IETF draft
   int iRes = 0;
   long iAS_ID = 0;
 
@@ -1084,11 +1109,9 @@ int roaValidate(struct ROA *rp)
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
   if (!certp) return ERR_SCM_BADNUMCERTS; // XXX: this never happens
-  int rescount = 0;
-  // check that the asID is within the EE cert's scope, if any
-  if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;
-  rescount += iRes; // count that we got an (optional) AS number extension
-  iRes = 0;
+
+  // NOTE: ROA asID need not be within EE cert's AS allocation!
+
   // check that the contents are valid
   struct ROAIPAddrBlocks *roaIPAddrBlocksp = &rp->content.signedData.
     encapContentInfo.eContent.roa.ipAddrBlocks;
@@ -1096,8 +1119,6 @@ int roaValidate(struct ROA *rp)
   // and that they are within the cert's resources
   if ((iRes = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
     return iRes; 
-  rescount += iRes;
-  if (!rescount) return ERR_SCM_NOIPAS;
   return 0;
   }
 
