@@ -1003,7 +1003,7 @@ static int checkIPAddrs(struct Certificate *certp,
     self, 0); 
     extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock);
     extp = (struct Extension *)next_of(&extp->self));
-  if (!extp) return 0;
+  if (!extp) return ERR_SCM_NOIPEXT;
   struct IpAddrBlock *certIpAddrBlockp = &extp->extnValue.ipAddressBlock;
 
   struct ROAIPAddressFamily *roaFamilyp;
@@ -1083,7 +1083,7 @@ static int checkIPAddrs(struct Certificate *certp,
     if (!matchedCertFamily)
       return ERR_SCM_ROAIPMISMATCH;
     }
-  return 1;
+  return 0;
   }
 
 /*
