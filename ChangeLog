@@ -1,5 +1,6 @@
 next
 
+	* Add conformance cases for various specifications and fix problems revealed by those conformance cases.
 	* Performance tuning for rsync.
 	* Remove dependency on python-netaddr and increase performance where python-netaddr used to be used.
 	* Various bug fixes.
