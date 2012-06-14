@@ -51,6 +51,8 @@
 // JFG - Reinsert this definition here if ranges are reinstated in asn
 //#define IP_RANGES_ALLOWED
 
+extern int strict_profile_checks_cms;
+
 enum asnFileFormat {
   FMT_CONF = 0,
   FMT_PEM,
@@ -194,7 +196,7 @@ int roaValidate(struct ROA *r);
   returns a negative error code.
 */
 
-int manifestValidate(struct ROA *r);
+int manifestValidate(struct ROA *r, int *stalep);
 
 /*
   This function performs all validations steps on a manifest that do not
@@ -281,6 +283,14 @@ char *signCMS(struct ROA *roa, char *keyfilename, int bad);
 /*
   This function is used in roa_serialize, make_test_roa and make_test_manifest.
 */ 
+
+/**
+ * sign CMS blob blindly, neither verifying eContent nor touching signedAttrs
+ * @param cms signed object with one signerInfo (the one to be signed)
+ * @param keyfilename path to .p15 keyfile
+ * @return NULL on success, error message on failure
+ */
+const char* signCMSBlob(struct CMSBlob *cms, const char *keyfilename);
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }

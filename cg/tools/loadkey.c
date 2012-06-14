@@ -37,7 +37,8 @@ int main(int argc, char **argv)
   if (argc < 4) fprintf(stderr, "Need argv[1] for label, [2] for .req file, [3] for outfile\n");
   else
     {
-    cryptInit();
+    if (cryptInit() != CRYPT_OK)
+      return fatal("Can't open Cryptlib");
     ansr = cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
     PrivateKey(&privkey, 0);
     if (get_casn_file(&privkey.self, argv[2], 0) < 0) return fatal("Error getting key");

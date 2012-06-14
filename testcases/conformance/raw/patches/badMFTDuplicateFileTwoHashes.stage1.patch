@@ -1,0 +1,13 @@
+--- badMFTDuplicateFileTwoHashes.raw.old	2012-01-25 11:27:30.620615576 -0500
++++ badMFTDuplicateFileTwoHashes.raw	2012-01-25 11:28:13.579840899 -0500
+@@ -13,6 +13,10 @@
+                                     bit 0x00A1E6F6F4CA68B39A59AD42BB936082
+                                         0x2CBA87BA4DC6D2B0D732AC15B0AB3332
+                                         0x8D
++                                seq ia5 "MFTDuplicateFileTwoHashes.crl"
++                                    bit 0x00A1E6F6F4CA68B39A59AD42BB936082
++                                        0x2CBA87BA4DC6D2B0D732AC15B0AB3332
++                                        0x8B
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 

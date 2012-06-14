@@ -1,0 +1,13 @@
+--- badCertSubjectSerNum.raw.old	2011-09-29 15:34:04.000000000 -0400
++++ badCertSubjectSerNum.raw	2011-09-29 15:35:00.000000000 -0400
+@@ -7,8 +7,8 @@
+                     prt "root"
+         seq utc "110411185728Z"
+             utc "460515185928Z"
+-        seq set seq oid 2.5.4.3 /* id_commonName */
+-                    prt "badCertSubjectSerNum"
++        seq set seq oid 2.5.4.5 /* serial number */
++                    prt "5"
+         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                 nul 
+             bit 0x003082010A0282010100BFBD06FD096D

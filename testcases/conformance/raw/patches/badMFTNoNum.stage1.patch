@@ -1,0 +1,12 @@
+--- badMFTNoNum.raw.old	2012-05-01 14:48:25.031317616 -0400
++++ badMFTNoNum.raw	2012-05-01 14:48:44.052861643 -0400
+@@ -5,8 +5,7 @@
+                     nul 
+             seq oid 1.2.840.113549.1.9.16.1.26 /* id_roa_pki_manifest */
+                 ctx+0x20
+-                    ocw seq int 0x01 /* 1 */ 
+-                            gen "20110411185728Z"
++                    ocw seq gen "20110411185728Z"
+                             gen "20460515185928Z"
+                             oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                             seq seq ia5 "MFTNoNum.crl"

@@ -44,7 +44,9 @@ fi
 # start loader
 ../proto/rcli -w $RPKI_PORT -p &
 LOADER_PID=$!
-sleep 1
+while ! nc -z localhost $RPKI_PORT; do
+    sleep 1
+done
 echo "Loader started (pid = $LOADER_PID)..."
 
 # run all steps
@@ -60,8 +62,10 @@ while [ $N -le $NUM_TOTAL ]; do
 done
 
 # cleanup
-kill -9 $LOADER_PID
-sleep 1
+kill $LOADER_PID
+wait $LOADER_PID || true
+# echo Socket state from netstat
+# netstat -ant | grep $RPKI_PORT
 
 # display results
 if [ "$NUM_PASSED" -eq "$NUM_TOTAL" ]; then
@@ -73,7 +77,7 @@ echo "-------------------------------------------------------------------"
 echo "Subsystem Test $TESTID: $NUM_PASSED out of $NUM_TOTAL steps passed."
 echo "Subsystem Test $TESTID: $TEST_STATUS"
 echo "-------------------------------------------------------------------"
-
+sleep 2
 # exit with nonzero if test failed
 if [ "$TEST_STATUS" != "PASS" ]; then
     exit 2

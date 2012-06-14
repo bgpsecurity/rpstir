@@ -158,30 +158,29 @@ ensure_file_exists "${single_cert_script}"
 # Generate Child certificates
 ###############################################################################
 
-${single_cert_cmd} 101 AIA2AccessDesc # ??? is this right?
-${single_cert_cmd} 102 AIABadAccess # wrong accessMethod for rsync URI
-${single_cert_cmd} 103 AIAAccessLoc # single HTTP accessLoc, no rsync
-${single_cert_cmd} 104 AIACrit  # wrongly mark AIA extension as critical
-${single_cert_cmd} 105 AKIHash  # AKI doesn't match parent SKI
-${single_cert_cmd} 106 AKILth   # AKI is too short (do we want too long?)
-${single_cert_cmd} 107 BadExtension1 # illegal extension (PolicyMappings)
-${single_cert_cmd} 109 BasicConstrNoCA # BasicConstr present, but cA not set
-${single_cert_cmd} 110 BasicConstrNoCrit # BasicConstr present, crit bit unset
-${single_cert_cmd} 111 BasicConstrPathLth # BasicConstr path length present
-${single_cert_cmd} 112 Cpol2oid # More than one Certificate Policy OID (more?)
-${single_cert_cmd} 113 CpolNoCrit # CertPolicy extension, crit bit unset
-${single_cert_cmd} 114 CRLDP2DistPt
+${single_cert_cmd} -x good 101 AIA2AccessDescHtRs
+${single_cert_cmd} 102 AIABadAccess
+${single_cert_cmd} 103 AIAAccessLoc
+${single_cert_cmd} 104 AIACrit
+${single_cert_cmd} 105 AKIHash
+${single_cert_cmd} 106 AKIShort
+${single_cert_cmd} 107 UnkExtension
+${single_cert_cmd} 109 BasicConstrNoCA
+${single_cert_cmd} 110 BasicConstrNoCrit
+${single_cert_cmd} 111 BasicConstrPathLth
+${single_cert_cmd} 112 Cpol2oid1correct
+${single_cert_cmd} 113 CpolNoCrit
+${single_cert_cmd} -x good 114 CRLDP2DistPt
 ${single_cert_cmd} 115 CRLDPCrit
 ${single_cert_cmd} 116 CRLDPCrlIssuer
-${single_cert_cmd} 117 CRLDPNoDistPt
 ${single_cert_cmd} 118 CRLDPReasons
 ${single_cert_cmd} 119 EKU
 ${single_cert_cmd} 120 InnerSigAlg
 ${single_cert_cmd} 121 IssuerOID
-${single_cert_cmd} 122 Issuer2Sets
+${single_cert_cmd} 122 Issuer2ComName
 ${single_cert_cmd} 123 IssuerUtf
-${single_cert_cmd} 124 Issuer2Seq
-${single_cert_cmd} 125 Issuer2SerNums
+${single_cert_cmd} 124 Issuer2SetComName
+${single_cert_cmd} 125 IssuerSerNum
 ${single_cert_cmd} 126 IssUID
 ${single_cert_cmd} 127 KUsageExtra
 ${single_cert_cmd} 128 KUsageNoCertSign
@@ -190,7 +189,7 @@ ${single_cert_cmd} 131 KUsageNoCRLSign
 ${single_cert_cmd} 134 OuterSigAlg
 ${single_cert_cmd} 135 PubKeyAlg
 ${single_cert_cmd} 136 PubKeyExp
-${single_cert_cmd} 137 PubKeyLth
+${single_cert_cmd} 137 PubKeyShort
 ${single_cert_cmd} 138 ResourcesASNoCrit
 ${single_cert_cmd} 139 ResourcesBadAFI
 ${single_cert_cmd} 140 ResourcesBadASOrder
@@ -199,16 +198,15 @@ ${single_cert_cmd} 142 ResourcesBadV6Order
 ${single_cert_cmd} 143 ResourcesIPNoCrit
 ${single_cert_cmd} 144 ResourcesNone
 ${single_cert_cmd} 145 ResourcesSAFI
-${single_cert_cmd} 147 SIAAccessLoc
+${single_cert_cmd} 147 SIARepoNoRsync
 ${single_cert_cmd} 148 SIAAccessMethod
-${single_cert_cmd} 149 SIAMissing
 ${single_cert_cmd} 150 SKIHash
-${single_cert_cmd} 151 SKILth
+${single_cert_cmd} 151 SKILong
 ${single_cert_cmd} 152 SubjectOID
-${single_cert_cmd} 153 Subject2Sets
+${single_cert_cmd} 153 Subject2ComName
 ${single_cert_cmd} 154 SubjectUtf
-${single_cert_cmd} 155 Subject2Seq
-${single_cert_cmd} 156 Subject2SerNum
+${single_cert_cmd} 155 Subject2SetComName
+${single_cert_cmd} 156 SubjectSerNum
 ${single_cert_cmd} 157 SubjUID
 ${single_cert_cmd} 158 ValCrossed
 ${single_cert_cmd} 159 ValFromFuture
@@ -238,3 +236,6 @@ ${single_cert_cmd} 183 NoCpol
 ${single_cert_cmd} 184 2Cpol
 ${single_cert_cmd} 185 2IPAddr
 ${single_cert_cmd} 186 2ASNum
+${single_cert_cmd} 187 CRLDPNoRsyncDistPt
+${single_cert_cmd} 188 IssuerSet2SerNums
+${single_cert_cmd} 189 SubjectSet2SerNums

@@ -1,0 +1,11 @@
+--- badROAIP2Big.raw.old	2011-11-13 02:45:16.000559268 -0500
++++ badROAIP2Big.raw	2011-11-13 02:45:49.945278439 -0500
+@@ -9,7 +9,7 @@
+                             seq seq oct 0x0001
+                                     seq seq bit 0x000101
+                                 seq oct 0x0002
+-                                    seq seq bit 0x00010201
++                                    seq seq bit 0x0001
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 

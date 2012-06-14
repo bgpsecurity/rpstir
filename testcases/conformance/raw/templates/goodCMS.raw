@@ -7,9 +7,9 @@ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
                 ctx+0x20
                     ocw seq int 0x08 /* 8 */ 
                             seq seq oct 0x0001
-                                    seq seq bit 0x0001
+                                    seq seq bit 0x000101
                                 seq oct 0x0002
-                                    seq seq bit 0x00010200
+                                    seq seq bit 0x00010201
             ctx+0x20
                 seq seq ctx+0x20
                             int 0x02 /* 2 */ 

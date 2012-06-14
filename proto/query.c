@@ -46,6 +46,7 @@ static int rejectStaleChain = 0;
 static int rejectStaleManifest = 0;
 static int rejectStaleCRL = 0;
 static int rejectNoManifest = 0;
+static int rejectNotYet = 0;
 static QueryField *globalFields[MAX_VALS];  /* to pass into handleResults */
 static int useLabels, multiline, validate, valIndex;
 static char *objectType;
@@ -103,7 +104,7 @@ static int handleResults (scmcon *conp, scmsrcha *s, int numLine)
   conp = conp; numLine = numLine;  // silence compiler warnings
   if (validate) {
     if (!checkValidity
-		((isROA || isRPSL) ? (char *) s->vec[valIndex].valptr : NULL,
+		((isROA || isRPSL || isManifest || isRTA || isCRL) ? (char *) s->vec[valIndex].valptr : NULL,
 		 isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0,
 		 scmp, connect))
 	return 0;
@@ -322,9 +323,21 @@ static int doQuery (char **displays, char **filters, char *orderp)
   globalFields[i] = NULL;
   if (validate) {
     valIndex = srch.nused;
-    if (isROA || isRPSL || isManifest || isRTA)
+    if (isROA || isRPSL || isManifest || isRTA || isCRL)
       {
-      char *ski = (isRTA)? "ski_ee": "ski"; 
+      char *ski;
+      if (isRTA)
+        {
+        ski = "ski_ee";
+        }
+      else if (isCRL)
+        {
+        ski = "aki";
+        }
+      else
+        {
+        ski = "ski";
+        }
       field2 = findField (ski);
       addcolsrchscm (&srch, ski, field2->sqlType, field2->maxSize);
       }
@@ -495,7 +508,8 @@ int main(int argc, char **argv)
     } else if (strcasecmp (argv[i], "-s") == 0) {
       if (parseStalenessSpecsFile(argv[i+1])) return -1;
 	  getSpecsVals(&rejectStaleChain, &rejectStaleManifest,
-				   &rejectStaleCRL, &rejectNoManifest);
+				   &rejectStaleCRL, &rejectNoManifest,
+				   &rejectNotYet);
     } else {      // unknown switch
       return printUsage();
     }

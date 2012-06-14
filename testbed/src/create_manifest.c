@@ -110,7 +110,7 @@ int write_fileList(void* man, void* value)
     return -1;
   
   //copy the value into a local copy of the buffer
-  filesAndHashes = calloc(strlen((char*)value), sizeof(char));
+  filesAndHashes = calloc(strlen((char*)value) + 1, sizeof(char));
   memcpy(filesAndHashes, (char*)value, strlen( (char*)value));
   buf = NULL;
 
@@ -124,7 +124,7 @@ int write_fileList(void* man, void* value)
     {
       // this is for safety. while using the strtok function
       // it's best to work on a copy of the tokenized item
-      char* testBuf = calloc(strlen(buf), sizeof(char));
+      char* testBuf = calloc(strlen(buf) + 1, sizeof(char));
       memcpy(testBuf, buf,strlen(buf));
       int fileNameLen;
       char* hash = NULL;
@@ -199,6 +199,7 @@ struct object_field *get_man_field_table()
 int create_manifest(struct object_field *table)
 {
   struct ROA roa;
+  struct FileListInManifest *f;
   //struct CMSAlgorithmIdentifier *algidp;
    
   ROA(&roa, 0);
@@ -213,6 +214,11 @@ int create_manifest(struct object_field *table)
       warn(FILE_OPEN_ERR, (char*)templateFile);
       return(FILE_OPEN_ERR);
     }
+
+  // Remove existing manifest file list.
+  // FIXME: THIS CAUSES PROBLEMS IF USER PROVIDES EMPTY FILE LIST!!
+  f = &roa.content.signedData.encapContentInfo.eContent.manifest.fileList;
+  clear_casn(&f->self);
 
   //Setup the outerlying CMS structure
   int i = 0;

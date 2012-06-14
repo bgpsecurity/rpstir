@@ -81,6 +81,9 @@ int write_objid(struct casn *casnp, char *from)
     return _write_objid(casnp, from);
     }
 
+// If there's no OID and no error, return 0. If there's an error, return
+// negative. If there is an OID, it includes a trailing NULL byte in the
+// length and optionally the buffer.
 int _readsize_objid(struct casn *casnp, char *to, int mode)
     {
     int lth;
