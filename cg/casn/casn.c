@@ -279,11 +279,14 @@ int eject_casn(struct casn *casnp, int num)
         tcasnp = pcasnp->ptr;
         pcasnp->ptr = tcasnp->ptr;
         }
-    _clear_casn(tcasnp, ~(ASN_FILLED_FLAG));  // clearing is enough.
+    if (tcasnp)
+        {
+        _clear_casn(tcasnp, ~(ASN_FILLED_FLAG));  // clearing is enough.
                          // Deleting would free definers
                          // in lower OF that should only be deleted when
                          // the lcasnp is deleted
-    _free_it(tcasnp);
+        _free_it(tcasnp);
+        }
     casnp->num_items--;
     return num;
     }
