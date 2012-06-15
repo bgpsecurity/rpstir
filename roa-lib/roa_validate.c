@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+#include <limits.h>
 #include <stdbool.h>
 
 #include "roa_utils.h"
