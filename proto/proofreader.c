@@ -72,7 +72,7 @@ static void process_type(FILE *str, FILE *tmpstr, int typ, char *inbuf,
   strcpy(inbuf, locbuf);
   sort_resources(iprangesp, numranges);
   int i;
-  for (i = 0; i < numranges; i++) fprintf(tmpstr, iprangesp[i].text);
+  for (i = 0; i < numranges; i++) fprintf(tmpstr, "%s", iprangesp[i].text);
   free(iprangesp);
   }
 

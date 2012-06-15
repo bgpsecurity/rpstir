@@ -270,7 +270,7 @@ void clear_ipranges(struct ipranges *iprangesp)
 
 static void internal_error(char *msg)
   {
-  fprintf(stderr, msg);
+  fprintf(stderr, "%s", msg);
   exit(0);
   }
 
