@@ -43,8 +43,6 @@ EXTRA_DIST = \
 	print-cert-addrs.sh \
 	queryIgnoreAll \
 	rfc3779 \
-	runtAll.sh \
-	runt.sh \
 	t?-?_* \
 	test1.log \
 	testall.sh \

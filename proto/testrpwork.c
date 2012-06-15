@@ -48,7 +48,7 @@ int main(int argc, char **argv)
   ERR_load_crypto_strings();
   if (!(table = findtablescm(scmp, "certificate")))
     fatal("Can't get table");
-  if (argc != 2) fatal("Wrong number of args");
+  if (argc != 2) fatal("Need name of control file");
   int ansr = read_SKI_blocks(scmp, conp, argv[1]);
   if (ansr < 0) fprintf(stderr, "Had error %d: %s\n", ansr, err2string(ansr));
   fatal("Finished");

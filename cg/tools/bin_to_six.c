@@ -27,7 +27,6 @@ int argc;
 char *argv[];
 {
 int ilth, olth;
-unsigned char *a;
 
 if (argc > 1)
     {
@@ -35,7 +34,7 @@ if (argc > 1)
     write (1,"\n",1);
     } 
 
-for (a = binbuf, *obuf = ' '; (ilth = read (0,binbuf,48)); )
+for (*obuf = ' '; (ilth = read (0,binbuf,48)); )
     {
     olth = 1 + sixBitEncode ((char *)binbuf,(char *)&obuf[1],ilth);
     obuf[olth++] = '\n';

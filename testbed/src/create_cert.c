@@ -500,7 +500,7 @@ int write_cert_pubkey(void *cert, void *val)
   pExp = strchr(val,token);
 
   // strip off leading spaces and the 0x
-  while(isspace(*mod))mod++;
+  while(isspace((int)(unsigned char)*mod))mod++;
   if (strncmp(mod, "0x", 2) != 0)
     return -1;
   mod+=2; 
@@ -508,7 +508,7 @@ int write_cert_pubkey(void *cert, void *val)
   mod_len = (char *)pExp - (char *)mod;
 
   pExp++;
-  while(isspace(*pExp)) pExp++;
+  while(isspace((int)(unsigned char)*pExp)) pExp++;
   if (strncmp(pExp, "0x", 2) != 0)
     return -1;
   pExp+=2; 
@@ -571,7 +571,7 @@ int write_sig(struct Certificate *cert, char *val)
     return -1;
 
   // strip off leading spaces and the 0x
-  while(isspace(*str_sig))str_sig++;
+  while(isspace((int)(unsigned char)*str_sig))str_sig++;
   if (strncmp(str_sig, "0x", 2) != 0)
     return -1;
 
@@ -616,7 +616,7 @@ int write_key_identifier(struct Certificate *cert, char *id, char *val)
   struct Extensions *extsp = &tbsp->extensions;
 
   // strip off leading spaces and the 0x
-  while(isspace(*str_ki))str_ki++;
+  while(isspace((int)(unsigned char)*str_ki))str_ki++;
   if (strncmp(str_ki, "0x", 2) != 0)
     return -1;
   str_ki+=2; 
@@ -708,7 +708,7 @@ int write_cert_crldp(void *cert, void *val)
   while (ptr != NULL)
     {
       next = strchr(ptr,token);
-      while (isspace(*ptr)) ptr++; // strip leading spaces
+      while (isspace((int)(unsigned char)*ptr)) ptr++; // strip leading spaces
       if (next == NULL)
 	ptr_len = strlen(ptr);
       else
@@ -756,7 +756,7 @@ int write_cert_sia(void *cert, void *val)
   while (ptr != NULL)
     {
       next = strchr(ptr,token);
-      while (isspace(*ptr)) ptr++; // strip leading spaces
+      while (isspace((int)(unsigned char)*ptr)) ptr++; // strip leading spaces
       if (next == NULL)
 	ptr_len = strlen(ptr);
       else
@@ -808,7 +808,7 @@ int write_cert_aia(void *cert, void *val)
     }
 
   extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
-  while (isspace(*ptr)) ptr++; // strip leading spaces
+  while (isspace((int)(unsigned char)*ptr)) ptr++; // strip leading spaces
 
   aiasp = &extp->extnValue.authorityInfoAccess;
   accdsp = (struct AccessDescription *)inject_casn(&aiasp->self, 0);
@@ -870,7 +870,7 @@ int write_cert_addrs(void *cert, void *val, int type)
   while (ptr != NULL)
     {
       next = strchr(ptr,token);
-      while (isspace(*ptr)) ptr++; // strip leading spaces
+      while (isspace((int)(unsigned char)*ptr)) ptr++; // strip leading spaces
       if (next == NULL)
 	ptr_len = strlen(ptr);
       else
@@ -936,7 +936,7 @@ int write_cert_asnums(void *cert, void *val)
   while (ptr != NULL)
     {
       next = strchr(ptr,token);
-      while (isspace(*ptr)) ptr++; // strip leading spaces
+      while (isspace((int)(unsigned char)*ptr)) ptr++; // strip leading spaces
       if (next == NULL)
 	ptr_len = strlen(ptr);
       else

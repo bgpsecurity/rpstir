@@ -6,7 +6,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+#include <limits.h>
+#include <stdbool.h>
 
 #include "roa_utils.h"
 #include "cryptlib.h"
@@ -254,24 +255,48 @@ int check_fileAndHash(struct FileAndHash *fahp, int ffd, uchar *inhash,
   return err == 0 ? hash_lth : err;
 }
 
+/* Find unique attribute, according to
+   http://tools.ietf.org/html/rfc6488#section-2.1.6.4
+
+     SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+
+     Attribute ::= SEQUENCE {
+       attrType OBJECT IDENTIFIER,
+       attrValues SET OF AttributeValue }
+
+     AttributeValue ::= ANY
+
+   The signedAttrs element MUST include only a single instance of any
+   particular attribute.  Additionally, even though the syntax allows
+   for a SET OF AttributeValue, in an RPKI signed object, the attrValues
+   MUST consist of only a single AttributeValue.
+
+   @param[in] attrsp      Attributes to search for the OID in.
+   @param[in] oidp        Attribute OID to search for.
+   @param[out] found_any  True indicates any attributes with the OID were found.
+                          False indicates no attributes with the OID were found.
+   @return                Non-NULL unique attribute, or NULL if the attribute
+                          was not found or was not unique.
+ */
 static struct Attribute *find_unique_attr(struct SignedAttributes *attrsp, 
-  char *oidp, int *nump)
+  char *oidp, bool *found_any)
   {
   struct Attribute *attrp, *ch_attrp = NULL;
-  int num = 0;
-  *nump = 0;
-  for (attrp = (struct Attribute *)member_casn(&attrsp->self, num);
-    attrp; attrp = (struct Attribute *)next_of(&attrp->self), num++)
+  *found_any = false;
+  for (attrp = (struct Attribute *)member_casn(&attrsp->self, 0);
+       attrp != NULL; attrp = (struct Attribute *)next_of(&attrp->self))
     {
     if (!diff_objid(&attrp->attrType, oidp))
       {
-      (*nump)++;
-      if (ch_attrp)           // attribute encountered already
+      if (*found_any)
+        {
         return NULL;
+        }
+      *found_any = true;
       ch_attrp = attrp;
       }
     }
-  // make sure there is one and only one attrValue in the attribute
+  // within the attribute, ensure there is exactly one attrValue
   if (ch_attrp && num_items(&ch_attrp->attrValues.self) != 1)
     return NULL;
   return ch_attrp;
@@ -417,24 +442,24 @@ static int cmsValidate(struct ROA *rp)
 
   if (!num_items(&sigInfop->signedAttrs.self)) return ERR_SCM_BADSIGATTRS;
   struct Attribute *attrp;
-  int num;
+  bool found_any;
   // make sure there is one and only one content
   if (!(attrp = find_unique_attr(&sigInfop->signedAttrs, id_contentTypeAttr,
-    &num)) ||
+    &found_any)) ||
   // make sure it is the same as in EncapsulatedContentInfo
       diff_casn(&attrp->attrValues.array.contentType, 
       &rp->content.signedData.encapContentInfo.eContentType)) 
       return ERR_SCM_BADCONTTYPE;  
   // make sure there is one and only one message digest
   if (!(attrp = find_unique_attr(&sigInfop->signedAttrs, 
-    id_messageDigestAttr, &num)) ||
+    id_messageDigestAttr, &found_any)) ||
   // make sure the message digest is 32 bytes long and we can get it
      vsize_casn(&attrp->attrValues.array.messageDigest) != 32 ||
      read_casn(&attrp->attrValues.array.messageDigest, digestbuf) != 32)
      return ERR_SCM_BADMSGDIGEST;
 
   // if there is a signing time, make sure it is the right format
-  attrp = find_unique_attr(&sigInfop->signedAttrs, id_signingTimeAttr, &num);
+  attrp = find_unique_attr(&sigInfop->signedAttrs, id_signingTimeAttr, &found_any);
   if (attrp)
     {
     uchar loctime[30];
@@ -455,10 +480,10 @@ static int cmsValidate(struct ROA *rp)
       if (strncmp((char *)loctime, "2050", 4) < 0) return ERR_SCM_SIGINFOTIM;
       }
     }
-  else if (num > 1) return ERR_SCM_SIGINFOTIM;
+  else if (found_any) return ERR_SCM_SIGINFOTIM;
   // check that there is no more than one binSigning time attribute
-  attrp = find_unique_attr(&sigInfop->signedAttrs, id_binSigningTimeAttr, &num);
-  if (num > 1) return ERR_SCM_BINSIGTIME;
+  attrp = find_unique_attr(&sigInfop->signedAttrs, id_binSigningTimeAttr, &found_any);
+  if (attrp == NULL && found_any) return ERR_SCM_BINSIGTIME;
   // check the hash
   memset(hashbuf, 0, 40);
   // read the content
@@ -720,6 +745,8 @@ static int check_mft_duplicate_filenames(struct Manifest *manp)
   int ret = 0;
   int file_length, total, i, j;
   total = num_items(&manp->fileList.self);
+  if (total == 0)
+    return 0;
   filenames = malloc(total * sizeof(char *));
   if (filenames == NULL)
     {
@@ -870,6 +897,9 @@ int manifestValidate(struct ROA *roap, int *stalep)
   return 0;
   }
 
+/*
+// NOTE: check_asnums function is not needed for validating a ROA.
+// Keeping it here (commented out) because it may be useful elsewhere.
 static int check_asnums(struct Certificate *certp, int iAS_ID)
   {
   struct Extension *extp;
@@ -909,6 +939,7 @@ static int check_asnums(struct Certificate *certp, int iAS_ID)
     }
   return 1;
   }
+*/
 
 struct certrange
   {
@@ -972,7 +1003,7 @@ static int checkIPAddrs(struct Certificate *certp,
     self, 0); 
     extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock);
     extp = (struct Extension *)next_of(&extp->self));
-  if (!extp) return 0;
+  if (!extp) return ERR_SCM_NOIPEXT;
   struct IpAddrBlock *certIpAddrBlockp = &extp->extnValue.ipAddressBlock;
 
   struct ROAIPAddressFamily *roaFamilyp;
@@ -1052,13 +1083,16 @@ static int checkIPAddrs(struct Certificate *certp,
     if (!matchedCertFamily)
       return ERR_SCM_ROAIPMISMATCH;
     }
-  return 1;
+  return 0;
   }
 
+/*
+ * Make sure that the ROA meets the provisions outlined in RFC 6482.
+ * Checks are limited to those that can be done using the standalone
+ * ROA.
+ */
 int roaValidate(struct ROA *rp)
   {
-  // Make sure that the ROA meets the provisions outlined in
-  // Kent/Kong ROA IETF draft
   int iRes = 0;
   long iAS_ID = 0;
 
@@ -1084,11 +1118,9 @@ int roaValidate(struct ROA *rp)
     return ERR_SCM_INVALASID;
   struct Certificate *certp = &rp->content.signedData.certificates.certificate;
   if (!certp) return ERR_SCM_BADNUMCERTS; // XXX: this never happens
-  int rescount = 0;
-  // check that the asID is within the EE cert's scope, if any
-  if ((iRes = check_asnums(certp, iAS_ID)) < 0) return iRes;
-  rescount += iRes; // count that we got an (optional) AS number extension
-  iRes = 0;
+
+  // NOTE: ROA asID need not be within EE cert's AS allocation!
+
   // check that the contents are valid
   struct ROAIPAddrBlocks *roaIPAddrBlocksp = &rp->content.signedData.
     encapContentInfo.eContent.roa.ipAddrBlocks;
@@ -1096,8 +1128,6 @@ int roaValidate(struct ROA *rp)
   // and that they are within the cert's resources
   if ((iRes = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
     return iRes; 
-  rescount += iRes;
-  if (!rescount) return ERR_SCM_NOIPAS;
   return 0;
   }
 

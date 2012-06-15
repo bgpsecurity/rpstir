@@ -616,7 +616,7 @@ int insertscm(scmcon *conp, scmtab *tabp, scmkva *arr)
         {
           for (j = 2; arr->vec[i].value[j] != '\0'; ++j)
             {
-              if (isxdigit(arr->vec[i].value[j]))
+              if (isxdigit((int)(unsigned char)arr->vec[i].value[j]))
                 stmt[wsta++] = arr->vec[i].value[j];
               else
                 {

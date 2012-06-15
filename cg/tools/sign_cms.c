@@ -7,6 +7,10 @@
  * the already-constructed signedAttrs.  It just hashes signedAttrs,
  * computes the RSA signature, and sets a signature value in the
  * SignerInfo.
+ *
+ * Exception: if signedAttrs field is absent, the first paragraph of
+ * RFC 5652 section 5.4 is implemented.  That is, hash the eContent
+ * value.
  */
 
 #include <stdio.h>

@@ -191,7 +191,7 @@ int main(int argc, char **argv)
     c = (char *)calloc(1, dsize + 2);
     dump_casn(&roa.self, c);
     FILE *str = fopen(curr_file, "w");
-    fprintf(str, c);
+    fprintf(str, "%s", c);
     fclose(str);
     }
   fatal(0, "");

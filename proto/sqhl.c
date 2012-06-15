@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <syslog.h>
 #include <assert.h>
+#include <mysql.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -1005,7 +1006,7 @@ static X509 *parent_cert(scmcon *conp, char *ski, char *subject,
     strcpy(parentIssuer, cert_ansrp->issuer);
     }
   else return NULL;
-  (void)snprintf(ofullname, PATH_MAX, cert_ansrp->fullname);
+  (void)snprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
   if ( pathname != NULL ) strncpy(*pathname, ofullname, PATH_MAX);
   if (flagsp) *flagsp = cert_ansrp->flags;
   return readCertFromFile(ofullname, stap);
@@ -2618,7 +2619,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_INVALDT;
       break;
     }
-    sta = read_casn (&manifest->thisUpdate, asn_time);
+    sta = read_casn (&manifest->thisUpdate, (unsigned char *)asn_time);
     if ( sta < 0 ) {
       log_msg(LOG_ERR, "Could not read time for thisUpdate");
       sta = ERR_SCM_INVALDT;
@@ -2634,7 +2635,7 @@ int add_manifest(scm *scmp, scmcon *conp, char *outfile, char *outdir,
       sta = ERR_SCM_INVALDT;
       break;
     }
-    sta = read_casn (&manifest->nextUpdate, asn_time);
+    sta = read_casn (&manifest->nextUpdate, (unsigned char *)asn_time);
     if ( sta < 0 ) {
       log_msg(LOG_ERR, "Could not read time for nextUpdate");
       sta = ERR_SCM_INVALDT;

@@ -174,6 +174,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] =
     "Unsupported Public Key Info",  /* ERR_SCM_UNSUPPUBKEY */
     "Routing Domain Identifier(s) present", /* ERR_SCM_BADASRDI */
     "Invalid CRLNumber",            /* ERR_SCM_BADCRLNUM */
+    "Missing RFC3779 IP extension", /* ERR_SCM_NOIPEXT */
   } ;
 
 char *err2string(int err)

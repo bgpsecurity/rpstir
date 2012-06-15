@@ -1,0 +1,26 @@
+next
+
+	* Add conformance cases for various specifications and fix problems revealed by those conformance cases.
+	* Performance tuning for rsync.
+	* Remove dependency on python-netaddr and increase performance where python-netaddr used to be used.
+	* Fix build and tests on NetBSD.
+	* Various bug fixes.
+
+0.3
+
+	* Fix security bugs in rsync_cord and rsync_listener.
+	* First-pass at preventing SQL injection attacks.
+	* Update chaser to prevent shell injection attacks and to minimize duplicate downloads.
+	* Warn if people try to build on an (unsupported) 64-bit platform or if OpenSSL was compiled without RFC 3779 support.
+	* Add error checking to rsync_aur.
+	* Performance tuning for rpki-rtr.
+	* Various bug fixes.
+
+0.2
+
+	* Support current version of rpki-rtr protocol.
+	* Various bug fixes.
+
+0.1
+
+	* Initial public release.

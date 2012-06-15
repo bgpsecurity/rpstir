@@ -161,7 +161,8 @@
 #define ERR_SCM_UNSUPPUBKEY -153        /* Unsupported Public Key Info */
 #define ERR_SCM_BADASRDI    -154        /* Routing Domain Identifier(s) present */
 #define ERR_SCM_BADCRLNUM   -155        /* Invalid CRLNumber */
-#define ERR_SCM_MAXERR      -155
+#define ERR_SCM_NOIPEXT     -156        /* Missing RFC3779 IP extension */
+#define ERR_SCM_MAXERR      -156
 
 /* macro that prints an error string and call return if a condition is true */
 #define checkErr(test, printArgs...) \
