@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 #
 
 # gen_all_certs.sh - create all certificates for RPKI syntax

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 #
 
 # make_test_CMS.sh - manually create ROA/CMS for RPKI syntax conformance test

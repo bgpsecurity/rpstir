@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 #
 
 # Set up RPKI environment variables if not already done.

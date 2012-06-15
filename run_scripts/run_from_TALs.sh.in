@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!@SHELL_BASH@ -e
 
 cd $RPKI_ROOT
 

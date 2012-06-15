@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 
 # gen_all_CMSs.sh - create all CMS test cases for RPKI syntactic
 #                   conformance test

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 #
 # gen_all.sh - create all conformance test cases: certs, roas, crls, mfts
 #

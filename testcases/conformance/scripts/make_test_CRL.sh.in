@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 #
 
 # make_test_CRL.sh - manually create CertificateRevocationList (CRL)
