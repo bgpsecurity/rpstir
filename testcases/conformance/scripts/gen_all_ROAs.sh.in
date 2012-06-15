@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 
 # gen_all_ROAs.sh - create all ROA test cases for RPKI syntactic
 #                   conformance test

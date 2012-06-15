@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 #
 
 # make_test_cert.sh - manually create certificate for RPKI syntax

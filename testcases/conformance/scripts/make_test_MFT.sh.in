@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHELL_BASH@
 
 # make_test_MFT.sh - manually create CertificateRevocationList (MFT)
 #       for RPKI syntax conformance test

@@ -264,6 +264,9 @@ AC_CONFIG_FILES([run_scripts/chaser.sh],
 AC_CONFIG_FILES([run_scripts/results.py],
                 [chmod +x run_scripts/results.py])
 
+AC_CONFIG_FILES([run_scripts/run_from_TALs.sh],
+                [chmod +x run_scripts/run_from_TALs.sh])
+
 AC_CONFIG_FILES([run_scripts/updateTA.py],
                 [chmod +x run_scripts/updateTA.py])
 
@@ -377,6 +380,42 @@ AC_CONFIG_FILES([testbed/src/rpkirepo.py],
 
 AC_CONFIG_FILES([testbed/src/testbed_create.py],
                 [chmod +x testbed/src/testbed_create.py])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all.sh],
+                [chmod +x testcases/conformance/scripts/gen_all.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_CMSs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_CMSs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_CRLs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_CRLs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_MFTs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_MFTs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_ROAs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_ROAs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_certs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_certs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_child_ca.sh],
+                [chmod +x testcases/conformance/scripts/gen_child_ca.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_mft.sh],
+                [chmod +x testcases/conformance/scripts/gen_mft.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_CMS.sh],
+                [chmod +x testcases/conformance/scripts/make_test_CMS.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_CRL.sh],
+                [chmod +x testcases/conformance/scripts/make_test_CRL.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_MFT.sh],
+                [chmod +x testcases/conformance/scripts/make_test_MFT.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_cert.sh],
+                [chmod +x testcases/conformance/scripts/make_test_cert.sh])
 
 AC_CONFIG_FILES([testcases/runt.sh],
                 [chmod +x testcases/runt.sh])

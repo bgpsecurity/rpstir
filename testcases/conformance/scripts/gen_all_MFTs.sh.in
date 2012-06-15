@@ -1,6 +1,6 @@
-#!/bin/bash
+#!@SHELL_BASH@
 
-# gen_all_CRLs.sh - create all CRL test cases for RPKI syntactic
+# gen_all_MFTs.sh - create all MFT test cases for RPKI syntactic
 #                   conformance test
 
 # Set up RPKI environment variables if not already done.
@@ -19,7 +19,7 @@ Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
   -h        \tDisplay this help file
 
-This script creates a large number of CRLs in subdirectories, prompts
+This script creates a large number of MFTs in subdirectories, prompts
 the user multiple times to edit interactively (e.g., in order to
 introduce errors), and captures those edits in '.patch' files (output
 of diff -u).  Later, running $0 with the -P option can replay the
@@ -29,8 +29,7 @@ reused from the keys directory, instead of the default of generating
 new keys.
 
 This tool assumes the repository structure in the diagram below.  It
-creates a ton of subdirectories each w/ a CRL and corresponding
-manifest.
+creates a ton of subdirectories each with a MFT and corresponding CRL.
 
 NOTE: this script does NOT update the manifest issued by root.
 
@@ -60,13 +59,13 @@ NOTE: this script does NOT update the manifest issued by root.
 	     +-------------------------------------------------+
              | rsync://rpki.bbn.com/conformance/root/subjname/ |
              |                                     	       |
-             |     +---------------------------+   	       |
-             |     | *Manifest issued by Child |               |
-             |     +---------------------------+               |
+             |     +---------------------------------------+   |
+             |     | *Manifest issued by Child (TEST CASE) |   |
+             |     +---------------------------------------+   |
              |                                                 |
-             |     +----------------------------------+        |
-             |     | *CRL issued by Child (TEST CASE) |        |
-             |     +----------------------------------+        |
+             |     +----------------------+                    |
+             |     | *CRL issued by Child |                    |
+             |     +----------------------+                    |
              |                                                 |
              | *Child's Repo Directory                         |
              +-------------------------------------------------+
@@ -78,10 +77,10 @@ Outputs:
   child CA certificate - inherits AS/IP resources from parent via inherit bit
   child repo directory - ASSUMED to be a subdirectory of parent's repo. The
                          new directory will be <outdir>/<subjectname>/
-  crl issued by child - named bad<subjectname>.crl, and has no entries
-  mft issued by child - named <subjectname>.mft, and has one entry (the crl)
+  crl issued by child - named <subjectname>.crl, and has no entries
+  mft issued by child - named bad<subjectname>.mft, and has one entry (the crl)
 
-  The filename for the crl will be prepended by the string 'bad' by
+  The filename for the mft will be prepended by the string 'bad' by
   default, though this can be replaced by an arbitrary non-empty
   string using the -x option.
 
@@ -90,9 +89,9 @@ Auxiliary Outputs: (not shown in diagram)
   child-issued MFT EE cert - <outdir>/<subjectname>/<subjectname>.mft.cer
   child-issued MFT EE key pair - <outdir>/<subjectname>/<subjectname>.mft.p15
   patch files - manual edits are saved as diff output in
-                'badCRL<subjectname>.stageN.patch' (N=0..1)
+                'badMFT<subjectname>.stageN.patch' (N=0..1)
   key files - generated key pairs for child and EE certs are stored in keys dir
-             as badCRL<filestem>.ee.p15
+             as badMFT<filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -140,8 +139,8 @@ else
     patch_option=
 fi
 
-single_CRL_script="$RPKI_ROOT/testcases/conformance/scripts/make_test_CRL.sh"
-single_CRL_cmd="${single_CRL_script} ${patch_option} -o ${OUTPUT_DIR}"
+single_MFT_script="$RPKI_ROOT/testcases/conformance/scripts/make_test_MFT.sh"
+single_MFT_cmd="${single_MFT_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################
 # Check for prerequisite tools and files
@@ -165,30 +164,25 @@ ensure_dir_exists ( ) {
 
 ensure_dir_exists "$OUTPUT_DIR"
 ensure_dir_exists "$CGTOOLS"
-ensure_file_exists "${single_CRL_script}"
+ensure_file_exists "${single_MFT_script}"
 
 ###############################################################################
-# Generate CRL cases
+# Generate MFT cases
 ###############################################################################
 
-${single_CRL_cmd} 640 CRLNoVersion
-${single_CRL_cmd} 641 CRLVersion0
-${single_CRL_cmd} 642 CRLSigAlgInner
-${single_CRL_cmd} 643 CRLSigAlgOuter
-${single_CRL_cmd} 644 CRLIssuerOID
-${single_CRL_cmd} 645 CRLIssuer2Sets
-${single_CRL_cmd} 646 CRLIssuerUTF
-${single_CRL_cmd} 647 CRLIssuer2Seq
-${single_CRL_cmd} 648 CRLIssuerSet2SerNums
-${single_CRL_cmd} 650 CRLThisUpdateTyp
-${single_CRL_cmd} 651 CRLNextUpdatePast
-${single_CRL_cmd} 652 CRLNextUpdateTyp
-${single_CRL_cmd} 653 CRLUpdatesCrossed
-${single_CRL_cmd} 654 CRLIssAltName
-${single_CRL_cmd} 655 CRLIssDistPt
-${single_CRL_cmd} 656 CRLDeltaCRLInd
-${single_CRL_cmd} 657 CRLNoAKI
-${single_CRL_cmd} 658 CRLNoCRLNum
-${single_CRL_cmd} 659 CRLEntryReason
-${single_CRL_cmd} 669 CRLNumber2Big
-${single_CRL_cmd} 670 CRL2CRLNums
+${single_MFT_cmd} 768 MFTWrongType
+${single_MFT_cmd} 769 MFTVersion0
+${single_MFT_cmd} 770 MFTVersion1
+${single_MFT_cmd} 771 MFTNoNum
+${single_MFT_cmd} 772 MFTNegNum
+${single_MFT_cmd} 773 MFTThisUpdUTC
+${single_MFT_cmd} 774 MFTThisUpdFuture
+${single_MFT_cmd} 775 MFTNextUpdUTC
+${single_MFT_cmd} 776 MFTNextUpdPast
+${single_MFT_cmd} 777 MFTHashAlg
+${single_MFT_cmd} 779 MFTFileHashShort
+${single_MFT_cmd} 780 MFTFileHashLong
+${single_MFT_cmd} 781 MFTFileNotIA5
+${single_MFT_cmd} 782 MFTHashOctetStr
+${single_MFT_cmd} 783 MFTDuplicateFileOneHash
+${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
