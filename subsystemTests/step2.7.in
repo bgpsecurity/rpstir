@@ -12,7 +12,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 echo "Loading data and running garbage collector"
 ../rsync_aur/rsync_aur -s -t $RPKI_PORT -f test2.7.log -w -e -i -d $RPKI_ROOT/testcases || \
   check_errs $? "$0 rsync_aur failed"
-../proto/garbage || \
+run "step7.garbage" ../proto/garbage || \
   check_errs $? "$0 ../proto/garbage failed"
 
 echo $0 PASS

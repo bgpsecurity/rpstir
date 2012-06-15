@@ -6,8 +6,10 @@ THIS_SCRIPT_DIR=$(dirname $0)
 
 . $RPKI_ROOT/trap_errors
 
+. $THIS_SCRIPT_DIR/test.include
+
 echo About to clear database $RPKI_DB ...
 
 # set up an initial database
-../proto/rcli -x -t $PWD/../testcases -y
-../proto/rcli -y -F ../testcases/C.cer
+run "rcli-x-t-y" ../proto/rcli -x -t $PWD/../testcases -y
+run "rcli-y-F" ../proto/rcli -y -F ../testcases/C.cer

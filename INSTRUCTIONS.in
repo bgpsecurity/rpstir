@@ -398,7 +398,7 @@ increased (within limits) until make check succeeds.
 If you have valgrind installed, you can run some tests under valgrind
 by running the command:
 
-   make check VALGRIND=1
+   make check CHECKTOOL=valgrind
 
 
 2.6 Post-Installation Procedures
