@@ -11,6 +11,7 @@ AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([rtr/pdu.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
@@ -84,26 +85,6 @@ AC_ARG_WITH(
     [ mysql_config=mysql_config]
 )
 
-if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
-fi
-if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
-fi
-if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
-fi
-
-if test x${odbc_include} != x; then
-  CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
-fi
-if test x${cryptlib_include} != x; then
-  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
-fi
-if test x${ssl_include} != x; then
-  CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
-fi
-
 AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
 if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --include specified non-system include flags
@@ -139,6 +120,26 @@ else
   AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 
+if test x${ssl_lib} != x; then
+  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
+fi
+if test x${odbc_lib} != x; then
+  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
+fi
+if test x${cryptlib_lib} != x; then
+  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
+fi
+
+if test x${odbc_include} != x; then
+  CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
+fi
+if test x${cryptlib_include} != x; then
+  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
+fi
+if test x${ssl_include} != x; then
+  CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
+fi
+
 #Check for GCC Stack-Smashing Protector and enable in some cases
 #  If --enable-stack-protector is specified: enable it
 #  Else if --disable-stack-protector is specified: don't enable it
@@ -158,11 +159,16 @@ AC_ARG_ENABLE(
     [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
 )
 
+#Check for pthreads.
+AX_PTHREAD
+if test x"$ax_pthread_ok" != xyes; then
+	AC_MSG_ERROR([pthread support is required])
+fi
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CC="$PTHREAD_CC"
+
 #Checks for libraries.
-AC_SEARCH_LIBS([pthread_create],[pthread],[],[
-	echo "Error: libpthread is required for building this project"
-	exit -1;
-])
 AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;

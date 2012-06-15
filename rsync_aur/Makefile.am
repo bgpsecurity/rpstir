@@ -9,7 +9,9 @@ AM_CFLAGS = -g -Wall -Wshadow -Wmissing-prototypes -Wmissing-declarations
 AM_CPPFLAGS = -I../proto -I../cg/casn -I../cg/asn -I../roa-lib -I../proto \
 	-I../utils
 
-LDADD = ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
+LDADD = ../roa-lib/libroa.a \
+	../cg/asn/libasn.a \
+	../cg/casn/libcasn.a \
 	../utils/libutils.a
 
 bin_PROGRAMS = rsync_aur rsync_listener
@@ -23,4 +25,3 @@ rsync_aur_SOURCES = main.c main.h parse.c socket_stuff.c sig_handler.c \
 	csapp.c csapp.h usage.c usage.h socket_stuff.h parse.h sig_handler.h
 
 rsync_listener_SOURCES = rsync_listener.c csapp.h rsync_listener.h csapp.c
-rsync_listener_LDFLAGS = -lpthread
