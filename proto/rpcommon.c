@@ -23,7 +23,17 @@ static char *translate_env(char *v)
 /* 
  * Function: Returns the translated value of an environment variable.
  *           IF none found, returns NULL
- */            
+ *
+ * Given input string '$foo/bar', do parameter substitution for the
+ * '$foo' by looking for the environment variable foo, and return the
+ * substituted result in a newly allocated string.  If foo is not in
+ * the environment, return NULL.
+ *
+ * WARNING: this function modifies the input!
+ *
+ * FIXME: this segfaults if the environment variable does not exist,
+ * or if a string begins with '$/'
+ */
   char *c = strchr(v, (int)'/');
   if (!c || !*c) return NULL;
   *c = 0;
