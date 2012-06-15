@@ -5,7 +5,7 @@
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
-
+#include <logutils.h>
 
 struct done_certs done_certs;
 
@@ -18,44 +18,76 @@ extern struct ipranges certranges, ruleranges, lessranges, fromranges;
 extern char *Xcrldp, *Xcp, *Xrpdir;
 
 
-struct keyring keyring;
-
-static int translate_env(char *v)
+static char *translate_env(char *v)
   {
+/* 
+ * Function: Returns the translated value of an environment variable.
+ *           IF none found, returns NULL
+ *
+ * Given input string '$foo/bar', do parameter substitution for the
+ * '$foo' by looking for the environment variable foo, and return the
+ * substituted result in a newly allocated string.  If foo is not in
+ * the environment, return NULL.
+ *
+ * WARNING: this function modifies the input!
+ *
+ * FIXME: this segfaults if the environment variable does not exist,
+ * or if a string begins with '$/'
+ */
   char *c = strchr(v, (int)'/');
-  if (!c || !*c) return -1;
+  if (!c || !*c) return NULL;
   *c = 0;
   char *rootp = getenv(&v[1]);
   char *b = (char *)calloc(1, strlen(rootp) + strlen(&c[1]) + 4);
+  if (!b) return NULL;
   sprintf(b, "%s/%s", rootp, &c[1]);
-  strcpy(v, b);
-  free(b);
-  return 0;
+  return b;
   }
 
-static int check_keyring(char *cc)
+static char *free_old_key_field(char *f)
   {
-  char *b;
+  if (f)
+    free(f);
+  return NULL;
+  }
+
+static int check_keyring(struct keyring * keyring, char *cc)
+  {
+  char *b, *envp = NULL;
+  keyring->filename = free_old_key_field(keyring->filename);
+  keyring->label    = free_old_key_field(keyring->label);
+  keyring->password = free_old_key_field(keyring->password);
   if ((cc = nextword(cc)))
     {
-    if (*cc == '$' && translate_env(cc) < 0) return -1;
+    if (*cc == '$')
+      {
+      if(!(envp = translate_env(cc))) 
+        return -1;
+      cc = envp;
+      }
     for (b = cc; *b > ' '; b++);
     if (*b)
       {
-      keyring.filename = (char *)calloc(1, (b - cc) + 2);
-      strncpy(keyring.filename, cc, (b - cc));
-      if ((cc = nextword(cc)))
+      keyring->filename = (char *)calloc(1, (b - cc) + 2);
+      if (keyring->filename)
         {
-        if ((b = strchr(cc, (int)' ')))
+        strncpy(keyring->filename, cc, (b - cc));
+        if ((cc = nextword(cc)))
           {
-          keyring.label = (char *)calloc(1, (b - cc) + 2);
-          strncpy( keyring.label, cc, (b - cc));
-          if ((cc = nextword(cc)))
+          if ((b = strchr(cc, (int)' ')))
             {
-            for (b = cc; *b > ' '; b++);
-            keyring.password = (char *)calloc(1, (b - cc) + 2);
-            strncpy( keyring.password, cc, (b - cc));
-            return 1;
+            keyring->label = (char *)calloc(1, (b - cc) + 2);
+            if (keyring->label)
+              {
+              strncpy( keyring->label, cc, (b - cc));
+              if ((cc = nextword(cc)))
+                {
+                for (b = cc; *b > ' '; b++);
+                keyring->password = (char *)calloc(1, (b - cc) + 2);
+                strncpy( keyring->password, cc, (b - cc));
+                return 1;
+                }
+              }
             }
           }
         }
@@ -77,25 +109,61 @@ static int trueOrFalse(char *c)
   return 0;
   }
 
-static char *next_cmd(char *buf, int siz, FILE *SKI)
+static int next_cmd(char *outbufp, int siz, FILE *SKI)
   {
-  char *c;
+/*
+ * Function: Gets next command in control file, eliminating superfluous white
+ *         space
+ * Inputs: Ptr to destination buffer
+ *         Length of destination
+ *         Ptr to FILE of commands
+ * Output: Buf filled with clean line
+ * Returns: 1 if success
+ *          0 if no more lines in file
+ *         -1 if error
+ * Procedure:
+ * 1. DO
+ *      Read in next line
+ *      IF none, return 0
+ *      Check for overflow or initial white space 
+ *    WHILE line is just a comment
+ * 2. Starting at input and output buffers
+ *    DO
+ *      Copy a word to output up to the limit of output 
+ *      Skip over white space in input
+ *      IF the output buffer is full but there's more input
+ *        Return error
+ *      Put one space in output   
+ *    WHILE there is more input
+ *    Overwrite the last space with line end codes 
+ *    Return success  
+ */
+  char locbuf[2 * SKIBUFSIZ],
+       *eip = &locbuf[sizeof(locbuf) - 1],   // last allowed char
+       *eop = &outbufp[siz - 3];             // last allowed char
+  do                                             // step1
+    {
+    *eip = 'x';   // a test character
+    if (!fgets(locbuf, sizeof(locbuf), SKI))
+      return 0;
+    if (*eip != 'x' || locbuf[0] <= ' ') return ERR_SCM_BADSKIFILE;
+    }
+  while(*locbuf == ';');
+                                                  // step 2
+  char *op = outbufp, *ip = locbuf;               
   do
     {
-    if (!(c = fgets(buf, siz, SKI))) return c;
+    while (*ip > ' ' && op < eop) *op++ = *ip++;
+    while (*ip && *ip <= ' ') 
+      ip++;
+    if (*ip > ' ' && op >= eop)            // No room for more
+      return -1;
+    *op++ = ' ';
     }
-  while(*buf == ';');
-  char *cc;
-  for (cc = buf; *cc != '\n'; cc++)
-      {
-      if (*cc == '\t' || *cc == ' ')
-        {
-        *cc = ' ';
-        while (cc[1] == ' ' || cc[1] == '\t')
-	  memmove(&cc[1], &cc[2], strlen(&cc[2]));
-        }
-      }
-  return c;
+  while (*ip);  
+  op[-1] = '\n';     // <=  &outbuf[siz-2] 
+  *op = 0;           // <=  &outbuf[siz-1]
+  return 1;
   }
 
 static int check_cp(char *cpp)
@@ -126,7 +194,7 @@ static int check_cp(char *cpp)
   return 1;
   }
 
-int check_date(char *datep, struct casn *casnp, ulong *datenump)
+int check_date(char *datep, struct casn *casnp, int64_t *datenump)
   {
   char *c;
   for (c = datep; *c >= '0' && *c <= '9'; c++);
@@ -147,7 +215,7 @@ int check_date(char *datep, struct casn *casnp, ulong *datenump)
 
 int check_dates(char *datesp)
   {
-  ulong fromDate, toDate;
+  int64_t fromDate, toDate;
   time_t now = time((time_t *)0);
   char *enddatep = nextword(datesp);
   if (!enddatep || datesp[14] != 'Z' || datesp[15] != ' ' ||
@@ -202,7 +270,7 @@ void clear_ipranges(struct ipranges *iprangesp)
 
 static void internal_error(char *msg)
   {
-  fprintf(stderr, msg);
+  fprintf(stderr, "%s", msg);
   exit(0);
   }
 
@@ -276,6 +344,7 @@ struct iprange *inject_range(struct ipranges *iprangesp, int num)
 struct iprange *next_range(struct ipranges *iprangesp,
   struct iprange *iprangep)
   {
+  if (iprangep - iprangesp->iprangep + 1 >= iprangesp->numranges) return NULL;
   if (iprangep[1].typ != iprangep->typ) return (struct iprange *)0;
   return ++iprangep;
   }
@@ -309,10 +378,86 @@ int touches(struct iprange *lop, struct iprange *hip, int lth)
   return memcmp(mid.lolim, hip->lolim, lth);
   }
 
+static struct AddressesOrRangesInIPAddressChoiceA *find_IP(int typ,
+    struct Extension *extp)
+  {
+  uchar fambuf[4];
+  int loctyp;
+  if (typ == IPv4) loctyp = 1;
+  else if (typ == IPv6) loctyp = 2;
+  else return (struct AddressesOrRangesInIPAddressChoiceA *)0;
+  struct IpAddrBlock *ipAddrBlock = &extp->extnValue.ipAddressBlock;
+  struct IPAddressFamilyA *ipFamp;
+  for (ipFamp = (struct IPAddressFamilyA *)member_casn(
+        &ipAddrBlock->self, 0);  ipFamp;
+    ipFamp = (struct IPAddressFamilyA *)next_of(&ipFamp->self))
+    {
+    read_casn(&ipFamp->addressFamily, fambuf);
+    if (fambuf[1] == loctyp)  // OK the cert has some
+     return &ipFamp->ipAddressChoice.addressesOrRanges;
+    }
+  return (struct AddressesOrRangesInIPAddressChoiceA *)0;
+  }
+
+void mk_certranges(struct ipranges *rangep,
+  struct Certificate *certp)
+  {
+  if (rangep->numranges > 0 || rangep->iprangep)
+      clear_ipranges(rangep);
+  int num = 0;
+  struct IPAddressOrRangeA *ipAddrOrRangep;
+  struct iprange *certrangep;
+  struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp;
+  struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
+  if (extp)
+    {
+    if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
+      {
+      for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        member_casn(&ipAddrOrRangesp->self, 0);
+        ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        next_of(&ipAddrOrRangep->self))
+        {
+        certrangep = inject_range(rangep, num++);
+        certrangep->typ = IPv4;
+        cvt_asn(certrangep, ipAddrOrRangep);
+        }
+      }
+    if ((ipAddrOrRangesp = find_IP(IPv6, extp)))
+      {
+      for (ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        member_casn(&ipAddrOrRangesp->self, 0);
+        ipAddrOrRangep; ipAddrOrRangep = (struct IPAddressOrRangeA *)
+        next_of(&ipAddrOrRangep->self))
+        {
+        certrangep = inject_range(rangep, num++);
+        certrangep->typ = IPv6;
+        cvt_asn(certrangep, ipAddrOrRangep);
+        }
+      }
+    }
+  if ((extp = find_extn(certp, id_pe_autonomousSysNum, 0)))
+    {
+    struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp =
+      &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges;
+    struct ASNumberOrRangeA *asNumOrRangep;
+    for (asNumOrRangep = (struct ASNumberOrRangeA *)
+      member_casn(&asNumbersOrRangesp->self, 0); asNumOrRangep;
+      asNumOrRangep = (struct ASNumberOrRangeA *)next_of(&asNumOrRangep->self))
+      {
+      certrangep = inject_range(rangep, num++);
+      certrangep->typ = ASNUM;
+      cvt_asnum(certrangep, asNumOrRangep);
+      }
+    }
+  certrangep = inject_range(rangep, num++);
+  certrangep->typ = 0;
+  }
+
 static int getIPBlock(FILE *SKI, int typ, char *skibuf, int siz)
   {
-  char *c;
-  while((c = next_cmd(skibuf, siz, SKI)))
+  int ansr;
+  while((ansr = next_cmd(skibuf, siz, SKI)) > 0)
     {
     if (*skibuf <= ' ') continue;
     if ((typ == IPv4 && *skibuf == 'I') ||  
@@ -321,7 +466,7 @@ static int getIPBlock(FILE *SKI, int typ, char *skibuf, int siz)
     char *cc = nextword(skibuf);
     if  (cc && *cc > ' ' && *cc != '-') return ERR_SCM_BADSKIBLOCK;
     struct iprange *iprangep  = inject_range(&ruleranges, ruleranges.numranges);
-    if (txt2loc(typ, skibuf, iprangep) < 0) return ERR_SCM_BADRANGE;
+    if (txt2loc(typ, skibuf, iprangep) < 0) return ERR_SCM_BADIPRANGE;
     else
       {
       int j = strlen(skibuf);
@@ -332,36 +477,43 @@ static int getIPBlock(FILE *SKI, int typ, char *skibuf, int siz)
         (j = touches(&iprangep[-1], iprangep, (iprangep->typ == IPv4)? 4: 16))
          >= 0)
         {
-        strcpy(errbuf, (!j)? "Ranges touch ": "Ranges out of order ");
+        snprintf(errbuf, sizeof(errbuf),
+          (!j)? "Ranges touch ": "Ranges out of order ");
         return  ERR_SCM_BADSKIBLOCK;
         }
       }
     }
-  if (!c) *skibuf = 0;
-  if (typ == ASNUM && c && !strncmp(skibuf, "SKI", 3))
+  if (ansr < 0) return ansr;
+  if (!ansr) *skibuf = 0;
+  if (typ == ASNUM && ansr && !strncmp(skibuf, "SKI", 3))
     strcpy(nextskibuf, skibuf);
-  return (c)? 1: 0;
+  return ansr;
   }
 
 int getSKIBlock(FILE *SKI, char *skibuf, int siz)
   {
   int ansr = ERR_SCM_BADSKIBLOCK;
-  if (!next_cmd(skibuf, siz, SKI) || strcmp(skibuf, "IPv4\n"))
-    strcpy(errbuf, "Missing/invalid IPv4 ");
+  int val; 
+  if ((val = next_cmd(skibuf, siz, SKI)) < 0)
+    snprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
+  else if (!val)
+    snprintf(errbuf, sizeof(errbuf), "Missing IPv4 ");
+  else if (strcmp(skibuf, "IPv4\n"))
+    snprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
   else if (getIPBlock(SKI, IPv4, skibuf, siz) < 0)
     {
-    if (!*errbuf) strcpy(errbuf, "Bad/disordered IPv4 group ");
+    if (!*errbuf) snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv4 group ");
     }
   else if (strcmp(skibuf, "IPv6\n")) 
-    strcpy(errbuf, "Missing/invalid IPv6 ");
+    snprintf(errbuf, sizeof(errbuf), "Missing/invalid IPv6 ");
   else if (getIPBlock(SKI, IPv6, skibuf, siz) < 0)
-    strcpy(errbuf, "Bad/disordered IPv6 group ");
+    snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv6 group ");
   else if (strcmp(skibuf, "AS#\n"))
-    strcpy(errbuf, "Missing/invalid AS# ");
+    snprintf(errbuf, sizeof(errbuf), "Missing/invalid AS# ");
   else if(getIPBlock(SKI, ASNUM, skibuf, siz) < 0)
-    strcpy(errbuf, "Bad/disordered AS# group ");
+    snprintf(errbuf, sizeof(errbuf), "Bad/disordered AS# group ");
   else if (ruleranges.numranges == 0)
-    strcpy(errbuf, "Empty SKI block ");
+    snprintf(errbuf, sizeof(errbuf), "Empty SKI block ");
   else 
     {
     ansr = 1;
@@ -369,83 +521,80 @@ int getSKIBlock(FILE *SKI, char *skibuf, int siz)
   return ansr;
   }
 
-int parse_SKI_blocks(FILE *SKI, char *skibuf, int siz, int *locflagsp)
+static int parse_privatekey(struct keyring * keyring, char *skibuf)
   {
-/*
-Procedure:
-1. Open file for control data
-   Get certificate for RP
-   Get key information for RP
-   Get any flags
-   Get first SKI line from the control file
-2. Process all the control blocks
-   IF no error,
-     FOR each item in done_certs
-       Flag the target cert in the database as having a para
-       Sign the paracertificate
-       Put it into database with para flag
-   Free all and return error
-*/
-  Certificate(&myrootcert, (ushort)0);
-  char *c, *cc;
-                                                     // step 1
-  int ansr = 0;
+  char *cc;
+  if (strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
+    {
+    snprintf(errbuf, sizeof(errbuf), "No private key method.");
+    return ERR_SCM_BADSKIFILE;
+    }
+  for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
+  if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc) < 0)
+    {
+    snprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
+    return ERR_SCM_BADSKIFILE;
+    }
+  return 0;
+  }
 
-  if (!next_cmd(skibuf, siz, SKI) ||
-    strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
+static int parse_topcert(char *skibuf, int siz, FILE *SKI)
     {
-    ansr = ERR_SCM_BADSKIFILE;
-    strcpy(errbuf, "No private key method.");
-    }
-  else
-    {
-    for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
-    if (strncmp(cc, "Keyring", 7) || check_keyring(cc) < 0)
-      {
-      ansr = ERR_SCM_BADSKIFILE;
-      strcpy(errbuf, "Invalid private key method.");
-      }
-    }
-  if (!ansr)
-    {
-    if (!next_cmd(skibuf, siz, SKI) ||
+    int ansr = 0, 
+    val = next_cmd(skibuf, siz, SKI);
+    char *c = NULL;
+    if (val <= 0 ||
       strncmp(skibuf, "TOPLEVELCERTIFICATE ", 20))
       {
       ansr = ERR_SCM_NORPCERT;
-      strcpy(errbuf, "No top level certificate.");
+      if (val < 0) snprintf(errbuf, sizeof(errbuf), "Error in top level certificate");
+      else snprintf(errbuf, sizeof(errbuf), "No top level certificate.");
       }
     else
       {           // get root cert
       if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      for (c = &skibuf[20]; *c == ' ' || *c == '\t'; c++); 
-      if (*c == '$') translate_env(&skibuf[20]);
-      strcpy(myrootfullname, &skibuf[20]);
-      if (get_casn_file(&myrootcert.self, &skibuf[20], 0) < 0)
+      for (c = &skibuf[20]; *c == ' '; c++); 
+      char *envp = c;
+      if (*c == '$') envp = translate_env(&skibuf[20]);
+      if (!envp)
         {
-        sprintf(errbuf, "Invalid top level certificate: %s.", myrootfullname);
+        snprintf(errbuf, sizeof(errbuf), "Error translating root cert file name");
         ansr = ERR_SCM_NORPCERT;
+        }
+      else if (strlen(envp) >= sizeof(myrootfullname) - 2)
+        {
+        ansr = ERR_SCM_NORPCERT;
+        snprintf(errbuf, sizeof(errbuf), "Top level certificate name too long");
         }
       else
         {
-        c = strrchr(&skibuf[20], (int)'/');
-        if (!c) ansr = ERR_SCM_NORPCERT;
+        strcpy(myrootfullname, envp);
+        if (get_casn_file(&myrootcert.self, myrootfullname, 0) < 0)
+          {
+          snprintf(errbuf, sizeof(errbuf), "Invalid top level certificate: %s.", myrootfullname);
+          ansr = ERR_SCM_NORPCERT;
+          }
         else
           {
-          *c = 0;
-          Xrpdir = (char *)calloc(1, strlen(&skibuf[20]) + 4);
-          strcpy(Xrpdir, &skibuf[20]);
+          c = strrchr(envp, (int)'/');
+          if (!c) ansr = ERR_SCM_NORPCERT;
+          else
+            {
+            *c = 0;
+            Xrpdir = (char *)calloc(1, strlen(envp) + 4);
+            strcpy(Xrpdir, envp);
+            }
           }
         }
       }
+    return ansr;
     }
-  if (!ansr && !next_cmd(skibuf, siz, SKI))
+
+static int parse_control_section(char *skibuf, int siz, FILE *SKI, 
+    int *locflagsp)  
     {
-    strcpy(errbuf, "No control section.");
-    ansr = ERR_SCM_BADSKIFILE;
-    }
-  else if (!ansr)   // CONTROL section
-    {
-    c = skibuf;
+    int ansr = 0, val = 0;
+    char *c = skibuf, *cc;
     while (c && !ansr && !strncmp(skibuf, "CONTROL ", 8))
       {
       if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
@@ -471,104 +620,178 @@ Procedure:
       else
         {
         ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "Invalid control message: %s.\n", cc);
+        snprintf(errbuf, sizeof(errbuf), "Invalid control message: %s.\n", cc);
         }
-      if (!ansr) c = next_cmd(skibuf, siz, SKI);
+      if (!ansr) 
+        {
+        if ((val = next_cmd(skibuf, siz, SKI)) <= 0)
+          {
+          c = NULL;
+          snprintf(errbuf, sizeof(errbuf), "Error in control section");
+          }
+        }
       }
     if (ansr == -1)
       {
-      sprintf(errbuf, "No/not TRUE or FALSE in %s.", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "No/not TRUE or FALSE in %s.", skibuf);
       ansr = ERR_SCM_BADSKIFILE;
+      } 
+    return ansr; 
+    }
+
+static int parse_validity_dates(char *cc)
+    {
+    cc = nextword(cc);
+    if (!*cc || (*cc != 'C'  && *cc != 'R' && check_dates(cc) < 0))
+        return ERR_SCM_BADSKIFILE;
+    return 0;
+    }
+
+static int parse_Xcrldp(char *cc)
+    {
+    int ansr = 0; 
+    cc = nextword(cc);
+    if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
+      !find_extn(&myrootcert, id_cRLDistributionPoints, 0)))
+      ansr = ERR_SCM_BADSKIFILE;
+    else if (strchr(cc, (int)','))
+      ansr = ERR_SCM_BADSKIFILE;
+    else
+      { 
+      Xcrldp = (char *)calloc(1, strlen(cc) + 2);
+      strcpy(Xcrldp, cc);
       }
-    while (c && !ansr && !strncmp(skibuf, "TAG", 3))
+    return ansr;
+    }
+
+static int parse_Xcp(char *cc, char *skibuf)
+    {
+    int ansr = 0;
+    struct Extension *extp;
+    cc = nextword(cc);
+    if (!*cc ||
+      (*cc == 'R' &&
+      ((!(extp = find_extn(&myrootcert, id_certificatePolicies, 0))) ||
+      num_items(&extp->extnValue.certificatePolicies.self) > 1)))
+      ansr = ERR_SCM_BADSKIFILE;
+    else if (nextword(cc))
       {
-      if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      cc = nextword(skibuf);
-      if (skibuf[3] != ' ')
-        {
-        sprintf(errbuf, "Invalid line: %s.", skibuf);
-        ansr = ERR_SCM_BADSKIFILE;
-        break;
-        }
-      if (!strncmp(cc, "Xvalidity_dates ", 16))
-        {
-        cc = nextword(cc);
-        if (!*cc || (*cc != 'C'  && *cc != 'R' && check_dates(cc) < 0))
-          {
-          ansr = ERR_SCM_BADSKIFILE;
-          break;
-          }
-        }
-      else if (!strncmp(cc, "Xcrldp ", 7))
-        {
-        cc = nextword(cc);
-        if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
-          !find_extn(&myrootcert, id_cRLDistributionPoints, 0)))
-          ansr = ERR_SCM_BADSKIFILE;
-        else if (strchr(cc, (int)','))
-          {
-          ansr = ERR_SCM_BADSKIFILE;
-          break;
-          }
-        else
-          { 
-          Xcrldp = (char *)calloc(1, strlen(cc) + 2);
-          strcpy(Xcrldp, cc);
-          }
-        }
-      else if (!strncmp(cc, "Xcp ", 4))
-        {
-        struct Extension *extp;
-        cc = nextword(cc);
-        if (!*cc ||
-          (*cc == 'R' &&
-          ((!(extp = find_extn(&myrootcert, id_certificatePolicies, 0)))
-          ||
-          num_items(&extp->extnValue.certificatePolicies.self) > 1)))
-          ansr = ERR_SCM_BADSKIFILE;
-        else if (nextword(cc))
-          {
-          ansr = ERR_SCM_BADSKIFILE;
-          sprintf(errbuf, "Invalid Xcp entry: %s.", skibuf);
-          } 
-        else if (check_cp(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
-        }
-      else if (!strncmp(cc, "Xaia ", 5))
-        {
-        cc = nextword(cc);
-        Xaia = (char *)calloc(1, strlen(cc) + 1);
-        strncpy(Xaia, cc, strlen(cc) + 1);
-        }
-      else
-        {
-        ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "Invalid TAG entry: %s.", cc);
-        }
-      if (!ansr) c = next_cmd(skibuf, siz, SKI);
+      ansr = ERR_SCM_BADSKIFILE;
+      snprintf(errbuf, sizeof(errbuf), "Invalid Xcp entry: %s.", skibuf);
+      } 
+    else if (check_cp(cc) < 0) ansr = ERR_SCM_BADSKIFILE;
+    return ansr;
+    }
+
+static int parse_tag_section(char *skibuf, int siz, FILE *SKI)
+  {
+  int ansr = 0, val = 0;
+  char *c, *cc;  
+  while (!ansr && !strncmp(skibuf, "TAG", 3))
+    {
+    if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
+    cc = nextword(skibuf);
+    if (skibuf[3] != ' ')
+      {
+      snprintf(errbuf, sizeof(errbuf), "Invalid line: %s.", skibuf);
+      ansr = ERR_SCM_BADSKIFILE;
+      break;
       }
+    if (!strncmp(cc, "Xvalidity_dates ", 16))
+      ansr = parse_validity_dates(cc);
+    else if (!strncmp(cc, "Xcrldp ", 7))
+      ansr = parse_Xcrldp(cc);
+    else if (!strncmp(cc, "Xcp ", 4))
+      ansr = parse_Xcp(cc, skibuf);
+    else if (!strncmp(cc, "Xaia ", 5))
+      {
+      cc = nextword(cc);
+      Xaia = (char *)calloc(1, strlen(cc) + 1);
+      strncpy(Xaia, cc, strlen(cc) + 1);
+      }
+    else
+      {
+      ansr = ERR_SCM_BADSKIFILE;
+      snprintf(errbuf, sizeof(errbuf), "Invalid TAG entry: %s.", cc);
+      }
+    if (!ansr) 
+      {
+      if ((val = next_cmd(skibuf, siz, SKI)) <= 0)
+        {
+        ansr = ERR_SCM_BADSKIFILE;
+        snprintf(errbuf, sizeof(errbuf), "Error in TAG entries");
+        }
+      }
+    }
+  return ansr;
+  }
+
+int parse_SKI_blocks(struct keyring * keyring, FILE *SKI, char *skibuf, int siz, int *locflagsp)
+  {
+/*
+Procedure:
+1. Get nformation on the top level certificate
+   Get first SKI line from the control file
+2. IF no error, process the control section
+   IF no error, process the tag section
+3. IF no error AND the next is part of the control section, note error
+    
+     FOR each item in done_certs
+       Flag the target cert in the database as having a para
+       Sign the paracertificate
+       Put it into database with para flag
+   Free all and return error
+*/
+  Certificate(&myrootcert, (ushort)0);
+  char *c, *cc;
+                                                     // step 1
+  int ansr = 0;
+  int val = 0;
+  if ((ansr = next_cmd(skibuf, siz, SKI)) <= 0)
+    {
+    ansr = ERR_SCM_BADSKIFILE;
+    snprintf(errbuf, sizeof(errbuf), "No private key material");
+    } 
+  else ansr = parse_privatekey(keyring, skibuf);
+
+  if (!ansr)
+    ansr = parse_topcert(skibuf, siz, SKI);
+  if (!ansr && (val = next_cmd(skibuf, siz, SKI)) <= 0)
+    {
+    if (val < 0) snprintf(errbuf, sizeof(errbuf), "Error in control section");
+    else snprintf(errbuf, sizeof(errbuf), "No control section.");
+    ansr = ERR_SCM_BADSKIFILE;
+    }
+                                                 // step 2
+  else if (!ansr) ansr = parse_control_section(skibuf, siz, SKI, locflagsp);
+  if (!ansr) ansr = parse_tag_section(skibuf, siz, SKI);
+                                                // step 3
+  if (!ansr)
+    {
     if (!*errbuf && !strncmp(skibuf, "CONTROL ", 8))
       {
-      sprintf(errbuf, "CONTROL message out of order: %s", skibuf);
+      snprintf(errbuf, sizeof(errbuf), "CONTROL message out of order: %s", skibuf);
       ansr = ERR_SCM_BADSKIFILE;
-      }
-    else if (ansr < 0)
-      {
-      if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
-      if (!*errbuf) sprintf(errbuf, "Invalid entry in file: %s.", skibuf);
       }
     else if (!ansr)
       {
-      if (!c || strncmp(skibuf, "SKI ", 4))
+      if (strncmp(skibuf, "SKI ", 4))
         {
         ansr = ERR_SCM_BADSKIFILE;
-        sprintf(errbuf, "No SKI entry in file.");
+        snprintf(errbuf, sizeof(errbuf), "No SKI entry in file.");
         }
       else if (!(cc = nextword(skibuf)) || *cc < ' ')
         {
         ansr = ERR_SCM_BADSKIFILE;
-        strcpy(errbuf, "Incomplete SKI entry.");
+        snprintf(errbuf, sizeof(errbuf), "Incomplete SKI entry.");
         }
       }
+    }
+  if (ansr < 0)
+    {
+    if ((c = strchr(skibuf, (int)'\n'))) *c = 0;
+    if (skibuf && *skibuf) 
+      log_msg(LOG_DEBUG, "Error at this line of control file: %s.", skibuf);
     }
   return ansr;
   }

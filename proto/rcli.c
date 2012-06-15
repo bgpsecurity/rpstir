@@ -30,6 +30,7 @@
 #include "sqhl.h"
 #include "diru.h"
 #include "myssl.h"
+#include "roa_utils.h"
 #include "err.h"
 #include "logutils.h"
 
@@ -228,6 +229,7 @@ static void usage(void)
   (void)printf("  -x         destroy all database tables\n");
   (void)printf("  -y         force operation: do not ask for confirmation\n");
   (void)printf("  -a         allow expired certificates\n");
+  (void)printf("  -s         do stricter profile checks\n");
   (void)printf("  -h         display usage and exit\n");
 }
 
@@ -261,7 +263,7 @@ static int makesock(char *porto, int *protosp)
   int  consumed;
   static int64_t num_accepted_connections = 0;
   static int64_t num_failed_connections = 0;
-//  int  one = 1;
+  int  one = 1;
   int  s;
 
   if ( sscanf(porto, "%" SCNu16 "%n", &port, &consumed) < 1 ||
@@ -272,12 +274,22 @@ static int makesock(char *porto, int *protosp)
   protos = *protosp;
   if ( protos < 0 )
     {
+      log_msg(LOG_INFO, "Creating a socket on port %" PRIu16, port);
       protos = socket(AF_INET, SOCK_STREAM, 0);
       if ( protos < 0 )
         {
           perror("Failed to create socket");
           return(protos);
         }
+
+      // Enable address reuse, so that TIME_WAIT doesn't prevent restart.
+      sta = setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+      if (sta < 0)
+        {
+          log_msg(LOG_WARNING, "Failed to set SO_REUSEADDR");
+          perror("Failed to set SO_REUSEADDR");
+        }
+
       memset(&sinn, 0, sizeof(sinn));
       sinn.sin_addr.s_addr = htonl(INADDR_ANY);
       sinn.sin_family = AF_INET;
@@ -286,10 +298,9 @@ static int makesock(char *porto, int *protosp)
       if ( sta < 0 )
 	{
 	  perror("Failed to bind to port");
-	  close(protos);
+          close(protos);
 	  return(sta);
 	}
-//  (void)setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
       sta = listen(protos, 5);
       if ( sta < 0 )
 	{
@@ -325,7 +336,7 @@ static char *afterwhite(char *ptr)
       c = *run;
       if ( c == 0 )
 	break;
-      if ( ! isspace((int)c) )
+      if ( ! isspace((int)(unsigned char)c) )
 	break;
       run++;
     }
@@ -335,11 +346,11 @@ static char *afterwhite(char *ptr)
 /*******************
 static char *splitOnWhite(char *ptr) {
   char *run = ptr;
-  while (*run && ! isspace((int)*run)) run++;
+  while (*run && ! isspace((int)(unsigned char)*run)) run++;
   if (! *run) return run;
   *run = 0;
   run++;
-  while (isspace((int)*run)) run++;
+  while (isspace((int)(unsigned char)*run)) run++;
   return run;
 }
 ********************/
@@ -414,11 +425,11 @@ static char *hasoneline(char *inp, char **nextp)
   case it returns a pointer to the first such line, and modifies left
   so that that line is deleted. If left does not contain a complete
   line this function will read as much socket data as it can. It will
-  stuff the first complete line (if any) into the return code, and
+  stuff the first complete line (if any) into 'line', and
   put the remaining stuff into left.
 */
 
-static char *sock1line(int s, char **leftp)
+static int sock1line(int s, char **leftp, char **line)
 {
   char *left2;
   char *left = *leftp;
@@ -432,24 +443,26 @@ static char *sock1line(int s, char **leftp)
   if ( ptr != NULL )  // left had at least one line
     {
       *leftp = next;
-      return(ptr);
+      *line = ptr;
+      return 0;
     }
   if ( left != NULL )
     leen = strlen(left);
   sta = ioctl(s, FIONREAD, &rd);
   if ( sta < 0 )
-    return(NULL);
+    return sta;
   /* Blocking mode, by A. Chi, 3/18/11.  Even if no data is available
      yet, block until we can read at least one byte. */
   if ( rd <= 0)
     rd = 1;
   left2 = (char *)calloc(leen+rd+1, sizeof(char));
-  if ( left2 == NULL )
-    return(NULL);
+  if ( left2 == NULL ) {
+    return -1;
+  }
   (void)strncpy(left2, left, leen);
-  sta = recv(s, left2+leen, rd, 0);
-  if ( sta < 0 )
-    sta = 0;
+  sta = recv(s, left2+leen, rd, MSG_WAITALL);
+  if (sta <= 0) // 0 indicates orderly connection shutdown
+    return -1;
   left2[leen+sta] = 0;
   //  free((void *)left);
   left = left2;
@@ -458,11 +471,13 @@ static char *sock1line(int s, char **leftp)
     {
       free((void *)*leftp);
       *leftp = next;
-      return(ptr);
+      *line = ptr;
+      return 0;
     }
   free((void *)*leftp);
   *leftp = left;
-  return(NULL);
+  *line = NULL;
+  return 0;
 }
 
 /*
@@ -581,12 +596,14 @@ static int sockline(scm *scmp, scmcon *conp, int s)
 	  return(sta);
 	}
       */
-      ptr = sock1line(s, &left);
+      sta = sock1line(s, &left, &ptr);
+      if (sta != 0)
+        return sta;
       if ( ptr == NULL )
 	continue;
       log_msg(LOG_INFO, "Sockline: %s", ptr);
       c = ptr[0];
-      if ( !isspace((int)(ptr[1])) )
+      if ( !isspace((int)(unsigned char)(ptr[1])) )
 	{
 	  log_msg(LOG_ERR, "Invalid line: ignored");
 	  free((void *)ptr);
@@ -703,7 +720,7 @@ static int fileline(scm *scmp, scmcon *conp, FILE *s)
       *cp = 0;   // trim off CR/LF
       log_msg(LOG_INFO, "Sockline: %s", ptr);
       c = ptr[0];
-      if ( !isspace((int)(ptr[1])) )
+      if ( !isspace((int)(unsigned char)(ptr[1])) )
 	{
 	  log_msg(LOG_ERR, "Invalid line: ignored");
 	  continue;
@@ -850,7 +867,7 @@ int main(int argc, char **argv)
       usage();
       return(1);
     }
-  while ( (c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:")) != EOF )
+  while ( (c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:s")) != EOF )
     {
       switch ( c )
 	{
@@ -896,6 +913,10 @@ int main(int argc, char **argv)
 	case 'h':
 	  usage();
 	  return(0);
+	case 's':
+	  strict_profile_checks = 1; // global from myssl.c
+	  strict_profile_checks_cms = 1; // global from roa_validate.c
+	  break;
 	default:
 	  (void)fprintf(stderr, "Invalid option '%c'\n", c);
 	  usage();
@@ -910,7 +931,7 @@ int main(int argc, char **argv)
       return(1);
     }
   if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 && 
-      thefile == 0 && thedelfile == 0)
+      thefile == 0 && thedelfile == 0 && skifile == 0)
     {
       (void)printf("You need to specify at least one operation "
 		   "(e.g. -f file).\n");
@@ -1166,16 +1187,30 @@ int main(int argc, char **argv)
   if ( (do_sockopts+do_fileopts) > 0 && porto != NULL && sta == 0 )
     {
       int protos = (-1);
+      const int max_makesock_attempts = 10;
+      int makesock_failures = 0;
       do
 	{
 	  if ( do_sockopts > 0 )
 	    {
-	      log_msg(LOG_INFO, "Creating a socket on port %s", porto);
 	      s = makesock(porto, &protos);
 	      if ( s < 0 )
-		log_msg(LOG_ERR, "Could not create socket");
+                {
+                  makesock_failures++;
+                  log_msg(LOG_ERR, "Failed to listen on port %s (failure #%d)",
+                          porto, makesock_failures);
+                  sleep(1);
+                  if (makesock_failures >= max_makesock_attempts) {
+                    log_msg(LOG_ERR,
+                            "%d failed attempts to create socket. Aborting.",
+                            max_makesock_attempts);
+                    sta = -1;
+                    break;
+                  }
+                }
 	      else
 		{
+                  makesock_failures = 0;
 		  log_flush();
 		  sta = sockline(scmp, realconp, s);
 		  log_msg(LOG_INFO, "Socket connection closed");
@@ -1206,11 +1241,25 @@ int main(int argc, char **argv)
 		}
 	    }
         if (sta == 0 && skifile) 
-          sta = read_SKI_blocks(scmp, realconp, skifile); 
+          {
+          log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
+          sta = read_SKI_blocks(scmp, realconp, skifile);
+          if (sta > 0) sta = 0;
+          if (sta)
+            log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
+          } 
 	} while ( perpetual > 0 ) ;
       if ( protos >= 0 )
 	(void)close(protos);
     }
+    if (sta == 0 && skifile)
+      {
+      log_msg(LOG_DEBUG, "Starting skifile %s", skifile); 
+      sta = read_SKI_blocks(scmp, realconp, skifile); 
+      if (sta > 0) sta = 0;
+      if (sta)
+        log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta), sta);
+      }
   (void)ranlast(scmp, realconp, "RSYNC");
   sqcleanup();
   if ( realconp != NULL )

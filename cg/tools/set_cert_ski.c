@@ -18,7 +18,7 @@ static int gen_hash(uchar *inbufp, int bsize, uchar *outbufp, int alg)
   int ansr;
 
   memset(hash, 0, 40);
-  cryptInit();
+  if (cryptInit() != CRYPT_OK) return -1;
   if (alg == 2) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
   else if (alg == 1) cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
   else return 0;
@@ -51,6 +51,11 @@ int main(int argc, char **argv)
   int klth = readvsize_casn(pubkp, &keyp);
   uchar khash[24];
   int ansr = gen_hash(&keyp[1], klth - 1, khash, 1);
+  if (ansr < 0) 
+    {
+    fprintf(stderr, "Couldn't get CryptLib\n");
+    return 0;
+    }
   struct Extension *extp;
   for (extp = (struct Extension *)member_casn(&cert.toBeSigned.extensions.self, 0); extp; 
     extp = (struct Extension *)next_of(&extp->self))

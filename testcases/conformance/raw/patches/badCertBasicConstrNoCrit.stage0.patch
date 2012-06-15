@@ -1,10 +1,10 @@
---- badCertBasicConstrNoCrit.raw.old	2011-05-25 14:24:34.000000000 -0400
-+++ badCertBasicConstrNoCrit.raw	2011-05-25 14:25:09.000000000 -0400
+--- badCertBasicConstrNoCrit.raw.old	2011-09-19 15:52:07.000000000 -0400
++++ badCertBasicConstrNoCrit.raw	2011-09-19 15:52:42.000000000 -0400
 @@ -30,7 +30,6 @@
-                 0x8395A87C2F1C516397470203010001
+                 0x2C7A91231D55453592430203010001
          ctx+0x23
              seq seq oid 2.5.29.19 /* id_basicConstraints */
 -                    boo 0xFF
                      ocw seq boo 0xFF
                  seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
-                     ocw oct 0xD8C8131BF55527DA27C425E86006185A
+                     ocw oct 0xE3A5B96E6D0AC790FECC28C625CCE8D5

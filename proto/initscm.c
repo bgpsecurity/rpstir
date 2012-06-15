@@ -113,7 +113,7 @@ static char *firsttok(char *ptr)
   while ( 1 )
     {
       c = *run++;
-      if ( isspace((int)c) || c == 0 )
+      if ( isspace((int)(unsigned char)c) || c == 0 )
 	break;
       cnt++;
     }
@@ -149,7 +149,7 @@ static int makecolumns(scmtab *outtab)
   ptr = strtok(dp, ",");
   while ( ptr != NULL && ptr[0] != 0 )
     {
-      if ( islower((int)(ptr[0])) && !isspace((int)(ptr[0])) )
+      if ( islower((int)(unsigned char)(ptr[0])) && !isspace((int)(unsigned char)(ptr[0])) )
 	cnt++;
       ptr = strtok(NULL, ",");
     }
@@ -163,7 +163,7 @@ static int makecolumns(scmtab *outtab)
   ptr = strtok(dp, ",");
   while ( ptr != NULL && ptr[0] != 0 && rcnt<cnt)
     {
-      if ( !islower((int)(ptr[0])) || isspace((int)(ptr[0])) || ptr[0] == 0 )
+      if ( !islower((int)(unsigned char)(ptr[0])) || isspace((int)(unsigned char)(ptr[0])) || ptr[0] == 0 )
 	break;
       outtab->cols[rcnt] = firsttok(ptr);
       if ( outtab->cols[rcnt] == NULL )

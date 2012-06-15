@@ -2,6 +2,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "semaphore_compat.h"
 
@@ -42,6 +43,8 @@ int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)
 
 	while (true)
 	{
+		pthread_testcancel();
+
 		retval = sem_trywait(sem);
 		if (retval == 0)
 		{

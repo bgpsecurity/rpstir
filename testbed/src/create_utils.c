@@ -159,7 +159,7 @@ char *stripws(char *str)
   int len;
 
   // Trim leading space
-  while(isspace(*str)) str++;
+  while(isspace((int)(unsigned char)*str)) str++;
 
   if(*str == 0)  // All spaces?
     return NULL;
@@ -171,7 +171,7 @@ char *stripws(char *str)
 
   memcpy(value,str, len);
   end = value + strlen(value) - 1;
-  while(end > value && isspace(*end)) end--;
+  while(end > value && isspace((int)(unsigned char)*end)) end--;
 
   // Write new null terminator
   *(end+1) = 0;
@@ -322,12 +322,12 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   if (ip == NULL || buf == NULL) \
     return -1; \
   \
-  for (i = 0; ip[i] != '\0' && isspace(ip[i]); ++i); \
+  for (i = 0; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
   \
   j = 0; \
   for (; \
     ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
-      (number_func(ip[i]) || strchr(separators, ip[i]) != NULL); \
+      (number_func((int)(unsigned char)ip[i]) || strchr(separators, ip[i]) != NULL); \
     ++i) \
   { \
     ipstr[j++] = ip[i]; \
@@ -337,7 +337,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
   if (inet_pton(family, ipstr, &ipbin0) != 1) \
     return -1; \
   \
-  for (; ip[i] != '\0' && isspace(ip[i]); ++i); \
+  for (; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
   \
   switch (ip[i]) \
   { \
@@ -349,12 +349,12 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
     case '/': \
       /* CIDR notation */ \
       memcpy(buf, &ipbin0, sizeof(ipbin0)); \
-      for (++i; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      for (++i; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
       if (sscanf(&ip[i], "%d%n", &prefix_len, &consumed) < 1) \
         return -1; \
       if (prefix_len < 0 || prefix_len > sizeof(ipbin0) * 8) \
         return -1; \
-      for (i += consumed; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      for (i += consumed; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
       if (ip[i] != '\0') \
         return -1; \
       if (fill == 0x00) \
@@ -391,11 +391,11 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
     \
     case '-': \
       /* range */ \
-      for (++i; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      for (++i; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
       j = 0; \
       for (; \
         ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
-          (number_func(ip[i]) || strchr(separators, ip[i]) != NULL); \
+          (number_func((int)(unsigned char)ip[i]) || strchr(separators, ip[i]) != NULL); \
         ++i) \
       { \
         ipstr[j++] = ip[i]; \
@@ -403,7 +403,7 @@ struct Extension *makeExtension(struct Extensions *extsp, char *idp)
       ipstr[j] = '\0'; \
       if (inet_pton(family, ipstr, &ipbin1) != 1) \
         return -1; \
-      for (; ip[i] != '\0' && isspace(ip[i]); ++i); \
+      for (; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
       if (ip[i] != '\0') \
         return -1; \
       if (memcmp(&ipbin0, &ipbin1, sizeof(ipbin0)) > 0) \

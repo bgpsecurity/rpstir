@@ -46,7 +46,7 @@ int read_casn_num(struct casn *casnp, long *valp)
     {
     struct casn *tcasnp;
     int ansr, err = 0;
-    uchar *c, buf[4];
+    uchar *c;
 
     if (_clear_error(casnp) < 0) return -1;
     if (casnp->type == ASN_NOTYPE)
@@ -57,12 +57,11 @@ int read_casn_num(struct casn *casnp, long *valp)
     if (!err)
 	{
         if ((ansr = _check_filled(tcasnp, 1)) < 0 ||
-            (!ansr && !(tcasnp->flags & ASN_DEFAULT_FLAG))) return ansr;
+            (!ansr && !(tcasnp->flags & ASN_DEFAULT_FLAG))) return ansr; // looks wrong, but we left it (AC, DM): may return 0 instead of error if not filled
         if (tcasnp->type != ASN_INTEGER && tcasnp->type != ASN_ENUMERATED &&
             tcasnp->type != ASN_BOOLEAN)
     	    err = ASN_TYPE_ERR;
-	else if (tcasnp->lth > sizeof(long) + 1 ||
-	    (tcasnp->lth == sizeof(long) + 1 && *tcasnp->startp != 0xFF))
+	else if (tcasnp->lth > sizeof(*valp))
             err = ASN_LENGTH_ERR;
 	}
     if (err) return _casn_obj_err(casnp, err);
@@ -72,12 +71,14 @@ int read_casn_num(struct casn *casnp, long *valp)
 	{
 	if (tcasnp->type == ASN_BOOLEAN)
     	    {
+            uchar buf[8];
+            memset(buf, 0, sizeof(buf)); 
     	    read_casn(tcasnp, buf);
 	    *valp = buf[0];
 	    return 1;
 	    }
-        *valp = 0;
-        return 0;
+        *valp = 0;  // DEFINITELY WRONG
+        return 0;   // MIGHT BE WRONG (depends on intended semantics when not filled in)
 //	*valp = (int)tcasnp->ptr;
 //      if ((ansr = *valp) < 0) ansr = -ansr;
 //	for (c = casnp->startp; ansr; ansr >>= 8, c++);
@@ -89,8 +90,8 @@ int read_casn_num(struct casn *casnp, long *valp)
         else *valp = 0;
         for (c = casnp->startp; c < &casnp->startp[casnp->lth];
             *valp = (*valp << 8) + (long)*c++);
+        return (c - casnp->startp);
 	}
-    return (c - casnp->startp);
     }
 
 int write_casn_num(struct casn *casnp, long val)

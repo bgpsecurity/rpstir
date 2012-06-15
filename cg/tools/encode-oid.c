@@ -87,7 +87,7 @@ int LdapOid2Asn1Id(char *ldapOid, int asn1BufLen, char *asn1Buf)
     do
     {
         startp = endp;
-        if (isdigit(*startp) == 0)
+        if (isdigit((int)(unsigned char)*startp) == 0)
         {
             offset = startp - ldapOid;                 /* Numerals only. */
         }

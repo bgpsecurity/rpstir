@@ -238,7 +238,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
   if ( run == buf || run >= endd )
     return(-1);
 // zero or more space characters
-  while ( run < endd && isspace((int)(*run)) )
+  while ( run < endd && isspace((int)(unsigned char)(*run)) )
     run++;
   if ( run >= endd )
     return(-1);
@@ -250,7 +250,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
     }
   run += strlen(i1);
 // zero or more whitespace characters
-  while ( run < endd && isspace((int)(*run)) )
+  while ( run < endd && isspace((int)(unsigned char)(*run)) )
     run++;
   if ( run >= endd )
     return(-1);
@@ -262,7 +262,7 @@ static int findarmor(char *buf, int buflen, char *i1, char *i2)
     }
   run += strlen(i2);
 // zero or more whitespace characters
-  while ( run < endd && isspace((int)(*run)) )
+  while ( run < endd && isspace((int)(unsigned char)(*run)) )
     run++;
   if ( run >= endd )
     return(-1);

@@ -1,0 +1,11 @@
+--- badMFTNextUpdUTC.raw.old	2012-01-25 11:08:38.745547957 -0500
++++ badMFTNextUpdUTC.raw	2012-01-25 11:09:24.073825060 -0500
+@@ -7,7 +7,7 @@
+                 ctx+0x20
+                     ocw seq int 0x01 /* 1 */ 
+                             gen "20110411185728Z"
+-                            gen "20460515185928Z"
++                            utc "460515185928Z"
+                             oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                             seq seq ia5 "MFTNextUpdUTC.crl"
+                                     bit 0x0018605AB3953CF37C73528C1859856C

@@ -108,7 +108,7 @@ static void signCRL(struct CertificateRevocationList *crlp, char *certname)
   signstring = (uchar *)calloc(1, sign_lth);
   sign_lth = encode_casn(&crlp->toBeSigned.self, signstring);
   memset(hash, 0, 40);
-  cryptInit();
+  if (cryptInit() != CRYPT_OK) fatal(5, "cryptInit failed");
   if ((ansr = cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
       (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA)) != 0)
     msg = "creating context";
@@ -225,8 +225,10 @@ int main(int argc, char **argv)
     certnum = getCertNum(subjfile);
     crlentryp = (struct CRLEntry *)inject_casn(&crltbsp->revokedCertificates.self,
       numcerts++);
+    int64_t longtime;
     write_casn_num(&crlentryp->userCertificate, (long)certnum);
-    read_casn_time(&crltbsp->lastUpdate.utcTime, (ulong *)&now);
+    read_casn_time(&crltbsp->lastUpdate.utcTime, &longtime);
+    now = longtime;
     adjustTime(&crlentryp->revocationDate.utcTime, now, delta);
     }
   signCRL(&crl, certname);
