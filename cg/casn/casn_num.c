@@ -25,6 +25,11 @@ extern int _casn_obj_err(struct casn *, int),
 int _table_op(struct casn *casnp),
     _write_casn_num(struct casn *casnp, long val);
 
+/*
+ * IMPORTANT: diff_casn_num can return error (-2)!  And this WILL
+ * happen when the ASN.1 integer lands outside of the range of a C
+ * long integer.
+ */
 int diff_casn_num(struct casn *casnp, long val)
     {
     long tmp;
