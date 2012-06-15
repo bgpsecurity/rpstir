@@ -25,21 +25,24 @@ extern int _casn_obj_err(struct casn *, int),
 int _table_op(struct casn *casnp),
     _write_casn_num(struct casn *casnp, long val);
 
+/*
+ * IMPORTANT: diff_casn_num can return error (-2)!  And this WILL
+ * happen when the ASN.1 integer lands outside of the range of a C
+ * long integer.
+ */
 int diff_casn_num(struct casn *casnp, long val)
     {
-    int neg, tmp;
-    uchar *b, *e;
+    long tmp;
 
-    if ((casnp->type != ASN_INTEGER && casnp->type != ASN_ENUMERATED) ||
-        casnp->lth > sizeof(long) || !(casnp->flags & ASN_FILLED_FLAG)) 
-        return _casn_obj_err(casnp, ASN_TYPE_ERR) - 1;
-    if (casnp->type == ASN_INTEGER && (*casnp->startp & 0x80)) neg = 1;
-    else neg = 0;
-    e = &(b = casnp->startp)[casnp->lth];
-    for (tmp = (*b++ & ~0x80); b < e; tmp = (tmp << 8) + *b++);
-    if (neg) tmp = -tmp;
-    if (val > tmp) return 1;
-    else return (val == tmp)? 0: -1;
+    if (read_casn_num(casnp, &tmp) < 0)
+        return -2;
+
+    if (tmp > val)
+        return 1;
+    else if (tmp < val)
+        return -1;
+    else
+        return 0;
     }
 
 int read_casn_num(struct casn *casnp, long *valp)
@@ -61,7 +64,7 @@ int read_casn_num(struct casn *casnp, long *valp)
         if (tcasnp->type != ASN_INTEGER && tcasnp->type != ASN_ENUMERATED &&
             tcasnp->type != ASN_BOOLEAN)
     	    err = ASN_TYPE_ERR;
-	else if (tcasnp->lth > sizeof(*valp))
+	else if (tcasnp->lth > sizeof(*valp) || tcasnp->lth < 0)
             err = ASN_LENGTH_ERR;
 	}
     if (err) return _casn_obj_err(casnp, err);
@@ -85,6 +88,8 @@ int read_casn_num(struct casn *casnp, long *valp)
 	}
     else
         {
+        if (tcasnp->lth <= 0)
+            return _casn_obj_err(tcasnp, ASN_LENGTH_ERR);
         if ((*tcasnp->startp & 0x80) && tcasnp->type == ASN_INTEGER)
             *valp = -1;
         else *valp = 0;

@@ -48,9 +48,9 @@ extern struct casn_err_struct casn_err_struct;
 int copy_casn(struct casn *, struct casn *),
     decode_casn(struct casn *casnp, uchar *from),
     decode_casn_lth(struct casn *, uchar *, int),
-    diff_casn(struct casn *, struct casn *),
-    diff_casn_num(struct casn *casnp, long val),
-    diff_casn_time(struct casn *casnp1, struct casn *casnp2),
+    diff_casn(struct casn *, struct casn *), // can return -2 (error)!
+    diff_casn_num(struct casn *casnp, long val), // can return -2 (error)!
+    diff_casn_time(struct casn *casnp1, struct casn *casnp2), // can return -2 (error)!
     diff_objid(struct casn *fr_casnp, char *objidp),
     dump_casn(struct casn *, char *),
     dump_size(struct casn *),
