@@ -25,4 +25,5 @@ check_PROGRAMS = lib/tests/good
 lib_tests_good_SOURCES = lib/tests/good.c
 lib_tests_good_LDADD = lib/libconfig.a
 
+TESTS_ENVIRONMENT = $(top_srcdir)/utils/run_with_tool.sh
 TESTS = $(check_PROGRAMS)
