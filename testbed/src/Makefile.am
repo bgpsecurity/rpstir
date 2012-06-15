@@ -26,10 +26,6 @@ gen_hash_SOURCES = gen_hash.c
 
 EXTRA_DIST = \
 	certs.conf \
-	create_objects.py \
 	crl.conf \
-	generic_allocate.py \
 	roa.conf \
-	rpkirepo.py \
-	testbed_create.py \
 	test.ini

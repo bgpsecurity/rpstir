@@ -16,7 +16,6 @@ bin_PROGRAMS = rsync_aur rsync_listener
 
 EXTRA_DIST = \
 	AUR.readme \
-	rsync_cord.py \
 	rsync_test.config \
 	test.log
 

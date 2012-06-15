@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!@SHELL_BASH@ -e
 
 cd "`dirname "$0"`"
 
@@ -13,6 +13,7 @@ PORT=1234
 SESSION=42
 WRONG_SESSION=4242
 SERVER_START_TIMEOUT=10
+SERVER_STOP_TIMEOUT=10
 CLIENT_MULTIPLE_TIMEOUT=120
 
 client_raw () {
@@ -28,11 +29,14 @@ client_raw () {
 client () {
 	COMMAND="$1"
 	EXPECTED_RESULTS="$2"
-	INPUT_PDU_FILE="`mktemp`"
+	INPUT_PDU_FILE="`@MKTEMP@`"
 	echo "$COMMAND" | "$CLIENT" write > "$INPUT_PDU_FILE"
 	client_raw "$COMMAND" "$EXPECTED_RESULTS" cat "$INPUT_PDU_FILE"
 	rm -f "$INPUT_PDU_FILE"
 }
+
+
+MULT_CLIENT_CLEANUP=0
 
 client_multiple_start () {
 	SUBTEST_NAME="$1"
@@ -41,15 +45,34 @@ client_multiple_start () {
 	echo "--- $SUBTEST_NAME" | tee -a response.log
 	echo "--- expecting: $EXPECTED_RESULTS x$N" | tee -a response.log
 
+	CLIENT_MULTIPLE_pids=""
+
 	tail -f -n 0 response.log &
 	CLIENT_MULTIPLE_tail_pid="$!"
+	MULT_CLIENT_CLEANUP=1
 
-	CLIENT_MULTIPLE_pids=""
 	for x in `seq 1 "$N"`; do
 		"$CLIENT" client_one localhost $PORT >> response.log &
 		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids $!"
 	done
 }
+
+client_multiple_kill () {
+	if test -n "$CLIENT_MULTIPLE_pids"; then
+		kill $CLIENT_MULTIPLE_pids || true
+		sleep 1
+		kill -9 $CLIENT_MULTIPLE_pids || true
+		wait $CLIENT_MULTIPLE_pids || true
+	fi
+
+	kill "$CLIENT_MULTIPLE_tail_pid" || true
+	sleep 1
+	kill -9 "$CLIENT_MULTIPLE_tail_pid" || true
+	wait "$CLIENT_MULTIPLE_tail_pid" || true
+
+	MULT_CLIENT_CLEANUP=0
+}
+
 client_multiple_wait () {
 	echo >&2 "Waiting for multiple clients..."
 	echo >&2 "(This may take up to $CLIENT_MULTIPLE_TIMEOUT seconds.)"
@@ -68,7 +91,10 @@ client_multiple_wait () {
 
 		if test $have_pids -eq 0; then
 			echo >&2 "...done waiting for multiple clients."
-			kill "$CLIENT_MULTIPLE_tail_pid"
+			kill "$CLIENT_MULTIPLE_tail_pid" || true
+			sleep 1
+			kill -9 "$CLIENT_MULTIPLE_tail_pid" || true
+			MULT_CLIENT_CLEANUP=0
 			wait "$CLIENT_MULTIPLE_tail_pid" || true
 			return
 		fi
@@ -76,27 +102,11 @@ client_multiple_wait () {
 		sleep 1
 	done
 
-	RETURN=0
-	if kill $CLIENT_MULTIPLE_pids; then
-		echo >&2 "Timed out waiting for multiple clients"
-		sleep 1
-		for client_pid in $CLIENT_MULTIPLE_pids; do
-			if kill -0 "$client_pid" > /dev/null 2>&1; then
-				echo >&2 "Force killing pid $client_pid"
-				kill -9 "$client_pid" || true
-			fi
-			wait "$client_pid" || true
-		done
-		RETURN=1
-	else
-		wait $CLIENT_MULTIPLE_pids
-		echo >&2 "...done waiting for multiple clients."
-	fi
+	echo >&2 "Timed out waiting for multiple clients"
 
-	kill "$CLIENT_MULTIPLE_tail_pid"
-	wait "$CLIENT_MULTIPLE_tail_pid" || true
+	client_multiple_kill
 
-	return $RETURN
+	return 1
 }
 
 
@@ -146,7 +156,7 @@ make_serial () {
 drop_serial () {
 	DROP_SERIAL="$1"
 
-	COMMAND_FILE="`mktemp`"
+	COMMAND_FILE="`@MKTEMP@`"
 
 	printf 'DELETE FROM rtr_update WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
 	printf 'DELETE FROM rtr_full WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
@@ -159,9 +169,30 @@ drop_serial () {
 }
 
 
+RTRD_CLEANUP=0
+
 stop_rtrd () {
-	kill $SERVER_PID
-	trap - 0
+	kill $SERVER_PID || true
+
+	echo >&2 "Waiting for server to quit cleanly..."
+	echo >&2 "(This may take up to $SERVER_STOP_TIMEOUT seconds.)"
+
+	for _discard in `seq 1 $SERVER_STOP_TIMEOUT`; do
+		sleep 1
+		if kill -0 $SERVER_PID; then
+			:
+		else
+			RTRD_CLEANUP=0
+			echo >&2 "...done. Server quit."
+			wait $SERVER_PID
+			return
+		fi
+	done
+
+	echo >&2 "Timed out waiting for server to quit cleanly"
+
+	kill -9 $SERVER_PID || true
+	RTRD_CLEANUP=0
 	wait $SERVER_PID
 }
 
@@ -169,10 +200,11 @@ start_rtrd () {
 	if test x"$VALGRIND" = x1; then
 		valgrind --log-file=valgrind.log --track-fds=full --leak-check=full --error-exitcode=1 "$SERVER" &
 	else
+		true # workaround for http://gnats.netbsd.org/cgi-bin/query-pr-single.pl?number=46327
 		"$SERVER" &
 	fi
 	SERVER_PID=$!
-	trap stop_rtrd 0
+	RTRD_CLEANUP=1
 
 	SERVER_STARTED=0
 
@@ -214,6 +246,22 @@ stop_test () {
 	mv -f "response.log" "response.$TEST.log"
 	compare "response.$TEST.log"
 }
+
+
+cleanup () {
+	RET=0
+
+	if test x"$RTRD_CLEANUP" = x1; then
+		stop_rtrd || RET=1
+	fi
+
+	if test x"$MULT_CLIENT_CLEANUP" = x1; then
+		client_multiple_kill || RET=1
+	fi
+
+	return $RET
+}
+trap cleanup 0
 
 
 init

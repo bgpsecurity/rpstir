@@ -422,7 +422,7 @@ looksOK(const char *str, unsigned int len)
      or cr|nl */
   for (i = 0; i < (int)len; i++) {
     c = (char)*(str + i);
-    if ( !(isprint(c)) && ((c != 0x0d) && (c != 0x0a)) )
+    if ( !(isprint((int)(unsigned char)c)) && ((c != 0x0d) && (c != 0x0a)) )
       return(FALSE);
   }
 
@@ -543,7 +543,7 @@ has_I_Format(const char *str, unsigned int len)
 
   for (i=0 ; i <= 8 ; i++) {
     c = (char)*(str + i);
-    if ((!isprint(c)) || c == 0x20)
+    if ((!isprint((int)(unsigned char)c)) || c == 0x20)
       return(FALSE);
   }
 
@@ -574,7 +574,7 @@ has_Text_Value(const char *str, unsigned int len)
   /* the filename chars should be at the very least printable */
   field_len = field_length(text, WHITESPACE);
   for (i = 0; i < field_len; i++)
-    if (!isprint(text[i]))
+    if (!isprint((int)(unsigned char)text[i]))
       return (FALSE);
 
   return(TRUE);

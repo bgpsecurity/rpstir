@@ -253,7 +253,7 @@ int write_revoked_certlist(void *crl, void *val)
   while (ptr != NULL)
     {
       next = strchr(ptr,token);
-      while (isspace(*ptr)) ptr++; // strip leading spaces
+      while (isspace((int)(unsigned char)*ptr)) ptr++; // strip leading spaces
       if (next == NULL)
 	ptr_len = strlen(ptr);
       else
@@ -444,7 +444,7 @@ int write_crl_sig(struct CertificateRevocationList *crlp, char *val)
     return -1;
 
   // strip off leading spaces and the 0x
-  while(isspace(*str_sig))str_sig++;
+  while(isspace((int)(unsigned char)*str_sig))str_sig++;
   if (strncmp(str_sig, "0x", 2) != 0)
     return -1;
 
@@ -488,7 +488,7 @@ int write_key_id(struct CertificateRevocationList *crlp,
   int ret;
 
   // strip off leading spaces and the 0x
-  while(isspace(*str_ki))str_ki++;
+  while(isspace((int)(unsigned char)*str_ki))str_ki++;
   if (strncmp(str_ki, "0x", 2) != 0)
     return -1;
   str_ki+=2; 

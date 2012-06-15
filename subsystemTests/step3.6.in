@@ -1,0 +1,15 @@
+#!@SHELL_BASH@
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $0)
+. $THIS_SCRIPT_DIR/../envir.setup
+
+. $RPKI_ROOT/trap_errors
+
+# test functions
+. $THIS_SCRIPT_DIR/test.include
+
+echo "Running the garbage collector"
+../proto/garbage || check_errs $? "$0 ../proto/garbage failed"
+
+echo $0 PASS

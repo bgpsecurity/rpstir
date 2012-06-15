@@ -126,7 +126,7 @@ int parse_config(char *configfile, struct object_field *tbl)
   while (fgets(buf, flen, fp) != NULL)
     { 
       name = buf;
-      while(isspace(*name)) name++;
+      while(isspace((int)(unsigned char)*name)) name++;
       if ( (strncmp(name,";", 1) == 0) || strlen(buf) <= 0)
 	continue;
 
