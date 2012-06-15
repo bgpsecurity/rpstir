@@ -1,2 +1,1 @@
 * integrate with the rest of RPSTIR
-* after moreChecksWithTool is merged in, run the config test(s) with valgrind
