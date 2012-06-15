@@ -72,7 +72,7 @@ Example:
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 # 2. Dependencies: This script assumes the existence (and PATH
-# accessibility) of the standard tools 'sed' and 'sha256sum'.
+# accessibility) of the standard tool 'sed'.
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
@@ -116,7 +116,7 @@ fi
 ###############################################################################
 
 # Ensure executables are in PATH
-hash sha256sum
+hash openssl
 hash sed
 hash basename
 
@@ -127,7 +127,7 @@ ensure_file_exists $TBTOOLS/create_object
 
 compute_sha256 ( ) {
     ensure_file_exists $1
-    echo $(sha256sum "$1" | sed -e 's/ .*$//' -e 'y/abcdef/ABCDEF/')
+    echo $(openssl sha -sha256 -r "$1" | sed -e 's/ .*$//' -e 'y/abcdef/ABCDEF/')
 }
 
 ###############################################################################

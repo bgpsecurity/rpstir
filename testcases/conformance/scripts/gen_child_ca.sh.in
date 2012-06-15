@@ -95,7 +95,7 @@ Auxiliary Outputs: (not shown in diagram)
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 # 2. Dependencies: This script assumes the existence (and PATH
-# accessibility) of the standard tools 'sed' and 'sha256sum'.
+# accessibility) of the standard tool 'sed'.
 
 # Set up paths to ASN.1 tools.
 CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
@@ -163,7 +163,7 @@ fi
 ###############################################################################
 
 # Ensure executables are in PATH
-hash sha256sum
+hash openssl
 hash sed
 
 ensure_file_exists $CGTOOLS/extractSIA
@@ -324,7 +324,7 @@ $TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
 echo "Created child-issued MFT EE certificate: ${child_mft_ee_path}"
 
 # 3. Compute hash of CRL
-child_crl_hash=$(sha256sum ${child_crl_path} | \
+child_crl_hash=$(openssl sha -sha256 -r ${child_crl_path} | \
     sed -e 's/ .*$//' -e 'y/abcdef/ABCDEF/')
 echo "Hash of ${child_crl_name}: 0x${child_crl_hash}"
 
