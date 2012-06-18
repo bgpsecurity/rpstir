@@ -1,4 +1,4 @@
-next
+0.4
 
 	* Add conformance cases for various specifications and fix problems revealed by those conformance cases.
 	* Performance tuning for rsync.
