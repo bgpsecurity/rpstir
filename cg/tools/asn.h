@@ -1,30 +1,84 @@
-/* $Id$ */
-/* Nov 13 2000 550U  */
-/* Nov 13 2000 GARDINER reduced to pure ASN.1 tags */
-/* Nov 13 2000 549U  */
-/* Nov 13 2000 GARDINER added ASN_CONT_SPEC0 for backwards compatibility */
-/* Nov 10 2000 548U  */
-/* Nov 10 2000 GARDINER removed SK error codes */
-/* Mar 20 1998 492U  */
-/* Mar 20 1998 GARDINER added UTF8 */
-/* Oct 16 1997 465U  */
-/* Oct 16 1997 GARDINER added ifdef structasn */
-/* Jan  5 1996 322U  */
-/* Jan  5 1996 GARDINER extended tag definitions; added struct typnames */
-/* Nov 15 1995 313U  */
-/* Nov 15 1995 GARDINER added ASN_REAL */
-/* Jun 13 1995 224U  */
-/* Jun 13 1995 GARDINER fixed header */
-/* Jun 12 1995 221U  */
-/* Jun 12 1995 GARDINER added multi-defines */
-/* Sep  1 1994  55U  */
-/* Sep  1 1994 GARDINER changed to use --cplusplus and const */
-/* Apr 21 1994  20U  */
-/* Apr 21 1994 GARDINER added ASN_FUNCTION */
-/* Apr  6 1994  12U  */
-/* Apr  6 1994 GARDINER added file headers */
-/* Apr  6 1994  10U  */
-/* Apr  6 1994 GARDINER started */
+/*
+ * $Id$ 
+ */
+/*
+ * Nov 13 2000 550U 
+ */
+/*
+ * Nov 13 2000 GARDINER reduced to pure ASN.1 tags 
+ */
+/*
+ * Nov 13 2000 549U 
+ */
+/*
+ * Nov 13 2000 GARDINER added ASN_CONT_SPEC0 for backwards compatibility 
+ */
+/*
+ * Nov 10 2000 548U 
+ */
+/*
+ * Nov 10 2000 GARDINER removed SK error codes 
+ */
+/*
+ * Mar 20 1998 492U 
+ */
+/*
+ * Mar 20 1998 GARDINER added UTF8 
+ */
+/*
+ * Oct 16 1997 465U 
+ */
+/*
+ * Oct 16 1997 GARDINER added ifdef structasn 
+ */
+/*
+ * Jan 5 1996 322U 
+ */
+/*
+ * Jan 5 1996 GARDINER extended tag definitions; added struct typnames 
+ */
+/*
+ * Nov 15 1995 313U 
+ */
+/*
+ * Nov 15 1995 GARDINER added ASN_REAL 
+ */
+/*
+ * Jun 13 1995 224U 
+ */
+/*
+ * Jun 13 1995 GARDINER fixed header 
+ */
+/*
+ * Jun 12 1995 221U 
+ */
+/*
+ * Jun 12 1995 GARDINER added multi-defines 
+ */
+/*
+ * Sep 1 1994 55U 
+ */
+/*
+ * Sep 1 1994 GARDINER changed to use --cplusplus and const 
+ */
+/*
+ * Apr 21 1994 20U 
+ */
+/*
+ * Apr 21 1994 GARDINER added ASN_FUNCTION 
+ */
+/*
+ * Apr 6 1994 12U 
+ */
+/*
+ * Apr 6 1994 GARDINER added file headers 
+ */
+/*
+ * Apr 6 1994 10U 
+ */
+/*
+ * Apr 6 1994 GARDINER started 
+ */
 /*****************************************************************************
 File:     asn.h
 Contents: Header file for basic ASN.1 functions.
@@ -35,7 +89,9 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-/* sfcsid[] = "@(#)asn.h 550p" */
+/*
+ * sfcsid[] = "@(#)asn.h 550p" 
+ */
 #ifndef _ASN_H
 #define _ASN_H
 
@@ -77,7 +133,8 @@ Remarks:
 #define ASN_APPL_CONSTR      (ASN_APPL_SPEC | ASN_CONSTRUCTED)
 #define ASN_CONT_SPEC        0x80
 #define ASN_CONT_CONSTR      (ASN_CONT_SPEC | ASN_CONSTRUCTED)
-#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED) /* bwds compat */
+#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED)  /* bwds compat 
+                                                                 */
 #define ASN_PRIV_SPEC        0xC0
 #define ASN_PRIV_CONSTR      (ASN_PRIV_SPEC | ASN_CONSTRUCTED)
 #define ASN_INDEF_LTH        0x80
@@ -92,21 +149,19 @@ Remarks:
 
 #define ASN_INDEF_FLAG 0x8000   /* used in asn.level to show indef length */
 
-struct asn
-    {
+struct asn {
     uchar *stringp;
     ulong lth;
     ushort level;
 #ifdef SUN
     ushort pad;
 #endif
-    };
+};
 
-struct typnames
-    {
+struct typnames {
     unsigned char typ;
     char *name;
-    };
+};
 
-#endif 
-#endif /* _ASN_H */
+#endif
+#endif                          /* _ASN_H */

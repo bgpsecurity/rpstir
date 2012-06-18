@@ -1,4 +1,6 @@
-/* $Id$ */
+/*
+ * $Id$ 
+ */
 /*****************************************************************************
 File:     asn_timedefs.h
 Contents: Header file for basic ASN.1 functions.
@@ -9,7 +11,9 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-/* sfcsid[] = "@(#)asn_timedefs.h 552P" */
+/*
+ * sfcsid[] = "@(#)asn_timedefs.h 552P" 
+ */
 #ifndef _ASN_TIMEDEFS_H
 #define _ASN_TIMEDEFS_H
 #define UTCBASE 70
@@ -32,4 +36,4 @@ Remarks:
 #define GENTYR 0
 #define GENTYRSIZ 4
 #define GENTSE (UTCSE + GENTYRSIZ - UTCYRSIZ)
-#endif /* ASN_TIMEDEFS_H */
+#endif                          /* ASN_TIMEDEFS_H */
