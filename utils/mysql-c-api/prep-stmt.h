@@ -6,11 +6,13 @@
 #define PREP_STMS_H_
 
 
-int stmtAddAll(dbconn *conn);
+int stmtAddAll(
+    dbconn * conn);
 
-void stmtDeleteAll(dbconn *conn);
+void stmtDeleteAll(
+    dbconn * conn);
 
-// Note:  keep in sync with array in implementation file
+// Note: keep in sync with array in implementation file
 enum prep_stmts_rtr {
     DB_PSTMT_RTR_GET_SESSION,
     DB_PSTMT_RTR_GET_LATEST_SERNUM,
@@ -29,4 +31,4 @@ enum prep_stmts_chaser {
 };
 
 
-#endif  // PREP_STMS_H_
+#endif                          // PREP_STMS_H_

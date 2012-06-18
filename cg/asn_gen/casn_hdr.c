@@ -1,4 +1,6 @@
-/* $Id$ */
+/*
+ * $Id$ 
+ */
 /*****************************************************************************
 File:     asn_chdr.c
 Contents: Functions to generate .h files as part of the ASN_CGEN program.
@@ -14,32 +16,38 @@ char casn_hdr_id[] = "@(#)casn_hdr.c 828P";
 
 #include "asn_gen.h"
 
-static void print_end(int, int),
-    print_hdr(),
-    print_item(char *, char *, long, int);
+static void print_end(
+    int,
+    int),
+    print_hdr(
+)  ,
+    print_item(
+    char *,
+    char *,
+    long,
+    int);
 
 static int thisdefined,
-    hdr_def(int *, int *),
-    hdr_item(int, int);
+    hdr_def(
+    int *,
+    int *),
+    hdr_item(
+    int,
+    int);
 
 static const char opener[] = "struct %s\n\
     {\n\
     struct casn self;\n",
-
     simple_definition[] = "void %s(struct casn *mine, ushort level);\n\n",
-
     any_item[] = "    struct %s %s;\n",
     forward[] = "class %s;\n\n",
     dup_point_func[] = "AsnObj *_%s%s();\n\n",
     func_line[] = "    %s;\n",
     index_op[] = "    AsnObj *_dup();\n    %s& operator[](int index) const;\n",
-
     assigner[] = "    %s & operator=(const %s &frobj)\
 \n        { *(AsnObj *)this = frobj; return *this; }\n",
-
     num_assigner[] = "    %s & operator=(const long val)\
 \n        { write(val); return *this; }\n",
-
     objid_assigner[] = "    %s & operator=(const char *val)\
 \n        { write(val, strlen(val)); return *this; }\n",
     constructor[] = "    %s();\n",
@@ -47,16 +55,14 @@ static const char opener[] = "struct %s\n\
     define_line[] = "#define %s %s\n\n",
     hi_lo[] = "    %s lo, hi;\n",
     assign_num[] =
-"    long operator=(const long val) { return write(val); }\n",
-
-    assign_char[] =
-"    long operator=(const char *c) { return write(c); }\n",
+    "    long operator=(const long val) { return write(val); }\n",
+    assign_char[] = "    long operator=(const char *c) { return write(c); }\n",
     name_constrainer[] = "int %sConstraint(struct %s *);\n\n",
-
     finale[] = "    };\n\n\
 void %s(struct %s *mine, ushort level);\n\n";
 
-void cdo_hdr()
+void cdo_hdr(
+    )
 {
 /**
 Function: Searches object table by generation and calls print_hdr for each
@@ -93,116 +99,129 @@ Procedure:
 	    Print its header stuff
 	Decrement the generation
 **/
-struct name_table *ntbp, *entbp, *curr_ntbp;
-int generation = -1, dup_ansr;
-long tmp;
-for (ntbp = (struct name_table *)name_area.area,
-    entbp = &ntbp[name_area.next]; ntbp < entbp; ntbp++)
+    struct name_table *ntbp,
+       *entbp,
+       *curr_ntbp;
+    int generation = -1,
+        dup_ansr;
+    long tmp;
+    for (ntbp = (struct name_table *)name_area.area,
+         entbp = &ntbp[name_area.next]; ntbp < entbp; ntbp++)
     {
-    if (ntbp->generation > generation) generation = ntbp->generation;
+        if (ntbp->generation > generation)
+            generation = ntbp->generation;
     }
-for ( ; generation >= -1; generation--)
+    for (; generation >= -1; generation--)
     {
-    for (ntbp = (struct name_table *)name_area.area; ntbp < entbp; ntbp++)
-	{
-	if (ntbp->generation != generation) continue;
-	end_definition();
-	cat(classname, ntbp->name);
-	if (*ntbp->name == '_')
-	    {
-	    curr_ntbp =
-                &((struct name_table *)name_area.area)[ntbp->parent.index];
-	    if (!(curr_ntbp->flags & ASN_FALSE_FLAG))
-		{
-		dup_ansr = test_dup(ntbp->name, &tmp);
-	        fprintf(outstr, opener, ntbp->name);
-	        print_end(dup_ansr, 1);
-		continue;
-		}
-	    }
-        else if (ntbp->pos < real_start ||
-            (ntbp->flags & (ASN_DEFINER_FLAG | ASN_DEFINED_FLAG)) ||
-	    ((ntbp->flags & ASN_TABLE_FLAG) && ntbp->parent.index >= 0 &&
-	    !(((struct name_table *)name_area.area)[ntbp->parent.index].flags &
-	    ASN_TABLE_FLAG))) continue;
-	else if (ntbp->pos >= real_start &&
-            !(ntbp->flags & (ASN_TABLE_FLAG | ASN_ENUM_FLAG)) &&
-            ((ntbp->flags & ASN_FALSE_FLAG) ||
-            (ntbp->type != -1 && ntbp->type < ASN_CONSTRUCTED &&
-             ntbp->tag < ASN_CONSTRUCTED)))
-	    {
-    	    cat(itemname, classname);
-	    curr_ntbp = replace_name(itemname);
-	    if (curr_ntbp->type != -1 && curr_ntbp->type < ASN_CONSTRUCTED &&
-                !(curr_ntbp->flags & ASN_ENUM_FLAG))
-		cat(itemname, casn_w);
-    	    if (!ntbp->max && !(ntbp->flags & (ASN_CONSTRAINT_FLAG |
-                ASN_DEFINED_FLAG)))
-                fprintf(outstr, define_line, classname,
-                    (ntbp->type & ASN_CONSTRUCTED)? itemname: casn_w);
-	    else
-		{
-		fprintf(outstr, opener, classname);
-		fprintf(outstr, finale, classname, classname);
-		}
-	    continue;
-	    }
-        else curr_ntbp = ntbp;
-	fseek(streams.str, curr_ntbp->pos, 0);
-	type = curr_ntbp->type;
-	state = IN_DEFINITION;
-	print_hdr();
-	}
+        for (ntbp = (struct name_table *)name_area.area; ntbp < entbp; ntbp++)
+        {
+            if (ntbp->generation != generation)
+                continue;
+            end_definition();
+            cat(classname, ntbp->name);
+            if (*ntbp->name == '_')
+            {
+                curr_ntbp =
+                    &((struct name_table *)name_area.area)[ntbp->parent.index];
+                if (!(curr_ntbp->flags & ASN_FALSE_FLAG))
+                {
+                    dup_ansr = test_dup(ntbp->name, &tmp);
+                    fprintf(outstr, opener, ntbp->name);
+                    print_end(dup_ansr, 1);
+                    continue;
+                }
+            }
+            else if (ntbp->pos < real_start ||
+                     (ntbp->flags & (ASN_DEFINER_FLAG | ASN_DEFINED_FLAG)) ||
+                     ((ntbp->flags & ASN_TABLE_FLAG) && ntbp->parent.index >= 0
+                      &&
+                      !(((struct name_table *)name_area.area)[ntbp->parent.
+                                                              index].
+                        flags & ASN_TABLE_FLAG)))
+                continue;
+            else if (ntbp->pos >= real_start &&
+                     !(ntbp->flags & (ASN_TABLE_FLAG | ASN_ENUM_FLAG)) &&
+                     ((ntbp->flags & ASN_FALSE_FLAG) ||
+                      (ntbp->type != -1 && ntbp->type < ASN_CONSTRUCTED &&
+                       ntbp->tag < ASN_CONSTRUCTED)))
+            {
+                cat(itemname, classname);
+                curr_ntbp = replace_name(itemname);
+                if (curr_ntbp->type != -1 && curr_ntbp->type < ASN_CONSTRUCTED
+                    && !(curr_ntbp->flags & ASN_ENUM_FLAG))
+                    cat(itemname, casn_w);
+                if (!ntbp->max && !(ntbp->flags & (ASN_CONSTRAINT_FLAG |
+                                                   ASN_DEFINED_FLAG)))
+                    fprintf(outstr, define_line, classname,
+                            (ntbp->
+                             type & ASN_CONSTRUCTED) ? itemname : casn_w);
+                else
+                {
+                    fprintf(outstr, opener, classname);
+                    fprintf(outstr, finale, classname, classname);
+                }
+                continue;
+            }
+            else
+                curr_ntbp = ntbp;
+            fseek(streams.str, curr_ntbp->pos, 0);
+            type = curr_ntbp->type;
+            state = IN_DEFINITION;
+            print_hdr();
+        }
     }
 }
 
-static void print_hdr()
+static void print_hdr(
+    )
 {
-/*
-Function: Creates class definitions for the things defined an ASN.1 file.
-
-Outputs: C header data written to 'outstr'
-Procedure:
-1. WHILE there is another token
-   	Switch on state
-2.    Case IN_DEFINITION
-	IF read_definition returns -1 OR state is global, return
-	IF (token is '{' OR line end) AND making the definition returns 0
-	    Return
-3. Case IN_ITEM
-   Case SUB_ITEM
-	IF reading item returns -1, return
-	IF (token is '}' OR ',' (indicating the end of an item)) AND
-	    making header item returns 0, return
-   Default: Exit with fatal message
-*/
-int dup_ansr, numdefineds;
-for ( end_item(); get_token(0, token); )
+    /*
+     * Function: Creates class definitions for the things defined an ASN.1
+     * file.
+     * 
+     * Outputs: C header data written to 'outstr' Procedure: 1. WHILE there is 
+     * another token Switch on state 2.  Case IN_DEFINITION IF read_definition 
+     * returns -1 OR state is global, return IF (token is '{' OR line end) AND 
+     * making the definition returns 0 Return 3. Case IN_ITEM Case SUB_ITEM IF 
+     * reading item returns -1, return IF (token is '}' OR ',' (indicating the 
+     * end of an item)) AND making header item returns 0, return Default: Exit 
+     * with fatal message 
+     */
+    int dup_ansr,
+        numdefineds;
+    for (end_item(); get_token(0, token);)
     {
-    switch (state)
-    	{
-    case IN_DEFINITION:
-	if ((*token != '{' && read_definition(-1) < 0) || state == GLOBAL)
-            return;
-	if ((*token == '{' || *token == '\n') &&
-	    !hdr_def(&numdefineds, &dup_ansr)) return;
-	break;
+        switch (state)
+        {
+        case IN_DEFINITION:
+            if ((*token != '{' && read_definition(-1) < 0) || state == GLOBAL)
+                return;
+            if ((*token == '{' || *token == '\n') &&
+                !hdr_def(&numdefineds, &dup_ansr))
+                return;
+            break;
 
-							    /* step 3 */
-    case IN_ITEM:
-    case SUB_ITEM:
-	if (read_item(-1, print_hdr) < 0) return;
-	if ((*token == ',' || *token == '}') &&	      /* end of item */
-	    !hdr_item(dup_ansr, numdefineds)) return;
-	break;
+            /*
+             * step 3 
+             */
+        case IN_ITEM:
+        case SUB_ITEM:
+            if (read_item(-1, print_hdr) < 0)
+                return;
+            if ((*token == ',' || *token == '}') &&     /* end of item */
+                !hdr_item(dup_ansr, numdefineds))
+                return;
+            break;
 
-    default:
-	fatal(4, (char *)state);
-	}
+        default:
+            fatal(4, (char *)state);
+        }
     }
 }
 
-static int hdr_def(int *numdefinedsp, int *dup_ansrp)
+static int hdr_def(
+    int *numdefinedsp,
+    int *dup_ansrp)
 {
 /**
 1. IF there's a subclass
@@ -242,93 +261,107 @@ static int hdr_def(int *numdefinedsp, int *dup_ansrp)
     Clear assorted variables
     Return 1
 **/
-struct name_table *ntbp;
-char *c;
-long tmp;
-struct parent *parentp;
-if (*subclass)
+    struct name_table *ntbp;
+    char *c;
+    long tmp;
+    struct parent *parentp;
+    if (*subclass)
     {
-    if (!*itemname)
+        if (!*itemname)
         {
-        cat(itemname, ((*subclass == '_')? &subclass[1]: subclass));
-        *itemname |= 0x20;
+            cat(itemname, ((*subclass == '_') ? &subclass[1] : subclass));
+            *itemname |= 0x20;
         }
-    if ((ntbp = replace_name(subclass)) &&
-        ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
-        !(ntbp->flags & ASN_ENUM_FLAG))
-        subtype = (short)ntbp->type;
+        if ((ntbp = replace_name(subclass)) &&
+            ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
+            !(ntbp->flags & ASN_ENUM_FLAG))
+            subtype = (short)ntbp->type;
     }
-					                    /* step 2 */
-if (*token == '{')
+    /*
+     * step 2 
+     */
+    if (*token == '{')
     {
-    state = IN_ITEM;
-    if ((type == ASN_BITSTRING || type == ASN_INTEGER ||
-        type == ASN_ENUMERATED || type == ASN_OBJ_ID) &&
-        !(option & ASN_OF_FLAG) &&
-        !(flags & ASN_TABLE_FLAG)) flags |= ASN_ENUM_FLAG;
+        state = IN_ITEM;
+        if ((type == ASN_BITSTRING || type == ASN_INTEGER ||
+             type == ASN_ENUMERATED || type == ASN_OBJ_ID) &&
+            !(option & ASN_OF_FLAG) && !(flags & ASN_TABLE_FLAG))
+            flags |= ASN_ENUM_FLAG;
     }
-if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) == ASN_TABLE_FLAG)
-    {               /* defined flag is turned on after printing table */
-    ntbp = find_name(classname);
-    classcount++;                   /* then go up one generation */
-    ntbp = &((struct name_table *)name_area.area)[ntbp->parent.index];
-    for (parentp = &ntbp->parent, *numdefinedsp = 0; parentp->next;
-        (*numdefinedsp)++, parentp= parentp->next);
+    if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) == ASN_TABLE_FLAG)
+    {                           /* defined flag is turned on after printing
+                                 * table */
+        ntbp = find_name(classname);
+        classcount++;           /* then go up one generation */
+        ntbp = &((struct name_table *)name_area.area)[ntbp->parent.index];
+        for (parentp = &ntbp->parent, *numdefinedsp = 0; parentp->next;
+             (*numdefinedsp)++, parentp = parentp->next);
     }
-else
+    else
     {
-					                     /* step 3 */
-    if ((flags & ASN_DEFINED_FLAG)) type = ASN_CHOICE;
-    if ((flags & ASN_TABLE_FLAG) && thisdefined > 0)
-        c = find_defined_class(thisdefined);
-    else c = classname;
-    *dup_ansrp = test_dup(c, &tmp);
-    if (type >= 0 && type < ASN_CONSTRUCTED &&
-        !(flags & ASN_ENUM_FLAG))
-        /* now clear it for a primitive named something else
-           had to wait after get_derivation to force AsnArray */
-        *dup_ansrp &= ~(ASN_DUPED_FLAG);
-    if (type < 0 || (type >= ASN_CONSTRUCTED && !(*classname & 0x20)) ||
-        (flags & ASN_ENUM_FLAG) || max)
+        /*
+         * step 3 
+         */
+        if ((flags & ASN_DEFINED_FLAG))
+            type = ASN_CHOICE;
+        if ((flags & ASN_TABLE_FLAG) && thisdefined > 0)
+            c = find_defined_class(thisdefined);
+        else
+            c = classname;
+        *dup_ansrp = test_dup(c, &tmp);
+        if (type >= 0 && type < ASN_CONSTRUCTED && !(flags & ASN_ENUM_FLAG))
+            /*
+             * now clear it for a primitive named something else had to wait
+             * after get_derivation to force AsnArray 
+             */
+            *dup_ansrp &= ~(ASN_DUPED_FLAG);
+        if (type < 0 || (type >= ASN_CONSTRUCTED && !(*classname & 0x20)) ||
+            (flags & ASN_ENUM_FLAG) || max)
         {
-        fprintf(outstr, opener, classname);
-        classcount++;
-        if (state == IN_DEFINITION)
+            fprintf(outstr, opener, classname);
+            classcount++;
+            if (state == IN_DEFINITION)
             {
-            if ((*dup_ansrp & ASN_OF_FLAG))
+                if ((*dup_ansrp & ASN_OF_FLAG))
                 {
-	        if (*subclass)
-	            {
-                    if (!*itemname)
-                        *strcpy(itemname, subclass) |= 0x20;
-	            }
-                if (subtype >= 0)
-	            {
-	            if (!*subclass) cat(itemname, array_w);
-		    if (*defined_by) mk_subclass(defined_by);
-	            else cat(subclass, casn_w);
-	            subtype = -1;
-	            }
-                print_item(itemname, subclass, subtype, 0);
+                    if (*subclass)
+                    {
+                        if (!*itemname)
+                            *strcpy(itemname, subclass) |= 0x20;
+                    }
+                    if (subtype >= 0)
+                    {
+                        if (!*subclass)
+                            cat(itemname, array_w);
+                        if (*defined_by)
+                            mk_subclass(defined_by);
+                        else
+                            cat(subclass, casn_w);
+                        subtype = -1;
+                    }
+                    print_item(itemname, subclass, subtype, 0);
                 }
-	    else if (*lo_end) fprintf(outstr, hi_lo, c);
-            else if (*classname != '_')
+                else if (*lo_end)
+                    fprintf(outstr, hi_lo, c);
+                else if (*classname != '_')
                 {
-                cat(itemname, classname);
-                *itemname |= 0x20;
-                print_item(itemname, c, type,
-                    (option & ~(ASN_OF_FLAG)));
+                    cat(itemname, classname);
+                    *itemname |= 0x20;
+                    print_item(itemname, c, type, (option & ~(ASN_OF_FLAG)));
                 }
-            print_end(*dup_ansrp, 0);
+                print_end(*dup_ansrp, 0);
             }
         }
     }
-if (state == IN_DEFINITION) return 0;
-end_item();
-return 1;
+    if (state == IN_DEFINITION)
+        return 0;
+    end_item();
+    return 1;
 }
 
-static int hdr_item(int dup_ansr, int numdefineds)
+static int hdr_item(
+    int dup_ansr,
+    int numdefineds)
 {
 /**
 1. IF object is a FUNCTION, print itemname as function definition
@@ -372,105 +405,138 @@ static int hdr_item(int dup_ansr, int numdefineds)
 	Go back to the start of the table definition
    Return 1
 **/
-char *c;
-struct name_table *ntbp;
-static struct name_table *ntablep, *ptbp;
-struct parent *parentp;
-if (type == ASN_BOOLEAN) *subclass = 0;
-							    /* step 1 */
-if (type == ASN_FUNCTION) fprintf(outstr, func_line, itemname);
-							    /* step 2 */
-else if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) != ASN_TABLE_FLAG)
+    char *c;
+    struct name_table *ntbp;
+    static struct name_table *ntablep,
+       *ptbp;
+    struct parent *parentp;
+    if (type == ASN_BOOLEAN)
+        *subclass = 0;
+    /*
+     * step 1 
+     */
+    if (type == ASN_FUNCTION)
+        fprintf(outstr, func_line, itemname);
+    /*
+     * step 2 
+     */
+    else if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) != ASN_TABLE_FLAG)
     {
-    if ((option & ASN_TABLE_FLAG))
+        if ((option & ASN_TABLE_FLAG))
         {
-        type = -1;
-        mk_in_name(subclass, tablename, classname);
+            type = -1;
+            mk_in_name(subclass, tablename, classname);
         }
-    if (*defined_by) mk_subclass(defined_by);
-    if (thisdefined > 1) set_alt_subtype(ntablep, thisdefined);
-    else if (type >= 0 && type < ASN_APPL_SPEC && *subclass) type = -1;
-    if (!*itemname)
+        if (*defined_by)
+            mk_subclass(defined_by);
+        if (thisdefined > 1)
+            set_alt_subtype(ntablep, thisdefined);
+        else if (type >= 0 && type < ASN_APPL_SPEC && *subclass)
+            type = -1;
+        if (!*itemname)
         {
-        if (type >= 0) c = &find_class(type)[3];
-        else if (!*subclass) c = "no_item";
-        else c = subclass;
-        *strcpy(itemname, c) |= 0x20;
+            if (type >= 0)
+                c = &find_class(type)[3];
+            else if (!*subclass)
+                c = "no_item";
+            else
+                c = subclass;
+            *strcpy(itemname, c) |= 0x20;
         }
-					                    /* step 3 */
-    if (*subclass && (ntbp = replace_name(subclass)) &&
-        ntbp->type < ASN_CONSTRUCTED &&
-        !(ntbp->flags & (ASN_TABLE_FLAG | ASN_ENUM_FLAG | ASN_CONSTRAINT_FLAG)))
+        /*
+         * step 3 
+         */
+        if (*subclass && (ntbp = replace_name(subclass)) &&
+            ntbp->type < ASN_CONSTRUCTED &&
+            !(ntbp->
+              flags & (ASN_TABLE_FLAG | ASN_ENUM_FLAG | ASN_CONSTRAINT_FLAG)))
         {
-        if (type < 0)
-	    {
-            type = ntbp->type;
-	    if (ntbp->max || (ntbp->flags & ASN_ENUM_FLAG))
-		type |= ASN_CONSTRUCTED;  // to force print_item to print name
-	    }
-        else if (subtype < 0) subtype = (short)ntbp->type;
+            if (type < 0)
+            {
+                type = ntbp->type;
+                if (ntbp->max || (ntbp->flags & ASN_ENUM_FLAG))
+                    type |= ASN_CONSTRUCTED;    // to force print_item to
+                                                // print name
+            }
+            else if (subtype < 0)
+                subtype = (short)ntbp->type;
         }
-    if (!*subclass && type < 0 && !(flags & ASN_ENUM_FLAG))
-        cat(subclass, casn_w);
+        if (!*subclass && type < 0 && !(flags & ASN_ENUM_FLAG))
+            cat(subclass, casn_w);
+        else
+        {
+            if (thisdefined > 0)
+                c = find_defined_class(thisdefined);
+            else
+                c = classname;
+            if (!(ptbp = find_name(c)))
+                syntax(itemname);
+            else if (ptbp->type == ASN_BITSTRING)
+                cat(subclass, casn_w);
+        }
+        print_item(itemname, subclass, type, option);
+    }
+    /*
+     * step 4 
+     */
+    if (*token != '}')
+        end_item();             /* not last */
+    else if (!(flags & ASN_TABLE_FLAG))
+    {                           /* i.e. last but not TABLE or DEFINED BY */
+        if (state != SUB_ITEM)  /* i.e. not in components */
+        {
+            print_end(dup_ansr, 1);
+        }
+        return 0;
+    }
     else
-        {
-        if (thisdefined > 0) c = find_defined_class(thisdefined);
-        else c = classname;
-        if (!(ptbp = find_name(c))) syntax(itemname);
-        else if (ptbp->type == ASN_BITSTRING) cat(subclass, casn_w);
-	}
-    print_item(itemname, subclass, type, option);
-    }
-					                    /* step 4 */
-if (*token != '}') end_item();      /* not last */
-else if (!(flags & ASN_TABLE_FLAG))
-    {                  /* i.e. last but not TABLE or DEFINED BY */
-    if (state != SUB_ITEM)      /* i.e. not in components */
-	{
-        print_end(dup_ansr, 1);
-	}
-    return 0;
-    }
-else
     {
-    state = IN_DEFINITION;
-    if (flags & ASN_DEFINED_FLAG)
+        state = IN_DEFINITION;
+        if (flags & ASN_DEFINED_FLAG)
         {
-        print_end(dup_ansr, 1);
-        if (thisdefined++ >= numdefineds) return (thisdefined = 0);
-        else (classname[strlen(classname) - 1])++;
+            print_end(dup_ansr, 1);
+            if (thisdefined++ >= numdefineds)
+                return (thisdefined = 0);
+            else
+                (classname[strlen(classname) - 1])++;
         }
-    else
+        else
         {
-        flags |= ASN_DEFINED_FLAG;
-        thisdefined = 1;
-        ntablep = find_name(classname);
-	for (parentp = &ntablep->parent; parentp; parentp = parentp->next)
-	    {
-	    if (parentp->index < 0) continue;
-	    ptbp = &((struct name_table *)name_area.area)[parentp->index];
-	    fprintf(outstr, simple_definition, ptbp->name);
-	    }
-        strcat(classname, "Defined");
+            flags |= ASN_DEFINED_FLAG;
+            thisdefined = 1;
+            ntablep = find_name(classname);
+            for (parentp = &ntablep->parent; parentp; parentp = parentp->next)
+            {
+                if (parentp->index < 0)
+                    continue;
+                ptbp = &((struct name_table *)name_area.area)[parentp->index];
+                fprintf(outstr, simple_definition, ptbp->name);
+            }
+            strcat(classname, "Defined");
         }
-    fseek(streams.str, tablepos, 0);
-    curr_line = table_start_line;
+        fseek(streams.str, tablepos, 0);
+        curr_line = table_start_line;
     }
-return 1;
+    return 1;
 }
 
-static void print_end(int dup_ansr, int mode)
+static void print_end(
+    int dup_ansr,
+    int mode)
 {
-fprintf(outstr, finale, classname, classname);
-if (def_constraintp)
+    fprintf(outstr, finale, classname, classname);
+    if (def_constraintp)
     {
-    fprintf(outstr, name_constrainer, classname, classname);
-    free(def_constraintp);
-    def_constraintp = (char *)0;
+        fprintf(outstr, name_constrainer, classname, classname);
+        free(def_constraintp);
+        def_constraintp = (char *)0;
     }
 }
 
-static void print_item(char *itemname, char *subcls, long loctype,
+static void print_item(
+    char *itemname,
+    char *subcls,
+    long loctype,
     int option)
 {
 /**
@@ -480,13 +546,17 @@ Procedure:
 //   IF it's really primitive, use "casn" as the class name
 2. Print the item with class and item names
 **/
-char *c = subcls;
-int tmp;
+    char *c = subcls;
+    int tmp;
 
-if (!*c || ((flags & ASN_ENUM_FLAG) && (tmp = find_name(classname)->type) ==
-    ASN_OBJ_ID)) c = casn_w;
-else if (*itemname == '*') c++;
-if ((loctype > 0 && loctype < ASN_CONSTRUCTED) || (option & ASN_TABLE_FLAG))
-    c = casn_w;
-fprintf(outstr, any_item, c, itemname);
+    if (!*c
+        || ((flags & ASN_ENUM_FLAG)
+            && (tmp = find_name(classname)->type) == ASN_OBJ_ID))
+        c = casn_w;
+    else if (*itemname == '*')
+        c++;
+    if ((loctype > 0 && loctype < ASN_CONSTRUCTED)
+        || (option & ASN_TABLE_FLAG))
+        c = casn_w;
+    fprintf(outstr, any_item, c, itemname);
 }
