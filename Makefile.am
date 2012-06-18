@@ -29,6 +29,7 @@ CLEANFILES = \
 BUILT_SOURCES =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
+pkgdata_DATA =
 
 include mk/asn_gen.mk
 include mk/libcasn.mk
