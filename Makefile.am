@@ -31,6 +31,7 @@ noinst_LIBRARIES =
 noinst_PROGRAMS =
 
 include mk/asn_gen.mk
+include mk/libcasn.mk
 include mk/librpkiasn1.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
