@@ -1,7 +1,5 @@
-#!/bin/bash
-#
-
 # Safe bash shell scripting practices
+# This file should be sourced from a bash script, not run directly.
 set -o errexit			# exit if anything fails
 set -o errtrace			# shell functions inherit 'ERR' trap
 init_cmd=$(basename $0)         # initial command

@@ -1,0 +1,11 @@
+--- badCertSubject2SetComName.raw.old	2011-09-29 15:33:34.000000000 -0400
++++ badCertSubject2SetComName.raw	2011-09-29 15:34:00.000000000 -0400
+@@ -9,6 +9,8 @@
+             utc "460515185928Z"
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "badCertSubject2SetComName"
++            set seq oid 2.5.4.3 /* id_commonName */
++                    prt "badCertSubject2SetComName"
+         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                 nul 
+             bit 0x003082010A0282010100BFBD06FD096D

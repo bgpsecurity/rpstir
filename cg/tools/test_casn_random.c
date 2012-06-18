@@ -34,22 +34,26 @@
 	} \
     }
 
-int main (int argc, char **argv)
+int main(
+    int argc,
+    char **argv)
 {
     char *filename;
 
-    if (argc < 2) {
-	printf("need to specify at least one file "
-	       "(of garbage) to test on the command line\n");
-	exit(1);
+    if (argc < 2)
+    {
+        printf("need to specify at least one file "
+               "(of garbage) to test on the command line\n");
+        exit(1);
     }
 
-    for (filename = *++argv; filename != NULL; filename = *++argv) {
-	TEST(Certificate);
-	TEST(ROA);
-	TEST(Manifest);
-	TEST(CertificateRevocationList);
-	TEST(CRLEntry);
+    for (filename = *++argv; filename != NULL; filename = *++argv)
+    {
+        TEST(Certificate);
+        TEST(ROA);
+        TEST(Manifest);
+        TEST(CertificateRevocationList);
+        TEST(CRLEntry);
     }
     exit(0);
 }

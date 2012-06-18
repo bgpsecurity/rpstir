@@ -14,4 +14,5 @@ queue_test_SOURCES = queue-test.c ../unittest.h
 stringutils_test_SOURCES = stringutils-test.c ../unittest.h
 unittest_test_SOURCES = unittest-test.c ../unittest.h
 
+TESTS_ENVIRONMENT = $(top_srcdir)/utils/run_with_tool.sh
 TESTS = $(check_PROGRAMS)

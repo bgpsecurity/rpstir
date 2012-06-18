@@ -114,7 +114,7 @@ static void make_listen_sockets(
     char listen_host[MAX_HOST_LENGTH];
     char listen_serv[MAX_SERVICE_LENGTH];
 
-    hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+    hints.ai_flags = AI_PASSIVE;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = 0;

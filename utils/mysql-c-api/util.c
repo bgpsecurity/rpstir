@@ -16,31 +16,43 @@
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt, const char *err_msg_in) {
+int wrap_mysql_stmt_execute(
+    dbconn * conn,
+    MYSQL_STMT * stmt,
+    const char *err_msg_in)
+{
     int tried = 0;
     int ret = 0;
     uint err_no = 0;
 
     ret = mysql_stmt_execute(stmt);
     // currently limited to a single reconnect attempt
-    while (ret) {
+    while (ret)
+    {
         err_no = mysql_stmt_errno(stmt);
-        if (err_no == CR_SERVER_GONE_ERROR  ||  err_no == CR_SERVER_LOST) {  // lost server connection
-            LOG(LOG_WARNING, "connection to MySQL server was lost: %s", mysql_stmt_error(stmt));
-            if (tried) {
+        if (err_no == CR_SERVER_GONE_ERROR || err_no == CR_SERVER_LOST)
+        {                       // lost server connection
+            LOG(LOG_WARNING, "connection to MySQL server was lost: %s",
+                mysql_stmt_error(stmt));
+            if (tried)
+            {
                 LOG(LOG_ERR, "not able to reconnect to MySQL server");
                 return -1;
             }
             tried++;
-            if (reconnectMysqlCApi(&conn)) {
+            if (reconnectMysqlCApi(&conn))
+            {
                 LOG(LOG_WARNING, "reconnection to MySQL server failed");
                 return -1;
             }
             ret = mysql_stmt_execute(stmt);
-        } else {  // error, but not server disconnect
+        }
+        else
+        {                       // error, but not server disconnect
             if (err_msg_in != NULL)
                 LOG(LOG_ERR, "%s", err_msg_in);
-            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt), mysql_stmt_error(stmt));
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+                mysql_stmt_error(stmt));
             return ret;
         }
     }
@@ -53,7 +65,12 @@ int wrap_mysql_stmt_execute(dbconn *conn, MYSQL_STMT *stmt, const char *err_msg_
  * @note Caller must free memory returned in first argument.
  * @ret 0 on success, -1 on failure, 1 on NULL value.
 ------------------------------------------------------------------------------*/
-int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char field_name[]) {
+int getStringByFieldname(
+    char **out,
+    MYSQL_RES * result,
+    MYSQL_ROW row,
+    char field_name[])
+{
     uint num_fields;
     int field_no = -1;
     uint i = 0;
@@ -61,29 +78,34 @@ int getStringByFieldname(char **out, MYSQL_RES *result, MYSQL_ROW row, char fiel
     ulong *lengths = NULL;
     ulong len;
 
-    if (row == NULL) {
+    if (row == NULL)
+    {
         LOG(LOG_ERR, "the argument row is NULL");
         return -1;
     }
 
     num_fields = mysql_num_fields(result);
     fields = mysql_fetch_fields(result);
-    for (i = 0; i < num_fields; i++) {
-        if (!strcmp(fields[i].name, field_name)) {
+    for (i = 0; i < num_fields; i++)
+    {
+        if (!strcmp(fields[i].name, field_name))
+        {
             field_no = i;
             break;
         }
     }
-    if (field_no == -1) {
+    if (field_no == -1)
+    {
         LOG(LOG_ERR, "could not find field name:  %s", field_name);
         return -1;
     }
 
-    lengths = mysql_fetch_lengths(result);  // mysql allocs the memory
+    lengths = mysql_fetch_lengths(result);      // mysql allocs the memory
     len = lengths[field_no];
 
-    *out = (char*) malloc(len + 1);
-    if (!(*out)) {
+    *out = (char *)malloc(len + 1);
+    if (!(*out))
+    {
         LOG(LOG_ERR, "could not alloc memory");
         return -1;
     }

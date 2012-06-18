@@ -19,10 +19,12 @@ struct config_context;
 	@param priority	See syslog(3).
 */
 void config_message(
-	const struct config_context * context,
-	int priority,
-	const char * format,
-	...) WARN_PRINTF(3, 4);
+    const struct config_context *context,
+    int priority,
+    const char *format,
+    ...) WARN_PRINTF(
+    3,
+    4);
 
 
 /**
@@ -38,51 +40,58 @@ void config_message(
 	@return			True on success, false on failure. This means that
 				this function can be used to validate input.
 */
-typedef bool (*config_value_converter)(
-	const struct config_context * context,
-	void * usr_arg,
-	const char * input,
-	void ** data);
+     typedef bool(
+    *config_value_converter) (
+    const struct config_context * context,
+    void *usr_arg,
+    const char *input,
+    void **data);
 
 /** Deep free data for a config item. */
-typedef void (*config_value_free)(void * data);
+     typedef void (
+    *config_value_free) (
+    void *data);
 
 /** Check an array of values for inter-value consistency/correctness. */
-typedef bool (*config_array_validator)(
-	const struct config_context * context,
-	void * usr_arg,
-	void const * const * input,
-	size_t num_items);
+     typedef bool(
+    *config_array_validator) (
+    const struct config_context * context,
+    void *usr_arg,
+    void const *const *input,
+    size_t num_items);
 
 
 
 /** Structure to describe an available config option. */
-struct config_option {
-	// configuration key, e.g. "SomeOption"
-	char * name;
+     struct config_option {
+         // configuration key, e.g. "SomeOption"
+         char *name;
 
-	// type information
-	bool is_array;
-	config_value_converter value_convert;
-	void * value_convert_usr_arg;
-	config_value_free value_free;
-	config_array_validator array_validate;
-	void * array_validate_usr_arg;
+         // type information
+         bool is_array;
+         config_value_converter value_convert;
+         void *value_convert_usr_arg;
+         config_value_free value_free;
+         config_array_validator array_validate;
+         void *array_validate_usr_arg;
 
-	// Default value, as if it came from the config file.
-	// NULL indicates that the option is mandatory.
-	char * default_value;
-};
+         // Default value, as if it came from the config file.
+         // NULL indicates that the option is mandatory.
+         char *default_value;
+     };
 
 
 /** Return the value for a non-array config option. */
-const void * config_get(size_t key);
+     const void *config_get(
+    size_t key);
 
 /** Return the length of an array config option. */
-size_t config_get_length(size_t key);
+     size_t config_get_length(
+    size_t key);
 
 /** Return the values for an array config option. */
-void const * const * config_get_array(size_t key);
+     void const *const *config_get_array(
+    size_t key);
 
 /**
 	Load configuration data from a config file.
@@ -95,10 +104,10 @@ void const * const * config_get_array(size_t key);
 	@param filename	The file to load data from. If this is NULL, the
 			default configuration file is used.
 */
-bool config_load(
-	size_t num_options,
-	const struct config_option * options,
-	const char * filename);
+     bool config_load(
+    size_t num_options,
+    const struct config_option *options,
+    const char *filename);
 
 /**
 	Call this after configuration data is no longer needed to free resources.
@@ -108,6 +117,7 @@ bool config_load(
 	@note This MUST NOT be called when any threads could possibly use
 		configuration data.
 */
-void config_unload();
+     void config_unload(
+    );
 
 #endif

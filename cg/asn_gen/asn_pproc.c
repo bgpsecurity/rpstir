@@ -1,4 +1,6 @@
-/* $Id$ */
+/*
+ * $Id$ 
+ */
 /*****************************************************************************
 File:     asn_pproc.c
 Contents: Functions to pre-process ASN.1 files as part of the ASN_GEN
@@ -11,7 +13,8 @@ Remarks:
 
 *****************************************************************************/
 
-const char asn_pproc_rcsid[]="$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_pproc.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
+const char asn_pproc_rcsid[] =
+    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_pproc.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
 char asn_pproc_id[] = "@(#)asn_pproc.c 828P";
 
 #include "asn_gen.h"
@@ -103,44 +106,100 @@ calls do_macro() to perform the substitutions.
 **/
 
 struct import_table *imtbp;
-               /* pointer to entry for imported file currently being read */
+               /*
+                * pointer to entry for imported file currently being read 
+                */
 
 static int num_imports;
-static int append_default(int, char *, char *),
-    append_token(char *, char *, char *),
-    pre_proc_get_token(int, FILE *, char *),
-    pre_proc_glob(int, FILE *, char *, char **, char *, int *),
-    pre_proc_def(int, FILE *, char *, char **, char *, int *),
-    pre_proc_item(int, FILE *, char *, char **, char *, int *, int),
-    recurs(int fd, FILE *str, char *newclass, int newstate, int in_sub);
+static int append_default(
+    int,
+    char *,
+    char *),
+    append_token(
+    char *,
+    char *,
+    char *),
+    pre_proc_get_token(
+    int,
+    FILE *,
+    char *),
+    pre_proc_glob(
+    int,
+    FILE *,
+    char *,
+    char **,
+    char *,
+    int *),
+    pre_proc_def(
+    int,
+    FILE *,
+    char *,
+    char **,
+    char *,
+    int *),
+    pre_proc_item(
+    int,
+    FILE *,
+    char *,
+    char **,
+    char *,
+    int *,
+    int),
+    recurs(
+    int fd,
+    FILE * str,
+    char *newclass,
+    int newstate,
+    int in_sub);
 
-FILE *make_substr(char *);
+FILE *make_substr(
+    char *);
 
-void empty_substr(FILE *, FILE *, char *, int, char *);
+void empty_substr(
+    FILE *,
+    FILE *,
+    char *,
+    int,
+    char *);
 
-static void glob_type(int, long, int),
-    print_signed(FILE *, char *, char *),
-    putout(FILE*, char *),
-    scan_modules(int), skip_to(int, int, int);
+static void glob_type(
+    int,
+    long,
+    int),
+    print_signed(
+    FILE *,
+    char *,
+    char *),
+    putout(
+    FILE *,
+    char *),
+    scan_modules(
+    int),
+    skip_to(
+    int,
+    int,
+    int);
 
-static char table[128], topclass[128],
+static char table[128],
+    topclass[128],
     tobesigned[] = "    toBeSigned  %sToBeSigned,\n",
-    tabledef[] =    /* used in SIGNED SEQUENCE TABLE ... */
-"%sAlgorithmIdentifier ::= SEQUENCE {\n\
+    tabledef[] =                /* used in SIGNED SEQUENCE TABLE ... */
+    "%sAlgorithmIdentifier ::= SEQUENCE {\n\
     algorithm OBJECT IDENTIFIER TABLE %s,\n\
     parameters ANY DEFINED BY algorithm OPTIONAL}\n\n",
     signed_def[] = "%s ::= %s %s",
     thatword[] = "    toBeSigned  %s,\n",
-    algsig[] = 
-"    algorithm  %sAlgorithmIdentifier,\n\
+    algsig[] = "    algorithm  %sAlgorithmIdentifier,\n\
     signature BIT STRING }\n\n",
-    instance_of[] =
-"%s ::= INSTANCE OF {\n\
+    instance_of[] = "%s ::= INSTANCE OF {\n\
     type_id OBJECT IDENTIFIER TABLE %s,\n\
     value   ANY DEFINED BY type_id }\n\n",
     sub_opener[] = "%s ::= %s {\n";
 
-void pre_proc(int fd, FILE *str, int in_sub)
+void pre_proc(
+    int fd,
+    FILE * str,
+    int in_sub)
 {
 /**
 Function: Preprocesses file fd to translate SIGNED macro and produce file str
@@ -163,82 +222,106 @@ Procedure:
 	    IF in a sub-item AND pre-processing the items returns GLOBAL
 		state, return
 **/
-char linebuf[20*ASN_BSIZE], *linend = linebuf, *elinebuf = &linebuf[sizeof(linebuf)];
-int signflag,
-    active;   /* -1= in main file,
-                  0= in imported file but not imported class
-		  1= in imported file in an imported class, no details needed
-		  2=  "   "        "  "   "    "      " , but details needed */
-ulong loctag;
-long loctype;
-if (!in_sub) *classname = *token = 0;
-if (fd >= 0 && !in_sub && !real_start) scan_modules(fd);
-if (fd <= 0) active = -1;
-else active = 0;
-for (signflag = loctag = 0, loctype = -1,
-    *linebuf = *itemname = 0; pre_proc_get_token(fd, str, linebuf); )
+    char linebuf[20 * ASN_BSIZE],
+       *linend = linebuf,
+        *elinebuf = &linebuf[sizeof(linebuf)];
+    int active;                 /* -1= in main file, 0= in imported file but
+                                 * not imported class 1= in imported file in
+                                 * an imported class, no details needed 2= " " 
+                                 * " " " " " , but details needed */
+    ulong loctag;
+    if (!in_sub)
+        *classname = *token = 0;
+    if (fd >= 0 && !in_sub && !real_start)
+        scan_modules(fd);
+    if (fd <= 0)
+        active = -1;
+    else
+        active = 0;
+    for (loctag = 0,
+         *linebuf = *itemname = 0; pre_proc_get_token(fd, str, linebuf);)
     {
-    switch (state)
-    	{
-    case PRE_GLOBAL:
-	if (*token == ':') syntax(definitions_w);
-	if (!strcmp(token, definitions_w)) state = GLOBAL;
-	else *token = 0;   /* discard up to DEFINITIONS */
-	break;
+        switch (state)
+        {
+        case PRE_GLOBAL:
+            if (*token == ':')
+                syntax(definitions_w);
+            if (!strcmp(token, definitions_w))
+                state = GLOBAL;
+            else
+                *token = 0;     /* discard up to DEFINITIONS */
+            break;
 
-    case GLOBAL:			 
-	state = pre_proc_glob(fd, str, linebuf, &linend, elinebuf, &active);
-	break;
+        case GLOBAL:
+            state =
+                pre_proc_glob(fd, str, linebuf, &linend, elinebuf, &active);
+            break;
 
-    case IN_DEFINITION:                                     /* got ::= */
-	if ((state = pre_proc_def(fd, str, linebuf, &linend, elinebuf,
-            &active)) == GLOBAL)
-	    {
-            active = (fd <= 0)? -1: 0;
-            loctype = -1;
-            *subclass = *classname = 0;
-	    if (fd >= 0) fflush(str);
-	    if (in_sub) return;
-	    }
-	else if (state == IN_DEFINITION)
-	    {
-            if (in_sub) return;
-	    syntax(token);
-	    }
-        *(linend = linebuf) = 0;
-	break;
+        case IN_DEFINITION:    /* got ::= */
+            if ((state = pre_proc_def(fd, str, linebuf, &linend, elinebuf,
+                                      &active)) == GLOBAL)
+            {
+                active = (fd <= 0) ? -1 : 0;
+                *subclass = *classname = 0;
+                if (fd >= 0)
+                    fflush(str);
+                if (in_sub)
+                    return;
+            }
+            else if (state == IN_DEFINITION)
+            {
+                if (in_sub)
+                    return;
+                syntax(token);
+            }
+            *(linend = linebuf) = 0;
+            break;
 
-    case IN_ITEM:
-    case SUB_ITEM:
-	if ((state = pre_proc_item(fd, str, linebuf, &linend, elinebuf,
-            &active, in_sub)) == GLOBAL && in_sub) return;
-	break;
+        case IN_ITEM:
+        case SUB_ITEM:
+            if ((state = pre_proc_item(fd, str, linebuf, &linend, elinebuf,
+                                       &active, in_sub)) == GLOBAL && in_sub)
+                return;
+            break;
 
-    default:
-	fatal(4, (char *)state);
-	}
+        default:
+            fatal(4, (char *)state);
+        }
     }
-if (fd < 0) return;
-if (linend > linebuf) fprintf(str, "%s\n", linebuf);
-if (!fd) free_imports();
+    if (fd < 0)
+        return;
+    if (linend > linebuf)
+        fprintf(str, "%s\n", linebuf);
+    if (!fd)
+        free_imports();
 }
 
-static int pre_proc_get_token(int fd, FILE *str, char *linebuf)
+static int pre_proc_get_token(
+    int fd,
+    FILE * str,
+    char *linebuf)
 {
-static int loopcount;
-if (!*token) loopcount = 0;
-else if (loopcount++ > 20)
+    static int loopcount;
+    if (!*token)
+        loopcount = 0;
+    else if (loopcount++ > 20)
     {
-    putout(str, linebuf);
-    fflush(str);
-    fatal(22, token);
+        putout(str, linebuf);
+        fflush(str);
+        fatal(22, token);
     }
-if (!*token && !get_token(fd, token)) return 0;
-return 1;
+    if (!*token && !get_token(fd, token))
+        return 0;
+    return 1;
 }
 
-static int pre_proc_glob(int fd, FILE *str, char *linebuf, char **linendpp,
-    char *elinebuf, int *activep)
+static int pre_proc_glob(
+    int fd,
+    FILE * str,
+    char *linebuf,
+    char **linendpp,
+    char *elinebuf,
+    int *activep)
 {
 /**
 1. DO
@@ -280,166 +363,192 @@ static int pre_proc_glob(int fd, FILE *str, char *linebuf, char **linendpp,
    WHILE state is GLOBAL AND there's a next token
    Return state
 **/
-char locfile[80], *c, *fname;
-int sub_fd;
-long tmp, locline;
-struct name_table *ntbp;
-struct class_table *ctbp = (struct class_table *)0;
-struct table_entry *tbep;
-struct table_out *tbop;
-do                                                          /* step 1 */
+    char locfile[80],
+       *c,
+       *fname;
+    int sub_fd;
+    long tmp,
+        locline;
+    struct name_table *ntbp;
+    struct class_table *ctbp = (struct class_table *)0;
+    struct table_entry *tbep;
+    struct table_out *tbop;
+    do                          /* step 1 */
     {
-    if (*token <= ' ');
-    else if (*token == '{')
+        if (*token <= ' ');
+        else if (*token == '{')
         {
-	add_macro(fd, classname);
-        *token = *classname = *(*linendpp = linebuf) = 0;
+            add_macro(fd, classname);
+            *token = *classname = *(*linendpp = linebuf) = 0;
         }
-    else if (*token == '}' || *token == '(') syntax(token);
-    else if (*token == ':')
+        else if (*token == '}' || *token == '(')
+            syntax(token);
+        else if (*token == ':')
         {
-	get_known(fd, &token[1], colon_ch);
-	get_known(fd, &token[2], equal_ch);
-	token[3] = 0;
-	if (ctbp)
-	    {
-	    if ((*classname & 0x20))
-		{
-		get_known(fd, token, "{");
-		class_instance(fd, str, ctbp, classname);
-		}
-	    else
-		{
-                collect_ids(fd, ctbp, str);
-		if (!fd && !ctbp->with_syntax.subject && !ctbp->with_syntax.next)
-		    {
-		    fprintf(str, linebuf);
-		    if (strncmp(ctbp->item.predicate,
-                        (c = "OBJECT IDENTIFIER"), 17) &&
-			strcmp(ctbp->item.predicate, (c = integer_w)))
-                        syntax(ctbp->item.predicate);
-		    fprintf(str, " ::= %s {\n", c);
-		    for (tbep = &ctbp->table_out.table_entry; tbep;
-                        tbep = tbep->next)
-			{
-			fprintf(str, "    %s %s ", (tbep->item)? tbep->item: "",
-                            (tbep->id)? tbep->id: "");
-			fprintf(str, (tbep->next)? ",\n": "}\n");
-			}
-		    }
-		}
-	    *token = *(*linendpp = linebuf) = 0;
-    	    ctbp = (struct class_table *)0;
-	    }
-        else if (strcmp(classname, definitions_w)) state = IN_DEFINITION;
-        else
+            get_known(fd, &token[1], colon_ch);
+            get_known(fd, &token[2], equal_ch);
+            token[3] = 0;
+            if (ctbp)
             {
-            if (!fd) fprintf(str, "%s ::=\n\n", linebuf);
-    	    *token = *classname = *(*linendpp = linebuf) = 0;
-	    }
+                if ((*classname & 0x20))
+                {
+                    get_known(fd, token, "{");
+                    class_instance(fd, str, ctbp, classname);
+                }
+                else
+                {
+                    collect_ids(fd, ctbp, str);
+                    if (!fd && !ctbp->with_syntax.subject
+                        && !ctbp->with_syntax.next)
+                    {
+                        fprintf(str, linebuf);
+                        if (strncmp(ctbp->item.predicate,
+                                    (c = "OBJECT IDENTIFIER"), 17) &&
+                            strcmp(ctbp->item.predicate, (c = integer_w)))
+                            syntax(ctbp->item.predicate);
+                        fprintf(str, " ::= %s {\n", c);
+                        for (tbep = &ctbp->table_out.table_entry; tbep;
+                             tbep = tbep->next)
+                        {
+                            fprintf(str, "    %s %s ",
+                                    (tbep->item) ? tbep->item : "",
+                                    (tbep->id) ? tbep->id : "");
+                            fprintf(str, (tbep->next) ? ",\n" : "}\n");
+                        }
+                    }
+                }
+                *token = *(*linendpp = linebuf) = 0;
+                ctbp = (struct class_table *)0;
+            }
+            else if (strcmp(classname, definitions_w))
+                state = IN_DEFINITION;
+            else
+            {
+                if (!fd)
+                    fprintf(str, "%s ::=\n\n", linebuf);
+                *token = *classname = *(*linendpp = linebuf) = 0;
+            }
         }
-    else if (!strcmp(token, imports_w))                     /* step 2 */
+        else if (!strcmp(token, imports_w))     /* step 2 */
         {
-        cat(classname, token);
-        if (real_start) syntax(token);
+            cat(classname, token);
+            if (real_start)
+                syntax(token);
+            *token = 0;
+            get_fnames(fd);
+            if (!fd)
+            {
+                for (imtbp = (struct import_table *)import_area.area;
+                     imtbp && imtbp->name; imtbp++)
+                {
+                    if (!strcmp(imtbp->name, source))
+                        continue;
+                    if (add_include_name(imtbp->name))
+                    {
+                        if ((sub_fd = find_file(imtbp->name)) < 0)
+                        {
+                            fname = (char *)calloc(1, strlen(imtbp->name) + 6);
+                            strcat(strcpy(fname, imtbp->name), ".asn");
+                            if ((sub_fd = find_file(fname)) < 0)
+                                fatal(2, imtbp->name);
+                            free(imtbp->name);
+                            imtbp->name = fname;
+                        }
+                        printf("    Imported file %s\n", imtbp->name);
+                        cat(locfile, curr_file);
+                        cat(curr_file, imtbp->name);
+                        locline = curr_line;
+                        curr_line = 0;
+                        state = recurs(sub_fd, str, (char *)0, PRE_GLOBAL, 0);
+                        close_file(sub_fd);
+                        fflush(str);
+                        curr_line = locline;
+                        cat(curr_file, locfile);
+                        *token = 0;
+                    }
+                }
+                imtbp = (struct import_table *)0;
+                num_imports = name_area.next;
+                printf("Main file\n");
+            }
+            if (*activep)
+                putout(str, "\n");
+            if (!fd)
+                real_start = ftell(str);
+            *classname = 0;
+        }
+        else if (!strcmp(token, exports_w))     /* step 3 */
+        {
+            get_exports(fd, str);
+            *classname = *token = 0;
+        }
+        else if (!strcmp(token, begin_w) || !strcmp(token, end_w))
+            *token = 0;
+        else if ((tmp = find_type(token)) != ASN_NOTYPE)
+        {
+            get_expected(fd, tmp, token);
+            glob_type(fd, tmp, *activep);
+            *(*linendpp = linebuf) = 0;
+        }
+        else if ((ntbp = find_name(token)) && ntbp->name && ntbp->type > 0 &&
+                 ntbp->type < ASN_APPL_SPEC)
+        {
+            if (!*classname)
+            {
+                cat(classname, token);
+                fatal(17, token);
+            }
+            ntbp->pos = -2;     /* so it won't appear in unused list */
+            glob_type(fd, ntbp->type, *activep);
+            *(*linendpp = linebuf) = 0;
+        }
+        else if (*activep && (ctbp = find_class_entry(token)))
+        {
+            if (!*classname)
+                fatal(20, "class name");
+            if (!(*classname & 0x20) &&
+                (ctbp->with_syntax.next || ctbp->with_syntax.subject))
+            {
+                for (tbop = &ctbp->table_out; tbop && tbop->table_name &&
+                     strcmp(tbop->table_name, classname); tbop = tbop->next);
+                if (!tbop)
+                    tbop =
+                        (struct table_out *)add_chain((struct chain *)&ctbp->
+                                                      table_out,
+                                                      sizeof(struct
+                                                             table_out));
+                fill_name(&tbop->table_name, classname);
+            }
+            *token = 0;
+        }
+        else if (!*classname && *token >= 'A')
+        {
+            cat(classname, token);
+            if (strcmp(token, definitions_w) && strcmp(token, implicit_w) &&
+                strcmp(token, explicit_w) && strcmp(token, type_identifier_w)
+                && is_reserved(token))
+                syntax("invalid class");
+        }
+        if (fd > 0 && *classname > ' ')
+            *activep = is_imported(classname);
+        if (*classname <= 'Z' && *activep && *token && (*linendpp > linebuf ||
+                                                        *token > ' ') &&
+            (*linendpp = cat(cat(*linendpp, token),
+                             ((*token == '{') ? "\n    " : " "))) >= elinebuf)
+            fatal(37, linebuf);
         *token = 0;
-        get_fnames(fd);
-        if (!fd)
-	    {
-            for(imtbp = (struct import_table *)import_area.area;
-	        imtbp && imtbp->name; imtbp++)
-	        {
-		if (!strcmp(imtbp->name, source)) continue;
-	        if (add_include_name(imtbp->name))
-		    {
-    	            if ((sub_fd = find_file(imtbp->name)) < 0)
-			{
-			fname = (char *)calloc(1, strlen(imtbp->name) + 6);
-			strcat(strcpy(fname, imtbp->name), ".asn");
-			if ((sub_fd = find_file(fname)) < 0)
-                            fatal(2, imtbp->name);
-			free(imtbp->name);
-			imtbp->name = fname;
-			}
-    	            printf("    Imported file %s\n", imtbp->name);
-		    cat(locfile, curr_file);
-		    cat(curr_file, imtbp->name);
-		    locline = curr_line;
-		    curr_line = 0;
-		    state = recurs(sub_fd, str, (char *)0, PRE_GLOBAL, 0);
-    	            close_file(sub_fd);
-		    fflush(str);
-		    curr_line = locline;
-		    cat(curr_file, locfile);
-		    *token = 0;
-		    }
-	        }
-	    imtbp = (struct import_table *)0;
-	    num_imports = name_area.next;
-	    printf("Main file\n");
-	    }
-        if (*activep) putout(str, "\n");
-        if (!fd) real_start = ftell(str);
-        *classname = 0;
-        }
-    else if (!strcmp(token, exports_w))                     /* step 3 */
-        {
-        get_exports(fd, str);
-        *classname = *token = 0;
-        }
-    else if (!strcmp(token, begin_w) || !strcmp(token, end_w)) *token = 0;
-    else if ((tmp = find_type(token)) != ASN_NOTYPE)
-	{
-        get_expected(fd, tmp, token);
-	glob_type(fd, tmp, *activep);
-	*(*linendpp = linebuf) = 0;
-	}
-    else if ((ntbp = find_name(token)) && ntbp->name && ntbp->type > 0 &&
-        ntbp->type < ASN_APPL_SPEC)
-        {
-        if (!*classname)
-	    {
-	    cat(classname, token);
-            fatal(17, token);
-	    }
-        ntbp->pos = -2;     /* so it won't appear in unused list */
-        glob_type(fd, ntbp->type, *activep);
-	*(*linendpp = linebuf) = 0;
-        }
-    else if (*activep && (ctbp = find_class_entry(token)))
-	{
-	if (!*classname) fatal(20, "class name");
-	if (!(*classname & 0x20) &&
-            (ctbp->with_syntax.next || ctbp->with_syntax.subject))
-	    {
-	    for (tbop = &ctbp->table_out; tbop && tbop->table_name &&
-                strcmp(tbop->table_name, classname); tbop = tbop->next);
-	    if (!tbop) tbop = (struct table_out *)add_chain((struct chain *)
-		&ctbp->table_out, sizeof(struct table_out));
-            fill_name(&tbop->table_name, classname);
-	    }
-	*token = 0;
-	}
-    else if (!*classname && *token >= 'A')
-        {
-        cat(classname, token);
-        if (strcmp(token, definitions_w) && strcmp(token, implicit_w) &&
-	    strcmp(token, explicit_w) && strcmp(token, type_identifier_w) &&
-            is_reserved(token)) syntax("invalid class");
-        }
-    if (fd > 0 && *classname > ' ') *activep = is_imported(classname);
-    if (*classname <= 'Z' && *activep && *token && (*linendpp > linebuf ||
-        *token > ' ') &&
-        (*linendpp = cat(cat(*linendpp, token),
-        ((*token == '{')? "\n    ": " "))) >= elinebuf) fatal(37, linebuf);
-    *token = 0;
     }
-while (state == GLOBAL && pre_proc_get_token(fd, str, linebuf));
-return state;
+    while (state == GLOBAL && pre_proc_get_token(fd, str, linebuf));
+    return state;
 }
 
-static int pre_proc_def(int fd, FILE *str, char *linebuf, char **linendpp,
-    char *elinebuf, int *activep)
+static int pre_proc_def(
+    int fd,
+    FILE * str,
+    char *linebuf,
+    char **linendpp,
+    char *elinebuf,
+    int *activep)
 {
 /**
 0. IF in later pre_proc pass AND have no real start yet AND the class has a
@@ -547,302 +656,348 @@ static int pre_proc_def(int fd, FILE *str, char *linebuf, char **linendpp,
 	OR '{' OR '(' OR ']')
    Return state
 **/
-int loctype, brackets, parens;
-long tmp;
-char *c, constrain = 0, is_brace, subfilename[128];
-struct class_table *ctbp;
-struct id_table *cidp;
-struct macro_table *mtbp;
-struct name_table *ntbp = find_name(classname);
-FILE *substr = 0;
-constrain = brackets = parens = 0;
-loctype = -1;
-*table = *itemname = 0;
-if (pre_proc_pass > 0 && !real_start && ntbp)
+    int loctype,
+        brackets,
+        parens;
+    long tmp;
+    char *c,
+        constrain = 0,
+        is_brace,
+        subfilename[128];
+    struct class_table *ctbp;
+    struct id_table *cidp;
+    struct macro_table *mtbp;
+    struct name_table *ntbp = find_name(classname);
+    FILE *substr = 0;
+    constrain = brackets = parens = 0;
+    loctype = -1;
+    *table = *itemname = 0;
+    if (pre_proc_pass > 0 && !real_start && ntbp)
     {
-    if ((ntbp - (struct name_table *)name_area.area) >= num_imports ||
-        (ntbp->flags & ASN_EXPORT_FLAG)) real_start = ftell(str);
+        if ((ntbp - (struct name_table *)name_area.area) >= num_imports ||
+            (ntbp->flags & ASN_EXPORT_FLAG))
+            real_start = ftell(str);
     }
-do
+    do
     {
-    if (!strcmp(token, encrypted_w))
-	{
-        loctype = encr_xform(fd, token);
-	if (!fd) *linendpp += append_token(*linendpp, token, elinebuf);
-	*token = 0;
-	}
-    else if (!strcmp(token, by_w) || !strcmp(token, in_w))
-	{
-	token[2] = ' ';
-	get_must(fd, &token[3]);
-	}
-    else if (!strcmp(token, class_w))
-	{
-        state = add_class_def(fd);
-	*classname = *(*linendpp = linebuf) = 0;
-	}
-    else if (!strcmp(token, defined_w))
-	{
-	token[7] = ' ';
-	get_known(fd, &token[8], by_w);
-	token[10] = ' ';
-	get_must(fd, &token[11]);
-	if (*topclass) cat(cat(cat(cat(&token[strlen(token)], " "), in_w), " "),
-	    topclass);
-	}
-    else if (!strcmp(token, default_w) || !strcmp(token, optional_w))
-	{
-	fprintf(str, "%s\n\n", linebuf);
-        return IN_DEFINITION;
-	}
-    else if (!strcmp(token, signed_w))
-	{
-	if (!*subclass)
-	    {
-	    get_must(fd, subclass);
-    	    if (*subclass == '{')
-    	        {
-    	        get_must(fd, subclass);
-    	        get_known(fd, token, "}");
-    	        }
-	    }
-	*token = 0;
-	if ((loctype = type = find_type(subclass)) >= 0 && type < ASN_CONSTRUCTED)
-	    {
-	    for (c = subclass; *c; c++);
-            *c++ = ' ';
-	    *c = 0;
-            get_expected(fd, type, c);
-    	    if (!*c) c[-1] = 0;
-	    type = ASN_NOTYPE;
-	    }
-	if (!strncmp(peek_token(fd), table_w, 5))
-	    {
-	    get_must(fd, token);
-	    get_must(fd, table);
-	    *token = 0;
-	    }
-	if (!fd || is_imported(classname))
-	    {
-	    add_name(classname, ASN_SEQUENCE, 0);
-            print_signed(str, classname, subclass);
-	    if (*activep > 0) *activep = is_imported(classname);
-            if (!fd || *activep)
-		{
-                if (loctype > ASN_CONSTRUCTED && loctype != ASN_NOTYPE)
-                    {
-                    cat(token, subclass);
-                    if (!substr) substr = make_substr(subfilename);
-                    fprintf(substr, signed_def, classname, "", "");
-                    state = recurs(fd, substr, (char *)0,  IN_DEFINITION, 1);
-                    state = GLOBAL;     /* signed always goes to end */
-                    }
-		}
-	    }
-        *(*linendpp = linebuf) = 0;
-	}
-    else if (!strcmp(token, size_w) && fd) *token = 0;
-    else if ((ctbp = find_class_entry(token)))
-	{
-        for (c = token; *c && *c != '.'; c++);
-        if (*c)         /* it is a XXX.&yy in a definition */
-            {
-            get_known(fd, token, "&");
-            get_must(fd, token);
-            }
-        else add_class_member(ctbp, classname);
-	*(*linendpp = linebuf) = *token = *classname = 0;
-        loctype = 0;
-	}
-    else if ((mtbp = find_macro(token)))
-	{
-	if (*activep) do_macro(fd, str, mtbp);
-	else
-	    {
-	    get_known(fd, token, "{");
-	    skip_to(fd, 1, 0);
-	    }
-	*(*linendpp = linebuf) = *token = 0;
-	state = GLOBAL;
-	}
-    else if (*token == '{')             /* step 2 */
-	{
-        state = IN_ITEM;
-        *linendpp += append_token(*linendpp, token, elinebuf);
-	if (fd > 0)        /* in import */
-	    {
-            skip_to(fd, 1, 0);
-	    state = GLOBAL;
-	    if (*peek_token(fd) == '(')
-		{
-	        get_known(fd, token, "(");
-	        skip_to(fd, 0, 1);
-		}
-            *linendpp += append_token(*linendpp, "}", elinebuf);
-	    }
-        *token = 0;
-        }
-    else if (!strcmp(token, of_w))
-	{
-        if (*activep) *linendpp += append_token(*linendpp, token, elinebuf);
-        get_must(fd, token);
-        if ((tmp = find_type(token)) == ASN_NOTYPE)
-	    {
-	    if (*activep) *linendpp += append_token(*linendpp, token, elinebuf);
-	    else *token = 0;
-	    if ((constrain = *peek_token(fd)) != '(')
-	        {
-	        constrain = 0;
-	        state = GLOBAL;
-		*token = 0;
-		}
-	    }
-	else if (tmp >= ASN_CONSTRUCTED)  /* SET/SEQ/CHOICE */
-	    {
-	    cat(cat(cat(itemname, &find_class(tmp)[3]), "In"), classname);
-	    if (*activep)
-		{
-		fprintf(str, "%s %s\n\n", linebuf, itemname);
-		*(*linendpp = linebuf) = 0;
-                fprintf(str, "%s ::= %s ", itemname, token);
-		state = recurs(fd, str, itemname, IN_DEFINITION, 1);
-		if (*token == ',') break;
-		}
-            *itemname = 0;
-	    }
-        else                     /* have a universal primitive */
-	    {
-	    get_expected(fd, tmp, token);
-	    loctype = tmp;
-	    if (!(is_brace = (*peek_token(fd) == '{')))
-	        {
-	        if (*activep) *linendpp += append_token(*linendpp, token, elinebuf);
-	        }
-	    else
-	        {
-	        cat(cat(cat(itemname, &find_class(tmp)[3]), "In"), classname);
-	        cat(classname, itemname);
-	        if (*activep)
-		    {
-		    fprintf(str, "%s %s\n\n", linebuf, itemname);
-		    *(*linendpp = linebuf) = 0;
-		    fprintf(str, sub_opener, itemname, token);
-		    get_known(fd, token, "{");
-		    state = IN_ITEM;
-		    }
-		*itemname = 0;
-		}
-	    *token = 0;
-	    }
-	if (!fd)
-	    {
-	    if (*linendpp > linebuf || *token == '{')
-		{
-	        if (*token == '{' && (*linendpp = cat(*linendpp, "{\n")) >=
-		    elinebuf) fatal(37, linebuf);
-		*token = 0;
-		}
-	    }
-	fflush(str);
-	*table = 0;
-	}
-                                                             /* step 3 */
-    else if (*token == '(')
-	{
-        test_paren(fd, token, linebuf, linendpp, elinebuf);
-	if (constrain == '(')
-	    {
-            if ((*linendpp = cat(*linendpp, "\n")) >= elinebuf) fatal(37, linebuf);
-    	    constrain = 0;
-    	    state = GLOBAL;
-	    }
-	}
-    else if (*token == '[') brackets++;
-    else if (*token == ']')
-	{
-	if ((*token == ']' && !brackets--)) syntax(token);
-	}
-    else if (!parens && !brackets && ((*token >= '0' && *token <= '9') ||
-        (*token == '_' && token[1] >= '0' && token[1] <= '9')))
-	{
-	for (c = (*token == '_')? &token[1]: token, tmp = 0;
-            *c >= '0' && *c <= '9'; tmp = (tmp * 10) + *c++ - '0');
-	if (*token == '_') tmp = -tmp;
-	if (*activep) add_ub(classname, tmp, *activep);
-	state = GLOBAL;
-	*token = *classname = *(*linendpp = linebuf) = 0;
-	}
-    else if ((tmp = find_type(token)) != ASN_NOTYPE)
-	{
-	get_expected(fd, (loctype = tmp), token);
-	if (!fd || *activep) add_name(classname, loctype, 0);
-	}
-    else if ((*token >= 'A' || *token == '*') && !is_reserved(token))
-	{
-	if (*subclass || loctype >= 0)
-	    {
-	    state = GLOBAL;
-	    if (loctype >= 0 && (loctype & ASN_CONSTRUCTED))
-		syntax(find_typestring(loctype));
-	    }
-	else if ((*token & 0x20) && (cidp = find_id(token)))
-	    {
-	    c = cidp->val;
-	    cidp = add_id(classname);
-	    cidp->val = c;
-	    end_definition();
-	    *token = *(*linendpp = linebuf) = 0;
-	    }
-	else cat(subclass, (*token == '*')? &token[1]: token);
-	}
-    if (*classname >= 'A' && *classname <= 'Z')             /* step 4 */
+        if (!strcmp(token, encrypted_w))
         {
-    	if (state == GLOBAL)
-	    {
-	    if (*activep && !constrain)
-		{
-            	if (*linendpp > linebuf) fprintf(str, "%s\n\n", linebuf);
-    		if (fd > 0 && *token >= 'A' && *token <= 'Z')
-    		    add_import_item(imtbp, token);
-        	if (*subclass || loctype >= 0) putout(str, "\n");
-		}
-	    }
-	else
-	    {
-	    if (*activep) *linendpp += append_token(*linendpp, token, elinebuf);
-	    *token = 0;
-	    }
-	}
-    else *token = 0;
+            loctype = encr_xform(fd, token);
+            if (!fd)
+                *linendpp += append_token(*linendpp, token, elinebuf);
+            *token = 0;
+        }
+        else if (!strcmp(token, by_w) || !strcmp(token, in_w))
+        {
+            token[2] = ' ';
+            get_must(fd, &token[3]);
+        }
+        else if (!strcmp(token, class_w))
+        {
+            state = add_class_def(fd);
+            *classname = *(*linendpp = linebuf) = 0;
+        }
+        else if (!strcmp(token, defined_w))
+        {
+            token[7] = ' ';
+            get_known(fd, &token[8], by_w);
+            token[10] = ' ';
+            get_must(fd, &token[11]);
+            if (*topclass)
+                cat(cat(cat(cat(&token[strlen(token)], " "), in_w), " "),
+                    topclass);
+        }
+        else if (!strcmp(token, default_w) || !strcmp(token, optional_w))
+        {
+            fprintf(str, "%s\n\n", linebuf);
+            return IN_DEFINITION;
+        }
+        else if (!strcmp(token, signed_w))
+        {
+            if (!*subclass)
+            {
+                get_must(fd, subclass);
+                if (*subclass == '{')
+                {
+                    get_must(fd, subclass);
+                    get_known(fd, token, "}");
+                }
+            }
+            *token = 0;
+            if ((loctype = type = find_type(subclass)) >= 0
+                && type < ASN_CONSTRUCTED)
+            {
+                for (c = subclass; *c; c++);
+                *c++ = ' ';
+                *c = 0;
+                get_expected(fd, type, c);
+                if (!*c)
+                    c[-1] = 0;
+                type = ASN_NOTYPE;
+            }
+            if (!strncmp(peek_token(fd), table_w, 5))
+            {
+                get_must(fd, token);
+                get_must(fd, table);
+                *token = 0;
+            }
+            if (!fd || is_imported(classname))
+            {
+                add_name(classname, ASN_SEQUENCE, 0);
+                print_signed(str, classname, subclass);
+                if (*activep > 0)
+                    *activep = is_imported(classname);
+                if (!fd || *activep)
+                {
+                    if (loctype > ASN_CONSTRUCTED && loctype != ASN_NOTYPE)
+                    {
+                        cat(token, subclass);
+                        if (!substr)
+                            substr = make_substr(subfilename);
+                        fprintf(substr, signed_def, classname, "", "");
+                        state =
+                            recurs(fd, substr, (char *)0, IN_DEFINITION, 1);
+                        state = GLOBAL; /* signed always goes to end */
+                    }
+                }
+            }
+            *(*linendpp = linebuf) = 0;
+        }
+        else if (!strcmp(token, size_w) && fd)
+            *token = 0;
+        else if ((ctbp = find_class_entry(token)))
+        {
+            for (c = token; *c && *c != '.'; c++);
+            if (*c)             /* it is a XXX.&yy in a definition */
+            {
+                get_known(fd, token, "&");
+                get_must(fd, token);
+            }
+            else
+                add_class_member(ctbp, classname);
+            *(*linendpp = linebuf) = *token = *classname = 0;
+            loctype = 0;
+        }
+        else if ((mtbp = find_macro(token)))
+        {
+            if (*activep)
+                do_macro(fd, str, mtbp);
+            else
+            {
+                get_known(fd, token, "{");
+                skip_to(fd, 1, 0);
+            }
+            *(*linendpp = linebuf) = *token = 0;
+            state = GLOBAL;
+        }
+        else if (*token == '{') /* step 2 */
+        {
+            state = IN_ITEM;
+            *linendpp += append_token(*linendpp, token, elinebuf);
+            if (fd > 0)         /* in import */
+            {
+                skip_to(fd, 1, 0);
+                state = GLOBAL;
+                if (*peek_token(fd) == '(')
+                {
+                    get_known(fd, token, "(");
+                    skip_to(fd, 0, 1);
+                }
+                *linendpp += append_token(*linendpp, "}", elinebuf);
+            }
+            *token = 0;
+        }
+        else if (!strcmp(token, of_w))
+        {
+            if (*activep)
+                *linendpp += append_token(*linendpp, token, elinebuf);
+            get_must(fd, token);
+            if ((tmp = find_type(token)) == ASN_NOTYPE)
+            {
+                if (*activep)
+                    *linendpp += append_token(*linendpp, token, elinebuf);
+                else
+                    *token = 0;
+                if ((constrain = *peek_token(fd)) != '(')
+                {
+                    constrain = 0;
+                    state = GLOBAL;
+                    *token = 0;
+                }
+            }
+            else if (tmp >= ASN_CONSTRUCTED)    /* SET/SEQ/CHOICE */
+            {
+                cat(cat(cat(itemname, &find_class(tmp)[3]), "In"), classname);
+                if (*activep)
+                {
+                    fprintf(str, "%s %s\n\n", linebuf, itemname);
+                    *(*linendpp = linebuf) = 0;
+                    fprintf(str, "%s ::= %s ", itemname, token);
+                    state = recurs(fd, str, itemname, IN_DEFINITION, 1);
+                    if (*token == ',')
+                        break;
+                }
+                *itemname = 0;
+            }
+            else                /* have a universal primitive */
+            {
+                get_expected(fd, tmp, token);
+                loctype = tmp;
+                if (!(is_brace = (*peek_token(fd) == '{')))
+                {
+                    if (*activep)
+                        *linendpp += append_token(*linendpp, token, elinebuf);
+                }
+                else
+                {
+                    cat(cat(cat(itemname, &find_class(tmp)[3]), "In"),
+                        classname);
+                    cat(classname, itemname);
+                    if (*activep)
+                    {
+                        fprintf(str, "%s %s\n\n", linebuf, itemname);
+                        *(*linendpp = linebuf) = 0;
+                        fprintf(str, sub_opener, itemname, token);
+                        get_known(fd, token, "{");
+                        state = IN_ITEM;
+                    }
+                    *itemname = 0;
+                }
+                *token = 0;
+            }
+            if (!fd)
+            {
+                if (*linendpp > linebuf || *token == '{')
+                {
+                    if (*token == '{' && (*linendpp = cat(*linendpp, "{\n")) >=
+                        elinebuf)
+                        fatal(37, linebuf);
+                    *token = 0;
+                }
+            }
+            fflush(str);
+            *table = 0;
+        }
+        /*
+         * step 3 
+         */
+        else if (*token == '(')
+        {
+            test_paren(fd, token, linebuf, linendpp, elinebuf);
+            if (constrain == '(')
+            {
+                if ((*linendpp = cat(*linendpp, "\n")) >= elinebuf)
+                    fatal(37, linebuf);
+                constrain = 0;
+                state = GLOBAL;
+            }
+        }
+        else if (*token == '[')
+            brackets++;
+        else if (*token == ']')
+        {
+            if ((*token == ']' && !brackets--))
+                syntax(token);
+        }
+        else if (!parens && !brackets && ((*token >= '0' && *token <= '9') ||
+                                          (*token == '_' && token[1] >= '0'
+                                           && token[1] <= '9')))
+        {
+            for (c = (*token == '_') ? &token[1] : token, tmp = 0;
+                 *c >= '0' && *c <= '9'; tmp = (tmp * 10) + *c++ - '0');
+            if (*token == '_')
+                tmp = -tmp;
+            if (*activep)
+                add_ub(classname, tmp, *activep);
+            state = GLOBAL;
+            *token = *classname = *(*linendpp = linebuf) = 0;
+        }
+        else if ((tmp = find_type(token)) != ASN_NOTYPE)
+        {
+            get_expected(fd, (loctype = tmp), token);
+            if (!fd || *activep)
+                add_name(classname, loctype, 0);
+        }
+        else if ((*token >= 'A' || *token == '*') && !is_reserved(token))
+        {
+            if (*subclass || loctype >= 0)
+            {
+                state = GLOBAL;
+                if (loctype >= 0 && (loctype & ASN_CONSTRUCTED))
+                    syntax(find_typestring(loctype));
+            }
+            else if ((*token & 0x20) && (cidp = find_id(token)))
+            {
+                c = cidp->val;
+                cidp = add_id(classname);
+                cidp->val = c;
+                end_definition();
+                *token = *(*linendpp = linebuf) = 0;
+            }
+            else
+                cat(subclass, (*token == '*') ? &token[1] : token);
+        }
+        if (*classname >= 'A' && *classname <= 'Z')     /* step 4 */
+        {
+            if (state == GLOBAL)
+            {
+                if (*activep && !constrain)
+                {
+                    if (*linendpp > linebuf)
+                        fprintf(str, "%s\n\n", linebuf);
+                    if (fd > 0 && *token >= 'A' && *token <= 'Z')
+                        add_import_item(imtbp, token);
+                    if (*subclass || loctype >= 0)
+                        putout(str, "\n");
+                }
+            }
+            else
+            {
+                if (*activep)
+                    *linendpp += append_token(*linendpp, token, elinebuf);
+                *token = 0;
+            }
+        }
+        else
+            *token = 0;
     }
-while (state == IN_DEFINITION && pre_proc_get_token(fd, str, linebuf) &&
-    *token != '}' && (*token == '{' || *token == '[' || *token == '(' ||
-    *token < ' ' ||
-    brackets || is_reserved(token) || (!*subclass && loctype < 0)));
-if ((state == IN_DEFINITION || state == IN_ITEM) && *linebuf)
+    while (state == IN_DEFINITION && pre_proc_get_token(fd, str, linebuf) &&
+           *token != '}' && (*token == '{' || *token == '[' || *token == '(' ||
+                             *token < ' ' ||
+                             brackets || is_reserved(token) || (!*subclass
+                                                                && loctype <
+                                                                0)));
+    if ((state == IN_DEFINITION || state == IN_ITEM) && *linebuf)
     {
-    if (!fd  && pre_proc_pass && state == IN_ITEM &&
+        if (!fd && pre_proc_pass && state == IN_ITEM &&
             tell_pos(streams.str) < real_start)
         {
-        do
+            do
             {
-            get_must(fd, token);
-            *linendpp += append_token(*linendpp, token, elinebuf);
+                get_must(fd, token);
+                *linendpp += append_token(*linendpp, token, elinebuf);
             }
-        while(*token != '}');
-        *token = 0;
-        state = IN_DEFINITION;   /* to make 2nd fprintf happen */
+            while (*token != '}');
+            *token = 0;
+            state = IN_DEFINITION;      /* to make 2nd fprintf happen */
         }
-    fprintf(str, "%s\n", linebuf);
-    if (state == IN_DEFINITION && !fd && *linebuf != '\n') fprintf(str, "\n");
+        fprintf(str, "%s\n", linebuf);
+        if (state == IN_DEFINITION && !fd && *linebuf != '\n')
+            fprintf(str, "\n");
     }
-if (substr) empty_substr(str, substr, linebuf, (elinebuf - linebuf),
-    subfilename);
-return (state == IN_DEFINITION)? GLOBAL: state;
+    if (substr)
+        empty_substr(str, substr, linebuf, (elinebuf - linebuf), subfilename);
+    return (state == IN_DEFINITION) ? GLOBAL : state;
 }
 
-static int pre_proc_item(int fd, FILE *str, char *linebuf, char **linendpp,
-    char *elinebuf, int *activep, int in_sub)
+static int pre_proc_item(
+    int fd,
+    FILE * str,
+    char *linebuf,
+    char **linendpp,
+    char *elinebuf,
+    int *activep,
+    int in_sub)
 {
 /**
 1. DO
@@ -927,243 +1082,296 @@ static int pre_proc_item(int fd, FILE *str, char *linebuf, char **linendpp,
    IF state is not GLOBAL, error
    Return state
 **/
-FILE *substr = (FILE *)0;
-char *b, *c, locclass[128], namebuf[128], subname[128],
-    subfilename[20];
-int parens, is_of;
-long tmp, loctype;
-ulong loctag;
-struct name_table *ntbp;
-struct class_table *ctbp;
-struct macro_table *mtbp;
-is_of = parens = loctag = 0;
-*locclass = *namebuf = *subname = *table = 0;
-do
+    FILE *substr = (FILE *) 0;
+    char *b,
+       *c,
+        locclass[128],
+        namebuf[128],
+        subname[128],
+        subfilename[20];
+    int parens;
+    long tmp;
+    ulong loctag;
+    struct name_table *ntbp;
+    struct class_table *ctbp;
+    struct macro_table *mtbp;
+    parens = loctag = 0;
+    *locclass = *namebuf = *subname = *table = 0;
+    do
     {
-    if (!strcmp(token, encrypted_w)) encr_xform(fd, token);
-    else if (*token == ',' || *token == '}')
-	{
-	if (*classname <= 'Z')
-	    *linendpp += append_token(*linendpp, token, elinebuf);
-        if (*token == ',' && *peek_token(fd) == '}')
-	    {
-	    while (**linendpp <= ' ') (*linendpp)--;
-            get_known(fd, token, "}");
-	    *linendpp += append_token(*linendpp, token, elinebuf);
-	    }
-	if (*activep) fprintf(str, "    %s\n", linebuf);
-	if (*token == '}')
-	    {
-	    state = GLOBAL;
-	    if (*peek_token(fd) == '(')
-		{
-		get_known(fd, token, "(");
-		*linendpp = linebuf;
-                test_paren(fd, token, linebuf, linendpp, elinebuf);
-		fprintf(str, "%s\n", linebuf);
-		}
-	    *token = *classname = *(*linendpp = linebuf) = 0;
-	    if (in_sub || get_token(fd, token)) fprintf(str, "\n");
-	    }
-	else *token = 0;
-	loctag = 0;
-	*(*linendpp = linebuf) = *table = *subclass = *itemname = *namebuf = 0;
-	}
-    else if (*token == '(' && fd)
-	{
-	for (parens = 1; parens && get_must(fd, token); )
-	    {
-	    if (*token == '(') parens++;
-	    else if (*token == ')') parens--;
-	    }
-	if (parens) fatal(20, ")");
-	*token = 0;
-	}
-    else if (*token == '(')
-	{
-	get_must(fd, &token[2]);
-	for (c = &token[2]; *c && *c != '.'; c++);
-	if (!(tmp = wdcmp(&token[2], size_w)) || !*c || c[1] != '.')
-	    {
-            token[1] = ' ';
-	    *linendpp += append_token(*linendpp, token, elinebuf);
-            if (!tmp)     /* SIZE */
-		{
-        	get_known(fd, token, "(");
-                test_paren(fd, token, linebuf, linendpp, elinebuf);
-		}
-	    else while (*peek_token(fd) != ')')
-		{
-		get_must(fd, token);
-		*linendpp += append_token(*linendpp, token, elinebuf);
-		}
-	    }
-         else
-	    {
-//    	      for (*linendpp -= 2; *linendpp > linebuf && **linendpp > ' ';
-//                (*linendpp)--);
-//    	      if (*linendpp > linebuf) (*linendpp)++;
-    	    if (!*itemname)
-    	        {
-    	        if (loctag <= 0) fatal(20, "item name");
-    	        cat(namebuf, *linendpp);
-    	        cat(itemname, &find_class(loctag)[3]);
-    	        *itemname |= 0x20;
-		 *linendpp += append_token(*linendpp, itemname, elinebuf);
-//		  cat(*linendpp, namebuf); // temp holding for 5 lines down
-    	        }
-//    	      mk_in_name(namebuf, itemname, classname);
-//    	      *namebuf &= ~(0x20);
-//    	      if (!substr) substr = make_substr(subfilename);
-//    	      fprintf(substr, range_opener, namebuf, *linendpp, &token[2]);
-//	      *linendpp += append_token(*linendpp, namebuf, elinebuf);
-	    token[1] = ' ';
-	    *linendpp += append_token(*linendpp, token, elinebuf);
-	    }
-	get_known(fd, token, ")");
-	}
-    else if (*token == '{' || !strcmp(token, of_w))
-	{
-        if (loctag != ASN_SEQUENCE && loctag != ASN_SET && loctag != ASN_CHOICE
-            && loctag != ASN_INTEGER && loctag != ASN_BITSTRING &&
-            loctag != ASN_ENUMERATED) syntax(token);
-        if (!substr) substr = make_substr(subfilename);
-	state = recurs(fd, substr, namebuf, IN_DEFINITION, 1);
-	if (*token == ',' || *token == '}') continue;
-	if (!strcmp(token, default_w))
-            *linendpp += append_default(fd, *linendpp, elinebuf);
-	loctag = 0;
-	}
-    else if (!strcmp(token, components_w))
-	{
-	for (b = token; *b; b++);
-	*b++ = ' ';
-	if (!get_token(fd, b)) fatal(14, linebuf);
-	if (strcmp(b, of_w)) syntax(b);
-	}
-    else if (!strcmp(token, default_w))
-        *linendpp += append_default(fd, *linendpp, elinebuf);
-    else if (!strcmp(token, end_w)) syntax(token);
-    else if (!strcmp(token, function_w))
+        if (!strcmp(token, encrypted_w))
+            encr_xform(fd, token);
+        else if (*token == ',' || *token == '}')
         {
-        for(c = token; *c; c++);
-        for (*c++ = ' ', parens = 0; c < &token[ASN_BSIZE] && (parens ||
-            (*peek_token(fd) != ',' && *peek_token(fd) != '}')) &&
-            get_must(fd, c) ; *c++ = ' ', *c = 0)
-    	    {
-            if (*c == '(') parens++;
-    	    else if (*c == ')' && !(--parens)) break;
-    	    while (*c) c++;
-     	     }
+            if (*classname <= 'Z')
+                *linendpp += append_token(*linendpp, token, elinebuf);
+            if (*token == ',' && *peek_token(fd) == '}')
+            {
+                while (**linendpp <= ' ')
+                    (*linendpp)--;
+                get_known(fd, token, "}");
+                *linendpp += append_token(*linendpp, token, elinebuf);
+            }
+            if (*activep)
+                fprintf(str, "    %s\n", linebuf);
+            if (*token == '}')
+            {
+                state = GLOBAL;
+                if (*peek_token(fd) == '(')
+                {
+                    get_known(fd, token, "(");
+                    *linendpp = linebuf;
+                    test_paren(fd, token, linebuf, linendpp, elinebuf);
+                    fprintf(str, "%s\n", linebuf);
+                }
+                *token = *classname = *(*linendpp = linebuf) = 0;
+                if (in_sub || get_token(fd, token))
+                    fprintf(str, "\n");
+            }
+            else
+                *token = 0;
+            loctag = 0;
+            *(*linendpp = linebuf) = *table = *subclass = *itemname =
+                *namebuf = 0;
         }
-    else if (!strcmp(token, signed_w))
-	{
-	get_must(fd, subclass);
-	c = namebuf;
-	if ((tmp = find_type(subclass)) == ASN_NOTYPE || !*itemname)
-	    {
-	    if (*subclass != '*') cat(cat(c, "Signed"), subclass);
-	    else cat(cat(c++, "*Signed"), &subclass[1]);
-	    }
-	else mk_in_name(namebuf, itemname, classname);
-	*c &= ~0x20;
-	*linendpp += append_token(*linendpp, namebuf, elinebuf);
-	if ((ntbp = find_name(namebuf)) && ntbp->name)
-	    {
-	    *token = 0;
-            continue; /* had before */
-	    }
-        add_name(namebuf, -1, 0);
-	if (!substr) substr = make_substr(subfilename);
-	state = recurs(fd, substr, (*namebuf == '*')? &namebuf[1]: namebuf,
-            IN_DEFINITION, 1);
-	if (*token == '}' || *token == ',') continue;
-	}
-    else if (!strcmp(token, size_w))
-	{
-	*linendpp += append_token(*linendpp, token, elinebuf);
-	get_known(fd, token, "(");
-        test_paren(fd, token, linebuf, linendpp, elinebuf);
-	}
-    else if ((tmp = find_type(token)) > 0 && (tmp <
-	ASN_APPL_SPEC || tmp == ASN_CHOICE))
-	{
-	get_expected(fd, (loctag = tmp), token);
-        if (loctag == ASN_INSTANCE_OF)
-    	    {
-    	    get_must(fd, token);
-    	    if (!(ctbp = find_class_entry(token))) fatal(30, token);
-    	    cat(token, ctbp->name);
-    	    for (c = &token[1]; *c; c++)
-    	        if (*c >= 'A' && *c <= 'Z') *c |= 0x20;
-    	    cat(cat(++c, token), "Table");
-    	    if (!substr) substr = make_substr(subfilename);
-    	    fprintf(substr, instance_of, token, c);
-    	    fill_name(&ctbp->table_out.table_name, c);
-    	    }
-	else if (loctag == ASN_SET || loctag == ASN_SEQUENCE ||
-            loctag == ASN_CHOICE || (*peek_token(fd) == '{' &&
-            (loctag == ASN_INTEGER || loctag == ASN_ENUMERATED ||
-            loctag == ASN_BITSTRING)))
-	    {
-	    if (!*itemname)
-		{
-		mk_in_name(itemname, &find_class(loctag)[3], classname);
-		cat(namebuf, itemname);
-		*itemname |= 0x20;
-		*linendpp += append_token(*linendpp, itemname, elinebuf);
-		}
-	    else mk_in_name(namebuf, itemname, classname);
-	    *namebuf &= ~0x20;
-	    *linendpp += append_token(*linendpp, namebuf, elinebuf);
-    	    if (!substr) substr = make_substr(subfilename);
-	    fprintf(substr, signed_def, namebuf, token,
-		(*peek_token(fd) == '{')? " ": "");
+        else if (*token == '(' && fd)
+        {
+            for (parens = 1; parens && get_must(fd, token);)
+            {
+                if (*token == '(')
+                    parens++;
+                else if (*token == ')')
+                    parens--;
+            }
+            if (parens)
+                fatal(20, ")");
             *token = 0;
-	    }
-	}
-    else if ((ctbp = find_class_entry(token))) collect_id_type(fd, ctbp, str);
-    else if ((mtbp = find_macro(token)))
-	{
-	if (!substr) substr = make_substr(subfilename);
-	cat(locclass, classname);
-	mk_in_name(classname, itemname, locclass);
-	*classname &= ~(0x20);
-	*linendpp += append_token(*linendpp, classname, elinebuf);
-	do_macro(fd, substr, mtbp);
-	*token = 0;
-	cat(classname, locclass);
-	}
-    else if (!*itemname && ((*token >= 'a' && *token <= 'z') ||
-	(*token >= 'A' && *token <= 'Z')))
-	cat(itemname, token);
-    if (*classname && *classname <= 'Z' && *token)
-	{
-	if (*token != '\n')
-	    *linendpp += append_token(*linendpp, token, elinebuf);
-	*token = 0;
-	}
-    if (state == GLOBAL)
-	{
-	if (substr)
-	    {
-	    if (*linendpp > linebuf) fatal(24, "pre-processor");
-	    if (*activep) putout(str, "\n");
-	    if (*activep)  empty_substr(str, substr, linebuf,
-                (elinebuf - linebuf), subfilename);
-	    *linebuf = 0;
-	    substr = (FILE *)0;
-	    fflush(str);
-	    }
-	loctype = -1;
-	}
+        }
+        else if (*token == '(')
+        {
+            get_must(fd, &token[2]);
+            for (c = &token[2]; *c && *c != '.'; c++);
+            if (!(tmp = wdcmp(&token[2], size_w)) || !*c || c[1] != '.')
+            {
+                token[1] = ' ';
+                *linendpp += append_token(*linendpp, token, elinebuf);
+                if (!tmp)       /* SIZE */
+                {
+                    get_known(fd, token, "(");
+                    test_paren(fd, token, linebuf, linendpp, elinebuf);
+                }
+                else
+                    while (*peek_token(fd) != ')')
+                    {
+                        get_must(fd, token);
+                        *linendpp += append_token(*linendpp, token, elinebuf);
+                    }
+            }
+            else
+            {
+                // for (*linendpp -= 2; *linendpp > linebuf && **linendpp > '
+                // ';
+                // (*linendpp)--);
+                // if (*linendpp > linebuf) (*linendpp)++;
+                if (!*itemname)
+                {
+                    if (loctag <= 0)
+                        fatal(20, "item name");
+                    cat(namebuf, *linendpp);
+                    cat(itemname, &find_class(loctag)[3]);
+                    *itemname |= 0x20;
+                    *linendpp += append_token(*linendpp, itemname, elinebuf);
+                    // cat(*linendpp, namebuf); // temp holding for 5 lines
+                    // down
+                }
+                // mk_in_name(namebuf, itemname, classname);
+                // *namebuf &= ~(0x20);
+                // if (!substr) substr = make_substr(subfilename);
+                // fprintf(substr, range_opener, namebuf, *linendpp,
+                // &token[2]);
+                // *linendpp += append_token(*linendpp, namebuf, elinebuf);
+                token[1] = ' ';
+                *linendpp += append_token(*linendpp, token, elinebuf);
+            }
+            get_known(fd, token, ")");
+        }
+        else if (*token == '{' || !strcmp(token, of_w))
+        {
+            if (loctag != ASN_SEQUENCE && loctag != ASN_SET
+                && loctag != ASN_CHOICE && loctag != ASN_INTEGER
+                && loctag != ASN_BITSTRING && loctag != ASN_ENUMERATED)
+                syntax(token);
+            if (!substr)
+                substr = make_substr(subfilename);
+            state = recurs(fd, substr, namebuf, IN_DEFINITION, 1);
+            if (*token == ',' || *token == '}')
+                continue;
+            if (!strcmp(token, default_w))
+                *linendpp += append_default(fd, *linendpp, elinebuf);
+            loctag = 0;
+        }
+        else if (!strcmp(token, components_w))
+        {
+            for (b = token; *b; b++);
+            *b++ = ' ';
+            if (!get_token(fd, b))
+                fatal(14, linebuf);
+            if (strcmp(b, of_w))
+                syntax(b);
+        }
+        else if (!strcmp(token, default_w))
+            *linendpp += append_default(fd, *linendpp, elinebuf);
+        else if (!strcmp(token, end_w))
+            syntax(token);
+        else if (!strcmp(token, function_w))
+        {
+            for (c = token; *c; c++);
+            for (*c++ = ' ', parens = 0; c < &token[ASN_BSIZE] && (parens ||
+                                                                   (*peek_token
+                                                                    (fd) != ','
+                                                                    &&
+                                                                    *peek_token
+                                                                    (fd) !=
+                                                                    '}'))
+                 && get_must(fd, c); *c++ = ' ', *c = 0)
+            {
+                if (*c == '(')
+                    parens++;
+                else if (*c == ')' && !(--parens))
+                    break;
+                while (*c)
+                    c++;
+            }
+        }
+        else if (!strcmp(token, signed_w))
+        {
+            get_must(fd, subclass);
+            c = namebuf;
+            if ((tmp = find_type(subclass)) == ASN_NOTYPE || !*itemname)
+            {
+                if (*subclass != '*')
+                    cat(cat(c, "Signed"), subclass);
+                else
+                    cat(cat(c++, "*Signed"), &subclass[1]);
+            }
+            else
+                mk_in_name(namebuf, itemname, classname);
+            *c &= ~0x20;
+            *linendpp += append_token(*linendpp, namebuf, elinebuf);
+            if ((ntbp = find_name(namebuf)) && ntbp->name)
+            {
+                *token = 0;
+                continue;       /* had before */
+            }
+            add_name(namebuf, -1, 0);
+            if (!substr)
+                substr = make_substr(subfilename);
+            state =
+                recurs(fd, substr, (*namebuf == '*') ? &namebuf[1] : namebuf,
+                       IN_DEFINITION, 1);
+            if (*token == '}' || *token == ',')
+                continue;
+        }
+        else if (!strcmp(token, size_w))
+        {
+            *linendpp += append_token(*linendpp, token, elinebuf);
+            get_known(fd, token, "(");
+            test_paren(fd, token, linebuf, linendpp, elinebuf);
+        }
+        else if ((tmp = find_type(token)) > 0 && (tmp <
+                                                  ASN_APPL_SPEC
+                                                  || tmp == ASN_CHOICE))
+        {
+            get_expected(fd, (loctag = tmp), token);
+            if (loctag == ASN_INSTANCE_OF)
+            {
+                get_must(fd, token);
+                if (!(ctbp = find_class_entry(token)))
+                    fatal(30, token);
+                cat(token, ctbp->name);
+                for (c = &token[1]; *c; c++)
+                    if (*c >= 'A' && *c <= 'Z')
+                        *c |= 0x20;
+                cat(cat(++c, token), "Table");
+                if (!substr)
+                    substr = make_substr(subfilename);
+                fprintf(substr, instance_of, token, c);
+                fill_name(&ctbp->table_out.table_name, c);
+            }
+            else if (loctag == ASN_SET || loctag == ASN_SEQUENCE ||
+                     loctag == ASN_CHOICE || (*peek_token(fd) == '{' &&
+                                              (loctag == ASN_INTEGER
+                                               || loctag == ASN_ENUMERATED
+                                               || loctag == ASN_BITSTRING)))
+            {
+                if (!*itemname)
+                {
+                    mk_in_name(itemname, &find_class(loctag)[3], classname);
+                    cat(namebuf, itemname);
+                    *itemname |= 0x20;
+                    *linendpp += append_token(*linendpp, itemname, elinebuf);
+                }
+                else
+                    mk_in_name(namebuf, itemname, classname);
+                *namebuf &= ~0x20;
+                *linendpp += append_token(*linendpp, namebuf, elinebuf);
+                if (!substr)
+                    substr = make_substr(subfilename);
+                fprintf(substr, signed_def, namebuf, token,
+                        (*peek_token(fd) == '{') ? " " : "");
+                *token = 0;
+            }
+        }
+        else if ((ctbp = find_class_entry(token)))
+            collect_id_type(fd, ctbp, str);
+        else if ((mtbp = find_macro(token)))
+        {
+            if (!substr)
+                substr = make_substr(subfilename);
+            cat(locclass, classname);
+            mk_in_name(classname, itemname, locclass);
+            *classname &= ~(0x20);
+            *linendpp += append_token(*linendpp, classname, elinebuf);
+            do_macro(fd, substr, mtbp);
+            *token = 0;
+            cat(classname, locclass);
+        }
+        else if (!*itemname && ((*token >= 'a' && *token <= 'z') ||
+                                (*token >= 'A' && *token <= 'Z')))
+            cat(itemname, token);
+        if (*classname && *classname <= 'Z' && *token)
+        {
+            if (*token != '\n')
+                *linendpp += append_token(*linendpp, token, elinebuf);
+            *token = 0;
+        }
+        if (state == GLOBAL)
+        {
+            if (substr)
+            {
+                if (*linendpp > linebuf)
+                    fatal(24, "pre-processor");
+                if (*activep)
+                    putout(str, "\n");
+                if (*activep)
+                    empty_substr(str, substr, linebuf,
+                                 (elinebuf - linebuf), subfilename);
+                *linebuf = 0;
+                substr = (FILE *) 0;
+                fflush(str);
+            }
+        }
     }
-while (state != GLOBAL && pre_proc_get_token(fd, str, linebuf));
-if (state != GLOBAL) fatal(14, linebuf);
-return state;
+    while (state != GLOBAL && pre_proc_get_token(fd, str, linebuf));
+    if (state != GLOBAL)
+        fatal(14, linebuf);
+    return state;
 }
 
-static int append_default(int fd, char *to, char *elinebuf)
+static int append_default(
+    int fd,
+    char *to,
+    char *elinebuf)
 {
 /**
 Function: Translate 'DEFAULT {}' to 'DEFAULT EMPTY'
@@ -1173,151 +1381,201 @@ Procedure:
     	IF next token isn't '}', syntax error
     	Put EMPTY in token
 **/
-int val;
-val = append_token(to, token, elinebuf);
-if (!get_token(fd, token)) syntax(classname);
-if (*token == '{')
+    int val;
+    val = append_token(to, token, elinebuf);
+    if (!get_token(fd, token))
+        syntax(classname);
+    if (*token == '{')
     {
-    if (!get_token(fd, token) || *token != '}') syntax(classname);
-    cat(token, empty_w);
+        if (!get_token(fd, token) || *token != '}')
+            syntax(classname);
+        cat(token, empty_w);
     }
-return val;
+    return val;
 }
 
-static int append_token(char *to, char *string, char *elinebuf)
+static int append_token(
+    char *to,
+    char *string,
+    char *elinebuf)
 {
-char *c;
-if (!*string) return 0;
-if ((c = cat(cat(to, string), " ")) > elinebuf) fatal(37, string);
-return c - to;
+    char *c;
+    if (!*string)
+        return 0;
+    if ((c = cat(cat(to, string), " ")) > elinebuf)
+        fatal(37, string);
+    return c - to;
 }
 
-void empty_substr(FILE *str, FILE *substr, char *buf, int size,
+void empty_substr(
+    FILE * str,
+    FILE * substr,
+    char *buf,
+    int size,
     char *subfilename)
 {
-fflush(substr);
-fseek(substr, 0L, 0);
-while (fgets(buf, size, substr)) fputs(buf, str);
-fclose(substr);
-unlink(subfilename);
+    fflush(substr);
+    fseek(substr, 0L, 0);
+    while (fgets(buf, size, substr))
+        fputs(buf, str);
+    fclose(substr);
+    unlink(subfilename);
 }
 
-static void glob_type(int fd, long loctype, int active)
+static void glob_type(
+    int fd,
+    long loctype,
+    int active)
 {
-struct id_table *cidp;
-char *c;
-int val;
-get_known(fd, token, ":");
-get_known(fd, token, ":");
-get_known(fd, token, "=");
-if (loctype == ASN_OBJ_ID || loctype == ASN_RELATIVE_OID)
+    struct id_table *cidp;
+    char *c;
+    int val;
+    get_known(fd, token, ":");
+    get_known(fd, token, ":");
+    get_known(fd, token, "=");
+    if (loctype == ASN_OBJ_ID || loctype == ASN_RELATIVE_OID)
     {
-    get_known(fd, token, "{");
-    get_must(fd, token);
-    if (active)
-    	{
-    	val = (add_id(classname) - (struct id_table *)id_area.area);
-		/* get_obj_id may move id_area.area */
-    	c = get_obj_id(fd, (*token >= 'A')? token: "", classname);
-	cidp = &((struct id_table *)id_area.area)[val];
-	cidp->val = c;
-    	}
-    else skip_to(fd, 1, 0);
+        get_known(fd, token, "{");
+        get_must(fd, token);
+        if (active)
+        {
+            val = (add_id(classname) - (struct id_table *)id_area.area);
+            /*
+             * get_obj_id may move id_area.area 
+             */
+            c = get_obj_id(fd, (*token >= 'A') ? token : "", classname);
+            cidp = &((struct id_table *)id_area.area)[val];
+            cidp->val = c;
+        }
+        else
+            skip_to(fd, 1, 0);
     }
-else if (loctype == ASN_INTEGER || loctype == ASN_ENUMERATED)
+    else if (loctype == ASN_INTEGER || loctype == ASN_ENUMERATED)
     {
-    get_must(fd, token);
-    if (*token < '0' || *token > '9') syntax(token);
-    for (c = token, val = 0; *c >= '0' && *c <= '9';
-        val = (val * 10) + *c++ - '0');
-    if (active) add_ub(classname, val, active);
+        get_must(fd, token);
+        if (*token < '0' || *token > '9')
+            syntax(token);
+        for (c = token, val = 0; *c >= '0' && *c <= '9';
+             val = (val * 10) + *c++ - '0');
+        if (active)
+            add_ub(classname, val, active);
     }
-*classname = *token = 0;
+    *classname = *token = 0;
 }
 
-FILE *make_substr(char *fname)
+FILE *make_substr(
+    char *fname)
 {
-int fd;
-FILE *nstr;
-strcpy(fname, "asnXXXXXX");
-if ((fd = mkstemp(fname)) < 0 ||
-    !(nstr = fdopen(fd, "w+"))) fatal(2, fname);
-made_change = 1;
-return nstr;
+    int fd;
+    FILE *nstr;
+    strcpy(fname, "asnXXXXXX");
+    if ((fd = mkstemp(fname)) < 0 || !(nstr = fdopen(fd, "w+")))
+        fatal(2, fname);
+    made_change = 1;
+    return nstr;
 }
 
-static void print_signed(FILE *str, char *tname, char *sclass)
+static void print_signed(
+    FILE * str,
+    char *tname,
+    char *sclass)
 {
-fprintf(str, sub_opener, tname, sequence_w);
-if (type == ASN_NOTYPE) fprintf(str, thatword, sclass);
-else fprintf(str, tobesigned, tname);
-fprintf(str, algsig, (*table)? tname: "");
-if (*table)     fprintf(str, tabledef, tname, table);
-strcat(tname, "ToBeSigned");
+    fprintf(str, sub_opener, tname, sequence_w);
+    if (type == ASN_NOTYPE)
+        fprintf(str, thatword, sclass);
+    else
+        fprintf(str, tobesigned, tname);
+    fprintf(str, algsig, (*table) ? tname : "");
+    if (*table)
+        fprintf(str, tabledef, tname, table);
+    strcat(tname, "ToBeSigned");
 }
 
-static void putout(FILE* str, char *msg)
+static void putout(
+    FILE * str,
+    char *msg)
 {
-fputs(msg, str);
-if (*msg > ' ') fputs(" ", str);
+    fputs(msg, str);
+    if (*msg > ' ')
+        fputs(" ", str);
 }
 
-static int recurs(int fd, FILE *str, char *newclass, int newstate, int in_sub)
+static int recurs(
+    int fd,
+    FILE * str,
+    char *newclass,
+    int newstate,
+    int in_sub)
 {
-char locclass[128];
-int locstate = state;
-cat(locclass, classname);
-if (in_sub && !*topclass) cat(topclass, classname);
-if (newclass) cat(classname, newclass);
-state = newstate;
-pre_proc(fd, str, in_sub);
-fflush(str);
-cat(classname, locclass);
-if (!strcmp(classname, topclass)) *topclass = 0;
-return locstate;
+    char locclass[128];
+    int locstate = state;
+    cat(locclass, classname);
+    if (in_sub && !*topclass)
+        cat(topclass, classname);
+    if (newclass)
+        cat(classname, newclass);
+    state = newstate;
+    pre_proc(fd, str, in_sub);
+    fflush(str);
+    cat(classname, locclass);
+    if (!strcmp(classname, topclass))
+        *topclass = 0;
+    return locstate;
 }
 
-static void scan_modules(int fd)
-    {
-    char *c, locbuf[512];
+static void scan_modules(
+    int fd)
+{
+    char *c,
+        locbuf[512];
     int siz;
     struct module_table *modtbp = (struct module_table *)0;
     while ((siz = get_token(fd, locbuf)))
-	{
-	while(*locbuf <= ' ' && (siz = get_token(fd, locbuf)));
-	if (!siz) break;
+    {
+        while (*locbuf <= ' ' && (siz = get_token(fd, locbuf)));
+        if (!siz)
+            break;
         modtbp = (struct module_table *)expand_area(&module_area);
         modtbp->fname = (char *)calloc(strlen(curr_file) + 2, 1);
         cat(modtbp->fname, curr_file);
-	if (strcmp((c = locbuf), definitions_w))
+        if (strcmp((c = locbuf), definitions_w))
             get_known(fd, &locbuf[siz + 4], definitions_w);
-	else c = "[none]";
-	modtbp->mname = (char *)calloc(strlen(c) + 2, 1);
-	cat(modtbp->mname, c);
+        else
+            c = "[none]";
+        modtbp->mname = (char *)calloc(strlen(c) + 2, 1);
+        cat(modtbp->mname, c);
         modtbp->start_pos = tell_pos(streams.str) - strlen(definitions_w);
-	while((siz = get_token(fd, locbuf)) && siz < sizeof(locbuf) &&
-            strcmp(locbuf, end_w));
-	if (siz >= sizeof(locbuf)) fatal(36, locbuf);
-	modtbp->end_pos = tell_pos(streams.str);
-	if (!siz) break;
-	}
+        while ((siz = get_token(fd, locbuf)) && siz < sizeof(locbuf) &&
+               strcmp(locbuf, end_w));
+        if (siz >= sizeof(locbuf))
+            fatal(36, locbuf);
+        modtbp->end_pos = tell_pos(streams.str);
+        if (!siz)
+            break;
+    }
     fseek(find_stream(fd), 0L, 0);
     curr_line = curr_pos = 0;
-    }
-
-
-
-
-static void skip_to(int fd, int braces, int parens)
-{
-do
-    {
-    get_must(fd, token);
-    if (*token == '(') parens++;
-    else if (*token == ')') parens--;
-    else if (*token == '{') braces++;
-    else if (*token == '}') braces--;
-    }
-while (braces || parens);
 }
 
+
+
+
+static void skip_to(
+    int fd,
+    int braces,
+    int parens)
+{
+    do
+    {
+        get_must(fd, token);
+        if (*token == '(')
+            parens++;
+        else if (*token == ')')
+            parens--;
+        else if (*token == '{')
+            braces++;
+        else if (*token == '}')
+            braces--;
+    }
+    while (braces || parens);
+}

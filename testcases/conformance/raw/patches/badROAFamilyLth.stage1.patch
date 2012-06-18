@@ -1,11 +1,11 @@
---- badROAFamilyLth.raw.old	2011-05-25 18:30:03.000000000 -0400
-+++ badROAFamilyLth.raw	2011-05-25 18:30:30.000000000 -0400
+--- badROAFamilyLth.raw.old	2011-11-13 02:44:26.916657701 -0500
++++ badROAFamilyLth.raw	2011-11-13 02:44:34.185742593 -0500
 @@ -8,7 +8,7 @@
                      ocw seq int 0x08 /* 8 */ 
                              seq seq oct 0x0001
-                                     seq seq bit 0x0001
+                                     seq seq bit 0x000101
 -                                seq oct 0x0002
 +                                seq oct 0x000203
-                                     seq seq bit 0x00010200
+                                     seq seq bit 0x00010201
              ctx+0x20
                  seq seq ctx+0x20

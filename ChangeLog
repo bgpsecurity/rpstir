@@ -1,8 +1,16 @@
 next
 
+	* TODO
+
+0.4
+
+	* Add conformance cases for various specifications and fix problems revealed by those conformance cases.
 	* Performance tuning for rsync.
 	* Remove dependency on python-netaddr and increase performance where python-netaddr used to be used.
-	* Various bug fixes.
+	* Fix build and tests on NetBSD.
+	* Fix compiling/linking with pthreads on some platforms.
+	* More tests can be run under valgrind.
+	* Various bug and compiler warning fixes.
 
 0.3
 

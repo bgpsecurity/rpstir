@@ -1,5 +1,5 @@
---- badCertSubjectUtf.raw.old	2011-06-14 23:46:01.000000000 -0400
-+++ badCertSubjectUtf.raw	2011-06-14 23:46:18.000000000 -0400
+--- badCertSubjectUtf.raw.old	2011-09-19 17:03:16.000000000 -0400
++++ badCertSubjectUtf.raw	2011-09-19 17:05:38.000000000 -0400
 @@ -8,7 +8,7 @@
          seq utc "110411185728Z"
              utc "460515185928Z"
@@ -8,4 +8,4 @@
 +                    utf "badCertSubjectUtf"
          seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                  nul 
-             bit 0x003082010A0282010100C247EF57C065
+             bit 0x003082010A0282010100BFBD06FD096D
