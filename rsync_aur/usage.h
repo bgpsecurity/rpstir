@@ -7,9 +7,10 @@
 #include <string.h>
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
-void myusage(const char *);
+void myusage(
+    const char *);
 
 #endif
