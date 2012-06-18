@@ -34,24 +34,30 @@ typedef struct _dbconn dbconn;
  *
  * @ret true if initialization succeeds.
 ------------------------------------------------------------------------------*/
-bool db_init();
+bool db_init(
+    );
 
-void db_close();
+void db_close(
+    );
 
-bool db_thread_init();
+bool db_thread_init(
+    );
 
-void db_thread_close();
+void db_thread_close(
+    );
 
 dbconn *db_connect(
-        int client_flags,
-        const char *host,
-        const char *user,
-        const char *pass,
-        const char *db);
+    int client_flags,
+    const char *host,
+    const char *user,
+    const char *pass,
+    const char *db);
 
-dbconn *db_connect_default(int client_flags);
+dbconn *db_connect_default(
+    int client_flags);
 
-void db_disconnect(dbconn *conn);
+void db_disconnect(
+    dbconn * conn);
 
 
-#endif // DB_CONNECT_H_
+#endif                          // DB_CONNECT_H_

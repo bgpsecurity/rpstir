@@ -55,4 +55,4 @@ extractValidityDate_SOURCES = extractValidityDate.c
 fix_manifest_SOURCES = fix_manifest.c
 check_signature_SOURCES = check_signature.c
 
-EXTRA_DIST = convert-oidtable.sh test_casn_random_driver.sh
+EXTRA_DIST = test_casn_random_driver.sh

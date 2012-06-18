@@ -6,7 +6,9 @@
 #include "unittest.h"
 
 
-static bool test_scrub_for_print__length_if_truncated(void) {
+static bool test_scrub_for_print__length_if_truncated(
+    void)
+{
     size_t const DST_LEN = 5;
     char src[] = "0123456789";
     char dst[DST_LEN];
@@ -17,7 +19,9 @@ static bool test_scrub_for_print__length_if_truncated(void) {
     return true;
 }
 
-static bool test_scrub_for_print__length_if_expansion_truncated(size_t const dst_sz) {
+static bool test_scrub_for_print__length_if_expansion_truncated(
+    size_t const dst_sz)
+{
     char src[50];
     char dst[dst_sz];
 
@@ -28,7 +32,9 @@ static bool test_scrub_for_print__length_if_expansion_truncated(size_t const dst
     return true;
 }
 
-static bool test_scrub_for_print__null_input(void) {
+static bool test_scrub_for_print__null_input(
+    void)
+{
     size_t const DST_LEN = 5;
     char src[] = "";
     char dst[DST_LEN];
@@ -39,7 +45,9 @@ static bool test_scrub_for_print__null_input(void) {
     return true;
 }
 
-static bool test_scrub_for_print__copy_all(void) {
+static bool test_scrub_for_print__copy_all(
+    void)
+{
     size_t const DST_LEN = 10;
     char src[] = "abcdefg";
     char dst[DST_LEN];
@@ -50,7 +58,9 @@ static bool test_scrub_for_print__copy_all(void) {
     return true;
 }
 
-static bool test_scrub_for_print__backslash(void) {
+static bool test_scrub_for_print__backslash(
+    void)
+{
     size_t const DST_LEN = 50;
     char src[] = "ab\\cde\\";
     char dst[DST_LEN];
@@ -61,7 +71,9 @@ static bool test_scrub_for_print__backslash(void) {
     return true;
 }
 
-static bool test_scrub_for_print__escape_chars(void) {
+static bool test_scrub_for_print__escape_chars(
+    void)
+{
     size_t const DST_LEN = 50;
     char src[] = "abcde";
     char dst[DST_LEN];
@@ -72,7 +84,9 @@ static bool test_scrub_for_print__escape_chars(void) {
     return true;
 }
 
-static bool test_scrub_for_print__sz(void) {
+static bool test_scrub_for_print__sz(
+    void)
+{
     size_t const DST_LEN = 50;
     char src[50];
     char dst[DST_LEN];
@@ -86,26 +100,41 @@ static bool test_scrub_for_print__sz(void) {
 }
 
 
-int main(void) {
-	if (!test_scrub_for_print__length_if_truncated()) return EXIT_FAILURE;
+int main(
+    void)
+{
+    if (!test_scrub_for_print__length_if_truncated())
+        return EXIT_FAILURE;
 
-	if (!test_scrub_for_print__length_if_expansion_truncated(1)) return EXIT_FAILURE;
-	if (!test_scrub_for_print__length_if_expansion_truncated(2)) return EXIT_FAILURE;
-	if (!test_scrub_for_print__length_if_expansion_truncated(3)) return EXIT_FAILURE;
-	if (!test_scrub_for_print__length_if_expansion_truncated(4)) return EXIT_FAILURE;
-	if (!test_scrub_for_print__length_if_expansion_truncated(5)) return EXIT_FAILURE;
-	if (!test_scrub_for_print__length_if_expansion_truncated(6)) return EXIT_FAILURE;
-	if (!test_scrub_for_print__length_if_expansion_truncated(7)) return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(1))
+        return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(2))
+        return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(3))
+        return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(4))
+        return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(5))
+        return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(6))
+        return EXIT_FAILURE;
+    if (!test_scrub_for_print__length_if_expansion_truncated(7))
+        return EXIT_FAILURE;
 
-    if (!test_scrub_for_print__null_input()) return EXIT_FAILURE;
+    if (!test_scrub_for_print__null_input())
+        return EXIT_FAILURE;
 
-    if (!test_scrub_for_print__copy_all()) return EXIT_FAILURE;
+    if (!test_scrub_for_print__copy_all())
+        return EXIT_FAILURE;
 
-    if (!test_scrub_for_print__backslash()) return EXIT_FAILURE;
+    if (!test_scrub_for_print__backslash())
+        return EXIT_FAILURE;
 
-    if (!test_scrub_for_print__escape_chars()) return EXIT_FAILURE;
+    if (!test_scrub_for_print__escape_chars())
+        return EXIT_FAILURE;
 
-    if (!test_scrub_for_print__sz()) return EXIT_FAILURE;
+    if (!test_scrub_for_print__sz())
+        return EXIT_FAILURE;
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

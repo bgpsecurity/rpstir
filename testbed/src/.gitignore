@@ -1,2 +1,6 @@
 create_object
+create_objects.py
 gen_hash
+generic_allocate.py
+rpkirepo.py
+testbed_create.py

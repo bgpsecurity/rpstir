@@ -15,10 +15,10 @@
 #define DB_INITIAL_THREADS 8
 
 /*
-Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2:
-	The cache MUST rate limit Serial Notifies to no more frequently
-	than one per minute.
-For demo VM only: This is lowered to make the demo go faster.
+ * Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2: The cache MUST rate
+ * limit Serial Notifies to no more frequently than one per minute.
+ *
+ * For demo VM only: This is lowered to make the demo go faster.
 */
 #define CXN_NOTIFY_INTERVAL 2
 

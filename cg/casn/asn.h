@@ -1,4 +1,6 @@
-/* $Id$ */
+/*
+ * $Id$ 
+ */
 /*****************************************************************************
 File:     asn.h
 Contents: Header file for basic ASN.1 functions.
@@ -9,7 +11,9 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-/* sfcsid[] = "@(#)asn.h 824P" */
+/*
+ * sfcsid[] = "@(#)asn.h 824P" 
+ */
 #ifndef _ASN_H
 #define _ASN_H
 
@@ -52,13 +56,14 @@ Remarks:
 #define ASN_APPL_CONSTR      (ASN_APPL_SPEC | ASN_CONSTRUCTED)
 #define ASN_CONT_SPEC        0x80
 #define ASN_CONT_CONSTR      (ASN_CONT_SPEC | ASN_CONSTRUCTED)
-#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED) /* bwds compat */
+#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED)  /* bwds compat 
+                                                                 */
 #define ASN_PRIV_SPEC        0xC0
 #define ASN_PRIV_CONSTR      (ASN_PRIV_SPEC | ASN_CONSTRUCTED)
 #define ASN_INDEF_LTH        0x80
 #define ASN_INDEF            ASN_INDEF_LTH
 #define ASN_CHOICE           (0x100 | ASN_CONSTRUCTED)
-#define ASN_NONE             0x101 /* not a real ASN.1 type (X.680-0207) */
+#define ASN_NONE             0x101      /* not a real ASN.1 type (X.680-0207) */
 #define ASN_FUNCTION         0x102
 #define ASN_NOTASN1          0x103
 #define ASN_NOTYPE           0x104
@@ -67,21 +72,19 @@ Remarks:
 
 #define ASN_INDEF_FLAG 0x8000   /* used in asn.level to show indef length */
 
-struct asn
-    {
+struct asn {
     uchar *stringp;
     ulong lth;
     ushort level;
 #ifdef SUN
     ushort pad;
 #endif
-    };
+};
 
-struct typnames
-    {
+struct typnames {
     unsigned char typ;
     char *name;
-    };
+};
 
 #endif
-#endif /* _ASN_H */
+#endif                          /* _ASN_H */

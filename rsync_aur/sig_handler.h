@@ -8,11 +8,13 @@
 #include <unistd.h>
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
-void sig_handler(int);
-int  setup_sig_catchers(void);
+void sig_handler(
+    int);
+int setup_sig_catchers(
+    void);
 
 
 #endif
