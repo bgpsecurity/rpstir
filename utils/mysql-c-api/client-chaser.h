@@ -22,7 +22,10 @@
  * @ret 0 on success
  *     -1 on failure
 ------------------------------------------------------------------------------*/
-int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len);
+int db_chaser_read_time(
+    dbconn * conn,
+    char *curr,
+    size_t const curr_len);
 
 
 /**=============================================================================
@@ -36,7 +39,10 @@ int db_chaser_read_time(dbconn *conn, char *curr, size_t const curr_len);
  *     -1 on failure
  *      ERR_CHASER_OOM if out of memory
 ------------------------------------------------------------------------------*/
-int64_t db_chaser_read_aia(dbconn *conn, char ***results, int64_t *num_malloced);
+int64_t db_chaser_read_aia(
+    dbconn * conn,
+    char ***results,
+    int64_t * num_malloced);
 
 
 /**=============================================================================
@@ -53,9 +59,13 @@ int64_t db_chaser_read_aia(dbconn *conn, char ***results, int64_t *num_malloced)
  *     -1 on failure
  *      ERR_CHASER_OOM if out of memory
 ------------------------------------------------------------------------------*/
-int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
-        int64_t *num_malloced, char const *ts,
-        int restrict_by_next_update, uint32_t seconds);
+int64_t db_chaser_read_crldp(
+    dbconn * conn,
+    char ***results,
+    int64_t * num_malloced,
+    char const *ts,
+    int restrict_by_next_update,
+    uint32_t seconds);
 
 /**=============================================================================
  * @brief Get rsync URIs from SIAs from the db.
@@ -70,8 +80,11 @@ int64_t db_chaser_read_crldp(dbconn *conn, char ***results,
  *     -1 on failure
  *      ERR_CHASER_OOM if out of memory
 ------------------------------------------------------------------------------*/
-int64_t db_chaser_read_sia(dbconn *conn, char ***results,
-        int64_t *num_malloced, uint chase_not_yet_validated);
+int64_t db_chaser_read_sia(
+    dbconn * conn,
+    char ***results,
+    int64_t * num_malloced,
+    uint chase_not_yet_validated);
 
 
 #endif

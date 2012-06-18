@@ -1,0 +1,9 @@
+--- badCRLNoVersion.crl.raw.old	2011-12-12 14:57:47.592156741 -0500
++++ badCRLNoVersion.crl.raw	2011-12-12 14:58:21.892127710 -0500
+@@ -1,5 +1,4 @@
+-seq seq int 0x01 /* 1 */ 
+-        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
++seq seq seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "CRLNoVersion"

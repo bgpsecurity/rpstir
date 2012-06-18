@@ -11,13 +11,17 @@
 #include "pdu.h"
 
 
-int db_rtr_get_session_id(dbconn *conn, session_id_t * session);
+int db_rtr_get_session_id(
+    dbconn * conn,
+    session_id_t * session);
 
 
 #define GET_SERNUM_SUCCESS 0
 #define GET_SERNUM_ERR -1
 #define GET_SERNUM_NONE -2
-int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t * serial);
+int db_rtr_get_latest_sernum(
+    dbconn * conn,
+    serial_number_t * serial);
 
 
 /**
@@ -27,7 +31,10 @@ int db_rtr_get_latest_sernum(dbconn *conn, serial_number_t * serial);
 	@param serial The serial number to start the query after.
 	@return 0 on success or an error code on failure.
 */
-int db_rtr_serial_query_init(dbconn *conn, void ** query_state, serial_number_t serial);
+int db_rtr_serial_query_init(
+    dbconn * conn,
+    void **query_state,
+    serial_number_t serial);
 
 /**
 	@param query_state A query state returned by startSerialQuery().
@@ -51,8 +58,12 @@ int db_rtr_serial_query_init(dbconn *conn, void ** query_state, serial_number_t 
 		if is_done is set to true, but note that is_done may be true
 		for any return value and must be true for any error code.
 */
-ssize_t db_rtr_serial_query_get_next(dbconn *conn, void * query_state, size_t max_rows,
-	PDU ** _pdus, bool * is_done);
+ssize_t db_rtr_serial_query_get_next(
+    dbconn * conn,
+    void *query_state,
+    size_t max_rows,
+    PDU ** _pdus,
+    bool * is_done);
 
 /**
 	Free any resources needed. This must be called when the calling
@@ -61,16 +72,26 @@ ssize_t db_rtr_serial_query_get_next(dbconn *conn, void * query_state, size_t ma
 	after calling serialQueryGetNext() but before it returns with is_done
 	set to true, or after any cancelation point in serialQueryGetNext().
 */
-void db_rtr_serial_query_close(dbconn *conn, void * query_state);
+void db_rtr_serial_query_close(
+    dbconn * conn,
+    void *query_state);
 
 // see the equivalent functions for serial queries above for descriptions
 // of parameters and return values
-int db_rtr_reset_query_init(dbconn *conn, void ** query_state);
+int db_rtr_reset_query_init(
+    dbconn * conn,
+    void **query_state);
 
-ssize_t db_rtr_reset_query_get_next(dbconn *conn, void * query_state, size_t max_rows,
-	PDU ** _pdus, bool * is_done);
+ssize_t db_rtr_reset_query_get_next(
+    dbconn * conn,
+    void *query_state,
+    size_t max_rows,
+    PDU ** _pdus,
+    bool * is_done);
 
-void db_rtr_reset_query_close(dbconn *conn, void * query_state);
+void db_rtr_reset_query_close(
+    dbconn * conn,
+    void *query_state);
 
 
 #endif

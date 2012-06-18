@@ -9,7 +9,8 @@ struct _Queue;
 typedef struct _Queue Queue;
 
 /** Create a new Queue. */
-Queue * Queue_new(bool thread_safe);
+Queue *Queue_new(
+    bool thread_safe);
 
 /**
         Free a Queue.
@@ -19,7 +20,8 @@ Queue * Queue_new(bool thread_safe);
         that each thread that holds a reference to this Queue has
         completed all operations related to this Queue.
 */
-void Queue_free(Queue * queue);
+void Queue_free(
+    Queue * queue);
 
 /**
 	Pop the queue if there's anything on the queue.
@@ -27,7 +29,9 @@ void Queue_free(Queue * queue);
 	@return Whether or not the pop was successful.
 	@param data Returned data if the pop was successful.
 */
-bool Queue_trypop(Queue * queue, void ** data);
+bool Queue_trypop(
+    Queue * queue,
+    void **data);
 
 /**
 	Push data onto the queue.
@@ -39,7 +43,9 @@ bool Queue_trypop(Queue * queue, void ** data);
 	            operations do not dereference or deallocate this
 	            pointer.
 */
-bool Queue_push(Queue * queue, void * data);
+bool Queue_push(
+    Queue * queue,
+    void *data);
 
 /**
         Return the approximate size of the queue.  The size returned is
@@ -50,7 +56,8 @@ bool Queue_push(Queue * queue, void * data);
         operation (i.e. thread_safe = false), Queue_size is fully
         reliable.
 */
-size_t Queue_size(Queue * queue);
+size_t Queue_size(
+    Queue * queue);
 
 
 #endif

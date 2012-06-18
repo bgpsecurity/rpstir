@@ -1,0 +1,13 @@
+--- badROAVersionV1ExplicitBadSig.raw.old	2012-02-16 14:14:45.814246090 -0500
++++ badROAVersionV1ExplicitBadSig.raw	2012-02-16 14:15:28.109433231 -0500
+@@ -5,7 +5,9 @@
+                     nul 
+             seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                 ctx+0x20
+-                    ocw seq int 0x08 /* 8 */ 
++                    ocw seq ctx+0x00
++                                0x00
++                            int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+                                     seq seq bit 0x000101
+                                 seq oct 0x0002

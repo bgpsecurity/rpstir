@@ -1,5 +1,5 @@
---- badCertSIAAccessMethod.raw.old	2011-06-21 15:05:14.000000000 -0400
-+++ badCertSIAAccessMethod.raw	2011-06-21 15:05:52.000000000 -0400
+--- badCertSIAAccessMethod.raw.old	2011-09-19 16:55:49.000000000 -0400
++++ badCertSIAAccessMethod.raw	2011-09-19 16:57:01.000000000 -0400
 @@ -57,7 +57,7 @@
                                  ctx+0x06
                                      "rsync://rpki.bbn.com/conformance/root/empt"
