@@ -2,8 +2,8 @@
 #define __MAIN_H
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
 
 #include <stdio.h>
