@@ -1,16 +1,20 @@
 #include "string.h"
 
-bool config_type_string_converter(const struct config_context * context, void * usr_arg, const char * input, void ** data)
+bool config_type_string_converter(
+    const struct config_context *context,
+    void *usr_arg,
+    const char *input,
+    void **data)
 {
-	(void)context;
-	(void)usr_arg;
+    (void)context;
+    (void)usr_arg;
 
-	*data = strdup(input);
-	if (*data == NULL)
-	{
-		LOG(LOG_ERR, "out of memory");
-		return false;
-	}
+    *data = strdup(input);
+    if (*data == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        return false;
+    }
 
-	return true;
+    return true;
 }

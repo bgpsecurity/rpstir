@@ -24,27 +24,33 @@
 
 
 /** Increment the line_offset past all whitespace. */
-static void skip_whitespace(const char * line, size_t * line_offset)
+static void skip_whitespace(
+    const char *line,
+    size_t * line_offset)
 {
-	*line_offset += strspn(line + *line_offset, CHARS_WHITESPACE);
+    *line_offset += strspn(line + *line_offset, CHARS_WHITESPACE);
 }
 
 /**
 	Increment the line_offset to the end of the line,
 	iff line_offset points to the start of a comment.
 */
-static void skip_comment(const char * line, size_t * line_offset)
+static void skip_comment(
+    const char *line,
+    size_t * line_offset)
 {
-	if (strncmp(line + *line_offset, COMMENT_START_STR, strlen(COMMENT_START_STR)) == 0)
-	{
-		for (; line[*line_offset] != '\0'; ++*line_offset)
-		{
-			if (line[*line_offset] == '\n')
-			{
-				return;
-			}
-		}
-	}
+    if (strncmp
+        (line + *line_offset, COMMENT_START_STR,
+         strlen(COMMENT_START_STR)) == 0)
+    {
+        for (; line[*line_offset] != '\0'; ++*line_offset)
+        {
+            if (line[*line_offset] == '\n')
+            {
+                return;
+            }
+        }
+    }
 }
 
 /**
@@ -55,57 +61,60 @@ static void skip_comment(const char * line, size_t * line_offset)
 	@return	True on success, false on error.
 */
 static bool get_option(
-	size_t num_options,
-	const struct config_option * config_options,
-	const struct config_context * context,
-	const char * line,
-	size_t * line_offset,
-	ssize_t * option)
+    size_t num_options,
+    const struct config_option *config_options,
+    const struct config_context *context,
+    const char *line,
+    size_t * line_offset,
+    ssize_t * option)
 {
-	size_t option_length = strcspn(line + *line_offset, CHARS_ALL_WHITESPACE);
+    size_t option_length = strcspn(line + *line_offset, CHARS_ALL_WHITESPACE);
 
-	if (option_length == 0)
-	{
-		config_message(context, LOG_ERR, "line must start with an option");
-		return false;
-	}
+    if (option_length == 0)
+    {
+        config_message(context, LOG_ERR, "line must start with an option");
+        return false;
+    }
 
-	if (strspn(line + *line_offset, CHARS_OPTION) != option_length)
-	{
-		config_message(context, LOG_ERR, "option name contains an invalid character");
-		return false;
-	}
+    if (strspn(line + *line_offset, CHARS_OPTION) != option_length)
+    {
+        config_message(context, LOG_ERR,
+                       "option name contains an invalid character");
+        return false;
+    }
 
-	if (strncmp(line + *line_offset, INCLUDE_STR, option_length) == 0 &&
-		strlen(INCLUDE_STR) == option_length)
-	{
-		*line_offset += option_length;
-		*option = CONFIG_OPTION_INCLUDE;
-		return true;
-	}
+    if (strncmp(line + *line_offset, INCLUDE_STR, option_length) == 0 &&
+        strlen(INCLUDE_STR) == option_length)
+    {
+        *line_offset += option_length;
+        *option = CONFIG_OPTION_INCLUDE;
+        return true;
+    }
 
-	for (*option = 0; (size_t)*option < num_options; ++*option)
-	{
-		if (strncmp(line + *line_offset, config_options[*option].name, option_length) == 0 &&
-			strlen(config_options[*option].name) == option_length)
-		{
-			*line_offset += option_length;
-			return true;
-		}
-	}
+    for (*option = 0; (size_t) * option < num_options; ++*option)
+    {
+        if (strncmp
+            (line + *line_offset, config_options[*option].name,
+             option_length) == 0
+            && strlen(config_options[*option].name) == option_length)
+        {
+            *line_offset += option_length;
+            return true;
+        }
+    }
 
-	if (ERROR_ON_UNKNOWN_OPTION)
-	{
-		config_message(context, LOG_ERR, "unknown option");
-		return false;
-	}
-	else
-	{
-		config_message(context, LOG_WARNING, "unknown option");
-		*line_offset += option_length;
-		*option = CONFIG_OPTION_UNKNOWN;
-		return true;
-	}
+    if (ERROR_ON_UNKNOWN_OPTION)
+    {
+        config_message(context, LOG_ERR, "unknown option");
+        return false;
+    }
+    else
+    {
+        config_message(context, LOG_WARNING, "unknown option");
+        *line_offset += option_length;
+        *option = CONFIG_OPTION_UNKNOWN;
+        return true;
+    }
 }
 
 /**
@@ -117,46 +126,46 @@ static bool get_option(
 	@return	True on success, false on error.
 */
 static bool get_value(
-	const struct config_context * context,
-	const char * line,
-	size_t * line_offset,
-	char ** value)
+    const struct config_context *context,
+    const char *line,
+    size_t * line_offset,
+    char **value)
 {
-	size_t i;
+    size_t i;
 
-	// is the value in quotes?
-	bool quoted = (line[*line_offset] == '"');
+    // is the value in quotes?
+    bool quoted = (line[*line_offset] == '"');
 
-	// does the current character follow a '\\'?
-	bool escaped = false;
+    // does the current character follow a '\\'?
+    bool escaped = false;
 
-	// has the value ended normally?
-	// (this is used to make sure there's nothing after an ending quote)
-	bool done = false;
+    // has the value ended normally?
+    // (this is used to make sure there's nothing after an ending quote)
+    bool done = false;
 
-	bool ret = true;
+    bool ret = true;
 
-	// length of variable name
-	size_t variable_size;
+    // length of variable name
+    size_t variable_size;
 
-	// variable name
-	char * variable;
+    // variable name
+    char *variable;
 
-	// variable value from environment
-	const char * variable_value;
+    // variable value from environment
+    const char *variable_value;
 
-	size_t value_size = 0;
-	size_t value_allocated = DYNAMIC_START;
+    size_t value_size = 0;
+    size_t value_allocated = DYNAMIC_START;
 
-	*value = malloc(value_allocated);
-	if (*value == NULL)
-	{
-		LOG(LOG_ERR, "out of memory");
-		ret = false;
-		goto done;
-	}
+    *value = malloc(value_allocated);
+    if (*value == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        ret = false;
+        goto done;
+    }
 
-	#define ADD_CHAR(c) \
+#define ADD_CHAR(c) \
 		do { \
 			if (value_size >= value_allocated) \
 			{ \
@@ -172,167 +181,171 @@ static bool get_value(
 			(*value)[value_size++] = (c); \
 		} while (false)
 
-	if (quoted)
-	{
-		++*line_offset;
-	}
+    if (quoted)
+    {
+        ++*line_offset;
+    }
 
-	for (; true; ++*line_offset)
-	{
-		if (done)
-		{
-			if (line[*line_offset] != '\0' &&
-				strchr(CHARS_ALL_WHITESPACE, line[*line_offset]) == NULL)
-			{
-				config_message(context, LOG_ERR,
-					"extraneous character after end of value");
-				ret = false;
-			}
+    for (; true; ++*line_offset)
+    {
+        if (done)
+        {
+            if (line[*line_offset] != '\0' &&
+                strchr(CHARS_ALL_WHITESPACE, line[*line_offset]) == NULL)
+            {
+                config_message(context, LOG_ERR,
+                               "extraneous character after end of value");
+                ret = false;
+            }
 
-			goto done;
-		}
-		else if (quoted && (line[*line_offset] == '\0' || line[*line_offset] == '\n'))
-		{
-			config_message(context, LOG_ERR,
-				"line ended without closing quote");
-			ret = false;
-			goto done;
-		}
-		else if (!quoted && (line[*line_offset] == '\0' ||
-			strchr(CHARS_ALL_WHITESPACE, line[*line_offset]) != NULL))
-		{
-			// end of unquoted value
-			goto done;
-		}
-		else if (quoted && !escaped && line[*line_offset] == '"')
-		{
-			// found end quote
-			done = true;
-			continue;
-		}
+            goto done;
+        }
+        else if (quoted
+                 && (line[*line_offset] == '\0' || line[*line_offset] == '\n'))
+        {
+            config_message(context, LOG_ERR,
+                           "line ended without closing quote");
+            ret = false;
+            goto done;
+        }
+        else if (!quoted && (line[*line_offset] == '\0' ||
+                             strchr(CHARS_ALL_WHITESPACE,
+                                    line[*line_offset]) != NULL))
+        {
+            // end of unquoted value
+            goto done;
+        }
+        else if (quoted && !escaped && line[*line_offset] == '"')
+        {
+            // found end quote
+            done = true;
+            continue;
+        }
 
-		// NOTE: at this point, the current character is either invalid or a continuation
-		// of the value. It cannot end the value unless it's invalid.
+        // NOTE: at this point, the current character is either invalid or a
+        // continuation
+        // of the value. It cannot end the value unless it's invalid.
 
-		if (quoted && !escaped && line[*line_offset] == '\\')
-		{
-			escaped = true;
-			continue;
-		}
+        if (quoted && !escaped && line[*line_offset] == '\\')
+        {
+            escaped = true;
+            continue;
+        }
 
-		if (quoted && escaped)
-		{
-			if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
-			{
-				ADD_CHAR(line[*line_offset]);
-			}
-			else if (line[*line_offset] == 'n')
-			{
-				ADD_CHAR('\n');
-			}
-			else if (line[*line_offset] == 'r')
-			{
-				ADD_CHAR('\r');
-			}
-			else if (line[*line_offset] == 't')
-			{
-				ADD_CHAR('\t');
-			}
-			else
-			{
-				config_message(context, LOG_ERR,
-					"unknown escape sequence \"\\%c\"",
-					line[*line_offset]);
-				ret = false;
-				goto done;
-			}
+        if (quoted && escaped)
+        {
+            if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
+            {
+                ADD_CHAR(line[*line_offset]);
+            }
+            else if (line[*line_offset] == 'n')
+            {
+                ADD_CHAR('\n');
+            }
+            else if (line[*line_offset] == 'r')
+            {
+                ADD_CHAR('\r');
+            }
+            else if (line[*line_offset] == 't')
+            {
+                ADD_CHAR('\t');
+            }
+            else
+            {
+                config_message(context, LOG_ERR,
+                               "unknown escape sequence \"\\%c\"",
+                               line[*line_offset]);
+                ret = false;
+                goto done;
+            }
 
-			escaped = false;
-			continue;
-		}
+            escaped = false;
+            continue;
+        }
 
-		if (line[*line_offset] == '$')
-		{
-			if (line[*line_offset + 1] != '{')
-			{
-				config_message(context, LOG_ERR,
-					"currently, only variable substitution of the form ${FOO} "
-					"is supported. The form $FOO is not supported.");
-				ret = false;
-				goto done;
-			}
+        if (line[*line_offset] == '$')
+        {
+            if (line[*line_offset + 1] != '{')
+            {
+                config_message(context, LOG_ERR,
+                               "currently, only variable substitution of the form ${FOO} "
+                               "is supported. The form $FOO is not supported.");
+                ret = false;
+                goto done;
+            }
 
-			variable_size = strcspn(line + *line_offset + 2,
-				CHARS_ALL_WHITESPACE CHARS_SPECIAL "}");
+            variable_size = strcspn(line + *line_offset + 2,
+                                    CHARS_ALL_WHITESPACE CHARS_SPECIAL "}");
 
-			if (line[*line_offset + 2 + variable_size] != '}')
-			{
-				config_message(context, LOG_ERR,
-					"incomplete environment variable. "
-					"Variables must end with '}'.");
-				ret = false;
-				goto done;
-			}
+            if (line[*line_offset + 2 + variable_size] != '}')
+            {
+                config_message(context, LOG_ERR,
+                               "incomplete environment variable. "
+                               "Variables must end with '}'.");
+                ret = false;
+                goto done;
+            }
 
-			variable = malloc(variable_size + 1);
-			if (variable == NULL)
-			{
-				LOG(LOG_ERR, "out of memory");
-				ret = false;
-				goto done;
-			}
+            variable = malloc(variable_size + 1);
+            if (variable == NULL)
+            {
+                LOG(LOG_ERR, "out of memory");
+                ret = false;
+                goto done;
+            }
 
-			snprintf(variable, variable_size + 1, "%s", line + *line_offset + 2);
+            snprintf(variable, variable_size + 1, "%s",
+                     line + *line_offset + 2);
 
-			variable_value = getenv(variable);
-			if (variable_value == NULL)
-			{
-				variable_value = "";
-				config_message(context, LOG_WARNING,
-					"variable ${%s} not found, using the empty string instead",
-					variable);
-			}
+            variable_value = getenv(variable);
+            if (variable_value == NULL)
+            {
+                variable_value = "";
+                config_message(context, LOG_WARNING,
+                               "variable ${%s} not found, using the empty string instead",
+                               variable);
+            }
 
-			free(variable);
+            free(variable);
 
-			for (i = 0; variable_value[i] != '\0'; ++i)
-			{
-				ADD_CHAR(variable_value[i]);
-			}
+            for (i = 0; variable_value[i] != '\0'; ++i)
+            {
+                ADD_CHAR(variable_value[i]);
+            }
 
-			// In addition to the variable name (of length variable_size),
-			// there's "${" and "}". The 2 is because after 'continue',
-			// *line_offset gets incremented.
-			*line_offset += variable_size + 2;
-			continue;
-		}
+            // In addition to the variable name (of length variable_size),
+            // there's "${" and "}". The 2 is because after 'continue',
+            // *line_offset gets incremented.
+            *line_offset += variable_size + 2;
+            continue;
+        }
 
-		if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
-		{
-			config_message(context, LOG_ERR,
-				"special character (%c) used in an invalid way",
-				line[*line_offset]);
-			ret = false;
-			goto done;
-		}
+        if (strchr(CHARS_SPECIAL, line[*line_offset]) != NULL)
+        {
+            config_message(context, LOG_ERR,
+                           "special character (%c) used in an invalid way",
+                           line[*line_offset]);
+            ret = false;
+            goto done;
+        }
 
-		ADD_CHAR(line[*line_offset]);
-	}
+        ADD_CHAR(line[*line_offset]);
+    }
 
-done:
+  done:
 
-	if (ret)
-	{
-		ADD_CHAR('\0');
-	}
-	else
-	{
-		free(*value);
-	}
+    if (ret)
+    {
+        ADD_CHAR('\0');
+    }
+    else
+    {
+        free(*value);
+    }
 
-	#undef ADD_CHAR
+#undef ADD_CHAR
 
-	return ret;
+    return ret;
 }
 
 /**
@@ -354,62 +367,64 @@ done:
 	@return			True on success, false on error.
 */
 static bool get_all_values(
-	const struct config_context * head,
-	struct config_context * tail,
-	size_t option_line,
-	const char * line,
-	size_t * line_offset,
-	char ** values,
-	size_t * num_values)
+    const struct config_context *head,
+    struct config_context *tail,
+    size_t option_line,
+    const char *line,
+    size_t * line_offset,
+    char **values,
+    size_t * num_values)
 {
-	size_t line_backup;
+    size_t line_backup;
 
-	while (true)
-	{
-		if (strcmp(line + *line_offset, "\\\n") == 0)
-		{
-			// line continuation
-			return true;
-		}
-		else if (strcmp(line + *line_offset, "\\") == 0)
-		{
-			config_message(head, LOG_ERR, "line continuation at end of file");
-			return false;
-		}
+    while (true)
+    {
+        if (strcmp(line + *line_offset, "\\\n") == 0)
+        {
+            // line continuation
+            return true;
+        }
+        else if (strcmp(line + *line_offset, "\\") == 0)
+        {
+            config_message(head, LOG_ERR, "line continuation at end of file");
+            return false;
+        }
 
-		skip_comment(line, line_offset);
+        skip_comment(line, line_offset);
 
-		if (line[*line_offset] == '\n')
-		{
-			// end of line
-			return true;
-		}
-		else if (line[*line_offset] == '\0')
-		{
-			// end of file
-			return true;
-		}
+        if (line[*line_offset] == '\n')
+        {
+            // end of line
+            return true;
+        }
+        else if (line[*line_offset] == '\0')
+        {
+            // end of file
+            return true;
+        }
 
-		if (*num_values >= MAX_ARRAY_LENGTH)
-		{
-			line_backup = tail->line;
-			tail->line = option_line;
-			config_message(head, LOG_ERR, "too many items in an array of values, limit is %d", MAX_ARRAY_LENGTH);
-			tail->line = line_backup;
-			return false;
-		}
+        if (*num_values >= MAX_ARRAY_LENGTH)
+        {
+            line_backup = tail->line;
+            tail->line = option_line;
+            config_message(head, LOG_ERR,
+                           "too many items in an array of values, limit is %d",
+                           MAX_ARRAY_LENGTH);
+            tail->line = line_backup;
+            return false;
+        }
 
-		if (get_value(head, line, line_offset, &values[*num_values]))
-		{
-			++*num_values;
-		}
-		else
-		{
-			return false;
-		}
+        if (get_value(head, line, line_offset, &values[*num_values]))
+        {
+            ++*num_values;
+        }
+        else
+        {
+            return false;
+        }
 
-		skip_whitespace(line, line_offset);
-	}
+        skip_whitespace(line, line_offset);
+    }
 
 }
 
@@ -424,466 +439,462 @@ static bool get_all_values(
 				called on values from a config file.
 */
 static bool convert_values(
-	const struct config_context * context,
-	const struct config_option * config_option,
-	struct config_value * config_value,
-	char const * const * values,
-	size_t num_values,
-	bool is_default)
+    const struct config_context *context,
+    const struct config_option *config_option,
+    struct config_value *config_value,
+    char const *const *values,
+    size_t num_values,
+    bool is_default)
 {
-	config_value->filled = true;
-	if (!is_default)
-	{
-		if (config_value->filled_not_default)
-		{
-			config_message(context, LOG_NOTICE,
-				"duplicate option overwriting previous value");
-		}
+    config_value->filled = true;
+    if (!is_default)
+    {
+        if (config_value->filled_not_default)
+        {
+            config_message(context, LOG_NOTICE,
+                           "duplicate option overwriting previous value");
+        }
 
-		config_value->filled_not_default = true;
-	}
+        config_value->filled_not_default = true;
+    }
 
-	if (config_option->is_array)
-	{
-		for (;
-			config_value->array_value.num_items != 0;
-			--config_value->array_value.num_items)
-		{
-			config_option->value_free(
-				config_value->array_value.data[
-					config_value->array_value.num_items - 1]);
-		}
-		free(config_value->array_value.data);
+    if (config_option->is_array)
+    {
+        for (;
+             config_value->array_value.num_items != 0;
+             --config_value->array_value.num_items)
+        {
+            config_option->value_free(config_value->array_value.
+                                      data[config_value->array_value.
+                                           num_items - 1]);
+        }
+        free(config_value->array_value.data);
 
-		config_value->array_value.data = malloc(sizeof(void *) * num_values);
-		if (config_value->array_value.data == NULL)
-		{
-			LOG(LOG_ERR, "out of memory");
-			return false;
-		}
+        config_value->array_value.data = malloc(sizeof(void *) * num_values);
+        if (config_value->array_value.data == NULL)
+        {
+            LOG(LOG_ERR, "out of memory");
+            return false;
+        }
 
-		for (config_value->array_value.num_items = 0;
-			config_value->array_value.num_items < num_values;
-			++config_value->array_value.num_items)
-		{
-			if (!config_option->value_convert(
-				context,
-				config_option->value_convert_usr_arg,
-				values[config_value->array_value.num_items],
-				&config_value->array_value.data[
-					config_value->array_value.num_items]))
-			{
-				return false;
-			}
-		}
+        for (config_value->array_value.num_items = 0;
+             config_value->array_value.num_items < num_values;
+             ++config_value->array_value.num_items)
+        {
+            if (!config_option->value_convert(context,
+                                              config_option->
+                                              value_convert_usr_arg,
+                                              values[config_value->array_value.
+                                                     num_items],
+                                              &config_value->array_value.
+                                              data[config_value->array_value.
+                                                   num_items]))
+            {
+                return false;
+            }
+        }
 
-		if (config_option->array_validate != NULL)
-		{
-			if (!config_option->array_validate(
-				context,
-				config_option->array_validate_usr_arg,
-				(void const * const *)config_value->array_value.data,
-				config_value->array_value.num_items))
-			{
-				return false;
-			}
-		}
-	}
-	else
-	{
-		if (num_values != 1)
-		{
-			config_message(context, LOG_ERR,
-				"non-array option must have exactly one value");
-			return false;
-		}
+        if (config_option->array_validate != NULL)
+        {
+            if (!config_option->array_validate(context,
+                                               config_option->
+                                               array_validate_usr_arg,
+                                               (void const *const *)
+                                               config_value->array_value.data,
+                                               config_value->array_value.
+                                               num_items))
+            {
+                return false;
+            }
+        }
+    }
+    else
+    {
+        if (num_values != 1)
+        {
+            config_message(context, LOG_ERR,
+                           "non-array option must have exactly one value");
+            return false;
+        }
 
-		config_option->value_free(config_value->single_value.data);
-		config_value->single_value.data = NULL;
+        config_option->value_free(config_value->single_value.data);
+        config_value->single_value.data = NULL;
 
-		if (!config_option->value_convert(
-			context,
-			config_option->value_convert_usr_arg,
-			values[0],
-			&config_value->single_value.data))
-		{
-			return false;
-		}
-	}
+        if (!config_option->value_convert(context,
+                                          config_option->value_convert_usr_arg,
+                                          values[0],
+                                          &config_value->single_value.data))
+        {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
 bool config_parse_file(
-	size_t num_options,
-	const struct config_option * config_options,
-	struct config_value * config_values,
-	struct config_context * head,
-	struct config_context * tail)
+    size_t num_options,
+    const struct config_option * config_options,
+    struct config_value * config_values,
+    struct config_context * head,
+    struct config_context * tail)
 {
-	// one line of the file
-	char * line = NULL;
+    // one line of the file
+    char *line = NULL;
 
-	// offset within the line
-	size_t line_offset;
+    // offset within the line
+    size_t line_offset;
 
-	// file being parsed
-	FILE * file = NULL;
+    // file being parsed
+    FILE *file = NULL;
 
-	// currently "active" option
-	ssize_t option = CONFIG_OPTION_NONE;
+    // currently "active" option
+    ssize_t option = CONFIG_OPTION_NONE;
 
-	// line number where currently active option started
-	size_t option_line;
+    // line number where currently active option started
+    size_t option_line;
 
-	// backup line number
-	size_t line_backup;
+    // backup line number
+    size_t line_backup;
 
-	// input values for the currently active option
-	char ** values = NULL;
+    // input values for the currently active option
+    char **values = NULL;
 
-	// amount of values array that's currently filled in
-	size_t num_values;
+    // amount of values array that's currently filled in
+    size_t num_values;
 
-	// for changing directories and going back
-	char * oldpwd = NULL;
-	char * filename_dirname = NULL; // copy of file name for dirname(3)
-	char * newpwd;
+    // for changing directories and going back
+    char *oldpwd = NULL;
+    char *filename_dirname = NULL;      // copy of file name for dirname(3)
+    char *newpwd;
 
-	// return value of this function
-	bool ret = true;
+    // return value of this function
+    bool ret = true;
 
-	line = malloc(MAX_LINE_LENGTH);
-	if (line == NULL)
-	{
-		LOG(LOG_ERR, "out of memory");
-		ret = false;
-		goto done;
-	}
+    line = malloc(MAX_LINE_LENGTH);
+    if (line == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        ret = false;
+        goto done;
+    }
 
-	file = fopen(tail->file, "r");
-	if (file == NULL)
-	{
-		config_message(head, LOG_ERR, "cannot open config file %s: %s",
-			tail->file, strerror(errno));
-		ret = false;
-		goto done;
-	}
+    file = fopen(tail->file, "r");
+    if (file == NULL)
+    {
+        config_message(head, LOG_ERR, "cannot open config file %s: %s",
+                       tail->file, strerror(errno));
+        ret = false;
+        goto done;
+    }
 
-	oldpwd = malloc(PATH_MAX);
-	if (oldpwd == NULL)
-	{
-		LOG(LOG_ERR, "out of memory");
-		ret = false;
-		goto done;
-	}
-	if (getcwd(oldpwd, PATH_MAX) == NULL)
-	{
-		LOG(LOG_ERR, "getcwd(): %s", strerror(errno));
-		free(oldpwd);
-		oldpwd = NULL;
-		ret = false;
-		goto done;
-	}
+    oldpwd = malloc(PATH_MAX);
+    if (oldpwd == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        ret = false;
+        goto done;
+    }
+    if (getcwd(oldpwd, PATH_MAX) == NULL)
+    {
+        LOG(LOG_ERR, "getcwd(): %s", strerror(errno));
+        free(oldpwd);
+        oldpwd = NULL;
+        ret = false;
+        goto done;
+    }
 
-	filename_dirname = strdup(tail->file);
-	if (filename_dirname == NULL)
-	{
-		LOG(LOG_ERR, "out of memory");
-		ret = false;
-		goto done;
-	}
-	newpwd = dirname(filename_dirname);
+    filename_dirname = strdup(tail->file);
+    if (filename_dirname == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        ret = false;
+        goto done;
+    }
+    newpwd = dirname(filename_dirname);
 
-	if (chdir(newpwd) != 0)
-	{
-		LOG(LOG_ERR, "chdir(%s): %s", newpwd, strerror(errno));
-		ret = false;
-		goto done;
-	}
+    if (chdir(newpwd) != 0)
+    {
+        LOG(LOG_ERR, "chdir(%s): %s", newpwd, strerror(errno));
+        ret = false;
+        goto done;
+    }
 
-	values = malloc(sizeof(char *) * MAX_ARRAY_LENGTH);
-	if (values == NULL)
-	{
-		LOG(LOG_ERR, "out of memory");
-		ret = false;
-		goto done;
-	}
-	num_values = 0;
+    values = malloc(sizeof(char *) * MAX_ARRAY_LENGTH);
+    if (values == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        ret = false;
+        goto done;
+    }
+    num_values = 0;
 
-	while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
-	{
-		++tail->line;
-		line_offset = 0;
+    while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
+    {
+        ++tail->line;
+        line_offset = 0;
 
-		if (strlen(line) == MAX_LINE_LENGTH - 1 && line[MAX_LINE_LENGTH - 1] != '\n')
-		{
-			config_message(head, LOG_ERR, "line too long");
-			ret = false;
-			goto done;
-		}
+        if (strlen(line) == MAX_LINE_LENGTH - 1
+            && line[MAX_LINE_LENGTH - 1] != '\n')
+        {
+            config_message(head, LOG_ERR, "line too long");
+            ret = false;
+            goto done;
+        }
 
-		skip_whitespace(line, &line_offset);
+        skip_whitespace(line, &line_offset);
 
-		if (option == CONFIG_OPTION_NONE)
-		{
-			skip_comment(line, &line_offset);
+        if (option == CONFIG_OPTION_NONE)
+        {
+            skip_comment(line, &line_offset);
 
-			if (line[line_offset] == '\n')
-			{
-				// empty line
-				continue;
-			}
-			else if (line[line_offset] == '\0')
-			{
-				// empty line at end of file
-				goto done;
-			}
+            if (line[line_offset] == '\n')
+            {
+                // empty line
+                continue;
+            }
+            else if (line[line_offset] == '\0')
+            {
+                // empty line at end of file
+                goto done;
+            }
 
-			if (!get_option(num_options,
-				config_options,
-				head,
-				line,
-				&line_offset,
-				&option))
-			{
-				ret = false;
-				goto done;
-			}
+            if (!get_option(num_options,
+                            config_options, head, line, &line_offset, &option))
+            {
+                ret = false;
+                goto done;
+            }
 
-			skip_whitespace(line, &line_offset);
+            skip_whitespace(line, &line_offset);
 
-			option_line = tail->line;
+            option_line = tail->line;
 
-			for (; num_values != 0; --num_values)
-			{
-				free(values[num_values - 1]);
-			}
-		}
+            for (; num_values != 0; --num_values)
+            {
+                free(values[num_values - 1]);
+            }
+        }
 
-		if (!get_all_values(head, tail, option_line, line, &line_offset, values, &num_values))
-		{
-			ret = false;
-			goto done;
-		}
+        if (!get_all_values
+            (head, tail, option_line, line, &line_offset, values, &num_values))
+        {
+            ret = false;
+            goto done;
+        }
 
-		if (strcmp(line + line_offset, "\\\n") == 0)
-		{
-			// line continuation
-			continue;
-		}
+        if (strcmp(line + line_offset, "\\\n") == 0)
+        {
+            // line continuation
+            continue;
+        }
 
-		if (option == CONFIG_OPTION_INCLUDE)
-		{
-			if (num_values != 1)
-			{
-				tail->line = option_line;
-				config_message(head, LOG_ERR, "include should take exactly one file");
-				ret = false;
-				goto done;
-			}
+        if (option == CONFIG_OPTION_INCLUDE)
+        {
+            if (num_values != 1)
+            {
+                tail->line = option_line;
+                config_message(head, LOG_ERR,
+                               "include should take exactly one file");
+                ret = false;
+                goto done;
+            }
 
-			tail->includes = malloc(sizeof(struct config_context));
-			if (tail->includes == NULL)
-			{
-				LOG(LOG_ERR, "out of memory");
-				ret = false;
-				goto done;
-			}
+            tail->includes = malloc(sizeof(struct config_context));
+            if (tail->includes == NULL)
+            {
+                LOG(LOG_ERR, "out of memory");
+                ret = false;
+                goto done;
+            }
 
-			tail->includes->file = values[0];
-			tail->includes->line = 0;
-			tail->includes->includes = NULL;
+            tail->includes->file = values[0];
+            tail->includes->line = 0;
+            tail->includes->includes = NULL;
 
-			line_backup = tail->line;
-			tail->line = option_line;
-			ret = config_parse_file(num_options,
-				config_options,
-				config_values,
-				head,
-				tail->includes);
-			tail->line = line_backup;
+            line_backup = tail->line;
+            tail->line = option_line;
+            ret = config_parse_file(num_options,
+                                    config_options,
+                                    config_values, head, tail->includes);
+            tail->line = line_backup;
 
-			free(tail->includes);
-			tail->includes = NULL;
+            free(tail->includes);
+            tail->includes = NULL;
 
-			if (!ret)
-			{
-				goto done;
-			}
-		}
-		else if (option == CONFIG_OPTION_UNKNOWN)
-		{
-			// nothing to do here
-		}
-		else
-		{
-			line_backup = tail->line;
-			tail->line = option_line;
-			ret = convert_values(head,
-				&config_options[option],
-				&config_values[option],
-				(char const * const *)values,
-				num_values,
-				false);
-			tail->line = line_backup;
-			if (!ret)
-			{
-				goto done;
-			}
-		}
+            if (!ret)
+            {
+                goto done;
+            }
+        }
+        else if (option == CONFIG_OPTION_UNKNOWN)
+        {
+            // nothing to do here
+        }
+        else
+        {
+            line_backup = tail->line;
+            tail->line = option_line;
+            ret = convert_values(head,
+                                 &config_options[option],
+                                 &config_values[option],
+                                 (char const *const *)values,
+                                 num_values, false);
+            tail->line = line_backup;
+            if (!ret)
+            {
+                goto done;
+            }
+        }
 
-		option = CONFIG_OPTION_NONE;
+        option = CONFIG_OPTION_NONE;
 
-		if (line[line_offset] == '\0')
-		{
-			// end of file
-			goto done;
-		}
-	}
+        if (line[line_offset] == '\0')
+        {
+            // end of file
+            goto done;
+        }
+    }
 
-	// if control reaches here, fgets returned NULL
-	if (errno != 0)
-	{
-		tail->line = 0;
-		config_message(head, LOG_ERR, "error reading config file %s: %s",
-			tail->file, strerror(errno));
-	}
+    // if control reaches here, fgets returned NULL
+    if (errno != 0)
+    {
+        tail->line = 0;
+        config_message(head, LOG_ERR, "error reading config file %s: %s",
+                       tail->file, strerror(errno));
+    }
 
-done:
+  done:
 
-	if (values != NULL)
-	{
-		for (; num_values != 0; --num_values)
-		{
-			free(values[num_values - 1]);
-		}
-		free(values);
-		values = NULL;
-	}
+    if (values != NULL)
+    {
+        for (; num_values != 0; --num_values)
+        {
+            free(values[num_values - 1]);
+        }
+        free(values);
+        values = NULL;
+    }
 
-	newpwd = NULL;
-	free(filename_dirname);
-	filename_dirname = NULL;
+    newpwd = NULL;
+    free(filename_dirname);
+    filename_dirname = NULL;
 
-	if (oldpwd != NULL)
-	{
-		if (chdir(oldpwd) != 0)
-		{
-			LOG(LOG_ERR, "chdir(%s): %s", oldpwd, strerror(errno));
-			ret = false;
-		}
+    if (oldpwd != NULL)
+    {
+        if (chdir(oldpwd) != 0)
+        {
+            LOG(LOG_ERR, "chdir(%s): %s", oldpwd, strerror(errno));
+            ret = false;
+        }
 
-		free(oldpwd);
-		oldpwd = NULL;
-	}
+        free(oldpwd);
+        oldpwd = NULL;
+    }
 
-	if (file != NULL)
-	{
-		if (fclose(file) != 0)
-		{
-			config_message(head, LOG_ERR, "cannot close config file %s: %s",
-				tail->file, strerror(errno));
-		}
-		file = NULL;
-	}
+    if (file != NULL)
+    {
+        if (fclose(file) != 0)
+        {
+            config_message(head, LOG_ERR, "cannot close config file %s: %s",
+                           tail->file, strerror(errno));
+        }
+        file = NULL;
+    }
 
-	if (line != NULL)
-	{
-		free(line);
-		line = NULL;
-	}
+    if (line != NULL)
+    {
+        free(line);
+        line = NULL;
+    }
 
-	return ret;
+    return ret;
 }
 
 
 bool config_load_defaults(
-	size_t num_options,
-	const struct config_option * config_options,
-	struct config_value * config_values,
-	struct config_context * context)
+    size_t num_options,
+    const struct config_option * config_options,
+    struct config_value * config_values,
+    struct config_context * context)
 {
-	bool ret = true;
-	size_t option;
-	size_t line_offset;
-	char * values[MAX_ARRAY_LENGTH];
-	size_t num_values = 0;
+    bool ret = true;
+    size_t option;
+    size_t line_offset;
+    char *values[MAX_ARRAY_LENGTH];
+    size_t num_values = 0;
 
-	// initialize config_values
-	for (option = 0; option < num_options; ++option)
-	{
-		config_values[option].filled = false;
-		config_values[option].filled_not_default = false;
-		if (config_options[option].is_array)
-		{
-			config_values[option].array_value.data = NULL;
-			config_values[option].array_value.num_items = 0;
-		}
-		else
-		{
-			config_values[option].single_value.data = NULL;
-		}
-	}
+    // initialize config_values
+    for (option = 0; option < num_options; ++option)
+    {
+        config_values[option].filled = false;
+        config_values[option].filled_not_default = false;
+        if (config_options[option].is_array)
+        {
+            config_values[option].array_value.data = NULL;
+            config_values[option].array_value.num_items = 0;
+        }
+        else
+        {
+            config_values[option].single_value.data = NULL;
+        }
+    }
 
-	// parse defaults
-	for (option = 0; option < num_options; ++option)
-	{
-		if (config_options[option].default_value == NULL)
-		{
-			continue;
-		}
+    // parse defaults
+    for (option = 0; option < num_options; ++option)
+    {
+        if (config_options[option].default_value == NULL)
+        {
+            continue;
+        }
 
-		line_offset = 0;
+        line_offset = 0;
 
-		for (; num_values != 0; --num_values)
-		{
-			free(values[num_values - 1]);
-		}
+        for (; num_values != 0; --num_values)
+        {
+            free(values[num_values - 1]);
+        }
 
-		if (!get_all_values(context,
-			context,
-			0,
-			config_options[option].default_value,
-			&line_offset,
-			values,
-			&num_values))
-		{
-			config_message(context, LOG_ERR, "%s has invalid default value",
-				config_options[option].name);
-			ret = false;
-			goto done;
-		}
+        if (!get_all_values(context,
+                            context,
+                            0,
+                            config_options[option].default_value,
+                            &line_offset, values, &num_values))
+        {
+            config_message(context, LOG_ERR, "%s has invalid default value",
+                           config_options[option].name);
+            ret = false;
+            goto done;
+        }
 
-		if (config_options[option].default_value[line_offset] != '\0')
-		{
-			config_message(context, LOG_ERR,
-				"%s's default values should only use one line",
-				config_options[option].name);
-			ret = false;
-			goto done;
-		}
+        if (config_options[option].default_value[line_offset] != '\0')
+        {
+            config_message(context, LOG_ERR,
+                           "%s's default values should only use one line",
+                           config_options[option].name);
+            ret = false;
+            goto done;
+        }
 
-		if (!convert_values(context,
-			&config_options[option],
-			&config_values[option],
-			(char const * const *)values,
-			num_values,
-			true))
-		{
-			config_message(context, LOG_ERR, "error parsing %s's default value",
-				config_options[option].name);
-			ret = false;
-			goto done;
-		}
-	}
+        if (!convert_values(context,
+                            &config_options[option],
+                            &config_values[option],
+                            (char const *const *)values, num_values, true))
+        {
+            config_message(context, LOG_ERR,
+                           "error parsing %s's default value",
+                           config_options[option].name);
+            ret = false;
+            goto done;
+        }
+    }
 
-done:
+  done:
 
-	for (; num_values != 0; --num_values)
-	{
-		free(values[num_values - 1]);
-	}
+    for (; num_values != 0; --num_values)
+    {
+        free(values[num_values - 1]);
+    }
 
-	return ret;
+    return ret;
 }
