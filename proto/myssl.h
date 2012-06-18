@@ -2,8 +2,8 @@
 #define _MYSSL_H_
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
 #include <openssl/err.h>
 #include <openssl/x509.h>
@@ -27,9 +27,9 @@ extern int strict_profile_checks;
 
 
 /*
-  This data structure defines the fields that must be extracted from a
-  certificate in order to insert it into the DB.
-*/
+ * This data structure defines the fields that must be extracted from a
+ * certificate in order to insert it into the DB. 
+ */
 
 #define CF_FIELD_FILENAME    0
 #define CF_FIELD_SUBJECT     1
@@ -50,76 +50,103 @@ extern int strict_profile_checks;
 #define CRL_MAX_SNUM_LTH    20  // maximum length of cert serial number in CRL
 #define CRL_MAX_CRLNUM_LTH  20
 /*
-  A certificate X509 * must be torn apart into this type of structure.
-  This structure can then be entered into the database.
-*/
+ * A certificate X509 * must be torn apart into this type of structure. This
+ * structure can then be entered into the database. 
+ */
 
-typedef struct _cert_fields
-{
-  char *fields[CF_NFIELDS];
-  void *ipb;
-  int   ipblen;
-  unsigned int dirid;
-  unsigned int flags;
+typedef struct _cert_fields {
+    char *fields[CF_NFIELDS];
+    void *ipb;
+    int ipblen;
+    unsigned int dirid;
+    unsigned int flags;
 } cert_fields;
 
-typedef char *(*cf_get)(X509 *x, int *stap, int *x509stap);
+typedef char *(
+    *cf_get) (
+    X509 * x,
+    int *stap,
+    int *x509stap);
 
-typedef void (*cfx_get)(const X509V3_EXT_METHOD *meth, void *exts,
-			cert_fields *cf, int *stap, int *x509stap);
+typedef void (
+    *cfx_get) (
+    const X509V3_EXT_METHOD * meth,
+    void *exts,
+    cert_fields * cf,
+    int *stap,
+    int *x509stap);
 
 /*
-  For each field in the X509 * that must be extracted, there is a get
-  function. Some fields are mandatory, others are optional. This structure
-  encapsulates the association of field numbers (above), get functions and
-  an indication of whether they are needed or optional. Note that "need"ed
-  here is not the same as a critical extension; a needed extension is one
-  that is required for a database field.
-*/
+ * For each field in the X509 * that must be extracted, there is a get
+ * function. Some fields are mandatory, others are optional. This structure
+ * encapsulates the association of field numbers (above), get functions and an 
+ * indication of whether they are needed or optional. Note that "need"ed here
+ * is not the same as a critical extension; a needed extension is one that is
+ * required for a database field. 
+ */
 
-typedef struct _cf_validator
-{
-  cf_get  get_func;
-  int     fieldno;
-  int     need;
+typedef struct _cf_validator {
+    cf_get get_func;
+    int fieldno;
+    int need;
 } cf_validator;
 
 /*
-  For each field that is part of the X509 extension, there is a get
-  function. As above, some fields are mandatory, others are optional.
-  This structure encapsulates the association of extension tags, get
-  functions, field numbers and an indication of whether they are needed
-  or optional.
-*/
+ * For each field that is part of the X509 extension, there is a get function. 
+ * As above, some fields are mandatory, others are optional. This structure
+ * encapsulates the association of extension tags, get functions, field
+ * numbers and an indication of whether they are needed or optional. 
+ */
 
-typedef struct _cfx_validator
-{
-  cfx_get  get_func;
-  int      fieldno;
-  int      tag;
-  int      need;
-  int      raw;
-} cfx_validator ;
+typedef struct _cfx_validator {
+    cfx_get get_func;
+    int fieldno;
+    int tag;
+    int need;
+    int raw;
+} cfx_validator;
 
-extern void  freecf(cert_fields *);
+extern void freecf(
+    cert_fields *);
 
-extern char *ASNTimeToDBTime(char *in, int *stap, int only_gentime);
-extern char *LocalTimeToDBTime(int *stap);
-extern char *UnixTimeToDBTime(time_t clck, int *stap);
-extern char *X509_to_ski(X509 *x, int *stap, int *x509stap);
-extern char *X509_to_subject(X509 *x, int *stap, int *x509stap);
+extern char *ASNTimeToDBTime(
+    char *in,
+    int *stap,
+    int only_gentime);
+extern char *LocalTimeToDBTime(
+    int *stap);
+extern char *UnixTimeToDBTime(
+    time_t clck,
+    int *stap);
+extern char *X509_to_ski(
+    X509 * x,
+    int *stap,
+    int *x509stap);
+extern char *X509_to_subject(
+    X509 * x,
+    int *stap,
+    int *x509stap);
 
-extern int   rescert_profile_chk(X509 *x, struct Certificate *certp, int ct, 
+extern int rescert_profile_chk(
+    X509 * x,
+    struct Certificate *certp,
+    int ct,
     int checkRPKI);
-extern int   crl_profile_chk(struct CertificateRevocationList *crlp);
+extern int crl_profile_chk(
+    struct CertificateRevocationList *crlp);
 
-extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
-				X509 **xp, int *stap, int *x509stap);
+extern cert_fields *cert2fields(
+    char *fname,
+    char *fullname,
+    int typ,
+    X509 ** xp,
+    int *stap,
+    int *x509stap);
 
 /*
-  This data structure defines the fields that must be extracted from a
-  CRL in order to insert it into the DB.
-*/
+ * This data structure defines the fields that must be extracted from a CRL in 
+ * order to insert it into the DB. 
+ */
 
 #define CRF_FIELD_FILENAME    0
 #define CRF_FIELD_ISSUER      1
@@ -134,58 +161,69 @@ extern cert_fields *cert2fields(char *fname, char *fullname, int typ,
 
 
 /*
-  A X509_CRL * must be torn apart into this type of structure.
-  This structure can then be entered into the database.
-*/
+ * A X509_CRL * must be torn apart into this type of structure. This structure 
+ * can then be entered into the database. 
+ */
 
-typedef struct _crl_fields
-{
-  char *fields[CRF_NFIELDS];
-  void *snlist;
-  unsigned int snlen;
-  unsigned int dirid;
-  unsigned int flags;
+typedef struct _crl_fields {
+    char *fields[CRF_NFIELDS];
+    void *snlist;
+    unsigned int snlen;
+    unsigned int dirid;
+    unsigned int flags;
 } crl_fields;
 
-typedef char *(*crf_get)(X509_CRL *x, int *stap, int *crlstap);
+typedef char *(
+    *crf_get) (
+    X509_CRL * x,
+    int *stap,
+    int *crlstap);
 
-typedef void (*crfx_get)(const X509V3_EXT_METHOD *meth, void *exts,
-			 crl_fields *cf, int *stap, int *crlstap);
+typedef void (
+    *crfx_get) (
+    const X509V3_EXT_METHOD * meth,
+    void *exts,
+    crl_fields * cf,
+    int *stap,
+    int *crlstap);
 
 /*
-  For each field in the X509_CRL * that must be extracted, there is a get
-  function. Some fields are mandatory, others are optional. This structure
-  encapsulates the association of field numbers (above), get functions and
-  an indication of whether they are need or optional.
-*/
+ * For each field in the X509_CRL * that must be extracted, there is a get
+ * function. Some fields are mandatory, others are optional. This structure
+ * encapsulates the association of field numbers (above), get functions and an 
+ * indication of whether they are need or optional. 
+ */
 
-typedef struct _crf_validator
-{
-  crf_get get_func;
-  int     fieldno;
-  int     need;
+typedef struct _crf_validator {
+    crf_get get_func;
+    int fieldno;
+    int need;
 } crf_validator;
 
 /*
-  For each field that is part of the X509_CRL extension, there is a get
-  function. As above, some fields are mandatory, others are optional.
-  This structure encapsulates the association of extension tags, get
-  functions, field numbers and an indication of whether they are needed
-  or optional.
-*/
+ * For each field that is part of the X509_CRL extension, there is a get
+ * function. As above, some fields are mandatory, others are optional. This
+ * structure encapsulates the association of extension tags, get functions,
+ * field numbers and an indication of whether they are needed or optional. 
+ */
 
-typedef struct _crfx_validator 
-{
-  crfx_get get_func;
-  int      fieldno;
-  int      tag;
-  int      need;
+typedef struct _crfx_validator {
+    crfx_get get_func;
+    int fieldno;
+    int tag;
+    int need;
 } crfx_validator;
 
-extern void  freecrf(crl_fields *);
+extern void freecrf(
+    crl_fields *);
 
-extern crl_fields *crl2fields(char *fname, char *fullname, int typ,
-		 X509_CRL **xp, int *stap, int *crlstap, 
-                 void *goodoidp);
+extern crl_fields *crl2fields(
+    char *fname,
+    char *fullname,
+    int typ,
+    X509_CRL ** xp,
+    int *stap,
+    int *crlstap,
+    void *goodoidp);
 
 #endif

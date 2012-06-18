@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.3, achi@bbn.com)
+AC_INIT(rpstir, 0.4, rpstir-support@bbn.com)
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
 PACKAGE_NAME_UC="RPSTIR"
@@ -268,6 +268,7 @@ AC_CONFIG_FILES([Makefile
                  testcases/Makefile
                  testbed/Makefile
                  testbed/src/Makefile
+                 testbed/src/tests/Makefile
                  utils/Makefile
                  utils/tests/Makefile
                  utils/mysql-c-api/Makefile

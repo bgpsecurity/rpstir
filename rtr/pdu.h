@@ -67,7 +67,9 @@ typedef uint32_t as_number_t;
         returns true if s1 > s2, and it returns false for the other
         three states.
 */
-bool serial_number_greater(serial_number_t s1, serial_number_t s2);
+bool serial_number_greater(
+    serial_number_t s1,
+    serial_number_t s2);
 
 
 struct _PDU;
@@ -77,31 +79,31 @@ typedef struct _PDU PDU;
  * structures holding data for an IP prefix (v4 or v6)
  *****/
 typedef struct _IP4PrefixData {
-	uint8_t flags;
-	uint8_t prefixLength;
-	uint8_t maxLength;
-	uint8_t reserved;
-	struct in_addr prefix4;
-	as_number_t asNumber;
+    uint8_t flags;
+    uint8_t prefixLength;
+    uint8_t maxLength;
+    uint8_t reserved;
+    struct in_addr prefix4;
+    as_number_t asNumber;
 } PACKED_STRUCT IP4PrefixData;
 
 typedef struct _IP6PrefixData {
-	uint8_t flags;
-	uint8_t prefixLength;
-	uint8_t maxLength;
-	uint8_t reserved;
-	struct in6_addr prefix6;
-	as_number_t asNumber;
+    uint8_t flags;
+    uint8_t prefixLength;
+    uint8_t maxLength;
+    uint8_t reserved;
+    struct in6_addr prefix6;
+    as_number_t asNumber;
 } PACKED_STRUCT IP6PrefixData;
 
 /*****
  * structure holding the data for an error response
  *****/
 typedef struct _ErrorData {
-	uint32_t encapsulatedPDULength;
-	uint8_t *encapsulatedPDU;
-	uint32_t errorTextLength;
-	uint8_t *errorText;
+    uint32_t encapsulatedPDULength;
+    uint8_t *encapsulatedPDU;
+    uint32_t errorTextLength;
+    uint8_t *errorText;
 } ErrorData;
 
 #define PDU_ERROR_HEADERS_LENGTH (sizeof(uint32_t) + sizeof(uint32_t))
@@ -110,20 +112,20 @@ typedef struct _ErrorData {
  * Basic structure of a PDU
  *****/
 struct _PDU {
-	uint8_t protocolVersion;
-	uint8_t pduType;
-	union {
-		session_id_t sessionId;
-		uint16_t reserved;
-		error_code_t errorCode;
-	};
-	uint32_t length;
-	union {
-		serial_number_t serialNumber;
-		IP4PrefixData ip4PrefixData;
-		IP6PrefixData ip6PrefixData;
-		ErrorData errorData;
-	};
+    uint8_t protocolVersion;
+    uint8_t pduType;
+    union {
+        session_id_t sessionId;
+        uint16_t reserved;
+        error_code_t errorCode;
+    };
+    uint32_t length;
+    union {
+        serial_number_t serialNumber;
+        IP4PrefixData ip4PrefixData;
+        IP6PrefixData ip6PrefixData;
+        ErrorData errorData;
+    };
 } PACKED_STRUCT;
 
 #define PDU_HEADER_LENGTH (offsetof(PDU, serialNumber))
@@ -133,14 +135,15 @@ struct _PDU {
 #define MAX_QUERY_PDU_LENGTH (PDU_HEADER_LENGTH + sizeof(serial_number_t))
 
 
-#define PDU_GOOD 0 /* valid PDU */
-#define PDU_TRUNCATED -1 /* PDU doesn't have errors but is truncated */
-#define PDU_WARNING -2 /* PDU has warnings but no errors */
+#define PDU_GOOD 0              /* valid PDU */
+#define PDU_TRUNCATED -1        /* PDU doesn't have errors but is truncated */
+#define PDU_WARNING -2          /* PDU has warnings but no errors */
 #define PDU_CORRUPT_DATA -3
 #define PDU_INTERNAL_ERROR -4
 #define PDU_UNSUPPORTED_PROTOCOL_VERSION -5
 #define PDU_UNSUPPORTED_PDU_TYPE -6
-#define PDU_INVALID_VALUE -7 /* PDU is well-formed but has a field with an invalid value */
+#define PDU_INVALID_VALUE -7    /* PDU is well-formed but has a field with an
+                                 * invalid value */
 #define PDU_IS_ERROR(retval) ((retval) <= PDU_CORRUPT_DATA)
 /**
 	Attempt to parse as much of buffer as possible into pdu.
@@ -150,7 +153,10 @@ struct _PDU {
 
 	@return one of the above constants
 */
-int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu);
+int parse_pdu(
+    uint8_t * buffer,
+    size_t buflen,
+    PDU * pdu);
 
 
 /**
@@ -158,18 +164,44 @@ int parse_pdu(uint8_t * buffer, size_t buflen, PDU * pdu);
 
 	@return Number of bytes written, or -1 if there's an error.
 */
-ssize_t dump_pdu(uint8_t * buffer, size_t buflen, const PDU * pdu);
+ssize_t dump_pdu(
+    uint8_t * buffer,
+    size_t buflen,
+    const PDU * pdu);
 
-void fill_pdu_serial_notify(PDU * pdu, session_id_t session, serial_number_t serial);
-void fill_pdu_serial_query(PDU * pdu, session_id_t session, serial_number_t serial);
-void fill_pdu_reset_query(PDU * pdu);
-void fill_pdu_cache_response(PDU * pdu, session_id_t session);
-void fill_pdu_ipv4_prefix(PDU * pdu, uint8_t flags,
-	uint8_t prefix_length, uint8_t max_length, const struct in_addr * prefix, as_number_t asn);
-void fill_pdu_ipv6_prefix(PDU * pdu, uint8_t flags,
-	uint8_t prefix_length, uint8_t max_length, const struct in6_addr * prefix, as_number_t asn);
-void fill_pdu_end_of_data(PDU * pdu, session_id_t session, serial_number_t serial);
-void fill_pdu_cache_reset(PDU * pdu);
+void fill_pdu_serial_notify(
+    PDU * pdu,
+    session_id_t session,
+    serial_number_t serial);
+void fill_pdu_serial_query(
+    PDU * pdu,
+    session_id_t session,
+    serial_number_t serial);
+void fill_pdu_reset_query(
+    PDU * pdu);
+void fill_pdu_cache_response(
+    PDU * pdu,
+    session_id_t session);
+void fill_pdu_ipv4_prefix(
+    PDU * pdu,
+    uint8_t flags,
+    uint8_t prefix_length,
+    uint8_t max_length,
+    const struct in_addr *prefix,
+    as_number_t asn);
+void fill_pdu_ipv6_prefix(
+    PDU * pdu,
+    uint8_t flags,
+    uint8_t prefix_length,
+    uint8_t max_length,
+    const struct in6_addr *prefix,
+    as_number_t asn);
+void fill_pdu_end_of_data(
+    PDU * pdu,
+    session_id_t session,
+    serial_number_t serial);
+void fill_pdu_cache_reset(
+    PDU * pdu);
 
 /**
 	The encapsulated_pdu and error_text parameters are stored in pdu
@@ -178,18 +210,24 @@ void fill_pdu_cache_reset(PDU * pdu);
 	If encapsulated_pdu or error_text is NULL, its respective length field
 	must be 0.
 */
-void fill_pdu_error_report(PDU * pdu, error_code_t code,
-	uint32_t encapsulated_pdu_length, uint8_t * encapsulated_pdu,
-	uint32_t error_text_length, uint8_t * error_text);
+void fill_pdu_error_report(
+    PDU * pdu,
+    error_code_t code,
+    uint32_t encapsulated_pdu_length,
+    uint8_t * encapsulated_pdu,
+    uint32_t error_text_length,
+    uint8_t * error_text);
 
 /**
 	@param pdu a parsed and valid PDU
 	@return a deep copy of pdu, or NULL if there isn't enough memory
 */
-PDU * pdu_deepcopy(const PDU * pdu);
+PDU *pdu_deepcopy(
+    const PDU * pdu);
 
 /** deep free the pdu */
-void pdu_free(PDU * pdu);
+void pdu_free(
+    PDU * pdu);
 
 /**
 	Deep free the array of PDUs.
@@ -198,14 +236,18 @@ void pdu_free(PDU * pdu);
 	in the array, which is less than or equal to the length
 	of the array.
 */
-void pdu_free_array(PDU * pdus, size_t num_pdus);
+void pdu_free_array(
+    PDU * pdus,
+    size_t num_pdus);
 
 /**
 	Print information from the valid pdu onto one line in buffer.
 	This is primarily useful for debugging.
 */
 #define PDU_SPRINT_BUFSZ 512
-void pdu_sprint(const PDU * pdu, char buffer[PDU_SPRINT_BUFSZ]);
+void pdu_sprint(
+    const PDU * pdu,
+    char buffer[PDU_SPRINT_BUFSZ]);
 
 
 #endif
