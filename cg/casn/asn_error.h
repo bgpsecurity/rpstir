@@ -1,4 +1,6 @@
-/* $Id$ */
+/*
+ * $Id$ 
+ */
 /*****************************************************************************
 File:     asn_error.h
 Contents: Error codes for ASN.1-object library.
@@ -11,10 +13,17 @@ Remarks:
 *****************************************************************************/
 #ifndef _ASN_ERROR_H
 #define _ASN_ERROR_H
-/* $Header: /nfs/sub-rosa/u2/IOS_Project/ASN/Dev/rcs/lib/asn_obj/asn_error.h,v 1.2 1995/01/11 22:23:34 jlowry Exp gardiner $ */
-/* sfcsid[] = "@(#)asn_error.h 324P" */
+/*
+ * $Header: /nfs/sub-rosa/u2/IOS_Project/ASN/Dev/rcs/lib/asn_obj/asn_error.h,v 
+ * 1.2 1995/01/11 22:23:34 jlowry Exp gardiner $ 
+ */
+/*
+ * sfcsid[] = "@(#)asn_error.h 324P" 
+ */
 
-void asn_error(int, char *);
+void asn_error(
+    int,
+    char *);
 
 #define ASN_MATCH_ERR       1
 #define ASN_MEM_ERR         2
@@ -43,4 +52,4 @@ void asn_error(int, char *);
 #define ASN_RECURSION_ERR   25
 #define ASN_ENUM_ERR        26
 #define ASN_FILE_ERR        27
-#endif /* _ASN_ERROR_H */
+#endif                          /* _ASN_ERROR_H */

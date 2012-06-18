@@ -13,7 +13,8 @@ Table of Contents
       2.1.3 MySQL and ODBC
       2.1.4 cryptlib
       2.1.5 rsync
-      2.1.6 python-netaddr
+      2.1.6 Python
+      2.1.7 netcat
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
@@ -41,10 +42,9 @@ Table of Contents
 Appendix A. Troubleshooting
     A.1 Database troubleshooting
     A.2 64-bit support
-    A.3 Python path
-    A.4 Specific Operating Systems
-      A.4.1 OpenBSD
-      A.4.2 FreeBSD
+    A.3 Specific Operating Systems
+      A.3.1 OpenBSD
+      A.3.2 FreeBSD
 
 ===============================================================================
 
@@ -100,8 +100,8 @@ can set and test environment variables.
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
-version 1.0.0f) from http://www.openssl.org.  We recommend the default
-installation target directory /usr/local/ssl.  As of version 1.0.0f,
+version 1.0.0i) from http://www.openssl.org.  We recommend the default
+installation target directory /usr/local/ssl.  As of version 1.0.0i,
 the steps were:
 
 	$ ./config enable-rfc3779
@@ -248,12 +248,17 @@ not necessarily support the necessary flags.  Check your version with
 rsync --version, and install from rsync.samba.org.  We recommend the
 latest version due to security and bug fixes.
 
-2.1.6 python-netaddr
+2.1.6 Python
 
-Currently, the generation of some test cases requires python-netaddr.
-It can be found at http://code.google.com/p/netaddr/, or through your
-package management system.  This dependency will be removed in future
-versions of the software.
+Install python, at least version 2.6.  Python is likely available in
+your operating system's package manager and is also available at
+http://python.org/download/.
+
+2.1.7 netcat
+
+Netcat comes preinstalled with many operating systems. If you do not
+already have the command nc, install netcat from your package manager
+or http://netcat.sourceforge.net/.
 
 
 2.2 RPKI Software
@@ -393,7 +398,7 @@ increased (within limits) until make check succeeds.
 If you have valgrind installed, you can run some tests under valgrind
 by running the command:
 
-   make check VALGRIND=1
+   make check CHECKTOOL=valgrind
 
 
 2.6 Post-Installation Procedures
@@ -790,22 +795,15 @@ To configure RPKI itself, run
     ./configure CFLAGS="-m32 -march=i686"
 
 
-A.3 Python path
+A.3 Specific Operating Systems
 
-Some systems may have the python executable installed somewhere other
-than /usr/bin/python. On these systems, run "/path/to/python ./something.py"
-instead of "./something.py".
-
-
-A.4 Specific Operating Systems
-
-A.4.1 OpenBSD
+A.3.1 OpenBSD
 
 If you have trouble compiling mysql-ODBC-connector, you may need to find
 all lines in its source that call wprintf() or swprintf() and comment
 them out.
 
-A.4.2 FreeBSD
+A.3.2 FreeBSD
 
 If you have trouble compiling cryptlib, you may have to comment out the
 sections in tools/ccopts.sh that enable ODBC support.

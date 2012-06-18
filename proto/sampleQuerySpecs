@@ -33,3 +33,7 @@ StaleCRL yes
 #   Specifying no eliminates all such objects, while yes allows them
 #   into the output (essentially ignoring this type of staleness).
 StaleManifest yes
+
+# Certificate can be added that have not yet become valid. Yes includes
+#   these certificates, no excludes them.
+NotYet no

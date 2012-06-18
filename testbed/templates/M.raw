@@ -1,11 +1,11 @@
 seq oid 1.2.840.113549.1.7.2 /* id_signedData */
     ctx+0x20
-        seq int 0x03
+        seq int 0x03 /* 3 */ 
             set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
                     nul 
             seq oid 1.2.840.113549.1.9.16.1.26 /* id_roa_pki_manifest */
                 ctx+0x20
-                    ocw seq int 0x01
+                    ocw seq int 0x01 /* 1 */ 
                             gen "20100901184106Z"
                             gen "20101001184106Z"
                             oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
@@ -19,8 +19,8 @@ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
                                         0x12
             ctx+0x20
                 seq seq ctx+0x20
-                            int 0x02
-                        int 0x0102
+                            int 0x02 /* 2 */ 
+                        int 0x0102 /* 258 */ 
                         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
                             nul 
                         seq set seq oid 2.5.4.3 /* id_commonName */
@@ -56,7 +56,7 @@ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
                                                             "/"
                                 seq oid 2.5.29.32 /* id_certificatePolicies */
                                     boo 0xFF
-                                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_pe + 4.2 */
+                                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
                                 seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
                                     ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
                                                 ctx+0x06
@@ -92,7 +92,7 @@ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
                         0x5BF256BC66D0EE794F560A27E6F058F2
                         0x5100E6691A5F830B9C69AB8E9BB46224
                         0xF5
-            set seq int 0x03
+            set seq int 0x03 /* 3 */ 
                     ctx+0x00
                         0x32E9C280595151AEEB55FCC99740242C
                         0xA3BDF4AC
@@ -106,7 +106,7 @@ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
                                     0x49E8064A616F53A696F12D51AF9AD412
                         seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
                             set utc "100901184106Z"
-                    seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
                         nul 
                     oct 0xC078AAC367EF2AD97ABA7617F064960D
                         0x5293FBA269F03F581F914FF7CFA7A660

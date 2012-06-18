@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.3, achi@bbn.com)
+AC_INIT(rpstir, 0.4, rpstir-support@bbn.com)
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -11,6 +11,7 @@ AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([rtr/pdu.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
@@ -22,6 +23,17 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 AC_PROG_SED
+AM_PATH_PYTHON([2.6])
+
+# Ideally this should be a check for how to create a temporary file on each platform,
+# but this seems to work for now on multiple platforms.
+MKTEMP="mktemp -t tmp.XXXXXXXXXX"
+AC_SUBST([MKTEMP])
+
+AC_PATH_PROG([SHELL_BASH], [bash])
+if test -z "$SHELL_BASH"; then
+  AC_MSG_WARN([cannot find bash, which is needed by some scripts])
+fi
 
 
 AC_ARG_WITH(
@@ -73,26 +85,6 @@ AC_ARG_WITH(
     [ mysql_config=mysql_config]
 )
 
-if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
-fi
-if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
-fi
-if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
-fi
-
-if test x${odbc_include} != x; then
-  CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
-fi
-if test x${cryptlib_include} != x; then
-  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
-fi
-if test x${ssl_include} != x; then
-  CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
-fi
-
 AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
 if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --include specified non-system include flags
@@ -128,6 +120,26 @@ else
   AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 
+if test x${ssl_lib} != x; then
+  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
+fi
+if test x${odbc_lib} != x; then
+  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS-}"
+fi
+if test x${cryptlib_lib} != x; then
+  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS-}"
+fi
+
+if test x${odbc_include} != x; then
+  CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
+fi
+if test x${cryptlib_include} != x; then
+  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
+fi
+if test x${ssl_include} != x; then
+  CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
+fi
+
 #Check for GCC Stack-Smashing Protector and enable in some cases
 #  If --enable-stack-protector is specified: enable it
 #  Else if --disable-stack-protector is specified: don't enable it
@@ -147,11 +159,16 @@ AC_ARG_ENABLE(
     [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
 )
 
+#Check for pthreads.
+AX_PTHREAD
+if test x"$ax_pthread_ok" != xyes; then
+	AC_MSG_ERROR([pthread support is required])
+fi
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CC="$PTHREAD_CC"
+
 #Checks for libraries.
-AC_SEARCH_LIBS([pthread_create],[pthread],[],[
-	echo "Error: libpthread is required for building this project"
-	exit -1;
-])
 AC_SEARCH_LIBS([dlopen],[dl],[],[
 	echo "Error: libdl is required for building this project"
 	exit -1;
@@ -231,16 +248,192 @@ AC_CONFIG_FILES([Makefile
                  subsystemTests/Makefile
                  subsystemTests/chaser/Makefile
                  subsystemTests/rtr/Makefile
+                 subsystemTests/test.include
                  testcases/Makefile
                  testbed/Makefile
                  testbed/src/Makefile
+                 testbed/src/tests/Makefile
                  utils/Makefile
                  utils/tests/Makefile
                  utils/mysql-c-api/Makefile
                  INSTRUCTIONS
 ])
 
+AC_CONFIG_FILES([cg/tools/convert-oidtable.sh],
+                [chmod +x cg/tools/convert-oidtable.sh])
+
+AC_CONFIG_FILES([rsync_aur/rsync_cord.py],
+                [chmod +x rsync_aur/rsync_cord.py])
+
+AC_CONFIG_FILES([run_scripts/chaser.sh],
+                [chmod +x run_scripts/chaser.sh])
+
+AC_CONFIG_FILES([run_scripts/results.py],
+                [chmod +x run_scripts/results.py])
+
+AC_CONFIG_FILES([run_scripts/run_from_TALs.sh],
+                [chmod +x run_scripts/run_from_TALs.sh])
+
+AC_CONFIG_FILES([run_scripts/updateTA.py],
+                [chmod +x run_scripts/updateTA.py])
+
+AC_CONFIG_FILES([subsystemTests/rtr/badPDUs.py],
+                [chmod +x subsystemTests/rtr/badPDUs.py])
+
 AC_CONFIG_FILES([subsystemTests/rtr/runRTRTest.sh],
                 [chmod +x subsystemTests/rtr/runRTRTest.sh])
+
+AC_CONFIG_FILES([subsystemTests/initDB],
+                [chmod +x subsystemTests/initDB])
+
+AC_CONFIG_FILES([subsystemTests/initDB4],
+                [chmod +x subsystemTests/initDB4])
+
+AC_CONFIG_FILES([subsystemTests/runSubsystemTest.sh],
+                [chmod +x subsystemTests/runSubsystemTest.sh])
+
+AC_CONFIG_FILES([subsystemTests/runSubsystemTest4.sh],
+                [chmod +x subsystemTests/runSubsystemTest4.sh])
+
+AC_CONFIG_FILES([subsystemTests/step1.1],
+                [chmod +x subsystemTests/step1.1])
+
+AC_CONFIG_FILES([subsystemTests/step1.2],
+                [chmod +x subsystemTests/step1.2])
+
+AC_CONFIG_FILES([subsystemTests/step1.3],
+                [chmod +x subsystemTests/step1.3])
+
+AC_CONFIG_FILES([subsystemTests/step1.4],
+                [chmod +x subsystemTests/step1.4])
+
+AC_CONFIG_FILES([subsystemTests/step1.5],
+                [chmod +x subsystemTests/step1.5])
+
+AC_CONFIG_FILES([subsystemTests/step1.6],
+                [chmod +x subsystemTests/step1.6])
+
+AC_CONFIG_FILES([subsystemTests/step1.7],
+                [chmod +x subsystemTests/step1.7])
+
+AC_CONFIG_FILES([subsystemTests/step1.8],
+                [chmod +x subsystemTests/step1.8])
+
+AC_CONFIG_FILES([subsystemTests/step1.9],
+                [chmod +x subsystemTests/step1.9])
+
+AC_CONFIG_FILES([subsystemTests/step2.1],
+                [chmod +x subsystemTests/step2.1])
+
+AC_CONFIG_FILES([subsystemTests/step2.2],
+                [chmod +x subsystemTests/step2.2])
+
+AC_CONFIG_FILES([subsystemTests/step2.3],
+                [chmod +x subsystemTests/step2.3])
+
+AC_CONFIG_FILES([subsystemTests/step2.4],
+                [chmod +x subsystemTests/step2.4])
+
+AC_CONFIG_FILES([subsystemTests/step2.5],
+                [chmod +x subsystemTests/step2.5])
+
+AC_CONFIG_FILES([subsystemTests/step2.6],
+                [chmod +x subsystemTests/step2.6])
+
+AC_CONFIG_FILES([subsystemTests/step2.7],
+                [chmod +x subsystemTests/step2.7])
+
+AC_CONFIG_FILES([subsystemTests/step2.8],
+                [chmod +x subsystemTests/step2.8])
+
+AC_CONFIG_FILES([subsystemTests/step3.1],
+                [chmod +x subsystemTests/step3.1])
+
+AC_CONFIG_FILES([subsystemTests/step3.2],
+                [chmod +x subsystemTests/step3.2])
+
+AC_CONFIG_FILES([subsystemTests/step3.3],
+                [chmod +x subsystemTests/step3.3])
+
+AC_CONFIG_FILES([subsystemTests/step3.4],
+                [chmod +x subsystemTests/step3.4])
+
+AC_CONFIG_FILES([subsystemTests/step3.5],
+                [chmod +x subsystemTests/step3.5])
+
+AC_CONFIG_FILES([subsystemTests/step3.6],
+                [chmod +x subsystemTests/step3.6])
+
+AC_CONFIG_FILES([subsystemTests/step3.7],
+                [chmod +x subsystemTests/step3.7])
+
+AC_CONFIG_FILES([subsystemTests/step3.8],
+                [chmod +x subsystemTests/step3.8])
+
+AC_CONFIG_FILES([subsystemTests/step3.9],
+                [chmod +x subsystemTests/step3.9])
+
+AC_CONFIG_FILES([subsystemTests/step4],
+                [chmod +x subsystemTests/step4])
+
+AC_CONFIG_FILES([testbed/src/create_objects.py],
+                [chmod +x testbed/src/create_objects.py])
+
+AC_CONFIG_FILES([testbed/src/generic_allocate.py],
+                [chmod +x testbed/src/generic_allocate.py])
+
+AC_CONFIG_FILES([testbed/src/rpkirepo.py],
+                [chmod +x testbed/src/rpkirepo.py])
+
+AC_CONFIG_FILES([testbed/src/testbed_create.py],
+                [chmod +x testbed/src/testbed_create.py])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all.sh],
+                [chmod +x testcases/conformance/scripts/gen_all.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_CMSs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_CMSs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_CRLs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_CRLs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_MFTs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_MFTs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_ROAs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_ROAs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_all_certs.sh],
+                [chmod +x testcases/conformance/scripts/gen_all_certs.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_child_ca.sh],
+                [chmod +x testcases/conformance/scripts/gen_child_ca.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/gen_mft.sh],
+                [chmod +x testcases/conformance/scripts/gen_mft.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_CMS.sh],
+                [chmod +x testcases/conformance/scripts/make_test_CMS.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_CRL.sh],
+                [chmod +x testcases/conformance/scripts/make_test_CRL.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_MFT.sh],
+                [chmod +x testcases/conformance/scripts/make_test_MFT.sh])
+
+AC_CONFIG_FILES([testcases/conformance/scripts/make_test_cert.sh],
+                [chmod +x testcases/conformance/scripts/make_test_cert.sh])
+
+AC_CONFIG_FILES([testcases/runt.sh],
+                [chmod +x testcases/runt.sh])
+
+AC_CONFIG_FILES([testcases/runtAll.sh],
+                [chmod +x testcases/runtAll.sh])
+
+AC_CONFIG_FILES([testcases/tools/create_cert.py],
+                [chmod +x testcases/tools/create_cert.py])
+
+AC_CONFIG_FILES([testcases/tools/run_tc.py],
+                [chmod +x testcases/tools/run_tc.py])
 
 AC_OUTPUT

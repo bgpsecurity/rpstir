@@ -8,11 +8,13 @@ SUBDIRS = . tests mysql-c-api
 
 AM_CFLAGS = -g -Wall -Wextra -Werror
 
+dist_check_SCRIPTS = run_with_tool.sh
+
 noinst_LIBRARIES = libutils.a libutilsdebug.a
 
 libutils_a_SOURCES = \
 	bag.c bag.h \
-	hash_utils.c \
+	hashutils.c hashutils.h \
 	logging.h \
 	logutils.c logutils.h \
 	macros.h \

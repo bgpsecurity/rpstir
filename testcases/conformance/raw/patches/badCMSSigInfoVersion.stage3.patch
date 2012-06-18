@@ -1,0 +1,11 @@
+--- badCMSSigInfoVersion.raw.old	2011-11-11 08:32:43.883090136 -0500
++++ badCMSSigInfoVersion.raw	2011-11-11 08:33:55.910091451 -0500
+@@ -104,7 +104,7 @@
+                         0x1FF8147FB67A20DC2CCD51D08990B76E
+                         0x24FA2FF981FAB782F95E4703BB26FB66
+                         0xA9
+-            set seq int 0x03 /* 3 */ 
++            set seq int 0x02 /* 2 */
+                     ctx+0x00
+                         0x100187AA93A3F4395634325A010DEEC3
+                         0xE339E0E7
