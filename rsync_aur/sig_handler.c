@@ -16,89 +16,107 @@
 #include "main.h"
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
 extern struct write_port *global_wport;
 
-void
-sig_handler(int sig)
+void sig_handler(
+    int sig)
 {
-  char *outStr;
-  char errorStr[128];
-  unsigned int retlen;
+    char *outStr;
+    char errorStr[128];
+    unsigned int retlen;
 
-  retlen = 0;
- 
-  memset(errorStr, '\0', sizeof(errorStr));
+    retlen = 0;
 
-  if (sig == SIGINT) {
-    snprintf(errorStr, sizeof(errorStr), "SIGINT caught\r\n");
-    outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
-    if (outStr) {
-      outputMsg(global_wport, outStr, retlen);
-      free(outStr);
+    memset(errorStr, '\0', sizeof(errorStr));
+
+    if (sig == SIGINT)
+    {
+        snprintf(errorStr, sizeof(errorStr), "SIGINT caught\r\n");
+        outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
+        if (outStr)
+        {
+            outputMsg(global_wport, outStr, retlen);
+            free(outStr);
+        }
+        retlen = 0;
+        outStr = makeEndStr(&retlen);
+        if (outStr)
+        {
+            outputMsg(global_wport, outStr, retlen);
+            free(outStr);
+        }
+        close(global_wport->out_desc);
+        exit(FALSE);
     }
-    retlen = 0;
-    outStr = makeEndStr(&retlen);
-    if (outStr) {
-      outputMsg(global_wport, outStr, retlen);
-      free(outStr);
+    else if (sig == SIGQUIT)
+    {
+        snprintf(errorStr, sizeof(errorStr), "SIGQUIT caught\r\n");
+        outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
+        if (outStr)
+        {
+            outputMsg(global_wport, outStr, retlen);
+            free(outStr);
+        }
+        retlen = 0;
+        outStr = makeEndStr(&retlen);
+        if (outStr)
+        {
+            outputMsg(global_wport, outStr, retlen);
+            free(outStr);
+        }
+        close(global_wport->out_desc);
+        exit(FALSE);
     }
-    close(global_wport->out_desc);
-    exit(FALSE);
-  } else if (sig == SIGQUIT) {
-    snprintf(errorStr, sizeof(errorStr), "SIGQUIT caught\r\n");
-    outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
-    if (outStr) {
-      outputMsg(global_wport, outStr, retlen);
-      free(outStr);
+    else if (sig == SIGTERM)
+    {
+        snprintf(errorStr, sizeof(errorStr), "SIGTERM caught\r\n");
+        outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
+        if (outStr)
+        {
+            outputMsg(global_wport, outStr, retlen);
+            free(outStr);
+        }
+        retlen = 0;
+        outStr = makeEndStr(&retlen);
+        if (outStr)
+        {
+            outputMsg(global_wport, outStr, retlen);
+            free(outStr);
+        }
+        close(global_wport->out_desc);
+        exit(FALSE);
     }
-    retlen = 0;
-    outStr = makeEndStr(&retlen);
-    if (outStr) {
-      outputMsg(global_wport, outStr, retlen);
-      free(outStr);
-    }
-    close(global_wport->out_desc);
-    exit(FALSE);
-  } else if (sig == SIGTERM) {
-    snprintf(errorStr, sizeof(errorStr), "SIGTERM caught\r\n");
-    outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
-    if (outStr) {
-      outputMsg(global_wport, outStr, retlen);
-      free(outStr);
-    }
-    retlen = 0;
-    outStr = makeEndStr(&retlen);
-    if (outStr) {
-      outputMsg(global_wport, outStr, retlen);
-      free(outStr);
-    }
-    close(global_wport->out_desc);
-    exit(FALSE);
-  }
 }
 
-int
-setup_sig_catchers(void)
+int setup_sig_catchers(
+    void)
 {
-  struct sigaction sa;
+    struct sigaction sa;
 
-  /* initialize sigaction structure */
-  sa.sa_handler = sig_handler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
+    /*
+     * initialize sigaction structure 
+     */
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
 
-  /* map the signals to the handler referenced in sigaction struct */
-  if (sigaction(SIGINT, &sa, NULL) != 0) {
-    return(FALSE);
-  }
-  if (sigaction(SIGQUIT, &sa, NULL) != 0) {
-    return(FALSE);
-  }
-  if (sigaction(SIGTERM, &sa, NULL) != 0) {
-    return(FALSE);
-  }
-  return(TRUE);
+    /*
+     * map the signals to the handler referenced in sigaction struct 
+     */
+    if (sigaction(SIGINT, &sa, NULL) != 0)
+    {
+        return (FALSE);
+    }
+    if (sigaction(SIGQUIT, &sa, NULL) != 0)
+    {
+        return (FALSE);
+    }
+    if (sigaction(SIGTERM, &sa, NULL) != 0)
+    {
+        return (FALSE);
+    }
+    return (TRUE);
 }

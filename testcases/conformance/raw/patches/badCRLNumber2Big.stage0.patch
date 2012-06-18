@@ -1,0 +1,11 @@
+--- badCRLNumber2Big.crl.raw.old	2012-02-08 13:04:18.729570616 -0500
++++ badCRLNumber2Big.crl.raw	2012-02-08 13:25:19.392814187 -0500
+@@ -7,7 +7,7 @@
+         utc "460515185928Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */
+-                    ocw int 0x01 /* 1 */ 
++                    ocw int 0x0102030405060708090A0B0C0D0E0F101112131415 /* 1 */ 
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
+                                 0xE4EE799C3704FB5C77C92EDD288E0492

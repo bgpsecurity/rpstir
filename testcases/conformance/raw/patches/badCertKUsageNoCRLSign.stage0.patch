@@ -1,7 +1,7 @@
---- badCertKUsageNoCRLSign.raw.old	2011-05-25 14:53:30.000000000 -0400
-+++ badCertKUsageNoCRLSign.raw	2011-05-25 14:53:55.000000000 -0400
+--- badCertKUsageNoCRLSign.raw.old	2011-09-19 16:25:44.000000000 -0400
++++ badCertKUsageNoCRLSign.raw	2011-09-19 16:26:38.000000000 -0400
 @@ -41,7 +41,7 @@
-                                 0x3A3EA861
+                                 0x5B7804D4
                  seq oid 2.5.29.15 /* id_keyUsage */
                      boo 0xFF
 -                    ocw bit 0x0106

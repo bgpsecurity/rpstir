@@ -10,7 +10,9 @@
 
 struct _dbconn {
     int client_flags;
-    MYSQL_STMT * * stmts[DB_CLIENT_NUM_TYPES]; // fixed-length array of variable length array of (MYSQL_STMT *)
+    MYSQL_STMT **stmts[DB_CLIENT_NUM_TYPES];    // fixed-length array of
+                                                // variable length array of
+                                                // (MYSQL_STMT *)
     MYSQL *mysql;
     char *host;
     char *user;
@@ -19,7 +21,8 @@ struct _dbconn {
 };
 
 
-int reconnectMysqlCApi(struct _dbconn **old_conn);
+int reconnectMysqlCApi(
+    struct _dbconn **old_conn);
 
 
-#endif // DB_INTERNAL_H_
+#endif                          // DB_INTERNAL_H_

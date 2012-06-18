@@ -11,14 +11,13 @@
 #define MAIN_LOOP_INTERVAL 5
 
 #define DB_RESPONSE_BUFFER_LENGTH 3
-#define DB_ROWS_PER_RESPONSE 20
+#define DB_ROWS_PER_RESPONSE 1024
 #define DB_INITIAL_THREADS 8
 
 /*
-Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2:
-	The cache MUST rate limit Serial Notifies to no more frequently
-	than one per minute.
-*/
+ * Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2: The cache MUST rate
+ * limit Serial Notifies to no more frequently than one per minute. 
+ */
 #define CXN_NOTIFY_INTERVAL 60
 
 // How often to check the cache state when more than CXN_NOTIFY_INTERVAL

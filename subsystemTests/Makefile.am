@@ -1,6 +1,8 @@
 AUTOMAKE_OPTIONS = 1.6 foreign
 
-SUBDIRS = rtr
+SUBDIRS = \
+	chaser \
+	rtr
 
 TESTS = \
 	./runSubsystemTest1.sh \
@@ -10,16 +12,14 @@ TESTS = \
 
 EXTRA_DIST = \
 	doLoader \
-	initDB \
-	initDB4 \
 	INSTRUCTIONS \
 	make* \
-	runSubsystemTest*.sh \
+	runSubsystemTest1.sh \
+	runSubsystemTest2.sh \
+	runSubsystemTest3.sh \
 	specs.*.* \
-	step* \
 	test*.log \
 	testcases4_LTA \
-	test.include \
 	ttest*.par
 
 CLEANFILES = \

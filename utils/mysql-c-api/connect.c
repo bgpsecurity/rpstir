@@ -16,7 +16,9 @@
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-bool db_init() {
+bool db_init(
+    )
+{
     int ret = mysql_library_init(0, NULL, NULL);
 
     if (ret)
@@ -28,51 +30,66 @@ bool db_init() {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void db_close() {
+void db_close(
+    )
+{
     mysql_library_end();
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-bool db_thread_init() {
+bool db_thread_init(
+    )
+{
     return mysql_thread_init() == 0;
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void db_thread_close() {
+void db_thread_close(
+    )
+{
     mysql_thread_end();
 }
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-int reconnectMysqlCApi(dbconn **old_conn) {
+int reconnectMysqlCApi(
+    dbconn ** old_conn)
+{
     dbconn *conn = *old_conn;
     MYSQL *mysql = conn->mysql;
 
     stmtDeleteAll(conn);
 
     // @see MySQL 5.1 Reference Manual, section 20.9.3.49 under
-    //     MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
+    // MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
     my_bool reconnect = 0;
-    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect))
+    {
         LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
     }
     if (!mysql_real_connect(mysql, conn->host, conn->user, conn->pass,
-            conn->db, 0, NULL, 0) ) {
+                            conn->db, 0, NULL, 0))
+    {
         LOG(LOG_ERR, "could not reconnect to MySQL db");
         LOG(LOG_ERR, "    %u: %s", mysql_errno(mysql), mysql_error(mysql));
-        if (mysql) {mysql_close(mysql);}
+        if (mysql)
+        {
+            mysql_close(mysql);
+        }
         return -1;
     }
-    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect))
+    {
         LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
     }
 
-    if (stmtAddAll(conn) != 0) {
+    if (stmtAddAll(conn) != 0)
+    {
         db_disconnect(conn);
         return -1;
     }
@@ -84,48 +101,66 @@ int reconnectMysqlCApi(dbconn **old_conn) {
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 static void *connectMysqlCApi(
-        int client_flags,
-        const char *host,
-        const char *user,
-        const char *pass,
-        const char *db) {
+    int client_flags,
+    const char *host,
+    const char *user,
+    const char *pass,
+    const char *db)
+{
     dbconn *conn = NULL;
     MYSQL *mysql = NULL;
 
     mysql = mysql_init(NULL);
-    if (!mysql) {
+    if (!mysql)
+    {
         LOG(LOG_ERR, "insufficient memory to alloc MYSQL object");
         LOG(LOG_ERR, "    %u: %s", mysql_errno(mysql), mysql_error(mysql));
         return NULL;
     }
 
     // @see MySQL 5.1 Reference Manual, section 20.9.3.49 under
-    //     MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
+    // MYSQL_OPT_RECONNECT for the reason for this unusual sequence.
     my_bool reconnect = 0;
-    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect))
+    {
         LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
     }
-    if (!mysql_real_connect(mysql, host, user, pass, db, 0, NULL, 0) ) {
+    if (!mysql_real_connect(mysql, host, user, pass, db, 0, NULL, 0))
+    {
         LOG(LOG_ERR, "could not connect to MySQL db");
         LOG(LOG_ERR, "    %u: %s", mysql_errno(mysql), mysql_error(mysql));
-        if (mysql) {mysql_close(mysql);}
+        if (mysql)
+        {
+            mysql_close(mysql);
+        }
         return NULL;
     }
-    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect))
+    {
         LOG(LOG_WARNING, " MySQL reconnect option might not be set properly");
     }
 
     conn = malloc(sizeof(dbconn));
-    if (!conn) {
-        LOG(LOG_ERR, "could not alloc for conn" );
-        if (mysql) {mysql_close(mysql);}
+    if (!conn)
+    {
+        LOG(LOG_ERR, "could not alloc for conn");
+        if (mysql)
+        {
+            mysql_close(mysql);
+        }
         return NULL;
     }
     conn->client_flags = client_flags;
     conn->mysql = mysql;
 
-    if (stmtAddAll(conn) != 0) {
-        db_disconnect(conn);
+    if (stmtAddAll(conn) != 0)
+    {
+        LOG(LOG_ERR, "could not add prepared statements to db connection");
+        if (mysql)
+        {
+            mysql_close(mysql);
+        }
+        free(conn);
         return NULL;
     }
 
@@ -133,15 +168,17 @@ static void *connectMysqlCApi(
     conn->host = strdup(host);
     conn->user = strdup(user);
     conn->pass = strdup(pass);
-    conn->db   = strdup(db);
-    if (conn->host == NULL  ||  conn->user == NULL ||
-            conn->pass == NULL  ||  conn->db == NULL) {
+    conn->db = strdup(db);
+    if (conn->host == NULL || conn->user == NULL ||
+        conn->pass == NULL || conn->db == NULL)
+    {
         LOG(LOG_ERR, "could not alloc for strings");
         db_disconnect(conn);
         return NULL;
     }
 
-    if (client_flags & ~DB_CLIENT_ALL) {
+    if (client_flags & ~DB_CLIENT_ALL)
+    {
         LOG(LOG_ERR, "got invalid flags");
         db_disconnect(conn);
         return NULL;
@@ -154,11 +191,12 @@ static void *connectMysqlCApi(
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 dbconn *db_connect(
-        int client_flags,
-        const char *host,
-        const char *user,
-        const char *pass,
-        const char *db) {
+    int client_flags,
+    const char *host,
+    const char *user,
+    const char *pass,
+    const char *db)
+{
 
     return connectMysqlCApi(client_flags, host, user, pass, db);
 }
@@ -166,11 +204,13 @@ dbconn *db_connect(
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-dbconn *db_connect_default(int client_flags) {
+dbconn *db_connect_default(
+    int client_flags)
+{
     const char *host = "localhost";
     const char *user = getenv("RPKI_DBUSER");
     const char *pass = getenv("RPKI_DBPASS");
-    const char *db =   getenv("RPKI_DB");
+    const char *db = getenv("RPKI_DB");
 
     return connectMysqlCApi(client_flags, host, user, pass, db);
 }
@@ -178,14 +218,21 @@ dbconn *db_connect_default(int client_flags) {
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
-void db_disconnect(dbconn *conn) {
-    if (conn) {
+void db_disconnect(
+    dbconn * conn)
+{
+    if (conn)
+    {
         stmtDeleteAll(conn);
 
-        free(conn->host); conn->host = NULL;
-        free(conn->user); conn->user = NULL;
-        free(conn->pass); conn->pass = NULL;
-        free(conn->db); conn->db = NULL;
+        free(conn->host);
+        conn->host = NULL;
+        free(conn->user);
+        conn->user = NULL;
+        free(conn->pass);
+        conn->pass = NULL;
+        free(conn->db);
+        conn->db = NULL;
 
         mysql_close(conn->mysql);
 

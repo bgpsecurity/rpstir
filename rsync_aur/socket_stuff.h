@@ -24,20 +24,26 @@
 #define UDP 2
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
 struct write_port {
-  int out_desc;
-  struct sockaddr_in server_addr;
-  struct hostent *host;
-  int to_length;
-  int protocol;
+    int out_desc;
+    struct sockaddr_in server_addr;
+    int to_length;
+    int protocol;
 };
 
-int tcpsocket(struct write_port *, int);
-int udpsocket(struct write_port *, int);
-int outputMsg(struct write_port *, char *, unsigned int);
+int tcpsocket(
+    struct write_port *,
+    int);
+int udpsocket(
+    struct write_port *,
+    int);
+int outputMsg(
+    struct write_port *,
+    char *,
+    unsigned int);
 
 
 #endif

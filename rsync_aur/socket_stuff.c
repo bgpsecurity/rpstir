@@ -20,47 +20,43 @@
  **************************************************/
 
 /*
-  $Id$
-*/
+ * $Id$ 
+ */
 
-int
-tcpsocket(struct write_port *wport, int portno)
+int tcpsocket(
+    struct write_port *wport,
+    int portno)
 {
-  char hn[256];
+    /*
+     * set the wport file descriptor to the socket we've created 
+     */
+    wport->out_desc = socket(AF_INET, SOCK_STREAM, 0);
+    if ((wport->out_desc) < 0)
+    {
+        perror("failed to create socket");
+        return (FALSE);
+    }
 
-  /* set the wport file descriptor to the socket we've created */
-  wport->out_desc = socket(AF_INET, SOCK_STREAM, 0);
-  if ( (wport->out_desc) < 0) {
-    perror("failed to create socket");
-    return(FALSE);
-  }
-                                                              
-//  wport->host = gethostbyname("127.0.0.1");                        
-  gethostname(hn, 256);
-  wport->host = gethostbyname(hn);                        
-  if (!(wport->host)) {
-    perror("could not create hostent from gethostbyname(\"127.0.0.1\")");
-    return(FALSE);
-  }
+    memset(&(wport->server_addr), '\0', sizeof(struct sockaddr_in));
+    wport->server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    wport->server_addr.sin_family = AF_INET;
+    wport->server_addr.sin_port = htons(portno);
 
-  memset(&(wport->server_addr), '\0', sizeof(struct sockaddr_in));
-  memcpy(&(wport->server_addr.sin_addr.s_addr), wport->host->h_addr,
-         wport->host->h_length);
-  wport->server_addr.sin_family = AF_INET;
-  wport->server_addr.sin_port = htons(portno);
+    /*
+     * set the protocol for this structure. This will be used in our generic
+     * write routine to determine if we need {write,send}, or sendto 
+     */
+    wport->protocol = TCP;
 
-  /* set the protocol for this structure. This will be used in 
-     our generic write routine to determine if we need {write,send}, or
-     sendto */
-  wport->protocol = TCP;
+    if (connect
+        (wport->out_desc, (const struct sockaddr *)&(wport->server_addr),
+         sizeof(wport->server_addr)) < 0)
+    {
+        perror("failed on connect()");
+        return (FALSE);
+    }
 
-  if (connect(wport->out_desc, (const struct sockaddr *)
-              &(wport->server_addr), sizeof(wport->server_addr)) < 0) {
-    perror("failed on connect()");
-    return(FALSE);
-  }
-
-  return(TRUE);
+    return (TRUE);
 }
 
 /**************************************************
@@ -82,69 +78,97 @@ tcpsocket(struct write_port *wport, int portno)
  * send messages to so sendto() can be conveyed   *
  * the correct data.                              *
  **************************************************/
-int
-udpsocket(struct write_port *wport, int portno)
+int udpsocket(
+    struct write_port *wport,
+    int portno)
 {
 
-  /* set the file wport desc to the socket we created */      
-  wport->out_desc = socket(AF_INET, SOCK_DGRAM, 0);
-  if ( (wport->out_desc) < 0) {
-    perror("failed to create socket");
-    return(FALSE);
-  }
+    /*
+     * set the file wport desc to the socket we created 
+     */
+    wport->out_desc = socket(AF_INET, SOCK_DGRAM, 0);
+    if ((wport->out_desc) < 0)
+    {
+        perror("failed to create socket");
+        return (FALSE);
+    }
 
-  wport->host = gethostbyname("127.0.0.1");
-  if (!(wport->host)) {
-    perror("could not create hostent from gethostbyname(\"127.0.0.1\")");
-    return(FALSE);
-  }
+    memset(&(wport->server_addr), '\0', sizeof(struct sockaddr_in));
+    wport->server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    wport->server_addr.sin_family = AF_INET;
+    wport->server_addr.sin_port = htons(portno);
 
-  memset(&(wport->server_addr), '\0', sizeof(struct sockaddr_in));
-  memcpy(&(wport->server_addr.sin_addr.s_addr), wport->host->h_addr,
-         wport->host->h_length);
-  wport->server_addr.sin_family = AF_INET;
-  wport->server_addr.sin_port = htons(portno);
+    /*
+     * set the to_length that will be used in sendto() calls 
+     */
+    wport->to_length = sizeof(struct sockaddr_in);
 
-  /* set the to_length that will be used in sendto() calls */
-  wport->to_length = sizeof(struct sockaddr_in);
+    /*
+     * set the protocol so we know to do sendto rather than {write,send} 
+     */
+    wport->protocol = UDP;
 
-  /* set the protocol so we know to do sendto rather than 
-     {write,send} */
-  wport->protocol = UDP;
-
-  return(TRUE);
+    return (TRUE);
 }
 
-int
-outputMsg(struct write_port *wport, char *str, unsigned int len)
+int outputMsg(
+    struct write_port *wport,
+    char *str,
+    unsigned int len)
 {
-  int ret = -1;
-  char *str_copy = NULL;
+    int ret = -1;
+    char *str_copy = NULL;
 
-  /* Log a copy of str without newline(s) */
-  str_copy = strdup(str);
-  if (str_copy) {
-    rstrip(str_copy, "\r\n");
-    log_msg(LOG_INFO, "Sending %s", str_copy);
-    log_flush();
-    free(str_copy);
-  }
-  
-  if (wport->protocol == LOCAL) {
-    ret = write(wport->out_desc, (const void *)str, len);
-    return(ret);
-  } else if (wport->protocol == TCP) {
-    /* send it */
-    ret = write(wport->out_desc, (const void *)str, len);
-    return(ret);
-  } else if (wport->protocol == UDP) {
-      /* send it */
-      ret = sendto(wport->out_desc, (const void *)str, len, 0, 
-                  (struct sockaddr *)&(wport->server_addr), 
-                  wport->to_length);
-  } else {
-    log_msg(LOG_ERR, "unknown protocol specification: %d",
-	    wport->protocol);
-  }
-  return(ret);
+    /*
+     * Log a copy of str without newline(s) 
+     */
+    str_copy = strdup(str);
+    if (str_copy)
+    {
+        rstrip(str_copy, "\r\n");
+        log_msg(LOG_INFO, "Sending %s", str_copy);
+        log_flush();
+        free(str_copy);
+    }
+
+    if (wport->protocol == LOCAL)
+    {
+        ret = write(wport->out_desc, (const void *)str, len);
+        if (ret < 0)
+            perror("write()");
+        else if (ret != len)
+            log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
+        return (ret);
+    }
+    else if (wport->protocol == TCP)
+    {
+        /*
+         * send it 
+         */
+        ret = write(wport->out_desc, (const void *)str, len);
+        if (ret < 0)
+            perror("write()");
+        else if (ret != len)
+            log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
+        return (ret);
+    }
+    else if (wport->protocol == UDP)
+    {
+        /*
+         * send it 
+         */
+        ret = sendto(wport->out_desc, (const void *)str, len, 0,
+                     (struct sockaddr *)&(wport->server_addr),
+                     wport->to_length);
+        if (ret < 0)
+            perror("sendto()");
+        else if (ret != len)
+            log_msg(LOG_ERR, "Sent %d bytes instead of %u", ret, len);
+    }
+    else
+    {
+        log_msg(LOG_ERR, "unknown protocol specification: %d",
+                wport->protocol);
+    }
+    return (ret);
 }

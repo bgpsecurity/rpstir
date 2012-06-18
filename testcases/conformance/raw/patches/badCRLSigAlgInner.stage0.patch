@@ -3,7 +3,7 @@
 @@ -1,5 +1,5 @@
  seq seq int 0x01 /* 1 */ 
 -        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
-+        seq oid 1.2.840.113549.1.1.12 /* id_sha_256WithRSAEncryption */
++        seq oid 1.2.840.113549.1.1.12 /* id_sha_384WithRSAEncryption */
              nul 
          seq set seq oid 2.5.4.3 /* id_commonName */
                      prt "CRLSigAlgInner"

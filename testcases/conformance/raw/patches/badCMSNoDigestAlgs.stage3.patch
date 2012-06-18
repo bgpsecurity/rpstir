@@ -1,0 +1,12 @@
+--- badCMSNoDigestAlgs.raw.old	2011-11-11 08:20:38.619085141 -0500
++++ badCMSNoDigestAlgs.raw	2011-11-11 08:20:55.241085157 -0500
+@@ -1,8 +1,7 @@
+ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
+     ctx+0x20
+         seq int 0x03 /* 3 */ 
+-            set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+-                    nul 
++            set
+             seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 

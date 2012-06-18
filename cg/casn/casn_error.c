@@ -1,4 +1,6 @@
-/* $Id$ */
+/*
+ * $Id$ 
+ */
 /*****************************************************************************
 File:     casn_error.c
 Contents: Function to report errors
@@ -13,9 +15,10 @@ Remarks:
 char casn_error_sfcsid[] = "@(#)casn_error.c 743P";
 #include <stdio.h>
 
-void casn_error(int num, char *msg) 
-    {
+void casn_error(
+    int num,
+    char *msg)
+{
     fprintf(stderr, "Error #%d: %s\n", num, msg);
     fflush(stderr);
-    }
-
+}

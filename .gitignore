@@ -16,6 +16,7 @@ configure
 TAGS
 *.swp
 rpstir-*.tar.gz
+INSTRUCTIONS
 
 # eclipse metadata
 .metadata
@@ -27,7 +28,7 @@ initial_rsync.config
 test.tal
 
 # directories generated during program execution
-
+rsync_cord.config
 *REPOSITORY
 *LOGS
 *EEcertificates
