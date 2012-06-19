@@ -234,11 +234,6 @@ fi
 
 
 AC_CONFIG_FILES([Makefile
-                 cg/Makefile
-                 cg/asn/Makefile
-                 cg/asn_gen/Makefile
-                 cg/casn/Makefile
-                 cg/tools/Makefile
                  doc/Makefile
                  proto/Makefile
                  roa-lib/Makefile
