@@ -26,6 +26,11 @@ EXTRA_DIST = \
 CLEANFILES = \
 	query.log
 
+AM_CFLAGS = \
+	-Wall \
+	-Wextra \
+	-g
+
 BUILT_SOURCES =
 bin_PROGRAMS =
 noinst_LIBRARIES =

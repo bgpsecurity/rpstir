@@ -1,9 +1,5 @@
 noinst_PROGRAMS += lib/casn/asn_gen/asn_gen
 
-lib_casn_asn_gen_asn_gen_CFLAGS = \
-	-Wall \
-	-g
-
 lib_casn_asn_gen_asn_gen_CPPFLAGS = \
 	-DCONSTRAINTS \
 	-DINTEL \
@@ -37,9 +33,8 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 
 noinst_LIBRARIES += lib/casn/libcasn.a
 
-lib_casn_libcasn_a_CFLAGS = -g -Wall -DINTEL
-
-#lib_casn_libcasn_a_CPPFLAGS = # TODO
+lib_casn_libcasn_a_CPPFLAGS = \
+	-DINTEL
 
 lib_casn_libcasn_a_SOURCES = \
 	asn.c \

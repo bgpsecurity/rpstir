@@ -1,9 +1,5 @@
 bin_PROGRAMS += bin/asn1/dump
 
-bin_asn1_dump_CFLAGS = \
-	-Wall \
-	-g
-
 bin_asn1_dump_CPPFLAGS = \
 	-Ilib/casn
 
@@ -18,29 +14,17 @@ bin_asn1_dump_LDADD = \
 
 bin_PROGRAMS += bin/asn1/dump_smart
 
-bin_asn1_dump_smart_CFLAGS = \
-	-Wall \
-	-g
-
 bin_asn1_dump_smart_SOURCES = \
 	dump_smart.c
 
 
 bin_PROGRAMS += bin/asn1/make_oidtable
 
-bin_asn1_make_oidtable_CFLAGS = \
-	-Wall \
-	-g
-
 bin_asn1_make_oidtable_SOURCES = \
 	make_oidtable.c
 
 
 bin_PROGRAMS += bin/asn1/rr
-
-bin_asn1_rr_CFLAGS = \
-	-Wall \
-	-g
 
 bin_asn1_rr_CPPFLAGS = \
 	-Ilib/casn
