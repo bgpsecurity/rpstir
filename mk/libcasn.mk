@@ -24,11 +24,13 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/casn_constr.c \
 	lib/casn/asn_gen/casn_hdr.c
 
-.asn.c: lib/casn/asn_gen/asn_gen
-	./lib/casn/asn_gen/asn_gen -c $<
+.asn.c:
+	$(MAKE) $*.h
 
-.asn.h: lib/casn/asn_gen/asn_gen
-	./lib/casn/asn_gen/asn_gen -c $<
+.asn.h:
+	$(MAKE) lib/casn/asn_gen/asn_gen
+	cd "`dirname $<`" && \
+		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen -c "`basename $<`"
 
 
 noinst_LIBRARIES += lib/casn/libcasn.a
