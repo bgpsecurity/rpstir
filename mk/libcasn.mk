@@ -53,3 +53,9 @@ lib_casn_libcasn_a_SOURCES = \
 	casn_other.c \
 	casn_real.c \
 	casn_time.c
+
+
+check_PROGRAMS += tests/subsystem/casn/test_casn_random
+
+
+dist_check_SCRIPTS += tests/subsystem/casn/test_casn_random_driver.sh

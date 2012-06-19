@@ -33,6 +33,8 @@ AM_CFLAGS = \
 
 BUILT_SOURCES =
 bin_PROGRAMS =
+check_PROGRAMS =
+dist_check_SCRIPTS =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
