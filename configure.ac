@@ -239,7 +239,6 @@ AC_CONFIG_FILES([Makefile
                  roa-lib/Makefile
                  roa-utils/Makefile
                  rsync_aur/Makefile
-                 rtr/Makefile
                  tests/subsystem/Makefile
                  tests/subsystem/chaser/Makefile
                  tests/subsystem/rtr/Makefile

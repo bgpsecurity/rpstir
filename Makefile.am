@@ -7,7 +7,6 @@ SUBDIRS = \
 	roa-utils \
 	rsync_aur \
 	tests/subsystem/testcases \
-	rtr \
 	tests/system/testbed \
 	tests/subsystem \
 	doc
