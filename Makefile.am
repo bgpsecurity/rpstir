@@ -51,6 +51,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
 
 include mk/asn1.mk
 include mk/libcasn.mk
+include mk/libdb.mk
 include mk/librpkiasn1.mk
 include mk/libutil.mk
 include mk/oidtable.mk
