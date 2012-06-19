@@ -42,6 +42,7 @@ lib_casn_libcasn_a_CFLAGS = -g -Wall -DINTEL
 #lib_casn_libcasn_a_CPPFLAGS = # TODO
 
 lib_casn_libcasn_a_SOURCES = \
+	asn.c \
 	asn.h \
 	asn_error.h \
 	asn_flags.h \
