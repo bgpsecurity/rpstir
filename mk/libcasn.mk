@@ -37,22 +37,23 @@ lib_casn_libcasn_a_CPPFLAGS = \
 	-DINTEL
 
 lib_casn_libcasn_a_SOURCES = \
-	asn.c \
-	asn.h \
-	asn_error.h \
-	asn_flags.h \
-	casn.c casn.h \
-	casn_bit.c \
-	casn_bits.c \
-	casn_copy_diff.c \
-	casn_dump.c \
-	casn_error.c \
-	casn_file_ops.c \
-	casn_num.c \
-	casn_objid.c \
-	casn_other.c \
-	casn_real.c \
-	casn_time.c
+	lib/casn/asn.c \
+	lib/casn/asn.h \
+	lib/casn/asn_error.h \
+	lib/casn/asn_flags.h \
+	lib/casn/casn.c \
+	lib/casn/casn.h \
+	lib/casn/casn_bit.c \
+	lib/casn/casn_bits.c \
+	lib/casn/casn_copy_diff.c \
+	lib/casn/casn_dump.c \
+	lib/casn/casn_error.c \
+	lib/casn/casn_file_ops.c \
+	lib/casn/casn_num.c \
+	lib/casn/casn_objid.c \
+	lib/casn/casn_other.c \
+	lib/casn/casn_real.c \
+	lib/casn/casn_time.c
 
 
 check_PROGRAMS += tests/subsystem/casn/test_casn_random
