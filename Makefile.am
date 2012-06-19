@@ -6,10 +6,10 @@ SUBDIRS = \
 	proto \
 	roa-utils \
 	rsync_aur \
-	testcases \
+	tests/subsystem/testcases \
 	rtr \
-	testbed \
-	subsystemTests \
+	tests/system/testbed \
+	tests/subsystem \
 	doc
 
 EXTRA_DIST = \
