@@ -20,12 +20,6 @@ AM_CPPFLAGS = $(DEPS_CFLAGS)
 LDADD = ../asn/libasn.a ../casn/libcasn.a ../../utils/libutils.a
 
 test_casn_random_SOURCES = test_casn_random.c 
-bin_to_six_SOURCES = bin_to_six.c prencode.c
-six_to_bin_SOURCES = six_to_bin.c prencode.c
-six2hex_SOURCES = six2hex.c prencode.c
-whatsfcs_SOURCES = whatsfcs.c prencode.c
-make_TA_SOURCES = make_TA.c
-encode_oid_SOURCES = encode-oid.c
 makeLTAtest_SOURCES = makeLTAtest.c
 checkLTAtest_SOURCES = checkLTAtest.c
 
