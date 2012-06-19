@@ -42,6 +42,7 @@ include mk/libcasn.mk
 include mk/librpkiasn1.mk
 include mk/oidtable.mk
 include mk/rpki-local-ta.mk
+include mk/rpki-object.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
 
