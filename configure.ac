@@ -248,9 +248,6 @@ AC_CONFIG_FILES([Makefile
                  tests/system/testbed/Makefile
                  tests/system/testbed/src/Makefile
                  tests/system/testbed/src/tests/Makefile
-                 utils/Makefile
-                 utils/tests/Makefile
-                 utils/mysql-c-api/Makefile
                  INSTRUCTIONS
 ])
 
