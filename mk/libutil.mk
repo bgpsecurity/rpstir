@@ -1,6 +1,6 @@
 noinst_LIBRARIES += lib/util/libutil.a
 
-lib_util_libutil_a_SOURCES =
+lib_util_libutil_a_SOURCES = \
 	lib/util/bag.c \
 	lib/util/bag.h \
 	lib/util/hashutils.c \
