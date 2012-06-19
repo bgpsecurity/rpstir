@@ -27,10 +27,12 @@ CLEANFILES = \
 	query.log
 
 BUILT_SOURCES =
+bin_PROGRAMS =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
 
+include mk/asn1.mk
 include mk/libcasn.mk
 include mk/librpkiasn1.mk
 
