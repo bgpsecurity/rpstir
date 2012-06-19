@@ -1,7 +1,7 @@
 pkgdata_DATA += var/oidtable
 CLEANFILES += var/oidtable
 
-var_oidtable_ASN1_SOURCES = \
+var_oidtable_ASN1 = \
 	lib/rpki-asn1/Algorithms.asn \
 	lib/rpki-asn1/blob.asn \
 	lib/rpki-asn1/certificate.asn \
@@ -15,5 +15,5 @@ var_oidtable_ASN1_SOURCES = \
 	lib/rpki-asn1/roa.asn \
 	lib/rpki-asn1/serial_number.asn
 
-var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_SOURCES)
-	./bin/asn1/make_oidtable $(var_oidtable_ASN1_SOURCES) var/oidtable
+var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1)
+	./bin/asn1/make_oidtable $(var_oidtable_ASN1) var/oidtable
