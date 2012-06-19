@@ -48,10 +48,11 @@ BUILT_SOURCES += $(lib_rpki_asn1_librpkiasn1_a_ASN1_H)
 noinst_LIBRARIES += lib/rpki-asn1/librpkiasn1.a
 
 lib_rpki_asn1_librpkiasn1_a_SOURCES = \
-	$(lib_rpki_asn1_librpkiasn1_a_ASN1) \
 	lib/rpki-asn1/CertificateToBeSignedConstraint.c \
 	lib/rpki-asn1/CertificateRevocationListToBeSignedConstraint.c
 
 nodist_lib_rpki_asn1_librpkiasn1_a_SOURCES = \
 	$(lib_rpki_asn1_librpkiasn1_a_ASN1_C) \
 	$(lib_rpki_asn1_librpkiasn1_a_ASN1_H)
+
+EXTRA_DIST += $(lib_rpki_asn1_librpkiasn1_a_ASN1)
