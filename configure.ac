@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
-AC_CONFIG_SRCDIR([rtr/pdu.h])
+AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_MAINTAINER_MODE

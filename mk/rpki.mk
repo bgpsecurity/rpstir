@@ -6,7 +6,7 @@ bin_rpki_chaser_LDADD = \
 
 bin_PROGRAMS += bin/rpki/garbage
 
-bin_rpki_garbade_LDADD = \
+bin_rpki_garbage_LDADD = \
 	lib/rpki/librpki.a
 
 
