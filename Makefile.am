@@ -51,6 +51,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
 include mk/asn1.mk
 include mk/libcasn.mk
 include mk/libdb.mk
+include mk/librpki.mk
 include mk/librpkiasn1.mk
 include mk/librpkirtr.mk
 include mk/libutil.mk
@@ -58,6 +59,7 @@ include mk/oidtable.mk
 include mk/rpki-local-ta.mk
 include mk/rpki-object.mk
 include mk/rpki-rtr.mk
+include mk/rpki.mk
 include mk/unittest.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
