@@ -34,4 +34,7 @@ bin_rpki_rcli_LDADD = \
 	lib/rpki/librpki.a
 
 
+dist_sysconf_DATA += etc/additional_rsync_uris.config
+
+
 dist_sysconf_DATA += etc/sampleQuerySpecs

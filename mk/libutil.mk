@@ -63,3 +63,6 @@ lib_util_tests_stringutils_test_CFLAGS = \
 	$(lib_util_libutildebug_a_CFLAGS)
 
 TESTS += lib/util/tests/stringutils-test
+
+
+EXTRA_DIST += lib/util/trap_errors

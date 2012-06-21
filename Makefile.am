@@ -13,11 +13,9 @@ SUBDIRS = \
 EXTRA_DIST = \
 	autogen.sh \
 	ChangeLog \
-	envir.setup \
 	INSTRUCTIONS \
 	LICENSE \
-	README-AUTOCONF \
-	trap_errors
+	README \
 
 CLEANFILES = \
 	query.log
@@ -47,6 +45,8 @@ dist_sysconf_DATA =
 
 dist_check_SCRIPTS += tests/run_with_tool.sh
 TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
+
+dist_sysconf_DATA += etc/envir.setup
 
 include mk/asn1.mk
 include mk/libcasn.mk
