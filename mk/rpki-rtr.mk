@@ -51,3 +51,9 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_CFLAGS = \
 
 
 EXTRA_DIST += bin/rpki-rtr/cleanServerData
+
+
+dist_doc_DATA += doc/rpki-rtr-daemon-outline
+
+
+dist_doc_DATA += doc/rpki-rtr-notes
