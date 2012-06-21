@@ -17,7 +17,6 @@ EXTRA_DIST = \
 	INSTRUCTIONS \
 	LICENSE \
 	README-AUTOCONF \
-	run_scripts \
 	trap_errors
 
 CLEANFILES = \
@@ -39,10 +38,12 @@ bin_PROGRAMS =
 bin_SCRIPTS =
 check_PROGRAMS =
 check_LIBRARIES =
+dist_bin_SCRIPTS =
 dist_check_SCRIPTS =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
+dist_sysconf_DATA =
 
 dist_check_SCRIPTS += tests/run_with_tool.sh
 TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh

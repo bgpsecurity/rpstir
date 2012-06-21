@@ -249,20 +249,20 @@ AC_CONFIG_FILES([Makefile
                  INSTRUCTIONS
 ])
 
+AC_CONFIG_FILES([bin/rpki/chaser.sh],
+                [chmod +x bin/rpki/chaser.sh])
+
+AC_CONFIG_FILES([bin/rpki/results.py],
+                [chmod +x bin/rpki/results.py])
+
+AC_CONFIG_FILES([bin/rpki/run_from_TALs.sh],
+                [chmod +x bin/rpki/run_from_TALs.sh])
+
+AC_CONFIG_FILES([bin/rpki/updateTA.py],
+                [chmod +x bin/rpki/updateTA.py])
+
 AC_CONFIG_FILES([rsync_aur/rsync_cord.py],
                 [chmod +x rsync_aur/rsync_cord.py])
-
-AC_CONFIG_FILES([run_scripts/chaser.sh],
-                [chmod +x run_scripts/chaser.sh])
-
-AC_CONFIG_FILES([run_scripts/results.py],
-                [chmod +x run_scripts/results.py])
-
-AC_CONFIG_FILES([run_scripts/run_from_TALs.sh],
-                [chmod +x run_scripts/run_from_TALs.sh])
-
-AC_CONFIG_FILES([run_scripts/updateTA.py],
-                [chmod +x run_scripts/updateTA.py])
 
 AC_CONFIG_FILES([tests/subsystem/rtr/badPDUs.py],
                 [chmod +x tests/subsystem/rtr/badPDUs.py])
