@@ -14,7 +14,7 @@ EXTRA_DIST = \
 	ChangeLog \
 	INSTRUCTIONS \
 	LICENSE \
-	README \
+	README
 
 AM_CFLAGS = \
 	-Wall \
