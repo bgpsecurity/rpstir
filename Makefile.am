@@ -43,7 +43,7 @@ noinst_PROGRAMS =
 pkgdata_DATA =
 dist_sysconf_DATA =
 
-examplesdir = $(pkgdatadir)/examples
+examplesdir = $(docdir)/examples
 
 dist_check_SCRIPTS += tests/run_with_tool.sh
 TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
