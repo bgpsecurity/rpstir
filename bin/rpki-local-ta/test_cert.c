@@ -1,7 +1,7 @@
 // For testing LTA perforation/expansion.
 
-#include <casn.h>
-#include <certificate.h>
+#include <casn/casn.h>
+#include <rpki-asn1/certificate.h>
 #include <stdio.h>
 
 char *msgs[] = {

@@ -1,7 +1,7 @@
 
 #include <errno.h>
-#include "rpwork.h"
-#include "logutils.h"
+#include "rpki/rpwork.h"
+#include "util/logutils.h"
 
 char *msgs[] = {
     "Finished %s OK\n",
