@@ -16,9 +16,6 @@ EXTRA_DIST = \
 	LICENSE \
 	README \
 
-CLEANFILES = \
-	query.log
-
 AM_CFLAGS = \
 	-Wall \
 	-Wextra \
@@ -30,6 +27,7 @@ CFLAGS_STRICT = \
 
 
 BUILT_SOURCES =
+CLEANFILES =
 TESTS =
 bin_PROGRAMS =
 bin_SCRIPTS =
