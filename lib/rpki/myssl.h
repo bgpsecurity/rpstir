@@ -19,8 +19,8 @@
 #include <openssl/rsa.h>
 #endif
 #include <openssl/bn.h>
-#include <certificate.h>
-#include "crlv2.h"
+#include <rpki-asn1/certificate.h>
+#include "rpki-asn1/crlv2.h"
 
 
 extern int strict_profile_checks;

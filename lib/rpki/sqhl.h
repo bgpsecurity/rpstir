@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "db_constants.h"
 
-#include "certificate.h"
+#include "rpki-asn1/certificate.h"
 
 /*
  * Object types 

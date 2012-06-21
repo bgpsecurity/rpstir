@@ -12,12 +12,12 @@
 #include <my_global.h>
 #include <mysql.h>
 
-#include "connect.h"
-#include "db-internal.h"
-#include "logging.h"
-#include "prep-stmt.h"
+#include "db/connect.h"
+#include "db/db-internal.h"
+#include "util/logging.h"
+#include "db/prep-stmt.h"
 #include "rtr.h"
-#include "util.h"
+#include "db/util.h"
 
 
 struct query_state {

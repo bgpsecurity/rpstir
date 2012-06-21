@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-#include "connect.h"
+#include "db/connect.h"
 
 #define ERR_CHASER_OOM -2
 #define DB_URI_LEN 1024

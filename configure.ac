@@ -422,4 +422,6 @@ AC_CONFIG_FILES([tests/subsystem/testcases/tools/create_cert.py],
 AC_CONFIG_FILES([tests/subsystem/testcases/tools/run_tc.py],
                 [chmod +x tests/subsystem/testcases/tools/run_tc.py])
 
+AC_CONFIG_LINKS([lib/rpki-asn1/casn.h:lib/casn/casn.h])
+
 AC_OUTPUT

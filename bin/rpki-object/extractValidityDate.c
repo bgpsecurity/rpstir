@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "certificate.h"
-#include "stringutils.h"
+#include "rpki-asn1/certificate.h"
+#include "util/stringutils.h"
 
 static void usage(
     int argc,

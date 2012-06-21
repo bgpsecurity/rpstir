@@ -15,15 +15,15 @@
 #include <stdbool.h>
 
 #include "globals.h"
-#include "hashutils.h"
+#include "util/hashutils.h"
 #include "myssl.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
-#include "logutils.h"
+#include "util/logutils.h"
 #include "rpwork.h"
-#include "crlv2.h"
+#include "rpki-asn1/crlv2.h"
 
 int strict_profile_checks = 0;
 

@@ -29,9 +29,9 @@
 #include <openssl/bn.h>
 
 // Generated from the asn definition
-#include <roa.h>
+#include <rpki-asn1/roa.h>
 
-#include "err.h"
+#include "rpki/err.h"
 
 // #define FALSE 0
 // #define TRUE 1

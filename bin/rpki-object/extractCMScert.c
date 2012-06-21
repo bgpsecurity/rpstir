@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <roa.h>
+#include <rpki-asn1/roa.h>
 
 int main(
     int argc,

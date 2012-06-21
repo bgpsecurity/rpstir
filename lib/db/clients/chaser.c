@@ -8,13 +8,13 @@
 #include <my_global.h>
 #include <mysql.h>
 
-#include "client-chaser.h"
-#include "connect.h"
-#include "db-internal.h"
-#include "logging.h"
-#include "prep-stmt.h"
-#include "db_constants.h"
-#include "util.h"
+#include "chaser.h"
+#include "db/connect.h"
+#include "db/db-internal.h"
+#include "util/logging.h"
+#include "db/prep-stmt.h"
+#include "rpki/db_constants.h"
+#include "db/util.h"
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/

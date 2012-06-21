@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "certificate.h"
+#include "rpki-asn1/certificate.h"
 
 static struct Extension *findExtension(
     struct Extensions *extsp,

@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "macros.h"
+#include "util/macros.h"
 
 /*****
  * Different PDU types

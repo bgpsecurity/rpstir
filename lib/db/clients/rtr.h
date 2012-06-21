@@ -7,8 +7,8 @@
 
 #include <stdbool.h>
 
-#include "connect.h"
-#include "pdu.h"
+#include "db/connect.h"
+#include "rpki-rtr/pdu.h"
 
 
 int db_rtr_get_session_id(

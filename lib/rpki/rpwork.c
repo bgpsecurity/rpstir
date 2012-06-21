@@ -5,7 +5,7 @@
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
-#include "logutils.h"
+#include "util/logutils.h"
 
 extern struct done_certs done_certs;
 

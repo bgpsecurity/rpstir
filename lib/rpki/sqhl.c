@@ -21,11 +21,11 @@
 #include "myssl.h"
 #include "err.h"
 #include "rpwork.h"
-#include "casn.h"
-#include "crlv2.h"
+#include "casn/casn.h"
+#include "rpki-asn1/crlv2.h"
 
-#include "roa_utils.h"
-#include "logutils.h"
+#include "cms/roa_utils.h"
+#include "util/logutils.h"
 
 
 #define ADDCOL(a, b, c, d, e, f)  \

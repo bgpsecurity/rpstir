@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "cryptlib.h"
 #include <string.h>
-#include <casn.h>
-#include "privkey.h"
+#include <casn/casn.h>
+#include "rpki-asn1/privkey.h"
 
 /*
  * $Id$ 

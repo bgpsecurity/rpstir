@@ -17,9 +17,9 @@ Remarks:
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include "asn.h"
-#include "asn_flags.h"
-#include "asn_error.h"
+#include "casn/asn.h"
+#include "casn/asn_flags.h"
+#include "casn/asn_error.h"
 
 struct casn {
     long tag;

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "certificate.h"
+#include "rpki-asn1/certificate.h"
 
 // Extract the SubjectPublicKeyInfo section from a certificate.  This
 // tool is useful for handling Trust Anchor Locators (draft-ietf-sidr-ta).

@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <cryptlib.h>
 #include <stdlib.h>
-#include "roa.h"
-#include "logutils.h"
+#include "rpki-asn1/roa.h"
+#include "util/logutils.h"
 
 
 /*

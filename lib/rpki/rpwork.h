@@ -13,15 +13,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#include <roa.h>
+#include <rpki-asn1/roa.h>
 #include <cryptlib.h>
-#include <keyfile.h>
+#include <rpki-asn1/keyfile.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <certificate.h>
-#include <casn.h>
+#include <rpki-asn1/certificate.h>
+#include <casn/casn.h>
 #include "sqhl.h"
 
 #define IPv4 4

@@ -11,8 +11,8 @@
 
 #include "roa_utils.h"
 #include "cryptlib.h"
-#include "logutils.h"
-#include "hashutils.h"
+#include "util/logutils.h"
+#include "util/hashutils.h"
 
 int strict_profile_checks_cms = 0;
 
@@ -212,7 +212,7 @@ static int check_cert(
                 readvsize_casn(&extp->extnValue.subjectKeyIdentifier, &ski);
 #ifndef ANYSKI
             if (ski_lth != tmp || memcmp(khash, ski, ski_lth))
-                err = ERR_SCM_INVALSKI
+                err = ERR_SCM_INVALSKI;
 #endif
                     tmp2 += ski_lth;    /* dummy statement to make compiler
                                          * happy */

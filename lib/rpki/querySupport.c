@@ -16,7 +16,7 @@
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
-#include "roa_utils.h"
+#include "cms/roa_utils.h"
 #include "querySupport.h"
 #include "err.h"
 #include "myssl.h"

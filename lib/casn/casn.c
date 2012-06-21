@@ -16,7 +16,7 @@ Cambridge, Ma. 02138
 char casn_sfcsid[] = "@(#)casn.c 871P";
 #include "casn.h"
 #include <stdio.h>
-#include "logutils.h"
+#include "util/logutils.h"
 
 #define ASN_READ 1              // modes for encode & read
 

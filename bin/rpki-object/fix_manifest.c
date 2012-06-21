@@ -5,15 +5,15 @@
 
 #include <stdio.h>
 #include <cryptlib.h>
-#include <keyfile.h>
+#include <rpki-asn1/keyfile.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
 #include <sys/stat.h>
-#include <certificate.h>
-#include <roa.h>
-#include <casn.h>
+#include <rpki-asn1/certificate.h>
+#include <rpki-asn1/roa.h>
+#include <casn/casn.h>
 
 extern int gen_hash(
     uchar * inbufp,

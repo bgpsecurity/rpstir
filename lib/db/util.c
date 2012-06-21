@@ -10,7 +10,7 @@
 #include <errmsg.h>
 
 #include "db-internal.h"
-#include "logging.h"
+#include "util/logging.h"
 #include "util.h"
 
 

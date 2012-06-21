@@ -3,9 +3,8 @@
 
 #include "connect.h"
 #include "db-internal.h"
-#include "logging.h"
+#include "util/logging.h"
 #include "prep-stmt.h"
-#include "rtr.h"
 #include "util.h"
 
 

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "certificate.h"
+#include "rpki-asn1/certificate.h"
 
 #define MAX_SIA_ACC_DESCR 100   /* maximum number of access descriptions */
 

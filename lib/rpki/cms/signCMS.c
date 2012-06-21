@@ -11,9 +11,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
-#include <certificate.h>
-#include <extensions.h>
-#include <roa.h>
+#include <rpki-asn1/certificate.h>
+#include <rpki-asn1/extensions.h>
+#include <rpki-asn1/roa.h>
 #include "roa_utils.h"
 
 // find the SID for this ROA and return it

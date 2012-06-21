@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "casn.h"
-#include "roa.h"
-#include "crlv2.h"
+#include "casn/casn.h"
+#include "rpki-asn1/roa.h"
+#include "rpki-asn1/crlv2.h"
 
 static char *msgs[] = {
     "Usage: name of input file\n",
