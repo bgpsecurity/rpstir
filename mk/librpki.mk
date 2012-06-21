@@ -1,6 +1,12 @@
 noinst_LIBRARIES += lib/rpki/librpki.a
 
 lib_rpki_librpki_a_SOURCES = \
+	lib/rpki/cms/roa_create.c \
+	lib/rpki/cms/roa_general.c \
+	lib/rpki/cms/roa_serialize.c \
+	lib/rpki/cms/roa_utils.h \
+	lib/rpki/cms/roa_validate.c \
+	lib/rpki/cms/signCMS.c \
 	lib/rpki/conversion.c \
 	lib/rpki/conversion.h \
 	lib/rpki/db_constants.h \

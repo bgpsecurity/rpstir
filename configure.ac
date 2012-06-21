@@ -236,7 +236,6 @@ fi
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  proto/Makefile
-                 roa-lib/Makefile
                  roa-utils/Makefile
                  rsync_aur/Makefile
                  tests/subsystem/Makefile
