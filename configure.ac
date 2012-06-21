@@ -237,7 +237,6 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  proto/Makefile
                  roa-utils/Makefile
-                 rsync_aur/Makefile
                  tests/subsystem/Makefile
                  tests/subsystem/chaser/Makefile
                  tests/subsystem/rtr/Makefile
@@ -261,8 +260,8 @@ AC_CONFIG_FILES([bin/rpki/run_from_TALs.sh],
 AC_CONFIG_FILES([bin/rpki/updateTA.py],
                 [chmod +x bin/rpki/updateTA.py])
 
-AC_CONFIG_FILES([rsync_aur/rsync_cord.py],
-                [chmod +x rsync_aur/rsync_cord.py])
+AC_CONFIG_FILES([bin/rpki-rsync/rsync_cord.py],
+                [chmod +x bin/rpki-rsync/rsync_cord.py])
 
 AC_CONFIG_FILES([tests/subsystem/rtr/badPDUs.py],
                 [chmod +x tests/subsystem/rtr/badPDUs.py])

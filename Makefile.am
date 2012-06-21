@@ -4,7 +4,6 @@ SUBDIRS = \
 	. \
 	proto \
 	roa-utils \
-	rsync_aur \
 	tests/subsystem/testcases \
 	tests/system/testbed \
 	tests/subsystem \
@@ -38,6 +37,7 @@ check_PROGRAMS =
 check_LIBRARIES =
 dist_bin_SCRIPTS =
 dist_check_SCRIPTS =
+dist_doc_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
