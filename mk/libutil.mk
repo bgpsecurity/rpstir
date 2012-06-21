@@ -29,6 +29,7 @@ lib_util_libutildebug_a_CFLAGS = \
 	$(lib_util_libutil_a_CFLAGS)
 
 lib_util_libutildebug_a_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-DDEBUG
 
 

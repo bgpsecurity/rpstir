@@ -25,6 +25,9 @@ CFLAGS_STRICT = \
 	$(AM_CFLAGS) \
 	-Werror
 
+AM_CPPFLAGS = \
+	-I$(top_srcdir)/lib
+
 
 BUILT_SOURCES =
 CLEANFILES =
