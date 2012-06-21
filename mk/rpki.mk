@@ -37,4 +37,15 @@ bin_rpki_rcli_LDADD = \
 dist_sysconf_DATA += etc/additional_rsync_uris.config
 
 
+sampletadir = $(examplesdir)/sample-ta
+
+conformancetadir = $(sampletadir)/bbn_conformance
+
+dist_conformanceta_DATA = \
+	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
+	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
+	etc/sample-ta/bbn_conformance/badRootBadAKI.tal \
+	etc/sample-ta/bbn_conformance/root.tal
+
+
 dist_sysconf_DATA += etc/sampleQuerySpecs
