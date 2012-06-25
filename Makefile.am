@@ -40,6 +40,7 @@ dist_bin_SCRIPTS =
 dist_check_DATA =
 dist_check_SCRIPTS =
 dist_doc_DATA =
+dist_noinst_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
@@ -49,6 +50,12 @@ examplesdir = $(docdir)/examples
 
 dist_check_SCRIPTS += tests/run_with_tool.sh
 TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
+
+dist_doc_DATA += \
+	doc/glossary.txt
+
+dist_noinst_DATA += \
+	doc/api.txt
 
 dist_sysconf_DATA += etc/envir.setup
 
