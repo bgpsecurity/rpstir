@@ -266,8 +266,8 @@ AC_CONFIG_FILES([bin/rpki-rsync/rsync_cord.py],
 AC_CONFIG_FILES([tests/subsystem/rtr/badPDUs.py],
                 [chmod +x tests/subsystem/rtr/badPDUs.py])
 
-AC_CONFIG_FILES([tests/subsystem/rtr/runRTRTest.sh],
-                [chmod +x tests/subsystem/rtr/runRTRTest.sh])
+AC_CONFIG_FILES([tests/subsystem/rtr/test.sh],
+                [chmod +x tests/subsystem/rtr/test.sh])
 
 AC_CONFIG_FILES([tests/subsystem/initDB],
                 [chmod +x tests/subsystem/initDB])
