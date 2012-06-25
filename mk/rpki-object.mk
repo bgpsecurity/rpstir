@@ -7,9 +7,6 @@ bin_PROGRAMS += bin/rpki-object/add_cms_cert_no_check
 bin_PROGRAMS += bin/rpki-object/add_key_info
 
 
-bin_PROGRAMS += bin/rpki-object/check_cert_sig
-
-
 bin_PROGRAMS += bin/rpki-object/check_signature
 
 
