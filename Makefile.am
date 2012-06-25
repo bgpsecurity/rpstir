@@ -34,17 +34,17 @@ CLEANFILES =
 TESTS =
 bin_PROGRAMS =
 bin_SCRIPTS =
-check_PROGRAMS =
 check_LIBRARIES =
+check_PROGRAMS =
 dist_bin_SCRIPTS =
 dist_check_DATA =
 dist_check_SCRIPTS =
 dist_doc_DATA =
 dist_noinst_DATA =
+dist_sysconf_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
-dist_sysconf_DATA =
 
 examplesdir = $(docdir)/examples
 
