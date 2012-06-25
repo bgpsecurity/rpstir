@@ -239,11 +239,11 @@ AC_CONFIG_FILES([Makefile
                  roa-utils/Makefile
                  tests/subsystem/Makefile
                  tests/subsystem/rtr/Makefile
-                 tests/subsystem/test.include
                  tests/subsystem/testcases/Makefile
                  tests/system/testbed/Makefile
                  tests/system/testbed/src/Makefile
                  tests/system/testbed/src/tests/Makefile
+                 tests/test.include
                  INSTRUCTIONS
 ])
 

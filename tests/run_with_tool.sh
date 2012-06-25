@@ -12,7 +12,7 @@ case "$PROG" in
     *)
         TEST_LOG_NAME=check
         STRICT_CHECKS=1
-        . `dirname "$0"`/../subsystemTests/test.include
+        . `dirname "$0"`/test.include
 
         run "$PROG" ./"$PROG" "$@" || exit $?
         ;;

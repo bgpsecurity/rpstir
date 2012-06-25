@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Shell function for checking if the number of lines of output matches
 # the expected number.
 
