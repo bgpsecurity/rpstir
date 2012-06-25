@@ -17,6 +17,7 @@ TAGS
 *.swp
 .~lock.*#
 rpstir-*.tar.gz
+/rpstir-*/
 INSTRUCTIONS
 .dirstamp
 
