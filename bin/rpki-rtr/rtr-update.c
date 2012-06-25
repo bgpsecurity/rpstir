@@ -2,9 +2,9 @@
  * Get the next round of RTR data into the database
  ***********************/
 
-#include "err.h"
-#include "scmf.h"
-#include "querySupport.h"
+#include "rpki/err.h"
+#include "rpki/scmf.h"
+#include "rpki/querySupport.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

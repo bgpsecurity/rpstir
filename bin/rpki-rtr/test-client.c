@@ -12,9 +12,9 @@
 #include <netdb.h>
 #include <errno.h>
 
-#include "logutils.h"
+#include "util/logutils.h"
 
-#include "pdu.h"
+#include "rpki-rtr/pdu.h"
 
 
 #define DELIM " \t\n\r"

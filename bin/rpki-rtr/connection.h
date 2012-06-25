@@ -4,8 +4,8 @@
 // Declarations related to connection threads.
 // Currently: main entry point and related arguments.
 
-#include "bag.h"
-#include "queue.h"
+#include "util/bag.h"
+#include "util/queue.h"
 
 #include "cache_state.h"
 #include "semaphores.h"

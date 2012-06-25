@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <sys/file.h>
 #include <stdio.h>
-#include "asn.h"
+#include "casn/asn.h"
 
 char rr_sfcsid[] = "@(#)rr.c 845p";
 

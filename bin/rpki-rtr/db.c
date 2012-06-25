@@ -1,10 +1,10 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include "macros.h"
-#include "logging.h"
-#include "mysql-c-api/connect.h"
-#include "mysql-c-api/rtr.h"
+#include "util/macros.h"
+#include "util/logging.h"
+#include "db/connect.h"
+#include "db/clients/rtr.h"
 
 #include "config.h"
 #include "signals.h"

@@ -10,11 +10,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "cryptlib.h"
-#include "../asn/certificate.h"
-#include <roa.h>
-#include <keyfile.h>
-#include <casn.h>
-#include <asn.h>
+#include "rpki-asn1/certificate.h"
+#include <rpki-asn1/roa.h>
+#include <rpki-asn1/keyfile.h>
+#include <casn/casn.h>
+#include <casn/asn.h>
 #include <time.h>
 
 char *msgs[] = {

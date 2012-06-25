@@ -4,8 +4,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "mysql-c-api/connect.h"
-#include "pdu.h"
+#include "db/connect.h"
+#include "lib/rpki-rtr/pdu.h"
 
 struct cache_state {
     bool data_available;

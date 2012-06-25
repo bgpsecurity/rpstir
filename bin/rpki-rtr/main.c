@@ -12,10 +12,10 @@
 #include <stdlib.h>
 #include <netdb.h>
 
-#include "bag.h"
-#include "queue.h"
-#include "logging.h"
-#include "mysql-c-api/connect.h"
+#include "util/bag.h"
+#include "util/queue.h"
+#include "util/logging.h"
+#include "db/connect.h"
 
 #include "cache_state.h"
 #include "config.h"

@@ -1,7 +1,7 @@
 #include <pthread.h>
 #include <signal.h>
 
-#include "logging.h"
+#include "util/logging.h"
 
 #include "signals.h"
 

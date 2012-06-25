@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "logging.h"
-#include "mysql-c-api/rtr.h"
+#include "util/logging.h"
+#include "db/clients/rtr.h"
 
 #include "cache_state.h"
 

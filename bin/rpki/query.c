@@ -4,14 +4,14 @@
 #include <string.h>
 #include <errno.h>
 
-#include "scm.h"
-#include "scmf.h"
-#include "err.h"
-#include "roa_utils.h"
-#include "myssl.h"
-#include "sqhl.h"
-#include "querySupport.h"
-#include "logutils.h"
+#include "rpki/scm.h"
+#include "rpki/scmf.h"
+#include "rpki/err.h"
+#include "rpki/cms/roa_utils.h"
+#include "rpki/myssl.h"
+#include "rpki/sqhl.h"
+#include "rpki/querySupport.h"
+#include "util/logutils.h"
 
 
 /*

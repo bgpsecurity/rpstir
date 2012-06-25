@@ -11,11 +11,11 @@
 #include <syslog.h>
 #include <unistd.h>
 
-#include "err.h"
-#include "logging.h"
-#include "mysql-c-api/connect.h"
-#include "mysql-c-api/client-chaser.h"
-#include "stringutils.h"
+#include "rpki/err.h"
+#include "util/logging.h"
+#include "db/connect.h"
+#include "db/clients/chaser.h"
+#include "util/stringutils.h"
 
 #define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON

@@ -8,12 +8,12 @@
 #include <time.h>
 #include <fcntl.h>
 
-#include "macros.h"
-#include "logging.h"
+#include "util/macros.h"
+#include "util/logging.h"
 
 #include "config.h"
 #include "signals.h"
-#include "pdu.h"
+#include "rpki-rtr/pdu.h"
 
 #include "connection.h"
 #include "db.h"

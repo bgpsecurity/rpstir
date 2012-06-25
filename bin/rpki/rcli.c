@@ -25,14 +25,14 @@
 #include <netinet/in.h>
 #endif
 
-#include "scm.h"
-#include "scmf.h"
-#include "sqhl.h"
-#include "diru.h"
-#include "myssl.h"
-#include "roa_utils.h"
-#include "err.h"
-#include "logutils.h"
+#include "rpki/scm.h"
+#include "rpki/scmf.h"
+#include "rpki/sqhl.h"
+#include "rpki/diru.h"
+#include "rpki/myssl.h"
+#include "rpki/cms/roa_utils.h"
+#include "rpki/err.h"
+#include "util/logutils.h"
 
 
 static char *tdir = NULL;       // top level dir of the repository

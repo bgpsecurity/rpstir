@@ -5,11 +5,11 @@
 
 #include <mysql.h>
 
-#include "scm.h"
-#include "scmf.h"
-#include "sqhl.h"
-#include "err.h"
-#include "logutils.h"
+#include "rpki/scm.h"
+#include "rpki/scmf.h"
+#include "rpki/sqhl.h"
+#include "rpki/err.h"
+#include "util/logutils.h"
 
 /*
  * $Id$ 

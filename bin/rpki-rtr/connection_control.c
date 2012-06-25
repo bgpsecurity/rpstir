@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "logging.h"
+#include "util/logging.h"
 
 #include "config.h"
 #include "signals.h"

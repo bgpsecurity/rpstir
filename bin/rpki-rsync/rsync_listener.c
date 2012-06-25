@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include "csapp.h"
 #include "signal.h"
-#include "logutils.h"
+#include "util/logutils.h"
 
 /*
  * The head of the queue

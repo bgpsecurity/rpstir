@@ -3,10 +3,10 @@
  */
 
 
-#include "roa_utils.h"
-#include "crlv2.h"
+#include "rpki/cms/roa_utils.h"
+#include "rpki-asn1/crlv2.h"
 #include "cryptlib.h"
-#include "blob.h"
+#include "rpki-asn1/blob.h"
 
 char *msgs[] = {
     "Signature %s\n",

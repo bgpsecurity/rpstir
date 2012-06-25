@@ -20,12 +20,12 @@
 #include "socket_stuff.h"
 #include "parse.h"
 #include "sig_handler.h"
-#include "roa.h"
-#include "roa_utils.h"
-#include "certificate.h"
-#include "err.h"
-#include "logutils.h"
-#include "stringutils.h"
+#include "rpki-asn1/roa.h"
+#include "rpki/cms/roa_utils.h"
+#include "rpki-asn1/certificate.h"
+#include "rpki/err.h"
+#include "util/logutils.h"
+#include "util/stringutils.h"
 
 #define INFO_FLAG 0x1
 #define WARNING_FLAG 0x2

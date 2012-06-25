@@ -19,7 +19,7 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include "asn.h"
+#include "casn/asn.h"
 
 extern void fatal(
     int,

@@ -21,7 +21,7 @@ Remarks:
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "asn.h"
+#include "casn/asn.h"
 
 #define BSIZE 512
 

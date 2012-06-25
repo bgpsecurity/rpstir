@@ -2,8 +2,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <casn.h>
-#include <certificate.h>
+#include <casn/casn.h>
+#include <rpki-asn1/certificate.h>
 #include <stdio.h>
 
 char *msgs[] = {

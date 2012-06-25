@@ -5,10 +5,10 @@
 // Currently: main entry point and related arguments, as well as
 // database request/response data structures.
 
-#include "queue.h"
-#include "bag.h"
+#include "util/queue.h"
+#include "util/bag.h"
 
-#include "pdu.h"
+#include "rpki-rtr/pdu.h"
 #include "semaphores.h"
 
 struct db_query {
