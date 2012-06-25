@@ -9,4 +9,4 @@ bin_PROGRAMS = makeROA
 
 makeROA_SOURCES = makeROA.c $(lib_rpki_headers)
 
-EXTRA_DIST = *.pem *.cer *.crl sampleQuerySpecs
+EXTRA_DIST = *.pem *.cer *.crl
