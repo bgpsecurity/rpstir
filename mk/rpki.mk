@@ -1,7 +1,8 @@
 bin_PROGRAMS += bin/rpki/chaser
 
 bin_rpki_chaser_LDADD = \
-	$(LDADD_LIBDB)
+	$(LDADD_LIBDB) \
+	$(LDADD_LIBUTIL)
 
 dist_check_SCRIPTS += tests/subsystem/chaser/test.sh
 
