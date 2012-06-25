@@ -1,5 +1,8 @@
 noinst_LIBRARIES += lib/db/libdb.a
 
+LDADD_LIBDB = \
+	lib/db/libdb.a
+
 lib_db_libdb_a_SOURCES = \
 	lib/db/clients/chaser.c \
 	lib/db/clients/chaser.h \

@@ -1,5 +1,5 @@
 badPDUs.py
-runRTRTest.sh
+test.sh
 *.diff
 *.cer
 *.roa

@@ -35,6 +35,10 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 
 noinst_LIBRARIES += lib/casn/libcasn.a
 
+LDADD_LIBCASN = \
+	lib/casn/libcasn.a \
+	$(LDADD_LIBUTIL)
+
 lib_casn_libcasn_a_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-DINTEL

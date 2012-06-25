@@ -16,9 +16,9 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_SOURCES = \
 	bin/rpki-rtr/signals.h
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_LDADD = \
-	lib/db/libdb.a \
-	lib/rpki-rtr/librpkirtr.a \
-	lib/util/libutil.a
+	$(LDADD_LIBDB) \
+	$(LDADD_LIBRPKIRTR) \
+	$(LDADD_LIBUTIL)
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_CFLAGS = \
 	$(CFLAGS_STRICT)
@@ -30,8 +30,8 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_SOURCES = \
 	bin/rpki-rtr/test-client.c
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_LDADD = \
-	lib/rpki-rtr/librpkirtr.a \
-	lib/util/libutil.a
+	$(LDADD_LIBRPKIRTR) \
+	$(LDADD_LIBUTIL)
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_CFLAGS = \
 	$(CFLAGS_STRICT)
@@ -43,8 +43,7 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_SOURCES = \
 	bin/rpki-rtr/rtr-update.c
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_LDADD = \
-	lib/rpki/librpki.a \
-	lib/util/libutil.a
+	$(LDADD_LIBRPKI)
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_CFLAGS = \
 	$(CFLAGS_STRICT)

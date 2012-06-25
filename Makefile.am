@@ -59,13 +59,16 @@ dist_noinst_DATA += \
 
 dist_sysconf_DATA += etc/envir.setup
 
-include mk/asn1.mk
-include mk/libcasn.mk
-include mk/libdb.mk
-include mk/librpki.mk
-include mk/librpkiasn1.mk
-include mk/librpkirtr.mk
+# library makefiles must be ordered by dependencies, lowest level library to highest
 include mk/libutil.mk
+include mk/libcasn.mk
+include mk/librpkiasn1.mk
+include mk/libdb.mk
+include mk/librpkirtr.mk
+include mk/librpki.mk
+
+# other makefiles shouldn't depend on one another, so are in alphabetical order
+include mk/asn1.mk
 include mk/oidtable.mk
 include mk/rpki-local-ta.mk
 include mk/rpki-object.mk

@@ -47,6 +47,10 @@ BUILT_SOURCES += $(lib_rpki_asn1_librpkiasn1_a_ASN1_H)
 
 noinst_LIBRARIES += lib/rpki-asn1/librpkiasn1.a
 
+LDADD_LIBRPKIASN1 = \
+	lib/rpki-asn1/librpkiasn1.a \
+	$(LDADD_LIBCASN)
+
 lib_rpki_asn1_librpkiasn1_a_SOURCES = \
 	lib/rpki-asn1/CertificateToBeSignedConstraint.c \
 	lib/rpki-asn1/CertificateRevocationListToBeSignedConstraint.c

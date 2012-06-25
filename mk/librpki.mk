@@ -1,5 +1,9 @@
 noinst_LIBRARIES += lib/rpki/librpki.a
 
+LDADD_LIBRPKI = \
+	lib/rpki/librpki.a \
+	$(LDADD_LIBRPKIASN1)
+
 lib_rpki_librpki_a_SOURCES = \
 	lib/rpki/cms/roa_create.c \
 	lib/rpki/cms/roa_general.c \
