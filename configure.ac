@@ -238,7 +238,6 @@ AC_CONFIG_FILES([Makefile
                  proto/Makefile
                  roa-utils/Makefile
                  tests/subsystem/Makefile
-                 tests/subsystem/chaser/Makefile
                  tests/subsystem/rtr/Makefile
                  tests/subsystem/test.include
                  tests/subsystem/testcases/Makefile
