@@ -76,7 +76,7 @@ bin_rpki_object_loadkey_LDADD = \
 bin_PROGRAMS += bin/rpki-object/make_manifest
 
 bin_rpki_object_make_manifest_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKI)
 
 dist_man_MANS += doc/make_manifest.1
 
@@ -84,7 +84,7 @@ dist_man_MANS += doc/make_manifest.1
 bin_PROGRAMS += bin/rpki-object/make_roa
 
 bin_rpki_object_make_roa_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKI)
 
 dist_man_MANS += doc/make_roa.1
 
