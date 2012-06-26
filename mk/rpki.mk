@@ -72,3 +72,31 @@ dist_conformanceta_DATA = \
 
 
 dist_sysconf_DATA += etc/sampleQuerySpecs
+
+
+EXTRA_DIST += tests/conformance/rfc3779
+
+dist_check_DATA += \
+	tests/conformance/raw/*.p15 \
+	tests/conformance/raw/*.raw \
+	tests/conformance/raw/keys/*.p15 \
+	tests/conformance/raw/patches/*.patch \
+	tests/conformance/raw/templates/*.p15 \
+	tests/conformance/raw/templates/*.raw \
+	tests/conformance/scripts/querySpecs
+
+dist_check_SCRIPTS += \
+	tests/conformance/scripts/run_bad_cert_tests.sh \
+	tests/conformance/scripts/run_tests.sh
+
+TESTS += \
+	tests/conformance/scripts/run_tests.sh
+
+CLEANFILES += \
+	tests/conformance/output \
+	tests/conformance/raw/root/*.cer \
+	tests/conformance/raw/root/*.crl \
+	tests/conformance/raw/root/*.mft \
+	tests/conformance/raw/root/*.roa \
+
+dist_doc_DATA += doc/conformance-cases

@@ -23,14 +23,12 @@ cert_validate_SOURCES = cert_validate.c
 cert_validate_LDFLAGS = -lpthread $(LIBS)
 
 TESTS = \
-	./conformance/scripts/run_tests.sh \
 	./makeall
 
 EXTRA_DIST = \
 	$(filter-out C.raw,$(wildcard *.p15 *.raw false*)) \
 	C.*.orig \
 	certpattern \
-	conformance \
 	makeall \
 	makecerts \
 	makecrls \
