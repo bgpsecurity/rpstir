@@ -1,2 +1,1 @@
  * look into doc/doxygen, it probably deserves its own mk/doxygen.mk file
- * read docs on automake handling of man(1) pages and move files from doc/Makefile.am to mk/*.mk as appropriate
