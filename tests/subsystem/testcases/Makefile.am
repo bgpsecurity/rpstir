@@ -40,7 +40,6 @@ EXTRA_DIST = \
 	makeM* \
 	print-cert-addrs.sh \
 	queryIgnoreAll \
-	rfc3779 \
 	t?-?_* \
 	test1.log \
 	testall.sh \

@@ -97,6 +97,6 @@ CLEANFILES += \
 	tests/conformance/raw/root/*.cer \
 	tests/conformance/raw/root/*.crl \
 	tests/conformance/raw/root/*.mft \
-	tests/conformance/raw/root/*.roa \
+	tests/conformance/raw/root/*.roa
 
 dist_doc_DATA += doc/conformance-cases
