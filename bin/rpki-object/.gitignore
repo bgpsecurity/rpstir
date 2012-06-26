@@ -10,6 +10,8 @@ fix_manifest
 gen_key
 get_sernum
 loadkey
+make_manifest
+make_roa
 put_sernum
 put_sia
 put_subj
@@ -17,4 +19,5 @@ read_roa
 set_cert_ski
 sign_cert
 sign_cms
+sign_roa
 update_cert

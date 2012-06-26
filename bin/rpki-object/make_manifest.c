@@ -3,8 +3,8 @@
  */
 
 
-#include "roa_utils.h"
-#include "manifest.h"
+#include "rpki/cms/roa_utils.h"
+#include "rpki-asn1/manifest.h"
 #include "cryptlib.h"
 #include <stdio.h>
 #include <sys/types.h>

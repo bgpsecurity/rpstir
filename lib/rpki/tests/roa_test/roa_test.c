@@ -3,12 +3,12 @@
  */
 
 
-#include "roa_utils.h"
+#include "rpki/cms/roa_utils.h"
 
-#include "scm.h"
-#include "scmf.h"
-#include "sqhl.h"
-#include "err.h"
+#include "rpki/scm.h"
+#include "rpki/scmf.h"
+#include "rpki/sqhl.h"
+#include "rpki/err.h"
 
 static unsigned char *myreadfile(
     char *fn,

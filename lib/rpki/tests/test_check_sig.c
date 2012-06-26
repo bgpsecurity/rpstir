@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "roa_utils.h"
+#include "rpki/cms/roa_utils.h"
 #include "cryptlib.h"
 
 /*
