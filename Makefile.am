@@ -3,7 +3,6 @@ AUTOMAKE_OPTIONS = 1.6 foreign
 SUBDIRS = \
 	. \
 	proto \
-	roa-utils \
 	tests/subsystem/testcases \
 	tests/system/testbed \
 	tests/subsystem \
