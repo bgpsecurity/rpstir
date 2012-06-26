@@ -61,7 +61,10 @@ CA Certificates
 113 CpolNoCrit          # CertPolicy extension, crit bit unset 6487#4.8.9
     CpolQualCps         # (good) correct Cert Policy OID with a certification practice statement (CPS) qualifier 6487#4.8.9 5280#4.2.1.4
     CpolQualCpsUnotice  # (good) correct Cert Policy OID with CPS and user notice qualifiers 6487#4.8.9 5280#4.2.1.4
-114 CRLDP2DistPt        # (good) CRL Dist Pt has 2 Dist points 6487#4.8.6
+114 CRLDP2DistPt        # CRL Dist Pt has 2 Dist points 6487#4.8.6
+    CRLDPHtRs           # (good) CRL Dist Pt has two URIs (http+rsync) 6487#4.8.6
+    CRLDPRsRs           # (good) CRL Dist Pt has two URIs (2 rsync) 6487#4.8.6
+    # TODO: read 6487#4.8.6 for more bad cases
 115 CRLDPCrit           # CRL Dist Pt marked critical 6487#4.8.6
 116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer 6487#4.8.6
 118 CRLDPReasons        # CRL Dist Pt has reasons 6487#4.8.6
