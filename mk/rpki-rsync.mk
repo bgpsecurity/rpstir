@@ -14,6 +14,8 @@ bin_rpki_rsync_rsync_aur_SOURCES =
 	bin/rpki-rsync/usage.c \
 	bin/rpki-rsync/usage.h
 
+dist_man_MANS += doc/rsync_aur.1
+
 
 bin_PROGRAMS += bin/rpki-rsync/rsync_listener
 

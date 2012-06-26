@@ -40,6 +40,7 @@ dist_bin_SCRIPTS =
 dist_check_DATA =
 dist_check_SCRIPTS =
 dist_doc_DATA =
+dist_man_MANS =
 dist_noinst_DATA =
 dist_sysconf_DATA =
 noinst_LIBRARIES =

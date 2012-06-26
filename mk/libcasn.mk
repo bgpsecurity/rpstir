@@ -24,6 +24,8 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/casn_constr.c \
 	lib/casn/asn_gen/casn_hdr.c
 
+dist_man_MANS += doc/asn_gen.1
+
 .asn.c:
 	$(MAKE) $*.h
 
@@ -61,6 +63,8 @@ lib_casn_libcasn_a_SOURCES = \
 	lib/casn/casn_other.c \
 	lib/casn/casn_real.c \
 	lib/casn/casn_time.c
+
+dist_man_MANS += doc/casn_functions.3
 
 
 check_PROGRAMS += tests/subsystem/casn/test_casn_random
