@@ -56,7 +56,7 @@ static scmtab scmtabbuilder[] = {
      "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
      "subject  VARCHAR(512),"
      "issuer   VARCHAR(512) NOT NULL,"
-     "sn       BIGINT NOT NULL,"
+     "sn       BINARY(20) NOT NULL,"
      "flags    INT UNSIGNED DEFAULT 0,"
      "ski      VARCHAR(128) NOT NULL,"
      "aki      VARCHAR(128),"
@@ -85,14 +85,14 @@ static scmtab scmtabbuilder[] = {
       * unique identifier obtained as max(local_id) + 1 issuer is the actual
       * CRL issuer, obtained from the issuer field of the CRL (direct CRL).
       * snlist is the list of serial numbers for this issuer. It is an array
-      * of bignums. The number of bignums in the list is snlen. Some of these
+      * of 20-byte ints. The number of bignums in the list is snlen. Some of these
       * revocations may already have happened and the corresponding sn set to
       * 0 in the list. sninuse keeps track of the number of serial numbers
       * that are not zero in the list.  When this number drops to 0, the
       * entire CRL may be deleted from the DB.
       * 
       * Note that snlist is of type MEDIUMBLOB, indicating that it can hold at 
-      * most 16M/8 = 2M entries. 
+      * most 16M/20 = 838860 entries.
       */
      "rpki_crl",
      "CRL",
