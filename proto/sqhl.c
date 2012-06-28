@@ -1166,13 +1166,13 @@ struct cert_answers *find_trust_anchors(
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *revokedSrch = NULL;
-static unsigned long long *revokedSNList;
+static uint8_t *revokedSNList;
 static unsigned int *revokedSNLen;
 
 // static variables to pass to callback
 
 static int isRevoked;
-static unsigned long long revokedSN;
+static const uint8_t *revokedSN = NULL;
 
 /*
  * callback function for cert_revoked 
@@ -1189,7 +1189,8 @@ static int revokedHandler(
     unsigned int i;
     for (i = 0; i < *revokedSNLen; i++)
     {
-        if (revokedSNList[i] == revokedSN)
+        if (memcmp(&revokedSNList[SER_NUM_MAX_SZ * i], revokedSN,
+                   SER_NUM_MAX_SZ) == 0)
         {
             isRevoked = 1;
             break;
@@ -1205,7 +1206,7 @@ static int revokedHandler(
 static int cert_revoked(
     scm * scmp,
     scmcon * conp,
-    char *sn,
+    const uint8_t *sn,
     char *issuer)
 {
     int sta;
@@ -1220,7 +1221,7 @@ static int cert_revoked(
         ADDCOL(revokedSrch, "snlist", SQL_C_BINARY, 16 * 1024 * 1024, sta,
                sta);
         revokedSNLen = (unsigned int *)revokedSrch->vec[0].valptr;
-        revokedSNList = (unsigned long long *)revokedSrch->vec[1].valptr;
+        revokedSNList = (uint8_t *)revokedSrch->vec[1].valptr;
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
@@ -1228,9 +1229,10 @@ static int cert_revoked(
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     isRevoked = 0;
-    revokedSN = strtoull(sn, NULL, 10);
+    revokedSN = sn;
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    revokedSN = NULL;
     return isRevoked;
 }
 
@@ -3296,7 +3298,7 @@ static int crliterator(
     scmsrcha * s,
     int idx)
 {
-    unsigned long long *snlist;
+    uint8_t *snlist;
     unsigned int snlen;
     unsigned int sninuse;
     unsigned int flags;
@@ -3338,11 +3340,12 @@ static int crliterator(
     lid = *(unsigned int *)(s->vec[4].valptr);
     if (s->vec[5].avalsize <= 0)
         return (0);
-    snlist = (unsigned long long *)(s->vec[5].valptr);
+    snlist = (uint8_t *)(s->vec[5].valptr);
     for (i = 0; i < snlen; i++)
     {
         ista =
-            (*crlip->cfunc) (crlip->scmp, crlip->conp, issuer, aki, snlist[i]);
+            (*crlip->cfunc) (crlip->scmp, crlip->conp, issuer, aki,
+                             &snlist[SER_NUM_MAX_SZ * i]);
         if (ista < 0)
             sta = ista;
         if (ista == 1)
@@ -3380,7 +3383,7 @@ static int crliterator(
  * code. 
  */
 
-static void *snlist = NULL;
+static uint8_t *snlist = NULL;
 
 int iterate_crl(
     scm * scmp,
@@ -3402,12 +3405,10 @@ int iterate_crl(
     // go for broke and allocate a blob large enough that it can hold
     // the entire snlist if necessary
     if (snlist == NULL)
-        snlist = (void *)calloc(16 * 1024 * 1024 / sizeof(unsigned long long),
-                                sizeof(unsigned long long));
-    else
-        memset(snlist, 0, 16 * 1024 * 1024);
+        snlist = malloc(16 * 1024 * 1024);
     if (snlist == NULL)
         return (ERR_SCM_NOMEM);
+    memset(snlist, 0, 16 * 1024 * 1024);
     initTables(scmp);
     // set up a search for issuer, snlen, sninuse, flags, snlist and aki
     srch1[0].colno = 1;
@@ -3829,7 +3830,7 @@ int model_cfunc(
     scmcon * conp,
     char *issuer,
     char *aki,
-    unsigned long long sn)
+    uint8_t *sn)
 {
     unsigned int lid;
     unsigned int flags;
@@ -3841,12 +3842,15 @@ int model_cfunc(
     char ski[512];
     char subject[512];
     char sno[24];
+    uint8_t sn_zero[SER_NUM_MAX_SZ];
     int sta;
+
+    memset(sn_zero, 0, sizeof(sn_zero));
 
     if (scmp == NULL || conp == NULL || conp->connected == 0)
         return (ERR_SCM_INVALARG);
     if (issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 ||
-        sn == 0)
+        memcmp(sn, sn_zero, SER_NUM_MAX_SZ) == 0)
         return (0);
     initTables(scmp);
     mymcf.did = 0;

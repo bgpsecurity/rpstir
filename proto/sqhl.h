@@ -58,7 +58,7 @@ typedef int (
     scmcon * conp,
     char *issuer,
     char *aki,
-    unsigned long long sn);
+    uint8_t *sn);
 
 typedef struct _crlinfo {
     scm *scmp;
