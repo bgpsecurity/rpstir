@@ -435,7 +435,7 @@ static int add_crl_internal(
         return (sta);
     // the following statement could use a LOT of memory, so we try
     // it early in case it fails
-    hexs = hexify(cf->snlen * sizeof(long long), cf->snlist, HEXIFY_HAT);
+    hexs = hexify(cf->snlen * SER_NUM_MAX_SZ, cf->snlist, HEXIFY_HAT);
     if (hexs == NULL)
         return (ERR_SCM_NOMEM);
     conp->mystat.tabname = "CRL";
@@ -1600,7 +1600,7 @@ static int verifyChildCRL(
     {
         model_cfunc(theSCMP, conp, cf->fields[CRF_FIELD_ISSUER],
                     cf->fields[CRF_FIELD_AKI],
-                    ((unsigned long long *)cf->snlist)[i]);
+                    &((uint8_t *)cf->snlist)[SER_NUM_MAX_SZ * i]);
     }
     return 0;
 }
@@ -2576,18 +2576,11 @@ int add_crl(
     // and do the revocations
     if ((sta == 0) && chainOK)
     {
-        uchar *u = (uchar *) cf->snlist;
-        for (i = 0; i < cf->snlen; i++, u += (sizeof(unsigned long long)))
+        uint8_t *u = (uint8_t *) cf->snlist;
+        for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
-            unsigned long long ull = 0;
-            uchar *e;
-            for (e = &u[7]; e >= u; e--)
-            {
-                ull <<= 8;
-                ull += *e;
-            }
             model_cfunc(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
-                        cf->fields[CRF_FIELD_AKI], ull);
+                        cf->fields[CRF_FIELD_AKI], u);
         }
     }
     freecrf(cf);
@@ -3841,7 +3834,7 @@ int model_cfunc(
     mcf mymcf;
     char ski[512];
     char subject[512];
-    char sno[24];
+    char *sno;
     uint8_t sn_zero[SER_NUM_MAX_SZ];
     int sta;
 
@@ -3857,7 +3850,11 @@ int model_cfunc(
     mymcf.toplevel = 1;
     w[0].column = "issuer";
     w[0].value = issuer;
-    (void)snprintf(sno, sizeof(sno), "%lld", sn);
+    sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
+    if (sno == NULL)
+    {
+        return (ERR_SCM_NOMEM);
+    }
     w[1].column = "sn";
     w[1].value = &sno[0];
     w[2].column = "aki";
@@ -3872,6 +3869,8 @@ int model_cfunc(
     srch.context = &mymcf;
     sta = searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    free(sno);
+    sno = NULL;
     if (sta < 0)
         return (sta);
     else

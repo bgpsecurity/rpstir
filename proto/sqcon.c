@@ -1594,7 +1594,7 @@ void *unhexify(
 int updateblobscm(
     scmcon * conp,
     scmtab * tabp,
-    unsigned long long *snlist,
+    uint8_t *snlist,
     unsigned int sninuse,
     unsigned int snlen,
     unsigned int lid)
