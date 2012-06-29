@@ -621,9 +621,7 @@ int insertscm(
     int sta;
     int leen = 128;
     int wsta = (-1);
-    int doq;
-    int i,
-        j;
+    int i;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
         tabp->tabname == NULL)
