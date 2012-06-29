@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <mysql.h>
 
+#include "globals.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"

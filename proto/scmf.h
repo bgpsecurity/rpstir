@@ -6,6 +6,7 @@
 #ifndef _SCMF_H_
 #define _SCMF_H_
 
+#include <inttypes.h>
 #include <sql.h>
 #include <sqlext.h>
 #include "scm.h"

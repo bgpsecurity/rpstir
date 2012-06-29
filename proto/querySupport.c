@@ -13,6 +13,7 @@
 #include <string.h>
 #include <mysql.h>
 
+#include "globals.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
@@ -277,7 +278,7 @@ static int displaySNList(
     unsigned int i,
         snlen;
     char *hexs;
-    char nomem[] = "out-of-memory"
+    char nomem[] = "out-of-memory";
 
     snlen = *((unsigned int *)(s->vec[idx1].valptr));
     snlist = (uint8_t *)s->vec[idx1 + 1].valptr;

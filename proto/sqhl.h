@@ -151,7 +151,7 @@ extern int model_cfunc(
     scmcon * conp,
     char *issuer,
     char *aki,
-    unsigned long long sn);
+    uint8_t *sn);
 extern int deletebylid(
     scmcon * conp,
     scmtab * tabp,
