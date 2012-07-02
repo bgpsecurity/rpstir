@@ -10,6 +10,7 @@ fix_manifest
 gen_key
 get_sernum
 loadkey
+makeROA
 make_manifest
 make_roa
 put_sernum
