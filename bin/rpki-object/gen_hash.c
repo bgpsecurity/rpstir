@@ -6,11 +6,11 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "certificate.h"
+#include "rpki-asn1/certificate.h"
 #include "cryptlib.h"
-#include <keyfile.h>
-#include <casn.h>
-#include <asn.h>
+#include <rpki-asn1/keyfile.h>
+#include <casn/casn.h>
+#include <casn/asn.h>
 #include <time.h>
 
 #define SHA1_HASH_LENGTH 20

@@ -44,7 +44,7 @@ bin_rpki_object_create_object_create_object_SOURCES = \
 	bin/rpki-object/create_object/sign_object.c
 
 bin_rpki_object_create_object_create_object_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKI)
 
 dist_pkgdata_DATA += \
 	var/templates

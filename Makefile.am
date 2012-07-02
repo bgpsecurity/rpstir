@@ -38,6 +38,7 @@ dist_check_SCRIPTS =
 dist_doc_DATA =
 dist_man_MANS =
 dist_noinst_DATA =
+dist_pkgdata_DATA =
 dist_sysconf_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
