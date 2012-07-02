@@ -2,7 +2,6 @@ AUTOMAKE_OPTIONS = 1.6 foreign
 
 SUBDIRS = \
 	. \
-	proto \
 	tests/subsystem/testcases \
 	tests/system/testbed \
 	tests/subsystem \
