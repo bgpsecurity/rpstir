@@ -138,8 +138,8 @@ CA Certificates
 167 Version4            # version number is v4, i.e. 3 6487#4.1
 168 SerNum              # negative serial number 6487#4.2 5280#4.1.2.2
     SerNum0             # zero serial number 6487#4.2 5280#4.1.2.2
-    SerNumMax           # (good) serial number is maximum allowable 5280#4.1.2.2
-    SerNumTooBig        # serial number is one more than maximum allowable 5280#4.1.2.2
+190 SerNumMax           # (good) serial number is maximum allowable 5280#4.1.2.2
+191 SerNumTooBig        # serial number is one more than maximum allowable 5280#4.1.2.2
 169 AIA2x               # two authority info access extensions 5280#4.2
 170 SIA2x               # two SIAs 5280#4.2
 171 NoAIA               # no authority info access extension 6487#4.8,4.8.7
