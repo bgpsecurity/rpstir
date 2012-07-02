@@ -2431,8 +2431,11 @@ static int add_cert_2(
     // check that no crls revoking this cert
     if (sta == 0)
     {
-        sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
-                           cf->fields[CF_FIELD_ISSUER]);
+        if (cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
+                         cf->fields[CF_FIELD_ISSUER]))
+        {
+            sta = ERR_SCM_REVOKED;
+        }
     }
     // actually add the certificate
     // sta = 0; chainOK = 1; // uncomment this line for running test 8
