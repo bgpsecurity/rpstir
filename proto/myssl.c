@@ -4253,11 +4253,6 @@ static int crl_entry_chk(
         log_msg(LOG_ERR, "Revoked serial number too long");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (vsize_casn(&entryp->userCertificate) > sizeof(long))
-    {
-        log_msg(LOG_ERR, "Revoked serial number too long for " PACKAGE_NAME);
-        return ERR_SCM_INTERNAL;
-    }
     else if (read_casn_num(&entryp->userCertificate, &snum) <= 0 || snum < 0)
     {
         log_msg(LOG_ERR, "Invalid revoked serial number");
