@@ -4,8 +4,7 @@ SUBDIRS = \
 	. \
 	tests/subsystem/testcases \
 	tests/system/testbed \
-	tests/subsystem \
-	doc
+	tests/subsystem
 
 EXTRA_DIST = \
 	autogen.sh \
@@ -68,6 +67,7 @@ include mk/librpki.mk
 
 # other makefiles shouldn't depend on one another, so are in alphabetical order
 include mk/asn1.mk
+include mk/doxygen.mk
 include mk/oidtable.mk
 include mk/rpki-local-ta.mk
 include mk/rpki-object.mk

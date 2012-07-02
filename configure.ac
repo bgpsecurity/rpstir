@@ -234,7 +234,6 @@ fi
 
 
 AC_CONFIG_FILES([Makefile
-                 doc/Makefile
                  tests/subsystem/Makefile
                  tests/subsystem/rtr/Makefile
                  tests/subsystem/testcases/Makefile
