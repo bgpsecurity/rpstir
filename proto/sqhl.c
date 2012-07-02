@@ -1173,7 +1173,7 @@ static unsigned int *revokedSNLen;
 // static variables to pass to callback
 
 static int isRevoked;
-static const uint8_t *revokedSN = NULL;
+static uint8_t *revokedSN = NULL;
 
 /*
  * callback function for cert_revoked 
@@ -1210,10 +1210,11 @@ static int revokedHandler(
 static int cert_revoked(
     scm * scmp,
     scmcon * conp,
-    const uint8_t *sn,
+    char *sn,
     char *issuer)
 {
     int sta;
+    int sn_len;
 
     // set up query once first time through and then just modify
     if (revokedSrch == NULL)
@@ -1233,9 +1234,19 @@ static int cert_revoked(
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     isRevoked = 0;
-    revokedSN = sn;
+    sn_len = strlen(sn);
+    if (sn_len != 2 + 2*SER_NUM_MAX_SZ) // "^x" followed by hex
+    {
+        return ERR_SCM_INVALARG;
+    }
+    revokedSN = unhexify(sn_len - 2, sn + 2); // 2 for the "^x" prefix
+    if (revokedSN == NULL)
+    {
+        return ERR_SCM_NOMEM;
+    }
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    free(revokedSN);
     revokedSN = NULL;
     return isRevoked ? ERR_SCM_REVOKED : 0;
 }
