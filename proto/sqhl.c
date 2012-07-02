@@ -1202,6 +1202,9 @@ static int revokedHandler(
 
 /*
  * Check whether a cert is revoked by a crl
+ *
+ * @return 0 if the cert isn't revoked, ERR_SCM_REVOKED if the cert is revoked,
+ *         or other error code
  */
 
 static int cert_revoked(
@@ -1234,7 +1237,7 @@ static int cert_revoked(
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     revokedSN = NULL;
-    return isRevoked;
+    return isRevoked ? ERR_SCM_REVOKED : 0;
 }
 
 /*
