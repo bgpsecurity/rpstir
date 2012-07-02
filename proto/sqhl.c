@@ -1200,6 +1200,9 @@ static int revokedHandler(
 
 /*
  * Check whether a cert is revoked by a crl
+ *
+ * @return 0 if the cert isn't revoked, ERR_SCM_REVOKED if the cert is revoked,
+ *         or other error code
  */
 
 static int cert_revoked(
@@ -1231,7 +1234,7 @@ static int cert_revoked(
     revokedSN = strtoull(sn, NULL, 10);
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    return isRevoked;
+    return isRevoked ? ERR_SCM_REVOKED : 0;
 }
 
 /*
@@ -2431,11 +2434,8 @@ static int add_cert_2(
     // check that no crls revoking this cert
     if (sta == 0)
     {
-        if (cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
-                         cf->fields[CF_FIELD_ISSUER]))
-        {
-            sta = ERR_SCM_REVOKED;
-        }
+        sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
+                           cf->fields[CF_FIELD_ISSUER]);
     }
     // actually add the certificate
     // sta = 0; chainOK = 1; // uncomment this line for running test 8
