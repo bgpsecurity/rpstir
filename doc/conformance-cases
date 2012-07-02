@@ -284,6 +284,8 @@ CRLs
 669 CRLNumber2Big            # has too long a CRL number 5280#5.2.3
     CRLNumberMax             # has the maximum allowed 20-octet CRL number 5280#5.2.3
 670 CRL2CRLNums              # has 2 CRL numbers 6487#errata
+    CRLEntrySerNumNeg        # CRL has entry with negative serial number 5280#5.1.2.6 6487#4.2 5280#4.1.2.2
+    CRLEntrySerNum0          # CRL has entry with zero serial number 5280#5.1.2.6 6487#4.2 5280#4.1.2.2
 
 Manifests
 
