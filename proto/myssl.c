@@ -437,7 +437,7 @@ static char *cf_get_sn(
         len = strlen(ptr);
         if (len > 2*SER_NUM_MAX_SZ)
         {
-            *stap = ERR_SCM_INTERNAL;
+            *stap = ERR_SCM_BADSERNUM;
             OPENSSL_free(ptr);
             BN_free(bn);
             return (NULL);
