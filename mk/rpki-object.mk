@@ -26,6 +26,39 @@ bin_rpki_object_check_signature_LDADD = \
 dist_man_MANS += doc/check_signature.1
 
 
+bin_PROGRAMS += bin/rpki-object/create_object/create_object
+
+bin_rpki_object_create_object_create_object_SOURCES = \
+	bin/rpki-object/create_object/create_cert.c \
+	bin/rpki-object/create_object/create_cert.h \
+	bin/rpki-object/create_object/create_crl.c \
+	bin/rpki-object/create_object/create_crl.h \
+	bin/rpki-object/create_object/create_manifest.c \
+	bin/rpki-object/create_object/create_manifest.h \
+	bin/rpki-object/create_object/create_object.c \
+	bin/rpki-object/create_object/create_object.h \
+	bin/rpki-object/create_object/create_roa.c \
+	bin/rpki-object/create_object/create_roa.h \
+	bin/rpki-object/create_object/create_utils.c \
+	bin/rpki-object/create_object/obj_err.h \
+	bin/rpki-object/create_object/sign_object.c
+
+bin_rpki_object_create_object_create_object_LDADD = \
+	$(LDADD_LIBRPKIASN1)
+
+dist_pkgdata_DATA += \
+	var/templates
+
+dist_check_SCRIPTS += \
+	bin/rpki-object/create_object/tests/empty_manifest.sh
+
+CLEANFILES += \
+	bin/rpki-object/create_object/tests/empty_manifest
+
+TESTS += \
+	bin/rpki-object/create_object/tests/empty_manifest.sh
+
+
 bin_PROGRAMS += bin/rpki-object/extractCMScert
 
 bin_rpki_object_extractCMScert_LDADD = \
@@ -53,6 +86,12 @@ bin_rpki_object_extractValidityDate_LDADD = \
 bin_PROGRAMS += bin/rpki-object/fix_manifest
 
 bin_rpki_object_fix_manifest_LDADD = \
+	$(LDADD_LIBRPKIASN1)
+
+
+bin_PROGRAMS += bin/rpki-object/gen_hash
+
+bin_rpki_object_gen_hash_LDADD = \
 	$(LDADD_LIBRPKIASN1)
 
 

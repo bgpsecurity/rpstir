@@ -3,7 +3,6 @@ AUTOMAKE_OPTIONS = 1.6 foreign
 SUBDIRS = \
 	. \
 	tests/subsystem/testcases \
-	tests/system/testbed \
 	tests/subsystem
 
 EXTRA_DIST = \
@@ -73,6 +72,7 @@ include mk/rpki-local-ta.mk
 include mk/rpki-object.mk
 include mk/rpki-rtr.mk
 include mk/rpki.mk
+include mk/testbed.mk
 include mk/unittest.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4

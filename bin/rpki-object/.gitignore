@@ -7,6 +7,7 @@ extractPubKeyInfo
 extractSIA
 extractValidityDate
 fix_manifest
+gen_hash
 gen_key
 get_sernum
 loadkey
