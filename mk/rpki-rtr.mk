@@ -84,8 +84,8 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 	bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/root.options \
 		CERT \
-		outputfilename=tests/subsystem/rtr/"$@" \
-		subjkeyfile=tests/subsystem/rtr/"$<"
+		outputfilename="$@" \
+		subjkeyfile="$<"
 
 tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
 	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
@@ -93,10 +93,10 @@ tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rt
 	bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
 		CERT \
-		outputfilename=tests/subsystem/rtr/"$@" \
+		outputfilename="$@" \
 		parentcertfile=tests/subsystem/rtr/root.cer \
 		parentkeyfile=tests/subsystem/rtr/root.key \
-		subjkeyfile=tests/subsystem/rtr/"$<" \
+		subjkeyfile="$<" \
 		serial="$*" \
 		subject="as$*" \
 		ipv4="$$IP4" \
@@ -117,8 +117,8 @@ tests/subsystem/rtr/as-%.roa: tests/subsystem/rtr/as-%.ee.cer tests/subsystem/rt
 	IP6=`echo "$$IP6" | cut -c 2-`; \
 	bin/rpki-object/create_object/create_object \
 		ROA \
-		outputfilename=tests/subsystem/rtr/"$@" \
-		eecertlocation=tests/subsystem/rtr/"$<" \
+		outputfilename="$@" \
+		eecertlocation="$<" \
 		eekeylocation=tests/subsystem/rtr/"ee-$*.key" \
 		asid="$*" \
 		roaipv4="$$IP4" \
