@@ -1,8 +1,5 @@
 AUTOMAKE_OPTIONS = 1.6 foreign
 
-SUBDIRS = \
-	. \
-	tests/subsystem
 
 EXTRA_DIST = \
 	autogen.sh \

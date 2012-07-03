@@ -32,3 +32,11 @@ check_PROGRAMS += tests/subsystem/rpki-local-ta/makeLTAtest
 
 tests_subsystem_rpki_local_ta_makeLTAtest_LDADD = \
 	$(LDADD_LIBRPKIASN1)
+
+
+dist_check_DATA += \
+	tests/subsystem/rpki-local-ta/testcases4_LTA \
+	tests/subsystem/rpki-local-ta/ttest*.par
+
+
+TESTS += tests/subsystem/rpki-local-ta/runSubsystemTest4.sh

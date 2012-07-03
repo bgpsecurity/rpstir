@@ -189,3 +189,30 @@ CLEANFILES += \
 
 
 TESTS += tests/subsystem/testcases/makeall
+
+
+dist_check_DATA += \
+	tests/subsystem/specs.*.* \
+	tests/subsystem/test*.log
+
+
+dist_check_SCRIPTS += \
+	tests/subsystem/doLoader \
+	tests/subsystem/make* \
+	tests/subsystem/runSubsystemTest1.sh \
+	tests/subsystem/runSubsystemTest2.sh \
+	tests/subsystem/runSubsystemTest3.sh
+
+
+CLEANFILES += \
+	tests/subsystem/garbage.log \
+	tests/subsystem/query.log \
+	tests/subsystem/rcli.log \
+	tests/subsystem/rsync_aur.log
+# TODO: are there more CLEANFILES? C*.cer?
+
+
+TESTS += \
+	tests/subsystem/runSubsystemTest1.sh \
+	tests/subsystem/runSubsystemTest2.sh \
+	tests/subsystem/runSubsystemTest3.sh
