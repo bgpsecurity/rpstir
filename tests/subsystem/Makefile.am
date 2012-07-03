@@ -1,8 +1,5 @@
 AUTOMAKE_OPTIONS = 1.6 foreign
 
-SUBDIRS = \
-	rtr
-
 TESTS = \
 	./runSubsystemTest1.sh \
 	./runSubsystemTest2.sh \

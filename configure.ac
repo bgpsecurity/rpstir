@@ -235,7 +235,6 @@ fi
 
 AC_CONFIG_FILES([Makefile
                  tests/subsystem/Makefile
-                 tests/subsystem/rtr/Makefile
                  tests/subsystem/testcases/Makefile
                  tests/test.include
                  INSTRUCTIONS
