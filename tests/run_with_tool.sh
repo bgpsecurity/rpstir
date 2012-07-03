@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+. `dirname "$0"`/test.include
+
 PROG=`basename "$1"`
 cd `dirname "$1"`
 shift
@@ -12,8 +14,6 @@ case "$PROG" in
     *)
         TEST_LOG_NAME=check
         STRICT_CHECKS=1
-        . `dirname "$0"`/test.include
-
         run "$PROG" ./"$PROG" "$@" || exit $?
         ;;
 esac
