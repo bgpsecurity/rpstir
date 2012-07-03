@@ -56,6 +56,7 @@ dist_noinst_DATA += \
 dist_sysconf_DATA += etc/envir.setup
 
 # library makefiles must be ordered by dependencies, lowest level library to highest
+include mk/libtest.mk
 include mk/libutil.mk
 include mk/libcasn.mk
 include mk/librpkiasn1.mk
@@ -73,7 +74,6 @@ include mk/rpki-rsync.mk
 include mk/rpki-rtr.mk
 include mk/rpki.mk
 include mk/testbed.mk
-include mk/unittest.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
 
