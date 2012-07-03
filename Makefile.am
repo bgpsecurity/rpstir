@@ -71,6 +71,7 @@ include mk/doxygen.mk
 include mk/oidtable.mk
 include mk/rpki-local-ta.mk
 include mk/rpki-object.mk
+include mk/rpki-rsync.mk
 include mk/rpki-rtr.mk
 include mk/rpki.mk
 include mk/testbed.mk
