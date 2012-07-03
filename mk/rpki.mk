@@ -103,3 +103,89 @@ CLEANFILES += \
 	tests/conformance/raw/root/*.roa
 
 dist_doc_DATA += doc/conformance-cases
+
+
+check_PROGRAMS += tests/subsystem/testcases/cert_validate
+
+tests_subsystem_testcases_cert_validate_LDADD = \
+	$(LDADD_RPKI)
+
+
+check_PROGRAMS += tests/subsystem/testcases/gen_test_key
+
+
+check_PROGRAMS += tests/subsystem/testcases/make_test_cert
+
+tests_subsystem_testcases_make_test_cert_SOURCES = \
+	tests/subsystem/testcases/adjustTime.c \
+	tests/subsystem/testcases/make_test_cert.c
+
+
+tests_subsystem_testcases_make_test_cert_LDADD = \
+	$(LDADD_RPKIASN1)
+
+
+check_PROGRAMS += tests/subsystem/testcases/make_test_crl
+
+tests_subsystem_testcases_make_test_crl_SOURCES = \
+	tests/subsystem/testcases/adjustTime.c \
+	tests/subsystem/testcases/make_test_crl.c
+
+tests_subsystem_testcases_make_test_crl_LDADD = \
+	$(LDADD_RPKIASN1)
+
+
+check_PROGRAMS += tests/subsystem/testcases/make_test_manifest
+
+tests_subsystem_testcases_make_test_manifest_SOURCES = \
+	tests/subsystem/testcases/adjustTime.c \
+	tests/subsystem/testcases/make_test_manifest.c
+
+tests_subsystem_testcases_make_test_manifest_LDADD = \
+	$(LDADD_RPKIASN1)
+
+
+check_PROGRAMS += tests/subsystem/testcases/make_test_roa
+
+tests_subsystem_testcases_make_test_roa_LDADD = \
+	$(LDADD_RPKI)
+
+
+dist_check_DATA += \
+	tests/subsystem/testcases/*.p15 \
+	tests/subsystem/testcases/C.*.orig \
+	tests/subsystem/testcases/certpattern \
+	tests/subsystem/testcases/false* \
+	tests/subsystem/testcases/makeC* \
+	tests/subsystem/testcases/makeL* \
+	tests/subsystem/testcases/makeM* \
+	tests/subsystem/testcases/queryIgnoreAll \
+	tests/subsystem/testcases/t?-?_* \
+	tests/subsystem/testcases/test1.log \
+	tests/subsystem/testcases/tools/test.conf
+
+
+dist_check_SCRIPTS += \
+	tests/subsystem/testcases/makeall \
+	tests/subsystem/testcases/makecerts \
+	tests/subsystem/testcases/makecrls \
+	tests/subsystem/testcases/makekeys \
+	tests/subsystem/testcases/makemanifests \
+	tests/subsystem/testcases/makeroas \
+	tests/subsystem/testcases/print-cert-addrs.sh \
+	tests/subsystem/testcases/testall.sh
+
+
+CLEANFILES += \
+	tests/subsystem/testcases/*.crl \
+	tests/subsystem/testcases/*.man \
+	tests/subsystem/testcases/*.roa \
+	tests/subsystem/testcases/C*.cer \
+	tests/subsystem/testcases/C.raw \
+	tests/subsystem/testcases/C1 \
+	tests/subsystem/testcases/C2 \
+	tests/subsystem/testcases/EEcertificates
+
+
+
+TESTS += tests/subsystem/testcases/makeall

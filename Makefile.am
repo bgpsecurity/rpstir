@@ -2,7 +2,6 @@ AUTOMAKE_OPTIONS = 1.6 foreign
 
 SUBDIRS = \
 	. \
-	tests/subsystem/testcases \
 	tests/subsystem
 
 EXTRA_DIST = \
