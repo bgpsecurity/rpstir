@@ -43,6 +43,10 @@ bin_rpki_object_create_object_create_object_SOURCES = \
 	bin/rpki-object/create_object/obj_err.h \
 	bin/rpki-object/create_object/sign_object.c
 
+bin_rpki_object_create_object_create_object_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-DTEMPLATES_DIR="\"$(abs_top_srcdir)/var/templates\""
+
 bin_rpki_object_create_object_create_object_LDADD = \
 	$(LDADD_LIBRPKI)
 

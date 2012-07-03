@@ -34,7 +34,7 @@ int write_EEcert(
 int write_EEkey(
     void *my_var,
     void *value);
-char *man_template = "../templates/M.man";
+char *man_template = TEMPLATES_DIR "/M.man";
 
 /**
  * Write the unique identifier for this manifest number

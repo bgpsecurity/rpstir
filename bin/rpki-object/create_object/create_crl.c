@@ -19,7 +19,7 @@
 #include "create_object.h"
 #include "obj_err.h"
 
-char *crl_template = "../templates/crl_template.crl";
+char *crl_template = TEMPLATES_DIR "/crl_template.crl";
 
 /*
  * function declarations 

@@ -20,7 +20,7 @@
 #include "obj_err.h"
 // #include "create_utils.h"
 
-char *roa_template = "../templates/R.roa";
+char *roa_template = TEMPLATES_DIR "/R.roa";
 void print_table(
     struct object_field *table);
 int write_EEcert(
