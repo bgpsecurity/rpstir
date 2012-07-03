@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
-#include "casn.h"
+#include "casn/casn.h"
 
 static char *units = "YMWDhms";
 

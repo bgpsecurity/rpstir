@@ -60,3 +60,12 @@ nodist_lib_rpki_asn1_librpkiasn1_a_SOURCES = \
 	$(lib_rpki_asn1_librpkiasn1_a_ASN1_H)
 
 EXTRA_DIST += $(lib_rpki_asn1_librpkiasn1_a_ASN1)
+
+
+check_PROGRAMS += tests/subsystem/rpki-asn1/test_casn_random
+
+tests_subsystem_rpki_asn1_test_casn_random_LDADD = \
+	$(LDADD_LIBRPKIASN1)
+
+
+dist_check_SCRIPTS += tests/subsystem/rpki-asn1/test_casn_random_driver.sh

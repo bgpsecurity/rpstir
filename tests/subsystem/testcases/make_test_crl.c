@@ -9,11 +9,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
-#include "crlv2.h"
-#include "certificate.h"
-#include "extensions.h"
+#include "rpki-asn1/crlv2.h"
+#include "rpki-asn1/certificate.h"
+#include "rpki-asn1/extensions.h"
 #include <cryptlib.h>
-#include <roa.h>
+#include <rpki-asn1/roa.h>
 
 extern int adjustTime(
     struct casn *,

@@ -26,11 +26,7 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 
 dist_man_MANS += doc/asn_gen.1
 
-.asn.c:
-	$(MAKE) $*.h
-
-.asn.h:
-	$(MAKE) lib/casn/asn_gen/asn_gen
+%.c %.h: %.asn lib/casn/asn_gen/asn_gen
 	cd "`dirname $<`" && \
 		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen -c "`basename $<`"
 
@@ -65,9 +61,3 @@ lib_casn_libcasn_a_SOURCES = \
 	lib/casn/casn_time.c
 
 dist_man_MANS += doc/casn_functions.3
-
-
-check_PROGRAMS += tests/subsystem/casn/test_casn_random
-
-
-dist_check_SCRIPTS += tests/subsystem/casn/test_casn_random_driver.sh

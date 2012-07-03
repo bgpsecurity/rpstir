@@ -13,10 +13,10 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
-#include <certificate.h>
-#include <extensions.h>
-#include <roa.h>
-#include <roa_utils.h>
+#include <rpki-asn1/certificate.h>
+#include <rpki-asn1/extensions.h>
+#include <rpki-asn1/roa.h>
+#include <rpki/cms/roa_utils.h>
 #include <assert.h>
 
 // in signCMS.c in this directory

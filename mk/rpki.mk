@@ -108,7 +108,7 @@ dist_doc_DATA += doc/conformance-cases
 check_PROGRAMS += tests/subsystem/testcases/cert_validate
 
 tests_subsystem_testcases_cert_validate_LDADD = \
-	$(LDADD_RPKI)
+	$(LDADD_LIBRPKI)
 
 
 check_PROGRAMS += tests/subsystem/testcases/gen_test_key
@@ -122,7 +122,7 @@ tests_subsystem_testcases_make_test_cert_SOURCES = \
 
 
 tests_subsystem_testcases_make_test_cert_LDADD = \
-	$(LDADD_RPKIASN1)
+	$(LDADD_LIBRPKIASN1)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_crl
@@ -132,7 +132,7 @@ tests_subsystem_testcases_make_test_crl_SOURCES = \
 	tests/subsystem/testcases/make_test_crl.c
 
 tests_subsystem_testcases_make_test_crl_LDADD = \
-	$(LDADD_RPKIASN1)
+	$(LDADD_LIBRPKIASN1)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_manifest
@@ -142,13 +142,13 @@ tests_subsystem_testcases_make_test_manifest_SOURCES = \
 	tests/subsystem/testcases/make_test_manifest.c
 
 tests_subsystem_testcases_make_test_manifest_LDADD = \
-	$(LDADD_RPKIASN1)
+	$(LDADD_LIBRPKI)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_roa
 
 tests_subsystem_testcases_make_test_roa_LDADD = \
-	$(LDADD_RPKI)
+	$(LDADD_LIBRPKI)
 
 
 dist_check_DATA += \

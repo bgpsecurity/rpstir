@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include "bag.h"
-#include "unittest.h"
+#include "util/bag.h"
+#include "test/unittest.h"
 
 bool empty_test(
     Bag * bag)

@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <extensions.h>
-#include <casn.h>
-#include <certificate.h>
-#include <roa.h>
-#include <manifest.h>
-#include <crlv2.h>
+#include <rpki-asn1/extensions.h>
+#include <casn/casn.h>
+#include <rpki-asn1/certificate.h>
+#include <rpki-asn1/roa.h>
+#include <rpki-asn1/manifest.h>
+#include <rpki-asn1/crlv2.h>
 
 /*
  * this program takes one or more filenames on the command line and

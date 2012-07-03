@@ -3,9 +3,9 @@
  */
 
 
-#include "manifest.h"
-#include "roa.h"
-#include "certificate.h"
+#include "rpki-asn1/manifest.h"
+#include "rpki-asn1/roa.h"
+#include "rpki-asn1/certificate.h"
 #include "cryptlib.h"
 #include <stdio.h>
 #include <sys/types.h>
@@ -13,8 +13,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
-#include <asn.h>
-#include <casn.h>
+#include <casn/asn.h>
+#include <casn/casn.h>
 
 extern char *signCMS(
     struct ROA *roap,

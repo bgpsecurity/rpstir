@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "stringutils.h"
-#include "unittest.h"
+#include "util/stringutils.h"
+#include "test/unittest.h"
 
 
 static bool test_scrub_for_print__length_if_truncated(

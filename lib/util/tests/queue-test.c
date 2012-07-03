@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#include "queue.h"
-#include "unittest.h"
+#include "util/queue.h"
+#include "test/unittest.h"
 
 // TODO: Maybe add tests with 2 and 3 threads to truly exercise the mutexes.
 
