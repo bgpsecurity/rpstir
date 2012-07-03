@@ -58,9 +58,9 @@ dist_doc_DATA += doc/rpki-rtr-daemon-outline
 dist_doc_DATA += doc/rpki-rtr-notes
 
 
-check_SCRIPTS += tests/subsystem/rtr/runRTRTest.sh
+check_SCRIPTS += tests/subsystem/rtr/test.sh
 
-TESTS += tests/subsystem/rtr/runRTRTest.sh
+TESTS += tests/subsystem/rtr/test.sh
 
 
 check_DATA += \
