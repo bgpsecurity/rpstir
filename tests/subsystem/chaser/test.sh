@@ -1,11 +1,11 @@
 #!/bin/sh -e
 
 cd "`dirname "$0"`"
-. ../../envir.setup
+. ../../../etc/envir.setup
 
 TEST_LOG_NAME=chaser
 STRICT_CHECKS=1
-. ../test.include
+. "$RPKI_ROOT"/tests/test.include
 
 #===============================================================================
 compare () {
@@ -48,7 +48,7 @@ for TEST_NAME in \
 	bad_chars
 do
 	start_test "$TEST_NAME"
-	run "$TEST_NAME" "$RPKI_ROOT/proto/chaser" -s -t -f "input.$TEST_NAME" > response.log
+	run "$TEST_NAME" chaser -s -t -f "input.$TEST_NAME" > response.log
 	stop_test "$TEST_NAME"
 done
 

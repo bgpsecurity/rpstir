@@ -2,16 +2,16 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # test functions
-. $THIS_SCRIPT_DIR/test.include
+. $RPKI_ROOT/tests/test.include
 echo $THIS_SCRIPT_DIR
 echo "Loading data"
-../rsync_aur/rsync_aur -s -t $RPKI_PORT -f test4.log -w -e -i \
-  -d $RPKI_ROOT/subsystemTests/testcases4_LTA || \
+rsync_aur -s -t $RPKI_PORT -f test4.log -w -e -i \
+  -d `pwd`/testcases4_LTA || \
   check_errs $? "$0 rsync_aur failed"
 
 echo $0 PASS

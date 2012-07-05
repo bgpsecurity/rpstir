@@ -75,6 +75,12 @@ fi
 # MySQL command line which reads statements from stdin
 export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 
+# add all binaries to the path
+find "$RPKI_ROOT/bin" -type d -print | while read path_dir; do
+    PATH="$path_dir:$PATH"
+done
+export PATH
+
 ############################################################################
 # Shell function for checking return codes for error (swiped from
 # http://steve-parker.org/sh/exitcodes.shtml)

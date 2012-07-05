@@ -2,10 +2,10 @@
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices - exit w/ failure on any error
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -74,15 +74,12 @@ Example:
 # 2. Dependencies: This script assumes the existence (and PATH
 # accessibility) of the standard tool 'sed'.
 
-# Set up paths to ASN.1 tools.
-CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
-TBTOOLS=$RPKI_ROOT/testbed/src	# Tools used for testbed generation
 
 # Options and defaults
 OUTPUT_DIR="."
-EECERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ee_template.cer"
-CRL_TEMPLATE="$RPKI_ROOT/testbed/templates/crl_template.crl"
-MFT_TEMPLATE="$RPKI_ROOT/testbed/templates/M.man"
+EECERT_TEMPLATE="$RPKI_ROOT/var/templates/ee_template.cer"
+CRL_TEMPLATE="$RPKI_ROOT/var/templates/crl_template.crl"
+MFT_TEMPLATE="$RPKI_ROOT/var/templates/M.man"
 
 # Process command line arguments.
 while getopts o:h opt
@@ -120,10 +117,10 @@ hash openssl
 hash sed
 hash basename
 
-ensure_file_exists $CGTOOLS/extractSIA
-ensure_file_exists $CGTOOLS/extractValidityDate
-ensure_file_exists $CGTOOLS/gen_key
-ensure_file_exists $TBTOOLS/create_object
+hash extractSIA
+hash extractValidityDate
+hash gen_key
+hash create_object
 
 compute_sha256 ( ) {
     ensure_file_exists $1
@@ -144,15 +141,15 @@ ensure_file_exists ${EECERT_TEMPLATE}
 ###############################################################################
 
 # Extract SIA manifest URI from parent
-parent_sia=$($CGTOOLS/extractSIA -m $PARENT_CERT_FILE)
+parent_sia=$(extractSIA -m $PARENT_CERT_FILE)
 echo "Parent SIA: ${parent_sia}"
 
 # Extract validity dates from parent in both X.509 (utctime or gmtime,
 # depending on the date) and MFT (gmtime) formats.
-parent_notbefore=$($CGTOOLS/extractValidityDate -b $PARENT_CERT_FILE)
-parent_notafter=$($CGTOOLS/extractValidityDate -a $PARENT_CERT_FILE)
-parent_notbefore_gtime=$($CGTOOLS/extractValidityDate -b -g $PARENT_CERT_FILE)
-parent_notafter_gtime=$($CGTOOLS/extractValidityDate -a -g $PARENT_CERT_FILE)
+parent_notbefore=$(extractValidityDate -b $PARENT_CERT_FILE)
+parent_notafter=$(extractValidityDate -a $PARENT_CERT_FILE)
+parent_notbefore_gtime=$(extractValidityDate -b -g $PARENT_CERT_FILE)
+parent_notafter_gtime=$(extractValidityDate -a -g $PARENT_CERT_FILE)
 
 # Compute SIA manifest URI for EE cert
 ee_sia_mft="${parent_sia}"
@@ -175,11 +172,11 @@ mft_ee_key_path=${OUTPUT_DIR}/${mft_name}.p15
 ###############################################################################
 
 # 1. Generate EE key pair
-$CGTOOLS/gen_key $mft_ee_key_path 2048
+gen_key $mft_ee_key_path 2048
 echo "Generated MFT EE key pair: $mft_ee_key_path"
 
 # 2. Create child-issued EE cert (to be embedded in the manifest)
-$TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
+create_object -t ${EECERT_TEMPLATE} CERT \
     outputfilename=${mft_ee_path} \
     parentcertfile=${PARENT_CERT_FILE} \
     parentkeyfile=${PARENT_KEY_FILE} \
@@ -211,7 +208,7 @@ while [ $# -gt 0 ]; do
 done
 
 # 4. Create child-issued Manifest
-$TBTOOLS/create_object -t ${MFT_TEMPLATE} MANIFEST \
+create_object -t ${MFT_TEMPLATE} MANIFEST \
     outputfilename=${mft_path} \
     EECertLocation=${mft_ee_path} \
     EEKeyLocation=${mft_ee_key_path} \

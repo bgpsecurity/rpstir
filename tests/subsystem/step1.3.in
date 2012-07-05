@@ -2,15 +2,15 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # test functions
-. $THIS_SCRIPT_DIR/test.include
+. $RPKI_ROOT/tests/test.include
 
 echo "Expecting 16 roa filenames"
-CMDLINE="../proto/query -s specs.1.3 -t roa -d filename"
+CMDLINE="query -s specs.1.3 -t roa -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 16
 
 echo $0 PASS

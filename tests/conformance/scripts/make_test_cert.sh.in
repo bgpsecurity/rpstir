@@ -13,10 +13,10 @@
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -107,14 +107,12 @@ Explanation of outputs, not in original order:
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-# Set up paths to ASN.1 tools.
-CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
-PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
-ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
-TEMPLATE_CERT_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCert.raw"
+OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+PATCHES_DIR="$RPKI_ROOT/tests/conformance/raw/patches"
+ROOT_KEY_PATH="$RPKI_ROOT/tests/conformance/raw/root.p15"
+TEMPLATE_CERT_RAW="$RPKI_ROOT/tests/conformance/raw/templates/goodCert.raw"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
@@ -186,11 +184,11 @@ ensure_dir_exists $OUTPUT_DIR
 ensure_dir_exists $PATCHES_DIR
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $TEMPLATE_CERT_RAW
-ensure_file_exists $CGTOOLS/rr
-ensure_file_exists $CGTOOLS/put_sernum
-ensure_file_exists $CGTOOLS/put_subj
-ensure_file_exists $CGTOOLS/dump_smart
-ensure_file_exists $CGTOOLS/sign_cert
+hash rr
+hash put_sernum
+hash put_subj
+hash dump_smart
+hash sign_cert
 
 if [ $USE_EXISTING_PATCHES ]
 then
@@ -208,10 +206,10 @@ cd ${OUTPUT_DIR}
 # Customize w/ serial number and subject name (based on $child_name)
 echo "Customizing cert w/ serial number $SERIAL and subject name ${child_name}"
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
-${CGTOOLS}/put_sernum ${child_name}.cer ${SERIAL}
-${CGTOOLS}/put_subj ${child_name}.cer ${child_name}
-${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
+rr <${child_name}.raw >${child_name}.cer
+put_sernum ${child_name}.cer ${SERIAL}
+put_subj ${child_name}.cer ${child_name}
+dump_smart ${child_name}.cer >${child_name}.raw
 
 # Stage 0: pre-setting SKI modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
@@ -229,9 +227,9 @@ fi
 
 # Set the SKI
 echo "Setting SKI"
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.blb
-${CGTOOLS}/set_cert_ski ${child_name}.blb ${child_name}.cer
-${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
+rr <${child_name}.raw >${child_name}.blb
+set_cert_ski ${child_name}.blb ${child_name}.cer
+dump_smart ${child_name}.cer >${child_name}.raw
 rm ${child_name}.blb ${child_name}.cer
 
 # Stage 1: post-setting SKI, pre-signing modification: manual or automatic (can be no-op)
@@ -250,10 +248,10 @@ fi
 
 # Sign it
 echo "Signing cert"
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.blb
-${CGTOOLS}/sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
+rr <${child_name}.raw >${child_name}.blb
+sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
 mv ${child_name}.blb ${child_name}.cer
-${CGTOOLS}/dump_smart ${child_name}.cer >${child_name}.raw
+dump_smart ${child_name}.cer >${child_name}.raw
 
 # Stage 2: post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
@@ -270,7 +268,7 @@ else
 fi
 
 # Convert back into DER-encoded binary.
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.cer
+rr <${child_name}.raw >${child_name}.cer
 
 # Clean-up
 rm ${child_name}.raw

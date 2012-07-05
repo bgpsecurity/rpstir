@@ -4,7 +4,7 @@
 IGNORE=""
 
 THIS_SCRIPT_DIR=`dirname "$0"`
-. "$THIS_SCRIPT_DIR/../../../envir.setup"
+. "$THIS_SCRIPT_DIR/../../../etc/envir.setup"
 
 cd "$THIS_SCRIPT_DIR"
 
@@ -46,14 +46,14 @@ add_file () {
 	esac
 
 	if test x"$TYPE" = x"bad"; then
-		if ! "$RPKI_ROOT/proto/rcli" -s -y $FLAGS "$FILE"; then
+		if ! rcli -s -y $FLAGS "$FILE"; then
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		FILECOUNT=`query -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
-			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
+			query -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
 			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
 				PASSED_IGNORE="$FILE $PASSED_IGNORE"
 			else
@@ -61,7 +61,7 @@ add_file () {
 			fi
 		fi
 	else
-		if ! "$RPKI_ROOT/proto/rcli" -s -y $FLAGS "$FILE"; then
+		if ! rcli -s -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding good file $FILE failed"
 			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
 				FAILED_IGNORE="$FILE $FAILED_IGNORE"
@@ -71,10 +71,10 @@ add_file () {
 			return
 		fi
 
-		FILECOUNT=`"$RPKI_ROOT/proto/query" -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		FILECOUNT=`query -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
-			"$RPKI_ROOT/proto/query" -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
+			query -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
 			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
 				FAILED_IGNORE="$FILE $FAILED_IGNORE"
 			else
@@ -92,14 +92,14 @@ list_files () {
 }
 
 init_db () {
-	"$RPKI_ROOT/run_scripts/initDB.sh"
+	initDB.sh
 }
 
 reset_db () {
-	"$RPKI_ROOT/proto/rcli" -x -t "$OUTPUT_DIR" -y
-	"$RPKI_ROOT/proto/rcli" -s -y -F "$OUTPUT_DIR"/root.cer
-	"$RPKI_ROOT/proto/rcli" -s -y -f "$OUTPUT_DIR"/root/root.crl
-	"$RPKI_ROOT/proto/rcli" -s -y -f "$OUTPUT_DIR"/root/root.mft
+	rcli -x -t "$OUTPUT_DIR" -y
+	rcli -s -y -F "$OUTPUT_DIR"/root.cer
+	rcli -s -y -f "$OUTPUT_DIR"/root/root.crl
+	rcli -s -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
 

@@ -2,19 +2,15 @@
 
 cd `dirname "$0"`
 
-. ../../../envir.setup
+. ../../../../etc/envir.setup
 
 OUTDIR="`pwd`/empty_manifest"
 rm -rf "$OUTDIR"
 mkdir "$OUTDIR"
 
-cd "$RPKI_ROOT/testbed/src"
 
-GEN_KEY="$RPKI_ROOT/cg/tools/gen_key"
-CREATE_OBJECT="$RPKI_ROOT/testbed/src/create_object"
-
-"$GEN_KEY" "$OUTDIR/root.p15" 2048
-"$CREATE_OBJECT" CERT \
+gen_key "$OUTDIR/root.p15" 2048
+create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
 	type=CA \
@@ -29,8 +25,8 @@ CREATE_OBJECT="$RPKI_ROOT/testbed/src/create_object"
 	ipv6="::/0" \
 	as=0-4294967295
 
-"$GEN_KEY" "$OUTDIR/empty_manifest.mft.ee.p15" 2048
-"$CREATE_OBJECT" CERT \
+gen_key "$OUTDIR/empty_manifest.mft.ee.p15" 2048
+create_object CERT \
 	outputfilename="$OUTDIR/empty_manifest.mft.ee.cer" \
 	parentcertfile="$OUTDIR/root.cer" \
 	parentkeyfile="$OUTDIR/root.p15" \
@@ -46,7 +42,7 @@ CREATE_OBJECT="$RPKI_ROOT/testbed/src/create_object"
 	ipv4=inherit \
 	ipv6=inherit \
 	as=inherit
-"$CREATE_OBJECT" MANIFEST \
+create_object MANIFEST \
 	outputfilename="$OUTDIR/empty_manifest.mft" \
 	EECertLocation="$OUTDIR/empty_manifest.mft.ee.cer" \
 	EEKeyLocation="$OUTDIR/empty_manifest.mft.ee.p15" \

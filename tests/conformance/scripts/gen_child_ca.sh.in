@@ -3,10 +3,10 @@
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices - exit w/ failure on any error
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -97,9 +97,6 @@ Auxiliary Outputs: (not shown in diagram)
 # 2. Dependencies: This script assumes the existence (and PATH
 # accessibility) of the standard tool 'sed'.
 
-# Set up paths to ASN.1 tools.
-CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
-TBTOOLS=$RPKI_ROOT/testbed/src	# Tools used for testbed generation
 
 # Options and defaults
 USE_CRL_PREFIX=0
@@ -108,10 +105,10 @@ PREFIX="bad"
 OUTPUT_DIR="."
 KEYS_DIR="."
 USE_EXISTING_KEYS=
-CACERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ca_template.cer"
-EECERT_TEMPLATE="$RPKI_ROOT/testbed/templates/ee_template.cer"
-CRL_TEMPLATE="$RPKI_ROOT/testbed/templates/crl_template.crl"
-MFT_TEMPLATE="$RPKI_ROOT/testbed/templates/M.man"
+CACERT_TEMPLATE="$RPKI_ROOT/var/templates/ca_template.cer"
+EECERT_TEMPLATE="$RPKI_ROOT/var/templates/ee_template.cer"
+CRL_TEMPLATE="$RPKI_ROOT/var/templates/crl_template.crl"
+MFT_TEMPLATE="$RPKI_ROOT/var/templates/M.man"
 
 # Process command line arguments.
 while getopts b:o:x:d:Kh opt
@@ -166,25 +163,25 @@ fi
 hash openssl
 hash sed
 
-ensure_file_exists $CGTOOLS/extractSIA
-ensure_file_exists $CGTOOLS/extractValidityDate
-ensure_file_exists $CGTOOLS/gen_key
-ensure_file_exists $TBTOOLS/create_object
+hash extractSIA
+hash extractValidityDate
+hash gen_key
+hash create_object
 
 ###############################################################################
 # Compute Paths (both rsync URIs and local paths)
 ###############################################################################
 
 # Extract SIA directory from parent (rsync URI)
-parent_sia=$($CGTOOLS/extractSIA $PARENT_CERT_FILE)
+parent_sia=$(extractSIA $PARENT_CERT_FILE)
 echo "Parent SIA: ${parent_sia}"
 
 # Extract validity dates from parent in both X.509 (utctime or gmtime,
 # depending on the date) and MFT (gmtime) formats.
-parent_notbefore=$($CGTOOLS/extractValidityDate -b $PARENT_CERT_FILE)
-parent_notafter=$($CGTOOLS/extractValidityDate -a $PARENT_CERT_FILE)
-parent_notbefore_gtime=$($CGTOOLS/extractValidityDate -b -g $PARENT_CERT_FILE)
-parent_notafter_gtime=$($CGTOOLS/extractValidityDate -a -g $PARENT_CERT_FILE)
+parent_notbefore=$(extractValidityDate -b $PARENT_CERT_FILE)
+parent_notafter=$(extractValidityDate -a $PARENT_CERT_FILE)
+parent_notbefore_gtime=$(extractValidityDate -b -g $PARENT_CERT_FILE)
+parent_notafter_gtime=$(extractValidityDate -a -g $PARENT_CERT_FILE)
 
 # Compute SIA directory (rsync URI) for child CA
 child_sia_dir="${parent_sia}${SUBJECTNAME}/"
@@ -257,7 +254,7 @@ else
 fi
 
 # 2. Create/sign child certificate with appropriate parameters
-$TBTOOLS/create_object -t ${CACERT_TEMPLATE} CERT \
+create_object -t ${CACERT_TEMPLATE} CERT \
     outputfilename=${child_cert_path} \
     parentcertfile=${PARENT_CERT_FILE} \
     parentkeyfile=${PARENT_KEY_FILE} \
@@ -284,7 +281,7 @@ mkdir -p $child_sia_path
 echo "Created child SIA directory: $child_sia_path"
 
 # Create child-issued CRL
-$TBTOOLS/create_object -t ${CRL_TEMPLATE} CRL \
+create_object -t ${CRL_TEMPLATE} CRL \
     outputfilename=${child_crl_path} \
     parentcertfile=${child_cert_path} \
     parentkeyfile=${child_key_path} \
@@ -300,12 +297,12 @@ if [ ${USE_EXISTING_KEYS} ]
 then
     echo "Using existing MFT EE key pair: $child_mft_ee_key_path"
 else
-    $CGTOOLS/gen_key $child_mft_ee_key_path 2048
+    gen_key $child_mft_ee_key_path 2048
     echo "Generated MFT EE key pair: $child_mft_ee_key_path"
 fi
 
 # 2. Create child-issued EE cert (to be embedded in the manifest)
-$TBTOOLS/create_object -t ${EECERT_TEMPLATE} CERT \
+create_object -t ${EECERT_TEMPLATE} CERT \
     outputfilename=${child_mft_ee_path} \
     parentcertfile=${child_cert_path} \
     parentkeyfile=${child_key_path} \
@@ -329,7 +326,7 @@ child_crl_hash=$(openssl sha -sha256 -r ${child_crl_path} | \
 echo "Hash of ${child_crl_name}: 0x${child_crl_hash}"
 
 # 4. Create child-issued Manifest
-$TBTOOLS/create_object -t ${MFT_TEMPLATE} MANIFEST \
+create_object -t ${MFT_TEMPLATE} MANIFEST \
     outputfilename=${child_mft_path} \
     EECertLocation=${child_mft_ee_path} \
     EEKeyLocation=${child_mft_ee_key_path} \

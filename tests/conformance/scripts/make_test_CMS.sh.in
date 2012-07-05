@@ -5,10 +5,10 @@
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -95,18 +95,16 @@ Explanation of outputs, not in original order:
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-# Set up paths to ASN.1 tools.
-CGTOOLS=$RPKI_ROOT/cg/tools     # Charlie Gardiner's tools
 export RPKI_NO_SIGNING_TIME=1
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
-PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
-KEYS_DIR="$RPKI_ROOT/testcases/conformance/raw/keys"
-ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
-ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
-TEMPLATE_EE_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodEECert.raw"
-TEMPLATE_ROA_RAW="$RPKI_ROOT/testcases/conformance/raw/templates/goodCMS.raw"
+OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+PATCHES_DIR="$RPKI_ROOT/tests/conformance/raw/patches"
+KEYS_DIR="$RPKI_ROOT/tests/conformance/raw/keys"
+ROOT_KEY_PATH="$RPKI_ROOT/tests/conformance/raw/root.p15"
+ROOT_CERT_PATH="$RPKI_ROOT/tests/conformance/raw/root.cer"
+TEMPLATE_EE_RAW="$RPKI_ROOT/tests/conformance/raw/templates/goodEECert.raw"
+TEMPLATE_ROA_RAW="$RPKI_ROOT/tests/conformance/raw/templates/goodCMS.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
@@ -185,15 +183,15 @@ ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $ROOT_CERT_PATH
 ensure_file_exists $TEMPLATE_EE_RAW
 ensure_file_exists $TEMPLATE_ROA_RAW
-ensure_file_exists $CGTOOLS/rr
-ensure_file_exists $CGTOOLS/put_sernum
-ensure_file_exists $CGTOOLS/put_subj
-ensure_file_exists $CGTOOLS/put_sia
-ensure_file_exists $CGTOOLS/add_key_info
-ensure_file_exists $CGTOOLS/add_cms_cert_no_check
-ensure_file_exists $CGTOOLS/dump_smart
-ensure_file_exists $CGTOOLS/sign_cert
-ensure_file_exists $CGTOOLS/sign_cms
+hash rr
+hash put_sernum
+hash put_subj
+hash put_sia
+hash add_key_info
+hash add_cms_cert_no_check
+hash dump_smart
+hash sign_cert
+hash sign_cms
 
 if [ $USE_EXISTING_PATCHES ]
 then
@@ -212,20 +210,20 @@ cd ${OUTPUT_DIR}
 
 # $1=CMS/ROA/MFT, $2=fault type, $3 =sernum
 cp ${TEMPLATE_EE_RAW} ${ee_name}.raw
-${CGTOOLS}/rr <${ee_name}.raw >${ee_name}.cer
-${CGTOOLS}/put_sernum ${ee_name}.cer ${SERIAL}
-${CGTOOLS}/put_subj ${ee_name}.cer ${ee_name}
-${CGTOOLS}/put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
+rr <${ee_name}.raw >${ee_name}.cer
+put_sernum ${ee_name}.cer ${SERIAL}
+put_subj ${ee_name}.cer ${ee_name}
+put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
 
 # Create new key if in manual mode (not using existing patches)
 if [ -z $USE_EXISTING_PATCHES ]
 then
-    ${CGTOOLS}/gen_key ${ee_key_path} 2048
+    gen_key ${ee_key_path} 2048
 fi
 
-${CGTOOLS}/add_key_info ${ee_name}.cer ${ee_key_path} ${ROOT_CERT_PATH}
+add_key_info ${ee_name}.cer ${ee_key_path} ${ROOT_CERT_PATH}
 rm ${ee_name}.cer.raw
-${CGTOOLS}/dump_smart ${ee_name}.cer >${ee_name}.raw
+dump_smart ${ee_name}.cer >${ee_name}.raw
 
 # Stage 0: Modify EE automatically or manually
 if [ $USE_EXISTING_PATCHES ]
@@ -245,8 +243,8 @@ fi
 
 # Sign EE cert
 echo "Signing EE cert"
-${CGTOOLS}/rr <${ee_name}.raw >${ee_name}.cer
-${CGTOOLS}/sign_cert ${ee_name}.cer ${ROOT_KEY_PATH}
+rr <${ee_name}.raw >${ee_name}.cer
+sign_cert ${ee_name}.cer ${ROOT_KEY_PATH}
 rm ${ee_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 
@@ -274,10 +272,10 @@ fi
 # signedAttrs.  Note that this operation also computes a signature
 # using the EE private key, but this signature computation is
 # superfluous because it will get overwritten later by sign_cms.
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
-${CGTOOLS}/add_cms_cert_no_check ${ee_name}.cer ${child_name}.roa \
+rr <${child_name}.raw >${child_name}.roa
+add_cms_cert_no_check ${ee_name}.cer ${child_name}.roa \
     ${ee_key_path} ${child_name}.roa
-${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
+dump_smart ${child_name}.roa > ${child_name}.raw
 
 # Stage 2: Modify ROA's SignedAttributes area, automatically or manually.
 if [ $USE_EXISTING_PATCHES ]
@@ -296,9 +294,9 @@ else
 fi
 
 # Sign the potentially modified SignedAttributes area using EE private key
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
-${CGTOOLS}/sign_cms ${child_name}.roa ${ee_key_path}
-${CGTOOLS}/dump_smart ${child_name}.roa > ${child_name}.raw
+rr <${child_name}.raw >${child_name}.roa
+sign_cms ${child_name}.roa ${ee_key_path}
+dump_smart ${child_name}.roa > ${child_name}.raw
 
 # Stage 3: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
@@ -317,6 +315,6 @@ else
 fi
 
 # Convert back into binary
-${CGTOOLS}/rr <${child_name}.raw >${child_name}.roa
+rr <${child_name}.raw >${child_name}.roa
 rm ${child_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${child_name}.roa"

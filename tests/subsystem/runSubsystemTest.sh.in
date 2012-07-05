@@ -23,15 +23,15 @@ NUM_STEPS=$2
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # for the run and run_bg functions
 export TEST_LOG_NAME="subsys$TESTID"
 
 # test functions
-. $THIS_SCRIPT_DIR/test.include
+. $RPKI_ROOT/tests/test.include
 
 cd $THIS_SCRIPT_DIR
 
@@ -45,7 +45,7 @@ if nc -z localhost $RPKI_PORT; then
 fi
 
 # start loader
-run_bg "rcli-w" ../proto/rcli -w $RPKI_PORT -p
+run_bg "rcli-w" rcli -w $RPKI_PORT -p
 LOADER_PID=$!
 while ! nc -z localhost $RPKI_PORT; do
     sleep 1

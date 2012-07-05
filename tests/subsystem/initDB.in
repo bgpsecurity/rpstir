@@ -2,14 +2,14 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
-. $THIS_SCRIPT_DIR/test.include
+. $RPKI_ROOT/tests/test.include
 
 echo About to clear database $RPKI_DB ...
 
 # set up an initial database
-run "rcli-x-t-y" ../proto/rcli -x -t $PWD/../testcases -y
-run "rcli-y-F" ../proto/rcli -y -F ../testcases/C.cer
+run "rcli-x-t-y" rcli -x -t $THIS_SCRIPT_DIR/testcases -y
+run "rcli-y-F" rcli -y -F $THIS_SCRIPT_DIR/testcases/C.cer

@@ -5,10 +5,10 @@
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -111,17 +111,16 @@ Auxiliary Outputs: (not shown in diagram)
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-# Set up paths to ASN.1 tools and conformance test scripts
-CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
+# Set up paths to conformance test scripts
 export RPKI_NO_SIGNING_TIME=1
-CONF_SCRIPTS=$RPKI_ROOT/testcases/conformance/scripts
+CONF_SCRIPTS=$RPKI_ROOT/tests/conformance/scripts
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
-PATCHES_DIR="$RPKI_ROOT/testcases/conformance/raw/patches"
-KEYS_DIR="$RPKI_ROOT/testcases/conformance/raw/keys"
-ROOT_KEY_PATH="$RPKI_ROOT/testcases/conformance/raw/root.p15"
-ROOT_CERT_PATH="$RPKI_ROOT/testcases/conformance/raw/root.cer"
+OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+PATCHES_DIR="$RPKI_ROOT/tests/conformance/raw/patches"
+KEYS_DIR="$RPKI_ROOT/tests/conformance/raw/keys"
+ROOT_KEY_PATH="$RPKI_ROOT/tests/conformance/raw/root.p15"
+ROOT_CERT_PATH="$RPKI_ROOT/tests/conformance/raw/root.cer"
 USE_EXISTING_PATCHES=
 PREFIX="bad"
 EDITOR=${EDITOR:-vi}            # set editor to vi if undefined
@@ -190,11 +189,11 @@ ensure_dir_exists $PATCHES_DIR
 
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $ROOT_CERT_PATH
-ensure_file_exists $CGTOOLS/rr
-ensure_file_exists $CGTOOLS/dump
-ensure_file_exists $CGTOOLS/dump_smart
-ensure_file_exists $CGTOOLS/sign_cert
-ensure_file_exists $CGTOOLS/add_cms_cert_no_check
+hash rr
+hash dump
+hash dump_smart
+hash sign_cert
+hash add_cms_cert_no_check
 ensure_file_exists $CONF_SCRIPTS/gen_child_ca.sh
 
 if [ $USE_EXISTING_PATCHES ]
@@ -230,7 +229,7 @@ $CONF_SCRIPTS/gen_child_ca.sh \
 cd ${OUTPUT_DIR}/${child_name}
 
 # Stage 0: Modify EE automatically or manually
-${CGTOOLS}/dump_smart ${mft_ee_filename} >${mft_ee_name}.raw
+dump_smart ${mft_ee_filename} >${mft_ee_name}.raw
 if [ $USE_EXISTING_PATCHES ]
 then
     echo "Stage 0: Modify EE automatically"
@@ -248,13 +247,13 @@ fi
 
 # Sign EE cert
 echo "Signing EE cert"
-${CGTOOLS}/rr <${mft_ee_name}.raw >${mft_ee_filename}
-${CGTOOLS}/sign_cert ${mft_ee_filename} ${child_key_path}
+rr <${mft_ee_name}.raw >${mft_ee_filename}
+sign_cert ${mft_ee_filename} ${child_key_path}
 rm ${mft_ee_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${child_name}/${mft_ee_name}.cer"
 
 # Stage 1: Modify MFT's to-be-signed portions automatically or manually
-${CGTOOLS}/dump_smart ${mft_name}.mft >${mft_name}.raw
+dump_smart ${mft_name}.mft >${mft_name}.raw
 if [ $USE_EXISTING_PATCHES ]
 then
     echo "Stage 1: Modify MFT's to-be-signed portions automatically"
@@ -272,10 +271,10 @@ fi
 
 # Embed EE into MFT and sign using EE private key
 echo "Embedding EE cert into MFT and signing"
-${CGTOOLS}/rr <${mft_name}.raw >${mft_name}.mft
-${CGTOOLS}/add_cms_cert_no_check ${mft_ee_filename} ${mft_name}.mft \
+rr <${mft_name}.raw >${mft_name}.mft
+add_cms_cert_no_check ${mft_ee_filename} ${mft_name}.mft \
     ${child_mft_ee_key_path} ${mft_name}.mft
-${CGTOOLS}/dump -a ${mft_name}.mft > ${mft_name}.raw
+dump -a ${mft_name}.mft > ${mft_name}.raw
 
 # Stage 2: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
@@ -294,6 +293,6 @@ else
 fi
 
 # Convert back into binary
-${CGTOOLS}/rr <${mft_name}.raw >${mft_name}.mft
+rr <${mft_name}.raw >${mft_name}.mft
 rm ${mft_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${child_name}/${mft_name}.mft"

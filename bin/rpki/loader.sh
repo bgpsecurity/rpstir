@@ -3,6 +3,6 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-$RPKI_ROOT/proto/rcli -w $RPKI_PORT -p
+rcli -w $RPKI_PORT -p

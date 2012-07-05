@@ -2,14 +2,14 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # test functions
-. $THIS_SCRIPT_DIR/test.include
+. $RPKI_ROOT/tests/test.include
 
 echo "Making L111 expired"
-./makeL111Expired || check_errs $? "$0 makeL111Expired failed"
+$THIS_SCRIPT_DIR/makeL111Expired || check_errs $? "$0 makeL111Expired failed"
 
 echo $0 PASS

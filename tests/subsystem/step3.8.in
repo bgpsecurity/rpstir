@@ -2,17 +2,17 @@
 
 # set environment variables if not set
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # test functions
-. $THIS_SCRIPT_DIR/test.include
+. $RPKI_ROOT/tests/test.include
 
 echo "Loading data and running garbage collector"
-../rsync_aur/rsync_aur -s -t $RPKI_PORT -f test3.7.log -w -e -i -d $RPKI_ROOT/testcases || \
+rsync_aur -s -t $RPKI_PORT -f test3.7.log -w -e -i -d $THIS_SCRIPT_DIR/testcases || \
   check_errs $? "$0 rsync_aur failed"
-run "step8.garbage" ../proto/garbage || \
-  check_errs $? "$0 ../proto/garbage failed"
+run "step8.garbage" garbage || \
+  check_errs $? "$0 garbage failed"
 
 echo $0 PASS

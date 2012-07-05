@@ -5,10 +5,10 @@
 
 # Set up RPKI environment variables if not already done.
 THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../envir.setup
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -84,11 +84,8 @@ Outputs:
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-# Set up paths to ASN.1 tools.
-CGTOOLS=$RPKI_ROOT/cg/tools	# Charlie Gardiner's tools
-
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/testcases/conformance/raw/root"
+OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
 USE_EXISTING_PATCHES=
 
 # Process command line arguments.
@@ -120,7 +117,7 @@ else
     patch_option=
 fi
 
-single_CMS_script="$RPKI_ROOT/testcases/conformance/scripts/make_test_CMS.sh"
+single_CMS_script="$RPKI_ROOT/tests/conformance/scripts/make_test_CMS.sh"
 single_CMS_cmd="${single_CMS_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################

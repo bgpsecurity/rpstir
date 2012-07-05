@@ -2,17 +2,16 @@
 
 cd "`dirname "$0"`"
 
-. ../../envir.setup
+. ../../../etc/envir.setup
 
 TEST_LOG_NAME=rtr
 STRICT_CHECKS=1
-. ../test.include
+. $RPKI_ROOT/tests/test.include
 
 
-SERVER="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtrd"
-CLIENT="$RPKI_ROOT/rtr/rtr-test-client"
-UPDATE="$RPKI_ROOT/rtr/@PACKAGE_NAME@-rtr-update"
-RCLI="$RPKI_ROOT/proto/rcli"
+SERVER="@PACKAGE_NAME@-rpki-rtr-daemon"
+CLIENT="@PACKAGE_NAME@-rpki-rtr-test-client"
+UPDATE="@PACKAGE_NAME@-rpki-rtr-update"
 PORT=1234
 SESSION=42
 WRONG_SESSION=4242
@@ -127,8 +126,8 @@ compare () {
 }
 
 init () {
-	"$RCLI" -x -t . -y
-	"$RCLI" -y -F "`pwd`/root.cer"
+	rcli -x -t . -y
+	rcli -y -F "`pwd`/root.cer"
 	echo "INSERT INTO rtr_session VALUES ($SESSION);" | $RPKI_MYSQL_CMD
 
 	SERIAL=""
@@ -145,13 +144,13 @@ make_serial () {
 	test "$FIRST_ASN" -le "$LAST_ASN"
 
 	for ASN in $ASNS_IN_DB; do
-		"$RCLI" -y -d "`pwd`/as-$ASN.roa"
+		rcli -y -d "`pwd`/as-$ASN.roa"
 	done
 
 	ASNS_IN_DB=`seq "$FIRST_ASN" "$LAST_ASN"`
 
 	for ASN in $ASNS_IN_DB; do
-		"$RCLI" -y -f "`pwd`/as-$ASN.roa"
+		rcli -y -f "`pwd`/as-$ASN.roa"
 	done
 
 	"$UPDATE" querySpecs "$SERIAL"
