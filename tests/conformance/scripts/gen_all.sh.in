@@ -18,7 +18,8 @@ hash sed
 
 # Clean out raw/root directory
 cd $RPKI_ROOT/tests/conformance
-rm -rf raw/root/*
+rm -rf raw/root
+mkdir raw/root
 
 # Build trust anchors
 cd $RPKI_ROOT/tests/conformance/raw
