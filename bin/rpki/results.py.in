@@ -52,12 +52,12 @@ def find_files_with_extension(absolute_path, ext):
     return p1.communicate()[0].splitlines()
 
 def find_validated_objects_in_db(object_type):
-    p1 = Popen([rpki_root + "/proto/query", "-t", object_type,
+    p1 = Popen([rpki_root + "/bin/rpki/query", "-t", object_type,
                 "-d", "pathname"], stdout=PIPE)
     return [line.split()[2] for line in p1.communicate()[0].splitlines()]
 
 def find_all_objects_in_db(object_type):
-    p1 = Popen([rpki_root + "/proto/query", "-t", object_type,
+    p1 = Popen([rpki_root + "/bin/rpki/query", "-t", object_type,
                 "-d", "pathname", "-i"], stdout=PIPE)
     return [line.split()[2] for line in p1.communicate()[0].splitlines()]
 

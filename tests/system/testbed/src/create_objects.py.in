@@ -185,7 +185,7 @@ class Certificate:
                 print "Copying factory pre-specified key file: " + \
                       myFactory.subjkeyfile + " to " + self.subjkeyfile
         else:
-            command_string = "../../cg/tools/gen_key " + \
+            command_string = "gen_key " + \
                              self.subjkeyfile + " 2048"
             os.system(command_string)
             if DEBUG_ON:

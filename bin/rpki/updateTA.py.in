@@ -289,8 +289,8 @@ if __name__ == "__main__":
     rpki_root = os.environ["RPKI_ROOT"].strip().rstrip("/")
     repo_path = rpki_root + "/REPOSITORY"
     ta_repo_path = repo_path + "/trustanchors"
-    rcli_path = rpki_root + "/proto/rcli"
-    extractkey_path = rpki_root + "/cg/tools/extractPubKeyInfo"
+    rcli_path = rpki_root + "/bin/rpki/rcli"
+    extractkey_path = rpki_root + "/bin/rpki-object/extractPubKeyInfo"
     if not os.path.exists(rpki_root):
         print >>sys.stderr, "Error: rpki_root (%s) is not a valid path"
         sys.exit(1)

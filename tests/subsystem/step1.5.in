@@ -10,6 +10,6 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $RPKI_ROOT/tests/test.include
 
 echo "Running the garbage collector"
-run "step6.garbage" garbage || check_errs $? "$0 ../proto/garbage failed"
+run "step6.garbage" garbage || check_errs $? "$0 garbage failed"
 
 echo $0 PASS
