@@ -233,9 +233,11 @@ if test "$ac_cv_sizeof_int" != 4 -o "$ac_cv_sizeof_long" != 4 -o "$ac_cv_sizeof_
 fi
 
 
-AC_CONFIG_FILES([Makefile
-                 tests/test.include
-                 INSTRUCTIONS
+AC_CONFIG_FILES([
+    etc/envir.setup
+    Makefile
+    tests/test.include
+    INSTRUCTIONS
 ])
 
 AC_CONFIG_FILES([bin/rpki/chaser.sh],

@@ -58,7 +58,7 @@ if [ "${RPKI_DBPASS}x" = "x" ]; then
 fi
 
 if [ "${OIDTABLE}x" = "x" ]; then
-    DEFAULT_OIDTABLE="$RPKI_ROOT/cg/oidtable"
+    DEFAULT_OIDTABLE="$RPKI_ROOT/var/oidtable"
     echo "Notice: OIDTABLE not set, defaulting to $DEFAULT_OIDTABLE"
     export OIDTABLE="$DEFAULT_OIDTABLE"
 fi
@@ -76,10 +76,20 @@ fi
 export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 
 # add all binaries to the path
-find "$RPKI_ROOT/bin" -type d -print | while read path_dir; do
-    PATH="$path_dir:$PATH"
-done
+BIN_DIRS="`@MKTEMP@`"
+find "$RPKI_ROOT/bin" -type d -print > "$BIN_DIRS"
+while read path_dir; do
+    case "$path_dir" in
+        */tests | */tests/*)
+            ;;
+        *)
+            PATH="$path_dir:$PATH"
+            ;;
+    esac
+done < "$BIN_DIRS"
 export PATH
+rm -f "$BIN_DIRS"
+unset BIN_DIRS
 
 ############################################################################
 # Shell function for checking return codes for error (swiped from
