@@ -249,7 +249,7 @@ if [ ${USE_EXISTING_KEYS} ]
 then
     echo "Using existing key pair: $child_key_path"
 else
-    $CGTOOLS/gen_key $child_key_path 2048
+    gen_key $child_key_path 2048
     echo "Generated key pair: $child_key_path"
 fi
 

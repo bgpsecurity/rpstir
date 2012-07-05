@@ -141,7 +141,6 @@ ensure_dir_exists ( ) {
 }
 
 ensure_dir_exists "$OUTPUT_DIR"
-ensure_dir_exists "$CGTOOLS"
 ensure_file_exists "${single_CMS_script}"
 
 ###############################################################################
