@@ -62,7 +62,7 @@ while [ $N -le "4" ]; do
      wait "$LOADER_PID" || failures="$failures rcli-w"
      run "rcli-c-$N" rcli -c testcases4_LTA/LTA/case${N} || failures="$failures rcli-c"
      cd testcases4_LTA/LTA 
-     run "checkLTAtest-$N" ./checkLTAtest case${N} C*.cer || failures="$failures checkLTAtest"
+     run "checkLTAtest-$N" ../../checkLTAtest case${N} C*.cer || failures="$failures checkLTAtest"
      cd ../../
     if [ -z "$failures" ]; then
 	NUM_PASSED=$(( $NUM_PASSED + 1 ))

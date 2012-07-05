@@ -8,12 +8,12 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/trap_errors
+. $RPKI_ROOT/lib/util/trap_errors
 
 # NOTES
 
 CFSCRIPTS=$RPKI_ROOT/tests/conformance/scripts # conformance scripts
-ensure_file_exists $CGTOOLS/rr
+hash rr
 hash sed
 
 # Clean out raw/root directory

@@ -1,9 +1,9 @@
 ;
 ;  miscellaneous comments
 ;
-PRIVATEKEYMETHOD Keyring $RPKI_ROOT/subsystemTests/testcases4_LTA/LTA/LTA.p15 label password
+PRIVATEKEYMETHOD Keyring $RPKI_ROOT/tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/LTA.p15 label password
 ;
-TOPLEVELCERTIFICATE $RPKI_ROOT/subsystemTests/testcases4_LTA/LTA/LTA.cer
+TOPLEVELCERTIFICATE $RPKI_ROOT/tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/LTA.cer
 ;
 ; CONTROL resource_nounion TRUE
 ;
