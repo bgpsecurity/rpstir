@@ -38,7 +38,7 @@ $CFSCRIPTS/gen_all_CRLs.sh -P
 $CFSCRIPTS/gen_all_MFTs.sh -P
 
 # Copy to output directory
-cd $RPKI_ROOT/testcases/conformance
+cd $RPKI_ROOT/tests/conformance
 rm -rf output
 mkdir -p output
 cp raw/*.cer output/
