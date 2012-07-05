@@ -5,9 +5,12 @@
 # To work around this, there are two versions of the TA, one for basing the
 # child certs on and one for adding to the database.
 
+cd `dirname "$0"`
+. ../../../etc/envir.setup
+
 # first assemble the root cert from source
 cp C.fake-parent.orig C.raw
-../cg/tools/rr < C.raw > C.cer
+rr < C.raw > C.cer
 
                                 ./make_test_cert C 20000207115900Z 20150313120100Z <makeC
 ./make_test_cert CM1     0D 1M
@@ -67,5 +70,5 @@ cp C2.cer C2X.cer
 cp C2.raw C2X.raw
 
 cp C.real.orig C.raw
-../cg/tools/rr < C.raw > C.cer
+rr < C.raw > C.cer
 ./make_test_cert C 20000207115900Z 20150313120100Z <makeC
