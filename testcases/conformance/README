@@ -297,9 +297,9 @@ Manifests
 769 MFTVersion0              # non-default version 0 6486#4.1
 770 MFTVersion1              # version 1 6486#4.2.1
 771 MFTNoNum                 # no manifest number 6486#4.2.1
-    MFTNumMax                # (good) maximum manifest number (20 octets) 6486#4.2.1
-    MFTNumZero               # (good) manifest number is zero 6486#4.2
-    MFTNumTooBig             # manifest number exceeds max 6486#4.2.1
+785 MFTNumMax                # (good) maximum manifest number (20 octets) 6486#4.2.1
+786 MFTNumZero               # (good) manifest number is zero 6486#4.2
+787 MFTNumTooBig             # manifest number exceeds max 6486#4.2.1
 772 MFTNegNum                # negative manifest number 6486#4.2.1
 773 MFTThisUpdUTC            # thisUpdate in UTC 6486#4.2
 774 MFTThisUpdFuture         # thisUpdate in future 6486#4.2.1

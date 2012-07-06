@@ -8,6 +8,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include "roa_utils.h"
 #include "cryptlib.h"
@@ -23,6 +24,8 @@ int strict_profile_checks_cms = 0;
  */
 
 #define MINMAXBUFSIZE 20
+
+#define MANIFEST_NUMBER_MAX_SIZE 20 /* in bytes */
 
 extern int CryptInitState;
 
@@ -732,11 +735,28 @@ static int check_mft_version(
 static int check_mft_number(
     struct casn *casnp)
 {
-    int lth;
-    long val;
-    lth = read_casn_num(casnp, &val);
-    if (lth <= 0 || val < 0)
+    int lth = vsize_casn(casnp);
+    uint8_t val[MANIFEST_NUMBER_MAX_SIZE];
+
+    if (lth <= 0)
+    {
+        log_msg(LOG_ERR, "Error reading manifest number");
         return ERR_SCM_BADMFTNUM;
+    }
+    else if (lth > MANIFEST_NUMBER_MAX_SIZE)
+    {
+        log_msg(LOG_ERR, "Manifest number is too long (%d bytes)", lth);
+        return ERR_SCM_BADMFTNUM;
+    }
+
+    read_casn(casnp, &val);
+
+    if (val[0] & 0x80)
+    {
+        log_msg(LOG_ERR, "Manifest number is negative");
+        return ERR_SCM_BADMFTNUM;
+    }
+
     return 0;
 }
 
