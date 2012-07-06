@@ -4413,9 +4413,24 @@ static int crl_extensions_chk(
     }
     else
     {
-        if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
+        uint8_t num[CRL_MAX_CRLNUM_LTH];
+
+        if (vsize_casn(crlnump) <= 0)
+        {
+            log_msg(LOG_ERR, "error reading CRLNumber");
+            return ERR_SCM_BADCRLNUM;
+        }
+        else if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
         {
             log_msg(LOG_ERR, "CRLNumber too long");
+            return ERR_SCM_BADCRLNUM;
+        }
+
+        read_casn(crlnump, num);
+
+        if (num[0] & 0x80)
+        {
+            log_msg(LOG_ERR, "CRLNumer is negative");
             return ERR_SCM_BADCRLNUM;
         }
     }
