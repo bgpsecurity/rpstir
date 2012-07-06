@@ -101,7 +101,7 @@ static scmtab scmtabbuilder[] = {
      "issuer   VARCHAR(512) NOT NULL,"
      "last_upd DATETIME NOT NULL,"
      "next_upd DATETIME NOT NULL,"
-     "crlno    BIGINT DEFAULT 0,"
+     "crlno    VARBINARY(20) NOT NULL,"
      "aki      VARCHAR(128),"
      "sig      VARCHAR(520) NOT NULL,"
      "hash     VARCHAR(256),"

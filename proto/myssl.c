@@ -1294,6 +1294,7 @@ static void crf_get_crlno(
     int *crlstap)
 {
     char *ptr;
+    int len;
     char *dptr;
 
     if (stap == NULL)
@@ -1303,18 +1304,18 @@ static void crf_get_crlno(
         *stap = ERR_SCM_INVALARG;
         return;
     }
-    if (meth->i2s == NULL)
+    if (meth->i2d == NULL)
     {
         *stap = ERR_SCM_BADEXT;
         return;
     }
-    ptr = meth->i2s(meth, exts);
-    if (ptr == NULL || ptr[0] == 0)
+    len = meth->i2d(exts, &ptr);
+    if (ptr == NULL || len <= 0)
     {
         *stap = ERR_SCM_BADEXT;
         return;
     }
-    dptr = strdup(ptr);
+    dptr = hexify(len, ptr, HEXIFY_HAT);
     OPENSSL_free(ptr);
     if (dptr == NULL)
     {
