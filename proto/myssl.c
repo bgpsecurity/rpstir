@@ -1293,7 +1293,7 @@ static void crf_get_crlno(
     int *stap,
     int *crlstap)
 {
-    char *ptr;
+    unsigned char *ptr;
     int len;
     char *dptr;
 
