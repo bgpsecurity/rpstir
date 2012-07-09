@@ -1293,8 +1293,9 @@ static void crf_get_crlno(
     int *stap,
     int *crlstap)
 {
-    unsigned char *ptr;
-    int len;
+    ASN1_INTEGER *crlno_a1 = (ASN1_INTEGER *)exts;
+    BIGNUM *crlno_bn;
+    char *ptr;
     char *dptr;
 
     if (stap == NULL)
@@ -1304,24 +1305,35 @@ static void crf_get_crlno(
         *stap = ERR_SCM_INVALARG;
         return;
     }
-    if (meth->i2d == NULL)
+
+    crlno_bn = ASN1_INTEGER_to_BN(crlno_a1, NULL);
+    if (crlno_bn == NULL)
     {
-        *stap = ERR_SCM_BADEXT;
+        *stap = ERR_SCM_BIGNUMERR;
         return;
     }
-    len = meth->i2d(exts, &ptr);
-    if (ptr == NULL || len <= 0)
+
+    ptr = BN_bn2hex(crlno_bn);
+    if (ptr == NULL)
     {
-        *stap = ERR_SCM_BADEXT;
+        BN_free(crlno_bn);
+        *stap = ERR_SCM_BIGNUMERR;
         return;
     }
-    dptr = hexify(len, ptr, HEXIFY_HAT);
-    OPENSSL_free(ptr);
+    BN_free(crlno_bn);
+
+    dptr = malloc(2 + strlen(ptr) + 1);
     if (dptr == NULL)
     {
+        OPENSSL_free(ptr);
         *stap = ERR_SCM_NOMEM;
         return;
     }
+
+    snprintf(dptr, 2 + strlen(ptr) + 1, "^x%s", ptr);
+
+    OPENSSL_free(ptr);
+
     cf->fields[CRF_FIELD_SN] = dptr;
 }
 
@@ -1366,7 +1378,7 @@ static void crf_get_aki(
 }
 
 static crfx_validator crxvalidators[] = {
-    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 0},
+    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 1},
     {crf_get_aki, CRF_FIELD_AKI, NID_authority_key_identifier, 1}
 };
 
