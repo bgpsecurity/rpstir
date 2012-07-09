@@ -181,8 +181,7 @@ static int handleResults(
                 emptyRPSL();
             oldasn = asn;
             // 0 == ipv4, 1 == ipv6
-            int i,
-                numprinted = 0;
+            int numprinted = 0;
 
             for (i = 0; i < 2; ++i)
             {
