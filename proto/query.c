@@ -258,8 +258,7 @@ static int handleResults(
                 snprintf(resultStr, MAX_RESULT_SZ,
                          "%s", (char *)s->vec[result].valptr);
             }
-            else if (field->sqlType == SQL_C_BINARY ||
-                     field->sqlType == SQL_C_VARBINARY)
+            else if (field->sqlType == SQL_C_BINARY)
             {
                 snprintf(resultStr, MAX_RESULT_SZ, "0x");
                 for (i = 0;
