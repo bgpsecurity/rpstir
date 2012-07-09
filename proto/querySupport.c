@@ -530,7 +530,7 @@ static QueryField fields[] = {
      "crlno",
      "CRL number",
      Q_JUST_DISPLAY | Q_FOR_CRL,
-     SQL_C_VARBINARY, 20,
+     SQL_C_BINARY, 20,
      NULL, NULL,
      "CRL#", NULL,
      },
