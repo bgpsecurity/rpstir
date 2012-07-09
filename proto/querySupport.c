@@ -537,8 +537,8 @@ static QueryField fields[] = {
     {
      "sn",
      "serial number",
-     Q_FOR_CERT,
-     SQL_C_CHAR, 16,
+     Q_JUST_DISPLAY | Q_FOR_CERT,
+     SQL_C_BINARY, 20,
      NULL, NULL,
      "Serial#", NULL,
      },
