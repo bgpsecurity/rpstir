@@ -198,7 +198,7 @@ def rotate_logs():
 def launch_listener():
     if not isTCPPortOpen(IP_LISTENER,portno):
         os.putenv('RPKI_LOGDIR', logDir)
-        cmdline = "%s/rsync_aur/rsync_listener %d" % \
+        cmdline = "%s/bin/rpki-rsync/rsync_listener %d" % \
             (os.getenv('RPKI_ROOT'),portno)
         main.debug('Launching rsync listener: RPKI_LOGDIR=%s %s' % \
                        (logDir, cmdline))

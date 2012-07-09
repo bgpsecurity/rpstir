@@ -210,7 +210,7 @@ int main(
             memset(path, '\0', MAXREAD);
             memset(command, '\0', MAXREAD);
 
-            snprintf(command, sizeof(command), "%s/rsync_aur/rsync_aur",
+            snprintf(command, sizeof(command), "%s/bin/rpki-rsync/rsync_aur",
                      getenv("RPKI_ROOT"));
 
             if (pipe(pipefd) != 0)
