@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include "scm.h"
 #include "scmf.h"
@@ -121,6 +122,7 @@ static int handleResults(
     int result = 0;
     int display;
     char resultStr[MAX_RESULT_SZ];
+    int i;
 
     conp = conp;
     numLine = numLine;          // silence compiler warnings
@@ -251,9 +253,24 @@ static int handleResults(
         }
         else if (s->vec[result].avalsize != SQL_NULL_DATA)
         {
-            if (field->sqlType == SQL_C_CHAR || field->sqlType == SQL_C_BINARY)
+            if (field->sqlType == SQL_C_CHAR)
+            {
                 snprintf(resultStr, MAX_RESULT_SZ,
                          "%s", (char *)s->vec[result].valptr);
+            }
+            else if (field->sqlType == SQL_C_BINARY ||
+                     field->sqlType == SQL_C_VARBINARY)
+            {
+                snprintf(resultStr, MAX_RESULT_SZ, "0x");
+                for (i = 0;
+                     i < s->vec[result].avalsize && MAX_RESULT_SZ > 2 + 2*i;
+                     ++i)
+                {
+                    snprintf(resultStr + 2 + 2*i, MAX_RESULT_SZ - (2 + 2*i),
+                             "%02" PRIX8,
+                             ((uint8_t *)s->vec[result].valptr)[i]);
+                }
+            }
             else
                 snprintf(resultStr, MAX_RESULT_SZ,
                          "%d", *((unsigned int *)s->vec[result].valptr));
