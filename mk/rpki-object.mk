@@ -181,7 +181,7 @@ dist_man_MANS += doc/sign_cert.1
 bin_PROGRAMS += bin/rpki-object/sign_cms
 
 bin_rpki_object_sign_cms_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKI)
 
 
 bin_PROGRAMS += bin/rpki-object/sign_roa

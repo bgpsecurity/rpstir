@@ -273,24 +273,45 @@ const char *signCMSBlob(
     struct SignerInfo *signerInfop =
         (struct SignerInfo *)member_casn(&cms->content.signedData.signerInfos.
                                          self, 0);
+    struct EncapsulatedContentInfo *encapContentInfop =
+        &cms->content.signedData.encapContentInfo;
 
-    // get the size of signed attributes and allocate space for them
-    if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
+    if (vsize_casn(&signerInfop->signedAttrs.self) == 0)
     {
-        errmsg = "sizing SignerInfo";
-        return errmsg;
-    }
-    tbsp = (unsigned char *)calloc(1, tbs_lth);
-    if (!tbsp)
-    {
-        errmsg = "out of memory";
-        return errmsg;
-    }
+        if ((tbs_lth = vsize_casn(&encapContentInfop->eContent.self)) < 0)
+        {
+            errmsg = "sizing eContent";
+            return errmsg;
+        }
+        tbsp = (unsigned char *)calloc(1, tbs_lth);
+        if (!tbsp)
+        {
+            errmsg = "out of memory";
+            return errmsg;
+        }
 
-    // DER-encode signedAttrs
-    tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
-    *tbsp = ASN_SET;            /* replace ASN.1 identifier octet with ASN_SET 
+        tbs_lth = read_casn(&encapContentInfop->eContent.self, tbsp);
+    }
+    else
+    {
+        // get the size of signed attributes and allocate space for them
+        if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
+        {
+            errmsg = "sizing SignerInfo";
+            return errmsg;
+        }
+        tbsp = (unsigned char *)calloc(1, tbs_lth);
+        if (!tbsp)
+        {
+            errmsg = "out of memory";
+            return errmsg;
+        }
+
+        // DER-encode signedAttrs
+        tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
+        *tbsp = ASN_SET;        /* replace ASN.1 identifier octet with ASN_SET 
                                  * (0x31) */
+    }
 
     // compute SHA-256 of signedAttrs
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) < 0)
