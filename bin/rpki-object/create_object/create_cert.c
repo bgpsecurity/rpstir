@@ -13,6 +13,7 @@
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
+#include <util/hashutils.h>
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
@@ -255,33 +256,6 @@ int write_default_fields(
 }
 
 
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    int alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr;
-
-    memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if (alg == 2)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    else if (alg == 1)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-    else
-        return 0;
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
-}
-
 static int writeHashedPublicKey(
     struct casn *valuep,
     struct casn *keyp)
@@ -289,7 +263,7 @@ static int writeHashedPublicKey(
     uchar *bitval;
     int siz = readvsize_casn(keyp, &bitval);
     uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
     free(bitval);
     write_casn(valuep, hashbuf, siz);
     return siz;

@@ -15,6 +15,7 @@
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
+#include <util/hashutils.h>
 #include <time.h>
 
 char *msgs[] = {
@@ -106,33 +107,6 @@ static struct Extension *findExtension(
          extp && diff_objid(&extp->extnID, oid);
          extp = (struct Extension *)next_of(&extp->self));
     return extp;
-}
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    int alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr;
-
-    memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if (alg == 2)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    else if (alg == 1)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-    else
-        return 0;
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
 }
 
 static void inheritIPAddresses(
@@ -637,7 +611,7 @@ static int writeHashedPublicKey(
     uchar *bitval;
     int siz = readvsize_casn(keyp, &bitval);
     uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
     free(bitval);
     if (x)
         hashbuf[0]++;

@@ -14,13 +14,7 @@
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/roa.h>
 #include <casn/casn.h>
-
-extern int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    CRYPT_ALGO_TYPE alg),
-    CryptInitState;
+#include "util/hashutils.h"
 
 char *msgs[] = {
     "Finished OK\n",

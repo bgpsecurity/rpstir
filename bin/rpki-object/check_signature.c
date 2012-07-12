@@ -7,6 +7,7 @@
 #include "rpki-asn1/crlv2.h"
 #include "cryptlib.h"
 #include "rpki-asn1/blob.h"
+#include "util/hashutils.h"
 
 char *msgs[] = {
     "Signature %s\n",
@@ -24,34 +25,6 @@ static void fatal(
     fprintf(stderr, msgs[err], param);
     if (err)
         exit(err);
-}
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    CRYPT_ALGO_TYPE alg)
-{                               // used for manifests alg = 1 for SHA-1; alg = 
-                                // 2 for SHA2
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr = -1;
-
-    if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
-        fatal(3, "hashing");
-
-
-    memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
-        fatal(2, "CryptInit");;
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
 }
 
 static int check_signature(
@@ -81,6 +54,8 @@ static int check_signature(
     buf = (uchar *) calloc(1, bsize);
     encode_casn(&hicertp->toBeSigned.subjectPublicKeyInfo.self, buf);
     sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
+    if (sidsize < 0)
+        fatal(3, "gen_hash");
     free(buf);
 
     // generate the sha256 hash of the signed attributes. We don't call

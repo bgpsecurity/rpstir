@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include "rpki/cms/roa_utils.h"
+#include "util/hashutils.h"
 #include "cryptlib.h"
 
 /*
@@ -28,33 +29,6 @@ static void fatal(
 {
     fprintf(stderr, msgs[err], param);
     exit(err);
-}
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    CRYPT_ALGO_TYPE alg)
-{                               // used for manifests alg = 1 for SHA-1; alg = 
-                                // 2 for SHA2
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr = -1;
-
-    if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
-        fatal(3, "algorithm");
-
-
-    memset(hash, 0, 40);
-    cryptInit();
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
 }
 
 static int check_signature(

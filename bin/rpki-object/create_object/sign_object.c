@@ -11,9 +11,8 @@
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/manifest.h>
 #include <casn/casn.h>
+#include <util/hashutils.h>
 #include "create_object.h"
-
-int CryptInitState = 0;
 
 struct keyring {
     char filename[1024];        // expanded from 80 to 1024. it was cutting

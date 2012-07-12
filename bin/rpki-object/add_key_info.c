@@ -13,6 +13,7 @@
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/crlv2.h>
 #include <casn/casn.h>
+#include <util/hashutils.h>
 
 char *msgs[] = {
     "Finished OK\n",
@@ -20,6 +21,7 @@ char *msgs[] = {
     "Couldn't find %s subject key identifier\n",        // 2
     "Usage: file names for certificate/CRL, subject key, [authority certificate]\n",
     "Subject and issuer differ in %s; need authority certificate\n",    // 4
+    "Couldn't get %s\n",
 };
 
 static void fatal(
@@ -68,38 +70,6 @@ static struct Extension *find_CRLextension(
     return extp;
 }
 
-int CryptInitState;
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    CRYPT_ALGO_TYPE alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr = -1;
-
-    if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
-        return -1;
-    memset(hash, 0, 40);
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            fatal(1, "CryptInit");
-        CryptInitState = 1;
-    }
-
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, alg);
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    if (ansr > 0)
-        memcpy(outbufp, hash, ansr);
-    return ansr;
-}
-
 int main(
     int argc,
     char **argv)
@@ -120,6 +90,8 @@ int main(
                               &keyp);
     uchar hashbuf[40];
     int hsize = gen_hash(&keyp[1], ksiz - 1, hashbuf, CRYPT_ALGO_SHA);
+    if (hsize < 0)
+        fatal(5, "hash");
     char *buf,
        *c = strrchr(argv[1], (int)'.');
     int siz;

@@ -8,6 +8,7 @@
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/roa.h>
 #include <casn/casn.h>
+#include <util/hashutils.h>
 
 char *msgs[] = {
     "Finished OK\n",
@@ -44,39 +45,6 @@ static struct Extension *find_extension(
          extp && diff_objid(&extp->extnID, idp);
          extp = (struct Extension *)next_of(&extp->self));
     return extp;
-}
-
-int CryptInitState;
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    CRYPT_ALGO_TYPE alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr = -1;
-
-    if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
-        return -1;
-    memset(hash, 0, 40);
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            fatal(1, "CryptInit");
-        CryptInitState = 1;
-    }
-
-    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) < 0)
-        fatal(2, "cryptContext");
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    if (ansr > 0)
-        memcpy(outbufp, hash, ansr);
-    return ansr;
 }
 
 // return a printable message indicating the error (if any) or NULL if not
@@ -255,6 +223,8 @@ int main(
         readvsize_casn(&roa.content.signedData.encapContentInfo.eContent.self,
                        &tbh);
     tbh_lth = gen_hash(tbh, tbh_lth, hashbuf, CRYPT_ALGO_SHA2);
+    if (tbh_lth < 0)
+        fatal(1, "hash");
     free(tbh);
     write_casn(&attrTbDefp->messageDigest, hashbuf, tbh_lth);
     write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
