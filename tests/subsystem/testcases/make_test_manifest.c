@@ -6,7 +6,7 @@
 #include "rpki-asn1/manifest.h"
 #include "rpki-asn1/roa.h"
 #include "rpki-asn1/certificate.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

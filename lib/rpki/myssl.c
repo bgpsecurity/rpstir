@@ -11,7 +11,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <limits.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <stdbool.h>
 
 #include "globals.h"

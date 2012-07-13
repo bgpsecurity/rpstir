@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <stdio.h>
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include <string.h>
 
 /*

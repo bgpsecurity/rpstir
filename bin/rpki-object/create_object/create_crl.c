@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include "rpki-asn1/crlv2.h"
 #include "rpki-asn1/certificate.h"
 #include "rpki-asn1/extensions.h"

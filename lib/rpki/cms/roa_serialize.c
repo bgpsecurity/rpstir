@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #include "roa_utils.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 
 extern char *signCMS(
     struct ROA *,

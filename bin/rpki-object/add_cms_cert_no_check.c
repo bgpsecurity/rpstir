@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <rpki-asn1/keyfile.h>
 #include <stdlib.h>
 #include <unistd.h>

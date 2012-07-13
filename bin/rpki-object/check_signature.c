@@ -5,7 +5,7 @@
 
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/crlv2.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include "rpki-asn1/blob.h"
 #include "util/hashutils.h"
 

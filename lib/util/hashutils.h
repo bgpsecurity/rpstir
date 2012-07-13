@@ -1,4 +1,4 @@
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 
 extern int CryptInitState;
 

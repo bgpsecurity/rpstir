@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 
 #include <openssl/err.h>
 #include <openssl/x509.h>

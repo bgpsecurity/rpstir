@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

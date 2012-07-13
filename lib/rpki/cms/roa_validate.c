@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 #include "roa_utils.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include "util/logutils.h"
 #include "util/hashutils.h"
 

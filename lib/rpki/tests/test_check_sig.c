@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "rpki/cms/roa_utils.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 
 /*
  * $Id$ 

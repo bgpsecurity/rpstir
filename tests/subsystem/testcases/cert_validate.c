@@ -7,7 +7,7 @@
 
 #include "rpki/cms/roa_utils.h"
 #include "util/hashutils.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 
 /*
  * This file contains the functions that semantically validate the ROA. Any
