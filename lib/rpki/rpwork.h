@@ -125,7 +125,7 @@ extern void free_ipranges(
     struct ipranges *);
 
 struct Extension *find_extn(
-    struct Certificate *certp,
+    struct Extensions *extsp,
     char *oid,
     int add);
 

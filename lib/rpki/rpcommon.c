@@ -269,11 +269,10 @@ int check_dates(
 }
 
 struct Extension *find_extn(
-    struct Certificate *certp,
+    struct Extensions *extsp,
     char *oid,
     int add)
 {
-    struct Extensions *extsp = &certp->toBeSigned.extensions;
     struct Extension *extp;
     int num = num_items(&extsp->self);
     if (!num && !add)
@@ -479,7 +478,7 @@ void mk_certranges(
     struct IPAddressOrRangeA *ipAddrOrRangep;
     struct iprange *certrangep;
     struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp;
-    struct Extension *extp = find_extn(certp, id_pe_ipAddrBlock, 0);
+    struct Extension *extp = find_extn(&certp->toBeSigned.extensions, id_pe_ipAddrBlock, 0);
     if (extp)
     {
         if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
@@ -511,7 +510,7 @@ void mk_certranges(
             }
         }
     }
-    if ((extp = find_extn(certp, id_pe_autonomousSysNum, 0)))
+    if ((extp = find_extn(&certp->toBeSigned.extensions, id_pe_autonomousSysNum, 0)))
     {
         struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp =
             &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges;
@@ -773,7 +772,7 @@ static int parse_Xcrldp(
     int ansr = 0;
     cc = nextword(cc);
     if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
-                 !find_extn(&myrootcert, id_cRLDistributionPoints, 0)))
+                 !find_extn(&myrootcert.toBeSigned.extensions, id_cRLDistributionPoints, 0)))
         ansr = ERR_SCM_BADSKIFILE;
     else if (strchr(cc, (int)','))
         ansr = ERR_SCM_BADSKIFILE;
@@ -794,7 +793,7 @@ static int parse_Xcp(
     cc = nextword(cc);
     if (!*cc ||
         (*cc == 'R' &&
-         ((!(extp = find_extn(&myrootcert, id_certificatePolicies, 0))) ||
+         ((!(extp = find_extn(&myrootcert.toBeSigned.extensions, id_certificatePolicies, 0))) ||
           num_items(&extp->extnValue.certificatePolicies.self) > 1)))
         ansr = ERR_SCM_BADSKIFILE;
     else if (nextword(cc))

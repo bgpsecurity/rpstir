@@ -2,6 +2,7 @@
 
 #include <casn/casn.h>
 #include <rpki-asn1/certificate.h>
+#include <rpki/rpwork.h>
 #include <stdio.h>
 
 char *msgs[] = {
@@ -22,20 +23,6 @@ int fatal(
     exit(-1);
 }
 
-struct Extension *find_extn(
-    struct Extensions *extsp,
-    char *oidp)
-{
-    struct Extension *extp;
-    int num = num_items(&extsp->self);
-    if (!num)
-        return NULL;
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oidp);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
 int main(
     int argc,
     char **argv)
@@ -50,7 +37,7 @@ int main(
     if ((lth = vsize_casn(casnp)) < 6)
         fatal(2, (char *)0);
     struct Extension *extp;
-    if (!(extp = find_extn(&cert.toBeSigned.extensions, id_pe_ipAddrBlock)))
+    if (!(extp = find_extn(&cert.toBeSigned.extensions, id_pe_ipAddrBlock, 0)))
         fatal(3, "IPAddress");
     struct Extensions extensions;
     Extensions(&extensions, (ushort) 0);
@@ -66,7 +53,7 @@ int main(
         fatal(5, "IP Addresses");
     sbextp = (struct Extension *)next_of(&sbextp->self);
     if (!(extp = find_extn(&cert.toBeSigned.extensions,
-                           id_pe_autonomousSysNum)))
+                           id_pe_autonomousSysNum, 0)))
         fatal(3, "AS number");
     if (diff_casn(&sbextp->self, &extp->self))
         fatal(5, "AS numbers");
