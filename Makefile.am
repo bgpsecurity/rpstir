@@ -25,6 +25,7 @@ AM_ETAGSFLAGS = \
 
 
 BUILT_SOURCES =
+CLEANDIRS =
 CLEANFILES =
 TESTS =
 bin_PROGRAMS =
@@ -77,6 +78,9 @@ include mk/rpki.mk
 include mk/testbed.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
+
+clean-local:
+	-rm -rf $(CLEANDIRS)
 
 install:
 	@echo '**** Please refer to the documentation file name INSTRUCTIONS. ****'
