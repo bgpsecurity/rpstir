@@ -2116,7 +2116,8 @@ static int rescert_ski_chk(
     /*
      * check ski hash 
      */
-    struct Extension *extp = find_extension(certp, id_subjectKeyIdentifier);
+    struct Extension *extp = find_extension(&certp->toBeSigned.extensions,
+                                            id_subjectKeyIdentifier, false);
     if (extp)
     {
         uchar hash[40];

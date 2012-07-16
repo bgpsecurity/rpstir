@@ -1,19 +1,19 @@
 bin_PROGRAMS += bin/rpki-object/add_cms_cert
 
 bin_rpki_object_add_cms_cert_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/add_cms_cert_no_check
 
 bin_rpki_object_add_cms_cert_no_check_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/add_key_info
 
 bin_rpki_object_add_key_info_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 dist_man_MANS += doc/add_key_info.1
 

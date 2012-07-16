@@ -1,8 +1,7 @@
 // For testing LTA perforation/expansion.
 
 #include <casn/casn.h>
-#include <rpki-asn1/certificate.h>
-#include <rpki/rpwork.h>
+#include <rpki-object/certificate.h>
 #include <stdio.h>
 
 char *msgs[] = {
@@ -37,7 +36,7 @@ int main(
     if ((lth = vsize_casn(casnp)) < 6)
         fatal(2, (char *)0);
     struct Extension *extp;
-    if (!(extp = find_extn(&cert.toBeSigned.extensions, id_pe_ipAddrBlock, 0)))
+    if (!(extp = find_extension(&cert.toBeSigned.extensions, id_pe_ipAddrBlock, 0)))
         fatal(3, "IPAddress");
     struct Extensions extensions;
     Extensions(&extensions, (ushort) 0);
@@ -52,8 +51,8 @@ int main(
     if (diff_casn(&sbextp->self, &extp->self))
         fatal(5, "IP Addresses");
     sbextp = (struct Extension *)next_of(&sbextp->self);
-    if (!(extp = find_extn(&cert.toBeSigned.extensions,
-                           id_pe_autonomousSysNum, 0)))
+    if (!(extp = find_extension(&cert.toBeSigned.extensions,
+                                id_pe_autonomousSysNum, 0)))
         fatal(3, "AS number");
     if (diff_casn(&sbextp->self, &extp->self))
         fatal(5, "AS numbers");

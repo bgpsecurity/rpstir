@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
 #include <casn/casn.h>
 #include "sqhl.h"
 
@@ -123,11 +123,6 @@ struct iprange *eject_range(
 
 extern void free_ipranges(
     struct ipranges *);
-
-struct Extension *find_extn(
-    struct Extensions *extsp,
-    char *oid,
-    int add);
 
 char *nextword(
     char *),

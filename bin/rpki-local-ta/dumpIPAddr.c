@@ -1,8 +1,7 @@
 // For testing LTA perforation/expansion.
 
 #include <casn/casn.h>
-#include <rpki-asn1/certificate.h>
-#include <rpki/rpwork.h>
+#include <rpki-object/certificate.h>
 #include <stdio.h>
 
 char *msgs[] = {
@@ -86,7 +85,7 @@ int main(
         if ((lth = get_casn_file(&extensions.self, *p, 0)) < 0)
             fatal(5, *p);
         struct Extension *extp;
-        if (!(extp = find_extn(&extensions, id_pe_ipAddrBlock, 0)))
+        if (!(extp = find_extension(&extensions, id_pe_ipAddrBlock, 0)))
             fatal(4, "IPAddress");
         printf("File %s\n", *p);
         struct IpAddrBlock *ipaddrblockp = &extp->extnValue.ipAddressBlock;

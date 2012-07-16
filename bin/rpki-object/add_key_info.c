@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
 #include <rpki-asn1/crlv2.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
@@ -32,24 +32,6 @@ static void fatal(
     exit(err);
 }
 
-static struct Extension *find_extension(
-    struct Extensions *extsp,
-    char *idp,
-    int creat)
-{
-    struct Extension *extp;
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, idp);
-         extp = (struct Extension *)next_of(&extp->self));
-    if (!extp && creat)
-    {
-        int num = num_items(&extsp->self);
-        extp = (struct Extension *)inject_casn(&extsp->self, num);
-        if (extp)
-            write_objid(&extp->extnID, idp);
-    }
-    return extp;
-}
 
 static struct Extension *find_CRLextension(
     struct CrlExtensions *extsp,

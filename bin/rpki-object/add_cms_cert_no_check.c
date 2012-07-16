@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
 #include <rpki-asn1/roa.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
@@ -33,19 +33,6 @@ struct keyring {
 };
 
 static struct keyring keyring;
-
-static struct Extension *find_extension(
-    struct Certificate *certp,
-    char *idp)
-{
-    struct Extension *extp;
-    for (extp =
-         (struct Extension *)member_casn(&certp->toBeSigned.extensions.self,
-                                         0);
-         extp && diff_objid(&extp->extnID, idp);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
 
 // return a printable message indicating the error (if any) or NULL if not
 // 
@@ -170,7 +157,7 @@ int main(
         fatal(1, "CMS file");
     struct Extension *sextp;
     // get EE's Auth Key ID
-    if (!(sextp = find_extension(&EEcert, id_authKeyId)))
+    if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
         fatal(3, "key identifier");
     // add cert to CMS object 
     struct BlobSignedData *signedDatap = &roa.content.signedData;
@@ -194,7 +181,7 @@ int main(
         fatal(2, "SignerInfo");
     write_casn_num(&signerInfop->version.v3, 3);
     // add EE's SKI
-    if (!(sextp = find_extension(&EEcert, id_subjectKeyIdentifier)))
+    if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_subjectKeyIdentifier, false)))
         fatal(2, "EE certificate's subject key identifier");
     copy_casn(&signerInfop->sid.subjectKeyIdentifier,
               &sextp->extnValue.subjectKeyIdentifier);
