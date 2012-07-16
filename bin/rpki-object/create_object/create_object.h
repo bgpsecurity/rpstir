@@ -66,9 +66,6 @@ extern struct Extension *makeExtension(
 void removeExtension(
     struct Extensions *extsp,
     char *oid);
-extern struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid);
 extern int write_family(
     struct IPAddressFamilyA *famp,
     char *buf,

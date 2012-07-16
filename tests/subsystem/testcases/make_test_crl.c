@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include "rpki-asn1/crlv2.h"
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 #include "rpki-asn1/extensions.h"
 #include <util/cryptlib_compat.h>
 #include <rpki-asn1/roa.h>
@@ -37,22 +37,6 @@ static int fatal(
 {
     fprintf(stderr, msgs[err], param);
     exit(err);
-}
-
-static struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *id)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
-         extp = (struct Extension *)next_of(&extp->self))
-    {
-        if (!diff_objid(&extp->extnID, id))
-            break;
-    }
-    return extp;
 }
 
 static long getCertNum(
@@ -255,7 +239,7 @@ int main(
     extp =
         (struct CRLExtension *)inject_casn(&crltbsp->extensions.self,
                                            numext++);
-    iextp = findExtension(&ctbsp->extensions, id_subjectKeyIdentifier);
+    iextp = find_extension(&ctbsp->extensions, id_subjectKeyIdentifier, false);
     write_objid(&extp->extnID, id_authKeyId);
     copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
               &iextp->extnValue.subjectKeyIdentifier);

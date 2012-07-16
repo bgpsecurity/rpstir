@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "util/cryptlib_compat.h"
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
@@ -183,12 +183,12 @@ int use_parent_cert(
     // fprintf(stdout,"copied issuer name\n");
 
     // replace aki extension of certificate with ski from issuer's cert
-    cextp = findExtension(&ctftbsp->extensions, id_authKeyId);
+    cextp = find_extension(&ctftbsp->extensions, id_authKeyId, false);
     if (!cextp)
         cextp = makeExtension(&ctftbsp->extensions, id_authKeyId);
     // fprintf(stdout,"copying ski as aki\n");
-    if ((iextp = findExtension(&issuer.toBeSigned.extensions,
-                               id_subjectKeyIdentifier)))
+    if ((iextp = find_extension(&issuer.toBeSigned.extensions,
+                                id_subjectKeyIdentifier, false)))
     {
         copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
                   &iextp->extnValue.subjectKeyIdentifier);
@@ -216,7 +216,7 @@ int write_default_fields(
     // key usage
     // If ca set keyCertSign and CRLsign bits
     // if ee set digitalSignature bit
-    if (!(cextp = findExtension(&ctftbsp->extensions, id_keyUsage)))
+    if (!(cextp = find_extension(&ctftbsp->extensions, id_keyUsage, false)))
         cextp = makeExtension(&ctftbsp->extensions, id_keyUsage);
     if (eecert)
     {                           // clear everything first
@@ -234,7 +234,7 @@ int write_default_fields(
 
     // basic constraints
     // if ee no extension, if ca set ca to one
-    cextp = findExtension(&ctftbsp->extensions, id_basicConstraints);
+    cextp = find_extension(&ctftbsp->extensions, id_basicConstraints, false);
     if (eecert)
     {
         // no basic constraints extension for an ee cert
@@ -313,7 +313,7 @@ int use_subject_keyfile(
     }
 
     // always update SKI to match subjectPublicKey
-    if (!(extp = findExtension(extsp, id_subjectKeyIdentifier)))
+    if (!(extp = find_extension(extsp, id_subjectKeyIdentifier, false)))
         extp = makeExtension(extsp, id_subjectKeyIdentifier);
     writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
 
@@ -970,7 +970,7 @@ int write_cert_addrs(
     else
         family[1] = 2;
 
-    extp = findExtension(extsp, id_pe_ipAddrBlock);
+    extp = find_extension(extsp, id_pe_ipAddrBlock, false);
     if (!extp)
     {
         extp = makeExtension(extsp, id_pe_ipAddrBlock);

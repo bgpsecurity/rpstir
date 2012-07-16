@@ -120,7 +120,7 @@ tests_subsystem_testcases_make_test_cert_SOURCES = \
 
 
 tests_subsystem_testcases_make_test_cert_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_crl
@@ -130,7 +130,7 @@ tests_subsystem_testcases_make_test_crl_SOURCES = \
 	tests/subsystem/testcases/make_test_crl.c
 
 tests_subsystem_testcases_make_test_crl_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_manifest

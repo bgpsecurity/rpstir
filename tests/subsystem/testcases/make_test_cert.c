@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "util/cryptlib_compat.h"
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
@@ -96,19 +96,6 @@ static void check_access_methods(
         fatal(12, e);
 }
 
-static struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oid);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
 static void inheritIPAddresses(
     struct Extension *extp,
     struct Extension *iextp)
@@ -192,7 +179,7 @@ static struct Extension *makeExtension(
     char *idp)
 {
     struct Extension *extp;
-    if (!(extp = findExtension(extsp, idp)))
+    if (!(extp = find_extension(extsp, idp, false)))
     {
         extp = (struct Extension *)inject_casn(&extsp->self,
                                                num_items(&extsp->self));
@@ -738,7 +725,7 @@ int main(
     {
         // key usage
         extp = makeExtension(extsp, id_keyUsage);
-        if (!(iextp = findExtension(iextsp, id_keyUsage)))
+        if (!(iextp = find_extension(iextsp, id_keyUsage, false)))
             fatal(4, "key usage");
         copy_casn(&extp->self, &iextp->self);
         if (ee)
@@ -750,18 +737,18 @@ int main(
         if (!ee)
         {
             extp = makeExtension(extsp, id_basicConstraints);
-            if (!(iextp = findExtension(iextsp, id_basicConstraints)))
+            if (!(iextp = find_extension(iextsp, id_basicConstraints, false)))
                 fatal(4, "basic constraints");
             copy_casn(&extp->self, &iextp->self);
         }
         // CRL dist points
         extp = makeExtension(extsp, id_cRLDistributionPoints);
-        if (!(iextp = findExtension(iextsp, id_cRLDistributionPoints)))
+        if (!(iextp = find_extension(iextsp, id_cRLDistributionPoints, false)))
             fatal(4, "CRL Dist points");
         copy_casn(&extp->self, &iextp->self);
         // Cert policies
         extp = makeExtension(extsp, id_certificatePolicies);
-        if (!(iextp = findExtension(iextsp, id_certificatePolicies)))
+        if (!(iextp = find_extension(iextsp, id_certificatePolicies, false)))
             fatal(4, "cert policies");
         copy_casn(&extp->self, &iextp->self);
         // authInfoAccess
@@ -779,7 +766,8 @@ int main(
         else                    // can copy it
         {
             extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
-            if (!(iextp = findExtension(iextsp, id_pkix_authorityInfoAccess)))
+            if (!(iextp = find_extension(iextsp, id_pkix_authorityInfoAccess,
+                                         false)))
                 fatal(4, "authorityInfoAccess");
             copy_casn(&extp->self, &iextp->self);
         }
@@ -795,8 +783,8 @@ int main(
      */
     if (issuerkeyfile)
     {
-        if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
-                                    id_subjectKeyIdentifier)))
+        if (!(iextp = find_extension(&issuer.toBeSigned.extensions,
+                                    id_subjectKeyIdentifier, false)))
             fatal(4, "subjectKeyIdentifier");
         extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
         copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
@@ -809,7 +797,8 @@ int main(
         if (explicitIPAS >= 0)  // no extension if explicitIPAS < 0
             extp = makeExtension(&ctftbsp->extensions, id_pe_ipAddrBlock);
         iextp =
-            findExtension(&issuer.toBeSigned.extensions, id_pe_ipAddrBlock);
+            find_extension(&issuer.toBeSigned.extensions, id_pe_ipAddrBlock,
+                           false);
         if (!ee)
         {
             int numfam = 0;
@@ -849,8 +838,8 @@ int main(
         if (!strchr(subjfile, (int)'R'))        // not for ROAs
         {
             iextp =
-                findExtension(&issuer.toBeSigned.extensions,
-                              id_pe_autonomousSysNum);
+                find_extension(&issuer.toBeSigned.extensions,
+                               id_pe_autonomousSysNum, false);
             extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
             if (!ee)            // get numbers from input file
             {
@@ -878,8 +867,8 @@ int main(
         }
         // subjectInfoAccess
         iextp =
-            findExtension(&issuer.toBeSigned.extensions,
-                          id_pe_subjectInfoAccess);
+            find_extension(&issuer.toBeSigned.extensions,
+                           id_pe_subjectInfoAccess, false);
         extp = makeExtension(extsp, id_pe_subjectInfoAccess);
         check_access_methods(iextp);
         copy_casn(&extp->self, &iextp->self);
@@ -898,7 +887,7 @@ int main(
     }
     else                        // root
     {
-        if (!(iextp = findExtension(extsp, id_pe_subjectInfoAccess)))
+        if (!(iextp = find_extension(extsp, id_pe_subjectInfoAccess, false)))
             fatal(4, "subjectInfoAccess");
         check_access_methods(iextp);
     }

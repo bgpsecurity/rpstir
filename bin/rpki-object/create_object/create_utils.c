@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "util/cryptlib_compat.h"
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
@@ -356,26 +356,12 @@ void removeExtension(
 }
 
 
-struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oid);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
 struct Extension *makeExtension(
     struct Extensions *extsp,
     char *idp)
 {
-    struct Extension *extp;
-    if (!(extp = findExtension(extsp, idp)))
+    struct Extension *extp = find_extension(extsp, idp, false);
+    if (extp == NULL)
     {
         extp = (struct Extension *)inject_casn(&extsp->self,
                                                num_items(&extsp->self));

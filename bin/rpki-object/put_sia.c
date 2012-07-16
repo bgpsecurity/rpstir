@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 
 #define MAX_SIA_ACC_DESCR 100   /* maximum number of access descriptions */
 
@@ -80,26 +80,12 @@ static int add_sia_request(
 }
 
 
-static struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oid);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
 static struct Extension *makeExtension(
     struct Extensions *extsp,
     char *idp)
 {
     struct Extension *extp;
-    if (!(extp = findExtension(extsp, idp)))
+    if (!(extp = find_extension(extsp, idp, false)))
     {
         extp = (struct Extension *)inject_casn(&extsp->self,
                                                num_items(&extsp->self));
@@ -197,7 +183,8 @@ int main(
     /*
      * Find or create SIA extension. 
      */
-    extp = findExtension(&cert.toBeSigned.extensions, id_pe_subjectInfoAccess);
+    extp = find_extension(&cert.toBeSigned.extensions,
+                          id_pe_subjectInfoAccess, false);
     if (!extp)
     {
         extp =

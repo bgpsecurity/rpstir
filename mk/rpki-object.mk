@@ -78,7 +78,7 @@ bin_rpki_object_extractPubKeyInfo_LDADD = \
 bin_PROGRAMS += bin/rpki-object/extractSIA
 
 bin_rpki_object_extractSIA_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/extractValidityDate
@@ -147,7 +147,7 @@ bin_rpki_object_put_sernum_LDADD = \
 bin_PROGRAMS += bin/rpki-object/put_sia
 
 bin_rpki_object_put_sia_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/put_subj

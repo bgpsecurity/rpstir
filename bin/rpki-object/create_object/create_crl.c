@@ -9,7 +9,7 @@
 #include <errno.h>
 #include "util/cryptlib_compat.h"
 #include "rpki-asn1/crlv2.h"
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 #include "rpki-asn1/extensions.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
@@ -232,8 +232,8 @@ int use_pcert(
     copy_casn(&crltbsp->issuer.self, &issuer.toBeSigned.subject.self);
 
     // overwrite crl aki extension using ski from issuer's cert
-    if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
-                                id_subjectKeyIdentifier)))
+    if (!(iextp = find_extension(&issuer.toBeSigned.extensions,
+                                 id_subjectKeyIdentifier, false)))
     {
         fprintf(stderr, "Error: could not obtain SKI from issuer cert");
         return -1;
