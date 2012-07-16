@@ -95,10 +95,12 @@ dist_check_SCRIPTS += \
 TESTS += \
 	tests/conformance/scripts/run_tests.sh
 
-CLEANFILES += \
+CLEANDIRS += \
 	tests/conformance/output \
-	tests/conformance/raw/*.cer \
 	tests/conformance/raw/root
+
+CLEANFILES += \
+	tests/conformance/raw/*.cer
 
 dist_doc_DATA += doc/conformance-cases
 
@@ -174,15 +176,17 @@ dist_check_SCRIPTS += \
 	tests/subsystem/testcases/testall.sh
 
 
+CLEANDIRS += \
+	tests/subsystem/testcases/C1 \
+	tests/subsystem/testcases/C2 \
+	tests/subsystem/testcases/EEcertificates
+
 CLEANFILES += \
 	tests/subsystem/testcases/*.crl \
 	tests/subsystem/testcases/*.man \
 	tests/subsystem/testcases/*.roa \
 	tests/subsystem/testcases/C*.cer \
-	tests/subsystem/testcases/C.raw \
-	tests/subsystem/testcases/C1 \
-	tests/subsystem/testcases/C2 \
-	tests/subsystem/testcases/EEcertificates
+	tests/subsystem/testcases/C.raw
 
 
 

@@ -1,7 +1,8 @@
 AUTOMAKE_OPTIONS = \
 	1.6 \
 	foreign \
-	subdir-objects
+	subdir-objects \
+	-Wall
 
 
 EXTRA_DIST = \
@@ -23,8 +24,12 @@ CFLAGS_STRICT = \
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib
 
+AM_ETAGSFLAGS = \
+	--declarations
+
 
 BUILT_SOURCES =
+CLEANDIRS =
 CLEANFILES =
 TESTS =
 bin_PROGRAMS =
@@ -79,8 +84,8 @@ include mk/testbed.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
 
-tags:
-	find ${PWD} -name \*.[ch] | xargs etags --declarations
+clean-local:
+	-rm -rf $(CLEANDIRS)
 
 install:
 	@echo '**** Please refer to the documentation file name INSTRUCTIONS. ****'

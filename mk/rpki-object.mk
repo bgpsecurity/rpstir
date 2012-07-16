@@ -56,7 +56,7 @@ dist_pkgdata_DATA += \
 dist_check_SCRIPTS += \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 
-CLEANFILES += \
+CLEANDIRS += \
 	bin/rpki-object/create_object/tests/empty_manifest
 
 TESTS += \
