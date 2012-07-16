@@ -20,6 +20,9 @@ CFLAGS_STRICT = \
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib
 
+AM_ETAGSFLAGS = \
+	--declarations
+
 
 BUILT_SOURCES =
 CLEANFILES =
@@ -74,9 +77,6 @@ include mk/rpki.mk
 include mk/testbed.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
-
-tags:
-	find ${PWD} -name \*.[ch] | xargs etags --declarations
 
 install:
 	@echo '**** Please refer to the documentation file name INSTRUCTIONS. ****'
