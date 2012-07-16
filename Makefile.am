@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS = 1.6 foreign
+AUTOMAKE_OPTIONS = 1.6 foreign -Wall
 
 
 EXTRA_DIST = \
