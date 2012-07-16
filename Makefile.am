@@ -1,4 +1,7 @@
-AUTOMAKE_OPTIONS = 1.6 foreign
+AUTOMAKE_OPTIONS = \
+	1.6 \
+	foreign \
+	subdir-objects
 
 
 EXTRA_DIST = \
