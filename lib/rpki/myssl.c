@@ -3910,8 +3910,7 @@ static int rescert_extensions_chk(
 int rescert_profile_chk(
     X509 * x,
     struct Certificate *certp,
-    int ct,
-    int checkRPKI)
+    int ct)
 {
     int ret = 0;
 
@@ -3985,11 +3984,8 @@ int rescert_profile_chk(
     if (ret < 0)
         return (ret);
 
-    if (checkRPKI)
-    {
-        ret = rescert_ip_asnum_chk(x, certp);
-        log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
-    }
+    ret = rescert_ip_asnum_chk(x, certp);
+    log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
     if (ret < 0)
         return (ret);
 

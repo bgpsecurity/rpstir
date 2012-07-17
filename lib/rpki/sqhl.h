@@ -20,9 +20,7 @@
 #define OT_CRL          2       /* DER encoded CRL */
 #define OT_ROA          3       /* DER encoded ROA */
 #define OT_MAN          4       /* manifests are only DER for now */
-#define OT_RTA          5       /* DER encoded RTA */
-#define OT_ETA          6
-#define OT_MAXBASIC     6
+#define OT_MAXBASIC     4
 
 #define OT_PEM_OFFSET   128
 

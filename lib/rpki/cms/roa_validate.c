@@ -692,24 +692,6 @@ static int cmsValidate(
  * free(path); *badfilesppp = badfilespp; return err; } 
  */
 
-int rtaValidate(
-    struct ROA *rtap)
-{
-    int iRes = cmsValidate(rtap);
-    if (iRes < 0)
-        return iRes;
-
-    // check eContentType 
-    if (diff_objid(&rtap->content.signedData.encapContentInfo.eContentType,
-                   id_ct_RPKITrustAnchor))
-        return ERR_SCM_BADCT;
-    if ((iRes =
-         check_cert(&rtap->content.signedData.encapContentInfo.
-                    eContent.trustAnchor, 0)) < 0)
-        return iRes;
-    return 0;
-}
-
 static int check_mft_version(
     struct casn *casnp)
 {
