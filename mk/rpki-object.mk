@@ -90,7 +90,7 @@ bin_rpki_object_extractValidityDate_LDADD = \
 bin_PROGRAMS += bin/rpki-object/fix_manifest
 
 bin_rpki_object_fix_manifest_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/gen_hash

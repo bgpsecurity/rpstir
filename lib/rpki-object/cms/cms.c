@@ -147,12 +147,15 @@ const char *signCMS(
         write_casn(&attrtdp->messageDigest, hash, signatureLength);
 
         // create signing time attribute; mark the signing time as now
-        attrp =
-            (struct Attribute *)inject_casn(&sigInfop->signedAttrs.self, 2);
-        write_objid(&attrp->attrType, id_signingTimeAttr);
-        attrtdp =
-            (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 0);
-        write_casn_time(&attrtdp->signingTime.utcTime, time((time_t *) 0));
+        if (getenv("RPKI_NO_SIGNING_TIME") == NULL)
+        {
+            attrp =
+                (struct Attribute *)inject_casn(&sigInfop->signedAttrs.self, 2);
+            write_objid(&attrp->attrType, id_signingTimeAttr);
+            attrtdp =
+                (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 0);
+            write_casn_time(&attrtdp->signingTime.utcTime, time((time_t *) 0));
+        }
 
         // we are all done with the content
         free(tbsp);
@@ -213,7 +216,6 @@ const char *signCMS(
     // done with cryptlib, shut it down
     cryptDestroyContext(hashContext);
     cryptDestroyContext(sigKeyContext);
-    cryptEnd();
 
     // did we have any trouble above? if so, bail
     if (msg != 0)
@@ -238,6 +240,7 @@ const char *signCMS(
 
     // copy the signature into the object
     copy_casn(&sigInfop->signature, &sigInfo.signature);
+    delete_casn(&sigInfo.self);
 
     // all done with it now
     free(signature);

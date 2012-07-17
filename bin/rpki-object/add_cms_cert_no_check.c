@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <rpki-object/certificate.h>
+#include <rpki-object/cms/cms.h>
 #include <rpki-asn1/roa.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
@@ -33,102 +34,6 @@ struct keyring {
 };
 
 static struct keyring keyring;
-
-// return a printable message indicating the error (if any) or NULL if not
-// 
-static char *signCMS(
-    struct CMSBlob *roa,
-    char *keyfilename,
-    int bad)
-{
-    CRYPT_CONTEXT sigKeyContext;
-    CRYPT_KEYSET cryptKeyset;
-    CRYPT_CONTEXT hashContext;
-    int signatureLength,
-        tbs_lth;
-    char *msg = (char *)0;
-    uchar *tbsp,
-       *signature = NULL,
-        hash[40];
-    struct SignerInfo *signerInfop =
-        (struct SignerInfo *)member_casn(&roa->content.signedData.signerInfos.
-                                         self, 0);
-
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            fatal(1, "CryptInit");
-        CryptInitState = 1;
-    }
-    // get the size of signed attributes and allocate space for them
-    if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
-        msg = "sizing SignerInfo";
-    else
-    {
-        tbsp = (uchar *) calloc(1, tbs_lth);
-        tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
-        *tbsp = ASN_SET;
-
-        if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) <
-            0)
-            msg = "creating hash context";
-        else if (cryptEncrypt(hashContext, tbsp, tbs_lth) < 0 ||
-                 cryptEncrypt(hashContext, tbsp, 0) < 0)
-            msg = "hasingg attrs";
-        else if (cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
-                                         hash, &signatureLength) < 0)
-            msg = "getting attr hash";
-        // get the key and sign it
-        else if (cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                                 keyfilename, CRYPT_KEYOPT_READONLY) < 0)
-            msg = "opening key set";
-        else if (cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                                    CRYPT_ALGO_RSA) < 0)
-            msg = "creating RSA context";
-        else if (cryptGetPrivateKey
-                 (cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, keyring.label,
-                  keyring.password) < 0)
-            msg = "getting key";
-        else if (cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
-                                      hashContext) < 0)
-            msg = "signing";
-        else
-        {
-            // check the signature to make sure it's right
-            signature = (uchar *) calloc(1, signatureLength + 20);
-            // second parameter is signatureMaxLength, so we allow a little
-            // more
-            if (cryptCreateSignature
-                (signature, signatureLength + 20, &signatureLength,
-                 sigKeyContext, hashContext) < 0)
-                msg = "signing";
-            // verify that the signature is right
-            else if (cryptCheckSignature
-                     (signature, signatureLength, sigKeyContext,
-                      hashContext) < 0)
-                msg = "verifying";
-        }
-    }
-
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
-
-    if (!msg)
-    {
-        struct SignerInfo sigInfo;
-        SignerInfo(&sigInfo, (ushort) 0);
-        decode_casn(&sigInfo.self, signature);
-        // copy the signature into the object
-        copy_casn(&signerInfop->signature, &sigInfo.signature);
-        delete_casn(&sigInfo.self);
-    }
-    else
-        fprintf(stderr, "Signing failed when %s\n", msg);
-    // all done with it now
-    if (signature)
-        free(signature);
-    return NULL;
-}
 
 int main(
     int argc,
@@ -234,7 +139,7 @@ int main(
     write_casn(&signerInfop->signatureAlgorithm.
                parameters.sha256WithRSAEncryption, (uchar *) "", 0);
     // sign it!
-    char *msg = signCMS(&roa, argv[3], 0);
+    char *msg = signCMSBlob(&roa, argv[3]);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else                        // and write it
