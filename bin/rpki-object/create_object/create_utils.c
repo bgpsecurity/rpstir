@@ -9,6 +9,7 @@
 #include <errno.h>
 #include "util/cryptlib_compat.h"
 #include "rpki-object/certificate.h"
+#include "rpki-object/cms/cms.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
@@ -24,10 +25,6 @@
 #define IPv6 6
 #define ASNUM 8
 
-extern char *signCMS(
-    struct ROA *roap,
-    char *keyfile,
-    int bad);
 int txt2loc(
     int typ,
     char *buf,

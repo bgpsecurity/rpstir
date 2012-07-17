@@ -16,14 +16,9 @@
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
 #include <rpki-asn1/roa.h>
+#include <rpki-object/cms/cms.h>
 #include <rpki/cms/roa_utils.h>
 #include <assert.h>
-
-// in signCMS.c in this directory
-extern char *signCMS(
-    struct ROA *,
-    char *,
-    int);
 
 void usage(
     char *prog)

@@ -125,7 +125,7 @@ bin_rpki_object_makeROA_LDADD = \
 bin_PROGRAMS += bin/rpki-object/make_manifest
 
 bin_rpki_object_make_manifest_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBRPKIOBJECT)
 
 dist_man_MANS += doc/make_manifest.1
 
@@ -133,7 +133,7 @@ dist_man_MANS += doc/make_manifest.1
 bin_PROGRAMS += bin/rpki-object/make_roa
 
 bin_rpki_object_make_roa_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBRPKIOBJECT)
 
 dist_man_MANS += doc/make_roa.1
 
@@ -181,7 +181,7 @@ dist_man_MANS += doc/sign_cert.1
 bin_PROGRAMS += bin/rpki-object/sign_cms
 
 bin_rpki_object_sign_cms_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/sign_roa

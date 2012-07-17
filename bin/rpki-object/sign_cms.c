@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include "rpki-asn1/roa.h"
 #include "util/logutils.h"
-#include "rpki/cms/roa_utils.h"
+#include "rpki-object/cms/cms.h"
 
 
 int main(

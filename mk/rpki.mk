@@ -142,7 +142,7 @@ tests_subsystem_testcases_make_test_manifest_SOURCES = \
 	tests/subsystem/testcases/make_test_manifest.c
 
 tests_subsystem_testcases_make_test_manifest_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_roa

@@ -16,11 +16,8 @@
 #include <casn/asn.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
+#include "rpki-object/cms/cms.h"
 
-extern char *signCMS(
-    struct ROA *roap,
-    char *keyfile,
-    int bad);
 /*
  * This file has a program to make manifests. 
  */

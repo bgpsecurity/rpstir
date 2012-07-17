@@ -14,7 +14,8 @@
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
 #include <rpki-asn1/roa.h>
-#include "roa_utils.h"
+
+#include "cms.h"
 
 // find the SID for this ROA and return it
 static struct casn *findSID(
@@ -45,15 +46,10 @@ static struct casn *findSID(
     return (struct casn *)0;
 }
 
-// 
-// sign a CMS (in this case a ROA)
-// if bad == 1, intentionally generate a bad signature 
-// return a printable message indicating the error (if any) or NULL if not
-// 
-char *signCMS(
+const char *signCMS(
     struct ROA *roa,
-    char *keyfilename,
-    int bad)
+    const char *keyfilename,
+    bool bad)
 {
     CRYPT_CONTEXT hashContext;
     CRYPT_CONTEXT sigKeyContext;
