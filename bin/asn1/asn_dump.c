@@ -20,6 +20,7 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include <string.h>
 #include <strings.h>
 #include "casn/asn.h"
+#include "casn/casn.h"
 
 extern void fatal(
     int,
@@ -35,8 +36,6 @@ static int putform(
 
 extern struct typnames typnames[];
 
-static void load_oidtable(
-    char *);
 static char *find_label(
     char *oidp,
     int *diffp);
@@ -384,38 +383,4 @@ static char *find_label(
         }
     }
     return (char *)0;
-}
-
-static void load_oidtable(
-    char *name)
-{
-    FILE *str = fopen(name, "r");
-    if (!str)
-        return;
-    int numoids = 16,
-        oidnum;
-    char locbuf[512];
-    oidtable = (struct oidtable *)calloc(numoids, sizeof(struct oidtable));
-    for (oidnum = 0; fgets(locbuf, 512, str); oidnum++)
-    {
-        if (oidnum >= numoids - 1)
-            oidtable = (struct oidtable *)realloc(oidtable,
-                                                  ((numoids +=
-                                                    16) *
-                                                   sizeof(struct oidtable)));
-        char *c,
-           *l;
-        for (c = locbuf; *c > ' '; c++);
-        for (*c++ = 0; *c && *c <= ' '; c++);
-        l = c;
-        for (c++; *c > ' '; c++);
-        *c = 0;
-        struct oidtable *oidp = &oidtable[oidnum];
-        oidp->oid = (char *)calloc(1, strlen(locbuf) + 2);
-        oidp->label = (char *)calloc(1, strlen(l) + 2);
-        strcpy(oidp->oid, locbuf);
-        strcpy(oidp->label, l);
-    }
-    oidtable[oidnum].oid = (char *)0;
-    oidtable_size = oidnum;
 }

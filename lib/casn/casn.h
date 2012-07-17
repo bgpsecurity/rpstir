@@ -184,6 +184,9 @@ void delete_casn(
     int type,
     int tag);
 
+void load_oidtable(
+    char *name);
+
 struct casn *dup_casn(
     struct casn *casnp),
    *index_casn(

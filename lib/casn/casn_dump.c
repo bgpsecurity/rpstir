@@ -50,8 +50,6 @@ static long _dumpread(
     char *to,
     int offset,
     int mode);
-static void load_oidtable(
-    char *);
 static char *find_label(
     char *oidp,
     int *diffp);
@@ -716,7 +714,7 @@ static char *find_label(
     return (char *)0;
 }
 
-static void load_oidtable(
+void load_oidtable(
     char *name)
 {
     FILE *str = fopen(name, "r");
