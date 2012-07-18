@@ -28,12 +28,17 @@ run_bg () {
     PROG="$1"
     shift
 
+    log_dir="."
+    if test -n "$TEST_LOG_DIR"; then
+        log_dir="$TEST_LOG_DIR"
+    fi
+
     case "$CHECKTOOL" in
         "valgrind")
             if test "x$STRICT_CHECKS" = x1; then
-                valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$PROG" "$@" &
+                valgrind --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$PROG" "$@" &
             else
-                valgrind --log-file="valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$PROG" "$@" &
+                valgrind --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$PROG" "$@" &
             fi
             ;;
         "" | "none")
