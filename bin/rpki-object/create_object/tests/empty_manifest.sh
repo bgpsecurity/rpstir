@@ -8,9 +8,13 @@ OUTDIR="`pwd`/empty_manifest"
 rm -rf "$OUTDIR"
 mkdir "$OUTDIR"
 
+TEST_LOG_NAME=empty_manifest
+TEST_LOG_DIR="$OUTDIR"
+. "$RPKI_ROOT/tests/test.include"
 
-gen_key "$OUTDIR/root.p15" 2048
-create_object CERT \
+
+run "gen_key-root" gen_key "$OUTDIR/root.p15" 2048
+run "create_object-root" create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
 	type=CA \
@@ -25,8 +29,8 @@ create_object CERT \
 	ipv6="::/0" \
 	as=0-4294967295
 
-gen_key "$OUTDIR/empty_manifest.mft.ee.p15" 2048
-create_object CERT \
+run "gen_key-mft-ee" gen_key "$OUTDIR/empty_manifest.mft.ee.p15" 2048
+run "create_object-mft-ee" create_object CERT \
 	outputfilename="$OUTDIR/empty_manifest.mft.ee.cer" \
 	parentcertfile="$OUTDIR/root.cer" \
 	parentkeyfile="$OUTDIR/root.p15" \
@@ -42,7 +46,7 @@ create_object CERT \
 	ipv4=inherit \
 	ipv6=inherit \
 	as=inherit
-create_object MANIFEST \
+run "create_object-mft" create_object MANIFEST \
 	outputfilename="$OUTDIR/empty_manifest.mft" \
 	EECertLocation="$OUTDIR/empty_manifest.mft.ee.cer" \
 	EEKeyLocation="$OUTDIR/empty_manifest.mft.ee.p15" \
