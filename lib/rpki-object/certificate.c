@@ -19,3 +19,27 @@ struct Extension *find_extension(
     }
     return extp;
 }
+
+struct Extension *make_extension(
+    struct Extensions *extsp,
+    const char *oid)
+{
+    struct Extension *extp = find_extension(extsp, oid, false);
+    if (extp == NULL)
+    {
+        extp = (struct Extension *)inject_casn(&extsp->self,
+                                               num_items(&extsp->self));
+        if (extp == NULL)
+        {
+            return NULL;
+        }
+    }
+    else
+    {
+        clear_casn(&extp->self);
+    }
+
+    write_objid(&extp->extnID, oid);
+
+    return extp;
+}

@@ -353,24 +353,6 @@ void removeExtension(
 }
 
 
-struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp)
-{
-    struct Extension *extp = find_extension(extsp, idp, false);
-    if (extp == NULL)
-    {
-        extp = (struct Extension *)inject_casn(&extsp->self,
-                                               num_items(&extsp->self));
-    }
-    else
-        clear_casn(&extp->self);
-
-    write_objid(&extp->extnID, idp);
-    return extp;
-}
-
-
 #define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separators, family) \
   char ipstr[addrstrlen]; \
   ip_type ipbin0, ipbin1; \

@@ -174,22 +174,6 @@ static int ipOrRange2prefix(
     return ansr + ansr2;
 }
 
-static struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp)
-{
-    struct Extension *extp;
-    if (!(extp = find_extension(extsp, idp, false)))
-    {
-        extp = (struct Extension *)inject_casn(&extsp->self,
-                                               num_items(&extsp->self));
-    }
-    else
-        clear_casn(&extp->self);
-    write_objid(&extp->extnID, idp);
-    return extp;
-}
-
 static void make_fullpath(
     char *fullpath,
     char *locpath)
@@ -719,12 +703,12 @@ int main(
     struct Extension *extp,
        *iextp;
     // make subjectKeyIdentifier first
-    extp = makeExtension(extsp, id_subjectKeyIdentifier);
+    extp = make_extension(extsp, id_subjectKeyIdentifier);
     writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp, skistat);
     if (issuerkeyfile)
     {
         // key usage
-        extp = makeExtension(extsp, id_keyUsage);
+        extp = make_extension(extsp, id_keyUsage);
         if (!(iextp = find_extension(iextsp, id_keyUsage, false)))
             fatal(4, "key usage");
         copy_casn(&extp->self, &iextp->self);
@@ -736,23 +720,23 @@ int main(
         // basic constraints
         if (!ee)
         {
-            extp = makeExtension(extsp, id_basicConstraints);
+            extp = make_extension(extsp, id_basicConstraints);
             if (!(iextp = find_extension(iextsp, id_basicConstraints, false)))
                 fatal(4, "basic constraints");
             copy_casn(&extp->self, &iextp->self);
         }
         // CRL dist points
-        extp = makeExtension(extsp, id_cRLDistributionPoints);
+        extp = make_extension(extsp, id_cRLDistributionPoints);
         if (!(iextp = find_extension(iextsp, id_cRLDistributionPoints, false)))
             fatal(4, "CRL Dist points");
         copy_casn(&extp->self, &iextp->self);
         // Cert policies
-        extp = makeExtension(extsp, id_certificatePolicies);
+        extp = make_extension(extsp, id_certificatePolicies);
         if (!(iextp = find_extension(iextsp, id_certificatePolicies, false)))
             fatal(4, "cert policies");
         copy_casn(&extp->self, &iextp->self);
         // authInfoAccess
-        extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
+        extp = make_extension(extsp, id_pkix_authorityInfoAccess);
         if (strlen(argv[1]) == 2 || (strlen(argv[1]) == 3 && argv[1][1] > '9'))
         {                       // first generation.  Have to build it
             struct AuthorityInfoAccessSyntax *aiasp =
@@ -765,7 +749,7 @@ int main(
         }
         else                    // can copy it
         {
-            extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
+            extp = make_extension(extsp, id_pkix_authorityInfoAccess);
             if (!(iextp = find_extension(iextsp, id_pkix_authorityInfoAccess,
                                          false)))
                 fatal(4, "authorityInfoAccess");
@@ -786,7 +770,7 @@ int main(
         if (!(iextp = find_extension(&issuer.toBeSigned.extensions,
                                     id_subjectKeyIdentifier, false)))
             fatal(4, "subjectKeyIdentifier");
-        extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
+        extp = make_extension(&ctftbsp->extensions, id_authKeyId);
         copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
                   &iextp->extnValue.subjectKeyIdentifier);
     }
@@ -795,7 +779,7 @@ int main(
     if (issuerkeyfile)
     {
         if (explicitIPAS >= 0)  // no extension if explicitIPAS < 0
-            extp = makeExtension(&ctftbsp->extensions, id_pe_ipAddrBlock);
+            extp = make_extension(&ctftbsp->extensions, id_pe_ipAddrBlock);
         iextp =
             find_extension(&issuer.toBeSigned.extensions, id_pe_ipAddrBlock,
                            false);
@@ -840,7 +824,7 @@ int main(
             iextp =
                 find_extension(&issuer.toBeSigned.extensions,
                                id_pe_autonomousSysNum, false);
-            extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
+            extp = make_extension(&ctftbsp->extensions, id_pe_autonomousSysNum);
             if (!ee)            // get numbers from input file
             {
                 copy_casn(&extp->critical, &iextp->critical);
@@ -869,7 +853,7 @@ int main(
         iextp =
             find_extension(&issuer.toBeSigned.extensions,
                            id_pe_subjectInfoAccess, false);
-        extp = makeExtension(extsp, id_pe_subjectInfoAccess);
+        extp = make_extension(extsp, id_pe_subjectInfoAccess);
         check_access_methods(iextp);
         copy_casn(&extp->self, &iextp->self);
         if (ee)                 // change it for an EE cert

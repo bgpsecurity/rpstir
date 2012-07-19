@@ -16,4 +16,14 @@ struct Extension *find_extension(
     const char *oid,
     bool create);
 
+/**
+ * If an extension with the specified oid exists, clear it and return it.
+ * Otherwise, create a new extension with the specified oid.
+ *
+ * @return the extension, or NULL on error
+ */
+struct Extension *make_extension(
+    struct Extensions *extsp,
+    const char *oid);
+
 #endif

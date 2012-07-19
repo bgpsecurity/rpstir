@@ -80,23 +80,6 @@ static int add_sia_request(
 }
 
 
-static struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp)
-{
-    struct Extension *extp;
-    if (!(extp = find_extension(extsp, idp, false)))
-    {
-        extp = (struct Extension *)inject_casn(&extsp->self,
-                                               num_items(&extsp->self));
-    }
-    else
-        clear_casn(&extp->self);
-
-    write_objid(&extp->extnID, idp);
-    return extp;
-}
-
 int main(
     int argc,
     char *argv[])
@@ -188,7 +171,7 @@ int main(
     if (!extp)
     {
         extp =
-            makeExtension(&cert.toBeSigned.extensions,
+            make_extension(&cert.toBeSigned.extensions,
                           id_pe_subjectInfoAccess);
         if (!extp)
         {
