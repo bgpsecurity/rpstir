@@ -60,9 +60,6 @@ extern int read_hex_val(
     char *from_val,
     int len,
     unsigned char *to_val);
-extern struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp);
 void removeExtension(
     struct Extensions *extsp,
     char *oid);
