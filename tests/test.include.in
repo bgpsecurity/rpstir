@@ -36,13 +36,13 @@ run_bg () {
     case "$CHECKTOOL" in
         "valgrind")
             if test "x$STRICT_CHECKS" = x1; then
-                valgrind --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$PROG" "$@" &
+                valgrind --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" --track-fds=full --leak-check=full --error-exitcode=1 "$PROG" "$@" <&0 &
             else
-                valgrind --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$PROG" "$@" &
+                valgrind --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" --error-exitcode=1 "$PROG" "$@" <&0 &
             fi
             ;;
         "" | "none")
-            "$PROG" "$@" &
+            "$PROG" "$@" <&0 &
             ;;
         *)
             echo >&2 "Error: invalid value for \$CHECKTOOL: $CHECKTOOL"
