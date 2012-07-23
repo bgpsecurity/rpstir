@@ -7,6 +7,11 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices - exit w/ failure on any error
 . $RPKI_ROOT/lib/util/trap_errors
 
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 # Usage
 usage ( ) {
     usagestr="
@@ -141,15 +146,15 @@ ensure_file_exists ${EECERT_TEMPLATE}
 ###############################################################################
 
 # Extract SIA manifest URI from parent
-parent_sia=$(extractSIA -m $PARENT_CERT_FILE)
+parent_sia=$(run "extractSIA-`basename $PARENT_CERT_FILE`" extractSIA -m $PARENT_CERT_FILE)
 echo "Parent SIA: ${parent_sia}"
 
 # Extract validity dates from parent in both X.509 (utctime or gmtime,
 # depending on the date) and MFT (gmtime) formats.
-parent_notbefore=$(extractValidityDate -b $PARENT_CERT_FILE)
-parent_notafter=$(extractValidityDate -a $PARENT_CERT_FILE)
-parent_notbefore_gtime=$(extractValidityDate -b -g $PARENT_CERT_FILE)
-parent_notafter_gtime=$(extractValidityDate -a -g $PARENT_CERT_FILE)
+parent_notbefore=$(run "extractValidityDate-b-`basename $PARENT_CERT_FILE`" extractValidityDate -b $PARENT_CERT_FILE)
+parent_notafter=$(run "extractValidityDate-a-`basename $PARENT_CERT_FILE`" extractValidityDate -a $PARENT_CERT_FILE)
+parent_notbefore_gtime=$(run "extractValidityDate-b-g-`basename $PARENT_CERT_FILE`" extractValidityDate -b -g $PARENT_CERT_FILE)
+parent_notafter_gtime=$(run "extractValidityDate-a-g-`basename $PARENT_CERT_FILE`" extractValidityDate -a -g $PARENT_CERT_FILE)
 
 # Compute SIA manifest URI for EE cert
 ee_sia_mft="${parent_sia}"
@@ -172,11 +177,11 @@ mft_ee_key_path=${OUTPUT_DIR}/${mft_name}.p15
 ###############################################################################
 
 # 1. Generate EE key pair
-gen_key $mft_ee_key_path 2048
+run "gen_key-`basename $mft_ee_key_path`" gen_key $mft_ee_key_path 2048
 echo "Generated MFT EE key pair: $mft_ee_key_path"
 
 # 2. Create child-issued EE cert (to be embedded in the manifest)
-create_object -t ${EECERT_TEMPLATE} CERT \
+run "create_object-`basename ${mft_ee_path}`" create_object -t ${EECERT_TEMPLATE} CERT \
     outputfilename=${mft_ee_path} \
     parentcertfile=${PARENT_CERT_FILE} \
     parentkeyfile=${PARENT_KEY_FILE} \
@@ -208,7 +213,7 @@ while [ $# -gt 0 ]; do
 done
 
 # 4. Create child-issued Manifest
-create_object -t ${MFT_TEMPLATE} MANIFEST \
+run "create_object-`basename ${mft_path}`" create_object -t ${MFT_TEMPLATE} MANIFEST \
     outputfilename=${mft_path} \
     EECertLocation=${mft_ee_path} \
     EEKeyLocation=${mft_ee_key_path} \
