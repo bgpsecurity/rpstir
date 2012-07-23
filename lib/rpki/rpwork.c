@@ -467,8 +467,6 @@ int get_CAcert(
     return i;
 }
 
-extern int CryptInitState;
-
 static int sign_cert(
     struct keyring *keyring,
     struct Certificate *certp)
@@ -489,13 +487,8 @@ static int sign_cert(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
     memset(hash, 0, 40);
-    if (!CryptInitState)
-    {
-        int i = cryptInit();
-        if (i)
-            return ERR_SCM_CRYPTLIB;
-        CryptInitState = 1;
-    }
+    if (cryptInit() != CRYPT_OK)
+        return ERR_SCM_CRYPTLIB;
     if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
         || (ansr =

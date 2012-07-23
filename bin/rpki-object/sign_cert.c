@@ -48,8 +48,6 @@ static void fatal(
         exit(err);
 }
 
-int CryptInitState = 0;
-
 
 static int setSignature(
     struct casn *tbhash,
@@ -78,12 +76,8 @@ static int setSignature(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(tbhash, signstring);
     memset(hash, 0, 40);
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            fatal(1, "CryptInit");
-        CryptInitState = 1;
-    }
+    if (cryptInit() != CRYPT_OK)
+        fatal(1, "CryptInit");
     if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
         || (ansr =

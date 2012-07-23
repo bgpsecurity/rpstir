@@ -56,12 +56,11 @@ static int setSignature(
     }
 
     memset(hash, 0, 40);
-    if (!CryptInitState)
+    if (cryptInit() != CRYPT_OK)
     {
-        cryptInit();
-        CryptInitState = 1;
+        msg = "initializing cryptlib"
     }
-    if ((ansr =
+    else if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
         || (ansr =
             cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,

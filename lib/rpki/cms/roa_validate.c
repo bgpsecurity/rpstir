@@ -24,8 +24,6 @@ int strict_profile_checks_cms = 0;
 
 #define MINMAXBUFSIZE 20
 
-extern int CryptInitState;
-
 int check_sig(
     struct ROA *rp,
     struct Certificate *certp)
@@ -68,12 +66,8 @@ int check_sig(
     *buf = ASN_SET;
 
     // (re)init the crypt library
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            return ERR_SCM_CRYPTLIB;
-        CryptInitState = 1;
-    }
+    if (cryptInit() != CRYPT_OK)
+        return ERR_SCM_CRYPTLIB;
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2))
         return ERR_SCM_CRYPTLIB;
     cryptEncrypt(hashContext, buf, bsize);
