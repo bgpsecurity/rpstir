@@ -173,7 +173,7 @@ bin_rpki_object_set_cert_ski_LDADD = \
 bin_PROGRAMS += bin/rpki-object/sign_cert
 
 bin_rpki_object_sign_cert_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 dist_man_MANS += doc/sign_cert.1
 
@@ -187,4 +187,4 @@ bin_rpki_object_sign_cms_LDADD = \
 bin_PROGRAMS += bin/rpki-object/update_cert
 
 bin_rpki_object_update_cert_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)

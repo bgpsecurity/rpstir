@@ -20,6 +20,7 @@
 #include "create_manifest.h"
 #include "create_roa.h"
 #include "obj_err.h"
+#include "util/logging.h"
 
 /*
  * function declrations 
@@ -280,6 +281,9 @@ int main(
     char *configFile = NULL;
     extern char *optarg;
     struct object_field *table;
+
+
+    OPEN_LOG("create_object", LOG_USER);
 
 
     // parse options

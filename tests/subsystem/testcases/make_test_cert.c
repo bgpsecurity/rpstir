@@ -16,6 +16,7 @@
 #include <casn/casn.h>
 #include <casn/asn.h>
 #include <util/hashutils.h>
+#include <util/logging.h>
 #include <time.h>
 
 char *msgs[] = {
@@ -396,100 +397,6 @@ static void set_name(
                strlen(namep));
 }
 
-static int setSignature(
-    struct Certificate *certp,
-    char *keyfile,
-    int bad)
-{
-    CRYPT_CONTEXT hashContext;
-    CRYPT_CONTEXT sigKeyContext;
-    CRYPT_KEYSET cryptKeyset;
-    uchar hash[40];
-    uchar *signature = NULL;
-    int ansr = 0,
-        signatureLength;
-    char *msg;
-    uchar *signstring = NULL;
-    int sign_lth;
-
-    if ((sign_lth = size_casn(&certp->toBeSigned.self)) < 0)
-        fatal(5, "sizing");
-    signstring = (uchar *) calloc(1, sign_lth);
-    sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
-    memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if ((ansr =
-         cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
-        || (ansr =
-            cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                               CRYPT_ALGO_RSA)) != 0)
-        msg = "creating context";
-    else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
-             (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
-        msg = "hashing";
-    else if ((ansr =
-              cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
-                                      hash, &signatureLength)) != 0)
-        msg = "getting attribute string";
-    else if ((ansr =
-              cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                              keyfile, CRYPT_KEYOPT_READONLY)) != 0)
-        msg = "opening key set";
-    else if ((ansr =
-              cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME,
-                                 "label", "password")) != 0)
-        msg = "getting key";
-    else if ((ansr =
-              cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
-                                   hashContext)) != 0)
-        msg = "signing";
-    else
-    {
-        signature = (uchar *) calloc(1, signatureLength + 20);
-        if ((ansr = cryptCreateSignature(signature, signatureLength + 20,
-                                         &signatureLength, sigKeyContext,
-                                         hashContext)) != 0)
-            msg = "signing";
-        else if ((ansr =
-                  cryptCheckSignature(signature, signatureLength,
-                                      sigKeyContext, hashContext)) != 0)
-            msg = "verifying";
-    }
-
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
-    cryptEnd();
-    if (signstring)
-        free(signstring);
-    signstring = NULL;
-    if (ansr == 0)
-    {
-        struct SignerInfo siginfo;
-        SignerInfo(&siginfo, (ushort) 0);
-        if ((ansr = decode_casn(&siginfo.self, signature)) < 0)
-            msg = "decoding signature";
-        else if ((ansr = readvsize_casn(&siginfo.signature, &signstring)) < 0)
-            msg = "reading signature";
-        else
-        {
-            if (bad)
-                signstring[0]++;
-            if ((ansr =
-                 write_casn_bits(&certp->signature, signstring, ansr, 0)) < 0)
-                msg = "writing signature";
-            else
-                ansr = 0;
-        }
-    }
-    if (signstring != NULL)
-        free(signstring);
-    if (signature != NULL)
-        free(signature);
-    if (ansr)
-        fatal(5, msg);
-    return ansr;
-}
-
 static void write_ASNums(
     struct ASNum *asnump)
 {
@@ -600,6 +507,7 @@ int main(
     int argc,
     char **argv)
 {
+    OPEN_LOG("make_test_cert", LOG_USER);
     if (argc < 4 || argc > 5)
         fatal(3, "");
     int bad = 0,
@@ -875,7 +783,12 @@ int main(
             fatal(4, "subjectInfoAccess");
         check_access_methods(iextp);
     }
-    setSignature(&cert, (issuerkeyfile) ? issuerkeyfile : subjkeyfile, bad);
+    if (!set_signature(&cert.toBeSigned.self, &cert.signature,
+                       (issuerkeyfile) ? issuerkeyfile : subjkeyfile,
+                       "label", "password", bad))
+    {
+        fatal(5, "setting signature");
+    }
     char fullpath[40];
     memset(fullpath, 0, sizeof(fullpath));
     make_fullpath(fullpath, subjfile);
