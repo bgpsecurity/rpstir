@@ -184,12 +184,6 @@ bin_rpki_object_sign_cms_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
 
-bin_PROGRAMS += bin/rpki-object/sign_roa
-
-bin_rpki_object_sign_roa_LDADD = \
-	$(LDADD_LIBRPKIASN1)
-
-
 bin_PROGRAMS += bin/rpki-object/update_cert
 
 bin_rpki_object_update_cert_LDADD = \
