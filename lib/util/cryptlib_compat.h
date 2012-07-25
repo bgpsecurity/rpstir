@@ -11,19 +11,11 @@
  * cryptlib has already been initialized.
  */
 C_CHECK_RETVAL \
-static inline C_RET cryptInit_wrapper()
-{
-    C_RET ret = cryptInit();
+C_RET cryptInit_wrapper();
 
-    if (ret == CRYPT_ERROR_INITED)
-    {
-        ret = CRYPT_OK;
-    }
-
-    return ret;
-}
-
+#ifndef COMPAT_NO_CLOBBER
 #define cryptInit cryptInit_wrapper
+#endif
 
 
 #endif

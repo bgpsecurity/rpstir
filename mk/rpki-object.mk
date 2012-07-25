@@ -101,6 +101,9 @@ bin_rpki_object_gen_hash_LDADD = \
 
 bin_PROGRAMS += bin/rpki-object/gen_key
 
+bin_rpki_object_gen_key_LDADD = \
+	$(LDADD_LIBUTIL)
+
 dist_man_MANS += doc/gen_key.1
 
 
