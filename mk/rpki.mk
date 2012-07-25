@@ -113,6 +113,9 @@ tests_subsystem_testcases_cert_validate_LDADD = \
 
 check_PROGRAMS += tests/subsystem/testcases/gen_test_key
 
+tests_subsystem_testcases_gen_test_key_LDADD = \
+	$(LDADD_LIBUTIL)
+
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_cert
 
