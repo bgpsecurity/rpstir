@@ -13,7 +13,14 @@ TEST_LOG_DIR="$OUTDIR"
 . "$RPKI_ROOT/tests/test.include"
 
 
-run "gen_key-root" gen_key "$OUTDIR/root.p15" 2048
+fail () {
+	echo "$@"
+	exit 1
+}
+
+
+run "gen_key-root" gen_key "$OUTDIR/root.p15" 2048 \
+	|| fail "gen_key root.p15 failed"
 run "create_object-root" create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
@@ -27,9 +34,11 @@ run "create_object-root" create_object CERT \
 	sia="r:rsync://example.com/rpki/,m:rsync://example.com/rpki/empty_manifest.mft" \
 	ipv4="0.0.0.0/0" \
 	ipv6="::/0" \
-	as=0-4294967295
+	as=0-4294967295 \
+	|| fail "create_object root.cer failed"
 
-run "gen_key-mft-ee" gen_key "$OUTDIR/empty_manifest.mft.ee.p15" 2048
+run "gen_key-mft-ee" gen_key "$OUTDIR/empty_manifest.mft.ee.p15" 2048 \
+	|| fail "gen_key empty_manifest.mft.ee.p15 failed"
 run "create_object-mft-ee" create_object CERT \
 	outputfilename="$OUTDIR/empty_manifest.mft.ee.cer" \
 	parentcertfile="$OUTDIR/root.cer" \
@@ -45,7 +54,8 @@ run "create_object-mft-ee" create_object CERT \
 	sia="s:rsync://example.com/rpki/empty_manifest.mft" \
 	ipv4=inherit \
 	ipv6=inherit \
-	as=inherit
+	as=inherit \
+	|| fail "create_object empty_manifest.mft.ee.cer failed"
 run "create_object-mft" create_object MANIFEST \
 	outputfilename="$OUTDIR/empty_manifest.mft" \
 	EECertLocation="$OUTDIR/empty_manifest.mft.ee.cer" \
@@ -53,4 +63,5 @@ run "create_object-mft" create_object MANIFEST \
 	thisUpdate=20120101010101Z \
 	nextUpdate=20490101010101Z \
 	manNum=1 \
-	fileList=""
+	fileList="" \
+	|| fail "create_object empty_manifest.mft failed"
