@@ -52,5 +52,6 @@ run_bg () {
 
 run () {
     run_bg "$@"
-    wait $!
+    wait $! || return $?
+    return 0
 }
