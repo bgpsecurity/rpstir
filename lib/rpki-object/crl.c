@@ -23,8 +23,12 @@ const char *signCRL(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(&crlp->toBeSigned.self, signstring);
     memset(hash, 0, 40);
-    cryptInit();
-    if ((ansr =
+    if (cryptInit() != CRYPT_OK)
+    {
+        msg = "initializing cryptlib";
+        ansr = -1;
+    }
+    else if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
         || (ansr =
             cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
@@ -64,7 +68,6 @@ const char *signCRL(
 
     cryptDestroyContext(hashContext);
     cryptDestroyContext(sigKeyContext);
-    cryptEnd();
     if (signstring)
         free(signstring);
     signstring = NULL;
