@@ -10,6 +10,8 @@ lib_util_libutil_a_SOURCES = \
 	lib/util/cryptlib_compat.h \
 	lib/util/hashutils.c \
 	lib/util/hashutils.h \
+	lib/util/inet.c \
+	lib/util/inet.h \
 	lib/util/logging.h \
 	lib/util/logutils.c \
 	lib/util/logutils.h \

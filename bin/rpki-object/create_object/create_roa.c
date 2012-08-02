@@ -18,6 +18,7 @@
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
+#include "util/inet.h"
 // #include "create_utils.h"
 
 char *roa_template = TEMPLATES_DIR "/R.roa";
