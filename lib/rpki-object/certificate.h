@@ -26,4 +26,24 @@ struct Extension *make_extension(
     struct Extensions *extsp,
     const char *oid);
 
+/**
+ * Check the signature of an object signed by a certificate.
+ *
+ * @param locertp signed object (NOTE: does not have to be part of a cert)
+ * @param hicertp parent certificate
+ * @param sigp signature
+ * @return true on valid signature, false on invalid signature or error
+ */
+bool check_signature(
+    struct casn *locertp,
+    struct Certificate *hicertp,
+    struct casn *sigp);
+
+/**
+ * Like check_signature() above, but with a child that's a certificate.
+ */
+bool check_cert_signature(
+    struct Certificate *locertp,
+    struct Certificate *hicertp);
+
 #endif

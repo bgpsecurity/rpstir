@@ -21,7 +21,7 @@ dist_man_MANS += doc/add_key_info.1
 bin_PROGRAMS += bin/rpki-object/check_signature
 
 bin_rpki_object_check_signature_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 dist_man_MANS += doc/check_signature.1
 
