@@ -170,6 +170,10 @@ int copy_casn(
     struct casn *,
     char *);                    // for use by constructors only
 
+int cf_oid(
+    char *curr_oid,
+    char *test_oid);
+
 void delete_casn(
     struct casn *),
     clear_casn(

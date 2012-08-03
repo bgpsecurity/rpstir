@@ -645,7 +645,7 @@ static int newline(
     return (c - to);
 }
 
-static int cf_oid(
+int cf_oid(
     char *curr_oid,
     char *test_oid)
 {
