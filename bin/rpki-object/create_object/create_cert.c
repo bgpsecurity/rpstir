@@ -10,7 +10,7 @@
 #include "util/cryptlib_compat.h"
 #include "rpki-object/certificate.h"
 #include <rpki-asn1/roa.h>
-#include <rpki-asn1/keyfile.h>
+#include <rpki-object/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
 #include <util/hashutils.h>
@@ -269,18 +269,6 @@ static int writeHashedPublicKey(
     return siz;
 }
 
-static int fillPublicKey(
-    struct casn *spkp,
-    char *keyfile)
-{
-    struct Keyfile kfile;
-    Keyfile(&kfile, (ushort) 0);
-    if (get_casn_file(&kfile.self, keyfile, 0) < 0)
-        return -1;
-    copy_casn(spkp, &kfile.content.bbb.ggg.iii.nnn.ooo.ppp.key);
-    return 0;
-}
-
 /*
  * Take values from the subject keyfile and write them to the 
  * current certificate.
@@ -308,7 +296,7 @@ int use_subject_keyfile(
         write_objid(&spkinfop->algorithm.algorithm, id_rsadsi_rsaEncryption);
         write_casn(&spkinfop->algorithm.parameters.rsadsi_rsaEncryption,
                    (uchar *) "", 0);
-        if (fillPublicKey(spkp, val) < 0)
+        if (!fillPublicKey(spkp, val))
             return -1;
     }
 

@@ -8,7 +8,7 @@
 #include <errno.h>
 #include "rpki-asn1/certificate.h"
 #include "util/cryptlib_compat.h"
-#include <rpki-asn1/keyfile.h>
+#include <rpki-object/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
 #include <util/hashutils.h>
@@ -51,21 +51,6 @@ static int writeFileHash(
 
     free(hashbuf);
     return siz;
-}
-
-static int fillPublicKey(
-    struct casn *spkp,
-    char *keyfile)
-{
-
-    struct Keyfile kfile;
-    Keyfile(&kfile, (ushort) 0);
-    if (get_casn_file(&kfile.self, keyfile, 0) < 0)
-        return -1;
-    int val = copy_casn(spkp, &kfile.content.bbb.ggg.iii.nnn.ooo.ppp.key);
-    if (val <= 0)
-        return -1;
-    return 0;
 }
 
 
@@ -134,7 +119,7 @@ int main(
         struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;
         struct casn *spkp = &spkinfop->subjectPublicKey;
 
-        if (fillPublicKey(spkp, configFile) < 0)
+        if (!fillPublicKey(spkp, configFile))
             return -1;
         writeHashedPublicKey(spkp);
 

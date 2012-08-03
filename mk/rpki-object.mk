@@ -96,7 +96,7 @@ bin_rpki_object_fix_manifest_LDADD = \
 bin_PROGRAMS += bin/rpki-object/gen_hash
 
 bin_rpki_object_gen_hash_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 bin_PROGRAMS += bin/rpki-object/gen_key

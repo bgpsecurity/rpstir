@@ -12,7 +12,7 @@
 #include "util/cryptlib_compat.h"
 #include "rpki-object/certificate.h"
 #include <rpki-asn1/roa.h>
-#include <rpki-asn1/keyfile.h>
+#include <rpki-object/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
 #include <util/hashutils.h>
@@ -57,18 +57,6 @@ extern int adjustTime(
     struct casn *timep,
     long now,
     char *deltap);
-
-static int fillPublicKey(
-    struct casn *spkp,
-    char *keyfile)
-{
-    struct Keyfile kfile;
-    Keyfile(&kfile, (ushort) 0);
-    if (get_casn_file(&kfile.self, keyfile, 0) < 0)
-        fatal(1, keyfile);
-    copy_casn(spkp, &kfile.content.bbb.ggg.iii.nnn.ooo.ppp.key);
-    return 0;
-}
 
 static void check_access_methods(
     struct Extension *iextp)
@@ -600,7 +588,10 @@ int main(
     write_casn(&spkinfop->algorithm.parameters.rsadsi_rsaEncryption,
                (uchar *) "", 0);
     struct casn *spkp = &spkinfop->subjectPublicKey;
-    fillPublicKey(spkp, subjkeyfile);
+    if (!fillPublicKey(spkp, subjkeyfile))
+    {
+        fatal(1, "subjkeyfile");
+    }
 
     struct Extensions *extsp = &ctftbsp->extensions,
         *iextsp;
