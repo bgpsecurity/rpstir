@@ -53,11 +53,6 @@ static void fatal(
     exit(err);
 }
 
-extern int adjustTime(
-    struct casn *timep,
-    long now,
-    char *deltap);
-
 static void check_access_methods(
     struct Extension *iextp)
 {

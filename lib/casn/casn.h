@@ -174,6 +174,11 @@ int cf_oid(
     char *curr_oid,
     char *test_oid);
 
+int adjustTime(
+    struct casn *timep,
+    long basetime,
+    char *deltap);
+
 void delete_casn(
     struct casn *),
     clear_casn(

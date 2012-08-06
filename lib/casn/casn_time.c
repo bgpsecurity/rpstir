@@ -497,3 +497,52 @@ int write_casn_time(
         return _casn_obj_err(casnp, -err);
     return casnp->lth;
 }
+
+int adjustTime(
+    struct casn *timep,
+    long basetime,
+    char *deltap)
+{
+    // if they passed in a NULL for deltap, just use basetime
+    if (deltap != NULL)
+    {
+        char *unitp = &deltap[strlen(deltap) - 1];
+        if (*unitp == 'Z')
+        {
+            // absolute time
+            if (strlen(deltap) == 15)   /* generalized time? */
+                /*
+                 * this fn doesn't handle generalizedtime, strip century 
+                 */
+                deltap += (15 - 13);
+            else if (strlen(deltap) != 13)      /* utc time? */
+                return -1;      /* bad format */
+            if (write_casn(timep, (uchar *) deltap, 13) < 0)
+                return -1;      /* bad format */
+        }
+        else if (strchr("YMWDhms", *unitp) != 0)
+        {
+            // relative time
+            ulong val;
+            sscanf(deltap, "%ld", &val);
+            if (*unitp == 's'); // val is right
+            else if (*unitp == 'm')
+                val *= 60;
+            else if (*unitp == 'h')
+                val *= 3600;
+            else if (*unitp == 'D')
+                val *= (3600 * 24);
+            else if (*unitp == 'W')
+                val *= (3600 * 24 * 7);
+            else if (*unitp == 'M')
+                val *= (3600 * 24 * 30);
+            else if (*unitp == 'Y')
+                val *= (3600 * 24 * 365);
+            basetime += val;
+            write_casn_time(timep, (ulong) basetime);
+        }
+        else
+            return -1;          // unknown delta unit, bad call
+    }
+    return 0;
+}

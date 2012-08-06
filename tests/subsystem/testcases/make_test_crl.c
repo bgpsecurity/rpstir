@@ -15,11 +15,6 @@
 #include <util/cryptlib_compat.h>
 #include <rpki-asn1/roa.h>
 
-extern int adjustTime(
-    struct casn *,
-    long,
-    char *);
-
 char *msgs[] = {
     "Finished %s OK\n",
     "Usage: CRLfile startdelta enddelta\n",
