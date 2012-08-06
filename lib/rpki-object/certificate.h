@@ -46,4 +46,14 @@ bool check_cert_signature(
     struct Certificate *locertp,
     struct Certificate *hicertp);
 
+/**
+ * Write the hash of keyp to valuep.
+ *
+ * @param bad whether or not to write an invalid hash
+ */
+int writeHashedPublicKey(
+    struct casn *valuep,
+    struct casn *keyp,
+    bool bad);
+
 #endif

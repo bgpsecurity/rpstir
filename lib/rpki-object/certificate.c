@@ -221,3 +221,19 @@ bool check_cert_signature(
     return check_signature(&locertp->toBeSigned.self, hicertp,
                            &locertp->signature);
 }
+
+int writeHashedPublicKey(
+    struct casn *valuep,
+    struct casn *keyp,
+    bool bad)
+{
+    uchar *bitval;
+    int siz = readvsize_casn(keyp, &bitval);
+    uchar hashbuf[24];
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
+    free(bitval);
+    if (bad)
+        hashbuf[0]++;
+    write_casn(valuep, hashbuf, siz);
+    return siz;
+}

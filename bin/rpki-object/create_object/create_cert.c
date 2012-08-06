@@ -256,19 +256,6 @@ int write_default_fields(
 }
 
 
-static int writeHashedPublicKey(
-    struct casn *valuep,
-    struct casn *keyp)
-{
-    uchar *bitval;
-    int siz = readvsize_casn(keyp, &bitval);
-    uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
-    free(bitval);
-    write_casn(valuep, hashbuf, siz);
-    return siz;
-}
-
 /*
  * Take values from the subject keyfile and write them to the 
  * current certificate.
@@ -303,7 +290,7 @@ int use_subject_keyfile(
     // always update SKI to match subjectPublicKey
     if (!(extp = find_extension(extsp, id_subjectKeyIdentifier, false)))
         extp = make_extension(extsp, id_subjectKeyIdentifier);
-    writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
+    writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp, false);
 
     return (SUCCESS);
 }

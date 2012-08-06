@@ -464,22 +464,6 @@ static int write_family(
     return num;
 }
 
-static int writeHashedPublicKey(
-    struct casn *valuep,
-    struct casn *keyp,
-    char x)
-{
-    uchar *bitval;
-    int siz = readvsize_casn(keyp, &bitval);
-    uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
-    free(bitval);
-    if (x)
-        hashbuf[0]++;
-    write_casn(valuep, hashbuf, siz);
-    return siz;
-}
-
 /*
  * static void view_extensions(struct Extensions *extsp) { struct Extension
  * *extp; for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
