@@ -13,9 +13,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <string.h>
+#include <errno.h>
 #include <casn/asn.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
+#include <util/file.h>
 #include "rpki-object/cms/cms.h"
 
 /*
@@ -118,16 +121,6 @@ static void make_fullpath(
 {
     make_fulldir(fullpath, locpath);
     strcat(fullpath, locpath);
-}
-
-static void mkdir_recursive(
-    const char *dir)
-{
-    char mkdircmd[60];
-    if (!dir || strlen(dir) == 0)
-        return;
-    snprintf(mkdircmd, sizeof(mkdircmd), "mkdir -p %s", dir);
-    system(mkdircmd);
 }
 
 int main(
@@ -251,7 +244,15 @@ int main(
     make_fulldir(fulldir, manifestfile);
     make_fullpath(fullpath, manifestfile);
     fprintf(stdout, "Path: %s\n", fullpath);
-    mkdir_recursive(fulldir);
+    if (fulldir[0] != '\0')
+    {
+        if (!mkdir_recursive(fulldir, 0777))
+        {
+            fprintf(stderr, "error: mkdir_recursive(\"%s\"): %s\n", fulldir,
+                    strerror(errno));
+            fatal(6, fulldir);
+        }
+    }
 
     if (put_casn_file(&roa.self, manifestfile, 0) < 0)
         fatal(6, manifestfile);
