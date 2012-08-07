@@ -103,23 +103,6 @@ int isempty(
 
 
 /*
- * $i1(q( put_num (to,val,lth) $i1)q) 
- */
-int put_num(
-    uchar * to,
-    ulong val,
-    int lth)
-{
-    uchar *c;
-    for (c = &to[lth]; c > to;)
-    {
-        *(--c) = (val % 10) + '0';
-        val /= 10;
-    }
-    return val;
-}
-
-/*
  * $i1(q( putx (c,val) $i1)q) 
  */
 uchar *putx(
