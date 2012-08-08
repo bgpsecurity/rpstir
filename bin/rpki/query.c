@@ -60,7 +60,7 @@ static int isROA = 0,
     isManifest = 0,
     isRTA = 0;
 static scm *scmp = NULL;
-static scmcon *connect = NULL;
+static scmcon *connection = NULL;
 
 
 struct {
@@ -130,7 +130,7 @@ static int handleResults(
             ((isROA || isRPSL || isManifest || isRTA
               || isCRL) ? (char *)s->vec[valIndex].valptr : NULL,
              isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0, scmp,
-             connect))
+             connection))
             return 0;
     }
 
@@ -322,9 +322,9 @@ static int doQuery(
     (void)setbuf(stdout, NULL);
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
-    connect = connectscm(scmp->dsn, errMsg, 1024);
-    checkErr(connect == NULL, "Cannot connect to database: %s\n", errMsg);
-    connect->mystat.tabname = objectType;
+    connection = connectscm(scmp->dsn, errMsg, 1024);
+    checkErr(connection == NULL, "Cannot connect to database: %s\n", errMsg);
+    connection->mystat.tabname = objectType;
     table = findtablescm(scmp, tableName(objectType));
     checkErr(table == NULL, "Cannot find table %s\n", objectType);
 
@@ -456,7 +456,7 @@ static int doQuery(
     /*
      * do query 
      */
-    status = searchscm(connect, table, &srch, NULL, handleResults, srchFlags,
+    status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
                        (isRPSL) ? "asn" : orderp);
     for (i = 0; i < srch.nused; i++)
     {

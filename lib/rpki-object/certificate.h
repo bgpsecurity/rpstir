@@ -2,6 +2,7 @@
 #define _LIB_RPKI_OBJECT_CERTIFICATE_H
 
 #include <stdbool.h>
+#include <arpa/inet.h>
 
 #include "rpki-asn1/certificate.h"
 
@@ -55,5 +56,19 @@ int writeHashedPublicKey(
     struct casn *valuep,
     struct casn *keyp,
     bool bad);
+
+/**
+ * Convert an inclusive range of addresses [low, high] to an IPAddressOrRangeA.
+ *
+ * @param af AF_INET or AF_INET6
+ * @param low address of appropriate length for the address family
+ * @param high address of appropriate length for the address family
+ * @return true on success, false on error
+ */
+bool make_IPAddrOrRange(
+    struct IPAddressOrRangeA *ipAddrOrRangep,
+    int af,
+    const void * low,
+    const void * high);
 
 #endif

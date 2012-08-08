@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "util/cryptlib_compat.h"
 #include "util/hashutils.h"
 #include "util/logging.h"
@@ -236,4 +238,187 @@ int writeHashedPublicKey(
         hashbuf[0]++;
     write_casn(valuep, hashbuf, siz);
     return siz;
+}
+
+/**
+ * Trim trim_bit from the right of src and write it to dst as a bit string.
+ */
+static int write_rtrim_bitstring(
+    struct casn * dst,
+    const uint8_t * src,
+    size_t src_length,
+    bool trim_bit)
+{
+    const uint8_t trim_byte = trim_bit ? 0xff : 0x00;
+
+    size_t prefix_bytes;
+    for (prefix_bytes = src_length;
+        prefix_bytes > 0 && src[prefix_bytes - 1] == trim_byte;
+        --prefix_bytes);
+
+    uint_fast8_t unused_bits;
+    for (unused_bits = 0;
+        prefix_bytes > 0 && unused_bits < 8 &&
+            (src[prefix_bytes - 1] & (1 << unused_bits)) ==
+            (trim_byte & (1 << unused_bits));
+        ++unused_bits);
+
+    uint8_t * bitstring = malloc(prefix_bytes + 1);
+    if (bitstring == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        return -1;
+    }
+
+    memcpy(&bitstring[1], src, prefix_bytes);
+    bitstring[0] = unused_bits;
+    bitstring[prefix_bytes] &= 0xff << unused_bits;
+
+    int ret = write_casn(dst, bitstring, prefix_bytes + 1);
+
+    free(bitstring);
+
+    return ret;
+}
+
+bool make_IPAddrOrRange(
+    struct IPAddressOrRangeA *ipAddrOrRangep,
+    int af,
+    const void * low,
+    const void * high)
+{
+    static const uint8_t zeroes[16] = {
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+    };
+
+    static const uint8_t ones[16] = {
+        0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff,
+    };
+
+    const uint8_t * low_bytes = (const uint8_t *)low;
+    const uint8_t * high_bytes = (const uint8_t *)high;
+    size_t addr_length;
+
+    switch (af)
+    {
+    case AF_INET:
+        addr_length = 4;
+        break;
+
+    case AF_INET6:
+        addr_length = 16;
+        break;
+
+    default:
+        LOG(LOG_ERR, "invalid address family %d", af);
+        return false;
+    }
+
+    if (memcmp(low, high, addr_length) > 0)
+    {
+        LOG(LOG_ERR, "low > high");
+        return false;
+    }
+
+    // compute the length of the common prefix
+    size_t common_bytes;
+    size_t common_bits;
+    size_t noncommon_byte_offset; // first byte that has no common prefix
+    for (common_bytes = 0;
+        common_bytes < addr_length &&
+            low_bytes[common_bytes] == high_bytes[common_bytes];
+        ++common_bytes);
+    for (common_bits = 0;
+        common_bytes < addr_length &&
+            (low_bytes[common_bytes] & (0x80 >> common_bits)) ==
+            (high_bytes[common_bytes] & (0x80 >> common_bits));
+        ++common_bits);
+    noncommon_byte_offset = common_bytes;
+    if (common_bits > 0)
+    {
+        ++noncommon_byte_offset;
+    }
+
+    // determine whether it's a prefix or a range
+    bool is_prefix;
+    if (common_bytes == addr_length)
+    {
+        // low == high
+        is_prefix = true;
+    }
+    else if (common_bits > 0 &&
+        (low_bytes[common_bytes] & (0xff >> common_bits)) != 0x00)
+    {
+        // low isn't all zeroes after the common prefix
+        is_prefix = false;
+    }
+    else if (common_bits > 0 &&
+        (high_bytes[common_bytes] & (0xff >> common_bits)) !=
+            (0xff >> common_bits))
+    {
+        // high isn't all ones after the common prefix
+        is_prefix = false;
+    }
+    else if (noncommon_byte_offset == addr_length)
+    {
+        // The common prefix goes into the last byte and the last bits of the
+        // last bytes are appropriately zero or one.
+        is_prefix = true;
+    }
+    else if (memcmp(&low_bytes[noncommon_byte_offset], zeroes,
+                    addr_length - noncommon_byte_offset) != 0)
+    {
+        // the trailing bytes of low are not all zero
+        is_prefix = false;
+    }
+    else if (memcmp(&high_bytes[noncommon_byte_offset], ones,
+                    addr_length - noncommon_byte_offset) != 0)
+    {
+        // the trailing bytes of high are not all ones
+        is_prefix = false;
+    }
+    else
+    {
+        is_prefix = true;
+    }
+
+    if (is_prefix)
+    {
+        // create BIT STRING
+        uint8_t prefix[noncommon_byte_offset + 1];
+        memcpy(&prefix[1], low, noncommon_byte_offset);
+        prefix[0] = (8 - common_bits) % 8;
+
+        if (write_casn(&ipAddrOrRangep->addressPrefix,
+                       prefix, sizeof(prefix)) <= 0)
+        {
+            LOG(LOG_ERR, "failed to write prefix");
+            return false;
+        }
+    }
+    else
+    {
+        if (write_rtrim_bitstring(&ipAddrOrRangep->addressRange.min,
+                                  low_bytes, addr_length, 0) <= 0)
+        {
+            LOG(LOG_ERR, "failed to write the low end of the range");
+            return false;
+        }
+
+        if (write_rtrim_bitstring(&ipAddrOrRangep->addressRange.max,
+                                  high_bytes, addr_length, 1) <= 0)
+        {
+            LOG(LOG_ERR, "failed to write the high end of the range");
+            return false;
+        }
+
+    }
+
+    return true;
 }

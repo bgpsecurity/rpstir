@@ -6,6 +6,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include "util/logutils.h"
+#include "rpki-object/certificate.h"
 
 extern struct done_certs done_certs;
 
@@ -603,88 +604,6 @@ static void make_ASnum(
     }
 }
 
-static void make_IPAddrOrRange(
-    struct IPAddressOrRangeA *ipAddrOrRangep,
-    struct iprange *tiprangep)
-{
-    /*
-     * Procedure: 1. Running from left to right, find where the low and high
-     * of tiprangep differ Count the number of bits where they match 2. IF
-     * beyond that point lolim is all zeroes and hilim all ones, write a
-     * prefix 3. ELSE make a range thus Find the last non-zero byte in the
-     * minimum Write those bytes to the min field Fill in the number of unused 
-     * bits in the min field Find the last non-FF byte in the max field Write
-     * those bytes in the max field Fill in the number of unused bits in the
-     * max field 
-     */
-    int lth = tiprangep->typ == IPv4 ? 4 : 16;
-    uchar *hucp,
-       *lucp,
-        mask = 0,
-        *eucp = &tiprangep->lolim[lth];
-    int numbits = 0;
-    // step 1
-    for (lucp = tiprangep->lolim, hucp = tiprangep->hilim;
-         lucp < eucp && *lucp == *hucp; lucp++, hucp++, numbits += 8);
-    if (lucp < eucp)
-    {
-        for (mask = 0x80; mask && (mask & *lucp) == (mask & *hucp);
-             mask >>= 1, numbits++);
-        // at first difference. test remains of byte
-        while (mask && !(mask & *lucp) && (mask & *hucp))
-            mask >>= 1;
-        if (!mask)              // now test remainder of bytes
-        {
-            for (lucp++, hucp++; lucp < eucp && !*lucp && *hucp == 0xff;
-                 lucp++, hucp++);
-        }
-    }
-    uchar bitstring[18];
-    int strlth;
-    memset(bitstring, 0, sizeof(bitstring));
-    clear_casn(&ipAddrOrRangep->self);
-    if (!mask && lucp >= eucp)  // step 2
-    {
-        strlth = (numbits + 7) >> 3;
-        memcpy(&bitstring[1], tiprangep->lolim, strlth);
-        bitstring[0] = (8 - (numbits & 7)) & 7;
-        write_casn(&ipAddrOrRangep->addressPrefix, bitstring, strlth + 1);
-    }
-    // step 3
-    else
-    {
-        // low end
-        if (tiprangep->typ == IPv4)
-            lucp = &tiprangep->lolim[3];
-        else
-            lucp = &tiprangep->lolim[15];
-        while (lucp > (uchar *) & tiprangep->lolim && !*lucp)
-            lucp--;
-        strlth = (lucp - tiprangep->lolim) + 1;
-        memcpy(&bitstring[1], tiprangep->lolim, strlth);
-        for (bitstring[0] = 0, mask = *lucp; mask && !(mask & 1);
-             mask >>= 1, bitstring[0]++);
-        write_casn(&ipAddrOrRangep->addressRange.min, bitstring, strlth + 1);
-
-        // high end
-        if (tiprangep->typ == IPv4)
-            lucp = &tiprangep->hilim[3];
-        else
-            lucp = &tiprangep->hilim[15];
-        while (lucp > (uchar *) & tiprangep->hilim && *lucp == 0xFF)
-            lucp--;
-        strlth = (lucp - tiprangep->hilim) + 1;
-        memcpy(&bitstring[1], tiprangep->hilim, strlth);
-        lucp = &bitstring[strlth];
-        for (bitstring[0] = 0, mask = 1; (mask & *lucp);
-             mask <<= 1, bitstring[0]++)
-        {
-            *lucp &= ~(mask);
-        }
-        write_casn(&ipAddrOrRangep->addressRange.max, bitstring, strlth + 1);
-    }
-}
-
 static int expand(
     struct ipranges *rulerangesp,
     int numrulerange,
@@ -1145,7 +1064,10 @@ static void remake_cert_ranges(
             ipAddrOrRangep =
                 (struct IPAddressOrRangeA *)inject_casn(&ipAddrOrRangesp->self,
                                                         num4);
-            make_IPAddrOrRange(ipAddrOrRangep, certrangep);
+            make_IPAddrOrRange(ipAddrOrRangep,
+                               certrangep->typ == IPv4 ? AF_INET : AF_INET6,
+                               certrangep->lolim,
+                               certrangep->hilim);
         }
     }
     // step 3
@@ -1171,7 +1093,10 @@ static void remake_cert_ranges(
             ipAddrOrRangep =
                 (struct IPAddressOrRangeA *)inject_casn(&ipAddrOrRangesp->self,
                                                         num6);
-            make_IPAddrOrRange(ipAddrOrRangep, certrangep);
+            make_IPAddrOrRange(ipAddrOrRangep,
+                               certrangep->typ == IPv4 ? AF_INET : AF_INET6,
+                               certrangep->lolim,
+                               certrangep->hilim);
         }
 
     }
