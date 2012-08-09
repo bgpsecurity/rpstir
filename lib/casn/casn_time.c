@@ -60,6 +60,7 @@ char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
+#include <limits.h>
 
 #define UTCBASE 70              // base year 1970 (unix epoch)
 #define UTCYR 0                 // 0 (UTC year position)
@@ -108,16 +109,34 @@ static ushort _mos[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304,
     334, 365, 366
 };                              /* last is for leap year */
 
-static ulong get_num(
+/**
+ * Converts lth decimal digits, starting at c, to a number
+ *
+ * return non-negative integer, or negative on failure
+ */
+static int get_num(
     const char *c,
     int lth)
 {
-    /*
-     * Function: Converts lth decimal digits, starting at c, to a number 
-     */
-    long val;
-    for (val = 0; lth--; val = (val * 10) + *c++ - '0');
-    return val;
+    intmax_t val = 0;
+    int i;
+    for (i = 0; i < lth; ++i)
+    {
+        if (c[i] >= '0' && c[i] <= '9')
+        {
+            val = val * 10 + (c[i] - '0');
+        }
+        else
+        {
+            return -1;
+        }
+
+        if (val > INT_MAX || val < 0)
+        {
+            return -1;
+        }
+    }
+    return (int)val;
 }
 
 /** Returns true (nonzero) if year is a leap year.
@@ -281,17 +300,17 @@ int _gentime_to_ulong(
     // add in this month's days
     val += da - 1;
     if (&fromp[GENHR] >= ep ||  /* hour */
-        (hr = (int)get_num(&fromp[GENHR], GENHRSIZ)) > 23)
+        (hr = (int)get_num(&fromp[GENHR], GENHRSIZ)) > 23 || hr < 0)
         return -1;
     val = (val * 24) + hr;
     if (val < 0)
         return -1;
     if (&fromp[GENMI] >= ep ||  /* min */
-        (mi = (int)get_num(&fromp[GENMI], GENMISIZ)) > 59)
+        (mi = (int)get_num(&fromp[GENMI], GENMISIZ)) > 59 || mi < 0)
         return -1;
     if (b <= &fromp[GENSE])
         se = 0;                 /* seconds */
-    else if ((se = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59)
+    else if ((se = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59 || se < 0)
         return -1;
     val = (val * 3600) + (mi * 60) + se;
     if (val < 0)
@@ -299,8 +318,8 @@ int _gentime_to_ulong(
     if (*b == '+' || *b == '-')
     {
         int xtra = 0;
-        if ((hr = (int)get_num(&b[GENSFXHR], GENHRSIZ)) > 23 ||
-            (mi = (int)get_num(&b[GENSFXMI], GENMISIZ)) > 59)
+        if ((hr = (int)get_num(&b[GENSFXHR], GENHRSIZ)) > 23 || hr < 0 ||
+            (mi = (int)get_num(&b[GENSFXMI], GENMISIZ)) > 59 || mi < 0)
             return -1;
         xtra = (hr * 60) + mi;  /* diff in minutes */
         if (*b == '-')
@@ -340,6 +359,8 @@ int _utctime_to_ulong(
         return -1;
 
     yr = (int)get_num(&fromp[UTCYR], UTCYRSIZ);
+    if (yr < 0)
+        return -1;
     if (yr < 50)                // rfc5280#section-4.1.2.5.1
         strcpy(genfrom, "20");
     else

@@ -70,23 +70,6 @@ int copynbytes(
 
 
 /*
- * $i1(q( get_num (c,lth) $i1)q) 
- */
-ulong get_num(
-    c,
-    lth)
-     uchar *c;
-     int lth;
-{
-    /*
-     * Function: Converts lth decimal digits, starting at c, to a number 
-     */
-    int val;
-    for (val = 0; lth--; val = (val * 10) + *c++ - '0');
-    return val;
-}
-
-/*
  * $i1(q( isempty (from,size) $i1)q) 
  */
 int isempty(
