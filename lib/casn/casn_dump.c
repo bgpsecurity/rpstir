@@ -50,14 +50,8 @@ static long _dumpread(
     char *to,
     int offset,
     int mode);
-static char *find_label(
-    char *oidp,
-    int *diffp);
 
-struct oidtable {
-    char *oid;
-    char *label;
-}  *oidtable;
+struct oidtable *oidtable;
 int oidtable_size;
 
 int _dump_tag(
@@ -447,7 +441,7 @@ long _dumpread(
             char *buf = (char *)calloc(1, ansr + 2);
             _readsize_objid(casnp, buf, 1);
             int diff;
-            char *labelp = find_label(buf, &diff);
+            char *labelp = find_label(buf, &diff, oidtable, oidtable_size);
             if (labelp)
             {
                 int xtra = strlen(labelp) + 7;
@@ -687,9 +681,11 @@ int cf_oid(
     return -1;                  // should never happen
 }
 
-static char *find_label(
+char *find_label(
     char *oidp,
-    int *diffp)
+    int *diffp,
+    struct oidtable * oidtable,
+    int oidtable_size)
 {
     int num;
     struct oidtable *curr_oidp;

@@ -36,14 +36,7 @@ static int putform(
 
 extern struct typnames typnames[];
 
-static char *find_label(
-    char *oidp,
-    int *diffp);
-
-struct oidtable {
-    char *oid;
-    char *label;
-}  *oidtable;
+struct oidtable *oidtable;
 int oidtable_size;
 
 int asn1dump(
@@ -240,7 +233,7 @@ static int putform(
         {
             int diff;
             char *label;
-            if ((label = find_label((char *)locbuf, &diff)))
+            if ((label = find_label((char *)locbuf, &diff, oidtable, oidtable_size)))
             {
                 if (!diff)
                     sprintf((char *)d, "  /* %s */", label);
@@ -314,31 +307,4 @@ static int putform(
         }
     }
     return row;
-}
-
-static char *find_label(
-    char *oidp,
-    int *diffp)
-{
-    int num;
-    struct oidtable *curr_oidp;
-    for (num = 0; num < oidtable_size; num++)
-    {
-        curr_oidp = &oidtable[num];
-        if ((*diffp = cf_oid(curr_oidp->oid, oidp)) <= 0)
-            break;
-    }
-    if (!(*diffp))
-        return curr_oidp->label;
-    // if (*diffp < -1) return (char *)0;
-    for (num++; num < oidtable_size; num++)
-    {
-        curr_oidp = &oidtable[num];
-        if ((*diffp = cf_oid(curr_oidp->oid, oidp)) < -1)
-        {
-            (*diffp)++;
-            return curr_oidp->label;
-        }
-    }
-    return (char *)0;
 }

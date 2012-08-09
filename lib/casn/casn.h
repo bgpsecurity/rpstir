@@ -46,6 +46,11 @@ struct casn_err_struct {
 
 extern struct casn_err_struct casn_err_struct;
 
+struct oidtable {
+    char *oid;
+    char *label;
+};
+
 int copy_casn(
     struct casn *,
     struct casn *),
@@ -212,6 +217,12 @@ struct casn *dup_casn(
     int num),
    *next_of(
     struct casn *casnp);
+
+char *find_label(
+    char *oidp,
+    int *diffp,
+    struct oidtable * oidtable,
+    int oidtable_size);
 
 #ifndef DEBUG
 #define dbcalloc calloc
