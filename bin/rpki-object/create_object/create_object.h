@@ -79,9 +79,6 @@ extern int write_ASNums(
     int num);
 extern char *stripQuotes(
     char *str);
-extern char *copy_string(
-    char *str,
-    int num);
 extern int cvtv4(
     uchar fill,
     char *ip,
