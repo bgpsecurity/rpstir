@@ -256,7 +256,7 @@ static int write_rtrim_bitstring(
         prefix_bytes > 0 && src[prefix_bytes - 1] == trim_byte;
         --prefix_bytes);
 
-    uint_fast8_t unused_bits;
+    uint8_t unused_bits;
     for (unused_bits = 0;
         prefix_bytes > 0 && unused_bits < 8 &&
             (src[prefix_bytes - 1] & (1 << unused_bits)) ==
