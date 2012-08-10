@@ -57,6 +57,8 @@ struct iprange {
     int typ;
     uchar lolim[18],
         hilim[18];
+    ulong loASnum,
+        hiASnum;
     char *text;
 };
 

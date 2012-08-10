@@ -41,20 +41,6 @@ struct object_field {
     my_func func;
 };
 
-struct iprange {
-    int typ;
-    uchar lolim[18],
-        hilim[18];
-    ulong loASnum,
-        hiASnum;
-    char *text;
-};
-
-struct ipranges {
-    int numranges;
-    struct iprange *iprangep;
-};
-
 
 extern int read_hex_val(
     char *from_val,

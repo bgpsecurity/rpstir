@@ -18,15 +18,7 @@
 #include "create_object.h"
 #include "obj_err.h"
 #include <util/inet.h>
-
-#define IPv4 4
-#define IPv6 6
-#define ASNUM 8
-
-int txt2loc(
-    int typ,
-    char *buf,
-    struct iprange *iprangep);
+#include <rpki/rpwork.h>
 
 /**
  * Writes an EEcert into a ROA or Manifest
@@ -420,83 +412,6 @@ int write_family(
     }
 
     return SUCCESS;
-}
-
-int txt2loc(
-    int typ,
-    char *buf,
-    struct iprange *iprangep)
-{
-    int ansr;
-    char *c,
-       *d = strchr(buf, (int)'-');
-    ulong ASnum;
-    iprangep->typ = typ;
-    memset(iprangep->lolim, 0, 16);
-    memset(iprangep->hilim, 0xFF, 16);
-    if (d && *d)
-        d++;
-    else
-        d = (char *)0;
-    if (typ == ASNUM)
-    {
-        for (c = buf; *c == '-' || (*c >= '0' && *c <= '9'); c++);
-        if (*c > ' ')
-            return -2;
-        sscanf(buf, "%ld", &ASnum);
-        uchar *top;
-        for (top = &iprangep->lolim[3]; top >= iprangep->lolim; top--)
-        {
-            *top = (uchar) (ASnum & 0xFF);
-            ASnum >>= 8;
-        }
-        if (!d)
-            memcpy(iprangep->hilim, iprangep->lolim, 4);
-        else
-        {
-            sscanf(d, "%ld", &ASnum);
-            for (top = &iprangep->hilim[3]; top >= iprangep->hilim; top--)
-            {
-                *top = (uchar) (ASnum & 0xFF);
-                ASnum >>= 8;
-            }
-        }
-    }
-    else if (typ == IPv4)
-    {
-        char *min = NULL;
-        if (d)                  // copy low if it is a range
-            min = copy_string(buf, (char *)d - buf - 1);
-        if ((ansr = cvtv4((uchar) 0, (min) ? min : buf, iprangep->lolim)) < 0
-            || (ansr =
-                cvtv4((uchar) 0xff, (d) ? d : buf, iprangep->hilim)) < 0)
-        {
-            if (min != NULL)
-                free(min);
-            return ansr;
-        }
-        if (min != NULL)
-            free(min);
-    }
-    else if (typ == IPv6)
-    {
-        char *min = NULL;
-        if (d)                  // copy low if it is a range
-            min = copy_string(buf, (char *)d - buf - 1);
-        if ((ansr = cvtv6((uchar) 0, (min) ? min : buf, iprangep->lolim)) < 0
-            || (ansr =
-                cvtv6((uchar) 0xff, (d) ? d : buf, iprangep->hilim)) < 0)
-        {
-            if (min != NULL)
-                free(min);
-            return ansr;
-        }
-        if (min != NULL)
-            free(min);
-    }
-    else
-        return -1;
-    return 0;
 }
 
 // copy the string by allocating memory and copying the string into the
