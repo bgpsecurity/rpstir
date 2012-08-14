@@ -264,6 +264,8 @@ void printUsage(
     exit(0);
 }
 
+extern char **environ;
+
 /*
  * create_object parse the object fields from the command line and call the
  * appropriate object creator with a table of fields filled in. 
@@ -284,6 +286,23 @@ int main(
 
 
     OPEN_LOG("create_object", LOG_USER);
+
+    size_t i;
+    fprintf(stderr, "Environment:\n");
+    for (i = 0; environ[i] != NULL; ++i)
+    {
+        fprintf(stderr, "    %s\n", environ[i]);
+    }
+
+    char * cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) == NULL)
+    {
+        perror("getcwd()");
+    }
+    else
+    {
+        fprintf(stderr, "Directory: %s\n", cwd);
+    }
 
 
     // parse options
