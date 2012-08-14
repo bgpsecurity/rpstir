@@ -78,7 +78,7 @@ struct object_field crl_field_table[] = {
     {"revokedcertlist", LIST, NULL, OPTIONAL, write_revoked_certlist},
     {"aki", OCTETSTRING, NULL, OPTIONAL, write_crl_aki},
     {"signatureValue", OCTETSTRING, NULL, OPTIONAL, write_cert_sig},
-    {NULL, 0, NULL, REQUIRED}
+    {NULL, 0, NULL, REQUIRED, NULL}
 };
 
 struct object_field *get_crl_field_table(

@@ -15,13 +15,6 @@
 #include <util/hashutils.h>
 #include "create_object.h"
 
-struct keyring {
-    char filename[1024];        // expanded from 80 to 1024. it was cutting
-                                // off filenames
-    char label[10];
-    char password[20];
-} keyring;
-
 /**
    sign_cert
    inputs:
@@ -56,11 +49,7 @@ int sign_cert(
     write_objid(&tbsalgp->algorithm, id_sha_256WithRSAEncryption);
     write_casn(&tbsalgp->parameters.rsadsi_SHA256_WithRSAEncryption,
                (uchar *) "", 0);
-    strcpy(keyring.label, "label");
-    strcpy(keyring.password, "password");
-    strcpy(keyring.filename, keyname);
-    if (!set_signature(casnp, sigp, keyring.filename, keyring.label,
-                       keyring.password, false))
+    if (!set_signature(casnp, sigp, keyname, "label", "password", false))
         return -1;
 
     write_objid(&algp->algorithm, id_sha_256WithRSAEncryption);

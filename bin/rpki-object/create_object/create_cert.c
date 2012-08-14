@@ -129,7 +129,7 @@ struct object_field cert_field_table[] = {
     {"as", LIST, NULL, REQUIRED, write_cert_asnums},    // as num resources
     {"signatureValue", OCTETSTRING, NULL, OPTIONAL, write_cert_sig},    // sig
     {"selfsigned", TEXT, NULL, OPTIONAL, NULL}, // true or false
-    {NULL, 0, NULL, REQUIRED}
+    {NULL, 0, NULL, REQUIRED, NULL}
 };
 
 struct object_field *get_cert_field_table(
