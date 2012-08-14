@@ -345,12 +345,8 @@ int create_roa(
             if (table[i].value != NULL)
             {
                 // This is the generic function call from the table
-                    fprintf(stderr, "About to process %s\n", table[i].name);
-                    fflush(stderr);
                 if (table[i].func(&roa, table[i].value) != SUCCESS)
                     return -1;
-                    fprintf(stderr, "Returned from processing %s\n", table[i].name);
-                    fflush(stderr);
             }
         }
     }
