@@ -38,7 +38,7 @@ int write_EEcert(
     {
         struct SignedData *sgdp = &roa->content.signedData;
         // Clear the old one
-        clear_casn(&sgdp->certificates.self);
+        eject_all_casn(&sgdp->certificates.self);
 
         struct Certificate *sigcertp =
             (struct Certificate *)inject_casn(&sgdp->certificates.self, 0);
