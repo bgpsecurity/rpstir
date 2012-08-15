@@ -452,33 +452,6 @@ int encode_casn(
     return _encodesize(casnp, to, ASN_READ);
 }
 
-struct casn *index_casn(
-    struct casn *casnp,
-    int num)
-{
-    struct casn *tcasnp;
-    int err = 0;
-
-    if (_clear_error(casnp) < 0)
-        return (struct casn *)0;
-    if (!casnp->level || !(_go_up(casnp)->flags & ASN_OF_FLAG))
-        err = ASN_NOT_OF_ERR;
-    else if (num >= casnp->num_items)
-        err = ASN_OF_BOUNDS_ERR;
-    else
-    {
-        for (tcasnp = casnp; num-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
-        if (num >= 0)
-            err = ASN_OF_BOUNDS_ERR;
-    }
-    if (err)
-    {
-        _casn_obj_err(casnp, err);
-        return (struct casn *)0;
-    }
-    return tcasnp;
-}
-
 struct casn *inject_casn(
     struct casn *casnp,
     int num)
@@ -547,23 +520,6 @@ struct casn *inject_casn(
     }
     casnp->num_items++;
     return tcasnp;
-}
-
-struct casn *insert_casn(
-    struct casn *casnp,
-    int num)
-{
-    struct casn *tcasnp;
-
-    if (_clear_error(casnp) < 0)
-        return (struct casn *)0;
-    if (!casnp->level || !((tcasnp = _go_up(casnp))->flags & ASN_OF_FLAG) ||
-        casnp != &tcasnp[1])
-    {
-        _casn_obj_err(casnp, ASN_NOT_OF_ERR);
-        return (struct casn *)0;
-    }
-    return inject_casn(tcasnp, num);
 }
 
 struct casn *member_casn(
@@ -639,19 +595,6 @@ int read_casn(
     uchar * to)
 {
     return _readvsize(casnp, to, ASN_READ);
-}
-
-int remove_casn(
-    struct casn *casnp,
-    int num)
-{
-    struct casn *tcasnp;
-
-    if (_clear_error(casnp) < 0)
-        return -1;
-    if (!casnp->level || !((tcasnp = _go_up(casnp))->flags & ASN_OF_FLAG))
-        return _casn_obj_err(casnp, ASN_OF_ERR);
-    return eject_casn(tcasnp, num);
 }
 
 void simple_constructor(
