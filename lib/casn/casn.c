@@ -525,6 +525,15 @@ struct casn *inject_casn(
             tcasnp->ptr = fcasnp->ptr;  // make new one point to where first
                                         // did
             _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));    // clear the old first
+            if (casnp->num_items == 1)
+            {
+                // We're in the process of moving the first item into its
+                // own struct casn as the new last item of the linked list.
+                // If num_items != 1, then lastp is already set correctly,
+                // but the first time the linked list is extended, lastp
+                // needs to be updated.
+                casnp->lastp = tcasnp;
+            }
         }
         fcasnp->ptr = tcasnp;   // then link first one to new one
         tcasnp = fcasnp;        // return ptr to first
