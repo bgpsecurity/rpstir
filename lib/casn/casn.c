@@ -398,9 +398,13 @@ int eject_casn(
         tcasnp = fcasnp->ptr;   // mark second for deletion (after it's copied 
                                 // into the first's place)
         _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
-        if (tcasnp)             // if first is not last
+        if (tcasnp)             // if first is not the final (after lastp)
         {
             copy_casn(fcasnp, tcasnp);  // copy second to first
+            if (casnp->num_items > 1 && casnp->lastp == tcasnp)
+            {
+                casnp->lastp = fcasnp;
+            }
             fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
         }
     }
@@ -409,6 +413,10 @@ int eject_casn(
         for (pcasnp = fcasnp, icount = num; --icount; pcasnp = pcasnp->ptr);
         tcasnp = pcasnp->ptr;
         pcasnp->ptr = tcasnp->ptr;
+        if (casnp->lastp == tcasnp)
+        {
+            casnp->lastp = pcasnp;
+        }
     }
     if (tcasnp)
     {
@@ -518,7 +526,10 @@ struct casn *inject_casn(
                                 // first
     {
         if (!casnp->num_items)  // there is only one, including final
+        {
             tcasnp->level = 0;  // fcasnp's ptr was null, so OK
+            casnp->lastp = fcasnp;
+        }
         else                    // there's more than one, including final
         {
             copy_casn(tcasnp, fcasnp);  // so copy the first to the new one
