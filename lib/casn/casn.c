@@ -400,9 +400,19 @@ int eject_casn(
         _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
         if (tcasnp)             // if first is not the final (after lastp)
         {
-            copy_casn(fcasnp, tcasnp);  // copy second to first
-            if (casnp->num_items > 1 && casnp->lastp == tcasnp)
+            if (casnp->num_items > 1)
             {
+                // tcasnp is a real entry in the SET/SEQUENCE
+                copy_casn(fcasnp, tcasnp);  // copy second to first
+                if (casnp->lastp == tcasnp)
+                {
+                    casnp->lastp = fcasnp;
+                }
+            }
+            else
+            {
+                // tcasnp is the final struct casn that's not filled in
+                fcasnp->flags &= ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG);
                 casnp->lastp = fcasnp;
             }
             fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
