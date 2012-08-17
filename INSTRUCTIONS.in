@@ -388,13 +388,6 @@ You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
 
-If the tests fail because of not enough output lines, it's possible
-that it's because of a known bug (#174). The workaround is to insert
-sleep commands into subsystemTests/runSubsystemTest.sh at the bottom
-of the loop that contains the line "./step${TESTID}.${N}". The amount
-of time needed to sleep depends on a number of factors and can be
-increased (within limits) until make check succeeds.
-
 If you have valgrind installed, you can run some tests under valgrind
 by running the command:
 
