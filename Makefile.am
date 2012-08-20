@@ -22,7 +22,8 @@ CFLAGS_STRICT = \
 	-Werror
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/lib
+	-I$(top_srcdir)/lib \
+	-DCONSTRAINTS
 
 AM_ETAGSFLAGS = \
 	--declarations
