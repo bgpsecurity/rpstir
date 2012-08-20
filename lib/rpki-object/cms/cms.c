@@ -272,7 +272,7 @@ const char *signCMSBlob(
     struct SignerInfo *signerInfop =
         (struct SignerInfo *)member_casn(&cms->content.signedData.signerInfos.
                                          self, 0);
-    struct EncapsulatedContentInfo *encapContentInfop =
+    struct BlobEncapsulatedContentInfo *encapContentInfop =
         &cms->content.signedData.encapContentInfo;
 
     if (vsize_casn(&signerInfop->signedAttrs.self) == 0)
