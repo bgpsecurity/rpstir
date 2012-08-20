@@ -240,7 +240,7 @@ const char *signCMS(
 
     // copy the signature into the object
     copy_casn(&sigInfop->signature, &sigInfo.signature);
-    delete_casn(&sigInfo.self);
+    //delete_casn(&sigInfo.self);
 
     // all done with it now
     free(signature);
