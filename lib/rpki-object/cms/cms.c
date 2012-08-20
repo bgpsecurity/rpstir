@@ -112,7 +112,7 @@ const char *signCMS(
 
     // set up the context, initialize crypt
     memset(hash, 0, 40);
-    if (cryptInit())
+    if (cryptInit() != CRYPT_OK)
         return "initializing cryptlib";
 
     // the following calls function f, and if f doesn't return 0 sets
