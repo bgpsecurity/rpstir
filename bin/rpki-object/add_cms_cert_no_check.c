@@ -139,7 +139,7 @@ int main(
     write_casn(&signerInfop->signatureAlgorithm.
                parameters.sha256WithRSAEncryption, (uchar *) "", 0);
     // sign it!
-    char *msg = signCMSBlob(&roa, argv[3]);
+    const char *msg = signCMSBlob(&roa, argv[3]);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else                        // and write it
