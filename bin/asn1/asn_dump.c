@@ -75,7 +75,7 @@ int asn1dump(
              ((asnp[-1].level & ASN_INDEF_FLAG) && !(typ & 0xC0))))
         {
             if ((asnp[-1].level & ASN_INDEF_FLAG))
-                fprintf(outf, indef_msg);
+                fprintf(outf, "%s", indef_msg);
             else
                 fprintf(outf, "\n");
             for (k = (asnp->level & ~(ASN_INDEF_FLAG)); k--;
@@ -147,7 +147,7 @@ int asn1dump(
                 if (!(asnp->level & ASN_INDEF_FLAG))
                     fprintf(outf, "\n");
                 else
-                    fprintf(outf, indef_msg);
+                    fprintf(outf, "%s", indef_msg);
                 for (j = 1 + (asnp->level & ~(ASN_INDEF_FLAG)); j--;
                      fprintf(outf, "    "));
             }
@@ -249,13 +249,13 @@ static int putform(
         }
         if (aflag < 0)
             fprintf(outf, "(%d) ", (d - locbuf));
-        fprintf(outf, (char *)locbuf);
+        fprintf(outf, "%s", (char *)locbuf);
         return row;
     }
     for (offset = (asnp->level + 1) * 4; lth;)
     {
         if (mode == 1)
-            fprintf(outf, (char *)delim);
+            fprintf(outf, "%s", (char *)delim);
         else
             fprintf(outf, "0x");
         if ((k = (width - 9 - offset) / mode) < 16)
@@ -287,7 +287,7 @@ static int putform(
         for (e = &(b = c)[j], lth -= j; c < e;
              fprintf(outf, ((mode > 1) ? "%02X" : "%c"), *c++));
         if (mode == 1)
-            fprintf(outf, (char *)delim);
+            fprintf(outf, "%s", (char *)delim);
         else if (aflag >= 0)
         {
             for (fprintf(outf, " /* "); b < e; b++)
