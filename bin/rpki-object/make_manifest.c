@@ -58,9 +58,9 @@ static int add_name(
     if (read(fd, b, siz + 2) != siz)
         fatal(2, curr_file);
     hsiz = gen_sha2(b, siz, hash);
-    if (inject_casn(&manp->fileList.self, num) < 0)
+    fahp = (struct FileAndHash *)inject_casn(&manp->fileList.self, num);
+    if (fahp == NULL)
         fatal(3, "fileList");
-    fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, num);
     write_casn(&fahp->file, (uchar *) curr_file, strlen(curr_file));
     write_casn_bits(&fahp->hash, hash, hsiz, 0);
     return 1;
