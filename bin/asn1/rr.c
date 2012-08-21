@@ -81,15 +81,15 @@ struct name_tab {
         next;                   /* offset to next free part of area */
 } genarea =
 {
-"genarea", 1024, 0x4000},       /* for varareas */
+"genarea", 1024, 0x4000, NULL, 0, 0},       /* for varareas */
 
     out_area =
 {
-"out_area", 1024, 0x20000},     /* for all output, to avoid having to do
+"out_area", 1024, 0x20000, NULL, 0, 0},     /* for all output, to avoid having to do
                                  * lseek() with -r option */
     asn_area =
 {
-"asn_area", 1024, 0x20000};
+"asn_area", 1024, 0x20000, NULL, 0, 0};
 
 extern struct typnames typnames[];      /* in asn.c */
 
