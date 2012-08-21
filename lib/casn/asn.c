@@ -308,13 +308,11 @@ int make_asn_table(
     uchar * c,
     ulong lth)
 {
-    unsigned char *b;
     struct asn *asnp;
     int count = count_asns(c) + 1;
     if (!(*asnbase = (struct asn *)calloc(count, sizeof(struct asn))))
         return 0;
     (asnp = *asnbase)->stringp = c;
-    b = asn_set(asnp);
     if ((count = decode_asn(&asnp, &asnp[count], c, lth, 0)) < 0)
         count = (c - asnp->stringp);
     return count;

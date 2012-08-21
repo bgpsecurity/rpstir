@@ -56,7 +56,6 @@ int main(
     strcpy(keyring.password, "password");
     if (get_casn_file(&roa.self, argv[1], 0) < 0)
         fatal(1, "CMS file");
-    struct SignedData *signedDatap = &roa.content.signedData;
     char *c = strrchr(argv[1], (int)'.');
     if (!c || (strcmp(c, ".man") && strcmp(c, ".mft") && strcmp(c, ".mnf")))
         fatal(1, "CMSfile suffix");
