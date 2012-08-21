@@ -246,7 +246,7 @@ int main(
 
     // check for revoked certs
     status = iterate_crl(scmp, connect, model_cfunc);
-    if (status != 0)
+    if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error checking for revoked certificates: %s\n",
                 err2string(status));
@@ -269,7 +269,7 @@ int main(
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(srch1[0].valptr);
     free(srch1[1].valptr);
-    if (status != 0)
+    if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for CRLs: %s\n",
                 err2string(status));
@@ -286,7 +286,7 @@ int main(
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (status != 0)
+    if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for manifests: %s\n",
                 err2string(status));
@@ -304,7 +304,7 @@ int main(
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    if (status != 0)
+    if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for manifests: %s\n",
                 err2string(status));
@@ -336,7 +336,7 @@ int main(
     free(srch1[0].valptr);
     free(srch1[1].valptr);
     free(srch1[2].valptr);
-    if (status != 0)
+    if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for certificates: %s\n",
                 err2string(status));
