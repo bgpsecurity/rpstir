@@ -381,7 +381,7 @@ static void constr_def(
         if (curr_pos > real_start)
         {
             if ((flags & ASN_DEFINED_FLAG))
-                fprintf(outstr, defined_flag);
+                fprintf(outstr, "%s", defined_flag);
             else if ((flags & ASN_TABLE_FLAG))
             {
                 ntbp = find_name(classname);
@@ -480,7 +480,7 @@ static void constr_def(
                             itemname, ntbp->max);
             }
             if (!*itemname)
-                fprintf(outstr, short_finale);
+                fprintf(outstr, "%s", short_finale);
             else if (*subclass == '_')
                 fprintf(outstr, finale, self_w, "");
             else
@@ -879,7 +879,7 @@ static int constr_item(
                         fprintf(outstr, definer_numeric_entry,
                                 definer_ids[tmp]);
                     else
-                        fprintf(outstr, definer_catchall_entry);
+                        fprintf(outstr, "%s", definer_catchall_entry);
                     free(definer_ids[tmp]);
                 }
                 free((char *)definer_ids);
@@ -1245,9 +1245,9 @@ static void print_enums(
 
     classtype = find_name(classname)->type;
     if (classtype != ASN_OBJ_ID)
-        fprintf(outstr, start_int_constraint);
+        fprintf(outstr, "%s", start_int_constraint);
     else
-        fprintf(outstr, start_objid_constraint);
+        fprintf(outstr, "%s", start_objid_constraint);
     while (*c)
     {
         for (b = c; *b > ' '; b++);
@@ -1279,9 +1279,9 @@ static void print_enums(
         }
     }
     if (classtype == ASN_OBJ_ID)
-        fprintf(outstr, end_objid_constraint);
+        fprintf(outstr, "%s", end_objid_constraint);
     else
-        fprintf(outstr, end_int_constraint);
+        fprintf(outstr, "%s", end_int_constraint);
 }
 
 static int print_flag(
@@ -1289,7 +1289,7 @@ static int print_flag(
     char *string,
     int val)
 {
-    fprintf(outstr, string);
+    fprintf(outstr, "%s", string);
     if ((option &= ~val))
         fprintf(outstr, " | ");
     return option;
