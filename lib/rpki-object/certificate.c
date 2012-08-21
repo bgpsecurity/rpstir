@@ -115,8 +115,18 @@ bool check_signature(
         ret = false;
         goto done;
     }
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    hashContextInitialized = true;
+
+    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) == CRYPT_OK)
+    {
+        hashContextInitialized = true;
+    }
+    else
+    {
+        LOG(LOG_ERR, "error creating hash context");
+        ret = false;
+        goto done;
+    }
+
     cryptEncrypt(hashContext, buf, bsize);
     cryptEncrypt(hashContext, buf, 0);
     cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ret);
@@ -132,8 +142,17 @@ bool check_signature(
     free(c);
 
     // set up the key by reading the modulus and exponent
-    cryptCreateContext(&pubkeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
-    pubkeyContextInitialized = true;
+    if (cryptCreateContext(&pubkeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA) == CRYPT_OK)
+    {
+        pubkeyContextInitialized = true;
+    }
+    else
+    {
+        LOG(LOG_ERR, "error creating pubkey context");
+        ret = false;
+        goto done;
+    }
+
     cryptSetAttributeString(pubkeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
     cryptInitComponents(&rsakey, CRYPT_KEYTYPE_PUBLIC);
 

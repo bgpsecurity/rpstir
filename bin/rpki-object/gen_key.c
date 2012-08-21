@@ -31,13 +31,29 @@ int main(
         fprintf(stderr, "Can't open Cryptlib\n");
         return 1;
     }
-    cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
+    if (cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA) != CRYPT_OK)
+    {
+        fprintf(stderr, "Can't create cryptlib private key context\n");
+        return 1;
+    }
     cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, "label", 5);
     cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, ksize / 8);
-    cryptGenerateKey(privKeyContext);
-    cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                    argv[1], CRYPT_KEYOPT_CREATE);
-    cryptAddPrivateKey(cryptKeyset, privKeyContext, "password");
+    if (cryptGenerateKey(privKeyContext) != CRYPT_OK)
+    {
+        fprintf(stderr, "Can't generate key\n");
+        return 1;
+    }
+    if (cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
+                    argv[1], CRYPT_KEYOPT_CREATE) != CRYPT_OK)
+    {
+        fprintf(stderr, "Can't open keyset\n");
+        return 1;
+    }
+    if (cryptAddPrivateKey(cryptKeyset, privKeyContext, "password") != CRYPT_OK)
+    {
+        fprintf(stderr, "Can't add key to keyset\n");
+        return 1;
+    }
     cryptKeysetClose(cryptKeyset);
     cryptDestroyContext(privKeyContext);
     cryptEnd();

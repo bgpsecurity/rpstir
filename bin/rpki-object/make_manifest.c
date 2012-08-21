@@ -26,6 +26,7 @@ char *msgs[] = {
     "Error in %s creating signature\n", // 5
     "Error writing %s\n",
     "File name %s too long\n",  // 7
+    "Error %s\n",
 };
 
 #define CURR_FILE_SIZE 512
@@ -100,8 +101,14 @@ static int gen_sha2(
     int ansr;
 
     memset(hash, 0, 40);
-    cryptInit();
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
+    if (cryptInit() != CRYPT_OK)
+    {
+        fatal(8, "initializing cryptlib");
+    }
+    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) != CRYPT_OK)
+    {
+        fatal(8, "creating cryptlib hash context");
+    }
     cryptEncrypt(hashContext, inbufp, bsize);
     cryptEncrypt(hashContext, inbufp, 0);
     cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
