@@ -370,7 +370,8 @@ int main(
        *eubp;
     struct id_table *idp,
        *eidp;
-    struct stat tstat;
+
+    (void)argc;
 
     for (p = &argv[1], lflag = tflag = uflag = do_flag = 0,
          source = (char *)0; *p; p++)
@@ -860,9 +861,6 @@ void cvt_number(
     char *from)
 {
     char *c;
-    int base;
-    long val,
-        val2;
     for (c = from; *c && *c != '.'; c++);
     if (*c == '.')
     {
@@ -885,7 +883,7 @@ char *derived_dup(
 
     if (loctype == ASN_SET)
         c = "AsnArrayOfSets";
-    else if (loctype >= sizeof(assign_table) || assign_table[loctype] == '0')
+    else if (loctype >= (long)sizeof(assign_table) || assign_table[loctype] == '0')
         c = "AsnArray";
     else if ((assign_table[loctype] & CHAR_ASSIGN))
         c = "AsnStringArray";
@@ -1646,21 +1644,6 @@ void print_tables(
         printf("  File: %s module: %s from %ld to %ld\n", modtbp->fname,
                modtbp->mname, modtbp->start_pos, modtbp->end_pos);
     }
-}
-
-static int putobjid(
-    char *to,
-    int val,
-    int lev)
-{
-    char *c = to;
-    uchar tmp = (val & 0x7F);
-    if (lev)
-        tmp += 0x80;
-    if ((val >>= 7))
-        c += putobjid(to, val, lev + 1);
-    sprintf(c, "\\%03o", tmp);
-    return (c - to) + 4;
 }
 
 int putoct(
