@@ -90,9 +90,6 @@ int write_cert_ipv6(
 int write_cert_asnums(
     void *cert,
     void *val);
-int write_cert_sig(
-    void *cert,
-    void *val);
 
 /*
  * Note: Some fields are in the table as optional but are actually required.
@@ -128,7 +125,6 @@ struct object_field cert_field_table[] = {
     {"ipv4", LIST, NULL, REQUIRED, write_cert_ipv4},    // ipv4 addresses
     {"ipv6", LIST, NULL, REQUIRED, write_cert_ipv6},    // ipv6 addresses
     {"as", LIST, NULL, REQUIRED, write_cert_asnums},    // as num resources
-    {"signatureValue", OCTETSTRING, NULL, OPTIONAL, write_cert_sig},    // sig
     {"selfsigned", TEXT, NULL, OPTIONAL, NULL}, // true or false
     {NULL, 0, NULL, REQUIRED, NULL}
 };
@@ -1077,16 +1073,6 @@ int write_cert_asnums(
         ptr = next;
     }
 
-    return SUCCESS;
-}
-
-/*
- *
- */
-int write_cert_sig(
-    void *cert,
-    void *val)
-{
     return SUCCESS;
 }
 

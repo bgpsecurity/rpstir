@@ -114,10 +114,6 @@ specified:
   string "inherit" means to encode the bits indicating that this
   certificate inherits all AS resources from its parent.
 
-* signatureValue=[hex integer] - Signature Value.  Note that this is
-  actually a bit string (RFC 5280), but RSA signature lengths are
-  always multiples of 8 bits.  Hex integers will begin with "0x".
-
 References:
 http://datatracker.ietf.org/doc/draft-ietf-sidr-res-certs
 http://datatracker.ietf.org/doc/rfc5280
