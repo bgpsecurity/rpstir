@@ -14,7 +14,6 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/asn_flags.h \
 	lib/casn/asn_gen/asn_gen.c \
 	lib/casn/asn_gen/asn_gen.h \
-	lib/casn/asn_gen/asn_java.c \
 	lib/casn/asn_gen/asn_obj.h \
 	lib/casn/asn_gen/asn_pproc.c \
 	lib/casn/asn_gen/asn_pprocx.c \
@@ -32,7 +31,7 @@ dist_man_MANS += doc/asn_gen.1
 		TEST_LOG_DIR=. \
 		STRICT_CHECKS=0 \
 		$(abs_top_builddir)/tests/run_with_tool.sh \
-		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen -c "`basename $<`"
+		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen "`basename $<`"
 
 
 noinst_LIBRARIES += lib/casn/libcasn.a

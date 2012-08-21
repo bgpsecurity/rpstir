@@ -17,6 +17,7 @@
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
+#include <string.h>
 
 char *cacert_template = TEMPLATES_DIR "/ca_template.cer";
 char *eecert_template = TEMPLATES_DIR "/ee_template.cer";
@@ -988,7 +989,7 @@ int write_cert_addrs(
             ptr_len = (char *)next - (char *)ptr;
             next++;
         }
-        if ((buf = copy_string(ptr, ptr_len)) <= 0)
+        if ((buf = strndup(ptr, ptr_len)) <= 0)
             return -1;
 
         if (write_family(famp, buf, num++) < 0)
@@ -1066,7 +1067,7 @@ int write_cert_asnums(
             next++;
         }
 
-        if ((buf = copy_string(ptr, ptr_len)) <= 0)
+        if ((buf = strndup(ptr, ptr_len)) <= 0)
             return -1;
 
         if (write_ASNums(asNump, buf, num++) < 0)

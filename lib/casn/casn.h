@@ -126,9 +126,6 @@ int copy_casn(
     read_objid(
     struct casn *,
     char *),
-    remove_casn(
-    struct casn *casnp,
-    int num),
     size_casn(
     struct casn *),
     tag_casn(
@@ -203,15 +200,9 @@ void load_oidtable(
 
 struct casn *dup_casn(
     struct casn *casnp),
-   *index_casn(
-    struct casn *casnp,
-    int num),
    *inject_casn(
     struct casn *,
     int),
-   *insert_casn(
-    struct casn *casnp,
-    int num),
    *member_casn(
     struct casn *casnp,
     int num),

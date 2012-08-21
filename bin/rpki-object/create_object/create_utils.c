@@ -413,18 +413,3 @@ int write_family(
 
     return SUCCESS;
 }
-
-// copy the string by allocating memory and copying the string into the
-// newly allocated memory
-char *copy_string(
-    char *str,
-    int num)
-{
-    char *buf;
-
-    if ((buf = calloc(num + 1, sizeof(char))) == NULL)
-        return NULL;
-
-    memcpy(buf, str, num);
-    return buf;
-}

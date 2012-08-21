@@ -241,7 +241,6 @@ static void usage(
         ("  -d dir     delete the indicated file (using full pathname)\n");
     (void)printf("  -f file    add the indicated file\n");
     (void)printf("  -F file    add the indicated trusted file\n");
-    (void)printf("  -E file    add the indicated ETA file\n");
     (void)printf("  -p         run the socket listener in perpetual mode\n");
     (void)printf("  -t topdir  create all database tables\n");
     (void)printf("  -w port    start an rsync listener on port\n");
@@ -893,7 +892,7 @@ int main(
         usage();
         return (1);
     }
-    while ((c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:s")) != EOF)
+    while ((c = getopt(argc, argv, "t:xyhad:f:F:w:z:pm:c:s")) != EOF)
     {
         switch (c)
         {
@@ -915,8 +914,6 @@ int main(
         case 'd':
             thedelfile = optarg;
             break;
-        case 'E':
-            trusted = OT_ETA - 1;
         case 'F':
             trusted++;
         case 'f':

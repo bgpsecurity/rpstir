@@ -120,7 +120,6 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Defective constraints file",       /* ERR_SCM_BADSKIFILE */
     "Error signing para-cert",  /* ERR_SCM_SIGNINGERR */
     "Invalid ROA",              /* ERR_SCM_INVALROA */
-    "Invalid RTA",              /* ERR_SCM_INVALRTA */
     "Invalid manifest",         /* ERR_SCM_INVALMAN */
     "Error writing EE cert",    /* ERR_SCM_WRITE_EE */
     "Key too small",            /* ERR_SCM_SMALLKEY -110 */

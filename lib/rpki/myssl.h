@@ -130,8 +130,7 @@ extern char *X509_to_subject(
 extern int rescert_profile_chk(
     X509 * x,
     struct Certificate *certp,
-    int ct,
-    int checkRPKI);
+    int ct);
 extern int crl_profile_chk(
     struct CertificateRevocationList *crlp);
 

@@ -229,15 +229,6 @@ int manifestValidate(
  * negative error code. 
  */
 
-int rtaValidate(
-    struct ROA *r);
-
-/*
- * This function performs all validations steps on a RTA that do not require
- * database access.  On success it returns 0; on failure, it returns a
- * negative error code. 
- */
-
 extern int roaValidate2(
     struct ROA *r);
 

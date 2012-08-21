@@ -63,7 +63,7 @@ int main(
         delete_casn(&crl.self);
     }
     else if (!strcmp(p, ".man") || !strcmp(p, ".mft") || !strcmp(p, ".mnf") ||
-             !strcmp(p, ".roa") || !strcmp(p, ".rta"))
+             !strcmp(p, ".roa"))
     {
         ROA(&roa, (ushort) 0);
         if (get_casn_file(&roa.self, argv[1], 0) < 0)
