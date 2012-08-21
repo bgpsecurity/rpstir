@@ -11,6 +11,7 @@
 #include <errno.h>
 #include "util/cryptlib_compat.h"
 #include "rpki-object/certificate.h"
+#include "rpki-object/signature.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-object/keyfile.h>
 #include <casn/casn.h>
