@@ -989,7 +989,7 @@ int write_cert_addrs(
             ptr_len = (char *)next - (char *)ptr;
             next++;
         }
-        if ((buf = strndup(ptr, ptr_len)) <= 0)
+        if ((buf = strndup(ptr, ptr_len)) == NULL)
             return -1;
 
         if (write_family(famp, buf, num++) < 0)
@@ -1067,7 +1067,7 @@ int write_cert_asnums(
             next++;
         }
 
-        if ((buf = strndup(ptr, ptr_len)) <= 0)
+        if ((buf = strndup(ptr, ptr_len)) == NULL)
             return -1;
 
         if (write_ASNums(asNump, buf, num++) < 0)
