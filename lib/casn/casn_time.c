@@ -139,29 +139,6 @@ static int get_num(
     return (int)val;
 }
 
-/** Returns true (nonzero) if year is a leap year.
- *
- * \remark http://en.wikipedia.org/wiki/Gregorian_calendar
- * 
- * Every year that is exactly divisible by four is a leap year, except
- * for years that are exactly divisible by 100; the centurial years
- * that are exactly divisible by 400 are still leap years. For
- * example, the year 1900 is not a leap year; the year 2000 is a leap
- * year.
- */
-static int is_leapyear(
-    int year)
-{
-    if (year % 400 == 0)
-        return 1;
-    else if (year % 100 == 0)
-        return 0;
-    else if (year % 4 == 0)
-        return 1;
-    else
-        return 0;
-}
-
 int diff_casn_time(
     struct casn *casnp1,
     struct casn *casnp2)
