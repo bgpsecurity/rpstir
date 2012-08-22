@@ -162,6 +162,84 @@ static int is_leapyear(
         return 0;
 }
 
+/**
+ * Convert struct tm to 64-bit signed integer.
+ *
+ * Mostly analogous to mktime(), with 64 bit output (unlike time_t
+ * which may be 32 or 64 depending on the system).  The mktime64_gmt()
+ * function shall convert the broken-down time, expressed as GMT, in
+ * the structure pointed to by timeptr, into a time since the Epoch
+ * value. The original values of the tm_wday and tm_yday components of
+ * the structure are ignored, and the original values of the other
+ * components are not restricted to the ranges described in <time.h>.
+ *
+ * Unlike POSIX mktime(), timeptr is NOT modified upon successful
+ * completion.  Nor is the output corrected for timezone and seasonal
+ * time adjustments.  Therefore, the input is assumed to be GMT,
+ * e.g. the output of the gmtime() function.
+ *
+ * \return The specified time since the Epoch encoded as a value of
+ * type int64_t.  If the time since the Epoch cannot be represented,
+ * the function shall return the value (int64_t)-1.  In particular,
+ * times before January 1, 1970 GMT cannot be represented and will
+ * return -1.
+ *
+ * \remark Note that leap-seconds will cause ambiguities; "Unix time"
+ * is neither a linear representation of time nor a true
+ * representation of UTC, as it cannot unambiguously represent UTC
+ * leap seconds (e.g. December 31, 1998 23:59:60).
+ */
+static int64_t mktime64_gmt(
+    const struct tm *timeptr)
+{
+    int64_t t = 0;
+    int64_t tm_sec,
+        tm_min,
+        tm_hour,
+        tm_mday,
+        tm_mon,
+        tm_year,
+        tm_yday;
+
+    // Minimally check pointer and bounds.
+    if (!timeptr || timeptr->tm_year < 70)
+        return (int64_t) - 1;
+
+    // Cast timeptr members to 64-bit integers.
+    tm_sec = timeptr->tm_sec;
+    tm_min = timeptr->tm_min;
+    tm_hour = timeptr->tm_hour;
+    tm_mday = timeptr->tm_mday;
+    tm_mon = timeptr->tm_mon;
+    tm_year = timeptr->tm_year;
+
+    // Compute tm_yday based on tm_mday, tm_mday, and tm_myear
+    if (tm_mon < 0 || tm_mon > 11)
+        return (int64_t) - 1;
+    tm_yday = _mos[tm_mon] + (tm_mday - 1);
+    // Must add leap day if March or later and it's a leap year.
+    if (is_leapyear(tm_year + 1900) && tm_mon >= 2)
+        tm_yday++;
+
+    /*
+     * Compute seconds since epoch.  Equation reference: Base Definitions
+     * volume of IEEE Std 1003.1-2001, Section 4.14, Seconds Since the Epoch.
+     * http://pubs.opengroup.org/onlinepubs/007904875/basedefs/xbd_chap04.html#tag_04_14
+     * Note: since all timeptr members were converted from int to int64_t, there is no
+     * danger of overflow on systems where int is 32-bit. 
+     */
+    t = tm_sec + tm_min * 60 + tm_hour * 3600 + tm_yday * 86400 +
+        (tm_year - 70) * 31536000 + ((tm_year - 69) / 4) * 86400 -
+        ((tm_year - 1) / 100) * 86400 + ((tm_year + 299) / 400) * 86400;
+
+    // As required by POSIX, we did not check bounds on timeptr members,
+    // so we must now check for a negative result.
+    if (t < 0)
+        return (int64_t) - 1;
+
+    return t;
+}
+
 int diff_casn_time(
     struct casn *casnp1,
     struct casn *casnp2)
