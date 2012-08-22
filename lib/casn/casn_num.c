@@ -158,10 +158,10 @@ int write_casn_num(
         {
             if ((casnp->flags & ASN_RANGE_FLAG))
             {
-                if (val > casnp->max || val < casnp->min)
+                if ((val >= 0 && (ulong)val > casnp->max) || val < casnp->min)
                     err = ASN_BOUNDS_ERR;
             }
-            else if (ansr < casnp->min || ansr > casnp->max)
+            else if (ansr < casnp->min || (ansr >= 0 && (ulong)ansr > casnp->max))
                 err = ASN_BOUNDS_ERR;
         }
     }
