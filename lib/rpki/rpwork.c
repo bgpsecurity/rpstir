@@ -822,15 +822,37 @@ static void print_range(
     char *title,
     struct ipranges *rangesp)
 {
-    /*
-     * int i, j; fprintf(stderr, "%s\n", title); for (i = 0; i <
-     * rangesp->numranges; i++) { struct iprange *iprangep =
-     * &rangesp->iprangep[i]; fprintf(stderr, "%d ", iprangep->typ); int lth;
-     * if (iprangep->typ == 4) lth = 4; else lth = 16; for (j = 0; j < lth;
-     * j++) fprintf(stderr, "0x%02x ", iprangep->lolim[j]); fprintf(stderr,
-     * "\n "); for (j = 0; j < lth; j++) fprintf(stderr, "0x%02x ",
-     * iprangep->hilim[j]); fprintf(stderr, "\n"); } fprintf(stderr, "\n"); 
-     */
+    #if 0
+    int i, j;
+
+    fprintf(stderr, "%s\n", title);
+
+    for (i = 0; i < rangesp->numranges; i++)
+    {
+        struct iprange *iprangep = &rangesp->iprangep[i];
+
+        fprintf(stderr, "%d ", iprangep->typ);
+
+        int lth;
+        if (iprangep->typ == 4)
+            lth = 4;
+        else
+            lth = 16;
+
+        for (j = 0; j < lth; j++)
+            fprintf(stderr, "0x%02x ", iprangep->lolim[j]);
+        fprintf(stderr, "\n ");
+
+        for (j = 0; j < lth; j++)
+            fprintf(stderr, "0x%02x ", iprangep->hilim[j]);
+        fprintf(stderr, "\n");
+    }
+
+    fprintf(stderr, "\n");
+    #else
+    (void)title;
+    (void)rangesp;
+    #endif
 }
 
 static void copy_text(
