@@ -523,6 +523,8 @@ static char *cf_get_sig(
     int *stap,
     int *x509stap)
 {
+    (void)x509stap;
+
     char *dptr;
 
     if (x->signature == NULL || x->signature->data == NULL ||
@@ -1235,6 +1237,8 @@ static char *crf_get_sig(
     int *stap,
     int *crlstap)
 {
+    (void)crlstap;
+
     char *dptr;
 
     if (x->signature == NULL || x->signature->data == NULL ||
