@@ -446,7 +446,7 @@ static void constr_def(
                 ntbp = replace_name(&subclass[1]);
                 fprintf(outstr, pointer_func, self_w, &subclass[1], self_w,
                         &subclass[1]);
-                if (ntbp->type == ntbp->tag || ntbp->tag == 0xFFFFFFFF)
+                if (ntbp->type == ntbp->tag || ntbp->tag == (long)0xFFFFFFFF)
                     fprintf(outstr, sub_tag_type, self_w, self_w,
                             find_define(ntbp->type));
                 else

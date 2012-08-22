@@ -273,7 +273,7 @@ static int hdr_def(
             *itemname |= 0x20;
         }
         if ((ntbp = replace_name(subclass)) &&
-            ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
+            ntbp->type != (long)0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
             !(ntbp->flags & ASN_ENUM_FLAG))
             subtype = (short)ntbp->type;
     }
