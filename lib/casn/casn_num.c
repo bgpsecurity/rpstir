@@ -92,7 +92,7 @@ int read_casn_num(
         if (tcasnp->type != ASN_INTEGER && tcasnp->type != ASN_ENUMERATED &&
             tcasnp->type != ASN_BOOLEAN)
             err = ASN_TYPE_ERR;
-        else if (tcasnp->lth > sizeof(*valp) || tcasnp->lth < 0)
+        else if (tcasnp->lth > sizeof(*valp))
             err = ASN_LENGTH_ERR;
     }
     if (err)
