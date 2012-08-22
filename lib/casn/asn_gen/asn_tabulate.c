@@ -170,7 +170,7 @@ static void tab_def(
     {
         if (type < 0)
             add_name(classname, (long)-1, ASN_FALSE_FLAG);
-        if (ptbp->pos < real_start && ptbp->type == 0xFFFFFFFF)
+        if (ptbp->pos < real_start && ptbp->type == (long)0xFFFFFFFF)
             ptbp->type = 0;     /* so imported passthru won't be undefined */
         add_child(subclass, parent, 0, (ulong) - 1, 0);
     }
