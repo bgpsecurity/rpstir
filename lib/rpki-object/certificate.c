@@ -72,6 +72,7 @@ bool check_signature(
         hash[40],
         sid[40];
     bool ret = true;
+    int hash_length = sizeof(hash);
 
     // get SID and generate the sha-1 hash
     // (needed for cryptlib; see below)
@@ -129,7 +130,7 @@ bool check_signature(
 
     cryptEncrypt(hashContext, buf, bsize);
     cryptEncrypt(hashContext, buf, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ret);
+    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &hash_length);
     free(buf);
 
     // get the public key from the certificate and decode it into an RSAPubKey
