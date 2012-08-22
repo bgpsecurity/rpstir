@@ -576,8 +576,7 @@ static int calculateAndClearPrefix(
     int iSize,
     unsigned char *iparray,
     unsigned char *cBadBits,
-    int *iGoodBytes,
-    int *maxLenp)
+    int *iGoodBytes)
 {
     int i = 0;
     int iIndex = 0;
@@ -1222,7 +1221,7 @@ static int setIPAddr(
         // (necessary to constuct ASN BITSTRING), then populate the bit notice
         // and add one to the length of the array to be copied
         calculateAndClearPrefix(iPrefixSize, 32, arrayptr, &cBadBits,
-                                &iGoodBytes, &maxLen);
+                                &iGoodBytes);
         ipv4array[0] = cBadBits;
         iGoodBytes++;
         // Then, write the bitstring (as an octet string) to the latest
@@ -1271,7 +1270,7 @@ static int setIPAddr(
         // (necessary to constuct ASN BITSTRING), then populate the bit notice
         // and add one to the length of the array to be copied
         calculateAndClearPrefix(iPrefixSize, 128, arrayptr, &cBadBits,
-                                &iGoodBytes, &maxLen);
+                                &iGoodBytes);
         ipv6array[0] = cBadBits;
         iGoodBytes++;
         // Then, write the bitstring (as an octet string) to the casn
