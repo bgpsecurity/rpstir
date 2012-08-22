@@ -703,6 +703,7 @@ static int expand(
             certrangep = next_range(certrangesp, certrangep);
         }
     }
+    *changesp += did;
     return did;
 }
 
@@ -783,7 +784,7 @@ static int perforate(
             did++;
         }
     }
-    *changesp = did;
+    *changesp += did;
     return did;
 }
 
@@ -795,7 +796,7 @@ static int perf_A_from_B(
         typ = IPv4,
         lessnum = 0,
         fromnum = 0,
-        changes;
+        changes = 0;
     if ((ansr = perforate(lessp, lessnum, fromp, fromnum, &changes)) < 0)
         return ansr;
     for (lessnum = 0; lessnum < lessp->numranges - 1 &&
