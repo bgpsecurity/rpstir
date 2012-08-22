@@ -458,7 +458,7 @@ char *cvt_int(
             b = &valbuf[4];
     }
     if (b)
-        strcpy(&valbuf[2], b);
+        memmove(&valbuf[2], b, strlen(b) + 1);
     b = cvt_out(valbuf);
     return c;
 }
