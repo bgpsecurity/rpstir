@@ -26,7 +26,7 @@ char *msgs[] = {
 
 static int fatal(
     int msg,
-    char *paramp)
+    const char *paramp)
 {
     fprintf(stderr, msgs[msg], paramp);
     exit(msg);

@@ -33,7 +33,7 @@ char *msgs[] = {
 
 static int fatal(
     int msg,
-    char *paramp);
+    const char *paramp);
 static int gen_sha2(
     uchar * inbufp,
     int bsize,
@@ -120,7 +120,7 @@ static int gen_sha2(
 
 static int fatal(
     int msg,
-    char *paramp)
+    const char *paramp)
 {
     fprintf(stderr, msgs[msg], paramp);
     exit(msg);
