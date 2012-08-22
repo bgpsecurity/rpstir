@@ -428,10 +428,10 @@ char *cvt_int(
         sign = *c++;
     else
         sign = 0;
+    for (uval = 0; *c >= '0' && *c <= '9';
+         uval = (uval * 10) + *c++ - '0');
     if (!sign)
     {
-        for (uval = 0; *c >= '0' && *c <= '9';
-             uval = (uval * 10) + *c++ - '0');
         if ((uval & 0x80000000))
             sprintf(valbuf, "0x00%08lX", uval);
         else
