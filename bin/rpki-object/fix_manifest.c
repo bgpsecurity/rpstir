@@ -94,7 +94,7 @@ int main(
         free(tbh);
         write_casn(&fahp->hash, hashbuf, j + 1);
     }
-    char *msg = signCMS(&roa, argv[2], 0);
+    const char *msg = signCMS(&roa, argv[2], 0);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else

@@ -275,8 +275,9 @@ int main(
         (struct Certificate *)inject_casn(&sgdp->certificates.self, 0);
     if (get_casn_file(&certp->self, certfile, 0) < 0)
         fatal(2, certfile);
-    if ((c = signCMS(&roa, keyfile, 0)))
-        fatal(5, c);
+    const char *msg;
+    if ((msg = signCMS(&roa, keyfile, 0)))
+        fatal(5, msg);
     if (put_casn_file(&roa.self, outfile, 0) < 0)
         fatal(6, outfile);
     if (vfile)

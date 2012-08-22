@@ -1815,7 +1815,7 @@ static int confInterpret(
      * keyfileName)) < 0) { // printf("Error creating signature\n"); iROAState 
      * = iRet2; } free(buf); 
      */
-    char *ap = signCMS(roa, keyfileName, 0);
+    const char *ap = signCMS(roa, keyfileName, 0);
     if (ap)
         iROAState = ERR_SCM_INVALSIG;
     return iROAState;

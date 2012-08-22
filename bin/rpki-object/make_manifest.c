@@ -236,8 +236,9 @@ int main(
     write_objid(&sigInfop->signatureAlgorithm.algorithm,
                 id_sha_256WithRSAEncryption);
 
-    if ((c = signCMS(&roa, argv[3], 0)))
-        fatal(5, c);
+    const char *msg;
+    if ((msg = signCMS(&roa, argv[3], 0)))
+        fatal(5, msg);
     if (put_casn_file(&roa.self, argv[1], 0) < 0)
         fatal(6, argv[1]);
     printf("What readable file, if any? ");
