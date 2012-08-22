@@ -28,10 +28,6 @@ static void print_define_tables(
 static void print_if_include(
     FILE *,
     char *);
-static int putobjid(
-    char *,
-    int,
-    int);
 
 int array,
     classcount,
