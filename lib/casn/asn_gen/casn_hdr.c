@@ -524,6 +524,10 @@ static void print_end(
     int dup_ansr,
     int mode)
 {
+    // TODO: determine if dup_ansr and mode are needed and remove them if not
+    (void)dup_ansr;
+    (void)mode;
+
     fprintf(outstr, finale, classname, classname);
     if (def_constraintp)
     {
