@@ -284,7 +284,7 @@ static void tab_item(
                           || (in_choice && tag >= 0)) ? locbuf : subclass;
             child =
                 add_child(child_name, parent, did,
-                          (child_name == subclass) ? (ulong) - 1 : type,
+                          (child_name == subclass) ? (long)((ulong) -1) : type,
                           (option & ~(ASN_TABLE_FLAG)));
             if (tag > 0)
             {
@@ -762,7 +762,7 @@ Procedure:
                 ptbp = &table[cparentp->index];
                 if ((ptbp->flags & ASN_DEFINER_FLAG))
                 {
-                    if (ptbp->type != 0xFFFFFFFF)
+                    if (ptbp->type != (long)0xFFFFFFFF)
                         ctbp->type = ptbp->type;
                     else
                         ctbp->type = table[ptbp->parent.index].type;
@@ -895,7 +895,7 @@ Inputs: pointer to start of table
             ((ptbp = &table[pparentp->index])->flags & ASN_FALSE_FLAG))
         {
             ptbp->type = ctbp->type;
-            if (ptbp->tag == 0xFFFFFFFF)
+            if (ptbp->tag == (long)0xFFFFFFFF)
                 ptbp->tag = ctbp->tag;
             set_false(table, ptbp);
         }

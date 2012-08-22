@@ -541,7 +541,7 @@ int main(
     for (did = 0, ntbp = (struct name_table *)name_area.area; ntbp <
          &((struct name_table *)name_area.area)[name_area.next]; ntbp++)
     {
-        if (ntbp->type != 0xFFFFFFFF || *ntbp->name > 'Z' ||
+        if (ntbp->type != (long)0xFFFFFFFF || *ntbp->name > 'Z' ||
             (ntbp->flags & (ASN_DEFINED_FLAG | ASN_DEFINER_FLAG | ASN_OF_FLAG |
                             ASN_POINTER_FLAG)) || is_ub(ntbp->name)
             || ntbp->pos < real_start)
@@ -681,7 +681,7 @@ Procedure:
         return parent;
     ansr = add_name(name, type, option);
     ntbp = &((struct name_table *)name_area.area)[ansr];
-    if (ntbp->type == 0xFFFFFFFF)
+    if (ntbp->type == (long)0xFFFFFFFF)
         ntbp->type = type;
     ntbp->flags |= option;
     for (parentp = &ntbp->parent;
@@ -1170,7 +1170,7 @@ void get_subtype(
     struct name_table *ntbp;
 
     if ((ntbp = replace_name(subclass)) &&
-        ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
+        ntbp->type != (long)0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
         !(ntbp->flags & ASN_ENUM_FLAG))
         subtype = (short)ntbp->type;
 }
