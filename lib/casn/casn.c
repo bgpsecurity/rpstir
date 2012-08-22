@@ -723,6 +723,9 @@ int _calc_lth(
     uchar ** cpp,
     uchar ftag)
 {
+    // TODO: determine if ftag is supposed to do anything, and remove it if not
+    (void)ftag;
+
     uchar *c = *cpp;
     int tmp,
         lth;
