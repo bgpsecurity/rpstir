@@ -281,6 +281,7 @@ int main(
 void *recv_rsync_conns(
     void *unused)
 {
+    (void)unused;
 
     int listenfd,
         connfd;
@@ -336,6 +337,7 @@ void *recv_rsync_conns(
 void sighup_handler(
     int sig)
 {
+    (void)sig;
     pthread_mutex_lock(&queue_mutex);
     pthread_cancel(tid);
     rsync_node *node;

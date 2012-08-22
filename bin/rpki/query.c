@@ -523,8 +523,7 @@ static int addAllFields(
  * add fields needed for RPSL query 
  */
 static int addRPSLFields(
-    char *displays[],
-    int numDisplays)
+    char *displays[])
 {
     // XXX hack... just add these by hand
     // XXX worse hack... we have hard-coded SQL field names scattered
@@ -685,7 +684,7 @@ int main(
     if (isRPSL)
     {
         checkErr(numDisplays != 0, "-d should not be used with RPSL query\n");
-        numDisplays = addRPSLFields(displays, 0);
+        numDisplays = addRPSLFields(displays);
     }
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
              (!isManifest), BAD_OBJECT_TYPE);
