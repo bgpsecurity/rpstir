@@ -790,7 +790,7 @@ static ssize_t rio_read(
     char *usrbuf,
     size_t n)
 {
-    int cnt;
+    size_t cnt;
 
     while (rp->rio_cnt <= 0)
     {                           /* refill if buf is empty */
@@ -810,8 +810,8 @@ static ssize_t rio_read(
      * Copy min(n, rp->rio_cnt) bytes from internal buf to user buf 
      */
     cnt = n;
-    if (rp->rio_cnt < n)
-        cnt = rp->rio_cnt;
+    if ((size_t)rp->rio_cnt < n)
+        cnt = (size_t)rp->rio_cnt;
     memcpy(usrbuf, rp->rio_bufptr, cnt);
     rp->rio_bufptr += cnt;
     rp->rio_cnt -= cnt;
@@ -888,8 +888,8 @@ ssize_t rio_readlineb(
     void *usrbuf,
     size_t maxlen)
 {
-    int n,
-        rc;
+    size_t n;
+    int rc;
     char c,
        *bufp = usrbuf;
 
@@ -939,7 +939,7 @@ void Rio_writen(
     void *usrbuf,
     size_t n)
 {
-    if (rio_writen(fd, usrbuf, n) != n)
+    if (rio_writen(fd, usrbuf, n) != (ssize_t)n)
         unix_error("Rio_writen error");
 }
 

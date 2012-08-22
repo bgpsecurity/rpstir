@@ -2952,7 +2952,7 @@ int add_manifest(
     do
     {                           // once through
         // read this_upd and next_upd
-        if (vsize_casn(&manifest->thisUpdate) + 1 > sizeof(asn_time))
+        if (vsize_casn(&manifest->thisUpdate) + 1 > (int)sizeof(asn_time))
         {
             log_msg(LOG_ERR, "thisUpdate is too large");
             sta = ERR_SCM_INVALDT;
@@ -2973,7 +2973,7 @@ int add_manifest(
         if (sta < 0)
             break;
 
-        if (vsize_casn(&manifest->nextUpdate) + 1 > sizeof(asn_time))
+        if (vsize_casn(&manifest->nextUpdate) + 1 > (int)sizeof(asn_time))
         {
             log_msg(LOG_ERR, "nextUpdate is too large");
             sta = ERR_SCM_INVALDT;

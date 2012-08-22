@@ -79,7 +79,7 @@ struct {
     "rpsl", "roa"},};
 
 
-static int oldasn;              // needed for grouping by AS#
+static unsigned int oldasn;              // needed for grouping by AS#
 static int v4size = 0,
     v6size = 0;
 static char *v4members = NULL,
@@ -284,7 +284,7 @@ static int handleResults(
 static char *tableName(
     char *objType)
 {
-    int i;
+    size_t i;
     for (i = 0; i < countof(tableNames); ++i)
     {
         if (!strcasecmp(objType, tableNames[i].objectName))

@@ -79,7 +79,7 @@ int main(
             int fl = readvsize_casn(&fahp->file, &f);
             if (fl < 0)
                 fatal(2, fname);
-            if (fl == strlen(fname) && !strcmp((char *)f, fname))
+            if ((ssize_t)fl == (ssize_t)strlen(fname) && !strcmp((char *)f, fname))
                 break;
         }
         if (!fahp || stat(fname, &statbuf) < 0 ||
