@@ -42,7 +42,7 @@ int _casn_obj_err(
 
 int get_casn_file(
     struct casn *casnp,
-    char *name,
+    const char *name,
     int fd)
 {
     long siz,

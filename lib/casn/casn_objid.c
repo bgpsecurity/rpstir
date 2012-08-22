@@ -32,7 +32,7 @@ extern int _casn_obj_err(
     struct casn *casnp),
     _write_objid(
     struct casn *casnp,
-    char *from);
+    const char *from);
 
 extern char *_putd(
     char *to,
@@ -48,15 +48,16 @@ int _readsize_objid(
 
 int diff_objid(
     struct casn *casnp,
-    char *objid)
+    const char *objid)
 {
     int ansr,
         lth,
         lth2;
     char *c;
+    const char *c_const;
 
-    for (c = objid; *c; c++);
-    lth2 = c - objid + 1;       // include terminal null, as read_objid does
+    for (c_const = objid; *c_const; c_const++);
+    lth2 = c_const - objid + 1;       // include terminal null, as read_objid does
     if ((lth = vsize_objid(casnp)) <= 0)
         return -2;
     c = dbcalloc(1, lth);
@@ -105,7 +106,7 @@ int vsize_objid(
 
 int write_objid(
     struct casn *casnp,
-    char *from)
+    const char *from)
 {
 
     if (_clear_error(casnp) < 0)

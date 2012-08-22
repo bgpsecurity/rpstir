@@ -205,7 +205,7 @@ int casn_error(
     struct casn *casnp),
     _write_objid(
     struct casn *casnp,
-    char *from);
+    const char *from);
 
 void _clear_casn(
     struct casn *,
@@ -2388,9 +2388,9 @@ int _write_enum(
 
 int _write_objid(
     struct casn *casnp,
-    char *from)
+    const char *from)
 {
-    char *c = from;
+    const char *c = from;
     long tmp,
         val;
     int i,

@@ -72,7 +72,7 @@ int copy_casn(
     struct casn *casnp2),       // can return -2 (error)!
     diff_objid(
     struct casn *fr_casnp,
-    char *objidp),
+    const char *objidp),
     dump_casn(
     struct casn *,
     char *),
@@ -91,7 +91,7 @@ int copy_casn(
     uchar *),
     get_casn_file(
     struct casn *casnp,
-    char *,
+    const char *,
     int),
     num_items(
     struct casn *casnp),
@@ -167,10 +167,10 @@ int copy_casn(
     int64_t),
     write_objid(
     struct casn *,
-    char *),
+    const char *),
     _write_objid(
     struct casn *,
-    char *);                    // for use by constructors only
+    const char *);                    // for use by constructors only
 
 int cf_oid(
     char *curr_oid,
