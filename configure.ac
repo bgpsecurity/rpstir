@@ -40,16 +40,6 @@ fi
 
 
 AC_ARG_WITH(
-    [config-file],
-    AS_HELP_STRING([--with-config-file],[Path to default configuration file. Defaults to rpstir.conf in the source directory.]),
-    [DEFAULT_CONFIG_FILE=$withval],
-    [DEFAULT_CONFIG_FILE=`pwd`/$PACKAGE_NAME.conf] # XXX: this only works if configure is run from srcdir (but that's all we support now anyway)
-)
-AC_SUBST([DEFAULT_CONFIG_FILE])
-AC_DEFINE_UNQUOTED([DEFAULT_CONFIG_FILE], ["$DEFAULT_CONFIG_FILE"])
-
-
-AC_ARG_WITH(
     [ssl-include],
     AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ]),
     [ ssl_include=$withval],

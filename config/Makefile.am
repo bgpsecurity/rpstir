@@ -1,5 +1,6 @@
 AM_CFLAGS = -g -Wall -Wextra -Werror
-AM_CPPFLAGS = $(DEPS_CFLAGS) -I../utils
+AM_CPPFLAGS = $(DEPS_CFLAGS) -I../utils \
+	-DSYSCONFDIR='"$(sysconfdir)"'
 
 EXTRA_DIST = \
 	lib/tests/*.conf

@@ -1,2 +1,1 @@
 * integrate with the rest of RPSTIR
-* Have two default config files, system (/etc/PACKAGE_NAME.conf) and user (~/.PACKAGE_NAME.conf). This avoids issues with conf files in git and follows convention of many programs.

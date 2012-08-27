@@ -20,7 +20,11 @@ enum config_key {
 };
 
 
-const struct config_option CONFIG_OPTIONS[];
+/**
+ * Wrapper around config_load() with rpstir-specific data.
+ */
+bool my_config_load(
+    );
 
 
 #endif

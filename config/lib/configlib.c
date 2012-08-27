@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
 #include "logging.h"
 
 #include "configlib.h"
 #include "config_load.h"
-
-
-#define CONFIG_ENV_VAR PACKAGE_NAME_UC "_CONFIG"
 
 
 static size_t config_num_options = 0;
@@ -56,7 +56,7 @@ void config_message(
             LOG(priority, "In config file included from %s:%zu:",
                 context->file, context->line);
         }
-        else if (context->line != 0)
+        else if (context->file != NULL && context->line != 0)
         {
             LOG(priority, "%s:%zu: %s", context->file, context->line, message);
             break;
@@ -72,7 +72,8 @@ void config_message(
 bool config_load(
     size_t num_options,
     const struct config_option *options,
-    const char *filename)
+    const char *filename,
+    char const * const * default_filenames)
 {
     size_t i;
 
@@ -88,25 +89,37 @@ bool config_load(
         return false;
     }
 
-    if (filename == NULL)
+    for (i = 0;
+        filename == NULL &&
+            default_filenames != NULL &&
+            default_filenames[i] != NULL;
+        ++i)
     {
-        filename = getenv(CONFIG_ENV_VAR);
-        if (filename != NULL)
+        if (access(default_filenames[i], R_OK) == 0)
+        {
+            filename = default_filenames[i];
+        }
+        else if (errno == ENOENT)
         {
             LOG(LOG_DEBUG,
-                "using configuration file \"%s\" from environment variable %s",
-                filename, CONFIG_ENV_VAR);
+                "Configuration file \"%s\" does not exist, skipping...",
+                default_filenames[i]);
+        }
+        else
+        {
+            LOG(LOG_ERR, "Error accessing configuration file \"%s\": %s",
+                default_filenames[i], strerror(errno));
+            config_num_options = 0;
+            config_options = NULL;
+            free(config_values);
+            config_values = NULL;
+            return false;
         }
     }
 
-    if (filename == NULL)
-    {
-        filename = DEFAULT_CONFIG_FILE;
-        LOG(LOG_DEBUG, "using default configuration file \"%s\"", filename);
-    }
-
     struct config_context context;
-    context.file = filename;
+
+    context.file = NULL;
     context.line = 0;
     context.includes = NULL;
 
@@ -118,12 +131,23 @@ bool config_load(
         return false;
     }
 
-    if (!config_parse_file
-        (config_num_options, config_options, config_values, &context,
-         &context))
+    if (filename == NULL)
     {
-        config_unload();
-        return false;
+        LOG(LOG_DEBUG, "no configuration file specified or available");
+    }
+    else
+    {
+        context.file = filename;
+        context.line = 0;
+        context.includes = NULL;
+
+        if (!config_parse_file
+            (config_num_options, config_options, config_values, &context,
+             &context))
+        {
+            config_unload();
+            return false;
+        }
     }
 
     for (i = 0; i < config_num_options; ++i)

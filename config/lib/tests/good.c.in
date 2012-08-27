@@ -241,7 +241,7 @@ static bool test_config(
         return false;
     }
 
-    ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file);
+    ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file, NULL);
     TEST_BOOL(ret, true);
 
     TEST(int, "%d", *(const int *)config_get(CONFIG_SOME_INT), ==, -5);

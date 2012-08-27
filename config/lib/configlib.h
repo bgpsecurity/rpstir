@@ -92,18 +92,29 @@ void const * const * config_get_array(
 /**
     Load configuration data from a config file.
 
-    @note This MUST be called before any threads that could possibly
-          use configuration data are started.
+    @note This is not thread-safe and MUST be called before any threads that
+          could possibly use configuration data are started.
 
     @param num_options Number of config options.
     @param options Description of options.
-    @param filename The file to load data from. If this is NULL, the
-                    default configuration file is used.
+    @param filename The file to load data from. This can be NULL, see below.
+                    It is an error if filename is not NULL and the specified
+                    file can't be accessed,
+    @param default_filenames NULL-terminated array of (NULL-terminated strings
+                             of) files to try if filename is NULL. Each file is
+                             tried in order until one exists. Once an existing
+                             file is found, no more files are checked. A value
+                             of NULL for default_filenames indicates no
+                             defaults. If no files are found, it is not
+                             inherently an error: the default values for each
+                             configuration item are used. However, if there are
+                             any mandatory variables, those will cause errors.
 */
 bool config_load(
     size_t num_options,
     const struct config_option *options,
-    const char *filename);
+    const char *filename,
+    char const * const * default_filenames);
 
 /**
     Call this after configuration data is no longer needed to free resources.
