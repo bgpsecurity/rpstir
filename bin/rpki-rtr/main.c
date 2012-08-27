@@ -472,8 +472,7 @@ static void startup(
     unblock_signals();
 
     block_signals();
-    run_state->config_loaded =
-        config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, NULL);
+    run_state->config_loaded = my_config_load();
     if (!run_state->config_loaded)
     {
         LOG(LOG_ERR, "can't load configuration");
