@@ -1,5 +1,5 @@
-#ifndef _LIB_CONFIG_LOAD_H
-#define _LIB_CONFIG_LOAD_H
+#ifndef _LIB_CONFIGLIB_CONFIG_LOAD_H
+#define _LIB_CONFIGLIB_CONFIG_LOAD_H
 
 
 /**

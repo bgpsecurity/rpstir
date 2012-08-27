@@ -1,11 +1,11 @@
-#ifndef _LIB_CONFIG_H
-#define _LIB_CONFIG_H
+#ifndef _LIB_CONFIGLIB_CONFIGLIB_H
+#define _LIB_CONFIGLIB_CONFIGLIB_H
 
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "logging.h"
-#include "macros.h"
+#include "util/logging.h"
+#include "util/macros.h"
 
 
 /** Context in parsing a config file */

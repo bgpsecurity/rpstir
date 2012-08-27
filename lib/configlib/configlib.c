@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "logging.h"
+#include "util/logging.h"
 
 #include "configlib.h"
 #include "config_load.h"

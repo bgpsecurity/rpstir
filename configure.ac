@@ -237,8 +237,6 @@ fi
 
 
 AC_CONFIG_FILES([
-    config/config.c
-    config/lib/tests/good.c
     etc/envir.setup
     Makefile
     tests/test.include

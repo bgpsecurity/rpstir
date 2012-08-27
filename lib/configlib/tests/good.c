@@ -1,12 +1,12 @@
-#include "unittest.h"
-#include "logging.h"
+#include "test/unittest.h"
+#include "util/logging.h"
 
-#include "lib/configlib.h"
+#include "configlib/configlib.h"
 
-#include "lib/types/bool.h"
-#include "lib/types/path.h"
-#include "lib/types/sscanf.h"
-#include "lib/types/string.h"
+#include "configlib/types/bool.h"
+#include "configlib/types/path.h"
+#include "configlib/types/sscanf.h"
+#include "configlib/types/string.h"
 
 enum config_key {
     CONFIG_SOME_INT,
@@ -348,10 +348,10 @@ static bool test_config(
              " barfoo  quux ");
 
     TEST_STR((const char *)config_get(CONFIG_FILE), ==,
-             "@abs_top_srcdir@/config/lib/tests/good.conf");
+             ABS_TOP_SRCDIR "/lib/configlib/tests/good.conf");
 
     TEST_STR((const char *)config_get(CONFIG_DIR), ==,
-             "@abs_top_srcdir@/config/lib");
+             ABS_TOP_SRCDIR "/lib/configlib");
 
     config_unload();
 

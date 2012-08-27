@@ -18,7 +18,9 @@ CFLAGS_STRICT = \
 	-Werror
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/lib
+	-I$(top_srcdir)/lib \
+	-DABS_TOP_SRCDIR='"@abs_top_srcdir@"' \
+	-DSYSCONFDIR='"$(sysconfdir)"'
 
 AM_ETAGSFLAGS = \
 	--declarations
@@ -60,6 +62,8 @@ dist_noinst_DATA += \
 # library makefiles must be ordered by dependencies, lowest level library to highest
 include mk/libtest.mk
 include mk/libutil.mk
+include mk/libconfiglib.mk
+include mk/libconfig.mk
 include mk/libcasn.mk
 include mk/librpkiasn1.mk
 include mk/libdb.mk

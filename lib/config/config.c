@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "config.h"
+#include "configlib/types/string.h"
 
-#include "lib/types/string.h"
+#include "config.h"
 
 
 #define CONFIG_ENV_VAR PACKAGE_NAME_UC "_CONFIG"
@@ -19,7 +19,7 @@ static const struct config_option config_options[] = {
      config_type_string_converter, NULL,
      free,
      NULL, NULL,
-     "\"@abs_top_srcdir@\""},
+     "\"" ABS_TOP_SRCDIR "\""},
 };
 
 

@@ -1,8 +1,8 @@
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _LIB_CONFIG_CONFIG_H
+#define _LIB_CONFIG_CONFIG_H
 
 
-#include "lib/configlib.h"
+#include "configlib/configlib.h"
 
 
 enum config_key {

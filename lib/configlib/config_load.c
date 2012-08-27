@@ -5,7 +5,7 @@
 #include <libgen.h>
 #include <limits.h>
 
-#include "logging.h"
+#include "util/logging.h"
 
 #include "configlib.h"
 #include "config_load.h"
