@@ -165,48 +165,6 @@ char *start_of_next_field(
 
 
 /*
- * Copy the directory string for a particular path to the destination buffer.
- * A path which ends in '/' will simply be copied, whereas a path with no '/'
- * returns the string ".".  At most dest_len characters will be copied,
- * including the terminating '\0'.  If dest_len was not enough space, a NULL
- * is returned. 
- */
-char *dirname(
-    char *dest,
-    int dest_len,
-    const char *path)
-{
-    const char *right_most_slash;
-    int dir_length;
-
-    if (!path)
-        return NULL;
-
-    /*
-     * Search for right-most slash. 
-     */
-    right_most_slash = strrchr(path, '/');
-    if (!right_most_slash)
-    {
-        if (dest_len < 2)
-            return NULL;
-        else
-            return strcpy(dest, ".");
-    }
-
-    /*
-     * Copy directory substring, terminating with null. 
-     */
-    dir_length = right_most_slash - path + 1;
-    if (dir_length > dest_len - 1)
-        return NULL;
-    strncpy(dest, path, dir_length);
-    dest[dir_length] = '\0';
-
-    return dest;
-}
-
-/*
  * Copy the current field (contiguous string of non-delimiter characters) into 
  * the destination buffer, up to dest_length-1 bytes. Append '\0' to terminate 
  * the C string.  If the buffer size is insufficient, safely null-terminate
