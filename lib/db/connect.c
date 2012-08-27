@@ -8,7 +8,7 @@
 #include <my_sys.h>
 #include <mysql.h>
 
-#include "config.h"
+#include "config/config.h"
 
 #include "connect.h"
 #include "db-internal.h"
