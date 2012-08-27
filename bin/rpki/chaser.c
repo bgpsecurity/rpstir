@@ -13,6 +13,7 @@
 
 #include "rpki/err.h"
 #include "util/logging.h"
+#include "config/config.h"
 #include "db/connect.h"
 #include "db/clients/chaser.h"
 #include "util/stringutils.h"
@@ -742,6 +743,13 @@ int main(
 
     OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
     (void)setbuf(stdout, NULL);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "Could not load configuration");
+        return EXIT_FAILURE;
+    }
+
     uris = malloc(sizeof(char *) * uris_max_sz);
     if (!uris)
     {
@@ -910,6 +918,8 @@ int main(
     }
 
     free_uris();
+
+    config_unload();
 
     CLOSE_LOG();
 
