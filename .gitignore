@@ -15,7 +15,9 @@ config.status
 configure
 TAGS
 *.swp
+.~lock.*#
 rpstir-*.tar.gz
+/rpstir-*/
 INSTRUCTIONS
 .dirstamp
 

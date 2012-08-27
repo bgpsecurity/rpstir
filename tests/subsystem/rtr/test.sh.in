@@ -1,0 +1,363 @@
+#!@SHELL_BASH@ -e
+
+cd "`dirname "$0"`"
+
+. ../../../etc/envir.setup
+
+TEST_LOG_NAME=rtr
+STRICT_CHECKS=1
+. $RPKI_ROOT/tests/test.include
+
+
+SERVER="@PACKAGE_NAME@-rpki-rtr-daemon"
+CLIENT="@PACKAGE_NAME@-rpki-rtr-test-client"
+UPDATE="@PACKAGE_NAME@-rpki-rtr-update"
+PORT=1234
+SESSION=42
+WRONG_SESSION=4242
+SERVER_START_TIMEOUT=10
+SERVER_STOP_TIMEOUT=10
+CLIENT_MULTIPLE_TIMEOUT=120
+
+client_raw () {
+	SUBTEST_NAME="$1"
+	shift
+	EXPECTED_RESULTS="$1"
+	shift
+	echo "--- $SUBTEST_NAME" | tee -a response.log
+	echo "--- expecting: $EXPECTED_RESULTS" | tee -a response.log
+	"$@" | "$CLIENT" client_one localhost $PORT | tee -a response.log
+}
+
+client () {
+	COMMAND="$1"
+	EXPECTED_RESULTS="$2"
+	INPUT_PDU_FILE="`@MKTEMP@`"
+	echo "$COMMAND" | "$CLIENT" write > "$INPUT_PDU_FILE"
+	client_raw "$COMMAND" "$EXPECTED_RESULTS" cat "$INPUT_PDU_FILE"
+	rm -f "$INPUT_PDU_FILE"
+}
+
+
+MULT_CLIENT_CLEANUP=0
+
+client_multiple_start () {
+	SUBTEST_NAME="$1"
+	EXPECTED_RESULTS="$2"
+	N="$3"
+	echo "--- $SUBTEST_NAME" | tee -a response.log
+	echo "--- expecting: $EXPECTED_RESULTS x$N" | tee -a response.log
+
+	CLIENT_MULTIPLE_pids=""
+
+	tail -f -n 0 response.log &
+	CLIENT_MULTIPLE_tail_pid="$!"
+	MULT_CLIENT_CLEANUP=1
+
+	for x in `seq 1 "$N"`; do
+		"$CLIENT" client_one localhost $PORT >> response.log &
+		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids $!"
+	done
+}
+
+client_multiple_kill () {
+	if test -n "$CLIENT_MULTIPLE_pids"; then
+		kill $CLIENT_MULTIPLE_pids || true
+		sleep 1
+		kill -9 $CLIENT_MULTIPLE_pids || true
+		wait $CLIENT_MULTIPLE_pids || true
+	fi
+
+	kill "$CLIENT_MULTIPLE_tail_pid" || true
+	sleep 1
+	kill -9 "$CLIENT_MULTIPLE_tail_pid" || true
+	wait "$CLIENT_MULTIPLE_tail_pid" || true
+
+	MULT_CLIENT_CLEANUP=0
+}
+
+client_multiple_wait () {
+	echo >&2 "Waiting for multiple clients..."
+	echo >&2 "(This may take up to $CLIENT_MULTIPLE_TIMEOUT seconds.)"
+	for _discard in `seq 1 "$CLIENT_MULTIPLE_TIMEOUT"`; do
+		CLIENT_MULTIPLE_pids_new=""
+		have_pids=0
+		for client_pid in $CLIENT_MULTIPLE_pids; do
+			if kill -0 "$client_pid" > /dev/null 2>&1; then
+				CLIENT_MULTIPLE_pids_new="$CLIENT_MULTIPLE_pids_new $client_pid"
+				have_pids=1
+			else
+				wait "$client_pid"
+			fi
+		done
+		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids_new"
+
+		if test $have_pids -eq 0; then
+			echo >&2 "...done waiting for multiple clients."
+			kill "$CLIENT_MULTIPLE_tail_pid" || true
+			sleep 1
+			kill -9 "$CLIENT_MULTIPLE_tail_pid" || true
+			MULT_CLIENT_CLEANUP=0
+			wait "$CLIENT_MULTIPLE_tail_pid" || true
+			return
+		fi
+
+		sleep 1
+	done
+
+	echo >&2 "Timed out waiting for multiple clients"
+
+	client_multiple_kill
+
+	return 1
+}
+
+
+compare () {
+	name="$1"
+	printf >&2 "comparing \"%s\" to \"%s\"... " "$name" "$name.correct"
+	if diff -u "$name.correct" "$name" > "$name.diff" 2>/dev/null; then
+		echo >&2 "success."
+	else
+		echo >&2 "failed!"
+		echo >&2 "See \"$name.diff\" for the differences."
+		exit 1
+	fi
+}
+
+init () {
+	rcli -x -t . -y
+	rcli -y -F "`pwd`/root.cer"
+	echo "INSERT INTO rtr_session VALUES ($SESSION);" | $RPKI_MYSQL_CMD
+
+	SERIAL=""
+	ASNS_IN_DB=""
+}
+
+make_serial () {
+	SERIAL="$1"
+	FIRST_ASN="$2"
+	LAST_ASN="$3"
+
+	test "$FIRST_ASN" -ge 1
+	test "$LAST_ASN" -le 255
+	test "$FIRST_ASN" -le "$LAST_ASN"
+
+	for ASN in $ASNS_IN_DB; do
+		rcli -y -d "`pwd`/as-$ASN.roa"
+	done
+
+	ASNS_IN_DB=`seq "$FIRST_ASN" "$LAST_ASN"`
+
+	for ASN in $ASNS_IN_DB; do
+		rcli -y -f "`pwd`/as-$ASN.roa"
+	done
+
+	"$UPDATE" querySpecs "$SERIAL"
+}
+
+drop_serial () {
+	DROP_SERIAL="$1"
+
+	COMMAND_FILE="`@MKTEMP@`"
+
+	printf 'DELETE FROM rtr_update WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+	printf 'DELETE FROM rtr_full WHERE serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+	printf 'DELETE rtr_incremental FROM rtr_incremental LEFT JOIN rtr_update ON rtr_incremental.serial_num = rtr_update.serial_num WHERE rtr_update.prev_serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+	printf 'UPDATE rtr_update SET prev_serial_num = NULL WHERE prev_serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
+
+	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
+
+	rm -f "$COMMAND_FILE"
+}
+
+
+RTRD_CLEANUP=0
+
+stop_rtrd () {
+	kill $SERVER_PID || true
+
+	echo >&2 "Waiting for server to quit cleanly..."
+	echo >&2 "(This may take up to $SERVER_STOP_TIMEOUT seconds.)"
+
+	for _discard in `seq 1 $SERVER_STOP_TIMEOUT`; do
+		sleep 1
+		if kill -0 $SERVER_PID; then
+			:
+		else
+			RTRD_CLEANUP=0
+			echo >&2 "...done. Server quit."
+			wait $SERVER_PID
+			return
+		fi
+	done
+
+	echo >&2 "Timed out waiting for server to quit cleanly"
+
+	kill -9 $SERVER_PID || true
+	RTRD_CLEANUP=0
+	wait $SERVER_PID
+}
+
+start_rtrd () {
+	run_bg "rtrd" "$SERVER"
+	SERVER_PID=$!
+	RTRD_CLEANUP=1
+
+	SERVER_STARTED=0
+
+	for _discard in `seq 1 $SERVER_START_TIMEOUT`; do
+		sleep 1
+		if nc -z localhost "$PORT"; then
+			SERVER_STARTED=1
+			break
+		fi
+	done
+
+	if test $SERVER_STARTED -ne 0; then
+		if kill -0 "$SERVER_PID"; then
+			echo >&2 "Server started"
+			return 0
+		else
+			echo >&2 "Server died"
+			wait "$SERVER_PID"
+			return 1
+		fi
+	else
+		echo >&2 "Failed to start server"
+		stop_rtrd
+		return 1
+	fi
+}
+
+
+start_test () {
+	TEST="$1"
+
+	rm -f "response.log" "response.$TEST.log"
+	touch "response.log"
+}
+
+stop_test () {
+	TEST="$1"
+
+	mv -f "response.log" "response.$TEST.log"
+	compare "response.$TEST.log"
+}
+
+
+cleanup () {
+	RET=0
+
+	if test x"$RTRD_CLEANUP" = x1; then
+		stop_rtrd || RET=1
+	fi
+
+	if test x"$MULT_CLIENT_CLEANUP" = x1; then
+		client_multiple_kill || RET=1
+	fi
+
+	return $RET
+}
+trap cleanup 0
+
+
+init
+
+start_rtrd
+
+
+start_test no_data
+client "reset_query" "No Data Available"
+client "serial_query $WRONG_SESSION 0" "Cache Reset"
+client "serial_query $SESSION 0" "Cache Reset"
+stop_test no_data
+
+start_test reset_query_first
+make_serial 5 1 4
+client "reset_query" "all data for serial $SERIAL"
+stop_test reset_query_first
+
+start_test serial_queries
+client "serial_query $WRONG_SESSION 5" "Cache Reset"
+client "serial_query $SESSION 5" "empty set"
+make_serial 7 2 6
+client "serial_query $SESSION 5" "difference from 5 to $SERIAL"
+client "serial_query $SESSION 7" "empty set"
+make_serial 8 1 3
+client "serial_query $SESSION 5" "difference from 5 to $SERIAL"
+client "serial_query $SESSION 6" "Cache Reset"
+client "serial_query $SESSION 7" "difference from 7 to $SERIAL"
+client "serial_query $SESSION 8" "empty set"
+drop_serial 5
+client "serial_query $SESSION 5" "Cache Reset"
+client "serial_query $SESSION 6" "Cache Reset"
+client "serial_query $SESSION 7" "difference from 7 to $SERIAL"
+client "serial_query $SESSION 8" "empty set"
+drop_serial 7
+client "serial_query $SESSION 7" "Cache Reset"
+client "serial_query $SESSION 8" "empty set"
+make_serial 14 1 3
+client "serial_query $SESSION 8" "empty set"
+client "serial_query $SESSION 10" "Cache Reset"
+client "serial_query $SESSION 14" "empty set"
+make_serial 15 1 3
+client "serial_query $SESSION 8" "empty set, ending at serial $SERIAL"
+make_serial 16 1 3
+client "serial_query $SESSION 8" "empty set, ending at serial $SERIAL"
+make_serial 17 2 3
+client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
+make_serial 18 2 3
+client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
+make_serial 19 2 3
+client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
+stop_test serial_queries
+
+start_test bad_pdus
+TOTAL_BAD_PDUS="`./badPDUs.py length`"
+for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
+	client_raw "Bad PDU #$i" "Error Report" ./badPDUs.py "$i"
+done
+stop_test bad_pdus
+
+start_test bad_pdu_usage # valid PDUs that should never be sent by the client
+client "serial_notify $WRONG_SESSION 123456" "Error Report"
+client "serial_notify $SESSION $SERIAL" "Error Report"
+client "cache_response $WRONG_SESSION" "Error Report"
+client "cache_response $SESSION" "Error Report"
+client "ipv4_prefix 255 255 255 255.255.255.255 4294967295" "Error Report"
+client "ipv6_prefix 255 255 255 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
+client "ipv4_prefix 1 32 32 255.255.255.255 4294967295" "Error Report"
+client "ipv6_prefix 1 128 128 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff 4294967295" "Error Report"
+client "ipv4_prefix 0 0 0 0.0.0.0 0" "Error Report"
+client "ipv6_prefix 0 0 0 :: 0" "Error Report"
+client "end_of_data $WRONG_SESSION 123456" "Error Report"
+client "end_of_data $SESSION $SERIAL" "Error Report"
+client "cache_reset" "Error Report"
+client "error_report 2" "no response" # No Data Available
+client "error_report 3" "no response" # Invalid Request
+stop_test bad_pdu_usage
+
+start_test bad_pdu_sequence # valid PDUs that can be sent by the client, but are sent at the wrong time or indicate an error
+client "error_report 0" "no response" # Corrupt Data
+client "error_report 1" "no response" # Internal Error
+client "error_report 4" "no response" # Unsupported Protocol Version
+client "error_report 5" "no response" # Unsupported PDU Type
+client "error_report 6" "no response" # Withdrawal of Unknown Record
+client "error_report 7" "no response" # Duplicate Announcement Received
+stop_test bad_pdu_sequence
+
+start_test serial_notify
+client_multiple_start "serial_notify" "Serial Notify for serial 20" 5
+echo >&2 "Sleeping to give rtrd time to settle..."
+sleep 5 # give rtrd time to start all the connection threads
+make_serial 20 1 3
+client_multiple_wait
+stop_test serial_notify
+
+start_test reset_query_last
+client "reset_query" "all data for serial $SERIAL"
+stop_test reset_query_last
+
+
+stop_rtrd

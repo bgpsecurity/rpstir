@@ -388,13 +388,6 @@ You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
 
-If the tests fail because of not enough output lines, it's possible
-that it's because of a known bug (#174). The workaround is to insert
-sleep commands into subsystemTests/runSubsystemTest.sh at the bottom
-of the loop that contains the line "./step${TESTID}.${N}". The amount
-of time needed to sleep depends on a number of factors and can be
-increased (within limits) until make check succeeds.
-
 If you have valgrind installed, you can run some tests under valgrind
 by running the command:
 
@@ -427,9 +420,9 @@ Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server (rtr/rpstir-rtrd)         Continuously as daemon
-RTR updater (rtr/rpstir-rtr-update)  After each call to chaser
-RTR client (rtr/rtr-test-client)     On demand by user
+RTR Server (rpstir-rpki-rtr-daemon)  Continuously as daemon
+RTR updater (rpstir-rpki-rtr-update) After each call to chaser
+RTR client (rpstir-rpki-rtr-test-client)  On demand by user
 
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
@@ -475,7 +468,7 @@ MySQL password twice.
     rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log
     mkdir -p REPOSITORY
     mkdir -p LOGS
-    run_scripts/initDB.sh
+    bin/rpki/initDB.sh
 
 3.1.3 Invoke DB Updater (rcli) in listening mode.
 
@@ -487,7 +480,7 @@ same executable that adds the trust anchors--but with flags which
 enable a different mode where it perpetually listens on a TCP socket
 for notifications of rsync updates.
 
-     xterm -e run_scripts/loader.sh &
+     xterm -e bin/rpki/loader.sh &
 
 As the command indicates, it is useful run loader.sh in a new xterm
 window.  Doing so separates the DB updater (rcli) log messages from
@@ -513,7 +506,7 @@ http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
     # The following command parses the TAL files, downloads the trust
     # anchor certificates, verifies their public key and signature, and
     # inserts them into the local database.
-    run_scripts/updateTA.py testbed-ripe.tal testbed-arin.tal testbed-apnic.tal
+    bin/rpki/updateTA.py testbed-ripe.tal testbed-arin.tal testbed-apnic.tal
 
 3.1.5 Manually insert trust anchors (optional).
 
@@ -529,9 +522,9 @@ to manually add each of the trust anchors.
     rsync rsync://arin.rpki.net/rpki/arin/root.cer arin_root.cer
     rsync rsync://ripe.rpki.net/rpki/ripe/root.cer ripe_root.cer
     cd ..
-    proto/rcli -y -F REPOSITORY/apnic_root.cer
-    proto/rcli -y -F REPOSITORY/arin_root.cer
-    proto/rcli -y -F REPOSITORY/ripe_root.cer
+    bin/rpki/rcli -y -F REPOSITORY/apnic_root.cer
+    bin/rpki/rcli -y -F REPOSITORY/arin_root.cer
+    bin/rpki/rcli -y -F REPOSITORY/ripe_root.cer
 
 3.1.6 Run URI Chaser.
 
@@ -541,7 +534,7 @@ download from all the repositories.  When each rsync transfer
 completes, the chaser invokes the rsync log parser, which notifies the
 DB Updater (activated in the previous step) of any changes.
 
-    run_scripts/chaser.sh
+    bin/rpki/chaser.sh
 
 The process of chasing URIs and then invoking rsync will automatically
 continue until no new publication directories have been found, or
@@ -564,7 +557,7 @@ roas, that might potentially be revoked by the updated version of a
 stale crl are set to an intermediate state of validity (called
 "unknown"), but are set back to valid if a current crl is available.
 
-    run_scripts/garbage.sh
+    bin/rpki/garbage.sh
 
 Successful garbage collection may not produce any screen output.
 
@@ -592,14 +585,14 @@ verbose mode, it also shows full paths to all invalid/unknown
 certifcates, thereby allowing the user to determine the offending
 rsync publication URI.
 
-Usage: run_scripts/results.py [options]
+Usage: bin/rpki/results.py [options]
 Options:
   -h, --help     show this help message and exit
   -v, --verbose  print lists of valid/unknown/invalid objects to stdout
 
 Example output:
 
-[bbn@rpki-fc13 rpki]$ run_scripts/results.py 
+[bbn@rpki-fc13 rpki]$ bin/rpki/results.py
 Using RPKI root directory: /home/bbn/rpki
 Using local repository path: /home/bbn/rpki/REPOSITORY
 
@@ -680,16 +673,16 @@ a simple comparison.  To do such filtering, add as many "-f
 <field>.<op>.<value>" arguments to the command line as desired, where
 op is one of (eq, ne, lt, gt, le, ge) and value is unquoted and
 contains # characters to replaces spaces.  Additional arguments are
-given if you type proto/query without any arguments.
+given if you type bin/rpki/query without any arguments.
 
     Examples:
 
-    proto/query -t cert -d pathname      # display paths of valid certs
-    proto/query -t cert -d pathname -d flags # display path+flags of valid certs
-    proto/query -t cert -d pathname -i   # display paths of valid/unknown certs
-    proto/query -t crl -d all            # display all fields of valid CRLs
-    proto/query -t roa -d pathname -d flags # display path+flags of valid roas
-    proto/query -t man -d all -i # display all fields of valid/unknown manifests
+    bin/rpki/query -t cert -d pathname      # display paths of valid certs
+    bin/rpki/query -t cert -d pathname -d flags # display path+flags of valid certs
+    bin/rpki/query -t cert -d pathname -i   # display paths of valid/unknown certs
+    bin/rpki/query -t crl -d all            # display all fields of valid CRLs
+    bin/rpki/query -t roa -d pathname -d flags # display path+flags of valid roas
+    bin/rpki/query -t man -d all -i # display all fields of valid/unknown manifests
 
 
 3.3 Warning
