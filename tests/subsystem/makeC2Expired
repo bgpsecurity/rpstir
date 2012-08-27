@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# set environment variables if not set
+THIS_SCRIPT_DIR=$(dirname $0)
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
+
+echo "update rpki_cert set valto='2008-07-31' where filename='C2.cer';" | \
+    $RPKI_MYSQL_CMD
