@@ -75,6 +75,11 @@ fi
 # MySQL command line which reads statements from stdin
 export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 
+# Path to transitional configuration file
+if [ -z "$RPSTIR_CONFIG" ]; then
+    export RPSTIR_CONFIG="$RPKI_ROOT/etc/rpstir.conf"
+fi
+
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
 find "$RPKI_ROOT/bin" -type d -print > "$BIN_DIRS"
