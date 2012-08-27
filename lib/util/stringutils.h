@@ -24,10 +24,6 @@ int exists_non_delimiter(
 char *start_of_next_field(
     const char *s,
     const char *delimiters);
-char *dirname(
-    char *dest,
-    int dest_len,
-    const char *path);
 char *this_field(
     char *dest,
     int dest_length,
