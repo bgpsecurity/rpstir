@@ -169,10 +169,10 @@ static void *connectMysqlCApi(
     // store parameters to enable reconnect
     conn->host = strdup(host);
     conn->user = strdup(user);
-    conn->pass = strdup(pass);
+    conn->pass = (pass == NULL ? NULL : strdup(pass));
     conn->db = strdup(db);
     if (conn->host == NULL || conn->user == NULL ||
-        conn->pass == NULL || conn->db == NULL)
+        (conn->pass == NULL && pass != NULL) || conn->db == NULL)
     {
         LOG(LOG_ERR, "could not alloc for strings");
         db_disconnect(conn);
