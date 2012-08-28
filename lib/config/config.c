@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "configlib/types/path.h"
 #include "configlib/types/string.h"
 
 #include "config.h"
@@ -16,7 +17,7 @@ static const struct config_option config_options[] = {
     {
      "Root",
      false,
-     config_type_string_converter, NULL,
+     config_type_path_converter, NULL,
      free,
      NULL, NULL,
      "\"" ABS_TOP_SRCDIR "\""},
@@ -25,7 +26,7 @@ static const struct config_option config_options[] = {
     {
      "Database",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      NULL},
@@ -34,7 +35,7 @@ static const struct config_option config_options[] = {
     {
      "DatabaseUser",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      NULL},
@@ -43,7 +44,7 @@ static const struct config_option config_options[] = {
     {
      "DatabasePassword",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_optional,
      free,
      NULL, NULL,
      NULL},
@@ -52,7 +53,7 @@ static const struct config_option config_options[] = {
     {
      "DatabaseDSN",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      NULL},
