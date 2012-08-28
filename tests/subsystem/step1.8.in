@@ -10,7 +10,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $RPKI_ROOT/tests/test.include
 
 echo "Loading data"
-rsync_aur -s -t $RPKI_PORT -f test1.8.log -w -e -i -d $THIS_SCRIPT_DIR/testcases || \
+rsync_aur -s -t -f test1.8.log -w -e -i -d $THIS_SCRIPT_DIR/testcases || \
   check_errs $? "$0 rsync_aur failed"
 
 echo $0 PASS

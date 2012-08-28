@@ -6,7 +6,7 @@ NAME
 
 SYNOPSIS
   
-        rsync_aur -f logfile -d topDir [-t portno | -u portno | -n] -s -e -h 
+        rsync_aur -f logfile -d topDir [-t | -u | -n] -s -e -h 
             -i -w
 
 
@@ -30,9 +30,9 @@ DESCRIPTION
             -d topDir specifies the relative path name of the directory
                being sent.
 
-            -t portno specifies the TCP socket to use, or
+            -t specifies to use a TCP socket, or
 
-            -u portno specifies the UDP socket to use, or
+            -u specifies to use a UDP socket, or
 
             -n specifies to send no messages but print them on stdout.
 

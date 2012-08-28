@@ -15,7 +15,8 @@ bin_rpki_rsync_rsync_aur_SOURCES = \
 	bin/rpki-rsync/usage.h
 
 bin_rpki_rsync_rsync_aur_LDADD = \
-	$(LDADD_LIBUTIL)
+	$(LDADD_LIBUTIL) \
+	$(LDADD_LIBCONFIG)
 
 dist_man_MANS += doc/rsync_aur.1
 

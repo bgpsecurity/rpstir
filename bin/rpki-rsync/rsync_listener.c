@@ -230,10 +230,10 @@ int main(
                 close(pipefd[0]);
                 dup2(pipefd[1], STDOUT_FILENO);
                 close(pipefd[1]);
-                log_msg(LOG_DEBUG, "%s -s -t %s -f %s -d %s", command,
-                        getenv("RPKI_PORT"), log_loc, rep_loc);
+                log_msg(LOG_DEBUG, "%s -s -t -f %s -d %s", command,
+                        log_loc, rep_loc);
                 log_flush();
-                execl(command, command, "-s", "-t", getenv("RPKI_PORT"), "-f",
+                execl(command, command, "-s", "-t", "-f",
                       log_loc, "-d", rep_loc, (const char *)NULL);
                 perror("execl()");
                 exit(EXIT_FAILURE);     // execl shouldn't return
@@ -252,8 +252,8 @@ int main(
             fclose(fp);
             wait(&status);
             log_msg((status == 0) ? LOG_INFO : LOG_ERR,
-                    "Process ended with termination status %d (command = %s -s -t %s -f %s -d %s)\n",
-                    status, command, getenv("RPKI_PORT"), log_loc, rep_loc);
+                    "Process ended with termination status %d (command = %s -s -t -f %s -d %s)\n",
+                    status, command, log_loc, rep_loc);
             log_flush();
         }
         /*
