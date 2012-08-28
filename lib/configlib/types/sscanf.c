@@ -14,6 +14,13 @@ bool config_type_sscanf_converter(
     char scan_format[32];
     int consumed;
 
+    if (input == NULL)
+    {
+        config_message(context, LOG_ERR, "%s can't be empty",
+                       args->description);
+        return false;
+    }
+
     *data = malloc(args->allocate_length);
     if (*data == NULL)
     {

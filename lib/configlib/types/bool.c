@@ -44,6 +44,12 @@ bool config_type_bool_converter(
 
     (void)usr_arg;
 
+    if (input == NULL)
+    {
+        config_message(context, LOG_ERR, "booleans can't be empty");
+        return false;
+    }
+
     for (i = 0; !found && true_names[i] != NULL; ++i)
     {
         if (strcmp(true_names[i], input) == 0)

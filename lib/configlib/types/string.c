@@ -6,8 +6,27 @@ bool config_type_string_converter(
     const char *input,
     void **data)
 {
-    (void)context;
-    (void)usr_arg;
+    struct config_type_string_usr_arg * args =
+        (struct config_type_string_usr_arg *)usr_arg;
+
+    if (input == NULL)
+    {
+        if (args->allow_null)
+        {
+            config_message(context, LOG_DEBUG,
+                           "found NULL option. "
+                           "If you meant the empty string, use `\"\"' instead");
+            *data = NULL;
+            return true;
+        }
+        else
+        {
+            config_message(context, LOG_ERR,
+                           "this option can't be NULL. "
+                           "For the empty string, use `\"\"'");
+            return false;
+        }
+    }
 
     *data = strdup(input);
     if (*data == NULL)
@@ -18,3 +37,7 @@ bool config_type_string_converter(
 
     return true;
 }
+
+struct config_type_string_usr_arg config_type_string_arg_optional = {true};
+
+struct config_type_string_usr_arg config_type_string_arg_mandatory = {false};

@@ -26,6 +26,8 @@ enum config_key {
     CONFIG_ENV_VAR_EMPTY,
     CONFIG_FILE,
     CONFIG_DIR,
+    CONFIG_NULL_STRING,
+    CONFIG_DEFAULT_NULL_STRING,
 
     CONFIG_NUM_OPTIONS
 };
@@ -76,7 +78,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "EmptyArray",
      true,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      "foo bar"},
@@ -85,7 +87,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "StringArray",
      true,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      stringarray_validator, (void *)1,
      "\"foo bar\" 1 3"},
@@ -103,7 +105,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "LongArray",
      true,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      NULL},
@@ -121,7 +123,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "DefaultString",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_optional,
      free,
      NULL, NULL,
      "this-is-the-default"},
@@ -148,7 +150,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "StringArrayChars",
      true,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      "foo \"\\\"\" \"'\" \"\\\\\" \"\\$\" \"\t\" \" \" \"#\" \"\\n\" \"\\r\" \"\\t\""},
@@ -184,7 +186,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "EnvVarString",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_optional,
      free,
      NULL, NULL,
      NULL},
@@ -193,7 +195,7 @@ static const struct config_option CONFIG_OPTIONS[] = {
     {
      "EnvVarEmpty",
      false,
-     config_type_string_converter, NULL,
+     config_type_string_converter, &config_type_string_arg_mandatory,
      free,
      NULL, NULL,
      NULL},
@@ -215,6 +217,24 @@ static const struct config_option CONFIG_OPTIONS[] = {
      free,
      NULL, NULL,
      NULL},
+
+    // CONFIG_NULL_STRING
+    {
+     "NullString",
+     false,
+     config_type_string_converter, &config_type_string_arg_optional,
+     free,
+     NULL, NULL,
+     "\"non-null default\""},
+
+    // CONFIG_DEFAULT_NULL_STRING
+    {
+     "DefaultNullString",
+     false,
+     config_type_string_converter, &config_type_string_arg_optional,
+     free,
+     NULL, NULL,
+     ""},
 };
 
 
@@ -352,6 +372,10 @@ static bool test_config(
 
     TEST_STR((const char *)config_get(CONFIG_DIR), ==,
              ABS_TOP_SRCDIR "/lib/configlib");
+
+    TEST(const char *, "%s", config_get(CONFIG_NULL_STRING), ==, NULL);
+
+    TEST(const char *, "%s", config_get(CONFIG_DEFAULT_NULL_STRING), ==, NULL);
 
     config_unload();
 

@@ -510,10 +510,20 @@ static bool convert_values(
     }
     else
     {
-        if (num_values != 1)
+        const char *value;
+
+        if (num_values == 0)
+        {
+            value = NULL;
+        }
+        else if (num_values == 1)
+        {
+            value = values[0];
+        }
+        else
         {
             config_message(context, LOG_ERR,
-                           "non-array option must have exactly one value");
+                           "non-array option must have no more than one value");
             return false;
         }
 
@@ -522,7 +532,7 @@ static bool convert_values(
 
         if (!config_option->value_convert(context,
                                           config_option->value_convert_usr_arg,
-                                          values[0],
+                                          value,
                                           &config_value->single_value.data))
         {
             return false;
