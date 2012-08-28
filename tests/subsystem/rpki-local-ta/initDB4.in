@@ -8,7 +8,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 
 . $RPKI_ROOT/lib/util/trap_errors
 
-echo About to clear database $RPKI_DB ...
+echo About to clear database ...
 
 # set up an initial database
 run "rcli-x-t-y" rcli -x -t $PWD/testcases4_LTA -y     # Rsync's local cache

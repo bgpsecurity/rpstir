@@ -8,5 +8,5 @@ THIS_SCRIPT_DIR=$(dirname $0)
 mkdir -p $RPKI_ROOT/REPOSITORY
 mkdir -p $RPKI_ROOT/LOGS
 
-echo About to clear database "${RPKI_DB}" ...
+echo About to clear database ...
 rcli -x -t $RPKI_ROOT/REPOSITORY -y

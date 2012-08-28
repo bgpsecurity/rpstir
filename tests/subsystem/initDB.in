@@ -8,7 +8,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 
 . $RPKI_ROOT/tests/test.include
 
-echo About to clear database $RPKI_DB ...
+echo About to clear database ...
 
 # set up an initial database
 run "rcli-x-t-y" rcli -x -t $THIS_SCRIPT_DIR/testcases -y
