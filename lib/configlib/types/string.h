@@ -9,4 +9,11 @@ bool config_type_string_converter(
     const char *input,
     void **data);
 
+struct config_type_string_usr_arg {
+    bool allow_null;
+};
+
+struct config_type_string_usr_arg config_type_string_arg_optional;
+struct config_type_string_usr_arg config_type_string_arg_mandatory;
+
 #endif

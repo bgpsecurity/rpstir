@@ -34,6 +34,8 @@ void config_message(
     @param[in] usr_arg User argument provided to the callback.
     @param[in] input String from the config file. This may be copied,
                      but the pointer itself must not be put in *data.
+                     It can be NULL if the config file has no value for
+                     a non-array option.
     @param[out] data A value of the correct type for the config item.
                      May be NULL.
     @return True on success, false on failure. This means that
