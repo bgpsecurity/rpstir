@@ -9,7 +9,9 @@
 #include "rpki/scmf.h"
 #include "rpki/sqhl.h"
 #include "rpki/err.h"
+#include "config/config.h"
 #include "util/logutils.h"
+#include "util/logging.h"
 
 /*
  * $Id$ 
@@ -206,6 +208,12 @@ int main(
         exit(1);
     }
     (void)setbuf(stdout, NULL);
+    OPEN_LOG(PACKAGE_NAME "-garbage", LOG_USER);
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        exit(EXIT_FAILURE);
+    }
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
     connect = connectscm(scmp->dsn, msg, WHERESTR_SIZE);
@@ -312,6 +320,8 @@ int main(
              metaTable->tabname, currTimestamp);
     status = statementscm_no_data(connect, msg);
 
+    config_unload();
+    CLOSE_LOG();
     log_close();
     return 0;
 }

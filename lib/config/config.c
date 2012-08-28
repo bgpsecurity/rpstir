@@ -47,6 +47,15 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      NULL},
+
+    // CONFIG_DATABASE_DSN
+    {
+     "DatabaseDSN",
+     false,
+     config_type_string_converter, NULL,
+     free,
+     NULL, NULL,
+     NULL},
 };
 
 

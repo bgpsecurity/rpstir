@@ -2,6 +2,8 @@
  * Get the next round of RTR data into the database
  ***********************/
 
+#include "util/logging.h"
+#include "config/config.h"
 #include "rpki/err.h"
 #include "rpki/scmf.h"
 #include "rpki/querySupport.h"
@@ -149,6 +151,14 @@ int main(
         fprintf(stderr, "\n");
         fprintf(stderr,
                 "The next serial number should only be specified in test mode.\n");
+        return EXIT_FAILURE;
+    }
+
+    OPEN_LOG(PACKAGE_NAME "-rtr-update", LOG_USER);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
         return EXIT_FAILURE;
     }
 
@@ -419,6 +429,10 @@ int main(
                                "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
                                "where rtr_update.prev_serial_num is null;");
     checkErr(sta < 0, "Can't delete old rtr_incremental data");
+
+    config_unload();
+
+    CLOSE_LOG();
 
     return 0;
 }

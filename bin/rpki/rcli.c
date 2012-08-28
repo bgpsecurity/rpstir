@@ -32,6 +32,8 @@
 #include "rpki/myssl.h"
 #include "rpki/cms/roa_utils.h"
 #include "rpki/err.h"
+#include "config/config.h"
+#include "util/logging.h"
 #include "util/logutils.h"
 
 
@@ -969,6 +971,12 @@ int main(
         perror("Could not initialize rcli log file");
         exit(1);
     }
+    OPEN_LOG(PACKAGE_NAME "-rcli", LOG_USER);
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        exit(EXIT_FAILURE);
+    }
     if (force == 0)
     {
         if (do_delete > 0)
@@ -1305,6 +1313,8 @@ int main(
     if (tdir != NULL)
         free((void *)tdir);
     log_msg(LOG_NOTICE, "Rsync client session ended");
+    config_unload();
+    CLOSE_LOG();
     log_close();
     return (sta);
 }

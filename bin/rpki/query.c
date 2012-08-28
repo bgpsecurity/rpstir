@@ -11,7 +11,9 @@
 #include "rpki/myssl.h"
 #include "rpki/sqhl.h"
 #include "rpki/querySupport.h"
+#include "config/config.h"
 #include "util/logutils.h"
+#include "util/logging.h"
 
 
 /*
@@ -619,6 +621,12 @@ int main(
         perror("Could not initialize query client log file");
         exit(1);
     }
+    OPEN_LOG(PACKAGE_NAME "-query", LOG_USER);
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't initialize configuration");
+        exit(EXIT_FAILURE);
+    }
     output = stdout;
     useLabels = 1;
     multiline = 0;
@@ -705,6 +713,8 @@ int main(
     clauses[numClauses++] = NULL;
     if ((status = doQuery(displays, clauses, orderp)) < 0)
         log_msg(LOG_ERR, "%s", err2string(status));
+    config_unload();
+    CLOSE_LOG();
     log_close();
     return status;
 }
