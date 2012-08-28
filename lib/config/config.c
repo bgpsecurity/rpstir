@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "configlib/types/path.h"
+#include "configlib/types/sscanf.h"
 #include "configlib/types/string.h"
 
 #include "config.h"
@@ -21,6 +22,15 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "\"" ABS_TOP_SRCDIR "\""},
+
+    // CONFIG_RPKI_PORT
+    {
+     "RPKIPort",
+     false,
+     config_type_sscanf_converter, &config_type_sscanf_arg_uint16_t,
+     free,
+     NULL, NULL,
+     "7344"},
 
     // CONFIG_DATABASE
     {

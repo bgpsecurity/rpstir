@@ -45,7 +45,7 @@ if nc -z localhost $RPKI_PORT; then
 fi
 
 # start loader
-run_bg "rcli-w" rcli -w $RPKI_PORT -p
+run_bg "rcli-w" rcli -w -p
 LOADER_PID=$!
 while ! nc -z localhost $RPKI_PORT; do
     sleep 1

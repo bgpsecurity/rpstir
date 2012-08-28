@@ -276,26 +276,19 @@ static int yorn(
 }
 
 static int makesock(
-    char *porto,
+    uint16_t port,
     int *protosp)
 {
     struct sockaddr_in sinn;
     struct sockaddr_in sout;
     socklen_t leen;
-    uint16_t port;
     int protos;
     int sta;
-    int consumed;
     static int64_t num_accepted_connections = 0;
     static int64_t num_failed_connections = 0;
     int one = 1;
     int s;
 
-    if (sscanf(porto, "%" SCNu16 "%n", &port, &consumed) < 1 ||
-        porto[consumed] != '\0')
-    {
-        return (-1);
-    }
     protos = *protosp;
     if (protos < 0)
     {
@@ -335,20 +328,20 @@ static int makesock(
         }
         *protosp = protos;
     }
-    log_msg(LOG_INFO, "Waiting for a connection on port %s", porto);
+    log_msg(LOG_INFO, "Waiting for a connection on port %" PRIu16, port);
     leen = sizeof(sout);
     s = accept(protos, (struct sockaddr *)&sout, &leen);
     if (s >= 0)
     {
         num_accepted_connections++;
-        log_msg(LOG_INFO, "New connection accepted on port %s (#%" PRId64 ")",
-                porto, num_accepted_connections);
+        log_msg(LOG_INFO, "New connection accepted on port %" PRIu16 " (#%" PRId64 ")",
+                port, num_accepted_connections);
     }
     else
     {
         num_failed_connections++;
-        log_msg(LOG_ERR, "Failed to accept connection on port %s (failure #%"
-                PRId64 ")", porto, num_failed_connections);
+        log_msg(LOG_ERR, "Failed to accept connection on port %" PRIu16 " (failure #%"
+                PRId64 ")", port, num_failed_connections);
     }
     // (void)close(protos);
     return (s);
@@ -895,7 +888,7 @@ int main(
         usage();
         return (1);
     }
-    while ((c = getopt(argc, argv, "t:xyhad:E:f:F:w:z:pm:c:s")) != EOF)
+    while ((c = getopt(argc, argv, "t:xyhad:E:f:F:wz:pm:c:s")) != EOF)
     {
         switch (c)
         {
@@ -926,7 +919,6 @@ int main(
             break;
         case 'w':
             do_sockopts++;
-            porto = optarg;
             break;
         case 'z':
             do_fileopts++;
@@ -1223,7 +1215,7 @@ int main(
         else
             log_msg(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
     }
-    if ((do_sockopts + do_fileopts) > 0 && porto != NULL && sta == 0)
+    if ((do_sockopts + do_fileopts) > 0 && sta == 0)
     {
         int protos = (-1);
         const int max_makesock_attempts = 10;
@@ -1232,12 +1224,13 @@ int main(
         {
             if (do_sockopts > 0)
             {
-                s = makesock(porto, &protos);
+                uint16_t port = *(uint16_t *)config_get(CONFIG_RPKI_PORT);
+                s = makesock(port, &protos);
                 if (s < 0)
                 {
                     makesock_failures++;
                     log_msg(LOG_ERR,
-                            "Failed to listen on port %s (failure #%d)", porto,
+                            "Failed to listen on port %" PRIu16 " (failure #%d)", port,
                             makesock_failures);
                     sleep(1);
                     if (makesock_failures >= max_makesock_attempts)
@@ -1259,7 +1252,7 @@ int main(
                     (void)close(s);
                 }
             }
-            if (do_fileopts > 0)
+            if (do_fileopts > 0 && porto != NULL)
             {
                 if (!isatty(0))
                 {

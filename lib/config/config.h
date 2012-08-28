@@ -7,7 +7,7 @@
 
 enum config_key {
     CONFIG_ROOT,                // $RPKI_ROOT
-    // CONFIG_PROCESS_PORT, // $RPKI_PORT
+    CONFIG_RPKI_PORT,           // $RPKI_PORT
     CONFIG_DATABASE,            // $RPKI_DB
     CONFIG_DATABASE_USER,       // $RPKI_DBUSER
     CONFIG_DATABASE_PASSWORD,   // $RPKI_DBPASS
