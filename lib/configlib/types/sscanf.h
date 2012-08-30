@@ -21,4 +21,22 @@ struct config_type_sscanf_usr_arg config_type_sscanf_arg_int;
 struct config_type_sscanf_usr_arg config_type_sscanf_arg_uint16_t;
 struct config_type_sscanf_usr_arg config_type_sscanf_arg_size_t;
 
+
+char * config_type_sscanf_converter_inverse(
+    void *usr_arg,
+    void *input);
+
+struct config_type_sscanf_inverse_usr_arg {
+    enum {
+        CONFIG_TYPE_SSCANF_SIGNED_INT,
+        CONFIG_TYPE_SSCANF_UNSIGNED_INT,
+        // TODO: relevant types for any other config_type_sscanf_arg_foo
+        //       variables above
+    } type;
+
+    size_t size;
+};
+
+struct config_type_sscanf_inverse_usr_arg config_type_sscanf_inverse_arg_uint16_t;
+
 #endif
