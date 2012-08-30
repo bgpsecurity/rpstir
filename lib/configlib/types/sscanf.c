@@ -90,7 +90,7 @@ char * config_type_sscanf_converter_inverse(
                     value = (intmax_t)(*(int64_t *)input);
                     break;
                 default:
-                    LOG(LOG_ERR, "unknown size of signed integer (%zu)". args->size);
+                    LOG(LOG_ERR, "unknown size of signed integer (%zu)", args->size);
                     return NULL;
             }
 
@@ -123,7 +123,7 @@ char * config_type_sscanf_converter_inverse(
                     value = (uintmax_t)(*(uint64_t *)input);
                     break;
                 default:
-                    LOG(LOG_ERR, "unknown size of unsigned integer (%zu)". args->size);
+                    LOG(LOG_ERR, "unknown size of unsigned integer (%zu)", args->size);
                     return NULL;
             }
 

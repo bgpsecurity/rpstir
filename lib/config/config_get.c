@@ -23,7 +23,7 @@ int main(
 
     OPEN_LOG(PACKAGE_NAME "-config_get", LOG_USER);
 
-    bool config_loadded = false;
+    bool config_loaded = false;
     char * config_value = NULL;
 
     if (my_config_load())
