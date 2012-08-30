@@ -47,6 +47,7 @@ dist_sysconf_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
+pkglibexec_PROGRAMS =
 
 examplesdir = $(docdir)/examples
 
