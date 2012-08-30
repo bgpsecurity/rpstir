@@ -34,6 +34,39 @@ void const *const *config_get_array(
     return (void const *const *)config_values[key].array_value.data;
 }
 
+char * config_find(
+    const char * key)
+{
+    size_t i;
+
+    for (i = 0; i < config_num_options; ++i)
+    {
+        if (strcmp(config_options[i].name, key) == 0)
+        {
+            if (config_options[i].is_array)
+            {
+                LOG(LOG_ERR, "converting configuration option %s to a string "
+                    "is currently not supported because it's an array", key);
+                return NULL;
+            }
+
+            if (config_options[i].value_convert_inverse == NULL)
+            {
+                LOG(LOG_ERR, "configuration option %s's type does not support "
+                    "converting to a string", key);
+                return NULL;
+            }
+
+            return config_options[i].value_convert_inverse(
+                config_options[i].value_convert_inverse_usr_arg,
+                config_values[i].single_value.data);
+        }
+    }
+
+    LOG(LOG_ERR, "configuration option %s not found", key);
+    return NULL;
+}
+
 
 void config_message(
     const struct config_context *context,

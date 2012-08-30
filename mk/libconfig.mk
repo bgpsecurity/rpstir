@@ -10,3 +10,12 @@ lib_config_libconfig_a_SOURCES = \
 
 lib_config_libconfig_a_CFLAGS = \
 	$(CFLAGS_STRICT)
+
+
+pkglibexec_PROGRAMS += lib/config/config_get
+
+lib_config_config_get_LDADD = \
+	$(LDADD_LIBCONFIG)
+
+lib_config_config_get_CFLAGS = \
+	$(CFLAGS_STRICT)
