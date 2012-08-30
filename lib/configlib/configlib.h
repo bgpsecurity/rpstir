@@ -47,6 +47,15 @@ typedef bool (*config_value_converter) (
     const char *input,
     void **data);
 
+/**
+    Converts the result of a config_value_converter back to a string.
+
+    @return a malloc() allocated string, or NULL on error
+*/
+typedef char * (*config_value_converter_inverse) (
+    void *usr_arg,
+    void *input);
+
 /** Deep free data for a config item. */
 typedef void (*config_value_free) (
     void *data);
@@ -69,6 +78,8 @@ struct config_option {
     bool is_array;
     config_value_converter value_convert;
     void *value_convert_usr_arg;
+    config_value_converter_inverse value_convert_inverse;
+    void *value_convert_inverse_usr_arg;
     config_value_free value_free;
     config_array_validator array_validate;
     void *array_validate_usr_arg;
@@ -90,6 +101,19 @@ size_t config_get_length(
 /** Return the values for an array config option. */
 void const * const * config_get_array(
     size_t key);
+
+/**
+    Return a string representation of the config option specified by its name.
+
+    @note This function should not be used by most C programs. It is not meant
+          to be particularly fast, and it leads to repeatedly parsing the same
+          data. This should mainly only be used for interfaces with other
+          languages, e.g. shell.
+
+    @return string that should be free()d, or NULL on error
+*/
+char * config_find(
+    const char * key);
 
 /**
     Load configuration data from a config file.
