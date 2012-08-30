@@ -17,6 +17,7 @@ int main(
         fprintf(stderr, "\n");
         fprintf(stderr, "Print a textual representation of the value\n");
         fprintf(stderr, "for the specified key.\n");
+        exit(EXIT_FAILURE);
     }
 
     const char * config_key = argv[1];
