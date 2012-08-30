@@ -43,8 +43,8 @@ cd $THIS_SCRIPT_DIR
   cd ../
 
 # check for existing loader and fail if so
-if nc -z localhost $RPKI_PORT; then
-    echo "ERROR: port $RPKI_PORT is already in use.  Aborting subsystem test."
+if nc -z localhost `config_get RPKIPort`; then
+    echo "ERROR: port `config_get RPKIPort` is already in use.  Aborting subsystem test."
     exit 3
 fi
 

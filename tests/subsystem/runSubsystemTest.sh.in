@@ -39,15 +39,15 @@ cd $THIS_SCRIPT_DIR
 ./initDB || check_errs $? "initDB failed!"
 
 # check for existing loader and fail if so
-if nc -z localhost $RPKI_PORT; then
-    echo "ERROR: port $RPKI_PORT is already in use.  Aborting subsystem test."
+if nc -z localhost `config_get RPKIPort`; then
+    echo "ERROR: port `config_get RPKIPort` is already in use.  Aborting subsystem test."
     exit 3
 fi
 
 # start loader
 run_bg "rcli-w" rcli -w -p
 LOADER_PID=$!
-while ! nc -z localhost $RPKI_PORT; do
+while ! nc -z localhost `config_get RPKIPort`; do
     sleep 1
 done
 echo "Loader started (pid = $LOADER_PID)..."
@@ -69,7 +69,7 @@ done
 kill $LOADER_PID
 wait $LOADER_PID || true
 # echo Socket state from netstat
-# netstat -ant | grep $RPKI_PORT
+# netstat -ant | grep `config_get RPKIPort`
 
 # display results
 if [ "$NUM_PASSED" -eq "$NUM_TOTAL" ]; then
