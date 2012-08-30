@@ -201,17 +201,12 @@ int main(
         {
             int status;
             char path[MAXREAD];
-            char command[MAXREAD];
             int pipefd[2];
             pid_t cpid;
             /*
              * Initilize buffers to be safe due to issues with OpenBSD
              */
             memset(path, '\0', MAXREAD);
-            memset(command, '\0', MAXREAD);
-
-            snprintf(command, sizeof(command), "%s/bin/rpki-rsync/rsync_aur",
-                     getenv("RPKI_ROOT"));
 
             if (pipe(pipefd) != 0)
             {
@@ -230,13 +225,13 @@ int main(
                 close(pipefd[0]);
                 dup2(pipefd[1], STDOUT_FILENO);
                 close(pipefd[1]);
-                log_msg(LOG_DEBUG, "%s -s -t -f %s -d %s", command,
+                log_msg(LOG_DEBUG, "rsync_aur -s -t -f %s -d %s",
                         log_loc, rep_loc);
                 log_flush();
-                execl(command, command, "-s", "-t", "-f",
-                      log_loc, "-d", rep_loc, (const char *)NULL);
-                perror("execl()");
-                exit(EXIT_FAILURE);     // execl shouldn't return
+                execlp("rsync_aur", "rsync_aur", "-s", "-t", "-f",
+                       log_loc, "-d", rep_loc, (const char *)NULL);
+                perror("execlp()");
+                exit(EXIT_FAILURE);     // execlp shouldn't return
             }
 
             close(pipefd[1]);
@@ -252,8 +247,8 @@ int main(
             fclose(fp);
             wait(&status);
             log_msg((status == 0) ? LOG_INFO : LOG_ERR,
-                    "Process ended with termination status %d (command = %s -s -t -f %s -d %s)\n",
-                    status, command, log_loc, rep_loc);
+                    "Process ended with termination status %d (command = rsync_aur -s -t -f %s -d %s)\n",
+                    status, log_loc, rep_loc);
             log_flush();
         }
         /*
