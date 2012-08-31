@@ -10,6 +10,8 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $RPKI_ROOT/lib/util/trap_errors
 
+CONFORMANCE_ROOT="`config_get RootDir`/tests/conformance"
+
 # Usage
 usage ( ) {
     usagestr="
@@ -105,7 +107,7 @@ Auxiliary Outputs: (not shown in diagram)
 
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+OUTPUT_DIR="$CONFORMANCE_ROOT/raw/root"
 USE_EXISTING_PATCHES=
 
 # Process command line arguments.
@@ -137,7 +139,7 @@ else
     patch_option=
 fi
 
-single_MFT_script="$RPKI_ROOT/tests/conformance/scripts/make_test_MFT.sh"
+single_MFT_script="$CONFORMANCE_ROOT/scripts/make_test_MFT.sh"
 single_MFT_cmd="${single_MFT_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################

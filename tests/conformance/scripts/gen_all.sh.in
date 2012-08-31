@@ -8,21 +8,23 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+. $THIS_SCRIPT_DIR/../../../lib/util/trap_errors
 
 # NOTES
 
-CFSCRIPTS=$RPKI_ROOT/tests/conformance/scripts # conformance scripts
+CONFORMANCE_ROOT="`config_get RootDir`/tests/conformance"
+
+CFSCRIPTS="$CONFORMANCE_ROOT/scripts" # conformance scripts
 hash rr
 hash sed
 
 # Clean out raw/root directory
-cd $RPKI_ROOT/tests/conformance
+cd "$CONFORMANCE_ROOT"
 rm -rf raw/root
 mkdir raw/root
 
 # Build trust anchors
-cd $RPKI_ROOT/tests/conformance/raw
+cd "$CONFORMANCE_ROOT/raw"
 for f in badRootBadAKI badRootBadCRLDP badRootNameDiff root
 do
     rr < $f.raw > $f.cer
@@ -39,7 +41,7 @@ $CFSCRIPTS/gen_all_CRLs.sh -P
 $CFSCRIPTS/gen_all_MFTs.sh -P
 
 # Copy to output directory
-cd $RPKI_ROOT/tests/conformance
+cd "$CONFORMANCE_ROOT"
 rm -rf output
 mkdir -p output
 cp raw/*.cer output/

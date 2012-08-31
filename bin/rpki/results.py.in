@@ -29,8 +29,7 @@ parser.add_option("-v", "--verbose",
 (options, args) = parser.parse_args()
 
 #
-# Get top-level RPKI directory, and compute local repository cache
-# path based on $RPKI_ROOT environment variable.
+# Get top-level RPKI directory, and compute local repository cache path
 #
 
 rpki_root = check_output(["config_get", "RootDir"]).strip().rstrip("/")
