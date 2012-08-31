@@ -16,4 +16,9 @@ struct config_type_string_usr_arg {
 struct config_type_string_usr_arg config_type_string_arg_optional;
 struct config_type_string_usr_arg config_type_string_arg_mandatory;
 
+
+char * config_type_string_converter_inverse(
+    void *usr_arg,
+    void *input);
+
 #endif
