@@ -19,7 +19,7 @@ static const struct config_option config_options[] = {
      "RootDir",
      false,
      config_type_path_converter, NULL,
-     NULL, NULL,
+     config_type_path_converter_inverse, NULL,
      free,
      NULL, NULL,
      "\"" ABS_TOP_SRCDIR "\""},
