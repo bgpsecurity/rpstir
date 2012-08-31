@@ -6,7 +6,7 @@
 
 
 enum config_key {
-    CONFIG_ROOT,                // $RPKI_ROOT
+    CONFIG_ROOT_DIR,            // $RPKI_ROOT
     CONFIG_RPKI_PORT,           // $RPKI_PORT
     CONFIG_DATABASE,            // $RPKI_DB
     CONFIG_DATABASE_USER,       // $RPKI_DBUSER

@@ -14,9 +14,9 @@
 
 /** All available config options */
 static const struct config_option config_options[] = {
-    // CONFIG_ROOT
+    // CONFIG_ROOT_DIR
     {
-     "Root",
+     "RootDir",
      false,
      config_type_path_converter, NULL,
      NULL, NULL,
