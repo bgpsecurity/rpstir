@@ -1,10 +1,10 @@
 #!@SHELL_BASH@ -e
 
-cd $RPKI_ROOT
-
 # set environment variables if not set
 THIS_SCRIPT_DIR=`dirname "$0"`
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
+
+cd $RPKI_ROOT
 
 TAL_FILES=""
 
