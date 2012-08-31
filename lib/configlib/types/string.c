@@ -41,3 +41,27 @@ bool config_type_string_converter(
 struct config_type_string_usr_arg config_type_string_arg_optional = {true};
 
 struct config_type_string_usr_arg config_type_string_arg_mandatory = {false};
+
+
+char * config_type_string_converter_inverse(
+    void *usr_arg,
+    void *input)
+{
+    (void)usr_arg;
+
+    if (input == NULL)
+    {
+        LOG(LOG_ERR, "can't print a NULL string");
+        return NULL;
+    }
+
+    char * ret = strdup((const char *)input);
+
+    if (ret == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        return NULL;
+    }
+
+    return ret;
+}
