@@ -13,7 +13,6 @@ bool config_type_path_converter(
     void **data);
 
 
-static const config_value_converter_inverse config_type_path_converter_inverse =
-    config_type_string_converter_inverse;
+#define config_type_path_converter_inverse config_type_string_converter_inverse
 
 #endif
