@@ -73,6 +73,26 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      NULL},
+
+    // CONFIG_DOWNLOAD_CONCURRENCY
+    {
+     "DownloadConcurrency",
+     false,
+     config_type_sscanf_converter, &config_type_sscanf_arg_size_t,
+     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_size_t,
+     free,
+     NULL, NULL,
+     "24"},
+
+    // CONFIG_RSYNC_LISTEN_PORT
+    {
+     "RsyncListenPort",
+     false,
+     config_type_sscanf_converter, &config_type_sscanf_arg_uint16_t,
+     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_uint16_t,
+     free,
+     NULL, NULL,
+     "3450"},
 };
 
 
