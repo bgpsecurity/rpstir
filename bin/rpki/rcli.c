@@ -863,7 +863,7 @@ int main(
     char *outfull = NULL;
     char *outdir = NULL;
     char *tmpdsn = NULL;
-    char *password = NULL;
+    const char *password = NULL;
     char *ne;
     char *porto = NULL;
     char errmsg[1024];
@@ -1016,8 +1016,8 @@ int main(
         /*
          * These privileged operations will need a password. 
          */
-        password = getenv("RPKI_ROOTPASSWORD"); /* can be defined by
-                                                 * environment variable */
+        password = config_get(CONFIG_DATABASE_ROOT_PASSWORD);
+
         if (password == NULL)   /* env variable does not specify password */
         {
             /*
@@ -1033,8 +1033,6 @@ int main(
          * name" parameter with something that is guaranteed to be valid. 
          */
         tmpdsn = makedsnscm(scmp->dsnpref, "mysql", "root", password);
-        if (password != NULL)
-            memset(password, 0, strlen(password));
         if (tmpdsn == NULL)
         {
             membail();

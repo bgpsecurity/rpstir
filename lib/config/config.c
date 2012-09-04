@@ -64,6 +64,16 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      NULL},
 
+    // CONFIG_DATABASE_ROOT_PASSWORD
+    {
+     "DatabaseRootPassword",
+     false,
+     config_type_string_converter, &config_type_string_arg_optional,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     ""},
+
     // CONFIG_DATABASE_DSN
     {
      "DatabaseDSN",
