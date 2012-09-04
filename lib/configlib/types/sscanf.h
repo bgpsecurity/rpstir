@@ -37,6 +37,7 @@ struct config_type_sscanf_inverse_usr_arg {
     size_t size;
 };
 
+struct config_type_sscanf_inverse_usr_arg config_type_sscanf_inverse_arg_size_t;
 struct config_type_sscanf_inverse_usr_arg config_type_sscanf_inverse_arg_uint16_t;
 
 #endif
