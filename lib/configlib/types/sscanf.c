@@ -144,5 +144,7 @@ char * config_type_sscanf_converter_inverse(
     }
 }
 
+struct config_type_sscanf_inverse_usr_arg config_type_sscanf_inverse_arg_size_t =
+    { CONFIG_TYPE_SSCANF_UNSIGNED_INT, sizeof(size_t) };
 struct config_type_sscanf_inverse_usr_arg config_type_sscanf_inverse_arg_uint16_t =
     { CONFIG_TYPE_SSCANF_UNSIGNED_INT, sizeof(uint16_t) };
