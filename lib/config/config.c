@@ -103,6 +103,16 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "3450"},
+
+    // CONFIG_RPKI_RTR_RETENTION_HOURS
+    {
+     "RpkiRtrRetentionHours",
+     false,
+     config_type_sscanf_converter, &config_type_sscanf_arg_size_t,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "96"},
 };
 
 

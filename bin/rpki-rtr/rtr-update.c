@@ -14,12 +14,6 @@
 #include <inttypes.h>
 #include <time.h>
 
-// number of hours to retain incremental updates
-// should be at least 24 + the maximum time between updates, since need
-// to always have not just all those within the last 24 hours but also
-// one more beyond these
-#define RETENTION_HOURS_DEFAULT 96
-
 static scm *scmp = NULL;
 static scmcon *connection = NULL;
 static scmsrcha *roaSrch = NULL;
@@ -73,17 +67,6 @@ static uint getLastSerialNumber(
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR,
               "create_time desc");
     return lastSerialNum;
-}
-
-/*****
- * allows overriding of retention time for data via environment variable
- *****/
-static int retentionHours(
-    )
-{
-    if (getenv("RTR_RETENTION_HOURS") != NULL)
-        return atoi(getenv("RTR_RETENTION_HOURS"));
-    return RETENTION_HOURS_DEFAULT;
 }
 
 
@@ -409,9 +392,10 @@ int main(
 
     snprintf(msg, sizeof(msg),
              "delete from rtr_update\n"
-             "where create_time < adddate(now(), interval -%d hour)\n"
+             "where create_time < adddate(now(), interval -%zu hour)\n"
              "and serial_num<>%u and serial_num<>%u;",
-             retentionHours(), prevSerialNum, currSerialNum);
+             *(const size_t *)config_get(CONFIG_RPKI_RTR_RETENTION_HOURS),
+             prevSerialNum, currSerialNum);
     sta = statementscm_no_data(connection, msg);
     checkErr(sta < 0, "Can't delete expired update metadata");
 
