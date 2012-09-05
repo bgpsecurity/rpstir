@@ -56,7 +56,7 @@ while [ $N -le "4" ]; do
     run_bg "rcli-w-$N" rcli -w
     LOADER_PID=$!
      echo "Loader started for case ${N}"
-     sleep 5
+     sleep 10
      failures=""
      ./step4 || failures="$failures step4"
      wait "$LOADER_PID" || failures="$failures rcli-w"
