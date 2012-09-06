@@ -5,6 +5,9 @@
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
+#include <libgen.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <util/logutils.h>
 
 struct done_certs done_certs;
@@ -23,33 +26,66 @@ extern char *Xcrldp,
    *Xrpdir;
 
 
-static char *translate_env(
-    char *v)
+/**
+ * @param from Path to file that references to.
+ * @param to Path extracted from the file from.
+ * @return If to is an absolute path, return a copy of to. Otherwise return a
+ *         normalized path to the file to as seen from the directory of from.
+ *         For example, if from is "path/to/foo" and to is "../bar", the return
+ *         value might be "path/to/../bar". On error, return NULL. Regardless
+ *         of the value of from and to, the return value should be passed to
+ *         free().
+ */
+static char *translate_file(
+    const char *from
+    const char *to)
 {
-    /*
-     * Function: Returns the translated value of an environment variable.
-     *           IF none found, returns NULL
-     *
-     * Given input string '$foo/bar', do parameter substitution for the
-     * '$foo' by looking for the environment variable foo, and return the
-     * substituted result in a newly allocated string.  If foo is not in
-     * the environment, return NULL.
-     *
-     * WARNING: this function modifies the input!
-     *
-     * FIXME: this segfaults if the environment variable does not exist,
-     * or if a string begins with '$/'
-     */
-    char *c = strchr(v, (int)'/');
-    if (!c || !*c)
+    if (from == NULL || to == NULL)
+    {
         return NULL;
-    *c = 0;
-    char *rootp = getenv(&v[1]);
-    char *b = (char *)calloc(1, strlen(rootp) + strlen(&c[1]) + 4);
-    if (!b)
+    }
+
+    if (to[0] == '\0')
+    {
         return NULL;
-    sprintf(b, "%s/%s", rootp, &c[1]);
-    return b;
+    }
+
+    if (to[0] == '/')
+    {
+        // to is an absolute path
+        return strdup(to);
+    }
+
+    char * from_for_dirname = strdup(from);
+    if (from_for_dirname == NULL)
+    {
+        return NULL;
+    }
+
+    char * from_dirname = dirname(from_for_dirname);
+
+    size_t relative_path_len = strlen(from_dirname) + 1 + strlen(to) + 1;
+    char * relative_path = malloc(ret_len);
+    if (relative_path == NULL)
+    {
+        free(from_for_dirname);
+        return NULL;
+    }
+
+    snprintf(relative_path, relative_path_len, "%s/%s", from_dirname, to);
+
+    free(from_for_dirname);
+
+    char * absolute_path = realpath(relative_path, NULL);
+
+    free(relative_path);
+
+    if (absolute_path == NULL)
+    {
+        return NULL;
+    }
+
+    return absolute_path;
 }
 
 static char *free_old_key_field(
@@ -62,7 +98,8 @@ static char *free_old_key_field(
 
 static int check_keyring(
     struct keyring *keyring,
-    char *cc)
+    char *cc,
+    const char *file_being_parsed)
 {
     char *b,
        *envp = NULL;
@@ -73,7 +110,7 @@ static int check_keyring(
     {
         if (*cc == '$')
         {
-            if (!(envp = translate_env(cc)))
+            if (!(envp = translate_file(file_being_parsed, cc)))
                 return -1;
             cc = envp;
         }
@@ -616,7 +653,8 @@ int getSKIBlock(
 
 static int parse_privatekey(
     struct keyring *keyring,
-    char *skibuf)
+    char *skibuf,
+    const char *file_being_parsed)
 {
     char *cc;
     if (strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
@@ -625,7 +663,7 @@ static int parse_privatekey(
         return ERR_SCM_BADSKIFILE;
     }
     for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
-    if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc) < 0)
+    if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc, file_being_parsed) < 0)
     {
         snprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
         return ERR_SCM_BADSKIFILE;
@@ -636,7 +674,8 @@ static int parse_privatekey(
 static int parse_topcert(
     char *skibuf,
     int siz,
-    FILE * SKI)
+    FILE * SKI,
+    const char * SKI_filename)
 {
     int ansr = 0,
         val = next_cmd(skibuf, siz, SKI);
@@ -656,7 +695,7 @@ static int parse_topcert(
         for (c = &skibuf[20]; *c == ' '; c++);
         char *envp = c;
         if (*c == '$')
-            envp = translate_env(&skibuf[20]);
+            envp = translate_file(SKI_filename, &skibuf[20]);
         if (!envp)
         {
             snprintf(errbuf, sizeof(errbuf),
@@ -859,6 +898,7 @@ static int parse_tag_section(
 int parse_SKI_blocks(
     struct keyring *keyring,
     FILE * SKI,
+    const char * SKI_filename,
     char *skibuf,
     int siz,
     int *locflagsp)
@@ -885,10 +925,10 @@ int parse_SKI_blocks(
         snprintf(errbuf, sizeof(errbuf), "No private key material");
     }
     else
-        ansr = parse_privatekey(keyring, skibuf);
+        ansr = parse_privatekey(keyring, skibuf, SKI_filename);
 
     if (!ansr)
-        ansr = parse_topcert(skibuf, siz, SKI);
+        ansr = parse_topcert(skibuf, siz, SKI, SKI_filename);
     if (!ansr && (val = next_cmd(skibuf, siz, SKI)) <= 0)
     {
         if (val < 0)

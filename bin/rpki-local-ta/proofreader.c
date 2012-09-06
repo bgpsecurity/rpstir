@@ -127,7 +127,7 @@ int main(
     if (!(tmpstr = fopen(f, "w+")))
         fatal(7, f);
 
-    if ((ansr = parse_SKI_blocks(&keyring, str, inbuf, sizeof(inbuf), &i)) < 0)
+    if ((ansr = parse_SKI_blocks(&keyring, str, argv[1], inbuf, sizeof(inbuf), &i)) < 0)
         fatal(2, errbuf);
     fseek(str, (long)0, 0);
     *inbuf = 0;

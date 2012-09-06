@@ -136,6 +136,7 @@ char *nextword(
 int parse_SKI_blocks(
     struct keyring *,
     FILE *,
+    const char *,
     char *,
     int,
     int *),

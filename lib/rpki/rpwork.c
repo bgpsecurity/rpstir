@@ -1615,7 +1615,7 @@ int read_SKI_blocks(
     if (!SKI)
         ansr = ERR_SCM_NOSKIFILE;
     else if ((ansr =
-              parse_SKI_blocks(&keyring, SKI, skibuf, sizeof(skibuf),
+              parse_SKI_blocks(&keyring, SKI, skiblockfile, skibuf, sizeof(skibuf),
                                &locflags)) >= 0)
     {
         if (!Xcp)
