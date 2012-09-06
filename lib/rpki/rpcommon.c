@@ -37,7 +37,7 @@ extern char *Xcrldp,
  *         free().
  */
 static char *translate_file(
-    const char *from
+    const char *from,
     const char *to)
 {
     if (from == NULL || to == NULL)
@@ -65,7 +65,7 @@ static char *translate_file(
     char * from_dirname = dirname(from_for_dirname);
 
     size_t relative_path_len = strlen(from_dirname) + 1 + strlen(to) + 1;
-    char * relative_path = malloc(ret_len);
+    char * relative_path = malloc(relative_path_len);
     if (relative_path == NULL)
     {
         free(from_for_dirname);
