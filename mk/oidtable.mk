@@ -17,3 +17,6 @@ var_oidtable_ASN1_H = \
 
 var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H)
 	./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)
+
+AM_CPPFLAGS += \
+	-DOIDTABLE='"$(abs_top_builddir)/var/oidtable"'

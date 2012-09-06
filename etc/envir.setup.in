@@ -57,12 +57,6 @@ if [ "${RPKI_DBPASS}x" = "x" ]; then
     export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
 fi
 
-if [ "${OIDTABLE}x" = "x" ]; then
-    DEFAULT_OIDTABLE="$RPKI_ROOT/var/oidtable"
-    echo "Notice: OIDTABLE not set, defaulting to $DEFAULT_OIDTABLE"
-    export OIDTABLE="$DEFAULT_OIDTABLE"
-fi
-
 
 # If mysql acccount needs a password, we must use -p<password> on the
 # mysql command line.  If no password, we must omit the option entirely.
