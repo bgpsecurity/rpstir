@@ -8,6 +8,7 @@
 #include <libgen.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 #include <util/logutils.h>
 
 struct done_certs done_certs;
@@ -101,42 +102,52 @@ static int check_keyring(
     char *cc,
     const char *file_being_parsed)
 {
-    char *b,
-       *envp = NULL;
+    char *b;
     keyring->filename = free_old_key_field(keyring->filename);
     keyring->label = free_old_key_field(keyring->label);
     keyring->password = free_old_key_field(keyring->password);
     if ((cc = nextword(cc)))
     {
-        if (*cc == '$')
+        size_t filename_raw_len = strcspn(cc, " ");
+        if (filename_raw_len <= 0)
         {
-            if (!(envp = translate_file(file_being_parsed, cc)))
-                return -1;
-            cc = envp;
+            return -1;
         }
+
+        char * filename_raw = strndup(cc, filename_raw_len);
+        if (filename_raw == NULL)
+        {
+            return -1;
+        }
+
+        keyring->filename = translate_file(file_being_parsed, filename_raw);
+
+        free(filename_raw);
+        filename_raw = NULL;
+
+        if (keyring->filename == NULL)
+        {
+            return -1;
+        }
+
         for (b = cc; *b > ' '; b++);
         if (*b)
         {
-            keyring->filename = (char *)calloc(1, (b - cc) + 2);
-            if (keyring->filename)
+            if ((cc = nextword(cc)))
             {
-                strncpy(keyring->filename, cc, (b - cc));
-                if ((cc = nextword(cc)))
+                if ((b = strchr(cc, (int)' ')))
                 {
-                    if ((b = strchr(cc, (int)' ')))
+                    keyring->label = (char *)calloc(1, (b - cc) + 2);
+                    if (keyring->label)
                     {
-                        keyring->label = (char *)calloc(1, (b - cc) + 2);
-                        if (keyring->label)
+                        strncpy(keyring->label, cc, (b - cc));
+                        if ((cc = nextword(cc)))
                         {
-                            strncpy(keyring->label, cc, (b - cc));
-                            if ((cc = nextword(cc)))
-                            {
-                                for (b = cc; *b > ' '; b++);
-                                keyring->password =
-                                    (char *)calloc(1, (b - cc) + 2);
-                                strncpy(keyring->password, cc, (b - cc));
-                                return 1;
-                            }
+                            for (b = cc; *b > ' '; b++);
+                            keyring->password =
+                                (char *)calloc(1, (b - cc) + 2);
+                            strncpy(keyring->password, cc, (b - cc));
+                            return 1;
                         }
                     }
                 }
@@ -693,16 +704,14 @@ static int parse_topcert(
         if ((c = strchr(skibuf, (int)'\n')))
             *c = 0;
         for (c = &skibuf[20]; *c == ' '; c++);
-        char *envp = c;
-        if (*c == '$')
-            envp = translate_file(SKI_filename, &skibuf[20]);
-        if (!envp)
+        c = translate_file(SKI_filename, c);
+        if (!c)
         {
             snprintf(errbuf, sizeof(errbuf),
                      "Error translating root cert file name");
             ansr = ERR_SCM_NORPCERT;
         }
-        else if (strlen(envp) >= sizeof(myrootfullname) - 2)
+        else if (strlen(c) >= sizeof(myrootfullname) - 2)
         {
             ansr = ERR_SCM_NORPCERT;
             snprintf(errbuf, sizeof(errbuf),
@@ -710,7 +719,7 @@ static int parse_topcert(
         }
         else
         {
-            strcpy(myrootfullname, envp);
+            strcpy(myrootfullname, c);
             if (get_casn_file(&myrootcert.self, myrootfullname, 0) < 0)
             {
                 snprintf(errbuf, sizeof(errbuf),
@@ -719,17 +728,18 @@ static int parse_topcert(
             }
             else
             {
-                c = strrchr(envp, (int)'/');
-                if (!c)
+                char * slash_in_top_cert = strrchr(c, (int)'/');
+                if (!slash_in_top_cert)
                     ansr = ERR_SCM_NORPCERT;
                 else
                 {
-                    *c = 0;
-                    Xrpdir = (char *)calloc(1, strlen(envp) + 4);
-                    strcpy(Xrpdir, envp);
+                    *slash_in_top_cert = 0;
+                    Xrpdir = (char *)calloc(1, strlen(c) + 4);
+                    strcpy(Xrpdir, c);
                 }
             }
         }
+        free(c);
     }
     return ansr;
 }
