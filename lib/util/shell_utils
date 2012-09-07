@@ -1,0 +1,14 @@
+# Utility functions for shell scripts
+
+warn () {
+    echo "WARNING:" "$@" >&2
+}
+
+error () {
+    echo "ERROR:" "$@" >&2
+}
+
+fatal () {
+    error "$@"
+    exit 1
+}
