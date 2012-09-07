@@ -19,6 +19,7 @@ TAGS
 rpstir-*.tar.gz
 /rpstir-*/
 INSTRUCTIONS
+.dirstamp
 
 # directories generated during program execution
 rsync_cord.config

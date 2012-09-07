@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../envir.setup
-
-../proto/rcli -w $RPKI_PORT -p

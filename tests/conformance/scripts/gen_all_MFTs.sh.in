@@ -1,0 +1,188 @@
+#!@SHELL_BASH@
+
+# gen_all_MFTs.sh - create all MFT test cases for RPKI syntactic
+#                   conformance test
+
+# Set up RPKI environment variables if not already done.
+THIS_SCRIPT_DIR=$(dirname $0)
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+
+# Safe bash shell scripting practices
+. $RPKI_ROOT/lib/util/trap_errors
+
+# Usage
+usage ( ) {
+    usagestr="
+Usage: $0 [options]
+
+Options:
+  -P        \tApply patches instead of prompting user to edit (default = false)
+  -h        \tDisplay this help file
+
+This script creates a large number of MFTs in subdirectories, prompts
+the user multiple times to edit interactively (e.g., in order to
+introduce errors), and captures those edits in '.patch' files (output
+of diff -u).  Later, running $0 with the -P option can replay the
+creation process by automatically applying those patch files instead
+of prompting for user intervention.  In patch mode, existing keys are
+reused from the keys directory, instead of the default of generating
+new keys.
+
+This tool assumes the repository structure in the diagram below.  It
+creates a ton of subdirectories each with a MFT and corresponding CRL.
+
+NOTE: this script does NOT update the manifest issued by root.
+
+               +-----------------------------------+
+               | rsync://rpki.bbn.com/conformance/ |
+               |    +--------+                     |
+         +--------->|  Root  |                     |
+         |     |    |  AIA   |                     |
+         |     |    |  SIA   |                     |
+         |     |    +---|----+                     |
+         |     +--------|--------------------------+
+         |              V
+         |     +----------------------------------------+
+         |     | rsync://rpki.bbn.com/conformance/root/ |
+         |     |   +--------+     +------------+        |
+         |     |   | *Child |     | CRL issued |        |
+         |     |   | CRLDP------->| by Root    |        |
+         +----------- AIA   |     +------------+        |
+               |   |  SIA------+                        |
+               |   +--------+  |  +-----------------+   |
+               |               |  | Manifest issued |   |
+               | Root's Repo   |  | by Root         |   |
+               | Directory     |  +-----------------+   |
+               +---------------|------------------------+
+                               |
+                               V
+	     +-------------------------------------------------+
+             | rsync://rpki.bbn.com/conformance/root/subjname/ |
+             |                                     	       |
+             |     +---------------------------------------+   |
+             |     | *Manifest issued by Child (TEST CASE) |   |
+             |     +---------------------------------------+   |
+             |                                                 |
+             |     +----------------------+                    |
+             |     | *CRL issued by Child |                    |
+             |     +----------------------+                    |
+             |                                                 |
+             | *Child's Repo Directory                         |
+             +-------------------------------------------------+
+
+Inputs:
+  -P - (optional) use patch mode for automatic insertion of errors
+
+Outputs:
+  child CA certificate - inherits AS/IP resources from parent via inherit bit
+  child repo directory - ASSUMED to be a subdirectory of parent's repo. The
+                         new directory will be <outdir>/<subjectname>/
+  crl issued by child - named <subjectname>.crl, and has no entries
+  mft issued by child - named bad<subjectname>.mft, and has one entry (the crl)
+
+  The filename for the mft will be prepended by the string 'bad' by
+  default, though this can be replaced by an arbitrary non-empty
+  string using the -x option.
+
+Auxiliary Outputs: (not shown in diagram)
+  child key pair - <outdir>/<subjectname>.p15
+  child-issued MFT EE cert - <outdir>/<subjectname>/<subjectname>.mft.cer
+  child-issued MFT EE key pair - <outdir>/<subjectname>/<subjectname>.mft.p15
+  patch files - manual edits are saved as diff output in
+                'badMFT<subjectname>.stageN.patch' (N=0..1)
+  key files - generated key pairs for child and EE certs are stored in keys dir
+             as badMFT<filestem>.ee.p15
+    "
+    printf "${usagestr}\n"
+    exit 1
+}
+
+# NOTES
+
+# Variable naming convention -- preset constants and command line
+# arguments are in ALL_CAPS.  Derived/computed values are in
+# lower_case.
+
+
+# Options and defaults
+OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+USE_EXISTING_PATCHES=
+
+# Process command line arguments.
+while getopts Ph opt
+do
+  case $opt in
+      P)
+	  USE_EXISTING_PATCHES=1
+	  ;;
+      h)
+	  usage
+	  ;;
+  esac
+done
+shift $((OPTIND - 1))
+if [ $# != "0" ]
+then
+    usage
+fi
+
+###############################################################################
+# Computed Variables
+###############################################################################
+
+if [ $USE_EXISTING_PATCHES ]
+then
+    patch_option="-P"
+else
+    patch_option=
+fi
+
+single_MFT_script="$RPKI_ROOT/tests/conformance/scripts/make_test_MFT.sh"
+single_MFT_cmd="${single_MFT_script} ${patch_option} -o ${OUTPUT_DIR}"
+
+###############################################################################
+# Check for prerequisite tools and files
+###############################################################################
+
+ensure_file_exists ( ) {
+    if [ ! -e "$1" ]
+    then
+	echo "Error: file not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+	echo "Error: directory not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists "$OUTPUT_DIR"
+ensure_file_exists "${single_MFT_script}"
+
+###############################################################################
+# Generate MFT cases
+###############################################################################
+
+${single_MFT_cmd} 768 MFTWrongType
+${single_MFT_cmd} 769 MFTVersion0
+${single_MFT_cmd} 770 MFTVersion1
+${single_MFT_cmd} 771 MFTNoNum
+${single_MFT_cmd} 772 MFTNegNum
+${single_MFT_cmd} 773 MFTThisUpdUTC
+${single_MFT_cmd} 774 MFTThisUpdFuture
+${single_MFT_cmd} 775 MFTNextUpdUTC
+${single_MFT_cmd} 776 MFTNextUpdPast
+${single_MFT_cmd} 777 MFTHashAlg
+${single_MFT_cmd} 779 MFTFileHashShort
+${single_MFT_cmd} 780 MFTFileHashLong
+${single_MFT_cmd} 781 MFTFileNotIA5
+${single_MFT_cmd} 782 MFTHashOctetStr
+${single_MFT_cmd} 783 MFTDuplicateFileOneHash
+${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
+${single_MFT_cmd} -x good 785 MFTNumMax
+${single_MFT_cmd} -x good 786 MFTNumZero
+${single_MFT_cmd} 787 MFTNumTooBig
