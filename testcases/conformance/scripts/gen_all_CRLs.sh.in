@@ -192,3 +192,8 @@ ${single_CRL_cmd} 658 CRLNoCRLNum
 ${single_CRL_cmd} 659 CRLEntryReason
 ${single_CRL_cmd} 669 CRLNumber2Big
 ${single_CRL_cmd} 670 CRL2CRLNums
+${single_CRL_cmd} -x good 671 CRLEntrySerNumMax
+${single_CRL_cmd} 672 CRLEntrySerNumTooBig
+${single_CRL_cmd} -x good 673 CRLNumberMax
+${single_CRL_cmd} -x good 674 CRLNumberZero
+${single_CRL_cmd} 675 CRLNumberNeg
