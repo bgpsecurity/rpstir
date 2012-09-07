@@ -69,4 +69,7 @@ lib_util_tests_stringutils_test_CFLAGS = \
 TESTS += lib/util/tests/stringutils-test
 
 
+EXTRA_DIST += lib/util/shell_utils
+
+
 EXTRA_DIST += lib/util/trap_errors
