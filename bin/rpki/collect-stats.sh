@@ -21,7 +21,7 @@ STATS_DIR="statistics/$SYNC_START_TIME~$SYNC_END_TIME"
 mkdir "$STATS_DIR" || fatal "could not create $STATS_DIR"
 
 
-cp -R LOGS rcli.log rsync_aur.log rsync_listener.log "$STATS_DIR" \
+cp -R LOGS chaser.log rcli.log rsync_aur.log rsync_listener.log "$STATS_DIR" \
     || fatal "could not copy LOGS"
 
 ls -lR REPOSITORY \
