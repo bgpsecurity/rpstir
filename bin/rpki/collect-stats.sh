@@ -12,7 +12,8 @@ formatted_date () {
 }
 
 SYNC_START_TIME="`formatted_date`"
-run_from_TALs.sh etc/sample-ta/*.tal
+run_from_TALs.sh etc/sample-ta/*.tal \
+    || fatal "error syncing with repositories"
 SYNC_END_TIME="`formatted_date`"
 
 
