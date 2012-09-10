@@ -7,6 +7,7 @@ THIS_SCRIPT_DIR=`dirname "$0"`
 . $THIS_SCRIPT_DIR/../envir.setup
 
 CHASER="$RPKI_ROOT/proto/chaser"
+CHASER_LOG="$RPKI_ROOT/chaser.log"
 RSYNC_CORD_CONF="$RPKI_ROOT/rsync_cord.config"
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
@@ -14,6 +15,11 @@ OLD_LIST="`@MKTEMP@`"
 CUR_LIST="`@MKTEMP@`"
 
 $CHASER "$@" > "$CUR_LIST"
+
+log () {
+	echo "`date`" "$@" >> "$CHASER_LOG"
+	echo "$@" >&2
+}
 
 while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	rm -f "$RSYNC_CORD_CONF"
@@ -26,7 +32,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	printf "DIRS=\"" >> "$RSYNC_CORD_CONF"
 	while read -r -d "" URI; do
 		if printf "%s" "$URI" | grep -q "$BAD_URI_CHARS"; then
-			echo >&2 "Discarding URI: $URI"
+			log "Discarding URI: $URI"
 		elif test -n "$URI"; then
 			if test $DONE_URI -eq 0; then
 				DONE_URI=1
