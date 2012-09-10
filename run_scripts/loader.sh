@@ -5,4 +5,4 @@
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../envir.setup
 
-$RPKI_ROOT/proto/rcli -w $RPKI_PORT -p
+exec $RPKI_ROOT/proto/rcli -w $RPKI_PORT -p
