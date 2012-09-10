@@ -2,7 +2,7 @@
 
 from threading import Thread
 from subprocess import Popen
-import getopt, sys, os, Queue, time, socket, subprocess, logging, commands
+import atexit, getopt, sys, os, Queue, time, socket, subprocess, logging, commands
 
 BLOCK_TIMEOUT = 1
 IP_LISTENER = '127.0.0.1'
@@ -203,6 +203,10 @@ def launch_listener():
         main.debug('Launching rsync listener: RPKI_LOGDIR=%s %s' % \
                        (logDir, cmdline))
         p = Popen(cmdline, shell=True)
+        def stop_listener(p):
+            p.terminate()
+            p.wait()
+        atexit.register(stop_listner, p)
         main.debug('rsync_listener pid: %d' % p.pid)
     else:
         main.info('rsync_listener was already running. Continuing execution.')
