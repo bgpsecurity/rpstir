@@ -50,7 +50,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	rm -f "$OLD_LIST"
 	OLD_LIST="$CUR_LIST"
 	CUR_LIST="`@MKTEMP@`"
-	$CHASER "$@" > "$CUR_LIST"
+	chaser "$@" > "$CUR_LIST"
 done
 
 rm -f "$OLD_LIST" "$CUR_LIST"
