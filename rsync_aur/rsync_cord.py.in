@@ -206,7 +206,7 @@ def launch_listener():
         def stop_listener(p):
             p.terminate()
             p.wait()
-        atexit.register(stop_listner, p)
+        atexit.register(stop_listener, p)
         main.debug('rsync_listener pid: %d' % p.pid)
     else:
         main.info('rsync_listener was already running. Continuing execution.')
