@@ -11,6 +11,8 @@ CHASER_LOG="$RPKI_ROOT/chaser.log"
 RSYNC_CORD_CONF="$RPKI_ROOT/rsync_cord.config"
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
+touch "$CHASER_LOG"
+
 OLD_LIST="`@MKTEMP@`"
 CUR_LIST="`@MKTEMP@`"
 
