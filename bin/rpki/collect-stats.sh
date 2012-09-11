@@ -47,3 +47,9 @@ query.sh -t roa -d pathname -d flags -i \
 query.sh -t manifest -d pathname -d this_upd -d next_upd -d flags -i \
     > "$STATS_DIR/query.mft" \
     || fatal "could not query manifests"
+
+
+tar -cpzf "$STATS_DIR.tgz" -C `dirname "$STATS_DIR"` `basename "$STATS_DIR"` \
+    || fatal "could not make $STATS_DIR.tgz"
+
+rm -rf "$STATS_DIR" || fatal "could not remove directory $STATS_DIR"
