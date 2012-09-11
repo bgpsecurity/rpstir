@@ -22,13 +22,15 @@ STATS_DIR="statistics/$SYNC_START_TIME~$SYNC_END_TIME"
 mkdir "$STATS_DIR" || fatal "could not create $STATS_DIR"
 
 
-cp -R LOGS chaser.log rcli.log rsync_aur.log rsync_listener.log "$STATS_DIR" \
-    || fatal "could not copy LOGS"
-
-ls -lR REPOSITORY \
-    > "$STATS_DIR/REPOSITORY.list" \
-    || fatal "could not list REPOSITORY"
-
+cp -R \
+    LOGS \
+    REPOSITORY \
+    chaser.log \
+    rcli.log \
+    rsync_aur.log \
+    rsync_listener.log \
+    "$STATS_DIR" \
+    || fatal "could not copy files"
 
 query.sh -t cert -d pathname -d valfrom -d valto -d flags -i \
     > "$STATS_DIR/query.cer" \
