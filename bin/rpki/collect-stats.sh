@@ -2,7 +2,7 @@
 
 cd `dirname "$0"`/../..
 
-. etc/envir.setup
+. etc/envir.setup > /dev/null
 
 . lib/util/shell_utils
 
@@ -13,6 +13,7 @@ formatted_date () {
 
 SYNC_START_TIME="`formatted_date`"
 run_from_TALs.sh etc/sample-ta/*.tal \
+    > run.log 2>&1 \
     || fatal "error syncing with repositories"
 SYNC_END_TIME="`formatted_date`"
 
@@ -29,6 +30,7 @@ cp -R \
     rcli.log \
     rsync_aur.log \
     rsync_listener.log \
+    run.log \
     "$STATS_DIR" \
     || fatal "could not copy files"
 
