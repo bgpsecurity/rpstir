@@ -388,13 +388,6 @@ You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
 
-If the tests fail because of not enough output lines, it's possible
-that it's because of a known bug (#174). The workaround is to insert
-sleep commands into subsystemTests/runSubsystemTest.sh at the bottom
-of the loop that contains the line "./step${TESTID}.${N}". The amount
-of time needed to sleep depends on a number of factors and can be
-increased (within limits) until make check succeeds.
-
 If you have valgrind installed, you can run some tests under valgrind
 by running the command:
 
@@ -427,8 +420,11 @@ Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server (rtr/rpstir-rtrd)         Continuously as daemon
-RTR updater (rtr/rpstir-rtr-update)  After each call to chaser
+RTR updater (rtr/rpstir-rtr-update)  After each call to chaser,
+                                     also before runing the RTR
+                                     server for the first time.
+RTR Server (rtr/rpstir-rtrd)         Continuously as daemon.
+                                     You must run the RTR updater first, though.
 RTR client (rtr/rtr-test-client)     On demand by user
 
 Query Client (query.sh)              On demand by user

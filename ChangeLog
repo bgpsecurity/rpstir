@@ -1,6 +1,6 @@
 next
 
-	* TODO
+	* Fix compatibility with older rsync servers.
 
 0.4
 
