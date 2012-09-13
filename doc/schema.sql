@@ -27,7 +27,30 @@ CREATE TABLE rpstir_rpki_object (
   -- 2: passes single-file validity checks
   status tinyint unsigned NOT NULL DEFAULT 0,
 
-  PRIMARY KEY (hash, file_type)
+  -- an error code, if appropriate
+  -- this is a foreign key to rpstir_rpki_object_status.id
+  status_reason int unsigned DEFAULT NULL,
+
+  -- extra information about the status, if applicable given the value of status_reason
+  status_explanation text DEFAULT NULL,
+
+  PRIMARY KEY (hash, file_type),
+
+  CHECK (status_explanation IS NULL OR status_reason IS NOT NULL)
+);
+
+-- information for a status code
+-- (see rpstir_rpki_object.status_reason and rpstir_rpki_object.status_explanation)
+CREATE TABLE rpstir_rpki_object_status (
+  id int unsigned NOT NULL,
+
+  -- what the status code indicates
+  message text NOT NULL,
+
+  -- a description of the format of the contents of rpstir_rpki_object.status_explanation
+  explanation_contents text DEFAULT NULL,
+
+  PRIMARY KEY (id)
 );
 
 -- state of a single attempt to download from a URI
