@@ -1,6 +1,7 @@
 next
 
 	* Fix compatibility with older rsync servers.
+	* Log when a URI is dropped from the list to synchronize.
 
 0.4
 
