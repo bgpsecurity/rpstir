@@ -420,8 +420,11 @@ Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server (rpstir-rpki-rtr-daemon)  Continuously as daemon
-RTR updater (rpstir-rpki-rtr-update) After each call to chaser
+RTR updater (rpstir-rpki-rtr-update) After each call to chaser,
+                                     also before runing the RTR
+                                     server for the first time.
+RTR Server (rpstir-rpki-rtr-daemon)  Continuously as daemon.
+                                     You must run the RTR updater first, though.
 RTR client (rpstir-rpki-rtr-test-client)  On demand by user
 
 Query Client (query.sh)              On demand by user
