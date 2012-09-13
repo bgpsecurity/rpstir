@@ -1,6 +1,7 @@
 next
 
-	* TODO
+	* Fix compatibility with older rsync servers.
+	* Support 20-octet serial numbers.
 
 0.4
 
