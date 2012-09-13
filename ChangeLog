@@ -1,7 +1,7 @@
 next
 
 	* Fix compatibility with older rsync servers.
-	* Support 20-octet serial numbers.
+	* Support 20-octet serial numbers, manifest numbers, and CRL numbers.
 
 0.4
 
