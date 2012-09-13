@@ -4,6 +4,7 @@ next
 	* Simplify internal dependencies.
 	* Switch to a single Makefile to speed up parallel compilation.
 	* Run much more code optionally under CHECKTOOL (e.g. valgrind).
+	* Remove some duplicate code.
 
 0.4
 
