@@ -54,15 +54,15 @@ class RSYNC_thread(Thread):
             #build and run the rsync command. This may block for awhile but that
             #is the beauty of the multiple threads.
             rsyncCom = [rsyncDir,
-                        "-Lirzs",
+                        "-Lirz",
                         "--del",
                         #"--max-size=10K",
                         "--timeout=10",
                         "--contimeout=10",
                         "--no-motd",
                         "--",
-                        "rsync://%s/" % nextURI,
-                        "%s/%s" % (repoDir, nextURI)]
+                        "rsync://%s/" % nextURI.replace("\\", "\\\\").replace(" ", "\\ "),
+                        "%s/%s" % (repoDir, nextURI.replace("\\", "\\\\").replace(" ", "\\ "))]
 
             with open(rsync_log, 'w') as rsync_log_file:
                 p = Popen(rsyncCom, stdout=rsync_log_file, stderr=subprocess.PIPE)
