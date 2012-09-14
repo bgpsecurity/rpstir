@@ -326,9 +326,14 @@ clients' public keys to allow SSH login.
 
 2.3.1 Configuration File
 
-Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf. Open ~/.@PACKAGE_NAME@.conf
-in an editor, read the comments, and edit the file as directed by the
-comments.
+Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf and make ~/.@PACKAGE_NAME@.conf
+only readable by the owner because it will contain database password(s):
+
+   cp etc/@PACKAGE_NAME@.conf ~/.@PACKAGE_NAME@.conf
+   chmod 600 ~/.@PACKAGE_NAME@.conf
+
+Open ~/.@PACKAGE_NAME@.conf in an editor, read the comments, and edit the file as
+directed by the comments.
 
 
 2.4 SSH Subsystem
