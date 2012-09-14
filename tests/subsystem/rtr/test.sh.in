@@ -128,7 +128,7 @@ compare () {
 init () {
 	rcli -x -t . -y
 	rcli -y -F "`pwd`/root.cer"
-	echo "INSERT INTO rtr_session VALUES ($SESSION);" | $RPKI_MYSQL_CMD
+	echo "INSERT INTO rtr_session VALUES ($SESSION);" | mysql_cmd
 
 	SERIAL=""
 	ASNS_IN_DB=""
@@ -166,7 +166,7 @@ drop_serial () {
 	printf 'DELETE rtr_incremental FROM rtr_incremental LEFT JOIN rtr_update ON rtr_incremental.serial_num = rtr_update.serial_num WHERE rtr_update.prev_serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
 	printf 'UPDATE rtr_update SET prev_serial_num = NULL WHERE prev_serial_num = %u;\n' "$DROP_SERIAL" >> "$COMMAND_FILE"
 
-	$RPKI_MYSQL_CMD < "$COMMAND_FILE"
+	mysql_cmd < "$COMMAND_FILE"
 
 	rm -f "$COMMAND_FILE"
 }
