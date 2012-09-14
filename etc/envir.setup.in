@@ -15,66 +15,24 @@
 # . $THIS_SCRIPT_DIR/../envir.setup
 #
 
-DEFAULT_RPKI_ROOT=${HOME}/trunk  # caller should set RPKI_ROOT
-DEFAULT_RPKI_PORT=7344
-DEFAULT_RPKI_DB=rpkidb7
-DEFAULT_RPKI_DBUSER=rpki
-DEFAULT_RPKI_DBPASS=bbn
-DEFAULT_RPKI_TCOUNT=24
-DEFAULT_RPKI_LISTPORT=3450
-DEFAULT_RPKI_DSN=myodbc3
-
-if [ "${RPKI_ROOT}x" = "x" ]; then
-    echo Warning: RPKI_ROOT not set, defaulting to $DEFAULT_RPKI_ROOT
-    export RPKI_ROOT=$DEFAULT_RPKI_ROOT
-fi
-if [ "${RPKI_DSN}x" = "x" ]; then
-    echo Warning: RPKI_DSN not set, defaulting to $DEFAULT_RPKI_DSN
-    export RPKI_DSN=$DEFAULT_RPKI_DSN
-fi
-if [ "${RPKI_TCOUNT}x" = "x" ]; then
-    echo Warning: RPKI_TCOUNT not set, defaulting to $DEFAULT_RPKI_TCOUNT
-    export RPKI_TCOUNT=$DEFAULT_RPKI_TCOUNT
-fi
-if [ "${RPKI_LISTPORT}x" = "x" ]; then
-    echo Warning: RPKI_LISTPORT not set, defaulting to $DEFAULT_RPKI_LISTPORT
-    export RPKI_LISTPORT=$DEFAULT_RPKI_LISTPORT
-fi
-if [ "${RPKI_PORT}x" = "x" ]; then
-    echo Warning: RPKI_PORT not set, defaulting to $DEFAULT_RPKI_PORT
-    export RPKI_PORT=$DEFAULT_RPKI_PORT;
-fi
-if [ "${RPKI_DB}x" = "x" ]; then
-    echo Warning: RPKI_DB not set, defaulting to $DEFAULT_RPKI_DB
-    export RPKI_DB=$DEFAULT_RPKI_DB;
-fi
-if [ "${RPKI_DBUSER}x" = "x" ]; then
-    echo Warning: RPKI_DBUSER not set, defaulting to $DEFAULT_RPKI_DBUSER
-    export RPKI_DBUSER=$DEFAULT_RPKI_DBUSER
-fi
-if [ "${RPKI_DBPASS}x" = "x" ]; then
-    echo Warning: RPKI_DBPASS not set, defaulting to $DEFAULT_RPKI_DBPASS
-    export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
-fi
-
-
-# If mysql acccount needs a password, we must use -p<password> on the
-# mysql command line.  If no password, we must omit the option entirely.
-if [ "${RPKI_DBPASS}x" = "x" ]; then
-    export RPKI_DBPASS_OPTION=
-else
-    export RPKI_DBPASS_OPTION="-p${RPKI_DBPASS}"
-fi
-
-# MySQL command line which reads statements from stdin
-export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 
 # Path to transitional configuration file
 if [ -z "$RPSTIR_CONFIG" ]; then
-    export RPSTIR_CONFIG="$RPKI_ROOT/etc/rpstir.conf"
+    export RPSTIR_CONFIG="@ABS_TOP_SRCDIR@/etc/rpstir.conf"
 fi
 
 CONFIG_ROOT_DIR=`config_get RootDir`
+
+
+# MySQL command line which reads statements from stdin
+export RPKI_MYSQL_CMD="mysql `config_get Database` -u `config_get DatabaseUser`"
+
+# XXX: password should not be in environment variable or on command line
+if DBPASS=`config_get DatabasePassword 2>/dev/null`; then
+    export RPKI_MYSQL_CMD="$RPKI_MYSQL_CMD -p$DBPASS"
+fi
+unset DBPASS
+
 
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
