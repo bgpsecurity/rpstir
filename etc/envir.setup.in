@@ -16,17 +16,9 @@
 #
 
 
-# Path to transitional configuration file
-if [ -z "$RPSTIR_CONFIG" ]; then
-    export RPSTIR_CONFIG="@ABS_TOP_SRCDIR@/etc/rpstir.conf"
-fi
-
-CONFIG_ROOT_DIR=`config_get RootDir`
-
-
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
-find "$RPKI_ROOT/bin" -type d -print > "$BIN_DIRS"
+find "@abs_top_builddir@/bin" -type d -print > "$BIN_DIRS"
 while read path_dir; do
     case "$path_dir" in
         */tests | */tests/*)
@@ -39,6 +31,14 @@ done < "$BIN_DIRS"
 export PATH
 rm -f "$BIN_DIRS"
 unset BIN_DIRS
+
+
+# Path to transitional configuration file
+if [ -z "$RPSTIR_CONFIG" ]; then
+    export RPSTIR_CONFIG="@abs_top_srcdir@/etc/rpstir.conf"
+fi
+
+CONFIG_ROOT_DIR=`config_get RootDir`
 
 
 # MySQL command line which reads statements from stdin
