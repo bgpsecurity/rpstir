@@ -24,16 +24,6 @@ fi
 CONFIG_ROOT_DIR=`config_get RootDir`
 
 
-# MySQL command line which reads statements from stdin
-export RPKI_MYSQL_CMD="mysql `config_get Database` -u `config_get DatabaseUser`"
-
-# XXX: password should not be in environment variable or on command line
-if DBPASS=`config_get DatabasePassword 2>/dev/null`; then
-    export RPKI_MYSQL_CMD="$RPKI_MYSQL_CMD -p$DBPASS"
-fi
-unset DBPASS
-
-
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
 find "$RPKI_ROOT/bin" -type d -print > "$BIN_DIRS"
@@ -49,6 +39,36 @@ done < "$BIN_DIRS"
 export PATH
 rm -f "$BIN_DIRS"
 unset BIN_DIRS
+
+
+# MySQL command line which reads statements from stdin
+mysql_cmd () {
+    local option_file ret
+
+    option_file="`@MKTEMP@`" || return 1
+
+    {
+        echo "[client]"
+        echo "database=\"`config_get Database`\""
+        echo "user=\"`config_get DatabaseUser`\""
+    } > "$option_file"
+
+    # put the password in the option file
+    # NOTE: the password should not be stored in an environment variable
+    #       or passed on the command line to echo or printf
+    if config_get DatabasePassword > /dev/null 2>&1; then
+        printf "password=\"" >> "$option_file"
+        config_get DatabasePassword >> "$option_file"
+        echo "\"" >> "$option_file"
+    fi
+
+    mysql --defaults-extra-file="$option_file" "$@" || ret=$?
+
+    rm -f "$option_file"
+
+    return $ret
+}
+
 
 ############################################################################
 # Shell function for checking return codes for error (swiped from
