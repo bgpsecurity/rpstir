@@ -20,7 +20,7 @@ Table of Contents
       2.2.2 Configure
       2.2.3 Build the Executables
     2.3 RPKI User Account
-      2.3.1 Environment Variables
+      2.3.1 Configuration File
     2.4 SSH Subsystem
     2.5 Self Test
     2.6 Post-Installation Procedures
@@ -325,39 +325,11 @@ especially if the default values need to be overridden.  It also
 provides a place, ~/.ssh/authorized_keys, to put all the RPKI-RTR
 clients' public keys to allow SSH login.
 
-2.3.1 Environment Variables
+2.3.1 Configuration File
 
-There are several environment variables used throughout the scripts
-and the code:
-
-required: RPKI_ROOT - full path to the top-level directory of the RPKI tree
-required: RPKI_PORT - port number on which the loader and feeder communicate
-required: RPKI_DB - name of the MySQL database used to hold RPKI data
-required: RPKI_DBUSER - username for logging into the MySQL database
-required: RPKI_DBPASS - password for logging into the MySQL database, if any
-required: RPKI_DSN - the DSN for db connection (e.g. "myodbc3-np")
-optional: RPKI_ROOTPASSWORD - the MySQL root password
-optional: RPKI_LISTPORT - port number for use by coordinator of parallel rsync
-
-Set these environment variables to match your installation.  You may
-choose any unused ports for RPKI_PORT and RPKI_LISTPORT.
-
-Some variables are required for the operation of the RPKI software.
-Each script will check for the required environment, and if any
-variables are not set, the script will warn the user and automatically
-set them to the following defaults:
-
-RPKI_DB = rpkidb7
-RPKI_PORT = 7344
-RPKI_ROOT = ${HOME}/rpki
-RPKI_DBUSER = rpki
-RPKI_DBPASS = bbn
-RPKI_DSN = myodbc3
-RPKI_LISTPORT = 3450
-
-If you ever need to directly run the binaries instead of running the
-scripts, there will be no setting of defaults for environment
-variables, so make sure to set these yourself.
+Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf. Open ~/.@PACKAGE_NAME@.conf
+in an editor, read the comments, and edit the file as directed by the
+comments.
 
 
 2.4 SSH Subsystem
