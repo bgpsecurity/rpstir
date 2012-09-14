@@ -166,13 +166,12 @@ ForceTrace      = Yes
 
 Then edit odbc.ini to set up a couple of system data sources.  This is
 slightly confusing: the user, password, and database name are actually
-ignored because they will be overridden by the RPKI software via
-environment variables.  However, depending on whether your database
-user has a password, in future steps below you will need to remember
-to set your RPKI_DSN variable to choose the DSN that is expecting a
-password (e.g. "myodbc3") or no password (e.g. "myodbc3-np").  Here is
-an example of a working odbc.ini that corresponds to the odbcinst.ini
-above:
+ignored because they will be overridden by the RPKI software.  However,
+depending on whether your database user has a password, in future steps
+below you will need to remember to set your DatabaseDSN configuration
+option to choose the DSN that is expecting a password (e.g. "myodbc3")
+or no password (e.g. "myodbc3-np").  Here is an example of a working
+odbc.ini that corresponds to the odbcinst.ini above:
 
 -----------------------------------------------------------------------------
 ;
@@ -432,11 +431,11 @@ to the file, additional_rsync_uris.config.
 3.1.2 Clear database and local repository cache.
 
 First, clear any existing local cache and call the initDB script.
-This deletes the database, if any, with the name RPKI_DB and sets up a
-new database with all the right tables.  Be prepared to enter the root
-MySQL password twice.
+This deletes the database, if any, configured in ~/.@PACKAGE_NAME@.conf
+and sets up a new database with all the right tables. Be prepared to
+enter the root MySQL password twice.
 
-    cd $RPKI_ROOT
+    # cd to @PACKAGE_NAME@'s root directory
     rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log
     mkdir -p REPOSITORY
     mkdir -p LOGS
@@ -468,7 +467,8 @@ of their choice.  For testing purposes, these instructions use Rob
 Austein's collection of sample trust anchors found at
 http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
 
-    cd $RPKI_ROOT
+    # cd to @PACKAGE_NAME@'s root directory
+
     # The following three commands retrieve three example long-term
     # trust anchors in the form of TALs.  Operationally, these TALs
     # must be obtained through a trusted channel, not HTTP!
@@ -677,7 +677,7 @@ to use rcli, it is important to check and make sure that your MySQL
 installation is correct.  Try the following command (drop the '-p' if
 your MySQL user has no password):
 
-    mysql --user=$RPKI_DBUSER -p
+    mysql --user=YOUR_DB_USER -p
 
 This should connect you to the database and give a "mysql> " prompt
 back. If it does not, then your MySQL and/or ODBC installation is not
