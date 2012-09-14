@@ -432,6 +432,10 @@ Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
 
+NOTE: the RTR updater (rtr/rpstir-rtr-update) requires a spec file.
+See proto/sampleQuerySpecs for an example file. You can use that
+example or write your own.
+
 
 2.6.2 Adjust Permissions
 
