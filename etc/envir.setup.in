@@ -74,6 +74,8 @@ if [ -z "$RPSTIR_CONFIG" ]; then
     export RPSTIR_CONFIG="$RPKI_ROOT/etc/rpstir.conf"
 fi
 
+CONFIG_ROOT_DIR=`config_get RootDir`
+
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
 find "$RPKI_ROOT/bin" -type d -print > "$BIN_DIRS"
