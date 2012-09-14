@@ -16,7 +16,7 @@
 #
 
 
-CONFIG_ROOT_DIR=`config_get RootDir`
+CONFIG_ROOT_DIR=`@abs_top_builddir@/bin/config/config_get RootDir`
 
 
 # add all binaries to the path
