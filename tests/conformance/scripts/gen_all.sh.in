@@ -12,7 +12,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 
 # NOTES
 
-CONFORMANCE_ROOT="`config_get RootDir`/tests/conformance"
+CONFORMANCE_ROOT="$CONFIG_ROOT_DIR/tests/conformance"
 
 CFSCRIPTS="$CONFORMANCE_ROOT/scripts" # conformance scripts
 hash rr

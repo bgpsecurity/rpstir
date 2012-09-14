@@ -9,9 +9,9 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
-CONFORMANCE_ROOT="`config_get RootDir`/tests/conformance"
+CONFORMANCE_ROOT="$CONFIG_ROOT_DIR/tests/conformance"
 
 # Usage
 usage ( ) {

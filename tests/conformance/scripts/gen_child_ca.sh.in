@@ -6,7 +6,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices - exit w/ failure on any error
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -105,10 +105,10 @@ PREFIX="bad"
 OUTPUT_DIR="."
 KEYS_DIR="."
 USE_EXISTING_KEYS=
-CACERT_TEMPLATE="$RPKI_ROOT/var/templates/ca_template.cer"
-EECERT_TEMPLATE="$RPKI_ROOT/var/templates/ee_template.cer"
-CRL_TEMPLATE="$RPKI_ROOT/var/templates/crl_template.crl"
-MFT_TEMPLATE="$RPKI_ROOT/var/templates/M.man"
+CACERT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/ca_template.cer"
+EECERT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/ee_template.cer"
+CRL_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/crl_template.crl"
+MFT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/M.man"
 
 # Process command line arguments.
 while getopts b:o:x:d:Kh opt

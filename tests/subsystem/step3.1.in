@@ -4,10 +4,10 @@
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
 # test functions
-. $RPKI_ROOT/tests/test.include
+. $CONFIG_ROOT_DIR/tests/test.include
 
 echo "Loading data"
 rsync_aur -s -t -f test3.1a.log -w -e -i -d $THIS_SCRIPT_DIR/testcases || \

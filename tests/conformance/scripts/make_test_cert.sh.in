@@ -16,7 +16,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
 # Usage
 usage ( ) {
@@ -109,10 +109,10 @@ Explanation of outputs, not in original order:
 
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
-PATCHES_DIR="$RPKI_ROOT/tests/conformance/raw/patches"
-ROOT_KEY_PATH="$RPKI_ROOT/tests/conformance/raw/root.p15"
-TEMPLATE_CERT_RAW="$RPKI_ROOT/tests/conformance/raw/templates/goodCert.raw"
+OUTPUT_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/root"
+PATCHES_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/patches"
+ROOT_KEY_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.p15"
+TEMPLATE_CERT_RAW="$CONFIG_ROOT_DIR/tests/conformance/raw/templates/goodCert.raw"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined

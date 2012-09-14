@@ -6,7 +6,7 @@ cd "`dirname "$0"`"
 
 TEST_LOG_NAME=rtr
 STRICT_CHECKS=1
-. $RPKI_ROOT/tests/test.include
+. $CONFIG_ROOT_DIR/tests/test.include
 
 
 SERVER="@PACKAGE_NAME@-rpki-rtr-daemon"

@@ -22,13 +22,13 @@ fi
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
 # for the run and run_bg functions
 export TEST_LOG_NAME=subsys4
 
 # test functions
-. $RPKI_ROOT/tests/test.include
+. $CONFIG_ROOT_DIR/tests/test.include
 
 cd $THIS_SCRIPT_DIR
 

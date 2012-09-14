@@ -4,7 +4,7 @@
 THIS_SCRIPT_DIR=`dirname "$0"`
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-cd "`config_get RootDir`"
+cd "$CONFIG_ROOT_DIR"
 
 TAL_FILES=""
 

@@ -5,7 +5,7 @@ cd "`dirname "$0"`"
 
 TEST_LOG_NAME=chaser
 STRICT_CHECKS=1
-. "$RPKI_ROOT"/tests/test.include
+. "$CONFIG_ROOT_DIR"/tests/test.include
 
 #===============================================================================
 compare () {

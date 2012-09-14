@@ -10,7 +10,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $THIS_SCRIPT_DIR/../../../lib/util/trap_errors
 
-CONFORMANCE_ROOT="`config_get RootDir`/tests/conformance"
+CONFORMANCE_ROOT="$CONFIG_ROOT_DIR/tests/conformance"
 
 # Usage
 usage ( ) {
