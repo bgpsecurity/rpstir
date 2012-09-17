@@ -8,6 +8,9 @@ AC_SUBST([PACKAGE_LONGNAME])
 PACKAGE_NAME_UC="RPSTIR"
 AC_SUBST([PACKAGE_NAME_UC])
 AC_DEFINE_UNQUOTED([PACKAGE_NAME_UC], ["$PACKAGE_NAME_UC"])
+CONFIG_ENV_VAR="RPSTIR_CONFIG"
+AC_SUBST([CONFIG_ENV_VAR])
+AC_DEFINE_UNQUOTED([CONFIG_ENV_VAR], ["$CONFIG_ENV_VAR"])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
@@ -404,6 +407,9 @@ AC_CONFIG_FILES([tests/conformance/scripts/make_test_MFT.sh],
 
 AC_CONFIG_FILES([tests/conformance/scripts/make_test_cert.sh],
                 [chmod +x tests/conformance/scripts/make_test_cert.sh])
+
+AC_CONFIG_FILES([tests/conformance/scripts/run_tests.sh],
+                [chmod +x tests/conformance/scripts/run_tests.sh])
 
 AC_CONFIG_FILES([tests/subsystem/testcases/tools/create_cert.py],
                 [chmod +x tests/subsystem/testcases/tools/create_cert.py])

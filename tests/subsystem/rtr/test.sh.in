@@ -18,6 +18,7 @@ WRONG_SESSION=4242
 SERVER_START_TIMEOUT=10
 SERVER_STOP_TIMEOUT=10
 CLIENT_MULTIPLE_TIMEOUT=120
+export @CONFIG_ENV_VAR@=test.conf
 
 client_raw () {
 	SUBTEST_NAME="$1"
@@ -153,7 +154,7 @@ make_serial () {
 		rcli -y -f "`pwd`/as-$ASN.roa"
 	done
 
-	"$UPDATE" querySpecs "$SERIAL"
+	"$UPDATE" "$SERIAL"
 }
 
 drop_serial () {

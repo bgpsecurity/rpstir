@@ -126,10 +126,10 @@ int main(
     int first_time = 0;
     int force_update = 0;
 
-    if (argc < 2 || argc > 3)
+    if (argc < 1 || argc > 2)
     {
         fprintf(stderr,
-                "Usage: %s <staleness spec file> [<next serial number>]\n",
+                "Usage: %s [<next serial number>]\n",
                 argv[0]);
         fprintf(stderr, "\n");
         fprintf(stderr,
@@ -224,10 +224,10 @@ int main(
     {
         prevSerialNum = getLastSerialNumber(connection, scmp);
     }
-    if (argc > 2)
+    if (argc > 1)
     {
         force_update = 1;
-        if (sscanf(argv[2], "%" SCNu32, &currSerialNum) != 1)
+        if (sscanf(argv[1], "%" SCNu32, &currSerialNum) != 1)
         {
             fprintf(stderr,
                     "Error: next serial number must be a nonnegative integer\n");
@@ -258,7 +258,7 @@ int main(
         checkErr(sta < 0,
                  "Can't get results of querying rtr_update for unusual corner cases\n");
 
-        if (argc > 2)
+        if (argc > 1)
         {
             checkErr(dont_proceed,
                      "Error: rtr_update is full or in an unusual state, or the specified next serial number already exists\n");
@@ -272,7 +272,7 @@ int main(
 
     // setup up the query if this is the first time
     // note that the where string is set to only select valid roa's, where
-    // the definition of valid is given by the staleness specs
+    // the definition of valid is given by the configuration file
     if (roaSrch == NULL)
     {
         QueryField *field;
@@ -284,7 +284,6 @@ int main(
         field = findField("ski");
         addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
         roaSrch->wherestr[0] = 0;
-        parseStalenessSpecsFile(argv[1]);
         addQueryFlagTests(roaSrch->wherestr, 0);
         roaTable = findtablescm(scmp, "roa");
         checkErr(roaTable == NULL, "Cannot find table roa\n");

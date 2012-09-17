@@ -2,14 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "configlib/types/bool.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string.h"
 
 #include "config.h"
-
-
-#define CONFIG_ENV_VAR PACKAGE_NAME_UC "_CONFIG"
 
 
 /** All available config options */
@@ -113,6 +111,56 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "96"},
+
+    // CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN
+    {
+     "RPKIAllowStaleValidationChain",
+     false,
+     config_type_bool_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "no"},
+
+    // CONFIG_RPKI_ALLOW_NO_MANIFEST
+    {
+     "RPKIAllowNoManifest",
+     false,
+     config_type_bool_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "yes"},
+
+    // CONFIG_RPKI_ALLOW_STALE_CRL
+    {
+     "RPKIAllowStaleCRL",
+     false,
+     config_type_bool_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "yes"},
+
+    // CONFIG_RPKI_ALLOW_STALE_MANIFEST
+    {
+     "RPKIAllowStaleManifest",
+     false,
+     config_type_bool_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "yes"},
+
+    // CONFIG_RPKI_ALLOW_NOT_YET
+    {
+     "RPKIAllowNotYet",
+     false,
+     config_type_bool_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "no"},
 };
 
 

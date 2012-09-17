@@ -75,7 +75,7 @@ check_DATA += \
 dist_check_DATA += \
 	tests/subsystem/rtr/*.correct \
 	tests/subsystem/rtr/*.options \
-	tests/subsystem/rtr/querySpecs
+	tests/subsystem/rtr/test.conf
 
 tests/subsystem/rtr/%.key:
 	bin/rpki-object/gen_key "$@" 2048

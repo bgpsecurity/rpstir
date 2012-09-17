@@ -13,6 +13,8 @@
 #include <string.h>
 #include <mysql.h>
 
+#include "config/config.h"
+
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
@@ -21,99 +23,20 @@
 #include "err.h"
 #include "myssl.h"
 
-static int rejectStaleChain = 0;
-static int rejectStaleManifest = 0;
-static int rejectStaleCRL = 0;
-static int rejectNoManifest = 0;
-static int rejectNotYet = 0;
-
-/*
- * routine to parse the filter specification file which determines how to
- * handle the various meta-data SCM_FLAG_XXX flags (ignore, matchset,
- * matchclr) 
- */
-int parseStalenessSpecsFile(
-    char *specsFilename)
-{
-    char str[WHERESTR_SIZE],
-        str2[WHERESTR_SIZE],
-        str3[WHERESTR_SIZE];
-    FILE *input = fopen(specsFilename, "r");
-
-    if (input == NULL)
-    {
-        printf("Could not open specs file: %s\n", specsFilename);
-        exit(-1);
-    }
-    while (fgets(str, WHERESTR_SIZE, input))
-    {
-        int got = sscanf(str, "%s %s", str2, str3);
-        if (got == 0)
-            continue;
-        if (str2[0] == '#')
-            continue;
-        if (got == 1)
-        {
-            perror("Bad format for specs file\n");
-            return -1;
-        }
-        if (strcmp(str2, "StaleCRL") == 0)
-        {
-            rejectStaleCRL = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "StaleManifest") == 0)
-        {
-            rejectStaleManifest = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "StaleValidationChain") == 0)
-        {
-            rejectStaleChain = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "NoManifest") == 0)
-        {
-            rejectNoManifest = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "NotYet") == 0)
-        {
-            rejectNotYet = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else
-        {
-            printf("Bad keyword in specs file: %s\n", str2);
-            return -1;
-        }
-    }
-    return 0;
-}
-
-void getSpecsVals(
-    int *rejectStaleChainp,
-    int *rejectStaleManifestp,
-    int *rejectStaleCRLp,
-    int *rejectNoManifestp,
-    int *rejectNotYetp)
-{
-    *rejectStaleChainp = rejectStaleChain;
-    *rejectStaleManifestp = rejectStaleManifest;
-    *rejectStaleCRLp = rejectStaleCRL;
-    *rejectNoManifestp = rejectNoManifest;
-    *rejectNotYetp = rejectNotYet;
-}
-
 void addQueryFlagTests(
     char *whereStr,
     int needAnd)
 {
     addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, needAnd);
-    if (rejectStaleChain)
+    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
         addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
-    if (rejectStaleCRL)
+    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_CRL))
         addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
-    if (rejectStaleManifest)
+    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_MANIFEST))
         addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (rejectNoManifest)
+    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NO_MANIFEST))
         addFlagTest(whereStr, SCM_FLAG_ONMAN, 1, 1);
-    if (rejectNotYet)
+    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NOT_YET))
         addFlagTest(whereStr, SCM_FLAG_NOTYET, 0, 1);
 }
 
@@ -169,19 +92,20 @@ int checkValidity(
         addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
         validWhereStr = validSrch->wherestr;
         validWhereStr[0] = 0;
-        if (rejectStaleChain)
+        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
             snprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
         free(now);
-        addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1, rejectStaleChain);
-        if (rejectStaleChain)
+        addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
+                    !*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN));
+        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
             addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
-        if (rejectStaleCRL)
+        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_CRL))
             addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
-        if (rejectStaleManifest)
+        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_MANIFEST))
             addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-        if (rejectNotYet)
+        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NOT_YET))
             addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
-        if (rejectNoManifest)
+        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NO_MANIFEST))
         {
             int len = strlen(validWhereStr);
             snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
@@ -193,7 +117,7 @@ int checkValidity(
         nextSKI = (char *)validSrch->vec[0].valptr;
         nextSubject = (char *)validSrch->vec[1].valptr;
 
-        if (!rejectStaleChain)
+        if (*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
         {
             anySrch = newsrchscm(NULL, 1, 0, 1);
             field = findField("flags");
@@ -238,7 +162,7 @@ int checkValidity(
                            registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (!found)
         {                       // no parent cert
-            if (rejectStaleChain)
+            if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
                 return 0;
             snprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                      whereInsertPtr + 5);
