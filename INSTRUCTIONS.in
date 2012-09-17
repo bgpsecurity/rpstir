@@ -87,7 +87,7 @@ this file before continuing.
 When installing prerequisites from your operating system's package
 manager, you may need to look for a -dev or -devel version of each
 package. These versions generally contain header files that are needed
-to build rpstir.
+to build @PACKAGE_NAME@.
 
 2.1.1 User Account
 
@@ -339,7 +339,7 @@ directed by the comments.
 2.4 SSH Subsystem
 
 If you plan to use the RTR Server as an SSH subsystem, you will need
-to run the rtr/rpstir-rtrd server as a daemon and set up an ssh subsystem
+to run the rtr/@PACKAGE_NAME@-rtrd server as a daemon and set up an ssh subsystem
 to connect to rtrd on localhost.  The netcat program, nc(1), is
 recommended for the ssh subsystem.  There are different versions of
 netcat, so read its manpage for caveats before setting it up as
@@ -396,14 +396,21 @@ Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server (rpstir-rpki-rtr-daemon)  Continuously as daemon
-RTR updater (rpstir-rpki-rtr-update) After each call to chaser
-RTR client (rpstir-rpki-rtr-test-client)  On demand by user
+RTR updater (@PACKAGE_NAME@-rpki-rtr-update) After each call to chaser,
+                                     also before runing the RTR
+                                     server for the first time.
+RTR Server (@PACKAGE_NAME@-rpki-rtr-daemon)  Continuously as daemon.
+                                     You must run the RTR updater first, though.
+RTR client (@PACKAGE_NAME@-rpki-rtr-test-client)  On demand by user
 
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
+
+NOTE: the RTR updater (rtr/@PACKAGE_NAME@-rtr-update) requires a spec file.
+See proto/sampleQuerySpecs for an example file. You can use that
+example or write your own.
 
 
 2.6.2 Adjust Permissions
@@ -541,7 +548,7 @@ Successful garbage collection may not produce any screen output.
 
 3.2 Results and Analysis
 
-There are three ways to obtain results from RPSTIR.
+There are three ways to obtain results from @PACKAGE_NAME@.
 . For an overview, generate a Validation Report (results.py).
 . For detailed information about validation state, use the Query Client.
 . For error analysis, search through rcli.log.
