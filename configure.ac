@@ -405,12 +405,6 @@ AC_CONFIG_FILES([tests/conformance/scripts/make_test_MFT.sh],
 AC_CONFIG_FILES([tests/conformance/scripts/make_test_cert.sh],
                 [chmod +x tests/conformance/scripts/make_test_cert.sh])
 
-AC_CONFIG_FILES([tests/subsystem/testcases/runt.sh],
-                [chmod +x tests/subsystem/testcases/runt.sh])
-
-AC_CONFIG_FILES([tests/subsystem/testcases/runtAll.sh],
-                [chmod +x tests/subsystem/testcases/runtAll.sh])
-
 AC_CONFIG_FILES([tests/subsystem/testcases/tools/create_cert.py],
                 [chmod +x tests/subsystem/testcases/tools/create_cert.py])
 
