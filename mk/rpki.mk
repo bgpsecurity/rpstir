@@ -89,7 +89,7 @@ dist_check_DATA += \
 	tests/conformance/scripts/conformance.conf
 
 dist_check_SCRIPTS += \
-	tests/conformance/scripts/run_bad_cert_tests.sh \
+	tests/conformance/scripts/run_bad_cert_tests.sh
 
 check_SCRIPTS += \
 	tests/conformance/scripts/run_tests.sh
