@@ -7,6 +7,16 @@ cd `dirname "$0"`/../..
 . lib/util/shell_utils
 
 
+LOCK_FILE="statistics.lock"
+
+cleanup () {
+    mutex_unlock "$LOCK_FILE"
+}
+
+mutex_trylock "$LOCK_FILE" || exit 1
+trap cleanup 0
+
+
 formatted_date () {
     date -u +"%Y-%m-%dT%H:%M:%S"
 }
