@@ -12,3 +12,42 @@ fatal () {
     error "$@"
     exit 1
 }
+
+
+# Try to lock a mutex pathname.
+# Returns 0 on successful lock, otherwise returns non-zero.
+mutex_trylock () {
+    local lockpath
+
+    if test $# -ne 1; then
+        error "mutex_trylock takes one argument"
+        return 2
+    fi
+
+    lockpath="$1"
+
+    if ln -s "locked by pid $$" "$lockpath" > /dev/null 2>&1; then
+        return 0
+    else
+        error "failed to acquire lock $lockpath"
+        return 1
+    fi
+}
+
+# Unlock a mutex pathname.
+mutex_unlock () {
+    local lockpath ret
+
+    if test $# -ne 1; then
+        error "mutex_trylock takes one argument"
+        return 2
+    fi
+
+    lockpath="$1"
+
+    ret=0
+
+    rm "$lockpath" || ret=1
+
+    return $ret
+}
