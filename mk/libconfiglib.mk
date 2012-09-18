@@ -1,7 +1,8 @@
 noinst_LIBRARIES += lib/configlib/libconfiglib.a
 
 LDADD_LIBCONFIGLIB = \
-	lib/configlib/libconfiglib.a
+	lib/configlib/libconfiglib.a \
+	$(LDADD_LIBUTIL)
 
 lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/configlib.c \
