@@ -3,6 +3,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "util/path_compat.h"
+
 #include "path.h"
 
 
