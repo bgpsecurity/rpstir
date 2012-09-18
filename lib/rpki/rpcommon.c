@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/logutils.h>
+#include <util/path_compat.h>
 
 struct done_certs done_certs;
 
