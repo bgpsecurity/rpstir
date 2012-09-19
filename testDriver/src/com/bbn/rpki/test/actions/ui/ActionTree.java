@@ -4,7 +4,10 @@
 package com.bbn.rpki.test.actions.ui;
 
 import java.awt.Component;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
 
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
@@ -14,6 +17,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.EpochEvent;
+import com.bbn.rpki.test.tasks.Epoch;
 import com.bbn.rpki.test.tasks.Model;
 
 /**
@@ -54,14 +58,33 @@ public class ActionTree {
       @Override
       public void epochsChanged() {
         // Save the current selection and try to re-establish after changing the model
-        TreePath path = actionTree.getSelectionPath();
+        Enumeration<TreePath> expandedDescendents = actionTree.getExpandedDescendants(new TreePath(actionTreeModel.getRoot()));
+        TreePath selectionPath = actionTree.getSelectionPath();
+        List<EpochEvent> visibleEpochEvents = new ArrayList<EpochEvent>();
+        if (expandedDescendents != null) {
+          while (expandedDescendents.hasMoreElements()) {
+            TreePath treePath = expandedDescendents.nextElement();
+            Object last = treePath.getLastPathComponent();
+            if (last instanceof Epoch) {
+              visibleEpochEvents.addAll(((Epoch) last).getEpochEvents());
+            }
+          }
+        }
+
         actionTreeModel.update(ActionTree.this.model);
-        Object lastComponent = path.getLastPathComponent();
-        if (lastComponent instanceof EpochEvent) {
-          // Try to re-select the same epoch after shuffling epochs
-          TreePath newPath = actionTreeModel.findPathTo(lastComponent);
-          actionTree.setSelectionPath(newPath);
-          l.selectionChanged(newPath);
+
+        for (EpochEvent epochEvent : visibleEpochEvents) {
+          TreePath path = actionTreeModel.findPathTo(epochEvent.getEpoch());
+          actionTree.expandPath(path);
+        }
+        if (selectionPath != null) {
+          Object lastComponent = selectionPath.getLastPathComponent();
+          if (lastComponent instanceof EpochEvent) {
+            // Try to re-select the same epoch after shuffling epochs
+            TreePath newPath = actionTreeModel.findPathTo(lastComponent);
+            actionTree.setSelectionPath(newPath);
+            l.selectionChanged(newPath);
+          }
         }
       }
     });

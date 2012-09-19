@@ -462,7 +462,7 @@ public class Model implements Constants {
   /**
    * @return the list of EpochActions
    */
-  public Collection<Epoch> getEpochs() {
+  public List<Epoch> getEpochs() {
     return epochs;
   }
 
