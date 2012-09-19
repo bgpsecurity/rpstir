@@ -71,7 +71,7 @@ class RSYNC_thread(Thread):
                 stderror = p.communicate()[1]
                 rcode = p.returncode
 
-            cli.info( (nextURI + " had return code %s") % (rcode) )
+            cli.info( "%s had return code %s" % (nextURI, rcode) )
             if not stderror == "":
                 cli.error( 'rsync returned errors: %s' % stderror )
             cli.info( ' '.join(rsyncCom) )
