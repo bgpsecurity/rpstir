@@ -36,7 +36,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.bbn.rpki.test.actions.AbstractAction;
-import com.bbn.rpki.test.actions.Epoch;
+import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
@@ -45,7 +45,13 @@ import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.TaskPath;
 
 /**
- * Displays the details of an action
+ * Displays the details of an action.
+ * 
+ * At the top is a title stating
+ * the kind of action and its principal attributes. Below are all the attributes of the
+ * action. An editor is provided for each attribute depending on what kind of value the
+ * attribute has. Below that is a tabbed pane with a tab for each epochEvent in which the
+ * action plays a part. Constraints on the timing of the part of the action can be selected.
  *
  * @author tomlinso
  */
@@ -55,13 +61,13 @@ public class ActionDetail {
   }
 
   interface EpochCallback {
-    void add(Epoch epoch);
-    void remove(Epoch epoch);
+    void add(EpochEvent epochEvent);
+    void remove(EpochEvent epochEvent);
     /**
-     * @param selectedEpoch
-     * @return true of the selected epoch can be removed from the list
+     * @param selectedEpochEvent
+     * @return true of the selected epochEvent can be removed from the list
      */
-    boolean canRemove(Epoch selectedEpoch);
+    boolean canRemove(EpochEvent selectedEpochEvent);
   }
 
   private abstract class AbstractSetter {
@@ -81,17 +87,18 @@ public class ActionDetail {
   private final Model model;
   private final List<Saver> savers = new ArrayList<Saver>();
   private AbstractAction action;
-  private Epoch epoch;
-  private final List<Epoch> epochs = new ArrayList<Epoch>();
-  private JTabbedPane epochsPane = null;
-  private final Action saveAction = new javax.swing.AbstractAction("Save") {
+  private EpochEvent epochEvent;
+  private final List<EpochEvent> epochEvents = new ArrayList<EpochEvent>();
+  private JTabbedPane epochEventsPane = null;
+  private final Action applyAction = new javax.swing.AbstractAction("Apply") {
 
     @Override
     public void actionPerformed(ActionEvent e) {
       for (Saver saver : savers) {
         saver.save();
       }
-      setAction(action, epoch);
+      model.epochsChanged();
+      setAction(action, epochEvent);
     }
   };
 
@@ -99,7 +106,7 @@ public class ActionDetail {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      setAction(action, epoch);
+      setAction(action, epochEvent);
     }
   };
   /**
@@ -108,7 +115,7 @@ public class ActionDetail {
   public ActionDetail(Model model) {
     this.model = model;
     JPanel buttons = new JPanel();
-    buttons.add(new JButton(saveAction));
+    buttons.add(new JButton(applyAction));
     buttons.add(new JButton(resetAction));
     Font titleFont = title.getFont().deriveFont(20f);
     title.setFont(titleFont);
@@ -119,14 +126,14 @@ public class ActionDetail {
 
   /**
    * @param action
-   * @param epoch
+   * @param epochEvent
    */
-  public void setAction(final AbstractAction action, Epoch epoch) {
+  public void setAction(final AbstractAction action, EpochEvent epochEvent) {
     this.action = action;
-    this.epoch = epoch;
-    this.epochs.clear();
+    this.epochEvent = epochEvent;
+    this.epochEvents.clear();
     panel.removeAll();
-    epochsPane = null;
+    epochEventsPane = null;
     savers.clear();
     title.setText(action == null ? "No Action Selected" : action.toString());
     if (action != null) {
@@ -146,20 +153,20 @@ public class ActionDetail {
           }
         };
         Component component = getComponent(value, setter);
-        if (value instanceof Epoch) {
-          // Combine Epoch components into a tabbed pane
-          if (epochsPane == null) {
-            epochsPane = new JTabbedPane();
+        if (value instanceof EpochEvent) {
+          // Combine EpochEVent components into a tabbed pane
+          if (epochEventsPane == null) {
+            epochEventsPane = new JTabbedPane();
             gbc.gridx = 0;
             gbc.gridwidth = 2;
             gbc.weightx = 1f;
             gbc.fill = component instanceof JScrollPane ? GridBagConstraints.BOTH : GridBagConstraints.HORIZONTAL;
             gbc.weighty = 0f;
-            panel.add(epochsPane, gbc);
+            panel.add(epochEventsPane, gbc);
           }
-          epochsPane.add(label, component);
-          if (value == epoch) {
-            epochsPane.setSelectedComponent(component);
+          epochEventsPane.add(label, component);
+          if (value == epochEvent) {
+            epochEventsPane.setSelectedComponent(component);
           }
         } else {
           gbc.gridx = 0;
@@ -182,17 +189,17 @@ public class ActionDetail {
       gbc.gridx = 0;
       gbc.gridwidth = 2;
       gbc.weighty = 1f;
-      if (epochsPane != null) {
-        epochsPane.getModel().addChangeListener(new ChangeListener() {
+      if (epochEventsPane != null) {
+        epochEventsPane.getModel().addChangeListener(new ChangeListener() {
 
           @Override
           public void stateChanged(ChangeEvent e) {
-            int index = epochsPane.getSelectedIndex();
+            int index = epochEventsPane.getSelectedIndex();
             if (index < 0) {
-              ActionDetail.this.epoch = null;
+              ActionDetail.this.epochEvent = null;
             }
             else {
-              ActionDetail.this.epoch = epochs.get(index);
+              ActionDetail.this.epochEvent = epochEvents.get(index);
             }
           }
         });
@@ -229,8 +236,8 @@ public class ActionDetail {
     if (value instanceof TaskPath) {
       return getTaskPathComponent((TaskPath) value, setter);
     }
-    if (value instanceof Epoch) {
-      return getEpochComponent((Epoch) value, setter);
+    if (value instanceof EpochEvent) {
+      return getEpochEventComponent((EpochEvent) value, setter);
     }
     assert false;
     return null;
@@ -333,14 +340,14 @@ public class ActionDetail {
     return box;
   }
 
-  private Component getEpochComponent(Epoch value, final AbstractSetter setter) {
+  private Component getEpochEventComponent(EpochEvent value, final AbstractSetter setter) {
     Box box = Box.createVerticalBox();
-    box.add(getEpochsBeforeComponent(value));
-    box.add(getEpochsCoincidentComponent(value));
-    box.add(getEpochsAfterComponent(value));
-    Collection<Epoch> epochs = model.getEpochs();
-    Epoch[] epochArray = new Epoch[epochs.size()];
-    epochArray = epochs.toArray(epochArray);
+    box.add(getEpochEventsBeforeComponent(value));
+    box.add(getEpochEventsCoincidentComponent(value));
+    box.add(getEpochEventsAfterComponent(value));
+    Collection<EpochEvent> epochEvents = model.getEpochEvents();
+    EpochEvent[] epochArray = new EpochEvent[epochEvents.size()];
+    epochArray = epochEvents.toArray(epochArray);
     final JComboBox combo = new JComboBox(epochArray);
     combo.setSelectedItem(value);
     registerListener(new Saver() {
@@ -354,86 +361,86 @@ public class ActionDetail {
   }
 
   /**
-   * @param epoch
+   * @param epochEvent
    * @return
    */
-  private Component getEpochsCoincidentComponent(final Epoch epoch) {
-    Collection<Epoch> coincident = epoch.getCoincidentEpochs();
-    Collection<Epoch> candidates = model.getPossibleCoincidentEpochs(epoch);
-    return getEpochsComponent(epoch, "Coincident Epochs", coincident, candidates, new EpochCallback() {
+  private Component getEpochEventsCoincidentComponent(final EpochEvent epochEvent) {
+    Collection<EpochEvent> coincident = epochEvent.getCoincidentEpochs();
+    Collection<EpochEvent> candidates = model.getPossibleCoincidentEpochs(epochEvent);
+    return getEpochsComponent(epochEvent, "Coincident Epoch Events", coincident, candidates, new EpochCallback() {
 
       @Override
-      public void add(Epoch epochToAdd) {
-        epoch.addCoincident(epochToAdd, false);
+      public void add(EpochEvent epochToAdd) {
+        epochEvent.addCoincident(epochToAdd, false);
       }
 
       @Override
-      public void remove(Epoch epochToRemove) {
-        epoch.removeCoincident(epochToRemove);
+      public void remove(EpochEvent epochToRemove) {
+        epochEvent.removeCoincident(epochToRemove);
       }
 
       @Override
-      public boolean canRemove(Epoch selectedEpoch) {
-        return epoch.canRemoveCoincident(selectedEpoch);
+      public boolean canRemove(EpochEvent selectedEpoch) {
+        return epochEvent.canRemoveCoincident(selectedEpoch);
       }
     });
   }
 
 
   /**
-   * @param epoch
+   * @param epochEvent
    * @return
    */
-  private Component getEpochsBeforeComponent(final Epoch epoch) {
-    Collection<Epoch> predecessors = epoch.getPredecessorEpochs();
-    Collection<Epoch> candidates = model.getPossiblePredecessors(epoch);
-    return getEpochsComponent(epoch, "Predecessor Epochs", predecessors, candidates, new EpochCallback() {
+  private Component getEpochEventsBeforeComponent(final EpochEvent epochEvent) {
+    Collection<EpochEvent> predecessors = epochEvent.getPredecessorEpochEvents();
+    Collection<EpochEvent> candidates = model.getPossiblePredecessors(epochEvent);
+    return getEpochsComponent(epochEvent, "Predecessor Epoch Events", predecessors, candidates, new EpochCallback() {
 
       @Override
-      public void add(Epoch epochToAdd) {
-        epoch.addPredecessor(epochToAdd, false);
+      public void add(EpochEvent epochToAdd) {
+        epochEvent.addPredecessor(epochToAdd, false);
       }
 
       @Override
-      public void remove(Epoch epochToRemove) {
-        epoch.removePredecessor(epochToRemove);
+      public void remove(EpochEvent epochToRemove) {
+        epochEvent.removePredecessor(epochToRemove);
       }
 
       @Override
-      public boolean canRemove(Epoch selectedEpoch) {
-        return epoch.canRemovePredecessor(selectedEpoch);
+      public boolean canRemove(EpochEvent selectedEpoch) {
+        return epochEvent.canRemovePredecessor(selectedEpoch);
       }
     });
   }
 
   /**
-   * @param epoch
+   * @param epochEvent
    * @return
    */
-  private Component getEpochsAfterComponent(final Epoch epoch) {
-    Collection<Epoch> successors = epoch.getSuccessorEpochs();
-    Collection<Epoch> candidates = model.getPossibleSuccessors(epoch);
-    return getEpochsComponent(epoch, "Successor Epochs", successors, candidates, new EpochCallback() {
+  private Component getEpochEventsAfterComponent(final EpochEvent epochEvent) {
+    Collection<EpochEvent> successors = epochEvent.getSuccessorEpochEvents();
+    Collection<EpochEvent> candidates = model.getPossibleSuccessors(epochEvent);
+    return getEpochsComponent(epochEvent, "Successor Epoch Events", successors, candidates, new EpochCallback() {
 
       @Override
-      public void add(Epoch epochToAdd) {
-        epoch.addSuccessor(epochToAdd, false);
+      public void add(EpochEvent epochToAdd) {
+        epochEvent.addSuccessor(epochToAdd, false);
       }
 
       @Override
-      public void remove(Epoch epochToRemove) {
-        epoch.removeSuccessor(epochToRemove);
+      public void remove(EpochEvent epochToRemove) {
+        epochEvent.removeSuccessor(epochToRemove);
       }
 
       @Override
-      public boolean canRemove(Epoch selectedEpoch) {
-        return epoch.canRemoveSuccessor(selectedEpoch);
+      public boolean canRemove(EpochEvent selectedEpoch) {
+        return epochEvent.canRemoveSuccessor(selectedEpoch);
       }
     });
   }
 
-  private Component getEpochsComponent(final Epoch epoch, String title, final Collection<Epoch> currentSelection, Collection<Epoch> availableEpochs, final EpochCallback cb) {
-    return new EpochsComponent(model, epoch, title, currentSelection, availableEpochs, cb);
+  private Component getEpochsComponent(final EpochEvent epochEvent, String title, final Collection<EpochEvent> currentSelection, Collection<EpochEvent> availableEpochs, final EpochCallback cb) {
+    return new EpochsComponent(model, epochEvent, title, currentSelection, availableEpochs, cb);
   }
 
 

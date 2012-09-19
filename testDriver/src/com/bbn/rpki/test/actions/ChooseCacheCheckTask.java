@@ -37,7 +37,9 @@ public class ChooseCacheCheckTask extends AbstractAction {
   private static final String TAG_EPOCH = "epoch";
 
   enum AttributeType {
-    TASK_PATH("Task Path");
+    TASK_PATH("Task Path"),
+    ID("Id"),
+    EPOCH("Epoch");
 
     static Map<String, AttributeType> d2o = null;
 
@@ -72,8 +74,8 @@ public class ChooseCacheCheckTask extends AbstractAction {
 
   private TaskPath path;
   private final Model model;
-  private final String id;
-  private final Epoch epoch;
+  private String id;
+  private final EpochEvent epoch;
 
   /**
    * @param model
@@ -83,7 +85,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
     this.model = model;
     this.path = new TaskPath(path);
     this.id = nextId();
-    epoch = new Epoch(this, "Cache Check " + id);
+    epoch = new EpochEvent(this, "Cache Check ");
   }
 
   /**
@@ -103,7 +105,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
     this.path = new TaskPath(element.getAttributeValue(ATTR_PATH));
     this.id = nextId();
     Element epochElement = element.getChild(TAG_EPOCH);
-    epoch = new Epoch(this, "Cache Check " + id, epochElement, actionContext);
+    epoch = new EpochEvent(this, "Cache Check ", epochElement, actionContext);
 
   }
 
@@ -119,18 +121,18 @@ public class ChooseCacheCheckTask extends AbstractAction {
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#getAllEpochs()
+   * @see com.bbn.rpki.test.actions.AbstractAction#getAllEpochEvents()
    */
   @Override
-  public Collection<Epoch> getAllEpochs() {
+  public Collection<EpochEvent> getAllEpochEvents() {
     return Collections.singleton(epoch);
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#execute(Epoch, com.bbn.rpki.test.objects.TypescriptLogger)
+   * @see com.bbn.rpki.test.actions.AbstractAction#execute(EpochEvent, com.bbn.rpki.test.objects.TypescriptLogger)
    */
   @Override
-  public void execute(Epoch executionEpoch, TypescriptLogger logger) {
+  public void execute(EpochEvent executionEpoch, TypescriptLogger logger) {
     // Navigate to the Task
     String[] path = this.path.getPath();
     TaskFactory.Task task = model.getTask(path[0]);
@@ -154,8 +156,8 @@ public class ChooseCacheCheckTask extends AbstractAction {
   @Override
   public LinkedHashMap<String, Object> getAttributes() {
     LinkedHashMap<String, Object> ret = new LinkedHashMap<String, Object>();
-    ret.put("id", id);
-    ret.put(TAG_EPOCH, epoch);
+    ret.put(AttributeType.ID.getDisplayName(), id);
+    ret.put(AttributeType.EPOCH.getDisplayName(), epoch);
     ret.put(AttributeType.TASK_PATH.getDisplayName(), path);
     return ret;
   }
@@ -170,7 +172,19 @@ public class ChooseCacheCheckTask extends AbstractAction {
     case TASK_PATH:
       path = (TaskPath) newValue;
       break;
+    case ID:
+      id = (String) newValue;
+      break;
     }
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getId()
+   */
+  @Override
+  public
+  String getId() {
+    return id;
   }
 
   /**
@@ -187,7 +201,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
    * @see com.bbn.rpki.test.actions.AbstractAction#getExecutionEpochs()
    */
   @Override
-  public Collection<Epoch> getExecutionEpochs() {
+  public Collection<EpochEvent> getExecutionEpochs() {
     return Collections.singleton(epoch);
   }
 }

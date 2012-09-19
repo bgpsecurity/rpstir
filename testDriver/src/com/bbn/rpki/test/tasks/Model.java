@@ -31,7 +31,7 @@ import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.ActionContext;
 import com.bbn.rpki.test.actions.AllocateAction;
 import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
-import com.bbn.rpki.test.actions.Epoch;
+import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.objects.CA_Obj;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.Constants;
@@ -145,8 +145,8 @@ public class Model implements Constants {
 
   private final File rpkiRoot;
   private final List<AbstractAction> actions = new ArrayList<AbstractAction>();
-  private final Set<Epoch> epochs = new HashSet<Epoch>();
-  private final List<EpochGroup> epochGroups = new ArrayList<EpochGroup>();
+  private final Set<EpochEvent> epochEvents = new HashSet<EpochEvent>();
+  private final List<Epoch> epochs = new ArrayList<Epoch>();
   private final String ianaServerName;
   private final CA_Object iana;
   private final List<File> objectList = new ArrayList<File>();
@@ -407,8 +407,8 @@ public class Model implements Constants {
     previousRepositoryRoots.addAll(repositoryRoots);
     repositoryRoots.clear();
     if (epochIndex > 0) {
-      EpochGroup epochActions = epochGroups.get(epochIndex - 1);
-      for (Epoch epoch : epochActions.getEpochs()) {
+      Epoch epochActions = epochs.get(epochIndex - 1);
+      for (EpochEvent epoch : epochActions.getEpochEvents()) {
         AbstractAction action = epoch.getAction();
         action.execute(null, logger);
       }
@@ -456,14 +456,14 @@ public class Model implements Constants {
    * @return count of number of epochs
    */
   public int getEpochCount() {
-    return epochGroups.size() + 1;
+    return epochs.size() + 1;
   }
 
   /**
    * @return the list of EpochActions
    */
-  public Collection<EpochGroup> getEpochGroups() {
-    return epochGroups;
+  public Collection<Epoch> getEpochs() {
+    return epochs;
   }
 
   /**
@@ -750,8 +750,8 @@ public class Model implements Constants {
   /**
    * @return the Epochs
    */
-  public Collection<Epoch> getEpochs() {
-    return epochs;
+  public Collection<EpochEvent> getEpochEvents() {
+    return epochEvents;
   }
 
   /**
@@ -770,17 +770,17 @@ public class Model implements Constants {
    * epochs are assigned an index one greater than the max of all predecessor
    */
   private void sortEpochs() {
-    Map<Epoch, AbstractAction> actionMap = new HashMap<Epoch, AbstractAction>();
+    Map<EpochEvent, AbstractAction> actionMap = new HashMap<EpochEvent, AbstractAction>();
     for (AbstractAction action : actions) {
-      for (Epoch epoch : action.getAllEpochs()) {
-        actionMap.put(epoch, action);
+      for (EpochEvent epochEvent : action.getAllEpochEvents()) {
+        actionMap.put(epochEvent, action);
       }
     }
+    epochEvents.clear();
+    epochEvents.addAll(actionMap.keySet());
+    EpochSorter sorter = new EpochSorter(epochEvents);
     epochs.clear();
-    epochs.addAll(actionMap.keySet());
-    EpochSorter sorter = new EpochSorter(epochs);
-    epochGroups.clear();
-    epochGroups.addAll(sorter.sort());
+    epochs.addAll(sorter.sort());
   }
 
   /**
@@ -790,10 +790,10 @@ public class Model implements Constants {
    * @param epoch
    * @return the epochs that are not already constrained w.r.t. the given epoch
    */
-  public Collection<Epoch> getPossibleSuccessors(Epoch epoch) {
-    Set<Epoch> ret = new HashSet<Epoch>(epochs);
+  public Collection<EpochEvent> getPossibleSuccessors(EpochEvent epoch) {
+    Set<EpochEvent> ret = new HashSet<EpochEvent>(epochEvents);
     ret.remove(epoch);
-    ret.removeAll(epoch.getSuccessorEpochs());
+    ret.removeAll(epoch.getSuccessorEpochEvents());
     ret.removeAll(epoch.findCoincidentEpochs());
     ret.removeAll(epoch.findPredecessorEpochs());
     return ret;
@@ -806,10 +806,10 @@ public class Model implements Constants {
    * @param epoch
    * @return the epochs that are not already constrained w.r.t. the given epoch
    */
-  public Collection<Epoch> getPossiblePredecessors(Epoch epoch) {
-    Set<Epoch> ret = new HashSet<Epoch>(epochs);
+  public Collection<EpochEvent> getPossiblePredecessors(EpochEvent epoch) {
+    Set<EpochEvent> ret = new HashSet<EpochEvent>(epochEvents);
     ret.remove(epoch);
-    ret.removeAll(epoch.getPredecessorEpochs());
+    ret.removeAll(epoch.getPredecessorEpochEvents());
     ret.removeAll(epoch.findCoincidentEpochs());
     ret.removeAll(epoch.findSuccessorEpochs());
     return ret;
@@ -822,8 +822,8 @@ public class Model implements Constants {
    * @param epoch
    * @return the epochs that are not already constrained w.r.t. the given epoch
    */
-  public Collection<Epoch> getPossibleCoincidentEpochs(Epoch epoch) {
-    Set<Epoch> ret = new HashSet<Epoch>(epochs);
+  public Collection<EpochEvent> getPossibleCoincidentEpochs(EpochEvent epoch) {
+    Set<EpochEvent> ret = new HashSet<EpochEvent>(epochEvents);
     ret.remove(epoch);
     ret.removeAll(epoch.getCoincidentEpochs());
     ret.removeAll(epoch.findSuccessorEpochs());

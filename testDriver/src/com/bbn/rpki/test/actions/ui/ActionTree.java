@@ -4,6 +4,7 @@
 package com.bbn.rpki.test.actions.ui;
 
 import java.awt.Component;
+import java.util.Collection;
 
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
@@ -11,7 +12,8 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import com.bbn.rpki.test.actions.Epoch;
+import com.bbn.rpki.test.actions.AbstractAction;
+import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.tasks.Model;
 
 /**
@@ -55,7 +57,7 @@ public class ActionTree {
         TreePath path = actionTree.getSelectionPath();
         actionTreeModel.update(ActionTree.this.model);
         Object lastComponent = path.getLastPathComponent();
-        if (lastComponent instanceof Epoch) {
+        if (lastComponent instanceof EpochEvent) {
           // Try to re-select the same epoch after shuffling epochs
           TreePath newPath = actionTreeModel.findPathTo(lastComponent);
           actionTree.setSelectionPath(newPath);
@@ -88,5 +90,19 @@ public class ActionTree {
     for (int i = 0; i < actionTree.getRowCount(); i++) {
       actionTree.collapseRow(i);
     }
+  }
+
+  /**
+   * @param addedAction
+   */
+  public void expandAndSelect(AbstractAction addedAction) {
+    Collection<EpochEvent> allEpochEvents = addedAction.getAllEpochEvents();
+    TreePath[] paths = new TreePath[allEpochEvents.size()];
+    int ix = 0;
+    for (EpochEvent epochEvent : allEpochEvents) {
+      TreePath treePath = actionTreeModel.getPathToRoot();
+      paths[ix++] = treePath;
+    }
+    actionTree.setSelectionPaths(paths);
   }
 }

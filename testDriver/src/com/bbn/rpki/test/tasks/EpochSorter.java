@@ -4,6 +4,7 @@
 package com.bbn.rpki.test.tasks;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,104 +12,138 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.bbn.rpki.test.actions.Epoch;
+import com.bbn.rpki.test.actions.EpochEvent;
 
 /**
- * <Enter the description of this type here>
+ * Starts with a collection of EpochEvents and groups coincident EpochEvents into Epochs.
+ * Then imposes the constraints on the individual EpochEvents onto the Epochs. Finally,
+ * the Epochs are sorted. Such that all predecessor Epochs come before their successors.
  *
  * @author tomlinso
  */
 public class EpochSorter {
-  private final Map<Epoch, EpochGroup> map = new HashMap<Epoch, EpochGroup>();
-
-  private final List<EpochGroup> groups = new ArrayList<EpochGroup>();
+  private final List<Epoch> epochs = new ArrayList<Epoch>();
+  private final Map<Epoch, Set<Epoch>> predecessors = new HashMap<Epoch, Set<Epoch>>();
 
   /**
-   * @param epochs the epochs to sort
+   * @param epochEvents the epochs to sort
    */
-  public EpochSorter(Collection<Epoch> epochs) {
-    for (Epoch epoch : epochs) {
-      addEpoch(epoch);
+  public EpochSorter(Collection<EpochEvent> epochEvents) {
+    for (EpochEvent epochEvent : epochEvents) {
+      epochEvent.setEpoch(null);
+    }
+    for (EpochEvent epochEvent : epochEvents) {
+      addEpochEvent(epochEvent);
     }
   }
 
   /**
-   * computes the epoch index of all groups and assigns that to the epochs
-   * within the group.
-   * @return the epoch collection sorted into groups of coincident epochs
+   * computes the index of all epochs and assigns that to the EpochEvents
+   * within the epoch.
+   * 
+   * @return the Epoch collection sorted into a proper succession of epoch events.
    */
-  public List<EpochGroup> sort() {
-    Set<EpochGroup> processedGroups = new HashSet<EpochGroup>();
+  public List<Epoch> sort() {
     int maxEpochIndex = 0;
-    for (EpochGroup group: groups) {
-      int epochIndex = computeEpochIndex(group, processedGroups);
+    for (Epoch epoch: epochs) {
+      epoch.setEpochIndex(null);
+      Set<Epoch> epochPredecessors = new HashSet<Epoch>();
+      predecessors.put(epoch, epochPredecessors);
+      for (EpochEvent epochEvent : epoch.getEpochEvents()) {
+        for (EpochEvent predecessor : epochEvent.getPredecessorEpochEvents()) {
+          Epoch predecessorEpoch = predecessor.getEpoch();
+          assert predecessorEpoch != null;
+          assert predecessor.getSuccessorEpochEvents().contains(epochEvent);
+          epochPredecessors.add(predecessorEpoch);
+        }
+      }
+    }
+    for (Epoch epoch: epochs) {
+      int epochIndex = computeEpochIndex(epoch);
       if (epochIndex > maxEpochIndex) {
         maxEpochIndex = epochIndex;
       }
-      for (Epoch epoch : group.getEpochs()) {
-        epoch.setEpochIndex(group.getEpochIndex());
+    }
+    Epoch[] retArray = new Epoch[maxEpochIndex + 1];
+    Arrays.fill(retArray, null);
+    for (Epoch epoch : epochs) {
+      int epochIndex = epoch.getEpochIndex();
+      if (retArray[epochIndex] == null) {
+        retArray[epochIndex] = epoch;
+      } else {
+        retArray[epochIndex].subsumeEpoch(epoch);
       }
     }
-    List<EpochGroup> ret = new ArrayList<EpochGroup>(maxEpochIndex + 1);
-    for (int i = 0; i <= maxEpochIndex; i++) {
-      EpochGroup group = new EpochGroup();
-      group.setEpochIndex(i);
-      ret.add(group);
-    }
-    for (Epoch epoch : map.keySet()) {
-      int epochIndex = map.get(epoch).getEpochIndex();
-      epoch.setEpochIndex(epochIndex);
-      ret.get(epochIndex).addEpoch(epoch);
-    }
-    return ret;
+    return Arrays.asList(retArray);
   }
 
-  private int computeEpochIndex(EpochGroup group, Set<EpochGroup> visited) {
-    if (visited.add(group)) {
+  /**
+   * The epochIndex of any Epoch is one greater than the maximum epochIndex
+   * of all its predecessors.
+   * @param epoch
+   * @return
+   */
+  private int computeEpochIndex(Epoch epoch) {
+    Integer epochIndex = epoch.getEpochIndex();
+    if (epochIndex == null) {
       int ix = 0;
-      for (EpochGroup predecessorGroup : group.getPredecessors()) {
-        int predecessorIndex = computeEpochIndex(predecessorGroup, visited);
+      for (Epoch predecessorEpoch : predecessors.get(epoch)) {
+        int predecessorIndex = computeEpochIndex(predecessorEpoch);
         ix = Math.max(ix, predecessorIndex + 1);
       }
-      group.setEpochIndex(ix);
+      epochIndex = ix;
+      epoch.setEpochIndex(epochIndex);
     }
-    return group.getEpochIndex();
+    return epochIndex;
   }
 
-  private EpochGroup findGroup(Epoch epoch, Set<Epoch> visited) {
-    EpochGroup group = null;
-    for (Epoch coincidentEpoch : epoch.getCoincidentEpochs()) {
-      if (visited.add(coincidentEpoch)) {
-        group = map.get(coincidentEpoch);
-        if (group != null) {
-          break;
+  /**
+   * Find EpochGroups coincident with the given epochEvent.
+   * Combine EpochGroups that are mutually coincident with the given epochEvent.
+   * Return the EpochGroup thus found or a brand new one i
+   * 
+   * @param epochEvent
+   * @return
+   */
+  private Epoch findEpoch(EpochEvent epochEvent) {
+    Epoch epoch = null;
+    List<EpochEvent> pendingEpochEvents = new ArrayList<EpochEvent>(1 + epochEvent.getCoincidentEpochs().size());
+    Collection<EpochEvent> coincidentEpochs = epochEvent.getCoincidentEpochs();
+    for (EpochEvent coincidentEpochEvent : coincidentEpochs) {
+      Epoch testEpoch = coincidentEpochEvent.getEpoch();
+      if (testEpoch != null) {
+        if (epoch != null) {
+          if (testEpoch == epoch) {
+            continue;
+          }
+          epoch.subsumeEpoch(testEpoch);
+          epochs.remove(testEpoch);
+        } else {
+          epoch = testEpoch;
         }
-        group = findGroup(coincidentEpoch, visited);
-        if (group != null) {
-          break;
-        }
+      } else {
+        pendingEpochEvents.add(coincidentEpochEvent);
       }
     }
-    if (group == null) {
-      group = new EpochGroup();
-      groups.add(group);
+    if (epoch == null) {
+      epoch = new Epoch();
+      epochs.add(epoch);
     }
-    group.add(epoch);
-    map.put(epoch, group);
-    return group;
+    pendingEpochEvents.add(epochEvent);
+    for (EpochEvent pendingEpochEvent : pendingEpochEvents) {
+      epoch.addEpochEvent(pendingEpochEvent);
+    }
+    return epoch;
   }
 
-  private void addEpoch(Epoch epoch) {
-    EpochGroup group = map.get(epoch);
-    if (group == null) {
-      HashSet<Epoch> visited = new HashSet<Epoch>();
-      group = findGroup(epoch, visited);
-      for (Epoch predecessor : epoch.getPredecessorEpochs()) {
-        visited.clear();
-        EpochGroup predecessorGroup = findGroup(predecessor, visited);
-        assert predecessor.getSuccessorEpochs().contains(epoch);
-        group.addPredecessor(predecessorGroup);
-      }
+  /**
+   * 
+   * @param epochEvent
+   */
+  private void addEpochEvent(EpochEvent epochEvent) {
+    Epoch epoch = epochEvent.getEpoch();
+    if (epoch == null) {
+      findEpoch(epochEvent);
     }
   }
 }

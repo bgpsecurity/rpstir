@@ -15,14 +15,14 @@ import java.util.Map;
 public class ActionContext {
   private int nextRef = 0;
 
-  private final Map<String, Epoch> ref2Epoch = new HashMap<String, Epoch>();
-  private final Map<Epoch, String> epoch2Ref = new HashMap<Epoch, String>();
+  private final Map<String, EpochEvent> ref2Epoch = new HashMap<String, EpochEvent>();
+  private final Map<EpochEvent, String> epoch2Ref = new HashMap<EpochEvent, String>();
 
   /**
    * @param epoch
    * @return the ref for this epoch
    */
-  public String getRef(Epoch epoch) {
+  public String getRef(EpochEvent epoch) {
     String ref = epoch2Ref.get(epoch);
     if (ref == null) {
       ref = String.valueOf(++nextRef);
@@ -35,7 +35,7 @@ public class ActionContext {
    * @param ref
    * @return the Epoch registered for the ref or null if not yet registered
    */
-  public Epoch getEpoch(String ref) {
+  public EpochEvent getEpoch(String ref) {
     return ref2Epoch.get(ref);
   }
 
@@ -43,7 +43,7 @@ public class ActionContext {
    * @param epoch
    * @param id
    */
-  public void registerEpoch(Epoch epoch, String id) {
+  public void registerEpoch(EpochEvent epoch, String id) {
     ref2Epoch.put(id, epoch);
     epoch2Ref.put(epoch, id);
   }
@@ -51,7 +51,7 @@ public class ActionContext {
   /**
    * @return the epochs
    */
-  public Collection<Epoch> getEpochs() {
+  public Collection<EpochEvent> getEpochs() {
     return epoch2Ref.keySet();
   }
 

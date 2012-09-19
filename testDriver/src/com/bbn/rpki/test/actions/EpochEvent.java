@@ -12,6 +12,8 @@ import java.util.Set;
 
 import org.jdom.Element;
 
+import com.bbn.rpki.test.tasks.Epoch;
+
 /**
  * Identifies an Epoch for corresponding to a particular point time such as
  * when (the certificate containing) a particular allocation becomes valid.
@@ -21,35 +23,36 @@ import org.jdom.Element;
  *
  * @author tomlinso
  */
-public final class Epoch implements XMLConstants {
+public final class EpochEvent implements XMLConstants {
 
   interface OthersAccessor {
-    void add(Epoch other, boolean locked);
+    void add(EpochEvent other, boolean locked);
   }
 
   private final AbstractAction action;
   private final String description;
+  private Epoch epoch = null;
 
   /**
    * @param action
    * @param description
    */
-  public Epoch(AbstractAction action, String description) {
+  public EpochEvent(AbstractAction action, String description) {
     this.action = action;
     this.description = description;
   }
 
-  private class LockableSet extends AbstractSet<Epoch> {
-    private final Set<Epoch> locked = new HashSet<Epoch>();
-    private final Set<Epoch> unlocked = new HashSet<Epoch>();
+  private class LockableSet extends AbstractSet<EpochEvent> {
+    private final Set<EpochEvent> locked = new HashSet<EpochEvent>();
+    private final Set<EpochEvent> unlocked = new HashSet<EpochEvent>();
     /**
      * @see java.util.AbstractCollection#iterator()
      */
     @Override
-    public Iterator<Epoch> iterator() {
-      return new Iterator<Epoch>() {
-        private final Iterator<Epoch> lockedIterator = locked.iterator();
-        private final Iterator<Epoch> unlockedIterator = unlocked.iterator();
+    public Iterator<EpochEvent> iterator() {
+      return new Iterator<EpochEvent>() {
+        private final Iterator<EpochEvent> lockedIterator = locked.iterator();
+        private final Iterator<EpochEvent> unlockedIterator = unlocked.iterator();
 
         @Override
         public boolean hasNext() {
@@ -57,7 +60,7 @@ public final class Epoch implements XMLConstants {
         }
 
         @Override
-        public Epoch next() {
+        public EpochEvent next() {
           if (lockedIterator.hasNext()) {
             return lockedIterator.next();
           }
@@ -83,11 +86,11 @@ public final class Epoch implements XMLConstants {
      * @see java.util.AbstractCollection#add(java.lang.Object)
      */
     @Override
-    public boolean add(Epoch e) {
+    public boolean add(EpochEvent e) {
       return unlocked.add(e);
     }
 
-    public boolean addLocked(Epoch e) {
+    public boolean addLocked(EpochEvent e) {
       return locked.add(e);
     }
 
@@ -103,7 +106,7 @@ public final class Epoch implements XMLConstants {
      * @see java.util.AbstractCollection#addAll(java.util.Collection)
      */
     @Override
-    public boolean addAll(Collection<? extends Epoch> c) {
+    public boolean addAll(Collection<? extends EpochEvent> c) {
       return unlocked.addAll(c);
     }
 
@@ -119,7 +122,7 @@ public final class Epoch implements XMLConstants {
      * @param other
      * @return if in the locked subset
      */
-    public boolean isLocked(Epoch other) {
+    public boolean isLocked(EpochEvent other) {
       return locked.contains(other);
     }
   }
@@ -127,7 +130,6 @@ public final class Epoch implements XMLConstants {
   private final LockableSet predecessorEpochs = new LockableSet();
   private final LockableSet successorEpochs = new LockableSet();
   private final LockableSet coincidentEpochs = new LockableSet();
-  private int epochIndex;
 
   /**
    * @return a description suitable for a combo box
@@ -141,27 +143,27 @@ public final class Epoch implements XMLConstants {
    */
   @Override
   public String toString() {
-    return getDescription();
+    return getDescription() + action.getId();
   }
 
   /**
    * @return the predecessors
    */
-  public Collection<Epoch> getPredecessorEpochs() {
+  public Collection<EpochEvent> getPredecessorEpochEvents() {
     return predecessorEpochs;
   }
 
   /**
    * @return the successors
    */
-  public Collection<Epoch> getSuccessorEpochs() {
+  public Collection<EpochEvent> getSuccessorEpochEvents() {
     return successorEpochs;
   }
 
   /**
    * @return the coincident
    */
-  public Collection<Epoch> getCoincidentEpochs() {
+  public Collection<EpochEvent> getCoincidentEpochs() {
     return coincidentEpochs;
   }
 
@@ -171,23 +173,23 @@ public final class Epoch implements XMLConstants {
    * successor.
    * @return all epochs constrained to follow this one
    */
-  public Set<Epoch> findSuccessorEpochs() {
-    Set<Epoch> visited = new HashSet<Epoch>();
-    Set<Epoch> ret = new HashSet<Epoch>();
+  public Set<EpochEvent> findSuccessorEpochs() {
+    Set<EpochEvent> visited = new HashSet<EpochEvent>();
+    Set<EpochEvent> ret = new HashSet<EpochEvent>();
     findSuccessorEpochs(ret, visited);
     return ret;
   }
 
-  private void findSuccessorEpochs(Set<Epoch> ret, Set<Epoch> visited) {
+  private void findSuccessorEpochs(Set<EpochEvent> ret, Set<EpochEvent> visited) {
     if (visited.add(this)) {
       ret.addAll(successorEpochs);
-      HashSet<Epoch> visited2 = new HashSet<Epoch>(visited);
-      HashSet<Epoch> visited3 = new HashSet<Epoch>(visited);
-      for (Epoch successor : successorEpochs) {
+      HashSet<EpochEvent> visited2 = new HashSet<EpochEvent>(visited);
+      HashSet<EpochEvent> visited3 = new HashSet<EpochEvent>(visited);
+      for (EpochEvent successor : successorEpochs) {
         successor.findSuccessorEpochs(ret, visited2);
         successor.findCoincidentEpochs(ret, visited);
       }
-      for (Epoch coincident : coincidentEpochs) {
+      for (EpochEvent coincident : coincidentEpochs) {
         coincident.findSuccessorEpochs(ret, visited3);
       }
     }
@@ -196,23 +198,23 @@ public final class Epoch implements XMLConstants {
   /**
    * @return all epochs constrained to precede this one
    */
-  public Set<Epoch> findPredecessorEpochs() {
-    Set<Epoch> visited = new HashSet<Epoch>();
-    Set<Epoch> ret = new HashSet<Epoch>();
+  public Set<EpochEvent> findPredecessorEpochs() {
+    Set<EpochEvent> visited = new HashSet<EpochEvent>();
+    Set<EpochEvent> ret = new HashSet<EpochEvent>();
     findPredecessorEpochs(ret, visited);
     return ret;
   }
 
-  private void findPredecessorEpochs(Set<Epoch> ret, Set<Epoch> visited) {
+  private void findPredecessorEpochs(Set<EpochEvent> ret, Set<EpochEvent> visited) {
     if (visited.add(this)) {
       ret.addAll(predecessorEpochs);
-      HashSet<Epoch> visited2 = new HashSet<Epoch>(visited);
-      HashSet<Epoch> visited3 = new HashSet<Epoch>(visited);
-      for (Epoch predecessor : predecessorEpochs) {
+      HashSet<EpochEvent> visited2 = new HashSet<EpochEvent>(visited);
+      HashSet<EpochEvent> visited3 = new HashSet<EpochEvent>(visited);
+      for (EpochEvent predecessor : predecessorEpochs) {
         predecessor.findPredecessorEpochs(ret, visited2);
         predecessor.findCoincidentEpochs(ret, visited);
       }
-      for (Epoch coincident : coincidentEpochs) {
+      for (EpochEvent coincident : coincidentEpochs) {
         coincident.findPredecessorEpochs(ret, visited3);
       }
     }
@@ -221,17 +223,17 @@ public final class Epoch implements XMLConstants {
   /**
    * @return all epochs coincident with this one
    */
-  public Set<Epoch> findCoincidentEpochs() {
-    Set<Epoch> visited = new HashSet<Epoch>();
-    Set<Epoch> ret = new HashSet<Epoch>();
+  public Set<EpochEvent> findCoincidentEpochs() {
+    Set<EpochEvent> visited = new HashSet<EpochEvent>();
+    Set<EpochEvent> ret = new HashSet<EpochEvent>();
     findCoincidentEpochs(ret, visited);
     return ret;
   }
 
-  private void findCoincidentEpochs(Set<Epoch> ret, Set<Epoch> visited) {
+  private void findCoincidentEpochs(Set<EpochEvent> ret, Set<EpochEvent> visited) {
     if (visited.add(this)) {
       ret.addAll(coincidentEpochs);
-      for (Epoch coincident : coincidentEpochs) {
+      for (EpochEvent coincident : coincidentEpochs) {
         coincident.findCoincidentEpochs(ret, visited);
       }
     }
@@ -242,7 +244,7 @@ public final class Epoch implements XMLConstants {
    * @param locked
    * @return true if other epoch could be added (is not locked to another epoch)
    */
-  public boolean addPredecessor(Epoch other, boolean locked) {
+  public boolean addPredecessor(EpochEvent other, boolean locked) {
     if (isCoincident(other) && !canRemoveCoincident(other)) {
       return false;
     }
@@ -265,14 +267,14 @@ public final class Epoch implements XMLConstants {
    * @param other
    * @return true if the predecessor can be removed (is present and not locked)
    */
-  public boolean canRemovePredecessor(Epoch other) {
+  public boolean canRemovePredecessor(EpochEvent other) {
     return predecessorEpochs.contains(other) && !predecessorEpochs.isLocked(other);
   }
 
   /**
    * @param other the other Epoch to remove
    */
-  public void removePredecessor(Epoch other) {
+  public void removePredecessor(EpochEvent other) {
     predecessorEpochs.remove(other);
     other.successorEpochs.remove(this);
   }
@@ -281,7 +283,7 @@ public final class Epoch implements XMLConstants {
    * @param other
    * @return true if other is a predecessor of this epoch
    */
-  public boolean isPredecessor(Epoch other) {
+  public boolean isPredecessor(EpochEvent other) {
     return predecessorEpochs.contains(other);
   }
 
@@ -290,7 +292,7 @@ public final class Epoch implements XMLConstants {
    * @param locked true if the added successor should be locked
    * @return true if other epoch could be added (is not locked to another epoch)
    */
-  public boolean addSuccessor(Epoch other, boolean locked) {
+  public boolean addSuccessor(EpochEvent other, boolean locked) {
     if (isPredecessor(other) && !canRemovePredecessor(other)) {
       return false;
     }
@@ -313,14 +315,14 @@ public final class Epoch implements XMLConstants {
    * @param other
    * @return true if the successor can be removed (is present and not locked)
    */
-  public boolean canRemoveSuccessor(Epoch other) {
+  public boolean canRemoveSuccessor(EpochEvent other) {
     return successorEpochs.contains(other) && !successorEpochs.isLocked(other);
   }
 
   /**
    * @param other the othger Epoch to remove
    */
-  public void removeSuccessor(Epoch other) {
+  public void removeSuccessor(EpochEvent other) {
     successorEpochs.remove(other);
     other.predecessorEpochs.remove(this);
   }
@@ -329,7 +331,7 @@ public final class Epoch implements XMLConstants {
    * @param other
    * @return true if other is a successor of this epoch
    */
-  public boolean isSuccessor(Epoch other) {
+  public boolean isSuccessor(EpochEvent other) {
     return successorEpochs.contains(other);
   }
 
@@ -338,7 +340,7 @@ public final class Epoch implements XMLConstants {
    * @param locked
    * @return true if other epoch could be added (is not locked to another epoch)
    */
-  public boolean addCoincident(Epoch other, boolean locked) {
+  public boolean addCoincident(EpochEvent other, boolean locked) {
     if (isPredecessor(other) && !canRemovePredecessor(other)) {
       return false;
     }
@@ -361,14 +363,14 @@ public final class Epoch implements XMLConstants {
    * @param other
    * @return true if the coincident can be removed (is present and not locked)
    */
-  public boolean canRemoveCoincident(Epoch other) {
+  public boolean canRemoveCoincident(EpochEvent other) {
     return coincidentEpochs.contains(other) && !coincidentEpochs.isLocked(other);
   }
 
   /**
    * @param other the other Epoch to remove
    */
-  public void removeCoincident(Epoch other) {
+  public void removeCoincident(EpochEvent other) {
     coincidentEpochs.remove(other);
     other.coincidentEpochs.remove(this);
   }
@@ -377,7 +379,7 @@ public final class Epoch implements XMLConstants {
    * @param other
    * @return true if this Epoch is coincident with the other Epoch
    */
-  public boolean isCoincident(Epoch other) {
+  public boolean isCoincident(EpochEvent other) {
     return coincidentEpochs.contains(other);
   }
 
@@ -397,7 +399,7 @@ public final class Epoch implements XMLConstants {
   }
 
   private void writeOthers(Element element, ActionContext actionContext, String tag, LockableSet others) {
-    for (Epoch other : others) {
+    for (EpochEvent other : others) {
       Element otherElement = new Element(tag);
       otherElement.setAttribute(ATTR_REF, actionContext.getRef(other));
       otherElement.setAttribute(ATTR_LOCKED, String.valueOf(others.isLocked(other)));
@@ -411,24 +413,24 @@ public final class Epoch implements XMLConstants {
    * @param element
    * @param actionContext
    */
-  public Epoch(AbstractAction action, String description, Element element, ActionContext actionContext) {
+  public EpochEvent(AbstractAction action, String description, Element element, ActionContext actionContext) {
     this.action = action;
     this.description = description;
     readOthers(element, actionContext, TAG_SUCCESSOR, new OthersAccessor() {
       @Override
-      public void add(Epoch epoch, boolean locked) {
+      public void add(EpochEvent epoch, boolean locked) {
         addSuccessor(epoch, locked);
       }
     });
     readOthers(element, actionContext, TAG_PREDECESSOR, new OthersAccessor() {
       @Override
-      public void add(Epoch epoch, boolean locked) {
+      public void add(EpochEvent epoch, boolean locked) {
         addPredecessor(epoch, locked);
       }
     });
     readOthers(element, actionContext, TAG_COINCIDENT, new OthersAccessor() {
       @Override
-      public void add(Epoch epoch, boolean locked) {
+      public void add(EpochEvent epoch, boolean locked) {
         addCoincident(epoch, locked);
       }
     });
@@ -440,7 +442,7 @@ public final class Epoch implements XMLConstants {
     for (Element otherElement : children) {
       String ref = otherElement.getAttributeValue(ATTR_REF);
       boolean locked = Boolean.valueOf(otherElement.getAttributeValue(ATTR_LOCKED));
-      Epoch other = actionContext.getEpoch(ref);
+      EpochEvent other = actionContext.getEpoch(ref);
       if (other != null) {
         othersAccessor.add(other, locked);
       }
@@ -448,23 +450,23 @@ public final class Epoch implements XMLConstants {
   }
 
   /**
-   * @param epochIndex the epochIndex to set
-   */
-  public void setEpochIndex(int epochIndex) {
-    this.epochIndex = epochIndex;
-  }
-
-  /**
-   * @return the epochIndex
-   */
-  public int getEpochIndex() {
-    return epochIndex;
-  }
-
-  /**
    * @return the action
    */
   public AbstractAction getAction() {
     return action;
+  }
+
+  /**
+   * @return the epoch
+   */
+  public Epoch getEpoch() {
+    return epoch;
+  }
+
+  /**
+   * @param epoch the epoch to set
+   */
+  public void setEpoch(Epoch epoch) {
+    this.epoch = epoch;
   }
 }

@@ -85,10 +85,10 @@ public class AllocateAction extends AbstractAction {
   private CA_Object child;
   private String allocationId;
   private IPRangeType rangeType;
-  private final Epoch allocationPublicationTime;
-  private final Epoch deallocationPublicationTime;
-  private final Epoch validityStartTime;
-  private final Epoch validityEndTime;
+  private final EpochEvent allocationPublicationTime;
+  private final EpochEvent deallocationPublicationTime;
+  private final EpochEvent validityStartTime;
+  private final EpochEvent validityEndTime;
 
   /**
    * @param parent
@@ -104,10 +104,10 @@ public class AllocateAction extends AbstractAction {
     this.allocationId = allocationId;
     this.rangeType = rangeType;
     this.allocationPairs.addAll(Arrays.asList(pairs));
-    allocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_ALLOCATION + allocationId);
-    deallocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_DEALLOCATION + allocationId);
-    validityStartTime = new Epoch(this, VALIDITY_START_TIME_OF_ALLOCATION + allocationId);
-    validityEndTime = new Epoch(this, VALIDITY_END_TIME_OF_ALLOCATION + allocationId);
+    allocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_ALLOCATION);
+    deallocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_DEALLOCATION);
+    validityStartTime = new EpochEvent(this, VALIDITY_START_TIME_OF_ALLOCATION);
+    validityEndTime = new EpochEvent(this, VALIDITY_END_TIME_OF_ALLOCATION);
     // Constrain start before end always
     validityStartTime.addSuccessor(validityEndTime, true);
     // Constrain publication when validity changes as default
@@ -140,10 +140,10 @@ public class AllocateAction extends AbstractAction {
     Element deallocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());
     Element validityStartTimeElement = element.getChild(AttributeType.VALIDITY_START_TIME.name());
     Element validityEndTimeElement = element.getChild(AttributeType.VALIDITY_END_TIME.name());
-    allocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_ALLOCATION + allocationId, allocationPublicationTimeElement, actionContext);
-    deallocationPublicationTime = new Epoch(this, PUBLICATION_TIME_OF_DEALLOCATION + allocationId, deallocationPublicationTimeElement, actionContext);
-    validityStartTime = new Epoch(this, VALIDITY_START_TIME_OF_ALLOCATION + allocationId, validityStartTimeElement, actionContext);
-    validityEndTime = new Epoch(this, VALIDITY_END_TIME_OF_ALLOCATION + allocationId, validityEndTimeElement, actionContext);
+    allocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_ALLOCATION, allocationPublicationTimeElement, actionContext);
+    deallocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_DEALLOCATION, deallocationPublicationTimeElement, actionContext);
+    validityStartTime = new EpochEvent(this, VALIDITY_START_TIME_OF_ALLOCATION, validityStartTimeElement, actionContext);
+    validityEndTime = new EpochEvent(this, VALIDITY_END_TIME_OF_ALLOCATION, validityEndTimeElement, actionContext);
 
     @SuppressWarnings("unchecked")
     List<Element> children = element.getChildren(Pair.TAG_PAIR);
@@ -174,20 +174,20 @@ public class AllocateAction extends AbstractAction {
   }
 
   /**
-   * @see com.bbn.rpki.test.actions.AbstractAction#getAllEpochs()
+   * @see com.bbn.rpki.test.actions.AbstractAction#getAllEpochEvents()
    */
   @Override
-  public Collection<Epoch> getAllEpochs() {
+  public Collection<EpochEvent> getAllEpochEvents() {
     return Arrays.asList(allocationPublicationTime, validityStartTime, deallocationPublicationTime, validityEndTime);
   }
 
   /**
    * Perform the allocation described
    * 
-   * @see com.bbn.rpki.test.actions.AbstractAction#execute(Epoch, TypescriptLogger)
+   * @see com.bbn.rpki.test.actions.AbstractAction#execute(EpochEvent, TypescriptLogger)
    */
   @Override
-  public void execute(Epoch executionEpoch, TypescriptLogger logger) {
+  public void execute(EpochEvent executionEpoch, TypescriptLogger logger) {
     if (executionEpoch == allocationPublicationTime) {
       switch (rangeType) {
       case ipv4:
@@ -230,6 +230,14 @@ public class AllocateAction extends AbstractAction {
   }
 
   /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getId()
+   */
+  @Override
+  public String getId() {
+    return allocationId;
+  }
+
+  /**
    * @see java.lang.Object#toString()
    */
   @Override
@@ -266,7 +274,7 @@ public class AllocateAction extends AbstractAction {
    * @see com.bbn.rpki.test.actions.AbstractAction#getExecutionEpochs()
    */
   @Override
-  public Collection<Epoch> getExecutionEpochs() {
+  public Collection<EpochEvent> getExecutionEpochs() {
     return Arrays.asList(allocationPublicationTime, deallocationPublicationTime);
   }
 }

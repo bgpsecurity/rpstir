@@ -11,7 +11,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import com.bbn.rpki.test.tasks.EpochGroup;
+import com.bbn.rpki.test.tasks.Epoch;
 import com.bbn.rpki.test.tasks.Model;
 
 /**
@@ -21,7 +21,7 @@ import com.bbn.rpki.test.tasks.Model;
  */
 public class ActionTreeModel implements TreeModel {
   class EpochsNode {
-    List<EpochGroup> epochs;
+    List<Epoch> epochs;
 
     @Override
     public String toString() {
@@ -54,8 +54,8 @@ public class ActionTreeModel implements TreeModel {
     if (parent == epochsNode) {
       return epochsNode.epochs.get(index);
     }
-    if (parent instanceof EpochGroup) {
-      EpochGroup epochGroup = (EpochGroup) parent;
+    if (parent instanceof Epoch) {
+      Epoch epochGroup = (Epoch) parent;
       return epochGroup.getEpoch(index);
     }
     // No more non-leaf nodes
@@ -70,9 +70,9 @@ public class ActionTreeModel implements TreeModel {
     if (parent == epochsNode) {
       return epochsNode.epochs.size();
     }
-    if (parent instanceof EpochGroup) {
-      EpochGroup epochGroup = (EpochGroup) parent;
-      return epochGroup.getEpochCount();
+    if (parent instanceof Epoch) {
+      Epoch epochGroup = (Epoch) parent;
+      return epochGroup.getEpochEventCount();
     }
     return 0;
   }
@@ -85,7 +85,7 @@ public class ActionTreeModel implements TreeModel {
     if (node == epochsNode) {
       return false;
     }
-    if (node instanceof EpochGroup) {
+    if (node instanceof Epoch) {
       return false;
     }
     return true;
@@ -107,8 +107,8 @@ public class ActionTreeModel implements TreeModel {
     if (parent == epochsNode) {
       return epochsNode.epochs.indexOf(child);
     }
-    if (parent instanceof EpochGroup) {
-      EpochGroup ae = (EpochGroup) parent;
+    if (parent instanceof Epoch) {
+      Epoch ae = (Epoch) parent;
       return ae.indexOf(child);
     }
     return -1;
@@ -160,7 +160,7 @@ public class ActionTreeModel implements TreeModel {
    * @param model
    */
   public void update(Model model) {
-    epochsNode.epochs = new ArrayList<EpochGroup>(model.getEpochGroups());
+    epochsNode.epochs = new ArrayList<Epoch>(model.getEpochs());
     fireRootModified();
   }
 
@@ -184,6 +184,14 @@ public class ActionTreeModel implements TreeModel {
         return treePath;
       }
     }
+    return null;
+  }
+
+  /**
+   * @return
+   */
+  public TreePath getPathToRoot() {
+    // TODO Auto-generated method stub
     return null;
   }
 }

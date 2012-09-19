@@ -21,12 +21,19 @@ import javax.swing.tree.TreePath;
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.AllocateAction;
 import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
-import com.bbn.rpki.test.actions.Epoch;
+import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.actions.ui.ActionTree.SelectionListener;
 import com.bbn.rpki.test.tasks.Model;
 
 /**
- * <Enter the description of this type here>
+ * An editor for the actions of the test.
+ * 
+ * Displays two panes side-by-side.
+ * 
+ * The left pane shows a tree of the epoch groups and what happens in each epoch group.
+ * Allows actions to be added, deleted or selected.
+ * 
+ * The right pane shows details about the selected action.
  *
  * @author tomlinso
  */
@@ -35,6 +42,7 @@ public class ActionsEditor implements SelectionListener {
   private final ActionTree actionTree;
   private final JScrollPane treePane;
   private final ActionDetail actionDetail;
+  private final JPanel mainPanel = new JPanel(new BorderLayout());
   private TreePath selectedPath = null;
 
   private final Action addAction = new javax.swing.AbstractAction("Add Action") {
@@ -58,6 +66,7 @@ public class ActionsEditor implements SelectionListener {
             Constructor<?> constructor = chosenClass.getConstructor(Model.class);
             AbstractAction addedAction = (AbstractAction) constructor.newInstance(model);
             model.addAction(addedAction);
+            actionTree.expandAndSelect(addedAction);
           } catch (Exception ex) {
             return;
           }
@@ -72,7 +81,7 @@ public class ActionsEditor implements SelectionListener {
       assert selectedPath != null;
       int pathCount = selectedPath.getPathCount();
       if (pathCount == 3) {
-        Epoch epoch = (Epoch) selectedPath.getPathComponent(2);
+        EpochEvent epoch = (EpochEvent) selectedPath.getPathComponent(2);
         AbstractAction action = epoch.getAction();
         model.removeAction(action);
       }
@@ -151,7 +160,7 @@ public class ActionsEditor implements SelectionListener {
       pathCount = 0;
     }
     if (pathCount > 2) {
-      Epoch epoch = (Epoch) newPath.getPathComponent(2);
+      EpochEvent epoch = (EpochEvent) newPath.getPathComponent(2);
       AbstractAction action = epoch.getAction();
       actionDetail.setAction(action, epoch);
       changeAction(deleteAction, "Delete Action");

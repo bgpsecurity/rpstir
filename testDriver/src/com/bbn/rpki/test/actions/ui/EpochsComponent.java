@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.bbn.rpki.test.actions.Epoch;
+import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.actions.ui.ActionDetail.EpochCallback;
 import com.bbn.rpki.test.tasks.Model;
 
@@ -28,12 +28,12 @@ class EpochsComponent extends JPanel {
   final JList list = new JList(listModel);
   final JButton removeButton = new JButton("Remove");
   final JButton addButton = new JButton("Add...");
-  private final Collection<Epoch> currentSelection;
+  private final Collection<EpochEvent> currentSelection;
   private EpochCallback cb;
-  private Collection<Epoch> availableEpochs;
+  private Collection<EpochEvent> availableEpochs;
   private Model model;
 
-  EpochsComponent(Model model, final Epoch epoch, final String title, final Collection<Epoch> currentSelection, Collection<Epoch> availableEpochs, final ActionDetail.EpochCallback cb) {
+  EpochsComponent(Model model, final EpochEvent epoch, final String title, final Collection<EpochEvent> currentSelection, Collection<EpochEvent> availableEpochs, final ActionDetail.EpochCallback cb) {
     super(new BorderLayout());
     this.model = model;
     this.cb = cb;
@@ -41,7 +41,7 @@ class EpochsComponent extends JPanel {
     if (currentSelection.isEmpty()) {
       markEmptyList(title);
     } else {
-      for (Epoch coincidentEpoch : currentSelection) {
+      for (EpochEvent coincidentEpoch : currentSelection) {
         listModel.addElement(coincidentEpoch);
       }
     }
@@ -54,7 +54,7 @@ class EpochsComponent extends JPanel {
       @Override
       public void actionPerformed(ActionEvent e) {
         for (Object o : list.getSelectedValues()) {
-          Epoch epochToRemove = (Epoch) o;
+          EpochEvent epochToRemove = (EpochEvent) o;
           cb.remove(epochToRemove);
           listModel.removeElement(epochToRemove);
           currentSelection.remove(epochToRemove);
@@ -88,7 +88,7 @@ class EpochsComponent extends JPanel {
         Object[] selection = list.getSelectedValues();
         boolean canRemove = selection.length > 0;
         for (Object selectedObject : selection) {
-          Epoch selectedEpoch = (Epoch) selectedObject;
+          EpochEvent selectedEpoch = (EpochEvent) selectedObject;
           if (!cb.canRemove(selectedEpoch)) {
             canRemove = false;
             break;
@@ -118,7 +118,7 @@ class EpochsComponent extends JPanel {
   }
 
   void addEpoch() {
-    Epoch[] epochArray = new Epoch[availableEpochs.size()];
+    EpochEvent[] epochArray = new EpochEvent[availableEpochs.size()];
     epochArray = availableEpochs.toArray(epochArray);
     JComboBox msg = new JComboBox(epochArray);
     int option = JOptionPane.showConfirmDialog(this, msg, "Select Epoch", JOptionPane.OK_CANCEL_OPTION);
@@ -129,8 +129,8 @@ class EpochsComponent extends JPanel {
       Object[] selectedObjects = msg.getSelectedObjects();
       boolean changed = false;
       for (Object object : selectedObjects) {
-        cb.add((Epoch) object);
-        currentSelection.add((Epoch) object);
+        cb.add((EpochEvent) object);
+        currentSelection.add((EpochEvent) object);
         listModel.addElement(object);
         changed = true;
       }

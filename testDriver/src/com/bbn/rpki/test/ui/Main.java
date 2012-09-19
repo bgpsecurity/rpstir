@@ -3,14 +3,19 @@
  */
 package com.bbn.rpki.test.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
@@ -37,6 +42,7 @@ public class Main {
   private final JSplitPane leftRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
   private final JSplitPane topBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tlPanel.getComponent(), leftRight);
   private final String[] args;
+  protected boolean run;
 
   /**
    * @param args
@@ -62,12 +68,40 @@ public class Main {
       System.out.println("Starting " + iniFile);
       Model model = new Model(Util.RPKI_ROOT, iniFile, tlPanel);
       ActionsEditor actionsEditor = new ActionsEditor(model);
-      JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
+      final JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
+      JPanel buttonsPanel = new JPanel();
+      JButton exitButton = new JButton("Exit");
+      exitButton.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          // TODO Auto-generated method stub
+          run = false;
+          dialog.setVisible(false);
+        }
+      });
+      buttonsPanel.add(exitButton);
+      JButton runButton = new JButton("Run");
+      runButton.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          // TODO Auto-generated method stub
+          run = true;
+          dialog.setVisible(false);
+        }
+      });
+      buttonsPanel.add(runButton);
+      dialog.add(buttonsPanel, BorderLayout.SOUTH);
       dialog.setModal(true);
       dialog.setResizable(true);
       dialog.add(actionsEditor.getComponent());
       dialog.pack();
       dialog.setVisible(true);
+      if (!run) {
+        System.exit(0);
+        return;
+      }
       Iterable<TaskFactory.Task> tasks = model.getTasks();
       executeTasks(tasks, model, "");
       System.out.println(iniFile + " completed");
