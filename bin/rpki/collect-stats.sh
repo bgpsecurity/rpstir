@@ -60,6 +60,9 @@ query.sh -t manifest -d pathname -d this_upd -d next_upd -d flags -i \
     > "$STATS_DIR/query.mft" \
     || fatal "could not query manifests"
 
+results.py -v > "$STATS_DIR/results" \
+    || fatal "could not run results.py"
+
 
 tar -cpzf "$STATS_DIR.tgz" -C `dirname "$STATS_DIR"` `basename "$STATS_DIR"` \
     || fatal "could not make $STATS_DIR.tgz"
