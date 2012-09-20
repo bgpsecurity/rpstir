@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.bbn.rpki.test.util.Util;
+import com.bbn.rpki.test.objects.Util;
 
 /**
  * Checks the cache for agreement with the most recent uploads.

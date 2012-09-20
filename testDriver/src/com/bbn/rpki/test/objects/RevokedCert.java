@@ -6,8 +6,6 @@ package com.bbn.rpki.test.objects;
 import java.math.BigInteger;
 import java.util.Date;
 
-import com.bbn.rpki.test.util.Util;
-
 /**
  * <Enter the description of this type here>
  *

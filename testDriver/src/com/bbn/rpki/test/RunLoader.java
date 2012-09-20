@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.bbn.rpki.test.objects.TypescriptLogger;
-import com.bbn.rpki.test.util.Util;
+import com.bbn.rpki.test.objects.Util;
 
 /**
  * <Enter the description of this type here>
