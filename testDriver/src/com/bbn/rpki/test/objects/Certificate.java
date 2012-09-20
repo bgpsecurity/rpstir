@@ -7,6 +7,8 @@ import java.io.File;
 import java.util.Calendar;
 import java.util.Map;
 
+import com.bbn.rpki.test.util.Util;
+
 /**
  * <Enter the description of this type here>
  *

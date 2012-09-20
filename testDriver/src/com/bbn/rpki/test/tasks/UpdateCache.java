@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * A Task to run the chaser to download and store into the cache

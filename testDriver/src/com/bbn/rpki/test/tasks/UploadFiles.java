@@ -7,8 +7,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.ExtensionHandler.ExtensionFilter;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * UPloads multiple files to a publication point

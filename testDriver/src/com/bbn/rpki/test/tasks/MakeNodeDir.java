@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * Task to create the directory for one node

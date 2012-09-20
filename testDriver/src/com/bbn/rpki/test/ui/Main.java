@@ -21,12 +21,12 @@ import javax.swing.SwingUtilities;
 
 import com.bbn.rpki.test.RunLoader;
 import com.bbn.rpki.test.actions.ui.ActionsEditor;
-import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.TaskBreakdown;
 import com.bbn.rpki.test.tasks.TaskFactory;
 import com.bbn.rpki.test.tasks.UpdateCache;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * <Enter the description of this type here>

@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.objects;
 
+import com.bbn.rpki.test.util.Util;
+
 
 /**
  * <Enter the description of this type here>

@@ -41,7 +41,7 @@ import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.TestbedConfig;
 import com.bbn.rpki.test.objects.TestbedCreate;
 import com.bbn.rpki.test.objects.TypescriptLogger;
-import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * Represents the current state of a test.

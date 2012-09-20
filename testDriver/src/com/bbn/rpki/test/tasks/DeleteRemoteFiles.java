@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * Common base class for deleting remote files from a particular publication

@@ -1,7 +1,7 @@
 /*
  * Created on Nov 7, 2011
  */
-package com.bbn.rpki.test.objects;
+package com.bbn.rpki.test.util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,7 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.bbn.rpki.test.util.Sucker;
+import com.bbn.rpki.test.objects.CA_Obj;
+import com.bbn.rpki.test.objects.Certificate;
+import com.bbn.rpki.test.objects.Constants;
+import com.bbn.rpki.test.objects.EE_cert;
+import com.bbn.rpki.test.objects.IPRangeList;
+import com.bbn.rpki.test.objects.Manifest;
+import com.bbn.rpki.test.objects.TypescriptLogger;
 
 /**
  * <Enter the description of this type here>

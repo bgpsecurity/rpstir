@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.bbn.rpki.test.objects.Util;
+import com.bbn.rpki.test.util.Util;
 
 /**
  * Installs a new trust anchor certificate
