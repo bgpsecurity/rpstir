@@ -258,6 +258,9 @@ AC_CONFIG_FILES([bin/rpki/updateTA.py],
 AC_CONFIG_FILES([bin/rpki-rsync/rsync_cord.py],
                 [chmod +x bin/rpki-rsync/rsync_cord.py])
 
+AC_CONFIG_FILES([bin/rpki-statistics/download-time-per-domain.py],
+                [chmod +x bin/rpki-statistics/download-time-per-domain.py])
+
 AC_CONFIG_FILES([bin/rpki-statistics/for-each-run.sh],
                 [chmod +x bin/rpki-statistics/for-each-run.sh])
 
