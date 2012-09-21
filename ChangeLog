@@ -3,6 +3,7 @@ next
 	* Fix compatibility with older rsync servers.
 	* Simplify internal dependencies.
 	* Switch to a single Makefile to speed up parallel compilation.
+	* Remove some unused code.
 
 0.4
 
