@@ -13,6 +13,14 @@ fatal () {
     exit 1
 }
 
+# depends on the script defining a usage function that prints a help message
+usage_fatal () {
+    error "$@"
+    echo >&2
+    usage
+    exit 1
+}
+
 
 # Try to lock a mutex pathname.
 # Returns 0 on successful lock, otherwise returns non-zero.
