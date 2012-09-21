@@ -1,0 +1,44 @@
+#!/bin/sh
+
+
+usage () {
+    {
+        echo "Usage: $0 <executable> [<executable's arguments> ...]"
+        echo
+        echo "For each statistics tarball, extract the tarball,"
+        echo "run the executable with the specified arguments"
+        echo "in the extracted directory, and remove the extracted"
+        echo "directory."
+    } >&2
+}
+
+
+. `dirname "$0"`/../../lib/util/shell_utils
+
+
+test $# -ge 1 || usage_fatal "no executable specified"
+
+# get absolute path of the executable
+test -x "$1" || usage_fatal "executable doesn't exist or can't be executed"
+EXECUTABLE_DIR=`dirname "$1"`
+EXECUTABLE=`cd "$EXECUTABLE_DIR" && pwd`/`basename "$1"`
+unset EXECUTABLE_DIR
+shift
+
+
+cd statistics || fatal "can't cd into the statistics directory"
+
+workdir="`@MKTEMP_DIR@`" || fatal "can't create temporary directory"
+
+for tarball in *.tgz; do
+    tar -xzpf ./"$tarball" -C "$workdir" || fatal "can't extract $tarball"
+
+    statsdir="$workdir"/`basename "$tarball" .tgz`
+    test -d "$statsdir" || fatal "tarball $tarball doesn't have expected contents"
+
+    (cd "$statsdir" && exec "$EXECUTABLE" "$@") || fatal "error in $EXECUTABLE"
+
+    rm -rf "$statsdir"
+done
+
+rm -rf "$workdir"
