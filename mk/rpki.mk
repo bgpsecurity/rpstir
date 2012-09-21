@@ -30,9 +30,6 @@ CLEANFILES += \
 	tests/subsystem/chaser/*.log
 
 
-dist_bin_SCRIPTS += bin/rpki/collect-stats.sh
-
-
 bin_PROGRAMS += bin/rpki/garbage
 
 bin_rpki_garbage_LDADD = \
