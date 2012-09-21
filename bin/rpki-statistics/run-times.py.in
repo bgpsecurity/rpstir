@@ -1,0 +1,55 @@
+#!@PYTHON@
+
+import datetime
+import os
+import re
+import sys
+
+
+"""
+Compute the duration of each complete run of synchronizing against the RPKI.
+"""
+
+
+if __name__ == '__main__':
+    file_re = re.compile(
+        """
+        ^
+        (?P<start_year>\\d{4}) - (?P<start_month>\\d{2}) - (?P<start_day>\\d{2}) T
+        (?P<start_hour>\\d{2}) : (?P<start_minute>\\d{2}) : (?P<start_second>\\d{2}) ~
+        (?P<stop_year>\\d{4}) - (?P<stop_month>\\d{2}) - (?P<stop_day>\\d{2}) T
+        (?P<stop_hour>\\d{2}) : (?P<stop_minute>\\d{2}) : (?P<stop_second>\\d{2})
+        \\.tgz
+        $
+        """,
+        re.VERBOSE)
+
+    for file_name in os.listdir('statistics'):
+        file_name_match = file_re.match(file_name)
+        if '\n' in file_name or file_name_match is None:
+            sys.stderr.write("unknown file: %s\n" % file_name)
+            continue
+
+        try:
+            start_time = datetime.datetime(
+                *[int(x) for x in file_name_match.group(
+                    'start_year', 'start_month', 'start_day', 'start_hour',
+                    'start_minute', 'start_second')])
+        except ValueError:
+            sys.stderr.write("invalid start date in file: %s\n" % file_name)
+            continue
+
+        try:
+            stop_time = datetime.datetime(
+                *[int(x) for x in file_name_match.group(
+                    'stop_year', 'stop_month', 'stop_day', 'stop_hour',
+                    'stop_minute', 'stop_second')])
+        except ValueError:
+            sys.stderr.write("invalid stop date in file: %s\n" % file_name)
+            continue
+
+        if start_time > stop_time:
+            sys.stderr.write("start time is after end time in file: %s\n" % file_name)
+            continue
+
+        print (stop_time - start_time).total_seconds()

@@ -256,6 +256,9 @@ AC_CONFIG_FILES([bin/rpki/updateTA.py],
 AC_CONFIG_FILES([bin/rpki-rsync/rsync_cord.py],
                 [chmod +x bin/rpki-rsync/rsync_cord.py])
 
+AC_CONFIG_FILES([bin/rpki-statistics/run-times.py],
+                [chmod +x bin/rpki-statistics/run-times.py])
+
 AC_CONFIG_FILES([tests/subsystem/rtr/badPDUs.py],
                 [chmod +x tests/subsystem/rtr/badPDUs.py])
 
