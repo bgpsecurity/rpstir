@@ -1,0 +1,116 @@
+#!@PYTHON@
+
+import datetime
+import os
+import re
+import sys
+
+
+"""
+Compute the amount time spent on validation (not downloading)
+"""
+
+log_line_re = re.compile(
+    """
+    ^
+    (?P<timezone>[a-zA-Z0-9]+) [ ]
+    (?P<year>\\d{4}) - (?P<month>\\d{2}) - (?P<day>\\d{2}) [ ]
+    (?P<hour>\\d{2}) : (?P<minute>\\d{2}) : (?P<second>\\d{2})
+    [ ]+ \\| [ ]
+    (?P<component>[^ ]+)
+    [ ]+ \\| [ ]
+    (?P<level>[^ ]+)
+    [ ]+ \\| [ ]
+    (?P<message>.*)
+    $
+    """,
+    re.VERBOSE)
+
+def log_line_match_to_datetime(match):
+    return datetime.datetime(
+        *[int(x) for x in match.group('year', 'month', 'day',
+                                      'hour', 'minute', 'second')])
+
+
+if __name__ == '__main__':
+    # XXX: updateTA.py time is not counted
+    message_start_validation_re = {
+        #'rsync': re.compile('^Rsync client session started$'),
+        'sockline': re.compile('^Sockline: B'),
+    }
+
+    message_stop_validation_re = {
+        #'rsync': re.compile('^Rsync client session ended$'),
+        'sockline': re.compile('^Sockline: E'),
+    }
+
+    # total time spent validating, not including the current interval
+    total_validation_time = 0.0
+
+    # type of the interval being procecessed (must be a key in the above dict()s
+    interval_type = None
+
+    # start of the current time interval of validation
+    interval_start = None
+
+    # end of the current interval
+    interval_stop = None
+
+    # amount of consecutive downtime to ignore
+    # this makes up for the low precision of the log combined with the relative speed of the actions
+    downtime_ignore = datetime.timedelta(seconds=1)
+
+    with open("rcli.log") as rcli_log:
+        for line in rcli_log:
+            line_match = log_line_re.match(line)
+            if line_match is None:
+                sys.stderr.write("invalid log line: %s\n" % line)
+                continue
+
+            message_datetime = log_line_match_to_datetime(line_match)
+
+            for message_type, message_re in message_start_validation_re.iteritems():
+                if message_re.match(line_match.group('message')) is not None:
+                    if interval_type is None:
+                        interval_type = message_type
+                        if interval_stop is None:
+                            # there's no previous interval
+                            interval_start = message_datetime
+                        elif interval_stop + downtime_ignore <= message_datetime:
+                            # tack on to the end of the last interval
+                            interval_stop = None
+                        else:
+                            # there's a previous interval but we're not appending to it
+                            total_validation_time += (interval_stop - interval_start).total_seconds()
+                            interval_start = message_datetime
+                            interval_stop = None
+                    else:
+                        # there's already a current interval
+                        sys.exit("log line tries to start an interval of "
+                                 "validation, but validation was already "
+                                 "started: %s"
+                                 % line)
+
+            for message_type, message_re in message_stop_validation_re.iteritems():
+                if message_re.match(line_match.group('message')) is not None:
+                    if interval_type is None or interval_start is None or interval_stop is not None:
+                        sys.exit("log line tries to end an interval of "
+                                 "validation, but validation wasn't "
+                                 "running: %s"
+                                 % line)
+                    elif interval_type != message_type:
+                        sys.exit("log line of type %s tries to end an interval "
+                                 "of type %s: %s"
+                                 % (message_type, interval_type, line))
+                    else:
+                        interval_type = None
+                        interval_stop = message_datetime
+
+    if interval_type is not None:
+        sys.exit("the last interval never ended")
+    elif interval_start is not None and interval_stop is not None:
+        total_validation_time += (interval_stop - interval_start).total_seconds()
+        interval_start = None
+        interval_stop = None
+
+    print total_validation_time
