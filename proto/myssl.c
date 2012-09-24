@@ -3747,7 +3747,8 @@ static int rescert_sig_algs_chk(
     else
     {
         modulus_bit_length = bytes_read * 8;
-        for (uint8_t bit_mask = 0x80;
+        uint8_t bit_mask;
+        for (bit_mask = 0x80;
             bit_mask > 0 && (pubkey_modulus_buf[0] & bit_mask) == 0;
             bit_mask >> 1)
         {
