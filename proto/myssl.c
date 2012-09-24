@@ -3662,7 +3662,7 @@ static int rescert_sig_algs_chk(
         vsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey);
     if (bytes_to_read > SUBJ_PUBKEY_MAX_SZ)
     {
-        log_msg(LOG_ERR, "subj pub key too long");
+        log_msg(LOG_ERR, "subj pub key too long (%d bytes)", bytes_to_read);
         return ERR_SCM_BADALG;
     }
     uchar *pubkey_buf;
@@ -3674,13 +3674,17 @@ static int rescert_sig_algs_chk(
         return ERR_SCM_NOMEM;
     if (bytes_read != bytes_to_read)
     {
-        log_msg(LOG_ERR, "subj pub key actual length != stated");
+        log_msg(LOG_ERR, "subj pub key actual length (%d) != stated (%d)",
+                bytes_read, bytes_to_read);
         free(pubkey_buf);
         return ERR_SCM_BADALG;
     }
     if (pubkey_buf[0] != 0)
     {
-        log_msg(LOG_ERR, "subj pub key not a whole number of bytes");
+        log_msg(LOG_ERR,
+                "subj pub key not a whole number of bytes (between %d and %d)",
+                bytes_read - 2, // one for the unused-bits byte
+                bytes_read - 1);
         free(pubkey_buf);
         return ERR_SCM_BADALG;
     }
@@ -3718,11 +3722,42 @@ static int rescert_sig_algs_chk(
         delete_casn(&rsapubkey.self);
         return ERR_SCM_NOMEM;
     }
-    if (bytes_read != SUBJ_PUBKEY_MODULUS_SZ + 1 ||
-        pubkey_modulus_buf[0] != 0 || (pubkey_modulus_buf[1] & 0x80) == 0)
+    if (pubkey_modulus_buf[0] & 0x80)
     {
-        log_msg(LOG_ERR, "subj pub key modulus bit-length != %d",
-                SUBJ_PUBKEY_MODULUS_SZ * 8);
+        log_msg(LOG_ERR, "subj pub key modulus is negative (length = %d bytes)",
+                bytes_read);
+        free(pubkey_modulus_buf);
+        delete_casn(&rsapubkey.self);
+        return ERR_SCM_BADALG;
+    }
+    int modulus_bit_length;
+    if (pubkey_modulus_buf[0] == 0)
+    {
+        if (bytes_read > 1 && (pubkey_modulus_buf[1] & 0x80) == 0)
+        {
+            log_msg(LOG_ERR, "subj pub key modulus has leading zero-byte "
+                    "(length = %d bytes)", bytes_read);
+            free(pubkey_modulus_buf);
+            delete_casn(&rsapubkey.self);
+            return ERR_SCM_BADALG;
+        }
+
+        modulus_bit_length = (bytes_read - 1) * 8;
+    }
+    else
+    {
+        modulus_bit_length = bytes_read * 8;
+        for (uint8_t bit_mask = 0x80;
+            bit_mask > 0 && (pubkey_modulus_buf[0] & bit_mask) == 0;
+            bit_mask >> 1)
+        {
+            --modulus_bit_length;
+        }
+    }
+    if (modulus_bit_length != SUBJ_PUBKEY_MODULUS_SZ * 8)
+    {
+        log_msg(LOG_ERR, "subj pub key modulus bit-length (%d) != %d",
+                modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
         free(pubkey_modulus_buf);
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
