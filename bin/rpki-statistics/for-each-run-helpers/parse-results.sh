@@ -7,7 +7,7 @@
 
 
 get_field_value () {
-    local field
+    local field line
 
     if test $# -ne 1; then
         echo >&2 "get_field_value takes one argument"
@@ -16,13 +16,17 @@ get_field_value () {
 
     field=$1
 
-    if grep "^$field: [0-9]\\+$" results | sed 's/^.*: \([0-9]\+\)$/\1/'; then
-        # the if condition above printed the value of the field
-        return
-    else
-        echo >&2 "can't find field \"$field\""
+    line=$(
+        grep "^$field: [0-9]\\+$" results || {
+            echo >&2 "can't find field \"$field\""
+            exit 1
+        }
+    )
+
+    echo "$line" | sed 's/^.*: \([0-9]\+\)$/\1/' || {
+        echo >&2 "can't parse line: $line"
         exit 1
-    fi
+    }
 }
 
 
