@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # Used to answer questions such as: "What % of certs/roas/etc... are invalid?"
-# Compute the ratio of field $1 to field $2 in the results file.
+
+# If one argument is specified, print that field.
+# If two arguments are specified, compute the ratio of field $1 to field $2 in the results file.
 
 
 get_field_value () {
@@ -24,12 +26,16 @@ get_field_value () {
 }
 
 
-if test $# -ne 2; then
-    echo >&2 "Usage: $0 results-field-for-numerator results-field-for-denominator"
+if test $# -eq 1; then
+    get_field_value "$1"
+elif test $# -eq 2; then
+    NUMERATOR=`get_field_value "$1"`
+    DENOMINATOR=`get_field_value "$2"`
+
+    awk "BEGIN {print $NUMERATOR * 1.0 / $DENOMINATOR}"
+else
+    echo >&2 "Usage:"
+    echo >&2 "    $0 results-field"
+    echo >&2 "    $0 results-field-for-numerator results-field-for-denominator"
     exit 1
 fi
-
-NUMERATOR=`get_field_value "$1"`
-DENOMINATOR=`get_field_value "$2"`
-
-awk "BEGIN {print $NUMERATOR * 1.0 / $DENOMINATOR}"
