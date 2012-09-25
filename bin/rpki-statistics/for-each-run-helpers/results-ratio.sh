@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Used to answer questions such as: "What % of certs/roas/etc... are invalid?"
 # Compute the ratio of field $1 to field $2 in the results file.
 
 

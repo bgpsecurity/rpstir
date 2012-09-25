@@ -7,7 +7,9 @@ import sys
 
 
 """
-Compute the amount time spent on validation (not downloading)
+Compute the amount time spent on validation (not downloading).
+
+NOTE: needs more thorough testing.
 """
 
 log_line_re = re.compile(
@@ -44,10 +46,17 @@ if __name__ == '__main__':
         'sockline': re.compile('^Sockline: E'),
     }
 
+    #### Finite State Machine for parsing rcli.log to determine
+    #### validation interval.
+
     # total time spent validating, not including the current interval
     total_validation_time = 0.0
 
     # type of the interval being procecessed (must be a key in the above dict()s
+    # Type means:
+    # None - not currently within an interval
+    # Sockline - currently within an interval of type 'sockline'
+    # <no other types at the moment>
     interval_type = None
 
     # start of the current time interval of validation

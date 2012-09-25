@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# cron runs this script once every X time period to collect statistics
+# from the global RPKI
+
 cd `dirname "$0"`/../..
 
 . etc/envir.setup > /dev/null
@@ -21,6 +24,7 @@ formatted_date () {
     date -u +"%Y-%m-%dT%H:%M:%S"
 }
 
+# Note: etc/sample-ta/*.tal on rtr-test:~dmandelb/statistics/ includes ARIN
 SYNC_START_TIME="`formatted_date`"
 run_from_TALs.sh etc/sample-ta/*.tal \
     > run.log 2>&1 \
