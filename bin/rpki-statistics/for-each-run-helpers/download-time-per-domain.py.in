@@ -3,6 +3,7 @@
 import datetime
 import os
 import re
+import sys
 
 
 """
@@ -19,13 +20,36 @@ if __name__ == '__main__':
     log_header_re_text_X = """
         ^
         (?P<day>[0-9]{2}) - (?P<month>[A-Za-z]+) - (?P<year>[0-9]{4}) -
-        {?P<hour>[0-9]{2}) : (?P<minute>[0-9]{2}) : (?P<second>[0-9]{2})[ ]+
-        [A-Z]+ [ ]+
+        (?P<hour>[0-9]{2}) : (?P<minute>[0-9]{2}) : (?P<second>[0-9]{2})[ ]+
+        (?P<level>[A-Z]+) [ ]+
         Thread: [ ] (?P<thread>[0-9]+) : [ ]+
         """
 
-    # TODO
-    log_uri_starting = re.compile()
+    log_uri_starting = re.compile(
+        log_header_re_text_X +
+        """
+        starting [ ]
+        (?P<host>[^/]+) /
+        (?P<path>.*)
+        $
+        """,
+        re.VERBOSE)
+
+    log_uri_done = re.compile(
+        log_header_re_text_X +
+        """
+        [^ ]+ [ ]
+        had [ ] return [ ] code [ ]
+        (?P<return_code>-?[0-9]+)
+        $
+        """,
+        re.VERBOSE)
+
+    # map of thread id to (datetime, host)
+    thread_started = {}
+
+    # map of host to time spent in seconds
+    time_per_host = {}
 
     for log_name in os.listdir('LOGS'):
         if '\n' in log_name or log_re.match(log_name) is None:
@@ -33,4 +57,20 @@ if __name__ == '__main__':
 
         with open(os.path.join('LOGS', log_name)) as log_file:
             for log_line in log_file:
-                # TODO
+                starting_match = log_uri_starting.match(log_line)
+                if starting_match is not None:
+                    thread = starting_match.group('thread')
+                    if thread in thread_started:
+                        sys.exit("thread %s already started" % thread)
+                    thread_started[thread] = (datetime.datetime(...), starting_match.group('host')) # TODO
+
+                done_match = log_uri_done.match(log_line)
+                if done_match is not None:
+                    thread = starting_match.group('thread')
+                    if thread not in thread_started:
+                        sys.exit("thread %s not started" % thread)
+                    # TODO: subtract start and end times, add to time_per_host, del thread_started[thread], store return code somewhere?
+
+        # TODO: make sure thread_started is empty
+
+    # TODO: print results
