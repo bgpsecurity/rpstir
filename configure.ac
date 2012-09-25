@@ -258,17 +258,17 @@ AC_CONFIG_FILES([bin/rpki/updateTA.py],
 AC_CONFIG_FILES([bin/rpki-rsync/rsync_cord.py],
                 [chmod +x bin/rpki-rsync/rsync_cord.py])
 
-AC_CONFIG_FILES([bin/rpki-statistics/download-time-per-domain.py],
-                [chmod +x bin/rpki-statistics/download-time-per-domain.py])
-
 AC_CONFIG_FILES([bin/rpki-statistics/for-each-run.sh],
                 [chmod +x bin/rpki-statistics/for-each-run.sh])
 
+AC_CONFIG_FILES([bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py],
+                [chmod +x bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py])
+
+AC_CONFIG_FILES([bin/rpki-statistics/for-each-run-helpers/validation-time.py],
+                [chmod +x bin/rpki-statistics/for-each-run-helpers/validation-time.py])
+
 AC_CONFIG_FILES([bin/rpki-statistics/run-times.py],
                 [chmod +x bin/rpki-statistics/run-times.py])
-
-AC_CONFIG_FILES([bin/rpki-statistics/validation-time.py],
-                [chmod +x bin/rpki-statistics/validation-time.py])
 
 AC_CONFIG_FILES([tests/subsystem/rtr/badPDUs.py],
                 [chmod +x tests/subsystem/rtr/badPDUs.py])
