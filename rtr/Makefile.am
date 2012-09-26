@@ -14,7 +14,7 @@ EXTRA_DIST = \
 libpdu_a_SOURCES = pdu.c pdu.h
 
 @PACKAGE_NAME@_rtr_update_SOURCES = rtr-update.c
-@PACKAGE_NAME@_rtr_update_LDFLAGS = $(LIBS)
+@PACKAGE_NAME@_rtr_update_LDFLAGS = $(LIBS) -Wl,--allow-multiple-definition
 @PACKAGE_NAME@_rtr_update_LDADD = \
 	../proto/librpki.a ../roa-lib/libroa.a ../cg/asn/libasn.a ../cg/casn/libcasn.a \
 	../utils/libutils.a
