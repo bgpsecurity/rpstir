@@ -74,9 +74,6 @@ dist_conformanceta_DATA = \
 	etc/sample-ta/bbn_conformance/root.tal
 
 
-dist_sysconf_DATA += etc/sampleQuerySpecs
-
-
 EXTRA_DIST += tests/conformance/rfc3779
 
 dist_check_DATA += \
