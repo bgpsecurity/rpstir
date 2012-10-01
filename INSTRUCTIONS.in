@@ -319,10 +319,10 @@ substitute the appropriate command (e.g. "gmake" on FreeBSD).
 2.3 RPKI User Account
 
 Establish a user account from which to run the RPKI software.  This
-allows environment variables to be set consistently between logins,
-especially if the default values need to be overridden.  It also
-provides a place, ~/.ssh/authorized_keys, to put all the RPKI-RTR
-clients' public keys to allow SSH login.
+provides a place to put the configuration file and prevent other users
+from reading sensitive information in it. It also provides a place,
+~/.ssh/authorized_keys, to put all the RPKI-RTR clients' public keys to
+allow SSH login.
 
 2.3.1 Configuration File
 
@@ -407,10 +407,6 @@ Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
-
-NOTE: the RTR updater (rtr/@PACKAGE_NAME@-rtr-update) requires a spec file.
-See proto/sampleQuerySpecs for an example file. You can use that
-example or write your own.
 
 
 2.6.2 Adjust Permissions
