@@ -438,7 +438,8 @@ periodically.
 
 If you wish to download from publication points other than those
 derived from the trust anchors, then add those publication points
-to the file, additional_rsync_uris.config.
+to the configuration file's (~/.@PACKAGE_NAME@.conf) option
+RPKIExtraPublicationPoints.
 
 3.1.2 Clear database and local repository cache.
 
