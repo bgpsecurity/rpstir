@@ -12,12 +12,12 @@ dist_check_SCRIPTS += tests/subsystem/chaser/test.sh
 TESTS += tests/subsystem/chaser/test.sh
 
 dist_check_DATA += \
-	tests/subsystem/chaser/input.bad_chars \
-	tests/subsystem/chaser/input.collapse_dots \
-	tests/subsystem/chaser/input.collapse_slash_dot \
-	tests/subsystem/chaser/input.collapse_slashes \
-	tests/subsystem/chaser/input.max_length \
-	tests/subsystem/chaser/input.subsume \
+	tests/subsystem/chaser/input.bad_chars.conf \
+	tests/subsystem/chaser/input.collapse_dots.conf \
+	tests/subsystem/chaser/input.collapse_slash_dot.conf \
+	tests/subsystem/chaser/input.collapse_slashes.conf \
+	tests/subsystem/chaser/input.max_length.conf \
+	tests/subsystem/chaser/input.subsume.conf \
 	tests/subsystem/chaser/response.bad_chars.log.correct \
 	tests/subsystem/chaser/response.collapse_dots.log.correct \
 	tests/subsystem/chaser/response.collapse_slash_dot.log.correct \
@@ -58,9 +58,6 @@ bin_PROGRAMS += bin/rpki/rcli
 
 bin_rpki_rcli_LDADD = \
 	$(LDADD_LIBRPKI)
-
-
-dist_sysconf_DATA += etc/additional_rsync_uris.config
 
 
 sampletadir = $(examplesdir)/sample-ta

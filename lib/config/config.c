@@ -161,6 +161,16 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "no"},
+
+    // CONFIG_RPKI_EXTRA_PUBLICATION_POINTS
+    {
+     "RPKIExtraPublicationPoints",
+     true,
+     config_type_string_converter, &config_type_string_arg_mandatory,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     ""},
 };
 
 

@@ -48,7 +48,8 @@ for TEST_NAME in \
 	bad_chars
 do
 	start_test "$TEST_NAME"
-	run "$TEST_NAME" chaser -s -t -f "input.$TEST_NAME" > response.log
+	export @CONFIG_ENV_VAR@="input.$TEST_NAME.conf"
+	run "$TEST_NAME" chaser -s -t > response.log
 	stop_test "$TEST_NAME"
 done
 
