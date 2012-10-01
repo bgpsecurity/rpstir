@@ -3,7 +3,8 @@ next
 	* Fix compatibility with older rsync servers.
 	* Simplify internal dependencies.
 	* Switch to a single Makefile to speed up parallel compilation.
-	* Use a configuration file instead of environment variables.
+	* Use a single configuration file syntax instead of environment
+	  variables and multiple incompatible configuration files.
 
 0.4
 
