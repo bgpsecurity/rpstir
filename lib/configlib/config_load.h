@@ -13,7 +13,7 @@
 #include "configlib.h"
 
 
-#define MAX_LINE_LENGTH 1024
+#define MAX_LINE_LENGTH 2048
 #define MAX_ARRAY_LENGTH 256
 
 #define CHARS_WHITESPACE " \t"  // must not include newline
