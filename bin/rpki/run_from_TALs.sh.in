@@ -43,6 +43,11 @@ initDB.sh
 # Start validator component in separate window
 loader.sh &
 LOADER_PID=$!
+stop_loader () {
+	kill "$LOADER_PID" || true # if it already quit, we don't care
+	wait "$LOADER_PID" || true # rcli currently doesn't quit cleanly
+}
+trap stop_loader 0
 sleep 1
 
 # Out-of-band initialization of trust anchor
@@ -50,6 +55,3 @@ updateTA.py $TAL_FILES
 
 # Chase downward from trust anchor(s) using rsync
 chaser.sh
-
-kill "$LOADER_PID"
-wait "$LOADER_PID"
