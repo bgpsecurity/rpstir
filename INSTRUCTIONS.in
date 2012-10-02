@@ -337,10 +337,9 @@ required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
 required: RPKI_DSN - the DSN for db connection (e.g. "myodbc3-np")
 optional: RPKI_ROOTPASSWORD - the MySQL root password
-optional: RPKI_LISTPORT - port number for use by coordinator of parallel rsync
 
 Set these environment variables to match your installation.  You may
-choose any unused ports for RPKI_PORT and RPKI_LISTPORT.
+choose any unused ports for RPKI_PORT.
 
 Some variables are required for the operation of the RPKI software.
 Each script will check for the required environment, and if any
@@ -353,7 +352,6 @@ RPKI_ROOT = ${HOME}/rpki
 RPKI_DBUSER = rpki
 RPKI_DBPASS = bbn
 RPKI_DSN = myodbc3
-RPKI_LISTPORT = 3450
 
 If you ever need to directly run the binaries instead of running the
 scripts, there will be no setting of defaults for environment
