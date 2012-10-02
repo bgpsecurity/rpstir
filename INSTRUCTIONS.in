@@ -475,6 +475,9 @@ relying parties obtain TAL files through a trusted out-of-band channel
 of their choice.  For testing purposes, these instructions use Rob
 Austein's collection of sample trust anchors found at
 http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
+Additionally, to get a copy of ARIN's TAL, go to
+https://www.arin.net/public/rpki/tal/index.xhtml and follow the
+directions there.
 
     # cd to @PACKAGE_NAME@'s root directory
 

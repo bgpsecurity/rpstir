@@ -38,8 +38,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	echo "\"" >> "$RSYNC_CORD_CONF"
 
 	rsync_cord.py -d -c "$RSYNC_CORD_CONF" \
-		-t "`config_get DownloadConcurrency`" \
-		-p "`config_get RsyncListenPort`"
+		-t "`config_get DownloadConcurrency`"
 
 	rm -f "$OLD_LIST"
 	OLD_LIST="$CUR_LIST"

@@ -21,16 +21,4 @@ bin_rpki_rsync_rsync_aur_LDADD = \
 dist_man_MANS += doc/rsync_aur.1
 
 
-bin_PROGRAMS += bin/rpki-rsync/rsync_listener
-
-bin_rpki_rsync_rsync_listener_SOURCES = \
-	bin/rpki-rsync/csapp.c \
-	bin/rpki-rsync/csapp.h \
-	bin/rpki-rsync/rsync_listener.c \
-	bin/rpki-rsync/rsync_listener.h
-
-bin_rpki_rsync_rsync_listener_LDADD = \
-	$(LDADD_LIBUTIL)
-
-
 dist_doc_DATA += doc/AUR.readme
