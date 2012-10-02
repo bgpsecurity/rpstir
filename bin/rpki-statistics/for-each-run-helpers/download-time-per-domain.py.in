@@ -1,5 +1,6 @@
 #!@PYTHON@
 
+import collections
 import datetime
 import os
 import re
@@ -8,9 +9,27 @@ import sys
 
 """
 Compute the amount of linear time spend trying to download from each domain.
-
-(UNFINISHED)
 """
+
+
+def log_line_match_to_datetime(match):
+    year, day, hour, minute, second = [int(x) for x in match.group(
+        'year', 'day', 'hour', 'minute', 'second')]
+    month = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    ].index(match.group('month')) + 1
+    return datetime.datetime(year, month, day, hour, minute, second)
 
 
 if __name__ == '__main__':
@@ -48,8 +67,9 @@ if __name__ == '__main__':
     # map of thread id to (datetime, host)
     thread_started = {}
 
-    # map of host to time spent in seconds
-    time_per_host = {}
+    # maps of host to time spent in seconds
+    time_per_host_success = collections.defaultdict(lambda: 0.0)
+    time_per_host_failure = collections.defaultdict(lambda: 0.0)
 
     for log_name in os.listdir('LOGS'):
         if '\n' in log_name or log_re.match(log_name) is None:
@@ -62,15 +82,30 @@ if __name__ == '__main__':
                     thread = starting_match.group('thread')
                     if thread in thread_started:
                         sys.exit("thread %s already started" % thread)
-                    thread_started[thread] = (datetime.datetime(...), starting_match.group('host')) # TODO
+                    thread_started[thread] = (
+                        log_line_match_to_datetime(starting_match),
+                        starting_match.group('host'))
 
                 done_match = log_uri_done.match(log_line)
                 if done_match is not None:
-                    thread = starting_match.group('thread')
+                    thread = done_match.group('thread')
                     if thread not in thread_started:
                         sys.exit("thread %s not started" % thread)
-                    # TODO: subtract start and end times, add to time_per_host, del thread_started[thread], store return code somewhere?
+                    duration = (log_line_match_to_datetime(done_match) -
+                                thread_started[thread][0]).total_seconds()
+                    if int(done_match.group('return_code')) == 0:
+                        time_per_host_success[thread_started[thread][1]] += duration
+                    else:
+                        time_per_host_failure[thread_started[thread][1]] += duration
+                    del thread_started[thread]
 
-        # TODO: make sure thread_started is empty
+        if thread_started:
+            sys.exit("not all threads ended before the end of the log file %s"
+                % os.path.join('LOGS', log_name))
 
-    # TODO: print results
+    print "host\tseconds spent on successful transfers\tseconds spent on failed transfers"
+    hosts = set()
+    hosts.update(time_per_host_success.iterkeys())
+    hosts.update(time_per_host_failure.iterkeys())
+    for host in sorted(hosts):
+        print "%s\t%s\t%s" % (host, time_per_host_success[host], time_per_host_failure[host])
