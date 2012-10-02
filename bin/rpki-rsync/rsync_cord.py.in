@@ -133,7 +133,7 @@ def thread_controller():
 #
 # Create log directories and/or rotate the logs
 #
-def rotate_logs():
+def rotate_logs(keep_logs):
     #create the log directory if it doesn't exist
     if not os.path.exists(logDir):
         os.system("mkdir " + logDir)
@@ -141,33 +141,18 @@ def rotate_logs():
         os.system("mkdir " + repoDir)
     
     #Rotate the main log for rsync_cord
-    if os.path.exists(logDir + "/rsync_cord.log.8"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.8 " + logDir +
-                  "/rsync_cord.log.9")
-    if os.path.exists(logDir + "/rsync_cord.log.7"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.7 " + logDir +
-                  "/rsync_cord.log.8")
-    if os.path.exists(logDir + "/rsync_cord.log.6"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.6 " + logDir +
-                  "/rsync_cord.log.7")
-    if os.path.exists(logDir + "/rsync_cord.log.5"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.5 " + logDir +
-                  "/rsync_cord.log.6")
-    if os.path.exists(logDir + "/rsync_cord.log.4"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.4 " + logDir +
-                  "/rsync_cord.log.5")
-    if os.path.exists(logDir + "/rsync_cord.log.3"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.3 " + logDir +
-                  "/rsync_cord.log.4")
-    if os.path.exists(logDir + "/rsync_cord.log.2"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.2 " + logDir +
-                  "/rsync_cord.log.3")
-    if os.path.exists(logDir + "/rsync_cord.log.1"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.1 " + logDir +
-                  "/rsync_cord.log.2")
-    if os.path.exists(logDir + "/rsync_cord.log"):
-        os.system("mv -f " + logDir + "/rsync_cord.log " + logDir +
-                  "/rsync_cord.log.1")
+    def log_file(number):
+        if number == 0:
+            return os.path.join(logDir, "rsync_cord.log")
+        else:
+            return os.path.join(logDir, "rsync_cord.log.%d" % number)
+    num_logs = 0
+    while os.path.exists(log_file(num_logs)):
+        num_logs += 1
+    if not keep_logs:
+        num_logs = min(num_logs, 9)
+    for log_number in xrange(num_logs, 0, -1):
+        os.rename(log_file(log_number - 1), log_file(log_number))
 
     #make directories for logs and repository locations
     for direc in dirs:
@@ -191,13 +176,15 @@ def usage():
                 \t The maximum number of threads to spawn. Default is 8\n \
             \t-d\n \
                 \t A debug flag to get extra output in the log file\n \
+            \t--keep-logs\n \
+                \t Keep all logs, instead of deleting old logs\n \
             \t-h --help\n \
                 \t   Shows this help information\n"
 
 
 #Parse command line args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help"])
+    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help", "keep-logs"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recoized"
@@ -208,6 +195,7 @@ except getopt.GetoptError, err:
 configFile = ""
 threadCount = 8
 debug = False
+keep_logs = False
 
 #Parse the options
 for o, a in opts:
@@ -220,6 +208,8 @@ for o, a in opts:
         threadCount = int(a)
     elif o in ("-d"):
         debug = True
+    elif o in ("--keep-logs"):
+        keep_logs = True
     else:
         print "unhandled option"
         sys.exit(1)
@@ -285,7 +275,7 @@ for direc in eachDir:
         URIPool.put(direc)
 
 #log rotation
-rotate_logs()
+rotate_logs(keep_logs)
 
 #Set up logging
 if debug:
