@@ -174,6 +174,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Routing Domain Identifier(s) present",     /* ERR_SCM_BADASRDI */
     "Invalid CRLNumber",        /* ERR_SCM_BADCRLNUM */
     "Missing RFC3779 IP extension",     /* ERR_SCM_NOIPEXT */
+    "Object has been revoked",  /* ERR_SCM_REVOKED */
 };
 
 char *err2string(

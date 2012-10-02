@@ -337,10 +337,9 @@ required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
 required: RPKI_DSN - the DSN for db connection (e.g. "myodbc3-np")
 optional: RPKI_ROOTPASSWORD - the MySQL root password
-optional: RPKI_LISTPORT - port number for use by coordinator of parallel rsync
 
 Set these environment variables to match your installation.  You may
-choose any unused ports for RPKI_PORT and RPKI_LISTPORT.
+choose any unused ports for RPKI_PORT.
 
 Some variables are required for the operation of the RPKI software.
 Each script will check for the required environment, and if any
@@ -353,7 +352,6 @@ RPKI_ROOT = ${HOME}/rpki
 RPKI_DBUSER = rpki
 RPKI_DBPASS = bbn
 RPKI_DSN = myodbc3
-RPKI_LISTPORT = 3450
 
 If you ever need to directly run the binaries instead of running the
 scripts, there will be no setting of defaults for environment
@@ -432,8 +430,8 @@ Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
 
-NOTE: the RTR updater (rtr/@PACKAGE_NAME@-rtr-update) requires a spec file.
-See proto/sampleQuerySpecs for an example file. You can use that
+NOTE: the RTR updater (@PACKAGE_NAME@-rpki-rtr-update) requires a spec file.
+See etc/sampleQuerySpecs for an example file. You can use that
 example or write your own.
 
 
@@ -502,6 +500,9 @@ relying parties obtain TAL files through a trusted out-of-band channel
 of their choice.  For testing purposes, these instructions use Rob
 Austein's collection of sample trust anchors found at
 http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
+Additionally, to get a copy of ARIN's TAL, go to
+https://www.arin.net/public/rpki/tal/index.xhtml and follow the
+directions there.
 
     cd $RPKI_ROOT
     # The following three commands retrieve three example long-term
