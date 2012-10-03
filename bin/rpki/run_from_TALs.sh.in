@@ -1,5 +1,9 @@
 #!@SHELL_BASH@ -e
 
+# set environment variables if not set
+THIS_SCRIPT_DIR=`dirname "$0"`
+. $THIS_SCRIPT_DIR/../../etc/envir.setup
+
 cd $RPKI_ROOT
 
 TAL_FILES=""
@@ -34,18 +38,20 @@ fi
 rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log query.log
 mkdir -p REPOSITORY
 mkdir -p LOGS
-./run_scripts/initDB.sh
+initDB.sh
 
 # Start validator component in separate window
-./run_scripts/loader.sh &
+loader.sh &
 LOADER_PID=$!
+stop_loader () {
+	kill "$LOADER_PID" || true # if it already quit, we don't care
+	wait "$LOADER_PID" || true # rcli currently doesn't quit cleanly
+}
+trap stop_loader 0
 sleep 1
 
 # Out-of-band initialization of trust anchor
-./run_scripts/updateTA.py $TAL_FILES
+updateTA.py $TAL_FILES
 
 # Chase downward from trust anchor(s) using rsync
-./run_scripts/chaser.sh
-
-kill "$LOADER_PID"
-wait "$LOADER_PID"
+chaser.sh

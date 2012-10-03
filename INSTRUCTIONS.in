@@ -87,7 +87,7 @@ this file before continuing.
 When installing prerequisites from your operating system's package
 manager, you may need to look for a -dev or -devel version of each
 package. These versions generally contain header files that are needed
-to build rpstir.
+to build @PACKAGE_NAME@.
 
 2.1.1 User Account
 
@@ -337,10 +337,9 @@ required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
 required: RPKI_DSN - the DSN for db connection (e.g. "myodbc3-np")
 optional: RPKI_ROOTPASSWORD - the MySQL root password
-optional: RPKI_LISTPORT - port number for use by coordinator of parallel rsync
 
 Set these environment variables to match your installation.  You may
-choose any unused ports for RPKI_PORT and RPKI_LISTPORT.
+choose any unused ports for RPKI_PORT.
 
 Some variables are required for the operation of the RPKI software.
 Each script will check for the required environment, and if any
@@ -353,7 +352,6 @@ RPKI_ROOT = ${HOME}/rpki
 RPKI_DBUSER = rpki
 RPKI_DBPASS = bbn
 RPKI_DSN = myodbc3
-RPKI_LISTPORT = 3450
 
 If you ever need to directly run the binaries instead of running the
 scripts, there will be no setting of defaults for environment
@@ -363,7 +361,7 @@ variables, so make sure to set these yourself.
 2.4 SSH Subsystem
 
 If you plan to use the RTR Server as an SSH subsystem, you will need
-to run the rtr/rpstir-rtrd server as a daemon and set up an ssh subsystem
+to run the rtr/@PACKAGE_NAME@-rtrd server as a daemon and set up an ssh subsystem
 to connect to rtrd on localhost.  The netcat program, nc(1), is
 recommended for the ssh subsystem.  There are different versions of
 netcat, so read its manpage for caveats before setting it up as
@@ -420,14 +418,21 @@ Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR Server (rpstir-rpki-rtr-daemon)  Continuously as daemon
-RTR updater (rpstir-rpki-rtr-update) After each call to chaser
-RTR client (rpstir-rpki-rtr-test-client)  On demand by user
+RTR updater (@PACKAGE_NAME@-rpki-rtr-update) After each call to chaser,
+                                     also before runing the RTR
+                                     server for the first time.
+RTR Server (@PACKAGE_NAME@-rpki-rtr-daemon)  Continuously as daemon.
+                                     You must run the RTR updater first, though.
+RTR client (@PACKAGE_NAME@-rpki-rtr-test-client)  On demand by user
 
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
+
+NOTE: the RTR updater (@PACKAGE_NAME@-rpki-rtr-update) requires a spec file.
+See etc/sampleQuerySpecs for an example file. You can use that
+example or write your own.
 
 
 2.6.2 Adjust Permissions
@@ -495,6 +500,9 @@ relying parties obtain TAL files through a trusted out-of-band channel
 of their choice.  For testing purposes, these instructions use Rob
 Austein's collection of sample trust anchors found at
 http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
+Additionally, to get a copy of ARIN's TAL, go to
+https://www.arin.net/public/rpki/tal/index.xhtml and follow the
+directions there.
 
     cd $RPKI_ROOT
     # The following three commands retrieve three example long-term
@@ -564,7 +572,7 @@ Successful garbage collection may not produce any screen output.
 
 3.2 Results and Analysis
 
-There are three ways to obtain results from RPSTIR.
+There are three ways to obtain results from @PACKAGE_NAME@.
 . For an overview, generate a Validation Report (results.py).
 . For detailed information about validation state, use the Query Client.
 . For error analysis, search through rcli.log.
