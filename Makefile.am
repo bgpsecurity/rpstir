@@ -64,7 +64,7 @@ dist_doc_DATA += \
 dist_noinst_DATA += \
 	doc/api.txt
 
-EXTRA_DIST += \
+dist_sysconf_DATA += \
 	etc/rpstir.conf
 
 # library makefiles must be ordered by dependencies, lowest level library to highest
