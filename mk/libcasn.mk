@@ -7,7 +7,7 @@ lib_casn_asn_gen_asn_gen_CPPFLAGS = \
 	-Dasn_hdr_id=casn_hdr_id \
 	-Dconstruct=cconstruct \
 	-Ddo_hdr=cdo_hdr \
-	-Ilib/casn/asn_gen
+	-I$(top_srcdir)/lib/casn/asn_gen
 
 lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/asn.h \
