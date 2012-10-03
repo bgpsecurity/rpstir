@@ -1,5 +1,8 @@
 #include "main.h"
 
+#include "util/logging.h"
+#include "config/config.h"
+
 
 /*
  * $Id$ 
@@ -89,6 +92,14 @@ int main(
 
     memset((char *)&wport, '\0', sizeof(struct write_port));
 
+    OPEN_LOG(PACKAGE_NAME "-rsync_aur", LOG_DAEMON);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        exit(EXIT_FAILURE);
+    }
+
     if (argc == 2 && *argv[1] != '-')   // process a script file as command
                                         // line
     {
@@ -143,17 +154,17 @@ int main(
         my_argc = argc;
     }
 
-    while ((ch = getopt(my_argc, my_argv, "t:u:f:d:l:nweish")) != -1)
+    while ((ch = getopt(my_argc, my_argv, "tuf:d:l:nweish")) != -1)
     {
         switch (ch)
         {
         case 't':              /* TCP flag */
             tflag = 1;
-            portno = atoi(optarg);
+            portno = *(uint16_t *)config_get(CONFIG_RPKI_PORT);
             break;
         case 'u':              /* UDP flag */
             uflag = 1;
-            portno = atoi(optarg);
+            portno = *(uint16_t *)config_get(CONFIG_RPKI_PORT);
             break;
         case 'n':              /* do nothing flag - print what messages would 
                                  * have been sent */
@@ -460,6 +471,10 @@ int main(
     }
 
     log_close();
+
+    config_unload();
+
+    CLOSE_LOG();
 
     return (0);
 }

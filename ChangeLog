@@ -6,6 +6,8 @@ next
 	* Switch to a single Makefile to speed up parallel compilation.
 	* Run much more code optionally under CHECKTOOL (e.g. valgrind).
 	* Remove some duplicate and some unused code.
+	* Use a single configuration file syntax instead of environment
+	  variables and multiple incompatible configuration files.
 
 0.4
 

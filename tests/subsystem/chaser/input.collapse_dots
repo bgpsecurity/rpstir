@@ -1,9 +1,0 @@
-rsync://foo.com/../
-rsync://foo.com/a/../b
-rsync://foo.com/a/../b/
-rsync://foo.com/a/../b/c/..
-rsync://foo.com/a/../b/c/../
-rsync://foo.com/a/../..
-rsync://foo.com/a/.../b
-rsync://foo.com/a/.../b/
-

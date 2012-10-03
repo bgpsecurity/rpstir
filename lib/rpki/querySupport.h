@@ -7,24 +7,6 @@
  * Functions and flags shared by query and server code
  ****************/
 
-/****
- * routine to parse the filter specification file which  determines how to
- * handle the various meta-data SCM_FLAG_XXX flags (ignore, matchset, matchclr)
- * - Returns 0 on success, -1 on failure
- ****/
-extern int parseStalenessSpecsFile(
-    char *specsFilename);
-
-/*****
- * read out the values from parsing the staleness specs
- *****/
-extern void getSpecsVals(
-    int *rejectStaleChainp,
-    int *rejectStaleManifestp,
-    int *rejectStaleCRLp,
-    int *rejectNoManifestp,
-    int *rejectNotYetp);
-
 /******
  * put the appropriate tests for SCM_FLAG_XXX flags in the where
  *   string of a query

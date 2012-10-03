@@ -13,7 +13,7 @@
 #   -v, --verbose  output lists of valid/invalid/unknown objects
 
 
-from subprocess import Popen, PIPE
+from subprocess import check_output, Popen, PIPE
 import os, sys
 from optparse import OptionParser
 
@@ -29,11 +29,10 @@ parser.add_option("-v", "--verbose",
 (options, args) = parser.parse_args()
 
 #
-# Get top-level RPKI directory, and compute local repository cache
-# path based on $RPKI_ROOT environment variable.
+# Get top-level RPKI directory, and compute local repository cache path
 #
 
-rpki_root = os.environ["RPKI_ROOT"].strip().rstrip("/")
+rpki_root = check_output(["config_get", "RootDir"]).strip().rstrip("/")
 repo_path = rpki_root + "/REPOSITORY"
 print "Using RPKI root directory: " + rpki_root
 print "Using local repository path: " + repo_path
@@ -52,12 +51,12 @@ def find_files_with_extension(absolute_path, ext):
     return p1.communicate()[0].splitlines()
 
 def find_validated_objects_in_db(object_type):
-    p1 = Popen([rpki_root + "/bin/rpki/query", "-t", object_type,
+    p1 = Popen(["query", "-t", object_type,
                 "-d", "pathname"], stdout=PIPE)
     return [line.split()[2] for line in p1.communicate()[0].splitlines()]
 
 def find_all_objects_in_db(object_type):
-    p1 = Popen([rpki_root + "/bin/rpki/query", "-t", object_type,
+    p1 = Popen(["query", "-t", object_type,
                 "-d", "pathname", "-i"], stdout=PIPE)
     return [line.split()[2] for line in p1.communicate()[0].splitlines()]
 

@@ -8,6 +8,8 @@
 #include <my_sys.h>
 #include <mysql.h>
 
+#include "config/config.h"
+
 #include "connect.h"
 #include "db-internal.h"
 #include "util/logging.h"
@@ -167,10 +169,10 @@ static void *connectMysqlCApi(
     // store parameters to enable reconnect
     conn->host = strdup(host);
     conn->user = strdup(user);
-    conn->pass = strdup(pass);
+    conn->pass = (pass == NULL ? NULL : strdup(pass));
     conn->db = strdup(db);
     if (conn->host == NULL || conn->user == NULL ||
-        conn->pass == NULL || conn->db == NULL)
+        (conn->pass == NULL && pass != NULL) || conn->db == NULL)
     {
         LOG(LOG_ERR, "could not alloc for strings");
         db_disconnect(conn);
@@ -208,9 +210,9 @@ dbconn *db_connect_default(
     int client_flags)
 {
     const char *host = "localhost";
-    const char *user = getenv("RPKI_DBUSER");
-    const char *pass = getenv("RPKI_DBPASS");
-    const char *db = getenv("RPKI_DB");
+    const char *user = config_get(CONFIG_DATABASE_USER);
+    const char *pass = config_get(CONFIG_DATABASE_PASSWORD);
+    const char *db = config_get(CONFIG_DATABASE);
 
     return connectMysqlCApi(client_flags, host, user, pass, db);
 }

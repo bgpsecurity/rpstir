@@ -22,7 +22,9 @@ CFLAGS_STRICT = \
 	-Werror
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/lib
+	-I$(top_srcdir)/lib \
+	-DABS_TOP_SRCDIR='"@abs_top_srcdir@"' \
+	-DSYSCONFDIR='"$(sysconfdir)"'
 
 AM_ETAGSFLAGS = \
 	--declarations
@@ -49,6 +51,7 @@ dist_sysconf_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
+pkglibexec_PROGRAMS =
 
 examplesdir = $(docdir)/examples
 
@@ -61,9 +64,14 @@ dist_doc_DATA += \
 dist_noinst_DATA += \
 	doc/api.txt
 
+EXTRA_DIST += \
+	etc/rpstir.conf
+
 # library makefiles must be ordered by dependencies, lowest level library to highest
 include mk/libtest.mk
 include mk/libutil.mk
+include mk/libconfiglib.mk
+include mk/libconfig.mk
 include mk/libcasn.mk
 include mk/librpkiasn1.mk
 include mk/librpkiobject.mk
@@ -73,6 +81,7 @@ include mk/librpki.mk
 
 # other makefiles shouldn't depend on one another, so are in alphabetical order
 include mk/asn1.mk
+include mk/config.mk
 include mk/doxygen.mk
 include mk/oidtable.mk
 include mk/rpki-local-ta.mk

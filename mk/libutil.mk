@@ -18,6 +18,8 @@ lib_util_libutil_a_SOURCES = \
 	lib/util/logutils.c \
 	lib/util/logutils.h \
 	lib/util/macros.h \
+	lib/util/path_compat.c \
+	lib/util/path_compat.h \
 	lib/util/queue.c \
 	lib/util/queue.h \
 	lib/util/semaphore_compat.c \

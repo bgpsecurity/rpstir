@@ -21,6 +21,8 @@
 #include <netinet/in.h>
 #endif
 
+#include "util/logging.h"
+#include "config/config.h"
 #include "rpki/scm.h"
 #include "rpki/scmf.h"
 #include "rpki/sqhl.h"
@@ -44,6 +46,13 @@ int main(
     scmtab *table = NULL;
     char errMsg[1024];
 
+    OPEN_LOG(PACKAGE_NAME "-testrpwork", LOG_USER);
+
+    if (!my_config_load())
+    {
+        fatal("Can't load configuration");
+    }
+
     if ((scmp = initscm()) == NULL)
         fatal("Can't initialize database");
     if ((conp = connectscm(scmp->dsn, errMsg, 1024)) == NULL)
@@ -57,6 +66,8 @@ int main(
     int ansr = read_SKI_blocks(scmp, conp, argv[1]);
     if (ansr < 0)
         fprintf(stderr, "Had error %d: %s\n", ansr, err2string(ansr));
+    config_unload();
+    CLOSE_LOG();
     fatal("Finished");
     return 0;
 }

@@ -2,6 +2,8 @@
  * Get the next round of RTR data into the database
  ***********************/
 
+#include "util/logging.h"
+#include "config/config.h"
 #include "rpki/err.h"
 #include "rpki/scmf.h"
 #include "rpki/querySupport.h"
@@ -11,12 +13,6 @@
 #include <limits.h>
 #include <inttypes.h>
 #include <time.h>
-
-// number of hours to retain incremental updates
-// should be at least 24 + the maximum time between updates, since need
-// to always have not just all those within the last 24 hours but also
-// one more beyond these
-#define RETENTION_HOURS_DEFAULT 96
 
 static scm *scmp = NULL;
 static scmcon *connection = NULL;
@@ -71,17 +67,6 @@ static uint getLastSerialNumber(
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR,
               "create_time desc");
     return lastSerialNum;
-}
-
-/*****
- * allows overriding of retention time for data via environment variable
- *****/
-static int retentionHours(
-    )
-{
-    if (getenv("RTR_RETENTION_HOURS") != NULL)
-        return atoi(getenv("RTR_RETENTION_HOURS"));
-    return RETENTION_HOURS_DEFAULT;
 }
 
 
@@ -141,14 +126,22 @@ int main(
     int first_time = 0;
     int force_update = 0;
 
-    if (argc < 2 || argc > 3)
+    if (argc < 1 || argc > 2)
     {
         fprintf(stderr,
-                "Usage: %s <staleness spec file> [<next serial number>]\n",
+                "Usage: %s [<next serial number>]\n",
                 argv[0]);
         fprintf(stderr, "\n");
         fprintf(stderr,
                 "The next serial number should only be specified in test mode.\n");
+        return EXIT_FAILURE;
+    }
+
+    OPEN_LOG(PACKAGE_NAME "-rtr-update", LOG_USER);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
         return EXIT_FAILURE;
     }
 
@@ -231,10 +224,10 @@ int main(
     {
         prevSerialNum = getLastSerialNumber(connection, scmp);
     }
-    if (argc > 2)
+    if (argc > 1)
     {
         force_update = 1;
-        if (sscanf(argv[2], "%" SCNu32, &currSerialNum) != 1)
+        if (sscanf(argv[1], "%" SCNu32, &currSerialNum) != 1)
         {
             fprintf(stderr,
                     "Error: next serial number must be a nonnegative integer\n");
@@ -265,7 +258,7 @@ int main(
         checkErr(sta < 0,
                  "Can't get results of querying rtr_update for unusual corner cases\n");
 
-        if (argc > 2)
+        if (argc > 1)
         {
             checkErr(dont_proceed,
                      "Error: rtr_update is full or in an unusual state, or the specified next serial number already exists\n");
@@ -279,7 +272,7 @@ int main(
 
     // setup up the query if this is the first time
     // note that the where string is set to only select valid roa's, where
-    // the definition of valid is given by the staleness specs
+    // the definition of valid is given by the configuration file
     if (roaSrch == NULL)
     {
         QueryField *field;
@@ -291,7 +284,6 @@ int main(
         field = findField("ski");
         addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
         roaSrch->wherestr[0] = 0;
-        parseStalenessSpecsFile(argv[1]);
         addQueryFlagTests(roaSrch->wherestr, 0);
         roaTable = findtablescm(scmp, "roa");
         checkErr(roaTable == NULL, "Cannot find table roa\n");
@@ -399,9 +391,10 @@ int main(
 
     snprintf(msg, sizeof(msg),
              "delete from rtr_update\n"
-             "where create_time < adddate(now(), interval -%d hour)\n"
+             "where create_time < adddate(now(), interval -%zu hour)\n"
              "and serial_num<>%u and serial_num<>%u;",
-             retentionHours(), prevSerialNum, currSerialNum);
+             *(const size_t *)config_get(CONFIG_RPKI_RTR_RETENTION_HOURS),
+             prevSerialNum, currSerialNum);
     sta = statementscm_no_data(connection, msg);
     checkErr(sta < 0, "Can't delete expired update metadata");
 
@@ -419,6 +412,10 @@ int main(
                                "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
                                "where rtr_update.prev_serial_num is null;");
     checkErr(sta < 0, "Can't delete old rtr_incremental data");
+
+    config_unload();
+
+    CLOSE_LOG();
 
     return 0;
 }

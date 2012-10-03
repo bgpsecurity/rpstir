@@ -15,64 +15,13 @@
 # . $THIS_SCRIPT_DIR/../envir.setup
 #
 
-DEFAULT_RPKI_ROOT=${HOME}/trunk  # caller should set RPKI_ROOT
-DEFAULT_RPKI_PORT=7344
-DEFAULT_RPKI_DB=rpkidb7
-DEFAULT_RPKI_DBUSER=rpki
-DEFAULT_RPKI_DBPASS=bbn
-DEFAULT_RPKI_TCOUNT=24
-DEFAULT_RPKI_DSN=myodbc3
 
-if [ "${RPKI_ROOT}x" = "x" ]; then
-    echo Warning: RPKI_ROOT not set, defaulting to $DEFAULT_RPKI_ROOT
-    export RPKI_ROOT=$DEFAULT_RPKI_ROOT
-fi
-if [ "${RPKI_DSN}x" = "x" ]; then
-    echo Warning: RPKI_DSN not set, defaulting to $DEFAULT_RPKI_DSN
-    export RPKI_DSN=$DEFAULT_RPKI_DSN
-fi
-if [ "${RPKI_TCOUNT}x" = "x" ]; then
-    echo Warning: RPKI_TCOUNT not set, defaulting to $DEFAULT_RPKI_TCOUNT
-    export RPKI_TCOUNT=$DEFAULT_RPKI_TCOUNT
-fi
-if [ "${RPKI_PORT}x" = "x" ]; then
-    echo Warning: RPKI_PORT not set, defaulting to $DEFAULT_RPKI_PORT
-    export RPKI_PORT=$DEFAULT_RPKI_PORT;
-fi
-if [ "${RPKI_DB}x" = "x" ]; then
-    echo Warning: RPKI_DB not set, defaulting to $DEFAULT_RPKI_DB
-    export RPKI_DB=$DEFAULT_RPKI_DB;
-fi
-if [ "${RPKI_DBUSER}x" = "x" ]; then
-    echo Warning: RPKI_DBUSER not set, defaulting to $DEFAULT_RPKI_DBUSER
-    export RPKI_DBUSER=$DEFAULT_RPKI_DBUSER
-fi
-if [ "${RPKI_DBPASS}x" = "x" ]; then
-    echo Warning: RPKI_DBPASS not set, defaulting to $DEFAULT_RPKI_DBPASS
-    export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
-fi
+CONFIG_ROOT_DIR=`@abs_top_builddir@/bin/config/config_get RootDir`
 
-if [ "${OIDTABLE}x" = "x" ]; then
-    DEFAULT_OIDTABLE="$RPKI_ROOT/var/oidtable"
-    echo "Notice: OIDTABLE not set, defaulting to $DEFAULT_OIDTABLE"
-    export OIDTABLE="$DEFAULT_OIDTABLE"
-fi
-
-
-# If mysql acccount needs a password, we must use -p<password> on the
-# mysql command line.  If no password, we must omit the option entirely.
-if [ "${RPKI_DBPASS}x" = "x" ]; then
-    export RPKI_DBPASS_OPTION=
-else
-    export RPKI_DBPASS_OPTION="-p${RPKI_DBPASS}"
-fi
-
-# MySQL command line which reads statements from stdin
-export RPKI_MYSQL_CMD="mysql $RPKI_DB -u $RPKI_DBUSER $RPKI_DBPASS_OPTION"
 
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
-find "$RPKI_ROOT/bin" -type d -print > "$BIN_DIRS"
+find "$CONFIG_ROOT_DIR/bin" -type d -print > "$BIN_DIRS"
 while read path_dir; do
     case "$path_dir" in
         */tests | */tests/*)
@@ -85,6 +34,36 @@ done < "$BIN_DIRS"
 export PATH
 rm -f "$BIN_DIRS"
 unset BIN_DIRS
+
+
+# MySQL command line which reads statements from stdin
+mysql_cmd () {
+    local option_file ret
+
+    option_file="`@MKTEMP@`" || return 1
+
+    {
+        echo "[client]"
+        echo "database=\"`config_get Database`\""
+        echo "user=\"`config_get DatabaseUser`\""
+    } > "$option_file"
+
+    # put the password in the option file
+    # NOTE: the password should not be stored in an environment variable
+    #       or passed on the command line to echo or printf
+    if config_get DatabasePassword > /dev/null 2>&1; then
+        printf "password=\"" >> "$option_file"
+        config_get DatabasePassword >> "$option_file"
+        echo "\"" >> "$option_file"
+    fi
+
+    mysql --defaults-extra-file="$option_file" "$@" || ret=$?
+
+    rm -f "$option_file"
+
+    return $ret
+}
+
 
 ############################################################################
 # Shell function for checking return codes for error (swiped from

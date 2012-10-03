@@ -15,6 +15,7 @@
 #include "util/bag.h"
 #include "util/queue.h"
 #include "util/logging.h"
+#include "config/config.h"
 #include "db/connect.h"
 
 #include "cache_state.h"
@@ -44,6 +45,8 @@ static void signal_handler(
 
 struct run_state {
     bool log_opened;
+
+    bool config_loaded;
 
     size_t listen_fds_initialized;
     int listen_fds[MAX_LISTENING_SOCKETS];
@@ -438,6 +441,12 @@ static void cleanup(
             ERR_LOG(errno, errorbuf, "close()");
     }
 
+    if (run_state->config_loaded)
+    {
+        config_unload();
+        run_state->config_loaded = false;
+    }
+
     LOG(LOG_NOTICE, "shutting down");
 
     if (run_state->log_opened)
@@ -460,6 +469,16 @@ static void startup(
     block_signals();
     OPEN_LOG(RTR_LOG_IDENT, RTR_LOG_FACILITY);
     run_state->log_opened = true;
+    unblock_signals();
+
+    block_signals();
+    run_state->config_loaded = my_config_load();
+    if (!run_state->config_loaded)
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        exit_code = EXIT_FAILURE;
+        pthread_exit(NULL);
+    }
     unblock_signals();
 
     make_listen_sockets(run_state, NULL, LISTEN_PORT);

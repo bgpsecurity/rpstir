@@ -281,12 +281,8 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
     
-    # Get top-level RPKI directory, and compute local repository cache
-    # path based on $RPKI_ROOT environment variable.
-    if not "RPKI_ROOT" in os.environ:
-        print >>sys.stderr, "Error: environment variable RPKI_ROOT is not set"
-        sys.exit(1)
-    rpki_root = os.environ["RPKI_ROOT"].strip().rstrip("/")
+    # Get top-level RPKI directory, and compute local repository cache path
+    rpki_root = subprocess.check_output(["config_get", "RootDir"]).strip().rstrip("/")
     repo_path = rpki_root + "/REPOSITORY"
     ta_repo_path = repo_path + "/trustanchors"
     rcli_path = rpki_root + "/bin/rpki/rcli"

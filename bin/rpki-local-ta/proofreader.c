@@ -1,6 +1,8 @@
 
 #include <errno.h>
 #include "rpki/rpwork.h"
+#include "config/config.h"
+#include "util/logging.h"
 #include "util/logutils.h"
 
 char *msgs[] = {
@@ -114,10 +116,18 @@ int main(
         exit(1);
     }
 
+    OPEN_LOG(PACKAGE_NAME "-proofreader", LOG_USER);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        exit(EXIT_FAILURE);
+    }
+
     if (!(tmpstr = fopen(f, "w+")))
         fatal(7, f);
 
-    if ((ansr = parse_SKI_blocks(&keyring, str, inbuf, sizeof(inbuf), &i)) < 0)
+    if ((ansr = parse_SKI_blocks(&keyring, str, argv[1], inbuf, sizeof(inbuf), &i)) < 0)
         fatal(2, errbuf);
     fseek(str, (long)0, 0);
     *inbuf = 0;
@@ -182,6 +192,8 @@ int main(
     if (warnings)
         fatal(8, "");
     fatal(0, argv[1]);
+    config_unload();
+    CLOSE_LOG();
     log_close();
     return 0;
 }

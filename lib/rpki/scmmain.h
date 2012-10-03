@@ -9,32 +9,6 @@
 #ifdef SCM_DEFINED_HERE
 
 /*
- * The DSN name is used to connect to the DB. This is only a part of the DSN;
- * to construct the full DSN you must append the DB name and the user name. 
- */
-
-static char *RPKI_DSN = "myodbc3";
-
-/*
- * The database name itself.  It can be overridden via the environment
- * variable RPKI_DB 
- */
-
-static char *RPKI_DB = "rpki";
-
-/*
- * The default database user name. 
- */
-
-static char *RPKI_DBUSER = "mysql";
-
-/*
- * The default database password. 
- */
-
-static char *RPKI_DBPASS = NULL;
-
-/*
  * Table definitions 
  */
 

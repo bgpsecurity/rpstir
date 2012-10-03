@@ -11,10 +11,9 @@ def run_aur(logger, rsync_log, repo_dir):
     aur_lock.acquire()
     logger.info("running AUR on %s" % rsync_log)
     p = Popen([
-        "%s/bin/rpki-rsync/rsync_aur" % os.getenv('RPKI_ROOT'),
+        "rsync_aur",
         "-s",
         "-t",
-        os.getenv('RPKI_PORT'),
         "-f",
         rsync_log,
         "-d",

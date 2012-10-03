@@ -61,10 +61,9 @@ int asn1dump(
         );
     char *indef_msg = " /* indefinite length */\n";
 
-    char *c;
-    if ((c = getenv("OIDTABLE")))
+    if (OIDTABLE != NULL)
     {
-        load_oidtable(c);
+        load_oidtable(OIDTABLE);
     }
     ansr = make_asn_table(&asnbase, buf, buflen);
     for (asnp = asnbase, row = 1, typ = ASN_CONSTRUCTED; asnp->stringp; asnp++)

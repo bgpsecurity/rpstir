@@ -8,7 +8,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
 TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
 TEST_LOG_NAME=`basename "$0"`
@@ -118,14 +118,14 @@ Auxiliary Outputs: (not shown in diagram)
 
 # Set up paths to conformance test scripts
 export RPKI_NO_SIGNING_TIME=1
-CONF_SCRIPTS=$RPKI_ROOT/tests/conformance/scripts
+CONF_SCRIPTS=$CONFIG_ROOT_DIR/tests/conformance/scripts
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
-PATCHES_DIR="$RPKI_ROOT/tests/conformance/raw/patches"
-KEYS_DIR="$RPKI_ROOT/tests/conformance/raw/keys"
-ROOT_KEY_PATH="$RPKI_ROOT/tests/conformance/raw/root.p15"
-ROOT_CERT_PATH="$RPKI_ROOT/tests/conformance/raw/root.cer"
+OUTPUT_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/root"
+PATCHES_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/patches"
+KEYS_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/keys"
+ROOT_KEY_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.p15"
+ROOT_CERT_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.cer"
 USE_EXISTING_PATCHES=
 PREFIX="bad"
 EDITOR=${EDITOR:-vi}            # set editor to vi if undefined
