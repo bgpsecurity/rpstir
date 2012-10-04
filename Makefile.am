@@ -30,6 +30,8 @@ AM_ETAGSFLAGS = \
 	--declarations
 
 
+examplesdir = $(docdir)/examples
+
 BUILT_SOURCES =
 CLEANDIRS =
 CLEANFILES =
@@ -44,6 +46,7 @@ dist_bin_SCRIPTS =
 dist_check_DATA =
 dist_check_SCRIPTS =
 dist_doc_DATA =
+dist_examples_DATA =
 dist_man_MANS =
 dist_noinst_DATA =
 dist_pkgdata_DATA =
@@ -52,8 +55,6 @@ noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
 pkglibexec_PROGRAMS =
-
-examplesdir = $(docdir)/examples
 
 dist_check_SCRIPTS += tests/run_with_tool.sh
 TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
@@ -64,7 +65,7 @@ dist_doc_DATA += \
 dist_noinst_DATA += \
 	doc/api.txt
 
-dist_sysconf_DATA += \
+dist_examples_DATA += \
 	etc/rpstir.conf
 
 # library makefiles must be ordered by dependencies, lowest level library to highest
