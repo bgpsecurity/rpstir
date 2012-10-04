@@ -23,7 +23,7 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/casn_constr.c \
 	lib/casn/asn_gen/casn_hdr.c
 
-dist_man_MANS += doc/asn_gen.1
+EXTRA_DIST += doc/asn_gen.1
 
 %.c %.h: %.asn lib/casn/asn_gen/asn_gen
 	cd "`dirname $<`" && \
@@ -63,4 +63,4 @@ lib_casn_libcasn_a_SOURCES = \
 	lib/casn/casn_real.c \
 	lib/casn/casn_time.c
 
-dist_man_MANS += doc/casn_functions.3
+EXTRA_DIST += doc/casn_functions.3

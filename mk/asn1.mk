@@ -21,7 +21,7 @@ dist_man_MANS += doc/dump_smart.1
 
 noinst_PROGRAMS += bin/asn1/make_oidtable
 
-dist_man_MANS += doc/make_oidtable.1
+EXTRA_DIST += doc/make_oidtable.1
 
 
 pkglibexec_PROGRAMS += bin/asn1/rr
