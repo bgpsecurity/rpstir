@@ -30,7 +30,7 @@ dist_man_MANS += doc/asn_gen.1
 		TEST_LOG_NAME=`basename "$<"` \
 		TEST_LOG_DIR=. \
 		STRICT_CHECKS=0 \
-		$(abs_top_builddir)/tests/run_with_tool.sh \
+		$(abs_top_srcdir)/tests/run_with_tool.sh \
 		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen "`basename $<`"
 
 
