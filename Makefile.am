@@ -95,6 +95,3 @@ ACLOCAL_AMFLAGS = -I build-aux -I m4
 
 clean-local:
 	-rm -rf $(CLEANDIRS)
-
-install:
-	@echo '**** Please refer to the documentation file name INSTRUCTIONS. ****'
