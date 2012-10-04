@@ -102,7 +102,7 @@ def update_one_TA(tal_file):
             print >>sys.stderr,\
                 "If you wish to remove this trust anchor, run 'rcli -d %s'" % \
                 (local_path)
-        return ret
+        return 0
 
     # Did the TA change?
     TA_has_changed = False
@@ -124,7 +124,7 @@ def update_one_TA(tal_file):
                 "Restoring old certificate from backup: %s --> %s"
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
-        return ret
+        return 0
 
     # Does the new TA have the right public key info?
     ret = verify_SubjectPubKeyInfo(local_path, pubkey_b64)
@@ -135,7 +135,7 @@ def update_one_TA(tal_file):
                 "Restoring old certificate from backup: %s --> %s"
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
-        return ret
+        return 0
 
     # If necessary, remove existing TA from database.
     existing_TA_removed = False
@@ -171,6 +171,7 @@ def update_one_TA(tal_file):
             if restore_ret != 0:
                 syslog(LOG_ERR,
                     "Error: could not restore old TA, this is bad!")
+                return restore_ret
 
     syslog(LOG_INFO, "Trust anchor updated (%s) " % rsync_uri)
     return ret
