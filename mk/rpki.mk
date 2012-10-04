@@ -1,4 +1,4 @@
-bin_PROGRAMS += bin/rpki/chaser
+pkglibexec_PROGRAMS += bin/rpki/chaser
 
 bin_rpki_chaser_CFLAGS = \
 	$(CFLAGS_STRICT)

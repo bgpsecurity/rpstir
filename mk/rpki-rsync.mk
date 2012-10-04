@@ -1,4 +1,4 @@
-bin_PROGRAMS += bin/rpki-rsync/rsync_aur
+pkglibexec_PROGRAMS += bin/rpki-rsync/rsync_aur
 
 bin_rpki_rsync_rsync_aur_SOURCES = \
 	bin/rpki-rsync/csapp.c \
