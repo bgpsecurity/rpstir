@@ -19,7 +19,7 @@ bin_asn1_dump_smart_LDADD = \
 dist_man_MANS += doc/dump_smart.1
 
 
-bin_PROGRAMS += bin/asn1/make_oidtable
+noinst_PROGRAMS += bin/asn1/make_oidtable
 
 dist_man_MANS += doc/make_oidtable.1
 
