@@ -46,10 +46,12 @@ import com.bbn.rpki.test.objects.Util;
 /**
  * Represents the current state of a test.
  * 
- * Test execution consists of a cycle of generating updates for the rpki objects
- * (files) and uploading those updated objects. The cache can be updated and
- * validated can occur at any point during the upload step subject to the
- * granularity of the breakdown of the upload.
+ * Test execution consists of a cycle:
+ *    Update rpki objects according to the EpochEvents of actions.
+ *    Uploading those updated objects.
+ * 
+ * The cache can be updated and validated at any point during the upload step
+ * subject to the granularity of the breakdown of the upload.
  * 
  * The cycle can be tailoring in three ways: specifying what changes should be
  * made to the rpki objects, how the upload process should be broken down and
@@ -276,10 +278,6 @@ public class Model implements Constants {
    */
   public void addTask(TaskFactory.Task task) {
     addTaskInner(task);
-    if (shouldInstallTrustAnchor(task, getEpochIndex())) {
-      InstallTrustAnchor taskFactory = getTaskFactory(InstallTrustAnchor.class);
-      addTaskInner(taskFactory.createOnlyTask());
-    }
     if (shouldUpdateCache(task)) {
       addTaskInner(getTaskFactory(UpdateCache.class).createOnlyTask());
       addTaskInner(getTaskFactory(CheckCacheStatus.class).createOnlyTask());
@@ -341,37 +339,6 @@ public class Model implements Constants {
    * @param task
    * @return
    */
-  private boolean shouldInstallTrustAnchor(TaskFactory.Task task, int epochIndex) {
-    // For not only install trust anchors for epoch 0
-    // Upload just after uploading an entire epoch (if not broken down)
-    if (task instanceof UploadEpoch.Task) {
-      return true;
-    }
-    // Upload just after uploading any root (only trust anchors within)
-    if (task instanceof UploadRepositoryRoot.Task) {
-      UploadRepositoryRoot.Task urr = (UploadRepositoryRoot.Task) task;
-      File[] topFiles = urr.getRepositoryRootDir().listFiles(cerFilter);
-      return topFiles.length > 0;
-    }
-    if (task instanceof UploadFiles.Task) {
-      UploadFiles.Task uploadFilesTask = (UploadFiles.Task) task;
-      if (getRepositoryRoots().contains(uploadFilesTask.getDirectory())) {
-        // If the directory is a repository root
-        for (File file : uploadFilesTask.getFilesToUpload()) {
-          // any file is a cert
-          if (file.getName().endsWith(".cer")) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * @param task
-   * @return
-   */
   protected boolean shouldUpdateCache(TaskFactory.Task task) {
     // Update the cache after each epoch, by default
     return task instanceof UploadEpoch.Task;
@@ -402,11 +369,19 @@ public class Model implements Constants {
    */
   public void advanceEpoch() {
     ++epochIndex;
+    // Add this here so actions can operate on it.
+    if (epochIndex == 0) {
+      addTask(getTaskFactory(UploadTrustAnchors.class).createOnlyTask());
+      addTaskInner(getTaskFactory(InstallTrustAnchor.class).createOnlyTask());
+    }
     addTask(getTaskFactory(UploadEpoch.class).createOnlyTask());
     previousRepositoryRoots.clear();
     previousRepositoryRoots.addAll(repositoryRoots);
     repositoryRoots.clear();
-    if (epochIndex > 0) {
+    if (epochIndex <= 0) {
+      // Epoch 0 actions are the building of the initial testbed
+      // The results of which are ready to go.
+    } else {
       Epoch epochActions = epochs.get(epochIndex - 1);
       for (EpochEvent epoch : epochActions.getEpochEvents()) {
         AbstractAction action = epoch.getAction();
