@@ -103,6 +103,55 @@ void const * const * config_get_array(
     size_t key);
 
 /**
+    Generate a helper function around config_get() that returns the appropriate
+    pointer type.
+*/
+#define CONFIG_GET_HELPER(key, type) \
+    static inline const type * key ## _get() \
+    { \
+        return (const type *)config_get(key); \
+    }
+
+/**
+    Same as CONFIG_GET_HELPER above, but dereference the pointer before
+    returning.
+*/
+#define CONFIG_GET_HELPER_DEREFERENCE(key, type) \
+    static inline type key ## _get() \
+    { \
+        return *(const type *)config_get(key); \
+    }
+
+/**
+    Generate two helper functions around config_get_array() that return the
+    appropriate pointer types. The first function returns the entire array,
+    the second returns an item in the array.
+*/
+#define CONFIG_GET_ARRAY_HELPER(key, type) \
+    static inline type const * const * key ## _get_array() \
+    { \
+        return (type const * const *)config_get_array(key); \
+    } \
+    static inline type const * key ## _get(size_t index) \
+    { \
+        return key ## _get_array()[index]; \
+    }
+
+/**
+    Same as CONFIG_GET_ARRAY_HELPER above, but the helper that returns
+    individual items dereferences them before returning.
+*/
+#define CONFIG_GET_ARRAY_HELPER_DEREFERENCE(key, type) \
+    static inline type const * const * key ## _get_array() \
+    { \
+        return (type const * const *)config_get_array(key); \
+    } \
+    static inline type key ## _get(size_t index) \
+    { \
+        return *(key ## _get_array()[index]); \
+    }
+
+/**
     Return a string representation of the config option specified by its name.
 
     @note This function should not be used by most C programs. It is not meant
