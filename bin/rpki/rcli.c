@@ -1016,7 +1016,7 @@ int main(
         /*
          * These privileged operations will need a password. 
          */
-        password = config_get(CONFIG_DATABASE_ROOT_PASSWORD);
+        password = CONFIG_DATABASE_ROOT_PASSWORD_get();
 
         if (password == NULL)   /* env variable does not specify password */
         {
@@ -1222,7 +1222,7 @@ int main(
         {
             if (do_sockopts > 0)
             {
-                uint16_t port = *(uint16_t *)config_get(CONFIG_RPKI_PORT);
+                uint16_t port = CONFIG_RPKI_PORT_get();
                 s = makesock(port, &protos);
                 if (s < 0)
                 {

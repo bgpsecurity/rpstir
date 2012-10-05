@@ -210,9 +210,9 @@ dbconn *db_connect_default(
     int client_flags)
 {
     const char *host = "localhost";
-    const char *user = config_get(CONFIG_DATABASE_USER);
-    const char *pass = config_get(CONFIG_DATABASE_PASSWORD);
-    const char *db = config_get(CONFIG_DATABASE);
+    const char *user = CONFIG_DATABASE_USER_get();
+    const char *pass = CONFIG_DATABASE_PASSWORD_get();
+    const char *db = CONFIG_DATABASE_get();
 
     return connectMysqlCApi(client_flags, host, user, pass, db);
 }

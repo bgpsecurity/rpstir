@@ -28,15 +28,15 @@ void addQueryFlagTests(
     int needAnd)
 {
     addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, needAnd);
-    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
         addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
-    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_CRL))
+    if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
         addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
-    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_MANIFEST))
+    if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
         addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NO_MANIFEST))
+    if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
         addFlagTest(whereStr, SCM_FLAG_ONMAN, 1, 1);
-    if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NOT_YET))
+    if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
         addFlagTest(whereStr, SCM_FLAG_NOTYET, 0, 1);
 }
 
@@ -92,20 +92,20 @@ int checkValidity(
         addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
         validWhereStr = validSrch->wherestr;
         validWhereStr[0] = 0;
-        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
+        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
             snprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
         free(now);
         addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
-                    !*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN));
-        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
+                    !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
+        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
             addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
-        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_CRL))
+        if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
             addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
-        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_MANIFEST))
+        if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
             addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NOT_YET))
+        if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
             addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
-        if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_NO_MANIFEST))
+        if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
         {
             int len = strlen(validWhereStr);
             snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
@@ -117,7 +117,7 @@ int checkValidity(
         nextSKI = (char *)validSrch->vec[0].valptr;
         nextSubject = (char *)validSrch->vec[1].valptr;
 
-        if (*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
+        if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
         {
             anySrch = newsrchscm(NULL, 1, 0, 1);
             field = findField("flags");
@@ -162,7 +162,7 @@ int checkValidity(
                            registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (!found)
         {                       // no parent cert
-            if (!*(const bool *)config_get(CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN))
+            if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
                 return 0;
             snprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                      whereInsertPtr + 5);

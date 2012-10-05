@@ -281,10 +281,10 @@ scm *initscm(
 {
     scm *scmp;
     int sta;
-    const char *db = config_get(CONFIG_DATABASE);
-    const char *dbu = config_get(CONFIG_DATABASE_USER);
-    const char *dbp = config_get(CONFIG_DATABASE_PASSWORD);
-    const char *dsn = config_get(CONFIG_DATABASE_DSN);
+    const char *db = CONFIG_DATABASE_get();
+    const char *dbu = CONFIG_DATABASE_USER_get();
+    const char *dbp = CONFIG_DATABASE_PASSWORD_get();
+    const char *dsn = CONFIG_DATABASE_DSN_get();
 
     scmp = (scm *) calloc(1, sizeof(scm));
     if (scmp == NULL)
