@@ -37,7 +37,7 @@ public class AdvanceEpoch extends TaskFactory {
      */
     @Override
     protected String getLogDetail() {
-      return null;
+      return String.valueOf(model.getEpochIndex());
     }
   }
 
