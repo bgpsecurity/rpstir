@@ -24,20 +24,11 @@ import com.bbn.rpki.test.objects.Util;
 public class InstallTrustAnchor extends TaskFactory {
   protected class Task extends TaskFactory.Task {
 
-    private final File certFile;
-
-    private final File talFile;
-
-    private final String talPrefix;
-
     /**
      * @param taskName
      */
     protected Task() {
       super(TASK_NAME);
-      this.certFile = model.getTrustAnchorCert();
-      this.talFile = model.getTALFile();
-      this.talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
     }
 
     /**
@@ -45,6 +36,9 @@ public class InstallTrustAnchor extends TaskFactory {
      */
     @Override
     public void run() {
+      File certFile = getCertFile();
+      File talFile = model.getTALFile();
+      String talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
       try {
         String rawOutput = Util.exec("openssl", false, null, null,
                                      null,
@@ -77,7 +71,7 @@ public class InstallTrustAnchor extends TaskFactory {
      */
     @Override
     protected String getLogDetail() {
-      return certFile.toString();
+      return getCertFile().toString();
     }
   }
 
@@ -107,5 +101,12 @@ public class InstallTrustAnchor extends TaskFactory {
   @Override
   protected Collection<String> getRelativeTaskNames() {
     return Collections.singleton(TASK_NAME);
+  }
+
+  /**
+   * @return
+   */
+  public File getCertFile() {
+    return model.getTrustAnchorCert();
   }
 }
