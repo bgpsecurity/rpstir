@@ -133,6 +133,7 @@ public class Main {
       }
       tlPanel.format("done%n");
     }
+    tlPanel.format("%sAll %stasks completed.", indent, indent.isEmpty() ? "" : "sub");
   }
 
   Container getComponent() {
