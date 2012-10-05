@@ -752,9 +752,7 @@ int main(
     // get configured extra URIs
     for (i = 0; i < config_get_length(CONFIG_RPKI_EXTRA_PUBLICATION_POINTS); ++i)
     {
-        const char * uri =
-            ((char const * const *)
-             config_get_array(CONFIG_RPKI_EXTRA_PUBLICATION_POINTS))[i];
+        const char * uri = CONFIG_RPKI_EXTRA_PUBLICATION_POINTS_get(i);
 
         if (DB_URI_LEN < strlen(uri))
         {

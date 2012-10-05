@@ -160,11 +160,11 @@ int main(
         {
         case 't':              /* TCP flag */
             tflag = 1;
-            portno = *(uint16_t *)config_get(CONFIG_RPKI_PORT);
+            portno = CONFIG_RPKI_PORT_get();
             break;
         case 'u':              /* UDP flag */
             uflag = 1;
-            portno = *(uint16_t *)config_get(CONFIG_RPKI_PORT);
+            portno = CONFIG_RPKI_PORT_get();
             break;
         case 'n':              /* do nothing flag - print what messages would 
                                  * have been sent */

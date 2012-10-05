@@ -393,7 +393,7 @@ int main(
              "delete from rtr_update\n"
              "where create_time < adddate(now(), interval -%zu hour)\n"
              "and serial_num<>%u and serial_num<>%u;",
-             *(const size_t *)config_get(CONFIG_RPKI_RTR_RETENTION_HOURS),
+             CONFIG_RPKI_RTR_RETENTION_HOURS_get(),
              prevSerialNum, currSerialNum);
     sta = statementscm_no_data(connection, msg);
     checkErr(sta < 0, "Can't delete expired update metadata");
