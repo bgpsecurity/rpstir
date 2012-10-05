@@ -2,6 +2,8 @@
 
 . `dirname "$0"`/test.include
 
+use_config_file "$TESTS_TOP_SRCDIR/tests/test.conf"
+
 PROG="$1"
 shift
 

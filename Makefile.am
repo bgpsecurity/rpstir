@@ -56,8 +56,11 @@ noinst_PROGRAMS =
 pkgdata_DATA =
 pkglibexec_PROGRAMS =
 
-dist_check_SCRIPTS += tests/run_with_tool.sh
-TESTS_ENVIRONMENT = $(top_srcdir)/tests/run_with_tool.sh
+dist_check_DATA += \
+	etc/test.conf \
+	tests/test.conf
+dist_check_SCRIPTS += tests/setup_test_environment.sh
+TESTS_ENVIRONMENT = $(top_srcdir)/tests/setup_test_environment.sh
 
 dist_doc_DATA += \
 	doc/glossary.txt

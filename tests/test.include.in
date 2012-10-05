@@ -1,6 +1,11 @@
 # Shell function for checking if the number of lines of output matches
 # the expected number.
 
+export TESTS_TOP_BUILDDIR="@abs_top_builddir@"
+export TESTS_TOP_SRCDIR="@abs_top_srcdir@"
+
+. "$TESTS_TOP_SRCDIR/lib/util/shell_utils"
+
 check_num_output_lines()
 {
     # Parameter 1 is the command line.
@@ -54,4 +59,10 @@ run () {
     run_bg "$@" || return $?
     wait $! || return $?
     return 0
+}
+
+use_config_file () {
+    test $# -eq 1 || fatal "Usage: $0 path/to/file.conf"
+
+    export @CONFIG_ENV_VAR@="$1"
 }
