@@ -45,7 +45,7 @@ public class Util implements Constants {
   }
 
   private static final String B64_ALPHABET =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
   private static DateFormat dateFormat1 = new SimpleDateFormat("yyMMddHHmmss'Z'");
 
@@ -321,7 +321,7 @@ public class Util implements Constants {
       final Process f = runtime.exec(cmdArray, null, cwd);
       Reader stdoutReader = new InputStreamReader(f.getInputStream());
       Reader stderrReader = new InputStreamReader(f.getErrorStream());
-      if (typescriptLogger != null) {
+      if (Boolean.FALSE && typescriptLogger != null) {
         stdoutReader = typescriptLogger.addSource(stdoutReader, "stdout");
         stderrReader = typescriptLogger.addSource(stderrReader, "stderr");
       }
@@ -344,7 +344,7 @@ public class Util implements Constants {
       String errString = stderr.getString();
       if (DEBUG_ON && typescriptLogger != null) {
         typescriptLogger.log(Arrays.asList(cmdArray));
-        typescriptLogger.log(string, System.getProperty("line.separator", "\n"));
+        //        typescriptLogger.log(string, System.getProperty("line.separator", "\n"));
       }
       commandLog.println(Arrays.asList(cmdArray));
       commandLog.flush();
