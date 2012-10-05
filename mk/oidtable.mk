@@ -18,7 +18,7 @@ var_oidtable_ASN1_H = \
 var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H)
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
-		tests/run_with_tool.sh \
+		tests/setup_test_environment.sh \
 		./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)
 
 AM_CPPFLAGS += \
