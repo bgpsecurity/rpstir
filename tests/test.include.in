@@ -61,6 +61,9 @@ run () {
     return 0
 }
 
+# Any test that calls use_config_file() should ensure that the config file
+# it uses includes $TESTS_INCLUDE_CONFIG.
+export TESTS_INCLUDE_CONFIG="$TESTS_TOP_SRCDIR/tests/test.conf"
 use_config_file () {
     test $# -eq 1 || fatal "Usage: $0 path/to/file.conf"
 
