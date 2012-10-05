@@ -190,6 +190,9 @@ public class TypescriptPanel extends TypescriptLogger {
   public void log(Object...msg) {
     StringBuilder sb = new StringBuilder();
     for (Object o : msg) {
+      if (sb.length() > 0) {
+        sb.append(" ");
+      }
       sb.append(o);
     }
     processString(sb.toString(), "stdout");
