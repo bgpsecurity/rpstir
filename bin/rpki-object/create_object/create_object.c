@@ -21,6 +21,7 @@
 #include "create_roa.h"
 #include "obj_err.h"
 #include "util/logging.h"
+#include "config/config.h"
 
 /*
  * function declrations 
@@ -94,6 +95,7 @@ static void fatal(
     char *param)
 {
     warn(err, param);
+    config_unload();
     exit(err);
 }
 
@@ -261,6 +263,9 @@ void printUsage(
     fprintf(stderr,
             "\t-t\tuse specified file template rather than the default\n");
     fprintf(stderr, "\t-h\tprint this usage\n");
+
+    config_unload();
+
     exit(0);
 }
 
@@ -284,6 +289,12 @@ int main(
 
 
     OPEN_LOG("create_object", LOG_USER);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        return EXIT_FAILURE;
+    }
 
 
     // parse options
@@ -345,7 +356,10 @@ int main(
 
         // if no validation error but we did have a parse err - exit
         if (parse_err)
+        {
+            config_unload();
             exit(INPUT_ARG_ERR);
+        }
 
         ret = create_cert(table);
         // fprintf(stdout,"return from creating certificate %d\n", ret);
@@ -371,7 +385,10 @@ int main(
 
         // if no validation error but we did have a parse err - exit
         if (parse_err)
+        {
+            config_unload();
             exit(INPUT_ARG_ERR);
+        }
 
         ret = create_crl(table);
     }
@@ -414,6 +431,8 @@ int main(
     }
     else
         fatal(INPUT_ARG_ERR, argv[1]);
+
+    config_unload();
 
     exit(ret);
 }

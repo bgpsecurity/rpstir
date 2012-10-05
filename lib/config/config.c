@@ -161,6 +161,56 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      ""},
+
+    // CONFIG_TEMPLATE_CA_CERT
+    {
+     "TemplateCACert",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/ca_template.cer\""},
+
+    // CONFIG_TEMPLATE_EE_CERT
+    {
+     "TemplateEECert",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/ee_template.cer\""},
+
+    // CONFIG_TEMPLATE_CRL
+    {
+     "TemplateCRL",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/crl_template.crl\""},
+
+    // CONFIG_TEMPLATE_MANIFEST
+    {
+     "TemplateManifest",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/M.man\""},
+
+    // CONFIG_TEMPLATE_ROA
+    {
+     "TemplateROA",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/R.roa\""},
 };
 
 

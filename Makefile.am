@@ -31,6 +31,7 @@ AM_ETAGSFLAGS = \
 
 
 examplesdir = $(docdir)/examples
+templatesdir = $(pkgdatadir)/templates
 
 BUILT_SOURCES =
 CLEANDIRS =

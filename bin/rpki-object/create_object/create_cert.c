@@ -18,9 +18,8 @@
 #include "create_object.h"
 #include "obj_err.h"
 #include <string.h>
+#include "config/config.h"
 
-char *cacert_template = TEMPLATES_DIR "/ca_template.cer";
-char *eecert_template = TEMPLATES_DIR "/ee_template.cer";
 int eecert = 0;                 // either EE or CA
 int selfSigned = 0;             // defaults to not self signed
 
@@ -1168,9 +1167,9 @@ int create_cert(
     if (!templateFile)
     {
         if (eecert)
-            templateFile = eecert_template;
+            templateFile = CONFIG_TEMPLATE_EE_CERT_get();
         else
-            templateFile = cacert_template;
+            templateFile = CONFIG_TEMPLATE_CA_CERT_get();
     }
     ret = get_casn_file(&cert.self, (char *)templateFile, 0);
     if (ret < 0)

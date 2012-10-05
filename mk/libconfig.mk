@@ -10,3 +10,7 @@ lib_config_libconfig_a_SOURCES = \
 
 lib_config_libconfig_a_CFLAGS = \
 	$(CFLAGS_STRICT)
+
+lib_config_libconfig_a_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-DTEMPLATESDIR='"$(templatesdir)"'
