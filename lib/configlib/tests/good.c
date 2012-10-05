@@ -32,6 +32,26 @@ enum config_key {
     CONFIG_NUM_OPTIONS
 };
 
+CONFIG_GET_HELPER_DEREFERENCE(CONFIG_SOME_INT, int)
+CONFIG_GET_ARRAY_HELPER(CONFIG_EMPTY_ARRAY, char)
+CONFIG_GET_ARRAY_HELPER(CONFIG_STRING_ARRAY, char)
+CONFIG_GET_ARRAY_HELPER_DEREFERENCE(CONFIG_INT_ARRAY, int)
+CONFIG_GET_ARRAY_HELPER(CONFIG_LONG_ARRAY, char)
+CONFIG_GET_HELPER_DEREFERENCE(CONFIG_INCLUDED_INT, int)
+CONFIG_GET_HELPER(CONFIG_DEFAULT_STRING, char)
+CONFIG_GET_ARRAY_HELPER_DEREFERENCE(CONFIG_DEFAULT_INT_ARRAY, int)
+CONFIG_GET_ARRAY_HELPER_DEREFERENCE(CONFIG_DEFAULT_EMPTY_ARRAY, int)
+CONFIG_GET_ARRAY_HELPER(CONFIG_STRING_ARRAY_CHARS, char)
+CONFIG_GET_HELPER_DEREFERENCE(CONFIG_SOME_BOOL_TRUE, bool)
+CONFIG_GET_HELPER_DEREFERENCE(CONFIG_SOME_BOOL_FALSE, bool)
+CONFIG_GET_HELPER_DEREFERENCE(CONFIG_ENV_VAR_INT, int)
+CONFIG_GET_HELPER(CONFIG_ENV_VAR_STRING, char)
+CONFIG_GET_HELPER(CONFIG_ENV_VAR_EMPTY, char)
+CONFIG_GET_HELPER(CONFIG_FILE, char)
+CONFIG_GET_HELPER(CONFIG_DIR, char)
+CONFIG_GET_HELPER(CONFIG_NULL_STRING, char)
+CONFIG_GET_HELPER(CONFIG_DEFAULT_NULL_STRING, char)
+
 
 static bool stringarray_validator(
     const struct config_context *context,
@@ -283,118 +303,72 @@ static bool test_config(
     ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file, NULL);
     TEST_BOOL(ret, true);
 
-    TEST(int, "%d", *(const int *)config_get(CONFIG_SOME_INT), ==, -5);
+    TEST(int, "%d", CONFIG_SOME_INT_get(), ==, -5);
 
     TEST(size_t, "%zu", config_get_length(CONFIG_EMPTY_ARRAY), ==, 0);
 
     TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY), ==, 3);
-    TEST_STR(((char const *const *)config_get_array(CONFIG_STRING_ARRAY))[0],
-             ==, "foo bar");
-    TEST_STR(((char const *const *)config_get_array(CONFIG_STRING_ARRAY))[1],
-             ==, "quux");
-    TEST_STR(((char const *const *)config_get_array(CONFIG_STRING_ARRAY))[2],
-             ==, "blah # this is not a comment");
+    TEST_STR(CONFIG_STRING_ARRAY_get(0), ==, "foo bar");
+    TEST_STR(CONFIG_STRING_ARRAY_get(1), ==, "quux");
+    TEST_STR(CONFIG_STRING_ARRAY_get(2), ==, "blah # this is not a comment");
 
     TEST(size_t, "%zu", config_get_length(CONFIG_INT_ARRAY), ==, 4);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_INT_ARRAY))[0],
-         ==, 8);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_INT_ARRAY))[1],
-         ==, -3);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_INT_ARRAY))[2],
-         ==, 40);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_INT_ARRAY))[3],
-         ==, 0xff);
+    TEST(int, "%d", CONFIG_INT_ARRAY_get(0), ==, 8);
+    TEST(int, "%d", CONFIG_INT_ARRAY_get(1), ==, -3);
+    TEST(int, "%d", CONFIG_INT_ARRAY_get(2), ==, 40);
+    TEST(int, "%d", CONFIG_INT_ARRAY_get(3), ==, 0xff);
 
     TEST(size_t, "%zu", config_get_length(CONFIG_LONG_ARRAY), ==, 5);
-    TEST_STR(((char const *const *)config_get_array(CONFIG_LONG_ARRAY))[0], ==,
-             "foo");
-    TEST_STR(((char const *const *)config_get_array(CONFIG_LONG_ARRAY))[1], ==,
-             "bar");
-    TEST_STR(((char const *const *)config_get_array(CONFIG_LONG_ARRAY))[2], ==,
-             "quux");
-    TEST_STR(((char const *const *)config_get_array(CONFIG_LONG_ARRAY))[3], ==,
-             "baz");
-    TEST_STR(((char const *const *)config_get_array(CONFIG_LONG_ARRAY))[4], ==,
-             "something else");
+    TEST_STR(CONFIG_LONG_ARRAY_get(0), ==, "foo");
+    TEST_STR(CONFIG_LONG_ARRAY_get(1), ==, "bar");
+    TEST_STR(CONFIG_LONG_ARRAY_get(2), ==, "quux");
+    TEST_STR(CONFIG_LONG_ARRAY_get(3), ==, "baz");
+    TEST_STR(CONFIG_LONG_ARRAY_get(4), ==, "something else");
 
-    TEST(int,
-         "%d",
-         *(const int *)config_get(CONFIG_INCLUDED_INT),
-         ==, 42);
+    TEST(int, "%d", CONFIG_INCLUDED_INT_get(), ==, 42);
 
     TEST_STR((const char *)config_get(CONFIG_DEFAULT_STRING), ==,
              "this-is-the-default");
 
     TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_INT_ARRAY), ==, 3);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[0],
-         ==, -1);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[1],
-         ==, 0);
-    TEST(int,
-         "%d",
-         *((int const *const *)config_get_array(CONFIG_DEFAULT_INT_ARRAY))[2],
-         ==, 1);
+    TEST(int, "%d", CONFIG_DEFAULT_INT_ARRAY_get(0), ==, -1);
+    TEST(int, "%d", CONFIG_DEFAULT_INT_ARRAY_get(1), ==, 0);
+    TEST(int, "%d", CONFIG_DEFAULT_INT_ARRAY_get(2), ==, 1);
 
     TEST(size_t, "%zu", config_get_length(CONFIG_DEFAULT_EMPTY_ARRAY), ==, 0);
 
     TEST(size_t, "%zu", config_get_length(CONFIG_STRING_ARRAY_CHARS), ==, 10);
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[0], ==, "\"");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[1], ==, "'");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[2], ==, "\\");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[3], ==, "$");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[4], ==, "\t");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[5], ==, " ");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[6], ==, "#");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[7], ==, "\n");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[8], ==, "\r");
-    TEST_STR(((char const *const *)
-              config_get_array(CONFIG_STRING_ARRAY_CHARS))[9], ==, "\t");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(0), ==, "\"");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(1), ==, "'");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(2), ==, "\\");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(3), ==, "$");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(4), ==, "\t");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(5), ==, " ");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(6), ==, "#");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(7), ==, "\n");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(8), ==, "\r");
+    TEST_STR(CONFIG_STRING_ARRAY_CHARS_get(9), ==, "\t");
 
-    TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_TRUE), true);
+    TEST_BOOL(CONFIG_SOME_BOOL_TRUE_get(), true);
 
-    TEST_BOOL(*(const bool *)config_get(CONFIG_SOME_BOOL_FALSE), false);
+    TEST_BOOL(CONFIG_SOME_BOOL_FALSE_get(), false);
 
-    TEST(int,
-         "%d",
-         *(const int *)config_get(CONFIG_ENV_VAR_INT),
-         ==, 0xfe0f);
+    TEST(int, "%d", CONFIG_ENV_VAR_INT_get(), ==, 0xfe0f);
 
-    TEST_STR((const char *)config_get(CONFIG_ENV_VAR_STRING), ==,
+    TEST_STR(CONFIG_ENV_VAR_STRING_get(), ==,
              "/foo bar \" # \\n ${ENV_VAR_STRING}/");
 
-    TEST_STR((const char *)config_get(CONFIG_ENV_VAR_EMPTY), ==,
-             " barfoo  quux ");
+    TEST_STR(CONFIG_ENV_VAR_EMPTY_get(), ==, " barfoo  quux ");
 
-    TEST_STR((const char *)config_get(CONFIG_FILE), ==,
+    TEST_STR(CONFIG_FILE_get(), ==,
              ABS_TOP_SRCDIR "/lib/configlib/tests/good.conf");
 
-    TEST_STR((const char *)config_get(CONFIG_DIR), ==,
+    TEST_STR(CONFIG_DIR_get(), ==,
              ABS_TOP_SRCDIR "/lib/configlib");
 
-    TEST(const char *, "%s", config_get(CONFIG_NULL_STRING), ==, NULL);
+    TEST(const char *, "%s", CONFIG_NULL_STRING_get(), ==, NULL);
 
-    TEST(const char *, "%s", config_get(CONFIG_DEFAULT_NULL_STRING), ==, NULL);
+    TEST(const char *, "%s", CONFIG_DEFAULT_NULL_STRING_get(), ==, NULL);
 
     config_unload();
 
