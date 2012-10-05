@@ -92,16 +92,6 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      "24"},
 
-    // CONFIG_RSYNC_LISTEN_PORT
-    {
-     "RsyncListenPort",
-     false,
-     config_type_sscanf_converter, &config_type_sscanf_arg_uint16_t,
-     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_uint16_t,
-     free,
-     NULL, NULL,
-     "3450"},
-
     // CONFIG_RPKI_RTR_RETENTION_HOURS
     {
      "RpkiRtrRetentionHours",
