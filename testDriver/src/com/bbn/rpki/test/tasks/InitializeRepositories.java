@@ -35,13 +35,13 @@ public class InitializeRepositories extends TaskFactory {
         if (!remotePath.endsWith("/")) {
           remotePath += "/";
         }
-        Util.exec("Initialize Repository", false, null, null,
+        Util.exec("Initialize Repository", false, false, null,
+                  null,
                   null,
                   "ssh",
                   sourceParts[0],
                   "rm",
-                  "-rf",
-                  remotePath + "*");
+                  "-rf", remotePath + "*");
       }
     }
 

@@ -104,7 +104,7 @@ public class Main {
       }
       Iterable<TaskFactory.Task> tasks = model.getTasks();
       executeTasks(tasks, model, "");
-      System.out.println(iniFile + " completed");
+      tlPanel.format("%s completed%n", iniFile);
       RunLoader.singleton().stop();
     }
   }
@@ -133,7 +133,6 @@ public class Main {
       }
       tlPanel.format("done%n");
     }
-    tlPanel.format("%sAll %stasks completed.", indent, indent.isEmpty() ? "" : "sub");
   }
 
   Container getComponent() {

@@ -276,7 +276,7 @@ public class Util implements Constants {
     cmdArray[1] = "-f";
     cmdArray[2] = Constants.CONFIG_PATH + file + ".cfg";
     System.arraycopy(xargs, 0, cmdArray, 3, xargs.length);
-    exec("create_object", false, null, null, null, cmdArray);
+    exec("create_object", false, false, null, null, null, cmdArray);
   }
 
   /**
@@ -284,10 +284,10 @@ public class Util implements Constants {
    * @return
    */
   static String generate_ski(String fileName) {
-    return exec("gen_hash", true, null, null,
+    return exec("gen_hash", true, false, null,
                 null,
-                Constants.BIN_DIR + "/gen_hash",
-                "-f", fileName);
+                null,
+                Constants.BIN_DIR + "/gen_hash", "-f", fileName);
   }
 
   /**
@@ -300,19 +300,20 @@ public class Util implements Constants {
    * @return stdout string
    */
   public static String exec(String title, boolean ignoreStatus, File cwd, String input, String cleanCommand, List<String> cmds) {
-    return exec(title, ignoreStatus, cwd, input, cleanCommand, cmds.toArray(new String[cmds.size()]));
+    return exec(title, ignoreStatus, false, cwd, input, cleanCommand, cmds.toArray(new String[cmds.size()]));
   }
 
   /**
    * @param title
    * @param ignoreStatus TODO
+   * @param showStdOut TODO
    * @param cwd
    * @param input TODO
    * @param cleanCommand TODO
    * @param cmdArray
    * @return stdout string
    */
-  public static String exec(String title, boolean ignoreStatus, File cwd, String input, String cleanCommand, String... cmdArray) {
+  public static String exec(String title, boolean ignoreStatus, boolean showStdOut, File cwd, String input, String cleanCommand, String... cmdArray) {
     int status;
     try {
       if (cwd == null) {
@@ -321,7 +322,7 @@ public class Util implements Constants {
       final Process f = runtime.exec(cmdArray, null, cwd);
       Reader stdoutReader = new InputStreamReader(f.getInputStream());
       Reader stderrReader = new InputStreamReader(f.getErrorStream());
-      if (Boolean.FALSE && typescriptLogger != null) {
+      if (showStdOut && typescriptLogger != null) {
         stdoutReader = typescriptLogger.addSource(stdoutReader, "stdout");
         stderrReader = typescriptLogger.addSource(stderrReader, "stderr");
       }
@@ -379,7 +380,7 @@ public class Util implements Constants {
           "-n",
           file.getPath()
       };
-      return exec("gen_hash", true, null, null, null, cmdArray);
+      return exec("gen_hash", true, false, null, null, null, cmdArray);
     }
   }
 
@@ -426,7 +427,7 @@ public class Util implements Constants {
    */
   public static void killProcessesRunning(String string) {
     // ps command to find processes of this user
-    String psOutput = Util.exec("ps -aef", true, null, null, null, "ps", "-aef");
+    String psOutput = Util.exec("ps -aef", true, false, null, null, null, "ps", "-aef");
     String[] lines = psOutput.split("\n");
     List<String> cmd = new ArrayList<String>();
     cmd.add("kill");
@@ -451,6 +452,6 @@ public class Util implements Constants {
     File repositoryDir = new File(RPKI_ROOT, "REPOSITORY");
     repositoryDir.mkdirs();
     new File(RPKI_ROOT, "LOGS").mkdirs();
-    exec("initDB", true, RPKI_ROOT, null, null, "proto/rcli",  "-x", "-t", repositoryDir.getPath(), "-y");
+    exec("initDB", true, false, RPKI_ROOT, null, null,  "proto/rcli", "-x", "-t", repositoryDir.getPath(), "-y");
   }
 }

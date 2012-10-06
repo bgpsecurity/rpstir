@@ -29,10 +29,10 @@ public class UpdateCache extends TaskFactory {
 
     @Override
     public void run() {
-      Util.exec("Chaser", false, Util.RPKI_ROOT, null,
+      Util.exec("Chaser", false, false, Util.RPKI_ROOT,
+                null,
                 "rsync_aur/rsync_listener",
-                "proto/chaser",
-                "-f", "initial_rsync.config");
+                "proto/chaser", "-f", "initial_rsync.config");
     }
 
     /**

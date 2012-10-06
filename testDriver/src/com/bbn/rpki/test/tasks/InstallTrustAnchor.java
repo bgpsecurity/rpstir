@@ -40,26 +40,26 @@ public class InstallTrustAnchor extends TaskFactory {
       File talFile = model.getTALFile();
       String talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
       try {
-        String rawOutput = Util.exec("openssl", false, null, null,
+        String rawOutput = Util.exec("openssl", false, false, null,
+                                     null,
                                      null,
                                      "openssl",
                                      "x509",
                                      "-inform",
                                      "DER",
                                      "-in",
-                                     certFile.getPath(),
-                                     "-pubkey", "-noout");
-        String cookedOutput = Util.exec("awk", false, Util.RPKI_ROOT, rawOutput,
-                                        null, "awk", "!/-----(BEGIN|END)/");
+                                     certFile.getPath(), "-pubkey", "-noout");
+        String cookedOutput = Util.exec("awk", false, false, Util.RPKI_ROOT,
+                                        rawOutput, null, "awk", "!/-----(BEGIN|END)/");
         Writer talWriter = new FileWriter(talFile);
         talWriter.write(talPrefix);
         talWriter.write(cookedOutput);
         talWriter.close();
 
-        Util.exec("updateTA", false, Util.RPKI_ROOT, null,
+        Util.exec("updateTA", false, true, Util.RPKI_ROOT,
                   null,
-                  "run_scripts/updateTA.py",
-                  "--verbose", talFile.getPath());
+                  null,
+                  "run_scripts/updateTA.py", "--verbose", talFile.getPath());
         model.addTrustAnchor(certFile);
       } catch (IOException e) {
         throw new RuntimeException(e);

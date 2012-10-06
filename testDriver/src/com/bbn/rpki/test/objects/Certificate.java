@@ -99,10 +99,10 @@ public class Certificate extends CA_Obj {
           System.out.println("Using pre-generated key for " + this.subjkeyfile);
         }
       } else {
-        Util.exec("gen_key", false, null, null,
+        Util.exec("gen_key", false, false, null,
                   null,
-                  "../../cg/tools/gen_key",
-                  this.subjkeyfile, "2048");
+                  null,
+                  "../../cg/tools/gen_key", this.subjkeyfile, "2048");
         if (DEBUG_ON) {
           System.out.println("Creating new key for " + this.subjkeyfile);
         }

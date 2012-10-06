@@ -25,7 +25,7 @@ public class CheckCacheStatus extends TaskFactory {
 
     @Override
     public void run() {
-      Util.exec("Reports", false, Util.RPKI_ROOT, null, null, "run_scripts/results.py", "-v");
+      Util.exec("Reports", false, false, Util.RPKI_ROOT, null, null, "run_scripts/results.py", "-v");
     }
 
     /**
