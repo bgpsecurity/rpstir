@@ -62,10 +62,10 @@ public class PregeneratedKeys {
           public void run() {
             String path;
             while ((path = queue.poll()) != null) {
-              Util.exec("gen_key", false, null, null, 
+              Util.exec("gen_key", false, false, null, 
                         null,
-                        "../../cg/tools/gen_key",
-                        path, "2048");
+                        null,
+                        "../../cg/tools/gen_key", path, "2048");
             }
           }
         };
