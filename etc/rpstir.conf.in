@@ -61,3 +61,9 @@ DatabaseDSN myodbc
 
 # List of URIs of extra publication points to download from.
 #RPKIExtraPublicationPoints
+
+# Where to store the cache of the global RPKI.
+#RPKICacheDir @pkgcachedir@
+
+# Where to store logs.
+#LogDir @pkglogdir@

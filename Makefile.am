@@ -31,6 +31,8 @@ AM_ETAGSFLAGS = \
 
 
 examplesdir = $(docdir)/examples
+pkgcachedir = $(localstatedir)/cache/$(PACKAGE_NAME)
+pkglogdir = $(localstatedir)/log/$(PACKAGE_NAME)
 templatesdir = $(pkgdatadir)/templates
 
 BUILT_SOURCES =
@@ -47,11 +49,11 @@ dist_bin_SCRIPTS =
 dist_check_DATA =
 dist_check_SCRIPTS =
 dist_doc_DATA =
-dist_examples_DATA =
 dist_man_MANS =
 dist_noinst_DATA =
 dist_pkgdata_DATA =
 dist_sysconf_DATA =
+examples_DATA =
 noinst_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
@@ -69,9 +71,6 @@ dist_doc_DATA += \
 
 dist_noinst_DATA += \
 	doc/api.txt
-
-dist_examples_DATA += \
-	etc/rpstir.conf
 
 # library makefiles must be ordered by dependencies, lowest level library to highest
 include mk/libtest.mk

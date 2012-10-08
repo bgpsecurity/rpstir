@@ -211,6 +211,26 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "\"" TEMPLATESDIR "/R.roa\""},
+
+    // CONFIG_RPKI_CACHE_DIR
+    {
+     "RPKICacheDir",
+     false,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGCACHEDIR "\""},
+
+    // CONFIG_LOG_DIR
+    {
+     "LogDir",
+     false,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGLOGDIR "\""},
 };
 
 
