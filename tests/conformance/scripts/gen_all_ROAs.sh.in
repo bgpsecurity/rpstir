@@ -10,7 +10,8 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $CONFIG_ROOT_DIR/lib/util/trap_errors
 
-CONFORMANCE_ROOT="$CONFIG_ROOT_DIR/tests/conformance"
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
 
 # Usage
 usage ( ) {
@@ -88,7 +89,7 @@ Outputs:
 
 
 # Options and defaults
-OUTPUT_DIR="$CONFORMANCE_ROOT/raw/root"
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
 USE_EXISTING_PATCHES=
 
 # Process command line arguments.
@@ -120,7 +121,7 @@ else
     patch_option=
 fi
 
-single_ROA_script="$CONFORMANCE_ROOT/scripts/make_test_CMS.sh"
+single_ROA_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CMS.sh"
 single_ROA_cmd="${single_ROA_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################

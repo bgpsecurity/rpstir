@@ -110,10 +110,6 @@ PREFIX="bad"
 OUTPUT_DIR="."
 KEYS_DIR="."
 USE_EXISTING_KEYS=
-CACERT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/ca_template.cer"
-EECERT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/ee_template.cer"
-CRL_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/crl_template.crl"
-MFT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/M.man"
 
 # Process command line arguments.
 while getopts b:o:x:d:Kh opt
@@ -236,8 +232,6 @@ child_mft_ee_key_path=${KEYS_DIR}/${child_mft_name}.p15
 ensure_dir_exists $OUTPUT_DIR
 ensure_file_exists ${PARENT_CERT_FILE}
 ensure_file_exists ${PARENT_KEY_FILE}
-ensure_file_exists ${CACERT_TEMPLATE}
-ensure_file_exists ${EECERT_TEMPLATE}
 if [ ${USE_EXISTING_KEYS} ]
 then
     ensure_file_exists $child_key_path
@@ -259,7 +253,7 @@ else
 fi
 
 # 2. Create/sign child certificate with appropriate parameters
-run "create_object-`basename ${child_cert_path}`" create_object -t ${CACERT_TEMPLATE} CERT \
+run "create_object-`basename ${child_cert_path}`" create_object CERT \
     outputfilename=${child_cert_path} \
     parentcertfile=${PARENT_CERT_FILE} \
     parentkeyfile=${PARENT_KEY_FILE} \
@@ -286,7 +280,7 @@ mkdir -p $child_sia_path
 echo "Created child SIA directory: $child_sia_path"
 
 # Create child-issued CRL
-run "create_object-`basename ${child_crl_path}`" create_object -t ${CRL_TEMPLATE} CRL \
+run "create_object-`basename ${child_crl_path}`" create_object CRL \
     outputfilename=${child_crl_path} \
     parentcertfile=${child_cert_path} \
     parentkeyfile=${child_key_path} \
@@ -307,7 +301,7 @@ else
 fi
 
 # 2. Create child-issued EE cert (to be embedded in the manifest)
-run "create_object-`basename ${child_mft_ee_path}`" create_object -t ${EECERT_TEMPLATE} CERT \
+run "create_object-`basename ${child_mft_ee_path}`" create_object CERT \
     outputfilename=${child_mft_ee_path} \
     parentcertfile=${child_cert_path} \
     parentkeyfile=${child_key_path} \
@@ -331,7 +325,7 @@ child_crl_hash=$(openssl sha -sha256 -r ${child_crl_path} | \
 echo "Hash of ${child_crl_name}: 0x${child_crl_hash}"
 
 # 4. Create child-issued Manifest
-run "create_object-`basename ${child_mft_path}`" create_object -t ${MFT_TEMPLATE} MANIFEST \
+run "create_object-`basename ${child_mft_path}`" create_object MANIFEST \
     outputfilename=${child_mft_path} \
     EECertLocation=${child_mft_ee_path} \
     EEKeyLocation=${child_mft_ee_key_path} \

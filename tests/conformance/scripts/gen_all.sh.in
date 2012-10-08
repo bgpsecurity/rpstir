@@ -17,26 +17,27 @@ STRICT_CHECKS=0
 
 # NOTES
 
-CONFORMANCE_ROOT="$CONFIG_ROOT_DIR/tests/conformance"
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
 
-CFSCRIPTS="$CONFORMANCE_ROOT/scripts" # conformance scripts
+CFSCRIPTS="$CONFORMANCE_ROOT_BUILDDIR/scripts" # conformance scripts
 hash rr
 hash sed
 
 # Clean out raw/root directory
-cd "$CONFORMANCE_ROOT"
+cd "$CONFORMANCE_ROOT_BUILDDIR"
 rm -rf raw/root
 mkdir raw/root
 
 # Build trust anchors
-cd "$CONFORMANCE_ROOT/raw"
+cd "$CONFORMANCE_ROOT_BUILDDIR/raw"
 for f in badRootBadAKI badRootBadCRLDP badRootNameDiff root
 do
-    run "rr-$f" rr < $f.raw > $f.cer
+    run "rr-$f" rr < "$CONFORMANCE_ROOT_SRCDIR/raw/$f.raw" > $f.cer
 done
 
 # Build CRL
-run "rr-root.crl" rr < root.crl.raw > root/root.crl
+run "rr-root.crl" rr < "$CONFORMANCE_ROOT_SRCDIR/raw/root.crl.raw" > root/root.crl
 
 # Generate all types of conformance cases
 $CFSCRIPTS/gen_all_certs.sh -P
@@ -46,7 +47,7 @@ $CFSCRIPTS/gen_all_CRLs.sh -P
 $CFSCRIPTS/gen_all_MFTs.sh -P
 
 # Copy to output directory
-cd "$CONFORMANCE_ROOT"
+cd "$CONFORMANCE_ROOT_BUILDDIR"
 rm -rf output
 mkdir -p output
 cp raw/*.cer output/
@@ -63,7 +64,7 @@ $CFSCRIPTS/gen_mft.sh \
     1 \
     ../raw/root.cer \
     rsync://rpki.bbn.com/conformance/root.cer \
-    ../raw/root.p15 \
+    "$CONFORMANCE_ROOT_SRCDIR/raw/root.p15" \
     rsync://rpki.bbn.com/conformance/root/root.crl \
     root/*.cer root/*.roa root/*.crl
 rm root.mft.cer root.mft.p15

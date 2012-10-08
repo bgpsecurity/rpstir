@@ -82,9 +82,6 @@ Example:
 
 # Options and defaults
 OUTPUT_DIR="."
-EECERT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/ee_template.cer"
-CRL_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/crl_template.crl"
-MFT_TEMPLATE="$CONFIG_ROOT_DIR/var/templates/M.man"
 
 # Process command line arguments.
 while getopts o:h opt
@@ -139,7 +136,6 @@ compute_sha256 ( ) {
 ensure_dir_exists $OUTPUT_DIR
 ensure_file_exists ${PARENT_CERT_FILE}
 ensure_file_exists ${PARENT_KEY_FILE}
-ensure_file_exists ${EECERT_TEMPLATE}
 
 ###############################################################################
 # Compute Paths (both rsync URIs and local paths)
@@ -181,7 +177,7 @@ run "gen_key-`basename $mft_ee_key_path`" gen_key $mft_ee_key_path 2048
 echo "Generated MFT EE key pair: $mft_ee_key_path"
 
 # 2. Create child-issued EE cert (to be embedded in the manifest)
-run "create_object-`basename ${mft_ee_path}`" create_object -t ${EECERT_TEMPLATE} CERT \
+run "create_object-`basename ${mft_ee_path}`" create_object CERT \
     outputfilename=${mft_ee_path} \
     parentcertfile=${PARENT_CERT_FILE} \
     parentkeyfile=${PARENT_KEY_FILE} \
@@ -213,7 +209,7 @@ while [ $# -gt 0 ]; do
 done
 
 # 4. Create child-issued Manifest
-run "create_object-`basename ${mft_path}`" create_object -t ${MFT_TEMPLATE} MANIFEST \
+run "create_object-`basename ${mft_path}`" create_object MANIFEST \
     outputfilename=${mft_path} \
     EECertLocation=${mft_ee_path} \
     EEKeyLocation=${mft_ee_key_path} \
