@@ -6,7 +6,6 @@
 THIS_SCRIPT_DIR=`dirname "$0"`
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-RSYNC_CORD_CONF="$CONFIG_ROOT_DIR/rsync_cord.config"
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
 OLD_LIST="`@MKTEMP@`"
@@ -15,11 +14,11 @@ CUR_LIST="`@MKTEMP@`"
 chaser "$@" > "$CUR_LIST"
 
 while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
-	rm -f "$RSYNC_CORD_CONF"
+	RSYNC_CORD_CONF="`@MKTEMP@`"
 
 	echo "RSYNC=\"`which rsync`\"" >> "$RSYNC_CORD_CONF"
-	echo "REPOSITORY=\"$CONFIG_ROOT_DIR/REPOSITORY\"" >> "$RSYNC_CORD_CONF"
-	echo "LOGS=\"$CONFIG_ROOT_DIR/LOGS\"" >> "$RSYNC_CORD_CONF"
+	echo "REPOSITORY=\"`config_get RPKICacheDir`\"" >> "$RSYNC_CORD_CONF"
+	echo "LOGS=\"`config_get LogDir`\"" >> "$RSYNC_CORD_CONF"
 
 	DONE_URI=0
 	printf "DIRS=\"" >> "$RSYNC_CORD_CONF"
@@ -39,6 +38,8 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 
 	rsync_cord.py -d -c "$RSYNC_CORD_CONF" \
 		-t "`config_get DownloadConcurrency`"
+
+	rm -f "$RSYNC_CORD_CONF"
 
 	rm -f "$OLD_LIST"
 	OLD_LIST="$CUR_LIST"
