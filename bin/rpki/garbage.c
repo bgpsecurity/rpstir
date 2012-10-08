@@ -202,18 +202,19 @@ int main(
     // initialize
     argc = argc;
     argv = argv;                // silence compiler warnings
-    if (log_init("garbage.log", "garbage", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Could not initialize garbage collector's logfile");
-        exit(1);
-    }
-    (void)setbuf(stdout, NULL);
     OPEN_LOG(PACKAGE_NAME "-garbage", LOG_USER);
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't load configuration");
         exit(EXIT_FAILURE);
     }
+    if (log_init("garbage", LOG_DEBUG, LOG_DEBUG) != 0)
+    {
+        perror("Could not initialize garbage collector's logfile");
+        config_unload();
+        exit(1);
+    }
+    (void)setbuf(stdout, NULL);
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
     connect = connectscm(scmp->dsn, msg, WHERESTR_SIZE);

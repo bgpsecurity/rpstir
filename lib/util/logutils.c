@@ -12,6 +12,8 @@
 #include <time.h>
 #include <string.h>
 
+#include "config/config.h"
+
 #include "logutils.h"
 
 /*
@@ -38,7 +40,7 @@ static void log_msg_generic(
 
 
 /*
- * Initialize logging system.  Open "logfile" for append, set the
+ * Initialize logging system.  Open a log file for append, set the
  * facility (i.e. component name), and set the logging verbosity to
  * file and to standard error.
  *
@@ -50,20 +52,32 @@ static void log_msg_generic(
  * should be fine.
  */
 int log_init(
-    const char *logfile,
     const char *facility,
     int file_loglevel,
     int stderr_loglevel)
 {
-    if (!logfile || !facility)
+    if (!facility)
     {
         errno = EINVAL;         /* Invalid argument */
         return -1;
     }
 
+    size_t logfile_len = strlen(CONFIG_LOG_DIR_get()) + strlen("/") +
+                         strlen(facility) + strlen(".log") + 1;
+    char * logfile = malloc(logfile_len);
+    if (logfile == NULL)
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+    snprintf(logfile, logfile_len, "%s/%s.log", CONFIG_LOG_DIR_get(), facility);
+
     log_fp = fopen(logfile, "a");
     if (!log_fp)
+    {
+        free(logfile);
         return -1;              /* errno set by fopen() */
+    }
 
     log_facility = strdup(facility);
     if (!log_facility)
@@ -71,6 +85,7 @@ int log_init(
         log_facility = "none";
         fclose(log_fp);
         log_fp = NULL;
+        free(logfile);
         errno = ENOMEM;
         return -1;
     }
@@ -82,6 +97,8 @@ int log_init(
     log_msg(LOG_MAINT,
             "Logging initialized: filelevel=%d, stderrlevel=%d, file=%s",
             log_filethresh, log_stderrthresh, logfile);
+
+    free(logfile);
 
     return 0;
 }

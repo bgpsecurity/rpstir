@@ -12,6 +12,8 @@
 #include <netdb.h>
 #include <errno.h>
 
+#include "config/config.h"
+#include "util/logging.h"
 #include "util/logutils.h"
 
 #include "rpki-rtr/pdu.h"
@@ -727,12 +729,23 @@ int main(
     int argc,
     char **argv)
 {
-    if (log_init
-        ("rtr-test-client.log", "rtr-test-client", LOG_DEBUG, LOG_DEBUG) != 0)
+    OPEN_LOG(PACKAGE_NAME "-rtr-test-client", LOG_USER);
+
+    if (!my_config_load())
     {
-        perror("log_init()");
+        LOG(LOG_ERR, "can't load configuration");
         return EXIT_FAILURE;
     }
+
+    if (log_init
+        ("rtr-test-client", LOG_DEBUG, LOG_DEBUG) != 0)
+    {
+        perror("log_init()");
+        config_unload();
+        return EXIT_FAILURE;
+    }
+
+    config_unload();
 
     if (argc < 2)
     {

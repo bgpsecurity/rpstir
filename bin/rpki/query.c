@@ -599,16 +599,17 @@ int main(
     int numDisplays = 0;
     int numClauses = 0;
 
-    if (log_init("query.log", "query", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Could not initialize query client log file");
-        exit(1);
-    }
     OPEN_LOG(PACKAGE_NAME "-query", LOG_USER);
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't initialize configuration");
         exit(EXIT_FAILURE);
+    }
+    if (log_init("query", LOG_DEBUG, LOG_DEBUG) != 0)
+    {
+        perror("Could not initialize query client log file");
+        config_unload();
+        exit(1);
     }
     output = stdout;
     useLabels = 1;

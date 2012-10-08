@@ -955,16 +955,17 @@ int main(
         usage();
         return (1);
     }
-    if (log_init("rcli.log", "rcli", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Could not initialize rcli log file");
-        exit(1);
-    }
     OPEN_LOG(PACKAGE_NAME "-rcli", LOG_USER);
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't load configuration");
         exit(EXIT_FAILURE);
+    }
+    if (log_init("rcli", LOG_DEBUG, LOG_DEBUG) != 0)
+    {
+        perror("Could not initialize rcli log file");
+        config_unload();
+        exit(1);
     }
     if (force == 0)
     {

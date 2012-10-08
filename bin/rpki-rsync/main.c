@@ -84,7 +84,6 @@ int main(
     int my_argc;                /* either real or from script file */
     const char *WHITESPACE = "\n\r\t ";
     char *inputLogFile = NULL;
-    char *rsync_aur_logfile = "rsync_aur.log";
 
     tflag = uflag = nflag = fflag = sflag = ch = 0;
     portno = retlen = 0;
@@ -154,7 +153,7 @@ int main(
         my_argc = argc;
     }
 
-    while ((ch = getopt(my_argc, my_argv, "tuf:d:l:nweish")) != -1)
+    while ((ch = getopt(my_argc, my_argv, "tuf:d:nweish")) != -1)
     {
         switch (ch)
         {
@@ -189,9 +188,6 @@ int main(
         case 's':              /* synchronize with rcli */
             sflag = 1;
             break;
-        case 'l':              /* logfile for rsync_aur itself */
-            rsync_aur_logfile = strdup(optarg);
-            break;
         case 'h':              /* help */
         default:
             myusage(argv[0]);
@@ -199,7 +195,7 @@ int main(
         }
     }
 
-    log_init(rsync_aur_logfile, "rsync_aur", LOG_DEBUG, LOG_DEBUG);
+    log_init("rsync_aur", LOG_DEBUG, LOG_DEBUG);
 
     /*
      * test for necessary flags 

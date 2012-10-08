@@ -29,7 +29,6 @@
  * Logging interface 
  */
 int log_init(
-    const char *logfile,
     const char *facility,
     int file_loglevel,
     int stderr_loglevel);

@@ -110,18 +110,18 @@ int main(
         i = 0;
     struct keyring keyring = { NULL, NULL, NULL };
 
-    if (log_init("proofreader.log", "proofreader", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Failed to initialize proofreader log file");
-        exit(1);
-    }
-
     OPEN_LOG(PACKAGE_NAME "-proofreader", LOG_USER);
 
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't load configuration");
         exit(EXIT_FAILURE);
+    }
+
+    if (log_init("proofreader", LOG_DEBUG, LOG_DEBUG) != 0)
+    {
+        perror("Failed to initialize proofreader log file");
+        exit(1);
     }
 
     if (!(tmpstr = fopen(f, "w+")))
