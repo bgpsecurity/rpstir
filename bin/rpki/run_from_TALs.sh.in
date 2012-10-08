@@ -4,8 +4,6 @@
 THIS_SCRIPT_DIR=`dirname "$0"`
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-cd "$CONFIG_ROOT_DIR"
-
 TAL_FILES=""
 
 print_usage () {
@@ -35,9 +33,12 @@ if test -z "$TAL_FILES"; then
 fi
 
 # Clear file cache and database
-rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log query.log
-mkdir -p REPOSITORY
-mkdir -p LOGS
+rm -rf \
+	"`config_get RPKICacheDir`"/* \
+	"`config_get LogDir`"/*
+mkdir -p \
+	"`config_get RPKICacheDir`" \
+	"`config_get LogDir`"
 initDB.sh
 
 # Start validator component in separate window
