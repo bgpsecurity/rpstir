@@ -241,9 +241,7 @@ fi
 
 
 AC_CONFIG_FILES([
-    etc/envir.setup
     Makefile
-    tests/test.include
     INSTRUCTIONS
 ])
 

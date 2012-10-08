@@ -20,21 +20,9 @@ CONFIG_ROOT_DIR=`@abs_top_builddir@/bin/config/config_get RootDir`
 
 
 # add all binaries to the path
-BIN_DIRS="`@MKTEMP@`"
-find "$CONFIG_ROOT_DIR/bin" -type d -print > "$BIN_DIRS"
-while read path_dir; do
-    case "$path_dir" in
-        */tests | */tests/*)
-            ;;
-        *)
-            PATH="$path_dir:$PATH"
-            ;;
-    esac
-done < "$BIN_DIRS"
-export PATH
-rm -f "$BIN_DIRS"
-unset BIN_DIRS
-
+if test -d "@pkglibexecdir@"; then
+    export PATH="@pkglibexecdir@:$PATH"
+fi
 
 # MySQL command line which reads statements from stdin
 mysql_cmd () {

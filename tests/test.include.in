@@ -3,6 +3,31 @@ export TESTS_TOP_SRCDIR="@abs_top_srcdir@"
 
 . "$TESTS_TOP_SRCDIR/lib/util/shell_utils"
 
+# add all binaries to the path
+BIN_DIRS="`@MKTEMP@`"
+find "$TESTS_TOP_BUILDDIR/bin" "$TESTS_TOP_SRCDIR/bin" -type d -print | \
+    sort | uniq > "$BIN_DIRS"
+while read path_dir; do
+    case "$path_dir" in
+        */tests | */tests/*)
+            ;;
+        *)
+            PATH="$path_dir:$PATH"
+            ;;
+    esac
+done < "$BIN_DIRS"
+export PATH
+rm -f "$BIN_DIRS"
+unset BIN_DIRS
+
+# Remove @pkglibexecdir@ from the path.
+# It could have been added by envir.setup, but it's inappropriate in tests.
+export PATH=`echo "$PATH" | \
+    sed "s,:@pkglibexecdir@:,:,g" | \
+    sed "s,^@pkglibexecdir@:,," | \
+    sed "s,:@pkglibexecdir@\$,,"`
+
+
 # Shell function for checking if the number of lines of output matches
 # the expected number.
 check_num_output_lines()
