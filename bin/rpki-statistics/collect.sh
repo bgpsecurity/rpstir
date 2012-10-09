@@ -43,7 +43,6 @@ cp -R \
     chaser.log \
     rcli.log \
     rsync_aur.log \
-    rsync_listener.log \
     run.log \
     "$STATS_DIR" \
     || fatal "could not copy files"
