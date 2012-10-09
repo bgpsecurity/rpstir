@@ -130,16 +130,20 @@ public class AllocateAction extends AbstractAction {
    * @param actionContext
    */
   public AllocateAction(Element element, Model model, ActionContext actionContext) {
-    String commonName = element.getAttributeValue(ATTR_CHILD_NAME);
     String parentCommonName = element.getAttributeValue(ATTR_PARENT_NAME);
+    String commonName = element.getAttributeValue(ATTR_CHILD_NAME);
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
+    String rangeTypeName = element.getAttributeValue(ATTR_RANGE_TYPE);
+
     parent = ActionManager.singleton().findCA_Object(parentCommonName);
     child = ActionManager.singleton().findCA_Object(commonName);
-    rangeType = IPRangeType.valueOf(element.getAttributeValue(ATTR_TYPE));
+    rangeType = IPRangeType.valueOf(rangeTypeName);
+
     Element allocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());
-    Element deallocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());
+    Element deallocationPublicationTimeElement = element.getChild(AttributeType.DEALLOCATION_PUBLICATION_TIME.name());
     Element validityStartTimeElement = element.getChild(AttributeType.VALIDITY_START_TIME.name());
     Element validityEndTimeElement = element.getChild(AttributeType.VALIDITY_END_TIME.name());
+
     allocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_ALLOCATION, allocationPublicationTimeElement, actionContext);
     deallocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_DEALLOCATION, deallocationPublicationTimeElement, actionContext);
     validityStartTime = new EpochEvent(this, VALIDITY_START_TIME_OF_ALLOCATION, validityStartTimeElement, actionContext);
@@ -157,13 +161,16 @@ public class AllocateAction extends AbstractAction {
    */
   @Override
   public Element toXML(ActionContext actionContext) {
-    Element element = createElement(VALUE_ALLOCATE);
+    Element element = createElement(ActionType.allocate);
     if (parent != null) {
       element.setAttribute(ATTR_PARENT_NAME, parent.commonName);
     }
     element.setAttribute(ATTR_CHILD_NAME, child.commonName);
     element.setAttribute(ATTR_ALLOCATION_ID, allocationId);
+    element.setAttribute(ATTR_RANGE_TYPE, rangeType.name());
+
     element.addContent(allocationPublicationTime.toXML(AttributeType.ALLOCATION_PUBLICATION_TIME.name(), actionContext));
+    element.addContent(deallocationPublicationTime.toXML(AttributeType.DEALLOCATION_PUBLICATION_TIME.name(), actionContext));
     element.addContent(validityStartTime.toXML(AttributeType.VALIDITY_START_TIME.name(), actionContext));
     element.addContent(validityEndTime.toXML(AttributeType.VALIDITY_END_TIME.name(), actionContext));
 

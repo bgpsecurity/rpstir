@@ -5,10 +5,12 @@ package com.bbn.rpki.test.actions;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.jdom.Element;
 
 import com.bbn.rpki.test.objects.TypescriptLogger;
+import com.bbn.rpki.test.tasks.Model;
 
 /**
  * Interface and support for all actions
@@ -20,11 +22,37 @@ public abstract class AbstractAction implements XMLConstants {
 
   enum ActionType {
     allocate,
+    chooseCacheCheckTask
   }
 
-  protected Element createElement(String actionType) {
+  public static void createActions(Element root, Model model) {
+    ActionContext actionContext = new ActionContext();
+    for (Element child : getChildren(root)) {
+      assert child.getName().equals(TAG_ACTION);
+      String typeName = child.getAttributeValue(ATTR_ACTION_TYPE);
+      ActionType type = ActionType.valueOf(typeName);
+      AbstractAction action = null;
+      switch (type) {
+      case allocate:
+        action = new AllocateAction(child, model, actionContext);
+        break;
+      case chooseCacheCheckTask:
+        action = new ChooseCacheCheckTask(child, model, actionContext);
+        break;
+      }
+      if (action != null) {
+        model.addAction(action);
+      }
+    }
+  }
+
+  static List<Element> getChildren(Element element) {
+    return element.getChildren();
+  }
+
+  protected Element createElement(ActionType actionType) {
     Element element = new Element(TAG_ACTION);
-    element.setAttribute(ATTR_ACTION_TYPE, actionType);
+    element.setAttribute(ATTR_ACTION_TYPE, actionType.name());
     return element;
   }
 

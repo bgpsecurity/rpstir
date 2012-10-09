@@ -96,11 +96,11 @@ public class ChooseCacheCheckTask extends AbstractAction {
   }
 
   /**
-   * @param model
    * @param element
+   * @param model
    * @param actionContext
    */
-  public ChooseCacheCheckTask(Model model, Element element, ActionContext actionContext) {
+  public ChooseCacheCheckTask(Element element, Model model, ActionContext actionContext) {
     this.model = model;
     this.path = new TaskPath(element.getAttributeValue(ATTR_PATH));
     this.id = nextId();
@@ -114,7 +114,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
    */
   @Override
   public Element toXML(ActionContext actionContext) {
-    Element element = createElement(VALUE_CHOOSE_CACHE_CHECK_TASK);
+    Element element = createElement(ActionType.chooseCacheCheckTask);
     element.setAttribute(ATTR_PATH, path.toString());
     element.addContent(epoch.toXML(TAG_EPOCH, actionContext));
     return element;

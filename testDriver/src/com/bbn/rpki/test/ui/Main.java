@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import javax.swing.JButton;
@@ -19,8 +20,18 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
+import org.jdom.Document;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+
 import com.bbn.rpki.test.RunLoader;
+import com.bbn.rpki.test.actions.AbstractAction;
+import com.bbn.rpki.test.actions.AllocateAction;
+import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
 import com.bbn.rpki.test.actions.ui.ActionsEditor;
+import com.bbn.rpki.test.objects.CA_Object;
+import com.bbn.rpki.test.objects.IPRangeType;
+import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.Model;
@@ -55,58 +66,71 @@ public class Main {
     topBottom.setDividerLocation(0.5);
     topBottom.setResizeWeight(0.5);
     if (args.length == 0) {
-      this.args = new String[] {"smaller.ini"};
+      this.args = new String[] {"smaller.ini", "../../testDriver/test.xml"};
     } else {
       this.args = args;
     }
   }
 
-  void run() throws IOException {
-    for (String arg : args) {
-      File iniFile = new File(arg);
-      assert iniFile.isFile();
-      System.out.println("Starting " + iniFile);
-      Model model = new Model(Util.RPKI_ROOT, iniFile, tlPanel);
-      ActionsEditor actionsEditor = new ActionsEditor(model);
-      final JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
-      JPanel buttonsPanel = new JPanel();
-      JButton exitButton = new JButton("Exit");
-      exitButton.addActionListener(new ActionListener() {
+  void run() throws IOException, JDOMException {
+    File iniFile = new File(args[0]);
+    assert iniFile.isFile();
+    System.out.println("Starting " + iniFile);
+    Model model = new Model(Util.RPKI_ROOT, iniFile, tlPanel);
+    if (args.length > 1) {
+      File xmlFile = new File(args[1]);
+      SAXBuilder saxBuilder = new SAXBuilder(false);
+      Document doc = saxBuilder.build(xmlFile);
+      AbstractAction.createActions(doc.getRootElement(), model);
+    } else {
+      // Build some actions
+      CA_Object ripe = model.getRootCA().findNode("RIPE-2");
+      CA_Object lir1 = ripe.findNode("LIR-2");
+      model.addAction(new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, model, new Pair("p", 8)));
+      String path = "UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)";
+      model.addAction(new ChooseCacheCheckTask(model, path));
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          // TODO Auto-generated method stub
-          run = false;
-          dialog.setVisible(false);
-        }
-      });
-      buttonsPanel.add(exitButton);
-      JButton runButton = new JButton("Run");
-      runButton.addActionListener(new ActionListener() {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          // TODO Auto-generated method stub
-          run = true;
-          dialog.setVisible(false);
-        }
-      });
-      buttonsPanel.add(runButton);
-      dialog.add(buttonsPanel, BorderLayout.SOUTH);
-      dialog.setModal(true);
-      dialog.setResizable(true);
-      dialog.add(actionsEditor.getComponent());
-      dialog.pack();
-      dialog.setVisible(true);
-      if (!run) {
-        System.exit(0);
-        return;
-      }
-      Iterable<TaskFactory.Task> tasks = model.getTasks();
-      executeTasks(tasks, model, "");
-      tlPanel.format("%s completed%n", iniFile);
-      RunLoader.singleton().stop();
+      OutputStream out = System.out;
+      model.writeModel(out);
     }
+    ActionsEditor actionsEditor = new ActionsEditor(model);
+    final JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
+    JPanel buttonsPanel = new JPanel();
+    JButton exitButton = new JButton("Exit");
+    exitButton.addActionListener(new ActionListener() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        run = false;
+        dialog.setVisible(false);
+      }
+    });
+    buttonsPanel.add(exitButton);
+    JButton runButton = new JButton("Run");
+    runButton.addActionListener(new ActionListener() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        // TODO Auto-generated method stub
+        run = true;
+        dialog.setVisible(false);
+      }
+    });
+    buttonsPanel.add(runButton);
+    dialog.add(buttonsPanel, BorderLayout.SOUTH);
+    dialog.setModal(true);
+    dialog.setResizable(true);
+    dialog.add(actionsEditor.getComponent());
+    dialog.pack();
+    dialog.setVisible(true);
+    if (!run) {
+      System.exit(0);
+      return;
+    }
+    Iterable<TaskFactory.Task> tasks = model.getTasks();
+    executeTasks(tasks, model, "");
+    tlPanel.format("%s completed%n", iniFile);
+    RunLoader.singleton().stop();
   }
 
   private void executeTasks(Iterable<TaskFactory.Task> tasks, Model model, String indent) {
@@ -142,8 +166,9 @@ public class Main {
   /**
    * @param args
    * @throws IOException
+   * @throws JDOMException
    */
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, JDOMException {
     Main main = new Main(args);
     JFrame frame = new JFrame("Test Driver");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

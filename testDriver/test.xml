@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test-actions>
+  <action actionType="allocate" parentName="IANA-0.RIPE-2" childName="IANA-0.RIPE-2.LIR-2" allocationId="a1" rangeType="ipv4">
+    <ALLOCATION_PUBLICATION_TIME id="1">
+      <coincident ref="2" locked="false" />
+    </ALLOCATION_PUBLICATION_TIME>
+    <DEALLOCATION_PUBLICATION_TIME id="3">
+      <coincident ref="4" locked="false" />
+    </DEALLOCATION_PUBLICATION_TIME>
+    <VALIDITY_START_TIME id="2">
+      <successor ref="4" locked="true" />
+      <coincident ref="1" locked="false" />
+    </VALIDITY_START_TIME>
+    <VALIDITY_END_TIME id="4">
+      <predecessor ref="2" locked="true" />
+      <coincident ref="3" locked="false" />
+    </VALIDITY_END_TIME>
+    <pair tag="p" arg="8" />
+  </action>
+  <action actionType="chooseCacheCheckTask" path="UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)">
+    <epoch id="5" />
+  </action>
+</test-actions>

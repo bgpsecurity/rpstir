@@ -7,7 +7,6 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.jdom.Element;
@@ -26,8 +25,29 @@ import com.bbn.rpki.test.tasks.Epoch;
 public final class EpochEvent implements XMLConstants {
 
   interface OthersAccessor {
-    void add(EpochEvent other, boolean locked);
+    void add(EpochEvent epochEvent, EpochEvent other, boolean locked);
   }
+
+  private static final OthersAccessor successorAccessor = new OthersAccessor() {
+    @Override
+    public void add(EpochEvent epochEvent, EpochEvent otherEvent, boolean locked) {
+      epochEvent.addSuccessor(otherEvent, locked);
+    }
+  };
+
+  private static final OthersAccessor predecessorAccessor = new OthersAccessor() {
+    @Override
+    public void add(EpochEvent epochEvent, EpochEvent otherEvent, boolean locked) {
+      epochEvent.addPredecessor(otherEvent, locked);
+    }
+  };
+
+  private static final OthersAccessor coincidentAccessor = new OthersAccessor() {
+    @Override
+    public void add(EpochEvent epochEvent, EpochEvent otherEvent, boolean locked) {
+      epochEvent.addCoincident(otherEvent, locked);
+    }
+  };
 
   private final AbstractAction action;
   private final String description;
@@ -416,37 +436,32 @@ public final class EpochEvent implements XMLConstants {
   public EpochEvent(AbstractAction action, String description, Element element, ActionContext actionContext) {
     this.action = action;
     this.description = description;
-    readOthers(element, actionContext, TAG_SUCCESSOR, new OthersAccessor() {
-      @Override
-      public void add(EpochEvent epoch, boolean locked) {
-        addSuccessor(epoch, locked);
-      }
-    });
-    readOthers(element, actionContext, TAG_PREDECESSOR, new OthersAccessor() {
-      @Override
-      public void add(EpochEvent epoch, boolean locked) {
-        addPredecessor(epoch, locked);
-      }
-    });
-    readOthers(element, actionContext, TAG_COINCIDENT, new OthersAccessor() {
-      @Override
-      public void add(EpochEvent epoch, boolean locked) {
-        addCoincident(epoch, locked);
-      }
-    });
-  }
-
-  private void readOthers(Element element, ActionContext actionContext, String tag, OthersAccessor othersAccessor) {
-    @SuppressWarnings("unchecked")
-    List<Element> children = element.getChildren(tag);
-    for (Element otherElement : children) {
-      String ref = otherElement.getAttributeValue(ATTR_REF);
-      boolean locked = Boolean.valueOf(otherElement.getAttributeValue(ATTR_LOCKED));
-      EpochEvent other = actionContext.getEpoch(ref);
+    String id = element.getAttributeValue(ATTR_ID);
+    actionContext.registerEpochEvent(this, id);
+    OthersAccessor othersAccessor;
+    for (Element child : children(element)) {
+      String tag = child.getName();
+      String ref = child.getAttributeValue(ATTR_REF);
+      boolean locked = Boolean.valueOf(child.getAttributeValue(ATTR_LOCKED));
+      EpochEvent other = actionContext.getEpochEvent(ref);
       if (other != null) {
-        othersAccessor.add(other, locked);
+        if (TAG_SUCCESSOR.equals(tag)) {
+          othersAccessor = successorAccessor;
+        } else if (TAG_PREDECESSOR.equals(tag)) {
+          othersAccessor = predecessorAccessor;
+        } else if (TAG_COINCIDENT.equals(tag)) {
+          othersAccessor = coincidentAccessor;
+        } else {
+          continue;
+        }
+        othersAccessor.add(this, other, locked);
       }
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private Iterable<Element> children(Element element) {
+    return element.getChildren();
   }
 
   /**

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -29,15 +30,11 @@ import org.jdom.output.XMLOutputter;
 
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.ActionContext;
-import com.bbn.rpki.test.actions.AllocateAction;
-import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
 import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.objects.CA_Obj;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.Constants;
 import com.bbn.rpki.test.objects.FactoryBase;
-import com.bbn.rpki.test.objects.IPRangeType;
-import com.bbn.rpki.test.objects.Pair;
 import com.bbn.rpki.test.objects.TestbedConfig;
 import com.bbn.rpki.test.objects.TestbedCreate;
 import com.bbn.rpki.test.objects.TypescriptLogger;
@@ -192,14 +189,19 @@ public class Model implements Constants {
     });
     this.ianaServerName = testbedConfig.getFactory("IANA").getServerName();
 
-    // Build some actions
-    CA_Object ripe = iana.findNode("RIPE-2");
-    CA_Object lir1 = ripe.findNode("LIR-2");
-    addAction(new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, this, new Pair("p", 8)));
-    String path = "UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)";
-    addAction(new ChooseCacheCheckTask(this, path));
     epochIndex = -1;
 
+    addTask(getTaskFactory(InitializeCache.class).createOnlyTask());
+    addTask(getTaskFactory(StartLoader.class).createOnlyTask());
+    addTask(getTaskFactory(InitializeRepositories.class).createOnlyTask());
+    addTask(getTaskFactory(AdvanceEpoch.class).createOnlyTask());
+  }
+
+  /**
+   * @param out
+   * @throws IOException
+   */
+  public void writeModel(OutputStream out) throws IOException {
     Element root = new Element("test-actions");
     ActionContext actionContext = new ActionContext();
     for (AbstractAction action : actions) {
@@ -207,11 +209,7 @@ public class Model implements Constants {
     }
     Document doc = new Document(root);
     XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-    outputter.output(doc, System.out);
-    addTask(getTaskFactory(InitializeCache.class).createOnlyTask());
-    addTask(getTaskFactory(StartLoader.class).createOnlyTask());
-    addTask(getTaskFactory(InitializeRepositories.class).createOnlyTask());
-    addTask(getTaskFactory(AdvanceEpoch.class).createOnlyTask());
+    outputter.output(doc, out);
   }
 
   /**

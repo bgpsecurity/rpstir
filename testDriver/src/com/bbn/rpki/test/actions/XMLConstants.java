@@ -23,6 +23,9 @@ public interface XMLConstants {
   static final String ATTR_ALLOCATION_ID = "allocationId";
 
   /** Tag or attribute name */
+  static final String ATTR_RANGE_TYPE = "rangeType";
+
+  /** Tag or attribute name */
   static final String ATTR_ALLOCATION_INDEX = "allocationIndex";
 
   /** Tag or attribute name */
@@ -57,13 +60,4 @@ public interface XMLConstants {
 
   /** Tag or attribute name */
   static final String ATTR_PATH = "path";
-
-  /** Tag or attribute name */
-  static final String VALUE_ALLOCATE = "allocate";
-
-  /** Tag or attribute name */
-  static final String VALUE_DEALLOCATE = "deallocate";
-
-  /** Tag or attribute name */
-  static final String VALUE_CHOOSE_CACHE_CHECK_TASK = "choose-check-task";
 }
