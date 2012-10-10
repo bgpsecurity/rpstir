@@ -1,11 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <test-actions>
+  <ini-file>
+[C-IANA]
+max_nodes = 75
+childSpec  = AFRINIC%1, APNIC%1, RIPE%1
+max_depth = 3
+serverName = rpki.bbn.com/rst
+breakAway = False
+subjkeyfile = ../templates/IANA.p15
+ttl = 365
+
+[C-AFRINIC]
+ipv4List   = p%268435456
+ipv6List   = p%268435456
+asList     = r%536870912
+childSpec  = LIR%10, ROAA%1
+serverName = afrinic.net
+breakAway  = False
+ttl        = 365
+
+[C-APNIC]
+ipv4List   = r%13, p%268435456, r%23, p%268435456
+ipv6List   = r%13, p%268435456, r%23, p%268435456
+asList     = r%536870912
+childSpec  = LIR%3, ROAA%1
+serverName = apnic.net
+breakAway  = False
+ttl        = 365
+
+[C-RIPE]
+ipv4List   = r%13, p%268435456, r%23, p%268435456
+ipv6List   = r%13, p%268435456, r%23, p%268435456
+asList     = r%536870912
+childSpec  = LIR%5, ROAA%1
+serverName = RIPE
+breakAway  = False
+ttl        = 365
+
+[C-LIR]
+ipv4List   = r%53, p%256
+ipv6List   = r%53, p%256
+asList     = r%128
+childSpec  = ROAA%2
+
+serverName = lir.net
+breakAway  = False
+ttl        = 365
+
+[R-ROAA]
+ipv4List   = p%16
+ipv6List   = p%16
+asList     = r%4
+serverName = roa.net
+breakAway  = False
+ttl        = 365
+ROAipv4List = p%4, p%4
+ROAipv6List = p%4, p%4
+asid        = 1
+</ini-file>
   <action actionType="allocate" parentName="IANA-0.RIPE-2" childName="IANA-0.RIPE-2.LIR-2" allocationId="a1" rangeType="ipv4">
     <ALLOCATION_PUBLICATION_TIME id="1">
       <coincident ref="2" locked="false" />
     </ALLOCATION_PUBLICATION_TIME>
     <DEALLOCATION_PUBLICATION_TIME id="3">
       <coincident ref="4" locked="false" />
+      <coincident ref="5" locked="false" />
     </DEALLOCATION_PUBLICATION_TIME>
     <VALIDITY_START_TIME id="2">
       <successor ref="4" locked="true" />
@@ -18,6 +77,9 @@
     <pair tag="p" arg="8" />
   </action>
   <action actionType="chooseCacheCheckTask" path="UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)">
-    <epoch id="5" />
+    <epoch id="5">
+      <coincident ref="3" locked="false" />
+    </epoch>
   </action>
 </test-actions>
+
