@@ -5,9 +5,11 @@ package com.bbn.rpki.test.tasks;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ import org.jdom.output.XMLOutputter;
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.ActionContext;
 import com.bbn.rpki.test.actions.EpochEvent;
+import com.bbn.rpki.test.actions.XMLConstants;
 import com.bbn.rpki.test.objects.CA_Obj;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.Constants;
@@ -60,7 +63,7 @@ import com.bbn.rpki.test.objects.Util;
  *
  * @author tomlinso
  */
-public class Model implements Constants {
+public class Model implements Constants, XMLConstants {
   /**
    * Interface for listeners wanting to know when significant model changes have
    * occured. For now only the epochs collection can be monitored.
@@ -170,7 +173,7 @@ public class Model implements Constants {
    * @param logger
    * @throws IOException
    */
-  public Model(File rpkiRoot, File iniFile, TypescriptLogger logger) throws IOException {
+  public Model(File rpkiRoot, String iniFile, TypescriptLogger logger) throws IOException {
     this.rpkiRoot = rpkiRoot;
     this.logger = logger;
     testbedConfig = new TestbedConfig(iniFile);
@@ -198,18 +201,29 @@ public class Model implements Constants {
   }
 
   /**
-   * @param out
+   * @param file
    * @throws IOException
    */
-  public void writeModel(OutputStream out) throws IOException {
+  public void writeModel(File file) throws IOException {
     Element root = new Element("test-actions");
+    Element iniFileElement = new Element(TAG_INI_FILE);
+    StringWriter stringWriter = new StringWriter();
+    testbedConfig.write(stringWriter);
+    iniFileElement.addContent(stringWriter.toString());
+    root.addContent(iniFileElement);
     ActionContext actionContext = new ActionContext();
     for (AbstractAction action : actions) {
       root.addContent(action.toXML(actionContext));
     }
     Document doc = new Document(root);
     XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-    outputter.output(doc, out);
+    Writer writer = new FileWriter(file);
+    try {
+      outputter.output(doc, writer);
+    } finally {
+      writer.close();
+      writer = null;
+    }
   }
 
   /**

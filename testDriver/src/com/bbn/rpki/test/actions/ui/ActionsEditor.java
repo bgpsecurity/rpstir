@@ -30,7 +30,7 @@ import com.bbn.rpki.test.tasks.Model;
  * 
  * Displays two panes side-by-side.
  * 
- * The left pane shows a tree of the epoch groups and what happens in each epoch group.
+ * The left pane shows a tree of the epochs and what happens in each epoch.
  * Allows actions to be added, deleted or selected.
  * 
  * The right pane shows details about the selected action.

@@ -10,6 +10,8 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
+import com.bbn.rpki.test.actions.ActionManager;
+
 /**
  * <Enter the description of this type here>
  *
@@ -163,7 +165,9 @@ public class TestbedCreate implements Constants {
         if (MAX_NODES > repo_size) {
           Object child = FACTORIES.get(ca_def.tag).create(ca_node, ca_node.children.size());
           if (child instanceof CA_Object) {
-            ca_node.children.add((CA_Object) child);
+            CA_Object caChild = (CA_Object) child;
+            ActionManager.singleton().recordCA_Object(caChild);
+            ca_node.children.add(caChild);
           } else if (child instanceof Roa) {
             ca_node.roas.add((Roa) child);
           } else {

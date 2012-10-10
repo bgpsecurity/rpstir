@@ -27,7 +27,7 @@ public abstract class AbstractAction implements XMLConstants {
 
   public static void createActions(Element root, Model model) {
     ActionContext actionContext = new ActionContext();
-    for (Element child : getChildren(root)) {
+    for (Element child : getChildren(root, TAG_ACTION)) {
       assert child.getName().equals(TAG_ACTION);
       String typeName = child.getAttributeValue(ATTR_ACTION_TYPE);
       ActionType type = ActionType.valueOf(typeName);
@@ -46,8 +46,8 @@ public abstract class AbstractAction implements XMLConstants {
     }
   }
 
-  static List<Element> getChildren(Element element) {
-    return element.getChildren();
+  static List<Element> getChildren(Element element, String tag) {
+    return element.getChildren(tag);
   }
 
   protected Element createElement(ActionType actionType) {

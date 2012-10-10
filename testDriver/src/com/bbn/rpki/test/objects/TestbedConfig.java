@@ -4,6 +4,9 @@
 package com.bbn.rpki.test.objects;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.Writer;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,23 +58,16 @@ public class TestbedConfig implements Constants {
   // These are set once while parsing the .ini
   private int maxDepth;
   private int maxNodes;
-
-  /**
-   * @param factories
-   * @param fileName
-   */
-  TestbedConfig(String fileName) {
-    this(new File(fileName));
-  }
+  private Wini wini;
 
   /**
    * Construct config for the specified file
-   * @param file
+   * @param iniFile
    */
-  public TestbedConfig(File file) {
+  public TestbedConfig(String iniFile) {
     try {
-      Wini config = new Wini(file);
-      Collection<Map.Entry<String, Section>> sectionEntries = config.entrySet();
+      wini = new Wini(new StringReader(iniFile));
+      Collection<Map.Entry<String, Section>> sectionEntries = wini.entrySet();
 
       // loop over all sections and options and build factories
       for (Map.Entry<String, Section> sectionEntry : sectionEntries) {
@@ -79,6 +75,14 @@ public class TestbedConfig implements Constants {
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  public void write(Writer writer) {
+    try {
+      wini.store(writer);
+    } catch (IOException e) {
+      // Should not happen
     }
   }
 

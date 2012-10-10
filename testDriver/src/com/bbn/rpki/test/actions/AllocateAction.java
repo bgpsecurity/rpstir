@@ -131,12 +131,12 @@ public class AllocateAction extends AbstractAction {
    */
   public AllocateAction(Element element, Model model, ActionContext actionContext) {
     String parentCommonName = element.getAttributeValue(ATTR_PARENT_NAME);
-    String commonName = element.getAttributeValue(ATTR_CHILD_NAME);
+    String childName = element.getAttributeValue(ATTR_CHILD_NAME);
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
     String rangeTypeName = element.getAttributeValue(ATTR_RANGE_TYPE);
 
     parent = ActionManager.singleton().findCA_Object(parentCommonName);
-    child = ActionManager.singleton().findCA_Object(commonName);
+    child = ActionManager.singleton().findCA_Object(childName);
     rangeType = IPRangeType.valueOf(rangeTypeName);
 
     Element allocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());

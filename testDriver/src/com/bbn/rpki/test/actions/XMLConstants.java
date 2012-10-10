@@ -46,6 +46,9 @@ public interface XMLConstants {
   /** Tag or attribute name */
   static final String ATTR_LOCKED = "locked";
 
+  /** Tag name */
+  static final String TAG_INI_FILE = "ini-file";
+
   /** Tag or attribute name */
   static final String TAG_COINCIDENT = "coincident";
 

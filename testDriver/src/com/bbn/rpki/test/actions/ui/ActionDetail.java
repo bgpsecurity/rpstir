@@ -129,7 +129,6 @@ public class ActionDetail {
    * @param epochEvent
    */
   public void setAction(final AbstractAction action, EpochEvent epochEvent) {
-    this.action = action;
     this.epochEvent = epochEvent;
     this.epochEvents.clear();
     panel.removeAll();
@@ -137,6 +136,7 @@ public class ActionDetail {
     savers.clear();
     title.setText(action == null ? "No Action Selected" : action.toString());
     if (action != null) {
+      this.epochEvents.addAll(action.getAllEpochEvents());
       GridBagConstraints gbc = new GridBagConstraints();
       gbc.gridy = 0;
       gbc.insets = new Insets(3, 5, 3, 5);
