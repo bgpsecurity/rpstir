@@ -1,8 +1,6 @@
 export TESTS_TOP_BUILDDIR="@abs_top_builddir@"
 export TESTS_TOP_SRCDIR="@abs_top_srcdir@"
 
-. "$TESTS_TOP_SRCDIR/lib/util/shell_utils"
-
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
 find "$TESTS_TOP_BUILDDIR/bin" "$TESTS_TOP_SRCDIR/bin" -type d -print | \
