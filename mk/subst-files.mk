@@ -1,4 +1,4 @@
-noinst_DATA += etc/envir.setup
+pkgdata_DATA += etc/envir.setup
 MK_SUBST_FILES += etc/envir.setup
 etc/envir.setup: $(srcdir)/etc/envir.setup.in
 

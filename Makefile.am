@@ -110,6 +110,19 @@ clean-local:
 	-rm -rf $(CLEANDIRS)
 
 
+## Extra variables for substitution in .in files.
+
+## preamble for shell scripts
+SETUP_ENVIRONMENT = \
+	if test -n "$$TESTS_TOP_BUILDDIR" -a -n "$$TESTS_TOP_SRCDIR"; then \
+		. "$$TESTS_TOP_SRCDIR/lib/util/shell_utils"; \
+		. "$$TESTS_TOP_BUILDDIR/etc/envir.setup"; \
+		. "$$TESTS_TOP_BUILDDIR/tests/test.include"; \
+	else \
+		. "$(pkgdatadir)/shell_utils"; \
+		. "$(pkgdatadir)/envir.setup"; \
+	fi
+
 ## Rules for generating files from .in.
 ## NOTE: Each file should already have its own dependency target like
 ##       "foo: $(srcdir)/foo.in" defined elsewhere.
@@ -120,7 +133,8 @@ do_subst = $(SED) \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
-	-e 's,[@]MKTEMP[@],$(MKTEMP),g'
+	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
+	-e 's,[@]SETUP_ENVIRONMENT[@],$(SETUP_ENVIRONMENT),g'
 
 $(MK_SUBST_FILES): Makefile
 	rm -f "$@"
