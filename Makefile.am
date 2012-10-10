@@ -35,6 +35,13 @@ pkgcachedir = $(localstatedir)/cache/$(PACKAGE_NAME)
 pkglogdir = $(localstatedir)/log/$(PACKAGE_NAME)
 templatesdir = $(pkgdatadir)/templates
 
+## Lists of all files to be generated from .in files by make.
+## The first list is for normal files, the second is for files that should be
+## executable. NOTE: neither list can contain macros (variable). They MUST be
+## lists of hardcoded filenames.
+MK_SUBST_FILES =
+MK_SUBST_FILES_EXEC =
+
 BUILT_SOURCES =
 CLEANDIRS =
 CLEANFILES =
@@ -101,3 +108,28 @@ ACLOCAL_AMFLAGS = -I build-aux -I m4
 
 clean-local:
 	-rm -rf $(CLEANDIRS)
+
+
+## Rules for generating files from .in.
+## NOTE: Each file should already have its own dependency target like
+##       "foo: $(srcdir)/foo.in" defined elsewhere.
+do_subst = $(SED) \
+	-e 's,[@]abs_top_builddir[@],$(abs_top_builddir),g' \
+	-e 's,[@]abs_top_srcdir[@],$(abs_top_srcdir),g' \
+	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
+	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
+	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
+	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
+	-e 's,[@]MKTEMP[@],$(MKTEMP),g'
+
+$(MK_SUBST_FILES): Makefile
+	rm -f "$@"
+	$(do_subst) < "$(srcdir)/$@.in" > "$@" || rm -f "$@"
+
+$(MK_SUBST_FILES_EXEC): Makefile
+	rm -f "$@"
+	$(do_subst) < "$(srcdir)/$@.in" > "$@" && chmod +x "$@" || rm -f "$@"
+
+BUILT_SOURCES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)
+CLEANFILES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)
+EXTRA_DIST += $(MK_SUBST_FILES:=.in) $(MK_SUBST_FILES_EXEC:=.in)
