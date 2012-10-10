@@ -1,3 +1,10 @@
+# This file should store functions only used by tests and undo any effects of
+# envir.setup that are not correct for tests (e.g. $PATH mangling).
+#
+# This file should not be included directly by regular scripts. It should only
+# be included via @SETUP_ENVIRONMENT@ or by setup_test_environment.sh, which
+# does bootstrapping for @SETUP_ENVIRONMENT@.
+
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
 find "$TESTS_TOP_BUILDDIR/bin" "$TESTS_TOP_SRCDIR/bin" -type d -print | \

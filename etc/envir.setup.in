@@ -1,19 +1,6 @@
-#!/bin/sh
-#
-
-# Sets up the environment variables for the RPKI relying party system,
-# but allows the user to override by setting existing variables.
-#
-# This file should NOT be executed on its own.  It should be imported
-# at the beginning of another script using "source" or ". ".  It is
-# useless to execute this file standalone, since "export" can only
-# affect the environment of child processes, not parent processes.
-#
-# Example:
-# # set environment variables if not set
-# THIS_SCRIPT_DIR=$(dirname $0)
-# . $THIS_SCRIPT_DIR/../envir.setup
-#
+# This file should setup the environment for installable scripts. It should not
+# contain anything used only by tests. It should only be sourced via
+# @SETUP_ENVIRONMENT@.
 
 
 CONFIG_ROOT_DIR=`@abs_top_builddir@/bin/config/config_get RootDir`
