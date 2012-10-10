@@ -70,8 +70,18 @@ pkglibexec_PROGRAMS =
 dist_check_DATA += \
 	etc/test.conf \
 	tests/test.conf
-dist_check_SCRIPTS += tests/setup_test_environment.sh
-TESTS_ENVIRONMENT = $(top_srcdir)/tests/setup_test_environment.sh
+
+check_SCRIPTS += tests/setup_test_environment.sh
+MK_SUBST_FILES_EXEC += tests/setup_test_environment.sh
+tests/setup_test_environment.sh: $(srcdir)/tests/setup_test_environment.sh.in
+
+## Anything that uses $(TESTS_ENVIRONMENT) before "make all" finishes should
+## depend on this.
+TESTS_ENVIRONTMENT_DEPS = \
+	tests/setup_test_environment.sh \
+	tests/test.include
+
+TESTS_ENVIRONMENT = $(top_builddir)/tests/setup_test_environment.sh
 
 dist_doc_DATA += \
 	doc/glossary.txt
@@ -144,6 +154,5 @@ $(MK_SUBST_FILES_EXEC): Makefile
 	rm -f "$@"
 	$(do_subst) < "$(srcdir)/$@.in" > "$@" && chmod +x "$@" || rm -f "$@"
 
-BUILT_SOURCES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)
 CLEANFILES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)
 EXTRA_DIST += $(MK_SUBST_FILES:=.in) $(MK_SUBST_FILES_EXEC:=.in)

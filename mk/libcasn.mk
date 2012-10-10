@@ -25,16 +25,12 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 
 EXTRA_DIST += doc/asn_gen.1
 
-# Dependency on tests/test.include is because setup_test_environment.sh uses
-# tests/test.include and this rule is used to build things in BUILT_SOURCES,
-# so tests/test.include's presence in BUILT_SOURCES isn't enough to ensure
-# it's built before the other things in BUILT_SOURCES that use this rule.
-%.c %.h: %.asn lib/casn/asn_gen/asn_gen tests/test.include
+%.c %.h: %.asn lib/casn/asn_gen/asn_gen $(TESTS_ENVIRONTMENT_DEPS)
 	cd "`dirname $<`" && \
 		TEST_LOG_NAME=`basename "$<"` \
 		TEST_LOG_DIR=. \
 		STRICT_CHECKS=0 \
-		$(abs_top_srcdir)/tests/setup_test_environment.sh \
+		$(TESTS_ENVIRONMENT) \
 		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen "`basename $<`"
 
 

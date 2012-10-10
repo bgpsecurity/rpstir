@@ -15,10 +15,10 @@ var_oidtable_ASN1_H = \
 	lib/rpki-asn1/roa.h \
 	lib/rpki-asn1/serial_number.h
 
-var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H)
+var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H) $(TESTS_ENVIRONTMENT_DEPS)
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
-		tests/setup_test_environment.sh \
+		$(TESTS_ENVIRONMENT) \
 		./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)
 
 AM_CPPFLAGS += \

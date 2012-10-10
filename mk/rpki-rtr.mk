@@ -81,13 +81,13 @@ tests/subsystem/rtr/%.key:
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		tests/setup_test_environment.sh bin/rpki-object/gen_key "$@" 2048
+		$(TESTS_ENVIRONMENT) bin/rpki-object/gen_key "$@" 2048
 
 tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/subsystem/rtr/root.options
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		tests/setup_test_environment.sh bin/rpki-object/create_object/create_object \
+		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/root.options \
 		CERT \
 		outputfilename="$@" \
@@ -99,7 +99,7 @@ tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rt
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		tests/setup_test_environment.sh bin/rpki-object/create_object/create_object \
+		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
 		CERT \
 		outputfilename="$@" \
@@ -127,7 +127,7 @@ tests/subsystem/rtr/as-%.roa: tests/subsystem/rtr/as-%.ee.cer tests/subsystem/rt
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		tests/setup_test_environment.sh bin/rpki-object/create_object/create_object \
+		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
 		ROA \
 		outputfilename="$@" \
 		eecertlocation="$<" \
