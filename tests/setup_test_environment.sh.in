@@ -11,6 +11,9 @@ use_config_file "$TESTS_TOP_SRCDIR/tests/test.conf"
 PROG="$1"
 shift
 
+export TESTS_BUILDDIR="$TESTS_TOP_BUILDDIR"/`dirname "$PROG"`
+export TESTS_SRCDIR="$TESTS_TOP_SRCDIR"/`dirname "$PROG"`
+
 case "$PROG" in
     *.sh)
         "$PROG" "$@" || exit $?
