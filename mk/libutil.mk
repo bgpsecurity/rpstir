@@ -80,4 +80,4 @@ TESTS += lib/util/tests/stringutils-test
 dist_pkgdata_DATA += lib/util/shell_utils
 
 
-EXTRA_DIST += lib/util/trap_errors
+dist_pkgdata_DATA += lib/util/trap_errors

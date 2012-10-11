@@ -134,6 +134,14 @@ SETUP_ENVIRONMENT = \
 		. "$(pkgdatadir)/envir.setup"; \
 	fi
 
+## pull in lib/util/trap_errors
+trap_errors = \
+	if test -n "$$TESTS_TOP_BUILDDIR" -a -n "$$TESTS_TOP_SRCDIR"; then \
+		. "$$TESTS_TOP_SRCDIR/lib/util/trap_errors"; \
+	else \
+		. "$(pkgdatadir)/trap_errors"; \
+	fi
+
 ## Rules for generating files from .in.
 ## NOTE: Each file should already have its own dependency target like
 ##       "foo: $(srcdir)/foo.in" defined elsewhere.
@@ -143,6 +151,7 @@ do_subst = $(SED) \
 	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
+	-e 's,[@]trap_errors[@],$(trap_errors),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
