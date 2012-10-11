@@ -1,0 +1,8 @@
+ * remove CONFIG_ROOT_DIR
+ * check for THIS_SCRIPT_DIR
+ * make sure all sourcing of shell_utils, test.include, envir.setup, and trap_errors is done via @SETUP_ENVIRONMENT@ and @trap_errors@
+ * run "make install DESTDIR=/path/to/tempdir" and see if everything gets installed in places that make sense
+ * handle oidtable: different locations for test/installed
+ * run "make distcheck"
+ * setup a VM, run "make install", and see if it works
+ * update INSTRUCTIONS.in
