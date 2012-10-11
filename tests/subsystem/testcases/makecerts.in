@@ -5,8 +5,9 @@
 # To work around this, there are two versions of the TA, one for basing the
 # child certs on and one for adding to the database.
 
+@SETUP_ENVIRONMENT@
+
 cd `dirname "$0"`
-. ../../../etc/envir.setup
 
 # first assemble the root cert from source
 cp C.fake-parent.orig C.raw

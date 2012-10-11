@@ -332,13 +332,17 @@ dist_check_DATA += \
 
 dist_check_SCRIPTS += \
 	tests/subsystem/testcases/makeall \
-	tests/subsystem/testcases/makecerts \
 	tests/subsystem/testcases/makecrls \
 	tests/subsystem/testcases/makekeys \
 	tests/subsystem/testcases/makemanifests \
 	tests/subsystem/testcases/makeroas \
 	tests/subsystem/testcases/print-cert-addrs.sh \
 	tests/subsystem/testcases/testall.sh
+
+
+check_SCRIPTS += tests/subsystem/testcases/makecerts
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecerts
+tests/subsystem/testcases/makecerts: $(srcdir)/tests/subsystem/testcases/makecerts.in
 
 
 CLEANDIRS += \
