@@ -4,3 +4,4 @@
  * run "make distcheck"
  * setup a VM, run "make install", and see if it works (i.e. test as much functionality as possible)
  * update INSTRUCTIONS.in
+ * remove mk/subst-files.mk since it doesn't make sense anymore
