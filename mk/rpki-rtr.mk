@@ -49,7 +49,9 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_CFLAGS = \
 	$(CFLAGS_STRICT)
 
 
-EXTRA_DIST += bin/rpki-rtr/cleanServerData
+bin_SCRIPTS += bin/rpki-rtr/cleanServerData
+MK_SUBST_FILES_EXEC += bin/rpki-rtr/cleanServerData
+bin/rpki-rtr/cleanServerData: $(srcdir)/bin/rpki-rtr/cleanServerData.in
 
 
 dist_doc_DATA += doc/rpki-rtr-daemon-outline

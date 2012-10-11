@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
-
-echo "update rpki_crl set next_upd='2008-07-31' where filename='L111.crl';" | \
-    mysql_cmd

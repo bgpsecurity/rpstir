@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
-
-echo "update rpki_manifest set next_upd='2008-07-31' where filename='M111.man';" | mysql_cmd

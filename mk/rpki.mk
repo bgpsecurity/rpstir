@@ -364,11 +364,24 @@ dist_check_DATA += \
 
 
 dist_check_SCRIPTS += \
-	tests/subsystem/doLoader \
-	tests/subsystem/make* \
 	tests/subsystem/runSubsystemTest1.sh \
 	tests/subsystem/runSubsystemTest2.sh \
 	tests/subsystem/runSubsystemTest3.sh
+
+
+check_SCRIPTS += \
+	tests/subsystem/makeC2Expired \
+	tests/subsystem/makeL111Expired \
+	tests/subsystem/makeM111stale
+
+MK_SUBST_FILES_EXEC += \
+	tests/subsystem/makeC2Expired \
+	tests/subsystem/makeL111Expired \
+	tests/subsystem/makeM111stale
+
+tests/subsystem/makeC2Expired: $(srcdir)/tests/subsystem/makeC2Expired.in
+tests/subsystem/makeL111Expired: $(srcdir)/tests/subsystem/makeL111Expired.in
+tests/subsystem/makeM111stale: $(srcdir)/tests/subsystem/makeM111stale.in
 
 
 CLEANFILES += \
