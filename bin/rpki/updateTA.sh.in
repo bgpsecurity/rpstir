@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# This wrapper script is needed because updateTA.py relies on
+# SETUP_ENVIRONMENT's $PATH mangling.
+
+@SETUP_ENVIRONMENT@
+
+exec updateTA.py "$@"

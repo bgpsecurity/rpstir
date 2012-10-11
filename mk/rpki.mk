@@ -42,13 +42,14 @@ bin_rpki_garbage_LDADD = \
 	$(LDADD_LIBRPKI)
 
 
-dist_bin_SCRIPTS += bin/rpki/garbage.sh
+bin_SCRIPTS += bin/rpki/initDB.sh
+MK_SUBST_FILES_EXEC += bin/rpki/initDB.sh
+bin/rpki/initDB.sh: $(srcdir)/bin/rpki/initDB.sh.in
 
 
-dist_bin_SCRIPTS += bin/rpki/initDB.sh
-
-
-dist_bin_SCRIPTS += bin/rpki/loader.sh
+bin_SCRIPTS += bin/rpki/loader.sh
+MK_SUBST_FILES_EXEC += bin/rpki/loader.sh
+bin/rpki/loader.sh: $(srcdir)/bin/rpki/loader.sh.in
 
 
 bin_PROGRAMS += bin/rpki/query
@@ -57,18 +58,20 @@ bin_rpki_query_LDADD = \
 	$(LDADD_LIBRPKI)
 
 
-dist_bin_SCRIPTS += bin/rpki/query.sh
-
-
 bin_PROGRAMS += bin/rpki/rcli
 
 bin_rpki_rcli_LDADD = \
 	$(LDADD_LIBRPKI)
 
 
-bin_SCRIPTS += bin/rpki/results.py
+pkglibexec_SCRIPTS += bin/rpki/results.py
 MK_SUBST_FILES_EXEC += bin/rpki/results.py
 bin/rpki/results.py: $(srcdir)/bin/rpki/results.py.in
+
+
+bin_SCRIPTS += bin/rpki/results.sh
+MK_SUBST_FILES_EXEC += bin/rpki/results.sh
+bin/rpki/results.sh: $(srcdir)/bin/rpki/results.sh.in
 
 
 bin_SCRIPTS += bin/rpki/run_from_TALs.sh
@@ -76,9 +79,14 @@ MK_SUBST_FILES_EXEC += bin/rpki/run_from_TALs.sh
 bin/rpki/run_from_TALs.sh: $(srcdir)/bin/rpki/run_from_TALs.sh.in
 
 
-bin_SCRIPTS += bin/rpki/updateTA.py
+pkglibexec_SCRIPTS += bin/rpki/updateTA.py
 MK_SUBST_FILES_EXEC += bin/rpki/updateTA.py
 bin/rpki/updateTA.py: $(srcdir)/bin/rpki/updateTA.py.in
+
+
+bin_SCRIPTS += bin/rpki/updateTA.sh
+MK_SUBST_FILES_EXEC += bin/rpki/updateTA.sh
+bin/rpki/updateTA.sh: $(srcdir)/bin/rpki/updateTA.sh.in
 
 
 sampletadir = $(examplesdir)/sample-ta

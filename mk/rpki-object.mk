@@ -49,8 +49,11 @@ bin_rpki_object_create_object_create_object_LDADD = \
 dist_templates_DATA = \
 	var/templates/*
 
-dist_check_SCRIPTS += \
+check_SCRIPTS += \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
+MK_SUBST_FILES_EXEC += \
+	bin/rpki-object/create_object/tests/empty_manifest.sh
+bin/rpki-object/create_object/tests/empty_manifest.sh: $(srcdir)/bin/rpki-object/create_object/tests/empty_manifest.sh.in
 
 CLEANDIRS += \
 	bin/rpki-object/create_object/tests/empty_manifest
