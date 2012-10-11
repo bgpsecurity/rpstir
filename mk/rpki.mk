@@ -152,9 +152,6 @@ MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_cert.sh
 tests/conformance/scripts/make_test_cert.sh: $(srcdir)/tests/conformance/scripts/make_test_cert.sh.in
 
 
-dist_check_SCRIPTS += \
-	tests/conformance/scripts/run_bad_cert_tests.sh
-
 check_SCRIPTS += tests/conformance/scripts/run_tests.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/run_tests.sh
 tests/conformance/scripts/run_tests.sh: $(srcdir)/tests/conformance/scripts/run_tests.sh.in
