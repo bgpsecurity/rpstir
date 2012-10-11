@@ -542,6 +542,21 @@ static bool convert_values(
     return true;
 }
 
+/**
+    Call fgets() after resetting errno to zero.
+
+    This is useful in a loop condition where it's important to distinguish
+    between fgets returning NULL because of an error or because of end of file.
+*/
+static char * fgets_reset_errno(
+    char *s,
+    int size,
+    FILE *stream)
+{
+    errno = 0;
+    return fgets(s, size, stream);
+}
+
 bool config_parse_file(
     size_t num_options,
     const struct config_option * config_options,
@@ -639,7 +654,7 @@ bool config_parse_file(
     }
     num_values = 0;
 
-    while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
+    while (fgets_reset_errno(line, MAX_LINE_LENGTH, file) != NULL)
     {
         ++tail->line;
         line_offset = 0;
