@@ -82,7 +82,7 @@ TESTS_ENVIRONTMENT_DEPS = \
 	tests/setup_test_environment.sh \
 	tests/test.include
 
-TESTS_ENVIRONMENT = $(top_builddir)/tests/setup_test_environment.sh
+TESTS_ENVIRONMENT = $(abs_top_builddir)/tests/setup_test_environment.sh
 
 dist_doc_DATA += \
 	doc/glossary.txt
