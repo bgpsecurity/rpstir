@@ -1,10 +1,7 @@
 #!@SHELL_BASH@ -e
 #
 
-
-# set environment variables if not set
-THIS_SCRIPT_DIR=`dirname "$0"`
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 

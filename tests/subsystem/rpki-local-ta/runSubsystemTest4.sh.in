@@ -18,19 +18,14 @@ if [ "$#" -ne "0" ]; then
     exit 1
 fi
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
-
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
-
 # for the run and run_bg functions
 export TEST_LOG_NAME=subsys4
 
-# test functions
-. $CONFIG_ROOT_DIR/tests/test.include
+@SETUP_ENVIRONMENT@
 
-cd $THIS_SCRIPT_DIR
+@trap_errors@
+
+cd "$TESTS_BUILDDIR"
 
 # refresh test certs
   cd testcases4_LTA

@@ -3,17 +3,14 @@
 # gen_all.sh - create all conformance test cases: certs, roas, crls, mfts
 #
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $THIS_SCRIPT_DIR/../../../lib/util/trap_errors
+@trap_errors@
 
-TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_DIR="$TESTS_BUILDDIR"
 TEST_LOG_NAME=`basename "$0"`
 STRICT_CHECKS=0
-. "$RPKI_ROOT/tests/test.include"
 
 # NOTES
 

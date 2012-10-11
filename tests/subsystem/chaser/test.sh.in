@@ -1,11 +1,10 @@
 #!/bin/sh -e
 
-cd "`dirname "$0"`"
-. ../../../etc/envir.setup
-
 TEST_LOG_NAME=chaser
 STRICT_CHECKS=1
-. "$CONFIG_ROOT_DIR"/tests/test.include
+
+@SETUP_ENVIRONMENT@
+
 
 #===============================================================================
 compare () {
@@ -26,16 +25,16 @@ compare () {
 start_test () {
 	TEST="$1"
 
-	rm -f "response.log" "response.$TEST.log"
-	touch "response.log"
+	rm -f "$TESTS_BUILDDIR/response.log" "$TESTS_BUILDDIR/response.$TEST.log"
+	touch "$TESTS_BUILDDIR/response.log"
 }
 
 #===============================================================================
 stop_test () {
 	TEST="$1"
 
-	mv -f "response.log" "response.$TEST.log"
-	compare "response.$TEST.log"
+	mv -f "$TESTS_BUILDDIR/response.log" "$TESTS_BUILDDIR/response.$TEST.log"
+	compare "$TESTS_BUILDDIR/response.$TEST.log"
 }
 
 #===============================================================================
@@ -48,8 +47,8 @@ for TEST_NAME in \
 	bad_chars
 do
 	start_test "$TEST_NAME"
-	use_config_file "input.$TEST_NAME.conf"
-	run "$TEST_NAME" chaser -s -t > response.log
+	use_config_file "$TESTS_SRCDIR/input.$TEST_NAME.conf"
+	run "$TEST_NAME" chaser -s -t > "$TESTS_BUILDDIR/response.log"
 	stop_test "$TEST_NAME"
 done
 

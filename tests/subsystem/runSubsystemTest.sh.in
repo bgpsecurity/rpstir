@@ -21,19 +21,14 @@ fi
 TESTID=$1
 NUM_STEPS=$2
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
+@trap_errors@
 
 # for the run and run_bg functions
 export TEST_LOG_NAME="subsys$TESTID"
 
-# test functions
-. $CONFIG_ROOT_DIR/tests/test.include
-
-cd $THIS_SCRIPT_DIR
+cd "$TESTS_BUILDDIR"
 
 # clear database
 ./initDB || check_errs $? "initDB failed!"

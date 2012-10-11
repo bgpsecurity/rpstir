@@ -1,16 +1,11 @@
 #!@SHELL_BASH@
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
-
-# test functions
-. $CONFIG_ROOT_DIR/tests/test.include
+@trap_errors@
 
 echo "Loading data"
-rsync_aur -s -t -f test1.1.log -w -e -i -d $THIS_SCRIPT_DIR/testcases || \
+rsync_aur -s -t -f test1.1.log -w -e -i -d "$TESTS_BUILDDIR/testcases" || \
   check_errs $? "$0 rsync_aur failed"
 
 echo $0 PASS

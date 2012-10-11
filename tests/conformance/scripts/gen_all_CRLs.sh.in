@@ -3,12 +3,10 @@
 # gen_all_CRLs.sh - create all CRL test cases for RPKI syntactic
 #                   conformance test
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
+@trap_errors@
 
 CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
 CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"

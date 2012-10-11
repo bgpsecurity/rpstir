@@ -3,17 +3,15 @@
 # whitespace separated list of files to ignore the results from
 IGNORE=""
 
-THIS_SCRIPT_DIR=`dirname "$0"`
-. "$THIS_SCRIPT_DIR/../../../etc/envir.setup"
+@SETUP_ENVIRONMENT@
 
-cd "$THIS_SCRIPT_DIR"
+cd "$TESTS_BUILDDIR"
 
-TEST_LOG_DIR="`pwd`"
+TEST_LOG_DIR="$TESTS_BUILDDIR"
 TEST_LOG_NAME=`basename "$0"`
 STRICT_CHECKS=0
-. "$RPKI_ROOT/tests/test.include"
 
-use_config_file "`pwd`/conformance.conf"
+use_config_file "$TESTS_SRCDIR/conformance.conf"
 
 ./gen_all.sh
 
