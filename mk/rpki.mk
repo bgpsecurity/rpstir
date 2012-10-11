@@ -372,6 +372,6 @@ CLEANFILES += \
 
 
 TESTS += \
-	tests/subsystem/runSubsystemTest1.sh \
-	tests/subsystem/runSubsystemTest2.sh \
-	tests/subsystem/runSubsystemTest3.sh
+	$(srcdir)/tests/subsystem/runSubsystemTest1.sh \
+	$(srcdir)/tests/subsystem/runSubsystemTest2.sh \
+	$(srcdir)/tests/subsystem/runSubsystemTest3.sh
