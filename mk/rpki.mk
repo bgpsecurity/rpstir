@@ -13,7 +13,7 @@ bin/rpki/chaser.sh: $(srcdir)/bin/rpki/chaser.sh.in
 
 check_SCRIPTS += tests/subsystem/chaser/test.sh
 MK_SUBST_FILES_EXEC += tests/subsystem/chaser/test.sh
-tests/subsystem/chaser/test.sh: $(srcdir)/tests/subsystem/chaser/test.sh
+tests/subsystem/chaser/test.sh: $(srcdir)/tests/subsystem/chaser/test.sh.in
 
 TESTS += tests/subsystem/chaser/test.sh
 
@@ -179,7 +179,7 @@ tests/subsystem/initDB: $(srcdir)/tests/subsystem/initDB.in
 
 check_SCRIPTS += tests/subsystem/runSubsystemTest.sh
 MK_SUBST_FILES_EXEC += tests/subsystem/runSubsystemTest.sh
-tests/subsystem/runSubsystemTest.sh: $(srcdir)/tests/subsystem/runSubsystemTest.sh
+tests/subsystem/runSubsystemTest.sh: $(srcdir)/tests/subsystem/runSubsystemTest.sh.in
 
 
 check_SCRIPTS += \

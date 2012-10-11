@@ -47,7 +47,7 @@ tests/subsystem/rpki-local-ta/initDB4: $(srcdir)/tests/subsystem/rpki-local-ta/i
 
 check_SCRIPTS += tests/subsystem/rpki-local-ta/runSubsystemTest4.sh
 MK_SUBST_FILES_EXEC += tests/subsystem/rpki-local-ta/runSubsystemTest4.sh
-tests/subsystem/rpki-local-ta/runSubsystemTest4.sh: $(srcdir)/tests/subsystem/rpki-local-ta/runSubsystemTest4.sh
+tests/subsystem/rpki-local-ta/runSubsystemTest4.sh: $(srcdir)/tests/subsystem/rpki-local-ta/runSubsystemTest4.sh.in
 
 
 check_SCRIPTS += tests/subsystem/rpki-local-ta/step4

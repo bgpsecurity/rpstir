@@ -64,7 +64,7 @@ tests/subsystem/rtr/badPDUs.py: $(srcdir)/tests/subsystem/rtr/badPDUs.py.in
 
 check_SCRIPTS += tests/subsystem/rtr/test.sh
 MK_SUBST_FILES_EXEC += tests/subsystem/rtr/test.sh
-tests/subsystem/rtr/test.sh: $(srcdir)/tests/subsystem/rtr/test.sh
+tests/subsystem/rtr/test.sh: $(srcdir)/tests/subsystem/rtr/test.sh.in
 
 TESTS += tests/subsystem/rtr/test.sh
 
