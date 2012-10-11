@@ -127,6 +127,7 @@ compare () {
 }
 
 init () {
+	mkdir -p "`config_get LogDir`"
 	rcli -x -t . -y
 	rcli -y -F "`pwd`/root.cer"
 	echo "INSERT INTO rtr_session VALUES ($SESSION);" | mysql_cmd
