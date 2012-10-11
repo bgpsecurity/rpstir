@@ -21,4 +21,9 @@ bin_rpki_rsync_rsync_aur_LDADD = \
 dist_man_MANS += doc/rsync_aur.1
 
 
+pkglibexec_SCRIPTS += bin/rpki-rsync/rsync_cord.py
+MK_SUBST_FILES_EXEC += bin/rpki-rsync/rsync_cord.py
+bin/rpki-rsync/rsync_cord.py: $(srcdir)/bin/rpki-rsync/rsync_cord.py.in
+
+
 dist_doc_DATA += doc/AUR.readme

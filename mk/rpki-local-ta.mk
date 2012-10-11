@@ -40,4 +40,19 @@ dist_check_DATA += \
 	tests/subsystem/rpki-local-ta/ttest*.par
 
 
+check_SCRIPTS += tests/subsystem/rpki-local-ta/initDB4
+MK_SUBST_FILES_EXEC += tests/subsystem/rpki-local-ta/initDB4
+tests/subsystem/rpki-local-ta/initDB4: $(srcdir)/tests/subsystem/rpki-local-ta/initDB4.in
+
+
+check_SCRIPTS += tests/subsystem/rpki-local-ta/runSubsystemTest4.sh
+MK_SUBST_FILES_EXEC += tests/subsystem/rpki-local-ta/runSubsystemTest4.sh
+tests/subsystem/rpki-local-ta/runSubsystemTest4.sh: $(srcdir)/tests/subsystem/rpki-local-ta/runSubsystemTest4.sh
+
+
+check_SCRIPTS += tests/subsystem/rpki-local-ta/step4
+MK_SUBST_FILES_EXEC += tests/subsystem/rpki-local-ta/step4
+tests/subsystem/rpki-local-ta/step4: $(srcdir)/tests/subsystem/rpki-local-ta/step4.in
+
+
 TESTS += tests/subsystem/rpki-local-ta/runSubsystemTest4.sh

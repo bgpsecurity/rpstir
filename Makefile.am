@@ -66,6 +66,7 @@ noinst_LIBRARIES =
 noinst_PROGRAMS =
 pkgdata_DATA =
 pkglibexec_PROGRAMS =
+pkglibexec_SCRIPTS =
 
 dist_check_DATA += \
 	etc/test.conf \
@@ -144,7 +145,10 @@ do_subst = $(SED) \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
-	-e 's,[@]SETUP_ENVIRONMENT[@],$(SETUP_ENVIRONMENT),g'
+	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
+	-e 's,[@]PYTHON[@],$(PYTHON),g' \
+	-e 's,[@]SETUP_ENVIRONMENT[@],$(SETUP_ENVIRONMENT),g' \
+	-e 's,[@]SHELL_BASH[@],$(SHELL_BASH),g'
 
 $(MK_SUBST_FILES): Makefile
 	rm -f "$@"

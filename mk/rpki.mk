@@ -7,7 +7,13 @@ bin_rpki_chaser_LDADD = \
 	$(LDADD_LIBDB) \
 	$(LDADD_LIBUTIL)
 
-dist_check_SCRIPTS += tests/subsystem/chaser/test.sh
+bin_SCRIPTS += bin/rpki/chaser.sh
+MK_SUBST_FILES_EXEC += bin/rpki/chaser.sh
+bin/rpki/chaser.sh: $(srcdir)/bin/rpki/chaser.sh.in
+
+check_SCRIPTS += tests/subsystem/chaser/test.sh
+MK_SUBST_FILES_EXEC += tests/subsystem/chaser/test.sh
+tests/subsystem/chaser/test.sh: $(srcdir)/tests/subsystem/chaser/test.sh
 
 TESTS += tests/subsystem/chaser/test.sh
 
@@ -60,6 +66,21 @@ bin_rpki_rcli_LDADD = \
 	$(LDADD_LIBRPKI)
 
 
+bin_SCRIPTS += bin/rpki/results.py
+MK_SUBST_FILES_EXEC += bin/rpki/results.py
+bin/rpki/results.py: $(srcdir)/bin/rpki/results.py.in
+
+
+bin_SCRIPTS += bin/rpki/run_from_TALs.sh
+MK_SUBST_FILES_EXEC += bin/rpki/run_from_TALs.sh
+bin/rpki/run_from_TALs.sh: $(srcdir)/bin/rpki/run_from_TALs.sh.in
+
+
+bin_SCRIPTS += bin/rpki/updateTA.py
+MK_SUBST_FILES_EXEC += bin/rpki/updateTA.py
+bin/rpki/updateTA.py: $(srcdir)/bin/rpki/updateTA.py.in
+
+
 sampletadir = $(examplesdir)/sample-ta
 
 conformancetadir = $(sampletadir)/bbn_conformance
@@ -82,11 +103,61 @@ dist_check_DATA += \
 	tests/conformance/raw/templates/*.raw \
 	tests/conformance/scripts/conformance.conf
 
+check_SCRIPTS += tests/conformance/scripts/gen_all.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all.sh
+tests/conformance/scripts/gen_all.sh: $(srcdir)/tests/conformance/scripts/gen_all.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_CMSs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CMSs.sh
+tests/conformance/scripts/gen_all_CMSs.sh: $(srcdir)/tests/conformance/scripts/gen_all_CMSs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_CRLs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CRLs.sh
+tests/conformance/scripts/gen_all_CRLs.sh: $(srcdir)/tests/conformance/scripts/gen_all_CRLs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_MFTs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_MFTs.sh
+tests/conformance/scripts/gen_all_MFTs.sh: $(srcdir)/tests/conformance/scripts/gen_all_MFTs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_ROAs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_ROAs.sh
+tests/conformance/scripts/gen_all_ROAs.sh: $(srcdir)/tests/conformance/scripts/gen_all_ROAs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_certs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_certs.sh
+tests/conformance/scripts/gen_all_certs.sh: $(srcdir)/tests/conformance/scripts/gen_all_certs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_child_ca.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_child_ca.sh
+tests/conformance/scripts/gen_child_ca.sh: $(srcdir)/tests/conformance/scripts/gen_child_ca.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_mft.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_mft.sh
+tests/conformance/scripts/gen_mft.sh: $(srcdir)/tests/conformance/scripts/gen_mft.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/make_test_CMS.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_CMS.sh
+tests/conformance/scripts/make_test_CMS.sh: $(srcdir)/tests/conformance/scripts/make_test_CMS.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/make_test_CRL.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_CRL.sh
+tests/conformance/scripts/make_test_CRL.sh: $(srcdir)/tests/conformance/scripts/make_test_CRL.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/make_test_MFT.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_MFT.sh
+tests/conformance/scripts/make_test_MFT.sh: $(srcdir)/tests/conformance/scripts/make_test_MFT.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/make_test_cert.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_cert.sh
+tests/conformance/scripts/make_test_cert.sh: $(srcdir)/tests/conformance/scripts/make_test_cert.sh.in
+
+
 dist_check_SCRIPTS += \
 	tests/conformance/scripts/run_bad_cert_tests.sh
 
-check_SCRIPTS += \
-	tests/conformance/scripts/run_tests.sh
+check_SCRIPTS += tests/conformance/scripts/run_tests.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/run_tests.sh
+tests/conformance/scripts/run_tests.sh: $(srcdir)/tests/conformance/scripts/run_tests.sh.in
 
 TESTS += \
 	tests/conformance/scripts/run_tests.sh
@@ -99,6 +170,100 @@ CLEANFILES += \
 	tests/conformance/raw/*.cer
 
 dist_doc_DATA += doc/conformance-cases
+
+
+check_SCRIPTS += tests/subsystem/initDB
+MK_SUBST_FILES_EXEC += tests/subsystem/initDB
+tests/subsystem/initDB: $(srcdir)/tests/subsystem/initDB.in
+
+
+check_SCRIPTS += tests/subsystem/runSubsystemTest.sh
+MK_SUBST_FILES_EXEC += tests/subsystem/runSubsystemTest.sh
+tests/subsystem/runSubsystemTest.sh: $(srcdir)/tests/subsystem/runSubsystemTest.sh
+
+
+check_SCRIPTS += \
+	tests/subsystem/step1.1 \
+	tests/subsystem/step1.2 \
+	tests/subsystem/step1.3 \
+	tests/subsystem/step1.4 \
+	tests/subsystem/step1.5 \
+	tests/subsystem/step1.6 \
+	tests/subsystem/step1.7 \
+	tests/subsystem/step1.8 \
+	tests/subsystem/step1.9 \
+	tests/subsystem/step2.1 \
+	tests/subsystem/step2.2 \
+	tests/subsystem/step2.3 \
+	tests/subsystem/step2.4 \
+	tests/subsystem/step2.5 \
+	tests/subsystem/step2.6 \
+	tests/subsystem/step2.7 \
+	tests/subsystem/step2.8 \
+	tests/subsystem/step3.1 \
+	tests/subsystem/step3.2 \
+	tests/subsystem/step3.3 \
+	tests/subsystem/step3.4 \
+	tests/subsystem/step3.5 \
+	tests/subsystem/step3.6 \
+	tests/subsystem/step3.7 \
+	tests/subsystem/step3.8 \
+	tests/subsystem/step3.9
+
+MK_SUBST_FILES_EXEC += \
+	tests/subsystem/step1.1 \
+	tests/subsystem/step1.2 \
+	tests/subsystem/step1.3 \
+	tests/subsystem/step1.4 \
+	tests/subsystem/step1.5 \
+	tests/subsystem/step1.6 \
+	tests/subsystem/step1.7 \
+	tests/subsystem/step1.8 \
+	tests/subsystem/step1.9 \
+	tests/subsystem/step2.1 \
+	tests/subsystem/step2.2 \
+	tests/subsystem/step2.3 \
+	tests/subsystem/step2.4 \
+	tests/subsystem/step2.5 \
+	tests/subsystem/step2.6 \
+	tests/subsystem/step2.7 \
+	tests/subsystem/step2.8 \
+	tests/subsystem/step3.1 \
+	tests/subsystem/step3.2 \
+	tests/subsystem/step3.3 \
+	tests/subsystem/step3.4 \
+	tests/subsystem/step3.5 \
+	tests/subsystem/step3.6 \
+	tests/subsystem/step3.7 \
+	tests/subsystem/step3.8 \
+	tests/subsystem/step3.9
+
+tests/subsystem/step1.1: $(srcdir)/tests/subsystem/step1.1.in
+tests/subsystem/step1.2: $(srcdir)/tests/subsystem/step1.2.in
+tests/subsystem/step1.3: $(srcdir)/tests/subsystem/step1.3.in
+tests/subsystem/step1.4: $(srcdir)/tests/subsystem/step1.4.in
+tests/subsystem/step1.5: $(srcdir)/tests/subsystem/step1.5.in
+tests/subsystem/step1.6: $(srcdir)/tests/subsystem/step1.6.in
+tests/subsystem/step1.7: $(srcdir)/tests/subsystem/step1.7.in
+tests/subsystem/step1.8: $(srcdir)/tests/subsystem/step1.8.in
+tests/subsystem/step1.9: $(srcdir)/tests/subsystem/step1.9.in
+tests/subsystem/step2.1: $(srcdir)/tests/subsystem/step2.1.in
+tests/subsystem/step2.2: $(srcdir)/tests/subsystem/step2.2.in
+tests/subsystem/step2.3: $(srcdir)/tests/subsystem/step2.3.in
+tests/subsystem/step2.4: $(srcdir)/tests/subsystem/step2.4.in
+tests/subsystem/step2.5: $(srcdir)/tests/subsystem/step2.5.in
+tests/subsystem/step2.6: $(srcdir)/tests/subsystem/step2.6.in
+tests/subsystem/step2.7: $(srcdir)/tests/subsystem/step2.7.in
+tests/subsystem/step2.8: $(srcdir)/tests/subsystem/step2.8.in
+tests/subsystem/step3.1: $(srcdir)/tests/subsystem/step3.1.in
+tests/subsystem/step3.2: $(srcdir)/tests/subsystem/step3.2.in
+tests/subsystem/step3.3: $(srcdir)/tests/subsystem/step3.3.in
+tests/subsystem/step3.4: $(srcdir)/tests/subsystem/step3.4.in
+tests/subsystem/step3.5: $(srcdir)/tests/subsystem/step3.5.in
+tests/subsystem/step3.6: $(srcdir)/tests/subsystem/step3.6.in
+tests/subsystem/step3.7: $(srcdir)/tests/subsystem/step3.7.in
+tests/subsystem/step3.8: $(srcdir)/tests/subsystem/step3.8.in
+tests/subsystem/step3.9: $(srcdir)/tests/subsystem/step3.9.in
 
 
 check_PROGRAMS += tests/subsystem/testcases/cert_validate
@@ -135,6 +300,15 @@ check_PROGRAMS += tests/subsystem/testcases/make_test_roa
 
 tests_subsystem_testcases_make_test_roa_LDADD = \
 	$(LDADD_LIBRPKI)
+
+
+check_SCRIPTS += tests/subsystem/testcases/tools/create_cert.py
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/tools/create_cert.py
+tests/subsystem/testcases/tools/create_cert.py: $(srcdir)/tests/subsystem/testcases/tools/create_cert.py.in
+
+check_SCRIPTS += tests/subsystem/testcases/tools/run_tc.py
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/tools/run_tc.py
+tests/subsystem/testcases/tools/run_tc.py: $(srcdir)/tests/subsystem/testcases/tools/run_tc.py.in
 
 
 dist_check_DATA += \

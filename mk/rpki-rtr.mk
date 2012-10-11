@@ -58,7 +58,13 @@ dist_doc_DATA += doc/rpki-rtr-daemon-outline
 dist_doc_DATA += doc/rpki-rtr-notes
 
 
+check_SCRIPTS += tests/subsystem/rtr/badPDUs.py
+MK_SUBST_FILES_EXEC += tests/subsystem/rtr/badPDUs.py
+tests/subsystem/rtr/badPDUs.py: $(srcdir)/tests/subsystem/rtr/badPDUs.py.in
+
 check_SCRIPTS += tests/subsystem/rtr/test.sh
+MK_SUBST_FILES_EXEC += tests/subsystem/rtr/test.sh
+tests/subsystem/rtr/test.sh: $(srcdir)/tests/subsystem/rtr/test.sh
 
 TESTS += tests/subsystem/rtr/test.sh
 
