@@ -13,7 +13,7 @@ TEST_LOG_NAME=`basename "$0"`
 STRICT_CHECKS=0
 . "$RPKI_ROOT/tests/test.include"
 
-export @CONFIG_ENV_VAR@="`pwd`/conformance.conf"
+use_config_file "`pwd`/conformance.conf"
 
 ./gen_all.sh
 

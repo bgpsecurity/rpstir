@@ -10,7 +10,7 @@ THIS_SCRIPT_DIR=$(dirname $0)
 . $CONFIG_ROOT_DIR/tests/test.include
 
 echo "Expecting 11 roa filenames"
-export @CONFIG_ENV_VAR@=specs.1.3.conf
+use_config_file specs.1.3.conf
 CMDLINE="query -t roa -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 11
 
