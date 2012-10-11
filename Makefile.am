@@ -72,6 +72,14 @@ dist_check_DATA += \
 	etc/test.conf \
 	tests/test.conf
 
+pkgdata_DATA += etc/envir.setup
+MK_SUBST_FILES += etc/envir.setup
+etc/envir.setup: $(srcdir)/etc/envir.setup.in
+
+examples_DATA += etc/rpstir.conf
+MK_SUBST_FILES += etc/rpstir.conf
+etc/rpstir.conf: $(srcdir)/etc/rpstir.conf.in
+
 check_SCRIPTS += tests/setup_test_environment.sh
 MK_SUBST_FILES_EXEC += tests/setup_test_environment.sh
 tests/setup_test_environment.sh: $(srcdir)/tests/setup_test_environment.sh.in
@@ -83,6 +91,10 @@ TESTS_ENVIRONTMENT_DEPS = \
 	tests/test.include
 
 TESTS_ENVIRONMENT = $(abs_top_builddir)/tests/setup_test_environment.sh
+
+noinst_DATA += tests/test.include
+MK_SUBST_FILES += tests/test.include
+tests/test.include: $(srcdir)/tests/test.include.in
 
 dist_doc_DATA += \
 	doc/glossary.txt
