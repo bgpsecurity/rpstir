@@ -114,14 +114,14 @@ Auxiliary Outputs: (not shown in diagram)
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-CONF_SCRIPTS=$CONFIG_ROOT_DIR/tests/conformance/scripts
+CONF_SCRIPTS=$TESTS_BUILDDIR/scripts
 
 # Options and defaults
-OUTPUT_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/root"
-PATCHES_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/patches"
-KEYS_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/keys"
-ROOT_KEY_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.p15"
-ROOT_CERT_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.cer"
+OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
+PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
+KEYS_DIR="$TESTS_SRCDIR/../raw/keys"
+ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
+ROOT_CERT_PATH="$TESTS_BUILDDIR/../raw/root.cer"
 USE_EXISTING_PATCHES=
 PREFIX="bad"
 EDITOR=${EDITOR:-vi}            # set editor to vi if undefined

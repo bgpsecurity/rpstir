@@ -100,13 +100,13 @@ Explanation of outputs, not in original order:
 export RPKI_NO_SIGNING_TIME=1
 
 # Options and defaults
-OUTPUT_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/root"
-PATCHES_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/patches"
-KEYS_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/keys"
-ROOT_KEY_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.p15"
-ROOT_CERT_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.cer"
-TEMPLATE_EE_RAW="$CONFIG_ROOT_DIR/tests/conformance/raw/templates/goodEECert.raw"
-TEMPLATE_ROA_RAW="$CONFIG_ROOT_DIR/tests/conformance/raw/templates/goodCMS.raw"
+OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
+PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
+KEYS_DIR="$TESTS_SRCDIR/../raw/keys"
+ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
+ROOT_CERT_PATH="$TESTS_BUILDDIR/../raw/root.cer"
+TEMPLATE_EE_RAW="$TESTS_SRCDIR/../raw/templates/goodEECert.raw"
+TEMPLATE_ROA_RAW="$TESTS_SRCDIR/../raw/templates/goodCMS.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
