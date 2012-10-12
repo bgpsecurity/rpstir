@@ -1,8 +1,12 @@
 chaser
 chaser.sh
 garbage
+initDB.sh
+loader.sh
 query
 rcli
 results.py
+results.sh
 run_from_TALs.sh
 updateTA.py
+updateTA.sh
