@@ -2,10 +2,6 @@
 # contain anything used only by tests. It should only be sourced via
 # @SETUP_ENVIRONMENT@.
 
-
-CONFIG_ROOT_DIR=`@abs_top_builddir@/bin/config/config_get RootDir`
-
-
 # add all binaries to the path
 if test -d "@pkglibexecdir@"; then
     export PATH="@pkglibexecdir@:$PATH"

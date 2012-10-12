@@ -12,16 +12,6 @@
 
 /** All available config options */
 static const struct config_option config_options[] = {
-    // CONFIG_ROOT_DIR
-    {
-     "RootDir",
-     false,
-     config_type_path_converter, NULL,
-     config_type_path_converter_inverse, NULL,
-     free,
-     NULL, NULL,
-     "\"" ABS_TOP_SRCDIR "\""},
-
     // CONFIG_RPKI_PORT
     {
      "RPKIPort",
