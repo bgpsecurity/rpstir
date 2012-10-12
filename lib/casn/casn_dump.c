@@ -19,6 +19,7 @@ Cambridge, Ma. 02138
 char casn_dump_sfcsid[] = "@(#)casn_dump.c 858P";
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "casn.h"
 
 extern struct casn *_skip_casn(

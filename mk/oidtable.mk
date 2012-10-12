@@ -22,4 +22,4 @@ var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H) $(TESTS_ENVIRONTME
 		./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)
 
 AM_CPPFLAGS += \
-	-DOIDTABLE='"$(abs_top_builddir)/var/oidtable"'
+	-DOIDTABLE='(getenv("TESTS_TOP_BUILDDIR") == NULL ? "$(pkgdatadir)/oidtable" : "$(abs_top_builddir)/var/oidtable")'
