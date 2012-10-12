@@ -124,7 +124,6 @@ include mk/rpki-object.mk
 include mk/rpki-rsync.mk
 include mk/rpki-rtr.mk
 include mk/rpki.mk
-include mk/subst-files.mk
 include mk/testbed.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
