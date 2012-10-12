@@ -1,9 +1,8 @@
 # Configuration file for testing only.
 #
-# Users should not edit this file. See etc/test.conf for user-configurable
-# options.
+# Users should not edit this file.
 
-Include ${TESTS_TOP_SRCDIR}/etc/test.conf
+Include ${HOME}/.@PACKAGE_NAME@.test.conf
 
 TemplateCACert ${TESTS_TOP_SRCDIR}/var/templates/ca_template.cer
 TemplateEECert ${TESTS_TOP_SRCDIR}/var/templates/ee_template.cer

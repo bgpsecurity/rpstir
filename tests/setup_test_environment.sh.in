@@ -2,11 +2,11 @@
 
 export TESTS_TOP_BUILDDIR="@abs_top_builddir@"
 export TESTS_TOP_SRCDIR="@abs_top_srcdir@"
-export TESTS_INCLUDE_CONFIG="$TESTS_TOP_SRCDIR/tests/test.conf"
+export TESTS_INCLUDE_CONFIG="$TESTS_TOP_BUILDDIR/tests/test.conf"
 
 . "$TESTS_TOP_BUILDDIR/tests/test.include"
 
-use_config_file "$TESTS_TOP_SRCDIR/tests/test.conf"
+use_config_file "$TESTS_INCLUDE_CONFIG"
 
 PROG="$1"
 shift

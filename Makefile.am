@@ -68,10 +68,6 @@ pkgdata_DATA =
 pkglibexec_PROGRAMS =
 pkglibexec_SCRIPTS =
 
-dist_check_DATA += \
-	etc/test.conf \
-	tests/test.conf
-
 pkgdata_DATA += etc/envir.setup
 MK_SUBST_FILES += etc/envir.setup
 etc/envir.setup: $(srcdir)/etc/envir.setup.in
@@ -80,9 +76,15 @@ examples_DATA += etc/rpstir.conf
 MK_SUBST_FILES += etc/rpstir.conf
 etc/rpstir.conf: $(srcdir)/etc/rpstir.conf.in
 
+EXTRA_DIST += etc/test.conf
+
 check_SCRIPTS += tests/setup_test_environment.sh
 MK_SUBST_FILES_EXEC += tests/setup_test_environment.sh
 tests/setup_test_environment.sh: $(srcdir)/tests/setup_test_environment.sh.in
+
+check_DATA += tests/test.conf
+MK_SUBST_FILES += tests/test.conf
+tests/test.conf: $(srcdir)/tests/test.conf.in
 
 ## Anything that uses $(TESTS_ENVIRONMENT) before "make all" finishes should
 ## depend on this.
