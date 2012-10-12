@@ -2,5 +2,6 @@
  * run "make install DESTDIR=/path/to/tempdir" and see if everything gets installed in places that make sense
  * run "make distcheck"
  * setup a VM, run "make install", and see if it works (i.e. test as much functionality as possible)
+ * buildbot changes?
  * update INSTRUCTIONS.in
   * copy etc/test.conf to ~/.@PACKAGE_NAME@.test.conf before "make check"
