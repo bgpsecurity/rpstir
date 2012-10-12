@@ -114,7 +114,7 @@ Auxiliary Outputs: (not shown in diagram)
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-CONF_SCRIPTS=$TESTS_BUILDDIR/scripts
+CONF_SCRIPTS="$TESTS_BUILDDIR"
 
 # Options and defaults
 OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
