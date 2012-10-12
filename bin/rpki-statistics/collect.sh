@@ -24,6 +24,12 @@ formatted_date () {
     date -u +"%Y-%m-%dT%H:%M:%S"
 }
 
+software_version () {
+    git describe --tags --long --always
+}
+
+SOFTWARE_VERSION_START="`software_version`"
+
 # Note: etc/sample-ta/*.tal on rtr-test:~dmandelb/statistics/ includes ARIN
 SYNC_START_TIME="`formatted_date`"
 run_from_TALs.sh etc/sample-ta/*.tal \
@@ -69,6 +75,12 @@ results.py > "$STATS_DIR/results" \
 results.py -v > "$STATS_DIR/results.verbose" \
     || fatal "could not run results.py (verbose)"
 
+SOFTWARE_VERSION_END="`software_version`"
+
+test "$SOFTWARE_VERSION_START" = "$SOFTWARE_VERSION_END" \
+    || fatal "software changed from $SOFTWARE_VERSION_START to $SOFTWARE_VERSION_END during the run"
+
+echo "$SOFTWARE_VERSION_START" > "$STATS_DIR/version"
 
 tar -cpzf "$STATS_DIR.tgz" -C `dirname "$STATS_DIR"` `basename "$STATS_DIR"` \
     || fatal "could not make $STATS_DIR.tgz"
