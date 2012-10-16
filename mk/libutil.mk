@@ -14,6 +14,7 @@ lib_util_libutil_a_SOURCES = \
 	lib/util/hashutils.h \
 	lib/util/inet.c \
 	lib/util/inet.h \
+	lib/util/logging.c \
 	lib/util/logging.h \
 	lib/util/logutils.c \
 	lib/util/logutils.h \
