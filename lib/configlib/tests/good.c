@@ -4,6 +4,7 @@
 #include "configlib/configlib.h"
 
 #include "configlib/types/bool.h"
+#include "configlib/types/enum.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string.h"
@@ -28,6 +29,7 @@ enum config_key {
     CONFIG_DIR,
     CONFIG_NULL_STRING,
     CONFIG_DEFAULT_NULL_STRING,
+    CONFIG_LOG_LEVEL,
 
     CONFIG_NUM_OPTIONS
 };
@@ -51,6 +53,7 @@ CONFIG_GET_HELPER(CONFIG_FILE, char)
 CONFIG_GET_HELPER(CONFIG_DIR, char)
 CONFIG_GET_HELPER(CONFIG_NULL_STRING, char)
 CONFIG_GET_HELPER(CONFIG_DEFAULT_NULL_STRING, char)
+CONFIG_GET_HELPER_DEREFERENCE(CONFIG_LOG_LEVEL, int)
 
 
 static bool stringarray_validator(
@@ -274,6 +277,16 @@ static const struct config_option CONFIG_OPTIONS[] = {
      free,
      NULL, NULL,
      ""},
+
+    // CONFIG_LOG_LEVEL
+    {
+     "LogLevel",
+     false,
+     config_type_enum_converter, &config_type_enum_arg_log_level,
+     NULL, NULL,
+     config_type_enum_free,
+     NULL, NULL,
+     NULL},
 };
 
 
@@ -369,6 +382,8 @@ static bool test_config(
     TEST(const char *, "%s", CONFIG_NULL_STRING_get(), ==, NULL);
 
     TEST(const char *, "%s", CONFIG_DEFAULT_NULL_STRING_get(), ==, NULL);
+
+    TEST(int, "%d", CONFIG_LOG_LEVEL_get(), ==, LOG_ALERT);
 
     config_unload();
 
