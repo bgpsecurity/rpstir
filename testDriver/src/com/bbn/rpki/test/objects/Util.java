@@ -354,6 +354,7 @@ public class Util implements Constants {
         if (DEBUG_ON && typescriptLogger != null) {
           typescriptLogger.log(ignoreStatus ? "stdout" : "stderr", msg);
           if (!ignoreStatus) {
+            typescriptLogger.log(errString);
             throw new RuntimeException(msg);
           }
         }
