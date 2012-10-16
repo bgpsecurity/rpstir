@@ -22,37 +22,37 @@ public abstract class Allocator implements Constants {
   protected IPRangeList asResources = new IPRangeList(IPRangeType.as);
   protected boolean modified = true;
 
-  protected IPRangeList subAllocateIPv4(List<Pair> iplist) {
+  protected IPRangeList subAllocateIPv4(List<? extends Pair> iplist) {
     if (DEBUG_ON) {
       System.out.println("IPv4 Request: " + iplist);
     }
 
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-      this.ipv4ResourcesFree.allocate(iplist, true);
+        this.ipv4ResourcesFree.allocate(iplist, true);
 
     return allocated_pairs;
   }
 
-  protected IPRangeList subAllocateIPv6(List<Pair> iplist) {
+  protected IPRangeList subAllocateIPv6(List<? extends Pair> iplist) {
     if (DEBUG_ON) {
       System.out.println("IPv6 Request: " + iplist);
     }
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-      this.ipv6ResourcesFree.allocate(iplist, true);
+        this.ipv6ResourcesFree.allocate(iplist, true);
 
     //  FIXME: maxlength not supported
     return allocated_pairs;
   }
 
-  protected IPRangeList subAllocateAS(List<Pair> asList) {
+  protected IPRangeList subAllocateAS(List<? extends Pair> asList) {
     if (DEBUG_ON) {
       System.out.println("AS Request: " + asList);
     }
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-      this.asResourcesFree.allocate(asList, false);
+        this.asResourcesFree.allocate(asList, false);
     return allocated_pairs;
   }
 

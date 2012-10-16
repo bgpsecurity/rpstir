@@ -80,9 +80,9 @@ public class CA_Object extends Allocator {
 
     if (parent != null) {
       Factory myFactory = (Factory) factoryBase;
-      takeIPv4(myFactory.ipv4List, "ini");
-      takeIPv6(myFactory.ipv6List, "ini");
-      takeAS(myFactory.asList, "ini");
+      takeIPv4(myFactory.ipv4List, null);
+      takeIPv6(myFactory.ipv6List, null);
+      takeAS(myFactory.asList, null);
     } else {
       //  trust anchor CA
       IANAFactory myFactory = (IANAFactory) factoryBase;
@@ -152,7 +152,7 @@ public class CA_Object extends Allocator {
    * @param pairs describe the addresses to take from the parent
    * @param allocationId
    */
-  public void takeIPv4(List<Pair> pairs, String allocationId) {
+  public void takeIPv4(List<? extends Pair> pairs, String allocationId) {
     IPRangeList allocation = parent.subAllocateIPv4(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
     this.ipv4Resources.addAll(allocation);
@@ -163,7 +163,7 @@ public class CA_Object extends Allocator {
    * @param pairs describe the addresses to take from the parent
    * @param allocationId
    */
-  public void takeIPv6(List<Pair> pairs, String allocationId) {
+  public void takeIPv6(List<? extends Pair> pairs, String allocationId) {
     IPRangeList allocation = parent.subAllocateIPv6(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
     this.ipv6Resources.addAll(allocation);
@@ -174,7 +174,7 @@ public class CA_Object extends Allocator {
    * @param pairs describe the addresses to take from the parent
    * @param allocationId
    */
-  public void takeAS(List<Pair> pairs, String allocationId) {
+  public void takeAS(List<? extends Pair> pairs, String allocationId) {
     IPRangeList allocation = parent.subAllocateAS(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
     this.asResources.addAll(allocation);
@@ -183,33 +183,37 @@ public class CA_Object extends Allocator {
 
   /**
    * 
-   * @param rangeType The type of range being returned
    * @param allocationId
    */
-  public void returnAllocation(IPRangeType rangeType, String allocationId) {
-    IPRangeList allocation = ActionManager.singleton().findAllocation(parent, this, rangeType, allocationId);
-    IPRangeList resources;
-    IPRangeList resourcesFree;
-    switch(rangeType) {
-    default:
-      // Should never happen
-      return;
-    case ipv4:
-      resources = this.ipv4Resources;
-      resourcesFree = this.ipv4ResourcesFree;
-      break;
-    case ipv6:
-      resources = this.ipv6Resources;
-      resourcesFree = this.ipv6ResourcesFree;
-      break;
-    case as:
-      resources = this.asResources;
-      resourcesFree = this.asResourcesFree;
-      break;
+  public void returnAllocation(String allocationId) {
+    for (IPRangeType rangeType : IPRangeType.values()) {
+      IPRangeList allocation = ActionManager.singleton().findAllocation(parent, this, rangeType, allocationId);
+      if (allocation == null) {
+        continue;
+      }
+      IPRangeList resources;
+      IPRangeList resourcesFree;
+      switch(rangeType) {
+      default:
+        // Should never happen
+        continue;
+      case ipv4:
+        resources = this.ipv4Resources;
+        resourcesFree = this.ipv4ResourcesFree;
+        break;
+      case ipv6:
+        resources = this.ipv6Resources;
+        resourcesFree = this.ipv6ResourcesFree;
+        break;
+      case as:
+        resources = this.asResources;
+        resourcesFree = this.asResourcesFree;
+        break;
+      }
+      resources.removeAll(allocation);
+      resourcesFree.removeAll(allocation);
+      parent.addAll(allocation);
     }
-    resources.removeAll(allocation);
-    resourcesFree.removeAll(allocation);
-    parent.addAll(allocation);
   }
 
   /**

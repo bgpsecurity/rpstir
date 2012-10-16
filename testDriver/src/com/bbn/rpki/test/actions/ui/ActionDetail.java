@@ -40,7 +40,8 @@ import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
-import com.bbn.rpki.test.objects.PairList;
+import com.bbn.rpki.test.objects.TypedPair;
+import com.bbn.rpki.test.objects.TypedPairList;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.TaskPath;
 
@@ -134,6 +135,7 @@ public class ActionDetail {
     panel.removeAll();
     epochEventsPane = null;
     savers.clear();
+    this.action = action;
     title.setText(action == null ? "No Action Selected" : action.toString());
     if (action != null) {
       this.epochEvents.addAll(action.getAllEpochEvents());
@@ -221,11 +223,14 @@ public class ActionDetail {
     if (value instanceof String) {
       return getStringComponent(value, setter);
     }
-    if (value instanceof PairList) {
-      return getPairListComponent((PairList) value, setter);
+    if (value instanceof TypedPairList) {
+      return getPairListComponent((TypedPairList) value, setter);
     }
     if (value instanceof IPRangeType) {
-      return getIPRangeTypeComponent(value, setter);
+      return getIPRangeTypeComponent((IPRangeType) value, setter);
+    }
+    if (value instanceof TypedPair) {
+      return getTypedPairComponent((TypedPair) value, setter);
     }
     if (value instanceof Pair) {
       return getPairComponent((Pair) value, setter);
@@ -327,8 +332,8 @@ public class ActionDetail {
     return component;
   }
 
-  private Component getIPRangeTypeComponent(Object value, final AbstractSetter setter) {
-    final JComboBox box = new JComboBox(IPRangeType.values());
+  private Component getIPRangeTypeComponent(IPRangeType value, final AbstractSetter setter) {
+    final JComboBox<IPRangeType> box = new JComboBox<IPRangeType>(IPRangeType.values());
     box.setSelectedItem(value);
     registerListener(new Saver() {
 
@@ -348,7 +353,7 @@ public class ActionDetail {
     Collection<EpochEvent> epochEvents = model.getEpochEvents();
     EpochEvent[] epochArray = new EpochEvent[epochEvents.size()];
     epochArray = epochEvents.toArray(epochArray);
-    final JComboBox combo = new JComboBox(epochArray);
+    final JComboBox<EpochEvent> combo = new JComboBox<EpochEvent>(epochArray);
     combo.setSelectedItem(value);
     registerListener(new Saver() {
 
@@ -443,23 +448,54 @@ public class ActionDetail {
     return new EpochsComponent(model, epochEvent, title, currentSelection, availableEpochs, cb);
   }
 
+  private Component getTypedPairComponent(final TypedPair typedPair, final AbstractSetter setter) {
+    final JPanel panel = new JPanel(new GridBagLayout());
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.gridy = 0;
+    gbc.gridx = 0;
+    panel.add(new JLabel("INR Type: "), gbc);
+    gbc.gridx = 1;
+    AbstractSetter typeSetter = new AbstractSetter() {
 
-  private Component getPairListComponent(final PairList list, final AbstractSetter setter) {
+      @Override
+      void updateAttribute() {
+        typedPair.type =(IPRangeType) newValue;
+      }
+    };
+    panel.add(getComponent(typedPair.type, typeSetter), gbc);
+    gbc.gridx = 2;
+    panel.add(new JLabel("  Range: "), gbc);
+    gbc.gridx = 3;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.weightx = 1f;
+    AbstractSetter pairSetter = new AbstractSetter() {
+      @Override
+      void updateAttribute() {
+        Pair pair = (Pair) newValue;
+        typedPair.tag = pair.tag;
+        typedPair.arg = pair.arg;
+      }
+    };
+    panel.add(getPairComponent(typedPair, pairSetter), gbc);
+    return panel;
+  }
+
+  private Component getPairListComponent(final TypedPairList list, final AbstractSetter setter) {
     final JPanel listData = new JPanel(new GridBagLayout());
     final GridBagConstraints gbc = new GridBagConstraints();
     gbc.gridy = 0;
     for (int i = 0, n = list.size(); i < n; i++) {
-      Pair element = list.get(i);
-      addPair(setter, list, listData, gbc, element);
+      TypedPair element = list.get(i);
+      addTypedPair(setter, list, listData, gbc, element);
     }
     final JButton newButton = new JButton("Add");
     newButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         listData.remove(newButton);
-        Pair newPair = new Pair("p", BigInteger.ZERO);
+        TypedPair newPair = new TypedPair(IPRangeType.ipv4, "p", BigInteger.ZERO);
         list.add(newPair);
-        addPair(setter, list, listData, gbc, newPair);
+        addTypedPair(setter, list, listData, gbc, newPair);
         addPairButton(listData, gbc, newButton);
         listData.revalidate();
         listData.repaint();
@@ -512,23 +548,23 @@ public class ActionDetail {
    * @param index
    * @param element
    */
-  private void addPair(final AbstractSetter setter,
-                       final PairList list,
-                       final JPanel listData,
-                       GridBagConstraints gbc,
-                       final Pair element) {
+  private void addTypedPair(final AbstractSetter setter,
+                            final TypedPairList list,
+                            final JPanel listData,
+                            GridBagConstraints gbc,
+                            final TypedPair element) {
     AbstractSetter setter2 = new AbstractSetter() {
       @Override
       public void updateAttribute() {
         int index = list.indexOf(element);
         assert index >= 0;
-        list.set(index, (Pair) newValue);
+        list.set(index, (TypedPair) newValue);
         setter.setValue(list);
       }
     };
 
     final Component component = getComponent(element, setter2);
-    addPairComponent(listData, gbc, component);
+    addTypedPairComponent(listData, gbc, component);
     final JButton deleteButton = new JButton("Delete");
     deleteButton.addActionListener(new ActionListener() {
       @Override
@@ -549,8 +585,8 @@ public class ActionDetail {
    * @param gbc
    * @param component
    */
-  private void addPairComponent(final JPanel listData, GridBagConstraints gbc,
-                                final Component component) {
+  private void addTypedPairComponent(final JPanel listData, GridBagConstraints gbc,
+                                     final Component component) {
     gbc.gridx = 0;
     gbc.fill = GridBagConstraints.BOTH;
     gbc.weightx = 1f;

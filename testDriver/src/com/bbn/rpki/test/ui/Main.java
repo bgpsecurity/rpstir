@@ -34,7 +34,7 @@ import com.bbn.rpki.test.actions.XMLConstants;
 import com.bbn.rpki.test.actions.ui.ActionsEditor;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.IPRangeType;
-import com.bbn.rpki.test.objects.Pair;
+import com.bbn.rpki.test.objects.TypedPair;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
 import com.bbn.rpki.test.tasks.Model;
@@ -152,7 +152,7 @@ public class Main implements XMLConstants {
     // Build some actions
     CA_Object ripe = model.getRootCA().findNode("RIPE-2");
     CA_Object lir1 = ripe.findNode("LIR-2");
-    model.addAction(new AllocateAction(ripe, lir1, "a1", IPRangeType.ipv4, model, new Pair("p", 8)));
+    model.addAction(new AllocateAction(ripe, lir1, "a1", model, new TypedPair(IPRangeType.ipv4, "p", 8)));
     String path = "UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)";
     model.addAction(new ChooseCacheCheckTask(model, path));
   }

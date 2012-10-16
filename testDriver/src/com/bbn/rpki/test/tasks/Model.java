@@ -405,7 +405,7 @@ public class Model implements Constants, XMLConstants {
       Epoch epochActions = epochs.get(epochIndex - 1);
       for (EpochEvent epochEvent : epochActions.getEpochEvents()) {
         AbstractAction action = epochEvent.getAction();
-        action.execute(null, logger);
+        action.execute(epochEvent, logger);
       }
     }
     Set<File> previousFiles = new HashSet<File>(objectList);

@@ -24,19 +24,19 @@ public class Pair {
 
   /** The text tag of the value */
   public String tag;
-  
+
   /** The numeric part of the value */
   public BigInteger arg;
-  
+
   /**
    * @param tag normally "r" or "p" for range or prefix
-   * @param arg 
+   * @param arg
    */
   public Pair(String tag, BigInteger arg) {
     this.tag = tag;
     this.arg = arg;
   }
-  
+
   /**
    * Construct from long or int
    * @param tag
@@ -45,7 +45,7 @@ public class Pair {
   public Pair(String tag, long arg) {
     this(tag, BigInteger.valueOf(arg));
   }
-  
+
   /**
    * Constructor from xml element
    * @param element
@@ -54,7 +54,7 @@ public class Pair {
     this.tag = element.getAttributeValue(ATTR_TAG);
     this.arg = new BigInteger(element.getAttributeValue(ATTR_ARG));
   }
-  
+
   /**
    * @return xml Element encoding this pair
    */
@@ -64,7 +64,7 @@ public class Pair {
     element.setAttribute(ATTR_ARG, String.valueOf(arg));
     return element;
   }
-  
+
   /**
    * @see java.lang.Object#toString()
    */

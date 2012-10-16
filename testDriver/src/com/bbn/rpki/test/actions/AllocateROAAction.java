@@ -13,9 +13,9 @@ import java.util.Map;
 import org.jdom.Element;
 
 import com.bbn.rpki.test.objects.CA_Object;
-import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
-import com.bbn.rpki.test.objects.PairList;
+import com.bbn.rpki.test.objects.TypedPair;
+import com.bbn.rpki.test.objects.TypedPairList;
 import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.tasks.Model;
 
@@ -35,7 +35,6 @@ public class AllocateROAAction extends AbstractAction {
   private static final String PUBLICATION_TIME_OF_ALLOCATION = "Publication Time of Allocation ";
 
   enum AttributeType {
-    INR_TYPE("INR Type"),
     ISSUER("Issuer"),
     SUBJECT("Subject"),
     ALLOCATION_PUBLICATION_TIME("Allocation Publication Time"),
@@ -71,10 +70,9 @@ public class AllocateROAAction extends AbstractAction {
     }
   }
 
-  private PairList allocationPairs = new PairList();
+  private TypedPairList allocationPairs = new TypedPairList();
   private CA_Object parent;
   private String allocationId;
-  private IPRangeType rangeType;
   private final EpochEvent allocationPublicationTime;
   private final EpochEvent deallocationPublicationTime;
   private final EpochEvent validityStartTime;
@@ -85,16 +83,14 @@ public class AllocateROAAction extends AbstractAction {
    * @param parent
    * @param child
    * @param allocationId
-   * @param rangeType
    * @param model
    * @param pairs the ranges or prefixes to be allocated
    */
-  public AllocateROAAction(CA_Object parent, String allocationId, IPRangeType rangeType, Model model, int asId, Pair...pairs) {
+  public AllocateROAAction(CA_Object parent, String allocationId, Model model, int asId, TypedPair...pairs) {
     super(model);
     this.parent = parent;
     this.asId = asId;
     this.allocationId = allocationId;
-    this.rangeType = rangeType;
     this.allocationPairs.addAll(Arrays.asList(pairs));
     allocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_ALLOCATION);
     deallocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_DEALLOCATION);
@@ -112,7 +108,7 @@ public class AllocateROAAction extends AbstractAction {
    * @param model
    */
   public AllocateROAAction(Model model) {
-    this(model.getRootCA(), "", IPRangeType.ipv4, model, 0);
+    this(model.getRootCA(), "", model, 0);
   }
 
   /**
@@ -129,7 +125,6 @@ public class AllocateROAAction extends AbstractAction {
     String rangeTypeName = element.getAttributeValue(ATTR_RANGE_TYPE);
 
     parent = ActionManager.singleton().findCA_Object(parentCommonName);
-    rangeType = IPRangeType.valueOf(rangeTypeName);
 
     Element allocationPublicationTimeElement = element.getChild(AttributeType.ALLOCATION_PUBLICATION_TIME.name());
     Element deallocationPublicationTimeElement = element.getChild(AttributeType.DEALLOCATION_PUBLICATION_TIME.name());
@@ -144,7 +139,7 @@ public class AllocateROAAction extends AbstractAction {
     @SuppressWarnings("unchecked")
     List<Element> children = element.getChildren(Pair.TAG_PAIR);
     for (Element childElement : children) {
-      allocationPairs.add(new Pair(childElement));
+      allocationPairs.add(new TypedPair(childElement));
     }
   }
 
@@ -159,7 +154,6 @@ public class AllocateROAAction extends AbstractAction {
     }
     element.setAttribute(ATTR_ASID, String.valueOf(asId));
     element.setAttribute(ATTR_ALLOCATION_ID, allocationId);
-    element.setAttribute(ATTR_RANGE_TYPE, rangeType.name());
 
     element.addContent(allocationPublicationTime.toXML(AttributeType.ALLOCATION_PUBLICATION_TIME.name(), actionContext));
     element.addContent(deallocationPublicationTime.toXML(AttributeType.DEALLOCATION_PUBLICATION_TIME.name(), actionContext));
@@ -246,7 +240,6 @@ public class AllocateROAAction extends AbstractAction {
     ret.put(AttributeType.VALIDITY_START_TIME.getDisplayName(), validityStartTime);
     ret.put(AttributeType.DEALLOCATION_PUBLICATION_TIME.getDisplayName(), deallocationPublicationTime);
     ret.put(AttributeType.VALIDITY_END_TIME.getDisplayName(), validityEndTime);
-    ret.put(AttributeType.INR_TYPE.getDisplayName(), rangeType);
     ret.put(AttributeType.ALLOCATIONS.getDisplayName(), allocationPairs);
     return ret;
   }
@@ -278,10 +271,7 @@ public class AllocateROAAction extends AbstractAction {
       allocationId = (String) newValue;
       break;
     case ALLOCATIONS:
-      allocationPairs = (PairList) newValue;
-      break;
-    case INR_TYPE:
-      rangeType = (IPRangeType) newValue;
+      allocationPairs = (TypedPairList) newValue;
       break;
     case ISSUER:
       parent = (CA_Object) newValue;

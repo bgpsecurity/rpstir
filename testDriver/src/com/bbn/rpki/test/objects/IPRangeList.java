@@ -88,11 +88,18 @@ public class IPRangeList implements Iterable<Range>, Constants {
    */
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder(getIpVersion().name());
+    sb.append(": ");
+    boolean first = true;
     for (Range range : this) {
-      sb.append(",").append(range);
+      if (first) {
+        first = false;
+      } else {
+        sb.append(",");
+      }
+      sb.append(range);
     }
-    return sb.substring(1);
+    return sb.toString();
   }
 
   /**
@@ -154,7 +161,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @param expressAsRange
    * @return the allocated ranges
    */
-  public IPRangeList allocate(List<Pair> requests,
+  public IPRangeList allocate(List<? extends Pair> requests,
                               boolean expressAsRange) {
     IPRangeList ret = new IPRangeList(ipVersion);
 

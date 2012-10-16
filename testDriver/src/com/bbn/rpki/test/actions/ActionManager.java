@@ -75,9 +75,18 @@ public class ActionManager {
    */
   public void recordAllocation(Allocator parent, Allocator child, String allocationId, IPRangeList list) {
     // TODO need a better key incorporating the parent
-    @SuppressWarnings("unused")
-    IPRangeList old = selectMap(list.getIpVersion()).put(allocationId, list);
-    //    assert old == null;
+    if (allocationId == null) {
+      return;
+    }
+    System.out.println("RecordAllocation " + allocationId + ": " + list);
+    IPRangeType rangeType = list.getIpVersion();
+    Map<String, IPRangeList> selectMap = selectMap(rangeType);
+    IPRangeList ranges = selectMap.get(allocationId);
+    if (ranges == null) {
+      ranges = new IPRangeList(rangeType);
+      selectMap(rangeType).put(allocationId, ranges);
+    }
+    ranges.addAll(list);
   }
 
   /**
