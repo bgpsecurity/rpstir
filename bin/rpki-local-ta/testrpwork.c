@@ -46,7 +46,7 @@ int main(
     scmtab *table = NULL;
     char errMsg[1024];
 
-    OPEN_LOG(PACKAGE_NAME "-testrpwork", LOG_USER);
+    OPEN_LOG("testrpwork", LOG_USER);
 
     if (!my_config_load())
     {

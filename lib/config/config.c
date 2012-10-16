@@ -3,9 +3,11 @@
 #include <string.h>
 
 #include "configlib/types/bool.h"
+#include "configlib/types/enum.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string.h"
+#include "util/logging.h"
 
 #include "config.h"
 
@@ -71,6 +73,16 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      NULL},
+
+    // CONFIG_LOG_LEVEL
+    {
+     "LogLevel",
+     false,
+     config_type_enum_converter, &config_type_enum_arg_log_level,
+     NULL, NULL,
+     config_type_enum_free,
+     NULL, NULL,
+     "LOG_INFO"},
 
     // CONFIG_DOWNLOAD_CONCURRENCY
     {
@@ -258,6 +270,11 @@ bool my_config_load(
                            getenv(CONFIG_ENV_VAR), default_config_files);
 
     free(user_conf_file);
+
+    if (ret)
+    {
+        SET_LOG_LEVEL(CONFIG_LOG_LEVEL_get());
+    }
 
     return ret;
 }

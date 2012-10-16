@@ -12,9 +12,7 @@
 #include <netdb.h>
 #include <errno.h>
 
-#include "config/config.h"
 #include "util/logging.h"
-#include "util/logutils.h"
 
 #include "rpki-rtr/pdu.h"
 
@@ -542,12 +540,12 @@ static bool read_pdu(
         {
             if (offset == 0)
             {
-                log_msg(LOG_NOTICE, "remote side closed connection");
+                LOG(LOG_NOTICE, "remote side closed connection");
             }
             else
             {
                 puts("received partial PDU before remote side closed connection");
-                log_msg(LOG_NOTICE,
+                LOG(LOG_NOTICE,
                         "remote side closed connection in the middle of sending a PDU");
             }
             return false;
@@ -559,7 +557,7 @@ static bool read_pdu(
         }
     }
 
-    log_msg(LOG_ERR, "this should never happen");
+    LOG(LOG_ERR, "this should never happen");
     return false;
 }
 
@@ -589,7 +587,7 @@ static int do_client(
     retval = getaddrinfo(host, port, &hints, &addr);
     if (retval != 0)
     {
-        log_msg(LOG_ERR, "getaddrinfo(): %s", gai_strerror(retval));
+        LOG(LOG_ERR, "getaddrinfo(): %s", gai_strerror(retval));
         return EXIT_FAILURE;
     }
 
@@ -599,15 +597,15 @@ static int do_client(
         cxn = socket(addrp->ai_family, addrp->ai_socktype, addrp->ai_protocol);
         if (cxn == -1)
         {
-            log_msg(LOG_WARNING, "socket(): %s", strerror(errno));
+            LOG(LOG_WARNING, "socket(): %s", strerror(errno));
             continue;
         }
 
         if (connect(cxn, addrp->ai_addr, addrp->ai_addrlen) != 0)
         {
-            log_msg(LOG_WARNING, "connect(): %s", strerror(errno));
+            LOG(LOG_WARNING, "connect(): %s", strerror(errno));
             if (close(cxn) != 0)
-                log_msg(LOG_WARNING, "close(): %s", strerror(errno));
+                LOG(LOG_WARNING, "close(): %s", strerror(errno));
             continue;
         }
         else
@@ -617,7 +615,7 @@ static int do_client(
     }
     if (addrp == NULL)
     {
-        log_msg(LOG_ERR, "could not connect to host \"%s\" port \"%s\"", host,
+        LOG(LOG_ERR, "could not connect to host \"%s\" port \"%s\"", host,
                 port);
         return EXIT_FAILURE;
     }
@@ -642,9 +640,9 @@ static int do_client(
         retval = select(nfds, &rfds, NULL, NULL, NULL);
         if (retval == -1)
         {
-            log_msg(LOG_ERR, "select(): %s", strerror(errno));
+            LOG(LOG_ERR, "select(): %s", strerror(errno));
             if (close(cxn) != 0)
-                log_msg(LOG_ERR, "close(): %s", strerror(errno));
+                LOG(LOG_ERR, "close(): %s", strerror(errno));
             return EXIT_FAILURE;
         }
 
@@ -653,7 +651,7 @@ static int do_client(
             if (!read_pdu(cxn, buffer, &pdu))
             {
                 if (close(cxn) != 0)
-                    log_msg(LOG_ERR, "close(): %s", strerror(errno));
+                    LOG(LOG_ERR, "close(): %s", strerror(errno));
                 return EXIT_SUCCESS;
             }
 
@@ -684,7 +682,7 @@ static int do_client(
 
                 default:
                     if (close(cxn) != 0)
-                        log_msg(LOG_ERR, "close(): %s", strerror(errno));
+                        LOG(LOG_ERR, "close(): %s", strerror(errno));
                     return EXIT_SUCCESS;
                 }
             }
@@ -695,24 +693,24 @@ static int do_client(
             read_len = read(STDIN_FILENO, buffer, MAX_PDU_SIZE);
             if (read_len < 0)
             {
-                log_msg(LOG_ERR, "read(): %s", strerror(errno));
+                LOG(LOG_ERR, "read(): %s", strerror(errno));
             }
             else if (read_len == 0)
             {
                 if (close(STDIN_FILENO) != 0)
-                    log_msg(LOG_ERR, "close(): %s", strerror(errno));
+                    LOG(LOG_ERR, "close(): %s", strerror(errno));
                 stdin_open = false;
             }
             else if (read_len > 0)
             {
                 write_len = write(cxn, buffer, read_len);
                 if (write_len < 0)
-                    log_msg(LOG_ERR, "write(): %s", strerror(errno));
+                    LOG(LOG_ERR, "write(): %s", strerror(errno));
                 if (write_len != read_len)
                 {
-                    log_msg(LOG_ERR, "couldn't send full PDU");
+                    LOG(LOG_ERR, "couldn't send full PDU");
                     if (close(cxn) != 0)
-                        log_msg(LOG_ERR, "close(): %s", strerror(errno));
+                        LOG(LOG_ERR, "close(): %s", strerror(errno));
                     return EXIT_FAILURE;
                 }
             }
@@ -720,7 +718,7 @@ static int do_client(
     }
 
     if (close(cxn) != 0)
-        log_msg(LOG_ERR, "close(): %s", strerror(errno));
+        LOG(LOG_ERR, "close(): %s", strerror(errno));
 
     return EXIT_SUCCESS;
 }
@@ -729,23 +727,7 @@ int main(
     int argc,
     char **argv)
 {
-    OPEN_LOG(PACKAGE_NAME "-rtr-test-client", LOG_USER);
-
-    if (!my_config_load())
-    {
-        LOG(LOG_ERR, "can't load configuration");
-        return EXIT_FAILURE;
-    }
-
-    if (log_init
-        ("rtr-test-client", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("log_init()");
-        config_unload();
-        return EXIT_FAILURE;
-    }
-
-    config_unload();
+    OPEN_LOG("rtr-test-client", LOG_USER);
 
     if (argc < 2)
     {
