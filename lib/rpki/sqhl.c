@@ -55,43 +55,42 @@ void setallowexpired(
 static void initTables(
     scm * scmp)
 {
-    char *msg = "Error finding %s table";
     if (theCertTable == NULL)
     {
         theDirTable = findtablescm(scmp, "DIRECTORY");
         if (theDirTable == NULL)
         {
-            LOG(LOG_ERR, msg, "directory");
+            LOG(LOG_ERR, "Error finding directory table");
             exit(-1);
         }
         theMetaTable = findtablescm(scmp, "METADATA");
         if (theMetaTable == NULL)
         {
-            LOG(LOG_ERR, msg, "metadata");
+            LOG(LOG_ERR, "Error finding metadata table");
             exit(-1);
         }
         theCertTable = findtablescm(scmp, "CERTIFICATE");
         if (theCertTable == NULL)
         {
-            LOG(LOG_ERR, msg, "certificate");
+            LOG(LOG_ERR, "Error finding certificate table");
             exit(-1);
         }
         theCRLTable = findtablescm(scmp, "CRL");
         if (theCRLTable == NULL)
         {
-            LOG(LOG_ERR, msg, "crl");
+            LOG(LOG_ERR, "Error finding crl table");
             exit(-1);
         }
         theROATable = findtablescm(scmp, "ROA");
         if (theROATable == NULL)
         {
-            LOG(LOG_ERR, msg, "roa");
+            LOG(LOG_ERR, "Error finding roa table");
             exit(-1);
         }
         theManifestTable = findtablescm(scmp, "MANIFEST");
         if (theManifestTable == NULL)
         {
-            LOG(LOG_ERR, msg, "manifest");
+            LOG(LOG_ERR, "Error finding manifest table");
             exit(-1);
         }
         theSCMP = scmp;
