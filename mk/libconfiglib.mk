@@ -11,6 +11,8 @@ lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/config_load.h \
 	lib/configlib/types/bool.c \
 	lib/configlib/types/bool.h \
+	lib/configlib/types/enum.c \
+	lib/configlib/types/enum.h \
 	lib/configlib/types/path.c \
 	lib/configlib/types/path.h \
 	lib/configlib/types/sscanf.c \
