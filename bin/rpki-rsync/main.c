@@ -153,7 +153,7 @@ int main(
         my_argc = argc;
     }
 
-    while ((ch = getopt(my_argc, my_argv, "tuf:d:l:nweish")) != -1)
+    while ((ch = getopt(my_argc, my_argv, "tuf:d:nweish")) != -1)
     {
         switch (ch)
         {
