@@ -133,7 +133,14 @@ public class CA_Object extends Allocator {
       } else {
         String siaPath = getServerName() + "/" + nickName + "/";
         String dirPath = REPO_PATH + getServerName() + "/";
-        this.certificate = new SS_cert(parent, getTtl(), siaPath, nickName, dirPath,
+        this.certificate = new SS_cert(parent,
+                                       getTtl(),
+                                       siaPath,
+                                       nickName,
+                                       dirPath,
+                                       this.asResources,
+                                       this.ipv4Resources,
+                                       this.ipv6Resources,
                                        subjKeyFile);
       }
       setModified(false);

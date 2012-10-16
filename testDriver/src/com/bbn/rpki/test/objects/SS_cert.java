@@ -19,15 +19,15 @@ public class SS_cert extends Certificate {
    * @param dirPath
    * @param subjKeyFile
    */
-  public SS_cert(CA_Object parent, int ttl, String siaPath, String nickname, String dirPath, String subjKeyFile) {
+  public SS_cert(CA_Object parent, int ttl, String siaPath, String nickname, String dirPath, IPRangeList asList, IPRangeList ipv4List, IPRangeList ipv6List, String subjKeyFile) {
     super(parent,
           ttl,
           dirPath,
           nickname,
           siaPath,
-          new IPRangeList(IPRangeType.as),
-          new IPRangeList(IPRangeType.ipv4),
-          new IPRangeList(IPRangeType.ipv6),
+          asList,
+          ipv4List,
+          ipv6List,
           subjKeyFile,
           "CERTIFICATE",
         "selfsigned=True");
