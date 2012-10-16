@@ -22,6 +22,7 @@ public abstract class AbstractAction implements XMLConstants {
 
   enum ActionType {
     allocate,
+    allocateROA,
     chooseCacheCheckTask
   }
 
@@ -48,6 +49,12 @@ public abstract class AbstractAction implements XMLConstants {
 
   static List<Element> getChildren(Element element, String tag) {
     return element.getChildren(tag);
+  }
+
+  protected final Model model;
+
+  protected AbstractAction(Model model) {
+    this.model = model;
   }
 
   protected Element createElement(ActionType actionType) {
@@ -97,4 +104,10 @@ public abstract class AbstractAction implements XMLConstants {
    * @return
    */
   public abstract String getId();
+
+  /**
+   * @param epochEvent
+   * @return
+   */
+  public abstract void addExecutionTime(EpochEvent epochEvent, ExecutionTimeContext etContext);
 }

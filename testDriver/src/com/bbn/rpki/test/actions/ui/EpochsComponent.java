@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -24,8 +25,8 @@ import com.bbn.rpki.test.actions.ui.ActionDetail.EpochCallback;
 import com.bbn.rpki.test.tasks.Model;
 
 class EpochsComponent extends JPanel {
-  final DefaultListModel listModel = new DefaultListModel();
-  final JList list = new JList(listModel);
+  final DefaultListModel<EpochEvent> listModel = new DefaultListModel<EpochEvent>();
+  final JList<EpochEvent> list = new JList<EpochEvent>(listModel);
   final JButton removeButton = new JButton("Remove");
   final JButton addButton = new JButton("Add...");
   private final Collection<EpochEvent> currentSelection;
@@ -53,11 +54,10 @@ class EpochsComponent extends JPanel {
 
       @Override
       public void actionPerformed(ActionEvent e) {
-        for (Object o : list.getSelectedValues()) {
-          EpochEvent epochToRemove = (EpochEvent) o;
-          cb.remove(epochToRemove);
-          listModel.removeElement(epochToRemove);
-          currentSelection.remove(epochToRemove);
+        for (EpochEvent epochEventToRemove : list.getSelectedValuesList()) {
+          cb.remove(epochEventToRemove);
+          listModel.removeElement(epochEventToRemove);
+          currentSelection.remove(epochEventToRemove);
           EpochsComponent.this.model.epochsChanged();
           if (currentSelection.isEmpty()) {
             markEmptyList(title);
@@ -85,10 +85,9 @@ class EpochsComponent extends JPanel {
           // Not a real selection -- ignore
           return;
         }
-        Object[] selection = list.getSelectedValues();
-        boolean canRemove = selection.length > 0;
-        for (Object selectedObject : selection) {
-          EpochEvent selectedEpoch = (EpochEvent) selectedObject;
+        List<EpochEvent> selection = list.getSelectedValuesList();
+        boolean canRemove = selection.size() > 0;
+        for (EpochEvent selectedEpoch : selection) {
           if (!cb.canRemove(selectedEpoch)) {
             canRemove = false;
             break;
@@ -114,31 +113,25 @@ class EpochsComponent extends JPanel {
    * @param title
    */
   public void markEmptyList(String title) {
-    listModel.addElement("<No " + title + ">");
+    listModel.addElement(new EpochEvent(null, "<No " + title + ">"));
   }
 
   void addEpoch() {
     EpochEvent[] epochArray = new EpochEvent[availableEpochs.size()];
     epochArray = availableEpochs.toArray(epochArray);
-    JComboBox msg = new JComboBox(epochArray);
+    JComboBox<EpochEvent> msg = new JComboBox<EpochEvent>(epochArray);
     int option = JOptionPane.showConfirmDialog(this, msg, "Select Epoch", JOptionPane.OK_CANCEL_OPTION);
     if (option == JOptionPane.OK_OPTION) {
       if (currentSelection.isEmpty()) {
         listModel.removeAllElements();
       }
-      Object[] selectedObjects = msg.getSelectedObjects();
-      boolean changed = false;
-      for (Object object : selectedObjects) {
-        cb.add((EpochEvent) object);
-        currentSelection.add((EpochEvent) object);
-        listModel.addElement(object);
-        changed = true;
-      }
-      if (changed) {
-        // Notify the main model that this epoch has different constraints
-        // The ActionTree will be notified in turn.
-        model.epochsChanged();
-      }
+      EpochEvent selectedEpochEvent = epochArray[msg.getSelectedIndex()];
+      cb.add(selectedEpochEvent);
+      currentSelection.add(selectedEpochEvent);
+      listModel.addElement(selectedEpochEvent);
+      // Notify the main model that this epoch has different constraints
+      // The ActionTree will be notified in turn.
+      model.epochsChanged();
     }
   }
 }

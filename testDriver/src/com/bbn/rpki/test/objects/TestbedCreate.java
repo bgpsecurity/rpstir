@@ -71,7 +71,7 @@ public class TestbedCreate implements Constants {
     ianaFactory.ipv4List.add(Range.createPrefix("0", 0, IPRangeType.ipv4));
     ianaFactory.ipv6List.add(Range.createPrefix("0", 0, IPRangeType.ipv6));
     ianaFactory.asList.add(Range.createRange("0", "0xffffffff", IPRangeType.as));
-    iana = new CA_Object(ianaFactory, null, 0, null);
+    iana = new CA_Object(ianaFactory, null, 0, ianaFactory.subjKeyFile);
   }
 
   /**
@@ -138,9 +138,9 @@ public class TestbedCreate implements Constants {
                                       null,
                                       null,
                                       false,
-                                      ca_node.myFactory.ttl,
+                                      ca_node.getTtl(),
                                       null);
-      Manifest new_manifest = new Manifest(ca_node, eeFactory);
+      Manifest new_manifest = new Manifest(ca_node);
       ca_node.manifests.add(new_manifest);
       repo_size += 1;
     }

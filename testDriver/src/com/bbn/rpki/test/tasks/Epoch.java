@@ -16,6 +16,7 @@ import com.bbn.rpki.test.actions.EpochEvent;
 public class Epoch {
   private final List<EpochEvent> epochEvents = new ArrayList<EpochEvent>();
   private Integer epochIndex;
+  private long executionTime;
 
   void addEpochEvent(EpochEvent epochEvent) {
     Epoch formerEpoch = epochEvent.getEpoch();
@@ -90,5 +91,28 @@ public class Epoch {
         addEpochEvent(epochEvent);
       }
     }
+  }
+
+  public long getEpochExecutionTime() {
+    long sum = 0;
+    for (EpochEvent epochEvent : epochEvents) {
+      sum += epochEvent.getEpoch().getExecutionTime();
+    }
+    return sum;
+  }
+
+  /**
+   * @return
+   */
+  private long getExecutionTime() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+  /**
+   * @param executionTime the executionTime to set
+   */
+  public void setExecutionTime(long executionTime) {
+    this.executionTime = executionTime;
   }
 }

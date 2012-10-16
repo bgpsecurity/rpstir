@@ -55,7 +55,7 @@ public class Crl extends CA_Obj {
     // Not sure on this nextUpdate time frame
     this.nextupdate      = Calendar.getInstance();
     this.nextupdate.setTimeInMillis(this.thisupdate.getTimeInMillis());
-    this.nextupdate.add(Calendar.DATE, parent.myFactory.ttl);
+    this.nextupdate.add(Calendar.DATE, parent.getTtl());
     this.crlnum          = parent.getNextChildSN();
     this.revokedcertlist = new ArrayList<RevokedCert>();
     this.aki             = parent.certificate.ski;

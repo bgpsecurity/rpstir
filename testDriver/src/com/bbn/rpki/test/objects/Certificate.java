@@ -58,8 +58,16 @@ public class Certificate extends CA_Obj {
   /** ipv6 */
   public IPRangeList ipv6;
 
-  Certificate(CA_Object parent, FactoryBase myFactory, String siaPath, String nickname, IPRangeList ipv4,
-              IPRangeList ipv6, IPRangeList asList, String subjKeyFile, String...xargs) {
+  Certificate(CA_Object parent,
+              final int ttl,
+              final String dirPath,
+              final String nickname,
+              final String siaPath,
+              IPRangeList asList,
+              IPRangeList ipv4,
+              IPRangeList ipv6,
+              String subjKeyFile,
+              String...xargs) {
     super(xargs);
     this.serial = parent == null ? 0 : parent.getNextChildSN();
 
@@ -67,13 +75,13 @@ public class Certificate extends CA_Obj {
     this.notBefore = Calendar.getInstance();
     this.notAfter = Calendar.getInstance();
     notAfter.setTimeInMillis(notBefore.getTimeInMillis());
-    this.notAfter.add(Calendar.DATE, myFactory.ttl);
+    this.notAfter.add(Calendar.DATE, ttl);
 
     // Set our subject key file name and generate the key
     // Also create the directory it if it doesn't exist
-    String dirPath = KEYS_PATH + siaPath;
-    new File(dirPath).mkdirs();
-    this.subjkeyfile = dirPath + nickname + ".p15";
+    String keyDirPath = KEYS_PATH + siaPath;
+    new File(keyDirPath).mkdirs();
+    this.subjkeyfile = keyDirPath + nickname + ".p15";
 
     // Subject key pair is either (in order of priority)...
     // 1) pre-specified for this certificate
@@ -84,12 +92,6 @@ public class Certificate extends CA_Obj {
       if (DEBUG_ON) {
         System.out.println("Copying pre-specified key file: " + subjKeyFile +
                            " to " + this.subjkeyfile);
-      }
-    } else if (myFactory.subjKeyFile != null) {
-      Util.copyfile(myFactory.subjKeyFile, this.subjkeyfile);
-      if (DEBUG_ON) {
-        System.out.println("Copying factory pre-specified key file: " +
-                           myFactory.subjKeyFile + " to " + this.subjkeyfile);
       }
     } else {
       String pregeneratedKeyFileName = PregeneratedKeys.getPregeneratedKey();
@@ -115,15 +117,6 @@ public class Certificate extends CA_Obj {
       System.out.println(this.ski);
     }
 
-    // Set the name we will write to file depending on if
-    // this is a CA_cert, EE_cert, SS_cert. Also check if it exists
-    if (this instanceof CA_cert) {
-      dirPath  = REPO_PATH + parent.SIA_path;
-    } else if (this instanceof EE_cert) {
-      dirPath = REPO_PATH + "EE/" + parent.SIA_path;
-    } else if (this instanceof SS_cert) {
-      dirPath = REPO_PATH + myFactory.serverName + "/";
-    }
     // Create the output file directory if it doesn't exist
     this.outputfilename = dirPath + Util.b64encode_wrapper(this.ski) + ".cer";
     if (DEBUG_ON) {
@@ -139,18 +132,15 @@ public class Certificate extends CA_Obj {
       this.subject = parent.commonName + "." + nickname;
       this.parentkeyfile = parent.certificate.subjkeyfile;
       this.aki = parent.certificate.ski;
-      this.ipv4 = new IPRangeList(ipv4);
-      this.ipv6 = new IPRangeList(ipv6);
-      this.as_list = new IPRangeList(asList);
     } else {
       this.issuer = nickname;
       this.subject = nickname;
       this.parentkeyfile = this.subjkeyfile;
       this.aki = this.ski;
-      this.ipv4 = myFactory.getIPV4RangeList();
-      this.ipv6 = myFactory.getIPV6RangeList();
-      this.as_list = myFactory.getASRangeList();
     }
+    this.ipv4 = new IPRangeList(ipv4);
+    this.ipv6 = new IPRangeList(ipv6);
+    this.as_list = new IPRangeList(asList);
   }
 
   /**

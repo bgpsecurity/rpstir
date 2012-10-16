@@ -37,7 +37,7 @@ public class CA_Object extends Allocator {
   /** The location (path to) the certificate */
   public String path_CA_cert;
   /** My factory */
-  public FactoryBase myFactory;
+  //  public FactoryBase myFactory;
 
   private int nextChildSN;
   final String bluePrintName;
@@ -58,6 +58,9 @@ public class CA_Object extends Allocator {
   private final String nickName;
   private final String subjKeyFile;
   private int manNum = 0;
+  private final int ttl;
+  private final String serverName;
+  private final boolean breakAway;
   /**
    * @param factoryBase
    * @param parent
@@ -66,11 +69,14 @@ public class CA_Object extends Allocator {
    */
   public CA_Object(FactoryBase factoryBase, CA_Object parent, int id, String subjKeyFile) {
     this.nextChildSN = 0;
+    this.ttl = factoryBase.ttl;
     this.bluePrintName = factoryBase.bluePrintName;
-    this.myFactory = factoryBase;
+    this.nickName = bluePrintName + "-" + id;
     this.parent = parent;
     this.subjKeyFile = subjKeyFile;
     this.id = id;
+    this.serverName = factoryBase.serverName;
+    this.breakAway = factoryBase.breakAway;
 
     if (parent != null) {
       Factory myFactory = (Factory) factoryBase;
@@ -98,7 +104,6 @@ public class CA_Object extends Allocator {
     this.SIA_path = sia_list[0].substring(0, sia_list[0].length());
     //    this.manifest_path = Util.removePrefix(sia_list[1], RSYNC_EXTENSION);
     this.path_CA_cert = certificate.outputfilename;
-    this.nickName= this.myFactory.bluePrintName + "-" + this.id;
     if (parent != null) {
       this.commonName = parent.commonName + "." + this.nickName;
     } else {
@@ -114,15 +119,21 @@ public class CA_Object extends Allocator {
     if (this.certificate == null || modified) {
       // Initialize our certificate
       if (parent != null) {
+        String sia_path = breakAway ? (getServerName() + "/" + nickName + "/") : (parent.SIA_path + nickName + "/");
+        String dirPath = REPO_PATH + parent.SIA_path;
         this.certificate = new CA_cert(parent,
-                                       id,
-                                       myFactory,
+                                       getTtl(),
+                                       dirPath,
+                                       nickName,
+                                       sia_path,
+                                       this.asResources,
                                        this.ipv4Resources,
                                        this.ipv6Resources,
-                                       this.asResources,
                                        this.subjKeyFile);
       } else {
-        this.certificate = new SS_cert(parent, myFactory,
+        String siaPath = getServerName() + "/" + nickName + "/";
+        String dirPath = REPO_PATH + getServerName() + "/";
+        this.certificate = new SS_cert(parent, getTtl(), siaPath, nickName, dirPath,
                                        subjKeyFile);
       }
       setModified(false);
@@ -312,5 +323,19 @@ public class CA_Object extends Allocator {
    */
   public String getCommonName() {
     return commonName;
+  }
+
+  /**
+   * @return the ttl
+   */
+  public int getTtl() {
+    return ttl;
+  }
+
+  /**
+   * @return the serverName
+   */
+  public String getServerName() {
+    return serverName;
   }
 }

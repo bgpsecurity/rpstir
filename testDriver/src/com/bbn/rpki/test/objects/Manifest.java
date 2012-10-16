@@ -23,12 +23,10 @@ public class Manifest extends CMS {
   public final Calendar nextupdate;
 
   private final CA_Object parent;
-
-  private final Factory myFactory;
-
   private EE_cert eeCert;
-
   private final int manNum;
+  private final int ttl;
+  private final String bluePrintName;
 
   /**
    * Construct a new manifest
@@ -36,15 +34,16 @@ public class Manifest extends CMS {
    * @param parent
    * @param myFactory
    */
-  public Manifest(CA_Object parent, Factory myFactory) {
+  public Manifest(CA_Object parent) {
     super("MANIFEST");
     this.parent = parent;
-    this.myFactory = myFactory;
+    this.ttl = parent.getTtl();
+    this.bluePrintName = parent.bluePrintName;
     this.thisupdate = Calendar.getInstance();
     // Not sure on this nextUpdate time frame
     this.nextupdate = Calendar.getInstance();
     this.nextupdate.setTimeInMillis(this.thisupdate.getTimeInMillis());
-    this.nextupdate.add(Calendar.DATE, parent.myFactory.ttl);
+    this.nextupdate.add(Calendar.DATE, ttl);
     this.manNum = parent.getNextManifestNumber();
     // Chop off our rsync:// portion and append the repo path
     this.outputfilename = REPO_PATH + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".mft";
@@ -77,7 +76,13 @@ public class Manifest extends CMS {
   protected EE_cert getEECert() {
     if (eeCert == null) {
       // Create single-use EE certificate
-      eeCert = new EE_cert(parent, manNum, myFactory, IPRangeList.IPV4_EMPTY, IPRangeList.IPV6_EMPTY, IPRangeList.AS_EMPTY);
+      eeCert = new EE_cert(parent,
+                           ttl,
+                           bluePrintName + "-" + manNum,
+                           parent.SIA_path + "EE-" + manNum + "/",
+                           IPRangeList.IPV4_EMPTY,
+                           IPRangeList.IPV6_EMPTY,
+                           IPRangeList.AS_EMPTY);
     }
     return eeCert;
   }

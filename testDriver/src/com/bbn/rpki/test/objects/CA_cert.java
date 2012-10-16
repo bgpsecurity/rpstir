@@ -16,13 +16,7 @@ public class CA_cert extends Certificate {
     String sia_path;
 
     S(FactoryBase myFactory, CA_Object parent, int childId) {
-      nickname = myFactory.bluePrintName + "-" + childId;
 
-      if (myFactory.breakAway) {
-        sia_path = myFactory.serverName + "/" + nickname + "/";
-      } else {
-        sia_path = parent.SIA_path + nickname + "/";
-      }
     }
   }
 
@@ -34,35 +28,37 @@ public class CA_cert extends Certificate {
 
   /**
    * @param parent
+   * @param asList
+   * @param ipv4
+   * @param ipv6
+   * @param subjKeyFile
    * @param myFactory
    * @param siaPath
    * @param serial
-   * @param ipv4
-   * @param ipv6
-   * @param asList
-   * @param subjKeyFile
    */
-  CA_cert(CA_Object parent, int childId, FactoryBase myFactory, IPRangeList ipv4,
-          IPRangeList ipv6, IPRangeList asList, String subjKeyFile) {
-    this(parent, myFactory, new S(myFactory, parent, childId), ipv4, ipv6, asList, subjKeyFile);
-  }
-
-  private CA_cert(CA_Object parent, FactoryBase myFactory, S s, IPRangeList ipv4,
-                  IPRangeList ipv6, IPRangeList asList, String subjKeyFile) {
+  CA_cert(CA_Object parent,
+          int ttl,
+          String dirPath,
+          String nickname,
+          String sia_path,
+          IPRangeList asList,
+          IPRangeList ipv4,
+          IPRangeList ipv6,
+          String subjKeyFile) {
     super(parent,
-          myFactory,
-          s.sia_path, 
-          s.nickname,
+          ttl,
+          dirPath,
+          nickname,
+          sia_path,
+          asList,
           ipv4,
           ipv6,
-          asList,
           subjKeyFile,
           "CERTIFICATE",
-          "selfsigned=False");
+        "selfsigned=False");
     this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".crl";
     this.aia   = "rsync://" + Util.removePrefix(parent.path_CA_cert, REPO_PATH);
-    this.sia   = "r:rsync://" + s.sia_path + ",m:rsync://" + s.sia_path + Util.b64encode_wrapper(this.ski) + ".mft";
-
+    this.sia   = "r:rsync://" + sia_path + ",m:rsync://" + sia_path + Util.b64encode_wrapper(this.ski) + ".mft";
   }
 
   /**

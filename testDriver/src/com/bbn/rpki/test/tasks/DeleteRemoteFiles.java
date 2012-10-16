@@ -40,7 +40,7 @@ public abstract class DeleteRemoteFiles extends TaskFactory {
                                serverName,
                                "cd",
                                remotePath,
-      "rm"));
+          "rm"));
       for (File file : supercededFiles) {
         String name = file.getName();
         cmd.add(name);

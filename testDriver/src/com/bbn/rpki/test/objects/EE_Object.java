@@ -14,19 +14,19 @@ import java.util.List;
  */
 public class EE_Object extends Allocator {
   final String bluePrintName;
-  final Factory myFactory;
   final CA_Object parent;
   final List<EE_Object> children;
   final String SIA_path;
   final int id;
   final String path_ROA;
   EE_cert certificate;
+  private final int ttl;
 
-  EE_Object(Factory myFactory,CA_Object parent) {
+  EE_Object(int ttl, Factory myFactory,CA_Object parent) {
 
     this.bluePrintName = myFactory.bluePrintName;
-    this.myFactory = myFactory;
     this.parent = parent;
+    this.ttl = ttl;
 
     // List initialization
     this.children = new ArrayList<EE_Object>();
@@ -53,8 +53,9 @@ public class EE_Object extends Allocator {
   public EE_cert getCertificate() {
     if (this.certificate == null || isModified()) {
       this.certificate = new EE_cert(parent,
-                                     id,
-                                     myFactory,
+                                     ttl,
+                                     bluePrintName + "-" + id,
+                                     parent.SIA_path + "EE-" + id + "/",
                                      this.ipv4Resources,
                                      this.ipv6Resources,
                                      this.asResources);

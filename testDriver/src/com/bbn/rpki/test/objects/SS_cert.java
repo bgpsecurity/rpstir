@@ -10,37 +10,27 @@ package com.bbn.rpki.test.objects;
  * @author RTomlinson
  */
 public class SS_cert extends Certificate {
-  private static class S {
-
-    String siaPath;
-    String nickname;
-
-    S(Allocator parent, FactoryBase myFactory) {
-      nickname = myFactory.bluePrintName + "-0";
-      siaPath = myFactory.serverName + "/" + nickname + "/";
-    }
-  }
 
   /**
    * @param parent
-   * @param myFactory
+   * @param ttl
+   * @param siaPath
+   * @param nickname
+   * @param dirPath
    * @param subjKeyFile
    */
-  public SS_cert(CA_Object parent, FactoryBase myFactory, String subjKeyFile) {
-    this(parent, myFactory, new S(parent, myFactory), subjKeyFile);
-  }
-
-  private SS_cert(CA_Object parent, FactoryBase myFactory, S s, String subjKeyFile) {
+  public SS_cert(CA_Object parent, int ttl, String siaPath, String nickname, String dirPath, String subjKeyFile) {
     super(parent,
-          myFactory,
-          s.siaPath,
-          s.nickname,
+          ttl,
+          dirPath,
+          nickname,
+          siaPath,
+          new IPRangeList(IPRangeType.as),
           new IPRangeList(IPRangeType.ipv4),
           new IPRangeList(IPRangeType.ipv6),
-          new IPRangeList(IPRangeType.as),
           subjKeyFile,
           "CERTIFICATE",
-    "selfsigned=True");
-    this.sia = "r:rsync://" + s.siaPath + ",m:rsync://" + s.siaPath + Util.b64encode_wrapper(this.ski) + ".mft";
+        "selfsigned=True");
+    this.sia = "r:rsync://" + siaPath + ",m:rsync://" + siaPath + Util.b64encode_wrapper(this.ski) + ".mft";
   }
 }

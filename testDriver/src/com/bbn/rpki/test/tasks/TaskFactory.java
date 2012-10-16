@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.bbn.rpki.test.actions.ExecutionTimeContext;
+
 
 /**
  * The interface for all tasks.
@@ -73,6 +75,8 @@ public abstract class TaskFactory {
      * Runs the task
      */
     public abstract void run();
+
+    public final long getExecutionTime(ExecutionTimeContext etContext) {return 0;}
 
     /**
      * @param breakdownName

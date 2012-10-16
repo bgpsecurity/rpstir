@@ -159,6 +159,13 @@ public class Model implements Constants, XMLConstants {
   private final List<File> repositoryRoots = new ArrayList<File>();
   private final List<File> previousRepositoryRoots = new ArrayList<File>();
   private final TestbedConfig testbedConfig;
+  /**
+   * @return the testbedConfig
+   */
+  public TestbedConfig getTestbedConfig() {
+    return testbedConfig;
+  }
+
   private final TypescriptLogger logger;
   protected Deque<TaskFactory.Task> tasks = new ArrayDeque<TaskFactory.Task>();
   private final Map<String, TaskFactory.Task> taskMap = new HashMap<String, TaskFactory.Task>();
@@ -361,10 +368,11 @@ public class Model implements Constants, XMLConstants {
   public Collection<String> getAllServerNames() {
     Set<String> ret = new HashSet<String>();
     for (FactoryBase factory : testbedConfig.getFactories().values()) {
-      if (factory.isBreakAway() || factory == iana.myFactory) {
+      if (factory.isBreakAway()) {
         ret.add(factory.getServerName());
       }
     }
+    ret.add(iana.getServerName());
     return ret;
   }
 

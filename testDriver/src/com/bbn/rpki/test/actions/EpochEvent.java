@@ -50,16 +50,16 @@ public final class EpochEvent implements XMLConstants {
   };
 
   private final AbstractAction action;
-  private final String description;
+  private final String name;
   private Epoch epoch = null;
 
   /**
    * @param action
-   * @param description
+   * @param name
    */
-  public EpochEvent(AbstractAction action, String description) {
+  public EpochEvent(AbstractAction action, String name) {
     this.action = action;
-    this.description = description;
+    this.name = name;
   }
 
   private class LockableSet extends AbstractSet<EpochEvent> {
@@ -154,8 +154,8 @@ public final class EpochEvent implements XMLConstants {
   /**
    * @return a description suitable for a combo box
    */
-  public String getDescription() {
-    return description;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -163,7 +163,7 @@ public final class EpochEvent implements XMLConstants {
    */
   @Override
   public String toString() {
-    return getDescription() + action.getId();
+    return getName() + (action == null ? "" : action.getId());
   }
 
   /**
@@ -435,7 +435,7 @@ public final class EpochEvent implements XMLConstants {
    */
   public EpochEvent(AbstractAction action, String description, Element element, ActionContext actionContext) {
     this.action = action;
-    this.description = description;
+    this.name = description;
     String id = element.getAttributeValue(ATTR_ID);
     actionContext.registerEpochEvent(this, id);
     OthersAccessor othersAccessor;

@@ -20,6 +20,7 @@ import javax.swing.tree.TreePath;
 
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.AllocateAction;
+import com.bbn.rpki.test.actions.AllocateROAAction;
 import com.bbn.rpki.test.actions.ChooseCacheCheckTask;
 import com.bbn.rpki.test.actions.EpochEvent;
 import com.bbn.rpki.test.actions.ui.ActionTree.SelectionListener;
@@ -50,6 +51,7 @@ public class ActionsEditor implements SelectionListener {
     public void actionPerformed(ActionEvent e) {
       Class<?>[] classes = {
           AllocateAction.class,
+          AllocateROAAction.class,
           ChooseCacheCheckTask.class
       };
       String[] names = new String[classes.length];

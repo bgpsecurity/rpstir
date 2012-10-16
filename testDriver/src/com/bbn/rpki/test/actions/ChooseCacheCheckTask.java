@@ -73,7 +73,6 @@ public class ChooseCacheCheckTask extends AbstractAction {
   }
 
   private TaskPath path;
-  private final Model model;
   private String id;
   private final EpochEvent epoch;
 
@@ -82,7 +81,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
    * @param path
    */
   public ChooseCacheCheckTask(Model model, String path) {
-    this.model = model;
+    super(model);
     this.path = new TaskPath(path);
     this.id = nextId();
     epoch = new EpochEvent(this, "Cache Check ");
@@ -101,7 +100,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
    * @param actionContext
    */
   public ChooseCacheCheckTask(Element element, Model model, ActionContext actionContext) {
-    this.model = model;
+    super(model);
     this.path = new TaskPath(element.getAttributeValue(ATTR_PATH));
     this.id = nextId();
     Element epochElement = element.getChild(TAG_EPOCH);
@@ -142,6 +141,30 @@ public class ChooseCacheCheckTask extends AbstractAction {
         TaskFactory.Task nTask = breakdown.getTask(path[i]);
         assert nTask != null;
         task = nTask;
+      } else {
+        breakdown = task.selectTaskBreakdown(path[i]);
+        assert breakdown != null;
+      }
+    }
+    task.setTestEnabled(true);
+  }
+
+  /**
+   * This action causes the upload task to be broken down into individual upload tasks. This effects
+   * the upload time, but not the computation time
+   * @see com.bbn.rpki.test.actions.AbstractAction#addExecutionTime(com.bbn.rpki.test.actions.EpochEvent, com.bbn.rpki.test.actions.ExecutionTimeContext)
+   */
+  @Override
+  public void addExecutionTime(EpochEvent epochEvent, ExecutionTimeContext etContext) {
+    // Walk down the tree to check each of the tasks that will be executed
+    String[] path = this.path.getPath();
+    TaskFactory.Task task = model.getTask(path[0]);
+    TaskBreakdown breakdown = null;
+    for (int i = 1; i < path.length; i++) {
+      if (i % 2 == 0) {
+        for (TaskFactory.Task subtask : breakdown.getTasks()) {
+          etContext.addTask(subtask);
+        }
       } else {
         breakdown = task.selectTaskBreakdown(path[i]);
         assert breakdown != null;
@@ -193,8 +216,11 @@ public class ChooseCacheCheckTask extends AbstractAction {
   @Override
   public String toString() {
     String[] pathArray = path.getPath();
+    if (pathArray.length == 0) {
+      return "Check Cache After Some Task";
+    }
     String lastTask = pathArray[pathArray.length - 1];
-    return String.format("Check Cache after %s", lastTask);
+    return String.format("Check Cache After %s", lastTask);
   }
 
   /**
