@@ -92,7 +92,7 @@ int main(
 
     memset((char *)&wport, '\0', sizeof(struct write_port));
 
-    OPEN_LOG(PACKAGE_NAME "-rsync_aur", LOG_DAEMON);
+    OPEN_LOG("rsync_aur", LOG_DAEMON);
 
     if (!my_config_load())
     {

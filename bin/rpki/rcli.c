@@ -960,7 +960,7 @@ int main(
         perror("Could not initialize rcli log file");
         exit(1);
     }
-    OPEN_LOG(PACKAGE_NAME "-rcli", LOG_USER);
+    OPEN_LOG("rcli", LOG_USER);
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't load configuration");

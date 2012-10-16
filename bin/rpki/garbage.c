@@ -208,7 +208,7 @@ int main(
         exit(1);
     }
     (void)setbuf(stdout, NULL);
-    OPEN_LOG(PACKAGE_NAME "-garbage", LOG_USER);
+    OPEN_LOG("garbage", LOG_USER);
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't load configuration");

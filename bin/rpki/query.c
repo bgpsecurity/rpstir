@@ -604,7 +604,7 @@ int main(
         perror("Could not initialize query client log file");
         exit(1);
     }
-    OPEN_LOG(PACKAGE_NAME "-query", LOG_USER);
+    OPEN_LOG("query", LOG_USER);
     if (!my_config_load())
     {
         LOG(LOG_ERR, "can't initialize configuration");

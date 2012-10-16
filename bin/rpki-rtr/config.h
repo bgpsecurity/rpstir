@@ -3,7 +3,7 @@
 
 #include <syslog.h>
 
-#define RTR_LOG_IDENT PACKAGE_NAME "-rtrd"
+#define RTR_LOG_IDENT "rpki-rtr-daemon"
 #define RTR_LOG_FACILITY LOG_DAEMON
 
 #define LISTEN_PORT "1234"

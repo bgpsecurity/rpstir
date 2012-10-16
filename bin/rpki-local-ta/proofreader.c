@@ -116,7 +116,7 @@ int main(
         exit(1);
     }
 
-    OPEN_LOG(PACKAGE_NAME "-proofreader", LOG_USER);
+    OPEN_LOG("proofreader", LOG_USER);
 
     if (!my_config_load())
     {
