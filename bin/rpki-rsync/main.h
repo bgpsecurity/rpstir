@@ -24,7 +24,7 @@
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/certificate.h"
 #include "rpki/err.h"
-#include "util/logutils.h"
+#include "util/logging.h"
 #include "util/stringutils.h"
 
 #define INFO_FLAG 0x1

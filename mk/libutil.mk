@@ -16,8 +16,6 @@ lib_util_libutil_a_SOURCES = \
 	lib/util/inet.h \
 	lib/util/logging.c \
 	lib/util/logging.h \
-	lib/util/logutils.c \
-	lib/util/logutils.h \
 	lib/util/macros.h \
 	lib/util/path_compat.c \
 	lib/util/path_compat.h \

@@ -12,7 +12,6 @@
 #include "rpki/sqhl.h"
 #include "rpki/querySupport.h"
 #include "config/config.h"
-#include "util/logutils.h"
 #include "util/logging.h"
 
 
@@ -159,12 +158,12 @@ static int handleResults(
                     filename = "";
             }
             else
-                log_msg(LOG_WARNING, "unexpected field %s in RPSL query",
+                LOG(LOG_WARNING, "unexpected field %s in RPSL query",
                         field->name);
         }
         if (asn == 0 || ip_addrs == 0)
         {
-            log_msg(LOG_ERR, "incomplete result returned in RPSL query: %s",
+            LOG(LOG_ERR, "incomplete result returned in RPSL query: %s",
                     (asn == 0) ? "no asn" : "no ip_addrs");
         }
         else
@@ -599,11 +598,6 @@ int main(
     int numDisplays = 0;
     int numClauses = 0;
 
-    if (log_init("query.log", "query", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Could not initialize query client log file");
-        exit(1);
-    }
     OPEN_LOG("query", LOG_USER);
     if (!my_config_load())
     {
@@ -688,9 +682,8 @@ int main(
     displays[numDisplays++] = NULL;
     clauses[numClauses++] = NULL;
     if ((status = doQuery(displays, clauses, orderp)) < 0)
-        log_msg(LOG_ERR, "%s", err2string(status));
+        LOG(LOG_ERR, "%s", err2string(status));
     config_unload();
     CLOSE_LOG();
-    log_close();
     return status;
 }

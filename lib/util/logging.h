@@ -1,8 +1,6 @@
 #ifndef _UTILS_LOGGING_H
 #define _UTILS_LOGGING_H
 
-// NOTE: see logutils.h for older (non-syslog) logging system
-
 #include <syslog.h>
 #include <stdbool.h>
 #include <string.h>
@@ -17,6 +15,14 @@
 #define CLOSE_LOG() \
     do { \
         closelog(); \
+    } while (false)
+
+/**
+    Currently a no-op because syslog() doesn't need flushing, but could be used
+    later if we switch away from syslog.
+*/
+#define FLUSH_LOG() \
+    do { \
     } while (false)
 
 /** Don't read or write this directly, use SET_LOG_LEVEL() below. */

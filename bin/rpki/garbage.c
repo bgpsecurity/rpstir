@@ -10,7 +10,6 @@
 #include "rpki/sqhl.h"
 #include "rpki/err.h"
 #include "config/config.h"
-#include "util/logutils.h"
 #include "util/logging.h"
 
 /*
@@ -202,11 +201,6 @@ int main(
     // initialize
     argc = argc;
     argv = argv;                // silence compiler warnings
-    if (log_init("garbage.log", "garbage", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Could not initialize garbage collector's logfile");
-        exit(1);
-    }
     (void)setbuf(stdout, NULL);
     OPEN_LOG("garbage", LOG_USER);
     if (!my_config_load())
@@ -322,6 +316,5 @@ int main(
 
     config_unload();
     CLOSE_LOG();
-    log_close();
     return 0;
 }

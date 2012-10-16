@@ -3,7 +3,6 @@
 #include "rpki/rpwork.h"
 #include "config/config.h"
 #include "util/logging.h"
-#include "util/logutils.h"
 
 char *msgs[] = {
     "Finished %s OK\n",
@@ -25,7 +24,7 @@ static void warn(
     int err,
     char *paramp)
 {
-    log_msg(LOG_WARNING, msgs[err], paramp);
+    LOG(LOG_WARNING, msgs[err], paramp);
     if (err)
         warnings++;
 }
@@ -37,7 +36,7 @@ static void fatal(
     warn(err, paramp);
     if (err)
         warn(8, "");
-    log_close();
+    CLOSE_LOG();
     exit(0);
 }
 
@@ -109,12 +108,6 @@ int main(
     int ansr,
         i = 0;
     struct keyring keyring = { NULL, NULL, NULL };
-
-    if (log_init("proofreader.log", "proofreader", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Failed to initialize proofreader log file");
-        exit(1);
-    }
 
     OPEN_LOG("proofreader", LOG_USER);
 
@@ -194,6 +187,5 @@ int main(
     fatal(0, argv[1]);
     config_unload();
     CLOSE_LOG();
-    log_close();
     return 0;
 }

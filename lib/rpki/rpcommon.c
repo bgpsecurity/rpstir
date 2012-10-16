@@ -9,7 +9,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <util/logutils.h>
+#include <util/logging.h>
 #include <util/path_compat.h>
 
 struct done_certs done_certs;
@@ -961,7 +961,7 @@ int parse_SKI_blocks(
         if ((c = strchr(skibuf, (int)'\n')))
             *c = 0;
         if (skibuf && *skibuf)
-            log_msg(LOG_DEBUG, "Error at this line of control file: %s.",
+            LOG(LOG_DEBUG, "Error at this line of control file: %s.",
                     skibuf);
     }
     return ansr;

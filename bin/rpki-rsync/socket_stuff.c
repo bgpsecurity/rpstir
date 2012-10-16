@@ -126,8 +126,8 @@ int outputMsg(
     if (str_copy)
     {
         rstrip(str_copy, "\r\n");
-        log_msg(LOG_INFO, "Sending %s", str_copy);
-        log_flush();
+        LOG(LOG_INFO, "Sending %s", str_copy);
+        FLUSH_LOG();
         free(str_copy);
     }
 
@@ -137,7 +137,7 @@ int outputMsg(
         if (ret < 0)
             perror("write()");
         else if (ret != len)
-            log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
+            LOG(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
         return (ret);
     }
     else if (wport->protocol == TCP)
@@ -149,7 +149,7 @@ int outputMsg(
         if (ret < 0)
             perror("write()");
         else if (ret != len)
-            log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
+            LOG(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
         return (ret);
     }
     else if (wport->protocol == UDP)
@@ -163,11 +163,11 @@ int outputMsg(
         if (ret < 0)
             perror("sendto()");
         else if (ret != len)
-            log_msg(LOG_ERR, "Sent %d bytes instead of %u", ret, len);
+            LOG(LOG_ERR, "Sent %d bytes instead of %u", ret, len);
     }
     else
     {
-        log_msg(LOG_ERR, "unknown protocol specification: %d",
+        LOG(LOG_ERR, "unknown protocol specification: %d",
                 wport->protocol);
     }
     return (ret);

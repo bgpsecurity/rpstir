@@ -21,7 +21,7 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "err.h"
-#include "util/logutils.h"
+#include "util/logging.h"
 #include "rpwork.h"
 #include "rpki-asn1/crlv2.h"
 
@@ -1022,7 +1022,7 @@ cert_fields *cert2fields(
         if (xvalidators[ui].need > 0 &&
             cf->fields[xvalidators[ui].fieldno] == NULL)
         {
-            log_msg(LOG_ERR, "Missing CF_FIELD %d", xvalidators[ui].fieldno);
+            LOG(LOG_ERR, "Missing CF_FIELD %d", xvalidators[ui].fieldno);
             *stap = ERR_SCM_MISSEXT;
             break;
         }
@@ -1575,7 +1575,7 @@ crl_fields *crl2fields(
     excnt = X509_CRL_get_ext_count(x);
     if (excnt != 2)
     {
-        log_msg(LOG_ERR, "Wrong number of CRL extensions");
+        LOG(LOG_ERR, "Wrong number of CRL extensions");
         *stap = ERR_SCM_INVALEXT;
     }
     else
@@ -1595,7 +1595,7 @@ crl_fields *crl2fields(
             }
             if (!goodoidp->lth)
             {
-                log_msg(LOG_ERR, "Invalid CRL extension [%d]", i);
+                LOG(LOG_ERR, "Invalid CRL extension [%d]", i);
                 *stap = ERR_SCM_INVALEXT;
                 break;
             }
@@ -1631,7 +1631,7 @@ crl_fields *crl2fields(
         if (did != 3)
         {
             *stap = ERR_SCM_INVALEXT;
-            log_msg(LOG_ERR, "Duplicate extensions");
+            LOG(LOG_ERR, "Duplicate extensions");
         }
     }
     // check that all needed extension fields are present
@@ -1642,7 +1642,7 @@ crl_fields *crl2fields(
             if (crxvalidators[ui].need > 0 &&
                 cf->fields[crxvalidators[ui].fieldno] == NULL)
             {
-                log_msg(LOG_ERR, "Missing CF_FIELD %d",
+                LOG(LOG_ERR, "Missing CF_FIELD %d",
                         xvalidators[ui].fieldno);
                 *stap = ERR_SCM_MISSEXT;
                 break;
@@ -1894,7 +1894,7 @@ static int rescert_flags_chk(
     {
         if (x->ex_flags & EXFLAG_CRITICAL)
         {
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "OpenSSL reports an unsupported critical extension "
                     "in an X.509 certificate.  Please ensure that OpenSSL "
                     "was compiled with RFC 3779 support.");
@@ -1919,7 +1919,7 @@ static int rescert_version_chk(
      * returns the value which is 2 to denote version 3 
      */
 
-    log_msg(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
+    LOG(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
     if (l != 2)                 /* see above: value of 2 means v3 */
         return (ERR_SCM_BADCERTVERS);
     else
@@ -1971,7 +1971,7 @@ static int rescert_basic_constraints_chk(
         /*
          * getting here means we couldn't figure it out above.. 
          */
-        log_msg(LOG_ERR, "couldn't determine cert_type to test against");
+        LOG(LOG_ERR, "couldn't determine cert_type to test against");
         return (ERR_SCM_INVALARG);
         break;
 
@@ -1992,7 +1992,7 @@ static int rescert_basic_constraints_chk(
 
                 if (!X509_EXTENSION_get_critical(ex))
                 {
-                    log_msg(LOG_ERR,
+                    LOG(LOG_ERR,
                             "[basic_const] CA_CERT: basic_constraints NOT critical!");
                     ret = ERR_SCM_NCEXT;
                     goto skip;
@@ -2001,13 +2001,13 @@ static int rescert_basic_constraints_chk(
                 bs = X509V3_EXT_d2i(ex);
                 if (!bs)
                 {
-                    log_msg(LOG_ERR, "Couldn't parse basic_constraints");
+                    LOG(LOG_ERR, "Couldn't parse basic_constraints");
                     ret = ERR_SCM_BADEXT;
                     goto skip;
                 }
                 if (!(bs->ca))
                 {
-                    log_msg(LOG_ERR,
+                    LOG(LOG_ERR,
                             "[basic_const] testing for CA_CERT: cA boolean NOT set");
                     ret = ERR_SCM_NOTCA;
                     goto skip;
@@ -2015,7 +2015,7 @@ static int rescert_basic_constraints_chk(
 
                 if (bs->pathlen)
                 {
-                    log_msg(LOG_ERR,
+                    LOG(LOG_ERR,
                             "[basic_const] basic constraints pathlen present "
                             "- profile violation");
                     ret = ERR_SCM_BADPATHLEN;
@@ -2028,12 +2028,12 @@ static int rescert_basic_constraints_chk(
         }
         if (basic_flag == 0)
         {
-            log_msg(LOG_ERR, "[basic_const] basic_constraints not present");
+            LOG(LOG_ERR, "[basic_const] basic_constraints not present");
             return (ERR_SCM_NOBC);
         }
         else if (basic_flag > 1)
         {
-            log_msg(LOG_ERR, "[basic_const] multiple instances of extension");
+            LOG(LOG_ERR, "[basic_const] multiple instances of extension");
             return (ERR_SCM_DUPBC);
         }
         else
@@ -2057,7 +2057,7 @@ static int rescert_basic_constraints_chk(
         break;
     }
   skip:
-    log_msg(LOG_DEBUG, "[basic_const] jump to return...");
+    LOG(LOG_DEBUG, "[basic_const] jump to return...");
     if (bs)
         BASIC_CONSTRAINTS_free(bs);
     return (ret);
@@ -2096,7 +2096,7 @@ static int rescert_ski_chk(
             ski_flag++;
             if (X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "SKI marked as critical, profile violation");
+                LOG(LOG_ERR, "SKI marked as critical, profile violation");
                 ret = ERR_SCM_CEXT;
                 goto skip;
             }
@@ -2104,12 +2104,12 @@ static int rescert_ski_chk(
     }
     if (ski_flag == 0)
     {
-        log_msg(LOG_ERR, "[ski] ski extension missing");
+        LOG(LOG_ERR, "[ski] ski extension missing");
         return (ERR_SCM_NOSKI);
     }
     else if (ski_flag > 1)
     {
-        log_msg(LOG_ERR, "[ski] multiple instances of ski extension");
+        LOG(LOG_ERR, "[ski] multiple instances of ski extension");
         return (ERR_SCM_DUPSKI);
     }
 
@@ -2151,7 +2151,7 @@ static int rescert_ski_chk(
         int hash_len = vsize_casn(&extp->extnValue.subjectKeyIdentifier);
         if (hash_len != 160 / 8)
         {
-            log_msg(LOG_ERR, "wrong ski length: %d instead of 160 bits",
+            LOG(LOG_ERR, "wrong ski length: %d instead of 160 bits",
                     8 * hash_len);
             return ERR_SCM_INVALSKI;
         }
@@ -2159,24 +2159,24 @@ static int rescert_ski_chk(
             read_casn(&extp->extnValue.subjectKeyIdentifier, ski_data);
         if (ski_len != 160 / 8)
         {
-            log_msg(LOG_ERR, "failed to read ski");
+            LOG(LOG_ERR, "failed to read ski");
             return ERR_SCM_INVALSKI;
         }
         if (memcmp(ski_data, hash, hash_len))
         {
-            log_msg(LOG_ERR, "SKI does not match Subject Public Key Info");
+            LOG(LOG_ERR, "SKI does not match Subject Public Key Info");
             return ERR_SCM_INVALSKI;
         }
     }
     else
     {
-        log_msg(LOG_ERR, "could not find ski extension for cert");
+        LOG(LOG_ERR, "could not find ski extension for cert");
         return (ERR_SCM_INVALSKI);
     }
 
     return (0);
   skip:
-    log_msg(LOG_DEBUG, "[ski]jump to return...");
+    LOG(LOG_DEBUG, "[ski]jump to return...");
     return (ret);
 }
 
@@ -2213,7 +2213,7 @@ static int rescert_aki_chk(
 
             if (X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "[aki] critical, profile violation");
+                LOG(LOG_ERR, "[aki] critical, profile violation");
                 ret = ERR_SCM_CEXT;
                 goto skip;
             }
@@ -2221,7 +2221,7 @@ static int rescert_aki_chk(
             akid = X509V3_EXT_d2i(ex);
             if (!akid)
             {
-                log_msg(LOG_ERR, "Failed to parse AKI");
+                LOG(LOG_ERR, "Failed to parse AKI");
                 ret = ERR_SCM_BADEXT;
                 goto skip;
             }
@@ -2232,14 +2232,14 @@ static int rescert_aki_chk(
              */
             if (!akid->keyid)
             {
-                log_msg(LOG_ERR, "[aki] key identifier sub field not present");
+                LOG(LOG_ERR, "[aki] key identifier sub field not present");
                 ret = ERR_SCM_NOAKI;
                 goto skip;
             }
 
             if (akid->issuer)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "[aki_chk] authorityCertIssuer is present = violation");
                 ret = ERR_SCM_ACI;
                 goto skip;
@@ -2247,7 +2247,7 @@ static int rescert_aki_chk(
 
             if (akid->serial)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "[aki_chk] authorityCertSerialNumber is present = violation");
                 ret = ERR_SCM_ACSN;
                 goto skip;
@@ -2256,7 +2256,7 @@ static int rescert_aki_chk(
             // http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.8.3
             if (akid->keyid->length != 160 / 8)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "[aki] key identifier has %d bytes instead of %d",
                         akid->keyid->length, 160 / 8);
                 ret = ERR_SCM_INVALAKI;
@@ -2273,12 +2273,12 @@ static int rescert_aki_chk(
 
     if (aki_flag == 0 && ct != TA_CERT)
     {
-        log_msg(LOG_ERR, "[aki_chk] missing AKI extension");
+        LOG(LOG_ERR, "[aki_chk] missing AKI extension");
         return (ERR_SCM_NOAKI);
     }
     else if (aki_flag > 1)
     {
-        log_msg(LOG_ERR, "[aki_chk] duplicate AKI extensions");
+        LOG(LOG_ERR, "[aki_chk] duplicate AKI extensions");
         return (ERR_SCM_DUPAKI);
     }
     else
@@ -2287,7 +2287,7 @@ static int rescert_aki_chk(
     }
 
   skip:
-    log_msg(LOG_DEBUG, "[aki]jump to return...");
+    LOG(LOG_DEBUG, "[aki]jump to return...");
     if (akid)
         AUTHORITY_KEYID_free(akid);
     return (ret);
@@ -2321,7 +2321,7 @@ static int rescert_key_usage_chk(
             kusage_flag++;
             if (!X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "[kusage] not marked critical, violation");
+                LOG(LOG_ERR, "[kusage] not marked critical, violation");
                 ret = ERR_SCM_NCEXT;
                 goto skip;
             }
@@ -2350,12 +2350,12 @@ static int rescert_key_usage_chk(
 
     if (kusage_flag == 0)
     {
-        log_msg(LOG_ERR, "[key_usage] missing Key Usage extension");
+        LOG(LOG_ERR, "[key_usage] missing Key Usage extension");
         return (ERR_SCM_NOKUSAGE);
     }
     else if (kusage_flag > 1)
     {
-        log_msg(LOG_ERR, "[key_usage] multiple key_usage extensions");
+        LOG(LOG_ERR, "[key_usage] multiple key_usage extensions");
         return (ERR_SCM_DUPKUSAGE);
     }
     else
@@ -2364,7 +2364,7 @@ static int rescert_key_usage_chk(
     }
 
   skip:
-    log_msg(LOG_DEBUG, "[key_usage] jump to...");
+    LOG(LOG_DEBUG, "[key_usage] jump to...");
     return (ret);
 }
 
@@ -2389,7 +2389,7 @@ static int rescert_extended_key_usage_chk(
             ++eku_flag;
             if (X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "[extended_key_usage] marked critical, violation");
                 ret = ERR_SCM_CEXT;
                 goto skip;
@@ -2401,7 +2401,7 @@ static int rescert_extended_key_usage_chk(
     {
         if (eku_flag)
         {
-            log_msg(LOG_ERR, "[extended_key_usage] EKU present in CA cert");
+            LOG(LOG_ERR, "[extended_key_usage] EKU present in CA cert");
             ret = ERR_SCM_EKU;
             goto skip;
         }
@@ -2412,7 +2412,7 @@ static int rescert_extended_key_usage_chk(
         // certs are allowed to have EKU
         if (eku_flag)
         {
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "[extended_key_usage] EKU present in CMS EE cert");
             ret = ERR_SCM_EKU;
             goto skip;
@@ -2420,7 +2420,7 @@ static int rescert_extended_key_usage_chk(
     }
 
   skip:
-    log_msg(LOG_DEBUG, "[extended_key_usage] jump to return...");
+    LOG(LOG_DEBUG, "[extended_key_usage] jump to return...");
     return ret;
 }
 
@@ -2465,14 +2465,14 @@ static int rescert_crldp_chk(
 #if 0                           // MCR removed this test
             if (ct == TA_CERT)
             {
-                log_msg(LOG_ERR, "[crldp] crldp found in self-signed cert");
+                LOG(LOG_ERR, "[crldp] crldp found in self-signed cert");
                 ret = ERR_SCM_CRLDPTA;
                 goto skip;
             }
 #endif
             if (X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "[crldp] marked critical, violation");
+                LOG(LOG_ERR, "[crldp] marked critical, violation");
                 ret = ERR_SCM_CEXT;
                 goto skip;
             }
@@ -2490,12 +2490,12 @@ static int rescert_crldp_chk(
 
     if (crldp_flag == 0)
     {
-        log_msg(LOG_ERR, "[crldp] missing crldp extension");
+        LOG(LOG_ERR, "[crldp] missing crldp extension");
         return (ERR_SCM_NOCRLDP);
     }
     else if (crldp_flag > 1)
     {
-        log_msg(LOG_ERR, "[crldp] duplicate crldp extensions");
+        LOG(LOG_ERR, "[crldp] duplicate crldp extensions");
         ret = ERR_SCM_DUPCRLDP;
         goto skip;
     }
@@ -2506,7 +2506,7 @@ static int rescert_crldp_chk(
     crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, &crit, &idx);
     if (!crldp)
     {
-        log_msg(LOG_ERR, "[crldp] could not retrieve crldp extension");
+        LOG(LOG_ERR, "[crldp] could not retrieve crldp extension");
         return (ERR_SCM_NOCRLDP);
     }
     ncrldp = sk_DIST_POINT_num(crldp);
@@ -2516,7 +2516,7 @@ static int rescert_crldp_chk(
         if (dist_st->reasons || dist_st->CRLissuer || !dist_st->distpoint
             || dist_st->distpoint->type != 0)
         {
-            log_msg(LOG_ERR, "[crldp] incorrect crldp sub fields");
+            LOG(LOG_ERR, "[crldp] incorrect crldp sub fields");
             ret = ERR_SCM_CRLDPSF;
             goto skip;
         }
@@ -2527,7 +2527,7 @@ static int rescert_crldp_chk(
                 sk_GENERAL_NAME_value(dist_st->distpoint->name.fullname, i);
             if (!gen_name)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "[crldp] error retrieving distribution point name");
                 ret = ERR_SCM_CRLDPNM;
                 goto skip;
@@ -2537,7 +2537,7 @@ static int rescert_crldp_chk(
              */
             if (gen_name->type != GEN_URI)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "[crldp] general name of non GEN_URI type found");
                 ret = ERR_SCM_BADCRLDP;
                 goto skip;
@@ -2557,13 +2557,13 @@ static int rescert_crldp_chk(
     }
     if (uri_flag == 0)
     {
-        log_msg(LOG_ERR, "[crldp] no general name of type URI");
+        LOG(LOG_ERR, "[crldp] no general name of type URI");
         ret = ERR_SCM_CRLDPNM;
         goto skip;
     }
     else if (rsync_uri_flag == 0)
     {
-        log_msg(LOG_ERR,
+        LOG(LOG_ERR,
                 "[crldp] no general name of type URI with RSYNC access method");
         ret = ERR_SCM_CRLDPNMRS;
         goto skip;
@@ -2578,7 +2578,7 @@ static int rescert_crldp_chk(
         return (0);
     }
   skip:
-    log_msg(LOG_DEBUG, "[crldp] jump to return...");
+    LOG(LOG_DEBUG, "[crldp] jump to return...");
     if (crldp)
         sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
     return (ret);
@@ -2624,7 +2624,7 @@ static int rescert_aia_chk(
 
             if (X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "[aia] marked critical, violation");
+                LOG(LOG_ERR, "[aia] marked critical, violation");
                 ret = ERR_SCM_CEXT;
                 goto skip;
             }
@@ -2641,13 +2641,13 @@ static int rescert_aia_chk(
         }
         else
         {
-            log_msg(LOG_ERR, "[aia] missing aia extension");
+            LOG(LOG_ERR, "[aia] missing aia extension");
             return (ERR_SCM_NOAIA);
         }
     }
     else if (info_flag > 1)
     {
-        log_msg(LOG_ERR, "[aia] multiple aia extensions");
+        LOG(LOG_ERR, "[aia] multiple aia extensions");
         return (ERR_SCM_DUPAIA);
     }
 
@@ -2664,7 +2664,7 @@ static int rescert_aia_chk(
     aia = X509_get_ext_d2i(x, NID_info_access, &crit, &idx);
     if (!aia)
     {
-        log_msg(LOG_ERR, "[aia] could not retrieve aia extension");
+        LOG(LOG_ERR, "[aia] could not retrieve aia extension");
         return (ERR_SCM_NOAIA);
     }
 
@@ -2673,7 +2673,7 @@ static int rescert_aia_chk(
         adesc = sk_ACCESS_DESCRIPTION_value(aia, i);
         if (!adesc)
         {
-            log_msg(LOG_ERR, "[aia] error retrieving access description");
+            LOG(LOG_ERR, "[aia] error retrieving access description");
             ret = ERR_SCM_NOAIA;
             goto skip;
         }
@@ -2682,7 +2682,7 @@ static int rescert_aia_chk(
          */
         if (adesc->location->type != GEN_URI)
         {
-            log_msg(LOG_ERR, "[aia] access type of non GEN_URI found");
+            LOG(LOG_ERR, "[aia] access type of non GEN_URI found");
             ret = ERR_SCM_BADAIA;
             goto skip;
         }
@@ -2699,7 +2699,7 @@ static int rescert_aia_chk(
 
     if (uri_flag == 0)
     {
-        log_msg(LOG_ERR, "[aia] no aia name of type URI rsync");
+        LOG(LOG_ERR, "[aia] no aia name of type URI rsync");
         ret = ERR_SCM_BADAIA;
         goto skip;
     }
@@ -2710,7 +2710,7 @@ static int rescert_aia_chk(
     }
 
   skip:
-    log_msg(LOG_DEBUG, "[aia] jump to return...");
+    LOG(LOG_DEBUG, "[aia] jump to return...");
     if (aia)
         sk_ACCESS_DESCRIPTION_pop_free(aia, ACCESS_DESCRIPTION_free);
     return (ret);
@@ -2766,17 +2766,17 @@ static int rescert_sia_chk(
     extp = get_extension(certp, id_pe_subjectInfoAccess, &count);
     if (count == 0)
     {
-        log_msg(LOG_ERR, "no SIA found");
+        LOG(LOG_ERR, "no SIA found");
         return ERR_SCM_NOSIA;
     }
     if (count > 1)
     {
-        log_msg(LOG_ERR, "multiple SIA found");
+        LOG(LOG_ERR, "multiple SIA found");
         return ERR_SCM_DUPSIA;
     }
     if (extp == NULL)
     {
-        log_msg(LOG_ERR, "error reading SIA");
+        LOG(LOG_ERR, "error reading SIA");
         return ERR_SCM_BADSIA;
     }
 
@@ -2785,7 +2785,7 @@ static int rescert_sia_chk(
     size = read_casn(&extp->critical, &crit_bool);
     if (size && crit_bool)
     {
-        log_msg(LOG_ERR, "critical bit set for SIA");
+        LOG(LOG_ERR, "critical bit set for SIA");
         return ERR_SCM_CEXT;
     }
 
@@ -2793,7 +2793,7 @@ static int rescert_sia_chk(
     type = get_cert_type(certp);
     if (type != CA_CERT && type != EE_CERT)
     {
-        log_msg(LOG_ERR, "could not read certificate type; or unknown type");
+        LOG(LOG_ERR, "could not read certificate type; or unknown type");
         return ERR_SCM_NOBC;
     }
 
@@ -2837,12 +2837,12 @@ static int rescert_sia_chk(
 
         if (!found_uri_repo_rsync)
         {
-            log_msg(LOG_ERR, "did not find rsync uri for repository for SIA");
+            LOG(LOG_ERR, "did not find rsync uri for repository for SIA");
             return ERR_SCM_BADSIA;
         }
         if (!found_uri_mft_rsync)
         {
-            log_msg(LOG_ERR, "did not find rsync uri for manifest for SIA");
+            LOG(LOG_ERR, "did not find rsync uri for manifest for SIA");
             return ERR_SCM_BADSIA;
         }
     }
@@ -2866,7 +2866,7 @@ static int rescert_sia_chk(
             }
             else
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "in EE-cert SIA, found accessMethod != id-ad-signedObject");
                 return ERR_SCM_BADSIA;
             }
@@ -2874,7 +2874,7 @@ static int rescert_sia_chk(
 
         if (!found_uri_obj_rsync)
         {
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "did not find rsync uri for signedObject for SIA");
             return ERR_SCM_BADSIA;
         }
@@ -2916,7 +2916,7 @@ static int rescert_sia_chk(
 
             if (X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "[sia] marked critical, violation");
+                LOG(LOG_ERR, "[sia] marked critical, violation");
                 ret = ERR_SCM_CEXT;
                 goto skip;
             }
@@ -2932,13 +2932,13 @@ static int rescert_sia_chk(
         }
         else
         {
-            log_msg(LOG_ERR, "[sia] missing sia extension");
+            LOG(LOG_ERR, "[sia] missing sia extension");
             return (ERR_SCM_NOSIA);
         }
     }
     else if (sinfo_flag > 1)
     {
-        log_msg(LOG_ERR, "[sia] multiple sia extensions");
+        LOG(LOG_ERR, "[sia] multiple sia extensions");
         return (ERR_SCM_DUPSIA);
     }
 
@@ -2958,7 +2958,7 @@ static int rescert_sia_chk(
     sia = X509_get_ext_d2i(x, NID_sinfo_access, &crit, &idx);
     if (!sia)
     {
-        log_msg(LOG_ERR, "[sia] could not retrieve sia extension");
+        LOG(LOG_ERR, "[sia] could not retrieve sia extension");
         return (ERR_SCM_NOSIA);
     }
 
@@ -2967,7 +2967,7 @@ static int rescert_sia_chk(
         adesc = sk_ACCESS_DESCRIPTION_value(sia, i);
         if (!adesc)
         {
-            log_msg(LOG_ERR, "[sia] error retrieving access description");
+            LOG(LOG_ERR, "[sia] error retrieving access description");
             ret = ERR_SCM_NOSIA;
             goto skip;
         }
@@ -2976,7 +2976,7 @@ static int rescert_sia_chk(
          */
         if (adesc->location->type != GEN_URI)
         {
-            log_msg(LOG_ERR, "[sia] access type of non GEN_URI found");
+            LOG(LOG_ERR, "[sia] access type of non GEN_URI found");
             ret = ERR_SCM_BADSIA;
             goto skip;
         }
@@ -3014,7 +3014,7 @@ static int rescert_sia_chk(
 
     if (uri_flag == 0)
     {
-        log_msg(LOG_ERR, "[sia] no sia name of type URI rsync");
+        LOG(LOG_ERR, "[sia] no sia name of type URI rsync");
         ret = ERR_SCM_BADSIA;
         goto skip;
     }
@@ -3025,7 +3025,7 @@ static int rescert_sia_chk(
     }
 
   skip:
-    log_msg(LOG_DEBUG, "[sia] jump to return...");
+    LOG(LOG_DEBUG, "[sia] jump to return...");
     if (sia)
         sk_ACCESS_DESCRIPTION_pop_free(sia, ACCESS_DESCRIPTION_free);
     return (ret);
@@ -3069,7 +3069,7 @@ static int rescert_cert_policy_chk(
             policy_flag++;
             if (!X509_EXTENSION_get_critical(ex))
             {
-                log_msg(LOG_ERR, "[policy] not marked as critical");
+                LOG(LOG_ERR, "[policy] not marked as critical");
                 ret = ERR_SCM_NCEXT;
                 goto skip;
             }
@@ -3077,13 +3077,13 @@ static int rescert_cert_policy_chk(
     }
     if (policy_flag == 0)
     {
-        log_msg(LOG_ERR, "[policy] policy extension missing");
+        LOG(LOG_ERR, "[policy] policy extension missing");
         ret = ERR_SCM_NOPOLICY;
         goto skip;
     }
     else if (policy_flag > 1)
     {
-        log_msg(LOG_ERR, "[policy] multiple instances of policy extension");
+        LOG(LOG_ERR, "[policy] multiple instances of policy extension");
         ret = ERR_SCM_DUPPOLICY;
         goto skip;
     }
@@ -3095,14 +3095,14 @@ static int rescert_cert_policy_chk(
     ex_cpols = X509_get_ext_d2i(x, NID_certificate_policies, &crit, &idx);
     if (!ex_cpols)
     {
-        log_msg(LOG_ERR, "[policy] policies present but could not retrieve");
+        LOG(LOG_ERR, "[policy] policies present but could not retrieve");
         ret = ERR_SCM_NOPOLICY;
         goto skip;
     }
 
     if (sk_POLICYINFO_num(ex_cpols) != 1)
     {
-        log_msg(LOG_ERR, "[policy] incorrect number of policies");
+        LOG(LOG_ERR, "[policy] incorrect number of policies");
         ret = ERR_SCM_DUPPOLICY;
         goto skip;
     }
@@ -3110,7 +3110,7 @@ static int rescert_cert_policy_chk(
     policy = sk_POLICYINFO_value(ex_cpols, 0);
     if (!policy)
     {
-        log_msg(LOG_ERR, "[policy] could not retrieve policyinfo");
+        LOG(LOG_ERR, "[policy] could not retrieve policyinfo");
         ret = ERR_SCM_NOPOLICY;
         goto skip;
     }
@@ -3121,14 +3121,14 @@ static int rescert_cert_policy_chk(
 
     if ((len != policy_id_len) || (strcmp(policy_id_str, oid_policy_id)))
     {
-        log_msg(LOG_ERR, "len: %d value: %s\n", len, policy_id_str);
-        log_msg(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
+        LOG(LOG_ERR, "len: %d value: %s\n", len, policy_id_str);
+        LOG(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
         ret = ERR_SCM_BADOID;
         goto skip;
     }
 
   skip:
-    log_msg(LOG_DEBUG, "[policy] jump to return...");
+    LOG(LOG_DEBUG, "[policy] jump to return...");
 
     if (ex_cpols)
         sk_POLICYINFO_pop_free(ex_cpols, POLICYINFO_free);
@@ -3152,18 +3152,18 @@ static int rescert_ip_resources_chk(
                                            &ext_count);
     if (!extp || !ext_count)
     {
-        log_msg(LOG_INFO, "no IP extension found");
+        LOG(LOG_INFO, "no IP extension found");
         return 0;
     }
     else if (ext_count > 1)
     {
-        log_msg(LOG_ERR, "multiple IP extensions found");
+        LOG(LOG_ERR, "multiple IP extensions found");
         return ERR_SCM_DUPIP;
     }
 
     if (!vsize_casn(&extp->self))
     {
-        log_msg(LOG_ERR, "IP extension is empty");
+        LOG(LOG_ERR, "IP extension is empty");
         return ERR_SCM_INVALEXT;
     }
 
@@ -3173,12 +3173,12 @@ static int rescert_ip_resources_chk(
     {
         if (size < 1)
         {
-            log_msg(LOG_ERR, "IP extension not marked critical");
+            LOG(LOG_ERR, "IP extension not marked critical");
             return ERR_SCM_NCEXT;
         }
         else
         {
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "IP extension critical flag is longer than one byte");
             return ERR_SCM_INVALEXT;
         }
@@ -3188,7 +3188,7 @@ static int rescert_ip_resources_chk(
         read_casn(&extp->critical, &critical);
         if (!critical)
         {
-            log_msg(LOG_ERR, "IP extension not marked critical");
+            LOG(LOG_ERR, "IP extension not marked critical");
             return ERR_SCM_NCEXT;
         }
     }
@@ -3215,18 +3215,18 @@ static int rescert_as_resources_chk(
                                            &ext_count);
     if (!extp || !ext_count)
     {
-        log_msg(LOG_INFO, "no AS extension found");
+        LOG(LOG_INFO, "no AS extension found");
         return 0;
     }
     else if (ext_count > 1)
     {
-        log_msg(LOG_ERR, "multiple AS extensions found");
+        LOG(LOG_ERR, "multiple AS extensions found");
         return ERR_SCM_DUPAS;
     }
 
     if (!vsize_casn(&extp->self))
     {
-        log_msg(LOG_ERR, "AS extension is empty");
+        LOG(LOG_ERR, "AS extension is empty");
         return ERR_SCM_INVALEXT;
     }
 
@@ -3236,12 +3236,12 @@ static int rescert_as_resources_chk(
     {
         if (size < 1)
         {
-            log_msg(LOG_ERR, "AS extension not marked critical");
+            LOG(LOG_ERR, "AS extension not marked critical");
             return ERR_SCM_NCEXT;
         }
         else
         {
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "AS extension critical flag is longer than one byte");
             return ERR_SCM_INVALEXT;
         }
@@ -3251,7 +3251,7 @@ static int rescert_as_resources_chk(
         read_casn(&extp->critical, &critical);
         if (!critical)
         {
-            log_msg(LOG_ERR, "AS extension not marked critical");
+            LOG(LOG_ERR, "AS extension not marked critical");
             return ERR_SCM_NCEXT;
         }
     }
@@ -3261,7 +3261,7 @@ static int rescert_as_resources_chk(
 
     if (size_casn((struct casn *)&extp->extnValue.autonomousSysNum.rdi.self))
     {
-        log_msg(LOG_ERR, "AS extension contains non-NULL rdi element");
+        LOG(LOG_ERR, "AS extension contains non-NULL rdi element");
         return ERR_SCM_BADASRDI;
     }
 
@@ -3269,12 +3269,12 @@ static int rescert_as_resources_chk(
         &extp->extnValue.autonomousSysNum.asnum;
     if (size_casn(&asidcap->inherit))
     {
-        log_msg(LOG_INFO, "AS resources marked as inherit");
+        LOG(LOG_INFO, "AS resources marked as inherit");
         return 1;
     }
     if (num_items(&asidcap->asNumbersOrRanges.self) <= 0)
     {
-        log_msg(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
+        LOG(LOG_ERR, "AS NumbersOrRanges is empty, or error reading it");
         return ERR_SCM_BADASRANGE;
     }
     return 1;
@@ -3313,7 +3313,7 @@ static int rescert_ip_asnum_chk(
 
     if (!have_ip_resources && !have_as_resources)
     {
-        log_msg(LOG_ERR, "cert has neither IP resources, nor AS resources");
+        LOG(LOG_ERR, "cert has neither IP resources, nor AS resources");
         return (ERR_SCM_NOIPAS);
     }
 
@@ -3323,13 +3323,13 @@ static int rescert_ip_asnum_chk(
 
         if (!ip_ext)
         {
-            log_msg(LOG_ERR, "couldn't get IP extension");
+            LOG(LOG_ERR, "couldn't get IP extension");
             return (ERR_SCM_INVALIPB);
         }
 
         if (!v3_addr_is_canonical(ip_ext))
         {
-            log_msg(LOG_ERR, "cert IP resources are not in canonical form");
+            LOG(LOG_ERR, "cert IP resources are not in canonical form");
             sk_IPAddressFamily_free(ip_ext);
             return (ERR_SCM_INVALIPB);
         }
@@ -3343,13 +3343,13 @@ static int rescert_ip_asnum_chk(
 
         if (!as_ext)
         {
-            log_msg(LOG_ERR, "couldn't get AS extension");
+            LOG(LOG_ERR, "couldn't get AS extension");
             return (ERR_SCM_BADASRANGE);
         }
 
         if (!v3_asid_is_canonical(as_ext))
         {
-            log_msg(LOG_ERR, "cert AS resources are not in canonical form");
+            LOG(LOG_ERR, "cert AS resources are not in canonical form");
             ASIdentifiers_free(as_ext);
             return (ERR_SCM_BADASRANGE);
         }
@@ -3477,7 +3477,7 @@ static int rescert_name_chk(
     {
         // RFC 6487 limits the total number of attributes, not the sequence
         // length explicitly
-        log_msg(LOG_ERR, "RDNSeq contains >2 RelativeDistinguishedName");
+        LOG(LOG_ERR, "RDNSeq contains >2 RelativeDistinguishedName");
         return -1;
     }
     for (sequence_idx = 0; sequence_idx < sequence_length; ++sequence_idx)
@@ -3489,7 +3489,7 @@ static int rescert_name_chk(
         {
             // RFC 6487 limits the total number of attributes, not the set
             // length explicitly
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "RelativeDistinguishedName contains >2 Attribute Value Assertions");
             return -1;
         }
@@ -3502,7 +3502,7 @@ static int rescert_name_chk(
             {
                 if (commonName)
                 {
-                    log_msg(LOG_ERR, "multiple CommonNames");
+                    LOG(LOG_ERR, "multiple CommonNames");
                     return -1;
                 }
                 commonName = true;
@@ -3510,12 +3510,12 @@ static int rescert_name_chk(
                 {
                     if (strict_profile_checks)
                     {
-                        log_msg(LOG_ERR, "CommonName not printableString");
+                        LOG(LOG_ERR, "CommonName not printableString");
                         return -1;
                     }
                     else
                     {
-                        log_msg(LOG_WARNING, "CommonName not printableString");
+                        LOG(LOG_WARNING, "CommonName not printableString");
                     }
                 }
             }
@@ -3523,14 +3523,14 @@ static int rescert_name_chk(
             {
                 if (serialNumber)
                 {
-                    log_msg(LOG_ERR, "multiple SerialNumbers");
+                    LOG(LOG_ERR, "multiple SerialNumbers");
                     return -1;
                 }
                 serialNumber = true;
             }
             else
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "AttributeValueAssertion contains an OID that is neither id_commonName nor id_serialNumber");
                 return -1;
             }
@@ -3539,7 +3539,7 @@ static int rescert_name_chk(
 
     if (!commonName)
     {
-        log_msg(LOG_ERR, "no CommonName present");
+        LOG(LOG_ERR, "no CommonName present");
         return -1;
     }
 
@@ -3564,7 +3564,7 @@ static int rescert_sig_algs_chk(
     int length = vsize_objid(&certp->algorithm.algorithm);
     if (length <= 0)
     {
-        log_msg(LOG_ERR, "length of outer sig alg oid <= 0");
+        LOG(LOG_ERR, "length of outer sig alg oid <= 0");
         return ERR_SCM_BADALG;
     }
     char *outer_sig_alg_oidp = calloc(1, length + 1);
@@ -3573,14 +3573,14 @@ static int rescert_sig_algs_chk(
     if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length)
     {
         free(outer_sig_alg_oidp);
-        log_msg(LOG_ERR, "outer sig alg oid actual length != stated length");
+        LOG(LOG_ERR, "outer sig alg oid actual length != stated length");
         return ERR_SCM_BADALG;
     }
 
     if (strncmp(outer_sig_alg_oidp, id_sha_256WithRSAEncryption, length) != 0)
     {
         free(outer_sig_alg_oidp);
-        log_msg(LOG_ERR, "inner sig alg oid does not match spec");
+        LOG(LOG_ERR, "inner sig alg oid does not match spec");
         return ERR_SCM_BADALG;
     }
 
@@ -3588,7 +3588,7 @@ static int rescert_sig_algs_chk(
     if (length <= 0)
     {
         free(outer_sig_alg_oidp);
-        log_msg(LOG_ERR, "length of inner sig alg oid <= 0");
+        LOG(LOG_ERR, "length of inner sig alg oid <= 0");
         return ERR_SCM_BADALG;
     }
     char *inner_sig_alg_oidp = calloc(1, length + 1);
@@ -3603,7 +3603,7 @@ static int rescert_sig_algs_chk(
     {
         free(inner_sig_alg_oidp);
         free(outer_sig_alg_oidp);
-        log_msg(LOG_ERR, "inner sig alg oid actual length != stated length");
+        LOG(LOG_ERR, "inner sig alg oid actual length != stated length");
         return ERR_SCM_BADALG;
     }
 
@@ -3611,7 +3611,7 @@ static int rescert_sig_algs_chk(
     {
         free(inner_sig_alg_oidp);
         free(outer_sig_alg_oidp);
-        log_msg(LOG_ERR, "inner sig alg oid does not match spec");
+        LOG(LOG_ERR, "inner sig alg oid does not match spec");
         return ERR_SCM_BADALG;
     }
 
@@ -3622,7 +3622,7 @@ static int rescert_sig_algs_chk(
     {
         free(inner_sig_alg_oidp);
         free(outer_sig_alg_oidp);
-        log_msg(LOG_ERR, "inner and outer sig alg oids do not match");
+        LOG(LOG_ERR, "inner and outer sig alg oids do not match");
         return ERR_SCM_BADALG;
     }
 
@@ -3634,7 +3634,7 @@ static int rescert_sig_algs_chk(
                     algorithm);
     if (length <= 0)
     {
-        log_msg(LOG_ERR, "length of subj pub key sig alg oid <= 0");
+        LOG(LOG_ERR, "length of subj pub key sig alg oid <= 0");
         return ERR_SCM_BADALG;
     }
     char *alg_pubkey_oidp = calloc(1, length + 1);
@@ -3644,7 +3644,7 @@ static int rescert_sig_algs_chk(
                    alg_pubkey_oidp) != length)
     {
         free(alg_pubkey_oidp);
-        log_msg(LOG_ERR,
+        LOG(LOG_ERR,
                 "subj pub key sig alg oid actual length != stated length");
         return ERR_SCM_BADALG;
     }
@@ -3652,7 +3652,7 @@ static int rescert_sig_algs_chk(
     if (strncmp(alg_pubkey_oidp, id_rsadsi_rsaEncryption, length) != 0)
     {
         free(alg_pubkey_oidp);
-        log_msg(LOG_ERR, "subj pub key sig alg id does not match spec");
+        LOG(LOG_ERR, "subj pub key sig alg id does not match spec");
         return ERR_SCM_BADALG;
     }
 
@@ -3663,7 +3663,7 @@ static int rescert_sig_algs_chk(
         vsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey);
     if (bytes_to_read > SUBJ_PUBKEY_MAX_SZ)
     {
-        log_msg(LOG_ERR, "subj pub key too long");
+        LOG(LOG_ERR, "subj pub key too long");
         return ERR_SCM_BADALG;
     }
     uchar *pubkey_buf;
@@ -3675,13 +3675,13 @@ static int rescert_sig_algs_chk(
         return ERR_SCM_NOMEM;
     if (bytes_read != bytes_to_read)
     {
-        log_msg(LOG_ERR, "subj pub key actual length != stated");
+        LOG(LOG_ERR, "subj pub key actual length != stated");
         free(pubkey_buf);
         return ERR_SCM_BADALG;
     }
     if (pubkey_buf[0] != 0)
     {
-        log_msg(LOG_ERR, "subj pub key not a whole number of bytes");
+        LOG(LOG_ERR, "subj pub key not a whole number of bytes");
         free(pubkey_buf);
         return ERR_SCM_BADALG;
     }
@@ -3693,7 +3693,7 @@ static int rescert_sig_algs_chk(
     free(pubkey_buf);
     if (bytes_read < 0)
     {
-        log_msg(LOG_ERR, "error decoding subj pub key");
+        LOG(LOG_ERR, "error decoding subj pub key");
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
     }
@@ -3703,13 +3703,13 @@ static int rescert_sig_algs_chk(
     bytes_read = readvsize_casn(&rsapubkey.modulus, &pubkey_modulus_buf);
     if (bytes_read < 0)
     {
-        log_msg(LOG_ERR, "error parsing public key modulus");
+        LOG(LOG_ERR, "error parsing public key modulus");
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
     }
     else if (bytes_read == 0)
     {
-        log_msg(LOG_ERR, "empty public key modulus");
+        LOG(LOG_ERR, "empty public key modulus");
         free(pubkey_modulus_buf);
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
@@ -3722,7 +3722,7 @@ static int rescert_sig_algs_chk(
     if (bytes_read != SUBJ_PUBKEY_MODULUS_SZ + 1 ||
         pubkey_modulus_buf[0] != 0 || (pubkey_modulus_buf[1] & 0x80) == 0)
     {
-        log_msg(LOG_ERR, "subj pub key modulus bit-length != %d",
+        LOG(LOG_ERR, "subj pub key modulus bit-length != %d",
                 SUBJ_PUBKEY_MODULUS_SZ * 8);
         free(pubkey_modulus_buf);
         delete_casn(&rsapubkey.self);
@@ -3734,13 +3734,13 @@ static int rescert_sig_algs_chk(
     long exponent;
     if (read_casn_num(&rsapubkey.exponent, &exponent) < 0)
     {
-        log_msg(LOG_ERR, "error reading subj pub key exponent");
+        LOG(LOG_ERR, "error reading subj pub key exponent");
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
     }
     if (exponent != SUBJ_PUBKEY_EXPONENT)
     {
-        log_msg(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
+        LOG(LOG_ERR, "subj pub key exponent != %d", SUBJ_PUBKEY_EXPONENT);
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
     }
@@ -3763,7 +3763,7 @@ static int rescert_serial_number_chk(
     int bytes_to_read = vsize_casn(&certp->toBeSigned.serialNumber);
     if (bytes_to_read > SER_NUM_MAX_SZ)
     {
-        log_msg(LOG_ERR, "serial number field too long");
+        LOG(LOG_ERR, "serial number field too long");
         return (ERR_SCM_BADSERNUM);
     }
 
@@ -3773,14 +3773,14 @@ static int rescert_serial_number_chk(
         return ERR_SCM_NOMEM;
     if (bytes_read != bytes_to_read)
     {
-        log_msg(LOG_ERR, "serial number actual length != stated length");
+        LOG(LOG_ERR, "serial number actual length != stated length");
         free(sernump);
         return (ERR_SCM_BADSERNUM);
     }
 
     if (*sernump & 0x80)
     {
-        log_msg(LOG_ERR, "serial number is negative");
+        LOG(LOG_ERR, "serial number is negative");
         free(sernump);
         return (ERR_SCM_BADSERNUM);
     }
@@ -3803,7 +3803,7 @@ static int rescert_dates_chk(
     if (diff_casn_time(&certp->toBeSigned.validity.notBefore.self,
                        &certp->toBeSigned.validity.notAfter.self) > 0)
     {
-        log_msg(LOG_ERR, "invalid certificate, notBefore > notAfter");
+        LOG(LOG_ERR, "invalid certificate, notBefore > notAfter");
         return ERR_SCM_BADDATES;        // I am the monarch of the sea.  I am
                                         // the ruler of the qu...
     }
@@ -3823,13 +3823,13 @@ static int rescert_subj_iss_UID_chk(
 {
     if (size_casn(&certp->toBeSigned.issuerUniqueID) > 0)
     {
-        log_msg(LOG_ERR, "certificate has issuer unique ID");
+        LOG(LOG_ERR, "certificate has issuer unique ID");
         return ERR_SCM_XPROFILE;
     }
 
     if (size_casn(&certp->toBeSigned.subjectUniqueID) > 0)
     {
-        log_msg(LOG_ERR, "certificate has subject unique ID");
+        LOG(LOG_ERR, "certificate has subject unique ID");
         return ERR_SCM_XPROFILE;
     }
 
@@ -3894,7 +3894,7 @@ static int rescert_extensions_chk(
             {
                 read_objid(&extp->extnID, oid_print);
             }
-            log_msg(LOG_ERR, "certificate has unknown extension %s",
+            LOG(LOG_ERR, "certificate has unknown extension %s",
                     oid_print);
             return ERR_SCM_BADEXT;
         }
@@ -3926,12 +3926,12 @@ int rescert_profile_chk(
         return (ERR_SCM_BADEXT);
 
     ret = rescert_flags_chk(x, ct);
-    log_msg(LOG_DEBUG, "rescert_flags_chk");
+    LOG(LOG_DEBUG, "rescert_flags_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_version_chk(x);
-    log_msg(LOG_DEBUG, "rescert_version_chk");
+    LOG(LOG_DEBUG, "rescert_version_chk");
     if (ret < 0)
         return (ret);
 
@@ -3941,82 +3941,82 @@ int rescert_profile_chk(
         return ERR_SCM_BADSUBJECT;
 
     ret = rescert_basic_constraints_chk(x, ct);
-    log_msg(LOG_DEBUG, "rescert_basic_constraints_chk");
+    LOG(LOG_DEBUG, "rescert_basic_constraints_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_ski_chk(x, certp);
-    log_msg(LOG_DEBUG, "rescert_ski_chk");
+    LOG(LOG_DEBUG, "rescert_ski_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_aki_chk(x, ct);
-    log_msg(LOG_DEBUG, "rescert_aki_chk");
+    LOG(LOG_DEBUG, "rescert_aki_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_key_usage_chk(x);
-    log_msg(LOG_DEBUG, "rescert_key_usage_chk");
+    LOG(LOG_DEBUG, "rescert_key_usage_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_extended_key_usage_chk(x, ct);
-    log_msg(LOG_DEBUG, "rescert_extended_key_usage_chk");
+    LOG(LOG_DEBUG, "rescert_extended_key_usage_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_crldp_chk(x, ct);
-    log_msg(LOG_DEBUG, "rescert_crldp_chk");
+    LOG(LOG_DEBUG, "rescert_crldp_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_aia_chk(x, ct);
-    log_msg(LOG_DEBUG, "rescert_aia_chk");
+    LOG(LOG_DEBUG, "rescert_aia_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_sia_chk(x, ct, certp);
-    log_msg(LOG_DEBUG, "rescert_sia_chk");
+    LOG(LOG_DEBUG, "rescert_sia_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_cert_policy_chk(x);
-    log_msg(LOG_DEBUG, "rescert_cert_policy_chk");
+    LOG(LOG_DEBUG, "rescert_cert_policy_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_ip_asnum_chk(x, certp);
-    log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
+    LOG(LOG_DEBUG, "rescert_ip_asnum_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_criticals_chk(x);
-    log_msg(LOG_DEBUG, "rescert_criticals_chk");
+    LOG(LOG_DEBUG, "rescert_criticals_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_sig_algs_chk(certp);
-    log_msg(LOG_DEBUG, "rescert_sig_algs_chk");
+    LOG(LOG_DEBUG, "rescert_sig_algs_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_serial_number_chk(certp);
-    log_msg(LOG_DEBUG, "rescert_serial_number_chk");
+    LOG(LOG_DEBUG, "rescert_serial_number_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_dates_chk(certp);
-    log_msg(LOG_DEBUG, "rescert_dates_chk");
+    LOG(LOG_DEBUG, "rescert_dates_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_subj_iss_UID_chk(certp);
-    log_msg(LOG_DEBUG, "rescert_subj_iss_UID_chk");
+    LOG(LOG_DEBUG, "rescert_subj_iss_UID_chk");
     if (ret < 0)
         return (ret);
 
     ret = rescert_extensions_chk(certp);
-    log_msg(LOG_DEBUG, "rescert_extensions_chk");
+    LOG(LOG_DEBUG, "rescert_extensions_chk");
     if (ret < 0)
         return (ret);
 
@@ -4080,13 +4080,13 @@ static int crl_sigalg_chk(
     if (diff_objid(&crlp->toBeSigned.signature.algorithm,
                    id_sha_256WithRSAEncryption) != 0)
     {
-        log_msg(LOG_ERR, "Wrong CRL inner signature algorithm");
+        LOG(LOG_ERR, "Wrong CRL inner signature algorithm");
         return ERR_SCM_BADSIGALG;
     }
     if (diff_objid(&crlp->algorithm.algorithm,
                    id_sha_256WithRSAEncryption) != 0)
     {
-        log_msg(LOG_ERR, "Wrong CRL outer signature algorithm");
+        LOG(LOG_ERR, "Wrong CRL outer signature algorithm");
         return ERR_SCM_BADSIGALG;
     }
     return 0;
@@ -4109,7 +4109,7 @@ static int crl_issuer_chk(
         return ERR_SCM_INTERNAL;
     if (rescert_name_chk(&crlp->toBeSigned.issuer.rDNSequence) < 0)
     {
-        log_msg(LOG_ERR, "Bad CRL issuer");
+        LOG(LOG_ERR, "Bad CRL issuer");
         return ERR_SCM_BADISSUER;
     }
     return 0;
@@ -4163,18 +4163,18 @@ static int crl_dates_chk(
                              &crltbsp->nextUpdate.self);
     if (ret == -2)
     {
-        log_msg(LOG_ERR, "failed to read CRL time field(s)");
+        LOG(LOG_ERR, "failed to read CRL time field(s)");
         return ERR_SCM_INVALDT;
     }
     if (cvt_crldate2DB(&crltbsp->lastUpdate) < 0 ||
         cvt_crldate2DB(&crltbsp->nextUpdate) < 0)
     {
-        log_msg(LOG_ERR, "CRL time field(s) don't fit into database");
+        LOG(LOG_ERR, "CRL time field(s) don't fit into database");
         return ERR_SCM_INTERNAL;
     }
     if (ret > 0)
     {
-        log_msg(LOG_ERR, "Invalid CRL, thisUpdate > nextUpdate");
+        LOG(LOG_ERR, "Invalid CRL, thisUpdate > nextUpdate");
         return ERR_SCM_BADDATES;
     }
     time_t now;
@@ -4186,7 +4186,7 @@ static int crl_dates_chk(
         int64_t secsInFuture = lastdate - now;
         // TODO: if (secsInFuture > user_configured_limit) { log; return
         // ERR_SCM_INVALDT; }
-        log_msg(LOG_WARNING, "thisUpdate %" PRId64 " seconds in the future",
+        LOG(LOG_WARNING, "thisUpdate %" PRId64 " seconds in the future",
                 secsInFuture);
     }
     return 0;
@@ -4214,23 +4214,23 @@ static int crl_entry_chk(
     // Forbid CRLEntryExtensions
     if (size_casn(&entryp->extensions.self) > 0)
     {
-        log_msg(LOG_ERR, "Revocation entry has extension(s)");
+        LOG(LOG_ERR, "Revocation entry has extension(s)");
         return ERR_SCM_CRLENTRYEXT;
     }
     // check serial number
     if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH)
     {
-        log_msg(LOG_ERR, "Revoked serial number too long");
+        LOG(LOG_ERR, "Revoked serial number too long");
         return ERR_SCM_BADREVSNUM;
     }
     else if (vsize_casn(&entryp->userCertificate) > sizeof(long))
     {
-        log_msg(LOG_ERR, "Revoked serial number too long for " PACKAGE_NAME);
+        LOG(LOG_ERR, "Revoked serial number too long for " PACKAGE_NAME);
         return ERR_SCM_INTERNAL;
     }
     else if (read_casn_num(&entryp->userCertificate, &snum) <= 0 || snum < 0)
     {
-        log_msg(LOG_ERR, "Invalid revoked serial number");
+        LOG(LOG_ERR, "Invalid revoked serial number");
         return ERR_SCM_BADREVSNUM;
     }
     // and the date
@@ -4238,16 +4238,16 @@ static int crl_entry_chk(
     int64_t now = time(0);
     if (read_casn_time(&entryp->revocationDate.self, &revdate) < 0)
     {
-        log_msg(LOG_ERR, "Invalid revocation date");
+        LOG(LOG_ERR, "Invalid revocation date");
         return ERR_SCM_BADREVDATE;
     }
     if (revdate > now)
     {
-        log_msg(LOG_WARNING, "Revocation date in the future");
+        LOG(LOG_WARNING, "Revocation date in the future");
     }
     if (cvt_crldate2DB(&entryp->revocationDate) < 0)
     {
-        log_msg(LOG_ERR, "Revocation date doesn't fit in database");
+        LOG(LOG_ERR, "Revocation date doesn't fit in database");
         return ERR_SCM_INTERNAL;
     }
 
@@ -4313,13 +4313,13 @@ static int crl_extensions_chk(
             i = 0;
             if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "CRL Authority Key Identifier extension marked critical");
                 return ERR_SCM_CEXT;
             }
             if (authkeyIdp)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "Duplicate CRL Authority Key Identifier extension");
                 return ERR_SCM_BADEXT;
             }
@@ -4330,12 +4330,12 @@ static int crl_extensions_chk(
             i = 0;
             if (read_casn_num(&crlextp->critical, &i) >= 0 && i > 0)
             {
-                log_msg(LOG_ERR, "CRL number extension marked critical");
+                LOG(LOG_ERR, "CRL number extension marked critical");
                 return ERR_SCM_CEXT;
             }
             if (crlnump)
             {
-                log_msg(LOG_ERR, "Duplicate CRL number extension");
+                LOG(LOG_ERR, "Duplicate CRL number extension");
                 return ERR_SCM_BADEXT;
             }
             crlnump = &crlextp->extnValue.cRLNumber;
@@ -4343,14 +4343,14 @@ static int crl_extensions_chk(
         else
         {
             // Forbid any other extension
-            log_msg(LOG_ERR, "Forbidden CRL extension");
+            LOG(LOG_ERR, "Forbidden CRL extension");
             char *oidp;
             i = vsize_objid(&crlextp->extnID);
             if (i > 0)
             {
                 if (!(oidp = (char *)calloc(1, i + 2)))
                 {
-                    log_msg(LOG_ERR, "Can't get memory while checking CRL");
+                    LOG(LOG_ERR, "Can't get memory while checking CRL");
                     return ERR_SCM_NOMEM;
                 }
             }
@@ -4361,29 +4361,29 @@ static int crl_extensions_chk(
             if (read_objid(&crlextp->extnID, oidp) <= 0)
             {
                 free(oidp);
-                log_msg(LOG_ERR, "Error reading CRLExtension OID");
+                LOG(LOG_ERR, "Error reading CRLExtension OID");
                 return ERR_SCM_BADEXT;
             }
-            log_msg(LOG_ERR, "Forbidden extension oid %s", oidp);
+            LOG(LOG_ERR, "Forbidden extension oid %s", oidp);
             free(oidp);
             return ERR_SCM_BADEXT;
         }
     }
     if (!authkeyIdp)
     {
-        log_msg(LOG_ERR, "No Authority Key Identifier extension");
+        LOG(LOG_ERR, "No Authority Key Identifier extension");
         return ERR_SCM_NOAKI;
     }
     if (!crlnump)
     {
-        log_msg(LOG_ERR, "No CRL number extension");
+        LOG(LOG_ERR, "No CRL number extension");
         return ERR_SCM_NOCRLNUM;
     }
     else
     {
         if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
         {
-            log_msg(LOG_ERR, "CRLNumber too long");
+            LOG(LOG_ERR, "CRLNumber too long");
             return ERR_SCM_BADCRLNUM;
         }
     }
@@ -4406,32 +4406,32 @@ int crl_profile_chk(
     if (!crlp)
         return ERR_SCM_INTERNAL;
 
-    log_msg(LOG_DEBUG, "crl_version_chk");
+    LOG(LOG_DEBUG, "crl_version_chk");
     ret = crl_version_chk(crlp);
     if (ret < 0)
         return ret;
 
-    log_msg(LOG_DEBUG, "crl_sigalg_chk");
+    LOG(LOG_DEBUG, "crl_sigalg_chk");
     ret = crl_sigalg_chk(crlp);
     if (ret < 0)
         return ret;
 
-    log_msg(LOG_DEBUG, "crl_issuer_chk");
+    LOG(LOG_DEBUG, "crl_issuer_chk");
     ret = crl_issuer_chk(crlp);
     if (ret < 0)
         return ret;
 
-    log_msg(LOG_DEBUG, "crl_dates_chk");
+    LOG(LOG_DEBUG, "crl_dates_chk");
     ret = crl_dates_chk(crlp);
     if (ret < 0)
         return ret;
 
-    log_msg(LOG_DEBUG, "crl_entries_chk");
+    LOG(LOG_DEBUG, "crl_entries_chk");
     ret = crl_entries_chk(crlp);
     if (ret < 0)
         return ret;
 
-    log_msg(LOG_DEBUG, "crl_extensions_chk");
+    LOG(LOG_DEBUG, "crl_extensions_chk");
     ret = crl_extensions_chk(crlp);
     if (ret < 0)
         return ret;
