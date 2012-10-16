@@ -44,7 +44,7 @@ volatile sig_atomic_t LOG_LEVEL;
             } \
             else \
             { \
-                syslog((priority), format, ## __VA_ARGS); \
+                syslog((priority), format, ## __VA_ARGS__); \
             } \
         } \
     } while (false)
