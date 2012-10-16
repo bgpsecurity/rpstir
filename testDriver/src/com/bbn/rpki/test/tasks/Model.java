@@ -403,8 +403,8 @@ public class Model implements Constants, XMLConstants {
       // The results of which are ready to go.
     } else {
       Epoch epochActions = epochs.get(epochIndex - 1);
-      for (EpochEvent epoch : epochActions.getEpochEvents()) {
-        AbstractAction action = epoch.getAction();
+      for (EpochEvent epochEvent : epochActions.getEpochEvents()) {
+        AbstractAction action = epochEvent.getAction();
         action.execute(null, logger);
       }
     }

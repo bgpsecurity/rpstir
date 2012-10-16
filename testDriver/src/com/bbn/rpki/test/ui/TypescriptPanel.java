@@ -189,13 +189,21 @@ public class TypescriptPanel extends TypescriptLogger {
   @Override
   public void log(Object...msg) {
     StringBuilder sb = new StringBuilder();
+    buildMsg(sb, msg);
+    processString(sb.toString(), "stdout");
+  }
+
+  private void buildMsg(StringBuilder sb, Object... msg) {
     for (Object o : msg) {
+      if (o.getClass().isArray()) {
+        buildMsg(sb, (Object[]) o);
+        continue;
+      }
       if (sb.length() > 0) {
         sb.append(" ");
       }
       sb.append(o);
     }
-    processString(sb.toString(), "stdout");
   }
 
   /**

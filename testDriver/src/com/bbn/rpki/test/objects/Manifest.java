@@ -26,7 +26,6 @@ public class Manifest extends CMS {
   private EE_cert eeCert;
   private final int manNum;
   private final int ttl;
-  private final String bluePrintName;
 
   /**
    * Construct a new manifest
@@ -38,7 +37,6 @@ public class Manifest extends CMS {
     super("MANIFEST");
     this.parent = parent;
     this.ttl = parent.getTtl();
-    this.bluePrintName = parent.bluePrintName;
     this.thisupdate = Calendar.getInstance();
     // Not sure on this nextUpdate time frame
     this.nextupdate = Calendar.getInstance();
@@ -78,7 +76,7 @@ public class Manifest extends CMS {
       // Create single-use EE certificate
       eeCert = new EE_cert(parent,
                            ttl,
-                           bluePrintName + "-" + manNum,
+                           "Manifest-EE",
                            parent.SIA_path + "EE-" + manNum + "/",
                            IPRangeList.IPV4_EMPTY,
                            IPRangeList.IPV6_EMPTY,

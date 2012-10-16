@@ -130,16 +130,6 @@ public class TestbedCreate implements Constants {
       ca_node.crl.add(new_crl);
       repo_size += 1;
       // manifest_list
-      // create an template factory for our ee needed in the manifest
-      Factory eeFactory = new Factory("Manifest-EE",
-                                      null,
-                                      null,
-                                      null,
-                                      null,
-                                      null,
-                                      false,
-                                      ca_node.getTtl(),
-                                      null);
       Manifest new_manifest = new Manifest(ca_node);
       ca_node.manifests.add(new_manifest);
       repo_size += 1;

@@ -344,7 +344,7 @@ public class Util implements Constants {
       @SuppressWarnings("unused") // For debugging
       String errString = stderr.getString();
       if (DEBUG_ON && typescriptLogger != null) {
-        typescriptLogger.log(Arrays.asList(cmdArray));
+        typescriptLogger.log(cmdArray, System.getProperty("line.separator", "\n"));
         //        typescriptLogger.log(string, System.getProperty("line.separator", "\n"));
       }
       commandLog.println(Arrays.asList(cmdArray));
