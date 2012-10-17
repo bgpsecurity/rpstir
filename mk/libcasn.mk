@@ -25,14 +25,6 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 
 EXTRA_DIST += doc/asn_gen.1
 
-%.c %.h: %.asn lib/casn/asn_gen/asn_gen $(TESTS_ENVIRONTMENT_DEPS)
-	cd "`dirname $<`" && \
-		TEST_LOG_NAME=`basename "$<"` \
-		TEST_LOG_DIR=. \
-		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) \
-		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen "`basename $<`"
-
 
 noinst_LIBRARIES += lib/casn/libcasn.a
 
