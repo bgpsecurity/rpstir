@@ -47,7 +47,22 @@ bin_rpki_object_create_object_create_object_LDADD = \
 	$(LDADD_LIBRPKI)
 
 dist_templates_DATA = \
-	var/templates/*
+	var/templates/EE.cer \
+	var/templates/EE.p15 \
+	var/templates/EE.raw \
+	var/templates/IANA.p15 \
+	var/templates/M.man \
+	var/templates/M.raw \
+	var/templates/R.raw \
+	var/templates/R.roa \
+	var/templates/TA.cer \
+	var/templates/TA.p15 \
+	var/templates/TA.raw \
+	var/templates/ca_template.cer \
+	var/templates/ca_template.raw \
+	var/templates/crl_template.crl \
+	var/templates/ee_template.cer \
+	var/templates/ee_template.raw
 
 check_SCRIPTS += \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
