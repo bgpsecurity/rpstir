@@ -169,15 +169,15 @@ public class TestbedConfig implements Constants {
       if ("IANA".equals(name)) {
         f = new IANAFactory(name, child, server, breakA, t, subjkeyfile);
       } else {
-        f = new Factory(name,
-                        ipv4,
-                        ipv6,
-                        as_list,
-                        child,
-                        server,
-                        breakA,
-                        t,
-                        subjkeyfile);
+        f = new CAFactory(name,
+                          ipv4,
+                          ipv6,
+                          as_list,
+                          child,
+                          server,
+                          breakA,
+                          t,
+                          subjkeyfile);
       }
       break;
     }

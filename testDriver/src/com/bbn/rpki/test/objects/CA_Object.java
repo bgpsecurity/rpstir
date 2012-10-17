@@ -33,11 +33,7 @@ public class CA_Object extends Allocator {
   /** cert common name */
   public String commonName;
   /** the certificate itself */
-  public Certificate certificate;
-  /** The location (path to) the certificate */
-  public String path_CA_cert;
-  /** My factory */
-  //  public FactoryBase myFactory;
+  private Certificate certificate;
 
   private int nextChildSN;
   final String bluePrintName;
@@ -67,47 +63,30 @@ public class CA_Object extends Allocator {
    * @param id
    * @param subjKeyFile
    */
-  public CA_Object(FactoryBase factoryBase, CA_Object parent, int id, String subjKeyFile) {
+  public CA_Object(FactoryBase factoryBase,
+                   CA_Object parent,
+                   int id,
+                   String subjKeyFile,
+                   int ttl,
+                   String bluePrintName,
+                   String serverName,
+                   boolean breakAway) {
     this.nextChildSN = 0;
-    this.ttl = factoryBase.ttl;
-    this.bluePrintName = factoryBase.bluePrintName;
+    this.ttl = ttl;
+    this.bluePrintName = bluePrintName;
     this.nickName = bluePrintName + "-" + id;
     this.parent = parent;
     this.subjKeyFile = subjKeyFile;
     this.id = id;
-    this.serverName = factoryBase.serverName;
-    this.breakAway = factoryBase.breakAway;
+    this.serverName = serverName;
+    this.breakAway = breakAway;
 
     if (parent != null) {
-      Factory myFactory = (Factory) factoryBase;
-      takeIPv4(myFactory.ipv4List, null);
-      takeIPv6(myFactory.ipv6List, null);
-      takeAS(myFactory.asList, null);
-    } else {
-      //  trust anchor CA
-      IANAFactory myFactory = (IANAFactory) factoryBase;
-      this.ipv4Resources = myFactory.ipv4List;
-      this.ipv6Resources = myFactory.ipv6List;
-      this.asResources = myFactory.asList;
-      ActionManager.singleton().recordAllocation(parent, this, "ini", this.ipv4Resources);
-      ActionManager.singleton().recordAllocation(parent, this, "ini", this.ipv6Resources);
-      ActionManager.singleton().recordAllocation(parent, this, "ini", this.asResources);
-    }
-    this.ipv4ResourcesFree = new IPRangeList(this.ipv4Resources);
-    this.ipv6ResourcesFree = new IPRangeList(this.ipv6Resources);
-    this.asResourcesFree = new IPRangeList(this.asResources);
-
-    Certificate certificate = getCertificate();
-    // Grab what I need from the certificate
-    // Obtain just the SIA path and cut off the r:rsync://
-    String[] sia_list = certificate.sia.substring(RSYNC_EXTENSION.length()).split(",");
-    this.SIA_path = sia_list[0].substring(0, sia_list[0].length());
-    //    this.manifest_path = Util.removePrefix(sia_list[1], RSYNC_EXTENSION);
-    this.path_CA_cert = certificate.outputfilename;
-    if (parent != null) {
+      this.SIA_path = breakAway ? (getServerName() + "/" + nickName + "/") : (parent.SIA_path + nickName + "/");
       this.commonName = parent.commonName + "." + this.nickName;
     } else {
       this.commonName = this.nickName;
+      this.SIA_path = getServerName() + "/" + nickName + "/";
     }
 
   }
@@ -119,28 +98,26 @@ public class CA_Object extends Allocator {
     if (this.certificate == null || modified) {
       // Initialize our certificate
       if (parent != null) {
-        String sia_path = breakAway ? (getServerName() + "/" + nickName + "/") : (parent.SIA_path + nickName + "/");
         String dirPath = REPO_PATH + parent.SIA_path;
         this.certificate = new CA_cert(parent,
                                        getTtl(),
                                        dirPath,
                                        nickName,
-                                       sia_path,
-                                       this.asResources,
-                                       this.ipv4Resources,
-                                       this.ipv6Resources,
+                                       SIA_path,
+                                       getRcvdRanges(IPRangeType.as),
+                                       getRcvdRanges(IPRangeType.ipv4),
+                                       getRcvdRanges(IPRangeType.ipv6),
                                        this.subjKeyFile);
       } else {
-        String siaPath = getServerName() + "/" + nickName + "/";
         String dirPath = REPO_PATH + getServerName() + "/";
         this.certificate = new SS_cert(parent,
                                        getTtl(),
-                                       siaPath,
+                                       SIA_path,
                                        nickName,
                                        dirPath,
-                                       this.asResources,
-                                       this.ipv4Resources,
-                                       this.ipv6Resources,
+                                       getRcvdRanges(IPRangeType.as),
+                                       getRcvdRanges(IPRangeType.ipv4),
+                                       getRcvdRanges(IPRangeType.ipv6),
                                        subjKeyFile);
       }
       setModified(false);
@@ -155,7 +132,7 @@ public class CA_Object extends Allocator {
   public void takeIPv4(List<? extends Pair> pairs, String allocationId) {
     IPRangeList allocation = parent.subAllocateIPv4(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
-    this.ipv4Resources.addAll(allocation);
+    this.addRcvdRanges(allocation);
     setModified(true);
   }
 
@@ -166,7 +143,7 @@ public class CA_Object extends Allocator {
   public void takeIPv6(List<? extends Pair> pairs, String allocationId) {
     IPRangeList allocation = parent.subAllocateIPv6(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
-    this.ipv6Resources.addAll(allocation);
+    this.addRcvdRanges(allocation);
     setModified(true);
   }
 
@@ -177,7 +154,7 @@ public class CA_Object extends Allocator {
   public void takeAS(List<? extends Pair> pairs, String allocationId) {
     IPRangeList allocation = parent.subAllocateAS(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
-    this.asResources.addAll(allocation);
+    this.addRcvdRanges(allocation);
     setModified(true);
   }
 
@@ -188,31 +165,10 @@ public class CA_Object extends Allocator {
   public void returnAllocation(String allocationId) {
     for (IPRangeType rangeType : IPRangeType.values()) {
       IPRangeList allocation = ActionManager.singleton().findAllocation(parent, this, rangeType, allocationId);
-      if (allocation == null) {
-        continue;
+      if (allocation != null) {
+        removeRcvdRanges(allocation);
+        parent.addFreeRanges(allocation);
       }
-      IPRangeList resources;
-      IPRangeList resourcesFree;
-      switch(rangeType) {
-      default:
-        // Should never happen
-        continue;
-      case ipv4:
-        resources = this.ipv4Resources;
-        resourcesFree = this.ipv4ResourcesFree;
-        break;
-      case ipv6:
-        resources = this.ipv6Resources;
-        resourcesFree = this.ipv6ResourcesFree;
-        break;
-      case as:
-        resources = this.asResources;
-        resourcesFree = this.asResourcesFree;
-        break;
-      }
-      resources.removeAll(allocation);
-      resourcesFree.removeAll(allocation);
-      parent.addAll(allocation);
     }
   }
 

@@ -44,7 +44,7 @@ public class Manifest extends CMS {
     this.nextupdate.add(Calendar.DATE, ttl);
     this.manNum = parent.getNextManifestNumber();
     // Chop off our rsync:// portion and append the repo path
-    this.outputfilename = REPO_PATH + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".mft";
+    this.outputfilename = REPO_PATH + parent.SIA_path + Util.b64encode_wrapper(parent.getCertificate().ski) + ".mft";
 
   }
 

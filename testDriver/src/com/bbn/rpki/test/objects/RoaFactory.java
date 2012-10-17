@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author RTomlinson
  */
-public class RoaFactory extends Factory implements Constants {
+public class RoaFactory extends Factory<Roa> implements Constants {
 
   /**
    * @param name

@@ -130,8 +130,9 @@ public class Certificate extends CA_Obj {
     if (parent != null) {
       this.issuer = parent.commonName;
       this.subject = parent.commonName + "." + nickname;
-      this.parentkeyfile = parent.certificate.subjkeyfile;
-      this.aki = parent.certificate.ski;
+      Certificate parentCert = parent.getCertificate();
+      this.parentkeyfile = parentCert.subjkeyfile;
+      this.aki = parentCert.ski;
     } else {
       this.issuer = nickname;
       this.subject = nickname;

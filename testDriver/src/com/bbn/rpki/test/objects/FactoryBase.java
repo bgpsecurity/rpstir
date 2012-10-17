@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @author RTomlinson
  */
-public abstract class FactoryBase {
+public abstract class FactoryBase<T> {
 
   /**
    * bp name
@@ -26,10 +26,6 @@ public abstract class FactoryBase {
   String SIA_path;
 
   final List<Pair> childSpec;
-
-  abstract IPRangeList getIPV4RangeList();
-  abstract IPRangeList getIPV6RangeList();
-  abstract IPRangeList getASRangeList();
 
   protected FactoryBase(String bluePrintName,
                         List<Pair> childSpec,
@@ -48,9 +44,8 @@ public abstract class FactoryBase {
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
    */
-  Object create(CA_Object parent, int id) {
-    return new CA_Object(this, parent, id, null);
-  }
+  abstract T create(CA_Object parent, int id);
+
   /**
    * @return the serverName
    */

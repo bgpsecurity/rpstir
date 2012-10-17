@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.objects;
 
+import java.math.BigInteger;
 import java.util.List;
 
 
@@ -11,7 +12,7 @@ import java.util.List;
  *
  * @author RTomlinson
  */
-public class IANAFactory extends FactoryBase {
+public class IANAFactory extends FactoryBase<CA_Object> {
   /**
    * @param bluePrintName
    * @param childSpec
@@ -24,30 +25,24 @@ public class IANAFactory extends FactoryBase {
                         boolean breakAway, int ttl, String subjKeyFile) {
     super(bluePrintName, childSpec, serverName, breakAway, ttl, subjKeyFile);
   }
-  
-  IPRangeList ipv4List = new IPRangeList(IPRangeType.ipv4);
-  IPRangeList ipv6List = new IPRangeList(IPRangeType.ipv6);
-  IPRangeList asList = new IPRangeList(IPRangeType.as);
-  
+
   /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#getIPV4RangeList()
+   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object, int)
    */
   @Override
-  public IPRangeList getIPV4RangeList() {
-    return ipv4List;
+  CA_Object create(CA_Object parent, int id) {
+    CA_Object caObject = new CA_Object(this, parent, id, null, ttl, bluePrintName,
+                                       serverName,
+                                       breakAway);
+    caObject.addRcvdRanges(getEverything(IPRangeType.as));
+    caObject.addRcvdRanges(getEverything(IPRangeType.ipv4));
+    caObject.addRcvdRanges(getEverything(IPRangeType.ipv6));
+    return caObject;
   }
-  /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#getIPV6RangeList()
-   */
-  @Override
-  public IPRangeList getIPV6RangeList() {
-    return ipv6List;
-  }
-  /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#getASRangeList()
-   */
-  @Override
-  public IPRangeList getASRangeList() {
-    return asList;
+
+  private IPRangeList getEverything(IPRangeType rangeType) {
+    IPRangeList everything = new IPRangeList(rangeType);
+    everything.addRange(BigInteger.ZERO, rangeType.getMax());
+    return everything;
   }
 }

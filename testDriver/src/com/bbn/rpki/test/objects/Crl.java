@@ -48,8 +48,9 @@ public class Crl extends CA_Obj {
    */
   public Crl(CA_Object parent) {
     super("CRL");
-    this.parentcertfile  = parent.path_CA_cert;
-    this.parentkeyfile   = parent.certificate.subjkeyfile;
+    Certificate parentCert = parent.getCertificate();
+    this.parentcertfile  = parentCert.outputfilename;
+    this.parentkeyfile   = parentCert.subjkeyfile;
     this.issuer          = parent.commonName;
     this.thisupdate      = Calendar.getInstance();
     // Not sure on this nextUpdate time frame
@@ -58,11 +59,11 @@ public class Crl extends CA_Obj {
     this.nextupdate.add(Calendar.DATE, parent.getTtl());
     this.crlnum          = parent.getNextChildSN();
     this.revokedcertlist = new ArrayList<RevokedCert>();
-    this.aki             = parent.certificate.ski;
+    this.aki             = parentCert.ski;
 
     // Create the output file directory if it doesn't exist
     String dir_path  = REPO_PATH + parent.SIA_path;
-    this.outputfilename = dir_path + Util.b64encode_wrapper(parent.certificate.ski)+".crl";
+    this.outputfilename = dir_path + Util.b64encode_wrapper(this.aki)+".crl";
   }
 
   /**

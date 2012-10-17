@@ -30,12 +30,9 @@ public class EE_Object extends Allocator {
 
     // List initialization
     this.children = new ArrayList<EE_Object>();
-    this.ipv4Resources = parent.subAllocateIPv4(ipv4List);
-    this.ipv6Resources = parent.subAllocateIPv6(ipv6List);
-    this.asResources = parent.subAllocateAS(asList);
-    this.ipv4ResourcesFree = new IPRangeList(this.ipv4Resources);
-    this.ipv6ResourcesFree = new IPRangeList(this.ipv6Resources);
-    this.asResourcesFree = new IPRangeList(this.asResources);
+    this.addRcvdRanges(parent.subAllocateIPv4(ipv4List));
+    this.addRcvdRanges(parent.subAllocateIPv6(ipv6List));
+    this.addRcvdRanges(parent.subAllocateAS(asList));
 
     // Initialize our certificate
     Certificate certificate = getCertificate();
@@ -56,9 +53,9 @@ public class EE_Object extends Allocator {
                                      ttl,
                                      bluePrintName + "-" + id,
                                      parent.SIA_path + "EE-" + id + "/",
-                                     this.ipv4Resources,
-                                     this.ipv6Resources,
-                                     this.asResources);
+                                     this.getRcvdRanges(IPRangeType.ipv4),
+                                     this.getRcvdRanges(IPRangeType.ipv6),
+                                     this.getRcvdRanges(IPRangeType.as));
       setModified(false);
     }
     return this.certificate;
@@ -68,13 +65,11 @@ public class EE_Object extends Allocator {
    * 
    */
   public void returnAllocation() {
-    IPRangeList[] rangeLists = {
-        ipv4Resources,
-        ipv6Resources,
-        asResources
-    };
-    for (IPRangeList ipRangeList : rangeLists) {
-      parent.addAll(ipRangeList);
+    for (IPRangeType rangeType : IPRangeType.values()) {
+      IPRangeList ranges = this.getRcvdRanges(rangeType);
+      this.removeRcvdRanges(ranges);
+      parent.addFreeRanges(ranges);
+
     }
     // Don't worry about our resources. We will never be used again.
   }

@@ -56,8 +56,8 @@ public class CA_cert extends Certificate {
           subjKeyFile,
           "CERTIFICATE",
         "selfsigned=False");
-    this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".crl";
-    this.aia   = "rsync://" + Util.removePrefix(parent.path_CA_cert, REPO_PATH);
+    this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.getCertificate().ski) + ".crl";
+    this.aia   = "rsync://" + Util.removePrefix(outputfilename, REPO_PATH);
     this.sia   = "r:rsync://" + sia_path + ",m:rsync://" + sia_path + Util.b64encode_wrapper(this.ski) + ".mft";
   }
 

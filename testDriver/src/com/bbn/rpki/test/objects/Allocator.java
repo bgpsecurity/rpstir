@@ -6,20 +6,37 @@ package com.bbn.rpki.test.objects;
 import java.util.List;
 
 /**
- * <Enter the description of this type here>
+ * Keeps track of the allocations for an entity (e.g. CA)
+ * 
+ * Maintains two lists for each of three types of numbers (as, ipv4, ipv6).
+ * The "free" lists show the currently available numbers that can be allocated from this entity.
+ * The "allocated" lists show the total allocates received by this entity.
+ * 
+ * Ranges can be added in two ways representing either the receipt of a new allocation from another
+ * entity or the return of a previous allocation to another entity. The former adds the ranges to
+ * both lists while the latter only adds to the free list. Similarly, ranges can be removed in two
+ * ways representing the cancellation of a previous allocation from another entity or the allocation
+ * of ranges to another entity. The latter affects the free list. the former is more complex.
+ * 
+ * Normally, if we lose our allocation, allocations from us to another must also cancelled. In a
+ * perfect world, we would already have cancelled the suballocations. Not having a perfect world at
+ * our disposal, we simply remove from both lists, if present and when the suballocation is
+ * cancelled, we do not add anything that is not in the allocated list back to the free list.
  *
  * @author RTomlinson
  */
 public abstract class Allocator implements Constants {
-
-  // These represent allocations that have been received and not re-allocated
-  protected IPRangeList ipv4ResourcesFree;
-  protected IPRangeList ipv6ResourcesFree;
-  protected IPRangeList asResourcesFree;
-  // These represent the allocations that have been received by this allocator
-  protected IPRangeList ipv4Resources = new IPRangeList(IPRangeType.ipv4);
-  protected IPRangeList ipv6Resources = new IPRangeList(IPRangeType.ipv6);
-  protected IPRangeList asResources = new IPRangeList(IPRangeType.as);
+  private static class ResourcePair {
+    IPRangeList free;
+    IPRangeList rcvd;
+    ResourcePair(IPRangeType rangeType) {
+      free = new IPRangeList(rangeType);
+      rcvd = new IPRangeList(rangeType);
+    }
+  }
+  private final ResourcePair asResources = new ResourcePair(IPRangeType.as);
+  private final ResourcePair ipv4Resources = new ResourcePair(IPRangeType.ipv4);
+  private final ResourcePair ipv6Resources = new ResourcePair(IPRangeType.ipv6);
   protected boolean modified = true;
 
   protected IPRangeList subAllocateIPv4(List<? extends Pair> iplist) {
@@ -29,7 +46,7 @@ public abstract class Allocator implements Constants {
 
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-        this.ipv4ResourcesFree.allocate(iplist, true);
+        this.ipv4Resources.free.allocate(iplist, true);
 
     return allocated_pairs;
   }
@@ -40,9 +57,8 @@ public abstract class Allocator implements Constants {
     }
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-        this.ipv6ResourcesFree.allocate(iplist, true);
+        this.ipv6Resources.free.allocate(iplist, true);
 
-    //  FIXME: maxlength not supported
     return allocated_pairs;
   }
 
@@ -52,63 +68,63 @@ public abstract class Allocator implements Constants {
     }
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-        this.asResourcesFree.allocate(asList, false);
+        this.asResources.free.allocate(asList, false);
     return allocated_pairs;
   }
 
-
-  /**
-   * @param rangeType
-   * @param range
-   */
-  public void removeFreeRange(IPRangeType rangeType, Range range) {
-    IPRangeList resourcesFree;
-    switch (rangeType) {
-    case ipv4:
-      resourcesFree = ipv4ResourcesFree;
-      break;
-    case ipv6:
-      resourcesFree = ipv6ResourcesFree;
-      break;
-    case as:
-      resourcesFree = asResourcesFree;
-      break;
-    default:
-      return;
-    }
-    resourcesFree.remove(range);
+  protected void addRcvdRanges(IPRangeList rangeList) {
+    ResourcePair resources = selectResources(rangeList.getIpVersion());
+    resources.rcvd.addAll(rangeList);
+    resources.free.addAll(rangeList);
   }
 
   /**
+   * Represents a cancellation of allocation to this allocator.
+   * Remove from rcvd list and remove what we can from free list
+   * 
    * @param rangeType
    * @param range
    */
-  public void addFreeRange(IPRangeType rangeType, Range range) {
-    IPRangeList resourcesFree;
+  public void removeRcvdRanges(IPRangeList rangeList) {
+    ResourcePair resources = selectResources(rangeList.getIpVersion());
+    resources.rcvd.removeAll(rangeList);
+    resources.free.removeAll(rangeList.intersection(resources.free));
+  }
+
+  protected void removeRcvdRange(Range range) {
+    ResourcePair resources = selectResources(range.version);
+    resources.rcvd.remove(range);
+  }
+
+  private ResourcePair selectResources(IPRangeType rangeType) {
+    ResourcePair resources;
     switch (rangeType) {
     case ipv4:
-      resourcesFree = ipv4ResourcesFree;
+      resources = ipv4Resources;
       break;
     case ipv6:
-      resourcesFree = ipv6ResourcesFree;
+      resources = ipv6Resources;
       break;
     case as:
-      resourcesFree = asResourcesFree;
+      resources = asResources;
       break;
     default:
-      return;
+      resources = null;
     }
-    resourcesFree.add(range);
+    assert resources != null;
+    return resources;
   }
 
   /**
-   * Return ranges to the free list
-   * @param rangeList
+   * Represents the return of a suballocation
+   * 
+   * @param rangeType
+   * @param range
    */
-  public void addAll(IPRangeList rangeList) {
-    for (Range range : rangeList) {
-      addFreeRange(rangeList.getIpVersion(), range);
-    }
+  protected void addFreeRanges(IPRangeList rangeList) {
+    ResourcePair resources = selectResources(rangeList.getIpVersion());
+    IPRangeList intersection = resources.rcvd.intersection(rangeList);
+    resources.free.addAll(intersection);
   }
 
   /**
@@ -123,5 +139,21 @@ public abstract class Allocator implements Constants {
    */
   public void setModified(boolean modified) {
     this.modified = modified;
+  }
+
+  /**
+   * @param rangeType
+   * @return
+   */
+  protected IPRangeList getRcvdRanges(IPRangeType rangeType) {
+    return selectResources(rangeType).rcvd;
+  }
+
+  /**
+   * @param rangeType
+   * @return
+   */
+  protected IPRangeList getFreeRanges(IPRangeType rangeType) {
+    return selectResources(rangeType).free;
   }
 }

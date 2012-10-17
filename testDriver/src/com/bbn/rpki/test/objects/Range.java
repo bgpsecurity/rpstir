@@ -11,11 +11,11 @@ import java.math.BigInteger;
  * @author RTomlinson
  */
 public class Range implements Constants, Comparable<Range> {
-    
+
   /**
    * @param base
    * @param bits
-   * @param version 
+   * @param version
    * @return A Range representing the specified prefix.
    */
   public static Range createPrefix(String base, int bits, IPRangeType version) {
@@ -51,17 +51,17 @@ public class Range implements Constants, Comparable<Range> {
     }
     return new BigInteger(s, radix);
   }
-  
-  IPRangeType version;
-  BigInteger min;
-  BigInteger max;
+
+  final IPRangeType version;
+  final BigInteger min;
+  final BigInteger max;
   private final boolean range;
-  
+
   /**
    * @param min
    * @param max
-   * @param version 
-   * @param range 
+   * @param version
+   * @param range
    */
   public Range(BigInteger min, BigInteger max, IPRangeType version, boolean range) {
     super();
@@ -77,7 +77,9 @@ public class Range implements Constants, Comparable<Range> {
   @Override
   public int compareTo(Range o) {
     int diff = min.subtract(o.min).signum();
-    if (diff != 0) return diff;
+    if (diff != 0) {
+      return diff;
+    }
     return max.subtract(o.max).signum();
   }
 
@@ -86,10 +88,12 @@ public class Range implements Constants, Comparable<Range> {
    * @return true if b is with this
    */
   public boolean contains(Range b) {
-    if (b.min.compareTo(min) < 0 || b.max.compareTo(max) > 0) return false;
+    if (b.min.compareTo(min) < 0 || b.max.compareTo(max) > 0) {
+      return false;
+    }
     return true;
   }
-  
+
   /**
    * @see java.lang.Object#toString()
    */
@@ -138,7 +142,7 @@ public class Range implements Constants, Comparable<Range> {
 
   /**
    * @param sb
-   * @param q 
+   * @param q
    * @return
    */
   private StringBuilder appendAS(StringBuilder sb, BigInteger q) {
@@ -155,7 +159,9 @@ public class Range implements Constants, Comparable<Range> {
     for (int shift = 128 - 16; shift >= 0; shift -= 16) {
       int x = q.shiftRight(shift).and(SXTN_BIT_MASK).intValue();
       if (x == 0) {
-        if (skipping) continue;
+        if (skipping) {
+          continue;
+        }
         if (!skipped) {
           // Start skipping zeros
           sb.append(":");
@@ -170,14 +176,18 @@ public class Range implements Constants, Comparable<Range> {
       }
       sb.append(":").append(String.format("%04X", x));
     }
-    if (skipping) sb.append(":");
+    if (skipping) {
+      sb.append(":");
+    }
   }
-  
+
   private void appendIPv4(StringBuilder sb, BigInteger q) {
     int i = q.intValue();
     for (int shift = 24; shift >= 0; shift -= 8) {
       int b = (i >> shift) & 0xff;
-      if (shift < 24) sb.append(".");
+      if (shift < 24) {
+        sb.append(".");
+      }
       sb.append(b);
     }
   }
@@ -194,7 +204,7 @@ public class Range implements Constants, Comparable<Range> {
     }
     return false;
   }
-  
+
   /**
    * @return true if this Range is being used as a prefix
    */
@@ -216,9 +226,9 @@ public class Range implements Constants, Comparable<Range> {
    * @return true if b overlaps this Range
    */
   public boolean overlaps(Range b) {
-    return min.compareTo(b.max) < 0 && max.compareTo(b.min) >= 0; 
+    return min.compareTo(b.max) < 0 && max.compareTo(b.min) >= 0;
   }
-  
+
   /**
    * @param b
    * @return the overlapping range or null if no overlap

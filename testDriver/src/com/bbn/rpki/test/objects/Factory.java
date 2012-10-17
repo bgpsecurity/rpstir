@@ -3,7 +3,6 @@
  */
 package com.bbn.rpki.test.objects;
 
-import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -11,16 +10,16 @@ import java.util.List;
  *
  * @author RTomlinson
  */
-public class Factory extends FactoryBase {
+public abstract class Factory<T> extends FactoryBase<T> {
 
   /** Initial allocation requests that should be made */
-  public List<Pair> asList;
+  protected List<Pair> asList;
 
   /** Initial allocation requests that should be made */
-  public List<Pair> ipv4List;
+  protected List<Pair> ipv4List;
 
   /** Initial allocation requests that should be made */
-  public List<Pair> ipv6List;
+  protected List<Pair> ipv6List;
 
 
   /**
@@ -34,52 +33,18 @@ public class Factory extends FactoryBase {
    * @param ttl
    * @param subjKeyFile
    */
-  public Factory(String bluePrintName,
-                 List<Pair> ipv4List,
-                 List<Pair> ipv6List,
-                 List<Pair> asList,
-                 List<Pair> childSpec,
-                 String serverName,
-                 boolean breakAway,
-                 int ttl,
-                 String subjKeyFile) {
+  protected Factory(String bluePrintName,
+                    List<Pair> ipv4List,
+                    List<Pair> ipv6List,
+                    List<Pair> asList,
+                    List<Pair> childSpec,
+                    String serverName,
+                    boolean breakAway,
+                    int ttl,
+                    String subjKeyFile) {
     super(bluePrintName, childSpec, serverName, breakAway, ttl, subjKeyFile);
     this.ipv4List = ipv4List;
     this.ipv6List = ipv6List;
     this.asList = asList;
-
-    // TODO Auto-generated constructor stub
-  }
-
-  /**
-   * @return the part
-   */
-  @Override
-  public IPRangeList getIPV4RangeList() {
-    IPRangeList ipv4Everything = new IPRangeList(IPRangeType.ipv4);
-    ipv4Everything.addRange(BigInteger.ZERO, new BigInteger("0xffffffff"));
-    return ipv4Everything.allocate(ipv4List, false);
-  }
-
-  /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#getIPV6RangeList()
-   */
-  @Override
-  public IPRangeList getIPV6RangeList() {
-    IPRangeList ipv6Everything = new IPRangeList(IPRangeType.ipv6);
-    ipv6Everything.addRange(BigInteger.ZERO,
-                            new BigInteger("0xffffffffffffffffffffffffffffffff"));
-    return ipv6Everything.allocate(ipv6List, false);
-  }
-
-  /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#getASRangeList()
-   */
-  @Override
-  public IPRangeList getASRangeList() {
-    IPRangeList asEverything = new IPRangeList(IPRangeType.as);
-    asEverything.addRange(BigInteger.ZERO,
-                          new BigInteger("0xffffffff"));
-    return asEverything.allocate(asList, false);
   }
 }

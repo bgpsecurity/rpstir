@@ -160,7 +160,8 @@ public class Util implements Constants {
    */
   public static void writeConfig(CA_Obj ca_obj) {
     try {
-      // Use introspection to print out all the member variables and their values to a file
+      // No longer uses introspection.
+      // Each CA_Obj supplies a Map of variables versus value.
       File configDir = new File(Constants.CONFIG_PATH);
       if (!configDir.isDirectory()) {
         configDir.mkdirs();

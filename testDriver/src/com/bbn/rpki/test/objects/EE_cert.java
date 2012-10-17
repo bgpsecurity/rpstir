@@ -41,12 +41,14 @@ public class EE_cert extends Certificate {
           null,
           "CERTIFICATE",
         "selfsigned=False");
-    this.aia   = "rsync://" + Util.removePrefix(parent.path_CA_cert, REPO_PATH);
-    this.crldp = "rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".crl";
+    Certificate parentCertificate = parent.getCertificate();
+    this.aia   = "rsync://" + Util.removePrefix(parentCertificate.outputfilename, REPO_PATH);
+    String encodedParentSki = Util.b64encode_wrapper(parentCertificate.ski);
+    this.crldp = "rsync://" + parent.SIA_path + encodedParentSki + ".crl";
     // Set our SIA based on the hash of our public key, which will be the name
     // of the ROA or Manifest this EE will be signing
     if (bluePrintName.equals("Manifest-EE")) {
-      this.sia = "s:rsync://" + parent.SIA_path + Util.b64encode_wrapper(parent.certificate.ski) + ".mft";
+      this.sia = "s:rsync://" + parent.SIA_path + encodedParentSki + ".mft";
       this.ipv4 = IPRangeList.IPV4_INHERIT;
       this.ipv6 = IPRangeList.IPV6_INHERIT;
       this.as_list = IPRangeList.AS_INHERIT;

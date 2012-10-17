@@ -46,6 +46,30 @@ public class IPRangeList implements Iterable<Range>, Constants {
     return false;
   }
 
+  public static void main(String...args) {
+    IPRangeList rcvd = new IPRangeList(IPRangeType.as);
+    Range range1 = new Range(new BigInteger("1000"), new BigInteger("1999"), IPRangeType.as, true);
+    Range range2 = new Range(new BigInteger("2000"), new BigInteger("2999"), IPRangeType.as, true);
+    rcvd.add(range1);
+    rcvd.add(range2);
+    IPRangeList free = new IPRangeList(rcvd);
+    // Allocate a prefix that must start at 1024 cutting a hole
+    IPRangeList suballoc = free.allocate(Collections.singletonList(new Pair("p", 1024)), true);
+    // Rescind the first allocation
+    rcvd.remove(range1);
+    free.removeAll(new IPRangeList(range1).intersection(free));
+    IPRangeList intersection = rcvd.intersection(suballoc);
+    System.out.println("rcvd = " + rcvd);
+    System.out.println("free = " + free);
+    System.out.println("suballoc = " + suballoc);
+    System.out.println("intersection = " + intersection);
+    free.addAll(intersection);
+    System.out.println("rcvd = " + rcvd);
+    System.out.println("free = " + free);
+    System.out.println("suballoc = " + suballoc);
+    System.out.println("intersection = " + intersection);
+  }
+
   private final IPRangeType ipVersion;
   private final List<Range> rangeList;
 
@@ -65,6 +89,16 @@ public class IPRangeList implements Iterable<Range>, Constants {
   public IPRangeList(IPRangeList orig) {
     rangeList = new ArrayList<Range>(orig.rangeList);
     this.ipVersion = orig.ipVersion;
+  }
+
+  /**
+   * @param ranges
+   */
+  public IPRangeList(Range...ranges) {
+    this(ranges[0].version);
+    for (Range range : ranges) {
+      add(range);
+    }
   }
 
   /**
@@ -355,20 +389,22 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @param range
    */
   public void add(Range range) {
-    for (int i = 0, n = rangeList.size(); i < n; i++) {
-      Range test = rangeList.get(i);
+    for (int i = 0, n = rangeList.size(); i <= n; i++) {
+      Range test = i < n ? rangeList.get(i) : null;
       Range test2 = null;
-      if (test.compareTo(range) > 0) {
-        assert !test.overlaps(range);
+      if (test == null || test.compareTo(range) > 0) {
+        assert test == null || !test.overlaps(range);
         // There are four legal cases:
         //  range is adjacent to test
         //  range is adjacent to the preceding range
         //  range is adjacent to neither
         //  range is adjacent to both
         int x = 0;
-        if (range.max.equals(test.min.subtract(BigInteger.ONE))) {
-          // Adjacent to test
-          x |= 1;
+        if (test != null) {
+          if (range.max.equals(test.min.subtract(BigInteger.ONE))) {
+            // Adjacent to test
+            x |= 1;
+          }
         }
         if (i > 0) {
           // May be adjacent to the preceding range
@@ -385,15 +421,15 @@ public class IPRangeList implements Iterable<Range>, Constants {
           return;
         case 1:
           // Adjacent to following range
-          test.min = range.min;
+          rangeList.set(i, new Range(range.min, test.max, test.version, false));
           return;
         case 2:
           // Adjacent to preceding range
-          test2.max = range.max;
+          rangeList.set(i - 1, new Range(test2.min, range.max, test2.version, false));
           return;
         case 3:
           // adjacent to both
-          test2.max = test.max;
+          rangeList.set(i - 1, new Range(test2.min, test.max, test.version, false));
           rangeList.remove(i);
           return;
         }
@@ -411,6 +447,9 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @return true if the range was successfully removed
    */
   public boolean remove(Range range) {
+    if (range == null) {
+      return true;
+    }
     for (int i = 0, n = rangeList.size(); i < n; i++) {
       Range test = rangeList.get(i);
       if (test.min.compareTo(range.max) > 0) {
@@ -458,6 +497,25 @@ public class IPRangeList implements Iterable<Range>, Constants {
       return test.contains(range);
     }
     return false;
+  }
+
+  /**
+   * Computes the intersection between this RangeList and another
+   * 
+   * @param rangeList
+   * @return the intersection or null if the lists do not intersect
+   */
+  public IPRangeList intersection(IPRangeList rangeList) {
+    IPRangeList ret = new IPRangeList(ipVersion);
+    for (Range range : rangeList) {
+      for (Range testRange : this) {
+        Range intersection = range.intersection(testRange);
+        if (intersection != null) {
+          ret.add(intersection);
+        }
+      }
+    }
+    return ret;
   }
 
   /**
