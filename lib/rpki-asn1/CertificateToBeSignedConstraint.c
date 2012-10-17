@@ -1,5 +1,5 @@
 
-#include "certificate.h"
+#include "rpki-asn1/certificate.h"
 
 int CertificateToBeSignedConstraint(
     struct CertificateToBeSigned *ctbsp)
