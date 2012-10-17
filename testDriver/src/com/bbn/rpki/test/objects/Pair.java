@@ -70,6 +70,13 @@ public class Pair {
    */
   @Override
   public String toString() {
+    return getPairString();
+  }
+
+  /**
+   * @return
+   */
+  public String getPairString() {
     return String.format("%s%%%d", tag, arg);
   }
 }

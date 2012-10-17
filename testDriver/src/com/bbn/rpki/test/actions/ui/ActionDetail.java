@@ -317,7 +317,7 @@ public class ActionDetail {
         if (value == null) {
           return "null";
         }
-        return value.toString();
+        return ((Pair) value).getPairString();
       }
     };
     final JFormattedTextField component = new JFormattedTextField(formatter);

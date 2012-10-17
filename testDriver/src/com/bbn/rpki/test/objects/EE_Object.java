@@ -22,17 +22,17 @@ public class EE_Object extends Allocator {
   EE_cert certificate;
   private final int ttl;
 
-  EE_Object(int ttl, Factory myFactory,CA_Object parent) {
+  public EE_Object(int ttl, List<Pair> asList, List<Pair> ipv4List, List<Pair> ipv6List, String bluePrintName, CA_Object parent) {
 
-    this.bluePrintName = myFactory.bluePrintName;
+    this.bluePrintName = bluePrintName;
     this.parent = parent;
     this.ttl = ttl;
 
     // List initialization
     this.children = new ArrayList<EE_Object>();
-    this.ipv4Resources = parent.subAllocateIPv4(myFactory.ipv4List);
-    this.ipv6Resources = parent.subAllocateIPv6(myFactory.ipv6List);
-    this.asResources = parent.subAllocateAS(myFactory.asList);
+    this.ipv4Resources = parent.subAllocateIPv4(ipv4List);
+    this.ipv6Resources = parent.subAllocateIPv6(ipv6List);
+    this.asResources = parent.subAllocateAS(asList);
     this.ipv4ResourcesFree = new IPRangeList(this.ipv4Resources);
     this.ipv6ResourcesFree = new IPRangeList(this.ipv6Resources);
     this.asResourcesFree = new IPRangeList(this.asResources);
@@ -62,5 +62,20 @@ public class EE_Object extends Allocator {
       setModified(false);
     }
     return this.certificate;
+  }
+
+  /**
+   * 
+   */
+  public void returnAllocation() {
+    IPRangeList[] rangeLists = {
+        ipv4Resources,
+        ipv6Resources,
+        asResources
+    };
+    for (IPRangeList ipRangeList : rangeLists) {
+      parent.addAll(ipRangeList);
+    }
+    // Don't worry about our resources. We will never be used again.
   }
 }

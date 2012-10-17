@@ -72,6 +72,7 @@ public class TestbedCreate implements Constants {
     ianaFactory.ipv6List.add(Range.createPrefix("0", 0, IPRangeType.ipv6));
     ianaFactory.asList.add(Range.createRange("0", "0xffffffff", IPRangeType.as));
     iana = new CA_Object(ianaFactory, null, 0, ianaFactory.subjKeyFile);
+    ActionManager.singleton().recordCA_Object(iana);
   }
 
   /**

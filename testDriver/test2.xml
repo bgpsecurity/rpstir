@@ -55,7 +55,7 @@ ttl = 365
 ROAipv4List = p%4, p%4
 ROAipv6List = p%4, p%4
 asid = 1</ini-file>
-  <action actionType="allocate" parentName="IANA-0.RIPE-2" childName="IANA-0.RIPE-2.LIR-2" allocationId="a1" rangeType="ipv4">
+  <action actionType="allocate" parentName="IANA-0.RIPE-2" childName="IANA-0.RIPE-2.LIR-2" allocationId="a1">
     <ALLOCATION_PUBLICATION_TIME id="1">
       <coincident ref="2" locked="false" />
     </ALLOCATION_PUBLICATION_TIME>
@@ -71,7 +71,7 @@ asid = 1</ini-file>
       <predecessor ref="2" locked="true" />
       <coincident ref="3" locked="false" />
     </VALIDITY_END_TIME>
-    <pair tag="p" arg="8" />
+    <pair tag="p" arg="8" rangeType="ipv4" />
   </action>
   <action actionType="chooseCacheCheckTask" path="UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)">
     <epoch id="4">

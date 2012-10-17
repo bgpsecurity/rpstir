@@ -3,7 +3,7 @@
  */
 package com.bbn.rpki.test.objects;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,15 +30,12 @@ public class Roa extends CMS {
    * @param myFactory
    * @param ee_object
    */
-  public Roa(RoaFactory myFactory, EE_Object ee_object) {
+  public Roa(EE_Object ee_object) {
     super("ROA");
     // Pull the info we need from our ee_object
-    this.asID           = new ArrayList<String>(myFactory.asid.size());
-    for (Pair pair : myFactory.asid) {
-      asID.add(String.format("'%s'", pair.arg.toString()));
-    }
-    this.roaipv4        = ee_object.subAllocateIPv4(myFactory.ROAipv4List);
-    this.roaipv6        = ee_object.subAllocateIPv6(myFactory.ROAipv6List);
+    this.asID           = Collections.singletonList(String.format("'%d'", ee_object.asResources.iterator().next().min));
+    this.roaipv4        = ee_object.ipv4Resources;
+    this.roaipv6        = ee_object.ipv6Resources;
     this.outputfilename = REPO_PATH + ee_object.path_ROA;
     this.ee_object = ee_object;
     // Make our directory to place our ROA if it doesn't already exist

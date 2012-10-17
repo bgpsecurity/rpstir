@@ -62,7 +62,7 @@ public class RoaFactory extends Factory implements Constants {
       System.out.println("creating a ROA for "+ bluePrintName);
     }
 
-    EE_Object ee_object = new EE_Object(ttl, this, parent);
-    return new Roa(this, ee_object);
+    EE_Object ee_object = new EE_Object(ttl, asid, ROAipv4List, ROAipv6List, bluePrintName, parent);
+    return new Roa(ee_object);
   }
 }

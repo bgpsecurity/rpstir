@@ -5,6 +5,7 @@ package com.bbn.rpki.test.actions;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,7 +14,10 @@ import java.util.Map;
 import org.jdom.Element;
 
 import com.bbn.rpki.test.objects.CA_Object;
+import com.bbn.rpki.test.objects.EE_Object;
+import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
+import com.bbn.rpki.test.objects.Roa;
 import com.bbn.rpki.test.objects.TypedPair;
 import com.bbn.rpki.test.objects.TypedPairList;
 import com.bbn.rpki.test.objects.TypescriptLogger;
@@ -26,13 +30,13 @@ import com.bbn.rpki.test.tasks.Model;
  */
 public class AllocateROAAction extends AbstractAction {
 
-  private static final String VALIDITY_END_TIME_OF_ALLOCATION = "Validity End Time of Allocation ";
+  private static final String VALIDITY_END_TIME_OF_ALLOCATION = "Validity End Time of ROA Allocation ";
 
-  private static final String VALIDITY_START_TIME_OF_ALLOCATION = "Validity Start Time of Allocation ";
+  private static final String VALIDITY_START_TIME_OF_ALLOCATION = "Validity Start Time of ROA Allocation ";
 
-  private static final String PUBLICATION_TIME_OF_DEALLOCATION = "Publication Time of Deallocation ";
+  private static final String PUBLICATION_TIME_OF_DEALLOCATION = "Publication Time of ROA Deallocation ";
 
-  private static final String PUBLICATION_TIME_OF_ALLOCATION = "Publication Time of Allocation ";
+  private static final String PUBLICATION_TIME_OF_ALLOCATION = "Publication Time of ROA Allocation ";
 
   enum AttributeType {
     ISSUER("Issuer"),
@@ -77,7 +81,8 @@ public class AllocateROAAction extends AbstractAction {
   private final EpochEvent deallocationPublicationTime;
   private final EpochEvent validityStartTime;
   private final EpochEvent validityEndTime;
-  private final int asId;
+
+  private EE_Object eeObject;
 
   /**
    * @param parent
@@ -86,10 +91,9 @@ public class AllocateROAAction extends AbstractAction {
    * @param model
    * @param pairs the ranges or prefixes to be allocated
    */
-  public AllocateROAAction(CA_Object parent, String allocationId, Model model, int asId, TypedPair...pairs) {
+  public AllocateROAAction(CA_Object parent, String allocationId, Model model, TypedPair...pairs) {
     super(model);
     this.parent = parent;
-    this.asId = asId;
     this.allocationId = allocationId;
     this.allocationPairs.addAll(Arrays.asList(pairs));
     allocationPublicationTime = new EpochEvent(this, PUBLICATION_TIME_OF_ALLOCATION);
@@ -108,7 +112,7 @@ public class AllocateROAAction extends AbstractAction {
    * @param model
    */
   public AllocateROAAction(Model model) {
-    this(model.getRootCA(), "", model, 0);
+    this(model.getRootCA(), "", model);
   }
 
   /**
@@ -120,9 +124,7 @@ public class AllocateROAAction extends AbstractAction {
   public AllocateROAAction(Element element, Model model, ActionContext actionContext) {
     super(model);
     String parentCommonName = element.getAttributeValue(ATTR_PARENT_NAME);
-    asId = Integer.parseInt(element.getAttributeValue(ATTR_ASID));
     allocationId = element.getAttributeValue(ATTR_ALLOCATION_ID);
-    String rangeTypeName = element.getAttributeValue(ATTR_RANGE_TYPE);
 
     parent = ActionManager.singleton().findCA_Object(parentCommonName);
 
@@ -148,11 +150,8 @@ public class AllocateROAAction extends AbstractAction {
    */
   @Override
   public Element toXML(ActionContext actionContext) {
-    Element element = createElement(ActionType.allocate);
-    if (parent != null) {
-      element.setAttribute(ATTR_PARENT_NAME, parent.commonName);
-    }
-    element.setAttribute(ATTR_ASID, String.valueOf(asId));
+    Element element = createElement(ActionType.allocateROA);
+    element.setAttribute(ATTR_PARENT_NAME, parent.commonName);
     element.setAttribute(ATTR_ALLOCATION_ID, allocationId);
 
     element.addContent(allocationPublicationTime.toXML(AttributeType.ALLOCATION_PUBLICATION_TIME.name(), actionContext));
@@ -181,34 +180,22 @@ public class AllocateROAAction extends AbstractAction {
    */
   @Override
   public void execute(EpochEvent epochEvent, TypescriptLogger logger) {
-    //    Roa roa = (Roa) model.getTestbedConfig().getFactory("ROA").create(parent, parent.getNextChildSN());
-    //    EE_Object eeObject = new EE_Object()
-    //    roa = new Roa(null, )
-    //    EE_Object child = roa.getEEObject();
-    //    switch (epochEvent.getName()) {
-    //    case PUBLICATION_TIME_OF_ALLOCATION:
-    //      switch (rangeType) {
-    //      case ipv4:
-    //        child.takeIPv4(allocationPairs, allocationId);
-    //        break;
-    //      case ipv6:
-    //        child.takeIPv6(allocationPairs, allocationId);
-    //        break;
-    //      case as:
-    //        child.takeAS(allocationPairs, allocationId);
-    //        break;
-    //      }
-    //      if (logger != null) {
-    //        logger.format("Allocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
-    //      }
-    //      break;
-    //    case VALIDITY_END_TIME_OF_ALLOCATION:
-    //      child.returnAllocation(rangeType, allocationId);
-    //      if (logger != null) {
-    //        logger.format("Deallocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
-    //      }
-    //      break;
-    //    }
+    switch (epochEvent.getName()) {
+    case PUBLICATION_TIME_OF_ALLOCATION:
+      List<Pair> asid = Collections.singletonList(new Pair("r", 1));
+      eeObject = new EE_Object(1, asid, allocationPairs.extract(IPRangeType.ipv4), allocationPairs.extract(IPRangeType.ipv6), "ROA-" + allocationId, parent);
+      Roa roa = new Roa(eeObject);
+      if (logger != null) {
+        logger.format("Allocate ROA %s from %s to %s identified as %s%n", allocationPairs, parent, eeObject, allocationId);
+      }
+      break;
+    case VALIDITY_END_TIME_OF_ALLOCATION:
+      eeObject.returnAllocation();
+      if (logger != null) {
+        logger.format("Deallocate ROA %s from %s to %s identified as %s%n", allocationPairs, parent, eeObject, allocationId);
+      }
+      break;
+    }
   }
 
   /**
@@ -255,10 +242,10 @@ public class AllocateROAAction extends AbstractAction {
   /**
    * @see java.lang.Object#toString()
    */
-  //  @Override
-  //  public String toString() {
-  //    return String.format("Allocate %s: %s from %s to %s", allocationId, rangeType.name(), parent.getNickname(), child.getNickname());
-  //  }
+  @Override
+  public String toString() {
+    return String.format("Allocate ROA %s: %s from %s", allocationId, allocationPairs, parent.getNickname());
+  }
 
   /**
    * @see com.bbn.rpki.test.actions.AbstractAction#updateAttribute(java.lang.String, java.lang.Object)

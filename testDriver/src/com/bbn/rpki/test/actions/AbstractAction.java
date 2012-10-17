@@ -37,6 +37,9 @@ public abstract class AbstractAction implements XMLConstants {
       case allocate:
         action = new AllocateAction(child, model, actionContext);
         break;
+      case allocateROA:
+        action = new AllocateROAAction(child, model, actionContext);
+        break;
       case chooseCacheCheckTask:
         action = new ChooseCacheCheckTask(child, model, actionContext);
         break;

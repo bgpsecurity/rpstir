@@ -61,5 +61,9 @@ public class TypedPair extends Pair implements XMLConstants {
     return element;
   }
 
+  @Override
+  public String toString() {
+    return type + ":" + super.toString();
+  }
 
 }

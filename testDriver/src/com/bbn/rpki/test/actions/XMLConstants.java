@@ -32,9 +32,6 @@ public interface XMLConstants {
   static final String ATTR_PARENT_NAME = "parentName";
 
   /** Tag or attribute name */
-  static final String ATTR_ASID = "asId";
-
-  /** Tag or attribute name */
   static final String ATTR_CHILD_NAME = "childName";
 
   /** Tag or attribute name */

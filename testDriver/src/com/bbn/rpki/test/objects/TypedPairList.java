@@ -4,6 +4,7 @@
 package com.bbn.rpki.test.objects;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <Enter the description of this type here>
@@ -11,5 +12,18 @@ import java.util.ArrayList;
  * @author rtomlinson
  */
 public class TypedPairList extends ArrayList<TypedPair> {
-  // No actual content
+
+  /**
+   * @param type
+   * @return
+   */
+  public List<Pair> extract(IPRangeType type) {
+    List<Pair> ret = new ArrayList<Pair>();
+    for (TypedPair pair : this) {
+      if (pair.type == type) {
+        ret.add(pair);
+      }
+    }
+    return ret;
+  }
 }
