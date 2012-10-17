@@ -2,6 +2,7 @@ pkgdata_DATA += var/oidtable
 CLEANFILES += var/oidtable
 
 var/oidtable: ./bin/asn1/make_oidtable $(ASN_BUILT_FILES:.asn=.h) $(ASN_SOURCE_FILES:.asn=.h) $(TESTS_ENVIRONTMENT_DEPS)
+	mkdir -p "$(@D)"
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		$(TESTS_ENVIRONMENT) \

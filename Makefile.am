@@ -180,10 +180,12 @@ do_subst = $(SED) \
 
 $(MK_SUBST_FILES): Makefile
 	rm -f "$@"
+	mkdir -p "$(@D)"
 	$(do_subst) < "$(srcdir)/$@.in" > "$@" || rm -f "$@"
 
 $(MK_SUBST_FILES_EXEC): Makefile
 	rm -f "$@"
+	mkdir -p "$(@D)"
 	$(do_subst) < "$(srcdir)/$@.in" > "$@" && chmod +x "$@" || rm -f "$@"
 
 CLEANFILES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)
@@ -193,6 +195,7 @@ EXTRA_DIST += $(MK_SUBST_FILES:=.in) $(MK_SUBST_FILES_EXEC:=.in)
 copy-asn-sources-stamp: $(ASN_SOURCE_FILES)
 	if test "$(builddir)" != "$(srcdir)"; then \
 		for file in $(ASN_SOURCE_FILES); do \
+			mkdir -p "$(builddir)"/`dirname "$$file"`; \
 			cp -f "$(srcdir)/$$file" "$(builddir)/$$file"; \
 		done; \
 	fi
@@ -226,6 +229,7 @@ ASN_GENERATION_DEPS = \
 	$(ASN_BUILT_FILES)
 
 $(ASN_C_FILES) $(ASN_H_FILES): $(ASN_GENERATION_DEPS)
+	mkdir -p "$(@D)"
 	base=`echo "$(@F)" | $(SED) "s/\\.[ch]\$$//"`; \
 	cd "$(@D)" && \
 		TEST_LOG_NAME="$$base" \

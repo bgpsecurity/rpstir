@@ -86,12 +86,14 @@ dist_check_DATA += \
 	tests/subsystem/rtr/test.conf
 
 tests/subsystem/rtr/%.key:
+	mkdir -p "$(@D)"
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
 		$(TESTS_ENVIRONMENT) bin/rpki-object/gen_key "$@" 2048
 
 tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/subsystem/rtr/root.options
+	mkdir -p "$(@D)"
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
@@ -102,6 +104,7 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 		subjkeyfile="$<"
 
 tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
+	mkdir -p "$(@D)"
 	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
 	IP6="`printf '%x::100-%x::%xff,%x:1::-%x:%x:ffff:ffff:ffff:ffff:ffff:ffff' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
 	TEST_LOG_NAME=`basename "$@"` \
@@ -121,6 +124,7 @@ tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rt
 		as="$*"
 
 tests/subsystem/rtr/as-%.roa: tests/subsystem/rtr/as-%.ee.cer tests/subsystem/rtr/ee-%.key
+	mkdir -p "$(@D)"
 	IP4=""; IP6=""; \
 	for IP_OCTET in `seq 1 "$*"`; do \
 		IP4="$$IP4,`printf '%u.0.%u.0/24%%25' '$*' $$IP_OCTET`"; \
