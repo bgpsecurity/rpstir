@@ -190,6 +190,7 @@ CLEANFILES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)
 EXTRA_DIST += $(MK_SUBST_FILES:=.in) $(MK_SUBST_FILES_EXEC:=.in)
 
 
+CLEANFILES += copy-asn-sources-stamp
 copy-asn-sources-stamp: $(ASN_SOURCE_FILES)
 	if test "$(builddir)" != "$(srcdir)"; then \
 		for file in $(ASN_SOURCE_FILES); do \
