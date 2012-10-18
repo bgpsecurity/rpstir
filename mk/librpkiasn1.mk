@@ -35,4 +35,4 @@ tests_subsystem_rpki_asn1_test_casn_random_LDADD = \
 	$(LDADD_LIBRPKIASN1)
 
 
-dist_check_SCRIPTS += tests/subsystem/rpki-asn1/test_casn_random_driver.sh
+EXTRA_DIST += tests/subsystem/rpki-asn1/test_casn_random_driver.sh

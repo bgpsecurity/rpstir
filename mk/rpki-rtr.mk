@@ -80,7 +80,7 @@ check_DATA += \
 	tests/subsystem/rtr/as-6.roa \
 	tests/subsystem/rtr/root.cer
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	tests/subsystem/rtr/*.correct \
 	tests/subsystem/rtr/*.options \
 	tests/subsystem/rtr/test.conf

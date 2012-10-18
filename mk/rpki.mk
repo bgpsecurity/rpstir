@@ -17,7 +17,7 @@ tests/subsystem/chaser/test.sh: $(srcdir)/tests/subsystem/chaser/test.sh.in
 
 TESTS += tests/subsystem/chaser/test.sh
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	tests/subsystem/chaser/input.bad_chars.conf \
 	tests/subsystem/chaser/input.collapse_dots.conf \
 	tests/subsystem/chaser/input.collapse_slash_dot.conf \
@@ -102,7 +102,7 @@ dist_conformanceta_DATA = \
 
 EXTRA_DIST += tests/conformance/rfc3779
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	tests/conformance/raw/*.p15 \
 	tests/conformance/raw/*.raw \
 	tests/conformance/raw/keys/*.p15 \
@@ -316,7 +316,7 @@ MK_SUBST_FILES_EXEC += tests/subsystem/testcases/tools/run_tc.py
 tests/subsystem/testcases/tools/run_tc.py: $(srcdir)/tests/subsystem/testcases/tools/run_tc.py.in
 
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	tests/subsystem/testcases/*.p15 \
 	tests/subsystem/testcases/C.*.orig \
 	tests/subsystem/testcases/certpattern \
@@ -330,7 +330,7 @@ dist_check_DATA += \
 	tests/subsystem/testcases/tools/test.conf
 
 
-dist_check_SCRIPTS += \
+EXTRA_DIST += \
 	tests/subsystem/testcases/makeall \
 	tests/subsystem/testcases/makecrls \
 	tests/subsystem/testcases/makekeys \
@@ -362,12 +362,12 @@ CLEANFILES += \
 TESTS += tests/subsystem/testcases/makeall
 
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	tests/subsystem/specs.*.*.conf \
 	tests/subsystem/test*.log
 
 
-dist_check_SCRIPTS += \
+EXTRA_DIST += \
 	tests/subsystem/runSubsystemTest1.sh \
 	tests/subsystem/runSubsystemTest2.sh \
 	tests/subsystem/runSubsystemTest3.sh

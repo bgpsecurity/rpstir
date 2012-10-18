@@ -34,7 +34,7 @@ tests_subsystem_rpki_local_ta_makeLTAtest_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	tests/subsystem/rpki-local-ta/test4.log \
 	tests/subsystem/rpki-local-ta/testcases4_LTA \
 	tests/subsystem/rpki-local-ta/ttest*.par
