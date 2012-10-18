@@ -398,25 +398,14 @@ int main(
     int retval = EXIT_SUCCESS;
 
     (void)argc;
+    (void)argv;
 
     OPEN_LOG("config-test-good", LOG_USER);
 
-    char *conf_file = malloc(strlen(argv[0]) + strlen(".conf") + 1);
-    if (conf_file == NULL)
-    {
-        fprintf(stderr, "out of memory\n");
-        return EXIT_FAILURE;
-    }
-
-    snprintf(conf_file,
-             strlen(argv[0]) + strlen(".conf") + 1, "%s.conf", argv[0]);
-
-    if (!test_config(conf_file))
+    if (!test_config(ABS_TOP_SRCDIR "/lib/configlib/tests/good.conf"))
     {
         retval = EXIT_FAILURE;
     }
-
-    free(conf_file);
 
     CLOSE_LOG();
 
