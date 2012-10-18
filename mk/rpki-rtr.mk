@@ -85,12 +85,25 @@ EXTRA_DIST += \
 	tests/subsystem/rtr/*.options \
 	tests/subsystem/rtr/test.conf
 
-tests/subsystem/rtr/%.key:
+RPKI_RTR_TEST_KEYS = \
+	tests/subsystem/rtr/ee-1.key \
+	tests/subsystem/rtr/ee-2.key \
+	tests/subsystem/rtr/ee-3.key \
+	tests/subsystem/rtr/ee-4.key \
+	tests/subsystem/rtr/ee-5.key \
+	tests/subsystem/rtr/ee-6.key \
+	tests/subsystem/rtr/root.key
+
+CLEANFILES += $(RPKI_RTR_TEST_KEYS)
+
+$(RPKI_RTR_TEST_KEYS):
 	mkdir -p "$(@D)"
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
 		$(TESTS_ENVIRONMENT) bin/rpki-object/gen_key "$@" 2048
+
+CLEANFILES += tests/subsystem/rtr/root.cer
 
 tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/subsystem/rtr/root.options
 	mkdir -p "$(@D)"
@@ -103,10 +116,28 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 		outputfilename="$@" \
 		subjkeyfile="$<"
 
-tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
+RPKI_RTR_TEST_EE_CERTS = \
+	tests/subsystem/rtr/as-1.ee.cer \
+	tests/subsystem/rtr/as-2.ee.cer \
+	tests/subsystem/rtr/as-3.ee.cer \
+	tests/subsystem/rtr/as-4.ee.cer \
+	tests/subsystem/rtr/as-5.ee.cer \
+	tests/subsystem/rtr/as-6.ee.cer
+
+CLEANFILES += $(RPKI_RTR_TEST_EE_CERTS)
+
+tests/subsystem/rtr/as-1.ee.cer: tests/subsystem/rtr/ee-1.key
+tests/subsystem/rtr/as-2.ee.cer: tests/subsystem/rtr/ee-2.key
+tests/subsystem/rtr/as-3.ee.cer: tests/subsystem/rtr/ee-3.key
+tests/subsystem/rtr/as-4.ee.cer: tests/subsystem/rtr/ee-4.key
+tests/subsystem/rtr/as-5.ee.cer: tests/subsystem/rtr/ee-5.key
+tests/subsystem/rtr/as-6.ee.cer: tests/subsystem/rtr/ee-6.key
+$(RPKI_RTR_TEST_EE_CERTS): tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
 	mkdir -p "$(@D)"
-	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
-	IP6="`printf '%x::100-%x::%xff,%x:1::-%x:%x:ffff:ffff:ffff:ffff:ffff:ffff' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
+	number=`echo "$(@F)" | sed -e "s/^as-//" -e "s/\\.ee\\.cer\$$//"`; \
+	key="$(@D)/ee-$$number.key"; \
+	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' $$number $$number $$number $$number $$number $$number`"; \
+	IP6="`printf '%x::100-%x::%xff,%x:1::-%x:%x:ffff:ffff:ffff:ffff:ffff:ffff' $$number $$number $$number $$number $$number $$number`"; \
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
@@ -116,23 +147,42 @@ tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rt
 		outputfilename="$@" \
 		parentcertfile=tests/subsystem/rtr/root.cer \
 		parentkeyfile=tests/subsystem/rtr/root.key \
-		subjkeyfile="$<" \
-		serial="$*" \
-		subject="as$*" \
+		subjkeyfile="$$key" \
+		serial="$$number" \
+		subject="as$$number" \
 		ipv4="$$IP4" \
 		ipv6="$$IP6" \
-		as="$*"
+		as="$$number"
 
-tests/subsystem/rtr/as-%.roa: tests/subsystem/rtr/as-%.ee.cer tests/subsystem/rtr/ee-%.key
+RPKI_RTR_TEST_ROAS = \
+	tests/subsystem/rtr/as-1.roa \
+	tests/subsystem/rtr/as-2.roa \
+	tests/subsystem/rtr/as-3.roa \
+	tests/subsystem/rtr/as-4.roa \
+	tests/subsystem/rtr/as-5.roa \
+	tests/subsystem/rtr/as-6.roa
+
+CLEANFILES += $(RPKI_RTR_TEST_ROAS)
+
+tests/subsystem/rtr/as-1.roa: tests/subsystem/rtr/as-1.ee.cer tests/subsystem/rtr/ee-1.key
+tests/subsystem/rtr/as-2.roa: tests/subsystem/rtr/as-2.ee.cer tests/subsystem/rtr/ee-2.key
+tests/subsystem/rtr/as-3.roa: tests/subsystem/rtr/as-3.ee.cer tests/subsystem/rtr/ee-3.key
+tests/subsystem/rtr/as-4.roa: tests/subsystem/rtr/as-4.ee.cer tests/subsystem/rtr/ee-4.key
+tests/subsystem/rtr/as-5.roa: tests/subsystem/rtr/as-5.ee.cer tests/subsystem/rtr/ee-5.key
+tests/subsystem/rtr/as-6.roa: tests/subsystem/rtr/as-6.ee.cer tests/subsystem/rtr/ee-6.key
+$(RPKI_RTR_TEST_ROAS):
 	mkdir -p "$(@D)"
+	number=`echo "$(@F)" | sed -e "s/^as-//" -e "s/\\.roa\$$//"`; \
+	ee_cer="$(@D)/as-$$number.ee.cer"; \
+	key="$(@D)/ee-$$number.key"; \
 	IP4=""; IP6=""; \
-	for IP_OCTET in `seq 1 "$*"`; do \
-		IP4="$$IP4,`printf '%u.0.%u.0/24%%25' '$*' $$IP_OCTET`"; \
-		IP6="$$IP6,`printf '%x::%x00/120' '$*' $$IP_OCTET`"; \
+	for IP_OCTET in `seq 1 "$$number"`; do \
+		IP4="$$IP4,`printf '%u.0.%u.0/24%%25' $$number $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x::%x00/120' $$number $$IP_OCTET`"; \
 	done; \
-	for IP_OCTET in `seq 1 "$*"`; do \
-		IP4="$$IP4,`printf '%u.%u.0.0/16' '$*' $$IP_OCTET`"; \
-		IP6="$$IP6,`printf '%x:%x::/32%%127' '$*' $$IP_OCTET`"; \
+	for IP_OCTET in `seq 1 "$$number"`; do \
+		IP4="$$IP4,`printf '%u.%u.0.0/16' $$number $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x:%x::/32%%127' $$number $$IP_OCTET`"; \
 	done; \
 	IP4=`echo "$$IP4" | cut -c 2-`; \
 	IP6=`echo "$$IP6" | cut -c 2-`; \
@@ -142,16 +192,13 @@ tests/subsystem/rtr/as-%.roa: tests/subsystem/rtr/as-%.ee.cer tests/subsystem/rt
 		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
 		ROA \
 		outputfilename="$@" \
-		eecertlocation="$<" \
-		eekeylocation=tests/subsystem/rtr/"ee-$*.key" \
-		asid="$*" \
+		eecertlocation="$$ee_cer" \
+		eekeylocation="$$key" \
+		asid="$$number" \
 		roaipv4="$$IP4" \
 		roaipv6="$$IP6"
 
 
 CLEANFILES += \
-	tests/subsystem/rtr/*.cer \
 	tests/subsystem/rtr/*.diff \
-	tests/subsystem/rtr/*.key \
-	tests/subsystem/rtr/*.log \
-	tests/subsystem/rtr/*.roa
+	tests/subsystem/rtr/*.log
