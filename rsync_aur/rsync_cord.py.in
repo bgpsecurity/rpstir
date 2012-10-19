@@ -1,38 +1,32 @@
 #!@PYTHON@
 
-from threading import Thread
+from threading import Thread, Lock
 from subprocess import Popen
-import getopt, sys, os, Queue, time, socket, subprocess, logging, commands
+import atexit, getopt, sys, os, Queue, time, socket, subprocess, logging, commands
 
 BLOCK_TIMEOUT = 1
-IP_LISTENER = '127.0.0.1'
 
-#
-# Test if an IP/Port is open
-#
-def isTCPPortOpen(ip,port):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.connect((ip,int(port)))
-        s.shutdown(socket.SHUT_RDWR)
-        return True
-    except:
-        return False
-
-#
-# A short utility function to handle tcp sending and error checking
-#
-def send_to_listener(data,logger):
-    #This needs a lot of error checking
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)				
-        s.connect((IP_LISTENER, portno))
-        bytesSent = s.send(data)
-        while bytesSent < len(data):
-            bytesSent = s.send(data)
-        s.close()
-    except:
-        logger.error("A socket error occurred")
+aur_lock = Lock()
+def run_aur(logger, rsync_log, repo_dir):
+    aur_lock.acquire()
+    logger.info("running AUR on %s" % rsync_log)
+    p = Popen([
+        "%s/rsync_aur/rsync_aur" % os.getenv('RPKI_ROOT'),
+        "-s",
+        "-t",
+        os.getenv('RPKI_PORT'),
+        "-f",
+        rsync_log,
+        "-d",
+        repo_dir,
+    ])
+    p.wait()
+    if p.returncode == 0:
+        logger.info("AUR on %s succeeded" % rsync_log)
+    else:
+        logger.error("AUR failed with return code %s on %s" %
+            (p.returncode, rsync_log))
+    aur_lock.release()
 
 #
 # This class handles the RSYNC threads
@@ -73,13 +67,9 @@ class RSYNC_thread(Thread):
             if not stderror == "":
                 cli.error( 'rsync returned errors: %s' % stderror )
             cli.info( ' '.join(rsyncCom) )
-            data = ("%s %s/%s %s") % \
-                (nextURI, repoDir, nextURI, rsync_log)
             
             if rcode == 0:
-                #if the rsync ran successful, notify Listener
-                cli.info( 'Notifying the listener' ) 
-                send_to_listener(data,cli)
+                run_aur(cli, rsync_log, os.path.join(repoDir, nextURI))
                 
             else:
                 # sleep, then re-run
@@ -94,8 +84,7 @@ class RSYNC_thread(Thread):
                     if rcode == 0:
                         cli.info( (nextURI + " Retry %d return code: %d") %\
                                       (retry_count, rcode))
-                        cli.info( 'Notifying the listener' ) 
-                        send_to_listener(data,cli)
+                        run_aur(cli, rsync_log, os.path.join(repoDir, nextURI))
                         break
                     else:
                         cli.error( (nextURI + " Retry %d return code: %d") %\
@@ -140,14 +129,11 @@ def thread_controller():
 
     main.debug('Threads have all closed')
 
-    # Send the RSYNC finished message to the listener
-    data = 'RSYNC_DONE'
-    send_to_listener(data,main)
 
 #
 # Create log directories and/or rotate the logs
 #
-def rotate_logs():
+def rotate_logs(keep_logs):
     #create the log directory if it doesn't exist
     if not os.path.exists(logDir):
         os.system("mkdir " + logDir)
@@ -155,33 +141,18 @@ def rotate_logs():
         os.system("mkdir " + repoDir)
     
     #Rotate the main log for rsync_cord
-    if os.path.exists(logDir + "/rsync_cord.log.8"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.8 " + logDir +
-                  "/rsync_cord.log.9")
-    if os.path.exists(logDir + "/rsync_cord.log.7"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.7 " + logDir +
-                  "/rsync_cord.log.8")
-    if os.path.exists(logDir + "/rsync_cord.log.6"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.6 " + logDir +
-                  "/rsync_cord.log.7")
-    if os.path.exists(logDir + "/rsync_cord.log.5"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.5 " + logDir +
-                  "/rsync_cord.log.6")
-    if os.path.exists(logDir + "/rsync_cord.log.4"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.4 " + logDir +
-                  "/rsync_cord.log.5")
-    if os.path.exists(logDir + "/rsync_cord.log.3"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.3 " + logDir +
-                  "/rsync_cord.log.4")
-    if os.path.exists(logDir + "/rsync_cord.log.2"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.2 " + logDir +
-                  "/rsync_cord.log.3")
-    if os.path.exists(logDir + "/rsync_cord.log.1"):
-        os.system("mv -f " + logDir + "/rsync_cord.log.1 " + logDir +
-                  "/rsync_cord.log.2")
-    if os.path.exists(logDir + "/rsync_cord.log"):
-        os.system("mv -f " + logDir + "/rsync_cord.log " + logDir +
-                  "/rsync_cord.log.1")
+    def log_file(number):
+        if number == 0:
+            return os.path.join(logDir, "rsync_cord.log")
+        else:
+            return os.path.join(logDir, "rsync_cord.log.%d" % number)
+    num_logs = 0
+    while os.path.exists(log_file(num_logs)):
+        num_logs += 1
+    if not keep_logs:
+        num_logs = min(num_logs, 9)
+    for log_number in xrange(num_logs, 0, -1):
+        os.rename(log_file(log_number - 1), log_file(log_number))
 
     #make directories for logs and repository locations
     for direc in dirs:
@@ -193,21 +164,6 @@ def rotate_logs():
             os.makedirs(d)
 
 #
-# Function to launch the rsync_listener
-#
-def launch_listener():
-    if not isTCPPortOpen(IP_LISTENER,portno):
-        os.putenv('RPKI_LOGDIR', logDir)
-        cmdline = "%s/rsync_aur/rsync_listener %d" % \
-            (os.getenv('RPKI_ROOT'),portno)
-        main.debug('Launching rsync listener: RPKI_LOGDIR=%s %s' % \
-                       (logDir, cmdline))
-        p = Popen(cmdline, shell=True)
-        main.debug('rsync_listener pid: %d' % p.pid)
-    else:
-        main.info('rsync_listener was already running. Continuing execution.')
-
-#
 # Function that prints the usage of this script
 #
 def usage():
@@ -216,19 +172,19 @@ def usage():
             Arguments:\n \
             \t-c config\n \
                 \t The config file that is to be used\n \
-            \t-p port\n \
-                \t The port to set the listener running on and communicate with it\n \
             \t-t threadcount\n \
                 \t The maximum number of threads to spawn. Default is 8\n \
             \t-d\n \
                 \t A debug flag to get extra output in the log file\n \
+            \t--keep-logs\n \
+                \t Keep all logs, instead of deleting old logs\n \
             \t-h --help\n \
                 \t   Shows this help information\n"
 
 
 #Parse command line args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hdc:p:t:", ["help"])
+    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help", "keep-logs"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recoized"
@@ -237,9 +193,9 @@ except getopt.GetoptError, err:
 
 #Default variables
 configFile = ""
-portno = 3450
 threadCount = 8
 debug = False
+keep_logs = False
 
 #Parse the options
 for o, a in opts:
@@ -248,12 +204,12 @@ for o, a in opts:
         sys.exit()
     elif o in ("-c"):
         configFile = a
-    elif o in ("-p"):
-        portno = int(a)
     elif o in ("-t"):
         threadCount = int(a)
     elif o in ("-d"):
         debug = True
+    elif o in ("--keep-logs"):
+        keep_logs = True
     else:
         print "unhandled option"
         sys.exit(1)
@@ -319,7 +275,7 @@ for direc in eachDir:
         URIPool.put(direc)
 
 #log rotation
-rotate_logs()
+rotate_logs(keep_logs)
 
 #Set up logging
 if debug:
@@ -336,12 +292,11 @@ logging.basicConfig(level=requested_log_level,
 main = logging.getLogger('main')
 main.debug('This will process %d URI\'s from %s' % (len(dirs), configFile))
 
-#launch the listener and the threads
+#launch the threads
 if URIPool.qsize() == 0:
     print "You don't have any URI's to RSYNC with"
     sys.exit(1)
 elif URIPool.qsize() == 1:
     main.warn('The URI list only has 1 URI.')
     
-launch_listener()
 thread_controller()

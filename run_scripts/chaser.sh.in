@@ -46,7 +46,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	done < "$CUR_LIST"
 	echo "\"" >> "$RSYNC_CORD_CONF"
 
-	"$RPKI_ROOT"/rsync_aur/rsync_cord.py -d -c "$RSYNC_CORD_CONF" -t "$RPKI_TCOUNT" -p "$RPKI_LISTPORT"
+	"$RPKI_ROOT"/rsync_aur/rsync_cord.py -d -c "$RSYNC_CORD_CONF" -t "$RPKI_TCOUNT"
 
 	rm -f "$OLD_LIST"
 	OLD_LIST="$CUR_LIST"

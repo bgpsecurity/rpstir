@@ -14,7 +14,7 @@ LDADD = ../roa-lib/libroa.a \
 	../cg/casn/libcasn.a \
 	../utils/libutils.a
 
-bin_PROGRAMS = rsync_aur rsync_listener
+bin_PROGRAMS = rsync_aur
 
 EXTRA_DIST = \
 	AUR.readme \
@@ -23,5 +23,3 @@ EXTRA_DIST = \
 
 rsync_aur_SOURCES = main.c main.h parse.c socket_stuff.c sig_handler.c \
 	csapp.c csapp.h usage.c usage.h socket_stuff.h parse.h sig_handler.h
-
-rsync_listener_SOURCES = rsync_listener.c csapp.h rsync_listener.h csapp.c
