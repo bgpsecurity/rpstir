@@ -1,0 +1,4 @@
+ * variable to store URI to fetch from
+ * add above variable's info to INSTRUCTIONS.in
+ * write script/program to check the version
+ * figure out where to call the above script/program
