@@ -173,4 +173,11 @@ public class Certificate extends CA_Obj {
   public void appendString(StringBuilder sb) {
     sb.append(String.format("%s(%s)", getClass().getSimpleName(), subject));
   }
+
+  /**
+   * @return true if the current time is after the validity end time
+   */
+  public boolean hasExpired() {
+    return Clock.now() > notAfter.getTimeInMillis();
+  }
 }

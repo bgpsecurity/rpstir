@@ -6,6 +6,9 @@ package com.bbn.rpki.test.objects;
 import java.math.BigInteger;
 import java.util.List;
 
+import com.bbn.rpki.test.actions.InitializeAction;
+import com.bbn.rpki.test.tasks.Model;
+
 
 /**
  * <Enter the description of this type here>
@@ -30,7 +33,7 @@ public class IANAFactory extends FactoryBase<CA_Object> {
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object, int)
    */
   @Override
-  CA_Object create(CA_Object parent, int id) {
+  CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
     CA_Object caObject = new CA_Object(this, parent, id, null, ttl, bluePrintName,
                                        serverName,
                                        breakAway);
@@ -42,7 +45,7 @@ public class IANAFactory extends FactoryBase<CA_Object> {
 
   private IPRangeList getEverything(IPRangeType rangeType) {
     IPRangeList everything = new IPRangeList(rangeType);
-    everything.addRange(BigInteger.ZERO, rangeType.getMax());
+    everything.add(new Range(BigInteger.ZERO, rangeType.getMax(), rangeType, rangeType == IPRangeType.as));
     return everything;
   }
 }

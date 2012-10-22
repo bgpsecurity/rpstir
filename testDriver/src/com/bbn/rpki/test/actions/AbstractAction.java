@@ -4,8 +4,8 @@
 package com.bbn.rpki.test.actions;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jdom.Element;
 
@@ -48,6 +48,7 @@ public abstract class AbstractAction implements XMLConstants {
         model.addAction(action);
       }
     }
+    model.initializeActions();
   }
 
   static List<Element> getChildren(Element element, String tag) {
@@ -69,7 +70,7 @@ public abstract class AbstractAction implements XMLConstants {
   /**
    * @return attributes map
    */
-  public abstract LinkedHashMap<String, Object> getAttributes();
+  public abstract Map<String, Object> getAttributes();
 
   /**
    * Encode this object as XML
@@ -106,7 +107,7 @@ public abstract class AbstractAction implements XMLConstants {
   /**
    * @return
    */
-  public abstract String getId();
+  public abstract Object getId();
 
   /**
    * @param epochEvent

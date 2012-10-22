@@ -7,12 +7,16 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bbn.rpki.test.actions.AllocateROAAction;
+import com.bbn.rpki.test.actions.InitializeAction;
+import com.bbn.rpki.test.tasks.Model;
+
 /**
  * <Enter the description of this type here>
  *
  * @author RTomlinson
  */
-public class RoaFactory extends Factory<Roa> implements Constants {
+public class RoaFactory extends Factory<AllocateROAAction> implements Constants {
 
   /**
    * @param name
@@ -54,15 +58,27 @@ public class RoaFactory extends Factory<Roa> implements Constants {
   public List<Pair> ROAipv6List;
 
   /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object, int)
+   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.tasks.Model, com.bbn.rpki.test.objects.CA_Object, int)
    */
   @Override
-  public Roa create(CA_Object parent, int id) {
+  public AllocateROAAction create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
     if (DEBUG_ON) {
       System.out.println("creating a ROA for "+ bluePrintName);
     }
 
-    EE_Object ee_object = new EE_Object(ttl, asid, ROAipv4List, ROAipv6List, bluePrintName, parent);
-    return new Roa(ee_object);
+    TypedPair[] allPairs = new TypedPair[asid.size() + ROAipv4List.size() + ROAipv6List.size()];
+    int q = 0;
+    q = addPairs(allPairs, q, IPRangeType.as, asid);
+    q = addPairs(allPairs, q, IPRangeType.ipv4, ROAipv4List);
+    q = addPairs(allPairs, q, IPRangeType.ipv6, ROAipv6List);
+
+    return new AllocateROAAction(parent, AllocationId.get("roa-ini-" + parent.getNickname()), model, allPairs);
+  }
+
+  private int addPairs(TypedPair[] allPairs, int q, IPRangeType rangeType, List<Pair> pairs) {
+    for (Pair pair : pairs) {
+      allPairs[q++] = new TypedPair(rangeType, pair.tag, pair.arg);
+    }
+    return q;
   }
 }

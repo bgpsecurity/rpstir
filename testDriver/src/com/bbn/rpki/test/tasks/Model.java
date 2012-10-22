@@ -33,6 +33,7 @@ import org.jdom.output.XMLOutputter;
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.ActionContext;
 import com.bbn.rpki.test.actions.EpochEvent;
+import com.bbn.rpki.test.actions.InitializeAction;
 import com.bbn.rpki.test.actions.XMLConstants;
 import com.bbn.rpki.test.objects.CA_Obj;
 import com.bbn.rpki.test.objects.CA_Object;
@@ -173,6 +174,7 @@ public class Model implements Constants, XMLConstants {
   private final List<File> nodeDirectories = new ArrayList<File>();
   private final Map<String, File> nodeDirectoryByName = new TreeMap<String, File>();
   private final List<Listener> listeners = new ArrayList<Listener>(1);
+  private InitializeAction initializeAction;
 
   /**
    * @param rpkiRoot
@@ -183,9 +185,10 @@ public class Model implements Constants, XMLConstants {
   public Model(File rpkiRoot, String iniFile, TypescriptLogger logger) throws IOException {
     this.rpkiRoot = rpkiRoot;
     this.logger = logger;
+
     testbedConfig = new TestbedConfig(iniFile);
-    TestbedCreate tbc = new TestbedCreate(testbedConfig);
-    tbc.createDriver();
+    TestbedCreate tbc = new TestbedCreate(testbedConfig, this);
+    initializeAction = tbc.createDriver();
     iana = tbc.getRoot();
     iana.iterate(new CA_Object.IterationAction() {
 
@@ -379,6 +382,13 @@ public class Model implements Constants, XMLConstants {
   /**
    * Advance to the next epoch.
    * 
+   * For epoch 0, we record the time we expect to be ready to start epoch 1 as the
+   * execution start time for epoch 1. Execution start times for subsequence epochs are also
+   * estimated. Whenever the execution start time of an epoch is recorded in a data object, that
+   * start time  and all preceding start times become fixed and are not allowed to be updated.
+   * Whenever an epoch ends, if the start time of the next epoch is not fixed, then the start time
+   * is adjusted to be the current time and all subsequent epoch start times are adjusted downward.
+   * 
    * 1) Record the previous roots so UploadEpoch can know what already exists
    *    when breaking down the upload into uploading each root.
    * 2) Apply all the actions of the epoch.
@@ -389,7 +399,6 @@ public class Model implements Constants, XMLConstants {
    */
   public void advanceEpoch() {
     ++epochIndex;
-    // Add this here so actions can operate on it.
     if (epochIndex == 0) {
       addTask(getTaskFactory(UploadTrustAnchors.class).createOnlyTask());
       addTaskInner(getTaskFactory(InstallTrustAnchor.class).createOnlyTask());
@@ -839,6 +848,14 @@ public class Model implements Constants, XMLConstants {
    */
   public void removeAction(AbstractAction action) {
     actions.remove(action);
+    epochsChanged();
+  }
+
+  /**
+   * Constraint the initializeActions
+   */
+  public void initializeActions() {
+    actions.addAll(initializeAction.getActions(iana, actions));
     epochsChanged();
   }
 }

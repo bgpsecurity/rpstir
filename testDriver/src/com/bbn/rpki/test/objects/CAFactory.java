@@ -5,6 +5,10 @@ package com.bbn.rpki.test.objects;
 
 import java.util.List;
 
+import com.bbn.rpki.test.actions.AllocateAction;
+import com.bbn.rpki.test.actions.InitializeAction;
+import com.bbn.rpki.test.tasks.Model;
+
 /**
  * <Enter the description of this type here>
  *
@@ -33,13 +37,25 @@ public class CAFactory extends Factory<CA_Object> {
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object, int)
    */
   @Override
-  CA_Object create(CA_Object parent, int id) {
+  CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
     CA_Object caObject = new CA_Object(this, parent, id, null, ttl, bluePrintName,
                                        serverName,
                                        breakAway);
-    caObject.takeAS(asList, null);
-    caObject.takeIPv4(ipv4List, null);
-    caObject.takeIPv6(ipv6List, null);
+    TypedPair[] allPairs = new TypedPair[asList.size() + ipv4List.size() + ipv6List.size()];
+    int q = 0;
+    q = addPairs(allPairs, q, IPRangeType.as, asList);
+    q = addPairs(allPairs, q, IPRangeType.ipv4, ipv4List);
+    q = addPairs(allPairs, q, IPRangeType.ipv6, ipv6List);
+
+    AllocateAction allocateAction = new AllocateAction(parent, caObject, AllocationId.get("ini-" + caObject.getNickname()), model, allPairs);
+    initializeAction.addAction(allocateAction);
     return caObject;
+  }
+
+  private int addPairs(TypedPair[] allPairs, int q, IPRangeType rangeType, List<Pair> pairs) {
+    for (Pair pair : pairs) {
+      allPairs[q++] = new TypedPair(rangeType, pair.tag, pair.arg);
+    }
+    return q;
   }
 }

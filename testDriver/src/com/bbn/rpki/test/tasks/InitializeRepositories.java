@@ -3,6 +3,8 @@
  */
 package com.bbn.rpki.test.tasks;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +44,25 @@ public class InitializeRepositories extends TaskFactory {
                   sourceParts[0],
                   "rm",
                   "-rf", remotePath + "*");
+      }
+      for (File nodeDir : model.getNodeDirectories()) {
+        String[] sourceParts = model.getSourcePath(nodeDir);
+        List<String> cmd = new ArrayList<String>();
+        String serverName = sourceParts[0];
+        String rootName = sourceParts[1];
+        StringBuilder sb = new StringBuilder(model.getRsyncBase(serverName, rootName));
+        for (int i = 2; i < sourceParts.length; i++) {
+          if (i > 2) {
+            sb.append("/");
+          }
+          sb.append(sourceParts[i]);
+        }
+        cmd.add("ssh");
+        cmd.add(serverName);
+        cmd.add("mkdir");
+        cmd.add("-p");
+        cmd.add(sb.toString());
+        Util.exec("Make remote dir", false, null, null, null, cmd);
       }
     }
 

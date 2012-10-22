@@ -22,7 +22,6 @@ public class UploadNode extends TaskFactory {
     private final File nodeDir;
     private TaskFactory.Task uploadTask;
     private TaskFactory.Task deleteTask;
-    private TaskFactory.Task mkdirTask;
 
     Task(File nodeDir) {
       super(getModel().getNodeName(nodeDir));
@@ -46,17 +45,8 @@ public class UploadNode extends TaskFactory {
       return deleteTask;
     }
 
-    private TaskFactory.Task getMkdirTask() {
-      if (mkdirTask == null) {
-        MakeNodeDir factory = model.getTaskFactory(MakeNodeDir.class);
-        mkdirTask = factory.createRelativeTask(model.getNodeName(nodeDir));
-      }
-      return mkdirTask;
-    }
-
     @Override
     public void run() {
-      getMkdirTask().run();
       getUploadTask().run();
       getDeleteTask().run();
     }
@@ -90,7 +80,6 @@ public class UploadNode extends TaskFactory {
       public TaskBreakdown getTaskBreakdown(TaskFactory.Task task) {
         Task parentTask = (Task) task;
         return new TaskBreakdown(getBreakdownName(), parentTask,
-                                 parentTask.getMkdirTask(),
                                  parentTask.getDeleteTask(),
                                  parentTask.getUploadTask());
       }
@@ -100,7 +89,6 @@ public class UploadNode extends TaskFactory {
       public TaskBreakdown getTaskBreakdown(TaskFactory.Task task) {
         Task parentTask = (Task) task;
         return new TaskBreakdown(getBreakdownName(), parentTask,
-                                 parentTask.getMkdirTask(),
                                  parentTask.getUploadTask(),
                                  parentTask.getDeleteTask());
       }

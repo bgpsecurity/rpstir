@@ -5,6 +5,9 @@ package com.bbn.rpki.test.objects;
 
 import java.util.List;
 
+import com.bbn.rpki.test.actions.InitializeAction;
+import com.bbn.rpki.test.tasks.Model;
+
 /**
  * <Enter the description of this type here>
  *
@@ -44,7 +47,7 @@ public abstract class FactoryBase<T> {
   /**
    * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
    */
-  abstract T create(CA_Object parent, int id);
+  abstract T create(Model model, InitializeAction initializeAction, CA_Object parent, int id);
 
   /**
    * @return the serverName

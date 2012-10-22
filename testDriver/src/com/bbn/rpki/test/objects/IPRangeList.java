@@ -536,6 +536,10 @@ public class IPRangeList implements Iterable<Range>, Constants {
    * @return true if the entire rangeList could be removed
    */
   public boolean removeAll(IPRangeList rangeList) {
+    if (rangeList == this) {
+      this.rangeList.clear();
+      return true;
+    }
     for (Range range : rangeList) {
       if (!contains(range)) {
         return false;
@@ -570,5 +574,12 @@ public class IPRangeList implements Iterable<Range>, Constants {
   @Override
   public Iterator<Range> iterator() {
     return Collections.unmodifiableList(rangeList).iterator();
+  }
+
+  /**
+   * @return true if no ranges are present
+   */
+  public boolean isEmpty() {
+    return rangeList.isEmpty();
   }
 }

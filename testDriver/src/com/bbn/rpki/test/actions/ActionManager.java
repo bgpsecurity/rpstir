@@ -6,6 +6,7 @@ package com.bbn.rpki.test.actions;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.bbn.rpki.test.objects.AllocationId;
 import com.bbn.rpki.test.objects.Allocator;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.IPRangeList;
@@ -30,11 +31,11 @@ public class ActionManager {
     return singleton;
   }
 
-  private final Map<String, IPRangeList> ipv4Allocations = new TreeMap<String, IPRangeList>();
+  private final Map<AllocationId, IPRangeList> ipv4Allocations = new TreeMap<AllocationId, IPRangeList>();
 
-  private final Map<String, IPRangeList> ipv6Allocations = new TreeMap<String, IPRangeList>();
+  private final Map<AllocationId, IPRangeList> ipv6Allocations = new TreeMap<AllocationId, IPRangeList>();
 
-  private final Map<String, IPRangeList> asAllocations = new TreeMap<String, IPRangeList>();
+  private final Map<AllocationId, IPRangeList> asAllocations = new TreeMap<AllocationId, IPRangeList>();
 
   private final Map<String, CA_Object> caObjects = new TreeMap<String, CA_Object>();
 
@@ -49,7 +50,7 @@ public class ActionManager {
    * @return the specified Range
    */
   public Range findAllocation(IPRangeType rangeType, String allocationId, int allocationIndex) {
-    Map<String, IPRangeList> map;
+    Map<AllocationId, IPRangeList> map;
     switch (rangeType) {
     case ipv4:
       map = ipv4Allocations;
@@ -73,14 +74,14 @@ public class ActionManager {
    * @param allocationId
    * @param list
    */
-  public void recordAllocation(Allocator parent, Allocator child, String allocationId, IPRangeList list) {
+  public void recordAllocation(Allocator parent, Allocator child, AllocationId allocationId, IPRangeList list) {
     // TODO need a better key incorporating the parent
     if (allocationId == null) {
       return;
     }
     System.out.println("RecordAllocation " + allocationId + ": " + list);
     IPRangeType rangeType = list.getIpVersion();
-    Map<String, IPRangeList> selectMap = selectMap(rangeType);
+    Map<AllocationId, IPRangeList> selectMap = selectMap(rangeType);
     IPRangeList ranges = selectMap.get(allocationId);
     if (ranges == null) {
       ranges = new IPRangeList(rangeType);
@@ -93,8 +94,8 @@ public class ActionManager {
    * @param ipVersion
    * @return Map from allocationId to ranges for the specified INR type
    */
-  public Map<String, IPRangeList> selectMap(IPRangeType ipVersion) {
-    Map<String, IPRangeList> map;
+  public Map<AllocationId, IPRangeList> selectMap(IPRangeType ipVersion) {
+    Map<AllocationId, IPRangeList> map;
     switch (ipVersion) {
     case ipv4:
       map = ipv4Allocations;
@@ -133,7 +134,7 @@ public class ActionManager {
    * @param allocationId
    * @return the allocation range list corresponding to the allocationid.
    */
-  public IPRangeList findAllocation(CA_Object parent, CA_Object ca_Object, IPRangeType rangeType, String allocationId) {
+  public IPRangeList findAllocation(Allocator parent, Allocator ca_Object, IPRangeType rangeType, AllocationId allocationId) {
     return selectMap(rangeType).get(allocationId);
   }
 }

@@ -15,7 +15,7 @@ public class CA_cert extends Certificate {
     String nickname;
     String sia_path;
 
-    S(FactoryBase myFactory, CA_Object parent, int childId) {
+    S(FactoryBase myFactory, Allocator parent, int childId) {
 
     }
   }

@@ -3,7 +3,6 @@
  */
 package com.bbn.rpki.test.objects;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +57,7 @@ public class Crl extends CA_Obj {
     this.nextupdate.setTimeInMillis(this.thisupdate.getTimeInMillis());
     this.nextupdate.add(Calendar.DATE, parent.getTtl());
     this.crlnum          = parent.getNextChildSN();
-    this.revokedcertlist = new ArrayList<RevokedCert>();
+    this.revokedcertlist = parent.getRevokedCertList();
     this.aki             = parentCert.ski;
 
     // Create the output file directory if it doesn't exist

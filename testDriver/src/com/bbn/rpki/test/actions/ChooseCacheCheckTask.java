@@ -177,7 +177,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
    * @see com.bbn.rpki.test.actions.AbstractAction#getAttributes()
    */
   @Override
-  public LinkedHashMap<String, Object> getAttributes() {
+  public Map<String, Object> getAttributes() {
     LinkedHashMap<String, Object> ret = new LinkedHashMap<String, Object>();
     ret.put(AttributeType.ID.getDisplayName(), id);
     ret.put(AttributeType.EPOCH.getDisplayName(), epoch);
@@ -204,7 +204,6 @@ public class ChooseCacheCheckTask extends AbstractAction {
   /**
    * @see com.bbn.rpki.test.actions.AbstractAction#getId()
    */
-  @Override
   public
   String getId() {
     return id;

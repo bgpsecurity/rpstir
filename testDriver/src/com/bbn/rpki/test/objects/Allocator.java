@@ -37,7 +37,7 @@ public abstract class Allocator implements Constants {
   private final ResourcePair asResources = new ResourcePair(IPRangeType.as);
   private final ResourcePair ipv4Resources = new ResourcePair(IPRangeType.ipv4);
   private final ResourcePair ipv6Resources = new ResourcePair(IPRangeType.ipv6);
-  protected boolean modified = true;
+  protected boolean modified = false;
 
   protected IPRangeList subAllocateIPv4(List<? extends Pair> iplist) {
     if (DEBUG_ON) {
@@ -76,6 +76,7 @@ public abstract class Allocator implements Constants {
     ResourcePair resources = selectResources(rangeList.getIpVersion());
     resources.rcvd.addAll(rangeList);
     resources.free.addAll(rangeList);
+    setModified(true);
   }
 
   /**
@@ -89,6 +90,7 @@ public abstract class Allocator implements Constants {
     ResourcePair resources = selectResources(rangeList.getIpVersion());
     resources.rcvd.removeAll(rangeList);
     resources.free.removeAll(rangeList.intersection(resources.free));
+    setModified(true);
   }
 
   protected void removeRcvdRange(Range range) {
@@ -155,5 +157,16 @@ public abstract class Allocator implements Constants {
    */
   protected IPRangeList getFreeRanges(IPRangeType rangeType) {
     return selectResources(rangeType).free;
+  }
+
+  /**
+   * @return
+   */
+  protected boolean hasResources() {
+    // TODO fix this when create_objects allows missing resources
+    if (asResources.rcvd.isEmpty() || ipv4Resources.rcvd.isEmpty() || ipv6Resources.rcvd.isEmpty()) {
+      return false;
+    }
+    return true;
   }
 }

@@ -5,6 +5,8 @@ package com.bbn.rpki.test.objects;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import com.bbn.rpki.test.actions.ActionManager;
@@ -48,7 +50,7 @@ public class CA_Object extends Allocator {
   final List<CA_Object> children = new ArrayList<CA_Object>();
   final List<Manifest> manifests = new ArrayList<Manifest>();
   final List<Roa> roas = new ArrayList<Roa>();
-  final List<Crl> crl = new ArrayList<Crl>();
+  final List<RevokedCertificate> revokedCertificates = new ArrayList<RevokedCertificate>();
   //  private final String manifest_path;
   private final int id;
   private final String nickName;
@@ -63,7 +65,7 @@ public class CA_Object extends Allocator {
    * @param id
    * @param subjKeyFile
    */
-  public CA_Object(FactoryBase factoryBase,
+  public CA_Object(FactoryBase<CA_Object> factoryBase,
                    CA_Object parent,
                    int id,
                    String subjKeyFile,
@@ -95,30 +97,40 @@ public class CA_Object extends Allocator {
    * @return the current certificate for this
    */
   public Certificate getCertificate() {
-    if (this.certificate == null || modified) {
-      // Initialize our certificate
-      if (parent != null) {
-        String dirPath = REPO_PATH + parent.SIA_path;
-        this.certificate = new CA_cert(parent,
-                                       getTtl(),
-                                       dirPath,
-                                       nickName,
-                                       SIA_path,
-                                       getRcvdRanges(IPRangeType.as),
-                                       getRcvdRanges(IPRangeType.ipv4),
-                                       getRcvdRanges(IPRangeType.ipv6),
-                                       this.subjKeyFile);
+    if (modified) {
+      if  (this.certificate != null) {
+        if (!this.certificate.hasExpired()) {
+          revokedCertificates.add(new RevokedCertificate(this.certificate));
+          this.certificate = null;
+        }
+      }
+      if (hasResources()) {
+        // Initialize our certificate
+        if (parent != null) {
+          String dirPath = REPO_PATH + parent.SIA_path;
+          this.certificate = new CA_cert(parent,
+                                         getTtl(),
+                                         dirPath,
+                                         nickName,
+                                         SIA_path,
+                                         getRcvdRanges(IPRangeType.as),
+                                         getRcvdRanges(IPRangeType.ipv4),
+                                         getRcvdRanges(IPRangeType.ipv6),
+                                         this.subjKeyFile);
+        } else {
+          String dirPath = REPO_PATH + getServerName() + "/";
+          this.certificate = new SS_cert(parent,
+                                         getTtl(),
+                                         SIA_path,
+                                         nickName,
+                                         dirPath,
+                                         getRcvdRanges(IPRangeType.as),
+                                         getRcvdRanges(IPRangeType.ipv4),
+                                         getRcvdRanges(IPRangeType.ipv6),
+                                         subjKeyFile);
+        }
       } else {
-        String dirPath = REPO_PATH + getServerName() + "/";
-        this.certificate = new SS_cert(parent,
-                                       getTtl(),
-                                       SIA_path,
-                                       nickName,
-                                       dirPath,
-                                       getRcvdRanges(IPRangeType.as),
-                                       getRcvdRanges(IPRangeType.ipv4),
-                                       getRcvdRanges(IPRangeType.ipv6),
-                                       subjKeyFile);
+        this.certificate = null;
       }
       setModified(false);
     }
@@ -129,40 +141,37 @@ public class CA_Object extends Allocator {
    * @param pairs describe the addresses to take from the parent
    * @param allocationId
    */
-  public void takeIPv4(List<? extends Pair> pairs, String allocationId) {
+  public void takeIPv4(List<? extends Pair> pairs, AllocationId allocationId) {
     IPRangeList allocation = parent.subAllocateIPv4(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
     this.addRcvdRanges(allocation);
-    setModified(true);
   }
 
   /**
    * @param pairs describe the addresses to take from the parent
    * @param allocationId
    */
-  public void takeIPv6(List<? extends Pair> pairs, String allocationId) {
+  public void takeIPv6(List<? extends Pair> pairs, AllocationId allocationId) {
     IPRangeList allocation = parent.subAllocateIPv6(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
     this.addRcvdRanges(allocation);
-    setModified(true);
   }
 
   /**
    * @param pairs describe the addresses to take from the parent
    * @param allocationId
    */
-  public void takeAS(List<? extends Pair> pairs, String allocationId) {
+  public void takeAS(List<? extends Pair> pairs, AllocationId allocationId) {
     IPRangeList allocation = parent.subAllocateAS(pairs);
     ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
     this.addRcvdRanges(allocation);
-    setModified(true);
   }
 
   /**
    * 
    * @param allocationId
    */
-  public void returnAllocation(String allocationId) {
+  public void returnAllocation(AllocationId allocationId) {
     for (IPRangeType rangeType : IPRangeType.values()) {
       IPRangeList allocation = ActionManager.singleton().findAllocation(parent, this, rangeType, allocationId);
       if (allocation != null) {
@@ -189,21 +198,26 @@ public class CA_Object extends Allocator {
     if (!new File(dir_path).isDirectory()) {
       new File(dir_path).mkdirs();
     }
-    list.add(getCertificate());
-    for (CA_Obj obj : crl) {
-      obj.appendObjectsToWrite(list);
-      list.add(obj);
-    }
-    for (Roa obj : roas) {
-      obj.appendObjectsToWrite(list);
-      list.add(obj);
-    }
-    for (CA_Object obj : children) {
-      obj.appendObjectsToWrite(list);
-    }
-    for (CA_Obj obj : manifests) {
-      obj.appendObjectsToWrite(list);
-      list.add(obj);
+    Certificate cert = getCertificate();
+    if (cert != null) {
+      list.add(cert);
+      {
+        Crl crl = new Crl(this);
+        list.add(crl);
+      }
+      for (Roa obj : roas) {
+        obj.appendObjectsToWrite(list);
+        list.add(obj);
+      }
+      for (CA_Object obj : children) {
+        obj.appendObjectsToWrite(list);
+      }
+      for (CA_Obj obj : manifests) {
+        obj.appendObjectsToWrite(list);
+        list.add(obj);
+      }
+    } else {
+      // no allocation so no cert, yet
     }
   }
 
@@ -281,7 +295,7 @@ public class CA_Object extends Allocator {
    * @param child
    * @return the index of the specified child
    */
-  public int indexOf(CA_Object child) {
+  public int indexOf(Allocator child) {
     return children.indexOf(child);
   }
 
@@ -304,5 +318,22 @@ public class CA_Object extends Allocator {
    */
   public String getServerName() {
     return serverName;
+  }
+
+  /**
+   * @return
+   */
+  public List<RevokedCert> getRevokedCertList() {
+    List<RevokedCert> ret = new ArrayList<RevokedCert>(revokedCertificates.size());
+    for (Iterator<RevokedCertificate> it = revokedCertificates.iterator(); it.hasNext(); ) {
+      RevokedCertificate revokedCertificate = it.next();
+      Certificate cert = revokedCertificate.getCertificate();
+      if (cert.hasExpired()) {
+        it.remove();
+      } else {
+        ret.add(new RevokedCert(cert.serial, new Date(revokedCertificate.getRevocationTime())));
+      }
+    }
+    return ret;
   }
 }

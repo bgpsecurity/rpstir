@@ -148,6 +148,9 @@ public class Util implements Constants {
       }
       sb.append(word);
     }
+    if (first) {
+      sb.append("NULL");
+    }
     if (bracketed) {
       sb.append("]");
     }
@@ -211,8 +214,10 @@ public class Util implements Constants {
             IPRangeList range = (IPRangeList) val;
             if (IPRangeList.isInherit(range)) {
               sb.append(String.format("%s=%s%n", member, "inherit"));
-            } else {
+            } else if (true || !range.isEmpty()) {
               appendList(sb, member, range, false);
+            } else {
+              System.out.println("not printing " + range);
             }
           } else if (member.equals("roaipv4") || member.equals("roaipv6")) {
             IPRangeList rangeList = (IPRangeList) val;

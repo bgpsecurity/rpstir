@@ -16,7 +16,6 @@ import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +36,7 @@ import javax.swing.event.ChangeListener;
 
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.EpochEvent;
+import com.bbn.rpki.test.objects.AllocationId;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.Pair;
@@ -85,6 +85,10 @@ public class ActionDetail {
   private final JPanel outerPanel = new JPanel(new BorderLayout());
   private final JLabel title = new JLabel();
   private final JPanel panel = new JPanel(new GridBagLayout());
+  private final JScrollPane scrollPane =
+      new JScrollPane(panel,
+                      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                      JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
   private final Model model;
   private final List<Saver> savers = new ArrayList<Saver>();
   private AbstractAction action;
@@ -122,7 +126,7 @@ public class ActionDetail {
     title.setFont(titleFont);
     outerPanel.add(title, BorderLayout.NORTH);
     outerPanel.add(buttons, BorderLayout.SOUTH);
-    outerPanel.add(panel, BorderLayout.CENTER);
+    outerPanel.add(scrollPane, BorderLayout.CENTER);
   }
 
   /**
@@ -136,13 +140,15 @@ public class ActionDetail {
     epochEventsPane = null;
     savers.clear();
     this.action = action;
-    title.setText(action == null ? "No Action Selected" : action.toString());
+    String titleText = action == null ? "No Action Selected" : action.toString();
+    title.setText(titleText);
+    title.setToolTipText(titleText);
     if (action != null) {
       this.epochEvents.addAll(action.getAllEpochEvents());
       GridBagConstraints gbc = new GridBagConstraints();
       gbc.gridy = 0;
       gbc.insets = new Insets(3, 5, 3, 5);
-      final LinkedHashMap<String, Object> attrs = action.getAttributes();
+      final Map<String, Object> attrs = action.getAttributes();
       for (Map.Entry<String, Object> entry : attrs.entrySet()) {
         final String label = entry.getKey();
         Object value = entry.getValue();
@@ -223,6 +229,9 @@ public class ActionDetail {
     if (value instanceof String) {
       return getStringComponent(value, setter);
     }
+    if (value instanceof AllocationId) {
+      return getAllocationIdComponent((AllocationId) value, setter);
+    }
     if (value instanceof TypedPairList) {
       return getPairListComponent((TypedPairList) value, setter);
     }
@@ -289,6 +298,34 @@ public class ActionDetail {
     c.add(Box.createHorizontalGlue());
     c.add(editButton);
     return c;
+  }
+
+  private Component getAllocationIdComponent(final AllocationId allocationId, final AbstractSetter setter) {
+    AbstractFormatter formatter = new AbstractFormatter() {
+
+      @Override
+      public Object stringToValue(String text) throws ParseException {
+        return AllocationId.get(text);
+      }
+
+      @Override
+      public String valueToString(Object value) throws ParseException {
+        if (value == null) {
+          return "null";
+        }
+        return ((AllocationId) value).toString();
+      }
+    };
+    final JFormattedTextField component = new JFormattedTextField(formatter);
+    component.setValue(allocationId);
+    registerListener(new Saver() {
+
+      @Override
+      public void save() {
+        setter.setValue(component.getValue());
+      }
+    });
+    return component;
   }
 
   /**

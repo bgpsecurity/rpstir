@@ -65,6 +65,7 @@ public class TestbedConfig implements Constants {
    * @param iniFile
    */
   public TestbedConfig(String iniFile) {
+    Util.deleteDirectories(new File(OBJECT_PATH).listFiles());
     try {
       wini = new Wini(new StringReader(iniFile));
       Collection<Map.Entry<String, Section>> sectionEntries = wini.entrySet();

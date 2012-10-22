@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.bbn.rpki.test.actions.ActionManager;
+import com.bbn.rpki.test.actions.AllocateROAAction;
+import com.bbn.rpki.test.actions.InitializeAction;
+import com.bbn.rpki.test.tasks.Model;
 
 /**
  * <Enter the description of this type here>
@@ -41,34 +44,25 @@ public class TestbedCreate implements Constants {
     R
   }
 
-  /**
-   * @param args
-   */
-  public static void main (String...args) {
-    String fileName = "test.ini";
-    if (args.length > 0) {
-      fileName = args[0];
-    }
-    TestbedConfig testbedConfig = new TestbedConfig(fileName);
-    TestbedCreate tbc = new TestbedCreate(testbedConfig);
-    tbc.writeFiles();
-  }
-
   private final Map<String, FactoryBase> FACTORIES;
   private final int MAX_DEPTH;
   private final int MAX_NODES;
   private final IANAFactory ianaFactory;
   private final CA_Object iana;
+  private final InitializeAction initializeAction;
+  private final Model model;
 
   /**
    * @param testbedConfig
    */
-  public TestbedCreate(TestbedConfig testbedConfig) {
+  public TestbedCreate(TestbedConfig testbedConfig, Model model) {
+    this.model = model;
+    initializeAction = new InitializeAction();
     FACTORIES = testbedConfig.getFactories();
     MAX_DEPTH = testbedConfig.getMaxDepth();
     MAX_NODES = testbedConfig.getMaxNodes();
     ianaFactory = (IANAFactory) FACTORIES.get("IANA");
-    iana = ianaFactory.create(null, 0);
+    iana = ianaFactory.create(model, initializeAction, null, 0);
     ActionManager.singleton().recordCA_Object(iana);
   }
 
@@ -84,7 +78,7 @@ public class TestbedCreate implements Constants {
    */
   public void writeFiles() {
     removeDirContents(new File(Constants.OBJECT_PATH));
-    create_driver(iana);
+    create_driver(model, iana);
     List<CA_Obj> rpkiObjects = new ArrayList<CA_Obj>();
     iana.appendObjectsToWrite(rpkiObjects);
     for (CA_Obj ca_Obj : rpkiObjects) {
@@ -96,7 +90,7 @@ public class TestbedCreate implements Constants {
   /**
    * @param iana
    */
-  public void create_driver(CA_Object iana) {
+  public InitializeAction create_driver(Model model, CA_Object iana) {
 
     // create our CA queue with no limit and place iana in it
     Deque<CA_Object> ca_queue = new ArrayDeque<CA_Object>();
@@ -120,21 +114,14 @@ public class TestbedCreate implements Constants {
       CA_Object ca_node = (CA_Object) qItem;
 
       // Creates all child CA's and ROA's for a the CA ca_node
-      repo_size = create_children(ca_node, repo_size);
+      repo_size = create_children(model, ca_node, repo_size);
 
       child_queue.addAll(ca_node.children);
-      // crl_list
-      Crl new_crl = new Crl(ca_node);
-      ca_node.crl.add(new_crl);
-      repo_size += 1;
-      // manifest_list
-      Manifest new_manifest = new Manifest(ca_node);
-      ca_node.manifests.add(new_manifest);
-      repo_size += 1;
     }
 
     System.out.format("Finished creation driver loop. repo_depth = %d repo_size = %d%n", repo_depth, repo_size);
     System.out.format("MAX_REPO depth %d%n", MAX_DEPTH);
+    return initializeAction;
   }
 
   /**
@@ -143,7 +130,7 @@ public class TestbedCreate implements Constants {
    * @param repo_size
    * @return
    */
-  private int create_children(CA_Object ca_node, int repo_size) {
+  private int create_children(Model model, CA_Object ca_node, int repo_size) {
     if (DEBUG_ON) {
       System.out.println(ca_node.bluePrintName);
     }
@@ -151,13 +138,13 @@ public class TestbedCreate implements Constants {
     for (Pair ca_def : list) {
       for (int n = 0; n < ca_def.arg.intValue(); n++) {
         if (MAX_NODES > repo_size) {
-          Object child = FACTORIES.get(ca_def.tag).create(ca_node, ca_node.children.size());
+          Object child = FACTORIES.get(ca_def.tag).create(model, initializeAction, ca_node, ca_node.children.size());
           if (child instanceof CA_Object) {
             CA_Object caChild = (CA_Object) child;
             ActionManager.singleton().recordCA_Object(caChild);
             ca_node.children.add(caChild);
-          } else if (child instanceof Roa) {
-            ca_node.roas.add((Roa) child);
+          } else if (child instanceof AllocateROAAction) {
+            initializeAction.addAction((AllocateROAAction) child);
           } else {
             System.err.println("Somehow got something besides CA or ROA as a child");
           }
@@ -191,7 +178,7 @@ public class TestbedCreate implements Constants {
   /**
    * Create all the children
    */
-  public void createDriver() {
-    create_driver(iana);
+  public InitializeAction createDriver() {
+    return create_driver(model, iana);
   }
 }
