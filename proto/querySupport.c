@@ -48,7 +48,7 @@ int parseStalenessSpecsFile(
     while (fgets(str, WHERESTR_SIZE, input))
     {
         int got = sscanf(str, "%s %s", str2, str3);
-        if (got == 0)
+        if (got <= 0)
             continue;
         if (str2[0] == '#')
             continue;
