@@ -1632,7 +1632,7 @@ crl_fields *crl2fields(
             if (*stap != 0 && need > 0)
                 break;
         }
-        if (did != 3)
+        if (*stap == 0 && did != 3)
         {
             *stap = ERR_SCM_INVALEXT;
             log_msg(LOG_ERR, "Duplicate extensions");
