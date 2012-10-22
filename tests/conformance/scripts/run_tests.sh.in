@@ -132,7 +132,12 @@ for CRL_CERT in CRL*.cer; do
 	reset_db
 	add_file good -f "$CRL_CERT"
 	add_file good -f "$CRL_NAME/$CRL_NAME.mft"
-	add_file bad -f "$CRL_NAME/bad$CRL_NAME.crl"
+	if test -f "$CRL_NAME/good$CRL_NAME.crl"; then
+		add_file good -f "$CRL_NAME/good$CRL_NAME.crl"
+	fi
+	if test -f "$CRL_NAME/bad$CRL_NAME.crl"; then
+		add_file bad -f "$CRL_NAME/bad$CRL_NAME.crl"
+	fi
 done
 
 for MFT_CERT in MFT*.cer; do
@@ -140,7 +145,12 @@ for MFT_CERT in MFT*.cer; do
 	reset_db
 	add_file good -f "$MFT_CERT"
 	add_file good -f "$MFT_NAME/$MFT_NAME.crl"
-	add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
+	if test -f "$MFT_NAME/good$MFT_NAME.mft"; then
+		add_file good -f "$MFT_NAME/good$MFT_NAME.mft"
+	fi
+	if test -f "$MFT_NAME/bad$MFT_NAME.mft"; then
+		add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
+	fi
 done
 
 if test -n "$FAILED"; then

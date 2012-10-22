@@ -110,7 +110,7 @@ the steps were:
 	$ make test
 	$ make install
 
-In addition, the some scripts invoke the OpenSSL executable from the
+In addition, some scripts invoke the OpenSSL executable from the
 shell.  Modify your user's PATH such that `which openssl` points to
 the custom-compiled binary that supports RFC 3779 extensions.
 
@@ -272,8 +272,8 @@ named @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz.  Extract the file using:
 
     tar xvzpf @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
     
-This will create a directory named @PACKAGE_TARNAME@-@PACKAGE_VERSION@ which will contain
-various subdirectories.
+This will create a directory named @PACKAGE_TARNAME@-@PACKAGE_VERSION@ which
+will contain various subdirectories.
 
 2.2.2 Configure
 

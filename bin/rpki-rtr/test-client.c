@@ -146,6 +146,13 @@ static void do_help(
 {
     size_t i;
 
+    fprintf(stderr, "Warning:\n");
+    fprintf(stderr,
+            "    This program is intended to be used only for testing a server\n"
+            "    or to analyze the protocol. It is not intended to be a general-purpose\n"
+            "    client and as such it allows you to do things that the protocol\n"
+            "    forbids.\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "    %s [-h | --help]             Print this help text.\n",
             argv0);
