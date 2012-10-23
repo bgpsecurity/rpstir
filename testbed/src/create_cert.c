@@ -123,9 +123,9 @@ struct object_field cert_field_table[] = {
                                                         // access 
     {"sia", TEXT, NULL, OPTIONAL, write_cert_sia},      // subj information
                                                         // access 
-    {"ipv4", LIST, NULL, REQUIRED, write_cert_ipv4},    // ipv4 addresses
-    {"ipv6", LIST, NULL, REQUIRED, write_cert_ipv6},    // ipv6 addresses
-    {"as", LIST, NULL, REQUIRED, write_cert_asnums},    // as num resources
+    {"ipv4", LIST, NULL, OPTIONAL, write_cert_ipv4},    // ipv4 addresses
+    {"ipv6", LIST, NULL, OPTIONAL, write_cert_ipv6},    // ipv6 addresses
+    {"as", LIST, NULL, OPTIONAL, write_cert_asnums},    // as num resources
     {"signatureValue", OCTETSTRING, NULL, OPTIONAL, write_cert_sig},    // sig
     {"selfsigned", TEXT, NULL, OPTIONAL, NULL}, // true or false
     {NULL, 0, NULL, REQUIRED}
@@ -1145,6 +1145,7 @@ void clear_cert(
     struct Certificate *certp)
 {
     struct CertificateToBeSigned *tbsp = &certp->toBeSigned;
+    struct Extensions *extsp = &tbsp->extensions;
 
     clear_casn(&tbsp->serialNumber);
     clear_casn(&tbsp->issuer.self);
@@ -1152,6 +1153,13 @@ void clear_cert(
     clear_casn(&tbsp->validity.self);
     clear_casn(&tbsp->subjectPublicKeyInfo.self);
     clear_casn(&certp->signature);
+
+    // remove all RFC 3779 extensions
+    // ASN.1 definition allows duplicates, even if RFC5280/6487 forbid them.
+    while (findExtension(extsp, id_pe_ipAddrBlock))
+        removeExtension(extsp, id_pe_ipAddrBlock);
+    while (findExtension(extsp, id_pe_autonomousSysNum))
+        removeExtension(extsp, id_pe_autonomousSysNum);
 }
 
 void setSelfSigned(
