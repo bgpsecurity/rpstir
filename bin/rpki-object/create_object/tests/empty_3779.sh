@@ -8,11 +8,15 @@ OUTDIR="`pwd`/empty_3779"
 rm -rf "$OUTDIR"
 mkdir "$OUTDIR"
 
+TEST_LOG_NAME=empty_3779
+TEST_LOG_DIR="$OUTDIR"
+. "$RPKI_ROOT/tests/test.include"
+
 
 # Intentionally violates RFC 6487 by having no RFC 3779 resources.  We
 # want to be able to produce this case.
-gen_key "$OUTDIR/root.p15" 2048
-create_object CERT \
+run "gen_key-root" gen_key "$OUTDIR/root.p15" 2048
+run "create_object-none" create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
 	type=CA \
@@ -25,7 +29,7 @@ create_object CERT \
 	sia="r:rsync://example.com/rpki/,m:rsync://example.com/empty_3779.mft"
 
 # Just IPv4
-create_object CERT \
+run "create_object-ipv4" create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
 	type=CA \
@@ -39,7 +43,7 @@ create_object CERT \
         ipv4="0.0.0.0/0"
 
 # Just IPv6
-create_object CERT \
+run "create_object-ipv6" create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
 	type=CA \
@@ -53,7 +57,7 @@ create_object CERT \
         ipv6="::/0"
 
 # Just AS numbers
-create_object CERT \
+run "create_object-as" create_object CERT \
 	outputfilename="$OUTDIR/root.cer" \
 	subjkeyfile="$OUTDIR/root.p15" \
 	type=CA \
