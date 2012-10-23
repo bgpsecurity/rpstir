@@ -65,15 +65,23 @@ dist_templates_DATA = \
 	var/templates/ee_template.raw
 
 check_SCRIPTS += \
+	bin/rpki-object/create_object/tests/empty_3779.sh
+MK_SUBST_FILES_EXEC += \
+	bin/rpki-object/create_object/tests/empty_3779.sh
+bin/rpki-object/create_object/tests/empty_3779.sh: $(srcdir)/bin/rpki-object/create_object/tests/empty_3779.sh.in
+
+check_SCRIPTS += \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 MK_SUBST_FILES_EXEC += \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 bin/rpki-object/create_object/tests/empty_manifest.sh: $(srcdir)/bin/rpki-object/create_object/tests/empty_manifest.sh.in
 
 CLEANDIRS += \
+	bin/rpki-object/create_object/tests/empty_3779 \
 	bin/rpki-object/create_object/tests/empty_manifest
 
 TESTS += \
+	bin/rpki-object/create_object/tests/empty_3779.sh \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 
 
