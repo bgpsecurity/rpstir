@@ -54,12 +54,15 @@ dist_pkgdata_DATA += \
 	var/templates
 
 dist_check_SCRIPTS += \
+	bin/rpki-object/create_object/tests/empty_3779.sh \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 
 CLEANDIRS += \
+	bin/rpki-object/create_object/tests/empty_3779 \
 	bin/rpki-object/create_object/tests/empty_manifest
 
 TESTS += \
+	bin/rpki-object/create_object/tests/empty_3779.sh \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 
 
