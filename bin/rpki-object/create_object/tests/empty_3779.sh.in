@@ -1,16 +1,13 @@
 #!/bin/sh -e
 
-cd `dirname "$0"`
+@SETUP_ENVIRONMENT@
 
-. ../../../../etc/envir.setup
-
-OUTDIR="`pwd`/empty_3779"
+OUTDIR="$TESTS_BUILDDIR/empty_3779"
 rm -rf "$OUTDIR"
 mkdir "$OUTDIR"
 
 TEST_LOG_NAME=empty_3779
 TEST_LOG_DIR="$OUTDIR"
-. "$RPKI_ROOT/tests/test.include"
 
 
 # Intentionally violates RFC 6487 by having no RFC 3779 resources.  We
