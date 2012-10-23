@@ -22,19 +22,33 @@ import com.bbn.rpki.test.tasks.Model;
  */
 public class TestbedCreate implements Constants {
   enum Option {
-    childspec,
-    ipv4list,
-    ipv6list,
-    aslist,
-    servername,
-    breakaway,
+    childSpec,
+    ipv4List(false),
+    ipv6List(false),
+    asList(false),
+    serverName,
+    breakAway,
     ttl,
     max_depth,
     max_nodes,
-    roaipv4list,
-    roaipv6list,
-    asid,
-    subjkeyfile
+    ROAipv4List(false),
+    ROAipv6List(false),
+    asid(false),
+    subjkeyfile;
+
+    private boolean keep;
+
+    private Option() {
+      this(true);
+    }
+
+    private Option(boolean keep) {
+      this.keep = keep;
+    }
+
+    public boolean keep() {
+      return keep;
+    }
   }
 
   enum FactoryType {
@@ -44,7 +58,7 @@ public class TestbedCreate implements Constants {
     R
   }
 
-  private final Map<String, FactoryBase> FACTORIES;
+  private final Map<String, FactoryBase<?>> FACTORIES;
   private final int MAX_DEPTH;
   private final int MAX_NODES;
   private final IANAFactory ianaFactory;
@@ -145,7 +159,7 @@ public class TestbedCreate implements Constants {
             ca_node.children.add(caChild);
           } else if (child instanceof AllocateROAAction) {
             initializeAction.addAction((AllocateROAAction) child);
-          } else {
+          } else if (child != null) {
             System.err.println("Somehow got something besides CA or ROA as a child");
           }
           repo_size += 1;

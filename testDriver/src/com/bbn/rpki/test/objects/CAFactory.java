@@ -42,13 +42,15 @@ public class CAFactory extends Factory<CA_Object> {
                                        serverName,
                                        breakAway);
     TypedPair[] allPairs = new TypedPair[asList.size() + ipv4List.size() + ipv6List.size()];
-    int q = 0;
-    q = addPairs(allPairs, q, IPRangeType.as, asList);
-    q = addPairs(allPairs, q, IPRangeType.ipv4, ipv4List);
-    q = addPairs(allPairs, q, IPRangeType.ipv6, ipv6List);
+    if (allPairs.length > 0) {
+      int q = 0;
+      q = addPairs(allPairs, q, IPRangeType.as, asList);
+      q = addPairs(allPairs, q, IPRangeType.ipv4, ipv4List);
+      q = addPairs(allPairs, q, IPRangeType.ipv6, ipv6List);
 
-    AllocateAction allocateAction = new AllocateAction(parent, caObject, AllocationId.get("ini-" + caObject.getNickname()), model, allPairs);
-    initializeAction.addAction(allocateAction);
+      AllocateAction allocateAction = new AllocateAction(parent, caObject, AllocationId.get("ini-" + caObject.getNickname()), model, allPairs);
+      initializeAction.addAction(allocateAction);
+    }
     return caObject;
   }
 

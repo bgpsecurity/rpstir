@@ -66,13 +66,17 @@ public class RoaFactory extends Factory<AllocateROAAction> implements Constants 
       System.out.println("creating a ROA for "+ bluePrintName);
     }
 
-    TypedPair[] allPairs = new TypedPair[asid.size() + ROAipv4List.size() + ROAipv6List.size()];
-    int q = 0;
-    q = addPairs(allPairs, q, IPRangeType.as, asid);
-    q = addPairs(allPairs, q, IPRangeType.ipv4, ROAipv4List);
-    q = addPairs(allPairs, q, IPRangeType.ipv6, ROAipv6List);
+    int ipCount = ROAipv4List.size() + ROAipv6List.size();
+    if (ipCount > 0) {
+      TypedPair[] allPairs = new TypedPair[asid.size() + ipCount];
+      int q = 0;
+      q = addPairs(allPairs, q, IPRangeType.as, asid);
+      q = addPairs(allPairs, q, IPRangeType.ipv4, ROAipv4List);
+      q = addPairs(allPairs, q, IPRangeType.ipv6, ROAipv6List);
 
-    return new AllocateROAAction(parent, AllocationId.get("roa-ini-" + parent.getNickname()), model, allPairs);
+      return new AllocateROAAction(parent, AllocationId.get("roa-ini-" + parent.getNickname()), model, allPairs);
+    }
+    return null;
   }
 
   private int addPairs(TypedPair[] allPairs, int q, IPRangeType rangeType, List<Pair> pairs) {

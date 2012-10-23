@@ -19,9 +19,6 @@ import java.util.TreeSet;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
 
-import com.bbn.rpki.test.objects.TestbedCreate.FactoryType;
-import com.bbn.rpki.test.objects.TestbedCreate.Option;
-
 /**
  * <Enter the description of this type here>
  *
@@ -53,7 +50,7 @@ public class TestbedConfig implements Constants {
     }
   }
 
-  private final Map<String, FactoryBase> factories = new TreeMap<String, FactoryBase>();
+  private final Map<String, FactoryBase<?>> factories = new TreeMap<String, FactoryBase<?>>();
   // Globals for repository specified by configuration file
   // These are set once while parsing the .ini
   private int maxDepth;
@@ -73,12 +70,22 @@ public class TestbedConfig implements Constants {
       // loop over all sections and options and build factories
       for (Map.Entry<String, Section> sectionEntry : sectionEntries) {
         configureFactory(sectionEntry);
+        Section section = sectionEntry.getValue();
+        for (TestbedCreate.Option option : TestbedCreate.Option.values()) {
+          if (!option.keep()) {
+            section.remove(option.name());
+          }
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
+  /**
+   * Write the config file
+   * @param writer
+   */
   public void write(Writer writer) {
     try {
       wini.store(writer);
@@ -106,8 +113,7 @@ public class TestbedConfig implements Constants {
     String section = sectionEntry.getKey();
     Section sectionMap = sectionEntry.getValue();
     for (Map.Entry<String, String> entry : sectionMap.entrySet()) {
-
-      Option option = Option.valueOf(entry.getKey().toLowerCase());
+      TestbedCreate.Option option = TestbedCreate.Option.valueOf(entry.getKey());
       if (option == null) {
         System.err.println("Opt in config file not recognized: " + entry.getKey());
         continue;
@@ -115,22 +121,22 @@ public class TestbedConfig implements Constants {
       String prop = entry.getValue().trim();
       switch (option) {
 
-      case childspec:
+      case childSpec:
         parse(child, prop);
         break;
-      case ipv4list:
+      case ipv4List:
         parse(ipv4, prop);
         break;
-      case ipv6list:
+      case ipv6List:
         parse(ipv6, prop);
         break;
-      case aslist:
+      case asList:
         parse(as_list, prop);
         break;
-      case servername:
+      case serverName:
         server = prop;
         break;
-      case breakaway:
+      case breakAway:
         breakA = prop.equalsIgnoreCase("true");
         break;
       case ttl:
@@ -142,10 +148,10 @@ public class TestbedConfig implements Constants {
       case max_nodes:
         maxNodes = new Integer(prop);
         break;
-      case roaipv4list:
+      case ROAipv4List:
         parse(roav4l, prop);
         break;
-      case roaipv6list:
+      case ROAipv6List:
         // FIXME: maxlength not yet supported
         parse(roav6l, prop);
         break;
@@ -160,11 +166,11 @@ public class TestbedConfig implements Constants {
     String[] typeAndName = section.split("-");
     String type = typeAndName[0];
     String name = typeAndName[1];
-    FactoryType factoryType = FactoryType.valueOf(type);
+    TestbedCreate.FactoryType factoryType = TestbedCreate.FactoryType.valueOf(type);
     if (factoryType == null) {
       throw new RuntimeException("Unrecognized type included in name of section in the .ini: " + type);
     }
-    FactoryBase f = null;
+    FactoryBase<?> f = null;
     switch (factoryType) {
     case C: {
       if ("IANA".equals(name)) {
@@ -207,7 +213,7 @@ public class TestbedConfig implements Constants {
   /**
    * @return the parsed factories map
    */
-  public Map<String, FactoryBase> getFactories() {
+  public Map<String, FactoryBase<?>> getFactories() {
     return factories;
   }
 
@@ -229,7 +235,7 @@ public class TestbedConfig implements Constants {
    * @param nodeName
    * @return the specified factory
    */
-  public FactoryBase getFactory(String nodeName) {
+  public FactoryBase<?> getFactory(String nodeName) {
     return factories.get(nodeName);
 
   }
@@ -239,7 +245,7 @@ public class TestbedConfig implements Constants {
    */
   public Collection<File> getRepositoryRoots() {
     Set<File> ret = new TreeSet<File>();
-    for (FactoryBase factoryBase : factories.values()) {
+    for (FactoryBase<?> factoryBase : factories.values()) {
       if (factoryBase.isBreakAway() || factoryBase instanceof IANAFactory) {
         ret.add(new File(new File(REPO_PATH), factoryBase.serverName));
       }

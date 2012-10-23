@@ -40,13 +40,6 @@ public class CA_Object extends Allocator {
   private int nextChildSN;
   final String bluePrintName;
   private final CA_Object parent;
-  /**
-   * @return the parent
-   */
-  public CA_Object getParent() {
-    return parent;
-  }
-
   final List<CA_Object> children = new ArrayList<CA_Object>();
   final List<Manifest> manifests = new ArrayList<Manifest>();
   final List<Roa> roas = new ArrayList<Roa>();
@@ -100,7 +93,7 @@ public class CA_Object extends Allocator {
     if (modified) {
       if  (this.certificate != null) {
         if (!this.certificate.hasExpired()) {
-          parent.revokeCertificate(this.certificate);
+          parent.revokedCertificates.add(new RevokedCertificate(this.certificate));
         }
         this.certificate = null;
       }
@@ -138,10 +131,10 @@ public class CA_Object extends Allocator {
   }
 
   /**
-   * @param certificate2
+   * @return the parent
    */
-  private void revokeCertificate(Certificate certificate) {
-    revokedCertificates.add(new RevokedCertificate(certificate));
+  public CA_Object getParent() {
+    return parent;
   }
 
   /**
