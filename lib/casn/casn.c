@@ -400,7 +400,10 @@ int eject_casn(
         _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
         if (tcasnp)             // if first is not last
         {
-            copy_casn(fcasnp, tcasnp);  // copy second to first
+            // Use _copy_casn instead of copy_casn because when the OF has only
+            // one element, tcasnp points to the empty template at the end of
+            // the OF, which copy_casn would refuse to copy.
+            _copy_casn(fcasnp, tcasnp, 0);  // copy second to first
             fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
         }
     }
