@@ -100,9 +100,9 @@ public class CA_Object extends Allocator {
     if (modified) {
       if  (this.certificate != null) {
         if (!this.certificate.hasExpired()) {
-          revokedCertificates.add(new RevokedCertificate(this.certificate));
-          this.certificate = null;
+          parent.revokeCertificate(this.certificate);
         }
+        this.certificate = null;
       }
       if (hasResources()) {
         // Initialize our certificate
@@ -135,6 +135,13 @@ public class CA_Object extends Allocator {
       setModified(false);
     }
     return this.certificate;
+  }
+
+  /**
+   * @param certificate2
+   */
+  private void revokeCertificate(Certificate certificate) {
+    revokedCertificates.add(new RevokedCertificate(certificate));
   }
 
   /**
@@ -201,16 +208,17 @@ public class CA_Object extends Allocator {
     Certificate cert = getCertificate();
     if (cert != null) {
       list.add(cert);
-      {
-        Crl crl = new Crl(this);
-        list.add(crl);
-      }
       for (Roa obj : roas) {
         obj.appendObjectsToWrite(list);
         list.add(obj);
       }
       for (CA_Object obj : children) {
         obj.appendObjectsToWrite(list);
+      }
+      // Do this after processing children because a certificate may be revoked
+      {
+        Crl crl = new Crl(this);
+        list.add(crl);
       }
       for (CA_Obj obj : manifests) {
         obj.appendObjectsToWrite(list);
