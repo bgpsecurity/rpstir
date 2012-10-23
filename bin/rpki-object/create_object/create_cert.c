@@ -1105,9 +1105,9 @@ void clear_cert(
 
     // remove all RFC 3779 extensions
     // ASN.1 definition allows duplicates, even if RFC5280/6487 forbid them.
-    while (findExtension(extsp, id_pe_ipAddrBlock))
+    while (find_extension(extsp, id_pe_ipAddrBlock, false))
         removeExtension(extsp, id_pe_ipAddrBlock);
-    while (findExtension(extsp, id_pe_autonomousSysNum))
+    while (find_extension(extsp, id_pe_autonomousSysNum, false))
         removeExtension(extsp, id_pe_autonomousSysNum);
 }
 
