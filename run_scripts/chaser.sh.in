@@ -23,6 +23,27 @@ log () {
 	echo "$@" >&2
 }
 
+# Check for the latest version.
+if test "$RPKI_NEW_VERSION_CHECK" != none; then
+	VERSION_FILE="`@MKTEMP@`"
+	if curl \
+		--cacert "$RPKI_ROOT/TODO.pem" \
+		--connect-timeout 60 \
+		--location \
+		--max-time 30 \
+		--output "$VERSION_FILE" \
+		"$RPKI_NEW_VERSION_CHECK"
+	then
+		LATEST_VERSION="$(head -n 1 "$VERSION_FILE")"
+		if test "@PACKAGE_VERSION@" != "$LATEST_VERSION"; then
+			log "A new version, $LATEST_VERSION, of @PACKAGE_NAME@ is available."
+		fi
+	else
+		log "Can't download version information from $RPKI_NEW_VERSION_CHECK"
+	fi
+	rm "$VERSION_FILE"
+fi
+
 while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 	rm -f "$RSYNC_CORD_CONF"
 
