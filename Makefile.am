@@ -172,6 +172,7 @@ do_subst = $(SED) \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
+	-e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' \
 	-e 's,[@]PYTHON[@],$(PYTHON),g' \
 	-e 's,[@]SETUP_ENVIRONMENT[@],$(SETUP_ENVIRONMENT),g' \
 	-e 's,[@]SHELL_BASH[@],$(SHELL_BASH),g'
