@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.actions;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,12 +13,24 @@ import org.jdom.Element;
 
 import com.bbn.rpki.test.objects.AllocationId;
 import com.bbn.rpki.test.objects.CA_Object;
+import com.bbn.rpki.test.objects.IPRangeList;
+import com.bbn.rpki.test.objects.IPRangeType;
+import com.bbn.rpki.test.objects.Range;
 import com.bbn.rpki.test.objects.TypedPair;
 import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.tasks.Model;
 
 /**
  * Represents an allocation action to be performed as part of a test.
+ * 
+ * There are four epoch events associated with an allocation action:
+ *   Validity start time -- when the allocation becomes effective
+ *   validity start publication time -- when the certificate containg the allocation is published
+ *   validity end time -- when the allocation ceases to be in effect
+ *   validity end publication time -- when the certificate containing the allocation is revoked
+ * This would seem to imply that allocations have a planned lifetime, but they don't. For testing,
+ * however, it is necessary to cover the cases where an allocation is rescinded and the associated
+ * timing of when the world becomes aware of this.
  *
  * @author tomlinso
  */
@@ -78,30 +91,61 @@ public class AllocateAction extends AllocateActionBase {
   public void execute(EpochEvent epochEvent, TypescriptLogger logger) {
     switch (epochEvent.getName()) {
     case PUBLICATION_TIME_OF_ALLOCATION:
-      for (TypedPair typedPair : allocationPairs) {
-        switch (typedPair.type) {
-        case ipv4:
-          child.takeIPv4(Collections.singletonList(typedPair), allocationId);
-          break;
-        case ipv6:
-          child.takeIPv6(Collections.singletonList(typedPair), allocationId);
-          break;
-        case as:
-          child.takeAS(Collections.singletonList(typedPair), allocationId);
-          break;
+      if (child == parent) {
+        // root, gets all
+        child.addRcvdRanges(validityStartTime.getEpoch().getEpochTime(),
+                            validityEndTime.getEpoch().getEpochTime(),
+                            allocationId,
+                            getEverything(IPRangeType.as),
+                            getEverything(IPRangeType.ipv4),
+                            getEverything(IPRangeType.ipv6));
+      } else {
+        for (TypedPair typedPair : allocationPairs) {
+          switch (typedPair.type) {
+          case ipv4:
+            child.takeAllocation(Collections.singletonList(typedPair),
+                                 IPRangeType.ipv4,
+                                 validityStartTime.getEpoch().getEpochTime(),
+                                 validityEndTime.getEpoch().getEpochTime(),
+                                 allocationId);
+            break;
+          case ipv6:
+            child.takeAllocation(Collections.singletonList(typedPair),
+                                 IPRangeType.ipv6,
+                                 validityStartTime.getEpoch().getEpochTime(),
+                                 validityEndTime.getEpoch().getEpochTime(),
+                                 allocationId);
+            break;
+          case as:
+            child.takeAllocation(Collections.singletonList(typedPair),
+                                 IPRangeType.as,
+                                 validityStartTime.getEpoch().getEpochTime(),
+                                 validityEndTime.getEpoch().getEpochTime(),
+                                 allocationId);
+            break;
+          }
         }
-      }
-      if (logger != null) {
-        logger.format("Allocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+        if (logger != null) {
+          logger.format("Allocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+        }
       }
       break;
     case VALIDITY_END_TIME_OF_ALLOCATION:
-      child.returnAllocation(allocationId);
-      if (logger != null) {
-        logger.format("Deallocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+      if (child != parent) {
+        child.returnAllocation(allocationId);
+        if (logger != null) {
+          logger.format("Deallocate %s from %s to %s identified as %s%n", allocationPairs, parent, child, allocationId);
+        }
       }
       break;
     }
+  }
+
+
+  private IPRangeList getEverything(IPRangeType rangeType) {
+    IPRangeList everything = new IPRangeList(rangeType);
+    everything.add(new Range(BigInteger.ZERO, rangeType.getMax(), rangeType, rangeType == IPRangeType.as));
+    return everything;
   }
 
   /**

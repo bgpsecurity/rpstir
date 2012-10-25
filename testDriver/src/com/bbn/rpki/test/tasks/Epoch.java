@@ -16,7 +16,8 @@ import com.bbn.rpki.test.actions.EpochEvent;
 public class Epoch {
   private final List<EpochEvent> epochEvents = new ArrayList<EpochEvent>();
   private Integer epochIndex;
-  private long executionTime;
+  private long epochTime;
+  private boolean epochTimeLocked;
 
   void addEpochEvent(EpochEvent epochEvent) {
     Epoch formerEpoch = epochEvent.getEpoch();
@@ -93,26 +94,21 @@ public class Epoch {
     }
   }
 
-  public long getEpochExecutionTime() {
-    long sum = 0;
-    for (EpochEvent epochEvent : epochEvents) {
-      sum += epochEvent.getEpoch().getExecutionTime();
+  /**
+   * @return the time at which this epoch should be executed
+   */
+  public long getEpochTime() {
+    epochTimeLocked = true;
+    return epochTime;
+  }
+
+  /**
+   * @param epochTime the time at which this epoch should be executed
+   */
+  public void setEpochTime(long epochTime) {
+    if (epochTimeLocked) {
+      throw new RuntimeException("Attempt to change epochTime when locked");
     }
-    return sum;
-  }
-
-  /**
-   * @return
-   */
-  private long getExecutionTime() {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  /**
-   * @param executionTime the executionTime to set
-   */
-  public void setExecutionTime(long executionTime) {
-    this.executionTime = executionTime;
+    this.epochTime = epochTime;
   }
 }

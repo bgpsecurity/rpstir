@@ -28,10 +28,17 @@ public class EE_cert extends Certificate {
    * @param serial
    * @param subjkeyfile
    */
-  EE_cert(CA_Object parent, int ttl, String bluePrintName, String siaPath, IPRangeList ipv4, IPRangeList ipv6,
+  EE_cert(CA_Object parent,
+          long validityStartTime,
+          long validityEndTime,
+          String bluePrintName,
+          String siaPath,
+          IPRangeList ipv4,
+          IPRangeList ipv6,
           IPRangeList asList) {
     super(parent,
-          ttl,
+          validityStartTime,
+          validityEndTime,
           REPO_PATH + "EE/" + parent.SIA_path,
           bluePrintName,
           siaPath,

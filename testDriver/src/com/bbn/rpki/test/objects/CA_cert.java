@@ -37,7 +37,8 @@ public class CA_cert extends Certificate {
    * @param serial
    */
   CA_cert(CA_Object parent,
-          int ttl,
+          long validityStartTime,
+          long validityEndTime,
           String dirPath,
           String nickname,
           String sia_path,
@@ -46,7 +47,8 @@ public class CA_cert extends Certificate {
           IPRangeList ipv6,
           String subjKeyFile) {
     super(parent,
-          ttl,
+          validityStartTime,
+          validityEndTime,
           dirPath,
           nickname,
           sia_path,

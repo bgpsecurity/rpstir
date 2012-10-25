@@ -38,7 +38,7 @@ public class CAFactory extends Factory<CA_Object> {
    */
   @Override
   CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
-    CA_Object caObject = new CA_Object(this, parent, id, null, ttl, bluePrintName,
+    CA_Object caObject = new CA_Object(this, parent, id, null, bluePrintName,
                                        serverName,
                                        breakAway);
     TypedPair[] allPairs = new TypedPair[asList.size() + ipv4List.size() + ipv6List.size()];

@@ -78,7 +78,13 @@ public class AllocateROAAction extends AllocateActionBase {
     switch (epochEvent.getName()) {
     case PUBLICATION_TIME_OF_ALLOCATION:
       List<Pair> asid = Collections.singletonList(new Pair("r", 1));
-      eeObject = new EE_Object(1, asid, allocationPairs.extract(IPRangeType.ipv4), allocationPairs.extract(IPRangeType.ipv6), "ROA-" + allocationId, parent);
+      eeObject = new EE_Object(validityStartTime.getEpoch().getEpochTime(),
+                               validityEndTime.getEpoch().getEpochTime(),
+                               asid,
+                               allocationPairs.extract(IPRangeType.ipv4),
+                               allocationPairs.extract(IPRangeType.ipv6),
+                               "ROA-" + allocationId,
+                               parent);
       Roa roa = new Roa(eeObject);
       if (logger != null) {
         logger.format("Allocate ROA %s from %s to %s identified as %s%n", allocationPairs, parent, eeObject, allocationId);

@@ -3,7 +3,6 @@
  */
 package com.bbn.rpki.test.objects;
 
-import java.math.BigInteger;
 import java.util.List;
 
 import com.bbn.rpki.test.actions.InitializeAction;
@@ -34,18 +33,9 @@ public class IANAFactory extends FactoryBase<CA_Object> {
    */
   @Override
   CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
-    CA_Object caObject = new CA_Object(this, parent, id, null, ttl, bluePrintName,
+    CA_Object caObject = new CA_Object(this, parent, id, null, bluePrintName,
                                        serverName,
                                        breakAway);
-    caObject.addRcvdRanges(getEverything(IPRangeType.as));
-    caObject.addRcvdRanges(getEverything(IPRangeType.ipv4));
-    caObject.addRcvdRanges(getEverything(IPRangeType.ipv6));
     return caObject;
-  }
-
-  private IPRangeList getEverything(IPRangeType rangeType) {
-    IPRangeList everything = new IPRangeList(rangeType);
-    everything.add(new Range(BigInteger.ZERO, rangeType.getMax(), rangeType, rangeType == IPRangeType.as));
-    return everything;
   }
 }

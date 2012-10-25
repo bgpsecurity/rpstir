@@ -12,8 +12,14 @@ import java.util.List;
 import com.bbn.rpki.test.actions.ActionManager;
 
 /**
- * <Enter the description of this type here>
- *
+ * Represents the state of a particular CA in the testbed. At any moment, there
+ * may be a current certificate reflecting allocations issued (and published) by another CA.
+ * The validity period of the certificate is determined from the set of active allocations
+ * received by this CA. The validity start time is the latest start time of any active allocation
+ * and the validity end time is the earliest end time of any active allocation. If a new allocation
+ * is "published", then in general, a new certificate must be published and the old certificate
+ * revoked.
+ * 
  * @author RTomlinson
  */
 public class CA_Object extends Allocator {
@@ -49,9 +55,10 @@ public class CA_Object extends Allocator {
   private final String nickName;
   private final String subjKeyFile;
   private int manNum = 0;
-  private final int ttl;
   private final String serverName;
   private final boolean breakAway;
+  private long validityStartTime;
+  private long validityEndTime;
   /**
    * @param factoryBase
    * @param parent
@@ -62,12 +69,10 @@ public class CA_Object extends Allocator {
                    CA_Object parent,
                    int id,
                    String subjKeyFile,
-                   int ttl,
                    String bluePrintName,
                    String serverName,
                    boolean breakAway) {
     this.nextChildSN = 0;
-    this.ttl = ttl;
     this.bluePrintName = bluePrintName;
     this.nickName = bluePrintName + "-" + id;
     this.parent = parent;
@@ -102,7 +107,8 @@ public class CA_Object extends Allocator {
         if (parent != null) {
           String dirPath = REPO_PATH + parent.SIA_path;
           this.certificate = new CA_cert(parent,
-                                         getTtl(),
+                                         validityStartTime,
+                                         validityEndTime,
                                          dirPath,
                                          nickName,
                                          SIA_path,
@@ -113,7 +119,8 @@ public class CA_Object extends Allocator {
         } else {
           String dirPath = REPO_PATH + getServerName() + "/";
           this.certificate = new SS_cert(parent,
-                                         getTtl(),
+                                         validityStartTime,
+                                         validityEndTime,
                                          SIA_path,
                                          nickName,
                                          dirPath,
@@ -138,33 +145,61 @@ public class CA_Object extends Allocator {
   }
 
   /**
-   * @param pairs describe the addresses to take from the parent
-   * @param allocationId
+   * @return the validityStartTime
    */
-  public void takeIPv4(List<? extends Pair> pairs, AllocationId allocationId) {
-    IPRangeList allocation = parent.subAllocateIPv4(pairs);
-    ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
-    this.addRcvdRanges(allocation);
+  public long getValidityStartTime() {
+    return validityStartTime;
   }
 
   /**
-   * @param pairs describe the addresses to take from the parent
-   * @param allocationId
+   * @param validityStartTime the validityStartTime to set
    */
-  public void takeIPv6(List<? extends Pair> pairs, AllocationId allocationId) {
-    IPRangeList allocation = parent.subAllocateIPv6(pairs);
-    ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
-    this.addRcvdRanges(allocation);
+  public void setValidityStartTime(long validityStartTime) {
+    this.validityStartTime = validityStartTime;
   }
 
   /**
-   * @param pairs describe the addresses to take from the parent
+   * @return the validityEndTime
+   */
+  public long getValidityEndTime() {
+    return validityEndTime;
+  }
+
+  /**
+   * @param validityEndTime the validityEndTime to set
+   */
+  public void setValidityEndTime(long validityEndTime) {
+    this.validityEndTime = validityEndTime;
+  }
+
+  /**
+   * Take an allocation from our parent according to the specified pairs and rangeType
+   * 
+   * @param pairs
+   * @param rangeType
    * @param allocationId
    */
-  public void takeAS(List<? extends Pair> pairs, AllocationId allocationId) {
-    IPRangeList allocation = parent.subAllocateAS(pairs);
-    ActionManager.singleton().recordAllocation(parent, this, allocationId, allocation);
-    this.addRcvdRanges(allocation);
+  public void takeAllocation(List<? extends Pair> pairs, IPRangeType rangeType,
+                             long validityStartTime, long validityEndTime,
+                             AllocationId allocationId) {
+    IPRangeList allocation = parent.subAllocate(rangeType, pairs);
+    addRcvdRanges(validityStartTime, validityEndTime, allocationId, allocation);
+  }
+
+  /**
+   * @param validityStartTime
+   * @param validityEndTime
+   * @param allocationId
+   * @param allocation
+   */
+  public void addRcvdRanges(long validityStartTime, long validityEndTime, AllocationId allocationId,
+                            IPRangeList...allocations) {
+    ActionManager.singleton().recordAllocation(parent, this, allocationId, allocations);
+    for (IPRangeList allocation : allocations) {
+      this.addRcvdRanges(allocation);
+    }
+    this.validityStartTime = validityStartTime;
+    this.validityEndTime = validityEndTime;
   }
 
   /**
@@ -305,13 +340,6 @@ public class CA_Object extends Allocator {
    */
   public String getCommonName() {
     return commonName;
-  }
-
-  /**
-   * @return the ttl
-   */
-  public int getTtl() {
-    return ttl;
   }
 
   /**

@@ -19,9 +19,19 @@ public class SS_cert extends Certificate {
    * @param dirPath
    * @param subjKeyFile
    */
-  public SS_cert(CA_Object parent, int ttl, String siaPath, String nickname, String dirPath, IPRangeList asList, IPRangeList ipv4List, IPRangeList ipv6List, String subjKeyFile) {
+  public SS_cert(CA_Object parent,
+                 long validityStartTime,
+                 long validityEndTime,
+                 String siaPath,
+                 String nickname,
+                 String dirPath,
+                 IPRangeList asList,
+                 IPRangeList ipv4List,
+                 IPRangeList ipv6List,
+                 String subjKeyFile) {
     super(parent,
-          ttl,
+          validityStartTime,
+          validityEndTime,
           dirPath,
           nickname,
           siaPath,

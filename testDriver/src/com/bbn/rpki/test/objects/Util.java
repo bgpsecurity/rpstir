@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 import com.bbn.rpki.test.util.Sucker;
@@ -50,6 +51,11 @@ public class Util implements Constants {
   private static DateFormat dateFormat1 = new SimpleDateFormat("yyMMddHHmmss'Z'");
 
   private static DateFormat dateFormat2 = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
+
+  static {
+    dateFormat1.setTimeZone(TimeZone.getTimeZone("GMT"));
+    dateFormat2.setTimeZone(TimeZone.getTimeZone("GMT"));
+  }
 
   /**
    * The value of the RPKI_ROOT environment variable
@@ -255,6 +261,7 @@ public class Util implements Constants {
    * @param cal
    */
   private synchronized static void appendDateTime(StringBuilder sb, String member, Calendar cal, boolean abbrevYear) {
+    cal.setTimeZone(TimeZone.getTimeZone("GMT"));
     if (cal.get(Calendar.YEAR) < 2050 && abbrevYear) {
       sb.append(String.format("%s=%s%n", member, dateFormat1.format(cal.getTime())));
     } else {

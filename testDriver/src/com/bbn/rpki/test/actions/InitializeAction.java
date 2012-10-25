@@ -8,8 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.bbn.rpki.test.objects.AllocationId;
 import com.bbn.rpki.test.objects.Allocator;
 import com.bbn.rpki.test.objects.CA_Object;
+import com.bbn.rpki.test.tasks.Model;
 
 /**
  * <Enter the description of this type here>
@@ -38,31 +40,42 @@ public class InitializeAction {
    * 
    * @param constraintActions
    */
-  public List<AbstractAction> getActions(Allocator iana, List<AbstractAction> constraintActions) {
-    constrainValidityStartTimes(iana, constraintActions);
+  public List<AbstractAction> getActions(Model model, CA_Object iana, List<AbstractAction> constraintActions) {
+    constrainValidityStartTimes(model, iana, constraintActions);
     return actions;
   }
 
-  private void constrainValidityStartTimes(Allocator iana, List<AbstractAction> constraintActions) {
+  private void constrainValidityStartTimes(Model model, CA_Object iana, List<AbstractAction> constraintActions) {
     Map<CA_Object, AllocateAction> rcvdAllocations = new HashMap<CA_Object, AllocateAction>();
+    AllocateAction ianaAllocateAction = null;
     for (AbstractAction action : actions) {
       if (action instanceof AllocateAction) {
         AllocateAction allocateAction = (AllocateAction) action;
         CA_Object rcvr = allocateAction.getChild();
+        if (rcvr == iana) {
+          ianaAllocateAction = allocateAction;
+        }
         rcvdAllocations.put(rcvr, allocateAction);
       }
     }
+    if (ianaAllocateAction == null) {
+      ianaAllocateAction = new AllocateAction(iana,
+                                              iana,
+                                              AllocationId.get("ini-iana"),
+                                              model);
+      actions.add(ianaAllocateAction);
+      rcvdAllocations.put(iana, ianaAllocateAction);
+    }
     for (AbstractAction action : actions) {
+      if (action == ianaAllocateAction) {
+        continue;
+      }
       if (action instanceof AllocateActionBase) {
         AllocateActionBase allocateAction = (AllocateActionBase) action;
         Allocator parent = allocateAction.getParent();
-        if (parent == iana) {
-          // Validity start is not constrained
-        } else {
-          AllocateAction rcvdAction = rcvdAllocations.get(parent);
-          rcvdAction.getValidityStartEvent().addSuccessor(allocateAction.getValidityStartEvent(), true);
-          rcvdAction.getValidityEndEvent().addPredecessor(allocateAction.getValidityEndEvent(), true);
-        }
+        AllocateAction rcvdAction = rcvdAllocations.get(parent);
+        rcvdAction.getValidityStartEvent().addSuccessor(allocateAction.getValidityStartEvent(), true);
+        rcvdAction.getValidityEndEvent().addPredecessor(allocateAction.getValidityEndEvent(), true);
         for (AbstractAction constraintAction : constraintActions) {
           allocateAction.constrainBy(constraintAction.getAllEpochEvents());
         }

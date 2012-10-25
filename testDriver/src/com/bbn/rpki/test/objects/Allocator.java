@@ -39,36 +39,16 @@ public abstract class Allocator implements Constants {
   private final ResourcePair ipv6Resources = new ResourcePair(IPRangeType.ipv6);
   protected boolean modified = false;
 
-  protected IPRangeList subAllocateIPv4(List<? extends Pair> iplist) {
+  protected IPRangeList subAllocate(IPRangeType rangeType, List<? extends Pair> ipList) {
     if (DEBUG_ON) {
-      System.out.println("IPv4 Request: " + iplist);
+      System.out.println("Request " + rangeType + ": " + ipList);
     }
+    ResourcePair resources = selectResources(rangeType);
 
     //  Note that the following may raise an exception!
     IPRangeList allocated_pairs =
-        this.ipv4Resources.free.allocate(iplist, true);
+        resources.free.allocate(ipList, true);
 
-    return allocated_pairs;
-  }
-
-  protected IPRangeList subAllocateIPv6(List<? extends Pair> iplist) {
-    if (DEBUG_ON) {
-      System.out.println("IPv6 Request: " + iplist);
-    }
-    //  Note that the following may raise an exception!
-    IPRangeList allocated_pairs =
-        this.ipv6Resources.free.allocate(iplist, true);
-
-    return allocated_pairs;
-  }
-
-  protected IPRangeList subAllocateAS(List<? extends Pair> asList) {
-    if (DEBUG_ON) {
-      System.out.println("AS Request: " + asList);
-    }
-    //  Note that the following may raise an exception!
-    IPRangeList allocated_pairs =
-        this.asResources.free.allocate(asList, false);
     return allocated_pairs;
   }
 
@@ -83,8 +63,7 @@ public abstract class Allocator implements Constants {
    * Represents a cancellation of allocation to this allocator.
    * Remove from rcvd list and remove what we can from free list
    * 
-   * @param rangeType
-   * @param range
+   * @param rangeList
    */
   public void removeRcvdRanges(IPRangeList rangeList) {
     ResourcePair resources = selectResources(rangeList.getIpVersion());

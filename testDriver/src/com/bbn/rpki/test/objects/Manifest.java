@@ -25,7 +25,6 @@ public class Manifest extends CMS {
   private final CA_Object parent;
   private EE_cert eeCert;
   private final int manNum;
-  private final int ttl;
 
   /**
    * Construct a new manifest
@@ -36,12 +35,10 @@ public class Manifest extends CMS {
   public Manifest(CA_Object parent) {
     super("MANIFEST");
     this.parent = parent;
-    this.ttl = parent.getTtl();
     this.thisupdate = Calendar.getInstance();
     // Not sure on this nextUpdate time frame
     this.nextupdate = Calendar.getInstance();
-    this.nextupdate.setTimeInMillis(this.thisupdate.getTimeInMillis());
-    this.nextupdate.add(Calendar.DATE, ttl);
+    this.nextupdate.setTimeInMillis(parent.getValidityEndTime());
     this.manNum = parent.getNextManifestNumber();
     // Chop off our rsync:// portion and append the repo path
     this.outputfilename = REPO_PATH + parent.SIA_path + Util.b64encode_wrapper(parent.getCertificate().ski) + ".mft";
@@ -75,7 +72,8 @@ public class Manifest extends CMS {
     if (eeCert == null) {
       // Create single-use EE certificate
       eeCert = new EE_cert(parent,
-                           ttl,
+                           parent.getValidityStartTime(),
+                           parent.getValidityEndTime(),
                            "Manifest-EE",
                            parent.SIA_path + "EE-" + manNum + "/",
                            IPRangeList.IPV4_EMPTY,

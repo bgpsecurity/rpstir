@@ -59,7 +59,8 @@ public class Certificate extends CA_Obj {
   public IPRangeList ipv6;
 
   Certificate(CA_Object parent,
-              final int ttl,
+              final long validityStartTime,
+              final long validityEndTime,
               final String dirPath,
               final String nickname,
               final String siaPath,
@@ -74,8 +75,8 @@ public class Certificate extends CA_Obj {
     // Certificate lifetime and expiration info
     this.notBefore = Calendar.getInstance();
     this.notAfter = Calendar.getInstance();
-    notAfter.setTimeInMillis(notBefore.getTimeInMillis());
-    this.notAfter.add(Calendar.DATE, ttl);
+    notBefore.setTimeInMillis(validityStartTime);
+    notAfter.setTimeInMillis(validityEndTime);
 
     // Set our subject key file name and generate the key
     // Also create the directory it if it doesn't exist

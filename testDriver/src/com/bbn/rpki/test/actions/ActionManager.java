@@ -74,20 +74,22 @@ public class ActionManager {
    * @param allocationId
    * @param list
    */
-  public void recordAllocation(Allocator parent, Allocator child, AllocationId allocationId, IPRangeList list) {
+  public void recordAllocation(Allocator parent, Allocator child, AllocationId allocationId, IPRangeList...lists) {
     // TODO need a better key incorporating the parent
     if (allocationId == null) {
       return;
     }
-    System.out.println("RecordAllocation " + allocationId + ": " + list);
-    IPRangeType rangeType = list.getIpVersion();
-    Map<AllocationId, IPRangeList> selectMap = selectMap(rangeType);
-    IPRangeList ranges = selectMap.get(allocationId);
-    if (ranges == null) {
-      ranges = new IPRangeList(rangeType);
-      selectMap(rangeType).put(allocationId, ranges);
+    for (IPRangeList list : lists) {
+      System.out.println("RecordAllocation " + allocationId + ": " + list);
+      IPRangeType rangeType = list.getIpVersion();
+      Map<AllocationId, IPRangeList> selectMap = selectMap(rangeType);
+      IPRangeList ranges = selectMap.get(allocationId);
+      if (ranges == null) {
+        ranges = new IPRangeList(rangeType);
+        selectMap(rangeType).put(allocationId, ranges);
+      }
+      ranges.addAll(list);
     }
-    ranges.addAll(list);
   }
 
   /**

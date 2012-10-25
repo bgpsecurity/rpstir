@@ -27,7 +27,7 @@ public class AdvanceEpoch extends TaskFactory {
     @Override
     public void run() {
       model.advanceEpoch();
-      if (model.getEpochIndex() + 1 < model.getEpochCount()) {
+      if (model.getEpochIndex() < model.getEpochCount()) {
         model.addTask(this);
       }
     }

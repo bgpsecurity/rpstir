@@ -38,10 +38,13 @@ import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.TypedPair;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.CheckCacheStatus;
+import com.bbn.rpki.test.tasks.InstallTrustAnchor;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.TaskBreakdown;
 import com.bbn.rpki.test.tasks.TaskFactory;
 import com.bbn.rpki.test.tasks.UpdateCache;
+import com.bbn.rpki.test.tasks.UploadEpoch;
+import com.bbn.rpki.test.tasks.UploadTrustAnchors;
 
 /**
  * <Enter the description of this type here>
@@ -59,6 +62,7 @@ public class Main implements XMLConstants {
   private final String[] args;
   protected boolean run;
   protected JFileChooser fileChooser;
+  private boolean uploadedTrustAnchors;
 
   /**
    * @param args
@@ -140,7 +144,9 @@ public class Main implements XMLConstants {
       System.exit(0);
       return;
     }
+    model.estimateEpochTimes();
     Iterable<TaskFactory.Task> tasks = model.getTasks();
+    uploadedTrustAnchors = false;
     executeTasks(tasks, model, "");
     tlPanel.format("Completed%n");
     RunLoader.singleton().stop();
@@ -200,6 +206,10 @@ public class Main implements XMLConstants {
         tlPanel.format("%s...", indent);
       }
       tlPanel.format("done%n");
+      if (!uploadedTrustAnchors && task.getTaskFactory() instanceof UploadEpoch) {
+        model.getTaskFactory(UploadTrustAnchors.class).createOnlyTask().run();
+        model.getTaskFactory(InstallTrustAnchor.class).createOnlyTask().run();
+      }
     }
   }
 

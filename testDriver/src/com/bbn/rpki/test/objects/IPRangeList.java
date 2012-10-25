@@ -343,10 +343,10 @@ public class IPRangeList implements Iterable<Range>, Constants {
       if (!freeRange.contains(candidate)) {
         return null;
       }
-      if (expressAsRange && candidate.couldBePrefix()) {
-        searchPosition = searchPosition.add(BigInteger.ONE);
-        continue;
-      }
+      //      if (expressAsRange && candidate.couldBePrefix()) {
+      //        searchPosition = searchPosition.add(BigInteger.ONE);
+      //        continue;
+      //      }
       Range conflict = detectConflict(candidate, allocatedBlocks);
       if (conflict == null) {
         return candidate;

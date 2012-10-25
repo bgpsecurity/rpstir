@@ -20,19 +20,26 @@ public class EE_Object extends Allocator {
   final int id;
   final String path_ROA;
   EE_cert certificate;
-  private final int ttl;
+  private final long validityStartTime;
+  private final long validityEndTime;
 
-  public EE_Object(int ttl, List<Pair> asList, List<Pair> ipv4List, List<Pair> ipv6List, String bluePrintName, CA_Object parent) {
-
+  public EE_Object(long validityStartTime,
+                   long validityEndTime,
+                   List<Pair> asList,
+                   List<Pair> ipv4List,
+                   List<Pair> ipv6List,
+                   String bluePrintName,
+                   CA_Object parent) {
     this.bluePrintName = bluePrintName;
     this.parent = parent;
-    this.ttl = ttl;
+    this.validityStartTime = validityStartTime;
+    this.validityEndTime = validityEndTime;
 
     // List initialization
     this.children = new ArrayList<EE_Object>();
-    this.addRcvdRanges(parent.subAllocateIPv4(ipv4List));
-    this.addRcvdRanges(parent.subAllocateIPv6(ipv6List));
-    this.addRcvdRanges(parent.subAllocateAS(asList));
+    this.addRcvdRanges(parent.subAllocate(IPRangeType.ipv4, ipv4List));
+    this.addRcvdRanges(parent.subAllocate(IPRangeType.ipv6, ipv6List));
+    this.addRcvdRanges(parent.subAllocate(IPRangeType.as, asList));
 
     // Initialize our certificate
     Certificate certificate = getCertificate();
@@ -50,7 +57,8 @@ public class EE_Object extends Allocator {
   public EE_cert getCertificate() {
     if (this.certificate == null || isModified()) {
       this.certificate = new EE_cert(parent,
-                                     ttl,
+                                     validityStartTime,
+                                     validityEndTime,
                                      bluePrintName + "-" + id,
                                      parent.SIA_path + "EE-" + id + "/",
                                      this.getRcvdRanges(IPRangeType.ipv4),

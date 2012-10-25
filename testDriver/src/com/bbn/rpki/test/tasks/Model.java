@@ -202,7 +202,7 @@ public class Model implements Constants, XMLConstants {
     });
     this.ianaServerName = testbedConfig.getFactory("IANA").getServerName();
 
-    epochIndex = -1;
+    epochIndex = 0;
 
     addTask(getTaskFactory(InitializeCache.class).createOnlyTask());
     addTask(getTaskFactory(StartLoader.class).createOnlyTask());
@@ -398,24 +398,27 @@ public class Model implements Constants, XMLConstants {
    * 5) Finally, determine the new set of roots.
    */
   public void advanceEpoch() {
-    ++epochIndex;
-    if (epochIndex == 0) {
-      addTask(getTaskFactory(UploadTrustAnchors.class).createOnlyTask());
-      addTaskInner(getTaskFactory(InstallTrustAnchor.class).createOnlyTask());
+    long epochTime = epochs.get(epochIndex).getEpochTime();
+    long currentTime = System.currentTimeMillis();
+    long delay = epochTime - currentTime;
+    if (delay <= 0) {
+      System.err.format("Epoch %d late by %d milliseconds%n", epochIndex, -delay);
+    } else {
+      try {
+        System.out.format("Epoch %d delay by %d milliseconds%n", epochIndex, delay);
+        Thread.sleep(delay);
+      } catch (InterruptedException e) {
+        // should not happen
+      }
     }
     addTask(getTaskFactory(UploadEpoch.class).createOnlyTask());
     previousRepositoryRoots.clear();
     previousRepositoryRoots.addAll(repositoryRoots);
     repositoryRoots.clear();
-    if (epochIndex <= 0) {
-      // Epoch 0 actions are the building of the initial testbed
-      // The results of which are ready to go.
-    } else {
-      Epoch epochActions = epochs.get(epochIndex - 1);
-      for (EpochEvent epochEvent : epochActions.getEpochEvents()) {
-        AbstractAction action = epochEvent.getAction();
-        action.execute(epochEvent, logger);
-      }
+    Epoch epochActions = epochs.get(epochIndex);
+    for (EpochEvent epochEvent : epochActions.getEpochEvents()) {
+      AbstractAction action = epochEvent.getAction();
+      action.execute(epochEvent, logger);
     }
     Set<File> previousFiles = new HashSet<File>(objectList);
     objectList.clear();
@@ -447,6 +450,7 @@ public class Model implements Constants, XMLConstants {
       }
       repositoryRoots.addAll(Arrays.asList(serverFile.listFiles(dirFilter)));
     }
+    ++epochIndex;
   }
 
   /**
@@ -460,7 +464,7 @@ public class Model implements Constants, XMLConstants {
    * @return count of number of epochs
    */
   public int getEpochCount() {
-    return epochs.size() + 1;
+    return epochs.size();
   }
 
   /**
@@ -855,7 +859,18 @@ public class Model implements Constants, XMLConstants {
    * Constraint the initializeActions
    */
   public void initializeActions() {
-    actions.addAll(initializeAction.getActions(iana, actions));
+    actions.addAll(initializeAction.getActions(this, iana, actions));
     epochsChanged();
+  }
+
+  /**
+   * Simple approach for now -- every epoch takes a fixed amount of time
+   */
+  public void estimateEpochTimes() {
+    long epochTime = System.currentTimeMillis();
+    for (Epoch epoch : epochs) {
+      epochTime += 15000;
+      epoch.setEpochTime(epochTime);
+    }
   }
 }
