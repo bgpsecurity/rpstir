@@ -53,7 +53,7 @@ public class CA_Object extends Allocator {
   //  private final String manifest_path;
   private final int id;
   private final String nickName;
-  private final String subjKeyFile;
+  private String subjKeyFile;
   private int manNum = 0;
   private final String serverName;
   private final boolean breakAway;
@@ -68,7 +68,6 @@ public class CA_Object extends Allocator {
   public CA_Object(FactoryBase<CA_Object> factoryBase,
                    CA_Object parent,
                    int id,
-                   String subjKeyFile,
                    String bluePrintName,
                    String serverName,
                    boolean breakAway) {
@@ -76,7 +75,7 @@ public class CA_Object extends Allocator {
     this.bluePrintName = bluePrintName;
     this.nickName = bluePrintName + "-" + id;
     this.parent = parent;
-    this.subjKeyFile = subjKeyFile;
+    this.subjKeyFile = null;
     this.id = id;
     this.serverName = serverName;
     this.breakAway = breakAway;
@@ -129,6 +128,8 @@ public class CA_Object extends Allocator {
                                          getRcvdRanges(IPRangeType.ipv6),
                                          subjKeyFile);
         }
+        // Save this in case we need a new cert with the same key
+        this.subjKeyFile = this.certificate.subjkeyfile;
       } else {
         this.certificate = null;
       }

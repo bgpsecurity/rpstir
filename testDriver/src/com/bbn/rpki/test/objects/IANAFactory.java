@@ -33,7 +33,7 @@ public class IANAFactory extends FactoryBase<CA_Object> {
    */
   @Override
   CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
-    CA_Object caObject = new CA_Object(this, parent, id, null, bluePrintName,
+    CA_Object caObject = new CA_Object(this, parent, id, bluePrintName,
                                        serverName,
                                        breakAway);
     return caObject;
