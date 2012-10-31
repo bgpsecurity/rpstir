@@ -21,7 +21,8 @@ EXTRA_DIST = \
 	LICENSE \
 	README-AUTOCONF \
 	run_scripts \
-	trap_errors
+	trap_errors \
+	version-server.pem
 
 CLEANFILES = \
 	query.log
