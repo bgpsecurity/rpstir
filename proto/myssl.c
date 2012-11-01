@@ -407,6 +407,8 @@ static char *cf_get_sn(
     BIGNUM *bn;
     char *ptr;
     char *dptr;
+    size_t len;
+    size_t i, j;
 
     if (x == NULL || stap == NULL || x509stap == NULL)
         return (NULL);
@@ -422,14 +424,37 @@ static char *cf_get_sn(
         *stap = ERR_SCM_BIGNUMERR;
         return (NULL);
     }
-    ptr = BN_bn2dec(bn);
+    ptr = BN_bn2hex(bn);
     if (ptr == NULL)
     {
         BN_free(bn);
         *stap = ERR_SCM_BIGNUMERR;
         return (NULL);
     }
-    dptr = strdup(ptr);
+    dptr = malloc(2 + 2*SER_NUM_MAX_SZ + 1); // "^x" and null terminator
+    if (dptr != NULL)
+    {
+        len = strlen(ptr);
+        if (len > 2*SER_NUM_MAX_SZ)
+        {
+            *stap = ERR_SCM_BADSERNUM;
+            OPENSSL_free(ptr);
+            BN_free(bn);
+            return (NULL);
+        }
+        i = 0;
+        dptr[i++] = '^';
+        dptr[i++] = 'x';
+        for (j = 0; j < 2*SER_NUM_MAX_SZ - len; ++j)
+        {
+            dptr[i++] = '0';
+        }
+        for (j = 0; j < len; ++j)
+        {
+            dptr[i++] = ptr[j];
+        }
+        dptr[i++] = '\0';
+    }
     OPENSSL_free(ptr);
     BN_free(bn);
     if (dptr == NULL)
@@ -1503,7 +1528,7 @@ crl_fields *crl2fields(
         }
         cf->fields[i] = res;
     }
-    // get flags, snlen and snlist; note that snlen is the count in BIGINTs
+    // get flags, snlen and snlist; note that snlen is the count of serials, not bytes
     cf->flags = 0;
     if (X509_cmp_current_time(X509_CRL_get_nextUpdate(x)) < 0)
         cf->flags |= SCM_FLAG_STALECRL;
@@ -1515,13 +1540,13 @@ crl_fields *crl2fields(
     snerr = 0;
     if (cf->snlen > 0)
     {
-        cf->snlist = (void *)calloc(cf->snlen, sizeof(unsigned long long));
+        cf->snlist = (void *)calloc(cf->snlen, SER_NUM_MAX_SZ);
         if (cf->snlist == NULL)
         {
             *stap = ERR_SCM_NOMEM;
             return (NULL);
         }
-        tov = (unsigned char *)(cf->snlist);
+        tov = (uint8_t *)(cf->snlist);
         for (ui = 0; ui < cf->snlen; ui++)
         {
             r = sk_X509_REVOKED_value(rev, ui);
@@ -1543,11 +1568,13 @@ crl_fields *crl2fields(
                 break;
             }
             int numbytes = (unsigned)BN_num_bytes(bn);
-            if (numbytes <= sizeof(unsigned long long))
+            if (numbytes <= SER_NUM_MAX_SZ)
             {
-                memcpy(tov, (unsigned char *)bn->d, numbytes);
+                memset(tov, 0, SER_NUM_MAX_SZ - numbytes);
+                tov += SER_NUM_MAX_SZ - numbytes;
+                BN_bn2bin(bn, tov);
+                tov += numbytes;
                 BN_free(bn);
-                tov += sizeof(unsigned long long);
             }
             else
             {
@@ -4256,7 +4283,8 @@ static int crl_entry_chk(
 {
     if (!entryp)
         return ERR_SCM_INTERNAL;
-    long snum;
+
+    uint8_t snum[CRL_MAX_SNUM_LTH];
 
     // Forbid CRLEntryExtensions
     if (size_casn(&entryp->extensions.self) > 0)
@@ -4270,16 +4298,17 @@ static int crl_entry_chk(
         log_msg(LOG_ERR, "Revoked serial number too long");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (vsize_casn(&entryp->userCertificate) > sizeof(long))
-    {
-        log_msg(LOG_ERR, "Revoked serial number too long for " PACKAGE_NAME);
-        return ERR_SCM_INTERNAL;
-    }
-    else if (read_casn_num(&entryp->userCertificate, &snum) <= 0 || snum < 0)
+    else if (read_casn(&entryp->userCertificate, snum) <= 0)
     {
         log_msg(LOG_ERR, "Invalid revoked serial number");
         return ERR_SCM_BADREVSNUM;
     }
+    else if (snum[0] & 0x80)
+    {
+        log_msg(LOG_ERR, "Negative revoked serial number");
+        return ERR_SCM_BADREVSNUM;
+    }
+
     // and the date
     int64_t revdate = 0;
     int64_t now = time(0);

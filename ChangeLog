@@ -4,6 +4,7 @@ next
 	* Be more careful about runaway processes in a few places.
 	* Log when a URI is dropped from the list to synchronize.
 	* Minimize extraneous fetching of remote repositories.
+	* Support 20-octet serial numbers.
 
 0.4
 
