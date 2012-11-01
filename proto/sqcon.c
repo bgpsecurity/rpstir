@@ -14,6 +14,7 @@
 #include "scmf.h"
 #include "diru.h"
 #include "err.h"
+#include "globals.h"
 
 
 /*
@@ -1605,7 +1606,7 @@ int updateblobscm(
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
         tabp->tabname == NULL)
         return (ERR_SCM_INVALARG);
-    hexi = hexify(snlen * sizeof(long long), (void *)snlist, HEXIFY_X);
+    hexi = hexify(snlen * SER_NUM_MAX_SZ, (void *)snlist, HEXIFY_X);
     if (hexi == NULL)
         return (ERR_SCM_NOMEM);
     // compute the size of the statement
