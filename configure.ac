@@ -240,6 +240,7 @@ AC_CONFIG_FILES([Makefile
                  cg/casn/Makefile
                  cg/tools/Makefile
                  doc/Makefile
+                 envir.setup
                  proto/Makefile
                  roa-lib/Makefile
                  roa-utils/Makefile

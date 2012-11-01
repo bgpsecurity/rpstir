@@ -5,6 +5,7 @@ next
 	* Log when a URI is dropped from the list to synchronize.
 	* Minimize extraneous fetching of remote repositories.
 	* Support 20-octet serial numbers.
+	* Check for new versions and log when a newer version is available.
 
 0.4
 
