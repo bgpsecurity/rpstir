@@ -22,7 +22,7 @@ EXTRA_DIST = \
 	README-AUTOCONF \
 	run_scripts \
 	trap_errors \
-	version-server.pem
+	version-server-ca.pem
 
 CLEANFILES = \
 	query.log
