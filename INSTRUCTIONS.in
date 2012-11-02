@@ -15,6 +15,7 @@ Table of Contents
       2.1.5 rsync
       2.1.6 Python
       2.1.7 netcat
+      2.1.8 cURL
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
@@ -260,6 +261,12 @@ Netcat comes preinstalled with many operating systems. If you do not
 already have the command nc, install netcat from your package manager
 or http://netcat.sourceforge.net/.
 
+2.1.8 cURL
+
+cURL also comes preinstalled with many operating systems. If the command
+curl is not already present, install it from your package manager or
+http://curl.haxx.se/.
+
 
 2.2 RPKI Software
 
@@ -337,6 +344,7 @@ required: RPKI_DBUSER - username for logging into the MySQL database
 required: RPKI_DBPASS - password for logging into the MySQL database, if any
 required: RPKI_DSN - the DSN for db connection (e.g. "myodbc3-np")
 optional: RPKI_ROOTPASSWORD - the MySQL root password
+optional: RPKI_NEW_VERSION_CHECK - URI to check for new versions of @PACKAGE_NAME@
 
 Set these environment variables to match your installation.  You may
 choose any unused ports for RPKI_PORT.
@@ -352,10 +360,14 @@ RPKI_ROOT = ${HOME}/rpki
 RPKI_DBUSER = rpki
 RPKI_DBPASS = bbn
 RPKI_DSN = myodbc3
+RPKI_NEW_VERSION_CHECK = https://rpki.bbn.com/check-version?package=@PACKAGE_NAME@&version=@PACKAGE_VERSION@
 
 If you ever need to directly run the binaries instead of running the
 scripts, there will be no setting of defaults for environment
 variables, so make sure to set these yourself.
+
+If you want to disable automatically checking for new versions of @PACKAGE_NAME@,
+set RPKI_NEW_VERSION_CHECK to "none".
 
 
 2.4 SSH Subsystem

@@ -19,6 +19,7 @@ TAGS
 rpstir-*.tar.gz
 /rpstir-*/
 INSTRUCTIONS
+envir.setup
 
 # eclipse metadata
 .metadata

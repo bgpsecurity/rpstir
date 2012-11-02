@@ -1,0 +1,10 @@
+--- goodCertSerNumMax.raw.old	2012-07-02 15:25:14.744192279 -0400
++++ goodCertSerNumMax.raw	2012-07-02 15:27:04.527712781 -0400
+@@ -1,6 +1,6 @@
+ seq seq ctx+0x20
+             int 0x02 /* 2 */ 
+-        int 0x00BE /* 190 */ 
++        int 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
