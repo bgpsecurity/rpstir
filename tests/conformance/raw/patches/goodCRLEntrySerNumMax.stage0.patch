@@ -1,0 +1,11 @@
+--- goodCRLEntrySerNumMax.crl.raw.old	2012-07-02 16:35:47.853867442 -0400
++++ goodCRLEntrySerNumMax.crl.raw	2012-07-02 16:38:15.640648509 -0400
+@@ -5,6 +5,8 @@
+                     prt "CRLEntrySerNumMax"
+         utc "110411185728Z"
+         utc "460515185928Z"
++        seq seq int 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
++                utc "110411185728Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */
+                     ocw int 0x01 /* 1 */ 
