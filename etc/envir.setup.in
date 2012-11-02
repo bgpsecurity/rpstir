@@ -22,6 +22,7 @@ DEFAULT_RPKI_DBUSER=rpki
 DEFAULT_RPKI_DBPASS=bbn
 DEFAULT_RPKI_TCOUNT=24
 DEFAULT_RPKI_DSN=myodbc3
+DEFAULT_RPKI_NEW_VERSION_CHECK="https://rpki.bbn.com/check-version?package=@PACKAGE_NAME@&version=@PACKAGE_VERSION@"
 
 if [ "${RPKI_ROOT}x" = "x" ]; then
     echo Warning: RPKI_ROOT not set, defaulting to $DEFAULT_RPKI_ROOT
@@ -50,6 +51,10 @@ fi
 if [ "${RPKI_DBPASS}x" = "x" ]; then
     echo Warning: RPKI_DBPASS not set, defaulting to $DEFAULT_RPKI_DBPASS
     export RPKI_DBPASS=$DEFAULT_RPKI_DBPASS
+fi
+if [ "${RPKI_NEW_VERSION_CHECK}x" = "x" ]; then
+    echo "Notice: RPKI_NEW_VERSION_CHECK not set, defaulting to $DEFAULT_RPKI_NEW_VERSION_CHECK"
+    export RPKI_NEW_VERSION_CHECK="$DEFAULT_RPKI_NEW_VERSION_CHECK"
 fi
 
 if [ "${OIDTABLE}x" = "x" ]; then
