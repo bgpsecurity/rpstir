@@ -716,12 +716,12 @@ static int check_mft_number(
 
     if (lth <= 0)
     {
-        log_msg(LOG_ERR, "Error reading manifest number");
+        LOG(LOG_ERR, "Error reading manifest number");
         return ERR_SCM_BADMFTNUM;
     }
     else if (lth > MANIFEST_NUMBER_MAX_SIZE)
     {
-        log_msg(LOG_ERR, "Manifest number is too long (%d bytes)", lth);
+        LOG(LOG_ERR, "Manifest number is too long (%d bytes)", lth);
         return ERR_SCM_BADMFTNUM;
     }
 
@@ -729,7 +729,7 @@ static int check_mft_number(
 
     if (val[0] & 0x80)
     {
-        log_msg(LOG_ERR, "Manifest number is negative");
+        LOG(LOG_ERR, "Manifest number is negative");
         return ERR_SCM_BADMFTNUM;
     }
 

@@ -3776,8 +3776,8 @@ static int rescert_sig_algs_chk(
     {
         if (bytes_read > 1 && (pubkey_modulus_buf[1] & 0x80) == 0)
         {
-            log_msg(LOG_ERR, "subj pub key modulus has leading zero-byte "
-                    "(length = %d bytes)", bytes_read);
+            LOG(LOG_ERR, "subj pub key modulus has leading zero-byte "
+                "(length = %d bytes)", bytes_read);
             free(pubkey_modulus_buf);
             delete_casn(&rsapubkey.self);
             return ERR_SCM_BADALG;
@@ -3800,13 +3800,13 @@ static int rescert_sig_algs_chk(
     {
         if (modulus_bit_length == 1024 && !strict_profile_checks)
         {
-            log_msg(LOG_WARNING, "subj pub key modulus bit-length (%d) != %d",
-                    modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
+            LOG(LOG_WARNING, "subj pub key modulus bit-length (%d) != %d",
+                modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
         }
         else
         {
-            log_msg(LOG_ERR, "subj pub key modulus bit-length (%d) != %d",
-                    modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
+            LOG(LOG_ERR, "subj pub key modulus bit-length (%d) != %d",
+                modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
             free(pubkey_modulus_buf);
             delete_casn(&rsapubkey.self);
             return ERR_SCM_BADALG;
@@ -4471,7 +4471,7 @@ static int crl_extensions_chk(
 
         if (vsize_casn(crlnump) <= 0)
         {
-            log_msg(LOG_ERR, "error reading CRLNumber");
+            LOG(LOG_ERR, "error reading CRLNumber");
             return ERR_SCM_BADCRLNUM;
         }
         else if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
@@ -4484,7 +4484,7 @@ static int crl_extensions_chk(
 
         if (num[0] & 0x80)
         {
-            log_msg(LOG_ERR, "CRLNumer is negative");
+            LOG(LOG_ERR, "CRLNumer is negative");
             return ERR_SCM_BADCRLNUM;
         }
     }
