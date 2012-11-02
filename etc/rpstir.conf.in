@@ -65,3 +65,7 @@ DatabaseDSN myodbc
 
 # List of URIs of extra publication points to download from.
 #RPKIExtraPublicationPoints
+
+# Where to check for new versions of @PACKAGE_NAME@. If you want to disable
+# checking for new versions, set it to the exact string "none".
+#NewVersionCheck "https://rpki.bbn.com/check-version?package=@PACKAGE_NAME@&version=@PACKAGE_VERSION@"

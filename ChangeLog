@@ -1,14 +1,20 @@
 next
 
-	* Fix compatibility with older rsync servers.
-	* Be more careful about runaway processes in a few places.
-	* Log when a URI is dropped from the list to synchronize.
 	* Simplify internal dependencies.
 	* Switch to a single Makefile to speed up parallel compilation.
 	* Run much more code optionally under CHECKTOOL (e.g. valgrind).
 	* Remove some duplicate and some unused code.
 	* Use a single configuration file syntax instead of environment
 	  variables and multiple incompatible configuration files.
+
+0.5
+
+	* Fix compatibility with older rsync servers.
+	* Be more careful about runaway processes in a few places.
+	* Log when a URI is dropped from the list to synchronize.
+	* Minimize extraneous fetching of remote repositories.
+	* Support 20-octet serial numbers, manifest numbers, and CRL numbers.
+	* Check for new versions and log when a newer version is available.
 
 0.4
 
