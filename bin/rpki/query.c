@@ -265,6 +265,12 @@ static int handleResults(
                              "%02" PRIX8,
                              ((uint8_t *)s->vec[result].valptr)[i]);
                 }
+                if (strlen("0x") + 2 * s->vec[result].avalsize >= MAX_RESULT_SZ &&
+                    MAX_RESULT_SZ > strlen("..."))
+                {
+                    snprintf(resultStr + MAX_RESULT_SZ - (1 + strlen("...")),
+                             1 + strlen("..."), "...");
+                }
             }
             else
                 snprintf(resultStr, MAX_RESULT_SZ,

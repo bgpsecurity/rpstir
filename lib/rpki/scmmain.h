@@ -85,11 +85,12 @@ static scmtab scmtabbuilder[] = {
       * unique identifier obtained as max(local_id) + 1 issuer is the actual
       * CRL issuer, obtained from the issuer field of the CRL (direct CRL).
       * snlist is the list of serial numbers for this issuer. It is an array
-      * of 20-byte ints. The number of bignums in the list is snlen. Some of these
-      * revocations may already have happened and the corresponding sn set to
-      * 0 in the list. sninuse keeps track of the number of serial numbers
-      * that are not zero in the list.  When this number drops to 0, the
-      * entire CRL may be deleted from the DB.
+      * of 20-byte network byte order unsigned ints that are left-padded with
+      * zeroes to each be exactly 20 bytes long. The number of serials in the
+      * list is snlen. Some of these revocations may already have happened and
+      * the corresponding sn set to 0 in the list. sninuse keeps track of the
+      * number of serial numbers that are not zero in the list.  When this
+      * number drops to 0, the entire CRL may be deleted from the DB.
       * 
       * Note that snlist is of type MEDIUMBLOB, indicating that it can hold at 
       * most 16M/20 = 838860 entries.

@@ -3798,11 +3798,19 @@ static int rescert_sig_algs_chk(
     }
     if (modulus_bit_length != SUBJ_PUBKEY_MODULUS_SZ * 8)
     {
-        log_msg(LOG_ERR, "subj pub key modulus bit-length (%d) != %d",
-                modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
-        free(pubkey_modulus_buf);
-        delete_casn(&rsapubkey.self);
-        return ERR_SCM_BADALG;
+        if (modulus_bit_length == 1024 && !strict_profile_checks)
+        {
+            log_msg(LOG_WARNING, "subj pub key modulus bit-length (%d) != %d",
+                    modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
+        }
+        else
+        {
+            log_msg(LOG_ERR, "subj pub key modulus bit-length (%d) != %d",
+                    modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
+            free(pubkey_modulus_buf);
+            delete_casn(&rsapubkey.self);
+            return ERR_SCM_BADALG;
+        }
     }
     free(pubkey_modulus_buf);
 
@@ -4476,7 +4484,7 @@ static int crl_extensions_chk(
 
         if (num[0] & 0x80)
         {
-            log_msg(LOG_ERR, "CRLNumer is negative");
+            log_msg(LOG_ERR, "CRLNumber is negative");
             return ERR_SCM_BADCRLNUM;
         }
     }
