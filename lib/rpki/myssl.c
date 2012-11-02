@@ -4488,7 +4488,7 @@ static int crl_extensions_chk(
 
         if (num[0] & 0x80)
         {
-            log_msg(LOG_ERR, "CRLNumer is negative");
+            log_msg(LOG_ERR, "CRLNumber is negative");
             return ERR_SCM_BADCRLNUM;
         }
     }
