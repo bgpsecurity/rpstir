@@ -6,7 +6,7 @@
 THIS_SCRIPT_DIR=`dirname "$0"`
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-CHASER_LOG="$RPKI_ROOT/chaser.log"
+CHASER_LOG="$CONFIG_ROOT_DIR/chaser.log"
 RSYNC_CORD_CONF="$CONFIG_ROOT_DIR/rsync_cord.config"
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
@@ -29,7 +29,7 @@ CONFIG_NEW_VERSION_CHECK="`config_get NewVersionCheck`"
 if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 	VERSION_FILE="`@MKTEMP@`"
 	if curl \
-		--cacert "$RPKI_ROOT/etc/version-server-ca.pem" \
+		--cacert "$CONFIG_ROOT_DIR/etc/version-server-ca.pem" \
 		--location \
 		--max-time 5 \
 		--output "$VERSION_FILE" \
