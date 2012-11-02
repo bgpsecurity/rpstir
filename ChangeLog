@@ -1,4 +1,4 @@
-next
+0.5
 
 	* Fix compatibility with older rsync servers.
 	* Be more careful about runaway processes in a few places.
