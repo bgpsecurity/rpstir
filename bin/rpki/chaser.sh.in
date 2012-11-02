@@ -25,24 +25,26 @@ log () {
 }
 
 # Check for the latest version.
-if test "$RPKI_NEW_VERSION_CHECK" != none; then
+CONFIG_NEW_VERSION_CHECK="`config_get NewVersionCheck`"
+if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 	VERSION_FILE="`@MKTEMP@`"
 	if curl \
 		--cacert "$RPKI_ROOT/etc/version-server-ca.pem" \
 		--location \
 		--max-time 5 \
 		--output "$VERSION_FILE" \
-		"$RPKI_NEW_VERSION_CHECK"
+		"$CONFIG_NEW_VERSION_CHECK"
 	then
 		LATEST_VERSION="$(head -n 1 "$VERSION_FILE")"
 		if test "@PACKAGE_VERSION@" != "$LATEST_VERSION"; then
 			log "A new version of @PACKAGE_NAME@, $LATEST_VERSION, is available."
 		fi
 	else
-		log "Can't download version information from $RPKI_NEW_VERSION_CHECK"
+		log "Can't download version information from $CONFIG_NEW_VERSION_CHECK"
 	fi
 	rm "$VERSION_FILE"
 fi
+unset CONFIG_NEW_VERSION_CHECK
 
 while test -s "$ADDED_LIST"; do
 	rm -f "$RSYNC_CORD_CONF"

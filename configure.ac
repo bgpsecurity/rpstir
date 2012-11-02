@@ -241,6 +241,7 @@ fi
 
 AC_CONFIG_FILES([
     etc/envir.setup
+    etc/rpstir.conf
     Makefile
     tests/test.include
     INSTRUCTIONS
