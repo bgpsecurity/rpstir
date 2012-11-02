@@ -13,6 +13,7 @@
 #include <string.h>
 #include <mysql.h>
 
+#include "globals.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
@@ -273,18 +274,31 @@ static int displaySNList(
     int idx1,
     char *returnStr)
 {
-    unsigned long long *snlist;
+    uint8_t *snlist;
     unsigned int i,
         snlen;
+    char *hexs;
+    char nomem[] = "out-of-memory";
 
     snlen = *((unsigned int *)(s->vec[idx1].valptr));
-    snlist = (unsigned long long *)s->vec[idx1 + 1].valptr;
+    snlist = (uint8_t *)s->vec[idx1 + 1].valptr;
     returnStr[0] = 0;
     for (i = 0; i < snlen; i++)
     {
+        hexs = hexify(SER_NUM_MAX_SZ, &snlist[SER_NUM_MAX_SZ * i], HEXIFY_X);
+        if (hexs == NULL)
+        {
+            // XXX: there should be a better way to signal an error
+            hexs = nomem;
+        }
         snprintf(&returnStr[strlen(returnStr)],
-                 MAX_RESULT_SZ - strlen(returnStr), "%s%llu",
-                 (i == 0) ? "" : " ", snlist[i]);
+                 MAX_RESULT_SZ - strlen(returnStr), "%s%s",
+                 (i == 0) ? "" : " ", hexs);
+        if (hexs == nomem)
+        {
+            break;
+        }
+        free(hexs);
     }
     return 2;
 }
@@ -499,16 +513,16 @@ static QueryField fields[] = {
     {
      "crlno",
      "CRL number",
-     Q_FOR_CRL,
-     SQL_C_ULONG, 8,
+     Q_JUST_DISPLAY | Q_FOR_CRL,
+     SQL_C_BINARY, 20,
      NULL, NULL,
      "CRL#", NULL,
      },
     {
      "sn",
      "serial number",
-     Q_FOR_CERT,
-     SQL_C_CHAR, 16,
+     Q_JUST_DISPLAY | Q_FOR_CERT,
+     SQL_C_BINARY, 20,
      NULL, NULL,
      "Serial#", NULL,
      },
