@@ -56,7 +56,7 @@ typedef int (
     scmcon * conp,
     char *issuer,
     char *aki,
-    unsigned long long sn);
+    uint8_t *sn);
 
 typedef struct _crlinfo {
     scm *scmp;
@@ -149,7 +149,7 @@ extern int model_cfunc(
     scmcon * conp,
     char *issuer,
     char *aki,
-    unsigned long long sn);
+    uint8_t *sn);
 extern int deletebylid(
     scmcon * conp,
     scmtab * tabp,
