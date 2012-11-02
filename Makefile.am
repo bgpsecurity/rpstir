@@ -3,6 +3,7 @@ AUTOMAKE_OPTIONS = 1.6 foreign -Wall
 
 EXTRA_DIST = \
 	autogen.sh \
+	version-server-ca.pem \
 	ChangeLog \
 	INSTRUCTIONS \
 	LICENSE \
