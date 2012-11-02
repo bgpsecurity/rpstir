@@ -407,6 +407,8 @@ static char *cf_get_sn(
     BIGNUM *bn;
     char *ptr;
     char *dptr;
+    size_t len;
+    size_t i, j;
 
     if (x == NULL || stap == NULL || x509stap == NULL)
         return (NULL);
@@ -422,14 +424,37 @@ static char *cf_get_sn(
         *stap = ERR_SCM_BIGNUMERR;
         return (NULL);
     }
-    ptr = BN_bn2dec(bn);
+    ptr = BN_bn2hex(bn);
     if (ptr == NULL)
     {
         BN_free(bn);
         *stap = ERR_SCM_BIGNUMERR;
         return (NULL);
     }
-    dptr = strdup(ptr);
+    dptr = malloc(2 + 2*SER_NUM_MAX_SZ + 1); // "^x" and null terminator
+    if (dptr != NULL)
+    {
+        len = strlen(ptr);
+        if (len > 2*SER_NUM_MAX_SZ)
+        {
+            *stap = ERR_SCM_BADSERNUM;
+            OPENSSL_free(ptr);
+            BN_free(bn);
+            return (NULL);
+        }
+        i = 0;
+        dptr[i++] = '^';
+        dptr[i++] = 'x';
+        for (j = 0; j < 2*SER_NUM_MAX_SZ - len; ++j)
+        {
+            dptr[i++] = '0';
+        }
+        for (j = 0; j < len; ++j)
+        {
+            dptr[i++] = ptr[j];
+        }
+        dptr[i++] = '\0';
+    }
     OPENSSL_free(ptr);
     BN_free(bn);
     if (dptr == NULL)
@@ -1268,6 +1293,8 @@ static void crf_get_crlno(
     int *stap,
     int *crlstap)
 {
+    ASN1_INTEGER *crlno_a1 = (ASN1_INTEGER *)exts;
+    BIGNUM *crlno_bn;
     char *ptr;
     char *dptr;
 
@@ -1278,24 +1305,35 @@ static void crf_get_crlno(
         *stap = ERR_SCM_INVALARG;
         return;
     }
-    if (meth->i2s == NULL)
+
+    crlno_bn = ASN1_INTEGER_to_BN(crlno_a1, NULL);
+    if (crlno_bn == NULL)
     {
-        *stap = ERR_SCM_BADEXT;
+        *stap = ERR_SCM_BIGNUMERR;
         return;
     }
-    ptr = meth->i2s(meth, exts);
-    if (ptr == NULL || ptr[0] == 0)
+
+    ptr = BN_bn2hex(crlno_bn);
+    if (ptr == NULL)
     {
-        *stap = ERR_SCM_BADEXT;
+        BN_free(crlno_bn);
+        *stap = ERR_SCM_BIGNUMERR;
         return;
     }
-    dptr = strdup(ptr);
-    OPENSSL_free(ptr);
+    BN_free(crlno_bn);
+
+    dptr = malloc(2 + strlen(ptr) + 1);
     if (dptr == NULL)
     {
+        OPENSSL_free(ptr);
         *stap = ERR_SCM_NOMEM;
         return;
     }
+
+    snprintf(dptr, 2 + strlen(ptr) + 1, "^x%s", ptr);
+
+    OPENSSL_free(ptr);
+
     cf->fields[CRF_FIELD_SN] = dptr;
 }
 
@@ -1340,7 +1378,7 @@ static void crf_get_aki(
 }
 
 static crfx_validator crxvalidators[] = {
-    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 0},
+    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 1},
     {crf_get_aki, CRF_FIELD_AKI, NID_authority_key_identifier, 1}
 };
 
@@ -1503,7 +1541,7 @@ crl_fields *crl2fields(
         }
         cf->fields[i] = res;
     }
-    // get flags, snlen and snlist; note that snlen is the count in BIGINTs
+    // get flags, snlen and snlist; note that snlen is the count of serials, not bytes
     cf->flags = 0;
     if (X509_cmp_current_time(X509_CRL_get_nextUpdate(x)) < 0)
         cf->flags |= SCM_FLAG_STALECRL;
@@ -1515,13 +1553,13 @@ crl_fields *crl2fields(
     snerr = 0;
     if (cf->snlen > 0)
     {
-        cf->snlist = (void *)calloc(cf->snlen, sizeof(unsigned long long));
+        cf->snlist = (void *)calloc(cf->snlen, SER_NUM_MAX_SZ);
         if (cf->snlist == NULL)
         {
             *stap = ERR_SCM_NOMEM;
             return (NULL);
         }
-        tov = (unsigned char *)(cf->snlist);
+        tov = (uint8_t *)(cf->snlist);
         for (ui = 0; ui < cf->snlen; ui++)
         {
             r = sk_X509_REVOKED_value(rev, ui);
@@ -1543,11 +1581,13 @@ crl_fields *crl2fields(
                 break;
             }
             int numbytes = (unsigned)BN_num_bytes(bn);
-            if (numbytes <= sizeof(unsigned long long))
+            if (numbytes <= SER_NUM_MAX_SZ)
             {
-                memcpy(tov, (unsigned char *)bn->d, numbytes);
+                memset(tov, 0, SER_NUM_MAX_SZ - numbytes);
+                tov += SER_NUM_MAX_SZ - numbytes;
+                BN_bn2bin(bn, tov);
+                tov += numbytes;
                 BN_free(bn);
-                tov += sizeof(unsigned long long);
             }
             else
             {
@@ -3662,7 +3702,7 @@ static int rescert_sig_algs_chk(
         vsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey);
     if (bytes_to_read > SUBJ_PUBKEY_MAX_SZ)
     {
-        log_msg(LOG_ERR, "subj pub key too long");
+        log_msg(LOG_ERR, "subj pub key too long (%d bytes)", bytes_to_read);
         return ERR_SCM_BADALG;
     }
     uchar *pubkey_buf;
@@ -3674,13 +3714,17 @@ static int rescert_sig_algs_chk(
         return ERR_SCM_NOMEM;
     if (bytes_read != bytes_to_read)
     {
-        log_msg(LOG_ERR, "subj pub key actual length != stated");
+        log_msg(LOG_ERR, "subj pub key actual length (%d) != stated (%d)",
+                bytes_read, bytes_to_read);
         free(pubkey_buf);
         return ERR_SCM_BADALG;
     }
     if (pubkey_buf[0] != 0)
     {
-        log_msg(LOG_ERR, "subj pub key not a whole number of bytes");
+        log_msg(LOG_ERR,
+                "subj pub key not a whole number of bytes (between %d and %d)",
+                bytes_read - 2, // one for the unused-bits byte
+                bytes_read - 1);
         free(pubkey_buf);
         return ERR_SCM_BADALG;
     }
@@ -3718,14 +3762,54 @@ static int rescert_sig_algs_chk(
         delete_casn(&rsapubkey.self);
         return ERR_SCM_NOMEM;
     }
-    if (bytes_read != SUBJ_PUBKEY_MODULUS_SZ + 1 ||
-        pubkey_modulus_buf[0] != 0 || (pubkey_modulus_buf[1] & 0x80) == 0)
+    if (pubkey_modulus_buf[0] & 0x80)
     {
-        log_msg(LOG_ERR, "subj pub key modulus bit-length != %d",
-                SUBJ_PUBKEY_MODULUS_SZ * 8);
+        log_msg(LOG_ERR, "subj pub key modulus is negative (length = %d bytes)",
+                bytes_read);
         free(pubkey_modulus_buf);
         delete_casn(&rsapubkey.self);
         return ERR_SCM_BADALG;
+    }
+    int modulus_bit_length;
+    if (pubkey_modulus_buf[0] == 0)
+    {
+        if (bytes_read > 1 && (pubkey_modulus_buf[1] & 0x80) == 0)
+        {
+            log_msg(LOG_ERR, "subj pub key modulus has leading zero-byte "
+                    "(length = %d bytes)", bytes_read);
+            free(pubkey_modulus_buf);
+            delete_casn(&rsapubkey.self);
+            return ERR_SCM_BADALG;
+        }
+
+        modulus_bit_length = (bytes_read - 1) * 8;
+    }
+    else
+    {
+        modulus_bit_length = bytes_read * 8;
+        uint8_t bit_mask;
+        for (bit_mask = 0x80;
+            bit_mask > 0 && (pubkey_modulus_buf[0] & bit_mask) == 0;
+            bit_mask >> 1)
+        {
+            --modulus_bit_length;
+        }
+    }
+    if (modulus_bit_length != SUBJ_PUBKEY_MODULUS_SZ * 8)
+    {
+        if (modulus_bit_length == 1024 && !strict_profile_checks)
+        {
+            log_msg(LOG_WARNING, "subj pub key modulus bit-length (%d) != %d",
+                    modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
+        }
+        else
+        {
+            log_msg(LOG_ERR, "subj pub key modulus bit-length (%d) != %d",
+                    modulus_bit_length, SUBJ_PUBKEY_MODULUS_SZ * 8);
+            free(pubkey_modulus_buf);
+            delete_casn(&rsapubkey.self);
+            return ERR_SCM_BADALG;
+        }
     }
     free(pubkey_modulus_buf);
 
@@ -4212,7 +4296,8 @@ static int crl_entry_chk(
 {
     if (!entryp)
         return ERR_SCM_INTERNAL;
-    long snum;
+
+    uint8_t snum[CRL_MAX_SNUM_LTH];
 
     // Forbid CRLEntryExtensions
     if (size_casn(&entryp->extensions.self) > 0)
@@ -4226,16 +4311,17 @@ static int crl_entry_chk(
         log_msg(LOG_ERR, "Revoked serial number too long");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (vsize_casn(&entryp->userCertificate) > sizeof(long))
-    {
-        log_msg(LOG_ERR, "Revoked serial number too long for " PACKAGE_NAME);
-        return ERR_SCM_INTERNAL;
-    }
-    else if (read_casn_num(&entryp->userCertificate, &snum) <= 0 || snum < 0)
+    else if (read_casn(&entryp->userCertificate, snum) <= 0)
     {
         log_msg(LOG_ERR, "Invalid revoked serial number");
         return ERR_SCM_BADREVSNUM;
     }
+    else if (snum[0] & 0x80)
+    {
+        log_msg(LOG_ERR, "Negative revoked serial number");
+        return ERR_SCM_BADREVSNUM;
+    }
+
     // and the date
     int64_t revdate = 0;
     int64_t now = time(0);
@@ -4384,9 +4470,24 @@ static int crl_extensions_chk(
     }
     else
     {
-        if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
+        uint8_t num[CRL_MAX_CRLNUM_LTH];
+
+        if (vsize_casn(crlnump) <= 0)
+        {
+            log_msg(LOG_ERR, "error reading CRLNumber");
+            return ERR_SCM_BADCRLNUM;
+        }
+        else if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
         {
             log_msg(LOG_ERR, "CRLNumber too long");
+            return ERR_SCM_BADCRLNUM;
+        }
+
+        read_casn(crlnump, num);
+
+        if (num[0] & 0x80)
+        {
+            log_msg(LOG_ERR, "CRLNumer is negative");
             return ERR_SCM_BADCRLNUM;
         }
     }
