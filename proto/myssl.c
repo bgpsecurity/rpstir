@@ -1293,6 +1293,8 @@ static void crf_get_crlno(
     int *stap,
     int *crlstap)
 {
+    ASN1_INTEGER *crlno_a1 = (ASN1_INTEGER *)exts;
+    BIGNUM *crlno_bn;
     char *ptr;
     char *dptr;
 
@@ -1303,24 +1305,35 @@ static void crf_get_crlno(
         *stap = ERR_SCM_INVALARG;
         return;
     }
-    if (meth->i2s == NULL)
+
+    crlno_bn = ASN1_INTEGER_to_BN(crlno_a1, NULL);
+    if (crlno_bn == NULL)
     {
-        *stap = ERR_SCM_BADEXT;
+        *stap = ERR_SCM_BIGNUMERR;
         return;
     }
-    ptr = meth->i2s(meth, exts);
-    if (ptr == NULL || ptr[0] == 0)
+
+    ptr = BN_bn2hex(crlno_bn);
+    if (ptr == NULL)
     {
-        *stap = ERR_SCM_BADEXT;
+        BN_free(crlno_bn);
+        *stap = ERR_SCM_BIGNUMERR;
         return;
     }
-    dptr = strdup(ptr);
-    OPENSSL_free(ptr);
+    BN_free(crlno_bn);
+
+    dptr = malloc(2 + strlen(ptr) + 1);
     if (dptr == NULL)
     {
+        OPENSSL_free(ptr);
         *stap = ERR_SCM_NOMEM;
         return;
     }
+
+    snprintf(dptr, 2 + strlen(ptr) + 1, "^x%s", ptr);
+
+    OPENSSL_free(ptr);
+
     cf->fields[CRF_FIELD_SN] = dptr;
 }
 
@@ -1365,7 +1378,7 @@ static void crf_get_aki(
 }
 
 static crfx_validator crxvalidators[] = {
-    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 0},
+    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 1},
     {crf_get_aki, CRF_FIELD_AKI, NID_authority_key_identifier, 1}
 };
 
@@ -4457,9 +4470,24 @@ static int crl_extensions_chk(
     }
     else
     {
-        if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
+        uint8_t num[CRL_MAX_CRLNUM_LTH];
+
+        if (vsize_casn(crlnump) <= 0)
+        {
+            log_msg(LOG_ERR, "error reading CRLNumber");
+            return ERR_SCM_BADCRLNUM;
+        }
+        else if (vsize_casn(crlnump) > CRL_MAX_CRLNUM_LTH)
         {
             log_msg(LOG_ERR, "CRLNumber too long");
+            return ERR_SCM_BADCRLNUM;
+        }
+
+        read_casn(crlnump, num);
+
+        if (num[0] & 0x80)
+        {
+            log_msg(LOG_ERR, "CRLNumer is negative");
             return ERR_SCM_BADCRLNUM;
         }
     }
