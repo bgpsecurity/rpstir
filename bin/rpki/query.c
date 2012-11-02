@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include "rpki/scm.h"
 #include "rpki/scmf.h"
@@ -115,6 +116,7 @@ static int handleResults(
     int result = 0;
     int display;
     char resultStr[MAX_RESULT_SZ];
+    int i;
 
     conp = conp;
     numLine = numLine;          // silence compiler warnings
@@ -173,8 +175,7 @@ static int handleResults(
                 emptyRPSL();
             oldasn = asn;
             // 0 == ipv4, 1 == ipv6
-            int i,
-                numprinted = 0;
+            int numprinted = 0;
 
             for (i = 0; i < 2; ++i)
             {
@@ -245,9 +246,29 @@ static int handleResults(
         }
         else if (s->vec[result].avalsize != SQL_NULL_DATA)
         {
-            if (field->sqlType == SQL_C_CHAR || field->sqlType == SQL_C_BINARY)
+            if (field->sqlType == SQL_C_CHAR)
+            {
                 snprintf(resultStr, MAX_RESULT_SZ,
                          "%s", (char *)s->vec[result].valptr);
+            }
+            else if (field->sqlType == SQL_C_BINARY)
+            {
+                snprintf(resultStr, MAX_RESULT_SZ, "0x");
+                for (i = 0;
+                     i < s->vec[result].avalsize && MAX_RESULT_SZ > 2 + 2*i;
+                     ++i)
+                {
+                    snprintf(resultStr + 2 + 2*i, MAX_RESULT_SZ - (2 + 2*i),
+                             "%02" PRIX8,
+                             ((uint8_t *)s->vec[result].valptr)[i]);
+                }
+                if (strlen("0x") + 2 * s->vec[result].avalsize >= MAX_RESULT_SZ &&
+                    MAX_RESULT_SZ > strlen("..."))
+                {
+                    snprintf(resultStr + MAX_RESULT_SZ - (1 + strlen("...")),
+                             1 + strlen("..."), "...");
+                }
+            }
             else
                 snprintf(resultStr, MAX_RESULT_SZ,
                          "%d", *((unsigned int *)s->vec[result].valptr));

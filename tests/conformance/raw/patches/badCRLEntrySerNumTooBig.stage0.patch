@@ -1,0 +1,11 @@
+--- badCRLEntrySerNumTooBig.crl.raw.old	2012-07-02 16:49:00.779008266 -0400
++++ badCRLEntrySerNumTooBig.crl.raw	2012-07-02 16:50:29.580289343 -0400
+@@ -5,6 +5,8 @@
+                     prt "CRLEntrySerNumTooBig"
+         utc "110411185728Z"
+         utc "460515185928Z"
++        seq seq int 0x008000000000000000000000000000000000000000
++                utc "110411185728Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */
+                     ocw int 0x01 /* 1 */ 

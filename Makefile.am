@@ -7,6 +7,7 @@ AUTOMAKE_OPTIONS = \
 
 EXTRA_DIST = \
 	autogen.sh \
+	etc/version-server-ca.pem \
 	ChangeLog \
 	INSTRUCTIONS \
 	LICENSE \
@@ -63,9 +64,6 @@ dist_doc_DATA += \
 
 dist_noinst_DATA += \
 	doc/api.txt
-
-EXTRA_DIST += \
-	etc/rpstir.conf
 
 # library makefiles must be ordered by dependencies, lowest level library to highest
 include mk/libtest.mk

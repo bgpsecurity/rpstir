@@ -6,6 +6,7 @@
 #ifndef _SCMF_H_
 #define _SCMF_H_
 
+#include <inttypes.h>
 #include <sql.h>
 #include <sqlext.h>
 #include "scm.h"
@@ -201,7 +202,7 @@ extern int setflagsscm(
 extern int updateblobscm(
     scmcon * conp,
     scmtab * tabp,
-    unsigned long long *snlist,
+    uint8_t *snlist,
     unsigned int sninuse,
     unsigned int snlen,
     unsigned int lid);

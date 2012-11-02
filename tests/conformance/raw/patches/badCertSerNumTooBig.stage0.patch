@@ -1,0 +1,10 @@
+--- badCertSerNumTooBig.raw.old	2012-07-02 15:27:07.809818566 -0400
++++ badCertSerNumTooBig.raw	2012-07-02 15:27:30.414544161 -0400
+@@ -1,6 +1,6 @@
+ seq seq ctx+0x20
+             int 0x02 /* 2 */ 
+-        int 0x00BF /* 191 */ 
++        int 0x008000000000000000000000000000000000000000
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */

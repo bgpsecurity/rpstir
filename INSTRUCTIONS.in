@@ -15,6 +15,7 @@ Table of Contents
       2.1.5 rsync
       2.1.6 Python
       2.1.7 netcat
+      2.1.8 cURL
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
@@ -258,6 +259,12 @@ http://python.org/download/.
 Netcat comes preinstalled with many operating systems. If you do not
 already have the command nc, install netcat from your package manager
 or http://netcat.sourceforge.net/.
+
+2.1.8 cURL
+
+cURL also comes preinstalled with many operating systems. If the command
+curl is not already present, install it from your package manager or
+http://curl.haxx.se/.
 
 
 2.2 RPKI Software
