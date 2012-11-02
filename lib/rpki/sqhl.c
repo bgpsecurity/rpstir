@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <mysql.h>
 
+#include "globals.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
@@ -435,7 +436,7 @@ static int add_crl_internal(
         return (sta);
     // the following statement could use a LOT of memory, so we try
     // it early in case it fails
-    hexs = hexify(cf->snlen * sizeof(long long), cf->snlist, HEXIFY_HAT);
+    hexs = hexify(cf->snlen * SER_NUM_MAX_SZ, cf->snlist, HEXIFY_HAT);
     if (hexs == NULL)
         return (ERR_SCM_NOMEM);
     conp->mystat.tabname = "CRL";
@@ -1166,13 +1167,13 @@ struct cert_answers *find_trust_anchors(
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *revokedSrch = NULL;
-static unsigned long long *revokedSNList;
+static uint8_t *revokedSNList;
 static unsigned int *revokedSNLen;
 
 // static variables to pass to callback
 
 static int isRevoked;
-static unsigned long long revokedSN;
+static uint8_t *revokedSN = NULL;
 
 /*
  * callback function for cert_revoked 
@@ -1189,7 +1190,8 @@ static int revokedHandler(
     unsigned int i;
     for (i = 0; i < *revokedSNLen; i++)
     {
-        if (revokedSNList[i] == revokedSN)
+        if (memcmp(&revokedSNList[SER_NUM_MAX_SZ * i], revokedSN,
+                   SER_NUM_MAX_SZ) == 0)
         {
             isRevoked = 1;
             break;
@@ -1212,6 +1214,7 @@ static int cert_revoked(
     char *issuer)
 {
     int sta;
+    int sn_len;
 
     // set up query once first time through and then just modify
     if (revokedSrch == NULL)
@@ -1223,7 +1226,7 @@ static int cert_revoked(
         ADDCOL(revokedSrch, "snlist", SQL_C_BINARY, 16 * 1024 * 1024, sta,
                sta);
         revokedSNLen = (unsigned int *)revokedSrch->vec[0].valptr;
-        revokedSNList = (unsigned long long *)revokedSrch->vec[1].valptr;
+        revokedSNList = (uint8_t *)revokedSrch->vec[1].valptr;
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
@@ -1231,9 +1234,20 @@ static int cert_revoked(
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     isRevoked = 0;
-    revokedSN = strtoull(sn, NULL, 10);
+    sn_len = strlen(sn);
+    if (sn_len != 2 + 2*SER_NUM_MAX_SZ) // "^x" followed by hex
+    {
+        return ERR_SCM_INVALARG;
+    }
+    revokedSN = unhexify(sn_len - 2, sn + 2); // 2 for the "^x" prefix
+    if (revokedSN == NULL)
+    {
+        return ERR_SCM_NOMEM;
+    }
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    free(revokedSN);
+    revokedSN = NULL;
     return isRevoked ? ERR_SCM_REVOKED : 0;
 }
 
@@ -1601,7 +1615,7 @@ static int verifyChildCRL(
     {
         model_cfunc(theSCMP, conp, cf->fields[CRF_FIELD_ISSUER],
                     cf->fields[CRF_FIELD_AKI],
-                    ((unsigned long long *)cf->snlist)[i]);
+                    &((uint8_t *)cf->snlist)[SER_NUM_MAX_SZ * i]);
     }
     return 0;
 }
@@ -2563,18 +2577,11 @@ int add_crl(
     // and do the revocations
     if ((sta == 0) && chainOK)
     {
-        uchar *u = (uchar *) cf->snlist;
-        for (i = 0; i < cf->snlen; i++, u += (sizeof(unsigned long long)))
+        uint8_t *u = (uint8_t *) cf->snlist;
+        for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
-            unsigned long long ull = 0;
-            uchar *e;
-            for (e = &u[7]; e >= u; e--)
-            {
-                ull <<= 8;
-                ull += *e;
-            }
             model_cfunc(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
-                        cf->fields[CRF_FIELD_AKI], ull);
+                        cf->fields[CRF_FIELD_AKI], u);
         }
     }
     freecrf(cf);
@@ -3286,7 +3293,7 @@ static int crliterator(
     scmsrcha * s,
     int idx)
 {
-    unsigned long long *snlist;
+    uint8_t *snlist;
     unsigned int snlen;
     unsigned int sninuse;
     unsigned int flags;
@@ -3328,11 +3335,12 @@ static int crliterator(
     lid = *(unsigned int *)(s->vec[4].valptr);
     if (s->vec[5].avalsize <= 0)
         return (0);
-    snlist = (unsigned long long *)(s->vec[5].valptr);
+    snlist = (uint8_t *)(s->vec[5].valptr);
     for (i = 0; i < snlen; i++)
     {
         ista =
-            (*crlip->cfunc) (crlip->scmp, crlip->conp, issuer, aki, snlist[i]);
+            (*crlip->cfunc) (crlip->scmp, crlip->conp, issuer, aki,
+                             &snlist[SER_NUM_MAX_SZ * i]);
         if (ista < 0)
             sta = ista;
         if (ista == 1)
@@ -3370,7 +3378,7 @@ static int crliterator(
  * code. 
  */
 
-static void *snlist = NULL;
+static uint8_t *snlist = NULL;
 
 int iterate_crl(
     scm * scmp,
@@ -3392,12 +3400,10 @@ int iterate_crl(
     // go for broke and allocate a blob large enough that it can hold
     // the entire snlist if necessary
     if (snlist == NULL)
-        snlist = (void *)calloc(16 * 1024 * 1024 / sizeof(unsigned long long),
-                                sizeof(unsigned long long));
-    else
-        memset(snlist, 0, 16 * 1024 * 1024);
+        snlist = malloc(16 * 1024 * 1024);
     if (snlist == NULL)
         return (ERR_SCM_NOMEM);
+    memset(snlist, 0, 16 * 1024 * 1024);
     initTables(scmp);
     // set up a search for issuer, snlen, sninuse, flags, snlist and aki
     srch1[0].colno = 1;
@@ -3819,7 +3825,7 @@ int model_cfunc(
     scmcon * conp,
     char *issuer,
     char *aki,
-    unsigned long long sn)
+    uint8_t *sn)
 {
     unsigned int lid;
     unsigned int flags;
@@ -3830,20 +3836,27 @@ int model_cfunc(
     mcf mymcf;
     char ski[512];
     char subject[512];
-    char sno[24];
+    char *sno;
+    uint8_t sn_zero[SER_NUM_MAX_SZ];
     int sta;
+
+    memset(sn_zero, 0, sizeof(sn_zero));
 
     if (scmp == NULL || conp == NULL || conp->connected == 0)
         return (ERR_SCM_INVALARG);
     if (issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 ||
-        sn == 0)
+        memcmp(sn, sn_zero, SER_NUM_MAX_SZ) == 0)
         return (0);
     initTables(scmp);
     mymcf.did = 0;
     mymcf.toplevel = 1;
     w[0].column = "issuer";
     w[0].value = issuer;
-    (void)snprintf(sno, sizeof(sno), "%lld", sn);
+    sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
+    if (sno == NULL)
+    {
+        return (ERR_SCM_NOMEM);
+    }
     w[1].column = "sn";
     w[1].value = &sno[0];
     w[2].column = "aki";
@@ -3858,6 +3871,8 @@ int model_cfunc(
     srch.context = &mymcf;
     sta = searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    free(sno);
+    sno = NULL;
     if (sta < 0)
         return (sta);
     else
