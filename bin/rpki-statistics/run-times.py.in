@@ -7,11 +7,15 @@ import sys
 
 
 """
-Compute the duration of each complete run of synchronizing against the RPKI.
+Analyze statistics on the duration of each complete run of synchronizing against the RPKI.
 """
 
 
-if __name__ == '__main__':
+def get_times():
+    """
+    Returns an ordered iterable of 2-tuples (start_time, end_time).
+    """
+
     file_re = re.compile(
         """
         ^
@@ -52,4 +56,12 @@ if __name__ == '__main__':
             sys.stderr.write("start time is after end time in file: %s\n" % file_name)
             continue
 
-        print (stop_time - start_time).total_seconds()
+        yield (start_time, stop_time)
+
+
+if __name__ == '__main__':
+    print "Start Time\tDuration (seconds)"
+    for start_time, stop_time in get_times():
+        print "%s\t%s" % (
+            start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+            (stop_time - start_time).total_seconds())
