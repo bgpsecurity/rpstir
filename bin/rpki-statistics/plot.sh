@@ -10,5 +10,13 @@ shift
 
 cd "$(dirname "$0")/plots"
 
+# generate times.dat which can be used by all plots
+{
+    printf "Start\tEnd\n"
+    for file in ../../../statistics/*.tgz; do
+        basename "$file" .tgz
+    done | sed -e 's/T/ /g' -e 's/~/\t/'
+} > times.dat
+
 "./$PLOT.sh" "$@" > "./$PLOT.dat"
 R -f "$PLOT.r"
