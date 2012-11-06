@@ -10,5 +10,5 @@ shift
 
 cd "$(dirname "$0")/plots"
 
-"./$PLOT.sh" > "./$PLOT.dat"
+"./$PLOT.sh" "$@" > "./$PLOT.dat"
 R -f "$PLOT.r"
