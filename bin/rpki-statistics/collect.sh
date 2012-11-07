@@ -75,6 +75,9 @@ results.py > "$STATS_DIR/results" \
 results.py -v > "$STATS_DIR/results.verbose" \
     || fatal "could not run results.py (verbose)"
 
+hostname > "$STATS_DIR/hostname" \
+    || fatal "could not record hostname"
+
 SOFTWARE_VERSION_END="`software_version`"
 
 test "$SOFTWARE_VERSION_START" = "$SOFTWARE_VERSION_END" \
