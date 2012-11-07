@@ -1,3 +1,5 @@
 #!/bin/sh
 
-"$(dirname "$0")/../run-times.py"
+cd "$(dirname "$0")/../../.."
+
+./bin/rpki-statistics/run-times.py
