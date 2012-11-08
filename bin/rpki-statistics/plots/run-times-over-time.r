@@ -5,5 +5,6 @@ png('run-times-over-time.png', width=1600, height=1200, pointsize=24)
 plot(data$Start, data$Duration/60, type="o",
     main="Combined Fetch and Validation Times",
     xlab="Start Time (UTC)",
-    ylab="Time to Fetch and Validate (minutes)")
+    ylab="Time to Fetch and Validate (minutes)",
+    ylim=c(0,max(data$Duration/60)))
 dev.off()
