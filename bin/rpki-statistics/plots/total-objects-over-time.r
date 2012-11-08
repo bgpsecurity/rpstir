@@ -1,4 +1,4 @@
-data <- read.table('total-objects-over-time', sep="\t", header=TRUE)
+data <- read.table('total-objects-over-time.dat', sep="\t", header=TRUE)
 data$Start <- as.POSIXlt(read.table('times.dat', sep="\t", header=TRUE)$Start)
 
 x <- data$Start
