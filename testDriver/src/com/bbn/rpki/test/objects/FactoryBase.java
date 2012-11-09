@@ -22,10 +22,8 @@ public abstract class FactoryBase<T> {
   /**
    * time to live in days
    */
-  protected int ttl;
   String subjKeyFile;
   String serverName;
-  boolean breakAway;
   String SIA_path;
 
   final List<Pair> childSpec;
@@ -33,14 +31,10 @@ public abstract class FactoryBase<T> {
   protected FactoryBase(String bluePrintName,
                         List<Pair> childSpec,
                         String serverName,
-                        boolean breakAway,
-                        int ttl,
                         String subjKeyFile) {
     this.bluePrintName = bluePrintName;
     this.childSpec = childSpec;
     this.serverName = serverName;
-    this.breakAway = breakAway;
-    this.ttl = ttl;
     this.subjKeyFile = subjKeyFile;
   }
 
@@ -54,12 +48,5 @@ public abstract class FactoryBase<T> {
    */
   public String getServerName() {
     return serverName;
-  }
-
-  /**
-   * @return true if the server name here should be used
-   */
-  public boolean isBreakAway() {
-    return breakAway;
   }
 }

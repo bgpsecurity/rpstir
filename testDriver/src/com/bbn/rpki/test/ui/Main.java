@@ -63,6 +63,7 @@ public class Main implements XMLConstants {
   protected boolean run;
   protected JFileChooser fileChooser;
   private boolean uploadedTrustAnchors;
+  private Model model;
 
   /**
    * @param args
@@ -74,11 +75,7 @@ public class Main implements XMLConstants {
     leftRight.setResizeWeight(0.5);
     topBottom.setDividerLocation(0.5);
     topBottom.setResizeWeight(0.5);
-    if (args.length == 0) {
-      this.args = new String[] {"smaller.ini", "../../testDriver/test.xml"};
-    } else {
-      this.args = args;
-    }
+    this.args = args;
   }
 
   void run() throws IOException, JDOMException {
@@ -89,18 +86,20 @@ public class Main implements XMLConstants {
     } else {
       fileChooser = new JFileChooser();
       if (fileChooser.showOpenDialog(topBottom) != JOptionPane.OK_OPTION) {
-        return;
+        xmlFile = null;
+      } else {
+        xmlFile = fileChooser.getSelectedFile();
       }
-      xmlFile = fileChooser.getSelectedFile();
     }
-    SAXBuilder saxBuilder = new SAXBuilder(false);
-    Document doc = saxBuilder.build(xmlFile);
-    Element rootElement = doc.getRootElement();
-    Element iniFileElement = rootElement.getChild(TAG_INI_FILE);
-    String iniFileContent = iniFileElement.getText();
-    final Model model = new Model(Util.RPKI_ROOT, iniFileContent, tlPanel);
-    AbstractAction.createActions(rootElement, model);
-    //    buildSomeActions(model);
+    if (xmlFile != null) {
+      SAXBuilder saxBuilder = new SAXBuilder(false);
+      Document doc = saxBuilder.build(xmlFile);
+      Element rootElement = doc.getRootElement();
+      model = new Model(Util.RPKI_ROOT, rootElement, tlPanel);
+      AbstractAction.createActions(rootElement, model);
+    } else {
+      model = new Model(Util.RPKI_ROOT, null, tlPanel);
+    }
     ActionsEditor actionsEditor = new ActionsEditor(model);
     final JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
     JPanel buttonsPanel = new JPanel();

@@ -63,4 +63,14 @@ public interface XMLConstants {
 
   /** Tag or attribute name */
   static final String ATTR_PATH = "path";
+
+  public static final String TAG_NODE = "node";
+
+  public static final String ATTR_SUBJ_KEY_FILE = "subjKeyFile";
+
+  public static final String ATTR_SERVER_NAME = "serverName";
+
+  public static final String ATTR_NICKNAME = "nickname";
+
+  public static final String TAG_TEST_ACTIONS = "test-actions";
 }

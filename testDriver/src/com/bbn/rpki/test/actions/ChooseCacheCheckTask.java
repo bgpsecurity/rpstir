@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.jdom.Element;
 
+import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.tasks.Model;
 import com.bbn.rpki.test.tasks.TaskBreakdown;
@@ -204,6 +205,7 @@ public class ChooseCacheCheckTask extends AbstractAction {
   /**
    * @see com.bbn.rpki.test.actions.AbstractAction#getId()
    */
+  @Override
   public
   String getId() {
     return id;
@@ -228,5 +230,15 @@ public class ChooseCacheCheckTask extends AbstractAction {
   @Override
   public Collection<EpochEvent> getExecutionEpochs() {
     return Collections.singleton(epoch);
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#referencesCA(com.bbn.rpki.test.objects.CA_Object)
+   */
+  @Override
+  public boolean referencesCA(CA_Object caObject) {
+    // TODO Need to figure this out.
+    // We should say true if the test task is one that references only the specified CA
+    return false;
   }
 }

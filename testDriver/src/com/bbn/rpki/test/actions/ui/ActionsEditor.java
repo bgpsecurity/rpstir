@@ -8,6 +8,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.Action;
 import javax.swing.JButton;
@@ -68,8 +69,17 @@ public class ActionsEditor implements SelectionListener {
             Constructor<?> constructor = chosenClass.getConstructor(Model.class);
             AbstractAction addedAction = (AbstractAction) constructor.newInstance(model);
             model.addAction(addedAction);
+            actionTree.update();
             actionTree.expandAndSelect(addedAction);
-          } catch (Exception ex) {
+          } catch (Throwable ex) {
+            if (ex instanceof InvocationTargetException) {
+              ex = ((InvocationTargetException) ex).getTargetException();
+            }
+            Object[] message = {
+                "Failed to create " + names[index],
+                ex.getMessage()
+            };
+            JOptionPane.showMessageDialog(getComponent(), message);
             return;
           }
         }
@@ -88,6 +98,15 @@ public class ActionsEditor implements SelectionListener {
         model.removeAction(action);
       }
     }
+  };
+  private final Action editCAListAction = new javax.swing.AbstractAction("Edit CA List") {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      CAEditor caEditor = new CAEditor(model, model.getRootCA(), getComponent());
+      caEditor.showDialog();
+    }
+
   };
 
   private final Action expandAction = new javax.swing.AbstractAction("Expand") {
@@ -119,6 +138,7 @@ public class ActionsEditor implements SelectionListener {
     JButton[] buttons = {
         new JButton(addAction),
         new JButton(deleteAction),
+        new JButton(editCAListAction),
         new JButton(expandAction),
         new JButton(collapseAction)
     };

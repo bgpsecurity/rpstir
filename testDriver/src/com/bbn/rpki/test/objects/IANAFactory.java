@@ -24,8 +24,9 @@ public class IANAFactory extends FactoryBase<CA_Object> {
    * @param subjKeyFile
    */
   protected IANAFactory(String bluePrintName, List<Pair> childSpec, String serverName,
-                        boolean breakAway, int ttl, String subjKeyFile) {
-    super(bluePrintName, childSpec, serverName, breakAway, ttl, subjKeyFile);
+                        String subjKeyFile) {
+    super(bluePrintName, childSpec, serverName, subjKeyFile);
+    assert serverName != null;
   }
 
   /**
@@ -33,9 +34,7 @@ public class IANAFactory extends FactoryBase<CA_Object> {
    */
   @Override
   CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
-    CA_Object caObject = new CA_Object(this, parent, id, bluePrintName,
-                                       serverName,
-                                       breakAway);
+    CA_Object caObject = new CA_Object(parent, bluePrintName + "-" + id, serverName, subjKeyFile);
     return caObject;
   }
 }

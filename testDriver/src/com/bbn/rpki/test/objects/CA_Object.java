@@ -5,11 +5,15 @@ package com.bbn.rpki.test.objects;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jdom.Element;
+
 import com.bbn.rpki.test.actions.ActionManager;
+import com.bbn.rpki.test.actions.XMLConstants;
 
 /**
  * Represents the state of a particular CA in the testbed. At any moment, there
@@ -23,6 +27,7 @@ import com.bbn.rpki.test.actions.ActionManager;
  * @author RTomlinson
  */
 public class CA_Object extends Allocator {
+
   /**
    * Interface to be implemented when iteration over the tree.
    *
@@ -44,50 +49,90 @@ public class CA_Object extends Allocator {
   private Certificate certificate;
 
   private int nextChildSN;
-  final String bluePrintName;
   private final CA_Object parent;
-  final List<CA_Object> children = new ArrayList<CA_Object>();
+  private final List<CA_Object> children = new ArrayList<CA_Object>();
   final List<Manifest> manifests = new ArrayList<Manifest>();
   final List<Roa> roas = new ArrayList<Roa>();
   final List<RevokedCertificate> revokedCertificates = new ArrayList<RevokedCertificate>();
   //  private final String manifest_path;
-  private final int id;
   private final String nickName;
   private String subjKeyFile;
   private int manNum = 0;
   private final String serverName;
-  private final boolean breakAway;
+  /**
+   * @return the breakAway
+   */
+  public boolean isBreakAway() {
+    return serverName != null;
+  }
+
   private long validityStartTime;
   private long validityEndTime;
   /**
-   * @param factoryBase
    * @param parent
-   * @param id
+   * @param nickname
+   * @param serverName
    * @param subjKeyFile
    */
-  public CA_Object(FactoryBase<CA_Object> factoryBase,
-                   CA_Object parent,
-                   int id,
-                   String bluePrintName,
+  public CA_Object(CA_Object parent,
+                   String nickname,
                    String serverName,
-                   boolean breakAway) {
+                   String subjKeyFile) {
     this.nextChildSN = 0;
-    this.bluePrintName = bluePrintName;
-    this.nickName = bluePrintName + "-" + id;
+    this.nickName = nickname;
     this.parent = parent;
     this.subjKeyFile = null;
-    this.id = id;
     this.serverName = serverName;
-    this.breakAway = breakAway;
+    this.subjKeyFile = subjKeyFile;
 
     if (parent != null) {
-      this.SIA_path = breakAway ? (getServerName() + "/" + nickName + "/") : (parent.SIA_path + nickName + "/");
+      this.SIA_path = isBreakAway() ? (getServerName() + "/" + nickName + "/") : (parent.SIA_path + nickName + "/");
       this.commonName = parent.commonName + "." + this.nickName;
     } else {
       this.commonName = this.nickName;
       this.SIA_path = getServerName() + "/" + nickName + "/";
     }
 
+  }
+
+  /**
+   * Construct from XML
+   * @param parent
+   * @param element
+   */
+  public CA_Object(CA_Object parent, Element element) {
+    this(parent,
+         element.getAttributeValue(XMLConstants.ATTR_NICKNAME),
+         element.getAttributeValue(XMLConstants.ATTR_SERVER_NAME),
+         element.getAttributeValue(XMLConstants.ATTR_SUBJ_KEY_FILE));
+    for (Element childElement : getChildren(element, XMLConstants.TAG_NODE)) {
+      CA_Object childCA = new CA_Object(this, childElement);
+      children.add(childCA);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private Collection<Element> getChildren(Element element, String tag) {
+    return element.getChildren(tag);
+  }
+
+  /**
+   * @return an element encoding this node
+   */
+  public Element toXML() {
+    Element element = new Element(XMLConstants.TAG_NODE);
+    element.setAttribute(XMLConstants.ATTR_NICKNAME, nickName);
+    if (subjKeyFile != null) {
+      element.setAttribute(XMLConstants.ATTR_SUBJ_KEY_FILE, subjKeyFile);
+    }
+    if (isBreakAway()) {
+      element.setAttribute(XMLConstants.ATTR_SERVER_NAME, serverName);
+    }
+    for (CA_Object childCA : children) {
+      Element childElement = childCA.toXML();
+      element.addContent(childElement);
+    }
+    return element;
   }
 
   /**
@@ -178,6 +223,8 @@ public class CA_Object extends Allocator {
    * 
    * @param pairs
    * @param rangeType
+   * @param validityStartTime
+   * @param validityEndTime
    * @param allocationId
    */
   public void takeAllocation(List<? extends Pair> pairs, IPRangeType rangeType,
@@ -191,7 +238,7 @@ public class CA_Object extends Allocator {
    * @param validityStartTime
    * @param validityEndTime
    * @param allocationId
-   * @param allocation
+   * @param allocations
    */
   public void addRcvdRanges(long validityStartTime, long validityEndTime, AllocationId allocationId,
                             IPRangeList...allocations) {
@@ -347,11 +394,11 @@ public class CA_Object extends Allocator {
    * @return the serverName
    */
   public String getServerName() {
-    return serverName;
+    return isBreakAway() ? serverName : getParent().getServerName();
   }
 
   /**
-   * @return
+   * @return the list of revoked certificates
    */
   public List<RevokedCert> getRevokedCertList() {
     List<RevokedCert> ret = new ArrayList<RevokedCert>(revokedCertificates.size());
@@ -365,5 +412,20 @@ public class CA_Object extends Allocator {
       }
     }
     return ret;
+  }
+
+  /**
+   * @param child
+   */
+  public void addChild(CA_Object child) {
+    children.add(child);
+    assert child.getParent() == this;
+  }
+
+  /**
+   * @param selectedCA
+   */
+  public void removeChild(CA_Object selectedCA) {
+    children.remove(selectedCA);
   }
 }

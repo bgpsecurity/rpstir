@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.jdom.Element;
 
+import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.tasks.Model;
 
@@ -114,4 +115,10 @@ public abstract class AbstractAction implements XMLConstants {
    * @return
    */
   public abstract void addExecutionTime(EpochEvent epochEvent, ExecutionTimeContext etContext);
+
+  /**
+   * @param caObject
+   * @return true if this action references the specified CA_Object
+   */
+  public abstract boolean referencesCA(CA_Object caObject);
 }

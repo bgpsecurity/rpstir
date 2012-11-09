@@ -37,12 +37,10 @@ public class RoaFactory extends Factory<AllocateROAAction> implements Constants 
                     List<Pair> as_list,
                     List<Pair> child,
                     String server,
-                    boolean breakA,
-                    Integer t,
                     List<Pair> roav4l,
                     List<Pair> roav6l,
                     int a) {
-    super(name, ipv4, ipv6, as_list, child, server, breakA, t, null);
+    super(name, ipv4, ipv6, as_list, child, server, null);
     asid = new ArrayList<Pair>(1);
     asid.add(new Pair("r", BigInteger.valueOf(a)));
     ROAipv4List = roav4l;

@@ -56,7 +56,15 @@ public class AllocateAction extends AllocateActionBase {
    * @param model
    */
   public AllocateAction(Model model) {
-    this(model.getRootCA(), model.getRootCA().getChild(0), AllocationId.generate(), model);
+    this(model.getRootCA(), getFirstChild(model), AllocationId.generate(), model);
+  }
+
+  private static CA_Object getFirstChild(Model model) {
+    CA_Object rootCA = model.getRootCA();
+    if (rootCA.getChildCount() == 0) {
+      throw new RuntimeException("Please define a child of " + rootCA.commonName + " first");
+    }
+    return rootCA.getChild(0);
   }
 
   /**
@@ -227,9 +235,17 @@ public class AllocateAction extends AllocateActionBase {
   }
 
   /**
-   * @return
+   * @return he child CA_Object
    */
   public CA_Object getChild() {
     return child;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#referencesCA(com.bbn.rpki.test.objects.CA_Object)
+   */
+  @Override
+  public boolean referencesCA(CA_Object caObject) {
+    return caObject == getChild() || caObject == getParent();
   }
 }

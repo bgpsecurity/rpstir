@@ -85,14 +85,19 @@ public class Certificate extends CA_Obj {
     this.subjkeyfile = keyDirPath + nickname + ".p15";
 
     // Subject key pair is either (in order of priority)...
+    // 0) pre-specified by an earlier version of this certificate (same key)
     // 1) pre-specified for this certificate
     // 2) pre-specified for this factory (e.g. IANA, maybe RIRs)
     // 3) generated
     if (subjKeyFile != null) {
-      Util.copyfile(subjKeyFile, this.subjkeyfile);
-      if (DEBUG_ON) {
-        System.out.println("Copying pre-specified key file: " + subjKeyFile +
-                           " to " + this.subjkeyfile);
+      if (subjKeyFile.equals(this.subjkeyfile)) {
+        // Same key as before. Don't try to copy.
+      } else {
+        Util.copyfile(subjKeyFile, this.subjkeyfile);
+        if (DEBUG_ON) {
+          System.out.println("Copying pre-specified key file: " + subjKeyFile +
+                             " to " + this.subjkeyfile);
+        }
       }
     } else {
       String pregeneratedKeyFileName = PregeneratedKeys.getPregeneratedKey();

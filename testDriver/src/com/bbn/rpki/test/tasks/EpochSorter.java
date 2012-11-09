@@ -44,7 +44,7 @@ public class EpochSorter {
    * @return the Epoch collection sorted into a proper succession of epoch events.
    */
   public List<Epoch> sort() {
-    int maxEpochIndex = 0;
+    int maxEpochIndex = -1;
     for (Epoch epoch: epochs) {
       epoch.setEpochIndex(null);
       Set<Epoch> epochPredecessors = new HashSet<Epoch>();

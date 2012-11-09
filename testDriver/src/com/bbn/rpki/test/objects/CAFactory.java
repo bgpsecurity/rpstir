@@ -29,8 +29,8 @@ public class CAFactory extends Factory<CA_Object> {
    */
   protected CAFactory(String bluePrintName, List<Pair> ipv4List, List<Pair> ipv6List,
                       List<Pair> asList, List<Pair> childSpec, String serverName,
-                      boolean breakAway, int ttl, String subjKeyFile) {
-    super(bluePrintName, ipv4List, ipv6List, asList, childSpec, serverName, breakAway, ttl, subjKeyFile);
+                      String subjKeyFile) {
+    super(bluePrintName, ipv4List, ipv6List, asList, childSpec, serverName, subjKeyFile);
   }
 
   /**
@@ -38,9 +38,8 @@ public class CAFactory extends Factory<CA_Object> {
    */
   @Override
   CA_Object create(Model model, InitializeAction initializeAction, CA_Object parent, int id) {
-    CA_Object caObject = new CA_Object(this, parent, id, bluePrintName,
-                                       serverName,
-                                       breakAway);
+    CA_Object caObject = new CA_Object(parent, bluePrintName + "-" + id, serverName,
+                                       subjKeyFile);
     TypedPair[] allPairs = new TypedPair[asList.size() + ipv4List.size() + ipv6List.size()];
     if (allPairs.length > 0) {
       int q = 0;

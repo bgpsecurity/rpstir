@@ -139,4 +139,12 @@ public class AllocateROAAction extends AllocateActionBase {
   public String toString() {
     return String.format("Allocate ROA %s: %s from %s", allocationId, allocationPairs, parent.getNickname());
   }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#referencesCA(com.bbn.rpki.test.objects.CA_Object)
+   */
+  @Override
+  public boolean referencesCA(CA_Object caObject) {
+    return caObject == getParent();
+  }
 }

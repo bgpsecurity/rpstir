@@ -6,6 +6,7 @@ package com.bbn.rpki.test.actions.ui;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
@@ -21,7 +22,7 @@ public class CATreeModel implements TreeModel {
 
   private final CA_Object rootCA;
   private final List<TreeModelListener> listeners =
-    new ArrayList<TreeModelListener>(1);
+      new ArrayList<TreeModelListener>(1);
 
   /**
    * @param rootCA
@@ -97,6 +98,17 @@ public class CATreeModel implements TreeModel {
   @Override
   public void removeTreeModelListener(TreeModelListener l) {
     listeners.remove(l);
+  }
+
+  /**
+   * 
+   */
+  public void update() {
+    TreePath treePath = new TreePath(rootCA);
+    TreeModelEvent e = new TreeModelEvent(this, treePath);
+    for (TreeModelListener l : listeners) {
+      l.treeStructureChanged(e);
+    }
   }
 
 }

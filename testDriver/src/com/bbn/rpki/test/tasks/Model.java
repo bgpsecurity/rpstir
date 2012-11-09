@@ -8,7 +8,6 @@ import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
@@ -24,6 +23,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -38,7 +38,6 @@ import com.bbn.rpki.test.actions.XMLConstants;
 import com.bbn.rpki.test.objects.CA_Obj;
 import com.bbn.rpki.test.objects.CA_Object;
 import com.bbn.rpki.test.objects.Constants;
-import com.bbn.rpki.test.objects.FactoryBase;
 import com.bbn.rpki.test.objects.TestbedConfig;
 import com.bbn.rpki.test.objects.TestbedCreate;
 import com.bbn.rpki.test.objects.TypescriptLogger;
@@ -65,6 +64,7 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class Model implements Constants, XMLConstants {
+
   /**
    * Interface for listeners wanting to know when significant model changes have
    * occured. For now only the epochs collection can be monitored.
@@ -145,6 +145,7 @@ public class Model implements Constants, XMLConstants {
       return file.isDirectory();
     }
   };
+  private static final String DEFAULT_SERVER_NAME = System.getProperty("defaultServer", "rpki.bbn.com/rpki");
 
   private final File rpkiRoot;
   private final List<AbstractAction> actions = new ArrayList<AbstractAction>();
@@ -159,13 +160,6 @@ public class Model implements Constants, XMLConstants {
   private int epochIndex;
   private final List<File> repositoryRoots = new ArrayList<File>();
   private final List<File> previousRepositoryRoots = new ArrayList<File>();
-  private final TestbedConfig testbedConfig;
-  /**
-   * @return the testbedConfig
-   */
-  public TestbedConfig getTestbedConfig() {
-    return testbedConfig;
-  }
 
   private final TypescriptLogger logger;
   protected Deque<TaskFactory.Task> tasks = new ArrayDeque<TaskFactory.Task>();
@@ -182,14 +176,28 @@ public class Model implements Constants, XMLConstants {
    * @param logger
    * @throws IOException
    */
-  public Model(File rpkiRoot, String iniFile, TypescriptLogger logger) throws IOException {
+  public Model(File rpkiRoot, Element rootElement, TypescriptLogger logger) throws IOException {
     this.rpkiRoot = rpkiRoot;
     this.logger = logger;
 
-    testbedConfig = new TestbedConfig(iniFile);
-    TestbedCreate tbc = new TestbedCreate(testbedConfig, this);
-    initializeAction = tbc.createDriver();
-    iana = tbc.getRoot();
+    if (rootElement != null) {
+      Element iniFileElement = rootElement.getChild(TAG_INI_FILE);
+      Element ianaElement = rootElement.getChild(TAG_NODE);
+      if (iniFileElement != null) {
+        String iniFileContent = iniFileElement.getText();
+        TestbedConfig testbedConfig;
+        testbedConfig = new TestbedConfig(iniFileContent);
+        TestbedCreate tbc = new TestbedCreate(testbedConfig, this);
+        initializeAction = tbc.createDriver();
+        iana = tbc.getRoot();
+      } else if (ianaElement != null) {
+        iana = new CA_Object(null, ianaElement);
+      } else {
+        iana = createIANA();
+      }
+    } else {
+      iana = createIANA();
+    }
     iana.iterate(new CA_Object.IterationAction() {
 
       @Override
@@ -200,7 +208,7 @@ public class Model implements Constants, XMLConstants {
         return true;
       }
     });
-    this.ianaServerName = testbedConfig.getFactory("IANA").getServerName();
+    this.ianaServerName = iana.getServerName();
 
     epochIndex = 0;
 
@@ -211,16 +219,21 @@ public class Model implements Constants, XMLConstants {
   }
 
   /**
+   * @return a new trust anchor
+   */
+  private CA_Object createIANA() {
+    CA_Object caObject = new CA_Object(null, "IANA-0", DEFAULT_SERVER_NAME, System.getProperty("ianaSubjKeyFile", "../templates/IANA.p15"));
+    return caObject;
+  }
+
+  /**
    * @param file
    * @throws IOException
    */
   public void writeModel(File file) throws IOException {
-    Element root = new Element("test-actions");
-    Element iniFileElement = new Element(TAG_INI_FILE);
-    StringWriter stringWriter = new StringWriter();
-    testbedConfig.write(stringWriter);
-    iniFileElement.addContent(stringWriter.toString());
-    root.addContent(iniFileElement);
+    Element root = new Element(XMLConstants.TAG_TEST_ACTIONS);
+    Element ianaElement = iana.toXML();
+    root.addContent(ianaElement);
     ActionContext actionContext = new ActionContext();
     for (AbstractAction action : actions) {
       root.addContent(action.toXML(actionContext));
@@ -370,13 +383,18 @@ public class Model implements Constants, XMLConstants {
    */
   public Collection<String> getAllServerNames() {
     Set<String> ret = new HashSet<String>();
-    for (FactoryBase factory : testbedConfig.getFactories().values()) {
-      if (factory.isBreakAway()) {
-        ret.add(factory.getServerName());
-      }
-    }
-    ret.add(iana.getServerName());
+    addServerNames(ret, iana);
     return ret;
+  }
+
+  private void addServerNames(Set<String> serverNames, CA_Object caObject) {
+    if (caObject.isBreakAway()) {
+      serverNames.add(caObject.getServerName());
+    }
+    for (int i = 0, n = caObject.getChildCount(); i < n; i++) {
+      CA_Object childCA = caObject.getChild(i);
+      addServerNames(serverNames, childCA);
+    }
   }
 
   /**
@@ -507,7 +525,11 @@ public class Model implements Constants, XMLConstants {
   public Collection<File> getRepositoryRoots() {
     if (repositoryRoots.isEmpty()) {
       // Use the configuration roots if empty
-      return testbedConfig.getRepositoryRoots();
+      Set<File> ret = new TreeSet<File>();
+      for (String serverName : getAllServerNames()) {
+        ret.add(new File(new File(REPO_PATH), serverName));
+      }
+      return ret;
     }
     return repositoryRoots;
   }
@@ -856,11 +878,21 @@ public class Model implements Constants, XMLConstants {
   }
 
   /**
-   * Constraint the initializeActions
+   * @param actionsToRemove
+   */
+  public void removeActions(Collection<AbstractAction> actionsToRemove) {
+    actions.removeAll(actionsToRemove);
+    epochsChanged();
+  }
+
+  /**
+   * Constrain the initializeActions
    */
   public void initializeActions() {
-    actions.addAll(initializeAction.getActions(this, iana, actions));
-    epochsChanged();
+    if (initializeAction != null) {
+      actions.addAll(initializeAction.getActions(this, iana, actions));
+      epochsChanged();
+    }
   }
 
   /**
@@ -872,5 +904,12 @@ public class Model implements Constants, XMLConstants {
       epochTime += 15000;
       epoch.setEpochTime(epochTime);
     }
+  }
+
+  /**
+   * @return the current set of AbstractActions
+   */
+  public Collection<AbstractAction> getActions() {
+    return actions;
   }
 }

@@ -12,9 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
@@ -171,10 +169,14 @@ public class TestbedConfig implements Constants {
       throw new RuntimeException("Unrecognized type included in name of section in the .ini: " + type);
     }
     FactoryBase<?> f = null;
+    boolean isIANA = "IANA".equals(name);
+    if (!breakA && !isIANA) {
+      server = null;
+    }
     switch (factoryType) {
     case C: {
-      if ("IANA".equals(name)) {
-        f = new IANAFactory(name, child, server, breakA, t, subjkeyfile);
+      if (isIANA) {
+        f = new IANAFactory(name, child, server, subjkeyfile);
       } else {
         f = new CAFactory(name,
                           ipv4,
@@ -182,8 +184,6 @@ public class TestbedConfig implements Constants {
                           as_list,
                           child,
                           server,
-                          breakA,
-                          t,
                           subjkeyfile);
       }
       break;
@@ -198,8 +198,6 @@ public class TestbedConfig implements Constants {
                          ipv6,
                          as_list, child,
                          server,
-                         breakA,
-                         t,
                          roav4l,
                          roav6l,
                          a);
@@ -238,18 +236,5 @@ public class TestbedConfig implements Constants {
   public FactoryBase<?> getFactory(String nodeName) {
     return factories.get(nodeName);
 
-  }
-
-  /**
-   * @return all the repository roots
-   */
-  public Collection<File> getRepositoryRoots() {
-    Set<File> ret = new TreeSet<File>();
-    for (FactoryBase<?> factoryBase : factories.values()) {
-      if (factoryBase.isBreakAway() || factoryBase instanceof IANAFactory) {
-        ret.add(new File(new File(REPO_PATH), factoryBase.serverName));
-      }
-    }
-    return ret;
   }
 }

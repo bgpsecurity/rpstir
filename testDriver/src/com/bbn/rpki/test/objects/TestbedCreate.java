@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +66,7 @@ public class TestbedCreate implements Constants {
   private final CA_Object iana;
   private final InitializeAction initializeAction;
   private final Model model;
+  private final Map<CA_Object,FactoryBase<?>> nodeFactories = new HashMap<CA_Object,FactoryBase<?>>();
 
   /**
    * @param testbedConfig
@@ -77,6 +79,7 @@ public class TestbedCreate implements Constants {
     MAX_NODES = testbedConfig.getMaxNodes();
     ianaFactory = (IANAFactory) FACTORIES.get("IANA");
     iana = ianaFactory.create(model, initializeAction, null, 0);
+    nodeFactories.put(iana, ianaFactory);
     ActionManager.singleton().recordCA_Object(iana);
   }
 
@@ -130,7 +133,10 @@ public class TestbedCreate implements Constants {
       // Creates all child CA's and ROA's for a the CA ca_node
       repo_size = create_children(model, ca_node, repo_size);
 
-      child_queue.addAll(ca_node.children);
+      for (int i = 0, n = ca_node.getChildCount(); i < n; i++) {
+        CA_Object child = ca_node.getChild(i);
+        child_queue.add(child);
+      }
     }
 
     System.out.format("Finished creation driver loop. repo_depth = %d repo_size = %d%n", repo_depth, repo_size);
@@ -146,17 +152,19 @@ public class TestbedCreate implements Constants {
    */
   private int create_children(Model model, CA_Object ca_node, int repo_size) {
     if (DEBUG_ON) {
-      System.out.println(ca_node.bluePrintName);
+      System.out.println(ca_node);
     }
-    List<Pair> list = FACTORIES.get(ca_node.bluePrintName).childSpec;
+    List<Pair> list = nodeFactories.get(ca_node).childSpec;
     for (Pair ca_def : list) {
       for (int n = 0; n < ca_def.arg.intValue(); n++) {
         if (MAX_NODES > repo_size) {
-          Object child = FACTORIES.get(ca_def.tag).create(model, initializeAction, ca_node, ca_node.children.size());
+          FactoryBase<?> childFactory = FACTORIES.get(ca_def.tag);
+          Object child = childFactory.create(model, initializeAction, ca_node, ca_node.getChildCount());
           if (child instanceof CA_Object) {
             CA_Object caChild = (CA_Object) child;
+            nodeFactories.put(caChild, childFactory);
             ActionManager.singleton().recordCA_Object(caChild);
-            ca_node.children.add(caChild);
+            ca_node.addChild(caChild);
           } else if (child instanceof AllocateROAAction) {
             initializeAction.addAction((AllocateROAAction) child);
           } else if (child != null) {

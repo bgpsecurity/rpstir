@@ -39,10 +39,8 @@ public abstract class Factory<T> extends FactoryBase<T> {
                     List<Pair> asList,
                     List<Pair> childSpec,
                     String serverName,
-                    boolean breakAway,
-                    int ttl,
                     String subjKeyFile) {
-    super(bluePrintName, childSpec, serverName, breakAway, ttl, subjKeyFile);
+    super(bluePrintName, childSpec, serverName, subjKeyFile);
     this.ipv4List = ipv4List;
     this.ipv6List = ipv6List;
     this.asList = asList;

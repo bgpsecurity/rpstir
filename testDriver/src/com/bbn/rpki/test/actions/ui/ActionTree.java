@@ -115,6 +115,10 @@ public class ActionTree {
     }
   }
 
+  public void update() {
+    actionTreeModel.update(model);
+  }
+
   /**
    * @param addedAction
    */
@@ -123,7 +127,8 @@ public class ActionTree {
     TreePath[] paths = new TreePath[allEpochEvents.size()];
     int ix = 0;
     for (EpochEvent epochEvent : allEpochEvents) {
-      TreePath treePath = actionTreeModel.getPathToRoot();
+      TreePath treePath = actionTreeModel.findPathTo(epochEvent);
+      actionTree.expandPath(treePath);
       paths[ix++] = treePath;
     }
     actionTree.setSelectionPaths(paths);
