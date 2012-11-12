@@ -216,7 +216,7 @@ public abstract class AllocateActionBase extends AbstractAction {
       parent = (CA_Object) newValue;
       break;
     case SUBJECT:
-      //      child = (CA_Object) newValue;
+      // Handled by subclasses
       break;
     }
   }
@@ -261,5 +261,14 @@ public abstract class AllocateActionBase extends AbstractAction {
    */
   public EpochEvent getValidityEndEvent() {
     return validityEndTime;
+  }
+
+  @Override
+  public List<String> getInvalidReasons() {
+    List<String> ret = null;
+    if (getId() == null) {
+      ret = appendReason(ret, "Allocation Id should be specified");
+    }
+    return ret;
   }
 }

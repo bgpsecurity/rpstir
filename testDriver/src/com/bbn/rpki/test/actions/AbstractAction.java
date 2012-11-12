@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.actions;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,8 @@ public abstract class AbstractAction implements XMLConstants {
     return element;
   }
 
+  public abstract List<String> getInvalidReasons();
+
   /**
    * @return attributes map
    */
@@ -121,4 +124,17 @@ public abstract class AbstractAction implements XMLConstants {
    * @return true if this action references the specified CA_Object
    */
   public abstract boolean referencesCA(CA_Object caObject);
+
+  /**
+   * @param ret
+   * @param string
+   * @return
+   */
+  protected List<String> appendReason(List<String> ret, String string) {
+    if (ret == null) {
+      ret = new ArrayList<String>();
+    }
+    ret.add(string);
+    return ret;
+  }
 }

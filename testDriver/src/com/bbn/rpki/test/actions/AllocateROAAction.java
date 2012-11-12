@@ -147,4 +147,16 @@ public class AllocateROAAction extends AllocateActionBase {
   public boolean referencesCA(CA_Object caObject) {
     return caObject == getParent();
   }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AllocateActionBase#getInvalidReasons()
+   */
+  @Override
+  public List<String> getInvalidReasons() {
+    List<String> ret = super.getInvalidReasons();
+    if (getParent() == null) {
+      ret = appendReason(ret, "Issuer CA must be specified");
+    }
+    return ret;
+  }
 }

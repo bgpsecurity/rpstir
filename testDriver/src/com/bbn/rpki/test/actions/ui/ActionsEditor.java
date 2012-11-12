@@ -191,4 +191,11 @@ public class ActionsEditor implements SelectionListener {
       changeAction(deleteAction, null);
     }
   }
+
+  /**
+   * @return
+   */
+  public boolean checkValidity() {
+    return actionDetail.checkValidity();
+  }
 }

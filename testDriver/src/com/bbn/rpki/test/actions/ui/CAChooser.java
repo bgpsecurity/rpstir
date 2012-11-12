@@ -117,7 +117,9 @@ public class CAChooser implements TreeSelectionListener {
         return null;
       }
       CAEditor caEditor = new CAEditor(model, selectedCA, scrollPane);
-      caEditor.showDialog();
+      CA_Object caObject = caEditor.showDialog();
+      treeModel.update();
+      selectCA(caObject);
     }
   }
 

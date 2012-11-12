@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jdom.Element;
@@ -240,5 +241,13 @@ public class ChooseCacheCheckTask extends AbstractAction {
     // TODO Need to figure this out.
     // We should say true if the test task is one that references only the specified CA
     return false;
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getInvalidReasons()
+   */
+  @Override
+  public List<String> getInvalidReasons() {
+    return null;
   }
 }

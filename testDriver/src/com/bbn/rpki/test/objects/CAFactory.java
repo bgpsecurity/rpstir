@@ -5,6 +5,7 @@ package com.bbn.rpki.test.objects;
 
 import java.util.List;
 
+import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.actions.AllocateAction;
 import com.bbn.rpki.test.actions.InitializeAction;
 import com.bbn.rpki.test.tasks.Model;
@@ -47,7 +48,7 @@ public class CAFactory extends Factory<CA_Object> {
       q = addPairs(allPairs, q, IPRangeType.ipv4, ipv4List);
       q = addPairs(allPairs, q, IPRangeType.ipv6, ipv6List);
 
-      AllocateAction allocateAction = new AllocateAction(parent, caObject, AllocationId.get("ini-" + caObject.getNickname()), model, allPairs);
+      AbstractAction allocateAction = new AllocateAction(parent, caObject, AllocationId.get("ini-" + caObject.getNickname()), model, allPairs);
       initializeAction.addAction(allocateAction);
     }
     return caObject;

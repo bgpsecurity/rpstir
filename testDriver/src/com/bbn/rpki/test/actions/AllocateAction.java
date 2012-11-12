@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.jdom.Element;
 
@@ -62,7 +63,7 @@ public class AllocateAction extends AllocateActionBase {
   private static CA_Object getFirstChild(Model model) {
     CA_Object rootCA = model.getRootCA();
     if (rootCA.getChildCount() == 0) {
-      throw new RuntimeException("Please define a child of " + rootCA.commonName + " first");
+      return rootCA;
     }
     return rootCA.getChild(0);
   }
@@ -193,7 +194,9 @@ public class AllocateAction extends AllocateActionBase {
    */
   @Override
   public String toString() {
-    return String.format("Allocate %s: %s from %s to %s", allocationId, allocationPairs, parent.getNickname(), child.getNickname());
+    String parentNickname = parent == null ? "<unspecified>" : parent.getNickname();
+    String childNickname = child == null ? "<unspecified>" : child.getNickname();
+    return String.format("Allocate %s: %s from %s to %s", allocationId, allocationPairs, parentNickname, childNickname);
   }
 
   /**
@@ -205,6 +208,13 @@ public class AllocateAction extends AllocateActionBase {
     switch (at) {
     case SUBJECT:
       child = (CA_Object) newValue;
+      break;
+    case ISSUER:
+      super.updateAttribute(label, newValue);
+      // Child must be child of new issuer
+      if (child.getParent() != newValue) {
+        child = null;
+      }
       break;
     default:
       super.updateAttribute(label, newValue);
@@ -247,5 +257,23 @@ public class AllocateAction extends AllocateActionBase {
   @Override
   public boolean referencesCA(CA_Object caObject) {
     return caObject == getChild() || caObject == getParent();
+  }
+
+  /**
+   * @see com.bbn.rpki.test.actions.AbstractAction#getInvalidReasons()
+   */
+  @Override
+  public List<String> getInvalidReasons() {
+    List<String> ret = super.getInvalidReasons();
+    if (getParent() == null && getParent() != model.getRootCA()) {
+      ret = appendReason(ret, "Issuer CA must be specified");
+    }
+    if (child == null) {
+      ret = appendReason(ret, "Subject CA must be specified");
+    }
+    if (child.getParent() != getParent()) {
+      ret = appendReason(ret, "Subject CA must be a child of the issuer CA");
+    }
+    return ret;
   }
 }

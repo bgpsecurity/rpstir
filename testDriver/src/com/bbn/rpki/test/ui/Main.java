@@ -100,7 +100,7 @@ public class Main implements XMLConstants {
     } else {
       model = new Model(Util.RPKI_ROOT, null, tlPanel);
     }
-    ActionsEditor actionsEditor = new ActionsEditor(model);
+    final ActionsEditor actionsEditor = new ActionsEditor(model);
     final JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(leftPanel));
     JPanel buttonsPanel = new JPanel();
     JButton exitButton = new JButton("Exit");
@@ -118,8 +118,10 @@ public class Main implements XMLConstants {
 
       @Override
       public void actionPerformed(ActionEvent e) {
-        run = true;
-        dialog.setVisible(false);
+        if (actionsEditor.checkValidity()) {
+          run = true;
+          dialog.setVisible(false);
+        }
       }
     });
     buttonsPanel.add(runButton);
@@ -128,7 +130,9 @@ public class Main implements XMLConstants {
     saveButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        save(model);
+        if (actionsEditor.checkValidity()) {
+          save(model);
+        }
       }
     });
     buttonsPanel.add(saveButton);

@@ -134,6 +134,9 @@ public class ActionDetail {
    * @param epochEvent
    */
   public void setAction(final AbstractAction action, EpochEvent epochEvent) {
+    if (action != this.action && !checkValidity()) {
+      return;
+    }
     this.epochEvent = epochEvent;
     this.epochEvents.clear();
     panel.removeAll();
@@ -218,6 +221,13 @@ public class ActionDetail {
     panel.repaint();
   }
 
+  /**
+   * @return
+   */
+  public boolean checkValidity() {
+    return InvalidActionDialog.checkValidity(getComponent(), this.action);
+  }
+
   private void registerListener(Saver saver) {
     savers.add(saver);
   }
@@ -278,20 +288,22 @@ public class ActionDetail {
    * @param setter
    * @return
    */
-  private Component getCAComponent(final CA_Object ca, final AbstractSetter setter) {
+  private Component getCAComponent(CA_Object ca, final AbstractSetter setter) {
     Box c = Box.createHorizontalBox();
     c.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(0, 5, 0, 0)));
     final JLabel nameLabel = new JLabel(ca.getCommonName());
     c.add(nameLabel);
     final JButton editButton = new JButton("Edit");
+    final CA_Object[] settableCA = {ca};
     editButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        CAChooser caChooser = new CAChooser(model, ca);
+        CAChooser caChooser = new CAChooser(model, settableCA[0]);
         CA_Object newCA = caChooser.showDialog(editButton);
         if (newCA != null) {
           setter.setValue(newCA);
           nameLabel.setText(newCA.getCommonName());
+          settableCA[0] = newCA;
         }
       }
     });

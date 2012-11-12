@@ -80,7 +80,7 @@ public class CAEditor implements CAChooser.Listener {
     buttons.add(new JButton(createAction));
     buttons.add(new JButton(deleteAction));
     buttons.add(new JButton(exitAction));
-    DocumentListener textActionListener = new DocumentListener() {
+    DocumentListener textDocumentListener = new DocumentListener() {
 
       @Override
       public void insertUpdate(DocumentEvent e) {
@@ -97,8 +97,10 @@ public class CAEditor implements CAChooser.Listener {
         updateButtonEnables();
       }
     };
-    nicknameField.getDocument().addDocumentListener(textActionListener);
-    serverNameField.getDocument().addDocumentListener(textActionListener);
+    nicknameField.getDocument().addDocumentListener(textDocumentListener);
+    serverNameField.getDocument().addDocumentListener(textDocumentListener);
+    nicknameField.addActionListener(createAction);
+    serverNameField.addActionListener(createAction);
     caChooser.addListener(this);
     updateButtonEnables();
     dialog = new JDialog(SwingUtilities.getWindowAncestor(c), "CA Editor");
@@ -115,9 +117,10 @@ public class CAEditor implements CAChooser.Listener {
   /**
    * @param c
    */
-  public void showDialog() {
+  public CA_Object showDialog() {
     dialog.setVisible(true);
     dialog.dispose();
+    return selectedCA;
   }
 
   /**
@@ -162,13 +165,11 @@ public class CAEditor implements CAChooser.Listener {
 
   protected void createCA() {
     if (selectedCA == null) {
-      JOptionPane.showMessageDialog(panel, "Select a parent CA first");
       return;
     }
     String nickname = nicknameField.getText().trim();
     String serverName = serverNameField.getText().trim();
     if (nickname.isEmpty() || serverName.isEmpty()) {
-      JOptionPane.showMessageDialog(panel, "Nickname and server name must be specified");
       return;
     }
     boolean breakAway = !serverName.equals(selectedCA.getServerName());
