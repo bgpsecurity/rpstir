@@ -19,4 +19,4 @@ cd "$(dirname "$0")/plots"
 } > times.dat
 
 "./$PLOT.sh" "$@" > "./$PLOT.dat"
-R -f "$PLOT.r"
+R -f "$PLOT.R"
