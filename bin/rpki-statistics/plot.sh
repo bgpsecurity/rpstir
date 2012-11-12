@@ -15,7 +15,7 @@ cd "$(dirname "$0")/plots"
     printf "Start\tEnd\n"
     for file in ../../../statistics/*.tgz; do
         basename "$file" .tgz
-    done | sed -e 's/T/ /g' -e 's/~/\t/'
+    done | sed -e 's/T/ /g' -e 's/~/\t/' | sort
 } > times.dat
 
 "./$PLOT.sh" "$@" > "./$PLOT.dat"
