@@ -41,7 +41,7 @@ public class Manifest extends CMS {
     this.nextupdate.setTimeInMillis(parent.getValidityEndTime());
     this.manNum = parent.getNextManifestNumber();
     // Chop off our rsync:// portion and append the repo path
-    this.outputfilename = REPO_PATH + parent.SIA_path + Util.b64encode_wrapper(parent.getCertificate().ski) + ".mft";
+    this.outputfilename = REPO_PATH + parent.getSIA_path() + Util.b64encode_wrapper(parent.getCertificate().ski) + ".mft";
 
   }
 
@@ -51,7 +51,7 @@ public class Manifest extends CMS {
   @Override
   public void getFieldMap(Map<String, Object> map) {
     super.getFieldMap(map);
-    File dirname = new File(REPO_PATH, parent.SIA_path);
+    File dirname = new File(REPO_PATH, parent.getSIA_path());
     List<String> fileList = new ArrayList<String>();
     for (File f : dirname.listFiles()) {
       if (f.isFile()) {
@@ -75,7 +75,7 @@ public class Manifest extends CMS {
                            parent.getValidityStartTime(),
                            parent.getValidityEndTime(),
                            "Manifest-EE",
-                           parent.SIA_path + "EE-" + manNum + "/",
+                           parent.getSIA_path() + "EE-" + manNum + "/",
                            IPRangeList.IPV4_EMPTY,
                            IPRangeList.IPV6_EMPTY,
                            IPRangeList.AS_EMPTY);
@@ -88,6 +88,6 @@ public class Manifest extends CMS {
    */
   @Override
   public void appendString(StringBuilder sb) {
-    sb.append(String.format("Manifest(%s)", parent.commonName));
+    sb.append(String.format("Manifest(%s)", parent.getCommonName()));
   }
 }

@@ -39,7 +39,7 @@ public class EE_cert extends Certificate {
     super(parent,
           validityStartTime,
           validityEndTime,
-          REPO_PATH + "EE/" + parent.SIA_path,
+          REPO_PATH + "EE/" + parent.getSIA_path(),
           bluePrintName,
           siaPath,
           asList,
@@ -51,16 +51,16 @@ public class EE_cert extends Certificate {
     Certificate parentCertificate = parent.getCertificate();
     this.aia   = "rsync://" + Util.removePrefix(parentCertificate.outputfilename, REPO_PATH);
     String encodedParentSki = Util.b64encode_wrapper(parentCertificate.ski);
-    this.crldp = "rsync://" + parent.SIA_path + encodedParentSki + ".crl";
+    this.crldp = "rsync://" + parent.getSIA_path() + encodedParentSki + ".crl";
     // Set our SIA based on the hash of our public key, which will be the name
     // of the ROA or Manifest this EE will be signing
     if (bluePrintName.equals("Manifest-EE")) {
-      this.sia = "s:rsync://" + parent.SIA_path + encodedParentSki + ".mft";
+      this.sia = "s:rsync://" + parent.getSIA_path() + encodedParentSki + ".mft";
       this.ipv4 = IPRangeList.IPV4_INHERIT;
       this.ipv6 = IPRangeList.IPV6_INHERIT;
       this.as_list = IPRangeList.AS_INHERIT;
     } else {
-      this.sia = "s:rsync://" + parent.SIA_path + Util.b64encode_wrapper(this.ski) + ".roa";
+      this.sia = "s:rsync://" + parent.getSIA_path() + Util.b64encode_wrapper(this.ski) + ".roa";
     }
   }
 

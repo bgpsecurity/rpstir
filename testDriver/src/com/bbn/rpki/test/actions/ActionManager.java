@@ -118,7 +118,7 @@ public class ActionManager {
    * @param ca_object
    */
   public void recordCA_Object(CA_Object ca_object) {
-    caObjects.put(ca_object.commonName, ca_object);
+    caObjects.put(ca_object.getCommonName(), ca_object);
   }
 
   /**

@@ -87,7 +87,7 @@ public class AllocateAction extends AllocateActionBase {
   public Element toXML(ActionContext actionContext) {
     Element element = createElement(ActionType.allocate);
     super.appendXML(element, actionContext);
-    element.setAttribute(ATTR_CHILD_NAME, child.commonName);
+    element.setAttribute(ATTR_CHILD_NAME, child.getCommonName());
     return element;
   }
 
@@ -100,7 +100,7 @@ public class AllocateAction extends AllocateActionBase {
   public void execute(EpochEvent epochEvent, TypescriptLogger logger) {
     switch (epochEvent.getName()) {
     case PUBLICATION_TIME_OF_ALLOCATION:
-      if (child == parent) {
+      if (child == parent || parent == null) {
         // root, gets all
         child.addRcvdRanges(validityStartTime.getEpoch().getEpochTime(),
                             validityEndTime.getEpoch().getEpochTime(),
@@ -271,8 +271,11 @@ public class AllocateAction extends AllocateActionBase {
     if (child == null) {
       ret = appendReason(ret, "Subject CA must be specified");
     }
-    if (child.getParent() != getParent()) {
-      ret = appendReason(ret, "Subject CA must be a child of the issuer CA");
+    CA_Object childParent = child.getParent();
+    if (childParent != null && childParent != child) {
+      if (childParent != getParent()) {
+        ret = appendReason(ret, "Subject CA must be a child of the issuer CA");
+      }
     }
     return ret;
   }

@@ -9,20 +9,19 @@ import java.awt.Dialog.ModalityType;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.HashSet;
 
 import javax.swing.Action;
 import javax.swing.Box;
-import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import com.bbn.rpki.test.actions.AbstractAction;
 import com.bbn.rpki.test.objects.CA_Object;
@@ -40,13 +39,14 @@ public class CAEditor implements CAChooser.Listener {
   private final JTextField serverNameField = new JTextField();
   private final JPanel panel = new JPanel();
 
-  private final Action createAction = new javax.swing.AbstractAction("Create CA") {
+  private final Action newAction = new javax.swing.AbstractAction("New CA") {
 
     @Override
     public void actionPerformed(ActionEvent e) {
       createCA();
     }
   };
+
   private final Action deleteAction = new javax.swing.AbstractAction("Delete CA") {
 
     @Override
@@ -54,10 +54,28 @@ public class CAEditor implements CAChooser.Listener {
       deleteCA();
     }
   };
+
+  private final Action resetAction = new javax.swing.AbstractAction("Reset") {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      reset();
+    }
+  };
+
+  private final Action applyAction = new javax.swing.AbstractAction("Apply") {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      apply();
+    }
+  };
+
   private final Action exitAction = new javax.swing.AbstractAction("Exit") {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+      apply();
       dialog.setVisible(false);
     }
   };
@@ -70,37 +88,27 @@ public class CAEditor implements CAChooser.Listener {
   /**
    * @param model
    * @param ca
-   * @param newCA
    */
   public CAEditor(Model model, CA_Object ca, Component c) {
     this.model = model;
     caChooser = new CAChooser(model, ca);
     JPanel createFields = createNewCAFields();
-    JPanel buttons = new JPanel();
-    buttons.add(new JButton(createAction));
-    buttons.add(new JButton(deleteAction));
-    buttons.add(new JButton(exitAction));
-    DocumentListener textDocumentListener = new DocumentListener() {
+    JToolBar buttons = new JToolBar();
+    buttons.setFloatable(false);
+    buttons.add(newAction);
+    buttons.add(deleteAction);
+    buttons.add(applyAction);
+    buttons.add(resetAction);
+    buttons.add(exitAction);
+    ActionListener l = new ActionListener() {
 
       @Override
-      public void insertUpdate(DocumentEvent e) {
-        updateButtonEnables();
-      }
-
-      @Override
-      public void removeUpdate(DocumentEvent e) {
-        updateButtonEnables();
-      }
-
-      @Override
-      public void changedUpdate(DocumentEvent e) {
-        updateButtonEnables();
+      public void actionPerformed(ActionEvent e) {
+        apply();
       }
     };
-    nicknameField.getDocument().addDocumentListener(textDocumentListener);
-    serverNameField.getDocument().addDocumentListener(textDocumentListener);
-    nicknameField.addActionListener(createAction);
-    serverNameField.addActionListener(createAction);
+    nicknameField.addActionListener(l);
+    serverNameField.addActionListener(l);
     caChooser.addListener(this);
     updateButtonEnables();
     dialog = new JDialog(SwingUtilities.getWindowAncestor(c), "CA Editor");
@@ -115,7 +123,8 @@ public class CAEditor implements CAChooser.Listener {
   }
 
   /**
-   * @param c
+   * Show the dialog and return the last-selected CA
+   * @return the last selected CA
    */
   public CA_Object showDialog() {
     dialog.setVisible(true);
@@ -167,33 +176,11 @@ public class CAEditor implements CAChooser.Listener {
     if (selectedCA == null) {
       return;
     }
-    String nickname = nicknameField.getText().trim();
-    String serverName = serverNameField.getText().trim();
-    if (nickname.isEmpty() || serverName.isEmpty()) {
-      return;
-    }
-    boolean breakAway = !serverName.equals(selectedCA.getServerName());
-    CA_Object child = new CA_Object(selectedCA, nickname, breakAway ? serverName : null, null);
+    String nickname = "Child" + selectedCA.getChildCount();
+    CA_Object child = new CA_Object(selectedCA, nickname, null, null);
     selectedCA.addChild(child);
     caChooser.update();
-    nicknameField.setText("");
     caChooser.selectCA(child);
-  }
-
-  /**
-   * @param ca
-   * @param depth
-   * @return
-   */
-  private CA_Object[] getPathToRoot(CA_Object rootCA, CA_Object ca, int depth) {
-    CA_Object[] ret;
-    if (ca == rootCA) {
-      ret = new CA_Object[depth + 1];
-    } else {
-      ret = getPathToRoot(rootCA, ca.getParent(), depth + 1);
-    }
-    ret[ret.length - depth - 1] = ca;
-    return ret;
   }
 
   private JPanel createNewCAFields() {
@@ -231,16 +218,34 @@ public class CAEditor implements CAChooser.Listener {
   @Override
   public void selectionChanged(CA_Object caObject) {
     selectedCA = caObject;
+    reset();
+  }
+
+  /**
+   * 
+   */
+  protected void reset() {
     if (selectedCA != null) {
       serverNameField.setText(selectedCA.getServerName());
+      nicknameField.setText(selectedCA.getNickname());
     }
     updateButtonEnables();
   }
 
   private void updateButtonEnables() {
-    createAction.setEnabled(selectedCA != null
-        && !nicknameField.getText().trim().isEmpty()
-        && !serverNameField.getText().trim().isEmpty());
+    exitAction.setEnabled(selectedCA == null ||
+        (!nicknameField.getText().trim().isEmpty() && !serverNameField.getText().trim().isEmpty()));
+    newAction.setEnabled(selectedCA != null);
     deleteAction.setEnabled(selectedCA != null && selectedCA.getParent() != null);
+  }
+
+  protected void apply() {
+    if (selectedCA != null) {
+      CA_Object child = selectedCA;
+      selectedCA.setNickname(nicknameField.getText().trim());
+      selectedCA.setServerName(serverNameField.getText().trim());
+      caChooser.update();
+      caChooser.selectCA(child);
+    }
   }
 }

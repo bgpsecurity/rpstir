@@ -145,13 +145,19 @@ public class Model implements Constants, XMLConstants {
       return file.isDirectory();
     }
   };
-  private static final String DEFAULT_SERVER_NAME = System.getProperty("defaultServer", "rpki.bbn.com/rpki");
+  private static final String DEFAULT_SERVER_NAME;
+  static {
+    String rsyncServer = System.getenv("RSYNC_SERVER");
+    if (rsyncServer == null) {
+      rsyncServer = "rpki.bbn.com/rpki";
+    }
+    DEFAULT_SERVER_NAME = System.getProperty("defaultServer", rsyncServer);
+  }
 
   private final File rpkiRoot;
   private final List<AbstractAction> actions = new ArrayList<AbstractAction>();
   private final Set<EpochEvent> epochEvents = new HashSet<EpochEvent>();
   private final List<Epoch> epochs = new ArrayList<Epoch>();
-  private final String ianaServerName;
   private final CA_Object iana;
   private final List<File> objectList = new ArrayList<File>();
   private final List<File> writtenFiles = new ArrayList<File>();
@@ -202,13 +208,12 @@ public class Model implements Constants, XMLConstants {
 
       @Override
       public boolean performAction(CA_Object caObject) {
-        File dir = new File(new File(REPO_PATH), caObject.SIA_path);
+        File dir = new File(new File(REPO_PATH), caObject.getSIA_path());
         nodeDirectories.add(dir);
         nodeDirectoryByName.put(caObject.getCommonName(), dir);
         return true;
       }
     });
-    this.ianaServerName = iana.getServerName();
 
     epochIndex = 0;
 
@@ -498,7 +503,7 @@ public class Model implements Constants, XMLConstants {
    * @return the trust anchor cert file
    */
   public File getTrustAnchorCert() {
-    File epochDir = new File(REPO_DIR, ianaServerName);
+    File epochDir = new File(REPO_DIR, iana.getServerName());
     File[] certFiles = epochDir.listFiles(cerFilter);
     assert certFiles.length == 1;
     return certFiles[0];
@@ -516,7 +521,7 @@ public class Model implements Constants, XMLConstants {
    */
   public String getTrustAnchorURL() {
     // TODO need a positive way to determine where trust anchors are
-    return String.format("rsync://%s", ianaServerName);
+    return String.format("rsync://%s", iana.getServerName());
   }
 
   /**

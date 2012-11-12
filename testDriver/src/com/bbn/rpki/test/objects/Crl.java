@@ -50,7 +50,7 @@ public class Crl extends CA_Obj {
     Certificate parentCert = parent.getCertificate();
     this.parentcertfile  = parentCert.outputfilename;
     this.parentkeyfile   = parentCert.subjkeyfile;
-    this.issuer          = parent.commonName;
+    this.issuer          = parent.getCommonName();
     this.thisupdate      = Calendar.getInstance();
     // Not sure on this nextUpdate time frame
     this.nextupdate      = Calendar.getInstance();
@@ -60,7 +60,7 @@ public class Crl extends CA_Obj {
     this.aki             = parentCert.ski;
 
     // Create the output file directory if it doesn't exist
-    String dir_path  = REPO_PATH + parent.SIA_path;
+    String dir_path  = REPO_PATH + parent.getSIA_path();
     this.outputfilename = dir_path + Util.b64encode_wrapper(this.aki)+".crl";
   }
 

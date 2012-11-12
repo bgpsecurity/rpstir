@@ -134,8 +134,8 @@ public class Certificate extends CA_Obj {
     // Initialization based on if you're a TA or not
     // EE and CA else SS
     if (parent != null) {
-      this.issuer = parent.commonName;
-      this.subject = parent.commonName + "." + nickname;
+      this.issuer = parent.getCommonName();
+      this.subject = parent.getCommonName() + "." + nickname;
       Certificate parentCert = parent.getCertificate();
       this.parentkeyfile = parentCert.subjkeyfile;
       this.aki = parentCert.ski;

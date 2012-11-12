@@ -144,7 +144,7 @@ public abstract class AllocateActionBase extends AbstractAction {
 
   protected Element appendXML(Element element, ActionContext actionContext) {
     if (parent != null) {
-      element.setAttribute(ATTR_PARENT_NAME, parent.commonName);
+      element.setAttribute(ATTR_PARENT_NAME, parent.getCommonName());
     }
     element.setAttribute(ATTR_ALLOCATION_ID, allocationId.toString());
 

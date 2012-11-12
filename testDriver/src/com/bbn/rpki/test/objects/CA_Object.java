@@ -41,10 +41,6 @@ public class CA_Object extends Allocator {
      */
     boolean performAction(CA_Object caObject);
   }
-  /** sia directory path (ends with /) */
-  public String SIA_path;
-  /** cert common name */
-  public String commonName;
   /** the certificate itself */
   private Certificate certificate;
 
@@ -55,10 +51,10 @@ public class CA_Object extends Allocator {
   final List<Roa> roas = new ArrayList<Roa>();
   final List<RevokedCertificate> revokedCertificates = new ArrayList<RevokedCertificate>();
   //  private final String manifest_path;
-  private final String nickName;
+  private String nickName;
   private String subjKeyFile;
   private int manNum = 0;
-  private final String serverName;
+  private String serverName;
   /**
    * @return the breakAway
    */
@@ -79,20 +75,11 @@ public class CA_Object extends Allocator {
                    String serverName,
                    String subjKeyFile) {
     this.nextChildSN = 0;
-    this.nickName = nickname;
+    setNickname(nickname);
     this.parent = parent;
     this.subjKeyFile = null;
-    this.serverName = serverName;
+    setServerName(serverName);
     this.subjKeyFile = subjKeyFile;
-
-    if (parent != null) {
-      this.SIA_path = isBreakAway() ? (getServerName() + "/" + nickName + "/") : (parent.SIA_path + nickName + "/");
-      this.commonName = parent.commonName + "." + this.nickName;
-    } else {
-      this.commonName = this.nickName;
-      this.SIA_path = getServerName() + "/" + nickName + "/";
-    }
-
   }
 
   /**
@@ -149,13 +136,13 @@ public class CA_Object extends Allocator {
       if (hasResources()) {
         // Initialize our certificate
         if (parent != null) {
-          String dirPath = REPO_PATH + parent.SIA_path;
+          String dirPath = REPO_PATH + parent.getSIA_path();
           this.certificate = new CA_cert(parent,
                                          validityStartTime,
                                          validityEndTime,
                                          dirPath,
                                          nickName,
-                                         SIA_path,
+                                         getSIA_path(),
                                          getRcvdRanges(IPRangeType.as),
                                          getRcvdRanges(IPRangeType.ipv4),
                                          getRcvdRanges(IPRangeType.ipv6),
@@ -165,7 +152,7 @@ public class CA_Object extends Allocator {
           this.certificate = new SS_cert(parent,
                                          validityStartTime,
                                          validityEndTime,
-                                         SIA_path,
+                                         getSIA_path(),
                                          nickName,
                                          dirPath,
                                          getRcvdRanges(IPRangeType.as),
@@ -277,7 +264,7 @@ public class CA_Object extends Allocator {
    */
   public void appendObjectsToWrite(List<CA_Obj> list) {
     // Create the directory for the objects we're about to store
-    String dir_path = REPO_PATH + SIA_path;
+    String dir_path = REPO_PATH + getSIA_path();
     if (!new File(dir_path).isDirectory()) {
       new File(dir_path).mkdirs();
     }
@@ -333,7 +320,7 @@ public class CA_Object extends Allocator {
    */
   @Override
   public String toString() {
-    return commonName;
+    return getCommonName();
   }
 
   /**
@@ -341,6 +328,13 @@ public class CA_Object extends Allocator {
    */
   public String getNickname() {
     return nickName;
+  }
+
+  /**
+   * @param nickname
+   */
+  public void setNickname(String nickname) {
+    this.nickName = nickname;
   }
 
   /**
@@ -387,7 +381,10 @@ public class CA_Object extends Allocator {
    * @return the common name
    */
   public String getCommonName() {
-    return commonName;
+    if (parent != null) {
+      return parent.getCommonName() + "." + nickName;
+    }
+    return nickName;
   }
 
   /**
@@ -395,6 +392,13 @@ public class CA_Object extends Allocator {
    */
   public String getServerName() {
     return isBreakAway() ? serverName : getParent().getServerName();
+  }
+
+  /**
+   * @param serverName
+   */
+  public void setServerName(String serverName) {
+    this.serverName = serverName;
   }
 
   /**
@@ -427,5 +431,19 @@ public class CA_Object extends Allocator {
    */
   public void removeChild(CA_Object selectedCA) {
     children.remove(selectedCA);
+  }
+
+  /**
+   * sia directory path (ends with /)
+   * 
+   * @return the sIA_path
+   */
+  public String getSIA_path() {
+    if (parent != null) {
+      return isBreakAway() ? (getServerName() + "/" + nickName + "/") : (parent.getSIA_path() + nickName + "/");
+    } else {
+      return getServerName() + "/" + nickName + "/";
+    }
+
   }
 }

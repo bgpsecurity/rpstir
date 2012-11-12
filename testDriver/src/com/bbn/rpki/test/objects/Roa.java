@@ -66,6 +66,6 @@ public class Roa extends CMS {
    */
   @Override
   public void appendString(StringBuilder sb) {
-    sb.append(String.format("Manifest(%s)", ee_object.parent.commonName));
+    sb.append(String.format("Manifest(%s)", ee_object.parent.getCommonName()));
   }
 }

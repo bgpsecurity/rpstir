@@ -60,7 +60,7 @@ public class EE_Object extends Allocator {
                                      validityStartTime,
                                      validityEndTime,
                                      bluePrintName + "-" + id,
-                                     parent.SIA_path + "EE-" + id + "/",
+                                     parent.getSIA_path() + "EE-" + id + "/",
                                      this.getRcvdRanges(IPRangeType.ipv4),
                                      this.getRcvdRanges(IPRangeType.ipv6),
                                      this.getRcvdRanges(IPRangeType.as));
