@@ -92,6 +92,7 @@ public class CA_Object extends Allocator {
          element.getAttributeValue(XMLConstants.ATTR_NICKNAME),
          element.getAttributeValue(XMLConstants.ATTR_SERVER_NAME),
          element.getAttributeValue(XMLConstants.ATTR_SUBJ_KEY_FILE));
+    ActionManager.singleton().recordCA_Object(this);
     for (Element childElement : getChildren(element, XMLConstants.TAG_NODE)) {
       CA_Object childCA = new CA_Object(this, childElement);
       children.add(childCA);
