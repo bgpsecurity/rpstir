@@ -56,7 +56,7 @@
 #    TAL.
 
 
-import os, sys, filecmp, shutil, subprocess, tempfile
+import os, sys, filecmp, shutil, subprocess, tempfile, time
 from optparse import OptionParser
 from base64 import b64encode
 from syslog import syslog, openlog, \
@@ -209,11 +209,37 @@ def rsync_download(uri, targetpath):
     target_dir = os.path.dirname(targetpath)
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
-        
-    # WARNING: we do not check uri or targetpath for malicious input!
-    # We are assuming that the TAL contents are obtained from a
-    # trusted source.
-    return subprocess.call([options.rsync_cmd, uri, targetpath])
+
+    # Try to download the trust anchor, retrying up to a limit (delay_max) if
+    # it fails.
+    delay = 15 # seconds
+    delay_max = 60
+
+    while True:
+        # WARNING: we do not check uri or targetpath for malicious input!
+        # We are assuming that the TAL contents are obtained from a
+        # trusted source.
+        ret = subprocess.call([options.rsync_cmd,
+                               "-L",
+                               "--timeout=10",
+                               "--contimeout=10",
+                               "--",
+                               uri,
+                               targetpath])
+
+        if ret == 0:
+            return 0
+
+        if delay > delay_max:
+            syslog(LOG_ERR, "rsync returned %s, giving up" % ret)
+            return ret
+
+        syslog(LOG_ERR,
+               "rsync returned %s, trying again in %s seconds" % (ret, delay))
+
+        time.sleep(delay)
+
+        delay *= 2
 
 def verify_TA_signature(cert_path):
     if options.verbose:
