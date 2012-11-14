@@ -1,5 +1,7 @@
 next
 
+	* When an rsync download of a trust anchor fails, retry a few times
+	  instead of giving up on downloading that trust anchor.
 	* Simplify internal dependencies.
 	* Switch to a single Makefile to speed up parallel compilation.
 	* Remove some unused code.
