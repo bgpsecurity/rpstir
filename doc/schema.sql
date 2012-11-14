@@ -20,7 +20,7 @@ CREATE TABLE rpstir_metadata (
 CREATE TABLE rpstir_rpki_object (
   hash binary(32) NOT NULL,
 
-  file_type ENUM('cer', 'crl', 'roa', 'mft') NOT NULL,
+  file_type ENUM('cer', 'crl', 'roa', 'mft', 'gbr') NOT NULL,
 
   -- 0: can't be parsed
   -- 1: parses, but fails single-file validity checks
@@ -53,7 +53,7 @@ CREATE TABLE rpstir_rpki_object_status (
   PRIMARY KEY (id)
 );
 
--- state of a single attempt to download from a URI
+-- state of a single attempt to download from a URI.  Note that the URI may represent a directory with multiple files and subdirectories.
 CREATE TABLE rpstir_rpki_download (
   id bigint unsigned NOT NULL AUTO_INCREMENT,
 
@@ -76,6 +76,7 @@ CREATE TABLE rpstir_rpki_download (
 );
 
 -- state of a single object at a single URI from a single download (i.e. point in time)
+-- rollback must guarantee that the active set of any single publication point will have the same download_id
 CREATE TABLE rpstir_rpki_object_instance (
   -- where the file was downloaded from, in normalized form
   -- this should be a sub-path of or equal to (SELECT uri FROM rpstir_rpki_download WHERE id = download_id)
@@ -134,7 +135,7 @@ CREATE TABLE rpstir_rpki_tal (
 CREATE TABLE rpstir_rpki_tal_certs (
   tal binary(32) NOT NULL, -- hash of TAL
   cert binary(32) NOT NULL, -- hash of cert
-  latest boolean NOT NULL DEAFULT TRUE, -- only true for the latest valid cert for each TAL
+  latest boolean NOT NULL DEFAULT TRUE, -- only true for the latest valid cert for each TAL
   PRIMARY KEY (tal, cert)
 );
 
