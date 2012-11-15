@@ -127,7 +127,7 @@ public class CA_Object extends Allocator {
    * @return the current certificate for this
    */
   public Certificate getCertificate() {
-    if (modified) {
+    if (isModified()) {
       if  (this.certificate != null) {
         if (!this.certificate.hasExpired()) {
           parent.revokedCertificates.add(new RevokedCertificate(this.certificate));

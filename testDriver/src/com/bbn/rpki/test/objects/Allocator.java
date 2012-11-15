@@ -37,7 +37,7 @@ public abstract class Allocator implements Constants {
   private final ResourcePair asResources = new ResourcePair(IPRangeType.as);
   private final ResourcePair ipv4Resources = new ResourcePair(IPRangeType.ipv4);
   private final ResourcePair ipv6Resources = new ResourcePair(IPRangeType.ipv6);
-  protected boolean modified = false;
+  private boolean modified = false;
 
   protected IPRangeList subAllocate(IPRangeType rangeType, List<? extends Pair> ipList) {
     if (DEBUG_ON) {
