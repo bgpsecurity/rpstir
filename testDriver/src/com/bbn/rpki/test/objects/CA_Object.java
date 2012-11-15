@@ -47,10 +47,8 @@ public class CA_Object extends Allocator {
   private int nextChildSN;
   private final CA_Object parent;
   private final List<CA_Object> children = new ArrayList<CA_Object>();
-  final List<Manifest> manifests = new ArrayList<Manifest>();
   final List<Roa> roas = new ArrayList<Roa>();
   final List<RevokedCertificate> revokedCertificates = new ArrayList<RevokedCertificate>();
-  //  private final String manifest_path;
   private String nickName;
   private String subjKeyFile;
   private int manNum = 0;
@@ -276,17 +274,18 @@ public class CA_Object extends Allocator {
         obj.appendObjectsToWrite(list);
         list.add(obj);
       }
-      for (CA_Object obj : children) {
-        obj.appendObjectsToWrite(list);
-      }
       // Do this after processing children because a certificate may be revoked
       {
         Crl crl = new Crl(this);
         list.add(crl);
       }
-      for (CA_Obj obj : manifests) {
+      {
+        Manifest manifest = new Manifest(this);
+        manifest.appendObjectsToWrite(list);
+        list.add(manifest);
+      }
+      for (CA_Object obj : children) {
         obj.appendObjectsToWrite(list);
-        list.add(obj);
       }
     } else {
       // no allocation so no cert, yet
