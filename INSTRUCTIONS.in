@@ -46,6 +46,7 @@ Appendix A. Troubleshooting
     A.3 Specific Operating Systems
       A.3.1 OpenBSD
       A.3.2 FreeBSD
+      A.3.3 Ubuntu 12.04-12.10 x86
 
 ===============================================================================
 
@@ -840,3 +841,117 @@ A.3.2 FreeBSD
 
 If you have trouble compiling cryptlib, you may have to comment out the
 sections in tools/ccopts.sh that enable ODBC support.
+
+A.3.3 Ubuntu 12.04-12.10 x86
+
+These are the exact instructions for installing RPSTIR on a fresh copy
+of Ubuntu 12.04 and Ubuntu 12.10, as of 11/16/2012.
+
+NOTE: Ubuntu 12.10 runs slowly without 3D acceleration due to the
+removal of Unity 2D.  In VirtualBox 4.2.4, fix it like so:
+http://askubuntu.com/questions/207813/why-does-an-ubuntu-12-10-guest-in-virtualbox-run-very-very-slowly
+The last check step may crash VirtualBox itself (yikes).  Don't run
+the final "/usr/lib/nux/unity_support_test -p"
+
+# Install the best editor :-)
+sudo apt-get install emacs
+
+# Build and version control tools
+sudo apt-get install git tig automake libtool openjdk-7-jdk build-essential
+
+# RPSTIR dependencies: standalone programs
+sudo apt-get install xterm curl
+sudo apt-get install mysql-server  # MySQL root password: rpstir
+sudo mysql_secure_installation
+
+# RPSTIR dependencies: libraries
+sudo apt-get install unixodbc-bin unixodbc-dev libmyodbc libmysqlclient-dev
+mkdir -p ~/libs
+
+  # OpenSSL w/ RFC3779 extensions
+  cd ~/libs
+  curl -OJ http://www.openssl.org/source/openssl-1.0.1c.tar.gz
+  tar -xzvf openssl-1.0.1c.tar.gz
+  cd openssl-1.0.1c.tar.gz
+  ./config enable-rfc3779 && make depend && make && make test
+  sudo make install
+
+  # Cryptlib
+  cd ~/libs
+  curl -OJ ftp://ftp.franken.de/pub/crypt/cryptlib/cl341.zip
+  mkdir cryptlib
+  cd cryptlib
+  unzip -a ../cl341.zip  # -a enables text-mode
+  emacs tools/getlibs.sh  # Edit line 121 to replace the entry for 'Linux':
+    #'Linux')
+    #	if [ -f /usr/lib/libdl.so -o \
+    #		 -f /usr/lib/i386-linux-gnu/libdl.so -o \
+    #		 -f /usr/lib64/libdl.so ] ; then
+    #		echo "-lresolv -lpthread -ldl" ;
+    #	else
+    #		echo "-lresolv -lpthread" ;
+    #	fi ;;
+  make shared # create libcl.so, not libcl.a
+  sudo install -o root -g root -m 755 libcl.so.3.4.1 /usr/local/lib
+  sudo ln -s libcl.so.3.4.1 /usr/local/lib/libcl.so
+  sudo install -o root -g root -m 644 cryptlib.h /usr/local/include
+
+# Configure ODBC
+odbcinst -j     # check that the paths below are correct
+
+  # populate driver file
+  sudo emacs /etc/odbcinst.ini
+    ;  ODBC Installed Drivers file
+
+    [myodbcConn]
+    Description	= MySQL odbc driver for Linux
+    Driver		= /usr/lib/i386-linux-gnu/odbc/libmyodbc.so
+    Setup		= /usr/lib/i386-linux-gnu/odbc/libodbcmyS.so
+    UsageCount	= 1
+
+    [ODBC]
+    TraceFile	= /tmp/sql-odbc.log
+    Trace		= Yes
+    ForceTrace	= Yes
+
+  # populate user data sources
+  emacs ~/.odbc.ini
+    ;
+    ;  odbc.ini configuration for Connector/ODBC drivers
+    ;
+
+    [ODBC Data Sources]
+    myodbc     = {MyODBC Driver DSN}
+
+    [myodbc]
+    Driver       = myodbcConn
+    Description  = Connector/ODBC Driver DSN
+    SERVER       = localhost
+    PORT         =
+    USER         = arbitraryuser
+    Password     = arbitrarypassword
+    Database     = arbitrarydbname
+    OPTION       = 3
+    SOCKET       =
+
+# Configure MySQL
+mysql -u root -p
+  CREATE USER 'bbn'@'localhost' IDENTIFIED BY 'rpstir';
+  GRANT ALL PRIVILEGES ON rpstirdb.* TO 'bbn'@'localhost';
+  quit
+
+# Configure environment variables
+emacs ~/.bashrc
+  # RPSTIR environment variables
+  export RPKI_ROOT=${HOME}/rpstir  # REMEMBER TO CHANGE THIS
+  export RPKI_DB=rpstirdb
+  export RPKI_PORT=31416
+  export RPKI_DBUSER=bbn
+  export RPKI_DBPASS=rpstir
+  export RPKI_ROOTPASSWORD=rpstir
+  export RPKI_DSN=myodbc
+source ~/.bashrc
+
+# Build RPSTIR
+cd $RPKI_ROOT
+./configure --enable-silent-rules && make && make check
