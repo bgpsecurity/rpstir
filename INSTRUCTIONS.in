@@ -226,6 +226,7 @@ $ wget --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl341.zip
 $ mkdir cryptlib
 $ cd cryptlib
 $ unzip -a ../cl341.zip  # -a enables text-mode
+$ # On recent Ubuntu, fix tools/getlibs.sh as shown below.
 $ make shared  # create libcl.so, not libcl.a
 $ su
 # install -o root -g root -m 755 libcl.so.3.4.1 /usr/local/lib
@@ -236,6 +237,25 @@ On FreeBSD, cryptlib can be obtained one of two ways: (1) using the package
 system by issuing the command pkg_add -r cryptlib, or (2) using the ports
 system by issuing the command make search name="cryptlib" from the
 /usr/ports directory.
+
+Ubuntu (e.g., 12.04 and 12.10) sometimes puts libdl in odd locations.
+In order to build cryptlib, you may need to edit tools/getlibs.sh and
+replace the entry for 'Linux' at line 121 with:
+
+	'Linux')
+		if [ -f /usr/lib/libdl.so -o \
+			 -f /usr/lib/i386-linux-gnu/libdl.so -o \
+			 -f /usr/lib64/libdl.so ] ; then
+			echo "-lresolv -lpthread -ldl" ;
+		else
+			echo "-lresolv -lpthread" ;
+		fi ;;
+
+This edit is necessary to correctly build cryptlib's shared library on
+recent versions of Ubuntu.  Note that failure is silent and will not
+reveal itself until you run RPSTIR's configure script.  Peter Gutmann,
+the author of Cryptlib, has been made aware of this issue and has
+indicated that it will be patched in a future version of Cryptlib.
 
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
