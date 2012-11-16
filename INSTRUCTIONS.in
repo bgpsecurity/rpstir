@@ -845,7 +845,7 @@ sections in tools/ccopts.sh that enable ODBC support.
 A.3.3 Ubuntu 12.04-12.10 x86
 
 These are the exact instructions for installing RPSTIR on a fresh copy
-of Ubuntu 12.04 and Ubuntu 12.10, as of 11/16/2012.
+of 32-bit Ubuntu 12.04 and Ubuntu 12.10, as of 11/16/2012.
 
 NOTE: Ubuntu 12.10 runs slowly without 3D acceleration due to the
 removal of Unity 2D.  In VirtualBox 4.2.4, fix it like so:
@@ -872,7 +872,7 @@ mkdir -p ~/libs
   cd ~/libs
   curl -OJ http://www.openssl.org/source/openssl-1.0.1c.tar.gz
   tar -xzvf openssl-1.0.1c.tar.gz
-  cd openssl-1.0.1c.tar.gz
+  cd openssl-1.0.1c/
   ./config enable-rfc3779 && make depend && make && make test
   sudo make install
 
@@ -883,14 +883,14 @@ mkdir -p ~/libs
   cd cryptlib
   unzip -a ../cl341.zip  # -a enables text-mode
   emacs tools/getlibs.sh  # Edit line 121 to replace the entry for 'Linux':
-    #'Linux')
-    #	if [ -f /usr/lib/libdl.so -o \
-    #		 -f /usr/lib/i386-linux-gnu/libdl.so -o \
-    #		 -f /usr/lib64/libdl.so ] ; then
-    #		echo "-lresolv -lpthread -ldl" ;
-    #	else
-    #		echo "-lresolv -lpthread" ;
-    #	fi ;;
+    'Linux')
+    	if [ -f /usr/lib/libdl.so -o \
+    		 -f /usr/lib/i386-linux-gnu/libdl.so -o \
+    		 -f /usr/lib64/libdl.so ] ; then
+    		echo "-lresolv -lpthread -ldl" ;
+    	else
+    		echo "-lresolv -lpthread" ;
+    	fi ;;
   make shared # create libcl.so, not libcl.a
   sudo install -o root -g root -m 755 libcl.so.3.4.1 /usr/local/lib
   sudo ln -s libcl.so.3.4.1 /usr/local/lib/libcl.so
