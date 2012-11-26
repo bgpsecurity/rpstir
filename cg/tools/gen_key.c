@@ -7,6 +7,8 @@
  * $Id: genkey.c 506 2008-06-03 21:20:05Z gardiner $ 
  */
 
+#define STANDARD_KEY_SIZE 2048
+
 
 int main(
     int argc,
@@ -24,6 +26,11 @@ int main(
     {
         fprintf(stderr, "Invalid key size\n");
         return 1;
+    }
+    if (ksize != STANDARD_KEY_SIZE)
+    {
+        fprintf(stderr, "Warning: key size %d is not the standard size (%d)\n",
+                ksize, STANDARD_KEY_SIZE);
     }
     printf("Making %s with key size %d bits \n", argv[1], ksize);
     if (cryptInit() != CRYPT_OK)
