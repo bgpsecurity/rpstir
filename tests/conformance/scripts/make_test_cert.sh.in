@@ -208,6 +208,7 @@ cd ${OUTPUT_DIR}
 # Customize w/ serial number and subject name (based on $child_name)
 echo "Customizing cert w/ serial number $SERIAL and subject name ${child_name}"
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
+chmod +w ${child_name}.raw
 run "rr-0-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.cer
 run "put_sernum-0-`basename ${child_name}`" put_sernum ${child_name}.cer ${SERIAL}
 run "put_subj-0-`basename ${child_name}`" put_subj ${child_name}.cer ${child_name}

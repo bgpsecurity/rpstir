@@ -24,7 +24,7 @@ hash sed
 # Clean out raw/root directory
 cd "$CONFORMANCE_ROOT_BUILDDIR"
 rm -rf raw/root
-mkdir raw/root
+mkdir -p raw/root
 
 # Build trust anchors
 cd "$CONFORMANCE_ROOT_BUILDDIR/raw"

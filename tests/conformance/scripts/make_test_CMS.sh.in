@@ -212,6 +212,7 @@ cd ${OUTPUT_DIR}
 
 # $1=CMS/ROA/MFT, $2=fault type, $3 =sernum
 cp ${TEMPLATE_EE_RAW} ${ee_name}.raw
+chmod +w ${ee_name}.raw
 run "rr-0-`basename ${ee_name}`" rr <${ee_name}.raw >${ee_name}.cer
 run "put_sernum-0-`basename ${ee_name}`" put_sernum ${ee_name}.cer ${SERIAL}
 run "put_subj-0-`basename ${ee_name}`" put_subj ${ee_name}.cer ${ee_name}
@@ -253,6 +254,7 @@ echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 # Make ROA
 echo "Making ROA"
 cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
+chmod +w ${child_name}.raw
 
 # Stage 1: Modify encapContentInfo (to-be-signed) automatically or manually
 if [ $USE_EXISTING_PATCHES ]
