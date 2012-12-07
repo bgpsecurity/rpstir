@@ -5,8 +5,8 @@
 @trap_errors@
 
 echo "Loading data"
-rsync_aur -s -t -f test4.log -w -e -i \
-  -d `pwd`/testcases4_LTA || \
+rsync_aur -s -t -f "$TESTS_SRCDIR/test4.log" -w -e -i \
+  -d "$TESTS_BUILDDIR/testcases4_LTA" || \
   check_errs $? "$0 rsync_aur failed"
 
 echo $0 PASS

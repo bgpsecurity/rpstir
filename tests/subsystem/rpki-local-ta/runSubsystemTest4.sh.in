@@ -27,15 +27,28 @@ export TEST_LOG_NAME=subsys4
 
 cd "$TESTS_BUILDDIR"
 
+# copy some things to testcases4_LTA if builddir != srcdir
+if test ! -e testcases4_LTA; then
+    mkdir -p testcases4_LTA/LTA
+    cp -a \
+        "$TESTS_SRCDIR/testcases4_LTA/"*.p15 \
+        "$TESTS_SRCDIR/testcases4_LTA/C.cer" \
+        "$TESTS_SRCDIR/testcases4_LTA/MYTA.cer" \
+        "$TESTS_BUILDDIR/testcases4_LTA/"
+    cp -a \
+        "$TESTS_SRCDIR/testcases4_LTA/LTA/"*.tst \
+        "$TESTS_SRCDIR/testcases4_LTA/LTA/case"* \
+        "$TESTS_SRCDIR/testcases4_LTA/LTA/LTA.cer" \
+        "$TESTS_SRCDIR/testcases4_LTA/LTA/LTA.p15" \
+        "$TESTS_BUILDDIR/testcases4_LTA/LTA"
+fi
+
 # refresh test certs
-  cd testcases4_LTA
-  for f in C?*.raw 
-  do
-    filename=`basename $f .raw`
-    rr <$f > ${filename}.cer
-  done
-  run "update_cert" update_cert 0D 2Y C?*.cer
-  cd ../
+for f in "$TESTS_SRCDIR/testcases4_LTA/"C?*.raw; do
+    filename=`basename "$f" .raw`
+    rr < "$f" > "$TESTS_BUILDDIR/testcases4_LTA/${filename}.cer"
+done
+run "update_cert" update_cert 0D 2Y testcases4_LTA/C?*.cer
 
 # check for existing loader and fail if so
 if nc -z localhost `config_get RPKIPort`; then
