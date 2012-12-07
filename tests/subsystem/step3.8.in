@@ -5,7 +5,7 @@
 @trap_errors@
 
 echo "Loading data and running garbage collector"
-rsync_aur -s -t -f test3.7.log -w -e -i -d "$TESTS_BUILDDIR/testcases" || \
+rsync_aur -s -t -f "$TESTS_SRCDIR/test3.7.log" -w -e -i -d "$TESTS_BUILDDIR/testcases" || \
   check_errs $? "$0 rsync_aur failed"
 run "step8.garbage" garbage || \
   check_errs $? "$0 garbage failed"
