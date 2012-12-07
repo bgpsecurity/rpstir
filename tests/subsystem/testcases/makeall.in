@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+cd "$TESTS_BUILDDIR"
+
+cp -a \
+    "$TESTS_SRCDIR/"*.p15 \
+    "$TESTS_BUILDDIR"
+
+./makecerts
+./makecrls
+./makeroas
+./makemanifests

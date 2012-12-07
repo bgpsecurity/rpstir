@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+./make_test_crl L1 0D 1Y < "$TESTS_SRCDIR/makeL1"
+./make_test_crl L11 0D 3M < "$TESTS_SRCDIR/makeL11"
+./make_test_crl L111 -1M  2M < "$TESTS_SRCDIR/makeL111"
+./make_test_crl L112 0D 3M < "$TESTS_SRCDIR/makeL112"
+./make_test_crl L21 0D 3M < "$TESTS_SRCDIR/makeL21"

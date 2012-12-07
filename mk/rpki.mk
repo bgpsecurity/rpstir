@@ -331,18 +331,33 @@ EXTRA_DIST += \
 
 
 EXTRA_DIST += \
-	tests/subsystem/testcases/makeall \
-	tests/subsystem/testcases/makecrls \
-	tests/subsystem/testcases/makekeys \
-	tests/subsystem/testcases/makemanifests \
-	tests/subsystem/testcases/makeroas \
 	tests/subsystem/testcases/print-cert-addrs.sh \
 	tests/subsystem/testcases/testall.sh
 
 
+check_SCRIPTS += tests/subsystem/testcases/makeall
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makeall
+tests/subsystem/testcases/makeall: $(srcdir)/tests/subsystem/testcases/makeall.in
+
 check_SCRIPTS += tests/subsystem/testcases/makecerts
 MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecerts
 tests/subsystem/testcases/makecerts: $(srcdir)/tests/subsystem/testcases/makecerts.in
+
+check_SCRIPTS += tests/subsystem/testcases/makecrls
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecrls
+tests/subsystem/testcases/makecrls: $(srcdir)/tests/subsystem/testcases/makecrls.in
+
+check_SCRIPTS += tests/subsystem/testcases/makekeys
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makekeys
+tests/subsystem/testcases/makekeys: $(srcdir)/tests/subsystem/testcases/makekeys.in
+
+check_SCRIPTS += tests/subsystem/testcases/makemanifests
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makemanifests
+tests/subsystem/testcases/makemanifests: $(srcdir)/tests/subsystem/testcases/makemanifests.in
+
+check_SCRIPTS += tests/subsystem/testcases/makeroas
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makeroas
+tests/subsystem/testcases/makeroas: $(srcdir)/tests/subsystem/testcases/makeroas.in
 
 
 CLEANDIRS += \
