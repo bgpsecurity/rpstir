@@ -210,3 +210,6 @@ $(RPKI_RTR_TEST_ROAS):
 CLEANFILES += \
 	tests/subsystem/rtr/*.diff \
 	tests/subsystem/rtr/*.log
+
+CLEANDIRS += \
+	tests/subsystem/rtr/EEcertificates

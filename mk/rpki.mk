@@ -1100,9 +1100,9 @@ CLEANDIRS += \
 CLEANFILES += \
 	tests/subsystem/testcases/*.crl \
 	tests/subsystem/testcases/*.man \
+	tests/subsystem/testcases/*.raw \
 	tests/subsystem/testcases/*.roa \
-	tests/subsystem/testcases/C*.cer \
-	tests/subsystem/testcases/C.raw
+	tests/subsystem/testcases/C*.cer
 
 
 
@@ -1153,7 +1153,6 @@ CLEANFILES += \
 	tests/subsystem/query.log \
 	tests/subsystem/rcli.log \
 	tests/subsystem/rsync_aur.log
-# TODO: are there more CLEANFILES? C*.cer?
 
 
 TESTS += \
