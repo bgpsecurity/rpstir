@@ -37,7 +37,8 @@ tests_subsystem_rpki_local_ta_makeLTAtest_LDADD = \
 EXTRA_DIST += \
 	tests/subsystem/rpki-local-ta/test4.log \
 	tests/subsystem/rpki-local-ta/testcases4_LTA \
-	tests/subsystem/rpki-local-ta/ttest*.par
+	tests/subsystem/rpki-local-ta/ttest4.1.par \
+	tests/subsystem/rpki-local-ta/ttest4.2.par
 
 
 check_SCRIPTS += tests/subsystem/rpki-local-ta/initDB4

@@ -33,6 +33,8 @@ lib_configlib_tests_good_LDADD = \
 	$(LDADD_LIBCONFIGLIB)
 
 EXTRA_DIST += \
-	lib/configlib/tests/*.conf
+	lib/configlib/tests/good.1.conf \
+	lib/configlib/tests/good.2.conf \
+	lib/configlib/tests/good.conf
 
 TESTS += lib/configlib/tests/good

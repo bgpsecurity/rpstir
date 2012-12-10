@@ -81,8 +81,16 @@ check_DATA += \
 	tests/subsystem/rtr/root.cer
 
 EXTRA_DIST += \
-	tests/subsystem/rtr/*.correct \
-	tests/subsystem/rtr/*.options \
+	tests/subsystem/rtr/ee.options \
+	tests/subsystem/rtr/response.bad_pdu_sequence.log.correct \
+	tests/subsystem/rtr/response.bad_pdu_usage.log.correct \
+	tests/subsystem/rtr/response.bad_pdus.log.correct \
+	tests/subsystem/rtr/response.no_data.log.correct \
+	tests/subsystem/rtr/response.reset_query_first.log.correct \
+	tests/subsystem/rtr/response.reset_query_last.log.correct \
+	tests/subsystem/rtr/response.serial_notify.log.correct \
+	tests/subsystem/rtr/response.serial_queries.log.correct \
+	tests/subsystem/rtr/root.options \
 	tests/subsystem/rtr/test.conf
 
 RPKI_RTR_TEST_KEYS = \
