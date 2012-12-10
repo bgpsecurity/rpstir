@@ -27,22 +27,6 @@ export TEST_LOG_NAME=subsys4
 
 cd "$TESTS_BUILDDIR"
 
-# copy some things to testcases4_LTA if builddir != srcdir
-if test ! -e testcases4_LTA; then
-    mkdir -p testcases4_LTA/LTA
-    cp -a \
-        "$TESTS_SRCDIR/testcases4_LTA/"*.p15 \
-        "$TESTS_SRCDIR/testcases4_LTA/C.cer" \
-        "$TESTS_SRCDIR/testcases4_LTA/MYTA.cer" \
-        "$TESTS_BUILDDIR/testcases4_LTA/"
-    cp -a \
-        "$TESTS_SRCDIR/testcases4_LTA/LTA/"*.tst \
-        "$TESTS_SRCDIR/testcases4_LTA/LTA/case"* \
-        "$TESTS_SRCDIR/testcases4_LTA/LTA/LTA.cer" \
-        "$TESTS_SRCDIR/testcases4_LTA/LTA/LTA.p15" \
-        "$TESTS_BUILDDIR/testcases4_LTA/LTA"
-fi
-
 # refresh test certs
 for f in "$TESTS_SRCDIR/testcases4_LTA/"C?*.raw; do
     filename=`basename "$f" .raw`

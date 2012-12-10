@@ -51,6 +51,7 @@ ASN_SOURCE_FILES =
 BUILT_SOURCES =
 CLEANDIRS =
 CLEANFILES =
+COPYFILES =
 TESTS =
 bin_PROGRAMS =
 bin_SCRIPTS =
@@ -134,8 +135,24 @@ include mk/testbed.mk
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
 
+
+BUILT_SOURCES += $(COPYFILES)
+EXTRA_DIST += $(COPYFILES)
+
+.PHONY: $(COPYFILES)
+$(COPYFILES):
+	if test '(' ! -e "$@" ')' -o "$(srcdir)/$@" -nt "$@"; then \
+		mkdir -p "$(@D)"; \
+		cp -a "$(srcdir)/$@" "$@"; \
+		chmod +w "$@"; \
+	fi
+
+
 clean-local:
 	-rm -rf $(CLEANDIRS)
+	if test "$(srcdir)" != "$(builddir)"; then \
+		rm -f $(COPYFILES); \
+	fi
 
 
 ## Extra variables for substitution in .in files.

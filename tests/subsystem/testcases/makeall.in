@@ -4,10 +4,6 @@
 
 cd "$TESTS_BUILDDIR"
 
-cp -a \
-    "$TESTS_SRCDIR/"*.p15 \
-    "$TESTS_BUILDDIR"
-
 ./makecerts
 ./makecrls
 ./makeroas

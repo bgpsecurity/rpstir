@@ -36,25 +36,30 @@ tests_subsystem_rpki_local_ta_makeLTAtest_LDADD = \
 
 EXTRA_DIST += \
 	tests/subsystem/rpki-local-ta/test4.log \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C.cer \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C.p15 \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C1.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C1.raw \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C11.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C11.raw \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C111.raw \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C112.raw \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C113.raw \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C2.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C2.raw \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C21.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C21.raw \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C211.raw \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C3.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C3.raw \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/C31.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C31.raw \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/C311.raw \
+	tests/subsystem/rpki-local-ta/ttest4.1.par \
+	tests/subsystem/rpki-local-ta/ttest4.2.par
+
+
+COPYFILES += \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C.p15 \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C1.p15 \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C11.p15 \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C2.p15 \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C21.p15 \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C3.p15 \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C31.p15 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C.case1.tst \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C.case2.tst \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C.case3.tst \
@@ -90,9 +95,28 @@ EXTRA_DIST += \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/case3 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/case4 \
 	tests/subsystem/rpki-local-ta/testcases4_LTA/MYTA.cer \
-	tests/subsystem/rpki-local-ta/testcases4_LTA/MYTA.p15 \
-	tests/subsystem/rpki-local-ta/ttest4.1.par \
-	tests/subsystem/rpki-local-ta/ttest4.2.par
+	tests/subsystem/rpki-local-ta/testcases4_LTA/MYTA.p15
+
+
+CLEANFILES += \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C1.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C11.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C111.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C112.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C113.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C2.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C21.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C211.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C3.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C31.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/C311.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C1.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C11.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C111.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C2.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C21.cer \
+	tests/subsystem/rpki-local-ta/testcases4_LTA/LTA/C211.cer
 
 
 check_SCRIPTS += tests/subsystem/rpki-local-ta/initDB4

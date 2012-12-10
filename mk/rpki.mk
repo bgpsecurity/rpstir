@@ -961,8 +961,59 @@ tests/subsystem/testcases/tools/run_tc.py: $(srcdir)/tests/subsystem/testcases/t
 
 EXTRA_DIST += \
 	tests/subsystem/testcases/C.fake-parent.orig \
-	tests/subsystem/testcases/C.p15 \
 	tests/subsystem/testcases/C.real.orig \
+	tests/subsystem/testcases/certpattern \
+	tests/subsystem/testcases/falseC2.cer \
+	tests/subsystem/testcases/makeC \
+	tests/subsystem/testcases/makeC1 \
+	tests/subsystem/testcases/makeC11 \
+	tests/subsystem/testcases/makeC111 \
+	tests/subsystem/testcases/makeC1111 \
+	tests/subsystem/testcases/makeC112 \
+	tests/subsystem/testcases/makeC113 \
+	tests/subsystem/testcases/makeC12 \
+	tests/subsystem/testcases/makeC121 \
+	tests/subsystem/testcases/makeC13 \
+	tests/subsystem/testcases/makeC131 \
+	tests/subsystem/testcases/makeC132 \
+	tests/subsystem/testcases/makeC2 \
+	tests/subsystem/testcases/makeC21 \
+	tests/subsystem/testcases/makeC211 \
+	tests/subsystem/testcases/makeC22 \
+	tests/subsystem/testcases/makeC221 \
+	tests/subsystem/testcases/makeC2211 \
+	tests/subsystem/testcases/makeC2212 \
+	tests/subsystem/testcases/makeC23 \
+	tests/subsystem/testcases/makeC231 \
+	tests/subsystem/testcases/makeC232 \
+	tests/subsystem/testcases/makeC233 \
+	tests/subsystem/testcases/makeL1 \
+	tests/subsystem/testcases/makeL11 \
+	tests/subsystem/testcases/makeL111 \
+	tests/subsystem/testcases/makeL112 \
+	tests/subsystem/testcases/makeL21 \
+	tests/subsystem/testcases/makeM1 \
+	tests/subsystem/testcases/makeM11 \
+	tests/subsystem/testcases/makeM111 \
+	tests/subsystem/testcases/makeM1111 \
+	tests/subsystem/testcases/makeM112 \
+	tests/subsystem/testcases/makeM231 \
+	tests/subsystem/testcases/queryIgnoreAll \
+	tests/subsystem/testcases/t1-1_actions \
+	tests/subsystem/testcases/t1-1_expect \
+	tests/subsystem/testcases/t1-1_flist \
+	tests/subsystem/testcases/t1-1_query \
+	tests/subsystem/testcases/test1.log \
+	tests/subsystem/testcases/tools/test.conf
+
+
+EXTRA_DIST += \
+	tests/subsystem/testcases/print-cert-addrs.sh \
+	tests/subsystem/testcases/testall.sh
+
+
+COPYFILES += \
+	tests/subsystem/testcases/C.p15 \
 	tests/subsystem/testcases/C1.p15 \
 	tests/subsystem/testcases/C11.p15 \
 	tests/subsystem/testcases/C111.p15 \
@@ -1016,55 +1067,7 @@ EXTRA_DIST += \
 	tests/subsystem/testcases/C23M1.p15 \
 	tests/subsystem/testcases/C23R1.p15 \
 	tests/subsystem/testcases/C23R2.p15 \
-	tests/subsystem/testcases/CM1.p15 \
-	tests/subsystem/testcases/certpattern \
-	tests/subsystem/testcases/falseC2.cer \
-	tests/subsystem/testcases/makeC \
-	tests/subsystem/testcases/makeC1 \
-	tests/subsystem/testcases/makeC11 \
-	tests/subsystem/testcases/makeC111 \
-	tests/subsystem/testcases/makeC1111 \
-	tests/subsystem/testcases/makeC112 \
-	tests/subsystem/testcases/makeC113 \
-	tests/subsystem/testcases/makeC12 \
-	tests/subsystem/testcases/makeC121 \
-	tests/subsystem/testcases/makeC13 \
-	tests/subsystem/testcases/makeC131 \
-	tests/subsystem/testcases/makeC132 \
-	tests/subsystem/testcases/makeC2 \
-	tests/subsystem/testcases/makeC21 \
-	tests/subsystem/testcases/makeC211 \
-	tests/subsystem/testcases/makeC22 \
-	tests/subsystem/testcases/makeC221 \
-	tests/subsystem/testcases/makeC2211 \
-	tests/subsystem/testcases/makeC2212 \
-	tests/subsystem/testcases/makeC23 \
-	tests/subsystem/testcases/makeC231 \
-	tests/subsystem/testcases/makeC232 \
-	tests/subsystem/testcases/makeC233 \
-	tests/subsystem/testcases/makeL1 \
-	tests/subsystem/testcases/makeL11 \
-	tests/subsystem/testcases/makeL111 \
-	tests/subsystem/testcases/makeL112 \
-	tests/subsystem/testcases/makeL21 \
-	tests/subsystem/testcases/makeM1 \
-	tests/subsystem/testcases/makeM11 \
-	tests/subsystem/testcases/makeM111 \
-	tests/subsystem/testcases/makeM1111 \
-	tests/subsystem/testcases/makeM112 \
-	tests/subsystem/testcases/makeM231 \
-	tests/subsystem/testcases/queryIgnoreAll \
-	tests/subsystem/testcases/t1-1_actions \
-	tests/subsystem/testcases/t1-1_expect \
-	tests/subsystem/testcases/t1-1_flist \
-	tests/subsystem/testcases/t1-1_query \
-	tests/subsystem/testcases/test1.log \
-	tests/subsystem/testcases/tools/test.conf
-
-
-EXTRA_DIST += \
-	tests/subsystem/testcases/print-cert-addrs.sh \
-	tests/subsystem/testcases/testall.sh
+	tests/subsystem/testcases/CM1.p15
 
 
 check_SCRIPTS += tests/subsystem/testcases/makeall
