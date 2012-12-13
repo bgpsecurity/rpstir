@@ -52,9 +52,10 @@ bin_rpki_rtr_rpki_rtr_update_CFLAGS = \
 	$(CFLAGS_STRICT)
 
 
-bin_SCRIPTS += bin/rpki-rtr/cleanServerData
-MK_SUBST_FILES_EXEC += bin/rpki-rtr/cleanServerData
-bin/rpki-rtr/cleanServerData: $(srcdir)/bin/rpki-rtr/cleanServerData.in
+pkglibexec_SCRIPTS += bin/rpki-rtr/rpki-rtr-reset
+PACKAGE_NAME_BINS += rpki-rtr-reset
+MK_SUBST_FILES_EXEC += bin/rpki-rtr/rpki-rtr-reset
+bin/rpki-rtr/rpki-rtr-reset: $(srcdir)/bin/rpki-rtr/rpki-rtr-reset.in
 
 
 dist_doc_DATA += doc/rpki-rtr-daemon-outline
