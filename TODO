@@ -9,3 +9,4 @@
   * if you install to a non-standard location, add $(bindir) to your $PATH
   * use generic make instead of gmake (after testing on BSD make)
   * update descriptions of how to run programs
+ * update ChangeLog
