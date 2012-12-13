@@ -182,7 +182,9 @@ static int check_uri_chars(
     int ret;
 
     // if bad char, drop and warn
-    char bad_chars[] = " \"#$<>?\\^`{|}";
+    // NOTE: The '\n' in bad_chars should really be whatever output_delimiter
+    //       in main is, but this works for now.
+    char bad_chars[] = " \"#$<>?\\^`{|}\n";
     char ch;
     for (i = 0; '\0' != str[i]; i++)
     {

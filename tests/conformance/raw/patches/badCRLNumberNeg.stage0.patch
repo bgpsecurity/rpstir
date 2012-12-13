@@ -1,0 +1,11 @@
+--- badCRLNumberNeg.crl.raw.old	2012-07-09 13:35:57.104722145 -0400
++++ badCRLNumberNeg.crl.raw	2012-07-09 13:36:40.110022451 -0400
+@@ -7,7 +7,7 @@
+         utc "460515185928Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */
+-                    ocw int 0x01 /* 1 */ 
++                    ocw int 0xff /* -1 */ 
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
+                                 0xF8FE48ABB1FE091FE518BA1CF89107FC

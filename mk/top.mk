@@ -3,6 +3,7 @@
 
 EXTRA_DIST += \
 	autogen.sh \
+	etc/version-server-ca.pem \
 	ChangeLog \
 	INSTRUCTIONS \
 	LICENSE \

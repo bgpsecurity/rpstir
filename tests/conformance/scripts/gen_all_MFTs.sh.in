@@ -184,3 +184,6 @@ ${single_MFT_cmd} 781 MFTFileNotIA5
 ${single_MFT_cmd} 782 MFTHashOctetStr
 ${single_MFT_cmd} 783 MFTDuplicateFileOneHash
 ${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
+${single_MFT_cmd} -x good 785 MFTNumMax
+${single_MFT_cmd} -x good 786 MFTNumZero
+${single_MFT_cmd} 787 MFTNumTooBig

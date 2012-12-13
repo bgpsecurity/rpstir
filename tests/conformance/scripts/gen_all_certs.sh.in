@@ -237,3 +237,5 @@ ${single_cert_cmd} 186 2ASNum
 ${single_cert_cmd} 187 CRLDPNoRsyncDistPt
 ${single_cert_cmd} 188 IssuerSet2SerNums
 ${single_cert_cmd} 189 SubjectSet2SerNums
+${single_cert_cmd} -x good 190 SerNumMax
+${single_cert_cmd} 191 SerNumTooBig

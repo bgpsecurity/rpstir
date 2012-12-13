@@ -14,6 +14,7 @@
 #include "scmf.h"
 #include "diru.h"
 #include "err.h"
+#include "globals.h"
 
 
 /*
@@ -540,6 +541,73 @@ static int valcols(
     return (0);
 }
 
+
+/**
+ * Quote the input as needed for use in a SQL statement.
+ *
+ * Note the special convention that if the value (as a string) begins with 
+ * ^x it is NOT quoted. The ^x is turned into 0x and then inserted. This
+ * is so that we can insert binary strings in their hex representation
+ * without having to pass in column information. Thus if we said
+ * ^x00656667 -> 0x00656667 as the value it would get inserted as NULefg
+ * but if we said "0x00656667" it would get inserted as the string
+ * 0x00656667. 
+ *
+ * @return 0 on success, error code on error
+ */
+static int quote_value(
+    const char * input,
+    char ** output)
+{
+    size_t i;
+    size_t len;
+    unsigned long escaped_length;
+
+    if (strncmp(input, "^x", 2) == 0)
+    {
+        for (i = 2; input[i] != '\0'; ++i)
+        {
+            if (!isxdigit((int)(unsigned char)input[i]))
+            {
+                return ERR_SCM_INVALARG;
+            }
+        }
+
+        *output = strdup(input);
+        if (*output == NULL)
+        {
+            return ERR_SCM_NOMEM;
+        }
+
+        (*output)[0] = '0';
+
+        return 0;
+    }
+    else
+    {
+        len = strlen(input);
+
+        *output = malloc(1 /* '"' */ +
+                         len * 2 /* escaped string*/ +
+                         1 /* '"' */ +
+                         1 /* '\0' */);
+        if (*output == NULL)
+        {
+            return ERR_SCM_NOMEM;
+        }
+
+        (*output)[0] = '"';
+
+        escaped_length = mysql_escape_string(&(*output)[1], input, len);
+
+        (*output)[1 + escaped_length] = '"';
+        (*output)[1 + escaped_length + 1] = '\0';
+
+        return 0;
+    }
+}
+
+
 /*
  * Insert an entry into a database table. 
  */
@@ -550,12 +618,11 @@ int insertscm(
     scmkva * arr)
 {
     char *stmt;
+    char *quoted = NULL;
     int sta;
     int leen = 128;
     int wsta = (-1);
-    int doq;
-    int i,
-        j;
+    int i;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
         tabp->tabname == NULL)
@@ -597,15 +664,6 @@ int insertscm(
             return (wsta);
         }
     }
-    /*
-     * Note the special convention that if the value (as a string) begins with 
-     * ^x it is NOT quoted. The ^x is turned into 0x and then inserted. This
-     * is so that we can insert binary strings in their hex representation
-     * without having to pass in column information. Thus if we said
-     * ^x00656667 -> 0x00656667 as the value it would get inserted as NULefg
-     * but if we said "0x00656667" it would get inserted as the string
-     * 0x00656667. 
-     */
     for (i = 0; i < arr->nused; ++i)
     {
         if (i == 0)
@@ -618,44 +676,22 @@ int insertscm(
             return (wsta);
         }
 
-        doq = strncmp(arr->vec[i].value, "^x", 2);
-        if (doq == 0)
+        sta = quote_value(arr->vec[i].value, &quoted);
+        if (sta < 0)
         {
-            wsta = strwillfit(stmt, leen, wsta, "0x");
+            free(stmt);
+            return (sta);
         }
-        else
-        {
-            wsta = strwillfit(stmt, leen, wsta, "\"");
-        }
+
+        wsta = strwillfit(stmt, leen, wsta, quoted);
+
+        free(quoted);
+        quoted = NULL;
+
         if (wsta < 0)
         {
-            free((void *)stmt);
+            free(stmt);
             return (wsta);
-        }
-        if (doq == 0)
-        {
-            for (j = 2; arr->vec[i].value[j] != '\0'; ++j)
-            {
-                if (isxdigit((int)(unsigned char)arr->vec[i].value[j]))
-                    stmt[wsta++] = arr->vec[i].value[j];
-                else
-                {
-                    free((void *)stmt);
-                    return ERR_SCM_INVALARG;
-                }
-            }
-            stmt[wsta] = '\0';
-        }
-        else
-        {
-            wsta += mysql_escape_string(stmt + wsta, arr->vec[i].value,
-                                        strlen(arr->vec[i].value));
-            wsta = strwillfit(stmt, leen, wsta, "\"");
-            if (wsta < 0)
-            {
-                free((void *)stmt);
-                return (wsta);
-            }
         }
     }
     wsta = strwillfit(stmt, leen, wsta, ");");
@@ -791,6 +827,7 @@ int searchscm(
     SQLRETURN rc;
     scmsrch *vecp;
     char *stmt = NULL;
+    char *quoted = NULL;
     int docall;
     int leen = 100;
     int sta = 0;
@@ -881,20 +918,30 @@ int searchscm(
         didw++;
         (void)strcat(stmt, " WHERE ");
         (void)strcat(stmt, srch->where->vec[0].column);
-        (void)strcat(stmt, "=\"");
-        (void)mysql_escape_string(stmt + strlen(stmt),
-                                  srch->where->vec[0].value,
-                                  strlen(srch->where->vec[0].value));
-        (void)strcat(stmt, "\"");
+        (void)strcat(stmt, "=");
+        sta = quote_value(srch->where->vec[0].value, &quoted);
+        if (sta < 0)
+        {
+            free(stmt);
+            return sta;
+        }
+        (void)strcat(stmt, quoted);
+        free(quoted);
+        quoted = NULL;
         for (i = 1; i < srch->where->nused; i++)
         {
             (void)strcat(stmt, " AND ");
             (void)strcat(stmt, srch->where->vec[i].column);
-            (void)strcat(stmt, "=\"");
-            (void)mysql_escape_string(stmt + strlen(stmt),
-                                      srch->where->vec[i].value,
-                                      strlen(srch->where->vec[i].value));
-            (void)strcat(stmt, "\"");
+            (void)strcat(stmt, "=");
+            sta = quote_value(srch->where->vec[i].value, &quoted);
+            if (sta < 0)
+            {
+                free(stmt);
+                return sta;
+            }
+            (void)strcat(stmt, quoted);
+            free(quoted);
+            quoted = NULL;
         }
     }
     if ((srch->wherestr != NULL) && !(what & SCM_SRCH_DO_JOIN_SELF))
@@ -1546,7 +1593,7 @@ void *unhexify(
 int updateblobscm(
     scmcon * conp,
     scmtab * tabp,
-    unsigned long long *snlist,
+    uint8_t *snlist,
     unsigned int sninuse,
     unsigned int snlen,
     unsigned int lid)
@@ -1559,7 +1606,7 @@ int updateblobscm(
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
         tabp->tabname == NULL)
         return (ERR_SCM_INVALARG);
-    hexi = hexify(snlen * sizeof(long long), (void *)snlist, HEXIFY_X);
+    hexi = hexify(snlen * SER_NUM_MAX_SZ, (void *)snlist, HEXIFY_X);
     if (hexi == NULL)
         return (ERR_SCM_NOMEM);
     // compute the size of the statement

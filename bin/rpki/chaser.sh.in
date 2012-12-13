@@ -8,17 +8,41 @@ BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
 touch "$CHASER_LOG"
 
-OLD_LIST="`@MKTEMP@`"
-CUR_LIST="`@MKTEMP@`"
+DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded
+CUR_LIST="`@MKTEMP@`" # current set of URIs that we know about
+ADDED_LIST="`@MKTEMP@`" # CUR_LIST minus DONE_LIST
 
-chaser "$@" > "$CUR_LIST"
+chaser -s "$@" | sort > "$CUR_LIST"
+cat "$CUR_LIST" > "$ADDED_LIST"
 
 log () {
 	echo "`date`" "$@" >> "$CHASER_LOG"
 	echo "$@" >&2
 }
 
-while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
+# Check for the latest version.
+CONFIG_NEW_VERSION_CHECK="`config_get NewVersionCheck`"
+if test "$CONFIG_NEW_VERSION_CHECK" != none; then
+	VERSION_FILE="`@MKTEMP@`"
+	if curl \
+		--cacert "$CONFIG_ROOT_DIR/etc/version-server-ca.pem" \
+		--location \
+		--max-time 5 \
+		--output "$VERSION_FILE" \
+		"$CONFIG_NEW_VERSION_CHECK"
+	then
+		LATEST_VERSION="$(head -n 1 "$VERSION_FILE")"
+		if test "@PACKAGE_VERSION@" != "$LATEST_VERSION"; then
+			log "A new version of @PACKAGE_NAME@, $LATEST_VERSION, is available."
+		fi
+	else
+		log "Can't download version information from $CONFIG_NEW_VERSION_CHECK"
+	fi
+	rm "$VERSION_FILE"
+fi
+unset CONFIG_NEW_VERSION_CHECK
+
+while test -s "$ADDED_LIST"; do
 	RSYNC_CORD_CONF="`@MKTEMP@`"
 
 	echo "RSYNC=\"`which rsync`\"" >> "$RSYNC_CORD_CONF"
@@ -27,7 +51,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 
 	DONE_URI=0
 	printf "DIRS=\"" >> "$RSYNC_CORD_CONF"
-	while read -r -d "" URI; do
+	while read -r URI; do
 		if printf "%s" "$URI" | grep -q "$BAD_URI_CHARS"; then
 			log "Discarding URI: $URI"
 		elif test -n "$URI"; then
@@ -38,7 +62,7 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 			fi
 			printf "%s" "$URI" | sed 's!^rsync://!!i' | sed 's!/$!!' >> "$RSYNC_CORD_CONF"
 		fi
-	done < "$CUR_LIST"
+	done < "$ADDED_LIST"
 	echo "\"" >> "$RSYNC_CORD_CONF"
 
 	rsync_cord.py -d -c "$RSYNC_CORD_CONF" \
@@ -46,10 +70,15 @@ while ! cmp -s "$OLD_LIST" "$CUR_LIST"; do
 
 	rm -f "$RSYNC_CORD_CONF"
 
-	rm -f "$OLD_LIST"
-	OLD_LIST="$CUR_LIST"
-	CUR_LIST="`@MKTEMP@`"
-	chaser "$@" > "$CUR_LIST"
+	NEW_DONE_LIST="`@MKTEMP@`"
+	cat "$DONE_LIST" "$ADDED_LIST" | sort | uniq > "$NEW_DONE_LIST"
+	rm -f "$DONE_LIST"
+	DONE_LIST="$NEW_DONE_LIST"
+	unset NEW_DONE_LIST
+
+	chaser -s "$@" | sort > "$CUR_LIST"
+
+	comm -13 "$DONE_LIST" "$CUR_LIST" > "$ADDED_LIST"
 done
 
-rm -f "$OLD_LIST" "$CUR_LIST"
+rm -f "$DONE_LIST" "$CUR_LIST" "$ADDED_LIST"
