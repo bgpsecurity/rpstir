@@ -174,6 +174,16 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      "\"https://rpki.bbn.com/check-version?package=" PACKAGE_NAME "&version=" PACKAGE_VERSION "\""},
 
+    // CONFIG_NEW_VERSION_CHECK_CA_CERT
+    {
+     "NewVersionCheckCACert",
+     false,
+     config_type_string_converter, &config_type_string_arg_mandatory,
+     config_type_string_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGDATADIR "/version-server-ca.pem\""},
+
     // CONFIG_TEMPLATE_CA_CERT
     {
      "TemplateCACert",

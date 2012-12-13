@@ -25,7 +25,7 @@ CONFIG_NEW_VERSION_CHECK="`config_get NewVersionCheck`"
 if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 	VERSION_FILE="`@MKTEMP@`"
 	if curl \
-		--cacert "$CONFIG_ROOT_DIR/etc/version-server-ca.pem" \
+		--cacert "`config_get NewVersionCheckCACert`" \
 		--location \
 		--max-time 5 \
 		--output "$VERSION_FILE" \
