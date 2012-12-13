@@ -5,9 +5,9 @@ STRICT_CHECKS=1
 
 @SETUP_ENVIRONMENT@
 
-SERVER="@PACKAGE_NAME@-rpki-rtr-daemon"
-CLIENT="@PACKAGE_NAME@-rpki-rtr-test-client"
-UPDATE="@PACKAGE_NAME@-rpki-rtr-update"
+SERVER="rpki-rtr-daemon"
+CLIENT="rpki-rtr-test-client"
+UPDATE="rpki-rtr-update"
 PORT=1234
 SESSION=42
 WRONG_SESSION=4242

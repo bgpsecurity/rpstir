@@ -1,6 +1,7 @@
-bin_PROGRAMS += bin/rpki-rtr/@PACKAGE_NAME@-rpki-rtr-daemon
+pkglibexec_PROGRAMS += bin/rpki-rtr/rpki-rtr-daemon
+PACKAGE_NAME_BINS += rpki-rtr-daemon
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_SOURCES = \
+bin_rpki_rtr_rpki_rtr_daemon_SOURCES = \
 	bin/rpki-rtr/cache_state.c \
 	bin/rpki-rtr/cache_state.h \
 	bin/rpki-rtr/config.h \
@@ -15,37 +16,39 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_SOURCES = \
 	bin/rpki-rtr/signals.c \
 	bin/rpki-rtr/signals.h
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_LDADD = \
+bin_rpki_rtr_rpki_rtr_daemon_LDADD = \
 	$(LDADD_LIBDB) \
 	$(LDADD_LIBRPKIRTR) \
 	$(LDADD_LIBUTIL)
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_CFLAGS = \
+bin_rpki_rtr_rpki_rtr_daemon_CFLAGS = \
 	$(CFLAGS_STRICT)
 
 
-bin_PROGRAMS += bin/rpki-rtr/@PACKAGE_NAME@-rpki-rtr-test-client
+pkglibexec_PROGRAMS += bin/rpki-rtr/rpki-rtr-test-client
+PACKAGE_NAME_BINS += rpki-rtr-test-client
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_SOURCES = \
+bin_rpki_rtr_rpki_rtr_test_client_SOURCES = \
 	bin/rpki-rtr/test-client.c
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_LDADD = \
+bin_rpki_rtr_rpki_rtr_test_client_LDADD = \
 	$(LDADD_LIBRPKIRTR) \
 	$(LDADD_LIBUTIL)
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_CFLAGS = \
+bin_rpki_rtr_rpki_rtr_test_client_CFLAGS = \
 	$(CFLAGS_STRICT)
 
 
-bin_PROGRAMS += bin/rpki-rtr/@PACKAGE_NAME@-rpki-rtr-update
+pkglibexec_PROGRAMS += bin/rpki-rtr/rpki-rtr-update
+PACKAGE_NAME_BINS += rpki-rtr-update
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_SOURCES = \
+bin_rpki_rtr_rpki_rtr_update_SOURCES = \
 	bin/rpki-rtr/rtr-update.c
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_LDADD = \
+bin_rpki_rtr_rpki_rtr_update_LDADD = \
 	$(LDADD_LIBRPKI)
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_CFLAGS = \
+bin_rpki_rtr_rpki_rtr_update_CFLAGS = \
 	$(CFLAGS_STRICT)
 
 
