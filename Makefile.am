@@ -30,6 +30,11 @@ CLEANDIRS =
 ## Files to copy from srcdir to builddir at the beginning of a build.
 COPYFILES =
 
+## Files in $(pkglibexecdir) that should have symlinks in $(bindir).
+## E.g. the value "foo" would create a symlink $(bindir)/$(PACKAGE_NAME)-foo
+## pointing to $(pkglibexecdir)/foo.
+PACKAGE_NAME_BINS =
+
 BUILT_SOURCES =
 CLEANFILES =
 EXTRA_DIST =
@@ -91,4 +96,5 @@ include mk/top.mk
 include mk/asn-files.mk
 include mk/cleandirs.mk
 include mk/copyfiles.mk
+include mk/package-name-bins.mk
 include mk/subst-files.mk

@@ -31,6 +31,7 @@ AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 AC_PROG_SED
 AM_PATH_PYTHON([2.6])
+AC_PROG_LN_S
 
 # Ideally this should be a check for how to create a temporary file on each platform,
 # but this seems to work for now on multiple platforms.
