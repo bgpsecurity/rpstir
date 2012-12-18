@@ -1,4 +1,4 @@
-cleanServerData
-rpki-rtr-update
+rpki-rtr-clear
 rpki-rtr-daemon
 rpki-rtr-test-client
+rpki-rtr-update
