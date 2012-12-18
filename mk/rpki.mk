@@ -7,10 +7,6 @@ bin_rpki_chaser_LDADD = \
 	$(LDADD_LIBDB) \
 	$(LDADD_LIBUTIL)
 
-bin_SCRIPTS += bin/rpki/chaser.sh
-MK_SUBST_FILES_EXEC += bin/rpki/chaser.sh
-bin/rpki/chaser.sh: $(srcdir)/bin/rpki/chaser.sh.in
-
 check_SCRIPTS += tests/subsystem/chaser/test.sh
 MK_SUBST_FILES_EXEC += tests/subsystem/chaser/test.sh
 tests/subsystem/chaser/test.sh: $(srcdir)/tests/subsystem/chaser/test.sh.in
@@ -77,6 +73,12 @@ bin/rpki/results.sh: $(srcdir)/bin/rpki/results.sh.in
 bin_SCRIPTS += bin/rpki/run_from_TALs.sh
 MK_SUBST_FILES_EXEC += bin/rpki/run_from_TALs.sh
 bin/rpki/run_from_TALs.sh: $(srcdir)/bin/rpki/run_from_TALs.sh.in
+
+
+pkglibexec_SCRIPTS += bin/rpki/synchronize
+MK_SUBST_FILES_EXEC += bin/rpki/synchronize
+bin/rpki/synchronize: $(srcdir)/bin/rpki/synchronize.in
+PACKAGE_NAME_BINS += synchronize
 
 
 pkglibexec_SCRIPTS += bin/rpki/updateTA.py

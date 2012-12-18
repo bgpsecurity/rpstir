@@ -3,20 +3,44 @@
 
 @SETUP_ENVIRONMENT@
 
-CHASER_LOG="`config_get LogDir`/chaser.log"
+
+usage () {
+	echo >&2 "Usage: $0 [<option> ...]"
+	echo >&2
+	echo >&2 "Synchronize @PACKAGE_NAME@'s local cache with the global RPKI."
+	echo >&2
+	echo >&2 "Options:"
+	echo >&2 "    -h        Print this help message."
+}
+
+while getopts h opt; do
+	case "$opt" in
+		h)
+			usage
+			exit 0
+			;;
+	esac
+done
+shift $((OPTIND - 1))
+if test $# -ne 0; then
+	usage_fatal "$0 doesn't take any arguments"
+fi
+
+
+SYNCHRONIZE_LOG="`config_get LogDir`/synchronize.log"
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
-touch "$CHASER_LOG"
+touch "$SYNCHRONIZE_LOG"
 
 DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded
 CUR_LIST="`@MKTEMP@`" # current set of URIs that we know about
 ADDED_LIST="`@MKTEMP@`" # CUR_LIST minus DONE_LIST
 
-chaser -s "$@" | sort > "$CUR_LIST"
+chaser -s | sort > "$CUR_LIST"
 cat "$CUR_LIST" > "$ADDED_LIST"
 
 log () {
-	echo "`date`" "$@" >> "$CHASER_LOG"
+	echo "`date`" "$@" >> "$SYNCHRONIZE_LOG"
 	echo "$@" >&2
 }
 
@@ -76,7 +100,7 @@ while test -s "$ADDED_LIST"; do
 	DONE_LIST="$NEW_DONE_LIST"
 	unset NEW_DONE_LIST
 
-	chaser -s "$@" | sort > "$CUR_LIST"
+	chaser -s | sort > "$CUR_LIST"
 
 	comm -13 "$DONE_LIST" "$CUR_LIST" > "$ADDED_LIST"
 done

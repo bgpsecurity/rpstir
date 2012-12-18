@@ -1,5 +1,4 @@
 chaser
-chaser.sh
 garbage
 initDB.sh
 loader.sh
@@ -8,5 +7,6 @@ rcli
 results.py
 results.sh
 run_from_TALs.sh
+synchronize
 updateTA.py
 updateTA.sh
