@@ -1,11 +1,11 @@
 chaser
 garbage
-initDB.sh
+initialize
 loader.sh
 query
 rcli
+results
 results.py
-results.sh
 run_from_TALs.sh
 synchronize
 updateTA.py

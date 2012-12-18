@@ -32,15 +32,17 @@ CLEANFILES += \
 	tests/subsystem/chaser/*.log
 
 
-bin_PROGRAMS += bin/rpki/garbage
+pkglibexec_PROGRAMS += bin/rpki/garbage
+PACKAGE_NAME_BINS += garbage
 
 bin_rpki_garbage_LDADD = \
 	$(LDADD_LIBRPKI)
 
 
-bin_SCRIPTS += bin/rpki/initDB.sh
-MK_SUBST_FILES_EXEC += bin/rpki/initDB.sh
-bin/rpki/initDB.sh: $(srcdir)/bin/rpki/initDB.sh.in
+pkglibexec_SCRIPTS += bin/rpki/initialize
+MK_SUBST_FILES_EXEC += bin/rpki/initialize
+bin/rpki/initialize: $(srcdir)/bin/rpki/initialize.in
+PACKAGE_NAME_BINS += initialize
 
 
 bin_SCRIPTS += bin/rpki/loader.sh
@@ -48,13 +50,15 @@ MK_SUBST_FILES_EXEC += bin/rpki/loader.sh
 bin/rpki/loader.sh: $(srcdir)/bin/rpki/loader.sh.in
 
 
-bin_PROGRAMS += bin/rpki/query
+pkglibexec_PROGRAMS += bin/rpki/query
+PACKAGE_NAME_BINS += query
 
 bin_rpki_query_LDADD = \
 	$(LDADD_LIBRPKI)
 
 
-bin_PROGRAMS += bin/rpki/rcli
+pkglibexec_PROGRAMS += bin/rpki/rcli
+PACKAGE_NAME_BINS += rcli
 
 bin_rpki_rcli_LDADD = \
 	$(LDADD_LIBRPKI)
@@ -65,9 +69,10 @@ MK_SUBST_FILES_EXEC += bin/rpki/results.py
 bin/rpki/results.py: $(srcdir)/bin/rpki/results.py.in
 
 
-bin_SCRIPTS += bin/rpki/results.sh
-MK_SUBST_FILES_EXEC += bin/rpki/results.sh
-bin/rpki/results.sh: $(srcdir)/bin/rpki/results.sh.in
+pkglibexec_SCRIPTS += bin/rpki/results
+MK_SUBST_FILES_EXEC += bin/rpki/results
+bin/rpki/results: $(srcdir)/bin/rpki/results.in
+PACKAGE_NAME_BINS += results
 
 
 bin_SCRIPTS += bin/rpki/run_from_TALs.sh

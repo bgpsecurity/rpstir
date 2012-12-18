@@ -37,7 +37,7 @@ rm -rf \
 mkdir -p \
 	"`config_get RPKICacheDir`" \
 	"`config_get LogDir`"
-initDB.sh
+initialize
 
 # Start validator component in separate window
 loader.sh &
