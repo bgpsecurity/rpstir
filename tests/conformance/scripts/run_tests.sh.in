@@ -94,10 +94,6 @@ list_files () {
 	for FILE in $FILES; do echo "$PREFIX$FILE"; done | sort
 }
 
-init_db () {
-	initDB.sh
-}
-
 reset_db () {
 	run "rcli-x-t" rcli -x -t "$OUTPUT_DIR" -y
 	run "rcli-root.cer" rcli -s -y -F "$OUTPUT_DIR"/root.cer
@@ -105,8 +101,6 @@ reset_db () {
 	run "rcli-root.mft" rcli -s -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
-
-init_db
 
 for BAD_ROOT in badRoot*.cer; do
 	reset_db
