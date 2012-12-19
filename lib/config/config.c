@@ -74,6 +74,16 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      NULL},
 
+    // CONFIG_TRUST_ANCHOR_LOCATORS
+    {
+     "TrustAnchorLocators",
+     true,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     NULL},
+
     // CONFIG_LOG_LEVEL
     {
      "LogLevel",
