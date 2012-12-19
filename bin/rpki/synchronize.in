@@ -63,7 +63,7 @@ unset CONFIG_NEW_VERSION_CHECK
 
 
 # Update the trust anchors.
-config_get TrustAnchorLocators | xargs -0 updateTA.py
+config_get TrustAnchorLocators | xargs -0 updateTA.py -d
 
 
 # Synchronize everything else.
