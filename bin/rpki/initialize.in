@@ -4,6 +4,33 @@
 @SETUP_ENVIRONMENT@
 
 
+usage () {
+    echo >&2 "Usage: $0 <option>"
+    echo >&2 "    -h | --help     Print this help message."
+    echo >&2
+    echo >&2 "    -f | --force    Initialize @PACKAGE_NAME@'s database and"
+    echo >&2 "                    directories. Note that this will delete any"
+    echo >&2 "                    existing data and logs."
+}
+
+if test $# -ne 1; then
+   usage_fatal "Please specify exactly one argument."
+fi
+
+case "$1" in
+    -h | --help)
+        usage
+        exit 0
+        ;;
+
+    -f | --force)
+        ;;
+
+    *)
+        usage_fatal "Unrecognized option: $1"
+esac
+
+
 # For each argument directory, make sure it exists and is empty, preserving
 # existing directory permissions if possible.
 make_clean_dir () {
