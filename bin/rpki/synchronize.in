@@ -67,6 +67,15 @@ config_get TrustAnchorLocators | xargs -0 updateTA.py -d
 
 
 # Synchronize everything else.
+rcli -w -p &
+LOADER_PID=$!
+stop_loader () {
+	kill "$LOADER_PID" || true # if it already quit, we don't care
+	wait "$LOADER_PID" || true # rcli currently doesn't quit cleanly
+}
+trap stop_loader 0
+sleep 1
+
 BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
 DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded

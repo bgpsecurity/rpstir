@@ -3,8 +3,24 @@
 
 @SETUP_ENVIRONMENT@
 
-mkdir -p "`config_get RPKICacheDir`"
-mkdir -p "`config_get LogDir`"
 
-echo About to clear database ...
-rcli -x -t "`config_get RPKICacheDir`" -y
+# For each argument directory, make sure it exists and is empty, preserving
+# existing directory permissions if possible.
+make_clean_dir () {
+    local dir
+
+    for dir in "$@"; do
+        if test -d "$dir"; then
+            find "$dir" -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf
+        else
+            mkdir -p "$dir"
+        fi
+    done
+}
+
+CACHE_DIR="`config_get RPKICacheDir`"
+LOG_DIR="`config_get LogDir`"
+
+make_clean_dir "$CACHE_DIR" "$LOG_DIR"
+
+rcli -x -t "$CACHE_DIR" -y

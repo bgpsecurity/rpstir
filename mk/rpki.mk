@@ -45,11 +45,6 @@ bin/rpki/initialize: $(srcdir)/bin/rpki/initialize.in
 PACKAGE_NAME_BINS += initialize
 
 
-bin_SCRIPTS += bin/rpki/loader.sh
-MK_SUBST_FILES_EXEC += bin/rpki/loader.sh
-bin/rpki/loader.sh: $(srcdir)/bin/rpki/loader.sh.in
-
-
 pkglibexec_PROGRAMS += bin/rpki/query
 PACKAGE_NAME_BINS += query
 
@@ -73,11 +68,6 @@ pkglibexec_SCRIPTS += bin/rpki/results
 MK_SUBST_FILES_EXEC += bin/rpki/results
 bin/rpki/results: $(srcdir)/bin/rpki/results.in
 PACKAGE_NAME_BINS += results
-
-
-bin_SCRIPTS += bin/rpki/run_from_TALs.sh
-MK_SUBST_FILES_EXEC += bin/rpki/run_from_TALs.sh
-bin/rpki/run_from_TALs.sh: $(srcdir)/bin/rpki/run_from_TALs.sh.in
 
 
 pkglibexec_SCRIPTS += bin/rpki/synchronize
