@@ -91,11 +91,6 @@ MK_SUBST_FILES_EXEC += bin/rpki/updateTA.py
 bin/rpki/updateTA.py: $(srcdir)/bin/rpki/updateTA.py.in
 
 
-bin_SCRIPTS += bin/rpki/updateTA.sh
-MK_SUBST_FILES_EXEC += bin/rpki/updateTA.sh
-bin/rpki/updateTA.sh: $(srcdir)/bin/rpki/updateTA.sh.in
-
-
 sampletadir = $(examplesdir)/sample-ta
 
 conformancetadir = $(sampletadir)/bbn_conformance

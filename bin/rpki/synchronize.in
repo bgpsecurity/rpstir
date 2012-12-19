@@ -4,6 +4,7 @@
 @SETUP_ENVIRONMENT@
 
 
+# option parsing
 usage () {
 	echo >&2 "Usage: $0 [<option> ...]"
 	echo >&2
@@ -27,22 +28,16 @@ if test $# -ne 0; then
 fi
 
 
+# logging
 SYNCHRONIZE_LOG="`config_get LogDir`/synchronize.log"
-BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
 
 touch "$SYNCHRONIZE_LOG"
-
-DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded
-CUR_LIST="`@MKTEMP@`" # current set of URIs that we know about
-ADDED_LIST="`@MKTEMP@`" # CUR_LIST minus DONE_LIST
-
-chaser -s | sort > "$CUR_LIST"
-cat "$CUR_LIST" > "$ADDED_LIST"
 
 log () {
 	echo "`date`" "$@" >> "$SYNCHRONIZE_LOG"
 	echo "$@" >&2
 }
+
 
 # Check for the latest version.
 CONFIG_NEW_VERSION_CHECK="`config_get NewVersionCheck`"
@@ -65,6 +60,21 @@ if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 	rm "$VERSION_FILE"
 fi
 unset CONFIG_NEW_VERSION_CHECK
+
+
+# Update the trust anchors.
+config_get TrustAnchorLocators | xargs -0 updateTA.py
+
+
+# Synchronize everything else.
+BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
+
+DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded
+CUR_LIST="`@MKTEMP@`" # current set of URIs that we know about
+ADDED_LIST="`@MKTEMP@`" # CUR_LIST minus DONE_LIST
+
+chaser -s | sort > "$CUR_LIST"
+cat "$CUR_LIST" > "$ADDED_LIST"
 
 while test -s "$ADDED_LIST"; do
 	RSYNC_CORD_CONF="`@MKTEMP@`"
