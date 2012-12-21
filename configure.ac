@@ -36,7 +36,9 @@ AC_PROG_LN_S
 # Ideally this should be a check for how to create a temporary file on each platform,
 # but this seems to work for now on multiple platforms.
 MKTEMP="mktemp -t tmp.XXXXXXXXXX"
+MKTEMP_DIR="mktemp -t tmp.XXXXXXXXXX -d"
 AC_SUBST([MKTEMP])
+AC_SUBST([MKTEMP_DIR])
 
 AC_PATH_PROG([SHELL_BASH], [bash])
 if test -z "$SHELL_BASH"; then
