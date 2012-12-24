@@ -8,7 +8,7 @@ bin_asn1_dump_SOURCES = \
 bin_asn1_dump_LDADD = \
 	$(LDADD_LIBCASN)
 
-dist_man_MANS += doc/dump.1
+EXTRA_DIST += doc/dump.1
 
 
 pkglibexec_PROGRAMS += bin/asn1/dump_smart
@@ -16,7 +16,7 @@ pkglibexec_PROGRAMS += bin/asn1/dump_smart
 bin_asn1_dump_smart_LDADD = \
 	$(LDADD_LIBRPKIASN1)
 
-dist_man_MANS += doc/dump_smart.1
+EXTRA_DIST += doc/dump_smart.1
 
 
 noinst_PROGRAMS += bin/asn1/make_oidtable
@@ -29,4 +29,4 @@ pkglibexec_PROGRAMS += bin/asn1/rr
 bin_asn1_rr_LDADD = \
 	$(LDADD_LIBCASN)
 
-dist_man_MANS += doc/rr.1
+EXTRA_DIST += doc/rr.1

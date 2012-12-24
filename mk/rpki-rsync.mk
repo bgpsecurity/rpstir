@@ -18,7 +18,7 @@ bin_rpki_rsync_rsync_aur_LDADD = \
 	$(LDADD_LIBUTIL) \
 	$(LDADD_LIBCONFIG)
 
-dist_man_MANS += doc/rsync_aur.1
+EXTRA_DIST += doc/rsync_aur.1
 
 
 pkglibexec_SCRIPTS += bin/rpki-rsync/rsync_cord.py

@@ -15,7 +15,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/add_key_info
 bin_rpki_object_add_key_info_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
-dist_man_MANS += doc/add_key_info.1
+EXTRA_DIST += doc/add_key_info.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/check_signature
@@ -23,7 +23,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/check_signature
 bin_rpki_object_check_signature_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
-dist_man_MANS += doc/check_signature.1
+EXTRA_DIST += doc/check_signature.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/create_object/create_object
@@ -126,7 +126,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/gen_key
 bin_rpki_object_gen_key_LDADD = \
 	$(LDADD_LIBUTIL)
 
-dist_man_MANS += doc/gen_key.1
+EXTRA_DIST += doc/gen_key.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/get_sernum
@@ -152,7 +152,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/make_manifest
 bin_rpki_object_make_manifest_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
-dist_man_MANS += doc/make_manifest.1
+EXTRA_DIST += doc/make_manifest.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/make_roa
@@ -160,7 +160,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/make_roa
 bin_rpki_object_make_roa_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
-dist_man_MANS += doc/make_roa.1
+EXTRA_DIST += doc/make_roa.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/put_sernum
@@ -186,7 +186,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/read_roa
 bin_rpki_object_read_roa_LDADD = \
 	$(LDADD_LIBRPKIASN1)
 
-dist_man_MANS += doc/read_roa.1
+EXTRA_DIST += doc/read_roa.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/set_cert_ski
@@ -200,7 +200,7 @@ pkglibexec_PROGRAMS += bin/rpki-object/sign_cert
 bin_rpki_object_sign_cert_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
-dist_man_MANS += doc/sign_cert.1
+EXTRA_DIST += doc/sign_cert.1
 
 
 pkglibexec_PROGRAMS += bin/rpki-object/sign_cms
