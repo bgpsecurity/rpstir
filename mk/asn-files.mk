@@ -39,7 +39,7 @@ $(ASN_C_FILES) $(ASN_H_FILES): $(ASN_GENERATION_DEPS)
 	for f in $(ASN_SOURCE_FILES); do \
 		dir=`dirname "$$f"` && \
 		mkdir -p "$$tmpdir/$$dir" && \
-		cp "$$f" "$$tmpdir/$$dir"; \
+		cp "$(srcdir)/$$f" "$$tmpdir/$$dir"; \
 	done && \
 	cd "$$tmpdir/$(@D)" && \
 	TEST_LOG_NAME="$(@F)" \
