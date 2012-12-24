@@ -58,10 +58,9 @@ MK_SUBST_FILES_EXEC += bin/rpki-rtr/rpki-rtr-clear
 bin/rpki-rtr/rpki-rtr-clear: $(srcdir)/bin/rpki-rtr/rpki-rtr-clear.in
 
 
-dist_doc_DATA += doc/rpki-rtr-daemon-outline
-
-
-dist_doc_DATA += doc/rpki-rtr-notes
+EXTRA_DIST += \
+	doc/rpki-rtr-daemon-outline \
+	doc/rpki-rtr-notes
 
 
 check_SCRIPTS += tests/subsystem/rtr/badPDUs.py
