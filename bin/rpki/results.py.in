@@ -13,7 +13,7 @@
 #   -v, --verbose  output lists of valid/invalid/unknown objects
 
 
-from subprocess import check_output, Popen, PIPE
+from subprocess import Popen, PIPE
 import os, sys
 from optparse import OptionParser
 
@@ -32,7 +32,8 @@ parser.add_option("-v", "--verbose",
 # Get top-level RPKI directory, and compute local repository cache path
 #
 
-repo_path = check_output(["config_get", "RPKICacheDir"]).strip().rstrip("/")
+repo_path = Popen(["config_get", "RPKICacheDir"], stdout=PIPE) \
+    .communicate()[0].strip().rstrip("/")
 print "Using local repository path: " + repo_path
 if not os.path.exists(repo_path):
     print >>sys.stderr, "Local repository does not exist (%s)" % repo_path

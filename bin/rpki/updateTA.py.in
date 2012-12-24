@@ -364,7 +364,9 @@ if __name__ == "__main__":
         sys.exit(1)
     
     # Get top-level RPKI directory, and compute local repository cache path
-    repo_path = subprocess.check_output(["config_get", "RPKICacheDir"]).strip().rstrip("/")
+    repo_path = subprocess.Popen(["config_get", "RPKICacheDir"],
+                                 stdout=subprocess.PIPE) \
+        .communicate()[0].strip().rstrip("/")
     ta_repo_path = repo_path + "/trustanchors"
     syslog(LOG_INFO, "Using local repository path: " + repo_path)
     syslog(LOG_INFO, "Using local trust anchor path: " + ta_repo_path)
