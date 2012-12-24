@@ -124,6 +124,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLDeltaCRLInd.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.mft.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.p15 \
+	tests/conformance/raw/keys/CRLEntrySerNumMax.mft.p15 \
+	tests/conformance/raw/keys/CRLEntrySerNumMax.p15 \
+	tests/conformance/raw/keys/CRLEntrySerNumTooBig.mft.p15 \
+	tests/conformance/raw/keys/CRLEntrySerNumTooBig.p15 \
 	tests/conformance/raw/keys/CRLIssAltName.mft.p15 \
 	tests/conformance/raw/keys/CRLIssAltName.p15 \
 	tests/conformance/raw/keys/CRLIssDistPt.mft.p15 \
@@ -150,6 +154,12 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLNoVersion.p15 \
 	tests/conformance/raw/keys/CRLNumber2Big.mft.p15 \
 	tests/conformance/raw/keys/CRLNumber2Big.p15 \
+	tests/conformance/raw/keys/CRLNumberMax.mft.p15 \
+	tests/conformance/raw/keys/CRLNumberMax.p15 \
+	tests/conformance/raw/keys/CRLNumberNeg.mft.p15 \
+	tests/conformance/raw/keys/CRLNumberNeg.p15 \
+	tests/conformance/raw/keys/CRLNumberZero.mft.p15 \
+	tests/conformance/raw/keys/CRLNumberZero.p15 \
 	tests/conformance/raw/keys/CRLSigAlgInner.mft.p15 \
 	tests/conformance/raw/keys/CRLSigAlgInner.p15 \
 	tests/conformance/raw/keys/CRLSigAlgOuter.mft.p15 \
@@ -171,6 +181,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/MFTNextUpdPast.p15 \
 	tests/conformance/raw/keys/MFTNextUpdUTC.p15 \
 	tests/conformance/raw/keys/MFTNoNum.p15 \
+	tests/conformance/raw/keys/MFTNumMax.p15 \
+	tests/conformance/raw/keys/MFTNumTooBig.p15 \
+	tests/conformance/raw/keys/MFTNumZero.p15 \
 	tests/conformance/raw/keys/MFTThisUpdFuture.p15 \
 	tests/conformance/raw/keys/MFTThisUpdUTC.p15 \
 	tests/conformance/raw/keys/MFTVersion0.p15 \
@@ -218,6 +231,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badMFTNextUpdPast.mft.p15 \
 	tests/conformance/raw/keys/badMFTNextUpdUTC.mft.p15 \
 	tests/conformance/raw/keys/badMFTNoNum.mft.p15 \
+	tests/conformance/raw/keys/badMFTNumTooBig.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdFuture.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdUTC.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion0.mft.p15 \
@@ -236,6 +250,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAFamily.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamilyLth.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
+	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
+	tests/conformance/raw/keys/goodMFTNumZero.mft.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
 	tests/conformance/raw/patches/badCMS2Certs.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMS2Certs.stage1.patch \
@@ -359,6 +375,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRLDeltaCRLInd.stage1.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage0.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage1.patch \
+	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage0.patch \
+	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage1.patch \
 	tests/conformance/raw/patches/badCRLIssAltName.stage0.patch \
 	tests/conformance/raw/patches/badCRLIssAltName.stage1.patch \
 	tests/conformance/raw/patches/badCRLIssDistPt.stage0.patch \
@@ -385,6 +403,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRLNoVersion.stage1.patch \
 	tests/conformance/raw/patches/badCRLNumber2Big.stage0.patch \
 	tests/conformance/raw/patches/badCRLNumber2Big.stage1.patch \
+	tests/conformance/raw/patches/badCRLNumberNeg.stage0.patch \
+	tests/conformance/raw/patches/badCRLNumberNeg.stage1.patch \
 	tests/conformance/raw/patches/badCRLSigAlgInner.stage0.patch \
 	tests/conformance/raw/patches/badCRLSigAlgInner.stage1.patch \
 	tests/conformance/raw/patches/badCRLSigAlgOuter.stage0.patch \
@@ -581,6 +601,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertSerNum.stage0.patch \
 	tests/conformance/raw/patches/badCertSerNum.stage1.patch \
 	tests/conformance/raw/patches/badCertSerNum.stage2.patch \
+	tests/conformance/raw/patches/badCertSerNumTooBig.stage0.patch \
+	tests/conformance/raw/patches/badCertSerNumTooBig.stage1.patch \
+	tests/conformance/raw/patches/badCertSerNumTooBig.stage2.patch \
 	tests/conformance/raw/patches/badCertSubjUID.stage0.patch \
 	tests/conformance/raw/patches/badCertSubjUID.stage1.patch \
 	tests/conformance/raw/patches/badCertSubjUID.stage2.patch \
@@ -673,6 +696,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTNoNum.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTNoNum.stage1.patch \
 	tests/conformance/raw/patches/badMFTNoNum.stage2.patch \
+	tests/conformance/raw/patches/badMFTNumTooBig.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTNumTooBig.stage1.patch \
+	tests/conformance/raw/patches/badMFTNumTooBig.stage2.patch \
 	tests/conformance/raw/patches/badMFTThisUpdFuture.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTThisUpdFuture.stage1.patch \
 	tests/conformance/raw/patches/badMFTThisUpdFuture.stage2.patch \
@@ -724,12 +750,27 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAVersionV2.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV2.stage2.patch \
 	tests/conformance/raw/patches/badROAVersionV2.stage3.patch \
+	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage0.patch \
+	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage1.patch \
+	tests/conformance/raw/patches/goodCRLNumberMax.stage0.patch \
+	tests/conformance/raw/patches/goodCRLNumberMax.stage1.patch \
+	tests/conformance/raw/patches/goodCRLNumberZero.stage0.patch \
+	tests/conformance/raw/patches/goodCRLNumberZero.stage1.patch \
 	tests/conformance/raw/patches/goodCertAIA2AccessDescHtRs.stage0.patch \
 	tests/conformance/raw/patches/goodCertAIA2AccessDescHtRs.stage1.patch \
 	tests/conformance/raw/patches/goodCertAIA2AccessDescHtRs.stage2.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage0.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage1.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage2.patch \
+	tests/conformance/raw/patches/goodCertSerNumMax.stage0.patch \
+	tests/conformance/raw/patches/goodCertSerNumMax.stage1.patch \
+	tests/conformance/raw/patches/goodCertSerNumMax.stage2.patch \
+	tests/conformance/raw/patches/goodMFTNumMax.ee.stage0.patch \
+	tests/conformance/raw/patches/goodMFTNumMax.stage1.patch \
+	tests/conformance/raw/patches/goodMFTNumMax.stage2.patch \
+	tests/conformance/raw/patches/goodMFTNumZero.ee.stage0.patch \
+	tests/conformance/raw/patches/goodMFTNumZero.stage1.patch \
+	tests/conformance/raw/patches/goodMFTNumZero.stage2.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage1.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage2.patch \
