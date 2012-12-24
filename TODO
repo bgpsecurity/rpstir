@@ -1,4 +1,3 @@
- * run "make install DESTDIR=/path/to/tempdir" and see if everything gets installed in places that make sense
  * rename installed files that might cause conflicts or confusion (e.g. by putting "dump" in $PATH)
  * setup a VM, run "make install", and see if it works (i.e. test as much functionality as possible)
  * buildbot changes
