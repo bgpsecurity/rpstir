@@ -1,4 +1,3 @@
- * setup a VM, run "make install", and see if it works (i.e. test as much functionality as possible)
  * write install tests?
  * buildbot changes
   * add distcheck to -extra builds
