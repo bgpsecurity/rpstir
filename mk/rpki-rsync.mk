@@ -26,4 +26,4 @@ MK_SUBST_FILES_EXEC += bin/rpki-rsync/rsync_cord.py
 bin/rpki-rsync/rsync_cord.py: $(srcdir)/bin/rpki-rsync/rsync_cord.py.in
 
 
-dist_doc_DATA += doc/AUR.readme
+EXTRA_DIST += doc/AUR.readme
