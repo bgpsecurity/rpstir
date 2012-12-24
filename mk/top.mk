@@ -3,6 +3,8 @@
 
 EXTRA_DIST += \
 	autogen.sh \
+	doc/api.txt \
+	doc/glossary.txt \
 	ChangeLog \
 	INSTRUCTIONS \
 	LICENSE \
@@ -17,9 +19,3 @@ MK_SUBST_FILES += etc/rpstir.conf
 etc/rpstir.conf: $(srcdir)/etc/rpstir.conf.in
 
 dist_pkgdata_DATA += etc/version-server-ca.pem
-
-dist_doc_DATA += \
-	doc/glossary.txt
-
-dist_noinst_DATA += \
-	doc/api.txt
