@@ -1,4 +1,3 @@
- * rename installed files that might cause conflicts or confusion (e.g. by putting "dump" in $PATH)
  * setup a VM, run "make install", and see if it works (i.e. test as much functionality as possible)
  * buildbot changes
   * add distcheck to -extra builds
