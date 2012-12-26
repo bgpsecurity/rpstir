@@ -51,3 +51,5 @@ LOG_DIR="`config_get LogDir`"
 make_clean_dir "$CACHE_DIR" "$LOG_DIR"
 
 rcli -x -t "$CACHE_DIR" -y
+
+rpki-rtr-update
