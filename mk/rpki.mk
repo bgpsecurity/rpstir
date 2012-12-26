@@ -52,7 +52,6 @@ bin_rpki_query_LDADD = \
 
 
 pkglibexec_PROGRAMS += bin/rpki/rcli
-PACKAGE_NAME_BINS += rcli
 
 bin_rpki_rcli_LDADD = \
 	$(LDADD_LIBRPKI)
