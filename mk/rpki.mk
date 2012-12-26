@@ -33,7 +33,6 @@ CLEANFILES += \
 
 
 pkglibexec_PROGRAMS += bin/rpki/garbage
-PACKAGE_NAME_BINS += garbage
 
 bin_rpki_garbage_LDADD = \
 	$(LDADD_LIBRPKI)

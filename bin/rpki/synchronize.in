@@ -125,3 +125,7 @@ while test -s "$ADDED_LIST"; do
 done
 
 rm -f "$DONE_LIST" "$CUR_LIST" "$ADDED_LIST"
+
+
+# Run garbage collection.
+garbage
