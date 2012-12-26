@@ -1,4 +1,3 @@
- * write install tests?
  * update INSTRUCTIONS.in
   * copy etc/test.conf to ~/.@PACKAGE_NAME@.test.conf before "make check"
   * if you install to a non-standard location, add $(bindir) to your $PATH
