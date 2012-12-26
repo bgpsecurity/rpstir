@@ -125,7 +125,7 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 		-f $(top_srcdir)/tests/subsystem/rtr/root.options \
 		CERT \
 		outputfilename="$@" \
-		subjkeyfile="$<"
+		subjkeyfile="tests/subsystem/rtr/root.key"
 
 RPKI_RTR_TEST_EE_CERTS = \
 	tests/subsystem/rtr/as-1.ee.cer \
