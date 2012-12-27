@@ -1021,7 +1021,7 @@ int searchscm(
             fnd = 0;
             for (i = 0; i < srch->nused; i++)
             {
-                if (srch->vec[i].avalsize != SQL_NO_DATA)
+                if (srch->vec[i].avalsize != SQL_NULL_DATA)
                     fnd++;
             }
             if (fnd == 0)
