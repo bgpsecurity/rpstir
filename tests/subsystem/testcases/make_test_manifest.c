@@ -39,7 +39,7 @@ char *msgs[] = {
 
 static int fatal(
     int msg,
-    char *paramp);
+    const char *paramp);
 
 static int add_name(
     char *curr_file,
@@ -74,7 +74,7 @@ static int add_name(
 
 static int fatal(
     int msg,
-    char *paramp)
+    const char *paramp)
 {
     fprintf(stderr, msgs[msg], paramp);
     exit(msg);
@@ -127,6 +127,7 @@ int main(
     int argc,
     char **argv)
 {
+    const char *msg;
     struct ROA roa;
     struct CMSAlgorithmIdentifier *algidp;
     ulong now = time((time_t *) 0);
@@ -234,8 +235,8 @@ int main(
                                           self, 0);
     if (get_casn_file(&certp->self, certfile, 0) < 0)
         fatal(2, certfile);
-    if ((c = signCMS(&roa, keyfile, 0)))
-        fatal(7, c);
+    if ((msg = signCMS(&roa, keyfile, 0)))
+        fatal(7, msg);
 
     char fullpath[40];
     char fulldir[40];

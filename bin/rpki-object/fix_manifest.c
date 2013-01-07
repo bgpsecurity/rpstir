@@ -56,7 +56,6 @@ int main(
     strcpy(keyring.password, "password");
     if (get_casn_file(&roa.self, argv[1], 0) < 0)
         fatal(1, "CMS file");
-    struct SignedData *signedDatap = &roa.content.signedData;
     char *c = strrchr(argv[1], (int)'.');
     if (!c || (strcmp(c, ".man") && strcmp(c, ".mft") && strcmp(c, ".mnf")))
         fatal(1, "CMSfile suffix");
@@ -80,7 +79,7 @@ int main(
             int fl = readvsize_casn(&fahp->file, &f);
             if (fl < 0)
                 fatal(2, fname);
-            if (fl == strlen(fname) && !strcmp((char *)f, fname))
+            if ((ssize_t)fl == (ssize_t)strlen(fname) && !strcmp((char *)f, fname))
                 break;
         }
         if (!fahp || stat(fname, &statbuf) < 0 ||
@@ -95,7 +94,7 @@ int main(
         free(tbh);
         write_casn(&fahp->hash, hashbuf, j + 1);
     }
-    char *msg = signCMS(&roa, argv[2], 0);
+    const char *msg = signCMS(&roa, argv[2], 0);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else

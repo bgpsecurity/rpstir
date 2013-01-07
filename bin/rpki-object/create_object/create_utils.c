@@ -69,7 +69,7 @@ int write_EEkey(
     // struct Certificate my_cert;
     struct ROA *roa = my_var;
     // Certificate(&my_cert, (ushort)0);
-    char *c;
+    const char *c;
 
     if ((c = signCMS(roa, (char *)value, 0)))
     {

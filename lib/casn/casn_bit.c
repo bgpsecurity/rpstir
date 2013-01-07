@@ -41,8 +41,8 @@ int read_casn_bit(
     bits = casnp->min;
     lth = 1 + (bits >> 3);      // which one wiil we read?
     bits &= 7;
-    if (lth >= tcasnp->lth ||   // beyond what we have now?
-        (lth - 1 == tcasnp->lth && (int)*tcasnp->startp + bits > 7))
+    if ((ulong)lth >= tcasnp->lth ||   // beyond what we have now?
+        ((ulong)lth - 1 == tcasnp->lth && (int)*tcasnp->startp + bits > 7))
         return 0;
     return (int)tcasnp->startp[lth] & (0x80 >> bits);
 }
@@ -66,7 +66,7 @@ Function: Writes enumerated bit to higher BIT STRING
         return _casn_obj_err(casnp, ASN_TYPE_ERR);
     bits = casnp->min;
     lth = 2 + (bits >> 3);      // which one wiil we write?
-    if (lth >= tcasnp->lth)     // beyond what we have now?
+    if ((ulong)lth >= tcasnp->lth)     // beyond what we have now?
     {
         tcasnp->startp = (uchar *) realloc(tcasnp->startp, lth + 1);
         memset(&tcasnp->startp[tcasnp->lth], 0, lth - tcasnp->lth);
