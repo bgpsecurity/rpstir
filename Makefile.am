@@ -1,4 +1,8 @@
-AUTOMAKE_OPTIONS = 1.6 foreign -Wall
+AUTOMAKE_OPTIONS = \
+	1.6 \
+	foreign \
+	subdir-objects \
+	-Wall
 
 
 EXTRA_DIST = \
@@ -12,11 +16,8 @@ EXTRA_DIST = \
 AM_CFLAGS = \
 	-Wall \
 	-Wextra \
+	-Werror \
 	-g
-
-CFLAGS_STRICT = \
-	$(AM_CFLAGS) \
-	-Werror
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib \
@@ -68,6 +69,7 @@ include mk/libconfiglib.mk
 include mk/libconfig.mk
 include mk/libcasn.mk
 include mk/librpkiasn1.mk
+include mk/librpkiobject.mk
 include mk/libdb.mk
 include mk/librpkirtr.mk
 include mk/librpki.mk

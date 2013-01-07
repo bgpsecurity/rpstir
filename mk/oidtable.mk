@@ -16,4 +16,7 @@ var_oidtable_ASN1_H = \
 	lib/rpki-asn1/serial_number.h
 
 var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H)
-	./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		tests/run_with_tool.sh \
+		./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)

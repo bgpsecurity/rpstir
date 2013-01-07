@@ -3,12 +3,15 @@
  */
 
 
-#include "rpki/cms/roa_utils.h"
+#include "rpki-object/cms/cms.h"
 #include "rpki-asn1/manifest.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <time.h>
+#include <unistd.h>
 
 /*
  * This file has a program to make manifests. 
@@ -23,13 +26,14 @@ char *msgs[] = {
     "Error in %s creating signature\n", // 5
     "Error writing %s\n",
     "File name %s too long\n",  // 7
+    "Error %s\n",
 };
 
 #define CURR_FILE_SIZE 512
 
 static int fatal(
     int msg,
-    char *paramp);
+    const char *paramp);
 static int gen_sha2(
     uchar * inbufp,
     int bsize,
@@ -54,9 +58,9 @@ static int add_name(
     if (read(fd, b, siz + 2) != siz)
         fatal(2, curr_file);
     hsiz = gen_sha2(b, siz, hash);
-    if (inject_casn(&manp->fileList.self, num) < 0)
+    fahp = (struct FileAndHash *)inject_casn(&manp->fileList.self, num);
+    if (fahp == NULL)
         fatal(3, "fileList");
-    fahp = (struct FileAndHash *)member_casn(&manp->fileList.self, num);
     write_casn(&fahp->file, (uchar *) curr_file, strlen(curr_file));
     write_casn_bits(&fahp->hash, hash, hsiz, 0);
     return 1;
@@ -97,8 +101,14 @@ static int gen_sha2(
     int ansr;
 
     memset(hash, 0, 40);
-    cryptInit();
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
+    if (cryptInit() != CRYPT_OK)
+    {
+        fatal(8, "initializing cryptlib");
+    }
+    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) != CRYPT_OK)
+    {
+        fatal(8, "creating cryptlib hash context");
+    }
     cryptEncrypt(hashContext, inbufp, bsize);
     cryptEncrypt(hashContext, inbufp, 0);
     cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
@@ -110,7 +120,7 @@ static int gen_sha2(
 
 static int fatal(
     int msg,
-    char *paramp)
+    const char *paramp)
 {
     fprintf(stderr, msgs[msg], paramp);
     exit(msg);
@@ -226,8 +236,9 @@ int main(
     write_objid(&sigInfop->signatureAlgorithm.algorithm,
                 id_sha_256WithRSAEncryption);
 
-    if ((c = signCMS(&roa, argv[3], 0)))
-        fatal(5, c);
+    const char *msg;
+    if ((msg = signCMS(&roa, argv[3], 0)))
+        fatal(5, msg);
     if (put_casn_file(&roa.self, argv[1], 0) < 0)
         fatal(6, argv[1]);
     printf("What readable file, if any? ");

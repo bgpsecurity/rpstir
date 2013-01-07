@@ -60,6 +60,7 @@ char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
+#include <limits.h>
 
 #define UTCBASE 70              // base year 1970 (unix epoch)
 #define UTCYR 0                 // 0 (UTC year position)
@@ -108,117 +109,34 @@ static ushort _mos[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304,
     334, 365, 366
 };                              /* last is for leap year */
 
-static ulong get_num(
+/**
+ * Converts lth decimal digits, starting at c, to a number
+ *
+ * return non-negative integer, or negative on failure
+ */
+static int get_num(
     const char *c,
     int lth)
 {
-    /*
-     * Function: Converts lth decimal digits, starting at c, to a number 
-     */
-    long val;
-    for (val = 0; lth--; val = (val * 10) + *c++ - '0');
-    return val;
-}
+    intmax_t val = 0;
+    int i;
+    for (i = 0; i < lth; ++i)
+    {
+        if (c[i] >= '0' && c[i] <= '9')
+        {
+            val = val * 10 + (c[i] - '0');
+        }
+        else
+        {
+            return -1;
+        }
 
-/** Returns true (nonzero) if year is a leap year.
- *
- * \remark http://en.wikipedia.org/wiki/Gregorian_calendar
- * 
- * Every year that is exactly divisible by four is a leap year, except
- * for years that are exactly divisible by 100; the centurial years
- * that are exactly divisible by 400 are still leap years. For
- * example, the year 1900 is not a leap year; the year 2000 is a leap
- * year.
- */
-static int is_leapyear(
-    int year)
-{
-    if (year % 400 == 0)
-        return 1;
-    else if (year % 100 == 0)
-        return 0;
-    else if (year % 4 == 0)
-        return 1;
-    else
-        return 0;
-}
-
-/**
- * Convert struct tm to 64-bit signed integer.
- *
- * Mostly analogous to mktime(), with 64 bit output (unlike time_t
- * which may be 32 or 64 depending on the system).  The mktime64_gmt()
- * function shall convert the broken-down time, expressed as GMT, in
- * the structure pointed to by timeptr, into a time since the Epoch
- * value. The original values of the tm_wday and tm_yday components of
- * the structure are ignored, and the original values of the other
- * components are not restricted to the ranges described in <time.h>.
- *
- * Unlike POSIX mktime(), timeptr is NOT modified upon successful
- * completion.  Nor is the output corrected for timezone and seasonal
- * time adjustments.  Therefore, the input is assumed to be GMT,
- * e.g. the output of the gmtime() function.
- *
- * \return The specified time since the Epoch encoded as a value of
- * type int64_t.  If the time since the Epoch cannot be represented,
- * the function shall return the value (int64_t)-1.  In particular,
- * times before January 1, 1970 GMT cannot be represented and will
- * return -1.
- *
- * \remark Note that leap-seconds will cause ambiguities; "Unix time"
- * is neither a linear representation of time nor a true
- * representation of UTC, as it cannot unambiguously represent UTC
- * leap seconds (e.g. December 31, 1998 23:59:60).
- */
-static int64_t mktime64_gmt(
-    const struct tm *timeptr)
-{
-    int64_t t = 0;
-    int64_t tm_sec,
-        tm_min,
-        tm_hour,
-        tm_mday,
-        tm_mon,
-        tm_year,
-        tm_yday;
-
-    // Minimally check pointer and bounds.
-    if (!timeptr || timeptr->tm_year < 70)
-        return (int64_t) - 1;
-
-    // Cast timeptr members to 64-bit integers.
-    tm_sec = timeptr->tm_sec;
-    tm_min = timeptr->tm_min;
-    tm_hour = timeptr->tm_hour;
-    tm_mday = timeptr->tm_mday;
-    tm_mon = timeptr->tm_mon;
-    tm_year = timeptr->tm_year;
-
-    // Compute tm_yday based on tm_mday, tm_mday, and tm_myear
-    if (tm_mon < 0 || tm_mon > 11)
-        return (int64_t) - 1;
-    tm_yday = _mos[tm_mon] + (tm_mday - 1);
-    // Must add leap day if March or later and it's a leap year.
-    if (is_leapyear(tm_year + 1900) && tm_mon >= 2)
-        tm_yday++;
-
-    /*
-     * Compute seconds since epoch.  Equation reference: Base Definitions
-     * volume of IEEE Std 1003.1-2001, Section 4.14, Seconds Since the Epoch.
-     * http://pubs.opengroup.org/onlinepubs/007904875/basedefs/xbd_chap04.html#tag_04_14
-     * Note: since all timeptr members were converted from int to int64_t, there is no
-     * danger of overflow on systems where int is 32-bit. 
-     */
-    t = tm_sec + tm_min * 60 + tm_hour * 3600 + tm_yday * 86400 +
-        (tm_year - 70) * 31536000 + ((tm_year - 69) / 4) * 86400 -
-        ((tm_year - 1) / 100) * 86400 + ((tm_year + 299) / 400) * 86400;
-
-    // As required by POSIX, we did not check bounds on timeptr members,
-    // so we must now check for a negative result.
-    if (t < 0)
-        return (int64_t) - 1;
-
-    return t;
+        if (val > INT_MAX || val < 0)
+        {
+            return -1;
+        }
+    }
+    return (int)val;
 }
 
 int diff_casn_time(
@@ -281,17 +199,17 @@ int _gentime_to_ulong(
     // add in this month's days
     val += da - 1;
     if (&fromp[GENHR] >= ep ||  /* hour */
-        (hr = (int)get_num(&fromp[GENHR], GENHRSIZ)) > 23)
+        (hr = (int)get_num(&fromp[GENHR], GENHRSIZ)) > 23 || hr < 0)
         return -1;
     val = (val * 24) + hr;
     if (val < 0)
         return -1;
     if (&fromp[GENMI] >= ep ||  /* min */
-        (mi = (int)get_num(&fromp[GENMI], GENMISIZ)) > 59)
+        (mi = (int)get_num(&fromp[GENMI], GENMISIZ)) > 59 || mi < 0)
         return -1;
     if (b <= &fromp[GENSE])
         se = 0;                 /* seconds */
-    else if ((se = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59)
+    else if ((se = (int)get_num(&fromp[GENSE], GENSESIZ)) > 59 || se < 0)
         return -1;
     val = (val * 3600) + (mi * 60) + se;
     if (val < 0)
@@ -299,8 +217,8 @@ int _gentime_to_ulong(
     if (*b == '+' || *b == '-')
     {
         int xtra = 0;
-        if ((hr = (int)get_num(&b[GENSFXHR], GENHRSIZ)) > 23 ||
-            (mi = (int)get_num(&b[GENSFXMI], GENMISIZ)) > 59)
+        if ((hr = (int)get_num(&b[GENSFXHR], GENHRSIZ)) > 23 || hr < 0 ||
+            (mi = (int)get_num(&b[GENSFXMI], GENMISIZ)) > 59 || mi < 0)
             return -1;
         xtra = (hr * 60) + mi;  /* diff in minutes */
         if (*b == '-')
@@ -340,6 +258,8 @@ int _utctime_to_ulong(
         return -1;
 
     yr = (int)get_num(&fromp[UTCYR], UTCYRSIZ);
+    if (yr < 0)
+        return -1;
     if (yr < 50)                // rfc5280#section-4.1.2.5.1
         strcpy(genfrom, "20");
     else
@@ -496,4 +416,53 @@ int write_casn_time(
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
         return _casn_obj_err(casnp, -err);
     return casnp->lth;
+}
+
+int adjustTime(
+    struct casn *timep,
+    long basetime,
+    char *deltap)
+{
+    // if they passed in a NULL for deltap, just use basetime
+    if (deltap != NULL)
+    {
+        char *unitp = &deltap[strlen(deltap) - 1];
+        if (*unitp == 'Z')
+        {
+            // absolute time
+            if (strlen(deltap) == 15)   /* generalized time? */
+                /*
+                 * this fn doesn't handle generalizedtime, strip century 
+                 */
+                deltap += (15 - 13);
+            else if (strlen(deltap) != 13)      /* utc time? */
+                return -1;      /* bad format */
+            if (write_casn(timep, (uchar *) deltap, 13) < 0)
+                return -1;      /* bad format */
+        }
+        else if (strchr("YMWDhms", *unitp) != 0)
+        {
+            // relative time
+            ulong val;
+            sscanf(deltap, "%ld", &val);
+            if (*unitp == 's'); // val is right
+            else if (*unitp == 'm')
+                val *= 60;
+            else if (*unitp == 'h')
+                val *= 3600;
+            else if (*unitp == 'D')
+                val *= (3600 * 24);
+            else if (*unitp == 'W')
+                val *= (3600 * 24 * 7);
+            else if (*unitp == 'M')
+                val *= (3600 * 24 * 30);
+            else if (*unitp == 'Y')
+                val *= (3600 * 24 * 365);
+            basetime += val;
+            write_casn_time(timep, (ulong) basetime);
+        }
+        else
+            return -1;          // unknown delta unit, bad call
+    }
+    return 0;
 }

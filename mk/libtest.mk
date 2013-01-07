@@ -7,7 +7,4 @@ EXTRA_DIST += \
 
 check_PROGRAMS += lib/test/tests/unittest-test
 
-lib_test_tests_unittest_test_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 TESTS += lib/test/tests/unittest-test

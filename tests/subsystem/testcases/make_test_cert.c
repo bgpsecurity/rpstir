@@ -9,12 +9,15 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "cryptlib.h"
-#include "rpki-asn1/certificate.h"
+#include "util/cryptlib_compat.h"
+#include "rpki-object/certificate.h"
+#include "rpki-object/signature.h"
 #include <rpki-asn1/roa.h>
-#include <rpki-asn1/keyfile.h>
+#include <rpki-object/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
+#include <util/hashutils.h>
+#include <util/logging.h>
 #include <time.h>
 
 char *msgs[] = {
@@ -51,23 +54,6 @@ static void fatal(
     exit(err);
 }
 
-extern int adjustTime(
-    struct casn *timep,
-    long now,
-    char *deltap);
-
-static int fillPublicKey(
-    struct casn *spkp,
-    char *keyfile)
-{
-    struct Keyfile kfile;
-    Keyfile(&kfile, (ushort) 0);
-    if (get_casn_file(&kfile.self, keyfile, 0) < 0)
-        fatal(1, keyfile);
-    copy_casn(spkp, &kfile.content.bbb.ggg.iii.nnn.ooo.ppp.key);
-    return 0;
-}
-
 static void check_access_methods(
     struct Extension *iextp)
 {
@@ -93,46 +79,6 @@ static void check_access_methods(
     }
     if (rep != 1 && man != 1)
         fatal(12, e);
-}
-
-static struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oid);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    int alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr;
-
-    memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if (alg == 2)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    else if (alg == 1)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-    else
-        return 0;
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
 }
 
 static void inheritIPAddresses(
@@ -211,22 +157,6 @@ static int ipOrRange2prefix(
     strcpy(&a[ansr2], b);
     free(b);
     return ansr + ansr2;
-}
-
-static struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp)
-{
-    struct Extension *extp;
-    if (!(extp = findExtension(extsp, idp)))
-    {
-        extp = (struct Extension *)inject_casn(&extsp->self,
-                                               num_items(&extsp->self));
-    }
-    else
-        clear_casn(&extp->self);
-    write_objid(&extp->extnID, idp);
-    return extp;
 }
 
 static void make_fullpath(
@@ -451,100 +381,6 @@ static void set_name(
                strlen(namep));
 }
 
-static int setSignature(
-    struct Certificate *certp,
-    char *keyfile,
-    int bad)
-{
-    CRYPT_CONTEXT hashContext;
-    CRYPT_CONTEXT sigKeyContext;
-    CRYPT_KEYSET cryptKeyset;
-    uchar hash[40];
-    uchar *signature = NULL;
-    int ansr = 0,
-        signatureLength;
-    char *msg;
-    uchar *signstring = NULL;
-    int sign_lth;
-
-    if ((sign_lth = size_casn(&certp->toBeSigned.self)) < 0)
-        fatal(5, "sizing");
-    signstring = (uchar *) calloc(1, sign_lth);
-    sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
-    memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if ((ansr =
-         cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
-        || (ansr =
-            cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                               CRYPT_ALGO_RSA)) != 0)
-        msg = "creating context";
-    else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
-             (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
-        msg = "hashing";
-    else if ((ansr =
-              cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
-                                      hash, &signatureLength)) != 0)
-        msg = "getting attribute string";
-    else if ((ansr =
-              cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                              keyfile, CRYPT_KEYOPT_READONLY)) != 0)
-        msg = "opening key set";
-    else if ((ansr =
-              cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME,
-                                 "label", "password")) != 0)
-        msg = "getting key";
-    else if ((ansr =
-              cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
-                                   hashContext)) != 0)
-        msg = "signing";
-    else
-    {
-        signature = (uchar *) calloc(1, signatureLength + 20);
-        if ((ansr = cryptCreateSignature(signature, signatureLength + 20,
-                                         &signatureLength, sigKeyContext,
-                                         hashContext)) != 0)
-            msg = "signing";
-        else if ((ansr =
-                  cryptCheckSignature(signature, signatureLength,
-                                      sigKeyContext, hashContext)) != 0)
-            msg = "verifying";
-    }
-
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
-    cryptEnd();
-    if (signstring)
-        free(signstring);
-    signstring = NULL;
-    if (ansr == 0)
-    {
-        struct SignerInfo siginfo;
-        SignerInfo(&siginfo, (ushort) 0);
-        if ((ansr = decode_casn(&siginfo.self, signature)) < 0)
-            msg = "decoding signature";
-        else if ((ansr = readvsize_casn(&siginfo.signature, &signstring)) < 0)
-            msg = "reading signature";
-        else
-        {
-            if (bad)
-                signstring[0]++;
-            if ((ansr =
-                 write_casn_bits(&certp->signature, signstring, ansr, 0)) < 0)
-                msg = "writing signature";
-            else
-                ansr = 0;
-        }
-    }
-    if (signstring != NULL)
-        free(signstring);
-    if (signature != NULL)
-        free(signature);
-    if (ansr)
-        fatal(5, msg);
-    return ansr;
-}
-
 static void write_ASNums(
     struct ASNum *asnump)
 {
@@ -629,22 +465,6 @@ static int write_family(
     return num;
 }
 
-static int writeHashedPublicKey(
-    struct casn *valuep,
-    struct casn *keyp,
-    char x)
-{
-    uchar *bitval;
-    int siz = readvsize_casn(keyp, &bitval);
-    uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
-    free(bitval);
-    if (x)
-        hashbuf[0]++;
-    write_casn(valuep, hashbuf, siz);
-    return siz;
-}
-
 /*
  * static void view_extensions(struct Extensions *extsp) { struct Extension
  * *extp; for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
@@ -655,6 +475,7 @@ int main(
     int argc,
     char **argv)
 {
+    OPEN_LOG("make_test_cert", LOG_USER);
     if (argc < 4 || argc > 5)
         fatal(3, "");
     int bad = 0,
@@ -747,7 +568,10 @@ int main(
     write_casn(&spkinfop->algorithm.parameters.rsadsi_rsaEncryption,
                (uchar *) "", 0);
     struct casn *spkp = &spkinfop->subjectPublicKey;
-    fillPublicKey(spkp, subjkeyfile);
+    if (!fillPublicKey(spkp, subjkeyfile))
+    {
+        fatal(1, "subjkeyfile");
+    }
 
     struct Extensions *extsp = &ctftbsp->extensions,
         *iextsp;
@@ -758,13 +582,13 @@ int main(
     struct Extension *extp,
        *iextp;
     // make subjectKeyIdentifier first
-    extp = makeExtension(extsp, id_subjectKeyIdentifier);
+    extp = make_extension(extsp, id_subjectKeyIdentifier);
     writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp, skistat);
     if (issuerkeyfile)
     {
         // key usage
-        extp = makeExtension(extsp, id_keyUsage);
-        if (!(iextp = findExtension(iextsp, id_keyUsage)))
+        extp = make_extension(extsp, id_keyUsage);
+        if (!(iextp = find_extension(iextsp, id_keyUsage, false)))
             fatal(4, "key usage");
         copy_casn(&extp->self, &iextp->self);
         if (ee)
@@ -775,23 +599,23 @@ int main(
         // basic constraints
         if (!ee)
         {
-            extp = makeExtension(extsp, id_basicConstraints);
-            if (!(iextp = findExtension(iextsp, id_basicConstraints)))
+            extp = make_extension(extsp, id_basicConstraints);
+            if (!(iextp = find_extension(iextsp, id_basicConstraints, false)))
                 fatal(4, "basic constraints");
             copy_casn(&extp->self, &iextp->self);
         }
         // CRL dist points
-        extp = makeExtension(extsp, id_cRLDistributionPoints);
-        if (!(iextp = findExtension(iextsp, id_cRLDistributionPoints)))
+        extp = make_extension(extsp, id_cRLDistributionPoints);
+        if (!(iextp = find_extension(iextsp, id_cRLDistributionPoints, false)))
             fatal(4, "CRL Dist points");
         copy_casn(&extp->self, &iextp->self);
         // Cert policies
-        extp = makeExtension(extsp, id_certificatePolicies);
-        if (!(iextp = findExtension(iextsp, id_certificatePolicies)))
+        extp = make_extension(extsp, id_certificatePolicies);
+        if (!(iextp = find_extension(iextsp, id_certificatePolicies, false)))
             fatal(4, "cert policies");
         copy_casn(&extp->self, &iextp->self);
         // authInfoAccess
-        extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
+        extp = make_extension(extsp, id_pkix_authorityInfoAccess);
         if (strlen(argv[1]) == 2 || (strlen(argv[1]) == 3 && argv[1][1] > '9'))
         {                       // first generation.  Have to build it
             struct AuthorityInfoAccessSyntax *aiasp =
@@ -804,8 +628,9 @@ int main(
         }
         else                    // can copy it
         {
-            extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
-            if (!(iextp = findExtension(iextsp, id_pkix_authorityInfoAccess)))
+            extp = make_extension(extsp, id_pkix_authorityInfoAccess);
+            if (!(iextp = find_extension(iextsp, id_pkix_authorityInfoAccess,
+                                         false)))
                 fatal(4, "authorityInfoAccess");
             copy_casn(&extp->self, &iextp->self);
         }
@@ -821,10 +646,10 @@ int main(
      */
     if (issuerkeyfile)
     {
-        if (!(iextp = findExtension(&issuer.toBeSigned.extensions,
-                                    id_subjectKeyIdentifier)))
+        if (!(iextp = find_extension(&issuer.toBeSigned.extensions,
+                                    id_subjectKeyIdentifier, false)))
             fatal(4, "subjectKeyIdentifier");
-        extp = makeExtension(&ctftbsp->extensions, id_authKeyId);
+        extp = make_extension(&ctftbsp->extensions, id_authKeyId);
         copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
                   &iextp->extnValue.subjectKeyIdentifier);
     }
@@ -833,9 +658,10 @@ int main(
     if (issuerkeyfile)
     {
         if (explicitIPAS >= 0)  // no extension if explicitIPAS < 0
-            extp = makeExtension(&ctftbsp->extensions, id_pe_ipAddrBlock);
+            extp = make_extension(&ctftbsp->extensions, id_pe_ipAddrBlock);
         iextp =
-            findExtension(&issuer.toBeSigned.extensions, id_pe_ipAddrBlock);
+            find_extension(&issuer.toBeSigned.extensions, id_pe_ipAddrBlock,
+                           false);
         if (!ee)
         {
             int numfam = 0;
@@ -875,9 +701,9 @@ int main(
         if (!strchr(subjfile, (int)'R'))        // not for ROAs
         {
             iextp =
-                findExtension(&issuer.toBeSigned.extensions,
-                              id_pe_autonomousSysNum);
-            extp = makeExtension(&ctftbsp->extensions, id_pe_autonomousSysNum);
+                find_extension(&issuer.toBeSigned.extensions,
+                               id_pe_autonomousSysNum, false);
+            extp = make_extension(&ctftbsp->extensions, id_pe_autonomousSysNum);
             if (!ee)            // get numbers from input file
             {
                 copy_casn(&extp->critical, &iextp->critical);
@@ -904,9 +730,9 @@ int main(
         }
         // subjectInfoAccess
         iextp =
-            findExtension(&issuer.toBeSigned.extensions,
-                          id_pe_subjectInfoAccess);
-        extp = makeExtension(extsp, id_pe_subjectInfoAccess);
+            find_extension(&issuer.toBeSigned.extensions,
+                           id_pe_subjectInfoAccess, false);
+        extp = make_extension(extsp, id_pe_subjectInfoAccess);
         check_access_methods(iextp);
         copy_casn(&extp->self, &iextp->self);
         if (ee)                 // change it for an EE cert
@@ -924,11 +750,16 @@ int main(
     }
     else                        // root
     {
-        if (!(iextp = findExtension(extsp, id_pe_subjectInfoAccess)))
+        if (!(iextp = find_extension(extsp, id_pe_subjectInfoAccess, false)))
             fatal(4, "subjectInfoAccess");
         check_access_methods(iextp);
     }
-    setSignature(&cert, (issuerkeyfile) ? issuerkeyfile : subjkeyfile, bad);
+    if (!set_signature(&cert.toBeSigned.self, &cert.signature,
+                       (issuerkeyfile) ? issuerkeyfile : subjkeyfile,
+                       "label", "password", bad))
+    {
+        fatal(5, "setting signature");
+    }
     char fullpath[40];
     memset(fullpath, 0, sizeof(fullpath));
     make_fullpath(fullpath, subjfile);

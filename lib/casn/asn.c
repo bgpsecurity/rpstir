@@ -228,7 +228,7 @@ int decode_asn(
     int ansr,
         did,
         indef;                  /* step 1 */
-    for (did = 0, curr_asnp = *asnpp; !nbytes || nbytes > did; curr_asnp++)
+    for (did = 0, curr_asnp = *asnpp; !nbytes || nbytes > (ulong)did; curr_asnp++)
     {
         if (curr_asnp >= easnp)
             return -1;
@@ -245,7 +245,7 @@ int decode_asn(
         }
         else
             indef = 1;
-        if ((nbytes && nbytes < did) ||
+        if ((nbytes && nbytes < (ulong)did) ||
             (typ == ASN_INTEGER && curr_asnp->lth > 1 && ((!*from &&
                                                            !(from[1] & 0x80))
                                                           || (*from == 0xFF
@@ -272,7 +272,7 @@ int decode_asn(
                 curr_asnp->lth = (from += 2) - curr_asnp->stringp - 2;
                 ansr += 2;
             }
-            if (nbytes && did + ansr > nbytes)
+            if (nbytes && (ulong)did + (ulong)ansr > nbytes)
             {
                 *asnpp = curr_asnp;
                 return -1;
@@ -290,7 +290,7 @@ int decode_asn(
             from += 2;
             curr_asnp->lth = ansr = from - curr_asnp->stringp - 2;
         }
-        if ((did += ansr) > nbytes && nbytes)
+        if ((ulong)(did += ansr) > nbytes && nbytes)
             return -1;
         if ((!nbytes || indef) && !*from && !from[1])
             break;              /* step 5 */
@@ -308,13 +308,11 @@ int make_asn_table(
     uchar * c,
     ulong lth)
 {
-    unsigned char *b;
     struct asn *asnp;
     int count = count_asns(c) + 1;
     if (!(*asnbase = (struct asn *)calloc(count, sizeof(struct asn))))
         return 0;
     (asnp = *asnbase)->stringp = c;
-    b = asn_set(asnp);
     if ((count = decode_asn(&asnp, &asnp[count], c, lth, 0)) < 0)
         count = (c - asnp->stringp);
     return count;
