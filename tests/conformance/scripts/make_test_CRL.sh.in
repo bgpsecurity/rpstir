@@ -11,6 +11,11 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $RPKI_ROOT/lib/util/trap_errors
 
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 # Usage
 usage ( ) {
     usagestr="
@@ -222,7 +227,7 @@ $CONF_SCRIPTS/gen_child_ca.sh \
 
 # Go into that subdirectory...
 cd ${OUTPUT_DIR}/${child_name}
-dump_smart ${crl_name}.crl >${crl_name}.crl.raw
+run "dump-smart-0-`basename ${crl_name}`" dump_smart ${crl_name}.crl >${crl_name}.crl.raw
 
 # Stage 0: Pre-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
@@ -240,10 +245,10 @@ fi
 
 # Sign it
 echo "Signing CRL"
-rr <${crl_name}.crl.raw >${crl_name}.blb
-sign_cert ${crl_name}.blb ${child_key_path}
+run "rr-1-`basename ${crl_name}`" rr <${crl_name}.crl.raw >${crl_name}.blb
+run "sign_cert-1-`basename ${crl_name}`" sign_cert ${crl_name}.blb ${child_key_path}
 mv ${crl_name}.blb ${crl_name}.crl
-dump_smart ${crl_name}.crl >${crl_name}.crl.raw
+run "dump_smart-1-`basename ${crl_name}`" dump_smart ${crl_name}.crl >${crl_name}.crl.raw
 
 # Stage 1: Post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
@@ -260,10 +265,10 @@ else
 fi
 
 # Convert back into DER-encoded binary
-rr <${crl_name}.crl.raw >${crl_name}.crl
+run "rr-final-`basename ${crl_name}`" rr <${crl_name}.crl.raw >${crl_name}.crl
 
 # Update manifest with hash of newly edited CRL
-fix_manifest ${child_name}.mft \
+run "fix_manifest-final-`basename ${child_name}`" fix_manifest ${child_name}.mft \
     ${child_mft_ee_key_path} ${crl_name}.crl
 echo "Updated manifest ${child_name}.mft with hash of ${crl_name}.crl"
 

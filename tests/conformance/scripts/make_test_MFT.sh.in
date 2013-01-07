@@ -10,6 +10,11 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $RPKI_ROOT/lib/util/trap_errors
 
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 # Usage
 usage ( ) {
     usagestr="
@@ -229,7 +234,7 @@ $CONF_SCRIPTS/gen_child_ca.sh \
 cd ${OUTPUT_DIR}/${child_name}
 
 # Stage 0: Modify EE automatically or manually
-dump_smart ${mft_ee_filename} >${mft_ee_name}.raw
+run "dump_smart-0-`basename ${mft_ee_filename}`" dump_smart ${mft_ee_filename} >${mft_ee_name}.raw
 if [ $USE_EXISTING_PATCHES ]
 then
     echo "Stage 0: Modify EE automatically"
@@ -247,13 +252,13 @@ fi
 
 # Sign EE cert
 echo "Signing EE cert"
-rr <${mft_ee_name}.raw >${mft_ee_filename}
-sign_cert ${mft_ee_filename} ${child_key_path}
+run "rr-1-`basename ${mft_ee_filename}`" rr <${mft_ee_name}.raw >${mft_ee_filename}
+run "sign_cert-1-`basename ${mft_ee_filename}`" sign_cert ${mft_ee_filename} ${child_key_path}
 rm ${mft_ee_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${child_name}/${mft_ee_name}.cer"
 
 # Stage 1: Modify MFT's to-be-signed portions automatically or manually
-dump_smart ${mft_name}.mft >${mft_name}.raw
+run "dump_smart-1-`basename ${mft_name}`" dump_smart ${mft_name}.mft >${mft_name}.raw
 if [ $USE_EXISTING_PATCHES ]
 then
     echo "Stage 1: Modify MFT's to-be-signed portions automatically"
@@ -271,10 +276,11 @@ fi
 
 # Embed EE into MFT and sign using EE private key
 echo "Embedding EE cert into MFT and signing"
-rr <${mft_name}.raw >${mft_name}.mft
-add_cms_cert_no_check ${mft_ee_filename} ${mft_name}.mft \
+run "rr-2-`basename ${mft_name}`" rr <${mft_name}.raw >${mft_name}.mft
+run "add_cms_cert_no_check-2-`basename ${mft_name}`" add_cms_cert_no_check \
+    ${mft_ee_filename} ${mft_name}.mft \
     ${child_mft_ee_key_path} ${mft_name}.mft
-dump -a ${mft_name}.mft > ${mft_name}.raw
+run "dump-2-`basename ${mft_name}`" dump -a ${mft_name}.mft > ${mft_name}.raw
 
 # Stage 2: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
@@ -293,6 +299,6 @@ else
 fi
 
 # Convert back into binary
-rr <${mft_name}.raw >${mft_name}.mft
+run "rr-final-`basename ${mft_name}`" rr <${mft_name}.raw >${mft_name}.mft
 rm ${mft_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${child_name}/${mft_name}.mft"

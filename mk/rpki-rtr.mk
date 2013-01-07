@@ -78,10 +78,16 @@ dist_check_DATA += \
 	tests/subsystem/rtr/querySpecs
 
 tests/subsystem/rtr/%.key:
-	bin/rpki-object/gen_key "$@" 2048
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		tests/run_with_tool.sh bin/rpki-object/gen_key "$@" 2048
 
 tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/subsystem/rtr/root.options
-	bin/rpki-object/create_object/create_object \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		tests/run_with_tool.sh bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/root.options \
 		CERT \
 		outputfilename="$@" \
@@ -90,7 +96,10 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 tests/subsystem/rtr/as-%.ee.cer: tests/subsystem/rtr/ee-%.key tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
 	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
 	IP6="`printf '%x::100-%x::%xff,%x:1::-%x:%x:ffff:ffff:ffff:ffff:ffff:ffff' '$*' '$*' '$*' '$*' '$*' '$*'`"; \
-	bin/rpki-object/create_object/create_object \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		tests/run_with_tool.sh bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
 		CERT \
 		outputfilename="$@" \
@@ -115,7 +124,10 @@ tests/subsystem/rtr/as-%.roa: tests/subsystem/rtr/as-%.ee.cer tests/subsystem/rt
 	done; \
 	IP4=`echo "$$IP4" | cut -c 2-`; \
 	IP6=`echo "$$IP6" | cut -c 2-`; \
-	bin/rpki-object/create_object/create_object \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		tests/run_with_tool.sh bin/rpki-object/create_object/create_object \
 		ROA \
 		outputfilename="$@" \
 		eecertlocation="$<" \

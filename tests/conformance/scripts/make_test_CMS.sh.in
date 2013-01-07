@@ -10,6 +10,11 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $RPKI_ROOT/lib/util/trap_errors
 
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 # Usage
 usage ( ) {
     usagestr="
@@ -210,20 +215,20 @@ cd ${OUTPUT_DIR}
 
 # $1=CMS/ROA/MFT, $2=fault type, $3 =sernum
 cp ${TEMPLATE_EE_RAW} ${ee_name}.raw
-rr <${ee_name}.raw >${ee_name}.cer
-put_sernum ${ee_name}.cer ${SERIAL}
-put_subj ${ee_name}.cer ${ee_name}
-put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
+run "rr-0-`basename ${ee_name}`" rr <${ee_name}.raw >${ee_name}.cer
+run "put_sernum-0-`basename ${ee_name}`" put_sernum ${ee_name}.cer ${SERIAL}
+run "put_subj-0-`basename ${ee_name}`" put_subj ${ee_name}.cer ${ee_name}
+run "put_sia-0-`basename ${ee_name}`" put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
 
 # Create new key if in manual mode (not using existing patches)
 if [ -z $USE_EXISTING_PATCHES ]
 then
-    gen_key ${ee_key_path} 2048
+    run "gen_key-0-`basename ${ee_key_path}`" gen_key ${ee_key_path} 2048
 fi
 
-add_key_info ${ee_name}.cer ${ee_key_path} ${ROOT_CERT_PATH}
+run "add_key_info-0-`basename ${ee_name}`" add_key_info ${ee_name}.cer ${ee_key_path} ${ROOT_CERT_PATH}
 rm ${ee_name}.cer.raw
-dump_smart ${ee_name}.cer >${ee_name}.raw
+run "dump_smart-0-`basename ${ee_name}`" dump_smart ${ee_name}.cer >${ee_name}.raw
 
 # Stage 0: Modify EE automatically or manually
 if [ $USE_EXISTING_PATCHES ]
@@ -243,8 +248,8 @@ fi
 
 # Sign EE cert
 echo "Signing EE cert"
-rr <${ee_name}.raw >${ee_name}.cer
-sign_cert ${ee_name}.cer ${ROOT_KEY_PATH}
+run "rr-1-`basename ${ee_name}`" rr <${ee_name}.raw >${ee_name}.cer
+run "sign_cert-1-`basename ${ee_name}`" sign_cert ${ee_name}.cer ${ROOT_KEY_PATH}
 rm ${ee_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 
@@ -272,10 +277,11 @@ fi
 # signedAttrs.  Note that this operation also computes a signature
 # using the EE private key, but this signature computation is
 # superfluous because it will get overwritten later by sign_cms.
-rr <${child_name}.raw >${child_name}.roa
-add_cms_cert_no_check ${ee_name}.cer ${child_name}.roa \
+run "rr-2-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.roa
+run "add_cms_cert_no_check-2-`basename ${child_name}`" \
+    add_cms_cert_no_check ${ee_name}.cer ${child_name}.roa \
     ${ee_key_path} ${child_name}.roa
-dump_smart ${child_name}.roa > ${child_name}.raw
+run "dump_smart-2-`basename ${child_name}`" dump_smart ${child_name}.roa > ${child_name}.raw
 
 # Stage 2: Modify ROA's SignedAttributes area, automatically or manually.
 if [ $USE_EXISTING_PATCHES ]
@@ -294,9 +300,9 @@ else
 fi
 
 # Sign the potentially modified SignedAttributes area using EE private key
-rr <${child_name}.raw >${child_name}.roa
-sign_cms ${child_name}.roa ${ee_key_path}
-dump_smart ${child_name}.roa > ${child_name}.raw
+run "rr-3-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.roa
+run "sign_cms-3-`basename ${child_name}`" sign_cms ${child_name}.roa ${ee_key_path}
+run "dump_smart-3-`basename ${child_name}`" dump_smart ${child_name}.roa > ${child_name}.raw
 
 # Stage 3: Modify ROA's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
@@ -315,6 +321,6 @@ else
 fi
 
 # Convert back into binary
-rr <${child_name}.raw >${child_name}.roa
+run "rr-final-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.roa
 rm ${child_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${child_name}.roa"
