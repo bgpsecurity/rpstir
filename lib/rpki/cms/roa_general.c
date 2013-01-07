@@ -264,7 +264,7 @@ static unsigned char *printIPv4String(
             char maxlenbuf[10];
             memset(maxlenbuf, 0, sizeof(maxlenbuf));
             sprintf(maxlenbuf, "^%d-%d", prefix, maxLen);
-            assert(iReturnLen + strlen(maxlenbuf) < cReturnStringSize);
+            assert(iReturnLen + (int)strlen(maxlenbuf) < cReturnStringSize);
             strcpy((char *)&cReturnString[iReturnLen], maxlenbuf);
             iReturnLen += strlen(maxlenbuf);
         }
@@ -359,7 +359,7 @@ static unsigned char *printIPv6String(
             char maxlenbuf[10];
             memset(maxlenbuf, 0, sizeof(maxlenbuf));
             sprintf(maxlenbuf, "^%d-%d", prefix, maxLen);
-            assert(iReturnLen + strlen(maxlenbuf) < cReturnStringSize);
+            assert(iReturnLen + (int)strlen(maxlenbuf) < cReturnStringSize);
             strcpy((char *)&cReturnString[iReturnLen], maxlenbuf);
             iReturnLen += strlen(maxlenbuf);
         }
@@ -384,7 +384,7 @@ static unsigned char *roaIPAddr(
     memset(ipaddr, 0, sizeof(ipaddr));
     iSize = vsize_casn(&raddr->address);
 
-    if ((0 >= iSize) || (sizeof(ipaddr) < iSize))
+    if ((0 >= iSize) || ((int)sizeof(ipaddr) < iSize))
         return NULL;
     if (0 > read_casn(&raddr->address, ipaddr))
         return NULL;
@@ -499,7 +499,7 @@ static int convertAddr(
             return ERR_SCM_INVALSZ;
         for (ii = 1; ii < addrLth; ii++)
             addrVal = (addrVal << 8) + abuf[ii];
-        while (ii++ <= sizeof(uint))
+        while (ii++ <= (int)sizeof(uint))
             addrVal <<= 8;
         xx = htonl(addrVal);
         if (!inet_ntop(family, &xx, outbuf, outbufLth))

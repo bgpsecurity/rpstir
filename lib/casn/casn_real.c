@@ -177,7 +177,7 @@ int read_casn_double(
         // shift mantissa to left for convenience
         if (locbuf[i] < mask)   // can shift all the way
         {
-            if (i + mantissa_lth >= sizeof(locbuf))
+            if (i + mantissa_lth >= (int)sizeof(locbuf))
                 return _casn_obj_err(casnp, ASN_GEN_ERR);
             memcpy(locbuf, &locbuf[i], mantissa_lth);
             for (c = &locbuf[mantissa_lth]; --i >= 0; *c++ = 0);
@@ -285,7 +285,7 @@ int write_casn_double(
     {
         *locbuf = 3;
         if (snprintf((char *)&locbuf[1], sizeof(locbuf) - 1,
-                     DBL_PRINTF_EFORMAT, box.dbl_val) > sizeof(locbuf) - 1)
+                     DBL_PRINTF_EFORMAT, box.dbl_val) > (int)sizeof(locbuf) - 1)
             return _casn_obj_err(casnp, ASN_BOUNDS_ERR);
         for (c = &locbuf[1]; *c; c++);  // go to end
         while (*(--c) == ' ')

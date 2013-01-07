@@ -916,11 +916,11 @@ Procedure
                 while (&c[count] >= &tbuf[tbufsize])
                     tbuf = extend_buf(tbuf, &c, (tbufsize += count));
                 cat(copy_word(cat(c, " "), classname), " ");
-                fprintf(str, (c = tbuf));
+                fprintf(str, "%s", (c = tbuf));
                 if (!substr)
                     substr = make_substr(subfilename);
                 c = cat(cat(tbuf, classname), " ::= ");
-                fprintf(substr, (c = tbuf));
+                fprintf(substr, "%s", (c = tbuf));
                 *tbuf = 0;
                 b = skip_word(b);
                 if (*b == '{')
@@ -988,7 +988,7 @@ Procedure
             if (ctbp)
             {
                 c = fill_id_type(c, ctbp, str);
-                fprintf(str, token);
+                fprintf(str, "%s", token);
             }
             else
                 c++;
@@ -996,7 +996,7 @@ Procedure
         for (b = c; *c && *c != '&'; c++);
         savec = *c;
         *c = 0;
-        fprintf(str, b);
+        fprintf(str, "%s", b);
         *c = savec;
     }
     fprintf(str, "\n\n");
@@ -1103,9 +1103,9 @@ Procedure:
                 c++;
         }
         if ((*c & 0x20))
-            fprintf(str, any_w);
+            fprintf(str, "%s", any_w);
         else
-            fprintf(str, citp->predicate);
+            fprintf(str, "%s", citp->predicate);
         return string;
     }
     string = scan_known(string, "(");

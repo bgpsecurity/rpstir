@@ -1677,6 +1677,9 @@ static int handleUpdateMan(
     scmsrcha * s,
     int idx)
 {
+    (void)conp;
+    (void)s;
+    (void)idx;
     updateManLid = *((unsigned int *)updateManSrch->vec[1].valptr);
     snprintf(updateManPath, PATH_MAX, "%s/",
              (char *)updateManSrch->vec[0].valptr);
@@ -2232,6 +2235,8 @@ static int handleValidMan(
     scmsrcha * s,
     int idx)
 {
+    (void)conp;
+    (void)idx;
     snprintf(validManPath, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
              (char *)s->vec[1].valptr);
     return 0;
@@ -2611,7 +2616,6 @@ static int extractAndAddCert(
     scm * scmp,
     scmcon * conp,
     char *outdir,
-    unsigned int id,
     int utrust,
     int typ,
     char *outfile,
@@ -2844,7 +2848,7 @@ int add_roa(
     }
     do
     {                           /* do-once */
-        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id,
+        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir,
                                      utrust, typ, outfile, ski,
                                      certfilename)) < 0)
             break;
@@ -2961,7 +2965,7 @@ int add_manifest(
     do
     {                           // once through
         // read this_upd and next_upd
-        if (vsize_casn(&manifest->thisUpdate) + 1 > sizeof(asn_time))
+        if (vsize_casn(&manifest->thisUpdate) + 1 > (int)sizeof(asn_time))
         {
             LOG(LOG_ERR, "thisUpdate is too large");
             sta = ERR_SCM_INVALDT;
@@ -2982,7 +2986,7 @@ int add_manifest(
         if (sta < 0)
             break;
 
-        if (vsize_casn(&manifest->nextUpdate) + 1 > sizeof(asn_time))
+        if (vsize_casn(&manifest->nextUpdate) + 1 > (int)sizeof(asn_time))
         {
             LOG(LOG_ERR, "nextUpdate is too large");
             sta = ERR_SCM_INVALDT;
@@ -3003,7 +3007,7 @@ int add_manifest(
         if (sta < 0)
             break;
 
-        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, id, utrust, typ,
+        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, utrust, typ,
                                      outfile, ski, certfilename)) < 0)
             break;
         cert_added = 1;

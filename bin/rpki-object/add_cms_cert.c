@@ -86,7 +86,7 @@ int main(
                strcmp(c, ".mnf")))
         fatal(1, "CMSfile suffix");
     // sign it!
-    char *msg = signCMS(&roa, argv[3], 0);
+    const char *msg = signCMS(&roa, argv[3], 0);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else                        // and write it

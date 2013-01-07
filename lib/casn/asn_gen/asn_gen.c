@@ -28,10 +28,6 @@ static void print_define_tables(
 static void print_if_include(
     FILE *,
     char *);
-static int putobjid(
-    char *,
-    int,
-    int);
 
 int array,
     classcount,
@@ -370,7 +366,8 @@ int main(
        *eubp;
     struct id_table *idp,
        *eidp;
-    struct stat tstat;
+
+    (void)argc;
 
     for (p = &argv[1], lflag = tflag = uflag = do_flag = 0,
          source = (char *)0; *p; p++)
@@ -544,7 +541,7 @@ int main(
     for (did = 0, ntbp = (struct name_table *)name_area.area; ntbp <
          &((struct name_table *)name_area.area)[name_area.next]; ntbp++)
     {
-        if (ntbp->type != 0xFFFFFFFF || *ntbp->name > 'Z' ||
+        if (ntbp->type != (long)0xFFFFFFFF || *ntbp->name > 'Z' ||
             (ntbp->flags & (ASN_DEFINED_FLAG | ASN_DEFINER_FLAG | ASN_OF_FLAG |
                             ASN_POINTER_FLAG)) || is_ub(ntbp->name)
             || ntbp->pos < real_start)
@@ -684,7 +681,7 @@ Procedure:
         return parent;
     ansr = add_name(name, type, option);
     ntbp = &((struct name_table *)name_area.area)[ansr];
-    if (ntbp->type == 0xFFFFFFFF)
+    if (ntbp->type == (long)0xFFFFFFFF)
         ntbp->type = type;
     ntbp->flags |= option;
     for (parentp = &ntbp->parent;
@@ -860,9 +857,6 @@ void cvt_number(
     char *from)
 {
     char *c;
-    int base;
-    long val,
-        val2;
     for (c = from; *c && *c != '.'; c++);
     if (*c == '.')
     {
@@ -885,7 +879,7 @@ char *derived_dup(
 
     if (loctype == ASN_SET)
         c = "AsnArrayOfSets";
-    else if (loctype >= sizeof(assign_table) || assign_table[loctype] == '0')
+    else if (loctype >= (long)sizeof(assign_table) || assign_table[loctype] == '0')
         c = "AsnArray";
     else if ((assign_table[loctype] & CHAR_ASSIGN))
         c = "AsnStringArray";
@@ -1176,7 +1170,7 @@ void get_subtype(
     struct name_table *ntbp;
 
     if ((ntbp = replace_name(subclass)) &&
-        ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
+        ntbp->type != (long)0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
         !(ntbp->flags & ASN_ENUM_FLAG))
         subtype = (short)ntbp->type;
 }
@@ -1646,21 +1640,6 @@ void print_tables(
         printf("  File: %s module: %s from %ld to %ld\n", modtbp->fname,
                modtbp->mname, modtbp->start_pos, modtbp->end_pos);
     }
-}
-
-static int putobjid(
-    char *to,
-    int val,
-    int lev)
-{
-    char *c = to;
-    uchar tmp = (val & 0x7F);
-    if (lev)
-        tmp += 0x80;
-    if ((val >>= 7))
-        c += putobjid(to, val, lev + 1);
-    sprintf(c, "\\%03o", tmp);
-    return (c - to) + 4;
 }
 
 int putoct(

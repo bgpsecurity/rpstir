@@ -56,7 +56,7 @@ extern char *makedsnscm(
     char *pref,
     char *db,
     char *usr,
-    char *pass);
+    const char *pass);
 extern scmtab *findtablescm(
     scm * scmp,
     char *hname);

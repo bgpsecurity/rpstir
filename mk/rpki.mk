@@ -1,8 +1,5 @@
 bin_PROGRAMS += bin/rpki/chaser
 
-bin_rpki_chaser_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 bin_rpki_chaser_LDADD = \
 	$(LDADD_LIBDB) \
 	$(LDADD_LIBUTIL)

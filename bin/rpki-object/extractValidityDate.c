@@ -9,6 +9,8 @@ static void usage(
     int argc,
     char *argv[])
 {
+    (void)argc;
+
     fprintf(stderr,
             "Extracts a validity date (notBefore/notAfter) from a certificate "
             "and writes it to stdout.\n"
