@@ -23,6 +23,6 @@ enum OBJ_ERRORS {
 
 extern void warn(
     int code,
-    char *arg);
+    const char *arg);
 
 #endif                          /* _OBJ_ERR_H */

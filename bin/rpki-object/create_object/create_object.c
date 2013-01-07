@@ -85,7 +85,7 @@ char *msgs[] = {
 
 void warn(
     int err,
-    char *param)
+    const char *param)
 {
     fprintf(stderr, msgs[err], param);
 }
