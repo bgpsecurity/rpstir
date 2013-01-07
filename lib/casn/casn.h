@@ -46,6 +46,11 @@ struct casn_err_struct {
 
 extern struct casn_err_struct casn_err_struct;
 
+struct oidtable {
+    char *oid;
+    char *label;
+};
+
 int copy_casn(
     struct casn *,
     struct casn *),
@@ -67,7 +72,7 @@ int copy_casn(
     struct casn *casnp2),       // can return -2 (error)!
     diff_objid(
     struct casn *fr_casnp,
-    char *objidp),
+    const char *objidp),
     dump_casn(
     struct casn *,
     char *),
@@ -86,7 +91,7 @@ int copy_casn(
     uchar *),
     get_casn_file(
     struct casn *casnp,
-    char *,
+    const char *,
     int),
     num_items(
     struct casn *casnp),
@@ -121,9 +126,6 @@ int copy_casn(
     read_objid(
     struct casn *,
     char *),
-    remove_casn(
-    struct casn *casnp,
-    int num),
     size_casn(
     struct casn *),
     tag_casn(
@@ -165,10 +167,19 @@ int copy_casn(
     int64_t),
     write_objid(
     struct casn *,
-    char *),
+    const char *),
     _write_objid(
     struct casn *,
-    char *);                    // for use by constructors only
+    const char *);                    // for use by constructors only
+
+int cf_oid(
+    char *curr_oid,
+    char *test_oid);
+
+int adjustTime(
+    struct casn *timep,
+    long basetime,
+    char *deltap);
 
 void delete_casn(
     struct casn *),
@@ -184,22 +195,25 @@ void delete_casn(
     int type,
     int tag);
 
+void load_oidtable(
+    char *name);
+
 struct casn *dup_casn(
     struct casn *casnp),
-   *index_casn(
-    struct casn *casnp,
-    int num),
    *inject_casn(
     struct casn *,
     int),
-   *insert_casn(
-    struct casn *casnp,
-    int num),
    *member_casn(
     struct casn *casnp,
     int num),
    *next_of(
     struct casn *casnp);
+
+char *find_label(
+    char *oidp,
+    int *diffp,
+    struct oidtable * oidtable,
+    int oidtable_size);
 
 #ifndef DEBUG
 #define dbcalloc calloc

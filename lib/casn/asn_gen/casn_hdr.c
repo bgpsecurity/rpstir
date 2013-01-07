@@ -273,7 +273,7 @@ static int hdr_def(
             *itemname |= 0x20;
         }
         if ((ntbp = replace_name(subclass)) &&
-            ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
+            ntbp->type != (long)0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
             !(ntbp->flags & ASN_ENUM_FLAG))
             subtype = (short)ntbp->type;
     }
@@ -524,6 +524,10 @@ static void print_end(
     int dup_ansr,
     int mode)
 {
+    // TODO: determine if dup_ansr and mode are needed and remove them if not
+    (void)dup_ansr;
+    (void)mode;
+
     fprintf(outstr, finale, classname, classname);
     if (def_constraintp)
     {

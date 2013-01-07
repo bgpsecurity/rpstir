@@ -205,7 +205,7 @@ int casn_error(
     struct casn *casnp),
     _write_objid(
     struct casn *casnp,
-    char *from);
+    const char *from);
 
 void _clear_casn(
     struct casn *,
@@ -398,12 +398,23 @@ int eject_casn(
         tcasnp = fcasnp->ptr;   // mark second for deletion (after it's copied 
                                 // into the first's place)
         _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
-        if (tcasnp)             // if first is not last
+        if (tcasnp)             // if first is not the final (after lastp)
         {
-            // Use _copy_casn instead of copy_casn because when the OF has only
-            // one element, tcasnp points to the empty template at the end of
-            // the OF, which copy_casn would refuse to copy.
-            _copy_casn(fcasnp, tcasnp, 0);  // copy second to first
+            if (casnp->num_items > 1)
+            {
+                // tcasnp is a real entry in the SET/SEQUENCE
+                copy_casn(fcasnp, tcasnp);  // copy second to first
+                if (casnp->lastp == tcasnp)
+                {
+                    casnp->lastp = fcasnp;
+                }
+            }
+            else
+            {
+                // tcasnp is the final struct casn that's not filled in
+                fcasnp->flags &= ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG);
+                casnp->lastp = fcasnp;
+            }
             fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
         }
     }
@@ -412,6 +423,10 @@ int eject_casn(
         for (pcasnp = fcasnp, icount = num; --icount; pcasnp = pcasnp->ptr);
         tcasnp = pcasnp->ptr;
         pcasnp->ptr = tcasnp->ptr;
+        if (casnp->lastp == tcasnp)
+        {
+            casnp->lastp = pcasnp;
+        }
     }
     if (tcasnp)
     {
@@ -455,33 +470,6 @@ int encode_casn(
     return _encodesize(casnp, to, ASN_READ);
 }
 
-struct casn *index_casn(
-    struct casn *casnp,
-    int num)
-{
-    struct casn *tcasnp;
-    int err = 0;
-
-    if (_clear_error(casnp) < 0)
-        return (struct casn *)0;
-    if (!casnp->level || !(_go_up(casnp)->flags & ASN_OF_FLAG))
-        err = ASN_NOT_OF_ERR;
-    else if (num >= casnp->num_items)
-        err = ASN_OF_BOUNDS_ERR;
-    else
-    {
-        for (tcasnp = casnp; num-- && tcasnp->ptr; tcasnp = tcasnp->ptr);
-        if (num >= 0)
-            err = ASN_OF_BOUNDS_ERR;
-    }
-    if (err)
-    {
-        _casn_obj_err(casnp, err);
-        return (struct casn *)0;
-    }
-    return tcasnp;
-}
-
 struct casn *inject_casn(
     struct casn *casnp,
     int num)
@@ -500,7 +488,9 @@ struct casn *inject_casn(
         err = ASN_NOT_OF_ERR;
     else if ((err = _fill_upward(casnp, 0)) != 0)
         err = -err;
-    else if (casnp->max && num >= casnp->max)
+    else if (num < 0)
+        err = ASN_OF_BOUNDS_ERR;
+    else if (casnp->max && (ulong)num >= casnp->max)
         err = ASN_OF_BOUNDS_ERR;
     if (err)
     {
@@ -521,20 +511,32 @@ struct casn *inject_casn(
                                 // first
     {
         if (!casnp->num_items)  // there is only one, including final
+        {
             tcasnp->level = 0;  // fcasnp's ptr was null, so OK
+            casnp->lastp = fcasnp;
+        }
         else                    // there's more than one, including final
         {
             copy_casn(tcasnp, fcasnp);  // so copy the first to the new one
             tcasnp->ptr = fcasnp->ptr;  // make new one point to where first
                                         // did
             _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));    // clear the old first
+            if (casnp->num_items == 1)
+            {
+                // We're in the process of moving the first item into its
+                // own struct casn as the new last item of the linked list.
+                // If num_items != 1, then lastp is already set correctly,
+                // but the first time the linked list is extended, lastp
+                // needs to be updated.
+                casnp->lastp = tcasnp;
+            }
         }
         fcasnp->ptr = tcasnp;   // then link first one to new one
         tcasnp = fcasnp;        // return ptr to first
     }
     else                        // there's more than one, including final
     {                           // if it's the last
-        if (num == casnp->num_items)
+        if ((ulong)num == casnp->num_items)
             pcasnp = casnp->lastp;
         // else find previous item
         else
@@ -544,29 +546,12 @@ struct casn *inject_casn(
         tcasnp->ptr = pcasnp->ptr;      // new one points to where previous
                                         // did
         pcasnp->ptr = tcasnp;   // previous points to new one
-        if (num == casnp->num_items)
+        if ((ulong)num == casnp->num_items)
             casnp->lastp = tcasnp;
         tcasnp->level = 0;      // this may be redundant
     }
     casnp->num_items++;
     return tcasnp;
-}
-
-struct casn *insert_casn(
-    struct casn *casnp,
-    int num)
-{
-    struct casn *tcasnp;
-
-    if (_clear_error(casnp) < 0)
-        return (struct casn *)0;
-    if (!casnp->level || !((tcasnp = _go_up(casnp))->flags & ASN_OF_FLAG) ||
-        casnp != &tcasnp[1])
-    {
-        _casn_obj_err(casnp, ASN_NOT_OF_ERR);
-        return (struct casn *)0;
-    }
-    return inject_casn(tcasnp, num);
 }
 
 struct casn *member_casn(
@@ -642,19 +627,6 @@ int read_casn(
     uchar * to)
 {
     return _readvsize(casnp, to, ASN_READ);
-}
-
-int remove_casn(
-    struct casn *casnp,
-    int num)
-{
-    struct casn *tcasnp;
-
-    if (_clear_error(casnp) < 0)
-        return -1;
-    if (!casnp->level || !((tcasnp = _go_up(casnp))->flags & ASN_OF_FLAG))
-        return _casn_obj_err(casnp, ASN_OF_ERR);
-    return eject_casn(tcasnp, num);
 }
 
 void simple_constructor(
@@ -751,6 +723,9 @@ int _calc_lth(
     uchar ** cpp,
     uchar ftag)
 {
+    // TODO: determine if ftag is supposed to do anything, and remove it if not
+    (void)ftag;
+
     uchar *c = *cpp;
     int tmp,
         lth;
@@ -1116,7 +1091,7 @@ struct casn *_find_tag(
 
     while (casnp)
     {
-        if (casnp->tag == tag || casnp->type == ASN_ANY)
+        if (casnp->tag == (long)tag || casnp->type == ASN_ANY)
             return casnp;
         if (casnp->type == ASN_CHOICE && (tcasnp = _find_tag(&casnp[1], tag)))
             return tcasnp;
@@ -2363,16 +2338,16 @@ int _write_casn(
             err = ASN_TIME_ERR;
     }
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
-             (tmp > casnp->max || tmp < casnp->min))
+             (tmp > (int)casnp->max || tmp < casnp->min))
         err = ASN_BOUNDS_ERR;
     else if ((casnp->flags & ASN_RANGE_FLAG))
     {
         if (lth > 4)
             err = ASN_BOUNDS_ERR;
-        else if (casnp->min != casnp->max)
+        else if ((long)casnp->min != (long)casnp->max)
         {
             for (b = c, num = 0; b < &c[lth]; num = (num << 8) + (int)*b++);
-            if (num < casnp->min || num > casnp->max)
+            if (num < casnp->min || num > (int)casnp->max)
                 err = ASN_BOUNDS_ERR;
         }
     }
@@ -2418,9 +2393,9 @@ int _write_enum(
 
 int _write_objid(
     struct casn *casnp,
-    char *from)
+    const char *from)
 {
-    char *c = from;
+    const char *c = from;
     long tmp,
         val;
     int i,

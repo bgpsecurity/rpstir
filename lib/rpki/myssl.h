@@ -19,7 +19,7 @@
 #include <openssl/rsa.h>
 #endif
 #include <openssl/bn.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
 #include "rpki-asn1/crlv2.h"
 
 
@@ -130,8 +130,7 @@ extern char *X509_to_subject(
 extern int rescert_profile_chk(
     X509 * x,
     struct Certificate *certp,
-    int ct,
-    int checkRPKI);
+    int ct);
 extern int crl_profile_chk(
     struct CertificateRevocationList *crlp);
 

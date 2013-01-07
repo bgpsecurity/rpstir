@@ -14,13 +14,13 @@
 #include <string.h>
 #include <limits.h>
 #include <rpki-asn1/roa.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <rpki-asn1/keyfile.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
 #include <casn/casn.h>
 #include "sqhl.h"
 
@@ -57,6 +57,8 @@ struct iprange {
     int typ;
     uchar lolim[18],
         hilim[18];
+    ulong loASnum,
+        hiASnum;
     char *text;
 };
 
@@ -123,11 +125,6 @@ struct iprange *eject_range(
 
 extern void free_ipranges(
     struct ipranges *);
-
-struct Extension *find_extn(
-    struct Certificate *certp,
-    char *oid,
-    int add);
 
 char *nextword(
     char *),

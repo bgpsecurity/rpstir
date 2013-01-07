@@ -136,7 +136,7 @@ int outputMsg(
         ret = write(wport->out_desc, (const void *)str, len);
         if (ret < 0)
             perror("write()");
-        else if (ret != len)
+        else if ((ssize_t)ret != (ssize_t)len)
             log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
         return (ret);
     }
@@ -148,7 +148,7 @@ int outputMsg(
         ret = write(wport->out_desc, (const void *)str, len);
         if (ret < 0)
             perror("write()");
-        else if (ret != len)
+        else if ((ssize_t)ret != (ssize_t)len)
             log_msg(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
         return (ret);
     }
@@ -162,7 +162,7 @@ int outputMsg(
                      wport->to_length);
         if (ret < 0)
             perror("sendto()");
-        else if (ret != len)
+        else if ((ssize_t)ret != (ssize_t)len)
             log_msg(LOG_ERR, "Sent %d bytes instead of %u", ret, len);
     }
     else

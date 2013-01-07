@@ -8,6 +8,11 @@ THIS_SCRIPT_DIR=`dirname "$0"`
 
 cd "$THIS_SCRIPT_DIR"
 
+TEST_LOG_DIR="`pwd`"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 QUERY_SPECS="`pwd`/querySpecs"
 
 ./gen_all.sh
@@ -46,11 +51,11 @@ add_file () {
 	esac
 
 	if test x"$TYPE" = x"bad"; then
-		if ! rcli -s -y $FLAGS "$FILE"; then
+		if ! run "rcli-$FILEBASENAME" rcli -s -y $FLAGS "$FILE"; then
 			return
 		fi
 
-		FILECOUNT=`query -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		FILECOUNT=`run "query-$FILEBASENAME" query -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 0; then
 			echo >&2 "Error: adding bad file $FILE succeeded"
 			query -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
@@ -61,7 +66,7 @@ add_file () {
 			fi
 		fi
 	else
-		if ! rcli -s -y $FLAGS "$FILE"; then
+		if ! run "rcli-$FILEBASENAME" rcli -s -y $FLAGS "$FILE"; then
 			echo >&2 "Error: adding good file $FILE failed"
 			if echo "$IGNORE" | grep -qF "$FILEBASENAME"; then
 				FAILED_IGNORE="$FILE $FAILED_IGNORE"
@@ -71,7 +76,7 @@ add_file () {
 			return
 		fi
 
-		FILECOUNT=`query -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		FILECOUNT=`run "query-$FILEBASENAME" query -s "$QUERY_SPECS" -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
 		if test "$FILECOUNT" -ne 1; then
 			echo >&2 "Error: adding good file $FILE failed"
 			query -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
@@ -96,10 +101,10 @@ init_db () {
 }
 
 reset_db () {
-	rcli -x -t "$OUTPUT_DIR" -y
-	rcli -s -y -F "$OUTPUT_DIR"/root.cer
-	rcli -s -y -f "$OUTPUT_DIR"/root/root.crl
-	rcli -s -y -f "$OUTPUT_DIR"/root/root.mft
+	run "rcli-x-t" rcli -x -t "$OUTPUT_DIR" -y
+	run "rcli-root.cer" rcli -s -y -F "$OUTPUT_DIR"/root.cer
+	run "rcli-root.crl" rcli -s -y -f "$OUTPUT_DIR"/root/root.crl
+	run "rcli-root.mft" rcli -s -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
 

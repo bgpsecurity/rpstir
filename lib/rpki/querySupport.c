@@ -382,7 +382,7 @@ static QueryField fields[] = {
     {
      "filename",
      "the filename where the data is stored in the repository",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_RTA,
+     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN,
      SQL_C_CHAR, FNAMESIZE,
      NULL, NULL,
      "Filename", NULL,
@@ -391,7 +391,7 @@ static QueryField fields[] = {
      "pathname",
      "full pathname (directory plus filename) where the data is stored",
      Q_JUST_DISPLAY | Q_FOR_ROA | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_MAN |
-     Q_FOR_RTA | Q_REQ_JOIN,
+     Q_REQ_JOIN,
      -1, 0,
      "dirname", "filename",
      "Pathname", pathnameDisplay,
@@ -399,7 +399,7 @@ static QueryField fields[] = {
     {
      "dirname",
      "the directory in the repository where the data is stored",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_RTA | Q_REQ_JOIN,
+     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_REQ_JOIN,
      SQL_C_CHAR, DNAMESIZE,
      NULL, NULL,
      "Directory", NULL,
@@ -411,22 +411,6 @@ static QueryField fields[] = {
      SQL_C_CHAR, SKISIZE,
      NULL, NULL,
      "SKI", NULL,
-     },
-    {
-     "ski_ee",
-     "rta ee subject key identifier",
-     Q_FOR_RTA,
-     SQL_C_CHAR, SKISIZE,
-     NULL, NULL,
-     "EE_SKI", NULL,
-     },
-    {
-     "ski_rta",
-     "rta subject key identifier",
-     Q_FOR_RTA,
-     SQL_C_CHAR, SKISIZE,
-     NULL, NULL,
-     "RTA_SKI", NULL,
      },
     {
      "aki",
@@ -577,8 +561,7 @@ static QueryField fields[] = {
     {
      "flags",
      "which flags are set in the database",
-     Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN |
-     Q_FOR_RTA,
+     Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN,
      SQL_C_ULONG, 8,
      NULL, NULL,
      "Flags Set", displayFlags,

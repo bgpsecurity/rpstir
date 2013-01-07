@@ -112,7 +112,6 @@
 #define ERR_SCM_BADSKIFILE  -104        /* defective constraints file */
 #define ERR_SCM_SIGNINGERR  -105        /* error signing para-cert */
 #define ERR_SCM_INVALROA    -106        /* invalid ROA */
-#define ERR_SCM_INVALRTA    -107        /* invalid RTA */
 #define ERR_SCM_INVALMAN    -108        /* invalid manifest */
 #define ERR_SCM_WRITE_EE    -109        /* error writing EE certificate */
 #define ERR_SCM_SMALLKEY    -110        /* key too small */
