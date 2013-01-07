@@ -701,7 +701,6 @@ static void get_paren(
     long *maxp,
     int parent)
 {
-    char *c;
     int lth;
 
     get_must(0, buf);
@@ -720,7 +719,7 @@ static void get_paren(
             option |= ASN_RANGE_FLAG;
         }
         else
-            for (c = &constraint_area.area[constraint_area.next]; *buf != ')';
+            for (; *buf != ')';
                  get_must(0, buf))
             {
                 lth = strlen(buf);

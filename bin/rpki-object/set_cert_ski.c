@@ -61,6 +61,6 @@ int main(
         c = "error writing certificate\n";
     else
         c = "wrote certificate OK\n";
-    fprintf(stderr, c);
+    fprintf(stderr, "%s", c);
     return 0;
 }

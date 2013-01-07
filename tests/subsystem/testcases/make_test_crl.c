@@ -28,7 +28,7 @@ char *msgs[] = {
 
 static int fatal(
     int err,
-    char *param)
+    const char *param)
 {
     fprintf(stderr, msgs[err], param);
     exit(err);
@@ -65,7 +65,7 @@ static void make_fullpath(
     if (strlen(locpath) > 6)
     {
         *f++ = 'C';
-        *l++;
+        l++;
         *f++ = *l++;            // 1st digit
         *f++ = '/';
         if (l[1] != '.')        // 2nd digit

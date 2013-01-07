@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include "util/cryptlib_compat.h"
@@ -9,12 +10,12 @@
  * $Id$ 
  */
 
-int fatal(
+static void fatal(
     char *msg)
 {
     if (msg && *msg)
         fprintf(stderr, "%s\n", msg);
-    return 0;
+    exit(EXIT_FAILURE);
 }
 
 uchar *setmember(
@@ -39,7 +40,6 @@ int main(
     CRYPT_CONTEXT privKeyContext;
     CRYPT_KEYSET cryptKeyset;
     CRYPT_PKCINFO_RSA *rsakey;
-    int ansr = 0;
     struct PrivateKey privkey;
     uchar *c,
        *buf;
@@ -52,53 +52,87 @@ int main(
     else
     {
         if (cryptInit() != CRYPT_OK)
-            return fatal("Can't open Cryptlib");
-        ansr =
-            cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA);
+        {
+            fatal("Can't open Cryptlib");
+        }
+
+        if (cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA) != CRYPT_OK)
+        {
+            fatal("Can't create cryptlib private key context");
+        }
+
         PrivateKey(&privkey, 0);
         if (get_casn_file(&privkey.self, argv[2], 0) < 0)
-            return fatal("Error getting key");
+            fatal("Error getting key");
+
         bsize = size_casn(&privkey.n);
         buf = (uchar *) calloc(1, bsize);
+        if (buf == NULL)
+        {
+            fatal("out of memory");
+        }
+
         rsakey = malloc(sizeof(CRYPT_PKCINFO_RSA));
+        if (rsakey == NULL)
+        {
+            fatal("out of memory");
+        }
+
         cryptInitComponents(rsakey, CRYPT_KEYTYPE_PRIVATE);
         if (!(c = (uchar *) setmember(&privkey.n, buf, &nsize)))
-            return fatal("Error getting n");
+            fatal("Error getting n");
         cryptSetComponent(rsakey->n, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.e, buf, &nsize)))
-            return fatal("Error getting e");
+            fatal("Error getting e");
         cryptSetComponent(rsakey->e, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.d, buf, &nsize)))
-            return fatal("Error getting d");
+            fatal("Error getting d");
         cryptSetComponent(rsakey->d, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.p, buf, &nsize)))
-            return fatal("Error getting p");
+            fatal("Error getting p");
         cryptSetComponent(rsakey->p, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.q, buf, &nsize)))
-            return fatal("Error getting q");
+            fatal("Error getting q");
         cryptSetComponent(rsakey->q, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.u, buf, &nsize)))
-            return fatal("Error getting u");
+            fatal("Error getting u");
         cryptSetComponent(rsakey->u, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.e1, buf, &nsize)))
-            return fatal("Error getting e1");
+            fatal("Error getting e1");
         cryptSetComponent(rsakey->e1, c, nsize * 8);
         if (!(c = (uchar *) setmember(&privkey.e2, buf, &nsize)))
-            return fatal("Error getting e2");
+            fatal("Error getting e2");
         cryptSetComponent(rsakey->e2, c, nsize * 8);
 
-        ansr =
-            cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL,
-                                    argv[1], strlen(argv[1]));
-        ansr =
-            cryptSetAttributeString(privKeyContext,
+        if (cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL,
+                                    argv[1], strlen(argv[1])) != CRYPT_OK)
+        {
+            fatal("Can't set label attribute string");
+        }
+
+        if (cryptSetAttributeString(privKeyContext,
                                     CRYPT_CTXINFO_KEY_COMPONENTS, rsakey,
-                                    sizeof(CRYPT_PKCINFO_RSA));
-        ansr =
-            cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                            argv[3], CRYPT_KEYOPT_CREATE);
-        ansr = cryptAddPrivateKey(cryptKeyset, privKeyContext, "password");
-        ansr = cryptDestroyContext(privKeyContext);
+                                    sizeof(CRYPT_PKCINFO_RSA)) != CRYPT_OK)
+        {
+            fatal("Can't set key components attribute string");
+        }
+
+        if (cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
+                            argv[3], CRYPT_KEYOPT_CREATE) != CRYPT_OK)
+        {
+            fatal("Can't open keyset");
+        }
+
+        if (cryptAddPrivateKey(cryptKeyset, privKeyContext, "password") != CRYPT_OK)
+        {
+            fatal("Can't add private key to keyset");
+        }
+
+        if (cryptDestroyContext(privKeyContext) != CRYPT_OK)
+        {
+            fatal("Can't destroy private key context");
+        }
+
         cryptEnd();
     }
     return 0;

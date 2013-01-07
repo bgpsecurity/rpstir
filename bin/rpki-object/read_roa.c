@@ -151,7 +151,7 @@ int main(
         char *a;
         if ((ansr = read_family(&a, roafamp)) < 0)
             fatal(5, (char *)i);
-        fprintf(str, a);
+        fprintf(str, "%s", a);
         free(a);
     }
     return 0;

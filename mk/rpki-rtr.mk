@@ -21,9 +21,6 @@ bin_rpki_rtr_rpki_rtr_daemon_LDADD = \
 	$(LDADD_LIBRPKIRTR) \
 	$(LDADD_LIBUTIL)
 
-bin_rpki_rtr_rpki_rtr_daemon_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 
 pkglibexec_PROGRAMS += bin/rpki-rtr/rpki-rtr-test-client
 PACKAGE_NAME_BINS += rpki-rtr-test-client
@@ -35,9 +32,6 @@ bin_rpki_rtr_rpki_rtr_test_client_LDADD = \
 	$(LDADD_LIBRPKIRTR) \
 	$(LDADD_LIBUTIL)
 
-bin_rpki_rtr_rpki_rtr_test_client_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 
 pkglibexec_PROGRAMS += bin/rpki-rtr/rpki-rtr-update
 PACKAGE_NAME_BINS += rpki-rtr-update
@@ -47,9 +41,6 @@ bin_rpki_rtr_rpki_rtr_update_SOURCES = \
 
 bin_rpki_rtr_rpki_rtr_update_LDADD = \
 	$(LDADD_LIBRPKI)
-
-bin_rpki_rtr_rpki_rtr_update_CFLAGS = \
-	$(CFLAGS_STRICT)
 
 
 pkglibexec_SCRIPTS += bin/rpki-rtr/rpki-rtr-clear

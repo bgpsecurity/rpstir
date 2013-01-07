@@ -1,11 +1,8 @@
 AM_CFLAGS = \
 	-Wall \
 	-Wextra \
+	-Werror \
 	-g
-
-CFLAGS_STRICT = \
-	$(AM_CFLAGS) \
-	-Werror
 
 AM_CPPFLAGS = \
 	-I$(top_builddir)/lib \
