@@ -7,6 +7,3 @@ LDADD_LIBCONFIG = \
 lib_config_libconfig_a_SOURCES = \
 	lib/config/config.c \
 	lib/config/config.h
-
-lib_config_libconfig_a_CFLAGS = \
-	$(CFLAGS_STRICT)

@@ -20,14 +20,8 @@ lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/types/string.c \
 	lib/configlib/types/string.h
 
-lib_configlib_libconfiglib_a_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 
 check_PROGRAMS += lib/configlib/tests/good
-
-lib_configlib_tests_good_CFLAGS = \
-	$(CFLAGS_STRICT)
 
 lib_configlib_tests_good_LDADD = \
 	$(LDADD_LIBCONFIGLIB)
