@@ -58,10 +58,9 @@ static int isROA = 0,
     isCert = 0,
     isCRL = 0,
     isRPSL = 0,
-    isManifest = 0,
-    isRTA = 0;
+    isManifest = 0;
 static scm *scmp = NULL;
-static scmcon *connect = NULL;
+static scmcon *connection = NULL;
 
 
 struct {
@@ -78,12 +77,10 @@ struct {
     {
     "manifest", "manifest"},
     {
-    "rpsl", "roa"},
-    {
-"rta", "compoundtrustanchor"},};
+    "rpsl", "roa"},};
 
 
-static int oldasn;              // needed for grouping by AS#
+static unsigned int oldasn;              // needed for grouping by AS#
 static int v4size = 0,
     v6size = 0;
 static char *v4members = NULL,
@@ -129,10 +126,10 @@ static int handleResults(
     if (validate)
     {
         if (!checkValidity
-            ((isROA || isRPSL || isManifest || isRTA
+            ((isROA || isRPSL || isManifest
               || isCRL) ? (char *)s->vec[valIndex].valptr : NULL,
              isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0, scmp,
-             connect))
+             connection))
             return 0;
     }
 
@@ -308,7 +305,7 @@ static int handleResults(
 static char *tableName(
     char *objType)
 {
-    int i;
+    size_t i;
     for (i = 0; i < countof(tableNames); ++i)
     {
         if (!strcasecmp(objType, tableNames[i].objectName))
@@ -343,9 +340,9 @@ static int doQuery(
     (void)setbuf(stdout, NULL);
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
-    connect = connectscm(scmp->dsn, errMsg, 1024);
-    checkErr(connect == NULL, "Cannot connect to database: %s\n", errMsg);
-    connect->mystat.tabname = objectType;
+    connection = connectscm(scmp->dsn, errMsg, 1024);
+    checkErr(connection == NULL, "Cannot connect to database: %s\n", errMsg);
+    connection->mystat.tabname = objectType;
     table = findtablescm(scmp, tableName(objectType));
     checkErr(table == NULL, "Cannot find table %s\n", objectType);
 
@@ -452,14 +449,10 @@ static int doQuery(
     if (validate)
     {
         valIndex = srch.nused;
-        if (isROA || isRPSL || isManifest || isRTA || isCRL)
+        if (isROA || isRPSL || isManifest || isCRL)
         {
             char *ski;
-            if (isRTA)
-            {
-                ski = "ski_ee";
-            }
-            else if (isCRL)
+            if (isCRL)
             {
                 ski = "aki";
             }
@@ -477,7 +470,7 @@ static int doQuery(
     /*
      * do query 
      */
-    status = searchscm(connect, table, &srch, NULL, handleResults, srchFlags,
+    status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
                        (isRPSL) ? "asn" : orderp);
     for (i = 0; i < srch.nused; i++)
     {
@@ -497,7 +490,7 @@ static int listOptions(
         j;
 
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
-             (!isManifest) && (!isRTA), BAD_OBJECT_TYPE);
+             (!isManifest), BAD_OBJECT_TYPE);
     printf("\nPossible fields to display or use in clauses for a %s:\n",
            objectType);
     for (i = 0; i < getNumFields(); i++)
@@ -507,8 +500,7 @@ static int listOptions(
         if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
             ((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
             ((getFields()[i].flags & Q_FOR_CERT) && isCert) ||
-            ((getFields()[i].flags & Q_FOR_MAN) && isManifest) ||
-            ((getFields()[i].flags & Q_FOR_RTA) && isRTA))
+            ((getFields()[i].flags & Q_FOR_MAN) && isManifest))
         {
             printf("  %s: %s\n", getFields()[i].name,
                    getFields()[i].description);
@@ -552,8 +544,7 @@ static int addAllFields(
  * add fields needed for RPSL query 
  */
 static int addRPSLFields(
-    char *displays[],
-    int numDisplays)
+    char *displays[])
 {
     // XXX hack... just add these by hand
     // XXX worse hack... we have hard-coded SQL field names scattered
@@ -586,9 +577,9 @@ static int printUsage(
     printf("      See the sample specifications file sampleQuerySpecs\n");
     printf
         ("  -l <type>: list the possible display fields for the type, where type is\n");
-    printf("     roa, cert, crl, manifest or rta.\n");
+    printf("     roa, cert, crl, or manifest.\n");
     printf
-        ("  -t <type>: the type of object requested: roa, cert, crl, man[ifest], or rta\n");
+        ("  -t <type>: the type of object requested: roa, cert, crl, or man[ifest]\n");
     printf("  -d <field>: display a field of the object (or 'all')\n");
     printf
         ("  -f <field>.<op>.<value>: filter where op is a comparison operator\n");
@@ -619,7 +610,6 @@ static void setObjectType(
     isCert = (strcasecmp(objectType, "cert") == 0);
     isManifest = (strcasecmp(objectType, "manifest") == 0);
     setIsManifest(isManifest);
-    isRTA = (strcasecmp(objectType, "rta") == 0);
     isRPSL = (strcasecmp(objectType, "rpsl") == 0);
 }
 
@@ -715,10 +705,10 @@ int main(
     if (isRPSL)
     {
         checkErr(numDisplays != 0, "-d should not be used with RPSL query\n");
-        numDisplays = addRPSLFields(displays, 0);
+        numDisplays = addRPSLFields(displays);
     }
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
-             (!isManifest) && (!isRTA), BAD_OBJECT_TYPE);
+             (!isManifest), BAD_OBJECT_TYPE);
     checkErr(numDisplays == 0 && isRPSL == 0, "Need to display something\n");
     if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
         numDisplays = addAllFields(displays, 0);

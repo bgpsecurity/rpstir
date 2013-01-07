@@ -10,6 +10,11 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $RPKI_ROOT/lib/util/trap_errors
 
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 # NOTES
 
 CFSCRIPTS=$RPKI_ROOT/tests/conformance/scripts # conformance scripts
@@ -25,11 +30,11 @@ mkdir raw/root
 cd $RPKI_ROOT/tests/conformance/raw
 for f in badRootBadAKI badRootBadCRLDP badRootNameDiff root
 do
-    rr < $f.raw > $f.cer
+    run "rr-$f" rr < $f.raw > $f.cer
 done
 
 # Build CRL
-rr < root.crl.raw > root/root.crl
+run "rr-root.crl" rr < root.crl.raw > root/root.crl
 
 # Generate all types of conformance cases
 $CFSCRIPTS/gen_all_certs.sh -P

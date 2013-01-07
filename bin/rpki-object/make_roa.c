@@ -3,11 +3,14 @@
  */
 
 
-#include "rpki/cms/roa_utils.h"
+#include "rpki-object/cms/cms.h"
 #include "rpki-asn1/manifest.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <time.h>
 
 char *msgs[] = {
@@ -23,7 +26,7 @@ char *msgs[] = {
 
 static int fatal(
     int msg,
-    char *paramp)
+    const char *paramp)
 {
     fprintf(stderr, msgs[msg], paramp);
     exit(msg);
@@ -272,8 +275,9 @@ int main(
         (struct Certificate *)inject_casn(&sgdp->certificates.self, 0);
     if (get_casn_file(&certp->self, certfile, 0) < 0)
         fatal(2, certfile);
-    if ((c = signCMS(&roa, keyfile, 0)))
-        fatal(5, c);
+    const char *msg;
+    if ((msg = signCMS(&roa, keyfile, 0)))
+        fatal(5, msg);
     if (put_casn_file(&roa.self, outfile, 0) < 0)
         fatal(6, outfile);
     if (vfile)

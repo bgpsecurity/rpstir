@@ -28,18 +28,12 @@ static void print_define_tables(
 static void print_if_include(
     FILE *,
     char *);
-static int putobjid(
-    char *,
-    int,
-    int);
 
 int array,
     classcount,
     modflag,
     genflag,
-    ceeflag,
     dosflag,
-    javaflag,
     did_tables,
     explicit1 = 3,
     flags,
@@ -258,7 +252,6 @@ identified-organization OBJECT IDENTIFIER ::= {3}\n",
 {
 asn_gen_id,
         asn_constr_id, asn_hdr_id,
-        asn_java_id,
         asn_pproc_id, asn_read_id, asn_tabulate_id, casn_constr_id,
         casn_hdr_id, 0}, *i_names = NULL, *i_paths = NULL, *mktemp(char *);
 
@@ -373,21 +366,15 @@ int main(
        *eubp;
     struct id_table *idp,
        *eidp;
-    struct stat tstat;
+
+    (void)argc;
 
     for (p = &argv[1], lflag = tflag = uflag = do_flag = 0,
          source = (char *)0; *p; p++)
     {
         if (*(c = *p) == '-')
         {
-            if (*(++c) == 'c')
-            {
-                if (!javaflag)
-                    ceeflag = 1;
-                else
-                    fatal(1, c);
-            }
-            else if (*c == 'd')
+            if (*c == 'd')
                 dosflag = 1;
             else if (*c == 'g')
                 genflag = 1;
@@ -408,13 +395,6 @@ int main(
                     strcpy(&i_paths[i_pathsize], c);
                     i_pathsize += did;
                 }
-            }
-            else if (*c == 'j')
-            {
-                if (!ceeflag)
-                    javaflag = 1;
-                else
-                    fatal(1, c);
             }
             else if (*c == 'l')
             {
@@ -460,14 +440,7 @@ int main(
                 c = b;
         }
         sfx = c;
-        if (ceeflag)
-            cat(sfx, ".c");
-        else if (javaflag)
-            *c = 0;
-        else if (dosflag)
-            cat(sfx, ".cpp");
-        else
-            cat(sfx, ".C");
+        cat(sfx, ".c");
     }
     if (!do_flag)
         do_flag = 3;
@@ -568,7 +541,7 @@ int main(
     for (did = 0, ntbp = (struct name_table *)name_area.area; ntbp <
          &((struct name_table *)name_area.area)[name_area.next]; ntbp++)
     {
-        if (ntbp->type != 0xFFFFFFFF || *ntbp->name > 'Z' ||
+        if (ntbp->type != (long)0xFFFFFFFF || *ntbp->name > 'Z' ||
             (ntbp->flags & (ASN_DEFINED_FLAG | ASN_DEFINER_FLAG | ASN_OF_FLAG |
                             ASN_POINTER_FLAG)) || is_ub(ntbp->name)
             || ntbp->pos < real_start)
@@ -597,112 +570,77 @@ int main(
     {
         time(&last);
         curr_line = curr_pos = 0;
-        if (javaflag)
-        {
-            if (!*fname)
-                outstr = stdout;
-            else
-            {
-                outstr = (FILE *) 0;
-                if (stat(fname, &tstat))
-                    mkdir(fname, 0777);
-                else if (!(tstat.st_mode & S_IFDIR))
-                    fatal(38, fname);
-            }
-            fseek(streams.str, 0L, 0);
-            jconstruct(fname, i_names, i_namesize);
-        }
+        if (!*fname)
+            outstr = stdout;
         else
         {
-            if (!*fname)
-                outstr = stdout;
-            else
-            {
-                printf("File %s\n", fname);
-                if (!(outstr = fopen(fname, "w")))
-                    fatal(2, fname);
-                cat(sfx, ".h");
-            }
-            print_if_include(outstr, fname);
-            fprintf(outstr, "\n");
-            fseek(streams.str, 0L, 0);
-            if (ceeflag)
-                cconstruct();
-            else
-                construct();
-            if (*fname)
-                fclose(outstr);
+            printf("File %s\n", fname);
+            if (!(outstr = fopen(fname, "w")))
+                fatal(2, fname);
+            cat(sfx, ".h");
         }
+        print_if_include(outstr, fname);
+        fprintf(outstr, "\n");
+        fseek(streams.str, 0L, 0);
+        cconstruct();
+        if (*fname)
+            fclose(outstr);
         clear_globals();
         time(&now);
         if (tflag)
             printf("Making C++ source took %d secs.\n", (int)(now - last));
         last = now;
     }
-    if (!javaflag)
+    if ((do_flag & 1))      /* .h file */
     {
-        if ((do_flag & 1))      /* .h file */
+        if (!*fname)
+            outstr = stdout;
+        else
         {
-            if (!*fname)
-                outstr = stdout;
-            else
+            cat(sfx, ".h");
+            printf("File %s\n", fname);
+            if (!(outstr = fopen(fname, "w")))
+                fatal(2, fname);
+            for (b = strcpy(locbuf, fname); *b; b++)
             {
-                cat(sfx, ".h");
-                printf("File %s\n", fname);
-                if (!(outstr = fopen(fname, "w")))
-                    fatal(2, fname);
-                for (b = strcpy(locbuf, fname); *b; b++)
-                {
-                    if (*b == '.')
-                        *b = '_';
-                }
-                /*
-                 * #endif comes later 
-                 */
-                fprintf(outstr, "#ifndef _%s\n#define _%s\n\n", locbuf,
-                        locbuf);
-                print_if_include(outstr, (!ceeflag) ? "asn_obj.h" : "casn.h");
-                for (b = cat(sourcebuf, source);
-                     b > sourcebuf && *(--b) != '.';);
-                cat(b, ".h");
-                for (c = i_names; c < &i_names[i_namesize];)
-                {
-                    if (strcmp(c, sourcebuf))
-                        print_if_include(outstr, c);
-                    while (*c++);
-                }
+                if (*b == '.')
+                    *b = '_';
             }
-            for (idp = (struct id_table *)id_area.area, eidp =
-                 &idp[id_area.next], idp += BUILT_IN_IDS; idp < eidp; idp++)
-                fprintf(outstr, "#define %s \"%s\"\n", idp->name, idp->val);
-            for (ubp = (struct ub_table *)ub_area.area, eubp =
-                 &ubp[ub_area.next]; ubp < eubp; ubp++)
+            /*
+             * #endif comes later 
+             */
+            fprintf(outstr, "#ifndef _%s\n#define _%s\n\n", locbuf,
+                    locbuf);
+            print_if_include(outstr, "casn.h");
+            for (b = cat(sourcebuf, source);
+                 b > sourcebuf && *(--b) != '.';);
+            cat(b, ".h");
+            for (c = i_names; c < &i_names[i_namesize];)
             {
-                if (ubp->status)
-                    fprintf(outstr, "#define %s %ld\n", ubp->name, ubp->val);
+                if (strcmp(c, sourcebuf))
+                    print_if_include(outstr, c);
+                while (*c++);
             }
-            if (id_area.area)
-                fprintf(outstr, "\n");
-            if (!ceeflag)
-                fprintf(outstr, "#ifdef __cplusplus\n");
-            fseek(streams.str, 0L, 0);
-            curr_line = curr_pos = 0;
-            if (ceeflag)
-            {
-                cdo_hdr();
-                fprintf(outstr, "#endif /* %s */\n", locbuf);
-            }
-            else
-            {
-                do_hdr();
-                fprintf(outstr, "#endif /* __cplusplus */\n#endif /* %s */\n",
-                        locbuf);
-            }
-            fclose(outstr);
-            time(&now);
-            if (tflag)
-                printf("Making header took %d secs.\n", (int)(now - last));
         }
+        for (idp = (struct id_table *)id_area.area, eidp =
+             &idp[id_area.next], idp += BUILT_IN_IDS; idp < eidp; idp++)
+            fprintf(outstr, "#define %s \"%s\"\n", idp->name, idp->val);
+        for (ubp = (struct ub_table *)ub_area.area, eubp =
+             &ubp[ub_area.next]; ubp < eubp; ubp++)
+        {
+            if (ubp->status)
+                fprintf(outstr, "#define %s %ld\n", ubp->name, ubp->val);
+        }
+        if (id_area.area)
+            fprintf(outstr, "\n");
+        fseek(streams.str, 0L, 0);
+        curr_line = curr_pos = 0;
+        cdo_hdr();
+        fprintf(outstr, "#endif /* %s */\n", locbuf);
+        fclose(outstr);
+        time(&now);
+        if (tflag)
+            printf("Making header took %d secs.\n", (int)(now - last));
     }
     if (tflag)
         printf("Total time %d secs.\n", (int)(now - start));
@@ -743,7 +681,7 @@ Procedure:
         return parent;
     ansr = add_name(name, type, option);
     ntbp = &((struct name_table *)name_area.area)[ansr];
-    if (ntbp->type == 0xFFFFFFFF)
+    if (ntbp->type == (long)0xFFFFFFFF)
         ntbp->type = type;
     ntbp->flags |= option;
     for (parentp = &ntbp->parent;
@@ -827,8 +765,7 @@ int add_include_name(
         fatal(7, (char *)0);
     strncpy((b = &i_names[i_namesize]), fname, (size_t) lth);
     c = &b[lth];
-    if (!javaflag)
-        c = cat(c, ".h");
+    c = cat(c, ".h");
     lth = (c - b) + 1;
     for (c = i_names; c < b && strcmp(c, b);)   /* eliminate duplicates */
     {
@@ -920,83 +857,14 @@ void cvt_number(
     char *from)
 {
     char *c;
-    int base;
-    long val,
-        val2;
     for (c = from; *c && *c != '.'; c++);
-    if (javaflag || ceeflag)
+    if (*c == '.')
     {
-        if (*c == '.')
-        {
-            for (c++; *c && *c != '.'; c++);
-            if (!*c)
-                syntax(from);
-        }
-        strcpy(to, from);
+        for (c++; *c && *c != '.'; c++);
+        if (!*c)
+            syntax(from);
     }
-    else
-    {
-        if (*c == '.')
-        {
-            for (val = 0;
-                 *from && *from != '.' && *from >= '0' && *from <= '9';
-                 val = (val * 10) + *from++ - '0');
-            val *= 40;
-            if (*from != '.')
-                syntax(from);
-            for (from++, val2 = 0;
-                 *from && *from != '.' && *from >= '0' && *from <= '9';
-                 val2 = (val2 * 10) + *from++ - '0');
-            if (*from && *from != '.')
-                syntax(from);
-            c = to;
-            c += putobjid(c, (val + val2), 0);
-            if (*from)
-                from++;
-            while (*from)
-            {
-                for (val = 0;
-                     *from && *from != '.' && *from >= '0' && *from <= '9';
-                     val = (val * 10) + *from++ - '0');
-                c += putobjid(c, val, 0);
-                if (*from)
-                {
-                    if (*from != '.')
-                        syntax(from);
-                    from++;
-                }
-            }
-        }
-        else if (*from == '0' && (from[1] == 'x' || from[1] == 'X'))
-        {
-            for (from += 2, c = to; *from;)
-            {
-                if (*from >= 'a')
-                    *from -= 0x20;
-                if (*from >= 'A')
-                    *from -= 7;
-                val = *from++ - '0';
-                if (*from)
-                {
-                    if (*from >= 'a')
-                        *from -= 0x20;
-                    if (*from >= 'A')
-                        *from -= 7;
-                    val = (val << 4) + *from++ - '0';
-                }
-                c += putoct(c, val);
-            }
-        }
-        else
-        {
-            if (*from != '0')
-                base = 10;
-            else
-                base = 8;
-            for (val = 0, c = to; *from; val = (val * base) + *from++ - '0');
-            c += putoct(c, val);
-        }
-    }
+    strcpy(to, from);
 }
 
 static char assign_table[] = "0114202000100000002222112";
@@ -1011,7 +879,7 @@ char *derived_dup(
 
     if (loctype == ASN_SET)
         c = "AsnArrayOfSets";
-    else if (loctype >= sizeof(assign_table) || assign_table[loctype] == '0')
+    else if (loctype >= (long)sizeof(assign_table) || assign_table[loctype] == '0')
         c = "AsnArray";
     else if ((assign_table[loctype] & CHAR_ASSIGN))
         c = "AsnStringArray";
@@ -1302,7 +1170,7 @@ void get_subtype(
     struct name_table *ntbp;
 
     if ((ntbp = replace_name(subclass)) &&
-        ntbp->type != 0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
+        ntbp->type != (long)0xFFFFFFFF && ntbp->type < ASN_CONSTRUCTED &&
         !(ntbp->flags & ASN_ENUM_FLAG))
         subtype = (short)ntbp->type;
 }
@@ -1772,21 +1640,6 @@ void print_tables(
         printf("  File: %s module: %s from %ld to %ld\n", modtbp->fname,
                modtbp->mname, modtbp->start_pos, modtbp->end_pos);
     }
-}
-
-static int putobjid(
-    char *to,
-    int val,
-    int lev)
-{
-    char *c = to;
-    uchar tmp = (val & 0x7F);
-    if (lev)
-        tmp += 0x80;
-    if ((val >>= 7))
-        c += putobjid(to, val, lev + 1);
-    sprintf(c, "\\%03o", tmp);
-    return (c - to) + 4;
 }
 
 int putoct(

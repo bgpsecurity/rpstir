@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include "rpki-asn1/certificate.h"
 #include "rpki-asn1/roa.h"
 #include <rpki-asn1/keyfile.h>
@@ -18,6 +18,7 @@
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
+#include "util/inet.h"
 // #include "create_utils.h"
 
 char *roa_template = TEMPLATES_DIR "/R.roa";
@@ -136,7 +137,7 @@ int parse_and_write_ips(
             // get a null terminated ipAddr to copy into the casn
             ipAddr = calloc(ipAddrLen + 1, sizeof(char));
             memcpy(ipAddr, next, ipAddrLen);
-            ipAddr[ipAddrLen + 1] = '\0';
+            ipAddr[ipAddrLen] = '\0';
             if (write_casn_num(&roafp->maxLength, max) < 0)
                 return -1;
         }

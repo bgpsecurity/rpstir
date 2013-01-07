@@ -46,7 +46,7 @@ int main(
         bsize = dump_size(&certificate.self);
         buf = (char *)calloc(1, bsize + 8);
         dump_casn(&certificate.self, buf);
-        printf(buf);
+        printf("%s", buf);
         free(buf);
         delete_casn(&certificate.self);
     }
@@ -58,12 +58,12 @@ int main(
         bsize = dump_size(&crl.self);
         buf = (char *)calloc(1, bsize + 8);
         dump_casn(&crl.self, buf);
-        printf(buf);
+        printf("%s", buf);
         free(buf);
         delete_casn(&crl.self);
     }
     else if (!strcmp(p, ".man") || !strcmp(p, ".mft") || !strcmp(p, ".mnf") ||
-             !strcmp(p, ".roa") || !strcmp(p, ".rta"))
+             !strcmp(p, ".roa"))
     {
         ROA(&roa, (ushort) 0);
         if (get_casn_file(&roa.self, argv[1], 0) < 0)
@@ -71,7 +71,7 @@ int main(
         bsize = dump_size(&roa.self);
         buf = (char *)calloc(1, bsize + 8);
         dump_casn(&roa.self, buf);
-        printf(buf);
+        printf("%s", buf);
         free(buf);
         delete_casn(&roa.self);
     }

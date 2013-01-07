@@ -1,13 +1,15 @@
 #include <stdio.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <rpki-asn1/keyfile.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
+#include <rpki-object/cms/cms.h>
 #include <rpki-asn1/roa.h>
 #include <casn/casn.h>
+#include <util/hashutils.h>
 
 char *msgs[] = {
     "Finished OK\n",
@@ -32,148 +34,6 @@ struct keyring {
 };
 
 static struct keyring keyring;
-
-static struct Extension *find_extension(
-    struct Certificate *certp,
-    char *idp)
-{
-    struct Extension *extp;
-    for (extp =
-         (struct Extension *)member_casn(&certp->toBeSigned.extensions.self,
-                                         0);
-         extp && diff_objid(&extp->extnID, idp);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
-int CryptInitState;
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    CRYPT_ALGO_TYPE alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr = -1;
-
-    if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
-        return -1;
-    memset(hash, 0, 40);
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            fatal(1, "CryptInit");
-        CryptInitState = 1;
-    }
-
-    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) < 0)
-        fatal(2, "cryptContext");
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    if (ansr > 0)
-        memcpy(outbufp, hash, ansr);
-    return ansr;
-}
-
-// return a printable message indicating the error (if any) or NULL if not
-// 
-static char *signCMS(
-    struct CMSBlob *roa,
-    char *keyfilename,
-    int bad)
-{
-    CRYPT_CONTEXT sigKeyContext;
-    CRYPT_KEYSET cryptKeyset;
-    CRYPT_CONTEXT hashContext;
-    int signatureLength,
-        tbs_lth;
-    char *msg = (char *)0;
-    uchar *tbsp,
-       *signature = NULL,
-        hash[40];
-    struct SignerInfo *signerInfop =
-        (struct SignerInfo *)member_casn(&roa->content.signedData.signerInfos.
-                                         self, 0);
-
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            fatal(1, "CryptInit");
-        CryptInitState = 1;
-    }
-    // get the size of signed attributes and allocate space for them
-    if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
-        msg = "sizing SignerInfo";
-    else
-    {
-        tbsp = (uchar *) calloc(1, tbs_lth);
-        tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
-        *tbsp = ASN_SET;
-
-        if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) <
-            0)
-            msg = "creating hash context";
-        else if (cryptEncrypt(hashContext, tbsp, tbs_lth) < 0 ||
-                 cryptEncrypt(hashContext, tbsp, 0) < 0)
-            msg = "hasingg attrs";
-        else if (cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
-                                         hash, &signatureLength) < 0)
-            msg = "getting attr hash";
-        // get the key and sign it
-        else if (cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                                 keyfilename, CRYPT_KEYOPT_READONLY) < 0)
-            msg = "opening key set";
-        else if (cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                                    CRYPT_ALGO_RSA) < 0)
-            msg = "creating RSA context";
-        else if (cryptGetPrivateKey
-                 (cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, keyring.label,
-                  keyring.password) < 0)
-            msg = "getting key";
-        else if (cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
-                                      hashContext) < 0)
-            msg = "signing";
-        else
-        {
-            // check the signature to make sure it's right
-            signature = (uchar *) calloc(1, signatureLength + 20);
-            // second parameter is signatureMaxLength, so we allow a little
-            // more
-            if (cryptCreateSignature
-                (signature, signatureLength + 20, &signatureLength,
-                 sigKeyContext, hashContext) < 0)
-                msg = "signing";
-            // verify that the signature is right
-            else if (cryptCheckSignature
-                     (signature, signatureLength, sigKeyContext,
-                      hashContext) < 0)
-                msg = "verifying";
-        }
-    }
-
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
-
-    if (!msg)
-    {
-        struct SignerInfo sigInfo;
-        SignerInfo(&sigInfo, (ushort) 0);
-        decode_casn(&sigInfo.self, signature);
-        // copy the signature into the object
-        copy_casn(&signerInfop->signature, &sigInfo.signature);
-        delete_casn(&sigInfo.self);
-    }
-    else
-        fprintf(stderr, "Signing failed when %s\n", msg);
-    // all done with it now
-    if (signature)
-        free(signature);
-    return NULL;
-}
 
 int main(
     int argc,
@@ -202,7 +62,7 @@ int main(
         fatal(1, "CMS file");
     struct Extension *sextp;
     // get EE's Auth Key ID
-    if (!(sextp = find_extension(&EEcert, id_authKeyId)))
+    if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
         fatal(3, "key identifier");
     // add cert to CMS object 
     struct BlobSignedData *signedDatap = &roa.content.signedData;
@@ -226,7 +86,7 @@ int main(
         fatal(2, "SignerInfo");
     write_casn_num(&signerInfop->version.v3, 3);
     // add EE's SKI
-    if (!(sextp = find_extension(&EEcert, id_subjectKeyIdentifier)))
+    if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_subjectKeyIdentifier, false)))
         fatal(2, "EE certificate's subject key identifier");
     copy_casn(&signerInfop->sid.subjectKeyIdentifier,
               &sextp->extnValue.subjectKeyIdentifier);
@@ -255,6 +115,8 @@ int main(
         readvsize_casn(&roa.content.signedData.encapContentInfo.eContent.self,
                        &tbh);
     tbh_lth = gen_hash(tbh, tbh_lth, hashbuf, CRYPT_ALGO_SHA2);
+    if (tbh_lth < 0)
+        fatal(1, "hash");
     free(tbh);
     write_casn(&attrTbDefp->messageDigest, hashbuf, tbh_lth);
     write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
@@ -277,7 +139,7 @@ int main(
     write_casn(&signerInfop->signatureAlgorithm.
                parameters.sha256WithRSAEncryption, (uchar *) "", 0);
     // sign it!
-    char *msg = signCMS(&roa, argv[3], 0);
+    const char *msg = signCMSBlob(&roa, argv[3]);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else                        // and write it

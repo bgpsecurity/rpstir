@@ -41,32 +41,12 @@ struct object_field {
     my_func func;
 };
 
-struct iprange {
-    int typ;
-    uchar lolim[18],
-        hilim[18];
-    ulong loASnum,
-        hiASnum;
-    char *text;
-};
-
-struct ipranges {
-    int numranges;
-    struct iprange *iprangep;
-};
-
 
 extern int read_hex_val(
     char *from_val,
     int len,
     unsigned char *to_val);
-extern struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp);
 void removeExtension(
-    struct Extensions *extsp,
-    char *oid);
-extern struct Extension *findExtension(
     struct Extensions *extsp,
     char *oid);
 extern int write_family(
@@ -79,17 +59,6 @@ extern int write_ASNums(
     int num);
 extern char *stripQuotes(
     char *str);
-extern char *copy_string(
-    char *str,
-    int num);
-extern int cvtv4(
-    uchar fill,
-    char *ip,
-    uchar * buf);
-extern int cvtv6(
-    uchar fill,
-    char *ip,
-    uchar * buf);
 
 extern const char *templateFile;
 #endif                          /* _CREATE_OBJ_H */

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "db_constants.h"
 
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 
 /*
  * Object types 
@@ -20,9 +20,7 @@
 #define OT_CRL          2       /* DER encoded CRL */
 #define OT_ROA          3       /* DER encoded ROA */
 #define OT_MAN          4       /* manifests are only DER for now */
-#define OT_RTA          5       /* DER encoded RTA */
-#define OT_ETA          6
-#define OT_MAXBASIC     6
+#define OT_MAXBASIC     4
 
 #define OT_PEM_OFFSET   128
 
@@ -186,9 +184,6 @@ extern struct cert_answers *find_parent_cert(
 extern struct cert_answers *find_trust_anchors(
     scm * sscmp,
     scmcon * conp);
-extern struct Extension *find_extension(
-    struct Certificate *certp,
-    char *idp);
 extern struct Extension *get_extension(
     struct Certificate *certp,
     char *idp,

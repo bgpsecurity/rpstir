@@ -8,12 +8,8 @@
 #include <unistd.h>
 
 #include "roa_utils.h"
-#include "cryptlib.h"
-
-extern char *signCMS(
-    struct ROA *,
-    char *,
-    int);
+#include "rpki-object/cms/cms.h"
+#include "util/cryptlib_compat.h"
 
 // Warning - MAX_LINE hardcoded as a constant in confInterpret;
 // if this changes, that must as well
@@ -580,8 +576,7 @@ static int calculateAndClearPrefix(
     int iSize,
     unsigned char *iparray,
     unsigned char *cBadBits,
-    int *iGoodBytes,
-    int *maxLenp)
+    int *iGoodBytes)
 {
     int i = 0;
     int iIndex = 0;
@@ -1226,7 +1221,7 @@ static int setIPAddr(
         // (necessary to constuct ASN BITSTRING), then populate the bit notice
         // and add one to the length of the array to be copied
         calculateAndClearPrefix(iPrefixSize, 32, arrayptr, &cBadBits,
-                                &iGoodBytes, &maxLen);
+                                &iGoodBytes);
         ipv4array[0] = cBadBits;
         iGoodBytes++;
         // Then, write the bitstring (as an octet string) to the latest
@@ -1275,7 +1270,7 @@ static int setIPAddr(
         // (necessary to constuct ASN BITSTRING), then populate the bit notice
         // and add one to the length of the array to be copied
         calculateAndClearPrefix(iPrefixSize, 128, arrayptr, &cBadBits,
-                                &iGoodBytes, &maxLen);
+                                &iGoodBytes);
         ipv6array[0] = cBadBits;
         iGoodBytes++;
         // Then, write the bitstring (as an octet string) to the casn
@@ -1572,12 +1567,8 @@ static int setCertName(
     struct ROA *roa,
     unsigned char *certfilenamestring)
 {
-    int iLen = 0;
     int iRet = 0;
     int iCerts = 0;
-
-    // JFG - Do we have a filename max, given our restriction to < 512?
-    iLen = strlen((char *)certfilenamestring);
 
     // Check to make sure there's only one cert and it's the one
     // we're about to read in.
@@ -1823,7 +1814,7 @@ static int confInterpret(
      * keyfileName)) < 0) { // printf("Error creating signature\n"); iROAState 
      * = iRet2; } free(buf); 
      */
-    char *ap = signCMS(roa, keyfileName, 0);
+    const char *ap = signCMS(roa, keyfileName, 0);
     if (ap)
         iROAState = ERR_SCM_INVALSIG;
     return iROAState;
@@ -1855,11 +1846,11 @@ int roaFromFile(
 
     // read in the file
     if ((fd = open(fname, (O_RDONLY))) < 0)
-        sta = ERR_SCM_COFILE;
+        return ERR_SCM_COFILE;
     else if (fstat(fd, &sb) != 0)
     {
         (void)close(fd);
-        sta = ERR_SCM_COFILE;
+        return ERR_SCM_COFILE;
     }
     else
     {
@@ -1873,6 +1864,10 @@ int roaFromFile(
         {
             free(buf);
             sta = ERR_SCM_BADFILE;
+        }
+        if (sta != 0)
+        {
+            return sta;
         }
     }
     // handle format-specific processing
