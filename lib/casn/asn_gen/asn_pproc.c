@@ -229,7 +229,6 @@ Procedure:
                                  * not imported class 1= in imported file in
                                  * an imported class, no details needed 2= " " 
                                  * " " " " " , but details needed */
-    ulong loctag;
     if (!in_sub)
         *classname = *token = 0;
     if (fd >= 0 && !in_sub && !real_start)
@@ -238,8 +237,7 @@ Procedure:
         active = -1;
     else
         active = 0;
-    for (loctag = 0,
-         *linebuf = *itemname = 0; pre_proc_get_token(fd, str, linebuf);)
+    for (*linebuf = *itemname = 0; pre_proc_get_token(fd, str, linebuf);)
     {
         switch (state)
         {
@@ -401,7 +399,7 @@ static int pre_proc_glob(
                     if (!fd && !ctbp->with_syntax.subject
                         && !ctbp->with_syntax.next)
                     {
-                        fprintf(str, linebuf);
+                        fprintf(str, "%s", linebuf);
                         if (strncmp(ctbp->item.predicate,
                                     (c = "OBJECT IDENTIFIER"), 17) &&
                             strcmp(ctbp->item.predicate, (c = integer_w)))
@@ -1545,9 +1543,9 @@ static void scan_modules(
         modtbp->mname = (char *)calloc(strlen(c) + 2, 1);
         cat(modtbp->mname, c);
         modtbp->start_pos = tell_pos(streams.str) - strlen(definitions_w);
-        while ((siz = get_token(fd, locbuf)) && siz < sizeof(locbuf) &&
+        while ((siz = get_token(fd, locbuf)) && siz < (int)sizeof(locbuf) &&
                strcmp(locbuf, end_w));
-        if (siz >= sizeof(locbuf))
+        if ((size_t)siz >= sizeof(locbuf))
             fatal(36, locbuf);
         modtbp->end_pos = tell_pos(streams.str);
         if (!siz)

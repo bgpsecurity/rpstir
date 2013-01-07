@@ -35,12 +35,9 @@ int sign_cert(
     struct AlgorithmIdentifier *algp,
        *tbsalgp;
     struct casn *casnp,
-       *sigp,
-       *selfp;
-    int ret;
+       *sigp;
 
 
-    selfp = &certp->self;
     casnp = &certp->toBeSigned.self;
     tbsalgp = &certp->toBeSigned.signature;
     sigp = &certp->signature;

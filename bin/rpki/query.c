@@ -77,7 +77,7 @@ struct {
     "rpsl", "roa"},};
 
 
-static int oldasn;              // needed for grouping by AS#
+static unsigned int oldasn;              // needed for grouping by AS#
 static int v4size = 0,
     v6size = 0;
 static char *v4members = NULL,
@@ -302,7 +302,7 @@ static int handleResults(
 static char *tableName(
     char *objType)
 {
-    int i;
+    size_t i;
     for (i = 0; i < countof(tableNames); ++i)
     {
         if (!strcasecmp(objType, tableNames[i].objectName))
@@ -541,8 +541,7 @@ static int addAllFields(
  * add fields needed for RPSL query 
  */
 static int addRPSLFields(
-    char *displays[],
-    int numDisplays)
+    char *displays[])
 {
     // XXX hack... just add these by hand
     // XXX worse hack... we have hard-coded SQL field names scattered
@@ -699,7 +698,7 @@ int main(
     if (isRPSL)
     {
         checkErr(numDisplays != 0, "-d should not be used with RPSL query\n");
-        numDisplays = addRPSLFields(displays, 0);
+        numDisplays = addRPSLFields(displays);
     }
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
              (!isManifest), BAD_OBJECT_TYPE);

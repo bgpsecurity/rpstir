@@ -23,6 +23,7 @@ static void usage(
     int argc,
     char *argv[])
 {
+    (void)argc;
     fprintf(stderr,
             "Modify Subject Information Access URI(s) in a certificate.\n"
             "\n"

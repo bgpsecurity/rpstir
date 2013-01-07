@@ -322,6 +322,9 @@ char *makeGenericStr(
     unsigned int holdLen;
     int ret;
 
+    // TODO: is len useful? can it be substituted for strlen(str) below?
+    (void)len;
+
     if (!str)
         return NULL;
 

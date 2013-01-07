@@ -85,6 +85,9 @@ int main(
         short x;
         char y[2];
     } end_test;
+
+    (void)argc;
+
     end_test.x = 1;
     little = (end_test.y[0] > 0);
     for (c = obuf; c < &obuf[66]; *c++ = ' ');

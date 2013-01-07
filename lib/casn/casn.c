@@ -205,7 +205,7 @@ int casn_error(
     struct casn *casnp),
     _write_objid(
     struct casn *casnp,
-    char *from);
+    const char *from);
 
 void _clear_casn(
     struct casn *,
@@ -488,7 +488,9 @@ struct casn *inject_casn(
         err = ASN_NOT_OF_ERR;
     else if ((err = _fill_upward(casnp, 0)) != 0)
         err = -err;
-    else if (casnp->max && num >= casnp->max)
+    else if (num < 0)
+        err = ASN_OF_BOUNDS_ERR;
+    else if (casnp->max && (ulong)num >= casnp->max)
         err = ASN_OF_BOUNDS_ERR;
     if (err)
     {
@@ -534,7 +536,7 @@ struct casn *inject_casn(
     }
     else                        // there's more than one, including final
     {                           // if it's the last
-        if (num == casnp->num_items)
+        if ((ulong)num == casnp->num_items)
             pcasnp = casnp->lastp;
         // else find previous item
         else
@@ -544,7 +546,7 @@ struct casn *inject_casn(
         tcasnp->ptr = pcasnp->ptr;      // new one points to where previous
                                         // did
         pcasnp->ptr = tcasnp;   // previous points to new one
-        if (num == casnp->num_items)
+        if ((ulong)num == casnp->num_items)
             casnp->lastp = tcasnp;
         tcasnp->level = 0;      // this may be redundant
     }
@@ -721,6 +723,9 @@ int _calc_lth(
     uchar ** cpp,
     uchar ftag)
 {
+    // TODO: determine if ftag is supposed to do anything, and remove it if not
+    (void)ftag;
+
     uchar *c = *cpp;
     int tmp,
         lth;
@@ -1086,7 +1091,7 @@ struct casn *_find_tag(
 
     while (casnp)
     {
-        if (casnp->tag == tag || casnp->type == ASN_ANY)
+        if (casnp->tag == (long)tag || casnp->type == ASN_ANY)
             return casnp;
         if (casnp->type == ASN_CHOICE && (tcasnp = _find_tag(&casnp[1], tag)))
             return tcasnp;
@@ -2333,16 +2338,16 @@ int _write_casn(
             err = ASN_TIME_ERR;
     }
     else if (!(casnp->flags & ASN_RANGE_FLAG) && casnp->max &&
-             (tmp > casnp->max || tmp < casnp->min))
+             (tmp > (int)casnp->max || tmp < casnp->min))
         err = ASN_BOUNDS_ERR;
     else if ((casnp->flags & ASN_RANGE_FLAG))
     {
         if (lth > 4)
             err = ASN_BOUNDS_ERR;
-        else if (casnp->min != casnp->max)
+        else if ((long)casnp->min != (long)casnp->max)
         {
             for (b = c, num = 0; b < &c[lth]; num = (num << 8) + (int)*b++);
-            if (num < casnp->min || num > casnp->max)
+            if (num < casnp->min || num > (int)casnp->max)
                 err = ASN_BOUNDS_ERR;
         }
     }
@@ -2388,9 +2393,9 @@ int _write_enum(
 
 int _write_objid(
     struct casn *casnp,
-    char *from)
+    const char *from)
 {
-    char *c = from;
+    const char *c = from;
     long tmp,
         val;
     int i,

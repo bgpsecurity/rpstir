@@ -242,12 +242,24 @@ int main(
     addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
     status = searchscm(connect, metaTable, &srch, NULL, handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != 0)
+    {
+        fprintf(stderr, "Error searching for timestamps: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
 
     // check for expired certs
     certificate_validity(scmp, connect);
 
     // check for revoked certs
     status = iterate_crl(scmp, connect, model_cfunc);
+    if (status != 0 && status != ERR_SCM_NODATA)
+    {
+        fprintf(stderr, "Error checking for revoked certificates: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
 
     // do check for stale crls (next update after last time and before this)
     // if no new crl replaced it (if count = 0 for crls with same issuer and
@@ -265,6 +277,12 @@ int main(
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(srch1[0].valptr);
     free(srch1[1].valptr);
+    if (status != 0 && status != ERR_SCM_NODATA)
+    {
+        fprintf(stderr, "Error searching for CRLs: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
 
     // now check for stale and then non-stale manifests
     // note: by doing non-stale test after stale test, those objects that
@@ -276,6 +294,12 @@ int main(
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != 0 && status != ERR_SCM_NODATA)
+    {
+        fprintf(stderr, "Error searching for manifests: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
     for (i = 0; i < numStaleManFiles; i++)
     {
         handleStaleMan2(connect, certTable, staleManFiles[i]);
@@ -288,6 +312,12 @@ int main(
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    if (status != 0 && status != ERR_SCM_NODATA)
+    {
+        fprintf(stderr, "Error searching for manifests: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
     for (i = 0; i < numStaleManFiles; i++)
     {
         handleFreshMan2(connect, certTable, staleManFiles[i]);
@@ -314,11 +344,23 @@ int main(
     free(srch1[0].valptr);
     free(srch1[1].valptr);
     free(srch1[2].valptr);
+    if (status != 0 && status != ERR_SCM_NODATA)
+    {
+        fprintf(stderr, "Error searching for certificates: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
 
     // write timestamp into database
     snprintf(msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
              metaTable->tabname, currTimestamp);
     status = statementscm_no_data(connect, msg);
+    if (status != 0)
+    {
+        fprintf(stderr, "Error updating timestamp: %s\n",
+                err2string(status));
+        exit(EXIT_FAILURE);
+    }
 
     config_unload();
     CLOSE_LOG();

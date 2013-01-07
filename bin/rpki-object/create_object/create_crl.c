@@ -57,9 +57,6 @@ int write_crl_aki(
 int write_crlNum(
     void *cert,
     void *val);
-int write_cert_sig(
-    void *crl,
-    void *val);
 
 /*
  * Note: Some fields are in the table as optional but are actually required.
@@ -77,7 +74,7 @@ struct object_field crl_field_table[] = {
     {"crlnum", INTEGER, NULL, REQUIRED, write_crlNum},
     {"revokedcertlist", LIST, NULL, OPTIONAL, write_revoked_certlist},
     {"aki", OCTETSTRING, NULL, OPTIONAL, write_crl_aki},
-    {"signatureValue", OCTETSTRING, NULL, OPTIONAL, write_cert_sig},
+    {"signatureValue", OCTETSTRING, NULL, OPTIONAL, NULL},
     {NULL, 0, NULL, REQUIRED, NULL}
 };
 

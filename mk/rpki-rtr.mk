@@ -20,9 +20,6 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_LDADD = \
 	$(LDADD_LIBRPKIRTR) \
 	$(LDADD_LIBUTIL)
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_daemon_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 
 bin_PROGRAMS += bin/rpki-rtr/@PACKAGE_NAME@-rpki-rtr-test-client
 
@@ -33,9 +30,6 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_LDADD = \
 	$(LDADD_LIBRPKIRTR) \
 	$(LDADD_LIBUTIL)
 
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_test_client_CFLAGS = \
-	$(CFLAGS_STRICT)
-
 
 bin_PROGRAMS += bin/rpki-rtr/@PACKAGE_NAME@-rpki-rtr-update
 
@@ -44,9 +38,6 @@ bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_SOURCES = \
 
 bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_LDADD = \
 	$(LDADD_LIBRPKI)
-
-bin_rpki_rtr_@PACKAGE_NAME@_rpki_rtr_update_CFLAGS = \
-	$(CFLAGS_STRICT)
 
 
 EXTRA_DIST += bin/rpki-rtr/cleanServerData
