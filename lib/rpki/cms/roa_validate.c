@@ -11,7 +11,7 @@
 #include <inttypes.h>
 
 #include "roa_utils.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include "util/logutils.h"
 #include "util/hashutils.h"
 
@@ -26,8 +26,6 @@ int strict_profile_checks_cms = 0;
 #define MINMAXBUFSIZE 20
 
 #define MANIFEST_NUMBER_MAX_SIZE 20 /* in bytes */
-
-extern int CryptInitState;
 
 int check_sig(
     struct ROA *rp,
@@ -71,12 +69,8 @@ int check_sig(
     *buf = ASN_SET;
 
     // (re)init the crypt library
-    if (!CryptInitState)
-    {
-        if (cryptInit() != CRYPT_OK)
-            return ERR_SCM_CRYPTLIB;
-        CryptInitState = 1;
-    }
+    if (cryptInit() != CRYPT_OK)
+        return ERR_SCM_CRYPTLIB;
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2))
         return ERR_SCM_CRYPTLIB;
     cryptEncrypt(hashContext, buf, bsize);
@@ -695,24 +689,6 @@ static int cmsValidate(
  * free(path); *badfilesppp = badfilespp; return err; } 
  */
 
-int rtaValidate(
-    struct ROA *rtap)
-{
-    int iRes = cmsValidate(rtap);
-    if (iRes < 0)
-        return iRes;
-
-    // check eContentType 
-    if (diff_objid(&rtap->content.signedData.encapContentInfo.eContentType,
-                   id_ct_RPKITrustAnchor))
-        return ERR_SCM_BADCT;
-    if ((iRes =
-         check_cert(&rtap->content.signedData.encapContentInfo.
-                    eContent.trustAnchor, 0)) < 0)
-        return iRes;
-    return 0;
-}
-
 static int check_mft_version(
     struct casn *casnp)
 {
@@ -749,7 +725,7 @@ static int check_mft_number(
         return ERR_SCM_BADMFTNUM;
     }
 
-    read_casn(casnp, &val);
+    read_casn(casnp, val);
 
     if (val[0] & 0x80)
     {

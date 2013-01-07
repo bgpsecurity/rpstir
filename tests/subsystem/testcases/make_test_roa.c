@@ -7,23 +7,20 @@
 #include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
+#include <string.h>
+#include <util/file.h>
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
 #include <rpki-asn1/roa.h>
+#include <rpki-object/cms/cms.h>
 #include <rpki/cms/roa_utils.h>
 #include <assert.h>
-
-// in signCMS.c in this directory
-extern char *signCMS(
-    struct ROA *,
-    char *,
-    int);
 
 void usage(
     char *prog)
@@ -61,7 +58,8 @@ void fatal(
 {
     va_list ap;
     va_start(ap, err);
-    assert(err < (sizeof(msgs) / sizeof(msgs[0])));
+    assert(err >= 0);
+    assert((size_t)err < (sizeof(msgs) / sizeof(msgs[0])));
     vfprintf(stderr, msgs[err], ap);
     va_end(ap);
     exit(err);
@@ -171,16 +169,6 @@ static void make_fullpath(
     strcat(fullpath, locpath);
 }
 
-static void mkdir_recursive(
-    const char *dir)
-{
-    char mkdircmd[60];
-    if (!dir || strlen(dir) == 0)
-        return;
-    snprintf(mkdircmd, sizeof(mkdircmd), "mkdir -p %s", dir);
-    system(mkdircmd);
-}
-
 int main(
     int argc,
     char **argv)
@@ -195,7 +183,7 @@ int main(
     struct ROA roa;
     struct Certificate cert,
         pcert;
-    char *msg;
+    const char *msg;
     int c;
     int v4maxLen = 0,
         v6maxLen = 0;
@@ -391,7 +379,12 @@ int main(
     make_fulldir(fulldir, roafile);
     make_fullpath(fullpath, roafile);
     printf("Path: %s\n", fullpath);
-    mkdir_recursive(fulldir);
+    if (!mkdir_recursive(fulldir, 0777))
+    {
+        fprintf(stderr, "error: mkdir_recursive(\"%s\"): %s\n", fulldir,
+                strerror(errno));
+        fatal(4, fulldir);
+    }
     if (put_casn_file(&roa.self, roafile, 0) < 0)
         fatal(4, roafile);
     if (put_casn_file(&roa.self, fullpath, 0) < 0)

@@ -5,7 +5,7 @@
 
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/manifest.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>

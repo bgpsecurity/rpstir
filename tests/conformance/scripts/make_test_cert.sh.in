@@ -18,6 +18,11 @@ THIS_SCRIPT_DIR=$(dirname $0)
 # Safe bash shell scripting practices
 . $RPKI_ROOT/lib/util/trap_errors
 
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
 # Usage
 usage ( ) {
     usagestr="
@@ -206,10 +211,10 @@ cd ${OUTPUT_DIR}
 # Customize w/ serial number and subject name (based on $child_name)
 echo "Customizing cert w/ serial number $SERIAL and subject name ${child_name}"
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
-rr <${child_name}.raw >${child_name}.cer
-put_sernum ${child_name}.cer ${SERIAL}
-put_subj ${child_name}.cer ${child_name}
-dump_smart ${child_name}.cer >${child_name}.raw
+run "rr-0-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.cer
+run "put_sernum-0-`basename ${child_name}`" put_sernum ${child_name}.cer ${SERIAL}
+run "put_subj-0-`basename ${child_name}`" put_subj ${child_name}.cer ${child_name}
+run "dump_smart-0-`basename ${child_name}`" dump_smart ${child_name}.cer >${child_name}.raw
 
 # Stage 0: pre-setting SKI modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
@@ -227,9 +232,9 @@ fi
 
 # Set the SKI
 echo "Setting SKI"
-rr <${child_name}.raw >${child_name}.blb
-set_cert_ski ${child_name}.blb ${child_name}.cer
-dump_smart ${child_name}.cer >${child_name}.raw
+run "rr-1-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.blb
+run "set_cert_ski-1-`basename ${child_name}`" set_cert_ski ${child_name}.blb ${child_name}.cer
+run "dump_smart-1-`basename ${child_name}`" dump_smart ${child_name}.cer >${child_name}.raw
 rm ${child_name}.blb ${child_name}.cer
 
 # Stage 1: post-setting SKI, pre-signing modification: manual or automatic (can be no-op)
@@ -248,10 +253,10 @@ fi
 
 # Sign it
 echo "Signing cert"
-rr <${child_name}.raw >${child_name}.blb
-sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
+run "rr-2-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.blb
+run "sign_cert-2-`basename ${child_name}`" sign_cert ${child_name}.blb ${ROOT_KEY_PATH}
 mv ${child_name}.blb ${child_name}.cer
-dump_smart ${child_name}.cer >${child_name}.raw
+run "dump_smart-2-`basename ${child_name}`" dump_smart ${child_name}.cer >${child_name}.raw
 
 # Stage 2: post-signing modification: manual or automatic (can be no-op)
 if [ $USE_EXISTING_PATCHES ]
@@ -268,7 +273,7 @@ else
 fi
 
 # Convert back into DER-encoded binary.
-rr <${child_name}.raw >${child_name}.cer
+run "rr-final-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.cer
 
 # Clean-up
 rm ${child_name}.raw

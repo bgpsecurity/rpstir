@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include "rpki-asn1/certificate.h"
 #include "rpki-asn1/roa.h"
 #include "rpki-asn1/keyfile.h"
@@ -20,6 +20,7 @@
 #include "create_manifest.h"
 #include "create_roa.h"
 #include "obj_err.h"
+#include "util/logging.h"
 
 /*
  * function declrations 
@@ -280,6 +281,9 @@ int main(
     char *configFile = NULL;
     extern char *optarg;
     struct object_field *table;
+
+
+    OPEN_LOG("create_object", LOG_USER);
 
 
     // parse options

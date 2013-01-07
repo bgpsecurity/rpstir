@@ -11,7 +11,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <limits.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <stdbool.h>
 
 #include "globals.h"
@@ -548,6 +548,8 @@ static char *cf_get_sig(
     int *stap,
     int *x509stap)
 {
+    (void)x509stap;
+
     char *dptr;
 
     if (x->signature == NULL || x->signature->data == NULL ||
@@ -1260,6 +1262,8 @@ static char *crf_get_sig(
     int *stap,
     int *crlstap)
 {
+    (void)crlstap;
+
     char *dptr;
 
     if (x->signature == NULL || x->signature->data == NULL ||
@@ -2156,7 +2160,8 @@ static int rescert_ski_chk(
     /*
      * check ski hash 
      */
-    struct Extension *extp = find_extension(certp, id_subjectKeyIdentifier);
+    struct Extension *extp = find_extension(&certp->toBeSigned.extensions,
+                                            id_subjectKeyIdentifier, false);
     if (extp)
     {
         uchar hash[40];
@@ -3994,8 +3999,7 @@ static int rescert_extensions_chk(
 int rescert_profile_chk(
     X509 * x,
     struct Certificate *certp,
-    int ct,
-    int checkRPKI)
+    int ct)
 {
     int ret = 0;
 
@@ -4069,11 +4073,8 @@ int rescert_profile_chk(
     if (ret < 0)
         return (ret);
 
-    if (checkRPKI)
-    {
-        ret = rescert_ip_asnum_chk(x, certp);
-        log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
-    }
+    ret = rescert_ip_asnum_chk(x, certp);
+    log_msg(LOG_DEBUG, "rescert_ip_asnum_chk");
     if (ret < 0)
         return (ret);
 

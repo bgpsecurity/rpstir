@@ -7,8 +7,9 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "cryptlib.h"
-#include "rpki-asn1/certificate.h"
+#include "util/cryptlib_compat.h"
+#include "rpki-object/certificate.h"
+#include "rpki-object/cms/cms.h"
 #include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
@@ -16,25 +17,8 @@
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
-#include <arpa/inet.h>
-#include <ctype.h>
-#include <string.h>
-
-#define IPv4 4
-#define IPv6 6
-#define ASNUM 8
-
-extern char *signCMS(
-    struct ROA *roap,
-    char *keyfile,
-    int bad);
-int txt2loc(
-    int typ,
-    char *buf,
-    struct iprange *iprangep);
-static void make_IPAddrOrRange(
-    struct IPAddressOrRangeA *ipAddrOrRangep,
-    struct iprange *tiprangep);
+#include <util/inet.h>
+#include <rpki/rpwork.h>
 
 /**
  * Writes an EEcert into a ROA or Manifest
@@ -54,7 +38,7 @@ int write_EEcert(
     {
         struct SignedData *sgdp = &roa->content.signedData;
         // Clear the old one
-        clear_casn(&sgdp->certificates.self);
+        eject_all_casn(&sgdp->certificates.self);
 
         struct Certificate *sigcertp =
             (struct Certificate *)inject_casn(&sgdp->certificates.self, 0);
@@ -85,7 +69,7 @@ int write_EEkey(
     // struct Certificate my_cert;
     struct ROA *roa = my_var;
     // Certificate(&my_cert, (ushort)0);
-    char *c;
+    const char *c;
 
     if ((c = signCMS(roa, (char *)value, 0)))
     {
@@ -355,171 +339,6 @@ void removeExtension(
     return;
 }
 
-
-struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oid);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
-struct Extension *makeExtension(
-    struct Extensions *extsp,
-    char *idp)
-{
-    struct Extension *extp;
-    if (!(extp = findExtension(extsp, idp)))
-    {
-        extp = (struct Extension *)inject_casn(&extsp->self,
-                                               num_items(&extsp->self));
-    }
-    else
-        clear_casn(&extp->self);
-
-    write_objid(&extp->extnID, idp);
-    return extp;
-}
-
-
-#define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separators, family) \
-  char ipstr[addrstrlen]; \
-  ip_type ipbin0, ipbin1; \
-  size_t i, j; \
-  int prefix_len; \
-  int consumed; \
-  \
-  if (ip == NULL || buf == NULL) \
-    return -1; \
-  \
-  for (i = 0; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
-  \
-  j = 0; \
-  for (; \
-    ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
-      (number_func((int)(unsigned char)ip[i]) || strchr(separators, ip[i]) != NULL); \
-    ++i) \
-  { \
-    ipstr[j++] = ip[i]; \
-  } \
-  ipstr[j] = '\0'; \
-  \
-  if (inet_pton(family, ipstr, &ipbin0) != 1) \
-    return -1; \
-  \
-  for (; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
-  \
-  switch (ip[i]) \
-  { \
-    case '\0': \
-      /* single IP, no prefix */ \
-      memcpy(buf, &ipbin0, sizeof(ipbin0)); \
-      return 0; \
-    \
-    case '/': \
-      /* CIDR notation */ \
-      memcpy(buf, &ipbin0, sizeof(ipbin0)); \
-      for (++i; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
-      if (sscanf(&ip[i], "%d%n", &prefix_len, &consumed) < 1) \
-        return -1; \
-      if (prefix_len < 0 || prefix_len > sizeof(ipbin0) * 8) \
-        return -1; \
-      for (i += consumed; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
-      if (ip[i] != '\0') \
-        return -1; \
-      if (fill == 0x00) \
-      { \
-        if (prefix_len % 8 != 0) \
-        { \
-          buf[prefix_len / 8] &= 0xFF << (8 - prefix_len % 8); \
-          j = prefix_len / 8 + 1; \
-        } \
-        else \
-        { \
-          j = prefix_len / 8; \
-        } \
-        memset(&buf[j], 0, sizeof(ipbin0) - j); \
-      } \
-      else if (fill == 0xFF) \
-      { \
-        if (prefix_len % 8 != 0) \
-        { \
-          buf[prefix_len / 8] |= 0xFF >> (prefix_len % 8); \
-          j = prefix_len / 8 + 1; \
-        } \
-        else \
-        { \
-          j = prefix_len / 8; \
-        } \
-        memset(&buf[j], 0xFF, sizeof(ipbin0) - j); \
-      } \
-      else \
-      { \
-        return -1; \
-      } \
-      return 0; \
-    \
-    case '-': \
-      /* range */ \
-      for (++i; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
-      j = 0; \
-      for (; \
-        ip[i] != '\0' && j + 1 < sizeof(ipstr) && \
-          (number_func((int)(unsigned char)ip[i]) || strchr(separators, ip[i]) != NULL); \
-        ++i) \
-      { \
-        ipstr[j++] = ip[i]; \
-      } \
-      ipstr[j] = '\0'; \
-      if (inet_pton(family, ipstr, &ipbin1) != 1) \
-        return -1; \
-      for (; ip[i] != '\0' && isspace((int)(unsigned char)ip[i]); ++i); \
-      if (ip[i] != '\0') \
-        return -1; \
-      if (memcmp(&ipbin0, &ipbin1, sizeof(ipbin0)) > 0) \
-        return -1; \
-      if (fill == 0x00) \
-      { \
-        memcpy(buf, &ipbin0, sizeof(ipbin0)); \
-      } \
-      else if (fill == 0xFF) \
-      { \
-        memcpy(buf, &ipbin1, sizeof(ipbin1)); \
-      } \
-      else \
-      { \
-        return -1; \
-      } \
-      return 0; \
-    \
-    default: \
-      return -1; \
-  }
-
-int cvtv4(
-    uchar fill,
-    char *ip,
-    uchar * buf)
-{
-    CVTV_BODY_COMMON(INET_ADDRSTRLEN, struct in_addr,
-                     isdigit,
-                     ".",
-                     AF_INET)} int cvtv6(
-    uchar fill,
-    char *ip,
-    uchar * buf)
-{
-    CVTV_BODY_COMMON(INET6_ADDRSTRLEN, struct in6_addr,
-                     isxdigit,
-                     ":.",
-                     AF_INET6)}
-#undef CVTV_BODY_COMMON
 int write_ASNums(
     struct ASNum *asnump,
     char *buf,
@@ -584,183 +403,13 @@ int write_family(
 
     ipAorRp =
         (struct IPAddressOrRangeA *)inject_casn(&ipAddrOrRangesp->self, num);
-    make_IPAddrOrRange(ipAorRp, &iprangep);
-    return SUCCESS;
-}
-
-int txt2loc(
-    int typ,
-    char *buf,
-    struct iprange *iprangep)
-{
-    int ansr;
-    char *c,
-       *d = strchr(buf, (int)'-');
-    ulong ASnum;
-    iprangep->typ = typ;
-    memset(iprangep->lolim, 0, 16);
-    memset(iprangep->hilim, 0xFF, 16);
-    if (d && *d)
-        d++;
-    else
-        d = (char *)0;
-    if (typ == ASNUM)
+    if (!make_IPAddrOrRange(ipAorRp,
+                            iprangep.typ == IPv4 ? AF_INET : AF_INET6,
+                            &iprangep.lolim,
+                            &iprangep.hilim))
     {
-        for (c = buf; *c == '-' || (*c >= '0' && *c <= '9'); c++);
-        if (*c > ' ')
-            return -2;
-        sscanf(buf, "%ld", &ASnum);
-        uchar *top;
-        for (top = &iprangep->lolim[3]; top >= iprangep->lolim; top--)
-        {
-            *top = (uchar) (ASnum & 0xFF);
-            ASnum >>= 8;
-        }
-        if (!d)
-            memcpy(iprangep->hilim, iprangep->lolim, 4);
-        else
-        {
-            sscanf(d, "%ld", &ASnum);
-            for (top = &iprangep->hilim[3]; top >= iprangep->hilim; top--)
-            {
-                *top = (uchar) (ASnum & 0xFF);
-                ASnum >>= 8;
-            }
-        }
-    }
-    else if (typ == IPv4)
-    {
-        char *min = NULL;
-        if (d)                  // copy low if it is a range
-            min = copy_string(buf, (char *)d - buf - 1);
-        if ((ansr = cvtv4((uchar) 0, (min) ? min : buf, iprangep->lolim)) < 0
-            || (ansr =
-                cvtv4((uchar) 0xff, (d) ? d : buf, iprangep->hilim)) < 0)
-        {
-            if (min != NULL)
-                free(min);
-            return ansr;
-        }
-        if (min != NULL)
-            free(min);
-    }
-    else if (typ == IPv6)
-    {
-        char *min = NULL;
-        if (d)                  // copy low if it is a range
-            min = copy_string(buf, (char *)d - buf - 1);
-        if ((ansr = cvtv6((uchar) 0, (min) ? min : buf, iprangep->lolim)) < 0
-            || (ansr =
-                cvtv6((uchar) 0xff, (d) ? d : buf, iprangep->hilim)) < 0)
-        {
-            if (min != NULL)
-                free(min);
-            return ansr;
-        }
-        if (min != NULL)
-            free(min);
-    }
-    else
         return -1;
-    return 0;
-}
-
-// copy the string by allocating memory and copying the string into the
-// newly allocated memory
-char *copy_string(
-    char *str,
-    int num)
-{
-    char *buf;
-
-    if ((buf = calloc(num + 1, sizeof(char))) == NULL)
-        return NULL;
-
-    memcpy(buf, str, num);
-    return buf;
-}
-
-
-void make_IPAddrOrRange(
-    struct IPAddressOrRangeA *ipAddrOrRangep,
-    struct iprange *tiprangep)
-{
-    /*
-     * Procedure: 1. Running from left to right, find where the low and high
-     * of tiprangep differ Count the number of bits where they match 2. IF
-     * beyond that point lolim is all zeroes and hilim all ones, write a
-     * prefix 3. ELSE make a range thus Find the last non-zero byte in the
-     * minimum Write those bytes to the min field Fill in the number of unused 
-     * bits in the min field Find the last non-FF byte in the max field Write
-     * those bytes in the max field Fill in the number of unused bits in the
-     * max field 
-     */
-    int lth = tiprangep->typ == IPv4 ? 4 : 16;
-    uchar *hucp,
-       *lucp,
-       *eucp = &tiprangep->lolim[lth];
-    uchar mask = 0x80;
-    uchar omask;
-    int numbits = 0;
-    // step 1
-    for (lucp = tiprangep->lolim, hucp = tiprangep->hilim;
-         lucp < eucp && *lucp == *hucp; lucp++, hucp++, numbits += 8);
-    if (lucp < eucp)
-    {
-        for (mask = 0x80; mask && (mask & *lucp) == (mask & *hucp);
-             mask >>= 1, numbits++);
     }
-    // at first difference. test remains of byte
-    while (mask && !(mask & *lucp) && (mask & *hucp))
-        mask >>= 1;
-    if (!mask)                  // now test remainder of bytes
-    {
-        for (lucp++, hucp++; lucp < eucp && !*lucp && *hucp == 0xff;
-             lucp++, hucp++);
-    }
-    uchar bitstring[18];
-    int strlth;
-    clear_casn(&ipAddrOrRangep->self);
-    if (!mask && lucp >= eucp)  // step 2
-    {
-        strlth = (numbits + 7) >> 3;
-        memcpy(&bitstring[1], tiprangep->lolim, strlth);
-        bitstring[0] = (8 - (numbits & 7)) & 7;
-        write_casn(&ipAddrOrRangep->addressPrefix, bitstring, strlth + 1);
-    }
-    // step 3
-    else
-    {
-        // low end
-        if (tiprangep->typ == IPv4)
-            lucp = &tiprangep->lolim[3];
-        else
-            lucp = &tiprangep->lolim[15];
-        while (lucp > (uchar *) & tiprangep->lolim && !*lucp)
-            lucp--;
-        strlth = (lucp - tiprangep->lolim) + 1;
-        memcpy(&bitstring[1], tiprangep->lolim, strlth);
-        for (bitstring[0] = 0, mask = *lucp; (mask != 0) && !(mask & 1);
-             mask >>= 1, bitstring[0]++);
-        write_casn(&ipAddrOrRangep->addressRange.min, bitstring, strlth + 1);
 
-        // high end
-        if (tiprangep->typ == IPv4)
-            lucp = &tiprangep->hilim[3];
-        else
-            lucp = &tiprangep->hilim[15];
-        while (lucp > (uchar *) & tiprangep->hilim && *lucp == 0xFF)
-            lucp--;
-        strlth = (lucp - tiprangep->hilim) + 1;
-        memcpy(&bitstring[1], tiprangep->hilim, strlth);
-        // mask = (*lucp >> 1);
-        // bitstring[strlth] &= ~mask;
-        mask = (*lucp);
-        omask = 0xFF;
-        for (bitstring[0] = 0; (mask & 1);
-             mask >>= 1, omask <<= 1, bitstring[0]++);
-        bitstring[strlth] &= omask;
-
-        write_casn(&ipAddrOrRangep->addressRange.max, bitstring, strlth + 1);
-    }
+    return SUCCESS;
 }

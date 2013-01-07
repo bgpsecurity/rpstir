@@ -6,38 +6,11 @@
 
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/manifest.h"
-#include "cryptlib.h"
+#include "util/hashutils.h"
+#include "util/cryptlib_compat.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    int alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr;
-
-    memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
-        return -1;
-    if (alg == 2)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    else if (alg == 1)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-    else
-        return 0;
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
-}
 
 int main(
     int argc,
@@ -62,7 +35,7 @@ int main(
     uchar *keyp;
     int klth = readvsize_casn(pubkp, &keyp);
     uchar khash[24];
-    int ansr = gen_hash(&keyp[1], klth - 1, khash, 1);
+    int ansr = gen_hash(&keyp[1], klth - 1, khash, CRYPT_ALGO_SHA);
     if (ansr < 0)
     {
         fprintf(stderr, "Couldn't get CryptLib\n");
@@ -88,6 +61,6 @@ int main(
         c = "error writing certificate\n";
     else
         c = "wrote certificate OK\n";
-    fprintf(stderr, c);
+    fprintf(stderr, "%s", c);
     return 0;
 }

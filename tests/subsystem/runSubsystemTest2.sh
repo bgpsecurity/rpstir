@@ -1,2 +1,2 @@
 #!/bin/sh -e
-exec ./runSubsystemTest.sh 2 8
+exec `dirname "$0"`/runSubsystemTest.sh 2 8
