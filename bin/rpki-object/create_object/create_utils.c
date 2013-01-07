@@ -632,7 +632,7 @@ int txt2loc(
     {
         char *min = NULL;
         if (d)                  // copy low if it is a range
-            min = copy_string(buf, (char *)d - buf - 1);
+            min = strndup(buf, (char *)d - buf - 1);
         if ((ansr = cvtv4((uchar) 0, (min) ? min : buf, iprangep->lolim)) < 0
             || (ansr =
                 cvtv4((uchar) 0xff, (d) ? d : buf, iprangep->hilim)) < 0)
@@ -648,7 +648,7 @@ int txt2loc(
     {
         char *min = NULL;
         if (d)                  // copy low if it is a range
-            min = copy_string(buf, (char *)d - buf - 1);
+            min = strndup(buf, (char *)d - buf - 1);
         if ((ansr = cvtv6((uchar) 0, (min) ? min : buf, iprangep->lolim)) < 0
             || (ansr =
                 cvtv6((uchar) 0xff, (d) ? d : buf, iprangep->hilim)) < 0)
@@ -663,21 +663,6 @@ int txt2loc(
     else
         return -1;
     return 0;
-}
-
-// copy the string by allocating memory and copying the string into the
-// newly allocated memory
-char *copy_string(
-    char *str,
-    int num)
-{
-    char *buf;
-
-    if ((buf = calloc(num + 1, sizeof(char))) == NULL)
-        return NULL;
-
-    memcpy(buf, str, num);
-    return buf;
 }
 
 
