@@ -58,7 +58,8 @@ void fatal(
 {
     va_list ap;
     va_start(ap, err);
-    assert(err < (sizeof(msgs) / sizeof(msgs[0])));
+    assert(err >= 0);
+    assert((size_t)err < (sizeof(msgs) / sizeof(msgs[0])));
     vfprintf(stderr, msgs[err], ap);
     va_end(ap);
     exit(err);
@@ -182,7 +183,7 @@ int main(
     struct ROA roa;
     struct Certificate cert,
         pcert;
-    char *msg;
+    const char *msg;
     int c;
     int v4maxLen = 0,
         v6maxLen = 0;

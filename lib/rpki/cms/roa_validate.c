@@ -725,7 +725,7 @@ static int check_mft_number(
         return ERR_SCM_BADMFTNUM;
     }
 
-    read_casn(casnp, &val);
+    read_casn(casnp, val);
 
     if (val[0] & 0x80)
     {

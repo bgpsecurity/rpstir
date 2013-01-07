@@ -15,6 +15,3 @@ lib_db_libdb_a_SOURCES = \
 	lib/db/prep-stmt.h \
 	lib/db/util.c \
 	lib/db/util.h
-
-lib_db_libdb_a_CFLAGS = \
-	$(CFLAGS_STRICT)
