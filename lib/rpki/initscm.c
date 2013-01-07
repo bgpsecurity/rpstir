@@ -250,7 +250,7 @@ char *makedsnscm(
     char *pref,
     char *db,
     char *usr,
-    char *pass)
+    const char *pass)
 {
     char *ptr;
     int len;
