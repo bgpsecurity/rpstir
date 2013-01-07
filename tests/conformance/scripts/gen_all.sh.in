@@ -1,0 +1,68 @@
+#!@SHELL_BASH@
+#
+# gen_all.sh - create all conformance test cases: certs, roas, crls, mfts
+#
+
+# Set up RPKI environment variables if not already done.
+THIS_SCRIPT_DIR=$(dirname $0)
+. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+
+# Safe bash shell scripting practices
+. $RPKI_ROOT/lib/util/trap_errors
+
+TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+. "$RPKI_ROOT/tests/test.include"
+
+# NOTES
+
+CFSCRIPTS=$RPKI_ROOT/tests/conformance/scripts # conformance scripts
+hash rr
+hash sed
+
+# Clean out raw/root directory
+cd $RPKI_ROOT/tests/conformance
+rm -rf raw/root
+mkdir raw/root
+
+# Build trust anchors
+cd $RPKI_ROOT/tests/conformance/raw
+for f in badRootBadAKI badRootBadCRLDP badRootNameDiff root
+do
+    run "rr-$f" rr < $f.raw > $f.cer
+done
+
+# Build CRL
+run "rr-root.crl" rr < root.crl.raw > root/root.crl
+
+# Generate all types of conformance cases
+$CFSCRIPTS/gen_all_certs.sh -P
+$CFSCRIPTS/gen_all_CMSs.sh -P
+$CFSCRIPTS/gen_all_ROAs.sh -P
+$CFSCRIPTS/gen_all_CRLs.sh -P
+$CFSCRIPTS/gen_all_MFTs.sh -P
+
+# Copy to output directory
+cd $RPKI_ROOT/tests/conformance
+rm -rf output
+mkdir -p output
+cp raw/*.cer output/
+cp -r raw/root output/
+find output -type f -name '*.ee.cer' -delete
+find output -type f -name '*.mft.cer' -delete
+find output -type f -name '.gitignore' -delete
+
+# Generate final manifest
+cd output
+$CFSCRIPTS/gen_mft.sh \
+    root \
+    1 \
+    1 \
+    ../raw/root.cer \
+    rsync://rpki.bbn.com/conformance/root.cer \
+    ../raw/root.p15 \
+    rsync://rpki.bbn.com/conformance/root/root.crl \
+    root/*.cer root/*.roa root/*.crl
+rm root.mft.cer root.mft.p15
+mv root.mft root/

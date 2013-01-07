@@ -7,11 +7,11 @@ CASN Functions (3)          ASN.1 LIBRARY FUNCTIONS   CASN Functions (3)
 NAME
         clear_casn, copy_casn, decode_casn, delete_casn, diff_casn,
         diff_casn_num, diff_casn_time, dump, dump_size, eject_casn, encode_casn,
-        encodesize_casn, get_casn_file, index_casn, inject_casn, insert_casn,
+        encodesize_casn, get_casn_file, inject_casn,
         member_casn, next_of, num_items, put_casn_file,
         read_casn, read_casn_bit, read_casn_bits,
         read_casn_double, read_casn_num, read_casn_time, read_objid,
-        read_vsize_casn, readvsize_objid, remove_casn,
+        read_vsize_casn, readvsize_objid,
         simple_constructor, size_casn,
         tagged_constructor, tag_casn, vsize_casn,
         vsize_objid, write_casn, write_casn_bit, write_casn_bits,
@@ -108,11 +108,6 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
         struct casn *member_casn(struct casn *casnp, int index)
 
-        struct casn *insert_casn (struct casn *casnp, int index)
-
-        int remove_casn(struct casn *, int index)
-
-        struct casn *index_casn(struct casn *casnp, int index)
 
 
 
@@ -625,12 +620,6 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
         struct casn *member_casn(struct casn *casnp, int index)
 
-        struct casn *insert_casn (struct casn *casnp, int index)
-
-        int remove_casn(struct casn *, int index)
-
-        struct casn *index_casn(struct casn *casnp, int index)
-
         Items which are members of a SEQUENCE OF or a SET OF can be  thought  of
         as  parts  of  something like an array of unspecified size.  The current
         size of the array is found with the 'num_items' function, e.g.
@@ -698,21 +687,6 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         If either 'inject' or 'eject' is used  on  an  object  which  is  not  a
         SET/SEQUENCE  OF, a run-time error is reported and either a null pointer
         or a negative number is returned.
-
-        The functions 'index_casn', 'insert_casn' and 'remove_casn' are an older
-        form of the functions 'member_casn', 'inject_casn' and 'eject_casn'.  In
-        each of these functions the 'struct casn  *'  parameter  refers  to  the
-        member of the array, not to the array.  For example, these two calls are
-        equivalent:
-
-            struct Leg *legp = member_casn(&body.legs, 1);
-
-        and
-
-            struct Leg *legp = index_casn(&body.legs.leg, 1);
-
-        Use of these functions has often  proved  confusing,  so  their  use  is
-        deprecated.
 
         Be careful, too, in setting pointers to objects in 'OF' arrays that  the
         pointer  is set after the array has been established.  In particular, it
