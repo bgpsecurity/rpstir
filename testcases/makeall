@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-./makecerts
-./makecrls
-./makeroas
-./makemanifests
