@@ -46,6 +46,7 @@ Appendix A. Troubleshooting
     A.3 Specific Operating Systems
       A.3.1 OpenBSD
       A.3.2 FreeBSD
+      A.3.3 Ubuntu 12.04-12.10 x86
 
 ===============================================================================
 
@@ -226,6 +227,7 @@ $ wget --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl341.zip
 $ mkdir cryptlib
 $ cd cryptlib
 $ unzip -a ../cl341.zip  # -a enables text-mode
+$ # On recent Ubuntu, fix tools/getlibs.sh as shown below.
 $ make shared  # create libcl.so, not libcl.a
 $ su
 # install -o root -g root -m 755 libcl.so.3.4.1 /usr/local/lib
@@ -236,6 +238,25 @@ On FreeBSD, cryptlib can be obtained one of two ways: (1) using the package
 system by issuing the command pkg_add -r cryptlib, or (2) using the ports
 system by issuing the command make search name="cryptlib" from the
 /usr/ports directory.
+
+Ubuntu (e.g., 12.04 and 12.10) sometimes puts libdl in odd locations.
+In order to build cryptlib, you may need to edit tools/getlibs.sh and
+replace the entry for 'Linux' at line 121 with:
+
+	'Linux')
+		if [ -f /usr/lib/libdl.so -o \
+			 -f /usr/lib/i386-linux-gnu/libdl.so -o \
+			 -f /usr/lib64/libdl.so ] ; then
+			echo "-lresolv -lpthread -ldl" ;
+		else
+			echo "-lresolv -lpthread" ;
+		fi ;;
+
+This edit is necessary to correctly build cryptlib's shared library on
+recent versions of Ubuntu.  Note that failure is silent and will not
+reveal itself until you run RPSTIR's configure script.  Peter Gutmann,
+the author of Cryptlib, has been made aware of this issue and has
+indicated that it will be patched in a future version of Cryptlib.
 
 There seem to be some problems with compiling cryptlib on Linux machines.
 You may need to modify some files to get it to build cleanly. Also note that
@@ -430,20 +451,20 @@ Chaser Client (chaser.sh)            Once per day
 Trust anchor updater (updateTA.py)   Just before each chaser run
 MySQL Database                       Continuously as daemon (mysqld)
 
-RTR updater (rtr/@PACKAGE_NAME@-rtr-update)  After each call to chaser,
+RTR updater (@PACKAGE_NAME@-rpki-rtr-update) After each call to chaser,
                                      also before runing the RTR
                                      server for the first time.
-RTR Server (rtr/@PACKAGE_NAME@-rtrd)         Continuously as daemon.
+RTR Server (@PACKAGE_NAME@-rpki-rtr-daemon)  Continuously as daemon.
                                      You must run the RTR updater first, though.
-RTR client (rtr/rtr-test-client)     On demand by user
+RTR client (@PACKAGE_NAME@-rpki-rtr-test-client)  On demand by user
 
 Query Client (query.sh)              On demand by user
 Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
 
-NOTE: the RTR updater (rtr/@PACKAGE_NAME@-rtr-update) requires a spec file.
-See proto/sampleQuerySpecs for an example file. You can use that
+NOTE: the RTR updater (@PACKAGE_NAME@-rpki-rtr-update) requires a spec file.
+See etc/sampleQuerySpecs for an example file. You can use that
 example or write your own.
 
 
@@ -485,7 +506,7 @@ MySQL password twice.
     rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log
     mkdir -p REPOSITORY
     mkdir -p LOGS
-    run_scripts/initDB.sh
+    bin/rpki/initDB.sh
 
 3.1.3 Invoke DB Updater (rcli) in listening mode.
 
@@ -497,7 +518,7 @@ same executable that adds the trust anchors--but with flags which
 enable a different mode where it perpetually listens on a TCP socket
 for notifications of rsync updates.
 
-     xterm -e run_scripts/loader.sh &
+     xterm -e bin/rpki/loader.sh &
 
 As the command indicates, it is useful run loader.sh in a new xterm
 window.  Doing so separates the DB updater (rcli) log messages from
@@ -526,7 +547,7 @@ directions there.
     # The following command parses the TAL files, downloads the trust
     # anchor certificates, verifies their public key and signature, and
     # inserts them into the local database.
-    run_scripts/updateTA.py testbed-ripe.tal testbed-arin.tal testbed-apnic.tal
+    bin/rpki/updateTA.py testbed-ripe.tal testbed-arin.tal testbed-apnic.tal
 
 3.1.5 Manually insert trust anchors (optional).
 
@@ -542,9 +563,9 @@ to manually add each of the trust anchors.
     rsync rsync://arin.rpki.net/rpki/arin/root.cer arin_root.cer
     rsync rsync://ripe.rpki.net/rpki/ripe/root.cer ripe_root.cer
     cd ..
-    proto/rcli -y -F REPOSITORY/apnic_root.cer
-    proto/rcli -y -F REPOSITORY/arin_root.cer
-    proto/rcli -y -F REPOSITORY/ripe_root.cer
+    bin/rpki/rcli -y -F REPOSITORY/apnic_root.cer
+    bin/rpki/rcli -y -F REPOSITORY/arin_root.cer
+    bin/rpki/rcli -y -F REPOSITORY/ripe_root.cer
 
 3.1.6 Run URI Chaser.
 
@@ -554,7 +575,7 @@ download from all the repositories.  When each rsync transfer
 completes, the chaser invokes the rsync log parser, which notifies the
 DB Updater (activated in the previous step) of any changes.
 
-    run_scripts/chaser.sh
+    bin/rpki/chaser.sh
 
 The process of chasing URIs and then invoking rsync will automatically
 continue until no new publication directories have been found, or
@@ -577,7 +598,7 @@ roas, that might potentially be revoked by the updated version of a
 stale crl are set to an intermediate state of validity (called
 "unknown"), but are set back to valid if a current crl is available.
 
-    run_scripts/garbage.sh
+    bin/rpki/garbage.sh
 
 Successful garbage collection may not produce any screen output.
 
@@ -605,14 +626,14 @@ verbose mode, it also shows full paths to all invalid/unknown
 certifcates, thereby allowing the user to determine the offending
 rsync publication URI.
 
-Usage: run_scripts/results.py [options]
+Usage: bin/rpki/results.py [options]
 Options:
   -h, --help     show this help message and exit
   -v, --verbose  print lists of valid/unknown/invalid objects to stdout
 
 Example output:
 
-[bbn@rpki-fc13 rpki]$ run_scripts/results.py 
+[bbn@rpki-fc13 rpki]$ bin/rpki/results.py
 Using RPKI root directory: /home/bbn/rpki
 Using local repository path: /home/bbn/rpki/REPOSITORY
 
@@ -693,16 +714,16 @@ a simple comparison.  To do such filtering, add as many "-f
 <field>.<op>.<value>" arguments to the command line as desired, where
 op is one of (eq, ne, lt, gt, le, ge) and value is unquoted and
 contains # characters to replaces spaces.  Additional arguments are
-given if you type proto/query without any arguments.
+given if you type bin/rpki/query without any arguments.
 
     Examples:
 
-    proto/query -t cert -d pathname      # display paths of valid certs
-    proto/query -t cert -d pathname -d flags # display path+flags of valid certs
-    proto/query -t cert -d pathname -i   # display paths of valid/unknown certs
-    proto/query -t crl -d all            # display all fields of valid CRLs
-    proto/query -t roa -d pathname -d flags # display path+flags of valid roas
-    proto/query -t man -d all -i # display all fields of valid/unknown manifests
+    bin/rpki/query -t cert -d pathname      # display paths of valid certs
+    bin/rpki/query -t cert -d pathname -d flags # display path+flags of valid certs
+    bin/rpki/query -t cert -d pathname -i   # display paths of valid/unknown certs
+    bin/rpki/query -t crl -d all            # display all fields of valid CRLs
+    bin/rpki/query -t roa -d pathname -d flags # display path+flags of valid roas
+    bin/rpki/query -t man -d all -i # display all fields of valid/unknown manifests
 
 
 3.3 Warning
@@ -820,3 +841,117 @@ A.3.2 FreeBSD
 
 If you have trouble compiling cryptlib, you may have to comment out the
 sections in tools/ccopts.sh that enable ODBC support.
+
+A.3.3 Ubuntu 12.04-12.10 x86
+
+These are the exact instructions for installing RPSTIR on a fresh copy
+of 32-bit Ubuntu 12.04 and Ubuntu 12.10, as of 11/16/2012.
+
+NOTE: Ubuntu 12.10 runs slowly without 3D acceleration due to the
+removal of Unity 2D.  In VirtualBox 4.2.4, fix it like so:
+http://askubuntu.com/questions/207813/why-does-an-ubuntu-12-10-guest-in-virtualbox-run-very-very-slowly
+The last check step may crash VirtualBox itself (yikes).  Don't run
+the final "/usr/lib/nux/unity_support_test -p"
+
+# Install the best editor :-)
+sudo apt-get install emacs
+
+# Build and version control tools
+sudo apt-get install git tig automake libtool openjdk-7-jdk build-essential
+
+# RPSTIR dependencies: standalone programs
+sudo apt-get install xterm curl
+sudo apt-get install mysql-server  # MySQL root password: rpstir
+sudo mysql_secure_installation
+
+# RPSTIR dependencies: libraries
+sudo apt-get install unixodbc-bin unixodbc-dev libmyodbc libmysqlclient-dev
+mkdir -p ~/libs
+
+  # OpenSSL w/ RFC3779 extensions
+  cd ~/libs
+  curl -OJ http://www.openssl.org/source/openssl-1.0.1c.tar.gz
+  tar -xzvf openssl-1.0.1c.tar.gz
+  cd openssl-1.0.1c/
+  ./config enable-rfc3779 && make depend && make && make test
+  sudo make install
+
+  # Cryptlib
+  cd ~/libs
+  curl -OJ ftp://ftp.franken.de/pub/crypt/cryptlib/cl341.zip
+  mkdir cryptlib
+  cd cryptlib
+  unzip -a ../cl341.zip  # -a enables text-mode
+  emacs tools/getlibs.sh  # Edit line 121 to replace the entry for 'Linux':
+    'Linux')
+    	if [ -f /usr/lib/libdl.so -o \
+    		 -f /usr/lib/i386-linux-gnu/libdl.so -o \
+    		 -f /usr/lib64/libdl.so ] ; then
+    		echo "-lresolv -lpthread -ldl" ;
+    	else
+    		echo "-lresolv -lpthread" ;
+    	fi ;;
+  make shared # create libcl.so, not libcl.a
+  sudo install -o root -g root -m 755 libcl.so.3.4.1 /usr/local/lib
+  sudo ln -s libcl.so.3.4.1 /usr/local/lib/libcl.so
+  sudo install -o root -g root -m 644 cryptlib.h /usr/local/include
+
+# Configure ODBC
+odbcinst -j     # check that the paths below are correct
+
+  # populate driver file
+  sudo emacs /etc/odbcinst.ini
+    ;  ODBC Installed Drivers file
+
+    [myodbcConn]
+    Description	= MySQL odbc driver for Linux
+    Driver		= /usr/lib/i386-linux-gnu/odbc/libmyodbc.so
+    Setup		= /usr/lib/i386-linux-gnu/odbc/libodbcmyS.so
+    UsageCount	= 1
+
+    [ODBC]
+    TraceFile	= /tmp/sql-odbc.log
+    Trace		= Yes
+    ForceTrace	= Yes
+
+  # populate user data sources
+  emacs ~/.odbc.ini
+    ;
+    ;  odbc.ini configuration for Connector/ODBC drivers
+    ;
+
+    [ODBC Data Sources]
+    myodbc     = {MyODBC Driver DSN}
+
+    [myodbc]
+    Driver       = myodbcConn
+    Description  = Connector/ODBC Driver DSN
+    SERVER       = localhost
+    PORT         =
+    USER         = arbitraryuser
+    Password     = arbitrarypassword
+    Database     = arbitrarydbname
+    OPTION       = 3
+    SOCKET       =
+
+# Configure MySQL
+mysql -u root -p
+  CREATE USER 'bbn'@'localhost' IDENTIFIED BY 'rpstir';
+  GRANT ALL PRIVILEGES ON rpstirdb.* TO 'bbn'@'localhost';
+  quit
+
+# Configure environment variables
+emacs ~/.bashrc
+  # RPSTIR environment variables
+  export RPKI_ROOT=${HOME}/rpstir  # REMEMBER TO CHANGE THIS
+  export RPKI_DB=rpstirdb
+  export RPKI_PORT=31416
+  export RPKI_DBUSER=bbn
+  export RPKI_DBPASS=rpstir
+  export RPKI_ROOTPASSWORD=rpstir
+  export RPKI_DSN=myodbc
+source ~/.bashrc
+
+# Build RPSTIR
+cd $RPKI_ROOT
+./configure --enable-silent-rules && make && make check

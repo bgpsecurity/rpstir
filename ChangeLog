@@ -1,5 +1,12 @@
 next
 
+	* When an rsync download of a trust anchor fails, retry a few times
+	  instead of giving up on downloading that trust anchor.
+	* Simplify internal dependencies.
+	* Switch to a single Makefile to speed up parallel compilation.
+	* Run much more code optionally under CHECKTOOL (e.g. valgrind).
+	* Remove some duplicate and some unused code.
+
 0.5
 
 	* Fix compatibility with older rsync servers.
