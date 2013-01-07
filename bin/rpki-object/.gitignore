@@ -21,5 +21,4 @@ read_roa
 set_cert_ski
 sign_cert
 sign_cms
-sign_roa
 update_cert

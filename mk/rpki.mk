@@ -113,36 +113,26 @@ tests_subsystem_testcases_cert_validate_LDADD = \
 
 check_PROGRAMS += tests/subsystem/testcases/gen_test_key
 
+tests_subsystem_testcases_gen_test_key_LDADD = \
+	$(LDADD_LIBUTIL)
+
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_cert
 
-tests_subsystem_testcases_make_test_cert_SOURCES = \
-	tests/subsystem/testcases/adjustTime.c \
-	tests/subsystem/testcases/make_test_cert.c
-
-
 tests_subsystem_testcases_make_test_cert_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_crl
 
-tests_subsystem_testcases_make_test_crl_SOURCES = \
-	tests/subsystem/testcases/adjustTime.c \
-	tests/subsystem/testcases/make_test_crl.c
-
 tests_subsystem_testcases_make_test_crl_LDADD = \
-	$(LDADD_LIBRPKIASN1)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_manifest
 
-tests_subsystem_testcases_make_test_manifest_SOURCES = \
-	tests/subsystem/testcases/adjustTime.c \
-	tests/subsystem/testcases/make_test_manifest.c
-
 tests_subsystem_testcases_make_test_manifest_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBRPKIOBJECT)
 
 
 check_PROGRAMS += tests/subsystem/testcases/make_test_roa

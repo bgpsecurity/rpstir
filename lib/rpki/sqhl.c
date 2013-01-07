@@ -2331,20 +2331,6 @@ struct Extension *get_extension(
 }
 
 
-/**=============================================================================
-------------------------------------------------------------------------------*/
-struct Extension *find_extension(
-    struct Certificate *certp,
-    char *idp)
-{
-    struct Extensions *exts = &certp->toBeSigned.extensions;
-    struct Extension *extp;
-    for (extp = (struct Extension *)member_casn(&exts->self, 0);
-         extp != NULL && diff_objid(&extp->extnID, idp);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
-
 /*
  * do the work of add_cert(). Factored out so we can call it from elsewhere.
  *
@@ -2376,7 +2362,7 @@ static int add_cert_2(
     int locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0)
         locerr = ERR_SCM_BADCERT;
-    else if (!(ski_extp = find_extension(&cert, id_subjectKeyIdentifier)))
+    else if (!(ski_extp = find_extension(&cert.toBeSigned.extensions, id_subjectKeyIdentifier, false)))
         locerr = ERR_SCM_NOSKI;
     if (locerr)
     {
@@ -2385,7 +2371,7 @@ static int add_cert_2(
     }
     if (utrust > 0)
     {
-        if (((aki_extp = find_extension(&cert, id_authKeyId)) &&
+        if (((aki_extp = find_extension(&cert.toBeSigned.extensions, id_authKeyId, false)) &&
              diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
                        &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
             strcmp(cf->fields[CF_FIELD_SUBJECT],
@@ -2594,7 +2580,8 @@ static int hexify_ski(
     struct Certificate *certp,
     char *skip)
 {
-    struct Extension *extp = find_extension(certp, id_subjectKeyIdentifier);
+    struct Extension *extp = find_extension(&certp->toBeSigned.extensions,
+                                            id_subjectKeyIdentifier, false);
     if (!extp)
         return ERR_SCM_NOSKI;
     int size = vsize_casn(&extp->self);

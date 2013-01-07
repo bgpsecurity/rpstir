@@ -2,21 +2,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "rpki-asn1/certificate.h"
-
-static struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *oid)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0);
-         extp && diff_objid(&extp->extnID, oid);
-         extp = (struct Extension *)next_of(&extp->self));
-    return extp;
-}
+#include "rpki-object/certificate.h"
 
 static void usage(
     int argc,
@@ -99,7 +85,7 @@ int main(
     /*
      * Find SIA extension. 
      */
-    extp = findExtension(&cert.toBeSigned.extensions, id_pe_subjectInfoAccess);
+    extp = find_extension(&cert.toBeSigned.extensions, id_pe_subjectInfoAccess, false);
     if (!extp)
     {
         fprintf(stderr, "Error: could not locate SIA extension.\n");

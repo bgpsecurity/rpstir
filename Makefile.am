@@ -1,4 +1,8 @@
-AUTOMAKE_OPTIONS = 1.6 foreign -Wall
+AUTOMAKE_OPTIONS = \
+	1.6 \
+	foreign \
+	subdir-objects \
+	-Wall
 
 
 EXTRA_DIST = \
@@ -63,6 +67,7 @@ include mk/libtest.mk
 include mk/libutil.mk
 include mk/libcasn.mk
 include mk/librpkiasn1.mk
+include mk/librpkiobject.mk
 include mk/libdb.mk
 include mk/librpkirtr.mk
 include mk/librpki.mk

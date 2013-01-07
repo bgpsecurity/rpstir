@@ -7,49 +7,15 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "rpki-asn1/certificate.h"
-#include "cryptlib.h"
-#include <rpki-asn1/keyfile.h>
+#include "util/cryptlib_compat.h"
+#include <rpki-object/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
+#include <util/hashutils.h>
 #include <time.h>
 
 #define SHA1_HASH_LENGTH 20
 #define SHA2_HASH_LENGTH 32
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    int alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar *hash;
-    int ansr;
-
-    if (alg == 2)
-        hash = calloc(SHA2_HASH_LENGTH, sizeof(char));
-    else if (alg == 1)
-        hash = calloc(SHA1_HASH_LENGTH, sizeof(char));
-    else
-        return 0;
-
-    // memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if (alg == 2)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    else if (alg == 1)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-    else
-        return 0;
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    free(hash);
-    return ansr;
-}
 
 static int writeHashedPublicKey(
     struct casn *keyp)
@@ -57,7 +23,7 @@ static int writeHashedPublicKey(
     uchar *bitval;
     int siz = readvsize_casn(keyp, &bitval);
     uchar *hashbuf = calloc(SHA1_HASH_LENGTH, sizeof(uchar));
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
     free(bitval);
 
     // write out the hashed key
@@ -75,7 +41,7 @@ static int writeFileHash(
 {
     uchar *hashbuf = calloc(SHA2_HASH_LENGTH, sizeof(uchar));
     int siz;
-    siz = gen_hash((uchar *) buf, len, hashbuf, 2);
+    siz = gen_hash((uchar *) buf, len, hashbuf, CRYPT_ALGO_SHA2);
 
     // write out the hashed key
     int i = 0;
@@ -85,21 +51,6 @@ static int writeFileHash(
 
     free(hashbuf);
     return siz;
-}
-
-static int fillPublicKey(
-    struct casn *spkp,
-    char *keyfile)
-{
-
-    struct Keyfile kfile;
-    Keyfile(&kfile, (ushort) 0);
-    if (get_casn_file(&kfile.self, keyfile, 0) < 0)
-        return -1;
-    int val = copy_casn(spkp, &kfile.content.bbb.ggg.iii.nnn.ooo.ppp.key);
-    if (val <= 0)
-        return -1;
-    return 0;
 }
 
 
@@ -168,7 +119,7 @@ int main(
         struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;
         struct casn *spkp = &spkinfop->subjectPublicKey;
 
-        if (fillPublicKey(spkp, configFile) < 0)
+        if (!fillPublicKey(spkp, configFile))
             return -1;
         writeHashedPublicKey(spkp);
 

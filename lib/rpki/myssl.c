@@ -11,7 +11,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <limits.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <stdbool.h>
 
 #include "globals.h"
@@ -2156,7 +2156,8 @@ static int rescert_ski_chk(
     /*
      * check ski hash 
      */
-    struct Extension *extp = find_extension(certp, id_subjectKeyIdentifier);
+    struct Extension *extp = find_extension(&certp->toBeSigned.extensions,
+                                            id_subjectKeyIdentifier, false);
     if (extp)
     {
         uchar hash[40];

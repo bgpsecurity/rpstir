@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -14,7 +14,8 @@
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
 #include <rpki-asn1/roa.h>
-#include "roa_utils.h"
+
+#include "cms.h"
 
 // find the SID for this ROA and return it
 static struct casn *findSID(
@@ -45,15 +46,10 @@ static struct casn *findSID(
     return (struct casn *)0;
 }
 
-// 
-// sign a CMS (in this case a ROA)
-// if bad == 1, intentionally generate a bad signature 
-// return a printable message indicating the error (if any) or NULL if not
-// 
-char *signCMS(
+const char *signCMS(
     struct ROA *roa,
-    char *keyfilename,
-    int bad)
+    const char *keyfilename,
+    bool bad)
 {
     CRYPT_CONTEXT hashContext;
     CRYPT_CONTEXT sigKeyContext;
@@ -116,7 +112,7 @@ char *signCMS(
 
     // set up the context, initialize crypt
     memset(hash, 0, 40);
-    if (cryptInit())
+    if (cryptInit() != CRYPT_OK)
         return "initializing cryptlib";
 
     // the following calls function f, and if f doesn't return 0 sets
@@ -151,12 +147,15 @@ char *signCMS(
         write_casn(&attrtdp->messageDigest, hash, signatureLength);
 
         // create signing time attribute; mark the signing time as now
-        attrp =
-            (struct Attribute *)inject_casn(&sigInfop->signedAttrs.self, 2);
-        write_objid(&attrp->attrType, id_signingTimeAttr);
-        attrtdp =
-            (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 0);
-        write_casn_time(&attrtdp->signingTime.utcTime, time((time_t *) 0));
+        if (getenv("RPKI_NO_SIGNING_TIME") == NULL)
+        {
+            attrp =
+                (struct Attribute *)inject_casn(&sigInfop->signedAttrs.self, 2);
+            write_objid(&attrp->attrType, id_signingTimeAttr);
+            attrtdp =
+                (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 0);
+            write_casn_time(&attrtdp->signingTime.utcTime, time((time_t *) 0));
+        }
 
         // we are all done with the content
         free(tbsp);
@@ -217,7 +216,6 @@ char *signCMS(
     // done with cryptlib, shut it down
     cryptDestroyContext(hashContext);
     cryptDestroyContext(sigKeyContext);
-    cryptEnd();
 
     // did we have any trouble above? if so, bail
     if (msg != 0)
@@ -242,6 +240,7 @@ char *signCMS(
 
     // copy the signature into the object
     copy_casn(&sigInfop->signature, &sigInfo.signature);
+    delete_casn(&sigInfo.self);
 
     // all done with it now
     free(signature);
@@ -273,24 +272,45 @@ const char *signCMSBlob(
     struct SignerInfo *signerInfop =
         (struct SignerInfo *)member_casn(&cms->content.signedData.signerInfos.
                                          self, 0);
+    struct BlobEncapsulatedContentInfo *encapContentInfop =
+        &cms->content.signedData.encapContentInfo;
 
-    // get the size of signed attributes and allocate space for them
-    if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
+    if (vsize_casn(&signerInfop->signedAttrs.self) == 0)
     {
-        errmsg = "sizing SignerInfo";
-        return errmsg;
-    }
-    tbsp = (unsigned char *)calloc(1, tbs_lth);
-    if (!tbsp)
-    {
-        errmsg = "out of memory";
-        return errmsg;
-    }
+        if ((tbs_lth = vsize_casn(&encapContentInfop->eContent.self)) < 0)
+        {
+            errmsg = "sizing eContent";
+            return errmsg;
+        }
+        tbsp = (unsigned char *)calloc(1, tbs_lth);
+        if (!tbsp)
+        {
+            errmsg = "out of memory";
+            return errmsg;
+        }
 
-    // DER-encode signedAttrs
-    tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
-    *tbsp = ASN_SET;            /* replace ASN.1 identifier octet with ASN_SET 
+        tbs_lth = read_casn(&encapContentInfop->eContent.self, tbsp);
+    }
+    else
+    {
+        // get the size of signed attributes and allocate space for them
+        if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
+        {
+            errmsg = "sizing SignerInfo";
+            return errmsg;
+        }
+        tbsp = (unsigned char *)calloc(1, tbs_lth);
+        if (!tbsp)
+        {
+            errmsg = "out of memory";
+            return errmsg;
+        }
+
+        // DER-encode signedAttrs
+        tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
+        *tbsp = ASN_SET;        /* replace ASN.1 identifier octet with ASN_SET 
                                  * (0x31) */
+    }
 
     // compute SHA-256 of signedAttrs
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) < 0)

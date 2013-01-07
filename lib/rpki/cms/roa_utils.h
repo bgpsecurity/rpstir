@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 
 #include <openssl/err.h>
 #include <openssl/x509.h>
@@ -302,24 +302,6 @@ int decode_b64(
  * data in "bufOut" of length "outSize". Note that it allocates memory to do
  * this, which the caller must free. 
  */
-char *signCMS(
-    struct ROA *roa,
-    char *keyfilename,
-    int bad);
-/*
- * This function is used in roa_serialize, make_test_roa and
- * make_test_manifest. 
- */
-
-/**
- * sign CMS blob blindly, neither verifying eContent nor touching signedAttrs
- * @param cms signed object with one signerInfo (the one to be signed)
- * @param keyfilename path to .p15 keyfile
- * @return NULL on success, error message on failure
- */
-const char *signCMSBlob(
-    struct CMSBlob *cms,
-    const char *keyfilename);
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }

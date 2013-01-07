@@ -398,12 +398,23 @@ int eject_casn(
         tcasnp = fcasnp->ptr;   // mark second for deletion (after it's copied 
                                 // into the first's place)
         _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
-        if (tcasnp)             // if first is not last
+        if (tcasnp)             // if first is not the final (after lastp)
         {
-            // Use _copy_casn instead of copy_casn because when the OF has only
-            // one element, tcasnp points to the empty template at the end of
-            // the OF, which copy_casn would refuse to copy.
-            _copy_casn(fcasnp, tcasnp, 0);  // copy second to first
+            if (casnp->num_items > 1)
+            {
+                // tcasnp is a real entry in the SET/SEQUENCE
+                copy_casn(fcasnp, tcasnp);  // copy second to first
+                if (casnp->lastp == tcasnp)
+                {
+                    casnp->lastp = fcasnp;
+                }
+            }
+            else
+            {
+                // tcasnp is the final struct casn that's not filled in
+                fcasnp->flags &= ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG);
+                casnp->lastp = fcasnp;
+            }
             fcasnp->ptr = tcasnp->ptr;  // make first point to where 2nd did
         }
     }
@@ -412,6 +423,10 @@ int eject_casn(
         for (pcasnp = fcasnp, icount = num; --icount; pcasnp = pcasnp->ptr);
         tcasnp = pcasnp->ptr;
         pcasnp->ptr = tcasnp->ptr;
+        if (casnp->lastp == tcasnp)
+        {
+            casnp->lastp = pcasnp;
+        }
     }
     if (tcasnp)
     {
@@ -494,13 +509,25 @@ struct casn *inject_casn(
                                 // first
     {
         if (!casnp->num_items)  // there is only one, including final
+        {
             tcasnp->level = 0;  // fcasnp's ptr was null, so OK
+            casnp->lastp = fcasnp;
+        }
         else                    // there's more than one, including final
         {
             copy_casn(tcasnp, fcasnp);  // so copy the first to the new one
             tcasnp->ptr = fcasnp->ptr;  // make new one point to where first
                                         // did
             _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));    // clear the old first
+            if (casnp->num_items == 1)
+            {
+                // We're in the process of moving the first item into its
+                // own struct casn as the new last item of the linked list.
+                // If num_items != 1, then lastp is already set correctly,
+                // but the first time the linked list is extended, lastp
+                // needs to be updated.
+                casnp->lastp = tcasnp;
+            }
         }
         fcasnp->ptr = tcasnp;   // then link first one to new one
         tcasnp = fcasnp;        // return ptr to first

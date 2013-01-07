@@ -24,9 +24,9 @@ check_num_output_lines()
 
 run_bg () {
     LOG="$1"
-    shift
+    shift || exit 1
     PROG="$1"
-    shift
+    shift || exit 1
 
     log_dir="."
     if test -n "$TEST_LOG_DIR"; then
@@ -51,7 +51,7 @@ run_bg () {
 }
 
 run () {
-    run_bg "$@"
+    run_bg "$@" || return $?
     wait $! || return $?
     return 0
 }

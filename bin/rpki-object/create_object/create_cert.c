@@ -7,12 +7,13 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "cryptlib.h"
-#include "rpki-asn1/certificate.h"
+#include "util/cryptlib_compat.h"
+#include "rpki-object/certificate.h"
 #include <rpki-asn1/roa.h>
-#include <rpki-asn1/keyfile.h>
+#include <rpki-object/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
+#include <util/hashutils.h>
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
@@ -129,7 +130,7 @@ struct object_field cert_field_table[] = {
     {"as", LIST, NULL, OPTIONAL, write_cert_asnums},    // as num resources
     {"signatureValue", OCTETSTRING, NULL, OPTIONAL, write_cert_sig},    // sig
     {"selfsigned", TEXT, NULL, OPTIONAL, NULL}, // true or false
-    {NULL, 0, NULL, REQUIRED}
+    {NULL, 0, NULL, REQUIRED, NULL}
 };
 
 struct object_field *get_cert_field_table(
@@ -183,12 +184,12 @@ int use_parent_cert(
     // fprintf(stdout,"copied issuer name\n");
 
     // replace aki extension of certificate with ski from issuer's cert
-    cextp = findExtension(&ctftbsp->extensions, id_authKeyId);
+    cextp = find_extension(&ctftbsp->extensions, id_authKeyId, false);
     if (!cextp)
-        cextp = makeExtension(&ctftbsp->extensions, id_authKeyId);
+        cextp = make_extension(&ctftbsp->extensions, id_authKeyId);
     // fprintf(stdout,"copying ski as aki\n");
-    if ((iextp = findExtension(&issuer.toBeSigned.extensions,
-                               id_subjectKeyIdentifier)))
+    if ((iextp = find_extension(&issuer.toBeSigned.extensions,
+                                id_subjectKeyIdentifier, false)))
     {
         copy_casn(&cextp->extnValue.authKeyId.keyIdentifier,
                   &iextp->extnValue.subjectKeyIdentifier);
@@ -216,8 +217,8 @@ int write_default_fields(
     // key usage
     // If ca set keyCertSign and CRLsign bits
     // if ee set digitalSignature bit
-    if (!(cextp = findExtension(&ctftbsp->extensions, id_keyUsage)))
-        cextp = makeExtension(&ctftbsp->extensions, id_keyUsage);
+    if (!(cextp = find_extension(&ctftbsp->extensions, id_keyUsage, false)))
+        cextp = make_extension(&ctftbsp->extensions, id_keyUsage);
     if (eecert)
     {                           // clear everything first
         write_casn_num(&cextp->critical, 1);
@@ -234,7 +235,7 @@ int write_default_fields(
 
     // basic constraints
     // if ee no extension, if ca set ca to one
-    cextp = findExtension(&ctftbsp->extensions, id_basicConstraints);
+    cextp = find_extension(&ctftbsp->extensions, id_basicConstraints, false);
     if (eecert)
     {
         // no basic constraints extension for an ee cert
@@ -245,7 +246,7 @@ int write_default_fields(
     {
         int caConstraint = 1;
         if (!cextp)
-            cextp = makeExtension(&ctftbsp->extensions, id_basicConstraints);
+            cextp = make_extension(&ctftbsp->extensions, id_basicConstraints);
         write_casn_num(&cextp->critical, 1);
         // write_casn(&cextp->extnValue.basicConstraints.self, (uchar *)"",
         // 0); 
@@ -255,58 +256,6 @@ int write_default_fields(
     return SUCCESS;
 }
 
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp,
-    int alg)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr;
-
-    memset(hash, 0, sizeof(hash));
-    cryptInit();
-    if (alg == 2)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    else if (alg == 1)
-        cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA);
-    else
-        return 0;
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
-}
-
-static int writeHashedPublicKey(
-    struct casn *valuep,
-    struct casn *keyp)
-{
-    uchar *bitval;
-    int siz = readvsize_casn(keyp, &bitval);
-    uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, 1);
-    free(bitval);
-    write_casn(valuep, hashbuf, siz);
-    return siz;
-}
-
-static int fillPublicKey(
-    struct casn *spkp,
-    char *keyfile)
-{
-    struct Keyfile kfile;
-    Keyfile(&kfile, (ushort) 0);
-    if (get_casn_file(&kfile.self, keyfile, 0) < 0)
-        return -1;
-    copy_casn(spkp, &kfile.content.bbb.ggg.iii.nnn.ooo.ppp.key);
-    return 0;
-}
 
 /*
  * Take values from the subject keyfile and write them to the 
@@ -335,14 +284,14 @@ int use_subject_keyfile(
         write_objid(&spkinfop->algorithm.algorithm, id_rsadsi_rsaEncryption);
         write_casn(&spkinfop->algorithm.parameters.rsadsi_rsaEncryption,
                    (uchar *) "", 0);
-        if (fillPublicKey(spkp, val) < 0)
+        if (!fillPublicKey(spkp, val))
             return -1;
     }
 
     // always update SKI to match subjectPublicKey
-    if (!(extp = findExtension(extsp, id_subjectKeyIdentifier)))
-        extp = makeExtension(extsp, id_subjectKeyIdentifier);
-    writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp);
+    if (!(extp = find_extension(extsp, id_subjectKeyIdentifier, false)))
+        extp = make_extension(extsp, id_subjectKeyIdentifier);
+    writeHashedPublicKey(&extp->extnValue.subjectKeyIdentifier, spkp, false);
 
     return (SUCCESS);
 }
@@ -758,7 +707,7 @@ int write_key_identifier(
     }
 
     // if it is there, clear it first
-    extp = makeExtension(extsp, id);
+    extp = make_extension(extsp, id);
     if (strncmp(id, id_subjectKeyIdentifier, strlen(id_subjectKeyIdentifier))
         == 0)
     {
@@ -839,7 +788,7 @@ int write_cert_crldp(
         return SUCCESS;
     }
     // separate out the crldp's and write each one into the sequence
-    extp = makeExtension(extsp, id_cRLDistributionPoints);
+    extp = make_extension(extsp, id_cRLDistributionPoints);
     ptr = val;
     while (ptr != NULL)
     {
@@ -896,7 +845,7 @@ int write_cert_sia(
     // r:, m: or s: for the different ones.
 
     // separate out the sia's and write each one into the sequence
-    extp = makeExtension(extsp, id_pe_subjectInfoAccess);
+    extp = make_extension(extsp, id_pe_subjectInfoAccess);
     ptr = val;
     while (ptr != NULL)
     {
@@ -957,7 +906,7 @@ int write_cert_aia(
         return SUCCESS;
     }
 
-    extp = makeExtension(extsp, id_pkix_authorityInfoAccess);
+    extp = make_extension(extsp, id_pkix_authorityInfoAccess);
     while (isspace((int)(unsigned char)*ptr))
         ptr++;                  // strip leading spaces
 
@@ -997,10 +946,10 @@ int write_cert_addrs(
     else
         family[1] = 2;
 
-    extp = findExtension(extsp, id_pe_ipAddrBlock);
+    extp = find_extension(extsp, id_pe_ipAddrBlock, false);
     if (!extp)
     {
-        extp = makeExtension(extsp, id_pe_ipAddrBlock);
+        extp = make_extension(extsp, id_pe_ipAddrBlock);
         write_casn_num(&extp->critical, 1);
     }
 
@@ -1090,7 +1039,7 @@ int write_cert_asnums(
     char token = ',';
     int num = 0;
 
-    extp = makeExtension(&tbsp->extensions, id_pe_autonomousSysNum);
+    extp = make_extension(&tbsp->extensions, id_pe_autonomousSysNum);
     write_casn_num(&extp->critical, 1);
     struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
 
@@ -1157,9 +1106,9 @@ void clear_cert(
 
     // remove all RFC 3779 extensions
     // ASN.1 definition allows duplicates, even if RFC5280/6487 forbid them.
-    while (findExtension(extsp, id_pe_ipAddrBlock))
+    while (find_extension(extsp, id_pe_ipAddrBlock, false))
         removeExtension(extsp, id_pe_ipAddrBlock);
-    while (findExtension(extsp, id_pe_autonomousSysNum))
+    while (find_extension(extsp, id_pe_autonomousSysNum, false))
         removeExtension(extsp, id_pe_autonomousSysNum);
 }
 

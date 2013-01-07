@@ -6,20 +6,21 @@
 #include "rpki-asn1/manifest.h"
 #include "rpki-asn1/roa.h"
 #include "rpki-asn1/certificate.h"
-#include "cryptlib.h"
+#include "util/cryptlib_compat.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <string.h>
+#include <errno.h>
 #include <casn/asn.h>
 #include <casn/casn.h>
+#include <util/hashutils.h>
+#include <util/file.h>
+#include "rpki-object/cms/cms.h"
 
-extern char *signCMS(
-    struct ROA *roap,
-    char *keyfile,
-    int bad);
 /*
  * This file has a program to make manifests. 
  */
@@ -33,15 +34,12 @@ char *msgs[] = {
     "Error creating signature\n",       // 5
     "Error writing %s\n",
     "Signature failed in %s\n", // 7
+    "Error getting %s\n",
 };
 
 static int fatal(
     int msg,
     char *paramp);
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp);
 
 static int add_name(
     char *curr_file,
@@ -61,7 +59,9 @@ static int add_name(
     b = (uchar *) calloc(1, siz);
     if (read(fd, b, siz + 2) != siz)
         fatal(2, curr_file);
-    hsiz = gen_hash(b, siz, hash);
+    hsiz = gen_hash(b, siz, hash, CRYPT_ALGO_SHA2);
+    if (hsiz < 0)
+        fatal(8, "hash");
     if (bad)
         hash[1]++;
     struct FileAndHash *fahp;
@@ -70,27 +70,6 @@ static int add_name(
     write_casn(&fahp->file, (uchar *) curr_file, strlen(curr_file));
     write_casn_bits(&fahp->hash, hash, hsiz, 0);
     return 1;
-}
-
-static int gen_hash(
-    uchar * inbufp,
-    int bsize,
-    uchar * outbufp)
-{
-    CRYPT_CONTEXT hashContext;
-    uchar hash[40];
-    int ansr;
-
-    memset(hash, 0, 40);
-    cryptInit();
-    cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2);
-    cryptEncrypt(hashContext, inbufp, bsize);
-    cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
-    cryptDestroyContext(hashContext);
-    cryptEnd();
-    memcpy(outbufp, hash, ansr);
-    return ansr;
 }
 
 static int fatal(
@@ -142,16 +121,6 @@ static void make_fullpath(
 {
     make_fulldir(fullpath, locpath);
     strcat(fullpath, locpath);
-}
-
-static void mkdir_recursive(
-    const char *dir)
-{
-    char mkdircmd[60];
-    if (!dir || strlen(dir) == 0)
-        return;
-    snprintf(mkdircmd, sizeof(mkdircmd), "mkdir -p %s", dir);
-    system(mkdircmd);
 }
 
 int main(
@@ -275,7 +244,15 @@ int main(
     make_fulldir(fulldir, manifestfile);
     make_fullpath(fullpath, manifestfile);
     fprintf(stdout, "Path: %s\n", fullpath);
-    mkdir_recursive(fulldir);
+    if (fulldir[0] != '\0')
+    {
+        if (!mkdir_recursive(fulldir, 0777))
+        {
+            fprintf(stderr, "error: mkdir_recursive(\"%s\"): %s\n", fulldir,
+                    strerror(errno));
+            fatal(6, fulldir);
+        }
+    }
 
     if (put_casn_file(&roa.self, manifestfile, 0) < 0)
         fatal(6, manifestfile);

@@ -8,12 +8,8 @@
 #include <unistd.h>
 
 #include "roa_utils.h"
-#include "cryptlib.h"
-
-extern char *signCMS(
-    struct ROA *,
-    char *,
-    int);
+#include "rpki-object/cms/cms.h"
+#include "util/cryptlib_compat.h"
 
 // Warning - MAX_LINE hardcoded as a constant in confInterpret;
 // if this changes, that must as well

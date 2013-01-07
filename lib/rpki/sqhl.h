@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "db_constants.h"
 
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/certificate.h"
 
 /*
  * Object types 
@@ -184,9 +184,6 @@ extern struct cert_answers *find_parent_cert(
 extern struct cert_answers *find_trust_anchors(
     scm * sscmp,
     scmcon * conp);
-extern struct Extension *find_extension(
-    struct Certificate *certp,
-    char *idp);
 extern struct Extension *get_extension(
     struct Certificate *certp,
     char *idp,

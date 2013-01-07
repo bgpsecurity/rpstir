@@ -6,8 +6,14 @@ LDADD_LIBUTIL = \
 lib_util_libutil_a_SOURCES = \
 	lib/util/bag.c \
 	lib/util/bag.h \
+	lib/util/cryptlib_compat.c \
+	lib/util/cryptlib_compat.h \
+	lib/util/file.c \
+	lib/util/file.h \
 	lib/util/hashutils.c \
 	lib/util/hashutils.h \
+	lib/util/inet.c \
+	lib/util/inet.h \
 	lib/util/logging.h \
 	lib/util/logutils.c \
 	lib/util/logutils.h \

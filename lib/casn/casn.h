@@ -46,6 +46,11 @@ struct casn_err_struct {
 
 extern struct casn_err_struct casn_err_struct;
 
+struct oidtable {
+    char *oid;
+    char *label;
+};
+
 int copy_casn(
     struct casn *,
     struct casn *),
@@ -167,6 +172,15 @@ int copy_casn(
     struct casn *,
     char *);                    // for use by constructors only
 
+int cf_oid(
+    char *curr_oid,
+    char *test_oid);
+
+int adjustTime(
+    struct casn *timep,
+    long basetime,
+    char *deltap);
+
 void delete_casn(
     struct casn *),
     clear_casn(
@@ -181,6 +195,9 @@ void delete_casn(
     int type,
     int tag);
 
+void load_oidtable(
+    char *name);
+
 struct casn *dup_casn(
     struct casn *casnp),
    *inject_casn(
@@ -191,6 +208,12 @@ struct casn *dup_casn(
     int num),
    *next_of(
     struct casn *casnp);
+
+char *find_label(
+    char *oidp,
+    int *diffp,
+    struct oidtable * oidtable,
+    int oidtable_size);
 
 #ifndef DEBUG
 #define dbcalloc calloc

@@ -19,7 +19,7 @@
 #include <openssl/rsa.h>
 #endif
 #include <openssl/bn.h>
-#include <rpki-asn1/certificate.h>
+#include <rpki-object/certificate.h>
 #include "rpki-asn1/crlv2.h"
 
 

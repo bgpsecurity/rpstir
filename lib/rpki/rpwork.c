@@ -6,6 +6,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include "util/logutils.h"
+#include "rpki-object/certificate.h"
 
 extern struct done_certs done_certs;
 
@@ -169,8 +170,8 @@ static int add_paracert2DB(
     if (ansr >= 0)
     {
         flags = done_certp->origflags & ~(SCM_FLAG_NOCHAIN);
-        struct Extension *extp = find_extn(done_certp->paracertp,
-                                           id_subjectKeyIdentifier, 0);
+        struct Extension *extp = find_extension(&done_certp->paracertp->toBeSigned.extensions,
+                                                id_subjectKeyIdentifier, 0);
         format_aKI(ski, &extp->extnValue.subjectKeyIdentifier);
         cert_answersp = find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
         if (!cert_answersp || cert_answersp->num_ansrs < 0)
@@ -264,13 +265,13 @@ static struct Certificate *mk_paracert(
     }                           // do nothing 
     else if ((*Xcrldp == 'R' && !Xcrldp[1]))
     {
-        fextp = find_extn(&myrootcert, id_cRLDistributionPoints, 0);
-        textp = find_extn(paracertp, id_cRLDistributionPoints, 1);
+        fextp = find_extension(&myrootcert.toBeSigned.extensions, id_cRLDistributionPoints, 0);
+        textp = find_extension(&paracertp->toBeSigned.extensions, id_cRLDistributionPoints, 1);
         copy_casn(&textp->self, &fextp->self);
     }
     else if (*Xcrldp != 'C' || Xcrldp[1])
     {
-        textp = find_extn(paracertp, id_cRLDistributionPoints, 1);
+        textp = find_extension(&paracertp->toBeSigned.extensions, id_cRLDistributionPoints, 1);
         clear_casn(&textp->extnValue.cRLDistributionPoints.self);
         write_objid(&textp->extnID, id_cRLDistributionPoints);
         char *pt,
@@ -302,10 +303,10 @@ static struct Certificate *mk_paracert(
     }
     if (Xcp && *Xcp != 'C')
     {
-        textp = find_extn(paracertp, id_certificatePolicies, 1);
+        textp = find_extension(&paracertp->toBeSigned.extensions, id_certificatePolicies, 1);
         if (*Xcp == 'R')
         {
-            fextp = find_extn(&myrootcert, id_certificatePolicies, 0);
+            fextp = find_extension(&myrootcert.toBeSigned.extensions, id_certificatePolicies, 0);
             copy_casn(&textp->self, &fextp->self);
         }
         else                    // D or specified one
@@ -325,7 +326,7 @@ static struct Certificate *mk_paracert(
     }
     if (Xaia && *Xaia != 'C' && Xaia[0] != 0 && Xaia[1] > 0)
     {
-        textp = find_extn(paracertp, id_pkix_authorityInfoAccess, 1);
+        textp = find_extension(&paracertp->toBeSigned.extensions, id_pkix_authorityInfoAccess, 1);
         clear_casn(&textp->extnValue.self);
         write_objid(&textp->extnID, id_pkix_authorityInfoAccess);
         struct AccessDescription *adp =
@@ -337,12 +338,12 @@ static struct Certificate *mk_paracert(
     }
     struct Extension *skiExtp,  // root's ski
        *akiExtp;                // new cert's aki
-    if (!(skiExtp = find_extn(&myrootcert, id_subjectKeyIdentifier, 0)))
+    if (!(skiExtp = find_extension(&myrootcert.toBeSigned.extensions, id_subjectKeyIdentifier, 0)))
     {
         snprintf(errbuf, sizeof(errbuf), "Certificate has no SKI.");
         return (struct Certificate *)0;
     }
-    if (!(akiExtp = find_extn(paracertp, id_authKeyId, 0)))
+    if (!(akiExtp = find_extension(&paracertp->toBeSigned.extensions, id_authKeyId, 0)))
     {
         if ((flags & SCM_FLAG_TRUSTED))
         {
@@ -467,8 +468,6 @@ int get_CAcert(
     return i;
 }
 
-extern int CryptInitState;
-
 static int sign_cert(
     struct keyring *keyring,
     struct Certificate *certp)
@@ -489,13 +488,8 @@ static int sign_cert(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
     memset(hash, 0, 40);
-    if (!CryptInitState)
-    {
-        int i = cryptInit();
-        if (i)
-            return ERR_SCM_CRYPTLIB;
-        CryptInitState = 1;
-    }
+    if (cryptInit() != CRYPT_OK)
+        return ERR_SCM_CRYPTLIB;
     if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
         || (ansr =
@@ -607,88 +601,6 @@ static void make_ASnum(
             asnum += *u;
         }
         write_casn_num(&asNumberOrRangep->range.max, asnum);
-    }
-}
-
-static void make_IPAddrOrRange(
-    struct IPAddressOrRangeA *ipAddrOrRangep,
-    struct iprange *tiprangep)
-{
-    /*
-     * Procedure: 1. Running from left to right, find where the low and high
-     * of tiprangep differ Count the number of bits where they match 2. IF
-     * beyond that point lolim is all zeroes and hilim all ones, write a
-     * prefix 3. ELSE make a range thus Find the last non-zero byte in the
-     * minimum Write those bytes to the min field Fill in the number of unused 
-     * bits in the min field Find the last non-FF byte in the max field Write
-     * those bytes in the max field Fill in the number of unused bits in the
-     * max field 
-     */
-    int lth = tiprangep->typ == IPv4 ? 4 : 16;
-    uchar *hucp,
-       *lucp,
-        mask = 0,
-        *eucp = &tiprangep->lolim[lth];
-    int numbits = 0;
-    // step 1
-    for (lucp = tiprangep->lolim, hucp = tiprangep->hilim;
-         lucp < eucp && *lucp == *hucp; lucp++, hucp++, numbits += 8);
-    if (lucp < eucp)
-    {
-        for (mask = 0x80; mask && (mask & *lucp) == (mask & *hucp);
-             mask >>= 1, numbits++);
-        // at first difference. test remains of byte
-        while (mask && !(mask & *lucp) && (mask & *hucp))
-            mask >>= 1;
-        if (!mask)              // now test remainder of bytes
-        {
-            for (lucp++, hucp++; lucp < eucp && !*lucp && *hucp == 0xff;
-                 lucp++, hucp++);
-        }
-    }
-    uchar bitstring[18];
-    int strlth;
-    memset(bitstring, 0, sizeof(bitstring));
-    clear_casn(&ipAddrOrRangep->self);
-    if (!mask && lucp >= eucp)  // step 2
-    {
-        strlth = (numbits + 7) >> 3;
-        memcpy(&bitstring[1], tiprangep->lolim, strlth);
-        bitstring[0] = (8 - (numbits & 7)) & 7;
-        write_casn(&ipAddrOrRangep->addressPrefix, bitstring, strlth + 1);
-    }
-    // step 3
-    else
-    {
-        // low end
-        if (tiprangep->typ == IPv4)
-            lucp = &tiprangep->lolim[3];
-        else
-            lucp = &tiprangep->lolim[15];
-        while (lucp > (uchar *) & tiprangep->lolim && !*lucp)
-            lucp--;
-        strlth = (lucp - tiprangep->lolim) + 1;
-        memcpy(&bitstring[1], tiprangep->lolim, strlth);
-        for (bitstring[0] = 0, mask = *lucp; mask && !(mask & 1);
-             mask >>= 1, bitstring[0]++);
-        write_casn(&ipAddrOrRangep->addressRange.min, bitstring, strlth + 1);
-
-        // high end
-        if (tiprangep->typ == IPv4)
-            lucp = &tiprangep->hilim[3];
-        else
-            lucp = &tiprangep->hilim[15];
-        while (lucp > (uchar *) & tiprangep->hilim && *lucp == 0xFF)
-            lucp--;
-        strlth = (lucp - tiprangep->hilim) + 1;
-        memcpy(&bitstring[1], tiprangep->hilim, strlth);
-        lucp = &bitstring[strlth];
-        for (bitstring[0] = 0, mask = 1; (mask & *lucp);
-             mask <<= 1, bitstring[0]++)
-        {
-            *lucp &= ~(mask);
-        }
-        write_casn(&ipAddrOrRangep->addressRange.max, bitstring, strlth + 1);
     }
 }
 
@@ -1113,7 +1025,7 @@ static void remake_cert_ranges(
     struct iprange *certrangep = certranges.iprangep;
     int num4 = 0,
         num6 = 0;
-    struct Extension *extp = find_extn(paracertp, id_pe_ipAddrBlock, 0);
+    struct Extension *extp = find_extension(&paracertp->toBeSigned.extensions, id_pe_ipAddrBlock, 0);
     struct Extensions *extsp = &paracertp->toBeSigned.extensions;
     struct IpAddrBlock *ipAddrBlockp;
     struct IPAddressFamilyA *ipfamp;
@@ -1152,7 +1064,10 @@ static void remake_cert_ranges(
             ipAddrOrRangep =
                 (struct IPAddressOrRangeA *)inject_casn(&ipAddrOrRangesp->self,
                                                         num4);
-            make_IPAddrOrRange(ipAddrOrRangep, certrangep);
+            make_IPAddrOrRange(ipAddrOrRangep,
+                               certrangep->typ == IPv4 ? AF_INET : AF_INET6,
+                               certrangep->lolim,
+                               certrangep->hilim);
         }
     }
     // step 3
@@ -1178,12 +1093,15 @@ static void remake_cert_ranges(
             ipAddrOrRangep =
                 (struct IPAddressOrRangeA *)inject_casn(&ipAddrOrRangesp->self,
                                                         num6);
-            make_IPAddrOrRange(ipAddrOrRangep, certrangep);
+            make_IPAddrOrRange(ipAddrOrRangep,
+                               certrangep->typ == IPv4 ? AF_INET : AF_INET6,
+                               certrangep->lolim,
+                               certrangep->hilim);
         }
 
     }
     // step 4
-    if ((extp = find_extn(paracertp, id_pe_autonomousSysNum, 0)))
+    if ((extp = find_extension(&paracertp->toBeSigned.extensions, id_pe_autonomousSysNum, 0)))
     {
         int i;
         for (i =
@@ -1297,8 +1215,8 @@ static int search_downward(
      * free the cert ELSE add the cert & paracert to the done list 4.  IF
      * something was done, call this function with this child 
      */
-    struct Extension *extp = find_extn(topcertp,
-                                       id_subjectKeyIdentifier, 0);
+    struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
+                                            id_subjectKeyIdentifier, 0);
     struct Certificate *childcertp;
     int ansr,
         numkid,
@@ -1325,10 +1243,10 @@ static int search_downward(
         if ((ansr =
              get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) < 0)
             return ERR_SCM_COFILE;
-        extp = find_extn(childcertp, id_authKeyId, 0);
+        extp = find_extension(&childcertp->toBeSigned.extensions, id_authKeyId, 0);
         memset(cAKI, 0, 64);
         format_aKI(cAKI, &extp->extnValue.authKeyId.keyIdentifier);
-        extp = find_extn(childcertp, id_subjectKeyIdentifier, 0);
+        extp = find_extension(&childcertp->toBeSigned.extensions, id_subjectKeyIdentifier, 0);
         format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
         if (strcmp(cAKI, pSKI) || !strcmp(cSKI, cAKI))
             continue;
@@ -1409,13 +1327,13 @@ static int process_trust_anchors(
         if ((ansr = get_casn_file(&childcertp->self, cert_ansrp->fullname, 0))
             < 0)
             return ERR_SCM_COFILE;
-        if (!(extp = find_extn(childcertp, id_pe_ipAddrBlock, 0)) &&
-            !(extp = find_extn(childcertp, id_pe_autonomousSysNum, 0)))
+        if (!(extp = find_extension(&childcertp->toBeSigned.extensions, id_pe_ipAddrBlock, 0)) &&
+            !(extp = find_extension(&childcertp->toBeSigned.extensions, id_pe_autonomousSysNum, 0)))
             continue;
         if (i >= done_certs.numcerts)
         {
             struct done_cert done_cert;
-            extp = find_extn(childcertp, id_subjectKeyIdentifier, 0);
+            extp = find_extension(&childcertp->toBeSigned.extensions, id_subjectKeyIdentifier, 0);
             format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
             fill_done_cert(&done_cert, cSKI, cert_ansrp->filename, childcertp,
                            cert_ansrp->local_id, cert_ansrp->flags);
@@ -1473,7 +1391,7 @@ static int process_control_block(
                        &done_certp->origcertp->toBeSigned.subject.self))
             break;
         // step 3
-        extp = find_extn(done_certp->origcertp, id_authKeyId, 0);
+        extp = find_extension(&done_certp->origcertp->toBeSigned.extensions, id_authKeyId, 0);
         format_aKI(skibuf, &extp->extnValue.authKeyId.keyIdentifier);
         if ((ansr = get_CAcert(skibuf, &ndone_certp)) < 0)
             return ansr;

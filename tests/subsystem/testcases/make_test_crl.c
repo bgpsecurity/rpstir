@@ -9,16 +9,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
-#include "rpki-asn1/crlv2.h"
-#include "rpki-asn1/certificate.h"
+#include "rpki-object/crl.h"
+#include "rpki-object/certificate.h"
 #include "rpki-asn1/extensions.h"
-#include <cryptlib.h>
+#include <util/cryptlib_compat.h>
 #include <rpki-asn1/roa.h>
-
-extern int adjustTime(
-    struct casn *,
-    long,
-    char *);
 
 char *msgs[] = {
     "Finished %s OK\n",
@@ -37,22 +32,6 @@ static int fatal(
 {
     fprintf(stderr, msgs[err], param);
     exit(err);
-}
-
-static struct Extension *findExtension(
-    struct Extensions *extsp,
-    char *id)
-{
-    struct Extension *extp;
-    if (!num_items(&extsp->self))
-        return (struct Extension *)0;
-    for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
-         extp = (struct Extension *)next_of(&extp->self))
-    {
-        if (!diff_objid(&extp->extnID, id))
-            break;
-    }
-    return extp;
 }
 
 static long getCertNum(
@@ -103,99 +82,6 @@ static void make_fullpath(
     strcpy(f, locpath);
 }
 
-static void signCRL(
-    struct CertificateRevocationList *crlp,
-    char *certname)
-{
-    char *c,
-        keyfile[80];
-    strcpy(keyfile, certname);
-    for (c = keyfile; *c && *c != '.'; c++);
-    strcpy(c, ".p15");
-
-    CRYPT_CONTEXT hashContext;
-    CRYPT_CONTEXT sigKeyContext;
-    CRYPT_KEYSET cryptKeyset;
-    uchar hash[40];
-    uchar *signature = NULL;
-    int ansr = 0,
-        signatureLength;
-    char *msg;
-    uchar *signstring = NULL;
-    int sign_lth;
-
-    sign_lth = size_casn(&crlp->toBeSigned.self);
-    signstring = (uchar *) calloc(1, sign_lth);
-    sign_lth = encode_casn(&crlp->toBeSigned.self, signstring);
-    memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
-        fatal(5, "cryptInit failed");
-    if ((ansr =
-         cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
-        || (ansr =
-            cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                               CRYPT_ALGO_RSA)) != 0)
-        msg = "creating context";
-    else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
-             (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
-        msg = "hashing";
-    else if ((ansr =
-              cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
-                                      hash, &signatureLength)) != 0)
-        msg = "getting attribute string";
-    else if ((ansr =
-              cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
-                              keyfile, CRYPT_KEYOPT_READONLY)) != 0)
-        msg = "opening key set";
-    else if ((ansr =
-              cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME,
-                                 "label", "password")) != 0)
-        msg = "getting key";
-    else if ((ansr =
-              cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
-                                   hashContext)) != 0)
-        msg = "signing";
-    else
-    {
-        signature = (uchar *) calloc(1, signatureLength + 20);
-        if ((ansr = cryptCreateSignature(signature, signatureLength + 20,
-                                         &signatureLength, sigKeyContext,
-                                         hashContext)) != 0)
-            msg = "signing";
-        else if ((ansr =
-                  cryptCheckSignature(signature, signatureLength,
-                                      sigKeyContext, hashContext)) != 0)
-            msg = "verifying";
-    }
-
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
-    cryptEnd();
-    if (signstring)
-        free(signstring);
-    signstring = NULL;
-    if (ansr == 0)
-    {
-        struct SignerInfo siginfo;
-        SignerInfo(&siginfo, (ushort) 0);
-        if ((ansr = decode_casn(&siginfo.self, signature)) < 0)
-            msg = "decoding signature";
-        else if ((ansr = readvsize_casn(&siginfo.signature, &signstring)) < 0)
-            msg = "reading signature";
-        else if ((ansr =
-                  write_casn_bits(&crlp->signature, signstring, ansr, 0)) < 0)
-            msg = "writing signature";
-        else
-            ansr = 0;
-    }
-    if (signstring != NULL)
-        free(signstring);
-    if (signature != NULL)
-        free(signature);
-    if (ansr)
-        fatal(5, msg);
-}
-
 int main(
     int argc,
     char **argv)
@@ -206,7 +92,8 @@ int main(
     fstat(0, &tstat);
     int filein = (tstat.st_mode & S_IFREG);
     char certname[40],
-        crlname[40];
+        crlname[40],
+        keyfile[40];
     memset(certname, 0, 40);
     memset(crlname, 0, 40);
     char *c;
@@ -221,6 +108,11 @@ int main(
     certname[0] = 'C';
     for (c = certname; *c && *c != '.'; c++);
     strcpy(--c, ".cer");
+    strcpy(keyfile, certname);
+    for (c = keyfile; *c && *c != '.'; c++);
+    strcpy(c, ".p15");
+
+    const char *msg;
 
     struct CertificateRevocationList crl;
     struct Certificate cert;
@@ -255,7 +147,7 @@ int main(
     extp =
         (struct CRLExtension *)inject_casn(&crltbsp->extensions.self,
                                            numext++);
-    iextp = findExtension(&ctbsp->extensions, id_subjectKeyIdentifier);
+    iextp = find_extension(&ctbsp->extensions, id_subjectKeyIdentifier, false);
     write_objid(&extp->extnID, id_authKeyId);
     copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
               &iextp->extnValue.subjectKeyIdentifier);
@@ -285,7 +177,11 @@ int main(
         now = longtime;
         adjustTime(&crlentryp->revocationDate.utcTime, now, delta);
     }
-    signCRL(&crl, certname);
+    msg = signCRL(&crl, keyfile);
+    if (msg != NULL)
+    {
+        fatal(5, msg);
+    }
     char fullpath[40];
     make_fullpath(fullpath, crlname);
     if (put_casn_file(&crl.self, crlname, 0) < 0)

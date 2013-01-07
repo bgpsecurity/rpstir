@@ -20,6 +20,7 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include <string.h>
 #include <strings.h>
 #include "casn/asn.h"
+#include "casn/casn.h"
 
 extern void fatal(
     int,
@@ -35,16 +36,7 @@ static int putform(
 
 extern struct typnames typnames[];
 
-static void load_oidtable(
-    char *);
-static char *find_label(
-    char *oidp,
-    int *diffp);
-
-struct oidtable {
-    char *oid;
-    char *label;
-}  *oidtable;
+struct oidtable *oidtable;
 int oidtable_size;
 
 int asn1dump(
@@ -241,7 +233,7 @@ static int putform(
         {
             int diff;
             char *label;
-            if ((label = find_label((char *)locbuf, &diff)))
+            if ((label = find_label((char *)locbuf, &diff, oidtable, oidtable_size)))
             {
                 if (!diff)
                     sprintf((char *)d, "  /* %s */", label);
@@ -315,107 +307,4 @@ static int putform(
         }
     }
     return row;
-}
-
-static int cf_oid(
-    char *curr_oid,
-    char *test_oid)
-{
-    char *c,
-       *t;
-    for (c = curr_oid, t = test_oid; *c && *t && *c == *t; c++, t++);
-    if (!*c && !*t)
-        return 0;               // exact match
-    if (!*t)
-        return 1;               // curr is longer than test
-    if (!*c)                    // curr is shorter than test, so partial match
-    {
-        // while(*t != '.' && t > test_oid) t--;
-        // return (test_oid -t - 1);
-        char *x;
-        for (x = t; *x; x++);
-        return (t - x - 1);
-    }
-    int cv,
-        tv;
-    for (c = curr_oid, t = test_oid; 1; c++, t++)
-    {
-        sscanf(c, "%d", &cv);
-        sscanf(t, "%d", &tv);
-        if (cv > tv)
-            return 1;
-        if (cv < tv)
-            return -1;
-        // matches so far
-        while (*c && *c != '.')
-            c++;
-        while (*t && *t != '.')
-            t++;
-        if (!*c)
-            return (curr_oid - c - 1);
-        if (!*t)
-            return 1;
-    }
-    return -1;                  // should never happen
-}
-
-static char *find_label(
-    char *oidp,
-    int *diffp)
-{
-    int num;
-    struct oidtable *curr_oidp;
-    for (num = 0; num < oidtable_size; num++)
-    {
-        curr_oidp = &oidtable[num];
-        if ((*diffp = cf_oid(curr_oidp->oid, oidp)) <= 0)
-            break;
-    }
-    if (!(*diffp))
-        return curr_oidp->label;
-    // if (*diffp < -1) return (char *)0;
-    for (num++; num < oidtable_size; num++)
-    {
-        curr_oidp = &oidtable[num];
-        if ((*diffp = cf_oid(curr_oidp->oid, oidp)) < -1)
-        {
-            (*diffp)++;
-            return curr_oidp->label;
-        }
-    }
-    return (char *)0;
-}
-
-static void load_oidtable(
-    char *name)
-{
-    FILE *str = fopen(name, "r");
-    if (!str)
-        return;
-    int numoids = 16,
-        oidnum;
-    char locbuf[512];
-    oidtable = (struct oidtable *)calloc(numoids, sizeof(struct oidtable));
-    for (oidnum = 0; fgets(locbuf, 512, str); oidnum++)
-    {
-        if (oidnum >= numoids - 1)
-            oidtable = (struct oidtable *)realloc(oidtable,
-                                                  ((numoids +=
-                                                    16) *
-                                                   sizeof(struct oidtable)));
-        char *c,
-           *l;
-        for (c = locbuf; *c > ' '; c++);
-        for (*c++ = 0; *c && *c <= ' '; c++);
-        l = c;
-        for (c++; *c > ' '; c++);
-        *c = 0;
-        struct oidtable *oidp = &oidtable[oidnum];
-        oidp->oid = (char *)calloc(1, strlen(locbuf) + 2);
-        oidp->label = (char *)calloc(1, strlen(l) + 2);
-        strcpy(oidp->oid, locbuf);
-        strcpy(oidp->label, l);
-    }
-    oidtable[oidnum].oid = (char *)0;
-    oidtable_size = oidnum;
 }
