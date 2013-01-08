@@ -8,6 +8,13 @@
 #include "configlib/configlib.h"
 
 
+/**
+    This is the only file that needs to be directly included to use rpstir's
+    configuration system. See lib/configlib/configlib.h for more detail about
+    extending the configuration system.
+*/
+
+
 enum config_key {
     CONFIG_ROOT_DIR,
     CONFIG_RPKI_PORT,
@@ -49,8 +56,13 @@ CONFIG_GET_HELPER(CONFIG_NEW_VERSION_CHECK, char)
 
 
 /**
- * Wrapper around config_load() with rpstir-specific data.
- */
+    Wrapper around config_load() with rpstir-specific data.
+
+    The note about thread-safety of config_load() in lib/configlib/configlib.h
+    applies to this.
+
+    See also config_unload() in configlib.h.
+*/
 bool my_config_load(
     );
 
