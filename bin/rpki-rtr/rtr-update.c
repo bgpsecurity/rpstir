@@ -120,7 +120,7 @@ static int writeROAData(
         snprintf(msg, sizeof(msg),
                  "insert ignore into %s values (%u, %u, \"%s\");",
                  fullTable->tabname, currSerialNum, asn, ptr);
-        statementscm_no_data(connection, msg);
+        sta = statementscm_no_data(connection, msg);
         checkErr(sta < 0, "Can't insert into %s", fullTable->tabname);
     }
     return 1;
