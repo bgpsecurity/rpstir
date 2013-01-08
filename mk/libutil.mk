@@ -60,4 +60,7 @@ lib_util_tests_stringutils_test_LDADD = \
 TESTS += lib/util/tests/stringutils-test
 
 
+EXTRA_DIST += lib/util/shell_utils
+
+
 EXTRA_DIST += lib/util/trap_errors
