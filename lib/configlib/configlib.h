@@ -89,7 +89,8 @@ void const * const * config_get_array(
 
 /**
     Generate a helper function around config_get() that returns the appropriate
-    pointer type.
+    pointer type. This is usually used for strings (char *) or pointers to
+    structs. See CONFIG_GET_HELPER_DEREFERENCE below for numeric types.
 
     For a string type option CONFIG_FOO, this code:
 
@@ -119,7 +120,9 @@ void const * const * config_get_array(
 
 /**
     Same as CONFIG_GET_HELPER above, but dereference the pointer before
-    returning.
+    returning. This is useful for numeric types where the functions generated
+    by CONFIG_GET_HELPER would return a pointer to the number instead of the
+    number itself.
 
     For an int type CONFIG_FOO, this code:
 
