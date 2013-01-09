@@ -250,6 +250,10 @@ char * config_find(
                              inherently an error: the default values for each
                              configuration item are used. However, if there are
                              any mandatory variables, those will cause errors.
+    @return True on success, false on failure. All parsing and verification of
+            the configuration is done by this function. If this returns true,
+            the config_get* functions and their helpers will all work without
+            any additional error checking.
 */
 bool config_load(
     size_t num_options,
