@@ -236,6 +236,9 @@ char * config_find(
     @note This is not thread-safe and MUST be called before any threads that
           could possibly use configuration data are started.
 
+    @note The config system uses logging from lib/util/logging.h. You should
+          call OPEN_LOG() before config_load().
+
     @param num_options Number of config options.
     @param options Description of options.
     @param filename The file to load data from. This can be NULL, see below.
@@ -252,6 +255,10 @@ char * config_find(
                              the default values for each configuration item are
                              used. However, if there are any mandatory
                              variables, those will cause errors.
+    @return True on success, false on failure. All parsing and verification of
+            the configuration is done by this function. If this returns true,
+            the config_get* functions and their helpers will all work without
+            any additional error checking.
 */
 bool config_load(
     size_t num_options,
