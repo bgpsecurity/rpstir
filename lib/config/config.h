@@ -30,8 +30,8 @@ enum config_key {
 /**
     Wrapper around config_load() with rpstir-specific data.
 
-    The note about thread-safety of config_load() in lib/configlib/configlib.h
-    applies to this.
+    The notes about thread-safety and logging from config_load() in
+    lib/configlib/configlib.h apply to this too.
 
     See also config_unload() in configlib.h.
 */
