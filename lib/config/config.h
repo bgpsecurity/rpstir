@@ -12,6 +12,50 @@
     This is the only file that needs to be directly included to use rpstir's
     configuration system. See lib/configlib/configlib.h for more detail about
     extending the configuration system.
+
+    For a quick introduction, here's an example program that uses this
+    library to print out the database. Note that this example does do all
+    necessary error checking.
+
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include "util/logging.h"
+        #include "config/config.h"
+
+        static void print_database()
+        {
+            printf("database: %s\n", CONFIG_DATABASE_get());
+        }
+
+        int main()
+        {
+            OPEN_LOG("foobar", LOG_USER);
+
+            if (!my_config_load())
+            {
+                LOG(LOG_ERR, "failed to load configuration");
+                return EXIT_FAILURE;
+            }
+
+            print_database();
+
+            config_unload();
+
+            CLOSE_LOG();
+
+            return EXIT_SUCCESS;
+        }
+
+    To add a new option:
+
+        1. Add the key to enum config_key below.
+        2. Define the helper functions below using one of the helper macros
+           (e.g. CONFIG_GET_HELPER). See lib/configlib/configlib.h for a
+           description of the available helper macros.
+        3. Add the option's description to the config_options array in
+           lib/config/config.c. See struct config_option in
+           lib/configlib/configlib.h and the types in lib/configlib/types/ for
+           more information.
 */
 
 
