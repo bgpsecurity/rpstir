@@ -19,7 +19,7 @@ extern char errbuf[160];
         LOG(LOG_ERR, format, ## __VA_ARGS__); \
         if (warnings > 0) \
         { \
-            LOG(LOG_ERR, "Had %d warnings. New file NOT created", warnings); \
+            LOG(LOG_ERR, "Fatal error, and also had %d warnings. New file NOT created", warnings); \
         } \
         config_unload(); \
         CLOSE_LOG(); \
