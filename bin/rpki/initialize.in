@@ -38,9 +38,10 @@ make_clean_dir () {
 
     for dir in "$@"; do
         if test -d "$dir"; then
-            find "$dir" -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf
+            find "$dir" -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf \
+                || fatal "Couldn't delete contents of $dir"
         else
-            mkdir -p "$dir"
+            mkdir -p "$dir" || fatal "Couldn't create $dir"
         fi
     done
 }
@@ -50,8 +51,8 @@ LOG_DIR="`config_get LogDir`"
 
 make_clean_dir "$CACHE_DIR" "$LOG_DIR"
 
-rcli -x -t "$CACHE_DIR" -y
+rcli -x -t "$CACHE_DIR" -y || fatal "Couldn't initialize database"
 
-rpki-rtr-clear
+rpki-rtr-clear || fatal "Couldn't clear rpki-rtr data"
 
-rpki-rtr-initialize
+rpki-rtr-initialize || fatal "Couldn't initialize rpki-rtr data"
