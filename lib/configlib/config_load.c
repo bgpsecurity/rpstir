@@ -132,6 +132,7 @@ static bool get_value(
     char **value)
 {
     size_t i;
+    char *tmp;
 
     // is the value in quotes?
     bool quoted = (line[*line_offset] == '"');
@@ -170,12 +171,16 @@ static bool get_value(
 			if (value_size >= value_allocated) \
 			{ \
 				value_allocated *= DYNAMIC_GROW_BY; \
-				*value = realloc(*value, value_allocated); \
-				if (*value == NULL) \
+				tmp = realloc(*value, value_allocated); \
+				if (tmp == NULL) \
 				{ \
 					LOG(LOG_ERR, "out of memory"); \
 					ret = false; \
 					goto done; \
+				} \
+				else \
+				{ \
+				    *value = tmp; \
 				} \
 			} \
 			(*value)[value_size++] = (c); \
