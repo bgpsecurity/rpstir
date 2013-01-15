@@ -16,29 +16,27 @@ Table of Contents
       2.1.6 Python
       2.1.7 netcat
       2.1.8 cURL
-    2.2 RPKI Software
+    2.2 @PACKAGE_NAME_UC@ Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
       2.2.3 Build the Executables
-    2.3 RPKI User Account
-      2.3.1 Configuration File
+    2.3 @PACKAGE_NAME_UC@ User Account
+      2.3.1 Configuration Files
     2.4 SSH Subsystem
     2.5 Self Test
-    2.6 Post-Installation Procedures
-      2.6.1 Cron Job Configuration
-      2.6.2 Adjust Permissions
+    2.6 Installation
+    2.7 Post-Installation Procedures
+      2.7.1 First Time Installation
+      2.7.2 Upgrading
 3. Running the RPKI Software
-    3.1 Walkthrough
-      3.1.1 Add rsync uris to configuration file.
-      3.1.2 Clear database and local repository cache.
-      3.1.3 Invoke DB Updater (rcli) in listening mode.
-      3.1.4 Automatically download Trust Anchors using TAL files.
-      3.1.5 Manually insert trust anchors (optional).
-      3.1.6 Run URI Chaser.
-      3.1.7 Run Garbage Collector.
+    3.1 Normal Operation
+      3.1.1 @PACKAGE_NAME@-synchronize
+      3.1.2 @PACKAGE_NAME@-rpki-rtr-daemon
+      3.1.3 @PACKAGE_NAME@-rpki-rtr-update
     3.2 Results and Analysis
-      3.2.1 Validation Report (results.py)
-      3.2.2 Query Client
+      3.2.1 Validation Report (@PACKAGE_NAME@-results)
+      3.2.2 Query Client (@PACKAGE_NAME@-query)
+      3.2.3 Log Files
     3.3 Warning
 Appendix A. Troubleshooting
     A.1 Database troubleshooting
@@ -54,9 +52,7 @@ Appendix A. Troubleshooting
 
 This document describes how to install and use the Relying Party Security
 Technology for Internet Routing (RPSTIR, pronounced rip-ster) software
-by Raytheon BBN Technologies.  Please refer to the design document,
-rpkidesign.doc, for a detailed description of the various software
-components in this release. Note that various files may refer to this
+by Raytheon BBN Technologies.  Note that various files may refer to this
 software by its old name, RPKI.
 
 Section 2 describes how to install that software, including its dependencies.
@@ -73,14 +69,13 @@ The RPKI software is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.  After reading this section,
 you will know:
     . How to install and configure the prerequisites.
-    . How to build the RPKI software.
+    . How to build the @PACKAGE_NAME@ software.
     . How to set up a user with the correct environment.
     . How to validate the installation.
 We assume that you can operate your system's package manager, as well
 as build packages from source and do minor edits on Makefiles.
 
-If you are running a 64-bit operating system or have python installed
-somewhere other than /usr/bin/python, see Appendix A at the bottom of
+If you are running a 64-bit operating system, see Appendix A at the bottom of
 this file before continuing.
 
 
@@ -93,10 +88,9 @@ to build @PACKAGE_NAME@.
 
 2.1.1 User Account
 
-You must establish a user account from which you can build and run the
-RPKI software.  While the full environment setup is detailed in
-section 2.3, the basic user should be created now so that you
-can set and test environment variables.
+You must establish a user account from which you can build and run @PACKAGE_NAME@.
+While the full environment setup is detailed in section 2.3, the basic user
+should be created now so that you can set and test environment variables.
 
 2.1.2 OpenSSL
 
@@ -127,17 +121,23 @@ or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
-2.13.2).  Then set up a database user for RPKI.  For example, the
-following creates a root password, then sets up a user with username
-"rpki", password "bbn", and access to the database named "rpkidb7":
+2.13.2).  Then set up a database user and database(s) for @PACKAGE_NAME@.
+If you want to run the self-tests, it is recommended to create a separate
+database for testing than for production use.  If you don't want to run the
+self-tests, only one database is needed.  For example, the following creates
+a root password, then sets up a user with username "@PACKAGE_NAME@", password "bbn",
+and access to the databases named "@PACKAGE_NAME@" and "@PACKAGE_NAME@_test":
 
     shell> mysql -u root
     mysql> SELECT Host, User FROM mysql.user;  /* view all accounts */
     mysql> SET PASSWORD FOR 'root'@'127.0.0.1' = PASSWORD('rootpass');
     mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('rootpass');
     mysql> SET PASSWORD FOR 'root'@'<myhostname>' = PASSWORD('rootpass');
-    mysql> CREATE USER 'rpki'@'localhost' IDENTIFIED BY 'bbn';
-    mysql> GRANT ALL PRIVILEGES ON rpkidb7.* TO 'rpki'@'localhost';
+    mysql> CREATE USER '@PACKAGE_NAME@'@'localhost' IDENTIFIED BY 'bbn';
+    mysql> CREATE DATABASE @PACKAGE_NAME@;
+    mysql> GRANT ALL PRIVILEGES ON @PACKAGE_NAME@.* TO '@PACKAGE_NAME@'@'localhost';
+    mysql> CREATE DATABASE @PACKAGE_NAME@_test;
+    mysql> GRANT ALL PRIVILEGES ON @PACKAGE_NAME@_test.* TO '@PACKAGE_NAME@'@'localhost';
 
 Configure the Connector/ODBC driver.  First, locate your system ODBC
 drivers and data sources configuration files.  For example:
@@ -168,7 +168,7 @@ ForceTrace      = Yes
 
 Then edit odbc.ini to set up a couple of system data sources.  This is
 slightly confusing: the user, password, and database name are actually
-ignored because they will be overridden by the RPKI software.  However,
+ignored because they will be overridden by @PACKAGE_NAME@.  However,
 depending on whether your database user has a password, in future steps
 below you will need to remember to set your DatabaseDSN configuration
 option to choose the DSN that is expecting a password (e.g. "myodbc3")
@@ -288,14 +288,14 @@ curl is not already present, install it from your package manager or
 http://curl.haxx.se/.
 
 
-2.2 RPKI Software
+2.2 @PACKAGE_NAME_UC@ Software
 
-The RPKI software is distributed as source code that should be built
+@PACKAGE_NAME_UC@ is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.
 
 2.2.1 Unpack the Source Code
 
-The RPKI software will have been delivered to you as a gzip-ed tarball
+@PACKAGE_NAME_UC@ will have been delivered to you as a gzip-ed tarball
 named @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz.  Extract the file using:
 
     tar xvzpf @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
@@ -305,10 +305,9 @@ will contain various subdirectories.
 
 2.2.2 Configure
 
-The BBN RPKI validation software uses autoconf to generate its
-Makefiles.  On many systems, it will suffice to run ./configure.
-However, the following options may be useful for the BBN RPKI
-software.
+@PACKAGE_NAME_UC@ uses autoconf to generate its Makefiles.  On many systems,
+it will suffice to run ./configure. However, the following options may be
+useful.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -333,41 +332,55 @@ output.  If you are using GNU make, then you have the option to use
 
 which will give much shorter compilation/linking notifications.
 
-The RTR code currently only compiles under gcc. If you have multiple
+The rpki-rtr code currently only compiles under gcc. If you have multiple
 compilers installed, add the option "CC=gcc" to ./configure.
 
 2.2.3 Build the Executables
 
 Once the configure script has generated all of the Makefiles, build
 the executables by issuing "make" in the top-level source directory.
-On some systems, the default is not GNU Make, so you may want to
-substitute the appropriate command (e.g. "gmake" on FreeBSD).
 
 
-2.3 RPKI User Account
+2.3 @PACKAGE_NAME_UC@ User Account
 
-Establish a user account from which to run the RPKI software.  This
+Establish a user account from which to run @PACKAGE_NAME@.  This
 provides a place to put the configuration file and prevent other users
 from reading sensitive information in it. It also provides a place,
 ~/.ssh/authorized_keys, to put all the RPKI-RTR clients' public keys to
 allow SSH login.
 
-2.3.1 Configuration File
+If you're installing to a non-standard location, add the bin directoy to the
+user's $PATH.
 
-Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf and make ~/.@PACKAGE_NAME@.conf
-only readable by the owner because it will contain database password(s):
+2.3.1 Configuration Files
+
+@PACKAGE_NAME_UC@ uses two different configuration files, ~/.@PACKAGE_NAME@.conf
+and ~/.@PACKAGE_NAME@.test.conf.  The former is used in normal operations, the
+latter is used only by @PACKAGE_NAME@'s self tests.  If you don't plan to run
+the self-tests, you only need to create ~/.@PACKAGE_NAME@.conf.  These
+directions show how to create both of them.
+
+Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf and etc/test.conf to
+~/.@PACKAGE_NAME@.test.conf and make both new files only readable by the owner
+because they will contain database password(s):
 
    cp etc/@PACKAGE_NAME@.conf ~/.@PACKAGE_NAME@.conf
-   chmod 600 ~/.@PACKAGE_NAME@.conf
+   cp etc/test.conf ~/.@PACKAGE_NAME@.test.conf
+   chmod 600 ~/.@PACKAGE_NAME@.conf ~/.@PACKAGE_NAME@.test.conf
 
-Open ~/.@PACKAGE_NAME@.conf in an editor, read the comments, and edit the file as
-directed by the comments.
+Open ~/.@PACKAGE_NAME@.conf and ~/.@PACKAGE_NAME@.test.conf in an editor,
+read the comments, and edit the files as directed by the comments.
+
+NOTE: Both configuration files have database options.  If you use the same
+database in both files, the self-tests will overwrite any data you keep in
+your production database.  It is strongly recommended to use a different
+database for testing than for production use.
 
 
 2.4 SSH Subsystem
 
-If you plan to use the RTR Server as an SSH subsystem, you will need
-to run the rtr/@PACKAGE_NAME@-rtrd server as a daemon and set up an ssh subsystem
+If you plan to use the rpki-rtr server as an SSH subsystem, you will need
+to run @PACKAGE_NAME@-rpki-rtr-daemon and set up an ssh subsystem
 to connect to rtrd on localhost.  The netcat program, nc(1), is
 recommended for the ssh subsystem.  There are different versions of
 netcat, so read its manpage for caveats before setting it up as
@@ -386,8 +399,6 @@ target by issuing the command:
 
    make check
 
-Note:  this will clear any data in the RPKI database.
-
 You may need to enter the MySQL root password several times as the
 various self-test steps proceed.  If all tests pass, you will see a
 message indicating success.
@@ -398,192 +409,83 @@ by running the command:
    make check CHECKTOOL=valgrind
 
 
-2.6 Post-Installation Procedures
+2.6 Installation
 
-Once the RPKI software installation passes the self-test, you may
-configure it to automatically run at regular intervals via cron.  It
-may also be desirable to allow arbitrary users to query the RPKI
-database.
+As root, run "make install" to install @PACKAGE_NAME@ on the system.
 
-2.6.1 Cron Job Configuration
-
-Except for the query client, all RPKI processes should run as the RPKI
-user at regular intervals using cron jobs.  NOTE: While cron job
-configuration will be used for final deployment, this release (@PACKAGE_VERSION@)
-does not include suggested crontab entries.  It is assumed that for
-trial purposes, manual execution gives the user/debugger maximum
-control.
-
---------------------------------------------------------------------
-Component (script or executable)     Frequency
---------------------------------------------------------------------
-Parallelized rsync (rsync_cord.py)   Invoked by chaser
-RCLI Database Client (loader.sh)     Continuously as daemon
-Garbage Collector (garbage.sh)       Once per day
-Chaser Client (chaser.sh)            Once per day
-Trust anchor updater (updateTA.py)   Just before each chaser run
-MySQL Database                       Continuously as daemon (mysqld)
-
-RTR updater (@PACKAGE_NAME@-rpki-rtr-update) After each call to chaser,
-                                     also before runing the RTR
-                                     server for the first time.
-RTR Server (@PACKAGE_NAME@-rpki-rtr-daemon)  Continuously as daemon.
-                                     You must run the RTR updater first, though.
-RTR client (@PACKAGE_NAME@-rpki-rtr-test-client)  On demand by user
-
-Query Client (query.sh)              On demand by user
-Results Statistics (results.py)      On demand by user
-Initialization (initDB.sh)           Ideally only once ("reset all")
---------------------------------------------------------------------
+   sudo make install
 
 
-2.6.2 Adjust Permissions
+2.7 Post-Installation Procedures
 
-Depending on the setup, you may also want to allow arbitrary users to
-run a query against the RPKI database, or to launch an rsync update
-cycle.  This step is unnecessary if you are simply trying this
-software out.
+2.7.1 First Time Installation
+
+If this is the first time you've installed @PACKAGE_NAME@ (i.e. if this is not
+an upgrade), there are some initialization steps.
+
+In the configuration file (~/.@PACKAGE_NAME@.conf) you created in step 2.3.1,
+find the parameters RPKICacheDir and LogDir.  Both of these directories should
+be created and the user from step 2.1.1 should have full access to these
+directories.  For example, if the directories are set to their defaults and the
+username is @PACKAGE_NAME@ in group @PACKAGE_NAME@:
+
+   sudo mkdir /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   sudo chown @PACKAGE_NAME@:@PACKAGE_NAME@ /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   sudo chmod 700 /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+
+Then run @PACKAGE_NAME@-initialize to set up the database:
+
+   @PACKAGE_NAME@-initialize
+
+2.7.2 Upgrading
+
+In this release, there's no upgrade procedure.
 
 ===============================================================================
 
 3. Running the RPKI Software
 
-3.1 Walkthrough
+3.1 Normal Operation
 
-The following walkthrough shows how to run the BBN RPKI validator.
-Note that steps 3.1.1-3.1.3 only need to be executed once at the
-beginning if everything goes completely as planned.  The other steps
-should be run periodically even under ideal circumstances.  In
-production, it is recommended that the user create a script to run
-3.1.4-3.1.6 and have a cron job that executes this script
-periodically.
+This section describes when and how to run each component of @PACKAGE_NAME@ as
+part of a relying party's normal operations. Cron jobs and init scripts are
+not included in this release, but this section should give the user enough
+information to create cron jobs or init scripts as appropriate.
 
-3.1.1 Add rsync uris to configuration file.
+3.1.1 @PACKAGE_NAME@-synchronize
 
-If you wish to download from publication points other than those
-derived from the trust anchors, then add those publication points
-to the configuration file's (~/.@PACKAGE_NAME@.conf) option
-RPKIExtraPublicationPoints.
+@PACKAGE_NAME@-synchronize synchronizes the local cache with the global RPKI,
+or anything else pointed to by the configured trust anchor locators.  It should
+be run regularly, for example by a cron job.  The amount of time it takes to
+complete one run can vary, so experimentation is suggested before picking the
+frequency to run it.
 
-3.1.2 Clear database and local repository cache.
+3.1.2 @PACKAGE_NAME@-rpki-rtr-daemon
 
-First, clear any existing local cache and call the initDB script.
-This deletes the database, if any, configured in ~/.@PACKAGE_NAME@.conf
-and sets up a new database with all the right tables. Be prepared to
-enter the root MySQL password twice.
+@PACKAGE_NAME@-rpki-rtr-daemon is @PACKAGE_NAME@'s rpki-rtr [draft-ietf-sidr-rpki-rtr]
+server.  If you plan to run an rpki-rtr server, this should be started on boot,
+e.g. from an init script or from rc.local. This program does not daemonize, but
+something like start-stop-daemon can be used.
 
-    # cd to @PACKAGE_NAME@'s root directory
-    rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log
-    mkdir -p REPOSITORY
-    mkdir -p LOGS
-    bin/rpki/initDB.sh
+3.1.3 @PACKAGE_NAME@-rpki-rtr-update
 
-3.1.3 Invoke DB Updater (rcli) in listening mode.
+After @PACKAGE_NAME@-synchronize finishes, @PACKAGE_NAME@-rpki-rtr-update can
+update the rpki-rtr cache. If you plan to use the rpki-rtr server, you should
+call @PACKAGE_NAME@-rpki-rtr-update after each successful call to
+@PACKAGE_NAME@-synchronize. For example, the cron job command could be:
 
-The following script starts the process that receives data from the
-rsync log parser and loads it into the database.  Under ideal
-circumstances, this will continue to run forever, waiting for input
-from the log parser.  Note that this script actually invokes rcli--the
-same executable that adds the trust anchors--but with flags which
-enable a different mode where it perpetually listens on a TCP socket
-for notifications of rsync updates.
-
-     xterm -e bin/rpki/loader.sh &
-
-As the command indicates, it is useful run loader.sh in a new xterm
-window.  Doing so separates the DB updater (rcli) log messages from
-the chaser/rsync log messages.
-
-3.1.4 Automatically download Trust Anchors using TAL files.
-
-A trust anchor certificate in the RPKI is obtained through a long term
-Trust Anchor Locator (TAL), which allows distribution via a mix of
-out-of-band and online means [draft-ietf-sidr-ta].  In practice,
-relying parties obtain TAL files through a trusted out-of-band channel
-of their choice.  For testing purposes, these instructions use Rob
-Austein's collection of sample trust anchors found at
-http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
-Additionally, to get a copy of ARIN's TAL, go to
-https://www.arin.net/public/rpki/tal/index.xhtml and follow the
-directions there.
-
-    # cd to @PACKAGE_NAME@'s root directory
-
-    # The following three commands retrieve three example long-term
-    # trust anchors in the form of TALs.  Operationally, these TALs
-    # must be obtained through a trusted channel, not HTTP!
-    wget http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors/testbed-ripe.tal
-    wget http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors/testbed-arin.tal
-    wget http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors/testbed-apnic.tal
-    # The following command parses the TAL files, downloads the trust
-    # anchor certificates, verifies their public key and signature, and
-    # inserts them into the local database.
-    bin/rpki/updateTA.py testbed-ripe.tal testbed-arin.tal testbed-apnic.tal
-
-3.1.5 Manually insert trust anchors (optional).
-
-Trust anchor material is not always distributed via TAL, e.g. in the
-case of local trust anchors.  Instead, we assume the user has directly
-obtained the trust anchor certificates through some reliable
-out-of-band method.  Then, we use the out-of-band invocation of rcli
-to manually add each of the trust anchors.
-
-    cd REPOSITORY
-    # The following three commands should be replaced by reliable methods.
-    rsync rsync://apnic.rpki.net/rpki/apnic/root.cer apnic_root.cer
-    rsync rsync://arin.rpki.net/rpki/arin/root.cer arin_root.cer
-    rsync rsync://ripe.rpki.net/rpki/ripe/root.cer ripe_root.cer
-    cd ..
-    bin/rpki/rcli -y -F REPOSITORY/apnic_root.cer
-    bin/rpki/rcli -y -F REPOSITORY/arin_root.cer
-    bin/rpki/rcli -y -F REPOSITORY/ripe_root.cer
-
-3.1.6 Run URI Chaser.
-
-This chases down objects from repositories that may not have been
-loaded but are required.  The chaser automatically invokes rsync to
-download from all the repositories.  When each rsync transfer
-completes, the chaser invokes the rsync log parser, which notifies the
-DB Updater (activated in the previous step) of any changes.
-
-    bin/rpki/chaser.sh
-
-The process of chasing URIs and then invoking rsync will automatically
-continue until no new publication directories have been found, or
-until a maximum depth is reached.
-
-3.1.7 Run Garbage Collector.
-
-(Note: the testbeds available as of 22 Nov 2010 have only small
-amounts of change due to expiration.  Nevertheless, it may be
-interesting to run the garbage collector just in case.)
-
-The Garbage Collector is responsible for any time-related state
-changes in object validity.  This checks for certificates that may
-have expired due to the passage of time, or crls that may have become
-stale due to the passage of time, and takes the appropriate actions.
-Any children certificates or roas of an expired certificate that are
-not reparented are marked as invalid, with this propagating down
-signing chains.  Certificates, and their descendant certificates and
-roas, that might potentially be revoked by the updated version of a
-stale crl are set to an intermediate state of validity (called
-"unknown"), but are set back to valid if a current crl is available.
-
-    bin/rpki/garbage.sh
-
-Successful garbage collection may not produce any screen output.
+   @PACKAGE_NAME@-synchronize && @PACKAGE_NAME@-rpki-rtr-update
 
 
 3.2 Results and Analysis
 
-There are three ways to obtain results from @PACKAGE_NAME@.
-. For an overview, generate a Validation Report (results.py).
-. For detailed information about validation state, use the Query Client.
-. For error analysis, search through rcli.log.
-We recommend starting with the first option and moving down the list
-as more detailed information is required.
+This section describes some of your options for getting more information about
+@PACKAGE_NAME@'s operations (see previous section) or the state of the RPKI.
 
-3.2.1 Validation Report (results.py)
+3.2.1 Validation Report (@PACKAGE_NAME@-results)
+
+If you want an overview of @PACKAGE_NAME@'s cached view of the RPKI, you can
+use @PACKAGE_NAME@-results.
 
 At a basic level, every object is in one of three states: fully
 validated to a trust anchor, unknown, and definitely invalid.  Valid
@@ -591,60 +493,17 @@ objects are inserted in the database; unknown objects are potentially
 valid, so they are kept in the database; definitely invalid objects
 are not entered into the database.
 
-The validation report generator (results.py) searches the local cache
+The validation report generator (@PACKAGE_NAME@-results) searches the local cache
 and the database and summarizes the three categories as counts.  In
 verbose mode, it also shows full paths to all invalid/unknown
 certifcates, thereby allowing the user to determine the offending
 rsync publication URI.
 
-Usage: bin/rpki/results.py [options]
-Options:
-  -h, --help     show this help message and exit
-  -v, --verbose  print lists of valid/unknown/invalid objects to stdout
+To see a list of options, run
 
-Example output:
+   @PACKAGE_NAME@-results --help
 
-[bbn@rpki-fc13 rpki]$ bin/rpki/results.py
-Using RPKI root directory: /home/bbn/rpki
-Using local repository path: /home/bbn/rpki/REPOSITORY
-
--------------------------------------------------------------------------------
-Certficate Information:
--------------------------------------------------------------------------------
-CA cert files: 23
-EE cert files: 136
-Total cert files: 159
-Validated certs: 81
-Status-unknown certs: 49
-Invalid or duplicate certs: 29
-
--------------------------------------------------------------------------------
-CRL Information:
--------------------------------------------------------------------------------
-Total crl files: 21
-Validated crls: 12
-Status-unknown crls: 5
-Invalid or duplicate crls: 4
-
--------------------------------------------------------------------------------
-ROA Information:
--------------------------------------------------------------------------------
-Total roa files: 105
-Validated roas: 56
-Status-unknown roas: 49
-Invalid or duplicate roas: 0
-
--------------------------------------------------------------------------------
-Manifest Information:
--------------------------------------------------------------------------------
-Total manifest files: 31
-Validated manifests: 7
-Status-unknown manifests: 0
-Invalid or duplicate manifests: 24
-
-Hint: to see lists of unknown/invalid objects, run with -v.
-
-3.2.2 Query Client
+3.2.2 Query Client (@PACKAGE_NAME@-query)
 
 This is the way to pull specific information out of the database and
 local repository.  There are two basic modes.
@@ -667,34 +526,37 @@ also be stale for a variety of reasons:
 For each type of staleness, it is possible to specify that the query
 consider ROAs that are stale in this manner to be either all valid or
 all invalid.  To control how different types of staleness are treated,
-use the "-s <filename>" option, where filename is a file in the same
-basic format as the sampleQuerySpecs file.  The sampleQuerySpecs file
-also has further documentation on the different types of filtering
-that can be specified.
+edit the config file created in step 2.3.1.
 
 The informational query provides the user with a means to see what is
 in the database without directly executing MySQL commands.  The basic
 informational query has the form
-./query.sh -t <type> -d <field> [-d <field> ... -d <field>]
+@PACKAGE_NAME@-query -t <type> -d <field> [-d <field> ... -d <field>]
 where type is either cert, crl, roa or manifest, and the fields are
 all the fields of the objects to display.  There are different
 possible fields for each object type. The full list of possibilities
-is obtained with the command "query.sh -l <type>".  Most of these
+is obtained with the command "@PACKAGE_NAME@-query -l <type>".  Most of these
 fields also provide the capability for filtering the results based on
 a simple comparison.  To do such filtering, add as many "-f
 <field>.<op>.<value>" arguments to the command line as desired, where
 op is one of (eq, ne, lt, gt, le, ge) and value is unquoted and
 contains # characters to replaces spaces.  Additional arguments are
-given if you type bin/rpki/query without any arguments.
+given if you type @PACKAGE_NAME@-query without any arguments.
 
     Examples:
 
-    bin/rpki/query -t cert -d pathname      # display paths of valid certs
-    bin/rpki/query -t cert -d pathname -d flags # display path+flags of valid certs
-    bin/rpki/query -t cert -d pathname -i   # display paths of valid/unknown certs
-    bin/rpki/query -t crl -d all            # display all fields of valid CRLs
-    bin/rpki/query -t roa -d pathname -d flags # display path+flags of valid roas
-    bin/rpki/query -t man -d all -i # display all fields of valid/unknown manifests
+    @PACKAGE_NAME@-query -t cert -d pathname      # display paths of valid certs
+    @PACKAGE_NAME@-query -t cert -d pathname -d flags # display path+flags of valid certs
+    @PACKAGE_NAME@-query -t cert -d pathname -i   # display paths of valid/unknown certs
+    @PACKAGE_NAME@-query -t crl -d all            # display all fields of valid CRLs
+    @PACKAGE_NAME@-query -t roa -d pathname -d flags # display path+flags of valid roas
+    @PACKAGE_NAME@-query -t man -d all -i # display all fields of valid/unknown manifests
+
+3.2.3 Log Files
+
+@PACKAGE_NAME_UC@ logs most things to syslog, so you can check your system logs
+for more information.  There are also some additional logs in the directory
+specified by the LogDir configuration parameter.
 
 
 3.3 Warning
