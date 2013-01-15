@@ -161,43 +161,32 @@ int main(
     sta = getuintscm(connection, &session_count);
     pophstmt(connection);
     checkErr(sta < 0, "Can't get results of querying rtr_session\n");
-    if (session_count != 1)
+    if (session_count == 0)
     {
-        sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_session;");
-        checkErr(sta < 0, "Can't truncate rtr_session");
+        LOG(LOG_ERR, "The rpki-rtr database isn't initialized.");
+        LOG(LOG_ERR, "See %s-rpki-rtr-initialize.", PACKAGE_NAME);
+        return EXIT_FAILURE;
+    }
+    else if (session_count != 1)
+    {
+        LOG(LOG_ERR,
+            "The rtr_session table has %u entries, which should never happen.",
+            session_count);
+        LOG(LOG_ERR,
+            "Consider running %s-rpki-rtr-clear and %s-rpki-rtr-initialize.",
+            PACKAGE_NAME, PACKAGE_NAME);
+        return EXIT_FAILURE;
+    }
 
-        sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
-        checkErr(sta < 0, "Can't truncate rtr_update");
-
-        sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_full;");
-        checkErr(sta < 0, "Can't truncate rtr_full");
-
-        sta =
-            statementscm_no_data(connection,
-                                 "TRUNCATE TABLE rtr_incremental;");
-        checkErr(sta < 0, "Can't truncate rtr_incremental");
-
-        sta =
-            statementscm_no_data(connection,
-                                 "INSERT INTO rtr_session (session_id) VALUES (FLOOR(RAND() * (1 << 16)));");
-        checkErr(sta < 0, "Can't generate a session id");
-
+    sta = newhstmt(connection);
+    checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
+    sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_update;");
+    checkErr(sta < 0, "Can't query rtr_update\n");
+    sta = getuintscm(connection, &update_count);
+    pophstmt(connection);
+    checkErr(sta < 0, "Can't get results of querying rtr_update\n");
+    if (update_count <= 0)
         first_time = 1;
-    }
-
-    // if there's a session but no updates, treat it as the first time
-    if (!first_time)
-    {
-        sta = newhstmt(connection);
-        checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-        sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_update;");
-        checkErr(sta < 0, "Can't query rtr_update\n");
-        sta = getuintscm(connection, &update_count);
-        pophstmt(connection);
-        checkErr(sta < 0, "Can't get results of querying rtr_update\n");
-        if (update_count <= 0)
-            first_time = 1;
-    }
 
     // delete any updates that weren't completed
     sta = statementscm_no_data(connection,

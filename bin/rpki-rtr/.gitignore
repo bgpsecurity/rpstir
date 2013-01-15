@@ -1,4 +1,5 @@
 rpki-rtr-clear
 rpki-rtr-daemon
+rpki-rtr-initialize
 rpki-rtr-test-client
 rpki-rtr-update

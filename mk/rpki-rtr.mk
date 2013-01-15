@@ -49,6 +49,12 @@ MK_SUBST_FILES_EXEC += bin/rpki-rtr/rpki-rtr-clear
 bin/rpki-rtr/rpki-rtr-clear: $(srcdir)/bin/rpki-rtr/rpki-rtr-clear.in
 
 
+pkglibexec_SCRIPTS += bin/rpki-rtr/rpki-rtr-initialize
+PACKAGE_NAME_BINS += rpki-rtr-initialize
+MK_SUBST_FILES_EXEC += bin/rpki-rtr/rpki-rtr-initialize
+bin/rpki-rtr/rpki-rtr-initialize: $(srcdir)/bin/rpki-rtr/rpki-rtr-initialize.in
+
+
 EXTRA_DIST += \
 	doc/rpki-rtr-daemon-outline \
 	doc/rpki-rtr-notes
