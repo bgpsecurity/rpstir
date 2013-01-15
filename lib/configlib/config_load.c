@@ -468,33 +468,33 @@ static bool convert_values(
     if (config_option->is_array)
     {
         for (;
-             config_value->array_value.num_items != 0;
-             --config_value->array_value.num_items)
+             config_value->value.array_value.num_items != 0;
+             --config_value->value.array_value.num_items)
         {
-            config_option->value_free(config_value->array_value.
-                                      data[config_value->array_value.
+            config_option->value_free(config_value->value.array_value.
+                                      data[config_value->value.array_value.
                                            num_items - 1]);
         }
-        free(config_value->array_value.data);
+        free(config_value->value.array_value.data);
 
-        config_value->array_value.data = malloc(sizeof(void *) * num_values);
-        if (config_value->array_value.data == NULL)
+        config_value->value.array_value.data = malloc(sizeof(void *) * num_values);
+        if (config_value->value.array_value.data == NULL)
         {
             LOG(LOG_ERR, "out of memory");
             return false;
         }
 
-        for (config_value->array_value.num_items = 0;
-             config_value->array_value.num_items < num_values;
-             ++config_value->array_value.num_items)
+        for (config_value->value.array_value.num_items = 0;
+             config_value->value.array_value.num_items < num_values;
+             ++config_value->value.array_value.num_items)
         {
             if (!config_option->value_convert(context,
                                               config_option->
                                               value_convert_usr_arg,
-                                              values[config_value->array_value.
+                                              values[config_value->value.array_value.
                                                      num_items],
-                                              &config_value->array_value.
-                                              data[config_value->array_value.
+                                              &config_value->value.array_value.
+                                              data[config_value->value.array_value.
                                                    num_items]))
             {
                 return false;
@@ -507,8 +507,8 @@ static bool convert_values(
                                                config_option->
                                                array_validate_usr_arg,
                                                (void const *const *)
-                                               config_value->array_value.data,
-                                               config_value->array_value.
+                                               config_value->value.array_value.data,
+                                               config_value->value.array_value.
                                                num_items))
             {
                 return false;
@@ -534,13 +534,13 @@ static bool convert_values(
             return false;
         }
 
-        config_option->value_free(config_value->single_value.data);
-        config_value->single_value.data = NULL;
+        config_option->value_free(config_value->value.single_value.data);
+        config_value->value.single_value.data = NULL;
 
         if (!config_option->value_convert(context,
                                           config_option->value_convert_usr_arg,
                                           value,
-                                          &config_value->single_value.data))
+                                          &config_value->value.single_value.data))
         {
             return false;
         }
@@ -865,12 +865,12 @@ bool config_load_defaults(
         config_values[option].filled_not_default = false;
         if (config_options[option].is_array)
         {
-            config_values[option].array_value.data = NULL;
-            config_values[option].array_value.num_items = 0;
+            config_values[option].value.array_value.data = NULL;
+            config_values[option].value.array_value.num_items = 0;
         }
         else
         {
-            config_values[option].single_value.data = NULL;
+            config_values[option].value.single_value.data = NULL;
         }
     }
 
@@ -882,7 +882,7 @@ bool config_load_defaults(
             continue;
         }
 
-        context.default_context.option = config_options[option].name;
+        context.context.default_context.option = config_options[option].name;
         line_offset = 0;
 
         for (; num_values != 0; --num_values)

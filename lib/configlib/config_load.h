@@ -52,7 +52,7 @@ struct config_value {
             void **data;
             size_t num_items;
         } array_value;
-    };
+    } value;
 };
 
 
@@ -74,7 +74,7 @@ struct config_context {
             // not an include line
             struct config_context_file *includes;
         } file_context;
-    };
+    } context;
 };
 
 

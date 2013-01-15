@@ -19,19 +19,19 @@ static struct config_value *config_values = NULL;
 const void *config_get(
     size_t key)
 {
-    return config_values[key].single_value.data;
+    return config_values[key].value.single_value.data;
 }
 
 size_t config_get_length(
     size_t key)
 {
-    return config_values[key].array_value.num_items;
+    return config_values[key].value.array_value.num_items;
 }
 
 void const *const *config_get_array(
     size_t key)
 {
-    return (void const *const *)config_values[key].array_value.data;
+    return (void const *const *)config_values[key].value.array_value.data;
 }
 
 char * config_find(
@@ -59,7 +59,7 @@ char * config_find(
 
             return config_options[i].value_convert_inverse(
                 config_options[i].value_convert_inverse_usr_arg,
-                config_values[i].single_value.data);
+                config_values[i].value.single_value.data);
         }
     }
 
@@ -91,14 +91,14 @@ void config_message(
     if (context->is_default)
     {
         LOG(priority, "default value for %s: %s",
-            context->default_context.option, message);
+            context->context.default_context.option, message);
     }
     else
     {
         const struct config_context_file * file_context;
 
         // modelled after gcc error messages for included files
-        for (file_context = &context->file_context;
+        for (file_context = &context->context.file_context;
             file_context != NULL;
             file_context = file_context->includes)
         {
@@ -186,13 +186,13 @@ bool config_load(
 
     if (default_filename != NULL)
     {
-        context.file_context.file = default_filename;
-        context.file_context.line = 0;
-        context.file_context.includes = NULL;
+        context.context.file_context.file = default_filename;
+        context.context.file_context.line = 0;
+        context.context.file_context.includes = NULL;
 
         if (!config_parse_file
             (config_num_options, config_options, config_values, &context,
-             &context.file_context))
+             &context.context.file_context))
         {
             config_unload();
             return false;
@@ -203,13 +203,13 @@ bool config_load(
 
     if (filename != NULL)
     {
-        context.file_context.file = filename;
-        context.file_context.line = 0;
-        context.file_context.includes = NULL;
+        context.context.file_context.file = filename;
+        context.context.file_context.line = 0;
+        context.context.file_context.includes = NULL;
 
         if (!config_parse_file
             (config_num_options, config_options, config_values, &context,
-             &context.file_context))
+             &context.context.file_context))
         {
             config_unload();
             return false;
@@ -246,16 +246,16 @@ void config_unload(
     {
         if (config_options[i].is_array)
         {
-            for (j = 0; j < config_values[i].array_value.num_items; ++j)
+            for (j = 0; j < config_values[i].value.array_value.num_items; ++j)
             {
-                config_options[i].value_free(config_values[i].array_value.
+                config_options[i].value_free(config_values[i].value.array_value.
                                              data[j]);
             }
-            free(config_values[i].array_value.data);
+            free(config_values[i].value.array_value.data);
         }
         else
         {
-            config_options[i].value_free(config_values[i].single_value.data);
+            config_options[i].value_free(config_values[i].value.single_value.data);
         }
     }
 
