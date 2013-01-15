@@ -40,7 +40,7 @@ static const struct config_option config_options[] = {
      config_type_string_converter_inverse, NULL,
      free,
      NULL, NULL,
-     NULL},
+     NULL}, // NULL here means this option must be filled in by a config file
 
     // CONFIG_DATABASE_USER
     {
@@ -70,7 +70,8 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      free,
      NULL, NULL,
-     ""},
+     ""}, // "" here means that the default is a NULL string.
+          // "\"\"" would be the empty string
 
     // CONFIG_DATABASE_DSN
     {
@@ -160,7 +161,7 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      free,
      NULL, NULL,
-     ""},
+     ""}, // "" here means the empty array
 
     // CONFIG_NEW_VERSION_CHECK
     {
