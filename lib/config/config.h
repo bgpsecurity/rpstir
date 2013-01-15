@@ -126,6 +126,11 @@ CONFIG_GET_HELPER(CONFIG_NEW_VERSION_CHECK, char)
     The notes about thread-safety and logging from config_load() in
     lib/configlib/configlib.h apply to this too.
 
+    If you set the CONFIG_ENV_VAR (see configure.ac) environment variable, this
+    function will use that as a file to load configuration from. This allows
+    users to try out one-time configuration changes and test programs to use
+    their own configuration.
+
     See also config_unload() in configlib.h.
 */
 bool my_config_load(
