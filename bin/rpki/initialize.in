@@ -52,4 +52,6 @@ make_clean_dir "$CACHE_DIR" "$LOG_DIR"
 
 rcli -x -t "$CACHE_DIR" -y
 
-rpki-rtr-update
+rpki-rtr-clear
+
+rpki-rtr-initialize
