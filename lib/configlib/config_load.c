@@ -352,7 +352,8 @@ static bool get_value(
 	Get all the values on a line.
 
 	@param head		Context of the line.
-	@param tail		Innermost file of the line's context.
+	@param tail		Innermost file of the line's context, or NULL
+				if this line isn't from a file.
 	@param option_line	Line where the the option started.
 	@param line_offset	Input param for offset within the line before
 				the first value to parse. Output param for the
@@ -368,7 +369,7 @@ static bool get_value(
 */
 static bool get_all_values(
     const struct config_context *head,
-    struct config_context *tail,
+    struct config_context_file *tail,
     size_t option_line,
     const char *line,
     size_t * line_offset,
@@ -405,12 +406,18 @@ static bool get_all_values(
 
         if (*num_values >= MAX_ARRAY_LENGTH)
         {
-            line_backup = tail->line;
-            tail->line = option_line;
+            if (tail != NULL)
+            {
+                line_backup = tail->line;
+                tail->line = option_line;
+            }
             config_message(head, LOG_ERR,
                            "too many items in an array of values, limit is %d",
                            MAX_ARRAY_LENGTH);
-            tail->line = line_backup;
+            if (tail != NULL)
+            {
+                tail->line = line_backup;
+            }
             return false;
         }
 
@@ -562,7 +569,7 @@ bool config_parse_file(
     const struct config_option * config_options,
     struct config_value * config_values,
     struct config_context * head,
-    struct config_context * tail)
+    struct config_context_file * tail)
 {
     // one line of the file
     char *line = NULL;
@@ -840,14 +847,16 @@ bool config_parse_file(
 bool config_load_defaults(
     size_t num_options,
     const struct config_option * config_options,
-    struct config_value * config_values,
-    struct config_context * context)
+    struct config_value * config_values)
 {
     bool ret = true;
     size_t option;
     size_t line_offset;
     char *values[MAX_ARRAY_LENGTH];
     size_t num_values = 0;
+    struct config_context context;
+
+    context.is_default = true;
 
     // initialize config_values
     for (option = 0; option < num_options; ++option)
@@ -873,6 +882,7 @@ bool config_load_defaults(
             continue;
         }
 
+        context.default_context.option = config_options[option].name;
         line_offset = 0;
 
         for (; num_values != 0; --num_values)
@@ -880,13 +890,13 @@ bool config_load_defaults(
             free(values[num_values - 1]);
         }
 
-        if (!get_all_values(context,
-                            context,
+        if (!get_all_values(&context,
+                            NULL,
                             0,
                             config_options[option].default_value,
                             &line_offset, values, &num_values))
         {
-            config_message(context, LOG_ERR, "%s has invalid default value",
+            config_message(&context, LOG_ERR, "%s has invalid default value",
                            config_options[option].name);
             ret = false;
             goto done;
@@ -894,19 +904,19 @@ bool config_load_defaults(
 
         if (config_options[option].default_value[line_offset] != '\0')
         {
-            config_message(context, LOG_ERR,
+            config_message(&context, LOG_ERR,
                            "%s's default values should only use one line",
                            config_options[option].name);
             ret = false;
             goto done;
         }
 
-        if (!convert_values(context,
+        if (!convert_values(&context,
                             &config_options[option],
                             &config_values[option],
                             (char const *const *)values, num_values, true))
         {
-            config_message(context, LOG_ERR,
+            config_message(&context, LOG_ERR,
                            "error parsing %s's default value",
                            config_options[option].name);
             ret = false;

@@ -18,6 +18,14 @@ struct config_context;
 
 
 /**
+    @return True iff the context is for a default value, as opposed to a value
+            from a configuration file.
+*/
+bool config_context_is_default(
+    const struct config_context * context);
+
+
+/**
     Callback for config type functions to use to log messages about their config item.
 
     @param context Opaque data. Might include things like line number in the config file.

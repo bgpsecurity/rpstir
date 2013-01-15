@@ -13,9 +13,12 @@ bool config_type_string_converter(
     {
         if (args->allow_null)
         {
-            config_message(context, LOG_DEBUG,
-                           "found NULL option. "
-                           "If you meant the empty string, use `\"\"' instead");
+            if (!config_context_is_default(context))
+            {
+                config_message(context, LOG_DEBUG,
+                               "found NULL option. If you meant the empty "
+                               "string, use `\"\"' instead");
+            }
             *data = NULL;
             return true;
         }
