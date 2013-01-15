@@ -131,6 +131,7 @@ bool config_load(
         if (access(default_filenames[i], R_OK) == 0)
         {
             default_filename = default_filenames[i];
+            break;
         }
         else if (errno == ENOENT)
         {
