@@ -12,7 +12,7 @@
 
 /**
     Try to do as much realpath() normalization as possible, given that the
-    speified path may or may not exist.
+    specified path may or may not exist.
 
     @return Normalized path, or NULL on error.
  */
@@ -21,7 +21,7 @@ static char * realpath_noent(
     const char *path)
 {
     // These variables store the current separation of path into (possibly
-    // extant) dir and non-existant base.
+    // extant) dir and non-existent base.
     //
     // Loop invariant:
     //   If base is NULL: dir == path
