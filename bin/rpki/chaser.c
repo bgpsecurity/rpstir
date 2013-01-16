@@ -18,7 +18,7 @@
 #include "db/clients/chaser.h"
 #include "util/stringutils.h"
 
-#define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
+#define CHASER_LOG_IDENT "chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON
 
 

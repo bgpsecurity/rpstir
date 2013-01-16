@@ -137,7 +137,7 @@ int main(
         return EXIT_FAILURE;
     }
 
-    OPEN_LOG(PACKAGE_NAME "-rtr-update", LOG_USER);
+    OPEN_LOG("rtr-update", LOG_USER);
 
     if (!my_config_load())
     {

@@ -67,7 +67,7 @@ int main(
 
     const char * config_key_name = argv[1];
 
-    OPEN_LOG(PACKAGE_NAME "-config_get", LOG_USER);
+    OPEN_LOG("config_get", LOG_USER);
 
     bool config_loaded = false;
     ssize_t config_key;

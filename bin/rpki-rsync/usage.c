@@ -29,7 +29,6 @@ void myusage(
     fprintf(stderr, "\t-u       \tconnect to UDP\n");
     fprintf(stderr, "\t-f filename\trsync logfile to read\n");
     fprintf(stderr, "\t-d dirname\trepository directory\n");
-    fprintf(stderr, "\t-l logname\trsync_aur logfile to write\n");
     fprintf(stderr,
             "\t-n         \tdo nothing - print what hould have been done\n");
     fprintf(stderr, "\t-w         \tcreate warning message(s)\n");

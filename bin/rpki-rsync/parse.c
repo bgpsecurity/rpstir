@@ -960,14 +960,14 @@ long next_dirblock(
         if (!fullpath_start)
         {
             line_start_pos = -1;        /* error code */
-            log_msg(LOG_ERR, "Malformed rsync log file line: %s", line);
+            LOG(LOG_ERR, "Malformed rsync log file line: %s", line);
             break;
         }
 
         if (!this_field(fullpath, PATH_MAX, fullpath_start, delimiters))
         {
             line_start_pos = -1;        /* error code */
-            log_msg(LOG_ERR, "Insufficient buffer to hold path: %s",
+            LOG(LOG_ERR, "Insufficient buffer to hold path: %s",
                     fullpath_start);
             break;
         }
@@ -975,7 +975,7 @@ long next_dirblock(
         if (!dirname(directory, PATH_MAX, fullpath))
         {
             line_start_pos = -1;        /* error code */
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "Insufficient buffer to hold directory.  Path = %s\n",
                     fullpath);
             break;

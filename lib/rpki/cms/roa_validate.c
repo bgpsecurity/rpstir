@@ -12,7 +12,7 @@
 
 #include "roa_utils.h"
 #include "util/cryptlib_compat.h"
-#include "util/logutils.h"
+#include "util/logging.h"
 #include "util/hashutils.h"
 
 int strict_profile_checks_cms = 0;
@@ -635,10 +635,10 @@ static int cmsValidate(
         if (strict_profile_checks_cms
             || diff_objid(oidp, id_rsadsi_rsaEncryption))
         {
-            log_msg(LOG_ERR, "invalid signature algorithm in ROA");
+            LOG(LOG_ERR, "invalid signature algorithm in ROA");
             return ERR_SCM_BADSIGALG;
         }
-        log_msg(LOG_WARNING, "deprecated signature algorithm in ROA");
+        LOG(LOG_WARNING, "deprecated signature algorithm in ROA");
     }
 
     // check that the subject key identifier has proper length
@@ -716,12 +716,12 @@ static int check_mft_number(
 
     if (lth <= 0)
     {
-        log_msg(LOG_ERR, "Error reading manifest number");
+        LOG(LOG_ERR, "Error reading manifest number");
         return ERR_SCM_BADMFTNUM;
     }
     else if (lth > MANIFEST_NUMBER_MAX_SIZE)
     {
-        log_msg(LOG_ERR, "Manifest number is too long (%d bytes)", lth);
+        LOG(LOG_ERR, "Manifest number is too long (%d bytes)", lth);
         return ERR_SCM_BADMFTNUM;
     }
 
@@ -729,7 +729,7 @@ static int check_mft_number(
 
     if (val[0] & 0x80)
     {
-        log_msg(LOG_ERR, "Manifest number is negative");
+        LOG(LOG_ERR, "Manifest number is negative");
         return ERR_SCM_BADMFTNUM;
     }
 
@@ -746,22 +746,22 @@ static int check_mft_dates(
         nextUpdate;
     if (read_casn_time(&manp->thisUpdate, &thisUpdate) < 0)
     {
-        log_msg(LOG_ERR, "This update is invalid");
+        LOG(LOG_ERR, "This update is invalid");
         return ERR_SCM_INVALDT;
     }
     if (thisUpdate > now)
     {
-        log_msg(LOG_ERR, "This update in the future");
+        LOG(LOG_ERR, "This update in the future");
         return ERR_SCM_INVALDT;
     }
     if (read_casn_time(&manp->nextUpdate, &nextUpdate) < 0)
     {
-        log_msg(LOG_ERR, "Next update is invalid");
+        LOG(LOG_ERR, "Next update is invalid");
         return ERR_SCM_INVALDT;
     }
     if (nextUpdate < thisUpdate)
     {
-        log_msg(LOG_ERR, "Next update earlier than this update");
+        LOG(LOG_ERR, "Next update earlier than this update");
         return ERR_SCM_INVALDT;
     }
     if (now > nextUpdate)
@@ -963,7 +963,7 @@ int manifestValidate(
     // step 5
     if (diff_objid(&manp->fileHashAlg, id_sha256))
     {
-        log_msg(LOG_ERR, "Incorrect hash algorithm");
+        LOG(LOG_ERR, "Incorrect hash algorithm");
         return ERR_SCM_BADHASHALG;
     }
     // step 6

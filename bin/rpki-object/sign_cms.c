@@ -17,7 +17,7 @@
 #include <util/cryptlib_compat.h>
 #include <stdlib.h>
 #include "rpki-asn1/roa.h"
-#include "util/logutils.h"
+#include "util/logging.h"
 #include "rpki-object/cms/cms.h"
 
 
@@ -32,7 +32,7 @@ int main(
 
     if (cryptInit() != CRYPT_OK)
     {
-        log_msg(LOG_ERR, "could not initialize cryptlib");
+        LOG(LOG_ERR, "could not initialize cryptlib");
         return -1;
     }
 
@@ -53,7 +53,7 @@ int main(
     CMSBlob(&cms, (ushort) 0);
     if (get_casn_file(&cms.self, (char *)cmsfilename, 0) < 0)
     {
-        log_msg(LOG_ERR, "could not load %s", cmsfilename);
+        LOG(LOG_ERR, "could not load %s", cmsfilename);
         return -1;
     }
 
@@ -63,7 +63,7 @@ int main(
     errmsg = signCMSBlob(&cms, keyfilename);
     if (errmsg)
     {
-        log_msg(LOG_ERR, "error %s", errmsg);
+        LOG(LOG_ERR, "error %s", errmsg);
         return -1;
     }
 
@@ -72,7 +72,7 @@ int main(
      */
     if (put_casn_file(&cms.self, (char *)cmsfilename, 0) < 0)
     {
-        log_msg(LOG_ERR, "could not write %s", cmsfilename);
+        LOG(LOG_ERR, "could not write %s", cmsfilename);
         return -1;
     }
 

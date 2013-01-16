@@ -26,7 +26,7 @@
 #include "rpki-asn1/crlv2.h"
 
 #include "cms/roa_utils.h"
-#include "util/logutils.h"
+#include "util/logging.h"
 
 
 #define ADDCOL(a, b, c, d, e, f)  \
@@ -56,43 +56,42 @@ void setallowexpired(
 static void initTables(
     scm * scmp)
 {
-    char *msg = "Error finding %s table";
     if (theCertTable == NULL)
     {
         theDirTable = findtablescm(scmp, "DIRECTORY");
         if (theDirTable == NULL)
         {
-            log_msg(LOG_ERR, msg, "directory");
+            LOG(LOG_ERR, "Error finding directory table");
             exit(-1);
         }
         theMetaTable = findtablescm(scmp, "METADATA");
         if (theMetaTable == NULL)
         {
-            log_msg(LOG_ERR, msg, "metadata");
+            LOG(LOG_ERR, "Error finding metadata table");
             exit(-1);
         }
         theCertTable = findtablescm(scmp, "CERTIFICATE");
         if (theCertTable == NULL)
         {
-            log_msg(LOG_ERR, msg, "certificate");
+            LOG(LOG_ERR, "Error finding certificate table");
             exit(-1);
         }
         theCRLTable = findtablescm(scmp, "CRL");
         if (theCRLTable == NULL)
         {
-            log_msg(LOG_ERR, msg, "crl");
+            LOG(LOG_ERR, "Error finding crl table");
             exit(-1);
         }
         theROATable = findtablescm(scmp, "ROA");
         if (theROATable == NULL)
         {
-            log_msg(LOG_ERR, msg, "roa");
+            LOG(LOG_ERR, "Error finding roa table");
             exit(-1);
         }
         theManifestTable = findtablescm(scmp, "MANIFEST");
         if (theManifestTable == NULL)
         {
-            log_msg(LOG_ERR, msg, "manifest");
+            LOG(LOG_ERR, "Error finding manifest table");
             exit(-1);
         }
         theSCMP = scmp;
@@ -489,7 +488,7 @@ static int verify_callback(
     if (!ok2)
     {
         cbx509err = store->error;
-        log_msg(LOG_ERR, "Error: %s",
+        LOG(LOG_ERR, "Error: %s",
                 X509_verify_cert_error_string(cbx509err));
     }
     else
@@ -1492,7 +1491,7 @@ static int verify_roa(
     {
         sta = set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
         if (sta < 0)
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "could not set ROA sigval: conp->mystat.errmsg = %s",
                     conp->mystat.errmsg);
     }
@@ -1800,7 +1799,7 @@ static int updateManifestObjs(
         }
         else
         {
-            log_msg(LOG_ERR, "Hash not ok on file %s", file);
+            LOG(LOG_ERR, "Hash not ok on file %s", file);
             // if hash not okay, delete object, and if cert, invalidate
             // children
             if (tabp == theCertTable)
@@ -1843,7 +1842,7 @@ static int verifyChildManifest(
     if (sta < 0)
     {
         delete_casn(&roa.self);
-        log_msg(LOG_ERR, "invalid manifest filename %s", outfull);
+        LOG(LOG_ERR, "invalid manifest filename %s", outfull);
         return sta;
     }
     struct Manifest *manifest =
@@ -1901,7 +1900,7 @@ static int verifyChildCert(
                         &chainOK);
         if (sta < 0)
         {
-            log_msg(LOG_ERR, "Child cert %s had bad signature", pathname);
+            LOG(LOG_ERR, "Child cert %s had bad signature", pathname);
             deletebylid(conp, theCertTable, data->id);
             return sta;
         }
@@ -2413,7 +2412,7 @@ static int add_cert_2(
     {
         if (X509_cmp_time(X509_get_notBefore(x), NULL) > 0)
         {
-            log_msg(LOG_WARNING, "Certificate notBefore is in the future");
+            LOG(LOG_WARNING, "Certificate notBefore is in the future");
             cf->flags |= SCM_FLAG_NOTYET;
         }
     }
@@ -2529,13 +2528,13 @@ int add_crl(
     CertificateRevocationList(&crl, 0);
     if (get_casn_file(&crl.self, outfull, 0) < 0)
     {
-        log_msg(LOG_ERR, "Failed to load CRL: %s", outfile);
+        LOG(LOG_ERR, "Failed to load CRL: %s", outfile);
         delete_casn(&crl.self);
         return ERR_SCM_INVALASN;
     }
     if ((sta = crl_profile_chk(&crl)) != 0)
     {
-        log_msg(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
+        LOG(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
         delete_casn(&crl.self);
         return sta;
     }
@@ -2729,7 +2728,7 @@ static int extractAndAddCert(
             sta = 0;            // dup roas OK
         else if (sta < 0)
         {
-            log_msg(LOG_ERR, "Error adding embedded certificate %s",
+            LOG(LOG_ERR, "Error adding embedded certificate %s",
                     pathname);
             /*
              * Leave the file there for debugging purposes.  FIXME: add code
@@ -2932,7 +2931,7 @@ int add_manifest(
     sta = get_casn_file(&roa.self, outfull, 0);
     if (sta < 0)
     {
-        log_msg(LOG_ERR, "invalid manifest %s", outfull);
+        LOG(LOG_ERR, "invalid manifest %s", outfull);
         delete_casn(&roa.self);
         return ERR_SCM_INVALASN;
     }
@@ -2968,14 +2967,14 @@ int add_manifest(
         // read this_upd and next_upd
         if (vsize_casn(&manifest->thisUpdate) + 1 > (int)sizeof(asn_time))
         {
-            log_msg(LOG_ERR, "thisUpdate is too large");
+            LOG(LOG_ERR, "thisUpdate is too large");
             sta = ERR_SCM_INVALDT;
             break;
         }
         sta = read_casn(&manifest->thisUpdate, (unsigned char *)asn_time);
         if (sta < 0)
         {
-            log_msg(LOG_ERR, "Could not read time for thisUpdate");
+            LOG(LOG_ERR, "Could not read time for thisUpdate");
             sta = ERR_SCM_INVALDT;
             break;
         }
@@ -2989,14 +2988,14 @@ int add_manifest(
 
         if (vsize_casn(&manifest->nextUpdate) + 1 > (int)sizeof(asn_time))
         {
-            log_msg(LOG_ERR, "nextUpdate is too large");
+            LOG(LOG_ERR, "nextUpdate is too large");
             sta = ERR_SCM_INVALDT;
             break;
         }
         sta = read_casn(&manifest->nextUpdate, (unsigned char *)asn_time);
         if (sta < 0)
         {
-            log_msg(LOG_ERR, "Could not read time for nextUpdate");
+            LOG(LOG_ERR, "Could not read time for nextUpdate");
             sta = ERR_SCM_INVALDT;
             break;
         }

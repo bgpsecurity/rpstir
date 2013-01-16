@@ -84,7 +84,6 @@ int main(
     int my_argc;                /* either real or from script file */
     const char *WHITESPACE = "\n\r\t ";
     char *inputLogFile = NULL;
-    char *rsync_aur_logfile = "rsync_aur.log";
 
     tflag = uflag = nflag = fflag = sflag = ch = 0;
     portno = retlen = 0;
@@ -92,7 +91,7 @@ int main(
 
     memset((char *)&wport, '\0', sizeof(struct write_port));
 
-    OPEN_LOG(PACKAGE_NAME "-rsync_aur", LOG_DAEMON);
+    OPEN_LOG("rsync_aur", LOG_DAEMON);
 
     if (!my_config_load())
     {
@@ -154,7 +153,7 @@ int main(
         my_argc = argc;
     }
 
-    while ((ch = getopt(my_argc, my_argv, "tuf:d:l:nweish")) != -1)
+    while ((ch = getopt(my_argc, my_argv, "tuf:d:nweish")) != -1)
     {
         switch (ch)
         {
@@ -189,17 +188,12 @@ int main(
         case 's':              /* synchronize with rcli */
             sflag = 1;
             break;
-        case 'l':              /* logfile for rsync_aur itself */
-            rsync_aur_logfile = strdup(optarg);
-            break;
         case 'h':              /* help */
         default:
             myusage(argv[0]);
             break;
         }
     }
-
-    log_init(rsync_aur_logfile, "rsync_aur", LOG_DEBUG, LOG_DEBUG);
 
     /*
      * test for necessary flags 
@@ -234,11 +228,11 @@ int main(
     fp = fopen(inputLogFile, "r");
     if (!fp)
     {
-        log_msg(LOG_ERR, "failed to open %s", inputLogFile);
+        LOG(LOG_ERR, "failed to open %s", inputLogFile);
         exit(1);
     }
-    log_msg(LOG_INFO, "Opened rsync log file: %s", inputLogFile);
-    log_flush();
+    LOG(LOG_INFO, "Opened rsync log file: %s", inputLogFile);
+    FLUSH_LOG();
     free(inputLogFile);
     inputLogFile = NULL;
 
@@ -251,16 +245,16 @@ int main(
         {
             if (tcpsocket(&wport, portno) != TRUE)
             {
-                log_msg(LOG_ERR, "tcpsocket failed...");
+                LOG(LOG_ERR, "tcpsocket failed...");
                 exit(-1);
             }
-            log_msg(LOG_INFO, "Established connection to port %d", portno);
+            LOG(LOG_INFO, "Established connection to port %d", portno);
         }
         else if (uflag)
         {
             if (udpsocket(&wport, portno) != TRUE)
             {
-                log_msg(LOG_ERR, "udpsocket failed...");
+                LOG(LOG_ERR, "udpsocket failed...");
                 exit(-1);
             }
         }
@@ -281,7 +275,7 @@ int main(
 
     if (setup_sig_catchers() != TRUE)
     {
-        log_msg(LOG_ERR, "failed to setup signal catchers... bailing.");
+        LOG(LOG_ERR, "failed to setup signal catchers... bailing.");
         exit(FALSE);
     }
 
@@ -299,7 +293,7 @@ int main(
     sendStr = makeStartStr(&retlen);
     if (!sendStr)
     {
-        log_msg(LOG_ERR, "failed to make Start String... bailing...");
+        LOG(LOG_ERR, "failed to make Start String... bailing...");
         exit(1);
     }
 
@@ -321,7 +315,7 @@ int main(
     sendStr = makeCDStr(&retlen, topDir);
     if (!sendStr)
     {
-        log_msg(LOG_ERR, "failed to make Directory String... bailing...");
+        LOG(LOG_ERR, "failed to make Directory String... bailing...");
         exit(1);
     }
 
@@ -356,7 +350,7 @@ int main(
         next_dirblock_pos = next_dirblock(fp);
         if (next_dirblock_pos < 0)
         {
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "Error while trying to find a block of directories.");
             break;
         }
@@ -390,13 +384,13 @@ int main(
                 fullpath_start = start_of_next_field(line, DELIMS);
                 if (!fullpath_start)
                 {
-                    log_msg(LOG_ERR, "Malformed rsync log file line: %s",
+                    LOG(LOG_ERR, "Malformed rsync log file line: %s",
                             line);
                     break;
                 }
                 if (!this_field(fullpath, PATH_MAX, fullpath_start, DELIMS))
                 {
-                    log_msg(LOG_ERR, "Insufficient buffer to hold path: %s",
+                    LOG(LOG_ERR, "Insufficient buffer to hold path: %s",
                             fullpath_start);
                     break;
                 }
@@ -410,7 +404,7 @@ int main(
                      getMessageFromString(line, (unsigned int)strlen(line),
                                           &retlen, flags)))
                 {
-                    log_msg(LOG_DEBUG, "Ignoring: %s", line);
+                    LOG(LOG_DEBUG, "Ignoring: %s", line);
                     continue;
                 }
                 if (pass_num == NORMAL_PASS && !is_manifest(fullpath))
@@ -436,7 +430,7 @@ int main(
         if (recv(wport.out_desc, &c, 1, MSG_WAITALL) != 1
             || (c != 'Y' && c != 'y'))
         {
-            log_msg(LOG_ERR, "failed to synchronize with rcli, bailing");
+            LOG(LOG_ERR, "failed to synchronize with rcli, bailing");
             exit(EXIT_FAILURE);
         }
     }
@@ -455,7 +449,7 @@ int main(
     sendStr = makeEndStr(&retlen);
     if (!sendStr)
     {
-        log_msg(LOG_ERR, "failed to make End String... bailing...");
+        LOG(LOG_ERR, "failed to make End String... bailing...");
         exit(1);
     }
     outputMsg(&wport, sendStr, retlen);
@@ -467,10 +461,8 @@ int main(
     if (wport.protocol != LOCAL)
     {
         close(wport.out_desc);
-        log_msg(LOG_DEBUG, "closed the descriptor %d", wport.out_desc);
+        LOG(LOG_DEBUG, "closed the descriptor %d", wport.out_desc);
     }
-
-    log_close();
 
     config_unload();
 
