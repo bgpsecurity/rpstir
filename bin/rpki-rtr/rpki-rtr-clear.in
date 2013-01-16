@@ -3,8 +3,6 @@
 
 @SETUP_ENVIRONMENT@
 
-. $THIS_SCRIPT_DIR/../../lib/util/shell_utils
-
 
 usage () {
     echo >&2 "Usage: $0 <option>"
