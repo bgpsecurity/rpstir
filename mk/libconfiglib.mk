@@ -9,6 +9,7 @@ lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/configlib.h \
 	lib/configlib/config_load.c \
 	lib/configlib/config_load.h \
+	lib/configlib/configlib_type.h \
 	lib/configlib/types/bool.c \
 	lib/configlib/types/bool.h \
 	lib/configlib/types/enum.c \

@@ -12,7 +12,7 @@
 
 /**
     Try to do as much realpath() normalization as possible, given that the
-    speified path may or may not exist.
+    specified path may or may not exist.
 
     @return Normalized path, or NULL on error.
  */
@@ -21,7 +21,7 @@ static char * realpath_noent(
     const char *path)
 {
     // These variables store the current separation of path into (possibly
-    // extant) dir and non-existant base.
+    // extant) dir and non-existent base.
     //
     // Loop invariant:
     //   If base is NULL: dir == path
@@ -61,18 +61,19 @@ static char * realpath_noent(
             }
             else
             {
-                dir_normalized = realloc(dir_normalized,
-                                         strlen(dir_normalized) +
-                                         1 /* '/' */+
-                                         strlen(base) +
-                                         1 /* null terminator */);
-                if (dir_normalized == NULL)
+                tmp = realloc(dir_normalized,
+                              strlen(dir_normalized) +
+                              1 /* '/' */+
+                              strlen(base) +
+                              1 /* null terminator */);
+                if (tmp == NULL)
                 {
                     LOG(LOG_ERR, "out of memory");
                     free(dir_normalized);
                     free(base);
                     return NULL;
                 }
+                dir_normalized = tmp;
 
                 // These are safe because the realloc() call above allocates
                 // dir_normalized to be long enough.

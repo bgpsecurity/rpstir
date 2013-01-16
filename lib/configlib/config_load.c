@@ -132,6 +132,7 @@ static bool get_value(
     char **value)
 {
     size_t i;
+    char *tmp;
 
     // is the value in quotes?
     bool quoted = (line[*line_offset] == '"');
@@ -170,12 +171,16 @@ static bool get_value(
 			if (value_size >= value_allocated) \
 			{ \
 				value_allocated *= DYNAMIC_GROW_BY; \
-				*value = realloc(*value, value_allocated); \
-				if (*value == NULL) \
+				tmp = realloc(*value, value_allocated); \
+				if (tmp == NULL) \
 				{ \
 					LOG(LOG_ERR, "out of memory"); \
 					ret = false; \
 					goto done; \
+				} \
+				else \
+				{ \
+				    *value = tmp; \
 				} \
 			} \
 			(*value)[value_size++] = (c); \
@@ -352,7 +357,8 @@ static bool get_value(
 	Get all the values on a line.
 
 	@param head		Context of the line.
-	@param tail		Innermost file of the line's context.
+	@param tail		Innermost file of the line's context, or NULL
+				if this line isn't from a file.
 	@param option_line	Line where the the option started.
 	@param line_offset	Input param for offset within the line before
 				the first value to parse. Output param for the
@@ -368,7 +374,7 @@ static bool get_value(
 */
 static bool get_all_values(
     const struct config_context *head,
-    struct config_context *tail,
+    struct config_context_file *tail,
     size_t option_line,
     const char *line,
     size_t * line_offset,
@@ -405,12 +411,18 @@ static bool get_all_values(
 
         if (*num_values >= MAX_ARRAY_LENGTH)
         {
-            line_backup = tail->line;
-            tail->line = option_line;
+            if (tail != NULL)
+            {
+                line_backup = tail->line;
+                tail->line = option_line;
+            }
             config_message(head, LOG_ERR,
                            "too many items in an array of values, limit is %d",
                            MAX_ARRAY_LENGTH);
-            tail->line = line_backup;
+            if (tail != NULL)
+            {
+                tail->line = line_backup;
+            }
             return false;
         }
 
@@ -461,33 +473,33 @@ static bool convert_values(
     if (config_option->is_array)
     {
         for (;
-             config_value->array_value.num_items != 0;
-             --config_value->array_value.num_items)
+             config_value->value.array_value.num_items != 0;
+             --config_value->value.array_value.num_items)
         {
-            config_option->value_free(config_value->array_value.
-                                      data[config_value->array_value.
+            config_option->value_free(config_value->value.array_value.
+                                      data[config_value->value.array_value.
                                            num_items - 1]);
         }
-        free(config_value->array_value.data);
+        free(config_value->value.array_value.data);
 
-        config_value->array_value.data = malloc(sizeof(void *) * num_values);
-        if (config_value->array_value.data == NULL)
+        config_value->value.array_value.data = malloc(sizeof(void *) * num_values);
+        if (config_value->value.array_value.data == NULL)
         {
             LOG(LOG_ERR, "out of memory");
             return false;
         }
 
-        for (config_value->array_value.num_items = 0;
-             config_value->array_value.num_items < num_values;
-             ++config_value->array_value.num_items)
+        for (config_value->value.array_value.num_items = 0;
+             config_value->value.array_value.num_items < num_values;
+             ++config_value->value.array_value.num_items)
         {
             if (!config_option->value_convert(context,
                                               config_option->
                                               value_convert_usr_arg,
-                                              values[config_value->array_value.
+                                              values[config_value->value.array_value.
                                                      num_items],
-                                              &config_value->array_value.
-                                              data[config_value->array_value.
+                                              &config_value->value.array_value.
+                                              data[config_value->value.array_value.
                                                    num_items]))
             {
                 return false;
@@ -500,8 +512,8 @@ static bool convert_values(
                                                config_option->
                                                array_validate_usr_arg,
                                                (void const *const *)
-                                               config_value->array_value.data,
-                                               config_value->array_value.
+                                               config_value->value.array_value.data,
+                                               config_value->value.array_value.
                                                num_items))
             {
                 return false;
@@ -527,13 +539,13 @@ static bool convert_values(
             return false;
         }
 
-        config_option->value_free(config_value->single_value.data);
-        config_value->single_value.data = NULL;
+        config_option->value_free(config_value->value.single_value.data);
+        config_value->value.single_value.data = NULL;
 
         if (!config_option->value_convert(context,
                                           config_option->value_convert_usr_arg,
                                           value,
-                                          &config_value->single_value.data))
+                                          &config_value->value.single_value.data))
         {
             return false;
         }
@@ -562,7 +574,7 @@ bool config_parse_file(
     const struct config_option * config_options,
     struct config_value * config_values,
     struct config_context * head,
-    struct config_context * tail)
+    struct config_context_file * tail)
 {
     // one line of the file
     char *line = NULL;
@@ -663,6 +675,15 @@ bool config_parse_file(
             && line[MAX_LINE_LENGTH - 1] != '\n')
         {
             config_message(head, LOG_ERR, "line too long");
+            ret = false;
+            goto done;
+        }
+
+        if (strchr(line, '\r') != NULL)
+        {
+            config_message(head, LOG_ERR,
+                           "Currently only unix line endings are supported. "
+                           "See dos2unix(1) to convert line endings.");
             ret = false;
             goto done;
         }
@@ -840,14 +861,16 @@ bool config_parse_file(
 bool config_load_defaults(
     size_t num_options,
     const struct config_option * config_options,
-    struct config_value * config_values,
-    struct config_context * context)
+    struct config_value * config_values)
 {
     bool ret = true;
     size_t option;
     size_t line_offset;
     char *values[MAX_ARRAY_LENGTH];
     size_t num_values = 0;
+    struct config_context context;
+
+    context.is_default = true;
 
     // initialize config_values
     for (option = 0; option < num_options; ++option)
@@ -856,12 +879,12 @@ bool config_load_defaults(
         config_values[option].filled_not_default = false;
         if (config_options[option].is_array)
         {
-            config_values[option].array_value.data = NULL;
-            config_values[option].array_value.num_items = 0;
+            config_values[option].value.array_value.data = NULL;
+            config_values[option].value.array_value.num_items = 0;
         }
         else
         {
-            config_values[option].single_value.data = NULL;
+            config_values[option].value.single_value.data = NULL;
         }
     }
 
@@ -873,6 +896,7 @@ bool config_load_defaults(
             continue;
         }
 
+        context.context.default_context.option = config_options[option].name;
         line_offset = 0;
 
         for (; num_values != 0; --num_values)
@@ -880,13 +904,13 @@ bool config_load_defaults(
             free(values[num_values - 1]);
         }
 
-        if (!get_all_values(context,
-                            context,
+        if (!get_all_values(&context,
+                            NULL,
                             0,
                             config_options[option].default_value,
                             &line_offset, values, &num_values))
         {
-            config_message(context, LOG_ERR, "%s has invalid default value",
+            config_message(&context, LOG_ERR, "%s has invalid default value",
                            config_options[option].name);
             ret = false;
             goto done;
@@ -894,19 +918,19 @@ bool config_load_defaults(
 
         if (config_options[option].default_value[line_offset] != '\0')
         {
-            config_message(context, LOG_ERR,
+            config_message(&context, LOG_ERR,
                            "%s's default values should only use one line",
                            config_options[option].name);
             ret = false;
             goto done;
         }
 
-        if (!convert_values(context,
+        if (!convert_values(&context,
                             &config_options[option],
                             &config_values[option],
                             (char const *const *)values, num_values, true))
         {
-            config_message(context, LOG_ERR,
+            config_message(&context, LOG_ERR,
                            "error parsing %s's default value",
                            config_options[option].name);
             ret = false;

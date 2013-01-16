@@ -52,18 +52,29 @@ struct config_value {
             void **data;
             size_t num_items;
         } array_value;
-    };
+    } value;
 };
 
 
 /** Stores context while parsing a configuration file. */
 struct config_context {
-    const char *file;
-    size_t line;
+    // whether this is from a default (in C) or from a file
+    bool is_default;
 
-    // pointer to context in included file, or NULL for a line that's not an
-    // include line
-    struct config_context *includes;
+    union {
+        struct config_context_default {
+            const char *option;
+        } default_context;
+
+        struct config_context_file {
+            const char *file;
+            size_t line;
+
+            // pointer to context in included file, or NULL for a line that's
+            // not an include line
+            struct config_context_file *includes;
+        } file_context;
+    } context;
 };
 
 
@@ -79,7 +90,7 @@ bool config_parse_file(
     const struct config_option *config_options,
     struct config_value *config_values,
     struct config_context *head,
-    struct config_context *tail);
+    struct config_context_file *tail);
 
 /**
 	Loads defaults and initializes config_values.
@@ -87,7 +98,6 @@ bool config_parse_file(
 bool config_load_defaults(
     size_t num_options,
     const struct config_option *config_options,
-    struct config_value *config_values,
-    struct config_context *context);
+    struct config_value *config_values);
 
 #endif
