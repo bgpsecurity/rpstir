@@ -16,6 +16,7 @@ Table of Contents
       2.1.6 Python
       2.1.7 netcat
       2.1.8 cURL
+      2.1.9 Syslog
     2.2 RPKI Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
@@ -286,6 +287,15 @@ or http://netcat.sourceforge.net/.
 cURL also comes preinstalled with many operating systems. If the command
 curl is not already present, install it from your package manager or
 http://curl.haxx.se/.
+
+2.1.9 Syslog
+
+A syslog daemon is probably already installed.  However, on some systems syslog
+has poor performance by default.  See
+http://stackoverflow.com/questions/208098/can-syslog-performance-be-improved
+for more information. If you're ok with the chance of losing some log messages
+if the system crashes, consider configuring your syslog daemon to not
+synchronize log files after each log message.
 
 
 2.2 RPKI Software
