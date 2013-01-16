@@ -40,7 +40,7 @@ char * config_get_string(
 
     return config_options[key].value_convert_inverse(
         config_options[key].value_convert_inverse_usr_arg,
-        config_values[key].single_value.data);
+        config_values[key].value.single_value.data);
 }
 
 size_t config_get_length(
@@ -67,12 +67,12 @@ char ** config_get_string_array(
         return NULL;
     }
 
-    if (config_values[key].array_value.num_items == 0)
+    if (config_values[key].value.array_value.num_items == 0)
     {
         return NULL;
     }
 
-    char ** ret = calloc(config_values[key].array_value.num_items,
+    char ** ret = calloc(config_values[key].value.array_value.num_items,
                          sizeof(char *));
     if (ret == NULL)
     {
@@ -80,11 +80,11 @@ char ** config_get_string_array(
         goto err;
     }
 
-    for (i = 0; i < config_values[key].array_value.num_items; ++i)
+    for (i = 0; i < config_values[key].value.array_value.num_items; ++i)
     {
         ret[i] = config_options[key].value_convert_inverse(
             config_options[key].value_convert_inverse_usr_arg,
-            config_values[key].array_value.data[i]);
+            config_values[key].value.array_value.data[i]);
         if (ret[i] == NULL)
         {
             goto err;
@@ -96,7 +96,7 @@ char ** config_get_string_array(
 err:
     if (ret != NULL)
     {
-        for (i = 0; i < config_values[key].array_value.num_items; ++i)
+        for (i = 0; i < config_values[key].value.array_value.num_items; ++i)
         {
             free(ret[i]);
         }
