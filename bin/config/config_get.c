@@ -5,6 +5,48 @@
 #include "util/logging.h"
 #include "config/config.h"
 
+
+static bool print_config(size_t key)
+{
+    if (config_is_array(key))
+    {
+        size_t i;
+        char ** values;
+
+        values = config_get_string_array(key);
+        if (values == NULL)
+        {
+            return false;
+        }
+
+        for (i = 0; i < config_get_length(key); ++i)
+        {
+            printf("%s%c", values[i], '\0');
+            free(values[i]);
+        }
+
+        free(values);
+
+        return true;
+    }
+    else
+    {
+        char * value;
+
+        value = config_get_string(key);
+        if (value == NULL)
+        {
+            return false;
+        }
+
+        printf("%s", value);
+
+        free(value);
+
+        return true;
+    }
+}
+
 int main(
     int argc,
     char **argv)
@@ -17,15 +59,18 @@ int main(
         fprintf(stderr, "\n");
         fprintf(stderr, "Print a textual representation of the value\n");
         fprintf(stderr, "for the specified key.\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "If the value is a scalar, just print it. If it's\n");
+        fprintf(stderr, "an array, print each element followed by a NUL.\n");
         exit(EXIT_FAILURE);
     }
 
-    const char * config_key = argv[1];
+    const char * config_key_name = argv[1];
 
     OPEN_LOG(PACKAGE_NAME "-config_get", LOG_USER);
 
     bool config_loaded = false;
-    char * config_value = NULL;
+    ssize_t config_key;
 
     if (my_config_load())
     {
@@ -38,19 +83,20 @@ int main(
         goto done;
     }
 
-    config_value = config_find(config_key);
-
-    if (config_value == NULL)
+    config_key = config_find(config_key_name);
+    if (config_key < 0)
     {
         ret = EXIT_FAILURE;
         goto done;
     }
 
-    fprintf(stdout, "%s", config_value);
+    if (!print_config((size_t)config_key))
+    {
+        ret = EXIT_FAILURE;
+        goto done;
+    }
 
 done:
-
-    free(config_value);
 
     if (config_loaded)
     {

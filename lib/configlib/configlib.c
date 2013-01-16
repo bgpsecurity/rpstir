@@ -16,10 +16,31 @@ static const struct config_option *config_options = NULL;
 static struct config_value *config_values = NULL;
 
 
+bool config_is_array(
+    size_t key)
+{
+    return config_options[key].is_array;
+}
+
 const void *config_get(
     size_t key)
 {
     return config_values[key].value.single_value.data;
+}
+
+char * config_get_string(
+    size_t key)
+{
+    if (config_options[key].value_convert_inverse == NULL)
+    {
+        LOG(LOG_ERR, "configuration option %s's type does not support "
+            "converting to a string", config_options[key].name);
+        return NULL;
+    }
+
+    return config_options[key].value_convert_inverse(
+        config_options[key].value_convert_inverse_usr_arg,
+        config_values[key].value.single_value.data);
 }
 
 size_t config_get_length(
@@ -34,37 +55,72 @@ void const *const *config_get_array(
     return (void const *const *)config_values[key].value.array_value.data;
 }
 
-char * config_find(
-    const char * key)
+char ** config_get_string_array(
+    size_t key)
 {
     size_t i;
 
-    for (i = 0; i < config_num_options; ++i)
+    if (config_options[key].value_convert_inverse == NULL)
     {
-        if (strcmp(config_options[i].name, key) == 0)
+        LOG(LOG_ERR, "configuration option %s's type does not support "
+            "converting to a string", config_options[key].name);
+        return NULL;
+    }
+
+    if (config_values[key].value.array_value.num_items == 0)
+    {
+        return NULL;
+    }
+
+    char ** ret = calloc(config_values[key].value.array_value.num_items,
+                         sizeof(char *));
+    if (ret == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        goto err;
+    }
+
+    for (i = 0; i < config_values[key].value.array_value.num_items; ++i)
+    {
+        ret[i] = config_options[key].value_convert_inverse(
+            config_options[key].value_convert_inverse_usr_arg,
+            config_values[key].value.array_value.data[i]);
+        if (ret[i] == NULL)
         {
-            if (config_options[i].is_array)
-            {
-                LOG(LOG_ERR, "converting configuration option %s to a string "
-                    "is currently not supported because it's an array", key);
-                return NULL;
-            }
-
-            if (config_options[i].value_convert_inverse == NULL)
-            {
-                LOG(LOG_ERR, "configuration option %s's type does not support "
-                    "converting to a string", key);
-                return NULL;
-            }
-
-            return config_options[i].value_convert_inverse(
-                config_options[i].value_convert_inverse_usr_arg,
-                config_values[i].value.single_value.data);
+            goto err;
         }
     }
 
-    LOG(LOG_ERR, "configuration option %s not found", key);
+    return ret;
+
+err:
+    if (ret != NULL)
+    {
+        for (i = 0; i < config_values[key].value.array_value.num_items; ++i)
+        {
+            free(ret[i]);
+        }
+        free(ret);
+    }
+
     return NULL;
+}
+
+ssize_t config_find(
+    const char * name)
+{
+    size_t key;
+
+    for (key = 0; key < config_num_options; ++key)
+    {
+        if (strcmp(config_options[key].name, name) == 0)
+        {
+            return (ssize_t)key;
+        }
+    }
+
+    LOG(LOG_ERR, "configuration option %s not found", name);
+    return -1;
 }
 
 

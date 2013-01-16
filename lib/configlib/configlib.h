@@ -62,6 +62,10 @@ struct config_option {
 };
 
 
+/** Return whether or not the option is an array. */
+bool config_is_array(
+    size_t key);
+
 /**
     Return the value for a non-array config option.
 
@@ -71,6 +75,15 @@ struct config_option {
     information.
 */
 const void *config_get(
+    size_t key);
+
+/**
+    Return a string representation of the non-array config option, or NULL on
+    error.
+
+    The string should be free()d when it's no longer needed.
+*/
+char * config_get_string(
     size_t key);
 
 /** Return the length of an array config option. */
@@ -85,6 +98,18 @@ size_t config_get_length(
     are often easier to use.
 */
 void const * const * config_get_array(
+    size_t key);
+
+/**
+    Return an array of string representations of values in the array config
+    option, or NULL on error. Note that this may also return NULL if the array
+    has zero length.
+
+    Each of the strings should be individually free()d when they're no longer
+    needed, and the entire array should be free()d after each string is
+    free()d.
+*/
+char ** config_get_string_array(
     size_t key);
 
 /**
@@ -218,17 +243,18 @@ void const * const * config_get_array(
     }
 
 /**
-    Return a string representation of the config option specified by its name.
+    Find an option by name.
 
     @note This function should not be used by most C programs. It is not meant
           to be particularly fast, and it leads to repeatedly parsing the same
           data. This should mainly only be used for interfaces with other
           languages, e.g. shell.
 
-    @return string that should be free()d, or NULL on error
+    @param name Option name, as used in a configuration file.
+    @return Key for the option, or negative on error.
 */
-char * config_find(
-    const char * key);
+ssize_t config_find(
+    const char * name);
 
 /**
     Load configuration data from a config file. Note that most programs should
