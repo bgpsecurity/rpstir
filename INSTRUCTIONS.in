@@ -363,6 +363,12 @@ only readable by the owner because it will contain database password(s):
 Open ~/.@PACKAGE_NAME@.conf in an editor, read the comments, and edit the file as
 directed by the comments.
 
+Later on, if you want to test configuration changes before changing
+~/.@PACKAGE_NAME@.conf, you can make a new configuration file and use it
+temporarily by setting $@CONFIG_ENV_VAR@, for example:
+
+   @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
+
 
 2.4 SSH Subsystem
 

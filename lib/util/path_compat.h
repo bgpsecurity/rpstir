@@ -6,7 +6,8 @@
 
 #ifdef __NetBSD__
 
-// NetBSD's realpath(3) doesn't appear to be POSIX-compliant
+// NetBSD's realpath(3) doesn't appear to be POSIX-compliant.
+// It doesn't allocate a resolved_path if the parameter is NULL.
 char * realpath_compat(
     const char *path,
     char *resolved_path);
