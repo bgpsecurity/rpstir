@@ -394,6 +394,9 @@ the below line, modified for the options you want to pass to netcat:
 
 2.5 Self Test
 
+If you didn't create the configuration files in step 2.3.1, go back and do that
+now. Some of the self tests won't work without the test configuration file.
+
 To perform a basic validation of your install, run the self-test
 target by issuing the command:
 
