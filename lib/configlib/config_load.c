@@ -679,6 +679,15 @@ bool config_parse_file(
             goto done;
         }
 
+        if (strchr(line, '\r') != NULL)
+        {
+            config_message(head, LOG_ERR,
+                           "Currently only unix line endings are supported. "
+                           "See dos2unix(1) to convert line endings.");
+            ret = false;
+            goto done;
+        }
+
         skip_whitespace(line, &line_offset);
 
         if (option == CONFIG_OPTION_NONE)
