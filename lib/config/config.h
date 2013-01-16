@@ -147,7 +147,9 @@ CONFIG_GET_HELPER(CONFIG_LOG_DIR, char)
     If you set the environment variable with the name defined by CONFIG_ENV_VAR
     in configure.ac (currently $RPSTIR_CONFIG), this function will use that as
     a file to load configuration from. This allows users to try out one-time
-    configuration changes and test programs to use their own configuration.
+    configuration changes and test programs to use their own configuration. In
+    test scripts, consider using the shell function use_config_file() in
+    tests/test.include(.in).
 
     See also config_unload() in configlib.h.
 */
