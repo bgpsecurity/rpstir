@@ -5,8 +5,8 @@
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-mkdir -p $RPKI_ROOT/REPOSITORY
-mkdir -p $RPKI_ROOT/LOGS
+mkdir -p "$CONFIG_ROOT_DIR/REPOSITORY"
+mkdir -p "$CONFIG_ROOT_DIR/LOGS"
 
-echo About to clear database "${RPKI_DB}" ...
-rcli -x -t $RPKI_ROOT/REPOSITORY -y
+echo About to clear database ...
+rcli -x -t "$CONFIG_ROOT_DIR/REPOSITORY" -y

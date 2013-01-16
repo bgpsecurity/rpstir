@@ -22,13 +22,13 @@ fi
 THIS_SCRIPT_DIR=$(dirname $0)
 . $THIS_SCRIPT_DIR/../../../etc/envir.setup
 
-. $RPKI_ROOT/lib/util/trap_errors
+. $CONFIG_ROOT_DIR/lib/util/trap_errors
 
 # for the run and run_bg functions
 export TEST_LOG_NAME=subsys4
 
 # test functions
-. $RPKI_ROOT/tests/test.include
+. $CONFIG_ROOT_DIR/tests/test.include
 
 cd $THIS_SCRIPT_DIR
 
@@ -43,8 +43,8 @@ cd $THIS_SCRIPT_DIR
   cd ../
 
 # check for existing loader and fail if so
-if nc -z localhost $RPKI_PORT; then
-    echo "ERROR: port $RPKI_PORT is already in use.  Aborting subsystem test."
+if nc -z localhost `config_get RPKIPort`; then
+    echo "ERROR: port `config_get RPKIPort` is already in use.  Aborting subsystem test."
     exit 3
 fi
 
@@ -53,7 +53,7 @@ N=1
 while [ $N -le "4" ]; do
 # clear database
     ./initDB4 || check_errs $? "initDB failed!"
-    run_bg "rcli-w-$N" rcli -w $RPKI_PORT
+    run_bg "rcli-w-$N" rcli -w
     LOADER_PID=$!
      echo "Loader started for case ${N}"
      sleep 10

@@ -37,12 +37,14 @@ esac
 
 # Note: the order of these commands is important.
 
-# prevents a new server from starting
-echo "TRUNCATE TABLE rtr_session;" | $RPKI_MYSQL_CMD
+{
+    # prevents a new server from starting
+    echo "TRUNCATE TABLE rtr_session;"
 
-# makes all queries fail
-echo "TRUNCATE TABLE rtr_update;" | $RPKI_MYSQL_CMD
+    # makes all queries fail
+    echo "TRUNCATE TABLE rtr_update;"
 
-# gets rid of data
-echo "TRUNCATE TABLE rtr_full;" | $RPKI_MYSQL_CMD
-echo "TRUNCATE TABLE rtr_incremental;" | $RPKI_MYSQL_CMD
+    # gets rid of data
+    echo "TRUNCATE TABLE rtr_full;"
+    echo "TRUNCATE TABLE rtr_incremental;"
+} | mysql_cmd

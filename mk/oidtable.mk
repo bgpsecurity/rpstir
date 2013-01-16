@@ -20,3 +20,6 @@ var/oidtable: ./bin/asn1/make_oidtable $(var_oidtable_ASN1_H)
 		TEST_LOG_DIR=`dirname "$@"` \
 		tests/run_with_tool.sh \
 		./bin/asn1/make_oidtable var/oidtable $(var_oidtable_ASN1_H)
+
+AM_CPPFLAGS += \
+	-DOIDTABLE='"$(abs_top_builddir)/var/oidtable"'

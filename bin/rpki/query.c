@@ -12,7 +12,9 @@
 #include "rpki/myssl.h"
 #include "rpki/sqhl.h"
 #include "rpki/querySupport.h"
+#include "config/config.h"
 #include "util/logutils.h"
+#include "util/logging.h"
 
 
 /*
@@ -43,11 +45,6 @@
  * functions that are used to process SQL queries
  */
 static FILE *output;            /* place to print output (file or screen) */
-static int rejectStaleChain = 0;
-static int rejectStaleManifest = 0;
-static int rejectStaleCRL = 0;
-static int rejectNoManifest = 0;
-static int rejectNotYet = 0;
 static QueryField *globalFields[MAX_VALS];      /* to pass into handleResults */
 static int useLabels,
     multiline,
@@ -561,7 +558,7 @@ static int addRPSLFields(
 static int printUsage(
     )
 {
-    printf("\nPossible usages:\n  query -r [-o <outfile>] [-s <specsFile>]\n");
+    printf("\nPossible usages:\n  query -r [-o <outfile>]\n");
     printf
         ("     Note that this is the form that a typical user should always use.\n");
     printf("     It produces the expected output of the system: RPSL.\n");
@@ -569,12 +566,9 @@ static int printUsage(
     printf("       to view the supporting data.\n");
     printf("  query -l <type>\n");
     printf
-        ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-s <specsFile>] [-i] [-n] [-m]\n\nSwitches:\n");
+        ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-i] [-n] [-m]\n\nSwitches:\n");
     printf("  -r: Output the RPSL data\n");
     printf("  -o <filename>: print results to filename (default is screen)\n");
-    printf
-        ("  -s <filename>: filename specifies how to handle different types of staleness.\n");
-    printf("      See the sample specifications file sampleQuerySpecs\n");
     printf
         ("  -l <type>: list the possible display fields for the type, where type is\n");
     printf("     roa, cert, crl, or manifest.\n");
@@ -629,6 +623,12 @@ int main(
     {
         perror("Could not initialize query client log file");
         exit(1);
+    }
+    OPEN_LOG(PACKAGE_NAME "-query", LOG_USER);
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't initialize configuration");
+        exit(EXIT_FAILURE);
     }
     output = stdout;
     useLabels = 1;
@@ -690,13 +690,6 @@ int main(
         {
             orderp = argv[i + 1];
         }
-        else if (strcasecmp(argv[i], "-s") == 0)
-        {
-            if (parseStalenessSpecsFile(argv[i + 1]))
-                return -1;
-            getSpecsVals(&rejectStaleChain, &rejectStaleManifest,
-                         &rejectStaleCRL, &rejectNoManifest, &rejectNotYet);
-        }
         else
         {                       // unknown switch
             return printUsage();
@@ -716,6 +709,8 @@ int main(
     clauses[numClauses++] = NULL;
     if ((status = doQuery(displays, clauses, orderp)) < 0)
         log_msg(LOG_ERR, "%s", err2string(status));
+    config_unload();
+    CLOSE_LOG();
     log_close();
     return status;
 }

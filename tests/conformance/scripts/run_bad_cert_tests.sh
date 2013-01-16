@@ -1,4 +1,4 @@
-$RPKI_ROOT/run_scripts/initDB.sh
+$CONFIG_ROOT_DIR/run_scripts/initDB.sh
 rcli -y -F ../root.cer
 # rcli -y -f badCert2AKI.cer                # Duplicate AKI (-59), log: [aki_chk] duplicate AKI extensions
 # rcli -y -f badCert2ASNum.cer              # Duplicate AS# resources (-80), log: multiple AS extensions found

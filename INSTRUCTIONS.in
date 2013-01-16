@@ -21,7 +21,7 @@ Table of Contents
       2.2.2 Configure
       2.2.3 Build the Executables
     2.3 RPKI User Account
-      2.3.1 Environment Variables
+      2.3.1 Configuration File
     2.4 SSH Subsystem
     2.5 Self Test
     2.6 Post-Installation Procedures
@@ -168,13 +168,12 @@ ForceTrace      = Yes
 
 Then edit odbc.ini to set up a couple of system data sources.  This is
 slightly confusing: the user, password, and database name are actually
-ignored because they will be overridden by the RPKI software via
-environment variables.  However, depending on whether your database
-user has a password, in future steps below you will need to remember
-to set your RPKI_DSN variable to choose the DSN that is expecting a
-password (e.g. "myodbc3") or no password (e.g. "myodbc3-np").  Here is
-an example of a working odbc.ini that corresponds to the odbcinst.ini
-above:
+ignored because they will be overridden by the RPKI software.  However,
+depending on whether your database user has a password, in future steps
+below you will need to remember to set your DatabaseDSN configuration
+option to choose the DSN that is expecting a password (e.g. "myodbc3")
+or no password (e.g. "myodbc3-np").  Here is an example of a working
+odbc.ini that corresponds to the odbcinst.ini above:
 
 -----------------------------------------------------------------------------
 ;
@@ -348,47 +347,27 @@ substitute the appropriate command (e.g. "gmake" on FreeBSD).
 2.3 RPKI User Account
 
 Establish a user account from which to run the RPKI software.  This
-allows environment variables to be set consistently between logins,
-especially if the default values need to be overridden.  It also
-provides a place, ~/.ssh/authorized_keys, to put all the RPKI-RTR
-clients' public keys to allow SSH login.
+provides a place to put the configuration file and prevent other users
+from reading sensitive information in it. It also provides a place,
+~/.ssh/authorized_keys, to put all the RPKI-RTR clients' public keys to
+allow SSH login.
 
-2.3.1 Environment Variables
+2.3.1 Configuration File
 
-There are several environment variables used throughout the scripts
-and the code:
+Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf and make ~/.@PACKAGE_NAME@.conf
+only readable by the owner because it will contain database password(s):
 
-required: RPKI_ROOT - full path to the top-level directory of the RPKI tree
-required: RPKI_PORT - port number on which the loader and feeder communicate
-required: RPKI_DB - name of the MySQL database used to hold RPKI data
-required: RPKI_DBUSER - username for logging into the MySQL database
-required: RPKI_DBPASS - password for logging into the MySQL database, if any
-required: RPKI_DSN - the DSN for db connection (e.g. "myodbc3-np")
-optional: RPKI_ROOTPASSWORD - the MySQL root password
-optional: RPKI_NEW_VERSION_CHECK - URI to check for new versions of @PACKAGE_NAME@
+   cp etc/@PACKAGE_NAME@.conf ~/.@PACKAGE_NAME@.conf
+   chmod 600 ~/.@PACKAGE_NAME@.conf
 
-Set these environment variables to match your installation.  You may
-choose any unused ports for RPKI_PORT.
+Open ~/.@PACKAGE_NAME@.conf in an editor, read the comments, and edit the file as
+directed by the comments.
 
-Some variables are required for the operation of the RPKI software.
-Each script will check for the required environment, and if any
-variables are not set, the script will warn the user and automatically
-set them to the following defaults:
+Later on, if you want to test configuration changes before changing
+~/.@PACKAGE_NAME@.conf, you can make a new configuration file and use it
+temporarily by setting $@CONFIG_ENV_VAR@, for example:
 
-RPKI_DB = rpkidb7
-RPKI_PORT = 7344
-RPKI_ROOT = ${HOME}/rpki
-RPKI_DBUSER = rpki
-RPKI_DBPASS = bbn
-RPKI_DSN = myodbc3
-RPKI_NEW_VERSION_CHECK = https://rpki.bbn.com/check-version?package=@PACKAGE_NAME@&version=@PACKAGE_VERSION@
-
-If you ever need to directly run the binaries instead of running the
-scripts, there will be no setting of defaults for environment
-variables, so make sure to set these yourself.
-
-If you want to disable automatically checking for new versions of @PACKAGE_NAME@,
-set RPKI_NEW_VERSION_CHECK to "none".
+   @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
 
 
 2.4 SSH Subsystem
@@ -463,10 +442,6 @@ Results Statistics (results.py)      On demand by user
 Initialization (initDB.sh)           Ideally only once ("reset all")
 --------------------------------------------------------------------
 
-NOTE: the RTR updater (@PACKAGE_NAME@-rpki-rtr-update) requires a spec file.
-See etc/sampleQuerySpecs for an example file. You can use that
-example or write your own.
-
 
 2.6.2 Adjust Permissions
 
@@ -493,16 +468,17 @@ periodically.
 
 If you wish to download from publication points other than those
 derived from the trust anchors, then add those publication points
-to the file, additional_rsync_uris.config.
+to the configuration file's (~/.@PACKAGE_NAME@.conf) option
+RPKIExtraPublicationPoints.
 
 3.1.2 Clear database and local repository cache.
 
 First, clear any existing local cache and call the initDB script.
-This deletes the database, if any, with the name RPKI_DB and sets up a
-new database with all the right tables.  Be prepared to enter the root
-MySQL password twice.
+This deletes the database, if any, configured in ~/.@PACKAGE_NAME@.conf
+and sets up a new database with all the right tables. Be prepared to
+enter the root MySQL password twice.
 
-    cd $RPKI_ROOT
+    # cd to @PACKAGE_NAME@'s root directory
     rm -rf REPOSITORY LOGS chaser.log rcli.log rsync_aur.log
     mkdir -p REPOSITORY
     mkdir -p LOGS
@@ -537,7 +513,8 @@ Additionally, to get a copy of ARIN's TAL, go to
 https://www.arin.net/public/rpki/tal/index.xhtml and follow the
 directions there.
 
-    cd $RPKI_ROOT
+    # cd to @PACKAGE_NAME@'s root directory
+
     # The following three commands retrieve three example long-term
     # trust anchors in the form of TALs.  Operationally, these TALs
     # must be obtained through a trusted channel, not HTTP!
@@ -746,7 +723,7 @@ to use rcli, it is important to check and make sure that your MySQL
 installation is correct.  Try the following command (drop the '-p' if
 your MySQL user has no password):
 
-    mysql --user=$RPKI_DBUSER -p
+    mysql --user=YOUR_DB_USER -p
 
 This should connect you to the database and give a "mysql> " prompt
 back. If it does not, then your MySQL and/or ODBC installation is not

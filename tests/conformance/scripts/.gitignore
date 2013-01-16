@@ -10,3 +10,4 @@ make_test_CMS.sh
 make_test_CRL.sh
 make_test_MFT.sh
 make_test_cert.sh
+run_tests.sh

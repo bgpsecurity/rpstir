@@ -105,9 +105,8 @@ int dump_casn(
 
     if (_clear_error(casnp) < 0)
         return -1;
-    char *c;
-    if (!oidtable && (c = getenv("OIDTABLE")))
-        load_oidtable(c);
+    if (!oidtable && OIDTABLE)
+        load_oidtable(OIDTABLE);
 
     if ((ansr = _dumpsize(casnp, to, 0, 1)) >= 0)
         to[ansr++] = '\n';
@@ -122,9 +121,8 @@ int dump_size(
     long ansr;
     if (_clear_error(casnp) < 0)
         return -1;
-    char *c;
-    if (!oidtable && (c = getenv("OIDTABLE")))
-        load_oidtable(c);
+    if (!oidtable && OIDTABLE)
+        load_oidtable(OIDTABLE);
 
     if ((ansr = _dumpsize(casnp, buf, 0, 0)) >= 0)
         ansr++;

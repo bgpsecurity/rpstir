@@ -11,8 +11,7 @@ notation) "C*.cer", CRLs are "L*.crl", ROAs are "R*.roa", and manifests are
 "M*.man".  The meanings of the intervening characters are described under each
 type below.  For convenmience, the various tools produce an additional file
 suffixed ".raw" which shows the contents of the main file generated in more
-readable form.  (If the user sets the environment variable OIDTABLE to point
-to cg/asn/oidtable, the OBJECT IDENTIFIERS will be interpreted in the raw file.)
+readable form.
 
     In addition to the "makeall" script there are several shell scripts that
 are used to manipulate the test data and run tests.  The script "testall.sh"
