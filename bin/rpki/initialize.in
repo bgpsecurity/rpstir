@@ -53,6 +53,6 @@ make_clean_dir "$CACHE_DIR" "$LOG_DIR"
 
 rcli -x -t "$CACHE_DIR" -y || fatal "Couldn't initialize database"
 
-rpki-rtr-clear || fatal "Couldn't clear rpki-rtr data"
+rpki-rtr-clear -f || fatal "Couldn't clear rpki-rtr data"
 
 rpki-rtr-initialize || fatal "Couldn't initialize rpki-rtr data"
