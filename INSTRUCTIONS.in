@@ -697,7 +697,7 @@ sections in tools/ccopts.sh that enable ODBC support.
 A.3.3 Ubuntu 12.04-12.10 x86
 
 These are the exact instructions for installing RPSTIR on a fresh copy
-of 32-bit Ubuntu 12.04 and Ubuntu 12.10, as of 11/16/2012.
+of 32-bit Ubuntu 12.04 and Ubuntu 12.10, as of 01/18/2013.
 
 NOTE: Ubuntu 12.10 runs slowly without 3D acceleration due to the
 removal of Unity 2D.  In VirtualBox 4.2.4, fix it like so:
@@ -708,11 +708,12 @@ the final "/usr/lib/nux/unity_support_test -p"
 # Install the best editor :-)
 sudo apt-get install emacs
 
-# Build and version control tools
-sudo apt-get install git tig automake libtool openjdk-7-jdk build-essential
+# Build tools
+sudo apt-get install openjdk-7-jdk build-essential
 
 # RPSTIR dependencies: standalone programs
-sudo apt-get install xterm curl
+sudo apt-get install curl
+sudo apt-get install unzip
 sudo apt-get install mysql-server  # MySQL root password: rpstir
 sudo mysql_secure_installation
 
@@ -788,22 +789,35 @@ odbcinst -j     # check that the paths below are correct
 
 # Configure MySQL
 mysql -u root -p
-  CREATE USER 'bbn'@'localhost' IDENTIFIED BY 'rpstir';
-  GRANT ALL PRIVILEGES ON rpstirdb.* TO 'bbn'@'localhost';
+  CREATE USER 'rpstir'@'localhost' IDENTIFIED BY 'bbn';
+  CREATE DATABASE rpstir;
+  GRANT ALL PRIVILEGES ON rpstir.* TO 'rpstir'@'localhost';
+  CREATE DATABASE rpstir_test;
+  GRANT ALL PRIVILEGES ON rpstir_test.* TO 'rpstir'@'localhost';
   quit
 
-# Configure environment variables
-emacs ~/.bashrc
-  # RPSTIR environment variables
-  export RPKI_ROOT=${HOME}/rpstir  # REMEMBER TO CHANGE THIS
-  export RPKI_DB=rpstirdb
-  export RPKI_PORT=31416
-  export RPKI_DBUSER=bbn
-  export RPKI_DBPASS=rpstir
-  export RPKI_ROOTPASSWORD=rpstir
-  export RPKI_DSN=myodbc
-source ~/.bashrc
+# Configure, build, test, and install rpstir
+cd path/to/rpstir # the directory this file is in
+./configure --enable-silent-rules
+make
+cp etc/rpstir.conf ~/.rpstir.conf
+cp etc/test.conf ~/.rpstir.test.conf
+chmod 600 ~/.rpstir.conf ~/.rpstir.test.conf
+emacs ~/.rpstir.conf # read the comments for each option, and make sure to set these:
+  Database rpstir
+  DatabaseUser rpstir
+  DatabasePassword bbn
+  DatabaseRootPassword rpstir
+emacs ~/.rpstir.test.conf # set these options:
+  Database rpstir_test
+  DatabaseUser rpstir
+  DatabasePassword bbn
+  DatabaseRootPassword rpstir
+make check
+sudo make install
 
-# Build RPSTIR
-cd $RPKI_ROOT
-./configure --enable-silent-rules && make && make check
+# Setup rpstir for your user
+sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
+sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
