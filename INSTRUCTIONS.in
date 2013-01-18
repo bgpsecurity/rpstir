@@ -448,7 +448,7 @@ be created and the user from step 2.1.1 should have full access to these
 directories.  For example, if the directories are set to their defaults and the
 username is @PACKAGE_NAME@ in group @PACKAGE_NAME@:
 
-   sudo mkdir /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   sudo mkdir -p /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
    sudo chown @PACKAGE_NAME@:@PACKAGE_NAME@ /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
    sudo chmod 700 /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
 
