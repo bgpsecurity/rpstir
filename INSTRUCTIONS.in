@@ -434,6 +434,14 @@ As root, run "make install" to install @PACKAGE_NAME@ on the system.
 
    sudo make install
 
+By default this will install various binaries to /usr/local/bin, which should
+be in the $PATH environment variable.  Additional binaries, which should only
+be used internally or by experts, are in /usr/local/libexec/@PACKAGE_NAME@.
+Documentation, example configuration, and example trust anchor locators are
+installed in /usr/local/share/doc/@PACKAGE_NAME@.  Some internal data is
+installed to /usr/local/share/@PACKAGE_NAME@.  In the next step, you'll manually
+create cache and log directories.
+
 
 2.7 Post-Installation Procedures
 
