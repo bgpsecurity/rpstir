@@ -6,7 +6,6 @@ EXTRA_DIST += \
 	doc/api.txt \
 	doc/glossary.txt \
 	ChangeLog \
-	INSTRUCTIONS \
 	LICENSE \
 	README
 
@@ -19,3 +18,5 @@ MK_SUBST_FILES += etc/rpstir.conf
 etc/rpstir.conf: $(srcdir)/etc/rpstir.conf.in
 
 dist_pkgdata_DATA += etc/version-server-ca.pem
+
+dist_doc_DATA += INSTRUCTIONS
