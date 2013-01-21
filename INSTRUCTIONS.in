@@ -489,7 +489,7 @@ frequency to run it.
 
 3.1.2 @PACKAGE_NAME@-rpki-rtr-daemon
 
-@PACKAGE_NAME@-rpki-rtr-daemon is @PACKAGE_NAME@'s rpki-rtr [draft-ietf-sidr-rpki-rtr]
+@PACKAGE_NAME@-rpki-rtr-daemon is @PACKAGE_NAME@'s rpki-rtr [rfc6810]
 server.  If you plan to run an rpki-rtr server, this should be started on boot,
 e.g. from an init script or from rc.local. This program does not daemonize, but
 something like start-stop-daemon can be used.
