@@ -46,6 +46,7 @@ Appendix A. Troubleshooting
       A.3.1 OpenBSD
       A.3.2 FreeBSD
       A.3.3 Ubuntu 12.04-12.10 x86
+    A.4 Configure can't find installed software
 
 ===============================================================================
 
@@ -829,3 +830,11 @@ sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
 sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
+
+
+A.4 Configure can't find installed software
+
+If you installed a dependency from your operating system's package manager and
+./configure is giving an error about being unable to find the dependency, you
+may need to install an additional package with the extension -dev or -devel.
+For example, on Ubuntu, you need to install unixodbc-dev and libmysqlclient-dev.
