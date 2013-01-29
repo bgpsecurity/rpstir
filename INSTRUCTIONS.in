@@ -115,10 +115,10 @@ the custom-compiled binary that supports RFC 3779 extensions.
 
 Install unixODBC from your operating system's package manager or
 http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
-recommended.  Install the MySQL database server, at least version 5.1,
-from the package manager or http://mysql.org.  Install the MySQL
-Connector/ODBC driver, at least version 3.51, from the package manager
-or mysql.org.
+recommended.  Install the MySQL database server, client, and client
+libraries, at least version 5.1, from the package manager or
+http://mysql.org.  Install the MySQL Connector/ODBC driver, at least
+version 3.51, from the package manager or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
