@@ -50,13 +50,13 @@ do_subst = $(SED) \
 	-e 's,[@]SHELL_BASH[@],$(SHELL_BASH),g'
 
 $(MK_SUBST_FILES): Makefile
-	rm -f "$@"
-	mkdir -p "$(@D)"
+	$(AM_V_GEN)rm -f "$@" && \
+	mkdir -p "$(@D)" && \
 	$(do_subst) < "$(srcdir)/$@.in" > "$@" || rm -f "$@"
 
 $(MK_SUBST_FILES_EXEC): Makefile
-	rm -f "$@"
-	mkdir -p "$(@D)"
+	$(AM_V_GEN)rm -f "$@" && \
+	mkdir -p "$(@D)" && \
 	$(do_subst) < "$(srcdir)/$@.in" > "$@" && chmod +x "$@" || rm -f "$@"
 
 CLEANFILES += $(MK_SUBST_FILES) $(MK_SUBST_FILES_EXEC)

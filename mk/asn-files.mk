@@ -29,7 +29,7 @@ ASN_GENERATION_DEPS = \
 # http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
 # for an overview.
 $(ASN_C_FILES) $(ASN_H_FILES): $(ASN_GENERATION_DEPS)
-	tmpdir=`$(MKTEMP_DIR)` && \
+	$(AM_V_GEN)tmpdir=`$(MKTEMP_DIR)` && \
 	base=`echo "$(@F)" | $(SED) "s/\\.[ch]\$$//"` && \
 	for f in $(ASN_BUILT_FILES); do \
 		dir=`dirname "$$f"` && \
