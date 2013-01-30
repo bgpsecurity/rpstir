@@ -26,6 +26,14 @@ trap_errors = \
 ## Rules for generating files from .in.
 ## NOTE: Each file should already have its own dependency target like
 ##       "foo: $(srcdir)/foo.in" defined elsewhere.
+##
+## The reason for doing this "manually" is that scripts need
+## hard-coded paths rather than variables like $(prefix), which is
+## desirable for Makefiles.  Thus, instead of generating fooscript
+## from fooscript.in at 'configure' time, we must hold off on
+## generating them until 'make' time, at which point we apply the
+## substitutions below.  See below for rationale:
+## http://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Installation-Directory-Variables.html
 do_subst = $(SED) \
 	-e 's,[@]abs_top_builddir[@],$(abs_top_builddir),g' \
 	-e 's,[@]abs_top_srcdir[@],$(abs_top_srcdir),g' \
