@@ -71,7 +71,7 @@ int main(
     int ksiz = readvsize_casn(&keyfile.content.bbb.ggg.iii.nnn.ooo.ppp.key,
                               &keyp);
     uchar hashbuf[40];
-    int hsize = gen_hash(&keyp[1], ksiz - 1, hashbuf, CRYPT_ALGO_SHA);
+    int hsize = gen_hash(&keyp[1], ksiz - 1, hashbuf, CRYPT_ALGO_SHA1);
     if (hsize < 0)
         fatal(5, "hash");
     char *buf,
