@@ -1,7 +1,6 @@
 AM_CFLAGS = \
 	-Wall \
 	-Wextra \
-	-Werror \
 	-g
 
 AM_CPPFLAGS = \
