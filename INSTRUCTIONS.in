@@ -787,12 +787,10 @@ emacs ~/.rpstir.conf # read the comments for each option, and make sure to set t
   Database rpstir
   DatabaseUser rpstir
   DatabasePassword bbn
-  DatabaseRootPassword rpstir
 emacs ~/.rpstir.test.conf # set these options:
   Database rpstir_test
   DatabaseUser rpstir
   DatabasePassword bbn
-  DatabaseRootPassword rpstir
 make check
 sudo make install
 

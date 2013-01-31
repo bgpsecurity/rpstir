@@ -386,15 +386,6 @@ int createdbscm(
         return (ERR_SCM_NOMEM);
     (void)snprintf(mk, leen, "CREATE DATABASE %s;", dbname);
     sta = statementscm_no_data(conp, mk);
-    if (sta < 0)
-    {
-        free((void *)mk);
-        return (sta);
-    }
-    (void)snprintf(mk, leen,
-                   "GRANT DELETE, INSERT, LOCK TABLES, SELECT, UPDATE ON %s.* TO '%s'@'localhost';",
-                   dbname, dbuser);
-    sta = statementscm_no_data(conp, mk);
     free((void *)mk);
     return (sta);
 }

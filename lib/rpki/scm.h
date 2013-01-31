@@ -53,9 +53,9 @@ extern scm *initscm(
 extern void freescm(
     scm * scmp);
 extern char *makedsnscm(
-    char *pref,
-    char *db,
-    char *usr,
+    const char *pref,
+    const char *db,
+    const char *usr,
     const char *pass);
 extern scmtab *findtablescm(
     scm * scmp,
