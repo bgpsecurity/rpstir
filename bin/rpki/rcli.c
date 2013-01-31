@@ -125,9 +125,11 @@ static int deleteop(
     // drop the database, destroying all tables in the process
     sta = deletedbscm(conp, scmp->db);
     if (sta == 0)
-        LOG(LOG_NOTICE, "Delete operation succeeded");
+        LOG(LOG_NOTICE, "Delete database (%s) operation succeeded",
+            scmp->db);
     else
-        LOG(LOG_ERR, "Delete operation failed: %s", geterrorscm(conp));
+        LOG(LOG_ERR, "Delete database (%s) operation failed: %s",
+            scmp->db, geterrorscm(conp));
     return (sta);
 }
 
@@ -150,11 +152,12 @@ static int createop(
     // step 1: create the database itself
     sta = createdbscm(conp, scmp->db, scmp->dbuser);
     if (sta == 0)
-        LOG(LOG_NOTICE, "Create database operation succeeded");
+        LOG(LOG_NOTICE, "Create database (%s) operation succeeded",
+            scmp->db);
     else
     {
-        LOG(LOG_ERR, "Create database operation failed: %s",
-                geterrorscm(conp));
+        LOG(LOG_ERR, "Create database (%s) operation failed: %s",
+            scmp->db, geterrorscm(conp));
         return (sta);
     }
     // step 2: create all the tables in the database
@@ -861,7 +864,6 @@ int main(
     char *outfull = NULL;
     char *outdir = NULL;
     char *tmpdsn = NULL;
-    const char *password = NULL;
     char *ne;
     char *porto = NULL;
     char errmsg[1024];
@@ -997,33 +999,18 @@ int main(
      * A test dsn is needed for operations that operate on the overall
      * database state as opposed to the rpki tables, namely the create and
      * delete operations.
-     * 
-     * Note that this code is done here in main() rather than in a subroutine
-     * in order to avoid passing parameter(s) on the stack that contain the
-     * root database password. 
      */
     if ((do_create + do_delete) > 0)
     {
         /*
-         * These privileged operations will need a password. 
+         * Note that in the following line, we do not intend to edit
+         * the database named "information_schema".  We are simply
+         * filling in the "database name" parameter with something
+         * that is guaranteed to be valid for MySQL.
          */
-        password = CONFIG_DATABASE_ROOT_PASSWORD_get();
-
-        if (password == NULL)   /* env variable does not specify password */
-        {
-            /*
-             * note: getpass manpage states that "this function is obsolete,
-             * do not use" and it is possible to write a local one, but leave
-             * this for now 
-             */
-            password = getpass("Enter MySQL root password: ");
-        }
-        /*
-         * Note that in the following line, we do not intend to edit the
-         * database named "mysql".  We are simply filling in the "database
-         * name" parameter with something that is guaranteed to be valid. 
-         */
-        tmpdsn = makedsnscm(scmp->dsnpref, "mysql", "root", password);
+        tmpdsn = makedsnscm(scmp->dsnpref, "information_schema",
+                            CONFIG_DATABASE_USER_get(),
+                            CONFIG_DATABASE_PASSWORD_get());
         if (tmpdsn == NULL)
         {
             membail();

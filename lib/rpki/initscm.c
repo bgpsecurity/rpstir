@@ -247,9 +247,9 @@ static int preparetables(
  */
 
 char *makedsnscm(
-    char *pref,
-    char *db,
-    char *usr,
+    const char *pref,
+    const char *db,
+    const char *usr,
     const char *pass)
 {
     char *ptr;
