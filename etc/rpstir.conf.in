@@ -13,9 +13,6 @@ DatabaseUser some_user
 # Password of DatabaseUser above.
 DatabasePassword some_password
 
-# Database root password, for initializing the database.
-DatabaseRootPassword some_password
-
 # ODBC DSN for the Database
 DatabaseDSN myodbc
 
