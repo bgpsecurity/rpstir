@@ -1,21 +1,16 @@
 #!@SHELL_BASH@
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
-
-# test functions
-. $CONFIG_ROOT_DIR/tests/test.include
+@trap_errors@
 
 echo "Expecting 11 roa filenames"
-export @CONFIG_ENV_VAR@=specs.1.3.conf
+use_config_file "$TESTS_SRCDIR/specs.1.3.conf"
 CMDLINE="query -t roa -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 11
 
 echo "Expecting 11 roa filenames"
-export @CONFIG_ENV_VAR@=specs.3.3b.conf
+use_config_file "$TESTS_SRCDIR/specs.3.3b.conf"
 CMDLINE="query -t roa -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 11
 

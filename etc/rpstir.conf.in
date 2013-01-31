@@ -19,6 +19,23 @@ DatabaseRootPassword some_password
 # ODBC DSN for the Database
 DatabaseDSN myodbc
 
+# List of TALs to use. These should be stored locally such that only trusted
+# users can modify these files. Here's more information on TALs:
+#
+# A trust anchor certificate in the RPKI is obtained through a long term
+# Trust Anchor Locator (TAL), which allows distribution via a mix of
+# out-of-band and online means [RFC 6490].  In practice, relying parties
+# obtain TAL files through a trusted out-of-band channel of their choice.
+# For testing purposes, you can use Rob Austein's collection of sample trust
+# anchors found at
+# http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
+# Additionally, to get a copy of ARIN's TAL, go to
+# https://www.arin.net/public/rpki/tal/index.xhtml and follow the
+# directions there.
+TrustAnchorLocators \
+    path/to/bar.tal \
+    path/to/foo.tal
+
 # How much to log. Only messages that are at the specified level or more
 # important are logged. See syslog(3) for the possible values.
 #LogLevel LOG_INFO
@@ -69,3 +86,9 @@ DatabaseDSN myodbc
 # Where to check for new versions of @PACKAGE_NAME@. If you want to disable
 # checking for new versions, set it to the exact string "none".
 #NewVersionCheck "https://rpki.bbn.com/check-version?package=@PACKAGE_NAME@&version=@PACKAGE_VERSION@"
+
+# Where to store the cache of the global RPKI.
+#RPKICacheDir @pkgcachedir@
+
+# Where to store logs.
+#LogDir @pkglogdir@

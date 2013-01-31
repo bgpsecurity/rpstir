@@ -1,6 +1,8 @@
 #!/bin/sh -e
 
-cd `dirname "$0"`
+@SETUP_ENVIRONMENT@
+
+cd "$TESTS_BUILDDIR"
 
 ./makecerts
 ./makecrls

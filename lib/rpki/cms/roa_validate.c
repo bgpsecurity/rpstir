@@ -52,7 +52,7 @@ int check_sig(
         return ERR_SCM_INVALSIG;;
     buf = (uchar *) calloc(1, bsize);
     encode_casn(&certp->toBeSigned.subjectPublicKeyInfo.self, buf);
-    sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
+    sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA1);
     free(buf);
 
     // generate the sha256 hash of the signed attributes. We don't call
@@ -190,7 +190,7 @@ static int check_cert(
     uchar *pubkey;
     tmp = readvsize_casn(spkeyp, &pubkey);
     uchar khash[22];
-    tmp = gen_hash(&pubkey[1], tmp - 1, khash, CRYPT_ALGO_SHA);
+    tmp = gen_hash(&pubkey[1], tmp - 1, khash, CRYPT_ALGO_SHA1);
     free(pubkey);
     int err = 1;                // require SKI
     struct Extension *extp;

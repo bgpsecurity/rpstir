@@ -162,7 +162,7 @@ def update_one_TA(tal_file):
         existing_TA_removed = True
 
     # Add new TA to database.
-    ret = subprocess.call([rcli_path, '-y', '-F', local_path])
+    ret = subprocess.call(['rcli', '-y', '-F', local_path])
     
     # If failure, restore old TA in the filesystem and database.
     if ret != 0:
@@ -174,7 +174,7 @@ def update_one_TA(tal_file):
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
         if existing_TA_removed:
-            restore_ret = subprocess.call([rcli_path, '-y', '-F', local_path])
+            restore_ret = subprocess.call(['rcli', '-y', '-F', local_path])
             if restore_ret != 0:
                 syslog(LOG_ERR,
                     "Error: could not restore old TA, this is bad!")
@@ -191,7 +191,7 @@ def delete_other_TAs(keep_paths):
     keep_paths = set([os.path.normpath(path) for path in keep_paths])
 
     query_p = subprocess.Popen(
-        [query_path, '-t', 'cert', '-d', 'pathname', '-n', '-i'],
+        ['query', '-t', 'cert', '-d', 'pathname', '-n', '-i'],
         stdout=subprocess.PIPE)
     all_certs = query_p.communicate()[0].splitlines()
     if query_p.returncode != 0:
@@ -323,7 +323,7 @@ def verify_TA_signature(cert_path):
     return ret
 
 def verify_SubjectPubKeyInfo(cert_path, pubkey_base64):
-    p1 = subprocess.Popen([extractkey_path, cert_path], stdout=subprocess.PIPE)
+    p1 = subprocess.Popen(['extractPubKeyInfo', cert_path], stdout=subprocess.PIPE)
     pubkey_binary = p1.communicate()[0]
     ret = p1.returncode
     if ret != 0:
@@ -337,7 +337,7 @@ def verify_SubjectPubKeyInfo(cert_path, pubkey_base64):
     return 0
 
 def remove_from_db(cert_path):
-    return subprocess.call([rcli_path, '-d', cert_path])
+    return subprocess.call(['rcli', '-d', cert_path])
 
 ###############################################################################
 
@@ -364,22 +364,10 @@ if __name__ == "__main__":
         sys.exit(1)
     
     # Get top-level RPKI directory, and compute local repository cache path
-    rpki_root = subprocess.check_output(["config_get", "RootDir"]).strip().rstrip("/")
-    repo_path = rpki_root + "/REPOSITORY"
+    repo_path = subprocess.Popen(["config_get", "RPKICacheDir"],
+                                 stdout=subprocess.PIPE) \
+        .communicate()[0].strip().rstrip("/")
     ta_repo_path = repo_path + "/trustanchors"
-    rcli_path = rpki_root + "/bin/rpki/rcli"
-    query_path = rpki_root + "/bin/rpki/query"
-    extractkey_path = rpki_root + "/bin/rpki-object/extractPubKeyInfo"
-    if not os.path.exists(rpki_root):
-        print >>sys.stderr, "Error: rpki_root (%s) is not a valid path"
-        sys.exit(1)
-    if not os.path.exists(rcli_path):
-        print >>sys.stderr, "Error: rcli_path (%s) is not a valid path"
-        sys.exit(1)
-    if not os.path.exists(extractkey_path):
-        print >>sys.stderr, "Error: extractkey_path (%s) is not a valid path"
-        sys.exit(1)
-    syslog(LOG_INFO, "Using RPKI root directory: " + rpki_root)
     syslog(LOG_INFO, "Using local repository path: " + repo_path)
     syslog(LOG_INFO, "Using local trust anchor path: " + ta_repo_path)
     

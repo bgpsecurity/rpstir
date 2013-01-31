@@ -18,8 +18,8 @@
 #include <time.h>
 #include "create_object.h"
 #include "obj_err.h"
+#include "config/config.h"
 
-char *crl_template = TEMPLATES_DIR "/crl_template.crl";
 
 /*
  * function declarations 
@@ -561,7 +561,7 @@ int create_crl(
 
     if (!templateFile)
     {
-        templateFile = crl_template;
+        templateFile = CONFIG_TEMPLATE_CRL_get();
     }
 
     // Read the crl template into the certifcate

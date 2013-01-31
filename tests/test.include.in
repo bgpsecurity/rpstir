@@ -1,6 +1,37 @@
+# This file should store functions only used by tests and undo any effects of
+# envir.setup that are not correct for tests (e.g. $PATH mangling).
+#
+# This file should not be included directly by regular scripts. It should only
+# be included via @SETUP_ENVIRONMENT@ or by setup_test_environment.sh, which
+# does bootstrapping for @SETUP_ENVIRONMENT@.
+
+# add all binaries to the path
+BIN_DIRS="`@MKTEMP@`"
+find "$TESTS_TOP_BUILDDIR/bin" "$TESTS_TOP_SRCDIR/bin" -type d -print | \
+    sort | uniq > "$BIN_DIRS"
+while read path_dir; do
+    case "$path_dir" in
+        */tests | */tests/*)
+            ;;
+        *)
+            PATH="$path_dir:$PATH"
+            ;;
+    esac
+done < "$BIN_DIRS"
+export PATH
+rm -f "$BIN_DIRS"
+unset BIN_DIRS
+
+# Remove @pkglibexecdir@ from the path.
+# It could have been added by envir.setup, but it's inappropriate in tests.
+export PATH=`echo "$PATH" | \
+    sed "s,:@pkglibexecdir@:,:,g" | \
+    sed "s,^@pkglibexecdir@:,," | \
+    sed "s,:@pkglibexecdir@\$,,"`
+
+
 # Shell function for checking if the number of lines of output matches
 # the expected number.
-
 check_num_output_lines()
 {
     # Parameter 1 is the command line.
@@ -54,4 +85,12 @@ run () {
     run_bg "$@" || return $?
     wait $! || return $?
     return 0
+}
+
+# Any test that calls use_config_file() should ensure that the config file
+# it uses includes $TESTS_INCLUDE_CONFIG.
+use_config_file () {
+    test $# -eq 1 || fatal "Usage: $0 path/to/file.conf"
+
+    export @CONFIG_ENV_VAR@="$1"
 }

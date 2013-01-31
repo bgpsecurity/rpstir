@@ -3,14 +3,13 @@
 # gen_all_CMSs.sh - create all CMS test cases for RPKI syntactic
 #                   conformance test
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $THIS_SCRIPT_DIR/../../../lib/util/trap_errors
+@trap_errors@
 
-CONFORMANCE_ROOT="$CONFIG_ROOT_DIR/tests/conformance"
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
 
 # Usage
 usage ( ) {
@@ -87,7 +86,7 @@ Outputs:
 # lower_case.
 
 # Options and defaults
-OUTPUT_DIR="$CONFORMANCE_ROOT/raw/root"
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
 USE_EXISTING_PATCHES=
 
 # Process command line arguments.
@@ -119,7 +118,7 @@ else
     patch_option=
 fi
 
-single_CMS_script="$CONFORMANCE_ROOT/scripts/make_test_CMS.sh"
+single_CMS_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CMS.sh"
 single_CMS_cmd="${single_CMS_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################

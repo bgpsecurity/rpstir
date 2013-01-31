@@ -3,17 +3,15 @@
 # whitespace separated list of files to ignore the results from
 IGNORE=""
 
-THIS_SCRIPT_DIR=`dirname "$0"`
-. "$THIS_SCRIPT_DIR/../../../etc/envir.setup"
+@SETUP_ENVIRONMENT@
 
-cd "$THIS_SCRIPT_DIR"
+cd "$TESTS_BUILDDIR"
 
-TEST_LOG_DIR="`pwd`"
+TEST_LOG_DIR="$TESTS_BUILDDIR"
 TEST_LOG_NAME=`basename "$0"`
 STRICT_CHECKS=0
-. "$RPKI_ROOT/tests/test.include"
 
-export @CONFIG_ENV_VAR@="`pwd`/conformance.conf"
+use_config_file "$TESTS_SRCDIR/conformance.conf"
 
 ./gen_all.sh
 
@@ -96,10 +94,6 @@ list_files () {
 	for FILE in $FILES; do echo "$PREFIX$FILE"; done | sort
 }
 
-init_db () {
-	initDB.sh
-}
-
 reset_db () {
 	run "rcli-x-t" rcli -x -t "$OUTPUT_DIR" -y
 	run "rcli-root.cer" rcli -s -y -F "$OUTPUT_DIR"/root.cer
@@ -107,8 +101,6 @@ reset_db () {
 	run "rcli-root.mft" rcli -s -y -f "$OUTPUT_DIR"/root/root.mft
 }
 
-
-init_db
 
 for BAD_ROOT in badRoot*.cer; do
 	reset_db

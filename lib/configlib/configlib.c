@@ -185,7 +185,6 @@ bool config_load(
     char const * const * default_filenames)
 {
     size_t i;
-    const char * default_filename = NULL;
 
     config_num_options = num_options;
     config_options = options;
@@ -200,13 +199,14 @@ bool config_load(
     }
 
     for (i = 0;
-        default_filenames != NULL &&
+        filename == NULL &&
+            default_filenames != NULL &&
             default_filenames[i] != NULL;
         ++i)
     {
         if (access(default_filenames[i], R_OK) == 0)
         {
-            default_filename = default_filenames[i];
+            filename = default_filenames[i];
             break;
         }
         else if (errno == ENOENT)
@@ -235,29 +235,14 @@ bool config_load(
         return false;
     }
 
-    bool loaded_from_file = false;
-
     struct config_context context;
     context.is_default = false;
 
-    if (default_filename != NULL)
+    if (filename == NULL)
     {
-        context.context.file_context.file = default_filename;
-        context.context.file_context.line = 0;
-        context.context.file_context.includes = NULL;
-
-        if (!config_parse_file
-            (config_num_options, config_options, config_values, &context,
-             &context.context.file_context))
-        {
-            config_unload();
-            return false;
-        }
-
-        loaded_from_file = true;
+        LOG(LOG_DEBUG, "no configuration file specified or available");
     }
-
-    if (filename != NULL)
+    else
     {
         context.context.file_context.file = filename;
         context.context.file_context.line = 0;
@@ -270,13 +255,6 @@ bool config_load(
             config_unload();
             return false;
         }
-
-        loaded_from_file = true;
-    }
-
-    if (!loaded_from_file)
-    {
-        LOG(LOG_DEBUG, "no configuration file specified or available");
     }
 
     for (i = 0; i < config_num_options; ++i)

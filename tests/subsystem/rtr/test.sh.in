@@ -1,33 +1,29 @@
 #!@SHELL_BASH@ -e
 
-cd "`dirname "$0"`"
-
-. ../../../etc/envir.setup
-
 TEST_LOG_NAME=rtr
 STRICT_CHECKS=1
-. $CONFIG_ROOT_DIR/tests/test.include
 
+@SETUP_ENVIRONMENT@
 
-SERVER="@PACKAGE_NAME@-rpki-rtr-daemon"
-CLIENT="@PACKAGE_NAME@-rpki-rtr-test-client"
-UPDATE="@PACKAGE_NAME@-rpki-rtr-update"
+SERVER="rpki-rtr-daemon"
+CLIENT="rpki-rtr-test-client"
+UPDATE="rpki-rtr-update"
 PORT=1234
 SESSION=42
 WRONG_SESSION=4242
 SERVER_START_TIMEOUT=10
 SERVER_STOP_TIMEOUT=10
 CLIENT_MULTIPLE_TIMEOUT=120
-export @CONFIG_ENV_VAR@=test.conf
+use_config_file "$TESTS_SRCDIR/test.conf"
 
 client_raw () {
 	SUBTEST_NAME="$1"
 	shift
 	EXPECTED_RESULTS="$1"
 	shift
-	echo "--- $SUBTEST_NAME" | tee -a response.log
-	echo "--- expecting: $EXPECTED_RESULTS" | tee -a response.log
-	"$@" | "$CLIENT" client_one localhost $PORT | tee -a response.log
+	echo "--- $SUBTEST_NAME" | tee -a "$TESTS_BUILDDIR/response.log"
+	echo "--- expecting: $EXPECTED_RESULTS" | tee -a "$TESTS_BUILDDIR/response.log"
+	"$@" | "$CLIENT" client_one localhost $PORT | tee -a "$TESTS_BUILDDIR/response.log"
 }
 
 client () {
@@ -46,17 +42,17 @@ client_multiple_start () {
 	SUBTEST_NAME="$1"
 	EXPECTED_RESULTS="$2"
 	N="$3"
-	echo "--- $SUBTEST_NAME" | tee -a response.log
-	echo "--- expecting: $EXPECTED_RESULTS x$N" | tee -a response.log
+	echo "--- $SUBTEST_NAME" | tee -a "$TESTS_BUILDDIR/response.log"
+	echo "--- expecting: $EXPECTED_RESULTS x$N" | tee -a "$TESTS_BUILDDIR/response.log"
 
 	CLIENT_MULTIPLE_pids=""
 
-	tail -f -n 0 response.log &
+	tail -f -n 0 "$TESTS_BUILDDIR/response.log" &
 	CLIENT_MULTIPLE_tail_pid="$!"
 	MULT_CLIENT_CLEANUP=1
 
 	for x in `seq 1 "$N"`; do
-		"$CLIENT" client_one localhost $PORT >> response.log &
+		"$CLIENT" client_one localhost $PORT >> "$TESTS_BUILDDIR/response.log" &
 		CLIENT_MULTIPLE_pids="$CLIENT_MULTIPLE_pids $!"
 	done
 }
@@ -116,19 +112,20 @@ client_multiple_wait () {
 
 compare () {
 	name="$1"
-	printf >&2 "comparing \"%s\" to \"%s\"... " "$name" "$name.correct"
-	if diff -u "$name.correct" "$name" > "$name.diff" 2>/dev/null; then
+	printf >&2 "comparing \"%s\" to \"%s\"... " "$TESTS_BUILDDIR/$name" "$TESTS_SRCDIR/$name.correct"
+	if diff -u "$TESTS_SRCDIR/$name.correct" "$TESTS_BUILDDIR/$name" > "$TESTS_BUILDDIR/$name.diff" 2>/dev/null; then
 		echo >&2 "success."
 	else
 		echo >&2 "failed!"
-		echo >&2 "See \"$name.diff\" for the differences."
+		echo >&2 "See \"$TESTS_BUILDDIR/$name.diff\" for the differences."
 		exit 1
 	fi
 }
 
 init () {
-	rcli -x -t . -y
-	rcli -y -F "`pwd`/root.cer"
+	mkdir -p "`config_get LogDir`"
+	rcli -x -t "$TESTS_BUILDDIR" -y
+	rcli -y -F "$TESTS_BUILDDIR/root.cer"
 	echo "INSERT INTO rtr_session VALUES ($SESSION);" | mysql_cmd
 
 	SERIAL=""
@@ -145,13 +142,13 @@ make_serial () {
 	test "$FIRST_ASN" -le "$LAST_ASN"
 
 	for ASN in $ASNS_IN_DB; do
-		rcli -y -d "`pwd`/as-$ASN.roa"
+		rcli -y -d "$TESTS_BUILDDIR/as-$ASN.roa"
 	done
 
 	ASNS_IN_DB=`seq "$FIRST_ASN" "$LAST_ASN"`
 
 	for ASN in $ASNS_IN_DB; do
-		rcli -y -f "`pwd`/as-$ASN.roa"
+		rcli -y -f "$TESTS_BUILDDIR/as-$ASN.roa"
 	done
 
 	"$UPDATE" "$SERIAL"
@@ -235,14 +232,14 @@ start_rtrd () {
 start_test () {
 	TEST="$1"
 
-	rm -f "response.log" "response.$TEST.log"
-	touch "response.log"
+	rm -f "$TESTS_BUILDDIR/response.log" "$TESTS_BUILDDIR/response.$TEST.log"
+	touch "$TESTS_BUILDDIR/response.log"
 }
 
 stop_test () {
 	TEST="$1"
 
-	mv -f "response.log" "response.$TEST.log"
+	mv -f "$TESTS_BUILDDIR/response.log" "$TESTS_BUILDDIR/response.$TEST.log"
 	compare "response.$TEST.log"
 }
 
@@ -315,9 +312,9 @@ client "serial_query $SESSION 8" "withdraw AS 1, ending at serial $SERIAL"
 stop_test serial_queries
 
 start_test bad_pdus
-TOTAL_BAD_PDUS="`./badPDUs.py length`"
+TOTAL_BAD_PDUS="`$TESTS_BUILDDIR/badPDUs.py length`"
 for i in `seq 1 "$TOTAL_BAD_PDUS"`; do
-	client_raw "Bad PDU #$i" "Error Report" ./badPDUs.py "$i"
+	client_raw "Bad PDU #$i" "Error Report" "$TESTS_BUILDDIR/badPDUs.py" "$i"
 done
 stop_test bad_pdus
 

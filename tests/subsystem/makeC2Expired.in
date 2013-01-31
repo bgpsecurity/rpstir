@@ -1,0 +1,6 @@
+#!/bin/sh
+
+@SETUP_ENVIRONMENT@
+
+echo "update rpki_cert set valto='2008-07-31' where filename='C2.cer';" | \
+    mysql_cmd

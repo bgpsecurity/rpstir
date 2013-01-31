@@ -70,7 +70,7 @@ relpath () {
     local abs_path cur_path rel_path common_prefix
 
     if test $# -ne 1; then
-        error "relpath takes on argument"
+        error "relpath takes one argument"
         return 1
     fi
 

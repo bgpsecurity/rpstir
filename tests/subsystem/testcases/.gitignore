@@ -4,6 +4,12 @@ make_test_cert
 make_test_crl
 make_test_manifest
 make_test_roa
+makeall
+makecerts
+makecrls
+makekeys
+makemanifests
+makeroas
 runt.sh
 runtAll.sh
 

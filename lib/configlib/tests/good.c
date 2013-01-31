@@ -1,5 +1,6 @@
 #include "test/unittest.h"
 #include "util/logging.h"
+#include "util/path_compat.h"
 
 #include "configlib/configlib.h"
 
@@ -294,6 +295,7 @@ static bool test_config(
     const char *conf_file)
 {
     bool ret;
+    char * path;
 
     if (setenv("ENV_VAR_INT", "0xfe0f", 1) != 0)
     {
@@ -373,11 +375,23 @@ static bool test_config(
 
     TEST_STR(CONFIG_ENV_VAR_EMPTY_get(), ==, " barfoo  quux ");
 
-    TEST_STR(CONFIG_FILE_get(), ==,
-             ABS_TOP_SRCDIR "/lib/configlib/tests/good.conf");
+    path = realpath(ABS_TOP_SRCDIR "/lib/configlib/tests/good.conf", NULL);
+    if (path == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        return false;
+    }
+    TEST_STR(CONFIG_FILE_get(), ==, path);
+    free(path);
 
-    TEST_STR(CONFIG_DIR_get(), ==,
-             ABS_TOP_SRCDIR "/lib/configlib");
+    path = realpath(ABS_TOP_SRCDIR "/lib/configlib", NULL);
+    if (path == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
+        return false;
+    }
+    TEST_STR(CONFIG_DIR_get(), ==, path);
+    free(path);
 
     TEST(const char *, "%s", CONFIG_NULL_STRING_get(), ==, NULL);
 
@@ -398,25 +412,14 @@ int main(
     int retval = EXIT_SUCCESS;
 
     (void)argc;
+    (void)argv;
 
     OPEN_LOG("config-test-good", LOG_USER);
 
-    char *conf_file = malloc(strlen(argv[0]) + strlen(".conf") + 1);
-    if (conf_file == NULL)
-    {
-        fprintf(stderr, "out of memory\n");
-        return EXIT_FAILURE;
-    }
-
-    snprintf(conf_file,
-             strlen(argv[0]) + strlen(".conf") + 1, "%s.conf", argv[0]);
-
-    if (!test_config(conf_file))
+    if (!test_config(ABS_TOP_SRCDIR "/lib/configlib/tests/good.conf"))
     {
         retval = EXIT_FAILURE;
     }
-
-    free(conf_file);
 
     CLOSE_LOG();
 

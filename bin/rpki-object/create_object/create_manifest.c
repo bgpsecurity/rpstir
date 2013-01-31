@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "util/cryptlib_compat.h"
+#include "config/config.h"
 
 /**
  *
@@ -34,7 +35,6 @@ int write_EEcert(
 int write_EEkey(
     void *my_var,
     void *value);
-char *man_template = TEMPLATES_DIR "/M.man";
 
 /**
  * Write the unique identifier for this manifest number
@@ -232,7 +232,7 @@ int create_manifest(
 
     if (!templateFile)
     {
-        templateFile = man_template;
+        templateFile = CONFIG_TEMPLATE_MANIFEST_get();
     }
 
     // Read the manifest template into this manifest

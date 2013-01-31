@@ -86,7 +86,7 @@ bool check_signature(
     }
     buf = (uchar *) calloc(1, bsize);
     encode_casn(&hicertp->toBeSigned.subjectPublicKeyInfo.self, buf);
-    sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
+    sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA1);
     if (sidsize < 0)
     {
         LOG(LOG_ERR, "gen_hash failed");
@@ -252,7 +252,7 @@ int writeHashedPublicKey(
     uchar *bitval;
     int siz = readvsize_casn(keyp, &bitval);
     uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA1);
     free(bitval);
     if (bad)
         hashbuf[0]++;

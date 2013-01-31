@@ -23,7 +23,7 @@ static int writeHashedPublicKey(
     uchar *bitval;
     int siz = readvsize_casn(keyp, &bitval);
     uchar *hashbuf = calloc(SHA1_HASH_LENGTH, sizeof(uchar));
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA1);
     free(bitval);
 
     // write out the hashed key

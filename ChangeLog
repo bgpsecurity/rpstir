@@ -8,6 +8,9 @@ next
 	* Remove some duplicate and some unused code.
 	* Use a single configuration file syntax instead of environment
 	  variables and multiple incompatible configuration files.
+	* Make it possible to install to the system instead of running from
+	  within the source directory.
+	* Simplify the commands used during normal operation.
 
 0.5
 

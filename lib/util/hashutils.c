@@ -16,7 +16,7 @@ int gen_hash(
     unsigned char hash[40];
     int ansr = -1;
 
-    if (alg != CRYPT_ALGO_SHA && alg != CRYPT_ALGO_SHA2)
+    if (alg != CRYPT_ALGO_SHA1 && alg != CRYPT_ALGO_SHA2)
         return -1;
     memset(hash, 0, 40);
     if (cryptInit() != CRYPT_OK)

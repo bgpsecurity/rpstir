@@ -1,2 +1,2 @@
 #!/bin/sh -e
-exec `dirname "$0"`/runSubsystemTest.sh 1 9
+exec "$TESTS_BUILDDIR/runSubsystemTest.sh" 1 9

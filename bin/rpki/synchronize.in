@@ -1,35 +1,50 @@
 #!@SHELL_BASH@ -e
 #
 
+@SETUP_ENVIRONMENT@
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=`dirname "$0"`
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
 
-CHASER_LOG="$CONFIG_ROOT_DIR/chaser.log"
-RSYNC_CORD_CONF="$CONFIG_ROOT_DIR/rsync_cord.config"
-BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
+# option parsing
+usage () {
+	echo >&2 "Usage: $0 [<option> ...]"
+	echo >&2
+	echo >&2 "Synchronize @PACKAGE_NAME@'s local cache with the global RPKI."
+	echo >&2
+	echo >&2 "Options:"
+	echo >&2 "    -h        Print this help message."
+}
 
-touch "$CHASER_LOG"
+while getopts h opt; do
+	case "$opt" in
+		h)
+			usage
+			exit 0
+			;;
+	esac
+done
+shift $((OPTIND - 1))
+if test $# -ne 0; then
+	usage_fatal "$0 doesn't take any arguments"
+fi
 
-DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded
-CUR_LIST="`@MKTEMP@`" # current set of URIs that we know about
-ADDED_LIST="`@MKTEMP@`" # CUR_LIST minus DONE_LIST
 
-chaser -s "$@" | sort > "$CUR_LIST"
-cat "$CUR_LIST" > "$ADDED_LIST"
+# logging
+SYNCHRONIZE_LOG="`config_get LogDir`/synchronize.log"
+
+touch "$SYNCHRONIZE_LOG"
 
 log () {
-	echo "`date`" "$@" >> "$CHASER_LOG"
+	echo "`date`" "$@" >> "$SYNCHRONIZE_LOG"
 	echo "$@" >&2
 }
+
 
 # Check for the latest version.
 CONFIG_NEW_VERSION_CHECK="`config_get NewVersionCheck`"
 if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 	VERSION_FILE="`@MKTEMP@`"
 	if curl \
-		--cacert "$CONFIG_ROOT_DIR/etc/version-server-ca.pem" \
+		--cacert "`config_get NewVersionCheckCACert`" \
 		--location \
 		--max-time 5 \
 		--output "$VERSION_FILE" \
@@ -46,12 +61,36 @@ if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 fi
 unset CONFIG_NEW_VERSION_CHECK
 
+
+# Update the trust anchors.
+config_get TrustAnchorLocators | xargs -0 updateTA.py -d
+
+
+# Synchronize everything else.
+rcli -w -p &
+LOADER_PID=$!
+stop_loader () {
+	kill "$LOADER_PID" || true # if it already quit, we don't care
+	wait "$LOADER_PID" || true # rcli currently doesn't quit cleanly
+}
+trap stop_loader 0
+sleep 1
+
+BAD_URI_CHARS='['\''",;&(){}|<>!$`\\[:space:][:cntrl:]]\|\[\|\]'
+
+DONE_LIST="`@MKTEMP@`" # URIs already fetched from or discarded
+CUR_LIST="`@MKTEMP@`" # current set of URIs that we know about
+ADDED_LIST="`@MKTEMP@`" # CUR_LIST minus DONE_LIST
+
+chaser -s | sort > "$CUR_LIST"
+cat "$CUR_LIST" > "$ADDED_LIST"
+
 while test -s "$ADDED_LIST"; do
-	rm -f "$RSYNC_CORD_CONF"
+	RSYNC_CORD_CONF="`@MKTEMP@`"
 
 	echo "RSYNC=\"`which rsync`\"" >> "$RSYNC_CORD_CONF"
-	echo "REPOSITORY=\"$CONFIG_ROOT_DIR/REPOSITORY\"" >> "$RSYNC_CORD_CONF"
-	echo "LOGS=\"$CONFIG_ROOT_DIR/LOGS\"" >> "$RSYNC_CORD_CONF"
+	echo "REPOSITORY=\"`config_get RPKICacheDir`\"" >> "$RSYNC_CORD_CONF"
+	echo "LOGS=\"`config_get LogDir`\"" >> "$RSYNC_CORD_CONF"
 
 	DONE_URI=0
 	printf "DIRS=\"" >> "$RSYNC_CORD_CONF"
@@ -72,15 +111,21 @@ while test -s "$ADDED_LIST"; do
 	rsync_cord.py -d -c "$RSYNC_CORD_CONF" \
 		-t "`config_get DownloadConcurrency`"
 
+	rm -f "$RSYNC_CORD_CONF"
+
 	NEW_DONE_LIST="`@MKTEMP@`"
 	cat "$DONE_LIST" "$ADDED_LIST" | sort | uniq > "$NEW_DONE_LIST"
 	rm -f "$DONE_LIST"
 	DONE_LIST="$NEW_DONE_LIST"
 	unset NEW_DONE_LIST
 
-	chaser -s "$@" | sort > "$CUR_LIST"
+	chaser -s | sort > "$CUR_LIST"
 
 	comm -13 "$DONE_LIST" "$CUR_LIST" > "$ADDED_LIST"
 done
 
 rm -f "$DONE_LIST" "$CUR_LIST" "$ADDED_LIST"
+
+
+# Run garbage collection.
+garbage

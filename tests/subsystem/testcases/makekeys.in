@@ -1,4 +1,7 @@
 #!/bin/sh
+
+@SETUP_ENVIRONMENT@
+
 ./gen_test_key CM1.p15	
 ./gen_test_key C1.p15
 ./gen_test_key C1M1.p15

@@ -35,7 +35,7 @@ int main(
     uchar *keyp;
     int klth = readvsize_casn(pubkp, &keyp);
     uchar khash[24];
-    int ansr = gen_hash(&keyp[1], klth - 1, khash, CRYPT_ALGO_SHA);
+    int ansr = gen_hash(&keyp[1], klth - 1, khash, CRYPT_ALGO_SHA1);
     if (ansr < 0)
     {
         fprintf(stderr, "Couldn't get CryptLib\n");

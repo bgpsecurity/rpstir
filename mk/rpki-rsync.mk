@@ -1,4 +1,4 @@
-bin_PROGRAMS += bin/rpki-rsync/rsync_aur
+pkglibexec_PROGRAMS += bin/rpki-rsync/rsync_aur
 
 bin_rpki_rsync_rsync_aur_SOURCES = \
 	bin/rpki-rsync/csapp.c \
@@ -18,7 +18,12 @@ bin_rpki_rsync_rsync_aur_LDADD = \
 	$(LDADD_LIBUTIL) \
 	$(LDADD_LIBCONFIG)
 
-dist_man_MANS += doc/rsync_aur.1
+EXTRA_DIST += doc/rsync_aur.1
 
 
-dist_doc_DATA += doc/AUR.readme
+pkglibexec_SCRIPTS += bin/rpki-rsync/rsync_cord.py
+MK_SUBST_FILES_EXEC += bin/rpki-rsync/rsync_cord.py
+bin/rpki-rsync/rsync_cord.py: $(srcdir)/bin/rpki-rsync/rsync_cord.py.in
+
+
+EXTRA_DIST += doc/AUR.readme

@@ -20,8 +20,8 @@
 #include "obj_err.h"
 #include "util/inet.h"
 // #include "create_utils.h"
+#include "config/config.h"
 
-char *roa_template = TEMPLATES_DIR "/R.roa";
 void print_table(
     struct object_field *table);
 int write_EEcert(
@@ -329,9 +329,9 @@ int create_roa(
     ROA(&roa, (ushort) 0);
 
     // Read the manifest template into this manifest
-    if (get_casn_file(&roa.self, roa_template, 0) < 0)
+    if (get_casn_file(&roa.self, CONFIG_TEMPLATE_ROA_get(), 0) < 0)
     {
-        warn(FILE_OPEN_ERR, roa_template);
+        warn(FILE_OPEN_ERR, CONFIG_TEMPLATE_ROA_get());
         return (FILE_OPEN_ERR);
     }
 

@@ -1,22 +1,21 @@
 #!/bin/sh -e
 
-cd "`dirname "$0"`"
-. ../../../etc/envir.setup
-
 TEST_LOG_NAME=chaser
 STRICT_CHECKS=1
-. "$CONFIG_ROOT_DIR"/tests/test.include
+
+@SETUP_ENVIRONMENT@
+
 
 #===============================================================================
 compare () {
 	name="$1"
-	printf >&2 "comparing \"%s\" to \"%s\"... " "$name" "$name.correct"
-	if diff -u "$name.correct" "$name" > "$name.diff" 2>/dev/null; then
+	printf >&2 "comparing \"%s\" to \"%s\"... " "$TESTS_BUILDDIR/$name" "$TESTS_SRCDIR/$name.correct"
+	if diff -u "$TESTS_SRCDIR/$name.correct" "$TESTS_BUILDDIR/$name" > "$TESTS_BUILDDIR/$name.diff" 2>/dev/null; then
 		echo >&2 "success."
         echo >&2
 	else
 		echo >&2 "failed!"
-		echo >&2 "See \"$name.diff\" for the differences."
+		echo >&2 "See \"$TESTS_BUILDDIR/$name.diff\" for the differences."
         echo >&2
 		exit 1
 	fi
@@ -26,15 +25,15 @@ compare () {
 start_test () {
 	TEST="$1"
 
-	rm -f "response.log" "response.$TEST.log"
-	touch "response.log"
+	rm -f "$TESTS_BUILDDIR/response.log" "$TESTS_BUILDDIR/response.$TEST.log"
+	touch "$TESTS_BUILDDIR/response.log"
 }
 
 #===============================================================================
 stop_test () {
 	TEST="$1"
 
-	mv -f "response.log" "response.$TEST.log"
+	mv -f "$TESTS_BUILDDIR/response.log" "$TESTS_BUILDDIR/response.$TEST.log"
 	compare "response.$TEST.log"
 }
 
@@ -48,8 +47,8 @@ for TEST_NAME in \
 	bad_chars
 do
 	start_test "$TEST_NAME"
-	export @CONFIG_ENV_VAR@="input.$TEST_NAME.conf"
-	run "$TEST_NAME" chaser -s -t > response.log
+	use_config_file "$TESTS_SRCDIR/input.$TEST_NAME.conf"
+	run "$TEST_NAME" chaser -s -t > "$TESTS_BUILDDIR/response.log"
 	stop_test "$TEST_NAME"
 done
 

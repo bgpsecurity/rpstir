@@ -11,17 +11,14 @@
 # by automatically applying those patch files without user
 # intervention.
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
+@trap_errors@
 
-TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_DIR="$TESTS_BUILDDIR"
 TEST_LOG_NAME=`basename "$0"`
 STRICT_CHECKS=0
-. "$RPKI_ROOT/tests/test.include"
 
 # Usage
 usage ( ) {
@@ -114,10 +111,10 @@ Explanation of outputs, not in original order:
 
 
 # Options and defaults
-OUTPUT_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/root"
-PATCHES_DIR="$CONFIG_ROOT_DIR/tests/conformance/raw/patches"
-ROOT_KEY_PATH="$CONFIG_ROOT_DIR/tests/conformance/raw/root.p15"
-TEMPLATE_CERT_RAW="$CONFIG_ROOT_DIR/tests/conformance/raw/templates/goodCert.raw"
+OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
+PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
+ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
+TEMPLATE_CERT_RAW="$TESTS_SRCDIR/../raw/templates/goodCert.raw"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
 EDITOR=${EDITOR:-vi}		# set editor to vi if undefined
@@ -211,6 +208,7 @@ cd ${OUTPUT_DIR}
 # Customize w/ serial number and subject name (based on $child_name)
 echo "Customizing cert w/ serial number $SERIAL and subject name ${child_name}"
 cp ${TEMPLATE_CERT_RAW} ${child_name}.raw
+chmod +w ${child_name}.raw
 run "rr-0-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.cer
 run "put_sernum-0-`basename ${child_name}`" put_sernum ${child_name}.cer ${SERIAL}
 run "put_subj-0-`basename ${child_name}`" put_subj ${child_name}.cer ${child_name}

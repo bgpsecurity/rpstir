@@ -18,29 +18,21 @@ if [ "$#" -ne "0" ]; then
     exit 1
 fi
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
-
-. $CONFIG_ROOT_DIR/lib/util/trap_errors
-
 # for the run and run_bg functions
 export TEST_LOG_NAME=subsys4
 
-# test functions
-. $CONFIG_ROOT_DIR/tests/test.include
+@SETUP_ENVIRONMENT@
 
-cd $THIS_SCRIPT_DIR
+@trap_errors@
+
+cd "$TESTS_BUILDDIR"
 
 # refresh test certs
-  cd testcases4_LTA
-  for f in C?*.raw 
-  do
-    filename=`basename $f .raw`
-    rr <$f > ${filename}.cer
-  done
-  run "update_cert" update_cert 0D 2Y C?*.cer
-  cd ../
+for f in "$TESTS_SRCDIR/testcases4_LTA/"C?*.raw; do
+    filename=`basename "$f" .raw`
+    rr < "$f" > "$TESTS_BUILDDIR/testcases4_LTA/${filename}.cer"
+done
+run "update_cert" update_cert 0D 2Y testcases4_LTA/C?*.cer
 
 # check for existing loader and fail if so
 if nc -z localhost `config_get RPKIPort`; then

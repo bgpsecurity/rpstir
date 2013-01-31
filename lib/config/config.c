@@ -14,16 +14,6 @@
 
 /** All available config options */
 static const struct config_option config_options[] = {
-    // CONFIG_ROOT_DIR
-    {
-     "RootDir",
-     false,
-     config_type_path_converter, NULL,
-     config_type_path_converter_inverse, NULL,
-     free,
-     NULL, NULL,
-     "\"" ABS_TOP_SRCDIR "\""},
-
     // CONFIG_RPKI_PORT
     {
      "RPKIPort",
@@ -81,6 +71,16 @@ static const struct config_option config_options[] = {
      false,
      config_type_string_converter, &config_type_string_arg_mandatory,
      NULL, NULL,
+     free,
+     NULL, NULL,
+     NULL},
+
+    // CONFIG_TRUST_ANCHOR_LOCATORS
+    {
+     "TrustAnchorLocators",
+     true,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
      free,
      NULL, NULL,
      NULL},
@@ -184,6 +184,86 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "\"https://rpki.bbn.com/check-version?package=" PACKAGE_NAME "&version=" PACKAGE_VERSION "\""},
+
+    // CONFIG_NEW_VERSION_CHECK_CA_CERT
+    {
+     "NewVersionCheckCACert",
+     false,
+     config_type_string_converter, &config_type_string_arg_mandatory,
+     config_type_string_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGDATADIR "/version-server-ca.pem\""},
+
+    // CONFIG_TEMPLATE_CA_CERT
+    {
+     "TemplateCACert",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/ca_template.cer\""},
+
+    // CONFIG_TEMPLATE_EE_CERT
+    {
+     "TemplateEECert",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/ee_template.cer\""},
+
+    // CONFIG_TEMPLATE_CRL
+    {
+     "TemplateCRL",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/crl_template.crl\""},
+
+    // CONFIG_TEMPLATE_MANIFEST
+    {
+     "TemplateManifest",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/M.man\""},
+
+    // CONFIG_TEMPLATE_ROA
+    {
+     "TemplateROA",
+     false,
+     config_type_path_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     "\"" TEMPLATESDIR "/R.roa\""},
+
+    // CONFIG_RPKI_CACHE_DIR
+    {
+     "RPKICacheDir",
+     false,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGCACHEDIR "\""},
+
+    // CONFIG_LOG_DIR
+    {
+     "LogDir",
+     false,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGLOGDIR "\""},
 };
 
 
