@@ -166,6 +166,6 @@ int main(
         strcpy(lastoid, curr_oidp->oid);
     }
     fclose(str);
-    fatal(0, outfile);
+    // fatal(0, outfile); // commented out for silent success
     return 0;
 }

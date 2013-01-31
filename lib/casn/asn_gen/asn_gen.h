@@ -553,3 +553,18 @@ extern struct id_table *add_id(
 
 extern struct macro_table *find_macro(
     char *);
+
+/* verbosity: default 0 (nothing printed to stdout on success)
+
+   From asn_gen.1 man page:
+   If '-v' is present, a table of all the defined items is printed on the
+   standard output in the form:
+
+       #5 Name xxxx generation 3 flags 0x0 tag 0x30 at 0x234 has:
+           Parent 2, mymap is '102', length 3
+
+   where '#5' is the index in the table, 'xxxx'represents the name  of
+   the  item, and the generation indicates the level at which the item
+   occurs, generation 0 being the highest.
+ */
+extern int vflag;

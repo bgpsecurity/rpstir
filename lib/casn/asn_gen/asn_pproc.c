@@ -452,7 +452,8 @@ static int pre_proc_glob(
                             free(imtbp->name);
                             imtbp->name = fname;
                         }
-                        printf("    Imported file %s\n", imtbp->name);
+                        if (vflag > 0)
+                            printf("    Imported file %s\n", imtbp->name);
                         cat(locfile, curr_file);
                         cat(curr_file, imtbp->name);
                         locline = curr_line;
@@ -467,7 +468,8 @@ static int pre_proc_glob(
                 }
                 imtbp = (struct import_table *)0;
                 num_imports = name_area.next;
-                printf("Main file\n");
+                if (vflag > 0)
+                    printf("Main file\n");
             }
             if (*activep)
                 putout(str, "\n");
