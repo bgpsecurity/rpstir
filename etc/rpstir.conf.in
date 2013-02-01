@@ -87,5 +87,9 @@ TrustAnchorLocators \
 # Where to store the cache of the global RPKI.
 #RPKICacheDir @pkgcachedir@
 
-# Where to store logs.
-#LogDir @pkglogdir@
+# Where to store additional logs such as rsync logs.  Note that
+# primary logging is performed by syslog, which by default goes to
+# /var/log/syslog, /var/log/messages, or another file in /var/log.
+# This setting only affects the secondary logging from programs such
+# as rsync.
+# LogDir @pkglogdir@
