@@ -6,6 +6,8 @@
 #include <string.h>
 #include <signal.h>
 
+/* LOG_LEVEL_TEXT[0] == "EMERG", etc. (RFC 5424) */
+extern const char *LOG_LEVEL_TEXT[];
 
 #define OPEN_LOG(ident, facility) \
     do { \
@@ -39,12 +41,14 @@ volatile sig_atomic_t LOG_LEVEL;
         { \
             if (LOG_LEVEL >= LOG_DEBUG) \
             { \
-                syslog((priority), "%s:%d in %s(): " format, \
-                    __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
+                syslog((priority), "%s: %s:%d in %s(): " format,        \
+                       LOG_LEVEL_TEXT[priority],                        \
+                       __FILE__, __LINE__, __func__, ## __VA_ARGS__);   \
             } \
             else \
             { \
-                syslog((priority), format, ## __VA_ARGS__); \
+                syslog((priority), "%s: " format,                 \
+                       LOG_LEVEL_TEXT[priority], ## __VA_ARGS__); \
             } \
         } \
     } while (false)
