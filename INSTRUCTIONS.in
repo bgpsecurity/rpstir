@@ -563,8 +563,10 @@ given if you type @PACKAGE_NAME@-query without any arguments.
 3.2.3 Log Files
 
 @PACKAGE_NAME_UC@ logs most things to syslog, so you can check your system logs
-for more information.  There are also some additional logs in the directory
-specified by the LogDir configuration parameter.
+for more information.  These are most likely in /var/log/syslog,
+/var/log/messages, or another file in /var/log.  There are also some additional
+logs (e.g., rsync's logs) in the directory specified by the LogDir configuration
+parameter, which is /usr/local/var/log/@PACKAGE_NAME@ by default.
 
 
 3.3 Warning
