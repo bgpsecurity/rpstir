@@ -20,3 +20,11 @@ tests/test.conf: $(srcdir)/tests/test.conf.in
 noinst_DATA += tests/test.include
 MK_SUBST_FILES += tests/test.include
 tests/test.include: $(srcdir)/tests/test.include.in
+
+
+# When $CHECKTOOL is set, extra log files can be generated. This rule cleans up
+# those log files.
+clean-local: clean-local-checktool-logs
+.PHONY: clean-local-checktool-logs
+clean-local-checktool-logs:
+	find . -type f -name 'valgrind.*.log' -exec rm -f '{}' +
