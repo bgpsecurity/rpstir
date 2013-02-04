@@ -1073,9 +1073,8 @@ int main(
         realconp = connectscm(scmp->dsn, errmsg, 1024);
         if (realconp == NULL)
         {
-            if (do_delete == 0)
-                LOG(LOG_ERR, "Cannot connect to DSN %s: %s",
-                        scmp->dsn, errmsg);
+            LOG(LOG_ERR, "Cannot connect to DSN %s: %s",
+                scmp->dsn, errmsg);
             freescm(scmp);
             if (tdir != NULL)
                 free((void *)tdir);
