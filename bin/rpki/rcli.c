@@ -1054,9 +1054,10 @@ int main(
         testconp = NULL;
     }
     /*
-     * If there has been an error, bail out. 
+     * If there has been an error or if we're done because the database was
+     * just deleted and not re-created, bail out.
      */
-    if (sta < 0)
+    if (sta < 0 || (do_delete > 0 && do_create == 0))
     {
         if (realconp != NULL)
             disconnectscm(realconp);
