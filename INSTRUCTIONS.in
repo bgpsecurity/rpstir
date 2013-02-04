@@ -77,8 +77,12 @@ you will know:
 We assume that you can operate your system's package manager, as well
 as build packages from source and do minor edits on Makefiles.
 
-If you are running a 64-bit operating system, see Appendix A at the bottom of
-this file before continuing.
+Note that @PACKAGE_NAME@ does not currently support running in a 64-bit
+environment.  It is strongly recommended to use a 32-bit operating system.
+However, it is possible, but more difficult, to run in a 32-bit environment on
+a 64-bit operating system.  If you still want to try running @PACKAGE_NAME@ on
+a 64-bit operating system, see Appendix A.2 at the bottom of this file before
+continuing.
 
 
 2.1 Prerequisites
@@ -614,7 +618,8 @@ A.2 64-bit support
 
 The RPKI software does not currently support running in 64-bit mode.
 It is however possible to run RPKI in 32-bit mode on a 64-bit OS that
-supports 32-bit binaries and libraries.
+supports 32-bit binaries and libraries.  This may work, but is not
+recommended.
 
 The build environment, including gcc, need to support 32-bit programs.
 You may need to install additional packages, see your operating system's
