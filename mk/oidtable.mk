@@ -5,6 +5,7 @@ var/oidtable: ./bin/asn1/make_oidtable $(ASN_BUILT_FILES:.asn=.h) $(ASN_SOURCE_F
 	$(AM_V_GEN)mkdir -p "$(@D)" && \
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
 		$(TESTS_ENVIRONMENT) \
 		./bin/asn1/make_oidtable var/oidtable $(ASN_BUILT_FILES:.asn=.h) $(ASN_SOURCE_FILES:.asn=.h)
 
