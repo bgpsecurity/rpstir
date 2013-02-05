@@ -249,6 +249,8 @@ static void usage(
     (void)printf("  -t topdir  create all database tables\n");
     (void)printf("  -w port    start an rsync listener on port\n");
     (void)printf("  -x         destroy all database tables\n");
+    (void)printf("             Note that if you use -x without -t,\n");
+    (void)printf("             no other operations can succeed.\n");
     (void)
         printf("  -y         force operation: do not ask for confirmation\n");
     (void)printf("  -a         allow expired certificates\n");
