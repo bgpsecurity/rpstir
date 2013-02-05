@@ -249,6 +249,8 @@ static void usage(
     (void)printf("  -t topdir  create all database tables\n");
     (void)printf("  -w port    start an rsync listener on port\n");
     (void)printf("  -x         destroy all database tables\n");
+    (void)printf("             Note that if you use -x without -t,\n");
+    (void)printf("             no other operations can succeed.\n");
     (void)
         printf("  -y         force operation: do not ask for confirmation\n");
     (void)printf("  -a         allow expired certificates\n");
@@ -1054,9 +1056,10 @@ int main(
         testconp = NULL;
     }
     /*
-     * If there has been an error, bail out. 
+     * If there has been an error or if we're done because the database was
+     * just deleted and not re-created, bail out.
      */
-    if (sta < 0)
+    if (sta < 0 || (do_delete > 0 && do_create == 0))
     {
         if (realconp != NULL)
             disconnectscm(realconp);
@@ -1073,9 +1076,8 @@ int main(
         realconp = connectscm(scmp->dsn, errmsg, 1024);
         if (realconp == NULL)
         {
-            if (do_delete == 0)
-                LOG(LOG_ERR, "Cannot connect to DSN %s: %s",
-                        scmp->dsn, errmsg);
+            LOG(LOG_ERR, "Cannot connect to DSN %s: %s",
+                scmp->dsn, errmsg);
             freescm(scmp);
             if (tdir != NULL)
                 free((void *)tdir);
