@@ -2,12 +2,11 @@
 ## level files.
 
 EXTRA_DIST += \
+	COPYING \
+	ChangeLog \
 	autogen.sh \
 	doc/api.txt \
-	doc/glossary.txt \
-	ChangeLog \
-	LICENSE \
-	README
+	doc/glossary.txt
 
 pkgdata_DATA += etc/envir.setup
 MK_SUBST_FILES += etc/envir.setup
@@ -19,4 +18,4 @@ etc/rpstir.conf: $(srcdir)/etc/rpstir.conf.in
 
 dist_pkgdata_DATA += etc/version-server-ca.pem
 
-dist_doc_DATA += INSTRUCTIONS
+dist_doc_DATA += README
