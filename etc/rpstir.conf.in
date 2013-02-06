@@ -1,4 +1,5 @@
-# Sample rpstir configuration file.
+# Sample rpstir configuration file. Copy this to @PACKAGE_SYS_CONF_FILE@
+# to use it system-wide.
 #
 # Default values are commented out. To change the default, uncomment the line
 # and edit the value. Configuration options that need to be filled in are
