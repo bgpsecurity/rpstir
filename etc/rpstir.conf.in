@@ -37,6 +37,27 @@ DatabaseDSN myodbc
 # Additionally, to get a copy of ARIN's TAL, go to
 # https://www.arin.net/public/rpki/tal/index.xhtml and follow the
 # directions there.
+#
+# If you want to get started testing things out and don't want to worry
+# about TALs yet, uncomment the section below and comment out the other
+# section with placeholder values for TrustAnchorLocators. Note that unlike
+# the other commented out configuration parameters, this is not the default,
+# just an example.
+#
+#     # DO NOT TRUST THESE FOR ANYTHING EVEN SLIGHTLY IMPORTANT.
+#     # They are for testing only.
+#     TrustAnchorLocators \
+#         @sampletadir@/afrinic.tal \
+#         @sampletadir@/apnic-rpki-root-afrinic-origin.tal \
+#         @sampletadir@/apnic-rpki-root-arin-origin.tal \
+#         @sampletadir@/apnic-rpki-root-iana-origin.tal \
+#         @sampletadir@/apnic-rpki-root-lacnic-origin.tal \
+#         @sampletadir@/apnic-rpki-root-ripe-origin.tal \
+#         @sampletadir@/lacnic.tal \
+#         @sampletadir@/ripe-ncc-root.tal
+#
+# If you know which TALs you want to use, put them in @pkgsysconfdir@
+# and list them below:
 TrustAnchorLocators \
     bar.tal \
     foo.tal
