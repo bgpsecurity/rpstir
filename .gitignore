@@ -18,7 +18,7 @@ TAGS
 .~lock.*#
 rpstir-*.tar.gz
 /rpstir-*/
-INSTRUCTIONS
+README
 .dirstamp
 copy-asn-sources-stamp
 
