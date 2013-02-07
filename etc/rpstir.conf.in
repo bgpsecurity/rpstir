@@ -14,7 +14,9 @@ DatabaseUser some_user
 # Password of DatabaseUser above.
 DatabasePassword some_password
 
-# ODBC DSN for the Database
+# ODBC DSN for the Database. This should match one of the sections in your
+# odbc.ini file. For example, if there's a section "[myodbc]" in /etc/odbc.ini,
+# this configuration item could be set to "myodbc".
 DatabaseDSN myodbc
 
 # List of TALs to use. These should be stored locally such that only trusted
@@ -24,8 +26,8 @@ DatabaseDSN myodbc
 # Trust Anchor Locator (TAL), which allows distribution via a mix of
 # out-of-band and online means [RFC 6490].  In practice, relying parties
 # obtain TAL files through a trusted out-of-band channel of their choice.
-# For testing purposes, you can use Rob Austein's collection of sample trust
-# anchors found at
+# For testing purposes, you can use the examples in @sampletadir@
+# or Rob Austein's collection of sample trust anchors found at
 # http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
 # Additionally, to get a copy of ARIN's TAL, go to
 # https://www.arin.net/public/rpki/tal/index.xhtml and follow the

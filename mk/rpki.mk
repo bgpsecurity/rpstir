@@ -76,9 +76,16 @@ MK_SUBST_FILES_EXEC += bin/rpki/updateTA.py
 bin/rpki/updateTA.py: $(srcdir)/bin/rpki/updateTA.py.in
 
 
-sampletadir = $(examplesdir)/sample-ta
-
-conformancetadir = $(sampletadir)/bbn_conformance
+dist_sampleta_DATA = \
+	etc/sample-ta/README \
+	etc/sample-ta/afrinic.tal \
+	etc/sample-ta/apnic-rpki-root-afrinic-origin.tal \
+	etc/sample-ta/apnic-rpki-root-arin-origin.tal \
+	etc/sample-ta/apnic-rpki-root-iana-origin.tal \
+	etc/sample-ta/apnic-rpki-root-lacnic-origin.tal \
+	etc/sample-ta/apnic-rpki-root-ripe-origin.tal \
+	etc/sample-ta/lacnic.tal \
+	etc/sample-ta/ripe-ncc-root.tal
 
 dist_conformanceta_DATA = \
 	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \

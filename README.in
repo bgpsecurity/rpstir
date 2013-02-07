@@ -468,7 +468,10 @@ group @PACKAGE_NAME@:
 
 Then run @PACKAGE_NAME@-initialize to set up the database:
 
-   @PACKAGE_NAME@-initialize
+   @PACKAGE_NAME@-initialize -f # WARNING: This will delete any old data you
+                                #          have in the configured database.
+                                #          Do not do this if you're upgrading
+                                #          and want to save your old data.
 
 2.7.2 Upgrading
 
