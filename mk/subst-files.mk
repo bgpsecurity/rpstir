@@ -40,6 +40,7 @@ do_subst = $(SED) \
 	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
+	-e 's,[@]pkgsysconfdir[@],$(pkgsysconfdir),g' \
 	-e 's,[@]sampletadir[@],$(sampletadir),g' \
 	-e 's,[@]trap_errors[@],$(trap_errors),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \

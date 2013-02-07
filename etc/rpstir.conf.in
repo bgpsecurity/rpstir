@@ -4,6 +4,10 @@
 # Default values are commented out. To change the default, uncomment the line
 # and edit the value. Configuration options that need to be filled in are
 # uncommented and have placeholder values. Edit the placeholders.
+#
+# Options for files (e.g., TrustAnchorLocators) or directories (e.g.,
+# RPKICacheDir) can take either absolute paths or paths relative to this
+# configuration file.
 
 # Database to use.
 Database some_database
@@ -20,7 +24,8 @@ DatabasePassword some_password
 DatabaseDSN myodbc
 
 # List of TALs to use. These should be stored locally such that only trusted
-# users can modify these files. Here's more information on TALs:
+# users can modify these files, i.e. they should normally be in
+# @pkgsysconfdir@. Here's more information on TALs:
 #
 # A trust anchor certificate in the RPKI is obtained through a long term
 # Trust Anchor Locator (TAL), which allows distribution via a mix of
@@ -33,8 +38,8 @@ DatabaseDSN myodbc
 # https://www.arin.net/public/rpki/tal/index.xhtml and follow the
 # directions there.
 TrustAnchorLocators \
-    path/to/bar.tal \
-    path/to/foo.tal
+    bar.tal \
+    foo.tal
 
 # How much to log. Only messages that are at the specified level or more
 # important are logged. See syslog(3) for the possible values.
