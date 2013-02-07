@@ -282,7 +282,7 @@ bool my_config_load(
 
     char const * const default_config_files[] = {
         user_conf_file,
-        SYSCONFDIR "/" PACKAGE_NAME ".conf",
+        PACKAGE_SYS_CONF_FILE,
         NULL
     };
 

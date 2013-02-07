@@ -22,7 +22,7 @@ Table of Contents
       2.2.2 Configure
       2.2.3 Build the Executables
     2.3 @PACKAGE_NAME_UC@ User Account
-      2.3.1 Configuration Files
+      2.3.1 Self-Test Configuration File
     2.4 SSH Subsystem
     2.5 Self Test
     2.6 Installation
@@ -96,7 +96,9 @@ to build @PACKAGE_NAME@.
 
 You must establish a user account from which you can build and run @PACKAGE_NAME@.
 While the full environment setup is detailed in section 2.3, the basic user
-should be created now so that you can set and test environment variables.
+should be created now so that you can set and test environment variables.  It
+is not necessary, but recommended that the user is the only user in their
+primary group.
 
 2.1.2 OpenSSL
 
@@ -347,35 +349,27 @@ allow SSH login.
 If you're installing to a non-standard location, add the bin directoy to the
 user's $PATH.
 
-2.3.1 Configuration Files
+2.3.1 Self-Test Configuration File
 
-@PACKAGE_NAME_UC@ uses two different configuration files, ~/.@PACKAGE_NAME@.conf
-and ~/.@PACKAGE_NAME@.test.conf.  The former is used in normal operations, the
-latter is used only by @PACKAGE_NAME@'s self tests.  If you don't plan to run
-the self-tests, you only need to create ~/.@PACKAGE_NAME@.conf.  These
-directions show how to create both of them.
+@PACKAGE_NAME_UC@ uses two different configuration files, one for normal
+operations and one for the self tests.  This step sets up the configuration
+file for the self-tests only.  If you don't plan to run the self-tests, you
+can skip this section.
 
-Copy etc/@PACKAGE_NAME@.conf to ~/.@PACKAGE_NAME@.conf and etc/test.conf to
-~/.@PACKAGE_NAME@.test.conf and make both new files only readable by the owner
-because they will contain database password(s):
+Copy etc/test.conf to ~/.@PACKAGE_NAME@.test.conf and make it readable only by
+the owner because it will contain a database password:
 
-   cp etc/@PACKAGE_NAME@.conf ~/.@PACKAGE_NAME@.conf
    cp etc/test.conf ~/.@PACKAGE_NAME@.test.conf
-   chmod 600 ~/.@PACKAGE_NAME@.conf ~/.@PACKAGE_NAME@.test.conf
+   chmod 600 ~/.@PACKAGE_NAME@.test.conf
 
-Open ~/.@PACKAGE_NAME@.conf and ~/.@PACKAGE_NAME@.test.conf in an editor,
-read the comments, and edit the files as directed by the comments.
+Open ~/.@PACKAGE_NAME@.test.conf in an editor, read the comments, and edit the
+file as directed by the comments.
 
-NOTE: Both configuration files have database options.  If you use the same
+NOTE: This file has database options that are homologous to options in the
+system-wide configuration file that you'll set up later.  If you use the same
 database in both files, the self-tests will overwrite any data you keep in
 your production database.  It is strongly recommended to use a different
 database for testing than for production use.
-
-Later on, if you want to test configuration changes before changing
-~/.@PACKAGE_NAME@.conf, you can make a new configuration file and use it
-temporarily by setting $@CONFIG_ENV_VAR@, for example:
-
-   @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
 
 
 2.4 SSH Subsystem
@@ -435,11 +429,38 @@ create cache and log directories.
 If this is the first time you've installed @PACKAGE_NAME@ (i.e. if this is not
 an upgrade), there are some initialization steps.
 
-In the configuration file (~/.@PACKAGE_NAME@.conf) you created in step 2.3.1,
-find the parameters RPKICacheDir and LogDir.  Both of these directories should
-be created and the user from step 2.1.1 should have full access to these
-directories.  For example, if the directories are set to their defaults and the
-username is @PACKAGE_NAME@ in group @PACKAGE_NAME@:
+First, create the system-wide configuration directory and file.  The
+system-wide configuration directory is /usr/local/etc/@PACKAGE_NAME@ by default.
+If you changed the value of ${sysconfdir}, use ${sysconfdir}/@PACKAGE_NAME@
+instead.  Files in the configuration directory should be readable only by the
+@PACKAGE_NAME@ user and root.  After creating the directory, create a file
+@PACKAGE_NAME@.conf in it.  There's a sample file that's in
+/usr/local/share/doc/@PACKAGE_NAME@/examples/@PACKAGE_NAME@.conf by default that you can use as
+a starting point.  Assuming everything is in default locations and the user you
+created in step 2.1.1 is @PACKAGE_NAME@ with group @PACKAGE_NAME@:
+
+   sudo mkdir /usr/local/etc/@PACKAGE_NAME@
+   sudo cp /usr/local/share/doc/@PACKAGE_NAME@/examples/@PACKAGE_NAME@.conf /usr/local/etc/@PACKAGE_NAME@/
+   sudo chown root:@PACKAGE_NAME@ /usr/local/etc/@PACKAGE_NAME@ /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+   sudo chmod 750 /usr/local/etc/@PACKAGE_NAME@
+   sudo chmod 640 /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+
+Then open the configuration file you just created in an editor, read the
+comments, and edit the file as directed by the comments.
+
+   sudoedit /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+
+Later on, if you want to test configuration changes before changing the
+system-wide configuration, you can make a new configuration file and use it
+temporarily by setting $@CONFIG_ENV_VAR@, for example:
+
+   @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
+
+In the configuration file you just created, find the parameters RPKICacheDir
+and LogDir.  Both of these directories should be created and the user from step
+2.1.1 should have full access to these directories.  For example, if the
+directories are set to their defaults and the username is @PACKAGE_NAME@ in
+group @PACKAGE_NAME@:
 
    sudo mkdir -p /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
    sudo chown @PACKAGE_NAME@:@PACKAGE_NAME@ /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
@@ -790,13 +811,8 @@ mysql -u root -p
 cd path/to/rpstir # the directory this file is in
 ./configure --enable-silent-rules
 make
-cp etc/rpstir.conf ~/.rpstir.conf
 cp etc/test.conf ~/.rpstir.test.conf
-chmod 600 ~/.rpstir.conf ~/.rpstir.test.conf
-emacs ~/.rpstir.conf # read the comments for each option, and make sure to set these:
-  Database rpstir
-  DatabaseUser rpstir
-  DatabasePassword bbn
+chmod 600 ~/.rpstir.test.conf
 emacs ~/.rpstir.test.conf # set these options:
   Database rpstir_test
   DatabaseUser rpstir
@@ -804,7 +820,16 @@ emacs ~/.rpstir.test.conf # set these options:
 make check
 sudo make install
 
-# Setup rpstir for your user
+# Setup rpstir
+sudo mkdir /usr/local/etc/rpstir
+sudo cp /usr/local/share/doc/rpstir/examples/rpstir.conf /usr/local/etc/rpstir/
+sudo chown root:rpstir /usr/local/etc/rpstir /usr/local/etc/rpstir/rpstir.conf
+sudo chmod 750 /usr/local/etc/rpstir
+sudo chmod 640 /usr/local/etc/rpstir/rpstir.conf
+sudoedit /usr/local/etc/rpstir/rpstir.conf # read the comments for each option, and make sure to set these:
+  Database rpstir
+  DatabaseUser rpstir
+  DatabasePassword bbn
 sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
 sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir

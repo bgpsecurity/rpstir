@@ -40,11 +40,13 @@ do_subst = $(SED) \
 	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
+	-e 's,[@]pkgsysconfdir[@],$(pkgsysconfdir),g' \
 	-e 's,[@]sampletadir[@],$(sampletadir),g' \
 	-e 's,[@]trap_errors[@],$(trap_errors),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
+	-e 's,[@]PACKAGE_SYS_CONF_FILE[@],$(PACKAGE_SYS_CONF_FILE),g' \
 	-e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' \
 	-e 's,[@]PYTHON[@],$(PYTHON),g' \
 	-e 's,[@]SETUP_ENVIRONMENT[@],$(SETUP_ENVIRONMENT),g' \
