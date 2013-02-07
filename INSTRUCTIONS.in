@@ -817,13 +817,13 @@ emacs ~/.rpstir.test.conf # set these options:
 make check
 sudo make install
 
-# Setup rpstir for your user
+# Setup rpstir
 sudo mkdir /usr/local/etc/rpstir
 sudo cp /usr/local/share/doc/rpstir/examples/rpstir.conf /usr/local/etc/rpstir/
 sudo chown root:rpstir /usr/local/etc/rpstir /usr/local/etc/rpstir/rpstir.conf
 sudo chmod 750 /usr/local/etc/rpstir
 sudo chmod 640 /usr/local/etc/rpstir/rpstir.conf
-sudoedit /usr/local/etc/rpstir/rpstir.conf # read the comments for each option, and make sure to set these:`
+sudoedit /usr/local/etc/rpstir/rpstir.conf # read the comments for each option, and make sure to set these:
   Database rpstir
   DatabaseUser rpstir
   DatabasePassword bbn
