@@ -129,8 +129,9 @@ int checkValidity(
     // now do the part specific to this cert
     int firstTime = 1;
     char prevSKI[128];
-    // keep going until trust anchor, where AKI = SKI
-    while (firstTime || (strcmp(nextSKI, prevSKI) != 0))
+    // keep going until trust anchor, where either AKI = SKI or no AKI
+    while (firstTime ||
+	   !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
     {
         if (firstTime)
         {
