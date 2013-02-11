@@ -1,8 +1,3 @@
-
-/*
- * $Id: query.c 857 2009-09-30 15:27:40Z dmontana $ 
- */
-
 /****************
  * Functions and flags shared by query and server code
  ****************/
@@ -23,6 +18,7 @@
 #include "querySupport.h"
 #include "err.h"
 #include "myssl.h"
+#include "util/logging.h"
 
 void addQueryFlagTests(
     char *whereStr,
@@ -51,27 +47,37 @@ static scmsrcha *validSrch = NULL,
     *anySrch = NULL;
 char *validWhereStr;
 static char *whereInsertPtr;
-static int found;
+static int parentsFound;
 static char *nextSKI,
    *nextSubject;
 
 /*
- * callback to indicate that parent found 
+ * callback to indicate that a parent was found
  */
-static int registerFound(
+static int registerParent(
     scmcon * conp,
     scmsrcha * s,
     int numLine)
 {
+    /* Ignore unused parameters, but silence compiler warnings. */
     conp = conp;
     s = s;
     numLine = numLine;
-    found = 1;
+
+    /* FIXME: nextSKI and nextSubject already point to
+     * s->vec[0].valptr and s->vec[1].valptr, so they are not updated
+     * here.  But when a column is NULL, avalsize = SQL_NULL_DATA
+     * (-1), and we should NOT be using the corresponding valptr.
+     * checkValidity() currently depends on valptr being zeroed out.
+     * This is Bad(TM).  Fix this on a rewrite of checkValidity. */
+
+    /* Count parent. */
+    parentsFound++;
     return 0;
 }
 
 /*
- * check the valdity via the db of the cert whose ski or localID is given 
+ * check the validity via the db of the cert whose ski or localID is given
  */
 int checkValidity(
     char *ski,
@@ -126,6 +132,14 @@ int checkValidity(
         }
     }
 
+    /* FIXME: This code assumes that is suffices to trace a single
+     * parent until one arrives at a trust anchor.  This will not
+     * always be the case, so key rollover or malicious activity might
+     * break the query client.  In addition, the right behavior is to
+     * trace up to any TRUSTED cert, which is not necessarily
+     * equivalent to any SELF-SIGNED cert.  Fix this on a future
+     * rewrite of checkValidity().  */
+
     // now do the part specific to this cert
     int firstTime = 1;
     char prevSKI[128];
@@ -159,19 +173,27 @@ int checkValidity(
                      escaped_subject);
             strncpy(prevSKI, nextSKI, 128);
         }
-        found = 0;
+        parentsFound = 0;
         status = searchscm(connect, validTable, validSrch, NULL,
-                           registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
-        if (!found)
+                           registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+        if (parentsFound > 1)
+        {
+            LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
+                parentsFound);
+        }
+        else if (parentsFound == 0)
         {                       // no parent cert
             if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
                 return 0;
             snprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                      whereInsertPtr + 5);
             status =
-                searchscm(connect, validTable, anySrch, NULL, registerFound,
+                searchscm(connect, validTable, anySrch, NULL, registerParent,
                           SCM_SRCH_DOVALUE_ALWAYS, NULL);
-            return !found;
+            if (parentsFound > 1)
+                LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
+                    parentsFound);
+            return !parentsFound;
         }
     }
     return 1;
