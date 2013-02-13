@@ -2,6 +2,7 @@
 ## level files.
 
 EXTRA_DIST += \
+	BUGS \
 	COPYING \
 	ChangeLog \
 	autogen.sh \
