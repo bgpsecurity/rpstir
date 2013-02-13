@@ -15,9 +15,3 @@ Object deletion:
     repository. This allows a malicious repository maintainer or monkey-in-the-
     middle who does not have access to a Certification Authority's private key
     to remove objects that are valid and not revoked.
-
-
-Halting problem:
-
-    We can't figure out if an arbitrary piece of software will halt or run
-    forever.
