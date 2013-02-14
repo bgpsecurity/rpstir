@@ -1,4 +1,4 @@
-next
+0.6
 
 	* When an rsync download of a trust anchor fails, retry a few times
 	  instead of giving up on downloading that trust anchor.
