@@ -3259,7 +3259,7 @@ static int rescert_as_resources_chk(
                                            &ext_count);
     if (!extp || !ext_count)
     {
-        LOG(LOG_INFO, "no AS extension found");
+        LOG(LOG_DEBUG, "no AS extension found");
         return 0;
     }
     else if (ext_count > 1)

@@ -947,6 +947,9 @@ int searchscm(
         sprintf(&stmt[strlen(stmt)], " order by %s ", orderp);
 
     (void)strcat(stmt, ";");
+    // Print SQL statement for debugging.
+    // fprintf(stderr, "%s\n", stmt);
+
     // execute the select statement
     rc = newhstmt(conp);
     if (!SQLOK(rc))
@@ -1008,12 +1011,15 @@ int searchscm(
                 else
                     continue;
             }
-            // count how many columns actually contain data
+            // Count how many columns actually contain data.
+            // In addition, zero out any stale data to discourage misuse.
             fnd = 0;
             for (i = 0; i < srch->nused; i++)
             {
                 if (srch->vec[i].avalsize != SQL_NULL_DATA)
                     fnd++;
+                else            /* Zero out any stale data. */
+                    memset(srch->vec[i].valptr, 0, srch->vec[i].valsize);
             }
             if (fnd == 0)
                 continue;

@@ -1906,6 +1906,8 @@ static int verifyChildCert(
         }
         updateValidFlags(conp, theCertTable, data->id, data->flags, 1);
     }
+
+    /* Check for subordinate CRLs */
     if (crlSrch == NULL)
     {
         crlSrch = newsrchscm(NULL, 4, 0, 1);
@@ -1916,14 +1918,18 @@ static int verifyChildCert(
         ADDCOL(crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
     }
     snprintf(crlSrch->wherestr, WHERESTR_SIZE,
-             "aki=\"%s\" and issuer=\"%s\"", data->aki, data->issuer);
+             "aki=\"%s\" and issuer=\"%s\"", data->ski, data->subject);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+
+    /* Check for associated ROA */
     snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     sta = searchscm(conp, theROATable, crlSrch, NULL, verifyChildROA,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+
+    /* Check for associated Manifest */
     if (manSrch == NULL)
     {
         manSrch = newsrchscm(NULL, 4, 0, 1);

@@ -84,8 +84,9 @@ static int writeROAData(
         *end;
     char msg[1024];
     int sta;
-    conp = conp;
-    numLine = numLine;
+
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(numLine);
 
     if (!checkValidity((char *)s->vec[2].valptr, 0, scmp, connection))
         return -1;
