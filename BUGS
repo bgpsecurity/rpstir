@@ -25,6 +25,6 @@ Object deletion:
     Certification Authority's private key to remove objects that are
     valid and not revoked.  We expect a feature in a future release
     that detects when an unauthenticated deletion has occurred.  In
-    farther future releases, we expect to improve our cache to store
+    further future releases, we expect to improve our cache to store
     these files and continue to use them for as long as they are
     considered valid.
