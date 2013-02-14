@@ -13,7 +13,7 @@ Single validation path:
     certificate. This would create an additional (invalid) path to the
     target's children, which may cause rpstir to consider those
     children invalid even though the correct path from them to a TA is
-    valid.  We expect to resolve this issue in the next release.
+    valid.  We expect to resolve this issue in a future release.
 
 
 Object deletion:
@@ -23,6 +23,8 @@ Object deletion:
     the remote repository. This allows a malicious repository
     maintainer or man-in-the-middle who does not have access to a
     Certification Authority's private key to remove objects that are
-    valid and not revoked.  We expect a feature in the next release
+    valid and not revoked.  We expect a feature in a future release
     that detects when an unauthenticated deletion has occurred.  In
-    future releases, we expect to implement full rollback capability.
+    farther future releases, we expect to improve our cache to store
+    these files and continue to use them for as long as they are
+    considered valid.
