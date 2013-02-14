@@ -1,0 +1,30 @@
+This file contains descriptions of known bugs in RPSTIR.  The BBN
+RPSTIR software team advises waiting for patches to these issues
+before deploying RPSTIR in a production environment.
+
+
+Single validation path:
+
+    If there is more than one path from an RPKI object to a trust
+    anchor, then in certain non-standard situations (traversing the
+    RPKI hierarchy out-of-order), only one of these paths is currently
+    checked. It might be possible for a malicious CA to exploit this
+    by re-signing and publishing a copy of another CA's
+    certificate. This would create an additional (invalid) path to the
+    target's children, which may cause rpstir to consider those
+    children invalid even though the correct path from them to a TA is
+    valid.  We expect to resolve this issue in a future release.
+
+
+Object deletion:
+
+    If an object is removed from a remote repository, it gets removed
+    from rpstir's cache the next time the cache is synchronized with
+    the remote repository. This allows a malicious repository
+    maintainer or man-in-the-middle who does not have access to a
+    Certification Authority's private key to remove objects that are
+    valid and not revoked.  We expect a feature in a future release
+    that detects when an unauthenticated deletion has occurred.  In
+    farther future releases, we expect to improve our cache to store
+    these files and continue to use them for as long as they are
+    considered valid.
