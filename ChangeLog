@@ -32,6 +32,14 @@
 	  within the source directory.
 	* When an rsync download of a trust anchor fails, retry a few times
 	  instead of giving up on downloading that trust anchor.
+	* Support Cryptlib 3.4.2.
+	* Fix a bug that occured when a trust anchor was added after its
+	  children. Some of the children that should have been considered valid
+	  were considered unknown. This doesn't happen in normal operation, but
+	  was discovered during testing at IETF 85.
+	* Don't require access to the database root account. As long as
+	  rpstir's database user has full permissions on a database, there's
+	  no reason to require access to the root database user.
 
 0.5
 
