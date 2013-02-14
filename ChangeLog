@@ -1,16 +1,37 @@
 0.6
 
-	* When an rsync download of a trust anchor fails, retry a few times
-	  instead of giving up on downloading that trust anchor.
-	* Simplify internal dependencies.
-	* Switch to a single Makefile to speed up parallel compilation.
-	* Run much more code optionally under CHECKTOOL (e.g. valgrind).
-	* Remove some duplicate and some unused code.
-	* Use a single configuration file syntax instead of environment
-	  variables and multiple incompatible configuration files.
+	* Simplify the commands used during normal operation. The commands
+	  are now named after what the user intends to do, instead of after the
+	  internal component we used to implement them. Some of the scripts are
+	  reorganized so that each script does one function (e.g., synchronize
+	  with remote repositories) instead of presenting an interface to one
+	  internal component (e.g., the component that validates objects fed to
+	  it by other components while syncronizing with remote repositories).
+	* Use a single configuration file syntax instead of a mix of
+	  environment variables and multiple incompatible configuration files.
+	  Additionally, provide an example configuration file with comments
+	  describing each option. This should make rpstir easier to set up.
+	* Switch from one Makefile per directory to a single Makefile. Aside
+	  from speeding up parallel compilation, this lets us simplify
+	  internal dependencies. With one Makefile per directory, we had to
+	  carefully order the directories such that nothing in one directory
+	  depended on something in a later directory. Since the dependencies
+	  changed over time, this became more and more complex to maintain.
+	  With a single Makefile, we can just tell "make" about each dependency
+	  and let "make" figure out the order to build things.
+	* Remove duplicate code. Before switching to a single Makefile (see
+	  above), we occasionally copied functions from one file to another to
+	  avoid having to restructure the source tree and reorder the
+	  per-directory Makefiles. With a single Makefile keeping track of
+	  dependencies, we consolidated the duplicated code and let "make"
+	  do the build ordering for us.
+	* Find and remove unused code.
+	* Improve support for CHECKTOOL. When $CHECKTOOL is set to "valgrind"
+	  for the self-tests, much more code is now tested with valgrind.
 	* Make it possible to install to the system instead of running from
 	  within the source directory.
-	* Simplify the commands used during normal operation.
+	* When an rsync download of a trust anchor fails, retry a few times
+	  instead of giving up on downloading that trust anchor.
 
 0.5
 
