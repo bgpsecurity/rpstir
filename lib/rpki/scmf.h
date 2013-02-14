@@ -229,7 +229,7 @@ extern void pophstmt(
  */
 
 #ifndef UNREFERENCED_PARAMETER
-#define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
+#define UNREFERENCED_PARAMETER(A) ((void)A)
 #endif
 
 #endif

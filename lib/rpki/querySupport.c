@@ -59,10 +59,9 @@ static int registerParent(
     scmsrcha * s,
     int numLine)
 {
-    /* Ignore unused parameters, but silence compiler warnings. */
-    conp = conp;
-    s = s;
-    numLine = numLine;
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(s);
+    UNREFERENCED_PARAMETER(numLine);
 
     /* FIXME: nextSKI and nextSubject already point to
      * s->vec[0].valptr and s->vec[1].valptr, so they are not updated

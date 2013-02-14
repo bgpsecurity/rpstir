@@ -117,8 +117,8 @@ static int handleResults(
     char resultStr[MAX_RESULT_SZ];
     int i;
 
-    conp = conp;
-    numLine = numLine;          // silence compiler warnings
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(numLine);
     if (validate)
     {
         if (!checkValidity

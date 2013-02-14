@@ -42,8 +42,8 @@ static int handleTimestamps(
     scmsrcha * s,
     int numLine)
 {
-    conp = conp;
-    numLine = numLine;          // silence compiler warnings
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(numLine);
     currTimestamp = (char *)s->vec[0].valptr;
     prevTimestamp = (char *)s->vec[1].valptr;
     return 0;
@@ -58,7 +58,7 @@ static int handleIfStale(
     scmsrcha * s,
     int cnt)
 {
-    s = s;
+    UNREFERENCED_PARAMETER(s);
     char msg[600];
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
@@ -85,8 +85,8 @@ static int handleIfCurrent(
     scmsrcha * s,
     int cnt)
 {
-    s = s;
     char msg[128];
+    UNREFERENCED_PARAMETER(s);
     if (cnt == 0)
         return 0;               // exists another crl that is current
     snprintf(msg, 128, "update %s set flags = flags - %d where local_id=%d;",
@@ -106,7 +106,7 @@ static int countCurrentCRLs(
     scmsrcha * s,
     int numLine)
 {
-    numLine = numLine;
+    UNREFERENCED_PARAMETER(numLine);
     if (cntSrch == NULL)
     {
         cntSrch = newsrchscm(NULL, 1, 0, 1);
@@ -156,8 +156,8 @@ static int handleStaleMan(
     scmsrcha * s,
     int numLine)
 {
-    numLine = numLine;
-    conp = conp;
+    UNREFERENCED_PARAMETER(numLine);
+    UNREFERENCED_PARAMETER(conp);
     int len = *((unsigned int *)s->vec[1].valptr);
     staleManFiles[numStaleManFiles] = malloc(len + 1);
     memcpy(staleManFiles[numStaleManFiles], (char *)s->vec[0].valptr, len);
