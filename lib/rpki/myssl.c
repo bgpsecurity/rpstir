@@ -3196,7 +3196,7 @@ static int rescert_ip_resources_chk(
                                            &ext_count);
     if (!extp || !ext_count)
     {
-        LOG(LOG_INFO, "no IP extension found");
+        LOG(LOG_DEBUG, "no IP extension found");
         return 0;
     }
     else if (ext_count > 1)
@@ -3313,7 +3313,7 @@ static int rescert_as_resources_chk(
         &extp->extnValue.autonomousSysNum.asnum;
     if (size_casn(&asidcap->inherit))
     {
-        LOG(LOG_INFO, "AS resources marked as inherit");
+        LOG(LOG_DEBUG, "AS resources marked as inherit");
         return 1;
     }
     if (num_items(&asidcap->asNumbersOrRanges.self) <= 0)

@@ -638,7 +638,11 @@ static int cmsValidate(
             LOG(LOG_ERR, "invalid signature algorithm in ROA");
             return ERR_SCM_BADSIGALG;
         }
-        LOG(LOG_WARNING, "deprecated signature algorithm in ROA");
+        /* In conversation at IETF 85, R. Austein said that this was a
+         * mistake in the specification, not the code.  We'll wait for
+         * an update to the RFC before we remove this entirely.  But
+         * log at debug level rather than warning. */
+        LOG(LOG_DEBUG, "deprecated signature algorithm in ROA?");
     }
 
     // check that the subject key identifier has proper length

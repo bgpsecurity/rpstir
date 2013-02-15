@@ -434,7 +434,8 @@ static int handle_uri_string(
         if (-1 == ret)
         {
             scrub_for_print(scrubbed_str2, section, DST_SZ, NULL, "");
-            LOG(LOG_WARNING,
+            // Removing a trailing slash is common; log at debug level.
+            LOG(LOG_DEBUG,
                 "modified rsync uri, replaced:  \"%s\" with \"%s\"",
                 scrubbed_str, scrubbed_str2);
         }
