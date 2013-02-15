@@ -620,7 +620,7 @@ static int sockline(
             return sta;
         if (ptr == NULL)
             continue;
-        LOG(LOG_INFO, "Sockline: %s", ptr);
+        LOG(LOG_DEBUG, "Sockline: %s", ptr);
         c = ptr[0];
         if (!isspace((int)(unsigned char)(ptr[1])))
         {
@@ -740,7 +740,7 @@ static int fileline(
         char *cp;
         for (cp = ptr; *cp >= ' '; cp++);
         *cp = 0;                // trim off CR/LF
-        LOG(LOG_INFO, "Sockline: %s", ptr);
+        LOG(LOG_DEBUG, "Sockline: %s", ptr);
         c = ptr[0];
         if (!isspace((int)(unsigned char)(ptr[1])))
         {
