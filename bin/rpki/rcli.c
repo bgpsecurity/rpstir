@@ -245,6 +245,8 @@ static void usage(
         ("  -d dir     delete the indicated file (using full pathname)\n");
     (void)printf("  -f file    add the indicated file\n");
     (void)printf("  -F file    add the indicated trusted file\n");
+    (void)printf("  -l         add files listed one per line on stdin\n");
+    (void)printf("  -L         add trusted files, one per line on stdin\n");
     (void)printf("  -p         run the socket listener in perpetual mode\n");
     (void)printf("  -t topdir  create all database tables\n");
     (void)printf("  -w port    start an rsync listener on port\n");
@@ -846,6 +848,8 @@ static int fileline(
 // -d object delete the given object
 // -f file add the given object
 // -F file add the given trusted object
+// -l add files listed one per line on stdin
+// -L add trusted files, one per line on stdin
 // -w port operate in wrapper mode using the given socket port
 // -p with -w indicates to run perpetually, e.g. as a daemon
 // -z run from file list instead of port
@@ -875,6 +879,7 @@ int main(
     int do_delete = 0;
     int do_sockopts = 0;
     int do_fileopts = 0;
+    int use_filelist = 0;
     int perpetual = 0;
     int really = 0;
     int trusted = 0;
@@ -890,7 +895,7 @@ int main(
         usage();
         return (1);
     }
-    while ((c = getopt(argc, argv, "t:xyhad:f:F:wz:pm:c:s")) != EOF)
+    while ((c = getopt(argc, argv, "t:xyhad:f:F:lLwz:pm:c:s")) != EOF)
     {
         switch (c)
         {
@@ -916,6 +921,11 @@ int main(
             trusted++;
         case 'f':
             thefile = optarg;
+            break;
+        case 'L':
+            trusted++;
+        case 'l':
+            use_filelist++;
             break;
         case 'w':
             do_sockopts++;
@@ -951,7 +961,7 @@ int main(
         return (1);
     }
     if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 &&
-        thefile == 0 && thedelfile == 0 && skifile == 0)
+        thefile == 0 && thedelfile == 0 && skifile == 0 && use_filelist == 0)
     {
         (void)printf("You need to specify at least one operation "
                      "(e.g. -f file).\n");
@@ -1139,14 +1149,14 @@ int main(
                 LOG(LOG_NOTICE, "File operation cancelled");
             if (sta == 0)
             {
-                LOG(LOG_INFO, "Attempting to add file %s", outfile);
+                LOG(LOG_INFO, "Attempting add: %s", outfile);
                 setallowexpired(allowex);
                 sta = add_object(scmp, realconp, outfile, outdir, outfull,
                                  trusted);
                 if (sta < 0)
                 {
                     LOG(LOG_ERR,
-                            "Could not add file %s: error %s (%d)",
+                            "Add failed: %s: error %s (%d)",
                             thefile, err2string(sta), sta);
                     if (sta == ERR_SCM_SQL)
                     {
@@ -1156,14 +1166,72 @@ int main(
                     }
                 }
                 else
-                    LOG(LOG_INFO, "Add operation succeeded");
+                    LOG(LOG_INFO, "Add succeeded: %s", outfile);
             }
             free((void *)outdir);
             free((void *)outfile);
             free((void *)outfull);
         }
         else
-            LOG(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "%s (%d)", err2string(sta), sta);
+    }
+    if (use_filelist > 0 && sta == 0)
+    {
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+        int status;
+
+        setallowexpired(allowex);
+        while ((read = getline(&line, &len, stdin)) != -1)
+        {
+            if (read == 0)
+                continue;
+
+            // Trim newline and skip line if empty
+            if (line[read - 1] == '\n')
+                line[read - 1] = '\0';
+            if (strlen(line) == 0)
+                continue;
+
+            // Split directory and file components of path
+            status = splitdf(NULL, NULL, line, &outdir, &outfile, &outfull);
+            if (status != 0)
+            {
+                LOG(LOG_ERR, "%s (%d)", err2string(sta), status);
+                continue;
+            }
+
+            LOG(LOG_INFO, "Attempting add: %s", outfile);
+
+            // Warn if file not within repository directory
+            if (strncmp(tdir, outdir, tdirlen) != 0)
+                LOG(LOG_WARNING, "%s is not in the repository", line);
+
+            // Add
+            status = add_object(scmp, realconp, outfile, outdir, outfull,
+                                trusted);
+            if (status == 0)
+            {
+                LOG(LOG_INFO, "Add succeeded: %s", outfile);
+            }
+            else
+            {
+                LOG(LOG_ERR, "Add failed: %s: error %s (%d)",
+                    line, err2string(status), status);
+                if (status == ERR_SCM_SQL)
+                {
+                    ne = geterrorscm(realconp);
+                    if (ne != NULL && ne != 0)
+                        LOG(LOG_ERR, "\t%s", ne);
+                }
+            }
+            free((void *)outdir);
+            free((void *)outfile);
+            free((void *)outfull);
+        }
+
+        free(line);
     }
     if (thedelfile != NULL && sta == 0)
     {
