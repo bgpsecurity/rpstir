@@ -233,6 +233,7 @@ ROAs
     WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
 551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
 552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
+560 ASIDZero                 # (good) AS 0 is allowed 6482#3.2, 6483#5, 6491
 553 Family                   # invalid family 6482#3.3
 554 FamilyLth                # family name too long 6482#3.3
     IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
