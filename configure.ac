@@ -234,7 +234,7 @@ AC_FUNC_STAT
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getline getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 if test "$ac_cv_func_getline" != yes; then
-    AC_MSG_ERROR([The getline() function from POSIX 2008 is requred.])
+    AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
 fi
 
 
