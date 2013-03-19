@@ -14,6 +14,7 @@ Remarks:
 
 #ifndef _casn_h
 #define _casn_h
+#include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -120,6 +121,9 @@ int copy_casn(
     read_casn_num(
     struct casn *,
     long *),
+    read_casn_num_max(
+    struct casn *,
+    intmax_t *),
     read_casn_time(
     struct casn *,
     int64_t *),
