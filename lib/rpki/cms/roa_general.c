@@ -459,22 +459,19 @@ static unsigned char **roaIPAddresses(
     return pcAddresses;
 }
 
-int roaAS_ID(
+/**
+    WARNING: This function does no error checking. Calling it with a NULL
+    r, or if r hasn't passed roaValidate() could cause unpredictable
+    behavior.
+*/
+uint32_t roaAS_ID(
     struct ROA *r)
 {
-    long iAS_ID = 0;
+    intmax_t iAS_ID;
+    read_casn_num_max(&r->content.signedData.encapContentInfo.eContent.roa.asID,
+                      &iAS_ID);
 
-    // parameter check
-    if (NULL == r)
-        return 0;
-
-    if (0 >=
-        read_casn_num(&
-                      (r->content.signedData.encapContentInfo.eContent.roa.
-                       asID), &iAS_ID))
-        return -1;
-
-    return iAS_ID;
+    return (uint32_t)iAS_ID;
 }
 
 /*
@@ -610,7 +607,7 @@ int roaGenerateFilter(
     int iRes = 0;
     int iFamilies = 0;
     int iAddrNum = 0;
-    int iAS_ID = 0;
+    uint32_t iAS_ID = 0;
     int sta;
     char cAS_ID[17];
     unsigned char *cSID = NULL;
@@ -691,7 +688,7 @@ int roaGenerateFilter2(
     int iRes = 0;
     int iFamilies = 0;
     int iAddrNum = 0;
-    int iAS_ID = 0;
+    uint32_t iAS_ID = 0;
     int sta;
     char cAS_ID[20];
     unsigned char *cSID = NULL;
