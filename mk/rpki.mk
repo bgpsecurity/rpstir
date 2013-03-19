@@ -254,6 +254,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
 	tests/conformance/raw/keys/goodMFTNumZero.mft.p15 \
+	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
 	tests/conformance/raw/patches/badCMS2Certs.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMS2Certs.stage1.patch \
@@ -773,6 +774,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodMFTNumZero.ee.stage0.patch \
 	tests/conformance/raw/patches/goodMFTNumZero.stage1.patch \
 	tests/conformance/raw/patches/goodMFTNumZero.stage2.patch \
+	tests/conformance/raw/patches/goodROAASIDZero.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAASIDZero.stage1.patch \
+	tests/conformance/raw/patches/goodROAASIDZero.stage2.patch \
+	tests/conformance/raw/patches/goodROAASIDZero.stage3.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage1.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage2.patch \
