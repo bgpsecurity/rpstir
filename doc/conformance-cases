@@ -315,6 +315,7 @@ Manifests
 782 MFTHashOctetStr          # file hash is octet, not bit string 6486#4.2
 783 MFTDuplicateFileOneHash  # duplicate file name with same hash 6486#4.2.1
 784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash 6486#4.2.1
+    MFTUnkownFileExtension   # file name has an unrecognized extension 6486#4.2.1
 
 
 Trust Anchor (self-signed) certificates
