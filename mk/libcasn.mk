@@ -56,3 +56,10 @@ lib_casn_libcasn_a_SOURCES = \
 	lib/casn/casn_time.c
 
 EXTRA_DIST += doc/casn_functions.3
+
+check_PROGRAMS += lib/casn/tests/readcasnnum-test
+
+lib_casn_tests_readcasnnum_test_LDADD = \
+	$(LDADD_LIBCASN)
+
+TESTS += lib/casn/tests/readcasnnum-test
