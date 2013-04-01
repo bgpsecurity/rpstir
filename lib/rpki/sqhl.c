@@ -2794,7 +2794,7 @@ static int add_roa_internal(
     cols[idx++].value = sig;
     cols[idx].column = "ip_addrs";
     cols[idx++].value = ip_addrs;
-    (void)snprintf(asn, sizeof(asn), "%" PRId32, asid);
+    (void)snprintf(asn, sizeof(asn), "%" PRIu32, asid);
     cols[idx].column = "asn";
     cols[idx++].value = asn;
     (void)snprintf(flagn, sizeof(flagn), "%u", flags);
