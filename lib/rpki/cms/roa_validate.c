@@ -1212,17 +1212,17 @@ int roaValidate(
     // check that the asID is a non-negative integer in the range specified by RFC4893
     if (read_casn_num_max(&roap->asID, &iAS_ID) < 0)
     {
-        LOG(LOG_ERR, "error reading ROA's asID");
+        LOG(LOG_ERR, "error reading ROA's AS number");
         return ERR_SCM_INVALASID;
     }
     else if (iAS_ID < 0)
     {
-        LOG(LOG_ERR, "ROA has negative asID");
+        LOG(LOG_ERR, "ROA has negative AS number (%" PRIdMAX ")", iAS_ID);
         return ERR_SCM_INVALASID;
     }
-    else if (iAS_ID > 0xffffffffL)
+    else if (iAS_ID > 0xffffffffLL)
     {
-        LOG(LOG_ERR, "ROA's asID is too large");
+        LOG(LOG_ERR, "ROA's AS number is too large (%" PRIdMAX ")", iAS_ID);
         return ERR_SCM_INVALASID;
     }
     struct Certificate *certp =
