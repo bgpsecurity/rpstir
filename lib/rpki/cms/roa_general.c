@@ -17,38 +17,6 @@
 // that the ROA has
 // been validated at entry and that ipaddrmax exceeds ipaddrmin
 
-// A quick itoa implementation that works only for radix <= 10
-static int itoa(
-    int n,
-    char *cN,
-    int radix)
-{
-    int i = 0;
-    int j = 0;
-    char *s;
-
-    if ((radix > 10) || (NULL == cN))
-        return ERR_SCM_INVALARG;
-
-    s = (char *)calloc(33, sizeof(char));
-    if (s == NULL)
-        return ERR_SCM_NOMEM;
-
-    do
-    {
-        s[i++] = (char)(n % radix + '0');
-        n -= n % radix;
-    }
-    while ((n /= radix) > 0);
-
-    for (j = 0; j < i; j++)
-        cN[i - 1 - j] = s[j];
-
-    cN[j] = '\0';
-    free(s);
-    return 0;
-}
-
 static int cvalhtoc2(
     unsigned char cVal,
     unsigned char *c2Array)
@@ -625,11 +593,9 @@ int roaGenerateFilter(
 
     memset(cAS_ID, 0, 17);
     iAS_ID = roaAS_ID(r);
-    if (iAS_ID == 0)
-        return ERR_SCM_INVALASID;
-    sta = itoa(iAS_ID, cAS_ID, 10);
-    if (sta < 0)
-        return sta;
+    sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
+    if (sta < 0 || sta == sizeof(cAS_ID))
+        return -1;
 
     cSID = roaSKI(r);
     if (NULL == cSID)
@@ -704,10 +670,10 @@ int roaGenerateFilter2(
         free(*strpp);
 
     memset(cAS_ID, 0, sizeof(cAS_ID));
-    if ((iAS_ID = roaAS_ID(r)) == 0)
-        return ERR_SCM_INVALASID;
-    if ((sta = itoa(iAS_ID, cAS_ID, 10)) < 0)
-        return sta;
+    iAS_ID = roaAS_ID(r);
+    sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
+    if (sta < 0 || sta == sizeof(cAS_ID))
+        return -1;
 
     if ((cSID = roaSKI(r)) == NULL)
         return ERR_SCM_INVALSKI;
