@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
-#include "lib/casn/casn.h"
+#include "casn/casn.h"
 
 /*
  NOTE: This set of tests assumes that C signed integers are
