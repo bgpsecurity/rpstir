@@ -1075,6 +1075,15 @@ static int setSID(
  * ( signature != NULL ) free(signature); return ansr; } 
  */
 
+/*
+ FIXME: This does not handle the full range of 32-bit AS numbers.
+ Fortunately, it is called only from a single unit test and is never
+ used in production.  It may be better to just remove the entire
+ calling code path (starts at the top from roaFromConfig).  We now
+ have other ways of generating ROAs from text files other than
+ roaFromConfig().  And/or we need to fix write_casn_num() as well as
+ its internal limit-checking code.
+*/
 static int setAS_ID(
     struct ROA *roa,
     unsigned char *asidstring)
@@ -1082,7 +1091,7 @@ static int setAS_ID(
     int iLen = 0;
     int iAS_ID = 0;
 
-    // Because we only accept 0 < ASID < 2**32
+    // FIXME: We deny AS 0 and AS numbers > 999999999, but allow negatives!
     iLen = strlen((char *)asidstring);
     if (9 < iLen)
         return ERR_SCM_INVALASID;

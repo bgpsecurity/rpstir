@@ -2757,7 +2757,7 @@ static int add_roa_internal(
     char *outfile,
     unsigned int dirid,
     char *ski,
-    int asid,
+    uint32_t asid,
     char *ip_addrs,
     char *sig,
     unsigned int flags)
@@ -2794,7 +2794,7 @@ static int add_roa_internal(
     cols[idx++].value = sig;
     cols[idx].column = "ip_addrs";
     cols[idx++].value = ip_addrs;
-    (void)snprintf(asn, sizeof(asn), "%d", asid);
+    (void)snprintf(asn, sizeof(asn), "%" PRIu32, asid);
     cols[idx].column = "asn";
     cols[idx++].value = asn;
     (void)snprintf(flagn, sizeof(flagn), "%u", flags);
@@ -2833,11 +2833,11 @@ int add_roa(
         certfilename[PATH_MAX],
         *ip_addrs = NULL;
     unsigned char *bsig = NULL;
-    int asid,
-        sta,
+    int sta,
         chainOK,
         bsiglen = 0,
         cert_added = 0;
+    uint32_t asid;
     unsigned int flags = 0;
 
     // validate parameters

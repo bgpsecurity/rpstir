@@ -202,12 +202,12 @@ unsigned char *roaSignature(
  * returns NULL. 
  */
 
-int roaAS_ID(
+uint32_t roaAS_ID(
     struct ROA *r);
 
 /*
- * This utility function extracts the AS# from a ROA and returns it. On
- * success this function returns a non-zero number, On failure it returns 0. 
+ * This utility function extracts the AS# from a ROA and returns it. Only
+ * call this after roaValidate() passes.
  */
 
 int roaValidate(
