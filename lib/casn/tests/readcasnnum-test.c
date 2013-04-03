@@ -35,7 +35,7 @@ int main(void)
         INTMAX_MIN != (-0x7fffffffffffffffLL - 1))
     {
         /* Note: Use (-0x7fffffffL - 1) instead of -0x80000000L to
-         * represent long 2^(-31).  The '-' has less precedence than
+         * represent long -2^31.  The '-' has less precedence than
          * 'L', so 0x80000000L is promoted to long long. */
         fprintf(stderr, "Unexpected C signed integer representation. "
                 "Skipping read_casn_num() test.\n");
