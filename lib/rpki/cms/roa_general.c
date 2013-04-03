@@ -594,7 +594,7 @@ int roaGenerateFilter(
     memset(cAS_ID, 0, 17);
     iAS_ID = roaAS_ID(r);
     sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
-    if (sta < 0 || sta == sizeof(cAS_ID))
+    if (sta < 0 || sta >= sizeof(cAS_ID))
         return -1;
 
     cSID = roaSKI(r);
@@ -672,7 +672,7 @@ int roaGenerateFilter2(
     memset(cAS_ID, 0, sizeof(cAS_ID));
     iAS_ID = roaAS_ID(r);
     sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
-    if (sta < 0 || sta == sizeof(cAS_ID))
+    if (sta < 0 || sta >= sizeof(cAS_ID))
         return -1;
 
     if ((cSID = roaSKI(r)) == NULL)
