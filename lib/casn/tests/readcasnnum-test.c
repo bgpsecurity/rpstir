@@ -31,8 +31,8 @@ int main(void)
     // 2) intmax_t appears to be 64-bit two's complement
     if (LONG_MAX != 0x7fffffffL ||
         LONG_MIN != (-0x7fffffffL - 1) ||
-        INTMAX_MAX != 0x7fffffffffffffff ||
-        INTMAX_MIN != (-0x7fffffffffffffff - 1))
+        INTMAX_MAX != 0x7fffffffffffffffLL ||
+        INTMAX_MIN != (-0x7fffffffffffffffLL - 1))
     {
         /* Note: Use (-0x7fffffffL - 1) instead of -0x80000000L to
          * represent long 2^(-31).  The '-' has less precedence than
