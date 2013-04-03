@@ -75,7 +75,7 @@ int read_casn_num(
     ret = read_casn_num_max(casnp, &tmp);
     *valp = (long)tmp;
 
-    if (ret > sizeof(*valp))
+    if (ret > (int)sizeof(*valp))
     {
         ret = _casn_obj_err(casnp, ASN_LENGTH_ERR);
     }
