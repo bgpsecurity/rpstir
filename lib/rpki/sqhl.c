@@ -1693,7 +1693,7 @@ static int updateManifestObjs(
     struct Manifest *manifest)
 {
     struct FileAndHash *fahp = NULL;
-    uchar file[200];
+    uchar file[NAME_MAX + 1];
     uchar bytehash[HASHSIZE / 2];
     uchar *bhash;
     scmtab *tabp;
@@ -1727,6 +1727,10 @@ static int updateManifestObjs(
     for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
          fahp != NULL; fahp = (struct FileAndHash *)next_of(&fahp->self))
     {
+        if (vsize_casn(&fahp->file) + 1 > (int)sizeof(file))
+        {
+            return ERR_SCM_BADMFTFILENAME;
+        }
         int flth = read_casn(&fahp->file, file);
         file[flth] = 0;
         if (strstr((char *)file, ".cer"))
