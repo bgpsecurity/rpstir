@@ -94,8 +94,8 @@ CA Certificates
 142 ResourcesBadV6Order # IPv6 addresses out of order 3779 (but full set is pending)
 143 ResourcesIPNoCrit   # IP address extension not critical 6487#4.8.10
 144 ResourcesNone       # neither AS nor IP 3779 extensions 6487#4.8.10
-    ResourcesIPEmpty    # empty set of IP addresses 6487#4.8.10
-    ResourcesASEmpty    # empty set of AS numbers 6487#4.8.11
+192 ResourcesIPEmpty    # empty set of IP addresses 6487#4.8.10
+193 ResourcesASEmpty    # empty set of AS numbers 6487#4.8.11
 145 ResourcesSAFI       # IP addresses has SAFI digit 6487#4.8.10
     ResourcesIP6Inherit # (good) inherit IPv6 resources only, others explicit 6487#4.8.10
     ResourcesIP4Inherit # (good) inherit IPv4 resources only, others explicit 6487#4.8.10
@@ -315,6 +315,7 @@ Manifests
 782 MFTHashOctetStr          # file hash is octet, not bit string 6486#4.2
 783 MFTDuplicateFileOneHash  # duplicate file name with same hash 6486#4.2.1
 784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash 6486#4.2.1
+TODO: enumerate cases of MFT EE rfc3779 resources. All resources present should be set to inherit, but it's unclear if all possible resources (AS, IPv4, IPv6) have to be present in the first place.
 
 
 Trust Anchor (self-signed) certificates

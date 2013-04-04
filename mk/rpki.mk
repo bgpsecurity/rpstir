@@ -562,6 +562,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertPubKeyShort.stage0.patch \
 	tests/conformance/raw/patches/badCertPubKeyShort.stage1.patch \
 	tests/conformance/raw/patches/badCertPubKeyShort.stage2.patch \
+	tests/conformance/raw/patches/badCertResourcesASEmpty.stage0.patch \
+	tests/conformance/raw/patches/badCertResourcesASEmpty.stage1.patch \
+	tests/conformance/raw/patches/badCertResourcesASEmpty.stage2.patch \
 	tests/conformance/raw/patches/badCertResourcesASNoCrit.stage0.patch \
 	tests/conformance/raw/patches/badCertResourcesASNoCrit.stage1.patch \
 	tests/conformance/raw/patches/badCertResourcesASNoCrit.stage2.patch \
@@ -577,6 +580,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertResourcesBadV6Order.stage0.patch \
 	tests/conformance/raw/patches/badCertResourcesBadV6Order.stage1.patch \
 	tests/conformance/raw/patches/badCertResourcesBadV6Order.stage2.patch \
+	tests/conformance/raw/patches/badCertResourcesIPEmpty.stage0.patch \
+	tests/conformance/raw/patches/badCertResourcesIPEmpty.stage1.patch \
+	tests/conformance/raw/patches/badCertResourcesIPEmpty.stage2.patch \
 	tests/conformance/raw/patches/badCertResourcesIPNoCrit.stage0.patch \
 	tests/conformance/raw/patches/badCertResourcesIPNoCrit.stage1.patch \
 	tests/conformance/raw/patches/badCertResourcesIPNoCrit.stage2.patch \
