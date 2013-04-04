@@ -188,6 +188,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/MFTNumZero.p15 \
 	tests/conformance/raw/keys/MFTThisUpdFuture.p15 \
 	tests/conformance/raw/keys/MFTThisUpdUTC.p15 \
+	tests/conformance/raw/keys/MFTUnkownFileExtension.p15 \
 	tests/conformance/raw/keys/MFTVersion0.p15 \
 	tests/conformance/raw/keys/MFTVersion1.p15 \
 	tests/conformance/raw/keys/MFTWrongType.p15 \
@@ -254,6 +255,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
 	tests/conformance/raw/keys/goodMFTNumZero.mft.p15 \
+	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
@@ -775,6 +777,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodMFTNumZero.ee.stage0.patch \
 	tests/conformance/raw/patches/goodMFTNumZero.stage1.patch \
 	tests/conformance/raw/patches/goodMFTNumZero.stage2.patch \
+	tests/conformance/raw/patches/goodMFTUnkownFileExtension.ee.stage0.patch \
+	tests/conformance/raw/patches/goodMFTUnkownFileExtension.stage1.patch \
+	tests/conformance/raw/patches/goodMFTUnkownFileExtension.stage2.patch \
 	tests/conformance/raw/patches/goodROAASIDMax.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAASIDMax.stage1.patch \
 	tests/conformance/raw/patches/goodROAASIDMax.stage2.patch \

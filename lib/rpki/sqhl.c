@@ -1735,6 +1735,8 @@ static int updateManifestObjs(
             tabp = theCRLTable;
         else if (strstr((char *)file, ".roa"))
             tabp = theROATable;
+        else
+            continue;
         snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"",
                  file);
         addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
