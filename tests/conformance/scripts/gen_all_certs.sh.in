@@ -239,3 +239,5 @@ ${single_cert_cmd} 188 IssuerSet2SerNums
 ${single_cert_cmd} 189 SubjectSet2SerNums
 ${single_cert_cmd} -x good 190 SerNumMax
 ${single_cert_cmd} 191 SerNumTooBig
+${single_cert_cmd} 192 ResourcesIPEmpty
+${single_cert_cmd} 193 ResourcesASEmpty

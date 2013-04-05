@@ -3236,6 +3236,33 @@ static int rescert_ip_resources_chk(
             return ERR_SCM_NCEXT;
         }
     }
+
+    bool have_contents = false;
+    struct IpAddrBlock *ipAddrBlock = &extp->extnValue.ipAddressBlock;
+    struct IPAddressFamilyA *ipAddrFamA;
+    for (ipAddrFamA = (struct IPAddressFamilyA *)member_casn(&ipAddrBlock->self, 0);
+        ipAddrFamA != NULL;
+        ipAddrFamA = (struct IPAddressFamilyA *)next_of(&ipAddrFamA->self))
+    {
+        if (vsize_casn(&ipAddrFamA->addressFamily) != 2)
+        {
+            LOG(LOG_ERR, "IP address family contains a SAFI");
+            return ERR_SCM_INVALFAM;
+        }
+
+        if (size_casn(&ipAddrFamA->ipAddressChoice.inherit) ||
+            num_items(&ipAddrFamA->ipAddressChoice.addressesOrRanges.self) > 0)
+        {
+            have_contents = true;
+        }
+    }
+
+    if (!have_contents)
+    {
+        LOG(LOG_ERR, "IP extension has no resources and is not marked inherit");
+        return ERR_SCM_NOIPADDR;
+    }
+
     return 1;
 }
 
@@ -3299,9 +3326,6 @@ static int rescert_as_resources_chk(
             return ERR_SCM_NCEXT;
         }
     }
-
-    // Should we make sure there's a non-empty set of AS resources if the AS
-    // extension is present and not inherit?
 
     if (size_casn((struct casn *)&extp->extnValue.autonomousSysNum.rdi.self))
     {
