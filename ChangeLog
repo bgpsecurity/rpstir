@@ -1,3 +1,22 @@
+next
+
+	* Add preliminary support for adding files from the local cache. In the
+	  future, this could be used to quickly deploy additional relying party
+	  machines without each one needing to download all files from the
+	  global RPKI.
+	* Fix various small bugs:
+		* There was a buffer overflow when manifests listed filenames
+		  longer than 199 bytes.
+		* There was a read of uninitialized memory when the first file
+		  listed on a manifest had an unknown extension.
+		* Empty sets of IP resources were allowed in certificates.
+		  (http://tools.ietf.org/html/rfc6487#section-4.8.10)
+		* Subsequent Address Family Identifier (SAFI) values were
+		  allowed in IP resources.
+		  (http://tools.ietf.org/html/rfc6487#section-4.8.10)
+		* In ROAs, AS numbers equal to zero or larger than 2^31 - 1
+		  were rejected.
+
 0.6
 
 	* Simplify the commands used during normal operation. The commands
