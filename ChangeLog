@@ -1,4 +1,4 @@
-next
+0.7
 
 	* Add preliminary support for adding files from the local cache. In the
 	  future, this could be used to quickly deploy additional relying party
