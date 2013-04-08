@@ -104,8 +104,8 @@ primary group.
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
-version 1.0.0i) from http://www.openssl.org.  We recommend the default
-installation target directory /usr/local/ssl.  As of version 1.0.0i,
+version 1.0.1d) from http://www.openssl.org.  We recommend the default
+installation target directory /usr/local/ssl.  As of version 1.0.1d,
 the steps were:
 
 	$ ./config enable-rfc3779
@@ -743,9 +743,9 @@ mkdir -p ~/libs
 
   # OpenSSL w/ RFC3779 extensions
   cd ~/libs
-  curl -OJ http://www.openssl.org/source/openssl-1.0.1c.tar.gz
-  tar -xzvf openssl-1.0.1c.tar.gz
-  cd openssl-1.0.1c/
+  curl -OJ http://www.openssl.org/source/openssl-1.0.1e.tar.gz
+  tar -xzvf openssl-1.0.1e.tar.gz
+  cd openssl-1.0.1e/
   ./config enable-rfc3779 && make depend && make && make test
   sudo make install
 
