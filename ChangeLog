@@ -4,8 +4,8 @@
 	  future, this could be used to quickly deploy additional relying party
 	  machines without each one needing to download all files from the
 	  global RPKI.
-	* Fix a buffer overflow that happened when manifests listed filenames
-	  longer than 199 bytes.
+	* Fix a buffer overflow when manifests list filenames longer than 199
+	  bytes.
 	* Fix a read of uninitialized memory when the first file listed on a
 	  manifest has an unknown extension.
 	* Don't allow empty sets of IP resources in certificates.
