@@ -1694,6 +1694,7 @@ static int updateManifestObjs(
 {
     struct FileAndHash *fahp = NULL;
     uchar file[NAME_MAX + 1];
+    uchar escaped_file[NAME_MAX * 2 + 1];
     uchar bytehash[HASHSIZE / 2];
     uchar *bhash;
     scmtab *tabp;
@@ -1741,8 +1742,9 @@ static int updateManifestObjs(
             tabp = theROATable;
         else
             continue;
+        mysql_escape_string(escaped_file, file, strlen(file));
         snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"",
-                 file);
+                 escaped_file);
         addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
         updateManLid = 0;
         memset(updateManHash, 0, sizeof(updateManHash));
