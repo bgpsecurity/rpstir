@@ -18,8 +18,9 @@ TAGS
 .~lock.*#
 rpstir-*.tar.gz
 /rpstir-*/
-INSTRUCTIONS
-envir.setup
+README
+.dirstamp
+copy-asn-sources-stamp
 
 # eclipse metadata
 .metadata

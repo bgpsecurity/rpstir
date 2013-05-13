@@ -1,0 +1,120 @@
+# Utility functions for shell scripts
+
+warn () {
+    echo "WARNING:" "$@" >&2
+}
+
+error () {
+    echo "ERROR:" "$@" >&2
+}
+
+fatal () {
+    error "$@"
+    exit 1
+}
+
+# depends on the script defining a usage function that prints a help message
+usage_fatal () {
+    error "$@"
+    echo >&2
+    usage
+    exit 1
+}
+
+
+# Try to lock a mutex pathname.
+# Returns 0 on successful lock, otherwise returns non-zero.
+mutex_trylock () {
+    local lockpath
+
+    if test $# -ne 1; then
+        error "mutex_trylock takes one argument"
+        return 2
+    fi
+
+    lockpath="$1"
+
+    if ln -s "locked by pid $$" "$lockpath" > /dev/null 2>&1; then
+        return 0
+    else
+        error "failed to acquire lock $lockpath"
+        return 1
+    fi
+}
+
+# Unlock a mutex pathname.
+mutex_unlock () {
+    local lockpath ret
+
+    if test $# -ne 1; then
+        error "mutex_trylock takes one argument"
+        return 2
+    fi
+
+    lockpath="$1"
+
+    ret=0
+
+    rm "$lockpath" || ret=1
+
+    return $ret
+}
+
+
+# Compute the minimal relative path from the curent directory to the path
+# specified as an argument.
+#
+# NOTE: This currently only works if the specified path exists and is a
+#       directory.
+relpath () {
+    local abs_path cur_path rel_path common_prefix
+
+    if test $# -ne 1; then
+        error "relpath takes one argument"
+        return 1
+    fi
+
+    abs_path="$(cd "$1" && pwd)" || {
+        error "Can't cd into $1"
+        return 1
+    }
+    if test "$abs_path" = "/"; then
+        abs_path=""
+    fi
+
+    cur_path="$(pwd)"
+    if test "$cur_path" = "/"; then
+        cur_path=""
+    fi
+
+    common_prefix="$cur_path" # common prefix of $cur_path and $abs_path
+    rel_path="." # relative path from $cur_path to $common_prefix
+    while true; do
+        case "$abs_path" in
+            "$common_prefix")
+                echo "$rel_path"
+                return 0
+                ;;
+
+            "$common_prefix"/*)
+                if test "$rel_path" = "."; then
+                    echo "${abs_path#"$common_prefix"/}"
+                else
+                    echo "${rel_path}/${abs_path#"$common_prefix"/}"
+                fi
+                return 0
+                ;;
+
+            *)
+                # $abs_path is not equal to or a child of $common_prefix, so
+                # remove the last path component from $common_prefix.
+                common_prefix="${common_prefix%/*}"
+                if test "$rel_path" = "."; then
+                    rel_path=".."
+                else
+                    rel_path="../$rel_path"
+                fi
+                ;;
+        esac
+    done
+}

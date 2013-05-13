@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+cd "$TESTS_BUILDDIR"
+
+./makecerts
+./makecrls
+./makeroas
+./makemanifests

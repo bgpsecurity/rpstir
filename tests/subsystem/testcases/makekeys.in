@@ -1,0 +1,58 @@
+#!/bin/sh
+
+@SETUP_ENVIRONMENT@
+
+./gen_test_key CM1.p15	
+./gen_test_key C1.p15
+./gen_test_key C1M1.p15
+./gen_test_key C11.p15
+./gen_test_key C11R1.p15
+./gen_test_key C11M1.p15
+./gen_test_key C11M2.p15
+./gen_test_key C111.p15
+./gen_test_key C111R1.p15
+./gen_test_key C111R2.p15
+./gen_test_key C111R3.p15
+./gen_test_key C111M1.p15
+./gen_test_key C1111.p15
+./gen_test_key C1111R1.p15
+./gen_test_key C112.p15
+./gen_test_key C112R1.p15
+./gen_test_key C113.p15
+./gen_test_key C113R1.p15
+./gen_test_key C12.p15
+./gen_test_key C121.p15
+./gen_test_key C121R1.p15
+./gen_test_key C13.p15
+./gen_test_key C131.p15
+./gen_test_key C131R1.p15
+./gen_test_key C132.p15
+./gen_test_key C132R1.p15
+./gen_test_key C132R2.p15
+./gen_test_key C2.p15
+./gen_test_key C21.p15
+./gen_test_key C211.p15
+./gen_test_key C211R1.p15
+./gen_test_key C22.p15
+./gen_test_key C22R1.p15
+./gen_test_key C221.p15
+./gen_test_key C221R1.p15
+./gen_test_key C2211.p15
+./gen_test_key C2211R1.p15
+./gen_test_key C2212.p15
+./gen_test_key C2212R1.p15
+./gen_test_key C2212R2.p15
+./gen_test_key C23.p15
+./gen_test_key C23R1.p15
+./gen_test_key C23R2.p15
+./gen_test_key C23M1.p15
+./gen_test_key C231.p15
+./gen_test_key C231R1.p15
+./gen_test_key C231R2.p15
+./gen_test_key C232.p15
+./gen_test_key C232R1.p15
+./gen_test_key C233.p15
+./gen_test_key C233R1.p15
+
+cp C2.cer C2X.cer
+cp C2.raw C2X.raw

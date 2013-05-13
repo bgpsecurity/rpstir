@@ -1,0 +1,46 @@
+#!/bin/sh
+# clean the rpki-rtr data out of the database
+
+@SETUP_ENVIRONMENT@
+
+
+usage () {
+    echo >&2 "Usage: $0 <option>"
+    echo >&2 "    -h | --help     Print this help message."
+    echo >&2
+    echo >&2 "    -f | --force    Clear all rpki-rtr data. Note that this will"
+    echo >&2 "                    disconnect all rpki-rtr clients and"
+    echo >&2 "                    invalidate the current rpki-rtr session."
+}
+
+if test $# -ne 1; then
+   usage_fatal "Please specify exactly one argument."
+fi
+
+case "$1" in
+    -h | --help)
+        usage
+        exit 0
+        ;;
+
+    -f | --force)
+        ;;
+
+    *)
+        usage_fatal "Unrecognized option: $1"
+esac
+
+
+# Note: the order of these commands is important.
+
+{
+    # prevents a new server from starting
+    echo "TRUNCATE TABLE rtr_session;"
+
+    # makes all queries fail
+    echo "TRUNCATE TABLE rtr_update;"
+
+    # gets rid of data
+    echo "TRUNCATE TABLE rtr_full;"
+    echo "TRUNCATE TABLE rtr_incremental;"
+} | mysql_cmd

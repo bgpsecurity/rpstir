@@ -1,0 +1,12 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo "Expecting 1 roa filenames"
+use_config_file "$TESTS_SRCDIR/specs.2.6.conf"
+CMDLINE="query -t roa -d filename"
+check_num_output_lines "$CMDLINE" "query client failed" 1
+
+echo $0 PASS

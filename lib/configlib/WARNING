@@ -1,0 +1,5 @@
+WARNING: This library IS NOT designed to provide any security against malicious
+config files. Some care is taken to avoid buffer overflows and other similar
+attacks, but there is NO GUARANTEE that an attacker with access to configuration
+file(s) can't gain the privileges of the user parsing the config file with this
+library.

@@ -1,0 +1,11 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo About to clear database ...
+
+# set up an initial database
+run "rcli-x-t-y" rcli -x -t "$TESTS_BUILDDIR/testcases" -y
+run "rcli-y-F" rcli -y -F "$TESTS_BUILDDIR/testcases/C.cer"

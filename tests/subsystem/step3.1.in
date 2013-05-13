@@ -1,0 +1,13 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo "Loading data"
+rsync_aur -s -t -f "$TESTS_SRCDIR/test3.1a.log" -w -e -i -d "$TESTS_BUILDDIR/testcases" || \
+  check_errs $? "$0 rsync_aur on test3.1a.log failed"
+rsync_aur -s -t -f "$TESTS_SRCDIR/test3.1b.log" -w -e -i -d "$TESTS_BUILDDIR/testcases" || \
+  check_errs $? "$0 rsync_aur on test3.1b.log failed"
+
+echo $0 PASS

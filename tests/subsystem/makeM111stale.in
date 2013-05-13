@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@SETUP_ENVIRONMENT@
+
+echo "update rpki_manifest set next_upd='2008-07-31' where filename='M111.man';" | mysql_cmd

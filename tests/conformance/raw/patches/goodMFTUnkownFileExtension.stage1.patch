@@ -1,0 +1,13 @@
+--- goodMFTUnkownFileExtension.raw.old	2013-04-04 16:25:10.776709090 -0400
++++ goodMFTUnkownFileExtension.raw	2013-04-04 16:26:46.600705082 -0400
+@@ -13,6 +13,10 @@
+                                     bit 0x00C6ABA04024BC547159CBA93651CF9E
+                                         0x80D2934538F1A4F3846E290166396D48
+                                         0xA1
++                                seq ia5 "foo.nul"
++                                    bit 0x00E3B0C44298FC1C149AFBF4C8996FB9
++                                        0x2427AE41E4649B934CA495991B7852B8
++                                        0x55
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 

@@ -1,0 +1,10 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo "Making L111 expired"
+"$TESTS_BUILDDIR/makeL111Expired" || check_errs $? "$0 makeL111Expired failed"
+
+echo $0 PASS

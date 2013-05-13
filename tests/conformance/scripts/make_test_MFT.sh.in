@@ -1,0 +1,301 @@
+#!@SHELL_BASH@
+
+# make_test_MFT.sh - manually create CertificateRevocationList (MFT)
+#       for RPKI syntax conformance test
+
+@SETUP_ENVIRONMENT@
+
+# Safe bash shell scripting practices
+@trap_errors@
+
+TEST_LOG_DIR="$TESTS_BUILDDIR"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+
+# Usage
+usage ( ) {
+    usagestr="
+Usage: $0 [options] <serial> <subjectname>
+
+Options:
+  -P        \tApply patches instead of prompting user to edit (default = false)
+  -k keyfile\tRoot's key (default = ...conformance/raw/root.p15)
+  -o outdir \tOutput directory (default = ...conformance/raw/root)
+  -p patchdir\tDirectory for saving/getting patches (default = ...conformance/raw/patches
+  -d keydir\tDirectory for saving/getting keys (default = ...conformance/raw/keys)
+  -x prefix\tPrefix (default = 'bad')
+  -h        \tDisplay this help file
+
+This script creates a MFT, prompts the user multiple times to edit it
+interactively (e.g., in order to introduce errors), and captures
+those edits in '.patch' files (output of diff -u).  Later,
+make_test_MFT.sh can replay the creation process by automatically
+applying those patch files instead of prompting for user intervention.
+
+This tool takes as input a parent CA certificate + key pair, and as
+output, issues a child CA certificate with a minimal publication
+subdirectory.  The diagram below shows outputs of the script.  The
+inputs and non-participants are indicated by normal boxes; the outputs
+are indicated by boxes whose label has a prepended asterisk (*).
+Note: this script does NOT update the 'Manifest issued by Parent'.
+
+
+               +-----------------------------------+
+               | rsync://rpki.bbn.com/conformance/ |
+               |    +--------+                     |
+         +--------->|  Root  |                     |
+         |     |    |  AIA   |                     |
+         |     |    |  SIA   |                     |
+         |     |    +---|----+                     |
+         |     +--------|--------------------------+
+         |              V
+         |     +----------------------------------------+
+         |     | rsync://rpki.bbn.com/conformance/root/ |
+         |     |   +--------+     +------------+        |
+         |     |   | *Child |     | CRL issued |        |
+         |     |   | CRLDP------->| by Parent  |        |
+         +----------- AIA   |     +------------+        |
+               |   |  SIA------+                        |
+               |   +--------+  |  +-----------------+   |
+               |               |  | Manifest issued |   |
+               | Root's Repo   |  | by Parent       |   |
+               | Directory     |  +-----------------+   |
+               +---------------|------------------------+
+                               |
+                               V
+	     +-------------------------------------------------+
+       	     | rsync://rpki.bbn.com/conformance/root/subjname/ |
+             |                                     	       |
+             |     +---------------------------------------+   |
+             |     | *Manifest issued by Child (TEST CASE) |   |
+             |     +---------------------------------------+   |
+             |                                                 |
+             |     +----------------------+                    |
+             |     | *CRL issued by Child |                    |
+             |     +----------------------+                    |
+             |                                                 |
+             | *Child's Repo Directory                         |
+             +-------------------------------------------------+
+
+Explanation of inputs, not in original order:
+  subjectname - subject name for the child
+  serial - serial number for the child to be created
+  -P - (optional) use patch mode for automatic insertion of patches
+  patchdir - (optional) local path to directory of patches
+  outdir - (optional) local path to parent's repo directory.  Defaults to CWD
+
+Outputs:
+  child CA certificate - inherits AS/IP resources from parent via inherit bit
+  path files - manual edits are saved as diff output in
+              'badMFT<subjectname>.stageN.patch' (N=0..1)
+
+  child repo directory - ASSUMED to be a subdirectory of parent's repo. The
+                         new directory will be <outdir>/<subjectname>/
+  crl issued by child - named <subjectname>.crl, and has no entries
+  mft issued by child - named <subjectname>.mft, and has one entry (the crl)
+
+  The filename for the mft will be prepended by the string 'bad' by
+  default, though this can be replaced by an arbitrary non-empty
+  string using the -x option.
+
+Auxiliary Outputs: (not shown in diagram)
+  child key pair - <outdir>/<subjectname>.p15
+  child-issued MFT EE cert - <outdir>/<subjectname>/<subjectname>.mft.cer
+  child-issued MFT EE key pair - <outdir>/<subjectname>/<subjectname>.mft.p15
+    "
+    printf "${usagestr}\n"
+    exit 1
+}
+
+# NOTES
+
+# 1. Variable naming convention -- preset constants and command line
+# arguments are in ALL_CAPS.  Derived/computed values are in
+# lower_case.
+
+# Set up paths to conformance test scripts
+export RPKI_NO_SIGNING_TIME=1
+CONF_SCRIPTS="$TESTS_BUILDDIR"
+
+# Options and defaults
+OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
+PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
+KEYS_DIR="$TESTS_SRCDIR/../raw/keys"
+ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
+ROOT_CERT_PATH="$TESTS_BUILDDIR/../raw/root.cer"
+USE_EXISTING_PATCHES=
+PREFIX="bad"
+EDITOR=${EDITOR:-vi}            # set editor to vi if undefined
+# Process command line arguments.
+while getopts Pk:o:p:d:x:h opt
+do
+  case $opt in
+      P)
+	  USE_EXISTING_PATCHES=1
+	  ;;
+      k)
+	  ROOT_KEY_PATH=$OPTARG
+	  ;;
+      o)
+	  OUTPUT_DIR=$OPTARG
+	  ;;
+      p)
+          PATCHES_DIR=$OPTARG
+          ;;
+      d)
+          KEYS_DIR=$OPTARG
+          ;;
+      x)
+          PREFIX=$OPTARG
+          ;;
+      h)
+	  usage
+	  ;;
+  esac
+done
+shift $((OPTIND - 1))
+if [ $# = "2" ]
+then
+    SERIAL=$1
+    SUBJECTNAME=$2
+else
+    usage
+fi
+
+###############################################################################
+# Computed Variables
+###############################################################################
+
+child_name="${SUBJECTNAME}"
+mft_name="${PREFIX}${child_name}"
+mft_ee_name=${mft_name}.ee
+mft_ee_filename=${mft_name}.mft.cer
+if [ ${USE_EXISTING_PATCHES} ]
+then
+    option_reuse_keys="-K"  # will be passed to gen_child_ca.sh
+else
+    option_reuse_keys=
+fi
+child_key_path=${KEYS_DIR}/${SUBJECTNAME}.p15
+child_mft_ee_key_path=${KEYS_DIR}/${mft_name}.mft.p15
+
+###############################################################################
+# Check for prerequisite tools and files
+###############################################################################
+
+hash patch
+hash diff
+
+ensure_dir_exists $OUTPUT_DIR
+ensure_dir_exists $PATCHES_DIR
+
+ensure_file_exists $ROOT_KEY_PATH
+ensure_file_exists $ROOT_CERT_PATH
+hash rr
+hash dump
+hash dump_smart
+hash sign_cert
+hash add_cms_cert_no_check
+ensure_file_exists $CONF_SCRIPTS/gen_child_ca.sh
+
+if [ $USE_EXISTING_PATCHES ]
+then
+    ensure_file_exists $PATCHES_DIR/${mft_ee_name}.stage0.patch
+    ensure_file_exists $PATCHES_DIR/${mft_name}.stage1.patch
+    ensure_file_exists $PATCHES_DIR/${mft_name}.stage2.patch
+    ensure_file_exists ${child_key_path}
+    ensure_file_exists ${child_mft_ee_key_path}
+fi
+
+###############################################################################
+# Generate Child cert
+###############################################################################
+
+cd ${OUTPUT_DIR}
+
+# Create a good MFT in a subdirectory (but named <prefix><subjname>.mft)
+$CONF_SCRIPTS/gen_child_ca.sh \
+    -b mft \
+    -o ${OUTPUT_DIR} \
+    -x ${PREFIX} \
+    ${option_reuse_keys} \
+    -d ${KEYS_DIR} \
+    ${child_name} \
+    ${SERIAL} \
+    ${ROOT_CERT_PATH} \
+    rsync://rpki.bbn.com/conformance/root.cer \
+    ${ROOT_KEY_PATH} \
+    rsync://rpki.bbn.com/conformance/root/root.crl
+
+# Go into that subdirectory...
+cd ${OUTPUT_DIR}/${child_name}
+
+# Stage 0: Modify EE automatically or manually
+run "dump_smart-0-`basename ${mft_ee_filename}`" dump_smart ${mft_ee_filename} >${mft_ee_name}.raw
+if [ $USE_EXISTING_PATCHES ]
+then
+    echo "Stage 0: Modify EE automatically"
+    patch ${mft_ee_name}.raw ${PATCHES_DIR}/${mft_ee_name}.stage0.patch
+    rm -f ${mft_ee_name}.raw.orig
+else
+    echo "Stage 0: Modify EE manually"
+    cp ${mft_ee_name}.raw ${mft_ee_name}.raw.old
+    ${EDITOR} ${mft_ee_name}.raw
+    diff -u ${mft_ee_name}.raw.old ${mft_ee_name}.raw \
+        >${PATCHES_DIR}/${mft_ee_name}.stage0.patch || true
+    rm ${mft_ee_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${mft_ee_name}.stage0.patch"
+fi
+
+# Sign EE cert
+echo "Signing EE cert"
+run "rr-1-`basename ${mft_ee_filename}`" rr <${mft_ee_name}.raw >${mft_ee_filename}
+run "sign_cert-1-`basename ${mft_ee_filename}`" sign_cert ${mft_ee_filename} ${child_key_path}
+rm ${mft_ee_name}.raw
+echo "Successfully created ${OUTPUT_DIR}/${child_name}/${mft_ee_name}.cer"
+
+# Stage 1: Modify MFT's to-be-signed portions automatically or manually
+run "dump_smart-1-`basename ${mft_name}`" dump_smart ${mft_name}.mft >${mft_name}.raw
+if [ $USE_EXISTING_PATCHES ]
+then
+    echo "Stage 1: Modify MFT's to-be-signed portions automatically"
+    patch ${mft_name}.raw ${PATCHES_DIR}/${mft_name}.stage1.patch
+    rm -f ${mft_name}.orig
+else
+    echo "Stage 1: Modify MFT's to-be-signed portions manually"
+    cp ${mft_name}.raw ${mft_name}.raw.old
+    ${EDITOR} ${mft_name}.raw
+    diff -u ${mft_name}.raw.old ${mft_name}.raw \
+        >${PATCHES_DIR}/${mft_name}.stage1.patch || true
+    rm ${mft_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${mft_name}.stage1.patch"
+fi
+
+# Embed EE into MFT and sign using EE private key
+echo "Embedding EE cert into MFT and signing"
+run "rr-2-`basename ${mft_name}`" rr <${mft_name}.raw >${mft_name}.mft
+run "add_cms_cert_no_check-2-`basename ${mft_name}`" add_cms_cert_no_check \
+    ${mft_ee_filename} ${mft_name}.mft \
+    ${child_mft_ee_key_path} ${mft_name}.mft
+run "dump-2-`basename ${mft_name}`" dump -a ${mft_name}.mft > ${mft_name}.raw
+
+# Stage 2: Modify ROA's not-signed portions automatically or manually
+if [ $USE_EXISTING_PATCHES ]
+then
+    echo "Stage 2: Modify MFT's not-signed portions automatically"
+    patch ${mft_name}.raw ${PATCHES_DIR}/${mft_name}.stage2.patch
+    rm -f ${mft_name}.raw.orig
+else
+    echo "Stage 2: Modify MFT's not-signed portions manually"
+    cp ${mft_name}.raw ${mft_name}.raw.old
+    ${EDITOR} ${mft_name}.raw
+    diff -u ${mft_name}.raw.old ${mft_name}.raw \
+        >${PATCHES_DIR}/${mft_name}.stage2.patch || true
+    rm ${mft_name}.raw.old
+    echo "Successfully created ${PATCHES_DIR}/${mft_name}.stage2.patch"
+fi
+
+# Convert back into binary
+run "rr-final-`basename ${mft_name}`" rr <${mft_name}.raw >${mft_name}.mft
+rm ${mft_name}.raw
+echo "Successfully created ${OUTPUT_DIR}/${child_name}/${mft_name}.mft"

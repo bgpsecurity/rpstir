@@ -1,0 +1,844 @@
+@PACKAGE_LONGNAME@
+Installation and Usage Manual
+Version @PACKAGE_VERSION@
+
+===============================================================================
+Table of Contents
+
+1. Organization of this document
+2. Installation
+    2.1 Prerequisites
+      2.1.1 User Account
+      2.1.2 OpenSSL
+      2.1.3 MySQL and ODBC
+      2.1.4 cryptlib
+      2.1.5 rsync
+      2.1.6 Python
+      2.1.7 netcat
+      2.1.8 cURL
+      2.1.9 Syslog
+    2.2 @PACKAGE_NAME_UC@ Software
+      2.2.1 Unpack the Source Code
+      2.2.2 Configure
+      2.2.3 Build the Executables
+    2.3 @PACKAGE_NAME_UC@ User Account
+      2.3.1 Self-Test Configuration File
+    2.4 SSH Subsystem
+    2.5 Self Test
+    2.6 Installation
+    2.7 Post-Installation Procedures
+      2.7.1 First Time Installation
+      2.7.2 Upgrading
+3. Running the RPKI Software
+    3.1 Normal Operation
+      3.1.1 @PACKAGE_NAME@-synchronize
+      3.1.2 @PACKAGE_NAME@-rpki-rtr-daemon
+      3.1.3 @PACKAGE_NAME@-rpki-rtr-update
+    3.2 Results and Analysis
+      3.2.1 Validation Report (@PACKAGE_NAME@-results)
+      3.2.2 Query Client (@PACKAGE_NAME@-query)
+      3.2.3 Log Files
+    3.3 Warning
+Appendix A. Troubleshooting
+    A.1 Database troubleshooting
+    A.2 64-bit support
+    A.3 Specific Operating Systems
+      A.3.1 OpenBSD
+      A.3.2 FreeBSD
+      A.3.3 Ubuntu 12.04-12.10 x86
+    A.4 Configure can't find installed software
+
+===============================================================================
+
+1. Organization of this document
+
+This document describes how to install and use the Relying Party Security
+Technology for Internet Routing (RPSTIR, pronounced rip-ster) software
+by Raytheon BBN Technologies.  Note that various files may refer to this
+software by its old name, RPKI.
+
+Section 2 describes how to install that software, including its dependencies.
+
+Section 3 provides a quick-start guide on how to get your system running.
+
+Appendix A provides troubleshooting tips for some common problems.
+
+===============================================================================
+
+2. Installation
+
+The RPKI software is distributed as source code that should be built
+using the GNU build tools on Linux/Unix.  After reading this section,
+you will know:
+    . How to install and configure the prerequisites.
+    . How to build the @PACKAGE_NAME@ software.
+    . How to set up a user with the correct environment.
+    . How to validate the installation.
+We assume that you can operate your system's package manager, as well
+as build packages from source and do minor edits on Makefiles.
+
+Note that @PACKAGE_NAME@ does not currently support running in a 64-bit
+environment.  It is strongly recommended to use a 32-bit operating system.
+However, it is possible, but more difficult, to run in a 32-bit environment on
+a 64-bit operating system.  If you still want to try running @PACKAGE_NAME@ on
+a 64-bit operating system, see Appendix A.2 at the bottom of this file before
+continuing.
+
+
+2.1 Prerequisites
+
+When installing prerequisites from your operating system's package
+manager, you may need to look for a -dev or -devel version of each
+package. These versions generally contain header files that are needed
+to build @PACKAGE_NAME@.
+
+2.1.1 User Account
+
+You must establish a user account from which you can build and run @PACKAGE_NAME@.
+While the full environment setup is detailed in section 2.3, the basic user
+should be created now so that you can set and test environment variables.  It
+is not necessary, but recommended that the user is the only user in their
+primary group.
+
+2.1.2 OpenSSL
+
+You must build OpenSSL from source in order to enable support for
+RFC3779 X.509v3 extensions.  Download the latest source code (at least
+version 1.0.1d) from http://www.openssl.org.  We recommend the default
+installation target directory /usr/local/ssl.  As of version 1.0.1d,
+the steps were:
+
+	$ ./config enable-rfc3779
+	$ make depend
+	$ make
+	$ make test
+	$ make install
+
+In addition, some scripts invoke the OpenSSL executable from the
+shell.  Modify your user's PATH such that `which openssl` points to
+the custom-compiled binary that supports RFC 3779 extensions.
+
+2.1.3 MySQL and ODBC
+
+Install unixODBC from your operating system's package manager or
+http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
+recommended.  Install the MySQL database server, client, and client
+libraries, at least version 5.1, from the package manager or
+http://mysql.org.  Install the MySQL Connector/ODBC driver, at least
+version 3.51, from the package manager or mysql.org.
+
+Configure MySQL.  First, secure the initial MySQL accounts, which
+includes setting a root password (see MySQL 5.1 manual, section
+2.13.2).  Then set up a database user and database(s) for @PACKAGE_NAME@.
+If you want to run the self-tests, it is recommended to create a separate
+database for testing than for production use.  If you don't want to run the
+self-tests, only one database is needed.  For example, the following creates
+a root password, then sets up a user with username "@PACKAGE_NAME@", password "bbn",
+and access to the databases named "@PACKAGE_NAME@" and "@PACKAGE_NAME@_test":
+
+    shell> mysql -u root
+    mysql> SELECT Host, User FROM mysql.user;  /* view all accounts */
+    mysql> SET PASSWORD FOR 'root'@'127.0.0.1' = PASSWORD('rootpass');
+    mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('rootpass');
+    mysql> SET PASSWORD FOR 'root'@'<myhostname>' = PASSWORD('rootpass');
+    mysql> CREATE USER '@PACKAGE_NAME@'@'localhost' IDENTIFIED BY 'bbn';
+    mysql> CREATE DATABASE @PACKAGE_NAME@;
+    mysql> GRANT ALL PRIVILEGES ON @PACKAGE_NAME@.* TO '@PACKAGE_NAME@'@'localhost';
+    mysql> CREATE DATABASE @PACKAGE_NAME@_test;
+    mysql> GRANT ALL PRIVILEGES ON @PACKAGE_NAME@_test.* TO '@PACKAGE_NAME@'@'localhost';
+
+Configure the Connector/ODBC driver.  First, locate your system ODBC
+drivers and data sources configuration files.  For example:
+
+[achi@roa-pki:~/rpki]$ odbcinst -j
+unixODBC 2.2.11
+DRIVERS............: /usr/local/etc/odbcinst.ini
+SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
+USER DATA SOURCES..: /home/achi/.odbc.ini
+
+Edit odbcinst.ini to use the appropriate driver depending on the
+version of the MySQL Connector.  For example:
+
+-----------------------------------------------------------------------------
+;  Sample /usr/local/etc/odbcinst.ini
+
+[myodbcConn]
+Description             = MySQL odbc driver for Linux & Win32
+Driver          = /usr/local/lib/libmyodbc3.so
+Setup           = /usr/local/lib/libmyodbc3S.so
+UsageCount              = 1
+
+[ODBC]
+TraceFile       = /tmp/sql-odbc.log
+Trace           = Yes
+ForceTrace      = Yes
+-----------------------------------------------------------------------------
+
+Then edit odbc.ini to set up a couple of system data sources.  This is
+slightly confusing: the user, password, and database name are actually
+ignored because they will be overridden by @PACKAGE_NAME@.  However,
+depending on whether your database user has a password, in future steps
+below you will need to remember to set your DatabaseDSN configuration
+option to choose the DSN that is expecting a password (e.g. "myodbc3")
+or no password (e.g. "myodbc3-np").  Here is an example of a working
+odbc.ini that corresponds to the odbcinst.ini above:
+
+-----------------------------------------------------------------------------
+;
+;  odbc.ini configuration for Connector/ODBC and Connector/ODBC 3.51 drivers
+;  /usr/local/etc/odbc.ini
+;
+
+[ODBC Data Sources]
+myodbc3     = {MyODBC 3.51 Driver DSN}
+myodbc3-np  = {MyODBC 3.51 Driver DSN for users without password}
+
+[myodbc3]
+Driver       = myodbcConn
+Description  = Connector/ODBC 3.51 Driver DSN
+SERVER       = localhost
+PORT         =
+USER         = arbitraryuser
+Password     = arbitrarypassword
+Database     = arbitrarydbname
+OPTION       = 3
+SOCKET       =
+
+[myodbc3-np]
+Driver       = myodbcConn
+Description  = Connector/ODBC 3.51 Driver DSN
+SERVER       = localhost
+PORT         =
+USER         = arbitraryuser
+; Password     = thisiscommentedout
+Database     = arbitrarydbname
+OPTION       = 3
+SOCKET       =
+-----------------------------------------------------------------------------
+
+You may also choose to set up user-specific $HOME/.odbc.ini file if
+you need special DSN settings per user.  However, this is not required
+for successful operation of the RPKI software.
+
+2.1.4 cryptlib
+
+Install Peter Gutmann's cryptlib, currently available at
+http://www.cs.auckland.ac.nz/~pgut001/cryptlib.  When compiling on *nix, it
+may be necessary to unzip in text mode to ensure that line endings are
+correct.  Ensure that both the library itself and its include files are in
+accessible locations.  For example, it may be necessary to manually copy
+libcl.so to /usr/local/lib and cryptlib.h to /usr/local/include.  To install
+cryptlib 3.4.2 (for example):
+
+$ wget --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl342.zip
+$ mkdir cryptlib
+$ cd cryptlib
+$ unzip -a ../cl342.zip  # -a enables text-mode
+$ make shared  # create libcl.so, not libcl.a
+$ su
+# install -o root -g root -m 755 libcl.so.3.4.2 /usr/local/lib
+# ln -s libcl.so.3.4.2 /usr/local/lib/libcl.so
+# install -o root -g root -m 644 cryptlib.h /usr/local/include
+
+On FreeBSD, cryptlib can be obtained one of two ways: (1) using the package
+system by issuing the command pkg_add -r cryptlib, or (2) using the ports
+system by issuing the command make search name="cryptlib" from the
+/usr/ports directory.
+
+There seem to be some problems with compiling cryptlib on Linux machines.
+You may need to modify some files to get it to build cleanly. Also note that
+the self-test code (make testlib; ./testlib) fails on at least FreeBSD
+and Linux. We do not currently think that this is cause for concern.
+
+2.1.5 rsync
+
+Your rsync should be at least version 2.6.9, as earlier versions do
+not necessarily support the necessary flags.  Check your version with
+rsync --version, and install from rsync.samba.org.  We recommend the
+latest version due to security and bug fixes.
+
+2.1.6 Python
+
+Install python, at least version 2.6.  Python is likely available in
+your operating system's package manager and is also available at
+http://python.org/download/.
+
+2.1.7 netcat
+
+Netcat comes preinstalled with many operating systems. If you do not
+already have the command nc, install netcat from your package manager
+or http://netcat.sourceforge.net/.
+
+2.1.8 cURL
+
+cURL also comes preinstalled with many operating systems. If the command
+curl is not already present, install it from your package manager or
+http://curl.haxx.se/.
+
+2.1.9 Syslog
+
+A syslog daemon is probably already installed.  However, on some systems syslog
+has poor performance by default.  See
+http://stackoverflow.com/questions/208098/can-syslog-performance-be-improved
+for more information. If you're ok with the chance of losing some log messages
+if the system crashes, consider configuring your syslog daemon to not
+synchronize log files after each log message.
+
+
+2.2 @PACKAGE_NAME_UC@ Software
+
+@PACKAGE_NAME_UC@ is distributed as source code that should be built
+using the GNU build tools on Linux/Unix.
+
+2.2.1 Unpack the Source Code
+
+@PACKAGE_NAME_UC@ will have been delivered to you as a gzip-ed tarball
+named @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz.  Extract the file using:
+
+    tar xvzpf @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
+    
+This will create a directory named @PACKAGE_TARNAME@-@PACKAGE_VERSION@ which
+will contain various subdirectories.
+
+2.2.2 Configure
+
+@PACKAGE_NAME_UC@ uses autoconf to generate its Makefiles.  On many systems,
+it will suffice to run ./configure. However, the following options may be
+useful.
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-ssl-include      Path to openssl library install location: Defaults
+                          to /usr/local/ssl/include
+  --with-ssl-lib          Path to openssl library install location: Defaults
+                          to /usr/local/ssl/lib
+  --with-cryptlib-include Path to cryptlib install location: Defaults to
+                          /usr/local/include
+  --with-odbc-include     Path to unixodbc include files: Defaults to
+                          /usr/local/include
+  --with-cryptlib-lib     Path to cryptlib install location: Defaults to
+                          /usr/local/lib
+  --with-odbc-lib         Path to unixODBC install location: Defaults to
+                          /usr/local/lib
+
+In addition, GNU make has the ability to dramatically reduce its
+output.  If you are using GNU make, then you have the option to use
+
+./configure --enable-silent-rules [other options]
+
+which will give much shorter compilation/linking notifications.
+
+The rpki-rtr code currently only compiles under gcc. If you have multiple
+compilers installed, add the option "CC=gcc" to ./configure.
+
+2.2.3 Build the Executables
+
+Once the configure script has generated all of the Makefiles, build
+the executables by issuing "make" in the top-level source directory.
+
+
+2.3 @PACKAGE_NAME_UC@ User Account
+
+Establish a user account from which to run @PACKAGE_NAME@.  This
+provides a place to put the configuration file and prevent other users
+from reading sensitive information in it. It also provides a place,
+~/.ssh/authorized_keys, to put all the RPKI-RTR clients' public keys to
+allow SSH login.
+
+If you're installing to a non-standard location, add the bin directoy to the
+user's $PATH.
+
+2.3.1 Self-Test Configuration File
+
+@PACKAGE_NAME_UC@ uses two different configuration files, one for normal
+operations and one for the self tests.  This step sets up the configuration
+file for the self-tests only.  If you don't plan to run the self-tests, you
+can skip this section.
+
+Copy etc/test.conf to ~/.@PACKAGE_NAME@.test.conf and make it readable only by
+the owner because it will contain a database password:
+
+   cp etc/test.conf ~/.@PACKAGE_NAME@.test.conf
+   chmod 600 ~/.@PACKAGE_NAME@.test.conf
+
+Open ~/.@PACKAGE_NAME@.test.conf in an editor, read the comments, and edit the
+file as directed by the comments.
+
+NOTE: This file has database options that are homologous to options in the
+system-wide configuration file that you'll set up later.  If you use the same
+database in both files, the self-tests will overwrite any data you keep in
+your production database.  It is strongly recommended to use a different
+database for testing than for production use.
+
+
+2.4 SSH Subsystem
+
+If you plan to use the rpki-rtr server as an SSH subsystem, you will need
+to run @PACKAGE_NAME@-rpki-rtr-daemon and set up an ssh subsystem
+to connect to rtrd on localhost.  The netcat program, nc(1), is
+recommended for the ssh subsystem.  There are different versions of
+netcat, so read its manpage for caveats before setting it up as
+a subsystem.  In particular, read the "-q" option's description, if your
+version of netcat has a "-q" option, to prevent runaway nc processes
+when clients disconnect. Edit the /etc/ssh/sshd_config file to contain
+the below line, modified for the options you want to pass to netcat:
+
+  Subsystem	rpki-rtr	nc <nc-options>... localhost <rtr-port>
+
+
+2.5 Self Test
+
+If you didn't create the configuration files in step 2.3.1, go back and do that
+now. Some of the self tests won't work without the test configuration file.
+
+To perform a basic validation of your install, run the self-test
+target by issuing the command:
+
+   make check
+
+You may need to enter the MySQL root password several times as the
+various self-test steps proceed.  If all tests pass, you will see a
+message indicating success.
+
+If you have valgrind installed, you can run some tests under valgrind
+by running the command:
+
+   make check CHECKTOOL=valgrind
+
+
+2.6 Installation
+
+As root, run "make install" to install @PACKAGE_NAME@ on the system.
+
+   sudo make install
+
+By default this will install various binaries to /usr/local/bin, which should
+be in the $PATH environment variable.  Additional binaries, which should only
+be used internally or by experts, are in /usr/local/libexec/@PACKAGE_NAME@.
+Documentation, example configuration, and example trust anchor locators are
+installed in /usr/local/share/doc/@PACKAGE_NAME@.  Some internal data is
+installed to /usr/local/share/@PACKAGE_NAME@.  In the next step, you'll manually
+create cache and log directories.
+
+
+2.7 Post-Installation Procedures
+
+2.7.1 First Time Installation
+
+If this is the first time you've installed @PACKAGE_NAME@ (i.e. if this is not
+an upgrade), there are some initialization steps.
+
+First, create the system-wide configuration directory and file.  The
+system-wide configuration directory is /usr/local/etc/@PACKAGE_NAME@ by default.
+If you changed the value of ${sysconfdir}, use ${sysconfdir}/@PACKAGE_NAME@
+instead.  Files in the configuration directory should be readable only by the
+@PACKAGE_NAME@ user and root.  After creating the directory, create a file
+@PACKAGE_NAME@.conf in it.  There's a sample file that's in
+/usr/local/share/doc/@PACKAGE_NAME@/examples/@PACKAGE_NAME@.conf by default that you can use as
+a starting point.  Assuming everything is in default locations and the user you
+created in step 2.1.1 is @PACKAGE_NAME@ with group @PACKAGE_NAME@:
+
+   sudo mkdir /usr/local/etc/@PACKAGE_NAME@
+   sudo cp /usr/local/share/doc/@PACKAGE_NAME@/examples/@PACKAGE_NAME@.conf /usr/local/etc/@PACKAGE_NAME@/
+   sudo chown root:@PACKAGE_NAME@ /usr/local/etc/@PACKAGE_NAME@ /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+   sudo chmod 750 /usr/local/etc/@PACKAGE_NAME@
+   sudo chmod 640 /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+
+Then open the configuration file you just created in an editor, read the
+comments, and edit the file as directed by the comments.
+
+   sudoedit /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+
+Later on, if you want to test configuration changes before changing the
+system-wide configuration, you can make a new configuration file and use it
+temporarily by setting $@CONFIG_ENV_VAR@, for example:
+
+   @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
+
+In the configuration file you just created, find the parameters RPKICacheDir
+and LogDir.  Both of these directories should be created and the user from step
+2.1.1 should have full access to these directories.  For example, if the
+directories are set to their defaults and the username is @PACKAGE_NAME@ in
+group @PACKAGE_NAME@:
+
+   sudo mkdir -p /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   sudo chown @PACKAGE_NAME@:@PACKAGE_NAME@ /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   sudo chmod 700 /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+
+Then run @PACKAGE_NAME@-initialize to set up the database:
+
+   @PACKAGE_NAME@-initialize -f # WARNING: This will delete any old data you
+                                #          have in the configured database.
+                                #          Do not do this if you're upgrading
+                                #          and want to save your old data.
+
+2.7.2 Upgrading
+
+In this release, there's no upgrade procedure.
+
+===============================================================================
+
+3. Running the RPKI Software
+
+3.1 Normal Operation
+
+This section describes when and how to run each component of @PACKAGE_NAME@ as
+part of a relying party's normal operations. Cron jobs and init scripts are
+not included in this release, but this section should give the user enough
+information to create cron jobs or init scripts as appropriate.
+
+3.1.1 @PACKAGE_NAME@-synchronize
+
+@PACKAGE_NAME@-synchronize synchronizes the local cache with the global RPKI,
+or anything else pointed to by the configured trust anchor locators.  It should
+be run regularly, for example by a cron job.  The amount of time it takes to
+complete one run can vary, so experimentation is suggested before picking the
+frequency to run it.
+
+3.1.2 @PACKAGE_NAME@-rpki-rtr-daemon
+
+@PACKAGE_NAME@-rpki-rtr-daemon is @PACKAGE_NAME@'s rpki-rtr [rfc6810]
+server.  If you plan to run an rpki-rtr server, this should be started on boot,
+e.g. from an init script or from rc.local. This program does not daemonize, but
+something like start-stop-daemon can be used.
+
+3.1.3 @PACKAGE_NAME@-rpki-rtr-update
+
+After @PACKAGE_NAME@-synchronize finishes, @PACKAGE_NAME@-rpki-rtr-update can
+update the rpki-rtr cache. If you plan to use the rpki-rtr server, you should
+call @PACKAGE_NAME@-rpki-rtr-update after each successful call to
+@PACKAGE_NAME@-synchronize. For example, the cron job command could be:
+
+   @PACKAGE_NAME@-synchronize && @PACKAGE_NAME@-rpki-rtr-update
+
+
+3.2 Results and Analysis
+
+This section describes some of your options for getting more information about
+@PACKAGE_NAME@'s operations (see previous section) or the state of the RPKI.
+
+3.2.1 Validation Report (@PACKAGE_NAME@-results)
+
+If you want an overview of @PACKAGE_NAME@'s cached view of the RPKI, you can
+use @PACKAGE_NAME@-results.
+
+At a basic level, every object is in one of three states: fully
+validated to a trust anchor, unknown, and definitely invalid.  Valid
+objects are inserted in the database; unknown objects are potentially
+valid, so they are kept in the database; definitely invalid objects
+are not entered into the database.
+
+The validation report generator (@PACKAGE_NAME@-results) searches the local cache
+and the database and summarizes the three categories as counts.  In
+verbose mode, it also shows full paths to all invalid/unknown
+certifcates, thereby allowing the user to determine the offending
+rsync publication URI.
+
+To see a list of options, run
+
+   @PACKAGE_NAME@-results --help
+
+3.2.2 Query Client (@PACKAGE_NAME@-query)
+
+This is the way to pull specific information out of the database and
+local repository.  There are two basic modes.
+
+The comprehensive query, indicated by the argument "-r", pulls all the
+valid ROAs from the repository and outputs a set of BGP filters in
+RPSL format specified by these ROAs.  To send the output to a file
+rather than the screen, include "-o <filename>" on the command line or
+just redirect the output. ROAs (as well as certificates and CRLs) can
+also be stale for a variety of reasons:
+  - Validation Chain Stale: The ROA was validatated by a trust chain
+    at some point, but now there is no longer a trust chain (e.g., due
+    to a certificate expiring or being revoked by a CRL).
+  - Stale CRL: Some certificate in the ROA's trust chain is in the
+    domain of a CRL that was supposed to be updated by a certain time
+    and has not.
+  - Stale Manifest: Similar to stale CRL
+  - No Manifest: Either the ROA or some certificate in its trust chain
+    is not on a validated manifest.
+For each type of staleness, it is possible to specify that the query
+consider ROAs that are stale in this manner to be either all valid or
+all invalid.  To control how different types of staleness are treated,
+edit the config file created in step 2.3.1.
+
+The informational query provides the user with a means to see what is
+in the database without directly executing MySQL commands.  The basic
+informational query has the form
+@PACKAGE_NAME@-query -t <type> -d <field> [-d <field> ... -d <field>]
+where type is either cert, crl, roa or manifest, and the fields are
+all the fields of the objects to display.  There are different
+possible fields for each object type. The full list of possibilities
+is obtained with the command "@PACKAGE_NAME@-query -l <type>".  Most of these
+fields also provide the capability for filtering the results based on
+a simple comparison.  To do such filtering, add as many "-f
+<field>.<op>.<value>" arguments to the command line as desired, where
+op is one of (eq, ne, lt, gt, le, ge) and value is unquoted and
+contains # characters to replaces spaces.  Additional arguments are
+given if you type @PACKAGE_NAME@-query without any arguments.
+
+    Examples:
+
+    @PACKAGE_NAME@-query -t cert -d pathname      # display paths of valid certs
+    @PACKAGE_NAME@-query -t cert -d pathname -d flags # display path+flags of valid certs
+    @PACKAGE_NAME@-query -t cert -d pathname -i   # display paths of valid/unknown certs
+    @PACKAGE_NAME@-query -t crl -d all            # display all fields of valid CRLs
+    @PACKAGE_NAME@-query -t roa -d pathname -d flags # display path+flags of valid roas
+    @PACKAGE_NAME@-query -t man -d all -i # display all fields of valid/unknown manifests
+
+3.2.3 Log Files
+
+@PACKAGE_NAME_UC@ logs most things to syslog, so you can check your system logs
+for more information.  These are most likely in /var/log/syslog,
+/var/log/messages, or another file in /var/log.  There are also some additional
+logs (e.g., rsync's logs) in the directory specified by the LogDir configuration
+parameter, which is /usr/local/var/log/@PACKAGE_NAME@ by default.
+
+
+3.3 Warning
+
+Aborting any of the scripts that change the database or repository in
+the middle of operation can leave the database in an inconsistent
+state.  It is recommended that after any such abort, you re-initialize
+the database, clear the repository, and reload the data from scratch.
+In the future, we plan to provide less drastic means of recovering
+from an abort.
+
+===============================================================================
+
+Appendix A. Troubleshooting
+
+A.1 Database troubleshooting
+
+If you are having database errors, particularly when you first attempt
+to use rcli, it is important to check and make sure that your MySQL
+installation is correct.  Try the following command (drop the '-p' if
+your MySQL user has no password):
+
+    mysql --user=YOUR_DB_USER -p
+
+This should connect you to the database and give a "mysql> " prompt
+back. If it does not, then your MySQL and/or ODBC installation is not
+correct. Check the troubleshooting section of the MySQL
+documentation. Verify that your ODBC information, in
+/usr/local/etc/odbc.ini and /usr/local/etc/odbcinst.ini, is correct.
+Verify that the MySQL daemon process mysqld is running using "ps -ef".
+Verify that there is a mysql socket named mysql.sock, typically in
+/tmp.
+
+Once you can successfully connect to the database as user "mysql" try
+connecting as root by issuing the command:
+
+    mysql --user=root --password=PWD
+
+where PWD is the root password specified in your odbc.ini file. If
+this does not succeed, follow the steps given in the MySQL manual for
+resetting the root password, then stop and restart the mysqld process.
+
+
+A.2 64-bit support
+
+The RPKI software does not currently support running in 64-bit mode.
+It is however possible to run RPKI in 32-bit mode on a 64-bit OS that
+supports 32-bit binaries and libraries.  This may work, but is not
+recommended.
+
+The build environment, including gcc, need to support 32-bit programs.
+You may need to install additional packages, see your operating system's
+documentation. To compile in 32-bit mode on x86_64, gcc takes the flags
+"-m32 -march=i686". The rest of these instructions assume those are the
+appropriate flags for 32-bit compilation. Substitute whatever your system
+uses in their place.
+
+All libraries that RPKI depends on need to be compiled in 32-bit mode.
+They may also need to be installed in an alternate library path for 32-bit
+libraries, see your operating system's documentation.
+
+Here are some notes from installing on CentOS 6.0 x86_64 that may or may
+not be useful for you:
+
+To configure openssl, subsitute
+
+    ./config enable-rfc3779
+
+with
+
+    ./Configure linux-elf enable-rfc3779 -m32 -march=i686
+
+To build cryptlib:
+
+Near the top of makefile, find the line that sets the
+CFLAGS variable and append "-m32 -march=i686" without quotes. Find the
+line that sets LDFLAGS and append "-m32" without quotes. Note that -m32
+is actually a gcc option, not an ld option. This is unusual behavior of
+cryptlib, not a mistake in this document. Lower down in makefile, find
+the line that starts like
+
+    $(SLIBNAME):
+
+Under that line, there should be a line that looks something like
+
+    @./tools/buildsharedlib.sh ... $(LD) ...
+
+Change only the "$(LD)" part so it looks like
+
+    @./tools/buildsharedlib.sh ... "$(LD) $(LDFLAGS)" ...
+
+Note the addition of quotes, they're important.
+
+Next, edit tools/ccopts.sh and delete all instances of the word (string
+separated by whitespace) "-march=opteron" that occur on a line that
+looks like
+
+    CCARGS=...
+
+Continue building with the regular instructions.
+
+To configure RPKI itself, run
+
+    ./configure CFLAGS="-m32 -march=i686"
+
+
+A.3 Specific Operating Systems
+
+A.3.1 OpenBSD
+
+If you have trouble compiling mysql-ODBC-connector, you may need to find
+all lines in its source that call wprintf() or swprintf() and comment
+them out.
+
+A.3.2 FreeBSD
+
+If you have trouble compiling cryptlib, you may have to comment out the
+sections in tools/ccopts.sh that enable ODBC support.
+
+A.3.3 Ubuntu 12.04-12.10 x86
+
+These are the exact instructions for installing RPSTIR on a fresh copy
+of 32-bit Ubuntu 12.04 and Ubuntu 12.10, as of 01/18/2013.
+
+NOTE: Ubuntu 12.10 runs slowly without 3D acceleration due to the
+removal of Unity 2D.  In VirtualBox 4.2.4, fix it like so:
+http://askubuntu.com/questions/207813/why-does-an-ubuntu-12-10-guest-in-virtualbox-run-very-very-slowly
+The last check step may crash VirtualBox itself (yikes).  Don't run
+the final "/usr/lib/nux/unity_support_test -p"
+
+# Install the best editor :-)
+sudo apt-get install emacs
+
+# Build tools
+sudo apt-get install openjdk-7-jdk build-essential
+
+# RPSTIR dependencies: standalone programs
+sudo apt-get install curl
+sudo apt-get install unzip
+sudo apt-get install mysql-server  # MySQL root password: rpstir
+sudo mysql_secure_installation
+
+# RPSTIR dependencies: libraries
+sudo apt-get install unixodbc-bin unixodbc-dev libmyodbc libmysqlclient-dev
+mkdir -p ~/libs
+
+  # OpenSSL w/ RFC3779 extensions
+  cd ~/libs
+  curl -OJ http://www.openssl.org/source/openssl-1.0.1e.tar.gz
+  tar -xzvf openssl-1.0.1e.tar.gz
+  cd openssl-1.0.1e/
+  ./config enable-rfc3779 && make depend && make && make test
+  sudo make install
+
+  # Cryptlib
+  cd ~/libs
+  curl -OJ ftp://ftp.franken.de/pub/crypt/cryptlib/cl342.zip
+  mkdir cryptlib
+  cd cryptlib
+  unzip -a ../cl342.zip  # -a enables text-mode
+  make shared # create libcl.so, not libcl.a
+  sudo install -o root -g root -m 755 libcl.so.3.4.2 /usr/local/lib
+  sudo ln -s libcl.so.3.4.2 /usr/local/lib/libcl.so
+  sudo install -o root -g root -m 644 cryptlib.h /usr/local/include
+
+# Configure ODBC
+odbcinst -j     # check that the paths below are correct
+
+  # populate driver file
+  sudo emacs /etc/odbcinst.ini
+    ;  ODBC Installed Drivers file
+
+    [myodbcConn]
+    Description	= MySQL odbc driver for Linux
+    Driver		= /usr/lib/i386-linux-gnu/odbc/libmyodbc.so
+    Setup		= /usr/lib/i386-linux-gnu/odbc/libodbcmyS.so
+    UsageCount	= 1
+
+    [ODBC]
+    TraceFile	= /tmp/sql-odbc.log
+    Trace		= Yes
+    ForceTrace	= Yes
+
+  # populate user data sources
+  emacs ~/.odbc.ini
+    ;
+    ;  odbc.ini configuration for Connector/ODBC drivers
+    ;
+
+    [ODBC Data Sources]
+    myodbc     = {MyODBC Driver DSN}
+
+    [myodbc]
+    Driver       = myodbcConn
+    Description  = Connector/ODBC Driver DSN
+    SERVER       = localhost
+    PORT         =
+    USER         = arbitraryuser
+    Password     = arbitrarypassword
+    Database     = arbitrarydbname
+    OPTION       = 3
+    SOCKET       =
+
+# Configure MySQL
+mysql -u root -p
+  CREATE USER 'rpstir'@'localhost' IDENTIFIED BY 'bbn';
+  CREATE DATABASE rpstir;
+  GRANT ALL PRIVILEGES ON rpstir.* TO 'rpstir'@'localhost';
+  CREATE DATABASE rpstir_test;
+  GRANT ALL PRIVILEGES ON rpstir_test.* TO 'rpstir'@'localhost';
+  quit
+
+# Configure, build, test, and install rpstir
+cd path/to/rpstir # the directory this file is in
+./configure --enable-silent-rules
+make
+cp etc/test.conf ~/.rpstir.test.conf
+chmod 600 ~/.rpstir.test.conf
+emacs ~/.rpstir.test.conf # set these options:
+  Database rpstir_test
+  DatabaseUser rpstir
+  DatabasePassword bbn
+make check
+sudo make install
+
+# Setup rpstir
+sudo mkdir /usr/local/etc/rpstir
+sudo cp /usr/local/share/doc/rpstir/examples/rpstir.conf /usr/local/etc/rpstir/
+sudo chown root:rpstir /usr/local/etc/rpstir /usr/local/etc/rpstir/rpstir.conf
+sudo chmod 750 /usr/local/etc/rpstir
+sudo chmod 640 /usr/local/etc/rpstir/rpstir.conf
+sudoedit /usr/local/etc/rpstir/rpstir.conf # read the comments for each option, and make sure to set these:
+  Database rpstir
+  DatabaseUser rpstir
+  DatabasePassword bbn
+sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
+sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
+
+
+A.4 Configure can't find installed software
+
+If you installed a dependency from your operating system's package manager and
+./configure is giving an error about being unable to find the dependency, you
+may need to install an additional package with the extension -dev or -devel.
+For example, on Ubuntu, you need to install unixodbc-dev and libmysqlclient-dev.

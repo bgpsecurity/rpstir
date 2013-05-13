@@ -1,0 +1,73 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+OUTDIR="$TESTS_BUILDDIR/empty_3779"
+rm -rf "$OUTDIR"
+mkdir "$OUTDIR"
+
+TEST_LOG_NAME=empty_3779
+TEST_LOG_DIR="$OUTDIR"
+
+
+# Intentionally violates RFC 6487 by having no RFC 3779 resources.  We
+# want to be able to produce this case.
+run "gen_key-root" gen_key "$OUTDIR/root.p15" 2048 \
+	|| fatal "could not generate root.p15"
+run "create_object-none" create_object CERT \
+	outputfilename="$OUTDIR/root.cer" \
+	subjkeyfile="$OUTDIR/root.p15" \
+	type=CA \
+	selfsigned=true \
+	serial=1 \
+	issuer="root" \
+	subject="root" \
+	notbefore=120101010101Z \
+	notafter=490101010101Z \
+	sia="r:rsync://example.com/rpki/,m:rsync://example.com/empty_3779.mft" \
+	|| fatal "could not create cert with no RFC 3779 resources"
+
+# Just IPv4
+run "create_object-ipv4" create_object CERT \
+	outputfilename="$OUTDIR/root.cer" \
+	subjkeyfile="$OUTDIR/root.p15" \
+	type=CA \
+	selfsigned=true \
+	serial=1 \
+	issuer="root" \
+	subject="root" \
+	notbefore=120101010101Z \
+	notafter=490101010101Z \
+	sia="r:rsync://example.com/rpki/,m:rsync://example.com/empty_3779.mft" \
+        ipv4="0.0.0.0/0" \
+        || fatal "could not create cert with only IPv4 resources"
+
+# Just IPv6
+run "create_object-ipv6" create_object CERT \
+	outputfilename="$OUTDIR/root.cer" \
+	subjkeyfile="$OUTDIR/root.p15" \
+	type=CA \
+	selfsigned=true \
+	serial=1 \
+	issuer="root" \
+	subject="root" \
+	notbefore=120101010101Z \
+	notafter=490101010101Z \
+	sia="r:rsync://example.com/rpki/,m:rsync://example.com/empty_3779.mft" \
+        ipv6="::/0" \
+        || fatal "could not create cert with only IPv6 resources"
+
+# Just AS numbers
+run "create_object-as" create_object CERT \
+	outputfilename="$OUTDIR/root.cer" \
+	subjkeyfile="$OUTDIR/root.p15" \
+	type=CA \
+	selfsigned=true \
+	serial=1 \
+	issuer="root" \
+	subject="root" \
+	notbefore=120101010101Z \
+	notafter=490101010101Z \
+	sia="r:rsync://example.com/rpki/,m:rsync://example.com/empty_3779.mft" \
+        as=0-4294967295 \
+        || fatal "could not create cert with only AS resources"

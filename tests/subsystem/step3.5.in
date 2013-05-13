@@ -1,0 +1,10 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo "Making M111 expired"
+./makeM111stale || check_errs $? "$0 makeM111stale failed"
+
+echo $0 PASS

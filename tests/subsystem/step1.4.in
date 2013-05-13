@@ -1,0 +1,10 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo "Making C2 expired"
+"$TESTS_BUILDDIR/makeC2Expired" || check_errs $? "$0 makeC2Expired failed"
+
+echo $0 PASS

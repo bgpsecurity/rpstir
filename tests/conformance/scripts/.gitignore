@@ -1,0 +1,13 @@
+gen_all.sh
+gen_all_CMSs.sh
+gen_all_CRLs.sh
+gen_all_MFTs.sh
+gen_all_ROAs.sh
+gen_all_certs.sh
+gen_child_ca.sh
+gen_mft.sh
+make_test_CMS.sh
+make_test_CRL.sh
+make_test_MFT.sh
+make_test_cert.sh
+run_tests.sh

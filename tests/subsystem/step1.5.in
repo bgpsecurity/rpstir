@@ -1,0 +1,10 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+echo "Running the garbage collector"
+run "step6.garbage" garbage || check_errs $? "$0 garbage failed"
+
+echo $0 PASS

@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+./make_test_manifest M1 < "$TESTS_SRCDIR/makeM1"
+./make_test_manifest M11 < "$TESTS_SRCDIR/makeM11"
+./make_test_manifest M111 < "$TESTS_SRCDIR/makeM111"
+./make_test_manifest M112 < "$TESTS_SRCDIR/makeM112"
+./make_test_manifest M231 < "$TESTS_SRCDIR/makeM231"
+./make_test_manifest M1111 < "$TESTS_SRCDIR/makeM1111"

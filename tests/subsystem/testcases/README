@@ -1,0 +1,204 @@
+                   Making Test Cases
+
+    The creation of test cases has been automated largely with script files,
+starting with the file "makeall".  This file calls a number of other script
+files: "makecerts", "makecrls", "makeroas" and "makemanifests".  These in turn
+call programs in this directory, such as "make_test_cert", "make_itest_crl",
+make_test_roa" and "make_test_manifest" giving the name of the file to be
+created and sometimes other parameters.  The files created have a simple naming
+structure indicating their types.  All certificates are named (in shell
+notation) "C*.cer", CRLs are "L*.crl", ROAs are "R*.roa", and manifests are
+"M*.man".  The meanings of the intervening characters are described under each
+type below.  For convenmience, the various tools produce an additional file
+suffixed ".raw" which shows the contents of the main file generated in more
+readable form.
+
+    In addition to the "makeall" script there are several shell scripts that
+are used to manipulate the test data and run tests.  The script "testall.sh"
+initializes the database and then loads the test files into the database for
+further manual work.  The scripts "runtAll.sh" and "runt.sh" run a set of
+tests using the data files on this directory, and then compare expected with
+actual results, as described below.
+
+1. Certificates
+
+    Certificates have only a simple commonName for their issuer and subject
+names.  The subject name is the same as the left part of the certificate file
+name, e.g. the certificate for the CA named "C12" is "C12.cer".  Certificates
+are either CA certificates or end-entity certificates.  CA certificates have
+only digits in the middle part.  The top certificate is for the CA "C"; it is
+self-signed.  End-entity certificates have the same first part as the signing
+CA followed by either an "R" for ROA signers or an "M" for manifest signers
+and then a digit to indicate the sequence, e.g. "C12R3" is the name of the
+signer of C12's third ROA.  End-entity certificates for signing manifests have
+the "inherit" flag set for IP addresses, but they have all the AS numbers of
+their issuing CA.  End-entity certificates for signing ROAs have all the IP
+addresses and AS numbers of their issuing CA.
+
+    To create certificates one must first run the gen_test_key program and
+give it a subject name to produce a file suffixed ".p15" to produce a file
+suffixed ".p15", thus
+
+    gen_test_key C12.p15
+
+produces the file "C12.p15".  The script file "makekeys" will generate all
+but the root key, C.p15, which is never changed.  It is not necessary to
+generate the kays more than once.  
+
+    To make the certificate one must then run
+
+    make_test_cert C12 su eu [b | e | n]
+
+where s and e represent some (possibly signed) number of one or more digits and
+u is either "Y" for years, "M" for months, "W" for weeks, "D" for days, "h" for
+hours, "m" for minutes or "s" for seconds.  The starting time of the certificate
+will be the current time adjusted by the "su" parameter, and the ending time
+will be the current time adjusted by the "eu" parameter.  The program allows
+some exceptional cases: To create an invalid signature, add the parameter "b";
+to force a manifest-signing end-entity to have all its signer's IP addresses
+instead of the "inherit" option, add the parameter "e"; to eliminate the IP 
+address extension in ROAs, use the 'n' parameter.  Only one of these
+exceptions is allowed at one time.  The IP address and AS number extensions
+for CAs must be supplied either interactively or by identifying a script file
+as standard input.  The latter method is simpler.  With a script file, the first
+lines define the IPv4 prefixes, followed by a blank line followed by IPv6
+prefix(es), a blank line and one or more lines of AS numbers or ranges, e.g.
+"63-68".
+
+    Making the "top" certificate is different.  One must start with an almost
+fully formed certificate, such as "C.cer" and modify its dates, IP address
+blocks and AS numbers.  To make changes to C.cer, the best way is to edit
+C.raw, keeping the indentations lined up, and then convert it like this:
+
+    ../cg/tools/rr <C.raw >C.cer
+
+To check the results, do
+
+    ../cg/tools/dump -a C.cer
+
+This will show a result similar to C.raw except that it will not "look inside"
+the OCTET STRING in each extension.
+
+2. Certificate Revocation Lists
+
+    CRLs are made in much the same way as certificates, except the program
+make_test_crl is used.  The CRL name contains the the digits in the CA name
+followed by a one-digit serial number, so "L123.crl" is the third CRL issued
+by CA C12.  The starting and ending times are set in the same way as for
+certificates:
+
+    make_test_crl L123 0D 3M <makeL123
+
+ A script file (or interactive method) lists the certificates to be revoked
+by having on each line the name of the subject and the time of revocation in
+relation to the starting date of the CRL.  For example
+
+     C12 -10D
+
+indicates that C12's certificate was revoked ten days before the CRL was
+issued.
+
+3. ROAs
+
+    ROAs are made with the tool make_test_roa, which takes as parameters the
+ROA filename, the EE certificate filename, the EE certificate keyfile name (to
+get the private key), the index of the AS number for this ROA (the cert will
+likely have more than one AS number under its control). There are optional
+arguments as well, to mark the signature bad, and to generate a file
+containing a readable version of the ROA.
+
+usage:
+./make_test_roa -r roafile -c certfile -k keyfile -i index [-R readable][-b]
+
+  -r roafile: file to which to write roa
+  -c certfile: file holding EE cert for roa
+  -k keyfile: file holding p15-format public key for signing roa
+  -i index: which child is this (of that cert) (one-based)
+  -R readable: file to write readable asn.1 for roa to
+  -b: generate bad (invalid) signature
+
+Typically, the name of the ROA consists of "R" followed by digits and
+".roa", so R123.roa is the third ROA produced by CA C12 (cert C12.cer) and
+signed by end entity C12R3.cer, with key pair found in C12R3.p15. To
+generate this ROA and save off a printable version, you use
+
+    make_test_roa -r R123.roa -c C12R3.cer -i 3 -k C12R3.p15 -R R123.raw
+
+4. Manifests
+
+    Manifests are created with the tool make_test_manifest, which takes three
+parameters (the manifest name and start and end times) and a script file
+listing all the objects covered by the manifest.  If the name of an object is
+followed by white space and a letter, the hash in the entry for that file in
+the manifest is made bad.  The name of the manifest consists of "M" followed
+by digits and ".man".  The manifest M123.man is the third manifest issued by
+CA C12 and signed by end entity C12M3, e.g.
+
+    make_test_manifest M123 0D 3M <makeM123
+
+5. Script files
+
+    The file "makeall" creates a set of test files by invoking the "makecerts",
+"makecrls", makeroas" and "makemanifests" scripts.  Each of these, in turn,
+then makes a set of files using the methods described above.  Makeall should be
+run at the start of a test cycle since each file it creates uses the current
+date as its start date, and typically expires a year later.  Note that some of
+the files are created deliberately with bad digital signitures, etc.
+
+    The "runt.sh" file contains a script to run a generic test.  The test being
+run is specified using command line parameters.  Each test is specified as a
+root (trust anchor) certificate, a set of files (from the "makeall" event) that
+are entered into an empty database, a set of actions to execute on the
+database, a query to be run and a set of expected results.  The parameters to
+"runt.sh" specify these as follows:
+
+    ./runt.sh TrustCert Actions InitialFileList Query ExpectedResults
+
+    The "TrustCert" parameter is used as it is entered, however each of the
+other parameters is only a partial name.  This partial name is then converted
+into a final file name as follows:
+
+    Actions as XXX          -> tXXX_actions
+    InitialFileList as XXX  -> tXXX_flist
+    Query as XXX            -> tXXX_query
+    ExpectedResults as XXX  -> tXXX_expect
+
+    Thus the files used for a given test can be found using "ls tXXX*".  Note
+that shorthand versions are allowed, such that a test can be specified using
+a partial list such as:
+
+    ./runt.sh TrustCert Actions
+    ./runt.sh TrustCert Actions InitialFileList
+
+    This was done as the action list is expected to vary all the time, while
+the initial file list, query and results may not.  In the shorthand case the
+partial file name used for the actions is used to generate the missing names.
+therefore the following commands are equivalent:
+
+    ./runt.sh C.cer 1-9 1-1
+    ./runt.sh C.cer 1-9 1-1 1-9 1-9
+
+    Both will use: C.cer as the cert, t1-9_actions as the action list,
+t1-1_flist as the initial file list, and t1-9_query and t1-9_expect as the
+query and expected result files.  This allows easy reuse of startup conditions,
+queries and expected results.  Note that if the same startup and query would
+result in different output, then something like the following would be needed:
+
+    ./runt.sh C.cer 1-15 1-1 1-1 1-15
+
+    Each test executed by "runt.sh" is run from start to finish without user
+intervention.  Each test starts off by deleting the current database, creating
+a new empty database and populating it with the files specified by its initial
+file list.  Then the actions specified in the actions file are done, and the
+query and comparison are then done.  A test passes if the expected results
+match (via diff) the saved version, and fail if they do not.
+
+    Each test that fails is noted by creating a file tXXX_error.  Therefore if
+the testcases directory is first purged of all *_error files, and no *_error
+file exists after the test(s) finish, then all test(s) pass.  Note that a
+pre-existing error file for the test being run is renamed to tXXX_error.sav.N
+(where N is 1, 2, etc.) at the start of each runt.sh run.
+
+    The file "runtAll.sh" invokes a series of runt.sh scripts, each specifying
+a different test in turn.
+

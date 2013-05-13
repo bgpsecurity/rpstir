@@ -1,0 +1,82 @@
+# This file should setup the environment for installable scripts. It should not
+# contain anything used only by tests. It should only be sourced via
+# @SETUP_ENVIRONMENT@.
+
+# add all binaries to the path
+if test -d "@pkglibexecdir@"; then
+    export PATH="@pkglibexecdir@:$PATH"
+fi
+
+# MySQL command line which reads statements from stdin
+mysql_cmd () {
+    local option_file ret
+
+    option_file="`@MKTEMP@`" || return 1
+
+    {
+        echo "[client]"
+        echo "database=\"`config_get Database`\""
+        echo "user=\"`config_get DatabaseUser`\""
+    } > "$option_file"
+
+    # put the password in the option file
+    # NOTE: the password should not be stored in an environment variable
+    #       or passed on the command line to echo or printf
+    if config_get DatabasePassword > /dev/null 2>&1; then
+        printf "password=\"" >> "$option_file"
+        config_get DatabasePassword >> "$option_file"
+        echo "\"" >> "$option_file"
+    fi
+
+    mysql --defaults-extra-file="$option_file" "$@" || ret=$?
+
+    rm -f "$option_file"
+
+    return $ret
+}
+
+
+############################################################################
+# Shell function for checking return codes for error (swiped from
+# http://steve-parker.org/sh/exitcodes.shtml)
+#
+# Usage:
+# grep "^${1}:" /etc/passwd > /dev/null 2>&1
+# check_errs $? "User ${1} not found in /etc/passwd"
+# USERNAME=`grep "^${1}:" /etc/passwd|cut -d":" -f1`
+# check_errs $? "Cut returned an error"
+# echo "USERNAME: $USERNAME"
+# check_errs $? "echo returned an error - very strange!"
+#
+# NOTE: DEPRECATED!  Better to use trap_errors at the top of your
+# script, which causes an exit and prints script/line number on any
+# error.
+
+check_errs()
+{
+  # Function. Parameter 1 is the return code
+  # Para. 2 is text to display on failure.
+  if [ "${1}" -ne "0" ]; then
+    echo "ERROR # ${1} : ${2}"
+    # as a bonus, make our script exit with the right error code.
+    exit ${1}
+  fi
+}
+
+############################################################################
+
+ensure_file_exists ( ) {
+    if [ ! -e "$1" ]
+    then
+	echo "Error: file not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+        echo "Error: directory not found - $1" 1>&2
+        exit 1
+    fi
+}
