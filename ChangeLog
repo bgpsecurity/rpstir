@@ -1,3 +1,8 @@
+next
+
+	* Fix a SQL injection when a filename in a manifest contains certain
+	  characters.
+
 0.7
 
 	* Add preliminary support for adding files from the local cache. In the
